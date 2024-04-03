@@ -1,3 +1,11 @@
+{{
+    config(
+        materialized = 'incremental',
+        incremental_strategy = 'insert_overwrite',
+        partition_by = {'field': 'partition_date', 'data_type': 'date'},
+    )
+}}
+
 WITH bookings_per_stock AS (
     SELECT
         stock_id,
@@ -9,9 +17,10 @@ WITH bookings_per_stock AS (
             END
         ) AS booking_stock_no_cancelled_cnt
     FROM
-        {{ref('booking_history')}} AS booking
-    WHERE partition_date = PARSE_DATE('%Y-%m-%d','{{ ds() }}')
-
+        {{source('clean','applicative_database_booking_history')}} AS booking
+    {% if is_incremental() %} 
+    WHERE partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
+    {% endif %}
     GROUP BY
         stock_id,
         partition_date
@@ -19,8 +28,8 @@ WITH bookings_per_stock AS (
 SELECT
     DISTINCT stock.partition_date, stock.offer_id, offer_item_ids.item_id, offer.offer_subcategoryId AS offer_subcategory_id, subcategories.category_id AS offer_category_id
 FROM
-    {{ref('stock_history')}} AS stock
-    JOIN {{ref('offer_history')}} AS offer ON stock.offer_id = offer.offer_id
+    {{source('clean','applicative_database_stock_history')}} AS stock
+    JOIN {{source('clean','applicative_database_offer_history')}} AS offer ON stock.offer_id = offer.offer_id
     AND stock.partition_date = offer.partition_date
     AND offer.offer_is_active
     AND NOT stock.stock_is_soft_deleted
@@ -50,6 +59,7 @@ WHERE
             ) > 0
         )
     )
-
-    AND stock.partition_date = DATE('{{ ds() }}')
+    {% if is_incremental() %} 
+    AND stock.partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
+    {% endif %}
 

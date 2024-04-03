@@ -1,0 +1,29 @@
+version: 2
+
+macros:
+
+  - name: discovery_vars
+    description: ""
+
+  - name: extract_params_int_value
+    description: ""
+
+  - name: extract_params_string_value
+    description: ""
+
+  - name: generate_schema_name
+    description: " Overview
+      It enables us to set up the destination dataset.
+      If we develop in dev environment (target = dev), the destination schema dataset is the default (tmp_env) specified in profile.yml.
+      If the model is in intermediate folder, schema name = int_{sub_folder_name}_{target_name}
+      Else the destination schema dataset is specified in dbt_project.yml (analytics_env or clean_env) "
+
+  - name: get_custom_alias
+    description: " This macro generates table aliases 
+    - By using the segment after '__' for models in the intermediate folder. 
+    - By removing 'mrt' and replacing '__' by '_' for models in the mart folder. 
+    - Otherwise, it uses the model's name.
+    "
+
+  - name: ml_variables
+    description: ""

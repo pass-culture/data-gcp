@@ -59,11 +59,16 @@ models:
       diversification:
         +tags: sandbox
         +re_data_monitored: false
+    intermediate:
+      +schema: clean_dbt_{{ target.name }}
+    mart:
+      +materialized: table
+      +schema: analytics_dbt_{{ target.name }}
   elementary:
     +on_schema_change: "append_new_columns"
     +enabled: false
   re_data:
-    +enabled: true
+    +enabled: false
 
 seeds:
   +schema: seeds

@@ -14,6 +14,7 @@ class MetabaseAPI:
             headers={"Content-Type": "application/json"},
             data=json.dumps({"username": username, "password": password}),
         )
+
         token_json = response.json()
         if "id" not in token_json:
             raise Exception(f"Error login to {host}, error: {token_json}")

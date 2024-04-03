@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: int_pcapi__adage_log
+    description: "This model is an incremental applying a filter on adage logs"
+
+  - name: int_pcapi__log
+    description: "This model is a view that extracts specific fields from the stdout table."
+
+  - name: int_pcapi__native_log
+    description: ""

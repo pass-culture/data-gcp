@@ -319,9 +319,80 @@ models:
   # - name: user_reco_iris
   #   config:
   #     schema: clean_{{ target.name }}
+  - name: reimbursement_collective
+    config:
+      schema: clean_{{ target.name }}
+  - name: reimbursement_individual
+    config:
+      schema: clean_{{ target.name }}
   - name: user_beneficiary
     config:
       schema: clean_{{ target.name }}
   - name: collective_offer_domain_name
+    config:
+      schema: clean_{{ target.name }}
+
+  - name: user_item_consultation
+    config:
+      schema: clean_{{ target.name }}
+  - name: user_item_discovery
+    config:
+      schema: clean_{{ target.name }}
+  - name: firebase_aggregated_daily_campaign_events
+    config:
+      schema: analytics_{{ target.name }}
+  - name: mrt_global__adage_log
+    config:
+      schema: analytics_{{ target.name }}
+  - name: mrt_global__firebase_native_event
+    config:
+      schema: analytics_{{ target.name }}
+  - name: mrt_global__venue
+    config:
+      schema: analytics_{{ target.name }}
+  # enriched folder 
+  - name: enriched_booking_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_collective_booking_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_collective_offer_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_cultural_partner_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_deposit_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_monthly_bookable_item_discoverability
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_offer_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_offerer_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_offerer_tags_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_user_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_user_offerer
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_venue_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_venue_tags_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: user_item_consultation
+    config:
+      schema: clean_{{ target.name }}
+  - name: user_item_discovery
     config:
       schema: clean_{{ target.name }}

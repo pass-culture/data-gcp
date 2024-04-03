@@ -3,6 +3,7 @@ LIVRE_LABEL = "Littérature (Livres, Bandes dessinés)"
 CINEMA_LABEL = "Cinéma & Films (DVD)"
 ART_LABEL = "Musées & Arts Visuels & Pratique Artistique (Cours, Ateliers)"
 SORTIES_LABEL = "Sorties (Spectacle Vivant, Concerts & Festivals, Jeux, Conférences)"
+ALL = "Pratiques Culturelles et Artistiques"
 
 CAT = {
     MUSIQUE_LABEL: [
@@ -62,7 +63,6 @@ CAT = {
     ],
 }
 
-
 GENRE = {
     MUSIQUE_LABEL: [
         "Blues",
@@ -105,8 +105,6 @@ GENRE = {
         "Escape Game",
         "Comédie Musicale",
         "Poésie",
-        "Ballet",
-        "Danse",
         "Escape Game",
         "Action/Aventure",
         "Comédie",
@@ -194,7 +192,6 @@ GENRE = {
     ],
 }
 
-
 MEDIUM = {
     MUSIQUE_LABEL: [
         "CD",
@@ -249,3 +246,25 @@ MEDIUM = {
         "Grandeur Nature",
     ],
 }
+
+CAT[ALL] = (
+    CAT[MUSIQUE_LABEL]
+    + CAT[LIVRE_LABEL]
+    + CAT[CINEMA_LABEL]
+    + CAT[ART_LABEL]
+    + CAT[SORTIES_LABEL]
+)
+MEDIUM[ALL] = (
+    MEDIUM[MUSIQUE_LABEL]
+    + MEDIUM[LIVRE_LABEL]
+    + MEDIUM[CINEMA_LABEL]
+    + MEDIUM[ART_LABEL]
+    + MEDIUM[SORTIES_LABEL]
+)
+GENRE[ALL] = (
+    GENRE[MUSIQUE_LABEL]
+    + GENRE[LIVRE_LABEL]
+    + GENRE[CINEMA_LABEL]
+    + GENRE[ART_LABEL]
+    + GENRE[SORTIES_LABEL]
+)

@@ -2,8 +2,6 @@ version: 1
 
 models: 
   - name: enriched_venue_data
-    config:
-      schema: analytics_{{ target.name }}
     description: Data table at venue level
     columns:
       - name: venue_public_name

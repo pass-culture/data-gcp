@@ -2,8 +2,6 @@ version: 2
 
 models: 
   - name: enriched_venue_tags_data
-    config:
-      schema: analytics_{{ target.name }}
     description: Venue tags data
     columns: 
       - name: venue_id

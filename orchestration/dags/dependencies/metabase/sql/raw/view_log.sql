@@ -5,4 +5,4 @@ SELECT
     qe.model,
     qe.model_id,
     qe.metadata
-FROM public.view_logs qe
+FROM public.view_log qe

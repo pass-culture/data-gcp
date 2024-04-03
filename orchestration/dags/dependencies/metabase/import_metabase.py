@@ -45,9 +45,9 @@ import_tables = {
         "destination_table": "metabase_collections",
     },
     "view_log": {
-        "sql": f"{SQL_PATH}/raw/view_logs.sql",
+        "sql": f"{SQL_PATH}/raw/view_log.sql",
         "destination_dataset": "{{ bigquery_raw_dataset }}",
-        "destination_table": "metabase_view_logs",
+        "destination_table": "metabase_view_log",
     },
 }
 

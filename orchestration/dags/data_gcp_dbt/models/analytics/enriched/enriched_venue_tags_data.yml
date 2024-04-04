@@ -3,6 +3,8 @@ version: 2
 models: 
   - name: enriched_venue_tags_data
     description: Venue tags data
+    config:
+      schema: analytics_{{ target.name }}
     columns: 
       - name: venue_id
         description: Unique identifier of a venue

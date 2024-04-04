@@ -318,7 +318,7 @@ user_agg_deposit_data_user_deposit_agg AS (
         MAX(expirationDate) AS user_last_deposit_expiration_date,
         SUM(amount) AS user_total_deposit_amount
     FROM
-        {{ source('raw','applicative_database_deposit')}}
+        {{ ref('deposit')}}
     GROUP BY
         1
 ),
@@ -341,7 +341,7 @@ last_deposit as (
         deposit.userId as user_id,
         deposit.id AS deposit_id,
     FROM
-    {{ source('raw','applicative_database_deposit')}} AS deposit
+    {{ ref('deposit')}} AS deposit
     QUALIFY ROW_NUMBER() OVER(PARTITION BY deposit.userId ORDER BY deposit.dateCreated DESC, id DESC) = 1
 ),
 amount_spent_last_deposit AS (

@@ -110,6 +110,7 @@ offer_metadata_id AS (
         offer_extracted_data.author,
         offer_extracted_data.performer,
          -- GTL of distinct objects (eg books and music) can collide
+        COALESCE(null,gtl_book.gtl_type,gtl_music.gtl_type) as gtl_type,
         case 
             when enriched_items.category_id like "LIVRE" then gtl_book.titelive_gtl_id 
             when enriched_items.category_id like "MUSIC" then gtl_music.titelive_gtl_id
@@ -131,7 +132,7 @@ offer_metadata_id AS (
             else null 
         end as gtl_label_level_3,
         case 
-            when enriched_items.category_id like "LIVRE" then gtl.gtl_label_level_4
+            when enriched_items.category_id like "LIVRE" then gtl_book.gtl_label_level_4
             when enriched_items.category_id like "MUSIC" then gtl_music.gtl_label_level_4
             else null 
         end as gtl_label_level_4

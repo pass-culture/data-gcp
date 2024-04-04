@@ -2,7 +2,8 @@ version: 1
 
 models:
   - name: enriched_cultural_partner_data
-    config: 
+    config:
+      schema: analytics_{{ target.name }}
       materialized: table
       tags: ["pro"]
     columns:

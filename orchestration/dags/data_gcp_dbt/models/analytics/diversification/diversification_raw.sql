@@ -95,7 +95,7 @@ LEFT JOIN {{ source('clean','subcategories') }} subcategories
   ON offer_metadata.subcategory_id = subcategories.id
 LEFT JOIN {{ref('item_clusters_topics_labels') }} as ictl
   ON bookings.item_id = ictl.item_id
-LEFT JOIN {{source('analytics','titelive_gtl_mapping') }} as gtlmap
+LEFT JOIN {{ ref('applicative_titelive_gtl') }} as gtlmap
   ON offer_metadata.titelive_gtl_id = gtlmap.titelive_gtl_id
 
 ),

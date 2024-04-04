@@ -46,5 +46,5 @@ SELECT
     )
     ) as blocked
 FROM `{{ bigquery_analytics_dataset }}.enriched_offer_data` eod
-INNER JOIN `{{ bigquery_analytics_dataset }}.titelive_gtl_mapping` gtl on gtl.gtl_id = eod.titelive_gtl_id
+INNER JOIN `{{ bigquery_clean_dataset }}.titelive_gtl` gtl on gtl.gtl_id = eod.titelive_gtl_id and gtl.gtl_type = 'book'
 GROUP BY 1

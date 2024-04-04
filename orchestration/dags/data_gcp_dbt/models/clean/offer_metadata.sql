@@ -123,7 +123,7 @@ offer_metadata_id AS (
     FROM enriched_items
     
     LEFT JOIN {{ ref('offer_extracted_data') }} as offer_extracted_data ON offer_extracted_data.offer_id = enriched_items.offer_id
-    LEFT JOIN {{ source('analytics','titelive_gtl_mapping') }} as gtl ON offer_extracted_data.titelive_gtl_id = gtl.gtl_id
+    LEFT JOIN {{ ref('titelive_gtl') }} as gtl ON offer_extracted_data.titelive_gtl_id = gtl.gtl_id
 ),
 
 

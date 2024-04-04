@@ -140,8 +140,8 @@ offer_metadata_id AS (
     FROM enriched_items
     
     LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = enriched_items.offer_id
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_titelive_gtl_mapping gtl_book ON offer_extracted_data.titelive_gtl_id = gtl_book.gtl_id and gtl_book.gtl_type = 'book'
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_titelive_gtl_mapping gtl_music ON offer_extracted_data.titelive_gtl_id = gtl_music.gtl_id and gtl_music.gtl_type = 'music'
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_titelive_gtl gtl_book ON offer_extracted_data.titelive_gtl_id = gtl_book.gtl_id and gtl_book.gtl_type = 'book'
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_titelive_gtl gtl_music ON offer_extracted_data.titelive_gtl_id = gtl_music.gtl_id and gtl_music.gtl_type = 'music'
 
 
 ),

@@ -30,6 +30,12 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "user_declared_iris",
     },
+    "applicative_database_titelive_gtl": {
+        "sql": f"{CLEAN_SQL_PATH}/applicative_database/titelive_gtl.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "applicative_database_titelive_gtl",
+    },
+
 }
 
 

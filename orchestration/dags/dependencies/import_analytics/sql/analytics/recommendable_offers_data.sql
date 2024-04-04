@@ -42,7 +42,7 @@ get_recommendable_offers AS (
         stock.stock_beginning_date AS stock_beginning_date,
         offer.last_stock_price AS stock_price,
         offer.titelive_gtl_id AS gtl_id,
-        COALESCE(null,gtl_mapping_book.gtl_type,gtl_mapping_music.gtl_type)
+        COALESCE(null,gtl_mapping_book.gtl_type,gtl_mapping_music.gtl_type) as gtl_type,
         case 
             when gtl_mapping_book.gtl_type = 'book' then glt_mapping_book.gtl_label_level_1
             when gtl_mapping_music.gtl_type = 'music' then glt_mapping_music.gtl_label_level_1

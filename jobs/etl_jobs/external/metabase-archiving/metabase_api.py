@@ -3,25 +3,37 @@ import json
 import pandas as pd
 from tqdm import tqdm
 from time import sleep
+from google.auth.transport.requests import Request
+from google.oauth2 import id_token
 
 
 class MetabaseAPI:
-    def __init__(self, username, password, host):
+    def get_open_id(self, client_id):
+        return id_token.fetch_id_token(Request(), client_id)
+
+    def __init__(self, username, password, host, client_id):
         self.host = host
+        self.bearer_token = f"Bearer {self.get_open_id(client_id)}"
+
         url = f"{host}/api/session"
         response = requests.post(
             url,
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": self.bearer_token,
+            },
             data=json.dumps({"username": username, "password": password}),
         )
-
-        token_json = response.json()
-        if "id" not in token_json:
-            raise Exception(f"Error login to {host}, error: {token_json}")
-        self.headers = {
-            "Content-Type": "application/json",
-            "X-Metabase-Session": token_json["id"],
-        }
+        response.raise_for_status()  # raises exception when not a 2xx response
+        if response.status_code != 204:
+            token_json = response.json()
+            if "id" not in token_json:
+                raise Exception(f"Error login to {host}, error: {token_json}")
+            self.headers = {
+                "Content-Type": "application/json",
+                "X-Metabase-Session": token_json["id"],
+                "Authorization": self.bearer_token,
+            }
 
     def get_users(self):
         response = requests.get(f"{self.host}/api/user/", headers=self.headers)

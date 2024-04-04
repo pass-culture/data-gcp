@@ -17,8 +17,12 @@ def preprocess(
         "default-config",
         help="Config file name",
     ),
+    cluster_prefix: str = typer.Option(
+        "",
+        help="Table prefix",
+    ),
 ):
-    params = load_config_file(config_file_name)
+    params = load_config_file(config_file_name, job_type="cluster")
 
     logger.info("Loading data: fetch items with metadata and pretained embedding")
     items = pd.read_gbq(f"SELECT * from `{TMP_DATASET}.{input_table}`")
@@ -53,7 +57,9 @@ def preprocess(
     )
     item_embedding_w_group = item_embedding_w_group.fillna(0)
     logger.info(f"item_embedding: {len(item_embedding_w_group)}")
-    item_embedding_w_group.to_gbq(f"{TMP_DATASET}.{output_table}", if_exists="replace")
+    item_embedding_w_group.to_gbq(
+        f"{TMP_DATASET}.{cluster_prefix}{output_table}", if_exists="replace"
+    )
 
     return
 

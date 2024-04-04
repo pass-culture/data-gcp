@@ -29,10 +29,15 @@ SELECT
    timestamp,
 FROM
  `{{ bigquery_raw_dataset }}.stdout`
-WHERE jsonPayload.message="Booking has been cancelled"
-OR jsonPayload.message="Offer has been created"
-OR jsonPayload.message="Offer has been updated"
-OR jsonPayload.message="Booking was marked as used"
-OR jsonPayload.message="Booking was marked as unused"
-OR jsonPayload.message="Successfully updated stock"
-OR jsonPayload.message="Some provided eans were not found"
+WHERE 
+DATE(timestamp) >= DATE_SUB(CURRENT_DATE, INTERVAL 90 day)
+AND 
+(
+  jsonPayload.message="Booking has been cancelled"
+  OR jsonPayload.message="Offer has been created"
+  OR jsonPayload.message="Offer has been updated"
+  OR jsonPayload.message="Booking was marked as used"
+  OR jsonPayload.message="Booking was marked as unused"
+  OR jsonPayload.message="Successfully updated stock"
+  OR jsonPayload.message="Some provided eans were not found"
+)

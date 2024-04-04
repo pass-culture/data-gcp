@@ -6,7 +6,7 @@ from polyfuzz import PolyFuzz
 
 from flair.embeddings import TransformerWordEmbeddings
 from configs.labels import CAT, GENRE, MEDIUM
-from tools.utils import CLEAN_DATASET, TMP_DATASET, load_config_file
+from tools.utils import CLEAN_DATASET, load_config_file, load_df
 
 from tqdm import tqdm
 
@@ -73,10 +73,6 @@ def clean_words(df, input_column, target_column):
     return df
 
 
-def load_df(input_table):
-    return pd.read_gbq(f"""SELECT * FROM `{TMP_DATASET}.{input_table}`""")
-
-
 def main(
     item_topics_labels_input_table: str = typer.Option(..., help="Path to data"),
     item_topics_input_table: str = typer.Option(..., help="Path to data"),
@@ -86,9 +82,12 @@ def main(
         "default-config",
         help="Config file name",
     ),
+    cluster_prefix: str = typer.Option(
+        "",
+        help="Table prefix",
+    ),
 ):
-    df = load_df(item_topics_labels_input_table)
-    params = load_config_file(config_file_name)
+    df = load_df(f"{cluster_prefix}{item_topics_labels_input_table}")
 
     df["category_details"] = df["macro_category"] + " " + df["micro_category"]
     df["sub_category_details"] = (
@@ -97,7 +96,7 @@ def main(
     df["genre_details"] = df["macro_genre"] + " " + df["micro_genre"]
     df["medium_details"] = df["macro_medium"] + " " + df["micro_medium"]
 
-    df_raw = load_df(item_topics_input_table)
+    df_raw = load_df(f"{cluster_prefix}{item_topics_input_table}")
 
     df = match_with_target(
         df,
@@ -152,7 +151,8 @@ def main(
         ]
     ]
     post_proc_df.to_gbq(
-        f"{CLEAN_DATASET}.{item_topics_labels_output_table}", if_exists="replace"
+        f"{CLEAN_DATASET}.{cluster_prefix}{item_topics_labels_output_table}",
+        if_exists="replace",
     )
 
     df_raw.merge(
@@ -170,7 +170,10 @@ def main(
             ]
         ],
         on=["semantic_cluster_id", "topic_id"],
-    ).to_gbq(f"{CLEAN_DATASET}.{item_topics_output_table}", if_exists="replace")
+    ).to_gbq(
+        f"{CLEAN_DATASET}.{cluster_prefix}{item_topics_output_table}",
+        if_exists="replace",
+    )
 
 
 if __name__ == "__main__":

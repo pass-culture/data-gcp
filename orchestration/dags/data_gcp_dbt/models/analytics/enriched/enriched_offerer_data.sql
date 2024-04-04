@@ -324,4 +324,4 @@ LEFT JOIN siren_reference_adage ON offerer.offerer_siren = siren_reference_adage
 WHERE
     offerer.offerer_validation_status='VALIDATED'
     AND offerer.offerer_is_active
-QUALIFY rank() over(partition by siren_data.siren order by update_date desc) = 1
+QUALIFY row_number() over(partition by siren_data.siren order by update_date desc) = 1

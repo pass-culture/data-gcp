@@ -8,19 +8,18 @@ from bertopic.representation import (
 )
 from tqdm import tqdm
 import numpy as np
-
-
-from tools.utils import ENV_SHORT_NAME, TMP_DATASET, CLEAN_DATASET, load_config_file
-from tools.utils import call_retry, sha1_to_base64
+from tools.utils import (
+    call_retry,
+    sha1_to_base64,
+    load_df,
+    TMP_DATASET,
+    load_config_file,
+)
 from configs.prompts import (
     get_macro_topics_messages,
     get_micro_topics_messages,
     EXPECTED_RESULTS,
 )
-
-
-def load_df(input_table):
-    return pd.read_gbq(f"""SELECT * FROM `{TMP_DATASET}.{input_table}`""")
 
 
 def decode(x, emb_size):
@@ -135,8 +134,13 @@ def main(
         "default-config",
         help="Config file name",
     ),
+    cluster_prefix: str = typer.Option(
+        "",
+        help="Table prefix",
+    ),
 ):
-    params = load_config_file(config_file_name)
+    params = load_config_file(config_file_name, job_type="cluster")
+
     topic_items_df = load_df(input_table)
     emb_size = params["pretrained_embedding_size"]
 
@@ -199,11 +203,14 @@ def main(
 
     topics_raw_all_df["topic_id"] = topics_raw_all_df["topic_id"].apply(sha1_to_base64)
     topics_all_df.to_gbq(
-        f"{TMP_DATASET}.{item_topics_labels_output_table}", if_exists="replace"
+        f"{TMP_DATASET}.{cluster_prefix}{item_topics_labels_output_table}",
+        if_exists="replace",
     )
     topics_raw_all_df[
         ["item_id", "topic_id", "semantic_cluster_id", "booking_cnt"]
-    ].to_gbq(f"{TMP_DATASET}.{item_topics_output_table}", if_exists="replace")
+    ].to_gbq(
+        f"{TMP_DATASET}.{cluster_prefix}{item_topics_output_table}", if_exists="replace"
+    )
 
 
 if __name__ == "__main__":

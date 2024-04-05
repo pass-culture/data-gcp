@@ -1,6 +1,6 @@
 SELECT
   CASE
-      WHEN LENGTH(cast(gtl_id as string) ) = 7 THEN CONCAT('0', cast(gtl_ids as string) )
+      WHEN LENGTH(cast(gtl_id as string) ) = 7 THEN CONCAT('0', cast(gtl_id as string) )
       ELSE cast(gtl_id as string) 
     END AS gtl_id,
     gtl_type,

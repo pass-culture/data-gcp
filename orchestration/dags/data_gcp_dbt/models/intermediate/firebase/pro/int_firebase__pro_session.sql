@@ -22,6 +22,7 @@ ranked_venues AS (
 
 SELECT
   DISTINCT e.unique_session_id,
+  e.user_id
   ro.offerer_id,
   rv.venue_id
 FROM {{ ref("int_firebase__pro_event") }} e

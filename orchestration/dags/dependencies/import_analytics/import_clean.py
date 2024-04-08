@@ -35,7 +35,6 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "applicative_database_titelive_gtl",
     },
-
 }
 
 

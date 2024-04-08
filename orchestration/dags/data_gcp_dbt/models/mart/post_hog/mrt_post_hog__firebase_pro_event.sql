@@ -48,4 +48,3 @@ SELECT
     ) as user_params,
     "pro" as origin
 FROM {{ ref("mrt_global__firebase_pro_event") }}
-WHERE MOD(ABS(FARM_FINGERPRINT(user_pseudo_id)),10) = 0

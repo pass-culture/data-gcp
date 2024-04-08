@@ -16,7 +16,7 @@ LEFT JOIN {{ ref("enriched_offerer_id") }} AS o ON uo.offerer_id=o.offerer_id
 QUALIFY ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY no_cancelled_booking_cnt DESC)=1
 ),
     
-    offerer_per_session AS(
+offerer_per_session AS(
 SELECT 
     unique_session_id
     ,COALESCE(ps.offerer_id,v.venue_managing_offerer_id,mau.offerer_id) as offerer_id
@@ -84,9 +84,10 @@ SELECT
     p.collective_offers_created as partner_nb_collective_offers
 FROM {{ ref("int_firebase__pro_event") }} AS e
 LEFT JOIN offerer_per_session ps ON ps.unique_session_id = e.unique_session_id
-LEFT JOIN {{ ref("enriched_venue_data") }} AS v ON e.venue_id=v.venue_id
-LEFT JOIN {{ ref("enriched_offerer_data") }} AS o ON COALESCE(e.offerer_id,v.venue_managing_offerer_id,ps.offerer_id)=o.offerer_id
+LEFT JOIN {{ ref("enriched_venue_data") }} AS v ON e.venue_id = v.venue_id
+LEFT JOIN {{ ref("enriched_offerer_data") }} AS o ON COALESCE(e.offerer_id,v.venue_managing_offerer_id,ps.offerer_id) = o.offerer_id
 LEFT JOIN {{ ref("enriched_cultural_partner_data") }} AS p ON v.partner_id=p.partner_id
-{% if is_incremental() %}
-AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
-{% endif %}
+WHERE TRUE
+    {% if is_incremental() %}
+    AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
+    {% endif %}

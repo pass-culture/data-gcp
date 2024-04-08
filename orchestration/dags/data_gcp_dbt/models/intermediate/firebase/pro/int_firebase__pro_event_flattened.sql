@@ -60,6 +60,3 @@ SELECT
 FROM firebase_pro_last_two_days_events,
     UNNEST(event_params) AS params
 GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
-        
-
-        

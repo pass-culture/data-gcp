@@ -112,8 +112,8 @@ offer_metadata_id AS (
          -- GTL of distinct objects (eg books and music) can collide
         COALESCE(null,gtl_book.gtl_type,gtl_music.gtl_type) as gtl_type,
         case 
-            when enriched_items.category_id like "BOOK" then gtl_book.titelive_gtl_id 
-            when enriched_items.category_id like "MUSIC" then gtl_music.titelive_gtl_id
+            when enriched_items.category_id like "BOOK" then gtl_book.gtl_id 
+            when enriched_items.category_id like "MUSIC" then gtl_music.gtl_id
             else null 
         end as titelive_gtl_id,
         case 

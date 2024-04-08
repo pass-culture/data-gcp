@@ -53,7 +53,9 @@ recommendable_items_raw AS (
         MIN(ro.offer_creation_date) as offer_creation_date,
         MIN(ro.stock_beginning_date) as stock_beginning_date,
         AVG(ro.stock_price) as stock_price,
-        MAX(ro.total_offers) as total_offers
+        MAX(ro.total_offers) as total_offers,
+        MAX(ro.semantic_emb_mean) as semantic_emb_mean,
+
     FROM
     `{{ bigquery_analytics_dataset }}`.recommendable_offers_raw ro
     GROUP BY 1

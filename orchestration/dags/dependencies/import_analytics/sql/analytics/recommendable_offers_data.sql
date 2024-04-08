@@ -23,9 +23,38 @@ WITH booking_numbers AS (
     GROUP BY
         offer.item_id
 ), 
+embeddings AS (
+    SELECT
+        ie.item_id,
+        ie.semantic_content_hybrid_embedding as semantic_content_embedding,
+    FROM
+        `{{ bigquery_clean_dataset }}.item_embeddings` ie
+    QUALIFY ROW_NUMBER() OVER (
+            PARTITION BY item_id
+            ORDER by
+                extraction_date DESC
+        ) = 1
+),
+embeddings_avg AS (
+    SELECT
+        item_id,
+        AVG(
 
-
-
+                cast(e as float64)
+        )AS embedding,
+    FROM
+        embeddings, 
+        UNNEST(
+                    SPLIT(
+                        SUBSTR(
+                            semantic_content_embedding,
+                            2,
+                            LENGTH(semantic_content_embedding) - 2
+                        )
+                    )
+                ) e
+    GROUP BY 1
+),
 get_recommendable_offers AS (
     SELECT
         offer.offer_id AS offer_id,
@@ -46,6 +75,7 @@ get_recommendable_offers AS (
         glt_mapping.gtl_label_level_2 AS gtl_l2,
         glt_mapping.gtl_label_level_3 AS gtl_l3,
         glt_mapping.gtl_label_level_4 AS gtl_l4,
+        COALESCE(isem.embedding, 0.0) as semantic_emb_mean,
         MAX(item_counts.item_count) as item_count,
         MAX(COALESCE(booking_numbers.booking_number, 0)) AS booking_number,
         MAX(COALESCE(booking_numbers.booking_number_last_7_days, 0)) AS booking_number_last_7_days,
@@ -83,6 +113,7 @@ get_recommendable_offers AS (
         ANY_VALUE(enriched_item_metadata.offer_sub_type_label) as offer_sub_type_label,
         ANY_VALUE(enriched_item_metadata.cluster_id) AS cluster_id,
         ANY_VALUE(enriched_item_metadata.topic_id) AS topic_id,
+        
 
     FROM
         `{{ bigquery_analytics_dataset }}`.enriched_offer_data offer
@@ -119,12 +150,13 @@ get_recommendable_offers AS (
             offer.item_id = sensitive_offer.item_id
         LEFT JOIN `{{ bigquery_analytics_dataset }}`.titelive_gtl_mapping glt_mapping on 
             offer.titelive_gtl_id = glt_mapping.gtl_id
+        LEFT JOIN embeddings_avg isem ON isem.item_id = offer.item_id
     WHERE
         offer.is_active = TRUE
         AND offer.offer_is_bookable = TRUE
         AND offerer.offerer_is_active = TRUE
         AND offer.offer_validation = 'APPROVED'
-    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18
+    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19
 )
 SELECT  * 
 FROM get_recommendable_offers 

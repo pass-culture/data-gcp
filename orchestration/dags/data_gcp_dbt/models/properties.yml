@@ -383,3 +383,6 @@ models:
   - name: user_item_discovery
     config:
       schema: clean_{{ target.name }}
+  - name: firebase_daily_offer_consultation_data
+    config:
+      schema: analytics_{{ target.name }}

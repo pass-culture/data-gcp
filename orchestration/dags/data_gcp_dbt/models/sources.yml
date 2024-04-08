@@ -102,6 +102,7 @@ sources:
       - name: applicative_database_venue_reimbursement_point_link
       - name: contentful_entries
       - name: firebase_events
+      - name: firebase_pro_events
       - name: geoip_city_v4
       - name: gsheet_eac_webinar
       - name: macro_rayons

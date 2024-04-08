@@ -38,7 +38,12 @@ offer_metadata as (
     , subcategory_id
     , category_id
     , offer_type_label
+    , gtl_type
     , titelive_gtl_id
+    , gtl_label_level_1
+    , gtl_label_level_2
+    , gtl_label_level_3
+    , gtl_label_level_4
   FROM {{ ref('offer_metadata') }}
 ),
 base_diversification as (
@@ -56,10 +61,13 @@ SELECT
     , is_free_offer
     , offer_metadata.category_id as category
     , offer_metadata.subcategory_id as sub_category
-    , gtlmap.gtl_label_lvl_1
-    , gtlmap.gtl_label_lvl_2
-    , gtlmap.gtl_label_lvl_3
-    , gtlmap.gtl_label_lvl_4
+    , offer_metadata.offer_type_domain
+    , offer_metadata.gtl_type
+    , offer_metadata.titelive_gtl_id
+    , offer_metadata.gtl_label_lvl_1
+    , offer_metadata.gtl_label_lvl_2
+    , offer_metadata.gtl_label_lvl_3
+    , offer_metadata.gtl_label_lvl_4
     -- prendre une venue unique pour les offres digitales
     , CASE
         WHEN bookings.digital_goods = True 
@@ -95,8 +103,7 @@ LEFT JOIN {{ source('clean','subcategories') }} subcategories
   ON offer_metadata.subcategory_id = subcategories.id
 LEFT JOIN {{ref('item_clusters_topics_labels') }} as ictl
   ON bookings.item_id = ictl.item_id
-LEFT JOIN {{ ref('applicative_titelive_gtl') }} as gtlmap
-  ON offer_metadata.titelive_gtl_id = gtlmap.titelive_gtl_id
+
 
 ),
 

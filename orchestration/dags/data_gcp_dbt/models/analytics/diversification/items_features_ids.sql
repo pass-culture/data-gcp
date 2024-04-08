@@ -1,6 +1,6 @@
 SELECT 
     distinct offer_item.item_id
-    , offer.gtl_type
+    , offer_meta.offer_type_domain
     , offer_meta.titelive_gtl_id
     , offer_meta.gtl_label_level_1
     , offer_meta.gtl_label_level_2

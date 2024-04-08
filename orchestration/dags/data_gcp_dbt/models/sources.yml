@@ -81,7 +81,7 @@ sources:
       - name: applicative_database_provider
       - name: applicative_database_recredit
       - name: applicative_database_stock
-      - name: applicative_database_titelive_gtl
+      - name: applicative_database_titelive_gtl_mapping
       - name: applicative_database_transaction
       - name: applicative_database_trusted_device
       - name: applicative_database_user
@@ -146,7 +146,6 @@ sources:
       - name: offer_types
       - name: region_department
       - name: siren_data_labels
-      - name: titelive_gtl_mapping
       - name: user_locations
       
       

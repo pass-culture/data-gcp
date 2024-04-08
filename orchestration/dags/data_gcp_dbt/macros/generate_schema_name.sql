@@ -2,7 +2,7 @@
 
     {%- set default_schema = target.dataset -%}
 
-    {%- if 'intermediate' in node.path -%}
+    {%- if 'intermediate' in node.path and ((target.name == "prod" and target.profile_name != "sandbox") or target.name == "stg") -%}
         {%- set model_parts = node.name.split('__') -%}
          {%- set schema_name = model_parts[0] ~ "_" ~ target.name -%}
             {{ schema_name }}

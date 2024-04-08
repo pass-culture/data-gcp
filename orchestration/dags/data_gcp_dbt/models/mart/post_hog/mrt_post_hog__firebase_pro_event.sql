@@ -1,11 +1,11 @@
 SELECT
     event_date,
-    CASE WHEN event_name="page_view" THEN CONCAT(event_name,page_name) ELSE event_name END as event_name
+    CASE WHEN event_name="page_view" THEN CONCAT(event_name,page_name) ELSE event_name END as event_name,
     event_timestamp,
     user_id,
     user_pseudo_id,
     unique_session_id,
-    origin,
+    page_origin,
     platform,
     user_device_category,
     user_device_operating_system,
@@ -15,15 +15,14 @@ SELECT
         offer_type,
         is_edition,
         is_draft,
-        used,
-        saved,
-        eac_wrong_student_modal_only6and5,
+        has_saved_query,
+        has_opened_wrong_student_modal,
         filled,
         filled_with_errors,
         onboarding_selected_legal_category
     ) as extra_params,
     STRUCT(
-        offerer_id
+        offerer_id,
         offerer_name,
         offerer_first_individual_offer_creation_date,
         offerer_first_collective_offer_creation_date,

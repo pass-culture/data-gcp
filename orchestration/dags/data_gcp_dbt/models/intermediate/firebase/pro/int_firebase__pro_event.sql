@@ -1,10 +1,6 @@
 {% set target_name = target.name %}
 {% set target_schema = generate_schema_name('analytics_dbt_' ~ target_name) %}
 
-{{ config(
-    pre_hook="{{create_dehumanize_id_function()}}"
-) }}
-
 {{
     config(
         materialized = "incremental",
@@ -14,7 +10,6 @@
     )
 }}
 
-
 WITH pro_event_raw_data as(
     SELECT 
         event_name,
@@ -23,42 +18,41 @@ WITH pro_event_raw_data as(
         platform,
         event_date,
         event_timestamp,
-        ga_session_number as session_number,
-        ga_session_id as session_id,
-        CONCAT(user_pseudo_id, '-',ga_session_id) as unique_session_id,
-        origin,
+        ga_session_number AS session_number,
+        ga_session_id AS session_id,
+        CONCAT(user_pseudo_id, '-',ga_session_id) AS unique_session_id,
+        origin AS page_origin,
         destination,
         traffic_campaign,
         traffic_medium,
         traffic_source,
-        category as user_device_category,
-        operating_system as user_device_operating_system,
-        operating_system_version as user_device_operating_system_version,
-        browser as user_web_browser,
-        browser_version as user_web_browser_version,
-        COALESCE(CAST(offerer_id as STRING),CAST(offererId AS STRING)) as offerer_id,
-        COALESCE(venue_id,CAST(venueId as STRING)) as venue_id,
+        category AS user_device_category,
+        operating_system AS user_device_operating_system,
+        operating_system_version AS user_device_operating_system_version,
+        browser AS user_web_browser,
+        browser_version AS user_web_browser_version,
+        COALESCE(CAST(offerer_id AS STRING),CAST(offererId AS STRING)) AS offerer_id,
+        COALESCE(venue_id,CAST(venueId AS STRING)) AS venue_id,
         page_location,
-        page_title as page_name,
-        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*)$""", 1) as url_first_path,
-        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*?)[\/.*?\/.*?\/|\?]""", 1) as url_path_type,
-        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/.*?\/.*?\/(.*?)\/|\?""", 1) as url_path_details,
-        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*?)\?""", 1) as url_path_before_params,
-        REGEXP_EXTRACT_ALL(page_location,r'(?:\?|&)(?:([^=]+)=(?:[^&]*))') as url_params_key,
-        REGEXP_EXTRACT_ALL(page_location,r'(?:\?|&)(?:(?:[^=]+)=([^&]*))') as url_params_value,
-        REGEXP_REPLACE(REGEXP_REPLACE(page_location , "[A-Z \\d]+[\\?\\/\\&]?", ""), "https://passculture.pro/", "") as url_path_agg,
+        page_title AS page_name,
+        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*)$""", 1) AS url_first_path,
+        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*?)[\/.*?\/.*?\/|\?]""", 1) AS url_path_type,
+        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/.*?\/.*?\/(.*?)\/|\?""", 1) AS url_path_details,
+        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*?)\?""", 1) AS url_path_before_params,
+        REGEXP_EXTRACT_ALL(page_location,r'(?:\?|&)(?:([^=]+)=(?:[^&]*))') AS url_params_key,
+        REGEXP_EXTRACT_ALL(page_location,r'(?:\?|&)(?:(?:[^=]+)=([^&]*))') AS url_params_value,
+        REGEXP_REPLACE(REGEXP_REPLACE(page_location , "[A-Z \\d]+[\\?\\/\\&]?", ""), "https://passculture.pro/", "") AS url_path_agg,
         page_referrer,
         page_number,
         COALESCE(double_offer_id,offerId) AS offer_id,
-        offerType as offer_type,
-        used,
-        saved,
-        hasOnly6eAnd5eStudents as eac_wrong_student_modal_only6and5,
-        isEdition as is_edition,
-        isDraft as is_draft,
+        offerType AS offer_type,
+        saved AS has_saved_query,
+        hasOnly6eAnd5eStudents AS has_opened_wrong_student_modal,
+        isEdition AS is_edition,
+        isDraft AS is_draft,
         filled,
-        filledWithErrors as filled_with_errors,
-        categorieJuridiqueUniteLegale as onboarding_selected_legal_category
+        filledWithErrors AS filled_with_errors,
+        categorieJuridiqueUniteLegale AS onboarding_selected_legal_category
 FROM {{ ref("int_firebase__pro_event_flattened") }}
 {% if is_incremental() %}
 WHERE event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")

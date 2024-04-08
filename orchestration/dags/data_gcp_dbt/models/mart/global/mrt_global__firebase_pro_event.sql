@@ -7,12 +7,12 @@
     )
 }}
 
-WITH most_active_offerer_per_user AS(
+WITH most_active_offerer_per_user AS (
 SELECT 
     DISTINCT uo.user_id
     ,uo.offerer_id
 FROM {{ ref("enriched_user_offerer") }} AS uo 
-LEFT JOIN {{ ref("enriched_offerer_id") }} AS o ON uo.offerer_id=o.offerer_id
+LEFT JOIN {{ ref("enriched_offerer_data") }} AS o ON uo.offerer_id=o.offerer_id
 QUALIFY ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY no_cancelled_booking_cnt DESC)=1
 ),
     
@@ -20,10 +20,10 @@ offerer_per_session AS(
 SELECT 
     unique_session_id
     ,COALESCE(ps.offerer_id,v.venue_managing_offerer_id,mau.offerer_id) as offerer_id
-FROM {{ ref("int_firebase__pro_session") }} ps 
+FROM {{ ref("int_firebase__pro_session") }} AS ps
 LEFT JOIN {{ ref("enriched_venue_data") }} AS v ON ps.venue_id=v.venue_id
 LEFT JOIN most_active_offerer_per_user AS mau ON mau.user_id=ps.user_id
-),
+)
 
 SELECT 
     e.event_name,
@@ -35,7 +35,7 @@ SELECT
     e.session_number,
     e.session_id,
     e.unique_session_id,
-    e.origin,
+    e.page_origin,
     e.destination,
     e.traffic_campaign,
     e.traffic_medium,
@@ -56,9 +56,8 @@ SELECT
     e.venue_id,
     e.offer_id,
     e.offer_type,
-    e.used,
-    e.saved,
-    e.eac_wrong_student_modal_only6and5,
+    e.has_saved_query,
+    e.has_opened_wrong_student_modal,
     e.filled,
     e.filled_with_errors,
     e.onboarding_selected_legal_category,
@@ -83,10 +82,10 @@ SELECT
     p.individual_offers_created as partner_nb_individual_offers,
     p.collective_offers_created as partner_nb_collective_offers
 FROM {{ ref("int_firebase__pro_event") }} AS e
-LEFT JOIN offerer_per_session ps ON ps.unique_session_id = e.unique_session_id
+LEFT JOIN offerer_per_session AS ps ON ps.unique_session_id = e.unique_session_id
 LEFT JOIN {{ ref("enriched_venue_data") }} AS v ON e.venue_id = v.venue_id
 LEFT JOIN {{ ref("enriched_offerer_data") }} AS o ON COALESCE(e.offerer_id,v.venue_managing_offerer_id,ps.offerer_id) = o.offerer_id
-LEFT JOIN {{ ref("enriched_cultural_partner_data") }} AS p ON v.partner_id=p.partner_id
+LEFT JOIN {{ ref("enriched_cultural_partner_data") }} AS p ON v.partner_id = p.partner_id
 WHERE TRUE
     {% if is_incremental() %}
     AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")

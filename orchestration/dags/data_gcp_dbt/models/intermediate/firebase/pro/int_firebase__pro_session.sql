@@ -20,9 +20,9 @@ ranked_venues AS (
 
 SELECT
   DISTINCT e.unique_session_id,
-  e.user_id
+  e.user_id,
   ro.offerer_id,
   rv.venue_id
-FROM {{ ref("int_firebase__pro_event") }} e
+FROM {{ ref("int_firebase__pro_event") }} AS e
 LEFT JOIN ranked_offers AS ro ON e.unique_session_id = ro.unique_session_id
 LEFT JOIN ranked_venues AS rv ON e.unique_session_id = rv.unique_session_id

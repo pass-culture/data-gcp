@@ -42,10 +42,27 @@ get_recommendable_offers AS (
         stock.stock_beginning_date AS stock_beginning_date,
         offer.last_stock_price AS stock_price,
         offer.titelive_gtl_id AS gtl_id,
-        glt_mapping.gtl_label_level_1 AS gtl_l1,
-        glt_mapping.gtl_label_level_2 AS gtl_l2,
-        glt_mapping.gtl_label_level_3 AS gtl_l3,
-        glt_mapping.gtl_label_level_4 AS gtl_l4,
+        COALESCE(null,gtl_mapping_book.gtl_type,gtl_mapping_music.gtl_type) as gtl_type,
+        case 
+            when gtl_mapping_book.gtl_type = 'book' then glt_mapping_book.gtl_label_level_1
+            when gtl_mapping_music.gtl_type = 'music' then glt_mapping_music.gtl_label_level_1
+            else null
+        end as gtl_l1,
+        case 
+            when gtl_mapping_book.gtl_type = 'book' then glt_mapping_book.gtl_label_level_2
+            when gtl_mapping_music.gtl_type = 'music' then glt_mapping_music.gtl_label_level_2
+            else null
+        end as gtl_l2,
+        case 
+            when gtl_mapping_book.gtl_type = 'book' then glt_mapping_book.gtl_label_level_3
+            when gtl_mapping_music.gtl_type = 'music' then glt_mapping_music.gtl_label_level_3
+            else null
+        end as gtl_l3,
+        case 
+            when gtl_mapping_book.gtl_type = 'book' then glt_mapping_book.gtl_label_level_4
+            when gtl_mapping_music.gtl_type = 'music' then glt_mapping_music.gtl_label_level_4
+            else null
+        end as gtl_l4,
         MAX(item_counts.item_count) as item_count,
         MAX(COALESCE(booking_numbers.booking_number, 0)) AS booking_number,
         MAX(COALESCE(booking_numbers.booking_number_last_7_days, 0)) AS booking_number_last_7_days,
@@ -117,8 +134,10 @@ get_recommendable_offers AS (
             offer.item_id = forbidden_offer.item_id
         LEFT JOIN `{{ bigquery_raw_dataset }}`.sensitive_item_recommendation sensitive_offer on 
             offer.item_id = sensitive_offer.item_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.titelive_gtl_mapping glt_mapping on 
-            offer.titelive_gtl_id = glt_mapping.gtl_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.titelive_gtl gtl_mapping_book on 
+            offer.titelive_gtl_id = glt_mapping_book.gtl_id and gtl_mapping_book.gtl_type = 'book'
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.titelive_gtl gtl_mapping_music on 
+            offer.titelive_gtl_id = glt_mapping_music.gtl_id and gtl_mapping_music.gtl_type = 'music'    
     WHERE
         offer.is_active = TRUE
         AND offer.offer_is_bookable = TRUE

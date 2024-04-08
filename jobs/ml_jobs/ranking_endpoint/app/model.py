@@ -23,6 +23,8 @@ numeric_features = [
     "offer_stock_price",
     "offer_creation_days",
     "offer_stock_beginning_days",
+    "day_of_the_week",
+    "hour_of_the_day",
 ]
 
 categorical_features = [

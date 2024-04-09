@@ -389,3 +389,12 @@ models:
   - name: mrt_global__firebase_pro_event
     config:
       schema: analytics_{{ target.name }}
+  - name: enriched_venue_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_venue_tags_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_cultural_partner_data
+    config:
+      schema: analytics_{{ target.name }}

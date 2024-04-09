@@ -39,7 +39,7 @@ high_dict = {
     "dev": "n1-standard-4",
 }
 min_nodes = {"prod": 1, "dev": 1, "stg": 1}
-
+max_nodes = {"prod": 20, "dev": 2, "stg": 2}
 schedule_dict = {"prod": "0 6 * * *", "dev": "0 7 * * *", "stg": "0 7 * * *"}
 
 
@@ -50,14 +50,7 @@ models_to_deploy = [
         "version_name": "v_{{ ts_nodash }}",
         "instance_type": standard_dict[ENV_SHORT_NAME],
         "min_nodes": min_nodes[ENV_SHORT_NAME],
-    },
-    # fallback endpoint
-    {
-        "experiment_name": f"retrieval_recommendation_v1.1_{ENV_SHORT_NAME}",
-        "endpoint_name": f"recommendation_user_retrieval_version_b_{ENV_SHORT_NAME}",
-        "version_name": "v_{{ ts_nodash }}",
-        "instance_type": standard_dict[ENV_SHORT_NAME],
-        "min_nodes": min_nodes[ENV_SHORT_NAME],
+        "max_nodes": max_nodes[ENV_SHORT_NAME],
     },
     # ranking endpoint
     {
@@ -66,6 +59,7 @@ models_to_deploy = [
         "version_name": "v_{{ ts_nodash }}",
         "instance_type": low_dict[ENV_SHORT_NAME],
         "min_nodes": min_nodes[ENV_SHORT_NAME],
+        "max_nodes": max_nodes[ENV_SHORT_NAME],
     },
     # semantic endpoint
     {
@@ -74,6 +68,7 @@ models_to_deploy = [
         "version_name": "v_{{ ts_nodash }}",
         "instance_type": standard_dict[ENV_SHORT_NAME],
         "min_nodes": min_nodes[ENV_SHORT_NAME],
+        "max_nodes": max_nodes[ENV_SHORT_NAME],
     },
 ]
 
@@ -129,6 +124,7 @@ with DAG(
         version_name = model_params["version_name"]
         instance_type = model_params["instance_type"]
         min_nodes = model_params["min_nodes"]
+        max_nodes = model_params["max_nodes"]
         deploy_command = f"""
             python deploy_model.py \
                 --region {DEFAULT_REGION} \
@@ -136,7 +132,8 @@ with DAG(
                 --endpoint-name {endpoint_name} \
                 --version-name {version_name} \
                 --instance-type {instance_type} \
-                --min-nodes {min_nodes}
+                --min-nodes {min_nodes} \
+                --max-nodes {max_nodes}
         """
 
         deploy_model = SSHGCEOperator(

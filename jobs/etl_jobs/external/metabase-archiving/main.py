@@ -17,6 +17,11 @@ METABASE_HOST = access_secret_data(
     PROJECT_NAME, f"metabase_host_{ENVIRONMENT_SHORT_NAME}"
 )
 
+CLIENT_ID = access_secret_data(
+    PROJECT_NAME, f"metabase-{ENVIRONMENT_SHORT_NAME}_oauth2_client_id"
+)
+
+
 password = access_secret_data(
     PROJECT_NAME, f"metabase-api-secret-{ENVIRONMENT_SHORT_NAME}"
 )
@@ -24,7 +29,10 @@ password = access_secret_data(
 
 def run():
     metabase = MetabaseAPI(
-        username=METABASE_API_USERNAME, password=password, host=METABASE_HOST
+        username=METABASE_API_USERNAME,
+        password=password,
+        host=METABASE_HOST,
+        client_id=CLIENT_ID,
     )
     archives_df = get_data_archiving(sql_file)
 

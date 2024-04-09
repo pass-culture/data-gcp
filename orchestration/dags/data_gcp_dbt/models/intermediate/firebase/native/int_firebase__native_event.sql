@@ -91,7 +91,7 @@ SELECT
     CASE WHEN firebase_screen = "SignupConfirmationEmailSent" OR event_name = "ContinueCGU" THEN 1 ELSE 0 END AS is_signup_completed,
     CASE WHEN firebase_screen IN ("BeneficiaryRequestSent","UnderageAccountCreated","BeneficiaryAccountCreated") THEN 1 ELSE 0 END AS is_benef_request_sent,
     CASE WHEN event_name = "login" THEN 1 ELSE 0 END AS is_login
-FROM {{ ref("int_firebase__event_flattened") }}
+FROM {{ ref("int_firebase__native_event_flattened") }}
 {% if is_incremental() %}
 WHERE event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
 {% endif %}

@@ -102,28 +102,27 @@ offer_metadata_id AS (
     SELECT
         enriched_items.*, 
         CASE
-            WHEN offer_type_domain = "MUSIC" AND offer_extracted_data.musicType != '' THEN  offer_extracted_data.musicType
-            WHEN offer_type_domain = "SHOW" AND offer_extracted_data.showType != '' THEN  offer_extracted_data.showType
+            WHEN enriched_items.offer_type_domain = "MUSIC" AND offer_extracted_data.musicType != '' THEN  offer_extracted_data.musicType
+            WHEN enriched_items.offer_type_domain = "SHOW" AND offer_extracted_data.showType != '' THEN  offer_extracted_data.showType
         END AS offer_type_id,
         CASE
-            WHEN offer_type_domain = "MUSIC" AND offer_extracted_data.musicType != '' THEN  offer_extracted_data.musicSubtype
-            WHEN offer_type_domain = "SHOW" AND offer_extracted_data.showType != '' THEN  offer_extracted_data.showSubType
+            WHEN enriched_items.offer_type_domain = "MUSIC" AND offer_extracted_data.musicType != '' THEN  offer_extracted_data.musicSubtype
+            WHEN enriched_items.offer_type_domain = "SHOW" AND offer_extracted_data.showType != '' THEN  offer_extracted_data.showSubType
         END AS offer_sub_type_id,
-
         offer_extracted_data.rayon,
         offer_extracted_data.genres,
         offer_extracted_data.author,
         offer_extracted_data.performer,
-        offer_extracted_data.titelive_gtl_id,
+        gtl.gtl_type,
+        gtl.gtl_id titelive_gtl_id,
         gtl.gtl_label_level_1,
         gtl.gtl_label_level_2,
         gtl.gtl_label_level_3,
         gtl.gtl_label_level_4
-
-    FROM enriched_items
-    
+    FROM enriched_items 
     LEFT JOIN {{ ref('offer_extracted_data') }} as offer_extracted_data ON offer_extracted_data.offer_id = enriched_items.offer_id
-    LEFT JOIN {{ source('analytics','titelive_gtl_mapping') }} as gtl ON offer_extracted_data.titelive_gtl_id = gtl.gtl_id
+    LEFT JOIN {{ ref('int_applicative__titelive_gtl') }} gtl ON offer_extracted_data.titelive_gtl_id = gtl.gtl_id and gtl.gtl_type = enriched_items.offer_type_domain
+    
 ),
 
 

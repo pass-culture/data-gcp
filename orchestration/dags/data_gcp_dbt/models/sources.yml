@@ -81,6 +81,7 @@ sources:
       - name: applicative_database_provider
       - name: applicative_database_recredit
       - name: applicative_database_stock
+      - name: applicative_database_titelive_gtl
       - name: applicative_database_transaction
       - name: applicative_database_trusted_device
       - name: applicative_database_user
@@ -101,6 +102,7 @@ sources:
       - name: applicative_database_venue_reimbursement_point_link
       - name: contentful_entries
       - name: firebase_events
+      - name: firebase_pro_events
       - name: geoip_city_v4
       - name: gsheet_eac_webinar
       - name: macro_rayons
@@ -145,7 +147,6 @@ sources:
       - name: offer_types
       - name: region_department
       - name: siren_data_labels
-      - name: titelive_gtl_mapping
       - name: user_locations
       
       

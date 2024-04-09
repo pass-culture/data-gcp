@@ -331,11 +331,10 @@ models:
   - name: collective_offer_domain_name
     config:
       schema: clean_{{ target.name }}
-
-  - name: user_item_consultation
+  - name: enriched_partner_activation_activity
     config:
-      schema: clean_{{ target.name }}
-  - name: user_item_discovery
+      schema: analytics_{{ target.name }}
+  - name: user_item_consultation
     config:
       schema: clean_{{ target.name }}
   - name: firebase_aggregated_daily_campaign_events
@@ -360,9 +359,6 @@ models:
   - name: enriched_collective_offer_data
     config:
       schema: analytics_{{ target.name }}
-  - name: enriched_cultural_partner_data
-    config:
-      schema: analytics_{{ target.name }}
   - name: enriched_deposit_data
     config:
       schema: analytics_{{ target.name }}
@@ -384,15 +380,21 @@ models:
   - name: enriched_user_offerer
     config:
       schema: analytics_{{ target.name }}
+  - name: user_item_discovery
+    config:
+      schema: clean_{{ target.name }}
+  - name: firebase_daily_offer_consultation_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: mrt_global__firebase_pro_event
+    config:
+      schema: analytics_{{ target.name }}
   - name: enriched_venue_data
     config:
       schema: analytics_{{ target.name }}
   - name: enriched_venue_tags_data
     config:
       schema: analytics_{{ target.name }}
-  - name: user_item_consultation
+  - name: enriched_cultural_partner_data
     config:
-      schema: clean_{{ target.name }}
-  - name: user_item_discovery
-    config:
-      schema: clean_{{ target.name }}
+      schema: analytics_{{ target.name }}

@@ -188,12 +188,12 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
             model_data = manifest["nodes"][model_node]
             # with TaskGroup(group_id=f"{model_data['alias']}_tasks", dag=dag):
             model_op_dict[model_node] = BashOperator(
-                task_id=model_data["alias"],
+                task_id=model_data["name"],
                 bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
                 env={
                     "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                     "target": "{{ params.target }}",
-                    "model": f"{model_data['alias']}",
+                    "model": f"{model_data['name']}",
                     "full_ref_str": full_ref_str,
                     "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
                     "EXCLUSION": " --exclude "

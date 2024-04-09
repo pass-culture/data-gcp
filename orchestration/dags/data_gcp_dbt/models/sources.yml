@@ -81,7 +81,7 @@ sources:
       - name: applicative_database_provider
       - name: applicative_database_recredit
       - name: applicative_database_stock
-      - name: applicative_database_titelive_gtl_mapping
+      - name: applicative_database_titelive__mapping
       - name: applicative_database_transaction
       - name: applicative_database_trusted_device
       - name: applicative_database_user

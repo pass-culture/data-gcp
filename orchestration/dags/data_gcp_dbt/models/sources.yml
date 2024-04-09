@@ -147,7 +147,6 @@ sources:
       - name: offer_types
       - name: region_department
       - name: siren_data_labels
-      - name: titelive_gtl_mapping
       - name: user_locations
       
       

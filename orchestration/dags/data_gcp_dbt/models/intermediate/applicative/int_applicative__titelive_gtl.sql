@@ -8,4 +8,4 @@ SELECT
     gtl_label_level_2,
     gtl_label_level_3,
     gtl_label_level_4
-FROM {{ source('raw','applicative_database_titelive_gtl_mapping') }}
+FROM {{ source('raw','applicative_database_titelive_gtl') }}

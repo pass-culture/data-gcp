@@ -11,7 +11,7 @@ class BucketFolder:
 
     def get_last_file_name(self, storage_client):
         blobs = storage_client.list_blobs(
-            self.bucket_name, prefix=f"{self.folder_name}"
+            self.bucket_name, prefix=f"{self.folder_name}/"
         )
 
         update_list = []

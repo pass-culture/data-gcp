@@ -250,5 +250,5 @@ FROM
         ON rurality.geo_code = eple.code_commune
     LEFT JOIN `{{ bigquery_analytics_dataset }}.institution_locations` as location_info 
         ON educational_institution.institution_id = location_info.institution_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.eple_aggregated_type`
+    LEFT JOIN `{{ bigquery_raw_dataset }}.eple_aggregated_type`
         ON educational_institution.institution_type = eple_aggregated_type.institution_type

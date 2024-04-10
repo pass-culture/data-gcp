@@ -2,6 +2,17 @@ version: 2
 
 macros:
 
+  - name: int_firebase__native_attribution
+    description: "This table was created following this ticket : 
+    https://www.notion.so/passcultureapp/Sessions-marketing-Fix-donn-es-T1-2024-8fd77bdb6bbd47de8e1bd0d33bc83707
+  
+    There was a parameter mistake in Firebase : 
+    Before, to track the impact of Marketing campaigns, we attributed a campaign to a user within the 24 hours that followed. 
+    But in Firebase, this parameter changed and was replaced by 6 months. 
+    The error has been corrected, but the data related to the campaigns are therefore incorrect between 20/12/23 04/04/24 included. 
+    We created this model to override Firebase's campaign data between these two dates (this override is made in int_firebase__event model).
+    "
+
   - name: int_firebase__native_event
     description: ""
 

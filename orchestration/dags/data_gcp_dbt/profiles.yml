@@ -26,7 +26,7 @@ data_gcp_dbt:
       type: bigquery
     prod:
       dataset: tmp_prod
-      job_execution_timeout_seconds: 300
+      job_execution_timeout_seconds: 1200
       job_retries: 8
       location: europe-west1
       method: oauth

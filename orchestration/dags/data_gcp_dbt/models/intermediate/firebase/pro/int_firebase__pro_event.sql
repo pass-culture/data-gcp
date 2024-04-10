@@ -1,5 +1,5 @@
 {{ config(
-    pre_hook="{{ create_humanize_id_function() }}"
+    pre_hook="{{ create_dehumanize_id_function() }}"
 ) }}
 
 {% set target_name = target.name %}

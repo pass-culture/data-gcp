@@ -260,6 +260,14 @@ WITH temp_firebase_events AS (
         ) as search_genre_types_filter,
         (
             select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'accessibilityFilter'
+        ) as search_accessibility_filter,
+        (
+            select
                 CAST(event_params.value.int_value AS STRING)
             from
                 unnest(event_params) event_params

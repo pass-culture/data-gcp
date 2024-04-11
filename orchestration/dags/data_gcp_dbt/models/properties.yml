@@ -331,6 +331,9 @@ models:
   - name: collective_offer_domain_name
     config:
       schema: clean_{{ target.name }}
+  - name: user_pro_new_nav_state
+    config:
+      schema: clean_{{ target.name }}
   - name: enriched_partner_activation_activity
     config:
       schema: analytics_{{ target.name }}

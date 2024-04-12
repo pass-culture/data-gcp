@@ -2,15 +2,15 @@
     config(
         materialized = "incremental",
         incremental_strategy = "insert_overwrite",
-        partition_by = {"field": "partition_date", "data_type": "date"},
+        partition_by = {"field": "event_date", "data_type": "date"},
         on_schema_change = "sync_all_columns"
     )
 }}
 
 SELECT  
-    a.partition_date,
-    a.message,
-    a.log_timestamp,
+    a.event_date,
+    a.event_name,
+    a.event_timestamp,
     a.user_id,
     a.session_id,
     a.total_results,

@@ -1,6 +1,4 @@
-{{ config(
-    pre_hook="{{ create_dehumanize_id_function() }}"
-) }}
+{{ config(pre_hook="{{ create_dehumanize_id_function() }}") }}
 
 {% set target_name = target.name %}
 {% set target_schema = generate_schema_name('analytics_dbt_' ~ target_name) %}

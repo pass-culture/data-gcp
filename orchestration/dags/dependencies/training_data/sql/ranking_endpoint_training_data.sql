@@ -14,6 +14,8 @@ events AS (
         poc.context,
         poc.reco_call_id,
         poc.event_date,
+        MOD(EXTRACT(DAYOFWEEK FROM poc.event_date) + 5, 7) + 1 AS day_of_the_week,
+        EXTRACT(HOUR FROM poc.date) AS hour_of_the_day,
         poc.user_id,
         poc.user_bookings_count,
         poc.user_clicks_count,
@@ -87,6 +89,8 @@ transactions AS (
 )
 SELECT
     context,
+    day_of_the_week,
+    hour_of_the_day,
     user_bookings_count,
     user_clicks_count,
     user_favorites_count,
@@ -126,4 +130,6 @@ GROUP BY
     13,
     14,
     15,
-    16
+    16,
+    17,
+    18

@@ -1,0 +1,12 @@
+version: 2
+
+macros:
+
+  - name: exp_posthog__firebase_pro_event
+    description: ""
+
+  - name: exp_posthog__firebase_native_event
+    description: ""
+  
+  - name: exp_posthog__firebase_adage_log
+    description: ""

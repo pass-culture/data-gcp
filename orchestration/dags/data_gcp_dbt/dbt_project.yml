@@ -64,6 +64,8 @@ models:
     mart:
       +materialized: table
       +schema: analytics_{{ target.name }}
+    export:
+      +schema: export_{{ target.name }}
   elementary:
     +on_schema_change: "append_new_columns"
     +enabled: false

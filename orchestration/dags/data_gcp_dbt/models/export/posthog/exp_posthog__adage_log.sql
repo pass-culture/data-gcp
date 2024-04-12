@@ -1,7 +1,7 @@
 SELECT  
-    partition_date, 
-    message,
-    log_timestamp,
+    partition_date as event_date, 
+    message as event_name,
+    log_timestamp as event_timestamp,
     user_id,
     session_id,
     STRUCT(

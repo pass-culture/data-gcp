@@ -112,6 +112,7 @@ SELECT
     ofr.offerer_name,
     ofr.offerer_validation_status,
     ofr.offerer_is_active,
+    va.venue_id IS NOT NULL AS venue_is_acessibility_synched,
     CASE WHEN v.venue_is_permanent THEN CONCAT("venue-",v.venue_id)
          ELSE CONCAT("offerer-", ofr.offerer_id) END AS partner_id,
     o.total_individual_bookings AS total_individual_bookings,
@@ -165,4 +166,5 @@ LEFT JOIN collective_offers_grouped_by_venue AS co ON co.venue_id = v.venue_id
 LEFT JOIN {{ source("raw", "applicative_database_venue_registration") }} AS vr ON v.venue_id = vr.venue_id
 LEFT JOIN {{ source("raw", "applicative_database_venue_contact") }} AS vc ON v.venue_id = vc.venue_id
 LEFT JOIN{{ source('raw', 'applicative_database_venue_label') }} AS vl ON vl.venue_label_id = v.venue_label_id
+LEFT JOIN{{ source('raw', 'applicative_database_accessibility_provider') }} AS va ON va.venue_id = v.venue_id
 LEFT JOIN {{ ref("int_applicative__offerer") }} AS ofr ON v.venue_managing_offerer_id = ofr.offerer_id

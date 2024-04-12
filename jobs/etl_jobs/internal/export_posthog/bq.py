@@ -64,7 +64,7 @@ def format_event(event: dict) -> PostHogEvent:
     unique_event = user_pseudo_id + str(event_time)
 
     event_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, unique_event)
-    event_params = {**event.get("event_params", {}), **event.get("extra_params", {})}
+    event_params = {**event.get("extra_params", {})}
     event_type = event["event_name"]
 
     user_params = {
@@ -73,14 +73,10 @@ def format_event(event: dict) -> PostHogEvent:
             "platform": event.get("platform"),
             "firebase_app_version": event.get("app_version"),
             "environment": ENV_SHORT_NAME,
-            "firebase_origin": event["origin"],
+            "import_origin": event["origin"],
         },
         **event.get("user_params", {}),
     }
-    if event["origin"] == "pro":
-        screen = event_params.get("page_title", "")
-    else:
-        screen = event_params.get("firebase_screen", "")
 
     properties = {**user_params, **event_params}
 
@@ -91,5 +87,4 @@ def format_event(event: dict) -> PostHogEvent:
         timestamp=event_time,
         uuid=str(event_uuid),
         user_properties=user_params,
-        screen=screen,
     )

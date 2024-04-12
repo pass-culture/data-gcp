@@ -4,13 +4,10 @@ SELECT
     event_timestamp,
     user_id,
     user_pseudo_id,
-    unique_session_id,
-    page_origin,
     platform,
-    user_device_category,
-    user_device_operating_system,
-    user_web_browser,
-    STRUCT(    
+    STRUCT(   
+        unique_session_id,
+        page_origin, 
         offer_id,
         offer_type,
         is_edition,
@@ -43,9 +40,11 @@ SELECT
         partner_type,
         partner_cultural_sector,
         partner_nb_individual_offers,
-        partner_nb_collective_offers
+        partner_nb_collective_offers,
+        user_device_category,
+        user_device_operating_system,
+        user_web_browser
     ) as user_params,
     "pro" as origin
 FROM {{ ref("mrt_global__firebase_pro_event") }}
--- 
 WHERE (NOT REGEXP_CONTAINS(event_name, '^[a-z]+(_[a-z]+)*$') OR event_name = "page_view")

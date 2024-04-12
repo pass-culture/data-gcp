@@ -63,7 +63,7 @@ models:
       +materialized: view
     mart:
       +materialized: table
-      +schema: analytics_{{ target.name }}
+      +schema: analytics_dbt_{{ target.name }}
     export:
       +schema: export_{{ target.name }}
   elementary:

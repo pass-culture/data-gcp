@@ -22,4 +22,3 @@ SELECT
     ) as user_params,
     "native" as origin
 FROM {{ ref("mrt_global__firebase_native_event") }}
-WHERE MOD(ABS(FARM_FINGERPRINT(user_pseudo_id)),10) = 0

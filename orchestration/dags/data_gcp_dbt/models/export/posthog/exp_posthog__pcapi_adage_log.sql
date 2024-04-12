@@ -1,10 +1,10 @@
 SELECT  
-    partition_date as event_date, 
-    message as event_name,
-    log_timestamp as event_timestamp,
+    event_date, 
+    event_name,
+    event_timestamp,
     user_id,
-    session_id,
-    STRUCT(
+    user_id as user_pseudo_id,
+    STRUCT (
         total_results,
         origin,
         collective_stock_id,
@@ -25,10 +25,7 @@ SELECT
         format_filter,
         playlist_id,
         domain_id,
-        venue_id,
-        rank_clicked
-    ) as event_params,
-    STRUCT (
+        rank_clicked,
         venue_id,
         partner_id,
         offer_students,
@@ -45,4 +42,4 @@ SELECT
         user_role
     )  as user_params,
     'adage' as origin
-FROM {{ ref('mrt_global__adage_log') }}
+FROM {{ ref('mrt_global__pcapi_adage_log') }}

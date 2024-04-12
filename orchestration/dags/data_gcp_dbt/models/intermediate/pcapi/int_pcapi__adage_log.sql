@@ -9,10 +9,10 @@
 
 WITH adage_logs AS (
     SELECT
-        partition_date,
+        partition_date as event_date,
         url_path,
-        log_timestamp,
-        message,
+        log_timestamp as event_timestamp,
+        message as event_name,
         technical_message_id,
         source,
         extra_user_id AS user_id,

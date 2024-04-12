@@ -19,12 +19,18 @@ SELECT
         END
     AS partner_type_origin
     ,agg_partner_cultural_sector.cultural_sector AS cultural_sector
+    ,enriched_offerer_data.dms_accepted_at AS dms_accepted_at
+    ,enriched_offerer_data.first_dms_adage_status AS first_dms_adage_status
+    ,enriched_offerer_data.is_reference_adage AS is_reference_adage
+    ,enriched_offerer_data.is_synchro_adage AS is_synchro_adage
     ,CASE WHEN DATE_DIFF(CURRENT_DATE,venue_last_bookable_offer_date,DAY) <= 30 THEN TRUE ELSE FALSE END AS is_active_last_30days
     ,CASE WHEN DATE_DIFF(CURRENT_DATE,venue_last_bookable_offer_date,YEAR) = 0 THEN TRUE ELSE FALSE END AS is_active_current_year
     ,COALESCE(enriched_venue_data.individual_offers_created,0) AS individual_offers_created
     ,COALESCE(enriched_venue_data.collective_offers_created,0) AS collective_offers_created
     ,(COALESCE(enriched_venue_data.collective_offers_created,0) + COALESCE(enriched_venue_data.individual_offers_created,0)) AS total_offers_created
     ,enriched_venue_data.first_offer_creation_date AS first_offer_creation_date
+    ,enriched_venue_data.first_individual_offer_creation_date AS first_individual_offer_creation_date
+    ,enriched_venue_data.first_collective_offer_creation_date AS first_collective_offer_creation_date
     ,venue_last_bookable_offer_date AS last_bookable_offer_date
     ,venue_first_bookable_offer_date AS first_bookable_offer_date
     ,COALESCE(enriched_venue_data.non_cancelled_individual_bookings,0) AS non_cancelled_individual_bookings
@@ -39,6 +45,8 @@ LEFT JOIN {{ source('analytics', 'region_department') }} AS region_department
     ON enriched_venue_data.venue_department_code = region_department.num_dep
 LEFT JOIN {{ source('raw', 'agg_partner_cultural_sector') }} ON agg_partner_cultural_sector.partner_type = enriched_venue_data.venue_type_label
 LEFT JOIN {{ ref('enriched_venue_tags_data') }} ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire sectoriel"
+LEFT JOIN {{ ref('enriched_offerer_data') }} AS enriched_offerer_data
+    ON enriched_venue_data.venue_managing_offerer_id = enriched_offerer_data.offerer_id
 WHERE venue_is_permanent IS TRUE
 ),
 
@@ -122,12 +130,18 @@ SELECT
         WHEN top_venue_per_offerer.partner_type_origin= "venue_type_label" THEN "most_active_venue_type"
         ELSE NULL END AS partner_type_origin
     ,agg_partner_cultural_sector.cultural_sector AS cultural_sector
+    ,enriched_offerer_data.dms_accepted_at AS dms_accepted_at
+    ,enriched_offerer_data.first_dms_adage_status AS first_dms_adage_status
+    ,enriched_offerer_data.is_reference_adage AS is_reference_adage
+    ,enriched_offerer_data.is_synchro_adage AS is_synchro_adage
     ,CASE WHEN DATE_DIFF(CURRENT_DATE,enriched_offerer_data.offerer_last_bookable_offer_date,DAY) <= 30 THEN TRUE ELSE FALSE END AS is_active_last_30days
     ,CASE WHEN DATE_DIFF(CURRENT_DATE,enriched_offerer_data.offerer_last_bookable_offer_date,YEAR) = 0 THEN TRUE ELSE FALSE END AS is_active_current_year
     ,COALESCE(enriched_offerer_data.offerer_individual_offers_created,0) AS individual_offers_created
     ,COALESCE(enriched_offerer_data.offerer_collective_offers_created,0) AS collective_offers_created
     ,COALESCE(enriched_offerer_data.offerer_individual_offers_created,0) + COALESCE(enriched_offerer_data.offerer_collective_offers_created,0) AS total_offers_created
     ,enriched_offerer_data.offerer_first_offer_creation_date AS first_offer_creation_date
+    ,enriched_offerer_data.offerer_first_individual_offer_creation_date AS first_individual_offer_creation_date
+    ,enriched_offerer_data.offerer_first_collective_offer_creation_date AS first_collective_offer_creation_date
     ,enriched_offerer_data.offerer_last_bookable_offer_date AS last_bookable_offer_date
     ,enriched_offerer_data.offerer_first_bookable_offer_date AS first_bookable_offer_date
     ,COALESCE(enriched_offerer_data.offerer_non_cancelled_individual_bookings,0) AS non_cancelled_individual_bookings

@@ -38,6 +38,7 @@ offer_metadata as (
     , subcategory_id
     , category_id
     , offer_type_label
+    , offer_type_domain
     , gtl_type
     , titelive_gtl_id
     , gtl_label_level_1
@@ -64,10 +65,10 @@ SELECT
     , offer_metadata.offer_type_domain
     , offer_metadata.gtl_type
     , offer_metadata.titelive_gtl_id
-    , offer_metadata.gtl_label_lvl_1
-    , offer_metadata.gtl_label_lvl_2
-    , offer_metadata.gtl_label_lvl_3
-    , offer_metadata.gtl_label_lvl_4
+    , offer_metadata.gtl_label_level_1
+    , offer_metadata.gtl_label_level_2
+    , offer_metadata.gtl_label_level_3
+    , offer_metadata.gtl_label_level_4
     -- prendre une venue unique pour les offres digitales
     , CASE
         WHEN bookings.digital_goods = True 

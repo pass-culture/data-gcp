@@ -1,7 +1,7 @@
 SELECT
     DATE(timestamp) as partition_date,
     timestamp,
-    jsonPayload.user_id,
+    COALESCE(CAST(jsonPayload.user_id AS STRING),CAST(jsonPayload.extra.user_id AS STRING)) AS user_id,
     jsonPayload.technical_message_id,
     jsonPayload.extra.choice_datetime,
     jsonPayload.extra.device_id,

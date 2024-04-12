@@ -155,6 +155,12 @@ SELECT
         ELSE FALSE
     END AS offer_is_underage_selectable,
     CASE
+            WHEN subcategories.category_id IN ('MUSIQUE_LIVE','MUSIQUE_ENREGISTREE') THEN "MUSIC"
+            WHEN subcategories.category_id = 'SPECTACLE' THEN "SHOW"
+            WHEN subcategories.category_id = 'CINEMA' THEN "MOVIE"
+            WHEN subcategories.category_id = 'LIVRE' THEN "BOOK"
+        END AS offer_type_domain,
+    CASE
         WHEN offer.offer_id IN (
             SELECT
                 offer_id

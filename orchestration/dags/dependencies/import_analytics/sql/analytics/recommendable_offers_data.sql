@@ -71,10 +71,11 @@ get_recommendable_offers AS (
         stock.stock_beginning_date AS stock_beginning_date,
         offer.last_stock_price AS stock_price,
         offer.titelive_gtl_id AS gtl_id,
-        glt_mapping.gtl_label_level_1 AS gtl_l1,
-        glt_mapping.gtl_label_level_2 AS gtl_l2,
-        glt_mapping.gtl_label_level_3 AS gtl_l3,
-        glt_mapping.gtl_label_level_4 AS gtl_l4,
+        gtl_mapping.gtl_type,
+        gtl_mapping.gtl_label_level_1 as gtl_l1,
+        gtl_mapping.gtl_label_level_2 as gtl_l2,
+        gtl_mapping.gtl_label_level_3 as gtl_l3,
+        gtl_mapping.gtl_label_level_4 as gtl_l4,
         COALESCE(isem.embedding, 0.0) as semantic_emb_mean,
         MAX(item_counts.item_count) as item_count,
         MAX(COALESCE(booking_numbers.booking_number, 0)) AS booking_number,
@@ -148,9 +149,10 @@ get_recommendable_offers AS (
             offer.item_id = forbidden_offer.item_id
         LEFT JOIN `{{ bigquery_raw_dataset }}`.sensitive_item_recommendation sensitive_offer on 
             offer.item_id = sensitive_offer.item_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.titelive_gtl_mapping glt_mapping on 
-            offer.titelive_gtl_id = glt_mapping.gtl_id
+        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_titelive_gtl gtl_mapping on 
+            offer.titelive_gtl_id = gtl_mapping.gtl_id and gtl_mapping.gtl_type = enriched_item_metadata.offer_type_domain
         LEFT JOIN embeddings_avg isem ON isem.item_id = offer.item_id
+
     WHERE
         offer.is_active = TRUE
         AND offer.offer_is_bookable = TRUE

@@ -112,36 +112,36 @@ offer_metadata_id AS (
          -- GTL of distinct objects (eg books and music) can collide
         COALESCE(null,gtl_book.gtl_type,gtl_music.gtl_type) as gtl_type,
         case 
-            when enriched_items.category_id like "BOOK" then gtl_book.titelive_gtl_id 
-            when enriched_items.category_id like "MUSIC" then gtl_music.titelive_gtl_id
+            when enriched_items.offer_type_domain like "BOOK" then gtl_book.gtl_id 
+            when enriched_items.offer_type_domain like "MUSIC" then gtl_music.gtl_id
             else null 
         end as titelive_gtl_id,
         case 
-            when enriched_items.category_id like "BOOK" then gtl_book.gtl_label_level_1
-            when enriched_items.category_id like "MUSIC" then gtl_music.gtl_label_level_1
+            when enriched_items.offer_type_domain like "BOOK" then gtl_book.gtl_label_level_1
+            when enriched_items.offer_type_domain like "MUSIC" then gtl_music.gtl_label_level_1
             else null 
         end as gtl_label_level_1,
         case 
-            when enriched_items.category_id like "BOOK" then gtl_book.gtl_label_level_2 
-            when enriched_items.category_id like "MUSIC" then gtl_music.gtl_label_level_2
+            when enriched_items.offer_type_domain like "BOOK" then gtl_book.gtl_label_level_2 
+            when enriched_items.offer_type_domain like "MUSIC" then gtl_music.gtl_label_level_2
             else null 
         end as gtl_label_level_2,
         case 
-            when enriched_items.category_id like "BOOK" then gtl_book.gtl_label_level_3
-            when enriched_items.category_id like "MUSIC" then gtl_music.gtl_label_level_3
+            when enriched_items.offer_type_domain like "BOOK" then gtl_book.gtl_label_level_3
+            when enriched_items.offer_type_domain like "MUSIC" then gtl_music.gtl_label_level_3
             else null 
         end as gtl_label_level_3,
         case 
-            when enriched_items.category_id like "BOOK" then gtl_book.gtl_label_level_4
-            when enriched_items.category_id like "MUSIC" then gtl_music.gtl_label_level_4
+            when enriched_items.offer_type_domain like "BOOK" then gtl_book.gtl_label_level_4
+            when enriched_items.offer_type_domain like "MUSIC" then gtl_music.gtl_label_level_4
             else null 
         end as gtl_label_level_4
 
     FROM enriched_items
     
     LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = enriched_items.offer_id
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_titelive_gtl_mapping gtl_book ON offer_extracted_data.titelive_gtl_id = gtl_book.gtl_id and gtl_book.gtl_type = 'book'
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_titelive_gtl_mapping gtl_music ON offer_extracted_data.titelive_gtl_id = gtl_music.gtl_id and gtl_music.gtl_type = 'music'
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_titelive_gtl gtl_book ON offer_extracted_data.titelive_gtl_id = gtl_book.gtl_id and gtl_book.gtl_type = 'book'
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_titelive_gtl gtl_music ON offer_extracted_data.titelive_gtl_id = gtl_music.gtl_id and gtl_music.gtl_type = 'music'
 
 
 ),

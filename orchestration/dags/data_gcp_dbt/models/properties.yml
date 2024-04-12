@@ -331,6 +331,9 @@ models:
   - name: collective_offer_domain_name
     config:
       schema: clean_{{ target.name }}
+  - name: user_pro_new_nav_state
+    config:
+      schema: clean_{{ target.name }}
   - name: enriched_partner_activation_activity
     config:
       schema: analytics_{{ target.name }}
@@ -384,5 +387,17 @@ models:
     config:
       schema: clean_{{ target.name }}
   - name: firebase_daily_offer_consultation_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: mrt_global__firebase_pro_event
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_venue_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_venue_tags_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_cultural_partner_data
     config:
       schema: analytics_{{ target.name }}

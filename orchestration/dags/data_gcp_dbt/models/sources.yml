@@ -88,6 +88,7 @@ sources:
       - name: applicative_database_user
       - name: applicative_database_user_offerer
       - name: applicative_database_user_pro_flags
+      - name: applicative_database_user_pro_new_nav_state
       - name: applicative_database_validation_rule_collective_offer_link
       - name: applicative_database_validation_rule_collective_offer_template_link
       - name: applicative_database_validation_rule_offer_link
@@ -108,7 +109,7 @@ sources:
       - name: gsheet_eac_webinar
       - name: macro_rayons
       - name: stdout
-      - name: user_pro_new_nav_state
+      
   - name: clean # this is the source_name
     schema: clean_{{ var('ENV_SHORT_NAME') }}
     tables:

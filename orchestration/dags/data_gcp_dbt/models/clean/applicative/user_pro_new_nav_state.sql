@@ -1,3 +1,3 @@
 SELECT 
     *
-FROM {{ source('raw', 'user_pro_new_nav_state') }}
+FROM {{ source('raw', 'applicative_database_user_pro_new_nav_state') }}

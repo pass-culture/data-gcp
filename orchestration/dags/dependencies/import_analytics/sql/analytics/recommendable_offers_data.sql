@@ -158,7 +158,7 @@ get_recommendable_offers AS (
         AND offer.offer_is_bookable = TRUE
         AND offerer.offerer_is_active = TRUE
         AND offer.offer_validation = 'APPROVED'
-    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19
+    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20
 )
 SELECT  * 
 FROM get_recommendable_offers 

@@ -56,20 +56,3 @@ def pca_reduce_embedding_dimension(
     dimension,
 ):
     return PCA(n_components=dimension).fit_transform(data)
-
-
-def export_polars_to_bq(data, project_id, dataset, output_table):
-    client = bigquery.Client()
-    with io.BytesIO() as stream:
-        data.write_parquet(stream)
-        stream.seek(0)
-        job = client.load_table_from_file(
-            stream,
-            project=project_id,
-            destination=f"{dataset}.{output_table}",
-            job_config=bigquery.LoadJobConfig(
-                source_format=bigquery.SourceFormat.PARQUET,
-                write_disposition="WRITE_TRUNCATE",
-            ),
-        )
-    job.result()

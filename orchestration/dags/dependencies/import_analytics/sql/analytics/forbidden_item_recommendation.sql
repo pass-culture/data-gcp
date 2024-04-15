@@ -1,7 +1,7 @@
 SELECT
     item_id,
     max(
-        gtl.gtl_label_level_1 IN (
+        eim.gtl_label_level_1 IN (
             "Sciences humaines & sociales", 
             "Scolaire", 
             "Religion & Esotérisme", 
@@ -11,20 +11,21 @@ SELECT
             "Sciences & Techniques"
         ) 
         OR
-        gtl.gtl_label_level_2 IN (
+        eim.gtl_label_level_2 IN (
             "Eveil / Petite enfance (- de 3 ans)", 
             "Livres illustrés / Enfance (+ de 3 ans)", 
             "Vie quotidienne & Bien-être",
             "Arts de la table / Gastronomie"
         )
         OR
-        gtl.gtl_label_level_3 IN (
+        eim.gtl_label_level_3 IN (
             "Jeux",
             "Public averti (+ 18 ans)",
-            "Kodomo"
+            "Kodomo",
+            "Erotisme"
         )
         OR
-        gtl.gtl_label_level_4 IN (
+        eim.gtl_label_level_4 IN (
             "Thriller érotique", 
             "Roman libertin",
             "Public averti (érotique, hyper violence…)",
@@ -32,19 +33,24 @@ SELECT
         )
     ) as restrained,
     max(
-    gtl.gtl_label_level_1 IN (
-        "Sciences humaines & sociales", 
-        "Scolaire", 
-        "Parascolaire"
-    ) 
-    OR
-    gtl.gtl_label_level_4 IN (
-        "Thriller érotique", 
-        "Roman libertin",
-        "Public averti (érotique, hyper violence…)",
-        "Enseignement universitaire"
-    )
+        eim.gtl_label_level_1 IN (
+            "Sciences humaines & sociales", 
+            "Scolaire", 
+            "Parascolaire"
+        )
+        OR
+        eim.gtl_label_level_3 IN (
+            "Thriller érotique",
+            "Erotisme",
+            "Nu / Charme / Erotisme"
+        ) 
+        OR
+        eim.gtl_label_level_4 IN (
+            "Roman libertin",
+            "Public averti (érotique, hyper violence…)",
+            "Enseignement universitaire"
+        )
     ) as blocked
 FROM `{{ bigquery_analytics_dataset }}.enriched_offer_data` eod
-INNER JOIN `{{ bigquery_clean_dataset }}.applicative_database_titelive_gtl` gtl on gtl.gtl_id = eod.titelive_gtl_id and gtl.gtl_type = eod.offer_type_domain
+INNER JOIN `{{ bigquery_analytics_dataset }}.enriched_item_metadata` eim on eim.item_id = eod.item_id
 GROUP BY 1

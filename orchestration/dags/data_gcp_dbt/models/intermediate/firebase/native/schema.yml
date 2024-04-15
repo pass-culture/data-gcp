@@ -1,0 +1,9 @@
+version: 2
+
+macros:
+
+  - name: int_firebase__native_event
+    description: ""
+
+  - name: int_firebase__native_event_flattened
+    description: ""

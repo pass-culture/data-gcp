@@ -28,7 +28,6 @@ def create_clusters(
         help="Table prefix",
     ),
 ):
-    client = bigquery.Client()
     params = load_config_file(config_file_name, job_type="cluster")
     embedding_cols = [f"t{x}" for x in range(params["pretrained_embedding_size"])]
     results = []
@@ -38,7 +37,7 @@ def create_clusters(
         )
 
     export_polars_to_bq(
-        client, pl.concat(results), CLEAN_DATASET, f"{cluster_prefix}{output_table}"
+        pl.concat(results), CLEAN_DATASET, f"{cluster_prefix}{output_table}"
     )
 
 

@@ -60,10 +60,10 @@ models:
         +tags: sandbox
         +re_data_monitored: false
     intermediate:
-      +schema: clean_dbt_{{ target.name }}
+      +materialized: view
     mart:
       +materialized: table
-      +schema: analytics_dbt_{{ target.name }}
+      +schema: analytics_{{ target.name }}
   elementary:
     +on_schema_change: "append_new_columns"
     +enabled: false

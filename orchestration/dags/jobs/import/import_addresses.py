@@ -37,9 +37,10 @@ dag_config = {
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
 }
 
-# FUNCTION_NAME = f"addresses_import_{ENV_SHORT_NAME}"
 USER_LOCATIONS_TABLE = "user_locations"
-schedule_interval = "0 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
+schedule_interval = (
+    "0 2,4,6,8,12,16 * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
+)
 
 default_args = {
     "start_date": datetime(2021, 3, 30),
@@ -61,7 +62,6 @@ with DAG(
     "import_addresses_v1",
     default_args=default_args,
     description="Importing new data from addresses api every day.",
-    # every 10 minutes if prod once a day otherwise
     schedule_interval=get_airflow_schedule(schedule_interval),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),

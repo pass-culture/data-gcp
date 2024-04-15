@@ -41,7 +41,7 @@ firebase_events AS (
         e.*
     EXCEPT
         (module_id, module_name)
-    FROM {{ source('analytics', 'firebase_events') }} e
+    FROM {{ ref('int_firebase__native_event') }} e
         LEFT JOIN mapping_module_name_and_id c_name on c_name.module_name = e.module_name
     WHERE
         event_name in (
@@ -162,7 +162,7 @@ firebase_conversion_step AS (
             ORDER BY
                 event.event_timestamp DESC
         ) as rank
-    FROM {{ source('analytics', 'firebase_events') }} conv
+    FROM {{ ref('int_firebase__native_event') }} conv
         INNER JOIN firebase_module_events event on event.unique_session_id = conv.unique_session_id
         AND event.offer_id = conv.offer_id
         AND event.user_id = conv.user_id -- conversion event after click event

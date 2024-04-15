@@ -60,6 +60,7 @@ def filter(
     call_id,
     prefilter: bool,
     vector_column_name: str,
+    re_rank: bool = False,
 ):
     try:
         results = model.filter(
@@ -68,6 +69,7 @@ def filter(
             n=size,
             prefilter=prefilter,
             vector_column_name=vector_column_name,
+            re_rank=re_rank,
         )
         return jsonify({"predictions": results})
     except Exception as e:
@@ -92,7 +94,8 @@ def search_vector(
     prefilter: bool,
     vector_column_name: str,
     similarity_metric: str,
-    item_id=None,
+    item_id: str = None,
+    re_rank: bool = False,
 ):
     try:
         if vector is not None:
@@ -105,6 +108,7 @@ def search_vector(
                 item_id=item_id,
                 prefilter=prefilter,
                 vector_column_name=vector_column_name,
+                re_rank=re_rank,
             )
             return jsonify({"predictions": results})
         else:
@@ -136,6 +140,7 @@ def predict():
     model_type = input_json["model_type"]
     debug = bool(input_json.get("debug", 0))
     prefilter = input_json.get("prefilter", None)
+    re_rank = input_json.get("re_rank", False)
     vector_column_name = input_json.get("vector_column_name", None)
     similarity_metric = input_json.get("similarity_metric", None)
     selected_params = input_json.get("params", {})
@@ -218,6 +223,7 @@ def predict():
                 similarity_metric=similarity_metric,
                 vector_column_name=vector_column_name,
                 item_id=input_str,
+                re_rank=re_rank,
             )
 
         if model_type == "filter":
@@ -236,6 +242,7 @@ def predict():
                 call_id=call_id,
                 prefilter=prefilter,
                 vector_column_name=vector_column_name,
+                re_rank=re_rank,
             )
 
     except Exception as e:

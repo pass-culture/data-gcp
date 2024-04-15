@@ -4,6 +4,8 @@ import lancedb
 from filter import Filter
 import joblib
 import numpy as np
+from lancedb.rerankers import Reranker
+import pyarrow as pa
 
 
 DETAIL_COLUMNS = [
@@ -33,12 +35,54 @@ DETAIL_COLUMNS = [
     "example_venue_longitude",
 ]
 
-DEFAULTS = ["_distance"]
+DEFAULTS = ["_distance", "_relevance_score", "_user_distance"]
+
+
+class UserReranker(Reranker):
+    def __init__(self, weight, user_docs, return_score="all"):
+        super().__init__(return_score)
+        self.weight = weight
+        self.user_docs = user_docs
+
+    def user_vector(self, var: str) -> Document:
+        try:
+            return self.user_docs[var]
+        except:
+            return None
+
+    def user_recommendation(self, vector_results: pa.Table, user_id: str):
+        _df = vector_results.to_pandas()
+        user_doc = self.user_vector(user_id)
+        if user_doc is not None:
+            X = vector_results["raw_embeddings"].to_pylist()
+
+            scores = -np.dot(X, user_doc.embedding)
+            _df["_user_distance"] = scores
+
+            _df["_relevance_score"] = _df["_distance"] * self.weight + _df[
+                "_user_distance"
+            ] * (1 - self.weight)
+        else:
+            _df["_relevance_score"] = _df["_distance"]
+        return pa.Table.from_pandas(_df).sort_by("_relevance_score")
+
+    def rerank_hybrid(
+        self, query: str, vector_results: pa.Table, fts_results: pa.Table
+    ):
+        combined_result = self.merge_results(vector_results, fts_results)
+        return combined_result
+
+    def rerank_vector(self, query: str, vector_results: pa.Table):
+        return self.user_recommendation(vector_results, user_id=query)
+
+    def rerank_fts(self, query: str, fts_results: pa.Table):
+        return fts_results
 
 
 class DefaultClient:
     def load(self) -> None:
         self.item_docs = DocumentArray.load("./metadata/item.docs")
+        self.re_ranker = None
         uri = "./metadata/vector"
         db = lancedb.connect(uri)
         self.table = db.open_table("items")
@@ -66,6 +110,7 @@ class DefaultClient:
         item_id: str = None,
         prefilter: bool = True,
         vector_column_name: str = "vector",
+        re_rank: bool = False,
     ) -> t.List[t.Dict]:
         results = (
             self.table.search(
@@ -79,9 +124,10 @@ class DefaultClient:
             .select(columns=self.columns(details))
             .metric(similarity_metric)
             .limit(n)
-            .to_list()
         )
-        return self.out(results, details, item_id=item_id)
+        if re_rank:
+            results = results.rerank(self.re_ranker)
+        return self.out(results.to_list(), details, item_id=item_id)
 
     def filter(
         self,
@@ -90,7 +136,9 @@ class DefaultClient:
         details: bool = False,
         prefilter: bool = True,
         vector_column_name: str = "booking_number_desc",
+        re_rank: bool = False,
     ) -> t.List[t.Dict]:
+
         results = (
             self.table.search(
                 [0], vector_column_name=vector_column_name, query_type="vector"
@@ -98,15 +146,13 @@ class DefaultClient:
             .where(self.build_query(query_filter), prefilter=prefilter)
             .select(columns=self.columns(details))
             .limit(n)
-            .to_list()
         )
-        return self.out(results, details)
+        if re_rank:
+            results = results.rerank(self.re_ranker)
+        return self.out(results.to_list(), details)
 
-    def columns(self, details: bool) -> t.Optional[t.List[str]]:
-        if details:
-            return None
-        else:
-            return DETAIL_COLUMNS
+    def columns(self) -> t.Optional[t.List[str]]:
+        return DETAIL_COLUMNS
 
     def out(self, results, details: bool, item_id: str = None):
         predictions = []
@@ -139,6 +185,7 @@ class DefaultClient:
 class RecoClient(DefaultClient):
     def __init__(self, default_token: str) -> None:
         self.default_token = default_token
+        self.re_ranker = UserReranker(weight=0.5, user_docs=self.user_docs)
 
     def user_vector(self, var: str) -> Document:
         default_user_embbeding = self.user_docs[self.default_token]

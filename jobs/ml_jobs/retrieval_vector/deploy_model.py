@@ -80,8 +80,12 @@ def prepare_docs():
     user_list = tf_reco.user_layer.layers[0].get_vocabulary()
     user_weights = tf_reco.user_layer.layers[1].get_weights()[0].astype(np.float32)
     # convert
-    user_embedding_dict = {x: y for x, y in zip(user_list, user_weights)}
-    item_embedding_dict = {x: y for x, y in zip(item_list, item_weights)}
+    user_embedding_dict = {
+        x: y / np.linalg.norm(y) for x, y in zip(user_list, user_weights)
+    }
+    item_embedding_dict = {
+        x: y / np.linalg.norm(y) for x, y in zip(item_list, item_weights)
+    }
 
     user_docs = get_user_docs(user_embedding_dict)
     user_docs.save("./metadata/user.docs")

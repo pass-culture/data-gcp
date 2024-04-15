@@ -110,6 +110,9 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/forbidden_item_recommendation.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "forbidden_item_recommendation",
+        "depends": [
+            "enriched_item_metadata",
+        ],
     },
     "recommendable_offers_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/recommendable_offers_data.sql",

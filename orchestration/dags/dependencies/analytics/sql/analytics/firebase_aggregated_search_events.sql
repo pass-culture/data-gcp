@@ -61,6 +61,7 @@ SELECT
         WHEN search_date_filter IS NOT NULL THEN 'date_filter'
         WHEN search_max_price_filter IS NOT NULL THEN 'max_price_filter'
         WHEN search_location_filter IS NOT NULL THEN 'location_filter'
+        WHEN search_accessibility_filter IS NOT NULL THEN 'accessibility_filter'
         ELSE 'Autre' END AS first_filter_applied
 FROM `{{ bigquery_analytics_dataset }}`.firebase_events
 WHERE event_date > DATE('{{ params.set_date }}')
@@ -88,6 +89,7 @@ SELECT
     , search_is_based_on_history
     , search_offer_is_duo_filter
     , search_native_categories_filter
+    , search_accessibility_filter
     , user_location_type
  FROM `{{ bigquery_analytics_dataset }}`.firebase_events
  WHERE event_name = 'PerformSearch'

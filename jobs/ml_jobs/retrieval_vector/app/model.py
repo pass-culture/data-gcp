@@ -108,6 +108,7 @@ class DefaultClient:
         query_filter: t.Dict = None,
         details: bool = False,
         item_id: str = None,
+        user_id: str = None,
         prefilter: bool = True,
         vector_column_name: str = "vector",
         re_rank: bool = False,
@@ -126,7 +127,7 @@ class DefaultClient:
             .limit(n)
         )
         if re_rank:
-            results = results.rerank(self.re_ranker)
+            results = results.rerank(self.re_ranker, query_string=user_id)
         return self.out(results.to_list(), details, item_id=item_id)
 
     def filter(
@@ -137,6 +138,7 @@ class DefaultClient:
         prefilter: bool = True,
         vector_column_name: str = "booking_number_desc",
         re_rank: bool = False,
+        user_id: str = None,
     ) -> t.List[t.Dict]:
 
         results = (
@@ -148,7 +150,7 @@ class DefaultClient:
             .limit(n)
         )
         if re_rank:
-            results = results.rerank(self.re_ranker)
+            results = results.rerank(self.re_ranker, query_string=user_id)
         return self.out(results.to_list(), details)
 
     def columns(self) -> t.Optional[t.List[str]]:

@@ -57,9 +57,10 @@ def filter(
     selected_params,
     size: int,
     debug: bool,
-    call_id,
+    call_id: str,
     prefilter: bool,
     vector_column_name: str,
+    user_id: str = None,
     re_rank: bool = False,
 ):
     try:
@@ -70,6 +71,7 @@ def filter(
             prefilter=prefilter,
             vector_column_name=vector_column_name,
             re_rank=re_rank,
+            user_id=user_id,
         )
         return jsonify({"predictions": results})
     except Exception as e:
@@ -95,6 +97,7 @@ def search_vector(
     vector_column_name: str,
     similarity_metric: str,
     item_id: str = None,
+    user_id: str = None,
     re_rank: bool = False,
 ):
     try:
@@ -106,6 +109,7 @@ def search_vector(
                 query_filter=selected_params,
                 details=debug,
                 item_id=item_id,
+                user_id=user_id,
                 prefilter=prefilter,
                 vector_column_name=vector_column_name,
                 re_rank=re_rank,
@@ -141,6 +145,7 @@ def predict():
     debug = bool(input_json.get("debug", 0))
     prefilter = input_json.get("prefilter", None)
     re_rank = input_json.get("re_rank", False)
+    user_id = input_json.get("user_id", None)
     vector_column_name = input_json.get("vector_column_name", None)
     similarity_metric = input_json.get("similarity_metric", None)
     selected_params = input_json.get("params", {})
@@ -156,23 +161,24 @@ def predict():
     try:
         if isinstance(model, RecoClient):
             if model_type == "recommendation":
-                input_str = str(input_json["user_id"])
+
                 logger.info(
                     f"recommendation",
                     extra={
                         "uuid": call_id,
-                        "user_id": input_str,
+                        "user_id": user_id,
                         "params": selected_params,
                         "size": size,
                     },
                 )
-                vector = model.user_vector(input_str)
+                vector = model.user_vector(user_id)
                 return search_vector(
                     vector,
                     size,
                     selected_params,
                     debug,
                     call_id=call_id,
+                    user_id=user_id,
                     prefilter=prefilter,
                     similarity_metric=similarity_metric,
                     vector_column_name=vector_column_name,
@@ -240,6 +246,7 @@ def predict():
                 size,
                 debug,
                 call_id=call_id,
+                user_id=user_id,
                 prefilter=prefilter,
                 vector_column_name=vector_column_name,
                 re_rank=re_rank,

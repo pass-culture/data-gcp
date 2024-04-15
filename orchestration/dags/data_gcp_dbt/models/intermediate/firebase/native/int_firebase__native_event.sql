@@ -62,7 +62,7 @@ SELECT
     index AS module_index,
     traffic_gen,
     traffic_content,
-    COALESCE(entryId,homeEntryId) AS entryId,
+    COALESCE(entryId,homeEntryId) AS entry_id,
     CASE WHEN entryId IN ('4XbgmX7fVVgBMoCJiLiY9n','1ZmUjN7Za1HfxlbAOJpik2') THEN "generale"
         WHEN entryId IS NULL THEN NULL
         ELSE "marketing" END AS home_type,

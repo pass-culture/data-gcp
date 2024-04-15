@@ -7,9 +7,7 @@ WITH campaigns AS (
     MIN(event_timestamp) AS campaign_begins_at,
     TIMESTAMP_ADD(MIN(event_timestamp), INTERVAL 1 DAY) AS original_campaign_ends_at
 FROM {{ ref("int_firebase__native_event_flattened") }}
-  WHERE
-    traffic_campaign IS NOT NULL AND traffic_source IS NOT NULL
-    AND event_date BETWEEN '2023-12-20' AND '2024-04-04'
+  WHERE traffic_campaign IS NOT NULL AND traffic_source IS NOT NULL
   GROUP BY
     user_pseudo_id,
     traffic_campaign,

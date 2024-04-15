@@ -1,14 +1,14 @@
 WITH items_w_embedding as (
     SELECT
         ie.item_id,
-        ie.semantic_content_hybrid_embedding as semantic_content_embedding,
+        ie.hybrid_embedding as hybrid_embedding,
     FROM
         `{{ bigquery_clean_dataset }}.item_embeddings_reduced_16` ie
 ),
 base as (
     SELECT
         ie.item_id,
-        ie.semantic_content_embedding,
+        ie.hybrid_embedding,
         enriched_item_metadata.subcategory_id AS subcategory_id,
         enriched_item_metadata.category_id as category,
         enriched_item_metadata.offer_type_id,

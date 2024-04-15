@@ -66,10 +66,6 @@ with DAG(
             default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-64",
             type="string",
         ),
-        "reduction_config_file_name": Param(
-            default="default-config",
-            type="string",
-        ),
         "cluster_config_file_name": Param(
             default="default-config",
             type="string",
@@ -102,47 +98,6 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command="""pip install -r requirements.txt --user && python3 -m spacy download fr_core_news_sm""",
-    )
-
-    export_task = BigQueryExecuteQueryOperator(
-        task_id=f"import_item_embbedding_data",
-        sql=(IMPORT_TRAINING_SQL_PATH / f"item_embeddings_reduction.sql").as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_item_embeddings_reduction",
-        dag=dag,
-    )
-
-    export_bq = BigQueryInsertJobOperator(
-        task_id=f"store_item_embbedding_data",
-        configuration={
-            "extract": {
-                "sourceTable": {
-                    "projectId": GCP_PROJECT_ID,
-                    "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": f"{DATE}_item_embeddings_reduction",
-                },
-                "compression": None,
-                "destinationUris": f"{dag_config['STORAGE_PATH']}/data-*.parquet",
-                "destinationFormat": "PARQUET",
-            }
-        },
-        dag=dag,
-    )
-
-    reduce_dimension = SSHGCEOperator(
-        task_id="reduce_dimension",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        environment=dag_config,
-        command="PYTHONPATH=. python reduction/dimension_reduction.py "
-        f"--gcp-project {GCP_PROJECT_ID} "
-        f"--env-short-name {ENV_SHORT_NAME} "
-        "--config-file-name {{ params.reduction_config_file_name }} "
-        f"--source-gs-path {dag_config['STORAGE_PATH']} "
-        f"--output-table-name item_embeddings "
-        f"--reduction-config default ",
-        retries=2,
     )
 
     bq_import_item_embeddings_task = bigquery_job_task(

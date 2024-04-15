@@ -46,5 +46,5 @@ SELECT
         user_web_browser
     ) as user_params,
     "pro" as origin
-FROM {{ ref("mrt_global__firebase_pro_event") }}
+FROM {{ ref("mrt_pro__event") }}
 WHERE (NOT REGEXP_CONTAINS(event_name, '^[a-z]+(_[a-z]+)*$') OR event_name = "page_view")

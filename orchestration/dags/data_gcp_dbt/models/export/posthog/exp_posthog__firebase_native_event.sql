@@ -36,4 +36,4 @@ SELECT
         user_deposit_initial_amount
     ) as user_params,
     "native" as origin
-FROM {{ ref("mrt_global__firebase_native_event") }}
+FROM {{ ref("mrt_native__event") }}

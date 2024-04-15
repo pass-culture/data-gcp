@@ -42,4 +42,4 @@ SELECT
         user_role
     )  as user_params,
     'adage' as origin
-FROM {{ ref('mrt_global__pcapi_adage_log') }}
+FROM {{ ref('mrt_collective__adage_log') }}

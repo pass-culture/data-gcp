@@ -2,7 +2,7 @@
     config(
         materialized = "incremental",
         incremental_strategy = "insert_overwrite",
-        partition_by = {"field": "partition_date", "data_type": "date"},
+        partition_by = {"field": "event_date", "data_type": "date"},
         on_schema_change = "sync_all_columns"
     )
 }}
@@ -69,12 +69,12 @@ generate_session AS (
     SELECT
         *,
         rnk - session_sum  as session_num,
-        MIN(log_timestamp) OVER (PARTITION BY user_id, rnk - session_sum) as session_start
+        MIN(event_timestamp) OVER (PARTITION BY user_id, rnk - session_sum) as session_start
     FROM (
         SELECT
         *,
-        SUM(same_session) OVER (PARTITION BY user_id  ORDER BY log_timestamp) as session_sum,
-        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY log_timestamp) as rnk
+        SUM(same_session) OVER (PARTITION BY user_id  ORDER BY event_timestamp) as session_sum,
+        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY event_timestamp) as rnk
         FROM adage_logs
     ) _inn_ts
 )
@@ -84,5 +84,5 @@ SELECT
 TO_HEX(MD5(CONCAT(CAST(session_start AS STRING), user_id, session_num))) as session_id
 FROM generate_session
 {% if is_incremental() %}
-WHERE partition_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
+WHERE event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
 {% endif %}

@@ -18,7 +18,7 @@ SELECT
     , booking_id
     , venue_id
     , app_version
-FROM {{ source('analytics', 'firebase_events') }}
+FROM {{ ref('int_firebase__native_event') }}
 WHERE (event_name IN ('ConsultVenue','BookingConfirmation') OR (event_name = 'ConsultOffer' AND origin = 'venue'))
 AND unique_session_id IS NOT NULL
 {% if is_incremental() %}

@@ -143,7 +143,6 @@ sources:
       - name: contentful_entries
       - name: contentful_relationships
       - name: eple
-      - name: firebase_events
       - name: firebase_pro_events
       - name: firebase_recommendation_events
       - name: linked_offers

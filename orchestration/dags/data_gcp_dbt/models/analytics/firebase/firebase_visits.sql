@@ -49,7 +49,7 @@ with visits as (
         COUNTIF(event_name = "login") AS nb_login,
         DATE_DIFF(MAX(event_timestamp),MIN(event_timestamp),SECOND) AS visit_duration_seconds,
     FROM
-            {{ source('analytics', 'firebase_events') }}
+            {{ ref('int_firebase__native_event') }}
     
         WHERE
             event_name NOT IN (

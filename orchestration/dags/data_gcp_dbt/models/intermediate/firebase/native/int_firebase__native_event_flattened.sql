@@ -8,28 +8,28 @@
 }}
 
 WITH firebase_last_two_days_events AS (
-
     SELECT *
     FROM {{ source("raw","firebase_events") }}
-    {% if is_incremental() %}
-    WHERE event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
-    {% endif %}
-
+    WHERE TRUE
+        {% if is_incremental() %}
+        AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
+        {% endif %}
 )
 
 SELECT
     event_date,
-    TIMESTAMP_MICROS(event_timestamp) AS event_timestamp,
-    TIMESTAMP_MICROS(event_previous_timestamp) AS event_previous_timestamp,
     user_id,
     user_pseudo_id,
     event_name,
-    MAX(platform) AS platform,
-    MAX(app_info.version) AS app_version,
-    MAX(traffic_source.source) AS traffic_source,
-    MAX(traffic_source.medium) AS traffic_medium,
-    MAX(traffic_source.name) AS traffic_campaign,
-    MAX(CASE WHEN params.key = "offerId" THEN params.value.double_value END) AS double_offer_id,
+    TIMESTAMP_MICROS(event_timestamp) AS event_timestamp,
+    TIMESTAMP_MICROS(event_previous_timestamp) AS event_previous_timestamp,
+    TIMESTAMP_MICROS(event_timestamp) AS user_first_touch_timestamp,
+    platform,
+    traffic_source.name,
+    traffic_source.medium,
+    traffic_source.source,
+    app_info.version AS app_version,
+    (SELECT event_params.value.double_value from unnest(event_params) event_params where event_params.key = 'offerId') as double_offer_id,
     {{ extract_params_int_value(["ga_session_id",
                                     "ga_session_number",
                                     "shouldUseAlgoliaRecommend",
@@ -38,12 +38,25 @@ SELECT
                                     "searchOfferIsDuo",
                                     "geo_located",
                                     "enabled"
-                                    ])}},
-    {{ extract_params_string_value(["firebase_screen",
+                                    ])}}
+    {{ extract_params_string_value([
+                                "searchId",
+                                "moduleId",
+                                "moduleName",
+                                "playlistType",
+                                "entryId",
+                                "homeEntryId",
+                                "locationType",
+                                "step",
+                                "searchGenreTypes",
+                                "call_id",
+                                "searchLocationFilter",
+                                "age",
+                                "searchCategories",
+                                "firebase_screen",
                                 "firebase_previous_screen",
                                 "pageName",
                                 "offerId",
-                                "locationType",
                                 "query",
                                 "searchQuery",
                                 "categoryName",
@@ -51,41 +64,31 @@ SELECT
                                 "venueId",
                                 "bookingId",
                                 "fromOfferId",
-                                "playlistType",
-                                "step",
                                 "filterTypes",
-                                "searchId",
                                 "filter",
-                                "searchLocationFilter",
-                                "searchCategories",
                                 "searchDate",
-                                "searchGenreTypes",
                                 "searchMaxPrice",
                                 "searchNativeCategories",
-                                "moduleName",
-                                "moduleId",
                                 "moduleListID",
                                 "index",
+                                "traffic_campaign",
+                                "traffic_source",
+                                "traffic_medium",
                                 "traffic_gen",
                                 "traffic_content",
-                                "entryId",
-                                "homeEntryId",
                                 "toEntryId",
                                 "reco_origin",
                                 "ab_test",
-                                "call_id",
                                 "model_version",
                                 "model_name",
                                 "model_endpoint",
-                                "age",
                                 "userStatus",
                                 "social",
                                 "searchView",
                                 "duration",
-                                "appsFlyerUserId"
+                                "appsFlyerUserId",
+                                "accessibilityFilter"
                                 ])
                                 }},
-        MAX(CASE WHEN params.key = "from" THEN params.value.string_value END) AS origin
-FROM firebase_last_two_days_events,
-    UNNEST(event_params) AS params
-GROUP BY 1, 2, 3, 4, 5, 6
+    (SELECT event_params.value.string_value from unnest(event_params) event_params where event_params.key = 'from') as origin
+FROM firebase_last_two_days_events

@@ -13,8 +13,7 @@ SELECT
   origin,
   COUNT(*) AS nb_daily_consult
 FROM
-  {{ source('analytics',
-    'firebase_events') }} e
+  {{ ref('int_firebase__native_event') }} e
 LEFT JOIN
   {{ref('offer_item_ids')}} offer_item_ids
 ON

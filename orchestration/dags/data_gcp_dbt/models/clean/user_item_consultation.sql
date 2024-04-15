@@ -12,7 +12,7 @@ SELECT
     , array_agg(distinct offer_item_ids.item_id) as consulted_items
     , array_agg(distinct firebase.origin) as consulted_origins
 FROM {{ ref('user_beneficiary') }} user
-JOIN {{ source('analytics', 'firebase_events') }} firebase
+JOIN {{ ref('int_firebase__native_event') }} firebase
     ON user.user_id = firebase.user_id
     and event_name = 'ConsultOffer'    
     {% if is_incremental() %}

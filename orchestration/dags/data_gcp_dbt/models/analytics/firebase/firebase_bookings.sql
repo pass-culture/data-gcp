@@ -16,7 +16,7 @@ SELECT
     , event_date as booking_date
     , event_timestamp as booking_timestamp
     , user_location_type
-FROM {{ source('analytics', 'firebase_events') }}
+FROM {{ ref('int_firebase__native_event') }}
 
 {% if is_incremental() %}
 -- recalculate latest day's data + previous

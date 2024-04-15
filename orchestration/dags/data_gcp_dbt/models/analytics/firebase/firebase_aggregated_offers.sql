@@ -31,7 +31,7 @@ SELECT
     SUM(
         CAST(event_name = 'HasAddedOfferToFavorites' AS INT64)
     ) AS has_added_offer_to_favorites
-FROM {{ source('analytics', 'firebase_events') }}
+FROM {{ ref('int_firebase__native_event') }}
 WHERE
     offer_id IS NOT NULL
 GROUP BY

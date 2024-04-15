@@ -50,7 +50,7 @@ with child_home as (
   , event_date as module_displayed_date
   , event_timestamp as module_displayed_timestamp
   , events.user_location_type
-  FROM {{ source('analytics', 'firebase_events') }} events
+  FROM {{ ref('int_firebase__native_event') }} events
   LEFT JOIN {{ source('analytics', 'contentful_entries') }} as ref
   on events.module_id = ref.id
   JOIN home_ref
@@ -81,7 +81,7 @@ with child_home as (
       , children_ref.title as module_name -- category block / highlight name
       , event_timestamp as module_clicked_timestamp
       , events.user_location_type
-    FROM {{ source('analytics', 'firebase_events') }} events
+    FROM {{ ref('int_firebase__native_event') }} events
     LEFT JOIN parents_ref
     ON events.module_list_id = parents_ref.id
     LEFT JOIN children_ref
@@ -119,7 +119,7 @@ with child_home as (
       , events.venue_id
       , event_timestamp as consult_offer_timestamp
       , events.user_location_type
-    FROM {{ source('analytics', 'firebase_events') }} events
+    FROM {{ ref('int_firebase__native_event') }} events
     WHERE event_name = 'ConsultOffer'
     AND origin in ("home", "exclusivity", "venue","video","videoModal","highlightOffer")
     AND user_pseudo_id is not null
@@ -137,7 +137,7 @@ with child_home as (
         , venue_id
         , event_timestamp as consult_venue_timestamp
         , user_location_type
-      FROM {{ source('analytics', 'firebase_events') }}
+      FROM {{ ref('int_firebase__native_event') }}
       WHERE event_name = "ConsultVenue"
       AND origin = "home" 
       and user_pseudo_id is not null

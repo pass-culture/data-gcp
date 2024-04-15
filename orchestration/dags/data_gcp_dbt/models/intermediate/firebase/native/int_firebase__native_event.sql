@@ -14,7 +14,11 @@ SELECT
     user_id,
     user_pseudo_id,
     event_name,
+    moduleId AS module_id,
     platform,
+    name,
+    medium,
+    source,
     app_version,
     traffic_source,
     traffic_medium,
@@ -52,14 +56,16 @@ SELECT
     searchDate AS search_date_filter,
     searchGenreTypes AS search_genre_types_filter,
     searchMaxPrice AS search_max_price_filter,
-    searchNativeCategories AS search_native_categories_filter,
+    searchGenreTypes AS search_native_categories_filter,
     moduleName AS module_name,
-    moduleId AS module_id,
     moduleListID AS module_list_id,
     index AS module_index,
     traffic_gen,
     traffic_content,
     COALESCE(entryId,homeEntryId) AS entry_id,
+    CASE WHEN entryId IN ('4XbgmX7fVVgBMoCJiLiY9n','1ZmUjN7Za1HfxlbAOJpik2') THEN "generale"
+        WHEN entryId IS NULL THEN NULL
+        ELSE "marketing" END AS home_type,
     toEntryId AS destination_entry_id,
     reco_origin,
     ab_test AS reco_ab_test,
@@ -73,6 +79,7 @@ SELECT
     type AS share_type,
     duration,
     appsFlyerUserId AS appsflyer_id,
+    accessibilityFilter AS search_accessibility_filter,
     CASE WHEN event_name = "ConsultOffer" THEN 1 ELSE 0 END AS is_consult_offer,
     CASE WHEN event_name = "BookingConfirmation" THEN 1 ELSE 0 END AS is_booking_confirmation,
     CASE WHEN event_name = "HasAddedOfferToFavorites" THEN 1 ELSE 0 END AS is_add_to_favorites,
@@ -90,8 +97,8 @@ SELECT
     CASE WHEN event_name = "screen_view" AND firebase_screen IN ("Bookings","BookingDetails") THEN 1 ELSE 0 END AS is_screen_view_bookings,
     CASE WHEN firebase_screen = "SignupConfirmationEmailSent" OR event_name = "ContinueCGU" THEN 1 ELSE 0 END AS is_signup_completed,
     CASE WHEN firebase_screen IN ("BeneficiaryRequestSent","UnderageAccountCreated","BeneficiaryAccountCreated") THEN 1 ELSE 0 END AS is_benef_request_sent,
-    CASE WHEN event_name = "login" THEN 1 ELSE 0 END AS is_login
-FROM {{ ref("int_firebase__native_event_flattened") }}
+    CASE WHEN event_name = "login" THEN 1 ELSE 0 END AS is_login,
+FROM {{ ref("int_firebase__native_event_flattened") }} AS e
 {% if is_incremental() %}
 WHERE event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
 {% endif %}

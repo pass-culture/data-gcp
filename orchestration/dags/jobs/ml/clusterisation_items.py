@@ -14,19 +14,10 @@ from dependencies.ml.clusterisation.import_data import (
     IMPORT_ITEM_CLUSTERS,
     IMPORT_ITEM_EMBEDDINGS,
 )
-
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-    BigQueryInsertJobOperator,
-)
-from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 from common.config import (
-    GCP_PROJECT_ID,
     DAG_FOLDER,
     ENV_SHORT_NAME,
     MLFLOW_BUCKET_NAME,
-    BIGQUERY_TMP_DATASET,
 )
 
 from common.alerts import task_fail_slack_alert
@@ -161,12 +152,9 @@ with DAG(
 
     (
         start
-        >> export_task
-        >> export_bq
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> reduce_dimension
         >> bq_import_item_embeddings_task
         >> preprocess_clustering
         >> generate_clustering

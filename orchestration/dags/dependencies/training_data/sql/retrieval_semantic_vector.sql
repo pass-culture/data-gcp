@@ -1,14 +1,10 @@
 WITH k AS (
     SELECT
         ie.item_id,
-        ie.semantic_content_hybrid_embedding as semantic_content_embedding,
+        ie.hybrid_embedding,
     FROM
-        `{{ bigquery_clean_dataset }}.item_embeddings` ie
-        INNER JOIN `{{ bigquery_analytics_dataset }}.recommendable_items_raw` ri on ri.item_id = ie.item_id QUALIFY ROW_NUMBER() OVER (
-            PARTITION BY item_id
-            ORDER by
-                extraction_date DESC
-        ) = 1
+        `{{ bigquery_clean_dataset }}.item_embeddings_reduced_16` ie
+    INNER JOIN `{{ bigquery_analytics_dataset }}.recommendable_items_raw` ri on ri.item_id = ie.item_id 
 ),
 z AS (
     SELECT
@@ -20,9 +16,9 @@ z AS (
                 UNNEST(
                     SPLIT(
                         SUBSTR(
-                            semantic_content_embedding,
+                            hybrid_embedding,
                             2,
-                            LENGTH(semantic_content_embedding) - 2
+                            LENGTH(hybrid_embedding) - 2
                         )
                     )
                 ) e

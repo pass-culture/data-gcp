@@ -70,3 +70,8 @@ from
     JOIN `{{ bigquery_clean_dataset }}`.item_embeddings ie on oii.item_id = ie.item_id
 where
     is_rule_up_to_date
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY ie.item_id
+    ORDER BY
+    ie.extraction_date DESC
+) = 1

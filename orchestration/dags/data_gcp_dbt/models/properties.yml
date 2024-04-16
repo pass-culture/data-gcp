@@ -389,9 +389,6 @@ models:
   - name: firebase_daily_offer_consultation_data
     config:
       schema: analytics_{{ target.name }}
-  - name: mrt_pro__event
-    config:
-      schema: analytics_{{ target.name }}
   - name: enriched_venue_data
     config:
       schema: analytics_{{ target.name }}

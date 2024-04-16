@@ -16,15 +16,17 @@ SELECT
             WHEN eim.titelive_gtl_id LIKE "0403%" THEN TRUE -- "Arts de la table / Gastronomie"
             WHEN eim.titelive_gtl_id LIKE "0406%" THEN TRUE -- "Vie quotidienne & Bien-être",
             -- LVL3
-            WHEN eim.titelive_gtl_id LIKE "010210%" THEN TRUE -- "Erotisme"
-            WHEN eim.titelive_gtl_id LIKE "010205%" THEN TRUE -- "Thriller érotique"
             WHEN eim.titelive_gtl_id LIKE "030201%" THEN TRUE -- "Public averti (+ 18 ans)"
             WHEN eim.titelive_gtl_id LIKE "030403%" THEN TRUE -- "Kodomo"
             WHEN eim.titelive_gtl_id LIKE "040505%" THEN TRUE -- "Jeux"
             -- LVL4
+            WHEN eim.titelive_gtl_id LIKE "01020503%" THEN TRUE -- "Thriller érotique"
+            WHEN eim.titelive_gtl_id LIKE "01020607%" THEN TRUE -- "Romance Erotique"
+            WHEN eim.titelive_gtl_id LIKE "01020608%" THEN TRUE -- "Dark Romance"
             WHEN eim.titelive_gtl_id LIKE "01030306%" THEN TRUE -- "Roman libertin"
             WHEN eim.titelive_gtl_id LIKE "03020112%" THEN TRUE -- "Public averti (érotique, hyper violence…)"
             WHEN eim.titelive_gtl_id LIKE "04010206%" THEN TRUE -- "Enseignement universitaire"
+            
         ELSE FALSE
         END
     )
@@ -37,7 +39,6 @@ SELECT
             WHEN eim.titelive_gtl_id LIKE "12%" THEN TRUE -- "Parascolaire"
             -- LVL3
             WHEN eim.titelive_gtl_id LIKE "010210%" THEN TRUE -- "Erotisme"
-            WHEN eim.titelive_gtl_id LIKE "010205%" THEN TRUE -- "Thriller érotique"
             WHEN eim.titelive_gtl_id LIKE "061102%" THEN TRUE -- "Nu / Charme / Erotisme"
             -- LVL4
             WHEN eim.titelive_gtl_id LIKE "01030306%" THEN TRUE -- "Roman libertin"

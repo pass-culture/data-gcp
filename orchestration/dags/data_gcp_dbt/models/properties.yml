@@ -343,10 +343,10 @@ models:
   - name: firebase_aggregated_daily_campaign_events
     config:
       schema: analytics_{{ target.name }}
-  - name: mrt_global__adage_log
+  - name: mrt_collective__adage_log
     config:
       schema: analytics_{{ target.name }}
-  - name: mrt_global__firebase_native_event
+  - name: mrt_native__event
     config:
       schema: analytics_{{ target.name }}
   - name: mrt_global__venue
@@ -389,7 +389,7 @@ models:
   - name: firebase_daily_offer_consultation_data
     config:
       schema: analytics_{{ target.name }}
-  - name: mrt_global__firebase_pro_event
+  - name: mrt_pro__event
     config:
       schema: analytics_{{ target.name }}
   - name: enriched_venue_data

@@ -1,7 +1,9 @@
+from datetime import datetime
 import typer
 import polars as pl
 from loguru import logger
 from google.cloud import bigquery
+
 from utils import ENV_SHORT_NAME, get_offline_recos, export_polars_to_bq
 
 
@@ -23,7 +25,7 @@ def offline_recommendation(
 
     logger.info("Offline recommendation: Get recommendations from API...")
     offline_recommendations = get_offline_recos(data)
-
+    offline_recommendations=offline_recommendations.with_columns(pl.lit(datetime.now().strftime("%Y-%m-%d")).alias("event_date"))
     logger.info("Offline recommendation: Store recos to BQ...")
     export_polars_to_bq(
         client=client,

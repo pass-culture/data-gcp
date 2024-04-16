@@ -2,15 +2,15 @@
     config(
         materialized = "incremental",
         incremental_strategy = "insert_overwrite",
-        partition_by = {"field": "partition_date", "data_type": "date"},
+        partition_by = {"field": "event_date", "data_type": "date"},
         on_schema_change = "sync_all_columns"
     )
 }}
 
 SELECT  
-    a.partition_date,
-    a.message,
-    a.log_timestamp,
+    a.event_date,
+    a.event_name,
+    a.event_timestamp,
     a.user_id,
     a.session_id,
     a.total_results,
@@ -52,6 +52,7 @@ FROM {{ ref("int_pcapi__adage_log") }} AS a
 LEFT JOIN {{ source("raw","applicative_database_collective_stock") }} AS s ON s.collective_stock_id = a.collective_stock_id
 LEFT JOIN {{ ref("enriched_collective_offer_data") }} AS o ON o.collective_offer_id = COALESCE(a.collective_offer_id,s.collective_offer_id)
 LEFT JOIN {{ ref("enriched_cultural_partner_data") }} AS p ON p.partner_id = o.partner_id
+WHERE TRUE
 {% if is_incremental() %}
-AND partition_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
+AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
 {% endif %}

@@ -11,8 +11,8 @@ with child_home as (
   SELECT DISTINCT
     e1.home_entry_id
     , e2.title
-  FROM {{ source('analytics', 'contentful_entries') }} e1
-  JOIN {{ source('analytics', 'contentful_entries') }} e2
+  FROM {{ ref('int_contentful__entries') }} e1
+  JOIN {{ ref('int_contentful__entries') }} e2
   ON e1.home_entry_id = e2.id
   WHERE e1.content_type = "categoryBlock"
 )
@@ -20,7 +20,7 @@ with child_home as (
     SELECT 
       home.id
       , home.title
-    from {{ source('analytics', 'contentful_entries') }} home
+    from {{ ref('int_contentful__entries') }} home
     LEFT JOIN child_home
     ON home.id = child_home.home_entry_id
     WHERE child_home.home_entry_id is null -- retirer les homes qui sont spécifiques
@@ -28,12 +28,12 @@ with child_home as (
 )
 , parents_ref as (  
     SELECT *
-    from {{ source('analytics', 'contentful_entries') }}
+    from {{ ref('int_contentful__entries') }}
     where content_type in ("categoryList", "thematicHighlight")
 )
 , children_ref as (
     SELECT *
-    from {{ source('analytics', 'contentful_entries') }}
+    from {{ ref('int_contentful__entries') }}
     where content_type in ("categoryBlock", "thematic_highlight_info")
 )
 , displayed as (
@@ -51,7 +51,7 @@ with child_home as (
   , event_timestamp as module_displayed_timestamp
   , events.user_location_type
   FROM {{ ref('int_firebase__native_event') }} events
-  LEFT JOIN {{ source('analytics', 'contentful_entries') }} as ref
+  LEFT JOIN {{ ref('int_contentful__entries') }} as ref
   on events.module_id = ref.id
   JOIN home_ref
   on events.entry_id = home_ref.id
@@ -88,7 +88,7 @@ with child_home as (
     ON events.module_id = children_ref.id
     LEFT JOIN home_ref
     ON events.entry_id = home_ref.id
-    LEFT JOIN {{ source('analytics', 'contentful_entries') }} as e
+    LEFT JOIN {{ ref('int_contentful__entries') }} as e
     ON events.destination_entry_id = e.id
     WHERE event_name in ("ExclusivityBlockClicked", "CategoryBlockClicked", "HighlightBlockClicked","BusinessBlockClicked","ConsultVideo")
     -- entry_id param is missing for event HighlightBlockClicked because it is available in a prior version of the app. 
@@ -103,7 +103,7 @@ with child_home as (
             , child as playlist_id
             , e.title as playlist_name
         FROM {{ source('analytics', 'contentful_relationships') }} r
-        LEFT JOIN {{ source('analytics', 'contentful_entries') }} e
+        LEFT JOIN {{ ref('int_contentful__entries') }} e
         ON r.child = e.id
     ),
     offer as (
@@ -169,7 +169,7 @@ with child_home as (
     AND offer.consult_offer_timestamp >= venue.consult_venue_timestamp
     LEFT JOIN home_ref
     ON coalesce(offer.entry_id, venue.entry_id) = home_ref.id
-    LEFT JOIN {{ source('analytics', 'contentful_entries') }} as ref
+    LEFT JOIN {{ ref('int_contentful__entries') }} as ref
     ON ref.id =  coalesce(offer.module_id, venue.module_id)
     JOIN relationships -- inner join to get only known relationships between playlist and homepages.
     ON relationships.playlist_id =  coalesce(offer.module_id, venue.module_id)

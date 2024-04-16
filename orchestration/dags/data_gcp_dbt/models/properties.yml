@@ -343,10 +343,10 @@ models:
   - name: firebase_aggregated_daily_campaign_events
     config:
       schema: analytics_{{ target.name }}
-  - name: mrt_global__adage_log
+  - name: mrt_collective__adage_log
     config:
       schema: analytics_{{ target.name }}
-  - name: mrt_global__firebase_native_event
+  - name: mrt_native__event
     config:
       schema: analytics_{{ target.name }}
   - name: mrt_global__venue
@@ -389,9 +389,6 @@ models:
   - name: firebase_daily_offer_consultation_data
     config:
       schema: analytics_{{ target.name }}
-  - name: mrt_global__firebase_pro_event
-    config:
-      schema: analytics_{{ target.name }}
   - name: enriched_venue_data
     config:
       schema: analytics_{{ target.name }}
@@ -399,5 +396,35 @@ models:
     config:
       schema: analytics_{{ target.name }}
   - name: enriched_cultural_partner_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: firebase_aggregated_offers
+    config:
+      schema: analytics_{{ target.name }}
+  - name: firebase_aggregated_users
+    config:
+      schema: analytics_{{ target.name }}
+  - name: firebase_app_experiments
+    config:
+      schema: analytics_{{ target.name }}
+  - name: firebase_bookings
+    config:
+      schema: analytics_{{ target.name }}
+  - name: firebase_home_events
+    config:
+      schema: analytics_{{ target.name }}
+  - name: firebase_home_funnel_conversion
+    config:
+      schema: analytics_{{ target.name }}
+  - name: firebase_session_origin
+    config:
+      schema: analytics_{{ target.name }}
+  - name: firebase_venue_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: firebase_visits
+    config:
+      schema: analytics_{{ target.name }}
+  - name: int_firebase__native_event
     config:
       schema: analytics_{{ target.name }}

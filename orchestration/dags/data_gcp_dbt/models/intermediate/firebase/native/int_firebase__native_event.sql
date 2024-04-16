@@ -3,7 +3,8 @@
         materialized = "incremental",
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "event_date", "data_type": "date"},
-        on_schema_change = "sync_all_columns"
+        on_schema_change = "sync_all_columns",
+        alias = "firebase_events"
     )
 }}
 
@@ -11,6 +12,7 @@ SELECT
     event_date,
     event_timestamp,
     event_previous_timestamp,
+    event_timestamp AS user_first_touch_timestamp,
     user_id,
     user_pseudo_id,
     event_name,
@@ -23,8 +25,7 @@ SELECT
     traffic_source,
     traffic_medium,
     traffic_campaign,
-    offerId AS offer_id,
-    COALESCE(offerId,CAST(double_offer_id AS string)) AS offer_id_test,
+    COALESCE(CAST(double_offer_id AS string),offerId) AS offer_id,
     ga_session_id AS session_id,
     CONCAT(user_pseudo_id, "-",ga_session_id) AS unique_session_id,
     ga_session_number AS session_number,

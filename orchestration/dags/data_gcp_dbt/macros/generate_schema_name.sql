@@ -2,7 +2,11 @@
 
     {%- set default_schema = target.dataset -%}
 
-    {%- if 'intermediate' in node.path and ((target.name == "prod" and target.profile_name != "sandbox") or target.name == "stg") -%}
+    {%- if custom_schema_name and target.name == 'prod' or target.name == 'stg' -%}
+
+        {{ custom_schema_name | trim }}
+
+    {%- elif 'intermediate' in node.path and ((target.name == "prod" and target.profile_name != "sandbox") or target.name == "stg") -%}
         {%- set model_parts = node.name.split('__') -%}
          {%- set schema_name = model_parts[0] ~ "_" ~ target.name -%}
             {{ schema_name }}
@@ -13,7 +17,7 @@
 
     {%- else -%}
 
-        {{ custom_schema_name | trim }}
+    {{ custom_schema_name | trim }}
 
     {%- endif -%}
 

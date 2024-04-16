@@ -398,8 +398,6 @@ models:
   - name: enriched_cultural_partner_data
     config:
       schema: analytics_{{ target.name }}
-
-
   - name: firebase_aggregated_offers
     config:
       schema: analytics_{{ target.name }}

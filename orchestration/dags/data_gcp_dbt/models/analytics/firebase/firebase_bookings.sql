@@ -20,5 +20,5 @@ FROM {{ ref('int_firebase__native_event') }}
 WHERE event_name = "BookingConfirmation"
 {% if is_incremental() %}
 -- recalculate latest day's data + previous
-where date(event_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 1 DAY) and DATE('{{ ds() }}')
+AND date(event_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 1 DAY) and DATE('{{ ds() }}')
 {% endif %}

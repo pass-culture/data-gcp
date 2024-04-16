@@ -103,23 +103,7 @@ import_firebase_beneficiary_tables = {
             "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING,
             "gcp_project_native_env": GCP_PROJECT_NATIVE_ENV,
         },
-    },
-    # analytics
-    "analytics_firebase_home_events": {
-        "sql": f"{SQL_PATH}/analytics/firebase_home_events.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_home_events",
-        "partition_prefix": "$",
-        "time_partitioning": {"field": "event_date"},
-        "clustering_fields": {"fields": ["event_type"]},
-        "depends": ["analytics_firebase_events"],
-    },
-    "analytics_firebase_app_experiments": {
-        "sql": f"{SQL_PATH}/analytics/firebase_app_experiments.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_app_experiments",
-        "depends": ["clean_firebase_app_experiments"],
-    },
+    }
 }
 
 import_tables = dict(import_firebase_beneficiary_tables, **import_firebase_pro_tables)

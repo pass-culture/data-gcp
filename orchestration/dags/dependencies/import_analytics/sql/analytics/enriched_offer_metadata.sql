@@ -110,8 +110,8 @@ offer_metadata_id AS (
         offer_extracted_data.author,
         offer_extracted_data.performer,
          -- GTL of distinct objects (eg books and music) can collide
-        gtl.gtl_type,
-        gtl.gtl_id as titelive_gtl_id,
+        offer_extracted_data.titelive_gtl_id as titelive_gtl_id,
+        gtl.gtl_type as gtl_type,
         gtl.gtl_label_level_1 as gtl_label_level_1,
         gtl.gtl_label_level_2 as gtl_label_level_2,
         gtl.gtl_label_level_3 as gtl_label_level_3,
@@ -119,8 +119,6 @@ offer_metadata_id AS (
     FROM enriched_items
     LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = enriched_items.offer_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_titelive_gtl gtl ON offer_extracted_data.titelive_gtl_id = gtl.gtl_id and gtl.gtl_type = enriched_items.offer_type_domain
-
-
 ),
 
 

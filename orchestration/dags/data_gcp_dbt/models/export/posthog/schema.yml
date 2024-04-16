@@ -2,11 +2,11 @@ version: 2
 
 macros:
 
-  - name: exp_posthog__firebase_pro_event
-    description: "Materialized view export for a Product Analytics Tool using a simplified schema of partner events."
+  - name: exp_posthog_pro_event
+    description: "Materialized view export for a Product Analytics Tool using a simplified schema of firebase partner events."
 
-  - name: exp_posthog__firebase_native_event
-    description: "Materialized view export for a Product Analytics Tool using a simplified schema of native events."
+  - name: exp_posthog__native_event
+    description: "Materialized view export for a Product Analytics Tool using a simplified schema of firebase native events."
   
-  - name: exp_posthog__pcapi_adage_log
+  - name: exp_posthog__adage_log
     description: "Materialized view export for a Product Analytics Tool using a simplified schema of adage events."

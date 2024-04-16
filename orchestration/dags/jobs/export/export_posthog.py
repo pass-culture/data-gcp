@@ -34,7 +34,7 @@ DAG_CONFIG = {
     "BASE_DIR": "data-gcp/jobs/etl_jobs/internal/export_posthog/",
 }
 
-TABLE_PARAMS = ["posthog_native_events", "posthog_adage_log", "posthog_pro_events"]
+TABLE_PARAMS = ["posthog_native_event", "posthog_adage_log", "posthog_pro_event"]
 
 GCE_PARAMS = {
     "instance_name": f"export-posthog-data-{ENV_SHORT_NAME}",

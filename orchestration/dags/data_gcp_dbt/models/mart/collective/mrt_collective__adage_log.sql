@@ -52,6 +52,7 @@ FROM {{ ref("int_pcapi__adage_log") }} AS a
 LEFT JOIN {{ source("raw","applicative_database_collective_stock") }} AS s ON s.collective_stock_id = a.collective_stock_id
 LEFT JOIN {{ ref("enriched_collective_offer_data") }} AS o ON o.collective_offer_id = COALESCE(a.collective_offer_id,s.collective_offer_id)
 LEFT JOIN {{ ref("enriched_cultural_partner_data") }} AS p ON p.partner_id = o.partner_id
+WHERE TRUE
 {% if is_incremental() %}
-AND partition_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
+AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
 {% endif %}

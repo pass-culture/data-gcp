@@ -17,7 +17,7 @@ SELECT
     , event_timestamp as booking_timestamp
     , user_location_type
 FROM {{ ref('int_firebase__native_event') }}
-
+WHERE event_name = "BookingConfirmation"
 {% if is_incremental() %}
 -- recalculate latest day's data + previous
 where date(event_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 1 DAY) and DATE('{{ ds() }}')

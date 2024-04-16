@@ -3,7 +3,8 @@
         materialized = "incremental",
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "event_date", "data_type": "date"},
-        on_schema_change = "sync_all_columns"
+        on_schema_change = "sync_all_columns",
+        alias = "firebase_events"
     )
 }}
 

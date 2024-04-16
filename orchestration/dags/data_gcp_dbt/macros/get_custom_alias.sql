@@ -1,8 +1,12 @@
 {% macro generate_alias_name(custom_alias_name=none, node=none) -%}
 
-    {%- if custom_alias_name -%}
+    {%- if custom_alias_name and 'applicative' in node.path -%}
 
         {{ custom_alias_name ~ node.name }}
+
+    {%- elif custom_alias_name -%}
+
+        {{ custom_alias_name }}
 
     {%- elif 'intermediate' in node.path and ((target.name == "prod" and target.profile_name != "sandbox") or target.name == "stg")  -%}
 

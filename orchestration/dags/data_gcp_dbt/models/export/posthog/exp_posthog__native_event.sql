@@ -1,7 +1,7 @@
 SELECT
     event_date,
     event_name,
-    event_timestamp,
+    timestamp(event_timestamp) as event_timestamp,
     user_id,
     user_pseudo_id,
     platform,

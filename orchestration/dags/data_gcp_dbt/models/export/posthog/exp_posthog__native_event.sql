@@ -37,3 +37,4 @@ SELECT
     ) as user_params,
     "native" as origin
 FROM {{ ref("mrt_native__event") }}
+WHERE user_pseudo_id is NOT NULL

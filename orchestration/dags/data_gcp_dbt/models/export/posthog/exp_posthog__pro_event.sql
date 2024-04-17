@@ -48,3 +48,4 @@ SELECT
     "pro" as origin
 FROM {{ ref("mrt_pro__event") }}
 WHERE (NOT REGEXP_CONTAINS(event_name, '^[a-z]+(_[a-z]+)*$') OR event_name = "page_view")
+AND user_pseudo_id is NOT NULL

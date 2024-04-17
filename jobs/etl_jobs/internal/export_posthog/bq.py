@@ -59,7 +59,7 @@ def bq_to_events(source_gs_path) -> t.List[PostHogEvent]:
 
 def format_event(event: dict) -> PostHogEvent:
     user_pseudo_id = event["user_pseudo_id"]
-    event_time = datetime.utcfromtimestamp(event["event_timestamp"] / 1e6)
+    event_time = event["event_timestamp"].to_pydatetime()
 
     unique_event = user_pseudo_id + str(event_time)
 

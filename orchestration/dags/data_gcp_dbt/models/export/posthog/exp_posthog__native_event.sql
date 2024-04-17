@@ -1,7 +1,7 @@
 SELECT
     event_date,
     event_name,
-    event_timestamp,
+    timestamp(event_timestamp) as event_timestamp,
     user_id,
     user_pseudo_id,
     platform,
@@ -37,3 +37,4 @@ SELECT
     ) as user_params,
     "native" as origin
 FROM {{ ref("mrt_native__event") }}
+WHERE user_pseudo_id is NOT NULL

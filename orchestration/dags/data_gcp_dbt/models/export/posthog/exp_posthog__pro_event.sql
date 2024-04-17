@@ -1,6 +1,6 @@
 SELECT
     event_date,
-    CASE WHEN event_name="page_view" THEN CONCAT(event_name,page_name) ELSE event_name END as event_name,
+    CASE WHEN event_name="page_view" THEN CONCAT("Page: ", page_name) ELSE event_name END as event_name,
     event_timestamp,
     user_id,
     user_pseudo_id,

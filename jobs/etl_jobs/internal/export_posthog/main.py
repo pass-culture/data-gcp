@@ -29,6 +29,7 @@ def run(
         posthog_personal_api_key=posthog_personal_api_key,
     )
     print(f"Will process {len(events)} events...")
+    event_idx = 0
     for event_idx, event in enumerate(events, 1):
         ph.event_to_posthog(event)
         if event_idx % BATCH_SIZE == 0:

@@ -1,7 +1,7 @@
 SELECT  
     event_date, 
     event_name,
-    event_timestamp,
+    timestamp(event_timestamp) as event_timestamp,
     user_id,
     user_id as user_pseudo_id,
     STRUCT (
@@ -43,3 +43,4 @@ SELECT
     )  as user_params,
     'adage' as origin
 FROM {{ ref('mrt_collective__adage_log') }}
+WHERE user_pseudo_id is NOT NULL

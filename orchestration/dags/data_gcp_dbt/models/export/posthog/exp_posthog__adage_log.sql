@@ -43,4 +43,4 @@ SELECT
     )  as user_params,
     'adage' as origin
 FROM {{ ref('mrt_collective__adage_log') }}
-WHERE user_pseudo_id is NOT NULL
+WHERE user_id is NOT NULL

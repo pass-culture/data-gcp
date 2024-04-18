@@ -49,7 +49,7 @@ GCE_PARAMS = {
 schedule_dict = {"prod": "0 8 * * *", "dev": "0 12 * * *", "stg": "0 10 * * *"}
 
 with DAG(
-    "export_posthog_catchup",
+    "export_posthog",
     default_args={
         "start_date": datetime.datetime(2023, 9, 1),
         "retries": 1,
@@ -59,8 +59,8 @@ with DAG(
     },
     description="Export to analytics data posthog",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
-    catchup=False,
-    start_date=datetime.datetime(2023, 12, 15),
+    catchup=True,
+    start_date=datetime.datetime(2024, 4, 1),
     max_active_runs=1,
     dagrun_timeout=datetime.timedelta(minutes=1440),
     user_defined_macros=macros.default,

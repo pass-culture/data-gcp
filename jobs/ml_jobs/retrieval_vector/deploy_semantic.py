@@ -17,7 +17,7 @@ from hnne import HNNE
 import joblib
 
 MODEL_TYPE = {
-    "n_dim": 64,
+    "n_dim": 32,
     "type": "semantic",
     "default_token": None,
     "transformer": "sentence-transformers/all-MiniLM-L6-v2",

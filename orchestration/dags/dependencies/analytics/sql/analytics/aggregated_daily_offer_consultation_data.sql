@@ -42,7 +42,7 @@ FROM
         'ConsultWholeOffer',
         'ConsultDescriptionDetails'
     )
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.contentful_algolia_modules_criterion` c ON fe.module_id = c.module_id
+    LEFT JOIN `{{ bigquery_int_contentful_dataset }}.algolia_modules_criterion` c ON fe.module_id = c.module_id
     AND fe.offer_id = c.offer_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON fe.user_id = eud.user_id
 GROUP BY

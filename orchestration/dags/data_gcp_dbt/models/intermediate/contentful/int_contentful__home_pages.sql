@@ -4,8 +4,7 @@ WITH home AS (
         id AS home_id,
         title AS home_name,
         REPLACE(modules, '\"', "") AS module_id
-    FROM
-        `{{ bigquery_raw_dataset }}.contentful_entries`,
+    FROM {{ source('raw', 'contentful_entries') }},
         UNNEST(JSON_EXTRACT_ARRAY(modules, '$')) AS modules
     WHERE
         content_type = "homepageNatif"
@@ -18,12 +17,23 @@ home_and_modules AS (
         title AS module_name,
         module_id,
         content_type
-    FROM
-        home
-    LEFT JOIN `{{ bigquery_raw_dataset }}.contentful_entries` module ON home.module_id = module.id
+    FROM home
+    LEFT JOIN {{ source('raw', 'contentful_entries') }} module 
+    ON home.module_id = module.id
     AND home.date_imported = module.date_imported
-)
-
+),
+contentful_entries AS (
+    SELECT
+        id,
+        title,
+        content_type,
+        ROW_NUMBER() OVER (
+            PARTITION BY id
+            ORDER BY
+                execution_date DESC
+        ) AS rnk
+    FROM{{ ref("int_contentful__entries") }}
+),
 SELECT
     date,
     home_id,

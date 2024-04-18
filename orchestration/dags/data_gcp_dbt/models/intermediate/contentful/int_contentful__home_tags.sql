@@ -1,3 +1,6 @@
+-- TODO checkup
+-- <TODO> @mripoll why RAW vs Clean here ? 
+
 WITH
   TEMP AS (
   SELECT DISTINCT
@@ -6,9 +9,9 @@ WITH
     tag_key,
     tag_value
   FROM
-    `{{ bigquery_clean_dataset }}.contentful_tags` tags
+    {{ ref("int_contentful__tags") }} tags
   INNER JOIN
-    `{{ bigquery_raw_dataset }}.contentful_entries` entries
+   {{ ref("int_contentful__entries") }}  entries
   ON
     entries.id = tags.entry_id
   WHERE

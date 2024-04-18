@@ -102,7 +102,7 @@ with child_home as (
             parent as home_id
             , child as playlist_id
             , e.title as playlist_name
-        FROM {{ source('analytics', 'contentful_relationships') }} r
+        FROM {{ ref("int_contentful__relationships") }} r
         LEFT JOIN {{ ref('int_contentful__entries') }} e
         ON r.child = e.id
     ),

@@ -18,7 +18,7 @@ SELECT
     v.offerer_name,
     v.offerer_validation_status,
     v.venue_is_acessibility_synched,
-    v.venue_type_code AS venue_type_label,
+    v.venue_type_label,
     v.venue_label,
     v.venue_humanized_id,
     v.venue_backoffice_link,

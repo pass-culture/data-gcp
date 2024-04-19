@@ -48,3 +48,7 @@ SELECT
     AND NOT s.stock_is_soft_deleted) THEN 1 ELSE 0 END AS is_bookable,
 FROM {{ source('raw','applicative_database_stock') }} AS s
 LEFT JOIN bookings_grouped_by_stock AS bs ON bs.stock_id = s.stock_id
+WHERE TRUE
+    {% if is_incremental() %}
+    AND stock_modified_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
+    {% endif %}

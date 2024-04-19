@@ -50,5 +50,5 @@ FROM {{ source('raw','applicative_database_stock') }} AS s
 LEFT JOIN bookings_grouped_by_stock AS bs ON bs.stock_id = s.stock_id
 WHERE TRUE
     {% if is_incremental() %}
-    AND stock_modified_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
+    AND stock_modified_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
     {% endif %}

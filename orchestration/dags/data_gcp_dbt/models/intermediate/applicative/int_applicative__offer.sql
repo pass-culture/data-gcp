@@ -1,15 +1,7 @@
-{{
-    config(
-        materialized = "incremental",
-        unique_key = "offer_id",
-        on_schema_change = "sync_all_columns"
-    )
-}}
-
 WITH stocks_grouped_by_offers AS (
         SELECT offer_id,
             SUM(available_stock) AS available_stock,
-            MAX(is_bookable) AS is_bookable, -- check si un des stock est bookable
+            MAX(is_bookable) AS is_bookable,
             SUM(total_bookings) AS total_bookings,
             SUM(total_individual_bookings) AS total_individual_bookings,
             SUM(total_non_cancelled_individual_bookings) AS total_non_cancelled_individual_bookings,
@@ -20,6 +12,28 @@ WITH stocks_grouped_by_offers AS (
             MAX(last_individual_booking_date) AS last_individual_booking_date
         FROM {{ ref('int_applicative__stock') }}
         GROUP BY offer_id
+),
+
+item_ids AS (
+    SELECT
+        offer_id,
+        CASE WHEN (
+            offer_subcategoryId = 'LIVRE_PAPIER'
+            AND isbn IS NOT NULL
+            AND isbn <> ''
+            ) THEN CONCAT('isbn-',isbn)
+        WHEN (offer_subcategoryId = 'SEANCE_CINE'
+            AND theater_movie_id IS NOT NULL
+            AND theater_movie_id <> ''
+            ) THEN CONCAT('movie_id-',theater_movie_id)
+        ELSE CONCAT('product-',offer_product_id) END AS item_id
+    FROM {{ ref('int_applicative__extract_offer') }}
+),
+
+linked_offers_deduped AS (
+    SELECT offer_id, item_linked_id
+    FROM {{ source('analytics','linked_offers') }}
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY offer_id ORDER BY rand()) = 1
 )
 
 SELECT
@@ -64,14 +78,23 @@ SELECT
     so.total_individual_theoretic_revenue,
     so.total_individual_real_revenue,
     so.first_individual_booking_date,
-    so.last_individual_booking_date
-FROM {{ source('raw', 'applicative_database_offer') }} AS o
+    so.last_individual_booking_date,
+    subcategories.is_physical_deposit as physical_goods,
+    subcategories.is_digital_deposit digital_goods,
+    subcategories.is_event as event,
+    subcategories.category_id AS offer_category_id,
+    CASE WHEN lo.item_linked_id is not null THEN REGEXP_REPLACE(
+            lo.item_linked_id,
+            r'[^a-zA-Z0-9\-\_]',
+            '')
+    ELSE REGEXP_REPLACE(ii.item_id, r'[^a-zA-Z0-9\-\_]', '') END as item_id
+FROM {{ ref('int_applicative__extract_offer') }} AS o
+LEFT JOIN item_ids AS ii ON ii.offer_id = o.offer_id
+LEFT JOIN linked_offers_deduped AS lo ON lo.offer_id = o.offer_id
 LEFT JOIN stocks_grouped_by_offers AS so ON so.offer_id = o.offer_id
-WHERE offer_subcategoryid NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
-AND (
-    booking_email != 'jeux-concours@passculture.app'
-    OR booking_email IS NULL
-)
-{% if is_incremental() %}
-AND offer_date_updated BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
-{% endif %}
+LEFT JOIN {{ source('clean','subcategories') }} AS subcategories ON o.offer_subcategoryId = subcategories.id
+WHERE o.offer_subcategoryid NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
+    AND (
+        booking_email != 'jeux-concours@passculture.app'
+        OR booking_email IS NULL
+        )

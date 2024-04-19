@@ -61,7 +61,7 @@ SELECT
     v.venue_is_virtual,
     v.venue_comment,
     v.venue_public_name,
-    v.venue_type_code,
+    v.venue_type_code AS venue_type_label,
     v.venue_label_id,
     v.venue_creation_date,
     v.venue_is_permanent,
@@ -165,6 +165,6 @@ LEFT JOIN offers_grouped_by_venue AS o ON o.venue_id = v.venue_id
 LEFT JOIN collective_offers_grouped_by_venue AS co ON co.venue_id = v.venue_id
 LEFT JOIN {{ source("raw", "applicative_database_venue_registration") }} AS vr ON v.venue_id = vr.venue_id
 LEFT JOIN {{ source("raw", "applicative_database_venue_contact") }} AS vc ON v.venue_id = vc.venue_id
-LEFT JOIN{{ source('raw', 'applicative_database_venue_label') }} AS vl ON vl.venue_label_id = v.venue_label_id
-LEFT JOIN{{ source('raw', 'applicative_database_accessibility_provider') }} AS va ON va.venue_id = v.venue_id
-LEFT JOIN {{ ref("int_applicative__offerer") }} AS ofr ON v.venue_managing_offerer_id = ofr.offerer_id
+LEFT JOIN {{ source('raw', 'applicative_database_venue_label') }} AS vl ON vl.venue_label_id = v.venue_label_id
+LEFT JOIN {{ source('raw', 'applicative_database_accessibility_provider') }} AS va ON va.venue_id = v.venue_id
+INNER JOIN {{ ref("int_applicative__offerer") }} AS ofr ON v.venue_managing_offerer_id = ofr.offerer_id

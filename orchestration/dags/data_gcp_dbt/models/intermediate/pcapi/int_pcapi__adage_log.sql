@@ -19,7 +19,7 @@ WITH adage_logs AS (
         uai,
         user_role,
         origin,
-        collective_stock_id,
+        stock_id as collective_stock_id,
         query_id,
         comment,
         requested_date,

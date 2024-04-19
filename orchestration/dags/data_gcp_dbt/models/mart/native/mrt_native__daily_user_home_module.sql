@@ -1,11 +1,11 @@
-{{ config(
-    materialized='table',
-    partition_by={
-        'field': 'module_displayed_date',
-        'data_type': 'date',
-        'granularity': 'day'
-    }
-) }}
+{{
+    config(
+        materialized = "incremental",
+        incremental_strategy = "insert_overwrite",
+        partition_by = {"field": "module_displayed_date", "data_type": "date", "granularity" : "day"},
+        on_schema_change = "sync_all_columns",
+    )
+}}
 
 WITH redirections AS (
 SELECT
@@ -15,6 +15,9 @@ SELECT
     unique_session_id
 FROM {{ref('int_firebase__native_event')}}
 WHERE event_name IN ('CategoryBlockClicked','HighlightBlockClicked')
+    {% if is_incremental() %}
+    AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
+    {% endif %}
 ),
 
 displayed AS (
@@ -42,6 +45,9 @@ INNER JOIN {{ ref('int_contentful__entries' )}} AS homes
     ON homes.id = events.entry_id
 WHERE event_name = 'ModuleDisplayedOnHomePage'
     AND events.unique_session_id IS NOT NULL
+    {% if is_incremental() %}
+    AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
+    {% endif %}
 QUALIFY ROW_NUMBER() OVER(PARTITION BY events.unique_session_id, events.module_id ORDER BY event_timestamp ) = 1
 ),
 
@@ -60,6 +66,9 @@ WHERE unique_session_id IS NOT NULL
                         "HighlightBlockClicked",
                         "BusinessBlockClicked",
                         "ConsultVideo")
+    {% if is_incremental() %}
+    AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
+    {% endif %}
 QUALIFY ROW_NUMBER() OVER(PARTITION BY unique_session_id, module_id ORDER BY event_timestamp) = 1
 ),
 
@@ -82,6 +91,9 @@ WHERE event_name = 'ConsultOffer'
                 "videoModal",
                 "highlightOffer")
     AND unique_session_id IS NOT NULL
+    {% if is_incremental() %}
+    AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
+    {% endif %}
 QUALIFY ROW_NUMBER() OVER(PARTITION BY unique_session_id, offer_id ORDER BY event_timestamp DESC) = 1
 ),
 
@@ -97,6 +109,9 @@ FROM {{ref('int_firebase__native_event')}}
 WHERE event_name = "ConsultVenue"
     AND origin = "home"
     AND unique_session_id IS NOT NULL
+    {% if is_incremental() %}
+    AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
+    {% endif %}
 QUALIFY ROW_NUMBER() OVER(PARTITION BY unique_session_id, venue_id ORDER BY event_timestamp DESC) = 1
 ),
 
@@ -137,7 +152,10 @@ WHERE events.event_name = 'HasAddedOfferToFavorites'
     "videoModal",
     "highlightOffer")
 AND events.unique_session_id IS NOT NULL
-AND consult_offer_timestamp <= events.event_timestamp QUALIFY ROW_NUMBER() OVER(PARTITION BY unique_session_id, offer_id ORDER BY event_timestamp DESC) = 1 -- get the LAST consultation
+{% if is_incremental() %}
+AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
+{% endif %}
+AND consult_offer_timestamp <= events.event_timestamp QUALIFY ROW_NUMBER() OVER(PARTITION BY unique_session_id, offer_id ORDER BY event_timestamp DESC) = 1
 )
 
 SELECT

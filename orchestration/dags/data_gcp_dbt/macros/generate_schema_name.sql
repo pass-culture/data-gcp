@@ -2,8 +2,8 @@
 
     {%- set default_schema = target.dataset -%}
 
-    {%- if custom_schema_name and target.name == 'prod' or target.name == 'stg' -%}
-
+    {%- if custom_schema_name and  ((target.name == "prod" and target.profile_name != "sandbox") or target.name == "stg") -%}
+    
         {{ custom_schema_name | trim }}
 
     {%- elif 'intermediate' in node.path and ((target.name == "prod" and target.profile_name != "sandbox") or target.name == "stg") -%}

@@ -12,8 +12,8 @@ SELECT
     jsonPayload.extra.uai,
     jsonPayload.extra.user_role,
     jsonPayload.extra.from AS origin,
-    CAST(jsonPayload.extra.stockId AS string) AS collective_stock_id,
-    CAST(jsonPayload.extra.offerId AS string) AS offer_id,
+    COALESCE(CAST(jsonPayload.extra.stockId AS string),CAST(jsonPayload.extra.stock_id as STRING)) AS stock_id,
+    COALESCE(CAST(jsonPayload.extra.offerId AS string),CAST(jsonPayload.extra.offer as STRING),CAST(jsonPayload.extra.offer_id as STRING)) AS offer_id,
     CAST(jsonPayload.extra.collective_offer_template_id AS string) AS collective_offer_template_id,
     CAST(jsonPayload.extra.queryid AS string) AS query_id,
     jsonPayload.extra.comment,
@@ -42,7 +42,16 @@ SELECT
     CAST(jsonPayload.extra.isfavorite AS boolean) AS is_favorite,
     CAST(jsonPayload.extra.playlistid AS STRING) AS playlist_id,
     CAST(jsonPayload.extra.domainid AS STRING) AS domain_id,
-    CAST(jsonPayload.extra.venueid AS STRING) AS venue_id,
+    COALESCE(CAST(jsonPayload.extra.venueid AS STRING),CAST(jsonPayload.extra.venue as STRING),CAST(jsonPayload.extra.venue_id as STRING)) as venue_id,
     CAST(jsonPayload.extra.index AS INT) AS rank_clicked,
+    COALESCE(CAST(jsonPayload.extra.product as STRING),CAST(jsonPayload.extra.product_id as STRING)) as product_id,
+    CAST(jsonPayload.extra.old_quantity as INT64) as stock_old_quantity,
+    CAST(jsonPayload.extra.stock_quantity as INT64) as stock_new_quantity,
+    jsonPayload.extra.old_price as stock_old_price,
+    jsonPayload.extra.stock_price as stock_new_price,
+    CAST(jsonPayload.extra.stock_dnbookedquantity as INT64) as stock_booking_quantity,
+    jsonPayload.extra.eans as list_of_eans_not_found,
     trace
+
+
 FROM {{ source("raw","stdout") }}

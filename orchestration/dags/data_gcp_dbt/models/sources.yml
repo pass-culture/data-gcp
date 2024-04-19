@@ -150,5 +150,6 @@ sources:
       - name: region_department
       - name: siren_data_labels
       - name: user_locations
+      - name: diversification_booking
       
       

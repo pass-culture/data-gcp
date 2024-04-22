@@ -47,3 +47,4 @@ FROM {{ ref('int_applicative__booking') }} AS b
 INNER JOIN {{ ref('mrt_global__stock') }} AS s ON s.stock_id = b.stock_id
 INNER JOIN {{ ref('mrt_global__user') }} AS u ON u.user_id = b.user_id
 WHERE u.is_beneficiary = 1
+    AND b.deposit_type IS NOT NULL

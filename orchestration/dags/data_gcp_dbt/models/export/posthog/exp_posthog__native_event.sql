@@ -38,3 +38,4 @@ SELECT
     "native" as origin
 FROM {{ ref("mrt_native__event") }}
 WHERE user_pseudo_id is NOT NULL
+AND MOD(ABS(FARM_FINGERPRINT(user_pseudo_id)),10) = 0

@@ -25,7 +25,10 @@ def offline_recommendation(
 
     logger.info("Offline recommendation: Get recommendations from API...")
     offline_recommendations = get_offline_recos(data)
-    offline_recommendations=offline_recommendations.with_columns(pl.lit(datetime.now().strftime("%Y-%m-%d")).alias("event_date"))
+    offline_recommendations = offline_recommendations.with_columns(
+        pl.lit(datetime.now()).alias("event_date")
+    )
+    offline_recommendations.with_columns(pl.lit(input_table).alias("campaign_type"))
     logger.info("Offline recommendation: Store recos to BQ...")
     export_polars_to_bq(
         client=client,
@@ -33,7 +36,7 @@ def offline_recommendation(
         dataset=f"tmp_{ENV_SHORT_NAME}",
         output_table=output_table,
     )
-    logger.info(f"Offline recommendation: Exported to {output_table}")
+    logger.info(f"Offline recommendation: Exported to {output_table} table")
     return
 
 

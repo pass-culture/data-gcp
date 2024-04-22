@@ -57,7 +57,7 @@ with DAG(
             type="string",
         ),
         "instance_type": Param(
-            default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-8",
+            default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-8  ",
             type="string",
         ),
     },
@@ -108,6 +108,7 @@ with DAG(
         base_dir=BASE_DIR,
         command="""pip install -r requirements.txt --user""",
     )
+
     export_to_backend_tasks = []
     for query_params in params_export:
         export_to_backend_tasks.append(
@@ -119,6 +120,9 @@ with DAG(
             )
         )
 
+    gce_instance_stop = StopGCEOperator(
+        task_id=f"gce_stop_task", instance_name=GCE_INSTANCE
+    )
     end = DummyOperator(task_id="end", dag=dag)
     (
         start
@@ -128,6 +132,9 @@ with DAG(
         >> install_dependencies
         >> get_offline_predictions[0]
         >> get_offline_predictions[1]
+        >> get_offline_predictions[2]
+        >> get_offline_predictions[3]
         >> export_to_backend_tasks
+        >> gce_instance_stop
         >> end
     )

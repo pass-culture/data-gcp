@@ -26,29 +26,40 @@ APP_CONFIG = {
     "route": "similar_offers",
 }
 N_RECO_DISPLAY = 10
+chunk_length = 1e3
 
 
 def get_offline_recos(data):
+    dl_output_list = []
     max_process = 2 if ENV_SHORT_NAME == "dev" else cpu_count() - 2
-    subset_length = len(data) // max_process
-    subset_length = subset_length if subset_length > 0 else 1
-    batch_number = max_process if subset_length > 1 else 1
-    print(
-        f"Starting process... with {batch_number} CPUs, subset length: {subset_length} "
-    )
-    batch_rows = [
-        list(chunk)
-        for chunk in list(np.array_split(data.rows(named=True), batch_number))
-    ]
+    chunk_number = len(data) // chunk_length
+    print(f"Starting multiprocess task for {len(data)} users in {chunk_number} chunks")
+    for chunk in list(np.array_split(data.rows(named=True), chunk_number)):
+        subset_length = len(chunk) // max_process
+        subset_length = subset_length if subset_length > 0 else 1
+        batch_number = max_process if subset_length > 1 else 1
+        print(
+            f"Starting process... with {batch_number} CPUs, subset length: {subset_length} "
+        )
+        batch_rows = [
+            list(batch) for batch in list(np.array_split(chunk, subset_length))
+        ]
 
+        output = multiprocess(batch_number, batch_rows)
+        dl_output_list.append(output)
+    print("Multiprocessing done")
+    output = pl.concat(dl_output_list)
+    return output
+
+
+def multiprocess(batch_number, batch_rows):
     with concurrent.futures.ProcessPoolExecutor(batch_number) as executor:
         futures = executor.map(
             _get_recos,
             batch_rows,
         )
-    print("Multiprocessing done")
-    dl_output = clean_multiprocess_output(futures)
-    return dl_output
+    output = clean_multiprocess_output(futures)
+    return output
 
 
 def _get_recos(rows):

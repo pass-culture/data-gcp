@@ -1,6 +1,6 @@
 SQL_PATH = "dependencies/ml/offline_recommendation/sql/import"
 DATE = "{{ yyyymmdd(ds) }}"
-queries = ["first_booking", "day_plus_two_after_booking"]
+queries = ["first_booking", "day_plus_two_after_booking","day_plus_fifty_deposit","day_plus_thirty_inactif"]
 params = []
 for query in queries:
     params.append(
@@ -9,6 +9,6 @@ for query in queries:
             "sql": f"{SQL_PATH}/{query}.sql",
             "write_disposition": "WRITE_TRUNCATE",
             "destination_dataset": "{{ bigquery_tmp_dataset }}",
-            "destination_table": f"{DATE}_{query}",
+            "destination_table": f"{query}",
         }
     )

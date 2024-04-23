@@ -1,3 +1,9 @@
+{{
+    config(
+        materialized = "table"
+    )
+}}
+
 SELECT
     DISTINCT b.user_id AS user_id,
     o.item_id AS item_id

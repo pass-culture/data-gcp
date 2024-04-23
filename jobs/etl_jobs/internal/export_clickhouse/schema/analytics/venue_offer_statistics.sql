@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS {{ dataset }}.venue_offer_statistics(
+CREATE TABLE IF NOT EXISTS analytics.venue_offer_statistics ON cluster default(
     update_date String,
     offerer_siren String,
     individual_collective String,
@@ -20,4 +20,5 @@ CREATE TABLE IF NOT EXISTS {{ dataset }}.venue_offer_statistics(
   ENGINE = MergeTree
   PARTITION BY update_date
   ORDER BY tuple(offerer_siren, venue_id)
+  SETTINGS storage_policy='gcs_main'
   COMMENT 'Venue offer individual and collective statistics'

@@ -1,10 +1,29 @@
 SELECT  
+
     event_date,
-    offer_id as offer_id,
-    item_id as item_id,
+    offerer_id,
+    offer_id,
+    venue_id,
+    offerer_name,
+    venue_name,
+    offer_name,
     origin,
-    nb_daily_consult as nb_consultation
-FROM `{{ bigquery_analytics_dataset }}.firebase_daily_offer_consultation_data` 
-WHERE 
-event_date BETWEEN date_sub(DATE("{{ ds }}"), INTERVAL 4 DAY) and DATE("{{ ds }}")
-AND offer_id is not null
+    user_role,
+    user_age,
+    sum(cnt_events) as cnt_events,
+FROM `{{ bigquery_analytics_dataset }}.aggregated_daily_offer_consultation_data` 
+WHERE event_date BETWEEN date_sub(DATE("{{ ds }}"), INTERVAL {{ params.days }} DAY) and DATE("{{ ds }}")
+and event_name = "ConsultOffer"
+AND offer_id is not null 
+AND offerer_id is not null
+GROUP BY 
+    event_date,
+    offerer_id,
+    offer_id,
+    venue_id,
+    offerer_name,
+    venue_name,
+    offer_name,
+    origin,
+    user_role,
+    user_age

@@ -96,6 +96,10 @@ for dag_name, dag_params in dags.items():
                 default=gce_params["instance_name"],
                 type="string",
             ),
+            "days": Param(
+                default=4,
+                type="integer",
+            ),
         },
     ) as dag:
 
@@ -123,7 +127,7 @@ for dag_name, dag_params in dags.items():
             dag=dag,
         )
 
-        in_tasks, out_tasks = [], []
+        in_tables_tasks, out_tables_tasks = [], []
         for table_config in TABLES_CONFIGS:
             tmp_table_name = table_config["sql"]
             clickhouse_table_name = table_config["clickhouse_table_name"]
@@ -169,12 +173,14 @@ for dag_name, dag_params in dags.items():
                 dag=dag,
             )
             export_task >> export_bq >> events_export
-            in_tasks.append(export_task)
-            out_tasks.append(events_export)
+            in_tables_tasks.append(export_task)
+            out_tables_tasks.append(events_export)
+
+        end_tables = DummyOperator(task_id="end_tables_export")
 
         gce_instance_stop = StopGCEOperator(
             task_id=f"gce_stop_task", instance_name="{{ params.instance_name }}"
         )
 
-        (gce_instance_start >> fetch_code >> install_dependencies >> in_tasks)
-        (out_tasks >> gce_instance_stop)
+        (gce_instance_start >> fetch_code >> install_dependencies >> in_tables_tasks)
+        (out_tables_tasks >> end_tables >> gce_instance_stop)

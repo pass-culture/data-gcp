@@ -27,7 +27,7 @@ SELECT
 FROM `{{ bigquery_analytics_dataset }}.diversification_raw` as diversification_raw
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_booking_data` as booking
 ON booking.booking_id = diversification_raw.booking_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_metadata` as offer_metadata
+LEFT JOIN `{{ bigquery_clean_dataset }}.offer_metadata` as offer_metadata
 ON booking.offer_id = offer_metadata.offer_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` as user
 ON diversification_raw.user_id = user.user_id

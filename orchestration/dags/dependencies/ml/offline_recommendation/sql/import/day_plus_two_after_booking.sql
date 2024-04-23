@@ -16,6 +16,6 @@ ebd.user_id
 ,eom.search_group_name
 from `{{ bigquery_analytics_dataset }}.enriched_booking_data` ebd
 JOIN user_with_one_booking uob on ebd.user_id=uob.user_id
-JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_metadata` eom on eom.offer_id=ebd.offer_id
+JOIN `{{ bigquery_clean_dataset }}.offer_metadata` eom on eom.offer_id=ebd.offer_id
 JOIN `{{ bigquery_analytics_dataset }}.enriched_venue_data` evd on evd.venue_id=ebd.venue_id
 where uob.first_booking_date=ebd.booking_creation_date

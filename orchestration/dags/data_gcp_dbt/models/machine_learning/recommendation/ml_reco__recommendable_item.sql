@@ -3,8 +3,8 @@ WITH venues AS (
             venue_id, 
             venue_longitude,
             venue_latitude
-        FROM `{{ bigquery_clean_dataset }}.applicative_database_venue` as venue
-        JOIN `{{ bigquery_clean_dataset }}.applicative_database_offerer` as offerer ON venue_managing_offerer_id=offerer_id
+        FROM {{ ref("int_applicative__venue") }} as venue
+        JOIN {{ ref("int_applicative__offerer") }} as offerer ON venue_managing_offerer_id=offerer_id
         WHERE venue.venue_is_virtual is false
         AND offerer.offerer_validation_status = 'VALIDATED'
 ),
@@ -14,10 +14,7 @@ offer_details AS (
         eod.item_id,
         eod.offer_id, 
         eod.offer_name,
-        v.venue_id, 
-        v.venue_longitude,
-        v.venue_latitude
-    FROM `{{ bigquery_analytics_dataset }}.enriched_offer_data` eod
+    FROM {{ ref('enriched_offer_data') }}  eod
     LEFT JOIN venues v on v.venue_id = eod.venue_id
     QUALIFY ROW_NUMBER() OVER (PARTITION BY eod.item_id ORDER BY eod.booking_confirm_cnt DESC) = 1
 ),
@@ -57,7 +54,7 @@ recommendable_items_raw AS (
         MAX(ro.semantic_emb_mean) as semantic_emb_mean,
 
     FROM
-    `{{ bigquery_analytics_dataset }}`.recommendable_offers_raw ro
+        {{ ref('ml_reco__available_offer') }} ro
     GROUP BY 1
 ),
 

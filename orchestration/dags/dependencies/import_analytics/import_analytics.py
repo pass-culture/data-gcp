@@ -46,15 +46,6 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_institution_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
-    "enriched_offer_metadata": {
-        "sql": f"{ANALYTICS_SQL_PATH}/enriched_offer_metadata.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
-    "enriched_item_metadata": {
-        "sql": f"{ANALYTICS_SQL_PATH}/enriched_item_metadata.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["enriched_offer_metadata"],
-    },
     "enriched_stock_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_stock_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -96,55 +87,6 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/offer_moderation.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "offer_moderation",
-    },
-    "offer_with_mediation": {
-        "sql": f"{ANALYTICS_SQL_PATH}/offer_with_mediation.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "offer_with_mediation",
-    },
-    "forbidden_item_recommendation": {
-        "sql": f"{ANALYTICS_SQL_PATH}/forbidden_item_recommendation.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "forbidden_item_recommendation",
-        "depends": [
-            "enriched_item_metadata",
-        ],
-    },
-    "recommendable_offers_data": {
-        "sql": f"{ANALYTICS_SQL_PATH}/recommendable_offers_data.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "recommendable_offers_data",
-        "depends": [
-            "offer_with_mediation",
-            "enriched_item_metadata",
-            "forbidden_item_recommendation",
-        ],
-    },
-    "recommendable_offers_raw": {
-        "sql": f"{ANALYTICS_SQL_PATH}/recommendable_offers_raw.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "recommendable_offers_raw",
-        "depends": [
-            "recommendable_offers_data",
-        ],
-    },
-    "recommendable_items_raw": {
-        "sql": f"{ANALYTICS_SQL_PATH}/recommendable_items_raw.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "recommendable_items_raw",
-        "depends": [
-            "recommendable_offers_raw",
-        ],
-    },
-    "non_recommendable_offers_data": {
-        "sql": f"{ANALYTICS_SQL_PATH}/non_recommendable_offers_data.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "non_recommendable_offers_data",
-    },
-    "non_recommendable_items_data": {
-        "sql": f"{ANALYTICS_SQL_PATH}/non_recommendable_items_data.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "non_recommendable_items_data",
     },
     "venue_siren_offers": {
         "sql": f"{ANALYTICS_SQL_PATH}/venue_siren_offers.sql",

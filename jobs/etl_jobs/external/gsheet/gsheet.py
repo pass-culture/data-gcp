@@ -20,7 +20,7 @@ SHEETS = {
             "Dans quel domaine culturel agissez vous principalement ?": "cultural_domain",
         },
     },
-    "sensitive_item_recommendation": {
+    "gsheet_ml_recommendation_sensitive_item": {
         "spreadsheet_id": "1wdZvDmM25BOckRwdaaVoCpDWNsQns1W5ZQ7i5B5BQGE",
         "expected_headers_dict": {
             "date": "date",

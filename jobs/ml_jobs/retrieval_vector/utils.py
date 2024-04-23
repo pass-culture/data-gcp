@@ -16,7 +16,7 @@ ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
 BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
 MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"
-
+BIGQUERY_RECOMMENDATION_DATASET = f"ml_recommendation_{ENV_SHORT_NAME}"
 
 item_columns = [
     "vector",
@@ -119,7 +119,7 @@ def get_items_metadata():
         ROW_NUMBER() OVER (ORDER BY booking_trend DESC) as booking_trend_desc,
         ROW_NUMBER() OVER (ORDER BY booking_creation_trend DESC) as booking_creation_trend_desc,
         ROW_NUMBER() OVER (ORDER BY booking_release_trend DESC) as booking_release_trend_desc
-        FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.recommendable_items_raw`
+        FROM `{GCP_PROJECT_ID}.{BIGQUERY_RECOMMENDATION_DATASET}.recommendable_item`
     """
     return client.query(sql).to_dataframe()
 

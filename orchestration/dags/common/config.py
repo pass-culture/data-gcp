@@ -46,6 +46,9 @@ BIGQUERY_ANALYTICS_DATASET = os.environ.get(
 BIGQUERY_BACKEND_DATASET = os.environ.get(
     "BIGQUERY_BACKEND_DATASET", f"backend_{ENV_SHORT_NAME}"
 )
+BIGQUERY_ML_RECOMMENDATION_DATASET = os.environ.get(
+    "BIGQUERY_BACKEND_DATASET", f"ml_recommendation_{ENV_SHORT_NAME}"
+)
 BIGQUERY_TMP_DATASET = os.environ.get("BIGQUERY_TMP_DATASET", f"tmp_{ENV_SHORT_NAME}")
 
 APPLICATIVE_PREFIX = "applicative_database_"

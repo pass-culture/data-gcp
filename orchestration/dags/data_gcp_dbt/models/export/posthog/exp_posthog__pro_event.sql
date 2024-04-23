@@ -1,7 +1,7 @@
 SELECT
     event_date,
-    CASE WHEN event_name="page_view" THEN CONCAT(event_name,page_name) ELSE event_name END as event_name,
-    event_timestamp,
+    CASE WHEN event_name="page_view" THEN CONCAT("Page: ", page_name) ELSE event_name END as event_name,
+    timestamp(event_timestamp) as event_timestamp,
     user_id,
     user_pseudo_id,
     platform,
@@ -48,3 +48,4 @@ SELECT
     "pro" as origin
 FROM {{ ref("mrt_pro__event") }}
 WHERE (NOT REGEXP_CONTAINS(event_name, '^[a-z]+(_[a-z]+)*$') OR event_name = "page_view")
+AND user_pseudo_id is NOT NULL

@@ -6,7 +6,7 @@
 ) }}
 
 WITH offers_grouped_by_venue AS (
-SELECT
+    SELECT
         venue_id,
         SUM(total_individual_bookings) AS total_individual_bookings,
         SUM(total_non_cancelled_individual_bookings) AS total_non_cancelled_individual_bookings,
@@ -18,9 +18,7 @@ SELECT
         MIN(CASE WHEN offer_validation = 'APPROVED' THEN offer_creation_date END) AS first_individual_offer_creation_date,
         MAX(CASE WHEN offer_validation = 'APPROVED' THEN offer_creation_date END) AS last_individual_offer_creation_date,
         COUNT(CASE WHEN offer_validation = 'APPROVED' THEN offer_id END) AS total_created_individual_offers,
-        COUNT(DISTINCT CASE WHEN is_bookable = 1 THEN offer_id END) AS total_venue_bookable_individual_offers,
-        MIN(CASE WHEN is_bookable = 1 THEN offer_creation_date END) AS venue_first_bookable_individual_offer_date,
-        MAX(CASE WHEN is_bookable = 1 THEN offer_creation_date END) AS venue_last_bookable_individual_offer_date,
+        COUNT(DISTINCT CASE WHEN is_bookable = 1 THEN offer_id END) AS total_venue_bookable_individual_offers
     FROM {{ ref('int_applicative__offer') }}
     GROUP BY venue_id
 ),
@@ -38,10 +36,17 @@ collective_offers_grouped_by_venue AS (
         COUNT(CASE WHEN collective_offer_validation = 'APPROVED' THEN collective_offer_id END) AS total_created_collective_offers,
         MIN(CASE WHEN collective_offer_validation = 'APPROVED' THEN collective_offer_creation_date END) AS first_collective_offer_creation_date,
         MAX(CASE WHEN collective_offer_validation = 'APPROVED' THEN collective_offer_creation_date END) AS last_collective_offer_creation_date,
-        COUNT(DISTINCT CASE WHEN is_bookable = 1 THEN collective_offer_id END) AS total_venue_bookable_collective_offers,
-        MIN(CASE WHEN is_bookable = 1 THEN collective_offer_creation_date END) AS venue_first_bookable_collective_offer_date,
-        MAX(CASE WHEN is_bookable = 1 THEN collective_offer_creation_date END) AS venue_last_bookable_collective_offer_date
+        COUNT(DISTINCT CASE WHEN is_bookable = 1 THEN collective_offer_id END) AS total_venue_bookable_collective_offers
     FROM {{ ref('int_applicative__collective_offer') }}
+    GROUP BY venue_id
+),
+
+bookable_offer_history AS (
+    SELECT
+        venue_id,
+        MIN(partition_date) AS venue_first_bookable_offer_date,
+        MAX(partition_date) AS venue_last_bookable_offer_date,
+    FROM {{ source('analytics', 'bookable_venue_history')}}
     GROUP BY venue_id
 )
 
@@ -61,7 +66,7 @@ SELECT
     v.venue_is_virtual,
     v.venue_comment,
     v.venue_public_name,
-    v.venue_type_code,
+    v.venue_type_code AS venue_type_label,
     v.venue_label_id,
     v.venue_creation_date,
     v.venue_is_permanent,
@@ -141,30 +146,25 @@ SELECT
     co.last_collective_offer_creation_date,
     COALESCE(co.total_created_collective_offers,0) AS total_created_collective_offers,
     COALESCE(o.total_created_individual_offers,0) + COALESCE(co.total_created_collective_offers,0) AS total_created_offers,
-    LEAST(
-        o.venue_first_bookable_individual_offer_date,
-        co.venue_first_bookable_collective_offer_date
-    ) AS venue_first_bookable_offer_date,
-    GREATEST(
-        o.venue_last_bookable_individual_offer_date,
-        co.venue_last_bookable_collective_offer_date
-    ) AS venue_last_bookable_offer_date,
-    CASE WHEN first_individual_booking_date IS NOT NULL AND first_collective_booking_date IS NOT NULL THEN LEAST(first_collective_booking_date, first_individual_booking_date)
+    boh.venue_first_bookable_offer_date,
+    boh.venue_last_bookable_offer_date,
+    CASE WHEN o.first_individual_booking_date IS NOT NULL AND co.first_collective_booking_date IS NOT NULL THEN LEAST(co.first_collective_booking_date,o.first_individual_booking_date)
          ELSE COALESCE(first_individual_booking_date,first_collective_booking_date) END AS first_booking_date,
-    CASE WHEN last_individual_booking_date IS NOT NULL AND last_collective_booking_date IS NOT NULL THEN GREATEST(last_collective_booking_date, last_individual_booking_date)
-         ELSE COALESCE(last_individual_booking_date,last_collective_booking_date) END AS last_booking_date,
-    CASE WHEN first_individual_offer_creation_date IS NOT NULL AND first_collective_offer_creation_date IS NOT NULL THEN LEAST(first_collective_offer_creation_date, first_individual_offer_creation_date)
-         ELSE COALESCE(first_individual_offer_creation_date,first_collective_offer_creation_date) END AS first_offer_creation_date,
-    CASE WHEN last_individual_offer_creation_date IS NOT NULL AND last_collective_offer_creation_date IS NOT NULL THEN GREATEST(last_collective_offer_creation_date, last_individual_offer_creation_date)
-        ELSE COALESCE(last_individual_offer_creation_date,last_collective_offer_creation_date) END AS last_offer_creation_date,
+    CASE WHEN o.last_individual_booking_date IS NOT NULL AND co.last_collective_booking_date IS NOT NULL THEN GREATEST(co.last_collective_booking_date,o.last_individual_booking_date)
+         ELSE COALESCE(o.last_individual_booking_date,co.last_collective_booking_date) END AS last_booking_date,
+    CASE WHEN o.first_individual_offer_creation_date IS NOT NULL AND co.first_collective_offer_creation_date IS NOT NULL THEN LEAST(co.first_collective_offer_creation_date,o.first_individual_offer_creation_date)
+         ELSE COALESCE(o.first_individual_offer_creation_date,co.first_collective_offer_creation_date) END AS first_offer_creation_date,
+    CASE WHEN o.last_individual_offer_creation_date IS NOT NULL AND co.last_collective_offer_creation_date IS NOT NULL THEN GREATEST(co.last_collective_offer_creation_date,o.last_individual_offer_creation_date)
+        ELSE COALESCE(o.last_individual_offer_creation_date,co.last_collective_offer_creation_date) END AS last_offer_creation_date,
     COALESCE(o.total_venue_bookable_individual_offers,0) AS total_venue_bookable_individual_offers,
     COALESCE(co.total_venue_bookable_collective_offers,0) AS total_venue_bookable_collective_offers,
     COALESCE(o.total_venue_bookable_individual_offers,0) + COALESCE(co.total_venue_bookable_collective_offers,0) AS total_venue_bookable_offers
 FROM {{ source("raw", "applicative_database_venue") }} AS v
 LEFT JOIN offers_grouped_by_venue AS o ON o.venue_id = v.venue_id
 LEFT JOIN collective_offers_grouped_by_venue AS co ON co.venue_id = v.venue_id
+LEFT JOIN bookable_offer_history AS boh ON boh.venue_id = v.venue_id
 LEFT JOIN {{ source("raw", "applicative_database_venue_registration") }} AS vr ON v.venue_id = vr.venue_id
 LEFT JOIN {{ source("raw", "applicative_database_venue_contact") }} AS vc ON v.venue_id = vc.venue_id
-LEFT JOIN{{ source('raw', 'applicative_database_venue_label') }} AS vl ON vl.venue_label_id = v.venue_label_id
-LEFT JOIN{{ source('raw', 'applicative_database_accessibility_provider') }} AS va ON va.venue_id = v.venue_id
-LEFT JOIN {{ ref("int_applicative__offerer") }} AS ofr ON v.venue_managing_offerer_id = ofr.offerer_id
+LEFT JOIN {{ source('raw', 'applicative_database_venue_label') }} AS vl ON vl.venue_label_id = v.venue_label_id
+LEFT JOIN {{ source('raw', 'applicative_database_accessibility_provider') }} AS va ON va.venue_id = v.venue_id
+INNER JOIN {{ ref("int_applicative__offerer") }} AS ofr ON v.venue_managing_offerer_id = ofr.offerer_id

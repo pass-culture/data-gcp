@@ -11,8 +11,8 @@ posthog_personal_api_key = access_secret_data(
 )
 
 
-BATCH_SIZE = 10_000
-TIME = 5
+BATCH_SIZE = 5000
+TIME = 10
 
 
 def run(
@@ -29,13 +29,14 @@ def run(
         posthog_personal_api_key=posthog_personal_api_key,
     )
     print(f"Will process {len(events)} events...")
+    event_idx = 0
     for event_idx, event in enumerate(events, 1):
         ph.event_to_posthog(event)
         if event_idx % BATCH_SIZE == 0:
             print(f"Processed {event_idx} events. Pausing for {TIME} second...")
             time.sleep(TIME)
     print(f"Processed {event_idx} events.... Wait for finish")
-    time.sleep(900)
+    time.sleep(1800)
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ WITH k AS (
         ie.item_id,
         ie.hybrid_embedding,
     FROM
-        `{{ bigquery_clean_dataset }}.item_embeddings_reduced_16` ie
+        `{{ bigquery_clean_dataset }}.item_embeddings_reduced_64` ie
     INNER JOIN `{{ bigquery_analytics_dataset }}.recommendable_items_raw` ri on ri.item_id = ie.item_id 
 ),
 z AS (

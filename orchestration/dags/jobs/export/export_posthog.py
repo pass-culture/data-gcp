@@ -34,7 +34,11 @@ DAG_CONFIG = {
     "BASE_DIR": "data-gcp/jobs/etl_jobs/internal/export_posthog/",
 }
 
-TABLE_PARAMS = ["posthog_native_event", "posthog_adage_log", "posthog_pro_event"]
+TABLE_PARAMS = {
+    "native": "posthog_native_event",
+    "adage": "posthog_adage_log",
+    "pro": "posthog_pro_event",
+}
 
 GCE_PARAMS = {
     "instance_name": f"export-posthog-data-{ENV_SHORT_NAME}",
@@ -55,8 +59,8 @@ with DAG(
     },
     description="Export to analytics data posthog",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
-    catchup=False,
-    start_date=datetime.datetime(2023, 12, 15),
+    catchup=True,
+    start_date=datetime.datetime(2024, 3, 1),
     max_active_runs=1,
     dagrun_timeout=datetime.timedelta(minutes=1440),
     user_defined_macros=macros.default,
@@ -80,11 +84,11 @@ with DAG(
         ),
     },
 ) as dag:
-    for table_name in TABLE_PARAMS:
-        table_config_name = f"export_{table_name}"
+    for job_name, table_name in TABLE_PARAMS.items():
+        table_config_name = f"export_{job_name}"
         table_id = f"{DATE}_{table_config_name}"
         params_instance = "{{ params.instance_name }}"
-        instance_name = f"{table_name}-{params_instance}"
+        instance_name = f"{job_name}-{params_instance}"
         storage_path = f"{DAG_CONFIG['STORAGE_PATH']}/{DATE}_{table_config_name}/"
         export_task = BigQueryExecuteQueryOperator(
             task_id=f"{table_config_name}",

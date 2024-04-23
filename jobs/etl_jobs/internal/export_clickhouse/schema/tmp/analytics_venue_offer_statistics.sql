@@ -1,4 +1,4 @@
-CREATE TABLE {{ dataset }}.{{ tmp_table_name }}
+CREATE TABLE IF NOT EXISTS {{ dataset }}.{{ tmp_table_name }} ON cluster default
   ENGINE = MergeTree
   PARTITION BY update_date
   ORDER BY tuple(offerer_siren, venue_id) 

@@ -37,7 +37,9 @@ def update_incremental(
                 print(update_sql)
                 clickhouse_client.command(update_sql)
     print(f"Done updating. Removing temporary table.")
-    clickhouse_client.command(f" DROP TABLE tmp.{tmp_table_name}")
+    clickhouse_client.command(
+        f" DROP TABLE IF EXISTS tmp.{tmp_table_name} ON cluster default"
+    )
 
 
 def remove_stale_partitions(dataset_name, table_name, update_date) -> None:

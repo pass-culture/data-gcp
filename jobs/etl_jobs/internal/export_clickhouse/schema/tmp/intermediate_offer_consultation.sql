@@ -1,5 +1,5 @@
 
-CREATE TABLE {{ dataset }}.{{ tmp_table_name }}
+CREATE TABLE IF NOT EXISTS {{ dataset }}.{{ tmp_table_name }}  ON cluster default
   ENGINE = MergeTree
   PARTITION BY partition_date
   ORDER BY (offerer_id,venue_id, offer_id)

@@ -86,7 +86,7 @@ default = {
     "bigquery_raw_dataset": BIGQUERY_RAW_DATASET,
     "bigquery_sandbox_dataset": BIGQUERY_SANDBOX_DATASET,
     "bigquery_backend_dataset": BIGQUERY_BACKEND_DATASET,
-    "bigquery_ml_recommendation_dataset": BIGQUERY_ML_RECOMMENDATION_DATASET,
+    "bigquery_ml_reco_dataset": BIGQUERY_ML_RECOMMENDATION_DATASET,
     "bigquery_appsflyer_import_dataset": f"{GCP_PROJECT_ID}.appsflyer_import_{ENV_SHORT_NAME}",
     "env_short_name": ENV_SHORT_NAME,
     "gcp_project": GCP_PROJECT_ID,

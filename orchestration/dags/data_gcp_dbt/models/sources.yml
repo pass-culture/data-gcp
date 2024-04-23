@@ -107,7 +107,7 @@ sources:
       - name: firebase_pro_events
       - name: geoip_city_v4
       - name: gsheet_eac_webinar
-      - name: gsheet_sensitive_item_recommendation
+      - name: gsheet_ml_recommendation_sensitive_item
       - name: macro_rayons
       - name: stdout
       

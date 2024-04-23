@@ -1,8 +1,3 @@
-{{
-    config(
-        materialized = "view"
-    )
-}}
 
 WITH selected_users AS (
   SELECT
@@ -32,7 +27,7 @@ LEFT JOIN {{ source('raw', 'applicative_database_user') }} u on u.user_id = ie.u
 
 SELECT
     eu.user_id,
-    eu.user_deposit_creation_date
+    eu.user_deposit_creation_date,
     eu.user_birth_date,
     eu.user_deposit_initial_amount,
     coalesce(eu.user_theoretical_remaining_credit, eu.user_last_deposit_amount) as user_theoretical_remaining_credit,

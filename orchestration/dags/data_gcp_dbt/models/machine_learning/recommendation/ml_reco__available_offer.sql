@@ -1,4 +1,14 @@
-WITH offers_with_mediation AS (
+WITH venue AS (
+    SELECT 
+            venue_id, 
+            venue_longitude,
+            venue_latitude
+    FROM {{ ref("int_applicative__venue") }}
+    WHERE venue_is_virtual is false
+    AND offerer_validation_status = 'VALIDATED'
+    AND offerer_is_active = TRUE
+),
+offers_with_mediation AS (
         SELECT offer_id
         FROM {{ ref('int_applicative__mediation') }}
         WHERE is_mediation = 1
@@ -7,8 +17,14 @@ WITH offers_with_mediation AS (
         FROM {{ ref("int_applicative__offer")}} AS o
         INNER JOIN {{ ref('int_applicative__product') }} AS p on o.offer_product_id = p.id
         WHERE p.is_mediation = 1
+), 
+item_count AS (
+    SELECT 
+        item_id, 
+        count(distinct offer_id) as item_count
+    FROM {{ ref("int_applicative__offer")}}
+    GROUP BY item_id
 ),
-
 booking_numbers AS (
     SELECT
         offer.item_id as item_id,
@@ -24,7 +40,6 @@ booking_numbers AS (
         SUM(IF(
             booking.booking_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 28 DAY), 1, 0
         )) AS booking_number_last_28_days,
-        COUNT(distinct offer.offer_id) as item_count
     FROM {{ ref('int_applicative__booking') }} booking
     LEFT JOIN {{ ref('int_applicative__stock') }} stock ON booking.stock_id = stock.stock_id
     LEFT JOIN  {{ ref('enriched_offer_data') }}  offer ON stock.offer_id = offer.offer_id
@@ -71,7 +86,7 @@ get_recommendable_offers AS (
         offer.offer_id AS offer_id,
         offer.item_id AS item_id,
         offer.offer_product_id AS product_id,
-        offer.venue_id AS venue_id,
+        venue.venue_id AS venue_id,
         venue.venue_latitude,
         venue.venue_longitude,
         offer.offer_name AS name,
@@ -90,7 +105,7 @@ get_recommendable_offers AS (
         im.gtl_label_level_3 as gtl_l3,
         im.gtl_label_level_4 as gtl_l4,
         COALESCE(isem.embedding, 0.0) as semantic_emb_mean,
-        MAX(booking_numbers.item_count) as item_count,
+        MAX(ic.item_count) as item_count,
         MAX(COALESCE(booking_numbers.booking_number, 0)) AS booking_number,
         MAX(COALESCE(booking_numbers.booking_number_last_7_days, 0)) AS booking_number_last_7_days,
         MAX(COALESCE(booking_numbers.booking_number_last_14_days, 0)) AS booking_number_last_14_days,
@@ -137,37 +152,23 @@ get_recommendable_offers AS (
                 ELSE 50000
             END
         ) as  default_max_distance
-    FROM
-        {{ ref('enriched_offer_data') }} offer
-        JOIN (
-            SELECT
-                *
-            FROM
-                {{ ref('int_applicative__venue') }} venue
-            WHERE
-                venue.offerer_validation_status = 'VALIDATED'
-        ) venue ON offer.venue_id = venue.venue_id
-        JOIN (
-            SELECT
-                *
-            FROM
-                 {{ ref('int_applicative__offerer') }} offerer
-            WHERE
-                offerer_validation_status='VALIDATED'
-        ) offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
-        LEFT JOIN {{ ref('int_applicative__stock') }} stock ON offer.offer_id = stock.offer_id
-        LEFT JOIN booking_numbers ON booking_numbers.item_id = offer.item_id
-        JOIN offers_with_mediation om on offer.offer_id=om.offer_id
-        LEFT JOIN {{ ref('item_metadata') }} AS im on offer.item_id = im.item_id
-        LEFT JOIN {{ ref('ml_reco__restrained_item') }} forbidden_offer on
-            offer.item_id = forbidden_offer.item_id
-        LEFT JOIN {{ source("raw", "gsheet_sensitive_item_recommendation")}} sensitive_offer on
-            offer.item_id = sensitive_offer.item_id
-        LEFT JOIN embeddings_avg isem ON isem.item_id = offer.item_id
+    FROM {{ ref('enriched_offer_data') }} offer
+    JOIN venue ON venue.venue_id = offer.venue_id
+    JOIN offers_with_mediation om on offer.offer_id=om.offer_id
+
+    LEFT JOIN {{ ref('int_applicative__stock') }} stock ON offer.offer_id = stock.offer_id
+    -- TODO: move this to an onether query related to item_metadata
+    LEFT JOIN booking_numbers ON booking_numbers.item_id = offer.item_id
+    LEFT JOIN item_count ic on ic.item_id = offer.item_id
+    LEFT JOIN {{ ref('item_metadata') }} AS im on offer.item_id = im.item_id
+    LEFT JOIN {{ ref('ml_reco__restrained_item') }} forbidden_offer on
+        offer.item_id = forbidden_offer.item_id
+    LEFT JOIN {{ source("raw", "gsheet_ml_recommendation_sensitive_item")}} sensitive_offer on
+        offer.item_id = sensitive_offer.item_id
+    LEFT JOIN embeddings_avg isem ON isem.item_id = offer.item_id
     WHERE
         offer.is_active = TRUE
         AND offer.offer_is_bookable = TRUE
-        AND offerer.offerer_is_active = TRUE
         AND offer.offer_validation = 'APPROVED'
     GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22
 )

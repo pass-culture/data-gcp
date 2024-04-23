@@ -23,7 +23,7 @@ SELECT
 
 FROM
   `{{ bigquery_analytics_dataset }}`.firebase_aggregated_users firebase_agg
-  JOIN `{{ bigquery_ml_recommendation_dataset }}`.user_statistics stats_reco ON stats_reco.user_id = firebase_agg.user_id
+  JOIN `{{ bigquery_ml_reco_dataset }}`.user_statistics stats_reco ON stats_reco.user_id = firebase_agg.user_id
   JOIN `{{ bigquery_analytics_dataset }}`.firebase_events firebase ON firebase.user_id = firebase_agg.user_id
   LEFT JOIN user_qpi uqpi on uqpi.user_id=firebase_agg.user_id
 GROUP BY

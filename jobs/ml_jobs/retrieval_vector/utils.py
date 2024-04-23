@@ -16,7 +16,7 @@ ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
 BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
 MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"
-BIGQUERY_RECOMMENDATION_DATASET = f"ml_recommendation_{ENV_SHORT_NAME}"
+BIGQUERY_RECOMMENDATION_DATASET = f"ml_reco_{ENV_SHORT_NAME}"
 
 item_columns = [
     "vector",

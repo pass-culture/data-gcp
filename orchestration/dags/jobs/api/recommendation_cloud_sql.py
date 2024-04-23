@@ -101,7 +101,7 @@ def get_table_names():
 
 
 def get_dataset_name(dataset_type):
-    if dataset_type == "ml_recommendation":
+    if dataset_type == "ml_reco":
         return BIGQUERY_ML_RECOMMENDATION_DATASET
     if dataset_type == "analytics":
         return BIGQUERY_ANALYTICS_DATASET

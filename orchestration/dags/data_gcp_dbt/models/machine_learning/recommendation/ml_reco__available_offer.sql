@@ -157,7 +157,7 @@ get_recommendable_offers AS (
     JOIN offers_with_mediation om on offer.offer_id=om.offer_id
 
     LEFT JOIN {{ ref('int_applicative__stock') }} stock ON offer.offer_id = stock.offer_id
-    -- TODO: move this to an onether query related to item_metadata
+    -- TODO: move this to an another query related to item_metadata or more precisely reco_item_metada
     LEFT JOIN booking_numbers ON booking_numbers.item_id = offer.item_id
     LEFT JOIN item_count ic on ic.item_id = offer.item_id
     LEFT JOIN {{ ref('item_metadata') }} AS im on offer.item_id = im.item_id

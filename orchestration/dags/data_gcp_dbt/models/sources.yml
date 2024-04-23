@@ -107,6 +107,7 @@ sources:
       - name: firebase_pro_events
       - name: geoip_city_v4
       - name: gsheet_eac_webinar
+      - name: gsheet_ml_recommendation_sensitive_item
       - name: macro_rayons
       - name: stdout
       
@@ -150,6 +151,7 @@ sources:
       - name: region_department
       - name: siren_data_labels
       - name: user_locations
+      - name: population_age_and_department_france_details
       - name: diversification_booking
       
       

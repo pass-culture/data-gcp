@@ -1,7 +1,9 @@
-CREATE TABLE {{ dataset }}.{{ tmp_table_name }}
+CREATE TABLE IF NOT EXISTS {{ dataset }}.{{ tmp_table_name }} ON cluster default
   ENGINE = MergeTree
   PARTITION BY update_date
-  ORDER BY tuple(offerer_siren, venue_id) AS
+  ORDER BY tuple(offerer_siren, venue_id) 
+  SETTINGS storage_policy='gcs_main'  
+AS
 SELECT 
     cast(update_date as String) as update_date,
     cast(offerer_siren as String) as offerer_siren,
@@ -20,7 +22,8 @@ SELECT
     count_pending_bookings,
     cast(real_amount_booked as Nullable(Float64)) as real_amount_booked,
     cast(pending_amount_booked as Nullable(Float64)) as pending_amount_booked
-FROM gcs(
+FROM s3Cluster(
+    'default', 
     gcs_credentials,
     url='{{ bucket_path }}'
 )

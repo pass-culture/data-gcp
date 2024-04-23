@@ -58,8 +58,7 @@ individual_offers_per_offerer AS (
         COUNT(offer.offer_id) AS individual_offers_created
     FROM
         {{ ref('venue') }} AS venue
-        LEFT JOIN {{ ref('offer') }} AS offer ON venue.venue_id = offer.venue_id
-                                                                                    AND offer.offer_validation = 'APPROVED'
+        LEFT JOIN {{ ref('offer') }} AS offer ON venue.venue_id = offer.venue_id AND offer.offer_validation = 'APPROVED'
     GROUP BY
         venue.venue_managing_offerer_id
 ),
@@ -72,8 +71,7 @@ all_collective_offers AS (
         collective_offer_creation_date
     FROM
         {{ source('raw', 'applicative_database_collective_offer') }} AS collective_offer
-     JOIN {{ ref('venue') }} AS venue ON venue.venue_id = collective_offer.venue_id
-                                                                             AND collective_offer.collective_offer_validation = 'APPROVED'
+     JOIN {{ ref('venue') }} AS venue ON venue.venue_id = collective_offer.venue_id AND collective_offer.collective_offer_validation = 'APPROVED'
     UNION
     ALL
     SELECT
@@ -83,8 +81,7 @@ all_collective_offers AS (
         collective_offer_creation_date
     FROM
         {{ source('raw', 'applicative_database_collective_offer_template') }} AS collective_offer_template
-     JOIN {{ ref('venue') }} AS venue ON venue.venue_id = collective_offer_template.venue_id
-                                                                            AND collective_offer_template.collective_offer_validation = 'APPROVED'
+     JOIN {{ ref('venue') }} AS venue ON venue.venue_id = collective_offer_template.venue_id AND collective_offer_template.collective_offer_validation = 'APPROVED'
 
 ),
 

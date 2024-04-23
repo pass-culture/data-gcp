@@ -47,6 +47,7 @@ SELECT
         ELSE FALSE
         END 
     )as blocked,
-FROM `{{ bigquery_analytics_dataset }}.enriched_offer_data` eod
-INNER JOIN `{{ bigquery_analytics_dataset }}.enriched_item_metadata` eim on eim.item_id = eod.item_id
+FROM {{ ref('enriched_offer_data') }} eod
+INNER JOIN {{ ref('item_metadata') }} eim on eim.item_id = eod.item_id
+WHERE eod.offer_type_domain = "BOOK"
 GROUP BY 1

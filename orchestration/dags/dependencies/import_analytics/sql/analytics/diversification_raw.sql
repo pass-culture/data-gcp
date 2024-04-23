@@ -28,7 +28,7 @@ offer_metadata as (
     , subcategory_id
     , category_id
     , offer_type_label
-  FROM `{{ bigquery_analytics_dataset }}.enriched_offer_metadata`
+  FROM `{{ bigquery_clean_dataset }}.offer_metadata`
 ),
 base_diversification as (
 SELECT

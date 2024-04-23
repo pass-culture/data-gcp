@@ -1,11 +1,10 @@
 import os
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
-from datetime import datetime
-from dataclasses import dataclass
+import clickhouse_connect
+from jinja2 import Template
 
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
-PROJECT_NAME = os.environ.get("GCP_PROJECT_ID")
+BASE_DIR = "schema"
 
 
 def access_secret_data(project_id, secret_id, version_id="latest", default=None):
@@ -16,3 +15,26 @@ def access_secret_data(project_id, secret_id, version_id="latest", default=None)
         return response.payload.data.decode("UTF-8")
     except DefaultCredentialsError:
         return default
+
+
+def load_sql(dataset_name: str, table_name: str, extra_data={}, folder="tmp") -> str:
+    with open(f"{BASE_DIR}/{folder}/{dataset_name}_{table_name}.sql") as file:
+        sql_template = file.read()
+        return Template(sql_template).render(extra_data)
+
+
+ENV_SHORT_NAME = {"prod": "prod", "stg": "staging", "dev": "dev"}[
+    os.environ.get("ENV_SHORT_NAME")
+]
+PROJECT_NAME = os.environ.get("GCP_PROJECT_ID")
+
+clickhouse_client = clickhouse_connect.get_client(
+    host=access_secret_data(
+        PROJECT_NAME, f"clickhouse-svc_external_ip-{ENV_SHORT_NAME}"
+    ),
+    port=access_secret_data(PROJECT_NAME, f"clickhouse_port_{ENV_SHORT_NAME}"),
+    username=access_secret_data(PROJECT_NAME, f"clickhouse_username_{ENV_SHORT_NAME}"),
+    password=access_secret_data(
+        PROJECT_NAME, f"clickhouse-admin_password-{ENV_SHORT_NAME}"
+    ),
+)

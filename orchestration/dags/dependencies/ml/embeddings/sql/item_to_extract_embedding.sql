@@ -46,12 +46,12 @@ SELECT
         ) then "None"
         else safe_cast(o.offer_description AS STRING)
     END AS description,
-    enriched_item_metadata.subcategory_id AS subcategory_id,
-    enriched_item_metadata.category_id AS category,
-    enriched_item_metadata.offer_type_id AS type_id,
-    enriched_item_metadata.offer_type_label AS type_label,
-    enriched_item_metadata.offer_sub_type_id AS sub_type_id,
-    enriched_item_metadata.offer_sub_type_label AS sub_type_label,
+    im.subcategory_id AS subcategory_id,
+    im.category_id AS category,
+    im.offer_type_id AS type_id,
+    im.offer_type_label AS type_label,
+    im.offer_sub_type_id AS sub_type_id,
+    im.offer_sub_type_label AS sub_type_label,
     offer_extracted_data.author,
     offer_extracted_data.performer,
     CASE
@@ -69,7 +69,7 @@ FROM
     `{{ bigquery_raw_dataset }}`.applicative_database_offer o
     LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offer_data eod on o.offer_id=eod.offer_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_item_ids oii on o.offer_id=oii.offer_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_item_metadata enriched_item_metadata on oii.item_id = enriched_item_metadata.item_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}`.item_metadata im on oii.item_id = im.item_id
     LEFT JOIN mediation ON o.offer_id = mediation.offer_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_extracted_data offer_extracted_data ON offer_extracted_data.offer_id = o.offer_id
 WHERE

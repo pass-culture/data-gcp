@@ -1,14 +1,14 @@
 TABLES_CONFIGS = [
     {
-        "sql": "export_offer_consultation",
-        "clickhouse_table_name": "offer_consultation",
-        "clickhouse_dataset_name": "analytics",
+        "sql": "export_user_consultation",
+        "clickhouse_table_name": "user_consultation",
+        "clickhouse_dataset_name": "intermediate",
         "mode": "incremental",
     },
     {
-        "sql": "export_user_consultation",
-        "clickhouse_table_name": "user_consultation",
-        "clickhouse_dataset_name": "recommendation",
+        "sql": "export_offer_consultation",
+        "clickhouse_table_name": "offer_consultation",
+        "clickhouse_dataset_name": "intermediate",
         "mode": "incremental",
     },
     {

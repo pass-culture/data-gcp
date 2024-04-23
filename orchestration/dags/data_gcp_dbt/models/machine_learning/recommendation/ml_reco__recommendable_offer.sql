@@ -1,15 +1,11 @@
-WITH venues AS (
-        SELECT 
-            venue_id, 
-            venue_longitude,
-            venue_latitude
-        FROM `{{ bigquery_clean_dataset }}.applicative_database_venue` as venue
-        JOIN `{{ bigquery_clean_dataset }}.applicative_database_offerer` as offerer ON venue_managing_offerer_id=offerer_id
-        WHERE venue.venue_is_virtual is false
-        AND offerer.offerer_validation_status = 'VALIDATED'
-),
 
-recommendable_offers_data AS (
+{{
+    config(
+        materialized = "view"
+    )
+}}
+
+WITH recommendable_offers_data AS (
     SELECT 
         *,
         ROW_NUMBER() OVER (PARTITION BY offer_id ORDER BY stock_price, stock_beginning_date ASC) as stock_rank,
@@ -19,6 +15,8 @@ recommendable_offers_data AS (
             offer_id,
             product_id,
             venue_id,
+            venue_latitude,
+            venue_longitude,
             offer_creation_date,
             stock_beginning_date,
             MAX(stock_price) as stock_price,
@@ -48,10 +46,10 @@ recommendable_offers_data AS (
             MAX(is_national) as is_national,
             MIN(url IS NOT NULL) as is_numerical,
             MAX((url IS NULL AND NOT is_national)) as is_geolocated,
-            MAX(offer_is_duo) as offer_is_duo    
-        FROM `{{ bigquery_analytics_dataset }}.recommendable_offers_data` 
-        WHERE (stock_beginning_date > CURRENT_DATE) OR (stock_beginning_date IS NULL)
-        GROUP BY 1,2,3,4,5,6
+            MAX(offer_is_duo) as offer_is_duo,
+            MAX(default_max_distance) as default_max_distance    
+        FROM {{ ref('ml_reco__available_offer') }}
+        GROUP BY 1,2,3,4,5,6,7,8
     )
 )
 
@@ -63,6 +61,8 @@ SELECT
     ro.subcategory_id,
     ro.search_group_name,
     ro.venue_id,
+    ro.venue_latitude,
+    ro.venue_longitude,
     ro.name,
     ro.gtl_id,
     ro.gtl_l1,
@@ -90,19 +90,8 @@ SELECT
     ro.is_underage_recommendable,
     ro.is_sensitive,
     ro.is_restrained,
-    v.venue_latitude,
-    v.venue_longitude,
-    CASE
-        WHEN subcategories.category_id = 'MUSIQUE_LIVE' THEN 150000
-        WHEN subcategories.category_id = 'MUSIQUE_ENREGISTREE'  THEN 50000
-        WHEN subcategories.category_id = 'SPECTACLE' THEN 100000
-        WHEN subcategories.category_id = 'CINEMA' THEN 50000
-        WHEN subcategories.category_id = 'LIVRE' THEN 50000
-        ELSE 50000
-    END as default_max_distance,
+    ro.default_max_distance,
     ROW_NUMBER() over() as unique_id
 FROM
     recommendable_offers_data ro
-INNER JOIN `{{ bigquery_clean_dataset }}`.subcategories subcategories ON ro.subcategory_id = subcategories.id
-LEFT JOIN venues v ON ro.venue_id =   v.venue_id
 WHERE stock_rank < 30 -- only next 30 events

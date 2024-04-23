@@ -9,7 +9,7 @@ WITH child_tags AS (
     around_radius,
     REPLACE(tags, '\"', "") AS tag_name
   FROM
-    {{ ref('int_contentful__entries') }},
+    {{ ref('int_contentful__entry') }},
     UNNEST(JSON_EXTRACT_ARRAY(tags, '$')) AS tags
   where
     tags is not null 
@@ -27,10 +27,10 @@ criterion AS (
     ct.tag_name,
     adc.criterion_id,
     adc.offer_id,
-    ado.offer_name
+    adc.offer_name
   FROM
     child_tags ct
-  LEFT JOIN {{ ref('int_applicative_offer_criterion_tag') }} adc.name = ct.tag_name
+  LEFT JOIN {{ ref('int_applicative__criterion') }} adc on adc.name = ct.tag_name
 ),
 module_ids AS (
   SELECT
@@ -38,8 +38,8 @@ module_ids AS (
     e.title as module_name,
     r.child
   FROM
-    {{ ref('int_contentful__entries') }} e
-    LEFT JOIN {{ ref('int_contentful__relationships') }} r on e.id = r.parent
+    {{ ref('int_contentful__entry') }} e
+    LEFT JOIN {{ ref('int_contentful__relationship') }} r on e.id = r.parent
   WHERE
     e.content_type = "algolia"
 )

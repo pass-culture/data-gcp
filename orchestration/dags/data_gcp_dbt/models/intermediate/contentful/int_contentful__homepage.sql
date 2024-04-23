@@ -21,19 +21,8 @@ home_and_modules AS (
     LEFT JOIN {{ source('raw', 'contentful_entries') }} module 
     ON home.module_id = module.id
     AND home.date_imported = module.date_imported
-),
-contentful_entries AS (
-    SELECT
-        id,
-        title,
-        content_type,
-        ROW_NUMBER() OVER (
-            PARTITION BY id
-            ORDER BY
-                execution_date DESC
-        ) AS rnk
-    FROM{{ ref("int_contentful__entries") }}
-),
+)
+
 SELECT
     date,
     home_id,

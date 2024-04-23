@@ -1,19 +1,15 @@
--- TODO checkup
-
--- <TODO> @mripoll why RAW vs Clean here ? 
-
 WITH
   TEMP AS (
-  SELECT DISTINCT -- TODO remove as this should not happen anymore
+  SELECT
     entry_id,
     COALESCE(title, offer_title) AS bloc_name,
     content_type,
     tag_key,
     tag_value
   FROM
-    {{ ref("int_contentful__tags") }} tags
+    {{ ref("int_contentful__tag") }} tags
   INNER JOIN
-    {{ ref("int_contentful__entries") }} entries 
+    {{ ref("int_contentful__entry") }} entries 
   ON
     entries.id = tags.entry_id
   WHERE

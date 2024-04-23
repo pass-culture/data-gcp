@@ -141,7 +141,6 @@ sources:
     tables:
       - name: adage
       - name: bookable_venue_history
-      - name: contentful_entries
       - name: contentful_relationships
       - name: eple
       - name: firebase_pro_events

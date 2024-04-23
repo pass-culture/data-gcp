@@ -22,8 +22,7 @@ SELECT
     count_pending_bookings,
     cast(real_amount_booked as Nullable(Float64)) as real_amount_booked,
     cast(pending_amount_booked as Nullable(Float64)) as pending_amount_booked
-FROM s3Cluster(
-    'default', 
+FROM s3(
     gcs_credentials,
     url='{{ bucket_path }}'
 )

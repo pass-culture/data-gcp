@@ -361,9 +361,9 @@ models:
   - name: mrt_global__venue
     config:
       schema: analytics_{{ target.name }}
-  - name: aggregated_monthly_user_used_booking_activity.sql
-    config: analytics_{{ target.name }}
-      schema:
+  - name: aggregated_monthly_user_used_booking_activity
+    config:
+      schema: analytics_{{ target.name }}
   # enriched folder 
   - name: enriched_booking_data
     config:
@@ -441,5 +441,11 @@ models:
     config:
       schema: analytics_{{ target.name }}
   - name: aggregated_daily_user_used_activity
+    config:
+      schema: analytics_{{ target.name }}
+  - name: user_penetration
+    config:
+      schema: analytics_{{ target.name }}
+  - name: user_penetration_cohorts
     config:
       schema: analytics_{{ target.name }}

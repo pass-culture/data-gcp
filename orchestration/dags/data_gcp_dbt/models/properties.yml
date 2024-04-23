@@ -2,10 +2,10 @@ version: 2
 # Temporary file during migration
 models:
   # adage
-  # - name: typeform_adage
-  #   config:
-  #     schema: clean_{{ target.name }}
-  # applicative folder 
+  - name: typeform_adage
+    config:
+      schema: clean_{{ target.name }}
+  # applicative folder
   - name: action_history
     config:
       schema: clean_{{ target.name }}
@@ -295,9 +295,9 @@ models:
   - name: cleaned_stock
     config:
       schema: clean_{{ target.name }}
-  # - name: user_ip_iris
-  #   config:
-  #     schema: clean_{{ target.name }}
+  - name: user_ip_iris
+    config:
+      schema: clean_{{ target.name }}
   - name: offer_extracted_data
     config:
       schema: clean_{{ target.name }}
@@ -310,15 +310,15 @@ models:
   - name: available_stock_information
     config:
       schema: clean_{{ target.name }}
-  # - name: user_declared_iris
-  #   config:
-  #     schema: clean_{{ target.name }}
+  - name: user_declared_iris
+    config:
+      schema: clean_{{ target.name }}
   - name: bookable_offer
     config:
       schema: clean_{{ target.name }}
-  # - name: user_reco_iris
-  #   config:
-  #     schema: clean_{{ target.name }}
+  - name: user_reco_iris
+    config:
+      schema: clean_{{ target.name }}
   - name: reimbursement_collective
     config:
       schema: clean_{{ target.name }}
@@ -340,6 +340,15 @@ models:
   - name: user_item_consultation
     config:
       schema: clean_{{ target.name }}
+  - name: item_metadata
+    config:
+      schema: clean_{{ target.name }}
+  - name: offer_metadata
+    config:
+      schema: clean_{{ target.name }}
+  - name: isbn_rayon_editor
+    config:
+      schema: clean_{{ target.name }}
   - name: firebase_aggregated_daily_campaign_events
     config:
       schema: analytics_{{ target.name }}
@@ -350,6 +359,9 @@ models:
     config:
       schema: analytics_{{ target.name }}
   - name: mrt_global__venue
+    config:
+      schema: analytics_{{ target.name }}
+  - name: aggregated_monthly_user_used_booking_activity
     config:
       schema: analytics_{{ target.name }}
   # enriched folder 
@@ -426,5 +438,14 @@ models:
     config:
       schema: analytics_{{ target.name }}
   - name: int_firebase__native_event
+    config:
+      schema: analytics_{{ target.name }}
+  - name: aggregated_daily_user_used_activity
+    config:
+      schema: analytics_{{ target.name }}
+  - name: user_penetration
+    config:
+      schema: analytics_{{ target.name }}
+  - name: user_penetration_cohorts
     config:
       schema: analytics_{{ target.name }}

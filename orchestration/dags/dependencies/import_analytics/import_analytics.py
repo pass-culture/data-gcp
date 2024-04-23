@@ -83,10 +83,6 @@ analytics_tables = {
             "enriched_institution_data",
         ],
     },
-    "isbn_rayon_editor": {
-        "sql": f"{ANALYTICS_SQL_PATH}/isbn_rayon_editor.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
     "stock_booking_information": {
         "sql": f"{ANALYTICS_SQL_PATH}/stock_booking_information.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -155,22 +151,6 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "venue_siren_offers",
         "clustering_fields": {"fields": ["offerer_siren", "venue_id"]},
-    },
-    "user_penetration": {
-        "sql": f"{ANALYTICS_SQL_PATH}/user_penetration.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "user_penetration",
-        "depends": [
-            "aggregated_monthly_user_used_booking_activity",
-        ],
-    },
-    "user_penetration_cohorts": {
-        "sql": f"{ANALYTICS_SQL_PATH}/user_penetration_cohorts.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "user_penetration_cohorts",
-        "depends": [
-            "user_penetration",
-        ],
     },
     "user_iris": {
         "sql": f"{ANALYTICS_SQL_PATH}/user_iris.sql",
@@ -354,32 +334,9 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "institution_locations",
     },
-    "user_iris_per_month": {
-        "sql": f"{ANALYTICS_SQL_PATH}/user_iris_per_month.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "user_iris_per_month${{ yyyymmdd(current_month(ds)) }}",
-        "time_partitioning": {"field": "month_log"},
-    },
 }
 
 aggregated_tables = {
-    "aggregated_daily_used_booking": {
-        "sql": f"{ANALYTICS_SQL_PATH}/aggregated_daily_used_booking.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
-    "aggregated_daily_user_data": {
-        "sql": f"{ANALYTICS_SQL_PATH}/aggregated_daily_user_data.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
-    "aggregated_daily_user_used_activity": {
-        "sql": f"{ANALYTICS_SQL_PATH}/aggregated_daily_user_used_activity.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
-    "aggregated_monthly_user_used_booking_activity": {
-        "sql": f"{ANALYTICS_SQL_PATH}/aggregated_monthly_user_used_booking_activity.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["aggregated_daily_user_used_activity"],
-    },
     "aggregated_user_stats_reco": {
         "sql": f"{ANALYTICS_SQL_PATH}/aggregated_user_stats_reco.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

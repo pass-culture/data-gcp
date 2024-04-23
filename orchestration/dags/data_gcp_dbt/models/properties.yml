@@ -361,6 +361,9 @@ models:
   - name: mrt_global__venue
     config:
       schema: analytics_{{ target.name }}
+  - name: aggregated_monthly_user_used_booking_activity.sql
+    config: analytics_{{ target.name }}
+      schema:
   # enriched folder 
   - name: enriched_booking_data
     config:

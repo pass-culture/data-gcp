@@ -353,11 +353,6 @@ analytics_tables = {
 }
 
 aggregated_tables = {
-    "aggregated_monthly_user_used_booking_activity": {
-        "sql": f"{ANALYTICS_SQL_PATH}/aggregated_monthly_user_used_booking_activity.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["aggregated_daily_user_used_activity"],
-    },
     "aggregated_user_stats_reco": {
         "sql": f"{ANALYTICS_SQL_PATH}/aggregated_user_stats_reco.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

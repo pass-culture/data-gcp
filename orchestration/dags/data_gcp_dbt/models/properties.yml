@@ -386,6 +386,9 @@ models:
   - name: enriched_offerer_data
     config:
       schema: analytics_{{ target.name }}
+  - name: enriched_offer_metadata
+    config:
+      schema: analytics_{{ target.name }}
   - name: enriched_offerer_tags_data
     config:
       schema: analytics_{{ target.name }}

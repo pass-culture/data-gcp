@@ -23,7 +23,7 @@ from common.config import (
     GCP_PROJECT_ID,
     GCP_REGION,
     DATA_GCS_BUCKET_NAME,
-    BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_ML_RECOMMENDATION_DATASET,
     BIGQUERY_ANALYTICS_DATASET,
     DAG_FOLDER,
     RECOMMENDATION_SQL_INSTANCE,
@@ -100,6 +100,13 @@ def get_table_names():
     return table_names
 
 
+def get_dataset_name(dataset_type):
+    if dataset_type == "ml_reco":
+        return BIGQUERY_ML_RECOMMENDATION_DATASET
+    if dataset_type == "analytics":
+        return BIGQUERY_ANALYTICS_DATASET
+
+
 with DAG(
     "recommendation_cloud_sql_v1",
     default_args=default_args,
@@ -118,10 +125,7 @@ with DAG(
     for table in TABLES:
         dataset_type = TABLES[table]["dataset_type"]
         bigquery_table_name = TABLES[table]["bigquery_table_name"]
-        if dataset_type == "clean":
-            dataset = BIGQUERY_CLEAN_DATASET
-        if dataset_type == "analytics":
-            dataset = BIGQUERY_ANALYTICS_DATASET
+        dataset = get_dataset_name(dataset_type)
 
         list_type_columns = [
             column_name

@@ -9,14 +9,14 @@ base as (
     SELECT
         ie.item_id,
         ie.hybrid_embedding,
-        enriched_item_metadata.subcategory_id AS subcategory_id,
-        enriched_item_metadata.category_id as category,
-        enriched_item_metadata.offer_type_id,
-        enriched_item_metadata.offer_type_label,
-        enriched_item_metadata.offer_sub_type_id,
-        enriched_item_metadata.offer_sub_type_label,
+        im.subcategory_id AS subcategory_id,
+        im.category_id as category,
+        im.offer_type_id,
+        im.offer_type_label,
+        im.offer_sub_type_id,
+        im.offer_sub_type_label,
     FROM items_w_embedding ie
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_item_metadata` enriched_item_metadata on ie.item_id = enriched_item_metadata.item_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}.item_metadata` im on ie.item_id = im.item_id
 )
 select
     *

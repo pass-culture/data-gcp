@@ -12,4 +12,4 @@ SELECT
     venue_motorDisabilityCompliant,
     venue_visualDisabilityCompliant,
     venue_withdrawal_details
-FROM `{{ bigquery_clean_dataset }}`.applicative_database_venue
+FROM `{{ bigquery_raw_dataset }}`.applicative_database_venue

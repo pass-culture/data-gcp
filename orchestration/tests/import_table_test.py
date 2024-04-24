@@ -1,6 +1,6 @@
 import unittest
 
-from dependencies.import_analytics.import_raw import (
+from dependencies.applicative_database.import_applicative_database import (
     get_tables_config_dict,
     RAW_SQL_PATH,
 )

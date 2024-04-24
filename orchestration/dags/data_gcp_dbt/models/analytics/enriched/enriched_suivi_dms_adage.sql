@@ -4,14 +4,14 @@ SELECT * EXCEPT(demandeur_entreprise_siren),
   CASE WHEN demandeur_entreprise_siren is null or demandeur_entreprise_siren = "nan" 
   THEN left(demandeur_siret, 9) ELSE demandeur_entreprise_siren END AS demandeur_entreprise_siren
   
-FROM `{{ bigquery_clean_dataset }}`.dms_pro_cleaned
+FROM {{ source('clean','dms_pro_cleaned') }}
 )
 
 , adage_agreg_synchro AS (
 SELECT 
     left(siret, 9) AS siren,
     siret
-FROM `{{ bigquery_analytics_dataset }}`.adage
+FROM {{ source('analytics','adage') }}
 where synchroPass = "1.0"
 )
 
@@ -23,7 +23,7 @@ SELECT
     left(siret, 9) AS siren,
     CASE WHEN siret in (select siret from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siret_synchro_adage,
     CASE WHEN left(siret, 9) in (select siren from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siren_synchro_adage,
-FROM `{{ bigquery_analytics_dataset }}`.adage 
+FROM {{ source('analytics','adage') }}
 )
 
 ,siren_reference_adage AS (
@@ -66,12 +66,12 @@ SELECT
 
 FROM
     dms_pro
-LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer AS offerer 
+LEFT JOIN {{ ref('offerer') }} AS offerer
     ON dms_pro.demandeur_entreprise_siren = offerer.offerer_siren AND offerer.offerer_siren <> "nan"
-LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue
+LEFT JOIN {{ ref('venue') }} AS venue
     ON venue.venue_managing_offerer_id = offerer.offerer_id 
     AND venue_name != 'Offre numérique'
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.adage AS adage 
+LEFT JOIN {{ source('analytics','adage') }} AS adage
     ON adage.siret = dms_pro.demandeur_siret
 WHERE dms_pro.application_status = 'accepte'
 AND dms_pro.procedure_id IN ('57081', '57189','61589','65028','80264')

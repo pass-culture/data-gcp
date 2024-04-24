@@ -34,17 +34,16 @@ SELECT
         DATE_DIFF(fe.event_date, eud.user_birth_date, YEAR)
     ) AS user_age,
     COUNT(*) AS cnt_events,
-FROM
-    `{{ bigquery_analytics_dataset }}.firebase_events` fe
-    JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_data` o ON fe.offer_id = o.offer_id
+FROM {{ ref('int_firebase__native_event')}} fe
+    JOIN {{ ref('enriched_offer_data')}} o ON fe.offer_id = o.offer_id
     AND fe.event_name IN (
         'ConsultOffer',
         'ConsultWholeOffer',
         'ConsultDescriptionDetails'
     )
-    LEFT JOIN `{{ bigquery_int_contentful_dataset }}.algolia_modules_criterion` c ON fe.module_id = c.module_id
+    LEFT JOIN {{ ref('int_contentful__algolia_modules_criterion')}} c ON fe.module_id = c.module_id
     AND fe.offer_id = c.offer_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON fe.user_id = eud.user_id
+    LEFT JOIN {{ ref('enriched_user_data')}} eud ON fe.user_id = eud.user_id
 GROUP BY
     1,
     2,

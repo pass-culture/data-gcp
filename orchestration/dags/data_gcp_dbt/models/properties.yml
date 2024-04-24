@@ -341,9 +341,6 @@ models:
   - name: user_pro_new_nav_state
     config:
       schema: clean_{{ target.name }}
-  - name: enriched_partner_activation_activity
-    config:
-      schema: analytics_{{ target.name }}
   - name: user_item_consultation
     config:
       schema: clean_{{ target.name }}
@@ -457,5 +454,59 @@ models:
     config:
       schema: analytics_{{ target.name }}
   - name: user_penetration_cohorts
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_institution_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: eple_aggregated
+    config:
+      schema: analytics_{{ target.name }}
+  - name: partner_type_bookability_frequency
+    config:
+      schema: analytics_{{ target.name }}
+  - name: siren_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_venue_provider_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: cultural_sector_bookability_frequency
+    config:
+      schema: analytics_{{ target.name }}
+  - name: venue_siren_offers
+    config:
+      schema: analytics_{{ target.name }}
+  - name: institution_locations
+    config:
+      schema: analytics_{{ target.name }}
+  - name: firebase_similar_offer_events
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_local_authority_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_partner_activation_activity
+    config:
+      schema: analytics_{{ target.name }}
+  - name: stock_booking_information
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_stock_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_reimbursement_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_suivi_dms_adage
+    config:
+      schema: analytics_{{ target.name }}
+  - name: aggregated_daily_offer_consultation_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_partner_retention_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: firebase_aggregated_similar_offer_events
     config:
       schema: analytics_{{ target.name }}

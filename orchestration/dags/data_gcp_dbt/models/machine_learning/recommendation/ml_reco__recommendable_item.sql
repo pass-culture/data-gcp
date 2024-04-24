@@ -1,3 +1,9 @@
+{{
+    config(
+        materialized = "table"
+    )
+}}
+
 WITH venues AS (
         SELECT 
             venue_id, 

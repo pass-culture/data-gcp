@@ -1,3 +1,9 @@
+{{
+    config(
+        materialized = "view"
+    )
+}}
+
 SELECT
     eod.item_id,
     MAX(

@@ -21,10 +21,6 @@ from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     APPLICATIVE_PREFIX,
 )
-
-from dependencies.import_analytics.import_clean import (
-    clean_tables,
-)
 from dependencies.import_analytics.import_analytics import define_import_tables
 
 import_tables = define_import_tables()
@@ -50,40 +46,7 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
-wait_for_raw = waiting_operator(dag=dag, dag_id="import_raw")
-
-# CLEAN : Copier les tables Raw dans Clean sauf s'il y a une requete de transformation dans clean.
-
-with TaskGroup(
-    group_id="clean_transformations_group", dag=dag
-) as clean_transformations:
-    import_tables_to_clean_transformation_jobs = {}
-    for table, params in clean_tables.items():
-        task = bigquery_job_task(dag=dag, table=table, job_params=params)
-        import_tables_to_clean_transformation_jobs[table] = {
-            "operator": task,
-            "depends": params.get("depends", []),
-            "dag_depends": params.get("dag_depends", []),  # liste de dag_id
-        }
-
-    end_import_table_to_clean = DummyOperator(
-        task_id="end_import_table_to_clean", dag=dag
-    )
-
-    import_tables_to_clean_transformation_tasks = depends_loop(
-        clean_tables,
-        import_tables_to_clean_transformation_jobs,
-        wait_for_raw,
-        dag,
-        default_end_operator=end_import_table_to_clean,
-    )
-
-
-wait_for_clean_copy_dbt = waiting_operator(
-    dag=dag, dag_id="dbt_run_dag", external_task_id="end"
-)
-
-end_import_table_to_clean = DummyOperator(task_id="end_import_table_to_clean", dag=dag)
+wait_for_dbt = waiting_operator(dag=dag, dag_id="dbt_run_dag", external_task_id="end")
 
 start_historical_data_applicative_tables_tasks = DummyOperator(
     task_id="start_historical_data_applicative_tables_tasks", dag=dag
@@ -167,18 +130,11 @@ analytics_table_tasks = depends_loop(
 
 end = DummyOperator(task_id="end", dag=dag)
 
-(
-    start
-    >> wait_for_raw
-    >> clean_transformations
-    >> wait_for_clean_copy_dbt
-    >> analytics_copy
-    >> end_import
-)
-(clean_transformations >> wait_for_clean_copy_dbt >> end_import_table_to_clean)
+(start >> wait_for_dbt >> analytics_copy >> end_import)
+
 
 (
-    end_import_table_to_clean
+    wait_for_dbt
     >> start_historical_data_applicative_tables_tasks
     >> historical_applicative
     >> end_historical_data_applicative_tables_tasks

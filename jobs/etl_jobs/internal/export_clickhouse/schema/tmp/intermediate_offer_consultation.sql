@@ -17,8 +17,7 @@ AS
     user_role,
     user_age,
     cast(cnt_events as UInt64) as cnt_events
-  FROM s3Cluster(
-    'default', 
+  FROM s3(
     gcs_credentials,
     url='{{ bucket_path }}'
 )

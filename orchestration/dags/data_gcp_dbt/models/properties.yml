@@ -507,3 +507,6 @@ models:
   - name: enriched_partner_retention_data
     config:
       schema: analytics_{{ target.name }}
+  - name: firebase_aggregated_similar_offer_events
+    config:
+      schema: analytics_{{ target.name }}

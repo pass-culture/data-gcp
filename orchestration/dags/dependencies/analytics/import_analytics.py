@@ -119,15 +119,6 @@ analytics_tables = {
             "import_intraday_firebase_data",
         ],
     },
-    "analytics_firebase_aggregated_similar_offer_events": {
-        "sql": f"{ANALYTICS_SQL_PATH}/firebase_aggregated_similar_offer_events.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_aggregated_similar_offer_events",
-        "time_partitioning": {"field": "event_date"},
-        "depends": [
-            "diversification_booking",
-        ],
-    },
     "adage_involved_student": {
         "sql": f"{ANALYTICS_SQL_PATH}/adage_involved_student.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

@@ -34,4 +34,3 @@ def flush_dataset():
     tables = pytest.bq_client.list_tables(dataset_id)
     for table in tables:
         drop_table(client=pytest.bq_client, dataset=TEST_DATASET, table=table.table_id)
-

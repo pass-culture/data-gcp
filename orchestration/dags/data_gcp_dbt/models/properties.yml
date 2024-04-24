@@ -341,9 +341,6 @@ models:
   - name: user_pro_new_nav_state
     config:
       schema: clean_{{ target.name }}
-  - name: enriched_partner_activation_activity
-    config:
-      schema: analytics_{{ target.name }}
   - name: user_item_consultation
     config:
       schema: clean_{{ target.name }}
@@ -487,5 +484,11 @@ models:
     config:
       schema: analytics_{{ target.name }}
   - name: enriched_local_authority_data
+    config:
+      schema: analytics_{{ target.name }}
+  - name: enriched_partner_activation_activity
+    config:
+      schema: analytics_{{ target.name }}
+  - name: stock_booking_information
     config:
       schema: analytics_{{ target.name }}

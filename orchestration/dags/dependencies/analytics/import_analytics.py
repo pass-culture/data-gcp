@@ -43,10 +43,6 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_reimbursement_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
-    "stock_booking_information": {
-        "sql": f"{ANALYTICS_SQL_PATH}/stock_booking_information.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
     "venue_locations": {
         "sql": f"{ANALYTICS_SQL_PATH}/venue_locations.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

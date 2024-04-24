@@ -16,11 +16,11 @@ SELECT
     ,COUNT(DISTINCT CASE WHEN booking.booking_status IN ('CONFIRMED') THEN booking.booking_id ELSE NULL END) AS count_pending_bookings
     ,SUM(CASE WHEN booking.booking_status IN ('USED', 'REIMBURSED') THEN booking.booking_intermediary_amount ELSE NULL END) AS real_amount_booked
     ,SUM(CASE WHEN booking.booking_status IN ('CONFIRMED') THEN booking.booking_intermediary_amount ELSE NULL END) AS pending_amount_booked
-FROM `{{ bigquery_analytics_dataset }}.enriched_venue_data` venue
-JOIN `{{ bigquery_analytics_dataset }}.enriched_offerer_data` offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_data` offer ON venue.venue_id = offer.venue_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}.subcategories` subcategories ON offer.offer_subcategoryid = subcategories.id
-LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_booking_data` booking ON offer.offer_id = booking.offer_id AND booking.booking_status IN ('USED', 'REIMBURSED', 'CONFIRMED')
+FROM {{ ref('enriched_venue_data') }} venue
+JOIN {{ ref('enriched_offerer_data') }} offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
+LEFT JOIN {{ ref('enriched_offer_data') }} offer ON venue.venue_id = offer.venue_id
+LEFT JOIN {{ source('clean','subcategories') }} subcategories ON offer.offer_subcategoryid = subcategories.id
+LEFT JOIN {{ ref('enriched_booking_data') }} booking ON offer.offer_id = booking.offer_id AND booking.booking_status IN ('USED', 'REIMBURSED', 'CONFIRMED')
 WHERE offerer_siren IS NOT NULL
 GROUP BY 1,2,3,4,5,6,7,8,9
 ),
@@ -42,10 +42,10 @@ SELECT
     ,COUNT(DISTINCT CASE WHEN booking.collective_booking_status IN ('PENDING') THEN booking.collective_booking_id ELSE NULL END) AS count_pending_tickets_booked -- same
     ,SUM(CASE WHEN booking.collective_booking_status IN ('USED', 'REIMBURSED','CONFIRMED') THEN booking.booking_amount ELSE NULL END) AS real_amount_booked
     ,SUM(CASE WHEN booking.collective_booking_status IN ('PENDING') THEN booking.booking_amount ELSE NULL END) AS pending_amount_booked
-FROM `{{ bigquery_analytics_dataset }}.enriched_venue_data` venue
-JOIN `{{ bigquery_analytics_dataset }}.enriched_offerer_data` offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_collective_offer_data` offer ON venue.venue_id = offer.venue_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_collective_booking_data` booking ON offer.collective_offer_id = booking.collective_offer_id AND booking.collective_booking_status IN ('USED', 'REIMBURSED', 'CONFIRMED', 'PENDING')
+FROM {{ ref('enriched_venue_data') }}  venue
+JOIN  {{ ref('enriched_offerer_data') }} offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
+LEFT JOIN  {{ ref('enriched_collective_offer_data') }} offer ON venue.venue_id = offer.venue_id
+LEFT JOIN {{ ref('enriched_collective_booking_data') }} booking ON offer.collective_offer_id = booking.collective_offer_id AND booking.collective_booking_status IN ('USED', 'REIMBURSED', 'CONFIRMED', 'PENDING')
 WHERE offerer_siren IS NOT NULL
 GROUP BY 1,2,3,4,5,6,7,8,9
 ),

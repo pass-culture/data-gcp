@@ -57,12 +57,6 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "offer_moderation",
     },
-    "venue_siren_offers": {
-        "sql": f"{ANALYTICS_SQL_PATH}/venue_siren_offers.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "venue_siren_offers",
-        "clustering_fields": {"fields": ["offerer_siren", "venue_id"]},
-    },
     "user_iris": {
         "sql": f"{ANALYTICS_SQL_PATH}/user_iris.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

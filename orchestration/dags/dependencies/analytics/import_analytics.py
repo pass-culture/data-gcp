@@ -209,13 +209,6 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/bookable_partner_history.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
-    "cultural_sector_bookability_frequency": {
-        "sql": f"{ANALYTICS_SQL_PATH}/cultural_sector_bookability_frequency.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": [
-            "bookable_partner_history",
-        ],
-    },
     "retention_partner_history": {
         "sql": f"{ANALYTICS_SQL_PATH}/retention_partner_history.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

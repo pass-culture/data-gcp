@@ -474,3 +474,6 @@ models:
   - name: enriched_venue_provider_data
     config:
       schema: analytics_{{ target.name }}
+  - name: cultural_sector_bookability_frequency
+    config:
+      schema: analytics_{{ target.name }}

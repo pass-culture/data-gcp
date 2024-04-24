@@ -13,7 +13,7 @@ from common.config import (
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
 )
 
-from orchestration.dags.dependencies.applicative_database.import_applicative_database import (
+from dependencies.applicative_database.import_applicative_database import (
     RAW_TABLES,
     HISTORICAL_CLEAN_APPLICATIVE_TABLES,
 )

@@ -182,7 +182,14 @@ SELECT
     consult_venue_timestamp,
     consult_offer_timestamp,
     fav_timestamp,
-    bookings.booking_timestamp
+    bookings.booking_timestamp,
+    home_tag.home_audience,
+    home_tag.user_lifecycle_home,
+    home_tag.home_type,
+    playlist_tag.playlist_type,
+    playlist_tag.offer_category,
+    playlist_tag.playlist_reach,
+    playlist_tag.playlist_recurrence
 FROM displayed
 LEFT JOIN clicked
     ON displayed.unique_session_id = clicked.unique_session_id
@@ -204,3 +211,7 @@ LEFT JOIN {{ ref('int_contentful__entry' )}} parent_modules
     ON parent_modules.id = displayed.parent_module_id
 LEFT JOIN {{ ref('int_contentful__entry' )}} parent_homes
     ON parent_modules.id = displayed.parent_entry_id
+LEFT JOIN {{ ref('int_contentful__home_tag' )}} home_tag
+    ON home_tag.entry_id = displayed.entry_id
+LEFT JOIN {{ ref('int_contentful__playlist_tag' )}} playlist_tag
+    ON playlist_tag.entry_id = displayed.module_id

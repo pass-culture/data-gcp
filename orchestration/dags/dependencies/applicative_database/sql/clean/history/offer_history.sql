@@ -24,4 +24,4 @@ SELECT
     offer_withdrawal_delay,
     offer_last_validation_type,
     DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY) as partition_date
-FROM `{{ bigquery_clean_dataset }}`.`applicative_database_offer`
+FROM `{{ bigquery_raw_dataset }}`.`applicative_database_offer`

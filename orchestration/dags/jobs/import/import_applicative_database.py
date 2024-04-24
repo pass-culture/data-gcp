@@ -7,20 +7,15 @@ from common.utils import one_line_query, get_airflow_schedule
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from common.alerts import analytics_fail_slack_alert
 from common.config import DAG_FOLDER
-
+from common.operators.biquery import bigquery_job_task
 from common.config import (
     GCP_PROJECT_ID,
-    BIGQUERY_RAW_DATASET,
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
 )
 
-from dependencies.import_analytics.import_raw import (
-    get_tables_config_dict,
-    RAW_SQL_PATH,
-)
-
-raw_tables = get_tables_config_dict(
-    PATH=DAG_FOLDER + "/" + RAW_SQL_PATH, BQ_DESTINATION_DATASET=BIGQUERY_RAW_DATASET
+from orchestration.dags.dependencies.applicative_database.import_applicative_database import (
+    RAW_TABLES,
+    HISTORICAL_CLEAN_APPLICATIVE_TABLES,
 )
 
 default_dag_args = {
@@ -32,7 +27,7 @@ default_dag_args = {
 }
 
 dag = DAG(
-    "import_raw",
+    "import_applicative_database",
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
     schedule_interval=get_airflow_schedule("0 1 * * *"),
@@ -44,11 +39,9 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
-# RAW
-
 with TaskGroup(group_id="raw_operations_group", dag=dag) as raw_operations_group:
     import_tables_to_raw_tasks = []
-    for table, params in raw_tables.items():
+    for table, params in RAW_TABLES.items():
         task = BigQueryInsertJobOperator(
             task_id=f"import_to_raw_{table}",
             configuration={
@@ -71,6 +64,15 @@ with TaskGroup(group_id="raw_operations_group", dag=dag) as raw_operations_group
     import_tables_to_raw_tasks.append(task)
 
 
+with TaskGroup(
+    group_id="historical_applicative_group", dag=dag
+) as historical_applicative:
+    historical_data_applicative_tables_tasks = []
+    for table, params in HISTORICAL_CLEAN_APPLICATIVE_TABLES.items():
+        task = bigquery_job_task(dag, table, params)
+        historical_data_applicative_tables_tasks.append(task)
+
+
 end_raw = DummyOperator(task_id="end", dag=dag)
 
-(start >> raw_operations_group >> end_raw)
+(start >> raw_operations_group >> historical_data_applicative_tables_tasks >> end_raw)

@@ -21,4 +21,4 @@ SELECT
     collective_offer_offer_venue,
     collective_offer_last_validation_type,
     DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY) as partition_date
-FROM `{{ bigquery_clean_dataset }}`.`applicative_database_collective_offer`
+FROM `{{ bigquery_raw_dataset }}`.`applicative_database_collective_offer`

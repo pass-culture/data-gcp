@@ -4,4 +4,4 @@ SELECT
     tag_id,
     DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY) as partition_date
 FROM
-    `{{ bigquery_clean_dataset }}`.`applicative_database_offerer_tag_mapping`
+    `{{ bigquery_raw_dataset }}`.`applicative_database_offerer_tag_mapping`

@@ -10,4 +10,4 @@ SELECT
     stock_beginning_date,
     stock_creation_date,
     DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY) as partition_date
-FROM `{{ bigquery_clean_dataset }}`.`applicative_database_stock`
+FROM `{{ bigquery_raw_dataset }}`.`applicative_database_stock`

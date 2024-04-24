@@ -279,10 +279,6 @@ analytics_tables = {
 }
 
 aggregated_tables = {
-    "aggregated_user_stats_reco": {
-        "sql": f"{ANALYTICS_SQL_PATH}/aggregated_user_stats_reco.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
     "aggregated_daily_offer_consultation_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/aggregated_daily_offer_consultation_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

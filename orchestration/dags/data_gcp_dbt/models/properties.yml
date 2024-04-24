@@ -468,3 +468,6 @@ models:
   - name: partner_type_bookability_frequency
     config:
       schema: analytics_{{ target.name }}
+  - name: siren_data
+    config:
+      schema: analytics_{{ target.name }}

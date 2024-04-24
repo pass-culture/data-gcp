@@ -459,3 +459,6 @@ models:
   - name: user_penetration_cohorts
     config:
       schema: analytics_{{ target.name }}
+  - name: enriched_institution_data
+    config:
+      schema: analytics_{{ target.name }}

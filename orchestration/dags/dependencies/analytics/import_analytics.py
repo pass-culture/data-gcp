@@ -26,10 +26,6 @@ def define_import_tables():
 
 
 analytics_tables = {
-    "enriched_institution_data": {
-        "sql": f"{ANALYTICS_SQL_PATH}/enriched_institution_data.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
     "enriched_stock_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_stock_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

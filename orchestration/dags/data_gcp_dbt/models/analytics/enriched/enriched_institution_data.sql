@@ -25,9 +25,8 @@ WITH ranked_deposit AS (
                 educational_deposit_creation_date DESC,
                 educational_deposit_id DESC
         ) AS deposit_rank_desc
-    FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_educational_deposit AS educational_deposit
-        JOIN `{{ bigquery_clean_dataset }}`.applicative_database_educational_year AS educational_year ON educational_deposit.educational_year_id = educational_year.adage_id
+    FROM {{ ref('educational_deposit') }} AS educational_deposit
+        JOIN {{ ref('educational_year') }} AS educational_year ON educational_deposit.educational_year_id = educational_year.adage_id
 ),
 
 first_deposit AS (
@@ -88,11 +87,10 @@ bookings_infos AS (
             ) THEN TRUE
             ELSE FALSE
         END AS is_current_year_booking,
-    FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_educational_institution AS educational_institution
-        JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_booking AS collective_booking ON educational_institution.educational_institution_id = collective_booking.educational_institution_id
+    FROM {{ ref('educational_institution') }} AS educational_institution
+        JOIN {{ ref('collective_booking') }} AS collective_booking ON educational_institution.educational_institution_id = collective_booking.educational_institution_id
         AND collective_booking_status != 'CANCELLED'
-        JOIN `{{ bigquery_clean_dataset }}`.applicative_database_educational_year AS educational_year ON educational_year.adage_id = collective_booking.educational_year_id
+        JOIN {{ ref('educational_year') }} AS educational_year ON educational_year.adage_id = collective_booking.educational_year_id
 ),
 
 first_booking AS (
@@ -111,8 +109,8 @@ last_booking AS (
         collective_offer_subcategory_id AS last_category_booked
     FROM
         bookings_infos
-        JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_stock AS collective_stock ON bookings_infos.collective_stock_id = collective_stock.collective_stock_id
-        JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer AS collective_offer ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
+        JOIN {{ ref('collective_stock') }} AS collective_stock ON bookings_infos.collective_stock_id = collective_stock.collective_stock_id
+        JOIN {{ ref('collective_offer') }} AS collective_offer ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
     WHERE
         booking_rank_desc = 1
 ),
@@ -120,7 +118,7 @@ bookings_per_institution AS (
     SELECT
         bookings_infos.institution_id,
         COUNT(DISTINCT booking_id) AS nb_non_cancelled_bookings,
-        COUNT(DISTINCT CASE WHEN is_current_year_booking THEN booking_id END) AS nb_non_cancelled_bookings_current_year,    
+        COUNT(DISTINCT CASE WHEN is_current_year_booking THEN booking_id END) AS nb_non_cancelled_bookings_current_year,
         SUM(collective_stock_price) AS theoric_amount_spent,
         SUM(CASE WHEN is_current_year_booking THEN collective_stock_price END) AS theoric_amount_spent_current_year,
         COUNT(
@@ -154,8 +152,8 @@ bookings_per_institution AS (
         COUNT(DISTINCT collective_offer_subcategory_id) AS nb_distinct_categories_booked
     FROM
         bookings_infos
-        JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_stock AS collective_stock ON bookings_infos.collective_stock_id = collective_stock.collective_stock_id
-        JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer AS collective_offer ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
+        JOIN {{ ref('collective_stock') }}  AS collective_stock ON bookings_infos.collective_stock_id = collective_stock.collective_stock_id
+        JOIN {{ ref('collective_offer') }} AS collective_offer ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
     GROUP BY
         1
 ),
@@ -164,8 +162,8 @@ students_per_institution AS (
         educational_institution.institution_id,
         SUM(number_of_students) AS nb_of_students
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_educational_institution AS educational_institution
-        LEFT JOIN `{{ bigquery_analytics_dataset }}`.number_of_students_per_eple AS number_of_students_per_eple ON educational_institution.institution_id = number_of_students_per_eple.institution_external_id
+         {{ ref('educational_institution') }} AS educational_institution
+        LEFT JOIN {{ source('analytics','number_of_students_per_eple') }} AS number_of_students_per_eple ON educational_institution.institution_id = number_of_students_per_eple.institution_external_id
     GROUP BY
         1
 ),
@@ -174,10 +172,10 @@ students_educonnectes AS (
     SELECT
         REGEXP_EXTRACT(result_content, '"school_uai": \"(.*?)\",') AS institution_external_id,
         COUNT(DISTINCT user.user_id) AS nb_jeunes_credited
-    FROM `{{ bigquery_clean_dataset }}`.applicative_database_beneficiary_fraud_check AS beneficiary_fraud_check
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.user_beneficiary AS user 
-        ON beneficiary_fraud_check.user_id = user.user_id 
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.user_suspension as user_suspension
+    FROM {{ ref('beneficiary_fraud_check') }} AS beneficiary_fraud_check
+    LEFT JOIN {{ ref('user_beneficiary') }} AS user
+        ON beneficiary_fraud_check.user_id = user.user_id
+    LEFT JOIN {{ ref('user_suspension') }} as user_suspension
         ON user_suspension.user_id = user.user_id
         AND rank = 1
     WHERE
@@ -232,9 +230,8 @@ SELECT
         students_educonnectes.nb_jeunes_credited,
         students_per_institution.nb_of_students
     ) AS part_eleves_beneficiaires
-FROM
-    `{{ bigquery_clean_dataset }}`.applicative_database_educational_institution AS educational_institution
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department ON educational_institution.institution_departement_code = region_department.num_dep
+FROM  {{ ref('educational_institution') }} AS educational_institution
+    LEFT JOIN {{ source('analytics','region_department') }} ON educational_institution.institution_departement_code = region_department.num_dep
     LEFT JOIN first_deposit ON educational_institution.educational_institution_id = first_deposit.institution_id
     LEFT JOIN current_deposit ON educational_institution.educational_institution_id = current_deposit.institution_id
     LEFT JOIN all_deposits ON educational_institution.educational_institution_id = all_deposits.institution_id
@@ -243,9 +240,9 @@ FROM
     LEFT JOIN bookings_per_institution ON educational_institution.educational_institution_id = bookings_per_institution.institution_id
     LEFT JOIN students_per_institution ON educational_institution.institution_id = students_per_institution.institution_id
     LEFT JOIN students_educonnectes ON educational_institution.institution_id = students_educonnectes.institution_external_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.eple` as eple
+    LEFT JOIN {{ source('analytics','eple') }} as eple
         ON educational_institution.institution_id = eple.id_etablissement
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.rural_city_type_data` as rurality 
+    LEFT JOIN {{ source('analytics','rural_city_type_data') }} as rurality
         ON rurality.geo_code = eple.code_commune
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.institution_locations` as location_info 
+    LEFT JOIN {{ source('analytics','institution_locations') }} as location_info
         ON educational_institution.institution_id = location_info.institution_id

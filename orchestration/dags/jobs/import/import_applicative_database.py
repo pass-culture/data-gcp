@@ -63,6 +63,7 @@ with TaskGroup(group_id="raw_operations_group", dag=dag) as raw_operations_group
         )
     import_tables_to_raw_tasks.append(task)
 
+middle = DummyOperator(task_id="import", dag=dag)
 
 with TaskGroup(
     group_id="historical_applicative_group", dag=dag
@@ -73,6 +74,12 @@ with TaskGroup(
         historical_data_applicative_tables_tasks.append(task)
 
 
-end_raw = DummyOperator(task_id="end", dag=dag)
+end = DummyOperator(task_id="end", dag=dag)
 
-(start >> raw_operations_group >> historical_data_applicative_tables_tasks >> end_raw)
+(
+    start
+    >> raw_operations_group
+    >> middle
+    >> historical_data_applicative_tables_tasks
+    >> end
+)

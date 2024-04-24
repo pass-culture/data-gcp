@@ -1,8 +1,6 @@
 import datetime
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.http.operators.http import SimpleHttpOperator
-from airflow.operators.python import PythonOperator
 from airflow.models import Param
 from common.operators.gce import (
     StartGCEOperator,
@@ -16,8 +14,6 @@ from common.config import (
     ENV_SHORT_NAME,
 )
 from common.alerts import task_fail_slack_alert
-from common.operators.biquery import bigquery_job_task
-from dependencies.siren.import_siren import ANALYTICS_TABLES
 from common.utils import getting_service_account_token, get_airflow_schedule
 from common import macros
 
@@ -88,10 +84,6 @@ with DAG(
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
-    analytics_tasks = []
-    for table, params in ANALYTICS_TABLES.items():
-        task = bigquery_job_task(dag, table, params)
-        analytics_tasks.append(task)
 
     start = DummyOperator(task_id="start", dag=dag)
 
@@ -104,6 +96,5 @@ with DAG(
         >> install_dependencies
         >> siren_to_bq
         >> gce_instance_stop
-        >> analytics_tasks
         >> end
     )

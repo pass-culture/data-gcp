@@ -34,10 +34,6 @@ analytics_tables = {
             "import_dms_subscriptions",
         ],
     },
-    "enriched_reimbursement_data": {
-        "sql": f"{ANALYTICS_SQL_PATH}/enriched_reimbursement_data.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
     "venue_locations": {
         "sql": f"{ANALYTICS_SQL_PATH}/venue_locations.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

@@ -495,3 +495,6 @@ models:
   - name: enriched_stock_data
     config:
       schema: analytics_{{ target.name }}
+  - name: enriched_reimbursement_data
+    config:
+      schema: analytics_{{ target.name }}

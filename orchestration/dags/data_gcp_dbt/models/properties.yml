@@ -483,3 +483,6 @@ models:
   - name: institution_locations
     config:
       schema: analytics_{{ target.name }}
+  - name: analytics_firebase_similar_offer_events
+    config:
+      schema: analytics_{{ target.name }}

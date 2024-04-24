@@ -109,13 +109,6 @@ analytics_tables = {
         "time_partitioning": {"field": "booking_date"},
         "params": {"from": -10, "to": -2},
     },
-    "analytics_firebase_similar_offer_events": {
-        "sql": f"{ANALYTICS_SQL_PATH}/firebase_similar_offer_events.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_similar_offer_events",
-        "time_partitioning": {"field": "event_date"},
-        "dag_depends": ["import_intraday_firebase_data"],
-    },
     "analytics_firebase_home_events_details": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_events_details.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

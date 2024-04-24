@@ -26,11 +26,6 @@ def define_import_tables():
 
 
 analytics_tables = {
-    "enriched_stock_data": {
-        "sql": f"{ANALYTICS_SQL_PATH}/enriched_stock_data.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": ["stock_booking_information"],
-    },
     "enriched_suivi_dms_adage": {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_suivi_dms_adage.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

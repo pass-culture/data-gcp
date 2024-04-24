@@ -492,3 +492,6 @@ models:
   - name: stock_booking_information
     config:
       schema: analytics_{{ target.name }}
+  - name: enriched_stock_data
+    config:
+      schema: analytics_{{ target.name }}

@@ -11,7 +11,7 @@ SELECT
             -- LVL1
             WHEN eim.titelive_gtl_id LIKE "07%" THEN TRUE -- "Religion & Esotérisme"
             WHEN eim.titelive_gtl_id LIKE "08%" THEN TRUE -- "Entreprise, économie & droit"
-            HEN eim.titelive_gtl_id LIKE "09%" THEN TRUE -- "Sciences humaines & sociales"
+            WHEN eim.titelive_gtl_id LIKE "09%" THEN TRUE -- "Sciences humaines & sociales"
             WHEN eim.titelive_gtl_id LIKE "10%" THEN TRUE -- "Sciences & Techniques"
             WHEN eim.titelive_gtl_id LIKE "11%" THEN TRUE -- "Scolaire"
             WHEN eim.titelive_gtl_id LIKE "12%" THEN TRUE -- "Parascolaire"

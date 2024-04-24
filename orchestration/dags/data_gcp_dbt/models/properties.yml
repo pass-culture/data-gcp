@@ -504,3 +504,6 @@ models:
   - name: aggregated_daily_offer_consultation_data
     config:
       schema: analytics_{{ target.name }}
+  - name: enriched_partner_retention_data
+    config:
+      schema: analytics_{{ target.name }}

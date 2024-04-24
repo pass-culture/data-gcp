@@ -200,14 +200,6 @@ aggregated_tables = {
         ],
         "dag_depends": ["import_intraday_firebase_data"],
     },
-    "enriched_partner_retention_data": {
-        "sql": f"{ANALYTICS_SQL_PATH}/enriched_partner_retention_data.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": [
-            "partner_type_bookability_frequency",
-            "enriched_venue_provider_data",
-        ],
-    },
 }
 
 

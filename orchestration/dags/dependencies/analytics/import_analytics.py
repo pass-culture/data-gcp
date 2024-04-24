@@ -26,14 +26,6 @@ def define_import_tables():
 
 
 analytics_tables = {
-    "enriched_suivi_dms_adage": {
-        "sql": f"{ANALYTICS_SQL_PATH}/enriched_suivi_dms_adage.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "dag_depends": [
-            "import_adage_v1",
-            "import_dms_subscriptions",
-        ],
-    },
     "venue_locations": {
         "sql": f"{ANALYTICS_SQL_PATH}/venue_locations.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

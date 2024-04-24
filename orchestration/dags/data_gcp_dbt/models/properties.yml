@@ -498,3 +498,6 @@ models:
   - name: enriched_reimbursement_data
     config:
       schema: analytics_{{ target.name }}
+  - name: enriched_suivi_dms_adage
+    config:
+      schema: analytics_{{ target.name }}

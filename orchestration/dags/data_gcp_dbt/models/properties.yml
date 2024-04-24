@@ -480,3 +480,6 @@ models:
   - name: venue_siren_offers
     config:
       schema: analytics_{{ target.name }}
+  - name: institution_locations
+    config:
+      schema: analytics_{{ target.name }}

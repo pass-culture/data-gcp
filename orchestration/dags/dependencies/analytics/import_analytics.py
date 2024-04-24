@@ -224,11 +224,6 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/collective_offer_domain_name.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
-    "institution_locations": {
-        "sql": f"{ANALYTICS_SQL_PATH}/institution_locations.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "institution_locations",
-    },
 }
 
 aggregated_tables = {

@@ -5,7 +5,7 @@ WITH qpv as (
     , commune_qp as qpv_communes
     , geoshape
   FROM
-    `{{ bigquery_analytics_dataset }}.QPV`
+    {{ source('analytics','QPV') }}
   WHERE geoshape is not null
 ),
 institutions as (
@@ -18,7 +18,7 @@ institutions as (
     , cast(latitude as float64) as institution_latitude
     , cast(longitude as float64) as institution_longitude
   FROM
-    `{{ bigquery_analytics_dataset }}.eple`
+    {{ source('analytics','eple') }}
 )
 SELECT 
   institution_id

@@ -88,6 +88,7 @@ default = {
     "bigquery_backend_dataset": BIGQUERY_BACKEND_DATASET,
     "bigquery_ml_reco_dataset": BIGQUERY_ML_RECOMMENDATION_DATASET,
     "bigquery_appsflyer_import_dataset": f"{GCP_PROJECT_ID}.appsflyer_import_{ENV_SHORT_NAME}",
+    "bigquery_int_contentful_dataset": f"{GCP_PROJECT_ID}.int_contentful_{ENV_SHORT_NAME}",
     "env_short_name": ENV_SHORT_NAME,
     "gcp_project": GCP_PROJECT_ID,
     "yyyymmdd": yyyymmdd,

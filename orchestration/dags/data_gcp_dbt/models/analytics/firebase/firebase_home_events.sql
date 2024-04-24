@@ -21,8 +21,8 @@ WITH mapping_module_name_and_id AS (
                         updated_at DESC
                 ) as rnk
             from
-                {{ source('analytics', 'contentful_relationships')}} relations
-                inner join {{ source('analytics', 'contentful_entries')}} entries on entries.id = relations.child
+                {{ ref("int_contentful__relationship") }} relations
+                inner join {{ ref("int_contentful__entry") }} entries on entries.id = relations.child
             WHERE
                 entries.content_type in (
                     "displayParameters",
@@ -132,7 +132,7 @@ firebase_module_events AS (
         ) AS module_index
     FROM
         firebase_events e
-        LEFT JOIN {{ source('analytics', 'contentful_entries')}} entries on entries.id = e.module_id
+        LEFT JOIN  {{ ref("int_contentful__entry") }} entries on entries.id = e.module_id
 ),
 -- conversion can be Booking or Favorite
 firebase_conversion_step AS (

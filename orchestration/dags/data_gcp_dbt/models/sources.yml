@@ -103,6 +103,8 @@ sources:
       - name: applicative_database_venue_registration
       - name: applicative_database_venue_reimbursement_point_link
       - name: contentful_entries
+      - name: contentful_relationships
+      - name: contentful_tags
       - name: firebase_events
       - name: firebase_pro_events
       - name: geoip_city_v4
@@ -141,8 +143,6 @@ sources:
     tables:
       - name: adage
       - name: bookable_venue_history
-      - name: contentful_entries
-      - name: contentful_relationships
       - name: eple
       - name: firebase_pro_events
       - name: firebase_recommendation_events

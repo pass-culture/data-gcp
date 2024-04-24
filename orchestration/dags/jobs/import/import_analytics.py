@@ -6,11 +6,7 @@ from common import macros
 from common.utils import depends_loop, get_airflow_schedule
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from common.operators.biquery import bigquery_job_task
-from dependencies.import_analytics.import_analytics import export_tables
-from dependencies.import_analytics.import_historical import (
-    historical_clean_applicative_database,
-    historical_analytics,
-)
+from dependencies.analytics.import_analytics import export_tables, define_import_tables
 from common.alerts import analytics_fail_slack_alert
 from common.config import DAG_FOLDER
 from common.utils import waiting_operator
@@ -21,9 +17,6 @@ from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     APPLICATIVE_PREFIX,
 )
-from dependencies.import_analytics.import_analytics import define_import_tables
-
-import_tables = define_import_tables()
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
@@ -48,42 +41,10 @@ start = DummyOperator(task_id="start", dag=dag)
 
 wait_for_dbt = waiting_operator(dag=dag, dag_id="dbt_run_dag", external_task_id="end")
 
-start_historical_data_applicative_tables_tasks = DummyOperator(
-    task_id="start_historical_data_applicative_tables_tasks", dag=dag
-)
-
-with TaskGroup(
-    group_id="historical_applicative_group", dag=dag
-) as historical_applicative:
-    historical_data_applicative_tables_tasks = []
-    for table, params in historical_clean_applicative_database.items():
-        task = bigquery_job_task(dag, table, params)
-        historical_data_applicative_tables_tasks.append(task)
-
-end_historical_data_applicative_tables_tasks = DummyOperator(
-    task_id="end_historical_data_applicative_tables_tasks", dag=dag
-)
-
-start_historical_analytics_table_tasks = DummyOperator(
-    task_id="start_historical_analytics_table_tasks", dag=dag
-)
-
-with TaskGroup(
-    group_id="historical_analytics_group", dag=dag
-) as historical_analytics_group:
-    historical_analytics_table_tasks = []
-    for table, params in historical_analytics.items():
-        task = bigquery_job_task(dag, table, params)
-        historical_analytics_table_tasks.append(task)
-
-end_historical_analytics_table_tasks = DummyOperator(
-    task_id="end_historical_analytics_table_tasks", dag=dag
-)
-
-
+# TODO: remove legacy copy job
 with TaskGroup(group_id="analytics_copy_group", dag=dag) as analytics_copy:
     import_tables_to_analytics_tasks = []
-    for table in import_tables:
+    for table in define_import_tables():
         task = BigQueryInsertJobOperator(
             dag=dag,
             task_id=f"import_to_analytics_{table}",
@@ -96,9 +57,7 @@ with TaskGroup(group_id="analytics_copy_group", dag=dag) as analytics_copy:
                         "datasetId": BIGQUERY_ANALYTICS_DATASET,
                         "tableId": f"{APPLICATIVE_PREFIX}{table}",
                     },
-                    "writeDisposition": params.get(
-                        "write_disposition", "WRITE_TRUNCATE"
-                    ),
+                    "writeDisposition": "WRITE_TRUNCATE",
                 }
             },
         )
@@ -115,7 +74,7 @@ for table, job_params in export_tables.items():
     analytics_table_jobs[table] = {
         "operator": task,
         "depends": job_params.get("depends", []),
-        "dag_depends": job_params.get("dag_depends", []),  # liste de dag_id
+        "dag_depends": job_params.get("dag_depends", []),
     }
 
 
@@ -130,21 +89,5 @@ analytics_table_tasks = depends_loop(
 
 end = DummyOperator(task_id="end", dag=dag)
 
-(start >> wait_for_dbt >> analytics_copy >> end_import)
-
-
-(
-    wait_for_dbt
-    >> start_historical_data_applicative_tables_tasks
-    >> historical_applicative
-    >> end_historical_data_applicative_tables_tasks
-)
-(
-    end_historical_data_applicative_tables_tasks
-    >> start_historical_analytics_table_tasks
-    >> historical_analytics_group
-    >> end_historical_analytics_table_tasks
-)
-(end_import >> start_analytics_table_tasks)
-(analytics_table_tasks >> end_analytics_table_tasks)
-(end_analytics_table_tasks, end_historical_analytics_table_tasks) >> end
+(start >> wait_for_dbt >> analytics_copy >> end_import >> start_analytics_table_tasks)
+(analytics_table_tasks >> end_analytics_table_tasks >> end)

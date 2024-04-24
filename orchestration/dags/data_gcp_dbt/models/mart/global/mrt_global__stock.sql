@@ -19,8 +19,6 @@ SELECT
     o.offer_creation_date,
     o.offer_is_duo,
     o.item_id,
-    o.offer_url,
-    o.last_stock_price,
     o.venue_id,
     o.venue_name,
     o.venue_department_code,
@@ -33,9 +31,6 @@ SELECT
     o.digital_goods,
     o.event,
     o.offer_category_id,
-    o.venue_latitude,
-    o.venue_longitude,
-    o.offer_is_national
 FROM {{ref('int_applicative__stock')}} AS s
 INNER JOIN {{ref('mrt_global__offer')}} AS o ON s.offer_id = o.offer_id
 WHERE TRUE

@@ -292,6 +292,10 @@ models:
   - name: bookable_collective_offer
     config:
       schema: clean_{{ target.name }}
+  - name: bookable_collective_offer_history
+    config:
+      schema: clean_{{ target.name }}
+
   - name: cleaned_stock
     config:
       schema: clean_{{ target.name }}
@@ -314,6 +318,9 @@ models:
     config:
       schema: clean_{{ target.name }}
   - name: bookable_offer
+    config:
+      schema: clean_{{ target.name }}
+  - name: bookable_offer_history
     config:
       schema: clean_{{ target.name }}
   - name: user_reco_iris

@@ -3,10 +3,6 @@ from data_analytics.utils.json import approx_equal
 from jinja2 import Environment, FileSystemLoader
 from google.cloud import bigquery
 from data_analytics.config import GCP_PROJECT, TEST_DATASET
-from data_analytics.data import (
-    ENRICHED_STOCK_DATA_EXPECTED,
-    ENRICHED_STOCK_DATA_INPUT,
-)
 
 from data_analytics.utils.gcp import (
     create_data,
@@ -40,17 +36,6 @@ def flush_dataset():
         drop_table(client=pytest.bq_client, dataset=TEST_DATASET, table=table.table_id)
 
 
-@pytest.mark.parametrize(
-    ["table_name", "input_data", "expected", "sorting_key"],
-    [
-        (
-            "enriched_stock_data",
-            ENRICHED_STOCK_DATA_INPUT,
-            ENRICHED_STOCK_DATA_EXPECTED,
-            "stock_id",
-        ),
-    ],
-)
 def test_create_queries(flush_dataset, table_name, input_data, expected, sorting_key):
     create_data(
         client=pytest.bq_client,

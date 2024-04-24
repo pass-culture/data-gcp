@@ -49,7 +49,6 @@ analytics_tables = {
         "params": {
             "diversification_features": [
                 "category",
-                "category",
                 "sub_category",
                 "format",
                 "venue_id",
@@ -127,7 +126,6 @@ analytics_tables = {
         "time_partitioning": {"field": "event_date"},
         "depends": [
             "diversification_booking",
-            "analytics_firebase_similar_offer_events",
         ],
     },
     "adage_involved_student": {

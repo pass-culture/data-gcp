@@ -1,8 +1,8 @@
 WITH active_venues_last_30days AS (SELECT
     venue_managing_offerer_id AS offerer_id
     ,STRING_AGG(DISTINCT CONCAT(' ',CASE WHEN venue_type_label != 'Offre numérique' THEN venue_type_label END)) AS active_last_30days_physical_venues_types
-FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.bookable_venue_history ON enriched_venue_data.venue_id = bookable_venue_history.venue_id
+FROM {{ ref('enriched_venue_data') }}
+LEFT JOIN {{ source('analytics','bookable_venue_history') }} ON enriched_venue_data.venue_id = bookable_venue_history.venue_id
 WHERE DATE_DIFF(CURRENT_DATE,partition_date,DAY) <= 30
 GROUP BY 1
 ORDER BY 1)
@@ -10,7 +10,7 @@ ORDER BY 1)
 ,administrative_venues AS (SELECT
     venue_managing_offerer_id AS offerer_id
     ,COUNT(CASE WHEN enriched_venue_data.venue_type_label = 'Lieu administratif' THEN venue_id ELSE NULL END) AS nb_administrative_venues
-FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data
+FROM {{ ref('enriched_venue_data') }}
 GROUP BY 1)
 
 ,top_CA_venue AS
@@ -18,7 +18,7 @@ GROUP BY 1)
     venue_managing_offerer_id AS offerer_id
     ,enriched_venue_data.venue_type_label
     ,RANK() OVER(PARTITION BY venue_managing_offerer_id ORDER BY real_revenue DESC) AS CA_rank
-FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data
+FROM {{ ref('enriched_venue_data') }}
 WHERE real_revenue > 0)
 
 ,top_bookings_venue AS
@@ -26,22 +26,23 @@ WHERE real_revenue > 0)
     venue_managing_offerer_id AS offerer_id
     ,enriched_venue_data.venue_type_label
     ,RANK() OVER(PARTITION BY venue_managing_offerer_id ORDER BY used_bookings DESC) AS bookings_rank
-FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data
+FROM {{ ref('enriched_venue_data') }}
 WHERE used_bookings > 0)
 
 ,reimbursement_points AS (
 SELECT
     venue_managing_offerer_id AS offerer_id
     ,COUNT(DISTINCT applicative_database_venue_reimbursement_point_link.venue_id) AS nb_reimbursement_points
-FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data
-LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_reimbursement_point_link ON enriched_venue_data.Venue_id = applicative_database_venue_reimbursement_point_link.venue_id
+FROM {{ ref('enriched_venue_data') }}
+LEFT JOIN {{ ref('venue_reimbursement_point_link') }}
+ ON enriched_venue_data.Venue_id = applicative_database_venue_reimbursement_point_link.venue_id
 GROUP BY 1)
 
 ,aggregated_venue_types AS (
     SELECT
         venue_managing_offerer_id AS offerer_id
         ,STRING_AGG(DISTINCT CONCAT(' ',CASE WHEN enriched_venue_data.venue_type_label != 'Offre numérique' THEN enriched_venue_data.venue_type_label END)) AS all_physical_venues_types
-    FROM `{{ bigquery_analytics_dataset }}`.enriched_venue_data
+    FROM {{ ref('enriched_venue_data') }}
     GROUP BY 1
 )
 
@@ -68,7 +69,7 @@ SELECT DISTINCT
             OR LOWER(enriched_offerer_data.offerer_name) LIKE '%petr%'
             OR LOWER(enriched_offerer_data.offerer_name) LIKE '%intercommunal%') THEN 'CC / Agglomérations / Métropoles'
         ELSE 'Non qualifiable' END AS local_authority_type
-    ,CASE WHEN enriched_offerer_data.offerer_id IN (SELECT priority_offerer_id FROM `{{ bigquery_analytics_dataset }}`.priority_local_authorities) THEN TRUE ELSE FALSE END AS is_priority
+    ,CASE WHEN enriched_offerer_data.offerer_id IN (SELECT priority_offerer_id FROM {{ source('analytics','priority_local_authorities') }}) THEN TRUE ELSE FALSE END AS is_priority
     ,COALESCE(applicative_database_offerer.offerer_validation_date,applicative_database_offerer.offerer_creation_date) AS local_authority_creation_date
     ,CASE WHEN DATE_TRUNC(COALESCE(enriched_offerer_data.offerer_validation_date,enriched_offerer_data.offerer_creation_date),YEAR) <= DATE_TRUNC(DATE_SUB(DATE(CURRENT_DATE/*'{{ ds }}'*/),INTERVAL 1 YEAR),YEAR) THEN TRUE ELSE FALSE END AS was_registered_last_year
     ,academy_name AS local_authority_academy_name
@@ -99,10 +100,10 @@ SELECT DISTINCT
     ,COALESCE(offerer_individual_real_revenue,0) AS individual_real_revenue
     ,COALESCE(offerer_collective_real_revenue,0) AS collective_real_revenue
     ,COALESCE(offerer_real_revenue,0) AS total_real_revenue
-FROM `{{ bigquery_analytics_dataset }}`.enriched_offerer_data
-JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer ON enriched_offerer_data.offerer_id = applicative_database_offerer.offerer_id
-JOIN `{{ bigquery_analytics_dataset }}`.region_department ON enriched_offerer_data.offerer_department_code = region_department.num_dep
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_venue_data ON enriched_offerer_data.offerer_id = enriched_venue_data.venue_managing_offerer_id
+FROM {{ ref('enriched_offerer_data') }}
+JOIN {{ ref('offerer') }} ON enriched_offerer_data.offerer_id = applicative_database_offerer.offerer_id
+JOIN {{ source('analytics','region_department') }} ON enriched_offerer_data.offerer_department_code = region_department.num_dep
+LEFT JOIN {{ ref('enriched_venue_data') }} ON enriched_offerer_data.offerer_id = enriched_venue_data.venue_managing_offerer_id
 LEFT JOIN aggregated_venue_types ON enriched_offerer_data.offerer_id = aggregated_venue_types.offerer_id
 LEFT JOIN active_venues_last_30days ON enriched_offerer_data.offerer_id = active_venues_last_30days.offerer_id
 LEFT JOIN administrative_venues ON enriched_offerer_data.offerer_id = administrative_venues.offerer_id

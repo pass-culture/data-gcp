@@ -112,7 +112,8 @@ sources:
       - name: gsheet_ml_recommendation_sensitive_item
       - name: macro_rayons
       - name: stdout
-      
+      - name: sensitive_item_recommendation
+
   - name: clean # this is the source_name
     schema: clean_{{ var('ENV_SHORT_NAME') }}
     tables:
@@ -124,7 +125,7 @@ sources:
       - name: applicative_database_collective_offer_history
       - name: applicative_database_collective_offer_template_history
       - name: adage_involved_student # this is the table_name
-      - name: dms_jeunes_cleaned 
+      - name: dms_jeunes_cleaned
       - name: dms_pro_cleaned
       - name: firebase_app_experiments
       - name: iris_france
@@ -153,5 +154,11 @@ sources:
       - name: user_locations
       - name: population_age_and_department_france_details
       - name: diversification_booking
-      
-      
+      - name: priority_local_authorities
+      - name: offer_with_mediation
+      - name: forbidden_item_recommendation
+      - name: number_of_students_per_eple
+      - name: institution_locations
+      - name: rural_city_type_data
+      - name: QPV
+

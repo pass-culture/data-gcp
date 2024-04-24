@@ -1,12 +1,16 @@
+{% set target_name = target.name %}
+{% set target_schema = generate_schema_name('analytics_' ~ target_name) %}
 
-{{ create_humanize_id_function() }} 
+{{ config(
+    pre_hook="{{create_humanize_id_function()}}"
+) }}
 
 WITH stock_humanized_id AS (
 SELECT
     stock_id,
-    humanize_id(stock_id) AS humanized_id
+    {{target_schema}}.humanize_id(stock_id) AS humanized_id
 FROM
-    `{{ bigquery_clean_dataset }}`.cleaned_stock
+    {{ ref('cleaned_stock') }}
 WHERE
     stock_id is not NULL
 )
@@ -34,9 +38,9 @@ SELECT
     stock.price_category_label,
     stock.stock_features
 FROM
-    `{{ bigquery_clean_dataset }}`.cleaned_stock AS stock
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue AS venue ON venue.venue_id = offer.venue_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.stock_booking_information ON stock.stock_id = stock_booking_information.stock_id
+    {{ ref('cleaned_stock') }} AS stock
+    LEFT JOIN {{ ref('offer') }} AS offer ON stock.offer_id = offer.offer_id
+    LEFT JOIN {{ ref('venue') }} AS venue ON venue.venue_id = offer.venue_id
+    LEFT JOIN {{ ref('stock_booking_information') }} ON stock.stock_id = stock_booking_information.stock_id
     LEFT JOIN stock_humanized_id AS stock_humanized_id ON stock_humanized_id.stock_id = stock.stock_id
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.available_stock_information ON stock_booking_information.stock_id = available_stock_information.stock_id
+    LEFT JOIN {{ ref('available_stock_information') }} ON stock_booking_information.stock_id = available_stock_information.stock_id

@@ -1,9 +1,5 @@
 import datetime
 from airflow import DAG
-
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.http.operators.http import SimpleHttpOperator
-from airflow.operators.python import PythonOperator
 from airflow.models import Param
 from common.operators.gce import (
     StartGCEOperator,
@@ -11,16 +7,7 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
 )
-
-from dependencies.contentful.import_contentful import contentful_tables
-
-
-from common.utils import (
-    depends_loop,
-    getting_service_account_token,
-    get_airflow_schedule,
-)
-from common.operators.biquery import bigquery_job_task
+from common.utils import get_airflow_schedule
 from common.alerts import task_fail_slack_alert
 
 from common import macros
@@ -90,28 +77,10 @@ with DAG(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
-start = DummyOperator(task_id="start", dag=dag)
-
-table_jobs = {}
-for table, job_params in contentful_tables.items():
-    task = bigquery_job_task(dag, table, job_params)
-    table_jobs[table] = {
-        "operator": task,
-        "depends": job_params.get("depends", []),
-        "dag_depends": job_params.get("dag_depends", []),
-    }
-
-end = DummyOperator(task_id="end", dag=dag)
-table_jobs = depends_loop(
-    contentful_tables, table_jobs, start, dag=dag, default_end_operator=end
-)
-
 (
-    start
-    >> gce_instance_start
+    gce_instance_start
     >> fetch_code
     >> install_dependencies
     >> import_contentful_data_to_bigquery
     >> gce_instance_stop
-    >> table_jobs
 )

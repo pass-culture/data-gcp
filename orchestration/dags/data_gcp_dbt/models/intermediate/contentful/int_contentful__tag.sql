@@ -19,8 +19,7 @@ FROM
                 ORDER BY
                     execution_date DESC
             ) as row_number
-        FROM
-            `{{ bigquery_raw_dataset }}.contentful_tags`
+        FROM {{ source('raw', 'contentful_tags') }}
     ) inn
 WHERE
     row_number = 1

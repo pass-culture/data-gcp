@@ -45,7 +45,7 @@ FROM {{ ref("int_firebase__native_event") }} AS e
 LEFT JOIN {{ ref("enriched_user_data") }} AS u ON e.user_id = u.user_id
 LEFT JOIN {{ ref("enriched_offer_data") }} AS o ON e.offer_id = o.offer_id
 LEFT JOIN {{ ref("enriched_venue_data") }} AS v ON v.venue_id = COALESCE(e.venue_id,o.venue_id)
-LEFT JOIN {{ ref("int_contentful__entries") }} AS c ON c.id = e.module_id
+LEFT JOIN {{ ref("int_contentful__entry") }} AS c ON c.id = e.module_id
 WHERE (
      event_name IN ("ConsultOffer",
       "BookingConfirmation",

@@ -27,7 +27,7 @@ contentful_tags AS (
         array_agg(
             coalesce(playlist_type, 'temporaire')
             ), " / ") as playlist_type
-    FROM `{{ bigquery_analytics_dataset }}.contentful_tags` 
+    FROM `{{ bigquery_int_contentful_dataset }}.tag` 
     GROUP BY entry_id
 ), 
 diversification_booking AS (

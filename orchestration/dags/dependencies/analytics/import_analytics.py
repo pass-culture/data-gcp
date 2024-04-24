@@ -134,7 +134,7 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_booking_origin${{ yyyymmdd(add_days(ds, 0)) }}",
         "time_partitioning": {"field": "booking_date"},
-        "dag_depends": ["import_intraday_firebase_data", "import_contentful"],
+        "dag_depends": ["import_intraday_firebase_data"],
         "params": {"from": -8, "to": 0},
     },
     "analytics_firebase_booking_origin_catchup": {
@@ -160,7 +160,6 @@ analytics_tables = {
         "depends": ["diversification_booking"],
         "dag_depends": [
             "import_intraday_firebase_data",
-            "import_contentful",
         ],  # computed once a day
     },
     "analytics_firebase_home_macro_conversion": {
@@ -171,7 +170,6 @@ analytics_tables = {
         "depends": ["diversification_booking"],
         "dag_depends": [
             "import_intraday_firebase_data",
-            "import_contentful",
         ],
     },
     "analytics_firebase_home_micro_conversion": {
@@ -182,7 +180,6 @@ analytics_tables = {
         "depends": ["diversification_booking"],
         "dag_depends": [
             "import_intraday_firebase_data",
-            "import_contentful",
         ],
     },
     "analytics_firebase_aggregated_similar_offer_events": {
@@ -283,7 +280,6 @@ aggregated_tables = {
         "destination_table": "aggregated_daily_offer_consultation_data",
         "dag_depends": [
             "import_intraday_firebase_data",
-            "import_contentful",
         ],  # computed once a day
     },
     "aggregated_weekly_user_data": {

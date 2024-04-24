@@ -134,7 +134,7 @@ LEFT JOIN bookings_origin_last_touch AS last_t USING(booking_id)
 
 , mapping_module AS (
   SELECT * 
-  FROM `{{ bigquery_analytics_dataset }}.contentful_homepages` 
+  FROM `{{ bigquery_int_contentful_dataset }}.homepage` 
   QUALIFY RANK() OVER(PARTITION BY module_id, home_id ORDER BY date DESC) = 1
 )
 

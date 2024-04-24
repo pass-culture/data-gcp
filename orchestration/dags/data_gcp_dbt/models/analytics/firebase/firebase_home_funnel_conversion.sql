@@ -11,8 +11,8 @@ with child_home as (
   SELECT DISTINCT
     e1.home_entry_id
     , e2.title
-  FROM {{ ref('int_contentful__entries') }} e1
-  JOIN {{ ref('int_contentful__entries') }} e2
+  FROM {{ ref('int_contentful__entry') }} e1
+  JOIN {{ ref('int_contentful__entry') }} e2
   ON e1.home_entry_id = e2.id
   WHERE e1.content_type = "categoryBlock"
 )
@@ -20,7 +20,7 @@ with child_home as (
     SELECT 
       home.id
       , home.title
-    from {{ ref('int_contentful__entries') }} home
+    from {{ ref('int_contentful__entry') }} home
     LEFT JOIN child_home
     ON home.id = child_home.home_entry_id
     WHERE child_home.home_entry_id is null -- retirer les homes qui sont spécifiques
@@ -28,12 +28,12 @@ with child_home as (
 )
 , parents_ref as (  
     SELECT *
-    from {{ ref('int_contentful__entries') }}
+    from {{ ref('int_contentful__entry') }}
     where content_type in ("categoryList", "thematicHighlight")
 )
 , children_ref as (
     SELECT *
-    from {{ ref('int_contentful__entries') }}
+    from {{ ref('int_contentful__entry') }}
     where content_type in ("categoryBlock", "thematic_highlight_info")
 )
 , displayed as (
@@ -51,7 +51,7 @@ with child_home as (
   , event_timestamp as module_displayed_timestamp
   , events.user_location_type
   FROM {{ ref('int_firebase__native_event') }} events
-  LEFT JOIN {{ ref('int_contentful__entries') }} as ref
+  LEFT JOIN {{ ref('int_contentful__entry') }} as ref
   on events.module_id = ref.id
   JOIN home_ref
   on events.entry_id = home_ref.id
@@ -88,7 +88,7 @@ with child_home as (
     ON events.module_id = children_ref.id
     LEFT JOIN home_ref
     ON events.entry_id = home_ref.id
-    LEFT JOIN {{ ref('int_contentful__entries') }} as e
+    LEFT JOIN {{ ref('int_contentful__entry') }} as e
     ON events.destination_entry_id = e.id
     WHERE event_name in ("ExclusivityBlockClicked", "CategoryBlockClicked", "HighlightBlockClicked","BusinessBlockClicked","ConsultVideo")
     -- entry_id param is missing for event HighlightBlockClicked because it is available in a prior version of the app. 
@@ -102,8 +102,8 @@ with child_home as (
             parent as home_id
             , child as playlist_id
             , e.title as playlist_name
-        FROM {{ source('analytics', 'contentful_relationships') }} r
-        LEFT JOIN {{ ref('int_contentful__entries') }} e
+        FROM {{ ref("int_contentful__relationship") }} r
+        LEFT JOIN {{ ref('int_contentful__entry') }} e
         ON r.child = e.id
     ),
     offer as (
@@ -169,7 +169,7 @@ with child_home as (
     AND offer.consult_offer_timestamp >= venue.consult_venue_timestamp
     LEFT JOIN home_ref
     ON coalesce(offer.entry_id, venue.entry_id) = home_ref.id
-    LEFT JOIN {{ ref('int_contentful__entries') }} as ref
+    LEFT JOIN {{ ref('int_contentful__entry') }} as ref
     ON ref.id =  coalesce(offer.module_id, venue.module_id)
     JOIN relationships -- inner join to get only known relationships between playlist and homepages.
     ON relationships.playlist_id =  coalesce(offer.module_id, venue.module_id)

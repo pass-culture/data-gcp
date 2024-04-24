@@ -39,9 +39,9 @@ SELECT
 FROM {{ref('int_firebase__native_event')}} AS events
 LEFT JOIN redirections
     ON redirections.unique_session_id = events.unique_session_id AND redirections.entry_id = events.entry_id
-INNER JOIN {{ ref('int_contentful__entries' )}} AS modules
+INNER JOIN {{ ref('int_contentful__entry' )}} AS modules
     ON modules.id = events.module_id
-INNER JOIN {{ ref('int_contentful__entries' )}} AS homes
+INNER JOIN {{ ref('int_contentful__entry' )}} AS homes
     ON homes.id = events.entry_id
 WHERE event_name = 'ModuleDisplayedOnHomePage'
     AND events.unique_session_id IS NOT NULL
@@ -182,7 +182,14 @@ SELECT
     consult_venue_timestamp,
     consult_offer_timestamp,
     fav_timestamp,
-    bookings.booking_timestamp
+    bookings.booking_timestamp,
+    home_tag.home_audience,
+    home_tag.user_lifecycle_home,
+    home_tag.home_type,
+    playlist_tag.playlist_type,
+    playlist_tag.offer_category,
+    playlist_tag.playlist_reach,
+    playlist_tag.playlist_recurrence
 FROM displayed
 LEFT JOIN clicked
     ON displayed.unique_session_id = clicked.unique_session_id
@@ -200,7 +207,11 @@ LEFT JOIN {{ ref( 'firebase_bookings' ) }} AS bookings
     ON displayed.unique_session_id = bookings.unique_session_id
     AND consultations.offer_id = bookings.offer_id
     AND consultations.consult_offer_timestamp <= bookings.booking_timestamp
-LEFT JOIN {{ ref('int_contentful__entries' )}} parent_modules
+LEFT JOIN {{ ref('int_contentful__entry' )}} parent_modules
     ON parent_modules.id = displayed.parent_module_id
-LEFT JOIN {{ ref('int_contentful__entries' )}} parent_homes
+LEFT JOIN {{ ref('int_contentful__entry' )}} parent_homes
     ON parent_modules.id = displayed.parent_entry_id
+LEFT JOIN {{ ref('int_contentful__home_tag' )}} home_tag
+    ON home_tag.entry_id = displayed.entry_id
+LEFT JOIN {{ ref('int_contentful__playlist_tag' )}} playlist_tag
+    ON playlist_tag.entry_id = displayed.module_id

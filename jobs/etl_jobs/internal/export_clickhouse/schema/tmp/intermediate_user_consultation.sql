@@ -10,8 +10,7 @@ AS
     cast(offer_id as String) as offer_id,
     cast(user_id as String) as user_id,
     origin
-  FROM s3Cluster(
-    'default', 
+  FROM s3(
     gcs_credentials,
     url='{{ bucket_path }}'
 )

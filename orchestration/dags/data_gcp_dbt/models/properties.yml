@@ -501,3 +501,6 @@ models:
   - name: enriched_suivi_dms_adage
     config:
       schema: analytics_{{ target.name }}
+  - name: aggregated_daily_offer_consultation_data
+    config:
+      schema: analytics_{{ target.name }}

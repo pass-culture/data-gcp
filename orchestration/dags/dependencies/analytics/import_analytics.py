@@ -192,14 +192,6 @@ analytics_tables = {
 }
 
 aggregated_tables = {
-    "aggregated_daily_offer_consultation_data": {
-        "sql": f"{ANALYTICS_SQL_PATH}/aggregated_daily_offer_consultation_data.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "aggregated_daily_offer_consultation_data",
-        "dag_depends": [
-            "import_intraday_firebase_data",
-        ],  # computed once a day
-    },
     "aggregated_weekly_user_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/aggregated_weekly_user_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

@@ -181,13 +181,6 @@ analytics_tables = {
         "dag_depends": ["import_intraday_firebase_data"],
         "params": {"set_date": "2023-01-01"},
     },
-    "enriched_local_authority_data": {
-        "sql": f"{ANALYTICS_SQL_PATH}/enriched_local_authority_data.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": [
-            "bookable_venue_history",
-        ],
-    },
     "bookable_venue_history": {
         "sql": f"{ANALYTICS_SQL_PATH}/bookable_venue_history.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

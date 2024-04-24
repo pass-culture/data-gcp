@@ -486,3 +486,6 @@ models:
   - name: analytics_firebase_similar_offer_events
     config:
       schema: analytics_{{ target.name }}
+  - name: enriched_local_authority_data
+    config:
+      schema: analytics_{{ target.name }}

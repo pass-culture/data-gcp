@@ -3,15 +3,12 @@ ANALYTICS_SQL_PATH = f"dependencies/analytics/sql/analytics"
 
 def define_import_tables():
     return [
-        "bank_information",
         "beneficiary_fraud_check",
         "booking",
-        "cashflow",
         "collective_offer",
         "collective_offer_domain",
         "criterion",
         "deposit",
-        "educational_deposit",
         "educational_domain",
         "educational_institution",
         "educational_year",
@@ -19,23 +16,12 @@ def define_import_tables():
         "offer",
         "offer_criterion",
         "offerer",
-        "payment",
-        "payment_status",
         "pricing",
-        "pricing_line",
         "stock",
         "user",
         "user_offerer",
         "venue",
         "venue_provider",
-        # add temporarly reimbursement tables
-        "cashflow_batch",
-        "cashflow_log",
-        "cashflow_pricing",
-        "invoice",
-        "invoice_cashflow",
-        "invoice_line",
-        "venue_reimbursement_point_link",
     ]
 
 

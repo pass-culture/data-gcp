@@ -480,7 +480,7 @@ models:
   - name: institution_locations
     config:
       schema: analytics_{{ target.name }}
-  - name: analytics_firebase_similar_offer_events
+  - name: firebase_similar_offer_events
     config:
       schema: analytics_{{ target.name }}
   - name: enriched_local_authority_data

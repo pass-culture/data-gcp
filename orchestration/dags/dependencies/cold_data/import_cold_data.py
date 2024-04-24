@@ -76,11 +76,7 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "rural_city_type_data",
     },
-    "eple_aggregated_type": {
-        "sql": f"{SQL_PATH}/analytics/eple_aggregated_type.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "eple_aggregated_type",
-    },
+
 }
 
 import_tables = dict(clean_tables, **analytics_tables)

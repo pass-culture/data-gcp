@@ -471,3 +471,6 @@ models:
   - name: siren_data
     config:
       schema: analytics_{{ target.name }}
+  - name: enriched_venue_provider_data
+    config:
+      schema: analytics_{{ target.name }}

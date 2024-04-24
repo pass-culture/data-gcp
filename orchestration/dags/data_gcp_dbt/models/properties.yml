@@ -462,3 +462,6 @@ models:
   - name: enriched_institution_data
     config:
       schema: analytics_{{ target.name }}
+  - name: eple_aggregated
+    config:
+      schema: analytics_{{ target.name }}

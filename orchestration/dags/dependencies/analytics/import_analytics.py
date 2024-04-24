@@ -47,13 +47,6 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/enriched_venue_provider_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
-    "eple_aggregated": {
-        "sql": f"{ANALYTICS_SQL_PATH}/eple_aggregated.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": [
-            "enriched_institution_data",
-        ],
-    },
     "stock_booking_information": {
         "sql": f"{ANALYTICS_SQL_PATH}/stock_booking_information.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

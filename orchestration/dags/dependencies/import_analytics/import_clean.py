@@ -12,13 +12,7 @@ from dependencies.import_analytics.import_raw import (
 
 CLEAN_SQL_PATH = f"dependencies/import_analytics/sql/clean"
 
-clean_tables = {
-    "applicative_database_titelive_gtl": {
-        "sql": f"{CLEAN_SQL_PATH}/applicative_database/titelive_gtl.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "applicative_database_titelive_gtl",
-    },
-}
+clean_tables = {}
 
 
 raw_tables = get_tables_config_dict(

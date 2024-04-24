@@ -49,6 +49,7 @@ analytics_tables = {
         "params": {
             "diversification_features": [
                 "category",
+                "category",
                 "sub_category",
                 "format",
                 "venue_id",

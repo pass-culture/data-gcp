@@ -30,7 +30,7 @@ criterion AS (
     adc.offer_name
   FROM
     child_tags ct
-  LEFT JOIN {{ ref('int_applicative__offer_criterion') }} adc on adc.name = ct.tag_name
+  LEFT JOIN {{ ref('int_applicative__offer_criterion') }} adc on adc.tag_name = ct.tag_name
 ),
 module_ids AS (
   SELECT

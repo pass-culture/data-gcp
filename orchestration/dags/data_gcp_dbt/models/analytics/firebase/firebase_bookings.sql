@@ -3,6 +3,7 @@
         materialized = 'incremental',
         incremental_strategy = 'insert_overwrite',
         partition_by = {'field': 'booking_date', 'data_type': 'date'},
+        on_schema_change = "sync_all_columns",
     )
 }}
 
@@ -15,6 +16,7 @@ SELECT
     , booking_id
     , event_date as booking_date
     , event_timestamp as booking_timestamp
+    , platform
     , user_location_type
 FROM {{ ref('int_firebase__native_event') }}
 WHERE event_name = "BookingConfirmation"

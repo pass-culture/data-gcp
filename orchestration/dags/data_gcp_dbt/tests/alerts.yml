@@ -1,5 +1,0 @@
-version: 1
-tests:
-  - name: dummy-test
-    meta:
-      owner: "@val"

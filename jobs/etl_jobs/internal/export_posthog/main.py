@@ -11,8 +11,8 @@ posthog_personal_api_key = access_secret_data(
 )
 
 
-BATCH_SIZE = 10000
-TIME = 1
+BATCH_SIZE = 500
+TIME = 15
 
 
 def run(

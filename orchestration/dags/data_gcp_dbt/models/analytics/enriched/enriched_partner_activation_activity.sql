@@ -23,7 +23,7 @@ SELECT
   partner.non_cancelled_individual_bookings as individual_bookings_after_first_activation,
   partner.confirmed_collective_bookings AS collective_bookings_after_first_activation
 FROM {{ ref('enriched_cultural_partner_data') }} partner 
-LEFT JOIN {{ ref('enriched_venue_data') }} venue on partner.venue_id = venue.venue_id  
+LEFT JOIN {{ ref('mrt_global__venue') }} venue on partner.venue_id = venue.venue_id
 LEFT JOIN {{ ref('enriched_offerer_data') }} offerer on offerer.offerer_id = partner.offerer_id ) 
 
 , partner_activation_stated AS (

@@ -16,7 +16,7 @@ SELECT
     ,COUNT(DISTINCT CASE WHEN booking.booking_status IN ('CONFIRMED') THEN booking.booking_id ELSE NULL END) AS count_pending_bookings
     ,SUM(CASE WHEN booking.booking_status IN ('USED', 'REIMBURSED') THEN booking.booking_intermediary_amount ELSE NULL END) AS real_amount_booked
     ,SUM(CASE WHEN booking.booking_status IN ('CONFIRMED') THEN booking.booking_intermediary_amount ELSE NULL END) AS pending_amount_booked
-FROM {{ ref('enriched_venue_data') }} venue
+FROM {{ ref('mrt_global__venue') }} venue
 JOIN {{ ref('enriched_offerer_data') }} offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
 LEFT JOIN {{ ref('enriched_offer_data') }} offer ON venue.venue_id = offer.venue_id
 LEFT JOIN {{ source('clean','subcategories') }} subcategories ON offer.offer_subcategoryid = subcategories.id
@@ -42,7 +42,7 @@ SELECT
     ,COUNT(DISTINCT CASE WHEN booking.collective_booking_status IN ('PENDING') THEN booking.collective_booking_id ELSE NULL END) AS count_pending_tickets_booked -- same
     ,SUM(CASE WHEN booking.collective_booking_status IN ('USED', 'REIMBURSED','CONFIRMED') THEN booking.booking_amount ELSE NULL END) AS real_amount_booked
     ,SUM(CASE WHEN booking.collective_booking_status IN ('PENDING') THEN booking.booking_amount ELSE NULL END) AS pending_amount_booked
-FROM {{ ref('enriched_venue_data') }}  venue
+FROM {{ ref('mrt_global__venue') }}  venue
 JOIN  {{ ref('enriched_offerer_data') }} offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
 LEFT JOIN  {{ ref('enriched_collective_offer_data') }} offer ON venue.venue_id = offer.venue_id
 LEFT JOIN {{ ref('enriched_collective_booking_data') }} booking ON offer.collective_offer_id = booking.collective_offer_id AND booking.collective_booking_status IN ('USED', 'REIMBURSED', 'CONFIRMED', 'PENDING')

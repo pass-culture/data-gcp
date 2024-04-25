@@ -154,16 +154,9 @@ analytics_tables = {
         "sql": f"{ANALYTICS_SQL_PATH}/bookable_venue_history.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
-    "bookable_partner_history": {
-        "sql": f"{ANALYTICS_SQL_PATH}/bookable_partner_history.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
     "retention_partner_history": {
         "sql": f"{ANALYTICS_SQL_PATH}/retention_partner_history.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": [
-            "bookable_partner_history",
-        ],
     },
     "funnel_subscription_beneficiary": {
         "sql": f"{ANALYTICS_SQL_PATH}/funnel_subscription_beneficiary.sql",

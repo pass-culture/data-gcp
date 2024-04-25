@@ -368,6 +368,9 @@ models:
   - name: aggregated_monthly_user_used_booking_activity
     config:
       schema: analytics_{{ target.name }}
+  - name: bookable_partner_history
+    config:
+      schema: analytics_{{ target.name }}
   # enriched folder 
   - name: enriched_booking_data
     config:

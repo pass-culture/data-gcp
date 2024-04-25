@@ -362,9 +362,6 @@ models:
   - name: mrt_native__event
     config:
       schema: analytics_{{ target.name }}
-  - name: mrt_global__venue
-    config:
-      schema: analytics_{{ target.name }}
   - name: aggregated_monthly_user_used_booking_activity
     config:
       schema: analytics_{{ target.name }}
@@ -414,7 +411,7 @@ models:
   - name: firebase_booking_origin
     config:
       schema: analytics_{{ target.name }}
-  - name: enriched_venue_data
+  - name: mrt_global__venue
     config:
       schema: analytics_{{ target.name }}
   - name: bookable_venue_history

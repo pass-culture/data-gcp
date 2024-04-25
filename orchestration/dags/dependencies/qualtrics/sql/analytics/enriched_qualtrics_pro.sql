@@ -66,10 +66,10 @@ GROUP BY 1, 2
 
 , first_dms as (
 SELECT 
-  enriched_venue_data.venue_id,
+  global_venue.venue_id,
   dms_pro.* 
 FROM {{ bigquery_analytics_dataset }}.dms_pro 
-LEFT JOIN {{ bigquery_analytics_dataset }}.enriched_venue_data on dms_pro.demandeur_siret = enriched_venue_data.venue_siret
+LEFT JOIN {{ bigquery_analytics_dataset }}.global_venue on dms_pro.demandeur_siret = global_venue.venue_siret
 WHERE procedure_id IN ('57081', '57189','61589','65028','80264')
 AND demandeur_siret <> "nan"
 AND venue_id is not null 

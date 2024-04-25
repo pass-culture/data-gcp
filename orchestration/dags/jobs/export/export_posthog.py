@@ -48,43 +48,42 @@ GCE_PARAMS = {
 
 schedule_dict = {"prod": "0 8 * * *", "dev": "0 12 * * *", "stg": "0 10 * * *"}
 
-with DAG(
-    "export_posthog_catchup",
-    default_args={
-        "start_date": datetime.datetime(2023, 9, 1),
-        "retries": 1,
-        "on_failure_callback": task_fail_slack_alert,
-        "retry_delay": datetime.timedelta(minutes=5),
-        "project_id": GCP_PROJECT_ID,
-    },
-    description="Export to analytics data posthog",
-    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
-    catchup=True,
-    start_date=datetime.datetime(2024, 3, 1),
-    max_active_runs=1,
-    dagrun_timeout=datetime.timedelta(minutes=1440),
-    user_defined_macros=macros.default,
-    template_searchpath=DAG_FOLDER,
-    params={
-        "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
-            type="string",
-        ),
-        "instance_type": Param(
-            default=GCE_PARAMS["instance_type"],
-            type="string",
-        ),
-        "instance_name": Param(
-            default=GCE_PARAMS["instance_name"],
-            type="string",
-        ),
-        "days": Param(
-            default=0,
-            type="integer",
-        ),
-    },
-) as dag:
-    for job_name, table_name in TABLE_PARAMS.items():
+for job_name, table_name in TABLE_PARAMS.items():
+    with DAG(
+        f"export_posthog_{job_name}_catchup",
+        default_args={
+            "start_date": datetime.datetime(2023, 9, 1),
+            "retries": 1,
+            "retry_delay": datetime.timedelta(minutes=5),
+            "project_id": GCP_PROJECT_ID,
+        },
+        description="Export to analytics data posthog",
+        schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
+        catchup=True,
+        start_date=datetime.datetime(2024, 3, 1),
+        max_active_runs=1,
+        dagrun_timeout=datetime.timedelta(minutes=1440),
+        user_defined_macros=macros.default,
+        template_searchpath=DAG_FOLDER,
+        params={
+            "branch": Param(
+                default="production" if ENV_SHORT_NAME == "prod" else "master",
+                type="string",
+            ),
+            "instance_type": Param(
+                default=GCE_PARAMS["instance_type"],
+                type="string",
+            ),
+            "instance_name": Param(
+                default=GCE_PARAMS["instance_name"],
+                type="string",
+            ),
+            "days": Param(
+                default=0,
+                type="integer",
+            ),
+        },
+    ) as dag:
         table_config_name = f"export_{job_name}"
         table_id = f"{DATE}_{table_config_name}"
         params_instance = "{{ params.instance_name }}"

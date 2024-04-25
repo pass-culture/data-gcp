@@ -54,9 +54,6 @@ models:
         - column_metrics
       +docs: 
         node_color: "#d90000" 
-      diversification:
-        +tags: sandbox
-        +re_data_monitored: false
     intermediate:
       +materialized: view
     mart:

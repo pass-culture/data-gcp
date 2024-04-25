@@ -516,3 +516,9 @@ models:
   - name: firebase_aggregated_similar_offer_events
     config:
       schema: analytics_{{ target.name }}
+  - name: diversification_raw
+    config:
+      schema: analytics_{{ target.name }}
+  - name: diversification_booking
+    config:
+      schema: analytics_{{ target.name }}

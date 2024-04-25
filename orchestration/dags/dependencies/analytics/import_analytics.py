@@ -57,14 +57,14 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_home_macro_conversion",
         "time_partitioning": {"field": "module_displayed_date"},
-        "dag_depends": ["import_intraday_firebase_data", "dbt_run_dag"],
+        "dag_depends": ["import_intraday_firebase_data"],
     },
     "analytics_firebase_home_micro_conversion": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_micro_conversion.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_home_micro_conversion",
         "time_partitioning": {"field": "module_displayed_date"},
-        "dag_depends": ["import_intraday_firebase_data", "dbt_run_dag"],
+        "dag_depends": ["import_intraday_firebase_data"],
     },
     "adage_involved_student": {
         "sql": f"{ANALYTICS_SQL_PATH}/adage_involved_student.sql",
@@ -93,7 +93,7 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_aggregated_search_events",
         "time_partitioning": {"field": "first_date"},
-        "dag_depends": ["import_intraday_firebase_data", "dbt_run_dag"],
+        "dag_depends": ["import_intraday_firebase_data"],
         "params": {"set_date": "2023-01-01"},
     },
     "retention_partner_history": {
@@ -120,7 +120,7 @@ aggregated_tables = {
     "aggregated_weekly_user_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/aggregated_weekly_user_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "dag_depends": ["import_intraday_firebase_data", "dbt_run_dag"],
+        "dag_depends": ["import_intraday_firebase_data"],
     },
 }
 

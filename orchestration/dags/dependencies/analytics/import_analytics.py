@@ -42,44 +42,12 @@ analytics_tables = {
         "destination_table": "user_iris",
         "dag_depends": ["export_cloudsql_tables_to_bigquery_v1"],
     },
-    "diversification_raw": {
-        "sql": f"{ANALYTICS_SQL_PATH}/diversification_raw.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "diversification_raw",
-        "params": {
-            "diversification_features": [
-                "category",
-                "sub_category",
-                "format",
-                "venue_id",
-                "extra_category",
-            ]
-        },
-    },
-    "diversification_booking": {
-        "sql": f"{ANALYTICS_SQL_PATH}/diversification_booking.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "diversification_booking",
-        "depends": [
-            "diversification_raw",
-        ],
-        "params": {
-            "diversification_features": [
-                "category",
-                "sub_category",
-                "format",
-                "venue_id",
-                "extra_category",
-            ]
-        },
-    },
     "analytics_firebase_home_events_details": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_events_details.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_home_events_details",
         "time_partitioning": {"field": "event_date"},
         "clustering_fields": {"fields": ["event_type"]},
-        "depends": ["diversification_booking"],
         "dag_depends": [
             "import_intraday_firebase_data",
         ],  # computed once a day
@@ -89,20 +57,14 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_home_macro_conversion",
         "time_partitioning": {"field": "module_displayed_date"},
-        "depends": ["diversification_booking"],
-        "dag_depends": [
-            "import_intraday_firebase_data",
-        ],
+        "dag_depends": ["import_intraday_firebase_data", "dbt_run_dag"],
     },
     "analytics_firebase_home_micro_conversion": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_micro_conversion.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_home_micro_conversion",
         "time_partitioning": {"field": "module_displayed_date"},
-        "depends": ["diversification_booking"],
-        "dag_depends": [
-            "import_intraday_firebase_data",
-        ],
+        "dag_depends": ["import_intraday_firebase_data", "dbt_run_dag"],
     },
     "adage_involved_student": {
         "sql": f"{ANALYTICS_SQL_PATH}/adage_involved_student.sql",
@@ -131,8 +93,7 @@ analytics_tables = {
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "firebase_aggregated_search_events",
         "time_partitioning": {"field": "first_date"},
-        "depends": ["diversification_booking"],
-        "dag_depends": ["import_intraday_firebase_data"],
+        "dag_depends": ["import_intraday_firebase_data", "dbt_run_dag"],
         "params": {"set_date": "2023-01-01"},
     },
     "retention_partner_history": {
@@ -159,10 +120,7 @@ aggregated_tables = {
     "aggregated_weekly_user_data": {
         "sql": f"{ANALYTICS_SQL_PATH}/aggregated_weekly_user_data.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": [
-            "diversification_booking",
-        ],
-        "dag_depends": ["import_intraday_firebase_data"],
+        "dag_depends": ["import_intraday_firebase_data", "dbt_run_dag"],
     },
 }
 

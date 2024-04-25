@@ -8,13 +8,32 @@
     )
 }}
 
-WITH all_bookings_reconciled AS (
+WITH firebase_bookings AS (
+  SELECT
+    event_date,
+    event_timestamp,
+    session_id,
+    unique_session_id,
+    platform,
+    user_location_type,
+    booking_id
+  FROM {{ ref('int_firebase__native_event') }} f_events
+  
+  WHERE event_name = 'BookingConfirmation'
+  {% if is_incremental() %}
+      AND date(event_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
+  {% endif %}
+  -- force only one booking_id
+  QUALIFY ROW_NUMBER() OVER(PARTITION BY booking_id ORDER BY event_timestamp ) = 1
+),
+
+all_bookings_reconciled AS (
   SELECT
     booking.user_id
-    , COALESCE(event_date, DATE(booking_creation_date)) AS booking_date
-    , COALESCE(event_timestamp, TIMESTAMP(booking_creation_date)) AS booking_timestamp
-    , session_id AS booking_session_id
-    , unique_session_id AS booking_unique_session_id
+    , COALESCE(f_events.event_date, DATE(booking_creation_date)) AS booking_date
+    , COALESCE(f_events.event_timestamp, TIMESTAMP(booking_creation_date)) AS booking_timestamp
+    , f_events.session_id AS booking_session_id
+    , f_events.unique_session_id AS booking_unique_session_id
     , booking.offer_id
     , booking.deposit_id
     , booking.booking_status
@@ -22,16 +41,11 @@ WITH all_bookings_reconciled AS (
     , booking.booking_intermediary_amount
     , booking.item_id
     , booking.booking_id
-    , platform
+    , f_events.platform
     , f_events.user_location_type
   FROM
       {{ ref('mrt_global__booking') }} booking
-  LEFT JOIN {{ ref('int_firebase__native_event') }} f_events
-  ON f_events.booking_id = booking.booking_id
-  AND event_name = 'BookingConfirmation'
-  {% if is_incremental() %}
-      AND date(event_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
-  {% endif %}
+  LEFT JOIN firebase_bookings f_events ON f_events.booking_id = booking.booking_id
 
   {% if is_incremental() %}
     WHERE DATE(booking_creation_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')

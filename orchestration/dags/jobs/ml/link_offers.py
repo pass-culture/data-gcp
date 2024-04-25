@@ -50,10 +50,8 @@ with DAG(
         ),
     },
 ) as dag:
-    
-    data_collect = bigquery_job_task(
-        dag, "import_item_batch", params, extra_params={}
-    )
+
+    data_collect = bigquery_job_task(dag, "import_item_batch", params, extra_params={})
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -76,8 +74,6 @@ with DAG(
         base_dir=BASE_DIR,
         command="""pip install -r requirements.txt --user""",
     )
-
-    
 
     preprocess = SSHGCEOperator(
         task_id="preprocess",

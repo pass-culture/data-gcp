@@ -1,6 +1,6 @@
 SQL_PATH = "dependencies/ml/linkage/sql"
 DATE = "{{ yyyymmdd(ds) }}"
-table="items_to_link"
+table = "items_to_link"
 params = {
     "sql": f"{SQL_PATH}/{table}.sql",
     "write_disposition": "WRITE_TRUNCATE",

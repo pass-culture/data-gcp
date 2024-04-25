@@ -45,9 +45,9 @@ def main(
     # Load preprocessed data
     logger.info("Loading offers to link...")
     df_offers_to_link_clean = pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.sandbox_{env_short_name}.offers_to_link_clean`"
+        f"SELECT * FROM `{gcp_project}.tmp_{env_short_name}.items_to_link_clean`"
     )
-    logger.info(f"{len(df_offers_to_link_clean)} offers to link")
+    logger.info(f"{len(df_offers_to_link_clean)} items to link")
     ###############
     # Split offers between performer and non performer
     logger.info("Split offers between offers with performer and non performer")
@@ -59,11 +59,11 @@ def main(
     df_to_link_performer = df_offers_to_link_clean.query(
         f"""offer_subcategoryId in {tuple(SUBCATEGORIES_WITH_PERFORMER)} """
     )
-    logger.info(f"{len(df_to_link_performer)} offers with performer to link")
+    logger.info(f"{len(df_to_link_performer)} items with performer to link")
     df_to_link_non_performer = df_offers_to_link_clean.query(
         f"""offer_subcategoryId in {tuple(subcat_wo_performer)} """
     )
-    logger.info(f"{len(df_to_link_non_performer)} offers without performer to link")
+    logger.info(f"{len(df_to_link_non_performer)} items without performer to link")
 
     ###############
     # Add dataframe to link to analysis config dict
@@ -120,7 +120,7 @@ def main(
     df_offers_linked_full = pd.concat(offers_matched_by_group_df_list)
 
     df_offers_linked_full.to_gbq(
-        f"sandbox_{env_short_name}.linked_offers_full",
+        f"tmp_{env_short_name}.linked_offers_full",
         project_id=gcp_project,
         if_exists="replace",
     )

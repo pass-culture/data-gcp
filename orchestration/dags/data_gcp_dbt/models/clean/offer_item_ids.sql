@@ -1,26 +1,24 @@
 with item_group_by_extra_data as(
     select
         offer.offer_id,
-        CASE
-            WHEN (
-                offer.offer_subcategoryId IN ('LIVRE_PAPIER')
-                AND (
-                    offer_extracted_data.isbn IS not null
-                    AND offer_extracted_data.isbn <> ''
-                )
-            ) THEN CONCAT('isbn-', offer_extracted_data.isbn)
-            WHEN (
-                offer.offer_subcategoryId IN ('SEANCE_CINE')
-                AND (
-                    offer_extracted_data.theater_movie_id IS not null
-                    AND offer_extracted_data.theater_movie_id <> ''
-                )
-            ) THEN CONCAT(
-                'movie_id-',
-                offer_extracted_data.theater_movie_id
-            )
-            ELSE CONCAT('product-', offer.offer_product_id)
-        END AS item_id,
+        CASE WHEN (
+            offer.offer_subcategoryId = 'LIVRE_PAPIER'
+            AND offer_extracted_data.isbn IS NOT NULL
+            AND offer_extracted_data.isbn <> ''
+            ) THEN CONCAT('isbn-',offer_extracted_data.isbn)
+        WHEN (offer.offer_subcategoryId = 'SEANCE_CINE'
+            AND offer_extracted_data.theater_movie_id IS NOT NULL
+            AND offer_extracted_data.theater_movie_id <> ''
+            ) THEN CONCAT('movie_id-',offer_extracted_data.theater_movie_id)
+        WHEN (offer.offer_subcategoryId = 'SUPPORT_PHYSIQUE_MUSIQUE_CD'
+            AND offer_extracted_data.ean IS NOT NULL
+            AND offer_extracted_data.ean <> ''
+            ) THEN CONCAT('cd_id-',offer_extracted_data.ean)
+        WHEN (offer.offer_subcategoryId = 'SUPPORT_PHYSIQUE_MUSIQUE_VINYLE'
+            AND offer_extracted_data.ean IS NOT NULL
+            AND offer_extracted_data.ean <> ''
+            ) THEN CONCAT('vinyle_id-',offer_extracted_data.ean)
+        ELSE CONCAT('offer-',offer.offer_id) END AS item_id
     FROM
         {{ ref('offer') }} AS offer
     LEFT JOIN {{ ref('offer_extracted_data') }} offer_extracted_data ON offer_extracted_data.offer_id = offer.offer_id

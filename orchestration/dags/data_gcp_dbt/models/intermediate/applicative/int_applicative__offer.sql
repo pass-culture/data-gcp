@@ -26,7 +26,15 @@ item_ids AS (
             AND theater_movie_id IS NOT NULL
             AND theater_movie_id <> ''
             ) THEN CONCAT('movie_id-',theater_movie_id)
-        ELSE CONCAT('product-',offer_product_id) END AS item_id
+        WHEN (offer_subcategoryId = 'SUPPORT_PHYSIQUE_MUSIQUE_CD'
+            AND ean IS NOT NULL
+            AND ean <> ''
+            ) THEN CONCAT('cd_id-',ean)
+        WHEN (offer_subcategoryId = 'SUPPORT_PHYSIQUE_MUSIQUE_VINYLE'
+            AND ean IS NOT NULL
+            AND ean <> ''
+            ) THEN CONCAT('vinyle_id-',ean)
+        ELSE CONCAT('offer-',offer_id) END AS item_id
     FROM {{ ref('int_applicative__extract_offer') }}
 ),
 

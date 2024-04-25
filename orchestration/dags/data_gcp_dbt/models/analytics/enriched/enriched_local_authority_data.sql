@@ -1,8 +1,8 @@
 WITH active_venues_last_30days AS (SELECT
     venue_managing_offerer_id AS offerer_id
     ,STRING_AGG(DISTINCT CONCAT(' ',CASE WHEN venue_type_label != 'Offre numérique' THEN venue_type_label END)) AS active_last_30days_physical_venues_types
-FROM {{ ref('enriched_venue_data') }}
-LEFT JOIN {{ ref('bookable_venue_history') }} ON enriched_venue_data.venue_id = bookable_venue_history.venue_id
+FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
+LEFT JOIN {{ ref('bookable_venue_history') }} ON mrt_global__venue.venue_id = bookable_venue_history.venue_id
 WHERE DATE_DIFF(CURRENT_DATE,partition_date,DAY) <= 30
 GROUP BY 1
 ORDER BY 1)

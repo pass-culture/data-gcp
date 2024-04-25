@@ -170,7 +170,7 @@ SELECT
          ELSE CONCAT("offerer-", bookable_venue_history.offerer_id) END AS partner_id,
     max(partition_date) last_bookable_date,
 FROM {{ ref('bookable_venue_history') }}
-LEFT JOIN {{ ref('enriched_venue_data')}} on bookable_venue_history.venue_id = enriched_venue_data.venue_id
+LEFT JOIN {{ ref('mrt_global__venue')}} AS mrt_global__venue on bookable_venue_history.venue_id = mrt_global__venue.venue_id
 WHERE total_bookable_offers <> 0
 GROUP BY 1
 )

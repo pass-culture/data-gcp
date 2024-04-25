@@ -604,14 +604,6 @@ BIGQUERY_SCHEMAS = {
         "venue_id": "STRING",
         "offerer_id": "STRING",
     },
-    "bookable_venue_history": {
-        "venue_id": "STRING",
-        "offerer_id": "STRING",
-        "partition_date": "DATETIME",
-        "individual_bookable_offers": "INT64",
-        "collective_bookable_offers": "INT64",
-        "total_bookable_offers": "INT64",
-    },
     "applicative_database_national_program": {
         "national_program_id": "STRING",
         "national_program_name": "STRING",

@@ -20,5 +20,6 @@ FROM {{ ref('int_firebase__native_event') }}
 WHERE event_name = "BookingConfirmation"
 {% if is_incremental() %}
 -- recalculate latest day's data + previous
-AND date(event_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 1 DAY) and DATE('{{ ds() }}')
+AND date(event_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
 {% endif %}
+QUALIFY ROW_NUMBER() OVER(PARTITION BY booking_id ORDER BY event_timestamp ) = 1

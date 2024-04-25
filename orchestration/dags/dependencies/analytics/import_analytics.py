@@ -73,21 +73,6 @@ analytics_tables = {
             ]
         },
     },
-    "analytics_firebase_booking_origin": {
-        "sql": f"{ANALYTICS_SQL_PATH}/firebase_booking_origin.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_booking_origin${{ yyyymmdd(add_days(ds, 0)) }}",
-        "time_partitioning": {"field": "booking_date"},
-        "dag_depends": ["import_intraday_firebase_data"],
-        "params": {"from": -8, "to": 0},
-    },
-    "analytics_firebase_booking_origin_catchup": {
-        "sql": f"{ANALYTICS_SQL_PATH}/firebase_booking_origin.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_booking_origin${{ yyyymmdd(add_days(ds, -2)) }}",
-        "time_partitioning": {"field": "booking_date"},
-        "params": {"from": -10, "to": -2},
-    },
     "analytics_firebase_home_events_details": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_events_details.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -150,20 +135,9 @@ analytics_tables = {
         "dag_depends": ["import_intraday_firebase_data"],
         "params": {"set_date": "2023-01-01"},
     },
-    "bookable_venue_history": {
-        "sql": f"{ANALYTICS_SQL_PATH}/bookable_venue_history.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
-    "bookable_partner_history": {
-        "sql": f"{ANALYTICS_SQL_PATH}/bookable_partner_history.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
     "retention_partner_history": {
         "sql": f"{ANALYTICS_SQL_PATH}/retention_partner_history.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "depends": [
-            "bookable_partner_history",
-        ],
     },
     "funnel_subscription_beneficiary": {
         "sql": f"{ANALYTICS_SQL_PATH}/funnel_subscription_beneficiary.sql",

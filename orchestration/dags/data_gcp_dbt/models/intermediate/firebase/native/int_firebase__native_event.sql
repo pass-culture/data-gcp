@@ -102,5 +102,5 @@ SELECT
     CASE WHEN event_name = "login" THEN 1 ELSE 0 END AS is_login,
 FROM {{ ref("int_firebase__native_event_flattened") }} AS e
 {% if is_incremental() %}
-WHERE event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
+WHERE event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
 {% endif %}

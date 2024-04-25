@@ -6,10 +6,10 @@ class EventExporter:
     def __init__(self, posthog_api_key, posthog_host, posthog_personal_api_key):
         self.client = Posthog(
             posthog_api_key,
-            sync_mode=False,  # force synchron
+            sync_mode=True,  # force synchron
             host=posthog_host,
             personal_api_key=posthog_personal_api_key,
-            thread=32,
+            thread=64,
         )
 
     def event_to_posthog(self, event: PostHogEvent) -> None:

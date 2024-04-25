@@ -110,6 +110,7 @@ sources:
       - name: geoip_city_v4
       - name: gsheet_eac_webinar
       - name: gsheet_ml_recommendation_sensitive_item
+      - name: eple_aggregated_type
       - name: macro_rayons
       - name: stdout
       - name: sensitive_item_recommendation
@@ -143,7 +144,6 @@ sources:
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: adage
-      - name: bookable_venue_history
       - name: eple
       - name: firebase_pro_events
       - name: firebase_recommendation_events

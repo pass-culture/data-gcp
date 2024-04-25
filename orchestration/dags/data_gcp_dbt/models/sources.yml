@@ -153,7 +153,6 @@ sources:
       - name: siren_data_labels
       - name: user_locations
       - name: population_age_and_department_france_details
-      - name: diversification_booking
       - name: priority_local_authorities
       - name: offer_with_mediation
       - name: forbidden_item_recommendation

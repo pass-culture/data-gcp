@@ -40,7 +40,7 @@ SELECT
 FROM {{ ref( 'mrt_native__daily_user_home_module' ) }} AS uh
 LEFT JOIN {{ source('raw','applicative_database_user') }} AS u
     ON u.user_id = uh.user_id
-LEFT JOIN {{ source('analytics','diversification_booking') }} AS db
+LEFT JOIN {{ ref('diversification_booking') }} AS db
     ON db.booking_id = uh.booking_id
 GROUP BY
     module_displayed_date,

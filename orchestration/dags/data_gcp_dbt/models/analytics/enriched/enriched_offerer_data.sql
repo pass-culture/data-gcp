@@ -122,7 +122,7 @@ bookable_individual_offer_cnt AS (
     offerer_id
     , MIN(partition_date) AS offerer_first_bookable_offer_date
     , MAX(partition_date) AS offerer_last_bookable_offer_date
-FROM {{ source('analytics', 'bookable_venue_history') }}
+FROM {{ ref('bookable_venue_history') }}
 GROUP BY 1
 ),
 

@@ -12,7 +12,7 @@ WITH firebase_last_two_days_events AS (
     FROM {{ source("raw","firebase_events") }}
     WHERE TRUE
         {% if is_incremental() %}
-        AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
+        AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
         {% endif %}
 )
 

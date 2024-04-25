@@ -176,4 +176,11 @@ ref_tables = {
             "department": "STRING",
         },
     },
+    "eple_aggregated_type": {
+        "file_type": "csv",
+        "schema": {
+            "institution_type": "STRING",
+            "macro_institution_type": "STRING",
+        },
+    },
 }

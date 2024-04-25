@@ -5,8 +5,8 @@ SELECT
     , partition_date
     , 'individual' AS offer_type
     , COUNT(DISTINCT offer_id) AS nb_bookable_offers
-FROM `{{ bigquery_analytics_dataset }}`.enriched_offer_data
-INNER JOIN `{{ bigquery_analytics_dataset }}`.bookable_offer_history USING(offer_id)
+FROM {{ ref('enriched_offer_data')}}
+INNER JOIN {{ ref('bookable_offer_history') }} USING(offer_id)
 GROUP BY 1,2,3,4
 UNION ALL
 SELECT
@@ -15,8 +15,8 @@ SELECT
     , partition_date
     , 'collective' AS offer_type
     , COUNT(DISTINCT collective_offer_id) AS nb_bookable_offers
-FROM `{{ bigquery_analytics_dataset }}`.enriched_collective_offer_data
-INNER JOIN `{{ bigquery_analytics_dataset }}`.bookable_collective_offer_history USING(collective_offer_id)
+FROM {{ ref('enriched_collective_offer_data')}}
+INNER JOIN {{ ref('bookable_collective_offer_history')}}  USING(collective_offer_id)
 GROUP BY 1,2,3,4),
 
 pivoted_data AS (

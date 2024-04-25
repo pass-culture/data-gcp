@@ -411,6 +411,9 @@ models:
   - name: enriched_venue_data
     config:
       schema: analytics_{{ target.name }}
+  - name: bookable_venue_history
+    config:
+      schema: analytics_{{ target.name }}
   - name: enriched_venue_tags_data
     config:
       schema: analytics_{{ target.name }}

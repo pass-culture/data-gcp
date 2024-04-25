@@ -132,7 +132,7 @@ sources:
       - name: item_clusters
       - name: item_embeddings
       - name: item_embeddings_reduced_64
-      - name: item_embeddings_reduced_32
+      - name: item_embeddin gs_reduced_32
       - name: item_embeddings_reduced_16
       - name: item_embeddings_reduced_5
       - name: item_topics
@@ -143,7 +143,6 @@ sources:
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: adage
-      - name: bookable_venue_history
       - name: eple
       - name: firebase_pro_events
       - name: firebase_recommendation_events

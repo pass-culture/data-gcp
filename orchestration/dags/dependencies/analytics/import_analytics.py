@@ -150,10 +150,6 @@ analytics_tables = {
         "dag_depends": ["import_intraday_firebase_data"],
         "params": {"set_date": "2023-01-01"},
     },
-    "bookable_venue_history": {
-        "sql": f"{ANALYTICS_SQL_PATH}/bookable_venue_history.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
     "bookable_partner_history": {
         "sql": f"{ANALYTICS_SQL_PATH}/bookable_partner_history.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",

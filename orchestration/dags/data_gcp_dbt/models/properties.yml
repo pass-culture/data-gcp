@@ -411,6 +411,9 @@ models:
   - name: firebase_daily_offer_consultation_data
     config:
       schema: analytics_{{ target.name }}
+  - name: firebase_booking_origin
+    config:
+      schema: analytics_{{ target.name }}
   - name: enriched_venue_data
     config:
       schema: analytics_{{ target.name }}

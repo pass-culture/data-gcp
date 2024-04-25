@@ -10,8 +10,8 @@
 
 WITH firebase_bookings AS (
   SELECT
-    event_date,
-    event_timestamp,
+    booking_date as event_date,
+    booking_timestamp  as event_timestamp,
     session_id,
     unique_session_id,
     platform,
@@ -20,7 +20,7 @@ WITH firebase_bookings AS (
   FROM {{ ref('firebase_bookings') }} f_events
 
   {% if is_incremental() %}
-  WHERE date(event_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
+  WHERE date(booking_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
   {% endif %}
 ),
 

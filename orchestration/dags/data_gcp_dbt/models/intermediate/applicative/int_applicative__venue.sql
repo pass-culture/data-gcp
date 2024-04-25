@@ -46,7 +46,7 @@ bookable_offer_history AS (
         venue_id,
         MIN(partition_date) AS venue_first_bookable_offer_date,
         MAX(partition_date) AS venue_last_bookable_offer_date,
-    FROM {{ source('analytics', 'bookable_venue_history')}}
+    FROM {{ ref('bookable_venue_history')}}
     GROUP BY venue_id
 )
 

@@ -33,7 +33,7 @@ default_args = {
 dag = DAG(
     "dbt_run_dag",
     default_args=default_args,
-    dagrun_timeout=timedelta(minutes=120),
+    dagrun_timeout=timedelta(minutes=240),
     catchup=False,
     description="A dbt wrapper for airflow",
     schedule_interval=get_airflow_schedule("0 1 * * *"),

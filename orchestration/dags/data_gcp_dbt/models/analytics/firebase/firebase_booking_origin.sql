@@ -17,14 +17,11 @@ WITH firebase_bookings AS (
     platform,
     user_location_type,
     booking_id
-  FROM {{ ref('int_firebase__native_event') }} f_events
-  
-  WHERE event_name = 'BookingConfirmation'
+  FROM {{ ref('firebase_bookings') }} f_events
+
   {% if is_incremental() %}
-      AND date(event_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
+  WHERE date(event_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
   {% endif %}
-  -- force only one booking_id
-  QUALIFY ROW_NUMBER() OVER(PARTITION BY booking_id ORDER BY event_timestamp ) = 1
 ),
 
 all_bookings_reconciled AS (

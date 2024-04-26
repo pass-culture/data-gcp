@@ -16,8 +16,8 @@ item_clusters AS (
         ic.item_id,  
         ANY_VALUE(ic.semantic_cluster_id) as cluster_id,
         ANY_VALUE(it.topic_id) as topic_id
-    FROM {{ source('clean', 'item_clusters') }} ic
-    LEFT JOIN {{ source('clean', 'item_topics') }} it on it.item_id = ic.item_id
+    FROM {{ source('clean', 'default_item_clusters') }} ic
+    LEFT JOIN {{ source('clean', 'default_item_topics') }} it on it.item_id = ic.item_id
     GROUP BY 1
 ),
 

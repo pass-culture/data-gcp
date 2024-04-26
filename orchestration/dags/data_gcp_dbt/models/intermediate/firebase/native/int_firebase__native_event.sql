@@ -58,7 +58,7 @@ SELECT
     searchDate AS search_date_filter,
     searchGenreTypes AS search_genre_types_filter,
     searchMaxPrice AS search_max_price_filter,
-    searchGenreTypes AS search_native_categories_filter,
+    searchNativeCategories AS search_native_categories_filter,
     moduleName AS module_name,
     moduleListID AS module_list_id,
     index AS module_index,

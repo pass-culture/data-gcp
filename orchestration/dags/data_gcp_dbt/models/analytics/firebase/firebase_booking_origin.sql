@@ -11,7 +11,7 @@
 WITH firebase_bookings AS (
   SELECT
     booking_date as event_date,
-    booking_timestamp  as event_timestamp,
+    TIMESTAMP(booking_timestamp)  as event_timestamp,
     session_id,
     unique_session_id,
     platform,
@@ -27,8 +27,8 @@ WITH firebase_bookings AS (
 all_bookings_reconciled AS (
   SELECT
     booking.user_id
-    , COALESCE(f_events.event_date, DATE(booking_creation_date)) AS booking_date
-    , COALESCE(f_events.event_timestamp, TIMESTAMP(booking_creation_date)) AS booking_timestamp
+    , COALESCE(f_events.event_date, DATE(booking_created_at)) AS booking_date
+    , COALESCE(f_events.event_timestamp, TIMESTAMP(booking_created_at)) AS booking_timestamp
     , f_events.session_id AS booking_session_id
     , f_events.unique_session_id AS booking_unique_session_id
     , booking.offer_id
@@ -45,7 +45,7 @@ all_bookings_reconciled AS (
   LEFT JOIN firebase_bookings f_events ON f_events.booking_id = booking.booking_id
 
   {% if is_incremental() %}
-    WHERE DATE(booking_creation_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
+    WHERE DATE(booking_created_at) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
   {% endif %}
 )
 
@@ -55,7 +55,7 @@ all_bookings_reconciled AS (
     , offer_id
     , item_id
     , event_date AS consult_date
-    , event_timestamp AS consult_timestamp
+    , TIMESTAMP(event_timestamp) AS consult_timestamp
     , origin AS consult_origin
     , reco_call_id
     , search_id
@@ -92,12 +92,12 @@ all_bookings_reconciled AS (
     , module_name AS module_name_first_touch
     , entry_id AS home_id_first_touch
   FROM all_bookings_reconciled
-  LEFT JOIN firebase_consult
+  INNER JOIN firebase_consult
   ON all_bookings_reconciled.user_id = firebase_consult.user_id
   AND all_bookings_reconciled.item_id = firebase_consult.item_id
   AND consult_date >= DATE_SUB(booking_date, INTERVAL 7 DAY) -- force 7 days lag max
-  AND consult_timestamp < booking_timestamp
-  QUALIFY ROW_NUMBER() OVER(PARTITION BY firebase_consult.user_id, firebase_consult.item_id ORDER BY consult_timestamp ) = 1
+  AND consult_timestamp <= TIMESTAMP_ADD(booking_timestamp, INTERVAL 5 MINUTE)
+  QUALIFY ROW_NUMBER() OVER(PARTITION BY booking_id, firebase_consult.user_id, firebase_consult.item_id ORDER BY consult_timestamp ASC) = 1
 )
 
 , bookings_origin_last_touch AS (
@@ -120,12 +120,12 @@ all_bookings_reconciled AS (
     , module_name AS module_name_last_touch
     , entry_id AS home_id_last_touch
   FROM all_bookings_reconciled
-  LEFT JOIN firebase_consult
+  INNER JOIN firebase_consult
   ON all_bookings_reconciled.user_id = firebase_consult.user_id
   AND all_bookings_reconciled.item_id = firebase_consult.item_id
   AND consult_date >= DATE_SUB(booking_date, INTERVAL 7 DAY)
-  AND consult_timestamp < booking_timestamp
-  QUALIFY ROW_NUMBER() OVER(PARTITION BY firebase_consult.user_id, firebase_consult.item_id ORDER BY consult_timestamp DESC) = 1
+  AND consult_timestamp <= TIMESTAMP_ADD(booking_timestamp, INTERVAL 5 MINUTE)
+  QUALIFY ROW_NUMBER() OVER(PARTITION BY booking_id, firebase_consult.user_id, firebase_consult.item_id ORDER BY consult_timestamp DESC) = 1
 )
 
 , booking_origin AS (

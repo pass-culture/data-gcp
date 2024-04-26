@@ -40,6 +40,12 @@ TABLE_PARAMS = {
     "pro": "posthog_pro_event",
 }
 
+CATCHUP_PARAMS = {
+    "native": datetime.datetime(2024, 4, 25),
+    "adage": datetime.datetime(2024, 1, 1),
+    "pro": datetime.datetime(2024, 3, 1),
+}
+
 GCE_PARAMS = {
     "instance_name": f"export-posthog-data-{ENV_SHORT_NAME}",
     "instance_type": "n1-standard-8",
@@ -50,7 +56,7 @@ schedule_dict = {"prod": "0 8 * * *", "dev": "0 12 * * *", "stg": "0 10 * * *"}
 
 for job_name, table_name in TABLE_PARAMS.items():
     with DAG(
-        f"export_posthog_{job_name}_catch",
+        f"export_posthog_{job_name}_catchup",
         default_args={
             "start_date": datetime.datetime(2023, 9, 1),
             "retries": 1,
@@ -60,7 +66,7 @@ for job_name, table_name in TABLE_PARAMS.items():
         description="Export to analytics data posthog",
         schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
         catchup=True,
-        start_date=datetime.datetime(2024, 3, 1),
+        start_date=CATCHUP_PARAMS[job_name],
         max_active_runs=1,
         dagrun_timeout=datetime.timedelta(minutes=1440),
         user_defined_macros=macros.default,

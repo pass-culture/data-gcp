@@ -51,6 +51,10 @@ SELECT
     jsonPayload.extra.stock_price as stock_new_price,
     CAST(jsonPayload.extra.stock_dnbookedquantity as INT64) as stock_booking_quantity,
     jsonPayload.extra.eans as list_of_eans_not_found,
+    CAST(jsonPayload.extra.offerer_id AS INT64) as offerer_id,
+    jsonPayload.extra.isconvenient as beta_test_new_nav_is_convenient,
+    jsonPayload.extra.ispleasant as beta_test_new_nav_is_pleasant,
+    jsonPayload.extra.comment as beta_test_new_nav_comment,
     trace
 
 

@@ -106,6 +106,13 @@ HISTORICAL_CLEAN_APPLICATIVE_TABLES = {
         "time_partitioning": {"field": "partition_date"},
         "clustering_fields": {"fields": ["partition_date"]},
     },
+    "user_pro_new_nav_state": {
+        "sql": f"{CLEAN_HISTORY_SQL_PATH}/user_pro_new_nav_state.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "applicative_database_user_pro_new_nav_state${{ yyyymmdd(yesterday()) }}",
+        "time_partitioning": {"field": "partition_date"},
+        "clustering_fields": {"fields": ["partition_date"]},
+    },
     "venue_history": {
         "sql": f"{CLEAN_HISTORY_SQL_PATH}/venue_history.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",

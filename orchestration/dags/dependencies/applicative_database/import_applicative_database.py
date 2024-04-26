@@ -92,6 +92,13 @@ HISTORICAL_CLEAN_APPLICATIVE_TABLES = {
         "time_partitioning": {"field": "partition_date"},
         "clustering_fields": {"fields": ["partition_date"]},
     },
+    "opening_hours": {
+        "sql": f"{CLEAN_HISTORY_SQL_PATH}/opening_hours.sql",
+        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_table": "applicative_database_opening_hours${{ yyyymmdd(yesterday()) }}",
+        "time_partitioning": {"field": "partition_date"},
+        "clustering_fields": {"fields": ["partition_date"]},
+    },
     "stock_history": {
         "sql": f"{CLEAN_HISTORY_SQL_PATH}/stock_history.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",

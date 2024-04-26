@@ -1,8 +1,3 @@
-{{
-    config(
-        tags = "sandbox"
-    )
-}}
 
 WITH users AS (
   SELECT DISTINCT 

@@ -61,7 +61,7 @@ with DAG(
             default="default-config",
             type="string",
         ),
-        "cluster_prefix": Param(default=None, type=["null", "string"]),
+        "cluster_prefix": Param(default="default_", type=["null", "string"]),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)

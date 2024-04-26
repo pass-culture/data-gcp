@@ -10,7 +10,7 @@ ORDER BY 1)
 ,administrative_venues AS (SELECT
     venue_managing_offerer_id AS offerer_id
     ,COUNT(CASE WHEN mrt_global__venue.venue_type_label = 'Lieu administratif' THEN venue_id ELSE NULL END) AS nb_administrative_venues
-FROM {{ ref('mrt_global__venue') }}
+FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
 GROUP BY 1)
 
 ,top_CA_venue AS
@@ -18,7 +18,7 @@ GROUP BY 1)
     venue_managing_offerer_id AS offerer_id
     ,mrt_global__venue.venue_type_label
     ,RANK() OVER(PARTITION BY venue_managing_offerer_id ORDER BY total_real_revenue DESC) AS CA_rank
-FROM {{ ref('mrt_global__venue') }}
+FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
 WHERE total_real_revenue > 0)
 
 ,top_bookings_venue AS
@@ -26,14 +26,14 @@ WHERE total_real_revenue > 0)
     venue_managing_offerer_id AS offerer_id
     ,mrt_global__venue.venue_type_label
     ,RANK() OVER(PARTITION BY venue_managing_offerer_id ORDER BY total_used_bookings DESC) AS bookings_rank
-FROM {{ ref('mrt_global__venue') }}
+FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
 WHERE total_used_bookings > 0)
 
 ,reimbursement_points AS (
 SELECT
     venue_managing_offerer_id AS offerer_id
     ,COUNT(DISTINCT applicative_database_venue_reimbursement_point_link.venue_id) AS nb_reimbursement_points
-FROM {{ ref('mrt_global__venue') }}
+FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
 LEFT JOIN {{ ref('venue_reimbursement_point_link') }}
  ON mrt_global__venue.Venue_id = applicative_database_venue_reimbursement_point_link.venue_id
 GROUP BY 1)
@@ -42,7 +42,7 @@ GROUP BY 1)
     SELECT
         venue_managing_offerer_id AS offerer_id
         ,STRING_AGG(DISTINCT CONCAT(' ',CASE WHEN mrt_global__venue.venue_type_label != 'Offre numérique' THEN mrt_global__venue.venue_type_label END)) AS all_physical_venues_types
-    FROM {{ ref('mrt_global__venue') }}
+    FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
     GROUP BY 1
 )
 
@@ -103,7 +103,7 @@ SELECT DISTINCT
 FROM {{ ref('enriched_offerer_data') }}
 JOIN {{ ref('offerer') }} ON enriched_offerer_data.offerer_id = applicative_database_offerer.offerer_id
 JOIN {{ source('analytics','region_department') }} ON enriched_offerer_data.offerer_department_code = region_department.num_dep
-LEFT JOIN {{ ref('mrt_global__venue') }} ON enriched_offerer_data.offerer_id = mrt_global__venue.venue_managing_offerer_id
+LEFT JOIN {{ ref('mrt_global__venue') }} AS mrt_global__venue ON enriched_offerer_data.offerer_id = mrt_global__venue.venue_managing_offerer_id
 LEFT JOIN aggregated_venue_types ON enriched_offerer_data.offerer_id = aggregated_venue_types.offerer_id
 LEFT JOIN active_venues_last_30days ON enriched_offerer_data.offerer_id = active_venues_last_30days.offerer_id
 LEFT JOIN administrative_venues ON enriched_offerer_data.offerer_id = administrative_venues.offerer_id

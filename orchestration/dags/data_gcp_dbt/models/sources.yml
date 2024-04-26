@@ -130,14 +130,14 @@ sources:
       - name: dms_pro_cleaned
       - name: firebase_app_experiments
       - name: iris_france
-      - name: item_clusters
+      - name: default_item_clusters
       - name: item_embeddings
       - name: item_embeddings_reduced_64
       - name: item_embeddings_reduced_32
       - name: item_embeddings_reduced_16
       - name: item_embeddings_reduced_5
-      - name: item_topics
-      - name: item_topics_labels
+      - name: default_item_topics
+      - name: default_item_topics_labels
       - name: siren_data
       - name: subcategories
   - name: analytics # this is the source_name

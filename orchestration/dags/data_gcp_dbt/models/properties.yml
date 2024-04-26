@@ -285,6 +285,9 @@ models:
   - name: beneficiary_fraud_status
     config:
       schema: clean_{{ target.name }}
+  - name: item_clusters_topics_labels
+    config:
+      schema: clean_{{ target.name }}
   # clean transformations 
   - name: booking
     config:

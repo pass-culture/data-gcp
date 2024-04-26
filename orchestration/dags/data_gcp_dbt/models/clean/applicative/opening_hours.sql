@@ -1,3 +1,3 @@
 SELECT 
     *
-FROM {{ source('raw', 'opening_hours') }}
+FROM {{ source('raw', 'applicative_database_opening_hours') }}

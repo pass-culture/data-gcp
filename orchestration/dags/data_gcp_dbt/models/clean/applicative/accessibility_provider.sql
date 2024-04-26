@@ -1,3 +1,3 @@
 SELECT
     *
-FROM {{ source('raw', 'accessibility_provider') }}
+FROM {{ source('raw', 'applicative_database_accessibility_provider') }}

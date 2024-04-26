@@ -74,7 +74,7 @@ GROUP BY 1,2,3)
     CASE WHEN mrt_global__venue.venue_is_permanent THEN CONCAT("venue-",mrt_global__venue.venue_id)
          ELSE CONCAT("offerer-", venue_managing_offerer_id) END AS partner_id
     ,applicative_database_favorite.*
-FROM {{ ref('mrt_global__venue')}}
+FROM {{ ref('mrt_global__venue')}} AS mrt_global__venue
 LEFT JOIN {{ ref('enriched_offer_data')}}enriched_offer_data ON mrt_global__venue.venue_id = enriched_offer_data.venue_id
 LEFT JOIN {{ ref('favorite')}} ON enriched_offer_data.offer_id = applicative_database_favorite.offerId)
 
@@ -108,14 +108,14 @@ SELECT
     DISTINCT CASE WHEN mrt_global__venue.venue_is_permanent THEN CONCAT("venue-",mrt_global__venue.venue_id)
      ELSE CONCAT("offerer-", venue_managing_offerer_id) END AS partner_id
     ,first_dms_adage_status
-FROM {{ ref('mrt_global__venue')}}
+FROM {{ ref('mrt_global__venue')}} AS mrt_global__venue
 LEFT JOIN {{ ref('enriched_offerer_data')}} on mrt_global__venue.venue_managing_offerer_id = enriched_offerer_data.offerer_id
 )
 
 ,siren_status AS (SELECT DISTINCT
     mrt_global__venue.partner_id
     ,CASE WHEN Etatadministratifunitelegale = 'A' THEN TRUE ELSE FALSE END AS has_active_siren
-FROM {{ ref('mrt_global__venue')}}
+FROM {{ ref('mrt_global__venue')}} AS mrt_global__venue
 JOIN {{ ref('enriched_offerer_data')}} ON mrt_global__venue.venue_managing_offerer_id = enriched_offerer_data.offerer_id
 LEFT JOIN {{ ref('siren_data')}} ON enriched_offerer_data.offerer_siren = siren_data.siren )
 
@@ -123,7 +123,7 @@ LEFT JOIN {{ ref('siren_data')}} ON enriched_offerer_data.offerer_siren = siren_
     CASE WHEN mrt_global__venue.venue_is_permanent THEN CONCAT("venue-",mrt_global__venue.venue_id)
          ELSE CONCAT("offerer-", venue_managing_offerer_id) END AS partner_id
     ,COALESCE(COUNT(*),0) AS offers_cnt
-FROM {{ ref('mrt_global__venue')}}
+FROM {{ ref('mrt_global__venue')}} AS mrt_global__venue
 LEFT JOIN {{ ref('offer')}} ON applicative_database_offer.venue_id = mrt_global__venue.venue_id
 WHERE offer_validation = 'REJECTED'
 GROUP BY 1)
@@ -132,7 +132,7 @@ GROUP BY 1)
     CASE WHEN mrt_global__venue.venue_is_permanent THEN CONCAT("venue-",mrt_global__venue.venue_id)
          ELSE CONCAT("offerer-", venue_managing_offerer_id) END AS partner_id
     ,CASE WHEN provider_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_provider
-FROM {{ ref('mrt_global__venue')}}
+FROM {{ ref('mrt_global__venue')}} AS mrt_global__venue
 LEFT JOIN {{ ref('enriched_venue_provider_data')}} ON enriched_venue_provider_data.venue_id = mrt_global__venue.venue_id AND is_active )
 
 --- On estime que si une structure a un lieu rattaché à un point de remboursement, tous les lieux de la structure le sont
@@ -143,7 +143,7 @@ LEFT JOIN {{ ref('enriched_venue_provider_data')}} ON enriched_venue_provider_da
     ,reimbursement_point_link_beginning_date
     ,reimbursement_point_link_ending_date
     ,RANK() OVER(PARTITION BY venue_managing_offerer_id,mrt_global__venue.venue_id ORDER BY reimbursement_point_link_beginning_date DESC) AS rang
-FROM {{ ref('mrt_global__venue')}}
+FROM {{ ref('mrt_global__venue')}} AS mrt_global__venue
 LEFT JOIN {{ ref('venue_reimbursement_point_link')}} ON mrt_global__venue.venue_id = applicative_database_venue_reimbursement_point_link.venue_id)
 
 ,reimbursment_point2 AS (SELECT

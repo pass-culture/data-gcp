@@ -10,8 +10,8 @@ WITH venue AS (
             venue_longitude,
             venue_latitude
     FROM {{ ref("int_applicative__venue") }}
-    WHERE venue_is_virtual is false
-    AND offerer_validation_status = 'VALIDATED'
+    WHERE
+    offerer_validation_status = 'VALIDATED'
     AND offerer_is_active = TRUE
 ),
 offers_with_mediation AS (

@@ -68,7 +68,7 @@ SELECT
   venue_managing_offerer_id AS offerer_id,
   criterion_name AS partner_type,
   'venue_tag' AS partner_type_origin
-FROM {{ ref('mrt_global__venue') }}
+FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
 JOIN {{ ref('enriched_venue_tags_data') }} ON mrt_global__venue.venue_id = enriched_venue_tags_data.venue_id
 AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire sectoriel"
 QUALIFY ROW_NUMBER() OVER(
@@ -88,7 +88,7 @@ SELECT
     ,venue_type_label AS partner_type
     ,'venue_type_label'
     AS partner_type_origin
-FROM {{ ref('mrt_global__venue') }}
+FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
 WHERE (total_created_offers > 0 OR venue_type_label != 'Offre numérique')
 QUALIFY ROW_NUMBER() OVER(
     PARTITION BY venue_managing_offerer_id 

@@ -1,6 +1,0 @@
-version: 2
-# Temporary file during migration
-models:
-  - name: item_clusters_topics_labels
-    config:
-      tags: sandbox

@@ -30,7 +30,7 @@ models:
         +meta:
           owner: "@team-data-engineering"
       +materialized: table
-      +schema: clean_dbt_{{ target.name }}
+      +schema: clean_{{ target.name }}
       +docs: 
         node_color: "#b43ddb"
       applicative: 
@@ -44,7 +44,7 @@ models:
         +incremental_strategy: insert_overwrite
     analytics:
       +materialized: table
-      +schema: analytics_dbt_{{ target.name }}
+      +schema: analytics_{{ target.name }}
       +re_data_monitored: true
       +re_data_anomaly_detector:
         name: modified_z_score

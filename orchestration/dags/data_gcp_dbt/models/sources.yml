@@ -37,6 +37,7 @@ sources:
       - name: applicative_database_criterion
       - name: applicative_database_criterion_category
       - name: applicative_database_criterion_category_mapping
+      - name: applicative_database_custom_reimbursement_rule
       - name: applicative_database_deposit
       - name: applicative_database_educational_deposit
       - name: applicative_database_educational_domain

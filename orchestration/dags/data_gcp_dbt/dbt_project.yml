@@ -56,6 +56,11 @@ models:
         node_color: "#d90000" 
     intermediate:
       +materialized: view
+      firebase:
+        native:
+          int_firebase__native_event:
+            +schema: analytics_{{ target.name }}
+
     mart:
       +materialized: table
       +schema: analytics_{{ target.name }}

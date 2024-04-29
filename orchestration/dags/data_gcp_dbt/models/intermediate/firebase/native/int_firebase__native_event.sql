@@ -58,7 +58,7 @@ SELECT
     searchDate AS search_date_filter,
     searchGenreTypes AS search_genre_types_filter,
     searchMaxPrice AS search_max_price_filter,
-    searchGenreTypes AS search_native_categories_filter,
+    searchNativeCategories AS search_native_categories_filter,
     moduleName AS module_name,
     moduleListID AS module_list_id,
     index AS module_index,
@@ -102,5 +102,5 @@ SELECT
     CASE WHEN event_name = "login" THEN 1 ELSE 0 END AS is_login,
 FROM {{ ref("int_firebase__native_event_flattened") }} AS e
 {% if is_incremental() %}
-WHERE event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
+WHERE event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
 {% endif %}

@@ -1,6 +1,6 @@
 
 {% set target_name = target.name %}
-{% set target_schema = generate_schema_name('analytics_dbt_' ~ target_name) %}
+{% set target_schema = generate_schema_name('analytics_' ~ target_name) %}
 
 WITH offerer_humanized_id AS (
     SELECT

@@ -22,11 +22,11 @@ def main(
     ),
 ) -> None:
     df_offers_to_link = pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.sandbox_{env_short_name}.offers_to_link`"
+        f"SELECT * FROM `{gcp_project}.tmp_{env_short_name}.items_to_link`"
     )
     df_offers_to_link_clean = preprocess(df_offers_to_link)
     df_offers_to_link_clean.to_gbq(
-        f"sandbox_{env_short_name}.offers_to_link_clean",
+        f"tmp_{env_short_name}.items_to_link_clean",
         project_id=gcp_project,
         if_exists="replace",
     )

@@ -1,16 +1,16 @@
 WITH permanent_venues AS
 (
 SELECT
-    enriched_venue_data.venue_id AS venue_id
+    mrt_global__venue.venue_id AS venue_id
     ,venue_managing_offerer_id AS offerer_id
-    ,enriched_venue_data.partner_id
+    ,mrt_global__venue.partner_id
     ,venue_creation_date AS partner_creation_date
     ,CASE WHEN DATE_TRUNC(venue_creation_date,YEAR) <= DATE_TRUNC(DATE_SUB(DATE('{{ ds() }}'),INTERVAL 1 YEAR),YEAR) THEN TRUE ELSE FALSE END AS was_registered_last_year
-    ,enriched_venue_data.venue_name AS partner_name
+    ,mrt_global__venue.venue_name AS partner_name
     ,region_department.academy_name AS partner_academy_name
-    ,enriched_venue_data.venue_region_name AS partner_region_name
-    ,enriched_venue_data.venue_department_code AS partner_department_code
-    ,enriched_venue_data.venue_postal_code AS partner_postal_code
+    ,mrt_global__venue.venue_region_name AS partner_region_name
+    ,mrt_global__venue.venue_department_code AS partner_department_code
+    ,mrt_global__venue.venue_postal_code AS partner_postal_code
     ,'venue' AS partner_status
     ,COALESCE(criterion_name, venue_type_label) AS partner_type
     ,CASE WHEN 
@@ -25,28 +25,28 @@ SELECT
     ,enriched_offerer_data.is_synchro_adage AS is_synchro_adage
     ,CASE WHEN DATE_DIFF(CURRENT_DATE,venue_last_bookable_offer_date,DAY) <= 30 THEN TRUE ELSE FALSE END AS is_active_last_30days
     ,CASE WHEN DATE_DIFF(CURRENT_DATE,venue_last_bookable_offer_date,YEAR) = 0 THEN TRUE ELSE FALSE END AS is_active_current_year
-    ,COALESCE(enriched_venue_data.individual_offers_created,0) AS individual_offers_created
-    ,COALESCE(enriched_venue_data.collective_offers_created,0) AS collective_offers_created
-    ,(COALESCE(enriched_venue_data.collective_offers_created,0) + COALESCE(enriched_venue_data.individual_offers_created,0)) AS total_offers_created
-    ,enriched_venue_data.first_offer_creation_date AS first_offer_creation_date
-    ,enriched_venue_data.first_individual_offer_creation_date AS first_individual_offer_creation_date
-    ,enriched_venue_data.first_collective_offer_creation_date AS first_collective_offer_creation_date
+    ,COALESCE(mrt_global__venue.total_created_individual_offers,0) AS individual_offers_created
+    ,COALESCE(mrt_global__venue.total_created_collective_offers,0) AS collective_offers_created
+    ,(COALESCE(mrt_global__venue.total_created_collective_offers,0) + COALESCE(mrt_global__venue.total_created_individual_offers,0)) AS total_offers_created
+    ,mrt_global__venue.first_offer_creation_date AS first_offer_creation_date
+    ,mrt_global__venue.first_individual_offer_creation_date AS first_individual_offer_creation_date
+    ,mrt_global__venue.first_collective_offer_creation_date AS first_collective_offer_creation_date
     ,venue_last_bookable_offer_date AS last_bookable_offer_date
     ,venue_first_bookable_offer_date AS first_bookable_offer_date
-    ,COALESCE(enriched_venue_data.non_cancelled_individual_bookings,0) AS non_cancelled_individual_bookings
-    ,COALESCE(enriched_venue_data.used_individual_bookings,0) AS used_individual_bookings
-    ,COALESCE(enriched_venue_data.non_cancelled_collective_bookings,0) AS confirmed_collective_bookings
-    ,COALESCE(enriched_venue_data.used_collective_bookings,0) AS used_collective_bookings
-    ,COALESCE(enriched_venue_data.individual_real_revenue,0) AS real_individual_revenue
-    ,COALESCE(enriched_venue_data.collective_real_revenue,0) AS real_collective_revenue
-    ,(COALESCE(enriched_venue_data.individual_real_revenue,0)+COALESCE(enriched_venue_data.collective_real_revenue,0)) AS total_real_revenue
-FROM {{ ref('enriched_venue_data') }} AS enriched_venue_data
+    ,COALESCE(mrt_global__venue.total_non_cancelled_individual_bookings,0) AS non_cancelled_individual_bookings
+    ,COALESCE(mrt_global__venue.total_used_individual_bookings,0) AS used_individual_bookings
+    ,COALESCE(mrt_global__venue.total_non_cancelled_collective_bookings,0) AS confirmed_collective_bookings
+    ,COALESCE(mrt_global__venue.total_used_collective_bookings,0) AS used_collective_bookings
+    ,COALESCE(mrt_global__venue.total_individual_real_revenue,0) AS real_individual_revenue
+    ,COALESCE(mrt_global__venue.total_collective_real_revenue,0) AS real_collective_revenue
+    ,(COALESCE(mrt_global__venue.total_individual_real_revenue,0)+COALESCE(mrt_global__venue.total_collective_real_revenue,0)) AS total_real_revenue
+FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
 LEFT JOIN {{ source('analytics', 'region_department') }} AS region_department
-    ON enriched_venue_data.venue_department_code = region_department.num_dep
-LEFT JOIN {{ source('raw', 'agg_partner_cultural_sector') }} ON agg_partner_cultural_sector.partner_type = enriched_venue_data.venue_type_label
-LEFT JOIN {{ ref('enriched_venue_tags_data') }} ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire sectoriel"
+    ON mrt_global__venue.venue_department_code = region_department.num_dep
+LEFT JOIN {{ source('raw', 'agg_partner_cultural_sector') }} ON agg_partner_cultural_sector.partner_type = mrt_global__venue.venue_type_label
+LEFT JOIN {{ ref('enriched_venue_tags_data') }} ON mrt_global__venue.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire sectoriel"
 LEFT JOIN {{ ref('enriched_offerer_data') }} AS enriched_offerer_data
-    ON enriched_venue_data.venue_managing_offerer_id = enriched_offerer_data.offerer_id
+    ON mrt_global__venue.venue_managing_offerer_id = enriched_offerer_data.offerer_id
 WHERE venue_is_permanent IS TRUE
 ),
 
@@ -64,18 +64,18 @@ GROUP BY 1
 -- On récupère tous les lieux taggués et on remonte le tag du lieu le + actif de chaque structure
 top_venue_tag_per_offerer AS (
 SELECT 
-  enriched_venue_data.venue_id,
+  mrt_global__venue.venue_id,
   venue_managing_offerer_id AS offerer_id,
   criterion_name AS partner_type,
   'venue_tag' AS partner_type_origin
-FROM {{ ref('enriched_venue_data') }} 
-JOIN {{ ref('enriched_venue_tags_data') }} ON enriched_venue_data.venue_id = enriched_venue_tags_data.venue_id
+FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
+JOIN {{ ref('enriched_venue_tags_data') }} ON mrt_global__venue.venue_id = enriched_venue_tags_data.venue_id
 AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire sectoriel"
 QUALIFY ROW_NUMBER() OVER(
     PARTITION BY venue_managing_offerer_id 
     ORDER BY 
-        theoretic_revenue DESC
-        , (COALESCE(enriched_venue_data.individual_offers_created,0) + COALESCE(enriched_venue_data.collective_offers_created,0)) DESC 
+        total_theoretic_revenue DESC
+        , (COALESCE(mrt_global__venue.total_created_individual_offers,0) + COALESCE(mrt_global__venue.total_created_collective_offers,0)) DESC
         , venue_name
 ) = 1
 ),
@@ -83,18 +83,18 @@ QUALIFY ROW_NUMBER() OVER(
 -- On récupère le label du lieu le + actif de chaque structure
 top_venue_type_per_offerer AS (
 SELECT
-    enriched_venue_data.venue_id
+    mrt_global__venue.venue_id
     ,venue_managing_offerer_id AS offerer_id
     ,venue_type_label AS partner_type
     ,'venue_type_label'
     AS partner_type_origin
-FROM {{ ref('enriched_venue_data') }}
-WHERE (total_offers_created > 0 OR venue_type_label != 'Offre numérique')
+FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
+WHERE (total_created_offers > 0 OR venue_type_label != 'Offre numérique')
 QUALIFY ROW_NUMBER() OVER(
     PARTITION BY venue_managing_offerer_id 
     ORDER BY 
-        theoretic_revenue DESC
-        , (COALESCE(enriched_venue_data.individual_offers_created,0) + COALESCE(enriched_venue_data.collective_offers_created,0)) DESC 
+        total_theoretic_revenue DESC
+        , (COALESCE(mrt_global__venue.total_created_individual_offers,0) + COALESCE(mrt_global__venue.total_created_collective_offers,0)) DESC
         , venue_name ASC
 ) = 1
 ),

@@ -4,7 +4,7 @@
 )}}
 
 {% set target_name = target.name %}
-{% set target_schema = generate_schema_name('analytics_dbt_' ~ target_name) %}
+{% set target_schema = generate_schema_name('analytics_' ~ target_name) %}
 
 WITH bookings_per_offer AS (
     SELECT
@@ -114,7 +114,9 @@ SELECT
     collective_offer.provider_id,
     collective_offer.national_program_id,
     national_program.national_program_name,
-    collective_offer.template_id
+    collective_offer.template_id,
+    NULL as collective_offer_contact_url,
+    NULL as collective_offer_contact_form
 FROM
     {{ source('raw', 'applicative_database_collective_offer') }} AS collective_offer
     JOIN {{ ref('venue') }} AS venue ON venue.venue_id = collective_offer.venue_id
@@ -167,7 +169,9 @@ SELECT
     template.provider_id,
     template.national_program_id,
     national_program.national_program_name,
-    NULL as template_id
+    NULL as template_id,
+    collective_offer_contact_url,
+    collective_offer_contact_form
 FROM
     {{ source('raw', 'applicative_database_collective_offer_template') }} AS template
     JOIN {{ ref('venue') }} AS venue ON venue.venue_id = template.venue_id

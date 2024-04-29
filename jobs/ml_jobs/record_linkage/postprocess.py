@@ -34,7 +34,7 @@ def main(
     # Load linked offers
     logger.info("Loading data from linkage to build label for linked items ")
     df_offers_linked_full = pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.sandbox_{env_short_name}.linked_offers_full`"
+        f"SELECT * FROM `{gcp_project}.tmp_{env_short_name}.linked_offers_full`"
     )
     logger.info(f"{len(df_offers_linked_full)} items to label")
     ####

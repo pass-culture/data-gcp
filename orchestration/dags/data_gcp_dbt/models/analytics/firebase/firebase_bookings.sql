@@ -3,6 +3,7 @@
         materialized = 'incremental',
         incremental_strategy = 'insert_overwrite',
         partition_by = {'field': 'booking_date', 'data_type': 'date'},
+        on_schema_change = "sync_all_columns",
     )
 }}
 
@@ -15,10 +16,12 @@ SELECT
     , booking_id
     , event_date as booking_date
     , event_timestamp as booking_timestamp
+    , platform
     , user_location_type
 FROM {{ ref('int_firebase__native_event') }}
 WHERE event_name = "BookingConfirmation"
 {% if is_incremental() %}
 -- recalculate latest day's data + previous
-AND date(event_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 1 DAY) and DATE('{{ ds() }}')
+AND date(event_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
 {% endif %}
+QUALIFY ROW_NUMBER() OVER(PARTITION BY booking_id ORDER BY event_timestamp ) = 1

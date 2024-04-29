@@ -6,7 +6,7 @@ class EventExporter:
     def __init__(self, posthog_api_key, posthog_host, posthog_personal_api_key):
         self.client = Posthog(
             posthog_api_key,
-            sync_mode=True,  # force synchron
+            sync_mode=False,  # force synchron
             host=posthog_host,
             personal_api_key=posthog_personal_api_key,
             thread=64,

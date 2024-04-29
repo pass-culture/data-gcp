@@ -59,12 +59,14 @@ SELECT
         WHEN eud.user_current_deposit_type = 'GRANT_18' THEN 'Bénéficiaire 18-20 ans'
         WHEN eud.user_current_deposit_type = 'GRANT_15_17' THEN 'Bénéficiaire 15-17 ans'
         WHEN e.user_id IS NOT NULL THEN 'Grand Public'
-    ELSE 'Non connecté' end as user_role
+    ELSE 'Non connecté' end as user_role,
+    ee.title as home_name
 
 FROM firebase_home_events e
 LEFT JOIN contentful_tags contentful_tags on contentful_tags.entry_id = e.module_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON e.user_id = eud.user_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_booking_data` ebd ON e.booking_id = ebd.booking_id
+LEFT JOIN `{{ bigquery_int_contentful_dataset }}.entry` ee on e.home_id = ee.id
 LEFT JOIN diversification_booking db
     ON db.user_id = e.user_id
     AND db.offer_id = e.offer_id

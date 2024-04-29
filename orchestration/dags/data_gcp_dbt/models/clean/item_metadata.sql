@@ -29,7 +29,7 @@ enriched_items AS (
         ic.cluster_id,
         IF(offer_type_label is not null, count_booking, null) as count_booking
     FROM {{ ref('offer_metadata') }} offer
-    LEFT JOIN {{ ref('offer_item_ids') }} offer_ids on offer.offer_id=offer_ids.offer_id
+    INNER JOIN {{ ref('offer_item_ids') }} offer_ids on offer.offer_id=offer_ids.offer_id
     LEFT JOIN item_clusters ic on ic.item_id = offer_ids.item_id
     LEFT JOIN offer_booking_information_view obi on obi.offer_id = offer.offer_id
 )

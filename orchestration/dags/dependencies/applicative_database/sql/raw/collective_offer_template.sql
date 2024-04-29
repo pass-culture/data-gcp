@@ -27,9 +27,11 @@ SELECT
     , "offerVenue" ->> \'otherAddress\' AS collective_offer_venue_other_address
     , BTRIM(array_to_string("interventionArea", \',\'), \'{\') AS intervention_area
     , CAST("lastValidationType" AS VARCHAR) AS collective_offer_last_validation_type
-    ,CAST("imageId" AS varchar(255)) AS collective_offer_image_id
+    , CAST("imageId" AS varchar(255)) AS collective_offer_image_id
     , CAST("providerId" AS VARCHAR) AS provider_id
     , CAST("nationalProgramId" AS varchar(255)) AS national_program_id
     , CAST(TRIM(BOTH \'[") \' FROM SPLIT_PART("dateRange" :: text, \',\',1)) AS timestamp) AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_offer_template_beginning_date
     , CAST(NULLIF(TRIM(BOTH \'[") \' FROM SPLIT_PART("dateRange" :: text, \',\',2)),\'\') AS timestamp) AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_offer_template_ending_date
+    , "contactUrl" AS collective_offer_contact_url
+    , "contactForm" AS collective_offer_contact_form
 FROM public.collective_offer_template

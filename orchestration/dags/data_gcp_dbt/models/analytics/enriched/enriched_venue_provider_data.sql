@@ -10,7 +10,7 @@ SELECT
   , venue_label
   , last_sync_date
   , creation_date
-  , count(distinct offer_id) as offer_sync_cnt
+  , count(distinct offer.offer_id) as offer_sync_cnt
   , count(distinct collective_offer_id) as collective_offer_sync_cnt
   , min(offer_creation_date) as first_offer_sync_date
   , min(collective_offer_creation_date) as first_collective_offer_sync_date

@@ -12,7 +12,7 @@ recmetrics==0.1.5
 google-cloud-aiplatform==1.22.0
 typer==0.7.0
 pytest==6.2.5
-tqdm==4.64.1
+tqdm==4.66.3
 protobuf>=3.9.2
 loguru==0.6.0
 sentence-transformers==2.2.2

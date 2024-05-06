@@ -142,7 +142,6 @@ FROM {{ref('int_firebase__native_event')}} AS events
 INNER JOIN consultations
 USING (unique_session_id,
         module_id,
-        entry_id,
         offer_id)
 WHERE events.event_name = 'HasAddedOfferToFavorites'
     AND events.origin IN ("home",

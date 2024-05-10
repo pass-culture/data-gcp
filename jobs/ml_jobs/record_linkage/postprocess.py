@@ -1,3 +1,4 @@
+from datetime import datetime
 import pandas as pd
 import typer
 from tools.config import GCP_PROJECT_ID, ENV_SHORT_NAME
@@ -5,13 +6,16 @@ from loguru import logger
 
 
 def build_item_id_from_linkage(df):
+    synchro_products = ["movie", "cd", "vinyle"]
     for link_id in df.linked_id.unique():
         df_tmp = df.query(f"linked_id=='{link_id}'")
         df_tmp = df_tmp.dropna()
         product_ids = list(df_tmp.item_id.unique())
         # logger.info(f"product_ids: {print(product_ids)}")
         if product_ids is not None:
-            item_ids = [item for item in product_ids if "movie" in item]
+            item_ids = [
+                item for item in product_ids if any(x in item for x in synchro_products)
+            ]
         else:
             item_ids = []
         if len(item_ids) > 0:
@@ -63,6 +67,10 @@ def main(
             "item_linked_id",
         ]
     ]
+    df_offers_linked_export_ready["extraction_date"] = [
+        datetime.now().strftime("%Y-%m-%d")
+    ] * len(df_offers_linked_export_ready)
+    df_offers_linked_export_ready = df_offers_linked_export_ready.drop_duplicates()
     df_offers_linked_export_ready.to_gbq(
         f"analytics_{env_short_name}.linked_offers",
         project_id=gcp_project,

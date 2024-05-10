@@ -4,6 +4,7 @@ import typer
 
 
 def preprocess(df):
+    df = df.fillna("ukn")
     df["offer_id"] = df["offer_id"].values.astype(int)
     df["offer_name"] = df["offer_name"].str.lower()
     df["offer_description"] = df["offer_description"].str.lower()

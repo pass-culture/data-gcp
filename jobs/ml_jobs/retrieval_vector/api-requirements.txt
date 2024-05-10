@@ -1,5 +1,5 @@
 flask==3.0.0
-flask-cors==4.0.0
+flask-cors==4.0.1
 hypercorn==0.15.0
 numpy==1.26.1
 pandas==2.1.1

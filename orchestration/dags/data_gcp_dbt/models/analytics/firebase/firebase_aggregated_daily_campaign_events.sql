@@ -38,7 +38,7 @@ SELECT
     , COALESCE(SUM(nb_consult_offer),0) AS nb_consult_offer
     , COALESCE(SUM(nb_add_to_favorites),0) AS nb_add_to_favorites
     , COALESCE(SUM(nb_booking_confirmation),0) AS nb_booking
-    , COALESCE(SAFE_DIVIDE(SUM(total_delta_diversification), SUM(booking_diversification_cnt)),0) AS avg_diversification
+    , booking_diversification_cnt AS diversification
     , COUNT(DISTINCT CASE WHEN nb_signup_completed > 0 THEN firebase_visits.unique_session_id ELSE NULL END) AS nb_signup
     , COUNT(DISTINCT CASE WHEN nb_benef_request_sent > 0 THEN firebase_visits.unique_session_id ELSE NULL END) AS nb_benef_request_sent
  FROM {{ ref('firebase_visits') }} firebase_visits

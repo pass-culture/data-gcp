@@ -24,7 +24,7 @@ data_and_hyperparams_dict = {
             "offer_description": {"method": "jarowinkler", "threshold": 0.95},
             "performer": {"method": "exact"},
         },
-        "matches_required": 2,
+        "matches_required": 3,
     },
     "non_performer": {
         "features": {

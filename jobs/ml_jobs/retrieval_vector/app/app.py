@@ -200,7 +200,7 @@ def predict():
             if input_json.get("items", None):
                 items = list(input_json["items"])
             elif input_json.get("offer_id", None):
-                items = list(input_json["offer_id"])
+                items = [input_json["offer_id"]]
             else:
                 items = []
             if len(items) == 1:
@@ -243,6 +243,15 @@ def predict():
                         similarity_metric=similarity_metric,
                         vector_column_name=vector_column_name,
                         item_id=vector["item_id"],
+                    )
+                    logger.info(
+                        f"similar_offer",
+                        extra={
+                            "uuid": call_id,
+                            "item_id": vector["item_id"],
+                            "params": selected_params,
+                            "size": size,
+                        },
                     )
 
                     predictions.append(s_vector.get_json())

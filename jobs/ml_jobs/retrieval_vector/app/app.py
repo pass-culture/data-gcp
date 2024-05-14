@@ -200,7 +200,7 @@ def predict():
             if input_json.get("items", None):
                 items = list(input_json["items"])
             elif input_json.get("offer_id", None):
-                items = list(input_json["offer_id"])
+                items = [input_json["offer_id"]]
             else:
                 items = []
             if len(items) == 1:

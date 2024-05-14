@@ -2,6 +2,23 @@ import requests
 import zipfile
 import io
 import pandas as pd
+from utils import ENV_SHORT_NAME
+
+
+def import_survey_metadata(data_center, api_token):
+    base_url = f"https://{data_center}.qualtrics.com/API/v3/surveys/"
+
+    headers = {
+        "Accept": "application/json",
+        "x-api-token": api_token,
+    }
+
+    response = requests.get(base_url, headers=headers)
+    if response.json()["meta"]["httpStatus"] == "200 - OK":
+        surveys = pd.DataFrame(response.json()["result"]["elements"])
+        surveys.to_gbq(f"clean_{ENV_SHORT_NAME}.qualtrics_survey", if_exists="replace")
+        active_surveys = list(surveys[surveys.isActive == True].id)
+        return active_surveys
 
 
 class QualtricsSurvey:
@@ -56,11 +73,10 @@ class QualtricsSurvey:
         df = pd.read_csv(file.open(name))
         ### Export to raw here ?
         print("Downloaded qualtrics survey")
+        self.raw_answer_df = df
 
-        return df
-
-    def process_qualtrics_data(self, target: str) -> pd.DataFrame:
-        response_df = self.get_qualtrics_survey()
+    def process_ir_qualtrics_data(self, target: str) -> pd.DataFrame:
+        response_df = self.raw_answer_df
         nb_columns = response_df.shape[1]
 
         if target == "GRANT_18":
@@ -153,3 +169,80 @@ class QualtricsSurvey:
         response_processed = response_processed.astype(str)
 
         return response_processed[select_fields]
+
+    def process_survey_answers(self) -> pd.DataFrame:
+
+        columns = self.raw_answer_df.columns
+        system_columns = [
+            "StartDate",
+            "EndDate",
+            "Status",
+            "IPAddress",
+            "Progress",
+            "Duration (in seconds)",
+            "Finished",
+            "RecordedDate",
+            "ResponseId",
+            "ExternalReference",
+            "LocationLatitude",
+            "LocationLongitude",
+            "DistributionChannel",
+            "UserLanguage",
+        ]
+        answer_columns = [col for col in columns if col.startswith("Q")]
+        drop_columns = ["RecipientLastName", "RecipientFirstName", "RecipientEmail"]
+        other_columns = [
+            col
+            for col in columns
+            if col not in system_columns + answer_columns + drop_columns
+        ]
+        mapping_question = self.raw_answer_df[answer_columns][:2].to_dict(
+            orient="records"
+        )
+        mapping_question_str = mapping_question[0]
+        mapping_question_id = mapping_question[1]
+
+        nb_columns = self.raw_answer_df.shape[1]
+        columns_mapping = {
+            f"level_{nb_columns - len(answer_columns)}": "question",
+            0: "answer",
+        }
+
+        df_step1 = (
+            self.raw_answer_df[2:]
+            .set_index(list(self.raw_answer_df.columns.drop(answer_columns)))
+            .stack(dropna=False)
+            .reset_index()
+            .rename(columns=columns_mapping)
+            .assign(
+                question_str=lambda _df: _df["question"].map(mapping_question_str),
+                question_id=lambda _df: _df["question"].map(mapping_question_id),
+            )
+        )
+        if len(other_columns) > 0:
+            df_final = df_step1.assign(
+                extra_data=lambda _df: _df[other_columns].to_dict(orient="records")
+            ).drop(drop_columns + other_columns, axis=1)
+        else:
+            df_final = df_step1.drop(drop_columns + other_columns, axis=1)
+
+        rename_dict = {
+            "StartDate": "start_date",
+            "EndDate": "end_date",
+            "Status": "status",
+            "IPAddress": "ip_address",
+            "Progress": "progress",
+            "Duration (in seconds)": "duration_seconds",
+            "Finished": "finished",
+            "RecordedDate": "recorded_date",
+            "ResponseId": "response_id",
+            "ExternalReference": "user_id",
+            "DistributionChannel": "distribution_channel",
+            "UserLanguage": "user_language",
+        }
+
+        df_final.rename(columns=rename_dict, inplace=True)
+
+        df_final["survey_id"] = self.survey_id
+
+        return df_final

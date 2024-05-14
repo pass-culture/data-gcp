@@ -244,6 +244,16 @@ def predict():
                         vector_column_name=vector_column_name,
                         item_id=vector["item_id"],
                     )
+                    logger.info(
+                        f"similar_offer",
+                            extra={
+                                "uuid": call_id,
+                                "item_id": vector["item_id"],
+                                "params": selected_params,
+                                "size": size,
+                            },
+                    )
+                    
 
                     predictions.append(s_vector.get_json())
 

@@ -37,6 +37,29 @@ def process_record_linkage(
         return False
 
 
+def multiprocess_linkage(
+    max_process, indexer, data_and_hyperparams_dict_tmp, df_source_tmp
+):
+    subset_length = len(df_source_tmp) // max_process
+    subset_length = subset_length if subset_length > 0 else 1
+    batch_number = max_process if subset_length > 1 else 1
+    print(f"Starting process with {batch_number} CPUs, subset length: {subset_length} ")
+    # batch_urls = [list(chunk) for chunk in list(np.array_split(urls, batch_number))]
+
+    with concurrent.futures.ProcessPoolExecutor(batch_number) as executor:
+        futures = executor.map(
+            process_record_linkage,
+            repeat(indexer),
+            repeat(data_and_hyperparams_dict_tmp),
+            repeat(df_source_tmp),
+            repeat(subset_length),
+            repeat(batch_number),
+            range(batch_number),
+        )
+    print("Multiprocessing done")
+    return futures
+
+
 def main(
     gcp_project,
     env_short_name,
@@ -59,12 +82,12 @@ def main(
     df_to_link_performer = df_offers_to_link_clean.query(
         f"""offer_subcategoryId in {tuple(SUBCATEGORIES_WITH_PERFORMER)} """
     )
-    logger.info(f"{len(df_to_link_performer)} items with performer to link")
+
     df_to_link_non_performer = df_offers_to_link_clean.query(
         f"""offer_subcategoryId in {tuple(subcat_wo_performer)} """
     )
     logger.info(f"{len(df_to_link_non_performer)} items without performer to link")
-
+    logger.info(f"{len(df_to_link_performer)} items with performer to link")
     ###############
     # Add dataframe to link to analysis config dict
     data_and_hyperparams_dict["performer"]["dataframe_to_link"] = df_to_link_performer
@@ -88,27 +111,14 @@ def main(
                 df_source_tmp = df_source.query(f"offer_subcategoryId=='{subcat}'")
                 logger.info(f"{len(df_source_tmp)} offers to link")
                 if len(df_source_tmp):
-                    subset_length = len(df_source_tmp) // max_process
-                    subset_length = subset_length if subset_length > 0 else 1
-                    batch_number = max_process if subset_length > 1 else 1
-                    print(
-                        f"Starting process with {batch_number} CPUs, subset length: {subset_length} "
+                    futures = multiprocess_linkage(
+                        max_process,
+                        indexer,
+                        data_and_hyperparams_dict_tmp,
+                        df_source_tmp,
                     )
-                    with concurrent.futures.ProcessPoolExecutor(
-                        batch_number
-                    ) as executor:
-                        futures = executor.map(
-                            process_record_linkage,
-                            repeat(indexer),
-                            repeat(data_and_hyperparams_dict_tmp),
-                            repeat(df_source_tmp),
-                            repeat(subset_length),
-                            repeat(batch_number),
-                            range(batch_number),
-                        )
-                        for future in futures:
-                            offers_matched_df_list.append(future)
-                    print("Multiprocessing done")
+                    for future in futures:
+                        offers_matched_df_list.append(future)
                     df_offers_matched = get_linked_offers_from_graph(
                         df_source_tmp, pd.concat(offers_matched_df_list)
                     )
@@ -119,20 +129,11 @@ def main(
                     )
     df_offers_linked_full = pd.concat(offers_matched_by_group_df_list)
 
+    df_offers_linked_full = df_offers_linked_full.drop_duplicates()
     df_offers_linked_full.to_gbq(
         f"tmp_{env_short_name}.linked_offers_full",
         project_id=gcp_project,
         if_exists="replace",
-    )
-    # Save already linked offers
-    # Cast offer_id back to string
-    df_offers_to_link_clean["offer_id"] = df_offers_to_link_clean["offer_id"].astype(
-        str
-    )
-    df_offers_to_link_clean.to_gbq(
-        f"analytics_{env_short_name}.offers_already_linked",
-        project_id=gcp_project,
-        if_exists="append",
     )
 
 

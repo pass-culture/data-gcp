@@ -1,16 +1,17 @@
-WITH offerer_offer_info AS -- last collective_offer_template by offerer_id created past 2 months
+WITH offerer_offer_info AS
   (SELECT o.offerer_id ,
           o.venue_id ,
           v.venue_latitude ,
           v.venue_longitude ,
+          v.venue_creation_date ,
           o.collective_offer_id ,
-          o.collective_offer_creation_date ,
+          o.collective_offer_creation_date
    FROM `{{ bigquery_analytics_dataset }}`.enriched_collective_offer_data o
    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue v ON v.venue_id=o.venue_id
-   WHERE o.collective_offer_creation_date >= DATE_SUB(current_date(), INTERVAL 2 MONTH) -- uniquement sur les 2 derniers mois
-     AND offer_is_template IS TRUE
-   QUALIFY ROW_NUMBER() OVER(PARTITION BY offerer_id ORDER BY collective_offer_creation_date DESC) = 1 ),  -- on garde seulement la plus récente
-
+   WHERE offer_is_template IS TRUE
+   AND v.venue_is_permanent
+   AND v.venue_creation_date >= DATE_SUB(current_date(), INTERVAL 4 MONTH)
+   QUALIFY ROW_NUMBER() OVER(PARTITION BY venue_id ORDER BY collective_offer_creation_date ASC) = 1 ),
 
 -- Add location of the venue_representation (venue_id of the field venue_adress) when it is different from the initial venue of the offer
 add_representation_venue AS
@@ -36,6 +37,7 @@ calculate_distance AS
           i.institution_rural_level ,
           o.offerer_id ,
           o.venue_id ,
+          o.venue_creation_date ,
           o.venue_v2_id ,
           o.collective_offer_id ,
           o.collective_offer_creation_date ,
@@ -49,6 +51,7 @@ SELECT institution_id ,
        institution_rural_level ,
        offerer_id ,
        venue_id ,
+       venue_creation_date ,
        collective_offer_id ,
        collective_offer_creation_date ,
        SAFE_DIVIDE(distance, 1000) as distance_in_km ,
@@ -62,4 +65,5 @@ GROUP BY 1,
          5,
          6,
          7,
-         8
+         8,
+         9

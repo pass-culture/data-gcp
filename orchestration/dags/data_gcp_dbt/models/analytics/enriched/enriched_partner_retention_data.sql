@@ -26,7 +26,7 @@ SELECT
     ,enriched_cultural_partner_data.partner_type
     ,enriched_cultural_partner_data.cultural_sector
     ,COALESCE(COUNT(DISTINCT user_id),0) AS unique_users
-    ,COALESCE(COUNT(DISTINCT CASE WHEN enriched_booking_data.user_id IN (SELECT DISTINCT user_id FROM fraud_users) THEN enriched_booking_data.user_id ELSE NULL END),0) AS unique_fraud_users
+    ,COALESCE(COUNT(DISTINCT CASE WHEN mrt_global__booking.user_id IN (SELECT DISTINCT user_id FROM fraud_users) THEN mrt_global__booking.user_id ELSE NULL END),0) AS unique_fraud_users
     ,COALESCE(COUNT(booking_id),0) AS individual_bookings_cnt
     ,COALESCE(SUM(CASE WHEN booking_is_used THEN booking_intermediary_amount ELSE NULL END),0) AS real_individual_revenue
     ,COALESCE(COUNT(CASE WHEN DATE_DIFF(CURRENT_DATE,booking_creation_date,MONTH) <= 2 THEN booking_id END),0) AS individual_bookings_last_2_month
@@ -35,7 +35,7 @@ SELECT
     ,COALESCE(COUNT(CASE WHEN DATE_DIFF(last_bookable_offer_date,booking_creation_date,MONTH) <= 6 THEN booking_id END),0) AS individual_bookings_6_month_before_last_bookable
 FROM {{ ref('enriched_cultural_partner_data')}}
 JOIN {{ ref('partner_type_bookability_frequency')}} USING(partner_type)
-LEFT JOIN {{ ref('enriched_booking_data')}} ON enriched_cultural_partner_data.partner_id = enriched_booking_data.partner_id
+LEFT JOIN {{ ref('mrt_global__booking')}} AS mrt_global__booking ON enriched_cultural_partner_data.partner_id = mrt_global__booking.partner_id
     AND NOT booking_is_cancelled
 GROUP BY 1,2,3)
 

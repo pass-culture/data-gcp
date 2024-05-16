@@ -52,7 +52,7 @@ aggregated_daily_user_used_bookings_history_1 AS (
         COUNT(booking_id) AS cnt_used_bookings
     FROM
         user_active_dates
-        LEFT JOIN {{ ref('enriched_booking_data') }} ebd ON ebd.deposit_id = user_active_dates.deposit_id
+        LEFT JOIN {{ ref('mrt_global__booking') }} ebd ON ebd.deposit_id = user_active_dates.deposit_id
         AND user_active_dates.active_date = DATE(booking_used_date)
         AND booking_is_used
     GROUP BY
@@ -79,7 +79,7 @@ diversification as (
     , date(booking_used_date) as booking_used_date
     , delta_diversification
   FROM {{ ref('diversification_booking') }} divers
-  LEFT JOIN {{ ref('enriched_booking_data') }} book
+  LEFT JOIN {{ ref('mrt_global__booking') }} book
   ON divers.booking_id = book.booking_id
 ),
 

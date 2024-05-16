@@ -15,7 +15,7 @@ bookings AS (
         THEN 1
         ELSE 0
       END as is_free_offer
-    , bookings.booking_creation_date
+    , bookings.booking_created_at AS booking_creation_date
     , bookings.booking_id
     , bookings.physical_goods
     , bookings.digital_goods
@@ -28,7 +28,7 @@ bookings AS (
     , ictl.x_cluster
     , ictl.y_cluster
 
-FROM {{ ref('enriched_booking_data') }} as bookings
+FROM {{ ref('mrt_global__booking') }} as bookings
 LEFT JOIN {{ ref('item_clusters_topics_labels') }} as ictl on ictl.item_id = bookings.item_id
 WHERE booking_status != 'CANCELLED'
 ),

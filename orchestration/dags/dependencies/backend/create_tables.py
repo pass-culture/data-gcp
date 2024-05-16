@@ -63,6 +63,15 @@ create_tables = {
         "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id
         "clustering_fields": {"fields": ["institution_id"]},
     },
+    "adage_home_playlist_new_venues": {
+        "sql": f"{BACKEND_SQL_PATH}/adage_home_playlist_new_venues.sql",
+        "destination_dataset": "{{ bigquery_backend_dataset }}",
+        "destination_table": "adage_home_playlist_new_venues",
+        "schedule_type": "daily",
+        "write_disposition": "WRITE_TRUNCATE",
+        "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id
+        "clustering_fields": {"fields": ["institution_id"]},
+    },
     "adage_home_playlist_moving_offerers": {
         "sql": f"{BACKEND_SQL_PATH}/adage_home_playlist_moving_offerers.sql",
         "destination_dataset": "{{ bigquery_backend_dataset }}",
@@ -80,4 +89,6 @@ create_tables = {
         "write_disposition": "WRITE_TRUNCATE",
         "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id
     },
+
+
 }

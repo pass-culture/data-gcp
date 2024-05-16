@@ -117,7 +117,9 @@ SELECT
     national_program.national_program_name,
     collective_offer.template_id,
     NULL as collective_offer_contact_url,
-    NULL as collective_offer_contact_form
+    NULL as collective_offer_contact_form,
+    NULL as collective_offer_contact_email,
+    NULL as collective_offer_contact_phone
 FROM
     {{ source('raw', 'applicative_database_collective_offer') }} AS collective_offer
     JOIN {{ ref('venue') }} AS venue ON venue.venue_id = collective_offer.venue_id
@@ -175,7 +177,9 @@ SELECT
     national_program.national_program_name,
     NULL as template_id,
     collective_offer_contact_url,
-    collective_offer_contact_form
+    collective_offer_contact_form,
+    collective_offer_contact_email,
+    collective_offer_contact_phone
 FROM
     {{ source('raw', 'applicative_database_collective_offer_template') }} AS template
     JOIN {{ ref('venue') }} AS venue ON venue.venue_id = template.venue_id

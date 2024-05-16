@@ -74,17 +74,17 @@ def preprocessing(string: str) -> str:
 def ratio(string_a: str, string_b: str, method: str) -> float:
 
     if method == "ratio":
-        return rapidfuzz.fuzz.token_sort_ratio(string_a, string_b)
+        return rapidfuzz.fuzz.token_sort_ratio(string_a, string_b) / 100
     if method == "damerau-levenshtein":
-        return 100 * rapidfuzz.distance.DamerauLevenshtein.normalized_similarity(
+        return rapidfuzz.distance.DamerauLevenshtein.normalized_similarity(
             string_a, string_b
         )
     if method == "jaro-winkler":
-        return 100 * rapidfuzz.distance.JaroWinkler.normalized_similarity(
-            string_a, string_b
-        )
+        return rapidfuzz.distance.JaroWinkler.normalized_similarity(string_a, string_b)
     if method == "lcs-seq":
-        return 100 * rapidfuzz.distance.LCSseq.normalized_similarity(string_a, string_b)
+        return rapidfuzz.distance.LCSseq.normalized_similarity(string_a, string_b)
+    if method == "osa":
+        return rapidfuzz.distance.OSA.normalized_similarity(string_a, string_b)
 
 
 def group_artist_names(names, threshold, method):
@@ -113,11 +113,15 @@ st.markdown("""---""")
 st.header("Calculating Clusters")
 with st.form("compute clusters"):
     st_threshold = st.slider(
-        "Levenstein threshold", min_value=0, max_value=100, step=1, value=90
+        "Levenstein threshold",
+        min_value=0.0,
+        max_value=1.0,
+        step=0.01,
+        value=0.9,
     )
     st_method = st.selectbox(
         "method",
-        options=["ratio", "jaro-winkler", "damerau-levenshtein", "lcs-seq"],
+        options=["ratio", "jaro-winkler", "damerau-levenshtein", "lcs-seq", "osa"],
         index=3,
     )
 

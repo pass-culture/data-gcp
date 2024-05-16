@@ -20,7 +20,7 @@ FROM {{ ref('mrt_global__venue') }} venue
 JOIN {{ ref('enriched_offerer_data') }} offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
 LEFT JOIN {{ ref('enriched_offer_data') }} offer ON venue.venue_id = offer.venue_id
 LEFT JOIN {{ source('clean','subcategories') }} subcategories ON offer.offer_subcategoryid = subcategories.id
-LEFT JOIN {{ ref('enriched_booking_data') }} booking ON offer.offer_id = booking.offer_id AND booking.booking_status IN ('USED', 'REIMBURSED', 'CONFIRMED')
+LEFT JOIN {{ ref('mrt_global__booking') }} booking ON offer.offer_id = booking.offer_id AND booking.booking_status IN ('USED', 'REIMBURSED', 'CONFIRMED')
 WHERE offerer_siren IS NOT NULL
 GROUP BY 1,2,3,4,5,6,7,8,9
 ),

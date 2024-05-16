@@ -65,7 +65,7 @@ SELECT
 FROM firebase_home_events e
 LEFT JOIN contentful_tags contentful_tags on contentful_tags.entry_id = e.module_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON e.user_id = eud.user_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_booking_data` ebd ON e.booking_id = ebd.booking_id
+LEFT JOIN `{{ bigquery_analytics_dataset }}.global_booking` ebd ON e.booking_id = ebd.booking_id
 LEFT JOIN `{{ bigquery_int_contentful_dataset }}.entry` ee on e.home_id = ee.id
 LEFT JOIN diversification_booking db
     ON db.user_id = e.user_id

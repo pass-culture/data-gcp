@@ -57,9 +57,9 @@ SELECT
     so.total_individual_real_revenue,
     so.first_individual_booking_date,
     so.last_individual_booking_date,
-    subcategories.is_physical_deposit as physical_goods,
-    subcategories.is_digital_deposit digital_goods,
-    subcategories.is_event as event,
+    subcategories.is_physical_deposit AS physical_goods,
+    subcategories.is_digital_deposit AS digital_goods,
+    subcategories.is_event AS event,
     subcategories.category_id AS offer_category_id,
      item_id
 FROM {{ ref('int_applicative__extract_offer') }} AS o

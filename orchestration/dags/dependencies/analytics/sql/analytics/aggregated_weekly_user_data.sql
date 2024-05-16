@@ -55,7 +55,7 @@ WITH
   FROM
     deposit_active_weeks
   LEFT JOIN
-    `{{ bigquery_analytics_dataset }}.enriched_booking_data` ebd
+    `{{ bigquery_analytics_dataset }}.global_booking` ebd
   ON
     ebd.deposit_id = deposit_active_weeks.deposit_id
     AND deposit_active_weeks.active_week = DATE_TRUNC(booking_creation_date, WEEK(MONDAY))

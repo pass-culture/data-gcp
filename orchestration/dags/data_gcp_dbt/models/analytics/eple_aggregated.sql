@@ -46,7 +46,7 @@ SELECT
     , COUNT(DISTINCT ebd.user_id) AS nb_credit_used_students
 FROM {{ ref('beneficiary_fraud_check') }} bfc
 JOIN {{ ref('enriched_deposit_data') }} edd ON edd.user_id = bfc.user_id
-LEFT JOIN {{ ref('enriched_booking_data') }} ebd ON ebd.user_id = edd.user_id AND not booking_is_cancelled
+LEFT JOIN {{ ref('mrt_global__booking') }} ebd ON ebd.user_id = edd.user_id AND not booking_is_cancelled
 WHERE type = 'EDUCONNECT'
 AND json_extract(result_content, '$.school_uai') IS NOT NULL
 AND edd.deposit_type = 'GRANT_15_17'

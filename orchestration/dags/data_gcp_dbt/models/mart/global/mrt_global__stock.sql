@@ -15,7 +15,7 @@ SELECT
     o.offer_id_at_providers,
     o.offer_name,
     o.offer_description,
-    o.offer_subcategoryId,
+    o.offer_subcategory_id,
     o.offer_creation_date,
     o.offer_is_duo,
     o.item_id,

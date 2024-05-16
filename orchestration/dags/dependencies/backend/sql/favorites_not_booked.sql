@@ -8,14 +8,14 @@ WITH favorites as (
             SELECT
                 count(*)
             FROM
-                `{{ bigquery_analytics_dataset }}.enriched_booking_data`
+                `{{ bigquery_analytics_dataset }}.global_booking`
             WHERE
                 offer_subcategoryId = offer.offer_subcategoryId
                 AND user_id = favorite.userId
         ) as user_bookings_for_this_subcat,
     FROM
         `{{ bigquery_clean_dataset }}.applicative_database_favorite` as favorite
-        LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_booking_data` as booking ON favorite.userId = booking.user_id
+        LEFT JOIN `{{ bigquery_analytics_dataset }}.global_booking` as booking ON favorite.userId = booking.user_id
         AND favorite.offerId = booking.offer_id
         JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_data` as offer ON favorite.offerId = offer.offer_id
         JOIN `{{ bigquery_clean_dataset }}.applicative_database_stock` as stock ON favorite.offerId = stock.offer_id

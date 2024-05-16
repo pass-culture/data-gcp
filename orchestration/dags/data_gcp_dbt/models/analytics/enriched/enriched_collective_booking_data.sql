@@ -36,6 +36,7 @@ SELECT
     educational_year.scholar_year,
     collective_booking.educational_redactor_id AS educational_redactor_id,
     eple.nom_etablissement,
+    institution_program.institution_program_name AS institution_program_name,
     eple.code_departement AS school_department_code,
     school_region_departement.region_name AS school_region_name,
     eple.libelle_academie,
@@ -63,3 +64,5 @@ FROM
     LEFT JOIN {{ source('analytics', 'region_department') }} AS school_region_departement ON eple.code_departement = school_region_departement.num_dep
     LEFT JOIN collective_booking_ranking_view ON collective_booking_ranking_view.collective_booking_id = collective_booking.collective_booking_id
     LEFT JOIN {{ source('clean', 'subcategories') }} subcategories ON collective_offer.collective_offer_subcategory_id = subcategories.id
+    LEFT JOIN {{ ref('int_applicative__institution_program') }} AS institution_program
+        ON collective_booking.educational_institution_id = institution_program.institution_id

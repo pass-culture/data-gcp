@@ -9,6 +9,7 @@ tensorflow==2.14.0
 tensorflow-recommenders==0.7.3
 keras==2.14
 recmetrics==0.1.5
+matplotlib==3.8.4
 google-cloud-aiplatform==1.22.0
 typer==0.7.0
 pytest==6.2.5

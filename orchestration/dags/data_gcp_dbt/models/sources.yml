@@ -42,6 +42,8 @@ sources:
       - name: applicative_database_educational_domain
       - name: applicative_database_educational_domain_venue
       - name: applicative_database_educational_institution
+      - name: applicative_database_educational_institution_program
+      - name: applicative_database_educational_institution_program_association
       - name: applicative_database_educational_redactor
       - name: applicative_database_educational_year
       - name: applicative_database_ems_cinema_details

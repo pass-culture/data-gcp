@@ -8,7 +8,7 @@ SELECT DISTINCT
     ,region_name
     ,institution_academie
     ,eid.ministry 
-    ,institution_type
+    ,eid.institution_type
     ,eat.macro_institution_type
     ,ey.scholar_year
     ,ed.educational_deposit_amount AS institution_deposit_amount

@@ -28,7 +28,7 @@ SELECT
     s.offerer_id,
     s.offerer_name,
     s.partner_id,
-    s.offer_subcategoryId,
+    s.offer_subcategory_id,
     s.physical_goods,
     s.digital_goods,
     s.event,
@@ -39,7 +39,7 @@ SELECT
     s.item_id,
     rank() OVER (
         PARTITION BY b.user_id,
-        s.offer_subcategoryId
+        s.offer_subcategory_id
         ORDER BY
             b.booking_created_at
     ) AS same_category_booking_rank

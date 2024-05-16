@@ -35,7 +35,7 @@ SELECT
     ,COALESCE(COUNT(CASE WHEN DATE_DIFF(last_bookable_offer_date,booking_creation_date,MONTH) <= 6 THEN booking_id END),0) AS individual_bookings_6_month_before_last_bookable
 FROM {{ ref('enriched_cultural_partner_data')}}
 JOIN {{ ref('partner_type_bookability_frequency')}} USING(partner_type)
-LEFT JOIN {{ ref('mrt_global__booking')}} ON enriched_cultural_partner_data.partner_id = mrt_global__booking.partner_id
+LEFT JOIN {{ ref('mrt_global__booking')}} AS mrt_global__booking ON enriched_cultural_partner_data.partner_id = mrt_global__booking.partner_id
     AND NOT booking_is_cancelled
 GROUP BY 1,2,3)
 

@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 from collections import defaultdict
 
-from rapidfuzz import fuzz
+import rapidfuzz
 import stqdm
 
 st.set_page_config(layout="wide")
@@ -15,14 +15,14 @@ PUNCTUATION = r"!|#|\$|\%|\&|\(|\)|\*|\+|\,|\/|\:|\;|\|\s-|\s-\s|-\s|\|"  # '<=>
 
 # %%
 selected_category = st.sidebar.selectbox(
-    "category", options=CATEGORIES, index=len(CATEGORIES) - 1
+    "category", options=CATEGORIES, index=0  # len(CATEGORIES) - 1
 )
 only_synchronized = st.sidebar.checkbox("only synchronized", value=False)
 only_booked = st.sidebar.checkbox("only booked", value=False)
 selected_punctuation = st.sidebar.selectbox(
     "only with punctuation", options=["WITHOUT", "WITH", "NEVERMIND"]
 )
-search_filter = st.sidebar.text_input("search", value="")
+search_filter = st.sidebar.text_input("search", value="oda")
 
 category_df = author_df.dropna().loc[
     lambda df: df.offer_category_id == selected_category
@@ -65,7 +65,29 @@ if len(filtered_df) > 0:
 
 # %% Clusterisation
 # Function to group similar artist names
-def group_artist_names(names, threshold):
+
+
+def preprocessing(string: str) -> str:
+    return " ".join(sorted(string.lower().split(" ")))
+
+
+def ratio(string_a: str, string_b: str, method: str) -> float:
+
+    if method == "ratio":
+        return rapidfuzz.fuzz.token_sort_ratio(string_a, string_b)
+    if method == "damerau-levenshtein":
+        return 100 * rapidfuzz.distance.DamerauLevenshtein.normalized_similarity(
+            string_a, string_b
+        )
+    if method == "jaro-winkler":
+        return 100 * rapidfuzz.distance.JaroWinkler.normalized_similarity(
+            string_a, string_b
+        )
+    if method == "lcs-seq":
+        return 100 * rapidfuzz.distance.LCSseq.normalized_similarity(string_a, string_b)
+
+
+def group_artist_names(names, threshold, method):
     grouped_names = defaultdict(list)
     seen_names = set()
 
@@ -73,10 +95,8 @@ def group_artist_names(names, threshold):
         # Check if the name is already seen or grouped
         if name.lower() not in seen_names:
             for grouped_name in grouped_names:
-                # method = fuzz.token_set_ratio
-                method = fuzz.token_sort_ratio
 
-                if method(name.lower(), grouped_name.lower()) > threshold:
+                if ratio(name, grouped_name, method) > threshold:
                     grouped_names[grouped_name].append(name)
                     seen_names.add(name.lower())
                     break
@@ -91,15 +111,23 @@ def group_artist_names(names, threshold):
 # Group similar artist names
 st.markdown("""---""")
 st.header("Calculating Clusters")
-st_threshold = st.slider(
-    "Levenstein threshold", min_value=0, max_value=100, step=1, value=90
-)
+with st.form("compute clusters"):
+    st_threshold = st.slider(
+        "Levenstein threshold", min_value=0, max_value=100, step=1, value=90
+    )
+    st_method = st.selectbox(
+        "method",
+        options=["ratio", "jaro-winkler", "damerau-levenshtein", "lcs-seq"],
+        index=3,
+    )
 
-artist_names = filtered_df.author.tolist()
-grouped_names = group_artist_names(artist_names, st_threshold)
-matched_authors = (
-    pd.DataFrame({"author": grouped_names})
-    .assign(num_authors=lambda df: df.author.apply(lambda l: len(l)))
-    .sort_values("num_authors", ascending=False)
-)
-st.dataframe(matched_authors, width=1500)
+    artist_names = filtered_df.author.map(preprocessing).tolist()
+    grouped_names = group_artist_names(artist_names, st_threshold, st_method)
+    matched_authors = (
+        pd.DataFrame({"author": grouped_names})
+        .assign(num_authors=lambda df: df.author.apply(lambda l: len(l)))
+        .sort_values("num_authors", ascending=False)
+    )
+    st.dataframe(matched_authors, width=1500)
+    # Every form must have a submit button.
+    submitted = st.form_submit_button("Compute")

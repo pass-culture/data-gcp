@@ -89,6 +89,4 @@ create_tables = {
         "write_disposition": "WRITE_TRUNCATE",
         "dag_depends": ["import_analytics_v7/end_import"],  # dag_id/task_id
     },
-
-
 }

@@ -1,6 +1,10 @@
 import streamlit as st
 
 import pandas as pd
+from collections import defaultdict
+
+from rapidfuzz import fuzz
+import stqdm
 
 st.set_page_config(layout="wide")
 
@@ -50,7 +54,6 @@ st.write("Number of authors after filtering", len(filtered_df))
 st.progress(len(filtered_df) / len(category_df))
 
 st.markdown("""---""")
-
 if len(filtered_df) > 0:
     st.dataframe(
         filtered_df.loc[:, ["author", "booking_cnt"]],
@@ -60,4 +63,43 @@ if len(filtered_df) > 0:
     )
 
 
-# %%
+# %% Clusterisation
+# Function to group similar artist names
+def group_artist_names(names, threshold):
+    grouped_names = defaultdict(list)
+    seen_names = set()
+
+    for name in stqdm.stqdm(names):
+        # Check if the name is already seen or grouped
+        if name.lower() not in seen_names:
+            for grouped_name in grouped_names:
+                # method = fuzz.token_set_ratio
+                method = fuzz.token_sort_ratio
+
+                if method(name.lower(), grouped_name.lower()) > threshold:
+                    grouped_names[grouped_name].append(name)
+                    seen_names.add(name.lower())
+                    break
+
+            else:
+                grouped_names[name] = [name]
+                seen_names.add(name.lower())
+
+    return list(grouped_names.values())
+
+
+# Group similar artist names
+st.markdown("""---""")
+st.header("Calculating Clusters")
+st_threshold = st.slider(
+    "Levenstein threshold", min_value=0, max_value=100, step=1, value=90
+)
+
+artist_names = filtered_df.author.tolist()
+grouped_names = group_artist_names(artist_names, st_threshold)
+matched_authors = (
+    pd.DataFrame({"author": grouped_names})
+    .assign(num_authors=lambda df: df.author.apply(lambda l: len(l)))
+    .sort_values("num_authors", ascending=False)
+)
+st.dataframe(matched_authors, width=1500)

@@ -9,12 +9,15 @@ SELECT DISTINCT
     ,institution_academie
     ,eid.ministry 
     ,institution_type
+    ,eat.macro_institution_type
     ,ey.scholar_year
     ,ed.educational_deposit_amount AS institution_deposit_amount
 FROM {{ ref('enriched_institution_data') }} eid
 LEFT JOIN {{ source('analytics','region_department') }} rd ON eid.institution_departement_code = rd.num_dep
 JOIN {{ ref('educational_deposit') }} ed ON ed.educational_institution_id = eid.institution_id
 JOIN {{ ref('educational_year') }} ey ON ey.adage_id = ed.educational_year_id
+LEFT JOIN  {{ source('raw','eple_aggregated_type') }} as eat
+        ON eid.institution_type = eat.institution_type
 ), 
 
 eple_bookings AS (
@@ -62,6 +65,7 @@ SELECT
     ,eple_infos.institution_city
     ,eple_infos.ministry
     ,eple_infos.institution_type
+    ,eple_infos.macro_institution_type
     ,eple_infos.scholar_year
     ,institution_deposit_amount
     ,theoric_amount_spent

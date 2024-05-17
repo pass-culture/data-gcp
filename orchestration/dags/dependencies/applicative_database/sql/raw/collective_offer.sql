@@ -18,8 +18,8 @@ SELECT
     , REPLACE(REPLACE(CAST("formats" AS varchar(255)), \'{\', \'\'), \'}\', \'\')  AS collective_offer_format
     , "dateUpdated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_offer_date_updated
     , BTRIM(array_to_string("students", \',\'), \'{\') AS collective_offer_students
-    , "contactEmail" AS collective_offer_contact_email
-    , "contactPhone" AS collective_offer_contact_phone
+    , CASE WHEN "contactEmail" IS NOT NULL THEN TRUE ELSE FALSE END AS collective_offer_contact_email
+    , CASE WHEN "contactPhone" IS NOT NULL THEN TRUE ELSE FALSE END AS collective_offer_contact_phone
     , "offerVenue" AS collective_offer_offer_venue
     , "offerVenue" ->> \'venueId\' AS collective_offer_venue_humanized_id
     , "offerVenue" ->> \'addressType\' AS collective_offer_venue_address_type

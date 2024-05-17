@@ -77,20 +77,10 @@ def preprocessing(string: str) -> str:
     return " ".join(sorted(rapidfuzz.utils.default_process(string).split()))
 
 
-def ratio(string_a: str, string_b: str, method: str) -> float:
-
-    if method == "ratio":
-        return rapidfuzz.fuzz.token_sort_ratio(string_a, string_b) / 100
-    if method == "damerau-levenshtein":
-        return rapidfuzz.distance.DamerauLevenshtein.normalized_similarity(
-            string_a, string_b
-        )
-    if method == "jaro-winkler":
-        return rapidfuzz.distance.JaroWinkler.normalized_similarity(string_a, string_b)
-    if method == "lcs-seq":
-        return rapidfuzz.distance.LCSseq.normalized_similarity(string_a, string_b)
-    if method == "osa":
-        return rapidfuzz.distance.OSA.normalized_similarity(string_a, string_b)
+def normalized_distance_token_sort_ratio(
+    string_a: str, string_b: str, **kwargs
+) -> float:
+    return 1 - rapidfuzz.fuzz.token_sort_ratio(string_a, string_b, **kwargs) / 100
 
 
 def group_artist_names(names, threshold, method):
@@ -102,7 +92,7 @@ def group_artist_names(names, threshold, method):
         if name.lower() not in seen_names:
             for grouped_name in grouped_names:
 
-                if ratio(name, grouped_name, method) > threshold:
+                if method(name, grouped_name) < threshold:
                     grouped_names[grouped_name].append(name)
                     seen_names.add(name.lower())
                     break
@@ -123,11 +113,20 @@ with st.form("compute clusters"):
         min_value=0.0,
         max_value=1.0,
         step=0.01,
-        value=0.9,
+        value=0.1,
     )
     st_method = st.selectbox(
         "method",
-        options=["ratio", "jaro-winkler", "damerau-levenshtein", "lcs-seq", "osa"],
+        options=[
+            normalized_distance_token_sort_ratio,
+            rapidfuzz.distance.DamerauLevenshtein.normalized_distance,
+            rapidfuzz.distance.JaroWinkler.normalized_distance,
+            rapidfuzz.distance.LCSseq.normalized_distance,
+            rapidfuzz.distance.OSA.normalized_distance,
+        ],
+        format_func=lambda x: (
+            x.func_code.co_name if hasattr(x, "func_code") else x.__name__
+        ),
         index=4,
     )
     st_cluster_threshold = st.slider(
@@ -146,30 +145,34 @@ with st.form("compute clusters"):
 
         t0 = time.time()
         grouped_names = group_artist_names(authors_list, st_threshold, st_method)
-        matched_authors = (
+        trivial_matched_df = (
             pd.DataFrame({"author": grouped_names})
             .assign(num_authors=lambda df: df.author.apply(len))
             .sort_values("num_authors", ascending=False)
         )
         st.write("Time to compute the clusters", time.time() - t0)
-        st.write("Number of clusters", len(matched_authors))
-        st.write("Number of authors", matched_authors.num_authors.sum())
-        st.dataframe(matched_authors, width=1500)
+        st.write("Number of clusters", len(trivial_matched_df))
+        st.write(
+            "Number of clusters with at least 2 names",
+            trivial_matched_df.num_authors.gt(1).sum(),
+        )
+        st.write("Number of authors", trivial_matched_df.num_authors.sum())
+        st.dataframe(trivial_matched_df, width=1500)
 
         # Compute the parwise distance between the authors
         t0 = time.time()
         distance_matrix = rapidfuzz.process.cdist(
             queries=authors_list,
             choices=authors_list,
-            scorer=rapidfuzz.distance.OSA.normalized_distance,
+            scorer=st_method,
         )
         st.write("Time to compute the matrix", time.time() - t0)
 
         # Perform hierarchical/agglomerative clustering
+        t0 = time.time()
         condensed_dist_matrix = squareform(distance_matrix)
         Z = linkage(condensed_dist_matrix, "centroid")
 
-        t0 = time.time()
         clusters = fcluster(Z, st_cluster_threshold, criterion="distance")
 
         # Show the clusters
@@ -188,4 +191,8 @@ with st.form("compute clusters"):
 
         st.write("Time to compute the clusters", time.time() - t0)
         st.write("Number of clusters", len(clusters_df))
+        st.write(
+            "Number of clusters with at least 2 names",
+            clusters_df.num_authors.gt(1).sum(),
+        )
         st.write("Number of authors", clusters_df.num_authors.sum())

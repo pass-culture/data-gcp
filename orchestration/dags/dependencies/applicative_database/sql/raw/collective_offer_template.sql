@@ -19,8 +19,6 @@ SELECT
     , BTRIM(array_to_string("students", \',\'), \'{\') AS collective_offer_students
     , "priceDetail" AS collective_offer_price_detail
     , BTRIM(array_to_string("bookingEmails", \',\'), \'{\') AS collective_offer_booking_email
-    , "contactEmail" AS collective_offer_contact_email
-    , "contactPhone" AS collective_offer_contact_phone
     , "offerVenue" AS collective_offer_offer_venue
     , "offerVenue" ->> \'venueId\' AS collective_offer_venue_humanized_id
     , "offerVenue" ->> \'addressType\' AS collective_offer_venue_address_type

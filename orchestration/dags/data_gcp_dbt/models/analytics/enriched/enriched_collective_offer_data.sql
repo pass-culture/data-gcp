@@ -129,7 +129,7 @@ FROM
     LEFT JOIN {{ source('analytics', 'region_department') }} venue_region ON venue_region.num_dep = venue.venue_department_code
     LEFT JOIN bookings_per_offer ON bookings_per_offer.collective_offer_id = collective_offer.collective_offer_id
     LEFT JOIN {{ source('raw', 'applicative_database_national_program') }} national_program USING(national_program_id)
-    LEFT JOIN {{ ref('int_applicative__institution_program') }} AS institution_program
+    LEFT JOIN {{ ref('int_applicative__institution') }} AS institution_program
         ON collective_offer.institution_id = institution_program.institution_id
 WHERE collective_offer.collective_offer_validation = 'APPROVED'
 UNION

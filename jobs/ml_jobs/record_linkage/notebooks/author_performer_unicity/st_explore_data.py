@@ -108,13 +108,7 @@ def group_artist_names(names, threshold, method):
 st.markdown("""---""")
 st.header("Calculating Clusters")
 with st.form("compute clusters"):
-    st_threshold = st.slider(
-        "Levenstein threshold",
-        min_value=0.0,
-        max_value=1.0,
-        step=0.01,
-        value=0.1,
-    )
+
     st_method = st.selectbox(
         "method",
         options=[
@@ -129,13 +123,24 @@ with st.form("compute clusters"):
         ),
         index=4,
     )
-    st_cluster_threshold = st.slider(
-        "Clustering threshold",
-        min_value=0.0,
-        max_value=1.0,
-        step=0.01,
-        value=0.2,
-    )
+
+    col_1, col_2 = st.columns(2)
+    with col_1:
+        st_trivial_clustering_threshold = st.slider(
+            "Trivial Clustering threshold",
+            min_value=0.0,
+            max_value=1.0,
+            step=0.01,
+            value=0.2,
+        )
+    with col_2:
+        st_clustering_threshold = st.slider(
+            "Clustering threshold",
+            min_value=0.0,
+            max_value=1.0,
+            step=0.01,
+            value=0.2,
+        )
     authors_list = filtered_df.author.map(preprocessing).drop_duplicates().tolist()
     st.write("Number of authors", len(authors_list))
     # Every form must have a submit button.
@@ -143,22 +148,19 @@ with st.form("compute clusters"):
 
     if submitted is True:
 
+        # Trivial clustering (thx gpt 3.5)
         t0 = time.time()
-        grouped_names = group_artist_names(authors_list, st_threshold, st_method)
+        grouped_names = group_artist_names(
+            authors_list, st_trivial_clustering_threshold, st_method
+        )
         trivial_matched_df = (
             pd.DataFrame({"author": grouped_names})
             .assign(num_authors=lambda df: df.author.apply(len))
             .sort_values("num_authors", ascending=False)
         )
-        st.write("Time to compute the clusters", time.time() - t0)
-        st.write("Number of clusters", len(trivial_matched_df))
-        st.write(
-            "Number of clusters with at least 2 names",
-            trivial_matched_df.num_authors.gt(1).sum(),
-        )
-        st.write("Number of authors", trivial_matched_df.num_authors.sum())
-        st.dataframe(trivial_matched_df, width=1500)
+        st.write("Time to compute the trivial clusters", time.time() - t0)
 
+        # Advanced clustering
         # Compute the parwise distance between the authors
         t0 = time.time()
         distance_matrix = rapidfuzz.process.cdist(
@@ -173,9 +175,8 @@ with st.form("compute clusters"):
         condensed_dist_matrix = squareform(distance_matrix)
         Z = linkage(condensed_dist_matrix, "centroid")
 
-        clusters = fcluster(Z, st_cluster_threshold, criterion="distance")
+        clusters = fcluster(Z, st_clustering_threshold, criterion="distance")
 
-        # Show the clusters
         clusters_df = (
             pd.DataFrame({"author": authors_list})
             .assign(cluster=clusters)
@@ -184,15 +185,27 @@ with st.form("compute clusters"):
             .assign(num_authors=lambda df: df.author.map(len))
             .sort_values("num_authors", ascending=False)
         )
-        st.dataframe(
-            clusters_df,
-            width=1500,
-        )
-
         st.write("Time to compute the clusters", time.time() - t0)
-        st.write("Number of clusters", len(clusters_df))
-        st.write(
-            "Number of clusters with at least 2 names",
-            clusters_df.num_authors.gt(1).sum(),
-        )
-        st.write("Number of authors", clusters_df.num_authors.sum())
+
+        # Display
+        st.markdown("""---""")
+        col_1, col_2 = st.columns(2)
+        with col_1:
+            st.write("Number of clusters", len(trivial_matched_df))
+            st.write(
+                "Number of clusters with at least 2 names",
+                trivial_matched_df.num_authors.gt(1).sum(),
+            )
+            st.write("Number of authors", trivial_matched_df.num_authors.sum())
+            st.dataframe(trivial_matched_df, width=1500)
+        with col_2:
+            st.write("Number of clusters", len(clusters_df))
+            st.write(
+                "Number of clusters with at least 2 names",
+                clusters_df.num_authors.gt(1).sum(),
+            )
+            st.write("Number of authors", clusters_df.num_authors.sum())
+            st.dataframe(
+                clusters_df,
+                width=1500,
+            )

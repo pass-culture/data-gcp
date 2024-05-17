@@ -1,7 +1,13 @@
+import time
+
 import streamlit as st
 
 import pandas as pd
 from collections import defaultdict
+
+from scipy.cluster.hierarchy import linkage, fcluster
+from scipy.spatial.distance import squareform
+from sklearn.cluster import AffinityPropagation
 
 import rapidfuzz
 import stqdm
@@ -68,7 +74,7 @@ if len(filtered_df) > 0:
 
 
 def preprocessing(string: str) -> str:
-    return " ".join(sorted(string.lower().split(" ")))
+    return " ".join(sorted(rapidfuzz.utils.default_process(string).split()))
 
 
 def ratio(string_a: str, string_b: str, method: str) -> float:
@@ -122,16 +128,64 @@ with st.form("compute clusters"):
     st_method = st.selectbox(
         "method",
         options=["ratio", "jaro-winkler", "damerau-levenshtein", "lcs-seq", "osa"],
-        index=3,
+        index=4,
     )
-
-    artist_names = filtered_df.author.map(preprocessing).tolist()
-    grouped_names = group_artist_names(artist_names, st_threshold, st_method)
-    matched_authors = (
-        pd.DataFrame({"author": grouped_names})
-        .assign(num_authors=lambda df: df.author.apply(lambda l: len(l)))
-        .sort_values("num_authors", ascending=False)
+    st_cluster_threshold = st.slider(
+        "Clustering threshold",
+        min_value=0.0,
+        max_value=1.0,
+        step=0.01,
+        value=0.2,
     )
-    st.dataframe(matched_authors, width=1500)
+    authors_list = filtered_df.author.map(preprocessing).drop_duplicates().tolist()
+    st.write("Number of authors", len(authors_list))
     # Every form must have a submit button.
     submitted = st.form_submit_button("Compute")
+
+    if submitted is True:
+
+        t0 = time.time()
+        grouped_names = group_artist_names(authors_list, st_threshold, st_method)
+        matched_authors = (
+            pd.DataFrame({"author": grouped_names})
+            .assign(num_authors=lambda df: df.author.apply(len))
+            .sort_values("num_authors", ascending=False)
+        )
+        st.write("Time to compute the clusters", time.time() - t0)
+        st.write("Number of clusters", len(matched_authors))
+        st.write("Number of authors", matched_authors.num_authors.sum())
+        st.dataframe(matched_authors, width=1500)
+
+        # Compute the parwise distance between the authors
+        t0 = time.time()
+        distance_matrix = rapidfuzz.process.cdist(
+            queries=authors_list,
+            choices=authors_list,
+            scorer=rapidfuzz.distance.OSA.normalized_distance,
+        )
+        st.write("Time to compute the matrix", time.time() - t0)
+
+        # Perform hierarchical/agglomerative clustering
+        condensed_dist_matrix = squareform(distance_matrix)
+        Z = linkage(condensed_dist_matrix, "centroid")
+
+        t0 = time.time()
+        clusters = fcluster(Z, st_cluster_threshold, criterion="distance")
+
+        # Show the clusters
+        clusters_df = (
+            pd.DataFrame({"author": authors_list})
+            .assign(cluster=clusters)
+            .groupby("cluster")
+            .agg({"author": set})
+            .assign(num_authors=lambda df: df.author.map(len))
+            .sort_values("num_authors", ascending=False)
+        )
+        st.dataframe(
+            clusters_df,
+            width=1500,
+        )
+
+        st.write("Time to compute the clusters", time.time() - t0)
+        st.write("Number of clusters", len(clusters_df))
+        st.write("Number of authors", clusters_df.num_authors.sum())

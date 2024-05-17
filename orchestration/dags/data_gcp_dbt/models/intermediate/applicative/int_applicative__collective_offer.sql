@@ -52,7 +52,7 @@ SELECT
     co.national_program_id,
     null as collective_offer_template_beginning_date,
     null as collective_offer_template_ending_date,
-    CASE WHEN cs.is_bookable = 1 AND co.collective_offer_is_active THEN 1 ELSE 0 END AS is_bookable,
+    CASE WHEN cs.is_bookable = 1 AND co.collective_offer_is_active THEN 1 ELSE 0 END AS collective_offer_is_bookable,
     cs.total_non_cancelled_collective_bookings,
     cs.total_collective_bookings,
     cs.total_used_collective_bookings,

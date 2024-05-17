@@ -61,7 +61,7 @@ SELECT
   COUNT(DISTINCT CASE WHEN booking_created_at > second_activation_date THEN booking_id END) AS individual_bookings_after_second_activation
   
 FROM partner_activation_stated
-LEFT JOIN {{ ref('mrt_global__booking') }} on partner_activation_stated.partner_id = mrt_global__booking.partner_id AND NOT booking_is_cancelled
+LEFT JOIN {{ ref('mrt_global__booking') }} AS mrt_global__booking on partner_activation_stated.partner_id = mrt_global__booking.partner_id AND NOT booking_is_cancelled
 GROUP BY 1
 )
 

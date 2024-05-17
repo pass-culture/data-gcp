@@ -250,5 +250,5 @@ FROM  {{ ref('educational_institution') }} AS educational_institution
         ON educational_institution.institution_id = location_info.institution_id
     LEFT JOIN  {{ source('raw','eple_aggregated_type') }} as eple_aggregated_type
         ON educational_institution.institution_type = eple_aggregated_type.institution_type
-    LEFT JOIN {{ ref('int_applicative__institution_program') }} AS institution_program
-        ON eple.institution_id = institution_program.institution_id
+    LEFT JOIN {{ ref('int_applicative__institution') }} AS institution_program
+        ON eple.id_etablissement = institution_program.institution_id

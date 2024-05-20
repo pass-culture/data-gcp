@@ -1,21 +1,27 @@
 import time
 from collections import defaultdict
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import rapidfuzz
 from scipy.cluster.hierarchy import linkage, fcluster
 from scipy.spatial.distance import squareform
 from scipy.stats import mode
-from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn.metrics import precision_score, recall_score, f1_score, silhouette_score
 
 # %% Load Data
 test_set_df = pd.read_csv("notebooks/author_performer_unicity/test_set.csv").loc[
     lambda df: ~df.true_cluster_name.str.contains("ANOMALY")
 ]
-
-# %% Preprocess Data
 input_df = test_set_df[["author"]]
+
+precision_dict = {}
+recall_dict = {}
+f1_dict = {}
+n_clusters_dict = {}
+silhouette_dict = {}
+f1_silhouette_dict = {}
 
 
 # %% Preprocessing
@@ -26,7 +32,6 @@ def preprocessing(string: str) -> str:
 filtered_df = test_set_df.assign(
     preprocessed_author=lambda df: df.author.map(preprocessing)
 )
-
 
 # %% Clustering
 N_WORKERS = -1  # -1 for max number of workers
@@ -40,41 +45,95 @@ distance_matrix = rapidfuzz.process.cdist(
 )
 condensed_dist_matrix = squareform(distance_matrix)
 Z = linkage(condensed_dist_matrix, "centroid")
-clusters = fcluster(Z, 0.2, criterion="distance")
-
-# %% Metrics
-ground_truth_labels = filtered_df.true_cluster_name.tolist()
-cluster_to_gt = defaultdict(list)
-for label, gt in zip(clusters, ground_truth_labels):
-    cluster_to_gt[label].append(gt)
 
 
-# Assign the most common ground truth label in each cluster to all members of that cluster
-predicted_labels = np.empty_like(clusters, dtype=object)
-for cluster, gt_labels in cluster_to_gt.items():
-    common_gt = mode(gt_labels).mode[0]
-    predicted_labels[clusters == cluster] = common_gt
+for distance_threshold in np.arange(0, 1, 0.01):
 
-# Calculate Precision, Recall, and F1 score
-precision = precision_score(
-    ground_truth_labels,
-    predicted_labels,
-    average="macro",
-    labels=np.unique(ground_truth_labels),
+    clusters = fcluster(Z, distance_threshold, criterion="distance")
+
+    # %% Metrics
+    ground_truth_labels = filtered_df.true_cluster_name.tolist()
+    cluster_to_gt = defaultdict(list)
+    for label, gt in zip(clusters, ground_truth_labels):
+        cluster_to_gt[label].append(gt)
+
+    # Assign the most common ground truth label in each cluster to all members of that cluster
+    predicted_labels = np.empty_like(clusters, dtype=object)
+    for cluster, gt_labels in cluster_to_gt.items():
+        common_gt = mode(gt_labels).mode[0]
+        predicted_labels[clusters == cluster] = common_gt
+
+    # Calculate Precision, Recall, and F1 score
+    precision = precision_score(
+        ground_truth_labels,
+        predicted_labels,
+        average="macro",
+        labels=np.unique(ground_truth_labels),
+    )
+    recall = recall_score(
+        ground_truth_labels,
+        predicted_labels,
+        average="macro",
+        labels=np.unique(ground_truth_labels),
+    )
+    f1 = f1_score(
+        ground_truth_labels,
+        predicted_labels,
+        average="macro",
+        labels=np.unique(ground_truth_labels),
+    )
+    # Calculate Silhouette Score only if there are at least 2 clusters
+    if len(np.unique(clusters)) == 1:
+        break
+    silhouette = silhouette_score(distance_matrix, clusters, metric="precomputed")
+
+    print(f"Precision: {precision:.4f}")
+    print(f"Recall: {recall:.4f}")
+    print(f"F1 Score: {f1:.4f}")
+    print(f"Number of clusters: {len(np.unique(clusters))}")
+    print(f"Silhouette Score: {silhouette:.4f}")
+    precision_dict[distance_threshold] = precision
+    recall_dict[distance_threshold] = recall
+    f1_dict[distance_threshold] = f1
+    n_clusters_dict[distance_threshold] = len(np.unique(clusters))
+    silhouette_dict[distance_threshold] = silhouette
+    f1_silhouette_dict[distance_threshold] = f1 + silhouette
+#
+# %% Display with matplotlib
+
+plt.figure(figsize=(10, 20))
+
+plt.subplot(3, 1, 1)
+plt.plot(precision_dict.keys(), precision_dict.values(), label="Precision")
+plt.plot(recall_dict.keys(), recall_dict.values(), label="Recall")
+plt.plot(f1_dict.keys(), f1_dict.values(), label="F1 Score")
+plt.plot(
+    f1_silhouette_dict.keys(),
+    f1_silhouette_dict.values(),
+    label="F1 + Silhouette",
 )
-recall = recall_score(
-    ground_truth_labels,
-    predicted_labels,
-    average="macro",
-    labels=np.unique(ground_truth_labels),
-)
-f1 = f1_score(
-    ground_truth_labels,
-    predicted_labels,
-    average="macro",
-    labels=np.unique(ground_truth_labels),
-)
+plt.legend()
 
-print(f"Precision: {precision:.4f}")
-print(f"Recall: {recall:.4f}")
-print(f"F1 Score: {f1:.4f}")
+plt.subplot(3, 1, 2)
+plt.plot(silhouette_dict.keys(), silhouette_dict.values(), label="Silhouette Score")
+plt.legend()
+
+plt.subplot(3, 1, 3)
+plt.plot(n_clusters_dict.keys(), n_clusters_dict.values(), label="Number of clusters")
+plt.legend()
+plt.show()
+
+
+# %%
+# Save the results
+pd.DataFrame(
+    {
+        "distance_threshold": list(precision_dict.keys()),
+        "precision": list(precision_dict.values()),
+        "recall": list(recall_dict.values()),
+        "f1": list(f1_dict.values()),
+        "silhouette": list(silhouette_dict.values()),
+        "f1_silhouette": list(f1_silhouette_dict.values()),
+        "n_clusters": list(n_clusters_dict.values()),
+    }
+).to_csv("notebooks/author_performer_unicity/data/metrics.csv", index=False)

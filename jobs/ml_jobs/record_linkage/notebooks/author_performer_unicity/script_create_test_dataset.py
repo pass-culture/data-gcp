@@ -64,6 +64,6 @@ merged_df = pd.merge(
 )
 
 # Save the results
-merged_df.to_csv(
+merged_df.drop_duplicates().to_csv(
     "notebooks/author_performer_unicity/data/author_clustered.csv", index=False
 )

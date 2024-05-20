@@ -30,8 +30,8 @@ SELECT
     , CAST("nationalProgramId" AS varchar(255)) AS national_program_id
     , CAST(TRIM(BOTH \'[") \' FROM SPLIT_PART("dateRange" :: text, \',\',1)) AS timestamp) AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_offer_template_beginning_date
     , CAST(NULLIF(TRIM(BOTH \'[") \' FROM SPLIT_PART("dateRange" :: text, \',\',2)),\'\') AS timestamp) AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_offer_template_ending_date
-    , CASE WHEN "contactUrl" IS NOT NULL THEN TRUE ELSE FALSE END AS collective_offer_contact_url
-    , CASE WHEN "contactForm" IS NOT NULL THEN TRUE ELSE FALSE END AS collective_offer_contact_form
-    , CASE WHEN "contactEmail" IS NOT NULL THEN TRUE ELSE FALSE END AS collective_offer_contact_email
-    , CASE WHEN "contactPhone" IS NOT NULL THEN TRUE ELSE FALSE END AS collective_offer_contact_phone
+    , "contactUrl" AS collective_offer_contact_url
+    , "contactForm" AS collective_offer_contact_form
+    , "contactEmail" AS collective_offer_contact_email
+    , "contactPhone" AS collective_offer_contact_phone
 FROM public.collective_offer_template

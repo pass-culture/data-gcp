@@ -73,7 +73,8 @@ SELECT
 FROM {{ ref('int_applicative__offer') }} AS o
     LEFT JOIN {{ source('clean', 'subcategories') }} subcategories ON o.offer_subcategory_id = subcategories.id
     INNER JOIN {{ref('int_applicative__venue')}} AS v ON v.venue_id = o.venue_id
-WHERE o.offer_validation = 'APPROVED'
+WHERE TRUE
+    -- o.offer_validation = 'APPROVED'
     {% if is_incremental() %}
     AND offer_date_updated BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
     {% endif %}

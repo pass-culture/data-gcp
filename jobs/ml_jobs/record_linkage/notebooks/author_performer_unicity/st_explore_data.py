@@ -163,10 +163,12 @@ with st.form("compute clusters"):
         # Advanced clustering
         # Compute the parwise distance between the authors
         t0 = time.time()
+        N_WORKERS = -1  # -1 for max number of workers
         distance_matrix = rapidfuzz.process.cdist(
             queries=authors_list,
             choices=authors_list,
             scorer=st_method,
+            workers=N_WORKERS,
         )
         st.write("Time to compute the matrix", time.time() - t0)
 
@@ -176,7 +178,6 @@ with st.form("compute clusters"):
         Z = linkage(condensed_dist_matrix, "centroid")
 
         clusters = fcluster(Z, st_clustering_threshold, criterion="distance")
-
         clusters_df = (
             pd.DataFrame({"author": authors_list})
             .assign(cluster=clusters)

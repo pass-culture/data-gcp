@@ -1,6 +1,7 @@
 with item_group_by_extra_data as(
     select
         offer.offer_id,
+        CASE WHEN offer.offer_id_at_providers IS NOT NULL THEN TRUE ELSE FALSE END as is_synchronised,
         CASE WHEN (
             offer.offer_subcategoryId = 'LIVRE_PAPIER'
             AND offer_extracted_data.isbn IS NOT NULL
@@ -27,7 +28,7 @@ items_grouping AS (
     SELECT
         offer.offer_id,
         CASE
-            WHEN linked_offers.item_linked_id is not null THEN REGEXP_REPLACE(
+            WHEN (linked_offers.item_linked_id is not null and not is_synchronised) THEN REGEXP_REPLACE(
                 linked_offers.item_linked_id,
                 r'[^a-zA-Z0-9\-\_]',
                 ''

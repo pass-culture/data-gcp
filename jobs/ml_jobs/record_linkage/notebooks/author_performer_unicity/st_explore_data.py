@@ -1,16 +1,12 @@
 import time
-
-import streamlit as st
-
-import pandas as pd
 from collections import defaultdict
 
-from scipy.cluster.hierarchy import linkage, fcluster
-from scipy.spatial.distance import squareform
-from sklearn.cluster import AffinityPropagation
-
+import pandas as pd
 import rapidfuzz
 import stqdm
+import streamlit as st
+from scipy.cluster.hierarchy import linkage, fcluster
+from scipy.spatial.distance import squareform
 
 st.set_page_config(layout="wide")
 
@@ -19,7 +15,12 @@ author_df = pd.read_csv("notebooks/author_performer_unicity/data/author.csv")
 CATEGORIES = author_df.offer_category_id.unique()
 PUNCTUATION = r"!|#|\$|\%|\&|\(|\)|\*|\+|\,|\/|\:|\;|\|\s-|\s-\s|-\s|\|"  # '<=>?@[\\]^_`{|}~|\s–\s'
 
+
 # %%
+def preprocessing(string: str) -> str:
+    return " ".join(sorted(rapidfuzz.utils.default_process(string).split()))
+
+
 selected_category = st.sidebar.selectbox(
     "category", options=CATEGORIES, index=0  # len(CATEGORIES) - 1
 )
@@ -54,6 +55,19 @@ filtered_df = (
     ]
 )
 
+if selected_category == "LIVRE":
+    filtered_df = (
+        filtered_df.assign(
+            author=lambda df: df.author.map(preprocessing)
+            .str.replace(r"(\b[a-zA-Z]\b)", "", regex=True)
+            .str.replace(r"\s+", " ", regex=True)
+            .str.strip()
+        )
+        .loc[lambda df: (df.author.apply(lambda x: len(x.split())) > 1)]
+        .drop_duplicates()
+    )
+
+
 # %% Print samples
 st.write("Number of authors", len(category_df))
 st.write("Number of authors after filtering", len(filtered_df))
@@ -71,10 +85,6 @@ if len(filtered_df) > 0:
 
 # %% Clusterisation
 # Function to group similar artist names
-
-
-def preprocessing(string: str) -> str:
-    return " ".join(sorted(rapidfuzz.utils.default_process(string).split()))
 
 
 def normalized_distance_token_sort_ratio(

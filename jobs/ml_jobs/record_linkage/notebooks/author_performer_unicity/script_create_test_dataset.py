@@ -8,7 +8,6 @@ from scipy.spatial.distance import squareform
 # %% Load Data
 author_df = pd.read_csv("notebooks/author_performer_unicity/data/author.csv")
 PUNCTUATION = r"!|#|\$|\%|\&|\(|\)|\*|\+|\,|\/|\:|\;|\|\s-|\s-\s|-\s|\|"  # '<=>?@[\\]^_`{|}~|\s–\s'
-
 CATEGORY_ID = "LIVRE"
 NAME_FILTER = "oda"
 

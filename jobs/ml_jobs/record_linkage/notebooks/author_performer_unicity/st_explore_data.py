@@ -5,8 +5,7 @@ import pandas as pd
 import rapidfuzz
 import stqdm
 import streamlit as st
-from scipy.cluster.hierarchy import linkage, fcluster
-from scipy.spatial.distance import squareform
+from sklearn.cluster import AgglomerativeClustering
 
 st.set_page_config(layout="wide")
 
@@ -162,10 +161,15 @@ with st.form("compute clusters"):
 
         # Perform hierarchical/agglomerative clustering
         t0 = time.time()
-        condensed_dist_matrix = squareform(distance_matrix)
-        Z = linkage(condensed_dist_matrix, "centroid")
 
-        clusters = fcluster(Z, st_clustering_threshold, criterion="distance")
+        clustering = AgglomerativeClustering(
+            n_clusters=None,
+            metric="precomputed",
+            linkage="single",
+            distance_threshold=st_clustering_threshold,
+        )
+        clusters = clustering.fit_predict(distance_matrix)
+
         clusters_df = (
             pd.DataFrame({"author": authors_list})
             .assign(cluster=clusters)

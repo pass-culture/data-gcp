@@ -1,11 +1,12 @@
 import time
 from collections import defaultdict
 
+import numpy as np
 import pandas as pd
 import rapidfuzz
 import stqdm
 import streamlit as st
-from sklearn.cluster import AgglomerativeClustering
+from sklearn.cluster import DBSCAN
 
 st.set_page_config(layout="wide")
 
@@ -147,28 +148,38 @@ with st.form("compute clusters"):
 
     if submitted is True:
 
-        # Advanced clustering
         # Compute the parwise distance between the authors
         t0 = time.time()
         N_WORKERS = -1  # -1 for max number of workers
+        # dtype = np.float32
+        # dtype = np.uint16
+        dtype = np.uint8
+        score_multiplier = (
+            255 if dtype == np.uint8 else 65535 if dtype == np.uint16 else 1
+        )
         distance_matrix = rapidfuzz.process.cdist(
             queries=authors_list,
             choices=authors_list,
             scorer=st_method,
             workers=N_WORKERS,
+            score_multiplier=score_multiplier,
+            dtype=dtype,
         )
         st.write("Time to compute the matrix", time.time() - t0)
+        st.write("Memory used", distance_matrix.nbytes / 1024**2, "MB")
 
-        # Perform hierarchical/agglomerative clustering
+        # Perform clustering with DBSCAN
         t0 = time.time()
 
-        clustering = AgglomerativeClustering(
-            n_clusters=None,
+        # clustering
+        clustering = DBSCAN(
+            eps=st_clustering_threshold * score_multiplier,
+            min_samples=2,
             metric="precomputed",
-            linkage="single",
-            distance_threshold=st_clustering_threshold,
+            n_jobs=-1,
         )
-        clusters = clustering.fit_predict(distance_matrix)
+        clustering.fit(distance_matrix)
+        clusters = clustering.labels_
 
         clusters_df = (
             pd.DataFrame({"author": authors_list})

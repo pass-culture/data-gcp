@@ -23,10 +23,9 @@ WITH involved_students AS (
         END AS level_macro,
         coalesce(sum(SAFE_CAST(involved_students as FLOAT64)), 0) as involved_students,
         coalesce(sum(SAFE_CAST(total_involved_students as FLOAT64)), 0) as total_involved_students,
-    FROM
-        `{{ bigquery_clean_dataset }}.adage_involved_student` ais
-        LEFT JOIN `{{ bigquery_clean_dataset }}.applicative_database_educational_year` ey on SAFE_CAST(ey.adage_id as int) = SAFE_CAST(ais.educational_year_adage_id as int)
-        LEFT JOIN `{{ bigquery_clean_dataset }}.institutional_scholar_level` isl on ais.level = isl.level_id
+    FROM {{ source('clean','adage_involved_student') }} ais
+        LEFT JOIN {{ ref('educational_year') }} ey on SAFE_CAST(ey.adage_id as int) = SAFE_CAST(ais.educational_year_adage_id as int)
+        LEFT JOIN {{ source('clean','institutional_scholar_level') }} isl on ais.level = isl.level_id
     where
         metric_name = "departements"
     GROUP BY

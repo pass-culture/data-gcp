@@ -9,7 +9,7 @@ SELECT
     , origin
     , platform
     , onboarding_user_selected_age
-FROM `{{ bigquery_analytics_dataset }}`.firebase_events f
+FROM {{ ref('int_firebase__native_event') }} f
 WHERE (event_name IN ('SelectAge','HasAcceptedAllCookies','login','OnboardingStarted','ConsultOffer','BookingConfirmation','first_open','ConsultOffer','ContinueSetEmail','ContinueSetPassword','ContinueSetBirthday','ContinueCGU','SetEmail','SetPassword','SetBirthday')
 OR firebase_screen IN ('SignupForm','ProfilSignUp', 'SignupConfirmationEmailSent', 'OnboardingWelcome','OnboardingGeolocation', 'FirstTutorial','BeneficiaryRequestSent','UnderageAccountCreated','BeneficiaryAccountCreated','FirstTutorial2','FirstTutorial3','FirstTutorial4','HasSkippedTutorial' )) 
 ),
@@ -20,7 +20,7 @@ OR firebase_screen IN ('SignupForm','ProfilSignUp', 'SignupConfirmationEmailSent
         user_pseudo_id 
         ,appsflyer_id
         ,event_timestamp
-  FROM `{{ bigquery_analytics_dataset }}`.firebase_events
+  FROM {{ ref('int_firebase__native_event') }}
   WHERE appsflyer_id is not null
   QUALIFY row_number() over (partition by user_pseudo_id order by event_date) = 1
 ),
@@ -139,5 +139,5 @@ LEFT JOIN signup_started ON first_open.user_pseudo_id=signup_started.user_pseudo
 LEFT JOIN signup_completed ON first_open.user_pseudo_id=signup_completed.user_pseudo_id
 LEFT JOIN first_login ON first_open.user_pseudo_id=first_login.user_pseudo_id
 LEFT JOIN beneficiary_request_sent ON first_open.user_pseudo_id=beneficiary_request_sent.user_pseudo_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_user_data u ON first_login.user_id=u.user_id
+LEFT JOIN {{ ref('enriched_user_data') }} u ON first_login.user_id=u.user_id
 LEFT JOIN user_accepted_tracking uat ON first_open.user_pseudo_id = uat.user_pseudo_id

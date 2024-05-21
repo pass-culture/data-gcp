@@ -1,11 +1,15 @@
-{{ create_humanize_id_function() }}
+{% set target_name = target.name %}
+{% set target_schema = generate_schema_name('analytics_' ~ target_name) %}
+
+{{ config(
+    pre_hook="{{create_humanize_id_function()}}"
+) }}
 
 WITH offer_humanized_id AS (
     SELECT
         offer_id,
-        humanize_id(offer_id) AS offer_humanized_id,
-    FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_offer
+        offer_humanized_id,
+    FROM {{ ref('int_applicative__offer') }}
     WHERE
         offer_id is not NULL
 ),
@@ -13,9 +17,8 @@ WITH offer_humanized_id AS (
 venue_humanized_id AS (
     SELECT
         venue_id,
-        humanize_id(venue_id) AS venue_humanized_id
-    FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_venue
+        venue_humanized_id
+    FROM {{ ref('int_applicative__venue') }}
     WHERE
         venue_id is not NULL
 ),
@@ -23,9 +26,9 @@ venue_humanized_id AS (
 offerer_humanized_id AS (
     SELECT
         offerer_id,
-        humanize_id(offerer_id) AS offerer_humanized_id
+        {{target_schema}}.humanize_id(offerer_id) as offerer_humanized_id,
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_offerer
+        {{ ref('offerer') }}
     WHERE
         offerer_id is not NULL
 ),
@@ -37,10 +40,9 @@ bookings_days AS (
         COUNT(DISTINCT booking_id) OVER (PARTITION BY offer.offer_id, DATE(booking_creation_date)) AS cnt_bookings_day,
         IF(booking_is_cancelled, COUNT(DISTINCT booking_id) OVER (PARTITION BY offer.offer_id, DATE(booking_creation_date)), NULL) AS cnt_bookings_cancelled,
         IF(NOT booking_is_cancelled, COUNT(DISTINCT booking_id) OVER (PARTITION BY offer.offer_id, DATE(booking_creation_date)), NULL) AS cnt_bookings_confirm,
-    FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_booking booking
-        JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock stock USING(stock_id)
-        JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer offer ON offer.offer_id = stock.offer_id
+    FROM {{ ref('booking') }} booking
+        JOIN {{ ref('stock') }} stock USING(stock_id)
+        JOIN {{ ref('offer') }} offer ON offer.offer_id = stock.offer_id
 ),
 
 count_bookings AS (
@@ -65,8 +67,8 @@ offer_stock_ids AS (
         SUM(stock_quantity) AS offer_stock_quantity,
         SUM(available_stock_information.available_stock_information) AS available_stock_quantity,
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_stock stock
-        JOIN `{{ bigquery_clean_dataset }}`.available_stock_information USING(stock_id)
+        {{ ref('stock') }} stock
+        JOIN {{ ref('available_stock_information') }} USING(stock_id)
     GROUP BY
         offer_id
 ),
@@ -76,8 +78,8 @@ last_stock AS (
         offer.offer_id,
         stock.stock_price AS last_stock_price
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer
-        JOIN `{{ bigquery_clean_dataset }}`.cleaned_stock AS stock on stock.offer_id = offer.offer_id
+         {{ ref('offer') }} AS offer
+        JOIN  {{ ref('cleaned_stock') }} AS stock on stock.offer_id = offer.offer_id
     QUALIFY ROW_NUMBER() OVER (PARTITION BY stock.offer_id ORDER BY stock.stock_creation_date DESC, stock.stock_id DESC) = 1
 ),
 
@@ -86,8 +88,8 @@ offer_tags AS (
         offerId AS offer_id,
         STRING_AGG(name, " ; " ORDER BY CAST(criterion.id AS INT) DESC) AS playlist_tags
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_offer_criterion offer_criterion
-        JOIN `{{ bigquery_clean_dataset }}`.applicative_database_criterion criterion ON criterion.id = offer_criterion.criterionId
+        {{ ref('offer_criterion') }} offer_criterion
+        JOIN {{ ref('criterion') }} criterion ON criterion.id = offer_criterion.criterionId
     GROUP BY
         offerId
 ),
@@ -102,9 +104,9 @@ offer_status AS (
             ELSE offer.offer_validation
         END AS offer_status
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_offer offer
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_stock stock ON offer.offer_id = stock.offer_id
-        JOIN `{{ bigquery_clean_dataset }}`.available_stock_information USING(stock_id)
+        {{ ref('offer') }} offer
+        LEFT JOIN {{ ref('stock') }} stock ON offer.offer_id = stock.offer_id
+        JOIN {{ ref('available_stock_information') }} USING(stock_id)
 ),
 
 offerer_tags AS (
@@ -112,8 +114,8 @@ offerer_tags AS (
         offerer_id,
         STRING_AGG(offerer_tag_label, " ; " ORDER BY CAST(offerer_id AS INT)) AS structure_tags
     FROM
-        `{{ bigquery_clean_dataset }}`.applicative_database_offerer_tag_mapping offerer_tag_mapping
-        LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer_tag offerer_tag ON offerer_tag_mapping.tag_id = offerer_tag.offerer_tag_id
+        {{ ref('offerer_tag_mapping') }} offerer_tag_mapping
+        LEFT JOIN {{ ref('offerer_tag') }}  offerer_tag ON offerer_tag_mapping.tag_id = offerer_tag.offerer_tag_id
     GROUP BY
         offerer_id
 )
@@ -133,10 +135,10 @@ SELECT DISTINCT
             SELECT
                 stock.offer_id
             FROM
-                `{{ bigquery_clean_dataset }}`.applicative_database_stock AS stock
-                JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offer AS offer ON stock.offer_id = offer.offer_id
+                {{ ref('stock') }} AS stock
+                JOIN {{ ref('offer') }} AS offer ON stock.offer_id = offer.offer_id
                   AND offer.offer_is_active
-                JOIN `{{ bigquery_clean_dataset }}`.available_stock_information ON available_stock_information.stock_id = stock.stock_id
+                JOIN {{ ref('available_stock_information') }} ON available_stock_information.stock_id = stock.stock_id
             WHERE NOT stock_is_soft_deleted
             AND
                 (
@@ -196,18 +198,18 @@ SELECT DISTINCT
     offerer_tags.structure_tags,
 
 FROM
-    `{{ bigquery_clean_dataset }}`.applicative_database_offer offer
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue venue ON venue.venue_id = offer.venue_id
+    {{ ref('offer') }} offer
+    LEFT JOIN {{ ref('venue') }}  venue ON venue.venue_id = offer.venue_id
     LEFT JOIN venue_humanized_id ON venue_humanized_id.venue_id = venue.venue_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.region_department region_dept ON region_dept.num_dep = venue.venue_department_code
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_label venue_label ON venue_label.venue_label_id = venue.venue_label_id
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_offerer offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
+    LEFT JOIN {{ source('analytics', 'region_department') }}  region_dept ON region_dept.num_dep = venue.venue_department_code
+    LEFT JOIN {{ ref('venue_label') }} venue_label ON venue_label.venue_label_id = venue.venue_label_id
+    LEFT JOIN {{ ref('offerer') }} offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
     LEFT JOIN offerer_humanized_id ON offerer_humanized_id.offerer_id = offerer.offerer_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.siren_data siren_data ON  siren_data.siren = offerer.offerer_siren
+    LEFT JOIN {{ ref('siren_data') }} siren_data ON  siren_data.siren = offerer.offerer_siren
     LEFT JOIN offerer_tags ON offerer_tags.offerer_id = offerer.offerer_id
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue_contact venue_contact ON  venue_contact.venue_id = venue.venue_id
+    LEFT JOIN {{ ref('venue_contact') }} venue_contact ON  venue_contact.venue_id = venue.venue_id
     LEFT JOIN offer_humanized_id AS offer_humanized_id ON offer_humanized_id.offer_id = offer.offer_id
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.subcategories subcategories ON subcategories.id = offer.offer_subcategoryid
+    LEFT JOIN {{ source('clean','subcategories') }}  subcategories ON subcategories.id = offer.offer_subcategoryid
     LEFT JOIN count_bookings ON count_bookings.offer_id = offer.offer_id
     LEFT JOIN offer_stock_ids ON offer_stock_ids.offer_id = offer.offer_id
     LEFT JOIN last_stock ON last_stock.offer_id = offer.offer_id

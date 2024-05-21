@@ -17,7 +17,7 @@ WITH
     weeks.week AS active_week,
     DATE_DIFF(CURRENT_DATE, deposit_creation_date, WEEK(MONDAY)) AS seniority_weeks,
   FROM
-    `{{ bigquery_analytics_dataset }}.enriched_deposit_data` enriched_deposit_data
+    {{ ref('enriched_deposit_data') }} enriched_deposit_data
   INNER JOIN
     weeks
   ON
@@ -25,7 +25,7 @@ WITH
     AND DATE_TRUNC(DATE(enriched_deposit_data.deposit_expiration_date),WEEK(MONDAY)) -- Toutes les semaines de vie du crédit
     AND deposit_creation_date > '2021-05-20' -- Les utilisateurs post sortie de l'app mobile
   INNER JOIN
-    `{{ bigquery_analytics_dataset }}.firebase_aggregated_users` fau
+    {{ ref('firebase_aggregated_users') }} fau
   ON
     enriched_deposit_data.user_id = fau.user_id
     AND DATE(last_connexion_date) >= DATE(deposit_creation_date) ), -- Uniquement des utilisateurs connectés post octroi du crédit
@@ -55,13 +55,13 @@ WITH
   FROM
     deposit_active_weeks
   LEFT JOIN
-    `{{ bigquery_analytics_dataset }}.global_booking` ebd
+    {{ ref('mrt_global__booking') }} ebd
   ON
     ebd.deposit_id = deposit_active_weeks.deposit_id
     AND deposit_active_weeks.active_week = DATE_TRUNC(booking_creation_date, WEEK(MONDAY))
     AND NOT booking_is_cancelled
   LEFT JOIN
-    `{{ bigquery_analytics_dataset }}.diversification_booking` diversification_booking
+    {{ ref('diversification_booking') }} diversification_booking
   ON
     diversification_booking.booking_id = ebd.booking_id
   GROUP BY
@@ -137,12 +137,12 @@ WITH
   FROM
     cum_booking_history
   LEFT JOIN
-    `{{ bigquery_analytics_dataset }}.firebase_visits` firebase_visits
+    {{ ref('firebase_visits') }} firebase_visits
   ON
     firebase_visits.user_id = cum_booking_history.user_id
     AND DATE_TRUNC(DATE(firebase_visits.first_event_timestamp), WEEK(MONDAY)) = cum_booking_history.active_week
   LEFT JOIN
-    `{{ bigquery_analytics_dataset }}.firebase_session_origin` firebase_session_origin
+    {{ ref('firebase_session_origin') }} firebase_session_origin
   USING
     (user_pseudo_id,
       session_id)

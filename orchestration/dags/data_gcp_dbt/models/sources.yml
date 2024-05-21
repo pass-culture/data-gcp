@@ -134,6 +134,7 @@ sources:
       - name: firebase_app_experiments
       - name: iris_france
       - name: default_item_clusters
+      - name: institutional_scholar_level
       - name: item_embeddings
       - name: item_embeddings_reduced_64
       - name: item_embeddings_reduced_32
@@ -147,20 +148,22 @@ sources:
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: adage
+      - name: epci
       - name: eple
       - name: firebase_pro_events
       - name: firebase_recommendation_events
+      - name: forbidden_item_recommendation
+      - name: institution_locations
       - name: linked_offers
+      - name: number_of_students_per_eple
       - name: offer_types
-      - name: region_department
-      - name: siren_data_labels
-      - name: user_locations
+      - name: offer_with_mediation
       - name: population_age_and_department_france_details
       - name: priority_local_authorities
-      - name: offer_with_mediation
-      - name: forbidden_item_recommendation
-      - name: number_of_students_per_eple
-      - name: institution_locations
-      - name: rural_city_type_data
       - name: QPV
+      - name: region_department
+      - name: rural_city_type_data
+      - name: siren_data_labels
+      - name: user_locations
+      - name: ZRR
 

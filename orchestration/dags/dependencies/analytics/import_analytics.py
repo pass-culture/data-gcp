@@ -26,16 +26,6 @@ def define_import_tables():
 
 
 analytics_tables = {
-    "venue_locations": {
-        "sql": f"{ANALYTICS_SQL_PATH}/venue_locations.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        # see associated dependencies
-    },
-    "offer_moderation": {
-        "sql": f"{ANALYTICS_SQL_PATH}/offer_moderation.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "offer_moderation",
-    },
     "user_iris": {
         "sql": f"{ANALYTICS_SQL_PATH}/user_iris.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -66,18 +56,6 @@ analytics_tables = {
         "time_partitioning": {"field": "module_displayed_date"},
         "dag_depends": ["import_intraday_firebase_data"],
     },
-    "adage_involved_student": {
-        "sql": f"{ANALYTICS_SQL_PATH}/adage_involved_student.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "adage_involved_student",
-        "dag_depends": ["import_adage_v1"],
-    },
-    "adage_involved_institution": {
-        "sql": f"{ANALYTICS_SQL_PATH}/adage_involved_institution.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "adage_involved_institution",
-        "dag_depends": ["import_adage_v1"],
-    },
     "analytics_firebase_recommendation_events": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_recommendation_events.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -96,33 +74,10 @@ analytics_tables = {
         "dag_depends": ["import_intraday_firebase_data"],
         "params": {"set_date": "2023-01-01"},
     },
-    "retention_partner_history": {
-        "sql": f"{ANALYTICS_SQL_PATH}/retention_partner_history.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
-    "funnel_subscription_beneficiary": {
-        "sql": f"{ANALYTICS_SQL_PATH}/funnel_subscription_beneficiary.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "funnel_subscription_beneficiary",
-        "dag_depends": ["import_intraday_firebase_data"],
-    },
     "dms_pro": {
         "sql": f"{ANALYTICS_SQL_PATH}/dms_pro.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
     },
-    "collective_offer_domain_name": {
-        "sql": f"{ANALYTICS_SQL_PATH}/collective_offer_domain_name.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-    },
 }
 
-aggregated_tables = {
-    "aggregated_weekly_user_data": {
-        "sql": f"{ANALYTICS_SQL_PATH}/aggregated_weekly_user_data.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "dag_depends": ["import_intraday_firebase_data"],
-    },
-}
-
-
-export_tables = dict(analytics_tables, **aggregated_tables)
+export_tables = dict(analytics_tables)

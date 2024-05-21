@@ -1,6 +1,6 @@
 WITH collective_stocks_grouped_by_collective_offers AS (
     SELECT collective_offer_id,
-    MAX(is_bookable) AS is_bookable, -- bookable = if at least one collective_stock has is_bookable = 1
+    MAX(collective_stock_is_bookable) AS collective_stock_is_bookable, -- bookable = if at least one collective_stock is_bookable
     SUM(total_collective_bookings) AS total_collective_bookings,
     SUM(total_non_cancelled_collective_bookings) AS total_non_cancelled_collective_bookings,
     SUM(total_used_collective_bookings) AS total_used_collective_bookings,
@@ -41,7 +41,7 @@ SELECT
     null as collective_offer_contact_form,
     co.collective_offer_offer_venue,
     co.collective_offer_venue_humanized_id,
-    co.collective_offer_venue_address_type,
+    co.collective_offer_venue_address_type AS collective_offer_address_type,
     co.collective_offer_venue_other_address,
     co.intervention_area,
     co.template_id,
@@ -50,9 +50,9 @@ SELECT
     co.collective_offer_image_id,
     co.provider_id,
     co.national_program_id,
-    null as collective_offer_template_beginning_date,
-    null as collective_offer_template_ending_date,
-    CASE WHEN cs.is_bookable = 1 AND co.collective_offer_is_active THEN 1 ELSE 0 END AS collective_offer_is_bookable,
+    NULL AS collective_offer_template_beginning_date,
+    NULL AS collective_offer_template_ending_date,
+    CASE WHEN cs.collective_stock_is_bookable AND co.collective_offer_is_active THEN TRUE ELSE FALSE END AS collective_offer_is_bookable,
     cs.total_non_cancelled_collective_bookings,
     cs.total_collective_bookings,
     cs.total_used_collective_bookings,
@@ -60,7 +60,7 @@ SELECT
     cs.total_collective_real_revenue,
     cs.first_collective_booking_date,
     cs.last_collective_booking_date,
-    0 AS is_template
+    FALSE AS collective_offer_is_template
 FROM {{ source('raw','applicative_database_collective_offer') }} AS co
 LEFT JOIN collective_stocks_grouped_by_collective_offers AS cs ON cs.collective_offer_id = co.collective_offer_id
 )
@@ -97,22 +97,22 @@ SELECT
     collective_offer_venue_address_type,
     collective_offer_venue_other_address,
     intervention_area,
-    null as template_id,
+    NULL AS template_id,
     collective_offer_last_validation_type,
-    null as institution_id,
+    NULL AS institution_id,
     collective_offer_image_id,
     provider_id,
     national_program_id,
     collective_offer_template_beginning_date,
     collective_offer_template_ending_date,
-    1 AS is_bookable,
+    TRUE AS collective_offer_is_bookable,
     0 as total_non_cancelled_collective_bookings,
     0 as total_collective_bookings,
     0 as total_used_collective_bookings,
     0 as total_collective_theoretic_revenue,
     0 as total_collective_real_revenue,
-    null as first_collective_booking_date,
-    null as last_collective_booking_date,
-    1 AS is_template
-FROM {{ source('raw','applicative_database_collective_offer_template') }} AS template
+    NULL AS first_collective_booking_date,
+    NULL AS last_collective_booking_date,
+    TRUE AS collective_offer_is_template
+FROM {{ source('raw','applicative_database_collective_offer_template') }}
 )

@@ -7,6 +7,7 @@ SELECT
     venue_id,
     offerer_id,
     collective_booking_cancellation_date,
+    collective_booking_cancellation_date IS NOT NULL AS collective_booking_is_cancelled,
     collective_booking_cancellation_limit_date,
     collective_booking_cancellation_reason,
     collective_booking_status,

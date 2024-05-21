@@ -1,5 +1,7 @@
 SELECT 
-  date(eac_webinar.date) as date,
+  case when eac_webinar.date like '%/%/%' then PARSE_DATE("%d/%m/%Y",eac_webinar.date)
+  else date(eac_webinar.date)
+  end as date,
   first_name,
   last_name,
   email,

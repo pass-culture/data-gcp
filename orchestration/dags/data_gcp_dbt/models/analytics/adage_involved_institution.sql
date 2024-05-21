@@ -17,8 +17,8 @@ WITH involved_students AS (
         coalesce(sum(SAFE_CAST(institutions as FLOAT64)), 0) as institutions,
         coalesce(sum(SAFE_CAST(total_institutions as FLOAT64)), 0) as total_institutions,
     FROM
-        `{{ bigquery_clean_dataset }}.adage_involved_student` ais
-        LEFT JOIN `{{ bigquery_clean_dataset }}.applicative_database_educational_year` ey on SAFE_CAST(ey.adage_id as int) = SAFE_CAST(ais.educational_year_adage_id as int)
+        {{ source('clean','adage_involved_student') }} ais
+        LEFT JOIN {{ ref('educational_year') }}  ey on SAFE_CAST(ey.adage_id as int) = SAFE_CAST(ais.educational_year_adage_id as int)
     where
         metric_name = "departements"
     GROUP BY

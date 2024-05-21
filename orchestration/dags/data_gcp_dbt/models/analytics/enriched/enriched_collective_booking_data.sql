@@ -40,6 +40,7 @@ SELECT
     eple.code_departement AS school_department_code,
     school_region_departement.region_name AS school_region_name,
     eple.libelle_academie,
+    collective_offer.collective_offer_venue_address_type AS collective_offer_address_type,
     collective_booking.collective_booking_creation_date,
     collective_booking.collective_booking_cancellation_date,
     CASE WHEN collective_booking.collective_booking_cancellation_date IS NULL THEN "FALSE" ELSE "TRUE" END AS collective_booking_is_cancelled,

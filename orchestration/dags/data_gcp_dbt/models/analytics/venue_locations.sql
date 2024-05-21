@@ -4,14 +4,14 @@ with venue_epci AS (
         epci_code,
         epci_name
     FROM
-        `{{ bigquery_clean_dataset }}.applicative_database_venue` venue
+        {{ ref('venue') }} venue
         JOIN (
             SELECT
                 epci.epci_code,
                 epci.epci_name,
                 geo_shape
             FROM
-                `{{ bigquery_analytics_dataset }}.epci` epci
+                {{ source('analytics','epci') }} epci
         ) c on ST_CONTAINS(
             c.geo_shape,
             ST_GEOGPOINT(venue.venue_longitude, venue.venue_latitude)
@@ -24,7 +24,7 @@ venue_qpv AS (
         qpv_name,
         qpv_communes
     FROM
-        `{{ bigquery_clean_dataset }}.applicative_database_venue` venue
+        {{ ref('venue') }} venue
         JOIN (
             SELECT
                 code_quartier as code_qpv,
@@ -32,7 +32,7 @@ venue_qpv AS (
                 commune_qp as qpv_communes,
                 geoshape
             FROM
-                `{{ bigquery_analytics_dataset }}.QPV`
+                {{ source('analytics','QPV') }}
         ) b ON ST_CONTAINS(
             b.geoshape,
             ST_GEOGPOINT(venue.venue_longitude, venue.venue_latitude)
@@ -48,7 +48,7 @@ venue_zrr AS (
         Code_Postal,
         geo_shape_insee
     FROM
-        `{{ bigquery_clean_dataset }}.applicative_database_venue` venue
+        {{ ref('venue') }} venue
         JOIN (
             SELECT
                 ZRR.CODGEO,
@@ -58,7 +58,7 @@ venue_zrr AS (
                 ZRR.Code_Postal,
                 ZRR.geo_shape_insee
             FROM
-                `{{ bigquery_analytics_dataset }}.ZRR` ZRR
+                {{ source('analytics','ZRR') }} ZRR
         ) d on ST_CONTAINS(
             d.geo_shape_insee,
             ST_GEOGPOINT(venue.venue_longitude, venue.venue_latitude)
@@ -82,9 +82,9 @@ SELECT
     venue_zrr.ZONAGE_ZRR,
     venue_zrr.Code_Postal
 FROM
-    `{{ bigquery_clean_dataset }}.applicative_database_venue` venue
+    {{ ref('venue') }} venue
     LEFT JOIN venue_epci ON venue.venue_id = venue_epci.venue_id
     LEFT JOIN venue_qpv ON venue.venue_id = venue_qpv.venue_id
     LEFT JOIN venue_zrr ON venue.venue_id = venue_zrr.venue_id
 WHERE
-    venue.venue_is_virtual is false;
+    venue.venue_is_virtual is false

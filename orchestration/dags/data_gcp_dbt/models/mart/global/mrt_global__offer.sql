@@ -1,7 +1,9 @@
 {{
     config(
-        materialized = "incremental",
-        unique_key = "offer_id",
+        partition_by={
+            "field": "offer_creation_date",
+            "data_type": "date"
+        },
         on_schema_change = "sync_all_columns"
     )
 }}
@@ -73,8 +75,3 @@ SELECT
 FROM {{ ref('int_applicative__offer') }} AS o
     LEFT JOIN {{ source('clean', 'subcategories') }} subcategories ON o.offer_subcategory_id = subcategories.id
     INNER JOIN {{ref('int_applicative__venue')}} AS v ON v.venue_id = o.venue_id
-WHERE TRUE
-    -- o.offer_validation = 'APPROVED'
-    {% if is_incremental() %}
-    AND offer_date_updated BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
-    {% endif %}

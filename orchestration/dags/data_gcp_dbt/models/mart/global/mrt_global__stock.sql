@@ -1,7 +1,9 @@
 {{
     config(
-        materialized = "incremental",
-        unique_key = "stock_id",
+        partition_by={
+            "field": "stock_modified_date",
+            "data_type": "date"
+        },
         on_schema_change = "sync_all_columns"
     )
 }}
@@ -9,6 +11,7 @@
 SELECT
     s.stock_beginning_date,
     s.stock_modified_date,
+    s.stock_modified_at,
     s.stock_id,
     o.offer_id,
     o.offer_product_id,
@@ -33,7 +36,3 @@ SELECT
     o.offer_category_id,
 FROM {{ref('int_applicative__stock')}} AS s
 INNER JOIN {{ref('mrt_global__offer')}} AS o ON s.offer_id = o.offer_id
-WHERE TRUE
-    {% if is_incremental() %}
-    AND stock_modified_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
-    {% endif %}

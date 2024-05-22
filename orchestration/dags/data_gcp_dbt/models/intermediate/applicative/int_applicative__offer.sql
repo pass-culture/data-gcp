@@ -83,9 +83,9 @@ SELECT
     o.casting,
     o.isbn,
     o.titelive_gtl_id,
-    CASE WHEN (so.is_bookable = 1
+    CASE WHEN (so.is_bookable
         AND o.offer_is_active
-        AND o.offer_validation = "APPROVED") THEN 1 ELSE 0 END AS offer_is_bookable,
+        AND o.offer_validation = "APPROVED") THEN TRUE ELSE FALSE END AS offer_is_bookable,
     so.total_available_stock,
     so.total_bookings,
     so.total_individual_bookings,

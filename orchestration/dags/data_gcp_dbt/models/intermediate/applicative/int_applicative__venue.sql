@@ -18,7 +18,7 @@ WITH offers_grouped_by_venue AS (
         MIN(CASE WHEN offer_validation = 'APPROVED' THEN offer_creation_date END) AS first_individual_offer_creation_date,
         MAX(CASE WHEN offer_validation = 'APPROVED' THEN offer_creation_date END) AS last_individual_offer_creation_date,
         COUNT(CASE WHEN offer_validation = 'APPROVED' THEN offer_id END) AS total_created_individual_offers,
-        COUNT(DISTINCT CASE WHEN offer_is_bookable = 1 THEN offer_id END) AS total_venue_bookable_individual_offers
+        COUNT(DISTINCT CASE WHEN offer_is_bookable THEN offer_id END) AS total_venue_bookable_individual_offers
     FROM {{ ref('int_applicative__offer') }}
     GROUP BY venue_id
 ),
@@ -36,7 +36,7 @@ collective_offers_grouped_by_venue AS (
         COUNT(CASE WHEN collective_offer_validation = 'APPROVED' THEN collective_offer_id END) AS total_created_collective_offers,
         MIN(CASE WHEN collective_offer_validation = 'APPROVED' THEN collective_offer_creation_date END) AS first_collective_offer_creation_date,
         MAX(CASE WHEN collective_offer_validation = 'APPROVED' THEN collective_offer_creation_date END) AS last_collective_offer_creation_date,
-        COUNT(DISTINCT CASE WHEN collective_offer_is_bookable = 1 THEN collective_offer_id END) AS total_venue_bookable_collective_offers
+        COUNT(DISTINCT CASE WHEN collective_offer_is_bookable THEN collective_offer_id END) AS total_venue_bookable_collective_offers
     FROM {{ ref('int_applicative__collective_offer') }}
     GROUP BY venue_id
 ),
@@ -108,6 +108,8 @@ SELECT
         {{target_schema}}.humanize_id(v.venue_id)
     ) AS venue_pc_pro_link,
     {{target_schema}}.humanize_id(v.venue_id) as venue_humanized_id,
+    venue_region_departement.region_name AS venue_region_name,
+    venue_region_departement.academy_name AS venue_academy_name,
     vr.venue_target AS venue_targeted_audience,
     vc.venue_contact_phone_number,
     vc.venue_contact_email,
@@ -168,3 +170,5 @@ LEFT JOIN {{ source("raw", "applicative_database_venue_contact") }} AS vc ON v.v
 LEFT JOIN {{ source('raw', 'applicative_database_venue_label') }} AS vl ON vl.venue_label_id = v.venue_label_id
 LEFT JOIN {{ source('raw', 'applicative_database_accessibility_provider') }} AS va ON va.venue_id = v.venue_id
 INNER JOIN {{ ref("int_applicative__offerer") }} AS ofr ON v.venue_managing_offerer_id = ofr.offerer_id
+LEFT JOIN {{ source('analytics', 'region_department') }} AS venue_region_departement ON v.venue_department_code = venue_region_departement.num_dep
+

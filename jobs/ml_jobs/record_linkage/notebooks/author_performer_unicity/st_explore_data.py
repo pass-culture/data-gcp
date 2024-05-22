@@ -1,5 +1,7 @@
 import time
+from typing import List, Callable
 
+import jellyfish
 import numpy as np
 import pandas as pd
 import rapidfuzz
@@ -17,6 +19,11 @@ PUNCTUATION = r"!|#|\$|\%|\&|\(|\)|\*|\+|\,|\/|\:|\;|\|\s-|\s-\s|-\s|\|"  # '<=>
 NUM_CHUNKS = 50
 SPARSE_FILTER_THRESHOLD = 0.2
 DTYPE_DISTANCE_MATRIX = np.uint8  # np.uint8, np.uint16, np.float32
+SCORE_MULTIPLIER = (
+    255
+    if DTYPE_DISTANCE_MATRIX == np.uint8
+    else 65535 if DTYPE_DISTANCE_MATRIX == np.uint16 else 1
+)
 
 
 # %%
@@ -105,6 +112,49 @@ def chunks(lst, n):
         yield lst[i : i + n]
 
 
+def format_clustering_function(x):
+    if hasattr(x, "func_code"):
+        return x.func_code.co_name
+    else:
+        return x.__name__
+
+
+@st.cache_data
+def compute_distance_matrix(
+    authors_list: List[str], _st_method: Callable, st_method_name: str
+):
+    # For caching with st_method_name
+    # Compute the parwise distance between the authors
+    t0 = time.time()
+
+    # Loop over the chunks
+    sparse_matrices = []
+    for authors_chunk in stqdm(chunks(authors_list, len(authors_list) // NUM_CHUNKS)):
+        # Compute the distance matrix for the chunk
+        distance_matrix = rapidfuzz.process.cdist(
+            queries=authors_chunk,
+            choices=authors_list,
+            scorer=_st_method,
+            score_multiplier=SCORE_MULTIPLIER,
+            dtype=DTYPE_DISTANCE_MATRIX,
+            workers=-1,  # -1 for all cores
+        )
+
+        # Create the Sparse Matrix
+        distance_matrix[
+            distance_matrix > SPARSE_FILTER_THRESHOLD * SCORE_MULTIPLIER
+        ] = 0
+        sparse_matrices.append(csr_matrix(distance_matrix))
+
+    # Concatenate the sparse matrices
+    complete_sparse_matrix = vstack(blocks=sparse_matrices, format="csr")
+
+    st.write("Time to compute the matrix", time.time() - t0)
+    st.write("Memory used", complete_sparse_matrix.data.nbytes / 1024**2, "MB")
+
+    return complete_sparse_matrix
+
+
 # Group similar artist names
 st.markdown("""---""")
 st.header("Calculating Clusters")
@@ -119,9 +169,7 @@ with st.form("compute clusters"):
             rapidfuzz.distance.LCSseq.normalized_distance,
             rapidfuzz.distance.OSA.normalized_distance,
         ],
-        format_func=lambda x: (
-            x.func_code.co_name if hasattr(x, "func_code") else x.__name__
-        ),
+        format_func=format_clustering_function,
         index=4,
     )
 
@@ -138,45 +186,14 @@ with st.form("compute clusters"):
     submitted = st.form_submit_button("Compute")
     if submitted is True:
 
-        # Compute the parwise distance between the authors
-        t0 = time.time()
-        score_multiplier = (
-            255
-            if DTYPE_DISTANCE_MATRIX == np.uint8
-            else 65535 if DTYPE_DISTANCE_MATRIX == np.uint16 else 1
+        complete_sparse_matrix = compute_distance_matrix(
+            authors_list, st_method, format_clustering_function(st_method)
         )
-
-        # Loop over the chunks
-        sparse_matrices = []
-        for authors_chunk in stqdm(
-            chunks(authors_list, len(authors_list) // NUM_CHUNKS)
-        ):
-            # Compute the distance matrix for the chunk
-            distance_matrix = rapidfuzz.process.cdist(
-                queries=authors_chunk,
-                choices=authors_list,
-                scorer=st_method,
-                score_multiplier=score_multiplier,
-                dtype=DTYPE_DISTANCE_MATRIX,
-                workers=-1,  # -1 for all cores
-            )
-
-            # Create the Sparse Matrix
-            distance_matrix[
-                distance_matrix > SPARSE_FILTER_THRESHOLD * score_multiplier
-            ] = 0
-            sparse_matrices.append(csr_matrix(distance_matrix))
-
-        # Concatenate the sparse matrices
-        complete_sparse_matrix = vstack(blocks=sparse_matrices, format="csr")
-
-        st.write("Time to compute the matrix", time.time() - t0)
-        st.write("Memory used", complete_sparse_matrix.data.nbytes / 1024**2, "MB")
 
         # Perform clustering with DBSCAN
         t0 = time.time()
         clustering = DBSCAN(
-            eps=st_clustering_threshold * score_multiplier,
+            eps=st_clustering_threshold * SCORE_MULTIPLIER,
             min_samples=2,
             metric="precomputed",
         )
@@ -185,10 +202,14 @@ with st.form("compute clusters"):
 
         clusters_df = (
             pd.DataFrame({"author": authors_list})
-            .assign(cluster=clusters)
+            .assign(
+                author_encoding=lambda df: df.author.map(jellyfish.metaphone),
+                cluster=clusters,
+            )
             .groupby("cluster")
-            .agg({"author": set})
+            .agg({"author": set, "author_encoding": set})
             .assign(num_authors=lambda df: df.author.map(len))
+            .assign(num_encodings=lambda df: df.author_encoding.map(len))
             .sort_values("num_authors", ascending=False)
         )
         st.write("Time to compute the clusters", time.time() - t0)

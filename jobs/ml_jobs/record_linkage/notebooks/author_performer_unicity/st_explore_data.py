@@ -1,12 +1,12 @@
 import time
-from collections import defaultdict
 
 import numpy as np
 import pandas as pd
 import rapidfuzz
-import stqdm
 import streamlit as st
+from scipy.sparse import csr_matrix, vstack
 from sklearn.cluster import DBSCAN
+from stqdm import stqdm
 
 st.set_page_config(layout="wide")
 
@@ -14,6 +14,8 @@ st.set_page_config(layout="wide")
 author_df = pd.read_csv("notebooks/author_performer_unicity/data/author.csv")
 CATEGORIES = author_df.offer_category_id.unique()
 PUNCTUATION = r"!|#|\$|\%|\&|\(|\)|\*|\+|\,|\/|\:|\;|\|\s-|\s-\s|-\s|\|"  # '<=>?@[\\]^_`{|}~|\s–\s'
+NUM_CHUNKS = 50
+SPARSE_FILTER_THRESHOLD = 0.2
 
 
 # %%
@@ -69,22 +71,25 @@ if selected_category == "LIVRE":
 
 
 # %% Print samples
-st.write("Number of authors", len(category_df))
-st.write("Number of authors after filtering", len(filtered_df))
-st.progress(len(filtered_df) / len(category_df))
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.write("Number of authors", len(category_df))
+with col2:
+    st.write("Number of authors after filtering", len(filtered_df))
+with col3:
+    st.progress(len(filtered_df) / len(category_df))
 
 st.markdown("""---""")
 if len(filtered_df) > 0:
     st.dataframe(
         filtered_df.loc[:, ["author", "booking_cnt"]],
         width=1500,
-        height=1500,
+        height=500,
         hide_index=True,
     )
 
 
 # %% Clusterisation
-# Function to group similar artist names
 
 
 def normalized_distance_token_sort_ratio(
@@ -93,25 +98,10 @@ def normalized_distance_token_sort_ratio(
     return 1 - rapidfuzz.fuzz.token_sort_ratio(string_a, string_b, **kwargs) / 100
 
 
-def group_artist_names(names, threshold, method):
-    grouped_names = defaultdict(list)
-    seen_names = set()
-
-    for name in stqdm.stqdm(names):
-        # Check if the name is already seen or grouped
-        if name.lower() not in seen_names:
-            for grouped_name in grouped_names:
-
-                if method(name, grouped_name) < threshold:
-                    grouped_names[grouped_name].append(name)
-                    seen_names.add(name.lower())
-                    break
-
-            else:
-                grouped_names[name] = [name]
-                seen_names.add(name.lower())
-
-    return list(grouped_names.values())
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i : i + n]
 
 
 # Group similar artist names
@@ -150,35 +140,47 @@ with st.form("compute clusters"):
 
         # Compute the parwise distance between the authors
         t0 = time.time()
-        N_WORKERS = -1  # -1 for max number of workers
-        # dtype = np.float32
-        # dtype = np.uint16
-        dtype = np.uint8
+        dtype = np.uint8  # np.uint8, np.uint16, np.float32
+
         score_multiplier = (
             255 if dtype == np.uint8 else 65535 if dtype == np.uint16 else 1
         )
-        distance_matrix = rapidfuzz.process.cdist(
-            queries=authors_list,
-            choices=authors_list,
-            scorer=st_method,
-            workers=N_WORKERS,
-            score_multiplier=score_multiplier,
-            dtype=dtype,
-        )
+
+        # Loop over the chunks
+        sparse_matrices = []
+        for authors_chunk in stqdm(
+            chunks(authors_list, len(authors_list) // NUM_CHUNKS)
+        ):
+            # Compute the distance matrix for the chunk
+            distance_matrix = rapidfuzz.process.cdist(
+                queries=authors_chunk,
+                choices=authors_list,
+                scorer=st_method,
+                workers=-1,  # -1 for all cores
+                score_multiplier=score_multiplier,
+                dtype=dtype,
+            )
+
+            # Filter the distance matrix
+            distance_matrix[
+                distance_matrix > SPARSE_FILTER_THRESHOLD * score_multiplier
+            ] = 0
+            sparse_matrices.append(csr_matrix(distance_matrix))
+
+        # Concatenate the sparse matrices
+        full_sparse_distance_matrix = vstack(blocks=sparse_matrices, format="csr")
+
         st.write("Time to compute the matrix", time.time() - t0)
-        st.write("Memory used", distance_matrix.nbytes / 1024**2, "MB")
+        st.write("Memory used", full_sparse_distance_matrix.data.nbytes / 1024**2, "MB")
 
         # Perform clustering with DBSCAN
         t0 = time.time()
-
-        # clustering
         clustering = DBSCAN(
             eps=st_clustering_threshold * score_multiplier,
             min_samples=2,
             metric="precomputed",
-            n_jobs=-1,
         )
-        clustering.fit(distance_matrix)
+        clustering.fit(full_sparse_distance_matrix)
         clusters = clustering.labels_
 
         clusters_df = (

@@ -50,7 +50,7 @@ SELECT
     AND (DATE(s.stock_beginning_date) > CURRENT_DATE OR s.stock_beginning_date IS NULL)
     -- <> available_stock > 0 OR available_stock is null
     AND (GREATEST(s.stock_quantity - COALESCE(bs.total_bookings, 0),0) > 0 OR s.stock_quantity IS NULL)
-    AND NOT s.stock_is_soft_deleted) THEN 1 ELSE 0 END AS is_bookable,
+    AND NOT s.stock_is_soft_deleted) THEN TRUE ELSE FALSE END AS is_bookable,
     rank() OVER (PARTITION BY s.offer_id ORDER BY s.stock_creation_date DESC, s.stock_id DESC) AS stock_rk
 FROM {{ source('raw','applicative_database_stock') }} AS s
 LEFT JOIN bookings_grouped_by_stock AS bs ON bs.stock_id = s.stock_id

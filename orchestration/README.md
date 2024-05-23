@@ -76,9 +76,21 @@ A partir de la console gcp, dans l'instance de composer, ajouter les dépendance
     > `http://localhost:8080`
     ```
 
-#### Stop
+### Stop
 
 Pour éteindre les conteneurs :
 ```sh
 make stop
 ```
+
+### Troubleshooting
+
+* Pour voir les logs dans les conteneurs :
+    ```sh
+    make show_airflow_logs
+    ```
+
+* Pour supprimer les conteneurs (et les données dans la DB) :
+    ```sh
+    docker-compose down
+    ```

@@ -35,4 +35,4 @@ SELECT
     o.event,
     o.offer_category_id,
 FROM {{ref('int_applicative__stock')}} AS s
-INNER JOIN {{ref('mrt_global__offer')}} AS o ON s.offer_id = o.offer_id
+INNER JOIN {{ref('mrt_global__offer_unverified')}} AS o ON s.offer_id = o.offer_id

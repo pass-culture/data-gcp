@@ -32,4 +32,4 @@ SELECT cs.collective_stock_id,
     co.collective_offer_address_type,
     co.collective_offer_image_id,
 FROM {{ ref('int_applicative__collective_stock') }} AS cs
-INNER JOIN {{ ref('mrt_collective__offer') }} AS co ON cs.collective_offer_id = co.collective_offer_id
+INNER JOIN {{ ref('mrt_collective__offer_unverified') }} AS co ON cs.collective_offer_id = co.collective_offer_id

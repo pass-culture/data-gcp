@@ -46,9 +46,9 @@ WITH export_table AS (
           offer_item_score,
           JSON_EXTRACT(offer_extra_data, "$.offer_ranking_score") as offer_ranking_score,
           REPLACE(JSON_EXTRACT(offer_extra_data, "$.offer_ranking_origin"),  '"', '') as offer_ranking_origin,
-          JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_7_days") as offer_booking_number_last_7_days,
-          JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_14_days") as offer_booking_number_last_14_days,
-          JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_28_days") as offer_booking_number_last_28_days,
+          JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_7_days") as total_last_7_days_bookings,
+          JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_14_days") as total_last_14_days_bookings,
+          JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_28_days") as total_last_28_days_bookings,
           JSON_EXTRACT(offer_extra_data, "$.offer_semantic_emb_mean") as offer_semantic_emb_mean
         ) as offer_context,
         STRUCT(

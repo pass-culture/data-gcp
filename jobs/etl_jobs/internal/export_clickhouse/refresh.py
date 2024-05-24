@@ -1,16 +1,16 @@
+import typer
 from datetime import datetime
-from utils import clickhouse_client, load_sql
+from utils import clickhouse_client, refresh_views
 
 
-def main_refresh(table_name, dataset_name):
-    mv_table_name = f"{dataset_name}_{table_name}"
-    clickhouse_client.command(
-        f"DROP VIEW IF EXISTS views.{table_name} ON cluster default"
-    )
+def run(
+    table_name: str = typer.Option(
+        ...,
+        help="table_name",
+    ),
+):
+    refresh_views(table_name)
 
-    sql_query = load_sql(
-        dataset_name=dataset_name, table_name=table_name, folder="views"
-    )
-    print(sql_query)
-    print(f"Refresh Mat View {mv_table_name}...")
-    clickhouse_client.command(sql_query)
+
+if __name__ == "__main__":
+    typer.run(run)

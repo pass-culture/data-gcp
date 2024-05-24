@@ -18,3 +18,24 @@ TABLES_CONFIGS = [
         "mode": "overwrite",
     },
 ]
+
+TABLES_CONFIGS2 = [
+    {
+        "sql": "clickhouse__bookings",
+        "clickhouse_table_name": "bookings",
+        "clickhouse_dataset_name": "intermediate",
+        "mode": "overwrite",
+    },
+    {
+        "sql": "clickhouse__collective_bookings",
+        "clickhouse_table_name": "collective_bookings",
+        "clickhouse_dataset_name": "intermediate",
+        "mode": "overwrite",
+    },
+    {
+        "sql": "clickhouse__native_events",
+        "clickhouse_table_name": "native_events",
+        "clickhouse_dataset_name": "intermediate",
+        "mode": "incremental",
+    },
+]

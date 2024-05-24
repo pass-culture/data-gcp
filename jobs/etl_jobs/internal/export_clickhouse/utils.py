@@ -5,6 +5,20 @@ import clickhouse_connect
 from jinja2 import Template
 
 BASE_DIR = "schema"
+VIEWS_CONFIGS = [
+    {
+        "clickhouse_view_name": "daily_aggregated_event",
+        "clickhouse_dataset_name": "analytics",
+    },
+    {
+        "clickhouse_view_name": "monthly_aggregated_offerer_revenue",
+        "clickhouse_dataset_name": "analytics",
+    },
+    {
+        "clickhouse_view_name": "yearly_aggregated_offerer_revenue",
+        "clickhouse_dataset_name": "analytics",
+    },
+]
 
 
 def access_secret_data(project_id, secret_id, version_id="latest", default=None):
@@ -21,6 +35,12 @@ def load_sql(dataset_name: str, table_name: str, extra_data={}, folder="tmp") ->
     with open(f"{BASE_DIR}/{folder}/{dataset_name}_{table_name}.sql") as file:
         sql_template = file.read()
         return Template(sql_template).render(extra_data)
+
+
+def load_sql_view(view_name: str, extra_data={}, folder="analytics"):
+    with open(f"{BASE_DIR}/analytics/{view_name}.sql") as file:
+        sql_template = file.read()
+    return Template(sql_template).render(extra_data)
 
 
 ENV_SHORT_NAME = {"prod": "prod", "stg": "staging", "dev": "dev"}[

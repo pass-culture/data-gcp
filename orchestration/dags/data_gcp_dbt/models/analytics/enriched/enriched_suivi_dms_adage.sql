@@ -11,30 +11,17 @@ FROM {{ source('clean','dms_pro_cleaned') }}
 SELECT 
     siren,
     siret
-FROM {{ source('analytics','adage') }}
+FROM {{ ref('adage') }}
 where synchroPass = "1.0"
-)
-
-, siret_reference_adage AS (
-SELECT 
-    venueid,
-    id,
-    siret,
-    siren,
-    siret_synchro_adage,
-    siren_synchro_adage,
-FROM {{ source('analytics','adage') }}
 )
 
 ,siren_reference_adage AS (
   SELECT 
     siren,
     max(siren_synchro_adage) AS siren_synchro_adage
-  FROM siret_reference_adage 
+  FROM {{ ref('adage') }}
   GROUP BY 1
 )
-
-
 
 SELECT
     dms_pro.procedure_id

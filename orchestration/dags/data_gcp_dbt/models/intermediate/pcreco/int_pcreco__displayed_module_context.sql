@@ -14,7 +14,7 @@ SELECT
     recommendation_context.offer_origin_id,
     user_context.user_is_geolocated,
     count(distinct offer_id) as total_displayed_offers
-FROM {{ ref("int_pcreco__recommended_offer_event")}}
+FROM {{ ref("int_pcreco__displayed_offer_event")}}
 
 {% if is_incremental() %}   
     WHERE event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')

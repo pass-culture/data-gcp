@@ -11,8 +11,9 @@ SELECT
   event_date,
   user_id,
   user_context.user_iris_id,
-  COUNT(DISTINCT reco_call_id) as total_events,
-FROM {{ ref("int_pcreco__recommended_offer_event")}} pso
+  COUNT(DISTINCT reco_call_id) as total_displayed_modules,
+  COUNT(DISTINCT offer_id) as total_displayed_offers,
+FROM {{ ref("int_pcreco__displayed_offer_event")}} pso
 WHERE 
 user_context.user_iris_id IS NOT NULL 
 AND user_context.user_is_geolocated

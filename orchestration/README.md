@@ -69,7 +69,7 @@ A partir de la console gcp, dans l'instance de composer, ajouter les dépendance
     ```
 1. Lancer les différents conteneurs
     ```sh
-    make dev
+    make start
     ```
 2. Se connecter au Airflow webserver
     ```sh
@@ -82,6 +82,14 @@ Pour éteindre les conteneurs :
 ```sh
 make stop
 ```
+
+### Changer les variables d'environnement
+
+Pour changer les variables d'environnement, il faut modifier le fichier `orchestration/.env` et relancer le build des conteneurs :
+```sh
+make rebuild
+```
+
 
 ### Troubleshooting
 

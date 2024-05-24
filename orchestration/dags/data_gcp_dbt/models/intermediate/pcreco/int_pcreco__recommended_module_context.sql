@@ -21,4 +21,9 @@ FROM {{ ref("int_pcreco__recommended_offer_event")}}
 {% endif %}
 
 
-GROUP BY 1,2,3,4,5,6
+GROUP BY event_date, 
+    reco_call_id,
+    playlist_origin, 
+    context,
+    offer_origin_id,
+    user_is_geolocated

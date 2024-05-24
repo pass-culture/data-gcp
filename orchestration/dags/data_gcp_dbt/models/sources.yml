@@ -117,6 +117,7 @@ sources:
       - name: macro_rayons
       - name: stdout
       - name: sensitive_item_recommendation
+      - name: past_offer_context
 
   - name: clean # this is the source_name
     schema: clean_{{ var('ENV_SHORT_NAME') }}
@@ -151,8 +152,6 @@ sources:
       - name: epci
       - name: eple
       - name: firebase_pro_events
-      - name: firebase_recommendation_events
-      - name: forbidden_item_recommendation
       - name: institution_locations
       - name: linked_offers
       - name: number_of_students_per_eple

@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS intermediate.native_events ON CLUSTER default
+CREATE TABLE IF NOT EXISTS intermediate.native_event ON CLUSTER default
 (
     partition_date String,
     event_name String,

@@ -5,7 +5,7 @@ SELECT
     offerer_id,
     sum(case when booking_status = 'USED' or booking_status ='REIMBURSED' then booking_amount else 0 end) AS revenue,
     sum(booking_amount) AS forcasted_revenue
-FROM intermediate.bookings
+FROM intermediate.booking
 GROUP BY
     offerer_id, creation_year
 order by offerer_id, creation_year DESC

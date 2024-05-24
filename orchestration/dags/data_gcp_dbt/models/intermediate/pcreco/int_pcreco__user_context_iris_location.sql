@@ -23,4 +23,6 @@ AND event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{
 {% endif %}
   
 
-GROUP BY 1, 2, 3
+GROUP BY event_date,
+    user_id,
+    user_iris_id

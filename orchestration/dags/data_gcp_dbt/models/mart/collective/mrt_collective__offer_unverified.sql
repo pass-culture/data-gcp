@@ -47,9 +47,16 @@ SELECT co.collective_offer_id,
     co.collective_offer_contact_url,
     co.collective_offer_contact_form,
     co.collective_offer_contact_email,
-    co.collective_offer_contact_phone
+    co.collective_offer_contact_phone,
+    cs.collective_stock_beginning_date_time,
+    cs.collective_stock_booking_limit_date_time,
+    cs.collective_stock_price,
+    cs.collective_stock_number_of_tickets,
+    cs.collective_stock_id,
+    cs.stock_id,
 FROM {{ ref('int_applicative__collective_offer') }} AS co
     INNER JOIN {{ref('int_applicative__venue')}} AS v ON v.venue_id = co.venue_id
     LEFT JOIN {{ source('clean', 'subcategories') }} ON subcategories.id = co.collective_offer_subcategory_id
     LEFT JOIN {{ source('raw', 'applicative_database_national_program') }} AS national_program ON national_program.national_program_id = co.national_program_id
     LEFT JOIN {{ ref('int_applicative__institution') }} AS institution_program ON co.institution_id = institution_program.institution_id
+    INNER JOIN {{ ref('int_applicative__collective_stock') }} AS cs ON cs.collective_offer_id = co.collective_offer_id

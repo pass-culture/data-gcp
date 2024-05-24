@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS intermediate.collective_bookings ON CLUSTER default
+CREATE TABLE IF NOT EXISTS intermediate.collective_booking ON CLUSTER default
 (
     update_date String,
     offerer_id String,

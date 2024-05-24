@@ -9,7 +9,7 @@ FROM {{ source('clean','dms_pro_cleaned') }}
 
 , adage_agreg_synchro AS (
 SELECT 
-    left(siret, 9) AS siren,
+    siren,
     siret
 FROM {{ source('analytics','adage') }}
 where synchroPass = "1.0"
@@ -20,9 +20,9 @@ SELECT
     venueid,
     id,
     siret,
-    left(siret, 9) AS siren,
-    CASE WHEN siret in (select siret from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siret_synchro_adage,
-    CASE WHEN left(siret, 9) in (select siren from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siren_synchro_adage,
+    siren,
+    siret_synchro_adage,
+    siren_synchro_adage,
 FROM {{ source('analytics','adage') }}
 )
 

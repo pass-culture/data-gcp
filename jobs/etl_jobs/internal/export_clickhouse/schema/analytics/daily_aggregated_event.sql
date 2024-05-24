@@ -7,7 +7,7 @@ SELECT
     venue_id,
     sum(is_consult_offer) AS nbr_offer_consultation,
     sum(is_consult_venue) AS nbr_venue_consultation,
-    sum(is_add_to_favorites) AS nbr_favorite
+    sum(is_add_to_favorites) AS favorite_cnt
 FROM intermediate.native_event
 WHERE event_name = 'ConsultOffer'
 GROUP BY

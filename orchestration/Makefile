@@ -7,3 +7,7 @@ stop:
 
 build:
 	docker-compose  build --no-cache;
+	docker-compose up -d;
+
+show_airflow_logs:
+	docker-compose logs -f;

@@ -34,5 +34,5 @@ SELECT
     academieId,
     left(siret, 9) AS siren,
     CASE WHEN siret in (select siret from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siret_synchro_adage,
-    CASE WHEN left(siret, 9) in (select siren from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siren_synchro_adage,
+    CASE WHEN left(siret, 9) in (select left(siret, 9) from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siren_synchro_adage,
 FROM {{ source('raw','adage') }}

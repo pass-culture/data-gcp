@@ -24,10 +24,7 @@ from common.config import (
 
 from common.utils import get_airflow_schedule
 from common.alerts import task_fail_slack_alert
-from dependencies.export_clickhouse.export_clickhouse import (
-    TABLES_CONFIGS,
-    VIEWS_CONFIGS,
-)
+from dependencies.export_clickhouse.export_clickhouse import TABLES_CONFIGS
 from common.alerts import task_fail_slack_alert
 import copy
 from common import macros

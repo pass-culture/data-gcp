@@ -177,17 +177,9 @@ class QualtricsSurvey:
             "StartDate",
             "EndDate",
             "Status",
-            "IPAddress",
-            "Progress",
-            "Duration (in seconds)",
-            "Finished",
-            "RecordedDate",
             "ResponseId",
             "ExternalReference",
-            "LocationLatitude",
-            "LocationLongitude",
             "DistributionChannel",
-            "UserLanguage",
         ]
         answer_columns = [col for col in columns if col.startswith("Q")]
         drop_columns = ["RecipientLastName", "RecipientFirstName", "RecipientEmail"]
@@ -230,19 +222,19 @@ class QualtricsSurvey:
             "StartDate": "start_date",
             "EndDate": "end_date",
             "Status": "status",
-            "IPAddress": "ip_address",
-            "Progress": "progress",
-            "Duration (in seconds)": "duration_seconds",
-            "Finished": "finished",
             "RecordedDate": "recorded_date",
             "ResponseId": "response_id",
             "ExternalReference": "user_id",
             "DistributionChannel": "distribution_channel",
-            "UserLanguage": "user_language",
         }
 
         df_final.rename(columns=rename_dict, inplace=True)
 
         df_final["survey_id"] = self.survey_id
 
-        return df_final
+        filtered_df = df_final[
+            (~df_final["question_id"].str.contains("TEXT"))
+            | (df_final["question_id"].str.contains("Topics"))
+        ]
+
+        return filtered_df

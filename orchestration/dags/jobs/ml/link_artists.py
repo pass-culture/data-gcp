@@ -39,6 +39,7 @@ with DAG(
     "link_artists",
     default_args=default_args,
     description="Link artists via clustering",
+    schedule_interval=None,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     params={

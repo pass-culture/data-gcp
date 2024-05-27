@@ -50,7 +50,6 @@ with DAG(
         ),
     },
 ) as dag:
-
     data_collect = bigquery_job_task(dag, "import_item_batch", params, extra_params={})
 
     gce_instance_start = StartGCEOperator(

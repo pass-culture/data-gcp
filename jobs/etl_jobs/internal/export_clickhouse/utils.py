@@ -43,10 +43,21 @@ def load_sql_view(view_name: str, extra_data={}, folder="analytics"):
     return Template(sql_template).render(extra_data)
 
 
+def refresh_views(view_name, folder="analytics"):
+    mv_view_name = f"{view_name}"
+    clickhouse_client.command(
+        f"DROP VIEW IF EXISTS {folder}.{view_name} ON cluster default"
+    )
+    sql_query = load_sql_view(view_name=view_name, folder="analytics")
+    print(sql_query)
+    print(f"Refresh View {mv_view_name}...")
+    clickhouse_client.command(sql_query)
+
+
 ENV_SHORT_NAME = {"prod": "prod", "stg": "staging", "dev": "dev"}[
-    os.environ.get("ENV_SHORT_NAME")
+    os.environ.get("ENV_SHORT_NAME", "dev")
 ]
-PROJECT_NAME = os.environ.get("GCP_PROJECT_ID")
+PROJECT_NAME = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 
 clickhouse_client = clickhouse_connect.get_client(
     host=access_secret_data(

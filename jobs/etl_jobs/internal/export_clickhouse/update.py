@@ -16,7 +16,6 @@ def update_incremental(
             f"Will update {len(partitions_to_update)} partition of {dataset_name}.{table_name}. {partitions_to_update}"
         )
         for date in partitions_to_update:
-
             total_rows = (
                 clickhouse_client.command(
                     f"SELECT count(*) FROM tmp.{tmp_table_name} WHERE partition_date = '{date}'"

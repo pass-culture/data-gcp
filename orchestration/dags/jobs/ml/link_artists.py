@@ -3,6 +3,9 @@ from datetime import datetime
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.python import PythonOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -119,6 +122,16 @@ with DAG(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
+    load_parquet_to_bigquery = GCSToBigQueryOperator(
+        bucket=DATA_GCS_BUCKET_NAME,
+        task_id="load_parquet_to_bigquery",
+        source_objects=INPUT_GCS_PATH.split(f"{DATA_GCS_BUCKET_NAME}/")[-1],
+        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.matched_artists",
+        source_format="PARQUET",
+        write_disposition="WRITE_TRUNCATE",
+        autodetect=True,
+    )
+
     (
         logging_task
         >> data_collect
@@ -127,5 +140,5 @@ with DAG(
         >> fetch_code
         >> install_dependencies
         >> artist_linkage
-        >> gce_instance_stop
+        >> [gce_instance_stop, load_parquet_to_bigquery]
     )

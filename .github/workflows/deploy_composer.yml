@@ -15,6 +15,13 @@ jobs:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
+  build-dbt:
+    runs-on: ubuntu-latest
+    uses: ./.github/workflows/reusable_dbt_build.yml
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+
   find-test-jobs:
     outputs:
       jobs: ${{ steps.find-testable-jobs.outputs.testable_jobs }}
@@ -73,7 +80,7 @@ jobs:
   composer-deploy-on-stg:
     if: github.ref == 'refs/heads/master'
     uses: ./.github/workflows/reusable_deploy_composer.yml
-    needs: [test-orchestration, test-jobs, linter]
+    needs: [test-orchestration, test-jobs, linter,build-dbt]
     with:
       TARGET_ENV:  "staging"
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--00137508-bucket"
@@ -90,6 +97,7 @@ jobs:
       - test-orchestration
       - test-jobs
       - linter
+      - build-dbt
       - composer-deploy-on-dev
     with:
       TARGET_ENV:  "production"

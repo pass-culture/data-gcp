@@ -40,7 +40,7 @@ def save_to_raw_bq(df, table_name, schema):
 
 def save_partition_table_to_bq(df, table_name, schema, partition_field):
     bigquery_client = bigquery.Client()
-    table_id = f"{PROJECT_NAME}.{BIGQUERY_ANALYTICS_DATASET}.{table_name}"
+    table_id = f"{PROJECT_NAME}.{BIGQUERY_RAW_DATASET}.{table_name}"
     job_config = bigquery.LoadJobConfig(
         write_disposition="WRITE_TRUNCATE",
         schema=[

@@ -23,7 +23,7 @@ from dependencies.ml.linkage.import_artists import PARAMS
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-artists-{ENV_SHORT_NAME}"
-BASE_DIR = "data-gcp/jobs/ml_jobs/record_linkage"
+BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
 STORAGE_PATH = f"{DATA_GCS_BUCKET_NAME}/link_artists"
 INPUT_GCS_PATH = f"gs://{STORAGE_PATH}/artists_to_match.parquet"
 OUTPUT_GCS_PATH = f"gs://{STORAGE_PATH}/matched_artists.parquet"
@@ -104,16 +104,15 @@ with DAG(
         command="""pip install -r requirements.txt --user""",
     )
 
-    record_linkage = SSHGCEOperator(
+    artist_linkage = SSHGCEOperator(
         task_id="artist_linkage",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
-        command="""
+        command=f"""
          python main.py \
         --source-file-path {INPUT_GCS_PATH} \
-        --output-file-path {OUTPUT_GCS_PATH}"
-    )
-    """,
+        --output-file-path {OUTPUT_GCS_PATH}
+        """,
     )
 
     gce_instance_stop = StopGCEOperator(
@@ -127,6 +126,6 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> record_linkage
+        >> artist_linkage
         >> gce_instance_stop
     )

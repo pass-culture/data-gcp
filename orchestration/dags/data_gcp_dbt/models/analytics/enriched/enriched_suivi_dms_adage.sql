@@ -7,14 +7,6 @@ SELECT * EXCEPT(demandeur_entreprise_siren),
 FROM {{ source('clean','dms_pro_cleaned') }}
 )
 
-, adage_agreg_synchro AS (
-SELECT 
-    siren,
-    siret
-FROM {{ ref('adage') }}
-where synchroPass = "1.0"
-)
-
 ,siren_reference_adage AS (
   SELECT 
     siren,

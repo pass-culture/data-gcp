@@ -180,14 +180,6 @@ venues_with_offers AS (
     GROUP BY
         offerer_id
         )
-        
-, adage_agreg_synchro AS (
-SELECT 
-    siren,
-    siret
-FROM {{ ref('adage')}}
-where synchroPass = "1.0"
-)
 
 ,siren_reference_adage AS (
   SELECT 

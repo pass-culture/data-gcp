@@ -186,16 +186,18 @@ for dag_name, dag_params in dags.items():
             out_tables_tasks.append(clickhouse_export)
 
         end_tables = DummyOperator(task_id="end_tables_export")
-        views_refresh = [
-            SSHGCEOperator(
-                task_id=f"{clickhouse_table_name}_export",
+        views_refresh = []
+        for view_config in VIEWS_CONFIGS:
+            clickhouse_view_name = view_config["clickhouse_view_name"]
+            view_task = SSHGCEOperator(
+                task_id=f"refresh_{clickhouse_view_name}_view",
                 instance_name="{{ params.instance_name }}",
                 base_dir=dag_config["BASE_DIR"],
-                command="python refresh.py "
-                f"--source-gs-path https://storage.googleapis.com/{storage_path}/data-*.parquet --table-name {clickhouse_table_name} --dataset-name {clickhouse_dataset_name} --update-date {_ds} --mode {mode}",
+                command="python refresh.py " f"--view-name {clickhouse_view_name}",
                 dag=dag,
             )
-        ]
+            views_refresh.append(view_task)
+
         gce_instance_stop = StopGCEOperator(
             task_id=f"gce_stop_task", instance_name="{{ params.instance_name }}"
         )

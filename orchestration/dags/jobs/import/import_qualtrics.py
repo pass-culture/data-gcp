@@ -91,15 +91,19 @@ with DAG(
         do_xcom_push=True,
     )
 
+    import_all_answers_to_bigquery = SSHGCEOperator(
+        task_id="import_all_answers_to_bigquery",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="python main.py --task import_all_survey_answers",
+        do_xcom_push=True,
+    )
+
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
-
-    (
-        gce_instance_start
-        >> fetch_code
-        >> install_dependencies
-        >> import_opt_out_to_bigquery
-        >> import_ir_answers_to_bigquery
-        >> gce_instance_stop
-    )
+    (gce_instance_start >> fetch_code >> install_dependencies)
+    (install_dependencies >> import_opt_out_to_bigquery >> gce_instance_stop)
+    (install_dependencies >> import_ir_answers_to_bigquery >> gce_instance_stop)
+    (install_dependencies >> import_all_answers_to_bigquery >> gce_instance_stop)

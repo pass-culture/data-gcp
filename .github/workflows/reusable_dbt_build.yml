@@ -1,0 +1,98 @@
+name: "DBT build job"
+
+on:
+  workflow_call:
+    inputs:
+      NOTIF_CHANNEL_ID:
+        type: string
+        required: false # Si pas fourni, alors pas de notif
+    secrets:
+      GCP_WORKLOAD_IDENTITY_PROVIDER:
+        required: true
+      GCP_SERVICE_ACCOUNT:
+        required: true
+          
+jobs:
+  dbt-build:
+    name: "dbt-build"
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+    defaults:
+     run: 
+       working-directory: "./orchestration/"
+    env:
+      AIRFLOW_HOME: "./"
+      DAG_FOLDER: "./dags"
+      DBT_FOLDER: "./dags/data_gpc_dbt"
+      DBT_TARGET_BUCKET_PATH: "./data/target"
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Connect to Secret Manager"
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+      - name: "Get secrets for Slack"
+        id: 'secrets'
+        uses: 'google-github-actions/get-secretmanager-secrets@v2'
+        with:
+          secrets: |-
+            SLACK_BOT_TOKEN:passculture-metier-ehp/passculture-ci-slack-bot-token
+            ARTIFACT_REGISTRY_SERVICE_ACCOUNT:passculture-metier-ehp/passculture-main-artifact-registry-service-account
+            ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER:passculture-metier-ehp/infra-prod-gcp-workload-identity-provider
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip' # caching pip dependencies
+          cache-dependency-path: ./orchestration/airflow/orchestration-requirements.txt
+      - name: "Install Python requirements"
+        run: pip install -r airflow/orchestration-requirements.txt
+      - name: "Authenticate with Google Cloud"
+        uses: "google-github-actions/auth@v2"
+        with:
+          create_credentials_file: true
+          token_format: "access_token"
+          workload_identity_provider: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
+      - name: "install dbt dependencies"
+        env:
+          GCP_PROJECT: "passculture-data-ehp"
+          GOOGLE_CLOUD_PROJECT: "passculture-data-ehp"
+          GCLOUD_PROJECT: "passculture-data-ehp"
+        run: |
+          export PYTHONPATH=$PYTHONPATH:./dags
+          cd $DBT_FOLDER_PATH
+          dbt deps --target=target
+      - name: "compile dbt project"
+        run: dbt compile --target=target
+      - name: ""
+        run: |
+          dbt ls --select state:modified+ --defer --state=$DBT_TARGET_BUCKET_PATH
+          dbt build --select state:modified+ --defer --state=$DBT_TARGET_BUCKET_PATH
+      
+      - name: "Post to a Slack channel"
+        if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
+        uses: slackapi/slack-github-action@v1.23.0
+        env:
+           SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.SLACK_BOT_TOKEN }}
+        with:
+          channel-id: ${{ inputs.NOTIF_CHANNEL_ID }}
+          payload: |
+            {
+              "attachments": [
+                {
+                  "mrkdwn_in": ["text"],
+                  "color": "#A30002",
+                  "author_name": "${{github.actor}}",
+                  "author_link": "https://github.com/${{github.actor}}",
+                  "author_icon": "https://github.com/${{github.actor}}.png",
+                  "title": "Build dbt",
+                  "title_link": "https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}",
+                  "text": "Le build dbt a échoué"
+                }
+              ],
+              "unfurl_links": false,
+              "unfurl_media": false
+            }

@@ -24,13 +24,15 @@ from common.config import (
 
 from common.utils import get_airflow_schedule
 from common.alerts import task_fail_slack_alert
-from dependencies.export_clickhouse.export_clickhouse import TABLES_CONFIGS
+from dependencies.export_clickhouse.export_clickhouse import (
+    TABLES_CONFIGS,
+    VIEWS_CONFIGS,
+)
 from common.alerts import task_fail_slack_alert
 import copy
 from common import macros
 import os
 
-# SQL_BASE_PATH = Path(f"{os.environ['GCS_BUCKET']}/plugins/compiled/data_gcp_dbt/models/export/clickhouse")
 DATASET_ID = f"export_{ENV_SHORT_NAME}"
 GCE_INSTANCE = f"export-clickhouse-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/clickhouse"
@@ -76,7 +78,7 @@ for dag_name, dag_params in dags.items():
     with DAG(
         f"export_clickhouse_{dag_name}",
         default_args=dag_params["default_dag_args"],
-        description="Export to analytics data clickhouse",
+        description="Export data to clickhouse",
         schedule_interval=get_airflow_schedule(
             dag_params["schedule_interval"][ENV_SHORT_NAME]
         ),
@@ -171,22 +173,22 @@ for dag_name, dag_params in dags.items():
                 dag=dag,
             )
 
-            events_export = SSHGCEOperator(
-                task_id=f"{clickhouse_table_name}_events_export",
+            clickhouse_export = SSHGCEOperator(
+                task_id=f"{clickhouse_table_name}_export",
                 instance_name="{{ params.instance_name }}",
                 base_dir=dag_config["BASE_DIR"],
                 command="python main.py "
                 f"--source-gs-path https://storage.googleapis.com/{storage_path}/data-*.parquet --table-name {clickhouse_table_name} --dataset-name {clickhouse_dataset_name} --update-date {_ds} --mode {mode}",
                 dag=dag,
             )
-            export_task >> export_bq >> events_export
+            export_task >> export_bq >> clickhouse_export
             in_tables_tasks.append(export_task)
-            out_tables_tasks.append(events_export)
+            out_tables_tasks.append(clickhouse_export)
 
         end_tables = DummyOperator(task_id="end_tables_export")
         views_refresh = [
             SSHGCEOperator(
-                task_id=f"{clickhouse_table_name}_events_export",
+                task_id=f"{clickhouse_table_name}_export",
                 instance_name="{{ params.instance_name }}",
                 base_dir=dag_config["BASE_DIR"],
                 command="python refresh.py "

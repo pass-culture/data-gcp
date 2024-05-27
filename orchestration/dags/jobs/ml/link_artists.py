@@ -125,7 +125,7 @@ with DAG(
     load_parquet_to_bigquery = GCSToBigQueryOperator(
         bucket=DATA_GCS_BUCKET_NAME,
         task_id="load_parquet_to_bigquery",
-        source_objects=INPUT_GCS_PATH.split(f"{DATA_GCS_BUCKET_NAME}/")[-1],
+        source_objects=OUTPUT_GCS_PATH.split(f"{DATA_GCS_BUCKET_NAME}/")[-1],
         destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.matched_artists",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",

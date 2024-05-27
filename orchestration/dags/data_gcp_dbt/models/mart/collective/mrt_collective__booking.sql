@@ -40,7 +40,7 @@ SELECT
     cb.collective_booking_rank,
     cs.collective_offer_image_id,
 FROM {{ ref('int_applicative__collective_booking') }}  AS cb
-    INNER JOIN {{ ref('mrt_collective__stock') }} AS cs ON cs.collective_stock_id = cb.collective_stock_id
+    INNER JOIN {{ ref('mrt_collective__offer_unverified') }} AS cs ON cs.collective_stock_id = cb.collective_stock_id
     INNER JOIN {{ source('raw', 'applicative_database_educational_year') }} AS educational_year ON educational_year.adage_id = cb.educational_year_id
     INNER JOIN {{ ref('educational_institution') }} AS educational_institution ON educational_institution.educational_institution_id = cb.educational_institution_id
     LEFT JOIN {{ source('analytics', 'eple') }} AS eple ON eple.id_etablissement = educational_institution.institution_id

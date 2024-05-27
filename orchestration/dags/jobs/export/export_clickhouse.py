@@ -108,7 +108,6 @@ for dag_name, dag_params in dags.items():
             ),
         },
     ) as dag:
-
         gce_instance_start = StartGCEOperator(
             task_id=f"gce_start_task",
             preemptible=False,

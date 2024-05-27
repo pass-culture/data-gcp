@@ -36,10 +36,12 @@ def load_sql(dataset_name: str, table_name: str, extra_data={}, folder="tmp") ->
         sql_template = file.read()
         return Template(sql_template).render(extra_data)
 
+
 def load_sql_view(view_name: str, extra_data={}, folder="analytics"):
     with open(f"{BASE_DIR}/{folder}/{view_name}.sql") as file:
         sql_template = file.read()
     return Template(sql_template).render(extra_data)
+
 
 def refresh_views(view_name, folder="analytics"):
     mv_view_name = f"{view_name}"
@@ -53,9 +55,9 @@ def refresh_views(view_name, folder="analytics"):
 
 
 ENV_SHORT_NAME = {"prod": "prod", "stg": "staging", "dev": "dev"}[
-    os.environ.get("ENV_SHORT_NAME","dev")
+    os.environ.get("ENV_SHORT_NAME", "dev")
 ]
-PROJECT_NAME = os.environ.get("GCP_PROJECT_ID","passculture-data-ehp")
+PROJECT_NAME = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 
 clickhouse_client = clickhouse_connect.get_client(
     host=access_secret_data(

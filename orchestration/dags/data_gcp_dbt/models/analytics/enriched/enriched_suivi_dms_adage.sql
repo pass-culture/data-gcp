@@ -38,8 +38,8 @@ SELECT
     , venue.venue_is_permanent
     , adage.id as adage_id
     , adage.dateModification as adage_date_modification
-    , CASE WHEN demandeur_siret IN (SELECT siret from siret_reference_adage) THEN TRUE ELSE FALSE END AS siret_ref_adage
-    , CASE WHEN demandeur_siret IN (SELECT siret from siret_reference_adage where siret_synchro_adage = TRUE) THEN TRUE ELSE FALSE END AS siret_synchro_adage
+    , CASE WHEN demandeur_siret IN (SELECT siret from {{ ref('adage') }}) THEN TRUE ELSE FALSE END AS siret_ref_adage
+    , CASE WHEN demandeur_siret IN (SELECT siret from {{ ref('adage') }} where siret_synchro_adage = TRUE) THEN TRUE ELSE FALSE END AS siret_synchro_adage
     , CASE WHEN demandeur_entreprise_siren IN (SELECT siren from siren_reference_adage) THEN TRUE ELSE FALSE END AS siren_ref_adage
     , CASE WHEN demandeur_entreprise_siren IN (SELECT siren from siren_reference_adage WHERE siren_synchro_adage) THEN TRUE ELSE FALSE END AS siren_synchro_adage
 

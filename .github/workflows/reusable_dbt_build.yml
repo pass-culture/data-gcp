@@ -26,7 +26,7 @@ jobs:
       AIRFLOW_HOME: "./"
       DAG_FOLDER: "./dags/"
       DBT_FOLDER: "./dags/data_gpc_dbt/"
-      DBT_TARGET_BUCKET_PATH: "europe-west1-data-composer--00137508-bucket/data/target"
+      DBT_TARGET_BUCKET_PATH: "europe-west1-data-composer--00137508-bucket/data/target/"
     steps:
       - uses: actions/checkout@v4
       - name: "Connect to Secret Manager"
@@ -57,22 +57,38 @@ jobs:
           workload_identity_provider: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
       - name: "install dbt dependencies"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           GCP_PROJECT: "passculture-data-ehp"
           GOOGLE_CLOUD_PROJECT: "passculture-data-ehp"
           GCLOUD_PROJECT: "passculture-data-ehp"
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
         run: |
           export PYTHONPATH=$PYTHONPATH:./dags
-          cd dags/data_gcp_dbt
-          cp profiles.yml ~/.dbt/profiles.yml
-          ls
-          dbt deps --target=target --profiles-dir="./"
+
+          dbt deps 
       - name: "compile dbt project"
-        run: dbt compile --target=target
-      - name: ""
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          GCP_PROJECT: "passculture-data-ehp"
+          GOOGLE_CLOUD_PROJECT: "passculture-data-ehp"
+          GCLOUD_PROJECT: "passculture-data-ehp"
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
         run: |
-          dbt ls --select state:modified+ --defer --state=$DBT_TARGET_BUCKET_PATH
-          dbt build --select state:modified+ --defer --state=$DBT_TARGET_BUCKET_PATH
+          dbt compile 
+      - name: "list and build modified models"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          GCP_PROJECT: "passculture-data-ehp"
+          GOOGLE_CLOUD_PROJECT: "passculture-data-ehp"
+          GCLOUD_PROJECT: "passculture-data-ehp"
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+        run: |
+          dbt ls --select state:modified+ --defer-state --state $DBT_TARGET_BUCKET_PATH
+          dbt build --select state:modified+ --defer-state --state $DBT_TARGET_BUCKET_PATH
       
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}

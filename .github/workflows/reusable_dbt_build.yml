@@ -85,7 +85,7 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
         run: |
-          git fetch origin master
+          git pull origin master
           dbt_run_changed() {
           children=$1
           common_ancestor=$(git merge-base --fork-point origin/master HEAD)
@@ -101,21 +101,7 @@ jobs:
           }
   
           dbt_run_changed +
-      - name: "list and build modified models"
-        working-directory: "./orchestration/dags/data_gcp_dbt/"
-        env:
-          GCP_PROJECT: "passculture-data-ehp"
-          GOOGLE_CLOUD_PROJECT: "passculture-data-ehp"
-          GCLOUD_PROJECT: "passculture-data-ehp"
-          DBT_TARGET_PATH: "target/"
-          DBT_PROFILES_DIR: "."
-          DBT_TARGET_BUCKET_PATH: "europe-west1-data-composer--00137508-bucket/data/target"
-          DBT_DEFER_STATE: "./composer-run-artifacts/"
-        run: |
-          mkdir composer-run-artifacts
-          gsutil cp gs://$DBT_TARGET_BUCKET_PATH/manifest.json ./composer-run-artifacts/manifest.json
-          dbt ls --select "state:modified+" --state composer-run-artifacts
-          dbt build --select "state:modified+" --defer --state composer-run-artifacts
+      
       
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}

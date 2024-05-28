@@ -89,7 +89,8 @@ jobs:
           DBT_PROFILES_DIR: "."
           DBT_TARGET_BUCKET_PATH: "europe-west1-data-composer--00137508-bucket/data/target"
         run: |
-          gsutil -m cp -r gs://$DBT_TARGET_BUCKET_PATH ./composer-run-artifacts
+          mkdir composer-run-artifacts
+          gsutil -m cp -r gs://$DBT_TARGET_BUCKET_PATH /composer-run-artifacts
           dbt ls --select state:modified+ --defer-state --state composer-run-artifacts
           dbt build --select state:modified+ --defer-state --state composer-run-artifacts
       

@@ -1,6 +1,7 @@
 import pandas as pd
 import rapidfuzz
 import typer
+
 from utils import read_parquet, upload_parquet
 
 app = typer.Typer()
@@ -15,7 +16,11 @@ def remove_punctuation(input_df: pd.DataFrame) -> pd.DataFrame:
     """
     PUNCTUATION = r"!|#|\$|\%|\&|\(|\)|\*|\+|\,|\/|\:|\;|\|\s-|\s-\s|-\s|\|"
 
-    return input_df.loc[lambda df: ~df.artist_name.str.contains(PUNCTUATION)]
+    return (
+        input_df.loc[lambda df: ~df.artist_name.str.contains(PUNCTUATION)]
+        if len(input_df) > 0
+        else input_df
+    )
 
 
 def format_artist_name(string: str) -> str:

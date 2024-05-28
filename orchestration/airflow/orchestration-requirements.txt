@@ -14,6 +14,6 @@ google-cloud-secret-manager>=1.0.2
 psycopg2-binary>=2.8
 # addons
 airflow-provider-great-expectations>=0.2.6
-dbt-core==1.7.2
+dbt-core==1.7.15
 dbt-bigquery==1.7.2
 

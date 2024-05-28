@@ -51,7 +51,7 @@ WHERE (
       "BookingConfirmation",
       "StepperDisplayed",
       "ModuleDisplayedOnHomePage",
-      "PlaylistHorinzontalScroll",
+      "PlaylistHorizontalScroll",
       "ConsultVenue",
       "VenuePlaylistDisplayedOnSearchResults",
       "ClickBookOffer",

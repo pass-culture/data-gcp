@@ -10,7 +10,6 @@ jobs:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
    build-dbt:
-    runs-on: ubuntu-latest
     uses: ./.github/workflows/reusable_dbt_build.yml
    find-test-jobs:
      outputs:

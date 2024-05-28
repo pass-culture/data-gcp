@@ -29,6 +29,7 @@ GCE_INSTANCE = f"link-artists-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
 STORAGE_PATH = f"{DATA_GCS_BUCKET_NAME}/link_artists"
 INPUT_GCS_PATH = f"gs://{STORAGE_PATH}/artists_to_match.parquet"
+PREPROCESSED_GCS_PATH = f"gs://{STORAGE_PATH}/preprocessed_artists_to_match.parquet"
 OUTPUT_GCS_PATH = f"gs://{STORAGE_PATH}/matched_artists.parquet"
 
 
@@ -107,13 +108,24 @@ with DAG(
         command="""pip install -r requirements.txt --user""",
     )
 
+    preprocess_data = SSHGCEOperator(
+        task_id="preprocess_data",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+         python preprocess.py \
+        --source-file-path {INPUT_GCS_PATH} \
+        --output-file-path {PREPROCESSED_GCS_PATH}
+        """,
+    )
+
     artist_linkage = SSHGCEOperator(
         task_id="artist_linkage",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
          python main.py \
-        --source-file-path {INPUT_GCS_PATH} \
+        --source-file-path {PREPROCESSED_GCS_PATH} \
         --output-file-path {OUTPUT_GCS_PATH}
         """,
     )
@@ -139,6 +151,7 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
+        >> preprocess_data
         >> artist_linkage
         >> [gce_instance_stop, load_parquet_to_bigquery]
     )

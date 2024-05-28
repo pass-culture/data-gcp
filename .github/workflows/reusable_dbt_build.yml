@@ -65,7 +65,7 @@ jobs:
           export PYTHONPATH=$PYTHONPATH:./dags
           pwd
           ls
-          cd $DBT_FOLDER
+          cd dags/data_gcp_dbt
           dbt deps --target=target
       - name: "compile dbt project"
         run: dbt compile --target=target

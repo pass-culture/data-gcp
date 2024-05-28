@@ -7,9 +7,9 @@ on:
         type: string
         required: false # Si pas fourni, alors pas de notif
     secrets:
-      GCP_WORKLOAD_IDENTITY_PROVIDER:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER:
         required: true
-      GCP_SERVICE_ACCOUNT:
+      GCP_EHP_SERVICE_ACCOUNT:
         required: true
           
 jobs:

@@ -24,8 +24,8 @@ jobs:
        working-directory: "./orchestration/"
     env:
       AIRFLOW_HOME: "./"
-      DAG_FOLDER: "./dags"
-      DBT_FOLDER: "./dags/data_gpc_dbt"
+      DAG_FOLDER: "./orchestration/dags"
+      DBT_FOLDER: "./orchestration/dags/data_gpc_dbt"
       DBT_TARGET_BUCKET_PATH: "europe-west1-data-composer--00137508-bucket/data/target"
     steps:
       - uses: actions/checkout@v4
@@ -63,6 +63,8 @@ jobs:
           GCLOUD_PROJECT: "passculture-data-ehp"
         run: |
           export PYTHONPATH=$PYTHONPATH:./dags
+          pwd
+          ls
           cd $DBT_FOLDER
           dbt deps --target=target
       - name: "compile dbt project"

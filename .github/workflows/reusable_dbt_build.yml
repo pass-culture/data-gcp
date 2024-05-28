@@ -64,7 +64,7 @@ jobs:
         run: |
           export PYTHONPATH=$PYTHONPATH:./dags
           cd dags/data_gcp_dbt
-          cp profile.yml ~/.dbt/profile.yml
+          cp profiles.yml ~/.dbt/profiles.yml
           ls
           dbt deps --target=target --profiles-dir="./"
       - name: "compile dbt project"

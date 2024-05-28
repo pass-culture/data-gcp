@@ -79,7 +79,28 @@ jobs:
           DBT_PROFILES_DIR: "."
         run: |
           dbt compile
-
+      - name: "compare against master and run changed models"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+        run: |
+          git fetch origin master
+          dbt_run_changed() {
+          children=$1
+          common_ancestor=$(git merge-base --fork-point origin/master HEAD)
+          models=$(git diff $common_ancestor --name-only | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/${children}/g" | tr '\n' ' ')
+          echo ${#models}
+          if [ -z "$models" ]
+          then
+                echo "no models were modified"
+          else
+                echo "Running models: ${models}"
+                dbt run --models $models
+          fi          
+          }
+  
+          dbt_run_changed +
       - name: "list and build modified models"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:

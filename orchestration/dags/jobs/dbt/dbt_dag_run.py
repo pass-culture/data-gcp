@@ -43,7 +43,7 @@ dag = DAG(
             type="string",
         ),
         "GLOBAL_CLI_FLAGS": Param(
-            default="--no-write-json",
+            default="",
             type="string",
         ),
         "full_refresh": Param(

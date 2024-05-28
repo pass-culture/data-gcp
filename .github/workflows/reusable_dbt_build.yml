@@ -56,6 +56,8 @@ jobs:
           token_format: "access_token"
           workload_identity_provider: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v2'
       - name: "install dbt dependencies"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
@@ -66,7 +68,6 @@ jobs:
           DBT_PROFILES_DIR: "."
         run: |
           export PYTHONPATH=$PYTHONPATH:./dags
-
           dbt deps 
       - name: "compile dbt project"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
@@ -87,8 +88,6 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
           DBT_TARGET_BUCKET_PATH: "europe-west1-data-composer--00137508-bucket/data/target"
-        with:
-          service_account: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
         run: |
           gsutil -m cp -r gs://$DBT_TARGET_BUCKET_PATH ./composer-run-artifacts
           dbt ls --select state:modified+ --defer-state --state composer-run-artifacts

@@ -1,6 +1,6 @@
 # --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt"
 # apache-airflow[gcp]==2.6.3
-# sshtunnel>=0.4.0
+sshtunnel>=0.4.0
 # # tests
 # pytest>=6.1
 # pytest-cov>=4.0.0
@@ -9,7 +9,7 @@
 # apache-airflow-providers-slack>=6.0.0
 # apache-airflow-providers-mysql>=3.2.1
 # apache-airflow-providers-postgres>=5.2.2
-# google-cloud-secret-manager>=1.0.2
+google-cloud-secret-manager>=1.0.2
 # # extras
 # psycopg2-binary>=2.8
 # # addons

@@ -1,6 +1,7 @@
 from datetime import datetime
 from scripts.utils import (
     GCP_PROJECT,
+    BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_RAW_DATASET,
     ADAGE_INVOLVED_STUDENTS_DTYPE,
     BQ_ADAGE_DTYPE,

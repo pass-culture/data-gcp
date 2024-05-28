@@ -124,7 +124,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
-         python main.py \
+         python cluster.py \
         --source-file-path {PREPROCESSED_GCS_PATH} \
         --output-file-path {OUTPUT_GCS_PATH}
         """,

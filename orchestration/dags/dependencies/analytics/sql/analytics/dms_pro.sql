@@ -1,1 +1,0 @@
-select * from `{{ bigquery_clean_dataset }}`.dms_pro_cleaned

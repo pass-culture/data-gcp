@@ -1,13 +1,4 @@
-WITH dms_pro AS (
-  
-SELECT * EXCEPT(demandeur_entreprise_siren),
-  CASE WHEN demandeur_entreprise_siren is null or demandeur_entreprise_siren = "nan" 
-  THEN left(demandeur_siret, 9) ELSE demandeur_entreprise_siren END AS demandeur_entreprise_siren
-  
-FROM {{ source('clean','dms_pro_cleaned') }}
-)
-
-,siren_reference_adage AS (
+WITH siren_reference_adage AS (
   SELECT 
     siren,
     max(siren_synchro_adage) AS siren_synchro_adage
@@ -44,7 +35,7 @@ SELECT
     , CASE WHEN demandeur_entreprise_siren IN (SELECT siren from siren_reference_adage WHERE siren_synchro_adage) THEN TRUE ELSE FALSE END AS siren_synchro_adage
 
 FROM
-    dms_pro
+    {{ ref('dms_pro') }}
 LEFT JOIN {{ ref('offerer') }} AS offerer
     ON dms_pro.demandeur_entreprise_siren = offerer.offerer_siren AND offerer.offerer_siren <> "nan"
 LEFT JOIN {{ ref('venue') }} AS venue

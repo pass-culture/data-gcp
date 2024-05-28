@@ -1,9 +1,10 @@
 install:
+	curl -LsSf https://astral.sh/uv/install.sh | sh
 	make initiate_env
 	make get_gcp_credentials
 	pyenv install 3.10.4 -s
 	pyenv local 3.10.4
-	pip install --upgrade pip
+	uv pip install --upgrade pip
 	MICROSERVICE_PATH=. VENV_NAME=data-gcp REQUIREMENTS_NAME=linter-requirements.txt make install_microservice
 	MICROSERVICE_PATH=jobs/ml_jobs/algo_training VENV_NAME=data-gcp-algo-training REQUIREMENTS_NAME=requirements.txt make install_microservice
 	MICROSERVICE_PATH=jobs/ml_jobs/record_linkage VENV_NAME=data-gcp-record-linkage REQUIREMENTS_NAME=requirements.txt make install_microservice
@@ -12,7 +13,7 @@ install:
 
 
 install_microservice:
-	cd $(MICROSERVICE_PATH) && (pyenv virtualenv $(VENV_NAME) || echo "pyenv-virtualenv $(VENV_NAME) already exists") && pyenv local $(VENV_NAME) && pip install --upgrade pip && pip install -r $(REQUIREMENTS_NAME)
+	cd $(MICROSERVICE_PATH) && (pyenv virtualenv $(VENV_NAME) || echo "pyenv-virtualenv $(VENV_NAME) already exists") && pyenv local $(VENV_NAME) && uv pip install --upgrade pip && uv pip install -r $(REQUIREMENTS_NAME)
 
 initiate_env:
 	cp -n .env.template .env.local

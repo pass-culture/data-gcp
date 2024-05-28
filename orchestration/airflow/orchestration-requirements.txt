@@ -1,4 +1,4 @@
---constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt"
+--constraint https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
 apache-airflow[gcp]==2.6.3
 sshtunnel>=0.4.0
 # tests

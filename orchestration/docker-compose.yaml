@@ -16,6 +16,7 @@ x-airflow-common:
     AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY:-}
     GCE_NETWORK_ID: ${GCE_NETWORK_ID:-}
     GCE_SUBNETWORK_ID: ${GCE_SUBNETWORK_ID:-}
+    ENV_SHORT_NAME: ${ENV_SHORT_NAME:-}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./airflow/config/airflow.cfg:/opt/airflow/airflow.cfg

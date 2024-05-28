@@ -18,7 +18,7 @@ def access_secret_data(project_id, secret_id, version_id=1, default=None):
         return default
 
 
-TOKEN = access_secret_data(GCP_PROJECT, "contentful-token")
+TOKEN = access_secret_data(GCP_PROJECT, "contentful-preview-token")
 SPACE_ID = access_secret_data(GCP_PROJECT, "contentful-space-id")
 
 ENTRIES_DTYPE = {

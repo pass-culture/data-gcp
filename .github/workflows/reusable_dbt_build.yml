@@ -85,7 +85,6 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
         run: |
-          git pull origin master
           dbt_run_changed() {
           children=$1
           common_ancestor=$(git merge-base --fork-point origin/master HEAD)

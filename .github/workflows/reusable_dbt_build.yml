@@ -86,6 +86,9 @@ jobs:
           GCLOUD_PROJECT: "passculture-data-ehp"
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
+          DBT_TARGET_BUCKET_PATH: "europe-west1-data-composer--00137508-bucket/data/target"
+        with:
+          service_account: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
         run: |
           gsutil -m cp -r gs://$DBT_TARGET_BUCKET_PATH ./composer-run-artifacts
           dbt ls --select state:modified+ --defer-state --state composer-run-artifacts

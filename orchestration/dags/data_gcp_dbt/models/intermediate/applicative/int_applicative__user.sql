@@ -40,5 +40,6 @@ SELECT
     user_role,
     user_birth_date,
     user_cultural_survey_filled_date,
-    CASE WHEN user_role IN ("UNDERAGE_BENEFICIARY", "BENEFICIARY") THEN 1 ELSE 0 END AS is_beneficiary
+    CASE WHEN user_role IN ("UNDERAGE_BENEFICIARY", "BENEFICIARY") THEN 1 ELSE 0 END AS is_beneficiary,
+    1 as test
 FROM {{ source("raw", "applicative_database_user") }}

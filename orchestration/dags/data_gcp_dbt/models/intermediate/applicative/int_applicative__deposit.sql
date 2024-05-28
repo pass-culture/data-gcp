@@ -11,5 +11,6 @@ SELECT
     dateCreated,
     dateUpdated,
     expirationDate,
-    type
+    type,
+    1 as test
 FROM {{ source("raw", "applicative_database_deposit") }}

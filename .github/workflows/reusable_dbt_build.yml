@@ -79,6 +79,17 @@ jobs:
           DBT_PROFILES_DIR: "."
         run: |
           dbt compile 
+      - name: "compare against master"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        run: |
+          dbt_run_changed() {
+          children=$1
+          models=$(git diff --name-only | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/${children}/g" | tr '\n' ' ')
+          echo "Running models: ${models}"
+          dbt run --models $models
+          }
+          dbt_run_changed
+          dbt_run_changed +
       - name: "list and build modified models"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
@@ -88,11 +99,12 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
           DBT_TARGET_BUCKET_PATH: "europe-west1-data-composer--00137508-bucket/data/target"
+          DBT_DEFER_STATE: "./composer-run-artifacts/"
         run: |
           mkdir composer-run-artifacts
-          gsutil cp -r gs://$DBT_TARGET_BUCKET_PATH ./composer-run-artifacts
-          dbt ls --select state:modified+ --defer-state --state composer-run-artifacts
-          dbt build --select state:modified+ --defer-state --state composer-run-artifacts
+          gsutil -m cp -r gs://$DBT_TARGET_BUCKET_PATH ./composer-run-artifacts
+          dbt ls --select state:modified+ --defer-state
+          dbt build --select state:modified+ --defer-state
       
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}

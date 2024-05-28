@@ -21,7 +21,7 @@ WITH export_table AS (
         ELSE "unknown"
         END as playlist_origin,
         context,
-        offer_order as offer_display_order,        
+        round(offer_order) as offer_display_order,        
         CAST(user_id AS STRING) as user_id,
         CAST(offer_id as STRING) as offer_id,
         offer_item_ids.item_id as item_id,
@@ -44,11 +44,12 @@ WITH export_table AS (
           offer_subcategory_id,
           offer_booking_number,
           offer_item_score,
+          offer_item_rank,
           JSON_EXTRACT(offer_extra_data, "$.offer_ranking_score") as offer_ranking_score,
           REPLACE(JSON_EXTRACT(offer_extra_data, "$.offer_ranking_origin"),  '"', '') as offer_ranking_origin,
-          JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_7_days") as total_last_7_days_bookings,
-          JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_14_days") as total_last_14_days_bookings,
-          JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_28_days") as total_last_28_days_bookings,
+          JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_7_days") as offer_booking_number_last_7_days,
+          JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_14_days") as offer_booking_number_last_14_days,
+          JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_28_days") as offer_booking_number_last_28_days,
           JSON_EXTRACT(offer_extra_data, "$.offer_semantic_emb_mean") as offer_semantic_emb_mean
         ) as offer_context,
         STRUCT(
@@ -73,10 +74,42 @@ WITH export_table AS (
         ORDER BY
             date DESC
         ) = 1
+),
+-- ensure event was actually displayed in some context
+displayed AS (
+    SELECT
+        reco_call_id,
+        event_date,
+        sum(is_consult_offer) as total_module_consult_offer,
+        sum(is_booking_confirmation) as total_module_booking_confirmation,
+        sum(is_add_to_favorites) as total_module_add_to_favorites,
+    FROM
+       {{ ref('int_firebase__native_event') }} fsoe
+    WHERE 
+        {% if is_incremental() %}   
+         event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3+2 DAY) and DATE('{{ ds() }}')
+        {% else %}
+            event_date >= date_sub(DATE('{{ ds() }}'), INTERVAL 60 DAY) 
+        {% endif %}
+        AND reco_call_id is not null
+        AND event_name in (
+            "ConsultOffer", 
+            "BookingConfirmation", 
+            "HasAddedOfferToFavorites", 
+            "ModuleDisplayedOnHomePage",
+            "PlaylistHorizontalScroll",
+            "PlaylistVerticalScroll"
+        )
+    GROUP BY reco_call_id, event_date
 )
 
-SELECT * 
-FROM export_table
+SELECT 
+    et.*, 
+    d.total_module_consult_offer, 
+    d.total_module_booking_confirmation, 
+    d.total_module_add_to_favorites, 
+FROM export_table et
+INNER JOIN displayed d ON et.reco_call_id = d.reco_call_id  AND d.event_date = et.event_date
 {% if is_incremental() %}   
     WHERE event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
 {% endif %}

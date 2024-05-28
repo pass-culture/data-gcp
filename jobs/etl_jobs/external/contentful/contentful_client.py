@@ -284,6 +284,7 @@ class ContentfulClient:
         self.client = contentful.Client(
             SPACE_ID,  # This is the space ID. A space is like a project folder in Contentful terms
             TOKEN,  # This is the access token for this space.
+            api_url="preview.contentful.com",
             environment=env,
             timeout_s=timeout,
         )
@@ -291,6 +292,7 @@ class ContentfulClient:
         self.df_links = pd.DataFrame(columns=["parent", "child"])
         self.df_tags = pd.DataFrame(columns=["tag_id", "tag_name", "entry_id"])
         self.datetime = datetime.today()
+        self.page_size = 500
 
     def add_parent_child_to_df(self, parent_id, child_id):
         values_to_add = {"parent": parent_id, "child": child_id}
@@ -391,12 +393,38 @@ class ContentfulClient:
         row_to_add = pd.Series(module_infos)
         self.df_modules = self.df_modules.append(row_to_add, ignore_index=True)
 
+    def get_paged_modules(self, module_details):
+        content_type = module_details["name"]
+
+        # Set initial query parameters
+        query = {
+            "content_type": content_type,
+            "include": 1,
+            "order": "sys.updatedAt",
+            "limit": self.page_size,
+            "skip": 0,
+        }
+        all_entries = []
+
+        # Retrieve the total number of entries
+        num_entries = self.client.entries(
+            {"content_type": content_type, "limit": 1, "include": 1}
+        ).total
+        print(f"Found {num_entries} for {content_type}")
+
+        # Iterate through pages
+        for i in range((num_entries // self.page_size) + 1):
+            query["skip"] = i * self.page_size
+            page = self.client.entries(query)
+            all_entries.extend(page)
+
+        print(f"Retrieved {len(all_entries)} entries")
+        return all_entries
+
     def get_all_playlists(self):
         for module_details in contentful_modules:
             # Here we get all the modules matching the type desired
-            modules = self.client.entries(
-                {"content_type": module_details["name"], "include": 1, "limit": 1000}
-            )
+            modules = self.get_paged_modules(module_details)
             for module in modules:
                 # Get all the infos from the module and add it to the final dataframe
                 all_infos = self.get_all_fields(module, module_details)
@@ -405,7 +433,7 @@ class ContentfulClient:
                 # Special case for homepages where we don't unfold submodules so we need to get the child-parent relationship here
                 if module_details["name"] == "homepageNatif":
                     # Get parent-child relationships
-                    submodules = module.fields().get("modules")
+                    submodules = module.fields().get("modules", [])
                     for submodule in submodules:
                         self.add_parent_child_to_df(module.id, submodule.id)
 

@@ -24,8 +24,8 @@ jobs:
        working-directory: "./orchestration/"
     env:
       AIRFLOW_HOME: "./"
-      DAG_FOLDER: "dags"
-      DBT_FOLDER: "dags/data_gpc_dbt"
+      DAG_FOLDER: "./dags/"
+      DBT_FOLDER: "./dags/data_gpc_dbt/"
       DBT_TARGET_BUCKET_PATH: "europe-west1-data-composer--00137508-bucket/data/target"
     steps:
       - uses: actions/checkout@v4
@@ -64,8 +64,9 @@ jobs:
         run: |
           export PYTHONPATH=$PYTHONPATH:./dags
           cd dags/data_gcp_dbt
+          cp profile.yml ~/.dbt/profile.yml
           ls
-          dbt deps --target=target --profiles-dir=$DBT_FOLDER
+          dbt deps --target=target --profiles-dir="./"
       - name: "compile dbt project"
         run: dbt compile --target=target
       - name: ""

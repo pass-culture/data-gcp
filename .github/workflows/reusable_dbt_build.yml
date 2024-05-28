@@ -87,8 +87,9 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
         run: |
-          dbt ls --select state:modified+ --defer-state --state $DBT_TARGET_BUCKET_PATH
-          dbt build --select state:modified+ --defer-state --state $DBT_TARGET_BUCKET_PATH
+          gsutil -m cp -r gs://$DBT_TARGET_BUCKET_PATH ./composer-run-artifacts
+          dbt ls --select state:modified+ --defer-state --state composer-run-artifacts
+          dbt build --select state:modified+ --defer-state --state composer-run-artifacts
       
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}

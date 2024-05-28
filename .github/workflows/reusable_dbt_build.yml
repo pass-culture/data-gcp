@@ -78,7 +78,8 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
         run: |
-          dbt compile 
+          dbt compile
+
       - name: "list and build modified models"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
@@ -91,9 +92,9 @@ jobs:
           DBT_DEFER_STATE: "./composer-run-artifacts/"
         run: |
           mkdir composer-run-artifacts
-          gsutil -m cp -r gs://$DBT_TARGET_BUCKET_PATH ./composer-run-artifacts
-          dbt ls --select state:modified+ --defer-state
-          dbt build --select state:modified+ --defer-state
+          gsutil cp gs://$DBT_TARGET_BUCKET_PATH/manifest.json ./composer-run-artifacts/manifest.json
+          dbt ls --select "state:modified+" --state composer-run-artifacts
+          dbt build --select "state:modified+" --defer --state composer-run-artifacts
       
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}

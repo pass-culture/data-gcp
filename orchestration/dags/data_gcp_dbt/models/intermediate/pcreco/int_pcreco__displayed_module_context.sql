@@ -3,6 +3,7 @@
         materialized = 'incremental',
         incremental_strategy = 'insert_overwrite',
         partition_by = {'field': 'event_date', 'data_type': 'date', "granularity" : "day"},
+        on_schema_change = "sync_all_columns",
     )
 }}
 
@@ -10,7 +11,6 @@ SELECT
     event_date, 
     reco_call_id,
     playlist_origin, 
-    context,
     recommendation_context.offer_origin_id,
     user_context.user_is_geolocated,
     count(distinct offer_id) as total_displayed_offers
@@ -24,6 +24,5 @@ FROM {{ ref("int_pcreco__displayed_offer_event")}}
 GROUP BY event_date, 
     reco_call_id,
     playlist_origin, 
-    context,
     offer_origin_id,
     user_is_geolocated

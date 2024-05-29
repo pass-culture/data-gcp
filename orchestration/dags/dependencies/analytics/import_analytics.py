@@ -26,12 +26,6 @@ def define_import_tables():
 
 
 analytics_tables = {
-    "user_iris": {
-        "sql": f"{ANALYTICS_SQL_PATH}/user_iris.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "user_iris",
-        "dag_depends": ["export_cloudsql_tables_to_bigquery_v1"],
-    },
     "analytics_firebase_home_events_details": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_events_details.sql",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
@@ -55,16 +49,6 @@ analytics_tables = {
         "destination_table": "firebase_home_micro_conversion",
         "time_partitioning": {"field": "module_displayed_date"},
         "dag_depends": ["import_intraday_firebase_data"],
-    },
-    "analytics_firebase_recommendation_events": {
-        "sql": f"{ANALYTICS_SQL_PATH}/firebase_recommendation_events.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_recommendation_events",
-        "time_partitioning": {"field": "event_date"},
-        "dag_depends": [
-            "export_cloudsql_tables_to_bigquery_v1",
-            "import_intraday_firebase_data",
-        ],  # computed once a day
     },
     "analytics_firebase_aggregated_search_events": {
         "sql": f"{ANALYTICS_SQL_PATH}/firebase_aggregated_search_events.sql",

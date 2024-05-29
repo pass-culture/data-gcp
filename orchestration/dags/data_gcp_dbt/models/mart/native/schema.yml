@@ -1,0 +1,6 @@
+version: 2
+
+macros:
+
+  - name: mrt_native__daily_home_recommendation_offer
+    description: "This table give details on offer displays of home recommendation modules and their related conversion events (consultations, favorites, bookings)"

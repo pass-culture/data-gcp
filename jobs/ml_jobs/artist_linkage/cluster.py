@@ -9,6 +9,7 @@ import typer
 from scipy.sparse import csr_matrix, vstack
 from sklearn.cluster import DBSCAN
 from tqdm import tqdm
+
 from utils import read_parquet, upload_parquet
 
 app = typer.Typer()
@@ -35,11 +36,11 @@ def chunks(lst, n):
         yield lst[i : i + n]
 
 
-def compute_distance_matrix(artists_list: List[str]):
+def compute_distance_matrix(artists_list: List[str], num_chunks: int):
     # Loop over the chunks
     sparse_matrices = []
     for artists_chunk in tqdm(
-        list(chunks(artists_list, len(artists_list) // NUM_CHUNKS))
+        list(chunks(artists_list, len(artists_list) // num_chunks))
     ):
         # Compute the distance matrix for the chunk
         distance_matrix = rapidfuzz.process.cdist(
@@ -82,7 +83,9 @@ def main(
         print(
             f"Computing the distance for {group} containing {len(artists_list)} preprocessed artists"
         )
-        complete_sparse_matrix = compute_distance_matrix(artists_list)
+        complete_sparse_matrix = compute_distance_matrix(
+            artists_list=artists_list, num_chunks=NUM_CHUNKS
+        )
         print("Time to compute the ditance matrix", time.time() - t0)
 
         # Perform clustering with DBSCAN

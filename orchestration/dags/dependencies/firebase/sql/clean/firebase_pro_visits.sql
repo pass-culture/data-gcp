@@ -125,7 +125,7 @@ SELECT
     COUNTIF(event_name="hasClickedSaveVenue" AND is_edition!="true") AS nb_confirmed_venue_creation, 
 
 -- count venue edition
-    COUNTIF(event_name = "page_view" AND (page_name ="Modifier un lieu - pass Culture Pro" OR (page_name = "Modifier ma page partenaire - pass Culture Pro" AND origin LIKE "%lieux%"))) AS nb_start_venue_edition, 
+    COUNTIF(event_name = "page_view" AND (page_name ="Modifier un lieu - pass Culture Pro" OR (page_name = "Modifier ma page partenaire - pass Culture Pro" AND origin LIKE "%lieux%") OR (page_name IN ("Gérer ma page sur l’application - pass Culture Pro","Gérer ma page sur ADAGE - pass Culture Pro") AND page_location LIKE "%edition"))) AS nb_start_venue_edition, 
     COUNTIF(event_name="hasClickedSaveVenue" AND is_edition="true") AS nb_confirmed_venue_edition,  
     COUNTIF(event_name="hasClickedAddImage") AS nb_clic_add_image,     
 

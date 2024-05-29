@@ -76,7 +76,7 @@ transactions AS (
     SELECT
         e. *,
         coalesce(i.booking, 0) > 0 as booking,
-        coalesce(i.booking, i.consult, 0) > 0 as consult,
+        (coalesce(i.booking, 0) + coalesce(i.consult, 0)) > 0 as consult,
         coalesce(i.delta_diversification, 0) as delta_diversification -- get all past events
     FROM events e 
     LEFT JOIN interact i ON i.user_id = e.user_id AND i.item_id = e.item_id

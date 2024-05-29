@@ -10,6 +10,11 @@ matched_artists_df = pd.read_parquet(
     "/home/laurent_pass/Téléchargements/link_artists_matched_artists.parquet"
 )
 
+## Hack
+matched_artists_df = pd.concat(
+    [matched_artists_df.loc[lambda df: ~df.cluster_id.isna()], matched_artists_df.loc[lambda df: df.cluster_id.isna()].assign(artist_nickname=lambda df: df.preprocessed_artist_name)]
+)
+
 ## Parameters
 st_artist_types = st.sidebar.multiselect(
     "Artist type",
@@ -42,7 +47,7 @@ filtered_df = (
 ## Display
 st.sidebar.write(matched_artists_df.columns)
 st.dataframe(
-    filtered_df.sort_values("cluster_id"),
+    filtered_df.sort_values(["cluster_id", "artist_nickname"]),
     width=1500,
     height=900,
 )

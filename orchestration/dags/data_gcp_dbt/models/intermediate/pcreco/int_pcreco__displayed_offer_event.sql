@@ -45,15 +45,15 @@ WITH export_table AS (
           offer_booking_number,
           offer_item_score,
           offer_item_rank,
-          JSON_EXTRACT(offer_extra_data, "$.offer_ranking_score") as offer_ranking_score,
           REPLACE(JSON_EXTRACT(offer_extra_data, "$.offer_ranking_origin"),  '"', '') as offer_ranking_origin,
-          JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_7_days") as offer_booking_number_last_7_days,
-          JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_14_days") as offer_booking_number_last_14_days,
-          JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_28_days") as offer_booking_number_last_28_days,
-          JSON_EXTRACT(offer_extra_data, "$.offer_semantic_emb_mean") as offer_semantic_emb_mean
+          SAFE_CAST(REPLACE(JSON_EXTRACT(offer_extra_data, "$.offer_ranking_score"),  '"', '') AS FLOAT64) as offer_ranking_score,
+          SAFE_CAST(REPLACE(JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_7_days"),  '"', '') AS FLOAT64) as offer_booking_number_last_7_days,
+          SAFE_CAST(REPLACE(JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_14_days"),  '"', '') AS FLOAT64) as offer_booking_number_last_14_days,
+          SAFE_CAST(REPLACE(JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_28_days"),  '"', '') AS FLOAT64) as offer_booking_number_last_28_days,
+          SAFE_CAST(REPLACE(JSON_EXTRACT(offer_extra_data, "$.offer_semantic_emb_mean"),  '"', '') AS FLOAT64) as offer_semantic_emb_mean
         ) as offer_context,
         STRUCT(
-            JSON_EXTRACT(context_extra_data, "$.offer_origin_id") as offer_origin_id
+            REPLACE(JSON_EXTRACT(context_extra_data, "$.offer_origin_id"),  '"', '') as offer_origin_id
         ) as recommendation_context        
     FROM
        {{ source('raw', 'past_offer_context') }} pso 

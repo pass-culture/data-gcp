@@ -1,5 +1,5 @@
 import time
-from typing import List
+from typing import Generator, List
 
 import jellyfish
 import numpy as np
@@ -30,13 +30,16 @@ DISTANCE_METRIC = rapidfuzz.distance.OSA.normalized_distance
 CLUSTERING_THRESHOLD = 0.1
 
 
-def chunks(lst, n):
-    """Yield successive n-sized chunks from lst."""
-    for i in range(0, len(lst), n):
-        yield lst[i : i + n]
+def chunks(artist_list: List[str], num_chunks: int) -> Generator[List[str], None, None]:
+    """Yield successive n-sized chunks from artist_list."""
+    for i in range(0, len(artist_list), num_chunks):
+        yield artist_list[i : i + num_chunks]
 
 
 def compute_distance_matrix(artists_list: List[str], num_chunks: int):
+    if num_chunks <= 0:
+        raise ValueError("num_chunks must be greater than 0")
+
     # Loop over the chunks
     sparse_matrices = []
     for artists_chunk in tqdm(

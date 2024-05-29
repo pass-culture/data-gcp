@@ -1,6 +1,7 @@
 import pytest
+from scipy.sparse import csr_matrix
 
-from cluster import chunks
+from cluster import chunks, compute_distance_matrix
 
 
 class TestCluster:
@@ -45,3 +46,36 @@ class TestCluster:
         def test_chunks_with_non_integer_chunk_size():
             with pytest.raises(TypeError):
                 list(chunks([1, 2, 3], "2"))
+
+    class TestComputeDistanceMatrix:
+        @staticmethod
+        @pytest.mark.parametrize(
+            "artists_list, num_chunks, expected_shape",
+            [
+                (["artist1", "artist2", "artist3"], 2, (3, 3)),
+                (["artist1", "artist2"], 1, (2, 2)),
+                (["artist1"], 1, (1, 1)),
+            ],
+        )
+        def test_compute_distance_matrix(artists_list, num_chunks, expected_shape):
+            result = compute_distance_matrix(artists_list, num_chunks)
+
+            assert isinstance(result, csr_matrix), "Result is not a sparse matrix"
+            assert (
+                result.shape == expected_shape
+            ), "Shape of the matrix is not as expected"
+            assert (
+                0 <= result.data.nbytes / 1024**2 <= 1
+            ), "Memory used is not within the expected range"
+
+        @staticmethod
+        @pytest.mark.parametrize(
+            "artists_list, num_chunks",
+            [
+                ([], 1),
+                (["artist1", "artist2"], 0),
+            ],
+        )
+        def test_compute_distance_matrix_invalid_input(artists_list, num_chunks):
+            with pytest.raises(ValueError):
+                compute_distance_matrix(artists_list, num_chunks)

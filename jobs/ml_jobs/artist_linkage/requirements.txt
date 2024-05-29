@@ -31,7 +31,9 @@ debugpy==1.8.1
 decorator==5.1.1
     # via ipython
 exceptiongroup==1.2.1
-    # via ipython
+    # via
+    #   ipython
+    #   pytest
 executing==2.0.1
     # via stack-data
 gitdb==4.0.11
@@ -61,6 +63,8 @@ googleapis-common-protos==1.63.0
     # via google-api-core
 idna==3.7
     # via requests
+iniconfig==2.0.0
+    # via pytest
 ipykernel==6.29.4
     # via -r requirements.in
 ipython==8.24.0
@@ -119,6 +123,7 @@ packaging==24.0
     # via
     #   altair
     #   ipykernel
+    #   pytest
     #   streamlit
 pandas==2.2.0
     # via
@@ -133,6 +138,8 @@ pillow==10.3.0
     # via streamlit
 platformdirs==4.2.2
     # via jupyter-core
+pluggy==1.5.0
+    # via pytest
 prompt-toolkit==3.0.44
     # via ipython
 proto-plus==1.23.0
@@ -165,6 +172,8 @@ pygments==2.18.0
     # via
     #   ipython
     #   rich
+pytest==8.2.1
+    # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via
     #   jupyter-client
@@ -224,6 +233,8 @@ threadpoolctl==3.5.0
     # via scikit-learn
 toml==0.10.2
     # via streamlit
+tomli==2.0.1
+    # via pytest
 toolz==0.12.1
     # via altair
 tornado==6.4

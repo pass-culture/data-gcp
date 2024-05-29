@@ -4,7 +4,6 @@
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "event_date", "data_type": "date", "granularity" : "day"},
         on_schema_change = "sync_all_columns",
-        alias = "firebase_events",
         cluster_by = "event_name"
     )
 }}

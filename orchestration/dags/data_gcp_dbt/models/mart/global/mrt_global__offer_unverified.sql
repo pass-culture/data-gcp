@@ -73,4 +73,4 @@ SELECT
     v.venue_type_label,
 FROM {{ ref('int_applicative__offer') }} AS o
     LEFT JOIN {{ source('clean', 'subcategories') }} subcategories ON o.offer_subcategory_id = subcategories.id
-    INNER JOIN {{ref('int_applicative__venue')}} AS v ON v.venue_id = o.venue_id
+    INNER JOIN {{ ref('mrt_global__venue_unverified')}} AS v ON v.venue_id = o.venue_id

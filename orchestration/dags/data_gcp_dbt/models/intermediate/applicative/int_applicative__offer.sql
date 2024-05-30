@@ -7,7 +7,7 @@
 
 WITH stocks_grouped_by_offers AS (
         SELECT offer_id,
-            SUM(total_available_stock) AS total_available_stock ,
+            SUM(total_available_stock) AS total_available_stock,
             MAX(is_bookable) AS is_bookable,
             SUM(total_bookings) AS total_bookings,
             SUM(total_individual_bookings) AS total_individual_bookings,
@@ -16,11 +16,13 @@ WITH stocks_grouped_by_offers AS (
             SUM(total_used_individual_bookings) AS total_used_individual_bookings,
             SUM(total_individual_theoretic_revenue) AS total_individual_theoretic_revenue,
             SUM(total_individual_real_revenue) AS total_individual_real_revenue,
+            SUM(total_individual_current_year_real_revenue) AS total_individual_current_year_real_revenue,
             MIN(first_individual_booking_date) AS first_individual_booking_date,
             MAX(last_individual_booking_date) AS last_individual_booking_date,
             SUM(stock_quantity) AS total_stock_quantity,
             SUM(total_first_bookings) AS total_first_bookings,
-            MAX(CASE WHEN stock_rk = 1 THEN stock_price ELSE NULL END) AS last_stock_price
+            MAX(CASE WHEN stock_rk = 1 THEN stock_price ELSE NULL END) AS last_stock_price,
+            MIN(stock_creation_date) AS first_stock_creation_date
         FROM {{ ref("int_applicative__stock") }}
         GROUP BY offer_id
 ),
@@ -94,11 +96,13 @@ SELECT
     so.total_used_individual_bookings,
     so.total_individual_theoretic_revenue,
     so.total_individual_real_revenue,
+    so.total_individual_current_year_real_revenue,
     so.first_individual_booking_date,
     so.last_individual_booking_date,
     so.total_stock_quantity,
     so.total_first_bookings,
     so.last_stock_price,
+    so.first_stock_creation_date,
     tf.total_favorites,
     subcategories.is_physical_deposit as physical_goods,
     subcategories.is_digital_deposit digital_goods,

@@ -35,6 +35,10 @@ SELECT collective_offer_id,
     collective_offer_contact_url,
     collective_offer_contact_form,
     collective_offer_contact_email,
-    collective_offer_contact_phone
+    collective_offer_contact_phone,
+    collective_stock_beginning_date_time,
+    collective_stock_booking_limit_date_time,
+    collective_stock_price,
+    collective_stock_number_of_tickets,
 FROM {{ ref('mrt_collective__offer_unverified') }}
 WHERE collective_offer_validation = 'APPROVED'

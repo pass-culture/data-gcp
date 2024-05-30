@@ -2,7 +2,14 @@ import pandas as pd
 from google.cloud import bigquery
 
 from contentful_client import ContentfulClient
-from utils import BIGQUERY_RAW_DATASET, GCP_PROJECT, ENV_SHORT_NAME, ENTRIES_DTYPE
+from utils import (
+    BIGQUERY_RAW_DATASET,
+    GCP_PROJECT,
+    ENV_SHORT_NAME,
+    ENTRIES_DTYPE,
+    TOKEN,
+    PREVIEW_TOKEN,
+)
 from datetime import datetime
 
 CONTENTFUL_ENTRIES_TABLE_NAME = "contentful_entries"
@@ -35,9 +42,21 @@ def run():
         request (flask.Request): The request object.
     """
     contentful_envs = {
-        "prod": ["production"],
-        "stg": ["testing"],
-        "dev": ["testing"],
+        "prod": {
+            "env": ["production"],
+            "access_token": PREVIEW_TOKEN,
+            "api_url": "preview.contentful.com",
+        },
+        "stg": {
+            "env": ["testing"],
+            "access_token": TOKEN,
+            "api_url": "cdn.contentful.com",
+        },
+        "dev": {
+            "env": ["testing"],
+            "access_token": TOKEN,
+            "api_url": "cdn.contentful.com",
+        },
     }
     modules_dfs, links_dfs, tags_dfs = [], [], []
     for contentful_env in contentful_envs[ENV_SHORT_NAME]:

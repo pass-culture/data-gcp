@@ -108,8 +108,8 @@ SELECT
     , COUNT( CASE WHEN event_name = 'VenuePlaylistDisplayedOnSearchResults' THEN 1 ELSE NULL END)  AS nb_venue_playlist_displayed_on_search_results
     , COUNT( DISTINCT CASE WHEN event_name = 'ConsultVenue' THEN venue_id ELSE NULL END)   AS nb_venues_consulted
 FROM last_search
-LEFT JOIN `{{ bigquery_int_firebase_dataset }}`.native_event ON firebase_events.unique_session_id = last_search.unique_session_id
-                                        AND firebase_events.unique_search_id = last_search.unique_search_id
+LEFT JOIN `{{ bigquery_int_firebase_dataset }}`.native_event ON native_event.unique_session_id = last_search.unique_session_id
+                                        AND native_event.unique_search_id = last_search.unique_search_id
                                         AND event_name IN ('NoSearchResult','ConsultOffer','HasAddedOfferToFavorites','VenuePlaylistDisplayedOnSearchResults','ConsultVenue')
 GROUP BY 1,2
 ),

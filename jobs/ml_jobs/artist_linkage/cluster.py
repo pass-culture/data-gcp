@@ -18,13 +18,6 @@ app = typer.Typer()
 NUM_CHUNKS = 50
 SPARSE_FILTER_THRESHOLD = 0.2
 DTYPE_DISTANCE_MATRIX = np.uint8  # np.uint8, np.uint16, np.float32
-SCORE_MULTIPLIER = (
-    255
-    if DTYPE_DISTANCE_MATRIX == np.uint8
-    else 65535
-    if DTYPE_DISTANCE_MATRIX == np.uint16
-    else 1
-)
 DISTANCE_METRIC = rapidfuzz.distance.OSA.normalized_distance
 CLUSTERING_THRESHOLD = 0.1
 
@@ -64,14 +57,15 @@ def compute_distance_matrix(artists_list: List[str], num_chunks: int):
             queries=artists_chunk,
             choices=artists_list,
             scorer=DISTANCE_METRIC,
-            score_multiplier=SCORE_MULTIPLIER,
+            score_multiplier=get_score_multiplier(DTYPE_DISTANCE_MATRIX),
             dtype=DTYPE_DISTANCE_MATRIX,
             workers=-1,  # -1 for all cores
         )
 
         # Create the Sparse Matrix
         distance_matrix[
-            distance_matrix > SPARSE_FILTER_THRESHOLD * SCORE_MULTIPLIER
+            distance_matrix
+            > SPARSE_FILTER_THRESHOLD * get_score_multiplier(DTYPE_DISTANCE_MATRIX)
         ] = 0
         sparse_matrices.append(csr_matrix(distance_matrix))
 
@@ -108,7 +102,7 @@ def main(
         # Perform clustering with DBSCAN
         t0 = time.time()
         clustering = DBSCAN(
-            eps=CLUSTERING_THRESHOLD * SCORE_MULTIPLIER,
+            eps=CLUSTERING_THRESHOLD * get_score_multiplier(DTYPE_DISTANCE_MATRIX),
             min_samples=2,
             metric="precomputed",
         )

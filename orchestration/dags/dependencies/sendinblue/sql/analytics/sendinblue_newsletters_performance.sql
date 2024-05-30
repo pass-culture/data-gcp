@@ -19,7 +19,7 @@ user_traffic as (
         , count(distinct case when event_name = 'ConsultOffer' then offer_id else null end) as offer_consultation_number
         , count(distinct case when event_name = 'BookingConfirmation' then booking_id else null end) as booking_number
         , count(distinct case when event_name = 'HasAddedOfferToFavorites' then offer_id else null end) as favorites_number
-    FROM `{{ bigquery_analytics_dataset }}.firebase_events` firebase
+    FROM `{{ bigquery_int_firebase_dataset }}.native_event` firebase
     LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` user
     ON firebase.user_id = user.user_id
     WHERE traffic_campaign is not null

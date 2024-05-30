@@ -60,7 +60,7 @@ def run():
     }
     modules_dfs, links_dfs, tags_dfs = [], [], []
     for contentful_env in contentful_envs[ENV_SHORT_NAME]:
-        contentful_client = ContentfulClient(env=contentful_env)
+        contentful_client = ContentfulClient(contentful_env)
         modules, links, tags = contentful_client.get_all_playlists()
         modules_dfs.append(modules)
         links_dfs.append(links)

@@ -17,8 +17,12 @@ numeric_features = [
     "user_iris_x",
     "user_iris_y",
     "offer_user_distance",
-    "offer_booking_number",
+    "offer_booking_number_last_7_days",
+    "offer_booking_number_last_14_days",
+    "offer_booking_number_last_28_days",
+    "offer_semantic_emb_mean",
     "offer_item_score",
+    "offer_item_rank",
     "offer_is_geolocated",
     "offer_stock_price",
     "offer_creation_days",
@@ -160,9 +164,9 @@ class TrainPipeline:
         self.model = lgb.train(
             self.params,
             train_data,
-            num_boost_round=10000,
+            num_boost_round=100_000,
             valid_sets=[train_data, test_data],
-            callbacks=[lgb.early_stopping(stopping_rounds=100)],
+            callbacks=[lgb.early_stopping(stopping_rounds=200)],
         )
 
     def predict(self, df: pd.DataFrame):

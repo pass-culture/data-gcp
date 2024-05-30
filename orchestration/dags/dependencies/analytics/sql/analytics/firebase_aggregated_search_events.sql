@@ -8,7 +8,7 @@ consulted_from_search AS (
         , unique_search_id
         , event_timestamp AS consult_timestamp
         , event_date AS consult_date
-    FROM `{{ bigquery_analytics_dataset }}`.firebase_events
+    FROM `{{ bigquery_int_firebase_dataset }}`.native_event
     WHERE event_date > DATE('{{ params.set_date }}')
     AND event_name = 'ConsultOffer'
     AND origin = 'search'
@@ -24,7 +24,7 @@ booked_from_search AS (
         , consult_timestamp
         , delta_diversification
     FROM consulted_from_search
-    JOIN `{{ bigquery_analytics_dataset }}`.firebase_events
+    JOIN `{{ bigquery_int_firebase_dataset }}`.native_event
         ON consulted_from_search.unique_session_id = firebase_events.unique_session_id
         AND consulted_from_search.offer_id = firebase_events.offer_id
         AND event_date > DATE('{{ params.set_date }}')
@@ -63,7 +63,7 @@ SELECT
         WHEN search_location_filter IS NOT NULL THEN 'location_filter'
         WHEN search_accessibility_filter IS NOT NULL THEN 'accessibility_filter'
         ELSE 'Autre' END AS first_filter_applied
-FROM `{{ bigquery_analytics_dataset }}`.firebase_events
+FROM `{{ bigquery_int_firebase_dataset }}`.native_event
 WHERE event_date > DATE('{{ params.set_date }}')
 AND event_name = 'PerformSearch'
 AND unique_search_id IS NOT NULL
@@ -91,7 +91,7 @@ SELECT
     , search_native_categories_filter
     , search_accessibility_filter
     , user_location_type
- FROM `{{ bigquery_analytics_dataset }}`.firebase_events
+ FROM `{{ bigquery_int_firebase_dataset }}`.native_event
  WHERE event_name = 'PerformSearch'
  AND NOT (event_name = 'PerformSearch' AND search_type = 'Suggestions' AND query IS NULL AND search_categories_filter IS NULL AND search_native_categories_filter IS NULL AND search_location_filter = '{"locationType":"EVERYWHERE"}')
 QUALIFY ROW_NUMBER() OVER(PARTITION BY unique_search_id, unique_session_id ORDER BY event_timestamp DESC) = 1
@@ -108,7 +108,7 @@ SELECT
     , COUNT( CASE WHEN event_name = 'VenuePlaylistDisplayedOnSearchResults' THEN 1 ELSE NULL END)  AS nb_venue_playlist_displayed_on_search_results
     , COUNT( DISTINCT CASE WHEN event_name = 'ConsultVenue' THEN venue_id ELSE NULL END)   AS nb_venues_consulted
 FROM last_search
-LEFT JOIN `{{ bigquery_analytics_dataset }}`.firebase_events ON firebase_events.unique_session_id = last_search.unique_session_id
+LEFT JOIN `{{ bigquery_int_firebase_dataset }}`.native_event ON firebase_events.unique_session_id = last_search.unique_session_id
                                         AND firebase_events.unique_search_id = last_search.unique_search_id
                                         AND event_name IN ('NoSearchResult','ConsultOffer','HasAddedOfferToFavorites','VenuePlaylistDisplayedOnSearchResults','ConsultVenue')
 GROUP BY 1,2

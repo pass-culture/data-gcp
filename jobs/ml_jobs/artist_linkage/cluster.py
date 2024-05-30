@@ -1,7 +1,6 @@
 import time
 from typing import Generator, List
 
-import jellyfish
 import numpy as np
 import pandas as pd
 import rapidfuzz
@@ -28,6 +27,21 @@ SCORE_MULTIPLIER = (
 )
 DISTANCE_METRIC = rapidfuzz.distance.OSA.normalized_distance
 CLUSTERING_THRESHOLD = 0.1
+
+
+def get_score_multiplier(dtype_distance_matrix: np.dtype) -> int:
+    """
+    Get the score multiplier for the distance matrix. The score multiplier is the maximum value of the distance matrix.
+    It can be useful in order to compress the distance matrix
+    Args:
+        dtype_distance_matrix: The data type of the distance matrix.
+    """
+    if dtype_distance_matrix == np.uint8:
+        return 255
+    elif dtype_distance_matrix == np.uint16:
+        return 65535
+    else:
+        return 1
 
 
 def chunks(artist_list: List[str], num_chunks: int) -> Generator[List[str], None, None]:
@@ -104,14 +118,12 @@ def main(
         clusters_df_list.append(
             pd.DataFrame({"artist": artists_list})
             .assign(
-                artist_encoding=lambda df: df.artist.map(jellyfish.metaphone),
                 cluster=clusters,
             )
             .groupby("cluster")
-            .agg({"artist": set, "artist_encoding": set})
+            .agg({"artist": set})
             .assign(
                 num_artists=lambda df: df.artist.map(len),
-                num_encodings=lambda df: df.artist_encoding.map(len),
                 offer_category_id=group[0],
                 artist_type=group[1],
                 group_cluster_id=lambda df: df.index,

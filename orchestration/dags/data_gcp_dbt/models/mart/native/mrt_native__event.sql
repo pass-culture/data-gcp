@@ -38,7 +38,7 @@ SELECT
     v.venue_name,
     v.venue_type_label,
     c.content_type,
-    d.amount AS user_current_deposit_type,
+    d.type AS user_current_deposit_type,
     u.user_last_deposit_amount,
     u.user_first_deposit_type,
     u.user_deposit_initial_amount

@@ -52,7 +52,7 @@ interact AS (
         sum(if(event_name in ("BookingConfirmation", "HasAddedOfferToFavorites"), 1, null)) as booking,
         avg(d.delta_diversification) as delta_diversification
     FROM
-        `{{ bigquery_analytics_dataset }}.firebase_events` fsoe
+        `{{ bigquery_int_firebase_dataset }}.native_event` fsoe
         LEFT JOIN diversification d on d.offer_id = fsoe.offer_id
     WHERE
         event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
@@ -67,7 +67,7 @@ seen AS (
         user_id,
         reco_call_id
     FROM
-        `{{ bigquery_analytics_dataset }}.firebase_events` fsoe
+        `{{ bigquery_int_firebase_dataset }}.native_event` fsoe
     WHERE
         event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY)
         AND event_name in ("ConsultOffer", "BookingConfirmation")

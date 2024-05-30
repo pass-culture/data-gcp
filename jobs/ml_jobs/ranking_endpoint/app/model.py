@@ -164,9 +164,9 @@ class TrainPipeline:
         self.model = lgb.train(
             self.params,
             train_data,
-            num_boost_round=10000,
+            num_boost_round=500_000,
             valid_sets=[train_data, test_data],
-            callbacks=[lgb.early_stopping(stopping_rounds=100)],
+            callbacks=[lgb.early_stopping(stopping_rounds=200)],
         )
 
     def predict(self, df: pd.DataFrame):

@@ -22,6 +22,7 @@ numeric_features = [
     "offer_booking_number_last_28_days",
     "offer_semantic_emb_mean",
     "offer_item_score",
+    "offer_item_rank",
     "offer_is_geolocated",
     "offer_stock_price",
     "offer_creation_days",

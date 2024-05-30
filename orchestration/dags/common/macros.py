@@ -82,7 +82,7 @@ def create_dehumanize_id_function():
 
 default = {
     "bigquery_analytics_dataset": BIGQUERY_ANALYTICS_DATASET,
-    "bigquery_int_firebase_dataset" : BIGQUERY_INT_FIREBASE_DATASET,
+    "bigquery_int_firebase_dataset": BIGQUERY_INT_FIREBASE_DATASET,
     "bigquery_tmp_dataset": BIGQUERY_TMP_DATASET,
     "bigquery_clean_dataset": BIGQUERY_CLEAN_DATASET,
     "bigquery_raw_dataset": BIGQUERY_RAW_DATASET,

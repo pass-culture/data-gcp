@@ -24,9 +24,9 @@ booked_from_search AS (
         , consult_timestamp
         , delta_diversification
     FROM consulted_from_search
-    JOIN `{{ bigquery_int_firebase_dataset }}`.native_event
-        ON consulted_from_search.unique_session_id = firebase_events.unique_session_id
-        AND consulted_from_search.offer_id = firebase_events.offer_id
+    JOIN `{{ bigquery_int_firebase_dataset }}`.native_event as native_event
+        ON consulted_from_search.unique_session_id = native_event.unique_session_id
+        AND consulted_from_search.offer_id = native_event.offer_id
         AND event_date > DATE('{{ params.set_date }}')
         AND event_name = 'BookingConfirmation'
         AND event_timestamp > consult_timestamp

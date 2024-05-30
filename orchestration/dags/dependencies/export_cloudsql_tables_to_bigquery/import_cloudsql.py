@@ -1,7 +1,6 @@
 SQL_PATH = f"dependencies/export_cloudsql_tables_to_bigquery/sql"
 SQL_TMP_PATH = SQL_PATH + "/tmp"
 SQL_RAW_PATH = SQL_PATH + "/raw"
-SQL_CLEAN_PATH = SQL_PATH + "/clean"
 
 TMP_TABLES = {
     "past_offer_context": {
@@ -19,16 +18,5 @@ RAW_TABLES = {
         "destination_dataset": "{{ bigquery_raw_dataset }}",
         "destination_table": "past_offer_context${{ yyyymmdd(today()) }}",
         "time_partitioning": {"field": "import_date"},
-    },
-}
-
-CLEAN_TABLES = {
-    "past_offer_context": {
-        "sql": f"{SQL_CLEAN_PATH}/past_offer_context.sql",
-        "write_disposition": "WRITE_TRUNCATE",
-        "time_partitioning": {"field": "event_date"},
-        "clustering_fields": {"fields": ["event_date"]},
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "past_offer_context",
     },
 }

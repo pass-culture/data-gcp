@@ -11,12 +11,10 @@ from airflow.operators.dummy_operator import DummyOperator
 from dependencies.export_cloudsql_tables_to_bigquery.import_cloudsql import (
     TMP_TABLES,
     RAW_TABLES,
-    CLEAN_TABLES,
 )
 from common.access_gcp_secrets import access_secret_data
 from common.alerts import task_fail_slack_alert
 from common.config import (
-    BIGQUERY_TMP_DATASET,
     RECOMMENDATION_SQL_INSTANCE,
 )
 from common.utils import from_external, get_airflow_schedule
@@ -99,8 +97,6 @@ end_export_tmp_tables = DummyOperator(task_id="export_tmp_tables", dag=dag)
 
 delete_rows = []
 for delete_table_rows in [
-    "past_recommended_offers",
-    "past_similar_offers",
     "past_offer_context",
 ]:
     delete_job = drop_table_task = CloudSQLExecuteQueryOperator(
@@ -122,15 +118,6 @@ for table, params in RAW_TABLES.items():
 
 end_raw = DummyOperator(task_id="end_raw", dag=dag)
 
-export_clean_table_tasks = []
-for table, params in CLEAN_TABLES.items():
-    task = bigquery_job_task(dag, f"import_{table}_in_clean", params)
-    export_clean_table_tasks.append(task)
-
-end_clean = DummyOperator(task_id="end_clean", dag=dag)
-
-end = DummyOperator(task_id="end", dag=dag)
-
 (
     start
     >> export_tmp_table_tasks
@@ -139,8 +126,4 @@ end = DummyOperator(task_id="end", dag=dag)
     >> end_delete_rows
     >> export_raw_table_tasks
     >> end_raw
-    >> export_clean_table_tasks
-    >> end_clean
-    >> end
 )
-(end_clean >> end)

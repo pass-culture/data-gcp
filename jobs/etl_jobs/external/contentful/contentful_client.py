@@ -281,7 +281,6 @@ contentful_modules = [
 
 class ContentfulClient:
     def __init__(self, config_env, timeout=1) -> None:
-        print(config_env)
         self.client = contentful.Client(
             SPACE_ID,  # This is the space ID. A space is like a project folder in Contentful terms
             access_token=config_env[

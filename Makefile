@@ -1,29 +1,27 @@
-VENV_BASE_NAME = data-gcp-base
-
 install_base:
-	curl -LsSf https://astral.sh/uv/install.sh | sh
 	make initiate_env
 	make get_gcp_credentials
 	pyenv install 3.10.4 -s
-	pyenv virtualenv 3.10.4 $(VENV_BASE_NAME)
-	@eval "$$(pyenv init -)" && pyenv activate $(VENV_BASE_NAME) && uv pip install --upgrade pip
-
-clean_install:
-	pyenv virtualenv-delete  -f $(VENV_BASE_NAME)
-	find . -name ".python-version" -type f -exec cat {} \; | sort | uniq | xargs -n 1 pyenv virtualenv-delete -f || true
-	find . -name ".python-version" -type f -delete
+	curl -LsSf https://astral.sh/uv/install.sh | sh
 
 install_microservice:
-	@eval "$$(pyenv init -)" && cd $(MICROSERVICE_PATH) && pyenv virtualenv $(VENV_BASE_NAME) $(VENV_NAME) && pyenv local $(VENV_NAME) && pyenv activate $(VENV_NAME) && uv pip install -r $(REQUIREMENTS_NAME)
+	# Recreate the venv if RECREATE_VENV is set to 1
+	@if [ "$(RECREATE_VENV)" = "1" ]; then \
+		eval "$$(pyenv init -)" && cd $(MICROSERVICE_PATH) && rm -f .python-version && pyenv virtualenv-delete -f $(VENV_NAME) && pyenv virtualenv $(VENV_BASE_NAME) $(VENV_NAME) && pyenv local $(VENV_NAME); \
+	fi
+	# Install the requirements
+	@eval "$$(pyenv init -)" && cd $(MICROSERVICE_PATH) && pyenv activate $(VENV_NAME) && uv pip install -r $(REQUIREMENTS_NAME)
 
 install:
-	make clean_install
 	make install_base
-	MICROSERVICE_PATH=. VENV_NAME=data-gcp REQUIREMENTS_NAME=linter-requirements.txt make install_microservice
-	MICROSERVICE_PATH=jobs/ml_jobs/algo_training VENV_NAME=data-gcp-algo-training REQUIREMENTS_NAME=requirements.txt make install_microservice
-	MICROSERVICE_PATH=jobs/ml_jobs/record_linkage VENV_NAME=data-gcp-record-linkage REQUIREMENTS_NAME=requirements.txt make install_microservice
-	MICROSERVICE_PATH=jobs/ml_jobs/artist_linkage VENV_NAME=data-gcp-artist-linkage REQUIREMENTS_NAME=requirements.txt make install_microservice
-	MICROSERVICE_PATH=orchestration VENV_NAME=data-gcp-orchestration REQUIREMENTS_NAME=airflow/orchestration-requirements.txt make install_microservice
+	MICROSERVICE_PATH=. VENV_BASE_NAME=3.10.4 VENV_NAME=data-gcp REQUIREMENTS_NAME=linter-requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
+	MICROSERVICE_PATH=jobs/ml_jobs/algo_training VENV_BASE_NAME=data-gcp-base VENV_NAME=data-gcp-algo-training REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
+	MICROSERVICE_PATH=jobs/ml_jobs/record_linkage VENV_BASE_NAME=data-gcp-base VENV_NAME=data-gcp-record-linkage REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
+	MICROSERVICE_PATH=jobs/ml_jobs/artist_linkage VENV_BASE_NAME=data-gcp-base VENV_NAME=data-gcp-artist-linkage REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
+	MICROSERVICE_PATH=orchestration VENV_BASE_NAME=data-gcp-base VENV_NAME=data-gcp-orchestration REQUIREMENTS_NAME=airflow/orchestration-requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
+
+clean_install:
+	CLEAN_INSTALL=1 make install
 
 initiate_env:
 	cp -n .env.template .env.local
@@ -32,7 +30,6 @@ get_gcp_credentials:
 ifeq (,$(wildcard ${HOME}/.config/gcloud/application_default_credentials.json))
 	gcloud auth application-default login
 endif
-
 
 install_ubuntu_libs:
 	sudo apt-get update

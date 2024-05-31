@@ -9,10 +9,7 @@ WITH venue AS (
             venue_id, 
             venue_longitude,
             venue_latitude
-    FROM {{ ref("int_applicative__venue") }}
-    WHERE
-    offerer_validation_status = 'VALIDATED'
-    AND offerer_is_active = TRUE
+    FROM {{ ref("mrt_global__venue") }}
 ),
 offers_with_mediation AS (
         SELECT offer_id

@@ -95,8 +95,8 @@ SELECT
     , sum(cnt_events) as total_consultation
     , COALESCE(SUM(CASE WHEN DATE_DIFF(CURRENT_DATE,event_date,MONTH) <= 2 THEN cnt_events END)) as consult_last_2_month
     , COALESCE(SUM(CASE WHEN DATE_DIFF(CURRENT_DATE,event_date,MONTH) <= 6 THEN cnt_events END)) as consult_last_6_month
-    , COALESCE(SUM(CASE WHEN DATE_DIFF(last_bookable_offer_date,event_date,MONTH) <= 2 THEN cnt_events END)) as consult_2_month_before_last_bookable
-    , COALESCE(SUM(CASE WHEN DATE_DIFF(last_bookable_offer_date,event_date,MONTH) <= 6 THEN cnt_events END)) as consult_6_month_before_last_bookable
+    , COALESCE(SUM(CASE WHEN DATE_DIFF(venue.last_bookable_offer_date,event_date,MONTH) <= 2 THEN cnt_events END)) as consult_2_month_before_last_bookable
+    , COALESCE(SUM(CASE WHEN DATE_DIFF(venue.last_bookable_offer_date,event_date,MONTH) <= 6 THEN cnt_events END)) as consult_6_month_before_last_bookable
 FROM {{ ref('aggregated_daily_offer_consultation_data')}} consult
 LEFT JOIN {{ ref('mrt_global__venue')}} venue on consult.venue_id = venue.venue_id
 LEFT JOIN {{ ref('enriched_cultural_partner_data')}} on (CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id) ELSE CONCAT("offerer-", venue_managing_offerer_id) END) = enriched_cultural_partner_data.partner_id
@@ -171,7 +171,7 @@ SELECT
     max(partition_date) last_bookable_date,
 FROM {{ ref('bookable_venue_history') }}
 LEFT JOIN {{ ref('mrt_global__venue')}} AS mrt_global__venue on bookable_venue_history.venue_id = mrt_global__venue.venue_id
-WHERE total_bookable_offers <> 0
+WHERE bookable_venue_history.total_bookable_offers <> 0
 GROUP BY 1
 )
 

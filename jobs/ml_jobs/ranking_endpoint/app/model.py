@@ -164,7 +164,7 @@ class TrainPipeline:
         self.model = lgb.train(
             self.params,
             train_data,
-            num_boost_round=100_000,
+            num_boost_round=50_000,
             valid_sets=[train_data, test_data],
             callbacks=[lgb.early_stopping(stopping_rounds=200)],
         )

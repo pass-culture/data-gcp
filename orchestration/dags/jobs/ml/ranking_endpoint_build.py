@@ -28,8 +28,8 @@ gce_params = {
     "run_name": "default",
     "instance_type": {
         "dev": "n1-standard-2",
-        "stg": "n1-standard-2",
-        "prod": "n1-standard-8",
+        "stg": "n1-standard-4",
+        "prod": "n1-standard-16",
     },
 }
 schedule_dict = {"prod": "0 20 * * 5", "dev": "0 20 * * *", "stg": "0 20 * * 3"}

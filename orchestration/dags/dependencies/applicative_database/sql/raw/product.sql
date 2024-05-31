@@ -10,5 +10,5 @@ SELECT
     ,"dateModifiedAtLastProvider" as dateModifiedAtLastProvider
     ,"idAtProviders" as idAtProviders
     ,"jsonData" ->> \'ean\' AS ean
-    ,"GcuCompatibilityType" AS GcuCompatibilityType
+    ,"gcuCompatibilityType" AS gcuCompatibilityType
 FROM public.product

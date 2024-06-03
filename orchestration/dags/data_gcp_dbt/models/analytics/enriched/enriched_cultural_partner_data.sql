@@ -23,16 +23,16 @@ SELECT
     ,enriched_offerer_data.first_dms_adage_status AS first_dms_adage_status
     ,enriched_offerer_data.is_reference_adage AS is_reference_adage
     ,enriched_offerer_data.is_synchro_adage AS is_synchro_adage
-    ,CASE WHEN DATE_DIFF(CURRENT_DATE,venue_last_bookable_offer_date,DAY) <= 30 THEN TRUE ELSE FALSE END AS is_active_last_30days
-    ,CASE WHEN DATE_DIFF(CURRENT_DATE,venue_last_bookable_offer_date,YEAR) = 0 THEN TRUE ELSE FALSE END AS is_active_current_year
+    ,CASE WHEN DATE_DIFF(CURRENT_DATE,last_bookable_offer_date,DAY) <= 30 THEN TRUE ELSE FALSE END AS is_active_last_30days
+    ,CASE WHEN DATE_DIFF(CURRENT_DATE,last_bookable_offer_date,YEAR) = 0 THEN TRUE ELSE FALSE END AS is_active_current_year
     ,COALESCE(mrt_global__venue.total_created_individual_offers,0) AS individual_offers_created
     ,COALESCE(mrt_global__venue.total_created_collective_offers,0) AS collective_offers_created
     ,(COALESCE(mrt_global__venue.total_created_collective_offers,0) + COALESCE(mrt_global__venue.total_created_individual_offers,0)) AS total_offers_created
     ,mrt_global__venue.first_offer_creation_date AS first_offer_creation_date
     ,mrt_global__venue.first_individual_offer_creation_date AS first_individual_offer_creation_date
     ,mrt_global__venue.first_collective_offer_creation_date AS first_collective_offer_creation_date
-    ,venue_last_bookable_offer_date AS last_bookable_offer_date
-    ,venue_first_bookable_offer_date AS first_bookable_offer_date
+    ,last_bookable_offer_date
+    ,first_bookable_offer_date AS first_bookable_offer_date
     ,COALESCE(mrt_global__venue.total_non_cancelled_individual_bookings,0) AS non_cancelled_individual_bookings
     ,COALESCE(mrt_global__venue.total_used_individual_bookings,0) AS used_individual_bookings
     ,COALESCE(mrt_global__venue.total_non_cancelled_collective_bookings,0) AS confirmed_collective_bookings

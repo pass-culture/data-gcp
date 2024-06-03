@@ -40,7 +40,6 @@ SCORE_MULTIPLIER = (
 def should_be_filtered(artist_df: pd.DataFrame) -> bool:
     pattern = "[\w\-\.]+\/[\w-]+|\+"  # patter for multi artists separated by + or /
 
-    # TODO: Remove artists with the pattern a. ....
     return artist_df.assign(
         should_be_filtered_pattern=lambda df: df.artist_name.str.contains(
             pattern, regex=True
@@ -61,6 +60,17 @@ def remove_leading_punctuation(artist_df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
+def remove_single_characters(artist_df: pd.DataFrame) -> pd.DataFrame:
+    pattern = r"\b[a-zA-Z]\b(?!\.)"
+    return artist_df.assign(
+        first_artist_comma=lambda df: df.first_artist_comma.str.replace(
+            pattern, "", regex=True
+        )
+        .str.replace(r"\s+", " ", regex=True)
+        .str.strip()
+    )
+
+
 def remove_parenthesis(artist_df: pd.DataFrame) -> pd.DataFrame:
     return artist_df.assign(
         artist_name=lambda df: df.artist_name.str.replace("\([.*]+\))", "")
@@ -71,8 +81,11 @@ def remove_parenthesis(artist_df: pd.DataFrame) -> pd.DataFrame:
 
 # %%
 def extract_artist_word_count(artist_df: pd.DataFrame) -> pd.DataFrame:
+    # count the number of words in the artist name that are longer than 2 characters (excluding punctuation / initials)
     return artist_df.assign(
-        artist_word_count=lambda df: df.first_artist_comma.str.split().map(len)
+        artist_word_count=lambda df: df.first_artist_comma.str.split().map(
+            lambda ll: len([x for x in ll if len(x) > 2])
+        )
     )
 
 
@@ -151,6 +164,7 @@ preprocessed_df = (
     .pipe(extract_first_artist_pattern)
     .pipe(extract_first_artist_comma)
     .pipe(extract_artist_word_count)
+    .pipe(remove_single_characters)
     .pipe(should_be_filtered)
     .sort_values(
         by=["artist_word_count", "total_booking_count", "offer_number"],

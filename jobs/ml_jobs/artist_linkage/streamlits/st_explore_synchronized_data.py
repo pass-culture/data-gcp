@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import rapidfuzz
 import streamlit as st
+from unidecode import unidecode
 
 st.set_page_config(layout="wide")
 
@@ -34,8 +35,6 @@ SCORE_MULTIPLIER = (
 
 
 # %%
-def preprocessing(string: str) -> str:
-    return " ".join(sorted(rapidfuzz.utils.default_process(string).split()))
 
 
 def should_be_filtered(artist_df: pd.DataFrame) -> bool:
@@ -199,17 +198,30 @@ st.write(
         .rename("word_count")
     ).T
 )
+
 st.markdown("---")
 
+
 ## Filtering
+def preprocess_artist_name(artist_df: pd.DataFrame) -> pd.DataFrame:
+    return artist_df.assign(
+        preprocessed_name=lambda df: df.first_artist_comma.map(unidecode).map(
+            lambda s: " ".join(sorted(rapidfuzz.utils.default_process(s).split()))
+        )
+    )
+
+
 filtered_df = (
-    preprocessed_df.assign(
-        preprocessed_name=lambda df: df.first_artist_comma.map(preprocessing),
+    preprocessed_df.pipe(preprocess_artist_name)
+    .assign(
         encoded_name=lambda df: df.preprocessed_name.map(jellyfish.metaphone),
     )
     .loc[lambda df: ~(df.should_be_filtered_pattern | df.should_be_filtered_word_count)]
     .loc[lambda df: df.is_synchronised]
     .sort_values(by="preprocessed_name")
+)
+st.write(
+    f"Number of unique preprocessed names after filtering : {len(filtered_df.preprocessed_name.unique())}"
 )
 
 st.dataframe(
@@ -230,10 +242,13 @@ st.dataframe(
 )
 st.markdown("---")
 
-## Pseudo Clustering
-clusted_df = filtered_df.groupby("preprocessed_name").apply(
-    lambda g: pd.DataFrame({"cluster_name": [g.name], "aliases": [set(g.artist)]})
+# Pseudo Clustering
+clustered_df = (
+    filtered_df.groupby("preprocessed_name")
+    .apply(lambda g: set(g.artist))
+    .rename("aliases")
+    .to_frame()
+    .assign(cluster_length=lambda df: df.aliases.map(len))
+    .sort_values(by="preprocessed_name")
 )
-st.write(clusted_df)
-
-st.write(len(filtered_df.preprocessed_name.unique()))
+st.write(clustered_df)

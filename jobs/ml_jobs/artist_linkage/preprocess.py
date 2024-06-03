@@ -3,6 +3,7 @@
 import pandas as pd
 import typer
 
+from utils.gcs_utils import upload_parquet
 from utils.preprocess_utils import (
     FilteringParamsType,
     extract_artist_word_count,
@@ -27,7 +28,7 @@ FILTERING_PARAMS = FilteringParamsType(
 def main(
     source_file_path: str = typer.Option(), output_file_path: str = typer.Option()
 ) -> None:
-    artists_to_match_df = read_parquet(source_file_path)
+    artists_to_match_df = pd.read_parquet(source_file_path)
 
     cleaned_df = artists_to_match_df.pipe(remove_leading_punctuation).pipe(
         remove_parenthesis

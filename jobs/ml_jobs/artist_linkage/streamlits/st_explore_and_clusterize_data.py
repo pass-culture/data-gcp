@@ -10,6 +10,18 @@ from scipy.sparse import csr_matrix, vstack
 from sklearn.cluster import DBSCAN
 from stqdm import stqdm
 
+from utils.preprocess_utils import (
+    FilteringParamsType,
+    extract_artist_word_count,
+    extract_first_artist,
+    extract_first_artist_pattern,
+    filter_artists,
+    format_name,
+    remove_leading_punctuation,
+    remove_parenthesis,
+    remove_single_characters,
+)
+
 st.set_page_config(layout="wide")
 
 # %% Load Data
@@ -48,6 +60,8 @@ selected_punctuation = st.sidebar.selectbox(
 )
 search_filter = st.sidebar.text_input("search", value="oda")
 
+
+# %%
 category_df = artist_df.dropna().loc[
     lambda df: df.offer_category_id == selected_category
 ]
@@ -74,17 +88,24 @@ filtered_df = (
     ]
 )
 
-if selected_category == "LIVRE":
-    filtered_df = (
-        filtered_df.assign(
-            artist=lambda df: df.artist.map(preprocessing)
-            .str.replace(r"(\b[a-zA-Z]\b)", "", regex=True)
-            .str.replace(r"\s+", " ", regex=True)
-            .str.strip()
-        )
-        .loc[lambda df: (df.artist.apply(lambda x: len(x.split())) > 1)]
-        .drop_duplicates()
+preprocessed_df = (
+    filtered_df.pipe(remove_leading_punctuation)
+    .pipe(remove_parenthesis)
+    .pipe(extract_first_artist_pattern)
+    .pipe(extract_first_artist)
+    .pipe(extract_artist_word_count)
+    .pipe(remove_single_characters)
+    .pipe(
+        filter_artists,
+        filtering_params=FilteringParamsType(
+            min_word_count=2,
+            max_word_count=5,
+            min_offer_count=100,
+            min_booking_count=100,
+        ),
     )
+    .pipe(format_name)
+)
 
 
 # %% Print samples
@@ -92,14 +113,14 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.write("Number of artists", len(category_df))
 with col2:
-    st.write("Number of artists after filtering", len(filtered_df))
+    st.write("Number of artists after filtering", len(preprocessed_df))
 with col3:
-    st.progress(len(filtered_df) / len(category_df))
+    st.progress(len(preprocessed_df) / len(category_df))
 
 st.markdown("""---""")
-if len(filtered_df) > 0:
+if len(preprocessed_df) > 0:
     st.dataframe(
-        filtered_df.loc[:, ["artist", "total_booking_count"]],
+        preprocessed_df,
         width=1500,
         height=500,
         hide_index=True,
@@ -188,7 +209,7 @@ with st.form("compute clusters"):
         step=0.01,
         value=0.2,
     )
-    artists_list = filtered_df.artist.map(preprocessing).drop_duplicates().tolist()
+    artists_list = preprocessed_df.artist.map(preprocessing).drop_duplicates().tolist()
     st.write("Number of artists", len(artists_list))
 
     submitted = st.form_submit_button("Compute")

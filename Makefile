@@ -38,3 +38,17 @@ install_ubuntu_libs:
 upload_dags_to_dev:
 	$(eval COMPOSER_BUCKET_PATH=$(shell gcloud composer environments describe data-composer-dev --location europe-west1 --format='value(config.dagGcsPrefix)'))
 	gsutil cp -r orchestration/dags/${path} $(COMPOSER_BUCKET_PATH)/${path}
+
+install_on_debian_vm:
+	curl https://pyenv.run | bash | echo "Pyenv already installed"
+	curl -LsSf https://astral.sh/uv/install.sh | sh
+	sudo rm /etc/apt/sources.list.d/kubernetes.list || echo "Kubernetes list already removed"
+	echo 'export PYENV_ROOT="$$HOME/.pyenv"' >> ~/.bashrc
+	echo 'export PATH="$$PYENV_ROOT/bin:$$PATH"' >> ~/.bashrc
+	echo 'eval "$$(pyenv init --path)"' >> ~/.bashrc
+	echo 'eval "$$(pyenv init -)"' >> ~/.bashrc
+	echo 'eval "$$(pyenv virtualenv-init -)"' >> ~/.bashrc
+	echo '. "$$HOME/.cargo/env"' >> ~/.bashrc
+	make install_ubuntu_libs
+	sudo apt install libmariadb-dev
+	bash

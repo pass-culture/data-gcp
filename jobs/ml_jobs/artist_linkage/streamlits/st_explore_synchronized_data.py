@@ -38,13 +38,15 @@ def preprocessing(string: str) -> str:
 
 
 def should_be_filtered(artist_df: pd.DataFrame) -> bool:
-    pattern = "[\w\-\.]+\/[\w-]+|\+"
+    pattern = "[\w\-\.]+\/[\w-]+|\+"  # patter for multi artists separated by + or /
     return artist_df.assign(
-        should_be_filtered=lambda df: (df.artist_name.str.contains(pattern, regex=True))
-        | (
+        should_be_filtered_pattern=lambda df: df.artist_name.str.contains(
+            pattern, regex=True
+        ),
+        should_be_filtered_word_count=lambda df: (
             (df.artist_word_count <= 1)
             & ((df.offer_number < 100) | (df.total_booking_count < 100))
-        )
+        ),
     )
 
 
@@ -93,7 +95,7 @@ def find_muti_artists_comma(artist_name_series: pd.Series):
 
 
 st_artist_type = st.sidebar.selectbox(
-    "artist type", options=artist_df.artist_type.unique(), index=1
+    "artist type", options=artist_df.artist_type.unique(), index=0
 )
 selected_category = st.sidebar.selectbox(
     "category",
@@ -144,8 +146,6 @@ filtered_df = (
     )
 )
 
-st.write(filtered_df.artist_word_count.value_counts().sort_index())
-
 
 # %% Print samples
 col1, col2, col3 = st.columns(3)
@@ -163,7 +163,6 @@ if len(filtered_df) > 0:
             :,
             [
                 "artist",
-                "should_be_filtered",
                 "is_multi_artists_pattern",
                 "first_artist_pattern",
                 "is_multi_artists_comma",
@@ -171,10 +170,13 @@ if len(filtered_df) > 0:
                 "artist_word_count",
                 "total_booking_count",
                 "offer_number",
-                "is_synchronised",
+                "should_be_filtered_pattern",
+                "should_be_filtered_word_count",
             ],
         ],
         width=1500,
         height=500,
         hide_index=True,
     )
+
+st.write(filtered_df.artist_word_count.value_counts().sort_index())

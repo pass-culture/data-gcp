@@ -1,5 +1,6 @@
 import string
 
+import jellyfish
 import numpy as np
 import pandas as pd
 import rapidfuzz
@@ -180,3 +181,31 @@ if len(filtered_df) > 0:
     )
 
 st.write(filtered_df.artist_word_count.value_counts().sort_index())
+st.markdown("---")
+
+# Pseudo Clustering
+clustered_df = (
+    filtered_df.assign(
+        preprocessed_name=lambda df: df.first_artist_comma.map(preprocessing),
+        encoded_name=lambda df: df.preprocessed_name.map(jellyfish.metaphone),
+    )
+    .loc[lambda df: ~(df.should_be_filtered_pattern | df.should_be_filtered_word_count)]
+    .sort_values(by="preprocessed_name")
+)
+
+st.dataframe(
+    clustered_df.loc[
+        :,
+        [
+            "artist",
+            "first_artist_comma",
+            "preprocessed_name",
+            "encoded_name",
+            "total_booking_count",
+            "offer_number",
+        ],
+    ],
+    width=1500,
+    height=500,
+    hide_index=True,
+)

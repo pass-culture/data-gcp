@@ -32,7 +32,7 @@ ifeq (,$(wildcard ${HOME}/.config/gcloud/application_default_credentials.json))
 endif
 
 install_ubuntu_libs:
-	sudo apt-get update
+	sudo apt-get update -y
 	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev
 
 upload_dags_to_dev:
@@ -43,12 +43,12 @@ install_on_debian_vm:
 	curl https://pyenv.run | bash | echo "Pyenv already installed"
 	curl -LsSf https://astral.sh/uv/install.sh | sh
 	sudo rm /etc/apt/sources.list.d/kubernetes.list || echo "Kubernetes list already removed"
+	make install_ubuntu_libs
+	sudo apt install -y libmariadb-dev
 	echo 'export PYENV_ROOT="$$HOME/.pyenv"' >> ~/.bashrc
 	echo 'export PATH="$$PYENV_ROOT/bin:$$PATH"' >> ~/.bashrc
 	echo 'eval "$$(pyenv init --path)"' >> ~/.bashrc
 	echo 'eval "$$(pyenv init -)"' >> ~/.bashrc
 	echo 'eval "$$(pyenv virtualenv-init -)"' >> ~/.bashrc
 	echo '. "$$HOME/.cargo/env"' >> ~/.bashrc
-	make install_ubuntu_libs
-	sudo apt install libmariadb-dev
 	bash

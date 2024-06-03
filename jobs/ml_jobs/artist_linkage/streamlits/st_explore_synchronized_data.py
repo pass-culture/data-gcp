@@ -14,9 +14,9 @@ def load_data(gs_path: str) -> pd.DataFrame:
     return pd.read_parquet(gs_path)
 
 
-artist_df = load_data(
-    "gs://data-bucket-stg/link_artists/artists_to_match.parquet"
-).assign(artist=lambda df: df.artist_name)
+artist_path = "/home/laurent_pass/Projects/data-gcp/jobs/ml_jobs/artist_linkage/streamlits/data/link_artists_artists_to_match.parquet"
+# artist_path = "gs://data-bucket-stg/link_artists/artists_to_match.parquet"
+artist_df = load_data(artist_path).assign(artist=lambda df: df.artist_name)
 
 CATEGORIES = artist_df.offer_category_id.unique()
 PUNCTUATION = r"!|#|\$|\%|\&|\(|\)|\*|\+|\,|\/|\:|\;|\|\s-|\s-\s|-\s|\|"  # '<=>?@[\\]^_`{|}~|\s–\s'

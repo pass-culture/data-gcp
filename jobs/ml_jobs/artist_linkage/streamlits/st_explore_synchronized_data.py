@@ -83,9 +83,11 @@ def remove_parenthesis(artist_df: pd.DataFrame) -> pd.DataFrame:
 def extract_artist_word_count(artist_df: pd.DataFrame) -> pd.DataFrame:
     # count the number of words in the artist name that are longer than 2 characters (excluding punctuation / initials)
     return artist_df.assign(
-        artist_word_count=lambda df: df.first_artist_comma.str.split().map(
-            lambda ll: len([x for x in ll if len(x) > 2])
+        artist_word_count=lambda df: df.first_artist_comma.str.replace(
+            r"[^\w\s]", "", regex=True
         )
+        .str.split()
+        .map(lambda ll: len([x for x in ll if len(x) > 2])),
     )
 
 
@@ -196,8 +198,6 @@ if len(preprocessed_df) > 0:
                 "artist_word_count",
                 "total_booking_count",
                 "offer_number",
-                "should_be_filtered_pattern",
-                "should_be_filtered_word_count",
             ],
         ],
         width=1500,
@@ -248,6 +248,9 @@ st.dataframe(
             "encoded_name",
             "total_booking_count",
             "offer_number",
+            "artist_word_count",
+            "should_be_filtered_pattern",
+            "should_be_filtered_word_count",
         ],
     ],
     width=1500,

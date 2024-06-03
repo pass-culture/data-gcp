@@ -9,7 +9,7 @@ from scipy.sparse import csr_matrix, vstack
 from sklearn.cluster import DBSCAN
 from tqdm import tqdm
 
-from utils import read_parquet, upload_parquet
+from gcs_utils import read_parquet, upload_parquet
 
 app = typer.Typer()
 

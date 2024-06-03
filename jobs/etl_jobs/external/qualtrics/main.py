@@ -13,7 +13,7 @@ from utils import (
     ANSWERS_SCHEMA,
 )
 from qualtrics_opt_out import import_qualtrics_opt_out
-from jobs.etl_jobs.external.qualtrics.qualtrics_survey_answers import (
+from qualtrics_survey_answers import (
     QualtricsSurvey,
     import_survey_metadata,
 )

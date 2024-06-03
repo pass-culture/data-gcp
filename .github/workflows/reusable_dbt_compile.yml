@@ -44,10 +44,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          cache: 'pip' # caching pip dependencies
-          cache-dependency-path: ./orchestration/airflow/orchestration-requirements.txt
-      - name: "Install Python requirements"
-        run: pip install -r airflow/orchestration-requirements.txt
+      - name: "Install orchestration & dbt requirements"
+        run: |
+          pip install -r airflow/orchestration-requirements.txt
+          pip install -r dags/dbt-requirements.txt
       - name: "Authenticate with Google Cloud"
         uses: "google-github-actions/auth@v2"
         with:
@@ -55,7 +55,7 @@ jobs:
           token_format: "access_token"
           workload_identity_provider: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
-      - name: "install dbt dependencies"
+      - name: "Install dbt dependencies"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           DBT_TARGET_PATH: "target/"

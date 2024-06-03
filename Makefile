@@ -7,18 +7,18 @@ install_base:
 install_microservice:
 	# Recreate the venv if RECREATE_VENV is set to 1
 	@if [ "$(RECREATE_VENV)" = "1" ]; then \
-		eval "$$(pyenv init -)" && cd $(MICROSERVICE_PATH) && rm -f .python-version && pyenv virtualenv-delete -f $(VENV_NAME) && pyenv virtualenv $(VENV_BASE_NAME) $(VENV_NAME) && pyenv local $(VENV_NAME); \
+		eval "$$(pyenv init -)" && cd $(MICROSERVICE_PATH) && rm -f .python-version && pyenv virtualenv-delete -f $(VENV_NAME) && pyenv virtualenv $(PHYTON_VENV_VERSION) $(VENV_NAME) && pyenv local $(VENV_NAME); \
 	fi
 	# Install the requirements
 	@eval "$$(pyenv init -)" && cd $(MICROSERVICE_PATH) && pyenv activate $(VENV_NAME) && uv pip install -r $(REQUIREMENTS_NAME)
 
 install:
 	make install_base
-	MICROSERVICE_PATH=. VENV_BASE_NAME=3.10.4 VENV_NAME=data-gcp REQUIREMENTS_NAME=linter-requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
-	MICROSERVICE_PATH=jobs/ml_jobs/algo_training VENV_BASE_NAME=data-gcp-base VENV_NAME=data-gcp-algo-training REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
-	MICROSERVICE_PATH=jobs/ml_jobs/record_linkage VENV_BASE_NAME=data-gcp-base VENV_NAME=data-gcp-record-linkage REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
-	MICROSERVICE_PATH=jobs/ml_jobs/artist_linkage VENV_BASE_NAME=data-gcp-base VENV_NAME=data-gcp-artist-linkage REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
-	MICROSERVICE_PATH=orchestration VENV_BASE_NAME=data-gcp-base VENV_NAME=data-gcp-orchestration REQUIREMENTS_NAME=airflow/orchestration-requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
+	MICROSERVICE_PATH=. PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp REQUIREMENTS_NAME=linter-requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
+	MICROSERVICE_PATH=jobs/ml_jobs/algo_training PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-algo-training REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
+	MICROSERVICE_PATH=jobs/ml_jobs/record_linkage PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-record-linkage REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
+	MICROSERVICE_PATH=jobs/ml_jobs/artist_linkage PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-artist-linkage REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
+	MICROSERVICE_PATH=orchestration PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-orchestration REQUIREMENTS_NAME=airflow/orchestration-requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
 
 clean_install:
 	CLEAN_INSTALL=1 make install

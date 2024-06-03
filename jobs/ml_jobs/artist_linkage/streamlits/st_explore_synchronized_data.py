@@ -40,6 +40,8 @@ def preprocessing(string: str) -> str:
 
 def should_be_filtered(artist_df: pd.DataFrame) -> bool:
     pattern = "[\w\-\.]+\/[\w-]+|\+"  # patter for multi artists separated by + or /
+
+    # TODO: Remove artists with the pattern a. ....
     return artist_df.assign(
         should_be_filtered_pattern=lambda df: df.artist_name.str.contains(
             pattern, regex=True
@@ -47,7 +49,8 @@ def should_be_filtered(artist_df: pd.DataFrame) -> bool:
         should_be_filtered_word_count=lambda df: (
             (df.artist_word_count <= 1)
             & ((df.offer_number < 100) | (df.total_booking_count < 100))
-        ),
+        )
+        | (df.artist_word_count >= 6),
     )
 
 
@@ -56,6 +59,14 @@ def remove_leading_punctuation(artist_df: pd.DataFrame) -> pd.DataFrame:
         artist_name=lambda df: df.artist_name.str.lstrip(
             string.whitespace + string.punctuation
         ).str.replace("\(.*\)", "", regex=True)
+    )
+
+
+def remove_parenthesis(artist_df: pd.DataFrame) -> pd.DataFrame:
+    return artist_df.assign(
+        artist_name=lambda df: df.artist_name.str.replace("\([.*]+\))", "")
+        .str.split("\(", regex=True)
+        .map(lambda ll: ll[0])
     )
 
 
@@ -112,11 +123,10 @@ search_filter = st.sidebar.text_input("search", value="oda")
 
 category_df = (
     artist_df.dropna()
-    .pipe(remove_leading_punctuation)
     .loc[lambda df: df.offer_category_id == selected_category]
     .loc[lambda df: df.artist_type == st_artist_type]
 )
-filtered_df = (
+preprocessed_df = (
     category_df.loc[lambda df: df.is_synchronised if only_synchronized else df.index]
     .loc[lambda df: df.total_booking_count > 0 if only_booked else df.index]
     .loc[
@@ -137,6 +147,8 @@ filtered_df = (
             else df.index
         )
     ]
+    .pipe(remove_leading_punctuation)
+    .pipe(remove_parenthesis)
     .pipe(extract_first_artist_pattern)
     .pipe(extract_first_artist_comma)
     .pipe(extract_artist_word_count)
@@ -153,14 +165,14 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.write("Number of artists", len(category_df))
 with col2:
-    st.write("Number of artists after filtering", len(filtered_df))
+    st.write("Number of artists after filtering", len(preprocessed_df))
 with col3:
-    st.progress(len(filtered_df) / len(category_df))
+    st.progress(len(preprocessed_df) / len(category_df))
 
 st.markdown("""---""")
-if len(filtered_df) > 0:
+if len(preprocessed_df) > 0:
     st.dataframe(
-        filtered_df.loc[
+        preprocessed_df.loc[
             :,
             [
                 "artist",
@@ -180,21 +192,28 @@ if len(filtered_df) > 0:
         hide_index=True,
     )
 
-st.write(filtered_df.artist_word_count.value_counts().sort_index())
+st.write(
+    pd.DataFrame(
+        preprocessed_df.artist_word_count.value_counts()
+        .sort_index()
+        .rename("word_count")
+    ).T
+)
 st.markdown("---")
 
-# Pseudo Clustering
-clustered_df = (
-    filtered_df.assign(
+## Filtering
+filtered_df = (
+    preprocessed_df.assign(
         preprocessed_name=lambda df: df.first_artist_comma.map(preprocessing),
         encoded_name=lambda df: df.preprocessed_name.map(jellyfish.metaphone),
     )
     .loc[lambda df: ~(df.should_be_filtered_pattern | df.should_be_filtered_word_count)]
+    .loc[lambda df: df.is_synchronised]
     .sort_values(by="preprocessed_name")
 )
 
 st.dataframe(
-    clustered_df.loc[
+    filtered_df.loc[
         :,
         [
             "artist",
@@ -209,3 +228,12 @@ st.dataframe(
     height=500,
     hide_index=True,
 )
+st.markdown("---")
+
+## Pseudo Clustering
+clusted_df = filtered_df.groupby("preprocessed_name").apply(
+    lambda g: pd.DataFrame({"cluster_name": [g.name], "aliases": [set(g.artist)]})
+)
+st.write(clusted_df)
+
+st.write(len(filtered_df.preprocessed_name.unique()))

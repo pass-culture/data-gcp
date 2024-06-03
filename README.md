@@ -64,10 +64,20 @@ Repo pour la team data sur GCP
   ```
   make install_ubuntu_libs
   ```
+- [VM DEBIAN] Installation d'autres librairies et fix de l'environnement pour les VM :
+  ```
+  make install_on_debian_vm
+  ```
 - Installation du projet
-  ```
-  make install
-  ```
+  - La première fois : installation from scratch, avec création des environnements virtuels
+    ```
+    make clean_install
+    ```
+  - Installation rapide des nouveaux packages
+    ```
+    make install
+    ```
+
 
 **2. Config .env.local**
 

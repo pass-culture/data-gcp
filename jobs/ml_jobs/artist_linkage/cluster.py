@@ -9,8 +9,6 @@ from scipy.sparse import csr_matrix, vstack
 from sklearn.cluster import DBSCAN
 from tqdm import tqdm
 
-from gcs_utils import read_parquet, upload_parquet
-
 app = typer.Typer()
 
 
@@ -20,6 +18,7 @@ SPARSE_FILTER_THRESHOLD = 0.2
 DTYPE_DISTANCE_MATRIX = np.uint8  # np.uint8, np.uint16, np.float32
 DISTANCE_METRIC = rapidfuzz.distance.OSA.normalized_distance
 CLUSTERING_THRESHOLD = 0.1
+RATIO_SYNCHRONISED_DATA_THRESHOLD = 0.8
 
 
 def get_score_multiplier(dtype_distance_matrix: np.dtype) -> int:
@@ -88,48 +87,55 @@ def main(
     for group, group_df in preprocessed_df.groupby(
         ["offer_category_id", "artist_type"]
     ):
-        artists_list = group_df.preprocessed_artist_name.drop_duplicates().tolist()
-
-        t0 = time.time()
-        print(
-            f"Computing the distance for {group} containing {len(artists_list)} preprocessed artists"
+        ratio_synchronised_data = group_df.is_synchronised.sum() / len(
+            group_df.is_synchronised
         )
-        complete_sparse_matrix = compute_distance_matrix(
-            artists_list=artists_list, num_chunks=NUM_CHUNKS
-        )
-        print("Time to compute the ditance matrix", time.time() - t0)
 
-        # Perform clustering with DBSCAN
-        t0 = time.time()
-        clustering = DBSCAN(
-            eps=CLUSTERING_THRESHOLD * get_score_multiplier(DTYPE_DISTANCE_MATRIX),
-            min_samples=2,
-            metric="precomputed",
-        )
-        clustering.fit(complete_sparse_matrix)
-        clusters = clustering.labels_
+        if ratio_synchronised_data >= RATIO_SYNCHRONISED_DATA_THRESHOLD:
+            print("Skipping the group", group)
+        else:
+            artists_list = group_df.preprocessed_artist_name.drop_duplicates().tolist()
 
-        clusters_df_list.append(
-            pd.DataFrame({"artist": artists_list})
-            .assign(
-                cluster=clusters,
+            t0 = time.time()
+            print(
+                f"Computing the distance for {group} containing {len(artists_list)} preprocessed artists"
             )
-            .groupby("cluster")
-            .agg({"artist": set})
-            .assign(
-                num_artists=lambda df: df.artist.map(len),
-                offer_category_id=group[0],
-                artist_type=group[1],
-                group_cluster_id=lambda df: df.index,
-                cluster_id=lambda df: df.offer_category_id
-                + "_"
-                + df.artist_type
-                + "_"
-                + df.index.astype(str),
+            complete_sparse_matrix = compute_distance_matrix(
+                artists_list=artists_list, num_chunks=NUM_CHUNKS
             )
-            .sort_values("num_artists", ascending=False)
-        )
-        print("Time to compute the clustering", time.time() - t0)
+            print("Time to compute the ditance matrix", time.time() - t0)
+
+            # Perform clustering with DBSCAN
+            t0 = time.time()
+            clustering = DBSCAN(
+                eps=CLUSTERING_THRESHOLD * get_score_multiplier(DTYPE_DISTANCE_MATRIX),
+                min_samples=2,
+                metric="precomputed",
+            )
+            clustering.fit(complete_sparse_matrix)
+            clusters = clustering.labels_
+
+            clusters_df_list.append(
+                pd.DataFrame({"artist": artists_list})
+                .assign(
+                    cluster=clusters,
+                )
+                .groupby("cluster")
+                .agg({"artist": set})
+                .assign(
+                    num_artists=lambda df: df.artist.map(len),
+                    offer_category_id=group[0],
+                    artist_type=group[1],
+                    group_cluster_id=lambda df: df.index,
+                    cluster_id=lambda df: df.offer_category_id
+                    + "_"
+                    + df.artist_type
+                    + "_"
+                    + df.index.astype(str),
+                )
+                .sort_values("num_artists", ascending=False)
+            )
+            print("Time to compute the clustering", time.time() - t0)
 
     clusters_df = pd.concat(clusters_df_list)
 

@@ -213,6 +213,12 @@ with st.form("compute clusters"):
                 artist_encoding=lambda df: df.artist.map(jellyfish.metaphone),
                 cluster=clusters,
             )
+            .assign(
+                cluster=lambda df: df.cluster.where(
+                    lambda s: s != -1,
+                    np.arange(df.cluster.max() + 1, df.cluster.max() + 1 + len(df)),
+                )
+            )
             .groupby("cluster")
             .agg({"artist": set, "artist_encoding": set})
             .assign(num_artists=lambda df: df.artist.map(len))

@@ -122,6 +122,12 @@ def cluster_with_distance_matrices(
         .assign(
             cluster=clusters,
         )
+        .assign(
+            cluster=lambda df: df.cluster.where(
+                lambda s: s != -1,
+                np.arange(df.cluster.max() + 1, df.cluster.max() + 1 + len(df)),
+            )
+        )  # Assign a new cluster id to the outliers
         .groupby("cluster")
         .agg({"preprocessed_artist_name": set})
     )

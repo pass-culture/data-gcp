@@ -29,7 +29,18 @@ def main(
         .pipe(extract_first_artist)
         .pipe(filter_artists, filtering_params=FILTERING_PARAMS)
         .pipe(format_names)
-    )
+    ).loc[
+        :,
+        [
+            "artist_name",
+            "offer_category_id",
+            "is_synchronised",
+            "offer_number",
+            "total_booking_count",
+            "artist_type",
+            "preprocessed_artist_name",
+        ],
+    ]
 
     upload_parquet(
         dataframe=preprocessed_df,

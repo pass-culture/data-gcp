@@ -84,7 +84,7 @@ def main(
 
     # Build the clusters
     clusters_df_list = []
-    for group, group_df in preprocessed_df.groupby(
+    for group_name, group_df in preprocessed_df.groupby(
         ["offer_category_id", "artist_type"]
     ):
         ratio_synchronised_data = group_df.is_synchronised.sum() / len(
@@ -92,13 +92,33 @@ def main(
         )
 
         if ratio_synchronised_data >= RATIO_SYNCHRONISED_DATA_THRESHOLD:
-            print("Skipping the group", group)
+            clusters_df_list.append(
+                group_df.loc[lambda df: df.is_synchronised]
+                .groupby("preprocessed_artist_name")
+                .apply(lambda g: set(g.artist_name))
+                .rename("artist")
+                .to_frame()
+                .reset_index()
+                .assign(
+                    num_artists=lambda df: df.artist.map(len),
+                    offer_category_id=group_name[0],
+                    artist_type=group_name[1],
+                    group_cluster_id=lambda df: df.index,
+                    cluster_id=lambda df: df.offer_category_id
+                    + "_"
+                    + df.artist_type
+                    + "_"
+                    + df.index.astype(str),
+                )
+                .sort_values("num_artists", ascending=False)
+            )
+
         else:
             artists_list = group_df.preprocessed_artist_name.drop_duplicates().tolist()
 
             t0 = time.time()
             print(
-                f"Computing the distance for {group} containing {len(artists_list)} preprocessed artists"
+                f"Computing the distance for {group_name} containing {len(artists_list)} preprocessed artists"
             )
             complete_sparse_matrix = compute_distance_matrix(
                 artists_list=artists_list, num_chunks=NUM_CHUNKS
@@ -124,8 +144,8 @@ def main(
                 .agg({"artist": set})
                 .assign(
                     num_artists=lambda df: df.artist.map(len),
-                    offer_category_id=group[0],
-                    artist_type=group[1],
+                    offer_category_id=group_name[0],
+                    artist_type=group_name[1],
                     group_cluster_id=lambda df: df.index,
                     cluster_id=lambda df: df.offer_category_id
                     + "_"

@@ -6,7 +6,12 @@ st.set_page_config(layout="wide")
 
 
 ## Load Data
-matched_artists_df = pd.read_parquet(
+@st.cache_data
+def load_data(source_path: str) -> pd.DataFrame:
+    return pd.read_parquet(source_path)
+
+
+matched_artists_df = load_data(
     "gs://data-bucket-stg/link_artists/matched_artists.parquet"
 )
 

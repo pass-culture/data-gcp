@@ -20,8 +20,14 @@ from utils.preprocess_utils import (
 
 st.set_page_config(layout="wide")
 
+
 # %% Load Data
-artist_df = pd.read_parquet(
+@st.cache_data
+def load_data(source_path: str) -> pd.DataFrame:
+    return pd.read_parquet(source_path)
+
+
+artist_df = pd.load_data(
     "gs://data-bucket-stg/link_artists/artists_to_match.parquet"
 ).assign(artist=lambda df: df.artist_name)
 

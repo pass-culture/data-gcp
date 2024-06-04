@@ -1,8 +1,9 @@
 {% macro generate_schema_name(custom_schema_name, node=none) -%}
 
     {%- set default_schema = target.dataset -%}
-
-    {%- if custom_schema_name and  ((target.name == "prod" and target.profile_name != "sandbox") or target.name == "stg") -%}
+    {%- if target.profile_name == "CI" -%}
+        {{ default_schema }}
+    {%- elif custom_schema_name and  ((target.name == "prod" and target.profile_name != "sandbox") or target.name == "stg") -%}
     
         {{ custom_schema_name | trim }}
 

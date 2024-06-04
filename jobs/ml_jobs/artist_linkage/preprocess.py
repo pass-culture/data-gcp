@@ -1,19 +1,13 @@
-# %%
-
 import pandas as pd
 import typer
 
 from utils.gcs_utils import upload_parquet
 from utils.preprocess_utils import (
     FilteringParamsType,
-    extract_artist_word_count,
+    clean_names,
     extract_first_artist,
-    extract_first_artist_pattern,
     filter_artists,
-    format_name,
-    remove_leading_punctuation,
-    remove_parenthesis,
-    remove_single_characters,
+    format_names,
 )
 
 app = typer.Typer()
@@ -30,21 +24,12 @@ def main(
 ) -> None:
     artists_to_match_df = pd.read_parquet(source_file_path)
 
-    cleaned_df = artists_to_match_df.pipe(remove_leading_punctuation).pipe(
-        remove_parenthesis
-    )
-
-    single_artist_df = cleaned_df.pipe(extract_first_artist_pattern).pipe(
-        extract_first_artist
-    )
-
-    filtered_df = (
-        single_artist_df.pipe(extract_artist_word_count)
-        .pipe(remove_single_characters)
+    preprocessed_df = (
+        artists_to_match_df.pipe(clean_names)
+        .pipe(extract_first_artist)
         .pipe(filter_artists, filtering_params=FILTERING_PARAMS)
+        .pipe(format_names)
     )
-
-    preprocessed_df = filtered_df.pipe(format_name)
 
     upload_parquet(
         dataframe=preprocessed_df,
@@ -52,6 +37,5 @@ def main(
     )
 
 
-# %%
 if __name__ == "__main__":
     app()

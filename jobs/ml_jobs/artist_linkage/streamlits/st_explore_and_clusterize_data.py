@@ -10,16 +10,12 @@ from scipy.sparse import csr_matrix, vstack
 from sklearn.cluster import DBSCAN
 from stqdm import stqdm
 
+from preprocess import FILTERING_PARAMS
 from utils.preprocess_utils import (
-    FilteringParamsType,
-    extract_artist_word_count,
+    clean_names,
     extract_first_artist,
-    extract_first_artist_pattern,
     filter_artists,
-    format_name,
-    remove_leading_punctuation,
-    remove_parenthesis,
-    remove_single_characters,
+    format_names,
 )
 
 st.set_page_config(layout="wide")
@@ -89,22 +85,10 @@ filtered_df = (
 )
 
 preprocessed_df = (
-    filtered_df.pipe(remove_leading_punctuation)
-    .pipe(remove_parenthesis)
-    .pipe(extract_first_artist_pattern)
+    filtered_df.pipe(clean_names)
     .pipe(extract_first_artist)
-    .pipe(extract_artist_word_count)
-    .pipe(remove_single_characters)
-    .pipe(
-        filter_artists,
-        filtering_params=FilteringParamsType(
-            min_word_count=2,
-            max_word_count=5,
-            min_offer_count=100,
-            min_booking_count=100,
-        ),
-    )
-    .pipe(format_name)
+    .pipe(filter_artists, filtering_params=FILTERING_PARAMS)
+    .pipe(format_names)
 )
 
 

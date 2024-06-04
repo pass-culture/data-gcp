@@ -38,12 +38,6 @@ SCORE_MULTIPLIER = (
     else 1
 )
 
-
-# %%
-def preprocessing(string: str) -> str:
-    return " ".join(sorted(rapidfuzz.utils.default_process(string).split()))
-
-
 selected_category = st.sidebar.selectbox(
     "category",
     options=CATEGORIES,
@@ -193,9 +187,10 @@ with st.form("compute clusters"):
         step=0.01,
         value=0.2,
     )
-    artists_list = preprocessed_df.artist.map(preprocessing).drop_duplicates().tolist()
+    artists_list = preprocessed_df.preprocessed_name.drop_duplicates().tolist()
     st.write("Number of artists", len(artists_list))
 
+    ### Clustering
     submitted = st.form_submit_button("Compute")
     if submitted is True:
         complete_sparse_matrix = compute_distance_matrix(

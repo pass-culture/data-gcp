@@ -9,9 +9,8 @@ WITH venues AS (
             venue_id, 
             venue_longitude,
             venue_latitude
-        FROM {{ ref("int_applicative__venue") }}
-        WHERE venue_is_virtual is false
-        AND offerer_validation_status = 'VALIDATED'
+        FROM {{ ref("mrt_global__venue") }}
+
 ),
 
 offer_details AS (

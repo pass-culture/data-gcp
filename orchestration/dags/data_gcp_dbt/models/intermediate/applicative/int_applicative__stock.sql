@@ -19,9 +19,10 @@ WITH bookings_grouped_by_stock AS (
         COUNT(CASE WHEN  booking_is_used THEN booking_id END) AS total_used_individual_bookings,
         SUM(CASE WHEN NOT booking_is_cancelled THEN booking_intermediary_amount END) AS total_individual_theoretic_revenue,
         SUM(CASE WHEN booking_is_used THEN booking_intermediary_amount END) AS total_individual_real_revenue,
+        SUM(CASE WHEN booking_is_used AND EXTRACT(YEAR FROM booking_creation_date) = EXTRACT(YEAR FROM current_date) THEN booking_intermediary_amount ELSE NULL END) AS total_individual_current_year_real_revenue,
         MIN(booking_creation_date) AS first_individual_booking_date,
         MAX(booking_creation_date) AS last_individual_booking_date,
-        COUNT(CASE WHEN booking_rank = 1 THEN booking_id END) AS total_first_bookings
+        COUNT(CASE WHEN booking_rank = 1 THEN booking_id END) AS total_first_bookings,
     FROM {{ ref('int_applicative__booking') }}
     GROUP BY stock_id
 )
@@ -56,7 +57,8 @@ SELECT
     bs.total_non_cancelled_individual_bookings,
     bs.total_used_individual_bookings,
     bs.total_individual_theoretic_revenue,
-    bs.total_individual_real_revenue,
+    total_individual_real_revenue,
+    total_individual_current_year_real_revenue,
     bs.first_individual_booking_date,
     bs.last_individual_booking_date,
     bs.total_first_bookings,

@@ -155,7 +155,7 @@ BIGQUERY_SCHEMAS = {
         "owningOffererId": "STRING",
         "url": "STRING",
         "fieldsUpdated": "STRING",
-        "isGcuCompatible": "BOOLEAN",
+        "gcuCompatibilityType": "STRING",
         "ean": "STRING",
     },
     "applicative_database_stock": {

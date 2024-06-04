@@ -280,12 +280,14 @@ contentful_modules = [
 
 
 class ContentfulClient:
-    def __init__(self, env="testing", timeout=1) -> None:
+    def __init__(self, config_env, timeout=1) -> None:
         self.client = contentful.Client(
             SPACE_ID,  # This is the space ID. A space is like a project folder in Contentful terms
-            TOKEN,  # This is the access token for this space.
-            api_url="preview.contentful.com",
-            environment=env,
+            access_token=config_env[
+                "access_token"
+            ],  # This is the access token for this space.
+            api_url=config_env["api_url"],
+            environment=config_env["env"],
             timeout_s=timeout,
         )
         self.df_modules = pd.DataFrame()

@@ -128,7 +128,7 @@ def filter_artists(
 
 def format_names(artist_df: pd.DataFrame) -> pd.DataFrame:
     return artist_df.assign(
-        preprocessed_name=lambda df: df.first_artist.map(unidecode).map(
+        preprocessed_artist_name=lambda df: df.first_artist.map(unidecode).map(
             lambda s: " ".join(sorted(rapidfuzz.utils.default_process(s).split()))
         )
     )

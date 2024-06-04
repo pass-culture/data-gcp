@@ -187,7 +187,7 @@ with st.form("compute clusters"):
         step=0.01,
         value=0.2,
     )
-    artists_list = preprocessed_df.preprocessed_name.drop_duplicates().tolist()
+    artists_list = preprocessed_df.preprocessed_artist_name.drop_duplicates().tolist()
     st.write("Number of artists", len(artists_list))
 
     ### Clustering

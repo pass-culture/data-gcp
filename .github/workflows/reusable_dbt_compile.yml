@@ -28,6 +28,8 @@ jobs:
       DBT_FOLDER: "./dags/data_gpc_dbt/"
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: "Connect to Secret Manager"
         uses: 'google-github-actions/auth@v2'
         with:
@@ -44,10 +46,6 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          cache: 'pip' # caching pip dependencies
-          cache-dependency-path: ./orchestration/airflow/orchestration-requirements.txt
-      - name: "Install Python requirements"
-        run: pip install -r airflow/orchestration-requirements.txt
       - name: "Authenticate with Google Cloud"
         uses: "google-github-actions/auth@v2"
         with:
@@ -55,7 +53,29 @@ jobs:
           token_format: "access_token"
           workload_identity_provider: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
-      - name: "install dbt dependencies"
+      - id: "get-target-bucket"
+        run: |
+          if ${{ github.base_ref == 'production'}}
+          then
+            echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--d5adf2e8-bucket" >> $GITHUB_OUTPUT
+          elif ${{ github.base_ref  == 'master' }}
+          then
+            echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--00137508-bucket" >> $GITHUB_OUTPUT
+          else
+            echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--a3134989-bucket" >> $GITHUB_OUTPUT
+          fi
+      - name: "Pull run artifacts"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          COMPOSER_DAGS_BUCKET: ${{ steps.get-target-bucket.outputs.COMPOSER_DAGS_BUCKET }}
+        run: |
+          mkdir env-run-artifacts
+          gsutil cp gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json dags/data_gcp_dbt/env-run-artifacts/manifest.py
+      - name: "Install orchestration & dbt requirements"
+        run: |
+          pip install -r airflow/orchestration-requirements.txt
+          pip install -r dags/dbt-requirements.txt
+      - name: "Install dbt dependencies"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           DBT_TARGET_PATH: "target/"
@@ -69,6 +89,10 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
         run: dbt compile
+      - name: "Run modified models & 1st order childrens"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        run: |
+          dbt run -s state:modified+1 --profile CI --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view'}"
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
         uses: slackapi/slack-github-action@v1.23.0

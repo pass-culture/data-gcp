@@ -11,10 +11,7 @@ on:
         required: true
       GCP_EHP_SERVICE_ACCOUNT:
         required: true
-  
-env:
-  GCP_REGION: "europe-west1"
-
+          
 jobs:
   dbt-compile:
     name: "dbt-compile"
@@ -33,30 +30,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - id: "get-target-bucket"
-        run: |
-          if ${{ github.base_ref == 'production'}}
-          then
-            echo "DATA_GCP_PROJECT=passculture-data-prod" >> $GITHUB_OUTPUT
-            echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--d5adf2e8-bucket" >> $GITHUB_OUTPUT
-            echo "COMPOSER_ENVIRONMENT_NAME=data-composer-prod" >> $GITHUB_OUTPUT
-            echo "TARGET_ENV=prod" >> $GITHUB_OUTPUT
-          elif ${{ github.base_ref  == 'master' }}
-          then
-            echo "DATA_GCP_PROJECT=passculture-data-ehp" >> $GITHUB_OUTPUT
-            echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--a3134989-bucket" >> $GITHUB_OUTPUT
-            echo "COMPOSER_ENVIRONMENT_NAME=data-composer-dev" >> $GITHUB_OUTPUT
-            echo "TARGET_ENV=stg" >> $GITHUB_OUTPUT
-          else
-            echo "DATA_GCP_PROJECT=passculture-data-ehp" >> $GITHUB_OUTPUT
-            echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--a3134989-bucket" >> $GITHUB_OUTPUT
-            echo "COMPOSER_ENVIRONMENT_NAME=data-composer-dev" >> $GITHUB_OUTPUT
-            echo "TARGET_ENV=dev" >> $GITHUB_OUTPUT
-          fi
       - name: "Connect to Secret Manager"
         uses: 'google-github-actions/auth@v2'
         with:
-          project_id: ${{ steps.get-target-bucket.outputs.DATA_GCP_PROJECT }}
           workload_identity_provider: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
       - name: "Get secrets for Slack"
@@ -77,7 +53,17 @@ jobs:
           token_format: "access_token"
           workload_identity_provider: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
-      
+      - id: "get-target-bucket"
+        run: |
+          if ${{ github.base_ref == 'production'}}
+          then
+            echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--d5adf2e8-bucket" >> $GITHUB_OUTPUT
+          elif ${{ github.base_ref  == 'master' }}
+          then
+            echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--00137508-bucket" >> $GITHUB_OUTPUT
+          else
+            echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--a3134989-bucket" >> $GITHUB_OUTPUT
+          fi
       - name: "Pull run artifacts"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:

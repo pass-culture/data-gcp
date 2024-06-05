@@ -28,11 +28,13 @@ class TestGetClusterToNicknameDict:
             {
                 "cluster_id": ["cluster1", "cluster1"],
                 "offer_number": [1, 2],
-                "first_artist": ["artist1", "artist2"],
+                "artist_name": ["artist 1", "2, artist"],
+                "first_artist": ["artist 1", "2, artist"],
+                "is_multi_artists": [False, False],
             }
         )
         result = get_cluster_to_nickname_dict(df)
-        assert result == {"cluster1": "artist2"}
+        assert result == {"cluster1": "2, artist"}
 
     def test_multiple_clusters(self):
         df = pd.DataFrame(
@@ -40,10 +42,30 @@ class TestGetClusterToNicknameDict:
                 "cluster_id": ["cluster1", "cluster1", "cluster2", "cluster2"],
                 "offer_number": [1, 2, 3, 4],
                 "first_artist": ["artist1", "artist2", "artist3", "artist4"],
+                "artist_name": ["artist1", "artist2", "artist3", "artist4"],
+                "is_multi_artists": [False, False, False, False],
             }
         )
         result = get_cluster_to_nickname_dict(df)
         assert result == {"cluster1": "artist2", "cluster2": "artist4"}
+
+    def test_multiple_clusters_with_multi_artists(self):
+        df = pd.DataFrame(
+            {
+                "cluster_id": ["cluster1", "cluster1", "cluster2", "cluster2"],
+                "offer_number": [1, 2, 5, 4],
+                "artist_name": [
+                    "artist1",
+                    "artist2 A ; artist2 B",
+                    "artist3",
+                    "artist4 A ; artist4 B ; artist4 C",
+                ],
+                "first_artist": ["artist1", "artist2 A", "artist3", "artist4 A"],
+                "is_multi_artists": [False, True, False, True],
+            }
+        )
+        result = get_cluster_to_nickname_dict(df)
+        assert result == {"cluster1": "artist2 A", "cluster2": "artist3"}
 
 
 class TestFormatClusterMatrix:

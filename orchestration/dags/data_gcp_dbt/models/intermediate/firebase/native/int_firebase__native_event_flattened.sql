@@ -1,21 +1,3 @@
-{{
-    config(
-        materialized = "incremental",
-        incremental_strategy = "insert_overwrite",
-        partition_by = {"field": "event_date", "data_type": "date"},
-        on_schema_change = "sync_all_columns"
-    )
-}}
-
-WITH firebase_last_two_days_events AS (
-    SELECT *
-    FROM {{ source("raw","firebase_events") }}
-    WHERE TRUE
-        {% if is_incremental() %}
-        AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
-        {% endif %}
-)
-
 SELECT
     event_date,
     user_id,
@@ -91,4 +73,4 @@ SELECT
                                 ])
                                 }},
     (SELECT event_params.value.string_value from unnest(event_params) event_params where event_params.key = 'from') as origin
-FROM firebase_last_two_days_events
+FROM {{ source("raw","firebase_events") }}

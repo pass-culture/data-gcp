@@ -38,6 +38,8 @@ def main(
             "offer_number",
             "total_booking_count",
             "artist_type",
+            "is_multi_artists",
+            "first_artist",
             "preprocessed_artist_name",
         ],
     ]

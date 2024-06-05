@@ -65,6 +65,7 @@ def _compute_distance_matrix(
 
     # Loop over the chunks
     sparse_matrices = []
+    num_chunks = min(num_chunks, len(artists_list))
     for artists_chunk in tqdm(
         list(_chunks(artists_list, len(artists_list) // num_chunks))
     ):
@@ -117,6 +118,9 @@ def cluster_with_distance_matrices(
         pd.DataFrame: DataFrame with clustered artists.
 
     """
+    if len(group_artist_df) == 0:
+        raise ValueError("group_artist_df must not be empty")
+
     t0 = time.time()
     artists_list = group_artist_df.preprocessed_artist_name.drop_duplicates().tolist()
 
@@ -195,6 +199,9 @@ def get_cluster_to_nickname_dict(merged_df: pd.DataFrame) -> dict:
     Returns:
         dict: A dictionary mapping cluster IDs to artist nicknames.
     """
+    if len(merged_df) == 0:
+        return {}
+
     return (
         merged_df.groupby("cluster_id")
         .apply(lambda df: df["offer_number"].idxmax())

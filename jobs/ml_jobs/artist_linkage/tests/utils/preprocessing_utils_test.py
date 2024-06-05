@@ -60,28 +60,28 @@ class TestPreprocessingUtils:
             df = pd.DataFrame({"artist_name": ["John Doe"]})
             result = extract_first_artist(df)
             assert result["first_artist"].iloc[0] == "John Doe"
-            assert result["is_multi_artists"].iloc[0] == False
+            assert not result["is_multi_artists"].iloc[0]
 
         @staticmethod
         def test_extract_first_artist_multiple_artists_pattern():
             df = pd.DataFrame({"artist_name": ["John Doe & Jane Doe"]})
             result = extract_first_artist(df)
             assert result["first_artist"].iloc[0] == "John Doe"
-            assert result["is_multi_artists"].iloc[0] == True
+            assert result["is_multi_artists"].iloc[0]
 
         @staticmethod
         def test_extract_first_artist_multiple_artists_comma():
             df = pd.DataFrame({"artist_name": ["John Doe, Jane Doe"]})
             result = extract_first_artist(df)
             assert result["first_artist"].iloc[0] == "John Doe"
-            assert result["is_multi_artists"].iloc[0] == True
+            assert result["is_multi_artists"].iloc[0]
 
         @staticmethod
         def test_extract_first_artist_single_artists_comma():
             df = pd.DataFrame({"artist_name": ["Doe, John"]})
             result = extract_first_artist(df)
             assert result["first_artist"].iloc[0] == "Doe, John"
-            assert result["is_multi_artists"].iloc[0] == False
+            assert not result["is_multi_artists"].iloc[0]
 
     class TestFilterArtists:
         @staticmethod

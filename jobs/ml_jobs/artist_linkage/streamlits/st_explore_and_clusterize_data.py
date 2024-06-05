@@ -11,7 +11,7 @@ from sklearn.cluster import DBSCAN
 from stqdm import stqdm
 
 from preprocess import FILTERING_PARAMS
-from utils.preprocess_utils import (
+from utils.preprocessing_utils import (
     clean_names,
     extract_first_artist,
     filter_artists,

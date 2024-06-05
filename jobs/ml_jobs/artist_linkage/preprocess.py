@@ -2,7 +2,7 @@ import pandas as pd
 import typer
 
 from utils.gcs_utils import upload_parquet
-from utils.preprocess_utils import (
+from utils.preprocessing_utils import (
     FilteringParamsType,
     clean_names,
     extract_first_artist,

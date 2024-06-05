@@ -20,9 +20,9 @@ def _remove_leading_punctuation(artist_df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: The DataFrame with leading punctuation and parentheses removed from the artist names.
     """
     return artist_df.assign(
-        artist_name=lambda df: df.artist_name.str.lstrip(
-            string.whitespace + string.punctuation
-        ).str.replace("\(.*\)", "", regex=True)
+        artist_name=lambda df: df.artist_name.str.lstrip(string.punctuation).str.rstrip(
+            string.punctuation
+        )
     )
 
 
@@ -56,7 +56,11 @@ def clean_names(artist_df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: The cleaned DataFrame with artist names.
 
     """
-    return artist_df.pipe(_remove_leading_punctuation).pipe(_remove_parenthesis)
+    return (
+        artist_df.pipe(_remove_leading_punctuation)
+        .pipe(_remove_parenthesis)
+        .assign(artist_name=lambda df: df.artist_name.str.strip())
+    )
 
 
 ### Multi Artists
@@ -102,13 +106,15 @@ def _extract_first_artist_comma(artist_df: pd.DataFrame):
     """
     pattern = "^(?![\w\-']+,).*,.*|.*,.*,.*"
     return artist_df.assign(
-        is_multi_artists=lambda df: (
+        is_multi_artists_comma=lambda df: (
             df.first_artist_pattern.str.contains(pattern, regex=True)
             & (~df.is_multi_artists_pattern)
         ),
         first_artist=lambda df: df.first_artist_pattern.str.split(",", regex=True)
         .map(lambda artist_list: artist_list[0])
-        .where(df.is_multi_artists, df.first_artist_pattern),
+        .where(df.is_multi_artists_comma, df.first_artist_pattern),
+        is_multi_artists=lambda df: df.is_multi_artists_pattern
+        | df.is_multi_artists_comma,
     )
 
 
@@ -123,8 +129,10 @@ def extract_first_artist(artist_df: pd.DataFrame):
     Returns:
         pd.DataFrame: The DataFrame with the first artist extracted.
     """
-    return artist_df.pipe(_extract_first_artist_pattern).pipe(
-        _extract_first_artist_comma
+    return (
+        artist_df.pipe(_extract_first_artist_pattern)
+        .pipe(_extract_first_artist_comma)
+        .assign(first_artist=lambda df: df.first_artist.str.strip())
     )
 
 
@@ -197,7 +205,7 @@ def _filter_artists(
     """
     pattern = "[\w\-\.]+\/[\w-]+|\+"  # pattern for multi artists separated by + or /
 
-    matching_patterns_indexes = artist_df.artist_name.str.contains(pattern, regex=True)
+    matching_patterns_indexes = artist_df.first_artist.str.contains(pattern, regex=True)
     too_few_words_indexes = (
         artist_df.artist_word_count < filtering_params["min_word_count"]
     ) & (
@@ -231,7 +239,9 @@ def filter_artists(
     """
     return (
         artist_df.pipe(_extract_artist_word_count)
-        .pipe(_remove_single_characters)
+        .pipe(
+            _remove_single_characters
+        )  # TODO: test without this line once we have metrics
         .pipe(_filter_artists, filtering_params=filtering_params)
     )
 

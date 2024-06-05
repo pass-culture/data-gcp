@@ -207,11 +207,14 @@ def get_cluster_to_nickname_dict(merged_df: pd.DataFrame) -> dict:
         .apply(lambda df: df["offer_number"].idxmax())
         .reset_index(name="index_nickname")
         .merge(
-            merged_df[["first_artist"]],
+            merged_df.first_artist.where(
+                merged_df.is_multi_artists, merged_df.artist_name
+            )
+            .rename("artist_nickname")
+            .to_frame(),
             left_on=["index_nickname"],
             right_index=True,
-        )[["cluster_id", "first_artist"]]
-        .rename(columns={"first_artist": "artist_nickname"})
+        )[["cluster_id", "artist_nickname"]]
         .set_index("cluster_id")["artist_nickname"]
         .to_dict()
     )

@@ -1,3 +1,12 @@
+{{
+    config(
+        materialized = "incremental",
+        incremental_strategy = "insert_overwrite",
+        partition_by = {"field": "execution_date", "data_type": "date", "granularity" : "day"},
+        on_schema_change = "sync_all_columns",
+    )
+}}
+
 WITH favorites as (
     SELECT
         DISTINCT favorite.userId as user_id,
@@ -8,29 +17,29 @@ WITH favorites as (
             SELECT
                 count(*)
             FROM
-                `{{ bigquery_analytics_dataset }}.global_booking`
+                {{ ref('mrt_global__booking') }}
             WHERE
                 offer_subcategoryId = offer.offer_subcategoryId
                 AND user_id = favorite.userId
         ) as user_bookings_for_this_subcat,
     FROM
-        `{{ bigquery_clean_dataset }}.applicative_database_favorite` as favorite
-        LEFT JOIN `{{ bigquery_analytics_dataset }}.global_booking` as booking ON favorite.userId = booking.user_id
+        {{ source('raw', 'applicative_database_favorite') }} as favorite
+        LEFT JOIN {{ ref('mrt_global__booking') }} as booking ON favorite.userId = booking.user_id
         AND favorite.offerId = booking.offer_id
-        JOIN `{{ bigquery_analytics_dataset }}.enriched_offer_data` as offer ON favorite.offerId = offer.offer_id
-        JOIN `{{ bigquery_clean_dataset }}.applicative_database_stock` as stock ON favorite.offerId = stock.offer_id
-        JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` as enruser ON favorite.userId = enruser.user_id
-        JOIN `{{ bigquery_analytics_dataset }}.subcategories` AS subcategories ON subcategories.id = offer.offer_subcategoryId
+        JOIN {{ ref('enriched_offer_data') }} as offer ON favorite.offerId = offer.offer_id
+        JOIN {{ source('raw', 'applicative_database_stock') }} as stock ON favorite.offerId = stock.offer_id
+        JOIN {{ ref('enriched_user_data') }} as enruser ON favorite.userId = enruser.user_id
+        JOIN {{ source('clean','subcategories') }} AS subcategories ON subcategories.id = offer.offer_subcategoryId
 
     WHERE
-        dateCreated <= DATE_SUB("{{ yesterday() }}", INTERVAL 7 DAY)
-        AND dateCreated > DATE_SUB("{{ yesterday() }}", INTERVAL 14 DAY)
+        dateCreated <= DATE_SUB(DATE('{{ ds() }}'), INTERVAL 8 DAY)
+        AND dateCreated > DATE_SUB(DATE('{{ ds() }}'), INTERVAL 15 DAY)
         AND booking.offer_id IS NULL
         AND booking.user_id IS NULL
         AND offer.offer_is_bookable = True
-        AND ( stock.stock_beginning_date > "{{ yesterday() }}" OR stock.stock_beginning_date is NULL)
+        AND ( stock.stock_beginning_date > DATE_SUB(DATE('{{ ds() }}'), INTERVAL 1 DAY) OR stock.stock_beginning_date is NULL)
         AND enruser.user_is_current_beneficiary = True
-        AND enruser.last_booking_date >= DATE_SUB("{{ yesterday() }}", INTERVAL 7 DAY)
+        AND enruser.last_booking_date >= DATE_SUB(DATE('{{ ds() }}'), INTERVAL 8 DAY)
         AND (
             enruser.user_theoretical_remaining_credit
         ) > stock.stock_price
@@ -40,7 +49,7 @@ WITH favorites as (
             )
 )
 SELECT
-    CAST("{{ today() }}" AS DATETIME) as execution_date,
+    DATE('{{ ds() }}') as execution_date,
     user_id,
     ARRAY_AGG(
         STRUCT(

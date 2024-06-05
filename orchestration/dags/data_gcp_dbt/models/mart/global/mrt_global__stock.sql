@@ -13,6 +13,19 @@ SELECT
     s.stock_modified_date,
     s.stock_modified_at,
     s.stock_id,
+    s.price_category_id,
+    s.stock_creation_date,
+    s.stock_booking_limit_date,
+    s.total_available_stock,
+    s.stock_quantity,
+    s.total_bookings,
+    s.total_non_cancelled_bookings,
+    s.total_cancelled_bookings,
+    s.total_paid_bookings,
+    s.stock_price,
+    s.price_category_label_id,
+    s.price_category_label,
+    s.stock_features,
     o.offer_id,
     o.offer_product_id,
     o.offer_id_at_providers,
@@ -34,5 +47,5 @@ SELECT
     o.digital_goods,
     o.event,
     o.offer_category_id,
-FROM {{ref('int_applicative__stock')}} AS s
-LEFT JOIN {{ref('mrt_global__offer_unverified')}} AS o ON s.offer_id = o.offer_id
+FROM {{ ref('int_applicative__stock') }} AS s
+LEFT JOIN {{ ref('mrt_global__offer_unverified') }} AS o ON s.offer_id = o.offer_id

@@ -5,7 +5,11 @@ import pandas as pd
 import rapidfuzz
 import typer
 
-from utils.clustering_utils import cluster_with_distance_matrices, format_cluster_matrix
+from utils.clustering_utils import (
+    cluster_with_distance_matrices,
+    format_cluster_matrix,
+    get_cluster_to_nickname_dict,
+)
 from utils.gcs_utils import upload_parquet
 
 app = typer.Typer()
@@ -40,6 +44,7 @@ def main(
             group_df.is_synchronised
         )
         if ratio_synchronised_data >= RATIO_SYNCHRONISED_DATA_THRESHOLD:
+            # Cluster by exactly matching on preprocessed_artist_name for synchronised data
             clusters_by_group_df = (
                 group_df.loc[lambda df: df.is_synchronised]
                 .groupby("preprocessed_artist_name")
@@ -67,11 +72,10 @@ def main(
             )
         )
         print("Time to compute the matching", time.time() - t0)
+    clusters_df = pd.concat(clusters_df_list)
 
     merged_df = preprocessed_df.merge(
-        pd.concat(clusters_df_list)
-        .loc[lambda df: df.group_cluster_id != -1]
-        .explode("preprocessed_artist_name")[
+        clusters_df.explode("preprocessed_artist_name")[
             [
                 "preprocessed_artist_name",
                 "offer_category_id",
@@ -83,24 +87,10 @@ def main(
         on=["preprocessed_artist_name", "offer_category_id", "artist_type"],
     )
 
-    cluster_to_nickname_dict = (
-        (
-            merged_df.groupby("cluster_id")
-            .apply(lambda df: df["offer_number"].idxmax())
-            .reset_index(name="index_nickname")
-        )
-        .merge(
-            merged_df[["artist_name"]],
-            left_on=["index_nickname"],
-            right_index=True,
-        )[["cluster_id", "artist_name"]]
-        .rename(columns={"artist_name": "artist_nickname"})
-        .set_index("cluster_id")["artist_nickname"]
-        .to_dict()
-    )
-
     output_df = merged_df.assign(
-        artist_nickname=lambda df: df.cluster_id.map(cluster_to_nickname_dict)
+        artist_nickname=lambda df: df.cluster_id.map(
+            get_cluster_to_nickname_dict(merged_df)
+        )
     )
 
     upload_parquet(

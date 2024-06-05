@@ -106,6 +106,7 @@ def cluster_with_distance_matrices(
 
     Args:
         group_artist_df (pd.DataFrame): DataFrame containing artist data.
+            Required columns: preprocessed_artist_name.
         num_chunks (int): Number of chunks to split the data into for distance matrix computation.
         clustering_threshold (float): Threshold for clustering.
         dtype_distance_matrix (np.dtype): Data type for the distance matrix.
@@ -163,6 +164,7 @@ def format_cluster_matrix(
 
     Args:
         cluster_df (pd.DataFrame): The cluster matrix dataframe.
+            Required columns: preprocessed_artist_name.
         offer_category_id (str): The offer category ID.
         artist_type (str): The artist type.
 
@@ -180,3 +182,29 @@ def format_cluster_matrix(
         + "_"
         + df.index.astype(str),
     ).sort_values("num_artists", ascending=False)
+
+
+def get_cluster_to_nickname_dict(merged_df: pd.DataFrame) -> dict:
+    """
+    Returns a dictionary mapping cluster IDs to artist nicknames.
+
+    Parameters:
+        merged_df (pd.DataFrame): The merged DataFrame containing cluster information.
+            Required columns: cluster_id, offer_number, artist_name.
+
+    Returns:
+        dict: A dictionary mapping cluster IDs to artist nicknames.
+    """
+    return (
+        merged_df.groupby("cluster_id")
+        .apply(lambda df: df["offer_number"].idxmax())
+        .reset_index(name="index_nickname")
+        .merge(
+            merged_df[["artist_name"]],
+            left_on=["index_nickname"],
+            right_index=True,
+        )[["cluster_id", "artist_name"]]
+        .rename(columns={"artist_name": "artist_nickname"})
+        .set_index("cluster_id")["artist_nickname"]
+        .to_dict()
+    )

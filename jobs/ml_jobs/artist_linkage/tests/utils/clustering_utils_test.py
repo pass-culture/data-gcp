@@ -28,7 +28,7 @@ class TestGetClusterToNicknameDict:
             {
                 "cluster_id": ["cluster1", "cluster1"],
                 "offer_number": [1, 2],
-                "artist_name": ["artist1", "artist2"],
+                "first_artist": ["artist1", "artist2"],
             }
         )
         result = get_cluster_to_nickname_dict(df)
@@ -39,7 +39,7 @@ class TestGetClusterToNicknameDict:
             {
                 "cluster_id": ["cluster1", "cluster1", "cluster2", "cluster2"],
                 "offer_number": [1, 2, 3, 4],
-                "artist_name": ["artist1", "artist2", "artist3", "artist4"],
+                "first_artist": ["artist1", "artist2", "artist3", "artist4"],
             }
         )
         result = get_cluster_to_nickname_dict(df)

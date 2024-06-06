@@ -17,7 +17,7 @@ DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
 dag_config = {
-    "BASE_DIR": "data-gcp/jobs/playground_vm",
+    "BASE_DIR": "data-gcp",
 }
 
 # Params
@@ -39,7 +39,7 @@ default_args = {
 
 
 with DAG(
-    "launch_vm",
+    "launch_vm_pyenv",
     default_args=default_args,
     description="Launch a vm to work on",
     schedule=None,
@@ -78,6 +78,7 @@ with DAG(
         task_id="fetch_code",
         instance_name="{{ params.instance_name }}",
         python_version="3.10",
+        use_pyenv=True,
         command="{{ params.branch }}",
         retries=2,
     )
@@ -86,7 +87,8 @@ with DAG(
         task_id="install_dependencies",
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
-        command="pip install -r requirements.txt --user",
+        command="NO_GCP_INIT=1 make clean_install",
+        use_pyenv=True,
         dag=dag,
         retries=2,
     )

@@ -154,7 +154,7 @@ SELECT
     CASE WHEN o.last_individual_offer_creation_date IS NOT NULL AND co.last_collective_offer_creation_date IS NOT NULL THEN GREATEST(co.last_collective_offer_creation_date,o.last_individual_offer_creation_date)
         ELSE COALESCE(o.last_individual_offer_creation_date,co.last_collective_offer_creation_date) END AS last_offer_creation_date,
     COALESCE(o.total_bookable_individual_offers,0) AS total_bookable_individual_offers,
-    COALESCE(o.total_venues) AS total_venues,
+    COALESCE(o.total_venues,0) AS total_venues,
     COALESCE(co.total_bookable_collective_offers,0) AS total_bookable_collective_offers,
     COALESCE(o.total_bookable_individual_offers,0) + COALESCE(co.total_bookable_collective_offers,0) AS total_bookable_offers
 FROM {{ source("raw", "applicative_database_venue") }} AS v

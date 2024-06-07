@@ -17,7 +17,7 @@ install:
 		make get_gcp_credentials; \
 	fi
 	make install_base
-	MICROSERVICE_PATH=. PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp REQUIREMENTS_NAME=linter-requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
+	MICROSERVICE_PATH=. PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
 	MICROSERVICE_PATH=jobs/ml_jobs/algo_training PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-algo-training REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
 	MICROSERVICE_PATH=jobs/ml_jobs/record_linkage PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-record-linkage REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
 	MICROSERVICE_PATH=jobs/ml_jobs/artist_linkage PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-artist-linkage REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice

@@ -3,10 +3,8 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from common.config import (
-    DAG_FOLDER,
-    ENV_SHORT_NAME,
-)
+from airflow.operators.python_operator import BranchPythonOperator
+from common.config import DAG_FOLDER, ENV_SHORT_NAME
 from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
@@ -17,7 +15,10 @@ DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
 dag_config = {
-    "BASE_DIR": "data-gcp/jobs/playground_vm",
+    "BASE_PLAYGROUND_DIR": "data-gcp/jobs/playground_vm",
+    "BASE_INSTALL_DIR": "data-gcp",
+    "COMMAND_INSTALL_PLAYGROUND": "pip install -r requirements.txt --user",
+    "COMMAND_INSTALL_PROJECT": "NO_GCP_INIT=1 make clean_install",
 }
 
 # Params
@@ -35,6 +36,7 @@ default_args = {
     "start_date": datetime(2022, 11, 30),
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
+    "dag_config": dag_config,
 }
 
 
@@ -58,8 +60,17 @@ with DAG(
         "gpu_count": Param(default=0, type="integer"),
         "gpu_type": Param(default="nvidia-tesla-t4", type="string"),
         "keep_alive": Param(default=True, type="boolean"),
+        "install_project": Param(default=True, type="boolean"),
     },
 ) as dag:
+
+    def select_clone_task(**kwargs):
+        input_parameter = kwargs["params"].get("install_project", False)
+        if input_parameter is True:
+            return "clone_and_setup_with_pyenv"
+        else:
+            return "clone_and_setup_with_conda"
+
     start = DummyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
@@ -74,21 +85,55 @@ with DAG(
         ],
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    branching_clone_task = BranchPythonOperator(
+        task_id="branching_clone_task",
+        python_callable=select_clone_task,
+        provide_context=True,
+    )
+
+    clone_and_setup_with_pyenv = CloneRepositoryGCEOperator(
+        task_id="clone_and_setup_with_pyenv",
         instance_name="{{ params.instance_name }}",
         python_version="3.10",
+        use_pyenv=True,
         command="{{ params.branch }}",
         retries=2,
     )
 
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
+    clone_and_setup_with_conda = CloneRepositoryGCEOperator(
+        task_id="clone_and_setup_with_conda",
         instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
-        command="pip install -r requirements.txt --user",
+        python_version="3.10",
+        use_pyenv=False,
+        command="{{ params.branch }}",
+        retries=2,
+    )
+
+    install_project_with_pyenv = SSHGCEOperator(
+        task_id="install_project_with_pyenv",
+        instance_name="{{ params.instance_name }}",
+        use_pyenv=True,
+        base_dir=dag_config["BASE_INSTALL_DIR"],
+        command=dag_config["COMMAND_INSTALL_PROJECT"],
         dag=dag,
         retries=2,
     )
 
-    (start >> gce_instance_start >> fetch_code >> install_dependencies)
+    install_playground_with_conda = SSHGCEOperator(
+        task_id="install_playground_with_conda",
+        instance_name="{{ params.instance_name }}",
+        use_pyenv=False,
+        base_dir=dag_config["BASE_PLAYGROUND_DIR"],
+        command=dag_config["COMMAND_INSTALL_PLAYGROUND"],
+        dag=dag,
+        retries=2,
+    )
+
+    clone_and_setup_with_pyenv >> install_project_with_pyenv
+    clone_and_setup_with_conda >> install_playground_with_conda
+    (
+        start
+        >> gce_instance_start
+        >> branching_clone_task
+        >> [clone_and_setup_with_pyenv, clone_and_setup_with_conda]
+    )

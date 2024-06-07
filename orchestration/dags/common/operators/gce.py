@@ -200,14 +200,16 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
         *args,
         **kwargs,
     ):
+        self.use_pyenv = use_pyenv
         self.command = (
             self.clone_and_init_with_conda(command, python_version)
-            if use_pyenv is False
+            if not self.use_pyenv
             else self.clone_and_init_with_pyenv(command)
         )
         self.instance_name = instance_name
         self.environment = environment
         self.python_version = python_version
+
         super(CloneRepositoryGCEOperator, self).__init__(
             instance_name=self.instance_name,
             command=self.command,
@@ -286,6 +288,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         *args,
         **kwargs,
     ):
+        self.use_pyenv = use_pyenv
         self.environment = dict(self.DEFAULT_EXPORT, **environment)
         commands_list = []
 
@@ -300,7 +303,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         )
 
         # Conda activate if required
-        if not use_pyenv:
+        if not self.use_pyenv:
             commands_list.append(
                 "conda init zsh && source ~/.zshrc && conda activate data-gcp"
             )

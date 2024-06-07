@@ -47,6 +47,8 @@ WITH favorites as (
                 (subcategories.is_digital_deposit AND (100 - enruser.last_deposit_theoretical_amount_spent_in_digital_goods) > stock.stock_price)
                 OR NOT subcategories.is_digital_deposit
             )
+        -- Hotfix before the dbt weekly DAG is fixed: Add condition to ensure the model runs only on Mondays
+        AND EXTRACT(DAYOFWEEK FROM DATE('{{ ds() }}')) = 2
 )
 SELECT
     DATE('{{ ds() }}') as execution_date,

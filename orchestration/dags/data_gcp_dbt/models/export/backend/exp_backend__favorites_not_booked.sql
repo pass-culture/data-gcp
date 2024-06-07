@@ -12,24 +12,24 @@ WITH favorites as (
         DISTINCT favorite.userId as user_id,
         offerId as offer_id,
         offer.offer_name,
-        offer.offer_subcategoryId as subcategory,
+        offer.offer_subcategory_id as subcategory,
         (
             SELECT
                 count(*)
             FROM
                 {{ ref('mrt_global__booking') }}
             WHERE
-                offer_subcategoryId = offer.offer_subcategoryId
+                offer_subcategory_id = offer.offer_subcategory_id
                 AND user_id = favorite.userId
         ) as user_bookings_for_this_subcat,
     FROM
         {{ source('raw', 'applicative_database_favorite') }} as favorite
         LEFT JOIN {{ ref('mrt_global__booking') }} as booking ON favorite.userId = booking.user_id
         AND favorite.offerId = booking.offer_id
-        JOIN {{ ref('enriched_offer_data') }} as offer ON favorite.offerId = offer.offer_id
+        JOIN {{ ref('mrt_global__offer') }} as offer ON favorite.offerId = offer.offer_id
         JOIN {{ source('raw', 'applicative_database_stock') }} as stock ON favorite.offerId = stock.offer_id
         JOIN {{ ref('enriched_user_data') }} as enruser ON favorite.userId = enruser.user_id
-        JOIN {{ source('clean','subcategories') }} AS subcategories ON subcategories.id = offer.offer_subcategoryId
+        JOIN {{ source('clean','subcategories') }} AS subcategories ON subcategories.id = offer.offer_subcategory_id
 
     WHERE
         dateCreated <= DATE_SUB(DATE('{{ ds() }}'), INTERVAL 8 DAY)

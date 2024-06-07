@@ -6,7 +6,7 @@ install_base:
 install_microservice:
 	# Recreate the venv if RECREATE_VENV is set to 1
 	@if [ "$(RECREATE_VENV)" = "1" ]; then \
-		eval "$$(pyenv init -)" && cd $(MICROSERVICE_PATH) && rm -f .python-version && pyenv virtualenv-delete -f $(VENV_NAME) && pyenv virtualenv $(PHYTON_VENV_VERSION) $(VENV_NAME) && pyenv local $(VENV_NAME); \
+		eval "$$(pyenv init -)" && cd $(MICROSERVICE_PATH) && rm -f .python-version && (pyenv virtualenv-delete -f $(VENV_NAME) || echo "virtualenv does not exist" )&& pyenv virtualenv $(PHYTON_VENV_VERSION) $(VENV_NAME) && pyenv local $(VENV_NAME); \
 	fi
 	# Install the requirements
 	@eval "$$(pyenv init -)" && cd $(MICROSERVICE_PATH) && pyenv activate $(VENV_NAME) && uv pip install -r $(REQUIREMENTS_NAME)
@@ -61,4 +61,4 @@ create_micro_service:
 	python automations/create_micro_service.py --ms-name $(MS_NAME)
 	git add .
 	git commit -am "Add $(MS_NAME) microservice"
-	make install
+	make clean_install

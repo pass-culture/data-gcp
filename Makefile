@@ -57,8 +57,8 @@ prerequisites_on_debian_vm:
 	echo '. "$$HOME/.cargo/env"' >> ~/.profile
 	bash
 
-create_micro_service:
-	python automations/create_micro_service.py --ms-name $(MS_NAME)
+create_microservice:
+	python automations/create_microservice.py --ms-name $(MS_NAME)
 	git add .
 	git commit -am "Add $(MS_NAME) microservice"
 	make clean_install

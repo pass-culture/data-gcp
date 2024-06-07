@@ -56,3 +56,8 @@ prerequisites_on_debian_vm:
 	echo 'eval "$$(pyenv virtualenv-init -)"' >> ~/.profile
 	echo '. "$$HOME/.cargo/env"' >> ~/.profile
 	bash
+
+create_micro_service:
+	python automations/create_micro_service.py --ms-name $(MS_NAME)
+	git add .
+	git commit -am "Add $(MS_NAME) microservice"

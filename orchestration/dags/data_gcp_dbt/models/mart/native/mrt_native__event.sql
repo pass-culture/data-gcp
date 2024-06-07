@@ -32,6 +32,7 @@ SELECT
     e.module_id,
     e.entry_id,
     e.onboarding_user_selected_age,
+    e.reco_ab_test,
     o.offer_name,
     o.offer_category_id,
     o.offer_subcategoryId,

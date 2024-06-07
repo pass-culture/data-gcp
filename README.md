@@ -109,3 +109,25 @@ Voici les jobs créés pour le déploiement :
 
 Ces déploiements sont déclenchés sur les branches `master` / `production`.
 
+## Automatisations
+
+### ML Jobs
+
+Pour créer un nouveau micro service de ML :
+
+```bash
+MS_NAME=mon_micro_service make create_micro_service
+```
+
+où mon_micro_service est le nom du micro service. Exemple :
+
+```bash
+MS_NAME=algo_llm make create_micro_service
+```
+
+Cela va :
+
+1. créer un dossier `algo_llm` dans `jobs/ml_jobs` avec les fichiers nécessaires pour le micro service.
+2. rajouter le micro service dans la target install du Makefile
+3. Commiter les changements
+4. Lancer l'installation du nouveau micro service

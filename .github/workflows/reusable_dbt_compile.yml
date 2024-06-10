@@ -60,7 +60,7 @@ jobs:
             echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--d5adf2e8-bucket" >> $GITHUB_OUTPUT
           elif ${{ github.base_ref  == 'master' }}
           then
-            echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--00137508-bucket" >> $GITHUB_OUTPUT
+          echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--a3134989-bucket" >> $GITHUB_OUTPUT
           else
             echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--a3134989-bucket" >> $GITHUB_OUTPUT
           fi

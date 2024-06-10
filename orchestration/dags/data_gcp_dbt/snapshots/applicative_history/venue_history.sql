@@ -1,4 +1,4 @@
-{% snapshot booking_snapshot %}
+{% snapshot venue_audioDisabilityCompliant_snapshot %}
 
 {{
     config(

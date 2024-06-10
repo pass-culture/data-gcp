@@ -166,4 +166,7 @@ sources:
       - name: siren_data_labels
       - name: user_locations
       - name: ZRR
-
+  - name: snp # this is the source_name
+    schema: snapshots_applicative
+    tables:
+      - name: booking_history

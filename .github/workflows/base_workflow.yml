@@ -9,7 +9,18 @@ jobs:
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
-   compile-dbt:
+   compile-dbt-on-prod:
+    if: github.base_ref == 'production'
+    with:
+      TARGET_COMPOSER_BUCKET: "europe-west1-data-composer--d5adf2e8-bucket"
+    uses: ./.github/workflows/reusable_dbt_compile.yml
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+   compile-dbt-on-stg:
+    if: github.base_ref == 'master'
+    with:
+      TARGET_COMPOSER_BUCKET: "europe-west1-data-composer--00137508-bucket"
     uses: ./.github/workflows/reusable_dbt_compile.yml
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}

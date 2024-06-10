@@ -63,7 +63,7 @@ jobs:
             echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--d5adf2e8-bucket" >> $GITHUB_OUTPUT
           elif ${{ github.base_ref  == 'master' }}
           then
-          echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--a3134989-bucket" >> $GITHUB_OUTPUT
+          echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--00137508-bucket" >> $GITHUB_OUTPUT
           else
             echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--a3134989-bucket" >> $GITHUB_OUTPUT
           fi
@@ -73,7 +73,7 @@ jobs:
           COMPOSER_DAGS_BUCKET: ${{ steps.get-target-bucket.outputs.COMPOSER_DAGS_BUCKET }}
         run: |
           mkdir env-run-artifacts
-          gsutil cp gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json dags/data_gcp_dbt/env-run-artifacts/manifest.py
+          gsutil cp gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json env-run-artifacts/manifest.py
       - name: "Install orchestration & dbt requirements"
         run: |
           pip install -r airflow/orchestration-requirements.txt

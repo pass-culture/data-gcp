@@ -3,6 +3,9 @@ name: "DBT build job"
 on:
   workflow_call:
     inputs:
+      TARGET_COMPOSER_BUCKET:
+        type: string
+        required: true
       NOTIF_CHANNEL_ID:
         type: string
         required: false # Si pas fourni, alors pas de notif
@@ -56,21 +59,10 @@ jobs:
           service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v2'
-      - id: "get-target-bucket"
-        run: |
-          if ${{ github.base_ref == 'production'}}
-          then
-            echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--d5adf2e8-bucket" >> $GITHUB_OUTPUT
-          elif ${{ github.base_ref  == 'master' }}
-          then
-          echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--00137508-bucket" >> $GITHUB_OUTPUT
-          else
-            echo "COMPOSER_DAGS_BUCKET=europe-west1-data-composer--a3134989-bucket" >> $GITHUB_OUTPUT
-          fi
       - name: "Pull run artifacts"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
-          COMPOSER_DAGS_BUCKET: ${{ steps.get-target-bucket.outputs.COMPOSER_DAGS_BUCKET }}
+          COMPOSER_DAGS_BUCKET: ${{ inputs.TARGET_COMPOSER_BUCKET }}
         run: |
           mkdir env-run-artifacts
           gsutil cp gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json env-run-artifacts/manifest.py
@@ -91,11 +83,17 @@ jobs:
         env:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
-        run: dbt compile
+        run: dbt compile --target-path target --profile CI --profiles-dir .
+      - name: "show compiled manifest"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        run: echo $(ls target)
       - name: "Run modified models & 1st order childrens"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
         run: |
-          dbt run -s state:modified+1 --profile CI --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view'}"
+          dbt run -s state:modified+1 --profile CI --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view'}" --target-path target --profiles-dir .
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
         uses: slackapi/slack-github-action@v1.23.0

@@ -1,6 +1,6 @@
 version: 2
 
-macros:
+models:
 
   - name: mrt_global__venue
     description: "This table that consolidates comprehensive details about venues at the `venue_id` granularity."

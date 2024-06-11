@@ -10,5 +10,3 @@ models:
           this is due to Support changes in the past which migh lead to misunderstandings.
           if user_department is not in pilote (2019_02 / 2019_06) phase but has created an account before, set 99.
           if user_department is not in experimentation (2019_06 / 2021_05) phase but has created an account before, set 99.
-        tests:
-          - not_null

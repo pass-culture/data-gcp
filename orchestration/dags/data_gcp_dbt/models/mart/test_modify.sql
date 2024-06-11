@@ -1,1 +1,0 @@
-select * from {{ ref('mrt_pro__event') }} limit 10

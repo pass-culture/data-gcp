@@ -1,6 +1,6 @@
 typer==0.9.0
 polars==0.19.12
-requests==2.31.0
+requests==2.32.2
 google-cloud-bigquery==3.12.0
 google-cloud-secret-manager==2.16.4
 pyarrow==13.0.0

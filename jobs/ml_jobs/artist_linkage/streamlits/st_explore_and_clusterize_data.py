@@ -10,10 +10,24 @@ from scipy.sparse import csr_matrix, vstack
 from sklearn.cluster import DBSCAN
 from stqdm import stqdm
 
+from preprocess import FILTERING_PARAMS
+from utils.preprocessing_utils import (
+    clean_names,
+    extract_first_artist,
+    filter_artists,
+    format_names,
+)
+
 st.set_page_config(layout="wide")
 
+
 # %% Load Data
-artist_df = pd.read_parquet(
+@st.cache_data
+def load_data(source_path: str) -> pd.DataFrame:
+    return pd.read_parquet(source_path)
+
+
+artist_df = pd.load_data(
     "gs://data-bucket-stg/link_artists/artists_to_match.parquet"
 ).assign(artist=lambda df: df.artist_name)
 
@@ -30,12 +44,6 @@ SCORE_MULTIPLIER = (
     else 1
 )
 
-
-# %%
-def preprocessing(string: str) -> str:
-    return " ".join(sorted(rapidfuzz.utils.default_process(string).split()))
-
-
 selected_category = st.sidebar.selectbox(
     "category",
     options=CATEGORIES,
@@ -48,6 +56,8 @@ selected_punctuation = st.sidebar.selectbox(
 )
 search_filter = st.sidebar.text_input("search", value="oda")
 
+
+# %%
 category_df = artist_df.dropna().loc[
     lambda df: df.offer_category_id == selected_category
 ]
@@ -74,17 +84,12 @@ filtered_df = (
     ]
 )
 
-if selected_category == "LIVRE":
-    filtered_df = (
-        filtered_df.assign(
-            artist=lambda df: df.artist.map(preprocessing)
-            .str.replace(r"(\b[a-zA-Z]\b)", "", regex=True)
-            .str.replace(r"\s+", " ", regex=True)
-            .str.strip()
-        )
-        .loc[lambda df: (df.artist.apply(lambda x: len(x.split())) > 1)]
-        .drop_duplicates()
-    )
+preprocessed_df = (
+    filtered_df.pipe(clean_names)
+    .pipe(extract_first_artist)
+    .pipe(filter_artists, filtering_params=FILTERING_PARAMS)
+    .pipe(format_names)
+)
 
 
 # %% Print samples
@@ -92,14 +97,14 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.write("Number of artists", len(category_df))
 with col2:
-    st.write("Number of artists after filtering", len(filtered_df))
+    st.write("Number of artists after filtering", len(preprocessed_df))
 with col3:
-    st.progress(len(filtered_df) / len(category_df))
+    st.progress(len(preprocessed_df) / len(category_df))
 
 st.markdown("""---""")
-if len(filtered_df) > 0:
+if len(preprocessed_df) > 0:
     st.dataframe(
-        filtered_df.loc[:, ["artist", "total_booking_count"]],
+        preprocessed_df,
         width=1500,
         height=500,
         hide_index=True,
@@ -188,9 +193,10 @@ with st.form("compute clusters"):
         step=0.01,
         value=0.2,
     )
-    artists_list = filtered_df.artist.map(preprocessing).drop_duplicates().tolist()
+    artists_list = preprocessed_df.preprocessed_artist_name.drop_duplicates().tolist()
     st.write("Number of artists", len(artists_list))
 
+    ### Clustering
     submitted = st.form_submit_button("Compute")
     if submitted is True:
         complete_sparse_matrix = compute_distance_matrix(
@@ -212,6 +218,12 @@ with st.form("compute clusters"):
             .assign(
                 artist_encoding=lambda df: df.artist.map(jellyfish.metaphone),
                 cluster=clusters,
+            )
+            .assign(
+                cluster=lambda df: df.cluster.where(
+                    lambda s: s != -1,
+                    np.arange(df.cluster.max() + 1, df.cluster.max() + 1 + len(df)),
+                )
             )
             .groupby("cluster")
             .agg({"artist": set, "artist_encoding": set})

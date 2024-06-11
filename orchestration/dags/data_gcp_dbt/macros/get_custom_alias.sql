@@ -1,6 +1,10 @@
 {% macro generate_alias_name(custom_alias_name=none, node=none) -%}
 
-    {%- if custom_alias_name and 'applicative' in node.path -%}
+    {%- if target.profile_name == "CI" -%}
+
+        {{ node.name }}
+
+    {%- elif custom_alias_name and 'applicative' in node.path -%}
 
         {{ custom_alias_name ~ node.name }}
 

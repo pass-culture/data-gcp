@@ -16,5 +16,5 @@ psycopg2-binary>=2.8
 airflow-provider-great-expectations>=0.2.6
 dbt-core==1.7.2
 dbt-bigquery==1.7.2
-re-data==0.10.9
+re-data==0.11
 click==8.1.4

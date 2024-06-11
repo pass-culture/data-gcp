@@ -36,12 +36,6 @@ models:
       applicative: 
         +alias: applicative_database_
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
-      applicative_history:
-        +alias: applicative_database_
-        +materialized: "{{ var('CI_MATERIALIZATION', 'incremental') }}"
-        +partition_by: {'field': 'partition_date', 'data_type': 'date'}
-        +cluster_by: ['partition_date']  
-        +incremental_strategy: insert_overwrite
     analytics:
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: analytics_{{ target.name }}

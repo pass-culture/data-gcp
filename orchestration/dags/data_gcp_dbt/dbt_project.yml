@@ -85,7 +85,7 @@ snapshots:
       tags: applicative_history
 tests:
   # +store_failures: true  # store failures for all tests
-  +severity: warn # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.  
+  +severity: "{{ var('CI_SEVERITY', 'warn') }}" # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.  
   +docs:
     show: true
     tags: "test"
@@ -95,3 +95,4 @@ vars:
   ENV_SHORT_NAME: dev
   re_data:save_test_history: true
   CI_MATERIALIZATION: none
+  CI_SEVERITY: none

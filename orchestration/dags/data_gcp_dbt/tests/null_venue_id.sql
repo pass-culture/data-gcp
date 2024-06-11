@@ -1,0 +1,1 @@
+select * from {{ ref('venue') }} where venue_id is null

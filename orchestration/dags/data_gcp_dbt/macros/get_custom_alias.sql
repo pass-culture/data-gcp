@@ -8,6 +8,10 @@
 
         {{ custom_alias_name }}
 
+    {%- elif target.profile_name == "CI" -%}
+
+        {{ node.name }}
+
     {%- elif ('intermediate' in node.path or 'machine_learning' in node.path) and ((target.name == "prod" and target.profile_name != "sandbox") or target.name == "stg")  -%}
 
         {%- set model_name = node.name.split('__') -%}

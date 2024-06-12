@@ -77,7 +77,7 @@ CI:
   target: dev
   outputs:
     dev:
-      dataset: CI_dev
+      dataset: ci_dev
       job_execution_timeout_seconds: 300
       job_retries: 1
       location: europe-west1
@@ -87,7 +87,7 @@ CI:
       threads: 1
       type: bigquery
     stg:
-      dataset: CI_stg
+      dataset: ci_stg
       job_execution_timeout_seconds: 300
       job_retries: 1
       location: europe-west1
@@ -97,7 +97,7 @@ CI:
       threads: 1
       type: bigquery
     prod:
-      dataset: CI_prod
+      dataset: ci_prod
       job_execution_timeout_seconds: 1200
       job_retries: 4
       location: europe-west1

@@ -76,15 +76,16 @@ wait4init = waiting_operator(dag, "dbt_init_dag")
 join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
 
 compile = BashOperator(
-                task_id="compilation",
-                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_manifest.sh ",
-                env={"target": "{{ params.target }}",
-                    "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-                },
-                append_env=True,
-                cwd=PATH_TO_DBT_PROJECT,
-                dag=dag,
-            )
+    task_id="compilation",
+    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_manifest.sh ",
+    env={
+        "target": "{{ params.target }}",
+        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+    },
+    append_env=True,
+    cwd=PATH_TO_DBT_PROJECT,
+    dag=dag,
+)
 
 end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
 
@@ -108,7 +109,11 @@ for node in manifest["nodes"].keys():
             dbt_snapshots.append(node)
         if manifest["nodes"][node]["resource_type"] == "model":
             dbt_models.append(node)
-        if manifest["nodes"][node]["resource_type"] == "test" and manifest["nodes"][node]["config"].get("severity", "warn").lower() == "error":
+        if (
+            manifest["nodes"][node]["resource_type"] == "test"
+            and manifest["nodes"][node]["config"].get("severity", "warn").lower()
+            == "error"
+        ):
             dbt_crit_tests.append(node)
 
 models_with_dependencies = [
@@ -262,5 +267,13 @@ with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
         )
 
 
-start >> branching >> [shunt, wait4init] >> join >> wait_for_raw >> snapshot_group >> data_transfo 
+(
+    start
+    >> branching
+    >> [shunt, wait4init]
+    >> join
+    >> wait_for_raw
+    >> snapshot_group
+    >> data_transfo
+)
 compile >> end

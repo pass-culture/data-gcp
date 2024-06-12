@@ -1,4 +1,4 @@
-{% snapshot venue_audioDisabilityCompliant_snapshot %}
+{% snapshot venue_history %}
 
 {{
     config(
@@ -8,7 +8,7 @@
     )
 }}
 
-select 
+select
   venue_id,
   venue_siret,
   venue_is_permanent,
@@ -20,7 +20,7 @@ select
   venue_mentalDisabilityCompliant,
   venue_motorDisabilityCompliant,
   venue_visualDisabilityCompliant,
-  venue_withdrawal_details 
+  venue_withdrawal_details
 from {{ ref('venue') }}
 
 {% endsnapshot %}

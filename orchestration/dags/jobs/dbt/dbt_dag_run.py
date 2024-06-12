@@ -79,6 +79,7 @@ end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
 
 wait_for_raw = waiting_operator(dag=dag, dag_id="import_applicative_database")
 
+
 # Dbt dag reconstruction
 model_op_dict = {}
 test_op_dict = {}
@@ -86,23 +87,19 @@ test_op_dict = {}
 
 manifest = load_manifest(f"{PATH_TO_DBT_TARGET}")
 
-dbt_models = [
-    node
-    for node in manifest["nodes"].keys()
-    if (
-        manifest["nodes"][node]["resource_type"] == "model"
-        and manifest["nodes"][node]["package_name"] == "data_gcp_dbt"
-    )
-]
-dbt_crit_tests = [
-    node
-    for node in manifest["nodes"].keys()
-    if (
-        manifest["nodes"].get(node).get("resource_type") == "test"
-        and manifest["nodes"].get(node).get("package_name") == "data_gcp_dbt"
-    )
-    and manifest["nodes"][node]["config"].get("severity", "warn").lower() == "error"
-]
+dbt_snapshots = []
+dbt_models = []
+dbt_crit_tests = []
+
+for node in manifest["nodes"].keys():
+    if manifest["nodes"][node]["package_name"] == "data_gcp_dbt":
+        if manifest["nodes"][node]["resource_type"] == "snapshot":
+            dbt_snapshots.append(node)
+        if manifest["nodes"][node]["resource_type"] == "model":
+            dbt_models.append(node)
+        if manifest["nodes"][node]["resource_type"] == "test" and manifest["nodes"][node]["config"].get("severity", "warn").lower() == "error":
+            dbt_crit_tests.append(node)
+
 models_with_dependencies = [
     node for node in manifest["child_map"].keys() if node in dbt_models
 ]

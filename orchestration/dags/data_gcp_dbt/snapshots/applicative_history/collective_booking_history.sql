@@ -26,6 +26,6 @@ SELECT
 	collective_booking_confirmation_date,
 	collective_booking_confirmation_limit_date,
 	educational_redactor_id
-FROM {{ ref('collective_booking') }}
+{{ source('raw', 'applicative_database_collective_booking') }}
 
 {% endsnapshot %}

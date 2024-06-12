@@ -13,6 +13,6 @@ SELECT
 	offerer_tag_name,
 	offerer_tag_label,
 	offerer_tag_description
-FROM {{ ref('offerer_tag') }}
+FROM {{ source('raw', 'applicative_database_offerer_tag') }}
 
 {% endsnapshot %}

@@ -8,6 +8,17 @@
     )
 }}
 
+WITH offer_rank as (
+    SELECT
+        *
+        , ROW_NUMBER() OVER (PARTITION BY offer_id ORDER BY offer_date_updated DESC) as row_number
+    FROM {{ source('raw', 'applicative_database_offer') }}
+    WHERE offer_subcategoryid NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
+    AND (
+        booking_email != 'jeux-concours@passculture.app'
+        OR booking_email IS NULL
+    )
+)   
 SELECT
 	offer_modified_at_last_provider_date,
 	offer_id,
@@ -36,6 +47,7 @@ SELECT
 	offer_last_validation_type,
 	TO_HEX(SHA256(TRIM(cast(offer_extra_data as string)))) as offer_extra_data_hash,
     TO_HEX(SHA256(ARRAY_TO_STRING(offer_media_urls, " "))) as offer_media_urls_hash
-FROM {{ ref('offer') }}
+FROM offer_rank
+WHERE row_number=1
 
 {% endsnapshot %}

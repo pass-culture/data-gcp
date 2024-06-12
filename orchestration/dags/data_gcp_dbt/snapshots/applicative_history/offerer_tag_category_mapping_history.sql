@@ -12,6 +12,6 @@ SELECT
 	offerer_tag_category_mapping_id,
 	offerer_tag_id,
 	offerer_tag_category_id
-FROM {{ ref('offerer_tag_category_mapping') }}
+FROM {{ source('raw', 'applicative_database_offerer_tag_category_mapping') }}
 
 {% endsnapshot %}

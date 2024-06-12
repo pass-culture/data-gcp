@@ -33,6 +33,6 @@ SELECT
 	collective_offer_image_id,
 	educational_domains,
 	collective_offer_venue_address_type
-FROM {{ ref('collective_offer_template') }}
+FROM {{ source('raw', 'applicative_database_collective_offer_template') }}
 
 {% endsnapshot %}

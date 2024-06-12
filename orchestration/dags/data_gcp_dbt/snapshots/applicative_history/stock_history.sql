@@ -20,6 +20,6 @@ SELECT
 	stock_beginning_date,
 	stock_creation_date,
 	number_of_tickets
-FROM {{ ref('stock') }}
+FROM {{ source('raw', 'applicative_database_stock') }}
 
 {% endsnapshot %}

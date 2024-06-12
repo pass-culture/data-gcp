@@ -12,7 +12,7 @@
 select
   booking_id,
   booking_creation_date,
-  stock_id,
+  booking.stock_id,
   booking_quantity,
   user_id,
   booking_amount,
@@ -23,7 +23,8 @@ select
   booking_cancellation_date,
   booking_cancellation_reason,
   booking_reimbursement_date
-from {{ ref('booking') }}
+FROM {{ source('raw','applicative_database_booking') }} booking
+JOIN {{ source('raw','applicative_database_stock') }} stock USING(stock_id)
 {% endsnapshot %}
 
 

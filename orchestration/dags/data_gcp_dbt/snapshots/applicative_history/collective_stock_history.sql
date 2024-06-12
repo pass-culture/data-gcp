@@ -19,6 +19,6 @@ SELECT
 	collective_stock_booking_limit_date_time,
 	collective_stock_number_of_tickets,
 	collective_stock_price_detail
-FROM {{ ref('collective_stock') }}
+FROM {{ source('raw', 'applicative_database_collective_stock') }}
 
 {% endsnapshot %}

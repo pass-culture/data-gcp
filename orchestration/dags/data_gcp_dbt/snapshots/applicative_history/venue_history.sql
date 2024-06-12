@@ -21,7 +21,7 @@ select
   venue_motorDisabilityCompliant,
   venue_visualDisabilityCompliant,
   venue_withdrawal_details
-from {{ ref('venue') }}
+FROM {{ source('raw', 'applicative_database_venue') }}
 
 {% endsnapshot %}
 

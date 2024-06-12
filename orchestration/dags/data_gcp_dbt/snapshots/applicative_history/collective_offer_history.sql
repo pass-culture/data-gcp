@@ -30,6 +30,6 @@ SELECT
 	collective_offer_contact_phone,
 	collective_offer_offer_venue,
 	collective_offer_last_validation_type
-FROM {{ ref('collective_offer') }}
+{{ source('raw', 'applicative_database_collective_offer') }}
 
 {% endsnapshot %}

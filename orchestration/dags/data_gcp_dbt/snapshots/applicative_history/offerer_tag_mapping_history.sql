@@ -12,6 +12,7 @@ SELECT
 	offerer_tag_mapping_id,
 	offerer_id,
 	tag_id
-FROM {{ ref('offerer_tag_mapping') }}
+FROM {{ source('raw', 'applicative_database_offerer_tag_mapping') }}
+
 
 {% endsnapshot %}

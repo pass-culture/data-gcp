@@ -160,7 +160,7 @@ LEFT JOIN tagged_partners ON tagged_partners.offerer_id = enriched_offerer_data.
 LEFT JOIN permanent_venues ON permanent_venues.offerer_id = enriched_offerer_data.offerer_id
 LEFT JOIN top_venue_per_offerer ON top_venue_per_offerer.offerer_id = enriched_offerer_data.offerer_id
 LEFT JOIN {{ source('raw', 'agg_partner_cultural_sector') }} ON agg_partner_cultural_sector.partner_type = COALESCE(tagged_partners.partner_type, top_venue_per_offerer.partner_type)
-WHERE NOT enriched_offerer_data.is_local_authority  -- Collectivités à part
+WHERE (NOT enriched_offerer_data.is_local_authority   OR enriched_offerer_data.is_local_authority IS NULL)-- Collectivités à part
 AND permanent_venues.offerer_id IS NULL -- Pas déjà compté à l'échelle du lieu permanent
 )
 

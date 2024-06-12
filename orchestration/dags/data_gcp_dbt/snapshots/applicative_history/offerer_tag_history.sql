@@ -3,8 +3,8 @@
 {{
     config(
       strategy='check',
-      unique_key='venue_id',
-      check_cols=['offerer_tag_id', 'offerer_tag_name', 'offerer_tag_label', 'offerer_tag_description']
+      unique_key='offerer_tag_id',
+      check_cols=['offerer_tag_name', 'offerer_tag_label', 'offerer_tag_description']
     )
 }}
 

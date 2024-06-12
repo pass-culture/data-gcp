@@ -3,8 +3,8 @@
 {{
     config(
       strategy='check',
-      unique_key='venue_id',
-      check_cols=['venue_id', 'venue_criterion_id', 'criterion_id']
+      unique_key='venue_criterion_id',
+      check_cols=['venue_id', 'criterion_id']
     )
 }}
 

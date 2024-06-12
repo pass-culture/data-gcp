@@ -25,6 +25,9 @@ clean-targets:
 
 models:
   data_gcp_dbt:
+    +persist_docs:
+      relation: true
+      columns: true
     clean:
       +config:
         +meta:

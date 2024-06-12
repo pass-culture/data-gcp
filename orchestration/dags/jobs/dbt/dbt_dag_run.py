@@ -232,4 +232,23 @@ for test, parents in crit_test_parents.items():
         except KeyError:
             pass
 
-start >> branching >> [shunt, wait4init] >> join >> wait_for_raw >> data_transfo
+# snapshot group
+with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
+    for snapshot_node in dbt_snapshots:
+        snapshot_data = manifest["nodes"][snapshot_node]
+        test_op_dict[snapshot_node] = BashOperator(
+            task_id=snapshot_data["alias"] + "_snapshot",
+            bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_snapshot.sh ",
+            env={
+                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                "target": "{{ params.target }}",
+                "snapshot": f"""{snapshot_data['alias']}""",
+                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+            },
+            append_env=True,
+            cwd=PATH_TO_DBT_PROJECT,
+            dag=dag,
+        )
+
+
+start >> branching >> [shunt, wait4init] >> join >> wait_for_raw >> snapshot_group >> data_transfo 

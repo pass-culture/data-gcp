@@ -77,7 +77,7 @@ join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
 
 compile = BashOperator(
     task_id="compilation",
-    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_manifest.sh ",
+    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_compile.sh ",
     env={
         "target": "{{ params.target }}",
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
@@ -252,8 +252,8 @@ for test, parents in crit_test_parents.items():
 with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
     for snapshot_node in dbt_snapshots:
         snapshot_data = manifest["nodes"][snapshot_node]
-        test_op_dict[snapshot_node] = BashOperator(
-            task_id=snapshot_data["alias"] + "_snapshot",
+        snapshot_op = BashOperator(
+            task_id=snapshot_data["alias"],
             bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_snapshot.sh ",
             env={
                 "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",

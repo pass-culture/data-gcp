@@ -23,10 +23,7 @@ select
   booking_cancellation_date,
   booking_cancellation_reason,
   booking_reimbursement_date
---from {{ source('clean', 'applicative_database_booking_history') }} limit 100
--- from {{ source('raw', 'applicative_database_booking') }}
-from {{ source('snp', 'booking_history') }}
--- select * from {{ source('clean', 'applicative_database_booking_history') }} limit 100
+from {{ ref('booking') }}
 {% endsnapshot %}
 
 

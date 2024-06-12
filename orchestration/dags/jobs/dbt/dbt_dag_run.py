@@ -75,6 +75,17 @@ wait4init = waiting_operator(dag, "dbt_init_dag")
 
 join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
 
+compile = BashOperator(
+                task_id="compilation",
+                bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_manifest.sh ",
+                env={"target": "{{ params.target }}",
+                    "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                },
+                append_env=True,
+                cwd=PATH_TO_DBT_PROJECT,
+                dag=dag,
+            )
+
 end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
 
 wait_for_raw = waiting_operator(dag=dag, dag_id="import_applicative_database")
@@ -219,9 +230,9 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
         )
         # replace model ascendency by test ascendency when needed
         if model_node in models_with_crit_test_dependencies:
-            test_op_dict[model_node] >> (children if len(children) > 0 else end)
+            test_op_dict[model_node] >> (children if len(children) > 0 else compile)
         else:
-            model_op_dict[model_node] >> (children if len(children) > 0 else end)
+            model_op_dict[model_node] >> (children if len(children) > 0 else compile)
 
 
 # test's cross dependencies management
@@ -252,3 +263,4 @@ with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
 
 
 start >> branching >> [shunt, wait4init] >> join >> wait_for_raw >> snapshot_group >> data_transfo 
+compile >> end

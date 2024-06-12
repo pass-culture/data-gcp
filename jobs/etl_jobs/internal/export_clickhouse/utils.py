@@ -24,7 +24,7 @@ def load_sql(dataset_name: str, table_name: str, extra_data={}, folder="tmp") ->
 
 
 def load_sql_view(view_name: str, extra_data={}, folder="analytics"):
-    with open(f"{BASE_DIR}/analytics/{view_name}.sql") as file:
+    with open(f"{BASE_DIR}/{folder}/{view_name}.sql") as file:
         sql_template = file.read()
     return Template(sql_template).render(extra_data)
 

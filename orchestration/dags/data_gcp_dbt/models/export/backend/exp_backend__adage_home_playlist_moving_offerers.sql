@@ -3,7 +3,7 @@ WITH random_template_offer_per_venue AS
   (SELECT collective_offer_id,
           collective_offer_creation_date,
           venue_id
-   FROM `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template o
+   FROM {{ source('raw', 'applicative_database_collective_offer_template') }} o
    WHERE o.collective_offer_venue_address_type = "school"
    AND collective_offer_is_active
    QUALIFY ROW_NUMBER() OVER (PARTITION BY venue_id ORDER BY RAND() )=1),
@@ -18,11 +18,11 @@ offerer_venue_info AS
           id.institution_longitude AS venue_moving_longitude,
           MAX(collective_booking_creation_date) AS last_booking_date,
           COUNT(DISTINCT b.collective_booking_id) AS nb_booking
-   FROM `{{ bigquery_analytics_dataset }}`.enriched_collective_booking_data b
-   INNER JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer o ON b.collective_offer_id=o.collective_offer_id
+   FROM {{ ref('enriched_collective_booking_data') }} b
+   INNER JOIN {{ source('raw', 'applicative_database_collective_offer') }} o ON b.collective_offer_id=o.collective_offer_id
    AND o.collective_offer_venue_address_type = "school"
    JOIN random_template_offer_per_venue v ON v.venue_id=b.venue_id -- JOIN because we only keep venues that have bookings AND template offer
-   LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_institution_data id ON id.institution_id=b.educational_institution_id
+   LEFT JOIN {{ ref('enriched_institution_data') }} id ON id.institution_id=b.educational_institution_id
    WHERE collective_booking_status IN ("CONFIRMED",
                                        "REIMBURSED",
                                        "USED")
@@ -40,7 +40,7 @@ institution_info AS
           institution_rural_level,
           institution_latitude,
           institution_longitude
-   FROM `{{ bigquery_analytics_dataset }}`.enriched_institution_data id), 
+   FROM {{ ref('enriched_institution_data') }} id),
 
 -- Get all venues with at least one reservation at less than 300KM.
 ac_moving AS

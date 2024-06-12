@@ -5,10 +5,11 @@ WITH offerer_offer_info AS
           v.venue_latitude ,
           v.venue_longitude ,
           o.collective_offer_id
-   FROM `{{ bigquery_analytics_dataset }}`.enriched_collective_offer_data o
-   JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue v ON v.venue_id=o.venue_id
+   FROM {{ ref('enriched_collective_offer_data') }}  o
+   JOIN {{ ref('venue') }} v ON v.venue_id=o.venue_id
    AND venue_is_permanent IS TRUE
-   JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template t ON t.collective_offer_id=o.collective_offer_id
+   JOIN
+    {{ source('raw', 'applicative_database_collective_offer_template') }} t ON t.collective_offer_id=o.collective_offer_id
      AND collective_offer_venue_address_type != "school"
    WHERE offer_is_template IS TRUE
      AND o.collective_offer_is_active ), 
@@ -19,7 +20,7 @@ institution_info AS
           institution_rural_level ,
           institution_latitude ,
           institution_longitude
-   FROM `{{ bigquery_analytics_dataset }}`.enriched_institution_data), 
+   FROM {{ ref('enriched_institution_data') }}),
 
 -- CROSS JOIN
 calculate_distance AS

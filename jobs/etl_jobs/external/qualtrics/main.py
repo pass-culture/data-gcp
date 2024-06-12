@@ -42,6 +42,7 @@ def run(
                 qualtrics_survey = QualtricsSurvey(
                     api_token=API_TOKEN, survey_id=survey_id, data_center=DATA_CENTER
                 )
+                qualtrics_survey.get_qualtrics_survey()
                 processed_df = qualtrics_survey.process_ir_qualtrics_data(target)
                 save_to_raw_bq(
                     processed_df,
@@ -52,6 +53,7 @@ def run(
                 qualtrics_survey = QualtricsSurvey(
                     api_token=API_TOKEN, survey_id=survey_id, data_center=DATA_CENTER
                 )
+                qualtrics_survey.get_qualtrics_survey()
                 processed_df = qualtrics_survey.process_ir_qualtrics_data(target)
                 dfs.append(processed_df)
         jeunes_df = pd.concat(dfs)

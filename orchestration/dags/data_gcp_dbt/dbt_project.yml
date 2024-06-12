@@ -65,6 +65,10 @@ models:
       +schema: analytics_{{ target.name }}
     export:
       +schema: export_{{ target.name }}
+      backend:
+        +schema: backend_{{ target.name }}
+        +materialized: table
+
   elementary:
     +on_schema_change: "append_new_columns"
     +enabled: false

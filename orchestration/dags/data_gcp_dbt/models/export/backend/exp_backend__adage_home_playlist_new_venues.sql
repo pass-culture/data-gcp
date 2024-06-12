@@ -6,8 +6,8 @@ WITH offerer_offer_info AS
           v.venue_creation_date ,
           o.collective_offer_id ,
           o.collective_offer_creation_date
-   FROM `{{ bigquery_analytics_dataset }}`.enriched_collective_offer_data o
-   LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue v ON v.venue_id=o.venue_id
+   FROM {{ ref('enriched_collective_offer_data') }} o
+   LEFT JOIN {{ ref('venue') }} v ON v.venue_id=o.venue_id
    WHERE offer_is_template IS TRUE
    AND v.venue_is_permanent
    AND v.venue_creation_date >= DATE_SUB(current_date(), INTERVAL 4 MONTH)
@@ -20,8 +20,8 @@ add_representation_venue AS
           v.venue_latitude AS venue_v2_latitude ,
           v.venue_longitude AS venue_v2_longitude
    FROM offerer_offer_info o
-   LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_collective_offer_template a ON o.collective_offer_id=a.collective_offer_id AND collective_offer_venue_humanized_id IS NOT NULL AND collective_offer_venue_humanized_id != a.venue_id
-   LEFT JOIN `{{ bigquery_clean_dataset }}`.applicative_database_venue v ON v.venue_id=a.collective_offer_venue_humanized_id),
+   LEFT JOIN {{ source('raw', 'applicative_database_collective_offer_template') }} a ON o.collective_offer_id=a.collective_offer_id AND collective_offer_venue_humanized_id IS NOT NULL AND collective_offer_venue_humanized_id != a.venue_id
+   LEFT JOIN {{ ref('venue') }} v ON v.venue_id=a.collective_offer_venue_humanized_id),
 
 -- Get institutions
 institution_info AS
@@ -29,7 +29,7 @@ institution_info AS
           institution_rural_level ,
           institution_latitude ,
           institution_longitude
-   FROM `{{ bigquery_analytics_dataset }}`.enriched_institution_data id),
+   FROM {{ ref('enriched_institution_data') }} id),
 
 -- CROSS JOIN
 calculate_distance AS

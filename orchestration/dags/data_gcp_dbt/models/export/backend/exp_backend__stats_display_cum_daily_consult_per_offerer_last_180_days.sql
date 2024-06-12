@@ -7,9 +7,9 @@ WITH
     OFFSET
       DAY) AS day
   FROM
-    `{{ bigquery_analytics_dataset }}.enriched_offerer_data`
+    {{ ref('enriched_offerer_data') }}
   INNER JOIN
-    `{{ bigquery_analytics_dataset }}.aggregated_daily_offer_consultation_data`
+    {{ ref('aggregated_daily_offer_consultation_data') }}
   USING
     (offerer_id)
   CROSS JOIN
@@ -30,7 +30,7 @@ WITH
       offerer_id,
       SUM(cnt_events) AS nb_daily_consult
     FROM
-      `{{ bigquery_analytics_dataset }}.aggregated_daily_offer_consultation_data`
+     {{ ref('aggregated_daily_offer_consultation_data') }}
     WHERE
       event_name = 'ConsultOffer'
     GROUP BY

@@ -82,7 +82,7 @@ SELECT
     p.partner_type,
     p.cultural_sector as partner_cultural_sector,
     p.individual_offers_created as partner_nb_individual_offers,
-    p.collective_offers_created as partner_nb_collective_offers,
+    p.collective_offers_created as partner_nb_collective_offers
 FROM {{ ref("int_firebase__pro_event") }} AS e
 LEFT JOIN offerer_per_session AS ps ON ps.unique_session_id = e.unique_session_id
 LEFT JOIN {{ ref("mrt_global__venue") }} AS v ON e.venue_id = v.venue_id

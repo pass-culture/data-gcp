@@ -42,6 +42,7 @@ LEFT JOIN {{ ref('int_applicative__user') }} AS u
     ON u.user_id = uh.user_id
 LEFT JOIN {{ ref('diversification_booking') }} AS db
     ON db.booking_id = uh.booking_id
+WHERE module_displayed_date >= date_sub(DATE('{{ ds() }}'), INTERVAL 6 MONTH)
 
 GROUP BY
     module_displayed_date,

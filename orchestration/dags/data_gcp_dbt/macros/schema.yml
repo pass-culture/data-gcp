@@ -45,7 +45,7 @@ macros:
         SELECT _col
         FROM UNNEST(
           ARRAY_CONCAT(
-            SPLIT(IFNULL(offers_1_10, \'\'), ','),
+            SPLIT(IFNULL(offers_1_10, ''), ','),
             SPLIT(IFNULL(offers_11_20, ''), ','),
             SPLIT(IFNULL(offers_21_30, ''), ','),
             SPLIT(IFNULL(offers_31_40, ''), ','),

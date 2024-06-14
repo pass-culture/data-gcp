@@ -40,7 +40,7 @@ FROM {{ ref('int_firebase__native_daily_user_home_module' )}} AS displayed
 LEFT JOIN {{ ref('int_contentful__entry' )}} AS parent_modules
     ON parent_modules.id = displayed.parent_module_id
 LEFT JOIN {{ ref('int_contentful__entry' )}} AS parent_homes
-    ON parent_modules.id = displayed.parent_entry_id
+    ON parent_homes.id = displayed.parent_entry_id
 LEFT JOIN {{ ref('int_contentful__home_tag' )}} AS home_tag
     ON home_tag.entry_id = displayed.entry_id
 LEFT JOIN {{ ref('int_contentful__playlist_tag' )}} AS playlist_tag

@@ -25,12 +25,15 @@ clean-targets:
 
 models:
   data_gcp_dbt:
+    +persist_docs:
+      relation: true
+      columns: true
     clean:
       +config:
         +meta:
           owner: "@team-data-engineering"
       +materialized: table
-      +schema: clean_dbt_{{ target.name }}
+      +schema: clean_{{ target.name }}
       +docs: 
         node_color: "#b43ddb"
       applicative: 
@@ -44,7 +47,7 @@ models:
         +incremental_strategy: insert_overwrite
     analytics:
       +materialized: table
-      +schema: analytics_dbt_{{ target.name }}
+      +schema: analytics_{{ target.name }}
       +re_data_monitored: true
       +re_data_anomaly_detector:
         name: modified_z_score
@@ -54,16 +57,18 @@ models:
         - column_metrics
       +docs: 
         node_color: "#d90000" 
-      diversification:
-        +tags: sandbox
-        +re_data_monitored: false
     intermediate:
       +materialized: view
+
     mart:
       +materialized: table
       +schema: analytics_{{ target.name }}
     export:
       +schema: export_{{ target.name }}
+      backend:
+        +schema: backend_{{ target.name }}
+        +materialized: table
+
   elementary:
     +on_schema_change: "append_new_columns"
     +enabled: false

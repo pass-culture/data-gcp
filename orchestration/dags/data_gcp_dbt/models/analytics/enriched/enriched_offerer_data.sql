@@ -1,6 +1,6 @@
 
 {% set target_name = target.name %}
-{% set target_schema = generate_schema_name('analytics_dbt_' ~ target_name) %}
+{% set target_schema = generate_schema_name('analytics_' ~ target_name) %}
 
 WITH offerer_humanized_id AS (
     SELECT
@@ -180,31 +180,12 @@ venues_with_offers AS (
     GROUP BY
         offerer_id
         )
-        
-, adage_agreg_synchro AS (
-SELECT 
-    left(siret, 9) AS siren,
-    siret
-FROM {{ source('analytics', 'adage')}}
-where synchroPass = "1.0"
-)
-
-, siret_reference_adage AS (
-SELECT 
-    venueid,
-    id,
-    siret,
-    left(siret, 9) AS siren,
-    CASE WHEN siret in (select siret from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siret_synchro_adage,
-    CASE WHEN left(siret, 9) in (select siren from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siren_synchro_adage,
-FROM {{ source('analytics', 'adage')}}
-)
 
 ,siren_reference_adage AS (
   SELECT 
     siren,
     max(siren_synchro_adage) AS siren_synchro_adage
-  FROM siret_reference_adage 
+  FROM {{ ref('adage')}}
   GROUP BY 1
 )
 
@@ -321,4 +302,4 @@ LEFT JOIN siren_reference_adage ON offerer.offerer_siren = siren_reference_adage
 WHERE
     offerer.offerer_validation_status='VALIDATED'
     AND offerer.offerer_is_active
-QUALIFY row_number() over(partition by siren_data.siren order by update_date desc) = 1
+QUALIFY row_number() over(partition by offerer.offerer_siren order by update_date desc) = 1

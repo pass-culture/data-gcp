@@ -7,28 +7,28 @@ WITH previous_export AS (
 
 ),lieux_physique AS (
     SELECT
-        enriched_venue_data.venue_id,
-        enriched_venue_data.venue_siret,
+        global_venue.venue_id,
+        global_venue.venue_siret,
         venue_booking_email as email,
         venue_name,
         venue_type_label,
         DATE_DIFF(current_date, venue_creation_date, DAY) AS anciennete_en_jours,
-        non_cancelled_bookings,
-        individual_offers_created,
-        collective_offers_created,
-        individual_offers_created + collective_offers_created AS offers_created,
-        theoretic_revenue,
+        total_non_cancelled_bookings,
+        total_created_individual_offers,
+        total_created_collective_offers,
+        total_created_individual_offers + total_created_collective_offers AS offers_created,
+        total_theoretic_revenue,
         venue_is_permanent,
         venue_region_name,
-        enriched_venue_data.venue_department_code,
+        global_venue.venue_department_code,
         geo_type,
         venue_is_virtual,
         DATE_DIFF(CURRENT_DATE, last_booking_date, DAY) AS nb_jours_depuis_derniere_resa
     FROM
-        `{{ bigquery_analytics_dataset }}.enriched_venue_data` enriched_venue_data
-        LEFT JOIN `{{ bigquery_analytics_dataset }}.venue_locations` venue_locations ON venue_locations.venue_id = enriched_venue_data.venue_id
+        `{{ bigquery_analytics_dataset }}.global_venue` global_venue
+        LEFT JOIN `{{ bigquery_analytics_dataset }}.venue_locations` venue_locations ON venue_locations.venue_id = global_venue.venue_id
         LEFT JOIN `{{ bigquery_analytics_dataset }}.rural_city_type_data` rural_city_type_data ON CAST(rural_city_type_data.geo_code AS string) = CAST(venue_locations.codgeo AS string)
-        LEFT JOIN `{{ bigquery_raw_dataset }}.qualtrics_opt_out_users` opt_out on opt_out.ext_ref = enriched_venue_data.venue_id
+        LEFT JOIN `{{ bigquery_raw_dataset }}.qualtrics_opt_out_users` opt_out on opt_out.ext_ref = global_venue.venue_id
     WHERE
         NOT venue_is_virtual AND opt_out.contact_id IS NULL
     GROUP BY

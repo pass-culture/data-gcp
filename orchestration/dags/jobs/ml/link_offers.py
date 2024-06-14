@@ -8,6 +8,8 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
 )
+from common.operators.biquery import bigquery_job_task
+from dependencies.ml.linkage.import_items import params
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
@@ -28,7 +30,7 @@ with DAG(
     "link_offers",
     default_args=default_args,
     description="Link offers via recordLinkage",
-    schedule_interval=get_airflow_schedule("0 0 * * 0"),
+    schedule_interval=get_airflow_schedule("0 0 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,
@@ -42,8 +44,15 @@ with DAG(
             default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-32",
             type="string",
         ),
+        "batch_size": Param(
+            default=20000 if ENV_SHORT_NAME == "prod" else 10000,
+            type="integer",
+        ),
     },
 ) as dag:
+
+    data_collect = bigquery_job_task(dag, "import_item_batch", params, extra_params={})
+
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         instance_name=GCE_INSTANCE,
@@ -64,17 +73,6 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command="""pip install -r requirements.txt --user""",
-    )
-
-    data_collect = SSHGCEOperator(
-        task_id="data_collect",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
-        python data_collect.py \
-        --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME}
-        """,
     )
 
     preprocess = SSHGCEOperator(
@@ -115,10 +113,10 @@ with DAG(
     )
 
     (
-        gce_instance_start
+        data_collect
+        >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> data_collect
         >> preprocess
         >> record_linkage
         >> postprocess

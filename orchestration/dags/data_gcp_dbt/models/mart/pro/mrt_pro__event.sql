@@ -21,7 +21,7 @@ SELECT
     unique_session_id
     ,COALESCE(ps.offerer_id,v.venue_managing_offerer_id,mau.offerer_id) as offerer_id
 FROM {{ ref("int_firebase__pro_session") }} AS ps
-LEFT JOIN {{ ref("enriched_venue_data") }} AS v ON ps.venue_id=v.venue_id
+LEFT JOIN {{ ref("mrt_global__venue") }} AS v ON ps.venue_id=v.venue_id
 LEFT JOIN most_active_offerer_per_user AS mau ON mau.user_id=ps.user_id
 )
 
@@ -83,7 +83,7 @@ SELECT
     p.collective_offers_created as partner_nb_collective_offers
 FROM {{ ref("int_firebase__pro_event") }} AS e
 LEFT JOIN offerer_per_session AS ps ON ps.unique_session_id = e.unique_session_id
-LEFT JOIN {{ ref("enriched_venue_data") }} AS v ON e.venue_id = v.venue_id
+LEFT JOIN {{ ref("mrt_global__venue") }} AS v ON e.venue_id = v.venue_id
 LEFT JOIN {{ ref("enriched_offerer_data") }} AS o ON COALESCE(e.offerer_id,v.venue_managing_offerer_id,ps.offerer_id) = o.offerer_id
 LEFT JOIN {{ ref("enriched_cultural_partner_data") }} AS p ON v.partner_id = p.partner_id
 WHERE TRUE

@@ -4,7 +4,7 @@ SELECT
     offer_id as offer_id,
     user_id as user_id,
     origin
-FROM `{{ bigquery_analytics_dataset }}.firebase_events` 
+FROM `{{ bigquery_int_firebase_dataset }}.native_event`
 WHERE 
 event_date BETWEEN date_sub(DATE("{{ ds }}"), INTERVAL {{ params.days }} DAY) and DATE("{{ ds }}")
 and event_name = "ConsultOffer"

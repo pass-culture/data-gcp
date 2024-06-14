@@ -4,6 +4,7 @@ import typer
 
 
 def preprocess(df):
+    df = df.fillna("ukn")
     df["offer_id"] = df["offer_id"].values.astype(int)
     df["offer_name"] = df["offer_name"].str.lower()
     df["offer_description"] = df["offer_description"].str.lower()
@@ -22,11 +23,11 @@ def main(
     ),
 ) -> None:
     df_offers_to_link = pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.sandbox_{env_short_name}.offers_to_link`"
+        f"SELECT * FROM `{gcp_project}.tmp_{env_short_name}.items_to_link`"
     )
     df_offers_to_link_clean = preprocess(df_offers_to_link)
     df_offers_to_link_clean.to_gbq(
-        f"sandbox_{env_short_name}.offers_to_link_clean",
+        f"tmp_{env_short_name}.items_to_link_clean",
         project_id=gcp_project,
         if_exists="replace",
     )

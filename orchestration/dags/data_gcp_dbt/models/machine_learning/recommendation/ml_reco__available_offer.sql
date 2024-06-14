@@ -9,10 +9,7 @@ WITH venue AS (
             venue_id, 
             venue_longitude,
             venue_latitude
-    FROM {{ ref("int_applicative__venue") }}
-    WHERE venue_is_virtual is false
-    AND offerer_validation_status = 'VALIDATED'
-    AND offerer_is_active = TRUE
+    FROM {{ ref("mrt_global__venue") }}
 ),
 offers_with_mediation AS (
         SELECT offer_id
@@ -159,14 +156,14 @@ get_recommendable_offers AS (
             END
         ) as  default_max_distance
     FROM {{ ref('enriched_offer_data') }} offer
-    JOIN venue ON venue.venue_id = offer.venue_id
-    JOIN offers_with_mediation om on offer.offer_id=om.offer_id
-
+    INNER JOIN venue ON venue.venue_id = offer.venue_id
+    INNER JOIN offers_with_mediation om on offer.offer_id=om.offer_id
+    INNER JOIN {{ ref('item_metadata') }} AS im on offer.item_id = im.item_id
     LEFT JOIN {{ ref('int_applicative__stock') }} stock ON offer.offer_id = stock.offer_id
     -- TODO: move this to an another query related to item_metadata or more precisely reco_item_metada
     LEFT JOIN booking_numbers ON booking_numbers.item_id = offer.item_id
     LEFT JOIN item_count ic on ic.item_id = offer.item_id
-    LEFT JOIN {{ ref('item_metadata') }} AS im on offer.item_id = im.item_id
+    
     LEFT JOIN {{ ref('ml_reco__restrained_item') }} forbidden_offer on
         offer.item_id = forbidden_offer.item_id
     LEFT JOIN {{ source("raw", "gsheet_ml_recommendation_sensitive_item")}} sensitive_offer on

@@ -1,11 +1,11 @@
 from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
     BigQueryCreateEmptyTableOperator,
+    BigQueryInsertJobOperator,
 )
-
 from common.config import GCP_PROJECT_ID
 
 
+# TODO: rename table in task_id
 def bigquery_job_task(dag, table, job_params, extra_params={}):
     return BigQueryInsertJobOperator(
         task_id=table,

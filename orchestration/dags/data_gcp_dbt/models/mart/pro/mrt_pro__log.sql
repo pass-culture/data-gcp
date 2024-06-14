@@ -1,6 +1,7 @@
 SELECT
    environement,
    user_id,
+   offerer_id,
    message,
    booking_id,
    offer_id,
@@ -14,6 +15,9 @@ SELECT
    stock_booking_quantity,
    list_of_eans_not_found,
    log_timestamp,
+   beta_test_new_nav_is_convenient,
+   beta_test_new_nav_is_pleasant,
+   beta_test_new_nav_comment
 FROM {{ref('int_pcapi__log')}}
 WHERE partition_date >= DATE_SUB(CURRENT_DATE, INTERVAL 90 day)
     AND message IN ("Booking has been cancelled"
@@ -24,4 +28,5 @@ WHERE partition_date >= DATE_SUB(CURRENT_DATE, INTERVAL 90 day)
         ,"Successfully updated stock"
         ,"Some provided eans were not found"
         ,"Stock update blocked because of price limitation"
+        ,"User with new nav activated submitting review"
     )

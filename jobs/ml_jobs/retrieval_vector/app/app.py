@@ -1,4 +1,4 @@
-from flask import Flask, request, Response, jsonify
+from flask import Flask, request, Response, jsonify, make_response
 from flask_cors import CORS
 from pythonjsonlogger import jsonlogger
 import logging
@@ -106,10 +106,10 @@ def search_vector(
                 prefilter=prefilter,
                 vector_column_name=vector_column_name,
             )
-            return jsonify({"predictions": results})
+            return make_response(jsonify({"predictions": results}), 200)
         else:
             logger.info("item not found")
-            return jsonify({"predictions": []})
+            return make_response(jsonify({"predictions": []}), 400)
     except Exception as e:
         logger.exception(e)
         logger.error(
@@ -197,28 +197,70 @@ def predict():
                 )
 
         if model_type == "similar_offer":
-            input_str = str(input_json["offer_id"])
-            logger.info(
-                f"similar_offer",
-                extra={
-                    "uuid": call_id,
-                    "item_id": input_str,
-                    "params": selected_params,
-                    "size": size,
-                },
-            )
-            vector = model.offer_vector(input_str)
-            return search_vector(
-                vector,
-                size,
-                selected_params,
-                debug,
-                call_id=call_id,
-                prefilter=prefilter,
-                similarity_metric=similarity_metric,
-                vector_column_name=vector_column_name,
-                item_id=input_str,
-            )
+            if input_json.get("items", None):
+                items = list(input_json["items"])
+            elif input_json.get("offer_id", None):
+                items = [input_json["offer_id"]]
+            else:
+                items = []
+            if len(items) == 1:
+                logger.info(
+                    f"similar_offer",
+                    extra={
+                        "uuid": call_id,
+                        "item_id": items[0],
+                        "params": selected_params,
+                        "size": size,
+                    },
+                )
+                vector = model.offer_vector(items[0])
+                return search_vector(
+                    vector,
+                    size,
+                    selected_params,
+                    debug,
+                    call_id=call_id,
+                    prefilter=prefilter,
+                    similarity_metric=similarity_metric,
+                    vector_column_name=vector_column_name,
+                    item_id=items[0],
+                )
+
+            elif len(items) > 1:
+                vectors = [
+                    {"item_id": item_id, "vector": model.offer_vector(item_id)}
+                    for item_id in items
+                ]
+                predictions = []
+                for vector in vectors:
+                    s_vector = search_vector(
+                        vector["vector"],
+                        size,
+                        selected_params,
+                        debug,
+                        call_id=call_id,
+                        prefilter=prefilter,
+                        similarity_metric=similarity_metric,
+                        vector_column_name=vector_column_name,
+                        item_id=vector["item_id"],
+                    )
+                    logger.info(
+                        f"similar_offer",
+                        extra={
+                            "uuid": call_id,
+                            "item_id": vector["item_id"],
+                            "params": selected_params,
+                            "size": size,
+                        },
+                    )
+
+                    predictions.append(s_vector.get_json())
+
+                flatten_predictions = sum(
+                    [prediction["predictions"] for prediction in predictions], []
+                )
+                final_predictions = flatten_predictions
+                return make_response(jsonify({"predictions": final_predictions}), 200)
 
         if model_type == "filter":
             logger.info(

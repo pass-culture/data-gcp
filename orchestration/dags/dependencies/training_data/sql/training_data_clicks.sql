@@ -7,7 +7,7 @@ WITH events AS (
         EXTRACT(DAYOFWEEK FROM event_timestamp) as event_day,
         EXTRACT(MONTH FROM event_timestamp) as event_month
     FROM
-        `{{ bigquery_analytics_dataset }}`.`firebase_events`
+        `{{ bigquery_int_firebase_dataset }}`.`native_event`
     WHERE
         event_name = "ConsultOffer"
         AND event_date >= DATE_SUB(DATE("{{ ds }}"), INTERVAL 6 MONTH)

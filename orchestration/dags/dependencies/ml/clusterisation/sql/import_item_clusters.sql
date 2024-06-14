@@ -24,7 +24,7 @@ SELECT
     ob.booking_cnt
 FROM
     `{{ bigquery_clean_dataset }}.{{ params.cluster_prefix }}item_clusters` ic
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_item_metadata` ei on ei.item_id = ic.item_id
+    LEFT JOIN `{{ bigquery_clean_dataset }}.item_metadata` ei on ei.item_id = ic.item_id
     LEFT JOIN offer_booking ob on ob.item_id = ic.item_id QUALIFY ROW_NUMBER() OVER (
         PARTITION BY ic.item_id
         ORDER BY

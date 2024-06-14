@@ -5,15 +5,11 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
 )
-from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 from airflow.models import Param
 from datetime import datetime, timedelta
 from common import macros
 from common.alerts import task_fail_slack_alert
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-)
-from common.config import ENV_SHORT_NAME, DAG_FOLDER, BIGQUERY_TMP_DATASET
+from common.config import ENV_SHORT_NAME, DAG_FOLDER
 from common.utils import get_airflow_schedule
 
 default_args = {
@@ -32,8 +28,8 @@ gce_params = {
     "run_name": "default",
     "instance_type": {
         "dev": "n1-standard-2",
-        "stg": "n1-standard-2",
-        "prod": "n1-standard-8",
+        "stg": "n1-standard-4",
+        "prod": "n1-standard-16",
     },
 }
 schedule_dict = {"prod": "0 20 * * 5", "dev": "0 20 * * *", "stg": "0 20 * * 3"}
@@ -64,20 +60,10 @@ with DAG(
         "experiment_name": Param(default=gce_params["experiment_name"], type="string"),
         "run_name": Param(default=gce_params["run_name"], type="string"),
         "model_name": Param(default=gce_params["model_name"], type="string"),
-        "table_name": Param(default="training_ranking_data", type="string"),
-        "dataset_name": Param(default=BIGQUERY_TMP_DATASET, type="string"),
+        "table_name": Param(default="ranking_endpoint_training", type="string"),
+        "dataset_name": Param(default=f"ml_reco_{ENV_SHORT_NAME}", type="string"),
     },
 ) as dag:
-    import_table = BigQueryExecuteQueryOperator(
-        task_id=f"create_train_ranking_table",
-        sql=(
-            IMPORT_TRAINING_SQL_PATH / f"ranking_endpoint_training_data.sql"
-        ).as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table="{{ params.dataset_name}}.{{ params.table_name }}",
-        dag=dag,
-    )
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         instance_name="{{ params.instance_name }}",
@@ -123,7 +109,6 @@ with DAG(
 
     (
         gce_instance_start
-        >> import_table
         >> fetch_code
         >> install_dependencies
         >> deploy_model

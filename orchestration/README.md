@@ -54,54 +54,51 @@ A partir de la console gcp, dans l'instance de composer, ajouter les dépendance
 
 ## Installer Airflow localement
 
-Pour remplir les trois fichiers de config, demander à un membre de l'équipe.
+### Récupération des Credentials GCP et des variables d'environnement
 
-### .env
+1. Demander le fichier `sa.gcpkey.json` à un membre de l'équipe et le mettre dans `/airflow/etc/sa.gcpkey.json`
+2. Récupérer le fichier .env et le mettre dans `orchestration/.env`
+   - Modifier les valeurs de _AIRFLOW_WWW_USER_USERNAME et _AIRFLOW_WWW_USER_PASSWORD dans le fichier .env 
+   - Modifier la valeur du DAG_FOLDER
 
-Créer un fichier `.env` à la racine du dossier `orchestration`. 
-Dans le fichier `.env`, définir un nom d'utilisateur et un mot de passe :
+### Build and run
 
-```sh
-_AIRFLOW_WWW_USER_USERNAME=<user>
-_AIRFLOW_WWW_USER_PASSWORD=<password>
-```
+0. **[La première fois uniquement]** Build et initialisation des tables
+    ```sh
+    make build
+    ```
+1. Lancer les différents conteneurs
+    ```sh
+    make start
+    ```
+2. Se connecter au Airflow webserver
+    ```sh
+    > `http://localhost:8080`
+    ```
 
-### airflow.cfg
-
-Il est necessaire de récupérer les configs de `airflow/config/airflow.cfg`
-
-
-### sa.gcpkey.json
-
-Mettre la clef SA composer dans `/airflow/etc/sa.gcpkey.json`
-
-#### 4. Build and run
-
-Build 
-
-```sh
-make build
-```
-
-(uniquement la première fois) :init airflow, création des tables par défaut.
-
-```sh
-docker-compose up airflow-init
-```
-
-Lancer les différents conteneurs
-```sh
-make dev
-```
-
-Lancer le Airflow webserver
-```sh
-> `http://localhost:8080`
-```
-
-#### Stop
+### Stop
 
 Pour éteindre les conteneurs :
 ```sh
 make stop
 ```
+
+### Changer les variables d'environnement
+
+Pour changer les variables d'environnement, il faut modifier le fichier `orchestration/.env` et relancer le build des conteneurs :
+```sh
+make rebuild
+```
+
+
+### Troubleshooting
+
+* Pour voir les logs dans les conteneurs :
+    ```sh
+    make show_airflow_logs
+    ```
+
+* Pour supprimer les conteneurs (et les données dans la DB) :
+    ```sh
+    docker-compose down
+    ```

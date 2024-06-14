@@ -2,7 +2,7 @@
     pre_hook="{{ create_humanize_id_function() }}"
 ) }}
 {% set target_name = target.name %}
-{% set target_schema = generate_schema_name('analytics_dbt_' ~ target_name) %}
+{% set target_schema = generate_schema_name('analytics_' ~ target_name) %}
 WITH offer_humanized_id AS (
     SELECT
         offer_id,
@@ -63,16 +63,17 @@ enriched_items AS (
             else safe_cast(offer.offer_description as STRING)
         END as offer_description,
         CASE
-            WHEN mediation.mediation_humanized_id is not null THEN CONCAT(
-                "https://storage.googleapis.com/{{ mediation_url }}-assets-fine-grained/thumbs/mediations/",
+            WHEN mediation.mediation_humanized_id IS NOT NULL THEN CONCAT(
+                'https://storage.googleapis.com/',
+                {{ get_mediation_url() }} || '-assets-fine-grained/thumbs/mediations/',
                 mediation.mediation_humanized_id
             )
             ELSE CONCAT(
-                "https://storage.googleapis.com/{{ mediation_url }}-assets-fine-grained/thumbs/products/",
-                {{target_schema}}.humanize_id(offer.offer_product_id)
+                'https://storage.googleapis.com/',
+                {{ get_mediation_url() }} || '-assets-fine-grained/thumbs/products/',
+                {{ target_schema }}.humanize_id(offer.offer_product_id)
             )
-        END AS image_url
-
+        END AS image_url,
     FROM {{ ref('offer') }} offer
     JOIN {{ source('clean','subcategories') }} subcategories ON offer.offer_subcategoryId = subcategories.id
     LEFT JOIN mediation ON offer.offer_id = mediation.offer_id

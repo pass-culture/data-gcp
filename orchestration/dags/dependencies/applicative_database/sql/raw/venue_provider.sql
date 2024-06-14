@@ -5,4 +5,5 @@ SELECT
     , CAST("providerId" AS varchar(255)) as provider_id
     , CAST("venueIdAtOfferProvider" AS varchar(255)) as venue_id_at_offer_provider
     , "lastSyncDate" as last_sync_date
+    , "dateCreated" as creation_date
 FROM public.venue_provider

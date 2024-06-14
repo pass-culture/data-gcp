@@ -163,6 +163,10 @@ Cette tâche exécute des tests sur les tâches identifiées.
 
 Cette tâche exécute des tests d'orchestration pour s'assurer que les processus sont correctement orchestrés.
 
+#### DBT installation et compilation
+
+Ces tâches Installent python, DBT + dbt-packages, compile le projet dbt et deploie les dbt-packages et le manifest dans le bucket de Composer
+
 #### Déploiement de Composer en Dev
 
 Cette tâche déploie Composer dans l'environnement de développement si la branche est `production`.

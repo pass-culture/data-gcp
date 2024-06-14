@@ -66,7 +66,8 @@ SELECT
     v.last_offer_creation_date,
     v.total_venue_bookable_individual_offers,
     v.total_venue_bookable_collective_offers,
-    v.total_venue_bookable_offers
+    v.total_venue_bookable_offers,
+    v.cicd_test_field_name as cicd_test_field_name_child
 FROM {{ ref('int_applicative__venue') }} AS v
 LEFT JOIN {{ source('analytics', 'region_department') }} AS venue_region_departement ON v.venue_department_code = venue_region_departement.num_dep
 WHERE v.offerer_validation_status='VALIDATED'

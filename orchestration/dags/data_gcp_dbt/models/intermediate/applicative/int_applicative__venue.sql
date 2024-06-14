@@ -160,7 +160,8 @@ SELECT
         ELSE COALESCE(o.last_individual_offer_creation_date,co.last_collective_offer_creation_date) END AS last_offer_creation_date,
     COALESCE(o.total_venue_bookable_individual_offers,0) AS total_venue_bookable_individual_offers,
     COALESCE(co.total_venue_bookable_collective_offers,0) AS total_venue_bookable_collective_offers,
-    COALESCE(o.total_venue_bookable_individual_offers,0) + COALESCE(co.total_venue_bookable_collective_offers,0) AS total_venue_bookable_offers
+    COALESCE(o.total_venue_bookable_individual_offers,0) + COALESCE(co.total_venue_bookable_collective_offers,0) AS total_venue_bookable_offers,
+    null as cicd_test_field
 FROM {{ source("raw", "applicative_database_venue") }} AS v
 LEFT JOIN offers_grouped_by_venue AS o ON o.venue_id = v.venue_id
 LEFT JOIN collective_offers_grouped_by_venue AS co ON co.venue_id = v.venue_id

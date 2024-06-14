@@ -61,6 +61,8 @@ SELECT
     moduleName AS module_name,
     moduleListID AS module_list_id,
     index AS module_index,
+    displayed_offers,
+    displayed_venues,
     traffic_gen,
     traffic_content,
     COALESCE(entryId,homeEntryId) AS entry_id,

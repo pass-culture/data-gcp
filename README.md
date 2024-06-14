@@ -84,18 +84,106 @@ Les dags sont déployés automatiquement lors d'un merge sur master / production
 
 
 ## CI/CD
-### CI
-On utilise CircleCI pour lancer des tests sur les différentes parties du repo.
-Les tests sont lancés sur toutes les branches git et sont répartis entre les jobs suivants :
-- *linter* : tester le bon formattage du code de tout le repo en utilisant `Black`
-- *orchestration-tests* : tester les différents DAGs d'orchestration
 
-### CD
-Pour la CD, on utilise deux outils : CircleCI et Cloud Build.
-#### CircleCI
-Voici les jobs créés pour le déploiement :
-- *vertex-ai-deploy* : déployer les modèles de ML via MLFlow dans Cloud Storage puis l'utiliser pour mettre à jour la version du modèle sur VertexAI
-- *composer-deploy* : déployer le dossier `dags` dans le bucket du Cloud Composer sur Cloud Storage
+### CI Workflow
 
-Ces déploiements sont déclenchés sur les branches `master` / `production`.
+Vue d'ensemble du workflow d'intégration continue (CI) pour notre projet, détaillant les différents workflows réutilisables et les tâches définies dans notre configuration GitHub Actions.
 
+#### Workflow de base
+
+`base_workflow.yml` est le workflow principal qui est déclenché sur les pull requests.
+
+#### Tâches
+
+#### Linter
+
+La tâche `linter` vérifie le code pour les problèmes de style en utilisant `black`. Elle se connecte à Google Cloud Secret Manager pour récupérer les secrets nécessaires et envoie éventuellement des notifications à un canal Slack si le linter échoue.
+
+#### Compilation DBT
+
+Il y a deux tâches de compilation, une pour la production et une pour le staging, qui compilent le projet DBT en fonction de la branche ciblée.
+
+#### Recherche de Tâches de Test
+
+Cette tâche identifie les tâches testables en analysant les fichiers modifiés et en déterminant quelles tâches doivent être testées.
+
+#### Vérification de la Non-Vacuité de la Matrice
+
+Cette tâche vérifie s'il y a des tâches à tester et s'assure que la matrice n'est pas vide.
+
+#### Tâches de Test
+
+Cette tâche exécute des tests sur les tâches identifiées.
+
+#### Recherche de Changements d'Orchestration
+
+Cette tâche vérifie les changements dans le dossier d'orchestration et détermine si des tests d'orchestration doivent être exécutés.
+
+#### Test d'Orchestration
+
+Cette tâche exécute des tests d'orchestration si des changements sont détectés.
+
+### Arbre d'Exécution des Tâches
+
+:::mermaid
+graph TD;
+    A[Workflow de Base] --> B[Linter]
+    A[Workflow de Base] --> C[Compilation DBT en Production]
+    A[Workflow de Base] --> D[Compilation DBT en Staging]
+    A[Workflow de Base] --> E[Recherche de Tâches de Test]
+    E[Recherche de Tâches de Test] --> F[Vérification de la Non-Vacuité de la Matrice]
+    F[Vérification de la Non-Vacuité de la Matrice] --> G[Tâches de Test]
+    A[Workflow de Base] --> H[Recherche de Changements d'Orchestration]
+    H[Recherche de Changements d'Orchestration] --> I[Test d'Orchestration]
+:::
+
+## Workflow CD
+
+Vue d'ensemble du workflow de déploiement continu (CD) pour notre projet, détaillant les différents workflows réutilisables et les tâches définies dans notre configuration GitHub Actions.
+
+### Workflow de Base
+
+Le fichier `deploy_composer.yml` est le workflow principal qui est déclenché sur les pushs vers les branches `master` et `production`. Il inclut plusieurs tâches et utilise des workflows réutilisables pour rationaliser le processus CD.
+
+### Tâches
+
+#### Linter
+
+La tâche `linter` vérifie le code pour les problèmes de style en utilisant `black`. Elle se connecte à Google Cloud Secret Manager pour récupérer les secrets nécessaires et envoie éventuellement des notifications à un canal Slack si le linter échoue.
+
+#### Recherche de Tâches de Test
+
+Cette tâche identifie les tâches testables en analysant les fichiers modifiés et déterminant quelles tâches doivent être testées.
+
+#### Tâches de Test
+
+Cette tâche exécute des tests sur les tâches identifiées.
+
+#### Test d'Orchestration
+
+Cette tâche exécute des tests d'orchestration pour s'assurer que les processus sont correctement orchestrés.
+
+#### Déploiement de Composer en Dev
+
+Cette tâche déploie Composer dans l'environnement de développement si la branche est `production`.
+
+#### Déploiement de Composer en Staging
+
+Cette tâche déploie Composer dans l'environnement de staging si la branche est `master`.
+
+#### Déploiement de Composer en Production
+
+Cette tâche déploie Composer dans l'environnement de production si la branche est `production`.
+
+## Arbre d'Exécution des Tâches
+
+:::mermaid
+graph TD;
+    A[Workflow de Déploiement] --> B[Linter]
+    A[Workflow de Déploiement] --> C[Recherche de Tâches de Test]
+    C[Recherche de Tâches de Test] --> D[Tâches de Test]
+    A[Workflow de Déploiement] --> E[Test d'Orchestration]
+    A[Workflow de Déploiement] --> F[Déploiement de Composer en Dev]
+    F[Déploiement de Composer en Dev] --> G[Déploiement de Composer en Production]
+    A[Workflow de Déploiement] --> H[Déploiement de Composer en Staging]
+:::

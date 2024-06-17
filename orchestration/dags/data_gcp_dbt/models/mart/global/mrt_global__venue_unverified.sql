@@ -75,6 +75,6 @@ SELECT
     ) AS venue_pc_pro_link,
     CASE WHEN v.venue_is_permanent THEN CONCAT("venue-",v.venue_id)
          ELSE ofr.partner_id END AS partner_id,
-    v.cicd_test_field1 as cicd_test_field2
+    v.cicd_test_field0 as cicd_test_field1
 FROM {{ ref('int_applicative__venue') }} AS v
 LEFT JOIN {{ ref('mrt_global__offerer') }} AS ofr ON v.venue_managing_offerer_id = ofr.offerer_id

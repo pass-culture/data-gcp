@@ -157,7 +157,7 @@ SELECT
     COALESCE(o.total_venues,0) AS total_venues,
     COALESCE(co.total_bookable_collective_offers,0) AS total_bookable_collective_offers,
     COALESCE(o.total_bookable_individual_offers,0) + COALESCE(co.total_bookable_collective_offers,0) AS total_bookable_offers,
-    null as cicd_test_field1
+    null as cicd_test_field0
 FROM {{ source("raw", "applicative_database_venue") }} AS v
 LEFT JOIN offers_grouped_by_venue AS o ON o.venue_id = v.venue_id
 LEFT JOIN collective_offers_grouped_by_venue AS co ON co.venue_id = v.venue_id

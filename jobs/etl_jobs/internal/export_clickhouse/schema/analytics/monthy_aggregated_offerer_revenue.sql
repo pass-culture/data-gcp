@@ -4,7 +4,7 @@ SELECT
     date_trunc('MONTH',toDate(creation_date)) AS creation_month,
     offerer_id,
     sum(case when booking_status = 'USED' or booking_status ='REIMBURSED' then booking_amount else 0 end) AS revenue,
-    sum(booking_amount) AS forcasted_revenue
+    sum(booking_amount) AS expected_revenue
 FROM intermediate.booking
 GROUP BY
     offerer_id, creation_month

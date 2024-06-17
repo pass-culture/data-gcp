@@ -6,24 +6,71 @@ macros:
     description: ""
 
   - name: extract_params_int_value
-    description: ""
+    description: |
+      This macro generates a SQL snippet to extract the `int_value` from event parameters in a nested structure, based on the provided list of parameter keys.
+      See extract_params_string_value for detailed explanation.
 
   - name: extract_params_string_value
-    description: ""
+    description: |
+      This macro generates a SQL snippet to extract the `string_value` from event parameters in a nested structure, based on the provided list of parameter keys.
+
+      Parameters
+      - params: A list of parameter keys for which the corresponding `string_value` should be extracted from the event parameters.
+
+      Example
+      The call of extract_params_string_value(["param1", "param2" ]) generates the following SQL query:
+      ```sql
+      (SELECT event_params.value.string_value FROM UNNEST(event_params) event_params WHERE event_params.key = 'param1') AS param1,
+      (SELECT event_params.value.string_value FROM UNNEST(event_params) event_params WHERE event_params.key = 'param2') AS param2
+      ```
+
+  - name: extract_str_to_array_field
+    description: |
+      This macro generates a SQL query to concatenate and process multiple string columns 
+      dynamically based on the specified start, step, and end values. The macro 
+      constructs column names such as `{column_name}_1_10`, `{column_name}_11_20`, etc., splits 
+      the comma-separated string values into arrays, and combines these arrays into 
+      a single array. It filters out null and empty strings from the final array.
+
+      Parameters:
+        - column_name (str): The name of the columns
+        - start (int): The starting index for generating column names.
+        - step (int): The step size to increment the index for generating column names.
+        - end (int): The ending index (exclusive) for generating column names.
+
+      Example:
+        The call of extract_str_to_array_field(offers, 0, 10, 50) generates the following SQL query:
+      ```sql
+      ARRAY(
+        SELECT _col
+        FROM UNNEST(
+          ARRAY_CONCAT(
+            SPLIT(IFNULL(offers_1_10, ''), ','),
+            SPLIT(IFNULL(offers_11_20, ''), ','),
+            SPLIT(IFNULL(offers_21_30, ''), ','),
+            SPLIT(IFNULL(offers_31_40, ''), ','),
+            SPLIT(IFNULL(offers_41_50, ''), ',')
+          )
+        ) AS _col
+        WHERE _col IS NOT NULL AND _col != ''
+      ) 
+      ```
 
   - name: generate_schema_name
-    description: " Overview
+    description: |
+      Overview
       It enables us to set up the destination dataset.
       If we develop in dev environment (target = dev), the destination schema dataset is the default (tmp_env) specified in profile.yml.
       If the model is in intermediate folder, schema name = int_{sub_folder_name}_{target_name}
-      Else the destination schema dataset is specified in dbt_project.yml (analytics_env or clean_env) "
+      Else the destination schema dataset is specified in dbt_project.yml (analytics_env or clean_env)
 
   - name: get_custom_alias
-    description: " This macro generates table aliases 
-    - By using the segment after '__' for models in the intermediate folder. 
-    - By removing 'mrt' and replacing '__' by '_' for models in the mart folder. 
-    - Otherwise, it uses the model's name.
-    "
+    description: |
+      This macro generates table aliases 
+      - By using the segment after '__' for models in the intermediate folder. 
+      - By removing 'mrt' and replacing '__' by '_' for models in the mart folder. 
+      - Otherwise, it uses the model's name.
+      
 
   - name: ml_variables
     description: ""

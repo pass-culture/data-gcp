@@ -16,7 +16,7 @@ WITH firebase_last_two_days_events AS (
         {% endif %}
 ),
 
-native_unnest (
+native_unnest AS (
     SELECT
         event_date,
         user_id,
@@ -88,7 +88,7 @@ native_unnest (
                                     "searchView",
                                     "duration",
                                     "appsFlyerUserId",
-                                    "accessibilityFilter"
+                                    "accessibilityFilter",
                                     "offers_1_10",
                                     "offers_11_20",
                                     "offers_21_30",

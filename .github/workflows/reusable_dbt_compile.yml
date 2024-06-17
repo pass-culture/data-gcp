@@ -87,6 +87,28 @@ jobs:
           DBT_PROFILES_DIR: "."
           TARGET_ENV: ${{ inputs.TARGET_ENV }}
         run: dbt compile --profile CI --target $TARGET_ENV
+      - name: Get changed dbt models
+        id: changed-models-yaml
+        uses: tj-actions/changed-files@v44
+        with:
+          files_yaml: |
+            model:
+              - 'dags/data_gcp_dbt/models/**.sql
+          # Optionally set `files_yaml_from_source_file` to read the YAML from a file. e.g `files_yaml_from_source_file: .github/changed-files.yml`
+
+      - name: Run step if any dbt model changed
+        # NOTE: Ensure all outputs are prefixed by the same key used above e.g. `model(...)`  when trying to access the `any_changed` output.
+        if: steps.changed-models-yaml.outputs.test_any_changed == 'true'  
+        env:
+          CHANGED_MODELS: ${{ steps.changed-models-yaml.outputs.test_all_changed_files }}
+          TARGET_BRANCH: ${{ github.base_ref }}
+          TARGET_ENV: ${{ inputs.TARGET_ENV }}
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+        run: |
+          export models=$(TEST_ALL_CHANGED_FILES | awk -F '/' '{ print $NF }' | sed "s/\.sql$/+1/g" | tr '\n' ' ')
+          echo $models
+          dbt run --model $models --profile CI --target $TARGET_ENV --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view'}" 
       - name: "Run modified models & 1st order childrens"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
@@ -109,6 +131,7 @@ jobs:
           fi          
           }
           dbt_run_changed_models +1
+        
       - name: "Run modified tests"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:

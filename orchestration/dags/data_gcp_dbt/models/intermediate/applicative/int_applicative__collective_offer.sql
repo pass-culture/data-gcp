@@ -7,7 +7,8 @@ WITH collective_stocks_grouped_by_collective_offers AS (
     MIN(first_collective_booking_date) AS first_collective_booking_date,
     MAX(last_collective_booking_date) AS last_collective_booking_date,
     SUM(total_collective_theoretic_revenue) AS total_collective_theoretic_revenue,
-    SUM(total_collective_real_revenue) AS total_collective_real_revenue
+    SUM(total_collective_real_revenue) AS total_collective_real_revenue,
+    SUM(total_collective_current_year_real_revenue) AS total_collective_current_year_real_revenue,
     FROM {{ ref('int_applicative__collective_stock') }}
     GROUP BY collective_offer_id
 )
@@ -33,12 +34,12 @@ SELECT
     co.collective_offer_format,
     co.collective_offer_date_updated,
     co.collective_offer_students,
-    null as collective_offer_price_detail,
+    NULL AS collective_offer_price_detail,
     co.collective_offer_booking_email,
     co.collective_offer_contact_email,
     co.collective_offer_contact_phone,
-    null as collective_offer_contact_url,
-    null as collective_offer_contact_form,
+    NULL AS collective_offer_contact_url,
+    NULL AS collective_offer_contact_form,
     co.collective_offer_offer_venue,
     co.collective_offer_venue_humanized_id,
     co.collective_offer_venue_address_type AS collective_offer_address_type,
@@ -58,6 +59,7 @@ SELECT
     cs.total_used_collective_bookings,
     cs.total_collective_theoretic_revenue,
     cs.total_collective_real_revenue,
+    cs.total_collective_current_year_real_revenue,
     cs.first_collective_booking_date,
     cs.last_collective_booking_date,
     FALSE AS collective_offer_is_template
@@ -106,11 +108,12 @@ SELECT
     collective_offer_template_beginning_date,
     collective_offer_template_ending_date,
     TRUE AS collective_offer_is_bookable,
-    0 as total_non_cancelled_collective_bookings,
-    0 as total_collective_bookings,
-    0 as total_used_collective_bookings,
-    0 as total_collective_theoretic_revenue,
-    0 as total_collective_real_revenue,
+    0 AS total_non_cancelled_collective_bookings,
+    0 AS total_collective_bookings,
+    0 AS total_used_collective_bookings,
+    0 AS total_collective_theoretic_revenue,
+    0 AS total_collective_real_revenue,
+    0 AS total_collective_current_year_real_revenue,
     NULL AS first_collective_booking_date,
     NULL AS last_collective_booking_date,
     TRUE AS collective_offer_is_template

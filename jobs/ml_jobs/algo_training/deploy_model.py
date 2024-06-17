@@ -119,7 +119,7 @@ class ModelHandler:
             max_replica_count=self.endpoint_params.max_nodes,
             machine_type=self.endpoint_params.instance_type,
             traffic_percentage=self.endpoint_params.traffic_percentage,
-            autoscaling_target_cpu_utilization=30,
+            autoscaling_target_cpu_utilization=70,
         )
         model.wait()
 

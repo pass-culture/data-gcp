@@ -64,10 +64,20 @@ Repo pour la team data sur GCP
   ```
   make install_ubuntu_libs
   ```
+- [VM DEBIAN] Installation d'autres librairies et fix de l'environnement pour les VM :
+  ```
+  make install_on_debian_vm
+  ```
 - Installation du projet
-  ```
-  make install
-  ```
+  - La première fois : installation from scratch, avec création des environnements virtuels
+    ```
+    make clean_install
+    ```
+  - Installation rapide des nouveaux packages
+    ```
+    make install
+    ```
+
 
 **2. Config .env.local**
 
@@ -191,3 +201,27 @@ graph TD;
     F[Déploiement de Composer en Dev] --> G[Déploiement de Composer en Production]
     A[Workflow de Déploiement] --> H[Déploiement de Composer en Staging]
 :::
+
+
+## Automatisations
+
+### ML Jobs
+
+Pour créer un nouveau micro service de ML :
+
+```bash
+MS_NAME=mon_micro_service make create_microservice
+```
+
+où mon_micro_service est le nom du micro service. Exemple :
+
+```bash
+MS_NAME=algo_llm make create_microservice
+```
+
+Cela va :
+
+1. créer un dossier `algo_llm` dans `jobs/ml_jobs` avec les fichiers nécessaires pour le micro service.
+2. rajouter le micro service dans la target install du Makefile
+3. Commiter les changements
+4. Lancer l'installation du nouveau micro service

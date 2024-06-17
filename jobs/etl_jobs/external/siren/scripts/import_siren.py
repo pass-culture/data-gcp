@@ -44,7 +44,7 @@ def get_offerer_siren_list():
 
 
 def get_siren_query(siren_list):
-    query = "https://api.insee.fr/entreprises/sirene/V3/siren?q="
+    query = "https://api.insee.fr/entreprises/sirene/V3.11/siren?q="
     for siren in siren_list:
         query += f"""siren:{siren} OR """
     query += f"""siren:{siren_list[len(siren_list)-1]}&nombre=1000"""
@@ -136,13 +136,13 @@ def append_info_siren_list(siren_info_list, result):
 # put token secrets
 def query_siren():
     token = get_api_token(access_secret_data(GCP_PROJECT, "siren-key"))
-
     siren_info_list = []
     headers = {
         "Accept": "application/json",
         "Authorization": f"""Bearer {token}""",
     }
     siren_list = get_offerer_siren_list()
+    print(f"Will update {len(siren_list)} SIREN")
     if len(siren_list) > 0:
         nb_df_sub_divisions = len(siren_list) // MAX_SIREN_CALL
         if (len(siren_list) - nb_df_sub_divisions * MAX_SIREN_CALL) == 0:
@@ -166,6 +166,9 @@ def query_siren():
                     f"Error API CALL {response.status_code} : {response.reason}"
                 )
             time.sleep(2.5)
+        if len(siren_info_list) == 0:
+            print("Something went wrong, exit.")
+            raise Exception()
         return siren_info_list
     return None
 

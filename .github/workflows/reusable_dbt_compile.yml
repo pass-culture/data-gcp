@@ -93,7 +93,7 @@ jobs:
         with:
           files_yaml: |
             model:
-              - 'dags/data_gcp_dbt/models/**.sql
+              - 'dags/data_gcp_dbt/models/**.sql'
           # Optionally set `files_yaml_from_source_file` to read the YAML from a file. e.g `files_yaml_from_source_file: .github/changed-files.yml`
 
       - name: Run step if any dbt model changed

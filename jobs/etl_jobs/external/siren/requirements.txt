@@ -1,5 +1,5 @@
 DateTime==4.3
-pandas==1.3.3
+pandas==2.2.2
 pandas-gbq==0.15.0
 requests==2.20.1
 gcsfs==2021.9.0

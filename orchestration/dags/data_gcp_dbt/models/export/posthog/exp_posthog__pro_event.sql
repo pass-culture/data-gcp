@@ -16,7 +16,7 @@ SELECT
         has_opened_wrong_student_modal,
         filled,
         filled_with_errors,
-        onboarding_selected_legal_category
+        onboarding_selected_legal_category,
         download_format,
         download_booking_status
     ) as extra_params,

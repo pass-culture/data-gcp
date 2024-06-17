@@ -8,5 +8,5 @@ SELECT
     deposit_type,
     booking_quantity,
     booking_amount
-FROM {{ ref('mrt_global__boking') }}
+FROM {{ ref('mrt_global__booking') }}
 WHERE not cast(booking_is_cancelled as bool) and booking_status != 'CANCELLED'

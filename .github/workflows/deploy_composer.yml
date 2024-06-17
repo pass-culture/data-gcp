@@ -5,6 +5,7 @@ on:
   branches:
     - master
     - production
+    - CI-environment
 
 jobs:
   linter:

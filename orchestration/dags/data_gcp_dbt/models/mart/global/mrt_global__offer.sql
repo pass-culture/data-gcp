@@ -19,6 +19,7 @@ SELECT
     offer_category_id,
     last_stock_price,
     offer_creation_date,
+    offer_created_at,
     offer_date_updated,
     offer_is_duo,
     item_id,

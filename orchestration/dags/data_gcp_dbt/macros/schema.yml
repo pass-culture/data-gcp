@@ -18,7 +18,7 @@ macros:
       - params: A list of parameter keys for which the corresponding `string_value` should be extracted from the event parameters.
 
       Example
-      The call {{ extract_params_string_value(["param1", "param2" ]) }} generates the following SQL query:
+      The call of extract_params_string_value(["param1", "param2" ]) generates the following SQL query:
       ```sql
       (SELECT event_params.value.string_value FROM UNNEST(event_params) event_params WHERE event_params.key = 'param1') AS param1,
       (SELECT event_params.value.string_value FROM UNNEST(event_params) event_params WHERE event_params.key = 'param2') AS param2
@@ -39,7 +39,7 @@ macros:
         - end (int): The ending index (exclusive) for generating column names.
 
       Example:
-        The call {{ extract_str_to_array_field(offers, 0, 10, 50) }} generates the following SQL query:
+        The call of extract_str_to_array_field(offers, 0, 10, 50) generates the following SQL query:
       ```sql
       ARRAY(
         SELECT _col

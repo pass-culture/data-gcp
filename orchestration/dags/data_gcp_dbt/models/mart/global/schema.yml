@@ -10,3 +10,4 @@ models:
 
   - name: mrt_global__offer_unverified
     description: "This table contains all offers, including both approved and unapproved ones."
+  

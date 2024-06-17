@@ -17,6 +17,8 @@ SELECT
         filled,
         filled_with_errors,
         onboarding_selected_legal_category
+        download_format,
+        download_booking_status
     ) as extra_params,
     STRUCT(
         offerer_id,

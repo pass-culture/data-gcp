@@ -160,22 +160,20 @@ def query_siren():
                 siren_info_list = append_info_siren_list(siren_info_list, result)
             elif response.status_code == 404:
                 print("Error 404")
-                print(response.content)
+                print(response.json())
             else:
                 raise ValueError(
                     f"Error API CALL {response.status_code} : {response.reason}"
                 )
             time.sleep(2.5)
         if len(siren_info_list) == 0:
-            print("Something went wrong, exit.")
-            raise Exception()
-        return siren_info_list
-    return None
+            print("Something went wrong for all SIREN.... pass.")
+    return siren_info_list
 
 
 def siren_to_bq():
     results = query_siren()
-    if results is not None:
+    if len(results) > 0:
         save_to_bq(results)
     return
 

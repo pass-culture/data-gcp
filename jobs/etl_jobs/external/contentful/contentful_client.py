@@ -101,12 +101,12 @@ BLOCK_PARAMETERS = {
             "tag",
             "home_entry_id",
         ],
-        "type": "unique",
+        "type": "list",
     },
     "trend_block": {
         "name": "items",
         "additional_fields": ["title", "image", "home_entry_id"],
-        "type": "unique",
+        "type": "list",
     },
 }
 

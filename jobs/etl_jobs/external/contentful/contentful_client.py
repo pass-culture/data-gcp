@@ -232,7 +232,7 @@ CONTENTFUL_MODULES = [
     },
     {
         "name": "trends",
-        "additional_fields": ["title", "items", "trend_block"],
+        "additional_fields": ["title"],
         "children": [
             BLOCK_PARAMETERS["trend_block"],
         ],
@@ -243,8 +243,6 @@ CONTENTFUL_MODULES = [
             "title",
             "displayed_title",
             "color",
-            "items",
-            "video_carousel_item",
         ],
         "children": [
             BLOCK_PARAMETERS["video_carousel_item"],

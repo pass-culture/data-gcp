@@ -10,7 +10,7 @@ google-cloud-secret-manager==2.2.0
 google-cloud-storage==1.38.0
 numpy>=1.26.3
 pandas==2.2.2
-requests==2.20.1
+requests==2.32.3
 temp==2020.7.2
 Werkzeug==2.2.3
-pandas-gbq
+pandas-gbq==0.23.1

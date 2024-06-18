@@ -1,4 +1,4 @@
 gcsfs==2021.9.0
 pandas==2.2.2
 pandas-gbq==0.23.1
-numpy
+numpy==2.0.0

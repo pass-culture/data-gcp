@@ -91,7 +91,7 @@ BLOCK_PARAMETERS = {
         "type": "unique",
     },
     "video_carousel_item": {
-        "name": "video_carousel_item",
+        "name": "items",
         "additional_fields": [
             "title",
             "duration_in_minutes",
@@ -104,7 +104,7 @@ BLOCK_PARAMETERS = {
         "type": "unique",
     },
     "trend_block": {
-        "name": "trend_block",
+        "name": "items",
         "additional_fields": ["title", "image", "home_entry_id"],
         "type": "unique",
     },
@@ -232,18 +232,14 @@ CONTENTFUL_MODULES = [
     },
     {
         "name": "trends",
-        "additional_fields": ["title"],
+        "additional_fields": ["title", "items"],
         "children": [
             BLOCK_PARAMETERS["trend_block"],
         ],
     },
     {
         "name": "videoCarousel",
-        "additional_fields": [
-            "title",
-            "displayed_title",
-            "color",
-        ],
+        "additional_fields": ["title", "color", "items"],
         "children": [
             BLOCK_PARAMETERS["video_carousel_item"],
         ],
@@ -351,7 +347,7 @@ class ContentfulClient:
                     basic_fields["algolia_parameters"]
                 ].append([add_algo.id for add_algo in other_fields.get(field)])
             elif (
-                field in ["venues_search_parameters", "modules"]
+                field in ["venues_search_parameters", "modules", "items"]
                 and other_fields.get(field) is not None
             ):
                 basic_fields[f"{field}"] = str(

@@ -4,11 +4,11 @@ WITH
     author AS artist_name,
     offer_category_id,
     is_synchronised,
-    COUNT(booking_cnt) AS offer_number,
-    SUM(IFNULL(booking_cnt, 0)) AS total_booking_count,
+    COUNT(total_individual_bookings) AS offer_number,
+    SUM(IFNULL(total_individual_bookings, 0)) AS total_booking_count,
     'author' AS artist_type
   FROM
-    `{{ bigquery_analytics_dataset }}`.enriched_offer_data
+    `{{ bigquery_analytics_dataset }}`.global_offer
   WHERE
     offer_category_id IN ("CINEMA",
       "MUSIQUE_LIVE",
@@ -26,11 +26,11 @@ WITH
     performer AS artist_name,
     offer_category_id,
     is_synchronised,
-    COUNT(booking_cnt) AS offer_number,
-    SUM(IFNULL(booking_cnt, 0)) AS total_booking_count,
+    COUNT(total_individual_bookings) AS offer_number,
+    SUM(IFNULL(total_individual_bookings, 0)) AS total_booking_count,
     'performer' AS artist_type
   FROM
-    `{{ bigquery_analytics_dataset }}`.enriched_offer_data
+    `{{ bigquery_analytics_dataset }}`.global_offer
   WHERE
     offer_category_id IN ( "MUSIQUE_LIVE",
       "SPECTACLE",

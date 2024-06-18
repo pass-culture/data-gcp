@@ -1,10 +1,10 @@
 WITH all_bookable_data AS (
 SELECT
-    enriched_offer_data.partner_id
+    mrt_global__offer.partner_id
     , partition_date
     , 'individual' AS offer_type
     , COUNT(DISTINCT offer_id) AS nb_bookable_offers
-FROM {{ ref('enriched_offer_data')}}
+FROM {{ ref('mrt_global__offer')}} AS mrt_global__offer
 INNER JOIN {{ ref('bookable_offer_history')}} USING(offer_id)
 GROUP BY 1,2,3
 UNION ALL

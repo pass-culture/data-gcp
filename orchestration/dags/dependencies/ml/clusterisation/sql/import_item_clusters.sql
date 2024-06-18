@@ -1,9 +1,9 @@
 WITH offer_booking AS (
     SELECT
         item_id,
-        sum(booking_cnt) as booking_cnt
+        sum(total_individual_bookings) as booking_cnt
     FROM
-        `{{ bigquery_analytics_dataset }}.enriched_offer_data`
+        `{{ bigquery_analytics_dataset }}.global_offer`
     GROUP BY
         1
 )

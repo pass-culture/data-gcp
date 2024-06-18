@@ -11,11 +11,11 @@ SELECT
         STRING_AGG(DISTINCT enroffer.author, " ")                       AS item_author,
         STRING_AGG(DISTINCT enroffer.performer, " ")                    AS item_performer,
         ROUND(AVG(enroffer.last_stock_price), -1)                       AS item_mean_stock_price,
-        ROUND(SUM(enroffer.booking_confirm_cnt), -1)                    AS item_booking_cnt,
-        ROUND(SUM(enroffer.favourite_cnt), -1)                          AS item_favourite_cnt,
+        ROUND(SUM(enroffer.total_used_individual_bookings), -1)                    AS item_booking_cnt,
+        ROUND(SUM(enroffer.total_favorites), -1)                          AS item_favourite_cnt,
 
 
-FROM `{{ bigquery_analytics_dataset }}`.enriched_offer_data enroffer
+FROM `{{ bigquery_analytics_dataset }}`.global_offer enroffer
 INNER JOIN `{{ bigquery_clean_dataset }}`.`applicative_database_offer` offer
         ON enroffer.offer_id = offer.offer_id
 INNER JOIN `{{ bigquery_analytics_dataset }}`.`subcategories` subcategories

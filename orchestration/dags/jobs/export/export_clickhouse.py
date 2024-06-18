@@ -19,16 +19,21 @@ from common.config import (
     ENV_SHORT_NAME,
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_TMP_DATASET,
+    PATH_TO_DBT_TARGET,
 )
+
 from common.utils import get_airflow_schedule
 from common.alerts import task_fail_slack_alert
-from dependencies.export_clickhouse.export_clickhouse import TABLES_CONFIGS
+from dependencies.export_clickhouse.export_clickhouse import (
+    TABLES_CONFIGS,
+    VIEWS_CONFIGS,
+)
 from common.alerts import task_fail_slack_alert
 import copy
 from common import macros
+import os
 
-SQL_BASE_PATH = Path("dependencies/export_clickhouse/sql")
-
+DATASET_ID = f"export_{ENV_SHORT_NAME}"
 GCE_INSTANCE = f"export-clickhouse-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/clickhouse"
 dag_config = {
@@ -51,13 +56,13 @@ dag_config = {
 }
 
 gce_params = {
-    "instance_name": f"export-clickhouse-data-{ENV_SHORT_NAME}",
+    "instance_name": f"export-clickhouse2-data-{ENV_SHORT_NAME}",
     "instance_type": "n1-standard-4",
 }
 
 dags = {
     "daily": {
-        "schedule_interval": {"prod": "0 8 * * *", "dev": None, "stg": None},
+        "schedule_interval": {"prod": None, "dev": None, "stg": None},
         "yyyymmdd": "{{ yyyymmdd(ds) }}",
         "default_dag_args": {
             "start_date": datetime.datetime(2024, 3, 1),
@@ -73,7 +78,7 @@ for dag_name, dag_params in dags.items():
     with DAG(
         f"export_clickhouse_{dag_name}",
         default_args=dag_params["default_dag_args"],
-        description="Export to analytics data posthog",
+        description="Export data to clickhouse",
         schedule_interval=get_airflow_schedule(
             dag_params["schedule_interval"][ENV_SHORT_NAME]
         ),
@@ -97,12 +102,11 @@ for dag_name, dag_params in dags.items():
                 type="string",
             ),
             "days": Param(
-                default=4,
+                default=-4,
                 type="integer",
             ),
         },
     ) as dag:
-
         gce_instance_start = StartGCEOperator(
             task_id=f"gce_start_task",
             preemptible=False,
@@ -138,9 +142,14 @@ for dag_name, dag_params in dags.items():
             table_id = f"tmp_{_ts}_{tmp_table_name}"
             storage_path = f"{dag_config['STORAGE_PATH']}/{clickhouse_table_name}"
 
+            if mode == "overwrite":
+                sql_query = f"""SELECT * FROM {DATASET_ID}.{tmp_table_name} """
+            elif mode == "incremental":
+                sql_query = f"""SELECT * FROM {DATASET_ID}.{tmp_table_name} """
+                """WHERE event_date = DATE("{{ add_days(ds, params.days) }}")"""
             export_task = BigQueryExecuteQueryOperator(
                 task_id=f"bigquery_export_{clickhouse_table_name}",
-                sql=(SQL_BASE_PATH / f"{tmp_table_name}.sql").as_posix(),
+                sql=sql_query,
                 write_disposition="WRITE_TRUNCATE",
                 use_legacy_sql=False,
                 destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{table_id}",
@@ -164,23 +173,34 @@ for dag_name, dag_params in dags.items():
                 dag=dag,
             )
 
-            events_export = SSHGCEOperator(
-                task_id=f"{clickhouse_table_name}_events_export",
+            clickhouse_export = SSHGCEOperator(
+                task_id=f"{clickhouse_table_name}_export",
                 instance_name="{{ params.instance_name }}",
                 base_dir=dag_config["BASE_DIR"],
                 command="python main.py "
                 f"--source-gs-path https://storage.googleapis.com/{storage_path}/data-*.parquet --table-name {clickhouse_table_name} --dataset-name {clickhouse_dataset_name} --update-date {_ds} --mode {mode}",
                 dag=dag,
             )
-            export_task >> export_bq >> events_export
+            export_task >> export_bq >> clickhouse_export
             in_tables_tasks.append(export_task)
-            out_tables_tasks.append(events_export)
+            out_tables_tasks.append(clickhouse_export)
 
         end_tables = DummyOperator(task_id="end_tables_export")
+        views_refresh = []
+        for view_config in VIEWS_CONFIGS:
+            clickhouse_view_name = view_config["clickhouse_view_name"]
+            view_task = SSHGCEOperator(
+                task_id=f"refresh_{clickhouse_view_name}_view",
+                instance_name="{{ params.instance_name }}",
+                base_dir=dag_config["BASE_DIR"],
+                command="python refresh.py " f"--view-name {clickhouse_view_name}",
+                dag=dag,
+            )
+            views_refresh.append(view_task)
 
         gce_instance_stop = StopGCEOperator(
             task_id=f"gce_stop_task", instance_name="{{ params.instance_name }}"
         )
 
         (gce_instance_start >> fetch_code >> install_dependencies >> in_tables_tasks)
-        (out_tables_tasks >> end_tables >> gce_instance_stop)
+        (out_tables_tasks >> end_tables >> views_refresh >> gce_instance_stop)

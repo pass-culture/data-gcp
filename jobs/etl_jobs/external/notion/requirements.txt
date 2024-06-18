@@ -7,7 +7,7 @@ google-cloud-storage>=1.38.0
 numpy>=1.26.3
 pandas>=1.1.4
 requests>=2.20.1
-pandas-gbq
+pandas-gbq==0.23.1
 notion-client>=2.0.0  
 notion2md>=2.8.3
 typer>=0.7.0

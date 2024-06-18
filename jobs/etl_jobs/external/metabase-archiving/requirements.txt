@@ -1,6 +1,6 @@
 pandas==2.2.2
-pandas_gbq
-requests==2.20.1
-google-cloud-secret-manager==2.2.0
-google-auth-oauthlib==0.4.6
+pandas_gbq==0.23.1
+requests==2.32.3
+google-cloud-secret-manager==2.20.0
+google-auth-oauthlib==1.2.0
 tqdm==4.58.0

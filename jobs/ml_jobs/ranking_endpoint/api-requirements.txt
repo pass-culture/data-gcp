@@ -5,5 +5,5 @@ numpy
 pandas
 pyarrow
 lightgbm==4.0.0
-scikit-learn==1.3.0
+scikit-learn==1.5.0
 python-json-logger

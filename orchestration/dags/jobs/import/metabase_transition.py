@@ -71,51 +71,50 @@ with DAG(
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
 
-    if ENV_SHORT_NAME == "prod":
-        gce_instance_start = StartGCEOperator(
-            instance_name=GCE_INSTANCE, task_id="gce_start_task"
-        )
+    gce_instance_start = StartGCEOperator(
+        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+    )
 
-        fetch_code = CloneRepositoryGCEOperator(
-            task_id="fetch_code",
-            instance_name=GCE_INSTANCE,
-            command="{{ params.branch }}",
-            python_version="3.9",
-        )
+    fetch_code = CloneRepositoryGCEOperator(
+        task_id="fetch_code",
+        instance_name=GCE_INSTANCE,
+        command="{{ params.branch }}",
+        python_version="3.9",
+    )
 
-        install_dependencies = SSHGCEOperator(
-            task_id="install_dependencies",
-            instance_name=GCE_INSTANCE,
-            base_dir=BASE_PATH,
-            command="pip install -r requirements.txt --user",
-            dag=dag,
-            retries=2,
-        )
+    install_dependencies = SSHGCEOperator(
+        task_id="install_dependencies",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        command="pip install -r requirements.txt --user",
+        dag=dag,
+        retries=2,
+    )
 
-        switch_metabase_cards_op = SSHGCEOperator(
-            task_id="switch_metabase_cards_op",
-            instance_name=GCE_INSTANCE,
-            base_dir=BASE_PATH,
-            environment=dag_config,
-            command="""
-            python main.py \
-            --metabase-card-type {{ params.metabase_card_type }} \
-            --legacy-table-name {{ params.legacy_table_name }} \
-            --new-table-name {{ params.new_table_name }} \
-            --legacy-schema-name {{ params.legacy_schema_name }} \
-            --new-schema-name {{ params.new_schema_name }} 
-            """,
-        )
+    switch_metabase_cards_op = SSHGCEOperator(
+        task_id="switch_metabase_cards_op",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="""
+        python main.py \
+        --metabase-card-type {{ params.metabase_card_type }} \
+        --legacy-table-name {{ params.legacy_table_name }} \
+        --new-table-name {{ params.new_table_name }} \
+        --legacy-schema-name {{ params.legacy_schema_name }} \
+        --new-schema-name {{ params.new_schema_name }} 
+        """,
+    )
 
-        gce_instance_stop = StopGCEOperator(
-            task_id="gce_stop_task", instance_name=GCE_INSTANCE
-        )
+    gce_instance_stop = StopGCEOperator(
+        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+    )
 
-        (
-            start
-            >> gce_instance_start
-            >> fetch_code
-            >> install_dependencies
-            >> switch_metabase_cards_op
-            >> gce_instance_stop
-        )
+    (
+        start
+        >> gce_instance_start
+        >> fetch_code
+        >> install_dependencies
+        >> switch_metabase_cards_op
+        >> gce_instance_stop
+    )

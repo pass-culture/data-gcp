@@ -22,7 +22,7 @@ def run():
         print("Folder Name : ", folder_name)
         bucket_folder = BucketFolder(DATA_BUCKET, folder_name)
         file_name = bucket_folder.get_last_file_name(storage_client)
-        print("File Name : ", folder_name)
+        print("File Name : ", file_name)
 
         GCS_to_bigquery(
             gcp_project=PROJECT_NAME,

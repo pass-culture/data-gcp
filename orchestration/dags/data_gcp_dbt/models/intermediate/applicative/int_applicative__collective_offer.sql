@@ -62,9 +62,12 @@ SELECT
     cs.total_collective_current_year_real_revenue,
     cs.first_collective_booking_date,
     cs.last_collective_booking_date,
-    FALSE AS collective_offer_is_template
+    FALSE AS collective_offer_is_template,
+    il.institution_internal_iris_id
 FROM {{ source('raw','applicative_database_collective_offer') }} AS co
 LEFT JOIN collective_stocks_grouped_by_collective_offers AS cs ON cs.collective_offer_id = co.collective_offer_id
+INNER JOIN {{ ref('int_applicative__educational_institution') }} AS ei ON ei.educational_institution_id = co.institution_id
+LEFT JOIN {{ ref('institution_locations') }} AS il ON il.institution_id = ei.institution_id
 )
 UNION ALL
 (
@@ -116,6 +119,7 @@ SELECT
     0 AS total_collective_current_year_real_revenue,
     NULL AS first_collective_booking_date,
     NULL AS last_collective_booking_date,
-    TRUE AS collective_offer_is_template
+    TRUE AS collective_offer_is_template,
+    NULL AS institution_internal_iris_id
 FROM {{ source('raw','applicative_database_collective_offer_template') }}
 )

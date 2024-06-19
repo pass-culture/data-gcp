@@ -35,7 +35,7 @@ SELECT
     ) AS user_age,
     COUNT(*) AS cnt_events,
 FROM {{ ref('int_firebase__native_event')}} fe
-    JOIN {{ ref('enriched_offer_data')}} o ON fe.offer_id = o.offer_id
+    JOIN {{ ref('mrt_global__offer')}} o ON fe.offer_id = o.offer_id
     AND fe.event_name IN (
         'ConsultOffer',
         'ConsultWholeOffer',

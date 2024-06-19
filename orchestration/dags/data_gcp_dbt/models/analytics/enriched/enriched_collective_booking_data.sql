@@ -52,6 +52,8 @@ SELECT
     collective_booking.collective_booking_reimbursement_date,
     collective_booking_ranking_view.collective_booking_rank,
     collective_offer.collective_offer_image_id,
+    institution_locations.institution_internal_iris_id,
+    venue.venue_iris_internal_id
 FROM
     {{ source('raw', 'applicative_database_collective_booking') }}  AS collective_booking
     INNER JOIN {{ source('raw', 'applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id
@@ -67,3 +69,4 @@ FROM
     LEFT JOIN {{ source('clean', 'subcategories') }} subcategories ON collective_offer.collective_offer_subcategory_id = subcategories.id
     LEFT JOIN {{ ref('int_applicative__institution') }} AS institution_program
         ON collective_booking.educational_institution_id = institution_program.institution_id
+    LEFT JOIN {{ ref('institution_locations') }} AS institution_locations ON institution_locations.institution_id = educational_institution.institution_id

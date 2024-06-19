@@ -20,7 +20,6 @@ def GCS_to_bigquery(
     destination_table,
     schema,
 ):
-    # TODO : support other file formats.
     if file_type == "csv":
         job_config = bigquery.LoadJobConfig(
             schema=[
@@ -31,19 +30,23 @@ def GCS_to_bigquery(
             write_disposition="WRITE_TRUNCATE",
             encoding="UTF-8",
         )
-
-        uri = "gs://{}/{}/{}.{}".format(bucket_name, folder_name, file_name, file_type)
-
-        table_id = "{}.{}.{}".format(
-            gcp_project, destination_dataset, destination_table
+    elif file_type == "parquet":
+        job_config = bigquery.LoadJobConfig(
+            source_format=bigquery.SourceFormat.PARQUET,
+            write_disposition="WRITE_TRUNCATE",
+            encoding="UTF-8",
         )
+    else:
+        raise Exception("Format not found")
 
-        load_job = bigquery_client.load_table_from_uri(
-            uri, table_id, job_config=job_config
-        )
+    uri = "gs://{}/{}/{}.{}".format(bucket_name, folder_name, file_name, file_type)
 
-        load_job.result()
+    table_id = "{}.{}.{}".format(gcp_project, destination_dataset, destination_table)
 
-        destination_table = bigquery_client.get_table(table_id)
+    load_job = bigquery_client.load_table_from_uri(uri, table_id, job_config=job_config)
 
-        print("Loaded {} rows.".format(destination_table.num_rows))
+    load_job.result()
+
+    destination_table = bigquery_client.get_table(table_id)
+
+    print("Loaded {} rows.".format(destination_table.num_rows))

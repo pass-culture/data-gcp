@@ -34,7 +34,7 @@ SELECT
     e.onboarding_user_selected_age,
     o.offer_name,
     o.offer_category_id,
-    o.offer_subcategoryId,
+    o.offer_subcategory_id,
     v.venue_name,
     v.venue_type_label,
     c.content_type,
@@ -44,7 +44,7 @@ SELECT
     u.user_deposit_initial_amount
 FROM {{ ref("int_firebase__native_event") }} AS e
 LEFT JOIN {{ ref("enriched_user_data") }} AS u ON e.user_id = u.user_id
-LEFT JOIN {{ ref("enriched_offer_data") }} AS o ON e.offer_id = o.offer_id
+LEFT JOIN {{ ref("mrt_global__offer") }} AS o ON e.offer_id = o.offer_id
 LEFT JOIN {{ ref("mrt_global__venue") }} AS v ON v.venue_id = COALESCE(e.venue_id,o.venue_id)
 LEFT JOIN {{ ref("int_contentful__entry") }} AS c ON c.id = e.module_id
 LEFT JOIN {{ ref("int_applicative__deposit" )}} AS d ON d.userId = e.user_id AND e.event_date BETWEEN d.dateCreated AND d.expirationDate

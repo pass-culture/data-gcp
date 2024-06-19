@@ -19,6 +19,7 @@ SELECT
     o.offer_category_id,
     o.last_stock_price,
     o.offer_creation_date,
+    o.offer_created_at,
     o.offer_date_updated,
     o.offer_is_duo,
     o.item_id,
@@ -71,6 +72,7 @@ SELECT
     v.offerer_id,
     v.offerer_name,
     v.venue_type_label,
+    v.venue_iris_internal_id
 FROM {{ ref('int_applicative__offer') }} AS o
     LEFT JOIN {{ source('clean', 'subcategories') }} subcategories ON o.offer_subcategory_id = subcategories.id
     INNER JOIN {{ ref('mrt_global__venue_unverified')}} AS v ON v.venue_id = o.venue_id

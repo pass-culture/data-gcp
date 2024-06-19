@@ -26,7 +26,6 @@ def umap_reduce_embedding_dimension(
 
 
 def pumap_reduce_embedding_dimension(data, dimension, train_frac=0.1, batch_size=2048):
-
     keras_fit_kwargs = {
         "callbacks": [
             tf.keras.callbacks.EarlyStopping(

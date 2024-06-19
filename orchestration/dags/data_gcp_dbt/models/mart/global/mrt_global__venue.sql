@@ -55,6 +55,10 @@ SELECT venue_id,
     total_created_offers,
     first_bookable_offer_date,
     last_bookable_offer_date,
+    first_individual_bookable_offer_date,
+    last_individual_bookable_offer_date,
+    first_collective_bookable_offer_date,
+    last_collective_bookable_offer_date,
     first_booking_date,
     last_booking_date,
     first_offer_creation_date,
@@ -68,6 +72,7 @@ SELECT venue_id,
     offerer_is_active,
     venue_pc_pro_link,
     partner_id,
+    venue_iris_internal_id
 FROM {{ ref('mrt_global__venue_unverified') }}
 WHERE offerer_validation_status='VALIDATED'
     AND offerer_is_active

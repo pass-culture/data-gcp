@@ -183,4 +183,7 @@ ref_tables = {
             "macro_institution_type": "STRING",
         },
     },
+    "geo_iris": {
+        "file_type": "parquet",
+    },
 }

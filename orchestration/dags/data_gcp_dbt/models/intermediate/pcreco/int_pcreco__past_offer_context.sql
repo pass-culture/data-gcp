@@ -52,9 +52,13 @@ WITH export_table AS (
           CAST(JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_28_days") AS FLOAT64) as offer_booking_number_last_28_days,
           CAST(JSON_EXTRACT(offer_extra_data, "$.offer_semantic_emb_mean") AS FLOAT64) as offer_semantic_emb_mean
         ) as offer_context,
-        STRUCT(
-            REPLACE(JSON_EXTRACT(context_extra_data, "$.offer_origin_id"),  '"', '') as offer_origin_id
-        ) as recommendation_context        
+        REPLACE(JSON_EXTRACT(context_extra_data, "$.offer_origin_id"),  '"', '') as offer_origin_id,
+        REPLACE(JSON_EXTRACT(context_extra_data, "$.model_params.name"),  '"', '') as model_params_name,
+        REPLACE(JSON_EXTRACT(context_extra_data, "$.model_params.description"),  '"', '') as model_params_description,
+        REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.retrievals[0].model_display_name"),  '"', '') as scorer_retrieval_model_display_name,
+        REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.retrievals[0].model_version"),  '"', '') as scorer_retrieval_model_version,
+        REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.ranking.model_display_name"),  '"', '') as scorer_ranking_model_display_name,
+        REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.ranking.model_version"),  '"', '') as scorer_ranking_model_version, 
     FROM
        {{ source('raw', 'past_offer_context') }} pso 
     INNER JOIN {{ ref('offer_item_ids') }} offer_item_ids USING(offer_id)

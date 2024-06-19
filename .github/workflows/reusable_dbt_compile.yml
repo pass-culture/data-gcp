@@ -25,6 +25,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
+      pull-requests: read
     defaults:
      run: 
        working-directory: "./orchestration/"
@@ -94,10 +95,13 @@ jobs:
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            **.sql
       - name: Run step if any dbt model changed
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         # NOTE: Ensure all outputs are prefixed by the same key used above e.g. `model(...)`  when trying to access the `any_changed` output.
-        if: steps.changed-files.outputs.test_any_changed == 'true'  
+        if: always()  
         env:
           ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
           TARGET_BRANCH: ${{ github.base_ref }}
@@ -105,12 +109,7 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
         run: |
-          for file in ${ALL_CHANGED_FILES}; do
-           echo "$file was changed"
-          done
-          export MODELS="$(ALL_CHANGED_FILES | grep 'orchestration/dags/data_gcp_dbt/models/' | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/+1/g" | tr '\n' ' ')"
-          echo $MODELS
-          dbt run --model $MODELS --profile CI --target $TARGET_ENV --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view'}" 
+          dbt run --model ($ALL_CHANGED_FILES | grep 'orchestration/dags/data_gcp_dbt/models/' | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/+1/g" | tr '\n' ' ') --profile CI --target $TARGET_ENV --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view'}" 
       - name: "Run modified models & 1st order childrens"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
@@ -119,10 +118,11 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
         run: |
+          echo $(git diff origin/$TARGET_BRANCH HEAD --name-only | grep 'orchestration/dags/data_gcp_dbt/models/' | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/+1/g" | tr '\n' ' ')
           dbt_run_changed_models() {
           children=$1
           common_ancestor=$(git merge-base --fork-point origin/$TARGET_BRANCH HEAD)
-          models=$(git diff $common_ancestor --name-only | grep 'orchestration/dags/data_gcp_dbt/models/' | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/${children}/g" | tr '\n' ' ')
+          models=$(git diff origin/$TARGET_BRANCH HEAD --name-only | grep 'orchestration/dags/data_gcp_dbt/models/' | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/${children}/g" | tr '\n' ' ')
           echo ${#models}
           if [ -z "$models" ]
           then

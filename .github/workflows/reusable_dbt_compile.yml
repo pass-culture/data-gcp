@@ -53,7 +53,11 @@ jobs:
         with:
           python-version: '3.10'
           cache: 'pip' # caching pip dependencies
-          cache-dependency-path: ./orchestration/airflow/orchestration-requirements.txt
+      - name: Check Python Version
+        run: python --version
+    
+      - name: Check pip Version
+        run: pip --version
       - name: "Install Python requirements"
         run: pip install -r airflow/orchestration-requirements.txt
       - name: "Authenticate with Google Cloud"
@@ -87,26 +91,24 @@ jobs:
           DBT_PROFILES_DIR: "."
           TARGET_ENV: ${{ inputs.TARGET_ENV }}
         run: dbt compile --profile CI --target $TARGET_ENV
-      - name: Get changed dbt models
-        id: changed-models
+      - name: Get changed files
+        id: changed-files
         uses: tj-actions/changed-files@v44
-        with:
-          files: |
-            orchestration/dags/data_gcp_dbt/models/**.sql
-          # Optionally set `files_yaml_from_source_file` to read the YAML from a file. e.g `files_yaml_from_source_file: .github/changed-files.yml`
-
       - name: Run step if any dbt model changed
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         # NOTE: Ensure all outputs are prefixed by the same key used above e.g. `model(...)`  when trying to access the `any_changed` output.
-        if: steps.changed-models.outputs.test_any_changed == 'true'  
+        if: steps.changed-files.outputs.test_any_changed == 'true'  
         env:
-          CHANGED_MODELS: ${{ steps.changed-models.outputs.all_changed_files }}
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
           TARGET_BRANCH: ${{ github.base_ref }}
           TARGET_ENV: ${{ inputs.TARGET_ENV }}
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
         run: |
-          export MODELS="$(CHANGED_MODELS | awk -F '/' '{ print $NF }' | sed "s/\.sql$/+1/g" | tr '\n' ' ')"
+          for file in ${ALL_CHANGED_FILES}; do
+           echo "$file was changed"
+          done
+          export MODELS="$(ALL_CHANGED_FILES | grep 'orchestration/dags/data_gcp_dbt/models/' | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/+1/g" | tr '\n' ' ')"
           echo $MODELS
           dbt run --model $MODELS --profile CI --target $TARGET_ENV --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view'}" 
       - name: "Run modified models & 1st order childrens"
@@ -119,11 +121,12 @@ jobs:
         run: |
           dbt_run_changed_models() {
           children=$1
-          common_ancestor=$(git merge-base --fork-point origin $TARGET_BRANCH HEAD)
+          common_ancestor=$(git merge-base --fork-point origin/$TARGET_BRANCH HEAD)
           models=$(git diff $common_ancestor --name-only | grep 'orchestration/dags/data_gcp_dbt/models/' | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/${children}/g" | tr '\n' ' ')
           echo ${#models}
           if [ -z "$models" ]
           then
+                echo $common_ancestor
                 echo "no models were modified"
           else
                 echo "Running models: ${models}"

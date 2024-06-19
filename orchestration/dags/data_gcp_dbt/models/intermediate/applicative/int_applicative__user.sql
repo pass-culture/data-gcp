@@ -5,6 +5,21 @@
     pre_hook="{{create_humanize_id_function()}}"
 ) }}
 
+WITH users_with_geo_candidates AS (
+    SELECT
+        u.*,
+        ul.latitude AS user_latitude,
+        ul.longitude AS user_longitude,
+        gi.iris_internal_id,
+        gi.region_name,
+        gi.iris_shape
+    FROM {{ source("raw", "applicative_database_user") }} AS u
+    LEFT JOIN {{ source("raw", "user_locations") }} AS ul USING(user_id)
+    INNER JOIN {{ source('clean', 'geo_iris') }} AS gi
+        ON ul.longitude BETWEEN gi.min_longitude AND gi.max_longitude
+           AND ul.latitude BETWEEN gi.min_latitude AND gi.max_latitude
+)
+
 SELECT
     user_id,
     user_creation_date,
@@ -12,16 +27,16 @@ SELECT
     user_has_enabled_marketing_email,
     COALESCE(
     CASE
-        WHEN user_postal_code = "97150" THEN "978"
-        WHEN SUBSTRING(user_postal_code, 0, 2) = "97" THEN SUBSTRING(user_postal_code, 0, 3)
-        WHEN SUBSTRING(user_postal_code, 0, 2) = "98" THEN SUBSTRING(user_postal_code, 0, 3)
-        WHEN SUBSTRING(user_postal_code, 0, 3) in ("200", "201", "209", "205") THEN "2A"
-        WHEN SUBSTRING(user_postal_code, 0, 3) in ("202", "206") THEN "2B"
-        ELSE SUBSTRING(user_postal_code, 0, 2)
+        WHEN u.user_postal_code = "97150" THEN "978"
+        WHEN SUBSTRING(u.user_postal_code, 0, 2) = "97" THEN SUBSTRING(u.user_postal_code, 0, 3)
+        WHEN SUBSTRING(u.user_postal_code, 0, 2) = "98" THEN SUBSTRING(u.user_postal_code, 0, 3)
+        WHEN SUBSTRING(u.user_postal_code, 0, 3) in ("200", "201", "209", "205") THEN "2A"
+        WHEN SUBSTRING(u.user_postal_code, 0, 3) in ("202", "206") THEN "2B"
+        ELSE SUBSTRING(u.user_postal_code, 0, 2)
         END,
-        user_department_code
+        u.user_department_code
     ) AS user_department_code,
-    user_postal_code,
+    u.user_postal_code,
     CASE
         WHEN user_activity in ("Alternant", "Apprenti", "Volontaire") THEN "Apprenti, Alternant, Volontaire en service civique rémunéré"
         WHEN user_activity in ("Inactif") THEN "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
@@ -40,5 +55,11 @@ SELECT
     user_role,
     user_birth_date,
     user_cultural_survey_filled_date,
-    CASE WHEN user_role IN ("UNDERAGE_BENEFICIARY", "BENEFICIARY") THEN 1 ELSE 0 END AS is_beneficiary
-FROM {{ source("raw", "applicative_database_user") }}
+    CASE WHEN user_role IN ("UNDERAGE_BENEFICIARY", "BENEFICIARY") THEN 1 ELSE 0 END AS is_beneficiary,
+    u.iris_internal_id AS user_iris_internal_id,
+    u.region_name AS user_region_name
+FROM users_with_geo_candidates AS u
+WHERE ST_CONTAINS(
+        u.iris_shape,
+        ST_GEOGPOINT(u.user_longitude, u.user_latitude)
+)

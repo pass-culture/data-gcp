@@ -444,6 +444,7 @@ SELECT
     user.user_age,
     user.user_birth_date,
     user.user_has_enabled_marketing_email,
+    user.user_internal_iris_id
 FROM
     {{ ref('user_beneficiary') }} AS user
     LEFT JOIN date_of_first_bookings ON user.user_id = date_of_first_bookings.user_id

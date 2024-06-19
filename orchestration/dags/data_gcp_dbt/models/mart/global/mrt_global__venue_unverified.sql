@@ -63,6 +63,7 @@ SELECT
     v.total_bookable_individual_offers,
     v.total_bookable_collective_offers,
     v.total_bookable_offers,
+    v.venue_iris_internal_id,
     ofr.offerer_id,
     ofr.offerer_name,
     ofr.offerer_validation_status,

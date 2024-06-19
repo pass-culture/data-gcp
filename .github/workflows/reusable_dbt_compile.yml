@@ -91,7 +91,7 @@ jobs:
         id: changed-models
         uses: tj-actions/changed-files@v44
         with:
-          file: |
+          files: |
             orchestration/dags/data_gcp_dbt/models/**.sql
           # Optionally set `files_yaml_from_source_file` to read the YAML from a file. e.g `files_yaml_from_source_file: .github/changed-files.yml`
 

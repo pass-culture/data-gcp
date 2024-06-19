@@ -125,6 +125,8 @@ où mon_micro_service est le nom du micro service. Exemple :
 MS_NAME=algo_llm make create_microservice
 ```
 
+coucou
+
 Cela va :
 
 1. créer un dossier `algo_llm` dans `jobs/ml_jobs` avec les fichiers nécessaires pour le micro service.

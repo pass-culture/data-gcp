@@ -72,6 +72,7 @@ SELECT
     offerer_id,
     offerer_name,
     venue_type_label,
+    venue_iris_internal_id
 FROM {{ ref('mrt_global__offer_unverified') }} AS o
 WHERE TRUE
     AND offer_validation = 'APPROVED'

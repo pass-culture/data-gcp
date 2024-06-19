@@ -5,7 +5,22 @@
 {% set target_name = target.name %}
 {% set target_schema = generate_schema_name('analytics_' ~ target_name) %}
 
-WITH user_beneficiary as (
+WITH users_with_geo_candidates AS (
+    SELECT
+        u.*,
+        ul.latitude AS user_latitude,
+        ul.longitude AS user_longitude,
+        gi.iris_internal_id,
+        gi.region_name,
+        gi.iris_shape
+    FROM {{ source("raw", "applicative_database_user") }} AS u
+    LEFT JOIN {{ source("raw", "user_locations") }} AS ul USING(user_id)
+    INNER JOIN {{ source('clean', 'geo_iris') }} AS gi
+        ON ul.longitude BETWEEN gi.min_longitude AND gi.max_longitude
+           AND ul.latitude BETWEEN gi.min_latitude AND gi.max_latitude
+),
+
+user_beneficiary as (
     SELECT 
         user_id,
         user_creation_date,
@@ -15,16 +30,16 @@ WITH user_beneficiary as (
         COALESCE(
         CASE
             
-            WHEN user_postal_code = '97150' THEN '978'
-            WHEN SUBSTRING(user_postal_code, 0, 2) = '97' THEN SUBSTRING(user_postal_code, 0, 3)
-            WHEN SUBSTRING(user_postal_code, 0, 2) = '98' THEN SUBSTRING(user_postal_code, 0, 3)
-            WHEN SUBSTRING(user_postal_code, 0, 3) in ('200', '201', '209', '205') THEN '2A'
-            WHEN SUBSTRING(user_postal_code, 0, 3) in ('202', '206') THEN '2B'
-            ELSE SUBSTRING(user_postal_code, 0, 2)
+            WHEN u.user_postal_code = '97150' THEN '978'
+            WHEN SUBSTRING(u.user_postal_code, 0, 2) = '97' THEN SUBSTRING(u.user_postal_code, 0, 3)
+            WHEN SUBSTRING(u.user_postal_code, 0, 2) = '98' THEN SUBSTRING(u.user_postal_code, 0, 3)
+            WHEN SUBSTRING(u.user_postal_code, 0, 3) in ('200', '201', '209', '205') THEN '2A'
+            WHEN SUBSTRING(u.user_postal_code, 0, 3) in ('202', '206') THEN '2B'
+            ELSE SUBSTRING(u.user_postal_code, 0, 2)
             END, 
-            user_department_code
+            u.user_department_code
         ) AS user_department_code,
-        user_postal_code,
+        u.user_postal_code,
         CASE
             WHEN user_activity in ("Alternant", "Apprenti", "Volontaire") THEN "Apprenti, Alternant, Volontaire en service civique rémunéré"
             WHEN user_activity in ("Inactif") THEN "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
@@ -42,10 +57,15 @@ WITH user_beneficiary as (
         user_age,
         user_role,
         user_birth_date,
-        user_cultural_survey_filled_date
-    FROM {{ source('raw', 'applicative_database_user') }}
+        user_cultural_survey_filled_date,
+        u.iris_internal_id AS user_iris_internal_id
+    FROM users_with_geo_candidates AS u
+    WHERE ST_CONTAINS(
+        u.iris_shape,
+        ST_GEOGPOINT(u.user_longitude, u.user_latitude)
+    )
     -- only BENEFICIARY
-    WHERE user_role IN ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')
+    AND  user_role IN ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')
 ),
 ranked_bookings AS (
     SELECT
@@ -83,7 +103,7 @@ SELECT
             user_department_code not in ("29","34","67","93","973","22","25","35","56","58","71","08","84","94")
             AND date(user_creation_date) < "2021-05-01"
         THEN "99"
-        ELSE user_department_code 
+        ELSE user_department_code
     END AS user_department_code,
     user_postal_code,
     user_activity,
@@ -94,6 +114,7 @@ SELECT
     user_role,
     user_birth_date,
     user_cultural_survey_filled_date,
+    user_iris_internal_id,
     CASE
         -- get user activation date with fictional offers (early 2019)
         WHEN offer_subcategoryId = 'ACTIVATION_THING'

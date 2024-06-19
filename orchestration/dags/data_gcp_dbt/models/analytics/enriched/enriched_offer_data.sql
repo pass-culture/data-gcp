@@ -124,6 +124,7 @@ SELECT
          ELSE CONCAT("offerer-", offerer.offerer_id) END AS partner_id,
     venue.venue_name,
     venue.venue_department_code,
+    venue.venue_iris_internal_id,
     offer.offer_id,
     offer.offer_product_id,
     {{target_schema}}.humanize_id(offer.offer_product_id) as offer_product_humanized_id,

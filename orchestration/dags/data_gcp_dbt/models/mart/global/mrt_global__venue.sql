@@ -68,6 +68,7 @@ SELECT venue_id,
     offerer_is_active,
     venue_pc_pro_link,
     partner_id,
+    venue_iris_internal_id
 FROM {{ ref('mrt_global__venue_unverified') }}
 WHERE offerer_validation_status='VALIDATED'
     AND offerer_is_active

@@ -139,6 +139,15 @@ with DAG(
             do_xcom_push=True,
         )
 
+        compute_metabase_dependencies_op = SSHGCEOperator(
+            task_id="compute_metabase_dependencies_op",
+            instance_name=GCE_INSTANCE,
+            base_dir=BASE_PATH,
+            environment=dag_config,
+            command="python dependencies.py ",
+            do_xcom_push=True,
+        )
+
         gce_instance_stop = StopGCEOperator(
             task_id="gce_stop_task", instance_name=GCE_INSTANCE
         )
@@ -149,6 +158,7 @@ with DAG(
             >> fetch_code
             >> install_dependencies
             >> archive_metabase_cards_op
+            >> compute_metabase_dependencies_op
             >> gce_instance_stop
         )
 

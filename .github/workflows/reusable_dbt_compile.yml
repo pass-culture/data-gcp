@@ -109,7 +109,7 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
         run: |
-          dbt run --model ($ALL_CHANGED_FILES | grep 'orchestration/dags/data_gcp_dbt/models/' | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/+1/g" | tr '\n' ' ') --profile CI --target $TARGET_ENV --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view'}" 
+          dbt run --model $($ALL_CHANGED_FILES | grep 'orchestration/dags/data_gcp_dbt/models/' | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/+1/g" | tr '\n' ' ') --profile CI --target $TARGET_ENV --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view'}" 
       - name: "Run modified models & 1st order childrens"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:

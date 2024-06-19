@@ -52,11 +52,11 @@ with DAG(
             type="string",
         ),
         "legacy_table_name": Param(
-            default=None,
+            default="",
             type="string",
         ),
         "new_table_name": Param(
-            default=None,
+            default="",
             type="string",
         ),
         "legacy_schema_name": Param(

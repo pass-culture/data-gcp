@@ -1,8 +1,10 @@
 name: "Base Workflow"
 
 on:
- pull_request:
-
+  pull_request:
+  push:
+    branches:
+      - CI-environement 
 jobs:
    linter:
     uses: ./.github/workflows/reusable_linter.yml
@@ -23,6 +25,15 @@ jobs:
     with:
       TARGET_COMPOSER_BUCKET: "europe-west1-data-composer--00137508-bucket"
       TARGET_ENV: "stg"
+    uses: ./.github/workflows/reusable_dbt_compile.yml
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+   compile-dbt-on-dev:
+    if: github.ref == 'ref/heads/CI-environement'
+    with:
+      TARGET_COMPOSER_BUCKET: "europe-west1-data-composer--a3134989-bucket"
+      TARGET_ENV: "dev"
     uses: ./.github/workflows/reusable_dbt_compile.yml
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}

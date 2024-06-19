@@ -50,7 +50,11 @@ bookable_offer_history AS (
         venue_id,
         MIN(partition_date) AS first_bookable_offer_date,
         MAX(partition_date) AS last_bookable_offer_date,
-    FROM {{ ref("bookable_venue_history")}}
+        MIN(CASE WHEN individual_bookable_offers >0 THEN partition_date END) AS first_individual_bookable_offer_date,
+        MAX(CASE WHEN individual_bookable_offers >0 THEN partition_date END) AS last_individual_bookable_offer_date,
+        MIN(CASE WHEN collective_bookable_offers >0 THEN partition_date END) AS first_collective_bookable_offer_date,
+        MAX(CASE WHEN collective_bookable_offers >0 THEN partition_date END) AS last_collective_bookable_offer_date
+    FROM {{ ref('bookable_venue_history')}}
     GROUP BY venue_id
 ),
 
@@ -156,6 +160,10 @@ SELECT
     COALESCE(o.total_created_individual_offers,0) + COALESCE(co.total_created_collective_offers,0) AS total_created_offers,
     boh.first_bookable_offer_date,
     boh.last_bookable_offer_date,
+    boh.first_individual_bookable_offer_date,
+    boh.last_individual_bookable_offer_date,
+    boh.first_collective_bookable_offer_date,
+    boh.last_collective_bookable_offer_date,
     CASE WHEN o.first_individual_booking_date IS NOT NULL AND co.first_collective_booking_date IS NOT NULL THEN LEAST(co.first_collective_booking_date,o.first_individual_booking_date)
          ELSE COALESCE(first_individual_booking_date,first_collective_booking_date) END AS first_booking_date,
     CASE WHEN o.last_individual_booking_date IS NOT NULL AND co.last_collective_booking_date IS NOT NULL THEN GREATEST(co.last_collective_booking_date,o.last_individual_booking_date)

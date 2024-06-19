@@ -106,7 +106,7 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
         run: |
-          export MODELS="$(TEST_ALL_CHANGED_FILES | awk -F '/' '{ print $NF }' | sed "s/\.sql$/+1/g" | tr '\n' ' ')"
+          export MODELS="$(CHANGED_MODELS | awk -F '/' '{ print $NF }' | sed "s/\.sql$/+1/g" | tr '\n' ' ')"
           echo $MODELS
           dbt run --model $MODELS --profile CI --target $TARGET_ENV --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view'}" 
       - name: "Run modified models & 1st order childrens"
@@ -119,7 +119,7 @@ jobs:
         run: |
           dbt_run_changed_models() {
           children=$1
-          common_ancestor=$(git merge-base --fork-point origin/$TARGET_BRANCH HEAD)
+          common_ancestor=$(git merge-base --fork-point origin $TARGET_BRANCH HEAD)
           models=$(git diff $common_ancestor --name-only | grep 'orchestration/dags/data_gcp_dbt/models/' | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/${children}/g" | tr '\n' ' ')
           echo ${#models}
           if [ -z "$models" ]

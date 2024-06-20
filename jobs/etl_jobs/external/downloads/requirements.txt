@@ -8,8 +8,8 @@ google-cloud-bigquery-storage==2.4.0
 google-cloud-core==1.6.0
 google-cloud-secret-manager==2.2.0
 google-cloud-storage==1.38.0
-numpy>=1.26.3
-pandas==2.2.2
+numpy==1.26.4
+pandas==2.0.3
 requests==2.32.3
 temp==2020.7.2
 Werkzeug==2.2.3

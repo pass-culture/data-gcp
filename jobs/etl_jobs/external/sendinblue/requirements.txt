@@ -1,4 +1,4 @@
-pandas==2.2.2
+pandas==2.0.3
 pandas_gbq==0.23.1
 google-cloud-secret-manager==2.20.0
 google-auth-oauthlib==0.7.0

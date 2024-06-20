@@ -121,4 +121,4 @@ class QueryCard:
                         )
 
     def update_card(self):
-        self.metabase_api.put_card(_id=self.card_id, _dict=self.card_info)
+        self.metabase_api.put_card(card_id=self.card_id, card_dict=self.card_info)

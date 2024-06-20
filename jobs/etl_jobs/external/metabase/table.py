@@ -3,21 +3,18 @@ import pandas as pd
 
 def get_mapped_fields(legacy_fields_df, new_fields_df):
 
-    mapped_df = legacy_fields_df.merge(new_fields_df, on="name")
-    mapped_df.rename(
+    mapped_df = legacy_fields_df.merge(new_fields_df, on="name").rename(
         columns={
             "table_id_x": "legacy_table_id",
             "table_id_y": "new_table_id",
             "id_x": "legacy_field_id",
             "id_y": "new_field_id",
         },
-        inplace=True,
     )
 
-    mapped_dict = pd.Series(
+    return pd.Series(
         mapped_df.new_field_id.values, index=mapped_df.legacy_field_id
     ).to_dict()
-    return mapped_dict
 
 
 class MetabaseTable:
@@ -29,8 +26,7 @@ class MetabaseTable:
     def get_table_id(self):
 
         metabase_tables = self.metabase_api.get_table()
-        metabase_tables_df = pd.DataFrame(metabase_tables)
-        metabase_tables_df = metabase_tables_df[["id", "schema", "name"]]
+        metabase_tables_df = pd.DataFrame(metabase_tables)[["id", "schema", "name"]]
         table_id = metabase_tables_df.query(
             f'name == "{self.table_name}" and schema == "{self.table_schema}" '
         )["id"].item()

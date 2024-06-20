@@ -22,7 +22,7 @@ CLIENT_ID = access_secret_data(
     PROJECT_NAME, f"metabase-{ENVIRONMENT_SHORT_NAME}_oauth2_client_id"
 )
 
-password = access_secret_data(
+PASSWORD = access_secret_data(
     PROJECT_NAME, f"metabase-api-secret-{ENVIRONMENT_SHORT_NAME}"
 )
 
@@ -56,7 +56,7 @@ def run(
 
     metabase = MetabaseAPI(
         username=METABASE_API_USERNAME,
-        password=password,
+        password=PASSWORD,
         host=METABASE_HOST,
         client_id=CLIENT_ID,
     )
@@ -71,17 +71,15 @@ def run(
     legacy_table_id = legacy_metabase_table.get_table_id()
     new_table_id = new_metabase_table.get_table_id()
 
-    metabase_field_mapping = get_mapped_fields(
-        legacy_fields_df, new_fields_df
-    )  # legacy id : new id
+    metabase_field_mapping = get_mapped_fields(legacy_fields_df, new_fields_df)
 
     if metabase_card_type == "native":
         transition_logs = []
-        transition_log = {}
-        transition_log["card_type"] = "native"
-        transition_log["legacy_table_name"] = legacy_table_name
-        transition_log["new_table_name"] = new_table_name
-
+        transition_log = {
+            "card_type": "native",
+            "legacy_table_name": legacy_table_name,
+            "new_table_name": new_table_name,
+        }
         for card_id in native_cards:
             transition_log["card_id"] = card_id
             transition_log["timestamp"] = datetime.datetime.now()
@@ -97,10 +95,11 @@ def run(
 
     if metabase_card_type == "query":
         transition_logs = []
-        transition_log = {}
-        transition_log["card_type"] = "native"
-        transition_log["legacy_table_name"] = legacy_table_name
-        transition_log["new_table_name"] = new_table_name
+        transition_log = {
+            "card_type": "query",
+            "legacy_table_name": legacy_table_name,
+            "new_table_name": new_table_name,
+        }
 
         for card_id in query_cards:
             transition_log["card_id"] = card_id

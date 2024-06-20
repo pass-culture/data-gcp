@@ -40,7 +40,7 @@ def refresh_views(view_name, folder="analytics"):
     clickhouse_client.command(sql_query)
 
 
-ENV_SHORT_NAME = {"prod": "prod", "stg": "staging", "dev": "dev"}[
+ENV_SHORT_NAME = {"prod": "prod", "stg": "stg", "dev": "dev"}[
     os.environ.get("ENV_SHORT_NAME", "dev")
 ]
 PROJECT_NAME = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")

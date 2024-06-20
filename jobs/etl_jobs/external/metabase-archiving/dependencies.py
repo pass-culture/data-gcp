@@ -7,6 +7,7 @@ from utils import (
     PROJECT_NAME,
     ENVIRONMENT_SHORT_NAME,
     ANALYTICS_DATASET,
+    CLEAN_DATASET,
     METABASE_API_USERNAME,
     access_secret_data,
 )
@@ -174,7 +175,7 @@ def run():
     )
 
     dependencies_df.to_gbq(
-        f"{ANALYTICS_DATASET}.dependencies_metabase", if_exists="replace"
+        f"{CLEAN_DATASET}.dependencies_metabase", if_exists="replace"
     )
 
     return "success"

@@ -2,7 +2,7 @@ datetime==4.3
 google-cloud-secret-manager==2.4.0
 gcsfs== 2023.5.0
 mlflow==2.8.1
-numpy==1.24.0
+numpy==1.26.4
 pandas==1.5.3
 pandas-gbq>=0.17.1
 tensorflow==2.14.0

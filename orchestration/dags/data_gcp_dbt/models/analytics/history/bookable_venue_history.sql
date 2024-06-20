@@ -1,11 +1,12 @@
 WITH all_bookable_data AS (
 SELECT
-    venue_id
-    , offerer_id
+    o.venue_id
+    , v.venue_managing_offerer_id AS offerer_id
     , partition_date
     , 'individual' AS offer_type
     , COUNT(DISTINCT offer_id) AS nb_bookable_offers
-FROM {{ ref('enriched_offer_data')}}
+FROM {{ ref('offer')}} AS o
+LEFT JOIN {{ ref('venue')}} AS v ON o.venue_id = v.venue_id
 INNER JOIN {{ ref('bookable_offer_history') }} USING(offer_id)
 GROUP BY 1,2,3,4
 UNION ALL

@@ -8,3 +8,4 @@ recordlinkage
 networkx
 pandas-gbq==0.23.1
 datetime
+numpy==1.26.4

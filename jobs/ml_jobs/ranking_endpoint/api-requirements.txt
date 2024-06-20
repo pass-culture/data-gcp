@@ -1,7 +1,7 @@
 flask==3.0.0
 flask-cors==4.0.0
 hypercorn==0.15.0
-numpy==2.0.0
+numpy==1.26.4
 pandas==2.0.3
 pyarrow==16.1.0
 lightgbm==4.0.0

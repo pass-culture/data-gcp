@@ -68,6 +68,8 @@ SELECT
     v.total_bookable_collective_offers,
     v.total_bookable_offers,
     v.venue_iris_internal_id,
+    v.total_non_cancelled_tickets,
+    v.total_current_year_non_cancelled_tickets,
     ofr.offerer_id,
     ofr.offerer_name,
     ofr.offerer_validation_status,

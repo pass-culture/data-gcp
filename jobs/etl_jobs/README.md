@@ -2,20 +2,13 @@
 
 ## Fonctionnement
 
-Certains jobs sont éxéxutés via des cloud functions. D'autres sont exécutés dans des VM. 
+Les jobs ETL sont des scripts python qui permettent de récupérer des données depuis différentes sources, de les transformer et de les charger dans BigQuery. Cest Jobs sont appelés par les DAGs Airflow.
 
-### Pour l'infrastructure des cloud functions:
+## Découpage
 
-Les functions sont déployées une première fois via terraform et le repo `infra-data` pour tous les paramètres liés à l'infra de la fonction.
+Les jobs ETL sont divisés en 2 catégories :
 
-Pour modifier ces paramètres il faut **apply** le nouveau code terraform, puis **redéployer** le code de la function comme décrit ci-dessous. (Le code terraform va chercher et déployer une archive du code dans GCS qui n'est pas forcément à jour.)
+- `external` : Ce sont les jobs qui appellent des APIs externes pour récupérer des données
+- `internal` : Ce sont les jobs qui appellent des services internes au Pass (services GCP ou API internes)
 
-### Pour déployer une nouvelle version du code d'une cloud function:
-
-```
-cd jobs/etl_jobs/{external|internal}/{qpi|addresses|...}
-
-gcloud functions deploy FUNCTION_NAME --region "europe-west1"  --entry-point run --source .
-```
-Avec: 
-- FUNCTION_NAME : `qpi_import_<env>` ou `addresses_import_<env>`
+** Remarque** : Le découpage n'est pas 100% respecté dans le code existant, mais c'est l'objectif à atteindre.

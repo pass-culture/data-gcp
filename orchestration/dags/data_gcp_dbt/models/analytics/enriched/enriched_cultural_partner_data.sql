@@ -23,12 +23,12 @@ SELECT
     ,enriched_offerer_data.first_dms_adage_status AS first_dms_adage_status
     ,enriched_offerer_data.is_reference_adage AS is_reference_adage
     ,enriched_offerer_data.is_synchro_adage AS is_synchro_adage
-    ,DATE_DIFF(CURRENT_DATE, last_bookable_offer_date, DAY) <= 30 AS is_active_last_30days
-    ,DATE_DIFF(CURRENT_DATE, last_bookable_offer_date, YEAR) = 0 AS is_active_current_year
-    ,DATE_DIFF(CURRENT_DATE, last_individual_bookable_offer_date, DAY) <= 30 AS is_individual_active_last_30days
-    ,DATE_DIFF(CURRENT_DATE, last_individual_bookable_offer_date, YEAR) = 0 AS is_individual_active_current_year
-    ,DATE_DIFF(CURRENT_DATE, last_collective_bookable_offer_date, DAY) <= 30 AS is_collective_active_last_30days
-    ,DATE_DIFF(CURRENT_DATE, last_collective_bookable_offer_date, YEAR) = 0 AS is_collective_active_current_year
+    ,CASE WHEN DATE_DIFF(CURRENT_DATE, last_bookable_offer_date, DAY) <= 30 THEN TRUE ELSE FALSE END AS is_active_last_30days
+    ,CASE WHEN DATE_DIFF(CURRENT_DATE, last_bookable_offer_date, YEAR) = 0 THEN TRUE ELSE FALSE END AS is_active_current_year
+    ,CASE WHEN DATE_DIFF(CURRENT_DATE, last_individual_bookable_offer_date, DAY) <= 30 THEN TRUE ELSE FALSE END AS is_individual_active_last_30days
+    ,CASE WHEN DATE_DIFF(CURRENT_DATE, last_individual_bookable_offer_date, YEAR) = 0 THEN TRUE ELSE FALSE END AS is_individual_active_current_year
+    ,CASE WHEN DATE_DIFF(CURRENT_DATE, last_collective_bookable_offer_date, DAY) <= 30 THEN TRUE ELSE FALSE END AS is_collective_active_last_30days
+    ,CASE WHEN DATE_DIFF(CURRENT_DATE, last_collective_bookable_offer_date, YEAR) = 0 THEN TRUE ELSE FALSE END AS is_collective_active_current_year
     ,COALESCE(mrt_global__venue.total_created_individual_offers,0) AS individual_offers_created
     ,COALESCE(mrt_global__venue.total_created_collective_offers,0) AS collective_offers_created
     ,(COALESCE(mrt_global__venue.total_created_collective_offers,0) + COALESCE(mrt_global__venue.total_created_individual_offers,0)) AS total_offers_created
@@ -205,6 +205,8 @@ SELECT
     ,collective_offers_created
     ,total_offers_created
     ,first_offer_creation_date
+    ,first_individual_offer_creation_date
+    ,first_collective_offer_creation_date
     ,last_bookable_offer_date
     ,first_bookable_offer_date
     ,first_individual_bookable_offer_date
@@ -245,6 +247,8 @@ SELECT
     ,collective_offers_created
     ,total_offers_created
     ,first_offer_creation_date
+    ,first_individual_offer_creation_date
+    ,first_collective_offer_creation_date
     ,last_bookable_offer_date
     ,first_bookable_offer_date
     ,first_individual_bookable_offer_date

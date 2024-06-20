@@ -1,13 +1,3 @@
-{{
-    config(
-        partition_by={
-            "field": "offer_creation_date",
-            "data_type": "date"
-        },
-        on_schema_change = "sync_all_columns"
-    )
-}}
-
 SELECT
     offer_id,
     offer_product_id,

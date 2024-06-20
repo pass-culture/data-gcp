@@ -56,7 +56,7 @@ dag_config = {
 }
 
 gce_params = {
-    "instance_name": f"export-clickhouse2-data-{ENV_SHORT_NAME}",
+    "instance_name": f"export-clickhouse-data-{ENV_SHORT_NAME}",
     "instance_type": "n1-standard-4",
 }
 

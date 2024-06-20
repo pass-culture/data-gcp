@@ -24,7 +24,7 @@ SELECT
         onboarding_user_selected_age,
         offer_name,
         offer_category_id,
-        offer_subcategoryId,
+        offer_subcategory_id,
         venue_name,
         venue_type_label,
         content_type

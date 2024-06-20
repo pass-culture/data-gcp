@@ -11,7 +11,7 @@ Les tests sont dans le dossier `orchestration/tests/`.
 
 ## Déploiement automatique des dags
 
-Lorsque l'on merge sur master les dags sont automatiquement déployés sur le cloud composer grâce à un job circle-ci.
+Lorsque l'on merge sur master les dags sont automatiquement déployés sur le cloud composer grâce à un job github-actions.
 
 Le job met à jour les fichiers modifiés dans le bucket du cloud composer puis vérifie qu'airflow charge bien les dags. Pour voir quels fichiers ont été modifiés, il faut regarder l'output de l'étape `Deploy to composer` du job `composer-deploy`.
 
@@ -56,7 +56,7 @@ A partir de la console gcp, dans l'instance de composer, ajouter les dépendance
 
 ### Récupération des Credentials GCP et des variables d'environnement
 
-1. Demander le fichier `sa.gcpkey.json` à un membre de l'équipe et le mettre dans `/airflow/etc/sa.gcpkey.json`
+1. Demander le fichier `sa.gcpkey.json` à un membre de l'équipe, se le partager via 1password et le mettre dans `/airflow/etc/sa.gcpkey.json`.
 2. Récupérer le fichier .env et le mettre dans `orchestration/.env`
    - Modifier les valeurs de _AIRFLOW_WWW_USER_USERNAME et _AIRFLOW_WWW_USER_PASSWORD dans le fichier .env 
    - Modifier la valeur du DAG_FOLDER

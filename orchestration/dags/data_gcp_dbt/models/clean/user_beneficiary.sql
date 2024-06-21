@@ -63,7 +63,7 @@ user_beneficiary as (
     WHERE ST_CONTAINS(
         u.iris_shape,
         ST_GEOGPOINT(u.user_longitude, u.user_latitude)
-    )
+    ) OR u.iris_shape IS NULL
     -- only BENEFICIARY
     AND  user_role IN ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')
 ),

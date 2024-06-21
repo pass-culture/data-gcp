@@ -244,6 +244,15 @@ def predict():
                         vector_column_name=vector_column_name,
                         item_id=vector["item_id"],
                     )
+                    logger.info(
+                        f"similar_offer",
+                        extra={
+                            "uuid": call_id,
+                            "item_id": vector["item_id"],
+                            "params": selected_params,
+                            "size": size,
+                        },
+                    )
 
                     predictions.append(s_vector.get_json())
 
@@ -251,7 +260,7 @@ def predict():
                     [prediction["predictions"] for prediction in predictions], []
                 )
                 final_predictions = flatten_predictions
-                return final_predictions
+                return make_response(jsonify({"predictions": final_predictions}), 200)
 
         if model_type == "filter":
             logger.info(

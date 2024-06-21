@@ -25,6 +25,9 @@ clean-targets:
 
 models:
   data_gcp_dbt:
+    +persist_docs:
+      relation: true
+      columns: true
     clean:
       +config:
         +meta:
@@ -56,16 +59,16 @@ models:
         node_color: "#d90000" 
     intermediate:
       +materialized: view
-      firebase:
-        native:
-          int_firebase__native_event:
-            +schema: analytics_{{ target.name }}
 
     mart:
       +materialized: table
       +schema: analytics_{{ target.name }}
     export:
       +schema: export_{{ target.name }}
+      backend:
+        +schema: backend_{{ target.name }}
+        +materialized: table
+
   elementary:
     +on_schema_change: "append_new_columns"
     +enabled: false

@@ -9,9 +9,8 @@ WITH venues AS (
             venue_id, 
             venue_longitude,
             venue_latitude
-        FROM {{ ref("int_applicative__venue") }}
-        WHERE venue_is_virtual is false
-        AND offerer_validation_status = 'VALIDATED'
+        FROM {{ ref("mrt_global__venue") }}
+
 ),
 
 offer_details AS (
@@ -22,9 +21,9 @@ offer_details AS (
         v.venue_id, 
         v.venue_longitude,
         v.venue_latitude
-    FROM {{ ref('enriched_offer_data') }}  eod
+    FROM {{ ref('mrt_global__offer') }}  eod
     LEFT JOIN venues v on v.venue_id = eod.venue_id
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY eod.item_id ORDER BY eod.booking_confirm_cnt DESC) = 1
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY eod.item_id ORDER BY eod.total_used_individual_bookings DESC) = 1
 ),
 
 

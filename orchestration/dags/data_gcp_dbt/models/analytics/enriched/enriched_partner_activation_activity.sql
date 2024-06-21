@@ -58,10 +58,10 @@ WHERE (has_activated_individual_part OR has_activated_collective_part))
 , indiv_bookings_after_activation AS (
 SELECT 
   partner_activation_stated.partner_id, 
-  COUNT(DISTINCT CASE WHEN booking_creation_date > second_activation_date THEN booking_id END) AS individual_bookings_after_second_activation
+  COUNT(DISTINCT CASE WHEN booking_created_at > second_activation_date THEN booking_id END) AS individual_bookings_after_second_activation
   
 FROM partner_activation_stated
-LEFT JOIN {{ ref('enriched_booking_data') }} on partner_activation_stated.partner_id = enriched_booking_data.partner_id AND NOT booking_is_cancelled
+LEFT JOIN {{ ref('mrt_global__booking') }} AS mrt_global__booking on partner_activation_stated.partner_id = mrt_global__booking.partner_id AND NOT booking_is_cancelled
 GROUP BY 1
 )
 
@@ -78,10 +78,10 @@ GROUP BY 1
 , indiv_offers_after_activation AS (
 SELECT 
   partner_activation_stated.partner_id, 
-  COUNT(DISTINCT enriched_offer_data.offer_id) AS individual_offers_created_after_first_activation,
-  COUNT(DISTINCT CASE WHEN offer_creation_date > second_activation_date THEN enriched_offer_data.offer_id END) AS individual_offers_created_after_second_activation
+  COUNT(DISTINCT mrt_global__offer.offer_id) AS individual_offers_created_after_first_activation,
+  COUNT(DISTINCT CASE WHEN offer_created_at > second_activation_date THEN mrt_global__offer.offer_id END) AS individual_offers_created_after_second_activation
 FROM partner_activation_stated
-LEFT JOIN {{ ref('enriched_offer_data') }} on partner_activation_stated.partner_id = enriched_offer_data.partner_id
+LEFT JOIN {{ ref('mrt_global__offer') }} AS mrt_global__offer on partner_activation_stated.partner_id = mrt_global__offer.partner_id
 GROUP BY 1
 )
 

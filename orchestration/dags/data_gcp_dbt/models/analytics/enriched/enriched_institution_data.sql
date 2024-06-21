@@ -195,6 +195,7 @@ SELECT
     first_deposit.ministry AS ministry,
     educational_institution.institution_type,
     eple_aggregated_type.macro_institution_type,
+    institution_program.institution_program_name AS institution_program_name,
     region_department.academy_name AS institution_academie,
     region_department.region_name AS institution_region_name,
     educational_institution.institution_departement_code,
@@ -249,3 +250,5 @@ FROM  {{ ref('educational_institution') }} AS educational_institution
         ON educational_institution.institution_id = location_info.institution_id
     LEFT JOIN  {{ source('raw','eple_aggregated_type') }} as eple_aggregated_type
         ON educational_institution.institution_type = eple_aggregated_type.institution_type
+    LEFT JOIN {{ ref('int_applicative__institution') }} AS institution_program
+        ON educational_institution.educational_institution_id = institution_program.institution_id

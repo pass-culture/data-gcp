@@ -13,11 +13,11 @@ AND action_history_json_data LIKE '%fraud%')
     ,COUNT(offer_id) AS individual_offers_created_cnt
     ,COUNT(CASE WHEN DATE_DIFF(CURRENT_DATE,offer_creation_date,MONTH) <= 2 THEN offer_id END) AS individual_offers_created_last_2_month
     ,COUNT(CASE WHEN DATE_DIFF(CURRENT_DATE,offer_creation_date,MONTH) <= 6 THEN offer_id END) AS individual_offers_created_last_6_month
-    ,COUNT(CASE WHEN DATE_DIFF(last_bookable_offer_date,offer_creation_date,MONTH) <= 2 THEN offer_id END) AS individual_offers_created_2_month_before_last_bookable
-    ,COUNT(CASE WHEN DATE_DIFF(last_bookable_offer_date,offer_creation_date,MONTH) <= 6 THEN offer_id END) AS individual_offers_created_6_month_before_last_bookable
-FROM {{ ref('enriched_cultural_partner_data')}}
+    ,COUNT(CASE WHEN DATE_DIFF(enriched_cultural_partner_data.last_bookable_offer_date,offer_creation_date,MONTH) <= 2 THEN offer_id END) AS individual_offers_created_2_month_before_last_bookable
+    ,COUNT(CASE WHEN DATE_DIFF(enriched_cultural_partner_data.last_bookable_offer_date,offer_creation_date,MONTH) <= 6 THEN offer_id END) AS individual_offers_created_6_month_before_last_bookable
+FROM {{ ref('enriched_cultural_partner_data')}} AS enriched_cultural_partner_data
 JOIN {{ ref('partner_type_bookability_frequency')}} USING(partner_type)
-LEFT JOIN {{ ref('enriched_offer_data')}} ON enriched_cultural_partner_data.partner_id = enriched_offer_data.partner_id
+LEFT JOIN {{ ref('mrt_global__offer')}} AS mrt_global__offer ON enriched_cultural_partner_data.partner_id = mrt_global__offer.partner_id
 GROUP BY 1,2,3)
 
 ,individual_bookings AS (
@@ -26,7 +26,7 @@ SELECT
     ,enriched_cultural_partner_data.partner_type
     ,enriched_cultural_partner_data.cultural_sector
     ,COALESCE(COUNT(DISTINCT user_id),0) AS unique_users
-    ,COALESCE(COUNT(DISTINCT CASE WHEN enriched_booking_data.user_id IN (SELECT DISTINCT user_id FROM fraud_users) THEN enriched_booking_data.user_id ELSE NULL END),0) AS unique_fraud_users
+    ,COALESCE(COUNT(DISTINCT CASE WHEN mrt_global__booking.user_id IN (SELECT DISTINCT user_id FROM fraud_users) THEN mrt_global__booking.user_id ELSE NULL END),0) AS unique_fraud_users
     ,COALESCE(COUNT(booking_id),0) AS individual_bookings_cnt
     ,COALESCE(SUM(CASE WHEN booking_is_used THEN booking_intermediary_amount ELSE NULL END),0) AS real_individual_revenue
     ,COALESCE(COUNT(CASE WHEN DATE_DIFF(CURRENT_DATE,booking_creation_date,MONTH) <= 2 THEN booking_id END),0) AS individual_bookings_last_2_month
@@ -35,7 +35,7 @@ SELECT
     ,COALESCE(COUNT(CASE WHEN DATE_DIFF(last_bookable_offer_date,booking_creation_date,MONTH) <= 6 THEN booking_id END),0) AS individual_bookings_6_month_before_last_bookable
 FROM {{ ref('enriched_cultural_partner_data')}}
 JOIN {{ ref('partner_type_bookability_frequency')}} USING(partner_type)
-LEFT JOIN {{ ref('enriched_booking_data')}} ON enriched_cultural_partner_data.partner_id = enriched_booking_data.partner_id
+LEFT JOIN {{ ref('mrt_global__booking')}} AS mrt_global__booking ON enriched_cultural_partner_data.partner_id = mrt_global__booking.partner_id
     AND NOT booking_is_cancelled
 GROUP BY 1,2,3)
 
@@ -75,8 +75,8 @@ GROUP BY 1,2,3)
          ELSE CONCAT("offerer-", venue_managing_offerer_id) END AS partner_id
     ,applicative_database_favorite.*
 FROM {{ ref('mrt_global__venue')}} AS mrt_global__venue
-LEFT JOIN {{ ref('enriched_offer_data')}}enriched_offer_data ON mrt_global__venue.venue_id = enriched_offer_data.venue_id
-LEFT JOIN {{ ref('favorite')}} ON enriched_offer_data.offer_id = applicative_database_favorite.offerId)
+LEFT JOIN {{ ref('mrt_global__offer')}} AS mrt_global__offer ON mrt_global__venue.venue_id = mrt_global__offer.venue_id
+LEFT JOIN {{ ref('favorite')}} ON mrt_global__offer.offer_id = applicative_database_favorite.offerId)
 
 ,favorites AS (SELECT
     enriched_cultural_partner_data.partner_id
@@ -95,8 +95,8 @@ SELECT
     , sum(cnt_events) as total_consultation
     , COALESCE(SUM(CASE WHEN DATE_DIFF(CURRENT_DATE,event_date,MONTH) <= 2 THEN cnt_events END)) as consult_last_2_month
     , COALESCE(SUM(CASE WHEN DATE_DIFF(CURRENT_DATE,event_date,MONTH) <= 6 THEN cnt_events END)) as consult_last_6_month
-    , COALESCE(SUM(CASE WHEN DATE_DIFF(last_bookable_offer_date,event_date,MONTH) <= 2 THEN cnt_events END)) as consult_2_month_before_last_bookable
-    , COALESCE(SUM(CASE WHEN DATE_DIFF(last_bookable_offer_date,event_date,MONTH) <= 6 THEN cnt_events END)) as consult_6_month_before_last_bookable
+    , COALESCE(SUM(CASE WHEN DATE_DIFF(venue.last_bookable_offer_date,event_date,MONTH) <= 2 THEN cnt_events END)) as consult_2_month_before_last_bookable
+    , COALESCE(SUM(CASE WHEN DATE_DIFF(venue.last_bookable_offer_date,event_date,MONTH) <= 6 THEN cnt_events END)) as consult_6_month_before_last_bookable
 FROM {{ ref('aggregated_daily_offer_consultation_data')}} consult
 LEFT JOIN {{ ref('mrt_global__venue')}} venue on consult.venue_id = venue.venue_id
 LEFT JOIN {{ ref('enriched_cultural_partner_data')}} on (CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id) ELSE CONCAT("offerer-", venue_managing_offerer_id) END) = enriched_cultural_partner_data.partner_id
@@ -169,9 +169,9 @@ SELECT
     CASE WHEN mrt_global__venue.venue_is_permanent THEN CONCAT("venue-",bookable_venue_history.venue_id)
          ELSE CONCAT("offerer-", bookable_venue_history.offerer_id) END AS partner_id,
     max(partition_date) last_bookable_date,
-FROM {{ ref('bookable_venue_history') }}
+FROM {{ ref('bookable_venue_history') }} AS bookable_venue_history
 LEFT JOIN {{ ref('mrt_global__venue')}} AS mrt_global__venue on bookable_venue_history.venue_id = mrt_global__venue.venue_id
-WHERE total_bookable_offers <> 0
+WHERE bookable_venue_history.total_bookable_offers <> 0
 GROUP BY 1
 )
 

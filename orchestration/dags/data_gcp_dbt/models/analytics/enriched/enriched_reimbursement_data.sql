@@ -17,7 +17,7 @@ CASE
             WHEN category = 'offerer contribution' THEN pricing_line.amount
         END AS offerer_contribution
     FROM
-        {{ ref('enriched_booking_data') }} booking
+        {{ ref('mrt_global__booking') }} booking
         LEFT JOIN {{ ref('pricing') }} pricing ON booking.booking_id = pricing.bookingId
         LEFT JOIN {{ ref('pricing_line') }} pricing_line ON pricing.id = pricing_line.pricingId
 ),

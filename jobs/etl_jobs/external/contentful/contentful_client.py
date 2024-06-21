@@ -1,9 +1,116 @@
 import contentful
 import pandas as pd
-from utils import SPACE_ID, TOKEN
+from utils import SPACE_ID
 from datetime import datetime
 
-contentful_modules = [
+BLOCK_PARAMETERS = {
+    "algolia_parameters": {
+        "name": "algolia_parameters",
+        "additional_fields": [
+            "title",
+            "is_geolocated",
+            "around_radius",
+            "tags",
+            "hits_per_page",
+            "categories",
+            "subcategories",
+            "is_thing",
+            "beginning_datetime",
+            "ending_datetime",
+            "is_event",
+            "is_duo",
+            "is_digital",
+            "newest_only",
+            "price_max",
+            "price_min",
+            "image_full_screen",
+        ],
+        "type": "unique",
+    },
+    "additional_algolia_parameters": {
+        "name": "additional_algolia_parameters",
+        "additional_fields": [
+            "title",
+            "is_geolocated",
+            "around_radius",
+            "tags",
+            "hits_per_page",
+            "categories",
+            "subcategories",
+            "is_thing",
+            "beginning_datetime",
+            "ending_datetime",
+            "is_event",
+            "is_duo",
+            "is_digital",
+            "newest_only",
+            "price_max",
+            "price_min",
+            "image_full_screen",
+        ],
+        "type": "list",
+    },
+    "display_parameters": {
+        "name": "display_parameters",
+        "additional_fields": ["title", "layout", "min_offers", "is_geolocated"],
+        "type": "unique",
+    },
+    "venues_search_parameters": {
+        "name": "venues_search_parameters",
+        "additional_fields": [
+            "title",
+            "is_geolocated",
+            "around_radius",
+            "tags",
+            "hits_per_page",
+            "venue_types",
+        ],
+        "type": "list",
+    },
+    "recommendation_parameters": {
+        "name": "recommendation_parameters",
+        "additional_fields": [
+            "title",
+            "is_event",
+            "beginning_datetime",
+            "ending_datetime",
+            "categories",
+            "subcategories",
+            "price_max",
+        ],
+        "type": "unique",
+    },
+    "category_block_list": {
+        "name": "category_block_list",
+        "additional_fields": ["title", "image", "home_entry_id"],
+        "type": "list",
+    },
+    "thematic_highlight_info": {
+        "name": "thematic_highlight_info",
+        "additional_fields": ["title", "beginning_datetime", "ending_datetime"],
+        "type": "unique",
+    },
+    "video_carousel_item": {
+        "name": "items",
+        "additional_fields": [
+            "title",
+            "duration_in_minutes",
+            "video_publication_date",
+            "youtube_video_id",
+            "offer_id",
+            "tag",
+            "home_entry_id",
+        ],
+        "type": "list",
+    },
+    "trend_block": {
+        "name": "items",
+        "additional_fields": ["title", "image", "home_entry_id"],
+        "type": "list",
+    },
+}
+
+CONTENTFUL_MODULES = [
     {
         "name": "homepageNatif",
         "additional_fields": ["title", "modules"],
@@ -17,23 +124,8 @@ contentful_modules = [
             "display_parameters",
         ],
         "children": [
-            {
-                "name": "venues_search_parameters",
-                "additional_fields": [
-                    "title",
-                    "is_geolocated",
-                    "around_radius",
-                    "tags",
-                    "hits_per_page",
-                    "venue_types",
-                ],
-                "type": "list",
-            },
-            {
-                "name": "display_parameters",
-                "additional_fields": ["title", "layout", "min_offers"],
-                "type": "unique",
-            },
+            BLOCK_PARAMETERS["venues_search_parameters"],
+            BLOCK_PARAMETERS["display_parameters"],
         ],
     },
     {
@@ -46,57 +138,9 @@ contentful_modules = [
             "additional_algolia_parameters",
         ],
         "children": [
-            {
-                "name": "display_parameters",
-                "additional_fields": ["title", "layout", "min_offers"],
-                "type": "unique",
-            },
-            {
-                "name": "algolia_parameters",
-                "additional_fields": [
-                    "title",
-                    "is_geolocated",
-                    "around_radius",
-                    "tags",
-                    "hits_per_page",
-                    "categories",
-                    "subcategories",
-                    "is_thing",
-                    "beginning_datetime",
-                    "ending_datetime",
-                    "is_event",
-                    "is_duo",
-                    "is_digital",
-                    "newest_only",
-                    "price_max",
-                    "price_min",
-                    "image_full_screen",
-                ],
-                "type": "unique",
-            },
-            {
-                "name": "additional_algolia_parameters",
-                "additional_fields": [
-                    "title",
-                    "is_geolocated",
-                    "around_radius",
-                    "tags",
-                    "hits_per_page",
-                    "categories",
-                    "subcategories",
-                    "is_thing",
-                    "beginning_datetime",
-                    "ending_datetime",
-                    "is_event",
-                    "is_duo",
-                    "is_digital",
-                    "newest_only",
-                    "price_max",
-                    "price_min",
-                    "image_full_screen",
-                ],
-                "type": "list",
-            },
+            BLOCK_PARAMETERS["display_parameters"],
+            BLOCK_PARAMETERS["algolia_parameters"],
+            BLOCK_PARAMETERS["additional_algolia_parameters"],
         ],
     },
     {
@@ -122,11 +166,7 @@ contentful_modules = [
             "display_parameters",
         ],
         "children": [
-            {
-                "name": "display_parameters",
-                "additional_fields": ["title", "is_geolocated", "around_radius"],
-                "type": "unique",
-            }
+            BLOCK_PARAMETERS["display_parameters"],
         ],
     },
     {
@@ -148,13 +188,7 @@ contentful_modules = [
             "title",
             "category_block_list",
         ],
-        "children": [
-            {
-                "name": "category_block_list",
-                "additional_fields": ["title", "image", "home_entry_id"],
-                "type": "list",
-            }
-        ],
+        "children": [BLOCK_PARAMETERS["category_block_list"]],
     },
     {
         "name": "recommendation",
@@ -164,24 +198,8 @@ contentful_modules = [
             "recommendation_parameters",
         ],
         "children": [
-            {
-                "name": "display_parameters",
-                "additional_fields": ["title", "layout", "min_offers"],
-                "type": "unique",
-            },
-            {
-                "name": "recommendation_parameters",
-                "additional_fields": [
-                    "title",
-                    "is_event",
-                    "beginning_datetime",
-                    "ending_datetime",
-                    "categories",
-                    "subcategories",
-                    "price_max",
-                ],
-                "type": "unique",
-            },
+            BLOCK_PARAMETERS["display_parameters"],
+            BLOCK_PARAMETERS["recommendation_parameters"],
         ],
     },
     {
@@ -191,13 +209,7 @@ contentful_modules = [
             "thematic_highlight_info",
             "thematic_home_entry_id",
         ],
-        "children": [
-            {
-                "name": "thematic_highlight_info",
-                "additional_fields": ["title", "beginning_datetime", "ending_datetime"],
-                "type": "unique",
-            }
-        ],
+        "children": [BLOCK_PARAMETERS["thematic_highlight_info"]],
     },
     {
         "name": "video",
@@ -215,92 +227,64 @@ contentful_modules = [
             "video_description",
         ],
         "children": [
-            {
-                "name": "algolia_parameters",
-                "additional_fields": [
-                    "title",
-                    "is_geolocated",
-                    "around_radius",
-                    "tags",
-                    "hits_per_page",
-                    "categories",
-                    "subcategories",
-                    "is_thing",
-                    "beginning_datetime",
-                    "ending_datetime",
-                    "is_event",
-                    "is_duo",
-                    "is_digital",
-                    "newest_only",
-                    "price_max",
-                    "price_min",
-                    "image_full_screen",
-                ],
-                "type": "unique",
-            },
+            BLOCK_PARAMETERS["algolia_parameters"],
+        ],
+    },
+    {
+        "name": "trends",
+        "additional_fields": ["title", "items"],
+        "children": [
+            BLOCK_PARAMETERS["trend_block"],
+        ],
+    },
+    {
+        "name": "videoCarousel",
+        "additional_fields": ["title", "color", "items"],
+        "children": [
+            BLOCK_PARAMETERS["video_carousel_item"],
         ],
     },
     {
         "name": "gtlPlaylist",
         "additional_fields": ["title", "algolia_parameters", "display_parameters"],
         "children": [
-            {
-                "name": "display_parameters",
-                "additional_fields": ["title", "layout", "min_offers"],
-                "type": "unique",
-            },
-            {
-                "name": "algolia_parameters",
-                "additional_fields": [
-                    "title",
-                    "is_geolocated",
-                    "around_radius",
-                    "tags",
-                    "hits_per_page",
-                    "categories",
-                    "subcategories",
-                    "is_thing",
-                    "beginning_datetime",
-                    "ending_datetime",
-                    "is_event",
-                    "is_duo",
-                    "is_digital",
-                    "newest_only",
-                    "price_max",
-                    "price_min",
-                    "image_full_screen",
-                    "gtl_level",
-                    "gtl_label",
-                ],
-                "type": "unique",
-            },
+            BLOCK_PARAMETERS["display_parameters"],
+            BLOCK_PARAMETERS["algolia_parameters"],
         ],
     },
 ]
 
 
 class ContentfulClient:
-    def __init__(self, env="testing", timeout=1) -> None:
+    def __init__(self, config_env, timeout=1) -> None:
         self.client = contentful.Client(
             SPACE_ID,  # This is the space ID. A space is like a project folder in Contentful terms
-            TOKEN,  # This is the access token for this space.
-            environment=env,
+            access_token=config_env[
+                "access_token"
+            ],  # This is the access token for this space.
+            api_url=config_env["api_url"],
+            environment=config_env["env"],
             timeout_s=timeout,
         )
         self.df_modules = pd.DataFrame()
         self.df_links = pd.DataFrame(columns=["parent", "child"])
         self.df_tags = pd.DataFrame(columns=["tag_id", "tag_name", "entry_id"])
         self.datetime = datetime.today()
+        self.page_size = 500
 
     def add_parent_child_to_df(self, parent_id, child_id):
         values_to_add = {"parent": parent_id, "child": child_id}
         row_to_add = pd.Series(values_to_add)
-        self.df_links = self.df_links.append(row_to_add, ignore_index=True)
+        self.df_links = pd.concat(
+            [self.df_links, row_to_add.to_frame()], ignore_index=True
+        )
 
     def add_tag_to_df(self, tag_id, tag_name, entry_id):
         values_to_add = {"tag_id": tag_id, "tag_name": tag_name, "entry_id": entry_id}
         row_to_add = pd.Series(values_to_add)
-        self.df_tags = self.df_tags.append(row_to_add, ignore_index=True)
+        self.df_tags = pd.concat(
+            [self.df_tags, row_to_add.to_frame()], ignore_index=True
+        )
 
     def get_basic_fields(self, module):
         sys_fields = [
@@ -367,14 +351,14 @@ class ContentfulClient:
                     basic_fields["algolia_parameters"]
                 ].append([add_algo.id for add_algo in other_fields.get(field)])
             elif (
-                field in ["venues_search_parameters", "modules"]
+                field in ["venues_search_parameters", "modules", "items"]
                 and other_fields.get(field) is not None
             ):
                 basic_fields[f"{field}"] = str(
                     [add_algo.id for add_algo in other_fields.get(field)]
                 )
             elif field in ["duration_in_minutes"]:
-                basic_fields[f"{field}"] = float(other_fields.get(field))
+                basic_fields[f"{field}"] = float(other_fields.get(field, 0))
             elif field in ["video_publication_date"]:
                 basic_fields[f"{field}"] = other_fields.get(field)
             else:
@@ -389,14 +373,42 @@ class ContentfulClient:
 
     def add_module_infos_to_modules_dataframe(self, module_infos):
         row_to_add = pd.Series(module_infos)
-        self.df_modules = self.df_modules.append(row_to_add, ignore_index=True)
+        self.df_modules = pd.concat(
+            [self.df_modules, row_to_add.to_frame()], ignore_index=True
+        )
+
+    def get_paged_modules(self, module_details):
+        content_type = module_details["name"]
+
+        # Set initial query parameters
+        query = {
+            "content_type": content_type,
+            "include": 1,
+            "order": "sys.updatedAt",
+            "limit": self.page_size,
+            "skip": 0,
+        }
+        all_entries = []
+
+        # Retrieve the total number of entries
+        num_entries = self.client.entries(
+            {"content_type": content_type, "limit": 1, "include": 1}
+        ).total
+        print(f"Found {num_entries} for {content_type}")
+
+        # Iterate through pages
+        for i in range((num_entries // self.page_size) + 1):
+            query["skip"] = i * self.page_size
+            page = self.client.entries(query)
+            all_entries.extend(page)
+
+        print(f"Retrieved {len(all_entries)} entries")
+        return all_entries
 
     def get_all_playlists(self):
-        for module_details in contentful_modules:
+        for module_details in CONTENTFUL_MODULES:
             # Here we get all the modules matching the type desired
-            modules = self.client.entries(
-                {"content_type": module_details["name"], "include": 1, "limit": 1000}
-            )
+            modules = self.get_paged_modules(module_details)
             for module in modules:
                 # Get all the infos from the module and add it to the final dataframe
                 all_infos = self.get_all_fields(module, module_details)
@@ -405,7 +417,7 @@ class ContentfulClient:
                 # Special case for homepages where we don't unfold submodules so we need to get the child-parent relationship here
                 if module_details["name"] == "homepageNatif":
                     # Get parent-child relationships
-                    submodules = module.fields().get("modules")
+                    submodules = module.fields().get("modules", [])
                     for submodule in submodules:
                         self.add_parent_child_to_df(module.id, submodule.id)
 

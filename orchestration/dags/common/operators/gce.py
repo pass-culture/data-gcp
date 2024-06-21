@@ -1,21 +1,22 @@
-from airflow.models import BaseOperator
-from airflow.utils.decorators import apply_defaults
-from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
-from airflow.exceptions import AirflowException
-from airflow.configuration import conf
-from common.hooks.image import MACHINE_TYPE
-from time import sleep
-from paramiko.ssh_exception import SSHException
-from common.config import (
-    GCE_ZONE,
-    GCP_PROJECT_ID,
-    GCE_BASE_PREFIX,
-    SSH_USER,
-    ENV_SHORT_NAME,
-)
-from common.hooks.gce import GCEHook
 import typing as t
 from base64 import b64encode
+from time import sleep
+
+from airflow.configuration import conf
+from airflow.exceptions import AirflowException
+from airflow.models import BaseOperator
+from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
+from airflow.utils.decorators import apply_defaults
+from common.config import (
+    ENV_SHORT_NAME,
+    GCE_BASE_PREFIX,
+    GCE_ZONE,
+    GCP_PROJECT_ID,
+    SSH_USER,
+)
+from common.hooks.gce import GCEHook
+from common.hooks.image import MACHINE_TYPE
+from paramiko.ssh_exception import SSHException
 
 
 class StartGCEOperator(BaseOperator):
@@ -195,13 +196,20 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
         command: str,
         environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
+        use_pyenv: bool = False,
         *args,
         **kwargs,
     ):
-        self.command = self.script(command, python_version)
+        self.use_pyenv = use_pyenv
+        self.command = (
+            self.clone_and_init_with_conda(command, python_version)
+            if not self.use_pyenv
+            else self.clone_and_init_with_pyenv(command)
+        )
         self.instance_name = instance_name
         self.environment = environment
         self.python_version = python_version
+
         super(CloneRepositoryGCEOperator, self).__init__(
             instance_name=self.instance_name,
             command=self.command,
@@ -210,7 +218,7 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
             **kwargs,
         )
 
-    def script(self, branch, python_version) -> str:
+    def clone_and_init_with_conda(self, branch, python_version) -> str:
         return """
         export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH
         python -m pip install --upgrade --user urllib3 
@@ -238,6 +246,29 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
             branch,
         )
 
+    def clone_and_init_with_pyenv(self, branch) -> str:
+        return """
+        python -m pip install --upgrade --user urllib3
+
+        DIR=data-gcp &&
+        if [ -d "$DIR" ]; then
+            echo "Update and Checkout repo..." &&
+            cd ${DIR} &&
+            git fetch --all &&
+            git reset --hard origin/%s
+        else
+            echo "Clone and checkout repo..." &&
+            git clone %s &&
+            cd ${DIR} &&
+            git checkout %s
+        fi
+        make prerequisites_on_debian_vm
+        """ % (
+            branch,
+            self.REPO,
+            branch,
+        )
+
 
 class SSHGCEOperator(BaseSSHGCEOperator):
     DEFAULT_EXPORT = {
@@ -253,19 +284,40 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         command: str,
         base_dir: str = None,
         environment: t.Dict[str, str] = {},
+        use_pyenv: bool = False,
         *args,
         **kwargs,
     ):
+        self.use_pyenv = use_pyenv
         self.environment = dict(self.DEFAULT_EXPORT, **environment)
-        default_command = "\n".join(
-            [
-                f"export {key}={value}"
-                for key, value in dict(self.DEFAULT_EXPORT, **environment).items()
-            ]
+        commands_list = []
+
+        # Default export
+        commands_list.append(
+            "\n".join(
+                [
+                    f"export {key}={value}"
+                    for key, value in dict(self.DEFAULT_EXPORT, **environment).items()
+                ]
+            )
         )
-        activate_env = "conda init zsh && source ~/.zshrc && conda activate data-gcp"
-        default_path = f"cd {base_dir}" if base_dir is not None else ""
-        self.command = "\n".join([default_command, activate_env, default_path, command])
+
+        # Conda activate if required
+        if not self.use_pyenv:
+            commands_list.append(
+                "conda init zsh && source ~/.zshrc && conda activate data-gcp"
+            )
+        else:
+            commands_list.append("source ~/.profile")
+
+        # Default path
+        if base_dir is not None:
+            commands_list.append(f"cd {base_dir}")
+
+        # Command
+        commands_list.append(command)
+
+        self.command = "\n".join(commands_list)
         self.instance_name = instance_name
         super(SSHGCEOperator, self).__init__(
             instance_name=self.instance_name,

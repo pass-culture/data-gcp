@@ -2,15 +2,6 @@ from common.config import BIGQUERY_ANALYTICS_DATASET
 from dependencies.great_expectations.utils import today, yesterday, last_week
 
 enriched_tables_test_config = {
-    "enriched_booking_data": {
-        "dataset_name": BIGQUERY_ANALYTICS_DATASET,
-        "date_field": "booking_creation_date",
-        "freshness_check": {
-            "dev": [yesterday, today],
-            "stg": [yesterday, today],
-            "prod": [yesterday, today],
-        },
-    },
     "enriched_collective_booking_data": {
         "dataset_name": BIGQUERY_ANALYTICS_DATASET,
         "date_field": "collective_booking_creation_date",
@@ -41,15 +32,6 @@ enriched_tables_test_config = {
     "enriched_institution_data": {
         "dataset_name": BIGQUERY_ANALYTICS_DATASET,
         "date_field": "last_booking_date",
-        "freshness_check": {
-            "dev": [last_week, today],
-            "stg": [yesterday, today],
-            "prod": [yesterday, today],
-        },
-    },
-    "enriched_offer_data": {
-        "dataset_name": BIGQUERY_ANALYTICS_DATASET,
-        "date_field": "offer_creation_date",
         "freshness_check": {
             "dev": [last_week, today],
             "stg": [yesterday, today],

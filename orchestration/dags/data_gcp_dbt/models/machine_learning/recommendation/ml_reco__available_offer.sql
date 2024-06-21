@@ -4,17 +4,7 @@
     )
 }}
 
-WITH venue AS (
-    SELECT 
-            venue_id, 
-            venue_longitude,
-            venue_latitude
-    FROM {{ ref("int_applicative__venue") }}
-    WHERE
-    offerer_validation_status = 'VALIDATED'
-    AND offerer_is_active = TRUE
-),
-offers_with_mediation AS (
+WITH offers_with_mediation AS (
         SELECT offer_id
         FROM {{ ref('int_applicative__mediation') }}
         WHERE is_mediation = 1
@@ -48,7 +38,7 @@ booking_numbers AS (
         )) AS booking_number_last_28_days,
     FROM {{ ref('int_applicative__booking') }} booking
     LEFT JOIN {{ ref('int_applicative__stock') }} stock ON booking.stock_id = stock.stock_id
-    LEFT JOIN  {{ ref('enriched_offer_data') }}  offer ON stock.offer_id = offer.offer_id
+    LEFT JOIN  {{ ref('mrt_global__offer') }}  offer ON stock.offer_id = offer.offer_id
     WHERE
         booking.booking_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 28 DAY)
         AND NOT booking.booking_is_cancelled
@@ -100,8 +90,8 @@ get_recommendable_offers AS (
         im.subcategory_id AS subcategory_id,
         im.category_id as category,
         im.search_group_name,
-        offer.URL AS url,
-        offer.offer_creation_date AS offer_creation_date,
+        offer.offer_url AS url,
+        offer.offer_created_at AS offer_creation_date,
         stock.stock_beginning_date AS stock_beginning_date,
         offer.last_stock_price AS stock_price,
         offer.titelive_gtl_id AS gtl_id,
@@ -126,7 +116,7 @@ get_recommendable_offers AS (
                     AND im.subcategory_id <> 'ABO_JEU_VIDEO'
                     AND im.subcategory_id <> 'ABO_LUDOTHEQUE'
                     AND (
-                        offer.URL IS NULL
+                        offer.offer_url IS NULL
                         OR offer.last_stock_price = 0
                         OR im.subcategory_id = 'LIVRE_NUMERIQUE'
                         OR im.subcategory_id = 'ABO_LIVRE_NUMERIQUE'
@@ -150,16 +140,16 @@ get_recommendable_offers AS (
         ANY_VALUE(im.topic_id) AS topic_id,
         MAX(
             CASE
-                WHEN offer.offer_subcategoryId = 'MUSIQUE_LIVE' THEN 150000
-                WHEN offer.offer_subcategoryId = 'MUSIQUE_ENREGISTREE'  THEN 50000
-                WHEN offer.offer_subcategoryId = 'SPECTACLE' THEN 100000
-                WHEN offer.offer_subcategoryId = 'CINEMA' THEN 50000
-                WHEN offer.offer_subcategoryId = 'LIVRE' THEN 50000
+                WHEN offer.offer_subcategory_id = 'MUSIQUE_LIVE' THEN 150000
+                WHEN offer.offer_subcategory_id = 'MUSIQUE_ENREGISTREE'  THEN 50000
+                WHEN offer.offer_subcategory_id = 'SPECTACLE' THEN 100000
+                WHEN offer.offer_subcategory_id = 'CINEMA' THEN 50000
+                WHEN offer.offer_subcategory_id = 'LIVRE' THEN 50000
                 ELSE 50000
             END
         ) as  default_max_distance
-    FROM {{ ref('enriched_offer_data') }} offer
-    INNER JOIN venue ON venue.venue_id = offer.venue_id
+    FROM {{ ref('mrt_global__offer') }} offer
+    INNER JOIN {{ ref('mrt_global__venue') }} AS venue ON venue.venue_id = offer.venue_id
     INNER JOIN offers_with_mediation om on offer.offer_id=om.offer_id
     INNER JOIN {{ ref('item_metadata') }} AS im on offer.item_id = im.item_id
     LEFT JOIN {{ ref('int_applicative__stock') }} stock ON offer.offer_id = stock.offer_id

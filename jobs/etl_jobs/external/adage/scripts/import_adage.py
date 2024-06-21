@@ -2,6 +2,7 @@ from datetime import datetime
 from scripts.utils import (
     GCP_PROJECT,
     BIGQUERY_ANALYTICS_DATASET,
+    BIGQUERY_RAW_DATASET,
     ADAGE_INVOLVED_STUDENTS_DTYPE,
     BQ_ADAGE_DTYPE,
     save_to_raw_bq,
@@ -71,7 +72,7 @@ def import_adage():
         df[k] = df[k].astype(str)
 
     df.to_gbq(
-        f"""{BIGQUERY_ANALYTICS_DATASET}.adage""",
+        f"""{BIGQUERY_RAW_DATASET}.adage""",
         project_id=GCP_PROJECT,
         if_exists="replace",
     )
@@ -85,7 +86,7 @@ def create_adage_historical_table():
 
 def adding_value():
     return f"""MERGE `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.adage_historical` A
-        USING `{GCP_PROJECT}.{BIGQUERY_ANALYTICS_DATASET}.adage` B
+        USING `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.adage` B
         ON B.id = A.id
         WHEN MATCHED THEN
             UPDATE SET 

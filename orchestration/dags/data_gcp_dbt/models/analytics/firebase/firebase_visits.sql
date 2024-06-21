@@ -52,25 +52,30 @@ with visits as (
     FROM
             {{ ref('int_firebase__native_event') }}
     
-        WHERE
-            event_name NOT IN (
-                'app_remove',
-                'os_update',
-                'batch_notification_open',
-                'batch_notification_display',
-                'batch_notification_dismiss',
-                'app_update'
-            )
-        GROUP BY
-            session_id,
-            user_pseudo_id,
-            unique_session_id,
-            platform,
-            app_version
+    WHERE
+      {% if is_incremental() %}   
+      -- lag in case session is between two days.
+      event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3+1 DAY) and DATE('{{ ds() }}') AND 
+      {% endif %}
+      
+      event_name NOT IN (
+            'app_remove',
+            'os_update',
+            'batch_notification_open',
+            'batch_notification_display',
+            'batch_notification_dismiss',
+            'app_update'
+        )
+    GROUP BY
+        session_id,
+        user_pseudo_id,
+        unique_session_id,
+        platform,
+        app_version
 )
 
 select * from visits
 -- incremental run only update partition of run day
 {% if is_incremental() %}   
-    where first_event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 1 DAY) and DATE('{{ ds() }}')
+    where first_event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
 {% endif %}

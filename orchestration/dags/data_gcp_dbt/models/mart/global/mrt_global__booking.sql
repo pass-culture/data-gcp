@@ -28,7 +28,7 @@ SELECT
     s.offerer_id,
     s.offerer_name,
     s.partner_id,
-    s.offer_subcategoryId,
+    s.offer_subcategory_id,
     s.physical_goods,
     s.digital_goods,
     s.event,
@@ -39,12 +39,15 @@ SELECT
     s.item_id,
     rank() OVER (
         PARTITION BY b.user_id,
-        s.offer_subcategoryId
+        s.offer_subcategory_id
         ORDER BY
             b.booking_created_at
-    ) AS same_category_booking_rank
+    ) AS same_category_booking_rank,
+    u.user_iris_internal_id,
+    s.venue_iris_internal_id
 FROM {{ ref('int_applicative__booking') }} AS b
 INNER JOIN {{ ref('mrt_global__stock') }} AS s ON s.stock_id = b.stock_id
 INNER JOIN {{ ref('mrt_global__user') }} AS u ON u.user_id = b.user_id
 WHERE u.is_beneficiary = 1
     AND b.deposit_type IS NOT NULL
+    AND s.offer_id IS NOT NULL

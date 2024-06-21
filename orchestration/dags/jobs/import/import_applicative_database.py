@@ -46,7 +46,7 @@ with TaskGroup(group_id="raw_operations_group", dag=dag) as raw_operations_group
             task_id=f"import_to_raw_{table}",
             configuration={
                 "query": {
-                    "query": f"""SELECT * FROM EXTERNAL_QUERY('{APPLICATIVE_EXTERNAL_CONNECTION_ID}', '{one_line_query(params['sql'])}')""",
+                    "query": f"""SELECT * FROM EXTERNAL_QUERY('{APPLICATIVE_EXTERNAL_CONNECTION_ID}', ''' {one_line_query(params['sql'])} ''')""",
                     "useLegacySql": False,
                     "destinationTable": {
                         "projectId": GCP_PROJECT_ID,

@@ -25,7 +25,7 @@ SELECT
     {% endfor %}
     , delta_diversification
 FROM {{ ref('diversification_raw') }} as diversification_raw
-LEFT JOIN {{ ref('enriched_booking_data') }} as booking
+LEFT JOIN {{ ref('mrt_global__booking') }} as booking
 ON booking.booking_id = diversification_raw.booking_id
 LEFT JOIN {{ ref('offer_metadata') }} as offer_metadata
 ON booking.offer_id = offer_metadata.offer_id

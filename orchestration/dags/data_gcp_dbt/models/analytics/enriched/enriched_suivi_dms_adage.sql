@@ -1,40 +1,10 @@
-WITH dms_pro AS (
-  
-SELECT * EXCEPT(demandeur_entreprise_siren),
-  CASE WHEN demandeur_entreprise_siren is null or demandeur_entreprise_siren = "nan" 
-  THEN left(demandeur_siret, 9) ELSE demandeur_entreprise_siren END AS demandeur_entreprise_siren
-  
-FROM {{ source('clean','dms_pro_cleaned') }}
-)
-
-, adage_agreg_synchro AS (
-SELECT 
-    left(siret, 9) AS siren,
-    siret
-FROM {{ source('analytics','adage') }}
-where synchroPass = "1.0"
-)
-
-, siret_reference_adage AS (
-SELECT 
-    venueid,
-    id,
-    siret,
-    left(siret, 9) AS siren,
-    CASE WHEN siret in (select siret from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siret_synchro_adage,
-    CASE WHEN left(siret, 9) in (select siren from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siren_synchro_adage,
-FROM {{ source('analytics','adage') }}
-)
-
-,siren_reference_adage AS (
+WITH siren_reference_adage AS (
   SELECT 
     siren,
     max(siren_synchro_adage) AS siren_synchro_adage
-  FROM siret_reference_adage 
+  FROM {{ ref('adage') }}
   GROUP BY 1
 )
-
-
 
 SELECT
     dms_pro.procedure_id
@@ -59,13 +29,13 @@ SELECT
     , venue.venue_is_permanent
     , adage.id as adage_id
     , adage.dateModification as adage_date_modification
-    , CASE WHEN demandeur_siret IN (SELECT siret from siret_reference_adage) THEN TRUE ELSE FALSE END AS siret_ref_adage
-    , CASE WHEN demandeur_siret IN (SELECT siret from siret_reference_adage where siret_synchro_adage = TRUE) THEN TRUE ELSE FALSE END AS siret_synchro_adage
+    , CASE WHEN demandeur_siret IN (SELECT siret from {{ ref('adage') }}) THEN TRUE ELSE FALSE END AS siret_ref_adage
+    , CASE WHEN demandeur_siret IN (SELECT siret from {{ ref('adage') }} where siret_synchro_adage = TRUE) THEN TRUE ELSE FALSE END AS siret_synchro_adage
     , CASE WHEN demandeur_entreprise_siren IN (SELECT siren from siren_reference_adage) THEN TRUE ELSE FALSE END AS siren_ref_adage
     , CASE WHEN demandeur_entreprise_siren IN (SELECT siren from siren_reference_adage WHERE siren_synchro_adage) THEN TRUE ELSE FALSE END AS siren_synchro_adage
 
 FROM
-    dms_pro
+    {{ ref('dms_pro') }}
 LEFT JOIN {{ ref('offerer') }} AS offerer
     ON dms_pro.demandeur_entreprise_siren = offerer.offerer_siren AND offerer.offerer_siren <> "nan"
 LEFT JOIN {{ ref('venue') }} AS venue

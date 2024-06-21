@@ -50,7 +50,9 @@ SELECT
                                 "filledWithErrors",
                                 "traffic_campaign",
                                 "traffic_medium",
-                                "traffic_source"
+                                "traffic_source",
+                                "format",
+                                "bookingStatus"
     ])}},
     (SELECT event_params.value.double_value from unnest(event_params) event_params where event_params.key = 'offerId') as double_offer_id,
     (SELECT event_params.value.string_value from unnest(event_params) event_params where event_params.key = 'from') as origin,

@@ -1,0 +1,17 @@
+SELECT p.provider_id,
+  p.provider_name,
+  p.is_active,
+  p.venue_id,
+  v.venue_name,
+  v.venue_department_code,
+  v.venue_creation_date,
+  v.venue_is_permanent,
+  v.venue_label,
+  p.last_sync_date,
+  p.creation_date,
+  v.total_created_offers,
+  v.total_created_collective_offers,
+  v.first_individual_offer_creation_date,
+  v.first_collective_offer_creation_date,
+FROM {{ ref('int_applicative__provider') }} AS p
+LEFT JOIN {{ ref('mrt_global__venue_unverified') }} AS v ON p.venue_id = v.venue_id

@@ -275,12 +275,16 @@ class ContentfulClient:
     def add_parent_child_to_df(self, parent_id, child_id):
         values_to_add = {"parent": parent_id, "child": child_id}
         row_to_add = pd.Series(values_to_add)
-        self.df_links = self.df_links.append(row_to_add, ignore_index=True)
+        self.df_links = pd.concat(
+            [self.df_links, row_to_add.to_frame()], ignore_index=True
+        )
 
     def add_tag_to_df(self, tag_id, tag_name, entry_id):
         values_to_add = {"tag_id": tag_id, "tag_name": tag_name, "entry_id": entry_id}
         row_to_add = pd.Series(values_to_add)
-        self.df_tags = self.df_tags.append(row_to_add, ignore_index=True)
+        self.df_tags = pd.concat(
+            [self.df_tags, row_to_add.to_frame()], ignore_index=True
+        )
 
     def get_basic_fields(self, module):
         sys_fields = [
@@ -369,7 +373,9 @@ class ContentfulClient:
 
     def add_module_infos_to_modules_dataframe(self, module_infos):
         row_to_add = pd.Series(module_infos)
-        self.df_modules = self.df_modules.append(row_to_add, ignore_index=True)
+        self.df_modules = pd.concat(
+            [self.df_modules, row_to_add.to_frame()], ignore_index=True
+        )
 
     def get_paged_modules(self, module_details):
         content_type = module_details["name"]

@@ -1,5 +1,5 @@
 SELECT
-    DATE("{{ ds }}") as update_date,
+    DATE("{{ ds() }}") as update_date,
     offerer_id,
     collective_offer_id,
     offer_id,

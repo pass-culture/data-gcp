@@ -89,8 +89,9 @@ def run(
                 native_card.update_filters(metabase_field_mapping)
                 native_card.update_query()
                 transition_log["success"] = True
-            except:
+            except Exception as e:
                 transition_log["success"] = False
+                print(e)
             transition_logs.append(transition_log)
 
     if metabase_card_type == "query":
@@ -114,8 +115,9 @@ def run(
                 query_card.update_viz_settings(metabase_field_mapping)
                 query_card.update_card()
                 transition_log["success"] = True
-            except:
+            except Exception as e:
                 transition_log["success"] = False
+                print(e)
             transition_logs.append(transition_log)
 
     pd.DataFrame(transition_logs).to_gbq(

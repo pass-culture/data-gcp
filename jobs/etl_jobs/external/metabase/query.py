@@ -53,11 +53,11 @@ class QueryCard:
                     agg[1][1] = mapped_fields_dict.get(agg[1][1], agg[1][1])
 
         if "breakout" in self.card_info["dataset_query"]["query"]:
-            for bk in self.card_info["dataset_query"]["query"]["breakout"]:
-                bk[1] = mapped_fields_dict.get(bk[1], bk[1])
-                if len(bk) > 2 and bk[2] and "source-field" in bk[2]:
-                    bk[2]["source-field"] = mapped_fields_dict.get(
-                        bk[2]["source-field"], bk[2]["source-field"]
+            for breakout in self.card_info["dataset_query"]["query"]["breakout"]:
+                breakout[1] = mapped_fields_dict.get(breakout[1], breakout[1])
+                if len(breakout) > 2 and breakout[2] and "source-field" in breakout[2]:
+                    breakout[2]["source-field"] = mapped_fields_dict.get(
+                        breakout[2]["source-field"], breakout[2]["source-field"]
                     )
         if "source-table" in self.card_info["dataset_query"]["query"]:
             if (
@@ -66,10 +66,10 @@ class QueryCard:
             ):
                 self.card_info["dataset_query"]["query"]["source-table"] = new_table_id
         if "joins" in self.card_info["dataset_query"]["query"]:
-            for cond in self.card_info["dataset_query"]["query"]["joins"]:
-                if cond["source-table"] == legacy_table_id:
-                    cond["source-table"] = new_table_id
-                for field in cond["condition"]:
+            for condition in self.card_info["dataset_query"]["query"]["joins"]:
+                if condition["source-table"] == legacy_table_id:
+                    condition["source-table"] = new_table_id
+                for field in condition["condition"]:
                     if isinstance(field, list):
                         if field[0] == "field":
                             field[1] = mapped_fields_dict.get(field[1], field[1])
@@ -82,13 +82,13 @@ class QueryCard:
                 order[1][1] = mapped_fields_dict.get(order[1][1], order[1][1])
 
         if "expressions" in self.card_info["dataset_query"]["query"]:
-            for key, value in self.card_info["dataset_query"]["query"][
+            for _, value in self.card_info["dataset_query"]["query"][
                 "expressions"
             ].items():
                 stack = [value]
                 while stack:
-                    current = stack.pop()
-                    for item in current:
+                    custom_expression = stack.pop()
+                    for item in custom_expression:
                         if isinstance(item, list):
                             if item and item[0] == "field" and len(item) > 1:
                                 item[1] = mapped_fields_dict.get(item[1], item[1])
@@ -111,14 +111,15 @@ class QueryCard:
 
         if self.card_info["result_metadata"]:
             for result in self.card_info["result_metadata"]:
-                if "field_ref" in result and result["field_ref"][0] == "field":
-                    if isinstance(result["field_ref"][1], int):
-                        result["field_ref"][1] = mapped_fields_dict.get(
-                            result["field_ref"][1], result["field_ref"][1]
-                        )
-                        result["id"] = mapped_fields_dict.get(
-                            result["id"], result["id"]
-                        )
+                if (
+                    "field_ref" in result
+                    and result["field_ref"][0] == "field"
+                    and isinstance(result["field_ref"][1], int)
+                ):
+                    result["field_ref"][1] = mapped_fields_dict.get(
+                        result["field_ref"][1], result["field_ref"][1]
+                    )
+                    result["id"] = mapped_fields_dict.get(result["id"], result["id"])
 
     def update_card(self):
         self.metabase_api.put_card(card_id=self.card_id, card_dict=self.card_info)

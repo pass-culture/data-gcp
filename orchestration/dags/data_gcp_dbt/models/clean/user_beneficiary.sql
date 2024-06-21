@@ -60,9 +60,10 @@ user_beneficiary as (
         user_cultural_survey_filled_date,
         u.iris_internal_id AS user_iris_internal_id
     FROM users_with_geo_candidates AS u
-    WHERE ST_CONTAINS(
+    WHERE ( ST_CONTAINS(
         u.iris_shape,
         ST_GEOGPOINT(u.user_longitude, u.user_latitude)
+        ) OR u.iris_shape IS NULL
     )
     -- only BENEFICIARY
     AND  user_role IN ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')

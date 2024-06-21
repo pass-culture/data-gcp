@@ -33,4 +33,4 @@ FROM geo_candidates gc
 WHERE ST_CONTAINS(
         gc.iris_shape,
         ST_GEOGPOINT(gc.venue_longitude, gc.venue_latitude)
-)
+) OR gc.iris_shape IS NULL

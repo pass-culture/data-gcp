@@ -194,4 +194,4 @@ LEFT JOIN {{ source("analytics", "region_department") }} AS venue_region_departe
 WHERE ST_CONTAINS(
         v.iris_shape,
         ST_GEOGPOINT(v.venue_longitude, v.venue_latitude)
-)
+) OR v.iris_shape IS NULL

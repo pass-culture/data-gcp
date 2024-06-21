@@ -62,4 +62,4 @@ FROM users_with_geo_candidates AS u
 WHERE ST_CONTAINS(
         u.iris_shape,
         ST_GEOGPOINT(u.user_longitude, u.user_latitude)
-)
+) OR u.iris_shape IS NULL

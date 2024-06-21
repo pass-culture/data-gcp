@@ -5,21 +5,6 @@
     pre_hook="{{create_humanize_id_function()}}"
 ) }}
 
-WITH users_with_geo_candidates AS (
-    SELECT
-        u.*,
-        ul.latitude AS user_latitude,
-        ul.longitude AS user_longitude,
-        gi.iris_internal_id,
-        gi.region_name,
-        gi.iris_shape
-    FROM {{ source("raw", "applicative_database_user") }} AS u
-    LEFT JOIN {{ source("analytics", "user_locations") }} AS ul USING(user_id)
-    LEFT JOIN {{ source('clean', 'geo_iris') }} AS gi
-        ON ul.longitude BETWEEN gi.min_longitude AND gi.max_longitude
-           AND ul.latitude BETWEEN gi.min_latitude AND gi.max_latitude
-)
-
 SELECT
     user_id,
     user_creation_date,
@@ -56,10 +41,6 @@ SELECT
     user_birth_date,
     user_cultural_survey_filled_date,
     CASE WHEN user_role IN ("UNDERAGE_BENEFICIARY", "BENEFICIARY") THEN 1 ELSE 0 END AS is_beneficiary,
-    u.iris_internal_id AS user_iris_internal_id,
-    u.region_name AS user_region_name
-FROM users_with_geo_candidates AS u
-WHERE ST_CONTAINS(
-        u.iris_shape,
-        ST_GEOGPOINT(u.user_longitude, u.user_latitude)
-) OR u.iris_shape IS NULL
+    NULL AS user_iris_internal_id,
+    NULL AS user_region_name
+FROM {{ source("raw", "applicative_database_user") }} AS u

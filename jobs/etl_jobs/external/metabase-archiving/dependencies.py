@@ -20,7 +20,7 @@ CLIENT_ID = access_secret_data(
     PROJECT_NAME, f"metabase-{ENVIRONMENT_SHORT_NAME}_oauth2_client_id"
 )
 
-password = access_secret_data(
+PASSWORD = access_secret_data(
     PROJECT_NAME, f"metabase-api-secret-{ENVIRONMENT_SHORT_NAME}"
 )
 
@@ -153,7 +153,7 @@ def get_native_dependencies(cards_list, tables_df):
 def run():
     metabase = MetabaseAPI(
         username=METABASE_API_USERNAME,
-        password=password,
+        password=PASSWORD,
         host=METABASE_HOST,
         client_id=CLIENT_ID,
     )

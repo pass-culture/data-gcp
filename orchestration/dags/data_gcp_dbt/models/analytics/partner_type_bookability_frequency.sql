@@ -15,7 +15,7 @@ FROM partner_crea_frequency
 INNER JOIN {{ ref('enriched_cultural_partner_data')}} USING (partner_id)
 ),
 
-partner_bookability_frequency AS (<
+partner_bookability_frequency AS (
 SELECT
     partner_id
     , COUNT(DISTINCT DATE_TRUNC(partition_date, MONTH)) AS nb_mois_bookable_this_year

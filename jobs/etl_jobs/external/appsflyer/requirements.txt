@@ -4,6 +4,7 @@ google-cloud-bigquery==2.34.3
 google-cloud-secret-manager==2.2.0
 requests==2.32.3
 pandas==2.0.3
+numpy==1.26.4
 pyarrow==3.0.0
 furl
 typer

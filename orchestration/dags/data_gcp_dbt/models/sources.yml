@@ -151,6 +151,7 @@ sources:
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: adage
+      - name: app_native_logs
       - name: epci
       - name: eple
       - name: firebase_pro_events

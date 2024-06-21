@@ -15,7 +15,7 @@ WITH users_with_geo_candidates AS (
         gi.iris_shape
     FROM {{ source("raw", "applicative_database_user") }} AS u
     LEFT JOIN {{ source("analytics", "user_locations") }} AS ul USING(user_id)
-    INNER JOIN {{ source('clean', 'geo_iris') }} AS gi
+    LEFT JOIN {{ source('clean', 'geo_iris') }} AS gi
         ON ul.longitude BETWEEN gi.min_longitude AND gi.max_longitude
            AND ul.latitude BETWEEN gi.min_latitude AND gi.max_latitude
 )

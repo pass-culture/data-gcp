@@ -69,7 +69,9 @@ def run(
         i = 0
         for s_id in active_surveys:
             i = i + 1
-            survey = QualtricsSurvey(s_id, DATA_CENTER, API_TOKEN)
+            survey = QualtricsSurvey(
+                api_token=API_TOKEN, survey_id=s_id, data_center=DATA_CENTER
+            )
             survey.get_qualtrics_survey()
             df = survey.process_survey_answers()
             df["survey_int_id"] = df["survey_id"].apply(

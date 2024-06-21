@@ -22,7 +22,7 @@ CLIENT_ID = access_secret_data(
 )
 
 
-password = access_secret_data(
+PASSWORD = access_secret_data(
     PROJECT_NAME, f"metabase-api-secret-{ENVIRONMENT_SHORT_NAME}"
 )
 
@@ -30,7 +30,7 @@ password = access_secret_data(
 def run():
     metabase = MetabaseAPI(
         username=METABASE_API_USERNAME,
-        password=password,
+        password=PASSWORD,
         host=METABASE_HOST,
         client_id=CLIENT_ID,
     )

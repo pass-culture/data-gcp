@@ -162,6 +162,7 @@ class QualtricsSurvey:
             .str.encode("ascii", errors="ignore")
             .str.decode("utf-8")  # remove accents
             .str.replace("[.,(,),-]", "")
+            .str.replace("-", "")
             .str.replace("  ", " ")
             .str.replace(" ", "_")
         )

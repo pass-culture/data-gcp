@@ -7,7 +7,6 @@ google-cloud-core>=1.6.0
 google-cloud-secret-manager>=2.2.0
 google-cloud-storage>=1.38.0
 pandas-gbq>=0.23.1
-numpy>=1.26.4
 requests==2.32.3
 Authlib==0.15.4
 fsspec==2021.4.0

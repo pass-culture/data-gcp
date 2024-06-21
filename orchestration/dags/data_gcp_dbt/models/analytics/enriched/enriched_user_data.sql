@@ -376,6 +376,15 @@ amount_spent_last_deposit AS (
     GROUP BY
         deposit_id
         , last_deposit.user_id
+),
+themes_subscribed AS (
+  SELECT 
+    user_id, 
+    currently_subscribed_themes, 
+    CASE WHEN (currently_subscribed_themes IS NULL OR currently_subscribed_themes = '') THEN FALSE ELSE TRUE END AS is_theme_subscribed
+FROM {{ source('analytics','app_native_logs')}}
+WHERE technical_message_id = "subscription_update"
+QUALIFY RANK() OVER(PARTITION BY user_id ORDER BY partition_date DESC) = 1
 )
 
 SELECT
@@ -444,7 +453,9 @@ SELECT
     user.user_age,
     user.user_birth_date,
     user.user_has_enabled_marketing_email,
-    user.user_iris_internal_id
+    user.user_iris_internal_id,
+    themes_subscribed.currently_subscribed_themes,
+    themes_subscribed.is_theme_subscribed
 FROM
     {{ ref('user_beneficiary') }} AS user
     LEFT JOIN date_of_first_bookings ON user.user_id = date_of_first_bookings.user_id
@@ -466,6 +477,7 @@ FROM
     LEFT JOIN {{ ref('user_suspension')}} AS user_suspension ON user_suspension.user_id = user.user_id
         AND rank = 1
     LEFT JOIN amount_spent_last_deposit ON amount_spent_last_deposit.user_id = user.user_id
+    LEFT JOIN themes_subscribed ON themes_subscribed.user_id = user.user_id
     JOIN user_agg_deposit_data ON user.user_id = user_agg_deposit_data.userId
 WHERE
     (

@@ -12,20 +12,24 @@ from utils import (
 )
 from datetime import datetime
 
-CONTENTFUL_ENTRIES_TABLE_NAME = "contentful_entries"
-CONTENTFUL_RELATIONSHIPS_TABLE_NAME = "contentful_relationships"
-CONTENTFUL_TAGS_TABLE_NAME = "contentful_tags"
+CONTENTFUL_ENTRIES_TABLE_NAME = "contentful_entry"
+CONTENTFUL_RELATIONSHIP_TABLE_NAME = "contentful_relationship"
+CONTENTFUL_TAG_TABLE_NAME = "contentful_tag"
 
 
 def save_raw_modules_to_bq(modules_df, table_name):
     _now = datetime.today()
     yyyymmdd = _now.strftime("%Y%m%d")
     modules_df["execution_date"] = _now
+    print(f"Will save {modules_df.shape[0]} rows to {table_name}")
+
     bigquery_client = bigquery.Client()
     table_id = f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{table_name}${yyyymmdd}"
     job_config = bigquery.LoadJobConfig(
         write_disposition="WRITE_TRUNCATE",
-        schema_update_options=[bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION],
+        schema_update_options=[
+            bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION,
+        ],
         time_partitioning=bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field="execution_date",
@@ -74,11 +78,11 @@ def run():
     )
     save_raw_modules_to_bq(
         links_df.drop_duplicates(),
-        CONTENTFUL_RELATIONSHIPS_TABLE_NAME,
+        CONTENTFUL_RELATIONSHIP_TABLE_NAME,
     )
     save_raw_modules_to_bq(
         tags_df.drop_duplicates(),
-        CONTENTFUL_TAGS_TABLE_NAME,
+        CONTENTFUL_TAG_TABLE_NAME,
     )
 
     return "Done"

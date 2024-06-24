@@ -11,4 +11,4 @@ SELECT
     number_of_tickets,
     booking_amount
 FROM {{ ref('enriched_collective_booking_data') }}
-WHERE not cast(collective_booking_is_cancelled as BOOL) and collective_booking_status != 'CANCELLED'
+WHERE collective_offerer_id is not null and not cast(collective_booking_is_cancelled as BOOL) and collective_booking_status != 'CANCELLED'

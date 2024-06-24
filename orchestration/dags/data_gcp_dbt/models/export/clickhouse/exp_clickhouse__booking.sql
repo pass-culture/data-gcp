@@ -9,4 +9,4 @@ SELECT
     booking_quantity,
     booking_amount
 FROM {{ ref('mrt_global__booking') }}
-WHERE not cast(booking_is_cancelled as bool) and booking_status != 'CANCELLED'
+WHERE offerer_id is not null and not cast(booking_is_cancelled as bool) and booking_status != 'CANCELLED' 

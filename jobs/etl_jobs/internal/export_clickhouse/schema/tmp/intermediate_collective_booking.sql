@@ -17,4 +17,4 @@ AS
         cast(educational_institution_id as String) as educational_institution_id,
         cast(number_of_tickets as UInt64) as number_of_tickets,
         cast(booking_amount as Float64) as booking_amount
-    FROM s3(gcs)
+    FROM s3('{{ bucket_path }}','{{ access_key_id }}','{{ secret_access_key }}')

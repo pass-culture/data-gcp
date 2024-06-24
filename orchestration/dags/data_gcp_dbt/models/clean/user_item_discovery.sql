@@ -77,7 +77,11 @@ agg_new_consultation_item as (
 SELECT 
     COALESCE(agg_new_consultation_item.user_id, agg_new_consultation_origin.user_id) as user_id
     , COALESCE(agg_new_consultation_item.consultation_date, agg_new_consultation_origin.consultation_date) as consultation_date
-    , COALESCE(discovery_origin, 0) as discovery_origin
+    , CASE
+        WHEN COALESCE(discovery_new_items, 0) < COALESCE(discovery_origin, 0) 
+        THEN COALESCE(discovery_new_items, 0)
+        ELSE COALESCE(discovery_origin, 0)
+    END as discovery_origin
     , {% for feature in discovery_vars("discovery_features") %} 
         COALESCE(discovery_{{feature}}, 0) as discovery_{{feature}}
         {% if not loop.last -%} , {%- endif %}

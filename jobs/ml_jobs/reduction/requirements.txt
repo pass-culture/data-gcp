@@ -4,7 +4,7 @@ typer==0.7.0
 pandas==1.4.1
 tqdm==4.66.1
 gcsfs==2023.5.0
-pandas-gbq>=0.17.1
+pandas-gbq==0.17.1
 numpy==1.23.3 
 hdbscan>=0.8.28
 umap_learn>=0.5.3

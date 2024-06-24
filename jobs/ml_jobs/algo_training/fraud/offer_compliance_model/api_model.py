@@ -71,7 +71,7 @@ class ApiModel(mlflow.pyfunc.PythonModel):
     def _get_catboost_features(self):
         return self.classification_model.feature_names_
 
-    def predict(self, model_input: PredictionInput) -> PredictionOutput:
+    def predict(self, context, model_input: PredictionInput) -> PredictionOutput:
         """
         Predicts the class labels for the given data using the trained classifier model.
 

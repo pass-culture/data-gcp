@@ -1,73 +1,54 @@
-# %%
-
-# # %% Debug
-
-# import os
-# import mlflow
-
-
-# os.environ["MLFLOW_TRACKING_TOKEN"] = (
-# )
-
-# name = "compliance"
-# model_type = "default"
-# env = "dev"
-# model_stage = "Production"
-# MLFLOW_EHP_URI = "https://mlflow.staging.passculture.team/"
-# model_name = f"{name}_{model_type}_{env}"
-# mlflow.set_tracking_uri(MLFLOW_EHP_URI)
-# catboost = mlflow.catboost.load_model(model_uri=f"models:/{model_name}/{model_stage}")
-# catboost.save_model("catboost_model.cbm")
-# %%
 import json
 
-from catboost import CatBoostClassifier
+import mlflow
+import typer
 
 from fraud.offer_compliance_model.api_model import ApiModel
-
-classification_model = CatBoostClassifier(one_hot_max_size=65).load_model(
-    "/home/laurent_pass/Projects/data-gcp/jobs/ml_jobs/algo_training/fraud/offer_compliance_model/compliance_model.cb"
+from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
+from utils.constants import (
+    ENV_SHORT_NAME,
+    MODEL_DIR,
 )
+from utils.mlflow_tools import connect_remote_mlflow
+from utils.secrets_utils import get_secret
 
 
-with open(
-    "/home/laurent_pass/Projects/data-gcp/jobs/ml_jobs/algo_training/fraud/offer_compliance_model/configs/default.json",
-    mode="r",
-    encoding="utf-8",
-) as config_file:
-    features = json.load(config_file)
+def package_api_model(
+    model_name: str = typer.Option(
+        "compliance_default", help="Model name for the training"
+    ),
+    config_file_name: str = typer.Option(
+        ...,
+        help="Name of the config file containing feature informations",
+    ),
+):
+    with open(
+        f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
+        mode="r",
+        encoding="utf-8",
+    ) as config_file:
+        features = json.load(config_file)
 
-api_model = ApiModel(classification_model=classification_model, features=features)
+    # Connect to MLflow
+    client_id = get_secret("mlflow_client_id")
+    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
+
+    # Build the API model
+    catboost_model = mlflow.catboost.load_model(
+        model_uri=f"models:/{model_name}_{ENV_SHORT_NAME}/latest"
+    )
+    api_model = ApiModel(classification_model=catboost_model, features=features)
+
+    # Register the API model
+    client = mlflow.MlflowClient()
+    run_id = client.get_latest_versions(f"{model_name}_{ENV_SHORT_NAME}")[0].run_id
+    mlflow.pyfunc.log_model(
+        python_model=api_model,
+        artifact_path=f"registry_{ENV_SHORT_NAME}",
+        registered_model_name=f"api_{model_name}_{ENV_SHORT_NAME}",
+        run_id=run_id,
+    )
 
 
-# %%
-model_input = {
-    "offer_name": "test",
-    "offer_description": "test",
-    "offer_subcategoryid": "rrez",
-    "rayon": "test",
-    "macro_rayon": "test",
-    "stock_price": 1,
-    "image_url": "",
-    "offer_type_label": "",
-    "offer_sub_type_label": "",
-    "author": "",
-    "performer": "",
-}
-model_input = {
-    "offer_id": "",
-    "offer_name": "",
-    "offer_description": "",
-    "offer_subcategoryid": "",
-    "rayon": "",
-    "macro_rayon": "",
-    "stock_price": 0,
-    "image_url": "",
-    "offer_type_label": "",
-    "offer_sub_type_label": "",
-    "author": "",
-    "performer": "",
-}
-prediction = api_model.predict(model_input=model_input)
-print("Prediction :")
-print(prediction)
+if __name__ == "__main__":
+    typer.run(package_api_model)

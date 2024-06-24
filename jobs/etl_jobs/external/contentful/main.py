@@ -21,11 +21,15 @@ def save_raw_modules_to_bq(modules_df, table_name):
     _now = datetime.today()
     yyyymmdd = _now.strftime("%Y%m%d")
     modules_df["execution_date"] = _now
+    print(f"Will save {modules_df.shape[0]} rows to {table_name}")
+
     bigquery_client = bigquery.Client()
     table_id = f"{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.{table_name}${yyyymmdd}"
     job_config = bigquery.LoadJobConfig(
         write_disposition="WRITE_TRUNCATE",
-        schema_update_options=[bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION],
+        schema_update_options=[
+            bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION,
+        ],
         time_partitioning=bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field="execution_date",

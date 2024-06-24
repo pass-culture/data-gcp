@@ -95,7 +95,6 @@ BLOCK_PARAMETERS = {
         "additional_fields": [
             "title",
             "duration_in_minutes",
-            "video_publication_date",
             "youtube_video_id",
             "offer_id",
             "tag",
@@ -122,6 +121,19 @@ CONTENTFUL_MODULES = [
             "title",
             "venues_search_parameters",
             "display_parameters",
+        ],
+        "children": [
+            BLOCK_PARAMETERS["venues_search_parameters"],
+            BLOCK_PARAMETERS["display_parameters"],
+        ],
+    },
+    {
+        "name": "venuesPlaylistAppV2",
+        "additional_fields": [
+            "title",
+            "venues_search_parameters",
+            "display_parameters",
+            "home_entry_id",
         ],
         "children": [
             BLOCK_PARAMETERS["venues_search_parameters"],
@@ -273,17 +285,20 @@ class ContentfulClient:
         self.page_size = 500
 
     def add_parent_child_to_df(self, parent_id, child_id):
-        values_to_add = {"parent": parent_id, "child": child_id}
-        row_to_add = pd.Series(values_to_add)
         self.df_links = pd.concat(
-            [self.df_links, row_to_add.to_frame()], ignore_index=True
+            [self.df_links, pd.DataFrame([{"parent": parent_id, "child": child_id}])],
+            ignore_index=True,
         )
 
     def add_tag_to_df(self, tag_id, tag_name, entry_id):
-        values_to_add = {"tag_id": tag_id, "tag_name": tag_name, "entry_id": entry_id}
-        row_to_add = pd.Series(values_to_add)
         self.df_tags = pd.concat(
-            [self.df_tags, row_to_add.to_frame()], ignore_index=True
+            [
+                self.df_tags,
+                pd.DataFrame(
+                    [{"tag_id": tag_id, "tag_name": tag_name, "entry_id": entry_id}]
+                ),
+            ],
+            ignore_index=True,
         )
 
     def get_basic_fields(self, module):
@@ -372,9 +387,8 @@ class ContentfulClient:
         return all_infos
 
     def add_module_infos_to_modules_dataframe(self, module_infos):
-        row_to_add = pd.Series(module_infos)
         self.df_modules = pd.concat(
-            [self.df_modules, row_to_add.to_frame()], ignore_index=True
+            [self.df_modules, pd.DataFrame([module_infos])], ignore_index=True
         )
 
     def get_paged_modules(self, module_details):

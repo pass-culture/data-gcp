@@ -44,7 +44,7 @@ def preprocess(
 
     (
         offer_compliance_raw.pipe(
-            PreprocessingPipeline.prepare_features, features=features
+            PreprocessingPipeline.prepare_features, features_description=features
         )
         .pipe(filter_df_for_training, features=features)
         .to_parquet(f"{STORAGE_PATH}/{output_dataframe_file_name}/data.parquet")

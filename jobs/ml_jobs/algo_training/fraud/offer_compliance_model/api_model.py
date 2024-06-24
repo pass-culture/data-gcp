@@ -30,12 +30,18 @@ class ApiModel(mlflow.pyfunc.PythonModel):
         self.classification_model = classification_model
         self.features = features
         self.preprocessing_pipeline = PreprocessingPipeline(
-            classification_model=self.classification_model,
             text_encoder=self.TEXT_ENCODER_MODEL,
             image_encoder=self.IMAGE_ENCODER_MODEL,
             semantic_content_columns=self.SEMENTIC_CONTENT_COLUMNS,
-            features=self.features,
+            features_description=self.features,
+            catboost_features=self._get_catboost_features(),
         )
+        self.classification_pipeline = ClassificationPipeline(
+            classification_model=self.classification_model
+        )
+
+    def _get_catboost_features(self):
+        return self.classification_model.feature_names_
 
     def predict(self, model_input: pd.DataFrame):
         """
@@ -58,14 +64,22 @@ class ApiModel(mlflow.pyfunc.PythonModel):
         # Loading Pipelines
 
         # Preprocess the data and the embedder
-        pool, data_w_emb = self.preprocessing_pipeline.preprocess(input_df)
+        pool, data_w_emb = self.preprocessing_pipeline(input_df)
         print(pool)
         print(data_w_emb)
 
         # Run the prediction
-        return self.get_prediction_and_main_contribution(data_w_emb, pool)
+        return self.classification_pipeline(data_w_emb, pool)
 
-    def get_prediction_and_main_contribution(self, data_w_emb, pool):
+
+class ClassificationPipeline:
+    def __init__(
+        self,
+        classification_model: CatBoostClassifier,
+    ):
+        self.classification_model = classification_model
+
+    def __call__(self, data_w_emb: pd.DataFrame, pool: Pool) -> tuple:
         """
         Prediction:
             Predict validation/rejection probability for a given input as catboost pool
@@ -128,19 +142,19 @@ class ApiModel(mlflow.pyfunc.PythonModel):
 class PreprocessingPipeline:
     def __init__(
         self,
-        classification_model: CatBoostClassifier,
         text_encoder: SentenceTransformer,
         image_encoder: SentenceTransformer,
         semantic_content_columns: list,
-        features: dict,
+        features_description: dict,
+        catboost_features: list,
     ):
-        self.classification_model = classification_model
         self.text_encoder = text_encoder
         self.image_encoder = image_encoder
         self.sementic_content_columns = semantic_content_columns
-        self.features = features
+        self.features_description = features_description
+        self.catboost_features = catboost_features
 
-    def preprocess(self, input_df: pd.DataFrame):
+    def __call__(self, input_df: pd.DataFrame):
         """
         Preprocessing steps:
             - prepare features
@@ -148,8 +162,8 @@ class PreprocessingPipeline:
         """
         input_with_embeddings_df = (
             input_df.pipe(self._extract_embedding)
-            .pipe(self.prepare_features, features=self.features)
-            .loc[:, self._get_catboost_features()]
+            .pipe(self.prepare_features, features_description=self.features_description)
+            .loc[:, self.catboost_features]
         )
 
         pool = self._convert_data_to_catboost_pool(input_with_embeddings_df)
@@ -211,12 +225,14 @@ class PreprocessingPipeline:
         return offer_img_embs
 
     @classmethod
-    def prepare_features(cls, df: pd.DataFrame, features: dict) -> pd.DataFrame:
+    def prepare_features(
+        cls, df: pd.DataFrame, features_description: dict
+    ) -> pd.DataFrame:
         def _is_ndarray(val):
             return isinstance(val, np.ndarray)
 
-        for feature_types in features["preprocess_features_type"].keys():
-            for col in features["preprocess_features_type"][feature_types]:
+        for feature_types in features_description["preprocess_features_type"].keys():
+            for col in features_description["preprocess_features_type"][feature_types]:
                 if feature_types == "text_features":
                     df[col] = df[col].fillna("").astype(str)
                 if feature_types == "numerical_features":
@@ -252,7 +268,7 @@ class PreprocessingPipeline:
             - output:
                 - catboost pool
         """
-        catboost_features_types = self.features["catboost_features_types"]
+        catboost_features_types = self.features_description["catboost_features_types"]
 
         return Pool(
             data=input_with_embeddings_df,
@@ -261,6 +277,3 @@ class PreprocessingPipeline:
             text_features=catboost_features_types["text_features"],
             embedding_features=catboost_features_types["embedding_features"],
         )
-
-    def _get_catboost_features(self):
-        return self.classification_model.feature_names_

@@ -71,4 +71,14 @@ model_input = {
 prediction = api_model.predict(model_input=model_input)
 print(prediction)
 
+
+# %%
+class Testt:
+    def __init__(self, a):
+        self.a = a
+
+    def apply(self, b):
+        return self.a + b
+
+
 # %%

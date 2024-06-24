@@ -69,16 +69,5 @@ model_input = {
     "performer": "",
 }
 prediction = api_model.predict(model_input=model_input)
+print("Prediction :")
 print(prediction)
-
-
-# %%
-class Testt:
-    def __init__(self, a):
-        self.a = a
-
-    def apply(self, b):
-        return self.a + b
-
-
-# %%

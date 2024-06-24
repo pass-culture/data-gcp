@@ -1,5 +1,6 @@
 import io
 import json
+from dataclasses import dataclass
 from heapq import nlargest, nsmallest
 
 import mlflow
@@ -10,6 +11,33 @@ import shap
 from catboost import CatBoostClassifier, Pool
 from PIL import Image
 from sentence_transformers import SentenceTransformer
+
+
+@dataclass
+class PredictionInput:
+    offer_name: str
+    offer_description: str
+    offer_subcategoryid: str
+    rayon: str
+    macro_rayon: str
+    stock_price: int
+    image_url: str
+    offer_type_label: str
+    offer_sub_type_label: str
+
+
+@dataclass
+class PredictionOutput:
+    probability_validated: float
+    validation_main_features: list
+    probability_rejected: float
+    rejection_main_features: list
+
+
+@dataclass
+class PreprocessingOutput:
+    pool: Pool
+    data_with_embeddings_df: pd.DataFrame
 
 
 class ApiModel(mlflow.pyfunc.PythonModel):
@@ -43,7 +71,7 @@ class ApiModel(mlflow.pyfunc.PythonModel):
     def _get_catboost_features(self):
         return self.classification_model.feature_names_
 
-    def predict(self, model_input: pd.DataFrame):
+    def predict(self, model_input: PredictionInput) -> PredictionOutput:
         """
         Predicts the class labels for the given data using the trained classifier model.
 
@@ -61,15 +89,11 @@ class ApiModel(mlflow.pyfunc.PythonModel):
         """
         input_df = pd.DataFrame([model_input])
 
-        # Loading Pipelines
-
         # Preprocess the data and the embedder
-        pool, data_w_emb = self.preprocessing_pipeline(input_df)
-        print(pool)
-        print(data_w_emb)
+        preprocessing_output = self.preprocessing_pipeline(input_df)
 
         # Run the prediction
-        return self.classification_pipeline(data_w_emb, pool)
+        return self.classification_pipeline(preprocessing_output)
 
 
 class ClassificationPipeline:
@@ -79,7 +103,7 @@ class ClassificationPipeline:
     ):
         self.classification_model = classification_model
 
-    def __call__(self, data_w_emb: pd.DataFrame, pool: Pool) -> tuple:
+    def __call__(self, preprocessing_output: PreprocessingOutput) -> PredictionOutput:
         """
         Prediction:
             Predict validation/rejection probability for a given input as catboost pool
@@ -101,26 +125,35 @@ class ClassificationPipeline:
         """
 
         proba_predicted = self.classification_model.predict(
-            pool,
+            preprocessing_output.pool,
             prediction_type="Probability",
             ntree_start=0,
             ntree_end=0,
             thread_count=1,
             verbose=None,
         )[0]
-        proba_rej = list(proba_predicted)[0] * 100
-        proba_val = list(proba_predicted)[1] * 100
-        top_val, top_rej = self._get_prediction_main_contribution(data_w_emb, pool)
-        return proba_val, proba_rej, top_val, top_rej
+        proba_rejection = list(proba_predicted)[0] * 100
+        proba_validation = list(proba_predicted)[1] * 100
+        top_validation, top_rejection = self._get_prediction_main_contribution(
+            preprocessing_output.data_with_embeddings_df, preprocessing_output.pool
+        )
+        return PredictionOutput(
+            probability_validated=proba_validation,
+            validation_main_features=top_validation,
+            probability_rejected=proba_rejection,
+            rejection_main_features=top_rejection,
+        )
 
-    def _get_prediction_main_contribution(self, data, pool):
+    def _get_prediction_main_contribution(
+        self, data: pd.DataFrame, pool: Pool
+    ) -> tuple[list, list]:
         explainer = shap.Explainer(self.classification_model, link=shap.links.logit)
         shap_values = explainer.shap_values(pool)
         top_val, top_rej = self.__get_contribution_from_shap_values(shap_values, data)
         return top_val, top_rej
 
     @staticmethod
-    def __get_contribution_from_shap_values(shap_values, data):
+    def __get_contribution_from_shap_values(shap_values, data: pd.DataFrame):
         topk_validation_factor = []
         topk_rejection_factor = []
         data_keys = list(data.keys())
@@ -154,7 +187,7 @@ class PreprocessingPipeline:
         self.features_description = features_description
         self.catboost_features = catboost_features
 
-    def __call__(self, input_df: pd.DataFrame):
+    def __call__(self, input_df: pd.DataFrame) -> PreprocessingOutput:
         """
         Preprocessing steps:
             - prepare features
@@ -167,7 +200,9 @@ class PreprocessingPipeline:
         )
 
         pool = self._convert_data_to_catboost_pool(input_with_embeddings_df)
-        return pool, input_with_embeddings_df
+        return PreprocessingOutput(
+            pool=pool, data_with_embeddings_df=input_with_embeddings_df
+        )
 
     def _extract_embedding(self, input_df: pd.DataFrame) -> pd.DataFrame:
         """

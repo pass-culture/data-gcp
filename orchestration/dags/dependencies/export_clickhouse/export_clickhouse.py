@@ -1,3 +1,6 @@
+# table_config['sql'] values don't refer to sql files but tables/views in bigquery created by dbt models in folder export/clickhouse
+# however theses dbt models are prefixed exp_clickhouse__modelName and aliased in BQ database as clickhouse_modelName by get_custom_alias dbt macro
+# make sure to set table_config['sql'] values to clickhouse_modelName
 TABLES_CONFIGS = [
     {
         "sql": "clickhouse_booking",

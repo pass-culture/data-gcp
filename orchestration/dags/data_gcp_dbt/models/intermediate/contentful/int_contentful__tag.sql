@@ -19,7 +19,7 @@ FROM
                 ORDER BY
                     execution_date DESC
             ) as row_number
-        FROM {{ source('raw', 'contentful_tags') }}
+        FROM {{ source('raw', 'contentful_tag') }}
     ) inn
 WHERE
     row_number = 1

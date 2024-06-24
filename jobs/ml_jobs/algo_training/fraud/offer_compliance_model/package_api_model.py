@@ -25,7 +25,7 @@ from catboost import CatBoostClassifier
 
 from fraud.offer_compliance_model.api_model import ApiModel
 
-classifier_model = CatBoostClassifier(one_hot_max_size=65).load_model(
+classification_model = CatBoostClassifier(one_hot_max_size=65).load_model(
     "/home/laurent_pass/Projects/data-gcp/jobs/ml_jobs/algo_training/fraud/offer_compliance_model/compliance_model.cb"
 )
 
@@ -37,7 +37,7 @@ with open(
 ) as config_file:
     features = json.load(config_file)
 
-api_model = ApiModel(model_classifier=classifier_model, features=features)
+api_model = ApiModel(classification_model=classification_model, features=features)
 
 
 # %%

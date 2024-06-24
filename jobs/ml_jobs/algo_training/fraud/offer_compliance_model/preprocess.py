@@ -5,38 +5,10 @@ import numpy as np
 import pandas as pd
 import typer
 
+from fraud.offer_compliance_model.api_model import PreprocessingPipeline
 from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
 from utils.constants import MODEL_DIR, STORAGE_PATH
 from utils.data_collect_queries import read_from_gcs
-
-
-def convert_str_emb_to_float(emb_list, emb_size=124):
-    float_emb = []
-    for str_emb in emb_list:
-        try:
-            emb = json.loads(str_emb)
-        except Exception:
-            emb = [0] * emb_size
-        float_emb.append(np.array(emb))
-    return float_emb
-
-
-def prepare_features(df: pd.DataFrame, features: dict) -> pd.DataFrame:
-    def _is_ndarray(val):
-        return isinstance(val, np.ndarray)
-
-    for feature_types in features["preprocess_features_type"].keys():
-        for col in features["preprocess_features_type"][feature_types]:
-            if feature_types == "text_features":
-                df[col] = df[col].fillna("").astype(str)
-            if feature_types == "numerical_features":
-                df[col] = df[col].fillna(0).astype(int)
-            if feature_types == "embedding_features":
-                if not df[col].apply(_is_ndarray).all():
-                    df[col] = convert_str_emb_to_float(df[col].tolist()).astype(
-                        "object"
-                    )
-    return df
 
 
 def filter_df_for_training(df: pd.DataFrame, features: dict) -> pd.DataFrame:
@@ -71,7 +43,9 @@ def preprocess(
     )
 
     (
-        offer_compliance_raw.pipe(prepare_features, features=features)
+        offer_compliance_raw.pipe(
+            PreprocessingPipeline.prepare_features, features=features
+        )
         .pipe(filter_df_for_training, features=features)
         .to_parquet(f"{STORAGE_PATH}/{output_dataframe_file_name}/data.parquet")
     )

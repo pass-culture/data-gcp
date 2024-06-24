@@ -12,9 +12,9 @@ from utils import (
 )
 from datetime import datetime
 
-CONTENTFUL_ENTRIES_TABLE_NAME = "contentful_entries"
-CONTENTFUL_RELATIONSHIPS_TABLE_NAME = "contentful_relationships"
-CONTENTFUL_TAGS_TABLE_NAME = "contentful_tags"
+CONTENTFUL_ENTRIES_TABLE_NAME = "contentful_entry"
+CONTENTFUL_RELATIONSHIP_TABLE_NAME = "contentful_relationship"
+CONTENTFUL_TAG_TABLE_NAME = "contentful_tag"
 
 
 def save_raw_modules_to_bq(modules_df, table_name):
@@ -78,11 +78,11 @@ def run():
     )
     save_raw_modules_to_bq(
         links_df.drop_duplicates(),
-        CONTENTFUL_RELATIONSHIPS_TABLE_NAME,
+        CONTENTFUL_RELATIONSHIP_TABLE_NAME,
     )
     save_raw_modules_to_bq(
         tags_df.drop_duplicates(),
-        CONTENTFUL_TAGS_TABLE_NAME,
+        CONTENTFUL_TAG_TABLE_NAME,
     )
 
     return "Done"

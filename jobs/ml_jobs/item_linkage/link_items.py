@@ -1,14 +1,11 @@
-import uuid
-import pandas as pd
-import typer
-import json
-from docarray import Document
-from loguru import logger
-import recordlinkage
 import multiprocessing as mp
-import networkx as nx
+import uuid
 from typing import List, Tuple
 
+import networkx as nx
+import pandas as pd
+import recordlinkage
+import typer
 from utils.gcs_utils import upload_parquet
 
 # Constants
@@ -21,6 +18,10 @@ MATCHES_REQUIRED = 3
 
 app = typer.Typer()
 
+
+# TODO: underscore on methods if not used elsewhere
+
+
 def setup_matching() -> recordlinkage.Compare:
     """
     Setup the record linkage comparison model.
@@ -28,37 +29,44 @@ def setup_matching() -> recordlinkage.Compare:
     Returns:
         recordlinkage.Compare: Configured comparison model.
     """
-    cpr_cl = recordlinkage.Compare()
+    comparator = recordlinkage.Compare()
     for feature, feature_dict in FEATURES.items():
-        cpr_cl.string(
+        comparator.string(
             feature,
             feature,
             method=feature_dict["method"],
             threshold=feature_dict["threshold"],
             label=feature,
         )
-    return cpr_cl
+    return comparator
 
-def get_links(candidate_links: pd.MultiIndex, cpr_cl: recordlinkage.Compare, 
-              table_left: pd.DataFrame, table_right: pd.DataFrame) -> pd.DataFrame:
+
+def get_links(
+    candidate_links: pd.MultiIndex,
+    comparator: recordlinkage.Compare,
+    table_left: pd.DataFrame,
+    table_right: pd.DataFrame,
+) -> pd.DataFrame:
     """
     Get links between candidate pairs based on the comparison model.
 
     Args:
         candidate_links (pd.MultiIndex): Candidate links.
-        cpr_cl (recordlinkage.Compare): Comparison model.
+        comparator (recordlinkage.Compare): Comparison model.
         table_left (pd.DataFrame): Left table for comparison.
         table_right (pd.DataFrame): Right table for comparison.
 
     Returns:
         pd.DataFrame: Dataframe containing matched pairs.
     """
-    ftrs = cpr_cl.compute(candidate_links, table_left, table_right)
-    matches = ftrs[ftrs.sum(axis=1) >= MATCHES_REQUIRED].reset_index()
+    # TODO: chainer
+    features = comparator.compute(candidate_links, table_left, table_right)
+    matches = features[features.sum(axis=1) >= MATCHES_REQUIRED].reset_index()
     matches = matches.rename(columns={"level_0": "index_1", "level_1": "index_2"})
     matches["index_1"] = matches["index_1"].apply(lambda x: f"L-{x}")
     matches["index_2"] = matches["index_2"].apply(lambda x: f"R-{x}")
     return matches
+
 
 def _chunkify(lst: List, n: int) -> List[List]:
     """
@@ -73,8 +81,13 @@ def _chunkify(lst: List, n: int) -> List[List]:
     """
     return [lst[i::n] for i in range(n)]
 
-def multiprocess_matching(candidate_links: pd.MultiIndex, cpr_cl: recordlinkage.Compare, 
-                          table_left: pd.DataFrame, table_right: pd.DataFrame) -> pd.DataFrame:
+
+def multiprocess_matching(
+    candidate_links: pd.MultiIndex,
+    cpr_cl: recordlinkage.Compare,
+    table_left: pd.DataFrame,
+    table_right: pd.DataFrame,
+) -> pd.DataFrame:
     """
     Perform record linkage using multiple processes.
 
@@ -96,8 +109,10 @@ def multiprocess_matching(candidate_links: pd.MultiIndex, cpr_cl: recordlinkage.
     matches = pd.concat(results)
     return matches
 
-def link_matches_by_graph(df_matches: pd.DataFrame, table_left: pd.DataFrame, 
-                          table_right: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
+
+def link_matches_by_graph(
+    df_matches: pd.DataFrame, table_left: pd.DataFrame, table_right: pd.DataFrame
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Link matches using graph connected components.
 
@@ -109,15 +124,16 @@ def link_matches_by_graph(df_matches: pd.DataFrame, table_left: pd.DataFrame,
     Returns:
         Tuple[pd.DataFrame, pd.DataFrame]: Updated left and right tables with link IDs.
     """
-    FG = nx.from_pandas_edgelist(
+    linkage_graph = nx.from_pandas_edgelist(
         df_matches, source="index_1", target="index_2", edge_attr=True
     )
 
     table_left["link_id"] = ["NC"] * len(table_left)
     table_right["link_id"] = ["NC"] * len(table_right)
 
-    connected_ids = list(nx.connected_components(FG))
-    for clusters in range(nx.number_connected_components(FG)):
+    # Todo: repasser dessus car un peu bizarre de devoir relinker et boucle dans les boucles peut être lent
+    connected_ids = list(nx.connected_components(linkage_graph))
+    for clusters in range(nx.number_connected_components(linkage_graph)):
         link_id = str(uuid.uuid4())[:8]
         for index in connected_ids[clusters]:
             if "L-" in index:
@@ -127,12 +143,15 @@ def link_matches_by_graph(df_matches: pd.DataFrame, table_left: pd.DataFrame,
                 index = int(index[2:])
                 table_right.at[index, "link_id"] = str(link_id)
 
-    table_right["link_count"] = table_right.groupby("link_id")["link_id"].transform(
-        "count"
+    table_right = table_right.assign(
+        link_count=table_right.groupby("link_id")["link_id"].transform("count")
     )
     return table_right, table_left
 
-def prepare_tables(indexer: recordlinkage.Index, df: pd.DataFrame, catalog: pd.DataFrame) -> Tuple[pd.MultiIndex, pd.DataFrame, pd.DataFrame]:
+
+def prepare_tables(
+    indexer: recordlinkage.Index, df: pd.DataFrame, catalog: pd.DataFrame
+) -> Tuple[pd.MultiIndex, pd.DataFrame, pd.DataFrame]:
     """
     Prepare tables for record linkage.
 
@@ -144,11 +163,14 @@ def prepare_tables(indexer: recordlinkage.Index, df: pd.DataFrame, catalog: pd.D
     Returns:
         Tuple[pd.MultiIndex, pd.DataFrame, pd.DataFrame]: Candidate links, cleaned left and right tables.
     """
+    # TODO: Chainer et peuit être splitter pour plus de claireté
     catalog["performer"] = catalog["performer"].fillna(value="unkn")
     catalog["offer_name"] = catalog["offer_name"].str.lower()
     catalog["offer_description"] = catalog["offer_description"].str.lower()
     table_left = df[["item_id", "batch_id"]].drop_duplicates().reset_index(drop=True)
-    table_right = df[["link_item_id", "batch_id"]].drop_duplicates().reset_index(drop=True)
+    table_right = (
+        df[["link_item_id", "batch_id"]].drop_duplicates().reset_index(drop=True)
+    )
 
     candidate_links = indexer.index(table_left, table_right)
 
@@ -157,6 +179,7 @@ def prepare_tables(indexer: recordlinkage.Index, df: pd.DataFrame, catalog: pd.D
         table_right, catalog, left_on=["link_item_id"], right_on=["item_id"], how="left"
     ).drop(columns=["link_item_id"])
     return candidate_links, table_left_clean, table_right_clean
+
 
 @app.command()
 def main(
@@ -191,10 +214,12 @@ def main(
         indexer, linkage_candidates, catalog
     )
 
-    cpr_cl = setup_matching()
+    comparator = setup_matching()
     matches = multiprocess_matching(
-        candidate_links, cpr_cl, table_left_clean, table_right_clean
+        candidate_links, comparator, table_left_clean, table_right_clean
     )
+
+    # Todo: gérer le double output
     table_left_final, table_right_final = link_matches_by_graph(
         matches, table_left_clean, table_right_clean
     )
@@ -207,6 +232,7 @@ def main(
         dataframe=table_left_final,
         gcs_path=f"{source_gcs_path}/{output_table_name}_left.parquet",
     )
+
 
 if __name__ == "__main__":
     app()

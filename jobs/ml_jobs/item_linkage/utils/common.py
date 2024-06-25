@@ -41,6 +41,7 @@ def reduce_embeddings_and_store_reducer(embeddings: list, n_dim, reducer_path):
 
     joblib.dump(hnne, reducer_path)
 
+    # return pd.DataFrame({"embedding":reduced_embeddings})
     return reduced_embeddings
 
 
@@ -72,14 +73,7 @@ def preprocess_embeddings(
     """
     dataset = ds.dataset(gcs_path, format="parquet")
     ldf = pl.scan_pyarrow_dataset(dataset)
-    item_list = ldf.select("item_id").collect().to_numpy().flatten()
     embedding = np.vstack(np.vstack(ldf.select("embedding").collect())[0]).astype(
         np.float32
     )
-
-    return pd.DataFrame(
-        {
-            "item_id": item_list,
-            "embedding": embedding,
-        }
-    )
+    return embedding

@@ -1,0 +1,33 @@
+class NativeCard:
+    def __init__(self, card_id, metabase_api):
+        self.card_id = card_id
+        self.metabase_api = metabase_api
+        self.card_info = self.metabase_api.get_cards(self.card_id)
+        self.query = self.card_info["dataset_query"]["native"]["query"]
+
+    def replace_table_name(self, legacy_table_name, new_table_name):
+
+        self.query = self.query.replace(legacy_table_name, new_table_name)
+
+        self.card_info["dataset_query"]["native"]["query"] = self.query
+
+    def replace_schema_name(
+        self, legacy_schema_name, new_schema_name, legacy_table_name, new_table_name
+    ):
+
+        self.query = self.query.replace(
+            f"{legacy_schema_name}.{legacy_table_name}",
+            f"{new_schema_name}.{new_table_name}",
+        )
+
+        self.card_info["dataset_query"]["native"]["query"] = self.query
+
+    def update_filters(self, metabase_field_mapping):
+        for _, d in self.card_info["dataset_query"]["native"]["template-tags"].items():
+            if d["type"] == "dimension":
+                d["dimension"][1] = metabase_field_mapping.get(
+                    d["dimension"][1], d["dimension"][1]
+                )
+
+    def update_query(self):
+        self.metabase_api.put_card(self.card_id, self.card_info)

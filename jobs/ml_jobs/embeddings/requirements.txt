@@ -13,3 +13,4 @@ requests==2.31.0
 gcsfs>= 2023.5.0
 protobuf>=3.9.2
 polars==0.19.12
+numpy<2.0.0

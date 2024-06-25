@@ -1,20 +1,20 @@
-import typer
-import pandas as pd
-import lancedb
-from lancedb.pydantic import Vector, LanceModel
-from utils.common import preprocess_embeddings, save_model_type
-from loguru import logger
 from typing import List
+
+import lancedb
+import pandas as pd
+import typer
+from lancedb.pydantic import LanceModel, Vector
+from loguru import logger
+from utils.common import preprocess_embeddings_and_store_reducer, save_model_type
 
 # Define constants
 MODEL_TYPE = {
     "n_dim": 32,
     "type": "semantic",
     "transformer": "sentence-transformers/all-MiniLM-L6-v2",
-    "reducer": "metadata/reducer.pkl",
+    "reducer_pickle_path": "metadata/reducer.pkl",
 }
 COLUMN_NAME_LIST = ["item_id", "performer"]
-DATA_CLEAN_PATH = "./data_clean.parquet"
 URI = "metadata/vector"
 
 
@@ -31,11 +31,13 @@ def prepare_table(gcs_path: str, column_name_list: List[str]) -> pd.DataFrame:
         pd.DataFrame: The prepared dataframe with embeddings.
     """
     item_df = pd.read_parquet(gcs_path, columns=column_name_list)
-    item_embeddings = preprocess_embeddings(gcs_path, MODEL_TYPE)
-    item_df = item_df.merge(item_embeddings, on="item_id")
-    item_df.rename(columns={"embedding": "vector"}, inplace=True)
-    item_df = item_df[column_name_list + ["vector"]]
-    return item_df
+    item_embeddings = preprocess_embeddings_and_store_reducer(
+        gcs_path, MODEL_TYPE["n_dim"], MODEL_TYPE["reducer_pickle_path"]
+    )
+
+    return item_df.merge(item_embeddings, on="item_id").rename(
+        columns={"embedding": "vector"}, inplace=True
+    )[column_name_list + ["vector"]]
 
 
 def create_items_table(items_df: pd.DataFrame) -> None:
@@ -46,7 +48,7 @@ def create_items_table(items_df: pd.DataFrame) -> None:
         items_df (pd.DataFrame): The dataframe to create the table from.
     """
 
-    class Item(LanceModel):
+    class ItemModel(LanceModel):
         vector: Vector(32)
         item_id: str
         performer: str
@@ -63,13 +65,12 @@ def create_items_table(items_df: pd.DataFrame) -> None:
             pd.DataFrame: A batch of the dataframe.
         """
         for i in range(0, len(df), batch_size):
-            yield df[i:i + batch_size]
+            yield df[i : i + batch_size]
 
     db = lancedb.connect(URI)
     db.drop_database()
-    db.create_table("items", make_batches(items_df), schema=Item)
-    table = db.open_table("items")
-    table.create_index(num_partitions=1024, num_sub_vectors=32)
+    db.create_table("items", make_batches(items_df), schema=ItemModel)
+    db.open_table("items").create_index(num_partitions=1024, num_sub_vectors=32)
 
 
 def main(
@@ -90,7 +91,9 @@ def main(
         input_table_name (str): The name of the input table.
     """
     logger.info("Download and prepare table...")
-    item_df_enriched = prepare_table(f"{source_gcs_path}/{input_table_name}", COLUMN_NAME_LIST)
+    item_df_enriched = prepare_table(
+        f"{source_gcs_path}/{input_table_name}", COLUMN_NAME_LIST
+    )
     logger.info("Creating LanceDB table...")
     create_items_table(item_df_enriched)
     save_model_type(MODEL_TYPE)

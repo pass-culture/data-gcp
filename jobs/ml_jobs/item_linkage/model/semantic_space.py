@@ -1,9 +1,11 @@
+import json
 import typing as t
+
+import joblib
+import numpy as np
 from docarray import Document
 from lancedb import connect
-import numpy as np
-import joblib
-import json
+from sentence_transformers import SentenceTransformer
 
 DETAIL_COLUMNS = [
     "item_id",
@@ -16,8 +18,6 @@ DEFAULTS = ["_distance"]
 
 class SemanticSpace:
     def __init__(self) -> None:
-        from sentence_transformers import SentenceTransformer
-
         self.uri = "metadata/vector"
         with open("metadata/model_type.json", "r") as file:
             config = json.load(file)
@@ -44,7 +44,6 @@ class SemanticSpace:
         n=50,
         vector_column_name: str = "vector",
     ) -> t.List[t.Dict]:
-
         results = (
             self.table.search(
                 vector.embedding,

@@ -155,8 +155,7 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         command="python build_semantic_space.py "
         f"--source-gcs-path {dag_config['STORAGE_PATH']} "
-        "--input-table-name item_data "
-        f"--output-table-path {dag_config['output_lancedb_path']}",
+        "--input-table-name item_data ",
         dag=dag,
     )
 

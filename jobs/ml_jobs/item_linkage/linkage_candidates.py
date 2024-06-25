@@ -8,8 +8,10 @@ from loguru import logger
 from model.semantic_space import SemanticSpace
 from utils.common import preprocess_embeddings, reduce_embeddings
 from utils.gcs_utils import upload_parquet
+from docarray import Document
 
 # Constants
+# TODO: INCREASE NUMBER OF RESULTS
 NUM_RESULTS = 5  # Number of results to retrieve
 LOGGING_INTERVAL = 10000  # Interval for logging progress
 COLUMN_NAME_LIST = ["item_id", "performer", "offer_name"]
@@ -34,25 +36,6 @@ def load_model(model_path: str) -> SemanticSpace:
     return model
 
 
-def update_dataframe(df: pd.DataFrame, item_id: str) -> pd.DataFrame:
-    """
-    Update the dataframe with the given item_id.
-
-    Args:
-        df (pd.DataFrame): Dataframe to update.
-        item_id (str): Item ID to update the dataframe with.
-
-    Returns:
-        pd.DataFrame: The updated dataframe.
-    """
-    df["source_item_id"] = [item_id] * len(df)
-    df["batch_id"] = [str(uuid.uuid4())[:5]] * len(df)
-    df.rename(
-        columns={"item_id": "link_item_id", "source_item_id": "item_id"}, inplace=True
-    )
-    return df
-
-
 def preprocess_data(
     gcs_path: str, column_list: List[str], hnne_reducer: HNNE
 ) -> pd.DataFrame:
@@ -72,16 +55,13 @@ def preprocess_data(
         performer=lambda df: df["performer"].fillna(value="unkn"),
         offer_name=lambda df: df["offer_name"].str.lower(),
     )
-    item_embeddings = preprocess_embeddings(gcs_path).assign(
-        embedding=lambda df: reduce_embeddings(
-            df["embedding"].tolist(), hnne_reducer=hnne_reducer
-        )
+    items_df["vector"] = reduce_embeddings(
+        preprocess_embeddings(gcs_path), hnne_reducer=hnne_reducer
     )
-    logger.info("Data preprocessed.")
-
-    return items_df.merge(item_embeddings, on="item_id").rename(
-        columns={"embedding": "vector"}
+    items_df["vector"] = (
+        items_df["vector"].map(lambda x: Document(embedding=x)).tolist()
     )
+    return items_df
 
 
 def generate_semantic_candidates(
@@ -102,22 +82,18 @@ def generate_semantic_candidates(
     for index, row in data.iterrows():
         if index % LOGGING_INTERVAL == 0 and index != 0:
             logger.info(f"Processing ongoing... ({index} items processed)")
-        params = {}
         result_df = model.search(
             vector=row.vector,
             similarity_metric="cosine",
             n=NUM_RESULTS,
-            query_filter=params,
-            details=True,
-            prefilter=True,
             vector_column_name="vector",
-        )
-        result_df = update_dataframe(result_df, row.item_id)
+        ).assign(batch_id=str(uuid.uuid4()), item_id=row.item_id)
+
         linkage.append(result_df)
-        if index == 10000:
+        # TODO: remove if
+        if index == LOGGING_INTERVAL:
             break
-    df_linkage = pd.concat(linkage)
-    return df_linkage
+    return pd.concat(linkage)
 
 
 @app.command()

@@ -17,13 +17,13 @@ DEFAULTS = ["_distance"]
 
 
 class SemanticSpace:
-    def __init__(self) -> None:
-        self.uri = "metadata/vector"
+    def __init__(self, model_path: str) -> None:
+        self.uri = model_path
         with open("metadata/model_type.json", "r") as file:
             config = json.load(file)
 
         self._encoder = SentenceTransformer(config["transformer"])
-        self.reducer = joblib.load(config["reducer"])
+        self.hnne_reducer = joblib.load(config["reducer_pickle_path"])
 
     def load(self) -> None:
         db = connect(self.uri)
@@ -56,5 +56,6 @@ class SemanticSpace:
             .metric(similarity_metric)
             .limit(n)
             .to_pandas(flatten=True)
+            .rename(columns={"item_id": "linked_item_id"})
         )
         return results

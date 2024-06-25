@@ -36,8 +36,12 @@ SELECT
     u.user_department_code,
     u.user_creation_date,
     u.user_activity,
+    u.user_civility,
+    u.user_age,
+    u.user_birth_date,
+    u.user_is_active,
     s.item_id,
-    rank() OVER (
+    RANK() OVER (
         PARTITION BY b.user_id,
         s.offer_subcategory_id
         ORDER BY

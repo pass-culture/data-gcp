@@ -62,6 +62,15 @@ class MetabaseAPI:
             response = requests.get(f"{self.host}/api/card/", headers=self.headers)
         return response.json()
 
+    def get_table(self, table_id=None):
+        if table_id:
+            response = requests.get(
+                f"{self.host}/api/table/{table_id}", headers=self.headers
+            )
+        else:
+            response = requests.get(f"{self.host}/api/table/", headers=self.headers)
+        return response.json()
+
     def format_cards(self, cards):
         export_cards = []
         for i, _c in enumerate(cards):

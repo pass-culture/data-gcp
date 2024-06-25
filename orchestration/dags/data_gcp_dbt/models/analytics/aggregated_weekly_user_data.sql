@@ -42,7 +42,7 @@ WITH
       FROM
         deposit_active_weeks.active_week) < EXTRACT(DAYOFYEAR
       FROM
-        user_birth_date), DATE_DIFF(deposit_active_weeks.active_week, user_birth_date, YEAR) - 1, DATE_DIFF(deposit_active_weeks.active_week, user_birth_date, YEAR)) AS user_age,
+        deposit_active_weeks.user_birth_date), DATE_DIFF(deposit_active_weeks.active_week, deposit_active_weeks.user_birth_date, YEAR) - 1, DATE_DIFF(deposit_active_weeks.active_week, deposit_active_weeks.user_birth_date, YEAR)) AS user_age,
     deposit_active_weeks.deposit_id,
     deposit_active_weeks.deposit_type,
     deposit_active_weeks.deposit_amount,

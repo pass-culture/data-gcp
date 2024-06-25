@@ -2,9 +2,9 @@ import datetime
 import json
 
 from airflow import DAG
+from airflow.operators.python_operator import BranchPythonOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.dates import datetime, timedelta
 from airflow.models import Param
 from common.alerts import task_fail_slack_alert
 from common.utils import get_airflow_schedule, waiting_operator
@@ -19,19 +19,20 @@ from common.config import (
 
 
 default_args = {
-    "start_date": datetime(2020, 12, 20),
+    "start_date": datetime.datetime(2020, 12, 20),
     "retries": 1,
-    "retry_delay": timedelta(minutes=2),
+    "retry_delay": datetime.timedelta(minutes=2),
     "project_id": GCP_PROJECT_ID,
 }
 
 dag = DAG(
     "dbt_weekly",
     default_args=default_args,
-    dagrun_timeout=timedelta(minutes=60),
+    dagrun_timeout=datetime.timedelta(minutes=60),
     catchup=False,
     description="run weekly aggregated models",
-    schedule_interval=get_airflow_schedule("0 1 * * 1"),  # run every monday at 1 AM
+    schedule_interval=get_airflow_schedule("0 1 * * *"),
+    user_defined_macros=macros.default,
     params={
         "target": Param(
             default=ENV_SHORT_NAME,
@@ -79,5 +80,25 @@ weekly = BashOperator(
 
 end = DummyOperator(task_id="end", dag=dag, trigger_rule="all_success")
 
+shunt = DummyOperator(task_id="skip_tasks", dag=dag)
 
-start >> wait_for_dbt_daily >> weekly >> end
+
+def conditionally_create_tasks(**context):
+    execution_date = context["ds"]
+    execution_date = datetime.datetime.strptime(execution_date, "%Y-%m-%d")
+
+    if execution_date.weekday() == 0:  # Check if the day is Monday
+        return ["wait_for_dbt_run_dag_end"]
+    else:
+        return ["skip_tasks"]
+
+
+branching = BranchPythonOperator(
+    task_id="branching",
+    python_callable=conditionally_create_tasks,
+    provide_context=True,
+    dag=dag,
+)
+
+start >> branching >> wait_for_dbt_daily >> weekly >> end
+branching >> shunt >> end

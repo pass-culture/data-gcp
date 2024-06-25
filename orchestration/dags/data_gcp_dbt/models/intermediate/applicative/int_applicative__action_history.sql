@@ -4,7 +4,7 @@ SELECT
     action_history_id,
     action_history_json_data,
     action_type,
-    action_date	D,
+    action_date,
     author_user_id,
     author_email,
     blacklisted_domain,

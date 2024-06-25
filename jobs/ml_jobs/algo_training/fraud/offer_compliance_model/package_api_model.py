@@ -40,14 +40,26 @@ def package_api_model(
     api_model = ApiModel(classification_model=catboost_model, features=features)
 
     # Register the API model
-    client = mlflow.MlflowClient()
-    run_id = client.get_latest_versions(f"{model_name}_{ENV_SHORT_NAME}")[0].run_id
+    api_model_name = f"api_{model_name}_{ENV_SHORT_NAME}"
     mlflow.pyfunc.log_model(
         python_model=api_model,
         artifact_path=f"registry_{ENV_SHORT_NAME}",
-        registered_model_name=f"api_{model_name}_{ENV_SHORT_NAME}",
-        run_id=run_id,
+        registered_model_name=api_model_name,
     )
+
+    # Add metadata
+    client = mlflow.MlflowClient()
+    training_run_id = client.get_latest_versions(f"{model_name}_{ENV_SHORT_NAME}")[
+        0
+    ].run_id
+    api_model_version = client.get_latest_versions(api_model_name)[0].version
+    client.set_model_version_tag(
+        name=api_model_name,
+        version=api_model_version,
+        key="training_run_id",
+        value=training_run_id,
+    )
+    client.set_registered_model_alias(api_model_name, "production", api_model_version)
 
 
 if __name__ == "__main__":

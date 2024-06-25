@@ -22,7 +22,7 @@ class SemanticSpace:
         with open("metadata/model_type.json", "r") as file:
             config = json.load(file)
 
-        self.encoder = SentenceTransformer(config["transformer"])
+        self._encoder = SentenceTransformer(config["transformer"])
         self.reducer = joblib.load(config["reducer"])
 
     def load(self) -> None:
@@ -30,7 +30,7 @@ class SemanticSpace:
         self.table = db.open_table("items")
 
     def text_vector(self, var: str, reduce: bool = True) -> Document:
-        encode = self.encoder.encode(var)
+        encode = self._encoder.encode(var)
         if reduce:
             reduce = np.array(self.reducer.transform([encode])).flatten()
         else:

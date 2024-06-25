@@ -23,7 +23,7 @@ def save_model_type(model_type):
         json.dump(model_type, file)
 
 
-def preprocess_embeddings_and_store_reducer(gcs_path, n_dim, reducer_path):
+def reduce_embeddings_and_store_reducer(embeddings: list, n_dim, reducer_path):
     """
     Preprocess embeddings from a given bucket path by normalizing them.
 
@@ -33,14 +33,53 @@ def preprocess_embeddings_and_store_reducer(gcs_path, n_dim, reducer_path):
     Returns:
     DataFrame: DataFrame containing item IDs and normalized embeddings.
     """
+
     hnne = HNNE(dim=n_dim)
+    reduced_embeddings = list(
+        hnne.fit_transform(embeddings, dim=n_dim).astype(np.float32)
+    )
+
+    joblib.dump(hnne, reducer_path)
+
+    return reduced_embeddings
+
+
+def reduce_embeddings(embeddings: list, hnne_reducer: HNNE) -> list:
+    """
+    Preprocess embeddings from a given bucket path by normalizing them.
+
+    Parameters:
+    bucket_path (str): Path to the bucket containing the embeddings.
+
+    Returns:
+    DataFrame: DataFrame containing item IDs and normalized embeddings.
+    """
+
+    return list(hnne_reducer.transform(embeddings).astype(np.float32))
+
+
+def preprocess_embeddings(
+    gcs_path,
+):
+    """
+    Preprocess embeddings from a given bucket path by normalizing them.
+
+    Parameters:
+    bucket_path (str): Path to the bucket containing the embeddings.
+
+    Returns:
+    DataFrame: DataFrame containing item IDs and normalized embeddings.
+    """
     dataset = ds.dataset(gcs_path, format="parquet")
     ldf = pl.scan_pyarrow_dataset(dataset)
     item_list = ldf.select("item_id").collect().to_numpy().flatten()
-    item_weights = np.vstack(np.vstack(ldf.select("embedding").collect())[0]).astype(
+    embedding = np.vstack(np.vstack(ldf.select("embedding").collect())[0]).astype(
         np.float32
     )
-    item_weights = list(hnne.fit_transform(item_weights, dim=n_dim).astype(np.float32))
-    joblib.dump(hnne, reducer_path)
 
-    return pd.DataFrame({"item_id": item_list, "embedding": item_weights})
+    return pd.DataFrame(
+        {
+            "item_id": item_list,
+            "embedding": embedding,
+        }
+    )

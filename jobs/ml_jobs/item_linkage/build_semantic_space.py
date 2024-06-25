@@ -5,7 +5,11 @@ import pandas as pd
 import typer
 from lancedb.pydantic import LanceModel, Vector
 from loguru import logger
-from utils.common import preprocess_embeddings_and_store_reducer, save_model_type
+from utils.common import (
+    preprocess_embeddings,
+    reduce_embeddings_and_store_reducer,
+    save_model_type,
+)
 
 # Define constants
 MODEL_TYPE = {
@@ -31,8 +35,14 @@ def prepare_table(gcs_path: str, column_name_list: List[str]) -> pd.DataFrame:
         pd.DataFrame: The prepared dataframe with embeddings.
     """
     item_df = pd.read_parquet(gcs_path, columns=column_name_list)
-    item_embeddings = preprocess_embeddings_and_store_reducer(
+    item_embeddings = preprocess_embeddings(
         gcs_path, MODEL_TYPE["n_dim"], MODEL_TYPE["reducer_pickle_path"]
+    ).assign(
+        item_embeddings=lambda df: reduce_embeddings_and_store_reducer(
+            embeddings=df.embedding,
+            n_dim=MODEL_TYPE["n_dim"],
+            reducer_path=MODEL_TYPE["reducer_pickle_path"],
+        )
     )
 
     return item_df.merge(item_embeddings, on="item_id").rename(

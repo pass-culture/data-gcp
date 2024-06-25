@@ -274,9 +274,8 @@ class PreprocessingPipeline:
                     df[col] = df[col].fillna(0).astype(int)
                 if feature_types == "embedding_features":
                     if not df[col].apply(_is_ndarray).all():
-                        df[col] = cls._convert_str_emb_to_float(
-                            df[col].tolist()
-                        ).astype("object")
+                        df[col] = cls._convert_str_emb_to_float(df[col].tolist())
+
         return df
 
     @staticmethod

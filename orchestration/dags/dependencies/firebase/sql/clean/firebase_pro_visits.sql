@@ -1,18 +1,71 @@
 WITH change_format AS(
-SELECT session_id,
-        unique_session_id,
-        session_number,
+SELECT (
+            select
+                event_params.value.int_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'ga_session_id'
+        ) as session_id,
+        CONCAT(user_pseudo_id, '-',
+                (
+            select
+                event_params.value.int_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'ga_session_id'
+                )
+         ) AS unique_session_id,
+        (
+            select
+                event_params.value.int_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'ga_session_number'
+        ) as session_number,
         user_id,
         user_pseudo_id,
         event_name,
-        page_name,
-        event_timestamp,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'page_title'
+        ) as page_name,
+        TIMESTAMP_SECONDS(
+            CAST(CAST(event_timestamp as INT64) / 1000000 as INT64)
+        ) AS event_timestamp,
         event_date,
-        page_location,
-        origin,
-        is_edition
-    FROM 
-        `{{ bigquery_int_firebase_dataset }}.pro_event`
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'page_location'
+        ) as page_location,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'from'
+        ) as origin,
+        (
+            select
+                event_params.value.string_value
+            from
+                unnest(event_params) event_params
+            where
+                event_params.key = 'isEdition'
+        ) as is_edition,
+    FROM
+        `{{ bigquery_raw_dataset }}.firebase_pro_events`
     WHERE 
         {% if params.dag_type == 'intraday' %}
         event_date = DATE('{{ ds }}')

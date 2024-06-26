@@ -135,7 +135,7 @@ Cette tâche exécute des tests d'orchestration si des changements sont détect�
 
 ### Arbre d'Exécution des Tâches
 
-:::mermaid
+```mermaid
 graph TD;
     A[Workflow de Base] --> B[Linter]
     A[Workflow de Base] --> C[Compilation DBT en Production]
@@ -145,7 +145,7 @@ graph TD;
     F[Vérification de la Non-Vacuité de la Matrice] --> G[Tâches de Test]
     A[Workflow de Base] --> H[Recherche de Changements d'Orchestration]
     H[Recherche de Changements d'Orchestration] --> I[Test d'Orchestration]
-:::
+```
 
 ## Workflow CD
 
@@ -191,7 +191,7 @@ Cette tâche déploie Composer dans l'environnement de production si la branche 
 
 ## Arbre d'Exécution des Tâches
 
-:::mermaid
+```mermaid
 graph TD;
     A[Workflow de Déploiement] --> B[Linter]
     A[Workflow de Déploiement] --> C[Recherche de Tâches de Test]
@@ -200,7 +200,7 @@ graph TD;
     A[Workflow de Déploiement] --> F[Déploiement de Composer en Dev]
     F[Déploiement de Composer en Dev] --> G[Déploiement de Composer en Production]
     A[Workflow de Déploiement] --> H[Déploiement de Composer en Staging]
-:::
+```
 
 
 ## Automatisations

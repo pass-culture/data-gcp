@@ -1,7 +1,10 @@
 name: "Base Workflow"
 
 on:
- pull_request:
+  pull_request:
+  push:
+    branches:
+      - CI-environement
 
 jobs:
    linter:

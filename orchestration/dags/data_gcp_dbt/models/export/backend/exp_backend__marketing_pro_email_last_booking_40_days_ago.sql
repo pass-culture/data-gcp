@@ -1,6 +1,6 @@
 {{
     config(
-        materialized = "incremental",
+        materialized = "incremental" if target.profile != "CI" else "view",
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "execution_date", "data_type": "date", "granularity" : "day"},
         on_schema_change = "sync_all_columns",

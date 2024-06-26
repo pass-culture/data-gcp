@@ -208,13 +208,13 @@ with DAG(
         )
 
     store_data["bookings"] = BigQueryInsertJobOperator(
-        task_id=f"store_bookings_data",
+        task_id="store_bookings_data",
         configuration={
             "extract": {
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
                     "datasetId": BIGQUERY_RAW_DATASET,
-                    "tableId": f"training_data_bookings",
+                    "tableId": "training_data_bookings",
                 },
                 "compression": None,
                 "destinationUris": f"{dag_config['STORAGE_PATH']}/bookings/data-*.parquet",

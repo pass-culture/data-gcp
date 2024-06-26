@@ -1,6 +1,5 @@
 import numpy as np
 import typing as t
-from datetime import datetime
 import uuid
 from utils import PostHogEvent, ENV_SHORT_NAME
 import pyarrow.dataset as ds

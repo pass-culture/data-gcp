@@ -1,6 +1,5 @@
 import tensorflow as tf
 import tensorflow_recommenders as tfrs
-import pandas as pd
 import numpy as np
 
 from utils.layers import (

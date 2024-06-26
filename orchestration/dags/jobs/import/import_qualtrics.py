@@ -1,7 +1,5 @@
 import datetime
 from airflow import DAG
-from airflow.providers.http.operators.http import SimpleHttpOperator
-from airflow.operators.python import PythonOperator
 from airflow.models import Param
 from common.operators.gce import (
     StartGCEOperator,
@@ -9,12 +7,11 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
 )
-import json
 
 from common.config import DAG_FOLDER
-from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
+from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID
 
-from common.utils import getting_service_account_token, get_airflow_schedule
+from common.utils import get_airflow_schedule
 
 from common.alerts import task_fail_slack_alert
 

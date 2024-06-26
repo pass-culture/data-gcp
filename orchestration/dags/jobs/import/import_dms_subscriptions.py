@@ -8,8 +8,6 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
 
-from google.auth.transport.requests import Request
-from google.oauth2 import id_token
 
 from common.alerts import task_fail_slack_alert
 from common.operators.biquery import bigquery_job_task
@@ -17,7 +15,6 @@ from common.operators.biquery import bigquery_job_task
 
 from common.config import (
     DATA_GCS_BUCKET_NAME,
-    BIGQUERY_CLEAN_DATASET,
     BIGQUERY_RAW_DATASET,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -101,7 +98,7 @@ with DAG(
     )
 
     dms_to_gcs_pro = SSHGCEOperator(
-        task_id=f"dms_to_gcs_pro",
+        task_id="dms_to_gcs_pro",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command="python main.py pro {{ params.updated_since_pro }} "
@@ -116,7 +113,7 @@ with DAG(
     )
 
     dms_to_gcs_jeunes = SSHGCEOperator(
-        task_id=f"dms_to_gcs_jeunes",
+        task_id="dms_to_gcs_jeunes",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command="python main.py jeunes {{ params.updated_since_jeunes }} "

@@ -3,7 +3,6 @@ import typer
 from loguru import logger
 from tools.utils import (
     ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
     convert_str_emb_to_float,
     convert_arr_emb_to_str,
     load_config_file,

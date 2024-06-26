@@ -25,9 +25,9 @@ gce_params = {
     "instance_name": f"retrieval-recommendation-build-{ENV_SHORT_NAME}",
     "experiment_name": f"retrieval_recommendation_v1.1_{ENV_SHORT_NAME}",
     "model_name": {
-        "dev": f"dummy_user_recommendation",
-        "stg": f"two_towers_user_recommendation",
-        "prod": f"two_towers_user_recommendation",
+        "dev": "dummy_user_recommendation",
+        "stg": "two_towers_user_recommendation",
+        "prod": "two_towers_user_recommendation",
     },
     "source_experiment_name": {
         "dev": f"dummy_{ENV_SHORT_NAME}",

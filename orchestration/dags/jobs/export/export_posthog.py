@@ -19,7 +19,6 @@ from common.config import (
     BIGQUERY_TMP_DATASET,
 )
 from common.utils import get_airflow_schedule
-from common.alerts import task_fail_slack_alert
 from common import macros
 
 DATASET_ID = f"export_{ENV_SHORT_NAME}"

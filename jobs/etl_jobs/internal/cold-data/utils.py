@@ -1,6 +1,5 @@
 import os
-from datetime import datetime
-from google.cloud import storage, bigquery
+from google.cloud import bigquery
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")

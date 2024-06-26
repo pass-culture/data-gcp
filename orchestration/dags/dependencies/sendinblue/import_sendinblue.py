@@ -1,4 +1,4 @@
-SQL_PATH = f"dependencies/sendinblue/sql"
+SQL_PATH = "dependencies/sendinblue/sql"
 
 raw_tables = {
     "sendinblue_transactional_raw": {

@@ -1,7 +1,5 @@
 import requests
 import json
-from tqdm import tqdm
-from time import sleep
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 

@@ -2,7 +2,6 @@ from google.cloud import storage
 from google.cloud import bigquery
 from utils import (
     PROJECT_NAME,
-    ENVIRONMENT_SHORT_NAME,
     RAW_DATASET,
     DATA_BUCKET,
     BIGQUERY_IMPORT_BUCKET_FOLDER,

@@ -1,7 +1,6 @@
 from configs.labels import CAT, GENRE
-from configs.labels import CAT, GENRE, MEDIUM
+from configs.labels import MEDIUM
 import itertools
-import random
 
 GENRE_EXAMPLES = list(set(itertools.chain(*list(GENRE.values()))))
 MEDIUM_EXAMPLES = list(set(itertools.chain(*list(MEDIUM.values()))))
@@ -19,10 +18,10 @@ EXPECTED_RESULTS = [
 SYSTEM_PROMPT = [
     {
         "role": "system",
-        "content": f"""
+        "content": """
         Votre tâche consiste à démontrer votre expertise dans la classification de genres culturels en décrivant les différents niveaux hiérarchiques de la classification.
         Votre réponse doit être précise et illustrer une compréhension approfondie des différentes nuances et niveaux de classification de genres culturels.
-        Return JSON {{"category" : <xxx>, "sub_category" : <xxx>, "medium" : <xxx>, "genre": <xxx>, "sub_genre": <xxx>}}
+        Return JSON {"category" : <xxx>, "sub_category" : <xxx>, "medium" : <xxx>, "genre": <xxx>, "sub_genre": <xxx>}
         """,
     },
     {

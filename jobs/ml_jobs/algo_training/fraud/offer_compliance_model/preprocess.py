@@ -1,8 +1,6 @@
 import json
-import os
 from sentence_transformers import SentenceTransformer
 
-import pandas as pd
 import numpy as np
 import typer
 from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH

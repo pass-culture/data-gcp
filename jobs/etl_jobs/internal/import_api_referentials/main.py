@@ -1,5 +1,4 @@
 import pandas as pd
-import pandas_gbq as gbq
 import importlib
 import argparse
 import numpy as np

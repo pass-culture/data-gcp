@@ -49,8 +49,8 @@ def plot_cm(
     else:
         sns.heatmap(conf_matrix, annot=True, fmt=".0f")
 
-    plt.xlabel(f"Predicted Label")
-    plt.ylabel(f"True Label")
+    plt.xlabel("Predicted Label")
+    plt.ylabel("True Label")
     plt.title(f"Confusion Matrix [proba >= {proba}]")
 
     plt.savefig(filename, format="pdf", dpi=300, bbox_inches="tight")

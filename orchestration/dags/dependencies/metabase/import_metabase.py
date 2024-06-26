@@ -1,6 +1,6 @@
 from common.config import DAG_FOLDER
 
-SQL_PATH = f"dependencies/metabase/sql"
+SQL_PATH = "dependencies/metabase/sql"
 
 
 import_tables = {

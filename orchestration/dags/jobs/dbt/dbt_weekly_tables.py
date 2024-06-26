@@ -1,12 +1,10 @@
 import datetime
-import json
 
 from airflow import DAG
 from airflow.operators.python_operator import BranchPythonOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.models import Param
-from common.alerts import task_fail_slack_alert
 from common.utils import get_airflow_schedule, waiting_operator
 
 from common import macros

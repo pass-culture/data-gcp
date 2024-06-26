@@ -1,4 +1,4 @@
-ANALYTICS_SQL_PATH = f"dependencies/batch/sql/analytics"
+ANALYTICS_SQL_PATH = "dependencies/batch/sql/analytics"
 
 import_batch_tables = {
     "batch_transactions": {

@@ -35,7 +35,7 @@ def update_incremental(
                 update_sql = f""" ALTER TABLE {dataset_name}.{table_name} ON cluster default REPLACE PARTITION '{date}' FROM tmp.{tmp_table_name}"""
                 print(update_sql)
                 clickhouse_client.command(update_sql)
-    print(f"Done updating. Removing temporary table.")
+    print("Done updating. Removing temporary table.")
     clickhouse_client.command(
         f" DROP TABLE IF EXISTS tmp.{tmp_table_name} ON cluster default"
     )
@@ -69,7 +69,7 @@ def update_overwrite(
 
     remove_stale_partitions(dataset_name, table_name, update_date)
 
-    print(f"Done updating. Removing temporary table.")
+    print("Done updating. Removing temporary table.")
     clickhouse_client.command(f" DROP TABLE tmp.{tmp_table_name} ON cluster default")
 
 
@@ -84,7 +84,7 @@ def create_intermediate_schema(table_name: str, dataset_name: str) -> None:
         folder="intermediate",
     )
     clickhouse_client.command(clickhouse_query)
-    print(f"Done creating table schema.")
+    print("Done creating table schema.")
 
 
 def main_update(mode, source_gs_path, table_name, dataset_name, update_date):

@@ -117,7 +117,7 @@ with DAG(
     )
 
     get_end_date = PythonOperator(
-        task_id=f"get_end_date",
+        task_id="get_end_date",
         python_callable=get_end_date,
         op_kwargs={
             "dataset": "{{ bigquery_raw_dataset }}",
@@ -128,7 +128,7 @@ with DAG(
     )
 
     get_start_date = PythonOperator(
-        task_id=f"get_start_date",
+        task_id="get_start_date",
         python_callable=get_start_date,
         op_kwargs={
             "end_date": "{{task_instance.xcom_pull(task_ids='get_end_date', key='return_value')}}",

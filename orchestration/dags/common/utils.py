@@ -1,13 +1,9 @@
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from airflow.sensors.external_task import ExternalTaskSensor
-import base64
-import hashlib
 
 from common.config import (
     GCP_PROJECT_ID,
-    MLFLOW_URL,
-    ENV_SHORT_NAME,
     FAILED_STATES,
     ALLOWED_STATES,
     LOCAL_ENV,

@@ -1,4 +1,3 @@
-import os
 from datetime import datetime, timedelta
 
 from airflow import DAG
@@ -11,7 +10,7 @@ from common.operators.gce import (
     SSHGCEOperator,
 )
 from common.alerts import task_fail_slack_alert
-from common.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
+from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME
 from common.utils import get_airflow_schedule
 
 GCE_INSTANCE = f"import-api-referentials-{ENV_SHORT_NAME}"
@@ -68,7 +67,7 @@ with DAG(
     )
 
     subcategories_job = SSHGCEOperator(
-        task_id=f"import_subcategories",
+        task_id="import_subcategories",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
@@ -77,7 +76,7 @@ with DAG(
     )
 
     types_job = SSHGCEOperator(
-        task_id=f"import_types",
+        task_id="import_types",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""

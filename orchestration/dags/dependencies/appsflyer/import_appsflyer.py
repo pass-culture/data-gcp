@@ -1,5 +1,5 @@
-APPSFLYER_CLEAN_SQL_PATH = f"dependencies/appsflyer/sql/clean"
-APPSFLYER_ANALYTICS_SQL_PATH = f"dependencies/appsflyer/sql/analytics"
+APPSFLYER_CLEAN_SQL_PATH = "dependencies/appsflyer/sql/clean"
+APPSFLYER_ANALYTICS_SQL_PATH = "dependencies/appsflyer/sql/analytics"
 
 dag_tables = {
     "appsflyer_install_report": {

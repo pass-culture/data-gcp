@@ -3,9 +3,6 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from common import macros
 from common.utils import get_airflow_schedule
-from great_expectations_provider.operators.great_expectations import (
-    GreatExpectationsOperator,
-)
 from common.alerts import analytics_fail_slack_alert
 from common.config import DAG_FOLDER, GCP_PROJECT_ID
 from airflow.operators.python import PythonOperator

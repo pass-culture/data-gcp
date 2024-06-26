@@ -6,7 +6,6 @@ import typer
 
 import tensorflow as tf
 from loguru import logger
-import pandas as pd
 
 from two_towers_model.models.match_model import MatchModel
 from two_towers_model.models.two_towers_model import TwoTowersModel

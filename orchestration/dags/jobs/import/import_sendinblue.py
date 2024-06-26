@@ -1,9 +1,6 @@
 import datetime
-import json
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.http.operators.http import SimpleHttpOperator
-from airflow.operators.python import PythonOperator
 from airflow.models import Param
 from common.operators.gce import (
     StartGCEOperator,

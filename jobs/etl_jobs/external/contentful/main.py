@@ -1,4 +1,3 @@
-import pandas as pd
 from google.cloud import bigquery
 
 from contentful_client import ContentfulClient

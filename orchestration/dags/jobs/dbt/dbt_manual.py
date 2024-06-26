@@ -1,24 +1,15 @@
 import datetime
-import json
 
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.task_group import TaskGroup
 from airflow.utils.dates import datetime, timedelta
 from airflow.models import Param
-from common.alerts import task_fail_slack_alert
-from common.utils import (
-    get_airflow_schedule,
-)
-from common.dbt.utils import rebuild_manifest
 
-from common import macros
 from common.config import (
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
     ENV_SHORT_NAME,
-    PATH_TO_DBT_TARGET,
 )
 
 

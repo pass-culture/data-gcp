@@ -4,7 +4,7 @@ from common.config import (
 )
 from common.access_gcp_secrets import access_secret_data
 
-SQL_PATH = f"dependencies/qualtrics/sql"
+SQL_PATH = "dependencies/qualtrics/sql"
 
 clean_tables = {
     "qualtrics_ir_jeunes": {

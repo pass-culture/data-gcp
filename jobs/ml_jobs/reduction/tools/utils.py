@@ -2,7 +2,6 @@ import os
 import io
 from google.cloud import bigquery
 from google.cloud import secretmanager
-import time
 import numpy as np
 import json
 import hashlib

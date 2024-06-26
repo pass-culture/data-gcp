@@ -67,10 +67,10 @@ with DAG(
     )
 
     import_documentation = SSHGCEOperator(
-        task_id=f"import_documentation",
+        task_id="import_documentation",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command=f"""
+        command="""
         python main.py
         """,
     )

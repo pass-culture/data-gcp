@@ -3,13 +3,8 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-    BigQueryInsertJobOperator,
-)
 from common.operators.gce import (
     StartGCEOperator,
-    StopGCEOperator,
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
 )

@@ -1,7 +1,9 @@
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 import googleapiclient.discovery
 from googleapiclient.errors import HttpError
-import pytz, json, os, time
+import pytz
+import json
+import time
 import dateutil
 import datetime
 from common.hooks.image import CPUImage

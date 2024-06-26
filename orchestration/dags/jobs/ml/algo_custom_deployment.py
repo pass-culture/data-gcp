@@ -43,7 +43,7 @@ with DAG(
         "endpoint_name": Param(
             default=f"recommendation_version_b_{ENV_SHORT_NAME}", type="string"
         ),
-        "version_name": Param(default=f"v_YYYYMMDD", type="string"),
+        "version_name": Param(default="v_YYYYMMDD", type="string"),
         "default_region": Param(default=DEFAULT_REGION, type="string"),
         "instance_type": Param(default="n1-standard-2", type="string"),
     },

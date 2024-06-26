@@ -21,7 +21,6 @@ from common.config import (
     SLACK_CONN_PASSWORD,
     MLFLOW_URL,
     BIGQUERY_TMP_DATASET,
-    BIGQUERY_RAW_DATASET,
 )
 from common.operators.gce import (
     StartGCEOperator,
@@ -112,7 +111,7 @@ with DAG(
 
         store_data = {}
         store_data["raw"] = BigQueryInsertJobOperator(
-            task_id=f"store_raw_data",
+            task_id="store_raw_data",
             configuration={
                 "extract": {
                     "sourceTable": {

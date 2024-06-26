@@ -1,6 +1,5 @@
-from common.config import DAG_FOLDER
 
-SQL_PATH = f"dependencies/cold_data/sql"
+SQL_PATH = "dependencies/cold_data/sql"
 
 clean_tables = {
     "institutional_scholar_level": {

@@ -91,8 +91,8 @@ with DAG(
     start = DummyOperator(task_id="start", dag=dag)
 
     export_task = BigQueryExecuteQueryOperator(
-        task_id=f"import_retrieval_semantic_vector_table",
-        sql=(IMPORT_TRAINING_SQL_PATH / f"retrieval_semantic_vector.sql").as_posix(),
+        task_id="import_retrieval_semantic_vector_table",
+        sql=(IMPORT_TRAINING_SQL_PATH / "retrieval_semantic_vector.sql").as_posix(),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_retrieval_semantic_vector_data",
@@ -124,7 +124,7 @@ with DAG(
         dag=dag,
     )
     export_bq = BigQueryInsertJobOperator(
-        task_id=f"store_item_embbedding_data",
+        task_id="store_item_embbedding_data",
         configuration={
             "extract": {
                 "sourceTable": {

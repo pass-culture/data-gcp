@@ -1,4 +1,3 @@
-import os
 from datetime import datetime, timedelta
 
 from airflow import DAG
@@ -71,7 +70,7 @@ with DAG(
     )
 
     ios_job = SSHGCEOperator(
-        task_id=f"import_ios",
+        task_id="import_ios",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
@@ -80,7 +79,7 @@ with DAG(
     )
 
     android_job = SSHGCEOperator(
-        task_id=f"import_android",
+        task_id="import_android",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""

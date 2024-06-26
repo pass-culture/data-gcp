@@ -1,9 +1,7 @@
 import requests
-import urllib3
 import time
 import json
 import typer
-import pandas as pd
 from dms_query import DMS_QUERY
 import gcsfs
 from utils import API_URL, access_secret_data, demarches_jeunes, demarches_pro

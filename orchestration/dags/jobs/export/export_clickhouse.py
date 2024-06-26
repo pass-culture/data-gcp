@@ -12,14 +12,12 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
 import datetime
-from pathlib import Path
 from common.config import (
     GCP_PROJECT_ID,
     DAG_FOLDER,
     ENV_SHORT_NAME,
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_TMP_DATASET,
-    PATH_TO_DBT_TARGET,
 )
 
 from common.utils import get_airflow_schedule
@@ -28,10 +26,7 @@ from dependencies.export_clickhouse.export_clickhouse import (
     TABLES_CONFIGS,
     VIEWS_CONFIGS,
 )
-from common.alerts import task_fail_slack_alert
-import copy
 from common import macros
-import os
 
 DATASET_ID = f"export_{ENV_SHORT_NAME}"
 GCE_INSTANCE = f"export-clickhouse-{ENV_SHORT_NAME}"
@@ -108,7 +103,7 @@ for dag_name, dag_params in dags.items():
         },
     ) as dag:
         gce_instance_start = StartGCEOperator(
-            task_id=f"gce_start_task",
+            task_id="gce_start_task",
             preemptible=False,
             instance_name="{{ params.instance_name }}",
             instance_type="{{ params.instance_type }}",
@@ -116,7 +111,7 @@ for dag_name, dag_params in dags.items():
         )
 
         fetch_code = CloneRepositoryGCEOperator(
-            task_id=f"fetch_code",
+            task_id="fetch_code",
             instance_name="{{ params.instance_name }}",
             python_version="3.10",
             command="{{ params.branch }}",
@@ -124,7 +119,7 @@ for dag_name, dag_params in dags.items():
         )
 
         install_dependencies = SSHGCEOperator(
-            task_id=f"install_dependencies",
+            task_id="install_dependencies",
             instance_name="{{ params.instance_name }}",
             base_dir=dag_config["BASE_DIR"],
             command="pip install -r requirements.txt --user",
@@ -199,7 +194,7 @@ for dag_name, dag_params in dags.items():
             views_refresh.append(view_task)
 
         gce_instance_stop = StopGCEOperator(
-            task_id=f"gce_stop_task", instance_name="{{ params.instance_name }}"
+            task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
         )
 
         (gce_instance_start >> fetch_code >> install_dependencies >> in_tables_tasks)

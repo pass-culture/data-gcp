@@ -1,7 +1,6 @@
 import typer
 import pandas as pd
 import numpy as np
-from google.cloud import bigquery
 from datetime import datetime, timedelta
 
 from utils import access_secret_data, bigquery_load_job

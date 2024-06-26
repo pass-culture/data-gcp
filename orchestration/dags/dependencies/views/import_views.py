@@ -1,4 +1,4 @@
-SQL_PATH = f"dependencies/views/sql"
+SQL_PATH = "dependencies/views/sql"
 
 
 import_tables = {

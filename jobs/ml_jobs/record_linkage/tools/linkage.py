@@ -44,7 +44,7 @@ def get_linked_offers(
         matches = matches.rename(columns={"level_0": "index_1", "level_1": "index_2"})
     else:
         matches = pd.DataFrame({})
-    log_duration(f"get_linked_offers: ", start)
+    log_duration("get_linked_offers: ", start)
     return matches
 
 
@@ -63,7 +63,7 @@ def get_linked_offers_from_graph(df_source, df_matches):
     df_linked_offers_from_graph["offer_id"] = df_linked_offers_from_graph[
         "offer_id"
     ].values.astype(int)
-    log_duration(f"_get_linked_offers_from_graph: ", start)
+    log_duration("_get_linked_offers_from_graph: ", start)
     return df_linked_offers_from_graph
 
 

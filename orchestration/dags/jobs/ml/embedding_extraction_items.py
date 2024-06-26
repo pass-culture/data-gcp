@@ -16,11 +16,7 @@ from common.alerts import task_fail_slack_alert
 from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
 from common.utils import get_airflow_schedule
 from common.config import (
-    GCP_PROJECT_ID,
-    DAG_FOLDER,
-    ENV_SHORT_NAME,
     MLFLOW_BUCKET_NAME,
-    BIGQUERY_TMP_DATASET,
 )
 
 DEFAULT_REGION = "europe-west1"

@@ -2,12 +2,9 @@ import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 
 import pandas as pd
-from datetime import datetime, timedelta, timezone
-import time
 
 from google.cloud import bigquery
 
-from utils import ENV_SHORT_NAME
 
 
 class SendinblueNewsletters:

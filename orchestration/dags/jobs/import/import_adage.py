@@ -11,14 +11,12 @@ from common.operators.gce import (
 from common.alerts import task_fail_slack_alert
 from common.operators.sensor import TimeSleepSensor
 from common.utils import (
-    getting_service_account_token,
     get_airflow_schedule,
 )
 
 from common import macros
 from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
 
-from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME
 
 GCE_INSTANCE = f"import-adage-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/adage"

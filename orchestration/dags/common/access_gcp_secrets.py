@@ -12,5 +12,5 @@ def access_secret_data(project_id, secret_id, default=None):
         except TypeError:
             response = client.access_secret_version(name)
         return response.payload.data.decode("UTF-8")
-    except (DefaultCredentialsError, PermissionDenied, NotFound) as e:
+    except (DefaultCredentialsError, PermissionDenied, NotFound):
         return default

@@ -450,7 +450,7 @@ class ContentfulClient:
                                     submodule_infos
                                 )
                                 self.add_parent_child_to_df(module.id, submodule.id)
-                    except KeyError as E:
+                    except KeyError:
                         continue
 
         self.df_modules = self.df_modules.replace("None", float("nan"))

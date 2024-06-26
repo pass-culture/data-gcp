@@ -1,5 +1,5 @@
 import pandas as pd
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from utils import IOS_APP_ID, ANDROID_APP_ID, TOKEN, save_to_bq
 from appsflyer import AppsFlyer
 from mapping import (

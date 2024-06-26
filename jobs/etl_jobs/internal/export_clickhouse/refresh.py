@@ -1,6 +1,5 @@
 import typer
-from datetime import datetime
-from utils import clickhouse_client, refresh_views
+from utils import refresh_views
 
 
 def run(

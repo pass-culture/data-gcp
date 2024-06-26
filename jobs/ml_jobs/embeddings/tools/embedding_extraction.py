@@ -46,7 +46,7 @@ def extract_embedding(
             df_encoded[emb_col_name] = df_encoded[emb_col_name].astype(str)
     print("Removing image on local disk...")
     shutil.rmtree("./img", ignore_errors=True)
-    log_duration(f"Embedding extraction: ", start)
+    log_duration("Embedding extraction: ", start)
     return df_encoded, emb_size_dict
 
 

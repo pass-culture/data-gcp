@@ -1,7 +1,6 @@
 import csv
 import json
 import os
-import time
 from datetime import datetime
 from urllib.parse import quote
 import requests

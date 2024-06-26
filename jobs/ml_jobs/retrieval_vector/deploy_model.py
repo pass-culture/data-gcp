@@ -1,4 +1,3 @@
-import pandas as pd
 from datetime import datetime
 import subprocess
 from google.cloud import bigquery
@@ -131,7 +130,7 @@ def main(
             artifact_uri=source_artifact_uri,
         )
     print(f"Get from {source_artifact_uri} trained model")
-    print(f"Download...")
+    print("Download...")
     download_model(source_artifact_uri)
     prepare_docs()
     print("Deploy...")

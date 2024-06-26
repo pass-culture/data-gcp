@@ -79,7 +79,7 @@ def main(
     serving_container = (
         f"eu.gcr.io/{GCP_PROJECT_ID}/{experiment_name.replace('.', '_')}:{run_id}"
     )
-    print(f"Download...")
+    print("Download...")
 
     prepare_docs(source_gs_path)
     print("Deploy...")

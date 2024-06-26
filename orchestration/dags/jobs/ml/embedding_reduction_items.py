@@ -12,7 +12,6 @@ from common import macros
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
-    BigQueryInsertJobOperator,
 )
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 from common.config import (
@@ -94,8 +93,8 @@ with DAG(
     )
 
     export_task = BigQueryExecuteQueryOperator(
-        task_id=f"import_item_embbedding_data",
-        sql=(IMPORT_TRAINING_SQL_PATH / f"item_embeddings_reduction.sql").as_posix(),
+        task_id="import_item_embbedding_data",
+        sql=(IMPORT_TRAINING_SQL_PATH / "item_embeddings_reduction.sql").as_posix(),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_item_embeddings_reduction",
@@ -103,7 +102,7 @@ with DAG(
     )
 
     export_bq = BigQueryInsertJobOperator(
-        task_id=f"store_item_embbedding_data",
+        task_id="store_item_embbedding_data",
         configuration={
             "extract": {
                 "sourceTable": {

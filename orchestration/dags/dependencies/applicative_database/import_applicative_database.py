@@ -4,8 +4,8 @@ from common.config import (
     DAG_FOLDER,
 )
 
-RAW_SQL_PATH = f"dependencies/applicative_database/sql/raw"
-CLEAN_HISTORY_SQL_PATH = f"dependencies/applicative_database/sql/clean/history"
+RAW_SQL_PATH = "dependencies/applicative_database/sql/raw"
+CLEAN_HISTORY_SQL_PATH = "dependencies/applicative_database/sql/clean/history"
 
 
 def get_tables_config_dict(PATH, BQ_DESTINATION_DATASET):

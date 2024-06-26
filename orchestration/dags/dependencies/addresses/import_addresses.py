@@ -17,8 +17,8 @@ USER_LOCATIONS_SCHEMA = [
     {"name": "date_updated", "type": "DATETIME", "mode": "NULLABLE"},
 ]
 
-SQL_CLEAN_PATH = f"dependencies/addresses/sql/clean"
-SQL_ANALYTICS_PATH = f"dependencies/addresses/sql/analytics"
+SQL_CLEAN_PATH = "dependencies/addresses/sql/clean"
+SQL_ANALYTICS_PATH = "dependencies/addresses/sql/analytics"
 
 CLEAN_TABLES = {
     "user_locations": {

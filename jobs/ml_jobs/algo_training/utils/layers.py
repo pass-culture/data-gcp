@@ -1,10 +1,9 @@
 from dataclasses import dataclass
 from loguru import logger
-import pandas as pd
 import numpy as np
 import tensorflow as tf
 import json
-from tensorflow.keras.layers import Embedding, TextVectorization, Dot
+from tensorflow.keras.layers import Embedding, TextVectorization
 from tensorflow.keras.layers.experimental.preprocessing import (
     StringLookup,
     IntegerLookup,

@@ -1,4 +1,4 @@
-SQL_PATH = f"dependencies/ml/clusterisation/sql/"
+SQL_PATH = "dependencies/ml/clusterisation/sql/"
 
 
 IMPORT_ITEM_CLUSTERS = {

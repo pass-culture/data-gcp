@@ -2,11 +2,10 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
-from airflow.operators.python import BranchPythonOperator, PythonOperator
+from airflow.operators.python import BranchPythonOperator
 from airflow.models import Param
 from common.operators.gce import (
     StartGCEOperator,
@@ -19,10 +18,9 @@ from common import macros
 from common.config import (
     BIGQUERY_RAW_DATASET,
     DATA_GCS_BUCKET_NAME,
-    ENV_SHORT_NAME,
 )
 from common.alerts import task_fail_slack_alert
-from common.utils import getting_service_account_token, get_airflow_schedule
+from common.utils import get_airflow_schedule
 from common.operators.biquery import bigquery_job_task
 from dependencies.addresses.import_addresses import (
     USER_LOCATIONS_SCHEMA,

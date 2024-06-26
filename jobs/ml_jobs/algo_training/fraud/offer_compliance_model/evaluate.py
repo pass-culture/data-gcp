@@ -5,7 +5,6 @@ import typer
 from utils.constants import (
     MODEL_DIR,
     STORAGE_PATH,
-    EXPERIMENT_NAME,
     ENV_SHORT_NAME,
     MLFLOW_RUN_ID_FILENAME,
 )
@@ -16,7 +15,6 @@ from utils.data_collect_queries import read_from_gcs
 from catboost import Pool
 from mlflow import MlflowClient
 import os
-import matplotlib.pyplot as plt
 
 
 def evaluate(

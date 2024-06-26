@@ -2,7 +2,6 @@ import typer
 import pandas as pd
 import polars as pl
 import time
-from google.cloud import bigquery
 from loguru import logger
 from tools.clusterisation import (
     clusterisation_from_prebuild_embedding,
@@ -60,7 +59,7 @@ def generate_clustering(group, input_table, embedding_cols):
     item_embedding_components = items_with_embedding[embedding_cols]
 
     ##Clusterisation step
-    logger.info(f"Clusterisation step...")
+    logger.info("Clusterisation step...")
     start = time.time()
     items_with_cluster_coordinates = clusterisation_from_prebuild_embedding(
         item_embedding_components,
@@ -75,7 +74,7 @@ def generate_clustering(group, input_table, embedding_cols):
         ],
         how="horizontal",
     )
-    logger.info(f"Clustering postprocessing... ")
+    logger.info("Clustering postprocessing... ")
     return embedding_cleaning(items_fully_enriched, clustering_group, embedding_cols)
 
 

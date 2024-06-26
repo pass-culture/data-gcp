@@ -7,12 +7,10 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import datetime, timedelta
 from airflow.models import Param
-from common.alerts import task_fail_slack_alert
 from common.utils import (
     get_airflow_schedule,
 )
 
-from common import macros
 from common.config import (
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
@@ -86,7 +84,7 @@ sleep_op = PythonOperator(
 
 run_elementary = BashOperator(
     task_id="dbt_elementary",
-    bash_command=f"bash ./scripts/dbt_run_package.sh ",
+    bash_command="bash ./scripts/dbt_run_package.sh ",
     env={
         "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
         "ENV_SHORT_NAME": ENV_SHORT_NAME,

@@ -1,6 +1,5 @@
 import pandas as pd
 from tools.utils import convert_str_emb_to_float
-from loguru import logger
 
 
 def prepare_embedding(data, pretrained_embedding_size):

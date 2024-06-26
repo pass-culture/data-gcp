@@ -128,7 +128,7 @@ def call_retry(
             raw = call(messages=messages, ttl=ttl, temperature=temperature, model=model)
             result = json.loads(raw)
 
-        except Exception as e:
+        except Exception:
             time.sleep(1)
             result = {}
 

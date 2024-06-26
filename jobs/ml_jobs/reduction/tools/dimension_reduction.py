@@ -1,6 +1,4 @@
 import numpy as np
-import io
-from google.cloud import bigquery
 import umap
 from sklearn.decomposition import PCA
 import tensorflow as tf

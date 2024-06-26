@@ -16,7 +16,6 @@ from common.utils import (
 )
 
 from common.config import GCP_PROJECT_ID, DAG_FOLDER, ENV_SHORT_NAME
-from common.config import GCP_PROJECT_ID, DAG_FOLDER
 from common.alerts import task_fail_slack_alert
 from dependencies.cold_data.import_cold_data import import_tables
 

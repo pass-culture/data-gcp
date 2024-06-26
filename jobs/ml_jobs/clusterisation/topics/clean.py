@@ -6,7 +6,7 @@ from polyfuzz import PolyFuzz
 
 from flair.embeddings import TransformerWordEmbeddings
 from configs.labels import CAT, GENRE, MEDIUM
-from tools.utils import CLEAN_DATASET, load_config_file, load_df
+from tools.utils import CLEAN_DATASET, load_df
 
 from tqdm import tqdm
 

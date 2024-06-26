@@ -6,7 +6,6 @@ import polars as pl
 import concurrent
 import numpy as np
 from multiprocessing import cpu_count
-from itertools import repeat
 from access_gcp_secrets import access_secret
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
@@ -52,7 +51,6 @@ def get_offline_recos(data):
 
 
 def _get_recos(rows):
-    import requests
 
     results = []
     try:

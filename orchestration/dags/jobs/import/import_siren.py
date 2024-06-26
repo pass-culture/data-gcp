@@ -14,7 +14,7 @@ from common.config import (
     ENV_SHORT_NAME,
 )
 from common.alerts import task_fail_slack_alert
-from common.utils import getting_service_account_token, get_airflow_schedule
+from common.utils import get_airflow_schedule
 from common import macros
 
 FUNCTION_NAME = f"siren_import_{ENV_SHORT_NAME}"

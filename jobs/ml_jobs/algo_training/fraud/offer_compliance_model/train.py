@@ -1,7 +1,6 @@
 import json
 import typer
 import mlflow
-import pandas as pd
 from catboost import CatBoostClassifier
 from utils.constants import (
     ENV_SHORT_NAME,

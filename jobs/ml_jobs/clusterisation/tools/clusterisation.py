@@ -1,22 +1,21 @@
 from loguru import logger
-import pandas as pd
 import polars as pl
 from sklearn.cluster import MiniBatchKMeans
-from sklearn.metrics import silhouette_samples, silhouette_score
+from sklearn.metrics import silhouette_samples
 
 
 def clusterisation_from_prebuild_embedding(
     embedding,
     target_n_clusters,
 ):
-    logger.info(f"mbkmeans_clusters: clustering...")
+    logger.info("mbkmeans_clusters: clustering...")
     clustering, cluster_labels = mbkmeans_clusters(
         X=embedding,
         k=target_n_clusters,
         mb=10_240,
         print_silhouette_values=False,
     )
-    logger.info(f"mbkmeans_clusters: done...")
+    logger.info("mbkmeans_clusters: done...")
     items_with_clusters = pl.DataFrame({"cluster": cluster_labels})
     cluster_center_coordinates = pl.DataFrame(
         {
@@ -37,7 +36,7 @@ def clusterisation_from_prebuild_embedding(
         on="cluster",
         how="inner",
     )
-    logger.info(f"mbkmeans_clusters: exported clusters...")
+    logger.info("mbkmeans_clusters: exported clusters...")
 
     return items_with_cluster_and_coordinates
 

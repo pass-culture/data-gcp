@@ -1,4 +1,4 @@
-ANALYTICS_SQL_PATH = f"dependencies/analytics/sql/analytics"
+ANALYTICS_SQL_PATH = "dependencies/analytics/sql/analytics"
 
 
 def define_import_tables():

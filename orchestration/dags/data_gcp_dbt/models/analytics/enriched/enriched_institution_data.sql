@@ -177,7 +177,7 @@ students_educonnectes AS (
         ON beneficiary_fraud_check.user_id = user.user_id
     LEFT JOIN {{ ref('user_suspension') }} as user_suspension
         ON user_suspension.user_id = user.user_id
-        AND rank = 1
+        AND action_history_rk = 1
     WHERE
         type = 'EDUCONNECT'
         AND REGEXP_EXTRACT(result_content, '"school_uai": \"(.*?)\",') IS NOT NULL

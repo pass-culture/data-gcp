@@ -475,7 +475,7 @@ FROM
     LEFT JOIN first_paid_booking_type ON user.user_id = first_paid_booking_type.user_id
     LEFT JOIN count_distinct_types ON user.user_id = count_distinct_types.user_id
     LEFT JOIN {{ ref('user_suspension')}} AS user_suspension ON user_suspension.user_id = user.user_id
-        AND rank = 1
+        AND action_history_rk = 1
     LEFT JOIN amount_spent_last_deposit ON amount_spent_last_deposit.user_id = user.user_id
     LEFT JOIN themes_subscribed ON themes_subscribed.user_id = user.user_id
     JOIN user_agg_deposit_data ON user.user_id = user_agg_deposit_data.userId

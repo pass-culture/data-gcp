@@ -1,12 +1,13 @@
-from flask import Flask, request, Response, jsonify, make_response
-from flask_cors import CORS
-from pythonjsonlogger import jsonlogger
+import json
 import logging
 import sys
-from model import DefaultClient, RecoClient, TextClient
-from docarray import Document
-import json
 import uuid
+
+from docarray import Document
+from flask import Flask, Response, jsonify, make_response, request
+from flask_cors import CORS
+from model import DefaultClient, RecoClient, TextClient
+from pythonjsonlogger import jsonlogger
 
 
 def load_model() -> DefaultClient:
@@ -49,7 +50,7 @@ logger.info("startup", extra=log_data)
 def input_size(size):
     try:
         return int(size)
-    except:
+    except Exception:
         return 10
 
 

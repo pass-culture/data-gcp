@@ -1,24 +1,20 @@
-import datetime
-
 from airflow import DAG
+from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.task_group import TaskGroup
-from airflow.utils.dates import datetime, timedelta
-from airflow.models import Param
 from airflow.operators.python import BranchPythonOperator
+from airflow.utils.dates import datetime, timedelta
+from airflow.utils.task_group import TaskGroup
 from common.alerts import task_fail_slack_alert
-from common.utils import get_airflow_schedule, waiting_operator
-from common.dbt.utils import load_manifest
-
 from common.config import (
+    ENV_SHORT_NAME,
+    EXCLUDED_TAGS,
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
-    ENV_SHORT_NAME,
     PATH_TO_DBT_TARGET,
-    EXCLUDED_TAGS,
 )
-
+from common.dbt.utils import load_manifest
+from common.utils import get_airflow_schedule, waiting_operator
 
 default_args = {
     "start_date": datetime(2020, 12, 23),

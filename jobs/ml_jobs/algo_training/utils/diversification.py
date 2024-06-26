@@ -4,7 +4,6 @@ from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
-
 from utils.constants import NUMBER_OF_PRESELECTED_OFFERS, RECOMMENDATION_NUMBER
 
 
@@ -45,7 +44,7 @@ def order_offers_by_score_and_diversify_categories(
 
     diversified_offers = []
     while len(diversified_offers) != np.sum(
-        [len(l) for l in offers_by_category.values()]
+        [len(offer_list) for offer_list in offers_by_category.values()]
     ):
         for offer_category in offers_by_category_ordered_by_frequency.keys():
             if offers_by_category_ordered_by_frequency[offer_category]:

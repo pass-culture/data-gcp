@@ -1,19 +1,15 @@
-import datetime
-
 from airflow import DAG
+from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.dates import datetime, timedelta
-from airflow.models import Param
-from common.utils import get_airflow_schedule, waiting_operator
-
 from common.config import (
+    ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
-    ENV_SHORT_NAME,
     PATH_TO_DBT_TARGET,
 )
-
+from common.utils import get_airflow_schedule, waiting_operator
 
 default_args = {
     "start_date": datetime(2020, 12, 1),

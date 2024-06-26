@@ -73,12 +73,12 @@ elif ENV_SHORT_NAME == "stg":
 else:
     MEDIATION_URL = "passculture-metier-ehp-testing"
 
-if LOCAL_ENV != None:
+if LOCAL_ENV is not None:
     PATH_TO_DBT_PROJECT = "/opt/airflow/dags/data_gcp_dbt"
 else:
     PATH_TO_DBT_PROJECT = f"{DAG_FOLDER}/data_gcp_dbt".replace("//", "/")
 
-if LOCAL_ENV != None:
+if LOCAL_ENV is not None:
     PATH_TO_DBT_TARGET = "/opt/airflow/dags/data_gcp_dbt/target"
 else:
     PATH_TO_DBT_TARGET = os.environ.get(

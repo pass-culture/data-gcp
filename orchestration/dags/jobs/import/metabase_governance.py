@@ -1,33 +1,33 @@
 import datetime
+
 from airflow import DAG
+from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from airflow.models import Param
+from common import macros
+from common.alerts import task_fail_slack_alert
+from common.config import (
+    DAG_FOLDER,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+    METABASE_EXTERNAL_CONNECTION_ID,
+)
+from common.operators.biquery import bigquery_job_task
 from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
 )
-from common import macros
 from common.utils import (
     depends_loop,
     get_airflow_schedule,
-    ENV_SHORT_NAME,
 )
 from dependencies.metabase.import_metabase import (
-    import_tables,
-    from_external,
     analytics_tables,
+    from_external,
+    import_tables,
 )
-from common.config import (
-    GCP_PROJECT_ID,
-    DAG_FOLDER,
-    METABASE_EXTERNAL_CONNECTION_ID,
-    ENV_SHORT_NAME,
-)
-from common.alerts import task_fail_slack_alert
-from common.operators.biquery import bigquery_job_task
 
 GCE_INSTANCE = f"metabase-governance-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/metabase-archiving"

@@ -1,7 +1,8 @@
-import requests
-import zipfile
 import io
+import zipfile
+
 import pandas as pd
+import requests
 from utils import ENV_SHORT_NAME
 
 
@@ -17,7 +18,7 @@ def import_survey_metadata(data_center, api_token):
     if response.json()["meta"]["httpStatus"] == "200 - OK":
         surveys = pd.DataFrame(response.json()["result"]["elements"])
         surveys.to_gbq(f"clean_{ENV_SHORT_NAME}.qualtrics_survey", if_exists="replace")
-        active_surveys = list(surveys[surveys.isActive == True].id)
+        active_surveys = list(surveys[surveys.isActive].id)
         return active_surveys
 
 
@@ -172,7 +173,6 @@ class QualtricsSurvey:
         return response_processed[select_fields]
 
     def process_survey_answers(self) -> pd.DataFrame:
-
         columns = self.raw_answer_df.columns
         system_columns = [
             "StartDate",

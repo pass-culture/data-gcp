@@ -3,9 +3,11 @@ import json
 import os
 from datetime import datetime
 from urllib.parse import quote
-import requests
+
 import gcsfs
+import requests
 from shapely.geometry import Point, Polygon
+
 from scripts.bigquery_client import BigQueryClient
 
 bigquery_client = BigQueryClient()
@@ -75,7 +77,7 @@ class AdressesDownloader:
                     "api_adresse_city": data["features"][0]["properties"]["city"],
                 }
                 return api_address_informations
-            except:
+            except Exception:
                 return api_address_informations
         return api_address_informations
 
@@ -110,7 +112,7 @@ class AdressesDownloader:
                         "epci_name": communes[i]["fields"]["epci_name"],
                     }
                     return commune_data
-                except:
+                except Exception:
                     return commune_data
         return commune_data
 
@@ -138,7 +140,7 @@ class AdressesDownloader:
                             "code_qpv": qpv[i]["fields"]["code_quartier"],
                         }
                         return qpv_informations
-            except:
+            except Exception:
                 pass
         return qpv_informations
 
@@ -155,12 +157,12 @@ class AdressesDownloader:
         with fs.open(f"{BUCKET_NAME}/functions/georef-france-commune.json") as file:
             communes = json.load(file)
 
-        self.user_address_dataframe[
-            ["code_epci", "epci_name"]
-        ] = self.user_address_dataframe.apply(
-            lambda row: self.find_commune_informations(row["city_code"], communes),
-            axis=1,
-            result_type="expand",
+        self.user_address_dataframe[["code_epci", "epci_name"]] = (
+            self.user_address_dataframe.apply(
+                lambda row: self.find_commune_informations(row["city_code"], communes),
+                axis=1,
+                result_type="expand",
+            )
         )
 
         with fs.open(
@@ -168,14 +170,14 @@ class AdressesDownloader:
         ) as file:
             qpv = json.load(file)
 
-        self.user_address_dataframe[
-            ["qpv_communes", "qpv_name", "code_qpv"]
-        ] = self.user_address_dataframe.apply(
-            lambda row: self.find_qpv_informations(
-                row["longitude"], row["latitude"], row["user_department_code"], qpv
-            ),
-            axis=1,
-            result_type="expand",
+        self.user_address_dataframe[["qpv_communes", "qpv_name", "code_qpv"]] = (
+            self.user_address_dataframe.apply(
+                lambda row: self.find_qpv_informations(
+                    row["longitude"], row["latitude"], row["user_department_code"], qpv
+                ),
+                axis=1,
+                result_type="expand",
+            )
         )
 
         with fs.open(

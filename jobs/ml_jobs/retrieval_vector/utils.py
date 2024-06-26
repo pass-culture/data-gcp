@@ -1,15 +1,14 @@
-import os
-import pandas as pd
-from datetime import datetime
-import time
-import subprocess
-from docarray import DocumentArray, Document
 import json
-import pyarrow as pa
+import os
+import subprocess
+import time
+from datetime import datetime
+
 import lancedb
-
+import pandas as pd
+import pyarrow as pa
+from docarray import Document, DocumentArray
 from google.cloud import bigquery
-
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
@@ -141,14 +140,14 @@ def get_users_metadata():
 def to_ts(f):
     try:
         return float(f.timestamp())
-    except:
+    except Exception:
         return 0.0
 
 
 def to_float(f):
     try:
         return float(f)
-    except:
+    except Exception:
         return None
 
 

@@ -1,13 +1,12 @@
+import time
 from heapq import nlargest, nsmallest
 
-
 import seaborn as sns
+from loguru import logger
 
 sns.set_theme()
 sns.set(font_scale=1)
 
-import time
-from loguru import logger
 
 STORAGE_PATH_IMG = "./img"
 

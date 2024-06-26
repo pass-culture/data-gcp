@@ -1,9 +1,9 @@
+import time
+
+import pandas as pd
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-import time
-import pandas as pd
-
 
 session = requests.Session()
 retry = Retry(connect=3, backoff_factor=0.5)
@@ -94,10 +94,10 @@ class BatchClient:
             .reset_index(drop=True)
             .assign(
                 version_a=lambda _df: _df["versions"].apply(
-                    lambda x: x.get("a", None) if type(x) is dict else x
+                    lambda x: x.get("a", None) if isinstance(x, dict) else x
                 ),
                 version_b=lambda _df: _df["versions"].apply(
-                    lambda x: x.get("b", None) if type(x) is dict else x
+                    lambda x: x.get("b", None) if isinstance(x, dict) else x
                 ),
             )
             .drop("versions", axis=1)

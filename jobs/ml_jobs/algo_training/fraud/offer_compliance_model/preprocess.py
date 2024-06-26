@@ -1,12 +1,11 @@
 import json
-from sentence_transformers import SentenceTransformer
 
 import numpy as np
 import typer
 from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
+from sentence_transformers import SentenceTransformer
 from utils.constants import MODEL_DIR, STORAGE_PATH
 from utils.data_collect_queries import read_from_gcs
-
 
 IMAGE_MODEL = SentenceTransformer("clip-ViT-B-32")
 TEXT_MODEL = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
@@ -17,7 +16,7 @@ def convert_str_emb_to_float(emb_list, emb_size=124):
     for str_emb in emb_list:
         try:
             emb = json.loads(str_emb)
-        except:
+        except Exception:
             emb = [0] * emb_size
         float_emb.append(np.array(emb))
     return float_emb

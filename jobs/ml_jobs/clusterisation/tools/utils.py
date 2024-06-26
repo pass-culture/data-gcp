@@ -1,15 +1,15 @@
-import os
-import io
-from google.cloud import bigquery
-from openai import OpenAI
-from timeout_decorator import timeout, TimeoutError
-from google.cloud import secretmanager
-import time
-import numpy as np
-import json
-import hashlib
 import base64
+import hashlib
+import io
+import json
+import os
+import time
+
+import numpy as np
 import pandas as pd
+from google.cloud import bigquery, secretmanager
+from openai import OpenAI
+from timeout_decorator import TimeoutError, timeout
 
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
@@ -27,7 +27,7 @@ def get_secret(secret_id: str):
 
 try:
     openai_api_key = get_secret(f"openai_token_{ENV_SHORT_NAME}")
-except:
+except Exception:
     print("Error, secret not found...")
     openai_api_key = os.environ.get("OPENAI_API_KEY")
     pass

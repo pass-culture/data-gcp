@@ -1,13 +1,13 @@
 import concurrent
-import numpy as np
 import shutil
 import time
 from multiprocessing import cpu_count
 
+import numpy as np
 from PIL import Image
 from sentence_transformers import SentenceTransformer
-from tools.logging_tools import log_duration
 from tools.config import ENV_SHORT_NAME
+from tools.logging_tools import log_duration
 
 
 def extract_embedding(
@@ -58,7 +58,7 @@ def encode_img_from_path(model, paths):
         try:
             img_emb = model.encode(Image.open(f"./img/{url}.jpeg"))
             offer_img_embs.append(list(img_emb))
-        except:
+        except Exception:
             offer_img_embs.append([0] * 512)
             offer_wo_img += 1
     print(f"{(offer_wo_img*100)/len(paths)}% offers dont have image")
@@ -75,7 +75,7 @@ def download_img_multiprocess(urls):
     )
     batch_urls = [list(chunk) for chunk in list(np.array_split(urls, batch_number))]
     with concurrent.futures.ProcessPoolExecutor(batch_number) as executor:
-        futures = executor.map(
+        executor.map(
             _download_img_from_url_list,
             batch_urls,
         )
@@ -98,8 +98,8 @@ def _download_img_from_url_list(urls):
                     filename = f"./img/{url}.jpeg"
                     with open(filename, "wb") as f:
                         f.write(response.content)
-            except:
+            except Exception:
                 continue
         return
-    except:
+    except Exception:
         return

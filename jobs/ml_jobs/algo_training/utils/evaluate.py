@@ -44,7 +44,7 @@ def evaluate(
             prediction_input_feature = features.get(
                 "input_prediction_feature", "user_id"
             )
-    except:
+    except Exception:
         logger.info("Config file not found: setting default configuration")
         prediction_input_feature = "user_id"
 

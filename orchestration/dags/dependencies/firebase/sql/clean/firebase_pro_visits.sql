@@ -25,7 +25,7 @@ SELECT (
             where
                 event_params.key = 'ga_session_number'
         ) as session_number,
-        user_id, 
+        user_id,
         user_pseudo_id,
         event_name,
         (
@@ -64,7 +64,7 @@ SELECT (
             where
                 event_params.key = 'isEdition'
         ) as is_edition,
-    FROM 
+    FROM
         `{{ bigquery_raw_dataset }}.firebase_pro_events`
     WHERE 
         {% if params.dag_type == 'intraday' %}

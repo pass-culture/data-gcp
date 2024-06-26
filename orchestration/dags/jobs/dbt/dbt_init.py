@@ -33,7 +33,7 @@ dag = DAG(
     default_args=default_args,
     catchup=False,
     description="A dbt wrapper for airflow",
-    schedule_interval=get_airflow_schedule("0 1 * * *"),
+    schedule_interval=None,
     params={
         "target": Param(
             default=ENV_SHORT_NAME,

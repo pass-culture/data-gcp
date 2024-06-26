@@ -1,25 +1,24 @@
-import typer
+import numpy as np
 import pandas as pd
-
+import typer
 from bertopic import BERTopic
 from bertopic.representation import (
     MaximalMarginalRelevance,
     PartOfSpeech,
 )
-from tqdm import tqdm
-import numpy as np
-from tools.utils import (
-    call_retry,
-    sha1_to_base64,
-    load_df,
-    TMP_DATASET,
-    load_config_file,
-)
 from configs.prompts import (
+    EXPECTED_RESULTS,
     get_macro_topics_messages,
     get_micro_topics_messages,
-    EXPECTED_RESULTS,
 )
+from tools.utils import (
+    TMP_DATASET,
+    call_retry,
+    load_config_file,
+    load_df,
+    sha1_to_base64,
+)
+from tqdm import tqdm
 
 
 def decode(x, emb_size):

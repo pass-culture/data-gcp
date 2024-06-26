@@ -1,3 +1,4 @@
+import time
 from datetime import date, datetime, timedelta
 
 from airflow import DAG
@@ -7,33 +8,24 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
-
-
+from common import macros
 from common.alerts import task_fail_slack_alert
-from common.operators.biquery import bigquery_job_task
-
-
 from common.config import (
-    DATA_GCS_BUCKET_NAME,
     BIGQUERY_RAW_DATASET,
+    DAG_FOLDER,
+    DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    DAG_FOLDER,
 )
-
+from common.operators.biquery import bigquery_job_task
 from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
 )
-import time
-
-
-from dependencies.dms_subscriptions.import_dms_subscriptions import CLEAN_TABLES
-from common import macros
 from common.utils import get_airflow_schedule
-
+from dependencies.dms_subscriptions.import_dms_subscriptions import CLEAN_TABLES
 
 DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 GCE_INSTANCE = f"import-dms-{ENV_SHORT_NAME}"

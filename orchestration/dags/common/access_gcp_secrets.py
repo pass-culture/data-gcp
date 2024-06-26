@@ -1,5 +1,5 @@
+from google.api_core.exceptions import NotFound, PermissionDenied
 from google.auth.exceptions import DefaultCredentialsError
-from google.api_core.exceptions import PermissionDenied, NotFound
 from google.cloud import secretmanager
 
 

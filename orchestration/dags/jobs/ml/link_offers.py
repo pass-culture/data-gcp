@@ -2,18 +2,18 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Param
-from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
-)
-from common.operators.biquery import bigquery_job_task
-from dependencies.ml.linkage.import_items import params
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
+from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
+from common.operators.biquery import bigquery_job_task
+from common.operators.gce import (
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
+)
 from common.utils import get_airflow_schedule
+from dependencies.ml.linkage.import_items import params
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-offers-{ENV_SHORT_NAME}"

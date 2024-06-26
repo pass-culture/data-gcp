@@ -1,20 +1,20 @@
 import datetime
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from dependencies.appsflyer.import_appsflyer import dag_tables
-from common.alerts import task_fail_slack_alert
-from common.operators.biquery import bigquery_job_task
-from common.utils import depends_loop, get_airflow_schedule
-from common import macros
-from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
 
+from airflow import DAG
 from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
+from common import macros
+from common.alerts import task_fail_slack_alert
+from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
+from common.operators.biquery import bigquery_job_task
 from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
 )
+from common.utils import depends_loop, get_airflow_schedule
+from dependencies.appsflyer.import_appsflyer import dag_tables
 
 GCE_INSTANCE = f"import-appsflyer-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/appsflyer"

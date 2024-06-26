@@ -1,8 +1,8 @@
-import typer
 import polars as pl
-from loguru import logger
+import typer
 from google.cloud import bigquery
-from utils import ENV_SHORT_NAME, get_offline_recos, export_polars_to_bq
+from loguru import logger
+from utils import ENV_SHORT_NAME, export_polars_to_bq, get_offline_recos
 
 
 def offline_recommendation(

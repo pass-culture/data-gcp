@@ -1,20 +1,21 @@
 from datetime import datetime
+
+import joblib
+import numpy as np
+import polars as pl
+import pyarrow.dataset as ds
 import typer
+from hnne import HNNE
 from utils import (
-    GCP_PROJECT_ID,
     ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+    create_items_table,
     deploy_container,
+    get_item_docs,
     get_items_metadata,
     save_experiment,
     save_model_type,
-    get_item_docs,
-    create_items_table,
 )
-import pyarrow.dataset as ds
-import polars as pl
-import numpy as np
-from hnne import HNNE
-import joblib
 
 MODEL_TYPE = {
     "n_dim": 32,

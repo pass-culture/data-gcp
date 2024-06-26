@@ -1,7 +1,8 @@
-from loguru import logger
 import time
-import umap
+
 import polars as pl
+import umap
+from loguru import logger
 from tqdm import tqdm
 
 

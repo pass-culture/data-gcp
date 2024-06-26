@@ -2,38 +2,34 @@
 
 import datetime
 from datetime import timedelta
-import pandas as pd
 
+import pandas as pd
 from airflow import DAG
+from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
-
-from airflow.models import Param
-from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
-)
+from common import macros
+from common.alerts import task_fail_slack_alert
 from common.config import (
+    DAG_FOLDER,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    DAG_FOLDER,
 )
 from common.operators.biquery import bigquery_job_task
+from common.operators.gce import (
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
+)
 from common.utils import (
     depends_loop,
     get_airflow_schedule,
 )
-
-from common.alerts import task_fail_slack_alert
-
-from common import macros
-
 from dependencies.sendinblue.import_sendinblue import (
-    raw_tables,
-    clean_tables,
     analytics_tables,
+    clean_tables,
+    raw_tables,
 )
 
 GCE_INSTANCE = f"import-sendinblue-{ENV_SHORT_NAME}"

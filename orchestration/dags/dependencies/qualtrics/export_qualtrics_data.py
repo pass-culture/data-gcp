@@ -1,8 +1,8 @@
-from common.config import (
-    GCP_PROJECT_ID,
-    ENV_SHORT_NAME,
-)
 from common.access_gcp_secrets import access_secret_data
+from common.config import (
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+)
 
 SQL_PATH = "dependencies/qualtrics/sql"
 

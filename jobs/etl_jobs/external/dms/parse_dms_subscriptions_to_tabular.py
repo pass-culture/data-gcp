@@ -1,7 +1,8 @@
-import pandas as pd
 import json
-import gcsfs
 import logging
+
+import gcsfs
+import pandas as pd
 import typer
 from utils import (
     destination_table_schema_jeunes,

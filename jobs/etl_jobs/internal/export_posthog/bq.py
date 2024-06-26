@@ -1,10 +1,10 @@
-import numpy as np
 import typing as t
 import uuid
-from utils import PostHogEvent, ENV_SHORT_NAME
-import pyarrow.dataset as ds
-import polars as pl
 
+import numpy as np
+import polars as pl
+import pyarrow.dataset as ds
+from utils import ENV_SHORT_NAME, PostHogEvent
 
 BATCH_SIZE = 100_000
 

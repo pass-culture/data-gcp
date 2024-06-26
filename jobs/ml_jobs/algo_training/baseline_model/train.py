@@ -1,17 +1,16 @@
 import mlflow
 import tensorflow as tf
 import typer
-from loguru import logger
-
 from baseline_model.models.baseline_model import BaselineModel
 from baseline_model.models.match_model import MatchModel
+from loguru import logger
 from utils.callbacks import MLFlowLogging
 from utils.constants import (
     ENV_SHORT_NAME,
+    MLFLOW_RUN_ID_FILENAME,
     MODEL_DIR,
     STORAGE_PATH,
     TRAIN_DIR,
-    MLFLOW_RUN_ID_FILENAME,
 )
 from utils.data_collect_queries import read_from_gcs
 from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment

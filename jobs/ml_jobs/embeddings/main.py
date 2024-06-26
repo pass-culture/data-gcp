@@ -1,8 +1,8 @@
 import json
 from datetime import datetime
+
 import pandas as pd
 import typer
-
 from tools.config import CONFIGS_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
 from tools.embedding_extraction import extract_embedding
 

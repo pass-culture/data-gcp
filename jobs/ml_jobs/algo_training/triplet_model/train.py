@@ -2,23 +2,21 @@ import mlflow
 import tensorflow as tf
 import typer
 from loguru import logger
-
 from triplet_model.models.match_model import MatchModel
 from triplet_model.models.triplet_model import TripletModel
 from triplet_model.utils.callbacks import MatchModelCheckpoint, MLFlowLogging
 from triplet_model.utils.dataset_utils import load_triplets_dataset
-from triplet_model.utils.model_utils import predict, identity_loss
+from triplet_model.utils.model_utils import identity_loss, predict
 from utils.constants import (
-    STORAGE_PATH,
     ENV_SHORT_NAME,
-    TRAIN_DIR,
-    MODEL_DIR,
     MLFLOW_RUN_ID_FILENAME,
+    MODEL_DIR,
+    STORAGE_PATH,
+    TRAIN_DIR,
 )
+from utils.data_collect_queries import read_from_gcs
 from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
 from utils.secrets_utils import get_secret
-from utils.data_collect_queries import read_from_gcs
-
 
 L2_REG = 0
 N_EPOCHS = 1000

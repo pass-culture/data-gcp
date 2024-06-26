@@ -1,9 +1,8 @@
-import mlflow
 import os
 
+import mlflow
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
-
 from utils.constants import MLFLOW_EHP_URI, MLFLOW_PROD_URI
 
 

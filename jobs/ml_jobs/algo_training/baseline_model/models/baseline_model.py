@@ -1,7 +1,6 @@
+import numpy as np
 import tensorflow as tf
 import tensorflow_recommenders as tfrs
-import numpy as np
-
 from utils.layers import (
     StringEmbeddingLayer,
 )

@@ -1,21 +1,22 @@
 import datetime
+
 from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
 from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
+from common import macros
+from common.alerts import task_fail_slack_alert
+from common.config import (
+    DAG_FOLDER,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+)
 from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
 )
-from common.config import DAG_FOLDER
-from common.config import (
-    GCP_PROJECT_ID,
-    ENV_SHORT_NAME,
-)
-from common.alerts import task_fail_slack_alert
 from common.utils import get_airflow_schedule
-from common import macros
 
 FUNCTION_NAME = f"siren_import_{ENV_SHORT_NAME}"
 SIREN_FILENAME = "siren_data.csv"

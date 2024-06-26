@@ -1,6 +1,6 @@
-from tools.config import ENV_SHORT_NAME, GCP_PROJECT_ID
 import pandas as pd
 import typer
+from tools.config import ENV_SHORT_NAME, GCP_PROJECT_ID
 
 
 def preprocess(df):

@@ -1,6 +1,6 @@
+import refresh as refresh
 import typer
 import update as update
-import refresh as refresh
 
 
 def run(

@@ -6,11 +6,10 @@ import numpy as np
 import pandas as pd
 import rapidfuzz
 import streamlit as st
+from preprocess import FILTERING_PARAMS
 from scipy.sparse import csr_matrix, vstack
 from sklearn.cluster import DBSCAN
 from stqdm import stqdm
-
-from preprocess import FILTERING_PARAMS
 from utils.preprocessing_utils import (
     clean_names,
     extract_first_artist,

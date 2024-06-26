@@ -1,4 +1,5 @@
 import os
+
 from common.config import (
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,

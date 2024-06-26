@@ -1,32 +1,32 @@
+import datetime
+
 from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
 from airflow.models import Param
-from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
-)
+from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
-import datetime
-from common.config import (
-    GCP_PROJECT_ID,
-    DAG_FOLDER,
-    ENV_SHORT_NAME,
-    DATA_GCS_BUCKET_NAME,
-    BIGQUERY_TMP_DATASET,
-)
-
-from common.utils import get_airflow_schedule
+from common import macros
 from common.alerts import task_fail_slack_alert
+from common.config import (
+    BIGQUERY_TMP_DATASET,
+    DAG_FOLDER,
+    DATA_GCS_BUCKET_NAME,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+)
+from common.operators.gce import (
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
+)
+from common.utils import get_airflow_schedule
 from dependencies.export_clickhouse.export_clickhouse import (
     TABLES_CONFIGS,
     VIEWS_CONFIGS,
 )
-from common import macros
 
 DATASET_ID = f"export_{ENV_SHORT_NAME}"
 GCE_INSTANCE = f"export-clickhouse-{ENV_SHORT_NAME}"

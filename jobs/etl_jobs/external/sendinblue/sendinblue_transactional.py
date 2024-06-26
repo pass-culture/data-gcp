@@ -1,12 +1,11 @@
-import sib_api_v3_sdk
-from sib_api_v3_sdk.rest import ApiException
-
-from google.cloud import bigquery
-import pandas as pd
-import numpy as np
+import logging
 from datetime import datetime
 
-import logging
+import numpy as np
+import pandas as pd
+import sib_api_v3_sdk
+from google.cloud import bigquery
+from sib_api_v3_sdk.rest import ApiException
 from utils import ENV_SHORT_NAME
 
 

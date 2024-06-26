@@ -1,21 +1,22 @@
+import time
+
 import pandas as pd
 import typer
-import time
-from utils import (
-    DATA_CENTER,
-    DIRECTORY_ID,
-    API_TOKEN,
-    OPT_OUT_EXPORT_COLUMNS,
-    save_to_raw_bq,
-    save_partition_table_to_bq,
-    IR_PRO_TABLE_SCHEMA,
-    IR_JEUNES_TABLE_SCHEMA,
-    ANSWERS_SCHEMA,
-)
 from qualtrics_opt_out import import_qualtrics_opt_out
 from qualtrics_survey_answers import (
     QualtricsSurvey,
     import_survey_metadata,
+)
+from utils import (
+    ANSWERS_SCHEMA,
+    API_TOKEN,
+    DATA_CENTER,
+    DIRECTORY_ID,
+    IR_JEUNES_TABLE_SCHEMA,
+    IR_PRO_TABLE_SCHEMA,
+    OPT_OUT_EXPORT_COLUMNS,
+    save_partition_table_to_bq,
+    save_to_raw_bq,
 )
 
 ir_surveys_mapping = {

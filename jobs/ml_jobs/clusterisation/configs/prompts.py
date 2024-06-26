@@ -1,6 +1,6 @@
-from configs.labels import CAT, GENRE
-from configs.labels import MEDIUM
 import itertools
+
+from configs.labels import CAT, GENRE, MEDIUM
 
 GENRE_EXAMPLES = list(set(itertools.chain(*list(GENRE.values()))))
 MEDIUM_EXAMPLES = list(set(itertools.chain(*list(MEDIUM.values()))))

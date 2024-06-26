@@ -1,27 +1,27 @@
 from datetime import datetime, timedelta
+
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
-)
 from common import macros
-from common.operators.biquery import bigquery_job_task
-from dependencies.ml.clusterisation.import_data import (
-    IMPORT_ITEM_CLUSTERS,
-    IMPORT_ITEM_EMBEDDINGS,
-)
+from common.alerts import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
     MLFLOW_BUCKET_NAME,
 )
-
-from common.alerts import task_fail_slack_alert
+from common.operators.biquery import bigquery_job_task
+from common.operators.gce import (
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
+)
 from common.utils import get_airflow_schedule
+from dependencies.ml.clusterisation.import_data import (
+    IMPORT_ITEM_CLUSTERS,
+    IMPORT_ITEM_EMBEDDINGS,
+)
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"clusterisation-{ENV_SHORT_NAME}"

@@ -1,10 +1,10 @@
-import typer
-import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
 
-from utils import access_secret_data, bigquery_load_job
+import numpy as np
+import pandas as pd
+import typer
 from batch_client import BatchClient
+from utils import access_secret_data, bigquery_load_job
 
 
 def main(

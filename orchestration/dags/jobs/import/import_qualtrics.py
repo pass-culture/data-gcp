@@ -1,22 +1,17 @@
 import datetime
+
 from airflow import DAG
 from airflow.models import Param
+from common import macros
+from common.alerts import task_fail_slack_alert
+from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
 )
-
-from common.config import DAG_FOLDER
-from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID
-
 from common.utils import get_airflow_schedule
-
-from common.alerts import task_fail_slack_alert
-
-from common import macros
-
 
 GCE_INSTANCE = f"import-qualtrics-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/qualtrics"

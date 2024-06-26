@@ -3,16 +3,6 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from common.operators.gce import (
-    StartGCEOperator,
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
-)
-from common.operators.biquery import bigquery_job_task
-from dependencies.ml.offline_recommendation.import_users import params
-from dependencies.ml.offline_recommendation.export_to_backend import (
-    params as params_export,
-)
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -20,7 +10,17 @@ from common.config import (
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
 )
+from common.operators.biquery import bigquery_job_task
+from common.operators.gce import (
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+    StartGCEOperator,
+)
 from common.utils import get_airflow_schedule
+from dependencies.ml.offline_recommendation.export_to_backend import (
+    params as params_export,
+)
+from dependencies.ml.offline_recommendation.import_users import params
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"offline-recommendation-{ENV_SHORT_NAME}"

@@ -1,21 +1,20 @@
 from datetime import datetime, timedelta
 
 from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
 from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
+from common import macros
+from common.alerts import task_fail_slack_alert
+from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
+from common.operators.biquery import bigquery_job_task
 from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
 )
-from common.alerts import task_fail_slack_alert
-from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
-from common.utils import get_airflow_schedule, depends_loop
+from common.utils import depends_loop, get_airflow_schedule
 from dependencies.batch.import_batch import import_batch_tables
-from common.operators.biquery import bigquery_job_task
-from common import macros
-
 
 GCE_INSTANCE = f"import-batch-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/batch"

@@ -1,22 +1,21 @@
 import datetime
+
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import PythonOperator
 from common import macros
-from common.utils import get_airflow_schedule
 from common.alerts import analytics_fail_slack_alert
 from common.config import DAG_FOLDER, GCP_PROJECT_ID
-from airflow.operators.python import PythonOperator
-
-from dependencies.great_expectations.run_tests import (
-    run_applicative_history_tests,
-    run_enriched_tests,
+from common.utils import get_airflow_schedule
+from dependencies.great_expectations.config_enriched import (
+    enriched_tables_test_config,
 )
 from dependencies.great_expectations.config_historical import (
     historical_applicative_test_config,
 )
-
-from dependencies.great_expectations.config_enriched import (
-    enriched_tables_test_config,
+from dependencies.great_expectations.run_tests import (
+    run_applicative_history_tests,
+    run_enriched_tests,
 )
 from dependencies.great_expectations.utils import clear_directory, ge_root_dir
 

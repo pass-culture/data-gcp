@@ -1,15 +1,16 @@
-import typer
-import pandas as pd
 import datetime
+
+import pandas as pd
+import typer
 from metabase_api import MetabaseAPI
-from table import MetabaseTable, get_mapped_fields
 from native import NativeCard
 from query import QueryCard
+from table import MetabaseTable, get_mapped_fields
 from utils import (
-    PROJECT_NAME,
+    ANALYTICS_DATASET,
     ENVIRONMENT_SHORT_NAME,
     METABASE_API_USERNAME,
-    ANALYTICS_DATASET,
+    PROJECT_NAME,
     access_secret_data,
     get_dependant_cards,
 )

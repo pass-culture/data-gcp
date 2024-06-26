@@ -1,5 +1,4 @@
 import pandas as pd
-
 from utils.preprocessing_utils import (
     FilteringParamsType,
     clean_names,

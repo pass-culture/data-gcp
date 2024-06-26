@@ -1,8 +1,8 @@
 import tensorflow as tf
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Embedding, Flatten, Dot, Layer
-from tensorflow.keras.regularizers import l2
+from tensorflow.keras.layers import Dot, Embedding, Flatten, Layer
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
+from tensorflow.keras.models import Model
+from tensorflow.keras.regularizers import l2
 
 
 class MarginLoss(Layer):

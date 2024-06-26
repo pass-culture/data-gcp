@@ -1,13 +1,13 @@
-from ruamel.yaml import YAML
 from datetime import datetime
 
 import great_expectations as gx
-from great_expectations.core.expectation_configuration import ExpectationConfiguration
-from great_expectations.core.batch import RuntimeBatchRequest
-from great_expectations.exceptions import DataContextError
 from great_expectations.cli.datasource import (
     sanitize_yaml_and_save_datasource,
 )
+from great_expectations.core.batch import RuntimeBatchRequest
+from great_expectations.core.expectation_configuration import ExpectationConfiguration
+from great_expectations.exceptions import DataContextError
+from ruamel.yaml import YAML
 
 
 class GreatExpectationsContext:

@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from utils import clickhouse_client, load_sql, load_sql_view
 
 

@@ -1,4 +1,5 @@
 import os
+
 from google.cloud import bigquery
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME")

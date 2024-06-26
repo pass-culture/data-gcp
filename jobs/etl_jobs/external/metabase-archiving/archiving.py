@@ -1,5 +1,6 @@
-import pandas as pd
 import re
+
+import pandas as pd
 from utils import ANALYTICS_DATASET, ENVIRONMENT_SHORT_NAME
 
 

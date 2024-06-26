@@ -5,7 +5,6 @@ from unittest import mock
 import pandas as pd
 from airflow.models import DagBag
 
-
 DAG_ID_LIST = [
     "recommendation_cloud_sql_v1",
     "export_cloudsql_tables_to_bigquery_v1",

@@ -1,10 +1,9 @@
 
 from common.config import ENV_SHORT_NAME
-
 from dependencies.great_expectations.great_expectations_context import (
     GreatExpectationsContext,
 )
-from dependencies.great_expectations.utils import get_table_volume_bounds, ge_root_dir
+from dependencies.great_expectations.utils import ge_root_dir, get_table_volume_bounds
 
 
 def run_applicative_history_tests(table_name, config):

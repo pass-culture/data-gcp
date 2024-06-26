@@ -1,8 +1,9 @@
-import pandas as pd
-import importlib
 import argparse
-import numpy as np
+import importlib
 import unicodedata
+
+import numpy as np
+import pandas as pd
 
 CATEGORIES_DTYPES = {
     "id": str,

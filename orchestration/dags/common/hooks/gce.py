@@ -1,21 +1,22 @@
-from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
-import googleapiclient.discovery
-from googleapiclient.errors import HttpError
-import pytz
+import datetime
 import json
 import time
+
 import dateutil
-import datetime
-from common.hooks.image import CPUImage
+import googleapiclient.discovery
+import pytz
+from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from common.config import (
     ENV_SHORT_NAME,
-    GCP_REGION,
-    GCE_ZONE,
-    GCP_PROJECT_ID,
-    GCE_SUBNETWORK_ID,
     GCE_NETWORK_ID,
     GCE_SA,
+    GCE_SUBNETWORK_ID,
+    GCE_ZONE,
+    GCP_PROJECT_ID,
+    GCP_REGION,
 )
+from common.hooks.image import CPUImage
+from googleapiclient.errors import HttpError
 
 DEFAULT_LABELS = {
     "env": ENV_SHORT_NAME,

@@ -1,15 +1,13 @@
-from google.cloud import storage
-from google.cloud import bigquery
+from bucket import BucketFolder
+from google.cloud import bigquery, storage
+from tables_config import ref_tables
 from utils import (
+    BIGQUERY_IMPORT_BUCKET_FOLDER,
+    DATA_BUCKET,
     PROJECT_NAME,
     RAW_DATASET,
-    DATA_BUCKET,
-    BIGQUERY_IMPORT_BUCKET_FOLDER,
     GCS_to_bigquery,
 )
-
-from tables_config import ref_tables
-from bucket import BucketFolder
 
 storage_client = storage.Client()
 bigquery_client = bigquery.Client()

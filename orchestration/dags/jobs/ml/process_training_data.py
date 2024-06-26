@@ -5,12 +5,16 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
 )
-
 from common import macros
 from common.alerts import analytics_fail_slack_alert
-from common.config import BIGQUERY_CLEAN_DATASET, BIGQUERY_RAW_DATASET, GCP_PROJECT_ID
-from common.config import DAG_FOLDER
+from common.config import (
+    BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_RAW_DATASET,
+    DAG_FOLDER,
+    GCP_PROJECT_ID,
+)
 from common.utils import get_airflow_schedule
+
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 default_dag_args = {

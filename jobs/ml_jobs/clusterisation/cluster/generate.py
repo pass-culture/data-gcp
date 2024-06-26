@@ -1,14 +1,15 @@
-import typer
+import time
+
 import pandas as pd
 import polars as pl
-import time
+import typer
 from loguru import logger
 from tools.clusterisation import (
     clusterisation_from_prebuild_embedding,
 )
 from tools.utils import (
-    TMP_DATASET,
     CLEAN_DATASET,
+    TMP_DATASET,
     export_polars_to_bq,
     load_config_file,
     sha1_to_base64,

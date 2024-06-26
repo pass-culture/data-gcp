@@ -1,7 +1,8 @@
 import os
+
+import clickhouse_connect
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
-import clickhouse_connect
 from jinja2 import Template
 
 BASE_DIR = "schema"

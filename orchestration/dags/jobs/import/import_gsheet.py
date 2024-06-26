@@ -1,17 +1,17 @@
 import datetime
+
 from airflow import DAG
 from airflow.models import Param
-from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
-)
 from common.alerts import task_fail_slack_alert
-
 from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+)
+from common.operators.gce import (
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 

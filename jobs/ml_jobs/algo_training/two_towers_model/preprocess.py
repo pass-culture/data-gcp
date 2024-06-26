@@ -1,8 +1,8 @@
 import json
-import typer
 
-from utils.constants import STORAGE_PATH, MODEL_DIR
+import typer
 from two_towers_model.utils.constants import CONFIGS_PATH
+from utils.constants import MODEL_DIR, STORAGE_PATH
 from utils.data_collect_queries import read_from_gcs
 
 

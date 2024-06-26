@@ -1,22 +1,21 @@
 import datetime
+
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.utils.task_group import TaskGroup
 from common import macros
-from common.utils import depends_loop, get_airflow_schedule
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from common.operators.biquery import bigquery_job_task
-from dependencies.analytics.import_analytics import export_tables, define_import_tables
 from common.alerts import analytics_fail_slack_alert
-from common.config import DAG_FOLDER
-from common.utils import waiting_operator
-
 from common.config import (
-    GCP_PROJECT_ID,
-    BIGQUERY_CLEAN_DATASET,
-    BIGQUERY_ANALYTICS_DATASET,
     APPLICATIVE_PREFIX,
+    BIGQUERY_ANALYTICS_DATASET,
+    BIGQUERY_CLEAN_DATASET,
+    DAG_FOLDER,
+    GCP_PROJECT_ID,
 )
+from common.operators.biquery import bigquery_job_task
+from common.utils import depends_loop, get_airflow_schedule, waiting_operator
+from dependencies.analytics.import_analytics import define_import_tables, export_tables
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),

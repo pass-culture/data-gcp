@@ -1,21 +1,21 @@
 import datetime
+
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.utils.task_group import TaskGroup
 from common import macros
-from common.utils import one_line_query, get_airflow_schedule
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from common.alerts import analytics_fail_slack_alert
-from common.config import DAG_FOLDER
-from common.operators.biquery import bigquery_job_task
 from common.config import (
-    GCP_PROJECT_ID,
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
+    DAG_FOLDER,
+    GCP_PROJECT_ID,
 )
-
+from common.operators.biquery import bigquery_job_task
+from common.utils import get_airflow_schedule, one_line_query
 from dependencies.applicative_database.import_applicative_database import (
-    RAW_TABLES,
     HISTORICAL_CLEAN_APPLICATIVE_TABLES,
+    RAW_TABLES,
 )
 
 default_dag_args = {

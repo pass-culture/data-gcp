@@ -6,23 +6,22 @@ import pandas as pd
 import tensorflow as tf
 import typer
 from loguru import logger
-
 from utils.constants import (
-    STORAGE_PATH,
-    ENV_SHORT_NAME,
     BIGQUERY_CLEAN_DATASET,
-    MODELS_RESULTS_TABLE_NAME,
-    GCP_PROJECT_ID,
-    SERVING_CONTAINER,
-    MODEL_NAME,
+    ENV_SHORT_NAME,
     EXPERIMENT_NAME,
-    MODEL_DIR,
+    GCP_PROJECT_ID,
     MLFLOW_RUN_ID_FILENAME,
+    MODEL_DIR,
+    MODEL_NAME,
+    MODELS_RESULTS_TABLE_NAME,
+    SERVING_CONTAINER,
+    STORAGE_PATH,
 )
+from utils.data_collect_queries import read_from_gcs
 from utils.evaluate import evaluate, save_pca_representation
 from utils.mlflow_tools import connect_remote_mlflow
 from utils.secrets_utils import get_secret
-from utils.data_collect_queries import read_from_gcs
 
 
 def main(

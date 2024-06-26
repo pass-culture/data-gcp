@@ -3,7 +3,6 @@ import pandas as pd
 import pytest
 import rapidfuzz
 from rapidfuzz import fuzz
-
 from utils import clustering_utils
 from utils.clustering_utils import (
     cluster_with_distance_matrices,

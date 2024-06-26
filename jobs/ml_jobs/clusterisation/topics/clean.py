@@ -1,13 +1,10 @@
 import pandas as pd
 import typer
-
-from polyfuzz.models import Embeddings
-from polyfuzz import PolyFuzz
-
-from flair.embeddings import TransformerWordEmbeddings
 from configs.labels import CAT, GENRE, MEDIUM
+from flair.embeddings import TransformerWordEmbeddings
+from polyfuzz import PolyFuzz
+from polyfuzz.models import Embeddings
 from tools.utils import CLEAN_DATASET, load_df
-
 from tqdm import tqdm
 
 LIST_TO_MAP = {

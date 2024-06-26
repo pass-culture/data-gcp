@@ -2,9 +2,10 @@ import concurrent
 import traceback
 from itertools import repeat
 from multiprocessing import cpu_count
-from loguru import logger
+
 import pandas as pd
 import recordlinkage
+from loguru import logger
 from tools.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,

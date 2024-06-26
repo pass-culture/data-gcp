@@ -1,30 +1,28 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
-)
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
-from common.utils import get_airflow_schedule
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
-    GCP_PROJECT_ID,
+    BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
-    BIGQUERY_TMP_DATASET,
 )
-
-from datetime import datetime
+from common.operators.gce import (
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
+)
+from common.utils import get_airflow_schedule
 
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 

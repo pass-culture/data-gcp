@@ -1,22 +1,22 @@
 import datetime
+
 from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
 from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
+from common import macros
+from common.alerts import task_fail_slack_alert
+from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
+from common.operators.biquery import bigquery_job_task
 from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
 )
-from common.operators.biquery import bigquery_job_task
-from common import macros
 from common.utils import (
     depends_loop,
     get_airflow_schedule,
 )
-
-from common.config import GCP_PROJECT_ID, DAG_FOLDER, ENV_SHORT_NAME
-from common.alerts import task_fail_slack_alert
 from dependencies.cold_data.import_cold_data import import_tables
 
 default_dag_args = {

@@ -1,13 +1,12 @@
-from google.auth.transport.requests import Request
-from google.oauth2 import id_token
 from airflow.sensors.external_task import ExternalTaskSensor
-
 from common.config import (
-    GCP_PROJECT_ID,
-    FAILED_STATES,
     ALLOWED_STATES,
+    FAILED_STATES,
+    GCP_PROJECT_ID,
     LOCAL_ENV,
 )
+from google.auth.transport.requests import Request
+from google.oauth2 import id_token
 
 
 def getting_service_account_token(function_name):

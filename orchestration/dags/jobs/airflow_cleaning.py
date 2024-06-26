@@ -1,8 +1,9 @@
+from datetime import timedelta
+
 import airflow
 from airflow import DAG
-from common.operators.gce import CleanGCEOperator
-from datetime import timedelta
 from common.config import ENV_SHORT_NAME
+from common.operators.gce import CleanGCEOperator
 from common.utils import get_airflow_schedule
 
 default_args = {

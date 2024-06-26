@@ -1,9 +1,10 @@
-import requests
-import time
 import json
+import time
+
+import gcsfs
+import requests
 import typer
 from dms_query import DMS_QUERY
-import gcsfs
 from utils import API_URL, access_secret_data, demarches_jeunes, demarches_pro
 
 

@@ -1,4 +1,5 @@
 import os
+
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 

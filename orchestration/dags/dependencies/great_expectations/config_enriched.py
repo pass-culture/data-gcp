@@ -1,5 +1,5 @@
 from common.config import BIGQUERY_ANALYTICS_DATASET
-from dependencies.great_expectations.utils import today, yesterday, last_week
+from dependencies.great_expectations.utils import last_week, today, yesterday
 
 enriched_tables_test_config = {
     "enriched_collective_booking_data": {

@@ -1,8 +1,8 @@
-from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 import pandas as pd
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
 
 
 def plot_features_importance(pipeline, filename):

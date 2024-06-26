@@ -1,15 +1,16 @@
-from airflow import DAG
-from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
-)
-from airflow.models import Param
 from datetime import datetime, timedelta
+
+from airflow import DAG
+from airflow.models import Param
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import ENV_SHORT_NAME, DAG_FOLDER
+from common.config import DAG_FOLDER, ENV_SHORT_NAME
+from common.operators.gce import (
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
+)
 
 default_args = {
     "start_date": datetime(2022, 11, 30),

@@ -1,8 +1,9 @@
 from datetime import datetime
+
 import pandas as pd
 import typer
-from tools.config import GCP_PROJECT_ID, ENV_SHORT_NAME
 from loguru import logger
+from tools.config import ENV_SHORT_NAME, GCP_PROJECT_ID
 
 
 def build_item_id_from_linkage(df):

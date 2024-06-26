@@ -4,7 +4,7 @@ WITH home AS (
         id AS home_id,
         title AS home_name,
         REPLACE(modules, '\"', "") AS module_id
-    FROM {{ source('raw', 'contentful_entries') }},
+    FROM {{ source('raw', 'contentful_entry') }},
         UNNEST(JSON_EXTRACT_ARRAY(modules, '$')) AS modules
     WHERE
         content_type = "homepageNatif"
@@ -18,7 +18,7 @@ home_and_modules AS (
         module_id,
         content_type
     FROM home
-    LEFT JOIN {{ source('raw', 'contentful_entries') }} module 
+    LEFT JOIN {{ source('raw', 'contentful_entry') }} module 
     ON home.module_id = module.id
     AND home.date_imported = module.date_imported
 )

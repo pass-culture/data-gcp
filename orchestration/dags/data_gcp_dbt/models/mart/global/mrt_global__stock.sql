@@ -47,5 +47,6 @@ SELECT
     o.digital_goods,
     o.event,
     o.offer_category_id,
-FROM {{ ref('int_applicative__stock') }} AS s
-LEFT JOIN {{ ref('mrt_global__offer_unverified') }} AS o ON s.offer_id = o.offer_id
+    o.venue_iris_internal_id
+FROM {{ref('int_applicative__stock')}} AS s
+LEFT JOIN {{ref('mrt_global__offer_unverified')}} AS o ON s.offer_id = o.offer_id

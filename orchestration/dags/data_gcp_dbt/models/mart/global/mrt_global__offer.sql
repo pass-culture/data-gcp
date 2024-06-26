@@ -1,13 +1,3 @@
-{{
-    config(
-        partition_by={
-            "field": "offer_creation_date",
-            "data_type": "date"
-        },
-        on_schema_change = "sync_all_columns"
-    )
-}}
-
 SELECT
     offer_id,
     offer_product_id,
@@ -19,6 +9,7 @@ SELECT
     offer_category_id,
     last_stock_price,
     offer_creation_date,
+    offer_created_at,
     offer_date_updated,
     offer_is_duo,
     item_id,
@@ -71,6 +62,7 @@ SELECT
     offerer_id,
     offerer_name,
     venue_type_label,
+    venue_iris_internal_id
 FROM {{ ref('mrt_global__offer_unverified') }} AS o
 WHERE TRUE
     AND offer_validation = 'APPROVED'

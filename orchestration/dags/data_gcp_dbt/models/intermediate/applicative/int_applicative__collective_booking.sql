@@ -13,13 +13,19 @@ SELECT
     collective_booking_status,
     collective_booking_reimbursement_date,
     educational_institution_id,
-    educational_year_id,
+    cb.educational_year_id,
     collective_booking_confirmation_date,
     collective_booking_confirmation_limit_date,
     educational_redactor_id,
-    rank() OVER (
+    ey.educational_year_beginning_date,
+    ey.educational_year_expiration_date,
+    CURRENT_DATE BETWEEN ey.educational_year_beginning_date
+        AND ey.educational_year_expiration_date AS is_current_educational_year,
+    RANK() OVER (
             PARTITION BY educational_institution_id
             ORDER BY
                 collective_booking_creation_date
         ) AS collective_booking_rank
-FROM {{ source('raw', 'applicative_database_collective_booking') }}
+FROM {{ source('raw', 'applicative_database_collective_booking') }} AS cb
+LEFT JOIN {{ source('raw', 'applicative_database_educational_year') }} AS ey
+    ON cb.educational_year_id = ey.educational_year_id

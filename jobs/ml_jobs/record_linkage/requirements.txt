@@ -1,10 +1,11 @@
-pandas==1.3.5
-pandas-gbq
+pandas==2.0.3
+pandas-gbq==0.23.1
 typer==0.7.0
 pytest>=6.1.1
 loguru
 psutil
 recordlinkage
 networkx
-pandas-gbq
+pandas-gbq==0.23.1
 datetime
+numpy==1.26.4

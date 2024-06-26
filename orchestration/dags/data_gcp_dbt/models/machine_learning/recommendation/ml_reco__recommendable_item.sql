@@ -21,9 +21,9 @@ offer_details AS (
         v.venue_id, 
         v.venue_longitude,
         v.venue_latitude
-    FROM {{ ref('enriched_offer_data') }}  eod
+    FROM {{ ref('mrt_global__offer') }}  eod
     LEFT JOIN venues v on v.venue_id = eod.venue_id
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY eod.item_id ORDER BY eod.booking_confirm_cnt DESC) = 1
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY eod.item_id ORDER BY eod.total_used_individual_bookings DESC) = 1
 ),
 
 

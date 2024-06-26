@@ -122,6 +122,10 @@ bookable_individual_offer_cnt AS (
     offerer_id
     , MIN(partition_date) AS offerer_first_bookable_offer_date
     , MAX(partition_date) AS offerer_last_bookable_offer_date
+    , MIN(CASE WHEN individual_bookable_offers>0 THEN partition_date ELSE NULL END) AS offerer_first_individual_bookable_offer_date
+    , MAX(CASE WHEN individual_bookable_offers>0 THEN partition_date ELSE NULL END) AS offerer_last_individual_bookable_offer_date
+    , MIN(CASE WHEN collective_bookable_offers>0 THEN partition_date ELSE NULL END) AS offerer_first_collective_bookable_offer_date
+    , MAX(CASE WHEN collective_bookable_offers>0 THEN partition_date ELSE NULL END) AS offerer_last_collective_bookable_offer_date
 FROM {{ ref('bookable_venue_history') }}
 GROUP BY 1
 ),
@@ -232,6 +236,10 @@ SELECT
          ELSE last_collective_offer_creation_date END AS offerer_last_offer_creation_date,
     bookable_offer_history.offerer_first_bookable_offer_date,
     bookable_offer_history.offerer_last_bookable_offer_date,
+    bookable_offer_history.offerer_first_individual_bookable_offer_date,
+    bookable_offer_history.offerer_last_individual_bookable_offer_date,
+    bookable_offer_history.offerer_first_collective_bookable_offer_date,
+    bookable_offer_history.offerer_last_collective_bookable_offer_date,
     individual_bookings_per_offerer.first_individual_booking_date AS offerer_first_individual_booking_date,
     individual_bookings_per_offerer.last_individual_booking_date AS offerer_last_individual_booking_date,
     collective_bookings_per_offerer.first_collective_booking_date AS offerer_first_collective_booking_date,

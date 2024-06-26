@@ -1,6 +1,13 @@
 # data-gcp
 
-Repo pour la team data sur GCP
+Repo pour la team data sur GCP.
+
+Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestration des jobs.
+
+- Les DAGs sont dans `orchestration/dags/`
+- Les scripts appelés dans les DAGs sont à mettre dans `jobs/`, et divisés en 2 catégories :
+  - ETL jobs : pour l'extraction, la transformation et le chargement des données
+  - ML jobs : pour les micro services de machine learning
 
 ## Organisation
 
@@ -44,45 +51,54 @@ Repo pour la team data sur GCP
 ```
 
 ## INSTALL
+
 ### Analytics (BigQuery)
 
-**Prérequis** :
+#### 0. Prérequis
+
 - [pyenv](https://github.com/pyenv/pyenv-installer)
   - ⚠ Don't forget to [install the prerequisites](https://github.com/pyenv/pyenv/wiki/Common-build-problems#prerequisites)
 - [pyenv virtualenv](https://github.com/pyenv/pyenv-virtualenv#installation)
-- accès aux comptes de services GCP
+- Accès aux comptes de services GCP
 - [Gcloud CLI](https://cloud.google.com/sdk/docs/install?hl=fr)
 
-**1. Installation du projet**
+#### 1. Installation du projet
 
 - Cloner le projet
-  ```
+
+  ```bash
   git clone git@github.com:pass-culture/data-gcp.git
   cd data-gcp
   ```
+
 - [LINUX] Installation de quelques librairies nécessaires à l'install du projet
-  ```
+
+  ```bash
   make install_ubuntu_libs
   ```
+
 - [VM DEBIAN] Installation d'autres librairies et fix de l'environnement pour les VM :
-  ```
+
+  ```bash
   make install_on_debian_vm
   ```
+
 - Installation du projet
   - La première fois : installation from scratch, avec création des environnements virtuels
-    ```
+
+    ```bash
     make clean_install
     ```
+
   - Installation rapide des nouveaux packages
-    ```
+
+    ```bash
     make install
     ```
 
-
-**2. Config .env.local**
+#### 2. Config .env.local
 
 Dans le fichier `.env.local`, renseigne les valeurs des variables manquantes en utilisant [cette page](https://www.notion.so/passcultureapp/Les-secrets-du-repo-data-gcp-085759e27a664a95a65a6886831bde54)
-
 
 ## Orchestration
 
@@ -92,8 +108,8 @@ Orchestration des jobs dags analytics & data science.
 
 Les dags sont déployés automatiquement lors d'un merge sur master / production
 
-
 ## CI/CD
+
 
 ### CI Workflow
 

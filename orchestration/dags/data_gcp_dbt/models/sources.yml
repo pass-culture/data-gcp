@@ -105,9 +105,9 @@ sources:
       - name: applicative_database_venue_provider
       - name: applicative_database_venue_registration
       - name: applicative_database_venue_reimbursement_point_link
-      - name: contentful_entries
-      - name: contentful_relationships
-      - name: contentful_tags
+      - name: contentful_entry
+      - name: contentful_relationship
+      - name: contentful_tag
       - name: firebase_events
       - name: firebase_pro_events
       - name: geoip_city_v4
@@ -118,6 +118,7 @@ sources:
       - name: stdout
       - name: sensitive_item_recommendation
       - name: past_offer_context
+      - name: user_locations
 
   - name: clean # this is the source_name
     schema: clean_{{ var('ENV_SHORT_NAME') }}
@@ -133,6 +134,7 @@ sources:
       - name: dms_jeunes_cleaned
       - name: dms_pro_cleaned
       - name: firebase_app_experiments
+      - name: geo_iris
       - name: iris_france
       - name: default_item_clusters
       - name: institutional_scholar_level
@@ -149,6 +151,7 @@ sources:
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: adage
+      - name: app_native_logs
       - name: epci
       - name: eple
       - name: firebase_pro_events

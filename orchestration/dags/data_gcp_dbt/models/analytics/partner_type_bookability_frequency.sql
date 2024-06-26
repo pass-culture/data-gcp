@@ -1,8 +1,8 @@
 WITH partner_crea_frequency AS (
 SELECT
-    enriched_offer_data.partner_id
+    mrt_global__offer.partner_id
     , COUNT(DISTINCT DATE_TRUNC(offer_creation_date, MONTH)) AS nb_mois_crea_this_year
-FROM {{ ref('enriched_offer_data')}}
+FROM {{ ref('mrt_global__offer')}} AS mrt_global__offer
 WHERE DATE_DIFF(current_date, offer_creation_date, MONTH) <= 12
 GROUP BY 1
 ),

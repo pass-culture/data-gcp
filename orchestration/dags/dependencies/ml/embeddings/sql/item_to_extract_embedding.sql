@@ -67,7 +67,7 @@ SELECT
 
 FROM
     `{{ bigquery_raw_dataset }}`.applicative_database_offer o
-    LEFT JOIN `{{ bigquery_analytics_dataset }}`.enriched_offer_data eod on o.offer_id=eod.offer_id
+    LEFT JOIN `{{ bigquery_analytics_dataset }}`.global_offer eod on o.offer_id=eod.offer_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_item_ids oii on o.offer_id=oii.offer_id
     LEFT JOIN `{{ bigquery_clean_dataset }}`.item_metadata im on oii.item_id = im.item_id
     LEFT JOIN mediation ON o.offer_id = mediation.offer_id
@@ -83,7 +83,7 @@ WHERE
     ) QUALIFY ROW_NUMBER() OVER (
         PARTITION BY item_id
         ORDER BY
-            eod.booking_cnt DESC
+            eod.total_individual_bookings DESC
     ) = 1
 ORDER BY o.offer_creation_date DESC
 LIMIT {{ params.batch_size }}

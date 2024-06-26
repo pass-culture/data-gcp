@@ -36,13 +36,19 @@ SELECT
     u.user_department_code,
     u.user_creation_date,
     u.user_activity,
+    u.user_civility,
+    u.user_age,
+    u.user_birth_date,
+    u.user_is_active,
     s.item_id,
-    rank() OVER (
+    RANK() OVER (
         PARTITION BY b.user_id,
         s.offer_subcategory_id
         ORDER BY
             b.booking_created_at
-    ) AS same_category_booking_rank
+    ) AS same_category_booking_rank,
+    u.user_iris_internal_id,
+    s.venue_iris_internal_id
 FROM {{ ref('int_applicative__booking') }} AS b
 INNER JOIN {{ ref('mrt_global__stock') }} AS s ON s.stock_id = b.stock_id
 INNER JOIN {{ ref('mrt_global__user') }} AS u ON u.user_id = b.user_id

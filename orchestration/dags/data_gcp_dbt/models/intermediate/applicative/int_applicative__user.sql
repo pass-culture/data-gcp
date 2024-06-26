@@ -12,16 +12,16 @@ SELECT
     user_has_enabled_marketing_email,
     COALESCE(
     CASE
-        WHEN user_postal_code = "97150" THEN "978"
-        WHEN SUBSTRING(user_postal_code, 0, 2) = "97" THEN SUBSTRING(user_postal_code, 0, 3)
-        WHEN SUBSTRING(user_postal_code, 0, 2) = "98" THEN SUBSTRING(user_postal_code, 0, 3)
-        WHEN SUBSTRING(user_postal_code, 0, 3) in ("200", "201", "209", "205") THEN "2A"
-        WHEN SUBSTRING(user_postal_code, 0, 3) in ("202", "206") THEN "2B"
-        ELSE SUBSTRING(user_postal_code, 0, 2)
+        WHEN u.user_postal_code = "97150" THEN "978"
+        WHEN SUBSTRING(u.user_postal_code, 0, 2) = "97" THEN SUBSTRING(u.user_postal_code, 0, 3)
+        WHEN SUBSTRING(u.user_postal_code, 0, 2) = "98" THEN SUBSTRING(u.user_postal_code, 0, 3)
+        WHEN SUBSTRING(u.user_postal_code, 0, 3) in ("200", "201", "209", "205") THEN "2A"
+        WHEN SUBSTRING(u.user_postal_code, 0, 3) in ("202", "206") THEN "2B"
+        ELSE SUBSTRING(u.user_postal_code, 0, 2)
         END,
-        user_department_code
+        u.user_department_code
     ) AS user_department_code,
-    user_postal_code,
+    u.user_postal_code,
     CASE
         WHEN user_activity in ("Alternant", "Apprenti", "Volontaire") THEN "Apprenti, Alternant, Volontaire en service civique rémunéré"
         WHEN user_activity in ("Inactif") THEN "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
@@ -40,5 +40,7 @@ SELECT
     user_role,
     user_birth_date,
     user_cultural_survey_filled_date,
-    CASE WHEN user_role IN ("UNDERAGE_BENEFICIARY", "BENEFICIARY") THEN 1 ELSE 0 END AS is_beneficiary
-FROM {{ source("raw", "applicative_database_user") }}
+    CASE WHEN user_role IN ("UNDERAGE_BENEFICIARY", "BENEFICIARY") THEN 1 ELSE 0 END AS is_beneficiary,
+    NULL AS user_iris_internal_id,
+    NULL AS user_region_name
+FROM {{ source("raw", "applicative_database_user") }} AS u

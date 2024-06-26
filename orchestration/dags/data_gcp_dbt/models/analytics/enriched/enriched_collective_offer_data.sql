@@ -120,7 +120,9 @@ SELECT
     NULL as collective_offer_contact_url,
     NULL as collective_offer_contact_form,
     NULL as collective_offer_contact_email,
-    NULL as collective_offer_contact_phone
+    NULL as collective_offer_contact_phone,
+    venue.venue_iris_internal_id,
+    institution_locations.institution_internal_iris_id
 FROM
     {{ source('raw', 'applicative_database_collective_offer') }} AS collective_offer
     JOIN {{ ref('venue') }} AS venue ON venue.venue_id = collective_offer.venue_id
@@ -132,6 +134,8 @@ FROM
     LEFT JOIN {{ source('raw', 'applicative_database_national_program') }} national_program USING(national_program_id)
     LEFT JOIN {{ ref('int_applicative__institution') }} AS institution_program
         ON collective_offer.institution_id = institution_program.institution_id
+    INNER JOIN {{ ref('educational_institution') }} AS educational_institution ON educational_institution.educational_institution_id = collective_offer.institution_id
+    LEFT JOIN {{ ref('institution_locations') }} AS institution_locations ON institution_locations.institution_id = educational_institution.institution_id
 WHERE collective_offer.collective_offer_validation = 'APPROVED'
 UNION
 ALL
@@ -176,12 +180,14 @@ SELECT
     template.provider_id,
     template.national_program_id,
     national_program.national_program_name,
-    template.collective_offer_venue_address_type AS collective_offer_address_type,
     NULL as template_id,
+    template.collective_offer_venue_address_type AS collective_offer_address_type,
     collective_offer_contact_url,
     collective_offer_contact_form,
     collective_offer_contact_email,
-    collective_offer_contact_phone
+    collective_offer_contact_phone,
+    venue.venue_iris_internal_id,
+    NULL AS institution_internal_iris_id
 FROM
     {{ source('raw', 'applicative_database_collective_offer_template') }} AS template
     JOIN {{ ref('venue') }} AS venue ON venue.venue_id = template.venue_id

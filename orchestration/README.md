@@ -1,104 +1,120 @@
 # Orchestration
+
 Repo pour l'orchestration sur Cloud Composer.
 
 ## Structure du dossier
 
-Les dags sont dans `orchestration/dags/`.
+Les fichiers sont organisés de la manière suivante :
 
-Les scripts appelés dans les dags sont à mettre dans `orchestration/dags/dependencies/`.
+- Les dags sont dans `dags/jobs` (2 DAGs sont dans `dags/`).
+- Les fonctions communes à tous les DAGs (~utils) sont dans `dags/common`.
+- Les requêtes SQL ainsi que la config python spécifique d'un DAG sont dans `dags/dependencies/`.
+- La config DBT est dans `dags/data_gcp_dbt`.
+- La config de great_expectations est dans `dags/great_expectations` : permet de tester la qualité des données.
+- Les tests sont dans le dossier `tests/`.
 
-Les tests sont dans le dossier `orchestration/tests/`.
+## Configuration, Déploiement et Lancement des DAGs sur Cloud Composer (Airflow sur GCP)
 
-## Déploiement automatique des dags
+### Déploiement des DAGs
 
-Lorsque l'on merge sur master les dags sont automatiquement déployés sur le cloud composer grâce à un job circle-ci.
+#### Déploiement automatique
+
+Lorsque l'on merge sur master les dags sont automatiquement déployés sur le cloud composer grâce à Github actions( [Voir doc](../README.md#cd)).
 
 Le job met à jour les fichiers modifiés dans le bucket du cloud composer puis vérifie qu'airflow charge bien les dags. Pour voir quels fichiers ont été modifiés, il faut regarder l'output de l'étape `Deploy to composer` du job `composer-deploy`.
 
-Lors de l'ajout d'un nouveau dag : ajouter un appel au script `./wait_for_dag_deployed.sh` correspondant à ce dag dans le job `composer-deploy`.
+#### Déploiement manuel
 
-## Uploader manuellement les fichiers sur Cloud Composer
-
-```
+```bash
 cd orchestration/dags
 
 gcloud composer environments storage dags import \
-    --environment ENVIRONMENT_NAME \
-    --location LOCATION \
-    --source FILE_TO_UPLOAD
+    --environment data-composer-{ENV} \
+    --location europe-west1 \
+    --source FILE_PATH_TO_UPLOAD
 ```
 
-Le chemin de référence est dags, donc pour envoyer les dependencies il faut envoyer `--source dags/dependencies`.
+où `{ENV}` est `dev`, `stg` ou `prod` et `FILE_PATH_TO_UPLOAD` est le chemin du fichier à envoyer. Le chemin de référence est dags, donc pour envoyer les dependencies il faut envoyer `--source dags/dependencies`.
 
-
-- ENVIRONMENT_NAME : data-composer-\<env>
-- LOCATION: europe-west1
-
-## Lancement des DAGs
+### Lancement des DAGs
 
 1. Aller sur l'instance de GCP Composer
 2. Dans l'onglet `ENVIRONMENT CONFIGURATION`, cliquer sur le lien Google storage de la section `Airflow web UI`
 3. Sélectionner le DAG et le lancer
 
-## Variables d'environnement
-https://cloud.google.com/composer/docs/how-to/managing/environment-variables?hl=fr#adding_and_updating_environment_variables
+### Variables d'environnement
+
+<https://cloud.google.com/composer/docs/how-to/managing/environment-variables?hl=fr#adding_and_updating_environment_variables>
 
 Pour voir, ajouter ou modifier les variables d'environement, il faut aller dans la console gcp, sur la page de l'instance de composer puis dans l'onglet variables d'environnement.
 
-## Installer des dépendances
-https://cloud.google.com/composer/docs/how-to/using/installing-python-dependencies?hl=fr#install-package
+### Installer des dépendances
+
+<https://cloud.google.com/composer/docs/how-to/using/installing-python-dependencies?hl=fr#install-package>
 
 A partir de la console gcp, dans l'instance de composer, ajouter les dépendances avec leur version.
 
-# Local 
+## Configuration, Déploiement et Lancement des DAGs sur le Airflow local
 
-## Installer Airflow localement
+On peut également choisir de lancer les DAGs en local. Cela permet notamment d'itérer plus vite car on n'a pas besoin de déployer les fichiers sur le cloud composer : ceux-ci sont automatiquement scannés par Airflow.
 
-### Récupération des Credentials GCP et des variables d'environnement
+### Installer Airflow localement (via Docker)
 
-1. Demander le fichier `sa.gcpkey.json` à un membre de l'équipe et le mettre dans `/airflow/etc/sa.gcpkey.json`
+On peut qu'avoir une version de Airflow installé en local. Pour pallier ça, il est possible de lancer Airflow dans un conteneur Docker, ce qui permet d'éviter d'avoir des side-effects sur la machine locale.
+
+#### Prérequis : récupération des Credentials GCP et des variables d'environnement
+
+1. Demander le fichier `sa.gcpkey.json` à un membre de l'équipe, se le partager via 1password et le mettre dans `/airflow/etc/sa.gcpkey.json`.
 2. Récupérer le fichier .env et le mettre dans `orchestration/.env`
-   - Modifier les valeurs de _AIRFLOW_WWW_USER_USERNAME et _AIRFLOW_WWW_USER_PASSWORD dans le fichier .env 
+   - Modifier les valeurs de _AIRFLOW_WWW_USER_USERNAME et _AIRFLOW_WWW_USER_PASSWORD dans le fichier .env
    - Modifier la valeur du DAG_FOLDER
 
-### Build and run
+### Premier lancement (La première fois uniquement)
 
-0. **[La première fois uniquement]** Build et initialisation des tables
-    ```sh
-    make build
-    ```
+```sh
+make build
+```
+
+### Lancement de l'app
+
 1. Lancer les différents conteneurs
+
     ```sh
     make start
     ```
+
 2. Se connecter au Airflow webserver
+
     ```sh
     > `http://localhost:8080`
     ```
 
-### Stop
+#### Stop
 
 Pour éteindre les conteneurs :
+
 ```sh
 make stop
 ```
 
-### Changer les variables d'environnement
+#### Changer les variables d'environnement
 
 Pour changer les variables d'environnement, il faut modifier le fichier `orchestration/.env` et relancer le build des conteneurs :
+
 ```sh
 make rebuild
 ```
 
+#### Troubleshooting
 
-### Troubleshooting
+- Pour voir les logs dans les conteneurs :
 
-* Pour voir les logs dans les conteneurs :
     ```sh
     make show_airflow_logs
     ```
 
-* Pour supprimer les conteneurs (et les données dans la DB) :
+- Pour supprimer les conteneurs (et les données dans la DB) :
+
     ```sh
     docker-compose down
     ```

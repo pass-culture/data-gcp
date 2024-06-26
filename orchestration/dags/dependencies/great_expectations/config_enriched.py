@@ -38,15 +38,6 @@ enriched_tables_test_config = {
             "prod": [yesterday, today],
         },
     },
-    "enriched_offer_data": {
-        "dataset_name": BIGQUERY_ANALYTICS_DATASET,
-        "date_field": "offer_creation_date",
-        "freshness_check": {
-            "dev": [last_week, today],
-            "stg": [yesterday, today],
-            "prod": [yesterday, today],
-        },
-    },
     "enriched_offerer_data": {
         "dataset_name": BIGQUERY_ANALYTICS_DATASET,
         "date_field": "offerer_creation_date",

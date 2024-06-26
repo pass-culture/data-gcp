@@ -19,5 +19,5 @@ SELECT
         price_max,
         min_offers
     )
-FROM {{ source('raw', 'contentful_entries') }}
+FROM {{ source('raw', 'contentful_entry') }}
 QUALIFY ROW_NUMBER() OVER (PARTITION BY id ORDER BY execution_date DESC) = 1

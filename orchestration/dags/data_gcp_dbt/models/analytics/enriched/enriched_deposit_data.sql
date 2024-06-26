@@ -140,7 +140,7 @@ FROM
     LEFT JOIN theoretical_amount_spent_in_digital_goods ON deposit.id = theoretical_amount_spent_in_digital_goods.deposit_id
     LEFT JOIN first_booking_date ON deposit.id = first_booking_date.deposit_id
     LEFT JOIN {{ ref('user_suspension') }} AS user_suspension ON user_suspension.user_id = user.user_id
-    AND rank = 1
+    AND action_history_rk = 1
 WHERE
     (
         user.user_is_active

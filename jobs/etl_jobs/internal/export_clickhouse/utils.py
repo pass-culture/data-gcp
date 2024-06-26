@@ -44,6 +44,15 @@ def refresh_views(view_name, folder="analytics"):
     print(f"Refresh View {mv_view_name}...")
     clickhouse_client.command(sql_query)
 
+def create_credentials_collection(collection_name: str, cluster_name: str = 'default') -> None:
+    print(f"Will create credentials collection {collection_name} on cluster {cluster_name} if not exist")
+    access_key_id = access_secret_data(PROJECT_NAME, f"-{ENV_SHORT_NAME}")
+    secret_access_key = access_secret_data(PROJECT_NAME, f"clickhouse-svc_external_ip-{ENV_SHORT_NAME}")
+
+    clickhouse_client.command(f"CREATE NAMED COLLECTION {collection_name} on cluster {cluster_name} AS 
+                              access_key_id = '{access_key_id}' NOT OVERRIDABLE,
+                              secret_access_key = '{secret_access_key}' NOT OVERRIDABLE")
+    print(f"Done creating crendentials collection.")
 
 ENV_SHORT_NAME = {"prod": "prod", "stg": "staging", "dev": "dev"}[
     os.environ.get("ENV_SHORT_NAME", "dev")

@@ -15,4 +15,7 @@ AS
         cast(deposit_type as String) as deposit_type,
         cast(booking_quantity as UInt64) as booking_quantity,
         cast(booking_amount as Float64) as booking_amount
-    FROM s3('{{ bucket_path }}','{{ access_key_id }}','{{ secret_access_key }}')
+    FROM s3(
+        gcs_credentials,
+        url='{{ bucket_path }}'
+    )

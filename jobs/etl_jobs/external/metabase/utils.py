@@ -24,7 +24,7 @@ def access_secret_data(project_id, secret_id, default=None):
 def get_dependant_cards(legacy_table_name, legacy_schema_name):
     query = f"""
         SELECT distinct card_id, card_type
-        FROM `{ENVIRONMENT_SHORT_NAME}.{CLEAN_DATASET}.dependencies_metabase` 
+        FROM `{PROJECT_NAME}.{CLEAN_DATASET}.dependencies_metabase` 
         WHERE table_name = '{legacy_table_name}'
         and lower(card_name) not like '%archive%'
         and schema = '{legacy_schema_name}' 
@@ -32,7 +32,7 @@ def get_dependant_cards(legacy_table_name, legacy_schema_name):
 
     metabase_activity_query = f"""
         SELECT *
-        FROM `{ENVIRONMENT_SHORT_NAME}.{ANALYTICS_DATASET}.metabase_activity` 
+        FROM `{PROJECT_NAME}.{ANALYTICS_DATASET}.metabase_activity` 
     """
 
     dependant_cards = pd.read_gbq(query)

@@ -1,4 +1,3 @@
-
 SQL_PATH = "dependencies/cold_data/sql"
 
 clean_tables = {

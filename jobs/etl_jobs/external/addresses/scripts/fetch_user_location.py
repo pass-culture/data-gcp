@@ -157,12 +157,12 @@ class AdressesDownloader:
         with fs.open(f"{BUCKET_NAME}/functions/georef-france-commune.json") as file:
             communes = json.load(file)
 
-        self.user_address_dataframe[["code_epci", "epci_name"]] = (
-            self.user_address_dataframe.apply(
-                lambda row: self.find_commune_informations(row["city_code"], communes),
-                axis=1,
-                result_type="expand",
-            )
+        self.user_address_dataframe[
+            ["code_epci", "epci_name"]
+        ] = self.user_address_dataframe.apply(
+            lambda row: self.find_commune_informations(row["city_code"], communes),
+            axis=1,
+            result_type="expand",
         )
 
         with fs.open(
@@ -170,14 +170,14 @@ class AdressesDownloader:
         ) as file:
             qpv = json.load(file)
 
-        self.user_address_dataframe[["qpv_communes", "qpv_name", "code_qpv"]] = (
-            self.user_address_dataframe.apply(
-                lambda row: self.find_qpv_informations(
-                    row["longitude"], row["latitude"], row["user_department_code"], qpv
-                ),
-                axis=1,
-                result_type="expand",
-            )
+        self.user_address_dataframe[
+            ["qpv_communes", "qpv_name", "code_qpv"]
+        ] = self.user_address_dataframe.apply(
+            lambda row: self.find_qpv_informations(
+                row["longitude"], row["latitude"], row["user_department_code"], qpv
+            ),
+            axis=1,
+            result_type="expand",
         )
 
         with fs.open(

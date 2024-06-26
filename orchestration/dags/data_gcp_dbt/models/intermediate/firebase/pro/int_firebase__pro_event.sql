@@ -23,7 +23,7 @@ WITH pro_event_raw_data as(
         ga_session_number AS session_number,
         ga_session_id AS session_id,
         CONCAT(user_pseudo_id, '-',ga_session_id) AS unique_session_id,
-        origin AS page_origin,
+        origin,
         destination,
         traffic_campaign,
         traffic_medium,

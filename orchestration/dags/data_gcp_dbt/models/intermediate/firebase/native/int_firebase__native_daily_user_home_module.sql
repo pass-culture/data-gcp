@@ -171,6 +171,7 @@ SELECT
     displayed.module_type,
     displayed.user_location_type,
     displayed.reco_call_id,
+    displayed.app_version,
     click_type,
     consultations.offer_id,
     consultations.venue_id,

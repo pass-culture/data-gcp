@@ -18,6 +18,7 @@ SELECT
     module_type,
     user_location_type,
     reco_call_id,
+    displayed.app_version,
     click_type,
     displayed.offer_id,
     venue_id,

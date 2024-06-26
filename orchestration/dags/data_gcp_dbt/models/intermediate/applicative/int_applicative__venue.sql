@@ -181,8 +181,7 @@ SELECT
     COALESCE(co.total_non_cancelled_tickets,0) AS total_non_cancelled_tickets,
     COALESCE(co.total_current_year_non_cancelled_tickets,0) AS total_current_year_non_cancelled_tickets,
     v.iris_internal_id AS venue_iris_internal_id,
-    v.region_name AS venue_region_name,
-    null as cicd_test_field0
+    v.region_name AS venue_region_name
 FROM venues_with_geo_candidates AS v
 LEFT JOIN offers_grouped_by_venue AS o ON o.venue_id = v.venue_id
 LEFT JOIN collective_offers_grouped_by_venue AS co ON co.venue_id = v.venue_id

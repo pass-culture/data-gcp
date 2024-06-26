@@ -5,6 +5,7 @@ on:
   branches:
     - master
     - production
+    - CI-environment
 
 jobs:
   linter:
@@ -33,7 +34,7 @@ jobs:
           done
           json_array="[$(IFS=,; echo "${folders[*]}")]"
           echo "testable_jobs=$json_array" | tee -a $GITHUB_OUTPUT
-  
+    
   test-jobs:
     needs: find-test-jobs
     if: ${{ needs.find-test-jobs.outputs.jobs != '' && toJson(fromJson(needs.find-test-jobs.outputs.jobs)) != '[]' }}
@@ -48,7 +49,7 @@ jobs:
     with:
       JOB_PATH: ${{ matrix.job }}
       NOTIF_CHANNEL_ID: ${{ vars.DEFAULT_NOTIF_CHANNEL_ID }}
-
+  
   test-orchestration:
     uses: ./.github/workflows/reusable_test_orchestration.yml
     with:
@@ -58,9 +59,9 @@ jobs:
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
       
   composer-deploy-on-dev:
-    if: github.ref == 'refs/heads/production' || github.ref == 'refs/heads/CI-environement'
+    if: github.ref == 'refs/heads/production'
     uses: ./.github/workflows/reusable_deploy_composer.yml
-    needs: [test-jobs, test-orchestration, linter]
+    needs: [test-orchestration, test-jobs, linter]
     with:
       TARGET_ENV:  "dev"
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--a3134989-bucket"
@@ -71,9 +72,9 @@ jobs:
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
   composer-deploy-on-stg:
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/CI-environement'
+    if: github.ref == 'refs/heads/master' 
     uses: ./.github/workflows/reusable_deploy_composer.yml
-    needs: [test-jobs, test-orchestration, linter]
+    needs: [test-orchestration, test-jobs, linter]
     with:
       TARGET_ENV:  "staging"
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--00137508-bucket"
@@ -86,7 +87,7 @@ jobs:
   composer-deploy-on-prod:
     if: github.ref == 'refs/heads/production'
     uses: ./.github/workflows/reusable_deploy_composer.yml
-    needs: [test-jobs, test-orchestration, linter, composer-deploy-on-dev]
+    needs: [test-orchestration, test-jobs, linter, composer-deploy-on-dev]
     with:
       TARGET_ENV:  "production"
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--d5adf2e8-bucket"

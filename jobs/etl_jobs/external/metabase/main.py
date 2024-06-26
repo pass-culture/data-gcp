@@ -75,12 +75,12 @@ def run(
 
     if metabase_card_type == "native":
         transition_logs = []
-        transition_log = {
-            "card_type": "native",
-            "legacy_table_name": legacy_table_name,
-            "new_table_name": new_table_name,
-        }
         for card_id in native_cards:
+            transition_log = {
+                "card_type": "native",
+                "legacy_table_name": legacy_table_name,
+                "new_table_name": new_table_name,
+            }
             transition_log["card_id"] = card_id
             transition_log["timestamp"] = datetime.datetime.now()
             try:
@@ -96,13 +96,13 @@ def run(
 
     if metabase_card_type == "query":
         transition_logs = []
-        transition_log = {
-            "card_type": "query",
-            "legacy_table_name": legacy_table_name,
-            "new_table_name": new_table_name,
-        }
 
         for card_id in query_cards:
+            transition_log = {
+                "card_type": "query",
+                "legacy_table_name": legacy_table_name,
+                "new_table_name": new_table_name,
+            }
             transition_log["card_id"] = card_id
             transition_log["timestamp"] = datetime.datetime.now()
             try:

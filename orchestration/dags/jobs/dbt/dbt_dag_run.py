@@ -54,7 +54,6 @@ dag = DAG(
 )
 
 
-
 start = DummyOperator(task_id="start", dag=dag)
 
 end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")

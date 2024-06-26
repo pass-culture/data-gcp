@@ -86,7 +86,7 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
           TARGET_ENV: ${{ inputs.TARGET_ENV }}
-        run: dbt compile --profile CI --target $TARGET_ENV
+        run: dbt compile --profile CI --target $TARGET_ENV --vars "{'ENV_SHORT_NAME':'$TARGET_ENV'}" 
       - name: "Run modified models & 1st order childrens"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
@@ -104,7 +104,7 @@ jobs:
                 echo "no models were modified"
           else
                 echo "Running models: ${models}"
-                dbt run --model $models --profile CI --target $TARGET_ENV --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view'}" 
+                dbt run --model $models --profile CI --target $TARGET_ENV --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$TARGET_ENV'}" 
           fi          
           }
           dbt_run_changed_models +1
@@ -116,7 +116,7 @@ jobs:
           TARGET_ENV: ${{ inputs.TARGET_ENV }}
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."          
-        run: dbt test --store-failures -s "state:modified" --exclude "test_name:relationships" --profile CI --target $TARGET_ENV --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','CI_SEVERITY':'error'}"
+        run: dbt test --store-failures -s "state:modified" --exclude "test_name:relationships" --profile CI --target $TARGET_ENV --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','CI_SEVERITY':'error','ENV_SHORT_NAME':'$TARGET_ENV'}"
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
         uses: slackapi/slack-github-action@v1.23.0

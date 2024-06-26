@@ -71,15 +71,6 @@ import_firebase_pro_tables = {
         "depends": ["raw_firebase_pro_events"],
     },
     # analytics
-    "analytics_firebase_pro_events": {
-        "sql": f"{SQL_PATH}/analytics/firebase_pro_events.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_pro_events",
-        "partition_prefix": "$",
-        "time_partitioning": {"field": "event_date"},
-        "clustering_fields": {"fields": ["event_name"]},
-        "depends": ["raw_firebase_pro_events"],
-    },
     "analytics_firebase_pro_visits": {
         "sql": f"{SQL_PATH}/analytics/firebase_pro_visits.sql",
         "write_disposition": "WRITE_TRUNCATE",

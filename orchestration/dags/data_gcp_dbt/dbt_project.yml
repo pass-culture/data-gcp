@@ -52,17 +52,19 @@ models:
       +docs: 
         node_color: "#d90000" 
     intermediate:
-      +materialized: view
-
+      +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"
     mart:
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: analytics_{{ target.name }}
     export:
       +schema: export_{{ target.name }}
+      +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"
       backend:
         +schema: backend_{{ target.name }}
-        +materialized: table
-
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+    machine_learning:
+      +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+      
   elementary:
     +on_schema_change: "append_new_columns"
     +enabled: false

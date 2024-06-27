@@ -35,7 +35,7 @@ SELECT
     e.session_number,
     e.session_id,
     e.unique_session_id,
-    e.page_origin AS origin,
+    e.origin,
     e.destination,
     e.traffic_campaign,
     e.traffic_medium,

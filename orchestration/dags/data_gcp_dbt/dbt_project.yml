@@ -80,7 +80,7 @@ seeds:
   +docs:
     node_color: "#000000"
 snapshots:
-  +target_schema: snapshots
+  +target_schema: snapshots_{{ target.name }}
   +docs:
     show: false
   data_gcp_dbt:

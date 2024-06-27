@@ -17,28 +17,28 @@ SELECT
     fpv.first_event_timestamp,
     fpv.last_event_timestamp,
     fpv.visit_duration_seconds,
-    COUNT(DISTINCT uo.offerer_id) as nb_offerer,
-    COUNT(DISTINCT p.partner_id) as nb_partner,
+    COUNT(DISTINCT uo.offerer_id) as total_offerers,
+    COUNT(DISTINCT p.partner_id) as total_partners,
 
     -- offer management (modification and creation after hub)
-    SUM(CASE WHEN nb_start_individual_offer_creation + nb_confirmed_individual_offer_creation + nb_start_collective_offer_template_creation + nb_confirmed_collective_offer_template_creation + nb_start_collective_offer_bookable_creation + nb_confirmed_collective_offer_bookable_creation + nb_start_individual_offer_details_edition + nb_confirmed_individual_offer_details_edition + nb_start_individual_offer_stock_edition + nb_confirmed_individual_offer_stock_edition > 0 THEN 1 ELSE 0 END) AS nb_manage_offer,
+    SUM(CASE WHEN total_started_individual_offers + total_confirmed_individual_offers + total_started_collective_offer_template + total_confirmed_collective_offer_template + total_started_bookable_collective_offers + total_confirmed_bookable_collective_offers + total_detail_edition_started_individual_offers + total_detail_edition_confirmed_individual_offers + total_stock_edition_started_individual_offers + total_stock_edition_confirmed_individual_offers > 0 THEN 1 ELSE 0 END) AS total_managed_offers,
 
     -- guichet management
-    SUM(CASE WHEN nb_view_ticket_page > 0 THEN 1 ELSE 0 END) AS nb_manage_ticket,
+    SUM(CASE WHEN total_ticket_page_views > 0 THEN 1 ELSE 0 END) AS total_managed_tickets,
     -- booking management (see pages about booking)
-    SUM(CASE WHEN nb_view_individual_booking_page + nb_view_collective_booking_page>0 THEN 1 ELSE 0 END) AS nb_manage_booking,
+    SUM(CASE WHEN total_individual_booking_page_views + total_collective_booking_page_views > 0 THEN 1 ELSE 0 END) AS total_managed_bookings,
     -- finance management (consult finance pages and add bank account)
-    SUM(CASE WHEN nb_view_financial_receipt_page+nb_view_financial_details_page + nb_view_banking_info_page + nb_clic_add_bank_account + nb_clic_add_venue_to_bank_account > 0 THEN 1 ELSE 0 END) AS nb_manage_finance,
+    SUM(CASE WHEN total_financial_receipt_page_views + total_financial_details_page_views + total_banking_info_page_views + total_add_bank_account_clicks + total_add_venue_to_bank_account_clicks > 0 THEN 1 ELSE 0 END) AS total_managed_finance,
 
     -- venue management (create and modify venue)
-    SUM(CASE WHEN nb_start_venue_creation + nb_confirmed_venue_creation + nb_start_venue_edition + nb_confirmed_venue_edition + nb_clic_add_image > 0 THEN 1 ELSE 0 END) AS nb_manage_venue,
+    SUM(CASE WHEN total_started_venue_creation + total_confirmed_venue_creation + total_started_venue_edition + total_confirmed_venue_edition + total_add_image_clicks > 0 THEN 1 ELSE 0 END) AS total_managed_venues,
     -- profil management (modify profil and invite user)
-    SUM(CASE WHEN nb_clic_modify_profil + nb_clic_add_collaborator + nb_clic_send_invitation > 0 THEN 1 ELSE 0 END) AS nb_manage_profil,
+    SUM(CASE WHEN total_modify_profile_clicks + total_add_collaborator_clicks + total_send_invitation_clicks > 0 THEN 1 ELSE 0 END) AS total_managed_profiles,
 
     -- stat consultation
-    SUM(CASE WHEN nb_view_stat_page > 0 THEN 1 ELSE 0 END) AS nb_consult_stat,
+    SUM(CASE WHEN total_stat_page_views > 0 THEN 1 ELSE 0 END) AS total_stat_page_views,
     -- help consultation
-    SUM(CASE WHEN nb_clic_collective_help + nb_clic_help_center + nb_clic_best_practices + nb_clic_consult_support + nb_clic_consult_cgu > 0 THEN 1 ELSE 0 END) AS nb_consult_help,
+    SUM(CASE WHEN total_collective_help_clicks + total_help_center_clicks + total_help_center_clicks + total_consult_support_clicks + total_consult_cgu_clicks > 0 THEN 1 ELSE 0 END) AS total_consulted_help,
 FROM {{ ref('int_firebase__pro_visit') }} AS fpv
 LEFT JOIN {{ ref('enriched_user_offerer') }} AS uo ON fpv.user_id = uo.user_id
 LEFT JOIN {{ ref('enriched_user_offerer') }} AS o ON uo.offerer_id = o.offerer_id

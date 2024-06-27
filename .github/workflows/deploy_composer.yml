@@ -33,7 +33,7 @@ jobs:
           done
           json_array="[$(IFS=,; echo "${folders[*]}")]"
           echo "testable_jobs=$json_array" | tee -a $GITHUB_OUTPUT
-    
+
   test-jobs:
     needs: find-test-jobs
     if: ${{ needs.find-test-jobs.outputs.jobs != '' && toJson(fromJson(needs.find-test-jobs.outputs.jobs)) != '[]' }}
@@ -56,7 +56,7 @@ jobs:
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
-      
+
   composer-deploy-on-dev:
     if: github.ref == 'refs/heads/production'
     uses: ./.github/workflows/reusable_deploy_composer.yml
@@ -71,7 +71,7 @@ jobs:
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
   composer-deploy-on-stg:
-    if: github.ref == 'refs/heads/master' 
+    if: github.ref == 'refs/heads/master'
     uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: [test-orchestration, test-jobs, linter]
     with:
@@ -95,5 +95,3 @@ jobs:
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
-  
-

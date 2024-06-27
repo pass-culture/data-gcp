@@ -25,7 +25,7 @@ SELECT
     FROM {{ ref('int_firebase__pro_event') }}
     WHERE TRUE
         {% if is_incremental() %}
-        AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
+        AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3+1 DAY) and DATE("{{ ds() }}")
         {% endif %}
 
 )
@@ -100,6 +100,10 @@ SELECT
     COUNTIF(event_name= "hasClickedConsultCGU") AS total_consult_cgu_clicks,
 
 FROM filtered_events
+WHERE TRUE
+        {% if is_incremental() %}
+        AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
+        {% endif %}
 GROUP BY
     session_id,
     user_pseudo_id,

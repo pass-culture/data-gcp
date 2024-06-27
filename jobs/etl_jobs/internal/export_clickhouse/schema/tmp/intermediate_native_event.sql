@@ -18,6 +18,6 @@ AS
         cast(is_consult_offer as UInt64) as is_consult_offer,
         cast(is_add_to_favorites as UInt64) as is_add_to_favorites
     FROM s3(
-            gcs_credentials,
-            url='{{ bucket_path }}'
-    )
+        gcs_credentials,
+        url='{{ bucket_path }}'
+)

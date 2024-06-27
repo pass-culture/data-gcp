@@ -18,4 +18,4 @@ AS
     FROM s3(
         gcs_credentials,
         url='{{ bucket_path }}'
-    )
+)

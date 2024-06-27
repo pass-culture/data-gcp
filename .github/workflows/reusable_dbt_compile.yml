@@ -34,8 +34,6 @@ jobs:
       DBT_FOLDER: "./dags/data_gcp_dbt/"
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: "Connect to Secret Manager"
         uses: 'google-github-actions/auth@v2'
         with:

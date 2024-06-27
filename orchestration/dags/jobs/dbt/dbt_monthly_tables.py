@@ -2,6 +2,7 @@ import datetime
 import json
 
 from airflow import DAG
+from airflow.operators.python_operator import BranchPythonOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.dates import datetime, timedelta
@@ -31,9 +32,7 @@ dag = DAG(
     dagrun_timeout=timedelta(minutes=60),
     catchup=False,
     description="run monthly aggregated models",
-    schedule_interval=get_airflow_schedule(
-        "0 1 1 * *"
-    ),  # run every 1st day of the month at 1 AM
+    schedule_interval=get_airflow_schedule("0 1 * * *"),
     params={
         "target": Param(
             default=ENV_SHORT_NAME,
@@ -60,7 +59,11 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
+end = DummyOperator(task_id="end", dag=dag, trigger_rule="all_success")
+
 wait_for_dbt_daily = waiting_operator(dag=dag, dag_id="dbt_run_dag")
+
+shunt = DummyOperator(task_id="skip_tasks", dag=dag)
 
 monthly = BashOperator(
     task_id="run_monthly",
@@ -79,7 +82,22 @@ monthly = BashOperator(
 )
 
 
-end = DummyOperator(task_id="end", dag=dag, trigger_rule="all_success")
+def conditionally_create_tasks(**context):
+    execution_date = context["ds"]
+    execution_date = datetime.datetime.strptime(execution_date, "%Y-%m-%d")
+
+    if execution_date.day == 1:  # Check if the day is the first of the month
+        return ["wait_for_dbt_run_dag_end"]
+    else:
+        return ["skip_tasks"]
 
 
-start >> wait_for_dbt_daily >> monthly >> end
+branching = BranchPythonOperator(
+    task_id="branching",
+    python_callable=conditionally_create_tasks,
+    provide_context=True,
+    dag=dag,
+)
+
+start >> branching >> wait_for_dbt_daily >> monthly >> end
+branching >> shunt >> end

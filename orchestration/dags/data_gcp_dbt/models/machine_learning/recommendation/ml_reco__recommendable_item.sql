@@ -1,8 +1,4 @@
-{{
-    config(
-        materialized = "table"
-    )
-}}
+
 
 WITH venues AS (
         SELECT 

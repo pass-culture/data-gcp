@@ -32,21 +32,15 @@ models:
       +config:
         +meta:
           owner: "@team-data-engineering"
-      +materialized: table
+      +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: clean_{{ target.name }}
       +docs: 
         node_color: "#b43ddb"
       applicative: 
         +alias: applicative_database_
-        +materialized: table
-      applicative_history:
-        +alias: applicative_database_
-        +materialized: incremental
-        +partition_by: {'field': 'partition_date', 'data_type': 'date'}
-        +cluster_by: ['partition_date']  
-        +incremental_strategy: insert_overwrite
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     analytics:
-      +materialized: table
+      +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: analytics_{{ target.name }}
       +re_data_monitored: true
       +re_data_anomaly_detector:
@@ -58,17 +52,19 @@ models:
       +docs: 
         node_color: "#d90000" 
     intermediate:
-      +materialized: view
-
+      +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"
     mart:
-      +materialized: table
+      +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: analytics_{{ target.name }}
     export:
       +schema: export_{{ target.name }}
+      +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"
       backend:
         +schema: backend_{{ target.name }}
-        +materialized: table
-
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+    machine_learning:
+      +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+      
   elementary:
     +on_schema_change: "append_new_columns"
     +enabled: false
@@ -88,7 +84,7 @@ snapshots:
       tags: applicative_history
 tests:
   # +store_failures: true  # store failures for all tests
-  +severity: warn # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.  
+  +severity: "{{ var('CI_SEVERITY', 'warn') }}" # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.  
   +docs:
     show: true
     tags: "test"
@@ -97,3 +93,5 @@ tests:
 vars:
   ENV_SHORT_NAME: dev
   re_data:save_test_history: true
+  CI_MATERIALIZATION: none
+  CI_SEVERITY: none

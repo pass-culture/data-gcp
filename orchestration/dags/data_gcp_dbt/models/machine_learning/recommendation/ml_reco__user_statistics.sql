@@ -1,10 +1,3 @@
-
-{{
-    config(
-        materialized = "table"
-    )
-}}
-
 WITH selected_users AS (
   SELECT
     eu.user_id,

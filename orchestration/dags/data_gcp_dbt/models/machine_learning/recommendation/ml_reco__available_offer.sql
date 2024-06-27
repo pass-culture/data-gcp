@@ -1,8 +1,3 @@
-{{
-    config(
-        materialized = "table"
-    )
-}}
 
 WITH offers_with_mediation AS (
         SELECT offer_id

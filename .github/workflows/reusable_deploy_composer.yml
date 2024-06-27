@@ -63,6 +63,46 @@ jobs:
           service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v2'
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip' # caching pip dependencies
+          cache-dependency-path: ./orchestration/airflow/orchestration-requirements.txt
+      - name: "Install Python requirements"
+        run: pip install -r airflow/orchestration-requirements.txt
+      - name: "Install dbt dependencies"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+        run: |
+          export PYTHONPATH=$PYTHONPATH:./dags
+          dbt deps 
+      - name: "deploy dbt dependencies"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+        run: |
+          gsutil -m rm -r  gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/target/dbt_packages
+          gsutil -m cp -r target/dbt_packages gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/target
+      - name: "compile dbt project"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+          TARGET_ENV: ${{ inputs.TARGET_ENV }}
+        run: dbt compile --profile CI --target $TARGET_ENV
+      - name: "Push manifest"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+        run: |
+          gsutil rm  gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/target/manifest.json
+          gsutil cp target/manifest.json gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json
       - name: "Deploy composer"
         run: |
           gsutil -m rm -r gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/dags

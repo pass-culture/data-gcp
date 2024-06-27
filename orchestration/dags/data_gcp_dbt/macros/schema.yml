@@ -64,13 +64,12 @@ macros:
       If the model is in intermediate folder, schema name = int_{sub_folder_name}_{target_name}
       Else the destination schema dataset is specified in dbt_project.yml (analytics_env or clean_env)
 
-  - name: get_custom_alias
-    description: |
-      This macro generates table aliases 
-      - By using the segment after '__' for models in the intermediate folder. 
-      - By removing 'mrt' and replacing '__' by '_' for models in the mart folder. 
-      - Otherwise, it uses the model's name.
-      
+  - name: generate_alias_name
+    description: " This macro generates table aliases 
+    - By using the segment after '__' for models in the intermediate folder. 
+    - By removing 'mrt' and replacing '__' by '_' for models in the mart folder. 
+    - Otherwise, it uses the model's name.
+    "
 
-  - name: ml_variables
+  - name: ml_vars
     description: ""

@@ -60,26 +60,6 @@ import_firebase_pro_tables = {
             "gcp_project_native_env": GCP_PROJECT_PRO_ENV,
         },
     },
-    # clean
-    "clean_firebase_pro_visits": {
-        "sql": f"{SQL_PATH}/clean/firebase_pro_visits.sql",
-        "write_disposition": "WRITE_TRUNCATE",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "firebase_pro_visits",
-        "partition_prefix": "$",
-        "time_partitioning": {"field": "first_event_date"},
-        "depends": ["raw_firebase_pro_events"],
-    },
-    # analytics
-    "analytics_firebase_pro_visits": {
-        "sql": f"{SQL_PATH}/analytics/firebase_pro_visits.sql",
-        "write_disposition": "WRITE_TRUNCATE",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_pro_visits",
-        "partition_prefix": "$",
-        "time_partitioning": {"field": "first_event_date"},
-        "depends": ["clean_firebase_pro_visits"],
-    },
 }
 
 import_firebase_beneficiary_tables = {

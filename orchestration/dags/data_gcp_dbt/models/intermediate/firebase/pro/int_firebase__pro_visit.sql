@@ -1,83 +1,38 @@
-WITH change_format AS(
-SELECT (
-            select
-                event_params.value.int_value
-            from
-                unnest(event_params) event_params
-            where
-                event_params.key = 'ga_session_id'
-        ) as session_id,
-        CONCAT(user_pseudo_id, '-',
-                (
-            select
-                event_params.value.int_value
-            from
-                unnest(event_params) event_params
-            where
-                event_params.key = 'ga_session_id'
-                )
-         ) AS unique_session_id,
-        (
-            select
-                event_params.value.int_value
-            from
-                unnest(event_params) event_params
-            where
-                event_params.key = 'ga_session_number'
-        ) as session_number,
+{{
+    config(
+        materialized = "incremental",
+        incremental_strategy = "insert_overwrite",
+        partition_by = {"field": "first_event_date", "data_type": "date"},
+        on_schema_change = "sync_all_columns",
+        alias = "firebase_pro_visits"
+    )
+}}
+
+WITH filtered_events AS(
+SELECT
+        session_id,
+        unique_session_id,
+        session_number,
         user_id,
         user_pseudo_id,
         event_name,
-        (
-            select
-                event_params.value.string_value
-            from
-                unnest(event_params) event_params
-            where
-                event_params.key = 'page_title'
-        ) as page_name,
-        TIMESTAMP_SECONDS(
-            CAST(CAST(event_timestamp as INT64) / 1000000 as INT64)
-        ) AS event_timestamp,
+        page_name,
+        event_timestamp,
         event_date,
-        (
-            select
-                event_params.value.string_value
-            from
-                unnest(event_params) event_params
-            where
-                event_params.key = 'page_location'
-        ) as page_location,
-        (
-            select
-                event_params.value.string_value
-            from
-                unnest(event_params) event_params
-            where
-                event_params.key = 'from'
-        ) as origin,
-        (
-            select
-                event_params.value.string_value
-            from
-                unnest(event_params) event_params
-            where
-                event_params.key = 'isEdition'
-        ) as is_edition,
-    FROM
-        `{{ bigquery_raw_dataset }}.firebase_pro_events`
-    WHERE 
-        {% if params.dag_type == 'intraday' %}
-        event_date = DATE('{{ ds }}')
-        {% else %}
-        event_date = DATE('{{ add_days(ds, -1) }}')
+        page_location,
+        origin,
+        is_edition
+    FROM {{ ref('int_firebase__pro_event') }}
+    WHERE TRUE
+        {% if is_incremental() %}
+        AND first_event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
         {% endif %}
 
 )
         
 SELECT
     session_id,
-    CONCAT(session_id, user_pseudo_id) as unique_session_id,
+    unique_session_id,
     user_pseudo_id,
     ANY_VALUE(user_id) AS user_id,
     ANY_VALUE(session_number) AS session_number,
@@ -144,8 +99,7 @@ SELECT
     COUNTIF(event_name="hasClickedConsultSupport") AS nb_clic_consult_support,
     COUNTIF(event_name="hasClickedConsultCGU") AS nb_clic_consult_cgu,
 
-FROM change_format
-
+FROM filtered_events
 GROUP BY
     session_id,
     user_pseudo_id,

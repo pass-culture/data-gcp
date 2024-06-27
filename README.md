@@ -154,13 +154,13 @@ Cette tâche exécute des tests d'orchestration si des changements sont détect�
 ```mermaid
 graph TD;
     A[Workflow de Base] --> B[Linter]
-    A[Workflow de Base] --> C[Compilation DBT en Production]
-    A[Workflow de Base] --> D[Compilation DBT en Staging]
-    A[Workflow de Base] --> E[Recherche de Tâches de Test]
-    E[Recherche de Tâches de Test] --> F[Vérification de la Non-Vacuité de la Matrice]
-    F[Vérification de la Non-Vacuité de la Matrice] --> G[Tâches de Test]
-    A[Workflow de Base] --> H[Recherche de Changements d'Orchestration]
-    H[Recherche de Changements d'Orchestration] --> I[Test d'Orchestration]
+    A -->|PR production| C[Compilation DBT en Production]
+    A -->|PR master| D[Compilation DBT en Staging]
+    A --> E[Recherche de Tâches de Test]
+    E --> F[Vérification de la Non-Vacuité de la Matrice]
+    F --> G[Tâches de Test]
+    A --> H[Recherche de Changements d'Orchestration]
+    H --> I[Test d'Orchestration]
 ```
 
 ### Workflow CD
@@ -209,13 +209,14 @@ Cette tâche déploie Composer dans l'environnement de production si la branche 
 
 ```mermaid
 graph TD;
-    A[Workflow de Déploiement] --> B[Linter]
-    A[Workflow de Déploiement] --> C[Recherche de Tâches de Test]
-    C[Recherche de Tâches de Test] --> D[Tâches de Test]
-    A[Workflow de Déploiement] --> E[Test d'Orchestration]
-    A[Workflow de Déploiement] --> F[Déploiement de Composer en Dev]
-    F[Déploiement de Composer en Dev] --> G[Déploiement de Composer en Production]
-    A[Workflow de Déploiement] --> H[Déploiement de Composer en Staging]
+    A[Workflow de Test] --> B[Linter]
+    A --> C[Recherche de Tâches de Test]
+    C --> D[Tâches de Test]
+    A --> E[Test d'Orchestration]
+    A -->|merge production| F[Déploiement de Composer & DBT en Dev]
+    F --> G[Déploiement de Composer & DBT en Production]
+    A -->|merge master| H[Déploiement de Composer & DBT en Staging]
+
 ```
 
 

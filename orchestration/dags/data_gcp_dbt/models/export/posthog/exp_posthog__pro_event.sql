@@ -7,7 +7,7 @@ SELECT
     platform,
     STRUCT(   
         unique_session_id,
-        page_origin, 
+        origin,
         offer_id,
         offer_type,
         is_edition,

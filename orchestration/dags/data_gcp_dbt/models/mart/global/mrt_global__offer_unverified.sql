@@ -72,6 +72,7 @@ SELECT
     v.offerer_id,
     v.offerer_name,
     v.venue_type_label,
-    v.venue_iris_internal_id
+    v.venue_iris_internal_id,
+    v.venue_region_name
 FROM {{ ref('int_applicative__offer') }} AS o
 INNER JOIN {{ ref('mrt_global__venue_unverified')}} AS v ON v.venue_id = o.venue_id

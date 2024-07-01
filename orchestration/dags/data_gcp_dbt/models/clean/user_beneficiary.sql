@@ -102,7 +102,7 @@ SELECT
     END AS user_activation_date,
     ui.user_iris_internal_id,
 FROM user_beneficiary AS u
-LEFT JOIN {{ ref('int_api_gouv__user_address_location') }} AS ui ON ui.user_id = u.user_id
+LEFT JOIN {{ ref('int_api_gouv__address_user_location') }} AS ui ON ui.user_id = u.user_id
 LEFT JOIN ranked_bookings 
     ON u.user_id = ranked_bookings.user_id
     AND rank_ = 1

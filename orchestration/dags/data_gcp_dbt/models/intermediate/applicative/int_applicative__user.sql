@@ -44,4 +44,4 @@ SELECT
     ui.user_iris_internal_id,
     ui.user_region_name
 FROM {{ source("raw", "applicative_database_user") }} AS u
-LEFT JOIN {{ ref("int_api_gouv__user_address_location") }} AS ui ON ui.user_id = u.user_id
+LEFT JOIN {{ ref("int_api_gouv__address_user_location") }} AS ui ON ui.user_id = u.user_id

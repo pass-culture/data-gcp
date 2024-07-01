@@ -65,11 +65,9 @@ jobs:
         uses: 'google-github-actions/setup-gcloud@v2'
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.10.14
-      - name: Check pip version
-        run: pip --version
-      - name: 'List Python bin directory'
-        run: ls -la /__t/Python/3.10.14/x64/bin
+          python-version: '3.10'
+          cache: 'pip' # caching pip dependencies
+          cache-dependency-path: ./orchestration/airflow/orchestration-requirements.txt
       - name: "Install Python requirements"
         run: pip install -r airflow/orchestration-requirements.txt
       - name: "Install dbt dependencies"

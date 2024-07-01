@@ -5,6 +5,7 @@ on:
   branches:
     - master
     - production
+    - hotfix-cd
 
 jobs:
   linter:
@@ -71,11 +72,11 @@ jobs:
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
   composer-deploy-on-stg:
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/hotfix-cd'
     uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: [test-orchestration, test-jobs, linter]
     with:
-      TARGET_ENV:  "staging"
+      TARGET_ENV:  "stg"
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--00137508-bucket"
       COMPOSER_ENVIRONMENT_NAME: "data-composer-stg"
       DATA_GCP_PROJECT: "passculture-data-ehp"

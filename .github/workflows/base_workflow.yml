@@ -2,6 +2,10 @@ name: "Base Workflow"
 
 on:
   pull_request:
+    branches:
+      - '*'
+      - '!hotfix-cd'
+    
 
 jobs:
    linter:

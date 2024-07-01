@@ -54,7 +54,26 @@ dag = DAG(
 )
 
 
+def choose_branch(**context):
+    run_id = context["dag_run"].run_id
+    if run_id.startswith("scheduled__"):
+        return ["wait_for_dbt_init_dag_end"]
+    return ["manual_trigger_shunt"]
+
+
 start = DummyOperator(task_id="start", dag=dag)
+
+branching = BranchPythonOperator(
+    task_id="branching",
+    python_callable=choose_branch,
+    provide_context=True,
+    dag=dag,
+)
+shunt = DummyOperator(task_id="manual_trigger_shunt", dag=dag)
+
+wait4init = waiting_operator(dag, "dbt_init_dag")
+
+join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
 
 end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
 
@@ -216,4 +235,4 @@ for test, parents in crit_test_parents.items():
         except KeyError:
             pass
 
-start >> wait_for_raw >> data_transfo
+start >> branching >> [shunt, wait4init] >> join >> wait_for_raw >> data_transfo

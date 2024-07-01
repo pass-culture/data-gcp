@@ -33,7 +33,7 @@ dag = DAG(
     default_args=default_args,
     catchup=False,
     description="A dbt wrapper for airflow",
-    schedule_interval=None,
+    schedule_interval=get_airflow_schedule("0 1 * * *"),
     params={
         "target": Param(
             default=ENV_SHORT_NAME,
@@ -84,21 +84,7 @@ sleep_op = PythonOperator(
     python_callable=lambda: time.sleep(120),  # wait 2 minutes
 )
 
-run_elementary = BashOperator(
-    task_id="dbt_elementary",
-    bash_command=f"bash ./scripts/dbt_run_package.sh ",
-    env={
-        "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-        "ENV_SHORT_NAME": ENV_SHORT_NAME,
-        "target": "{{ params.target }}",
-        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-        "package_name": "elementary",
-    },
-    append_env=True,
-    cwd=PATH_TO_DBT_PROJECT,
-    dag=dag,
-)
 
 end = DummyOperator(task_id="end", dag=dag)
 
-start >> deps >> manifest >> sleep_op >> run_elementary >> end
+start >> deps >> manifest >> sleep_op >> end

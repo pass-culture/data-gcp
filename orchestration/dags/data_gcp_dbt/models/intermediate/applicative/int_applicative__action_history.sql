@@ -13,6 +13,7 @@ SELECT
     venue_id,
     comment,
     JSON_EXTRACT_SCALAR(action_history_json_data, "$.reason") AS action_history_reason,
+    action_history_reason,
     ROW_NUMBER() OVER (
         PARTITION BY user_id
         ORDER BY

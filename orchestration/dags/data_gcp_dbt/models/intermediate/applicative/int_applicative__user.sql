@@ -42,6 +42,31 @@ SELECT
     u.user_cultural_survey_filled_date,
     CASE WHEN u.user_role IN ("UNDERAGE_BENEFICIARY", "BENEFICIARY") THEN 1 ELSE 0 END AS is_beneficiary,
     ui.user_iris_internal_id,
-    ui.user_region_name
+    ui.user_region_name,
+
+
+
+    -- user_cultural_survey_filled_date AS first_connection_date,
+    CASE WHEN user_role IN ("UNDERAGE_BENEFICIARY", "BENEFICIARY") THEN TRUE ELSE FALSE END AS is_beneficiary,
+    -- mettre le paramètre airflow plutôt que current_date ici ?
+    DATE_DIFF(CURRENT_DATE(), CAST(user_activation_date AS DATE), DAY) AS user_seniority,
+
+    u.iris_internal_id AS user_iris_internal_id,
+    u.region_name AS user_region_name,
+
+    ---bgu.total_individual_bookings,
+    --bgu.total_non_cancelled_individual_bookings,
+    --bgu.first_booking_date,
+
+
+    CASE WHEN last_deposit_amount < 300 THEN 'GRANT_15_17' ELSE 'GRANT_18' END AS current_deposit_type,
+    CASE WHEN first_deposit_amount < 300 THEN 'GRANT_15_17' ELSE 'GRANT_18' END AS first_deposit_type,
+
+    region_department.region_name AS user_region_name,
+
 FROM {{ source("raw", "applicative_database_user") }} AS u
 LEFT JOIN {{ ref("int_api_gouv__address_user_location") }} AS ui ON ui.user_id = u.user_id
+LEFT JOIN bookings_grouped_by_user AS bgu ON bgu.user_id = u.user_id
+LEFT JOIN deposit_grouped_by_user AS dgu ON dgu.userId= u.user_id
+LEFT JOIN {{source('analytics','region_department')}} ON u.user_department_code = region_department.num_dep
+

@@ -27,6 +27,14 @@ SELECT
             ORDER BY
                 dateCreated DESC,
                 id DESC
-        ) AS deposit_rank_desc
-FROM {{ source("raw", "applicative_database_deposit") }} AS d
+        ) AS deposit_rank_desc,
 
+
+    userId,
+    source,
+    dateCreated,
+    dateUpdated,
+    expirationDate,
+    type,
+    ROW_NUMBER() OVER(PARTITION BY deposit.userId ORDER BY deposit.dateCreated DESC, id DESC) AS rown_deposit
+FROM {{ source("raw", "applicative_database_deposit") }} AS d

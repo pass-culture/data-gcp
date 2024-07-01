@@ -45,6 +45,7 @@ SELECT
     s.stock_fields_updated,
     s.price_category_id,
     s.stock_features,
+    s.offerer_address_id,
     CASE WHEN s.stock_quantity IS NULL THEN NULL
         ELSE GREATEST( s.stock_quantity - COALESCE(bs.total_bookings, 0),0)
     END AS total_available_stock,

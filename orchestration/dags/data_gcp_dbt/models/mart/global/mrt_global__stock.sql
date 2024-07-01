@@ -26,6 +26,7 @@ SELECT
     s.price_category_label_id,
     s.price_category_label,
     s.stock_features,
+    s.offerer_address_id,
     o.offer_id,
     o.offer_product_id,
     o.offer_id_at_providers,

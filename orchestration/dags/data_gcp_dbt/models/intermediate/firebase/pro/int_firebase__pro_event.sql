@@ -56,7 +56,10 @@ WITH pro_event_raw_data as(
         filledWithErrors AS filled_with_errors,
         categorieJuridiqueUniteLegale AS onboarding_selected_legal_category,
         format AS download_format,
-        bookingStatus AS download_booking_status
+        bookingStatus AS download_booking_status,
+        buttonType AS download_button_type,
+        fileType AS download_file_type,
+        filesCount AS download_files_cnt
 FROM {{ ref("int_firebase__pro_event_flattened") }}
 {% if is_incremental() %}
 WHERE event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")

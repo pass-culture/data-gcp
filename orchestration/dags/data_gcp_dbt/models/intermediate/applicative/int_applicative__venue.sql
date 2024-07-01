@@ -74,7 +74,7 @@ venues_with_geo_candidates AS (
 
 SELECT
     v.venue_thumb_count,
-    v.venue_address,
+    v.venue_street,
     v.venue_postal_code,
     v.venue_city,
     v.ban_id,
@@ -125,6 +125,7 @@ SELECT
     ) AS venue_backoffice_link,
     {{target_schema}}.humanize_id(v.venue_id) as venue_humanized_id,
     venue_region_departement.academy_name AS venue_academy_name,
+    v.offerer_address_id,
     vr.venue_target AS venue_targeted_audience,
     vc.venue_contact_phone_number,
     vc.venue_contact_email,
@@ -181,7 +182,7 @@ SELECT
     COALESCE(co.total_non_cancelled_tickets,0) AS total_non_cancelled_tickets,
     COALESCE(co.total_current_year_non_cancelled_tickets,0) AS total_current_year_non_cancelled_tickets,
     v.iris_internal_id AS venue_iris_internal_id,
-    v.region_name AS venue_region_name
+    v.region_name AS venue_region_name,
 FROM venues_with_geo_candidates AS v
 LEFT JOIN offers_grouped_by_venue AS o ON o.venue_id = v.venue_id
 LEFT JOIN collective_offers_grouped_by_venue AS co ON co.venue_id = v.venue_id

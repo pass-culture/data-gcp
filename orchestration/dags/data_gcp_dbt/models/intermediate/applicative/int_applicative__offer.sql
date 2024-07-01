@@ -85,6 +85,7 @@ SELECT
     o.casting,
     o.isbn,
     o.titelive_gtl_id,
+    o.offerer_address_id,
     CASE WHEN (so.is_bookable
         AND o.offer_is_active
         AND o.offer_validation = "APPROVED") THEN TRUE ELSE FALSE END AS offer_is_bookable,

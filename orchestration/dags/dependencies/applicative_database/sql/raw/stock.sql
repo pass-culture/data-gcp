@@ -14,4 +14,5 @@ SELECT
     , "fieldsUpdated" AS stock_fields_updated
     , CAST("priceCategoryId" AS varchar(255)) AS price_category_id
     , BTRIM(array_to_string("features", \',\'), \'{\') AS stock_features
+    , CAST("offererAddressId" AS varchar(255)) as offerer_address_id
 FROM public.stock

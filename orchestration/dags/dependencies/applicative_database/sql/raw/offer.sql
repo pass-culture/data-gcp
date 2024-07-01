@@ -29,4 +29,5 @@ SELECT
     , "withdrawalType" AS offer_withdrawal_type
     , "withdrawalDelay" AS offer_withdrawal_delay
     , CAST("bookingContact" AS varchar(255)) as booking_contact
+    , CAST("offererAddressId" AS varchar(255)) as offerer_address_id
 FROM public.offer

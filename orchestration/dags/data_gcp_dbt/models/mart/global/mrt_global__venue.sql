@@ -2,7 +2,7 @@ SELECT venue_id,
     venue_name,
     venue_public_name,
     venue_booking_email,
-    venue_address,
+    venue_street,
     venue_latitude,
     venue_longitude,
     venue_department_code,
@@ -74,7 +74,8 @@ SELECT venue_id,
     offerer_is_active,
     venue_pc_pro_link,
     partner_id,
-    venue_iris_internal_id
+    venue_iris_internal_id,
+    offerer_address_id,
 FROM {{ ref('mrt_global__venue_unverified') }}
 WHERE offerer_validation_status='VALIDATED'
     AND offerer_is_active

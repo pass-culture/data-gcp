@@ -1,6 +1,6 @@
 SELECT
     "thumbCount" AS venue_thumb_count
-    , "address" as venue_address
+    , "street" as venue_street
     , "postalCode" as venue_postal_code
     , "city" as venue_city
     , "banId" as ban_id
@@ -59,4 +59,5 @@ SELECT
     , "dmsToken" AS dms_token
     , "description" AS venue_description
     , "withdrawalDetails" AS venue_withdrawal_details
+    , "offererAddressId" AS offerer_address_id 
 FROM public.venue

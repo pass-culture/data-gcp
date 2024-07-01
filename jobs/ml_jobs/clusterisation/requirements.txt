@@ -21,3 +21,4 @@ openai
 umap-learn[parametric_umap]
 numba
 pynndescent
+tf-keras

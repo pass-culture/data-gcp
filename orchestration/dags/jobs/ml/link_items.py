@@ -26,7 +26,7 @@ from common.config import (
 
 from datetime import datetime
 
-from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
+from jobs.ml.constants import IMPORT_LINKAGE_SQL_PATH
 
 DATE = "{{ ts_nodash }}"
 
@@ -100,7 +100,7 @@ with DAG(
 
     export_task = BigQueryExecuteQueryOperator(
         task_id=f"import_retrieval_semantic_vector_table",
-        sql=(IMPORT_TRAINING_SQL_PATH / f"linkage_item_data.sql").as_posix(),
+        sql=(IMPORT_LINKAGE_SQL_PATH / f"linkage_item_data.sql").as_posix(),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_linkage_item_data",

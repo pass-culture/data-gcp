@@ -1,0 +1,18 @@
+--constraint https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+apache-airflow[gcp]==2.6.3
+sshtunnel~=0.4
+# tests
+pytest~=7.4
+pytest-cov~=4.0
+mock~=4.0.2
+#apache-airflow-providers-ssh~=3.7
+#apache-airflow-providers-mysql~=5.1
+#apache-airflow-providers-postgres~=5.2
+#google-cloud-secret-manager~=2.16
+# extras
+psycopg2-binary>=2.8
+# addons
+airflow-provider-great-expectations==0.2.6
+apache-airflow-providers-slack==7.3.1
+dbt-core==1.7.2
+dbt-bigquery~=1.7

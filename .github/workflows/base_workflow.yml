@@ -13,7 +13,7 @@ jobs:
     if: github.base_ref == 'production'
     with:
       TARGET_COMPOSER_BUCKET: "europe-west1-data-composer--d5adf2e8-bucket"
-      TARGET_ENV: "prod"
+      ENV_SHORT_NAME: "prod"
     uses: ./.github/workflows/reusable_dbt_compile.yml
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -22,7 +22,7 @@ jobs:
     if: github.base_ref == 'master'
     with:
       TARGET_COMPOSER_BUCKET: "europe-west1-data-composer--00137508-bucket"
-      TARGET_ENV: "staging"
+      ENV_SHORT_NAME: "stg"
     uses: ./.github/workflows/reusable_dbt_compile.yml
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}

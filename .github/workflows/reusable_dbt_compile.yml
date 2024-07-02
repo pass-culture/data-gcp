@@ -6,7 +6,7 @@ on:
       TARGET_COMPOSER_BUCKET:
         type: string
         required: true
-      TARGET_ENV:
+      ENV_SHORT_NAME:
         type: string
         required: true
       NOTIF_CHANNEL_ID:
@@ -83,13 +83,13 @@ jobs:
         env:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
-          TARGET_ENV: ${{ inputs.TARGET_ENV }}
-        run: dbt compile --profile CI --target $TARGET_ENV --vars "{'ENV_SHORT_NAME':'$TARGET_ENV'}" 
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+        run: dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" 
       - name: "Run modified models & 1st order childrens"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           TARGET_BRANCH: ${{ github.base_ref }}
-          TARGET_ENV: ${{ inputs.TARGET_ENV }}
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
         run: |
@@ -102,7 +102,7 @@ jobs:
                 echo "no models were modified"
           else
                 echo "Running models: ${models}"
-                dbt run --model $models --exclude config.materialized:incremental --profile CI --target $TARGET_ENV --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$TARGET_ENV'}" 
+                dbt run --model $models --exclude config.materialized:incremental --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" 
           fi          
           }
           dbt_run_changed_models +1
@@ -111,10 +111,10 @@ jobs:
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           TARGET_BRANCH: ${{ github.base_ref }}
-          TARGET_ENV: ${{ inputs.TARGET_ENV }}
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."          
-        run: dbt test --store-failures -s "state:modified" --exclude test_name:relationships config.materialized:incremental --profile CI --target $TARGET_ENV --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','CI_SEVERITY':'error','ENV_SHORT_NAME':'$TARGET_ENV'}"
+        run: dbt test --store-failures -s "state:modified" --exclude test_name:relationships config.materialized:incremental --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','CI_SEVERITY':'error','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
         uses: slackapi/slack-github-action@v1.23.0

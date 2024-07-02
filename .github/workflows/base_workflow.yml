@@ -22,7 +22,7 @@ jobs:
     if: github.base_ref == 'master'
     with:
       TARGET_COMPOSER_BUCKET: "europe-west1-data-composer--00137508-bucket"
-      TARGET_ENV: "stg"
+      TARGET_ENV: "staging"
     uses: ./.github/workflows/reusable_dbt_compile.yml
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}

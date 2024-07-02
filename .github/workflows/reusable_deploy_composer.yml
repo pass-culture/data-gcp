@@ -52,6 +52,11 @@ jobs:
             SLACK_BOT_TOKEN:passculture-metier-ehp/passculture-ci-slack-bot-token
             ARTIFACT_REGISTRY_SERVICE_ACCOUNT:passculture-metier-ehp/passculture-main-artifact-registry-service-account
             ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER:passculture-metier-ehp/infra-prod-gcp-workload-identity-provider
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip' # caching pip dependencies
+          cache-dependency-path: ./orchestration/airflow/orchestration-requirements.txt
       - id: auth
         name: "Authenticate with Google Cloud"
         uses: "google-github-actions/auth@v2"
@@ -63,10 +68,6 @@ jobs:
           service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v2'
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-          cache: 'pip' # caching pip dependencies
       - name: "Install Python requirements"
         run: pip install -r airflow/orchestration-requirements.txt
       - name: "Install dbt dependencies"

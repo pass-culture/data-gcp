@@ -52,12 +52,8 @@ jobs:
           python-version: '3.10'
           cache: 'pip' # caching pip dependencies
           cache-dependency-path: ./orchestration/airflow/orchestration-requirements.txt
-      - name: Check pip version
-        run: pip --version
       - name: "Install Python requirements"
         run: pip install -r airflow/orchestration-requirements.txt
-      - name: "pip freeze"
-        run: pip freeze
       - name: "Authenticate with Google Cloud"
         uses: "google-github-actions/auth@v2"
         with:

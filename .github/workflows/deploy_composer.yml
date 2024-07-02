@@ -5,7 +5,6 @@ on:
   branches:
     - master
     - production
-    - hotfix-cd
 
 jobs:
   linter:
@@ -17,7 +16,6 @@ jobs:
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
   find-test-jobs:
-    if: github.ref != 'refs/heads/master'
     outputs:
       jobs: ${{ steps.find-testable-jobs.outputs.testable_jobs }}
     runs-on: ubuntu-latest
@@ -73,9 +71,9 @@ jobs:
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
   composer-deploy-on-stg:
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/hotfix-cd'
+    if: github.ref == 'refs/heads/master'
     uses: ./.github/workflows/reusable_deploy_composer.yml
-    # needs: [test-orchestration, test-jobs, linter]
+    needs: [test-orchestration, test-jobs, linter]
     with:
       TARGET_ENV:  "stg"
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--00137508-bucket"

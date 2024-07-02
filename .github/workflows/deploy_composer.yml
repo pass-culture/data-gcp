@@ -5,6 +5,7 @@ on:
   branches:
     - master
     - production
+    - test-target-cicd
 
 jobs:
   linter:

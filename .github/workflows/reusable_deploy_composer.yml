@@ -17,6 +17,9 @@ on:
       TARGET_ENV:
         type: string
         required: true
+      ENV_SHORT_NAME:
+        type: string
+        required: true
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER:
         required: true
@@ -83,8 +86,6 @@ jobs:
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
-          DBT_TARGET_PATH: "target/"
-          DBT_PROFILES_DIR: "."
         run: |
           gsutil -m rm -r  gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/target/dbt_packages
           gsutil -m cp -r target/dbt_packages gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/target
@@ -93,14 +94,12 @@ jobs:
         env:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
-          TARGET_ENV: ${{ inputs.TARGET_ENV }}
-        run: dbt compile --profile CI --target $TARGET_ENV
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+        run: dbt compile --profile CI --target $ENV_SHORT_NAME
       - name: "Push manifest"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
-          DBT_TARGET_PATH: "target/"
-          DBT_PROFILES_DIR: "."
         run: |
           gsutil rm  gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/target/manifest.json
           gsutil cp target/manifest.json gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json

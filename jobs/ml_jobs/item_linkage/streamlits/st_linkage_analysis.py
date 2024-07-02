@@ -12,22 +12,22 @@ def load_data(source_path: str) -> pd.DataFrame:
 
 
 links = load_data(
-    "gs://mlflow-bucket-prod/linkage_item_prod/linkage_20240625T084628/linkage_final_items_right.parquet"
+    "gs://mlflow-bucket-prod/linkage_item_prod/linkage_20240625T084628/linkage_final_items_candidates.parquet"
 )
 
 sources = load_data(
-    "gs://mlflow-bucket-prod/linkage_item_prod/linkage_20240625T084628/linkage_final_items_left.parquet"
+    "gs://mlflow-bucket-prod/linkage_item_prod/linkage_20240625T084628/linkage_final_items_sources.parquet"
 )
 
 ## Parameters
 st_link_id = st.sidebar.text_input(
-    "links Link id",value="", help="Search for offer name"
+    "links Link id", value="", help="Search for offer name"
 )
-st_batch_id = st.sidebar.text_input(
-    "links batch id",value="", help="Search for offer name"
+st_candidates_id = st.sidebar.text_input(
+    "links batch id", value="", help="Search for offer name"
 )
-st_link_count= st.sidebar.number_input(
-    "links link count",value=1.0, help="Search for offer name"
+st_link_count = st.sidebar.number_input(
+    "links link count", value=1.0, help="Search for offer name"
 )
 st_search_filter_links = st.sidebar.text_input(
     "links Search Filter", value="", help="Search for offer name"
@@ -37,11 +37,14 @@ st_search_filter_sources = st.sidebar.text_input(
 )
 
 
-
 # ## Filter Dataframe
 links_filtered = (
     links.loc[lambda df: df.link_id == st_link_id if st_link_id != "" else df.index]
-    .loc[lambda df: df.batch_id == st_batch_id if st_batch_id != "" else df.index]
+    .loc[
+        lambda df: df.candidates_id == st_candidates_id
+        if st_candidates_id != ""
+        else df.index
+    ]
     .loc[
         lambda df: (
             df.offer_name.str.contains(st_search_filter_links, case=False)
@@ -51,8 +54,12 @@ links_filtered = (
     ]
 )
 sources_filtered = (
-    sources.loc[lambda df: df.link_id == st_link_id if st_link_id != "" else df.index ]
-    .loc[lambda df: df.batch_id == st_batch_id if st_batch_id != "" else df.index]
+    sources.loc[lambda df: df.link_id == st_link_id if st_link_id != "" else df.index]
+    .loc[
+        lambda df: df.candidates_id == st_candidates_id
+        if st_candidates_id != ""
+        else df.index
+    ]
     .loc[
         lambda df: (
             df.offer_name.str.contains(st_search_filter_sources, case=False)
@@ -61,8 +68,10 @@ sources_filtered = (
         )
     ]
 )
-links_clean=links.loc[lambda df: df.link_count == st_link_count if st_link_count != "" else df.index ]
-# st.dataframe(sources.iloc[:100]) 
+links_clean = links.loc[
+    lambda df: df.link_count == st_link_count if st_link_count == 1.0 else df.index
+]
+# st.dataframe(sources.iloc[:100])
 st.dataframe(links_clean)
 ## Display
 st.header("Items linked")
@@ -74,7 +83,7 @@ st.dataframe(
 )
 st.header("Source Items")
 st.dataframe(
-    sources_filtered.sort_values(["link_id", "batch_id"]),
+    sources_filtered.sort_values(["link_id", "candidates_id"]),
     width=1500,
     height=500,
 )

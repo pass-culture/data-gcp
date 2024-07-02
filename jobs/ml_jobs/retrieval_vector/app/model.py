@@ -162,10 +162,7 @@ class TextClient(DefaultClient):
         self.encoder = SentenceTransformer(transformer)
         self.reducer = joblib.load(reducer_path)
 
-    def text_vector(self, var: str, reduce: bool = True) -> Document:
+    def text_vector(self, var: str):
         encode = self.encoder.encode(var)
-        if reduce:
-            reduce = np.array(self.reducer.transform([encode])).flatten()
-        else:
-            reduce = encode.flatten()
+        reduce = np.array(self.reducer.transform([encode])).flatten()
         return Document(embedding=reduce)

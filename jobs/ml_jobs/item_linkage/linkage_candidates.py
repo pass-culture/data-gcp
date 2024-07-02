@@ -9,11 +9,9 @@ from model.semantic_space import SemanticSpace
 from utils.common import preprocess_embeddings, reduce_embeddings
 from utils.gcs_utils import upload_parquet
 from docarray import Document
+from tqdm import tqdm
+from constants import LOGGING_INTERVAL, NUM_RESULTS, MODEL_PATH
 
-# Constants
-# TODO: INCREASE NUMBER OF RESULTS
-NUM_RESULTS = 5  # Number of results to retrieve
-LOGGING_INTERVAL = 10000  # Interval for logging progress
 COLUMN_NAME_LIST = ["item_id", "performer", "offer_name"]
 
 app = typer.Typer()
@@ -31,7 +29,6 @@ def load_model(model_path: str) -> SemanticSpace:
     """
     logger.info("Loading model...")
     model = SemanticSpace(model_path)
-    model.load()
     logger.info("Model loaded.")
     return model
 
@@ -59,7 +56,9 @@ def preprocess_data(
         preprocess_embeddings(gcs_path), hnne_reducer=hnne_reducer
     )
     items_df["vector"] = (
-        items_df["vector"].map(lambda x: Document(embedding=x)).tolist()
+        items_df["vector"]
+        .map(lambda embedding_array: Document(embedding=embedding_array))
+        .tolist()
     )
     return items_df
 
@@ -79,31 +78,28 @@ def generate_semantic_candidates(
     """
     linkage = []
     logger.info(f"Generating semantic candidates for {len(data)} items...")
+    progress_bar = tqdm(total=len(data), miniters=LOGGING_INTERVAL)
     for index, row in data.iterrows():
-        if index % LOGGING_INTERVAL == 0 and index != 0:
-            logger.info(f"Processing ongoing... ({index} items processed)")
         result_df = model.search(
             vector=row.vector,
             similarity_metric="cosine",
             n=NUM_RESULTS,
             vector_column_name="vector",
-        ).assign(batch_id=str(uuid.uuid4()), item_id=row.item_id)
+        ).assign(candidates_id=str(uuid.uuid4()), item_id=row.item_id)
 
         linkage.append(result_df)
-        # TODO: remove if
-        if index == LOGGING_INTERVAL:
-            break
+        progress_bar.update(1)
+    progress_bar.close()
     return pd.concat(linkage)
 
 
 @app.command()
 def main(
-    model_path: str = typer.Option("metadata/vector", help="Model path"),
     source_gcs_path: str = typer.Option(
         "gs://mlflow-bucket-prod/linkage_vector_prod", help="GCS bucket path"
     ),
     input_table_name: str = typer.Option(
-        "item_embedding_data", help="Input table path"
+        "item_candidates_data", help="Input table path"
     ),
     output_table_path: str = typer.Option(
         "linkage_candidates_items", help="Output table path"
@@ -113,12 +109,11 @@ def main(
     Main function to preprocess data, prepare vectors, generate semantic candidates, and upload the results to GCS.
 
     Args:
-        model_path (str): Path to the model.
         source_gcs_path (str): GCS path to the source data.
         input_table_name (str): Name of the input table.
         output_table_path (str): Path to save the output table.
     """
-    model = load_model(model_path)
+    model = load_model(MODEL_PATH)
     items_with_embeddings_df = preprocess_data(
         f"{source_gcs_path}/{input_table_name}", COLUMN_NAME_LIST, model.hnne_reducer
     )

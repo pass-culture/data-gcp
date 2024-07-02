@@ -8,21 +8,24 @@ from loguru import logger
 from utils.common import (
     preprocess_embeddings,
     reduce_embeddings_and_store_reducer,
-    save_model_type,
 )
 
 # Define constants
-MODEL_TYPE = {
-    "n_dim": 32,
-    "type": "semantic",
-    "transformer": "sentence-transformers/all-MiniLM-L6-v2",
-    "reducer_pickle_path": "metadata/reducer.pkl",
-}
+from constants import (
+    MODEL_TYPE,
+    NUM_PARTITIONS,
+    NUM_SUB_VECTORS,
+    LANCEDB_BATCH_SIZE,
+    UNKNOWN_PERFORMER,
+    MODEL_PATH,
+)
+
 COLUMN_NAME_LIST = ["item_id", "performer"]
-URI = "metadata/vector"
 
 
-def prepare_table(gcs_path: str, column_name_list: List[str]) -> pd.DataFrame:
+def preprocess_data_and_store_reducer(
+    gcs_path: str, column_name_list: List[str], reducer_path: str
+) -> pd.DataFrame:
     """
     Prepare the table by reading the parquet file from GCS, preprocessing embeddings,
     and merging the embeddings with the dataframe.
@@ -34,14 +37,16 @@ def prepare_table(gcs_path: str, column_name_list: List[str]) -> pd.DataFrame:
     Returns:
         pd.DataFrame: The prepared dataframe with embeddings.
     """
-    item_df = pd.read_parquet(gcs_path, columns=column_name_list)
-    item_embeddings = preprocess_embeddings(gcs_path)
-    item_df["vector"] = reduce_embeddings_and_store_reducer(
-        embeddings=item_embeddings,
-        n_dim=MODEL_TYPE["n_dim"],
-        reducer_path=MODEL_TYPE["reducer_pickle_path"],
+    item_df = pd.read_parquet(gcs_path, columns=column_name_list).assign(
+        performer=lambda df: df["performer"].fillna(value=UNKNOWN_PERFORMER),
     )
-    return item_df
+    return item_df.assign(
+        vector=reduce_embeddings_and_store_reducer(
+            embeddings=preprocess_embeddings(gcs_path),
+            n_dim=MODEL_TYPE["n_dim"],
+            reducer_path=reducer_path,
+        )
+    )
 
 
 def create_items_table(items_df: pd.DataFrame) -> None:
@@ -57,7 +62,7 @@ def create_items_table(items_df: pd.DataFrame) -> None:
         item_id: str
         performer: str
 
-    def make_batches(df: pd.DataFrame, batch_size: int = 5000):
+    def make_batches(df: pd.DataFrame, batch_size: int):
         """
         Yield successive batches of the dataframe.
 
@@ -71,10 +76,16 @@ def create_items_table(items_df: pd.DataFrame) -> None:
         for i in range(0, len(df), batch_size):
             yield df[i : i + batch_size]
 
-    db = lancedb.connect(URI)
+    db = lancedb.connect(MODEL_PATH)
     db.drop_database()
-    db.create_table("items", make_batches(items_df), schema=ItemModel)
-    db.open_table("items").create_index(num_partitions=1024, num_sub_vectors=32)
+    db.create_table(
+        "items",
+        make_batches(df=items_df, batch_size=LANCEDB_BATCH_SIZE),
+        schema=ItemModel,
+    )
+    db.open_table("items").create_index(
+        num_partitions=NUM_PARTITIONS, num_sub_vectors=NUM_SUB_VECTORS
+    )
 
 
 def main(
@@ -83,7 +94,7 @@ def main(
         help="GCS parquet path",
     ),
     input_table_name: str = typer.Option(
-        "item_data",
+        "item_sources_data",
         help="GCS parquet path",
     ),
 ) -> None:
@@ -95,12 +106,13 @@ def main(
         input_table_name (str): The name of the input table.
     """
     logger.info("Download and prepare table...")
-    item_df_enriched = prepare_table(
-        f"{source_gcs_path}/{input_table_name}", COLUMN_NAME_LIST
+    item_df_enriched = preprocess_data_and_store_reducer(
+        f"{source_gcs_path}/{input_table_name}",
+        COLUMN_NAME_LIST,
+        MODEL_TYPE["reducer_pickle_path"],
     )
     logger.info("Creating LanceDB table...")
     create_items_table(item_df_enriched)
-    save_model_type(MODEL_TYPE)
     logger.info("LanceDB table and index created...")
 
 

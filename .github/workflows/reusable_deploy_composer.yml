@@ -31,7 +31,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    container: google/cloud-sdk:448.0.0
+    container: google/cloud-sdk:482.0.0
     runs-on: ubuntu-latest
     environment: ${{ inputs.TARGET_ENV }}
     defaults:

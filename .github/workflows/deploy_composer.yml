@@ -77,7 +77,7 @@ jobs:
     uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: [linter]
     with:
-      TARGET_ENV:  "staging"
+      TARGET_ENV:  "stg"
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--00137508-bucket"
       COMPOSER_ENVIRONMENT_NAME: "data-composer-stg"
       DATA_GCP_PROJECT: "passculture-data-ehp"

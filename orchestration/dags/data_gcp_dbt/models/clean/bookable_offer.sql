@@ -1,6 +1,7 @@
 SELECT
     offer.*
     , offerer.offerer_id
+    , null as test
 FROM {{ source('raw','applicative_database_stock') }} AS stock
 JOIN {{ ref('offer') }} AS offer 
     ON stock.offer_id = offer.offer_id
@@ -25,3 +26,4 @@ AND (
     )
 AND NOT stock_is_soft_deleted
 AND offer_validation = 'APPROVED'
+limit 10

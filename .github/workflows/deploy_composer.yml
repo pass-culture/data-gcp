@@ -63,6 +63,7 @@ jobs:
     needs: [test-orchestration, test-jobs, linter]
     with:
       TARGET_ENV:  "dev"
+      ENV_SHORT_NAME: "dev"
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--a3134989-bucket"
       COMPOSER_ENVIRONMENT_NAME: "data-composer-dev"
       DATA_GCP_PROJECT: "passculture-data-ehp"
@@ -76,6 +77,7 @@ jobs:
     needs: [test-orchestration, test-jobs, linter]
     with:
       TARGET_ENV:  "staging"
+      ENV_SHORT_NAME: "stg"
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--00137508-bucket"
       COMPOSER_ENVIRONMENT_NAME: "data-composer-stg"
       DATA_GCP_PROJECT: "passculture-data-ehp"
@@ -89,6 +91,7 @@ jobs:
     needs: [test-orchestration, test-jobs, linter, composer-deploy-on-dev]
     with:
       TARGET_ENV:  "production"
+      ENV_SHORT_NAME: "prod"
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--d5adf2e8-bucket"
       COMPOSER_ENVIRONMENT_NAME: "data-composer-prod"
       DATA_GCP_PROJECT: "passculture-data-prod"

@@ -71,10 +71,21 @@ SELECT
     v.total_non_cancelled_tickets,
     v.total_current_year_non_cancelled_tickets,
     v.offerer_address_id,
+    v.is_active_last_30days,
+    v.is_active_current_year,
+    v.is_individual_active_last_30days,
+    v.is_individual_active_current_year,
+    v.is_collective_active_last_30days,
+    v.is_collective_active_current_year,
     ofr.offerer_id,
     ofr.offerer_name,
     ofr.offerer_validation_status,
     ofr.offerer_is_active,
+    ofr.dms_accepted_at,
+    ofr.first_dms_adage_status,
+    ofr.is_reference_adage,
+    ofr.is_synchro_adage,
+
     CONCAT(
         "https://passculture.pro/structures/",
         ofr.offerer_humanized_id,
@@ -82,6 +93,20 @@ SELECT
         venue_humanized_id
     ) AS venue_pc_pro_link,
     CASE WHEN v.venue_is_permanent THEN CONCAT("venue-",v.venue_id)
-         ELSE ofr.partner_id END AS partner_id
+         ELSE ofr.partner_id END AS partner_id,
+    ROW_NUMBER() OVER(
+        PARTITION BY v.venue_managing_offerer_id
+        ORDER BY
+            v.total_theoretic_revenue DESC,
+            v.total_created_offers DESC,
+            venue_name DESC
+    ) AS offerer_rank_desc,
+    ROW_NUMBER() OVER(
+        PARTITION BY v.venue_managing_offerer_id
+        ORDER BY
+            v.total_theoretic_revenue DESC,
+            v.total_created_offers DESC,
+            v.venue_name ASC
+    ) AS offerer_rank_asc
 FROM {{ ref('int_applicative__venue') }} AS v
 LEFT JOIN {{ ref('mrt_global__offerer') }} AS ofr ON v.venue_managing_offerer_id = ofr.offerer_id

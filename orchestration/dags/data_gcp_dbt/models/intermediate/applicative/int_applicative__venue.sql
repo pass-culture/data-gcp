@@ -124,6 +124,8 @@ SELECT
         v.venue_id
     ) AS venue_backoffice_link,
     {{target_schema}}.humanize_id(v.venue_id) as venue_humanized_id,
+    v.iris_internal_id AS venue_iris_internal_id,
+    v.region_name AS venue_region_name,
     venue_region_departement.academy_name AS venue_academy_name,
     v.offerer_address_id,
     vr.venue_target AS venue_targeted_audience,
@@ -183,6 +185,12 @@ SELECT
     COALESCE(co.total_current_year_non_cancelled_tickets,0) AS total_current_year_non_cancelled_tickets,
     v.iris_internal_id AS venue_iris_internal_id,
     v.region_name AS venue_region_name,
+    CASE WHEN DATE_DIFF(CURRENT_DATE, boh.last_bookable_offer_date, DAY) <= 30 THEN TRUE ELSE FALSE END AS is_active_last_30days,
+    CASE WHEN DATE_DIFF(CURRENT_DATE, boh.last_bookable_offer_date, YEAR) = 0 THEN TRUE ELSE FALSE END AS is_active_current_year,
+    CASE WHEN DATE_DIFF(CURRENT_DATE, boh.last_individual_bookable_offer_date, DAY) <= 30 THEN TRUE ELSE FALSE END AS is_individual_active_last_30days,
+    CASE WHEN DATE_DIFF(CURRENT_DATE, boh.last_individual_bookable_offer_date, YEAR) = 0 THEN TRUE ELSE FALSE END AS is_individual_active_current_year,
+    CASE WHEN DATE_DIFF(CURRENT_DATE, boh.last_collective_bookable_offer_date, DAY) <= 30 THEN TRUE ELSE FALSE END AS is_collective_active_last_30days,
+    CASE WHEN DATE_DIFF(CURRENT_DATE, boh.last_collective_bookable_offer_date, YEAR) = 0 THEN TRUE ELSE FALSE END AS is_collective_active_current_year,
 FROM venues_with_geo_candidates AS v
 LEFT JOIN offers_grouped_by_venue AS o ON o.venue_id = v.venue_id
 LEFT JOIN collective_offers_grouped_by_venue AS co ON co.venue_id = v.venue_id

@@ -17,6 +17,9 @@ on:
       TARGET_ENV:
         type: string
         required: true
+      ENV_SHORT_NAME:
+        type: string
+        required: true
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER:
         required: true
@@ -31,7 +34,6 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    container: google/cloud-sdk:448.0.0
     runs-on: ubuntu-latest
     environment: ${{ inputs.TARGET_ENV }}
     defaults:
@@ -52,6 +54,15 @@ jobs:
             SLACK_BOT_TOKEN:passculture-metier-ehp/passculture-ci-slack-bot-token
             ARTIFACT_REGISTRY_SERVICE_ACCOUNT:passculture-metier-ehp/passculture-main-artifact-registry-service-account
             ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER:passculture-metier-ehp/infra-prod-gcp-workload-identity-provider
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: "Install Python requirements"
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r airflow/orchestration-requirements.txt
+          # cache: 'pip' # caching pip dependencies
+          # cache-dependency-path: ./orchestration/airflow/orchestration-requirements.txt
       - id: auth
         name: "Authenticate with Google Cloud"
         uses: "google-github-actions/auth@v2"
@@ -63,6 +74,35 @@ jobs:
           service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v2'
+      - name: "Install dbt dependencies"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+        run: |
+          export PYTHONPATH=$PYTHONPATH:./dags
+          dbt deps 
+      - name: "deploy dbt dependencies"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
+        run: |
+          gsutil -m rm -r  gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/target/dbt_packages
+          gsutil -m cp -r target/dbt_packages gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/target
+      - name: "compile dbt project"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+        run: dbt compile --profile CI --target $ENV_SHORT_NAME
+      - name: "Push manifest"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
+        run: |
+          gsutil rm  gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/target/manifest.json
+          gsutil cp target/manifest.json gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json
       - name: "Deploy composer"
         run: |
           gsutil -m rm -r gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/dags

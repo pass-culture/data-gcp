@@ -18,9 +18,14 @@ def access_secret_data(project_id, secret_id, version_id="latest", default=None)
 
 
 def load_sql(dataset_name: str, table_name: str, extra_data={}, folder="tmp") -> str:
-    with open(f"{BASE_DIR}/{folder}/{dataset_name}_{table_name}.sql") as file:
-        sql_template = file.read()
-        return Template(sql_template).render(extra_data)
+    if folder == "tmp":
+        with open(f"{BASE_DIR}/{folder}/{dataset_name}_{table_name}.sql") as file:
+            sql_template = file.read()
+            return Template(sql_template).render(extra_data)
+    else:
+        with open(f"{BASE_DIR}/{folder}/{table_name}.sql") as file:
+            sql_template = file.read()
+            return Template(sql_template).render(extra_data)
 
 
 def load_sql_view(view_name: str, extra_data={}, folder="analytics"):

@@ -89,6 +89,7 @@ WHERE event_name = 'ConsultOffer'
                 "venue",
                 "video",
                 "videoModal",
+                "video_carousel_block",
                 "highlightOffer")
     AND unique_session_id IS NOT NULL
     {% if is_incremental() %}
@@ -107,7 +108,7 @@ SELECT unique_session_id,
     user_location_type
 FROM {{ref('int_firebase__native_event')}}
 WHERE event_name = "ConsultVenue"
-    AND origin = "home"
+    AND origin IN ("home","venueList")
     AND unique_session_id IS NOT NULL
     {% if is_incremental() %}
     AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
@@ -149,6 +150,7 @@ WHERE events.event_name = 'HasAddedOfferToFavorites'
     "venue",
     "video",
     "videoModal",
+    "video_carousel_block",
     "highlightOffer")
 AND events.unique_session_id IS NOT NULL
 {% if is_incremental() %}
@@ -169,6 +171,7 @@ SELECT
     displayed.module_type,
     displayed.user_location_type,
     displayed.reco_call_id,
+    displayed.app_version,
     click_type,
     consultations.offer_id,
     consultations.venue_id,

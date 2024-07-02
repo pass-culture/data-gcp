@@ -7,7 +7,7 @@ SELECT
     platform,
     STRUCT(   
         unique_session_id,
-        page_origin, 
+        origin,
         offer_id,
         offer_type,
         is_edition,
@@ -18,7 +18,10 @@ SELECT
         filled_with_errors,
         onboarding_selected_legal_category,
         download_format,
-        download_booking_status
+        download_booking_status,
+        download_button_type,
+        download_file_type,
+        download_files_cnt
     ) as extra_params,
     STRUCT(
         offerer_id,

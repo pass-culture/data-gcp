@@ -43,7 +43,6 @@ WITH user_beneficiary as (
         user_role,
         user_birth_date,
         user_cultural_survey_filled_date,
-        NULL AS user_iris_internal_id
     FROM {{ source("raw", "applicative_database_user") }} AS u
     -- only BENEFICIARY
     WHERE  user_role IN ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')
@@ -67,7 +66,7 @@ ranked_bookings AS (
 )
 
 SELECT 
-    user_beneficiary.user_id,
+    u.user_id,
     user_creation_date,
     user_humanized_id,
     user_has_enabled_marketing_email,
@@ -76,17 +75,17 @@ SELECT
     CASE 
         -- if user_department is not in "pilote" (2019_02 / 2019_06) phase but has created an account before, set 99.
         WHEN 
-            user_department_code not in ("29","34","67","93","973")
+            u.user_department_code not in ("29","34","67","93","973")
             AND date(user_creation_date) < "2019-06-01"
         THEN "99"
         -- if user_department is not in "experimentation" (2019_06 / 2021_05) phase but has created an account before, set 99.
         WHEN 
-            user_department_code not in ("29","34","67","93","973","22","25","35","56","58","71","08","84","94")
+            u.user_department_code not in ("29","34","67","93","973","22","25","35","56","58","71","08","84","94")
             AND date(user_creation_date) < "2021-05-01"
         THEN "99"
-        ELSE user_department_code
+        ELSE u.user_department_code
     END AS user_department_code,
-    user_postal_code,
+    u.user_postal_code,
     user_activity,
     user_civility,
     user_school_type,
@@ -95,15 +94,16 @@ SELECT
     user_role,
     user_birth_date,
     user_cultural_survey_filled_date,
-    user_iris_internal_id,
     CASE
         -- get user activation date with fictional offers (early 2019)
         WHEN offer_subcategoryId = 'ACTIVATION_THING'
         AND booking_used_date IS NOT NULL THEN booking_used_date
         ELSE user_creation_date
-    END AS user_activation_date
-FROM user_beneficiary
+    END AS user_activation_date,
+    ui.user_iris_internal_id,
+FROM user_beneficiary AS u
+LEFT JOIN {{ ref('int_api_gouv__address_user_location') }} AS ui ON ui.user_id = u.user_id
 LEFT JOIN ranked_bookings 
-    ON user_beneficiary.user_id = ranked_bookings.user_id
+    ON u.user_id = ranked_bookings.user_id
     AND rank_ = 1
 

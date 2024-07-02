@@ -11,4 +11,4 @@ SELECT
     is_consult_venue,
     is_add_to_favorites
 FROM {{ ref("int_firebase__native_event") }}
-WHERE event_name in ("ConsultOffer","ConsultVenue","HasAddedOfferToFavorites")
+WHERE venue_id is not null and event_name in ("ConsultOffer","ConsultVenue","HasAddedOfferToFavorites")

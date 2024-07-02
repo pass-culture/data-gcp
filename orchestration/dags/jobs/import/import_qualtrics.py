@@ -54,7 +54,9 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"job_type": "long_task"},
     )
 
     fetch_code = CloneRepositoryGCEOperator(

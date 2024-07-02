@@ -36,7 +36,8 @@ SELECT
     stock.price_category_id,
     stock.price_category_label_id,
     stock.price_category_label,
-    stock.stock_features
+    stock.stock_features,
+    stock.offerer_address_id
 FROM
     {{ ref('cleaned_stock') }} AS stock
     LEFT JOIN {{ ref('offer') }} AS offer ON stock.offer_id = offer.offer_id

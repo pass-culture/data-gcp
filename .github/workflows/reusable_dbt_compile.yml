@@ -3,6 +3,12 @@ name: "DBT build job"
 on:
   workflow_call:
     inputs:
+      TARGET_COMPOSER_BUCKET:
+        type: string
+        required: true
+      ENV_SHORT_NAME:
+        type: string
+        required: true
       NOTIF_CHANNEL_ID:
         type: string
         required: false # Si pas fourni, alors pas de notif
@@ -25,7 +31,7 @@ jobs:
     env:
       AIRFLOW_HOME: "./"
       DAG_FOLDER: "./dags/"
-      DBT_FOLDER: "./dags/data_gpc_dbt/"
+      DBT_FOLDER: "./dags/data_gcp_dbt/"
     steps:
       - uses: actions/checkout@v4
       - name: "Connect to Secret Manager"
@@ -41,7 +47,7 @@ jobs:
             SLACK_BOT_TOKEN:passculture-metier-ehp/passculture-ci-slack-bot-token
             ARTIFACT_REGISTRY_SERVICE_ACCOUNT:passculture-metier-ehp/passculture-main-artifact-registry-service-account
             ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER:passculture-metier-ehp/infra-prod-gcp-workload-identity-provider
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
           cache: 'pip' # caching pip dependencies
@@ -55,7 +61,16 @@ jobs:
           token_format: "access_token"
           workload_identity_provider: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
-      - name: "install dbt dependencies"
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v2'
+      - name: "Pull run artifacts"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          COMPOSER_DAGS_BUCKET: ${{ inputs.TARGET_COMPOSER_BUCKET }}
+        run: |
+          mkdir env-run-artifacts
+          gsutil -m cp gs://$COMPOSER_DAGS_BUCKET/data/target/* env-run-artifacts/
+      - name: "Install dbt dependencies"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           DBT_TARGET_PATH: "target/"
@@ -68,7 +83,38 @@ jobs:
         env:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
-        run: dbt compile
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+        run: dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" 
+      - name: "Run modified models & 1st order childrens"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          TARGET_BRANCH: ${{ github.base_ref }}
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+        run: |
+          dbt_run_changed_models() {
+          children=$1
+          models=$(git diff origin/$TARGET_BRANCH HEAD --name-only | grep 'orchestration/dags/data_gcp_dbt/models/' | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/${children}/g" | tr '\n' ' ')
+          echo ${#models}
+          if [ -z "$models" ]
+          then
+                echo "no models were modified"
+          else
+                echo "Running models: ${models}"
+                dbt run --model $models --exclude config.materialized:incremental --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" 
+          fi          
+          }
+          dbt_run_changed_models +1
+        
+      - name: "Run modified tests"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          TARGET_BRANCH: ${{ github.base_ref }}
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."          
+        run: dbt test --store-failures -s "state:modified" --exclude test_name:relationships config.materialized:incremental --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','CI_SEVERITY':'error','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
         uses: slackapi/slack-github-action@v1.23.0

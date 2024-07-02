@@ -74,7 +74,7 @@ venues_with_geo_candidates AS (
 
 SELECT
     v.venue_thumb_count,
-    v.venue_address,
+    v.venue_street,
     v.venue_postal_code,
     v.venue_city,
     v.ban_id,
@@ -125,6 +125,7 @@ SELECT
     ) AS venue_backoffice_link,
     {{target_schema}}.humanize_id(v.venue_id) as venue_humanized_id,
     venue_region_departement.academy_name AS venue_academy_name,
+    v.offerer_address_id,
     vr.venue_target AS venue_targeted_audience,
     vc.venue_contact_phone_number,
     vc.venue_contact_email,

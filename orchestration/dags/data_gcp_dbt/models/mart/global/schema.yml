@@ -1,6 +1,6 @@
 version: 2
 
-macros:
+models:
 
   - name: mrt_global__venue
     description: "This table that consolidates comprehensive details about venues at the `venue_id` granularity."
@@ -10,3 +10,4 @@ macros:
 
   - name: mrt_global__offer_unverified
     description: "This table contains all offers, including both approved and unapproved ones."
+  

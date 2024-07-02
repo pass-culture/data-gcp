@@ -23,7 +23,7 @@ clean_tables = {
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "qualtrics_ac${{ yyyymmdd(current_month(ds)) }}",
         "time_partitioning": {"field": "calculation_month"},
-        "params": {"volume": 10000 if ENV_SHORT_NAME == "prod" else 10},
+        "params": {"volume": 3500 if ENV_SHORT_NAME == "prod" else 10},
         "qualtrics_automation_id": access_secret_data(
             GCP_PROJECT_ID, f"qualtrics_ir_ac_automation_id_{ENV_SHORT_NAME}"
         ),

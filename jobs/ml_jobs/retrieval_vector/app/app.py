@@ -1,6 +1,7 @@
 from flask import Flask, request, Response, jsonify, make_response
 from flask_cors import CORS
 from pythonjsonlogger import jsonlogger
+import traceback
 import logging
 import sys
 from model import DefaultClient, RecoClient, TextClient
@@ -108,9 +109,12 @@ def search_vector(
             )
             return make_response(jsonify({"predictions": results}), 200)
         else:
-            logger.info("item not found")
+            logger.info(
+                "item not found", extra={"uuid": call_id, "params": selected_params}
+            )
             return make_response(jsonify({"predictions": []}), 400)
     except Exception as e:
+        tb = traceback.format_exc()
         logger.exception(e)
         logger.error(
             "error",
@@ -118,6 +122,10 @@ def search_vector(
                 "uuid": call_id,
                 "params": selected_params,
                 "size": size,
+                "content": {
+                    "error": e.__class__.__name__,
+                    "trace": tb,
+                },
             },
         )
         return jsonify({"predictions": []})

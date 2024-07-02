@@ -5,6 +5,7 @@ on:
   branches:
     - master
     - production
+    - hotfix-cicd-failing-v2
 
 jobs:
   linter:
@@ -71,7 +72,7 @@ jobs:
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
   composer-deploy-on-stg:
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/hotfix-cicd-failing-v2'
     uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: [test-orchestration, test-jobs, linter]
     with:

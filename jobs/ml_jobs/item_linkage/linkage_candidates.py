@@ -12,8 +12,8 @@ from docarray import Document
 
 # Constants
 # TODO: INCREASE NUMBER OF RESULTS
-NUM_RESULTS = 5  # Number of results to retrieve
-LOGGING_INTERVAL = 10000  # Interval for logging progress
+NUM_RESULTS = 20  # Number of results to retrieve
+LOGGING_INTERVAL = 50000  # Interval for logging progress
 COLUMN_NAME_LIST = ["item_id", "performer", "offer_name"]
 
 app = typer.Typer()
@@ -90,9 +90,6 @@ def generate_semantic_candidates(
         ).assign(batch_id=str(uuid.uuid4()), item_id=row.item_id)
 
         linkage.append(result_df)
-        # TODO: remove if
-        if index == LOGGING_INTERVAL:
-            break
     return pd.concat(linkage)
 
 

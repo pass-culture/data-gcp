@@ -19,9 +19,6 @@ MATCHES_REQUIRED = 3
 app = typer.Typer()
 
 
-# TODO: underscore on methods if not used elsewhere
-
-
 def setup_matching() -> recordlinkage.Compare:
     """
     Setup the record linkage comparison model.
@@ -59,16 +56,11 @@ def get_links(
     Returns:
         pd.DataFrame: Dataframe containing matched pairs.
     """
-    # TODO: chainer
     features = comparator.compute(candidate_links, table_left, table_right)
     matches = features[features.sum(axis=1) >= MATCHES_REQUIRED].reset_index()
     matches = matches.rename(columns={"level_0": "index_1", "level_1": "index_2"})
-    # matches.assign(
-    #     index_1=lambda df: f"L-{df['index_1']}",
-    #     index_2=lambda df: f"R-{df['index_2']}",
-    # )
-    matches["index_1"] = matches["index_1"].apply(lambda x: f"source-{x}")
-    matches["index_2"] = matches["index_2"].apply(lambda x: f"candidate-{x}")
+    matches["index_1"] = matches["index_1"].apply(lambda x: f"S-{x}")
+    matches["index_2"] = matches["index_2"].apply(lambda x: f"C-{x}")
     return matches
 
 
@@ -132,15 +124,14 @@ def link_matches_by_graph(
         df_matches, source="index_1", target="index_2", edge_attr=True
     )
 
-    sources=sources.assign(link_id="NC")
-    candidates=candidates.assign(link_id="NC")
+    sources = sources.assign(link_id="NC")
+    candidates = candidates.assign(link_id="NC")
 
-    # Todo: repasser dessus car un peu bizarre de devoir relinker et boucle dans les boucles peut être lent
     connected_ids = list(nx.connected_components(linkage_graph))
     for clusters in range(nx.number_connected_components(linkage_graph)):
         link_id = str(uuid.uuid4())[:8]
         for index in connected_ids[clusters]:
-            if "source" in index:
+            if "S" in index:
                 index = int(index[2:])
                 sources.at[index, "link_id"] = str(link_id)
             else:
@@ -150,7 +141,7 @@ def link_matches_by_graph(
     candidates = candidates.assign(
         link_count=candidates.groupby("link_id")["link_id"].transform("count")
     )
-    return sources,candidates
+    return sources, candidates
 
 
 def clean_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
@@ -164,9 +155,18 @@ def clean_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: Cleaned catalog dataframe.
     """
     catalog = catalog.assign(
-        performer=lambda df: df["performer"].replace('', None).str.lower().fillna(value="unkn"),
-        offer_name=lambda df: df["offer_name"].replace('', None).str.lower().fillna(value="no_name"),
-        offer_description=lambda df: df["offer_description"].replace('', None).str.lower().fillna(value="no_des"),
+        performer=lambda df: df["performer"]
+        .replace("", None)
+        .str.lower()
+        .fillna(value="unkn"),
+        offer_name=lambda df: df["offer_name"]
+        .replace("", None)
+        .str.lower()
+        .fillna(value="no_name"),
+        offer_description=lambda df: df["offer_description"]
+        .replace("", None)
+        .str.lower()
+        .fillna(value="no_des"),
     )
     return catalog
 
@@ -186,7 +186,6 @@ def prepare_tables(
     Returns:
         Tuple[pd.MultiIndex, pd.DataFrame, pd.DataFrame]: Candidate links, cleaned left and right tables.
     """
-    # TODO: Chainer et peuit être splitter pour plus de claireté
     sources = df[["item_id", "batch_id"]].drop_duplicates().reset_index(drop=True)
     candidates = (
         df[["item_id_candidate", "batch_id"]].drop_duplicates().reset_index(drop=True)
@@ -198,7 +197,6 @@ def prepare_tables(
 def enriched_items(items_df, catalog, key):
     items_df = items_df.merge(catalog, left_on=key, right_on="item_id", how="left")
     return items_df
-
 
 
 @app.command()
@@ -226,7 +224,6 @@ def main(
         f"{source_gcs_path}/{catalog_table_name}",
         columns=["item_id", "performer", "offer_name", "offer_description"],
     ).pipe(clean_catalog)
-    # catalog_clean=clean_catalog(catalog)
     linkage_candidates = pd.read_parquet(
         f"{source_gcs_path}/{input_table_name}.parquet"
     )
@@ -242,11 +239,10 @@ def main(
         candidate_links, comparator, sources_clean, candidates_clean
     )
 
-    # Todo: gérer le double output
     sources_final, candidates_final = link_matches_by_graph(
         matches, sources_clean, candidates_clean
     )
-    candidates_final_clean=candidates_final.query("link_id != 'NC'")
+    candidates_final_clean = candidates_final.query("link_id != 'NC'")
     upload_parquet(
         dataframe=sources_final,
         gcs_path=f"{source_gcs_path}/{output_table_name}_sources.parquet",

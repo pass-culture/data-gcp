@@ -7,6 +7,7 @@ import pandas as pd
 import polars as pl
 import pyarrow.dataset as ds
 from hnne import HNNE
+from loguru import logger
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
@@ -33,7 +34,7 @@ def reduce_embeddings_and_store_reducer(embeddings: list, n_dim, reducer_path):
     Returns:
     DataFrame: DataFrame containing item IDs and normalized embeddings.
     """
-
+    logger.info("Reducing embeddings and storing reducer...")
     hnne = HNNE(dim=n_dim)
     reduced_embeddings = list(
         hnne.fit_transform(embeddings, dim=n_dim).astype(np.float32)
@@ -55,7 +56,7 @@ def reduce_embeddings(embeddings: list, hnne_reducer: HNNE) -> list:
     Returns:
     DataFrame: DataFrame containing item IDs and normalized embeddings.
     """
-
+    logger.info("Reducing embeddings...")
     return list(hnne_reducer.transform(embeddings).astype(np.float32))
 
 
@@ -71,6 +72,7 @@ def preprocess_embeddings(
     Returns:
     DataFrame: DataFrame containing item IDs and normalized embeddings.
     """
+    logger.info("Loading embeddings...")
     dataset = ds.dataset(gcs_path, format="parquet")
     ldf = pl.scan_pyarrow_dataset(dataset)
     embedding = np.vstack(np.vstack(ldf.select("embedding").collect())[0]).astype(

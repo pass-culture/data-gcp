@@ -8,6 +8,7 @@ from loguru import logger
 from model.semantic_space import SemanticSpace
 from utils.common import preprocess_embeddings, reduce_embeddings
 from utils.gcs_utils import upload_parquet
+from docarray import Document
 
 # Constants
 # TODO: INCREASE NUMBER OF RESULTS
@@ -54,16 +55,12 @@ def preprocess_data(
         performer=lambda df: df["performer"].fillna(value="unkn"),
         offer_name=lambda df: df["offer_name"].str.lower(),
     )
-    items_df["embedding"] = reduce_embeddings(
+    items_df["vector"] = reduce_embeddings(
         preprocess_embeddings(gcs_path), hnne_reducer=hnne_reducer
     )
-    # item_embeddings = preprocess_embeddings(gcs_path).assign(
-    #     embedding=lambda df: reduce_embeddings(
-    #         df["embedding"].tolist(), hnne_reducer=hnne_reducer
-    #     )
-    # )
-    logger.info("Data preprocessed.")
-    items_df.rename(columns={"embedding": "vector"}, inplace=True)
+    items_df["vector"] = (
+        items_df["vector"].map(lambda x: Document(embedding=x)).tolist()
+    )
     return items_df
 
 
@@ -85,7 +82,6 @@ def generate_semantic_candidates(
     for index, row in data.iterrows():
         if index % LOGGING_INTERVAL == 0 and index != 0:
             logger.info(f"Processing ongoing... ({index} items processed)")
-        params = {}
         result_df = model.search(
             vector=row.vector,
             similarity_metric="cosine",
@@ -95,7 +91,7 @@ def generate_semantic_candidates(
 
         linkage.append(result_df)
         # TODO: remove if
-        if index == 50000:
+        if index == LOGGING_INTERVAL:
             break
     return pd.concat(linkage)
 

@@ -62,10 +62,10 @@ jobs:
     uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: [test-orchestration, test-jobs, linter]
     with:
-      TARGET_ENV:  "dev"
+      GITHUB_ENV_NAME: "dev"
       ENV_SHORT_NAME: "dev"
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--a3134989-bucket"
-      COMPOSER_ENVIRONMENT_NAME: "data-composer-dev"
+      COMPOSER_NAME: "data-composer-dev"
       DATA_GCP_PROJECT: "passculture-data-ehp"
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -76,10 +76,10 @@ jobs:
     uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: [test-orchestration, test-jobs, linter]
     with:
-      TARGET_ENV:  "staging"
+      GITHUB_ENV_NAME: "staging"
       ENV_SHORT_NAME: "stg"
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--00137508-bucket"
-      COMPOSER_ENVIRONMENT_NAME: "data-composer-stg"
+      COMPOSER_NAME: "data-composer-stg"
       DATA_GCP_PROJECT: "passculture-data-ehp"
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -90,10 +90,10 @@ jobs:
     uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: [test-orchestration, test-jobs, linter, composer-deploy-on-dev]
     with:
-      TARGET_ENV:  "production"
+      GITHUB_ENV_NAME: "production"
       ENV_SHORT_NAME: "prod"
       COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--d5adf2e8-bucket"
-      COMPOSER_ENVIRONMENT_NAME: "data-composer-prod"
+      COMPOSER_NAME: "data-composer-prod"
       DATA_GCP_PROJECT: "passculture-data-prod"
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}

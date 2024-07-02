@@ -209,13 +209,16 @@ Cette tâche déploie Composer dans l'environnement de production si la branche 
 
 ```mermaid
 graph TD;
-    A[Workflow de Test] --> B[Linter]
+    A[Workflow de Déploiement] --> B[Linter]
     A --> C[Recherche de Tâches de Test]
-    C --> D[Tâches de Test]
-    A --> E[Test d'Orchestration]
-    A -->|merge production| F[Déploiement de Composer & DBT en Dev]
+    A --> D[Test d'Orchestration]
+    B --> E[Tâches de Test]
+    C --> E
+    D --> E
+    E -->|merge master| H[Déploiement de Composer & DBT en Staging]
+    E -->|merge production| F[Déploiement de Composer & DBT en Dev]
     F --> G[Déploiement de Composer & DBT en Production]
-    A -->|merge master| H[Déploiement de Composer & DBT en Staging]
+    
 
 ```
 

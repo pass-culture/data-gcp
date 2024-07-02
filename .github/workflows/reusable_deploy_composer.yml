@@ -1,6 +1,6 @@
 name: "Deploy Composer"
 
-run-name: "Deploy Composer on ${{ github.event.inputs.TARGET_ENV }}"
+run-name: "Deploy Composer on ${{ github.event.inputs.GITHUB_ENV_NAME }}"
 
 on:
   workflow_call:
@@ -11,10 +11,10 @@ on:
       COMPOSER_DAGS_BUCKET:
         type: string
         required: true
-      COMPOSER_ENVIRONMENT_NAME:
+      COMPOSER_NAME:
         type: string
         required: true
-      TARGET_ENV:
+      GITHUB_ENV_NAME:
         type: string
         required: true
       ENV_SHORT_NAME:
@@ -35,7 +35,7 @@ jobs:
       id-token: write
       contents: write
     runs-on: ubuntu-latest
-    environment: ${{ inputs.TARGET_ENV }}
+    environment: ${{ inputs.GITHUB_ENV_NAME }}
     defaults:
      run: 
        working-directory: "./orchestration/"
@@ -109,7 +109,7 @@ jobs:
           gsutil -m cp -r dags gs://${{ inputs.COMPOSER_DAGS_BUCKET }}
       - name: "Wait for composer to be deployed (10s x 6 times)"
         run: |
-          ./wait_for_dag_deployed.sh ${{ inputs.COMPOSER_ENVIRONMENT_NAME }} ${{ env.GCP_REGION }} airflow_monitoring 6 10 ${{ inputs.DATA_GCP_PROJECT }}
+          ./wait_for_dag_deployed.sh ${{ inputs.COMPOSER_NAME }} ${{ env.GCP_REGION }} airflow_monitoring 6 10 ${{ inputs.DATA_GCP_PROJECT }}
       - name: "Post to a Slack channel"
         if: always()
         uses: slackapi/slack-github-action@v1.23.0
@@ -128,7 +128,7 @@ jobs:
                   "author_icon": "https://github.com/${{github.actor}}.png",
                   "title": "Composer déployé",
                   "title_link": "https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}",
-                  "text": "Composer a été déployé sur l'environnement ${{ inputs.COMPOSER_ENVIRONMENT_NAME }}"
+                  "text": "Composer a été déployé sur l'environnement ${{ inputs.COMPOSER_NAME }}"
                 }
               ],
               "unfurl_links": false,

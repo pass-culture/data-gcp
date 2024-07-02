@@ -37,13 +37,18 @@ apache-airflow==2.6.3
     #   apache-airflow-providers-google
     #   apache-airflow-providers-http
     #   apache-airflow-providers-imap
+    #   apache-airflow-providers-mysql
+    #   apache-airflow-providers-postgres
     #   apache-airflow-providers-slack
     #   apache-airflow-providers-sqlite
+    #   apache-airflow-providers-ssh
 apache-airflow-providers-common-sql==1.5.2
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   apache-airflow
     #   apache-airflow-providers-google
+    #   apache-airflow-providers-mysql
+    #   apache-airflow-providers-postgres
     #   apache-airflow-providers-slack
     #   apache-airflow-providers-sqlite
 apache-airflow-providers-ftp==3.4.2
@@ -62,6 +67,14 @@ apache-airflow-providers-imap==3.2.2
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   apache-airflow
+apache-airflow-providers-mysql==5.1.1
+    # via
+    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+    #   -r orchestration-requirements.in
+apache-airflow-providers-postgres==5.5.1
+    # via
+    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+    #   -r orchestration-requirements.in
 apache-airflow-providers-slack==7.3.1
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -70,10 +83,18 @@ apache-airflow-providers-sqlite==3.4.2
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   apache-airflow
+apache-airflow-providers-ssh==3.7.1
+    # via
+    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+    #   -r orchestration-requirements.in
 apispec==5.2.2
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   flask-appbuilder
+appnope==0.1.4
+    # via
+    #   ipykernel
+    #   ipython
 argcomplete==3.1.1
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -581,6 +602,7 @@ google-cloud-resource-manager==1.10.2
 google-cloud-secret-manager==2.16.2
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+    #   -r orchestration-requirements.in
     #   apache-airflow-providers-google
 google-cloud-spanner==3.36.0
     # via
@@ -647,10 +669,6 @@ graphviz==0.20.1
     #   apache-airflow
 great-expectations==0.18.17
     # via airflow-provider-great-expectations
-greenlet==2.0.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
-    #   sqlalchemy
 grpc-google-iam-v1==0.12.6
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -725,6 +743,13 @@ importlib-metadata==6.7.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   dbt-semantic-interfaces
+    #   flask
+    #   jupyter-client
+    #   jupyter-lsp
+    #   jupyterlab
+    #   jupyterlab-server
+    #   markdown
+    #   nbconvert
 importlib-resources==5.12.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -957,6 +982,10 @@ multidict==6.0.4
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   aiohttp
     #   yarl
+mysqlclient==2.2.0
+    # via
+    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+    #   apache-airflow-providers-mysql
 nbclient==0.8.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -1039,6 +1068,7 @@ pandocfilters==1.5.1
 paramiko==3.2.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+    #   apache-airflow-providers-ssh
     #   sshtunnel
 parsedatetime==2.6
     # via agate
@@ -1181,6 +1211,7 @@ psycopg2-binary==2.9.6
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   -r orchestration-requirements.in
+    #   apache-airflow-providers-postgres
 ptyprocess==0.7.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -1381,7 +1412,9 @@ rsa==4.9
     #   google-auth
 ruamel-yaml==0.17.17
     # via great-expectations
-scipy==1.14.0
+ruamel-yaml-clib==0.2.8
+    # via ruamel-yaml
+scipy==1.13.1
     # via great-expectations
 send2trash==1.8.3
     # via jupyter-server
@@ -1464,6 +1497,7 @@ sshtunnel==0.4.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   -r orchestration-requirements.in
+    #   apache-airflow-providers-ssh
 stack-data==0.6.2
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -1541,6 +1575,7 @@ typing-extensions==4.7.1
     #   dbt-semantic-interfaces
     #   flask-limiter
     #   great-expectations
+    #   ipython
     #   limits
     #   looker-sdk
     #   mashumaro
@@ -1612,3 +1647,4 @@ zipp==3.15.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   importlib-metadata
+    #   importlib-resources

@@ -95,7 +95,7 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
-        run: dbt compile --profile CI --target $ENV_SHORT_NAME
+        run: dbt compile --target $ENV_SHORT_NAME
       - name: "Push manifest"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:

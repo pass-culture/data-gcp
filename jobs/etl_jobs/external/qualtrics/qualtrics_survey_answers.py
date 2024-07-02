@@ -213,9 +213,13 @@ class QualtricsSurvey:
             )
         )
         if len(other_columns) > 0:
-            df_final = df_step1.assign(
-                extra_data=lambda _df: _df[other_columns].to_dict(orient="records")
-            ).drop(drop_columns + other_columns, axis=1)
+            df_final = (
+                df_step1.assign(
+                    extra_data=lambda _df: _df[other_columns].to_dict(orient="records")
+                )
+                .drop(drop_columns + other_columns, axis=1)
+                .astype({"extra_data": str})
+            )
         else:
             df_final = df_step1.drop(drop_columns + other_columns, axis=1)
 

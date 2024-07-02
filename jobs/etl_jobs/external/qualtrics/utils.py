@@ -110,7 +110,7 @@ IR_PRO_TABLE_SCHEMA = {
 ANSWERS_SCHEMA = {
     "start_date": "STRING",
     "end_date": "STRING",
-    "status": "STRING",
+    "status": "INTEGER",
     "response_id": "STRING",
     "user_id": "STRING",
     "distribution_channel": "STRING",

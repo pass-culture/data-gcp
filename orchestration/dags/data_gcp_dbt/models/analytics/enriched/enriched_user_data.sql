@@ -455,7 +455,8 @@ SELECT
     user.user_has_enabled_marketing_email,
     user.user_iris_internal_id,
     themes_subscribed.currently_subscribed_themes,
-    themes_subscribed.is_theme_subscribed
+    themes_subscribed.is_theme_subscribed,
+    user.is_in_qpv
 FROM
     {{ ref('user_beneficiary') }} AS user
     LEFT JOIN date_of_first_bookings ON user.user_id = date_of_first_bookings.user_id

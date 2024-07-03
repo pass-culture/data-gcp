@@ -42,6 +42,8 @@ SELECT
     u.user_cultural_survey_filled_date,
     CASE WHEN u.user_role IN ("UNDERAGE_BENEFICIARY", "BENEFICIARY") THEN 1 ELSE 0 END AS is_beneficiary,
     ui.user_iris_internal_id,
-    ui.user_region_name
+    ui.user_region_name,
+    ui.qpv_name is not null AS is_in_qpv
+    
 FROM {{ source("raw", "applicative_database_user") }} AS u
 LEFT JOIN {{ ref("int_api_gouv__address_user_location") }} AS ui ON ui.user_id = u.user_id

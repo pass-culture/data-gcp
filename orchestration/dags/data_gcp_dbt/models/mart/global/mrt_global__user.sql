@@ -14,5 +14,6 @@ SELECT
     user_birth_date,
     user_cultural_survey_filled_date,
     is_beneficiary,
-    user_iris_internal_id
+    user_iris_internal_id,
+    is_in_qpv
 FROM {{ ref('int_applicative__user') }}

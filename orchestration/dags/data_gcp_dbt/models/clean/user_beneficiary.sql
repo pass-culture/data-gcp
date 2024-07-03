@@ -101,6 +101,7 @@ SELECT
         ELSE user_creation_date
     END AS user_activation_date,
     ui.user_iris_internal_id,
+    ui.qpv_name is not null AS is_in_qpv
 FROM user_beneficiary AS u
 LEFT JOIN {{ ref('int_api_gouv__address_user_location') }} AS ui ON ui.user_id = u.user_id
 LEFT JOIN ranked_bookings 

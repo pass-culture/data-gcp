@@ -1,22 +1,22 @@
-import pandas as pd
-import mlflow
 import json
+import os
+
+import mlflow
+import pandas as pd
 import typer
-from utils.constants import (
-    MODEL_DIR,
-    STORAGE_PATH,
-    EXPERIMENT_NAME,
-    ENV_SHORT_NAME,
-    MLFLOW_RUN_ID_FILENAME,
-)
-from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
-from utils.mlflow_tools import connect_remote_mlflow
-from utils.secrets_utils import get_secret
-from utils.data_collect_queries import read_from_gcs
 from catboost import Pool
 from mlflow import MlflowClient
-import os
-import matplotlib.pyplot as plt
+
+from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
+from utils.constants import (
+    ENV_SHORT_NAME,
+    MLFLOW_RUN_ID_FILENAME,
+    MODEL_DIR,
+    STORAGE_PATH,
+)
+from utils.data_collect_queries import read_from_gcs
+from utils.mlflow_tools import connect_remote_mlflow
+from utils.secrets_utils import get_secret
 
 
 def evaluate(

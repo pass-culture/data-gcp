@@ -83,7 +83,7 @@ SELECT
         {% if not loop.last -%} , {%- endif %}
     {% endfor %}
     , {% for feature in discovery_vars("discovery_features") %} 
-        discovery_{{feature}}
+        COALESCE(discovery_{{feature}}, 0)
         {% if not loop.last -%} + {%- endif %}
     {% endfor %} + COALESCE(discovery_origin, 0)
     as discovery_delta

@@ -1,6 +1,6 @@
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 
+from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
@@ -8,28 +8,27 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
-from common.utils import get_airflow_schedule
-from airflow import DAG
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
-    GCP_PROJECT_ID,
+    BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
+    MLFLOW_URL,
     SLACK_CONN_ID,
     SLACK_CONN_PASSWORD,
-    MLFLOW_URL,
-    BIGQUERY_TMP_DATASET,
-    BIGQUERY_RAW_DATASET,
 )
 from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
 )
+from common.utils import get_airflow_schedule
 from dependencies.ml.utils import create_algo_training_slack_block
+
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 DATE = "{{ ts_nodash }}"
@@ -112,7 +111,7 @@ with DAG(
 
         store_data = {}
         store_data["raw"] = BigQueryInsertJobOperator(
-            task_id=f"store_raw_data",
+            task_id="store_raw_data",
             configuration={
                 "extract": {
                     "sourceTable": {
@@ -204,6 +203,17 @@ with DAG(
         dag=dag,
     )
 
+    package_api_model = SSHGCEOperator(
+        task_id="package_api_model",
+        instance_name="{{ params.instance_name }}",
+        base_dir=dag_config["BASE_DIR"],
+        environment=dag_config,
+        command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/package_api_model.py "
+        "--model-name {{ params.model_name }} "
+        "--config-file-name {{ params.config_file_name }} ",
+        dag=dag,
+    )
+
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
@@ -230,6 +240,7 @@ with DAG(
         >> split_data
         >> train
         >> evaluate
+        >> package_api_model
         >> gce_instance_stop
         >> send_slack_notif_success
     )

@@ -9,8 +9,27 @@ jobs:
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+   find-dbt-changes:
+    outputs:
+      changes: ${{ steps.dbt-changes.outputs.changes }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: "is dbt project modified?"
+        id: dbt-changes
+        env:
+          TARGET_BRANCH: ${{ github.base_ref }}
+        run: |
+          git fetch origin $TARGET_BRANCH
+          changed_files=$(git diff origin/$TARGET_BRANCH HEAD --name-only | grep 'orchestration/dags/data_gcp_dbt/' || true)
+          if [ -z "$changed_files" ]; then
+            echo "changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "changes=true" >> $GITHUB_OUTPUT
+          fi
    compile-dbt-on-prod:
-    if: github.base_ref == 'production'
+    needs: find-dbt-changes
+    if: github.base_ref == 'production' && needs.find-dbt-changes.outputs.changes == 'true'
     with:
       TARGET_COMPOSER_BUCKET: "europe-west1-data-composer--d5adf2e8-bucket"
       ENV_SHORT_NAME: "prod"
@@ -19,7 +38,8 @@ jobs:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
    compile-dbt-on-stg:
-    if: github.base_ref == 'master'
+    needs: find-dbt-changes
+    if: github.base_ref == 'master' && needs.find-dbt-changes.outputs.changes == 'true'
     with:
       TARGET_COMPOSER_BUCKET: "europe-west1-data-composer--00137508-bucket"
       ENV_SHORT_NAME: "stg"

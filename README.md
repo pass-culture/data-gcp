@@ -125,9 +125,13 @@ Vue d'ensemble du workflow d'intégration continue (CI) pour notre projet, déta
 
 La tâche `linter` vérifie le code pour les problèmes de style en utilisant `black`. Elle se connecte à Google Cloud Secret Manager pour récupérer les secrets nécessaires et envoie éventuellement des notifications à un canal Slack si le linter échoue.
 
+* Recherche modifications du projet DBT
+
+Cette tâche recherche s'il y a eu des modifications/création/suppression de fichiers dans le projet DBT.
+
 * Compilation DBT
 
-Il y a deux tâches de compilation, une pour la production et une pour le staging, qui compilent le projet DBT en fonction de la branche ciblée.
+Il y a deux tâches de compilation, une pour la production et une pour staging, qui compilent le projet DBT en fonction de la branche ciblée lorsque des modifications ont eu lieu dans le projet DBT.
 
 * Recherche de Tâches de Test
 
@@ -154,8 +158,9 @@ Cette tâche exécute des tests d'orchestration si des changements sont détect�
 ```mermaid
 graph TD;
     A[Workflow de Base] --> B[Linter]
-    A -->|PR production| C[Compilation DBT en Production]
-    A -->|PR master| D[Compilation DBT en Staging]
+    A --> AA[Recherche modifications du projet DBT]
+    AA -->|PR production| C[Compilation DBT en Production]
+    AA -->|PR master| D[Compilation DBT en Staging]
     A --> E[Recherche de Tâches de Test]
     E --> F[Vérification de la Non-Vacuité de la Matrice]
     F --> G[Tâches de Test]

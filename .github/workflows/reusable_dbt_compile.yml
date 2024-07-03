@@ -95,6 +95,7 @@ jobs:
         run: |
           dbt_run_changed_models() {
           children=$1
+          git fetch origin $TARGET_BRANCH
           models=$(git diff origin/$TARGET_BRANCH HEAD --name-only | grep 'orchestration/dags/data_gcp_dbt/models/' | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/${children}/g" | tr '\n' ' ')
           echo ${#models}
           if [ -z "$models" ]

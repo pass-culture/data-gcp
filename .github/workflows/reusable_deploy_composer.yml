@@ -86,9 +86,7 @@ jobs:
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
-        run: |
-          gsutil -m rm -r  gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/target/dbt_packages
-          gsutil -m cp -r target/dbt_packages gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/target
+        run: gsutil -m rsync -d -r target/dbt_packages gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/target/dbt_packages
       - name: "compile dbt project"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
@@ -100,13 +98,9 @@ jobs:
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
-        run: |
-          gsutil rm  gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/target/manifest.json
-          gsutil cp target/manifest.json gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json
+        run: gsutil cp target/manifest.json gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json
       - name: "Deploy composer"
-        run: |
-          gsutil -m rm -r gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/dags
-          gsutil -m cp -r dags gs://${{ inputs.COMPOSER_DAGS_BUCKET }}
+        run: gsutil -m rsync -d -r dags gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/dags
       - name: "Wait for composer to be deployed (10s x 6 times)"
         run: |
           ./wait_for_dag_deployed.sh ${{ inputs.COMPOSER_NAME }} ${{ env.GCP_REGION }} airflow_monitoring 6 10 ${{ inputs.DATA_GCP_PROJECT }}

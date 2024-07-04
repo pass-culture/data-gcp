@@ -60,29 +60,29 @@ SELECT
     COUNTIF(event_name = "page_view" AND page_name IN ("Création - Détail de l’offre - pass Culture Pro","Détails - Créer une offre individuelle - pass Culture Pro")) AS total_started_created_individual_offers,
     COUNTIF(event_name = "page_view" AND page_name= "Confirmation - Offre individuelle publiée - pass Culture Pro") AS total_confirmed_created_individual_offers,
 -- collectiv
-    COUNTIF(event_name = "page_view" AND page_location LIKE "%/offre/creation/collectif/vitrine%" ) AS total_started_created_collective_offer_template,
-    COUNTIF(event_name = "page_view" AND page_location LIKE "%collectif/vitrine/confirmation%") AS total_confirmed_created_collective_offer_template,
+    COUNTIF(event_name = "page_view" AND page_location LIKE "%/offre/creation/collectif/vitrine%" ) AS total_started_created_template_collective_offers,
+    COUNTIF(event_name = "page_view" AND page_location LIKE "%collectif/vitrine/confirmation%") AS total_confirmed_created_template_collective_offers,
     COUNTIF(event_name = "page_view" AND (page_location LIKE "%/offre/creation/collectif?%" OR (page_location LIKE "%offre/collectif%" AND page_location LIKE "%creation?%"))) AS total_started_created_bookable_collective_offers,
     COUNTIF(event_name = "page_view" AND page_location LIKE "%/collectif/confirmation%") AS total_confirmed_created_bookable_collective_offers,
 
 -- count offer edition 
 -- indiv
-    COUNTIF(event_name = "page_view" AND page_name = "Détails - Modifier une offre individuelle - pass Culture Pro") AS total_detailed_edited_started_individual_offers,
+    COUNTIF(event_name = "page_view" AND page_name = "Détails - Modifier une offre individuelle - pass Culture Pro") AS total_started_detail_edited_individual_offers,
 
-    COUNTIF(event_name = "page_view" AND page_name = "Récapitulatif - Modifier une offre individuelle - pass Culture Pro" AND origin LIKE "%/offre/individuelle%" AND origin LIKE "%edition/informations%") AS total_detail_edition_confirmed_individual_offers,
-    COUNTIF(event_name = "page_view" AND page_name = "Stocks et prix - Modifier une offre individuelle - pass Culture Pro") AS total_stock_edition_started_individual_offers,
-    COUNTIF(event_name = "page_view" AND page_name = "Stocks et prix - Consulter une offre individuelle - pass Culture Pro" AND origin LIKE "%/offre/individuelle%" AND origin LIKE "%/stocks%") AS total_stock_edition_confirmed_individual_offers,
+    COUNTIF(event_name = "page_view" AND page_name = "Récapitulatif - Modifier une offre individuelle - pass Culture Pro" AND origin LIKE "%/offre/individuelle%" AND origin LIKE "%edition/informations%") AS total_confirmed_detail_edited_individual_offers,
+    COUNTIF(event_name = "page_view" AND page_name = "Stocks et prix - Modifier une offre individuelle - pass Culture Pro") AS total_started_stock_edited_individual_offers,
+    COUNTIF(event_name = "page_view" AND page_name = "Stocks et prix - Consulter une offre individuelle - pass Culture Pro" AND origin LIKE "%/offre/individuelle%" AND origin LIKE "%/stocks%") AS total_confirmed_stock_edited_individual_offers,
 -- collectiv
-    COUNTIF(event_name = "page_view" AND page_name = "Détails - Modifier une offre collective réservable - pass Culture Pro") AS total_edition_started_collective_offers,
-    COUNTIF(event_name = "page_view" AND page_name = "Récapitulatif - Modifier une offre collective réservable - pass Culture Pro" AND origin LIKE "%collectif/edition%") AS total_confirmed_collective_offer_edition,
+    COUNTIF(event_name = "page_view" AND page_name = "Détails - Modifier une offre collective réservable - pass Culture Pro") AS total_started_edited_collective_offers,
+    COUNTIF(event_name = "page_view" AND page_name = "Récapitulatif - Modifier une offre collective réservable - pass Culture Pro" AND origin LIKE "%collectif/edition%") AS total_confirmed_edited_collective_offers,
 
 -- count venue creation
-    COUNTIF(event_name IN ("hasClickedAddFirstVenueInOfferer","hasClickedAddVenueInOfferer","hasClickedCreateVenue")) AS total_started_venue_creation, -- total_created_venue ?
-    COUNTIF(event_name = "hasClickedSaveVenue" AND is_edition != "true") AS total_confirmed_venue_creation, -- total confirmed_venue ?
+    COUNTIF(event_name IN ("hasClickedAddFirstVenueInOfferer","hasClickedAddVenueInOfferer","hasClickedCreateVenue")) AS total_started_created_venues,
+    COUNTIF(event_name = "hasClickedSaveVenue" AND is_edition != "true") AS total_confirmed_created_venues, -- total confirmed_venue ?
 
 -- count venue edition
-    COUNTIF(event_name = "page_view" AND (page_name = "Modifier un lieu - pass Culture Pro" OR (page_name = "Modifier ma page partenaire - pass Culture Pro" AND origin LIKE "%lieux%") OR (page_name IN ("Gérer ma page sur l’application - pass Culture Pro","Gérer ma page sur ADAGE - pass Culture Pro") AND page_location LIKE "%edition"))) AS total_started_venue_edition,
-    COUNTIF(event_name = "hasClickedSaveVenue" AND is_edition = "true") AS total_confirmed_venue_edition,
+    COUNTIF(event_name = "page_view" AND (page_name = "Modifier un lieu - pass Culture Pro" OR (page_name = "Modifier ma page partenaire - pass Culture Pro" AND origin LIKE "%lieux%") OR (page_name IN ("Gérer ma page sur l’application - pass Culture Pro","Gérer ma page sur ADAGE - pass Culture Pro") AND page_location LIKE "%edition"))) AS total_started_edited_venues,
+    COUNTIF(event_name = "hasClickedSaveVenue" AND is_edition = "true") AS total_confirmed_edited_venues,
     COUNTIF(event_name = "hasClickedAddImage") AS total_add_image_clicks,
 
 -- count other CTA 

@@ -66,14 +66,7 @@ jobs:
           dir_names_max_depth: 5
       - name: "Trouver les Jobs testables"
         id: "find-testable-jobs"
-        run: |
-          find jobs -type d  -name "tests" -exec dirname {} \; > /tmp/list.txt
-          folders=()
-          for folder in $(cat /tmp/list.txt); do
-            folders+=(\\\"${folder}\\\")
-          done
-          json_array="[$(IFS=,; echo "${folders[*]}")]"
-          echo "testable_jobs=$json_array" | tee -a $GITHUB_OUTPUT
+        run: .github/workflows/scripts/find_tests.sh
       - name: "Show found files"
         id: "compute" # Intersection de testable_jobs et de (changed-etl-files et changed-ml-files)
         run: |

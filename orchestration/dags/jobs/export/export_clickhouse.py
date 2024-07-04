@@ -1,5 +1,6 @@
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.utils.task_group import TaskGroup
 from airflow.models import Param
 from common.operators.gce import (
     StartGCEOperator,
@@ -7,6 +8,7 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
 )
+from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
@@ -22,7 +24,7 @@ from common.config import (
     PATH_TO_DBT_TARGET,
 )
 
-from common.utils import get_airflow_schedule
+from common.utils import get_airflow_schedule, waiting_operator
 from common.alerts import task_fail_slack_alert
 from dependencies.export_clickhouse.export_clickhouse import (
     TABLES_CONFIGS,
@@ -131,9 +133,30 @@ for dag_name, dag_params in dags.items():
             dag=dag,
         )
 
+        with TaskGroup(
+            group_id="waiting_dbt_transfo", dag=dag
+        ) as wait_for_dbt_daily_tasks:
+            for table_config in TABLES_CONFIGS:
+                waiting_task = waiting_operator(dag, "dbt_dag_run", table_config["sql"])
+
+        def choose_branch(**context):
+            run_id = context["dag_run"].run_id
+            if run_id.startswith("scheduled__"):
+                return [f"waiting_dbt_transfo"]
+            return ["shunt_manual"]
+
+        branching = BranchPythonOperator(
+            task_id="branching",
+            python_callable=choose_branch,
+            provide_context=True,
+            dag=dag,
+        )
+        shunt = DummyOperator(task_id="shunt_manual", dag=dag)
+        join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
+
         in_tables_tasks, out_tables_tasks = [], []
         for table_config in TABLES_CONFIGS:
-            tmp_table_name = table_config["sql"]
+            tmp_table_name = table_config["bigquery_table_name"]
             clickhouse_table_name = table_config["clickhouse_table_name"]
             clickhouse_dataset_name = table_config["clickhouse_dataset_name"]
             mode = table_config["mode"]
@@ -202,5 +225,13 @@ for dag_name, dag_params in dags.items():
             task_id=f"gce_stop_task", instance_name="{{ params.instance_name }}"
         )
 
-        (gce_instance_start >> fetch_code >> install_dependencies >> in_tables_tasks)
+        (
+            gce_instance_start
+            >> fetch_code
+            >> install_dependencies
+            >> branching
+            >> [shunt, wait_for_dbt_daily_tasks]
+            >> join
+            >> in_tables_tasks
+        )
         (out_tables_tasks >> end_tables >> views_refresh >> gce_instance_stop)

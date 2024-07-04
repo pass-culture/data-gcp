@@ -245,9 +245,7 @@ class QualtricsSurvey:
             "survey_int_id": int,
         }
 
-        df_final = df_final.rename(columns=rename_dict, inplace=True).astype(
-            format_dict
-        )
+        df_final = df_final.rename(columns=rename_dict).astype(format_dict)
 
         df_final["survey_id"] = self.survey_id
 

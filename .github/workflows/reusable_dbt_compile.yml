@@ -74,9 +74,7 @@ jobs:
         env:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
-        run: |
-          export PYTHONPATH=$PYTHONPATH:./dags
-          dbt deps 
+        run: PYTHONPATH=$PYTHONPATH:./dags dbt deps
       - name: "compile dbt project"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
@@ -98,8 +96,13 @@ jobs:
           TARGET_BRANCH: ${{ github.base_ref }}
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           DBT_TARGET_PATH: "target/"
-          DBT_PROFILES_DIR: "."          
-        run: dbt test --store-failures -s "state:modified" --exclude test_name:relationships config.materialized:incremental --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','CI_SEVERITY':'error','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+          DBT_PROFILES_DIR: "."
+        run: |
+          dbt test --store-failures -s "state:modified" \
+          --exclude test_name:relationships config.materialized:incremental \
+          --profile CI --target $ENV_SHORT_NAME --defer \
+          --state env-run-artifacts --favor-state \
+          --vars "{'CI_MATERIALIZATION':'view','CI_SEVERITY':'error','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
         uses: slackapi/slack-github-action@v1.23.0

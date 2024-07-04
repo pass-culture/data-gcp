@@ -12,4 +12,5 @@ cat /tmp/output.json
 jobs_to_test=$(jq --compact-output --slurp '(.[0] + .[1]) - ((.[0] + .[1]) - .[2])' /tmp/output.json)
 
 # Set the output variable
+echo "jobs=${jobs_to_test}" | tee -a
 echo "jobs=${jobs_to_test}" | tee -a $GITHUB_OUTPUT

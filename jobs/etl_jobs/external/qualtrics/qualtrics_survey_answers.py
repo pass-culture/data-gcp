@@ -213,13 +213,9 @@ class QualtricsSurvey:
             )
         )
         if len(other_columns) > 0:
-            df_final = (
-                df_step1.assign(
-                    extra_data=lambda _df: _df[other_columns].to_dict(orient="records")
-                )
-                .drop(drop_columns + other_columns, axis=1)
-                .astype({"extra_data": str})
-            )
+            df_final = df_step1.assign(
+                extra_data=lambda _df: _df[other_columns].to_dict(orient="records")
+            ).drop(drop_columns + other_columns, axis=1)
         else:
             df_final = df_step1.drop(drop_columns + other_columns, axis=1)
 
@@ -233,7 +229,25 @@ class QualtricsSurvey:
             "DistributionChannel": "distribution_channel",
         }
 
-        df_final.rename(columns=rename_dict, inplace=True)
+        format_dict = {
+            "start_date": str,
+            "end_date": str,
+            "status": int,
+            "response_id": str,
+            "user_id": str,
+            "distribution_channel": str,
+            "question": str,
+            "answer": str,
+            "question_str": str,
+            "question_id": str,
+            "extra_data": str,
+            "survey_id": str,
+            "survey_int_id": int,
+        }
+
+        df_final = df_final.rename(columns=rename_dict, inplace=True).astype(
+            format_dict
+        )
 
         df_final["survey_id"] = self.survey_id
 

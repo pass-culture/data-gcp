@@ -3,19 +3,22 @@
 # make sure to set table_config['sql'] values to clickhouse_modelName
 TABLES_CONFIGS = [
     {
-        "sql": "clickhouse_booking",
+        "sql": "exp_clickhouse__booking",
+        "bigquery_table_name": "clickhouse_booking",
         "clickhouse_table_name": "booking",
         "clickhouse_dataset_name": "intermediate",
         "mode": "overwrite",
     },
     {
-        "sql": "clickhouse_collective_booking",
+        "sql": "exp_clickhouse__collective_booking",
+        "bigquery_table_name": "clickhouse_collective_booking",
         "clickhouse_table_name": "collective_booking",
         "clickhouse_dataset_name": "intermediate",
         "mode": "overwrite",
     },
     {
-        "sql": "clickhouse_native_event",
+        "sql": "exp_clickhouse__native_event",
+        "bigquery_table_name": "clickhouse_native_event",
         "clickhouse_table_name": "native_event",
         "clickhouse_dataset_name": "intermediate",
         "mode": "incremental",

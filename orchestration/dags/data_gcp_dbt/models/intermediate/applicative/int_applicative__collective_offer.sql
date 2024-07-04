@@ -70,7 +70,7 @@ SELECT
     FALSE AS collective_offer_is_template,
 FROM {{ source('raw','applicative_database_collective_offer') }} AS co
 LEFT JOIN collective_stocks_grouped_by_collective_offers AS cs ON cs.collective_offer_id = co.collective_offer_id
-INNER JOIN {{ ref('int_applicative__educational_institution') }} AS ei ON ei.educational_institution_id = co.institution_id
+LEFT JOIN {{ ref('int_applicative__educational_institution') }} AS ei ON ei.educational_institution_id = co.institution_id
 LEFT JOIN {{ ref('institution_locations') }} AS il ON il.institution_id = ei.institution_id
 )
 UNION ALL

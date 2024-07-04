@@ -70,12 +70,9 @@ jobs:
       - name: "Show found files"
         id: "compute" # Intersection de testable_jobs et de (changed-etl-files et changed-ml-files)
         run: |
-          echo "${{ steps.changed-etl-files.outputs.all_changed_files }}" > /tmp/output.json
-          echo "${{ steps.changed-ml-files.outputs.all_changed_files }}" >> /tmp/output.json
-          echo "${{ steps.find-testable-jobs.outputs.testable_jobs }}" >> /tmp/output.json
-          cat /tmp/output.json
-          jobs_to_test=$(jq --compact-output --slurp '(.[0] + .[1]) - ((.[0] + .[1]) - .[2])' /tmp/output.json)
-          echo "jobs=${jobs_to_test}" | tee -a $GITHUB_OUTPUT
+          .github/workflows/scripts/find_test_intersections.sh "${{ steps.changed-etl-files.outputs.all_changed_files }}" \
+            "${{ steps.changed-ml-files.outputs.all_changed_files }}" \
+            "${{ steps.find-testable-jobs.outputs.testable_jobs }}"
    assert-matrix-not-empty:
     needs: find-test-jobs
     if: ${{ needs.find-test-jobs.outputs.jobs != '' && toJson(fromJson(needs.find-test-jobs.outputs.jobs)) != '[]' }}

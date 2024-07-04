@@ -229,6 +229,8 @@ class QualtricsSurvey:
             "DistributionChannel": "distribution_channel",
         }
 
+        df_final["survey_id"] = self.survey_id
+
         format_dict = {
             "start_date": str,
             "end_date": str,
@@ -246,8 +248,6 @@ class QualtricsSurvey:
         }
 
         df_final = df_final.rename(columns=rename_dict).astype(format_dict)
-
-        df_final["survey_id"] = self.survey_id
 
         filtered_df = df_final[
             (~df_final["question_id"].str.contains("TEXT"))

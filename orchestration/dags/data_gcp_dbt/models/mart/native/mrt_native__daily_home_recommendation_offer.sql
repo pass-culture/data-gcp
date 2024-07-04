@@ -82,7 +82,7 @@ SELECT
   oc.parent_entry_id,
   oc.parent_home_type,
   oc.module_type,
-  mc.unique_session_id, 
+  oc.unique_session_id, 
   mc.booking_id,
   MAX(mc.consult_offer_timestamp) as consult_offer_timestamp,
   MAX(mc.booking_timestamp) as booking_timestamp,

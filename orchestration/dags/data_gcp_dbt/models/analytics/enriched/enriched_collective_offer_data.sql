@@ -134,7 +134,7 @@ FROM
     LEFT JOIN {{ source('raw', 'applicative_database_national_program') }} national_program USING(national_program_id)
     LEFT JOIN {{ ref('int_applicative__institution') }} AS institution_program
         ON collective_offer.institution_id = institution_program.institution_id
-    INNER JOIN {{ ref('educational_institution') }} AS educational_institution ON educational_institution.educational_institution_id = collective_offer.institution_id
+    LEFT JOIN {{ ref('educational_institution') }} AS educational_institution ON educational_institution.educational_institution_id = collective_offer.institution_id
     LEFT JOIN {{ ref('institution_locations') }} AS institution_locations ON institution_locations.institution_id = educational_institution.institution_id
 WHERE collective_offer.collective_offer_validation = 'APPROVED'
 UNION

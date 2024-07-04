@@ -140,6 +140,8 @@ SELECT
         WHEN subcategories.category_id = "MUSIQUE_LIVE" THEN o.musicSubtype
         WHEN subcategories.category_id <> "SPECTACLE" AND o.musicsubType IS NOT NULL THEN o.musicSubtype
     END AS subType,
+    future_offer.offer_publication_date,
+    CASE WHEN o.offer_is_active IS False AND future_offer.offer_publication_date>=current_date THEN True ELSE False END AS is_future_scheduled
 FROM {{ ref("int_applicative__extract_offer") }} AS o
 LEFT JOIN {{ ref("offer_item_ids") }} AS ii on ii.offer_id = o.offer_id
 LEFT JOIN stocks_grouped_by_offers AS so ON so.offer_id = o.offer_id
@@ -150,6 +152,7 @@ LEFT JOIN {{ ref("isbn_rayon_editor") }} AS isbn_rayon_editor ON o.isbn = isbn_r
 LEFT JOIN {{ ref("int_applicative__mediation") }} AS m ON o.offer_id = m.offer_id
     AND m.is_active
     AND m.mediation_rown = 1
+LEFT JOIN {{ source('raw','applicative_database_future_offer') }} AS future_offer ON future_offer.offer_id=o.offer_id
 WHERE o.offer_subcategoryid NOT IN ("ACTIVATION_THING", "ACTIVATION_EVENT")
     AND (
         booking_email != "jeux-concours@passculture.app"

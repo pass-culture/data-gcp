@@ -64,7 +64,6 @@ SELECT
     o.total_favorites,
     o.total_stock_quantity,
     o.total_first_bookings,
-    o.offerer_address_id,
     v.venue_id,
     v.venue_name,
     v.venue_department_code,
@@ -75,5 +74,8 @@ SELECT
     v.venue_type_label,
     v.venue_iris_internal_id,
     v.venue_region_name,
+    o.offerer_address_id,
+    o.offer_publication_date,
+    o.is_future_scheduled
 FROM {{ ref('int_applicative__offer') }} AS o
 INNER JOIN {{ ref('mrt_global__venue_unverified')}} AS v ON v.venue_id = o.venue_id

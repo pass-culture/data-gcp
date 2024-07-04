@@ -78,7 +78,7 @@ weekly = BashOperator(
 )
 
 
-end = DummyOperator(task_id="end", dag=dag, trigger_rule="all_success")
+end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
 
 shunt = DummyOperator(task_id="skip_tasks", dag=dag)
 

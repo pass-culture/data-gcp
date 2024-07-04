@@ -59,7 +59,7 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
-end = DummyOperator(task_id="end", dag=dag, trigger_rule="all_success")
+end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
 
 wait_for_dbt_daily = waiting_operator(dag=dag, dag_id="dbt_run_dag")
 

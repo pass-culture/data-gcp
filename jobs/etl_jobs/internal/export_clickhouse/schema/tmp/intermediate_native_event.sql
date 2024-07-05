@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS {{ dataset }}.{{ tmp_table_name }} ON cluster default
     ORDER BY event_name
     SETTINGS storage_policy='gcs_main'
 
-AS 
+AS
     SELECT
         cast(partition_date as String) AS partition_date,
         cast(event_name as String) as event_name,

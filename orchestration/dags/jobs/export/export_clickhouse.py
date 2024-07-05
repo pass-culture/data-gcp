@@ -133,28 +133,13 @@ for dag_name, dag_params in dags.items():
             dag=dag,
         )
 
-        with TaskGroup(
-            group_id="waiting_dbt_transfo", dag=dag
-        ) as wait_for_dbt_daily_tasks:
-            for table_config in TABLES_CONFIGS:
-                waiting_task = waiting_operator(dag, "dbt_dag_run", table_config["sql"])
-
         def choose_branch(**context):
             run_id = context["dag_run"].run_id
             if run_id.startswith("scheduled__"):
                 return [f"waiting_dbt_transfo"]
             return ["shunt_manual"]
 
-        branching = BranchPythonOperator(
-            task_id="branching",
-            python_callable=choose_branch,
-            provide_context=True,
-            dag=dag,
-        )
-        shunt = DummyOperator(task_id="shunt_manual", dag=dag)
-        join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
-
-        in_tables_tasks, out_tables_tasks = [], []
+        waiting_transfo_tasks, out_tables_tasks = [], []
         for table_config in TABLES_CONFIGS:
             tmp_table_name = table_config["bigquery_table_name"]
             clickhouse_table_name = table_config["clickhouse_table_name"]
@@ -170,6 +155,9 @@ for dag_name, dag_params in dags.items():
             elif mode == "incremental":
                 sql_query = f"""SELECT * FROM {DATASET_ID}.{tmp_table_name} """
                 """WHERE event_date = DATE("{{ add_days(ds, params.days) }}")"""
+
+            waiting_task = waiting_operator(dag, "dbt_dag_run", table_config["sql"])
+
             export_task = BigQueryExecuteQueryOperator(
                 task_id=f"bigquery_export_{clickhouse_table_name}",
                 sql=sql_query,
@@ -204,8 +192,8 @@ for dag_name, dag_params in dags.items():
                 f"--source-gs-path https://storage.googleapis.com/{storage_path}/data-*.parquet --table-name {clickhouse_table_name} --dataset-name {clickhouse_dataset_name} --update-date {_ds} --mode {mode}",
                 dag=dag,
             )
-            export_task >> export_bq >> clickhouse_export
-            in_tables_tasks.append(export_task)
+            waiting_task >> export_task >> export_bq >> clickhouse_export
+            waiting_transfo_tasks.append(waiting_task)
             out_tables_tasks.append(clickhouse_export)
 
         end_tables = DummyOperator(task_id="end_tables_export")
@@ -229,9 +217,6 @@ for dag_name, dag_params in dags.items():
             gce_instance_start
             >> fetch_code
             >> install_dependencies
-            >> branching
-            >> [shunt, wait_for_dbt_daily_tasks]
-            >> join
-            >> in_tables_tasks
+            >> waiting_transfo_tasks
         )
         (out_tables_tasks >> end_tables >> views_refresh >> gce_instance_stop)

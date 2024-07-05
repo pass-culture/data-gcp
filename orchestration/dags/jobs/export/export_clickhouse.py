@@ -14,14 +14,12 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
 import datetime
-from pathlib import Path
 from common.config import (
     GCP_PROJECT_ID,
     DAG_FOLDER,
     ENV_SHORT_NAME,
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_TMP_DATASET,
-    PATH_TO_DBT_TARGET,
 )
 
 from common.utils import get_airflow_schedule, waiting_operator
@@ -30,10 +28,8 @@ from dependencies.export_clickhouse.export_clickhouse import (
     TABLES_CONFIGS,
     VIEWS_CONFIGS,
 )
-from common.alerts import task_fail_slack_alert
-import copy
 from common import macros
-import os
+
 
 DATASET_ID = f"export_{ENV_SHORT_NAME}"
 GCE_INSTANCE = f"export-clickhouse-{ENV_SHORT_NAME}"
@@ -177,8 +173,10 @@ for dag_name, dag_params in dags.items():
             if mode == "overwrite":
                 sql_query = f"""SELECT * FROM {DATASET_ID}.{tmp_table_name} """
             elif mode == "incremental":
-                sql_query = f"""SELECT * FROM {DATASET_ID}.{tmp_table_name} """
-                """WHERE {partition_key} BETWEEN DATE("{{ add_days(ds, params.from_days) AND DATE("{{ add_days(ds, params.to_days) }}")"""
+                sql_query = (
+                    f"""SELECT * FROM {DATASET_ID}.{tmp_table_name}  WHERE {partition_key} """
+                    + ' BETWEEN DATE("{{ add_days(ds, params.from_days)}}") AND DATE("{{ add_days(ds, params.to_days) }}")'
+                )
 
             export_task = BigQueryExecuteQueryOperator(
                 task_id=f"bigquery_export_{clickhouse_table_name}",

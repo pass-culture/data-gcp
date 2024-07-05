@@ -1,0 +1,13 @@
+flask==3.0.0
+flask-cors==4.0.0
+hypercorn==0.15.0
+numpy==1.26.4
+pandas==2.1.1
+pyarrow==13.0.0
+loguru==0.6.0
+sentence-transformers==2.2.2
+python-json-logger==2.0.7
+lancedb==0.3.3
+docarray==0.21.0
+umap-learn==0.5.3
+hnne==0.1.10

@@ -5,11 +5,16 @@ if [ -z "$1" ]; then
   echo "TARGET_BRANCH is required as the first argument"
   exit 1
 fi
+if [ -z "$2" ]; then
+  echo "WORKING_DIR is required as the second argument"
+  exit 1
+fi
+
 
 TARGET_BRANCH=$1
+WORKING_DIR=$2
 children="+1"
-WORKING_DIR="orchestration/dags/data_gcp_dbt/"
-cd $WORKING_DIR || exit
+cd $WORKING_DIR
 
 
 dbt_run_changed_models() {

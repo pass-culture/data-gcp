@@ -4,24 +4,24 @@ models:
 
   - name: exp_backend__favorites_not_booked
     description: |
-    Overview: |
-      This scripts exports a list of users based on the following criteria in order to promote offers to them.
+      Overview:
+        This scripts exports a list of users based on the following criteria in order to promote offers to them.
 
-    User Selection Criteria: |
-      Select only users who have not made any reservations between J-1 and J-7.
+      User Selection Criteria:
+        Select only users who have not made any reservations between J-1 and J-7.
 
-    Offer Selection Criteria: |
-      For the selected users, identify all favorite offers from between J-7 and J-14 that meet the following conditions:
-      - The offer is still in stock.
-      - The event date has not passed (for event offers).
-      - The offer has not been reserved or canceled.
-      - The price of the offer is less than the remaining credit of the user.
+      Offer Selection Criteria: 
+        For the selected users, identify all favorite offers from between J-7 and J-14 that meet the following conditions:
+        - The offer is still in stock.
+        - The event date has not passed (for event offers).
+        - The offer has not been reserved or canceled.
+        - The price of the offer is less than the remaining credit of the user.
 
-    Offer Prioritization: |
-      If multiple offers are available, select the offer from the category that the user has reserved the least.
+      Offer Prioritization:
+        If multiple offers are available, select the offer from the category that the user has reserved the least.
 
-    Data Update Schedule: |
-      The table is updated weekly.
-      The execution_date serves as the reference date J-0.
-      Select users who did not reserve offers in the previous week (S-1).
-      Select the offer based on favorites from the week S-2, applying the above rules.
+      Data Update Schedule:
+        The table is updated weekly.
+        The execution_date serves as the reference date J-0.
+        Select users who did not reserve offers in the previous week (S-1).
+        Select the offer based on favorites from the week S-2, applying the above rules.

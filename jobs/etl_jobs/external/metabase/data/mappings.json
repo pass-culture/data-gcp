@@ -1,5 +1,10 @@
 {
-  "legacy_table_name": {
-    "old_column_name": "new_column_name"
+  "enriched_venue_tags_data": {
+    "criterion_category_id": "venue_tag_category_id",
+    "criterion_category_label": "venue_tag_category_label",
+    "criterion_id": "venue_tag_id",
+    "criterion_name": "venue_tag_name",
+    "partner_id": "partner_id",
+    "venue_id": "venue_id"
   }
 }

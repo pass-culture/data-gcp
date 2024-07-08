@@ -7,8 +7,6 @@
     )
 }}
 
--- check où c'est censé aller cette colonne total_confirmed_collective_offer_edition (nouveau nom : total_confirmed_edited_collective_offers)
-
 SELECT
     fpv.user_id,
     fpv.user_pseudo_id,
@@ -23,7 +21,7 @@ SELECT
     COUNT(DISTINCT p.partner_id) as total_partners,
 
     -- offer management (modification and creation after hub)
-    SUM(CASE WHEN total_started_individual_offers + total_confirmed_individual_offers + total_started_created_template_collective_offers + total_confirmed_created_template_collective_offers + total_started_created_bookable_collective_offers + total_confirmed_created_bookable_collective_offers + total_detailed_edited_started_individual_offers + total_confirmed_detail_edited_individual_offers + total_stock_edition_started_individual_offers + total_confirmed_stock_edited_individual_offers > 0 THEN 1 ELSE 0 END) AS total_managed_offers,
+    SUM(CASE WHEN total_started_created_individual_offers + total_confirmed_created_individual_offers + total_started_created_template_collective_offers + total_confirmed_created_template_collective_offers + total_started_created_bookable_collective_offers + total_confirmed_created_bookable_collective_offers + total_started_detail_edited_individual_offers + total_confirmed_detail_edited_individual_offers + total_started_stock_edited_individual_offers + total_confirmed_stock_edited_individual_offers > 0 THEN 1 ELSE 0 END) AS total_managed_offers,
 
     -- guichet management
     SUM(CASE WHEN total_ticket_page_views > 0 THEN 1 ELSE 0 END) AS total_managed_tickets,

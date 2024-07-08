@@ -107,7 +107,7 @@ GROUP BY 1
 SELECT
     DISTINCT CASE WHEN mrt_global__venue.venue_is_permanent THEN CONCAT("venue-",mrt_global__venue.venue_id)
      ELSE CONCAT("offerer-", venue_managing_offerer_id) END AS partner_id
-    ,first_dms_adage_status
+    ,enriched_offerer_data.first_dms_adage_status
 FROM {{ ref('mrt_global__venue')}} AS mrt_global__venue
 LEFT JOIN {{ ref('enriched_offerer_data')}} on mrt_global__venue.venue_managing_offerer_id = enriched_offerer_data.offerer_id
 )

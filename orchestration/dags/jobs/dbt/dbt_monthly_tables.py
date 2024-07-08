@@ -5,7 +5,6 @@ from airflow import DAG
 from airflow.operators.python_operator import BranchPythonOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.dates import datetime, timedelta
 from airflow.models import Param
 from common.alerts import task_fail_slack_alert
 from common.utils import get_airflow_schedule, waiting_operator
@@ -20,16 +19,16 @@ from common.config import (
 
 
 default_args = {
-    "start_date": datetime(2020, 12, 1),
+    "start_date": datetime.datetime(2020, 12, 1),
     "retries": 1,
-    "retry_delay": timedelta(minutes=2),
+    "retry_delay": datetime.timedelta(minutes=2),
     "project_id": GCP_PROJECT_ID,
 }
 
 dag = DAG(
     "dbt_monthly",
     default_args=default_args,
-    dagrun_timeout=timedelta(minutes=60),
+    dagrun_timeout=datetime.timedelta(minutes=60),
     catchup=False,
     description="run monthly aggregated models",
     schedule_interval=get_airflow_schedule("0 1 * * *"),

@@ -1,8 +1,9 @@
-import pandas as pd
 import re
-import typer
-from metabase_api import MetabaseAPI
 
+import pandas as pd
+import typer
+
+from metabase_api import MetabaseAPI
 from utils import (
     PROJECT_NAME,
     ENVIRONMENT_SHORT_NAME,
@@ -92,7 +93,6 @@ def get_query_dependencies(card_list, tables_df):
 
 
 def get_table_infos(metabase):
-
     table_infos = {}
     i = 0
     for table_info in metabase.get_table():
@@ -112,20 +112,18 @@ def get_table_infos(metabase):
 
 
 def get_native_dependencies(cards_list, tables_df):
-
     regex = (
-        f"FROM {ANALYTICS_DATASET}.[a-zA-Z0-9_]+|JOIN {ANALYTICS_DATASET}.[a-zA-Z0-9_]+"
+        f"from {ANALYTICS_DATASET}.[a-zA-Z0-9_]+|join {ANALYTICS_DATASET}.[a-zA-Z0-9_]+"
     )
     i = 0
     dependencies_native = {}
     for card in cards_list:
-
         card_id = card["id"]
         card_name = card["name"]
         card_owner = card["creator"]["email"]
         card_type = card["dataset_query"]["type"]
 
-        sql_lines = card["dataset_query"]["native"]["query"]
+        sql_lines = card["dataset_query"]["native"]["query"].lower()
         sql_lines = sql_lines.replace("`", "")
         table_dependency = re.findall(regex, sql_lines)
         table_dependency = list(set(table_dependency)) + list(set(table_dependency))

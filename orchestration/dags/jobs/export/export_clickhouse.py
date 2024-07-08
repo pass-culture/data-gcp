@@ -75,7 +75,7 @@ dags = {
 def choose_branch(**context):
     run_id = context["dag_run"].run_id
     if run_id.startswith("scheduled__"):
-        return [f"waiting_dbt_transfo"]
+        return [f"waiting_dbt_group.waiting_dbt_jobs"]
     return ["shunt_manual"]
 
 
@@ -125,10 +125,15 @@ for dag_name, dag_params in dags.items():
         )
 
         with TaskGroup(
-            group_id="waiting_dbt_transfo", dag=dag
+            group_id="waiting_dbt_group", dag=dag
         ) as wait_for_dbt_daily_tasks:
+            wait = DummyOperator(task_id="waiting_dbt_jobs", dag=dag)
+
             for table_config in TABLES_CONFIGS:
-                waiting_task = waiting_operator(dag, "dbt_dag_run", table_config["sql"])
+                waiting_task = waiting_operator(
+                    dag, "dbt_run_dag", f"data_transformation.{table_config['sql']}"
+                )
+                wait.set_downstream(waiting_task)
 
         shunt = DummyOperator(task_id="shunt_manual", dag=dag)
         join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")

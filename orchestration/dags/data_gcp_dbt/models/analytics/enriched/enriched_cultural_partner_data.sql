@@ -2,7 +2,7 @@ WITH permanent_venues AS
 (
 SELECT
     mrt_global__venue.venue_id AS venue_id
-    ,venue_managing_offerer_id AS offerer_id
+    ,mrt_global__venue.venue_managing_offerer_id AS offerer_id
     ,mrt_global__venue.partner_id
     ,venue_creation_date AS partner_creation_date
     ,CASE WHEN DATE_TRUNC(venue_creation_date,YEAR) <= DATE_TRUNC(DATE_SUB(DATE('{{ ds() }}'),INTERVAL 1 YEAR),YEAR) THEN TRUE ELSE FALSE END AS was_registered_last_year
@@ -12,9 +12,9 @@ SELECT
     ,mrt_global__venue.venue_department_code AS partner_department_code
     ,mrt_global__venue.venue_postal_code AS partner_postal_code
     ,'venue' AS partner_status
-    ,COALESCE(criterion_name, venue_type_label) AS partner_type
+    ,COALESCE(venue_tag_name, venue_type_label) AS partner_type
     ,CASE WHEN 
-        criterion_name IS NOT NULL THEN "venue_tag"
+        venue_tag_name IS NOT NULL THEN "venue_tag"
         ELSE 'venue_type_label' 
         END
     AS partner_type_origin
@@ -52,7 +52,7 @@ FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
 LEFT JOIN {{ source('analytics', 'region_department') }} AS region_department
     ON mrt_global__venue.venue_department_code = region_department.num_dep
 LEFT JOIN {{ source('raw', 'agg_partner_cultural_sector') }} ON agg_partner_cultural_sector.partner_type = mrt_global__venue.venue_type_label
-LEFT JOIN {{ ref('enriched_venue_tags_data') }} ON mrt_global__venue.venue_id = enriched_venue_tags_data.venue_id AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire sectoriel"
+LEFT JOIN {{ ref('mrt_global__venue_tag') }} ON mrt_global__venue.venue_id = mrt_global__venue_tag.venue_id AND mrt_global__venue_tag.venue_tag_category_label = "Comptage partenaire sectoriel"
 LEFT JOIN {{ ref('enriched_offerer_data') }} AS enriched_offerer_data
     ON mrt_global__venue.venue_managing_offerer_id = enriched_offerer_data.offerer_id
 WHERE venue_is_permanent IS TRUE
@@ -73,14 +73,14 @@ GROUP BY 1
 top_venue_tag_per_offerer AS (
 SELECT 
   mrt_global__venue.venue_id,
-  venue_managing_offerer_id AS offerer_id,
-  criterion_name AS partner_type,
+  mrt_global__venue.venue_managing_offerer_id AS offerer_id,
+  venue_tag_name AS partner_type,
   'venue_tag' AS partner_type_origin
 FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
-JOIN {{ ref('enriched_venue_tags_data') }} ON mrt_global__venue.venue_id = enriched_venue_tags_data.venue_id
-AND enriched_venue_tags_data.criterion_category_label = "Comptage partenaire sectoriel"
+JOIN {{ ref('mrt_global__venue_tag') }} ON mrt_global__venue.venue_id = mrt_global__venue_tag.venue_id
+AND mrt_global__venue_tag.venue_tag_category_label = "Comptage partenaire sectoriel"
 QUALIFY ROW_NUMBER() OVER(
-    PARTITION BY venue_managing_offerer_id 
+    PARTITION BY mrt_global__venue.venue_managing_offerer_id
     ORDER BY 
         total_theoretic_revenue DESC
         , (COALESCE(mrt_global__venue.total_created_individual_offers,0) + COALESCE(mrt_global__venue.total_created_collective_offers,0)) DESC

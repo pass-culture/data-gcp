@@ -89,9 +89,11 @@ class MetabaseAPI:
                     "card_creator_id": creator_id,
                     "card_updated_at": _c["updated_at"],
                     "card_database_id": _c["database_id"],
-                    "card_dataset_query": _c["dataset_query"][_dataset_type]["query"]
-                    if _dataset_type == "native"
-                    else None,
+                    "card_dataset_query": (
+                        _c["dataset_query"][_dataset_type]["query"]
+                        if _dataset_type == "native"
+                        else None
+                    ),
                 }
                 if "last-edit-info" in _c:
                     edit_dict = {

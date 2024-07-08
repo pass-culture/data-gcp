@@ -21,7 +21,5 @@ models:
         If multiple offers are available, select the offer from the category that the user has reserved the least.
 
       Data Update Schedule:
-        The table is updated weekly.
+        The table is updated weekly on Monday.
         The execution_date serves as the reference date J-0.
-        Select users who did not reserve offers in the previous week (S-1).
-        Select the offer based on favorites from the week S-2, applying the above rules.

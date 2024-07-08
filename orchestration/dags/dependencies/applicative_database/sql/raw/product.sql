@@ -9,6 +9,7 @@ SELECT
     ,"lastProviderId" as lastProviderId
     ,"dateModifiedAtLastProvider" as dateModifiedAtLastProvider
     ,"idAtProviders" as idAtProviders
+    ,"jsonData"  AS product_extra_data
     ,"jsonData" ->> \'ean\' AS ean
     ,"gcuCompatibilityType" AS gcuCompatibilityType
 FROM public.product

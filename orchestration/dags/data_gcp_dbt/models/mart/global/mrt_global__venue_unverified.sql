@@ -109,4 +109,4 @@ SELECT
             v.venue_name ASC
     ) AS offerer_rank_asc
 FROM {{ ref('int_applicative__venue') }} AS v
-LEFT JOIN {{ ref('mrt_global__offerer') }} AS ofr ON v.venue_managing_offerer_id = ofr.offerer_id
+LEFT JOIN {{ ref('mrt_global__offerer_unverified') }} AS ofr ON v.venue_managing_offerer_id = ofr.offerer_id

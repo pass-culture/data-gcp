@@ -4,17 +4,13 @@ import pandas as pd
 def get_mapped_fields(legacy_fields_df, new_fields_df, column_mapping):
     if column_mapping != {}:
         legacy_fields_df["name"] = legacy_fields_df["name"].map(column_mapping)
-    mapped_df = (
-        legacy_fields_df
-        .merge(new_fields_df, on="name")
-        .rename(
-            columns={
-                "table_id_x": "legacy_table_id",
-                "table_id_y": "new_table_id",
-                "id_x": "legacy_field_id",
-                "id_y": "new_field_id",
-            },
-        )
+    mapped_df = legacy_fields_df.merge(new_fields_df, on="name").rename(
+        columns={
+            "table_id_x": "legacy_table_id",
+            "table_id_y": "new_table_id",
+            "id_x": "legacy_field_id",
+            "id_y": "new_field_id",
+        },
     )
 
     return pd.Series(

@@ -1,15 +1,20 @@
 import pandas as pd
 
 
-def get_mapped_fields(legacy_fields_df, new_fields_df):
-
-    mapped_df = legacy_fields_df.merge(new_fields_df, on="name").rename(
-        columns={
-            "table_id_x": "legacy_table_id",
-            "table_id_y": "new_table_id",
-            "id_x": "legacy_field_id",
-            "id_y": "new_field_id",
-        },
+def get_mapped_fields(legacy_fields_df, new_fields_df, column_mapping):
+    if column_mapping != {}:
+        legacy_fields_df["name"] = legacy_fields_df["name"].map(column_mapping)
+    mapped_df = (
+        legacy_fields_df
+        .merge(new_fields_df, on="name")
+        .rename(
+            columns={
+                "table_id_x": "legacy_table_id",
+                "table_id_y": "new_table_id",
+                "id_x": "legacy_field_id",
+                "id_y": "new_field_id",
+            },
+        )
     )
 
     return pd.Series(
@@ -24,7 +29,6 @@ class MetabaseTable:
         self.metabase_api = metabase_api
 
     def get_table_id(self):
-
         metabase_tables = self.metabase_api.get_table()
         metabase_tables_df = pd.DataFrame(metabase_tables)[["id", "schema", "name"]]
         table_id = metabase_tables_df.query(

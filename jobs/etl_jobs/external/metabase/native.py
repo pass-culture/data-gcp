@@ -22,6 +22,13 @@ class NativeCard:
 
         self.card_info["dataset_query"]["native"]["query"] = self.query
 
+    def replace_column_names(self, column_mapping):
+        new_query = self.query
+        for column_key_map, mapped_column_key in column_mapping.items():
+            new_query = new_query.replace(column_key_map, mapped_column_key)
+
+        self.card_info["dataset_query"]["native"]["query"] = new_query
+
     def update_filters(self, metabase_field_mapping):
         for _, d in self.card_info["dataset_query"]["native"]["template-tags"].items():
             if d["type"] == "dimension":

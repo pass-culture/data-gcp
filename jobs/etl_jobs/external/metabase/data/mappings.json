@@ -1,4 +1,25 @@
 {
+    "firebase_pro_visits": {
+        "first_event_date": "first_event_date",
+        "first_event_timestamp": "first_event_timestamp",
+        "last_event_timestamp": "last_event_timestamp",
+        "nb_consult_help": "total_consulted_help",
+        "nb_consult_stat": "total_stat_page_views",
+        "unique_session_id": "unique_session_id",
+        "user_id": "user_id",
+        "user_pseudo_id": "user_pseudo_id",
+        "visit_duration_seconds": "visit_duration_seconds",
+        "nb_manage_booking": "total_managed_bookings",
+        "nb_manage_finance": "total_managed_finance",
+        "nb_manage_offer": "total_managed_offers",
+        "nb_manage_profil": "total_managed_profiles",
+        "nb_manage_ticket": "total_managed_tickets",
+        "nb_manage_venue": "total_managed_venues",
+        "nb_offerer": "total_offerers",
+        "nb_partner": "total_partners",
+        "session_number": "session_number",
+    }
+}
   "enriched_venue_tags_data": {
     "criterion_category_id": "venue_tag_category_id",
     "criterion_category_label": "venue_tag_category_label",

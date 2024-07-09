@@ -1,6 +1,6 @@
 {{
   config(
-    materialized = "incremental",
+    **custom_incremental_config(
     partition_by={
       "field": "event_date",
       "data_type": "date",
@@ -10,7 +10,7 @@
     incremental_strategy = "insert_overwrite",
     on_schema_change = "sync_all_columns"
   )
-}}
+) }}
 
 WITH bookings_and_diversification_per_sesh AS (
 SELECT

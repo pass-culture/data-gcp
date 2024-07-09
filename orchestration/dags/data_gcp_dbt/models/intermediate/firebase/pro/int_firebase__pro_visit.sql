@@ -1,12 +1,12 @@
 {{
     config(
-        materialized = "incremental",
+        alias = 'firebase_pro_visits',
+        **custom_incremental_config(
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "first_event_date", "data_type": "date"},
-        on_schema_change = "sync_all_columns",
-        alias = "firebase_pro_visits"
-    )
-}}
+        on_schema_change = "sync_all_columns"
+        )
+) }}
 
 WITH filtered_events AS(
 SELECT
@@ -29,7 +29,7 @@ SELECT
         {% endif %}
 
 )
-        
+
 SELECT
     session_id,
     unique_session_id,
@@ -65,7 +65,7 @@ SELECT
     COUNTIF(event_name = "page_view" AND (page_location LIKE "%/offre/creation/collectif?%" OR (page_location LIKE "%offre/collectif%" AND page_location LIKE "%creation?%"))) AS total_started_created_bookable_collective_offers,
     COUNTIF(event_name = "page_view" AND page_location LIKE "%/collectif/confirmation%") AS total_confirmed_created_bookable_collective_offers,
 
--- count offer edition 
+-- count offer edition
 -- indiv
     COUNTIF(event_name = "page_view" AND page_name = "Détails - Modifier une offre individuelle - pass Culture Pro") AS total_started_detail_edited_individual_offers,
 
@@ -85,7 +85,7 @@ SELECT
     COUNTIF(event_name = "hasClickedSaveVenue" AND is_edition = "true") AS total_confirmed_edited_venues,
     COUNTIF(event_name = "hasClickedAddImage") AS total_add_image_clicks,
 
--- count other CTA 
+-- count other CTA
     COUNTIF(event_name IN ("hasClickedAddBankAccount","hasClickedContinueToDS","hasClickedBankDetailsRecordFollowUp")) AS total_add_bank_account_clicks,
     COUNTIF(event_name IN ("hasClickedAddVenueToBankAccount","hasClickedSaveVenueToBankAccount","hasClickedChangeVenueToBankAccount")) AS total_add_venue_to_bank_account_clicks,
     COUNTIF(event_name="hasClickedInviteCollaborator") AS total_add_collaborator_clicks,

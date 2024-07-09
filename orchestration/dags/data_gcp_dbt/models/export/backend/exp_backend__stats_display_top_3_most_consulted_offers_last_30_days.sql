@@ -1,11 +1,11 @@
 {{
     config(
-        materialized = "incremental",
+        **custom_incremental_config(
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "execution_date", "data_type": "date", "granularity" : "day"},
         on_schema_change = "sync_all_columns",
     )
-}}
+) }}
 
 WITH
   consult_per_offer_last_3O_days AS (
@@ -21,10 +21,10 @@ WITH
     event_name = 'ConsultOffer'
   GROUP BY
     1,
-    2 
+    2
 )
 
-SELECT 
+SELECT
   DATE('{{ ds() }}') AS execution_date,
   offerer_id,
   offer_id,

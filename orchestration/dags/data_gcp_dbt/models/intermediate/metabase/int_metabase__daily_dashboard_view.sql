@@ -11,8 +11,8 @@ select
 from
     {{ ref("int_metabase__daily_query") }}
 GROUP BY
-    1,
-    2,
-    3,
-    4,
-    5
+    execution_date,
+    dashboard_id,
+    card_id,
+    card_name,
+    dashboard_name

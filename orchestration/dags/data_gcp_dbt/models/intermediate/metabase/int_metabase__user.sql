@@ -4,4 +4,4 @@ SELECT
     date_joined,
     last_login,
     is_superuser,
-FROM {{ source('raw', "metabase_core_user") }}
+FROM {{ source("raw", "metabase_core_user") }}

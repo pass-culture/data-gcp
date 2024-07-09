@@ -1,7 +1,6 @@
 import pandas as pd
 import re
 from utils import (
-    ANALYTICS_DATASET,
     ENVIRONMENT_SHORT_NAME,
     INT_METABASE_DATASET,
     PROJECT_NAME,
@@ -172,7 +171,7 @@ class MoveToArchive:
         archived_logs_df = pd.DataFrame(archived_logs_dict)
         archived_logs_df.to_gbq(
             f"""{PROJECT_NAME}.{INT_METABASE_DATASET}.archiving_log""",
-            project_id=self.gcp_project,
+            project_id=PROJECT_NAME,
             if_exists="append",
         )
         return "Logs saved in BQ"

@@ -6,8 +6,7 @@ from google.cloud import secretmanager
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
-ANALYTICS_DATASET = f"analytics_{ENVIRONMENT_SHORT_NAME}"
-CLEAN_DATASET = f"clean_{ENVIRONMENT_SHORT_NAME}"
+INT_METABASE_DATASET = f"int_metabase_{ENVIRONMENT_SHORT_NAME}"
 METABASE_API_USERNAME = "metabase-data-bot@passculture.app"
 
 
@@ -24,7 +23,7 @@ def access_secret_data(project_id, secret_id, default=None):
 def get_dependant_cards(legacy_table_name, legacy_schema_name):
     query = f"""
         SELECT distinct card_id, card_type
-        FROM `{PROJECT_NAME}.{CLEAN_DATASET}.dependencies_metabase` 
+        FROM `{PROJECT_NAME}.{INT_METABASE_DATASET}.card_dependency` 
         WHERE table_name = '{legacy_table_name}'
         and lower(card_name) not like '%archive%'
         and schema = '{legacy_schema_name}' 
@@ -32,7 +31,7 @@ def get_dependant_cards(legacy_table_name, legacy_schema_name):
 
     metabase_activity_query = f"""
         SELECT *
-        FROM `{PROJECT_NAME}.{ANALYTICS_DATASET}.metabase_activity` 
+        FROM `{PROJECT_NAME}.{INT_METABASE_DATASET}.activity` 
     """
 
     dependant_cards = pd.read_gbq(query)

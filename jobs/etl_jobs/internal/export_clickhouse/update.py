@@ -68,8 +68,12 @@ def update_overwrite(
     )
 
     remove_stale_partitions(dataset_name, table_name, update_date)
+    total_rows = (
+        clickhouse_client.command(f"SELECT count(*) FROM {dataset_name}.{table_name}'")
+        | 0
+    )
 
-    print(f"Done updating. Removing temporary table.")
+    print(f"Done updating. Table contains {total_rows}. Removing temporary table.")
     clickhouse_client.command(f" DROP TABLE tmp.{tmp_table_name} ON cluster default")
 
 

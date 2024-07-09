@@ -19,7 +19,7 @@ clean_long_ml_delay = {"prod": 60 * 24, "dev": 60 * 3, "stg": 60 * 3}
 
 
 dag = DAG(
-    "airflow_cleaning",
+    "gcp_vm_cleaning",
     default_args=default_args,
     catchup=False,
     description="Automatic cleaning of VMs",

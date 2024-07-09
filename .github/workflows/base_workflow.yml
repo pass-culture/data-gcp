@@ -19,14 +19,7 @@ jobs:
         id: dbt-changes
         env:
           TARGET_BRANCH: ${{ github.base_ref }}
-        run: |
-          git fetch origin $TARGET_BRANCH
-          changed_files=$(git diff origin/$TARGET_BRANCH HEAD --name-only | grep 'orchestration/dags/data_gcp_dbt/' || true)
-          if [ -z "$changed_files" ]; then
-            echo "changes=false" >> $GITHUB_OUTPUT
-          else
-            echo "changes=true" >> $GITHUB_OUTPUT
-          fi
+        run: .github/workflows/scripts/check_dbt_changes.sh $TARGET_BRANCH
    compile-dbt-on-prod:
     needs: find-dbt-changes
     if: github.base_ref == 'production' && needs.find-dbt-changes.outputs.changes == 'true'
@@ -73,23 +66,13 @@ jobs:
           dir_names_max_depth: 5
       - name: "Trouver les Jobs testables"
         id: "find-testable-jobs"
-        run: |
-          find jobs -type d  -name "tests" -exec dirname {} \; > /tmp/list.txt
-          folders=()
-          for folder in $(cat /tmp/list.txt); do
-            folders+=(\\\"${folder}\\\")
-          done
-          json_array="[$(IFS=,; echo "${folders[*]}")]"
-          echo "testable_jobs=$json_array" | tee -a $GITHUB_OUTPUT
+        run: .github/workflows/scripts/find_tests.sh
       - name: "Show found files"
         id: "compute" # Intersection de testable_jobs et de (changed-etl-files et changed-ml-files)
         run: |
-          echo "${{ steps.changed-etl-files.outputs.all_changed_files }}" > /tmp/output.json
-          echo "${{ steps.changed-ml-files.outputs.all_changed_files }}" >> /tmp/output.json
-          echo "${{ steps.find-testable-jobs.outputs.testable_jobs }}" >> /tmp/output.json
-          cat /tmp/output.json
-          jobs_to_test=$(jq --compact-output --slurp '(.[0] + .[1]) - ((.[0] + .[1]) - .[2])' /tmp/output.json)
-          echo "jobs=${jobs_to_test}" | tee -a $GITHUB_OUTPUT
+          output=$(python3 .github/workflows/scripts/find_test_intersections.py ${{ steps.changed-etl-files.outputs.all_changed_files }} ${{ steps.changed-ml-files.outputs.all_changed_files }} ${{ steps.find-testable-jobs.outputs.testable_jobs }})
+          echo "Found tests: $output"
+          echo "$output" >> $GITHUB_OUTPUT
    assert-matrix-not-empty:
     needs: find-test-jobs
     if: ${{ needs.find-test-jobs.outputs.jobs != '' && toJson(fromJson(needs.find-test-jobs.outputs.jobs)) != '[]' }}

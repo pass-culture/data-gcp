@@ -74,9 +74,7 @@ jobs:
         env:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
-        run: |
-          export PYTHONPATH=$PYTHONPATH:./dags
-          dbt deps 
+        run: PYTHONPATH=$PYTHONPATH:./dags dbt deps
       - name: "compile dbt project"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
@@ -85,6 +83,14 @@ jobs:
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
         run: dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" 
       - name: "Run modified models & 1st order childrens"
+        working-directory: .
+        env:
+          TARGET_BRANCH: ${{ github.base_ref }}
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+        run: .github/workflows/scripts/run_dbt_changed_models.sh ${{ github.base_ref }} orchestration/dags/data_gcp_dbt
+      - name: "Run modified tests"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           TARGET_BRANCH: ${{ github.base_ref }}
@@ -92,29 +98,11 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
         run: |
-          dbt_run_changed_models() {
-          children=$1
-          git fetch origin $TARGET_BRANCH
-          models=$(git diff origin/$TARGET_BRANCH HEAD --name-only | grep 'orchestration/dags/data_gcp_dbt/models/' | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/${children}/g" | tr '\n' ' ')
-          echo ${#models}
-          if [ -z "$models" ]
-          then
-                echo "no models were modified"
-          else
-                echo "Running models: ${models}"
-                dbt run --model $models --exclude config.materialized:incremental --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" 
-          fi          
-          }
-          dbt_run_changed_models +1
-        
-      - name: "Run modified tests"
-        working-directory: "./orchestration/dags/data_gcp_dbt/"
-        env:
-          TARGET_BRANCH: ${{ github.base_ref }}
-          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
-          DBT_TARGET_PATH: "target/"
-          DBT_PROFILES_DIR: "."          
-        run: dbt test --store-failures -s "state:modified" --exclude test_name:relationships config.materialized:incremental --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','CI_SEVERITY':'error','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+          dbt test --store-failures -s "state:modified" \
+          --exclude test_name:relationships config.materialized:incremental \
+          --profile CI --target $ENV_SHORT_NAME --defer \
+          --state env-run-artifacts --favor-state \
+          --vars "{'CI_MATERIALIZATION':'view','CI_SEVERITY':'error','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
         uses: slackapi/slack-github-action@v1.23.0

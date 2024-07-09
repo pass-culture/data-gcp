@@ -13,28 +13,32 @@ WITH bq_costs AS (
   SELECT
     date(start_time) as start_date,
     date(creation_time) as creation_date,
-    project_id,
+    queries.project_id,
+    queries.job_id,
     user_email,
     cache_hit,
-    destination_table.dataset_id,
-    destination_table.table_id,
+    destination_table.dataset_id as dataset_id,
+    destination_table.table_id as table_id,
     statement_type,
     query,
-    sum(total_bytes_billed) as total_bytes, 
+    CAST(regexp_extract(query, r"Metabase:: userID: ([0-9]+).*") AS INT) as metabase_user_id,
+    regexp_extract(query, r"queryHash: ([a-z-0-9]+)\n") as metabase_hash,
+    STRING_AGG(CONCAT(referenced_table_unn.dataset_id, '.', referenced_table_unn.table_id), "," ORDER BY CONCAT(referenced_table_unn.dataset_id, '.', referenced_table_unn.table_id) ) as referenced_tables,
+    sum(coalesce(total_bytes_billed, total_bytes_processed)) as total_bytes, 
     count(*) as total_queries
-  FROM `{{ var('project_name') }}`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+  FROM `{{ var('project_name') }}`.INFORMATION_SCHEMA.JOBS_BY_PROJECT queries, 
+  UNNEST(referenced_tables) AS referenced_table_unn
   {% if is_incremental() %}
-    WHERE date(creation_time) BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
+    WHERE date(creation_time) BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 7 DAY) and DATE("{{ ds() }}")
   {% endif %}
-  GROUP BY 1, 2, 3, 4, 5, 6,7, 8, 9
+  GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 
 )
 
 
 SELECT 
     *, 
-    regexp_extract(query, r"Metabase:: userID: ([0-9]+).*") as metabase_user_id,
-    regexp_extract(query, r"queryHash: ([a-z-0-9]+)\n") as metabase_hash,
     total_bytes * 5 / power(1024, 4) as cost_usd
 FROM bq_costs
+
 

@@ -111,21 +111,22 @@ sources:
       - name: contentful_entry
       - name: contentful_relationship
       - name: contentful_tag
+      - name: eple_aggregated_type
       - name: firebase_events
       - name: firebase_pro_events
       - name: geoip_city_v4
       - name: gsheet_eac_webinar
       - name: gsheet_ml_recommendation_sensitive_item
-      - name: eple_aggregated_type
       - name: macro_rayons
-      - name: stdout
-      - name: sensitive_item_recommendation
-      - name: past_offer_context
-      - name: user_locations
+      - name: metabase_collection
+      - name: metabase_core_user
       - name: metabase_query_execution
       - name: metabase_report_card
       - name: metabase_report_dashboard
-      - name: metabase_collection
+      - name: past_offer_context
+      - name: sensitive_item_recommendation
+      - name: stdout
+      - name: user_locations
 
   - name: clean # this is the source_name
     schema: clean_{{ var('ENV_SHORT_NAME') }}

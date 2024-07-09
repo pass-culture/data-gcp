@@ -1,6 +1,26 @@
 version: 2
 
 models:
+  - name: int_metabase__activity
+    description: |
+      This model retrieves a detailed report of card's last execution status from our analytics Metabase instance .
+
+  - name: int_metabase__aggregated_card_activity
+    description: |
+       This model aggregates execution statistics for each card from the Metabase instance.
+
   - name: int_metabase__collection_archive
     description: |
-      This model is a view that performs a series of operations on collections in a Metabase system to filter, process, and prepare them for archiving, while ensuring personal collections and certain native archives are excluded.
+      This model is a view that performs a series of operations on collections in our analytics Metabase to filter, process, and prepare them for archiving, while ensuring personal collections and certain native archives are excluded.
+
+  - name: int_metabase__daily_dashboard_view
+    description: |
+      This model aggregates daily execution statistics for each dashboard from the Metabase instance.
+  
+  - name: int_metabase__daily_query
+  description: |
+    This model gives a comprehensive view of each card's execution details.
+
+  - name: int_metabase__user
+  description: |
+    This model gives details about users from the Metabase instance.

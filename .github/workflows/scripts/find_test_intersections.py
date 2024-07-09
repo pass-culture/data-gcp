@@ -15,18 +15,21 @@ def main():
     testable_jobs = ast.literal_eval(format_input(sys.argv[3]))
 
     # Function to check if a file is in the testable jobs list or any of its parent directories
-    def is_testable(file_path, testable_jobs):
-        file_path = Path(file_path)
-        for job in testable_jobs:
-            job_path = Path(job)
-            if file_path == job_path or job_path in file_path.parents:
+    def shoud_run_job_test(changed_file: str, testable_jobs: list[str]):
+        changed_file_path = Path(changed_file)
+        for testable_job in testable_jobs:
+            testable_job_path = Path(testable_job)
+            if (
+                testable_job_path == changed_file_path
+                or testable_job_path in changed_file_path.parents
+            ):
                 return job
         return None
 
     # Compute the jobs to test
     jobs_to_test_set = set()
-    for file in changed_etl_files + changed_ml_files:
-        job = is_testable(file, testable_jobs)
+    for changed_file in changed_etl_files + changed_ml_files:
+        job = shoud_run_job_test(changed_file, testable_jobs)
         if job:
             jobs_to_test_set.add(job)
 

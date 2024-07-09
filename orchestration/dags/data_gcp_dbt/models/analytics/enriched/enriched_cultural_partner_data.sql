@@ -52,7 +52,7 @@ FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
 LEFT JOIN {{ source('analytics', 'region_department') }} AS region_department
     ON mrt_global__venue.venue_department_code = region_department.num_dep
 LEFT JOIN {{ source('raw', 'agg_partner_cultural_sector') }} ON agg_partner_cultural_sector.partner_type = mrt_global__venue.venue_type_label
-LEFT JOIN {{ ref('mrt_global__venue_tag') }} ON mrt_global__venue.venue_id = mrt_global__venue_tag.venue_id AND mrt_global__venue_tag.venue_tag_category_label = "Comptage partenaire sectoriel"
+LEFT JOIN {{ ref('mrt_global__venue_tag') }} AS mrt_global__venue_tag ON mrt_global__venue.venue_id = mrt_global__venue_tag.venue_id AND mrt_global__venue_tag.venue_tag_category_label = "Comptage partenaire sectoriel"
 LEFT JOIN {{ ref('enriched_offerer_data') }} AS enriched_offerer_data
     ON mrt_global__venue.venue_managing_offerer_id = enriched_offerer_data.offerer_id
 WHERE venue_is_permanent IS TRUE
@@ -77,7 +77,7 @@ SELECT
   venue_tag_name AS partner_type,
   'venue_tag' AS partner_type_origin
 FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
-JOIN {{ ref('mrt_global__venue_tag') }} ON mrt_global__venue.venue_id = mrt_global__venue_tag.venue_id
+JOIN {{ ref('mrt_global__venue_tag') }} AS mrt_global__venue_tag ON mrt_global__venue.venue_id = mrt_global__venue_tag.venue_id
 AND mrt_global__venue_tag.venue_tag_category_label = "Comptage partenaire sectoriel"
 QUALIFY ROW_NUMBER() OVER(
     PARTITION BY mrt_global__venue.venue_managing_offerer_id

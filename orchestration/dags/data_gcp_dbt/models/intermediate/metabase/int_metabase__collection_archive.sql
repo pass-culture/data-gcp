@@ -1,16 +1,10 @@
--- Table de correspondance 
--- Filtres appliqués
--- collections personnelles supprimées
--- et collections contenues dans les collections personnelles supprimées
-
-
 WITH archive_folder_ref as
 (
     SELECT 
         concat(location, collection_id) as archive_full_location
         , slug
         , trim(replace(replace(slug, "___", '_'), '__', '_'), '_') as clean_slug
-    FROM `{{ bigquery_raw_dataset }}.metabase_collections`
+    FROM  {{ source("raw", "metabase_collection") }} 
     WHERE concat(location, collection_id) like '/610%'
     AND archived = false
 ),
@@ -18,7 +12,7 @@ WITH archive_folder_ref as
 personal_collection_roots as (
     SELECT
         distinct concat(location, collection_id) as root
-    from  `{{ bigquery_raw_dataset }}.metabase_collections`
+    from   {{ source("raw", "metabase_collection") }} 
     where personal_owner_id is not null
 ),
 
@@ -26,7 +20,7 @@ collections_w_root as (
   SELECT
         *
         , concat('/', split(concat(location, collection_id), '/')[SAFE_OFFSET(1)]) as root
-  FROM `{{ bigquery_raw_dataset }}.metabase_collections` c
+  FROM  {{ source("raw", "metabase_collection") }} c
   WHERE personal_owner_id is null
 ), 
 
@@ -65,16 +59,16 @@ SELECT DISTINCT
         , trim(replace(replace(slug, "___", '_'), '__', '_'), '_') as clean_slug
         , concat(trim(replace(replace(slug, "___", '_'), '__', '_'), '_'), '_archive') as clean_slug_archive
     FROM collections_wo_perso
-    -- 610 est l'id de la collection "4. Archive". On la retire ici.
+    -- 610 is the ID of the "4. Archive" collection. It is being removed here.
     WHERE concat(location, collection_id) not like '/610%'
-    -- la collection ne se trouve pas dans l'archive native de Metabase.
+    -- the collection is not located in Metabase's native archive.
     AND archived = false
-    -- les collections sont publiques (ie: retirer les collections personnelles)
+    -- the collections are public (i.e., remove personal collections)
     AND personal_owner_id is null
-    -- Filtrer sur les collections dont la profondeur du chemin n'excede pas 3 éléments pour récupérer le dossier parent de niveau 2 de chaque carte/dashboard.
-    -- Le dossier d'archive a une profondeur de dossiers de max 2 dossiers.
-    -- Exemple : une carte à archiver se situe dans l'arborescence /256/236/159/. On récupère uniquement les deux premiers niveaux
-    -- pour pourvoir deplacer la carte dans le dossier d'archive correspondant :
+    -- Filter the collections where the path depth does not exceed 3 elements to retrieve the level 2 parent folder of each card/dashboard.
+    -- The archive folder has a maximum depth of 2 folders.
+    -- Example: a card to be archived is located in the hierarchy /256/236/159/. Only the first two levels are retrieved
+    -- to be able to move the card into the corresponding archive folder: /256/236_archive/159/.
     AND ARRAY_LENGTH(split(CONCAT(location, collection_id), '/')) - 1 < 3
 ),
 
@@ -88,7 +82,7 @@ archive as (
         THEN trim(replace(replace(slug, "___", '_'), '__', '_'), '_')
         ELSE concat(trim(replace(replace(slug, "___", '_'), '__', '_'), '_'), '_archive')
     END as clean_slug_archive
-  FROM `{{ bigquery_raw_dataset }}.metabase_collections`
+  FROM {{ source("raw", "metabase_collection") }} 
   WHERE concat(location, collection_id) like '/610%'
   AND archived = false
 )

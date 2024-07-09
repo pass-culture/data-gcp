@@ -22,13 +22,13 @@ WITH bq_costs AS (
     query,
     sum(total_bytes_billed) as total_bytes, 
     count(*) as total_queries
-  FROM `{{ project }}.region-europe-west1`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+  FROM `{{ var('project_name') }}`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
   {% if is_incremental() %}
     WHERE date(creation_time) BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
   {% endif %}
   GROUP BY 1, 2, 3, 4, 5, 6,7, 8, 9
 
-),
+)
 
 
 SELECT 

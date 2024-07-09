@@ -8,19 +8,19 @@ profile: 'data_gcp_dbt'
 # These configurations specify where dbt should look for different types of files.
 # The `model-paths` config, for example, states that models in this project can be
 # found in the "models/" directory. You probably won't need to change these!
-model-paths: ["models"]
-analysis-paths: ["analyses"]
-test-paths: ["tests"]
-seed-paths: ["seeds"]
-macro-paths: ["macros"]
-snapshot-paths: ["snapshots"]
+model-paths: [ "models" ]
+analysis-paths: [ "analyses" ]
+test-paths: [ "tests" ]
+seed-paths: [ "seeds" ]
+macro-paths: [ "macros" ]
+snapshot-paths: [ "snapshots" ]
 
 target-path: "{{ env_var('DBT_TARGET_PATH', 'target') }}"
 
 # If you wish to write dbt artifacts to a custom directory, please use the --target-path CLI flag or DBT_TARGET_PATH env var instead.
 packages-install-path: "{{ env_var('DBT_TARGET_PATH', 'target') }}/dbt_packages"
- # directories to be removed by `dbt clean`
-clean-targets:        
+# directories to be removed by `dbt clean`
+clean-targets:
   - "{{ env_var('DBT_TARGET_PATH', 'target') }}"
 
 models:
@@ -34,9 +34,9 @@ models:
           owner: "@team-data-engineering"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: clean_{{ target.name }}
-      +docs: 
+      +docs:
         node_color: "#b43ddb"
-      applicative: 
+      applicative:
         +alias: applicative_database_
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     analytics:
@@ -49,8 +49,8 @@ models:
       +re_data_metrics_groups:
         - table_metrics
         - column_metrics
-      +docs: 
-        node_color: "#d90000" 
+      +docs:
+        node_color: "#d90000"
     intermediate:
       +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"
     mart:
@@ -64,7 +64,7 @@ models:
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     machine_learning:
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
-      
+
   elementary:
     +on_schema_change: "append_new_columns"
     +enabled: false
@@ -95,3 +95,4 @@ vars:
   re_data:save_test_history: true
   CI_MATERIALIZATION: none
   CI_SEVERITY: none
+  project_name: "{{ 'pass-culture-data-' ~ target.name ~ '.region-europe-west1' }}"

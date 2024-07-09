@@ -122,6 +122,10 @@ sources:
       - name: sensitive_item_recommendation
       - name: past_offer_context
       - name: user_locations
+      - name: metabase_query_execution
+      - name: metabase_report_card
+      - name: metabase_report_dashboard
+      - name: metabase_collection
 
   - name: clean # this is the source_name
     schema: clean_{{ var('ENV_SHORT_NAME') }}

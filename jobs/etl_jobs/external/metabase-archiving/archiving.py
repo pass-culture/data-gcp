@@ -1,22 +1,16 @@
 import pandas as pd
 import re
-from utils import ANALYTICS_DATASET, ENVIRONMENT_SHORT_NAME
+from utils import (
+    ANALYTICS_DATASET,
+    ENVIRONMENT_SHORT_NAME,
+    INT_METABASE_DATASET,
+    PROJECT_NAME,
+)
 
 
-def get_data_archiving(sql_file):
+def get_data_archiving():
     """Run SQL query and save data in a dataframe."""
-
-    params = {"{{ANALYTICS_DATASET}}": ANALYTICS_DATASET}
-
-    file = open(sql_file, "r")
-    sql = file.read()
-
-    for param, table_name in params.items():
-        sql = sql.replace(param, table_name)
-
-    archives_df = pd.read_gbq(sql, dialect="standard")
-
-    return archives_df
+    return pd.read_gbq(f""" SELECT * FROM `{INT_METABASE_DATASET}.activity` """)
 
 
 def preprocess_data_archiving(
@@ -101,8 +95,8 @@ def preprocess_data_archiving(
         return _dict_to_archive
 
 
-class move_to_archive:
-    def __init__(self, movement, metabase, gcp_project, analytics_dataset):
+class MoveToArchive:
+    def __init__(self, movement, metabase):
         self.movement = movement
         self.id = movement.get("id", None)
         self.name = movement.get("name", None)
@@ -112,9 +106,6 @@ class move_to_archive:
         self.last_execution_date = movement.get("last_execution_date", None)
         self.last_execution_context = movement.get("last_execution_context", None)
         self.parent_folder = movement.get("parent_folder", None)
-        self.gcp_project = gcp_project
-        self.analytics_dataset = analytics_dataset
-
         self.metabase_connection = metabase
 
     def rename_archive_object(self):
@@ -180,7 +171,7 @@ class move_to_archive:
         archived_logs_dict = self.move_object()
         archived_logs_df = pd.DataFrame(archived_logs_dict)
         archived_logs_df.to_gbq(
-            f"""{self.gcp_project}.{self.analytics_dataset}.logs_metabase_archiving""",
+            f"""{PROJECT_NAME}.{INT_METABASE_DATASET}.archiving_log""",
             project_id=self.gcp_project,
             if_exists="append",
         )

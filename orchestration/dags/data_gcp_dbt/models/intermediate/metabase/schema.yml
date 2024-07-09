@@ -1,0 +1,6 @@
+version: 2
+
+models:
+  - name: int_metabase__collection_archive
+    description: |
+      This model is a view that performs a series of operations on collections in a Metabase system to filter, process, and prepare them for archiving, while ensuring personal collections and certain native archives are excluded.

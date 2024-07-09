@@ -4,7 +4,7 @@ SELECT
   , context
   , execution_date
   , row_number() over(partition by card_id order by execution_date desc) as rank
-FROM `{{ bigquery_raw_dataset }}.metabase_query_execution` as execution_query
+FROM {{ source("raw", "metabase_query_execution") }} as execution_query
 order by execution_date desc
 ),
 
@@ -18,7 +18,7 @@ aggregated_activity as (
         , count(distinct dashboard_id) as nbr_dashboards
         , max(execution_query.execution_date) as last_execution_date
         , sum(case when error is null then 0 else 1 end) as total_errors
-    FROM `{{ bigquery_raw_dataset }}.metabase_query_execution` as execution_query
+    FROM  {{ source("raw", "metabase_query_execution") }} as execution_query
     GROUP BY 
       card_id
 )
@@ -49,10 +49,10 @@ SELECT
 FROM rank_execution
 JOIN aggregated_activity
 ON rank_execution.card_id = aggregated_activity.card_id
-JOIN `{{ bigquery_raw_dataset }}.metabase_report_card` as report_card
+JOIN {{ source("raw", "metabase_report_card") }} as report_card
   ON aggregated_activity.card_id = report_card.id
-JOIN `{{ bigquery_raw_dataset }}.metabase_collections` public_collections
+JOIN {{ source("raw", "metabase_collection") }}  public_collections
   ON public_collections.collection_id = report_card.card_collection_id
-JOIN `{{ bigquery_analytics_dataset }}.metabase_ref_collections_archive` as ref_archive
+JOIN {{ ref('int_metabase__collection_archive') }} as ref_archive
     ON report_card.card_collection_id = ref_archive.collection_id
 WHERE rank = 1

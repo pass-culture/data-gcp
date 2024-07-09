@@ -1,16 +1,10 @@
--- Table de correspondance 
--- Filtres appliqués
--- collections personnelles supprimées
--- et collections contenues dans les collections personnelles supprimées
-
-
 WITH archive_folder_ref as
 (
     SELECT 
         concat(location, collection_id) as archive_full_location
         , slug
         , trim(replace(replace(slug, "___", '_'), '__', '_'), '_') as clean_slug
-    FROM `{{ bigquery_raw_dataset }}.metabase_collections`
+    FROM  {{ source("raw", "metabase_collection") }} 
     WHERE concat(location, collection_id) like '/610%'
     AND archived = false
 ),
@@ -18,7 +12,7 @@ WITH archive_folder_ref as
 personal_collection_roots as (
     SELECT
         distinct concat(location, collection_id) as root
-    from  `{{ bigquery_raw_dataset }}.metabase_collections`
+    from   {{ source("raw", "metabase_collection") }} 
     where personal_owner_id is not null
 ),
 
@@ -26,7 +20,7 @@ collections_w_root as (
   SELECT
         *
         , concat('/', split(concat(location, collection_id), '/')[SAFE_OFFSET(1)]) as root
-  FROM `{{ bigquery_raw_dataset }}.metabase_collections` c
+  FROM  {{ source("raw", "metabase_collection") }} c
   WHERE personal_owner_id is null
 ), 
 
@@ -88,7 +82,7 @@ archive as (
         THEN trim(replace(replace(slug, "___", '_'), '__', '_'), '_')
         ELSE concat(trim(replace(replace(slug, "___", '_'), '__', '_'), '_'), '_archive')
     END as clean_slug_archive
-  FROM `{{ bigquery_raw_dataset }}.metabase_collections`
+  FROM {{ source("raw", "metabase_collection") }} 
   WHERE concat(location, collection_id) like '/610%'
   AND archived = false
 )

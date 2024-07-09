@@ -9,9 +9,9 @@ select
     sum(result_rows) as result_rows,
     count(*) as total_views
 from
-    `{{ bigquery_raw_dataset }}.metabase_query_execution` mqe
-    JOIN `{{ bigquery_raw_dataset }}.metabase_report_card` mrc ON mqe.card_id = mrc.id
-    LEFT JOIN `{{ bigquery_raw_dataset }}.metabase_report_dashboard` mrd ON mqe.dashboard_id = mrd.id
+    {{ source("raw", "metabase_query_execution") }} mqe
+    JOIN {{ source("raw", "metabase_report_card") }}  mrc ON mqe.card_id = mrc.id
+    LEFT JOIN {{ source("raw", "metabase_report_dashboard") }} mrd ON mqe.dashboard_id = mrd.id
 GROUP BY
     1,
     2,

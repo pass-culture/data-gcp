@@ -13,7 +13,7 @@ from utils import (
     PROJECT_NAME,
     ENVIRONMENT_SHORT_NAME,
     METABASE_API_USERNAME,
-    ANALYTICS_DATASET,
+    INT_METABASE_DATASET,
     access_secret_data,
     get_dependant_cards,
 )
@@ -133,7 +133,7 @@ def run(
             transition_logs.append(transition_log)
 
     pd.DataFrame(transition_logs).to_gbq(
-        (f"{ANALYTICS_DATASET}.metabase_migration_logs"),
+        (f"{INT_METABASE_DATASET}.migration_log"),
         project_id=PROJECT_NAME,
         if_exists="append",
     )

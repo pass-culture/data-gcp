@@ -1,6 +1,6 @@
 {{
     config(
-        materialized = 'incremental',
+        materialized = macros.set_materialization('incremental'),
         incremental_strategy = 'insert_overwrite',
         partition_by = {'field': 'event_date', 'data_type': 'date'},
     )

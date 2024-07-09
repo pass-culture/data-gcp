@@ -1,6 +1,6 @@
 {{
     config(
-        materialized = 'incremental',
+        materialized = macros.set_materialization('incremental'),
         incremental_strategy = 'insert_overwrite',
         partition_by = {'field': 'module_displayed_date', 'data_type': 'date'},
     )
@@ -17,7 +17,7 @@ with child_home as (
   WHERE e1.content_type = "categoryBlock"
 )
 , home_ref as (
-    SELECT 
+    SELECT
       home.id
       , home.title
     from {{ ref('int_contentful__entry') }} home
@@ -26,7 +26,7 @@ with child_home as (
     WHERE child_home.home_entry_id is null -- retirer les homes qui sont spécifiques
     AND home.content_type = "homepageNatif"
 )
-, parents_ref as (  
+, parents_ref as (
     SELECT *
     from {{ ref('int_contentful__entry') }}
     where content_type in ("categoryList", "thematicHighlight")
@@ -37,7 +37,7 @@ with child_home as (
     where content_type in ("categoryBlock", "thematic_highlight_info")
 )
 , displayed as (
-  SELECT 
+  SELECT
     user_pseudo_id
   , user_id
   , session_id
@@ -91,14 +91,14 @@ with child_home as (
     LEFT JOIN {{ ref('int_contentful__entry') }} as e
     ON events.destination_entry_id = e.id
     WHERE event_name in ("ExclusivityBlockClicked", "CategoryBlockClicked", "HighlightBlockClicked","BusinessBlockClicked","ConsultVideo")
-    -- entry_id param is missing for event HighlightBlockClicked because it is available in a prior version of the app. 
+    -- entry_id param is missing for event HighlightBlockClicked because it is available in a prior version of the app.
     and user_pseudo_id is not null
     and session_id is not null
     QUALIFY rank() over(partition by unique_session_id, module_id order by event_timestamp) = 1 -- get the first click event
 )
 , consultations as (
     WITH relationships as (
-        SELECT DISTINCT 
+        SELECT DISTINCT
             parent as home_id
             , child as playlist_id
             , e.title as playlist_name
@@ -107,7 +107,7 @@ with child_home as (
         ON r.child = e.id
     ),
     offer as (
-    SELECT 
+    SELECT
       user_pseudo_id
       , user_id
       , session_id
@@ -139,11 +139,11 @@ with child_home as (
         , user_location_type
       FROM {{ ref('int_firebase__native_event') }}
       WHERE event_name = "ConsultVenue"
-      AND origin = "home" 
+      AND origin = "home"
       and user_pseudo_id is not null
       QUALIFY rank() over(partition by unique_session_id, venue_id order by event_timestamp desc) = 1 -- get the last consultation
   )
-  SELECT 
+  SELECT
       offer.user_pseudo_id
       , offer.user_id
       , offer.session_id
@@ -176,7 +176,7 @@ with child_home as (
     AND relationships.home_id = coalesce(offer.entry_id, venue.entry_id)
 )
 
-SELECT 
+SELECT
     displayed.user_pseudo_id
   , displayed.user_id
   , displayed.session_id
@@ -192,7 +192,7 @@ SELECT
   , click_type
   , clicked.module_id as child_module_id -- category block id
   , clicked.module_name as child_module_name
-  , playlist_id 
+  , playlist_id
   , playlist_name
   , origin
   , content_type
@@ -214,7 +214,7 @@ LEFT JOIN clicked
 LEFT JOIN consultations
   ON displayed.unique_session_id = consultations.unique_session_id
   -- coalesce + conditional joining pour ne pas exclure les consultations d'offres "directes" => performance ?
-  AND coalesce(clicked.destination_entry_id, displayed.parent_module_id) = case when clicked.destination_entry_id is null then playlist_id else consultations.home_id end 
+  AND coalesce(clicked.destination_entry_id, displayed.parent_module_id) = case when clicked.destination_entry_id is null then playlist_id else consultations.home_id end
   AND coalesce(clicked.module_clicked_timestamp, displayed.module_displayed_timestamp) <= consultations.consult_offer_timestamp
 LEFT JOIN {{ ref('firebase_bookings') }} as bookings
   ON displayed.unique_session_id = bookings.unique_session_id

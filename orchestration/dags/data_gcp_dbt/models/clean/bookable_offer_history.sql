@@ -1,6 +1,6 @@
 {{
     config(
-        materialized = 'incremental',
+        materialized = macros.set_materialization('incremental'),
         incremental_strategy = 'insert_overwrite',
         partition_by = {'field': 'partition_date', 'data_type': 'date'},
     )
@@ -18,7 +18,7 @@ WITH bookings_per_stock AS (
         ) AS booking_stock_no_cancelled_cnt
     FROM
         {{source('clean','applicative_database_booking_history')}} AS booking
-    {% if is_incremental() %} 
+    {% if is_incremental() %}
     WHERE partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
     {% endif %}
     GROUP BY
@@ -59,7 +59,6 @@ WHERE
             ) > 0
         )
     )
-    {% if is_incremental() %} 
+    {% if is_incremental() %}
     AND stock.partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
     {% endif %}
-

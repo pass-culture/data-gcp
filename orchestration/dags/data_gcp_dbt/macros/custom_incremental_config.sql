@@ -4,7 +4,7 @@
     on_schema_change='ignore',
     cluster_by=None
 ) %}
-    {% if target.name == 'CI' %}
+    {% if target.profile_name == 'CI' %}
         {% set materialization = 'view' %}
     {% else %}
         {% set materialization = 'incremental' %}

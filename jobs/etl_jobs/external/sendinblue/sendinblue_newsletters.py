@@ -80,7 +80,7 @@ class SendinblueNewsletters:
             for group in [camp.get("statistics") for camp in campaigns_list]
         ]
         campaign_stats["open_number"] = [
-            group.get("campaignStats")[0].get("viewed")
+            group.get("campaignStats")[0].get("uniqueViews")
             if len(group.get("campaignStats")) > 0
             else 0
             for group in [camp.get("statistics") for camp in campaigns_list]

@@ -2,7 +2,6 @@ SELECT
     offerer_id,
     partner_id,
     offerer_name,
-    siren_update_date,
     offerer_creation_date,
     offerer_validation_date,
     first_stock_creation_date,
@@ -71,6 +70,6 @@ SELECT
     is_reference_adage,
     is_synchro_adage,
     partner_type,
-FROM {{ ref('mrt_global__offerer_unverified') }}
+FROM {{ ref('int_global__offerer') }}
 WHERE offerer_validation_status='VALIDATED'
     AND offerer_is_active

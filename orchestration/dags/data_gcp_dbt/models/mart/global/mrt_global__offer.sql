@@ -67,6 +67,6 @@ SELECT
     offerer_address_id,
     offer_publication_date,
     is_future_scheduled
-FROM {{ ref('mrt_global__offer_unverified') }} AS o
+FROM {{ ref('int_global__offer') }} AS o
 WHERE TRUE
     AND offer_validation = 'APPROVED'

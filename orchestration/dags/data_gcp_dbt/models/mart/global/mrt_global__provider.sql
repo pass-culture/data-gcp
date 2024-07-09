@@ -14,4 +14,4 @@ SELECT p.provider_id,
   v.first_individual_offer_creation_date,
   v.first_collective_offer_creation_date,
 FROM {{ ref('int_applicative__provider') }} AS p
-LEFT JOIN {{ ref('mrt_global__venue_unverified') }} AS v ON p.venue_id = v.venue_id
+LEFT JOIN {{ ref('int_global__venue') }} AS v ON p.venue_id = v.venue_id

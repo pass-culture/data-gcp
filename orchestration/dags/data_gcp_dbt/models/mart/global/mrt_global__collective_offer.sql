@@ -42,5 +42,5 @@ SELECT collective_offer_id,
     collective_stock_booking_limit_date_time,
     collective_stock_price,
     collective_stock_number_of_tickets,
-FROM {{ ref('mrt_global__collective_offer_unverified') }}
+FROM {{ ref('int_global__collective_offer') }}
 WHERE collective_offer_validation = 'APPROVED'

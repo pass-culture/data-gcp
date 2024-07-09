@@ -1,10 +1,10 @@
 {{
     config(
-        materialized = macros.set_materialization('incremental'),
+        **custom_incremental_config(
         incremental_strategy = 'insert_overwrite',
-        partition_by = {'field': 'consultation_date', 'data_type': 'date'},
+        partition_by = {'field': 'consultation_date', 'data_type': 'date'}
     )
-}}
+) }}
 
 SELECT
     user.user_id

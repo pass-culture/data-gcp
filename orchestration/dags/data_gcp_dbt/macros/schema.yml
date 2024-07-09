@@ -73,5 +73,6 @@ macros:
 
   - name: ml_vars
     description: ""
-  - name: set_materialization
+
+  - name: custom_incremental_config
     description: "materialize incremental models as views in CI"

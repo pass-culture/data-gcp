@@ -1,10 +1,12 @@
 {{
     config(
-        materialized = macros.set_materialization('incremental'),
+        **custom_incremental_config(
         incremental_strategy = 'insert_overwrite',
         partition_by = {'field': 'module_displayed_date', 'data_type': 'date'},
     )
-}}
+) }}
+
+
 
 with child_home as (
  -- Home qui proviennent d'un category block

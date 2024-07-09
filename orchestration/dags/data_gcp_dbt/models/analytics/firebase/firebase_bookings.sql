@@ -1,11 +1,11 @@
 {{
     config(
-        materialized = macros.set_materialization('incremental'),
-        incremental_strategy = 'insert_overwrite',
-        partition_by = {'field': 'booking_date', 'data_type': 'date'},
+        **custom_incremental_config(
+        incremental_strategy='insert_overwrite',
+        partition_by={'field': 'booking_date', 'data_type': 'date'},
         on_schema_change = "sync_all_columns",
     )
-}}
+) }}
 
 SELECT
     user_id

@@ -1,11 +1,12 @@
 {{
     config(
         tags = "monthly",
-        materialized = macros.set_materialization('incremental'),
-        incremental_strategy = 'insert_overwrite',
-        partition_by = {'field': 'month', 'data_type': 'date'},
+        **custom_incremental_config(
+        incremental_strategy='insert_overwrite',
+        partition_by={'field': 'month', 'data_type': 'date'},
     )
-}}
+) }}
+
 
 WITH monthly_bookable_items AS (
 SELECT

@@ -1,12 +1,12 @@
 {{
     config(
-        materialized = macros.set_materialization('incremental'),
+        **custom_incremental_config(
         incremental_strategy = 'insert_overwrite',
         partition_by = {'field': 'event_date', 'data_type': 'date', "granularity" : "day"},
         on_schema_change = "sync_all_columns",
-        cluster_by = "playlist_origin"
+        cluster_by = "playlist_origin",
     )
-}}
+) }}
 
 WITH export_table AS (
     SELECT

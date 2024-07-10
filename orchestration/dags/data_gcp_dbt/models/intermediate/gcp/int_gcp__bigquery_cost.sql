@@ -26,7 +26,7 @@ WITH bq_costs AS (
     STRING_AGG(CONCAT(referenced_table_unn.dataset_id, '.', referenced_table_unn.table_id), "," ORDER BY CONCAT(referenced_table_unn.dataset_id, '.', referenced_table_unn.table_id) ) as referenced_tables,
     sum(coalesce(total_bytes_billed, total_bytes_processed)) as total_bytes, 
     count(*) as total_queries
-  FROM `{{ var('project_name') }}`.INFORMATION_SCHEMA.JOBS_BY_PROJECT queries, 
+  FROM `{{ var('project_name') }}.{{ var('region_name') }}`.INFORMATION_SCHEMA.JOBS_BY_PROJECT queries, 
   UNNEST(referenced_tables) AS referenced_table_unn
   {% if is_incremental() %}
     WHERE date(creation_time) BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 7 DAY) and DATE("{{ ds() }}")

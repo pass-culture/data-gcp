@@ -162,7 +162,6 @@ sources:
       - name: app_native_logs
       - name: epci
       - name: eple
-      - name: firebase_pro_events
       - name: institution_locations
       - name: linked_offers
       - name: number_of_students_per_eple

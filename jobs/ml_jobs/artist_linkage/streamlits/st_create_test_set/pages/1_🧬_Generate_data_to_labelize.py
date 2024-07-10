@@ -3,6 +3,8 @@ import re
 import pandas as pd
 import streamlit as st
 
+from streamlits.st_create_test_set.constants import TEST_SET_TO_LABELIZE_GCS_PATH
+
 st.set_page_config(layout="wide")
 
 MAX_ITEMS_IN_DATASET = 1000
@@ -10,9 +12,6 @@ ARTISTS_TO_MATCH_GCS_PATH = (
     "gs://data-bucket-prod/link_artists/artists_to_match.parquet"
 )
 MATCHED_ARTISTS_GCS_PATH = "gs://data-bucket-prod/link_artists/matched_artists.parquet"
-TEST_SET_TO_LABELIZE_GCS_PATH = (
-    "gs://data-bucket-prod/link_artists/test_sets_to_labelize"
-)
 
 
 # %% Load Data

@@ -95,7 +95,6 @@ vars:
   re_data:save_test_history: true
   CI_MATERIALIZATION: none
   CI_SEVERITY: none
-  project_name: "{{ 'passculture-data-prod' if target.name == 'prod' else 'passculture-data-ehp' }}"
   region_name: "{{ 'region-europe-west1' }}"
 
 

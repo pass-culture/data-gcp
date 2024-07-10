@@ -9,7 +9,7 @@
 
 SELECT
     e.event_date,
-    e.event_name,
+    CASE WHEN e.event_name = "screen_view" THEN CONCAT(e.event_name, "_", e.firebase_screen ) ELSE e.event_name END AS event_name,
     e.event_timestamp,
     e.user_id,
     e.user_pseudo_id,

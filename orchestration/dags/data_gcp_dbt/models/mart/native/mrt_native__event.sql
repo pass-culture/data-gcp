@@ -68,7 +68,13 @@ WHERE (
       "HasSeenAllVideo",
       "Screenshot",
       "NoSearchResult",
-      "PerformSearch")
+      "PerformSearch",
+      "ConsultAvailableDates",
+      "BookOfferConfirmDates",
+      "ConsultVenueMap",
+      "TrendsBlockClicked",
+      "SystemBlockDisplayed",
+      "ConsultHome")
     OR
     (
         e.event_name = "screen_view"

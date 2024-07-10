@@ -4,6 +4,7 @@ import streamlit as st
 from streamlits.st_create_test_set.constants import (
     TEST_SET_GCS_PATH,
     TEST_SET_TO_LABELIZE_GCS_PATH,
+    LabellingStatus,
 )
 from streamlits.st_create_test_set.utils import list_files
 
@@ -28,13 +29,7 @@ def load_test_sets_to_labelize(file_name) -> pd.DataFrame:
     return pd.read_parquet(file_name)
 
 
-def should_match(df: pd.DataFrame):
-    # return df.assign(label=lambda df: df.groupby("cluster_id").)
-    return df
-
-
 # %% Run Main
-
 if __name__ == "__main__":
     # Load Data
     available_test_set = get_test_set_to_labelize()
@@ -56,39 +51,50 @@ if __name__ == "__main__":
     st.divider()
     st.subheader("Select Artist Nickname to Labelize")
 
-    st_columns = st.columns([4, 1])
+    st_columns = st.columns([3, 1])
     with st_columns[0]:
-        st.write(
+        clusters_df = (
             test_set_to_labelize.groupby("artist_nickname")
             .agg(
                 artist_names=("artist_name", list),
                 num_elements=("artist_name", "nunique"),
             )
             .sort_values(by="num_elements", ascending=False)
-        )
+        ).reset_index()
+        st.dataframe(clusters_df, hide_index=True)
+
     with st_columns[1]:
         st_artist_name = st.selectbox(
             "Select artist nickname",
-            options=test_set_to_labelize.artist_nickname.unique(),
+            options=clusters_df.artist_nickname.tolist(),
             index=None,
         )
 
+    # Labelize Data
+    st.divider()
+    st.subheader("Labelize Data")
     if st_artist_name is not None:
-        st.divider()
-        st.subheader("Labelize Data")
-        edited_df = st.data_editor(
-            test_set_to_labelize.assign(
-                is_my_artist=lambda df: df.artist_nickname == st_artist_name,
-                irrelevant_data=False,
-            ).loc[:, COLUMNS_TO_DISPLAY + ["is_my_artist", "irrelevant_data"]],
-            disabled=COLUMNS_TO_DISPLAY,
-            hide_index=True,
-        )
+        with st.form("Labelize Data"):
+            edited_df = st.data_editor(
+                test_set_to_labelize.assign(
+                    is_my_artist=lambda df: df.artist_nickname == st_artist_name,
+                    irrelevant_data=False,
+                ).loc[
+                    :,
+                    COLUMNS_TO_DISPLAY
+                    + [LabellingStatus.OK.value, LabellingStatus.IRRELEVANT.value],
+                ],
+                disabled=COLUMNS_TO_DISPLAY,
+                hide_index=True,
+            )
 
-        # Save Data
-        file_name = st_selected_test_set.split("/")[-1]
-        file_path = f"{TEST_SET_GCS_PATH}/{file_name}"
-        st_save_dataset_button = st.button(f"Generate Dataset : :green[{file_path}]")
+            # Save Data
+            file_name = st_selected_test_set.split("/")[-1]
+            file_path = f"{TEST_SET_GCS_PATH}/{file_name}"
+            st_save_dataset_button = st.form_submit_button(
+                f"Generate Dataset : :green[{file_path}]"
+            )
+
         if st_save_dataset_button:
             final_df = test_set_to_labelize.merge(
                 edited_df,

@@ -21,3 +21,8 @@ st.page_link(
     label="Labellize the data 🏷️",
     icon="2️⃣",
 )
+st.page_link(
+    "pages/3_🔃_Review_test_sets.py",
+    label="Review the labelized test sets 🔃",
+    icon="3️⃣",
+)

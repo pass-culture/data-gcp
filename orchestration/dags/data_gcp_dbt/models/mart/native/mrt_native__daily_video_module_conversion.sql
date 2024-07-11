@@ -1,11 +1,11 @@
 {{
     config(
-        materialized = "incremental",
+        **custom_incremental_config(
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "event_date", "data_type": "date", "granularity" : "day"},
         on_schema_change = "sync_all_columns",
     )
-}}
+) }}
 
 SELECT
     event_date
@@ -26,7 +26,7 @@ FROM {{ref('int_firebase__native_daily_user_video_module')}}
     {% if is_incremental() %}
     AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
     {% endif %}
-GROUP BY 
+GROUP BY
     event_date
     , module_id
     , user_role

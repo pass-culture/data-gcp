@@ -1,12 +1,12 @@
 {{
     config(
-        materialized = "incremental",
+        **custom_incremental_config(
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "booking_date", "data_type": "date", "granularity" : "day"},
         on_schema_change = "sync_all_columns",
         cluster_by = "module_name_first_touch"
     )
-}}
+) }}
 
 WITH firebase_bookings AS (
   SELECT
@@ -74,7 +74,7 @@ all_bookings_reconciled AS (
 )
 
 , bookings_origin_first_touch AS (
-  SELECT 
+  SELECT
     all_bookings_reconciled.user_id
     , booking_date
     , booking_timestamp
@@ -103,7 +103,7 @@ all_bookings_reconciled AS (
 )
 
 , bookings_origin_last_touch AS (
-  SELECT 
+  SELECT
       all_bookings_reconciled.user_id
     , booking_date
     , booking_timestamp
@@ -131,7 +131,7 @@ all_bookings_reconciled AS (
 )
 
 , booking_origin AS (
-  SELECT 
+  SELECT
   all_bookings_reconciled.user_id
   , all_bookings_reconciled.booking_date
   , all_bookings_reconciled.booking_timestamp
@@ -166,12 +166,12 @@ LEFT JOIN bookings_origin_last_touch AS last_t USING(booking_id)
 )
 
 , mapping_module AS (
-  SELECT * 
+  SELECT *
   FROM {{ ref("int_contentful__homepage") }}
   QUALIFY RANK() OVER(PARTITION BY module_id, home_id ORDER BY date DESC) = 1
 )
 
-SELECT 
+SELECT
     user_id
   , deposit_id
   , booking_date
@@ -208,7 +208,7 @@ SELECT
   , coalesce(home_id_last_touch, last_touch_map.home_id) AS home_id_last_touch
   , last_touch_map.home_name AS home_name_last_touch
   , last_touch_map.content_type AS content_type_last_touch
-  
+
 FROM booking_origin
 LEFT JOIN mapping_module AS first_touch_map
 ON booking_origin.module_id_first_touch = first_touch_map.module_id

@@ -1,6 +1,6 @@
 {{
   config(
-    materialized = "incremental",
+    **custom_incremental_config(
     partition_by={
       "field": "first_event_date",
       "data_type": "date",
@@ -9,7 +9,7 @@
     },
     incremental_strategy = 'insert_overwrite'
   )
-}}
+) }}
 
 SELECT DISTINCT
     user_pseudo_id

@@ -1,12 +1,12 @@
 {{
     config(
-        materialized = 'incremental',
+        **custom_incremental_config(
         incremental_strategy = 'insert_overwrite',
         partition_by = {'field': 'event_date', 'data_type': 'date', "granularity" : "day"},
         on_schema_change = "sync_all_columns",
-        cluster_by = "playlist_origin"
+        cluster_by = "playlist_origin",
     )
-}}
+) }}
 
 WITH export_table AS (
     SELECT
@@ -14,14 +14,14 @@ WITH export_table AS (
         date(date) as event_date,
         date as event_created_at,
         call_id as reco_call_id,
-        CASE 
+        CASE
             WHEN context like "similar_offer:%" THEN "similar_offer"
             WHEN context like "recommendation_fallback:%" THEN "similar_offer"
             WHEN context like "recommendation:%" THEN "recommendation"
         ELSE "unknown"
         END as playlist_origin,
         context,
-        round(offer_order) as offer_display_order,        
+        round(offer_order) as offer_display_order,
         CAST(user_id AS STRING) as user_id,
         CAST(offer_id as STRING) as offer_id,
         offer_item_ids.item_id as item_id,
@@ -58,18 +58,18 @@ WITH export_table AS (
         REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.retrievals[0].model_display_name"),  '"', '') as scorer_retrieval_model_display_name,
         REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.retrievals[0].model_version"),  '"', '') as scorer_retrieval_model_version,
         REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.ranking.model_display_name"),  '"', '') as scorer_ranking_model_display_name,
-        REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.ranking.model_version"),  '"', '') as scorer_ranking_model_version, 
+        REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.ranking.model_version"),  '"', '') as scorer_ranking_model_version,
     FROM
-       {{ source('raw', 'past_offer_context') }} pso 
+       {{ source('raw', 'past_offer_context') }} pso
     INNER JOIN {{ ref('offer_item_ids') }} offer_item_ids USING(offer_id)
     LEFT JOIN {{ source('clean', 'iris_france') }}  ii on ii.id = pso.user_iris_id
 
-    {% if is_incremental() %}   
+    {% if is_incremental() %}
         WHERE import_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
     {% else %}
-        WHERE import_date >= date_sub(DATE('{{ ds() }}'), INTERVAL 60 DAY) 
+        WHERE import_date >= date_sub(DATE('{{ ds() }}'), INTERVAL 60 DAY)
     {% endif %}
-    
+
     QUALIFY ROW_NUMBER() OVER (
         PARTITION BY
             user_id,
@@ -80,11 +80,11 @@ WITH export_table AS (
         ) = 1
 )
 
-SELECT 
-    et.*, 
+SELECT
+    et.*,
 FROM export_table et
-{% if is_incremental() %}   
+{% if is_incremental() %}
     WHERE et.event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 2 DAY) and DATE('{{ ds() }}')
 {% else %}
-    WHERE et.event_date >= date_sub(DATE('{{ ds() }}'), INTERVAL 60 DAY) 
+    WHERE et.event_date >= date_sub(DATE('{{ ds() }}'), INTERVAL 60 DAY)
 {% endif %}

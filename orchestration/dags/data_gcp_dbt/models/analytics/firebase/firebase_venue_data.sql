@@ -1,10 +1,10 @@
 {{
     config(
-        materialized = 'incremental',
+        **custom_incremental_config(
         incremental_strategy = 'insert_overwrite',
         partition_by = {'field': 'display_date', 'data_type': 'date'},
     )
-}}
+) }}
 
 with venue_data AS (
 SELECT
@@ -65,6 +65,6 @@ LEFT JOIN venue_data ON venue_data.unique_session_id = consult_offer.unique_sess
                 AND venue_data.offer_id = consult_offer.offer_id
                 AND venue_data.event_timestamp > consult_offer.consult_offer_timestamp
                 AND event_name = 'BookingConfirmation'
-{% if is_incremental() %}   
+{% if is_incremental() %}
     where display_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 1 DAY) and DATE('{{ ds() }}')
 {% endif %}

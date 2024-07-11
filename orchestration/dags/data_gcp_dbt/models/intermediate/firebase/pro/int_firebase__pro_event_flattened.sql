@@ -1,11 +1,11 @@
 {{
     config(
-        materialized = "incremental",
+        **custom_incremental_config(
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "event_date", "data_type": "date"},
         on_schema_change = "sync_all_columns"
     )
-}}
+) }}
 
 WITH firebase_pro_last_two_days_events AS (
     SELECT *
@@ -16,7 +16,7 @@ WITH firebase_pro_last_two_days_events AS (
         {% endif %}
 )
 
-SELECT 
+SELECT
     event_name,
     user_pseudo_id,
     user_id,

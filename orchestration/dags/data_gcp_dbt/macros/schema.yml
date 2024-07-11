@@ -26,10 +26,10 @@ macros:
 
   - name: extract_str_to_array_field
     description: |
-      This macro generates a SQL query to concatenate and process multiple string columns 
-      dynamically based on the specified start, step, and end values. The macro 
-      constructs column names such as `{column_name}_1_10`, `{column_name}_11_20`, etc., splits 
-      the comma-separated string values into arrays, and combines these arrays into 
+      This macro generates a SQL query to concatenate and process multiple string columns
+      dynamically based on the specified start, step, and end values. The macro
+      constructs column names such as `{column_name}_1_10`, `{column_name}_11_20`, etc., splits
+      the comma-separated string values into arrays, and combines these arrays into
       a single array. It filters out null and empty strings from the final array.
 
       Parameters:
@@ -53,7 +53,7 @@ macros:
           )
         ) AS _col
         WHERE _col IS NOT NULL AND _col != ''
-      ) 
+      )
       ```
 
   - name: generate_schema_name
@@ -65,8 +65,15 @@ macros:
       Else the destination schema dataset is specified in dbt_project.yml (analytics_env or clean_env)
 
   - name: generate_alias_name
-    description: " This macro generates table aliases 
-    - By using the segment after '__' for models in the intermediate folder. 
-    - By removing 'mrt' and replacing '__' by '_' for models in the mart folder. 
+    description: " This macro generates table aliases
+    - By using the segment after '__' for models in the intermediate folder.
+    - By removing 'mrt' and replacing '__' by '_' for models in the mart folder.
     - Otherwise, it uses the model's name.
     "
+
+  - name: ml_vars
+    description: ""
+
+  - name: custom_incremental_config
+    description: "materialize incremental models as views in CI"
+

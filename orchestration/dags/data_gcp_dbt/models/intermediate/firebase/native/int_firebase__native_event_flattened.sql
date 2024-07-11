@@ -1,11 +1,11 @@
 {{
     config(
-        materialized = "incremental",
+        **custom_incremental_config(
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "event_date", "data_type": "date"},
         on_schema_change = "sync_all_columns"
     )
-}}
+) }}
 
 WITH firebase_last_two_days_events AS (
     SELECT *
@@ -112,6 +112,6 @@ native_unnest AS (
 
 SELECT
     * except(offers_1_10,offers_11_20,offers_21_30,offers_31_40,offers_41_50,venues_1_10,venues_11_20,venues_21_30,venues_31_40,venues_41_50),
-    {{ extract_str_to_array_field("offers", 0, 10, 50) }} AS displayed_offers, 
+    {{ extract_str_to_array_field("offers", 0, 10, 50) }} AS displayed_offers,
     {{ extract_str_to_array_field("venues", 0, 10, 50) }} AS displayed_venues
 FROM native_unnest

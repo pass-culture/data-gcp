@@ -1,7 +1,7 @@
 
 {{
   config(
-    materialized = "incremental",
+    **custom_incremental_config(
     partition_by={
       "field": "first_event_date",
       "data_type": "date",
@@ -11,7 +11,7 @@
     incremental_strategy = 'insert_overwrite',
     on_schema_change = "sync_all_columns"
   )
-}}
+) }}
 
 with visits as (
     SELECT
@@ -51,13 +51,13 @@ with visits as (
         DATE_DIFF(MAX(event_timestamp),MIN(event_timestamp),SECOND) AS visit_duration_seconds,
     FROM
             {{ ref('int_firebase__native_event') }}
-    
+
     WHERE
-      {% if is_incremental() %}   
+      {% if is_incremental() %}
       -- lag in case session is between two days.
-      event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3+1 DAY) and DATE('{{ ds() }}') AND 
+      event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3+1 DAY) and DATE('{{ ds() }}') AND
       {% endif %}
-      
+
       event_name NOT IN (
             'app_remove',
             'os_update',
@@ -76,6 +76,6 @@ with visits as (
 
 select * from visits
 -- incremental run only update partition of run day
-{% if is_incremental() %}   
+{% if is_incremental() %}
     where first_event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
 {% endif %}

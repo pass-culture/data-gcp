@@ -1,11 +1,11 @@
 {{
     config(
-        materialized = "incremental",
+        **custom_incremental_config(
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "date_updated", "data_type": "datetime", "granularity" : "day"},
         on_schema_change = "sync_all_columns",
     )
-}}
+) }}
 
 WITH users_updated AS (
 SELECT user_id,

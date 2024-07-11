@@ -25,7 +25,7 @@ dbt_run_changed_models() {
     echo "no models were modified"
   else
     echo "Running models: ${models}"
-    dbt run --model $models --exclude config.materialized:incremental --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+    dbt run --model $models --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
   fi
 }
 

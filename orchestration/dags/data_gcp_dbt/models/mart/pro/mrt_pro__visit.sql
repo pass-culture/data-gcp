@@ -1,11 +1,11 @@
 {{
     config(
-        materialized = "incremental",
+        **custom_incremental_config(
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "first_event_date", "data_type": "date"},
         on_schema_change = "sync_all_columns"
     )
-}}
+) }}
 
 SELECT
     fpv.user_id,
@@ -56,4 +56,3 @@ GROUP BY user_id,
         first_event_timestamp,
         last_event_timestamp,
         visit_duration_seconds
-        

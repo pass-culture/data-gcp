@@ -1,23 +1,23 @@
 {{
     config(
-        materialized = "incremental",
+        **custom_incremental_config(
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "event_date", "data_type": "date"},
         on_schema_change = "sync_all_columns"
     )
-}}
+) }}
 
 WITH most_active_offerer_per_user AS (
-SELECT 
+SELECT
     DISTINCT uo.user_id
     ,uo.offerer_id
-FROM {{ ref("enriched_user_offerer") }} AS uo 
+FROM {{ ref("enriched_user_offerer") }} AS uo
 LEFT JOIN {{ ref("enriched_offerer_data") }} AS o ON uo.offerer_id=o.offerer_id
 QUALIFY ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY no_cancelled_booking_cnt DESC)=1
 ),
-    
+
 offerer_per_session AS(
-SELECT 
+SELECT
     unique_session_id
     ,COALESCE(ps.offerer_id,v.venue_managing_offerer_id,mau.offerer_id) as offerer_id
 FROM {{ ref("int_firebase__pro_session") }} AS ps
@@ -25,7 +25,7 @@ LEFT JOIN {{ ref("mrt_global__venue") }} AS v ON ps.venue_id=v.venue_id
 LEFT JOIN most_active_offerer_per_user AS mau ON mau.user_id=ps.user_id
 )
 
-SELECT 
+SELECT
     e.event_name,
     e.page_name,
     e.user_pseudo_id,

@@ -1,5 +1,4 @@
 {{ config(
-    materialized='table',
     partition_by={
         'field': 'module_displayed_date',
         'data_type': 'date',

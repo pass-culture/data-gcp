@@ -1,13 +1,13 @@
 {{
     config(
-        materialized = 'incremental',
-        incremental_strategy = 'insert_overwrite',
-        partition_by = {'field': 'booking_date', 'data_type': 'date'},
+        **custom_incremental_config(
+        incremental_strategy='insert_overwrite',
+        partition_by={'field': 'booking_date', 'data_type': 'date'},
         on_schema_change = "sync_all_columns",
     )
-}}
+) }}
 
-SELECT 
+SELECT
     user_id
     , user_pseudo_id
     , session_id

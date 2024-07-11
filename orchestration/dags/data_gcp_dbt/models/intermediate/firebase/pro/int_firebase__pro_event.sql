@@ -5,15 +5,15 @@
 
 {{
     config(
-        materialized = "incremental",
+        **custom_incremental_config(
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "event_date", "data_type": "date"},
         on_schema_change = "sync_all_columns"
     )
-}}
+) }}
 
 WITH pro_event_raw_data as(
-    SELECT 
+    SELECT
         event_name,
         user_pseudo_id,
         CASE WHEN REGEXP_CONTAINS(user_id, r"\D") THEN {{target_schema}}.dehumanize_id(user_id) ELSE user_id END AS user_id,
@@ -68,9 +68,9 @@ WHERE event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("
 
 SELECT
     * EXCEPT(url_first_path, url_path_type, url_path_details, url_path_before_params),
-    CASE 
+    CASE
         WHEN url_path_details is NULL THEN REPLACE(COALESCE(url_path_before_params, url_first_path), "/", "-")
         WHEN url_path_details is NOT NULL THEN CONCAT(url_path_type, "-", url_path_details)
-        ELSE url_path_type 
+        ELSE url_path_type
     END as url_path_extract
 FROM pro_event_raw_data

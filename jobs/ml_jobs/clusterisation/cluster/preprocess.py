@@ -17,15 +17,23 @@ def preprocess(
         "default-config",
         help="Config file name",
     ),
-    cluster_prefix: str = typer.Option(
-        "",
-        help="Table prefix",
-    ),
 ):
+    """
+    Preprocesses the data in groups based {config_file_name} for clustering.
+
+    Args:
+        input_table (str): Path to the input data.
+        output_table (str): Path to the output data.
+        config_file_name (str, optional): Config file name. Defaults to "default-config".
+
+    Returns:
+        None
+    """
+
     params = load_config_file(config_file_name, job_type="cluster")
 
     logger.info("Loading data: fetch items with metadata and pretained embedding")
-    items = pd.read_gbq(f"SELECT * from `{TMP_DATASET}.{input_table}`")
+    items: pd.DataFrame = pd.read_gbq(f"SELECT * from `{TMP_DATASET}.{input_table}`")
 
     logger.info("Build item groups...")
     item_clean = (
@@ -57,9 +65,7 @@ def preprocess(
     )
     item_embedding_w_group = item_embedding_w_group.fillna(0)
     logger.info(f"item_embedding: {len(item_embedding_w_group)}")
-    item_embedding_w_group.to_gbq(
-        f"{TMP_DATASET}.{cluster_prefix}{output_table}", if_exists="replace"
-    )
+    item_embedding_w_group.to_gbq(f"{TMP_DATASET}.{output_table}", if_exists="replace")
 
     return
 

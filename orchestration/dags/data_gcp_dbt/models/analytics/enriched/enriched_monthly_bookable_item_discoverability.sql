@@ -1,11 +1,12 @@
 {{
     config(
         tags = "monthly",
-        materialized = 'incremental',
-        incremental_strategy = 'insert_overwrite',
-        partition_by = {'field': 'month', 'data_type': 'date'},
+        **custom_incremental_config(
+        incremental_strategy='insert_overwrite',
+        partition_by={'field': 'month', 'data_type': 'date'},
     )
-}}
+) }}
+
 
 WITH monthly_bookable_items AS (
 SELECT
@@ -19,8 +20,8 @@ FROM {{ref('bookable_offer_history')}} bookable_offer_history
    {% if is_incremental() %} -- recalculate latest day's DATA + previous
 WHERE
   DATE(partition_date) BETWEEN
-    DATE_TRUNC('{{ ds() }}', MONTH) -- first day of the month 
-    AND 
+    DATE_TRUNC('{{ ds() }}', MONTH) -- first day of the month
+    AND
     DATE_SUB(DATE_ADD(DATE_TRUNC('{{ ds() }}', MONTH), INTERVAL 1 month), interval 1 day) -- last day of the month
 {% endif %}
 GROUP BY 1,2,3,4
@@ -41,8 +42,8 @@ FROM {{ref('firebase_daily_offer_consultation_data')}} firebase_daily_offer_cons
    {% if is_incremental() %} -- recalculate latest day's DATA + previous
 WHERE
   DATE(event_date) BETWEEN
-    DATE_TRUNC('{{ ds() }}', MONTH) -- first day of the month 
-    AND 
+    DATE_TRUNC('{{ ds() }}', MONTH) -- first day of the month
+    AND
     DATE_SUB(DATE_ADD(DATE_TRUNC('{{ ds() }}', MONTH), INTERVAL 1 month), interval 1 day) -- last day of the month
 {% endif %}
 GROUP BY 1,2
@@ -51,6 +52,3 @@ GROUP BY 1,2
 SELECT *
 FROM monthly_bookable_items
 LEFT JOIN monthly_consulted_items USING(month, item_id)
-
-
-

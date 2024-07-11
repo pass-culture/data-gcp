@@ -1,11 +1,11 @@
 {{
     config(
-        materialized = 'incremental',
-        incremental_strategy = 'insert_overwrite',
-        partition_by = {'field': 'event_date', 'data_type': 'date'},
+        **custom_incremental_config(
+        incremental_strategy='insert_overwrite',
+        partition_by={'field': 'event_date', 'data_type': 'date'},
         on_schema_change = "sync_all_columns"
     )
-}}
+) }}
 
 WITH mapping_module_name_and_id AS (
     SELECT
@@ -224,7 +224,7 @@ SELECT
     e.module_index
 FROM
     event_union e
-    
+
 {% if is_incremental() %}
 -- recalculate latest day's data + previous
 where date(event_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 1 DAY) and DATE('{{ ds() }}')

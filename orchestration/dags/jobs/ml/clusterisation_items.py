@@ -11,20 +11,18 @@ from common.operators.gce import (
 from common import macros
 from common.operators.biquery import bigquery_job_task
 from dependencies.ml.clusterisation.import_data import (
-    IMPORT_ITEM_CLUSTERS,
     IMPORT_ITEM_EMBEDDINGS,
 )
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
-    MLFLOW_BUCKET_NAME,
 )
 
 from common.alerts import task_fail_slack_alert
 from common.utils import get_airflow_schedule
 
 DEFAULT_REGION = "europe-west1"
-GCE_INSTANCE = f"clusterisation-{ENV_SHORT_NAME}"
+
 BASE_DIR = "data-gcp/jobs/ml_jobs/clusterisation"
 DATE = "{{ yyyymmdd(ds) }}"
 
@@ -34,9 +32,19 @@ default_args = {
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
-dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/clusterisation_items_{ENV_SHORT_NAME}/clusterisation_items_{DATE}/{DATE}_item_embbedding_data",
-}
+
+CLUSTERING_CONFIG = [
+    {
+        "name": "default",
+        "cluster_config_file_name": "default-config",
+        "cluster_prefix": "default",
+    },
+    {
+        "name": "unconstrained",
+        "cluster_config_file_name": "unconstrained-config",
+        "cluster_prefix": "unconstrained",
+    },
+]
 
 
 with DAG(
@@ -57,110 +65,80 @@ with DAG(
             default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-64",
             type="string",
         ),
-        "cluster_config_file_name": Param(
-            default="default-config",
-            type="string",
-        ),
-        "cluster_prefix": Param(default="default_", type=["null", "string"]),
     },
 ) as dag:
-    start = DummyOperator(task_id="start", dag=dag)
-    end = DummyOperator(task_id="end", dag=dag)
-
-    gce_instance_start = StartGCEOperator(
-        task_id="gce_start_task",
-        instance_name=GCE_INSTANCE,
-        preemptible=False,
-        instance_type="{{ params.instance_type }}",
-        retries=2,
-        labels={"job_type": "long_ml"},
-    )
-
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
-        instance_name=GCE_INSTANCE,
-        python_version="3.10",
-        command="{{ params.branch }}",
-        retries=2,
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command="""pip install -r requirements.txt --user && python3 -m spacy download fr_core_news_sm""",
-    )
-
     bq_import_item_embeddings_task = bigquery_job_task(
-        dag, "bq_import_item_embeddings", IMPORT_ITEM_EMBEDDINGS, extra_params={}
+        dag,
+        f"bq_import_item_embeddings",
+        IMPORT_ITEM_EMBEDDINGS,
+        extra_params={},
     )
 
-    preprocess_clustering = SSHGCEOperator(
-        task_id="preprocess_clustering",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command="PYTHONPATH=. python cluster/preprocess.py "
-        f"--input-table {DATE}_import_item_embeddings "
-        f"--output-table {DATE}_import_item_clusters_preprocess "
-        "--config-file-name {{ params.cluster_config_file_name }} "
-        "--cluster-prefix {{ params.cluster_prefix }}",
-    )
+    for cluster_config in CLUSTERING_CONFIG:
+        job_name = cluster_config["name"]
+        cluster_config_file_name = cluster_config["cluster_config_file_name"]
+        cluster_prefix = cluster_config["cluster_prefix"]
+        gce_instance = f"clusterisation-{job_name}-{ENV_SHORT_NAME}"
 
-    generate_clustering = SSHGCEOperator(
-        task_id="generate_clustering",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command="PYTHONPATH=. python cluster/generate.py "
-        f"--input-table {DATE}_import_item_clusters_preprocess "
-        f"--output-table item_clusters "
-        "--config-file-name {{ params.cluster_config_file_name }} "
-        "--cluster-prefix {{ params.cluster_prefix }}",
-    )
+        start = DummyOperator(task_id=f"start_{job_name}", dag=dag)
+        end = DummyOperator(task_id=f"end_{job_name}", dag=dag)
 
-    bq_import_item_clusters_task = bigquery_job_task(
-        dag, "bq_import_item_clusters", IMPORT_ITEM_CLUSTERS, extra_params={}
-    )
+        gce_instance_start = StartGCEOperator(
+            task_id=f"gce_start_{job_name}_task",
+            instance_name=gce_instance,
+            preemptible=False,
+            instance_type="{{ params.instance_type }}",
+            retries=2,
+            labels={"job_type": "long_ml"},
+        )
 
-    generate_topics = SSHGCEOperator(
-        task_id="generate_topics",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command="PYTHONPATH=. python topics/generate.py "
-        f"--input-table {DATE}_import_item_clusters "
-        f"--item-topics-labels-output-table {DATE}_item_topics_labels "
-        f"--item-topics-output-table {DATE}_item_topics "
-        "--config-file-name {{ params.cluster_config_file_name }} "
-        "--cluster-prefix {{ params.cluster_prefix }}",
-    )
+        fetch_code = CloneRepositoryGCEOperator(
+            task_id=f"fetch_{job_name}_code",
+            instance_name=gce_instance,
+            python_version="3.10",
+            command="{{ params.branch }}",
+            retries=2,
+        )
 
-    clean_topics = SSHGCEOperator(
-        task_id="clean_topics",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command="PYTHONPATH=. python topics/clean.py "
-        f"--item-topics-labels-input-table {DATE}_item_topics_labels "
-        f"--item-topics-input-table {DATE}_item_topics "
-        f"--item-topics-labels-output-table item_topics_labels "
-        f"--item-topics-output-table item_topics "
-        "--config-file-name {{ params.cluster_config_file_name }} "
-        "--cluster-prefix {{ params.cluster_prefix }}",
-    )
+        install_dependencies = SSHGCEOperator(
+            task_id=f"install_{job_name}_dependencies",
+            instance_name=gce_instance,
+            base_dir=BASE_DIR,
+            command="""pip install -r requirements.txt --user""",
+        )
 
-    gce_instance_stop = StopGCEOperator(
-        task_id="gce_stop_task", instance_name=GCE_INSTANCE
-    )
+        preprocess_clustering = SSHGCEOperator(
+            task_id=f"preprocess_{job_name}_clustering",
+            instance_name=gce_instance,
+            base_dir=BASE_DIR,
+            command="PYTHONPATH=. python cluster/preprocess.py "
+            f"--input-table {DATE}_import_item_embeddings "
+            f"--output-table {DATE}_{cluster_prefix}_import_item_clusters_preprocess "
+            f"--config-file-name {cluster_config_file_name} ",
+        )
 
-    (
-        start
-        >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
-        >> bq_import_item_embeddings_task
-        >> preprocess_clustering
-        >> generate_clustering
-        >> bq_import_item_clusters_task
-        >> generate_topics
-        >> clean_topics
-        >> gce_instance_stop
-        >> end
-    )
+        generate_clustering = SSHGCEOperator(
+            task_id=f"generate_{job_name}_clustering",
+            instance_name=gce_instance,
+            base_dir=BASE_DIR,
+            command="PYTHONPATH=. python cluster/generate.py "
+            f"--input-table {DATE}_{cluster_prefix}_import_item_clusters_preprocess "
+            f"--output-table {cluster_prefix}_item_clusters "
+            f"--config-file-name {cluster_config_file_name} ",
+        )
+
+        gce_instance_stop = StopGCEOperator(
+            task_id=f"gce_{job_name}_stop_task", instance_name=gce_instance
+        )
+
+        (
+            bq_import_item_embeddings_task
+            >> start
+            >> gce_instance_start
+            >> fetch_code
+            >> install_dependencies
+            >> preprocess_clustering
+            >> generate_clustering
+            >> gce_instance_stop
+            >> end
+        )

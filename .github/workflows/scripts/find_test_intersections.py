@@ -23,7 +23,7 @@ def main():
                 testable_job_path == changed_file_path
                 or testable_job_path in changed_file_path.parents
             ):
-                return job
+                return testable_job
         return None
 
     # Compute the jobs to test

@@ -1,3 +1,5 @@
+{% set diversification_features = [ "category", "sub_category", "format", "venue_id", "extra_category"] %}
+
 SELECT 
     diversification_raw.user_id
     , booking.offer_id
@@ -19,7 +21,7 @@ SELECT
         IF(booking.digital_goods = True, 'digital', null),
         IF(booking.event = True, 'event', null)
     ) as format
-    , {% for feature in ml_vars("diversification_features") %}
+    , {% for feature in diversification_features %}
         {{feature}}_diversification
         {% if not loop.last -%} , {%- endif %}
     {% endfor %}

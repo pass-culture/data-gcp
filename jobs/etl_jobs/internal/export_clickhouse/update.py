@@ -69,7 +69,7 @@ def update_overwrite(
 
     remove_stale_partitions(dataset_name, table_name, update_date)
     total_rows = (
-        clickhouse_client.command(f"SELECT count(*) FROM {dataset_name}.{table_name}'")
+        clickhouse_client.command(f"SELECT count(*) FROM {dataset_name}.{table_name}")
         | 0
     )
 

@@ -70,6 +70,3 @@ macros:
     - By removing 'mrt' and replacing '__' by '_' for models in the mart folder. 
     - Otherwise, it uses the model's name.
     "
-
-  - name: ml_vars
-    description: ""

@@ -2,7 +2,6 @@ import typer
 import pandas as pd
 import polars as pl
 import time
-from google.cloud import bigquery
 from loguru import logger
 from tools.clusterisation import (
     clusterisation_from_prebuild_embedding,
@@ -23,25 +22,28 @@ def create_clusters(
         "default-config",
         help="Config file name",
     ),
-    cluster_prefix: str = typer.Option(
-        "",
-        help="Table prefix",
-    ),
 ):
+    """
+    Create clusters based on the given input data and configuration file {config_file_name}.
+
+    Args:
+        input_table (str): Path to the input data.
+        output_table (str): Path to the output data.
+        config_file_name (str, optional): Config file name. Defaults to "default-config".
+    """
+
     params = load_config_file(config_file_name, job_type="cluster")
     embedding_cols = [f"t{x}" for x in range(params["pretrained_embedding_size"])]
     results = []
     for group in params["group_config"]:
-        results.append(
-            generate_clustering(group, f"{cluster_prefix}{input_table}", embedding_cols)
-        )
+        results.append(generate_clustering(group, f"{input_table}", embedding_cols))
 
-    export_polars_to_bq(
-        pl.concat(results), CLEAN_DATASET, f"{cluster_prefix}{output_table}"
-    )
+    export_polars_to_bq(pl.concat(results), CLEAN_DATASET, f"{output_table}")
 
 
-def generate_clustering(group, input_table, embedding_cols):
+def generate_clustering(
+    group: dict, input_table: str, embedding_cols: list
+) -> pl.DataFrame:
     target_n_clusters = group["nb_clusters"]
     clustering_group = group["group"]
     items_with_embedding_pd = pd.read_gbq(

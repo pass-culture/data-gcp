@@ -1,10 +1,10 @@
 {
     "pretrained_embedding_name": "hybrid_embedding",
-    "pretrained_embedding_size" : 16,
+    "pretrained_embedding_size" : 64,
     "group_config": [
         {
             "group": "ALL",
-            "nb_clusters": 90,
+            "nb_clusters": 1000,
             "features": [
                 {
                     "type": "category",

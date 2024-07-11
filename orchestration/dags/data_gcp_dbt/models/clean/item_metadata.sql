@@ -15,9 +15,9 @@ item_clusters AS (
     SELECT 
         ic.item_id,  
         ANY_VALUE(ic.semantic_cluster_id) as cluster_id,
-        ANY_VALUE(it.topic_id) as topic_id
+        ANY_VALUE(it.semantic_cluster_id) as topic_id -- TODO: temporary solution, should be removed after the refactor of topics logics.
     FROM {{ source('clean', 'default_item_clusters') }} ic
-    LEFT JOIN {{ source('clean', 'default_item_topics') }} it on it.item_id = ic.item_id
+    LEFT JOIN {{ source('clean', 'unconstrained_item_clusters') }} it on it.item_id = ic.item_id
     GROUP BY 1
 ),
 

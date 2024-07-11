@@ -46,6 +46,7 @@ def generate_clustering(
 ) -> pl.DataFrame:
     target_n_clusters = group["nb_clusters"]
     clustering_group = group["group"]
+    logger.info(f"Will load {TMP_DATASET}.{input_table}...")
     items_with_embedding_pd = pd.read_gbq(
         f"SELECT * from `{TMP_DATASET}.{input_table}` where category_group='{clustering_group}' "
     )

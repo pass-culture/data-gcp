@@ -37,12 +37,12 @@ CLUSTERING_CONFIG = [
     {
         "name": "default",
         "cluster_config_file_name": "default-config",
-        "cluster_prefix": "default_",
+        "cluster_prefix": "default",
     },
     {
         "name": "unconstrained",
         "cluster_config_file_name": "unconstrained-config",
-        "cluster_prefix": "unconstrained_",
+        "cluster_prefix": "unconstrained",
     },
 ]
 
@@ -114,7 +114,7 @@ with DAG(
             command="PYTHONPATH=. python cluster/preprocess.py "
             f"--input-table {DATE}_import_item_embeddings "
             f"--output-table {DATE}_{cluster_prefix}_import_item_clusters_preprocess "
-            "--config-file-name {{ params.cluster_config_file_name }} ",
+            f"--config-file-name {cluster_config_file_name} ",
         )
 
         generate_clustering = SSHGCEOperator(
@@ -124,8 +124,7 @@ with DAG(
             command="PYTHONPATH=. python cluster/generate.py "
             f"--input-table {DATE}_{cluster_prefix}_import_item_clusters_preprocess "
             f"--output-table {cluster_prefix}_item_clusters "
-            "--config-file-name {{ params.cluster_config_file_name }} "
-            "--cluster-prefix {{ params.cluster_prefix }}",
+            f"--config-file-name {cluster_config_file_name} "
         )
 
         gce_instance_stop = StopGCEOperator(

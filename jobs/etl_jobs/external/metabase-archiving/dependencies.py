@@ -6,9 +6,9 @@ import typer
 from metabase_api import MetabaseAPI
 from utils import (
     PROJECT_NAME,
+    INT_METABASE_DATASET,
     ENVIRONMENT_SHORT_NAME,
     ANALYTICS_DATASET,
-    CLEAN_DATASET,
     METABASE_API_USERNAME,
     access_secret_data,
 )
@@ -173,7 +173,7 @@ def run():
     )
 
     dependencies_df.to_gbq(
-        f"{CLEAN_DATASET}.dependencies_metabase", if_exists="replace"
+        f"{INT_METABASE_DATASET}.card_dependency", if_exists="replace"
     )
 
     return "success"

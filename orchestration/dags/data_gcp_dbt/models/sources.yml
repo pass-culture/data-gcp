@@ -111,16 +111,21 @@ sources:
       - name: contentful_entry
       - name: contentful_relationship
       - name: contentful_tag
+      - name: eple_aggregated_type
       - name: firebase_events
       - name: firebase_pro_events
       - name: geoip_city_v4
       - name: gsheet_eac_webinar
       - name: gsheet_ml_recommendation_sensitive_item
-      - name: eple_aggregated_type
       - name: macro_rayons
-      - name: stdout
-      - name: sensitive_item_recommendation
+      - name: metabase_collection
+      - name: metabase_core_user
+      - name: metabase_query_execution
+      - name: metabase_report_card
+      - name: metabase_report_dashboard
       - name: past_offer_context
+      - name: sensitive_item_recommendation
+      - name: stdout
       - name: user_locations
 
   - name: clean # this is the source_name
@@ -140,14 +145,13 @@ sources:
       - name: geo_iris
       - name: iris_france
       - name: default_item_clusters
+      - name: unconstrained_item_clusters
       - name: institutional_scholar_level
       - name: item_embeddings
       - name: item_embeddings_reduced_64
       - name: item_embeddings_reduced_32
       - name: item_embeddings_reduced_16
       - name: item_embeddings_reduced_5
-      - name: default_item_topics
-      - name: default_item_topics_labels
       - name: siren_data
       - name: subcategories
   - name: analytics # this is the source_name
@@ -157,7 +161,6 @@ sources:
       - name: app_native_logs
       - name: epci
       - name: eple
-      - name: firebase_pro_events
       - name: institution_locations
       - name: linked_offers
       - name: number_of_students_per_eple

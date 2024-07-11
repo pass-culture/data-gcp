@@ -18,6 +18,7 @@ SELECT
     , event_timestamp as booking_timestamp
     , platform
     , user_location_type
+    , app_version
 FROM {{ ref('int_firebase__native_event') }}
 WHERE event_name = "BookingConfirmation"
 {% if is_incremental() %}

@@ -14,6 +14,7 @@ WITH firebase_bookings AS (
     TIMESTAMP(booking_timestamp)  as event_timestamp,
     session_id,
     unique_session_id,
+    app_version,
     platform,
     user_location_type,
     booking_id
@@ -31,6 +32,7 @@ all_bookings_reconciled AS (
     , COALESCE(f_events.event_timestamp, TIMESTAMP(booking_created_at)) AS booking_timestamp
     , f_events.session_id AS booking_session_id
     , f_events.unique_session_id AS booking_unique_session_id
+    , f_events.app_version as booking_app_version
     , booking.offer_id
     , booking.deposit_id
     , booking.booking_status
@@ -134,6 +136,7 @@ all_bookings_reconciled AS (
   , all_bookings_reconciled.booking_date
   , all_bookings_reconciled.booking_timestamp
   , all_bookings_reconciled.booking_session_id
+  , all_bookings_reconciled.booking_app_version
   , all_bookings_reconciled.booking_unique_session_id
   , all_bookings_reconciled.offer_id
   , all_bookings_reconciled.item_id
@@ -174,6 +177,7 @@ SELECT
   , booking_date
   , booking_timestamp
   , booking_session_id
+  , booking_app_version
   , booking_unique_session_id
   , offer_id
   , item_id

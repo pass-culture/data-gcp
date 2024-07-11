@@ -14,14 +14,12 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
 import datetime
-from pathlib import Path
 from common.config import (
     GCP_PROJECT_ID,
     DAG_FOLDER,
     ENV_SHORT_NAME,
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_TMP_DATASET,
-    PATH_TO_DBT_TARGET,
 )
 
 from common.utils import get_airflow_schedule, waiting_operator
@@ -30,10 +28,8 @@ from dependencies.export_clickhouse.export_clickhouse import (
     TABLES_CONFIGS,
     VIEWS_CONFIGS,
 )
-from common.alerts import task_fail_slack_alert
-import copy
 from common import macros
-import os
+
 
 DATASET_ID = f"export_{ENV_SHORT_NAME}"
 GCE_INSTANCE = f"export-clickhouse-{ENV_SHORT_NAME}"
@@ -58,7 +54,7 @@ dag_config = {
 }
 
 gce_params = {
-    "instance_name": f"export-clickhouse2-data-{ENV_SHORT_NAME}",
+    "instance_name": f"export-clickhouse-data-{ENV_SHORT_NAME}",
     "instance_type": "n1-standard-4",
 }
 
@@ -74,6 +70,13 @@ dags = {
         },
     },
 }
+
+
+def choose_branch(**context):
+    run_id = context["dag_run"].run_id
+    if run_id.startswith("scheduled__"):
+        return [f"waiting_dbt_group.waiting_dbt_jobs"]
+    return ["shunt_manual"]
 
 
 for dag_name, dag_params in dags.items():
@@ -103,12 +106,38 @@ for dag_name, dag_params in dags.items():
                 default=gce_params["instance_name"],
                 type="string",
             ),
-            "days": Param(
+            "to_days": Param(
+                default=0,
+                type="integer",
+            ),
+            "from_days": Param(
                 default=-4,
                 type="integer",
             ),
         },
     ) as dag:
+
+        branching = BranchPythonOperator(
+            task_id="branching",
+            python_callable=choose_branch,
+            provide_context=True,
+            dag=dag,
+        )
+
+        with TaskGroup(
+            group_id="waiting_dbt_group", dag=dag
+        ) as wait_for_dbt_daily_tasks:
+            wait = DummyOperator(task_id="waiting_dbt_jobs", dag=dag)
+
+            for table_config in TABLES_CONFIGS:
+                waiting_task = waiting_operator(
+                    dag, "dbt_run_dag", f"data_transformation.{table_config['sql']}"
+                )
+                wait.set_downstream(waiting_task)
+
+        shunt = DummyOperator(task_id="shunt_manual", dag=dag)
+        join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
+
         gce_instance_start = StartGCEOperator(
             task_id=f"gce_start_task",
             preemptible=False,
@@ -133,32 +162,13 @@ for dag_name, dag_params in dags.items():
             dag=dag,
         )
 
-        with TaskGroup(
-            group_id="waiting_dbt_transfo", dag=dag
-        ) as wait_for_dbt_daily_tasks:
-            for table_config in TABLES_CONFIGS:
-                waiting_task = waiting_operator(dag, "dbt_dag_run", table_config["sql"])
-
-        def choose_branch(**context):
-            run_id = context["dag_run"].run_id
-            if run_id.startswith("scheduled__"):
-                return [f"waiting_dbt_transfo"]
-            return ["shunt_manual"]
-
-        branching = BranchPythonOperator(
-            task_id="branching",
-            python_callable=choose_branch,
-            provide_context=True,
-            dag=dag,
-        )
-        shunt = DummyOperator(task_id="shunt_manual", dag=dag)
-        join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
-
         in_tables_tasks, out_tables_tasks = [], []
         for table_config in TABLES_CONFIGS:
             tmp_table_name = table_config["bigquery_table_name"]
+            partition_key = table_config.get("partition_key", "partition_date")
             clickhouse_table_name = table_config["clickhouse_table_name"]
             clickhouse_dataset_name = table_config["clickhouse_dataset_name"]
+
             mode = table_config["mode"]
             _ts = "{{ ts_nodash }}"
             _ds = "{{ ds }}"
@@ -168,8 +178,11 @@ for dag_name, dag_params in dags.items():
             if mode == "overwrite":
                 sql_query = f"""SELECT * FROM {DATASET_ID}.{tmp_table_name} """
             elif mode == "incremental":
-                sql_query = f"""SELECT * FROM {DATASET_ID}.{tmp_table_name} """
-                """WHERE event_date = DATE("{{ add_days(ds, params.days) }}")"""
+                sql_query = (
+                    f"""SELECT * FROM {DATASET_ID}.{tmp_table_name}  WHERE {partition_key} """
+                    + ' BETWEEN DATE("{{ add_days(ds, params.from_days)}}") AND DATE("{{ add_days(ds, params.to_days) }}")'
+                )
+
             export_task = BigQueryExecuteQueryOperator(
                 task_id=f"bigquery_export_{clickhouse_table_name}",
                 sql=sql_query,
@@ -178,6 +191,7 @@ for dag_name, dag_params in dags.items():
                 destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{table_id}",
                 dag=dag,
             )
+            in_tables_tasks.append(export_task)
 
             export_bq = BigQueryInsertJobOperator(
                 task_id=f"{clickhouse_table_name}_to_bucket",
@@ -205,7 +219,6 @@ for dag_name, dag_params in dags.items():
                 dag=dag,
             )
             export_task >> export_bq >> clickhouse_export
-            in_tables_tasks.append(export_task)
             out_tables_tasks.append(clickhouse_export)
 
         end_tables = DummyOperator(task_id="end_tables_export")
@@ -226,12 +239,12 @@ for dag_name, dag_params in dags.items():
         )
 
         (
-            gce_instance_start
-            >> fetch_code
-            >> install_dependencies
-            >> branching
+            branching
             >> [shunt, wait_for_dbt_daily_tasks]
             >> join
+            >> gce_instance_start
+            >> fetch_code
+            >> install_dependencies
             >> in_tables_tasks
         )
         (out_tables_tasks >> end_tables >> views_refresh >> gce_instance_stop)

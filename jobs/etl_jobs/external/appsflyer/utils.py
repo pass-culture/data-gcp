@@ -32,9 +32,10 @@ def access_secret_data(project_id, secret_id, version_id="latest", default=None)
 def save_to_bq(df, table_name, start_date, end_date, schema_field, date_column):
     df[date_column] = pd.to_datetime(df[date_column])
     _dates = pd.date_range(start_date, end_date)
+    print(f"Will Save.. {table_name} -> {df.shape[0]}")
     for event_date in _dates:
         date_str = event_date.strftime("%Y-%m-%d")
-        tmp_df = df[df[date_column].dt.date == pd.to_datetime(date_str)]
+        tmp_df = df[df[date_column].dt.date == pd.to_datetime(date_str).date()]
         tmp_df[date_column] = tmp_df[date_column].astype(str)
         if tmp_df.shape[0] > 0:
             print(f"Saving.. {table_name} -> {date_str}")

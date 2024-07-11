@@ -1,4 +1,6 @@
 
+{% set diversification_features = [ "category", "sub_category", "format", "venue_id", "extra_category"] %}
+
 WITH users AS (
   SELECT DISTINCT 
     user_id
@@ -21,15 +23,8 @@ bookings AS (
     , bookings.digital_goods
     , bookings.event
     , bookings.venue_id
-    , ictl.category as clustering_category
-    , ictl.semantic_category as clustering_semmantic_category
-    , ictl.semantic_cluster_id
-    , ictl.topic_id
-    , ictl.x_cluster
-    , ictl.y_cluster
 
 FROM {{ ref('mrt_global__booking') }} as bookings
-LEFT JOIN {{ ref('item_clusters_topics_labels') }} as ictl on ictl.item_id = bookings.item_id
 WHERE booking_status != 'CANCELLED'
 ),
 offer_metadata as (
@@ -83,18 +78,6 @@ SELECT
       END as extra_category
   -- attribuer un numéro de réservation
     , row_number() over(partition by users.user_id order by booking_creation_date) as booking_rank
-  -- features de clustering
-    , ictl.micro_category_details
-    , ictl.macro_category_details
-    , ictl.semantic_category
-    , ictl.category_lvl0
-    , ictl.category_lvl1
-    , ictl.category_lvl2
-    , ictl.category_genre_lvl1
-    , ictl.category_genre_lvl2
-    , ictl.category_medium_lvl1
-    , ictl.category_medium_lvl2
-    , ictl.semantic_cluster_id
 FROM users
 INNER JOIN bookings
   ON users.user_id = bookings.user_id
@@ -102,8 +85,6 @@ LEFT JOIN offer_metadata
   ON bookings.offer_id = offer_metadata.offer_id
 LEFT JOIN {{ source('clean','subcategories') }} subcategories
   ON offer_metadata.subcategory_id = subcategories.id
-LEFT JOIN {{ref('item_clusters_topics_labels') }} as ictl
-  ON bookings.item_id = ictl.item_id
 
 
 ),
@@ -123,7 +104,7 @@ diversification_scores as (
   -- Pour attribuer les scores de diversification : 
   -- Comparer la date de booking avec la première date de booking sur chaque feature.
   -- Lorsque ces 2 dates sont les mêmes, attribuer 1 point.
-  , {% for feature in ml_vars("diversification_features") %} 
+  , {% for feature in diversification_features %} 
   CASE
         WHEN booking_creation_date = min(booking_creation_date) over(partition by user_id, {{feature}}) AND booking_rank != 1
         THEN 1
@@ -139,14 +120,14 @@ SELECT
   , item_id
   , booking_id
   , booking_creation_date
-  , {% for feature in ml_vars("diversification_features") %}
+  , {% for feature in diversification_features %}
     {{feature}}_diversification
     {% if not loop.last -%} , {%- endif %}
     {% endfor %}
   , case
       when booking_rank = 1 then 1 -- 1 point d'office pour le premier booking
       else -- somme des points de diversification pr les suivants
-          {% for feature in ml_vars("diversification_features") %} 
+          {% for feature in diversification_features %} 
           {{feature}}_diversification 
           {% if not loop.last -%} + {%- endif %}
           {% endfor %}

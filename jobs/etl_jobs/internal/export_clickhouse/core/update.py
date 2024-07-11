@@ -1,5 +1,5 @@
-from datetime import datetime
-from utils import clickhouse_client, load_sql, load_sql_view
+from core.utils import clickhouse_client
+from core.fs import load_sql
 
 
 def update_incremental(
@@ -80,7 +80,6 @@ def update_overwrite(
 def create_intermediate_schema(table_name: str, dataset_name: str) -> None:
     print(f"Will create intermediate.{table_name} schema on clickhouse cluster if new.")
     clickhouse_query = load_sql(
-        dataset_name=dataset_name,
         table_name=table_name,
         extra_data={
             "dataset": "intermediate",
@@ -91,58 +90,23 @@ def create_intermediate_schema(table_name: str, dataset_name: str) -> None:
     print(f"Done creating table schema.")
 
 
-def main_update(mode, source_gs_path, table_name, dataset_name, update_date):
-    _id = datetime.now().strftime("%Y%m%d%H%M%S")
-    tmp_table_name = f"{table_name}_{_id}"
-
-    # import table in a tmp
+def create_tmp_schema(
+    sql_file_name: str, table_name: str, update_date: str, source_gs_path: str
+) -> None:
     clickhouse_client.command(
-        f"DROP TABLE IF EXISTS tmp.{tmp_table_name} ON cluster default"
+        f"DROP TABLE IF EXISTS tmp.{table_name} ON cluster default"
     )
 
     sql_query = load_sql(
-        dataset_name=dataset_name,
-        table_name=table_name,
+        table_name=sql_file_name,
         extra_data={
             "dataset": "tmp",
             "date": update_date,
-            "tmp_table_name": tmp_table_name,
+            "tmp_table_name": table_name,
             "bucket_path": source_gs_path,
         },
+        folder="tmp",
     )
     print(sql_query)
-    print(f"Creating tmp.{tmp_table_name} table...")
-    clickhouse_client.command(sql_query)
-
-    # create table schema
-    create_intermediate_schema(table_name, dataset_name)
-
-    # update tables
-    if mode == "incremental":
-        update_incremental(
-            dataset_name=dataset_name,
-            table_name=table_name,
-            tmp_table_name=tmp_table_name,
-            update_date=update_date,
-        )
-    elif mode == "overwrite":
-        update_overwrite(
-            dataset_name=dataset_name,
-            table_name=table_name,
-            tmp_table_name=tmp_table_name,
-            update_date=update_date,
-        )
-    else:
-        raise Exception(f"Mode unknown, got {mode}")
-
-
-def refresh_views(view_name):
-    mv_view_name = f"{view_name}"
-    clickhouse_client.command(
-        f"DROP VIEW IF EXISTS analytics.{view_name} ON cluster default"
-    )
-
-    sql_query = load_sql_view(view_name=view_name, folder="analytics")
-    print(sql_query)
-    print(f"Refresh View {mv_view_name}...")
+    print(f"Creating tmp.{table_name} table...")
     clickhouse_client.command(sql_query)

@@ -30,8 +30,6 @@ from dependencies.export_clickhouse.export_clickhouse import (
 )
 from common import macros
 
-
-DATASET_ID = f"export_{ENV_SHORT_NAME}"
 GCE_INSTANCE = f"export-clickhouse-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/clickhouse"
 dag_config = {
@@ -131,7 +129,9 @@ for dag_name, dag_params in dags.items():
 
             for table_config in TABLES_CONFIGS:
                 waiting_task = waiting_operator(
-                    dag, "dbt_run_dag", f"data_transformation.{table_config['sql']}"
+                    dag,
+                    "dbt_run_dag",
+                    f"data_transformation.{table_config['dbt_model']}",
                 )
                 wait.set_downstream(waiting_task)
 
@@ -165,6 +165,7 @@ for dag_name, dag_params in dags.items():
         in_tables_tasks, out_tables_tasks = [], []
         for table_config in TABLES_CONFIGS:
             tmp_table_name = table_config["bigquery_table_name"]
+            tmp_dataset_name = table_config["bigquery_dataset_name"]
             partition_key = table_config.get("partition_key", "partition_date")
             clickhouse_table_name = table_config["clickhouse_table_name"]
             clickhouse_dataset_name = table_config["clickhouse_dataset_name"]

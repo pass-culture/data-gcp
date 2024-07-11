@@ -124,7 +124,7 @@ with DAG(
             command="PYTHONPATH=. python cluster/generate.py "
             f"--input-table {DATE}_{cluster_prefix}_import_item_clusters_preprocess "
             f"--output-table {cluster_prefix}_item_clusters "
-            f"--config-file-name {cluster_config_file_name} "
+            f"--config-file-name {cluster_config_file_name} ",
         )
 
         gce_instance_stop = StopGCEOperator(

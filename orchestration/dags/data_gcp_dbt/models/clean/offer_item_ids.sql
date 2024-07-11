@@ -6,9 +6,8 @@ with items_grouping AS (
             WHEN (offer.offer_product_id is not null) THEN CONCAT('product-',offer.offer_product_id)
             ELSE CONCAT('offer-',offer.offer_id)
         END as item_id
-    FROM
-        `clean_stg.applicative_database_offer` AS offer
-        LEFT JOIN `analytics_stg.linked_offers` linked_offers ON linked_offers.offer_id = offer.offer_id
+    FROM {{ ref('offer') }} AS offer
+    LEFT JOIN {{ source('analytics','linked_offers') }} linked_offers ON linked_offers.offer_id = offer.offer_id
 )
 SELECT
     offer_id,

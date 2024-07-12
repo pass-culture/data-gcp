@@ -49,7 +49,8 @@ SELECT
         CAST(bgd.user_creation_date AS DATE),
         DAY
     ) AS days_between_user_creation_and_deposit_creation,
-    bgd.user_birth_date
+    bgd.user_birth_date,
+    DATE_DIFF(d.deposit_creation_date,u.user_birth_date, YEAR) - IF(EXTRACT(MONTH FROM bgd.user_birth_date)*100 + EXTRACT(DAY FROM bgd.user_birth_date) > EXTRACT(MONTH FROM d.deposit_creation_date)*100 + EXTRACT(DAY FROM d.deposit_creation_date),1,0) AS user_age_at_deposit_creation
 FROM {{ ref('int_applicative__deposit') }} AS d
 LEFT JOIN bookings_grouped_by_deposit AS bgd ON bgd.deposit_id = d.deposit_id
 LEFT JOIN {{ source('analytics','region_department') }} AS region_department ON bgd.user_department_code = region_department.num_dep

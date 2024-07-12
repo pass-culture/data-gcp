@@ -38,6 +38,7 @@ SELECT
     u.user_activity,
     u.user_civility,
     u.user_age,
+    DATE_DIFF(b.booking_creation_date,u.user_birth_date, YEAR) - IF(EXTRACT(MONTH FROM u.user_birth_date)*100 + EXTRACT(DAY FROM u.user_birth_date) > EXTRACT(MONTH FROM b.booking_creation_date)*100 + EXTRACT(DAY FROM b.booking_creation_date),1,0) AS user_age_at_booking,
     u.user_birth_date,
     u.user_is_active,
     s.item_id,

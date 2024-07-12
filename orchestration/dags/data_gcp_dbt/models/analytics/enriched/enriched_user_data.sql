@@ -451,6 +451,7 @@ SELECT
         ELSE FALSE
     END AS user_is_current_beneficiary,
     user.user_age,
+    DATE_DIFF(user_agg_deposit_data.user_first_deposit_creation_date,user.user_birth_date, YEAR) - IF(EXTRACT(MONTH FROM user.user_birth_date)*100 + EXTRACT(DAY FROM user.user_birth_date) > EXTRACT(MONTH FROM user_agg_deposit_data.user_first_deposit_creation_date)*100 + EXTRACT(DAY FROM user_agg_deposit_data.user_first_deposit_creation_date),1,0) AS user_age_at_first_deposit,
     user.user_birth_date,
     user.user_has_enabled_marketing_email,
     user.user_iris_internal_id,

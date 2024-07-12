@@ -75,6 +75,17 @@ venues_with_geo_candidates as (
         left join {{ source('clean', 'geo_iris') }} as gi
             on v.venue_longitude between gi.min_longitude and gi.max_longitude
                 and v.venue_latitude between gi.min_latitude and gi.max_latitude
+),
+
+venue_images AS (
+    SELECT 
+        v.venue_id,
+        CASE 
+            WHEN gp.banner_url IS NOT NULL THEN "offerer"
+            WHEN gp.venue_id IS NOT NULL THEN "google"
+            ELSE "default_category" END AS venue_image_source
+    FROM {{ source("raw", "applicative_database_venue") }} AS v
+    LEFT JOIN {{ source('raw', 'google_places_info') }} AS gp ON v.venue_id = gp.venue_id 
 )
 
 select
@@ -137,7 +148,8 @@ select
     v.venue_macro_density_label,
     v.venue_academy_name,
     v.offerer_address_id,
-    vr.venue_target as venue_targeted_audience,
+    v.venue_image_source,
+    vr.venue_target AS venue_targeted_audience,
     vc.venue_contact_phone_number,
     vc.venue_contact_email,
     vc.venue_contact_website,

@@ -17,9 +17,8 @@ SELECT
   mc.card_id_last_editor_email,
   mc.card_id_last_edition_date,
   mc.dashboard_id,
-  sum(gbc.cost_usd) as cost_usd,
   sum(gbc.cost_euro) as cost_euro, 
-  sum(gbc.total_bytes_billed) / POW(10, 9) as total_gigabytes,
+  sum(gbc.total_gigabytes_billed) as total_gigabytes,
   sum(gbc.total_bytes_billed)  as total_bytes,
   sum(gbc.total_queries) as total_queries
 FROM {{ ref("int_gcp__bigquery_cost") }} gbc 

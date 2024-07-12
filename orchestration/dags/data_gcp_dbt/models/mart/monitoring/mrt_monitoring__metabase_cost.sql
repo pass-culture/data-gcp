@@ -6,7 +6,6 @@ WITH metabase_cost AS (
         metabase_user_id,
         SUM(total_bytes_billed) as total_bytes_billed,
         SUM(total_queries) as total_queries,
-        SUM(cost_usd) as cost_usd,
         SUM(cost_euro) as cost_euro
     FROM {{ ref('int_gcp__bigquery_cost') }}
     GROUP BY creation_date, metabase_hash, metabase_user_id
@@ -26,7 +25,6 @@ SELECT
     avg(result_rows) as mean_result_rows,
     sum(total_bytes_billed) as total_bytes,
     sum(total_queries) as total_queries, 
-    sum(cost_usd) as cost_usd,
     sum(cost_euro) as cost_euro
 FROM {{ ref("int_metabase__daily_query") }} mq 
 LEFT JOIN metabase_cost mc 

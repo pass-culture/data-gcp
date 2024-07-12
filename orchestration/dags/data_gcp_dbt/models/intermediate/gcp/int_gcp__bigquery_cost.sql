@@ -50,6 +50,6 @@ bq_costs AS (
 
 SELECT
     *,
-    ROUND(total_bytes_billed / POWER(2, 40) * 5, 2)  as cost_usd,
-    ROUND(total_bytes_billed / POWER(2, 40) * 5, 2) / 1.08  as cost_euro,
+    6.8 * total_bytes_billed / POWER(2, 40) as cost_euro, -- price estimation for 1TB
+    total_bytes_billed / POWER(10, 9) as total_gigabytes_billed
 FROM bq_costs

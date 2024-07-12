@@ -1,11 +1,5 @@
 from datetime import datetime
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.python import PythonOperator
-from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
-    GCSToBigQueryOperator,
-)
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -24,6 +18,13 @@ from common.operators.gce import (
 )
 from dependencies.ml.linkage.import_artists import PARAMS
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.python import PythonOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
+
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-artists-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
@@ -32,12 +33,16 @@ INPUT_GCS_PATH = f"gs://{STORAGE_PATH}/artists_to_match.parquet"
 PREPROCESSED_GCS_PATH = f"gs://{STORAGE_PATH}/preprocessed_artists_to_match.parquet"
 OUTPUT_GCS_PATH = f"gs://{STORAGE_PATH}/matched_artists.parquet"
 
+# Test set paths
+IMPORT_TEST_SET_GCS_BASE_PATH = f"gs://{STORAGE_PATH}/labelled_test_sets"
+TEST_SET_BQ_TABLE = "test_set"
 
 default_args = {
     "start_date": datetime(2024, 5, 1),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
 }
+
 
 with DAG(
     "link_artists",
@@ -84,6 +89,18 @@ with DAG(
             }
         },
         dag=dag,
+    )
+
+    collect_test_sets_into_bq = GCSToBigQueryOperator(
+        task_id="import_test_sets_in_bq",
+        bucket=DATA_GCS_BUCKET_NAME,
+        source_objects=[
+            f"{IMPORT_TEST_SET_GCS_BASE_PATH.split(f'{DATA_GCS_BUCKET_NAME}/')[-1]}/*.parquet"
+        ],
+        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{TEST_SET_BQ_TABLE}",
+        source_format="PARQUET",
+        write_disposition="WRITE_TRUNCATE",
+        autodetect=True,
     )
 
     gce_instance_start = StartGCEOperator(
@@ -155,3 +172,4 @@ with DAG(
         >> artist_linkage
         >> [gce_instance_stop, load_parquet_to_bigquery]
     )
+    (logging_task >> collect_test_sets_into_bq)

@@ -12,7 +12,6 @@ SELECT
     user_age,
     user_role,
     user_birth_date,
-    user_cultural_survey_filled_date,
     is_beneficiary,
     user_iris_internal_id
 FROM {{ ref('int_applicative__user') }}

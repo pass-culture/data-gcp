@@ -26,7 +26,7 @@ SELECT
         WHEN u.user_activity in ("Alternant", "Apprenti", "Volontaire") THEN "Apprenti, Alternant, Volontaire en service civique rémunéré"
         WHEN u.user_activity in ("Inactif") THEN "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
         WHEN u.user_activity in ("Étudiant") THEN "Etudiant"
-        WHEN u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur") THEN "Chômeur, En recherche d'emploi"
+        WHEN u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") THEN "Chômeur, En recherche d'emploi"
         ELSE u.user_activity
     END AS user_activity,
     CASE
@@ -39,7 +39,6 @@ SELECT
     u.user_age,
     u.user_role,
     u.user_birth_date,
-    u.user_cultural_survey_filled_date,
     CASE WHEN u.user_role IN ("UNDERAGE_BENEFICIARY", "BENEFICIARY") THEN 1 ELSE 0 END AS is_beneficiary,
     ui.user_iris_internal_id,
     ui.user_region_name

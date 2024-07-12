@@ -29,7 +29,7 @@ WITH user_beneficiary as (
             WHEN user_activity in ("Alternant", "Apprenti", "Volontaire") THEN "Apprenti, Alternant, Volontaire en service civique rémunéré"
             WHEN user_activity in ("Inactif") THEN "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
             WHEN user_activity in ("Étudiant") THEN "Etudiant"
-            WHEN user_activity in ("Chômeur", "En recherche d'emploi ou chômeur") THEN "Chômeur, En recherche d'emploi"
+            WHEN user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") THEN "Chômeur, En recherche d'emploi"
             ELSE user_activity
         END AS user_activity,
         CASE
@@ -42,7 +42,6 @@ WITH user_beneficiary as (
         user_age,
         user_role,
         user_birth_date,
-        user_cultural_survey_filled_date,
     FROM {{ source("raw", "applicative_database_user") }} AS u
     -- only BENEFICIARY
     WHERE  user_role IN ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')
@@ -93,7 +92,6 @@ SELECT
     user_age,
     user_role,
     user_birth_date,
-    user_cultural_survey_filled_date,
     CASE
         -- get user activation date with fictional offers (early 2019)
         WHEN offer_subcategoryId = 'ACTIVATION_THING'

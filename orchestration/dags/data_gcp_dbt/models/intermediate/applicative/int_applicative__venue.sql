@@ -148,7 +148,7 @@ select
     v.venue_macro_density_label,
     v.venue_academy_name,
     v.offerer_address_id,
-    v.venue_image_source,
+    venue_images.venue_image_source,
     vr.venue_target AS venue_targeted_audience,
     vc.venue_contact_phone_number,
     vc.venue_contact_email,

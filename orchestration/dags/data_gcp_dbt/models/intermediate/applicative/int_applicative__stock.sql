@@ -10,8 +10,8 @@ WITH bookings_grouped_by_stock AS (
     SELECT
         stock_id,
         SUM(booking_quantity) AS total_bookings,
-        SUM(CASE WHEN booking_is_cancelled = False THEN booking_quantity END) AS total_non_cancelled_bookings,
-        SUM(CASE WHEN booking_is_cancelled = True THEN booking_quantity END) AS total_cancelled_bookings,
+        SUM(CASE WHEN NOT booking_is_cancelled THEN booking_quantity ELSE NULL END) AS total_non_cancelled_bookings,
+        SUM(CASE WHEN booking_is_cancelled THEN booking_quantity END) AS total_cancelled_bookings,
         SUM(CASE WHEN booking_status = 'REIMBURSED' THEN booking_quantity END) AS total_paid_bookings,
         COUNT(booking_id) AS total_individual_bookings,
         COUNT(CASE WHEN booking_is_cancelled THEN booking_id END) AS total_cancelled_individual_bookings,
@@ -46,8 +46,9 @@ SELECT
     s.price_category_id,
     s.stock_features,
     s.offerer_address_id,
+
     CASE WHEN s.stock_quantity IS NULL THEN NULL
-        ELSE GREATEST( s.stock_quantity - COALESCE(bs.total_bookings, 0),0)
+        ELSE GREATEST( s.stock_quantity - COALESCE(bs.total_non_cancelled_bookings, 0),0)
     END AS total_available_stock,
     bs.total_bookings,
     bs.total_non_cancelled_bookings,

@@ -129,6 +129,7 @@ sources:
       - name: sensitive_item_recommendation
       - name: stdout
       - name: user_locations
+      - name: google_places_info
 
   - name: clean # this is the source_name
     schema: clean_{{ var('ENV_SHORT_NAME') }}

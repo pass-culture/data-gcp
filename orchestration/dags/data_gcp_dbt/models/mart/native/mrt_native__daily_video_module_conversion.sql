@@ -3,7 +3,7 @@
         **custom_incremental_config(
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "event_date", "data_type": "date", "granularity" : "day"},
-        on_schema_change = "sync_all_columns",
+        on_schema_change = "sync_all_columns"
     )
 ) }}
 
@@ -23,9 +23,10 @@ SELECT
     , COUNT(DISTINCT CASE WHEN pct_video_seen >= 0.5 THEN unique_session_id ELSE NULL END) AS total_seen_50_pct_video
     , COUNT(DISTINCT CASE WHEN pct_video_seen >= 0.75 THEN unique_session_id ELSE NULL END) AS total_seen_75_pct_video
 FROM {{ref('int_firebase__native_daily_user_video_module')}}
-    {% if is_incremental() %}
+WHERE TRUE
+{% if is_incremental() %}
     AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
-    {% endif %}
+{% endif %}
 GROUP BY
     event_date
     , module_id

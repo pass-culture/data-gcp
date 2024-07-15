@@ -60,6 +60,8 @@ end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
 
 wait_for_raw = waiting_operator(dag=dag, dag_id="import_applicative_database")
 
+snapshots_checkpoint = DummyOperator(task_id="snapshots_checkpoint", dag=dag)
+
 compile = BashOperator(
     task_id="compilation",
     bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_compile.sh ",
@@ -246,4 +248,5 @@ with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
         )
 
 start >> wait_for_raw >> data_transfo
+wait_for_raw >> snapshots_checkpoint >> snapshot_group >> compile
 compile >> end

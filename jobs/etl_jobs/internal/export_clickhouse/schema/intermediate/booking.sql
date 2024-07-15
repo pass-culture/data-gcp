@@ -14,4 +14,4 @@ ENGINE = MergeTree
 PARTITION BY update_date
 ORDER BY (offerer_id, booking_status, offer_id)
 SETTINGS storage_policy='gcs_main'
-COMMENT 'Offer bookings on native app, partitioned  by update date ordered by offerer, booking status and offer'
+COMMENT 'Offer bookings on native app, partitioned by update date ordered by offerer, booking status and offer'

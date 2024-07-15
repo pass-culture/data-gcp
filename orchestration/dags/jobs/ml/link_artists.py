@@ -42,6 +42,7 @@ TEST_SET_BQ_TABLE = "test_set"
 LINKED_ARTISTS_IN_TEST_SET_PATH = (
     f"gs://{STORAGE_PATH}/linked_artists_in_test_set.parquet"
 )
+ARTIST_METRICS_PATH = f"gs://{STORAGE_PATH}/artist_metrics.parquet"
 
 default_args = {
     "start_date": datetime(2024, 5, 1),
@@ -193,6 +194,17 @@ with DAG(
         dag=dag,
     )
 
+    compute_metrics = artist_linkage = SSHGCEOperator(
+        task_id="compute_metrics",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+         python evaluate.py \
+        --source-file-path {LINKED_ARTISTS_IN_TEST_SET_PATH} \
+        --output-file-path {ARTIST_METRICS_PATH}
+        """,
+    )
+
     (
         logging_task
         >> data_collect
@@ -209,5 +221,6 @@ with DAG(
         [load_parquet_to_bigquery, collect_test_sets_into_bq]
         >> artist_linkage_on_test_set
         >> artist_linkage_on_test_set_to_gcs
+        >> compute_metrics
         >> gce_instance_stop
     )

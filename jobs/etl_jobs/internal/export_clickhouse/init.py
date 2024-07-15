@@ -1,6 +1,6 @@
 import typer
 from core.utils import (
-    clickhouse_client,
+    CLICKHOUSE_CLIENT,
     access_secret_data,
     PROJECT_NAME,
     ENV_SHORT_NAME,
@@ -20,9 +20,9 @@ def init() -> None:
     """Create default configuration for Clickhouse."""
     for db in DATABASE:
         try:
-            sql_query = f""" CREATE IF NOT EXISTS DATABASE {db}  ON cluster default """
+            sql_query = f""" CREATE DATABASE IF NOT EXISTS {db} ON cluster default """
             print(f"Will Execute: {sql_query}")
-            clickhouse_client.command(sql_query)
+            CLICKHOUSE_CLIENT.command(sql_query)
         except Exception as e:
             print(f"Something went wrong: {e}")
     try:
@@ -31,7 +31,7 @@ def init() -> None:
                 access_key_id = '{access_key_id}',
                 secret_access_key = '{secret_access_key}'
         """
-        clickhouse_client.command(named_collection)
+        CLICKHOUSE_CLIENT.command(named_collection)
     except Exception as e:
         print(f"Something went wrong: {e}")
 

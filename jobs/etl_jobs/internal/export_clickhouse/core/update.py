@@ -1,11 +1,11 @@
-from core.utils import clickhouse_client
+from core.utils import CLICKHOUSE_CLIENT
 from core.fs import load_sql
 
 
 def update_incremental(
     dataset_name: str, table_name: str, tmp_table_name: str, update_date: str
 ) -> None:
-    partitions_to_update = clickhouse_client.query_df(
+    partitions_to_update = CLICKHOUSE_CLIENT.query_df(
         f"SELECT distinct partition_date FROM tmp.{tmp_table_name}"
     )
     if len(partitions_to_update) > 0:
@@ -17,13 +17,13 @@ def update_incremental(
         )
         for date in partitions_to_update:
             total_rows = (
-                clickhouse_client.command(
+                CLICKHOUSE_CLIENT.command(
                     f"SELECT count(*) FROM tmp.{tmp_table_name} WHERE partition_date = '{date}'"
                 )
                 | 0
             )
             previous_rows = (
-                clickhouse_client.command(
+                CLICKHOUSE_CLIENT.command(
                     f"SELECT count(*) FROM {dataset_name}.{table_name} WHERE partition_date = '{date}'"
                 )
                 | 0
@@ -34,15 +34,15 @@ def update_incremental(
                 )
                 update_sql = f""" ALTER TABLE {dataset_name}.{table_name} ON cluster default REPLACE PARTITION '{date}' FROM tmp.{tmp_table_name}"""
                 print(update_sql)
-                clickhouse_client.command(update_sql)
+                CLICKHOUSE_CLIENT.command(update_sql)
     print(f"Done updating. Removing temporary table.")
-    clickhouse_client.command(
+    CLICKHOUSE_CLIENT.command(
         f" DROP TABLE IF EXISTS tmp.{tmp_table_name} ON cluster default"
     )
 
 
 def remove_stale_partitions(dataset_name, table_name, update_date) -> None:
-    previous_partitions = clickhouse_client.query_df(
+    previous_partitions = CLICKHOUSE_CLIENT.query_df(
         f"SELECT distinct update_date FROM {dataset_name}.{table_name}"
     )
     if len(previous_partitions) > 0:
@@ -54,7 +54,7 @@ def remove_stale_partitions(dataset_name, table_name, update_date) -> None:
 
     for date in previous_partitions:
         print(f"Removing partiton_date={date} for table {table_name}")
-        clickhouse_client.command(
+        CLICKHOUSE_CLIENT.command(
             f" ALTER TABLE {dataset_name}.{table_name} ON cluster default DROP PARTITION '{date}'"
         )
 
@@ -63,18 +63,18 @@ def update_overwrite(
     dataset_name: str, table_name: str, tmp_table_name: str, update_date: str
 ) -> None:
     print(f"Will overwrite {dataset_name}.{table_name}. New update : {update_date}")
-    clickhouse_client.command(
+    CLICKHOUSE_CLIENT.command(
         f" ALTER TABLE {dataset_name}.{table_name} ON cluster default REPLACE PARTITION '{update_date}' FROM tmp.{tmp_table_name}"
     )
 
     remove_stale_partitions(dataset_name, table_name, update_date)
     total_rows = (
-        clickhouse_client.command(f"SELECT count(*) FROM {dataset_name}.{table_name}")
+        CLICKHOUSE_CLIENT.command(f"SELECT count(*) FROM {dataset_name}.{table_name}")
         | 0
     )
 
     print(f"Done updating. Table contains {total_rows}. Removing temporary table.")
-    clickhouse_client.command(f" DROP TABLE tmp.{tmp_table_name} ON cluster default")
+    CLICKHOUSE_CLIENT.command(f" DROP TABLE tmp.{tmp_table_name} ON cluster default")
 
 
 def create_intermediate_schema(table_name: str, dataset_name: str) -> None:
@@ -86,14 +86,14 @@ def create_intermediate_schema(table_name: str, dataset_name: str) -> None:
         },
         folder="intermediate",
     )
-    clickhouse_client.command(clickhouse_query)
+    CLICKHOUSE_CLIENT.command(clickhouse_query)
     print(f"Done creating table schema.")
 
 
 def create_tmp_schema(
     sql_file_name: str, table_name: str, update_date: str, source_gs_path: str
 ) -> None:
-    clickhouse_client.command(
+    CLICKHOUSE_CLIENT.command(
         f"DROP TABLE IF EXISTS tmp.{table_name} ON cluster default"
     )
 
@@ -109,4 +109,4 @@ def create_tmp_schema(
     )
     print(sql_query)
     print(f"Creating tmp.{table_name} table...")
-    clickhouse_client.command(sql_query)
+    CLICKHOUSE_CLIENT.command(sql_query)

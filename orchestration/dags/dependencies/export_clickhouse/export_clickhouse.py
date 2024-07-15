@@ -23,7 +23,7 @@ def generate_table_configs(models: list[tuple]):
     ]
 
 
-def generate_views_configs(view_names):
+def generate_views_configs(table_names):
     """
     Generates configuration for views in ClickHouse.
 
@@ -33,9 +33,9 @@ def generate_views_configs(view_names):
     return [
         {
             "clickhouse_dataset_name": dataset_name,
-            "clickhouse_view_name": view_name,
+            "clickhouse_table_name": table_name,
         }
-        for dataset_name, view_name in view_names
+        for dataset_name, table_name in table_names
     ]
 
 
@@ -45,9 +45,9 @@ DBT_MODELS = [
     ("collective_booking", "overwrite"),
     ("native_event", "incremental"),
 ]
-# List of view names to be refreshed
-CLICKHOUSE_VIEWS = [
-    ("analytics", "daily_aggregated_event"),
+# List of aggreated tables names to be refreshed
+CLICKHOUSE_TABLES = [
+    ("analytics", "daily_aggregated_offer_event"),
     ("analytics", "monthly_aggregated_offerer_collective_revenue"),
     ("analytics", "monthly_aggregated_offerer_revenue"),
     ("analytics", "yearly_aggregated_offerer_collective_revenue"),
@@ -55,4 +55,4 @@ CLICKHOUSE_VIEWS = [
 ]
 
 TABLES_CONFIGS = generate_table_configs(models=DBT_MODELS)
-VIEWS_CONFIGS = generate_views_configs(view_names=CLICKHOUSE_VIEWS)
+VIEWS_CONFIGS = generate_views_configs(table_names=CLICKHOUSE_TABLES)

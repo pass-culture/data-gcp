@@ -7,7 +7,7 @@ app = typer.Typer()
 ### Params
 def compute_metrics_per_slice(
     artists_per_slice: pd.api.typing.DataFrameGroupBy,
-) -> pd.DataFrame:
+) -> pd.Series:
     tp = artists_per_slice.loc[artists_per_slice.tp].offer_number.sum()
     fp = artists_per_slice.loc[artists_per_slice.fp].offer_number.sum()
     fn = artists_per_slice.loc[artists_per_slice.fn].offer_number.sum()
@@ -19,15 +19,15 @@ def compute_metrics_per_slice(
         2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
     )
 
-    return pd.DataFrame(
+    return pd.Series(
         {
-            "tp": [tp],
-            "fp": [fp],
-            "fn": [fn],
-            "tn": [tn],
-            "precision": [precision],
-            "recall": [recall],
-            "f1": [f1],
+            "tp": tp,
+            "fp": fp,
+            "fn": fn,
+            "tn": tn,
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
         }
     )
 
@@ -59,7 +59,7 @@ def main(
     input_file_path: str = typer.Option(),
     output_file_path: str = typer.Option(),
 ) -> None:
-    matched_artists_in_test_set_df = pd.read_csv(input_file_path)
+    matched_artists_in_test_set_df = pd.read_parquet(input_file_path)
 
     main_cluster_per_dataset = get_main_matched_cluster_per_dataset(
         matched_artists_in_test_set_df

@@ -69,6 +69,33 @@ with DAG(
         ),
     },
 ) as dag:
+    # GCE
+    gce_instance_start = StartGCEOperator(
+        task_id="gce_start_task",
+        instance_name=GCE_INSTANCE,
+        instance_type="{{ params.instance_type }}",
+        labels={"job_type": "ml"},
+        preemptible=False,
+    )
+
+    gce_instance_stop = StopGCEOperator(
+        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+    )
+
+    fetch_code = CloneRepositoryGCEOperator(
+        task_id="fetch_code",
+        instance_name=GCE_INSTANCE,
+        python_version="3.10",
+        command="{{ params.branch }}",
+    )
+
+    install_dependencies = SSHGCEOperator(
+        task_id="install_dependencies",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command="""pip install -r requirements.txt --user""",
+    )
+
     logging_task = PythonOperator(
         task_id="logging_task",
         python_callable=lambda: print(
@@ -77,6 +104,7 @@ with DAG(
         dag=dag,
     )
 
+    # Artist Linkage
     data_collect = bigquery_job_task(
         dag,
         f"create_bq_table_{IMPORT_ARTISTS_PARAMS['destination_table']}",
@@ -112,28 +140,6 @@ with DAG(
         autodetect=True,
     )
 
-    gce_instance_start = StartGCEOperator(
-        task_id="gce_start_task",
-        instance_name=GCE_INSTANCE,
-        instance_type="{{ params.instance_type }}",
-        labels={"job_type": "ml"},
-        preemptible=False,
-    )
-
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
-        instance_name=GCE_INSTANCE,
-        python_version="3.10",
-        command="{{ params.branch }}",
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command="""pip install -r requirements.txt --user""",
-    )
-
     preprocess_data = SSHGCEOperator(
         task_id="preprocess_data",
         instance_name=GCE_INSTANCE,
@@ -156,18 +162,14 @@ with DAG(
         """,
     )
 
-    load_parquet_to_bigquery = GCSToBigQueryOperator(
+    load_artist_linkage_to_bigquery = GCSToBigQueryOperator(
         bucket=DATA_GCS_BUCKET_NAME,
-        task_id="load_parquet_to_bigquery",
+        task_id="load_artist_linkage_to_bigquery",
         source_objects=OUTPUT_GCS_PATH.split(f"{DATA_GCS_BUCKET_NAME}/")[-1],
         destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.matched_artists",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,
-    )
-
-    gce_instance_stop = StopGCEOperator(
-        task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
     # Metrics
@@ -194,33 +196,43 @@ with DAG(
         dag=dag,
     )
 
-    compute_metrics = artist_linkage = SSHGCEOperator(
-        task_id="compute_metrics",
+    artist_metrics = SSHGCEOperator(
+        task_id="artist_metrics",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""
          python evaluate.py \
-        --source-file-path {LINKED_ARTISTS_IN_TEST_SET_PATH} \
+        --input-file-path {LINKED_ARTISTS_IN_TEST_SET_PATH} \
         --output-file-path {ARTIST_METRICS_PATH}
         """,
     )
 
+    artist_metrics_to_bigquery = GCSToBigQueryOperator(
+        bucket=DATA_GCS_BUCKET_NAME,
+        task_id="artist_metrics_to_bigquery",
+        source_objects=ARTIST_METRICS_PATH.split(f"{DATA_GCS_BUCKET_NAME}/")[-1],
+        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.artist_metrics",
+        source_format="PARQUET",
+        write_disposition="WRITE_TRUNCATE",
+        autodetect=True,
+    )
+
+    (logging_task >> gce_instance_start >> fetch_code >> install_dependencies)
+    (logging_task >> data_collect >> export_input_bq_to_gcs)
+    (logging_task >> collect_test_sets_into_bq)
+
     (
-        logging_task
-        >> data_collect
-        >> export_input_bq_to_gcs
-        >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
+        [export_input_bq_to_gcs, install_dependencies]
         >> preprocess_data
         >> artist_linkage
-        >> load_parquet_to_bigquery
+        >> load_artist_linkage_to_bigquery
     )
-    (logging_task >> collect_test_sets_into_bq)
+
     (
-        [load_parquet_to_bigquery, collect_test_sets_into_bq]
+        [load_artist_linkage_to_bigquery, collect_test_sets_into_bq]
         >> artist_linkage_on_test_set
         >> artist_linkage_on_test_set_to_gcs
-        >> compute_metrics
+        >> artist_metrics
+        >> artist_metrics_to_bigquery
         >> gce_instance_stop
     )

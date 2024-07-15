@@ -13,7 +13,7 @@ WITH metabase_query AS (
         sum(mqe.result_rows) as result_rows
     FROM {{ source("raw", "metabase_query_execution") }}  mqe
     GROUP BY execution_date,
-         metabase_hash,
+        metabase_hash,
         dashboard_id,
         card_id,
         execution_id,

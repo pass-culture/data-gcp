@@ -49,6 +49,11 @@ import_tables = {
         "destination_dataset": "{{ bigquery_raw_dataset }}",
         "destination_table": "metabase_view_log",
     },
+    "revision": {
+        "sql": f"{SQL_PATH}/raw/revision.sql",
+        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_table": "metabase_revision",
+    },
 }
 
 

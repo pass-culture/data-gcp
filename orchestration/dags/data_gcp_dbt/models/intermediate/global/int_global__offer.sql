@@ -78,4 +78,4 @@ SELECT
     o.offer_publication_date,
     o.is_future_scheduled
 FROM {{ ref('int_applicative__offer') }} AS o
-INNER JOIN {{ ref('mrt_global__venue_unverified')}} AS v ON v.venue_id = o.venue_id
+INNER JOIN {{ ref('int_global__venue')}} AS v ON v.venue_id = o.venue_id

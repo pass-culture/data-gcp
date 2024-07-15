@@ -1,7 +1,7 @@
 from common.config import ENV_SHORT_NAME
 
 
-def generate_table_configs(models: list[tuple]):
+def generate_table_configs(models):
     """
     Generates configuration for Clickhous export table from DBT models to GCS
     DBT models are prefixed with 'exp_clickhouse__{model_name}' but will be aliased in BigQuery 'exp_{env}.clickhouse_{model_name}'.

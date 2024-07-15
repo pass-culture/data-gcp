@@ -128,7 +128,8 @@ SELECT
         CAST(user.user_creation_date AS DATE),
         DAY
     ) AS days_between_user_creation_and_deposit_creation,
-    user.user_birth_date
+    user.user_birth_date,
+    DATE_DIFF(deposit.dateCreated,user.user_birth_date, YEAR) - IF(EXTRACT(MONTH FROM user.user_birth_date)*100 + EXTRACT(DAY FROM user.user_birth_date) > EXTRACT(MONTH FROM deposit.dateCreated)*100 + EXTRACT(DAY FROM deposit.dateCreated),1,0) AS user_age_at_deposit_creation
 FROM
     {{ source('raw', 'applicative_database_deposit') }} AS deposit
     JOIN {{ ref('user_beneficiary') }} AS user ON user.user_id = deposit.userId

@@ -14,8 +14,6 @@ aniso8601==9.0.1
     # via graphene
 annotated-types==0.7.0
     # via pydantic
-async-timeout==4.0.3
-    # via aiohttp
 attrs==23.2.0
     # via
     #   aiohttp
@@ -78,7 +76,6 @@ filelock==3.15.4
     #   jina-hubble-sdk
     #   torch
     #   transformers
-    #   triton
 flask==3.0.3
     # via mlflow
 fonttools==4.53.1
@@ -100,7 +97,7 @@ gitpython==3.1.43
     # via
     #   mlflow
     #   streamlit
-google-api-core==2.19.1
+google-api-core[grpc]==2.19.1
     # via
     #   google-cloud-bigquery
     #   google-cloud-core
@@ -123,7 +120,7 @@ google-auth-oauthlib==1.2.1
     #   gcsfs
     #   pandas-gbq
     #   pydata-google-auth
-google-cloud-bigquery==3.25.0
+google-cloud-bigquery[pandas]==3.25.0
     # via
     #   -r requirements.in
     #   pandas-gbq
@@ -143,7 +140,7 @@ google-resumable-media==2.7.1
     # via
     #   google-cloud-bigquery
     #   google-cloud-storage
-googleapis-common-protos==1.63.2
+googleapis-common-protos[grpc]==1.63.2
     # via
     #   google-api-core
     #   grpc-google-iam-v1
@@ -476,12 +473,6 @@ scipy==1.14.0
     #   sentence-transformers
 sentence-transformers==3.0.1
     # via -r requirements.in
-setuptools==70.2.0
-    # via
-    #   opentelemetry-api
-    #   opentelemetry-sdk
-    #   pandas-gbq
-    #   pydata-google-auth
 six==1.16.0
     # via
     #   ecdsa
@@ -513,7 +504,7 @@ torch==2.3.1
     # via sentence-transformers
 tornado==6.4.1
     # via streamlit
-tqdm==4.64.1
+tqdm==4.66.3
     # via
     #   -r requirements.in
     #   hnne
@@ -523,8 +514,6 @@ tqdm==4.64.1
     #   transformers
 transformers==4.42.3
     # via sentence-transformers
-triton==2.3.1
-    # via torch
 typer==0.7.0
     # via
     #   -r requirements.in
@@ -532,7 +521,6 @@ typer==0.7.0
 typing-extensions==4.12.2
     # via
     #   alembic
-    #   altair
     #   huggingface-hub
     #   opentelemetry-sdk
     #   pydantic

@@ -16,7 +16,10 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
 )
-from dependencies.ml.linkage.import_artists import PARAMS
+from dependencies.ml.linkage.artist_linkage_on_test_set import (
+    PARAMS as ARTIST_LINKAGE_ON_TEST_SET_PARAMS,
+)
+from dependencies.ml.linkage.import_artists import PARAMS as IMPORT_ARTISTS_PARAMS
 
 from airflow import DAG
 from airflow.models import Param
@@ -36,6 +39,9 @@ OUTPUT_GCS_PATH = f"gs://{STORAGE_PATH}/matched_artists.parquet"
 # Test set paths
 IMPORT_TEST_SET_GCS_BASE_PATH = f"gs://{STORAGE_PATH}/labelled_test_sets"
 TEST_SET_BQ_TABLE = "test_set"
+LINKED_ARTISTS_IN_TEST_SET_PATH = (
+    f"gs://{STORAGE_PATH}/linked_artists_in_test_set.parquet"
+)
 
 default_args = {
     "start_date": datetime(2024, 5, 1),
@@ -71,17 +77,19 @@ with DAG(
     )
 
     data_collect = bigquery_job_task(
-        dag, f"create_bq_table_{PARAMS['destination_table']}", PARAMS
+        dag,
+        f"create_bq_table_{IMPORT_ARTISTS_PARAMS['destination_table']}",
+        IMPORT_ARTISTS_PARAMS,
     )
 
     export_input_bq_to_gcs = BigQueryInsertJobOperator(
-        task_id=f"{PARAMS['destination_table']}_to_bucket",
+        task_id=f"{IMPORT_ARTISTS_PARAMS['destination_table']}_to_bucket",
         configuration={
             "extract": {
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
                     "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": PARAMS["destination_table"],
+                    "tableId": IMPORT_ARTISTS_PARAMS["destination_table"],
                 },
                 "compression": None,
                 "destinationUris": INPUT_GCS_PATH,
@@ -147,10 +155,6 @@ with DAG(
         """,
     )
 
-    gce_instance_stop = StopGCEOperator(
-        task_id="gce_stop_task", instance_name=GCE_INSTANCE
-    )
-
     load_parquet_to_bigquery = GCSToBigQueryOperator(
         bucket=DATA_GCS_BUCKET_NAME,
         task_id="load_parquet_to_bigquery",
@@ -159,6 +163,34 @@ with DAG(
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,
+    )
+
+    gce_instance_stop = StopGCEOperator(
+        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+    )
+
+    # Metrics
+    artist_linkage_on_test_set = bigquery_job_task(
+        dag,
+        f"create_bq_table_{ARTIST_LINKAGE_ON_TEST_SET_PARAMS['destination_table']}",
+        ARTIST_LINKAGE_ON_TEST_SET_PARAMS,
+    )
+
+    artist_linkage_on_test_set_to_gcs = BigQueryInsertJobOperator(
+        task_id=f"{ARTIST_LINKAGE_ON_TEST_SET_PARAMS['destination_table']}_to_bucket",
+        configuration={
+            "extract": {
+                "sourceTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": BIGQUERY_TMP_DATASET,
+                    "tableId": ARTIST_LINKAGE_ON_TEST_SET_PARAMS["destination_table"],
+                },
+                "compression": None,
+                "destinationUris": LINKED_ARTISTS_IN_TEST_SET_PATH,
+                "destinationFormat": "PARQUET",
+            }
+        },
+        dag=dag,
     )
 
     (
@@ -170,6 +202,12 @@ with DAG(
         >> install_dependencies
         >> preprocess_data
         >> artist_linkage
-        >> [gce_instance_stop, load_parquet_to_bigquery]
+        >> load_parquet_to_bigquery
     )
     (logging_task >> collect_test_sets_into_bq)
+    (
+        [load_parquet_to_bigquery, collect_test_sets_into_bq]
+        >> artist_linkage_on_test_set
+        >> artist_linkage_on_test_set_to_gcs
+        >> gce_instance_stop
+    )

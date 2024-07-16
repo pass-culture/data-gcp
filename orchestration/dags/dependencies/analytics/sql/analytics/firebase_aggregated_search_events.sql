@@ -11,7 +11,7 @@ consulted_from_search AS (
     FROM `{{ bigquery_int_firebase_dataset }}`.native_event
     WHERE event_date > DATE('{{ params.set_date }}')
     AND event_name = 'ConsultOffer'
-    AND origin = 'search'
+    AND search_id is not null 
     QUALIFY ROW_NUMBER() OVER(PARTITION BY unique_session_id, offer_id, unique_search_id ORDER BY event_timestamp) = 1
 ),
 booked_from_search AS (

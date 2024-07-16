@@ -11,9 +11,9 @@ WITH
     test_set.is_my_artist,
     test_set.irrelevant_data
   FROM
-    `{{ bigquery_tmp_dataset }}`.artists_to_link AS artists_to_link
-  RIGHT JOIN
     `{{ bigquery_tmp_dataset }}`.test_set test_set
+  LEFT JOIN
+    `{{ bigquery_tmp_dataset }}`.artists_to_link AS artists_to_link
   ON
     artists_to_link.artist_name = test_set.artist_name
     AND artists_to_link.offer_category_id = test_set.offer_category_id

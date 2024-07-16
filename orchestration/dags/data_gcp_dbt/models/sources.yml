@@ -174,4 +174,7 @@ sources:
       - name: siren_data_labels
       - name: user_locations
       - name: ZRR
-
+  - name: ml_preproc
+    schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
+    tables:
+      - name : item_embedding_extraction 

@@ -1,11 +1,5 @@
 WITH bookings_grouped_by_deposit AS (
     SELECT deposit_id,
-        MAX(user_civility) AS user_civility,
-        MAX(user_department_code) AS user_department_code,
-        MAX(user_age) AS user_age,
-        MAX(user_is_active) AS user_is_active,
-        MAX(user_creation_date) AS user_creation_date,
-        MAX(user_birth_date) AS user_birth_date,
         SUM(CASE WHEN booking_is_used THEN booking_amount * booking_quantity END) AS total_actual_amount_spent,
         SUM(booking_amount * booking_quantity) AS total_theoretical_amount_spent,
         SUM(CASE WHEN digital_goods
@@ -22,10 +16,16 @@ SELECT
     d.deposit_id,
     d.deposit_amount,
     d.user_id,
-    bgd.user_civility,
-    bgd.user_department_code,
-    bgd.user_age,
-    region_department.region_name AS user_region_name,
+    u.user_civility,
+    u.user_region_name,
+    u.user_postal_code,
+    u.user_city,
+    u.user_epci,
+    u.user_academy_name,
+    u.user_density_label,
+    u.user_macro_density_label,
+    u.user_department_code,
+    u.user_age,
     d.deposit_source,
     d.deposit_creation_date,
     d.deposit_update_date,
@@ -46,16 +46,16 @@ SELECT
     ) AS deposit_seniority,
     DATE_DIFF(
         CAST(d.deposit_creation_date AS DATE),
-        CAST(bgd.user_creation_date AS DATE),
+        CAST(u.user_creation_date AS DATE),
         DAY
     ) AS days_between_user_creation_and_deposit_creation,
-    bgd.user_birth_date
+    u.user_birth_date
 FROM {{ ref('int_applicative__deposit') }} AS d
 LEFT JOIN bookings_grouped_by_deposit AS bgd ON bgd.deposit_id = d.deposit_id
-LEFT JOIN {{ source('analytics','region_department') }} AS region_department ON bgd.user_department_code = region_department.num_dep
+LEFT JOIN {{ ref('int_applicative__user') }} AS u ON u.user_id = d.user_id
 LEFT JOIN {{ ref('int_applicative__action_history') }} AS ah ON ah.user_id = d.user_id AND ah.action_history_rk = 1
 WHERE
     (
-        bgd.user_is_active
+        u.user_is_active
         OR ah.action_history_reason = 'upon user request'
     )

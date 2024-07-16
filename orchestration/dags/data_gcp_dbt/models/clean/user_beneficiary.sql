@@ -101,6 +101,22 @@ SELECT
         ELSE user_creation_date
     END AS user_activation_date,
     ui.user_iris_internal_id,
+    ui.user_region_name,
+    ui.user_city,
+    ui.user_epci,
+    ui.user_academy_name,
+    ui.user_density_label,
+    ui.user_macro_density_label,
+    CASE WHEN ui.qpv_name IS NOT NULL THEN TRUE ELSE FALSE END AS user_is_in_qpv,
+    CASE WHEN u.user_activity = "Chômeur, En recherche d'emploi" THEN TRUE ELSE FALSE END AS user_is_unemployed,
+    CASE WHEN 
+        ((ui.qpv_name IS NOT NULL)
+        OR 
+        ui.user_macro_density_label = "rural"
+        OR 
+        u.user_activity = "Chômeur, En recherche d'emploi")
+        THEN TRUE ELSE FALSE END 
+        AS user_is_priority_public
 FROM user_beneficiary AS u
 LEFT JOIN {{ ref('int_api_gouv__address_user_location') }} AS ui ON ui.user_id = u.user_id
 LEFT JOIN ranked_bookings 

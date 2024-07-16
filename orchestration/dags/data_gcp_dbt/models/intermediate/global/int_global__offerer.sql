@@ -18,7 +18,7 @@ tagged_partners AS (
 SELECT
     offerer_id,
     STRING_AGG(DISTINCT tag_label ORDER BY tag_label) AS partner_type
-FROM {{ ref("mrt_global__offerer_tag") }}
+FROM {{ ref("int_applicative__offerer_tag") }}
 WHERE tag_category_name = "comptage"
 AND tag_label NOT IN ("Association", "EPN","Collectivité","Pas de tag associé","Auto-Entrepreneur","Compagnie","Tourneur")
 GROUP BY offerer_id

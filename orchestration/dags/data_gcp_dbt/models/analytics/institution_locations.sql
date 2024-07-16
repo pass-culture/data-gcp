@@ -12,7 +12,6 @@ institutions AS (
   SELECT
     id_etablissement AS institution_id,
     nom_etablissement AS institution_name,
-    nom_commune AS institution_city,
     code_postal AS institution_postal_code,
     code_departement AS institution_department_code,
     CAST(latitude AS float64) AS institution_latitude,
@@ -24,7 +23,6 @@ institutions_qpv AS (
   SELECT
     institution_id,
     institution_name,
-    institution_city,
     institution_postal_code,
     institution_department_code,
     institution_latitude,
@@ -48,6 +46,12 @@ institutions_qpv AS (
 )
 SELECT
   iq.*,
+  gi.city_label AS institution_city,
+  gi.region_name AS institution_region_name,
+  gi.epci_label AS institution_epci,
+  gi.academy_name AS institution_academy_name,
+  gi.density_label AS institution_density_label,
+  gi.density_macro_level AS institution_macro_density_label, 
   iris_internal_id AS institution_internal_iris_id
 FROM institutions_qpv AS iq
 LEFT JOIN {{ source('clean', 'geo_iris') }} AS gi

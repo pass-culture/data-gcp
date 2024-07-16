@@ -5,15 +5,14 @@ SELECT DISTINCT
     ,institution_name
     ,institution_city
     ,institution_departement_code
-    ,region_name
-    ,institution_academie
+    ,institution_region_name AS region_name
+    ,institution_academy_name AS institution_academie
     ,eid.ministry 
     ,eid.institution_type
     ,eat.macro_institution_type
     ,ey.scholar_year
     ,ed.educational_deposit_amount AS institution_deposit_amount
 FROM {{ ref('enriched_institution_data') }} eid
-LEFT JOIN {{ source('analytics','region_department') }} rd ON eid.institution_departement_code = rd.num_dep
 JOIN {{ ref('educational_deposit') }} ed ON ed.educational_institution_id = eid.institution_id
 JOIN {{ ref('educational_year') }} ey ON ey.adage_id = ed.educational_year_id
 LEFT JOIN  {{ source('raw','eple_aggregated_type') }} as eat

@@ -41,7 +41,6 @@ SELECT
     u.user_birth_date,
     u.user_cultural_survey_filled_date,
     u.user_address,
-    u.user_city,
     u.user_last_connection_date,
     u.user_is_email_validated,
     u.user_has_seen_pro_tutorials,
@@ -50,6 +49,20 @@ SELECT
     u.user_has_enabled_marketing_push,
     CASE WHEN u.user_role IN ("UNDERAGE_BENEFICIARY", "BENEFICIARY") THEN 1 ELSE 0 END AS is_beneficiary,
     ui.user_iris_internal_id,
-    ui.user_region_name
+    ui.user_region_name,
+    ui.user_city,
+    ui.user_epci,
+    ui.user_academy_name,
+    ui.user_density_label,
+    ui.user_macro_density_label,
+    CASE WHEN ui.qpv_name IS NOT NULL THEN TRUE ELSE FALSE END AS user_is_in_qpv,
+    CASE WHEN u.user_activity IN ("Chômeur", "En recherche d'emploi ou chômeur") THEN TRUE ELSE FALSE END AS user_is_unemployed,
+    CASE WHEN 
+        (
+        (ui.qpv_name IS NOT NULL) 
+        OR (u.user_activity IN ("Chômeur", "En recherche d'emploi ou chômeur")) 
+        OR (ui.user_macro_density_label = "rural") 
+        )
+        THEN TRUE ELSE FALSE END AS user_is_priority_public
 FROM {{ source("raw", "applicative_database_user") }} AS u
 LEFT JOIN {{ ref("int_api_gouv__address_user_location") }} AS ui ON ui.user_id = u.user_id

@@ -92,11 +92,11 @@ def main(
     )
     metrics_dict = {
         "precision_mean": metrics_per_dataset_df.precision.mean(),
-        "precision_std": metrics_per_dataset_df.precision.mean(),
+        "precision_std": metrics_per_dataset_df.precision.std(),
         "recall_mean": metrics_per_dataset_df.recall.mean(),
-        "recall_std": metrics_per_dataset_df.recall.mean(),
+        "recall_std": metrics_per_dataset_df.recall.std(),
         "f1_mean": metrics_per_dataset_df.f1.mean(),
-        "f1_std": metrics_per_dataset_df.f1.mean(),
+        "f1_std": metrics_per_dataset_df.f1.std(),
     }
 
     # MLflow Logging

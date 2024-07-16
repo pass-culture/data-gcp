@@ -248,5 +248,5 @@ with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
         )
 
 start >> wait_for_raw >> data_transfo
-wait_for_raw >> snapshots_checkpoint >> snapshot_group >> compile
+wait_for_raw >> snapshots_checkpoint >> snapshot_group
 compile >> end

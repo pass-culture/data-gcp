@@ -1,5 +1,11 @@
 from datetime import datetime
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.python import PythonOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -20,13 +26,6 @@ from dependencies.ml.linkage.artist_linkage_on_test_set import (
     PARAMS as ARTIST_LINKAGE_ON_TEST_SET_PARAMS,
 )
 from dependencies.ml.linkage.import_artists import PARAMS as IMPORT_ARTISTS_PARAMS
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.python import PythonOperator
-from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
-    GCSToBigQueryOperator,
-)
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-artists-{ENV_SHORT_NAME}"

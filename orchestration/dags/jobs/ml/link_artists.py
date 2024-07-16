@@ -23,6 +23,7 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
 )
+from common.utils import get_airflow_schedule
 from dependencies.ml.linkage.artist_linkage_on_test_set import (
     PARAMS as ARTIST_LINKAGE_ON_TEST_SET_PARAMS,
 )
@@ -31,6 +32,7 @@ from dependencies.ml.linkage.import_artists import PARAMS as IMPORT_ARTISTS_PARA
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-artists-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
+SCHEDULE_CRON = "0 3 * * *"
 
 # GCS Paths / Filenames
 STORAGE_BASE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/link_artists_{ENV_SHORT_NAME}"
@@ -47,7 +49,7 @@ TEST_SET_BQ_TABLE = "test_set"
 METRICS_TABLE = "artist_metrics"
 
 default_args = {
-    "start_date": datetime(2024, 5, 1),
+    "start_date": datetime(2024, 7, 16),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
 }
@@ -57,7 +59,7 @@ with DAG(
     "link_artists",
     default_args=default_args,
     description="Link artists via clustering",
-    schedule_interval=None,
+    schedule_interval=get_airflow_schedule(SCHEDULE_CRON),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     params={

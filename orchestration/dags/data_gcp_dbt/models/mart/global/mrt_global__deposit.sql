@@ -26,6 +26,7 @@ SELECT
     u.user_macro_density_label,
     u.user_department_code,
     u.user_age,
+    u.user_creation_date,
     d.deposit_source,
     d.deposit_creation_date,
     d.deposit_update_date,

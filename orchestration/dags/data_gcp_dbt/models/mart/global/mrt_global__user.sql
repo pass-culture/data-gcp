@@ -19,7 +19,6 @@ SELECT
     user_role,
     user_birth_date,
     user_cultural_survey_filled_date,
-    is_beneficiary,
     user_iris_internal_id,
     user_is_unemployed,
     user_is_in_qpv,

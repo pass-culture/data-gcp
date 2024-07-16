@@ -8,9 +8,6 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
 )
-from common.operators.biquery import bigquery_job_task
-
-from dependencies.ml.embeddings.import_items import params
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
@@ -19,8 +16,6 @@ from common.config import (
     GCP_PROJECT_ID,
     DAG_FOLDER,
     ENV_SHORT_NAME,
-    MLFLOW_BUCKET_NAME,
-    BIGQUERY_TMP_DATASET,
 )
 
 DEFAULT_REGION = "europe-west1"
@@ -33,15 +28,14 @@ default_args = {
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
-dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/embedding_extraction_items_{ENV_SHORT_NAME}/embedding_extraction_items_{DATE}/{DATE}_item_embbedding_data",
+DAG_CONFIG = {
     "TOKENIZERS_PARALLELISM": "false",
 }
 with DAG(
     "embeddings_extraction_items",
     default_args=default_args,
     description="Extact items metadata embeddings",
-    schedule_interval=get_airflow_schedule("0 0 * * 0"),
+    schedule_interval=get_airflow_schedule("0 * * * *"),  # every hour
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,
@@ -60,14 +54,11 @@ with DAG(
             type="string",
         ),
         "batch_size": Param(
-            default=20000 if ENV_SHORT_NAME == "prod" else 10000,
+            default=50_000 if ENV_SHORT_NAME == "prod" else 10000,
             type="integer",
         ),
     },
 ) as dag:
-    data_collect_task = bigquery_job_task(
-        dag, "import_item_batch", params, extra_params={}
-    )
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -100,22 +91,25 @@ with DAG(
         command="PYTHONPATH=. python preprocess.py "
         f"--gcp-project {GCP_PROJECT_ID} "
         f"--env-short-name {ENV_SHORT_NAME} "
+        "--batch-size {{ params.batch_size }} "
         "--config-file-name {{ params.config_file_name }} "
-        f"--input-table-name {DATE}_item_to_extract_embeddings "
-        f"--output-table-name {DATE}_item_to_extract_embeddings_clean ",
+        f"--input-dataset-name ml_input_{ENV_SHORT_NAME} "
+        f"--input-table-name item_embedding_extraction "
+        f"--output-table-name {DATE}_item_to_extract_embeddings_preprocessing ",
     )
 
     extract_embedding = SSHGCEOperator(
         task_id="extract_embedding",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
-        environment=dag_config,
+        environment=DAG_CONFIG,
         command="mkdir -p img && PYTHONPATH=. python main.py "
         f"--gcp-project {GCP_PROJECT_ID} "
         f"--env-short-name {ENV_SHORT_NAME} "
         "--config-file-name {{ params.config_file_name }} "
-        f"--input-table-name {DATE}_item_to_extract_embeddings_clean "
-        f"--output-table-name item_embeddings",
+        f"--input-table-name {DATE}_item_to_extract_embeddings_preprocessing "
+        f"--output-dataset-name ml_preproc_{ENV_SHORT_NAME} "
+        f"--output-table-name item_embedding_extraction ",
     )
 
     gce_instance_stop = StopGCEOperator(
@@ -123,8 +117,7 @@ with DAG(
     )
 
     (
-        data_collect_task
-        >> gce_instance_start
+        gce_instance_start
         >> fetch_code
         >> install_dependencies
         >> preprocess

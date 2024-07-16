@@ -1,12 +1,6 @@
 import os
 from datetime import datetime
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.python import PythonOperator
-from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
-    GCSToBigQueryOperator,
-)
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -29,6 +23,13 @@ from dependencies.ml.linkage.artist_linkage_on_test_set import (
 )
 from dependencies.ml.linkage.import_artists import PARAMS as IMPORT_ARTISTS_PARAMS
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.python import PythonOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
+
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-artists-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
@@ -42,7 +43,6 @@ PREPROCESSED_GCS_FILENAME = "preprocessed_artists_to_match.parquet"
 OUTPUT_GCS_FILENAME = "matched_artists.parquet"
 IMPORT_TEST_SET_GCS_REGEX = "labelled_test_sets/*.parquet"
 LINKED_ARTISTS_IN_TEST_SET_FILENAME = "linked_artists_in_test_set.parquet"
-ARTIST_METRICS_FILENAME = "artist_metrics.parquet"
 
 # BQ Output Tables
 MATCHED_ARTISTS_BQ_TABLE = "matched_artists"
@@ -208,20 +208,9 @@ with DAG(
             base_dir=BASE_DIR,
             command=f"""
          python evaluate.py \
-        --input-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_IN_TEST_SET_FILENAME)} \
-        --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTIST_METRICS_FILENAME)}
+        --input-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_IN_TEST_SET_FILENAME)}
         """,
         ),
-    )
-    # TODO: Remove this task when MLFlow logging is implemented
-    artist_metrics_to_bigquery = GCSToBigQueryOperator(
-        bucket=MLFLOW_BUCKET_NAME,
-        task_id="artist_metrics_to_bigquery",
-        source_objects=os.path.join(GCS_FOLDER_PATH, ARTIST_METRICS_FILENAME),
-        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{METRICS_TABLE}",
-        source_format="PARQUET",
-        write_disposition="WRITE_TRUNCATE",
-        autodetect=True,
     )
 
     (logging_task >> gce_instance_start >> fetch_code >> install_dependencies)
@@ -240,6 +229,5 @@ with DAG(
         >> artist_linkage_on_test_set
         >> artist_linkage_on_test_set_to_gcs
         >> artist_metrics
-        >> artist_metrics_to_bigquery
         >> gce_instance_stop
     )

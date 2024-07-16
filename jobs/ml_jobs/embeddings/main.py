@@ -79,8 +79,6 @@ def main(
     ) as config_file:
         params = json.load(config_file)
 
-    batch_size = params["batch_size"]
-
     count_query = f"SELECT COUNT(*) as total_to_process FROM `{gcp_project}.{input_dataset_name}.{input_table_name}`"
     total_to_process = pd.read_gbq(count_query)["total_to_process"][0]
 
@@ -91,39 +89,11 @@ def main(
         f"Total rows to process: {total_to_process}, will process {max_rows_to_process} rows."
     )
 
-    df = load_data(
-        gcp_project,
-        input_dataset_name,
-        input_table_name,
-        batch_size,
-        iteration,
-        processed_rows,
-    )
     processed_rows = 0
     iteration = 0
 
     # Will loop until all data is processed or max_rows_to_process is reached
-    while df.shape[0] > 0 and processed_rows < max_rows_to_process:
-        df = preprocess(df, params["features"])
-
-        df = (
-            extract_embedding(
-                df,
-                params,
-            )
-            .assign(
-                extraction_date=datetime.now().strftime("%Y-%m-%d"),
-                extraction_datetime=datetime.now(),
-            )
-            .to_gbq(
-                f"{output_dataset_name}.{output_table_name}",
-                project_id=gcp_project,
-                if_exists="append",
-            )
-        )
-        processed_rows += df.shape[0]
-        iteration += 1
-        # loop until all data is processed
+    while processed_rows < max_rows_to_process:
         df = load_data(
             gcp_project,
             input_dataset_name,
@@ -132,8 +102,19 @@ def main(
             iteration,
             processed_rows,
         )
+        df = preprocess(df, params["features"])
 
-    return
+        extract_embedding(df, params,).assign(
+            extraction_date=datetime.now().strftime("%Y-%m-%d"),
+            extraction_datetime=datetime.now(),
+        ).to_gbq(
+            f"{output_dataset_name}.{output_table_name}",
+            project_id=gcp_project,
+            if_exists="append",
+        )
+
+        processed_rows += df.shape[0]
+        iteration += 1
 
 
 if __name__ == "__main__":

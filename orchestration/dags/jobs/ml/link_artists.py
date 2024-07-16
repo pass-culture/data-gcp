@@ -32,7 +32,7 @@ from dependencies.ml.linkage.import_artists import PARAMS as IMPORT_ARTISTS_PARA
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-artists-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
-SCHEDULE_CRON = "0 3 * * *"
+SCHEDULE_CRON = "0 3 * * 1"
 
 # GCS Paths / Filenames
 GCS_FOLDER_PATH = f"link_artists_{ENV_SHORT_NAME}"
@@ -69,7 +69,7 @@ with DAG(
             type="string",
         ),
         "instance_type": Param(
-            default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-32",
+            default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-8",
             type="string",
         ),
     },

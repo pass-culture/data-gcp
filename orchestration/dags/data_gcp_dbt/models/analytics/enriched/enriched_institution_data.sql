@@ -196,14 +196,17 @@ SELECT
     educational_institution.institution_type,
     eple_aggregated_type.macro_institution_type,
     institution_program.institution_program_name AS institution_program_name,
-    region_department.academy_name AS institution_academie,
-    region_department.region_name AS institution_region_name,
+    location_info.institution_academy_name,
+    location_info.institution_region_name,
     educational_institution.institution_departement_code,
     educational_institution.institution_postal_code,
-    educational_institution.institution_city,
-    rurality.geo_type as institution_rural_level,
-    location_info.institution_latitude as institution_latitude,
-    location_info.institution_longitude as institution_longitude,
+    location_info.institution_city,
+    location_info.institution_epci,
+    location_info.institution_density_label,
+    location_info.institution_macro_density_label, 
+    location_info.institution_latitude,
+    location_info.institution_longitude,
+    CASE WHEN location_info.institution_qpv_name is not null THEN TRUE ELSE FALSE END AS institution_in_qpv,
     first_deposit.first_deposit_creation_date,
     current_deposit.institution_current_deposit_amount,
     current_deposit.current_deposit_creation_date,
@@ -233,7 +236,6 @@ SELECT
         students_per_institution.nb_of_students
     ) AS part_eleves_beneficiaires
 FROM  {{ ref('educational_institution') }} AS educational_institution
-    LEFT JOIN {{ source('analytics','region_department') }} ON educational_institution.institution_departement_code = region_department.num_dep
     LEFT JOIN first_deposit ON educational_institution.educational_institution_id = first_deposit.institution_id
     LEFT JOIN current_deposit ON educational_institution.educational_institution_id = current_deposit.institution_id
     LEFT JOIN all_deposits ON educational_institution.educational_institution_id = all_deposits.institution_id
@@ -244,9 +246,7 @@ FROM  {{ ref('educational_institution') }} AS educational_institution
     LEFT JOIN students_educonnectes ON educational_institution.institution_id = students_educonnectes.institution_external_id
     LEFT JOIN {{ source('analytics','eple') }} as eple
         ON educational_institution.institution_id = eple.id_etablissement
-    LEFT JOIN {{ source('analytics','rural_city_type_data') }} as rurality
-        ON rurality.geo_code = eple.code_commune
-    LEFT JOIN {{ source('analytics','institution_locations') }} as location_info
+    LEFT JOIN {{ ref('institution_locations') }} as location_info
         ON educational_institution.institution_id = location_info.institution_id
     LEFT JOIN  {{ source('raw','eple_aggregated_type') }} as eple_aggregated_type
         ON educational_institution.institution_type = eple_aggregated_type.institution_type

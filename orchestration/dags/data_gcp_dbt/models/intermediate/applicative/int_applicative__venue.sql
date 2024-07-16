@@ -62,9 +62,14 @@ bookable_offer_history AS (
 
 venues_with_geo_candidates AS (
     SELECT
-        v.*,
+        v.* EXCEPT(venue_city) ,
         gi.iris_internal_id,
-        gi.region_name,
+        gi.region_name AS venue_region_name,
+        gi.city_label AS venue_city,
+        gi.epci_label AS venue_epci,
+        gi.academy_name AS venue_academy_name,
+        gi.density_label AS venue_density_label,
+        gi.density_macro_level AS venue_macro_density_label,
         gi.iris_shape
     FROM {{ source("raw", "applicative_database_venue") }} AS v
     LEFT JOIN {{ source('clean', 'geo_iris') }} AS gi
@@ -76,7 +81,6 @@ SELECT
     v.venue_thumb_count,
     v.venue_street,
     v.venue_postal_code,
-    v.venue_city,
     v.ban_id,
     v.venue_id,
     v.venue_name,
@@ -125,8 +129,12 @@ SELECT
     ) AS venue_backoffice_link,
     {{target_schema}}.humanize_id(v.venue_id) as venue_humanized_id,
     v.iris_internal_id AS venue_iris_internal_id,
-    v.region_name AS venue_region_name,
-    venue_region_departement.academy_name AS venue_academy_name,
+    v.venue_region_name,
+    v.venue_city,
+    v.venue_epci,
+    v.venue_density_label,
+    v.venue_macro_density_label,
+    v.venue_academy_name,
     v.offerer_address_id,
     vr.venue_target AS venue_targeted_audience,
     vc.venue_contact_phone_number,
@@ -197,7 +205,6 @@ LEFT JOIN {{ source("raw", "applicative_database_venue_registration") }} AS vr O
 LEFT JOIN {{ source("raw", "applicative_database_venue_contact") }} AS vc ON v.venue_id = vc.venue_id
 LEFT JOIN {{ source("raw", "applicative_database_venue_label") }} AS vl ON vl.venue_label_id = v.venue_label_id
 LEFT JOIN {{ source("raw", "applicative_database_accessibility_provider") }} AS va ON va.venue_id = v.venue_id
-LEFT JOIN {{ source("analytics", "region_department") }} AS venue_region_departement ON v.venue_department_code = venue_region_departement.num_dep
 WHERE ST_CONTAINS(
         v.iris_shape,
         ST_GEOGPOINT(v.venue_longitude, v.venue_latitude)

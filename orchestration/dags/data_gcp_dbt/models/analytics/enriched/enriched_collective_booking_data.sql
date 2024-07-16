@@ -22,8 +22,14 @@ SELECT
     collective_offer.collective_offer_format AS collective_offer_format,
     collective_offer.venue_id AS venue_id,
     venue.venue_name,
+    venue.venue_postal_code,
     venue.venue_department_code,
-    venue_region_departement.region_name AS venue_region_name,
+    venue.venue_region_name,
+    venue.venue_city,
+    venue.venue_epci,
+    venue.venue_academy_name,
+    venue.venue_density_label,
+    venue.venue_macro_density_label,
     collective_booking.offerer_id AS offerer_id,
     CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id)
          ELSE CONCAT("offerer-", offerer.offerer_id) END AS partner_id,
@@ -35,11 +41,16 @@ SELECT
     collective_booking.educational_year_id AS educational_year_id,
     educational_year.scholar_year,
     collective_booking.educational_redactor_id AS educational_redactor_id,
-    eple.nom_etablissement,
-    institution_program.institution_program_name AS institution_program_name,
-    eple.code_departement AS school_department_code,
-    school_region_departement.region_name AS school_region_name,
-    eple.libelle_academie,
+    educational_institution.institution_name,
+    institution_program.institution_program_name,
+    institution_locations.institution_academy_name,
+    institution_locations.institution_region_name,
+    institution_locations.institution_department_code,
+    institution_locations.institution_postal_code,
+    institution_locations.institution_city,
+    institution_locations.institution_epci,
+    institution_locations.institution_density_label,
+    institution_locations.institution_macro_density_label, 
     collective_offer.collective_offer_venue_address_type AS collective_offer_address_type,
     collective_booking.collective_booking_creation_date,
     collective_booking.collective_booking_cancellation_date,
@@ -58,13 +69,10 @@ FROM
     {{ source('raw', 'applicative_database_collective_booking') }}  AS collective_booking
     INNER JOIN {{ source('raw', 'applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id
     INNER JOIN {{ source('raw', 'applicative_database_collective_offer') }} AS collective_offer ON collective_offer.collective_offer_id = collective_stock.collective_offer_id
-    INNER JOIN {{ ref('venue') }} AS venue ON collective_booking.venue_id = venue.venue_id
+    INNER JOIN {{ ref('int_applicative__venue') }} AS venue ON collective_booking.venue_id = venue.venue_id
     INNER JOIN {{ source('raw', 'applicative_database_offerer') }} AS offerer ON offerer.offerer_id = venue.venue_managing_offerer_id
     INNER JOIN {{ ref('educational_institution') }} AS educational_institution ON educational_institution.educational_institution_id = collective_booking.educational_institution_id
     INNER JOIN {{ source('raw', 'applicative_database_educational_year') }} AS educational_year ON educational_year.adage_id = collective_booking.educational_year_id
-    LEFT JOIN {{ source('analytics', 'eple') }} AS eple ON eple.id_etablissement = educational_institution.institution_id
-    LEFT JOIN {{ source('analytics', 'region_department') }} AS venue_region_departement ON venue.venue_department_code = venue_region_departement.num_dep
-    LEFT JOIN {{ source('analytics', 'region_department') }} AS school_region_departement ON eple.code_departement = school_region_departement.num_dep
     LEFT JOIN collective_booking_ranking_view ON collective_booking_ranking_view.collective_booking_id = collective_booking.collective_booking_id
     LEFT JOIN {{ source('clean', 'subcategories') }} subcategories ON collective_offer.collective_offer_subcategory_id = subcategories.id
     LEFT JOIN {{ ref('int_applicative__institution') }} AS institution_program

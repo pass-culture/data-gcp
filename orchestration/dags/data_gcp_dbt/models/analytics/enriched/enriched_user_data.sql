@@ -421,7 +421,6 @@ SELECT
     user_last_deposit_amount - amount_spent_last_deposit.deposit_theoretical_amount_spent AS user_theoretical_remaining_credit,
     user.user_humanized_id,
     last_booking_date.last_booking_date,
-    region_department.region_name AS user_region_name,
     first_paid_booking_date.booking_creation_date_first,
     DATE_DIFF(
         date_of_first_bookings.first_booking_date,
@@ -455,7 +454,16 @@ SELECT
     user.user_has_enabled_marketing_email,
     user.user_iris_internal_id,
     themes_subscribed.currently_subscribed_themes,
-    themes_subscribed.is_theme_subscribed
+    themes_subscribed.is_theme_subscribed,
+    user.user_region_name,
+    user.user_city,
+    user.user_epci,
+    user.user_academy_name,
+    user.user_density_label,
+    user.user_macro_density_label,
+    user.user_is_in_qpv,
+    user.user_is_unemployed,
+    user.user_is_priority_public
 FROM
     {{ ref('user_beneficiary') }} AS user
     LEFT JOIN date_of_first_bookings ON user.user_id = date_of_first_bookings.user_id
@@ -469,7 +477,6 @@ FROM
     LEFT JOIN theoretical_amount_spent_in_physical_goods ON user.user_id = theoretical_amount_spent_in_physical_goods.user_id
     LEFT JOIN theoretical_amount_spent_in_outings ON user.user_id = theoretical_amount_spent_in_outings.user_id
     LEFT JOIN last_booking_date ON last_booking_date.user_id = user.user_id
-    LEFT JOIN {{source('analytics','region_department')}} ON user.user_department_code = region_department.num_dep
     LEFT JOIN first_paid_booking_date ON user.user_id = first_paid_booking_date.user_id
     LEFT JOIN first_booking_type ON user.user_id = first_booking_type.user_id
     LEFT JOIN first_paid_booking_type ON user.user_id = first_paid_booking_type.user_id

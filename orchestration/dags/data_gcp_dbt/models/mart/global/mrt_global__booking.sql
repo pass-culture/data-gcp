@@ -24,7 +24,14 @@ SELECT
     s.venue_label,
     s.venue_type_label, -- venue_type_name
     s.venue_id,
+    s.venue_postal_code,
     s.venue_department_code,
+    s.venue_region_name,
+    s.venue_city,
+    s.venue_epci,
+    s.venue_density_label,
+    s.venue_macro_density_label,
+    s.venue_academy_name,
     s.offerer_id,
     s.offerer_name,
     s.partner_id,
@@ -33,7 +40,14 @@ SELECT
     s.digital_goods,
     s.event,
     s.offer_category_id,
+    u.user_postal_code,
     u.user_department_code,
+    u.user_region_name,
+    u.user_city,
+    u.user_epci,
+    u.user_academy_name,
+    u.user_density_label,
+    u.user_macro_density_label,
     u.user_creation_date,
     u.user_activity,
     u.user_civility,
@@ -52,6 +66,5 @@ SELECT
 FROM {{ ref('int_applicative__booking') }} AS b
 INNER JOIN {{ ref('mrt_global__stock') }} AS s ON s.stock_id = b.stock_id
 INNER JOIN {{ ref('mrt_global__user') }} AS u ON u.user_id = b.user_id
-WHERE u.is_beneficiary = 1
-    AND b.deposit_type IS NOT NULL
+WHERE b.deposit_type IS NOT NULL
     AND s.offer_id IS NOT NULL

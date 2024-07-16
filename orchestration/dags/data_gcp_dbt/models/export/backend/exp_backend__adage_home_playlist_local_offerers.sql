@@ -17,7 +17,7 @@ WITH offerer_offer_info AS
 -- Get institutions
 institution_info AS
   (SELECT institution_id ,
-          institution_rural_level ,
+          institution_density_label AS institution_rural_level ,
           institution_latitude ,
           institution_longitude
    FROM {{ ref('enriched_institution_data') }}),

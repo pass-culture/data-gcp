@@ -11,7 +11,7 @@ WITH most_active_offerer_per_user AS (
 SELECT
     DISTINCT uo.user_id
     ,uo.offerer_id
-FROM {{ ref("enriched_user_offerer") }} AS uo
+FROM {{ ref("mrt_global__user_offerer") }} AS uo
 LEFT JOIN {{ ref("enriched_offerer_data") }} AS o ON uo.offerer_id=o.offerer_id
 QUALIFY ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY no_cancelled_booking_cnt DESC)=1
 ),

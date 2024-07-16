@@ -47,7 +47,6 @@ SELECT
     u.user_phone_validation_status,
     u.user_has_validated_email,
     u.user_has_enabled_marketing_push,
-    CASE WHEN u.user_role IN ("UNDERAGE_BENEFICIARY", "BENEFICIARY") THEN 1 ELSE 0 END AS is_beneficiary,
     ui.user_iris_internal_id,
     ui.user_region_name,
     ui.user_city,
@@ -66,3 +65,4 @@ SELECT
         THEN TRUE ELSE FALSE END AS user_is_priority_public
 FROM {{ source("raw", "applicative_database_user") }} AS u
 LEFT JOIN {{ ref("int_api_gouv__address_user_location") }} AS ui ON ui.user_id = u.user_id
+WHERE u.user_role IN ("UNDERAGE_BENEFICIARY", "BENEFICIARY")

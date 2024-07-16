@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 import pandas as pd
 import typer
-
+from utils.logging import logging
 from tools.config import CONFIGS_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
 from tools.embedding_extraction import extract_embedding
 
@@ -16,6 +16,10 @@ def main(
     input_table_name: str = typer.Option(
         ...,
         help="Name of the dataframe we want to clean",
+    ),
+    output_dataset_name: str = typer.Option(
+        ...,
+        help="Name of the cleaned dataframe",
     ),
     output_table_name: str = typer.Option(
         ...,
@@ -37,26 +41,26 @@ def main(
     df_data_to_extract_embedding = pd.read_gbq(
         f"SELECT * FROM `{gcp_project}.tmp_{env_short_name}.{input_table_name}`"
     )
+    logging.info(f"Data loaded: {df_data_to_extract_embedding.shape}")
+    if df_data_to_extract_embedding.shape[0] > 0:
+        ###############
+        # Run embedding extraction
+        df_data_w_embedding = extract_embedding(
+            df_data_to_extract_embedding,
+            params,
+        )
 
-    ###############
-    # Run embedding extraction
-    df_data_w_embedding, emb_size_dict = extract_embedding(
-        df_data_to_extract_embedding,
-        params,
-    )
+        df_data_w_embedding["extraction_date"] = datetime.now().strftime("%Y-%m-%d")
+        df_data_w_embedding["extraction_datetime"] = datetime.now()
 
-    df_data_w_embedding["extraction_date"] = [
-        datetime.now().strftime("%Y-%m-%d")
-    ] * len(df_data_w_embedding)
+        df_data_w_embedding.to_gbq(
+            f"{output_dataset_name}.{output_table_name}",
+            project_id=gcp_project,
+            if_exists="append",
+        )
+    else:
+        logging.warning("No data to extract embeddings from.")
 
-    df_data_w_embedding.to_gbq(
-        f"clean_{env_short_name}.{output_table_name}",
-        project_id=gcp_project,
-        if_exists="append",
-    )
-
-    with open("./emb_size_dict.json", "w") as f:
-        json.dump(emb_size_dict, f)
     return
 
 

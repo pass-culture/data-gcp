@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 from airflow import DAG
@@ -11,9 +12,9 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
-    DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+    MLFLOW_BUCKET_NAME,
 )
 from common.operators.biquery import BigQueryInsertJobOperator, bigquery_job_task
 from common.operators.gce import (
@@ -30,18 +31,20 @@ from dependencies.ml.linkage.import_artists import PARAMS as IMPORT_ARTISTS_PARA
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-artists-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
-STORAGE_PATH = f"{DATA_GCS_BUCKET_NAME}/link_artists"
-INPUT_GCS_PATH = f"gs://{STORAGE_PATH}/artists_to_match.parquet"
-PREPROCESSED_GCS_PATH = f"gs://{STORAGE_PATH}/preprocessed_artists_to_match.parquet"
-OUTPUT_GCS_PATH = f"gs://{STORAGE_PATH}/matched_artists.parquet"
 
-# Test set paths
-IMPORT_TEST_SET_GCS_BASE_PATH = f"gs://{STORAGE_PATH}/labelled_test_sets"
+# GCS Paths / Filenames
+STORAGE_BASE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/link_artists_{ENV_SHORT_NAME}"
+INPUT_GCS_FILENAME = "artists_to_match.parquet"
+PREPROCESSED_GCS_FILENAME = "preprocessed_artists_to_match.parquet"
+OUTPUT_GCS_FILENAME = "matched_artists.parquet"
+IMPORT_TEST_SET_GCS_REGEX = "labelled_test_sets/*.parquet"
+LINKED_ARTISTS_IN_TEST_SET_FILENAME = "linked_artists_in_test_set.parquet"
+ARTIST_METRICS_FILENAME = "artist_metrics.parquet"
+
+# BQ Output Tables
+MATCHED_ARTISTS_BQ_TABLE = "matched_artists"
 TEST_SET_BQ_TABLE = "test_set"
-LINKED_ARTISTS_IN_TEST_SET_PATH = (
-    f"gs://{STORAGE_PATH}/linked_artists_in_test_set.parquet"
-)
-ARTIST_METRICS_PATH = f"gs://{STORAGE_PATH}/artist_metrics.parquet"
+METRICS_TABLE = "artist_metrics"
 
 default_args = {
     "start_date": datetime(2024, 5, 1),
@@ -120,7 +123,7 @@ with DAG(
                     "tableId": IMPORT_ARTISTS_PARAMS["destination_table"],
                 },
                 "compression": None,
-                "destinationUris": INPUT_GCS_PATH,
+                "destinationUris": os.path.join(STORAGE_BASE_PATH, INPUT_GCS_FILENAME),
                 "destinationFormat": "PARQUET",
             }
         },
@@ -129,10 +132,8 @@ with DAG(
 
     collect_test_sets_into_bq = GCSToBigQueryOperator(
         task_id="import_test_sets_in_bq",
-        bucket=DATA_GCS_BUCKET_NAME,
-        source_objects=[
-            f"{IMPORT_TEST_SET_GCS_BASE_PATH.split(f'{DATA_GCS_BUCKET_NAME}/')[-1]}/*.parquet"
-        ],
+        bucket=MLFLOW_BUCKET_NAME,
+        source_objects=[IMPORT_TEST_SET_GCS_REGEX],
         destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{TEST_SET_BQ_TABLE}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
@@ -145,8 +146,8 @@ with DAG(
         base_dir=BASE_DIR,
         command=f"""
          python preprocess.py \
-        --source-file-path {INPUT_GCS_PATH} \
-        --output-file-path {PREPROCESSED_GCS_PATH}
+        --source-file-path {os.path.join(STORAGE_BASE_PATH, INPUT_GCS_FILENAME)} \
+        --output-file-path {os.path.join(STORAGE_BASE_PATH, PREPROCESSED_GCS_FILENAME)}
         """,
     )
 
@@ -156,15 +157,15 @@ with DAG(
         base_dir=BASE_DIR,
         command=f"""
          python cluster.py \
-        --source-file-path {PREPROCESSED_GCS_PATH} \
-        --output-file-path {OUTPUT_GCS_PATH}
+        --source-file-path {os.path.join(STORAGE_BASE_PATH, PREPROCESSED_GCS_FILENAME)} \
+        --output-file-path {os.path.join(STORAGE_BASE_PATH, OUTPUT_GCS_FILENAME)}
         """,
     )
 
     load_artist_linkage_to_bigquery = GCSToBigQueryOperator(
-        bucket=DATA_GCS_BUCKET_NAME,
+        bucket=MLFLOW_BUCKET_NAME,
         task_id="load_artist_linkage_to_bigquery",
-        source_objects=OUTPUT_GCS_PATH.split(f"{DATA_GCS_BUCKET_NAME}/")[-1],
+        source_objects=OUTPUT_GCS_FILENAME,
         destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.matched_artists",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
@@ -188,29 +189,33 @@ with DAG(
                     "tableId": ARTIST_LINKAGE_ON_TEST_SET_PARAMS["destination_table"],
                 },
                 "compression": None,
-                "destinationUris": LINKED_ARTISTS_IN_TEST_SET_PATH,
+                "destinationUris": os.path.join(
+                    STORAGE_BASE_PATH, LINKED_ARTISTS_IN_TEST_SET_FILENAME
+                ),
                 "destinationFormat": "PARQUET",
             }
         },
         dag=dag,
     )
 
-    artist_metrics = SSHGCEOperator(
-        task_id="artist_metrics",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
+    artist_metrics = (
+        SSHGCEOperator(
+            task_id="artist_metrics",
+            instance_name=GCE_INSTANCE,
+            base_dir=BASE_DIR,
+            command=f"""
          python evaluate.py \
-        --input-file-path {LINKED_ARTISTS_IN_TEST_SET_PATH} \
-        --output-file-path {ARTIST_METRICS_PATH}
+        --input-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_IN_TEST_SET_FILENAME)} \
+        --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTIST_METRICS_FILENAME)}
         """,
+        ),
     )
-
+    # TODO: Remove this task when MLFlow logging is implemented
     artist_metrics_to_bigquery = GCSToBigQueryOperator(
-        bucket=DATA_GCS_BUCKET_NAME,
+        bucket=MLFLOW_BUCKET_NAME,
         task_id="artist_metrics_to_bigquery",
-        source_objects=ARTIST_METRICS_PATH.split(f"{DATA_GCS_BUCKET_NAME}/")[-1],
-        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.artist_metrics",
+        source_objects=ARTIST_METRICS_FILENAME,
+        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{METRICS_TABLE}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,

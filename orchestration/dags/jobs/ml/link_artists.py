@@ -35,7 +35,8 @@ BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
 SCHEDULE_CRON = "0 3 * * *"
 
 # GCS Paths / Filenames
-STORAGE_BASE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/link_artists_{ENV_SHORT_NAME}"
+GCS_FOLDER_PATH = f"link_artists_{ENV_SHORT_NAME}"
+STORAGE_BASE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}"
 INPUT_GCS_FILENAME = "artists_to_match.parquet"
 PREPROCESSED_GCS_FILENAME = "preprocessed_artists_to_match.parquet"
 OUTPUT_GCS_FILENAME = "matched_artists.parquet"
@@ -135,7 +136,7 @@ with DAG(
     collect_test_sets_into_bq = GCSToBigQueryOperator(
         task_id="import_test_sets_in_bq",
         bucket=MLFLOW_BUCKET_NAME,
-        source_objects=[IMPORT_TEST_SET_GCS_REGEX],
+        source_objects=[os.path.join(GCS_FOLDER_PATH, IMPORT_TEST_SET_GCS_REGEX)],
         destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{TEST_SET_BQ_TABLE}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
@@ -167,7 +168,7 @@ with DAG(
     load_artist_linkage_to_bigquery = GCSToBigQueryOperator(
         bucket=MLFLOW_BUCKET_NAME,
         task_id="load_artist_linkage_to_bigquery",
-        source_objects=OUTPUT_GCS_FILENAME,
+        source_objects=os.path.join(GCS_FOLDER_PATH, OUTPUT_GCS_FILENAME),
         destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.matched_artists",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
@@ -216,7 +217,7 @@ with DAG(
     artist_metrics_to_bigquery = GCSToBigQueryOperator(
         bucket=MLFLOW_BUCKET_NAME,
         task_id="artist_metrics_to_bigquery",
-        source_objects=ARTIST_METRICS_FILENAME,
+        source_objects=os.path.join(GCS_FOLDER_PATH, ARTIST_METRICS_FILENAME),
         destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{METRICS_TABLE}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",

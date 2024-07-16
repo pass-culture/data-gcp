@@ -53,7 +53,7 @@ SELECT
     u.user_birth_date
 FROM {{ ref('int_applicative__deposit') }} AS d
 LEFT JOIN bookings_grouped_by_deposit AS bgd ON bgd.deposit_id = d.deposit_id
-LEFT JOIN {{ ref('int_applicative__user') }} AS u ON u.user_id = d.user_id
+INNER JOIN {{ ref('int_applicative__user') }} AS u ON u.user_id = d.user_id
 LEFT JOIN {{ ref('int_applicative__action_history') }} AS ah ON ah.user_id = d.user_id AND ah.action_history_rk = 1
 WHERE
     (

@@ -54,7 +54,7 @@ with DAG(
             type="string",
         ),
         "batch_size": Param(
-            default=50_000 if ENV_SHORT_NAME == "prod" else 10000,
+            default=25_000 if ENV_SHORT_NAME == "prod" else 10000,
             type="integer",
         ),
     },

@@ -76,7 +76,3 @@ FROM {{ source('raw','applicative_database_stock') }} AS s
 LEFT JOIN bookings_grouped_by_stock AS bs ON bs.stock_id = s.stock_id
 LEFT JOIN {{ source('raw','applicative_database_price_category') }} AS price_category ON price_category.price_category_id = s.price_category_id
 LEFT JOIN {{ source('raw','applicative_database_price_category_label') }} AS price_category_label ON price_category.price_category_label_id = price_category_label.price_category_label_id
-WHERE TRUE
-    {% if is_incremental() %}
-    AND stock_modified_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
-    {% endif %}

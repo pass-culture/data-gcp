@@ -40,8 +40,8 @@ SELECT
     -- help consultation
     SUM(CASE WHEN total_collective_help_clicks + total_help_center_clicks + total_help_center_clicks + total_consult_support_clicks + total_consult_cgu_clicks > 0 THEN 1 ELSE 0 END) AS total_consulted_help,
 FROM {{ ref('int_firebase__pro_visit') }} AS fpv
-LEFT JOIN {{ ref('enriched_user_offerer') }} AS uo ON fpv.user_id = uo.user_id
-LEFT JOIN {{ ref('enriched_user_offerer') }} AS o ON uo.offerer_id = o.offerer_id
+LEFT JOIN {{ ref('mrt_global__user_offerer') }} AS uo ON fpv.user_id = uo.user_id
+LEFT JOIN {{ ref('mrt_global__user_offerer') }} AS o ON uo.offerer_id = o.offerer_id
 LEFT JOIN {{ ref('enriched_cultural_partner_data') }} AS p ON uo.offerer_id = p.offerer_id
 WHERE TRUE
     {% if is_incremental() %}

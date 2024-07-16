@@ -46,6 +46,10 @@ def main(
         ...,
         help="Number of items to preprocess",
     ),
+    max_rows_to_process: int = typer.Option(
+        -1,
+        help="Number of item to preprocess at maximum. If -1, all items will be processed",
+    ),
     input_dataset_name: str = typer.Option(
         ...,
         help="Name of the input dateset",
@@ -64,7 +68,8 @@ def main(
     ),
 ) -> None:
     """
-    Main loggic data for embedding extraction
+    Main loggic data for embedding extraction.
+    Input table depends on output table, we loop until all data is processed, by default.
     """
 
     with open(
@@ -75,6 +80,16 @@ def main(
         params = json.load(config_file)
 
     batch_size = params["batch_size"]
+
+    count_query = f"SELECT COUNT(*) as total_to_process FROM `{gcp_project}.{input_dataset_name}.{input_table_name}`"
+    total_to_process = pd.read_gbq(count_query)["total_to_process"][0]
+
+    if max_rows_to_process < 0:
+        max_rows_to_process = total_to_process
+
+    logging.info(
+        f"Total rows to process: {total_to_process}, will process {max_rows_to_process} rows."
+    )
 
     df = load_data(
         gcp_project,
@@ -87,8 +102,8 @@ def main(
     processed_rows = 0
     iteration = 0
 
-    # input table depends on output table.
-    while df.shape[0] > 0:
+    # Will loop until all data is processed or max_rows_to_process is reached
+    while df.shape[0] > 0 and processed_rows < max_rows_to_process:
         df = preprocess(df, params["features"])
 
         df = (

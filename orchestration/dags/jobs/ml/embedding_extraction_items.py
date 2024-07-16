@@ -84,20 +84,6 @@ with DAG(
         command="""pip install -r requirements.txt --user""",
     )
 
-    preprocess = SSHGCEOperator(
-        task_id="preprocess",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command="PYTHONPATH=. python preprocess.py "
-        f"--gcp-project {GCP_PROJECT_ID} "
-        f"--env-short-name {ENV_SHORT_NAME} "
-        "--batch-size {{ params.batch_size }} "
-        "--config-file-name {{ params.config_file_name }} "
-        f"--input-dataset-name ml_input_{ENV_SHORT_NAME} "
-        f"--input-table-name item_embedding_extraction "
-        f"--output-table-name {DATE}_item_to_extract_embeddings_preprocessing ",
-    )
-
     extract_embedding = SSHGCEOperator(
         task_id="extract_embedding",
         instance_name=GCE_INSTANCE,
@@ -105,9 +91,10 @@ with DAG(
         environment=DAG_CONFIG,
         command="mkdir -p img && PYTHONPATH=. python main.py "
         f"--gcp-project {GCP_PROJECT_ID} "
-        f"--env-short-name {ENV_SHORT_NAME} "
         "--config-file-name {{ params.config_file_name }} "
-        f"--input-table-name {DATE}_item_to_extract_embeddings_preprocessing "
+        "--batch-size {{ params.batch_size }} "
+        f"--input-dataset-name ml_input_{ENV_SHORT_NAME} "
+        f"--input-table-name item_embedding_extraction "
         f"--output-dataset-name ml_preproc_{ENV_SHORT_NAME} "
         f"--output-table-name item_embedding_extraction ",
     )
@@ -120,7 +107,6 @@ with DAG(
         gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> preprocess
         >> extract_embedding
         >> gce_instance_stop
     )

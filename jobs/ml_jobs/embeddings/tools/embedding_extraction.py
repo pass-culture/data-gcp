@@ -21,9 +21,8 @@ def extract_embedding(df_data, params):
     download_img_multiprocess(df_data.image.tolist())
 
     for feature in params["features"]:
-        logging.info(f"Processing {feature['name']}")
         for model_type in feature["model"]:
-            logging.info(f"Using {model_type}")
+            step = time.time()
             model = models[model_type]
             emb_col_name = create_embedding_column_name(feature, model_type)
             if feature["type"] == "image":
@@ -36,9 +35,10 @@ def extract_embedding(df_data, params):
                     model, df_data[feature["name"]].tolist()
                 )
             df_encoded[emb_col_name] = df_encoded[emb_col_name].astype(str)
+            log_duration(f"Processed {feature['name']}, using {model_type}", step)
 
     shutil.rmtree(IMAGE_DIR, ignore_errors=True)
-    log_duration("Embedding extraction", start)
+    log_duration(f"Done processing.", start)
     return df_encoded
 
 
@@ -83,7 +83,10 @@ def encode_img_from_path(model, paths):
     if len(images) > 0:
         try:
             encoded_images = model.encode(
-                images, batch_size=128, show_progress_bar=True
+                images,
+                batch_size=128,
+                normalize_embeddings=True,
+                show_progress_bar=False,
             )
             for url, img_emb in zip(urls, encoded_images):
                 embeddings[url] = list(img_emb)
@@ -109,5 +112,7 @@ def encode_text(model, texts):
     """
     return [
         list(embedding)
-        for embedding in model.encode(texts, batch_size=128, show_progress_bar=True)
+        for embedding in model.encode(
+            texts, batch_size=128, normalize_embeddings=True, show_progress_bar=False
+        )
     ]

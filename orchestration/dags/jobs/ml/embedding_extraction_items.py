@@ -54,7 +54,11 @@ with DAG(
             type="string",
         ),
         "batch_size": Param(
-            default=25_000 if ENV_SHORT_NAME == "prod" else 10000,
+            default=25_000 if ENV_SHORT_NAME == "prod" else 5_000,
+            type="integer",
+        ),
+        "max_rows_to_process": Param(
+            default=1_000_000 if ENV_SHORT_NAME == "prod" else 15_000,
             type="integer",
         ),
     },
@@ -93,6 +97,7 @@ with DAG(
         f"--gcp-project {GCP_PROJECT_ID} "
         "--config-file-name {{ params.config_file_name }} "
         "--batch-size {{ params.batch_size }} "
+        "--max-rows-to-process {{ params.max_rows_to_process }} "
         f"--input-dataset-name ml_input_{ENV_SHORT_NAME} "
         f"--input-table-name item_embedding_extraction "
         f"--output-dataset-name ml_preproc_{ENV_SHORT_NAME} "

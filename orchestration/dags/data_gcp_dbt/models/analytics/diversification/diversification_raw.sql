@@ -1,5 +1,6 @@
 
-{% set diversification_features = [ "category", "sub_category", "format", "venue_id", "extra_category"] %}
+{% set diversification_features = [ "category", "sub_category", "format", "venue_id", "extra_category", "venue_type_label"] %}
+{% set delta_diversification_features = ["category", "sub_category", "format", "venue_id", "extra_category"] %}
 
 WITH users AS (
   SELECT DISTINCT 
@@ -23,6 +24,7 @@ bookings AS (
     , bookings.digital_goods
     , bookings.event
     , bookings.venue_id
+    , bookings.venue_type_label
 
 FROM {{ ref('mrt_global__booking') }} as bookings
 WHERE booking_status != 'CANCELLED'
@@ -54,6 +56,7 @@ SELECT
         WHEN subcategories.online_offline_platform in ("OFFLINE", "ONLINE_OR_OFFLINE") AND subcategories.is_event = FALSE THEN "physical"
     END as format 
     , bookings.offer_id
+    , bookings.venue_type_label
     , is_free_offer
     , offer_metadata.category_id as category
     , offer_metadata.subcategory_id as sub_category
@@ -127,7 +130,7 @@ SELECT
   , case
       when booking_rank = 1 then 1 -- 1 point d'office pour le premier booking
       else -- somme des points de diversification pr les suivants
-          {% for feature in diversification_features %} 
+          {% for feature in delta_diversification_features %} 
           {{feature}}_diversification 
           {% if not loop.last -%} + {%- endif %}
           {% endfor %}

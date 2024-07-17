@@ -9,3 +9,4 @@ MLFLOW_URI = (
     else "https://mlflow.staging.passculture.team/"
 )
 MLFLOW_SECRET_NAME = "mlflow_client_id"
+SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}"

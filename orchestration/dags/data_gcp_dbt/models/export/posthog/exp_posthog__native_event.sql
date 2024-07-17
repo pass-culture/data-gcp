@@ -27,7 +27,8 @@ SELECT
         offer_subcategory_id,
         venue_name,
         venue_type_label,
-        content_type
+        content_type,
+        origin
     ) as extra_params,
     STRUCT(
         user_current_deposit_type,

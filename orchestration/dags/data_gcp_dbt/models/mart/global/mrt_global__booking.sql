@@ -22,7 +22,7 @@ SELECT
     s.offer_name,
     s.venue_name,
     s.venue_label,
-    s.venue_type_label, -- venue_type_name # TODO
+    s.venue_type_label,
     s.venue_id,
     s.venue_postal_code,
     s.venue_department_code,

@@ -2,16 +2,14 @@ import matplotlib.pyplot as plt
 import mlflow
 import pandas as pd
 import typer
-
-from utils.constants import ENV_SHORT_NAME, EXPERIMENT_BASE_NAME
 from utils.mlflow import (
     connect_remote_mlflow,
     get_mlflow_client_id,
     get_mlflow_experiment,
 )
 
-METRICS_PER_DATASET_CSV_PATH = "metrics_per_dataset.csv"
-METRICS_PER_DATASET_GRAPH_PATH = "metrics_per_dataset.png"
+METRICS_PER_DATASET_CSV_FILENAME = "metrics_per_dataset.csv"
+METRICS_PER_DATASET_GRAPH_FILENAME = "metrics_per_dataset.png"
 
 app = typer.Typer()
 
@@ -69,6 +67,7 @@ def get_main_matched_cluster_per_dataset(
 @app.command()
 def main(
     input_file_path: str = typer.Option(),
+    experiment_name: str = typer.Option(),
 ) -> None:
     matched_artists_in_test_set_df = pd.read_parquet(input_file_path)
 
@@ -101,8 +100,7 @@ def main(
 
     # MLflow Logging
     connect_remote_mlflow(get_mlflow_client_id())
-    experiment_name = f"{EXPERIMENT_BASE_NAME}_{ENV_SHORT_NAME}"
-    experiment = get_mlflow_experiment(experiment_name)
+    experiment = get_mlflow_experiment(experiment_name=experiment_name)
     with mlflow.start_run(experiment_id=experiment.experiment_id):
         # Log Dataset
         dataset = mlflow.data.from_pandas(
@@ -113,8 +111,8 @@ def main(
         mlflow.log_input(dataset, context="evaluation")
 
         # Log Metrics
-        metrics_per_dataset_df.to_csv(METRICS_PER_DATASET_CSV_PATH, index=False)
-        mlflow.log_artifact(METRICS_PER_DATASET_CSV_PATH)
+        metrics_per_dataset_df.to_csv(METRICS_PER_DATASET_CSV_FILENAME, index=False)
+        mlflow.log_artifact(METRICS_PER_DATASET_CSV_FILENAME)
         mlflow.log_metrics(metrics_dict)
 
         # Create and Log Graph
@@ -123,8 +121,8 @@ def main(
         )
         ax.legend(loc="upper left")
         plt.tight_layout()
-        plt.savefig(METRICS_PER_DATASET_GRAPH_PATH)
-        mlflow.log_artifact(METRICS_PER_DATASET_GRAPH_PATH)
+        plt.savefig(METRICS_PER_DATASET_GRAPH_FILENAME)
+        mlflow.log_artifact(METRICS_PER_DATASET_GRAPH_FILENAME)
 
 
 if __name__ == "__main__":

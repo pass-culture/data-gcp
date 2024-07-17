@@ -207,7 +207,8 @@ with DAG(
             base_dir=BASE_DIR,
             command=f"""
          python evaluate.py \
-        --input-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_IN_TEST_SET_FILENAME)}
+        --input-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_IN_TEST_SET_FILENAME)} \
+        --experiment-name artist_linkage_v1.0_{ENV_SHORT_NAME}
         """,
         ),
     )

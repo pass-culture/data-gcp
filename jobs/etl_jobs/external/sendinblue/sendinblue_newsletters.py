@@ -118,7 +118,7 @@ class SendinblueNewsletters:
     def save_to_historical(self, df_to_save, schema):
         bigquery_client = bigquery.Client()
 
-        _now = self.end_date
+        _now = datetime.now(tz=timezone.utc)
         yyyymmdd = _now.strftime("%Y%m%d")
         table_id = f"{self.gcp_project}.{self.raw_dataset}.{self.destination_table_name}_histo${yyyymmdd}"
         job_config = bigquery.LoadJobConfig(

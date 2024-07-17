@@ -1,6 +1,12 @@
 import os
 from datetime import datetime
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.python import PythonOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -23,29 +29,22 @@ from dependencies.ml.linkage.artist_linkage_on_test_set import (
 )
 from dependencies.ml.linkage.import_artists import PARAMS as IMPORT_ARTISTS_PARAMS
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.python import PythonOperator
-from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
-    GCSToBigQueryOperator,
-)
-
 DEFAULT_REGION = "europe-west1"
-GCE_INSTANCE = f"link-artists-{ENV_SHORT_NAME}"
+GCE_INSTANCE = f"artist-linkage-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
 SCHEDULE_CRON = "0 3 * * 1"
 
 # GCS Paths / Filenames
-GCS_FOLDER_PATH = f"link_artists_{ENV_SHORT_NAME}"
+GCS_FOLDER_PATH = f"artist_linkage_{ENV_SHORT_NAME}"
 STORAGE_BASE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}"
-INPUT_GCS_FILENAME = "artists_to_match.parquet"
-PREPROCESSED_GCS_FILENAME = "preprocessed_artists_to_match.parquet"
-OUTPUT_GCS_FILENAME = "matched_artists.parquet"
+INPUT_GCS_FILENAME = "artists_to_link.parquet"
+PREPROCESSED_GCS_FILENAME = "preprocessed_artists_to_link.parquet"
+OUTPUT_GCS_FILENAME = "linked_artists.parquet"
 IMPORT_TEST_SET_GCS_REGEX = "labelled_test_sets/*.parquet"
 LINKED_ARTISTS_IN_TEST_SET_FILENAME = "linked_artists_in_test_set.parquet"
 
 # BQ Output Tables
-MATCHED_ARTISTS_BQ_TABLE = "matched_artists"
+LINKED_ARTISTS_BQ_TABLE = "linked_artists"
 TEST_SET_BQ_TABLE = "test_set"
 METRICS_TABLE = "artist_metrics"
 
@@ -57,7 +56,7 @@ default_args = {
 
 
 with DAG(
-    "link_artists",
+    "artist_linkage",
     default_args=default_args,
     description="Link artists via clustering",
     schedule_interval=get_airflow_schedule(SCHEDULE_CRON),
@@ -169,7 +168,7 @@ with DAG(
         bucket=MLFLOW_BUCKET_NAME,
         task_id="load_artist_linkage_to_bigquery",
         source_objects=os.path.join(GCS_FOLDER_PATH, OUTPUT_GCS_FILENAME),
-        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.matched_artists",
+        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{LINKED_ARTISTS_BQ_TABLE}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,

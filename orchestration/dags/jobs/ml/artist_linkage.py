@@ -24,28 +24,27 @@ from common.operators.gce import (
     StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
-from dependencies.ml.linkage.artist_linkage_on_test_set import (
-    PARAMS as ARTIST_LINKAGE_ON_TEST_SET_PARAMS,
-)
 from dependencies.ml.linkage.import_artists import PARAMS as IMPORT_ARTISTS_PARAMS
+from dependencies.ml.linkage.linked_artists_on_test_set import (
+    PARAMS as LINKED_ARTISTS_ON_TEST_SET_PARAMS,
+)
 
 DEFAULT_REGION = "europe-west1"
-GCE_INSTANCE = f"link-artists-{ENV_SHORT_NAME}"
+GCE_INSTANCE = f"artist-linkage-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
 SCHEDULE_CRON = "0 3 * * 1"
 
 # GCS Paths / Filenames
-GCS_FOLDER_PATH = f"link_artists_{ENV_SHORT_NAME}"
+GCS_FOLDER_PATH = f"artist_linkage_{ENV_SHORT_NAME}"
 STORAGE_BASE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}"
-INPUT_GCS_FILENAME = "artists_to_match.parquet"
-PREPROCESSED_GCS_FILENAME = "preprocessed_artists_to_match.parquet"
-OUTPUT_GCS_FILENAME = "matched_artists.parquet"
+ARTISTS_TO_LINK_GCS_FILENAME = "artists_to_link.parquet"
+PREPROCESSED_GCS_FILENAME = "preprocessed_artists_to_link.parquet"
+LINKED_ARTISTS_GCS_FILENAME = "linked_artists.parquet"
 IMPORT_TEST_SET_GCS_REGEX = "labelled_test_sets/*.parquet"
 LINKED_ARTISTS_IN_TEST_SET_FILENAME = "linked_artists_in_test_set.parquet"
-ARTIST_METRICS_FILENAME = "artist_metrics.parquet"
 
 # BQ Output Tables
-MATCHED_ARTISTS_BQ_TABLE = "matched_artists"
+LINKED_ARTISTS_BQ_TABLE = "linked_artists"
 TEST_SET_BQ_TABLE = "test_set"
 METRICS_TABLE = "artist_metrics"
 
@@ -57,7 +56,7 @@ default_args = {
 
 
 with DAG(
-    "link_artists",
+    "artist_linkage",
     default_args=default_args,
     description="Link artists via clustering",
     schedule_interval=get_airflow_schedule(SCHEDULE_CRON),
@@ -126,7 +125,9 @@ with DAG(
                     "tableId": IMPORT_ARTISTS_PARAMS["destination_table"],
                 },
                 "compression": None,
-                "destinationUris": os.path.join(STORAGE_BASE_PATH, INPUT_GCS_FILENAME),
+                "destinationUris": os.path.join(
+                    STORAGE_BASE_PATH, ARTISTS_TO_LINK_GCS_FILENAME
+                ),
                 "destinationFormat": "PARQUET",
             }
         },
@@ -149,7 +150,7 @@ with DAG(
         base_dir=BASE_DIR,
         command=f"""
          python preprocess.py \
-        --source-file-path {os.path.join(STORAGE_BASE_PATH, INPUT_GCS_FILENAME)} \
+        --source-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_TO_LINK_GCS_FILENAME)} \
         --output-file-path {os.path.join(STORAGE_BASE_PATH, PREPROCESSED_GCS_FILENAME)}
         """,
     )
@@ -161,35 +162,35 @@ with DAG(
         command=f"""
          python cluster.py \
         --source-file-path {os.path.join(STORAGE_BASE_PATH, PREPROCESSED_GCS_FILENAME)} \
-        --output-file-path {os.path.join(STORAGE_BASE_PATH, OUTPUT_GCS_FILENAME)}
+        --output-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_GCS_FILENAME)}
         """,
     )
 
-    load_artist_linkage_to_bigquery = GCSToBigQueryOperator(
+    load_data_into_linked_artists_table = GCSToBigQueryOperator(
         bucket=MLFLOW_BUCKET_NAME,
-        task_id="load_artist_linkage_to_bigquery",
-        source_objects=os.path.join(GCS_FOLDER_PATH, OUTPUT_GCS_FILENAME),
-        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.matched_artists",
+        task_id="load_data_into_linked_artists_table",
+        source_objects=os.path.join(GCS_FOLDER_PATH, LINKED_ARTISTS_GCS_FILENAME),
+        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{LINKED_ARTISTS_BQ_TABLE}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,
     )
 
     # Metrics
-    artist_linkage_on_test_set = bigquery_job_task(
+    linked_artists_on_test_set = bigquery_job_task(
         dag,
-        f"create_bq_table_{ARTIST_LINKAGE_ON_TEST_SET_PARAMS['destination_table']}",
-        ARTIST_LINKAGE_ON_TEST_SET_PARAMS,
+        f"create_bq_table_{LINKED_ARTISTS_ON_TEST_SET_PARAMS['destination_table']}",
+        LINKED_ARTISTS_ON_TEST_SET_PARAMS,
     )
 
-    artist_linkage_on_test_set_to_gcs = BigQueryInsertJobOperator(
-        task_id=f"{ARTIST_LINKAGE_ON_TEST_SET_PARAMS['destination_table']}_to_bucket",
+    linked_artists_on_test_set_to_gcs = BigQueryInsertJobOperator(
+        task_id=f"{LINKED_ARTISTS_ON_TEST_SET_PARAMS['destination_table']}_to_bucket",
         configuration={
             "extract": {
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
                     "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": ARTIST_LINKAGE_ON_TEST_SET_PARAMS["destination_table"],
+                    "tableId": LINKED_ARTISTS_ON_TEST_SET_PARAMS["destination_table"],
                 },
                 "compression": None,
                 "destinationUris": os.path.join(
@@ -209,19 +210,9 @@ with DAG(
             command=f"""
          python evaluate.py \
         --input-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_IN_TEST_SET_FILENAME)} \
-        --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTIST_METRICS_FILENAME)}
+        --experiment-name artist_linkage_v1.0_{ENV_SHORT_NAME}
         """,
         ),
-    )
-    # TODO: Remove this task when MLFlow logging is implemented
-    artist_metrics_to_bigquery = GCSToBigQueryOperator(
-        bucket=MLFLOW_BUCKET_NAME,
-        task_id="artist_metrics_to_bigquery",
-        source_objects=os.path.join(GCS_FOLDER_PATH, ARTIST_METRICS_FILENAME),
-        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{METRICS_TABLE}",
-        source_format="PARQUET",
-        write_disposition="WRITE_TRUNCATE",
-        autodetect=True,
     )
 
     (logging_task >> gce_instance_start >> fetch_code >> install_dependencies)
@@ -232,14 +223,13 @@ with DAG(
         [export_input_bq_to_gcs, install_dependencies]
         >> preprocess_data
         >> artist_linkage
-        >> load_artist_linkage_to_bigquery
+        >> load_data_into_linked_artists_table
     )
 
     (
-        [load_artist_linkage_to_bigquery, collect_test_sets_into_bq]
-        >> artist_linkage_on_test_set
-        >> artist_linkage_on_test_set_to_gcs
+        [load_data_into_linked_artists_table, collect_test_sets_into_bq]
+        >> linked_artists_on_test_set
+        >> linked_artists_on_test_set_to_gcs
         >> artist_metrics
-        >> artist_metrics_to_bigquery
         >> gce_instance_stop
     )

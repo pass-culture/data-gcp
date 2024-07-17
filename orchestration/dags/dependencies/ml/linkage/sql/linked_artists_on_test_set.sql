@@ -34,7 +34,7 @@ SELECT
 FROM
   artists_on_test_set
 LEFT JOIN
-  `{{ bigquery_tmp_dataset }}`.matched_artists linked_artists
+  `{{ bigquery_tmp_dataset }}`.linked_artists linked_artists
 ON
   artists_on_test_set.artist_name = linked_artists.artist_name
   AND artists_on_test_set.offer_category_id = linked_artists.offer_category_id

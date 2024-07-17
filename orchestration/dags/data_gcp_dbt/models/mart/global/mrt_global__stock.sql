@@ -55,6 +55,7 @@ SELECT
     o.digital_goods,
     o.event,
     o.offer_category_id,
-    o.venue_iris_internal_id
+    o.venue_iris_internal_id,
+    o.offer_url
 FROM {{ref('int_applicative__stock')}} AS s
 LEFT JOIN {{ref('int_global__offer')}} AS o ON s.offer_id = o.offer_id

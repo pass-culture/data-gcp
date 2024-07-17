@@ -17,6 +17,7 @@ x-airflow-common:
     GCE_NETWORK_ID: ${GCE_NETWORK_ID:-}
     GCE_SUBNETWORK_ID: ${GCE_SUBNETWORK_ID:-}
     ENV_SHORT_NAME: ${ENV_SHORT_NAME:-}
+    GCE_SA: ${GCE_SA:-}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./airflow/config/airflow.cfg:/opt/airflow/airflow.cfg

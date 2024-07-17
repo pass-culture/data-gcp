@@ -72,7 +72,7 @@ GROUP BY 1,2,3)
 
 ,favorites1 AS (SELECT DISTINCT
     CASE WHEN mrt_global__venue.venue_is_permanent THEN CONCAT("venue-",mrt_global__venue.venue_id)
-         ELSE CONCAT("offerer-", venue_managing_offerer_id) END AS partner_id
+         ELSE CONCAT("offerer-", mrt_global__venue.venue_managing_offerer_id) END AS partner_id
     ,applicative_database_favorite.*
 FROM {{ ref('mrt_global__venue')}} AS mrt_global__venue
 LEFT JOIN {{ ref('mrt_global__offer')}} AS mrt_global__offer ON mrt_global__venue.venue_id = mrt_global__offer.venue_id
@@ -91,7 +91,7 @@ GROUP BY 1,2,3)
 ,consultations AS (
 SELECT
     CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id)
-         ELSE CONCAT("offerer-", venue_managing_offerer_id) END AS partner_id
+         ELSE CONCAT("offerer-", venue.venue_managing_offerer_id) END AS partner_id
     , sum(cnt_events) as total_consultation
     , COALESCE(SUM(CASE WHEN DATE_DIFF(CURRENT_DATE,event_date,MONTH) <= 2 THEN cnt_events END)) as consult_last_2_month
     , COALESCE(SUM(CASE WHEN DATE_DIFF(CURRENT_DATE,event_date,MONTH) <= 6 THEN cnt_events END)) as consult_last_6_month
@@ -99,14 +99,14 @@ SELECT
     , COALESCE(SUM(CASE WHEN DATE_DIFF(venue.last_bookable_offer_date,event_date,MONTH) <= 6 THEN cnt_events END)) as consult_6_month_before_last_bookable
 FROM {{ ref('aggregated_daily_offer_consultation_data')}} consult
 LEFT JOIN {{ ref('mrt_global__venue')}} venue on consult.venue_id = venue.venue_id
-LEFT JOIN {{ ref('enriched_cultural_partner_data')}} on (CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id) ELSE CONCAT("offerer-", venue_managing_offerer_id) END) = enriched_cultural_partner_data.partner_id
+LEFT JOIN {{ ref('enriched_cultural_partner_data')}} on (CASE WHEN venue.venue_is_permanent THEN CONCAT("venue-",venue.venue_id) ELSE CONCAT("offerer-", venue.venue_managing_offerer_id) END) = enriched_cultural_partner_data.partner_id
 GROUP BY 1
 )
 
 ,adage_status AS (
 SELECT
     DISTINCT CASE WHEN mrt_global__venue.venue_is_permanent THEN CONCAT("venue-",mrt_global__venue.venue_id)
-     ELSE CONCAT("offerer-", venue_managing_offerer_id) END AS partner_id
+     ELSE CONCAT("offerer-", mrt_global__venue.venue_managing_offerer_id) END AS partner_id
     ,enriched_offerer_data.first_dms_adage_status
 FROM {{ ref('mrt_global__venue')}} AS mrt_global__venue
 LEFT JOIN {{ ref('enriched_offerer_data')}} on mrt_global__venue.venue_managing_offerer_id = enriched_offerer_data.offerer_id
@@ -121,7 +121,7 @@ LEFT JOIN {{ ref('siren_data')}} ON enriched_offerer_data.offerer_siren = siren_
 
 ,rejected_offers AS (SELECT
     CASE WHEN mrt_global__venue.venue_is_permanent THEN CONCAT("venue-",mrt_global__venue.venue_id)
-         ELSE CONCAT("offerer-", venue_managing_offerer_id) END AS partner_id
+         ELSE CONCAT("offerer-", mrt_global__venue.venue_managing_offerer_id) END AS partner_id
     ,COALESCE(COUNT(*),0) AS offers_cnt
 FROM {{ ref('mrt_global__venue')}} AS mrt_global__venue
 LEFT JOIN {{ ref('offer')}} ON applicative_database_offer.venue_id = mrt_global__venue.venue_id
@@ -130,19 +130,19 @@ GROUP BY 1)
 
 ,providers AS (SELECT
     CASE WHEN mrt_global__venue.venue_is_permanent THEN CONCAT("venue-",mrt_global__venue.venue_id)
-         ELSE CONCAT("offerer-", venue_managing_offerer_id) END AS partner_id
+         ELSE CONCAT("offerer-", mrt_global__venue.venue_managing_offerer_id) END AS partner_id
     ,CASE WHEN provider_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_provider
 FROM {{ ref('mrt_global__venue')}} AS mrt_global__venue
 LEFT JOIN {{ ref('enriched_venue_provider_data')}} ON enriched_venue_provider_data.venue_id = mrt_global__venue.venue_id AND is_active )
 
 --- On estime que si une structure a un lieu rattaché à un point de remboursement, tous les lieux de la structure le sont
 ,reimbursment_point1 AS (SELECT DISTINCT
-    venue_managing_offerer_id AS offerer_id
+    mrt_global__venue.venue_managing_offerer_id AS offerer_id
     ,mrt_global__venue.venue_id
     ,venue_is_permanent
     ,reimbursement_point_link_beginning_date
     ,reimbursement_point_link_ending_date
-    ,RANK() OVER(PARTITION BY venue_managing_offerer_id,mrt_global__venue.venue_id ORDER BY reimbursement_point_link_beginning_date DESC) AS rang
+    ,RANK() OVER(PARTITION BY mrt_global__venue.venue_managing_offerer_id,mrt_global__venue.venue_id ORDER BY reimbursement_point_link_beginning_date DESC) AS rang
 FROM {{ ref('mrt_global__venue')}} AS mrt_global__venue
 LEFT JOIN {{ ref('venue_reimbursement_point_link')}} ON mrt_global__venue.venue_id = applicative_database_venue_reimbursement_point_link.venue_id)
 

@@ -1,5 +1,15 @@
+import matplotlib.pyplot as plt
+import mlflow
 import pandas as pd
 import typer
+from utils.mlflow import (
+    connect_remote_mlflow,
+    get_mlflow_client_id,
+    get_mlflow_experiment,
+)
+
+METRICS_PER_DATASET_CSV_FILENAME = "metrics_per_dataset.csv"
+METRICS_PER_DATASET_GRAPH_FILENAME = "metrics_per_dataset.png"
 
 app = typer.Typer()
 
@@ -57,7 +67,7 @@ def get_main_matched_cluster_per_dataset(
 @app.command()
 def main(
     input_file_path: str = typer.Option(),
-    output_file_path: str = typer.Option(),
+    experiment_name: str = typer.Option(),
 ) -> None:
     matched_artists_in_test_set_df = pd.read_parquet(input_file_path)
 
@@ -79,8 +89,40 @@ def main(
         .apply(compute_metrics_per_slice)
         .reset_index()
     )
+    metrics_dict = {
+        "precision_mean": metrics_per_dataset_df.precision.mean(),
+        "precision_std": metrics_per_dataset_df.precision.std(),
+        "recall_mean": metrics_per_dataset_df.recall.mean(),
+        "recall_std": metrics_per_dataset_df.recall.std(),
+        "f1_mean": metrics_per_dataset_df.f1.mean(),
+        "f1_std": metrics_per_dataset_df.f1.std(),
+    }
 
-    metrics_per_dataset_df.to_parquet(output_file_path, index=False)
+    # MLflow Logging
+    connect_remote_mlflow(get_mlflow_client_id())
+    experiment = get_mlflow_experiment(experiment_name=experiment_name)
+    with mlflow.start_run(experiment_id=experiment.experiment_id):
+        # Log Dataset
+        dataset = mlflow.data.from_pandas(
+            matched_artists_in_test_set_df,
+            source=input_file_path,
+            name="artists_on_test_sets",
+        )
+        mlflow.log_input(dataset, context="evaluation")
+
+        # Log Metrics
+        metrics_per_dataset_df.to_csv(METRICS_PER_DATASET_CSV_FILENAME, index=False)
+        mlflow.log_artifact(METRICS_PER_DATASET_CSV_FILENAME)
+        mlflow.log_metrics(metrics_dict)
+
+        # Create and Log Graph
+        ax = metrics_per_dataset_df.plot.barh(
+            x="dataset_name", y=["precision", "recall", "f1"], rot=0, figsize=(8, 12)
+        )
+        ax.legend(loc="upper left")
+        plt.tight_layout()
+        plt.savefig(METRICS_PER_DATASET_GRAPH_FILENAME)
+        mlflow.log_artifact(METRICS_PER_DATASET_GRAPH_FILENAME)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-{% set diversification_features = [ "category", "sub_category", "format", "venue_id", "extra_category"] %}
+{% set diversification_features = ["category", "sub_category", "format", "venue_id", "extra_category", "venue_type_label"] %}
 
 SELECT 
     diversification_raw.user_id

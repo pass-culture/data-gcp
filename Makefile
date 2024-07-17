@@ -56,6 +56,7 @@ prerequisites_on_debian_vm:
 	echo 'eval "$$(pyenv init -)"' >> ~/.profile
 	echo 'eval "$$(pyenv virtualenv-init -)"' >> ~/.profile
 	echo '. "$$HOME/.cargo/env"' >> ~/.profile
+	echo 'source ~/.profile' >> ~/.bashrc
 	bash
 
 create_microservice:

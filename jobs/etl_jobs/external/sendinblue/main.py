@@ -40,8 +40,8 @@ def run(
             raw_dataset=BIGQUERY_RAW_DATASET,
             api_key=API_KEY,
             destination_table_name=NEWSLETTERS_TABLE_NAME,
-            start_date=today - timedelta(days=UPDATE_WINDOW),
-            end_date=today,
+            start_date=start_date,
+            end_date=end_date,
         )
 
         sendinblue_newsletters.create_instance_email_campaigns_api()

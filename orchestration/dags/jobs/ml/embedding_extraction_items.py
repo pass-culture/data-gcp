@@ -31,13 +31,21 @@ default_args = {
 DAG_CONFIG = {
     "TOKENIZERS_PARALLELISM": "false",
 }
+
+
+INPUT_DATASET_NAME = "ml_input_{ENV_SHORT_NAME}"
+INPUT_TABLE_NAME = "item_embedding_extraction"
+OUTPUT_DATASET_NAME = "ml_preproc_{ENV_SHORT_NAME}"
+OUTPUT_TABLE_NAME = "item_embedding_extraction"
+
+
 with DAG(
     "embeddings_extraction_items",
     default_args=default_args,
     description="Extact items metadata embeddings",
-    schedule_interval=get_airflow_schedule("0 * * * *"),  # every hour
+    schedule_interval=get_airflow_schedule("0 12 * * *"),  # every day
     catchup=False,
-    dagrun_timeout=timedelta(minutes=180),
+    dagrun_timeout=timedelta(hours=20),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     params={
@@ -54,7 +62,11 @@ with DAG(
             type="string",
         ),
         "batch_size": Param(
-            default=25_000 if ENV_SHORT_NAME == "prod" else 10000,
+            default=25_000 if ENV_SHORT_NAME == "prod" else 5_000,
+            type="integer",
+        ),
+        "max_rows_to_process": Param(
+            default=500_000 if ENV_SHORT_NAME == "prod" else 15_000,
             type="integer",
         ),
     },
@@ -84,20 +96,6 @@ with DAG(
         command="""pip install -r requirements.txt --user""",
     )
 
-    preprocess = SSHGCEOperator(
-        task_id="preprocess",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command="PYTHONPATH=. python preprocess.py "
-        f"--gcp-project {GCP_PROJECT_ID} "
-        f"--env-short-name {ENV_SHORT_NAME} "
-        "--batch-size {{ params.batch_size }} "
-        "--config-file-name {{ params.config_file_name }} "
-        f"--input-dataset-name ml_input_{ENV_SHORT_NAME} "
-        f"--input-table-name item_embedding_extraction "
-        f"--output-table-name {DATE}_item_to_extract_embeddings_preprocessing ",
-    )
-
     extract_embedding = SSHGCEOperator(
         task_id="extract_embedding",
         instance_name=GCE_INSTANCE,
@@ -105,11 +103,13 @@ with DAG(
         environment=DAG_CONFIG,
         command="mkdir -p img && PYTHONPATH=. python main.py "
         f"--gcp-project {GCP_PROJECT_ID} "
-        f"--env-short-name {ENV_SHORT_NAME} "
         "--config-file-name {{ params.config_file_name }} "
-        f"--input-table-name {DATE}_item_to_extract_embeddings_preprocessing "
-        f"--output-dataset-name ml_preproc_{ENV_SHORT_NAME} "
-        f"--output-table-name item_embedding_extraction ",
+        "--batch-size {{ params.batch_size }} "
+        "--max-rows-to-process {{ params.max_rows_to_process }} "
+        f"--input-dataset-name {INPUT_DATASET_NAME} "
+        f"--input-table-name {INPUT_TABLE_NAME} "
+        f"--output-dataset-name {OUTPUT_DATASET_NAME} "
+        f"--output-table-name {OUTPUT_TABLE_NAME} ",
     )
 
     gce_instance_stop = StopGCEOperator(
@@ -120,7 +120,6 @@ with DAG(
         gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> preprocess
         >> extract_embedding
         >> gce_instance_stop
     )

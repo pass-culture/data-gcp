@@ -6,5 +6,6 @@ logging.basicConfig(
 )
 
 
-def log_duration(message, start):
-    logging.info(f"{message}: {time.time() - start} seconds.")
+def log_duration(message: str, start: float):
+    duration_in_minutes = (time.time() - start) / 60
+    logging.info(f"{message}: {duration_in_minutes} minutes.")

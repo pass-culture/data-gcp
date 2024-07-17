@@ -54,6 +54,9 @@ SELECT
     u.user_age,
     u.user_birth_date,
     u.user_is_active,
+    u.user_is_in_qpv,
+    u.user_is_unemployed,
+    u.user_is_priority_public,
     s.item_id,
     RANK() OVER (
         PARTITION BY b.user_id,

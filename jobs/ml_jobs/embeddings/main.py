@@ -10,13 +10,14 @@ from tools.embedding_extraction import extract_embedding
 def preprocess(df, features):
     df = df.fillna(" ")
     for feature in features:
-        if feature["type"] == "text":
-            df[feature["name"]] = df[feature["name"]].str.lower()
         if feature["type"] == "macro_text":
-            df[feature["name"]] = df[feature["content"]].agg(" ".join, axis=1)
-            df[feature["name"]] = df[feature["name"]].astype(str)
-            df[feature["name"]] = df[feature["name"]].str.lower()
-            df[feature["name"]] = df[feature["name"]].str.replace("_", " ")
+            df[feature["name"]] = (
+                df[feature["content"]]
+                .agg(" ".join, axis=1)
+                .astype(str)
+                .str.lower()
+                .str.replace("_", " ")
+            )
     return df
 
 
@@ -28,9 +29,9 @@ def load_data(
     iteration: int,
     processed_rows: int,
 ) -> pd.DataFrame:
-    sql = f"SELECT * FROM `{gcp_project}.{input_dataset_name}.{input_table_name}` LIMIT {batch_size} "
-
-    df = pd.read_gbq(sql)
+    df = pd.read_gbq(
+        f"SELECT * FROM `{gcp_project}.{input_dataset_name}.{input_table_name}` LIMIT {batch_size} "
+    )
     logging.info(
         f"Data loaded: {df.shape}, {iteration} iteration, processed rows: {processed_rows}"
     )
@@ -48,7 +49,7 @@ def main(
     ),
     max_rows_to_process: int = typer.Option(
         -1,
-        help="Number of item to preprocess at maximum. If -1, all items will be processed",
+        help="Number of item to preprocess at maximum. If -1, all items will be processed.",
     ),
     input_dataset_name: str = typer.Option(
         ...,
@@ -83,7 +84,7 @@ def main(
     total_to_process = pd.read_gbq(count_query)["total_to_process"][0]
 
     if max_rows_to_process < 0:
-        max_rows_to_process = total_to_process
+        max_rows_to_process = min(total_to_process, max_rows_to_process)
 
     logging.info(
         f"Total rows to process: {total_to_process}, will process {max_rows_to_process} rows."
@@ -92,16 +93,17 @@ def main(
     processed_rows = 0
     iteration = 0
 
+    df = load_data(
+        gcp_project,
+        input_dataset_name,
+        input_table_name,
+        batch_size,
+        iteration,
+        processed_rows,
+    )
     # Will loop until all data is processed or max_rows_to_process is reached
-    while processed_rows < max_rows_to_process:
-        df = load_data(
-            gcp_project,
-            input_dataset_name,
-            input_table_name,
-            batch_size,
-            iteration,
-            processed_rows,
-        )
+    while processed_rows < max_rows_to_process and df.shape[0] > 0:
+
         df = preprocess(df, params["features"])
 
         extract_embedding(df, params,).assign(
@@ -115,6 +117,15 @@ def main(
 
         processed_rows += df.shape[0]
         iteration += 1
+
+        df = load_data(
+            gcp_project,
+            input_dataset_name,
+            input_table_name,
+            batch_size,
+            iteration,
+            processed_rows,
+        )
 
 
 if __name__ == "__main__":

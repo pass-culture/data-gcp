@@ -31,6 +31,14 @@ default_args = {
 DAG_CONFIG = {
     "TOKENIZERS_PARALLELISM": "false",
 }
+
+
+INPUT_DATASET_NAME = "ml_input_{ENV_SHORT_NAME}"
+INPUT_TABLE_NAME = "item_embedding_extraction"
+OUTPUT_DATASET_NAME = "ml_preproc_{ENV_SHORT_NAME}"
+OUTPUT_TABLE_NAME = "item_embedding_extraction"
+
+
 with DAG(
     "embeddings_extraction_items",
     default_args=default_args,
@@ -98,10 +106,10 @@ with DAG(
         "--config-file-name {{ params.config_file_name }} "
         "--batch-size {{ params.batch_size }} "
         "--max-rows-to-process {{ params.max_rows_to_process }} "
-        f"--input-dataset-name ml_input_{ENV_SHORT_NAME} "
-        f"--input-table-name item_embedding_extraction "
-        f"--output-dataset-name ml_preproc_{ENV_SHORT_NAME} "
-        f"--output-table-name item_embedding_extraction ",
+        f"--input-dataset-name {INPUT_DATASET_NAME} "
+        f"--input-table-name {INPUT_TABLE_NAME} "
+        f"--output-dataset-name {OUTPUT_DATASET_NAME} "
+        f"--output-table-name {OUTPUT_TABLE_NAME} ",
     )
 
     gce_instance_stop = StopGCEOperator(

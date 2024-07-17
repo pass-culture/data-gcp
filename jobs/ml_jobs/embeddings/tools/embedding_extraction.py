@@ -5,6 +5,7 @@ from sentence_transformers import SentenceTransformer
 from utils.logging import logging, log_duration
 from utils.download import IMAGE_DIR, download_img_multiprocess
 from utils.file_handler import load_img_multiprocess
+from tools.config import TRANSFORMER_BATCH_SIZE
 
 
 def extract_embedding(df_data, params):
@@ -22,7 +23,7 @@ def extract_embedding(df_data, params):
 
     for feature in params["features"]:
         for model_type in feature["model"]:
-            step = time.time()
+            step_time = time.time()
             model = models[model_type]
             emb_col_name = create_embedding_column_name(feature, model_type)
             if feature["type"] == "image":
@@ -35,7 +36,7 @@ def extract_embedding(df_data, params):
                     model, df_data[feature["name"]].tolist()
                 )
             df_encoded[emb_col_name] = df_encoded[emb_col_name].astype(str)
-            log_duration(f"Processed {feature['name']}, using {model_type}", step)
+            log_duration(f"Processed {feature['name']}, using {model_type}", step_time)
 
     shutil.rmtree(IMAGE_DIR, ignore_errors=True)
     log_duration(f"Done processing.", start)
@@ -84,7 +85,7 @@ def encode_img_from_path(model, paths):
         try:
             encoded_images = model.encode(
                 images,
-                batch_size=128,
+                batch_size=TRANSFORMER_BATCH_SIZE,
                 normalize_embeddings=True,
                 show_progress_bar=False,
             )
@@ -113,6 +114,9 @@ def encode_text(model, texts):
     return [
         list(embedding)
         for embedding in model.encode(
-            texts, batch_size=128, normalize_embeddings=True, show_progress_bar=False
+            texts,
+            batch_size=TRANSFORMER_BATCH_SIZE,
+            normalize_embeddings=True,
+            show_progress_bar=False,
         )
     ]

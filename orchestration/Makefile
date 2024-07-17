@@ -1,5 +1,5 @@
 build_and_init:
-	docker-compose  build --no-cache;
+	docker-compose build --no-cache;
 	docker-compose up -d;
 
 start:
@@ -9,7 +9,7 @@ stop:
 	docker-compose stop;
 
 rebuild:
-	docker-compose down;
+	docker-compose down -v; # This stops containers and removes volumes
 	docker-compose build;
 	docker-compose up -d;
 

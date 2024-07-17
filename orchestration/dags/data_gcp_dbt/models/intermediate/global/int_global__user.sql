@@ -142,7 +142,7 @@ SELECT
     first_paid_booking_type.first_paid_booking_type,
     bdgu.total_distinct_types,
     u.user_is_active,
-    us.action_history_reason AS user_suspension_reason,
+    ah.action_history_reason AS user_suspension_reason,
     bdgu.first_deposit_amount AS user_deposit_initial_amount,
     bdgu.last_deposit_expiration_date AS user_deposit_expiration_date,
     CASE WHEN ( TIMESTAMP( bdgu.last_deposit_expiration_date ) >= CURRENT_TIMESTAMP()
@@ -153,7 +153,7 @@ SELECT
     u.user_has_enabled_marketing_email,
     u.user_iris_internal_id
 FROM {{ ref('int_applicative__user') }} AS u
-LEFT JOIN {{ ref('mrt_global__user_suspension')}} AS us ON us.user_id = u.user_id AND action_history_rk = 1
+LEFT JOIN {{ ref('int_applicative__action_history')}} AS ah ON ah.user_id = u.user_id AND ah.action_history_rk = 1
 LEFT JOIN user_agg_deposit_data AS ud ON ud.user_id = u.user_id
 LEFT JOIN bookings_deposit_grouped_by_user AS bdgu ON bdgu.user_id = u.user_id
 LEFT JOIN date_of_bookings_on_third_product AS dbtp ON dbtp.user_id = u.user_id

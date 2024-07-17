@@ -67,6 +67,7 @@ SELECT
     venue_label,
     partner_id,
     offerer_id,
+    venue_managing_offerer_id,
     offerer_name,
     venue_type_label,
     venue_iris_internal_id,
@@ -76,3 +77,4 @@ SELECT
 FROM {{ ref('int_global__offer') }} AS o
 WHERE TRUE
     AND offer_validation = 'APPROVED'
+    AND venue_id IS NOT NULL

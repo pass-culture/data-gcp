@@ -88,7 +88,6 @@ SELECT
     ofr.first_dms_adage_status,
     ofr.is_reference_adage,
     ofr.is_synchro_adage,
-
     CONCAT(
         "https://passculture.pro/structures/",
         ofr.offerer_humanized_id,

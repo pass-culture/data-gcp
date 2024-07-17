@@ -33,9 +33,9 @@ DAG_CONFIG = {
 }
 
 
-INPUT_DATASET_NAME = "ml_input_{ENV_SHORT_NAME}"
+INPUT_DATASET_NAME = f"ml_input_{ENV_SHORT_NAME}"
 INPUT_TABLE_NAME = "item_embedding_extraction"
-OUTPUT_DATASET_NAME = "ml_preproc_{ENV_SHORT_NAME}"
+OUTPUT_DATASET_NAME = f"ml_preproc_{ENV_SHORT_NAME}"
 OUTPUT_TABLE_NAME = "item_embedding_extraction"
 
 

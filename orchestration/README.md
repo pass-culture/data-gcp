@@ -72,7 +72,7 @@ On peut qu'avoir une version de Airflow installé en local. Pour pallier ça, il
 ### Premier lancement (La première fois uniquement)
 
 ```sh
-make build
+make build_and_init
 ```
 
 ### Lancement de l'app

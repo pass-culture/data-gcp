@@ -4,6 +4,8 @@ alembic==1.13.2
     # via mlflow
 altair==5.3.0
     # via streamlit
+aniso8601==9.0.1
+    # via graphene
 asttokens==2.4.1
     # via stack-data
 attrs==23.2.0
@@ -19,6 +21,7 @@ bottleneck==1.3.8
 cachetools==5.3.3
     # via
     #   google-auth
+    #   mlflow
     #   streamlit
 certifi==2024.2.2
     # via requests
@@ -42,14 +45,12 @@ debugpy==1.8.1
     # via ipykernel
 decorator==5.1.1
     # via ipython
+deprecated==1.2.14
+    # via opentelemetry-api
 docker==7.1.0
     # via mlflow
 entrypoints==0.4
     # via mlflow
-exceptiongroup==1.2.1
-    # via
-    #   ipython
-    #   pytest
 executing==2.0.1
     # via stack-data
 flask==3.0.3
@@ -62,7 +63,7 @@ gitpython==3.1.43
     # via
     #   mlflow
     #   streamlit
-google-api-core==2.19.0
+google-api-core[grpc]==2.19.0
     # via
     #   google-cloud-core
     #   google-cloud-secret-manager
@@ -84,11 +85,19 @@ google-crc32c==1.5.0
     #   google-resumable-media
 google-resumable-media==2.7.0
     # via google-cloud-storage
-googleapis-common-protos==1.63.0
+googleapis-common-protos[grpc]==1.63.0
     # via
     #   google-api-core
     #   grpc-google-iam-v1
     #   grpcio-status
+graphene==3.3
+    # via mlflow
+graphql-core==3.2.3
+    # via
+    #   graphene
+    #   graphql-relay
+graphql-relay==3.2.0
+    # via graphene
 greenlet==3.0.3
     # via sqlalchemy
 grpc-google-iam-v1==0.13.1
@@ -160,7 +169,7 @@ matplotlib-inline==0.1.7
     #   ipython
 mdurl==0.1.2
     # via markdown-it-py
-mlflow==2.10.2
+mlflow==2.14.2
     # via -r requirements.in
 nest-asyncio==1.6.0
     # via ipykernel
@@ -183,6 +192,14 @@ numpy==1.26.4
     #   scikit-learn
     #   scipy
     #   streamlit
+opentelemetry-api==1.16.0
+    # via
+    #   mlflow
+    #   opentelemetry-sdk
+opentelemetry-sdk==1.16.0
+    # via mlflow
+opentelemetry-semantic-conventions==0.37b0
+    # via opentelemetry-sdk
 packaging==23.2
     # via
     #   altair
@@ -192,7 +209,7 @@ packaging==23.2
     #   mlflow
     #   pytest
     #   streamlit
-pandas==2.2.0
+pandas[parquet,performance]==2.2.0
     # via
     #   -r requirements.in
     #   altair
@@ -332,8 +349,6 @@ threadpoolctl==3.5.0
     # via scikit-learn
 toml==0.10.2
     # via streamlit
-tomli==2.0.1
-    # via pytest
 toolz==0.12.1
     # via altair
 tornado==6.4
@@ -356,8 +371,7 @@ typer==0.12.3
 typing-extensions==4.12.0
     # via
     #   alembic
-    #   altair
-    #   ipython
+    #   opentelemetry-sdk
     #   sqlalchemy
     #   streamlit
     #   typer
@@ -375,5 +389,7 @@ wcwidth==0.2.13
     # via prompt-toolkit
 werkzeug==3.0.3
     # via flask
+wrapt==1.16.0
+    # via deprecated
 zipp==3.19.2
     # via importlib-metadata

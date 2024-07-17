@@ -82,9 +82,11 @@ def main(
 
     count_query = f"SELECT COUNT(*) as total_to_process FROM `{gcp_project}.{input_dataset_name}.{input_table_name}`"
     total_to_process = pd.read_gbq(count_query)["total_to_process"][0]
-
+    # If max_rows_to_process is -1, we will process all data
     if max_rows_to_process < 0:
-        max_rows_to_process = min(total_to_process, max_rows_to_process)
+        max_rows_to_process = total_to_process
+    # Ensure we don't process more than total_to_process
+    max_rows_to_process = min(total_to_process, max_rows_to_process)
 
     logging.info(
         f"Total rows to process: {total_to_process}, will process {max_rows_to_process} rows."

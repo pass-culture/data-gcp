@@ -1,4 +1,5 @@
 import typer
+from datetime import datetime
 from sendinblue_newsletters import SendinblueNewsletters
 from sendinblue_transactional import SendinblueTransactional
 from datetime import datetime, timezone, timedelta, date
@@ -40,8 +41,8 @@ def run(
             raw_dataset=BIGQUERY_RAW_DATASET,
             api_key=API_KEY,
             destination_table_name=NEWSLETTERS_TABLE_NAME,
-            start_date=start_date,
-            end_date=end_date,
+            start_date=datetime.strptime(start_date, "%Y-%m-%d").date(),
+            end_date=datetime.strptime(end_date, "%Y-%m-%d").date(),
         )
 
         sendinblue_newsletters.create_instance_email_campaigns_api()

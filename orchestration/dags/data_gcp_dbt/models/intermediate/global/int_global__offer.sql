@@ -56,6 +56,7 @@ SELECT
     o.rayon,
     o.book_editor,
     o.type,
+    o.offer_last_provider_id,
     o.subType AS sub_type,
     o.mediation_humanized_id,
     o.total_individual_bookings,

@@ -122,7 +122,7 @@ class SendinblueNewsletters:
         yyyymmdd = _now.strftime("%Y%m%d")
         table_id = f"{self.gcp_project}.{self.raw_dataset}.{self.destination_table_name}_histo${yyyymmdd}"
         job_config = bigquery.LoadJobConfig(
-            write_disposition="WRITE_TRUNCATE",
+            write_disposition="WRITE_APPEND",
             time_partitioning=bigquery.TimePartitioning(
                 type_=bigquery.TimePartitioningType.DAY, field="update_date"
             ),

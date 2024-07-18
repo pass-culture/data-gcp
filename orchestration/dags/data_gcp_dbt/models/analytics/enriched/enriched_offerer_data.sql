@@ -271,6 +271,7 @@ SELECT
     COALESCE(individual_bookings_per_offerer.individual_current_year_real_revenue,0) + COALESCE(collective_bookings_per_offerer.collective_current_year_real_revenue,0) AS current_year_revenue,
     offerer_department_code.offerer_department_code,
     region_department.region_name AS offerer_region_name,
+    offerer.offerer_city,
     offerer.offerer_siren,
     siren_data.activitePrincipaleUniteLegale AS legal_unit_business_activity_code,
     label_unite_legale AS legal_unit_business_activity_label,

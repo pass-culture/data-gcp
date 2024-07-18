@@ -47,15 +47,6 @@ enriched_tables_test_config = {
             "prod": [yesterday, today],
         },
     },
-    "enriched_stock_data": {
-        "dataset_name": BIGQUERY_ANALYTICS_DATASET,
-        "date_field": "stock_creation_date",
-        "freshness_check": {
-            "dev": [last_week, today],
-            "stg": [yesterday, today],
-            "prod": [yesterday, today],
-        },
-    },
     "enriched_suivi_dms_adage": {
         "dataset_name": BIGQUERY_ANALYTICS_DATASET,
         "date_field": "processed_at",

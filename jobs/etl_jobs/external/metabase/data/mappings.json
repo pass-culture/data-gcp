@@ -26,5 +26,28 @@
     "criterion_name": "venue_tag_name",
     "partner_id": "partner_id",
     "venue_id": "venue_id"
+  },
+  "enriched_stock_data": {
+    "available_stock_information": "total_available_stock",
+    "booking_cancelled": "total_cancelled_bookings",
+    "booking_paid": "total_paid_bookings",
+    "booking_quantity": "total_bookings",
+    "offer_id": "offer_id",
+    "offer_name": "offer_name",
+    "offer_subcategoryId": "offer_subcategory_id",
+    "offerer_address_id": "offerer_address_id",
+    "offerer_id": "offerer_id",
+    "partner_id": "partner_id",
+    "price_category_id": "price_category_id",
+    "price_category_label": "price_category_label",
+    "price_category_label_id": "price_category_label_id",
+    "stock_beginning_date": "stock_beginning_date",
+    "stock_booking_limit_date": "stock_booking_limit_date",
+    "stock_creation_date": "stock_creation_date",
+    "stock_features": "stock_features",
+    "stock_id": "stock_id",
+    "stock_price": "stock_price",
+    "stock_quantity": "stock_quantity",
+    "venue_department_code": "venue_department_code"
   }
 }

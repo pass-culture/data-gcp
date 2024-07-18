@@ -49,5 +49,22 @@
     "stock_price": "stock_price",
     "stock_quantity": "stock_quantity",
     "venue_department_code": "venue_department_code"
+  },
+  "enriched_venue_provider_data": {
+    "collective_offer_sync_cnt": "total_collective_offers",
+    "creation_date": "creation_date",
+    "first_collective_offer_sync_date": "first_collective_offer_creation_date",
+    "first_offer_sync_date": "first_individual_offer_creation_date",
+    "is_active": "is_active",
+    "last_sync_date": "last_sync_date",
+    "offer_sync_cnt": "total_individual_offers",
+    "provider_id": "provider_id",
+    "provider_name": "provider_name",
+    "venue_creation_date": "venue_creation_date",
+    "venue_department_code": "venue_department_code",
+    "venue_id": "venue_id",
+    "venue_is_permanent": "venue_is_permanent",
+    "venue_label": "venue_label",
+    "venue_name": "venue_name"
   }
 }

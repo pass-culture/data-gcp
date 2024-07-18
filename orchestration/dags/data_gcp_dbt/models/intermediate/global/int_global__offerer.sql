@@ -80,6 +80,7 @@ SELECT
     ofr.is_collective_active_last_30days,
     ofr.is_collective_active_current_year,
     region_department.region_name AS offerer_region_name,
+    ofr.offerer_city,
     region_department.academy_name,
     siren_data.activitePrincipaleUniteLegale AS legal_unit_business_activity_code,
     label_unite_legale AS legal_unit_business_activity_label,

@@ -77,6 +77,7 @@ with DAG(
         command=f"""
         python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} ios      
         """,
+        retries=2,
     )
 
     android_job = SSHGCEOperator(
@@ -86,6 +87,7 @@ with DAG(
         command=f"""
         python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} android      
         """,
+        retries=2,
     )
 
     gce_instance_stop = StopGCEOperator(

@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 import mlflow
 import pandas as pd
 import typer
+
 from utils.mlflow import (
     connect_remote_mlflow,
-    get_mlflow_client_id,
     get_mlflow_experiment,
 )
 
@@ -99,7 +99,7 @@ def main(
     }
 
     # MLflow Logging
-    connect_remote_mlflow(get_mlflow_client_id())
+    connect_remote_mlflow()
     experiment = get_mlflow_experiment(experiment_name=experiment_name)
     with mlflow.start_run(experiment_id=experiment.experiment_id):
         # Log Dataset

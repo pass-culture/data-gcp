@@ -80,7 +80,7 @@ SELECT
     s.venue_iris_internal_id,
     s.offer_url,
 FROM {{ ref('int_applicative__booking') }} AS b
-INNER JOIN {{ ref('mrt_global__stock') }} AS s ON s.stock_id = b.stock_id
+INNER JOIN {{ ref('int_global__stock') }} AS s ON s.stock_id = b.stock_id
 INNER JOIN {{ ref('mrt_global__user') }} AS u ON u.user_id = b.user_id
 WHERE b.deposit_type IS NOT NULL
     AND s.offer_id IS NOT NULL

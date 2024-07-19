@@ -54,6 +54,7 @@ SELECT
     is_collective_active_last_30days,
     is_collective_active_current_year,
     offerer_region_name,
+    offerer_city,
     academy_name,
     legal_unit_business_activity_code,
     legal_unit_business_activity_label,

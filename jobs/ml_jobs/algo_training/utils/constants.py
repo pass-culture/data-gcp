@@ -6,6 +6,7 @@ STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
 MODEL_DIR = os.environ.get("MODEL_DIR", "")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 TRAIN_DIR = os.environ.get("TRAIN_DIR", "/home/airflow/train")
+MODEL_NAME = os.environ.get("MODEL_NAME", "")
 
 # Infra Parameters
 BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"

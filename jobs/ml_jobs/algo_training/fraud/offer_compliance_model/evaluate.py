@@ -16,7 +16,6 @@ from utils.constants import (
 )
 from utils.data_collect_queries import read_from_gcs
 from utils.mlflow_tools import connect_remote_mlflow
-from utils.secrets_utils import get_secret
 
 
 def evaluate(
@@ -60,8 +59,7 @@ def evaluate(
         text_features=features["catboost_features_types"]["text_features"],
         embedding_features=features["catboost_features_types"]["embedding_features"],
     )
-    client_id = get_secret("mlflow_client_id")
-    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
+    connect_remote_mlflow()
     model = mlflow.catboost.load_model(
         model_uri=f"models:/{model_name}_{ENV_SHORT_NAME}/latest"
     )

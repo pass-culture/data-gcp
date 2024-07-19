@@ -8,27 +8,22 @@ import typer
 from loguru import logger
 
 from utils.constants import (
-    STORAGE_PATH,
-    ENV_SHORT_NAME,
     BIGQUERY_CLEAN_DATASET,
-    MODELS_RESULTS_TABLE_NAME,
     GCP_PROJECT_ID,
-    SERVING_CONTAINER,
-    MODEL_NAME,
-    EXPERIMENT_NAME,
-    MODEL_DIR,
     MLFLOW_RUN_ID_FILENAME,
+    MODEL_DIR,
+    MODEL_NAME,
+    MODELS_RESULTS_TABLE_NAME,
+    SERVING_CONTAINER,
+    STORAGE_PATH,
 )
+from utils.data_collect_queries import read_from_gcs
 from utils.evaluate import evaluate, save_pca_representation
 from utils.mlflow_tools import connect_remote_mlflow
-from utils.secrets_utils import get_secret
-from utils.data_collect_queries import read_from_gcs
 
 
 def main(
-    experiment_name: str = typer.Option(
-        EXPERIMENT_NAME, help="Name of the experiment on MLflow"
-    ),
+    experiment_name: str = typer.Option(None, help="Name of the experiment on MLflow"),
     model_name: str = typer.Option(MODEL_NAME, help="Name of the model to evaluate"),
     training_dataset_name: str = typer.Option(
         "recommendation_training_data", help="Name of the training dataset in storage"
@@ -41,8 +36,7 @@ def main(
     ),
 ):
     logger.info("-------EVALUATE START------- ")
-    client_id = get_secret("mlflow_client_id")
-    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
+    connect_remote_mlflow()
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="r") as file:
         run_id = file.read()
@@ -90,7 +84,6 @@ def main(
         figures_folder=pca_plots_path,
     )
 
-    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     with mlflow.start_run(
         experiment_id=experiment_id, run_id=run_id, nested=True
     ) as run:

@@ -4,33 +4,20 @@ WITH offer_booking_information_view AS (
         COUNT(DISTINCT booking.booking_id) AS count_booking
     FROM
         {{ ref('offer') }} AS offer
-        LEFT JOIN {{ source('raw', 'applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
-        LEFT JOIN {{ ref('booking') }} AS booking ON stock.stock_id = booking.stock_id
+    LEFT JOIN {{ source('raw', 'applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
+    LEFT JOIN {{ ref('booking') }} AS booking ON stock.stock_id = booking.stock_id
     WHERE booking_is_used
     GROUP BY
         offer_id
-), 
-
-item_clusters AS (
-    SELECT 
-        ic.item_id,  
-        ANY_VALUE(ic.semantic_cluster_id) as cluster_id,
-        ANY_VALUE(it.semantic_cluster_id) as topic_id -- TODO: temporary solution, should be removed after the refactor of topics logics.
-    FROM {{ source('clean', 'default_item_clusters') }} ic
-    LEFT JOIN {{ source('clean', 'unconstrained_item_clusters') }} it on it.item_id = ic.item_id
-    GROUP BY 1
 ),
 
 enriched_items AS (
     SELECT 
         offer.*,
         offer_ids.item_id,
-        ic.topic_id,
-        ic.cluster_id,
         IF(offer_type_label is not null, count_booking, null) as count_booking
     FROM {{ ref('offer_metadata') }} offer
     INNER JOIN {{ ref('offer_item_ids') }} offer_ids on offer.offer_id=offer_ids.offer_id
-    LEFT JOIN item_clusters ic on ic.item_id = offer_ids.item_id
     LEFT JOIN offer_booking_information_view obi on obi.offer_id = offer.offer_id
 )
 

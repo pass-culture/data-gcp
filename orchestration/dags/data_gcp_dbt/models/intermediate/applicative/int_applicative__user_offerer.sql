@@ -18,4 +18,4 @@ SELECT
     u.user_has_enabled_marketing_push,
     u.user_has_enabled_marketing_email,
 FROM {{ source("raw", "applicative_database_user_offerer") }} as uo
-LEFT JOIN  {{ ref("int_applicative__user") }} as u on uo.userid = u.user_id
+LEFT JOIN {{ source("raw", "applicative_database_user") }}as u on uo.userid = u.user_id

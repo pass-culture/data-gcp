@@ -145,14 +145,7 @@ sources:
       - name: firebase_app_experiments
       - name: geo_iris
       - name: iris_france
-      - name: default_item_clusters
-      - name: unconstrained_item_clusters
       - name: institutional_scholar_level
-      - name: item_embeddings
-      - name: item_embeddings_reduced_64
-      - name: item_embeddings_reduced_32
-      - name: item_embeddings_reduced_16
-      - name: item_embeddings_reduced_5
       - name: siren_data
       - name: subcategories
   - name: analytics # this is the source_name
@@ -178,4 +171,11 @@ sources:
   - name: ml_preproc
     schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
     tables:
-      - name : item_embedding_extraction 
+      - name: default_item_cluster
+      
+      - name: item_embedding_extraction 
+      - name: item_embedding_reduced_64
+      - name: item_embedding_reduced_32
+      - name: item_embedding_reduced_16
+      - name: item_embedding_reduced_5
+      - name: unconstrained_item_cluster

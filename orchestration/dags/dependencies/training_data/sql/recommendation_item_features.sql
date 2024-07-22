@@ -3,8 +3,8 @@ SELECT
         offer_item_ids.item_id                                          AS item_id,
         subcategories.category_id                                       AS offer_categoryId,
         offer.offer_subcategoryId                                       AS offer_subcategoryid,
-        item_embeddings_reduced.image_embedding                         AS item_image_embedding,
-        item_embeddings_reduced.semantic_content_embedding              AS item_semantic_content_hybrid_embedding,
+        item_embedding_reduced.image_embedding                          AS item_image_embedding,
+        item_embedding_reduced.semantic_content_embedding               AS item_semantic_content_hybrid_embedding,
         STRING_AGG(DISTINCT enroffer.offer_name, " ")                   AS item_names,
         STRING_AGG(DISTINCT offer.offer_description, " ")               AS item_descriptions,
         STRING_AGG(DISTINCT enroffer.rayon, " ")                        AS item_rayons,
@@ -22,8 +22,8 @@ INNER JOIN `{{ bigquery_analytics_dataset }}`.`subcategories` subcategories
         ON offer.offer_subcategoryId = subcategories.id
 INNER JOIN `{{ bigquery_clean_dataset }}`.`offer_item_ids` offer_item_ids
         ON offer_item_ids.offer_id = offer.offer_id
-INNER JOIN `{{ bigquery_clean_dataset }}`.`item_embeddings_reduced_16` item_embeddings_reduced
-        ON offer_item_ids.item_id = item_embeddings_reduced.item_id
+INNER JOIN `{{ bigquery_ml_preproc_dataset }}`.`item_embedding_reduced_16` item_embedding_reduced
+        ON offer_item_ids.item_id = item_embedding_reduced.item_id
 GROUP BY 1,2,3,4,5
 )
 

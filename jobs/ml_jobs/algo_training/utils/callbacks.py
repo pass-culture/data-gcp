@@ -1,19 +1,16 @@
-import tensorflow as tf
 import mlflow
+import tensorflow as tf
 
 from utils.mlflow_tools import connect_remote_mlflow
-from utils.constants import ENV_SHORT_NAME
 
 
 class MLFlowLogging(tf.keras.callbacks.Callback):
-    def __init__(self, client_id: str, env: str, export_path: str):
+    def __init__(self, export_path: str):
         super(MLFlowLogging, self).__init__()
-        self.client_id = client_id
-        self.env = env
         self.export_path = export_path
 
     def on_epoch_end(self, epoch, logs=None):
-        connect_remote_mlflow(self.client_id, env=ENV_SHORT_NAME)
+        connect_remote_mlflow()
 
         mlflow.log_metrics(
             {

@@ -7,8 +7,6 @@ from tools.clusterisation import (
     clusterisation_from_prebuild_embedding,
 )
 from tools.utils import (
-    TMP_DATASET,
-    CLEAN_DATASET,
     export_polars_to_bq,
     load_config_file,
     sha1_to_base64,
@@ -16,8 +14,10 @@ from tools.utils import (
 
 
 def create_clusters(
-    input_table: str = typer.Option(..., help="Path to data"),
-    output_table: str = typer.Option(..., help="Path to data"),
+    input_dataset_name: str = typer.Option(..., help="Path to dataset input name"),
+    input_table_name: str = typer.Option(..., help="Path to table intput name"),
+    output_dataset_name: str = typer.Option(..., help="Path to the dataset name"),
+    output_table_name: str = typer.Option(..., help="Path to tablename"),
     config_file_name: str = typer.Option(
         "default-config",
         help="Config file name",
@@ -36,19 +36,23 @@ def create_clusters(
     embedding_cols = [f"t{x}" for x in range(params["pretrained_embedding_size"])]
     results = []
     for group in params["group_config"]:
-        results.append(generate_clustering(group, f"{input_table}", embedding_cols))
+        results.append(
+            generate_clustering(
+                group, input_dataset_name, input_table_name, embedding_cols
+            )
+        )
 
-    export_polars_to_bq(pl.concat(results), CLEAN_DATASET, f"{output_table}")
+    export_polars_to_bq(pl.concat(results), output_dataset_name, output_table_name)
 
 
 def generate_clustering(
-    group: dict, input_table: str, embedding_cols: list
+    group: dict, input_dataset_name: str, input_table_name: str, embedding_cols: list
 ) -> pl.DataFrame:
     target_n_clusters = group["nb_clusters"]
     clustering_group = group["group"]
-    logger.info(f"Will load {TMP_DATASET}.{input_table}...")
+    logger.info(f"Will load {input_dataset_name}.{input_table_name}...")
     items_with_embedding_pd = pd.read_gbq(
-        f"SELECT * from `{TMP_DATASET}.{input_table}` where category_group='{clustering_group}' "
+        f"SELECT * from `{input_dataset_name}.{input_table_name}` where category_group='{clustering_group}' "
     )
     logger.info(
         f"Loaded! -> item_full_encoding_enriched: {len(items_with_embedding_pd)}"

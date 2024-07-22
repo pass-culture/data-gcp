@@ -21,6 +21,7 @@ from common.config import (
     ENV_SHORT_NAME,
     MLFLOW_BUCKET_NAME,
     BIGQUERY_TMP_DATASET,
+    BIGQUERY_ML_FEATURES_DATASET,
 )
 
 from common.alerts import task_fail_slack_alert
@@ -93,23 +94,14 @@ with DAG(
         command="""pip install -r requirements.txt --user""",
     )
 
-    export_task = BigQueryExecuteQueryOperator(
-        task_id=f"import_item_embbedding_data",
-        sql=(IMPORT_TRAINING_SQL_PATH / f"item_embeddings_reduction.sql").as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_item_embeddings_reduction",
-        dag=dag,
-    )
-
     export_bq = BigQueryInsertJobOperator(
         task_id=f"store_item_embbedding_data",
         configuration={
             "extract": {
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": f"{DATE}_item_embeddings_reduction",
+                    "datasetId": BIGQUERY_ML_FEATURES_DATASET,
+                    "tableId": "item_embedding",
                 },
                 "compression": None,
                 "destinationUris": f"{dag_config['STORAGE_PATH']}/data-*.parquet",
@@ -127,7 +119,8 @@ with DAG(
         command="PYTHONPATH=. python dimension_reduction.py "
         "--config-file-name {{ params.reduction_config_file_name }} "
         f"--source-gs-path {dag_config['STORAGE_PATH']} "
-        f"--output-table-name item_embeddings "
+        f"--output-dataset-name ml_preproc_{ENV_SHORT_NAME} "
+        f"--output-prefix-table-name item_embedding "
         f"--reduction-config default ",
         retries=2,
     )
@@ -138,7 +131,6 @@ with DAG(
 
     (
         start
-        >> export_task
         >> export_bq
         >> gce_instance_start
         >> fetch_code

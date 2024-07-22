@@ -122,9 +122,7 @@ def run(
                 query_card.update_dataset_query(
                     metabase_field_mapping, legacy_table_id, new_table_id
                 )
-                query_card.update_result_metadata(metabase_field_mapping)
                 query_card.update_table_id(new_table_id)
-                query_card.update_viz_settings(metabase_field_mapping)
                 query_card.update_card()
                 transition_log["success"] = True
             except Exception as e:

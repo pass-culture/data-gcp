@@ -62,7 +62,7 @@ with DAG(
             type="string",
         ),
         "batch_size": Param(
-            default=20_000 if ENV_SHORT_NAME == "prod" else 5_000,
+            default=10_000 if ENV_SHORT_NAME == "prod" else 5_000,
             type="integer",
         ),
         "max_rows_to_process": Param(

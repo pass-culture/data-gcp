@@ -3,6 +3,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import json
 import time
+from datetime import datetime
 import pandas as pd
 
 
@@ -79,7 +80,14 @@ class BatchClient:
                 response_df = pd.DataFrame.from_records(response.json()["detail"])
                 response_df["campaign_token"] = response.json()["campaign_token"]
                 dfs_list.append(response_df)
+                print(f"Length of the list of dataframes : {len(dfs_list)}")
+            else:
+                print(
+                    f"Error in the response: {response.json()} --- Status code : {response.status_code}"
+                )
+                continue
             if i % 60 == 0:  # limit at 60 calls each minute = 5 sec by requests
+                print(f"Datetime: {datetime.now()}")
                 print("wait 1 min")
                 time.sleep(60)
 

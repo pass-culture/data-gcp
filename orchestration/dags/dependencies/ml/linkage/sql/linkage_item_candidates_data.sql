@@ -3,7 +3,7 @@ WITH k AS (
         ie.item_id,
         ie.name_embedding
     FROM
-        `{{ bigquery_clean_dataset }}.item_embeddings_reduced_32` ie
+        `{{ bigquery_ml_preproc_dataset }}.item_embedding_reduced_32` ie
     INNER JOIN `{{ bigquery_analytics_dataset }}.global_offer` go on go.item_id = ie.item_id
     where go.is_active 
     and go.is_synchronised is False

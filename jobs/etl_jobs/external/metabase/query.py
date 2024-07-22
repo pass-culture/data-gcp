@@ -1,6 +1,7 @@
 import json
 import re
 
+
 class QueryCard:
     def __init__(self, card_id, metabase_api):
         self.card_id = card_id
@@ -16,7 +17,9 @@ class QueryCard:
         new_stringify_dict = json.dumps(old_dict)
 
         for index_to_map, mapped_index in mapped_fields_dict.items():
-            new_stringify_dict = re.sub(rf"\b{index_to_map}\b", f"{mapped_index}", new_stringify_dict)
+            new_stringify_dict = re.sub(
+                rf"\b{index_to_map}\b", f"{mapped_index}", new_stringify_dict
+            )
 
         new_stringify_dict = new_stringify_dict.replace(
             f'"source-table": {legacy_table_id}', f'"source-table": {new_table_id}'

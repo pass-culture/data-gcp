@@ -20,7 +20,10 @@ SELECT
     v.venue_humanized_id,
     v.venue_backoffice_link,
     v.venue_region_name,
+    v.venue_epci,
     v.venue_academy_name,
+    v.venue_density_label,
+    v.venue_macro_density_label,
     v.venue_targeted_audience,
     v.banner_url,
     v.venue_description,
@@ -85,7 +88,6 @@ SELECT
     ofr.first_dms_adage_status,
     ofr.is_reference_adage,
     ofr.is_synchro_adage,
-
     CONCAT(
         "https://passculture.pro/structures/",
         ofr.offerer_humanized_id,

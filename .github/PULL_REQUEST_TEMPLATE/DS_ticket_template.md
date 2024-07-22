@@ -13,6 +13,7 @@ Tag a reviewer if necessacy  @github/username
 JIRA-ticket_number
 
 ### Type of change
+
 - [ ] hotfix (non-breaking change which fixes an issue)
 - [ ] New model
 - [ ] Training

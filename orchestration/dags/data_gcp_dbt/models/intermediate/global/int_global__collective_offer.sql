@@ -13,9 +13,14 @@ SELECT co.collective_offer_id,
     co.institution_id,
     institution_program.institution_program_name,
     v.venue_name,
-    v.venue_department_code,
     v.venue_region_name,
+    v.venue_department_code,
+    v.venue_postal_code,
+    v.venue_city,
+    v.venue_epci,
     v.venue_academy_name,
+    v.venue_density_label,
+    v.venue_macro_density_label,
     v.venue_is_virtual,
     v.venue_managing_offerer_id AS offerer_id,
     v.offerer_name,
@@ -33,6 +38,14 @@ SELECT co.collective_offer_id,
     co.total_collective_bookings,
     co.total_non_cancelled_collective_bookings,
     co.total_used_collective_bookings,
+    co.institution_academy_name,
+    co.institution_region_name,
+    co.institution_department_code,
+    co.institution_postal_code,
+    co.institution_city,
+    co.institution_epci,
+    co.institution_density_label,
+    co.institution_macro_density_label,
     CONCAT(
         'https://passculture.pro/offre/',
         co.collective_offer_id,
@@ -57,8 +70,8 @@ SELECT co.collective_offer_id,
     cs.collective_stock_id,
     cs.stock_id,
 FROM {{ ref('int_applicative__collective_offer') }} AS co
-    INNER JOIN {{ref('int_global__venue')}} AS v ON v.venue_id = co.venue_id
-    LEFT JOIN {{ source('clean', 'subcategories') }} ON subcategories.id = co.collective_offer_subcategory_id
-    LEFT JOIN {{ source('raw', 'applicative_database_national_program') }} AS national_program ON national_program.national_program_id = co.national_program_id
-    LEFT JOIN {{ ref('int_applicative__institution') }} AS institution_program ON co.institution_id = institution_program.institution_id
-    LEFT JOIN {{ ref('int_applicative__collective_stock') }} AS cs ON cs.collective_offer_id = co.collective_offer_id
+INNER JOIN {{ref('int_global__venue')}} AS v ON v.venue_id = co.venue_id
+LEFT JOIN {{ source('clean', 'subcategories') }} ON subcategories.id = co.collective_offer_subcategory_id
+LEFT JOIN {{ source('raw', 'applicative_database_national_program') }} AS national_program ON national_program.national_program_id = co.national_program_id
+LEFT JOIN {{ ref('int_applicative__institution') }} AS institution_program ON co.institution_id = institution_program.institution_id
+LEFT JOIN {{ ref('int_applicative__collective_stock') }} AS cs ON cs.collective_offer_id = co.collective_offer_id

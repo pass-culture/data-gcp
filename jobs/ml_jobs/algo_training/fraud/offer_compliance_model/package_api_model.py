@@ -10,7 +10,6 @@ from utils.constants import (
     MODEL_DIR,
 )
 from utils.mlflow_tools import connect_remote_mlflow
-from utils.secrets_utils import get_secret
 
 
 def package_api_model(
@@ -30,8 +29,7 @@ def package_api_model(
         features = json.load(config_file)
 
     # Connect to MLflow
-    client_id = get_secret("mlflow_client_id")
-    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
+    connect_remote_mlflow()
 
     # Build the API model
     catboost_model = mlflow.catboost.load_model(

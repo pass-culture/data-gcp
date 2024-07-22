@@ -56,6 +56,7 @@ SELECT
     o.rayon,
     o.book_editor,
     o.type,
+    o.offer_last_provider_id,
     o.subType AS sub_type,
     o.mediation_humanized_id,
     o.total_individual_bookings,
@@ -66,16 +67,23 @@ SELECT
     o.total_first_bookings,
     v.venue_id,
     v.venue_name,
-    v.venue_department_code,
     v.venue_label,
     v.partner_id,
     v.offerer_id,
+    v.venue_managing_offerer_id,
     v.offerer_name,
     v.venue_type_label,
     v.venue_iris_internal_id,
     v.venue_region_name,
+    v.venue_department_code,
+    v.venue_postal_code,
+    v.venue_city,
+    v.venue_epci,
+    v.venue_academy_name,
+    v.venue_density_label,
+    v.venue_macro_density_label,
     o.offerer_address_id,
     o.offer_publication_date,
     o.is_future_scheduled
 FROM {{ ref('int_applicative__offer') }} AS o
-INNER JOIN {{ ref('int_global__venue')}} AS v ON v.venue_id = o.venue_id
+LEFT JOIN {{ ref('int_global__venue')}} AS v ON v.venue_id = o.venue_id

@@ -5,6 +5,12 @@ SELECT
     user_has_enabled_marketing_email,
     user_department_code,
     user_postal_code,
+    user_region_name,
+    user_city,
+    user_epci,
+    user_academy_name,
+    user_density_label,
+    user_macro_density_label,
     user_activity,
     user_civility,
     user_school_type,
@@ -13,6 +19,8 @@ SELECT
     user_role,
     user_birth_date,
     user_cultural_survey_filled_date,
-    is_beneficiary,
-    user_iris_internal_id
+    user_iris_internal_id,
+    user_is_unemployed,
+    user_is_in_qpv,
+    user_is_priority_public
 FROM {{ ref('int_applicative__user') }}

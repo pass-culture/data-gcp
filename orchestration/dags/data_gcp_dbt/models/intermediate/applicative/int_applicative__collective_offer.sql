@@ -67,6 +67,14 @@ SELECT
     cs.total_non_cancelled_tickets,
     cs.total_current_year_non_cancelled_tickets,
     il.institution_internal_iris_id,
+    il.institution_academy_name,
+    il.institution_region_name,
+    il.institution_department_code,
+    il.institution_postal_code,
+    il.institution_city,
+    il.institution_epci,
+    il.institution_density_label,
+    il.institution_macro_density_label,
     FALSE AS collective_offer_is_template,
 FROM {{ source('raw','applicative_database_collective_offer') }} AS co
 LEFT JOIN collective_stocks_grouped_by_collective_offers AS cs ON cs.collective_offer_id = co.collective_offer_id
@@ -126,6 +134,14 @@ SELECT
     0 AS total_non_cancelled_tickets,
     0 AS total_current_year_non_cancelled_tickets,
     NULL AS institution_internal_iris_id,
+    NULL AS institution_academy_name,
+    NULL AS institution_region_name,
+    NULL AS institution_department_code,
+    NULL AS institution_postal_code,
+    NULL AS institution_city,
+    NULL AS institution_epci,
+    NULL AS institution_density_label,
+    NULL AS institution_macro_density_label,
     TRUE AS collective_offer_is_template,
 FROM {{ source('raw','applicative_database_collective_offer_template') }}
 )

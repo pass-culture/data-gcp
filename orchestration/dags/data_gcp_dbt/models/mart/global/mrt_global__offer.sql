@@ -57,16 +57,24 @@ SELECT
     venue_id,
     venue_name,
     venue_department_code,
+    venue_region_name,
+    venue_postal_code,
+    venue_city,
+    venue_epci,
+    venue_academy_name,
+    venue_density_label,
+    venue_macro_density_label,
     venue_label,
     partner_id,
     offerer_id,
+    venue_managing_offerer_id,
     offerer_name,
     venue_type_label,
     venue_iris_internal_id,
-    venue_region_name,
     offerer_address_id,
     offer_publication_date,
     is_future_scheduled
 FROM {{ ref('int_global__offer') }} AS o
 WHERE TRUE
     AND offer_validation = 'APPROVED'
+    AND venue_id IS NOT NULL

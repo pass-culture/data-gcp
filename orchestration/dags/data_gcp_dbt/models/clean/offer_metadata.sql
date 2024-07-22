@@ -38,6 +38,7 @@ enriched_items AS (
 
     SELECT 
         offer.offer_id,
+        offer.offer_creation_date,
         offer.offer_subcategoryId AS subcategory_id,
         subcategories.category_id AS category_id,
         subcategories.search_group_name AS search_group_name,

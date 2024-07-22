@@ -18,7 +18,7 @@ tagged_partners AS (
 SELECT
     offerer_id,
     STRING_AGG(DISTINCT tag_label ORDER BY tag_label) AS partner_type
-FROM {{ ref("mrt_global__offerer_tag") }}
+FROM {{ ref("int_applicative__offerer_tag") }}
 WHERE tag_category_name = "comptage"
 AND tag_label NOT IN ("Association", "EPN","Collectivité","Pas de tag associé","Auto-Entrepreneur","Compagnie","Tourneur")
 GROUP BY offerer_id
@@ -80,6 +80,7 @@ SELECT
     ofr.is_collective_active_last_30days,
     ofr.is_collective_active_current_year,
     region_department.region_name AS offerer_region_name,
+    ofr.offerer_city,
     region_department.academy_name,
     siren_data.activitePrincipaleUniteLegale AS legal_unit_business_activity_code,
     label_unite_legale AS legal_unit_business_activity_label,

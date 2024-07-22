@@ -83,6 +83,7 @@ def export_reduction_table(
 def plan(
     source_gs_path,
     embedding_columns,
+    output_dataset_name,
     output_table_prefix,
     target_dimension,
     target_name,
@@ -106,7 +107,7 @@ def plan(
         data=ldf.select(
             ["item_id", "reduction_method"] + embedding_columns + [target_name]
         ),
-        dataset=f"clean_{ENV_SHORT_NAME}",
+        dataset=output_dataset_name,
         output_table=output_table_name,
     )
     logger.info(f"Done Table... {output_table_name}")
@@ -120,9 +121,13 @@ def dimension_reduction(
         ...,
         help="Name of the dataframe we want to reduce",
     ),
-    output_table_name: str = typer.Option(
+    output_dataset_name: str = typer.Option(
         ...,
-        help="Name of the dataframe we want to clean",
+        help="Name of the output dataset",
+    ),
+    output_prefix_table_name: str = typer.Option(
+        ...,
+        help="Name of the output prefix table",
     ),
     reduction_config: str = typer.Option(
         "default",
@@ -144,7 +149,8 @@ def dimension_reduction(
         plan(
             source_gs_path,
             embedding_columns,
-            output_table_prefix=output_table_name,
+            output_dataset_name=output_dataset_name,
+            output_table_prefix=output_prefix_table_name,
             target_dimension=target_dimension,
             target_name=target_name,
             method=method,

@@ -9,10 +9,6 @@ from common.operators.gce import (
     SSHGCEOperator,
 )
 from common import macros
-from common.operators.biquery import bigquery_job_task
-from dependencies.ml.clusterisation.import_data import (
-    IMPORT_ITEM_EMBEDDINGS,
-)
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
@@ -48,9 +44,9 @@ CLUSTERING_CONFIG = [
 
 
 with DAG(
-    "clusterisation_item",
+    "embedding_clusterisation_item",
     default_args=default_args,
-    description="Cluster offers from metadata embeddings",
+    description="Cluster items from metadata embeddings",
     schedule_interval=get_airflow_schedule("0 0 * * 0"),  # every sunday
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
@@ -67,13 +63,6 @@ with DAG(
         ),
     },
 ) as dag:
-    bq_import_item_embeddings_task = bigquery_job_task(
-        dag,
-        f"bq_import_item_embeddings",
-        IMPORT_ITEM_EMBEDDINGS,
-        extra_params={},
-    )
-
     for cluster_config in CLUSTERING_CONFIG:
         job_name = cluster_config["name"]
         cluster_config_file_name = cluster_config["cluster_config_file_name"]
@@ -112,8 +101,10 @@ with DAG(
             instance_name=gce_instance,
             base_dir=BASE_DIR,
             command="PYTHONPATH=. python cluster/preprocess.py "
-            f"--input-table {DATE}_import_item_embeddings "
-            f"--output-table {DATE}_{cluster_prefix}_import_item_clusters_preprocess "
+            f"--input-dataset-name ml_input_{ENV_SHORT_NAME} "
+            f"--input-table item_embedding_clusterisation "
+            f"--output-dataset-name tmp_{ENV_SHORT_NAME} "
+            f"--output-table-name {DATE}_{cluster_prefix}_import_item_clusters_preprocess "
             f"--config-file-name {cluster_config_file_name} ",
         )
 
@@ -122,8 +113,10 @@ with DAG(
             instance_name=gce_instance,
             base_dir=BASE_DIR,
             command="PYTHONPATH=. python cluster/generate.py "
-            f"--input-table {DATE}_{cluster_prefix}_import_item_clusters_preprocess "
-            f"--output-table {cluster_prefix}_item_clusters "
+            f"--input-dataset-name tmp_{ENV_SHORT_NAME} "
+            f"--input-table-name {DATE}_{cluster_prefix}_import_item_clusters_preprocess "
+            f"--output-dataset-name ml_preproc_{ENV_SHORT_NAME} "
+            f"--output-table-name {cluster_prefix}_item_cluster "
             f"--config-file-name {cluster_config_file_name} ",
         )
 
@@ -132,8 +125,7 @@ with DAG(
         )
 
         (
-            bq_import_item_embeddings_task
-            >> start
+            start
             >> gce_instance_start
             >> fetch_code
             >> install_dependencies

@@ -9,69 +9,7 @@ WITH offers_with_mediation AS (
         INNER JOIN {{ ref('int_applicative__product') }} AS p on o.offer_product_id = p.id
         WHERE p.is_mediation = 1
 ), 
-item_count AS (
-    SELECT 
-        item_id, 
-        count(distinct offer_id) as item_count
-    FROM {{ ref("int_applicative__offer")}}
-    GROUP BY item_id
-),
-booking_numbers AS (
-    SELECT
-        offer.item_id as item_id,
-        SUM(IF(
-            booking.booking_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 14 DAY), 1, 0
-        )) AS booking_number,
-        SUM(IF(
-            booking.booking_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY), 1, 0
-        )) AS booking_number_last_7_days,
-        SUM(IF(
-            booking.booking_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 14 DAY), 1, 0
-        )) AS booking_number_last_14_days,
-        SUM(IF(
-            booking.booking_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 28 DAY), 1, 0
-        )) AS booking_number_last_28_days,
-    FROM {{ ref('int_applicative__booking') }} booking
-    LEFT JOIN {{ ref('int_applicative__stock') }} stock ON booking.stock_id = stock.stock_id
-    LEFT JOIN  {{ ref('mrt_global__offer') }}  offer ON stock.offer_id = offer.offer_id
-    WHERE
-        booking.booking_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 28 DAY)
-        AND NOT booking.booking_is_cancelled
-    GROUP BY
-        offer.item_id
-), 
-embeddings AS (
-    SELECT
-        ie.item_id,
-        ie.semantic_content_hybrid_embedding as semantic_content_embedding,
-    FROM
-        {{ source('clean', 'item_embeddings') }} ie
-    QUALIFY ROW_NUMBER() OVER (
-            PARTITION BY item_id
-            ORDER by
-                extraction_date DESC
-        ) = 1
-),
-embeddings_avg AS (
-    SELECT
-        item_id,
-        AVG(
 
-                cast(e as float64)
-        )AS embedding,
-    FROM
-        embeddings, 
-        UNNEST(
-                    SPLIT(
-                        SUBSTR(
-                            semantic_content_embedding,
-                            2,
-                            LENGTH(semantic_content_embedding) - 2
-                        )
-                    )
-                ) e
-    GROUP BY 1
-),
 get_recommendable_offers AS (
     SELECT
         offer.offer_id AS offer_id,
@@ -95,12 +33,14 @@ get_recommendable_offers AS (
         im.gtl_label_level_2 as gtl_l2,
         im.gtl_label_level_3 as gtl_l3,
         im.gtl_label_level_4 as gtl_l4,
-        COALESCE(isem.embedding, 0.0) as semantic_emb_mean,
-        MAX(ic.item_count) as item_count,
-        MAX(COALESCE(booking_numbers.booking_number, 0)) AS booking_number,
-        MAX(COALESCE(booking_numbers.booking_number_last_7_days, 0)) AS booking_number_last_7_days,
-        MAX(COALESCE(booking_numbers.booking_number_last_14_days, 0)) AS booking_number_last_14_days,
-        MAX(COALESCE(booking_numbers.booking_number_last_28_days, 0)) AS booking_number_last_28_days,
+        COALESCE(ml_feat.avg_semantic_embedding, 0.0) as semantic_emb_mean,
+        MAX(ml_feat.total_offers) as item_count,
+        MAX(COALESCE(ml_feat.booking_number_last_14_days, 0)) AS booking_number, -- TODO: legacy purposes, to be removed
+        MAX(COALESCE(ml_feat.booking_number_last_7_days, 0)) AS booking_number_last_7_days,
+        MAX(COALESCE(ml_feat.booking_number_last_14_days, 0)) AS booking_number_last_14_days,
+        MAX(COALESCE(ml_feat.booking_number_last_28_days, 0)) AS booking_number_last_28_days,
+        ANY_VALUE(ml_feat.cluster_id) AS cluster_id,
+        ANY_VALUE(ml_feat.topic_id) AS topic_id,
         MIN(offer.is_national) AS is_national,
         MAX(
             CASE
@@ -131,8 +71,6 @@ get_recommendable_offers AS (
         ANY_VALUE(im.offer_type_label) as offer_type_label,
         ANY_VALUE(im.offer_sub_type_id) as offer_sub_type_id,
         ANY_VALUE(im.offer_sub_type_label) as offer_sub_type_label,
-        ANY_VALUE(im.cluster_id) AS cluster_id,
-        ANY_VALUE(im.topic_id) AS topic_id,
         MAX(
             CASE
                 WHEN offer.offer_subcategory_id = 'MUSIQUE_LIVE' THEN 150000
@@ -148,15 +86,11 @@ get_recommendable_offers AS (
     INNER JOIN offers_with_mediation om on offer.offer_id=om.offer_id
     INNER JOIN {{ ref('item_metadata') }} AS im on offer.item_id = im.item_id
     LEFT JOIN {{ ref('int_applicative__stock') }} stock ON offer.offer_id = stock.offer_id
-    -- TODO: move this to an another query related to item_metadata or more precisely reco_item_metada
-    LEFT JOIN booking_numbers ON booking_numbers.item_id = offer.item_id
-    LEFT JOIN item_count ic on ic.item_id = offer.item_id
-    
+    LEFT JOIN {{ ref('ml_feat__item_feature_28_day') }} AS ml_feat ON ml_feat.item_id = offer.item_id
     LEFT JOIN {{ ref('ml_reco__restrained_item') }} forbidden_offer on
         offer.item_id = forbidden_offer.item_id
     LEFT JOIN {{ source("raw", "gsheet_ml_recommendation_sensitive_item")}} sensitive_offer on
         offer.item_id = sensitive_offer.item_id
-    LEFT JOIN embeddings_avg isem ON isem.item_id = offer.item_id
     WHERE
         offer.is_active = TRUE
         AND offer.offer_is_bookable = TRUE

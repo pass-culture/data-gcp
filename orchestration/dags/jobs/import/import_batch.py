@@ -49,7 +49,7 @@ with DAG(
 
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,
-        instance_type="n1-standard-2",
+        instance_type="n1-standard-1",
         task_id="gce_start_task",
         retries=2,
         preemptible=False,

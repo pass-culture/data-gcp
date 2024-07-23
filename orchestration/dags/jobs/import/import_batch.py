@@ -53,6 +53,7 @@ with DAG(
         task_id="gce_start_task",
         retries=2,
         preemptible=False,
+        labels={"job_type": "long_task"},
     )
 
     fetch_code = CloneRepositoryGCEOperator(

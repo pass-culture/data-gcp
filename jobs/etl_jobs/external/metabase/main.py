@@ -10,10 +10,10 @@ from native import NativeCard
 from query import QueryCard
 from table import MetabaseTable, get_mapped_fields
 from utils import (
-    PROJECT_NAME,
     ENVIRONMENT_SHORT_NAME,
-    METABASE_API_USERNAME,
     INT_METABASE_DATASET,
+    METABASE_API_USERNAME,
+    PROJECT_NAME,
     access_secret_data,
     get_dependant_cards,
 )
@@ -84,6 +84,7 @@ def run(
         legacy_fields_df, new_fields_df, table_columns_mappings
     )
 
+    backup_cards = {}
     if metabase_card_type == "native":
         transition_logs = []
         for card_id in native_cards:
@@ -96,6 +97,14 @@ def run(
             transition_log["timestamp"] = datetime.datetime.now()
             try:
                 native_card = NativeCard(card_id, metabase)
+
+                backup_cards.append(
+                    {
+                        "card_id": card_id,
+                        "card_info": native_card.card_info,
+                        "query": native_card.query,
+                    }
+                )
                 native_card.replace_table_name(legacy_table_name, new_table_name)
                 native_card.replace_column_names(table_columns_mappings)
                 native_card.update_filters(metabase_field_mapping)
@@ -119,6 +128,12 @@ def run(
             transition_log["timestamp"] = datetime.datetime.now()
             try:
                 query_card = QueryCard(card_id, metabase)
+                backup_cards.append(
+                    {
+                        "card_id": card_id,
+                        "card_info": native_card.card_info,
+                    }
+                )
                 query_card.update_dataset_query(
                     metabase_field_mapping, legacy_table_id, new_table_id
                 )
@@ -134,6 +149,13 @@ def run(
         (f"{INT_METABASE_DATASET}.migration_log"),
         project_id=PROJECT_NAME,
         if_exists="append",
+    )
+
+    df_backup_cards = pd.DataFrame(backup_cards)
+    date = datetime.datetime.now()
+    df_backup_cards.to_csv(
+        f"gs://data-bucket-stg/metabase_transition/{date}_{metabase_card_type}_{legacy_table_name}.csv",
+        index=False,
     )
 
     return "success"

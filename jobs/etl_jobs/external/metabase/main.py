@@ -154,7 +154,7 @@ def run(
     df_backup_cards = pd.DataFrame(backup_cards)
     date = datetime.datetime.now()
     df_backup_cards.to_csv(
-        f"gs://data-bucket-stg/metabase_transition/{date}_{metabase_card_type}_{legacy_table_name}.csv",
+        f"gs://data-bucket-{ENVIRONMENT_SHORT_NAME}/metabase_transition/{date}_{metabase_card_type}_{legacy_table_name}.csv",
         index=False,
     )
 

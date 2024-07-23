@@ -25,17 +25,13 @@ def load_data(
     gcp_project: str,
     input_dataset_name: str,
     input_table_name: str,
-    batch_size: int,
-    iteration: int,
-    processed_rows: int,
+    max_rows_to_process: int,
 ) -> pd.DataFrame:
-    df = pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.{input_dataset_name}.{input_table_name}` LIMIT {batch_size} "
+    # If max_rows_to_process is -1, we will process all data.
+    limit = f" LIMIT {max_rows_to_process} " if max_rows_to_process > 0 else ""
+    return pd.read_gbq(
+        f"SELECT * FROM `{gcp_project}.{input_dataset_name}.{input_table_name}` {limit} "
     )
-    logging.info(
-        f"Data loaded: {df.shape}, {iteration} iteration, processed rows: {processed_rows}"
-    )
-    return df
 
 
 def main(
@@ -80,18 +76,6 @@ def main(
     ) as config_file:
         params = json.load(config_file)
 
-    count_query = f"SELECT COUNT(*) as total_to_process FROM `{gcp_project}.{input_dataset_name}.{input_table_name}`"
-    total_to_process = pd.read_gbq(count_query)["total_to_process"][0]
-    # If max_rows_to_process is -1, we will process all data
-    if max_rows_to_process < 0:
-        max_rows_to_process = total_to_process
-    # Ensure we don't process more than total_to_process
-    max_rows_to_process = min(total_to_process, max_rows_to_process)
-
-    logging.info(
-        f"Total rows to process: {total_to_process}, will process {max_rows_to_process} rows."
-    )
-
     processed_rows = 0
     iteration = 0
 
@@ -99,16 +83,14 @@ def main(
         gcp_project,
         input_dataset_name,
         input_table_name,
-        batch_size,
-        iteration,
-        processed_rows,
+        max_rows_to_process,
     )
-    # Will loop until all data is processed or max_rows_to_process is reached
-    while processed_rows < max_rows_to_process and df.shape[0] > 0:
+    logging.info(f"Will process {df.shape} rows.")
+    df = preprocess(df, params["features"])
 
-        df = preprocess(df, params["features"])
-
-        extract_embedding(df, params,).assign(
+    for start in range(0, df.shape[0], batch_size):
+        df_subset = df.iloc[start : start + batch_size]
+        extract_embedding(df_subset, params).assign(
             extraction_date=datetime.now().strftime("%Y-%m-%d"),
             extraction_datetime=datetime.now(),
         ).to_gbq(
@@ -116,18 +98,12 @@ def main(
             project_id=gcp_project,
             if_exists="append",
         )
-
-        processed_rows += df.shape[0]
-        iteration += 1
-
-        df = load_data(
-            gcp_project,
-            input_dataset_name,
-            input_table_name,
-            batch_size,
-            iteration,
-            processed_rows,
+        logging.info(
+            f"{iteration} iteration (batch {start}/{start + batch_size}), processed rows: {processed_rows}"
         )
+
+        processed_rows += df_subset.shape[0]
+        iteration += 1
 
 
 if __name__ == "__main__":

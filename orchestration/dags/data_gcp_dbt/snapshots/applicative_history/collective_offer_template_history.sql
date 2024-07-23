@@ -24,7 +24,7 @@ with formated_offer_template as (
     	collective_offer_last_validation_type,
     	educational_domains,
     	collective_offer_venue_address_type
-    FROM {{ source('raw','collective_offer_template') }}
+    FROM {{ source('raw','applicative_database_collective_offer_template') }}
 )
 select * from formated_offer_template
 

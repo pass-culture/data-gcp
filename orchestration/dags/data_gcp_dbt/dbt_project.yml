@@ -83,7 +83,7 @@ snapshots:
     applicative_history:
       tags: applicative_history
 tests:
-  # +store_failures: true  # store failures for all tests
+  +store_failures: true  # store failures for all tests
   +severity: "{{ var('CI_SEVERITY', 'warn') }}" # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.
   +docs:
     show: true

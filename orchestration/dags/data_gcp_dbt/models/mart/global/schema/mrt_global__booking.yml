@@ -115,8 +115,8 @@ models:
       - name: offerer_id
         description: ''
         data_type: STRING
-        # tests:
-        #   - not_null
+        tests:
+          - not_null
       - name: offerer_name
         description: ''
         data_type: STRING

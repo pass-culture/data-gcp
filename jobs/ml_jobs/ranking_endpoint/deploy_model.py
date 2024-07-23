@@ -131,10 +131,9 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
             }
         )
         .fillna({"consult": 0, "booking": 0, "delta_diversification": 0})
-        .assign(
-            target=lambda df: (df["consult"] + df["booking"])
-            * (1 + df["delta_diversification"])
-        )
+        .assign(target_class="seen")
+        .where(lambda df: df["booking"] != 1, other="booked")
+        .where(lambda df: df["consult"] != 1, other="consulted")
     )
     train_data, test_data = train_test_split(data, test_size=0.2)
 

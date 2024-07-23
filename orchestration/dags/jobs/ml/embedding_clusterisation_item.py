@@ -102,7 +102,7 @@ with DAG(
             base_dir=BASE_DIR,
             command="PYTHONPATH=. python cluster/preprocess.py "
             f"--input-dataset-name ml_input_{ENV_SHORT_NAME} "
-            f"--input-table item_embedding_clusterisation "
+            f"--input-table-name item_embedding_clusterisation "
             f"--output-dataset-name tmp_{ENV_SHORT_NAME} "
             f"--output-table-name {DATE}_{cluster_prefix}_import_item_clusters_preprocess "
             f"--config-file-name {cluster_config_file_name} ",

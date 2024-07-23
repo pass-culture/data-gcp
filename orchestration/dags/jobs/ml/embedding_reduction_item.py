@@ -11,16 +11,13 @@ from common.operators.gce import (
 from common import macros
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
-from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 from common.config import (
     GCP_PROJECT_ID,
     DAG_FOLDER,
     ENV_SHORT_NAME,
     MLFLOW_BUCKET_NAME,
-    BIGQUERY_TMP_DATASET,
     BIGQUERY_ML_FEATURES_DATASET,
 )
 
@@ -44,7 +41,7 @@ dag_config = {
 
 
 with DAG(
-    "embedding_reduction_items",
+    "embedding_reduction_item",
     default_args=default_args,
     description="Reduce embeddings",
     schedule_interval=get_airflow_schedule("0 0 * * 0"),  # every sunday

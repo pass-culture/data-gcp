@@ -1,4 +1,4 @@
-{% snapshot offerer_tag_history %}
+{% snapshot snapshot__applicative_offerer_tag %}
 
 {{
     config(

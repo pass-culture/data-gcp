@@ -1,4 +1,4 @@
-{% snapshot stock_history %}
+{% snapshot snapshot__applicative_stock %}
 
 {{
     config(

@@ -76,11 +76,11 @@ seeds:
   +docs:
     node_color: "#000000"
 snapshots:
-  +target_schema: snapshots_applicative_{{ target.name }}
+  +target_schema: snapshot_{{ target.name }}
   +docs:
     show: false
   data_gcp_dbt:
-    applicative_history:
+    applicative:
       tags: applicative_history
 tests:
   # +store_failures: true  # store failures for all tests

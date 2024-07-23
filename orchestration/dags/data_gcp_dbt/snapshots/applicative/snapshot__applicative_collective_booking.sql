@@ -1,4 +1,4 @@
-{% snapshot collective_booking_history %}
+{% snapshot snapshot__applicative_collective_booking %}
 
 {{
     config(

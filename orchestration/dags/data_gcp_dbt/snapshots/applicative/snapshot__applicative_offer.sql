@@ -1,4 +1,4 @@
-{% snapshot offer_history %}
+{% snapshot snapshot__offer_history %}
 
 {{
     config(

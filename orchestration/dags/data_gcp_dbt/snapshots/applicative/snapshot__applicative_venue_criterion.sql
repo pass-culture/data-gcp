@@ -1,4 +1,4 @@
-{% snapshot venue_criterion_history %}
+{% snapshot snapshot__applicative_venue_criterion %}
 
 {{
     config(

@@ -1,5 +1,5 @@
 
-{% snapshot collective_stock_history %}
+{% snapshot snapshot__applicative_collective_stock %}
 
 {{
     config(

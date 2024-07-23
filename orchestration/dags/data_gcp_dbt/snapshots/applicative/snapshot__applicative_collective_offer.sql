@@ -1,4 +1,4 @@
-{% snapshot collective_offer_history %}
+{% snapshot snapshot__applicative_collective_offer %}
 
 {{
     config(

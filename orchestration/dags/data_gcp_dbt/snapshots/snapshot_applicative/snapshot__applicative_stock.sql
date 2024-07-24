@@ -19,8 +19,7 @@ with formated_stock as (
     	offer_id,
     	stock_is_soft_deleted,
     	stock_beginning_date,
-    	stock_creation_date,
-    	number_of_tickets
+    	stock_creation_date
     FROM {{ source('raw', 'applicative_database_stock') }}
 )
 

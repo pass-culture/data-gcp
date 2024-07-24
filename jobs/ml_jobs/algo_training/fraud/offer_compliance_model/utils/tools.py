@@ -1,27 +1,12 @@
-import os
-import shutil
-import urllib.request
+import time
 from heapq import nlargest, nsmallest
 
-import numpy as np
-import pandas as pd
-from catboost import Pool
-from PIL import Image
-from sentence_transformers import SentenceTransformer
-from tqdm import tqdm
-
 import seaborn as sns
+from loguru import logger
 
 sns.set_theme()
 sns.set(font_scale=1)
 
-import os
-import time
-from multiprocessing import cpu_count
-import concurrent
-from itertools import repeat
-import mlflow
-from loguru import logger
 
 STORAGE_PATH_IMG = "./img"
 

@@ -86,7 +86,7 @@ SELECT
     label_unite_legale AS legal_unit_business_activity_label,
     siren_data.categorieJuridiqueUniteLegale AS legal_unit_legal_category_code,
     label_categorie_juridique AS legal_unit_legal_category_label,
-    siren_data.activitePrincipaleUniteLegale = '84.11Z' AS is_local_authority,
+    CASE WHEN siren_data.activitePrincipaleUniteLegale = '84.11Z' THEN TRUE ELSE FALSE END AS is_local_authority,
     ofr.total_managed_venues,
     ofr.total_physical_managed_venues,
     ofr.total_permanent_managed_venues,

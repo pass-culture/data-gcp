@@ -70,4 +70,3 @@ FROM {{ ref('int_global__booking') }} AS b
 WHERE deposit_type IS NOT NULL
     AND offer_id IS NOT NULL
     AND user_id IS NOT NULL
-

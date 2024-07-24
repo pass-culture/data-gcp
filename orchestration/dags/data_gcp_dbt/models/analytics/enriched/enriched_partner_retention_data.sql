@@ -133,7 +133,7 @@ GROUP BY 1)
          ELSE CONCAT("offerer-", mrt_global__venue.venue_managing_offerer_id) END AS partner_id
     ,CASE WHEN provider_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_provider
 FROM {{ ref('mrt_global__venue')}} AS mrt_global__venue
-LEFT JOIN {{ ref('enriched_venue_provider_data')}} ON enriched_venue_provider_data.venue_id = mrt_global__venue.venue_id AND is_active )
+LEFT JOIN {{ ref('mrt_global__venue_provider')}} AS mrt_global__venue_provider ON mrt_global__venue_provider.venue_id = mrt_global__venue.venue_id AND is_active )
 
 --- On estime que si une structure a un lieu rattaché à un point de remboursement, tous les lieux de la structure le sont
 ,reimbursment_point1 AS (SELECT DISTINCT

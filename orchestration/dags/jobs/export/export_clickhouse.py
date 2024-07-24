@@ -32,6 +32,7 @@ from common import macros
 
 GCE_INSTANCE = f"export-clickhouse-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/clickhouse"
+GCP_STORAGE_URI = "https://storage.googleapis.com"
 dag_config = {
     "PROJECT_NAME": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
@@ -58,7 +59,7 @@ gce_params = {
 
 dags = {
     "daily": {
-        "schedule_interval": {"prod": "0 1 * * *", "dev": None, "stg": None},
+        "schedule_interval": {"prod": "0 1 * * *", "stg": "0 1 * * *", "dev": None},
         "yyyymmdd": "{{ yyyymmdd(ds) }}",
         "default_dag_args": {
             "start_date": datetime.datetime(2024, 3, 1),
@@ -144,6 +145,7 @@ for dag_name, dag_params in dags.items():
             instance_name="{{ params.instance_name }}",
             instance_type="{{ params.instance_type }}",
             retries=2,
+            gce_network_type="GKE",
         )
 
         fetch_code = CloneRepositoryGCEOperator(
@@ -212,12 +214,16 @@ for dag_name, dag_params in dags.items():
             )
 
             clickhouse_export = SSHGCEOperator(
+                dag=dag,
                 task_id=f"{clickhouse_table_name}_export",
                 instance_name="{{ params.instance_name }}",
                 base_dir=dag_config["BASE_DIR"],
                 command="python main.py "
-                f"--source-gs-path https://storage.googleapis.com/{storage_path}/data-*.parquet --table-name {clickhouse_table_name} --dataset-name {clickhouse_dataset_name} --update-date {_ds} --mode {mode}",
-                dag=dag,
+                f"--source-gs-path {GCP_STORAGE_URI}/{storage_path}/data-*.parquet "
+                f"--table-name {clickhouse_table_name} "
+                f"--dataset-name {clickhouse_dataset_name} "
+                f"--update-date {_ds} "
+                f"--mode {mode} ",
             )
             export_task >> export_bq >> clickhouse_export
             out_tables_tasks.append(clickhouse_export)

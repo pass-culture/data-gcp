@@ -3,15 +3,15 @@ import googleapiclient.discovery
 from googleapiclient.errors import HttpError
 import pytz, json, os, time
 import dateutil
+import typing as t
 import datetime
 from common.hooks.image import CPUImage
+from common.hooks.network import DefaultVPCNetwork
 from common.config import (
     ENV_SHORT_NAME,
     GCP_REGION,
     GCE_ZONE,
     GCP_PROJECT_ID,
-    GCE_SUBNETWORK_ID,
-    GCE_NETWORK_ID,
     GCE_SA,
 )
 
@@ -29,23 +29,23 @@ class GCEHook(GoogleBaseHook):
 
     def __init__(
         self,
-        gcp_project=GCP_PROJECT_ID,
-        gcp_zone=GCE_ZONE,
-        gcp_region=GCP_REGION,
-        gce_network_id=GCE_NETWORK_ID,
-        gce_subnetwork_id=GCE_SUBNETWORK_ID,
-        gce_sa=GCE_SA,
-        source_image_type=CPUImage(),
+        gcp_project: str = GCP_PROJECT_ID,
+        gcp_zone: str = GCE_ZONE,
+        gcp_region: str = GCP_REGION,
+        gce_networks: t.List[DefaultVPCNetwork] = [DefaultVPCNetwork()],
+        gce_sa: str = GCE_SA,
+        source_image_type: CPUImage = CPUImage(),
         gcp_conn_id: str = "google_cloud_default",
+        disk_size_gb: str = "100",
         delegate_to: str = None,
         impersonation_chain: str = None,
     ):
         self.gcp_project = gcp_project
         self.gcp_zone = gcp_zone
         self.gcp_region = gcp_region
-        self.gce_network_id = gce_network_id
-        self.gce_subnetwork_id = gce_subnetwork_id
+        self.gce_networks = gce_networks
         self.gce_sa = gce_sa
+        self.disk_size_gb = disk_size_gb
         self.source_image_type = source_image_type
         super().__init__(
             gcp_conn_id=gcp_conn_id,
@@ -161,14 +161,18 @@ class GCEHook(GoogleBaseHook):
                     "boot": True,
                     "autoDelete": True,
                     "initialize_params": {
-                        "disk_size_gb": "100",
+                        "disk_size_gb": self.disk_size_gb,
                         "sourceImage": self.source_image_type.source_image,
                     },
                 }
             ],
             # Specify VPC network interface
             "networkInterfaces": [
-                {"network": self.gce_network_id, "subnetwork": self.gce_subnetwork_id}
+                {
+                    "network": network.network_id,
+                    "subnetwork": network.subnetwork_id,
+                }
+                for network in self.gce_networks
             ],
             "serviceAccounts": [
                 {

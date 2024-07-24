@@ -59,7 +59,11 @@ gce_params = {
 
 dags = {
     "daily": {
-        "schedule_interval": {"prod": "0 1 * * *", "stg": "0 1 * * *", "dev": None},
+        "schedule_interval": {
+            "prod": "0 1 * * *",
+            "stg": "0 1 * * *",
+            "dev": "0 1 * * *",
+        },
         "yyyymmdd": "{{ yyyymmdd(ds) }}",
         "default_dag_args": {
             "start_date": datetime.datetime(2024, 3, 1),

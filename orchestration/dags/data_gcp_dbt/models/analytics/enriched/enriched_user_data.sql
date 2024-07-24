@@ -384,7 +384,7 @@ themes_subscribed AS (
     CASE WHEN (currently_subscribed_themes IS NULL OR currently_subscribed_themes = '') THEN FALSE ELSE TRUE END AS is_theme_subscribed
 FROM {{ source('analytics','app_native_logs')}}
 WHERE technical_message_id = "subscription_update"
-QUALIFY RANK() OVER(PARTITION BY user_id ORDER BY partition_date DESC) = 1
+QUALIFY ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY partition_date DESC) = 1
 )
 
 SELECT

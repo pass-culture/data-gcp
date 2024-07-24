@@ -1,21 +1,22 @@
-import pandas as pd
-from datetime import datetime
-import typer
-from app.model import TrainPipeline
-import mlflow
 import os
+from datetime import datetime
+
+import mlflow
+import pandas as pd
+import typer
 from sklearn.model_selection import train_test_split
+
+from app.model import TrainPipeline
+from figure import plot_cm, plot_features_importance, plot_hist
 from utils import (
-    GCP_PROJECT_ID,
     ENV_SHORT_NAME,
-    deploy_container,
-    save_experiment,
+    GCP_PROJECT_ID,
     connect_remote_mlflow,
+    deploy_container,
     get_mlflow_experiment,
     get_secret,
+    save_experiment,
 )
-from figure import plot_features_importance, plot_cm, plot_hist
-
 
 PARAMS = {"seen": 500_000, "consult": 500_000, "booking": 500_000}
 

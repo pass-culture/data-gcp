@@ -241,7 +241,7 @@ with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
             env={
                 "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                 "target": "{{ params.target }}",
-                "snapshot": f"""{snapshot_data['alias']}""",
+                "snapshot": f"""{snapshot_data['name']}""",
                 "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
             },
             append_env=True,

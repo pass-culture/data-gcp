@@ -77,8 +77,8 @@ class TrainPipeline:
         self.preprocessor: ColumnTransformer = None
         self.train_size = 0.8
         self.target = target
-        if params is None:
-            self.params = {
+        self.params = (
+            {
                 "objective": "binary",
                 "metric": "binary_logloss",
                 "boosting_type": "gbdt",
@@ -90,8 +90,9 @@ class TrainPipeline:
                 "bagging_freq": 5,
                 "verbose": int(verbose),
             }
-        else:
-            self.params = params
+            if params is None
+            else params
+        )
 
     def set_pipeline(self):
         numeric_transformer = Pipeline(

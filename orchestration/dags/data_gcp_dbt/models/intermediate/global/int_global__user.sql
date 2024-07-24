@@ -134,6 +134,8 @@ SELECT
     u.user_has_enabled_marketing_email,
     u.user_iris_internal_id,
     u.user_humanized_id,
+    u.currently_subscribed_themes,
+    u.is_theme_subscribed,
     dgu.first_deposit_creation_date,
     ud.first_deposit_type,
     dgu.total_deposit_amount,

@@ -6,7 +6,7 @@ WITH
     UNNEST( GENERATE_DATE_ARRAY('2021-05-17', CURRENT_DATE, INTERVAL 1 WEEK) ) AS week ),
   deposit_active_weeks AS (
   SELECT
-    enriched_deposit_data.user_id,
+    mrt_global__deposit.user_id,
     user_department_code,
     user_region_name,
     user_birth_date,
@@ -17,17 +17,17 @@ WITH
     weeks.week AS active_week,
     DATE_DIFF(CURRENT_DATE, deposit_creation_date, WEEK(MONDAY)) AS seniority_weeks,
   FROM
-    {{ ref('enriched_deposit_data') }} enriched_deposit_data
+    {{ ref('mrt_global__deposit') }} AS mrt_global__deposit
   INNER JOIN
     weeks
   ON
-    weeks.week BETWEEN DATE_TRUNC(DATE(enriched_deposit_data.deposit_creation_date),WEEK(MONDAY))
-    AND DATE_TRUNC(DATE(enriched_deposit_data.deposit_expiration_date),WEEK(MONDAY)) -- Toutes les semaines de vie du crédit
+    weeks.week BETWEEN DATE_TRUNC(DATE(mrt_global__deposit.deposit_creation_date),WEEK(MONDAY))
+    AND DATE_TRUNC(DATE(mrt_global__deposit.deposit_expiration_date),WEEK(MONDAY)) -- Toutes les semaines de vie du crédit
     AND deposit_creation_date > '2021-05-20' -- Les utilisateurs post sortie de l'app mobile
   INNER JOIN
     {{ ref('firebase_aggregated_users') }} fau
   ON
-    enriched_deposit_data.user_id = fau.user_id
+    mrt_global__deposit.user_id = fau.user_id
     AND DATE(last_connexion_date) >= DATE(deposit_creation_date) ), -- Uniquement des utilisateurs connectés post octroi du crédit
 
   aggregated_weekly_deposit_bookings_history AS (

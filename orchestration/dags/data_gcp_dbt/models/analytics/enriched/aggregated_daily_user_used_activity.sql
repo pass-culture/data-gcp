@@ -20,9 +20,9 @@ user_active_dates AS (
         DATE_DIFF(CURRENT_DATE, deposit_creation_date, DAY) AS seniority_days,
         DATE_DIFF(CURRENT_DATE, deposit_creation_date, MONTH) AS seniority_months
     FROM
-        {{ ref('enriched_deposit_data') }} AS enriched_deposit_data
-        JOIN days ON days.day BETWEEN DATE(enriched_deposit_data.deposit_creation_date)
-        AND DATE(enriched_deposit_data.deposit_expiration_date)
+        {{ ref('mrt_global__deposit') }} AS mrt_global__deposit
+        JOIN days ON days.day BETWEEN DATE(mrt_global__deposit.deposit_creation_date)
+        AND DATE(mrt_global__deposit.deposit_expiration_date)
 ),
 aggregated_daily_user_used_bookings_history_1 AS (
     SELECT

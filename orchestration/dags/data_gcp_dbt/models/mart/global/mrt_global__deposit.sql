@@ -2,7 +2,7 @@ WITH bookings_grouped_by_deposit AS (
     SELECT deposit_id,
         SUM(CASE WHEN booking_is_used THEN booking_amount * booking_quantity END) AS total_actual_amount_spent,
         SUM(booking_amount * booking_quantity) AS total_theoretical_amount_spent,
-        SUM(CASE WHEN digital_goods
+        SUM(CASE WHEN digital_goods AND offer_url IS NOT NULL
             THEN booking_amount * booking_quantity END) AS total_theoretical_amount_spent_in_digital_goods,
         MIN(booking_creation_date) AS first_individual_booking_date,
         MAX(booking_creation_date) AS last_individual_booking_date,

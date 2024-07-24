@@ -43,11 +43,11 @@ SELECT
      TRIM(json_extract(result_content, '$.school_uai'), '"') AS school 
     , COUNT(DISTINCT edd.user_id) AS educonnect_inscriptions
     , COUNT(DISTINCT CASE WHEN DATE_DIFF(current_date, deposit_creation_date, DAY) <= 365 THEN edd.user_id ELSE NULL END) AS last_12_months_inscriptions
-    , AVG(COALESCE(deposit_theoretical_amount_spent,0)) AS avg_spent_per_user
-    , SAFE_DIVIDE(SUM(deposit_theoretical_amount_spent), SUM(deposit_amount)) AS pct_spent
+    , AVG(COALESCE(total_theoretical_amount_spent,0)) AS avg_spent_per_user
+    , SAFE_DIVIDE(SUM(total_theoretical_amount_spent), SUM(deposit_amount)) AS pct_spent
     , COUNT(DISTINCT ebd.user_id) AS nb_credit_used_students
 FROM {{ ref('beneficiary_fraud_check') }} bfc
-JOIN {{ ref('enriched_deposit_data') }} edd ON edd.user_id = bfc.user_id
+JOIN {{ ref('mrt_global__deposit') }} edd ON edd.user_id = bfc.user_id
 LEFT JOIN {{ ref('mrt_global__booking') }} ebd ON ebd.user_id = edd.user_id AND not booking_is_cancelled
 WHERE type = 'EDUCONNECT'
 AND json_extract(result_content, '$.school_uai') IS NOT NULL

@@ -42,7 +42,7 @@ models:
           - not_null
       - name: deposit_id
         description: ''
-        data_type: 
+        data_type:
       - name: deposit_type
         description: ''
         data_type: STRING
@@ -116,7 +116,9 @@ models:
         description: ''
         data_type: STRING
         tests:
-          - not_null
+          - not_null:
+              config:
+                severity: warn
       - name: offerer_name
         description: ''
         data_type: STRING

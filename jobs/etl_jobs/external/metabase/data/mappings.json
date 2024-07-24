@@ -66,5 +66,31 @@
     "venue_is_permanent": "venue_is_permanent",
     "venue_label": "venue_label",
     "venue_name": "venue_name"
+  },
+  "enriched_deposit_data": {
+    "days_between_user_creation_and_deposit_creation": "days_between_user_creation_and_deposit_creation",
+    "deposit_actual_amount_spent": "total_actual_amount_spent",
+    "deposit_amount": "deposit_amount",
+    "deposit_creation_date": "deposit_creation_date",
+    "deposit_expiration_date": "deposit_expiration_date",
+    "deposit_first_booking_date": "first_individual_booking_date",
+    "deposit_id": "deposit_id",
+    "deposit_last_booking_date": "last_individual_booking_date",
+    "deposit_no_cancelled_bookings": "total_non_cancelled_individual_bookings",
+    "deposit_rank_asc": "deposit_rank_asc",
+    "deposit_rank_desc": "deposit_rank_desc",
+    "deposit_seniority": "deposit_seniority",
+    "deposit_source": "deposit_source",
+    "deposit_theoretical_amount_spent": "total_theoretical_amount_spent",
+    "deposit_theoretical_amount_spent_in_digital_goods": "total_theoretical_amount_spent_in_digital_goods",
+    "deposit_type": "deposit_type",
+    "deposit_update_date": "deposit_update_date",
+    "user_age": "user_age",
+    "user_birth_date": "user_birth_date",
+    "user_civility": "user_civility",
+    "user_creation_date": "user_creation_date",
+    "user_department_code": "user_department_code",
+    "user_id": "user_id",
+    "user_region_name": "user_region_name"
   }
 }

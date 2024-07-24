@@ -13,6 +13,9 @@ GCP_REGION = "europe-west1"
 GCE_ZONE = "europe-west1-b"
 GCE_SUBNETWORK_ID = os.environ.get("GCE_SUBNETWORK_ID")
 GCE_NETWORK_ID = os.environ.get("GCE_NETWORK_ID")
+GCE_VPC_SHARED_HOST_SUBNETWORK_ID = os.environ.get("GCE_VPC_SHARED_HOST_SUBNETWORK_ID")
+GCE_VPC_SHARED_HOST_NETWORK_ID = os.environ.get("GCE_VPC_SHARED_HOST_NETWORK_ID")
+
 GCE_SA = os.environ.get("GCE_SA", f"algo-training-{ENV_SHORT_NAME}")
 GCE_BASE_PREFIX = f"composer-{ENV_SHORT_NAME}"
 

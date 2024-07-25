@@ -171,7 +171,7 @@ class TrainPipeline:
             callbacks=[lgb.early_stopping(stopping_rounds=200)],
         )
 
-    def predict(self, df: pd.DataFrame):
+    def predict(self, df: pd.DataFrame) -> pd.DataFrame:
         processed_data = self.preprocessor.transform(df)
         df["score"] = self.model.predict(processed_data)
         return df

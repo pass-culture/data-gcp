@@ -69,7 +69,12 @@ def load_data(dataset_name, table_name):
     return pd.read_gbq(sql).sample(frac=1)
 
 
-def plot_figures(test_data, train_data, pipeline, figure_folder):
+def plot_figures(
+    test_data: pd.DataFrame,
+    train_data: pd.DataFrame,
+    pipeline: TrainPipeline,
+    figure_folder: str,
+):
     os.makedirs(figure_folder, exist_ok=True)
 
     for prefix, df in [("test_", test_data), ("train_", train_data)]:
@@ -136,9 +141,12 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
 
         test_data = pipeline.predict(test_data)
         train_data = pipeline.predict(train_data)
-        plot_figures(test_data, train_data, pipeline, figure_folder)
 
-        mlflow.log_artifacts(figure_folder, "model_plots")
+        # Save Data
+        plot_figures(test_data, train_data, pipeline, figure_folder)
+        train_data.to_csv(f"{figure_folder}/train_predictions.csv", index=False)
+        test_data.to_csv(f"{figure_folder}/test_predictions.csv", index=False)
+        mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
 
     # retrain on whole
     pipeline.train(data)

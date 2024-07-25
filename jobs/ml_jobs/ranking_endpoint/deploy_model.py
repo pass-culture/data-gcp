@@ -121,7 +121,7 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     data["delta_diversification"] = (
         data["delta_diversification"].astype(float).fillna(0)
     )
-    data["target"] = data["consult"] + data["booking"] * (
+    data["target"] = (data["consult"] + data["booking"]) * (
         1 + data["delta_diversification"]
     )
     train_data, test_data = train_test_split(data, test_size=0.2)

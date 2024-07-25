@@ -37,12 +37,12 @@ collective_offers_grouped_by_venue AS (
         SUM(total_collective_current_year_real_revenue) AS total_collective_current_year_real_revenue,
         MIN(first_collective_booking_date) AS first_collective_booking_date,
         MAX(last_collective_booking_date) AS last_collective_booking_date,
+        SUM(total_non_cancelled_tickets) AS total_non_cancelled_tickets,
+        SUM(total_current_year_non_cancelled_tickets) AS total_current_year_non_cancelled_tickets,
         COUNT(CASE WHEN collective_offer_validation = 'APPROVED' THEN collective_offer_id END) AS total_created_collective_offers,
         MIN(CASE WHEN collective_offer_validation = 'APPROVED' THEN collective_offer_creation_date END) AS first_collective_offer_creation_date,
         MAX(CASE WHEN collective_offer_validation = 'APPROVED' THEN collective_offer_creation_date END) AS last_collective_offer_creation_date,
         COUNT(DISTINCT CASE WHEN collective_offer_is_bookable THEN collective_offer_id END) AS total_bookable_collective_offers,
-        SUM(total_non_cancelled_tickets) AS total_non_cancelled_tickets,
-        SUM(total_current_year_non_cancelled_tickets) AS total_current_year_non_cancelled_tickets
     FROM {{ ref('int_applicative__collective_offer') }}
     GROUP BY venue_id
 ),
@@ -197,6 +197,14 @@ SELECT
     CASE WHEN DATE_DIFF(CURRENT_DATE, boh.last_individual_bookable_offer_date, YEAR) = 0 THEN TRUE ELSE FALSE END AS is_individual_active_current_year,
     CASE WHEN DATE_DIFF(CURRENT_DATE, boh.last_collective_bookable_offer_date, DAY) <= 30 THEN TRUE ELSE FALSE END AS is_collective_active_last_30days,
     CASE WHEN DATE_DIFF(CURRENT_DATE, boh.last_collective_bookable_offer_date, YEAR) = 0 THEN TRUE ELSE FALSE END AS is_collective_active_current_year,
+    ROW_NUMBER() OVER(
+        PARTITION BY venue_managing_offerer_id
+        ORDER BY
+            COALESCE(o.total_individual_real_revenue,0) + COALESCE(co.total_collective_real_revenue,0) DESC) AS offerer_real_revenue_rank,
+    ROW_NUMBER() OVER(
+        PARTITION BY venue_managing_offerer_id
+        ORDER BY
+            COALESCE(o.total_used_individual_bookings,0) + COALESCE(co.total_used_collective_bookings,0) DESC) AS offerer_bookings_rank
 FROM venues_with_geo_candidates AS v
 LEFT JOIN offers_grouped_by_venue AS o ON o.venue_id = v.venue_id
 LEFT JOIN collective_offers_grouped_by_venue AS co ON co.venue_id = v.venue_id

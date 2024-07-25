@@ -43,6 +43,6 @@ class SemanticSpace:
             .metric(similarity_metric)
             .limit(n)
             .to_pandas(flatten=True)
-            .rename(columns={"item_id": "item_id_candidate"})
+            .rename(columns={"item_id": "item_id_synchro"})
         )
         return results

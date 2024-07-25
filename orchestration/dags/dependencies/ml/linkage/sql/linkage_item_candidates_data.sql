@@ -5,8 +5,7 @@ WITH k AS (
     FROM
         `{{ bigquery_ml_preproc_dataset }}.item_embedding_reduced_32` ie
     INNER JOIN `{{ bigquery_analytics_dataset }}.global_offer` go on go.item_id = ie.item_id
-    where go.is_active 
-    and go.is_synchronised is False
+    where go.offer_product_id is null
     and go.offer_subcategory_id<>'LIVRE_PAPIER'
     QUALIFY ROW_NUMBER() OVER (PARTITION BY ie.item_id ORDER BY ie.reduction_method DESC) = 1
 
@@ -38,20 +37,23 @@ offers as (
         go.offer_name,
         go.offer_description,
         go.performer,
-        go.is_synchronised
+        go.offer_subcategory_id
     FROM
         `{{ bigquery_analytics_dataset }}.global_offer` go
-    where go.is_active
-    and go.is_synchronised is False
+    where go.offer_product_id is null
     and go.offer_subcategory_id<>'LIVRE_PAPIER'
+),
+candidates as(
+    SELECT
+        CASE WHEN o.item_id like 'link-%' THEN o.offer_id ELSE o.item_id END AS item_id,
+        z.embedding,
+        o.offer_name,
+        o.offer_description,
+        o.performer,
+        o.offer_subcategory_id
+    FROM
+        offers o
+    INNER JOIN z on z.item_id = o.item_id
 )
-SELECT
-    CASE WHEN o.item_id like 'link-%' THEN o.offer_id ELSE o.item_id END AS item_id,
-    z.embedding,
-    o.offer_name,
-    o.offer_description,
-    o.performer,
-FROM
-    offers o
-INNER JOIN z on z.item_id = o.item_id
-QUALIFY ROW_NUMBER() OVER (PARTITION BY offer_id ORDER BY performer DESC) = 1
+select * from candidates
+QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY performer DESC) = 1

@@ -11,106 +11,365 @@ def load_data(source_path: str) -> pd.DataFrame:
     return pd.read_parquet(source_path)
 
 
-links = load_data(
-    "gs://mlflow-bucket-prod/linkage_item_prod/linkage_20240625T084628/linkage_final_items_candidates.parquet"
-)
+linkage_j_70 = load_data("./streamlits/linkage_final_items_jaro_70.parquet")
 
-sources = load_data(
-    "gs://mlflow-bucket-prod/linkage_item_prod/linkage_20240625T084628/linkage_final_items_sources.parquet"
-)
+linkage_j_80 = load_data("./streamlits/linkage_final_items_jaro_80.parquet")
+
+linkage_j_90 = load_data("./streamlits/linkage_final_items_jaro_90.parquet")
+
+linkage_jw_90 = load_data("./streamlits/linkage_final_items_jarowinkler_90.parquet")
+
+linkage_lev_80 = load_data("./streamlits/linkage_final_items_lev_80.parquet")
+
+linkage_lev_90 = load_data("./streamlits/linkage_final_items_lev_90.parquet")
+# linkage_candidates_items = load_data(
+#     "gs://mlflow-bucket-prod/linkage_item_prod/linkage_20240722T161954/linkage_candidates_items.parquet"
+# )
 
 ## Parameters
 st_link_id = st.sidebar.text_input(
-    "links Link id", value="", help="Search for offer name"
+    "linkage Link id", value="", help="Search for offer name"
 )
-st_candidates_id = st.sidebar.text_input(
-    "links batch id", value="", help="Search for offer name"
+st_item_id_synchro = st.sidebar.text_input(
+    "synchro item_id", value="", help="Search for offer name"
 )
-st_link_count = st.sidebar.number_input(
-    "links link count", value=1.0, help="Search for offer name"
+st_item_id_singleton = st.sidebar.text_input(
+    "singleton item_id", value="", help="Search for offer name"
 )
-st_search_filter_links = st.sidebar.text_input(
-    "links Search Filter", value="", help="Search for offer name"
+st_search_filter_linkage = st.sidebar.text_input(
+    "linkage Search Filter", value="", help="Search for offer name"
 )
-st_search_filter_sources = st.sidebar.text_input(
-    "sources Search Filter", value="", help="Search for offer name"
+st_search_filter_linkage_candidates_items = st.sidebar.text_input(
+    "linkage_candidates_items Search Filter", value="", help="Search for offer name"
 )
 
 
 # ## Filter Dataframe
-links_filtered = (
-    links.loc[lambda df: df.link_id == st_link_id if st_link_id != "" else df.index]
+linkage_filtered_j_70 = (
+    linkage_j_70.loc[
+        lambda df: df.link_id == st_link_id if st_link_id != "" else df.index
+    ]
     .loc[
-        lambda df: df.candidates_id == st_candidates_id
-        if st_candidates_id != ""
+        lambda df: df.item_id_synchro == st_item_id_synchro
+        if st_item_id_synchro != ""
+        else df.index
+    ]
+    .loc[
+        lambda df: df.item_id_candidate == st_item_id_singleton
+        if st_item_id_singleton != ""
         else df.index
     ]
     .loc[
         lambda df: (
-            df.offer_name.str.contains(st_search_filter_links, case=False)
-            if st_search_filter_links != ""
+            df.offer_name_synchro.str.contains(st_search_filter_linkage, case=False)
+            if st_search_filter_linkage != ""
+            else df.index
+        )
+    ]
+    .loc[
+        lambda df: (
+            df.offer_name_candidates.str.contains(
+                st_search_filter_linkage_candidates_items, case=False
+            )
+            if st_search_filter_linkage_candidates_items != ""
             else df.index
         )
     ]
 )
-sources_filtered = (
-    sources.loc[lambda df: df.link_id == st_link_id if st_link_id != "" else df.index]
+
+
+linkage_filtered_j_80 = (
+    linkage_j_80.loc[
+        lambda df: df.link_id == st_link_id if st_link_id != "" else df.index
+    ]
     .loc[
-        lambda df: df.candidates_id == st_candidates_id
-        if st_candidates_id != ""
+        lambda df: df.item_id_synchro == st_item_id_synchro
+        if st_item_id_synchro != ""
+        else df.index
+    ]
+    .loc[
+        lambda df: df.item_id_candidate == st_item_id_singleton
+        if st_item_id_singleton != ""
         else df.index
     ]
     .loc[
         lambda df: (
-            df.offer_name.str.contains(st_search_filter_sources, case=False)
-            if st_search_filter_sources != ""
+            df.offer_name_synchro.str.contains(st_search_filter_linkage, case=False)
+            if st_search_filter_linkage != ""
+            else df.index
+        )
+    ]
+    .loc[
+        lambda df: (
+            df.offer_name_candidates.str.contains(
+                st_search_filter_linkage_candidates_items, case=False
+            )
+            if st_search_filter_linkage_candidates_items != ""
             else df.index
         )
     ]
 )
-links_clean = links.loc[
-    lambda df: df.link_count == st_link_count if st_link_count == 1.0 else df.index
-]
-# st.dataframe(sources.iloc[:100])
-st.dataframe(links_clean)
-## Display
-st.header("Items linked")
-# st.sidebar.write(matched_artists_df.columns)
-st.dataframe(
-    links_filtered.sort_values(["link_id", "link_count"]),
-    width=1500,
-    height=500,
+
+linkage_filtered_j_90 = (
+    linkage_j_90.loc[
+        lambda df: df.link_id == st_link_id if st_link_id != "" else df.index
+    ]
+    .loc[
+        lambda df: df.item_id_synchro == st_item_id_synchro
+        if st_item_id_synchro != ""
+        else df.index
+    ]
+    .loc[
+        lambda df: df.item_id_candidate == st_item_id_singleton
+        if st_item_id_singleton != ""
+        else df.index
+    ]
+    .loc[
+        lambda df: (
+            df.offer_name_synchro.str.contains(st_search_filter_linkage, case=False)
+            if st_search_filter_linkage != ""
+            else df.index
+        )
+    ]
+    .loc[
+        lambda df: (
+            df.offer_name_candidates.str.contains(
+                st_search_filter_linkage_candidates_items, case=False
+            )
+            if st_search_filter_linkage_candidates_items != ""
+            else df.index
+        )
+    ]
 )
-st.header("Source Items")
-st.dataframe(
-    sources_filtered.sort_values(["link_id", "candidates_id"]),
-    width=1500,
-    height=500,
+
+linkage_filtered_jw_90 = (
+    linkage_jw_90.loc[
+        lambda df: df.link_id == st_link_id if st_link_id != "" else df.index
+    ]
+    .loc[
+        lambda df: df.item_id_synchro == st_item_id_synchro
+        if st_item_id_synchro != ""
+        else df.index
+    ]
+    .loc[
+        lambda df: df.item_id_candidate == st_item_id_singleton
+        if st_item_id_singleton != ""
+        else df.index
+    ]
+    .loc[
+        lambda df: (
+            df.offer_name_synchro.str.contains(st_search_filter_linkage, case=False)
+            if st_search_filter_linkage != ""
+            else df.index
+        )
+    ]
+    .loc[
+        lambda df: (
+            df.offer_name_candidates.str.contains(
+                st_search_filter_linkage_candidates_items, case=False
+            )
+            if st_search_filter_linkage_candidates_items != ""
+            else df.index
+        )
+    ]
 )
-# ## Graphs
-# st.header("Metrics")
-# artists_in_cluster_df = (
-#     filtered_df.groupby("artist_nickname")
-#     .agg({"artist_name": len})
-#     .sort_values("artist_name", ascending=False)
-#     .reset_index()
-#     .rename(columns={"artist_name": "artist_count"})
+
+linkage_filtered_lev_80 = (
+    linkage_lev_80.loc[
+        lambda df: df.link_id == st_link_id if st_link_id != "" else df.index
+    ]
+    .loc[
+        lambda df: df.item_id_synchro == st_item_id_synchro
+        if st_item_id_synchro != ""
+        else df.index
+    ]
+    .loc[
+        lambda df: df.item_id_candidate == st_item_id_singleton
+        if st_item_id_singleton != ""
+        else df.index
+    ]
+    .loc[
+        lambda df: (
+            df.offer_name_synchro.str.contains(st_search_filter_linkage, case=False)
+            if st_search_filter_linkage != ""
+            else df.index
+        )
+    ]
+    .loc[
+        lambda df: (
+            df.offer_name_candidates.str.contains(
+                st_search_filter_linkage_candidates_items, case=False
+            )
+            if st_search_filter_linkage_candidates_items != ""
+            else df.index
+        )
+    ]
+)
+
+linkage_filtered_lev_90 = (
+    linkage_lev_90.loc[
+        lambda df: df.link_id == st_link_id if st_link_id != "" else df.index
+    ]
+    .loc[
+        lambda df: df.item_id_synchro == st_item_id_synchro
+        if st_item_id_synchro != ""
+        else df.index
+    ]
+    .loc[
+        lambda df: df.item_id_candidate == st_item_id_singleton
+        if st_item_id_singleton != ""
+        else df.index
+    ]
+    .loc[
+        lambda df: (
+            df.offer_name_synchro.str.contains(st_search_filter_linkage, case=False)
+            if st_search_filter_linkage != ""
+            else df.index
+        )
+    ]
+    .loc[
+        lambda df: (
+            df.offer_name_candidates.str.contains(
+                st_search_filter_linkage_candidates_items, case=False
+            )
+            if st_search_filter_linkage_candidates_items != ""
+            else df.index
+        )
+    ]
+)
+
+# linkage_candidates_items_filtered = (
+#     linkage_candidates_items.loc[lambda df: df.link_id == st_link_id if st_link_id != "" else df.index]
+#     .loc[
+#         lambda df: df.item_id_synchro == st_item_id_synchro
+#         if st_item_id_synchro != ""
+#         else df.index
+#     ]
+#     .loc[
+#         lambda df: df.item_id_candidate == st_item_id_singleton
+#         if st_item_id_singleton != ""
+#         else df.index
+#     ]
+#     .loc[
+#         lambda df: (
+#             df.offer_name.str.contains(st_search_filter_linkage, case=False)
+#             if st_search_filter_linkage != ""
+#             else df.index
+#         )
+#     ]
 # )
-# col1, col2 = st.columns([1, 2])
-# with col1:
-#     st.write(artists_in_cluster_df)
-# with col2:
-#     percentage = (
-#         100
-#         * artists_in_cluster_df.loc[lambda df: df.artist_count >= 2].artist_count.sum()
-#         / artists_in_cluster_df.artist_count.sum()
-#     )
-#     cluster_count = (
-#         artists_in_cluster_df.groupby("artist_count")
-#         .agg({"artist_nickname": len})
-#         .reset_index()
-#         .rename(columns={"artist_nickname": "cluster_count"})
-#     )
-#     st.subheader("Cluster Count")
-#     st.bar_chart(cluster_count.set_index("artist_count"))
-#     st.write(f"Artists percentage matched at least once: {percentage:.1f}%")
+
+# st.header(f"linkage_candidates_items_filtered")
+# st.dataframe(
+#     linkage_candidates_items_filtered[["item_id_synchro","offer_name_synchro","offer_name_candidates","item_id_candidate","performer_synchro","performer_candidate","offer_description_synchro","offer_subcategory_id_synchro"]].sort_values(["item_id_synchro"]),
+#     width=1500,
+#     height=500,
+# )
+
+st.header(f"Jaro / 0.70 : {len(linkage_j_70)} singletons matched ")
+st.dataframe(
+    linkage_filtered_j_70[
+        [
+            "item_id_synchro",
+            "offer_name_synchro",
+            "offer_name_candidates",
+            "item_id_candidate",
+            "performer_synchro",
+            "performer_candidate",
+            "offer_description_synchro",
+            "offer_subcategory_id_synchro",
+        ]
+    ].sort_values(["item_id_synchro"]),
+    width=1500,
+    height=500,
+)
+
+st.header(f"Jaro / 0.80 : {len(linkage_j_80)} singletons matched")
+st.dataframe(
+    linkage_filtered_j_80[
+        [
+            "item_id_synchro",
+            "offer_name_synchro",
+            "offer_name_candidates",
+            "item_id_candidate",
+            "performer_synchro",
+            "performer_candidate",
+            "offer_description_synchro",
+            "offer_subcategory_id_synchro",
+        ]
+    ].sort_values(["item_id_synchro"]),
+    width=1500,
+    height=500,
+)
+
+st.header(f"Jaro / 0.90 : {len(linkage_j_90)} singletons matched")
+st.dataframe(
+    linkage_filtered_j_90[
+        [
+            "item_id_synchro",
+            "offer_name_synchro",
+            "offer_name_candidates",
+            "item_id_candidate",
+            "performer_synchro",
+            "performer_candidate",
+            "offer_description_synchro",
+            "offer_subcategory_id_synchro",
+        ]
+    ].sort_values(["item_id_synchro"]),
+    width=1500,
+    height=500,
+)
+
+st.header(f"Jaro-winkler / 0.90 : {len(linkage_jw_90)} ")
+st.dataframe(
+    linkage_filtered_jw_90[
+        [
+            "item_id_synchro",
+            "offer_name_synchro",
+            "offer_name_candidates",
+            "item_id_candidate",
+            "performer_synchro",
+            "performer_candidate",
+            "offer_description_synchro",
+            "offer_subcategory_id_synchro",
+        ]
+    ].sort_values(["item_id_synchro"]),
+    width=1500,
+    height=500,
+)
+
+st.header(f"Levenshtein / 0.80 : {len(linkage_lev_80)} singletons matched")
+st.dataframe(
+    linkage_filtered_lev_80[
+        [
+            "item_id_synchro",
+            "offer_name_synchro",
+            "offer_name_candidates",
+            "item_id_candidate",
+            "performer_synchro",
+            "performer_candidate",
+            "offer_description_synchro",
+            "offer_subcategory_id_synchro",
+        ]
+    ].sort_values(["item_id_synchro"]),
+    width=1500,
+    height=500,
+)
+
+st.header(f"Levenshtein / 0.90 : {len(linkage_lev_90)} singletons matched")
+st.dataframe(
+    linkage_filtered_lev_90[
+        [
+            "item_id_synchro",
+            "offer_name_synchro",
+            "offer_name_candidates",
+            "item_id_candidate",
+            "performer_synchro",
+            "performer_candidate",
+            "offer_description_synchro",
+            "offer_subcategory_id_synchro",
+        ]
+    ].sort_values(["item_id_synchro"]),
+    width=1500,
+    height=500,
+)

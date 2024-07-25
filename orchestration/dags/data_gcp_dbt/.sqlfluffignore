@@ -1,0 +1,7 @@
+
+target/
+macros/
+analyses/
+models/machine_learning/recommendation/ml_reco__available_offer.sql
+models/machine_learning/recommendation/ml_reco__recommendable_offer.sql
+models/mart/monitoring/mrt_monitoring__bigquery_cost.sql

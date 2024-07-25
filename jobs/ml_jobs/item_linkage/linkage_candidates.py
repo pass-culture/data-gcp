@@ -6,11 +6,15 @@ import typer
 from hnne import HNNE
 from loguru import logger
 from model.semantic_space import SemanticSpace
-from utils.common import preprocess_embeddings, reduce_embeddings
+from utils.common import (
+    read_parquet_in_batches_gcs,
+    reduce_embeddings,
+    preprocess_embeddings_by_chunk,
+)
 from utils.gcs_utils import upload_parquet
 from docarray import Document
 from tqdm import tqdm
-from constants import LOGGING_INTERVAL, NUM_RESULTS, MODEL_PATH
+from constants import LOGGING_INTERVAL, NUM_RESULTS, MODEL_PATH, PARQUET_BATCH_SIZE
 
 COLUMN_NAME_LIST = ["item_id", "performer", "offer_name"]
 
@@ -33,9 +37,7 @@ def load_model(model_path: str) -> SemanticSpace:
     return model
 
 
-def preprocess_data(
-    gcs_path: str, column_list: List[str], hnne_reducer: HNNE
-) -> pd.DataFrame:
+def preprocess_data(chunk: pd.DataFrame, hnne_reducer: HNNE) -> pd.DataFrame:
     """
     Preprocess the data by reading the parquet file, filling missing values, and merging embeddings.
 
@@ -48,12 +50,12 @@ def preprocess_data(
         pd.DataFrame: The preprocessed data.
     """
     logger.info("Preprocessing data...")
-    items_df = pd.read_parquet(gcs_path, columns=column_list).assign(
+    items_df = chunk.assign(
         performer=lambda df: df["performer"].fillna(value="unkn"),
         offer_name=lambda df: df["offer_name"].str.lower(),
-    )
+    ).drop(columns=["embedding"])
     items_df["vector"] = reduce_embeddings(
-        preprocess_embeddings(gcs_path), hnne_reducer=hnne_reducer
+        preprocess_embeddings_by_chunk(chunk), hnne_reducer=hnne_reducer
     )
     items_df["vector"] = (
         items_df["vector"]
@@ -85,8 +87,7 @@ def generate_semantic_candidates(
             similarity_metric="cosine",
             n=NUM_RESULTS,
             vector_column_name="vector",
-        ).assign(candidates_id=str(uuid.uuid4()), item_id=row.item_id)
-
+        ).assign(candidates_id=str(uuid.uuid4()), item_id_candidate=row.item_id)
         linkage.append(result_df)
         progress_bar.update(1)
     progress_bar.close()
@@ -114,11 +115,15 @@ def main(
         output_table_path (str): Path to save the output table.
     """
     model = load_model(MODEL_PATH)
-    items_with_embeddings_df = preprocess_data(
-        f"{source_gcs_path}/{input_table_name}", COLUMN_NAME_LIST, model.hnne_reducer
-    )
-
-    linkage_candidates = generate_semantic_candidates(model, items_with_embeddings_df)
+    file_path = f"{source_gcs_path}/{input_table_name}/data-000000000000.parquet"
+    linkage_by_chunk = []
+    for chunk in read_parquet_in_batches_gcs(file_path, PARQUET_BATCH_SIZE):
+        items_with_embeddings_df = preprocess_data(chunk, model.hnne_reducer)
+        linkage_candidates_chunk = generate_semantic_candidates(
+            model, items_with_embeddings_df
+        )
+        linkage_by_chunk.append(linkage_candidates_chunk)
+    linkage_candidates = pd.concat(linkage_by_chunk)
     upload_parquet(
         dataframe=linkage_candidates,
         gcs_path=f"{source_gcs_path}/{output_table_path}.parquet",

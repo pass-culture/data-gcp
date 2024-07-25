@@ -6,8 +6,9 @@ import typer
 from lancedb.pydantic import LanceModel, Vector
 from loguru import logger
 from utils.common import (
-    preprocess_embeddings,
+    preprocess_embeddings_by_chunk,
     reduce_embeddings_and_store_reducer,
+    read_parquet_in_batches_gcs,
 )
 
 # Define constants
@@ -16,6 +17,7 @@ from constants import (
     NUM_PARTITIONS,
     NUM_SUB_VECTORS,
     LANCEDB_BATCH_SIZE,
+    PARQUET_BATCH_SIZE,
     UNKNOWN_PERFORMER,
     MODEL_PATH,
 )
@@ -24,7 +26,7 @@ COLUMN_NAME_LIST = ["item_id", "performer"]
 
 
 def preprocess_data_and_store_reducer(
-    gcs_path: str, column_name_list: List[str], reducer_path: str
+    chunk: pd.DataFrame, reducer_path: str
 ) -> pd.DataFrame:
     """
     Prepare the table by reading the parquet file from GCS, preprocessing embeddings,
@@ -37,12 +39,12 @@ def preprocess_data_and_store_reducer(
     Returns:
         pd.DataFrame: The prepared dataframe with embeddings.
     """
-    item_df = pd.read_parquet(gcs_path, columns=column_name_list).assign(
+    item_df = chunk.assign(
         performer=lambda df: df["performer"].fillna(value=UNKNOWN_PERFORMER),
     )
     return item_df.assign(
         vector=reduce_embeddings_and_store_reducer(
-            embeddings=preprocess_embeddings(gcs_path),
+            embeddings=preprocess_embeddings_by_chunk(chunk),
             n_dim=MODEL_TYPE["n_dim"],
             reducer_path=reducer_path,
         )
@@ -77,12 +79,23 @@ def create_items_table(items_df: pd.DataFrame) -> None:
             yield df[i : i + batch_size]
 
     db = lancedb.connect(MODEL_PATH)
-    db.drop_database()
-    db.create_table(
-        "items",
-        make_batches(df=items_df, batch_size=LANCEDB_BATCH_SIZE),
-        schema=ItemModel,
-    )
+    try:
+        logger.info("Creating LanceDB table...")
+        db.create_table(
+            "items",
+            make_batches(df=items_df, batch_size=LANCEDB_BATCH_SIZE),
+            schema=ItemModel,
+        )
+    except:
+        logger.info("LanceDB table already exists...")
+        tbl = db.open_table("items")
+        tbl.add(
+            make_batches(df=items_df, batch_size=LANCEDB_BATCH_SIZE),
+        )
+
+
+def create_index_on_items_table() -> None:
+    db = lancedb.connect(MODEL_PATH)
     db.open_table("items").create_index(
         num_partitions=NUM_PARTITIONS, num_sub_vectors=NUM_SUB_VECTORS
     )
@@ -106,14 +119,21 @@ def main(
         input_table_name (str): The name of the input table.
     """
     logger.info("Download and prepare table...")
-    item_df_enriched = preprocess_data_and_store_reducer(
-        f"{source_gcs_path}/{input_table_name}",
-        COLUMN_NAME_LIST,
-        MODEL_TYPE["reducer_pickle_path"],
-    )
-    logger.info("Creating LanceDB table...")
-    create_items_table(item_df_enriched)
-    logger.info("LanceDB table and index created...")
+
+    file_path = f"{source_gcs_path}/{input_table_name}/data-000000000000.parquet"
+    total_count = 0
+    for chunk in read_parquet_in_batches_gcs(file_path, PARQUET_BATCH_SIZE):
+
+        item_df_enriched = preprocess_data_and_store_reducer(
+            chunk,
+            MODEL_TYPE["reducer_pickle_path"],
+        )
+        create_items_table(item_df_enriched)
+        total_count += len(chunk)
+    logger.info(f"Total rows processed: {total_count}")
+    create_index_on_items_table()
+    logger.info
+    logger.info("LanceDB table and index created!")
 
 
 if __name__ == "__main__":

@@ -285,32 +285,23 @@ def postprocess_matching(matches, item_singletons_clean, item_synchro_clean):
 
 @app.command()
 def main(
-    source_gcs_path: str = typer.Option("metadata/vector", help="GCS bucket path"),
-    sources_table_name: str = typer.Option(
-        "item_sources_data", help="Catalog table name"
-    ),
-    candidates_table_name: str = typer.Option(
-        "item_candidates_data", help="Catalog table name"
-    ),
-    input_table_path: str = typer.Option(
-        "linkage_candidates_items", help="Input table name"
-    ),
-    output_table_name: str = typer.Option(
-        "linkage_final_items", help="Output table name"
-    ),
+    input_sources_path: str = typer.Option(default=...),
+    input_candidates_path: str = typer.Option(default=...),
+    linkage_candidates_path: str = typer.Option(default=...),
+    output_path: str = typer.Option(default=..., help="Output GCS path"),
 ) -> None:
     """
     Main function to perform record linkage and upload the results to GCS.
 
     Args:
-        source_gcs_path (str): GCS path to the source data.
-        catalog_table_name (str): Name of the catalog table.
-        input_table_path (str): Name of the input table with linkage candidates.
-        output_table_name (str): Name of the output table to save the final linked items.
+        input_sources_path (str): Path to the sources data.
+        input_candidates_path (str): Path to the candidates data.
+        linkage_candidates_path (str): Path to the linkage candidates data.
+        output_path (str): Output GCS path.
     """
     indexer_per_candidates = recordlinkage.index.Block(on="candidates_id")
     item_synchro = pd.read_parquet(
-        f"{source_gcs_path}/{sources_table_name}",
+        input_sources_path,
         columns=[
             "item_id",
             "performer",
@@ -321,7 +312,7 @@ def main(
     ).pipe(clean_catalog)
 
     item_singletons = pd.read_parquet(
-        f"{source_gcs_path}/{candidates_table_name}",
+        input_candidates_path,
         columns=[
             "item_id",
             "performer",
@@ -332,9 +323,7 @@ def main(
     ).pipe(clean_catalog)
 
     catalog_clean = pd.concat([item_synchro, item_singletons]).drop_duplicates()
-    linkage_candidates = pd.read_parquet(
-        f"{source_gcs_path}/{input_table_path}.parquet"
-    )
+    linkage_candidates = pd.read_parquet(linkage_candidates_path)
     (
         candidate_links,
         item_singletons_clean,
@@ -353,7 +342,7 @@ def main(
 
     upload_parquet(
         dataframe=linkage_final,
-        gcs_path=f"{source_gcs_path}/{output_table_name}.parquet",
+        gcs_path=output_path,
     )
 
     linkage_final.to_gbq("sandbox_prod.linked_items", if_exists="replace")

@@ -180,7 +180,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         command="python build_semantic_space.py "
-        f"--input-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['input_sources_filename'])}",
+        f"--input-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['input_sources_filename'])} ",
     )
 
     get_linkage_candidates = SSHGCEOperator(
@@ -188,8 +188,8 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         command="python linkage_candidates.py "
-        f"--input-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['input_candidates_filename'])}"
-        f"--output-table-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['linkage_candidates_filename'])}",
+        f"--input-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['input_candidates_filename'])} "
+        f"--output-table-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['linkage_candidates_filename'])} ",
     )
 
     link_items = SSHGCEOperator(
@@ -197,11 +197,10 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         command="python link_items.py "
-        f"--source-gcs-path {dag_config['STORAGE_PATH']} "
-        "--sources-table-name {{ params.input_sources_table }} "
-        "--candidates-table-name {{ params.input_candidates_table }} "
-        "--input-table-path {{ params.output_linkage_candidates_table_path }} "
-        "--output-table-path {{ params.linked_items_table }}",
+        f"--input-sources-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['input_sources_filename'])} "
+        f"--input-candidates-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['input_candidates_filename'])} "
+        f"--linkage-candidates-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['linkage_candidates_filename'])} "
+        f"--output-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['linked_items_filename'])} ",
     )
 
     gce_instance_stop = StopGCEOperator(

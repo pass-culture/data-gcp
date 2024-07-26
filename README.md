@@ -110,7 +110,7 @@ Les dags sont déployés automatiquement lors d'un merge sur master / production
 
 ## CI/CD
 
-Pipelines détaillées dans .github/workflows/README.md
+Pipelines détaillées dans le [README de github Action](.github/workflows/README.md)
 
 ## Automatisations
 

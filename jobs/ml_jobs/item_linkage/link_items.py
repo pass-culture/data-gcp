@@ -345,8 +345,6 @@ def main(
         gcs_path=output_path,
     )
 
-    linkage_final.to_gbq("sandbox_prod.linked_items", if_exists="replace")
-
 
 if __name__ == "__main__":
     app()

@@ -8,6 +8,9 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
 from common import macros
 from common.config import (
     BIGQUERY_TMP_DATASET,
@@ -29,11 +32,12 @@ from jobs.ml.constants import IMPORT_LINKAGE_SQL_PATH
 DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
+GCS_FOLDER_PATH = f"linkage_item_{ENV_SHORT_NAME}/linkage_{DATE}"
 dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/linkage_item_{ENV_SHORT_NAME}/linkage_{DATE}",
+    "GCS_FOLDER_PATH": GCS_FOLDER_PATH,
+    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}",
     "BASE_DIR": "data-gcp/jobs/ml_jobs/item_linkage/",
     "EXPERIMENT_NAME": f"linkage_semantic_vector_v1.0_{ENV_SHORT_NAME}",
-    "MODEL_NAME": f"v1.1_{ENV_SHORT_NAME}",
     "linkage_item_sources_data_request": "linkage_item_sources_data.sql",
     "linkage_item_candidates_data_request": "linkage_item_candidates_data.sql",
     "input_sources_table": f"{DATE}_input_sources_table",
@@ -203,6 +207,18 @@ with DAG(
         f"--output-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['linked_items_filename'])} ",
     )
 
+    load_link_items_into_bq = GCSToBigQueryOperator(
+        bucket=MLFLOW_BUCKET_NAME,
+        task_id="load_linked_artists_into_bq",
+        source_objects=os.path.join(
+            GCS_FOLDER_PATH, dag_config["linked_items_filename"]
+        ),
+        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{dag_config['linked_items_table']}",
+        source_format="PARQUET",
+        write_disposition="WRITE_TRUNCATE",
+        autodetect=True,
+    )
+
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
@@ -219,5 +235,6 @@ with DAG(
         >> build_linkage_vector
         >> get_linkage_candidates
         >> link_items
+        >> load_link_items_into_bq
         >> gce_instance_stop
     )

@@ -192,7 +192,7 @@ with DAG(
         base_dir=DAG_CONFIG["BASE_DIR"],
         command="python linkage_candidates.py "
         f"--input-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['INPUT_CANDIDATES_FILENAME'])} "
-        f"--output-table-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKAGE_CANDIDATES_FILENAME'])} ",
+        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKAGE_CANDIDATES_FILENAME'])} ",
     )
 
     link_items = SSHGCEOperator(

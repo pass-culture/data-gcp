@@ -13,6 +13,7 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
 )
 from common import macros
 from common.config import (
+    BIGQUERY_SANDBOX_DATASET,
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
@@ -212,7 +213,7 @@ with DAG(
         source_objects=os.path.join(
             GCS_FOLDER_PATH, DAG_CONFIG["LINKED_ITEMS_FILENAME"]
         ),
-        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DAG_CONFIG['LINKED_ITEMS_TABLE']}",
+        destination_project_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['LINKED_ITEMS_TABLE']}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,

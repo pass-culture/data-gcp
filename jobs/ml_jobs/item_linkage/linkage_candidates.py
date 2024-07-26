@@ -1,20 +1,19 @@
 import uuid
-from typing import List
 
 import pandas as pd
 import typer
+from constants import LOGGING_INTERVAL, MODEL_PATH, NUM_RESULTS, PARQUET_BATCH_SIZE
+from docarray import Document
 from hnne import HNNE
 from loguru import logger
 from model.semantic_space import SemanticSpace
+from tqdm import tqdm
 from utils.common import (
+    preprocess_embeddings_by_chunk,
     read_parquet_in_batches_gcs,
     reduce_embeddings,
-    preprocess_embeddings_by_chunk,
 )
 from utils.gcs_utils import upload_parquet
-from docarray import Document
-from tqdm import tqdm
-from constants import LOGGING_INTERVAL, NUM_RESULTS, MODEL_PATH, PARQUET_BATCH_SIZE
 
 COLUMN_NAME_LIST = ["item_id", "performer", "offer_name"]
 
@@ -96,15 +95,8 @@ def generate_semantic_candidates(
 
 @app.command()
 def main(
-    source_gcs_path: str = typer.Option(
-        "gs://mlflow-bucket-prod/linkage_vector_prod", help="GCS bucket path"
-    ),
-    input_table_path: str = typer.Option(
-        "item_candidates_data", help="Input table path"
-    ),
-    output_table_path: str = typer.Option(
-        "linkage_candidates_items", help="Output table path"
-    ),
+    input_path: str = typer.Option(default=..., help="Input table path"),
+    output_path: str = typer.Option(default=..., help="Output table path"),
 ) -> None:
     """
     Main function to preprocess data, prepare vectors, generate semantic candidates, and upload the results to GCS.
@@ -115,19 +107,16 @@ def main(
         output_table_path (str): Path to save the output table.
     """
     model = load_model(MODEL_PATH)
-    file_path = f"{source_gcs_path}/{input_table_path}/data-000000000000.parquet"
+
     linkage_by_chunk = []
-    for chunk in read_parquet_in_batches_gcs(file_path, PARQUET_BATCH_SIZE):
+    for chunk in read_parquet_in_batches_gcs(input_path, PARQUET_BATCH_SIZE):
         items_with_embeddings_df = preprocess_data(chunk, model.hnne_reducer)
         linkage_candidates_chunk = generate_semantic_candidates(
             model, items_with_embeddings_df
         )
         linkage_by_chunk.append(linkage_candidates_chunk)
     linkage_candidates = pd.concat(linkage_by_chunk)
-    upload_parquet(
-        dataframe=linkage_candidates,
-        gcs_path=f"{source_gcs_path}/{output_table_path}.parquet",
-    )
+    upload_parquet(dataframe=linkage_candidates, gcs_path=output_path)
 
 
 if __name__ == "__main__":

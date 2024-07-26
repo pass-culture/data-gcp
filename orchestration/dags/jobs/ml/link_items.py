@@ -180,7 +180,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         command="python build_semantic_space.py "
-        f"--input-path {dag_config['STORAGE_PATH']/dag_config['input_sources_filename']} ",
+        f"--input-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['input_sources_filename'])}",
     )
 
     get_linkage_candidates = SSHGCEOperator(
@@ -188,9 +188,8 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         command="python linkage_candidates.py "
-        f"--source-gcs-path {dag_config['STORAGE_PATH']} "
-        "--input-table-path {{ params.input_candidates_table }} "
-        "--output-table-path {{ params.output_linkage_candidates_table_path }}",
+        f"--input-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['input_candidates_filename'])}"
+        f"--output-table-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['linkage_candidates_filename'])}",
     )
 
     link_items = SSHGCEOperator(

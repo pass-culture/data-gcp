@@ -73,7 +73,7 @@ class PredictPipeline:
 class TrainPipeline:
     def __init__(self, target: str, params: dict = None, verbose: bool = False) -> None:
         self.numeric_features = NUMERIC_FEATURES
-        self.categorical_features = DEFAULT_CATEGORICAL
+        self.categorical_features = CATEGORICAL_FEATURES
         self.preprocessor: ColumnTransformer = None
         self.train_size = 0.8
         self.target = target

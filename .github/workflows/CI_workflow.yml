@@ -20,7 +20,7 @@ jobs:
         env:
           TARGET_BRANCH: ${{ github.base_ref }}
         run: .github/workflows/scripts/check_dbt_changes.sh $TARGET_BRANCH
-   compile-dbt-on-prod:
+   dbt-integration-prod:
     needs: find-dbt-changes
     if: github.base_ref == 'production' && needs.find-dbt-changes.outputs.changes == 'true'
     with:
@@ -30,7 +30,7 @@ jobs:
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
-   compile-dbt-on-stg:
+   dbt-integration-stg:
     needs: find-dbt-changes
     if: github.base_ref == 'master' && needs.find-dbt-changes.outputs.changes == 'true'
     with:

@@ -180,8 +180,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         command="python build_semantic_space.py "
-        f"--source-gcs-path {dag_config['STORAGE_PATH']} "
-        "--input-table-name {{ params.input_sources_table }} ",
+        f"--input-path {dag_config['STORAGE_PATH']/dag_config['input_sources_filename']} ",
     )
 
     get_linkage_candidates = SSHGCEOperator(

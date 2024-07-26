@@ -1,25 +1,23 @@
-from typing import List
-
 import lancedb
 import pandas as pd
 import typer
+
+# Define constants
+from constants import (
+    LANCEDB_BATCH_SIZE,
+    MODEL_PATH,
+    MODEL_TYPE,
+    NUM_PARTITIONS,
+    NUM_SUB_VECTORS,
+    PARQUET_BATCH_SIZE,
+    UNKNOWN_PERFORMER,
+)
 from lancedb.pydantic import LanceModel, Vector
 from loguru import logger
 from utils.common import (
     preprocess_embeddings_by_chunk,
-    reduce_embeddings_and_store_reducer,
     read_parquet_in_batches_gcs,
-)
-
-# Define constants
-from constants import (
-    MODEL_TYPE,
-    NUM_PARTITIONS,
-    NUM_SUB_VECTORS,
-    LANCEDB_BATCH_SIZE,
-    PARQUET_BATCH_SIZE,
-    UNKNOWN_PERFORMER,
-    MODEL_PATH,
+    reduce_embeddings_and_store_reducer,
 )
 
 COLUMN_NAME_LIST = ["item_id", "performer"]
@@ -102,12 +100,8 @@ def create_index_on_items_table() -> None:
 
 
 def main(
-    source_gcs_path: str = typer.Option(
-        "gs://mlflow-bucket-prod/linkage_vector_prod/",
-        help="GCS parquet path",
-    ),
-    input_table_name: str = typer.Option(
-        "item_sources_data",
+    input_path: str = typer.Option(
+        default=...,
         help="GCS parquet path",
     ),
 ) -> None:
@@ -115,15 +109,12 @@ def main(
     Main function to download and prepare the table, create the LanceDB table, and save the model type.
 
     Args:
-        source_gcs_path (str): The GCS path to the source parquet files.
-        input_table_name (str): The name of the input table.
+        input_path (str): The GCS path to the parquet file.
     """
     logger.info("Download and prepare table...")
 
-    file_path = f"{source_gcs_path}/{input_table_name}/data-000000000000.parquet"
     total_count = 0
-    for chunk in read_parquet_in_batches_gcs(file_path, PARQUET_BATCH_SIZE):
-
+    for chunk in read_parquet_in_batches_gcs(input_path, PARQUET_BATCH_SIZE):
         item_df_enriched = preprocess_data_and_store_reducer(
             chunk,
             MODEL_TYPE["reducer_pickle_path"],

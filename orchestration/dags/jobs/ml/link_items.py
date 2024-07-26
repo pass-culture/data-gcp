@@ -33,23 +33,22 @@ DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
 GCS_FOLDER_PATH = f"linkage_item_{ENV_SHORT_NAME}/linkage_{DATE}"
-dag_config = {
+DAG_CONFIG = {
     "GCS_FOLDER_PATH": GCS_FOLDER_PATH,
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}",
     "BASE_DIR": "data-gcp/jobs/ml_jobs/item_linkage/",
     "EXPERIMENT_NAME": f"linkage_semantic_vector_v1.0_{ENV_SHORT_NAME}",
-    "linkage_item_sources_data_request": "linkage_item_sources_data.sql",
-    "linkage_item_candidates_data_request": "linkage_item_candidates_data.sql",
-    "input_sources_table": f"{DATE}_input_sources_table",
-    "input_candidates_table": f"{DATE}_item_candidates_data",
-    "linked_items_table": "linked_items",
-    "input_sources_filename": "item_sources_data.parquet",
-    "input_candidates_filename": "item_candidates_data.parquet",
-    "linkage_candidates_filename": "linkage_candidates_items.parquet",
-    "linked_items_filename": "linkage_candidates_items.parquet",
+    "LINKAGE_ITEM_SOURCES_DATA_REQUEST": "linkage_item_sources_data.sql",
+    "LINKAGE_ITEM_CANDIDATES_DATA_REQUEST": "linkage_item_candidates_data.sql",
+    "INPUT_SOURCES_TABLE": f"{DATE}_input_sources_table",
+    "INPUT_CANDIDATES_TABLE": f"{DATE}_item_candidates_data",
+    "LINKED_ITEMS_TABLE": "linked_items",
+    "INPUT_SOURCES_FILENAME": "item_sources_data.parquet",
+    "INPUT_CANDIDATES_FILENAME": "item_candidates_data.parquet",
+    "LINKAGE_CANDIDATES_FILENAME": "linkage_candidates_items.parquet",
+    "LINKED_ITEMS_FILENAME": "linkage_candidates_items.parquet",
 }
-
-gce_params = {
+GCE_PARAMS = {
     "instance_name": f"linkage-item-{ENV_SHORT_NAME}",
     "instance_type": {
         "prod": "n1-standard-16",
@@ -58,20 +57,20 @@ gce_params = {
     },
 }
 
-default_args = {
+DEFAULT_ARGS = {
     "start_date": datetime(2022, 11, 30),
     # "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
 
-schedule_dict = {"prod": "0 4 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"}
+SCHEDULE_DICT = {"prod": "0 4 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"}
 
 with DAG(
     "link_items",
-    default_args=default_args,
+    default_args=DEFAULT_ARGS,
     description="Process to link items using semantic vectors.",
-    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
@@ -82,11 +81,11 @@ with DAG(
             type="string",
         ),
         "instance_type": Param(
-            default=gce_params["instance_type"][ENV_SHORT_NAME],
+            default=GCE_PARAMS["instance_type"][ENV_SHORT_NAME],
             type="string",
         ),
         "instance_name": Param(
-            default=gce_params["instance_name"],
+            default=GCE_PARAMS["instance_name"],
             type="string",
         ),
     },
@@ -96,22 +95,22 @@ with DAG(
     import_sources = BigQueryExecuteQueryOperator(
         task_id="import_sources",
         sql=(
-            IMPORT_LINKAGE_SQL_PATH / dag_config["linkage_item_sources_data_request"]
+            IMPORT_LINKAGE_SQL_PATH / DAG_CONFIG["LINKAGE_ITEM_SOURCES_DATA_REQUEST"]
         ).as_posix(),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{dag_config['input_sources_table']}",
+        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DAG_CONFIG['INPUT_SOURCES_TABLE']}",
     )
     import_data_tasks.append(import_sources)
 
     import_candidates = BigQueryExecuteQueryOperator(
         task_id="import_candidates",
         sql=(
-            IMPORT_LINKAGE_SQL_PATH / dag_config["linkage_item_candidates_data_request"]
+            IMPORT_LINKAGE_SQL_PATH / DAG_CONFIG["LINKAGE_ITEM_CANDIDATES_DATA_REQUEST"]
         ).as_posix(),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{dag_config['input_candidates_table']}",
+        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DAG_CONFIG['INPUT_CANDIDATES_TABLE']}",
     )
     import_data_tasks.append(import_candidates)
     end_imports = DummyOperator(task_id="end_imports", dag=dag)
@@ -123,12 +122,12 @@ with DAG(
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
                     "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": f"{dag_config['input_sources_table']}",
+                    "tableId": f"{DAG_CONFIG['INPUT_SOURCES_TABLE']}",
                 },
                 "compression": None,
                 "destinationFormat": "PARQUET",
                 "destinationUris": os.path.join(
-                    dag_config["STORAGE_PATH"], dag_config["input_sources_filename"]
+                    DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_FILENAME"]
                 ),
             }
         },
@@ -143,12 +142,12 @@ with DAG(
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
                     "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": dag_config["input_candidates_table"],
+                    "tableId": DAG_CONFIG["INPUT_CANDIDATES_TABLE"],
                 },
                 "compression": None,
                 "destinationFormat": "PARQUET",
                 "destinationUris": os.path.join(
-                    dag_config["STORAGE_PATH"], dag_config["input_candidates_filename"]
+                    DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_CANDIDATES_FILENAME"]
                 ),
             }
         },
@@ -175,45 +174,45 @@ with DAG(
     install_dependencies = SSHGCEOperator(
         task_id="install_dependencies",
         instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
+        base_dir=DAG_CONFIG["BASE_DIR"],
         command="pip install -r requirements.txt --user",
     )
 
     build_linkage_vector = SSHGCEOperator(
         task_id="build_linkage_vector",
         instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
+        base_dir=DAG_CONFIG["BASE_DIR"],
         command="python build_semantic_space.py "
-        f"--input-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['input_sources_filename'])} ",
+        f"--input-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['INPUT_SOURCES_FILENAME'])} ",
     )
 
     get_linkage_candidates = SSHGCEOperator(
         task_id="get_linkage_candidates",
         instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
+        base_dir=DAG_CONFIG["BASE_DIR"],
         command="python linkage_candidates.py "
-        f"--input-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['input_candidates_filename'])} "
-        f"--output-table-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['linkage_candidates_filename'])} ",
+        f"--input-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['INPUT_CANDIDATES_FILENAME'])} "
+        f"--output-table-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKAGE_CANDIDATES_FILENAME'])} ",
     )
 
     link_items = SSHGCEOperator(
         task_id="link_items",
         instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
+        base_dir=DAG_CONFIG["BASE_DIR"],
         command="python link_items.py "
-        f"--input-sources-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['input_sources_filename'])} "
-        f"--input-candidates-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['input_candidates_filename'])} "
-        f"--linkage-candidates-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['linkage_candidates_filename'])} "
-        f"--output-path {os.path.join(dag_config['STORAGE_PATH'],dag_config['linked_items_filename'])} ",
+        f"--input-sources-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['INPUT_SOURCES_FILENAME'])} "
+        f"--input-candidates-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['INPUT_CANDIDATES_FILENAME'])} "
+        f"--linkage-candidates-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKAGE_CANDIDATES_FILENAME'])} "
+        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKED_ITEMS_FILENAME'])} ",
     )
 
     load_link_items_into_bq = GCSToBigQueryOperator(
         bucket=MLFLOW_BUCKET_NAME,
         task_id="load_linked_artists_into_bq",
         source_objects=os.path.join(
-            GCS_FOLDER_PATH, dag_config["linked_items_filename"]
+            GCS_FOLDER_PATH, DAG_CONFIG["LINKED_ITEMS_FILENAME"]
         ),
-        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{dag_config['linked_items_table']}",
+        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DAG_CONFIG['LINKED_ITEMS_TABLE']}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,

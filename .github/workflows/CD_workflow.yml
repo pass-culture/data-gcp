@@ -1,4 +1,4 @@
-name: "Deploy Composer"
+name: "Deployement workflow"
 
 on:
  push:
@@ -48,7 +48,7 @@ jobs:
     with:
       JOB_PATH: ${{ matrix.job }}
       NOTIF_CHANNEL_ID: ${{ vars.DEFAULT_NOTIF_CHANNEL_ID }}
-  
+
   test-orchestration:
     uses: ./.github/workflows/reusable_test_orchestration.yml
     with:

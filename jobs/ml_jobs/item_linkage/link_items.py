@@ -1,16 +1,17 @@
 import multiprocessing as mp
+import re
+import string
+import unicodedata
 from typing import List, Tuple
+
 import pandas as pd
 import recordlinkage
 import typer
-from utils.gcs_utils import upload_parquet
 from constants import (
     FEATURES,
     MATCHES_REQUIRED,
 )
-import re
-import unicodedata
-import string
+from utils.gcs_utils import upload_parquet
 
 app = typer.Typer()
 
@@ -223,7 +224,6 @@ def enriched_items(items_df, catalog, key):
 
 
 def postprocess_matching(matches, item_singletons_clean, item_synchro_clean):
-
     matches["index_1"] = matches["index_1"].astype(str)
     matches["index_2"] = matches["index_2"].astype(str)
 

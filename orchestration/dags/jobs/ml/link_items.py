@@ -1,30 +1,27 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
-)
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
-from common.utils import get_airflow_schedule
 from common import macros
-from common.alerts import task_fail_slack_alert
 from common.config import (
-    GCP_PROJECT_ID,
+    BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
-    BIGQUERY_TMP_DATASET,
 )
-
-from datetime import datetime
+from common.operators.gce import (
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
+)
+from common.utils import get_airflow_schedule
 
 from jobs.ml.constants import IMPORT_LINKAGE_SQL_PATH
 
@@ -36,19 +33,19 @@ dag_config = {
     "BASE_DIR": "data-gcp/jobs/ml_jobs/item_linkage/",
     "EXPERIMENT_NAME": f"linkage_semantic_vector_v1.0_{ENV_SHORT_NAME}",
     "MODEL_NAME": f"v1.1_{ENV_SHORT_NAME}",
+    "output_lancedb_path": "metadata/vector",
     "input_sources_table_name": "item_sources_data",
     "input_candidates_table_name": "item_candidates_data",
-    "output_lancedb_path": "metadata/vector",
     "output_linkage_candidates_table_path": "linkage_candidates_items",
-    "output_linkage_final_table_path": "linkage_final_items",
+    "output_linkage_final_table_path": "linked_items",
 }
 
 gce_params = {
     "instance_name": f"linkage-item-{ENV_SHORT_NAME}",
     "instance_type": {
-        "dev": "n1-standard-2",
-        "stg": "n1-standard-8",
         "prod": "n1-standard-16",
+        "stg": "n1-standard-8",
+        "dev": "n1-standard-2",
     },
 }
 
@@ -59,7 +56,7 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
 }
 
-schedule_dict = {"prod": "0 4 * * *", "dev": "0 6 * * *", "stg": "0 6 * * 3"}
+schedule_dict = {"prod": "0 4 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"}
 
 with DAG(
     "link_items",
@@ -108,8 +105,8 @@ with DAG(
     start = DummyOperator(task_id="start", dag=dag)
     import_data_tasks = []
     import_sources = BigQueryExecuteQueryOperator(
-        task_id=f"import_sources",
-        sql=(IMPORT_LINKAGE_SQL_PATH / f"linkage_item_sources_data.sql").as_posix(),
+        task_id="import_sources",
+        sql=(IMPORT_LINKAGE_SQL_PATH / "linkage_item_sources_data.sql").as_posix(),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_"
@@ -119,8 +116,8 @@ with DAG(
     import_data_tasks.append(import_sources)
 
     import_candidates = BigQueryExecuteQueryOperator(
-        task_id=f"import_candidates",
-        sql=(IMPORT_LINKAGE_SQL_PATH / f"linkage_item_candidates_data.sql").as_posix(),
+        task_id="import_candidates",
+        sql=(IMPORT_LINKAGE_SQL_PATH / "linkage_item_candidates_data.sql").as_posix(),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_"
@@ -131,7 +128,7 @@ with DAG(
     end_imports = DummyOperator(task_id="end_imports", dag=dag)
     export_to_bq_tasks = []
     export_sources_bq = BigQueryInsertJobOperator(
-        task_id=f"export_sources_bq",
+        task_id="export_sources_bq",
         configuration={
             "extract": {
                 "sourceTable": {
@@ -150,7 +147,7 @@ with DAG(
     export_to_bq_tasks.append(export_sources_bq)
 
     export_candidates_bq = BigQueryInsertJobOperator(
-        task_id=f"export_candidates_bq",
+        task_id="export_candidates_bq",
         configuration={
             "extract": {
                 "sourceTable": {

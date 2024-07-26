@@ -1,4 +1,4 @@
-name: "DBT build job"
+name: "DBT building job"
 
 on:
   workflow_call:
@@ -17,16 +17,16 @@ on:
         required: true
       GCP_EHP_SERVICE_ACCOUNT:
         required: true
-          
+
 jobs:
-  dbt-compile:
-    name: "dbt-compile"
+  dbt-build:
+    name: "dbt-build"
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: write
     defaults:
-     run: 
+     run:
        working-directory: "./orchestration/"
     env:
       AIRFLOW_HOME: "./"
@@ -81,7 +81,7 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
-        run: dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" 
+        run: dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Run modified models & 1st order childrens"
         working-directory: .
         env:

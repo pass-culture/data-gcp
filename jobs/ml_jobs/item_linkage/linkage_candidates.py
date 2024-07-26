@@ -99,7 +99,7 @@ def main(
     source_gcs_path: str = typer.Option(
         "gs://mlflow-bucket-prod/linkage_vector_prod", help="GCS bucket path"
     ),
-    input_table_name: str = typer.Option(
+    input_table_path: str = typer.Option(
         "item_candidates_data", help="Input table path"
     ),
     output_table_path: str = typer.Option(
@@ -111,11 +111,11 @@ def main(
 
     Args:
         source_gcs_path (str): GCS path to the source data.
-        input_table_name (str): Name of the input table.
+        input_table_path (str): Name of the input table.
         output_table_path (str): Path to save the output table.
     """
     model = load_model(MODEL_PATH)
-    file_path = f"{source_gcs_path}/{input_table_name}/data-000000000000.parquet"
+    file_path = f"{source_gcs_path}/{input_table_path}/data-000000000000.parquet"
     linkage_by_chunk = []
     for chunk in read_parquet_in_batches_gcs(file_path, PARQUET_BATCH_SIZE):
         items_with_embeddings_df = preprocess_data(chunk, model.hnne_reducer)

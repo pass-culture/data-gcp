@@ -292,7 +292,7 @@ def main(
     candidates_table_name: str = typer.Option(
         "item_candidates_data", help="Catalog table name"
     ),
-    input_table_name: str = typer.Option(
+    input_table_path: str = typer.Option(
         "linkage_candidates_items", help="Input table name"
     ),
     output_table_name: str = typer.Option(
@@ -305,7 +305,7 @@ def main(
     Args:
         source_gcs_path (str): GCS path to the source data.
         catalog_table_name (str): Name of the catalog table.
-        input_table_name (str): Name of the input table with linkage candidates.
+        input_table_path (str): Name of the input table with linkage candidates.
         output_table_name (str): Name of the output table to save the final linked items.
     """
     indexer_per_candidates = recordlinkage.index.Block(on="candidates_id")
@@ -333,7 +333,7 @@ def main(
 
     catalog_clean = pd.concat([item_synchro, item_singletons]).drop_duplicates()
     linkage_candidates = pd.read_parquet(
-        f"{source_gcs_path}/{input_table_name}.parquet"
+        f"{source_gcs_path}/{input_table_path}.parquet"
     )
     (
         candidate_links,
@@ -355,6 +355,8 @@ def main(
         dataframe=linkage_final,
         gcs_path=f"{source_gcs_path}/{output_table_name}.parquet",
     )
+
+    linkage_final.to_gbq("sandbox_prod.linked_items", if_exists="replace")
 
 
 if __name__ == "__main__":

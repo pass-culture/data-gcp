@@ -107,6 +107,7 @@ with DAG(
         ),
         dag=dag,
     )
+    print("DEBUG")
 
     # Artist Linkage
     data_collect = bigquery_job_task(

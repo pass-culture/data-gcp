@@ -49,9 +49,8 @@ jobs:
       - uses: yezz123/setup-uv@v4
       - name: "Install Python requirements"
         run: |
-          uv venv
-          uv pip install setuptools==71.1.0
-          uv pip install --no-build-isolation -r airflow/orchestration-requirements.txt
+          uv pip install --system setuptools==71.1.0 poetry==1.8.3
+          uv pip install --system  --no-build-isolation -r airflow/orchestration-requirements.txt
       - name: "Authenticate with Google Cloud"
         uses: "google-github-actions/auth@v2"
         with:

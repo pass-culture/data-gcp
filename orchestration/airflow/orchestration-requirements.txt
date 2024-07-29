@@ -888,7 +888,7 @@ lockfile==0.12.2
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   apache-airflow
     #   python-daemon
-logbook==1.5.3
+logbook==1.6.0
     # via dbt-core
 looker-sdk==23.10.0
     # via

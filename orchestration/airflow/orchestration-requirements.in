@@ -16,3 +16,4 @@ airflow-provider-great-expectations==0.2.6
 apache-airflow-providers-slack==7.3.1
 dbt-core==1.7.2
 dbt-bigquery~=1.7
+setuptools==66.1.0

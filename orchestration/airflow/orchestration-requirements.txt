@@ -1415,8 +1415,9 @@ setproctitle==1.3.2
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   apache-airflow
-setuptools==66.1.1
+setuptools==66.1.0
     # via
+    #   -r orchestration-requirements.in
     #   gcloud-aio-auth
     #   gcloud-aio-bigquery
     #   gcloud-aio-storage

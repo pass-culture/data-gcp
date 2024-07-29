@@ -66,7 +66,7 @@ with DAG(
             type="integer",
         ),
         "max_rows_to_process": Param(
-            default=500_000 if ENV_SHORT_NAME == "prod" else 15_000,
+            default=200_000 if ENV_SHORT_NAME == "prod" else 15_000,
             type="integer",
         ),
     },

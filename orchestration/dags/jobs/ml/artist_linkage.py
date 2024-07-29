@@ -99,6 +99,7 @@ with DAG(
         base_dir=BASE_DIR,
         command="""pip install -r requirements.txt --user""",
     )
+    print("Debug    ")
 
     logging_task = PythonOperator(
         task_id="logging_task",

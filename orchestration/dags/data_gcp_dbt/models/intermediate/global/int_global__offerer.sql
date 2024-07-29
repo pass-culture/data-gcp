@@ -22,6 +22,14 @@ FROM {{ ref("int_applicative__offerer_tag") }}
 WHERE tag_category_name = "comptage"
 AND tag_label NOT IN ("Association", "EPN","Collectivité","Pas de tag associé","Auto-Entrepreneur","Compagnie","Tourneur")
 GROUP BY offerer_id
+),
+
+reimbursement_points AS (
+SELECT
+    offerer_id
+    ,COUNT(DISTINCT venue_id) AS total_reimbursement_points
+FROM  {{ ref('int_applicative__venue_reimbursement_point_link') }}
+GROUP BY offerer_id
 )
 
 SELECT
@@ -79,6 +87,8 @@ SELECT
     ofr.is_individual_active_current_year,
     ofr.is_collective_active_last_30days,
     ofr.is_collective_active_current_year,
+    ofr.top_real_revenue_venue_type,
+    ofr.top_bookings_venue_type,
     region_department.region_name AS offerer_region_name,
     ofr.offerer_city,
     region_department.academy_name,
@@ -90,6 +100,8 @@ SELECT
     ofr.total_managed_venues,
     ofr.total_physical_managed_venues,
     ofr.total_permanent_managed_venues,
+    ofr.all_physical_venues_types,
+    ofr.total_administrative_venues,
     ofr.total_venues,
     ofr.offerer_humanized_id,
     COALESCE(first_dms_adage.application_status, 'dms_adage_non_depose') AS first_dms_adage_status,
@@ -97,6 +109,7 @@ SELECT
     siren_reference_adage.siren IS NOT NULL AS is_reference_adage,
     CASE WHEN siren_reference_adage.siren IS NULL THEN FALSE ELSE siren_synchro_adage END AS is_synchro_adage,
     tagged_partners.partner_type,
+    rp.total_reimbursement_points
 FROM {{ ref('int_applicative__offerer') }} AS ofr
 LEFT JOIN {{ source('analytics', 'region_department') }} AS region_department ON ofr.offerer_department_code = region_department.num_dep
 LEFT JOIN {{ source('clean', 'siren_data') }} AS siren_data ON siren_data.siren = ofr.offerer_siren
@@ -108,4 +121,5 @@ LEFT JOIN first_dms_adage AS first_dms_adage_accepted ON
     AND first_dms_adage_accepted.application_status = "accepte"
 LEFT JOIN siren_reference_adage ON ofr.offerer_siren = siren_reference_adage.siren
 LEFT JOIN tagged_partners ON ofr.offerer_id = tagged_partners.offerer_id
+LEFT JOIN reimbursement_points AS rp ON rp.offerer_id = ofr.offerer_id
 QUALIFY ROW_NUMBER() OVER (PARTITION BY offerer_siren ORDER BY siren_data.update_date DESC) = 1

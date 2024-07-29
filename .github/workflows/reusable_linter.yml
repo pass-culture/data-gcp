@@ -37,7 +37,7 @@ jobs:
           python-version: '3.10'
       - uses: yezz123/setup-uv@v4
       - name : "Install Black"
-        run: uv pip install --system -r  linter-requirements.txt
+        run: uv pip sync --system linter-requirements.txt
       - name: "Run Black"
         run: black --check --verbose .
       - name: "Post to a Slack channel"

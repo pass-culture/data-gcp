@@ -86,7 +86,7 @@ bookings_infos AS (
                 AND CAST(educational_year_expiration_date AS DATE) >= CURRENT_DATE
             ) THEN TRUE
             ELSE FALSE
-        END AS is_current_year_booking,
+        END AS is_current_year_booking
     FROM {{ ref('educational_institution') }} AS educational_institution
         JOIN {{ ref('collective_booking') }} AS collective_booking ON educational_institution.educational_institution_id = collective_booking.educational_institution_id
         AND collective_booking_status != 'CANCELLED'
@@ -203,7 +203,7 @@ SELECT
     location_info.institution_city,
     location_info.institution_epci,
     location_info.institution_density_label,
-    location_info.institution_macro_density_label, 
+    location_info.institution_macro_density_label,
     location_info.institution_latitude,
     location_info.institution_longitude,
     CASE WHEN location_info.institution_qpv_name is not null THEN TRUE ELSE FALSE END AS institution_in_qpv,

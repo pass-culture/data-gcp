@@ -51,7 +51,7 @@ SELECT
     cb.collective_booking_used_date,
     cb.collective_booking_reimbursement_date,
     cb.collective_booking_rank,
-    co.collective_offer_image_id,
+    co.collective_offer_image_id
 FROM {{ ref('int_applicative__collective_booking') }}  AS cb
 INNER JOIN {{ ref('int_global__collective_offer') }} AS co ON co.collective_stock_id = cb.collective_stock_id
 INNER JOIN {{ source('raw', 'applicative_database_educational_year') }} AS educational_year ON educational_year.adage_id = cb.educational_year_id

@@ -58,7 +58,7 @@ WITH export_table AS (
         REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.retrievals[0].model_display_name"),  '"', '') as scorer_retrieval_model_display_name,
         REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.retrievals[0].model_version"),  '"', '') as scorer_retrieval_model_version,
         REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.ranking.model_display_name"),  '"', '') as scorer_ranking_model_display_name,
-        REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.ranking.model_version"),  '"', '') as scorer_ranking_model_version,
+        REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.ranking.model_version"),  '"', '') as scorer_ranking_model_version
     FROM
        {{ source('raw', 'past_offer_context') }} pso
     INNER JOIN {{ ref('offer_item_ids') }} offer_item_ids USING(offer_id)
@@ -81,7 +81,7 @@ WITH export_table AS (
 )
 
 SELECT
-    et.*,
+    et.*
 FROM export_table et
 {% if is_incremental() %}
     WHERE et.event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 2 DAY) and DATE('{{ ds() }}')

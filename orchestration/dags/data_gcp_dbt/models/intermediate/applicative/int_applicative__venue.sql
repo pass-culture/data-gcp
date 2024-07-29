@@ -20,7 +20,7 @@ WITH offers_grouped_by_venue AS (
         MIN(CASE WHEN offer_validation = "APPROVED" THEN offer_creation_date END) AS first_individual_offer_creation_date,
         MAX(CASE WHEN offer_validation = "APPROVED" THEN offer_creation_date END) AS last_individual_offer_creation_date,
         COUNT(CASE WHEN offer_validation = "APPROVED" THEN offer_id END) AS total_created_individual_offers,
-        COUNT(DISTINCT CASE WHEN offer_is_bookable THEN offer_id END) AS total_bookable_individual_offers,
+        COUNT(DISTINCT CASE WHEN offer_is_bookable THEN offer_id END) AS total_bookable_individual_offers
         COUNT(DISTINCT venue_id) AS total_venues
     FROM {{ ref("int_applicative__offer") }}
     GROUP BY venue_id
@@ -196,7 +196,7 @@ SELECT
     CASE WHEN DATE_DIFF(CURRENT_DATE, boh.last_individual_bookable_offer_date, DAY) <= 30 THEN TRUE ELSE FALSE END AS is_individual_active_last_30days,
     CASE WHEN DATE_DIFF(CURRENT_DATE, boh.last_individual_bookable_offer_date, YEAR) = 0 THEN TRUE ELSE FALSE END AS is_individual_active_current_year,
     CASE WHEN DATE_DIFF(CURRENT_DATE, boh.last_collective_bookable_offer_date, DAY) <= 30 THEN TRUE ELSE FALSE END AS is_collective_active_last_30days,
-    CASE WHEN DATE_DIFF(CURRENT_DATE, boh.last_collective_bookable_offer_date, YEAR) = 0 THEN TRUE ELSE FALSE END AS is_collective_active_current_year,
+    CASE WHEN DATE_DIFF(CURRENT_DATE, boh.last_collective_bookable_offer_date, YEAR) = 0 THEN TRUE ELSE FALSE END AS is_collective_active_current_year
 FROM venues_with_geo_candidates AS v
 LEFT JOIN offers_grouped_by_venue AS o ON o.venue_id = v.venue_id
 LEFT JOIN collective_offers_grouped_by_venue AS co ON co.venue_id = v.venue_id

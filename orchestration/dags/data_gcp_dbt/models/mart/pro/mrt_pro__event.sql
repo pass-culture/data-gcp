@@ -11,8 +11,8 @@ WITH most_active_offerer_per_user AS (
 SELECT
     DISTINCT uo.user_id
     ,uo.offerer_id
-FROM {{ ref("mrt_global__user_offerer") }} AS uo
-LEFT JOIN {{ ref("enriched_offerer_data") }} AS o ON uo.offerer_id=o.offerer_id
+FROM {{ ref('mrt_global__user_offerer') }} AS uo
+LEFT JOIN {{ ref('enriched_offerer_data') }} AS o ON uo.offerer_id=o.offerer_id
 QUALIFY ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY no_cancelled_booking_cnt DESC)=1
 ),
 
@@ -20,8 +20,8 @@ offerer_per_session AS(
 SELECT
     unique_session_id
     ,COALESCE(ps.offerer_id,v.venue_managing_offerer_id,mau.offerer_id) as offerer_id
-FROM {{ ref("int_firebase__pro_session") }} AS ps
-LEFT JOIN {{ ref("mrt_global__venue") }} AS v ON ps.venue_id=v.venue_id
+FROM {{ ref('int_firebase__pro_session') }} AS ps
+LEFT JOIN {{ ref('mrt_global__venue') }} AS v ON ps.venue_id=v.venue_id
 LEFT JOIN most_active_offerer_per_user AS mau ON mau.user_id=ps.user_id
 )
 
@@ -87,11 +87,11 @@ SELECT
     p.cultural_sector as partner_cultural_sector,
     p.individual_offers_created as partner_nb_individual_offers,
     p.collective_offers_created as partner_nb_collective_offers
-FROM {{ ref("int_firebase__pro_event") }} AS e
+FROM {{ ref('int_firebase__pro_event') }} AS e
 LEFT JOIN offerer_per_session AS ps ON ps.unique_session_id = e.unique_session_id
-LEFT JOIN {{ ref("mrt_global__venue") }} AS v ON e.venue_id = v.venue_id
-LEFT JOIN {{ ref("enriched_offerer_data") }} AS o ON COALESCE(e.offerer_id,v.venue_managing_offerer_id,ps.offerer_id) = o.offerer_id
-LEFT JOIN {{ ref("enriched_cultural_partner_data") }} AS p ON v.partner_id = p.partner_id
+LEFT JOIN {{ ref('mrt_global__venue') }} AS v ON e.venue_id = v.venue_id
+LEFT JOIN {{ ref('enriched_offerer_data') }} AS o ON COALESCE(e.offerer_id,v.venue_managing_offerer_id,ps.offerer_id) = o.offerer_id
+LEFT JOIN {{ ref('enriched_cultural_partner_data') }} AS p ON v.partner_id = p.partner_id
 WHERE TRUE
     {% if is_incremental() %}
     AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")

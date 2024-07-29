@@ -59,6 +59,6 @@ SELECT
     ])}},
     (SELECT event_params.value.double_value from unnest(event_params) event_params where event_params.key = 'offerId') as double_offer_id,
     (SELECT event_params.value.string_value from unnest(event_params) event_params where event_params.key = 'from') as origin,
-    (SELECT event_params.value.string_value from unnest(event_params) event_params where event_params.key = 'to') as destination,
+    (SELECT event_params.value.string_value from unnest(event_params) event_params where event_params.key = 'to') as destination
 FROM firebase_pro_last_two_days_events,
     UNNEST(event_params) AS params

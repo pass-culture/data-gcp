@@ -339,7 +339,7 @@ user_agg_deposit_data AS (
 last_deposit as (
     SELECT
         deposit.userId as user_id,
-        deposit.id AS deposit_id,
+        deposit.id AS deposit_id
     FROM
     {{ ref('deposit')}} AS deposit
     QUALIFY ROW_NUMBER() OVER(PARTITION BY deposit.userId ORDER BY deposit.dateCreated DESC, id DESC) = 1
@@ -352,12 +352,12 @@ amount_spent_last_deposit AS (
             SUM(booking_intermediary_amount),
             0
         ) AS deposit_theoretical_amount_spent
-        , SUM(CASE 
+        , SUM(CASE
             WHEN booking_is_used IS TRUE
             THEN booking_intermediary_amount
             ELSE 0
         END) AS deposit_actual_amount_spent
-        , SUM(CASE 
+        , SUM(CASE
             WHEN subcategories.is_digital_deposit = true AND offer.offer_url IS NOT NULL
             THEN booking_intermediary_amount
             ELSE 0
@@ -366,11 +366,11 @@ amount_spent_last_deposit AS (
         {{ ref('booking')}} AS booking
     JOIN last_deposit
         ON last_deposit.deposit_id = booking.deposit_id
-    LEFT JOIN {{ source('raw','applicative_database_stock')}} AS stock 
+    LEFT JOIN {{ source('raw','applicative_database_stock')}} AS stock
         ON booking.stock_id = stock.stock_id
-    LEFT JOIN {{ ref('offer') }} AS offer  
+    LEFT JOIN {{ ref('offer') }} AS offer
         ON stock.offer_id = offer.offer_id
-    INNER JOIN {{ source('clean','subcategories') }} AS subcategories 
+    INNER JOIN {{ source('clean','subcategories') }} AS subcategories
         ON offer.offer_subcategoryId = subcategories.id
     WHERE booking_is_cancelled IS FALSE
     GROUP BY
@@ -378,9 +378,9 @@ amount_spent_last_deposit AS (
         , last_deposit.user_id
 ),
 themes_subscribed AS (
-  SELECT 
-    user_id, 
-    currently_subscribed_themes, 
+  SELECT
+    user_id,
+    currently_subscribed_themes,
     CASE WHEN (currently_subscribed_themes IS NULL OR currently_subscribed_themes = '') THEN FALSE ELSE TRUE END AS is_theme_subscribed
 FROM {{ source('analytics','app_native_logs')}}
 WHERE technical_message_id = "subscription_update"
@@ -491,4 +491,3 @@ WHERE
         user.user_is_active
         OR user_suspension.action_history_reason = 'upon user request'
     )
-

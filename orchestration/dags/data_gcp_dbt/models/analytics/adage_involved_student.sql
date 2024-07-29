@@ -15,14 +15,14 @@ WITH involved_students AS (
         ey.scholar_year,
         isl.level_id,
         isl.level_code,
-        CASE 
-            WHEN isl.level_code in ("6EME", "5EME", "4EME", "3EME", "6E SEGPA", "5E SEGPA", "4E SEGPA", "3E SEGPA") THEN "Collège" 
+        CASE
+            WHEN isl.level_code in ("6EME", "5EME", "4EME", "3EME", "6E SEGPA", "5E SEGPA", "4E SEGPA", "3E SEGPA") THEN "Collège"
             WHEN isl.level_code in ("2NDE G-T", "1ERE G-T", "TERM G-T", "CAP 1 AN", "1CAP2", "2CAP2", "2CAP3", "3CAP3", "2NDE PRO", "1ERE PRO", "TLEPRO" ) THEN "Lycée"
             WHEN isl.level_code = "MLDS" THEN "MLDS"
-            ELSE isl.level_code 
+            ELSE isl.level_code
         END AS level_macro,
         coalesce(sum(SAFE_CAST(involved_students as FLOAT64)), 0) as involved_students,
-        coalesce(sum(SAFE_CAST(total_involved_students as FLOAT64)), 0) as total_involved_students,
+        coalesce(sum(SAFE_CAST(total_involved_students as FLOAT64)), 0) as total_involved_students
     FROM {{ source('clean','adage_involved_student') }} ais
         LEFT JOIN {{ ref('educational_year') }} ey on SAFE_CAST(ey.adage_id as int) = SAFE_CAST(ais.educational_year_adage_id as int)
         LEFT JOIN {{ source('clean','institutional_scholar_level') }} isl on ais.level = isl.level_id

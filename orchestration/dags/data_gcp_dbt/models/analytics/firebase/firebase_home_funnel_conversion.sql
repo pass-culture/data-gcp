@@ -108,43 +108,43 @@ with child_home as (
         LEFT JOIN {{ ref('int_contentful__entry') }} e
         ON r.child = e.id
     ),
-    offer as (
-    SELECT
-      user_pseudo_id
-      , user_id
-      , session_id
-      , unique_session_id
-      , entry_id
-      , module_id
-      , origin
-      , events.offer_id
-      , events.venue_id
-      , event_timestamp as consult_offer_timestamp
-      , events.user_location_type
-    FROM {{ ref('int_firebase__native_event') }} events
-    WHERE event_name = 'ConsultOffer'
-    AND origin in ("home", "exclusivity", "venue","video","videoModal","highlightOffer")
-    AND user_pseudo_id is not null
-    QUALIFY rank() over(partition by unique_session_id, offer_id order by event_timestamp desc) = 1 -- get the last consultation
-    ),
-    venue as ( -- get the module_id for venue playlist
-      SELECT
-        user_pseudo_id
-        , user_id
-        , session_id
-        , unique_session_id
-        , entry_id
-        , module_id
-        , offer_id
-        , venue_id
-        , event_timestamp as consult_venue_timestamp
-        , user_location_type
-      FROM {{ ref('int_firebase__native_event') }}
-      WHERE event_name = "ConsultVenue"
-      AND origin = "home"
-      and user_pseudo_id is not null
-      QUALIFY rank() over(partition by unique_session_id, venue_id order by event_timestamp desc) = 1 -- get the last consultation
-  )
+  offer as (
+  SELECT
+    user_pseudo_id
+    , user_id
+    , session_id
+    , unique_session_id
+    , entry_id
+    , module_id
+    , origin
+    , events.offer_id
+    , events.venue_id
+    , event_timestamp as consult_offer_timestamp
+    , events.user_location_type
+  FROM {{ ref('int_firebase__native_event') }} events
+  WHERE event_name = 'ConsultOffer'
+  AND origin in ("home", "exclusivity", "venue","video","videoModal","highlightOffer")
+  AND user_pseudo_id is not null
+  QUALIFY rank() over(partition by unique_session_id, offer_id order by event_timestamp desc) = 1 -- get the last consultation
+  ),
+venue as ( -- get the module_id for venue playlist
+  SELECT
+    user_pseudo_id
+    , user_id
+    , session_id
+    , unique_session_id
+    , entry_id
+    , module_id
+    , offer_id
+    , venue_id
+    , event_timestamp as consult_venue_timestamp
+    , user_location_type
+  FROM {{ ref('int_firebase__native_event') }}
+  WHERE event_name = "ConsultVenue"
+  AND origin = "home"
+  and user_pseudo_id is not null
+  QUALIFY rank() over(partition by unique_session_id, venue_id order by event_timestamp desc) = 1 -- get the last consultation
+)
   SELECT
       offer.user_pseudo_id
       , offer.user_id

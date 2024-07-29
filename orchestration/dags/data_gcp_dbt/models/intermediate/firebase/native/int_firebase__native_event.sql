@@ -103,7 +103,7 @@ SELECT
     CASE WHEN event_name = "screen_view" AND firebase_screen IN ("Bookings","BookingDetails") THEN 1 ELSE 0 END AS is_screen_view_bookings,
     CASE WHEN firebase_screen = "SignupConfirmationEmailSent" OR event_name = "ContinueCGU" THEN 1 ELSE 0 END AS is_signup_completed,
     CASE WHEN firebase_screen IN ("BeneficiaryRequestSent","UnderageAccountCreated","BeneficiaryAccountCreated") THEN 1 ELSE 0 END AS is_benef_request_sent,
-    CASE WHEN event_name = "login" THEN 1 ELSE 0 END AS is_login,
+    CASE WHEN event_name = "login" THEN 1 ELSE 0 END AS is_login
 FROM {{ ref("int_firebase__native_event_flattened") }} AS e
 {% if is_incremental() %}
 WHERE event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")

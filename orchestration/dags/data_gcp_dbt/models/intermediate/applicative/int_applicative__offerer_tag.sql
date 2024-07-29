@@ -7,7 +7,7 @@ SELECT
     ot.offerer_tag_description AS tag_description,
     otcm.offerer_tag_category_id AS tag_category_id,
     otc.offerer_tag_category_name AS tag_category_name,
-    otc.offerer_tag_category_label AS tag_category_label,
+    otc.offerer_tag_category_label AS tag_category_label
 FROM  {{ source('raw', 'applicative_database_offerer_tag_mapping') }} AS otm
 INNER JOIN {{ source('raw', 'applicative_database_offerer_tag') }} AS ot
     ON ot.offerer_tag_id = otm.tag_id

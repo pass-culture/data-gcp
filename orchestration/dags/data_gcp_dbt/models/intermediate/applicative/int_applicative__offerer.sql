@@ -121,6 +121,6 @@ SELECT o.offerer_is_active,
     CASE WHEN DATE_DIFF(CURRENT_DATE,vgo.last_individual_bookable_offer_date,DAY) <= 30 THEN TRUE ELSE FALSE END AS is_individual_active_last_30days,
     CASE WHEN DATE_DIFF(CURRENT_DATE,vgo.last_individual_bookable_offer_date,YEAR) = 0 THEN TRUE ELSE FALSE END AS is_individual_active_current_year,
     CASE WHEN DATE_DIFF(CURRENT_DATE,vgo.last_collective_bookable_offer_date,DAY) <= 30 THEN TRUE ELSE FALSE END AS is_collective_active_last_30days,
-    CASE WHEN DATE_DIFF(CURRENT_DATE,vgo.last_collective_bookable_offer_date,YEAR) = 0 THEN TRUE ELSE FALSE END AS is_collective_active_current_year,
+    CASE WHEN DATE_DIFF(CURRENT_DATE,vgo.last_collective_bookable_offer_date,YEAR) = 0 THEN TRUE ELSE FALSE END AS is_collective_active_current_year
 FROM {{ source("raw", "applicative_database_offerer") }} AS o
 LEFT JOIN venue_grouped_by_offerer AS vgo ON o.offerer_id = vgo.venue_managing_offerer_id

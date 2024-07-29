@@ -4,7 +4,7 @@ WITH offerer_offer_info AS -- last collective_offer_template by offerer_id creat
           v.venue_latitude ,
           v.venue_longitude ,
           o.collective_offer_id ,
-          o.collective_offer_creation_date ,
+          o.collective_offer_creation_date
    FROM {{ ref('enriched_collective_offer_data') }} o
    LEFT JOIN {{ ref('venue') }} v ON v.venue_id=o.venue_id
    WHERE o.collective_offer_creation_date >= DATE_SUB(current_date(), INTERVAL 2 MONTH) -- uniquement sur les 2 derniers mois

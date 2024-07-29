@@ -23,6 +23,6 @@ SELECT
   SUM(population) OVER (
     PARTITION BY decimal_age, department_code
     ORDER BY active_month ROWS BETWEEN 11 PRECEDING AND current row
-  ) as population_last_12_months,
+  ) as population_last_12_months
 
 FROM cohorted_population

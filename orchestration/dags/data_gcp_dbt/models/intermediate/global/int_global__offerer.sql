@@ -96,7 +96,7 @@ SELECT
     first_dms_adage_accepted.processed_at AS dms_accepted_at,
     siren_reference_adage.siren IS NOT NULL AS is_reference_adage,
     CASE WHEN siren_reference_adage.siren IS NULL THEN FALSE ELSE siren_synchro_adage END AS is_synchro_adage,
-    tagged_partners.partner_type,
+    tagged_partners.partner_type
 FROM {{ ref('int_applicative__offerer') }} AS ofr
 LEFT JOIN {{ source('analytics', 'region_department') }} AS region_department ON ofr.offerer_department_code = region_department.num_dep
 LEFT JOIN {{ source('clean', 'siren_data') }} AS siren_data ON siren_data.siren = ofr.offerer_siren

@@ -78,7 +78,7 @@ SELECT
         ) AS user_booking_id_rank,
     u.user_iris_internal_id,
     s.venue_iris_internal_id,
-    s.offer_url,
+    s.offer_url
 FROM {{ ref('int_applicative__booking') }} AS b
 LEFT JOIN {{ ref('int_global__stock') }} AS s ON s.stock_id = b.stock_id
 LEFT JOIN {{ ref('mrt_global__user') }} AS u ON u.user_id = b.user_id

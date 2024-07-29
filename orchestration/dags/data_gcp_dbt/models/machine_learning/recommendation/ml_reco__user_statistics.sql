@@ -32,7 +32,7 @@ SELECT
     coalesce(eu.user_theoretical_remaining_credit, eu.user_last_deposit_amount) as user_theoretical_remaining_credit,
     eu.booking_cnt,
     au.consult_offer,
-    au.has_added_offer_to_favorites,
+    au.has_added_offer_to_favorites
 FROM selected_users eu
 LEFT JOIN {{ ref('firebase_aggregated_users') }}  au on eu.user_id = au.user_id
 QUALIFY ROW_NUMBER() over (PARTITION BY eu.user_id ORDER BY eu.booking_cnt DESC) = 1

@@ -10,7 +10,7 @@ embeddings AS (
     SELECT
         item_id,
         semantic_content_embedding as semantic_content_embedding
-    FROM {{ ref('ml_feat__item_embedding') }} 
+    FROM {{ ref('ml_feat__item_embedding') }}
 ),
 
 avg_embedding AS (

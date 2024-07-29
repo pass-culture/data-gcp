@@ -21,7 +21,7 @@ SELECT
   sum(gbc.total_gigabytes_billed) as total_gigabytes,
   sum(gbc.total_bytes_billed)  as total_bytes,
   sum(gbc.total_queries) as total_queries
-FROM {{ ref('int_gcp__bigquery_cost') }} gbc
+FROM {{ ref('int_gcp__bigquery_cost') }} gbc
 LEFT JOIN {{ ref('int_metabase__user') }} mu on mu.user_id = gbc.metabase_user_id
 LEFT JOIN {{ ref('mrt_monitoring__metabase_cost') }} mc on
   (date(mc.date) = date(gbc.creation_date)

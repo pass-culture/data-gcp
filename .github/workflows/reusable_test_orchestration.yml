@@ -56,7 +56,7 @@ jobs:
         with:
           uv-version: "0.2.29"
       - name: "Install Python requirements"
-        run: uv pip install --system -r airflow/orchestration-requirements.txt
+        run: uv pip sync --system airflow/orchestration-requirements.txt
       - name: "Authenticate with Google Cloud"
         uses: "google-github-actions/auth@v2"
         with:

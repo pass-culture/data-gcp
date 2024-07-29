@@ -91,10 +91,6 @@ apispec==5.2.2
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   flask-appbuilder
-appnope==0.1.4
-    # via
-    #   ipykernel
-    #   ipython
 argcomplete==3.1.1
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -667,8 +663,12 @@ graphviz==0.20.1
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   apache-airflow
-great-expectations==0.18.17
+great-expectations==0.18.19
     # via airflow-provider-great-expectations
+greenlet==2.0.2
+    # via
+    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+    #   sqlalchemy
 grpc-google-iam-v1==0.12.6
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -743,13 +743,6 @@ importlib-metadata==6.7.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   dbt-semantic-interfaces
-    #   flask
-    #   jupyter-client
-    #   jupyter-lsp
-    #   jupyterlab
-    #   jupyterlab-server
-    #   markdown
-    #   nbconvert
 importlib-resources==5.12.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -870,7 +863,7 @@ jupyterlab==4.0.13
     # via notebook
 jupyterlab-pygments==0.3.0
     # via nbconvert
-jupyterlab-server==2.27.2
+jupyterlab-server==2.27.3
     # via
     #   jupyterlab
     #   notebook
@@ -901,7 +894,7 @@ looker-sdk==23.10.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   apache-airflow-providers-google
-makefun==1.15.2
+makefun==1.15.4
     # via great-expectations
 mako==1.2.4
     # via
@@ -1410,11 +1403,11 @@ rsa==4.9
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   gcloud-aio-storage
     #   google-auth
-ruamel-yaml==0.17.17
+ruamel-yaml==0.17.40
     # via great-expectations
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
-scipy==1.13.1
+scipy==1.14.0
     # via great-expectations
 send2trash==1.8.3
     # via jupyter-server
@@ -1575,7 +1568,6 @@ typing-extensions==4.7.1
     #   dbt-semantic-interfaces
     #   flask-limiter
     #   great-expectations
-    #   ipython
     #   limits
     #   looker-sdk
     #   mashumaro
@@ -1647,4 +1639,3 @@ zipp==3.15.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   importlib-metadata
-    #   importlib-resources

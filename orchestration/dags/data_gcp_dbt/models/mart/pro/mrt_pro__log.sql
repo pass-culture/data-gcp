@@ -18,7 +18,7 @@ SELECT
    beta_test_new_nav_is_convenient,
    beta_test_new_nav_is_pleasant,
    beta_test_new_nav_comment
-FROM {{ref('int_pcapi__log')}}
+FROM {{ ref('int_pcapi__log') }}
 WHERE partition_date >= DATE_SUB(CURRENT_DATE, INTERVAL 90 day)
     AND message IN ("Booking has been cancelled"
         ,"Offer has been created"

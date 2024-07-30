@@ -38,7 +38,7 @@ SELECT
     d.total_module_consult_offer,
     d.total_module_booking_confirmation,
     d.total_module_add_to_favorites
-FROM {{ ref('int_pcreco__past_offer_context')}} et
+FROM {{ ref('int_pcreco__past_offer_context') }} et
 INNER JOIN displayed d ON d.event_date = et.event_date AND d.reco_call_id = et.reco_call_id
 {% if is_incremental() %}
     WHERE et.event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')

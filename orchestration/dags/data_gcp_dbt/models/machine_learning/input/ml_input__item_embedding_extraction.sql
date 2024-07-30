@@ -41,7 +41,7 @@ SELECT
     ) as author_concat,
     offer_creation_date
         
-  FROM {{ ref('item_metadata')}} im
+  FROM {{ ref('item_metadata') }} im
   LEFT JOIN last_extraction le ON le.item_id = im.item_id
   WHERE le.item_id IS NULL
 

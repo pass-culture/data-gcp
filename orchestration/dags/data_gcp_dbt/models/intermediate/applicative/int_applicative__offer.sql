@@ -44,7 +44,7 @@ SELECT
     o.offer_creation_date AS offer_created_at,
     o.offer_date_updated,
     o.offer_product_id,
-    {{target_schema}}.humanize_id(o.offer_product_id) as offer_product_humanized_id,
+    {{ target_schema }}.humanize_id(o.offer_product_id) as offer_product_humanized_id,
     o.venue_id,
     o.offer_last_provider_id,
     o.booking_email,
@@ -113,7 +113,7 @@ SELECT
     isbn_rayon_editor.book_editor,
     ii.item_id,
     m.mediation_humanized_id,
-    {{target_schema}}.humanize_id(o.offer_id) AS offer_humanized_id,
+    {{ target_schema }}.humanize_id(o.offer_id) AS offer_humanized_id,
     (o.offer_subcategoryId NOT IN ("JEU_EN_LIGNE", "JEU_SUPPORT_PHYSIQUE", "ABO_JEU_VIDEO", "ABO_LUDOTHEQUE")
             AND (
                 o.offer_url IS NULL -- not numerical

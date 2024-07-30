@@ -1,7 +1,7 @@
 WITH siren_reference_adage AS (
   SELECT siren,
     max(siren_synchro_adage) AS siren_synchro_adage
-  FROM {{ ref('adage')}}
+  FROM {{ ref('adage') }}
   GROUP BY siren
 ),
 
@@ -9,7 +9,7 @@ first_dms_adage AS (
 SELECT demandeur_entreprise_siren,
     application_status,
     processed_at
-FROM {{ ref('dms_pro')}}
+FROM {{ ref('dms_pro') }}
 WHERE procedure_id IN ('57081', '57189','61589','65028','80264')
 QUALIFY row_number() OVER(PARTITION BY demandeur_entreprise_siren ORDER BY application_submitted_at ASC) = 1
 ),

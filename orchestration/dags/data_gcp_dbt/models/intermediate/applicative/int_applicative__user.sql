@@ -8,7 +8,7 @@
 SELECT
     u.user_id,
     u.user_creation_date,
-    {{target_schema}}.humanize_id(u.user_id) AS user_humanized_id,
+    {{ target_schema }}.humanize_id(u.user_id) AS user_humanized_id,
     u.user_has_enabled_marketing_email,
     COALESCE(
     CASE

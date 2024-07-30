@@ -53,7 +53,7 @@ WITH adage_logs AS (
                     DATE_DIFF(log_timestamp, LAG(log_timestamp, 1) OVER (PARTITION BY user_id ORDER BY log_timestamp), MINUTE) <= 30 AS INT
                 ), 1
             ) as same_session
-    FROM {{ref('int_pcapi__log')}}
+    FROM {{ ref('int_pcapi__log') }}
     WHERE
         (
             url_path LIKE "%adage-iframe%"

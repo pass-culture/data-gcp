@@ -22,7 +22,7 @@ SELECT
     , COUNT(DISTINCT CASE WHEN pct_video_seen >= 0.25 THEN unique_session_id ELSE NULL END) AS total_seen_25_pct_video
     , COUNT(DISTINCT CASE WHEN pct_video_seen >= 0.5 THEN unique_session_id ELSE NULL END) AS total_seen_50_pct_video
     , COUNT(DISTINCT CASE WHEN pct_video_seen >= 0.75 THEN unique_session_id ELSE NULL END) AS total_seen_75_pct_video
-FROM {{ref('int_firebase__native_daily_user_video_module')}}
+FROM {{ ref('int_firebase__native_daily_user_video_module') }}
 WHERE TRUE
 {% if is_incremental() %}
     AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")

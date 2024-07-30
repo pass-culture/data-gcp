@@ -65,7 +65,7 @@ SELECT o.offerer_is_active,
     o.offerer_siren,
     o.offerer_validation_status,
     o.offerer_validation_date,
-    {{target_schema}}.humanize_id(o.offerer_id) AS offerer_humanized_id,
+    {{ target_schema }}.humanize_id(o.offerer_id) AS offerer_humanized_id,
     CASE
         WHEN o.offerer_postal_code = "97150" THEN "978"
         WHEN SUBSTRING(o.offerer_postal_code, 0, 2) = "97" THEN SUBSTRING(o.offerer_postal_code, 0, 3)

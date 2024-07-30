@@ -47,7 +47,7 @@ LEFT JOIN {{ ref('enriched_user_data') }} AS u ON e.user_id = u.user_id
 LEFT JOIN {{ ref('mrt_global__offer') }} AS o ON e.offer_id = o.offer_id
 LEFT JOIN {{ ref('mrt_global__venue') }} AS v ON v.venue_id = COALESCE(e.venue_id,o.venue_id)
 LEFT JOIN {{ ref('int_contentful__entry') }} AS c ON c.id = e.module_id
-LEFT JOIN {{ ref('int_applicative__deposit' )}} AS d ON d.user_id = e.user_id AND e.event_date BETWEEN d.deposit_creation_date AND d.deposit_expiration_date
+LEFT JOIN {{ ref('int_applicative__deposit' ) }} AS d ON d.user_id = e.user_id AND e.event_date BETWEEN d.deposit_creation_date AND d.deposit_expiration_date
 WHERE (
      event_name IN ("ConsultOffer",
       "BookingConfirmation",

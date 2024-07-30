@@ -16,7 +16,7 @@ SELECT
     , user_id
     , COALESCE(user_role, "Grand Public") AS user_role
     , unique_session_id
-FROM {{ref('int_firebase__native_video_event')}} video_events
+FROM {{ ref('int_firebase__native_video_event') }} video_events
 LEFT JOIN  {{ ref('int_applicative__user') }} AS u USING(user_id)
 WHERE event_name = 'ModuleDisplayedOnHomePage'
     {% if is_incremental() %}
@@ -29,7 +29,7 @@ SELECT
     module_id
     , unique_session_id
     , COUNT(DISTINCT entry_id) AS total_homes_consulted
-FROM {{ref('int_firebase__native_video_event')}} video_events
+FROM {{ ref('int_firebase__native_video_event') }} video_events
 WHERE event_name = 'ConsultHome'
     {% if is_incremental() %}
     AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
@@ -50,7 +50,7 @@ SELECT
     , MAX(total_video_seen_duration_seconds) AS total_video_seen_duration_seconds
     , MAX(video_duration_seconds) AS video_duration_seconds
     , SAFE_DIVIDE(MAX(total_video_seen_duration_seconds), MAX(video_duration_seconds)) AS pct_video_seen
-FROM {{ref('int_firebase__native_video_event')}} video_events
+FROM {{ ref('int_firebase__native_video_event') }} video_events
 WHERE event_name != 'ModuleDisplayedOnHomePage'
     {% if is_incremental() %}
     AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")

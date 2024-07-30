@@ -41,7 +41,7 @@ WITH bookings_deposit_grouped_by_user AS (
             AND booking_used_date IS NOT NULL THEN booking_used_date
             ELSE NULL
         END) AS user_activation_date
-    FROM {{ ref('int_global__booking')}} AS b
+    FROM {{ ref('int_global__booking') }} AS b
     LEFT JOIN {{ ref('int_applicative__deposit') }} AS d ON d.deposit_id = b.deposit_id
         AND deposit_rank_desc = 1
     GROUP BY user_id
@@ -56,7 +56,7 @@ deposit_grouped_by_user AS (
         MAX(deposit_expiration_date) AS last_deposit_expiration_date,
         SUM(deposit_amount) AS total_deposit_amount
     FROM
-        {{ ref('int_applicative__deposit')}}
+        {{ ref('int_applicative__deposit') }}
     GROUP BY user_id
 ),
 user_agg_deposit_data AS (
@@ -168,7 +168,7 @@ SELECT
             AND COALESCE(bdgu.deposit_actual_amount_spent,0) < dgu.last_deposit_amount )
         AND u.user_is_active THEN TRUE ELSE FALSE END AS user_is_current_beneficiary
 FROM {{ ref('int_applicative__user') }} AS u
-LEFT JOIN {{ ref('int_applicative__action_history')}} AS ah ON ah.user_id = u.user_id AND ah.action_history_rk = 1
+LEFT JOIN {{ ref('int_applicative__action_history') }} AS ah ON ah.user_id = u.user_id AND ah.action_history_rk = 1
 INNER JOIN user_agg_deposit_data AS ud ON ud.user_id = u.user_id
 LEFT JOIN deposit_grouped_by_user AS dgu ON dgu.user_id = u.user_id
 LEFT JOIN bookings_deposit_grouped_by_user AS bdgu ON bdgu.user_id = u.user_id

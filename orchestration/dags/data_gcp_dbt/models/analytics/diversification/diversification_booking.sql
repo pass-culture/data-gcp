@@ -22,7 +22,7 @@ SELECT
         IF(booking.event = True, 'event', null)
     ) as format
     , {% for feature in diversification_features %}
-        {{feature}}_diversification
+        {{ feature }}_diversification
         {% if not loop.last -%} , {%- endif %}
     {% endfor %}
     , delta_diversification

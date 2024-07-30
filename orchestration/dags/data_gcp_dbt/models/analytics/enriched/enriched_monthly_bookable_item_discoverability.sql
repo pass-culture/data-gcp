@@ -16,7 +16,7 @@ SELECT
     , offer_category_id
     , COUNT(DISTINCT offer_id) AS nb_bookable_offers
     , COUNT(DISTINCT partition_date) AS nb_bookable_days
-FROM {{ref('bookable_offer_history')}} bookable_offer_history
+FROM {{ ref('bookable_offer_history') }} bookable_offer_history
    {% if is_incremental() %} -- recalculate latest day's DATA + previous
 WHERE
   DATE(partition_date) BETWEEN
@@ -38,7 +38,7 @@ SELECT
     , SUM(CASE WHEN origin = 'favorites' THEN nb_daily_consult ELSE NULL END) AS nb_monthly_favorites_consult
     , SUM(CASE WHEN origin IN ('similar_offer','same_artist_playlist') THEN nb_daily_consult ELSE NULL END) AS nb_monthly_similar_offer_consult
     , SUM(CASE WHEN origin NOT IN ('search','home', 'video','videoModal', 'highlightOffer', 'thematicHighlight','exclusivity','venue','favorites','similar_offer','same_artist_playlist') THEN nb_daily_consult ELSE NULL END) AS nb_monthly_other_channel_offer_consult
-FROM {{ref('firebase_daily_offer_consultation_data')}} firebase_daily_offer_consultation_data
+FROM {{ ref('firebase_daily_offer_consultation_data') }} firebase_daily_offer_consultation_data
    {% if is_incremental() %} -- recalculate latest day's DATA + previous
 WHERE
   DATE(event_date) BETWEEN

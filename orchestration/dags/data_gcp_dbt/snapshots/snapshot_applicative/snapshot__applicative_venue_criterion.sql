@@ -12,6 +12,6 @@ SELECT
 	venue_criterion_id,
   venue_id,
 	criterion_id
-FROM {{source('raw', 'applicative_database_venue_criterion') }}
+FROM {{ source('raw', 'applicative_database_venue_criterion') }}
 
 {% endsnapshot %}

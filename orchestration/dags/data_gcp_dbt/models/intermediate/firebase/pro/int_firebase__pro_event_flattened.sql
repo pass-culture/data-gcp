@@ -19,7 +19,7 @@ SELECT
                                 "categorieJuridiqueUniteLegale",
                                 "venueId",
                                 "filesCount"
-    ])}}
+    ]) }}
     {{ extract_params_string_value(["venue_id",
                                 "page_title",
                                 "page_location",
@@ -38,7 +38,7 @@ SELECT
                                 "bookingStatus",
                                 "buttonType",
                                 "fileType"
-    ])}},
+    ]) }},
     (SELECT event_params.value.double_value from unnest(event_params) event_params where event_params.key = 'offerId') as double_offer_id,
     (SELECT event_params.value.string_value from unnest(event_params) event_params where event_params.key = 'from') as origin,
     (SELECT event_params.value.string_value from unnest(event_params) event_params where event_params.key = 'to') as destination,

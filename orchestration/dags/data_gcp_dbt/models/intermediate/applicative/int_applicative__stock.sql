@@ -29,7 +29,7 @@ WITH bookings_grouped_by_stock AS (
 
 SELECT
     s.stock_id,
-    {{target_schema}}.humanize_id(s.stock_id) AS stock_humanized_id,
+    {{ target_schema }}.humanize_id(s.stock_id) AS stock_humanized_id,
     s.stock_id_at_providers,
     s.stock_modified_at_last_provider_date,
     DATE(s.stock_modified_date) AS stock_modified_date,

@@ -4,8 +4,8 @@ WITH date_of_first_bookings AS (
         MIN(booking.booking_creation_date) AS first_booking_date
     FROM
 
-        {{ ref('booking')}} AS booking
-        JOIN {{ source('raw','applicative_database_stock')}} AS stock ON stock.stock_id = booking.stock_id
+        {{ ref('booking') }} AS booking
+        JOIN {{ source('raw','applicative_database_stock') }} AS stock ON stock.stock_id = booking.stock_id
         JOIN {{ ref('offer') }} AS offer ON offer.offer_id = stock.offer_id
     WHERE
         booking.booking_is_cancelled IS FALSE
@@ -22,8 +22,8 @@ date_of_second_bookings_ranked_booking_data AS (
                 booking.booking_creation_date ASC
         ) AS rank_booking
     FROM
-        {{ ref('booking')}} AS booking
-        JOIN {{ source('raw','applicative_database_stock')}} AS stock ON stock.stock_id = booking.stock_id
+        {{ ref('booking') }} AS booking
+        JOIN {{ source('raw','applicative_database_stock') }} AS stock ON stock.stock_id = booking.stock_id
         JOIN {{ ref('offer') }} AS offer ON offer.offer_id = stock.offer_id
     WHERE booking.booking_is_cancelled IS FALSE
 ),
@@ -49,8 +49,8 @@ date_of_bookings_on_third_product_tmp AS (
                 booking.booking_creation_date
         ) AS rank_booking_in_cat
     FROM
-        {{ ref('booking')}} AS booking
-        JOIN {{ source('raw','applicative_database_stock')}} AS stock ON booking.stock_id = stock.stock_id
+        {{ ref('booking') }} AS booking
+        JOIN {{ source('raw','applicative_database_stock') }} AS stock ON booking.stock_id = stock.stock_id
         JOIN {{ ref('offer') }} AS offer ON offer.offer_id = stock.offer_id
     WHERE booking.booking_is_cancelled IS FALSE
 ),
@@ -81,8 +81,8 @@ number_of_bookings AS (
         booking.user_id,
         COUNT(booking.booking_id) AS number_of_bookings
     FROM
-        {{ ref('booking')}} AS booking
-        JOIN {{ source('raw','applicative_database_stock')}} AS stock ON stock.stock_id = booking.stock_id
+        {{ ref('booking') }} AS booking
+        JOIN {{ source('raw','applicative_database_stock') }} AS stock ON stock.stock_id = booking.stock_id
         JOIN {{ ref('offer') }} AS offer ON offer.offer_id = stock.offer_id
     GROUP BY
         user_id
@@ -92,8 +92,8 @@ number_of_non_cancelled_bookings AS (
         booking.user_id,
         COUNT(booking.booking_id) AS number_of_bookings
     FROM
-        {{ ref('booking')}} AS booking
-        JOIN {{ source('raw','applicative_database_stock')}} AS stock ON stock.stock_id = booking.stock_id
+        {{ ref('booking') }} AS booking
+        JOIN {{ source('raw','applicative_database_stock') }} AS stock ON stock.stock_id = booking.stock_id
         JOIN {{ ref('offer') }} AS offer ON offer.offer_id = stock.offer_id
         AND NOT booking.booking_is_cancelled
     GROUP BY
@@ -138,8 +138,8 @@ theoretical_amount_spent_in_digital_goods_eligible_booking AS (
         booking.booking_quantity,
         booking.booking_intermediary_amount
     FROM
-        {{ ref('booking')}} AS booking
-        LEFT JOIN {{ source('raw','applicative_database_stock')}} AS stock ON booking.stock_id = stock.stock_id
+        {{ ref('booking') }} AS booking
+        LEFT JOIN {{ source('raw','applicative_database_stock') }} AS stock ON booking.stock_id = stock.stock_id
         LEFT JOIN {{ ref('offer') }} AS offer ON stock.offer_id = offer.offer_id
         INNER JOIN {{ source('clean','subcategories') }} AS subcategories ON offer.offer_subcategoryId = subcategories.id
     WHERE
@@ -169,8 +169,8 @@ theoretical_amount_spent_in_physical_goods_eligible_booking AS (
         booking.booking_quantity,
         booking.booking_intermediary_amount
     FROM
-        {{ ref('booking')}} AS booking
-        LEFT JOIN {{ source('raw','applicative_database_stock')}} AS stock ON booking.stock_id = stock.stock_id
+        {{ ref('booking') }} AS booking
+        LEFT JOIN {{ source('raw','applicative_database_stock') }} AS stock ON booking.stock_id = stock.stock_id
         LEFT JOIN {{ ref('offer') }} AS offer ON stock.offer_id = offer.offer_id
         INNER JOIN {{ source('clean','subcategories') }} AS subcategories ON offer.offer_subcategoryId = subcategories.id
     WHERE
@@ -201,8 +201,8 @@ theoretical_amount_spent_in_outings_eligible_booking AS (
         booking.booking_quantity,
         booking.booking_intermediary_amount
     FROM
-        {{ ref('booking')}} AS booking
-        LEFT JOIN {{ source('raw','applicative_database_stock')}} AS stock ON booking.stock_id = stock.stock_id
+        {{ ref('booking') }} AS booking
+        LEFT JOIN {{ source('raw','applicative_database_stock') }} AS stock ON booking.stock_id = stock.stock_id
         LEFT JOIN {{ ref('offer') }} AS offer ON stock.offer_id = offer.offer_id
         INNER JOIN {{ source('clean','subcategories') }} AS subcategories ON offer.offer_subcategoryId = subcategories.id
     WHERE
@@ -229,8 +229,8 @@ last_booking_date AS (
         booking.user_id,
         MAX(booking.booking_creation_date) AS last_booking_date
     FROM
-        {{ ref('booking')}} AS booking
-        JOIN {{ source('raw','applicative_database_stock')}} AS stock ON stock.stock_id = booking.stock_id
+        {{ ref('booking') }} AS booking
+        JOIN {{ source('raw','applicative_database_stock') }} AS stock ON stock.stock_id = booking.stock_id
         JOIN {{ ref('offer') }} AS offer ON offer.offer_id = stock.offer_id
     GROUP BY
         user_id
@@ -240,8 +240,8 @@ first_paid_booking_date AS (
         booking.user_id,
         min(booking.booking_creation_date) AS booking_creation_date_first
     FROM
-        {{ ref('booking')}} AS booking
-        JOIN {{ source('raw','applicative_database_stock')}} AS stock ON stock.stock_id = booking.stock_id
+        {{ ref('booking') }} AS booking
+        JOIN {{ source('raw','applicative_database_stock') }} AS stock ON stock.stock_id = booking.stock_id
         JOIN {{ ref('offer') }} AS offer ON offer.offer_id = stock.offer_id
         AND COALESCE(booking.booking_amount, 0) > 0
     GROUP BY
@@ -259,8 +259,8 @@ first_booking_type_bookings_ranked AS (
                 booking.booking_id ASC
         ) AS rank_booking
     FROM
-        {{ ref('booking')}} AS booking
-        JOIN {{ source('raw','applicative_database_stock')}} AS stock ON booking.stock_id = stock.stock_id
+        {{ ref('booking') }} AS booking
+        JOIN {{ source('raw','applicative_database_stock') }} AS stock ON booking.stock_id = stock.stock_id
         JOIN {{ ref('offer') }} AS offer ON offer.offer_id = stock.offer_id
 ),
 first_booking_type AS (
@@ -283,8 +283,8 @@ first_paid_booking_type_paid_bookings_ranked AS (
                 booking.booking_creation_date
         ) AS rank_booking
     FROM
-        {{ ref('booking')}} AS booking
-        JOIN {{ source('raw','applicative_database_stock')}} AS stock ON booking.stock_id = stock.stock_id
+        {{ ref('booking') }} AS booking
+        JOIN {{ source('raw','applicative_database_stock') }} AS stock ON booking.stock_id = stock.stock_id
         JOIN {{ ref('offer') }} AS offer ON offer.offer_id = stock.offer_id
         AND booking.booking_amount > 0
 ),
@@ -302,8 +302,8 @@ count_distinct_types AS (
         booking.user_id,
         COUNT(DISTINCT offer.offer_subcategoryId) AS cnt_distinct_types
     FROM
-        {{ ref('booking')}} AS booking
-        JOIN {{ source('raw','applicative_database_stock')}} AS stock ON booking.stock_id = stock.stock_id
+        {{ ref('booking') }} AS booking
+        JOIN {{ source('raw','applicative_database_stock') }} AS stock ON booking.stock_id = stock.stock_id
         JOIN {{ ref('offer') }} AS offer ON offer.offer_id = stock.offer_id
         AND NOT booking_is_cancelled
     GROUP BY
@@ -318,7 +318,7 @@ user_agg_deposit_data_user_deposit_agg AS (
         MAX(expirationDate) AS user_last_deposit_expiration_date,
         SUM(amount) AS user_total_deposit_amount
     FROM
-        {{ ref('deposit')}}
+        {{ ref('deposit') }}
     GROUP BY
         1
 ),
@@ -341,7 +341,7 @@ last_deposit as (
         deposit.userId as user_id,
         deposit.id AS deposit_id
     FROM
-    {{ ref('deposit')}} AS deposit
+    {{ ref('deposit') }} AS deposit
     QUALIFY ROW_NUMBER() OVER(PARTITION BY deposit.userId ORDER BY deposit.dateCreated DESC, id DESC) = 1
 ),
 amount_spent_last_deposit AS (
@@ -363,10 +363,10 @@ amount_spent_last_deposit AS (
             ELSE 0
         END) as deposit_theoretical_amount_spent_in_digital_goods
     FROM
-        {{ ref('booking')}} AS booking
+        {{ ref('booking') }} AS booking
     JOIN last_deposit
         ON last_deposit.deposit_id = booking.deposit_id
-    LEFT JOIN {{ source('raw','applicative_database_stock')}} AS stock
+    LEFT JOIN {{ source('raw','applicative_database_stock') }} AS stock
         ON booking.stock_id = stock.stock_id
     LEFT JOIN {{ ref('offer') }} AS offer
         ON stock.offer_id = offer.offer_id
@@ -382,7 +382,7 @@ themes_subscribed AS (
     user_id,
     currently_subscribed_themes,
     CASE WHEN (currently_subscribed_themes IS NULL OR currently_subscribed_themes = '') THEN FALSE ELSE TRUE END AS is_theme_subscribed
-FROM {{ source('analytics','app_native_logs')}}
+FROM {{ source('analytics','app_native_logs') }}
 WHERE technical_message_id = "subscription_update"
 QUALIFY ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY partition_date DESC) = 1
 )
@@ -481,7 +481,7 @@ FROM
     LEFT JOIN first_booking_type ON user.user_id = first_booking_type.user_id
     LEFT JOIN first_paid_booking_type ON user.user_id = first_paid_booking_type.user_id
     LEFT JOIN count_distinct_types ON user.user_id = count_distinct_types.user_id
-    LEFT JOIN {{ ref('user_suspension')}} AS user_suspension ON user_suspension.user_id = user.user_id
+    LEFT JOIN {{ ref('user_suspension') }} AS user_suspension ON user_suspension.user_id = user.user_id
         AND action_history_rk = 1
     LEFT JOIN amount_spent_last_deposit ON amount_spent_last_deposit.user_id = user.user_id
     LEFT JOIN themes_subscribed ON themes_subscribed.user_id = user.user_id

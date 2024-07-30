@@ -20,8 +20,8 @@ SELECT
     , ne.offer_id
     , COALESCE(CAST(video_seen_duration_seconds AS FLOAT64),0) total_video_seen_duration_seconds
     , COALESCE(CAST(video_duration_seconds AS FLOAT64),0) video_duration_seconds
-FROM {{ref('int_firebase__native_event')}} ne
-INNER JOIN {{ ref('int_contentful__entry' )}}  ce ON ne.module_id = ce.id
+FROM {{ ref('int_firebase__native_event') }} ne
+INNER JOIN {{ ref('int_contentful__entry' ) }}  ce ON ne.module_id = ce.id
                                             AND ce.content_type IN ('video','videoCarousel', 'videoCarouselItem')
 WHERE event_name IN ('ConsultVideo','HasSeenAllVideo', 'HasDismissedModal', 'VideoPaused', 'ModuleDisplayedOnHomePage', 'ConsultOffer','ConsultHome')
     {% if is_incremental() %}

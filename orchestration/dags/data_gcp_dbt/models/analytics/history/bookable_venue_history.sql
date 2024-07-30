@@ -14,8 +14,8 @@ SELECT
     , 'individual' AS offer_type
     , COUNT(DISTINCT offer_id) AS nb_bookable_offers
 FROM {{ ref('bookable_offer_history') }}
-INNER JOIN {{ ref('offer')}} AS o using(offer_id)
-LEFT JOIN {{ ref('venue')}} AS v ON o.venue_id = v.venue_id
+INNER JOIN {{ ref('offer') }} AS o using(offer_id)
+LEFT JOIN {{ ref('venue') }} AS v ON o.venue_id = v.venue_id
     {% if is_incremental() %}
     WHERE partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
     {% endif %}
@@ -27,8 +27,8 @@ SELECT
     , partition_date
     , 'collective' AS offer_type
     , COUNT(DISTINCT collective_offer_id) AS nb_bookable_offers
-FROM {{ ref('bookable_collective_offer_history')}}
-INNER JOIN {{ ref('enriched_collective_offer_data')}} USING(collective_offer_id)
+FROM {{ ref('bookable_collective_offer_history') }}
+INNER JOIN {{ ref('enriched_collective_offer_data') }} USING(collective_offer_id)
     {% if is_incremental() %}
     WHERE partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
     {% endif %}

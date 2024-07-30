@@ -17,7 +17,7 @@ WITH bookings_per_stock AS (
             END
         ) AS booking_stock_no_cancelled_cnt
     FROM
-        {{source('clean','applicative_database_booking_history')}} AS booking
+        {{ source('clean','applicative_database_booking_history') }} AS booking
     {% if is_incremental() %}
     WHERE partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
     {% endif %}
@@ -28,14 +28,14 @@ WITH bookings_per_stock AS (
 SELECT
     DISTINCT stock.partition_date, stock.offer_id, offer_item_ids.item_id, offer.offer_subcategoryId AS offer_subcategory_id, subcategories.category_id AS offer_category_id
 FROM
-    {{source('clean','applicative_database_stock_history')}} AS stock
-    JOIN {{source('clean','applicative_database_offer_history')}} AS offer ON stock.offer_id = offer.offer_id
+    {{ source('clean','applicative_database_stock_history') }} AS stock
+    JOIN {{ source('clean','applicative_database_offer_history') }} AS offer ON stock.offer_id = offer.offer_id
     AND stock.partition_date = offer.partition_date
     AND offer.offer_is_active
     AND NOT stock.stock_is_soft_deleted
     LEFT JOIN bookings_per_stock ON stock.stock_id = bookings_per_stock.stock_id
     AND stock.partition_date = bookings_per_stock.partition_date
-    LEFT JOIN {{ref('offer_item_ids')}} offer_item_ids ON offer_item_ids.offer_id = stock.offer_id
+    LEFT JOIN {{ ref('offer_item_ids') }} offer_item_ids ON offer_item_ids.offer_id = stock.offer_id
     LEFT JOIN {{ source('clean', 'subcategories') }} subcategories ON subcategories.id = offer.offer_subcategoryId
 WHERE
     (

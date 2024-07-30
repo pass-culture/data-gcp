@@ -15,7 +15,7 @@ SELECT
 FROM
   {{ ref('int_firebase__native_event') }} e
 LEFT JOIN
-  {{ref('offer_item_ids')}} offer_item_ids
+  {{ ref('offer_item_ids') }} offer_item_ids
 ON
   offer_item_ids.offer_id = e.offer_id
 WHERE

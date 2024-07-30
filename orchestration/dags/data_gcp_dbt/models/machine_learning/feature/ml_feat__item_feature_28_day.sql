@@ -2,7 +2,7 @@ WITH item_count AS (
     SELECT
         item_id,
         count(distinct offer_id) as total_offers
-    FROM {{ ref("int_applicative__offer")}}
+    FROM {{ ref("int_applicative__offer") }}
     GROUP BY item_id
 ),
 

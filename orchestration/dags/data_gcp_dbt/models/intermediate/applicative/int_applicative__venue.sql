@@ -56,7 +56,7 @@ bookable_offer_history AS (
         MAX(CASE WHEN individual_bookable_offers >0 THEN partition_date END) AS last_individual_bookable_offer_date,
         MIN(CASE WHEN collective_bookable_offers >0 THEN partition_date END) AS first_collective_bookable_offer_date,
         MAX(CASE WHEN collective_bookable_offers >0 THEN partition_date END) AS last_collective_bookable_offer_date
-    FROM {{ ref('bookable_venue_history')}}
+    FROM {{ ref('bookable_venue_history') }}
     GROUP BY venue_id
 ),
 
@@ -127,7 +127,7 @@ SELECT
         "https://backoffice.passculture.team/pro/venue/",
         v.venue_id
     ) AS venue_backoffice_link,
-    {{target_schema}}.humanize_id(v.venue_id) as venue_humanized_id,
+    {{ target_schema }}.humanize_id(v.venue_id) as venue_humanized_id,
     v.iris_internal_id AS venue_iris_internal_id,
     v.venue_region_name,
     v.venue_city,

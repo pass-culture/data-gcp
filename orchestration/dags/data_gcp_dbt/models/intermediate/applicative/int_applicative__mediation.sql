@@ -18,6 +18,6 @@ SELECT
     isActive AS is_active,
     fieldsUpdated AS fields_updated,
     CASE WHEN isActive AND thumbCount > 0 THEN 1 ELSE 0 END AS is_mediation,
-    {{target_schema}}.humanize_id(id) AS mediation_humanized_id,
+    {{ target_schema }}.humanize_id(id) AS mediation_humanized_id,
     ROW_NUMBER() OVER (PARTITION BY offerId ORDER BY dateModifiedAtLastProvider DESC) as mediation_rown
 FROM {{ source('raw', 'applicative_database_mediation') }}

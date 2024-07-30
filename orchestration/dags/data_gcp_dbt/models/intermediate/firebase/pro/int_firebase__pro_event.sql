@@ -16,7 +16,7 @@ WITH pro_event_raw_data as(
     SELECT
         event_name,
         user_pseudo_id,
-        CASE WHEN REGEXP_CONTAINS(user_id, r"\D") THEN {{target_schema}}.dehumanize_id(user_id) ELSE user_id END AS user_id,
+        CASE WHEN REGEXP_CONTAINS(user_id, r"\D") THEN {{ target_schema }}.dehumanize_id(user_id) ELSE user_id END AS user_id,
         platform,
         event_date,
         event_timestamp,

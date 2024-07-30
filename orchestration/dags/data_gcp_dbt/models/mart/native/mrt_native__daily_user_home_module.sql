@@ -37,12 +37,12 @@ SELECT
     playlist_tag.offer_category,
     playlist_tag.playlist_reach,
     playlist_tag.playlist_recurrence
-FROM {{ ref('int_firebase__native_daily_user_home_module' )}} AS displayed
-LEFT JOIN {{ ref('int_contentful__entry' )}} AS parent_modules
+FROM {{ ref('int_firebase__native_daily_user_home_module' ) }} AS displayed
+LEFT JOIN {{ ref('int_contentful__entry' ) }} AS parent_modules
     ON parent_modules.id = displayed.parent_module_id
-LEFT JOIN {{ ref('int_contentful__entry' )}} AS parent_homes
+LEFT JOIN {{ ref('int_contentful__entry' ) }} AS parent_homes
     ON parent_homes.id = displayed.parent_entry_id
-LEFT JOIN {{ ref('int_contentful__home_tag' )}} AS home_tag
+LEFT JOIN {{ ref('int_contentful__home_tag' ) }} AS home_tag
     ON home_tag.entry_id = displayed.entry_id
-LEFT JOIN {{ ref('int_contentful__playlist_tag' )}} AS playlist_tag
+LEFT JOIN {{ ref('int_contentful__playlist_tag' ) }} AS playlist_tag
     ON playlist_tag.entry_id = displayed.module_id

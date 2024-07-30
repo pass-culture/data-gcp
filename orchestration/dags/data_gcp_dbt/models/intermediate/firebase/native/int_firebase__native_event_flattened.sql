@@ -39,7 +39,7 @@ native_unnest AS (
                                         "searchOfferIsDuo",
                                         "geo_located",
                                         "enabled"
-                                        ])}}
+                                        ]) }}
         {{ extract_params_string_value([
                                     "searchId",
                                     "moduleId",

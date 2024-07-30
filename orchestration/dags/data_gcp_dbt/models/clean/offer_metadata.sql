@@ -6,7 +6,7 @@
 WITH offer_humanized_id AS (
     SELECT
         offer_id,
-        {{target_schema}}.humanize_id(offer_id) AS humanized_id
+        {{ target_schema }}.humanize_id(offer_id) AS humanized_id
     FROM
         {{ ref('offer') }}
     WHERE
@@ -15,7 +15,7 @@ WITH offer_humanized_id AS (
 mediation AS (
     SELECT
         offer_id,
-        {{target_schema}}.humanize_id(id) as mediation_humanized_id
+        {{ target_schema }}.humanize_id(id) as mediation_humanized_id
     FROM
         (
             SELECT

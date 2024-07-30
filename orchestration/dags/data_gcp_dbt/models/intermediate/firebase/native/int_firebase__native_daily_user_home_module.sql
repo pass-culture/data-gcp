@@ -13,7 +13,7 @@ SELECT
     module_id AS parent_module_id,
     entry_id AS parent_entry_id,
     unique_session_id
-FROM {{ref('int_firebase__native_event')}}
+FROM {{ ref('int_firebase__native_event') }}
 WHERE event_name IN ('CategoryBlockClicked','HighlightBlockClicked')
     {% if is_incremental() %}
     AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
@@ -36,12 +36,12 @@ SELECT
     redirections.parent_entry_id,
     events.user_location_type,
     CASE WHEN modules.content_type = 'recommendation' THEN events.reco_call_id ELSE NULL END AS reco_call_id
-FROM {{ref('int_firebase__native_event')}} AS events
+FROM {{ ref('int_firebase__native_event') }} AS events
 LEFT JOIN redirections
     ON redirections.unique_session_id = events.unique_session_id AND redirections.entry_id = events.entry_id
-INNER JOIN {{ ref('int_contentful__entry' )}} AS modules
+INNER JOIN {{ ref('int_contentful__entry' ) }} AS modules
     ON modules.id = events.module_id
-INNER JOIN {{ ref('int_contentful__entry' )}} AS homes
+INNER JOIN {{ ref('int_contentful__entry' ) }} AS homes
     ON homes.id = events.entry_id
 WHERE event_name = 'ModuleDisplayedOnHomePage'
     AND events.unique_session_id IS NOT NULL
@@ -59,7 +59,7 @@ SELECT
     module_id,
     module_list_id,
     event_timestamp AS module_clicked_timestamp
-FROM {{ref('int_firebase__native_event')}}
+FROM {{ ref('int_firebase__native_event') }}
 WHERE unique_session_id IS NOT NULL
     AND event_name IN ("ExclusivityBlockClicked",
                         "CategoryBlockClicked",
@@ -82,7 +82,7 @@ SELECT
     venue_id,
     event_timestamp AS consult_offer_timestamp,
     user_location_type
-FROM {{ref('int_firebase__native_event')}}
+FROM {{ ref('int_firebase__native_event') }}
 WHERE event_name = 'ConsultOffer'
     AND origin IN ("home",
                 "exclusivity",
@@ -106,7 +106,7 @@ SELECT unique_session_id,
     venue_id,
     event_timestamp AS consult_venue_timestamp,
     user_location_type
-FROM {{ref('int_firebase__native_event')}}
+FROM {{ ref('int_firebase__native_event') }}
 WHERE event_name = "ConsultVenue"
     AND origin IN ("home","venueList")
     AND unique_session_id IS NOT NULL
@@ -139,7 +139,7 @@ SELECT consultations.unique_session_id,
     consultations.entry_id,
     consultations.offer_id,
     events.event_timestamp AS fav_timestamp
-FROM {{ref('int_firebase__native_event')}} AS events
+FROM {{ ref('int_firebase__native_event') }} AS events
 INNER JOIN consultations
 USING (unique_session_id,
         module_id,

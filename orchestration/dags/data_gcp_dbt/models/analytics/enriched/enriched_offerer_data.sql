@@ -5,7 +5,7 @@
 WITH offerer_humanized_id AS (
     SELECT
         offerer_id,
-         {{target_schema}}.humanize_id(offerer_id) AS humanized_id
+         {{ target_schema }}.humanize_id(offerer_id) AS humanized_id
     FROM
         {{ source('raw', 'applicative_database_offerer') }}
     WHERE
@@ -189,7 +189,7 @@ venues_with_offers AS (
   SELECT 
     siren,
     max(siren_synchro_adage) AS siren_synchro_adage
-  FROM {{ ref('adage')}}
+  FROM {{ ref('adage') }}
   GROUP BY 1
 )
 
@@ -199,7 +199,7 @@ SELECT * EXCEPT(demandeur_entreprise_siren),
   CASE WHEN demandeur_entreprise_siren is null or demandeur_entreprise_siren = "nan" 
   THEN left(demandeur_siret, 9) ELSE demandeur_entreprise_siren END AS demandeur_entreprise_siren
   
-FROM {{ source('clean', 'dms_pro_cleaned')}}
+FROM {{ source('clean', 'dms_pro_cleaned') }}
 WHERE procedure_id IN ('57081', '57189','61589','65028','80264')
 )
 

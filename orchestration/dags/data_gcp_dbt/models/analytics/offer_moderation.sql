@@ -26,7 +26,7 @@ venue_humanized_id AS (
 offerer_humanized_id AS (
     SELECT
         offerer_id,
-        {{target_schema}}.humanize_id(offerer_id) as offerer_humanized_id
+        {{ target_schema }}.humanize_id(offerer_id) as offerer_humanized_id
     FROM
         {{ ref('offerer') }}
     WHERE

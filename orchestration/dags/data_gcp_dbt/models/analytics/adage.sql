@@ -1,6 +1,6 @@
 WITH adage_agreg_synchro AS (
 SELECT siret
-FROM {{ source('raw', 'adage')}}
+FROM {{ source('raw', 'adage') }}
 where synchroPass = "1.0"
 )
 

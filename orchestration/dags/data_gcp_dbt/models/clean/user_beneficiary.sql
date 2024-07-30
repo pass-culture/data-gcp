@@ -1,6 +1,6 @@
 {{ config(
     pre_hook="{{create_humanize_id_function()}}"
-)}}
+) }}
 
 {% set target_name = target.name %}
 {% set target_schema = generate_schema_name('analytics_' ~ target_name) %}
@@ -9,7 +9,7 @@ WITH user_beneficiary as (
     SELECT
         user_id,
         user_creation_date,
-        {{target_schema}}.humanize_id(user_id) AS user_humanized_id,
+        {{ target_schema }}.humanize_id(user_id) AS user_humanized_id,
         user_has_enabled_marketing_email,
         -- keep user_postal_code by default.
         COALESCE(

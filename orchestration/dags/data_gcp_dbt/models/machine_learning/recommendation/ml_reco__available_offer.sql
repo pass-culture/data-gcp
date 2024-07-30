@@ -5,7 +5,7 @@ WITH offers_with_mediation AS (
         WHERE is_mediation = 1
     UNION DISTINCT
         SELECT o.offer_id
-        FROM {{ ref("int_applicative__offer")}} AS o
+        FROM {{ ref("int_applicative__offer") }} AS o
         INNER JOIN {{ ref('int_applicative__product') }} AS p on o.offer_product_id = p.id
         WHERE p.is_mediation = 1
 ), 
@@ -89,7 +89,7 @@ get_recommendable_offers AS (
     LEFT JOIN {{ ref('ml_feat__item_feature_28_day') }} AS ml_feat ON ml_feat.item_id = offer.item_id
     LEFT JOIN {{ ref('ml_reco__restrained_item') }} forbidden_offer on
         offer.item_id = forbidden_offer.item_id
-    LEFT JOIN {{ source("raw", "gsheet_ml_recommendation_sensitive_item")}} sensitive_offer on
+    LEFT JOIN {{ source("raw", "gsheet_ml_recommendation_sensitive_item") }} sensitive_offer on
         offer.item_id = sensitive_offer.item_id
     WHERE
         offer.is_active = TRUE

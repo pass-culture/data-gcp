@@ -86,4 +86,4 @@ SELECT
     o.offer_publication_date,
     o.is_future_scheduled
 FROM {{ ref('int_applicative__offer') }} AS o
-LEFT JOIN {{ ref('int_global__venue')}} AS v ON v.venue_id = o.venue_id
+LEFT JOIN {{ ref('int_global__venue') }} AS v ON v.venue_id = o.venue_id

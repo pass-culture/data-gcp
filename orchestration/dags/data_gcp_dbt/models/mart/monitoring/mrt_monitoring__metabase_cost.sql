@@ -31,7 +31,7 @@ LEFT JOIN metabase_cost mc
     ON date(mc.creation_date) = date(mq.execution_date)
     AND mc.metabase_hash = mq.metabase_hash
     AND mc.metabase_user_id = mq.metabase_user_id
-LEFT JOIN {{ ref('int_metabase__aggregated_card_activity')}} aca on aca.card_id = mq.card_id
+LEFT JOIN {{ ref('int_metabase__aggregated_card_activity') }} aca on aca.card_id = mq.card_id
 WHERE NOT cache_hit -- only thoses where we have real SQL queries
 GROUP BY
     date(mq.execution_date),

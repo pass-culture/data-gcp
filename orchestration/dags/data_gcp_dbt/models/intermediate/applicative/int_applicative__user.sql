@@ -5,6 +5,16 @@
     pre_hook="{{create_humanize_id_function()}}"
 ) }}
 
+WITH themes_subscribed AS (
+  SELECT
+    user_id,
+    currently_subscribed_themes,
+    CASE WHEN (currently_subscribed_themes IS NULL OR currently_subscribed_themes = "") THEN FALSE ELSE TRUE END AS is_theme_subscribed
+FROM {{ source("analytics","app_native_logs")}}
+WHERE technical_message_id = "subscription_update"
+QUALIFY ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY partition_date DESC) = 1
+)
+
 SELECT
     u.user_id,
     u.user_creation_date,
@@ -59,10 +69,13 @@ SELECT
     CASE WHEN 
         (
         (ui.qpv_name IS NOT NULL) 
-        OR (u.user_activity IN ("Chômeur", "En recherche d'emploi ou chômeur")) 
+        OR (u.user_activity IN ("Chômeur", "En recherche d'emploi ou chômeur"))
         OR (ui.user_macro_density_label = "rural") 
         )
-        THEN TRUE ELSE FALSE END AS user_is_priority_public
+        THEN TRUE ELSE FALSE END AS user_is_priority_public,
+    currently_subscribed_themes,
+    is_theme_subscribed
 FROM {{ source("raw", "applicative_database_user") }} AS u
 LEFT JOIN {{ ref("int_api_gouv__address_user_location") }} AS ui ON ui.user_id = u.user_id
+LEFT JOIN themes_subscribed AS ts ON ts.user_id = u.user_id
 WHERE u.user_role IN ("UNDERAGE_BENEFICIARY", "BENEFICIARY")

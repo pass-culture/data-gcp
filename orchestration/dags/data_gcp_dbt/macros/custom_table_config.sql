@@ -5,7 +5,6 @@
         {% set config_params = {
             'materialized': 'table'
         } %}
-        {% endif %}
     {% endif %}
     {{ return(config_params) }}
 {% endmacro %}

@@ -1,7 +1,5 @@
 {{
-    config(
-        materialized = "table"
-    )
+    config(**custom_table_config())
  }}
 
 WITH bookings_deposit_grouped_by_user AS (

@@ -9,7 +9,15 @@ from common.operators.gce import (
     SSHGCEOperator,
 )
 from common.operators.biquery import bigquery_job_task
-from dependencies.ml.linkage.import_items import params
+from dependencies.ml.linkage.import_items import (
+    SQL_IMPORT_PARAMS,
+    PREPROCESS_OUTPUT_TABLE,
+    PREPROCESS_INPUT_TABLE,
+    MAIN_OUTPUT_TABLE,
+    POSTPROCESS_OUTPUT_TABLE,
+    TMP_DATASET,
+    ANALYTICS_DATASET,
+)
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
@@ -18,6 +26,8 @@ from common.utils import get_airflow_schedule
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-offers-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/record_linkage"
+PREPROCESS_INPUT_TABLE = "ml_input"
+
 
 default_args = {
     "start_date": datetime(2022, 1, 5),
@@ -50,7 +60,9 @@ with DAG(
         ),
     },
 ) as dag:
-    data_collect = bigquery_job_task(dag, "import_item_batch", params, extra_params={})
+    data_collect = bigquery_job_task(
+        dag, "import_item_batch", SQL_IMPORT_PARAMS, extra_params={}
+    )
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -80,8 +92,10 @@ with DAG(
         base_dir=BASE_DIR,
         command=f"""
          python preprocess.py \
-        --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME}
+        --input-dataset-name {TMP_DATASET} \
+        --input-table-name {PREPROCESS_INPUT_TABLE} \
+        --output-dataset-name {TMP_DATASET} \
+        --output-table-name {PREPROCESS_OUTPUT_TABLE}
         """,
     )
 
@@ -91,8 +105,11 @@ with DAG(
         base_dir=BASE_DIR,
         command=f"""
          python main.py \
-        --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME}
+        --input-dataset-name {TMP_DATASET} \
+        --input-table-name {PREPROCESS_INPUT_TABLE} \
+        --output-dataset-name {TMP_DATASET} \
+        --output-table-name {MAIN_OUTPUT_TABLE}
+        
         """,
     )
 
@@ -102,8 +119,10 @@ with DAG(
         base_dir=BASE_DIR,
         command=f"""
          python postprocess.py \
-        --gcp-project {GCP_PROJECT_ID} \
-        --env-short-name {ENV_SHORT_NAME}
+        --input-dataset-name {TMP_DATASET} \
+        --input-table-name {MAIN_OUTPUT_TABLE} \
+        --output-dataset-name {ANALYTICS_DATASET} \
+        --output-table-name {POSTPROCESS_OUTPUT_TABLE}
         """,
     )
 

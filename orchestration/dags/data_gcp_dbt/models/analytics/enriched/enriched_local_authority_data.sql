@@ -117,8 +117,8 @@ select distinct
     COALESCE(offerer_collective_real_revenue, 0) as collective_real_revenue,
     COALESCE(offerer_real_revenue, 0) as total_real_revenue
 from {{ ref('enriched_offerer_data') }}
-    join {{ ref('offerer') }} on enriched_offerer_data.offerer_id = applicative_database_offerer.offerer_id
-    join {{ source('analytics','region_department') }} on enriched_offerer_data.offerer_department_code = region_department.num_dep
+    join {{ ref('offerer') }} as  applicative_database_offerer on enriched_offerer_data.offerer_id = applicative_database_offerer.offerer_id
+    join {{ source('analytics','region_department') }} as region_department on enriched_offerer_data.offerer_department_code = region_department.num_dep
     left join {{ ref('mrt_global__venue') }} as mrt_global__venue on enriched_offerer_data.offerer_id = mrt_global__venue.venue_managing_offerer_id
     left join aggregated_venue_types on enriched_offerer_data.offerer_id = aggregated_venue_types.offerer_id
     left join active_venues_last_30days on enriched_offerer_data.offerer_id = active_venues_last_30days.offerer_id

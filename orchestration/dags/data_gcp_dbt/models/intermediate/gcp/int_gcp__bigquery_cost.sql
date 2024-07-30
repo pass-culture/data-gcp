@@ -37,7 +37,7 @@ bq_costs as (
         SUM(total_bytes_billed) as total_bytes_billed,
         SUM(total_bytes_processed) as total_bytes_processed,
         COUNT(*) as total_queries
-    from {{ target.project }}.{{ var('region_name') }}.information_schema.jobs_by_project queries
+    from `{{ target.project }}.{{ var('region_name') }}`.information_schema.jobs_by_project as queries
         left join table_references tr on queries.project_id = tr.project_id and queries.job_id = tr.job_id
     {% if is_incremental() %}
         where DATE(creation_time) between DATE_SUB(DATE("{{ ds() }}"), interval 28 day) and DATE("{{ ds() }}")

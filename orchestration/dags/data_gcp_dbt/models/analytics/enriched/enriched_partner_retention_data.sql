@@ -19,7 +19,7 @@ individual_offers_created as (
         COUNT(case when DATE_DIFF(enriched_cultural_partner_data.last_bookable_offer_date, offer_creation_date, month) <= 2 then offer_id end) as individual_offers_created_2_month_before_last_bookable,
         COUNT(case when DATE_DIFF(enriched_cultural_partner_data.last_bookable_offer_date, offer_creation_date, month) <= 6 then offer_id end) as individual_offers_created_6_month_before_last_bookable
     from {{ ref('enriched_cultural_partner_data') }} as enriched_cultural_partner_data
-        join {{ ref('partner_type_bookability_frequency') }} using (partner_type)
+        join {{ ref('partner_type_bookability_frequency') }} as partner_type_bookability_frequency using (partner_type)
         left join {{ ref('mrt_global__offer') }} as mrt_global__offer on enriched_cultural_partner_data.partner_id = mrt_global__offer.partner_id
     group by 1, 2, 3
 ),
@@ -37,8 +37,8 @@ individual_bookings as (
         COALESCE(COUNT(case when DATE_DIFF(CURRENT_DATE, booking_creation_date, month) <= 6 then booking_id end), 0) as individual_bookings_last_6_month,
         COALESCE(COUNT(case when DATE_DIFF(last_bookable_offer_date, booking_creation_date, month) <= 2 then booking_id end), 0) as individual_bookings_2_month_before_last_bookable,
         COALESCE(COUNT(case when DATE_DIFF(last_bookable_offer_date, booking_creation_date, month) <= 6 then booking_id end), 0) as individual_bookings_6_month_before_last_bookable
-    from {{ ref('enriched_cultural_partner_data') }}
-        join {{ ref('partner_type_bookability_frequency') }} using (partner_type)
+    from {{ ref('enriched_cultural_partner_data') }} as enriched_cultural_partner_data
+        join {{ ref('partner_type_bookability_frequency') }} as partner_type_bookability_frequency using (partner_type)
         left join {{ ref('mrt_global__booking') }} as mrt_global__booking on enriched_cultural_partner_data.partner_id = mrt_global__booking.partner_id
             and not booking_is_cancelled
     group by 1, 2, 3
@@ -168,7 +168,7 @@ reimbursment_point1 as (
         reimbursement_point_link_ending_date,
         RANK() over (partition by mrt_global__venue.venue_managing_offerer_id, mrt_global__venue.venue_id order by reimbursement_point_link_beginning_date desc) as rang
     from {{ ref('mrt_global__venue') }} as mrt_global__venue
-        left join {{ ref('venue_reimbursement_point_link') }} on mrt_global__venue.venue_id = applicative_database_venue_reimbursement_point_link.venue_id
+        left join {{ ref('venue_reimbursement_point_link') }} as applicative_database_venue_reimbursement_point_link  on mrt_global__venue.venue_id = applicative_database_venue_reimbursement_point_link.venue_id
 ),
 
 reimbursment_point2 as (
@@ -214,8 +214,8 @@ churned as (
         median_bookability_frequency,
         DATE_DIFF(CURRENT_DATE(), last_bookable_date, day) days_since_last_bookable_offer
     from bookable
-        join {{ ref('enriched_cultural_partner_data') }} on bookable.partner_id = enriched_cultural_partner_data.partner_id
-        join {{ ref('cultural_sector_bookability_frequency') }} on enriched_cultural_partner_data.cultural_sector = cultural_sector_bookability_frequency.cultural_sector
+        join {{ ref('enriched_cultural_partner_data') }} as enriched_cultural_partner_data on bookable.partner_id = enriched_cultural_partner_data.partner_id
+        join {{ ref('cultural_sector_bookability_frequency') }} as cultural_sector_bookability_frequency on enriched_cultural_partner_data.cultural_sector = cultural_sector_bookability_frequency.cultural_sector
 ),
 
 churn_segmentation as (
@@ -293,7 +293,7 @@ select distinct
     ROUND(SAFE_DIVIDE(COALESCE(unique_fraud_users, 0), COALESCE(unique_users, 0)) * 100) as pct_unique_fraud_users,
     days_since_last_bookable_offer,
     COALESCE(partner_segmentation, "not activated") partner_segmentation
-from {{ ref('enriched_cultural_partner_data') }}
+from {{ ref('enriched_cultural_partner_data') }} as enriched_cultural_partner_data
     left join individual_offers_created on enriched_cultural_partner_data.partner_id = individual_offers_created.partner_id
     left join collective_offers_created on enriched_cultural_partner_data.partner_id = collective_offers_created.partner_id
     left join individual_bookings on enriched_cultural_partner_data.partner_id = individual_bookings.partner_id

@@ -20,7 +20,7 @@ WITH offers_grouped_by_venue AS (
         MIN(CASE WHEN offer_validation = "APPROVED" THEN offer_creation_date END) AS first_individual_offer_creation_date,
         MAX(CASE WHEN offer_validation = "APPROVED" THEN offer_creation_date END) AS last_individual_offer_creation_date,
         COUNT(CASE WHEN offer_validation = "APPROVED" THEN offer_id END) AS total_created_individual_offers,
-        COUNT(DISTINCT CASE WHEN offer_is_bookable THEN offer_id END) AS total_bookable_individual_offers
+        COUNT(DISTINCT CASE WHEN offer_is_bookable THEN offer_id END) AS total_bookable_individual_offers,
         COUNT(DISTINCT venue_id) AS total_venues
     FROM {{ ref("int_applicative__offer") }}
     GROUP BY venue_id

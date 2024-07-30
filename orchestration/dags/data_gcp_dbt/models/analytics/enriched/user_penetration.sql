@@ -1,3 +1,6 @@
+-- temporary fix for CI, query unable to be run as view
+{{ config(materialized='table') }}
+
 with population_dpt as (
   SELECT
       DATE(pop.current_date) active_month,

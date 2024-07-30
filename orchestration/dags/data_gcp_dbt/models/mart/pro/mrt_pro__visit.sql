@@ -38,7 +38,7 @@ SELECT
     -- stat consultation
     SUM(CASE WHEN total_stat_page_views > 0 THEN 1 ELSE 0 END) AS total_stat_page_views,
     -- help consultation
-    SUM(CASE WHEN total_collective_help_clicks + total_help_center_clicks + total_help_center_clicks + total_consult_support_clicks + total_consult_cgu_clicks > 0 THEN 1 ELSE 0 END) AS total_consulted_help,
+    SUM(CASE WHEN total_collective_help_clicks + total_help_center_clicks + total_help_center_clicks + total_consult_support_clicks + total_consult_cgu_clicks > 0 THEN 1 ELSE 0 END) AS total_consulted_help
 FROM {{ ref('int_firebase__pro_visit') }} AS fpv
 LEFT JOIN {{ ref('mrt_global__user_offerer') }} AS uo ON fpv.user_id = uo.user_id
 LEFT JOIN {{ ref('mrt_global__user_offerer') }} AS o ON uo.offerer_id = o.offerer_id

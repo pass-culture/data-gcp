@@ -5,11 +5,11 @@
 }}
 
 WITH recommendable_offers_data AS (
-    SELECT 
+    SELECT
         *,
         ROW_NUMBER() OVER (PARTITION BY offer_id ORDER BY stock_price, stock_beginning_date ASC) as stock_rank,
     FROM (
-        SELECT 
+        SELECT
             item_id,
             offer_id,
             product_id,
@@ -46,8 +46,8 @@ WITH recommendable_offers_data AS (
             MIN(url IS NOT NULL) as is_numerical,
             MAX((url IS NULL AND NOT is_national)) as is_geolocated,
             MAX(offer_is_duo) as offer_is_duo,
-            MAX(default_max_distance) as default_max_distance    
-        FROM {{ ref('ml_reco__available_offer') }}
+            MAX(default_max_distance) as default_max_distance
+        FROM {{ ref('ml_reco__available_offer') }}
         GROUP BY 1,2,3,4,5,6,7,8
     )
 )

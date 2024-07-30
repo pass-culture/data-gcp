@@ -22,7 +22,7 @@ WITH favorites as (
             WHERE
                 offer_subcategory_id = offer.offer_subcategory_id
                 AND user_id = favorite.userId
-        ) as user_bookings_for_this_subcat,
+        ) as user_bookings_for_this_subcat
     FROM
         {{ source('raw', 'applicative_database_favorite') }} as favorite
         LEFT JOIN {{ ref('mrt_global__booking') }} as booking ON favorite.userId = booking.user_id

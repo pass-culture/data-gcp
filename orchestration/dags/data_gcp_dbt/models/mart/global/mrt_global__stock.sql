@@ -18,5 +18,5 @@ SELECT stock_id,
     price_category_id,
     price_category_label,
     price_category_label_id,
-    venue_department_code,
-FROM {{ref('int_global__stock')}}
+    venue_department_code
+FROM {{ ref('int_global__stock') }}

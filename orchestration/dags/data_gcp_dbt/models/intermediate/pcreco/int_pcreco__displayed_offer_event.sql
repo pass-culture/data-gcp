@@ -14,7 +14,7 @@ WITH displayed AS (
         event_date,
         sum(is_consult_offer) as total_module_consult_offer,
         sum(is_booking_confirmation) as total_module_booking_confirmation,
-        sum(is_add_to_favorites) as total_module_add_to_favorites,
+        sum(is_add_to_favorites) as total_module_add_to_favorites
     FROM
        {{ ref('int_firebase__native_event') }} fsoe
     WHERE
@@ -37,7 +37,7 @@ SELECT
     et.*,
     d.total_module_consult_offer,
     d.total_module_booking_confirmation,
-    d.total_module_add_to_favorites,
+    d.total_module_add_to_favorites
 FROM {{ ref('int_pcreco__past_offer_context')}} et
 INNER JOIN displayed d ON d.event_date = et.event_date AND d.reco_call_id = et.reco_call_id
 {% if is_incremental() %}

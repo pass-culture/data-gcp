@@ -8,7 +8,7 @@
 WITH offer_humanized_id AS (
     SELECT
         offer_id,
-        offer_humanized_id,
+        offer_humanized_id
     FROM {{ ref('int_applicative__offer') }}
     WHERE
         offer_id is not NULL
@@ -26,7 +26,7 @@ venue_humanized_id AS (
 offerer_humanized_id AS (
     SELECT
         offerer_id,
-        {{target_schema}}.humanize_id(offerer_id) as offerer_humanized_id,
+        {{target_schema}}.humanize_id(offerer_id) as offerer_humanized_id
     FROM
         {{ ref('offerer') }}
     WHERE
@@ -39,7 +39,7 @@ bookings_days AS (
         DATE(booking_creation_date) AS booking_creation_date,
         COUNT(DISTINCT booking_id) OVER (PARTITION BY offer.offer_id, DATE(booking_creation_date)) AS cnt_bookings_day,
         IF(booking_is_cancelled, COUNT(DISTINCT booking_id) OVER (PARTITION BY offer.offer_id, DATE(booking_creation_date)), NULL) AS cnt_bookings_cancelled,
-        IF(NOT booking_is_cancelled, COUNT(DISTINCT booking_id) OVER (PARTITION BY offer.offer_id, DATE(booking_creation_date)), NULL) AS cnt_bookings_confirm,
+        IF(NOT booking_is_cancelled, COUNT(DISTINCT booking_id) OVER (PARTITION BY offer.offer_id, DATE(booking_creation_date)), NULL) AS cnt_bookings_confirm
     FROM {{ ref('booking') }} booking
         JOIN {{ ref('stock') }} stock USING(stock_id)
         JOIN {{ ref('offer') }} offer ON offer.offer_id = stock.offer_id
@@ -65,7 +65,7 @@ offer_stock_ids AS (
         DATE(MIN(stock_beginning_date)) AS first_stock_beginning_date,
         DATE(MAX(stock_booking_limit_date)) AS last_booking_limit_date,
         SUM(stock_quantity) AS offer_stock_quantity,
-        SUM(available_stock_information.available_stock_information) AS available_stock_quantity,
+        SUM(available_stock_information.available_stock_information) AS available_stock_quantity
     FROM
         {{ ref('stock') }} stock
         JOIN {{ ref('available_stock_information') }} USING(stock_id)
@@ -195,7 +195,7 @@ SELECT DISTINCT
     SAFE_DIVIDE((offer_stock_ids.offer_stock_quantity - offer_stock_ids.available_stock_quantity), offer_stock_ids.offer_stock_quantity) AS fill_rate,
     last_stock.last_stock_price,
     offer_tags.playlist_tags,
-    offerer_tags.structure_tags,
+    offerer_tags.structure_tags
 
 FROM
     {{ ref('offer') }} offer

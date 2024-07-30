@@ -15,7 +15,7 @@ WITH
     DATE_TRUNC(deposit_creation_date, WEEK(MONDAY)) AS deposit_creation_week,
     deposit_type,
     weeks.week AS active_week,
-    DATE_DIFF(CURRENT_DATE, deposit_creation_date, WEEK(MONDAY)) AS seniority_weeks,
+    DATE_DIFF(CURRENT_DATE, deposit_creation_date, WEEK(MONDAY)) AS seniority_weeks
   FROM
     {{ ref('mrt_global__deposit') }} AS mrt_global__deposit
   INNER JOIN

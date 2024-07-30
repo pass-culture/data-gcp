@@ -3,7 +3,7 @@ SELECT
   venue_id,
   venue_managing_offerer_id,
   venue_tag_name AS partner_type,
-  "venue_tag" AS partner_type_origin,
+  "venue_tag" AS partner_type_origin
 FROM {{ ref("mrt_global__venue_tag") }}
 WHERE venue_tag_category_label = "Comptage partenaire sectoriel"
     AND offerer_rank_desc = 1
@@ -14,7 +14,7 @@ SELECT
     venue_id,
     venue_managing_offerer_id,
     venue_type_label AS partner_type,
-    "venue_type_label" AS partner_type_origin,
+    "venue_type_label" AS partner_type_origin
 FROM {{ ref("mrt_global__venue") }}
 WHERE (total_created_offers > 0 OR venue_type_label != "Offre numérique")
     AND offerer_rank_asc = 1
@@ -77,7 +77,7 @@ SELECT
     o.total_individual_real_revenue,
     o.total_collective_real_revenue,
     o.total_real_revenue,
-    "offerer" AS partner_status,
+    "offerer" AS partner_status
 FROM {{ ref("mrt_global__offerer") }} AS o
 LEFT JOIN {{ ref("mrt_global__venue") }} AS v
                                     ON v.offerer_id = o.offerer_id
@@ -134,7 +134,7 @@ SELECT
     v.total_individual_real_revenue,
     v.total_collective_real_revenue,
     v.total_real_revenue,
-    "venue"AS partner_status,
+    "venue" AS partner_status
 FROM {{ ref("mrt_global__venue") }} AS v
 LEFT JOIN {{ source("raw", "agg_partner_cultural_sector") }} ON agg_partner_cultural_sector.partner_type = v.venue_type_label
 LEFT JOIN {{ ref("mrt_global__venue_tag") }} AS vt ON v.venue_id = vt.venue_id AND vt.venue_tag_category_label = "Comptage partenaire sectoriel"

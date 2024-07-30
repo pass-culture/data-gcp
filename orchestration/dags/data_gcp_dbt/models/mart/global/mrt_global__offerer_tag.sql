@@ -7,5 +7,5 @@ SELECT
     tag_description,
     tag_category_id,
     tag_category_name,
-    tag_category_label,
+    tag_category_label
 FROM  {{ ref('int_applicative__offerer_tag') }}

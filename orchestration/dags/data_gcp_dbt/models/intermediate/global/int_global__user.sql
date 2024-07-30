@@ -40,7 +40,7 @@ WITH bookings_deposit_grouped_by_user AS (
             WHEN offer_subcategory_id = 'ACTIVATION_THING'
             AND booking_used_date IS NOT NULL THEN booking_used_date
             ELSE NULL
-        END) AS user_activation_date,
+        END) AS user_activation_date
     FROM {{ ref('int_global__booking')}} AS b
     LEFT JOIN {{ ref('int_applicative__deposit') }} AS d ON d.deposit_id = b.deposit_id
         AND deposit_rank_desc = 1
@@ -87,7 +87,7 @@ SELECT booking_id,
     RANK() OVER (
         PARTITION BY user_id
         ORDER BY booking_created_at ASC
-    ) AS user_booking_rank,
+    ) AS user_booking_rank
 FROM {{ ref('int_global__booking') }}
 WHERE booking_is_cancelled IS FALSE
 
@@ -96,7 +96,7 @@ WHERE booking_is_cancelled IS FALSE
 date_of_bookings_on_third_product AS (
     SELECT
         user_id,
-        booking_created_at AS booking_on_third_product_date,
+        booking_created_at AS booking_on_third_product_date
     FROM ranked_for_bookings_not_canceled
     WHERE same_category_booking_rank = 1
     QUALIFY RANK() OVER (
@@ -109,7 +109,7 @@ date_of_bookings_on_third_product AS (
 first_paid_booking_type AS (
     SELECT
         user_id,
-        offer_subcategory_id AS first_paid_booking_type,
+        offer_subcategory_id AS first_paid_booking_type
     FROM {{ ref('mrt_global__booking') }}
     WHERE booking_amount > 0
     QUALIFY RANK() over (
@@ -166,7 +166,7 @@ SELECT
     dgu.last_deposit_expiration_date AS user_deposit_expiration_date,
     CASE WHEN ( TIMESTAMP(dgu.last_deposit_expiration_date ) >= CURRENT_TIMESTAMP()
             AND COALESCE(bdgu.deposit_actual_amount_spent,0) < dgu.last_deposit_amount )
-        AND u.user_is_active THEN TRUE ELSE FALSE END AS user_is_current_beneficiary,
+        AND u.user_is_active THEN TRUE ELSE FALSE END AS user_is_current_beneficiary
 FROM {{ ref('int_applicative__user') }} AS u
 LEFT JOIN {{ ref('int_applicative__action_history')}} AS ah ON ah.user_id = u.user_id AND ah.action_history_rk = 1
 INNER JOIN user_agg_deposit_data AS ud ON ud.user_id = u.user_id

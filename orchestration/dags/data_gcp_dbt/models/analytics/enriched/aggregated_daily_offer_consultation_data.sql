@@ -33,7 +33,7 @@ SELECT
         DATE_DIFF(fe.event_date, eud.user_birth_date, YEAR) - 1,
         DATE_DIFF(fe.event_date, eud.user_birth_date, YEAR)
     ) AS user_age,
-    COUNT(*) AS cnt_events,
+    COUNT(*) AS cnt_events
 FROM {{ ref('int_firebase__native_event')}} fe
     JOIN {{ ref('mrt_global__offer')}} o ON fe.offer_id = o.offer_id
     AND fe.event_name IN (

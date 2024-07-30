@@ -68,7 +68,7 @@ SELECT co.collective_offer_id,
     cs.collective_stock_price,
     cs.collective_stock_number_of_tickets,
     cs.collective_stock_id,
-    cs.stock_id,
+    cs.stock_id
 FROM {{ ref('int_applicative__collective_offer') }} AS co
 INNER JOIN {{ref('int_global__venue')}} AS v ON v.venue_id = co.venue_id
 LEFT JOIN {{ source('clean', 'subcategories') }} ON subcategories.id = co.collective_offer_subcategory_id

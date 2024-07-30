@@ -182,7 +182,7 @@ SELECT
     consult_venue_timestamp,
     consult_offer_timestamp,
     fav_timestamp,
-    bookings.booking_timestamp,
+    bookings.booking_timestamp
 FROM displayed
 LEFT JOIN clicked
     ON displayed.unique_session_id = clicked.unique_session_id

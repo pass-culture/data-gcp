@@ -121,9 +121,9 @@ SELECT
         deposit_id
         ORDER BY
             active_date
-    ) AS cumulative_cnt_used_bookings
-    , coalesce(delta_diversification, 0) as delta_diversification
-    , coalesce(sum(delta_diversification) over(partition by activity.user_id order by active_date), 0) as delta_diversification_cumsum
+    ) AS cumulative_cnt_used_bookings,
+    coalesce(delta_diversification, 0) as delta_diversification,
+    coalesce(sum(delta_diversification) over(partition by activity.user_id order by active_date), 0) as delta_diversification_cumsum
 FROM
     aggregated_daily_user_used_bookings_history_1 as activity
 LEFT JOIN diversification_used

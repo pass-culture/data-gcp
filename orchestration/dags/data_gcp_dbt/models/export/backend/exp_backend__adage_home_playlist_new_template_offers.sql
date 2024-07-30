@@ -1,4 +1,5 @@
-WITH offerer_offer_info AS -- last collective_offer_template by offerer_id created past 2 months
+-- last collective_offer_template by offerer_id created past 2 months
+WITH offerer_offer_info AS
   (SELECT o.offerer_id ,
           o.venue_id ,
           v.venue_latitude ,

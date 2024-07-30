@@ -2,3 +2,5 @@
 target/
 macros/
 analyses/
+models/clean/user_item_discovery.sql
+models/analytics/diversification/diversification_raw.sql

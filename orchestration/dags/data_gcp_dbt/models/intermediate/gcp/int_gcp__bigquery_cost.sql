@@ -13,7 +13,7 @@ with table_references as (
         q.job_id,
         STRING_AGG(CONCAT(referenced_table_unn.dataset_id, '.', referenced_table_unn.table_id), "," order by CONCAT(referenced_table_unn.dataset_id, '.', referenced_table_unn.table_id)) as referenced_tables
 
-    from {{ target.project }}.{{ var('region_name') }}.information_schema.jobs_by_project q,
+    from `{{ target.project }}.{{ var('region_name') }}.INFORMATION_SCHEMA.JOBS_BY_PROJECT` q,
         UNNEST(referenced_tables) as referenced_table_unn
 
     group by 1, 2
@@ -37,7 +37,7 @@ bq_costs as (
         SUM(total_bytes_billed) as total_bytes_billed,
         SUM(total_bytes_processed) as total_bytes_processed,
         COUNT(*) as total_queries
-    from `{{ target.project }}.{{ var('region_name') }}.INFORMATION_SCHEMA.JOBS_BY_PROJECT` as queries
+    from `{{ target.project }}.{{ var('region_name') }}`.INFORMATION_SCHEMA.JOBS_BY_PROJECT as queries
         left join table_references tr on queries.project_id = tr.project_id and queries.job_id = tr.job_id
     {% if is_incremental() %}
         where DATE(creation_time) between DATE_SUB(DATE("{{ ds() }}"), interval 28 day) and DATE("{{ ds() }}")

@@ -20,7 +20,7 @@ from dependencies.ml.linkage.import_items import (
 )
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
+from common.config import ENV_SHORT_NAME, DAG_FOLDER
 from common.utils import get_airflow_schedule
 
 DEFAULT_REGION = "europe-west1"
@@ -106,10 +106,9 @@ with DAG(
         command=f"""
          python main.py \
         --input-dataset-name {TMP_DATASET} \
-        --input-table-name {PREPROCESS_INPUT_TABLE} \
+        --input-table-name {PREPROCESS_OUTPUT_TABLE} \
         --output-dataset-name {TMP_DATASET} \
         --output-table-name {MAIN_OUTPUT_TABLE}
-        
         """,
     )
 

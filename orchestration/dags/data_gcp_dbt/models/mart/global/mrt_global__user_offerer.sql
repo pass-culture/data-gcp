@@ -1,4 +1,4 @@
-SELECT
+select
     offerer_id,
     user_id,
     user_affiliation_rank,
@@ -16,6 +16,6 @@ SELECT
     user_has_validated_email,
     user_has_enabled_marketing_push,
     user_has_enabled_marketing_email
-FROM {{ ref("int_applicative__user_offerer") }}
-WHERE user_offerer_validation_status = "VALIDATED"
-    AND user_is_active
+from {{ ref("int_applicative__user_offerer") }}
+where user_offerer_validation_status = "VALIDATED"
+    and user_is_active

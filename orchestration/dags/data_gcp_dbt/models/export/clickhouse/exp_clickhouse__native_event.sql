@@ -1,4 +1,4 @@
-SELECT  
+select
     event_date as partition_date,
     event_name,
     event_timestamp,
@@ -10,12 +10,12 @@ SELECT
     is_consult_offer,
     is_consult_venue,
     is_add_to_favorites
-FROM {{ ref("int_firebase__native_event") }}
-WHERE event_name in ("ConsultOffer","ConsultVenue","HasAddedOfferToFavorites")
-AND 
+from {{ ref("int_firebase__native_event") }}
+where event_name in ("ConsultOffer", "ConsultVenue", "HasAddedOfferToFavorites")
+    and
     -- ensure the params are consistent with the event
-    CASE
-        WHEN is_consult_offer = 1 THEN offer_id is not NULL
-        WHEN is_consult_venue = 1 THEN venue_id is not NULL
-        WHEN is_add_to_favorites = 1 THEN offer_id is not NULL
-    END
+    case
+        when is_consult_offer = 1 then offer_id is not NULL
+        when is_consult_venue = 1 then venue_id is not NULL
+        when is_add_to_favorites = 1 then offer_id is not NULL
+    end

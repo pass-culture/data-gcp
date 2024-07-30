@@ -1,15 +1,15 @@
-SELECT
+select
     id,
     -- HOTFIX: Adjust 'amount' from 90 to 80 to correct a discrepancy (55 deposit are concerned)
-    CASE WHEN type = "GRANT_15_17" AND amount > 80 THEN 80
-        WHEN type = "GRANT_18" AND amount < 300 THEN 300
-        WHEN type = "GRANT_18" AND amount > 500 THEN 500
-        ELSE amount
-    END AS amount,
-    userId,
+    case when type = "GRANT_15_17" and amount > 80 then 80
+        when type = "GRANT_18" and amount < 300 then 300
+        when type = "GRANT_18" and amount > 500 then 500
+        else amount
+    end as amount,
+    userid,
     source,
-    dateCreated,
-    dateUpdated,
-    expirationDate,
+    datecreated,
+    dateupdated,
+    expirationdate,
     type
-FROM {{ source("raw", "applicative_database_deposit") }}
+from {{ source("raw", "applicative_database_deposit") }}

@@ -1,4 +1,4 @@
-SELECT
+select
     v.venue_id,
     v.venue_name,
     v.venue_public_name,
@@ -94,22 +94,23 @@ SELECT
         ofr.offerer_humanized_id,
         "/lieux/",
         venue_humanized_id
-    ) AS venue_pc_pro_link,
-    CASE WHEN v.venue_is_permanent THEN CONCAT("venue-",v.venue_id)
-         ELSE ofr.partner_id END AS partner_id,
-    ROW_NUMBER() OVER(
-        PARTITION BY v.venue_managing_offerer_id
-        ORDER BY
-            v.total_theoretic_revenue DESC,
-            v.total_created_offers DESC,
-            venue_name DESC
-    ) AS offerer_rank_desc,
-    ROW_NUMBER() OVER(
-        PARTITION BY v.venue_managing_offerer_id
-        ORDER BY
-            v.total_theoretic_revenue DESC,
-            v.total_created_offers DESC,
-            v.venue_name ASC
-    ) AS offerer_rank_asc,
-FROM {{ ref('int_applicative__venue') }} AS v
-LEFT JOIN {{ ref('int_global__offerer') }} AS ofr ON v.venue_managing_offerer_id = ofr.offerer_id
+    ) as venue_pc_pro_link,
+    case when v.venue_is_permanent then CONCAT("venue-", v.venue_id)
+        else ofr.partner_id
+    end as partner_id,
+    ROW_NUMBER() over (
+        partition by v.venue_managing_offerer_id
+        order by
+            v.total_theoretic_revenue desc,
+            v.total_created_offers desc,
+            venue_name desc
+    ) as offerer_rank_desc,
+    ROW_NUMBER() over (
+        partition by v.venue_managing_offerer_id
+        order by
+            v.total_theoretic_revenue desc,
+            v.total_created_offers desc,
+            v.venue_name asc
+    ) as offerer_rank_asc
+from {{ ref('int_applicative__venue') }} as v
+    left join {{ ref('int_global__offerer') }} as ofr on v.venue_managing_offerer_id = ofr.offerer_id

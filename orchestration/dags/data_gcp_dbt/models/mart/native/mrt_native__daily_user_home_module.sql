@@ -4,7 +4,7 @@
     )
 }}
 
-SELECT
+select
     user_id,
     unique_session_id,
     displayed.entry_id,
@@ -12,9 +12,9 @@ SELECT
     module_id,
     module_name,
     parent_module_id,
-    parent_modules.content_type AS parent_module_type,
+    parent_modules.content_type as parent_module_type,
     parent_entry_id,
-    parent_homes.content_type AS parent_home_type,
+    parent_homes.content_type as parent_home_type,
     module_type,
     user_location_type,
     reco_call_id,
@@ -37,12 +37,12 @@ SELECT
     playlist_tag.offer_category,
     playlist_tag.playlist_reach,
     playlist_tag.playlist_recurrence
-FROM {{ ref('int_firebase__native_daily_user_home_module' ) }} AS displayed
-LEFT JOIN {{ ref('int_contentful__entry' ) }} AS parent_modules
-    ON parent_modules.id = displayed.parent_module_id
-LEFT JOIN {{ ref('int_contentful__entry' ) }} AS parent_homes
-    ON parent_homes.id = displayed.parent_entry_id
-LEFT JOIN {{ ref('int_contentful__home_tag' ) }} AS home_tag
-    ON home_tag.entry_id = displayed.entry_id
-LEFT JOIN {{ ref('int_contentful__playlist_tag' ) }} AS playlist_tag
-    ON playlist_tag.entry_id = displayed.module_id
+from {{ ref('int_firebase__native_daily_user_home_module' ) }} as displayed
+    left join {{ ref('int_contentful__entry' ) }} as parent_modules
+        on parent_modules.id = displayed.parent_module_id
+    left join {{ ref('int_contentful__entry' ) }} as parent_homes
+        on parent_homes.id = displayed.parent_entry_id
+    left join {{ ref('int_contentful__home_tag' ) }} as home_tag
+        on home_tag.entry_id = displayed.entry_id
+    left join {{ ref('int_contentful__playlist_tag' ) }} as playlist_tag
+        on playlist_tag.entry_id = displayed.module_id

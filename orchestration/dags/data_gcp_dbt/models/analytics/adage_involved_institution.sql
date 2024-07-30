@@ -1,27 +1,27 @@
-WITH involved_students AS (
-    SELECT
+with involved_students as (
+    select
         date(execution_date) as date,
-        CASE
-            WHEN metric_id = "02A" THEN "2A"
-            WHEN metric_id = "02B" THEN "2B"
-            WHEN upper(metric_id) = "TOTAL" THEN "-1"
-            WHEN upper(metric_id) LIKE "%97%" THEN RIGHT(metric_id, 3)
-            ELSE RIGHT(metric_id, 2)
-        END as department_code,
+        case
+            when metric_id = "02A" then "2A"
+            when metric_id = "02B" then "2B"
+            when upper(metric_id) = "TOTAL" then "-1"
+            when upper(metric_id) like "%97%" then right(metric_id, 3)
+            else right(metric_id, 2)
+        end as department_code,
         ey.educational_year_id,
         ey.educational_year_beginning_date,
         ey.educational_year_expiration_date,
         ey.adage_id,
         ey.scholar_year,
         ais.level,
-        coalesce(sum(SAFE_CAST(institutions as FLOAT64)), 0) as institutions,
-        coalesce(sum(SAFE_CAST(total_institutions as FLOAT64)), 0) as total_institutions
-    FROM
+        coalesce(sum(safe_cast(institutions as FLOAT64)), 0) as institutions,
+        coalesce(sum(safe_cast(total_institutions as FLOAT64)), 0) as total_institutions
+    from
         {{ source('clean','adage_involved_student') }} ais
-        LEFT JOIN {{ ref('educational_year') }}  ey on SAFE_CAST(ey.adage_id as int) = SAFE_CAST(ais.educational_year_adage_id as int)
+        left join {{ ref('educational_year') }} ey on safe_cast(ey.adage_id as INT) = safe_cast(ais.educational_year_adage_id as INT)
     where
         metric_name = "departements"
-    GROUP BY
+    group by
         1,
         2,
         3,
@@ -32,7 +32,7 @@ WITH involved_students AS (
         8
 )
 
-SELECT
+select
     involved.date,
     involved.department_code,
     involved.educational_year_id,
@@ -42,7 +42,7 @@ SELECT
     involved.scholar_year,
     avg(institutions) as institutions,
     avg(total_institutions) as total_institutions
-FROM
+from
     involved_students involved
-WHERE NOT is_NaN(institutions)
-GROUP BY 1,2,3,4,5,6,7
+where not is_nan(institutions)
+group by 1, 2, 3, 4, 5, 6, 7

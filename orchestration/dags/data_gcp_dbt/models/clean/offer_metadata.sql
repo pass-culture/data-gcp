@@ -3,114 +3,115 @@
 ) }}
 {% set target_name = target.name %}
 {% set target_schema = generate_schema_name('analytics_' ~ target_name) %}
-WITH offer_humanized_id AS (
-    SELECT
+with offer_humanized_id as (
+    select
         offer_id,
-        {{ target_schema }}.humanize_id(offer_id) AS humanized_id
-    FROM
+        {{ target_schema }}.humanize_id(offer_id) as humanized_id
+    from
         {{ ref('offer') }}
-    WHERE
+    where
         offer_id is not NULL
 ),
-mediation AS (
-    SELECT
+
+mediation as (
+    select
         offer_id,
         {{ target_schema }}.humanize_id(id) as mediation_humanized_id
-    FROM
+    from
         (
-            SELECT
+            select
                 id,
-                offerId as offer_id,
-                ROW_NUMBER() OVER (
-                    PARTITION BY offerId
-                    ORDER BY
-                        dateModifiedAtLastProvider DESC
+                offerid as offer_id,
+                ROW_NUMBER() over (
+                    partition by offerid
+                    order by
+                        datemodifiedatlastprovider desc
                 ) as rnk
-            FROM
+            from
                 {{ source('raw', 'applicative_database_mediation') }}
-            WHERE
-                isActive
+            where
+                isactive
         ) inn
-    WHERE
+    where
         rnk = 1
 ),
-enriched_items AS (
 
-    SELECT
+enriched_items as (
+
+    select
         offer.offer_id,
         offer.offer_creation_date,
-        offer.offer_subcategoryId AS subcategory_id,
-        subcategories.category_id AS category_id,
-        subcategories.search_group_name AS search_group_name,
-        CASE
-            WHEN subcategories.category_id = 'MUSIQUE_LIVE' THEN "MUSIC"
-            WHEN subcategories.category_id = 'MUSIQUE_ENREGISTREE'  THEN "MUSIC"
-            WHEN subcategories.category_id = 'SPECTACLE' THEN "SHOW"
-            WHEN subcategories.category_id = 'CINEMA' THEN "MOVIE"
-            WHEN subcategories.category_id = 'LIVRE' THEN "BOOK"
-        END AS offer_type_domain,
-        CASE
+        offer.offer_subcategoryid as subcategory_id,
+        subcategories.category_id as category_id,
+        subcategories.search_group_name as search_group_name,
+        case
+            when subcategories.category_id = 'MUSIQUE_LIVE' then "MUSIC"
+            when subcategories.category_id = 'MUSIQUE_ENREGISTREE' then "MUSIC"
+            when subcategories.category_id = 'SPECTACLE' then "SHOW"
+            when subcategories.category_id = 'CINEMA' then "MOVIE"
+            when subcategories.category_id = 'LIVRE' then "BOOK"
+        end as offer_type_domain,
+        case
             when (
-                offer.offer_name is null
+                offer.offer_name is NULL
                 or offer.offer_name = 'NaN'
             ) then "None"
-            else safe_cast(offer.offer_name as STRING)
-        END as offer_name,
-        CASE
+            else SAFE_CAST(offer.offer_name as STRING)
+        end as offer_name,
+        case
             when (
-                offer.offer_description is null
+                offer.offer_description is NULL
                 or offer.offer_description = 'NaN'
             ) then "None"
-            else safe_cast(offer.offer_description as STRING)
-        END as offer_description,
-        CASE
-            WHEN mediation.mediation_humanized_id IS NOT NULL THEN CONCAT(
-                'https://storage.googleapis.com/',
-                {{ get_mediation_url() }} || '-assets-fine-grained/thumbs/mediations/',
-                mediation.mediation_humanized_id
-            )
-            ELSE CONCAT(
-                'https://storage.googleapis.com/',
-                {{ get_mediation_url() }} || '-assets-fine-grained/thumbs/products/',
-                {{ target_schema }}.humanize_id(offer.offer_product_id)
-            )
-        END AS image_url
-    FROM {{ ref('offer') }} offer
-    JOIN {{ source('clean','subcategories') }} subcategories ON offer.offer_subcategoryId = subcategories.id
-    LEFT JOIN mediation ON offer.offer_id = mediation.offer_id
+            else SAFE_CAST(offer.offer_description as STRING)
+        end as offer_description,
+        case
+            when mediation.mediation_humanized_id is not NULL
+                then CONCAT(
+                        'https://storage.googleapis.com/',
+                        {{ get_mediation_url() }} || '-assets-fine-grained/thumbs/mediations/',
+                        mediation.mediation_humanized_id
+                    )
+            else CONCAT(
+                    'https://storage.googleapis.com/',
+                    {{ get_mediation_url() }} || '-assets-fine-grained/thumbs/products/',
+                    {{ target_schema }}.humanize_id(offer.offer_product_id)
+                )
+        end as image_url
+    from {{ ref('offer') }} offer
+        join {{ source('clean','subcategories') }} subcategories on offer.offer_subcategoryid = subcategories.id
+        left join mediation on offer.offer_id = mediation.offer_id
 ),
 
-offer_types AS (
-    SELECT
-      DISTINCT
-        upper(domain) as offer_type_domain,
-         CAST(type AS STRING) as offer_type_id,
+offer_types as (
+    select distinct
+        UPPER(domain) as offer_type_domain,
+        CAST(type as STRING) as offer_type_id,
         label as offer_type_label
-    FROM {{ source('analytics','offer_types') }} offer
+    from {{ source('analytics','offer_types') }} offer
 ),
 
-offer_sub_types AS (
-    SELECT
-      DISTINCT
-        upper(domain) as offer_type_domain,
-         CAST(type AS STRING) as offer_type_id,
+offer_sub_types as (
+    select distinct
+        UPPER(domain) as offer_type_domain,
+        CAST(type as STRING) as offer_type_id,
         label as offer_type_label,
-        SAFE_CAST(SAFE_CAST(sub_type AS FLOAT64) AS STRING) as offer_sub_type_id,
+        SAFE_CAST(SAFE_CAST(sub_type as FLOAT64) as STRING) as offer_sub_type_id,
         sub_label as offer_sub_type_label
-    FROM {{ source('analytics','offer_types') }} offer
+    from {{ source('analytics','offer_types') }} offer
 ),
 
-offer_metadata_id AS (
-    SELECT
+offer_metadata_id as (
+    select
         enriched_items.*,
-        CASE
-            WHEN enriched_items.offer_type_domain = "MUSIC" AND offer_extracted_data.musicType != '' THEN  offer_extracted_data.musicType
-            WHEN enriched_items.offer_type_domain = "SHOW" AND offer_extracted_data.showType != '' THEN  offer_extracted_data.showType
-        END AS offer_type_id,
-        CASE
-            WHEN enriched_items.offer_type_domain = "MUSIC" AND offer_extracted_data.musicType != '' THEN  offer_extracted_data.musicSubtype
-            WHEN enriched_items.offer_type_domain = "SHOW" AND offer_extracted_data.showType != '' THEN  offer_extracted_data.showSubType
-        END AS offer_sub_type_id,
+        case
+            when enriched_items.offer_type_domain = "MUSIC" and offer_extracted_data.musictype != '' then offer_extracted_data.musictype
+            when enriched_items.offer_type_domain = "SHOW" and offer_extracted_data.showtype != '' then offer_extracted_data.showtype
+        end as offer_type_id,
+        case
+            when enriched_items.offer_type_domain = "MUSIC" and offer_extracted_data.musictype != '' then offer_extracted_data.musicsubtype
+            when enriched_items.offer_type_domain = "SHOW" and offer_extracted_data.showtype != '' then offer_extracted_data.showsubtype
+        end as offer_sub_type_id,
         offer_extracted_data.rayon,
         offer_extracted_data.genres,
         offer_extracted_data.author,
@@ -121,50 +122,49 @@ offer_metadata_id AS (
         gtl.gtl_label_level_2,
         gtl.gtl_label_level_3,
         gtl.gtl_label_level_4
-    FROM enriched_items
-    LEFT JOIN {{ ref('offer_extracted_data') }} as offer_extracted_data ON offer_extracted_data.offer_id = enriched_items.offer_id
-    LEFT JOIN {{ ref('int_applicative__titelive_gtl') }} gtl ON offer_extracted_data.titelive_gtl_id = gtl.gtl_id and gtl.gtl_type = enriched_items.offer_type_domain
+    from enriched_items
+        left join {{ ref('offer_extracted_data') }} as offer_extracted_data on offer_extracted_data.offer_id = enriched_items.offer_id
+        left join {{ ref('int_applicative__titelive_gtl') }} gtl on offer_extracted_data.titelive_gtl_id = gtl.gtl_id and gtl.gtl_type = enriched_items.offer_type_domain
 
 ),
 
 
-offer_metadata AS (
-    SELECT
-        omi.* except(genres, rayon),
-        CASE
-            WHEN omi.offer_type_domain = "MUSIC" THEN offer_types.offer_type_label
-            WHEN omi.offer_type_domain = "SHOW"  THEN offer_types.offer_type_label
-            WHEN omi.offer_type_domain = "MOVIE" THEN REGEXP_EXTRACT_ALL(UPPER(genres), r'[0-9a-zA-Z][^"]+')[safe_offset(0)] -- array of string, take first only
-            WHEN omi.offer_type_domain = "BOOK"  THEN macro_rayons.macro_rayon
-        END AS offer_type_label,
+offer_metadata as (
+    select
+        omi.* except (genres, rayon),
+        case
+            when omi.offer_type_domain = "MUSIC" then offer_types.offer_type_label
+            when omi.offer_type_domain = "SHOW" then offer_types.offer_type_label
+            when omi.offer_type_domain = "MOVIE" then REGEXP_EXTRACT_ALL(UPPER(genres), r'[0-9a-zA-Z][^"]+')[SAFE_OFFSET(0)] -- array of string, take first only
+            when omi.offer_type_domain = "BOOK" then macro_rayons.macro_rayon
+        end as offer_type_label,
 
-        CASE
-            WHEN omi.offer_type_domain = "MUSIC" THEN if(offer_types.offer_type_label is null, NULL, [offer_types.offer_type_label])
-            WHEN omi.offer_type_domain = "SHOW"  THEN if(offer_types.offer_type_label is null, NULL, [offer_types.offer_type_label])
-            WHEN omi.offer_type_domain = "MOVIE" THEN REGEXP_EXTRACT_ALL(UPPER(genres), r'[0-9a-zA-Z][^"]+') -- array of string convert to list
-            WHEN omi.offer_type_domain = "BOOK"  THEN if(macro_rayons.macro_rayon is null, NULL, [macro_rayons.macro_rayon])
-        END AS offer_type_labels,
+        case
+            when omi.offer_type_domain = "MUSIC" then IF(offer_types.offer_type_label is NULL, NULL, [offer_types.offer_type_label])
+            when omi.offer_type_domain = "SHOW" then IF(offer_types.offer_type_label is NULL, NULL, [offer_types.offer_type_label])
+            when omi.offer_type_domain = "MOVIE" then REGEXP_EXTRACT_ALL(UPPER(genres), r'[0-9a-zA-Z][^"]+') -- array of string convert to list
+            when omi.offer_type_domain = "BOOK" then IF(macro_rayons.macro_rayon is NULL, NULL, [macro_rayons.macro_rayon])
+        end as offer_type_labels,
 
-        CASE
-            WHEN omi.offer_type_domain = "MUSIC" THEN offer_sub_types.offer_sub_type_label
-            WHEN omi.offer_type_domain = "SHOW"  THEN offer_sub_types.offer_sub_type_label
-            WHEN omi.offer_type_domain = "MOVIE" THEN NULL -- no sub-genre here
-            WHEN omi.offer_type_domain = "BOOK"  THEN omi.rayon
-        END AS offer_sub_type_label
+        case
+            when omi.offer_type_domain = "MUSIC" then offer_sub_types.offer_sub_type_label
+            when omi.offer_type_domain = "SHOW" then offer_sub_types.offer_sub_type_label
+            when omi.offer_type_domain = "MOVIE" then NULL -- no sub-genre here
+            when omi.offer_type_domain = "BOOK" then omi.rayon
+        end as offer_sub_type_label
 
-    FROM offer_metadata_id omi
+    from offer_metadata_id omi
 
-    LEFT JOIN offer_types
-        ON offer_types.offer_type_domain = omi.offer_type_domain
-        AND  offer_types.offer_type_id = omi.offer_type_id
+        left join offer_types
+            on offer_types.offer_type_domain = omi.offer_type_domain
+                and offer_types.offer_type_id = omi.offer_type_id
 
-    LEFT JOIN offer_sub_types
-        ON offer_sub_types.offer_type_domain = omi.offer_type_domain
-        AND  offer_sub_types.offer_type_id = omi.offer_type_id
-        AND  offer_sub_types.offer_sub_type_id = omi.offer_sub_type_id
-    LEFT JOIN {{ source('raw','macro_rayons') }} ON omi.rayon = macro_rayons.rayon
+        left join offer_sub_types
+            on offer_sub_types.offer_type_domain = omi.offer_type_domain
+                and offer_sub_types.offer_type_id = omi.offer_type_id
+                and offer_sub_types.offer_sub_type_id = omi.offer_sub_type_id
+        left join {{ source('raw','macro_rayons') }} on omi.rayon = macro_rayons.rayon
 )
 
-SELECT
-*
-FROM offer_metadata
+select *
+from offer_metadata

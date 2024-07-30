@@ -7,9 +7,9 @@
     )
 ) }}
 
-SELECT
+select
     e.event_date,
-    CASE WHEN e.event_name = "screen_view" THEN CONCAT(e.event_name, "_", e.firebase_screen ) ELSE e.event_name END AS event_name,
+    case when e.event_name = "screen_view" then CONCAT(e.event_name, "_", e.firebase_screen) else e.event_name end as event_name,
     e.event_timestamp,
     e.user_id,
     e.user_pseudo_id,
@@ -38,49 +38,51 @@ SELECT
     v.venue_name,
     v.venue_type_label,
     c.content_type,
-    d.deposit_type AS user_current_deposit_type,
+    d.deposit_type as user_current_deposit_type,
     u.user_last_deposit_amount,
     u.user_first_deposit_type,
     u.user_deposit_initial_amount
-FROM {{ ref('int_firebase__native_event') }} AS e
-LEFT JOIN {{ ref('enriched_user_data') }} AS u ON e.user_id = u.user_id
-LEFT JOIN {{ ref('mrt_global__offer') }} AS o ON e.offer_id = o.offer_id
-LEFT JOIN {{ ref('mrt_global__venue') }} AS v ON v.venue_id = COALESCE(e.venue_id,o.venue_id)
-LEFT JOIN {{ ref('int_contentful__entry') }} AS c ON c.id = e.module_id
-LEFT JOIN {{ ref('int_applicative__deposit' ) }} AS d ON d.user_id = e.user_id AND e.event_date BETWEEN d.deposit_creation_date AND d.deposit_expiration_date
-WHERE (
-     event_name IN ("ConsultOffer",
-      "BookingConfirmation",
-      "StepperDisplayed",
-      "ModuleDisplayedOnHomePage",
-      "PlaylistHorizontalScroll",
-      "ConsultVenue",
-      "VenuePlaylistDisplayedOnSearchResults",
-      "ClickBookOffer",
-      "BookingConfirmation",
-      "ContinueCGU",
-      "HasAddedOfferToFavorites",
-      "SelectAge",
-      "Share",
-      "CategoryBlockClicked",
-      "HighlightBlockClicked",
-      "ConsultVideo",
-      "HasSeenAllVideo",
-      "Screenshot",
-      "NoSearchResult",
-      "PerformSearch",
-      "ConsultAvailableDates",
-      "BookOfferConfirmDates",
-      "ConsultVenueMap",
-      "TrendsBlockClicked",
-      "SystemBlockDisplayed",
-      "ConsultHome")
-    OR
+from {{ ref('int_firebase__native_event') }} as e
+    left join {{ ref('enriched_user_data') }} as u on e.user_id = u.user_id
+    left join {{ ref('mrt_global__offer') }} as o on e.offer_id = o.offer_id
+    left join {{ ref('mrt_global__venue') }} as v on v.venue_id = COALESCE(e.venue_id, o.venue_id)
+    left join {{ ref('int_contentful__entry') }} as c on c.id = e.module_id
+    left join {{ ref('int_applicative__deposit' ) }} as d on d.user_id = e.user_id and e.event_date between d.deposit_creation_date and d.deposit_expiration_date
+where (
+    event_name in (
+        "ConsultOffer",
+        "BookingConfirmation",
+        "StepperDisplayed",
+        "ModuleDisplayedOnHomePage",
+        "PlaylistHorizontalScroll",
+        "ConsultVenue",
+        "VenuePlaylistDisplayedOnSearchResults",
+        "ClickBookOffer",
+        "BookingConfirmation",
+        "ContinueCGU",
+        "HasAddedOfferToFavorites",
+        "SelectAge",
+        "Share",
+        "CategoryBlockClicked",
+        "HighlightBlockClicked",
+        "ConsultVideo",
+        "HasSeenAllVideo",
+        "Screenshot",
+        "NoSearchResult",
+        "PerformSearch",
+        "ConsultAvailableDates",
+        "BookOfferConfirmDates",
+        "ConsultVenueMap",
+        "TrendsBlockClicked",
+        "SystemBlockDisplayed",
+        "ConsultHome"
+    )
+    or
     (
         e.event_name = "screen_view"
-        AND e.firebase_screen IN  ("SignupForm","ProfilSignUp", "SignupConfirmationEmailSent", "OnboardingWelcome","OnboardingGeolocation", "FirstTutorial","BeneficiaryRequestSent","UnderageAccountCreated","BeneficiaryAccountCreated","FirstTutorial2","FirstTutorial3","FirstTutorial4","HasSkippedTutorial" )
+        and e.firebase_screen in ("SignupForm", "ProfilSignUp", "SignupConfirmationEmailSent", "OnboardingWelcome", "OnboardingGeolocation", "FirstTutorial", "BeneficiaryRequestSent", "UnderageAccountCreated", "BeneficiaryAccountCreated", "FirstTutorial2", "FirstTutorial3", "FirstTutorial4", "HasSkippedTutorial")
     )
 )
 {% if is_incremental() %}
-AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
+    and event_date between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")
 {% endif %}

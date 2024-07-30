@@ -75,7 +75,7 @@ def main(
     # Load preprocessed data
     logger.info("Loading offers to link...")
     df_offers_to_link_clean = pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.{input_dataset_name}{input_table_name}`"
+        f"SELECT * FROM `{gcp_project}.{input_dataset_name}.{input_table_name}`"
     )
     logger.info(f"{len(df_offers_to_link_clean)} items to link")
     ###############

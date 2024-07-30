@@ -1,5 +1,5 @@
 -- temporary fix for CI, query unable to be run as view
-{{ config(materialized='table') }}
+{{ config(materialized='ephemeral' if target.profile_name =='CI' else 'table') }}
 
 with population_dpt as (
   SELECT

@@ -88,6 +88,7 @@ SELECT
     ofr.first_dms_adage_status,
     ofr.is_reference_adage,
     ofr.is_synchro_adage,
+    ofr.total_reimbursement_points,
     CONCAT(
         "https://passculture.pro/structures/",
         ofr.offerer_humanized_id,
@@ -109,6 +110,6 @@ SELECT
             v.total_theoretic_revenue DESC,
             v.total_created_offers DESC,
             v.venue_name ASC
-    ) AS offerer_rank_asc
+    ) AS offerer_rank_asc,
 FROM {{ ref('int_applicative__venue') }} AS v
 LEFT JOIN {{ ref('int_global__offerer') }} AS ofr ON v.venue_managing_offerer_id = ofr.offerer_id

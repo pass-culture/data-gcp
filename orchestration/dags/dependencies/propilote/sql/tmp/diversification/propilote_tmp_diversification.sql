@@ -23,7 +23,7 @@ diversification as (
         ON div.user_id=user.user_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
         on  user.user_department_code = rd.num_dep 
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.mrt_global__deposit` as deposit
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.global_deposit` as deposit
         ON user.user_id = deposit.user_id 
     JOIN `{{ bigquery_analytics_dataset }}.global_booking` as booking
         ON booking.booking_id = div.booking_id

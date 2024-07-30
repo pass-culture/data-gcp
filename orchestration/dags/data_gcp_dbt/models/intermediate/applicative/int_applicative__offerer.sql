@@ -1,5 +1,5 @@
 {% set target_name = target.name %}
-{% set target_schema = generate_schema_name('analytics_' ~ target_name) %}
+{% set target_schema = generate_schema_name("analytics_" ~ target_name) %}
 
 {{ config(
     pre_hook="{{create_humanize_id_function()}}"
@@ -44,9 +44,13 @@ WITH venue_grouped_by_offerer AS (
         MIN(first_collective_bookable_offer_date) AS first_collective_bookable_offer_date,
         MAX(last_collective_bookable_offer_date) AS last_collective_bookable_offer_date,
         COUNT(DISTINCT venue_id) AS total_managed_venues,
-        COUNT(DISTINCT CASE WHEN NOT venue_is_virtual THEN venue_id ELSE NULL END) AS total_physical_managed_venues,
-        COUNT(DISTINCT CASE WHEN venue_is_permanent THEN venue_id ELSE NULL END) AS total_permanent_managed_venues
-    FROM {{ ref('int_applicative__venue') }}
+        COUNT(DISTINCT CASE WHEN NOT venue_is_virtual THEN venue_id END) AS total_physical_managed_venues,
+        COUNT(DISTINCT CASE WHEN venue_is_permanent THEN venue_id END) AS total_permanent_managed_venues,
+        STRING_AGG(DISTINCT CONCAT(" ",CASE WHEN venue_type_label != "Offre numérique" THEN venue_type_label END)) AS all_physical_venues_types,
+        COUNT(CASE WHEN venue_type_label = "Lieu administratif" THEN venue_id ELSE NULL END) AS total_administrative_venues,
+        MAX(CASE WHEN offerer_real_revenue_rank = 1 THEN venue_type_label END) AS top_real_revenue_venue_type,
+        MAX(CASE WHEN offerer_bookings_rank = 1 THEN venue_type_label END) AS top_bookings_venue_type,
+    FROM {{ ref("int_applicative__venue") }}
     GROUP BY venue_managing_offerer_id
 )
 
@@ -63,11 +67,11 @@ SELECT o.offerer_is_active,
     o.offerer_validation_date,
     {{target_schema}}.humanize_id(o.offerer_id) AS offerer_humanized_id,
     CASE
-        WHEN o.offerer_postal_code = '97150' THEN '978'
-        WHEN SUBSTRING(o.offerer_postal_code, 0, 2) = '97' THEN SUBSTRING(o.offerer_postal_code, 0, 3)
-        WHEN SUBSTRING(o.offerer_postal_code, 0, 2) = '98' THEN SUBSTRING(o.offerer_postal_code, 0, 3)
-        WHEN SUBSTRING(o.offerer_postal_code, 0, 3) in ('200', '201', '209', '205') THEN '2A'
-        WHEN SUBSTRING(o.offerer_postal_code, 0, 3) in ('202', '206') THEN '2B'
+        WHEN o.offerer_postal_code = "97150" THEN "978"
+        WHEN SUBSTRING(o.offerer_postal_code, 0, 2) = "97" THEN SUBSTRING(o.offerer_postal_code, 0, 3)
+        WHEN SUBSTRING(o.offerer_postal_code, 0, 2) = "98" THEN SUBSTRING(o.offerer_postal_code, 0, 3)
+        WHEN SUBSTRING(o.offerer_postal_code, 0, 3) in ("200", "201", "209", "205") THEN "2A"
+        WHEN SUBSTRING(o.offerer_postal_code, 0, 3) in ("202", "206") THEN "2B"
     ELSE SUBSTRING(offerer_postal_code, 0, 2)
     END AS offerer_department_code,
     COALESCE(vgo.total_non_cancelled_individual_bookings,0) AS total_non_cancelled_individual_bookings,
@@ -104,10 +108,14 @@ SELECT o.offerer_is_active,
     vgo.last_individual_bookable_offer_date,
     vgo.first_collective_bookable_offer_date,
     vgo.last_collective_bookable_offer_date,
-    COALESCE(vgo.total_venues) AS total_venues,
-    COALESCE(vgo.total_managed_venues) AS total_managed_venues,
-    COALESCE(vgo.total_physical_managed_venues) AS total_physical_managed_venues,
-    COALESCE(vgo.total_permanent_managed_venues) AS total_permanent_managed_venues,
+    vgo.total_venues,
+    vgo.top_real_revenue_venue_type,
+    vgo.top_bookings_venue_type,
+    COALESCE(vgo.total_managed_venues,0) AS total_managed_venues,
+    COALESCE(vgo.total_physical_managed_venues,0) AS total_physical_managed_venues,
+    COALESCE(vgo.total_permanent_managed_venues,0) AS total_permanent_managed_venues,
+    vgo.total_administrative_venues,
+    vgo.all_physical_venues_types,
     CASE WHEN vgo.first_individual_offer_creation_date IS NOT NULL AND vgo.first_collective_offer_creation_date IS NOT NULL THEN LEAST(vgo.first_collective_offer_creation_date,vgo.first_individual_offer_creation_date)
          ELSE COALESCE(vgo.first_individual_offer_creation_date,vgo.first_collective_offer_creation_date) END AS first_offer_creation_date,
     CASE WHEN vgo.last_individual_offer_creation_date IS NOT NULL AND vgo.last_collective_offer_creation_date IS NOT NULL THEN LEAST(vgo.last_collective_offer_creation_date,vgo.last_individual_offer_creation_date)

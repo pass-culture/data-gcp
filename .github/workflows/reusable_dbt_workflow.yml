@@ -1,4 +1,4 @@
-name: "DBT build job"
+name: "DBT building job"
 
 on:
   workflow_call:
@@ -17,16 +17,16 @@ on:
         required: true
       GCP_EHP_SERVICE_ACCOUNT:
         required: true
-          
+
 jobs:
-  dbt-compile:
-    name: "dbt-compile"
+  dbt-build:
+    name: "dbt-build"
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: write
     defaults:
-     run: 
+     run:
        working-directory: "./orchestration/"
     env:
       AIRFLOW_HOME: "./"
@@ -51,8 +51,10 @@ jobs:
         with:
           python-version: '3.10'
       - uses: yezz123/setup-uv@v4
-      - name: "Install Python requirements"
-        run: uv pip install --system -r airflow/orchestration-requirements.txt
+      - name: "Install Python requirements" # TODO: remove --no-build-isolation when packages fixes of logbook are available
+        run: |
+          uv pip install --system setuptools==71.1.0 poetry==1.8.3
+          uv pip install --system  --no-build-isolation -r airflow/orchestration-requirements.txt
       - name: "Authenticate with Google Cloud"
         uses: "google-github-actions/auth@v2"
         with:
@@ -81,7 +83,7 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
-        run: dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" 
+        run: dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Run modified models & 1st order childrens"
         working-directory: .
         env:

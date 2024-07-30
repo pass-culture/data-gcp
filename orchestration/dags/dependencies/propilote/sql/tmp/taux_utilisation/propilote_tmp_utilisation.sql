@@ -14,7 +14,7 @@ infos_users AS (
         , user.user_department_code
         , user.user_region_name
         , rd.academy_name
-    FROM `{{ bigquery_analytics_dataset }}.mrt_global__deposit` as deposit
+    FROM `{{ bigquery_analytics_dataset }}.global_deposit` as deposit
     JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` as user ON deposit.user_id = user.user_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
         on  user.user_department_code = rd.num_dep 

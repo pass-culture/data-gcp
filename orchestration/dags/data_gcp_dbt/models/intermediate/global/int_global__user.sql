@@ -96,7 +96,7 @@ date_of_bookings_on_third_product AS (
 first_paid_booking_type AS (
     SELECT
         user_id,
-        offer_subcategory_id AS first_paid_booking_type,
+        offer_subcategory_id AS first_paid_booking_type
     FROM {{ ref('mrt_global__booking') }}
     WHERE booking_amount > 0
     QUALIFY RANK() over (

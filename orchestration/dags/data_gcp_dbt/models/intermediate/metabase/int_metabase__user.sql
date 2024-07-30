@@ -3,5 +3,5 @@ SELECT
     email,
     date_joined,
     last_login,
-    is_superuser,
+    is_superuser
 FROM {{ source("raw", "metabase_core_user") }}

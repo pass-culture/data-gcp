@@ -19,7 +19,7 @@ SELECT user_id,
     qpv_name,
     code_qpv,
     zrr,
-    date_updated,
+    date_updated
 FROM {{ source("raw", "user_locations") }}
 {% if is_incremental() %}
 WHERE date_updated >= DATE("{{ ds() }}") - 1

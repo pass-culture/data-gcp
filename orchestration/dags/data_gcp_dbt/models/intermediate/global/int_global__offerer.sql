@@ -123,3 +123,4 @@ LEFT JOIN siren_reference_adage ON ofr.offerer_siren = siren_reference_adage.sir
 LEFT JOIN tagged_partners ON ofr.offerer_id = tagged_partners.offerer_id
 LEFT JOIN reimbursement_points AS rp ON rp.offerer_id = ofr.offerer_id
 QUALIFY ROW_NUMBER() OVER (PARTITION BY offerer_siren ORDER BY siren_data.update_date DESC) = 1
+

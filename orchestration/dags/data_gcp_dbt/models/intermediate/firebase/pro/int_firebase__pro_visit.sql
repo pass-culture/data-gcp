@@ -98,7 +98,7 @@ SELECT
     COUNTIF(event_name= "hasClickedHelpCenter") AS total_help_center_clicks,
     COUNTIF(event_name= "hasClickedBestPracticesAndStudies") AS total_best_practices_clicks,
     COUNTIF(event_name= "hasClickedConsultSupport") AS total_consult_support_clicks,
-    COUNTIF(event_name= "hasClickedConsultCGU") AS total_consult_cgu_clicks,
+    COUNTIF(event_name= "hasClickedConsultCGU") AS total_consult_cgu_clicks
 
 FROM filtered_events
 WHERE TRUE

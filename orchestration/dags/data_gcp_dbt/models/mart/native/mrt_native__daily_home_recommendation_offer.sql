@@ -23,7 +23,7 @@ WITH module_context AS (
       parent_entry_id,
       parent_home_type,
       module_type,
-      reco_call_id,
+      reco_call_id
   FROM {{ ref('mrt_native__daily_user_home_module') }}
   {% if is_incremental() %}
     WHERE module_displayed_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
@@ -49,7 +49,7 @@ WITH module_context AS (
         mc.parent_module_type,
         mc.parent_entry_id,
         mc.parent_home_type,
-        mc.module_type,
+        mc.module_type
     FROM {{ ref('int_pcreco__displayed_offer_event') }} doe
     INNER JOIN module_context mc
       ON
@@ -86,8 +86,7 @@ SELECT
   mc.booking_id,
   MAX(mc.consult_offer_timestamp) as consult_offer_timestamp,
   MAX(mc.booking_timestamp) as booking_timestamp,
-  MAX(mc.fav_timestamp) as fav_timestamp,
-
+  MAX(mc.fav_timestamp) as fav_timestamp
 FROM offer_context oc
 LEFT JOIN {{ ref('mrt_native__daily_user_home_module') }} mc
   ON oc.module_displayed_date = mc.module_displayed_date

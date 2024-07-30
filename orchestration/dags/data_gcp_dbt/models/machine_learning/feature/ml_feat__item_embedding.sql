@@ -10,7 +10,7 @@ SELECT
     ie.label_embedding,
     ie.label_hybrid_embedding,
     ie.extraction_date,
-    ie.extraction_datetime,
+    ie.extraction_datetime
 FROM
     {{ source('ml_preproc', 'item_embedding_extraction') }} ie
 INNER JOIN {{ ref("item_metadata") }} im on ie.item_id = im.item_id

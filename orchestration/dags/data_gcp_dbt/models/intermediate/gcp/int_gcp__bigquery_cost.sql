@@ -12,7 +12,7 @@ WITH table_references AS (
   SELECT
     q.project_id,
     q.job_id,
-    STRING_AGG(CONCAT(referenced_table_unn.dataset_id, '.', referenced_table_unn.table_id), "," ORDER BY CONCAT(referenced_table_unn.dataset_id, '.', referenced_table_unn.table_id) ) as referenced_tables,
+    STRING_AGG(CONCAT(referenced_table_unn.dataset_id, '.', referenced_table_unn.table_id), "," ORDER BY CONCAT(referenced_table_unn.dataset_id, '.', referenced_table_unn.table_id) ) as referenced_tables
 
   FROM `{{ target.project }}.{{ var('region_name') }}`.INFORMATION_SCHEMA.JOBS_BY_PROJECT q,
   UNNEST(referenced_tables) AS referenced_table_unn

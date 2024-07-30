@@ -168,7 +168,7 @@ GROUP BY 1)
 SELECT
     CASE WHEN mrt_global__venue.venue_is_permanent THEN CONCAT("venue-",bookable_venue_history.venue_id)
          ELSE CONCAT("offerer-", bookable_venue_history.offerer_id) END AS partner_id,
-    max(partition_date) last_bookable_date,
+    max(partition_date) last_bookable_date
 FROM {{ ref('bookable_venue_history') }} AS bookable_venue_history
 LEFT JOIN {{ ref('mrt_global__venue')}} AS mrt_global__venue on bookable_venue_history.venue_id = mrt_global__venue.venue_id
 WHERE bookable_venue_history.total_bookable_offers <> 0

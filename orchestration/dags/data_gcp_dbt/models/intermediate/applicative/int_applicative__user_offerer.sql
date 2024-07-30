@@ -16,6 +16,6 @@ SELECT
     u.user_phone_validation_status,
     u.user_has_validated_email,
     u.user_has_enabled_marketing_push,
-    u.user_has_enabled_marketing_email,
+    u.user_has_enabled_marketing_email
 FROM {{ source("raw", "applicative_database_user_offerer") }} as uo
 LEFT JOIN {{ source("raw", "applicative_database_user") }}as u on uo.userid = u.user_id

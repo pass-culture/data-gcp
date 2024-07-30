@@ -15,7 +15,7 @@ WITH involved_students AS (
         ey.scholar_year,
         ais.level,
         coalesce(sum(SAFE_CAST(institutions as FLOAT64)), 0) as institutions,
-        coalesce(sum(SAFE_CAST(total_institutions as FLOAT64)), 0) as total_institutions,
+        coalesce(sum(SAFE_CAST(total_institutions as FLOAT64)), 0) as total_institutions
     FROM
         {{ source('clean','adage_involved_student') }} ais
         LEFT JOIN {{ ref('educational_year') }}  ey on SAFE_CAST(ey.adage_id as int) = SAFE_CAST(ais.educational_year_adage_id as int)

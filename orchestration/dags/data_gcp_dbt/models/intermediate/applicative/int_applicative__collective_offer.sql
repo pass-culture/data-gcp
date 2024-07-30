@@ -75,7 +75,7 @@ SELECT
     il.institution_epci,
     il.institution_density_label,
     il.institution_macro_density_label,
-    FALSE AS collective_offer_is_template,
+    FALSE AS collective_offer_is_template
 FROM {{ source('raw','applicative_database_collective_offer') }} AS co
 LEFT JOIN collective_stocks_grouped_by_collective_offers AS cs ON cs.collective_offer_id = co.collective_offer_id
 LEFT JOIN {{ ref('int_applicative__educational_institution') }} AS ei ON ei.educational_institution_id = co.institution_id
@@ -142,6 +142,6 @@ SELECT
     NULL AS institution_epci,
     NULL AS institution_density_label,
     NULL AS institution_macro_density_label,
-    TRUE AS collective_offer_is_template,
+    TRUE AS collective_offer_is_template
 FROM {{ source('raw','applicative_database_collective_offer_template') }}
 )

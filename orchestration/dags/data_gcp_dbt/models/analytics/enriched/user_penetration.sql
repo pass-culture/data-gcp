@@ -1,3 +1,6 @@
+-- temporary fix for CI, query unable to be run as view
+{{ config(tags='failing_ci') }}
+
 with population_dpt as (
   SELECT
       DATE(pop.current_date) active_month,
@@ -18,7 +21,7 @@ with population_dpt as (
     aa.active_month,
     aa.user_department_code as department_code,
     DATE(DATE_TRUNC(ud.user_birth_date , MONTH)) as born_date,
-    COUNT(distinct ud.user_id) as total_users,
+    COUNT(distinct ud.user_id) as total_users
     FROM  {{ ref('aggregated_monthly_user_used_booking_activity') }} aa
     INNER JOIN {{ ref('enriched_user_data') }} ud on ud.user_id = aa.user_id
   GROUP BY 1,2,3

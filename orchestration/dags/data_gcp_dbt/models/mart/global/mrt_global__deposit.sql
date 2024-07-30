@@ -1,18 +1,21 @@
-WITH bookings_grouped_by_deposit AS (
-    SELECT deposit_id,
-        SUM(CASE WHEN booking_is_used THEN booking_amount * booking_quantity END) AS total_actual_amount_spent,
-        SUM(booking_amount * booking_quantity) AS total_theoretical_amount_spent,
-        SUM(CASE WHEN digital_goods AND offer_url IS NOT NULL
-            THEN booking_amount * booking_quantity END) AS total_theoretical_amount_spent_in_digital_goods,
-        MIN(booking_creation_date) AS first_individual_booking_date,
-        MAX(booking_creation_date) AS last_individual_booking_date,
-        COUNT(DISTINCT booking_id) AS total_non_cancelled_individual_bookings
-    FROM {{ ref('mrt_global__booking') }}
-    WHERE NOT booking_is_cancelled
-    GROUP BY deposit_id
+with bookings_grouped_by_deposit as (
+    select
+        deposit_id,
+        SUM(case when booking_is_used then booking_amount * booking_quantity end) as total_actual_amount_spent,
+        SUM(booking_amount * booking_quantity) as total_theoretical_amount_spent,
+        SUM(case
+            when digital_goods and offer_url is not NULL
+                then booking_amount * booking_quantity
+        end) as total_theoretical_amount_spent_in_digital_goods,
+        MIN(booking_creation_date) as first_individual_booking_date,
+        MAX(booking_creation_date) as last_individual_booking_date,
+        COUNT(distinct booking_id) as total_non_cancelled_individual_bookings
+    from {{ ref('mrt_global__booking') }}
+    where not booking_is_cancelled
+    group by deposit_id
 )
 
-SELECT
+select
     d.deposit_id,
     d.deposit_amount,
     d.user_id,
@@ -42,21 +45,21 @@ SELECT
     bgd.last_individual_booking_date,
     DATE_DIFF(
         CURRENT_DATE(),
-        CAST(d.deposit_creation_date AS DATE),
-        DAY
-    ) AS deposit_seniority,
+        CAST(d.deposit_creation_date as DATE),
+        day
+    ) as deposit_seniority,
     DATE_DIFF(
-        CAST(d.deposit_creation_date AS DATE),
-        CAST(u.user_creation_date AS DATE),
-        DAY
-    ) AS days_between_user_creation_and_deposit_creation,
+        CAST(d.deposit_creation_date as DATE),
+        CAST(u.user_creation_date as DATE),
+        day
+    ) as days_between_user_creation_and_deposit_creation,
     u.user_birth_date
-FROM {{ ref('int_applicative__deposit') }} AS d
-LEFT JOIN bookings_grouped_by_deposit AS bgd ON bgd.deposit_id = d.deposit_id
-INNER JOIN {{ ref('int_applicative__user') }} AS u ON u.user_id = d.user_id
-LEFT JOIN {{ ref('int_applicative__action_history') }} AS ah ON ah.user_id = d.user_id AND ah.action_history_rk = 1
-WHERE
+from {{ ref('int_applicative__deposit') }} as d
+    left join bookings_grouped_by_deposit as bgd on bgd.deposit_id = d.deposit_id
+    inner join {{ ref('int_applicative__user') }} as u on u.user_id = d.user_id
+    left join {{ ref('int_applicative__action_history') }} as ah on ah.user_id = d.user_id and ah.action_history_rk = 1
+where
     (
         u.user_is_active
-        OR ah.action_history_reason = 'upon user request'
+        or ah.action_history_reason = 'upon user request'
     )

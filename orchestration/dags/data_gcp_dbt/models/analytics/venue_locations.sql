@@ -1,70 +1,73 @@
-with venue_epci AS (
-    SELECT
+with venue_epci as (
+    select
         venue_id,
         epci_code,
         epci_name
-    FROM
+    from
         {{ ref('venue') }} venue
-        JOIN (
-            SELECT
+        join (
+            select
                 epci.epci_code,
                 epci.epci_name,
                 geo_shape
-            FROM
+            from
                 {{ source('analytics','epci') }} epci
         ) c on ST_CONTAINS(
             c.geo_shape,
             ST_GEOGPOINT(venue.venue_longitude, venue.venue_latitude)
         )
 ),
-venue_qpv AS (
-    SELECT
+
+venue_qpv as (
+    select
         venue_id,
         code_qpv,
         qpv_name,
         qpv_communes
-    FROM
+    from
         {{ ref('venue') }} venue
-        JOIN (
-            SELECT
+        join (
+            select
                 code_quartier as code_qpv,
                 noms_des_communes_concernees as qpv_name,
                 commune_qp as qpv_communes,
                 geoshape
-            FROM
+            from
                 {{ source('analytics','QPV') }}
-        ) b ON ST_CONTAINS(
+        ) b on ST_CONTAINS(
             b.geoshape,
             ST_GEOGPOINT(venue.venue_longitude, venue.venue_latitude)
         )
 ),
-venue_zrr AS (
-    SELECT
+
+venue_zrr as (
+    select
         venue_id,
-        CODGEO,
-        LIBGEO,
-        ZRR_SIMP,
-        ZONAGE_ZRR,
-        Code_Postal,
+        codgeo,
+        libgeo,
+        zrr_simp,
+        zonage_zrr,
+        code_postal,
         geo_shape_insee
-    FROM
+    from
         {{ ref('venue') }} venue
-        JOIN (
-            SELECT
-                ZRR.CODGEO,
-                ZRR.LIBGEO,
-                ZRR.ZRR_SIMP,
-                ZRR.ZONAGE_ZRR,
-                ZRR.Code_Postal,
-                ZRR.geo_shape_insee
-            FROM
-                {{ source('analytics','ZRR') }} ZRR
+        join (
+            select
+                zrr.codgeo,
+                zrr.libgeo,
+                zrr.zrr_simp,
+                zrr.zonage_zrr,
+                zrr.code_postal,
+                zrr.geo_shape_insee
+            from
+                {{ source('analytics','ZRR') }} zrr
         ) d on ST_CONTAINS(
             d.geo_shape_insee,
             ST_GEOGPOINT(venue.venue_longitude, venue.venue_latitude)
         )
 )
-SELECT
+
+select
     venue.venue_id,
     venue.venue_city,
     venue.venue_postal_code,
@@ -76,15 +79,15 @@ SELECT
     venue_qpv.code_qpv,
     venue_qpv.qpv_name,
     venue_qpv.qpv_communes,
-    venue_zrr.CODGEO,
-    venue_zrr.LIBGEO,
-    venue_zrr.ZRR_SIMP,
-    venue_zrr.ZONAGE_ZRR,
-    venue_zrr.Code_Postal
-FROM
+    venue_zrr.codgeo,
+    venue_zrr.libgeo,
+    venue_zrr.zrr_simp,
+    venue_zrr.zonage_zrr,
+    venue_zrr.code_postal
+from
     {{ ref('venue') }} venue
-    LEFT JOIN venue_epci ON venue.venue_id = venue_epci.venue_id
-    LEFT JOIN venue_qpv ON venue.venue_id = venue_qpv.venue_id
-    LEFT JOIN venue_zrr ON venue.venue_id = venue_zrr.venue_id
-WHERE
+    left join venue_epci on venue.venue_id = venue_epci.venue_id
+    left join venue_qpv on venue.venue_id = venue_qpv.venue_id
+    left join venue_zrr on venue.venue_id = venue_zrr.venue_id
+where
     venue.venue_is_virtual is false

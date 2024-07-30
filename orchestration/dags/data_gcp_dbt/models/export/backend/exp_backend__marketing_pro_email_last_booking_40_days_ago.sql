@@ -7,10 +7,11 @@
     )
 ) }}
 
-SELECT
-     DATE('{{ ds() }}') as execution_date
-    ,venue_id
-    ,venue_booking_email
-FROM  {{ ref('mrt_global__venue') }}
-WHERE venue_is_permanent
-AND DATE_DIFF(current_date, last_booking_date, DAY) = 40
+select
+    DATE('{{ ds() }}') as execution_date,
+    venue_id,
+    venue_booking_email
+from {{ ref('mrt_global__venue') }}
+where
+    venue_is_permanent
+    and DATE_DIFF(CURRENT_DATE, last_booking_date, day) = 40

@@ -1,7 +1,7 @@
-WITH metabase_query AS (
-    SELECT 
+with metabase_query as (
+    select
         mqe.execution_date,
-        TO_HEX(`hash`) as metabase_hash, 
+        TO_HEX(`hash`) as metabase_hash,
         dashboard_id,
         mqe.card_id,
         mqe.execution_id,
@@ -9,10 +9,11 @@ WITH metabase_query AS (
         mqe.cache_hit,
         mqe.error,
         mqe.context,
-        sum(mqe.running_time) as running_time,
-        sum(mqe.result_rows) as result_rows
-    FROM {{ source("raw", "metabase_query_execution") }}  mqe
-    GROUP BY execution_date,
+        SUM(mqe.running_time) as running_time,
+        SUM(mqe.result_rows) as result_rows
+    from {{ source("raw", "metabase_query_execution") }} mqe
+    group by
+        execution_date,
         metabase_hash,
         dashboard_id,
         card_id,
@@ -21,16 +22,16 @@ WITH metabase_query AS (
         cache_hit,
         error,
         context
-) 
+)
 
-SELECT
+select
     mqe.*,
     mrc.card_name,
-    mrc.created_at AS card_creation_date,
-    mrc.updated_at AS card_update_date,
+    mrc.created_at as card_creation_date,
+    mrc.updated_at as card_update_date,
     mrc.card_collection_id as card_collection_id,
     mrd.dashboard_name,
-    row_number() over(partition by card_id order by execution_date desc) as card_id_execution_rank
-FROM metabase_query AS mqe
-INNER JOIN  {{ source("raw", "metabase_report_card") }} AS mrc ON mqe.card_id = mrc.id
-LEFT JOIN {{ source("raw", "metabase_report_dashboard") }} AS mrd  ON mqe.dashboard_id = mrd.id
+    ROW_NUMBER() over (partition by card_id order by execution_date desc) as card_id_execution_rank
+from metabase_query as mqe
+    inner join {{ source("raw", "metabase_report_card") }} as mrc on mqe.card_id = mrc.id
+    left join {{ source("raw", "metabase_report_dashboard") }} as mrd on mqe.dashboard_id = mrd.id

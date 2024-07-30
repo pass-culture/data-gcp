@@ -1,61 +1,64 @@
-WITH qpv AS (
-  SELECT
-    code_quartier AS code_qpv,
-    noms_des_communes_concernees AS qpv_name,
-    commune_qp AS qpv_communes,
-    geoshape
-  FROM
-    {{ source('analytics', 'QPV') }}
-  WHERE geoshape IS NOT NULL
+with qpv as (
+    select
+        code_quartier as code_qpv,
+        noms_des_communes_concernees as qpv_name,
+        commune_qp as qpv_communes,
+        geoshape
+    from
+        {{ source('analytics', 'QPV') }}
+    where geoshape is not NULL
 ),
-institutions AS (
-  SELECT
-    id_etablissement AS institution_id,
-    nom_etablissement AS institution_name,
-    code_postal AS institution_postal_code,
-    code_departement AS institution_department_code,
-    CAST(latitude AS float64) AS institution_latitude,
-    CAST(longitude AS float64) AS institution_longitude
-  FROM
-    {{ source('analytics', 'eple') }}
+
+institutions as (
+    select
+        id_etablissement as institution_id,
+        nom_etablissement as institution_name,
+        code_postal as institution_postal_code,
+        code_departement as institution_department_code,
+        CAST(latitude as float64) as institution_latitude,
+        CAST(longitude as float64) as institution_longitude
+    from
+        {{ source('analytics', 'eple') }}
 ),
-institutions_qpv AS (
-  SELECT
-    institution_id,
-    institution_name,
-    institution_postal_code,
-    institution_department_code,
-    institution_latitude,
-    institution_longitude,
-    code_qpv AS institution_qpv_code,
-    qpv_name AS institution_qpv_name,
-    CASE
-      WHEN code_qpv IS NULL AND institution_latitude IS NULL AND institution_longitude IS NULL THEN NULL
-      ELSE
-        CASE
-          WHEN code_qpv IS NOT NULL THEN 1
-          ELSE 0
-        END
-    END AS institution_in_qpv
-  FROM institutions
-  LEFT JOIN qpv
-  ON ST_CONTAINS(
-    qpv.geoshape,
-    ST_GEOGPOINT(institution_longitude, institution_latitude)
-  )
+
+institutions_qpv as (
+    select
+        institution_id,
+        institution_name,
+        institution_postal_code,
+        institution_department_code,
+        institution_latitude,
+        institution_longitude,
+        code_qpv as institution_qpv_code,
+        qpv_name as institution_qpv_name,
+        case
+            when code_qpv is NULL and institution_latitude is NULL and institution_longitude is NULL then NULL
+            else
+                case
+                    when code_qpv is not NULL then 1
+                    else 0
+                end
+        end as institution_in_qpv
+    from institutions
+        left join qpv
+            on ST_CONTAINS(
+                qpv.geoshape,
+                ST_GEOGPOINT(institution_longitude, institution_latitude)
+            )
 )
-SELECT
-  iq.*,
-  gi.city_label AS institution_city,
-  gi.region_name AS institution_region_name,
-  gi.epci_label AS institution_epci,
-  gi.academy_name AS institution_academy_name,
-  gi.density_label AS institution_density_label,
-  gi.density_macro_level AS institution_macro_density_label, 
-  iris_internal_id AS institution_internal_iris_id
-FROM institutions_qpv AS iq
-LEFT JOIN {{ source('clean', 'geo_iris') }} AS gi
-ON ST_CONTAINS(
-  gi.iris_shape,
-  ST_GEOGPOINT(iq.institution_longitude, iq.institution_latitude)
-)
+
+select
+    iq.*,
+    gi.city_label as institution_city,
+    gi.region_name as institution_region_name,
+    gi.epci_label as institution_epci,
+    gi.academy_name as institution_academy_name,
+    gi.density_label as institution_density_label,
+    gi.density_macro_level as institution_macro_density_label,
+    iris_internal_id as institution_internal_iris_id
+from institutions_qpv as iq
+    left join {{ source('clean', 'geo_iris') }} as gi
+        on ST_CONTAINS(
+            gi.iris_shape,
+            ST_GEOGPOINT(iq.institution_longitude, iq.institution_latitude)
+        )

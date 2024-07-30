@@ -1,4 +1,4 @@
-SELECT
+select
     b.booking_id,
     b.booking_creation_date,
     b.booking_created_at,
@@ -58,27 +58,28 @@ SELECT
     u.user_is_unemployed,
     u.user_is_priority_public,
     s.item_id,
-    RANK() OVER (
-        PARTITION BY b.user_id,
-        s.offer_subcategory_id
-        ORDER BY
+    RANK() over (
+        partition by
+            b.user_id,
+            s.offer_subcategory_id
+        order by
             b.booking_created_at
-    ) AS same_category_booking_rank,
-    RANK() OVER (
-            PARTITION BY b.user_id
-            ORDER BY
-                booking_creation_date ASC
-        ) AS user_booking_rank,
+    ) as same_category_booking_rank,
+    RANK() over (
+        partition by b.user_id
+        order by
+            booking_creation_date asc
+    ) as user_booking_rank,
 
     RANK() over (
-            PARTITION by b.user_id
-            order by
-                booking_creation_date,
-                booking_id ASC
-        ) AS user_booking_id_rank,
+        partition by b.user_id
+        order by
+            booking_creation_date,
+            booking_id asc
+    ) as user_booking_id_rank,
     u.user_iris_internal_id,
     s.venue_iris_internal_id,
     s.offer_url
-FROM {{ ref('int_applicative__booking') }} AS b
-LEFT JOIN {{ ref('int_global__stock') }} AS s ON s.stock_id = b.stock_id
-LEFT JOIN {{ ref('mrt_global__user') }} AS u ON u.user_id = b.user_id
+from {{ ref('int_applicative__booking') }} as b
+    left join {{ ref('int_global__stock') }} as s on s.stock_id = b.stock_id
+    left join {{ ref('mrt_global__user') }} as u on u.user_id = b.user_id

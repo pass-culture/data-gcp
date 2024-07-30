@@ -7,23 +7,25 @@
     )
 ) }}
 
-SELECT
-    unique_session_id
-    , user_id
-    , event_timestamp
-    , event_date
-    , app_version
-    , event_name
-    , module_id
-    , video_id
-    , entry_id
-    , ne.offer_id
-    , COALESCE(CAST(video_seen_duration_seconds AS FLOAT64),0) total_video_seen_duration_seconds
-    , COALESCE(CAST(video_duration_seconds AS FLOAT64),0) video_duration_seconds
-FROM {{ ref('int_firebase__native_event') }} ne
-INNER JOIN {{ ref('int_contentful__entry' ) }}  ce ON ne.module_id = ce.id
-                                            AND ce.content_type IN ('video','videoCarousel', 'videoCarouselItem')
-WHERE event_name IN ('ConsultVideo','HasSeenAllVideo', 'HasDismissedModal', 'VideoPaused', 'ModuleDisplayedOnHomePage', 'ConsultOffer','ConsultHome')
+select
+    unique_session_id,
+    user_id,
+    event_timestamp,
+    event_date,
+    app_version,
+    event_name,
+    module_id,
+    video_id,
+    entry_id,
+    ne.offer_id,
+    COALESCE(CAST(video_seen_duration_seconds as FLOAT64), 0) total_video_seen_duration_seconds,
+    COALESCE(CAST(video_duration_seconds as FLOAT64), 0) video_duration_seconds
+from {{ ref('int_firebase__native_event') }} ne
+    inner join {{ ref('int_contentful__entry' ) }}
+        ce on ne.module_id = ce.id
+    and ce.content_type in ('video', 'videoCarousel', 'videoCarouselItem')
+where
+    event_name in ('ConsultVideo', 'HasSeenAllVideo', 'HasDismissedModal', 'VideoPaused', 'ModuleDisplayedOnHomePage', 'ConsultOffer', 'ConsultHome')
     {% if is_incremental() %}
-    AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
+        and event_date between DATE_SUB(DATE("{{ ds() }}"), interval 1 day) and DATE("{{ ds() }}")
     {% endif %}

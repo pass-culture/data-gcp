@@ -1,314 +1,327 @@
-
 {% set target_name = target.name %}
 {% set target_schema = generate_schema_name('analytics_' ~ target_name) %}
 
-WITH offerer_humanized_id AS (
-    SELECT
+with offerer_humanized_id as (
+    select
         offerer_id,
-         {{ target_schema }}.humanize_id(offerer_id) AS humanized_id
-    FROM
+        {{ target_schema }}.humanize_id(offerer_id) as humanized_id
+    from
         {{ source('raw', 'applicative_database_offerer') }}
-    WHERE
+    where
         offerer_id is not NULL
 ),
 
-individual_bookings_per_offerer AS (
-    SELECT
-        venue.venue_managing_offerer_id AS offerer_id,
-        count(booking.booking_id) AS total_individual_bookings
-        ,COUNT(CASE WHEN NOT booking.booking_is_cancelled THEN booking.booking_id ELSE NULL END) AS non_cancelled_individual_bookings
-        ,COUNT(CASE WHEN  booking.booking_is_used THEN booking.booking_id ELSE NULL END) AS used_individual_bookings
-        ,COALESCE(SUM(CASE WHEN NOT booking.booking_is_cancelled THEN booking.booking_intermediary_amount ELSE NULL END),0) AS individual_theoretic_revenue
-        ,COALESCE(SUM(CASE WHEN booking.booking_is_used THEN booking.booking_intermediary_amount ELSE NULL END),0) AS individual_real_revenue
-        ,COALESCE(SUM(CASE WHEN booking.booking_is_used AND EXTRACT(YEAR FROM booking.booking_creation_date) = EXTRACT(YEAR FROM current_date) THEN booking.booking_intermediary_amount ELSE NULL END),0) AS individual_current_year_real_revenue
-        ,MIN(booking.booking_creation_date) AS first_individual_booking_date
-        ,MAX(booking.booking_creation_date) AS last_individual_booking_date
-    FROM
-        {{ ref('venue') }} AS venue
-        LEFT JOIN {{ ref('offer') }} AS offer ON venue.venue_id = offer.venue_id
-        LEFT JOIN {{ source('raw', 'applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
-        LEFT JOIN {{ ref('booking') }} AS booking ON stock.stock_id = booking.stock_id
-    GROUP BY
+individual_bookings_per_offerer as (
+    select
+        venue.venue_managing_offerer_id as offerer_id,
+        count(booking.booking_id) as total_individual_bookings,
+        count(case when not booking.booking_is_cancelled then booking.booking_id else NULL end) as non_cancelled_individual_bookings,
+        count(case when booking.booking_is_used then booking.booking_id else NULL end) as used_individual_bookings,
+        coalesce(sum(case when not booking.booking_is_cancelled then booking.booking_intermediary_amount else NULL end), 0) as individual_theoretic_revenue,
+        coalesce(sum(case when booking.booking_is_used then booking.booking_intermediary_amount else NULL end), 0) as individual_real_revenue,
+        coalesce(sum(case when booking.booking_is_used and extract(year from booking.booking_creation_date) = extract(year from current_date) then booking.booking_intermediary_amount else NULL end), 0) as individual_current_year_real_revenue,
+        min(booking.booking_creation_date) as first_individual_booking_date,
+        max(booking.booking_creation_date) as last_individual_booking_date
+    from
+        {{ ref('venue') }} as venue
+        left join {{ ref('offer') }} as offer on venue.venue_id = offer.venue_id
+        left join {{ source('raw', 'applicative_database_stock') }} as stock on stock.offer_id = offer.offer_id
+        left join {{ ref('booking') }} as booking on stock.stock_id = booking.stock_id
+    group by
         venue.venue_managing_offerer_id
 ),
 
-collective_bookings_per_offerer AS (
-    SELECT
-        collective_booking.offerer_id
-        ,COUNT(collective_booking.collective_booking_id) AS total_collective_bookings
-         ,COUNT(CASE WHEN collective_booking_status NOT IN ('CANCELLED')THEN collective_booking.collective_booking_id ELSE NULL END) AS non_cancelled_collective_bookings
-        ,COUNT(CASE WHEN collective_booking_status IN ('USED','REIMBURSED')THEN collective_booking.collective_booking_id ELSE NULL END) AS used_collective_bookings
-        ,COALESCE(SUM(CASE WHEN collective_booking_status NOT IN ('CANCELLED')THEN collective_stock.collective_stock_price ELSE NULL END),0) AS collective_theoretic_revenue
-        ,COALESCE(SUM(CASE WHEN collective_booking_status IN ('USED','REIMBURSED') THEN collective_stock.collective_stock_price ELSE NULL END),0) AS collective_real_revenue
-        ,COALESCE(SUM(CASE WHEN collective_booking_status IN ('USED','REIMBURSED') AND EXTRACT(YEAR FROM collective_booking.collective_booking_creation_date) = EXTRACT(YEAR FROM current_date) THEN collective_stock.collective_stock_price ELSE NULL END),0) AS collective_current_year_real_revenue
-        ,MIN(collective_booking.collective_booking_creation_date) AS first_collective_booking_date
-        ,MAX(collective_booking.collective_booking_creation_date) AS last_collective_booking_date
-    FROM
-        {{ source('raw', 'applicative_database_collective_booking') }} AS collective_booking
-    INNER JOIN {{ source('raw', 'applicative_database_collective_stock') }} AS collective_stock ON collective_stock.collective_stock_id = collective_booking.collective_stock_id
-    GROUP BY
+collective_bookings_per_offerer as (
+    select
+        collective_booking.offerer_id,
+        count(collective_booking.collective_booking_id) as total_collective_bookings,
+        count(case when collective_booking_status not in ('CANCELLED') then collective_booking.collective_booking_id else NULL end) as non_cancelled_collective_bookings,
+        count(case when collective_booking_status in ('USED', 'REIMBURSED') then collective_booking.collective_booking_id else NULL end) as used_collective_bookings,
+        coalesce(sum(case when collective_booking_status not in ('CANCELLED') then collective_stock.collective_stock_price else NULL end), 0) as collective_theoretic_revenue,
+        coalesce(sum(case when collective_booking_status in ('USED', 'REIMBURSED') then collective_stock.collective_stock_price else NULL end), 0) as collective_real_revenue,
+        coalesce(sum(case when collective_booking_status in ('USED', 'REIMBURSED') and extract(year from collective_booking.collective_booking_creation_date) = extract(year from current_date) then collective_stock.collective_stock_price else NULL end), 0) as collective_current_year_real_revenue,
+        min(collective_booking.collective_booking_creation_date) as first_collective_booking_date,
+        max(collective_booking.collective_booking_creation_date) as last_collective_booking_date
+    from
+        {{ source('raw', 'applicative_database_collective_booking') }} as collective_booking
+        inner join {{ source('raw', 'applicative_database_collective_stock') }} as collective_stock on collective_stock.collective_stock_id = collective_booking.collective_stock_id
+    group by
         collective_booking.offerer_id
 ),
 
-individual_offers_per_offerer AS (
-    SELECT
-        venue.venue_managing_offerer_id AS offerer_id,
-        MIN(offer.offer_creation_date) AS first_individual_offer_creation_date,
-        MAX(offer.offer_creation_date) AS last_individual_offer_creation_date,
-        COUNT(offer.offer_id) AS individual_offers_created
-    FROM
-        {{ ref('venue') }} AS venue
-        LEFT JOIN {{ ref('offer') }} AS offer ON venue.venue_id = offer.venue_id AND offer.offer_validation = 'APPROVED'
-    GROUP BY
+individual_offers_per_offerer as (
+    select
+        venue.venue_managing_offerer_id as offerer_id,
+        min(offer.offer_creation_date) as first_individual_offer_creation_date,
+        max(offer.offer_creation_date) as last_individual_offer_creation_date,
+        count(offer.offer_id) as individual_offers_created
+    from
+        {{ ref('venue') }} as venue
+        left join {{ ref('offer') }} as offer on venue.venue_id = offer.venue_id and offer.offer_validation = 'APPROVED'
+    group by
         venue.venue_managing_offerer_id
 ),
 
-all_collective_offers AS (
-    SELECT
+all_collective_offers as (
+    select
         collective_offer_id,
         venue.venue_id,
-        venue.venue_managing_offerer_id AS offerer_id,
+        venue.venue_managing_offerer_id as offerer_id,
         collective_offer_creation_date
-    FROM
-        {{ source('raw', 'applicative_database_collective_offer') }} AS collective_offer
-     JOIN {{ ref('venue') }} AS venue ON venue.venue_id = collective_offer.venue_id AND collective_offer.collective_offer_validation = 'APPROVED'
-    UNION
-    ALL
-    SELECT
+    from
+        {{ source('raw', 'applicative_database_collective_offer') }} as collective_offer
+        join {{ ref('venue') }} as venue on venue.venue_id = collective_offer.venue_id and collective_offer.collective_offer_validation = 'APPROVED'
+    union
+    all
+    select
         collective_offer_id,
         venue.venue_id,
-        venue.venue_managing_offerer_id AS offerer_id,
+        venue.venue_managing_offerer_id as offerer_id,
         collective_offer_creation_date
-    FROM
-        {{ source('raw', 'applicative_database_collective_offer_template') }} AS collective_offer_template
-     JOIN {{ ref('venue') }} AS venue ON venue.venue_id = collective_offer_template.venue_id AND collective_offer_template.collective_offer_validation = 'APPROVED'
+    from
+        {{ source('raw', 'applicative_database_collective_offer_template') }} as collective_offer_template
+        join {{ ref('venue') }} as venue on venue.venue_id = collective_offer_template.venue_id and collective_offer_template.collective_offer_validation = 'APPROVED'
 
 ),
 
-collective_offers_per_offerer AS (
-    SELECT
+collective_offers_per_offerer as (
+    select
         offerer_id,
-        count(collective_offer_id) AS collective_offers_created,
-        MIN(collective_offer_creation_date) AS first_collective_offer_creation_date,
-        MAX(collective_offer_creation_date) AS last_collective_offer_creation_date
-    FROM
+        count(collective_offer_id) as collective_offers_created,
+        min(collective_offer_creation_date) as first_collective_offer_creation_date,
+        max(collective_offer_creation_date) as last_collective_offer_creation_date
+    from
         all_collective_offers
-    GROUP BY
+    group by
         offerer_id
 ),
 
-bookable_individual_offer_cnt AS (
-    SELECT
+bookable_individual_offer_cnt as (
+    select
         offerer_id,
-        COUNT(DISTINCT offer_id) AS offerer_bookable_individual_offer_cnt
-    FROM
+        count(distinct offer_id) as offerer_bookable_individual_offer_cnt
+    from
         {{ ref('bookable_offer') }}
-    GROUP BY
+    group by
         1
- ),
-
- bookable_collective_offer_cnt AS (
-    SELECT
-        offerer_id,
-        COUNT(DISTINCT collective_offer_id) AS offerer_bookable_collective_offer_cnt
-    FROM
-        {{ ref('bookable_collective_offer') }}
-    GROUP BY
-        1
- ),
-
- bookable_offer_history AS (
- SELECT
-    offerer_id
-    , MIN(partition_date) AS offerer_first_bookable_offer_date
-    , MAX(partition_date) AS offerer_last_bookable_offer_date
-    , MIN(CASE WHEN individual_bookable_offers>0 THEN partition_date ELSE NULL END) AS offerer_first_individual_bookable_offer_date
-    , MAX(CASE WHEN individual_bookable_offers>0 THEN partition_date ELSE NULL END) AS offerer_last_individual_bookable_offer_date
-    , MIN(CASE WHEN collective_bookable_offers>0 THEN partition_date ELSE NULL END) AS offerer_first_collective_bookable_offer_date
-    , MAX(CASE WHEN collective_bookable_offers>0 THEN partition_date ELSE NULL END) AS offerer_last_collective_bookable_offer_date
-FROM {{ ref('bookable_venue_history') }}
-GROUP BY 1
 ),
 
-related_stocks AS (
-    SELECT
+bookable_collective_offer_cnt as (
+    select
+        offerer_id,
+        count(distinct collective_offer_id) as offerer_bookable_collective_offer_cnt
+    from
+        {{ ref('bookable_collective_offer') }}
+    group by
+        1
+),
+
+bookable_offer_history as (
+    select
+        offerer_id,
+        min(partition_date) as offerer_first_bookable_offer_date,
+        max(partition_date) as offerer_last_bookable_offer_date,
+        min(case when individual_bookable_offers > 0 then partition_date else NULL end) as offerer_first_individual_bookable_offer_date,
+        max(case when individual_bookable_offers > 0 then partition_date else NULL end) as offerer_last_individual_bookable_offer_date,
+        min(case when collective_bookable_offers > 0 then partition_date else NULL end) as offerer_first_collective_bookable_offer_date,
+        max(case when collective_bookable_offers > 0 then partition_date else NULL end) as offerer_last_collective_bookable_offer_date
+    from {{ ref('bookable_venue_history') }}
+    group by 1
+),
+
+related_stocks as (
+    select
         offerer.offerer_id,
-        MIN(stock.stock_creation_date) AS first_stock_creation_date
-    FROM
-        {{ source('raw', 'applicative_database_offerer') }} AS offerer
-        LEFT JOIN {{ ref('venue') }} AS venue ON venue.venue_managing_offerer_id = offerer.offerer_id
-        LEFT JOIN {{ ref('offer') }} AS offer ON offer.venue_id = venue.venue_id
-        LEFT JOIN {{ source('raw', 'applicative_database_stock') }} AS stock ON stock.offer_id = offer.offer_id
-    GROUP BY
+        min(stock.stock_creation_date) as first_stock_creation_date
+    from
+        {{ source('raw', 'applicative_database_offerer') }} as offerer
+        left join {{ ref('venue') }} as venue on venue.venue_managing_offerer_id = offerer.offerer_id
+        left join {{ ref('offer') }} as offer on offer.venue_id = venue.venue_id
+        left join {{ source('raw', 'applicative_database_stock') }} as stock on stock.offer_id = offer.offer_id
+    group by
         offerer_id
 ),
 
-offerer_department_code AS (
-    SELECT
+offerer_department_code as (
+    select
         offerer.offerer_id,
-        CASE
-            WHEN offerer_postal_code = '97150' THEN '978'
-            WHEN SUBSTRING(offerer_postal_code, 0, 2) = '97' THEN SUBSTRING(offerer_postal_code, 0, 3)
-            WHEN SUBSTRING(offerer_postal_code, 0, 2) = '98' THEN SUBSTRING(offerer_postal_code, 0, 3)
-            WHEN SUBSTRING(offerer_postal_code, 0, 3) in ('200', '201', '209', '205') THEN '2A'
-            WHEN SUBSTRING(offerer_postal_code, 0, 3) in ('202', '206') THEN '2B'
-        ELSE SUBSTRING(offerer_postal_code, 0, 2)
-        END AS offerer_department_code
-    FROM
-        {{ source('raw', 'applicative_database_offerer') }} AS offerer
-    WHERE
+        case
+            when offerer_postal_code = '97150' then '978'
+            when substring(offerer_postal_code, 0, 2) = '97' then substring(offerer_postal_code, 0, 3)
+            when substring(offerer_postal_code, 0, 2) = '98' then substring(offerer_postal_code, 0, 3)
+            when substring(offerer_postal_code, 0, 3) in ('200', '201', '209', '205') then '2A'
+            when substring(offerer_postal_code, 0, 3) in ('202', '206') then '2B'
+            else substring(offerer_postal_code, 0, 2)
+        end as offerer_department_code
+    from
+        {{ source('raw', 'applicative_database_offerer') }} as offerer
+    where
         "offerer_postal_code" is not NULL
 ),
 
-related_venues AS (
-    SELECT
-        offerer.offerer_id
-        ,COUNT(DISTINCT venue_id) AS total_venues_managed
-        ,COALESCE(COUNT(DISTINCT CASE WHEN NOT venue_is_virtual THEN venue_id ELSE NULL END),0) AS physical_venues_managed
-        ,COALESCE(COUNT(DISTINCT CASE WHEN venue_is_permanent THEN venue_id ELSE NULL END),0) AS permanent_venues_managed
-    FROM
-        {{ source('raw', 'applicative_database_offerer') }} AS offerer
-        LEFT JOIN {{ ref('venue') }} AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id
-    GROUP BY
+related_venues as (
+    select
+        offerer.offerer_id,
+        count(distinct venue_id) as total_venues_managed,
+        coalesce(count(distinct case when not venue_is_virtual then venue_id else NULL end), 0) as physical_venues_managed,
+        coalesce(count(distinct case when venue_is_permanent then venue_id else NULL end), 0) as permanent_venues_managed
+    from
+        {{ source('raw', 'applicative_database_offerer') }} as offerer
+        left join {{ ref('venue') }} as venue on offerer.offerer_id = venue.venue_managing_offerer_id
+    group by
         1
 ),
 
-venues_with_offers AS (
-    SELECT
+venues_with_offers as (
+    select
         offerer.offerer_id,
-        count(DISTINCT offer.venue_id) AS nb_venue_with_offers
-    FROM
-        {{ source('raw', 'applicative_database_offerer') }} AS offerer
-        LEFT JOIN {{ ref('venue') }} AS venue ON offerer.offerer_id = venue.venue_managing_offerer_id
-        LEFT JOIN {{ ref('offer') }} AS offer ON venue.venue_id = offer.venue_id
-    GROUP BY
+        count(distinct offer.venue_id) as nb_venue_with_offers
+    from
+        {{ source('raw', 'applicative_database_offerer') }} as offerer
+        left join {{ ref('venue') }} as venue on offerer.offerer_id = venue.venue_managing_offerer_id
+        left join {{ ref('offer') }} as offer on venue.venue_id = offer.venue_id
+    group by
         offerer_id
-        )
+),
 
-,siren_reference_adage AS (
-  SELECT 
-    siren,
-    max(siren_synchro_adage) AS siren_synchro_adage
-  FROM {{ ref('adage') }}
-  GROUP BY 1
+siren_reference_adage as (
+    select
+        siren,
+        max(siren_synchro_adage) as siren_synchro_adage
+    from {{ ref('adage') }}
+    group by 1
+),
+
+dms_adage as (
+
+    select
+        * except (demandeur_entreprise_siren),
+        case
+            when demandeur_entreprise_siren is NULL or demandeur_entreprise_siren = "nan"
+                then left(demandeur_siret, 9)
+            else demandeur_entreprise_siren
+        end as demandeur_entreprise_siren
+
+    from {{ source('clean', 'dms_pro_cleaned') }}
+    where procedure_id in ('57081', '57189', '61589', '65028', '80264')
+),
+
+first_dms_adage as (
+    select *
+    from dms_adage
+    qualify row_number() over (partition by demandeur_entreprise_siren order by application_submitted_at asc) = 1
+),
+
+first_dms_adage_accepted as (
+    select *
+    from dms_adage
+    where application_status = "accepte"
+    qualify row_number() over (partition by demandeur_entreprise_siren order by processed_at asc) = 1
 )
 
-,dms_adage AS (
-  
-SELECT * EXCEPT(demandeur_entreprise_siren),
-  CASE WHEN demandeur_entreprise_siren is null or demandeur_entreprise_siren = "nan" 
-  THEN left(demandeur_siret, 9) ELSE demandeur_entreprise_siren END AS demandeur_entreprise_siren
-  
-FROM {{ source('clean', 'dms_pro_cleaned') }}
-WHERE procedure_id IN ('57081', '57189','61589','65028','80264')
-)
 
-,first_dms_adage AS (
-SELECT * 
-FROM dms_adage
-QUALIFY row_number() OVER(PARTITION BY demandeur_entreprise_siren ORDER BY application_submitted_at ASC) = 1
-)
-
-, first_dms_adage_accepted AS (
-SELECT * 
-FROM dms_adage
-WHERE application_status = "accepte"
-QUALIFY row_number() OVER(PARTITION BY demandeur_entreprise_siren ORDER BY processed_at ASC) = 1
-)
-
-
-SELECT
+select
     offerer.offerer_id,
-    CONCAT("offerer-", offerer.offerer_id) AS partner_id,
+    concat("offerer-", offerer.offerer_id) as partner_id,
     offerer.offerer_name,
     offerer.offerer_creation_date,
     offerer.offerer_validation_date,
     related_stocks.first_stock_creation_date,
-    individual_offers_per_offerer.first_individual_offer_creation_date AS offerer_first_individual_offer_creation_date,
-    individual_offers_per_offerer.last_individual_offer_creation_date AS offerer_last_individual_offer_creation_date,
-    collective_offers_per_offerer.first_collective_offer_creation_date AS offerer_first_collective_offer_creation_date,
-    collective_offers_per_offerer.last_collective_offer_creation_date AS offerer_last_collective_offer_creation_date,
-    CASE WHEN first_individual_offer_creation_date IS NOT NULL AND first_collective_offer_creation_date IS NOT NULL THEN LEAST(first_collective_offer_creation_date, first_individual_offer_creation_date)
-         WHEN first_individual_offer_creation_date IS NOT NULL THEN first_individual_offer_creation_date
-         ELSE first_collective_offer_creation_date END AS offerer_first_offer_creation_date,
-    CASE WHEN last_individual_offer_creation_date IS NOT NULL AND last_collective_offer_creation_date IS NOT NULL THEN GREATEST(last_collective_offer_creation_date, last_individual_offer_creation_date)
-         WHEN last_individual_offer_creation_date IS NOT NULL THEN last_individual_offer_creation_date
-         ELSE last_collective_offer_creation_date END AS offerer_last_offer_creation_date,
+    individual_offers_per_offerer.first_individual_offer_creation_date as offerer_first_individual_offer_creation_date,
+    individual_offers_per_offerer.last_individual_offer_creation_date as offerer_last_individual_offer_creation_date,
+    collective_offers_per_offerer.first_collective_offer_creation_date as offerer_first_collective_offer_creation_date,
+    collective_offers_per_offerer.last_collective_offer_creation_date as offerer_last_collective_offer_creation_date,
+    case
+        when first_individual_offer_creation_date is not NULL and first_collective_offer_creation_date is not NULL then least(first_collective_offer_creation_date, first_individual_offer_creation_date)
+        when first_individual_offer_creation_date is not NULL then first_individual_offer_creation_date
+        else first_collective_offer_creation_date
+    end as offerer_first_offer_creation_date,
+    case
+        when last_individual_offer_creation_date is not NULL and last_collective_offer_creation_date is not NULL then greatest(last_collective_offer_creation_date, last_individual_offer_creation_date)
+        when last_individual_offer_creation_date is not NULL then last_individual_offer_creation_date
+        else last_collective_offer_creation_date
+    end as offerer_last_offer_creation_date,
     bookable_offer_history.offerer_first_bookable_offer_date,
     bookable_offer_history.offerer_last_bookable_offer_date,
     bookable_offer_history.offerer_first_individual_bookable_offer_date,
     bookable_offer_history.offerer_last_individual_bookable_offer_date,
     bookable_offer_history.offerer_first_collective_bookable_offer_date,
     bookable_offer_history.offerer_last_collective_bookable_offer_date,
-    individual_bookings_per_offerer.first_individual_booking_date AS offerer_first_individual_booking_date,
-    individual_bookings_per_offerer.last_individual_booking_date AS offerer_last_individual_booking_date,
-    collective_bookings_per_offerer.first_collective_booking_date AS offerer_first_collective_booking_date,
-    collective_bookings_per_offerer.last_collective_booking_date AS offerer_last_collective_booking_date,
-    CASE WHEN first_individual_booking_date IS NOT NULL AND first_collective_booking_date IS NOT NULL THEN LEAST(first_collective_booking_date, first_individual_booking_date)
-         WHEN first_individual_booking_date IS NOT NULL THEN first_individual_booking_date
-         ELSE first_collective_booking_date END AS first_booking_date,
-    CASE WHEN last_individual_booking_date IS NOT NULL AND last_collective_booking_date IS NOT NULL THEN GREATEST(last_collective_booking_date, last_individual_booking_date)
-         WHEN last_individual_booking_date IS NOT NULL THEN last_individual_booking_date
-         ELSE last_collective_booking_date END AS offerer_last_booking_date,
-    COALESCE(individual_offers_per_offerer.individual_offers_created,0) AS offerer_individual_offers_created,
-    COALESCE(collective_offers_per_offerer.collective_offers_created,0) AS offerer_collective_offers_created,
-    COALESCE(individual_offers_per_offerer.individual_offers_created,0) + COALESCE(collective_offers_per_offerer.collective_offers_created,0) AS offer_cnt,
-    COALESCE(bookable_individual_offer_cnt.offerer_bookable_individual_offer_cnt,0) AS offerer_bookable_individual_offer_cnt,
-    COALESCE(bookable_collective_offer_cnt.offerer_bookable_collective_offer_cnt,0) AS offerer_bookable_collective_offer_cnt,
-    COALESCE(bookable_individual_offer_cnt.offerer_bookable_individual_offer_cnt,0) + COALESCE(bookable_collective_offer_cnt.offerer_bookable_collective_offer_cnt,0) AS offerer_bookable_offer_cnt,
-    COALESCE(individual_bookings_per_offerer.non_cancelled_individual_bookings,0) AS offerer_non_cancelled_individual_bookings,
-    COALESCE(collective_bookings_per_offerer.non_cancelled_collective_bookings,0) AS offerer_non_cancelled_collective_bookings,
-    COALESCE(individual_bookings_per_offerer.non_cancelled_individual_bookings,0) + COALESCE(collective_bookings_per_offerer.non_cancelled_collective_bookings,0) AS no_cancelled_booking_cnt,
-    COALESCE(individual_bookings_per_offerer.used_individual_bookings,0) + COALESCE(collective_bookings_per_offerer.used_collective_bookings,0) AS offerer_used_bookings,
-    COALESCE(individual_bookings_per_offerer.used_individual_bookings,0) AS offerer_used_individual_bookings,
-    COALESCE(collective_bookings_per_offerer.used_collective_bookings,0) AS offerer_used_collective_bookings,
-    COALESCE(individual_bookings_per_offerer.individual_theoretic_revenue,0) AS offerer_individual_theoretic_revenue,
-    COALESCE(individual_bookings_per_offerer.individual_real_revenue,0) AS offerer_individual_real_revenue,
-    COALESCE(collective_bookings_per_offerer.collective_theoretic_revenue,0) AS offerer_collective_theoretic_revenue,
-    COALESCE(collective_bookings_per_offerer.collective_real_revenue,0) AS offerer_collective_real_revenue,
-    COALESCE(individual_bookings_per_offerer.individual_theoretic_revenue,0) + COALESCE(collective_bookings_per_offerer.collective_theoretic_revenue,0) AS offerer_theoretic_revenue,
-    COALESCE(individual_bookings_per_offerer.individual_real_revenue,0) + COALESCE(collective_bookings_per_offerer.collective_real_revenue,0) AS offerer_real_revenue,
-    COALESCE(individual_bookings_per_offerer.individual_current_year_real_revenue,0) + COALESCE(collective_bookings_per_offerer.collective_current_year_real_revenue,0) AS current_year_revenue,
+    individual_bookings_per_offerer.first_individual_booking_date as offerer_first_individual_booking_date,
+    individual_bookings_per_offerer.last_individual_booking_date as offerer_last_individual_booking_date,
+    collective_bookings_per_offerer.first_collective_booking_date as offerer_first_collective_booking_date,
+    collective_bookings_per_offerer.last_collective_booking_date as offerer_last_collective_booking_date,
+    case
+        when first_individual_booking_date is not NULL and first_collective_booking_date is not NULL then least(first_collective_booking_date, first_individual_booking_date)
+        when first_individual_booking_date is not NULL then first_individual_booking_date
+        else first_collective_booking_date
+    end as first_booking_date,
+    case
+        when last_individual_booking_date is not NULL and last_collective_booking_date is not NULL then greatest(last_collective_booking_date, last_individual_booking_date)
+        when last_individual_booking_date is not NULL then last_individual_booking_date
+        else last_collective_booking_date
+    end as offerer_last_booking_date,
+    coalesce(individual_offers_per_offerer.individual_offers_created, 0) as offerer_individual_offers_created,
+    coalesce(collective_offers_per_offerer.collective_offers_created, 0) as offerer_collective_offers_created,
+    coalesce(individual_offers_per_offerer.individual_offers_created, 0) + coalesce(collective_offers_per_offerer.collective_offers_created, 0) as offer_cnt,
+    coalesce(bookable_individual_offer_cnt.offerer_bookable_individual_offer_cnt, 0) as offerer_bookable_individual_offer_cnt,
+    coalesce(bookable_collective_offer_cnt.offerer_bookable_collective_offer_cnt, 0) as offerer_bookable_collective_offer_cnt,
+    coalesce(bookable_individual_offer_cnt.offerer_bookable_individual_offer_cnt, 0) + coalesce(bookable_collective_offer_cnt.offerer_bookable_collective_offer_cnt, 0) as offerer_bookable_offer_cnt,
+    coalesce(individual_bookings_per_offerer.non_cancelled_individual_bookings, 0) as offerer_non_cancelled_individual_bookings,
+    coalesce(collective_bookings_per_offerer.non_cancelled_collective_bookings, 0) as offerer_non_cancelled_collective_bookings,
+    coalesce(individual_bookings_per_offerer.non_cancelled_individual_bookings, 0) + coalesce(collective_bookings_per_offerer.non_cancelled_collective_bookings, 0) as no_cancelled_booking_cnt,
+    coalesce(individual_bookings_per_offerer.used_individual_bookings, 0) + coalesce(collective_bookings_per_offerer.used_collective_bookings, 0) as offerer_used_bookings,
+    coalesce(individual_bookings_per_offerer.used_individual_bookings, 0) as offerer_used_individual_bookings,
+    coalesce(collective_bookings_per_offerer.used_collective_bookings, 0) as offerer_used_collective_bookings,
+    coalesce(individual_bookings_per_offerer.individual_theoretic_revenue, 0) as offerer_individual_theoretic_revenue,
+    coalesce(individual_bookings_per_offerer.individual_real_revenue, 0) as offerer_individual_real_revenue,
+    coalesce(collective_bookings_per_offerer.collective_theoretic_revenue, 0) as offerer_collective_theoretic_revenue,
+    coalesce(collective_bookings_per_offerer.collective_real_revenue, 0) as offerer_collective_real_revenue,
+    coalesce(individual_bookings_per_offerer.individual_theoretic_revenue, 0) + coalesce(collective_bookings_per_offerer.collective_theoretic_revenue, 0) as offerer_theoretic_revenue,
+    coalesce(individual_bookings_per_offerer.individual_real_revenue, 0) + coalesce(collective_bookings_per_offerer.collective_real_revenue, 0) as offerer_real_revenue,
+    coalesce(individual_bookings_per_offerer.individual_current_year_real_revenue, 0) + coalesce(collective_bookings_per_offerer.collective_current_year_real_revenue, 0) as current_year_revenue,
     offerer_department_code.offerer_department_code,
     offerer.offerer_city,
-    region_department.region_name AS offerer_region_name,
+    region_department.region_name as offerer_region_name,
     offerer.offerer_siren,
-    siren_data.activitePrincipaleUniteLegale AS legal_unit_business_activity_code,
-    label_unite_legale AS legal_unit_business_activity_label,
-    siren_data.categorieJuridiqueUniteLegale AS legal_unit_legal_category_code,
-    label_categorie_juridique AS legal_unit_legal_category_label,
-    CASE WHEN siren_data.activitePrincipaleUniteLegale = '84.11Z' THEN TRUE ELSE FALSE END AS is_local_authority,
+    siren_data.activiteprincipaleunitelegale as legal_unit_business_activity_code,
+    label_unite_legale as legal_unit_business_activity_label,
+    siren_data.categoriejuridiqueunitelegale as legal_unit_legal_category_code,
+    label_categorie_juridique as legal_unit_legal_category_label,
+    case when siren_data.activiteprincipaleunitelegale = '84.11Z' then TRUE else FALSE end as is_local_authority,
     total_venues_managed,
     physical_venues_managed,
     permanent_venues_managed,
-    COALESCE(venues_with_offers.nb_venue_with_offers,0) AS venue_with_offer,
-    offerer_humanized_id.humanized_id AS offerer_humanized_id,
-    CASE WHEN first_dms_adage.application_status IS NULL THEN "dms_adage_non_depose" ELSE first_dms_adage.application_status END AS first_dms_adage_status,
-    first_dms_adage_accepted.processed_at AS dms_accepted_at,
-    CASE WHEN siren_reference_adage.siren is null THEN FALSE ELSE TRUE END AS is_reference_adage,
-    CASE WHEN siren_reference_adage.siren is null THEN FALSE ELSE siren_synchro_adage END AS is_synchro_adage 
-FROM
-    {{ source('raw', 'applicative_database_offerer') }} AS offerer
-    LEFT JOIN individual_bookings_per_offerer ON individual_bookings_per_offerer.offerer_id = offerer.offerer_id
-    LEFT JOIN collective_bookings_per_offerer ON collective_bookings_per_offerer.offerer_id = offerer.offerer_id
-    LEFT JOIN individual_offers_per_offerer ON individual_offers_per_offerer.offerer_id = offerer.offerer_id
-    LEFT JOIN collective_offers_per_offerer ON collective_offers_per_offerer.offerer_id = offerer.offerer_id
-    LEFT JOIN related_stocks ON related_stocks.offerer_id = offerer.offerer_id
-    LEFT JOIN offerer_department_code ON offerer_department_code.offerer_id = offerer.offerer_id
-    LEFT JOIN {{ source('analytics', 'region_department') }} AS region_department ON offerer_department_code.offerer_department_code = region_department.num_dep
-    LEFT JOIN related_venues ON related_venues.offerer_id = offerer.offerer_id
-    LEFT JOIN venues_with_offers ON venues_with_offers.offerer_id = offerer.offerer_id
-    LEFT JOIN offerer_humanized_id ON offerer_humanized_id.offerer_id = offerer.offerer_id
-    LEFT JOIN bookable_individual_offer_cnt ON bookable_individual_offer_cnt.offerer_id = offerer.offerer_id
-    LEFT JOIN bookable_collective_offer_cnt ON bookable_collective_offer_cnt.offerer_id = offerer.offerer_id
-    LEFT JOIN bookable_offer_history ON bookable_offer_history.offerer_id = offerer.offerer_id
-LEFT JOIN {{ source('clean', 'siren_data') }} AS siren_data ON siren_data.siren = offerer.offerer_siren
-LEFT JOIN {{ source('analytics', 'siren_data_labels') }} AS siren_data_labels ON siren_data_labels.activitePrincipaleUniteLegale = siren_data.activitePrincipaleUniteLegale
-                                            AND CAST(siren_data_labels.categorieJuridiqueUniteLegale AS STRING) = CAST(siren_data.categorieJuridiqueUniteLegale AS STRING)
-LEFT JOIN first_dms_adage ON first_dms_adage.demandeur_entreprise_siren = offerer.offerer_siren
-LEFT JOIN first_dms_adage_accepted ON first_dms_adage_accepted.demandeur_entreprise_siren = offerer.offerer_siren                                               
-LEFT JOIN siren_reference_adage ON offerer.offerer_siren = siren_reference_adage.siren                                
-WHERE
-    offerer.offerer_validation_status='VALIDATED'
-    AND offerer.offerer_is_active
-QUALIFY row_number() over(partition by offerer.offerer_siren order by update_date desc) = 1
+    coalesce(venues_with_offers.nb_venue_with_offers, 0) as venue_with_offer,
+    offerer_humanized_id.humanized_id as offerer_humanized_id,
+    case when first_dms_adage.application_status is NULL then "dms_adage_non_depose" else first_dms_adage.application_status end as first_dms_adage_status,
+    first_dms_adage_accepted.processed_at as dms_accepted_at,
+    case when siren_reference_adage.siren is NULL then FALSE else TRUE end as is_reference_adage,
+    case when siren_reference_adage.siren is NULL then FALSE else siren_synchro_adage end as is_synchro_adage
+from
+    {{ source('raw', 'applicative_database_offerer') }} as offerer
+    left join individual_bookings_per_offerer on individual_bookings_per_offerer.offerer_id = offerer.offerer_id
+    left join collective_bookings_per_offerer on collective_bookings_per_offerer.offerer_id = offerer.offerer_id
+    left join individual_offers_per_offerer on individual_offers_per_offerer.offerer_id = offerer.offerer_id
+    left join collective_offers_per_offerer on collective_offers_per_offerer.offerer_id = offerer.offerer_id
+    left join related_stocks on related_stocks.offerer_id = offerer.offerer_id
+    left join offerer_department_code on offerer_department_code.offerer_id = offerer.offerer_id
+    left join {{ source('analytics', 'region_department') }} as region_department on offerer_department_code.offerer_department_code = region_department.num_dep
+    left join related_venues on related_venues.offerer_id = offerer.offerer_id
+    left join venues_with_offers on venues_with_offers.offerer_id = offerer.offerer_id
+    left join offerer_humanized_id on offerer_humanized_id.offerer_id = offerer.offerer_id
+    left join bookable_individual_offer_cnt on bookable_individual_offer_cnt.offerer_id = offerer.offerer_id
+    left join bookable_collective_offer_cnt on bookable_collective_offer_cnt.offerer_id = offerer.offerer_id
+    left join bookable_offer_history on bookable_offer_history.offerer_id = offerer.offerer_id
+    left join {{ source('clean', 'siren_data') }} as siren_data on siren_data.siren = offerer.offerer_siren
+    left join {{ source('analytics', 'siren_data_labels') }} as siren_data_labels
+        on
+            siren_data_labels.activiteprincipaleunitelegale = siren_data.activiteprincipaleunitelegale
+            and cast(siren_data_labels.categoriejuridiqueunitelegale as STRING) = cast(siren_data.categoriejuridiqueunitelegale as STRING)
+    left join first_dms_adage on first_dms_adage.demandeur_entreprise_siren = offerer.offerer_siren
+    left join first_dms_adage_accepted on first_dms_adage_accepted.demandeur_entreprise_siren = offerer.offerer_siren
+    left join siren_reference_adage on offerer.offerer_siren = siren_reference_adage.siren
+where
+    offerer.offerer_validation_status = 'VALIDATED'
+    and offerer.offerer_is_active
+qualify row_number() over (partition by offerer.offerer_siren order by update_date desc) = 1

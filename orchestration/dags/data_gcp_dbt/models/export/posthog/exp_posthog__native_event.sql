@@ -1,4 +1,4 @@
-SELECT
+select
     event_date,
     event_name,
     timestamp(event_timestamp) as event_timestamp,
@@ -6,7 +6,7 @@ SELECT
     user_pseudo_id,
     platform,
     app_version,
-    STRUCT(
+    struct(
         traffic_campaign,
         traffic_source,
         traffic_medium,
@@ -29,13 +29,14 @@ SELECT
         venue_type_label,
         content_type
     ) as extra_params,
-    STRUCT(
+    struct(
         user_current_deposit_type,
         user_last_deposit_amount,
         user_first_deposit_type,
         user_deposit_initial_amount
     ) as user_params,
     "native" as origin
-FROM {{ ref("mrt_native__event") }}
-WHERE user_pseudo_id is NOT NULL
-AND MOD(ABS(FARM_FINGERPRINT(user_pseudo_id)),10) = 0
+from {{ ref("mrt_native__event") }}
+where
+    user_pseudo_id is not NULL
+    and mod(abs(farm_fingerprint(user_pseudo_id)), 10) = 0

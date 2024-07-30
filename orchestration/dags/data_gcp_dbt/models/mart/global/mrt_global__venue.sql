@@ -1,4 +1,5 @@
-SELECT venue_id,
+select
+    venue_id,
     venue_name,
     venue_public_name,
     venue_booking_email,
@@ -91,6 +92,7 @@ SELECT venue_id,
     offerer_address_id,
     offerer_rank_desc,
     offerer_rank_asc
-FROM {{ ref('int_global__venue') }}
-WHERE offerer_validation_status='VALIDATED'
-    AND offerer_is_active
+from {{ ref('int_global__venue') }}
+where
+    offerer_validation_status = 'VALIDATED'
+    and offerer_is_active

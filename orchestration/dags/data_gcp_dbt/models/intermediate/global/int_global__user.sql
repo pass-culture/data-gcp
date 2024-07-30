@@ -4,130 +4,148 @@
     )
  }}
 
-WITH bookings_deposit_grouped_by_user AS (
-    SELECT b.user_id,
-        COUNT(booking_id) AS total_individual_bookings,
-        COUNT(CASE WHEN NOT booking_is_cancelled THEN booking_id END) AS total_non_cancelled_individual_bookings,
-        SUM(CASE WHEN booking_is_used THEN booking_intermediary_amount END) AS total_actual_amount_spent,
-        SUM(CASE WHEN NOT booking_is_cancelled THEN booking_intermediary_amount END) AS total_theoretical_amount_spent,
-        MIN(CASE WHEN NOT booking_is_cancelled THEN booking_created_at END) AS first_individual_booking_date,
-        MAX(booking_created_at) AS last_individual_booking_date,
-        MIN(CASE WHEN booking_amount > 0 THEN booking_creation_date END) AS booking_creation_date_first,
-        SUM(CASE WHEN physical_goods AND offer_url IS NULL AND NOT booking_is_cancelled THEN booking_intermediary_amount END) AS total_actual_amount_spent_in_physical_goods,
-        SUM(CASE WHEN event
-            AND NOT booking_is_cancelled THEN booking_intermediary_amount END) AS total_theoretical_amount_spent_in_outings,
-        COUNT(DISTINCT CASE WHEN NOT booking_is_cancelled THEN offer_subcategory_id END) AS total_distinct_types,
-        MIN(CASE WHEN user_booking_rank = 2 AND NOT booking_is_cancelled THEN booking_creation_date END) AS first_booking_date,
-        MAX(CASE WHEN user_booking_id_rank = 1 THEN offer_subcategory_id END) AS  first_booking_type,
-        MIN(CASE WHEN COALESCE(booking_amount, 0) > 0 THEN booking_creation_date END) AS first_paid_booking_date,
-        MAX(CASE WHEN user_booking_rank = 2 AND NOT booking_is_cancelled THEN booking_creation_date END) AS second_booking_date,
-        SUM(CASE WHEN deposit_rank_desc = 1 THEN booking_intermediary_amount END) AS deposit_theoretical_amount_spent,
-        SUM(CASE WHEN NOT booking_is_cancelled
-            AND deposit_rank_desc =1
-            AND booking_is_used
-            THEN booking_intermediary_amount END) AS deposit_actual_amount_spent,
-        SUM(CASE WHEN deposit_rank_desc =1
-            AND NOT booking_is_cancelled
-            AND digital_goods = true AND offer_url IS NOT NULL
-            THEN booking_intermediary_amount
-            END) AS total_actual_amount_spent_in_digital_goods,
-        SUM(CASE WHEN deposit_rank_desc =1
-            AND digital_goods = true AND offer_url IS NOT NULL
-            THEN booking_intermediary_amount
-            END) AS total_theoretical_amount_spent_in_digital_goods,
-        MAX(d.deposit_id) AS last_deposit_id,
-        MAX(CASE
-            WHEN offer_subcategory_id = 'ACTIVATION_THING'
-            AND booking_used_date IS NOT NULL THEN booking_used_date
-            ELSE NULL
-        END) AS user_activation_date
-    FROM {{ ref('int_global__booking') }} AS b
-    LEFT JOIN {{ ref('int_applicative__deposit') }} AS d ON d.deposit_id = b.deposit_id
-        AND deposit_rank_desc = 1
-    GROUP BY user_id
+with bookings_deposit_grouped_by_user as (
+    select
+        b.user_id,
+        COUNT(booking_id) as total_individual_bookings,
+        COUNT(case when not booking_is_cancelled then booking_id end) as total_non_cancelled_individual_bookings,
+        SUM(case when booking_is_used then booking_intermediary_amount end) as total_actual_amount_spent,
+        SUM(case when not booking_is_cancelled then booking_intermediary_amount end) as total_theoretical_amount_spent,
+        MIN(case when not booking_is_cancelled then booking_created_at end) as first_individual_booking_date,
+        MAX(booking_created_at) as last_individual_booking_date,
+        MIN(case when booking_amount > 0 then booking_creation_date end) as booking_creation_date_first,
+        SUM(case when physical_goods and offer_url is NULL and not booking_is_cancelled then booking_intermediary_amount end) as total_actual_amount_spent_in_physical_goods,
+        SUM(case
+            when
+                event
+                and not booking_is_cancelled then booking_intermediary_amount
+        end) as total_theoretical_amount_spent_in_outings,
+        COUNT(distinct case when not booking_is_cancelled then offer_subcategory_id end) as total_distinct_types,
+        MIN(case when user_booking_rank = 2 and not booking_is_cancelled then booking_creation_date end) as first_booking_date,
+        MAX(case when user_booking_id_rank = 1 then offer_subcategory_id end) as first_booking_type,
+        MIN(case when COALESCE(booking_amount, 0) > 0 then booking_creation_date end) as first_paid_booking_date,
+        MAX(case when user_booking_rank = 2 and not booking_is_cancelled then booking_creation_date end) as second_booking_date,
+        SUM(case when deposit_rank_desc = 1 then booking_intermediary_amount end) as deposit_theoretical_amount_spent,
+        SUM(case
+            when
+                not booking_is_cancelled
+                and deposit_rank_desc = 1
+                and booking_is_used
+                then booking_intermediary_amount
+        end) as deposit_actual_amount_spent,
+        SUM(case
+            when
+                deposit_rank_desc = 1
+                and not booking_is_cancelled
+                and digital_goods = TRUE and offer_url is not NULL
+                then booking_intermediary_amount
+        end) as total_actual_amount_spent_in_digital_goods,
+        SUM(case
+            when
+                deposit_rank_desc = 1
+                and digital_goods = TRUE and offer_url is not NULL
+                then booking_intermediary_amount
+        end) as total_theoretical_amount_spent_in_digital_goods,
+        MAX(d.deposit_id) as last_deposit_id,
+        MAX(case
+            when
+                offer_subcategory_id = 'ACTIVATION_THING'
+                and booking_used_date is not NULL then booking_used_date
+            else NULL
+        end) as user_activation_date
+    from {{ ref('int_global__booking') }} as b
+        left join {{ ref('int_applicative__deposit') }}
+            as d on d.deposit_id = b.deposit_id
+        and deposit_rank_desc = 1
+    group by user_id
 
 ),
 
-deposit_grouped_by_user AS (
-    SELECT user_id,
-        MIN(deposit_creation_date) AS first_deposit_creation_date,
-        MIN(deposit_amount) AS first_deposit_amount,
-        MAX(deposit_amount) AS last_deposit_amount,
-        MAX(deposit_expiration_date) AS last_deposit_expiration_date,
-        SUM(deposit_amount) AS total_deposit_amount
-    FROM
+deposit_grouped_by_user as (
+    select
+        user_id,
+        MIN(deposit_creation_date) as first_deposit_creation_date,
+        MIN(deposit_amount) as first_deposit_amount,
+        MAX(deposit_amount) as last_deposit_amount,
+        MAX(deposit_expiration_date) as last_deposit_expiration_date,
+        SUM(deposit_amount) as total_deposit_amount
+    from
         {{ ref('int_applicative__deposit') }}
-    GROUP BY user_id
+    group by user_id
 ),
-user_agg_deposit_data AS (
-    SELECT
+
+user_agg_deposit_data as (
+    select
         user_deposit_agg.*,
-        CASE WHEN last_deposit_amount < 300 THEN 'GRANT_15_17'
-            ELSE 'GRANT_18'
-        END AS current_deposit_type,
-        CASE
-            WHEN first_deposit_amount < 300 THEN 'GRANT_15_17'
-            ELSE 'GRANT_18'
-        END AS first_deposit_type
-    FROM
+        case
+            when last_deposit_amount < 300 then 'GRANT_15_17'
+            else 'GRANT_18'
+        end as current_deposit_type,
+        case
+            when first_deposit_amount < 300 then 'GRANT_15_17'
+            else 'GRANT_18'
+        end as first_deposit_type
+    from
         deposit_grouped_by_user user_deposit_agg
 ),
 
-ranked_for_bookings_not_canceled AS (
+ranked_for_bookings_not_canceled as (
 
-SELECT booking_id,
-    user_id,
-    booking_created_at,
-    offer_subcategory_id,
-    RANK() OVER (
-        PARTITION BY user_id,
-        offer_subcategory_id
-        ORDER BY booking_created_at
-    ) AS same_category_booking_rank,
-    RANK() OVER (
-        PARTITION BY user_id
-        ORDER BY booking_created_at ASC
-    ) AS user_booking_rank
-FROM {{ ref('int_global__booking') }}
-WHERE booking_is_cancelled IS FALSE
-
-),
-
-date_of_bookings_on_third_product AS (
-    SELECT
+    select
+        booking_id,
         user_id,
-        booking_created_at AS booking_on_third_product_date
-    FROM ranked_for_bookings_not_canceled
-    WHERE same_category_booking_rank = 1
-    QUALIFY RANK() OVER (
-            PARTITION BY user_id
-            ORDER BY booking_created_at
-        ) = 3
-),
-
-
-first_paid_booking_type AS (
-    SELECT
-        user_id,
-        offer_subcategory_id AS first_paid_booking_type
-    FROM {{ ref('mrt_global__booking') }}
-    WHERE booking_amount > 0
-    QUALIFY RANK() over (
+        booking_created_at,
+        offer_subcategory_id,
+        RANK() over (
+            partition by
+                user_id,
+                offer_subcategory_id
+            order by booking_created_at
+        ) as same_category_booking_rank,
+        RANK() over (
             partition by user_id
-            order by
-                booking_created_at
-        ) = 1
+            order by booking_created_at asc
+        ) as user_booking_rank
+    from {{ ref('int_global__booking') }}
+    where booking_is_cancelled is FALSE
+
+),
+
+date_of_bookings_on_third_product as (
+    select
+        user_id,
+        booking_created_at as booking_on_third_product_date
+    from ranked_for_bookings_not_canceled
+    where same_category_booking_rank = 1
+    qualify RANK() over (
+        partition by user_id
+        order by booking_created_at
+    ) = 3
+),
+
+
+first_paid_booking_type as (
+    select
+        user_id,
+        offer_subcategory_id as first_paid_booking_type
+    from {{ ref('mrt_global__booking') }}
+    where booking_amount > 0
+    qualify RANK() over (
+        partition by user_id
+        order by
+            booking_created_at
+    ) = 1
 )
 
 
-SELECT
+select
     u.user_id,
     u.user_department_code,
     u.user_postal_code,
     u.user_activity,
     u.user_civility,
     u.user_school_type,
-    u.user_cultural_survey_filled_date AS first_connection_date,
+    u.user_cultural_survey_filled_date as first_connection_date,
     u.user_is_active,
     u.user_age,
     u.user_birth_date,
@@ -141,8 +159,8 @@ SELECT
     bdgu.first_booking_date,
     bdgu.second_booking_date,
     dbtp.booking_on_third_product_date,
-    COALESCE(bdgu.total_individual_bookings, 0) AS total_individual_bookings,
-    COALESCE( bdgu.total_non_cancelled_individual_bookings, 0) AS total_non_cancelled_individual_bookings,
+    COALESCE(bdgu.total_individual_bookings, 0) as total_individual_bookings,
+    COALESCE(bdgu.total_non_cancelled_individual_bookings, 0) as total_non_cancelled_individual_bookings,
     bdgu.total_actual_amount_spent,
     bdgu.total_theoretical_amount_spent,
     bdgu.total_actual_amount_spent_in_digital_goods,
@@ -152,30 +170,32 @@ SELECT
     bdgu.total_theoretical_amount_spent_in_digital_goods,
     bdgu.deposit_actual_amount_spent,
     dgu.last_deposit_amount,
-    dgu.last_deposit_amount - bdgu.deposit_theoretical_amount_spent AS total_theoretical_remaining_credit,
-    bdgu.last_individual_booking_date AS last_booking_date,
+    dgu.last_deposit_amount - bdgu.deposit_theoretical_amount_spent as total_theoretical_remaining_credit,
+    bdgu.last_individual_booking_date as last_booking_date,
     bdgu.booking_creation_date_first,
-    DATE_DIFF(bdgu.first_individual_booking_date,dgu.first_deposit_creation_date,DAY) AS days_between_activation_date_and_first_booking_date,
-    DATE_DIFF(bdgu.booking_creation_date_first,dgu.first_deposit_creation_date,DAY) AS days_between_activation_date_and_first_booking_paid,
-    COALESCE(user_activation_date,user_creation_date) AS user_activation_date,
+    DATE_DIFF(bdgu.first_individual_booking_date, dgu.first_deposit_creation_date, day) as days_between_activation_date_and_first_booking_date,
+    DATE_DIFF(bdgu.booking_creation_date_first, dgu.first_deposit_creation_date, day) as days_between_activation_date_and_first_booking_paid,
+    COALESCE(user_activation_date, user_creation_date) as user_activation_date,
     bdgu.first_booking_type,
     first_paid_booking_type.first_paid_booking_type,
     bdgu.total_distinct_types,
-    ah.action_history_reason AS user_suspension_reason,
-    dgu.first_deposit_amount AS user_deposit_initial_amount,
-    dgu.last_deposit_expiration_date AS user_deposit_expiration_date,
-    CASE WHEN ( TIMESTAMP(dgu.last_deposit_expiration_date ) >= CURRENT_TIMESTAMP()
-            AND COALESCE(bdgu.deposit_actual_amount_spent,0) < dgu.last_deposit_amount )
-        AND u.user_is_active THEN TRUE ELSE FALSE END AS user_is_current_beneficiary
-FROM {{ ref('int_applicative__user') }} AS u
-LEFT JOIN {{ ref('int_applicative__action_history') }} AS ah ON ah.user_id = u.user_id AND ah.action_history_rk = 1
-INNER JOIN user_agg_deposit_data AS ud ON ud.user_id = u.user_id
-LEFT JOIN deposit_grouped_by_user AS dgu ON dgu.user_id = u.user_id
-LEFT JOIN bookings_deposit_grouped_by_user AS bdgu ON bdgu.user_id = u.user_id
-LEFT JOIN date_of_bookings_on_third_product AS dbtp ON dbtp.user_id = u.user_id
-LEFT JOIN first_paid_booking_type ON u.user_id = first_paid_booking_type.user_id
-WHERE
+    ah.action_history_reason as user_suspension_reason,
+    dgu.first_deposit_amount as user_deposit_initial_amount,
+    dgu.last_deposit_expiration_date as user_deposit_expiration_date,
+    case when (
+        TIMESTAMP(dgu.last_deposit_expiration_date) >= CURRENT_TIMESTAMP()
+        and COALESCE(bdgu.deposit_actual_amount_spent, 0) < dgu.last_deposit_amount
+    )
+    and u.user_is_active then TRUE else FALSE end as user_is_current_beneficiary
+from {{ ref('int_applicative__user') }} as u
+    left join {{ ref('int_applicative__action_history') }} as ah on ah.user_id = u.user_id and ah.action_history_rk = 1
+    inner join user_agg_deposit_data as ud on ud.user_id = u.user_id
+    left join deposit_grouped_by_user as dgu on dgu.user_id = u.user_id
+    left join bookings_deposit_grouped_by_user as bdgu on bdgu.user_id = u.user_id
+    left join date_of_bookings_on_third_product as dbtp on dbtp.user_id = u.user_id
+    left join first_paid_booking_type on u.user_id = first_paid_booking_type.user_id
+where
     (
         user_is_active
-        OR action_history_reason = 'upon user request'
+        or action_history_reason = 'upon user request'
     )

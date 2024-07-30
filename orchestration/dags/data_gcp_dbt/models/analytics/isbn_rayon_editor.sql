@@ -1,32 +1,34 @@
-WITH matching_isbn_with_rayon AS (
-SELECT
-    isbn
-  , rayon
-  , ROW_NUMBER() OVER (PARTITION BY isbn ORDER BY COUNT(DISTINCT offer_id) DESC) AS rank_rayon
-FROM {{ ref('offer_extracted_data') }}
-WHERE offer_subcategoryId IN ('LIVRE_PAPIER', 'LIVRE_NUMERIQUE', 'LIVRE_AUDIO_PHYSIQUE')
-AND rayon IS NOT NULL
-AND isbn IS NOT NULL
-GROUP BY 1,2
-QUALIFY ROW_NUMBER() OVER (PARTITION BY isbn ORDER BY COUNT(DISTINCT offer_id) DESC) = 1
+with matching_isbn_with_rayon as (
+    select
+        isbn,
+        rayon,
+        ROW_NUMBER() over (partition by isbn order by COUNT(distinct offer_id) desc) as rank_rayon
+    from {{ ref('offer_extracted_data') }}
+    where
+        offer_subcategoryid in ('LIVRE_PAPIER', 'LIVRE_NUMERIQUE', 'LIVRE_AUDIO_PHYSIQUE')
+        and rayon is not NULL
+        and isbn is not NULL
+    group by 1, 2
+    qualify ROW_NUMBER() over (partition by isbn order by COUNT(distinct offer_id) desc) = 1
 ),
 
-matching_isbn_with_editor AS (
-SELECT
-    isbn
-    , book_editor
-    , ROW_NUMBER() OVER (PARTITION BY isbn ORDER BY COUNT(DISTINCT offer_id) DESC) AS rank_editor
-FROM {{ ref('offer_extracted_data') }}
-WHERE offer_subcategoryId IN ('LIVRE_PAPIER', 'LIVRE_NUMERIQUE', 'LIVRE_AUDIO_PHYSIQUE')
-AND book_editor IS NOT NULL
-AND isbn IS NOT NULL
-GROUP BY 1,2
-QUALIFY ROW_NUMBER() OVER (PARTITION BY isbn ORDER BY COUNT(DISTINCT offer_id) DESC) = 1
+matching_isbn_with_editor as (
+    select
+        isbn,
+        book_editor,
+        ROW_NUMBER() over (partition by isbn order by COUNT(distinct offer_id) desc) as rank_editor
+    from {{ ref('offer_extracted_data') }}
+    where
+        offer_subcategoryid in ('LIVRE_PAPIER', 'LIVRE_NUMERIQUE', 'LIVRE_AUDIO_PHYSIQUE')
+        and book_editor is not NULL
+        and isbn is not NULL
+    group by 1, 2
+    qualify ROW_NUMBER() over (partition by isbn order by COUNT(distinct offer_id) desc) = 1
 )
 
-SELECT DISTINCT
-    isbn
-    , rayon
-    , book_editor
-FROM matching_isbn_with_rayon
-LEFT JOIN matching_isbn_with_editor USING(isbn)
+select distinct
+    isbn,
+    rayon,
+    book_editor
+from matching_isbn_with_rayon
+    left join matching_isbn_with_editor using (isbn)

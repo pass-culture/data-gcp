@@ -1,35 +1,37 @@
-WITH home AS (
-    SELECT
+with home as (
+    select
         date_imported,
-        id AS home_id,
-        title AS home_name,
-        REPLACE(modules, '\"', "") AS module_id
-    FROM {{ source('raw', 'contentful_entry') }},
-        UNNEST(JSON_EXTRACT_ARRAY(modules, '$')) AS modules
-    WHERE
+        id as home_id,
+        title as home_name,
+        REPLACE(modules, '\"', "") as module_id
+    from {{ source('raw', 'contentful_entry') }},
+        UNNEST(JSON_EXTRACT_ARRAY(modules, '$')) as modules
+    where
         content_type = "homepageNatif"
 ),
-home_and_modules AS (
-    SELECT
-        DATE(home.date_imported) AS date,
+
+home_and_modules as (
+    select
+        DATE(home.date_imported) as date,
         home_id,
         home_name,
-        title AS module_name,
+        title as module_name,
         module_id,
         content_type
-    FROM home
-    LEFT JOIN {{ source('raw', 'contentful_entry') }} module 
-    ON home.module_id = module.id
-    AND home.date_imported = module.date_imported
+    from home
+        left join {{ source('raw', 'contentful_entry') }} module
+            on
+                home.module_id = module.id
+                and home.date_imported = module.date_imported
 )
 
-SELECT
+select
     date,
     home_id,
     home_name,
     module_name,
     module_id,
     content_type
-FROM
+from
     home_and_modules
-QUALIFY ROW_NUMBER() OVER (PARTITION BY date, home_id, module_id) = 1
+qualify ROW_NUMBER() over (partition by date, home_id, module_id) = 1

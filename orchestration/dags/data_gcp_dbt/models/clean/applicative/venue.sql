@@ -1,36 +1,39 @@
-WITH venues AS (
-    SELECT
-        v.* EXCEPT(venue_department_code),
-        COALESCE(CASE
-            WHEN v.venue_postal_code = '97150' THEN '978'
-            WHEN SUBSTRING(v.venue_postal_code, 0, 2) = '97' THEN SUBSTRING(v.venue_postal_code, 0, 3)
-            WHEN SUBSTRING(v.venue_postal_code, 0, 2) = '98' THEN SUBSTRING(v.venue_postal_code, 0, 3)
-            WHEN SUBSTRING(v.venue_postal_code, 0, 3) in ('200', '201', '209', '205') THEN '2A'
-            WHEN SUBSTRING(v.venue_postal_code, 0, 3) in ('202', '206') THEN '2B'
-            ELSE SUBSTRING(v.venue_postal_code, 0, 2)
-            END,
+with venues as (
+    select
+        v.* except (venue_department_code),
+        COALESCE(
+            case
+                when v.venue_postal_code = '97150' then '978'
+                when SUBSTRING(v.venue_postal_code, 0, 2) = '97' then SUBSTRING(v.venue_postal_code, 0, 3)
+                when SUBSTRING(v.venue_postal_code, 0, 2) = '98' then SUBSTRING(v.venue_postal_code, 0, 3)
+                when SUBSTRING(v.venue_postal_code, 0, 3) in ('200', '201', '209', '205') then '2A'
+                when SUBSTRING(v.venue_postal_code, 0, 3) in ('202', '206') then '2B'
+                else SUBSTRING(v.venue_postal_code, 0, 2)
+            end,
             v.venue_department_code
-        ) AS venue_department_code
-    FROM {{ source('raw', 'applicative_database_venue') }} AS v
+        ) as venue_department_code
+    from {{ source('raw', 'applicative_database_venue') }} as v
 ),
-geo_candidates AS (
-    SELECT
+
+geo_candidates as (
+    select
         v.*,
         gi.iris_internal_id,
         gi.region_name,
         gi.iris_shape
-    FROM venues AS v
-    LEFT JOIN {{ source('clean', 'geo_iris') }} AS gi
-        ON v.venue_longitude BETWEEN gi.min_longitude AND gi.max_longitude
-           AND v.venue_latitude BETWEEN gi.min_latitude AND gi.max_latitude
-    )
+    from venues as v
+        left join {{ source('clean', 'geo_iris') }} as gi
+            on
+                v.venue_longitude between gi.min_longitude and gi.max_longitude
+                and v.venue_latitude between gi.min_latitude and gi.max_latitude
+)
 
-SELECT
+select
     gc.*,
-    gc.iris_internal_id AS venue_iris_internal_id,
-    gc.region_name AS venue_region_name
-FROM geo_candidates gc
-WHERE ST_CONTAINS(
-        gc.iris_shape,
-        ST_GEOGPOINT(gc.venue_longitude, gc.venue_latitude)
-) OR gc.iris_shape IS NULL
+    gc.iris_internal_id as venue_iris_internal_id,
+    gc.region_name as venue_region_name
+from geo_candidates gc
+where ST_CONTAINS(
+    gc.iris_shape,
+    ST_GEOGPOINT(gc.venue_longitude, gc.venue_latitude)
+) or gc.iris_shape is NULL

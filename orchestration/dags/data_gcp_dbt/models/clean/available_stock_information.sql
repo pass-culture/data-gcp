@@ -1,25 +1,26 @@
-WITH bookings_grouped_by_stock AS (
-    SELECT
+with bookings_grouped_by_stock as (
+    select
         booking.stock_id,
         SUM(booking.booking_quantity) as number_of_booking
-    FROM
-        {{ source('raw','applicative_database_booking') }} AS booking
-    LEFT JOIN {{ source('raw','applicative_database_stock') }} AS stock 
-        ON booking.stock_id = stock.stock_id
-    WHERE
+    from
+        {{ source('raw','applicative_database_booking') }} as booking
+        left join {{ source('raw','applicative_database_stock') }} as stock
+            on booking.stock_id = stock.stock_id
+    where
         booking.booking_is_cancelled = False
-    GROUP BY
+    group by
         booking.stock_id
 )
-SELECT
+
+select
     stock.stock_id,
-    CASE
-        WHEN stock.stock_quantity IS NULL THEN NULL
-        ELSE GREATEST(
+    case
+        when stock.stock_quantity is Null then Null
+        else GREATEST(
             stock.stock_quantity - COALESCE(bookings_grouped_by_stock.number_of_booking, 0),
             0
         )
-    END AS available_stock_information
-FROM
-    {{ source('raw','applicative_database_stock') }} AS stock
-    LEFT JOIN bookings_grouped_by_stock ON bookings_grouped_by_stock.stock_id = stock.stock_id
+    end as available_stock_information
+from
+    {{ source('raw','applicative_database_stock') }} as stock
+    left join bookings_grouped_by_stock on bookings_grouped_by_stock.stock_id = stock.stock_id

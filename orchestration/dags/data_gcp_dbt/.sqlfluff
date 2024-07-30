@@ -21,10 +21,10 @@ apply_dbt_builtins = True
 project_dir = ./
 profiles_dir = ./
 profile = data_gcp_dbt
-target = dev
+target = stg
 
 [sqlfluff:templater:dbt:context]
-ENV_SHORT_NAME = "dev"
+ENV_SHORT_NAME = "stg"
 ; [sqlfluff:templater:jinja:context]
 ; target= {"profile_name": "data_gcp_dbt","name": "dev"}
 ; incremental_strategy='insert_overwrite'
@@ -49,8 +49,8 @@ spacing_before = touch
 
 
 [sqlfluff:layout:type:comment]
-spacing_before = 1
-spacing_after = 1
+spacing_before = any
+spacing_after = any
 
 [sqlfluff:layout:type:template_loop]
 spacing_before = any
@@ -61,6 +61,9 @@ preferred_first_table_in_join_clause = earlier
 
 [sqlfluff:rules:aliasing.table]
 aliasing = explicit
+
+[sqlfluff:rules.aliasing]
+unused = true
 
 [sqlfluff:rules:ambiguous.column_references]  # Number in group by
 group_by_and_order_by_style = implicit

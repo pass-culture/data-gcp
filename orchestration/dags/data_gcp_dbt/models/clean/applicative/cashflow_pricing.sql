@@ -1,2 +1,3 @@
-select *
-from {{ source('raw', 'applicative_database_cashflow_pricing') }}
+SELECT
+    *
+FROM {{ source('raw', 'applicative_database_cashflow_pricing') }}

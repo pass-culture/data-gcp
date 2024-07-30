@@ -1,24 +1,24 @@
-select
+SELECT
     user_id,
-    MIN(first_event_timestamp) as first_connexion_date,
-    MAX(last_event_timestamp) as last_connexion_date,
-    SUM(visit_duration_seconds) as visit_total_time,
-    AVG(visit_duration_seconds) as visit_avg_time,
-    COUNT(distinct session_id) as visit_count,
-    SUM(nb_screen_view) as screen_view,
-    SUM(nb_screen_view_home) as screen_view_home,
-    SUM(nb_screen_view_search) as screen_view_search,
-    SUM(nb_screen_view_offer) as screen_view_offer,
-    SUM(nb_screen_view_profile) as screen_view_profile,
-    SUM(nb_screen_view_favorites) as screen_view_favorites,
-    SUM(nb_share) as share,
-    SUM(nb_consult_video) as consult_video,
-    SUM(nb_add_to_favorites) as has_added_offer_to_favorites,
-    SUM(nb_consult_offer) as consult_offer,
-    SUM(nb_booking_confirmation) as booking_confirmation
-from {{ ref('firebase_visits') }}
+    MIN(first_event_timestamp) AS first_connexion_date,
+    MAX(last_event_timestamp) AS last_connexion_date,
+    SUM(visit_duration_seconds) AS visit_total_time,
+    AVG(visit_duration_seconds) AS visit_avg_time,
+    COUNT(DISTINCT session_id) AS visit_count,
+    SUM(nb_screen_view) AS screen_view,
+    SUM(nb_screen_view_home) AS screen_view_home,
+    SUM(nb_screen_view_search) AS screen_view_search,
+    SUM(nb_screen_view_offer) AS screen_view_offer,
+    SUM(nb_screen_view_profile) AS screen_view_profile,
+    SUM(nb_screen_view_favorites) AS screen_view_favorites,
+    SUM(nb_share) AS share,
+    SUM(nb_consult_video) AS consult_video,
+    SUM(nb_add_to_favorites) AS has_added_offer_to_favorites,
+    SUM(nb_consult_offer) AS consult_offer,
+    SUM(nb_booking_confirmation) AS booking_confirmation
+FROM {{ ref('firebase_visits') }}
 
-where
-    user_id is not NULL
-group by
+WHERE
+    user_id IS NOT NULL
+GROUP BY
     user_id

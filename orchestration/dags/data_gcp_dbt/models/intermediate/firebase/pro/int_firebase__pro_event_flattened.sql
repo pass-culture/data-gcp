@@ -1,10 +1,10 @@
-select
+SELECT
     event_name,
     user_pseudo_id,
     user_id,
     platform,
     event_date,
-    TIMESTAMP_MICROS(event_timestamp) as event_timestamp,
+    TIMESTAMP_MICROS(event_timestamp) AS event_timestamp,
     device.category,
     device.operating_system,
     device.operating_system_version,
@@ -39,7 +39,7 @@ select
                                 "buttonType",
                                 "fileType"
     ]) }},
-    (select event_params.value.double_value from UNNEST(event_params) event_params where event_params.key = 'offerId') as double_offer_id,
-    (select event_params.value.string_value from UNNEST(event_params) event_params where event_params.key = 'from') as origin,
-    (select event_params.value.string_value from UNNEST(event_params) event_params where event_params.key = 'to') as destination
-from {{ source("raw","firebase_pro_events") }}
+    (SELECT event_params.value.double_value from unnest(event_params) event_params where event_params.key = 'offerId') as double_offer_id,
+    (SELECT event_params.value.string_value from unnest(event_params) event_params where event_params.key = 'from') as origin,
+    (SELECT event_params.value.string_value from unnest(event_params) event_params where event_params.key = 'to') as destination,
+FROM {{ source("raw","firebase_pro_events") }}

@@ -1,2 +1,4 @@
-select *
-from {{ source('raw', 'applicative_database_finance_incident') }}
+SELECT
+    *
+FROM {{ source('raw', 'applicative_database_finance_incident') }}
+

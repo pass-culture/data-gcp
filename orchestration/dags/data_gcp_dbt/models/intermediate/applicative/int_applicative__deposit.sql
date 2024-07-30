@@ -1,34 +1,32 @@
-select
-    id as deposit_id,
+SELECT
+    id AS deposit_id,
     -- HOTFIX: Adjust 'amount' from 90 to 80 to correct a discrepancy (55 deposit are concerned)
-    case
-        when type = "GRANT_15_17" and amount > 80 then 80
-        when type = "GRANT_18" and amount < 300 then 300
-        when type = "GRANT_18" and amount > 500 then 500
-        else amount
-    end as deposit_amount,
-    userid as user_id,
+    CASE WHEN type = "GRANT_15_17" AND amount > 80 THEN 80
+        WHEN type = "GRANT_18" AND amount < 300 THEN 300
+        WHEN type = "GRANT_18" AND amount > 500 THEN 500
+        ELSE amount
+    END AS deposit_amount,
+    userId AS user_id,
     source,
-    datecreated as deposit_creation_date,
-    dateupdated as deposit_update_date,
-    expirationdate as deposit_expiration_date,
-    type as deposit_type,
-    case
-        when lower(source) like "%educonnect%" then "EDUCONNECT"
-        when lower(source) like "%ubble%" then "UBBLE"
-        when (lower(source) like "%dms%" or lower(source) like "%démarches simplifiées%") then "DMS"
-        else source
-    end as deposit_source,
-    row_number() over (
-        partition by userid
-        order by
-            datecreated,
-            id
-    ) as deposit_rank_asc,
-    row_number() over (
-        partition by userid
-        order by
-            datecreated desc,
-            id desc
-    ) as deposit_rank_desc
-from {{ source("raw", "applicative_database_deposit") }} as d
+    dateCreated AS deposit_creation_date,
+    dateUpdated AS deposit_update_date,
+    expirationDate AS deposit_expiration_date,
+    type AS deposit_type,
+    CASE WHEN lower(source) like "%educonnect%" THEN "EDUCONNECT"
+        WHEN lower(source) like "%ubble%" THEN "UBBLE"
+        WHEN (lower(source) like "%dms%" OR lower(source) like "%démarches simplifiées%") THEN "DMS"
+        ELSE source END AS deposit_source,
+    ROW_NUMBER() OVER(
+            PARTITION BY userId
+            ORDER BY
+                dateCreated,
+                id
+        ) AS deposit_rank_asc,
+    ROW_NUMBER() OVER(
+            PARTITION BY userId
+            ORDER BY
+                dateCreated DESC,
+                id DESC
+        ) AS deposit_rank_desc
+FROM {{ source("raw", "applicative_database_deposit") }} AS d
+

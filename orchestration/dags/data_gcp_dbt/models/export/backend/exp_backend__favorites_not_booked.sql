@@ -8,65 +8,63 @@
         )
 ) }}
 
-with favorites as (
-    select distinct
-        favorite.userid as user_id,
-        offerid as offer_id,
+WITH favorites as (
+    SELECT
+        DISTINCT favorite.userId as user_id,
+        offerId as offer_id,
         offer.offer_name,
         offer.offer_subcategory_id as subcategory,
         (
-            select count(*)
-            from
+            SELECT
+                count(*)
+            FROM
                 {{ ref('mrt_global__booking') }}
-            where
+            WHERE
                 offer_subcategory_id = offer.offer_subcategory_id
-                and user_id = favorite.userid
+                AND user_id = favorite.userId
         ) as user_bookings_for_this_subcat
-    from
+    FROM
         {{ source('raw', 'applicative_database_favorite') }} as favorite
-        left join {{ ref('mrt_global__booking') }} as booking
-            on
-                favorite.userid = booking.user_id
-                and favorite.offerid = booking.offer_id
-        join {{ ref('mrt_global__offer') }} as offer on favorite.offerid = offer.offer_id
-        join {{ source('raw', 'applicative_database_stock') }} as stock on favorite.offerid = stock.offer_id
-        join {{ ref('enriched_user_data') }} as enruser on favorite.userid = enruser.user_id
-        join {{ source('clean','subcategories') }} as subcategories on subcategories.id = offer.offer_subcategory_id
+        LEFT JOIN {{ ref('mrt_global__booking') }} as booking ON favorite.userId = booking.user_id
+        AND favorite.offerId = booking.offer_id
+        JOIN {{ ref('mrt_global__offer') }} as offer ON favorite.offerId = offer.offer_id
+        JOIN {{ source('raw', 'applicative_database_stock') }} as stock ON favorite.offerId = stock.offer_id
+        JOIN {{ ref('enriched_user_data') }} as enruser ON favorite.userId = enruser.user_id
+        JOIN {{ source('clean','subcategories') }} AS subcategories ON subcategories.id = offer.offer_subcategory_id
 
-    where
-        datecreated <= date_sub(date('{{ ds() }}'), interval 8 day)
-        and datecreated > date_sub(date('{{ ds() }}'), interval 15 day)
-        and booking.offer_id is NULL
-        and booking.user_id is NULL
-        and offer.offer_is_bookable = TRUE
-        and (stock.stock_beginning_date > date_sub(date('{{ ds() }}'), interval 1 day) or stock.stock_beginning_date is NULL)
-        and enruser.user_is_current_beneficiary = TRUE
-        and enruser.last_booking_date >= date_sub(date('{{ ds() }}'), interval 8 day)
-        and (
+    WHERE
+        dateCreated <= DATE_SUB(DATE('{{ ds() }}'), INTERVAL 8 DAY)
+        AND dateCreated > DATE_SUB(DATE('{{ ds() }}'), INTERVAL 15 DAY)
+        AND booking.offer_id IS NULL
+        AND booking.user_id IS NULL
+        AND offer.offer_is_bookable = True
+        AND ( stock.stock_beginning_date > DATE_SUB(DATE('{{ ds() }}'), INTERVAL 1 DAY) OR stock.stock_beginning_date is NULL)
+        AND enruser.user_is_current_beneficiary = True
+        AND enruser.last_booking_date >= DATE_SUB(DATE('{{ ds() }}'), INTERVAL 8 DAY)
+        AND (
             enruser.user_theoretical_remaining_credit
         ) > stock.stock_price
-        and (
-            (subcategories.is_digital_deposit and (100 - enruser.last_deposit_theoretical_amount_spent_in_digital_goods) > stock.stock_price)
-            or not subcategories.is_digital_deposit
-        )
+        AND (
+                (subcategories.is_digital_deposit AND (100 - enruser.last_deposit_theoretical_amount_spent_in_digital_goods) > stock.stock_price)
+                OR NOT subcategories.is_digital_deposit
+            )
 )
-
-select
-    date('{{ ds() }}') as execution_date,
+SELECT
+    DATE('{{ ds() }}') as execution_date,
     user_id,
-    array_agg(
-        struct(
+    ARRAY_AGG(
+        STRUCT(
             offer_id,
             offer_name,
             subcategory,
             user_bookings_for_this_subcat
         )
-        order by
-            user_bookings_for_this_subcat asc
+        ORDER BY
+            user_bookings_for_this_subcat ASC
         LIMIT
-        1
-    )[offset(0)].*
-from
+            1
+    ) [OFFSET(0)].*
+FROM
     favorites
-group by
+GROUP BY
     user_id

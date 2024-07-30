@@ -8,11 +8,11 @@
     )
 }}
 
-    select
-        offerer_tag_mapping_id,
-        offerer_id,
-        tag_id
-    from {{ source('raw', 'applicative_database_offerer_tag_mapping') }}
+SELECT
+	offerer_tag_mapping_id,
+	offerer_id,
+	tag_id
+FROM {{ source('raw', 'applicative_database_offerer_tag_mapping') }}
 
 
 {% endsnapshot %}

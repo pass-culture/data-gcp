@@ -1,16 +1,15 @@
-select
-    CAST(id as string) as id,
+SELECT CAST(id AS string) AS id,
     name,
     description,
-    thumbcount,
-    jsondata as product_extra_data,
-    subcategoryid,
+    thumbCount,
+    jsonData as product_extra_data,
+    subcategoryId,
     last_30_days_booking,
-    lastproviderid,
-    datemodifiedatlastprovider,
-    idatproviders,
+    lastProviderId,
+    dateModifiedAtLastProvider,
+    idAtProviders,
     ean,
     --gcucompatibilitytype,
-    case when product.thumbcount > 0 then 1 else 0 end as is_mediation
-from {{ source('raw', 'applicative_database_product') }} product
-where product.thumbcount > 0
+    CASE WHEN product.thumbCount > 0 THEN 1 ELSE 0 END AS is_mediation
+FROM {{ source('raw', 'applicative_database_product') }} product
+where product.thumbCount > 0

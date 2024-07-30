@@ -1,5 +1,5 @@
-select
-    DATE_TRUNC(active_date, month) as active_month,
+SELECT
+    DATE_TRUNC(active_date,MONTH) AS active_month,
     months_since_deposit_created,
     user_id,
     user_department_code,
@@ -7,11 +7,11 @@ select
     deposit_id,
     deposit_type,
     seniority_months,
-    MAX(cumulative_amount_spent) as cumulative_amount_spent,
-    MAX(cumulative_cnt_used_bookings) as cumulative_cnt_used_bookings
-from
+    MAX(cumulative_amount_spent) AS cumulative_amount_spent,
+    MAX(cumulative_cnt_used_bookings) AS cumulative_cnt_used_bookings
+FROM
     {{ ref('aggregated_daily_user_used_activity') }}
-group by
+GROUP BY
     active_month,
     months_since_deposit_created,
     user_id,

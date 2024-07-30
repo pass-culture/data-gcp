@@ -1,6 +1,6 @@
 -- TODO : Retirer les colonnes non utilisées
 -- + check que les filtres sont ceux que l'on veut
-select
+SELECT
     booking_id,
     booking_creation_date,
     booking_created_at,
@@ -66,8 +66,7 @@ select
     user_iris_internal_id,
     venue_iris_internal_id,
     offer_url
-from {{ ref('int_global__booking') }} as b
-where
-    deposit_type is not NULL
-    and offer_id is not NULL
-    and user_id is not NULL
+FROM {{ ref('int_global__booking') }} AS b
+WHERE deposit_type IS NOT NULL
+    AND offer_id IS NOT NULL
+    AND user_id IS NOT NULL

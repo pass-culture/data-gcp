@@ -1,14 +1,14 @@
-select
-    SAFE_CAST(ending_datetime as TIMESTAMP) as ending_datetime,
-    SAFE_CAST(beginning_datetime as TIMESTAMP) as beginning_datetime,
-    SAFE_CAST(is_geolocated as BOOL) as is_geolocated,
-    SAFE_CAST(is_duo as BOOL) as is_duo,
-    SAFE_CAST(is_event as BOOL) as is_event,
-    SAFE_CAST(is_thing as BOOL) as is_thing,
-    SAFE_CAST(price_max as FLOAT64) as price_max,
-    SAFE_CAST(min_offers as INT64) as min_offers,
+SELECT
+    SAFE_CAST(ending_datetime AS TIMESTAMP) AS ending_datetime,
+    SAFE_CAST(beginning_datetime as TIMESTAMP) AS beginning_datetime,
+    SAFE_CAST(is_geolocated AS bool) AS is_geolocated,
+    SAFE_CAST(is_duo AS bool) AS is_duo,
+    SAFE_CAST(is_event AS bool) AS is_event,
+    SAFE_CAST(is_thing AS bool) AS is_thing,
+    SAFE_CAST(price_max AS FLOAT64) AS price_max,
+    SAFE_CAST(min_offers AS INT64) AS min_offers,
     *
-    except
+    EXCEPT
     (
         ending_datetime,
         beginning_datetime,
@@ -19,5 +19,5 @@ select
         price_max,
         min_offers
     )
-from {{ source('raw', 'contentful_entry') }}
-qualify ROW_NUMBER() over (partition by id order by execution_date desc) = 1
+FROM {{ source('raw', 'contentful_entry') }}
+QUALIFY ROW_NUMBER() OVER (PARTITION BY id ORDER BY execution_date DESC) = 1

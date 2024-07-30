@@ -1,5 +1,4 @@
-select
-    procedure_id,
+SELECT procedure_id,
     application_id,
     application_number,
     application_archived,
@@ -12,12 +11,12 @@ select
     instructors,
     demandeur_siret,
     demandeur_naf,
-    demandeur_libellenaf,
-    demandeur_entreprise_formejuridique,
-    demandeur_entreprise_formejuridiquecode,
-    demandeur_entreprise_codeeffectifentreprise,
-    demandeur_entreprise_raisonsociale,
-    demandeur_entreprise_siretsiegesocial,
+    demandeur_libelleNaf,
+    demandeur_entreprise_formeJuridique,
+    demandeur_entreprise_formeJuridiqueCode,
+    demandeur_entreprise_codeEffectifEntreprise,
+    demandeur_entreprise_raisonSociale,
+    demandeur_entreprise_siretSiegeSocial,
     numero_identifiant_lieu,
     statut,
     typologie,
@@ -25,9 +24,6 @@ select
     academie_groupe_instructeur,
     domaines,
     erreur_traitement_pass_culture,
-    case
-        when (demandeur_entreprise_siren is NULL or demandeur_entreprise_siren = "nan")
-            then LEFT(demandeur_siret, 9)
-        else demandeur_entreprise_siren
-    end as demandeur_entreprise_siren
-from {{ source('clean','dms_pro_cleaned') }}
+    CASE WHEN (demandeur_entreprise_siren IS NULL OR demandeur_entreprise_siren = "nan")
+        THEN LEFT(demandeur_siret, 9) ELSE demandeur_entreprise_siren END AS demandeur_entreprise_siren
+FROM {{ source('clean','dms_pro_cleaned') }}

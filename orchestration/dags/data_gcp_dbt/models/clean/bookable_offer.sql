@@ -1,27 +1,27 @@
-select
-    offer.*,
-    offerer.offerer_id
-from {{ source('raw','applicative_database_stock') }} as stock
-    join {{ ref('offer') }} as offer
-        on stock.offer_id = offer.offer_id
-    left join {{ ref('available_stock_information') }} as av_stock
-        on stock.stock_id = av_stock.stock_id
-    left join {{ source('raw','applicative_database_venue') }} as venue
-        on offer.venue_id = venue.venue_id
-    left join {{ source('raw','applicative_database_offerer') }} as offerer
-        on venue.venue_managing_offerer_id = offerer.offerer_id
-where (
+SELECT
+    offer.*
+    , offerer.offerer_id
+FROM {{ source('raw','applicative_database_stock') }} AS stock
+JOIN {{ ref('offer') }} AS offer 
+    ON stock.offer_id = offer.offer_id
+LEFT JOIN {{ ref('available_stock_information') }} AS av_stock
+    ON stock.stock_id = av_stock.stock_id
+LEFT JOIN {{ source('raw','applicative_database_venue') }} AS venue
+    ON offer.venue_id = venue.venue_id
+LEFT JOIN {{ source('raw','applicative_database_offerer') }} AS offerer
+    ON venue.venue_managing_offerer_id = offerer.offerer_id
+WHERE (
     DATE(stock.stock_booking_limit_date) > CURRENT_DATE
-    or stock.stock_booking_limit_date is NULL
-)
-and (
+    OR stock.stock_booking_limit_date IS NULL
+    )
+AND (
     DATE(stock.stock_beginning_date) > CURRENT_DATE
-    or stock.stock_beginning_date is NULL
-)
-and offer.offer_is_active
-and (
+    OR stock.stock_beginning_date IS NULL
+    )
+AND offer.offer_is_active
+AND (
     available_stock_information > 0
-    or available_stock_information is NULL
-)
-and not stock_is_soft_deleted
-and offer_validation = 'APPROVED'
+    OR available_stock_information IS NULL
+    )
+AND NOT stock_is_soft_deleted
+AND offer_validation = 'APPROVED'

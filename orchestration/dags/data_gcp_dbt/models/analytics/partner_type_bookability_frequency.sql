@@ -1,46 +1,44 @@
-with partner_crea_frequency as (
-    select
-        mrt_global__offer.partner_id,
-        COUNT(distinct DATE_TRUNC(offer_creation_date, month)) as nb_mois_crea_this_year
-    from {{ ref('mrt_global__offer') }} as mrt_global__offer
-    where DATE_DIFF(CURRENT_DATE, offer_creation_date, month) <= 12
-    group by 1
+WITH partner_crea_frequency AS (
+SELECT
+    mrt_global__offer.partner_id
+    , COUNT(DISTINCT DATE_TRUNC(offer_creation_date, MONTH)) AS nb_mois_crea_this_year
+FROM {{ ref('mrt_global__offer') }} AS mrt_global__offer
+WHERE DATE_DIFF(current_date, offer_creation_date, MONTH) <= 12
+GROUP BY 1
 ),
 
-cultural_sector_crea_frequency as (
-    select distinct
-        enriched_cultural_partner_data.partner_type,
-        PERCENTILE_DISC(nb_mois_crea_this_year, 0.5) over (partition by enriched_cultural_partner_data.partner_type) as median_crea_offer_frequency
-    from partner_crea_frequency
-        inner join {{ ref('enriched_cultural_partner_data') }} using (partner_id)
+cultural_sector_crea_frequency AS (
+SELECT DISTINCT
+    enriched_cultural_partner_data.partner_type
+    , PERCENTILE_DISC(nb_mois_crea_this_year, 0.5) OVER(PARTITION BY enriched_cultural_partner_data.partner_type) AS median_crea_offer_frequency
+FROM partner_crea_frequency
+INNER JOIN {{ ref('enriched_cultural_partner_data') }} USING (partner_id)
 ),
 
-partner_bookability_frequency as (
-    select
-        partner_id,
-        COUNT(distinct DATE_TRUNC(partition_date, month)) as nb_mois_bookable_this_year
-    from {{ ref('bookable_partner_history') }}
-    where DATE_DIFF(CURRENT_DATE, partition_date, month) <= 12
-    group by 1
-),
+partner_bookability_frequency AS (
+SELECT
+    partner_id
+    , COUNT(DISTINCT DATE_TRUNC(partition_date, MONTH)) AS nb_mois_bookable_this_year
+FROM {{ ref('bookable_partner_history') }}
+WHERE DATE_DIFF(current_date, partition_date, MONTH) <= 12
+GROUP BY 1),
 
-cultural_sector_bookability_frequency as (
-    select distinct
-        enriched_cultural_partner_data.partner_type,
-        PERCENTILE_DISC(nb_mois_bookable_this_year, 0.5) over (partition by enriched_cultural_partner_data.partner_type) as median_bookability_frequency
-    from partner_bookability_frequency
-        inner join {{ ref('enriched_cultural_partner_data') }} using (partner_id)
+cultural_sector_bookability_frequency AS (
+SELECT DISTINCT
+    enriched_cultural_partner_data.partner_type
+    , PERCENTILE_DISC(nb_mois_bookable_this_year, 0.5) OVER(PARTITION BY enriched_cultural_partner_data.partner_type) AS median_bookability_frequency
+FROM partner_bookability_frequency
+INNER JOIN {{ ref('enriched_cultural_partner_data') }} USING (partner_id)
 )
 
-select
-    partner_type,
-    median_bookability_frequency,
-    median_crea_offer_frequency,
-    case
-        when median_bookability_frequency <= 6 then 1
-        when median_bookability_frequency >= 11 then 3
-        else 2
-    end as cultural_sector_bookability_frequency_group
-from cultural_sector_crea_frequency
-    left join cultural_sector_bookability_frequency using (partner_type)
-order by 1
+SELECT
+    partner_type
+    , median_bookability_frequency
+    , median_crea_offer_frequency
+    , CASE
+        WHEN median_bookability_frequency <= 6 THEN 1
+        WHEN median_bookability_frequency >= 11 THEN 3
+        ELSE 2 END AS cultural_sector_bookability_frequency_group
+FROM cultural_sector_crea_frequency
+LEFT JOIN cultural_sector_bookability_frequency USING(partner_type)
+ORDER BY 1

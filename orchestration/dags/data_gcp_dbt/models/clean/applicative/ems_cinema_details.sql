@@ -1,2 +1,3 @@
-select *
-from {{ source('raw', 'applicative_database_ems_cinema_details') }}
+SELECT 
+    *
+FROM {{ source('raw', 'applicative_database_ems_cinema_details') }}

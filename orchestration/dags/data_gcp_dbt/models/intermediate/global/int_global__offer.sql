@@ -8,7 +8,7 @@
     )
 }}
 
-select
+SELECT
     o.offer_id,
     o.offer_product_id,
     o.offer_product_humanized_id,
@@ -57,7 +57,7 @@ select
     o.book_editor,
     o.type,
     o.offer_last_provider_id,
-    o.subtype as sub_type,
+    o.subType AS sub_type,
     o.mediation_humanized_id,
     o.total_individual_bookings,
     o.total_cancelled_individual_bookings,
@@ -85,5 +85,5 @@ select
     o.offerer_address_id,
     o.offer_publication_date,
     o.is_future_scheduled
-from {{ ref('int_applicative__offer') }} as o
-    left join {{ ref('int_global__venue') }} as v on v.venue_id = o.venue_id
+FROM {{ ref('int_applicative__offer') }} AS o
+LEFT JOIN {{ ref('int_global__venue') }} AS v ON v.venue_id = o.venue_id

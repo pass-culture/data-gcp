@@ -1,2 +1,2 @@
-select *
-from {{ ref("int_applicative__action_history") }}
+SELECT *
+FROM {{ ref("int_applicative__action_history") }}

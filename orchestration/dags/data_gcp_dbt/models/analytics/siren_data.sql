@@ -1,8 +1,8 @@
-select * except (rnk)
-from (
-    select
-        *,
-        ROW_NUMBER() over (partition by siren order by update_date desc) as rnk
-    from {{ source('clean','siren_data') }}
+SELECT * except(rnk) 
+FROM (
+    SELECT 
+        *
+        , ROW_NUMBER() OVER (PARTITION BY siren ORDER BY update_date DESC) as rnk
+    FROM {{ source('clean','siren_data') }}
 ) inn
-where rnk = 1
+WHERE rnk = 1

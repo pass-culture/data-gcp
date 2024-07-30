@@ -1,5 +1,4 @@
-select
-    stock_id,
+SELECT stock_id,
     stock_beginning_date,
     stock_booking_limit_date,
     stock_creation_date,
@@ -20,4 +19,4 @@ select
     price_category_label,
     price_category_label_id,
     venue_department_code
-from {{ ref('int_global__stock') }}
+FROM {{ ref('int_global__stock') }}

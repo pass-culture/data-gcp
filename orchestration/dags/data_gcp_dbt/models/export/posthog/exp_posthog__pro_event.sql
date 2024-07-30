@@ -1,11 +1,11 @@
-select
+SELECT
     event_date,
-    case when event_name = "page_view" then CONCAT("Page: ", page_name) else event_name end as event_name,
-    TIMESTAMP(event_timestamp) as event_timestamp,
+    CASE WHEN event_name="page_view" THEN CONCAT("Page: ", page_name) ELSE event_name END as event_name,
+    timestamp(event_timestamp) as event_timestamp,
     user_id,
     user_pseudo_id,
     platform,
-    struct(
+    STRUCT(   
         unique_session_id,
         origin,
         offer_id,
@@ -23,7 +23,7 @@ select
         download_file_type,
         download_files_cnt
     ) as extra_params,
-    struct(
+    STRUCT(
         offerer_id,
         offerer_name,
         offerer_first_individual_offer_creation_date,
@@ -51,7 +51,6 @@ select
         user_web_browser
     ) as user_params,
     "pro" as origin
-from {{ ref("mrt_pro__event") }}
-where
-    (not REGEXP_CONTAINS(event_name, '^[a-z]+(_[a-z]+)*$') or event_name = "page_view")
-    and user_pseudo_id is not NULL
+FROM {{ ref("mrt_pro__event") }}
+WHERE (NOT REGEXP_CONTAINS(event_name, '^[a-z]+(_[a-z]+)*$') OR event_name = "page_view")
+AND user_pseudo_id is NOT NULL

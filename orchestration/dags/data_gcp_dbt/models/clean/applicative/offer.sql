@@ -1,16 +1,14 @@
-with offer_rank as (
-    select
-        *,
-        ROW_NUMBER() over (partition by offer_id order by offer_date_updated desc) as row_number
-    from {{ source('raw', 'applicative_database_offer') }}
-    where
-        offer_subcategoryid not in ('ACTIVATION_THING', 'ACTIVATION_EVENT')
-        and (
-            booking_email != 'jeux-concours@passculture.app'
-            or booking_email is NULL
-        )
-)
-
-select * except (row_number)
-from offer_rank
-where row_number = 1
+WITH offer_rank as (
+    SELECT
+        *
+        , ROW_NUMBER() OVER (PARTITION BY offer_id ORDER BY offer_date_updated DESC) as row_number
+    FROM {{ source('raw', 'applicative_database_offer') }}
+    WHERE offer_subcategoryid NOT IN ('ACTIVATION_THING', 'ACTIVATION_EVENT')
+    AND (
+        booking_email != 'jeux-concours@passculture.app'
+        OR booking_email IS NULL
+    )
+)    
+SELECT * except(row_number)
+FROM offer_rank
+WHERE row_number=1

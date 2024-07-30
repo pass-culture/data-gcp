@@ -8,21 +8,21 @@
     )
 ) }}
 
-with displayed as (
-    select
+WITH displayed AS (
+    SELECT
         reco_call_id,
         event_date,
         sum(is_consult_offer) as total_module_consult_offer,
         sum(is_booking_confirmation) as total_module_booking_confirmation,
         sum(is_add_to_favorites) as total_module_add_to_favorites
-    from
-        {{ ref('int_firebase__native_event') }} fsoe
-    where
+    FROM
+       {{ ref('int_firebase__native_event') }} fsoe
+    WHERE
         {% if is_incremental() %}
-            event_date between date_sub(date('{{ ds() }}'), interval 3 day) and date('{{ ds() }}') and
+        event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}') AND
         {% endif %}
         reco_call_id is not null
-        and event_name in (
+        AND event_name in (
             "ConsultOffer",
             "BookingConfirmation",
             "HasAddedOfferToFavorites",
@@ -30,16 +30,16 @@ with displayed as (
             "PlaylistHorizontalScroll",
             "PlaylistVerticalScroll"
         )
-    group by reco_call_id, event_date
+    GROUP BY reco_call_id, event_date
 )
 
-select
+SELECT
     et.*,
     d.total_module_consult_offer,
     d.total_module_booking_confirmation,
     d.total_module_add_to_favorites
-from {{ ref('int_pcreco__past_offer_context') }} et
-    inner join displayed d on d.event_date = et.event_date and d.reco_call_id = et.reco_call_id
+FROM {{ ref('int_pcreco__past_offer_context') }} et
+INNER JOIN displayed d ON d.event_date = et.event_date AND d.reco_call_id = et.reco_call_id
 {% if is_incremental() %}
-    where et.event_date between date_sub(date('{{ ds() }}'), interval 3 day) and date('{{ ds() }}')
+    WHERE et.event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
 {% endif %}

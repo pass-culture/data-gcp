@@ -7,17 +7,16 @@
     )
 ) }}
 
-select distinct
-    event_date,
-    user_pseudo_id,
-    user_id,
-    user_properties.key as experiment_name,
-    user_properties.value.string_value as experiment_value
-from {{ source('raw','firebase_events') }},
-    UNNEST(user_properties) as user_properties
-where
-    user_properties.key like "%firebase_exp%"
+SELECT DISTINCT
+        event_date,
+        user_pseudo_id,
+        user_id,
+        user_properties.key as experiment_name,
+        user_properties.value.string_value as experiment_value
+FROM {{ source('raw','firebase_events') }},
+UNNEST(user_properties) AS user_properties
+where user_properties.key like "%firebase_exp%"
     {% if is_incremental() %}
-        and event_date between DATE_SUB(DATE("{{ ds() }}"), interval 1 day) and DATE("{{ ds() }}")
+    AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
     {% endif %}
-qualify ROW_NUMBER() over (partition by user_pseudo_id, user_id, experiment_name order by event_date desc) = 1
+QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id,user_id,experiment_name ORDER BY event_date DESC) = 1

@@ -1,4 +1,4 @@
-select
+SELECT
     offer_id,
     offer_product_id,
     offer_product_humanized_id,
@@ -74,8 +74,7 @@ select
     offerer_address_id,
     offer_publication_date,
     is_future_scheduled
-from {{ ref('int_global__offer') }} as o
-where
-    TRUE
-    and offer_validation = 'APPROVED'
-    and venue_id is not NULL
+FROM {{ ref('int_global__offer') }} AS o
+WHERE TRUE
+    AND offer_validation = 'APPROVED'
+    AND venue_id IS NOT NULL

@@ -91,33 +91,34 @@ ranked_for_bookings_not_canceled as (
     where booking_is_cancelled is FALSE
 ),
 
-date_of_bookings_on_third_product as (
-    select
+date_of_bookings_on_third_product AS (
+    SELECT
         user_id,
-        booking_created_at as booking_on_third_product_date
-    from ranked_for_bookings_not_canceled
-    where same_category_booking_rank = 1
-    qualify RANK() over (
-        partition by user_id
-        order by booking_created_at
-    ) = 3
+        booking_created_at AS booking_on_third_product_date
+    FROM ranked_for_bookings_not_canceled
+    WHERE same_category_booking_rank = 1
+    QUALIFY RANK() OVER (
+            PARTITION BY user_id
+            ORDER BY booking_created_at
+        ) = 3
 ),
+
 
 first_paid_booking_type as (
     select
         user_id,
-        offer_subcategory_id as first_paid_booking_type
-    from {{ ref('mrt_global__booking') }}
-    where booking_amount > 0
-    qualify RANK() over (
-        partition by user_id
-        order by
-            booking_created_at
-    ) = 1
+        offer_subcategory_id AS first_paid_booking_type
+    FROM {{ ref('mrt_global__booking') }}
+    WHERE booking_amount > 0
+    QUALIFY RANK() over (
+            partition by user_id
+            order by
+                booking_created_at
+        ) = 1
 )
 
 
-select
+SELECT
     u.user_id,
     u.user_department_code,
     u.user_postal_code,
@@ -125,7 +126,7 @@ select
     u.user_activity,
     u.user_civility,
     u.user_school_type,
-    u.user_cultural_survey_filled_date as first_connection_date,
+    u.user_cultural_survey_filled_date AS first_connection_date,
     u.user_is_active,
     u.user_age,
     u.user_birth_date,
@@ -149,8 +150,8 @@ select
     bdgu.first_booking_date,
     bdgu.second_booking_date,
     dbtp.booking_on_third_product_date,
-    COALESCE(bdgu.total_individual_bookings, 0) as total_individual_bookings,
-    COALESCE(bdgu.total_non_cancelled_individual_bookings, 0) as total_non_cancelled_individual_bookings,
+    COALESCE(bdgu.total_individual_bookings, 0) AS total_individual_bookings,
+    COALESCE( bdgu.total_non_cancelled_individual_bookings, 0) AS total_non_cancelled_individual_bookings,
     bdgu.total_actual_amount_spent,
     bdgu.total_theoretical_amount_spent,
     bdgu.total_theoretical_amount_spent_in_digital_goods,
@@ -163,9 +164,9 @@ select
     dgu.last_deposit_amount - bdgu.total_deposit_theoretical_amount_spent as total_theoretical_remaining_credit,
     bdgu.last_individual_booking_date as last_booking_date,
     bdgu.booking_creation_date_first,
-    DATE_DIFF(bdgu.first_individual_booking_date, dgu.first_deposit_creation_date, day) as days_between_activation_date_and_first_booking_date,
-    DATE_DIFF(bdgu.booking_creation_date_first, dgu.first_deposit_creation_date, day) as days_between_activation_date_and_first_booking_paid,
-    COALESCE(user_activation_date, user_creation_date) as user_activation_date,
+    DATE_DIFF(bdgu.first_individual_booking_date,dgu.first_deposit_creation_date,DAY) AS days_between_activation_date_and_first_booking_date,
+    DATE_DIFF(bdgu.booking_creation_date_first,dgu.first_deposit_creation_date,DAY) AS days_between_activation_date_and_first_booking_paid,
+    COALESCE(user_activation_date,user_creation_date) AS user_activation_date,
     bdgu.first_booking_type,
     first_paid_booking_type.first_paid_booking_type,
     bdgu.total_distinct_booking_types,
@@ -189,5 +190,5 @@ from {{ ref('int_applicative__user') }} as u
 where
     (
         user_is_active
-        or action_history_reason = 'upon user request'
+        OR action_history_reason = 'upon user request'
     )

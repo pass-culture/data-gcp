@@ -1,38 +1,38 @@
-with adage_agreg_synchro as (
-    select siret
-    from {{ source('raw', 'adage') }}
-    where synchropass = "1.0"
+WITH adage_agreg_synchro AS (
+SELECT siret
+FROM {{ source('raw', 'adage') }}
+where synchroPass = "1.0"
 )
 
-select
+SELECT
     id,
-    venueid,
+    venueId,
     siret,
-    statutid,
-    labelid,
-    typeid,
-    communeid,
+    statutId,
+    labelId,
+    typeId,
+    communeId,
     libelle,
     adresse,
-    siteweb,
+    siteWeb,
     latitude,
     longitude,
     actif,
-    synchropass,
-    datemodification,
-    statutlibelle,
-    labellibelle,
-    typeicone,
-    typelibelle,
-    communelibelle,
-    communedepartement,
-    academielibelle,
-    regionlibelle,
+    synchroPass,
+    dateModification,
+    statutLibelle,
+    labelLibelle,
+    typeIcone,
+    typeLibelle,
+    communeLibelle,
+    communeDepartement,
+    academieLibelle,
+    regionLibelle,
     domaines,
-    domaineids,
-    regionid,
-    academieid,
-    left(siret, 9) as siren,
-    case when siret in (select siret from adage_agreg_synchro) then TRUE else FALSE end as siret_synchro_adage,
-    case when left(siret, 9) in (select left(siret, 9) from adage_agreg_synchro) then TRUE else FALSE end as siren_synchro_adage
-from {{ source('raw','adage') }}
+    domaineIds,
+    regionId,
+    academieId,
+    left(siret, 9) AS siren,
+    CASE WHEN siret in (select siret from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siret_synchro_adage,
+    CASE WHEN left(siret, 9) in (select left(siret, 9) from adage_agreg_synchro) THEN TRUE ELSE FALSE END AS siren_synchro_adage
+FROM {{ source('raw','adage') }}

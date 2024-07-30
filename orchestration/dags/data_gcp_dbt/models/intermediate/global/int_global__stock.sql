@@ -1,4 +1,4 @@
-select
+SELECT
     s.stock_beginning_date,
     s.stock_modified_date,
     s.stock_modified_at,
@@ -38,7 +38,7 @@ select
     o.venue_macro_density_label,
     o.venue_label,
     o.venue_type_label,
-    o.venue_managing_offerer_id as offerer_id,
+    o.venue_managing_offerer_id AS offerer_id,
     o.offerer_name,
     o.partner_id,
     o.physical_goods,
@@ -47,5 +47,5 @@ select
     o.offer_category_id,
     o.venue_iris_internal_id,
     o.offer_url
-from {{ ref('int_applicative__stock') }} as s
-    left join {{ ref('int_global__offer') }} as o on s.offer_id = o.offer_id
+FROM {{ ref('int_applicative__stock') }} AS s
+LEFT JOIN {{ ref('int_global__offer') }} AS o ON s.offer_id = o.offer_id

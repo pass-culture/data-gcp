@@ -1,4 +1,6 @@
-select
+
+
+SELECT
     ie.item_id,
     ie.image_embedding,
     ie.name_embedding,
@@ -9,12 +11,12 @@ select
     ie.label_hybrid_embedding,
     ie.extraction_date,
     ie.extraction_datetime
-from
+FROM
     {{ source('ml_preproc', 'item_embedding_extraction') }} ie
-    inner join {{ ref("item_metadata") }} im on ie.item_id = im.item_id
+INNER JOIN {{ ref("item_metadata") }} im on ie.item_id = im.item_id
 
-qualify ROW_NUMBER() over (
-    partition by ie.item_id
-    order by
-        ie.extraction_datetime desc
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY ie.item_id
+    ORDER by
+        ie.extraction_datetime DESC
 ) = 1

@@ -1,2 +1,3 @@
-select *
-from {{ source('raw', 'applicative_database_offerer_tag') }}
+SELECT 
+    *
+FROM {{ source('raw', 'applicative_database_offerer_tag') }}

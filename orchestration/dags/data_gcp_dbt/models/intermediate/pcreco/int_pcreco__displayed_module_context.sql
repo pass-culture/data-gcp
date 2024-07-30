@@ -7,7 +7,7 @@
     )
 ) }}
 
-select
+SELECT
     event_date,
     reco_call_id,
     playlist_origin,
@@ -20,13 +20,13 @@ select
     scorer_ranking_model_version,
     user_context.user_is_geolocated,
     count(distinct offer_id) as total_displayed_offers
-from {{ ref("int_pcreco__displayed_offer_event") }}
+FROM {{ ref("int_pcreco__displayed_offer_event") }}
 
 {% if is_incremental() %}
-    where event_date between date_sub(date('{{ ds() }}'), interval 3 day) and date('{{ ds() }}')
+    WHERE event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
 {% endif %}
 
-group by
+GROUP BY
     event_date,
     reco_call_id,
     playlist_origin,

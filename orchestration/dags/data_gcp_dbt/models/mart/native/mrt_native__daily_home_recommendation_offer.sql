@@ -7,32 +7,31 @@
     )
 ) }}
 
-with module_context as (
-    select distinct
-        user_id,
-        module_displayed_date,
-        unique_session_id,
-        user_location_type,
-        entry_id,
-        entry_name,
-        module_id,
-        module_name,
-        parent_module_id,
-        parent_module_type,
-        parent_entry_id,
-        parent_home_type,
-        module_type,
-        reco_call_id
-    from {{ ref('mrt_native__daily_user_home_module') }}
-    {% if is_incremental() %}
-        where module_displayed_date between date_sub(date('{{ ds() }}'), interval 3 day) and date('{{ ds() }}')
-    {% else %}
+WITH module_context AS (
+  SELECT
+    DISTINCT
+      user_id,
+      module_displayed_date,
+      unique_session_id,
+      user_location_type,
+      entry_id,
+      entry_name,
+      module_id,
+      module_name,
+      parent_module_id,
+      parent_module_type,
+      parent_entry_id,
+      parent_home_type,
+      module_type,
+      reco_call_id
+  FROM {{ ref('mrt_native__daily_user_home_module') }}
+  {% if is_incremental() %}
+    WHERE module_displayed_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
+  {% else %}
     WHERE module_displayed_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 60 DAY) and DATE('{{ ds() }}')
   {% endif %}
-),
-
-offer_context as (
-    select
+), offer_context AS (
+    SELECT
         doe.event_date as module_displayed_date,
         mc.user_id,
         mc.unique_session_id,
@@ -51,52 +50,50 @@ offer_context as (
         mc.parent_entry_id,
         mc.parent_home_type,
         mc.module_type
-    from {{ ref('int_pcreco__displayed_offer_event') }} doe
-        inner join module_context mc
-            on
-                mc.module_displayed_date = doe.event_date
-                and mc.reco_call_id = doe.reco_call_id
-                and mc.user_id = doe.user_id
-    where
-        playlist_origin = "recommendation"
-        {% if is_incremental() %}
-            and event_date between date_sub(date('{{ ds() }}'), interval 3 day) and date('{{ ds() }}')
-        {% else %}
+    FROM {{ ref('int_pcreco__displayed_offer_event') }} doe
+    INNER JOIN module_context mc
+      ON
+      mc.module_displayed_date = doe.event_date
+      AND mc.reco_call_id = doe.reco_call_id
+      AND mc.user_id = doe.user_id
+    WHERE playlist_origin = "recommendation"
+    {% if is_incremental() %}
+    AND event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
+    {% else %}
     AND event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 60 DAY) and DATE('{{ ds() }}')
     {% endif %}
 )
 
-select
-    oc.module_displayed_date,
-    oc.reco_call_id,
-    oc.playlist_origin,
-    oc.context,
-    oc.user_id,
-    oc.offer_id,
-    oc.offer_display_order,
-    oc.user_location_type,
-    oc.entry_id,
-    oc.entry_name,
-    oc.module_id,
-    oc.module_name,
-    oc.parent_module_id,
-    oc.parent_module_type,
-    oc.parent_entry_id,
-    oc.parent_home_type,
-    oc.module_type,
-    oc.unique_session_id,
-    mc.booking_id,
-    max(mc.consult_offer_timestamp) as consult_offer_timestamp,
-    max(mc.booking_timestamp) as booking_timestamp,
-    max(mc.fav_timestamp) as fav_timestamp
-from offer_context oc
-    left join {{ ref('mrt_native__daily_user_home_module') }} mc
-        on
-            oc.module_displayed_date = mc.module_displayed_date
-            and oc.reco_call_id = mc.reco_call_id
-            and oc.playlist_origin = mc.module_type
-            and oc.offer_id = mc.offer_id
-group by
+SELECT
+  oc.module_displayed_date,
+  oc.reco_call_id,
+  oc.playlist_origin,
+  oc.context,
+  oc.user_id,
+  oc.offer_id,
+  oc.offer_display_order,
+  oc.user_location_type,
+  oc.entry_id,
+  oc.entry_name,
+  oc.module_id,
+  oc.module_name,
+  oc.parent_module_id,
+  oc.parent_module_type,
+  oc.parent_entry_id,
+  oc.parent_home_type,
+  oc.module_type,
+  oc.unique_session_id,
+  mc.booking_id,
+  MAX(mc.consult_offer_timestamp) as consult_offer_timestamp,
+  MAX(mc.booking_timestamp) as booking_timestamp,
+  MAX(mc.fav_timestamp) as fav_timestamp
+FROM offer_context oc
+LEFT JOIN {{ ref('mrt_native__daily_user_home_module') }} mc
+  ON oc.module_displayed_date = mc.module_displayed_date
+  AND oc.reco_call_id = mc.reco_call_id
+  AND oc.playlist_origin = mc.module_type
+  AND oc.offer_id = mc.offer_id
+GROUP BY
     module_displayed_date,
     reco_call_id,
     playlist_origin,

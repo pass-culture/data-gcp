@@ -1,4 +1,4 @@
-select
+SELECT
     cb.collective_booking_id,
     cb.collective_stock_id,
     co.stock_id,
@@ -16,7 +16,7 @@ select
     co.partner_id,
     co.offerer_name,
     co.venue_iris_internal_id,
-    co.collective_stock_price as booking_amount,
+    co.collective_stock_price AS booking_amount,
     co.collective_stock_number_of_tickets,
     co.collective_stock_beginning_date_time,
     cb.educational_institution_id,
@@ -52,7 +52,7 @@ select
     cb.collective_booking_reimbursement_date,
     cb.collective_booking_rank,
     co.collective_offer_image_id
-from {{ ref('int_applicative__collective_booking') }} as cb
-    inner join {{ ref('int_global__collective_offer') }} as co on co.collective_stock_id = cb.collective_stock_id
-    inner join {{ source('raw', 'applicative_database_educational_year') }} as educational_year on educational_year.adage_id = cb.educational_year_id
-    inner join {{ ref('int_applicative__educational_institution') }} as educational_institution on educational_institution.educational_institution_id = cb.educational_institution_id
+FROM {{ ref('int_applicative__collective_booking') }}  AS cb
+INNER JOIN {{ ref('int_global__collective_offer') }} AS co ON co.collective_stock_id = cb.collective_stock_id
+INNER JOIN {{ source('raw', 'applicative_database_educational_year') }} AS educational_year ON educational_year.adage_id = cb.educational_year_id
+INNER JOIN {{ ref('int_applicative__educational_institution') }} AS educational_institution ON educational_institution.educational_institution_id = cb.educational_institution_id

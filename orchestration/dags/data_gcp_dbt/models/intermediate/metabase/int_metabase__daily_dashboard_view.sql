@@ -10,7 +10,7 @@ select
     count(*) as total_views
 from
     {{ ref("int_metabase__daily_query") }}
-group by
+GROUP BY
     execution_date,
     dashboard_id,
     card_id,

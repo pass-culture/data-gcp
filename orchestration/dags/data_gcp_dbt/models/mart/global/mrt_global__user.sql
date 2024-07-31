@@ -33,16 +33,16 @@ select user_id,
     total_non_cancelled_individual_bookings,
     total_actual_amount_spent,
     total_theoretical_amount_spent,
-    total_theoretical_amount_spent_in_digital_goods,
-    total_theoretical_amount_spent_in_physical_goods,
-    total_theoretical_amount_spent_in_outings,
+    total_theoretical_digital_goods_amount_spent,
+    total_theoretical_physical_goods_amount_spent,
+    total_theoretical_outings_amount_spent,
     total_deposit_theoretical_amount_spent,
-    total_last_deposit_amount_spent_in_digital_goods,
+    total_last_deposit_digital_goods_amount_spent,
     total_deposit_actual_amount_spent,
     last_deposit_amount,
     total_theoretical_remaining_credit,
     last_booking_date,
-    booking_creation_date_first,
+    first_booking_creation_date,
     days_between_activation_date_and_first_booking_date,
     days_between_activation_date_and_first_booking_paid,
     user_activation_date,
@@ -58,5 +58,5 @@ from {{ ref('int_global__user') }}
 where
     (
         user_is_active
-        or action_history_reason = 'upon user request'
+        or user_suspension_reason = 'upon user request'
     )

@@ -1,23 +1,31 @@
 [sqlfluff]
+# Global configuration
 dialect = bigquery
 templater = dbt
-runaway_limit = 10
 max_line_length = 0
-rules= JJ01
-; exclude_rules = references.qualification,AM06
+rules = JJ01
 processes = 1
 large_file_skip_byte_limit = 25000
 ignore_templated_areas = False
 
-
+[sqlfluff:indentation]
+# While implicit indents are not enabled by default. Many of the
+# SQLFluff maintainers do use them in their projects.
+allow_implicit_indents = True
+indent_unit = space
+indented_ctes = False
+indented_joins = True
+indented_using_on = True
+indented_on_contents = True
+tab_space_size = 4
+template_blocks_indent = True
 
 [sqlfluff:templater:jinja]
-apply_template_indentation = True  # Apply indentation rules within Jinja templates
+# Templater configuration
+# Apply indentation rules within Jinja templates
+apply_template_indentation = True
 apply_dbt_builtins = True
-load_macros_from_path = ./macros, ./target/dbt_packages/dbt_utils/macros,./target/dbt_packages/dbt_date/macros,./target/dbt_packages/dbt_airflow_macros/macros
-
-; [sqlfluff:templater:jinja:macros]
-; ds = {% macro ds() %} current_date().strftime("%Y-%m-%d") {% endmacro %}
+load_macros_from_path = ./macros, ./target/dbt_packages/dbt_utils/macros, ./target/dbt_packages/dbt_date/macros, ./target/dbt_packages/dbt_airflow_macros/macros
 
 [sqlfluff:templater:dbt]
 apply_dbt_builtins = True
@@ -28,28 +36,18 @@ target = stg
 
 [sqlfluff:templater:dbt:context]
 ENV_SHORT_NAME = "stg"
-; [sqlfluff:templater:jinja:context]
-; target= {"profile_name": "data_gcp_dbt","name": "dev"}
-; incremental_strategy='insert_overwrite'
-; partition_by={'field': 'event_date', 'data_type': 'date'}
-; on_schema_change='ignore'
 
-[sqlfluff:rules:capitalisation.keywords]
-capitalisation_policy = lower
-
-[sqlfluff:rules:capitalisation.functions]
-capitalisation_policy = lower
-
-[sqlfluff:rules:capitalisation.identifiers]
-capitalisation_policy = lower
+[sqlfluff:templater]
+unwrap_wrapped_queries = True
+apply_dbt_builtins = True
 
 [sqlfluff:layout:type:comma]
+# Layout configuration
 spacing_before = touch
 line_position = trailing
 
 [sqlfluff:layout:type:end_of_file]
 spacing_before = touch
-
 
 [sqlfluff:layout:type:comment]
 spacing_before = any
@@ -58,6 +56,16 @@ spacing_after = any
 [sqlfluff:layout:type:template_loop]
 spacing_before = any
 spacing_after = any
+
+[sqlfluff:rules:capitalisation.keywords]
+# Rules configuration
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.identifiers]
+capitalisation_policy = lower
 
 [sqlfluff:rules:structure.join_condition_order]
 preferred_first_table_in_join_clause = earlier
@@ -68,19 +76,6 @@ aliasing = explicit
 [sqlfluff:rules.aliasing]
 unused = true
 
-[sqlfluff:rules:ambiguous.column_references]  # Number in group by and order by
+[sqlfluff:rules:ambiguous.column_references]
+# Number in group by and order by
 group_by_and_order_by_style = implicit
-
-
-[sqlfluff:templater]
-unwrap_wrapped_queries = True
-apply_dbt_builtins = True
-
-[sqlfluff:indentation]
-indent_unit = space
-indented_ctes = False
-indented_joins = True
-indented_using_on = True
-indented_on_contents = True
-tab_space_size = 4
-template_blocks_indent = True

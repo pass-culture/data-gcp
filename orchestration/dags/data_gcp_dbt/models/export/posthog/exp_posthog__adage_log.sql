@@ -1,10 +1,10 @@
-SELECT  
-    event_date, 
+select
+    event_date,
     event_name,
     timestamp(event_timestamp) as event_timestamp,
     user_id,
     user_id as user_pseudo_id,
-    STRUCT (
+    struct(
         total_results,
         origin,
         collective_stock_id,
@@ -37,10 +37,10 @@ SELECT
         partner_confirmed_collective_bookings,
         partner_department_code
     ) as extra_params,
-    STRUCT (
+    struct(
         uai,
         user_role
-    )  as user_params,
+    ) as user_params,
     'adage' as origin
-FROM {{ ref('mrt_collective__adage_log') }}
-WHERE user_id is NOT NULL
+from {{ ref('mrt_collective__adage_log') }}
+where user_id is not NULL

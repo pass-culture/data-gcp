@@ -1,7 +1,7 @@
-SELECT
+select
     b.booking_id,
-    DATE(b.booking_creation_date) AS booking_creation_date,
-    b.booking_creation_date AS booking_created_at,
+    DATE(b.booking_creation_date) as booking_creation_date,
+    b.booking_creation_date as booking_created_at,
     b.stock_id,
     b.booking_quantity,
     b.user_id,
@@ -18,8 +18,8 @@ SELECT
     b.venue_id,
     b.price_category_label,
     b.booking_reimbursement_date,
-    COALESCE(b.booking_amount, 0) * COALESCE(b.booking_quantity, 0) AS booking_intermediary_amount,
-    RANK() OVER (PARTITION BY b.user_id ORDER BY booking_creation_date) AS booking_rank,
+    COALESCE(b.booking_amount, 0) * COALESCE(b.booking_quantity, 0) as booking_intermediary_amount,
+    RANK() over (partition by b.user_id order by booking_creation_date) as booking_rank,
     d.deposit_type
-FROM {{ source('raw','applicative_database_booking') }} AS b
-LEFT JOIN {{ ref('int_applicative__deposit') }} AS d ON b.deposit_id = d.deposit_id
+from {{ source('raw','applicative_database_booking') }} as b
+    left join {{ ref('int_applicative__deposit') }} as d on b.deposit_id = d.deposit_id

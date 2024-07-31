@@ -1,62 +1,63 @@
-WITH individual_data AS (
-SELECT
-    offerer_siren
-    ,CASE WHEN offer.offer_id IS NULL THEN NULL ELSE "INDIVIDUAL" END AS individual_collective
-    ,venue.venue_id
-    ,venue.venue_name
-    ,venue.venue_public_name
-    ,subcategories.category_id
-    ,subcategories.id AS subcategory
-    ,offer.offer_id
-    ,offer.offer_name
-    ,COUNT(DISTINCT CASE WHEN booking.booking_status IN ('USED', 'REIMBURSED') THEN booking.booking_id ELSE NULL END) AS count_bookings -- will be deleted
-    ,COUNT(DISTINCT CASE WHEN booking.booking_status IN ('USED', 'REIMBURSED') THEN booking.booking_id ELSE NULL END) AS count_used_bookings
-    ,SUM(CASE WHEN booking.booking_status IN ('USED', 'REIMBURSED') THEN booking.booking_quantity ELSE NULL END) AS count_used_tickets_booked
-    ,SUM(CASE WHEN booking.booking_status IN ('CONFIRMED') THEN booking.booking_quantity ELSE NULL END) AS count_pending_tickets_booked
-    ,COUNT(DISTINCT CASE WHEN booking.booking_status IN ('CONFIRMED') THEN booking.booking_id ELSE NULL END) AS count_pending_bookings
-    ,SUM(CASE WHEN booking.booking_status IN ('USED', 'REIMBURSED') THEN booking.booking_intermediary_amount ELSE NULL END) AS real_amount_booked
-    ,SUM(CASE WHEN booking.booking_status IN ('CONFIRMED') THEN booking.booking_intermediary_amount ELSE NULL END) AS pending_amount_booked
-FROM {{ ref('mrt_global__venue') }} venue
-JOIN {{ ref('enriched_offerer_data') }} offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
-LEFT JOIN {{ ref('mrt_global__offer') }} offer ON venue.venue_id = offer.venue_id
-LEFT JOIN {{ source('clean','subcategories') }} subcategories ON offer.offer_subcategory_id = subcategories.id
-LEFT JOIN {{ ref('mrt_global__booking') }} booking ON offer.offer_id = booking.offer_id AND booking.booking_status IN ('USED', 'REIMBURSED', 'CONFIRMED')
-WHERE offerer_siren IS NOT NULL
-GROUP BY 1,2,3,4,5,6,7,8,9
+with individual_data as (
+    select
+        offerer_siren,
+        case when offer.offer_id is NULL then NULL else "INDIVIDUAL" end as individual_collective,
+        venue.venue_id,
+        venue.venue_name,
+        venue.venue_public_name,
+        subcategories.category_id,
+        subcategories.id as subcategory,
+        offer.offer_id,
+        offer.offer_name,
+        COUNT(distinct case when booking.booking_status in ('USED', 'REIMBURSED') then booking.booking_id else NULL end) as count_bookings, -- will be deleted
+        COUNT(distinct case when booking.booking_status in ('USED', 'REIMBURSED') then booking.booking_id else NULL end) as count_used_bookings,
+        SUM(case when booking.booking_status in ('USED', 'REIMBURSED') then booking.booking_quantity else NULL end) as count_used_tickets_booked,
+        SUM(case when booking.booking_status in ('CONFIRMED') then booking.booking_quantity else NULL end) as count_pending_tickets_booked,
+        COUNT(distinct case when booking.booking_status in ('CONFIRMED') then booking.booking_id else NULL end) as count_pending_bookings,
+        SUM(case when booking.booking_status in ('USED', 'REIMBURSED') then booking.booking_intermediary_amount else NULL end) as real_amount_booked,
+        SUM(case when booking.booking_status in ('CONFIRMED') then booking.booking_intermediary_amount else NULL end) as pending_amount_booked
+    from {{ ref('mrt_global__venue') }} venue
+        join {{ ref('enriched_offerer_data') }} offerer on venue.venue_managing_offerer_id = offerer.offerer_id
+        left join {{ ref('mrt_global__offer') }} offer on venue.venue_id = offer.venue_id
+        left join {{ source('clean','subcategories') }} subcategories on offer.offer_subcategory_id = subcategories.id
+        left join {{ ref('mrt_global__booking') }} booking on offer.offer_id = booking.offer_id and booking.booking_status in ('USED', 'REIMBURSED', 'CONFIRMED')
+    where offerer_siren is not NULL
+    group by 1, 2, 3, 4, 5, 6, 7, 8, 9
 ),
-collective_data AS (
-SELECT
-    offerer_siren
-    ,CASE WHEN offer.collective_offer_id IS NULL THEN NULL ELSE "COLLECTIVE" END AS individual_collective
-    ,venue.venue_id
-    ,venue.venue_name
-    ,venue.venue_public_name
-    ,offer.collective_offer_category_id
-    ,offer.collective_offer_subcategory_id
-    ,offer.collective_offer_id
-    ,offer.collective_offer_name
-    ,COUNT(DISTINCT CASE WHEN booking.collective_booking_status IN ('USED', 'REIMBURSED','CONFIRMED') THEN booking.collective_booking_id ELSE NULL END) AS count_bookings -- will be deleted
-    ,COUNT(DISTINCT CASE WHEN booking.collective_booking_status IN ('USED', 'REIMBURSED','CONFIRMED') THEN booking.collective_booking_id ELSE NULL END) AS count_used_bookings
-    ,COUNT(DISTINCT CASE WHEN booking.collective_booking_status IN ('PENDING') THEN booking.collective_booking_id ELSE NULL END) AS count_pending_bookingst
-    ,COUNT(DISTINCT CASE WHEN booking.collective_booking_status IN ('USED', 'REIMBURSED','CONFIRMED') THEN booking.collective_booking_id ELSE NULL END) AS count_used_tickets_booked -- 1 offer = 1 ticket, just to match format
-    ,COUNT(DISTINCT CASE WHEN booking.collective_booking_status IN ('PENDING') THEN booking.collective_booking_id ELSE NULL END) AS count_pending_tickets_booked -- same
-    ,SUM(CASE WHEN booking.collective_booking_status IN ('USED', 'REIMBURSED','CONFIRMED') THEN booking.booking_amount ELSE NULL END) AS real_amount_booked
-    ,SUM(CASE WHEN booking.collective_booking_status IN ('PENDING') THEN booking.booking_amount ELSE NULL END) AS pending_amount_booked
-FROM {{ ref('mrt_global__venue') }}  venue
-JOIN  {{ ref('enriched_offerer_data') }} offerer ON venue.venue_managing_offerer_id = offerer.offerer_id
-LEFT JOIN  {{ ref('enriched_collective_offer_data') }} offer ON venue.venue_id = offer.venue_id
-LEFT JOIN {{ ref('enriched_collective_booking_data') }} booking ON offer.collective_offer_id = booking.collective_offer_id AND booking.collective_booking_status IN ('USED', 'REIMBURSED', 'CONFIRMED', 'PENDING')
-WHERE offerer_siren IS NOT NULL
-GROUP BY 1,2,3,4,5,6,7,8,9
+
+collective_data as (
+    select
+        offerer_siren,
+        case when offer.collective_offer_id is NULL then NULL else "COLLECTIVE" end as individual_collective,
+        venue.venue_id,
+        venue.venue_name,
+        venue.venue_public_name,
+        offer.collective_offer_category_id,
+        offer.collective_offer_subcategory_id,
+        offer.collective_offer_id,
+        offer.collective_offer_name,
+        COUNT(distinct case when booking.collective_booking_status in ('USED', 'REIMBURSED', 'CONFIRMED') then booking.collective_booking_id else NULL end) as count_bookings, -- will be deleted
+        COUNT(distinct case when booking.collective_booking_status in ('USED', 'REIMBURSED', 'CONFIRMED') then booking.collective_booking_id else NULL end) as count_used_bookings,
+        COUNT(distinct case when booking.collective_booking_status in ('PENDING') then booking.collective_booking_id else NULL end) as count_pending_bookingst,
+        COUNT(distinct case when booking.collective_booking_status in ('USED', 'REIMBURSED', 'CONFIRMED') then booking.collective_booking_id else NULL end) as count_used_tickets_booked, -- 1 offer = 1 ticket, just to match format
+        COUNT(distinct case when booking.collective_booking_status in ('PENDING') then booking.collective_booking_id else NULL end) as count_pending_tickets_booked, -- same
+        SUM(case when booking.collective_booking_status in ('USED', 'REIMBURSED', 'CONFIRMED') then booking.booking_amount else NULL end) as real_amount_booked,
+        SUM(case when booking.collective_booking_status in ('PENDING') then booking.booking_amount else NULL end) as pending_amount_booked
+    from {{ ref('mrt_global__venue') }} venue
+        join {{ ref('enriched_offerer_data') }} offerer on venue.venue_managing_offerer_id = offerer.offerer_id
+        left join {{ ref('enriched_collective_offer_data') }} offer on venue.venue_id = offer.venue_id
+        left join {{ ref('enriched_collective_booking_data') }} booking on offer.collective_offer_id = booking.collective_offer_id and booking.collective_booking_status in ('USED', 'REIMBURSED', 'CONFIRMED', 'PENDING')
+    where offerer_siren is not NULL
+    group by 1, 2, 3, 4, 5, 6, 7, 8, 9
 ),
-all_data AS (
-SELECT
-    *
-FROM individual_data
-UNION ALL
-SELECT
-    *
-FROM collective_data
+
+all_data as (
+    select *
+    from individual_data
+    union all
+    select *
+    from collective_data
 )
-SELECT *
-FROM all_data
+
+select *
+from all_data

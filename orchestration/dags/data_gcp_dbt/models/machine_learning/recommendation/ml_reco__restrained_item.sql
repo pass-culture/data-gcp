@@ -4,56 +4,56 @@
     )
 }}
 
-SELECT
+select
     eod.item_id,
     MAX(
-        CASE
+        case
             -- LVL1
-            WHEN eim.titelive_gtl_id LIKE "07%" THEN TRUE -- "Religion & Esotérisme"
-            WHEN eim.titelive_gtl_id LIKE "08%" THEN TRUE -- "Entreprise, économie & droit"
-            WHEN eim.titelive_gtl_id LIKE "09%" THEN TRUE -- "Sciences humaines & sociales"
-            WHEN eim.titelive_gtl_id LIKE "10%" THEN TRUE -- "Sciences & Techniques"
-            WHEN eim.titelive_gtl_id LIKE "11%" THEN TRUE -- "Scolaire"
-            WHEN eim.titelive_gtl_id LIKE "12%" THEN TRUE -- "Parascolaire"
-            WHEN eim.titelive_gtl_id LIKE "13%" THEN TRUE -- "Dictionnaires / Encyclopédies / Documentation"
+            when eim.titelive_gtl_id like "07%" then TRUE -- "Religion & Esotérisme"
+            when eim.titelive_gtl_id like "08%" then TRUE -- "Entreprise, économie & droit"
+            when eim.titelive_gtl_id like "09%" then TRUE -- "Sciences humaines & sociales"
+            when eim.titelive_gtl_id like "10%" then TRUE -- "Sciences & Techniques"
+            when eim.titelive_gtl_id like "11%" then TRUE -- "Scolaire"
+            when eim.titelive_gtl_id like "12%" then TRUE -- "Parascolaire"
+            when eim.titelive_gtl_id like "13%" then TRUE -- "Dictionnaires / Encyclopédies / Documentation"
             -- LVL2
-            WHEN eim.titelive_gtl_id LIKE "0202%" THEN TRUE -- "Eveil / Petite enfance (- de 3 ans)",
-            WHEN eim.titelive_gtl_id LIKE "0203%" THEN TRUE -- "Livres illustrés / Enfance (+ de 3 ans)",
-            WHEN eim.titelive_gtl_id LIKE "0403%" THEN TRUE -- "Arts de la table / Gastronomie"
-            WHEN eim.titelive_gtl_id LIKE "0406%" THEN TRUE -- "Vie quotidienne & Bien-être",
+            when eim.titelive_gtl_id like "0202%" then TRUE -- "Eveil / Petite enfance (- de 3 ans)",
+            when eim.titelive_gtl_id like "0203%" then TRUE -- "Livres illustrés / Enfance (+ de 3 ans)",
+            when eim.titelive_gtl_id like "0403%" then TRUE -- "Arts de la table / Gastronomie"
+            when eim.titelive_gtl_id like "0406%" then TRUE -- "Vie quotidienne & Bien-être",
             -- LVL3
-            WHEN eim.titelive_gtl_id LIKE "030201%" THEN TRUE -- "Public averti (+ 18 ans)"
-            WHEN eim.titelive_gtl_id LIKE "030403%" THEN TRUE -- "Kodomo"
-            WHEN eim.titelive_gtl_id LIKE "040505%" THEN TRUE -- "Jeux"
+            when eim.titelive_gtl_id like "030201%" then TRUE -- "Public averti (+ 18 ans)"
+            when eim.titelive_gtl_id like "030403%" then TRUE -- "Kodomo"
+            when eim.titelive_gtl_id like "040505%" then TRUE -- "Jeux"
             -- LVL4
-            WHEN eim.titelive_gtl_id LIKE "01020503%" THEN TRUE -- "Thriller érotique"
-            WHEN eim.titelive_gtl_id LIKE "01020607%" THEN TRUE -- "Romance Erotique"
-            WHEN eim.titelive_gtl_id LIKE "01020608%" THEN TRUE -- "Dark Romance"
-            WHEN eim.titelive_gtl_id LIKE "01030306%" THEN TRUE -- "Roman libertin"
-            WHEN eim.titelive_gtl_id LIKE "03020112%" THEN TRUE -- "Public averti (érotique, hyper violence…)"
-            WHEN eim.titelive_gtl_id LIKE "04010206%" THEN TRUE -- "Enseignement universitaire"
+            when eim.titelive_gtl_id like "01020503%" then TRUE -- "Thriller érotique"
+            when eim.titelive_gtl_id like "01020607%" then TRUE -- "Romance Erotique"
+            when eim.titelive_gtl_id like "01020608%" then TRUE -- "Dark Romance"
+            when eim.titelive_gtl_id like "01030306%" then TRUE -- "Roman libertin"
+            when eim.titelive_gtl_id like "03020112%" then TRUE -- "Public averti (érotique, hyper violence…)"
+            when eim.titelive_gtl_id like "04010206%" then TRUE -- "Enseignement universitaire"
 
-        ELSE FALSE
-        END
+            else FALSE
+        end
     )
-     as restrained,
+        as restrained,
     MAX(
-        CASE
+        case
             -- LVL1
-            WHEN eim.titelive_gtl_id LIKE "09%" THEN TRUE -- "Sciences humaines & sociales"
-            WHEN eim.titelive_gtl_id LIKE "11%" THEN TRUE -- "Scolaire"
-            WHEN eim.titelive_gtl_id LIKE "12%" THEN TRUE -- "Parascolaire"
+            when eim.titelive_gtl_id like "09%" then TRUE -- "Sciences humaines & sociales"
+            when eim.titelive_gtl_id like "11%" then TRUE -- "Scolaire"
+            when eim.titelive_gtl_id like "12%" then TRUE -- "Parascolaire"
             -- LVL3
-            WHEN eim.titelive_gtl_id LIKE "010210%" THEN TRUE -- "Erotisme"
-            WHEN eim.titelive_gtl_id LIKE "061102%" THEN TRUE -- "Nu / Charme / Erotisme"
+            when eim.titelive_gtl_id like "010210%" then TRUE -- "Erotisme"
+            when eim.titelive_gtl_id like "061102%" then TRUE -- "Nu / Charme / Erotisme"
             -- LVL4
-            WHEN eim.titelive_gtl_id LIKE "01030306%" THEN TRUE -- "Roman libertin"
-            WHEN eim.titelive_gtl_id LIKE "03020112%" THEN TRUE -- "Public averti (érotique, hyper violence…)"
-            WHEN eim.titelive_gtl_id LIKE "04010206%" THEN TRUE -- "Enseignement universitaire"
-        ELSE FALSE
-        END
+            when eim.titelive_gtl_id like "01030306%" then TRUE -- "Roman libertin"
+            when eim.titelive_gtl_id like "03020112%" then TRUE -- "Public averti (érotique, hyper violence…)"
+            when eim.titelive_gtl_id like "04010206%" then TRUE -- "Enseignement universitaire"
+            else FALSE
+        end
     ) as blocked
-FROM {{ ref('mrt_global__offer') }} eod
-INNER JOIN {{ ref('item_metadata') }} eim on eim.item_id = eod.item_id
-WHERE eod.offer_type_domain = "BOOK"
-GROUP BY 1
+from {{ ref('mrt_global__offer') }} eod
+    inner join {{ ref('item_metadata') }} eim on eim.item_id = eod.item_id
+where eod.offer_type_domain = "BOOK"
+group by 1

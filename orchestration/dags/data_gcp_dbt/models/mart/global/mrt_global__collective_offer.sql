@@ -1,4 +1,5 @@
-SELECT collective_offer_id,
+select
+    collective_offer_id,
     collective_offer_humanized_id,
     collective_offer_name,
     venue_id,
@@ -47,5 +48,5 @@ SELECT collective_offer_id,
     collective_stock_booking_limit_date_time,
     collective_stock_price,
     collective_stock_number_of_tickets
-FROM {{ ref('int_global__collective_offer') }}
-WHERE collective_offer_validation = 'APPROVED'
+from {{ ref('int_global__collective_offer') }}
+where collective_offer_validation = 'APPROVED'

@@ -1,4 +1,4 @@
-SELECT
+select
     log_timestamp,
     environement,
     user_id,
@@ -9,11 +9,11 @@ SELECT
     app_version,
     platform,
     trace,
-    CASE url_path
-        WHEN "/native/v1/me" THEN "app_native"
-        WHEN "/beneficiaries/current" THEN "webapp"
-        WHEN "/users/current" THEN "pro"
-    END AS source
-FROM {{ref('int_pcapi__log')}}
-WHERE log_timestamp >= DATE_SUB(CURRENT_TIMESTAMP(), INTERVAL 365 day)
-AND url_path IN ("/users/current", "/native/v1/me", "/native/v1/signin")
+    case url_path
+        when "/native/v1/me" then "app_native"
+        when "/beneficiaries/current" then "webapp"
+        when "/users/current" then "pro"
+    end as source
+from {{ ref('int_pcapi__log') }}
+where log_timestamp >= DATE_SUB(CURRENT_TIMESTAMP(), interval 365 day)
+    and url_path in ("/users/current", "/native/v1/me", "/native/v1/signin")

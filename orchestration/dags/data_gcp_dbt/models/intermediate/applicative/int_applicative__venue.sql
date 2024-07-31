@@ -75,17 +75,6 @@ venues_with_geo_candidates as (
         left join {{ source('clean', 'geo_iris') }} as gi
             on v.venue_longitude between gi.min_longitude and gi.max_longitude
                 and v.venue_latitude between gi.min_latitude and gi.max_latitude
-),
-
-venue_images AS (
-    SELECT 
-        v.venue_id,
-        CASE 
-            WHEN gp.banner_url IS NOT NULL THEN "offerer"
-            WHEN gp.venue_id IS NOT NULL THEN "google"
-            ELSE "default_category" END AS venue_image_source
-    FROM {{ source("raw", "applicative_database_venue") }} AS v
-    LEFT JOIN {{ source('raw', 'google_places_info') }} AS gp ON v.venue_id = gp.venue_id 
 )
 
 select
@@ -223,7 +212,10 @@ select
         partition by venue_managing_offerer_id
         order by
             COALESCE(o.total_used_individual_bookings, 0) + COALESCE(co.total_used_collective_bookings, 0) desc
-    ) as offerer_bookings_rank
+    ) as offerer_bookings_rank,
+    case when gp.banner_url is not NULL then "offerer"
+    when gp.venue_id is not NULL then "google"
+    else "default_category" end as venue_image_source,
 from venues_with_geo_candidates as v
     left join offers_grouped_by_venue as o on o.venue_id = v.venue_id
     left join collective_offers_grouped_by_venue as co on co.venue_id = v.venue_id
@@ -232,6 +224,7 @@ from venues_with_geo_candidates as v
     left join {{ source("raw", "applicative_database_venue_contact") }} as vc on v.venue_id = vc.venue_id
     left join {{ source("raw", "applicative_database_venue_label") }} as vl on vl.venue_label_id = v.venue_label_id
     left join {{ source("raw", "applicative_database_accessibility_provider") }} as va on va.venue_id = v.venue_id
+    left join {{ source('raw', 'google_places_info') }} AS gp ON v.venue_id = gp.venue_id 
 where ST_CONTAINS(
         v.iris_shape,
         ST_GEOGPOINT(v.venue_longitude, v.venue_latitude)

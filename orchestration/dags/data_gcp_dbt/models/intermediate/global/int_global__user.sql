@@ -1,10 +1,3 @@
-{{
-    config(
-        materialized = "view"
-    )
- }}
-
-
 with bookings_deposit_grouped_by_user as (
     select
         b.user_id,
@@ -14,11 +7,11 @@ with bookings_deposit_grouped_by_user as (
         sum(case when not booking_is_cancelled then booking_intermediary_amount end) as total_theoretical_amount_spent,
         min(case when not booking_is_cancelled then booking_created_at end) as first_individual_booking_date,
         max(booking_created_at) as last_individual_booking_date,
-        min(case when booking_amount > 0 then booking_creation_date end) as booking_creation_date_first,
-        sum(case when physical_goods and offer_url is null and not booking_is_cancelled then booking_intermediary_amount end) as total_theoretical_amount_spent_in_physical_goods,
+        min(case when booking_amount > 0 then booking_creation_date end) as first_booking_creation_date,
+        sum(case when physical_goods and offer_url is null and not booking_is_cancelled then booking_intermediary_amount end) as total_theoretical_physical_goods_amount_spent,
         sum(case when event
                 and not booking_is_cancelled then booking_intermediary_amount
-        end) as total_theoretical_amount_spent_in_outings,
+        end) as total_theoretical_outings_amount_spent,
         count(distinct case when not booking_is_cancelled then offer_subcategory_id end) as total_distinct_booking_types,
         min(case when not booking_is_cancelled then booking_creation_date end) as first_booking_date,
         max(case when user_booking_id_rank = 1 then offer_subcategory_id end) as first_booking_type,
@@ -35,12 +28,12 @@ with bookings_deposit_grouped_by_user as (
         sum(case when not booking_is_cancelled
                 and digital_goods
                 and offer_url is not null then booking_intermediary_amount
-        end) as total_theoretical_amount_spent_in_digital_goods,
+        end) as total_theoretical_digital_goods_amount_spent,
         sum(case when deposit_rank_desc = 1
                 and digital_goods
                 and offer_url is not null
                 and not booking_is_cancelled then booking_intermediary_amount
-        end) as total_last_deposit_amount_spent_in_digital_goods,
+        end) as total_last_deposit_digital_goods_amount_spent,
         max(case when offer_subcategory_id = 'ACTIVATION_THING'
                 and booking_used_date is not null then booking_used_date
             else null
@@ -103,7 +96,6 @@ date_of_bookings_on_third_product as (
     ) = 3
 ),
 
-
 first_paid_booking_type as (
     select
         user_id,
@@ -116,7 +108,6 @@ first_paid_booking_type as (
             booking_created_at
     ) = 1
 )
-
 
 select
     u.user_id,
@@ -154,18 +145,18 @@ select
     coalesce(bdgu.total_non_cancelled_individual_bookings, 0) as total_non_cancelled_individual_bookings,
     bdgu.total_actual_amount_spent,
     bdgu.total_theoretical_amount_spent,
-    bdgu.total_theoretical_amount_spent_in_digital_goods,
-    bdgu.total_theoretical_amount_spent_in_physical_goods,
-    bdgu.total_theoretical_amount_spent_in_outings,
+    bdgu.total_theoretical_digital_goods_amount_spent,
+    bdgu.total_theoretical_physical_goods_amount_spent,
+    bdgu.total_theoretical_outings_amount_spent,
     bdgu.total_deposit_theoretical_amount_spent,
-    bdgu.total_last_deposit_amount_spent_in_digital_goods,
+    bdgu.total_last_deposit_digital_goods_amount_spent,
     bdgu.total_deposit_actual_amount_spent,
     dgu.last_deposit_amount,
     dgu.last_deposit_amount - bdgu.total_deposit_theoretical_amount_spent as total_theoretical_remaining_credit,
     bdgu.last_individual_booking_date as last_booking_date,
-    bdgu.booking_creation_date_first,
+    bdgu.first_booking_creation_date,
     date_diff(bdgu.first_individual_booking_date, dgu.first_deposit_creation_date, day) as days_between_activation_date_and_first_booking_date,
-    date_diff(bdgu.booking_creation_date_first, dgu.first_deposit_creation_date, day) as days_between_activation_date_and_first_booking_paid,
+    date_diff(bdgu.first_booking_creation_date, dgu.first_deposit_creation_date, day) as days_between_activation_date_and_first_booking_paid,
     coalesce(user_activation_date, user_creation_date) as user_activation_date,
     bdgu.first_booking_type,
     first_paid_booking_type.first_paid_booking_type,
@@ -187,8 +178,3 @@ from {{ ref('int_applicative__user') }} as u
     left join bookings_deposit_grouped_by_user as bdgu on bdgu.user_id = u.user_id
     left join date_of_bookings_on_third_product as dbtp on dbtp.user_id = u.user_id
     left join first_paid_booking_type on u.user_id = first_paid_booking_type.user_id
-where
-    (
-        user_is_active
-        or action_history_reason = 'upon user request'
-    )

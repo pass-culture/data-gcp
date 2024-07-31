@@ -1,4 +1,4 @@
-SELECT
+select
     user_id,
     user_creation_date,
     user_humanized_id,
@@ -23,4 +23,4 @@ SELECT
     user_is_unemployed,
     user_is_in_qpv,
     user_is_priority_public
-FROM {{ ref('int_applicative__user') }}
+from {{ ref('int_applicative__user') }}

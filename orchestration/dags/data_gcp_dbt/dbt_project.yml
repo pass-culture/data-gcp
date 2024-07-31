@@ -95,4 +95,4 @@ vars:
   re_data:save_test_history: true
   CI_MATERIALIZATION: none
   CI_SEVERITY: none
-  region_name: "{{ 'region-europe-west1' }}"
+  region_name: region-europe-west1

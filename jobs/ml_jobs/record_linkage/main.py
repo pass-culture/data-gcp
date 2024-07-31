@@ -11,6 +11,7 @@ from tools.config import (
     SUBCATEGORIES_WITH_PERFORMER,
     data_and_hyperparams_dict,
 )
+import typer
 from tools.linkage import get_linked_offers, get_linked_offers_from_graph
 
 
@@ -61,14 +62,20 @@ def multiprocess_linkage(
 
 
 def main(
-    gcp_project,
-    env_short_name,
+    gcp_project: str = typer.Option(
+        GCP_PROJECT_ID,
+        help="BigQuery Project in which the offers to link is located",
+    ),
+    input_dataset_name: str = typer.Option(..., help="Path to the dataset input name."),
+    input_table_name: str = typer.Option(..., help="Path to the intput table name."),
+    output_dataset_name: str = typer.Option(..., help="Path to the dataset name."),
+    output_table_name: str = typer.Option(..., help="Path to the output table name."),
 ) -> None:
     ###############
     # Load preprocessed data
     logger.info("Loading offers to link...")
     df_offers_to_link_clean = pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.tmp_{env_short_name}.items_to_link_clean`"
+        f"SELECT * FROM `{gcp_project}.{input_dataset_name}.{input_table_name}`"
     )
     logger.info(f"{len(df_offers_to_link_clean)} items to link")
     ###############
@@ -131,7 +138,7 @@ def main(
 
     df_offers_linked_full = df_offers_linked_full.drop_duplicates()
     df_offers_linked_full.to_gbq(
-        f"tmp_{env_short_name}.linked_offers_full",
+        f"{output_dataset_name}.{output_table_name}",
         project_id=gcp_project,
         if_exists="replace",
     )

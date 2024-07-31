@@ -1,3 +1,2 @@
-SELECT
-    *
-FROM {{ source('raw', 'applicative_database_collective_offer_domain') }}
+select *
+from {{ source('raw', 'applicative_database_collective_offer_domain') }}

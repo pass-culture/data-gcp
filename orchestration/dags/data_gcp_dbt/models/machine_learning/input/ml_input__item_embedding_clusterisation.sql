@@ -4,22 +4,22 @@
     )
 }}
 
-WITH items_w_embedding as (
-    SELECT
+with items_w_embedding as (
+    select
         item_id,
-        hybrid_embedding as hybrid_embedding,
-    FROM
+        hybrid_embedding as hybrid_embedding
+    from
         {{ source("ml_preproc", "item_embedding_reduced_32") }}
 )
 
-SELECT
+select
     ie.item_id,
     ie.hybrid_embedding,
-    im.subcategory_id AS subcategory_id,
+    im.subcategory_id as subcategory_id,
     im.category_id as category,
     im.offer_type_id,
     im.offer_type_label,
     im.offer_sub_type_id,
     im.offer_sub_type_label
-FROM items_w_embedding ie
-INNER JOIN {{ ref("item_metadata") }} im on ie.item_id = im.item_id
+from items_w_embedding ie
+    inner join {{ ref("item_metadata") }} im on ie.item_id = im.item_id

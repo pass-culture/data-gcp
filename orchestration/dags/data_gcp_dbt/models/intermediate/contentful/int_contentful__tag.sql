@@ -1,25 +1,26 @@
-SELECT
+select
     tag_id,
     tag_name,
     entry_id,
     tag_key,
     tag_value,
-    CASE
-        WHEN tag_key = "pl" THEN tag_value
-    END as playlist_type
-FROM
+    case
+        when tag_key = "pl" then tag_value
+    end as playlist_type
+from
     (
-        SELECT
+        select
             *,
-            split(tag_name, ':') [safe_ordinal(1)] as tag_key,
-            split(tag_name, ':') [safe_ordinal(2)] as tag_value,
-            ROW_NUMBER() OVER (
-                PARTITION BY tag_id,
-                entry_id
-                ORDER BY
-                    execution_date DESC
+            split(tag_name, ':')[safe_ordinal(1)] as tag_key,
+            split(tag_name, ':')[safe_ordinal(2)] as tag_value,
+            row_number() over (
+                partition by
+                    tag_id,
+                    entry_id
+                order by
+                    execution_date desc
             ) as row_number
-        FROM {{ source('raw', 'contentful_tag') }}
+        from {{ source('raw', 'contentful_tag') }}
     ) inn
-WHERE
+where
     row_number = 1

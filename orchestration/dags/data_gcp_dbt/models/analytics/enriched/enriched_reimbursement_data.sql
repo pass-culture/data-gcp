@@ -1,40 +1,43 @@
-WITH clean_payment_status AS (
-    SELECT
-        paymentId,
-        MAX(date) AS last_status_date
-    FROM
+with clean_payment_status as (
+    select
+        paymentid,
+        MAX(date) as last_status_date
+    from
         {{ ref('payment_status') }} payment_statuts
-    GROUP BY
+    group by
         1
 ),
-clean_pricing_line1 AS (
-    SELECT
+
+clean_pricing_line1 as (
+    select
         booking.booking_id,
-CASE
-            WHEN category = 'offerer revenue' THEN pricing_line.amount
-        END AS offerer_revenue,
-CASE
-            WHEN category = 'offerer contribution' THEN pricing_line.amount
-        END AS offerer_contribution
-    FROM
+        case
+            when category = 'offerer revenue' then pricing_line.amount
+        end as offerer_revenue,
+        case
+            when category = 'offerer contribution' then pricing_line.amount
+        end as offerer_contribution
+    from
         {{ ref('mrt_global__booking') }} booking
-        LEFT JOIN {{ ref('pricing') }} pricing ON booking.booking_id = pricing.bookingId
-        LEFT JOIN {{ ref('pricing_line') }} pricing_line ON pricing.id = pricing_line.pricingId
+        left join {{ ref('pricing') }} pricing on booking.booking_id = pricing.bookingid
+        left join {{ ref('pricing_line') }} pricing_line on pricing.id = pricing_line.pricingid
 ),
-clean_pricing_line2 AS (
-    SELECT
+
+clean_pricing_line2 as (
+    select
         booking_id,
-        SUM(- offerer_revenue / 100) AS offerer_revenue,
-        SUM(offerer_contribution / 100) AS offerer_contribution
-    FROM
+        SUM(-offerer_revenue / 100) as offerer_revenue,
+        SUM(offerer_contribution / 100) as offerer_contribution
+    from
         clean_pricing_line1
-    GROUP BY
+    group by
         1
 ),
-individuel AS (
-    SELECT
-        DISTINCT applicative_database_deposit.type AS booking_type,
-        '' AS collective_booking_id,
+
+individuel as (
+    select distinct
+        applicative_database_deposit.type as booking_type,
+        '' as collective_booking_id,
         booking.booking_id,
         booking.booking_status,
         booking.booking_creation_date,
@@ -42,68 +45,71 @@ individuel AS (
         booking_used_date,
         booking.venue_id,
         booking.offerer_id,
-        '' AS educational_institution_id,
-        pricing.id AS pricing_id,
-        pricing.status AS pricing_status,
-        pricing.creationdate AS pricing_creation_date,
-        - pricing.amount / 100 AS pricing_amount,
-        pricing.standardRule AS pricing_rule,
+        '' as educational_institution_id,
+        pricing.id as pricing_id,
+        pricing.status as pricing_status,
+        pricing.creationdate as pricing_creation_date,
+        -pricing.amount / 100 as pricing_amount,
+        pricing.standardrule as pricing_rule,
         clean_pricing_line2.offerer_revenue,
         clean_pricing_line2.offerer_contribution,
-        cashflow.id AS cashflow_id,
-        cashflow.creationdate AS cashflow_creation_date,
-        cashflow.status AS cashflow_status,
-        - cashflow.amount / 100 AS cashflow_amount,
-        cashflow_batch.creationdate AS cashflow_batch_creation_date,
-        cashflow_batch.label AS cashflow_batch_label,
+        cashflow.id as cashflow_id,
+        cashflow.creationdate as cashflow_creation_date,
+        cashflow.status as cashflow_status,
+        -cashflow.amount / 100 as cashflow_amount,
+        cashflow_batch.creationdate as cashflow_batch_creation_date,
+        cashflow_batch.label as cashflow_batch_label,
         invoice.invoice_id,
         invoice.invoice_reference,
         invoice.invoice_creation_date,
-        invoice.amount AS invoice_amount
-    FROM
+        invoice.amount as invoice_amount
+    from
         {{ ref('booking') }} booking
-        LEFT JOIN {{ ref('stock') }} ON booking.stock_id = applicative_database_stock.stock_id
-        LEFT JOIN {{ ref('deposit') }} ON booking.deposit_id = applicative_database_deposit.id
-        LEFT JOIN {{ ref('pricing') }} pricing ON booking.booking_id = pricing.bookingId
-        LEFT JOIN clean_pricing_line2 ON booking.booking_id = clean_pricing_line2.booking_id
-        LEFT JOIN {{ ref('cashflow_pricing') }} cashflow_pricing ON pricing.id = cashflow_pricing.pricingId
-        LEFT JOIN {{ ref('cashflow') }} cashflow ON cashflow_pricing.cashflowId = cashflow.id
-        LEFT JOIN {{ ref('cashflow_batch') }} cashflow_batch ON cashflow.batchId = cashflow_batch.id
-        LEFT JOIN {{ ref('invoice_cashflow') }} invoice_cashflow ON cashflow.id = invoice_cashflow.cashflow_id
-        LEFT JOIN {{ ref('invoice') }} invoice ON invoice_cashflow.invoice_id = invoice.invoice_id
-        LEFT JOIN {{ ref('invoice_line') }}  invoice_line ON invoice.invoice_id = invoice_line.invoice_id
-    WHERE
-        NOT invoice.invoice_reference LIKE '%.2'
+        left join {{ ref('stock') }} as applicative_database_stock on booking.stock_id = applicative_database_stock.stock_id
+        left join {{ ref('deposit') }} as applicative_database_deposit on booking.deposit_id = applicative_database_deposit.id
+        left join {{ ref('pricing') }} as pricing on booking.booking_id = pricing.bookingid
+        left join clean_pricing_line2 on booking.booking_id = clean_pricing_line2.booking_id
+        left join {{ ref('cashflow_pricing') }} cashflow_pricing on pricing.id = cashflow_pricing.pricingid
+        left join {{ ref('cashflow') }} cashflow on cashflow_pricing.cashflowid = cashflow.id
+        left join {{ ref('cashflow_batch') }} cashflow_batch on cashflow.batchid = cashflow_batch.id
+        left join {{ ref('invoice_cashflow') }} invoice_cashflow on cashflow.id = invoice_cashflow.cashflow_id
+        left join {{ ref('invoice') }} invoice on invoice_cashflow.invoice_id = invoice.invoice_id
+        left join {{ ref('invoice_line') }} invoice_line on invoice.invoice_id = invoice_line.invoice_id
+    where
+        not invoice.invoice_reference like '%.2'
 ),
-coll_clean_pricing_line1 AS (
-    SELECT
+
+coll_clean_pricing_line1 as (
+    select
         collective_booking.collective_booking_id,
-CASE
-            WHEN category = 'offerer revenue' THEN pricing_line.amount
-        END AS offerer_revenue,
-CASE
-            WHEN category = 'offerer contribution' THEN pricing_line.amount
-        END AS offerer_contribution
-    FROM
+        case
+            when category = 'offerer revenue' then pricing_line.amount
+        end as offerer_revenue,
+        case
+            when category = 'offerer contribution' then pricing_line.amount
+        end as offerer_contribution
+    from
         {{ ref('enriched_collective_booking_data') }} collective_booking
-        LEFT JOIN {{ ref('pricing') }} pricing ON collective_booking.collective_booking_id = pricing.collective_booking_id
-        LEFT JOIN {{ ref('pricing_line') }} pricing_line ON pricing.id = pricing_line.pricingId
+        left join {{ ref('pricing') }} pricing on collective_booking.collective_booking_id = pricing.collective_booking_id
+        left join {{ ref('pricing_line') }} pricing_line on pricing.id = pricing_line.pricingid
 ),
-coll_clean_pricing_line2 AS (
-    SELECT
+
+coll_clean_pricing_line2 as (
+    select
         collective_booking_id,
-        SUM(- offerer_revenue / 100) AS offerer_revenue,
-        SUM(offerer_contribution / 100) AS offerer_contribution
-    FROM
+        SUM(-offerer_revenue / 100) as offerer_revenue,
+        SUM(offerer_contribution / 100) as offerer_contribution
+    from
         coll_clean_pricing_line1
-    GROUP BY
+    group by
         1
 ),
-collective AS (
-    SELECT
-        'collective' AS booking_type,
+
+collective as (
+    select
+        'collective' as booking_type,
         collective_booking.collective_booking_id,
-        '' AS booking_id,
+        '' as booking_id,
         collective_booking.collective_booking_status,
         collective_booking.collective_booking_creation_date,
         collective_booking.collective_booking_cancellation_date,
@@ -111,43 +117,42 @@ collective AS (
         collective_booking.venue_id,
         collective_booking.offerer_id,
         collective_booking.educational_institution_id,
-        pricing.id AS pricing_id,
-        pricing.status AS pricing_status,
-        pricing.creationdate AS pricing_creation_date,
-        - pricing.amount / 100 AS pricing_amount,
-        pricing.standardRule AS pricing_rule,
+        pricing.id as pricing_id,
+        pricing.status as pricing_status,
+        pricing.creationdate as pricing_creation_date,
+        -pricing.amount / 100 as pricing_amount,
+        pricing.standardrule as pricing_rule,
         offerer_revenue,
         offerer_contribution,
-        cashflow.id AS cashflow_id,
-        cashflow.creationdate AS cashflow_creation_date,
-        cashflow.status AS cashflow_status,
-        - cashflow.amount / 100 AS cashflow_amount,
-        cashflow_batch.creationdate AS cashflow_batch_creation_date,
-        cashflow_batch.label AS cashflow_batch_label,
+        cashflow.id as cashflow_id,
+        cashflow.creationdate as cashflow_creation_date,
+        cashflow.status as cashflow_status,
+        -cashflow.amount / 100 as cashflow_amount,
+        cashflow_batch.creationdate as cashflow_batch_creation_date,
+        cashflow_batch.label as cashflow_batch_label,
         invoice.invoice_id,
         invoice.invoice_reference,
         invoice.invoice_creation_date,
-        invoice.amount AS invoice_amount
-    FROM
+        invoice.amount as invoice_amount
+    from
         {{ ref('collective_booking') }} collective_booking
-        LEFT JOIN {{ ref('pricing') }} pricing ON collective_booking.collective_booking_id = pricing.collective_booking_id
-        LEFT JOIN coll_clean_pricing_line2 ON collective_booking.collective_booking_id = coll_clean_pricing_line2.collective_booking_id
-        LEFT JOIN {{ ref('cashflow_pricing') }} cashflow_pricing ON pricing.id = cashflow_pricing.pricingId
-        LEFT JOIN {{ ref('cashflow') }} cashflow ON cashflow_pricing.cashflowId = cashflow.id
-        LEFT JOIN {{ ref('cashflow_batch') }} cashflow_batch ON cashflow.batchId = cashflow_batch.id
-        LEFT JOIN {{ ref('invoice_cashflow') }} invoice_cashflow ON cashflow.id = invoice_cashflow.cashflow_id
-        LEFT JOIN {{ ref('invoice') }} invoice ON invoice_cashflow.invoice_id = invoice.invoice_id
-        LEFT JOIN {{ ref('invoice_line') }} invoice_line ON invoice.invoice_id = invoice_line.invoice_id
-    WHERE
-        NOT invoice.invoice_reference LIKE '%.2'
+        left join {{ ref('pricing') }} pricing on collective_booking.collective_booking_id = pricing.collective_booking_id
+        left join coll_clean_pricing_line2 on collective_booking.collective_booking_id = coll_clean_pricing_line2.collective_booking_id
+        left join {{ ref('cashflow_pricing') }} cashflow_pricing on pricing.id = cashflow_pricing.pricingid
+        left join {{ ref('cashflow') }} cashflow on cashflow_pricing.cashflowid = cashflow.id
+        left join {{ ref('cashflow_batch') }} cashflow_batch on cashflow.batchid = cashflow_batch.id
+        left join {{ ref('invoice_cashflow') }} invoice_cashflow on cashflow.id = invoice_cashflow.cashflow_id
+        left join {{ ref('invoice') }} invoice on invoice_cashflow.invoice_id = invoice.invoice_id
+        left join {{ ref('invoice_line') }} invoice_line on invoice.invoice_id = invoice_line.invoice_id
+    where
+        not invoice.invoice_reference like '%.2'
 )
-SELECT
-    *
-FROM
+
+select *
+from
     individuel
-UNION
-ALL
-SELECT
-    *
-FROM
+union
+all
+select *
+from
     collective

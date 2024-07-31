@@ -78,7 +78,7 @@ CI:
   outputs:
     dev:
       dataset: ci_dev
-      job_execution_timeout_seconds: 300
+      job_execution_timeout_seconds: 600
       job_retries: 1
       location: europe-west1
       method: oauth
@@ -88,7 +88,7 @@ CI:
       type: bigquery
     stg:
       dataset: ci_stg
-      job_execution_timeout_seconds: 300
+      job_execution_timeout_seconds: 600
       job_retries: 1
       location: europe-west1
       method: oauth

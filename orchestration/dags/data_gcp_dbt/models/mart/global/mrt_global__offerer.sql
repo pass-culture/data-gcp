@@ -1,4 +1,4 @@
-SELECT
+select
     offerer_id,
     partner_id,
     offerer_name,
@@ -70,7 +70,7 @@ SELECT
     dms_accepted_at,
     is_reference_adage,
     is_synchro_adage,
-    partner_type,
-FROM {{ ref('int_global__offerer') }}
-WHERE offerer_validation_status='VALIDATED'
-    AND offerer_is_active
+    partner_type
+from {{ ref('int_global__offerer') }}
+where offerer_validation_status = 'VALIDATED'
+    and offerer_is_active

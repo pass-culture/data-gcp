@@ -1,3 +1,2 @@
-SELECT 
-    *
-FROM {{ source('raw', 'applicative_database_trusted_device') }}
+select *
+from {{ source('raw', 'applicative_database_trusted_device') }}

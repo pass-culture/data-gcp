@@ -1,4 +1,4 @@
-SELECT
+select
     offerer_tag_mapping_id,
     offerer_id,
     tag_id,
@@ -7,5 +7,5 @@ SELECT
     tag_description,
     tag_category_id,
     tag_category_name,
-    tag_category_label,
-FROM  {{ ref('int_applicative__offerer_tag') }}
+    tag_category_label
+from {{ ref('int_applicative__offerer_tag') }}

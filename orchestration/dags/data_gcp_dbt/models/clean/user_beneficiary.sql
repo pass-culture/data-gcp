@@ -30,12 +30,12 @@ with user_beneficiary as (
             when user_activity in ("Étudiant") then "Etudiant"
             when user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then "Chômeur, En recherche d'emploi"
             else user_activity
-        end as  user_activity,
+        end as user_activity,
         case
             when user_civility in ("M", "M.") then "M."
             when user_civility in ("Mme") then "Mme"
             else user_civility
-        end as  user_civility,
+        end as user_civility,
         user_school_type,
         user_is_active,
         user_age,
@@ -82,8 +82,8 @@ select
             u.user_department_code not in ("29", "34", "67", "93", "973", "22", "25", "35", "56", "58", "71", "08", "84", "94")
             and DATE(user_creation_date) < "2021-05-01"
             then "99"
-        else  u.user_department_code
-    end as  user_department_code,
+        else u.user_department_code
+    end as user_department_code,
     u.user_postal_code,
     user_activity,
     user_civility,
@@ -105,8 +105,8 @@ select
     ui.user_academy_name,
     ui.user_density_label,
     ui.user_macro_density_label,
-    case when ui.qpv_name is not NULL then TRUE else  FALSE end as  user_is_in_qpv,
-    case when u.user_activity = "Chômeur, En recherche d'emploi" then TRUE else  FALSE end as  user_is_unemployed,
+    case when ui.qpv_name is not NULL then TRUE else FALSE end as user_is_in_qpv,
+    case when u.user_activity = "Chômeur, En recherche d'emploi" then TRUE else FALSE end as user_is_unemployed,
     case when
             (
                 (ui.qpv_name is not NULL)
@@ -116,7 +116,7 @@ select
                 u.user_activity = "Chômeur, En recherche d'emploi"
             )
             then TRUE
-        else  FALSE
+        else FALSE
     end
         as user_is_priority_public
 from user_beneficiary as u

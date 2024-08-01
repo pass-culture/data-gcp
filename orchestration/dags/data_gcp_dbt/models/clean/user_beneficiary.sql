@@ -14,7 +14,6 @@ with user_beneficiary as (
         -- keep user_postal_code by default.
         COALESCE(
             case
-
                 when u.user_postal_code = '97150' then '978'
                 when SUBSTRING(u.user_postal_code, 0, 2) = '97' then SUBSTRING(u.user_postal_code, 0, 3)
                 when SUBSTRING(u.user_postal_code, 0, 2) = '98' then SUBSTRING(u.user_postal_code, 0, 3)
@@ -29,7 +28,7 @@ with user_beneficiary as (
             when user_activity in ("Alternant", "Apprenti", "Volontaire") then "Apprenti, Alternant, Volontaire en service civique rémunéré"
             when user_activity in ("Inactif") then "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
             when user_activity in ("Étudiant") then "Etudiant"
-            when user_activity in ("Chômeur", "En recherche d'emploi ou chômeur") then "Chômeur, En recherche d'emploi"
+            when user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then "Chômeur, En recherche d'emploi"
             else user_activity
         end as user_activity,
         case
@@ -42,7 +41,6 @@ with user_beneficiary as (
         user_age,
         user_role,
         user_birth_date,
-        user_cultural_survey_filled_date
     from {{ source("raw", "applicative_database_user") }} as u
     -- only BENEFICIARY
     where user_role in ('UNDERAGE_BENEFICIARY', 'BENEFICIARY')
@@ -94,7 +92,6 @@ select
     user_age,
     user_role,
     user_birth_date,
-    user_cultural_survey_filled_date,
     case
         -- get user activation date with fictional offers (early 2019)
         when offer_subcategoryid = 'ACTIVATION_THING'

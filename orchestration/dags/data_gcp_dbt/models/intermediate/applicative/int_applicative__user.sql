@@ -37,7 +37,7 @@ select
         when u.user_activity in ("Alternant", "Apprenti", "Volontaire") then "Apprenti, Alternant, Volontaire en service civique rémunéré"
         when u.user_activity in ("Inactif") then "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
         when u.user_activity in ("Étudiant") then "Etudiant"
-        when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur") then "Chômeur, En recherche d'emploi"
+        when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then "Chômeur, En recherche d'emploi"
         else u.user_activity
     end as user_activity,
     case
@@ -50,7 +50,6 @@ select
     u.user_age,
     u.user_role,
     u.user_birth_date,
-    u.user_cultural_survey_filled_date,
     u.user_address,
     u.user_last_connection_date,
     u.user_is_email_validated,
@@ -66,11 +65,11 @@ select
     ui.user_density_label,
     ui.user_macro_density_label,
     case when ui.qpv_name is not NULL then TRUE else FALSE end as user_is_in_qpv,
-    case when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur") then TRUE else FALSE end as user_is_unemployed,
+    case when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then TRUE else FALSE end as user_is_unemployed,
     case when
             (
                 (ui.qpv_name is not NULL)
-                or (u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur"))
+                or (u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi"))
                 or (ui.user_macro_density_label = "rural")
             )
             then TRUE

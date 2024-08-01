@@ -426,7 +426,6 @@ select
     user_agg_deposit_data.user_first_deposit_type as user_first_deposit_type,
     user_agg_deposit_data.user_total_deposit_amount,
     user_agg_deposit_data.user_current_deposit_type,
-    user.user_cultural_survey_filled_date as first_connection_date,
     date_of_first_bookings.first_booking_date,
     date_of_second_bookings.second_booking_date,
     date_of_bookings_on_third_product.booking_on_third_product_date,

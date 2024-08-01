@@ -1,5 +1,4 @@
 import datetime
-import json
 
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
@@ -10,6 +9,7 @@ from airflow.utils.dates import datetime, timedelta
 from airflow.models import Param
 from common.alerts import task_fail_slack_alert, dbt_test_slack_alert
 from common.utils import get_airflow_schedule, waiting_operator
+from common.dbt.utils import load_json_artifact
 
 from common import macros
 from common.config import (
@@ -26,9 +26,7 @@ SLACK_CONN_PASSWORD = access_secret_data(
 )
 SLACK_WEBHOOK_URL = f"https://hooks.slack.com/services/{SLACK_CONN_PASSWORD}"
 
-
-with open(f"{PATH_TO_DBT_TARGET}/run_results.json") as results_json:
-    test_results_dict = json.load(results_json)
+test_results_dict = load_json_artifact(PATH_TO_DBT_TARGET)
 
 default_args = {
     "start_date": datetime(2020, 12, 23),

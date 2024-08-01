@@ -25,15 +25,15 @@ with user_beneficiary as (
         ) as user_department_code,
         u.user_postal_code,
         case
-            when user_activity in ("Alternant", "Apprenti", "Volontaire") THEN "Apprenti, Alternant, Volontaire en service civique rémunéré"
-            when user_activity in ("Inactif") THEN "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
-            when user_activity in ("Étudiant") THEN "Etudiant"
-            when user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") THEN "Chômeur, En recherche d'emploi"
+            when user_activity in ("Alternant", "Apprenti", "Volontaire") then "Apprenti, Alternant, Volontaire en service civique rémunéré"
+            when user_activity in ("Inactif") then "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
+            when user_activity in ("Étudiant") then "Etudiant"
+            when user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then "Chômeur, En recherche d'emploi"
             else user_activity
         end as  user_activity,
         case
-            when user_civility in ("M", "M.") THEN "M."
-            when user_civility IN ("Mme") THEN "Mme"
+            when user_civility in ("M", "M.") then "M."
+            when user_civility in ("Mme") then "Mme"
             else user_civility
         end as  user_civility,
         user_school_type,

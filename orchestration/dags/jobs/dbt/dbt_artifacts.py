@@ -1,12 +1,14 @@
 import datetime
+import json
 
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.dates import datetime, timedelta
 from airflow.models import Param
-from common.alerts import task_fail_slack_alert
+from common.alerts import task_fail_slack_alert, dbt_test_slack_alert
 from common.utils import get_airflow_schedule, waiting_operator
 
 from common import macros
@@ -23,6 +25,10 @@ SLACK_CONN_PASSWORD = access_secret_data(
     GCP_PROJECT_ID, "slack-analytics-conn-password"
 )
 SLACK_WEBHOOK_URL = f"https://hooks.slack.com/services/{SLACK_CONN_PASSWORD}"
+
+
+with open(f"{PATH_TO_DBT_TARGET}/run_results.json") as results_json:
+    test_results_dict = json.load(results_json)
 
 default_args = {
     "start_date": datetime(2020, 12, 23),
@@ -87,6 +93,17 @@ compute_metrics_elementary = BashOperator(
     dag=dag,
 )
 
+warning_alert_slack = PythonOperator(
+    task_id="warning_alert_slack",
+    python_callable=dbt_test_slack_alert,
+    op_kwargs={
+        "results_json": test_results_dict,
+    },
+    provide_context=True,
+    dag=dag,
+)
+
+
 with TaskGroup(group_id="re_data", dag=dag) as re_data_overview:
     re_data_generate_json = BashOperator(
         task_id="re_data_generate_json",
@@ -138,5 +155,5 @@ re_data_notify = BashOperator(
 )
 
 (start >> wait_dbt_run >> compute_metrics_re_data >> re_data_overview >> re_data_notify)
-wait_dbt_run >> dbt_test
+wait_dbt_run >> dbt_test >> warning_alert_slack
 wait_dbt_run >> compute_metrics_elementary

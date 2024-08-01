@@ -115,3 +115,38 @@ def dbt_test_fail_slack_alert(
         dag=dag,
     )
     return dbt_test_fail_slack_alert_alert.execute(context=context)
+
+
+def dbt_test_slack_alert(context, results_json, job_type=ENV_SHORT_NAME):
+    webhook_token = JOB_TYPE.get(job_type)
+
+    slack_header = f"""{ENV_EMOJI[ENV_SHORT_NAME]}
+    DBT warning tests report:
+    """
+
+    tests_results = results_json.get("results", [])
+
+    slack_msg = slack_header
+    for result in tests_results:
+        if result["status"] == "warn":
+            slack_msg = (
+                "\n".join(
+                    [slack_msg, f"""*Test* <{result['unique_id'].split('.')[2]}>"""]
+                )
+                + " has failed with severity:\n"
+                + f"{result['status']}\n"
+                + " and message:\n"
+                + result["message"]
+            )
+
+    if slack_msg == slack_header:
+        slack_msg += "\nAll tests passed succesfully! :tada:"
+
+    dbt_test_warn_slack_alert = SlackWebhookOperator(
+        task_id="slack_alert_warn",
+        http_conn_id=SLACK_CONN_ID,
+        webhook_token=webhook_token,
+        message=slack_msg,
+        username="airflow",
+    )
+    return dbt_test_warn_slack_alert.execute(context=context)

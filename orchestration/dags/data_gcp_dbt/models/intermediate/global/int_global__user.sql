@@ -126,7 +126,6 @@ select
     u.user_activity,
     u.user_civility,
     u.user_school_type,
-    u.user_cultural_survey_filled_date as first_connection_date,
     u.user_is_active,
     u.user_age,
     u.user_birth_date,

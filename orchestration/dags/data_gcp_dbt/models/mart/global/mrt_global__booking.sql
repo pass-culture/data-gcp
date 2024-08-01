@@ -1,5 +1,3 @@
--- TODO : Retirer les colonnes non utilisées
--- + check que les filtres sont ceux que l'on veut
 select
     booking_id,
     booking_creation_date,

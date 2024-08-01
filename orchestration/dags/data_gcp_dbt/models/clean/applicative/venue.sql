@@ -10,7 +10,7 @@ with venues as (
                 when SUBSTRING(v.venue_postal_code, 0, 3) in ('202', '206') then '2B'
                 else SUBSTRING(v.venue_postal_code, 0, 2)
             end,
-            v.venue_department_code,
+            v.venue_department_code
         ) AS venue_department_code,
         CASE 
             WHEN gp.banner_url IS NOT NULL THEN "offerer"

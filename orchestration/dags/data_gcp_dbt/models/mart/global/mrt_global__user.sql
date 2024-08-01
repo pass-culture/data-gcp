@@ -50,7 +50,7 @@ select user_id,
     first_paid_booking_type,
     total_distinct_booking_types,
     user_suspension_reason,
-    user_deposit_initial_amount,
+    first_deposit_amount,
     user_deposit_expiration_date,
     user_is_current_beneficiary,
     DATE_DIFF(DATE('{{ ds() }}'), CAST(user_activation_date AS DATE), DAY) as user_seniority

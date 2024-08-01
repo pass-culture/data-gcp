@@ -26,7 +26,6 @@ from common.utils import get_airflow_schedule
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-offers-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/record_linkage"
-PREPROCESS_INPUT_TABLE = "ml_input"
 
 
 default_args = {

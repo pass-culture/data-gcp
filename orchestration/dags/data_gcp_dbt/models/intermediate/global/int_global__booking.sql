@@ -9,7 +9,7 @@ select
     b.booking_is_used,
     b.booking_cancellation_date,
     b.booking_cancellation_reason,
-    b.user_id,
+    u.user_id,
     b.deposit_id,
     b.deposit_type,
     b.reimbursed,
@@ -82,4 +82,4 @@ select
     s.offer_url
 from {{ ref('int_applicative__booking') }} as b
     left join {{ ref('int_global__stock') }} as s on s.stock_id = b.stock_id
-    left join {{ ref('mrt_global__user') }} as u on u.user_id = b.user_id
+    left join {{ ref('int_applicative__user') }} as u on u.user_id = b.user_id

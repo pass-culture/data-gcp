@@ -34,15 +34,15 @@ select
     ) as user_department_code,
     u.user_postal_code,
     CASE
-        WHEN u.user_activity in ("Alternant", "Apprenti", "Volontaire") THEN "Apprenti, Alternant, Volontaire en service civique rémunéré"
-        WHEN u.user_activity in ("Inactif") THEN "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
-        WHEN u.user_activity in ("Étudiant") THEN "Etudiant"
-        WHEN u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") THEN "Chômeur, En recherche d'emploi"
+        when u.user_activity in ("Alternant", "Apprenti", "Volontaire") then "Apprenti, Alternant, Volontaire en service civique rémunéré"
+        when u.user_activity in ("Inactif") then "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
+        when u.user_activity in ("Étudiant") then "Etudiant"
+        when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then "Chômeur, En recherche d'emploi"
         ELSE u.user_activity
     END AS user_activity,
     CASE
-        WHEN u.user_civility in ("M", "M.") THEN "M."
-        WHEN u.user_civility = "Mme" THEN "Mme."
+        when u.user_civility in ("M", "M.") then "M."
+        when u.user_civility = "Mme" then "Mme."
         ELSE u.user_civility
     END AS user_civility,
     u.user_school_type,

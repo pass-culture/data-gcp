@@ -8,28 +8,28 @@
 ) }}
 
 with
-CONSULT_PER_OFFER_LAST_3O_DAYS as (
+consult_per_offer_last_30_days as (
     select
-        OFFERER_ID,
-        OFFER_ID,
-        SUM(CNT_EVENTS) as NB_CONSULT_LAST_30_DAYS
+        offerer_id,
+        offer_id,
+        sum(cnt_events) as nb_consult_last_30_days
     from
         {{ ref('aggregated_daily_offer_consultation_data') }}
     where
-        EVENT_DATE between DATE_SUB(CURRENT_DATE, interval 30 day) and DATE(CURRENT_DATE)
+        event_date between date_sub(current_date, interval 30 day) and date(current_date)
         and
-        EVENT_NAME = 'ConsultOffer'
+        event_name = 'ConsultOffer'
     group by
         1,
         2
 )
 
 select
-    DATE('{{ ds() }}') as EXECUTION_DATE,
-    OFFERER_ID,
-    OFFER_ID,
-    NB_CONSULT_LAST_30_DAYS,
-    ROW_NUMBER() over (partition by OFFERER_ID order by NB_CONSULT_LAST_30_DAYS desc) as CONSULT_RANK
+    date('{{ ds() }}') as execution_date,
+    offerer_id,
+    offer_id,
+    nb_consult_last_30_days,
+    row_number() over (partition by offerer_id order by nb_consult_last_30_days desc) as consult_rank
 from
-    CONSULT_PER_OFFER_LAST_3O_DAYS
-qualify ROW_NUMBER() over (partition by OFFERER_ID order by NB_CONSULT_LAST_30_DAYS desc) <= 3
+    consult_per_offer_last_30_days
+qualify row_number() over (partition by offerer_id order by nb_consult_last_30_days desc) <= 3

@@ -30,10 +30,9 @@ from dependencies.export_clickhouse.export_clickhouse import (
 )
 from common import macros
 
-
-DATASET_ID = f"export_{ENV_SHORT_NAME}"
 GCE_INSTANCE = f"export-clickhouse-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/clickhouse"
+GCP_STORAGE_URI = "https://storage.googleapis.com"
 dag_config = {
     "PROJECT_NAME": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
@@ -60,7 +59,11 @@ gce_params = {
 
 dags = {
     "daily": {
-        "schedule_interval": {"prod": "0 1 * * *", "dev": None, "stg": None},
+        "schedule_interval": {
+            "prod": "0 1 * * *",
+            "stg": "0 1 * * *",
+            "dev": "0 1 * * *",
+        },
         "yyyymmdd": "{{ yyyymmdd(ds) }}",
         "default_dag_args": {
             "start_date": datetime.datetime(2024, 3, 1),
@@ -131,7 +134,9 @@ for dag_name, dag_params in dags.items():
 
             for table_config in TABLES_CONFIGS:
                 waiting_task = waiting_operator(
-                    dag, "dbt_run_dag", f"data_transformation.{table_config['sql']}"
+                    dag,
+                    "dbt_run_dag",
+                    f"data_transformation.{table_config['dbt_model']}",
                 )
                 wait.set_downstream(waiting_task)
 
@@ -144,6 +149,7 @@ for dag_name, dag_params in dags.items():
             instance_name="{{ params.instance_name }}",
             instance_type="{{ params.instance_type }}",
             retries=2,
+            gce_network_type="GKE",
         )
 
         fetch_code = CloneRepositoryGCEOperator(
@@ -164,7 +170,8 @@ for dag_name, dag_params in dags.items():
 
         in_tables_tasks, out_tables_tasks = [], []
         for table_config in TABLES_CONFIGS:
-            tmp_table_name = table_config["bigquery_table_name"]
+            table_name = table_config["bigquery_table_name"]
+            dataset_name = table_config["bigquery_dataset_name"]
             partition_key = table_config.get("partition_key", "partition_date")
             clickhouse_table_name = table_config["clickhouse_table_name"]
             clickhouse_dataset_name = table_config["clickhouse_dataset_name"]
@@ -172,14 +179,14 @@ for dag_name, dag_params in dags.items():
             mode = table_config["mode"]
             _ts = "{{ ts_nodash }}"
             _ds = "{{ ds }}"
-            table_id = f"tmp_{_ts}_{tmp_table_name}"
+            table_id = f"tmp_{_ts}_{table_name}"
             storage_path = f"{dag_config['STORAGE_PATH']}/{clickhouse_table_name}"
 
             if mode == "overwrite":
-                sql_query = f"""SELECT * FROM {DATASET_ID}.{tmp_table_name} """
+                sql_query = f"""SELECT * FROM {dataset_name}.{table_name} """
             elif mode == "incremental":
                 sql_query = (
-                    f"""SELECT * FROM {DATASET_ID}.{tmp_table_name}  WHERE {partition_key} """
+                    f"""SELECT * FROM {dataset_name}.{table_name}  WHERE {partition_key} """
                     + ' BETWEEN DATE("{{ add_days(ds, params.from_days)}}") AND DATE("{{ add_days(ds, params.to_days) }}")'
                 )
 
@@ -211,12 +218,16 @@ for dag_name, dag_params in dags.items():
             )
 
             clickhouse_export = SSHGCEOperator(
+                dag=dag,
                 task_id=f"{clickhouse_table_name}_export",
                 instance_name="{{ params.instance_name }}",
                 base_dir=dag_config["BASE_DIR"],
                 command="python main.py "
-                f"--source-gs-path https://storage.googleapis.com/{storage_path}/data-*.parquet --table-name {clickhouse_table_name} --dataset-name {clickhouse_dataset_name} --update-date {_ds} --mode {mode}",
-                dag=dag,
+                f"--source-gs-path {GCP_STORAGE_URI}/{storage_path}/data-*.parquet "
+                f"--table-name {clickhouse_table_name} "
+                f"--dataset-name {clickhouse_dataset_name} "
+                f"--update-date {_ds} "
+                f"--mode {mode} ",
             )
             export_task >> export_bq >> clickhouse_export
             out_tables_tasks.append(clickhouse_export)
@@ -224,12 +235,12 @@ for dag_name, dag_params in dags.items():
         end_tables = DummyOperator(task_id="end_tables_export")
         views_refresh = []
         for view_config in VIEWS_CONFIGS:
-            clickhouse_view_name = view_config["clickhouse_view_name"]
+            clickhouse_table_name = view_config["clickhouse_table_name"]
             view_task = SSHGCEOperator(
-                task_id=f"refresh_{clickhouse_view_name}_view",
+                task_id=f"refresh_{clickhouse_table_name}",
                 instance_name="{{ params.instance_name }}",
                 base_dir=dag_config["BASE_DIR"],
-                command="python refresh.py " f"--view-name {clickhouse_view_name}",
+                command="python refresh.py " f"--table-name {clickhouse_table_name}",
                 dag=dag,
             )
             views_refresh.append(view_task)

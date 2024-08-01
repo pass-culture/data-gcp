@@ -60,6 +60,10 @@ end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
 
 wait_for_raw = waiting_operator(dag=dag, dag_id="import_applicative_database")
 
+data_transfo_checkpoint = DummyOperator(task_id="data_transfo_checkpoint", dag=dag)
+
+snapshots_checkpoint = DummyOperator(task_id="snapshots_checkpoint", dag=dag)
+
 compile = BashOperator(
     task_id="compilation",
     bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_compile.sh ",
@@ -237,7 +241,7 @@ with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
             env={
                 "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
                 "target": "{{ params.target }}",
-                "snapshot": f"""{snapshot_data['alias']}""",
+                "snapshot": f"""{snapshot_data['name']}""",
                 "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
             },
             append_env=True,
@@ -245,5 +249,6 @@ with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
             dag=dag,
         )
 
-start >> wait_for_raw >> data_transfo
+start >> wait_for_raw >> data_transfo_checkpoint >> data_transfo
+wait_for_raw >> snapshots_checkpoint >> snapshot_group >> compile
 compile >> end

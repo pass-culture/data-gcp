@@ -1,10 +1,16 @@
-SELECT
+select
     user_id,
     user_creation_date,
     user_humanized_id,
     user_has_enabled_marketing_email,
     user_department_code,
     user_postal_code,
+    user_region_name,
+    user_city,
+    user_epci,
+    user_academy_name,
+    user_density_label,
+    user_macro_density_label,
     user_activity,
     user_civility,
     user_school_type,
@@ -12,6 +18,9 @@ SELECT
     user_age,
     user_role,
     user_birth_date,
-    is_beneficiary,
-    user_iris_internal_id
-FROM {{ ref('int_applicative__user') }}
+    user_cultural_survey_filled_date,
+    user_iris_internal_id,
+    user_is_unemployed,
+    user_is_in_qpv,
+    user_is_priority_public
+from {{ ref('int_applicative__user') }}

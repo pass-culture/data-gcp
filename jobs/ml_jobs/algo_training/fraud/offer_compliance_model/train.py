@@ -13,7 +13,6 @@ from utils.constants import (
 )
 from utils.data_collect_queries import read_from_gcs
 from utils.mlflow_tools import connect_remote_mlflow
-from utils.secrets_utils import get_secret
 
 
 def train(
@@ -55,8 +54,7 @@ def train(
     )
 
     # Mlflow logging
-    client_id = get_secret("mlflow_client_id")
-    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
+    connect_remote_mlflow()
     experiment_name = f"{model_name}_v1.0_{ENV_SHORT_NAME}"
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     with mlflow.start_run(experiment_id=experiment_id, run_name=run_name):

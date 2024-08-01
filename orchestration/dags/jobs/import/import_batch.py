@@ -49,8 +49,11 @@ with DAG(
 
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,
+        instance_type="n1-standard-1",
         task_id="gce_start_task",
         retries=2,
+        preemptible=False,
+        labels={"job_type": "long_task"},
     )
 
     fetch_code = CloneRepositoryGCEOperator(
@@ -77,6 +80,7 @@ with DAG(
         command=f"""
         python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} ios      
         """,
+        retries=2,
     )
 
     android_job = SSHGCEOperator(
@@ -86,6 +90,7 @@ with DAG(
         command=f"""
         python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} android      
         """,
+        retries=2,
     )
 
     gce_instance_stop = StopGCEOperator(

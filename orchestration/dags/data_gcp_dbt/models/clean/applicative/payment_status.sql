@@ -1,3 +1,2 @@
-SELECT
-    *
-FROM {{ source('raw', 'applicative_database_payment_status') }}
+select *
+from {{ source('raw', 'applicative_database_payment_status') }}

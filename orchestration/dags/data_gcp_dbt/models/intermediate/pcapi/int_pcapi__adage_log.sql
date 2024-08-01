@@ -7,15 +7,15 @@
     )
 ) }}
 
-WITH adage_logs AS (
-    SELECT
+with adage_logs as (
+    select
         partition_date as event_date,
         url_path,
         log_timestamp as event_timestamp,
         message as event_name,
         technical_message_id,
         source,
-        extra_user_id AS user_id,
+        extra_user_id as user_id,
         uai,
         user_role,
         origin,
@@ -26,7 +26,7 @@ WITH adage_logs AS (
         total_students,
         total_teachers,
         header_link_name,
-        booking_id AS collective_booking_id,
+        booking_id as collective_booking_id,
         address_type_filter,
         text_filter,
         department_filter,
@@ -42,47 +42,47 @@ WITH adage_logs AS (
         domain_id,
         venue_id,
         rank_clicked,
-        CASE
-            WHEN url_path LIKE "%adage-iframe%" THEN 'adage-iframe'
-            ELSE 'adage'
-        END as log_source,
-        CASE WHEN message="CreateCollectiveOfferRequest" THEN collective_offer_template_id ELSE offer_id END as collective_offer_id,
-        CASE WHEN message="SearchButtonClicked" THEN results_count WHEN message="TrackingFilter" THEN results_number ELSE NULL END as total_results,
+        case
+            when url_path like "%adage-iframe%" then 'adage-iframe'
+            else 'adage'
+        end as log_source,
+        case when message = "CreateCollectiveOfferRequest" then collective_offer_template_id else offer_id end as collective_offer_id,
+        case when message = "SearchButtonClicked" then results_count when message = "TrackingFilter" then results_number else NULL end as total_results,
         COALESCE(
-                CAST(
-                    DATE_DIFF(log_timestamp, LAG(log_timestamp, 1) OVER (PARTITION BY user_id ORDER BY log_timestamp), MINUTE) <= 30 AS INT
-                ), 1
-            ) as same_session
-    FROM {{ref('int_pcapi__log')}}
-    WHERE
+            CAST(
+                DATE_DIFF(log_timestamp, LAG(log_timestamp, 1) over (partition by user_id order by log_timestamp), minute) <= 30 as INT
+            ), 1
+        ) as same_session
+    from {{ ref('int_pcapi__log') }}
+    where
         (
-            url_path LIKE "%adage-iframe%"
-            OR analytics_source = 'adage'
+            url_path like "%adage-iframe%"
+            or analytics_source = 'adage'
         )
-    AND message NOT LIKE "%HTTP%"
-    {% if is_incremental() %}
-    AND partition_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
-    {% endif %}
+        and message not like "%HTTP%"
+        {% if is_incremental() %}
+            and partition_date between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")
+        {% endif %}
 ),
 
-generate_session AS (
-    SELECT
+generate_session as (
+    select
         *,
-        rnk - session_sum  as session_num,
-        MIN(event_timestamp) OVER (PARTITION BY user_id, rnk - session_sum) as session_start
-    FROM (
-        SELECT
-        *,
-        SUM(same_session) OVER (PARTITION BY user_id  ORDER BY event_timestamp) as session_sum,
-        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY event_timestamp) as rnk
-        FROM adage_logs
+        rnk - session_sum as session_num,
+        MIN(event_timestamp) over (partition by user_id, rnk - session_sum) as session_start
+    from (
+        select
+            *,
+            SUM(same_session) over (partition by user_id order by event_timestamp) as session_sum,
+            ROW_NUMBER() over (partition by user_id order by event_timestamp) as rnk
+        from adage_logs
     ) _inn_ts
 )
 
-SELECT
-* EXCEPT(session_num, session_start, rnk, same_session, session_sum),
-TO_HEX(MD5(CONCAT(CAST(session_start AS STRING), user_id, session_num))) as session_id
-FROM generate_session
+select
+    * except (session_num, session_start, rnk, same_session, session_sum),
+    TO_HEX(MD5(CONCAT(CAST(session_start as STRING), user_id, session_num))) as session_id
+from generate_session
 {% if is_incremental() %}
-WHERE event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
+    where event_date between DATE_SUB(DATE("{{ ds() }}"), interval 1 day) and DATE("{{ ds() }}")
 {% endif %}

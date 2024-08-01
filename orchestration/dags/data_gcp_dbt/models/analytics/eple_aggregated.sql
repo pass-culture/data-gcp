@@ -1,85 +1,87 @@
-WITH eple_infos AS (
-SELECT DISTINCT 
-    institution_id 
-    ,institution_external_id
-    ,institution_name
-    ,institution_city
-    ,institution_departement_code
-    ,region_name
-    ,institution_academie
-    ,eid.ministry 
-    ,eid.institution_type
-    ,eat.macro_institution_type
-    ,ey.scholar_year
-    ,ed.educational_deposit_amount AS institution_deposit_amount
-FROM {{ ref('enriched_institution_data') }} eid
-LEFT JOIN {{ source('analytics','region_department') }} rd ON eid.institution_departement_code = rd.num_dep
-JOIN {{ ref('educational_deposit') }} ed ON ed.educational_institution_id = eid.institution_id
-JOIN {{ ref('educational_year') }} ey ON ey.adage_id = ed.educational_year_id
-LEFT JOIN  {{ source('raw','eple_aggregated_type') }} as eat
-        ON eid.institution_type = eat.institution_type
-), 
+with eple_infos as (
+    select distinct
+        institution_id,
+        institution_external_id,
+        institution_name,
+        institution_city,
+        institution_departement_code,
+        institution_region_name as region_name,
+        institution_academy_name as institution_academie,
+        eid.ministry,
+        eid.institution_type,
+        eat.macro_institution_type,
+        ey.scholar_year,
+        ed.educational_deposit_amount as institution_deposit_amount
+    from {{ ref('enriched_institution_data') }} eid
+        join {{ ref('educational_deposit') }} ed on ed.educational_institution_id = eid.institution_id
+        join {{ ref('educational_year') }} ey on ey.adage_id = ed.educational_year_id
+        left join {{ source('raw','eple_aggregated_type') }} as eat
+            on eid.institution_type = eat.institution_type
+),
 
-eple_bookings AS (
-SELECT 
-    eple_infos.institution_id
-    ,eple_infos.scholar_year
-    ,SUM(CASE WHEN collective_booking_status != 'CANCELLED' THEN booking_amount ELSE NULL END) AS theoric_amount_spent
-    ,SUM(CASE WHEN collective_booking_status IN ('USED','REIMBURSED') THEN booking_amount ELSE NULL END) AS real_amount_spent
-FROM eple_infos
-JOIN {{ ref('enriched_collective_booking_data') }} ecbd ON ecbd.educational_institution_id = eple_infos.institution_id AND ecbd.scholar_year = eple_infos.scholar_year
-GROUP BY 1, 2)
+eple_bookings as (
+    select
+        eple_infos.institution_id,
+        eple_infos.scholar_year,
+        SUM(case when collective_booking_status != 'CANCELLED' then booking_amount else NULL end) as theoric_amount_spent,
+        SUM(case when collective_booking_status in ('USED', 'REIMBURSED') then booking_amount else NULL end) as real_amount_spent
+    from eple_infos
+        join {{ ref('enriched_collective_booking_data') }} ecbd on ecbd.educational_institution_id = eple_infos.institution_id and ecbd.scholar_year = eple_infos.scholar_year
+    group by 1, 2
+),
 
-,total_nb_of_students AS (
-SELECT 
-    eid.institution_id 
-    ,eid.institution_name 
-    ,SUM(number_of_students) AS nb_students
-FROM {{ ref('enriched_institution_data') }} eid
-LEFT JOIN {{ source('analytics','number_of_students_per_eple') }} ns ON eid.institution_external_id = ns.institution_external_id
-GROUP BY 1,2)
+total_nb_of_students as (
+    select
+        eid.institution_id,
+        eid.institution_name,
+        SUM(number_of_students) as nb_students
+    from {{ ref('enriched_institution_data') }} eid
+        left join {{ source('analytics','number_of_students_per_eple') }} ns on eid.institution_external_id = ns.institution_external_id
+    group by 1, 2
+),
 
-,nb_eleves_educonnectes_per_eple AS (
-SELECT  
-     TRIM(json_extract(result_content, '$.school_uai'), '"') AS school 
-    , COUNT(DISTINCT edd.user_id) AS educonnect_inscriptions
-    , COUNT(DISTINCT CASE WHEN DATE_DIFF(current_date, deposit_creation_date, DAY) <= 365 THEN edd.user_id ELSE NULL END) AS last_12_months_inscriptions
-    , AVG(COALESCE(deposit_theoretical_amount_spent,0)) AS avg_spent_per_user
-    , SAFE_DIVIDE(SUM(deposit_theoretical_amount_spent), SUM(deposit_amount)) AS pct_spent
-    , COUNT(DISTINCT ebd.user_id) AS nb_credit_used_students
-FROM {{ ref('beneficiary_fraud_check') }} bfc
-JOIN {{ ref('enriched_deposit_data') }} edd ON edd.user_id = bfc.user_id
-LEFT JOIN {{ ref('mrt_global__booking') }} ebd ON ebd.user_id = edd.user_id AND not booking_is_cancelled
-WHERE type = 'EDUCONNECT'
-AND json_extract(result_content, '$.school_uai') IS NOT NULL
-AND edd.deposit_type = 'GRANT_15_17'
-GROUP BY 1)
+nb_eleves_educonnectes_per_eple as (
+    select
+        TRIM(JSON_EXTRACT(result_content, '$.school_uai'), '"') as school,
+        COUNT(distinct edd.user_id) as educonnect_inscriptions,
+        COUNT(distinct case when DATE_DIFF(CURRENT_DATE, deposit_creation_date, day) <= 365 then edd.user_id else NULL end) as last_12_months_inscriptions,
+        AVG(COALESCE(total_theoretical_amount_spent, 0)) as avg_spent_per_user,
+        SAFE_DIVIDE(SUM(total_theoretical_amount_spent), SUM(deposit_amount)) as pct_spent,
+        COUNT(distinct ebd.user_id) as nb_credit_used_students
+    from {{ ref('beneficiary_fraud_check') }} bfc
+        join {{ ref('mrt_global__deposit') }} edd on edd.user_id = bfc.user_id
+        left join {{ ref('mrt_global__booking') }} ebd on ebd.user_id = edd.user_id and not booking_is_cancelled
+    where type = 'EDUCONNECT'
+        and JSON_EXTRACT(result_content, '$.school_uai') is not NULL
+        and edd.deposit_type = 'GRANT_15_17'
+    group by 1
+)
 
-SELECT 
-    eple_infos.institution_id 
-    ,eple_infos.institution_external_id
-    ,eple_infos.institution_name
-    ,eple_infos.institution_academie
-    ,eple_infos.region_name
-    ,eple_infos.institution_departement_code
-    ,eple_infos.institution_city
-    ,eple_infos.ministry
-    ,eple_infos.institution_type
-    ,eple_infos.macro_institution_type
-    ,eple_infos.scholar_year
-    ,institution_deposit_amount
-    ,theoric_amount_spent
-    ,SAFE_DIVIDE(theoric_amount_spent, institution_deposit_amount) AS pct_credit_theoric_amount_spent
-    ,real_amount_spent
-    ,SAFE_DIVIDE(real_amount_spent, institution_deposit_amount) AS pct_credit_real_amount_spent
-    ,nb_students AS total_students
-    ,educonnect_inscriptions
-    ,last_12_months_inscriptions
-    ,nb_credit_used_students
-    ,avg_spent_per_user
-    ,pct_spent AS pct_spent_per_user
-    ,SAFE_DIVIDE(last_12_months_inscriptions, nb_students) AS pct_beneficiary_students
-FROM eple_infos
-LEFT JOIN eple_bookings ON eple_bookings.institution_id = eple_infos.institution_id AND eple_infos.scholar_year = eple_bookings.scholar_year
-LEFT JOIN total_nb_of_students ON eple_infos.institution_id = total_nb_of_students.institution_id
-LEFT JOIN nb_eleves_educonnectes_per_eple ON eple_infos.institution_external_id = nb_eleves_educonnectes_per_eple.school
+select
+    eple_infos.institution_id,
+    eple_infos.institution_external_id,
+    eple_infos.institution_name,
+    eple_infos.institution_academie,
+    eple_infos.region_name,
+    eple_infos.institution_departement_code,
+    eple_infos.institution_city,
+    eple_infos.ministry,
+    eple_infos.institution_type,
+    eple_infos.macro_institution_type,
+    eple_infos.scholar_year,
+    institution_deposit_amount,
+    theoric_amount_spent,
+    SAFE_DIVIDE(theoric_amount_spent, institution_deposit_amount) as pct_credit_theoric_amount_spent,
+    real_amount_spent,
+    SAFE_DIVIDE(real_amount_spent, institution_deposit_amount) as pct_credit_real_amount_spent,
+    nb_students as total_students,
+    educonnect_inscriptions,
+    last_12_months_inscriptions,
+    nb_credit_used_students,
+    avg_spent_per_user,
+    pct_spent as pct_spent_per_user,
+    SAFE_DIVIDE(last_12_months_inscriptions, nb_students) as pct_beneficiary_students
+from eple_infos
+    left join eple_bookings on eple_bookings.institution_id = eple_infos.institution_id and eple_infos.scholar_year = eple_bookings.scholar_year
+    left join total_nb_of_students on eple_infos.institution_id = total_nb_of_students.institution_id
+    left join nb_eleves_educonnectes_per_eple on eple_infos.institution_external_id = nb_eleves_educonnectes_per_eple.school

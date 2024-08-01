@@ -38,6 +38,7 @@ sources:
       - name: applicative_database_criterion
       - name: applicative_database_criterion_category
       - name: applicative_database_criterion_category_mapping
+      - name: applicative_database_custom_reimbursement_rule
       - name: applicative_database_deposit
       - name: applicative_database_educational_deposit
       - name: applicative_database_educational_domain
@@ -123,6 +124,7 @@ sources:
       - name: metabase_query_execution
       - name: metabase_report_card
       - name: metabase_report_dashboard
+      - name: metabase_revision
       - name: past_offer_context
       - name: sensitive_item_recommendation
       - name: stdout
@@ -144,14 +146,7 @@ sources:
       - name: firebase_app_experiments
       - name: geo_iris
       - name: iris_france
-      - name: default_item_clusters
-      - name: unconstrained_item_clusters
       - name: institutional_scholar_level
-      - name: item_embeddings
-      - name: item_embeddings_reduced_64
-      - name: item_embeddings_reduced_32
-      - name: item_embeddings_reduced_16
-      - name: item_embeddings_reduced_5
       - name: siren_data
       - name: subcategories
   - name: analytics # this is the source_name
@@ -174,4 +169,14 @@ sources:
       - name: siren_data_labels
       - name: user_locations
       - name: ZRR
-
+  - name: ml_preproc
+    schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
+    tables:
+      - name: default_item_cluster
+      
+      - name: item_embedding_extraction 
+      - name: item_embedding_reduced_64
+      - name: item_embedding_reduced_32
+      - name: item_embedding_reduced_16
+      - name: item_embedding_reduced_5
+      - name: unconstrained_item_cluster

@@ -8,14 +8,13 @@ from baseline_model.models.match_model import MatchModel
 from utils.callbacks import MLFlowLogging
 from utils.constants import (
     ENV_SHORT_NAME,
+    MLFLOW_RUN_ID_FILENAME,
     MODEL_DIR,
     STORAGE_PATH,
     TRAIN_DIR,
-    MLFLOW_RUN_ID_FILENAME,
 )
 from utils.data_collect_queries import read_from_gcs
 from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
-from utils.secrets_utils import get_secret
 
 N_EPOCHS = 100
 MIN_DELTA = 0.001  # Minimum change in the accuracy before a callback is called
@@ -86,8 +85,7 @@ def train(
     )
 
     # Connect to MLFlow
-    client_id = get_secret("mlflow_client_id")
-    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
+    connect_remote_mlflow()
     experiment = get_mlflow_experiment(experiment_name)
 
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
@@ -151,8 +149,6 @@ def train(
                     verbose=1,
                 ),
                 MLFlowLogging(
-                    client_id=client_id,
-                    env=ENV_SHORT_NAME,
                     export_path=export_path,
                 ),
             ],

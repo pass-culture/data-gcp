@@ -7,30 +7,30 @@
     )
 ) }}
 
-WITH firebase_last_two_days_events AS (
-    SELECT *
-    FROM {{ source("raw","firebase_events") }}
-    WHERE TRUE
+with firebase_last_two_days_events as (
+    select *
+    from {{ source("raw","firebase_events") }}
+    where TRUE
         {% if is_incremental() %}
-        AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 3 DAY) and DATE("{{ ds() }}")
+            and event_date between date_sub(date("{{ ds() }}"), interval 3 day) and date("{{ ds() }}")
         {% endif %}
 ),
 
-native_unnest AS (
-    SELECT
+native_unnest as (
+    select
         event_date,
         user_id,
         user_pseudo_id,
         event_name,
-        TIMESTAMP_MICROS(event_timestamp) AS event_timestamp,
-        TIMESTAMP_MICROS(event_previous_timestamp) AS event_previous_timestamp,
-        TIMESTAMP_MICROS(event_timestamp) AS user_first_touch_timestamp,
+        timestamp_micros(event_timestamp) as event_timestamp,
+        timestamp_micros(event_previous_timestamp) as event_previous_timestamp,
+        timestamp_micros(event_timestamp) as user_first_touch_timestamp,
         platform,
         traffic_source.name,
         traffic_source.medium,
         traffic_source.source,
-        app_info.version AS app_version,
-        (SELECT event_params.value.double_value from unnest(event_params) event_params where event_params.key = 'offerId') as double_offer_id,
+        app_info.version as app_version,
+        (select event_params.value.double_value from unnest(event_params) event_params where event_params.key = 'offerId') as double_offer_id,
         {{ extract_params_int_value(["ga_session_id",
                                         "ga_session_number",
                                         "shouldUseAlgoliaRecommend",
@@ -39,7 +39,7 @@ native_unnest AS (
                                         "searchOfferIsDuo",
                                         "geo_located",
                                         "enabled"
-                                        ])}}
+                                        ]) }}
         {{ extract_params_string_value([
                                     "searchId",
                                     "moduleId",
@@ -104,14 +104,14 @@ native_unnest AS (
                                     "youtubeId",
                                     ])
                                     }},
-        (SELECT event_params.value.string_value from unnest(event_params) event_params where event_params.key = 'from') as origin
-    FROM firebase_last_two_days_events
+        (select event_params.value.string_value from unnest(event_params) event_params where event_params.key = 'from') as origin
+    from firebase_last_two_days_events
 )
 
 
 
-SELECT
-    * except(offers_1_10,offers_11_20,offers_21_30,offers_31_40,offers_41_50,venues_1_10,venues_11_20,venues_21_30,venues_31_40,venues_41_50),
-    {{ extract_str_to_array_field("offers", 0, 10, 50) }} AS displayed_offers,
-    {{ extract_str_to_array_field("venues", 0, 10, 50) }} AS displayed_venues
-FROM native_unnest
+select
+    * except (offers_1_10, offers_11_20, offers_21_30, offers_31_40, offers_41_50, venues_1_10, venues_11_20, venues_21_30, venues_31_40, venues_41_50),
+    {{ extract_str_to_array_field("offers", 0, 10, 50) }} as displayed_offers,
+    {{ extract_str_to_array_field("venues", 0, 10, 50) }} as displayed_venues
+from native_unnest

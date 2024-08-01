@@ -1,4 +1,4 @@
-SELECT
+select
     cb.collective_booking_id,
     cb.collective_stock_id,
     co.stock_id,
@@ -16,19 +16,30 @@ SELECT
     co.partner_id,
     co.offerer_name,
     co.venue_iris_internal_id,
-    co.collective_stock_price AS booking_amount, -- nom de cette colonne ? il faut que ce soit iso avec mrt_collective__offer
+    co.collective_stock_price as booking_amount,
     co.collective_stock_number_of_tickets,
     co.collective_stock_beginning_date_time,
     cb.educational_institution_id,
     cb.educational_year_id,
     educational_year.scholar_year,
     cb.educational_redactor_id,
-    eple.nom_etablissement,
     co.institution_program_name,
     co.institution_internal_iris_id,
-    eple.code_departement AS school_department_code,
-    school_region_departement.region_name AS school_region_name,
-    eple.libelle_academie,
+    educational_institution.institution_name,
+    co.institution_academy_name,
+    co.institution_region_name,
+    co.institution_department_code,
+    co.institution_postal_code,
+    co.institution_city,
+    co.institution_epci,
+    co.institution_density_label,
+    co.institution_macro_density_label,
+    co.venue_city,
+    co.venue_epci,
+    co.venue_academy_name,
+    co.venue_density_label,
+    co.venue_macro_density_label,
+    co.venue_postal_code,
     co.collective_offer_address_type,
     cb.collective_booking_creation_date,
     cb.collective_booking_cancellation_date,
@@ -40,10 +51,8 @@ SELECT
     cb.collective_booking_used_date,
     cb.collective_booking_reimbursement_date,
     cb.collective_booking_rank,
-    co.collective_offer_image_id,
-FROM {{ ref('int_applicative__collective_booking') }}  AS cb
-    INNER JOIN {{ ref('mrt_global__collective_offer_unverified') }} AS co ON co.collective_stock_id = cb.collective_stock_id
-    INNER JOIN {{ source('raw', 'applicative_database_educational_year') }} AS educational_year ON educational_year.adage_id = cb.educational_year_id
-    INNER JOIN {{ ref('educational_institution') }} AS educational_institution ON educational_institution.educational_institution_id = cb.educational_institution_id
-    LEFT JOIN {{ source('analytics', 'eple') }} AS eple ON eple.id_etablissement = educational_institution.institution_id
-    LEFT JOIN {{ source('analytics', 'region_department') }} AS school_region_departement ON eple.code_departement = school_region_departement.num_dep
+    co.collective_offer_image_id
+from {{ ref('int_applicative__collective_booking') }} as cb
+    inner join {{ ref('int_global__collective_offer') }} as co on co.collective_stock_id = cb.collective_stock_id
+    inner join {{ source('raw', 'applicative_database_educational_year') }} as educational_year on educational_year.adage_id = cb.educational_year_id
+    inner join {{ ref('int_applicative__educational_institution') }} as educational_institution on educational_institution.educational_institution_id = cb.educational_institution_id

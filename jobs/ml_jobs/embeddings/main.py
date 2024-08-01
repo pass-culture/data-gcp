@@ -2,29 +2,73 @@ import json
 from datetime import datetime
 import pandas as pd
 import typer
-
+from utils.logging import logging
 from tools.config import CONFIGS_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
 from tools.embedding_extraction import extract_embedding
 
 
+def preprocess(df, features):
+    df = df.fillna(" ")
+    for feature in features:
+        if feature["type"] == "macro_text":
+            df[feature["name"]] = (
+                df[feature["content"]]
+                .agg(" ".join, axis=1)
+                .astype(str)
+                .str.lower()
+                .str.replace("_", " ")
+            )
+    return df
+
+
+def load_data(
+    gcp_project: str,
+    input_dataset_name: str,
+    input_table_name: str,
+    max_rows_to_process: int,
+) -> pd.DataFrame:
+    # If max_rows_to_process is -1, we will process all data.
+    limit = f" LIMIT {max_rows_to_process} " if max_rows_to_process > 0 else ""
+    return pd.read_gbq(
+        f"SELECT * FROM `{gcp_project}.{input_dataset_name}.{input_table_name}` {limit} "
+    )
+
+
 def main(
     gcp_project: str = typer.Option(GCP_PROJECT_ID, help="GCP project ID"),
-    env_short_name: str = typer.Option(ENV_SHORT_NAME, help="Env short name"),
     config_file_name: str = typer.Option(
         "default-config-offer", help="Config file name"
     ),
+    batch_size: int = typer.Option(
+        ...,
+        help="Number of items to preprocess",
+    ),
+    max_rows_to_process: int = typer.Option(
+        -1,
+        help="Number of item to preprocess at maximum. If -1, all items will be processed.",
+    ),
+    input_dataset_name: str = typer.Option(
+        ...,
+        help="Name of the input dateset",
+    ),
     input_table_name: str = typer.Option(
         ...,
-        help="Name of the dataframe we want to clean",
+        help="Name of the input table.",
+    ),
+    output_dataset_name: str = typer.Option(
+        ...,
+        help="Name of the output dataset",
     ),
     output_table_name: str = typer.Option(
         ...,
-        help="Name of the cleaned dataframe",
+        help="Name of the output table",
     ),
 ) -> None:
-    """ """
-    ###############
-    # Load config
+    """
+    Main loggic data for embedding extraction.
+    Input table depends on output table, we loop until all data is processed, by default.
+    """
+
     with open(
         f"{CONFIGS_PATH}/{config_file_name}.json",
         mode="r",
@@ -32,32 +76,34 @@ def main(
     ) as config_file:
         params = json.load(config_file)
 
-    ###############
-    # Load preprocessed data
-    df_data_to_extract_embedding = pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.tmp_{env_short_name}.{input_table_name}`"
+    processed_rows = 0
+    iteration = 0
+
+    df = load_data(
+        gcp_project,
+        input_dataset_name,
+        input_table_name,
+        max_rows_to_process,
     )
+    logging.info(f"Will process {df.shape} rows.")
+    df = preprocess(df, params["features"])
 
-    ###############
-    # Run embedding extraction
-    df_data_w_embedding, emb_size_dict = extract_embedding(
-        df_data_to_extract_embedding,
-        params,
-    )
+    for start in range(0, df.shape[0], batch_size):
+        df_subset = df.iloc[start : start + batch_size]
+        extract_embedding(df_subset, params).assign(
+            extraction_date=datetime.now().strftime("%Y-%m-%d"),
+            extraction_datetime=datetime.now(),
+        ).to_gbq(
+            f"{output_dataset_name}.{output_table_name}",
+            project_id=gcp_project,
+            if_exists="append",
+        )
+        logging.info(
+            f"{iteration} iteration (batch {start}/{start + batch_size}), processed rows: {processed_rows}"
+        )
 
-    df_data_w_embedding["extraction_date"] = [
-        datetime.now().strftime("%Y-%m-%d")
-    ] * len(df_data_w_embedding)
-
-    df_data_w_embedding.to_gbq(
-        f"clean_{env_short_name}.{output_table_name}",
-        project_id=gcp_project,
-        if_exists="append",
-    )
-
-    with open("./emb_size_dict.json", "w") as f:
-        json.dump(emb_size_dict, f)
-    return
+        processed_rows += df_subset.shape[0]
+        iteration += 1
 
 
 if __name__ == "__main__":

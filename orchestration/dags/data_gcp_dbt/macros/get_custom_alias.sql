@@ -8,7 +8,7 @@
 
         {{ custom_alias_name ~ node.name }}
 
-    {%- elif ('intermediate' in node.path or 'machine_learning' in node.path or 'backend' in node.path) and ((target.name == "prod" and target.profile_name != "sandbox") or target.name == "stg")  -%}
+    {%- elif ('intermediate' in node.path or 'machine_learning' in node.path or 'backend' in node.path or node.resource_type == 'snapshot' ) and ((target.name == "prod" and target.profile_name != "sandbox") or target.name == "stg")  -%}
 
         {%- set model_name = node.name.split('__') -%}
         {{ model_name[-1] | trim }}

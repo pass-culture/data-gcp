@@ -10,7 +10,7 @@ with themes_subscribed as (
     select
         user_id,
         currently_subscribed_themes,
-        case when (currently_subscribed_themes is NULL or currently_subscribed_themes = "") then FALSE else TRUE end as is_theme_subscribed
+        case when (currently_subscribed_themes is NULL or currently_subscribed_themes = "") then FALSE else TRUE end as  is_theme_subscribed
     from {{ source("analytics","app_native_logs") }}
     where technical_message_id = "subscription_update"
     qualify ROW_NUMBER() over (partition by user_id order by partition_date desc) = 1
@@ -33,18 +33,18 @@ select
         u.user_department_code
     ) as user_department_code,
     u.user_postal_code,
-    CASE
+    case
         when u.user_activity in ("Alternant", "Apprenti", "Volontaire") then "Apprenti, Alternant, Volontaire en service civique rémunéré"
         when u.user_activity in ("Inactif") then "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
         when u.user_activity in ("Étudiant") then "Etudiant"
         when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then "Chômeur, En recherche d'emploi"
-        ELSE u.user_activity
-    END AS user_activity,
-    CASE
+        else u.user_activity
+    end as  user_activity,
+    case
         when u.user_civility in ("M", "M.") then "M."
         when u.user_civility = "Mme" then "Mme."
-        ELSE u.user_civility
-    END AS user_civility,
+        else u.user_civility
+    end as  user_civility,
     u.user_school_type,
     u.user_is_active,
     u.user_age,
@@ -64,8 +64,8 @@ select
     ui.user_academy_name,
     ui.user_density_label,
     ui.user_macro_density_label,
-    case when ui.qpv_name is not NULL then TRUE else FALSE end as user_is_in_qpv,
-    case when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then TRUE else FALSE end as user_is_unemployed,
+    case when ui.qpv_name is not NULL then TRUE else FALSE end as  user_is_in_qpv,
+    case when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then TRUE else FALSE end as  user_is_unemployed,
     case when
             (
                 (ui.qpv_name is not NULL)
@@ -74,7 +74,7 @@ select
             )
             then TRUE
         else FALSE
-    end as user_is_priority_public,
+    end as  user_is_priority_public,
     currently_subscribed_themes,
     is_theme_subscribed
 from {{ source("raw", "applicative_database_user") }} as u

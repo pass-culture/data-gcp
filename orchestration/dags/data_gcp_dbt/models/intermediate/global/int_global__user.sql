@@ -162,7 +162,7 @@ select
     bdgu.total_distinct_booking_types,
     ah.action_history_reason as user_suspension_reason,
     dgu.first_deposit_amount,
-    dgu.last_deposit_expiration_date as user_deposit_expiration_date,
+    dgu.last_deposit_expiration_date as last_deposit_expiration_date,
     case when (
             timestamp(dgu.last_deposit_expiration_date) >= current_timestamp()
             and coalesce(bdgu.total_deposit_actual_amount_spent, 0) < dgu.last_deposit_amount

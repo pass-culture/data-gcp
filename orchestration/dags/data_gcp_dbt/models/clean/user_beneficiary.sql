@@ -14,7 +14,6 @@ with user_beneficiary as (
         -- keep user_postal_code by default.
         COALESCE(
             case
-
                 when u.user_postal_code = '97150' then '978'
                 when SUBSTRING(u.user_postal_code, 0, 2) = '97' then SUBSTRING(u.user_postal_code, 0, 3)
                 when SUBSTRING(u.user_postal_code, 0, 2) = '98' then SUBSTRING(u.user_postal_code, 0, 3)
@@ -25,18 +24,18 @@ with user_beneficiary as (
             u.user_department_code
         ) as user_department_code,
         u.user_postal_code,
-        CASE
-            WHEN user_activity in ("Alternant", "Apprenti", "Volontaire") THEN "Apprenti, Alternant, Volontaire en service civique rémunéré"
-            WHEN user_activity in ("Inactif") THEN "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
-            WHEN user_activity in ("Étudiant") THEN "Etudiant"
-            WHEN user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") THEN "Chômeur, En recherche d'emploi"
-            ELSE user_activity
-        END AS user_activity,
-        CASE
-            WHEN user_civility in ("M", "M.") THEN "M."
-            WHEN user_civility IN ("Mme") THEN "Mme"
-            ELSE user_civility
-        END AS user_civility,
+        case
+            when user_activity in ("Alternant", "Apprenti", "Volontaire") THEN "Apprenti, Alternant, Volontaire en service civique rémunéré"
+            when user_activity in ("Inactif") THEN "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
+            when user_activity in ("Étudiant") THEN "Etudiant"
+            when user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") THEN "Chômeur, En recherche d'emploi"
+            else user_activity
+        end as  user_activity,
+        case
+            when user_civility in ("M", "M.") THEN "M."
+            when user_civility IN ("Mme") THEN "Mme"
+            else user_civility
+        end as  user_civility,
         user_school_type,
         user_is_active,
         user_age,
@@ -83,8 +82,8 @@ select
             u.user_department_code not in ("29", "34", "67", "93", "973", "22", "25", "35", "56", "58", "71", "08", "84", "94")
             and DATE(user_creation_date) < "2021-05-01"
             then "99"
-        else u.user_department_code
-    end as user_department_code,
+        else  u.user_department_code
+    end as  user_department_code,
     u.user_postal_code,
     user_activity,
     user_civility,
@@ -93,12 +92,12 @@ select
     user_age,
     user_role,
     user_birth_date,
-    CASE
+    case
         -- get user activation date with fictional offers (early 2019)
         when offer_subcategoryid = 'ACTIVATION_THING'
             and booking_used_date is not NULL then booking_used_date
-        else user_creation_date
-    end as user_activation_date,
+        else  user_creation_date
+    end as  user_activation_date,
     ui.user_iris_internal_id,
     ui.user_region_name,
     ui.user_city,
@@ -106,8 +105,8 @@ select
     ui.user_academy_name,
     ui.user_density_label,
     ui.user_macro_density_label,
-    case when ui.qpv_name is not NULL then TRUE else FALSE end as user_is_in_qpv,
-    case when u.user_activity = "Chômeur, En recherche d'emploi" then TRUE else FALSE end as user_is_unemployed,
+    case when ui.qpv_name is not NULL then TRUE else  FALSE end as  user_is_in_qpv,
+    case when u.user_activity = "Chômeur, En recherche d'emploi" then TRUE else  FALSE end as  user_is_unemployed,
     case when
             (
                 (ui.qpv_name is not NULL)
@@ -117,7 +116,7 @@ select
                 u.user_activity = "Chômeur, En recherche d'emploi"
             )
             then TRUE
-        else FALSE
+        else  FALSE
     end
         as user_is_priority_public
 from user_beneficiary as u

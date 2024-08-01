@@ -91,6 +91,6 @@ if LOCAL_ENV != None:
     PATH_TO_DBT_TARGET = "/opt/airflow/dags/data_gcp_dbt/target"
 else:
     PATH_TO_DBT_TARGET = os.environ.get(
-        "DBT_TARGET_PATH", "/home/airflow/gcs/data/target"
+        "DBT_TARGET_PATH", "/opt/airflow/dags/data_gcp_dbt/target"
     )
 EXCLUDED_TAGS = ["sandbox", "weekly", "monthly"]

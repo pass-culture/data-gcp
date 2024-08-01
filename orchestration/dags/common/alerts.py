@@ -117,7 +117,7 @@ def dbt_test_fail_slack_alert(
     return dbt_test_fail_slack_alert_alert.execute(context=context)
 
 
-def dbt_test_slack_alert(context, results_json, job_type=ENV_SHORT_NAME):
+def dbt_test_slack_alert(results_json, job_type=ENV_SHORT_NAME, **context):
     webhook_token = JOB_TYPE.get(job_type)
 
     slack_header = f"""{ENV_EMOJI[ENV_SHORT_NAME]}

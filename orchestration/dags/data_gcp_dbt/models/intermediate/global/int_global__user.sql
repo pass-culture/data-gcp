@@ -47,7 +47,7 @@ with bookings_deposit_grouped_by_user as (
 deposit_grouped_by_user as (
     select
         user_id,
-        min(deposit_creation_date) as user_deposit_creation_date,
+        min(deposit_creation_date) as first_deposit_creation_date,
         min(deposit_amount) as first_deposit_amount,
         max(deposit_amount) as last_deposit_amount,
         max(deposit_expiration_date) as last_deposit_expiration_date,
@@ -133,7 +133,7 @@ select
     u.user_humanized_id,
     u.currently_subscribed_themes,
     u.is_theme_subscribed,
-    dgu.user_deposit_creation_date,
+    dgu.first_deposit_creation_date,
     ud.first_deposit_type,
     dgu.total_deposit_amount,
     ud.current_deposit_type,
@@ -154,15 +154,15 @@ select
     dgu.last_deposit_amount - bdgu.total_deposit_theoretical_amount_spent as total_theoretical_remaining_credit,
     bdgu.last_individual_booking_date as last_booking_date,
     bdgu.first_booking_creation_date,
-    date_diff(bdgu.first_individual_booking_date, dgu.user_deposit_creation_date, day) as days_between_activation_date_and_first_booking_date,
-    date_diff(bdgu.first_booking_creation_date, dgu.user_deposit_creation_date, day) as days_between_activation_date_and_first_booking_paid,
+    date_diff(bdgu.first_individual_booking_date, dgu.first_deposit_creation_date, day) as days_between_activation_date_and_first_booking_date,
+    date_diff(bdgu.first_booking_creation_date, dgu.first_deposit_creation_date, day) as days_between_activation_date_and_first_booking_paid,
     coalesce(user_activation_date, user_creation_date) as user_activation_date,
     bdgu.first_booking_type,
     first_paid_booking_type.first_paid_booking_type,
     bdgu.total_distinct_booking_types,
     ah.action_history_reason as user_suspension_reason,
     dgu.first_deposit_amount as user_deposit_initial_amount,
-    dgu.last_deposit_expiration_date as user_deposit_expiration_date,
+    dgu.last_deposit_expiration_date as last_deposit_expiration_date,
     case when (
             timestamp(dgu.last_deposit_expiration_date) >= current_timestamp()
             and coalesce(bdgu.total_deposit_actual_amount_spent, 0) < dgu.last_deposit_amount

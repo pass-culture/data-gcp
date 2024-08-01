@@ -26,7 +26,7 @@ SLACK_CONN_PASSWORD = access_secret_data(
 )
 SLACK_WEBHOOK_URL = f"https://hooks.slack.com/services/{SLACK_CONN_PASSWORD}"
 
-test_results_dict = load_json_artifact(PATH_TO_DBT_TARGET)
+test_results_dict = load_json_artifact(PATH_TO_DBT_TARGET, 'run_results.json')
 
 default_args = {
     "start_date": datetime(2020, 12, 23),

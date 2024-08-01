@@ -96,8 +96,8 @@ select
         -- get user activation date with fictional offers (early 2019)
         when offer_subcategoryid = 'ACTIVATION_THING'
             and booking_used_date is not NULL then booking_used_date
-        else  user_creation_date
-    end as  user_activation_date,
+        else user_creation_date
+    end as user_activation_date,
     ui.user_iris_internal_id,
     ui.user_region_name,
     ui.user_city,

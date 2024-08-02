@@ -24,7 +24,7 @@ answers AS (
 ir_export AS (
     SELECT
         user_data.user_id,
-        user_data.user_current_deposit_type as deposit_type,
+        user_data.current_deposit_type as deposit_type,
         user_data.user_civility,
         no_cancelled_booking,
         user_data.user_region_name,
@@ -36,7 +36,7 @@ ir_export AS (
         zrr,
         user_seniority
 
-        FROM `{{ bigquery_analytics_dataset }}.enriched_user_data` user_data
+        FROM `{{ bigquery_analytics_dataset }}.global_user` user_data
         INNER JOIN `{{ bigquery_clean_dataset }}.applicative_database_user` applicative_database_user ON user_data.user_id = applicative_database_user.user_id
         LEFT JOIN `{{ bigquery_analytics_dataset }}.user_locations` user_locations ON user_locations.user_id = user_data.user_id
         LEFT JOIN `{{ bigquery_analytics_dataset }}.rural_city_type_data`  rural_city_type_data ON user_locations.city_code = rural_city_type_data.geo_code
@@ -45,7 +45,7 @@ ir_export AS (
         LEFT JOIN answers ON user_data.user_id = answers.user_id
         WHERE 
             user_data.user_id is not null
-        AND user_data.user_current_deposit_type in ("GRANT_15_17", "GRANT_18")
+        AND user_data.current_deposit_type in ("GRANT_15_17", "GRANT_18")
         AND user_is_current_beneficiary is true
         AND user_data.user_is_active is true
         AND applicative_database_user.user_has_enabled_marketing_email is true

@@ -21,7 +21,7 @@ display_and_convert as (
         display_data.unique_session_id,
         display_data.event_timestamp,
         display_data.event_date,
-        enriched_user_data.user_current_deposit_type,
+        mrt_global__user.current_deposit_type,
         display_data.app_version,
         display_data.similar_offer_playlist_type,
         display_data.is_algolia_recommend,
@@ -38,7 +38,7 @@ display_and_convert as (
                 and display_data.item_id = convert_data.similar_item_id
                 and display_data.similar_offer_playlist_type = convert_data.similar_offer_playlist_type
         left join {{ ref('diversification_booking') }} as diversification_booking on diversification_booking.booking_id = convert_data.booking_id
-        join {{ ref('enriched_user_data') }} as enriched_user_data on enriched_user_data.user_id = display_data.user_id
+        join {{ ref('mrt_global__user') }} as mrt_global__user on mrt_global__user.user_id = display_data.user_id
     group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
 ),
 

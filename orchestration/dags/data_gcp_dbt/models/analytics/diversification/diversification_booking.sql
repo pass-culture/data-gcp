@@ -15,7 +15,7 @@ select
     booking.user_activity,
     user.user_civility,
     booking.booking_intermediary_amount as booking_amount,
-    user.user_deposit_creation_date,
+    user.first_deposit_creation_date,
     COALESCE(
         IF(booking.physical_goods = True, 'physical', Null),
         IF(booking.digital_goods = True, 'digital', Null),
@@ -31,5 +31,5 @@ from {{ ref('diversification_raw') }} as diversification_raw
         on booking.booking_id = diversification_raw.booking_id
     left join {{ ref('offer_metadata') }} as offer_metadata
         on booking.offer_id = offer_metadata.offer_id
-    left join {{ ref('enriched_user_data') }} as user
+    left join {{ ref('mrt_global__user') }} as user
         on diversification_raw.user_id = user.user_id

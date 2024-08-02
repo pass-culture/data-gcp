@@ -10,12 +10,26 @@ with diversification as (
         im.item_id
 ),
 
-events as (
-    select
+interaction AS (
+    SELECT
         event_date,
         reco_call_id,
-        user_id,
-        offer_id,
+        max(if(is_consult_offer + is_booking_confirmation + is_add_to_favorites > 0, offer_display_order, -1)) as last_offer_display_order,
+    from
+        {{ ref('int_pcreco__displayed_offer_event') }} poc
+    where
+        event_date >= date_sub(current_date, interval 14 day)
+        and user_id != "-1"
+        and (total_module_consult_offer + total_module_booking_confirmation + total_module_add_to_favorites) > 0
+    GROUP BY event_date, reco_call_id
+),
+
+events as (
+    select
+        poc.event_date,
+        poc.reco_call_id,
+        poc.user_id,
+        poc.offer_id,
         item_id,
         user_context.user_deposit_remaining_credit,
         user_context.user_bookings_count,
@@ -36,18 +50,17 @@ events as (
         offer_context.offer_booking_number_last_14_days,
         offer_context.offer_booking_number_last_28_days,
         offer_context.offer_semantic_emb_mean,
-        mod(extract(dayofweek from event_date) + 5, 7) + 1 as day_of_the_week,
+        mod(extract(dayofweek from poc.event_date) + 5, 7) + 1 as day_of_the_week,
         extract(hour from event_created_at) as hour_of_the_day,
-        date_diff(offer_context.offer_creation_date, event_date, day) as offer_creation_days,
-        date_diff(offer_context.offer_stock_beginning_date, event_date, day) as offer_stock_beginning_days,
+        date_diff(offer_context.offer_creation_date, poc.event_date, day) as offer_creation_days,
+        date_diff(offer_context.offer_stock_beginning_date, poc.event_date, day) as offer_stock_beginning_days,
         offer_display_order
     from
         {{ ref('int_pcreco__displayed_offer_event') }} poc
+    inner join interaction ii on ii.event_date = poc.event_date 
+        and ii.reco_call_id = poc.reco_call_id and poc.offer_display_order <= ii.last_offer_display_order
     where
-        event_date >= date_sub(current_date, interval 14 day)
-        and user_id != "-1"
-        and offer_display_order <= 30
-        and (total_module_consult_offer + total_module_booking_confirmation + total_module_add_to_favorites) > 0
+        poc.event_date >= date_sub(current_date, interval 14 day)
 ),
 
 interact as (

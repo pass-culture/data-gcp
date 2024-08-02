@@ -15,6 +15,11 @@ ENV_EMOJI = {
     "dev": ":snowflake: *DEV* :snowflake:",
 }
 
+SEVERITY_TYPE_EMOJI = {
+    "warn": ":warning:",
+    "error": ":firecracker:",
+}
+
 JOB_TYPE = {
     "analytics": access_secret_data(
         GCP_PROJECT_ID,
@@ -122,7 +127,7 @@ def dbt_test_slack_alert(results_json, job_type=ENV_SHORT_NAME, **context):
     webhook_token = JOB_TYPE.get(job_type)
 
     slack_header = f"""{ENV_EMOJI[ENV_SHORT_NAME]}
-    DBT warning tests report:
+    *:page_facing_up: DBT tests report :page_facing_up:*
     """
     if isinstance(results_json, str):
         results_json = ast.literal_eval(results_json)
@@ -132,15 +137,16 @@ def dbt_test_slack_alert(results_json, job_type=ENV_SHORT_NAME, **context):
 
         slack_msg = slack_header
         for result in tests_results:
-            if result["status"] == "warn":
+            if result["status"] != "pass":
                 slack_msg = (
                     "\n".join(
-                        [slack_msg, f"""*Test* <{result['unique_id'].split('.')[2]}>"""]
+                        [
+                            slack_msg,
+                            f"""{SEVERITY_TYPE_EMOJI[result['status']]} *Test:* {result['unique_id'].split('.')[2]}""",
+                        ]
                     )
-                    + " has failed with severity:\n"
-                    + f"{result['status']}\n"
-                    + " and message:\n"
-                    + result["message"]
+                    + f" has failed with severity {result['status']}\n"
+                    + f">_{result['message']}_"
                 )
     else:
         slack_msg = slack_header

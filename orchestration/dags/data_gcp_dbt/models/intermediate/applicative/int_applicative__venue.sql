@@ -213,9 +213,7 @@ select
         order by
             COALESCE(o.total_used_individual_bookings, 0) + COALESCE(co.total_used_collective_bookings, 0) desc
     ) as offerer_bookings_rank,
-    case when gp.banner_url is not NULL then "offerer"
-    when gp.venue_id is not NULL then "google"
-    else "default_category" end as venue_image_source,
+    case when gp.banner_url is not NULL then "offerer" when gp.venue_id is not NULL then "google" else "default_category" end as venue_image_source
 from venues_with_geo_candidates as v
     left join offers_grouped_by_venue as o on o.venue_id = v.venue_id
     left join collective_offers_grouped_by_venue as co on co.venue_id = v.venue_id
@@ -224,7 +222,7 @@ from venues_with_geo_candidates as v
     left join {{ source("raw", "applicative_database_venue_contact") }} as vc on v.venue_id = vc.venue_id
     left join {{ source("raw", "applicative_database_venue_label") }} as vl on vl.venue_label_id = v.venue_label_id
     left join {{ source("raw", "applicative_database_accessibility_provider") }} as va on va.venue_id = v.venue_id
-    left join {{ source('raw', 'google_places_info') }} AS gp ON v.venue_id = gp.venue_id 
+    left join {{ source("raw", "google_places_info") }} AS gp ON v.venue_id = gp.venue_id
 where ST_CONTAINS(
         v.iris_shape,
         ST_GEOGPOINT(v.venue_longitude, v.venue_latitude)

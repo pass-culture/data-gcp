@@ -26,7 +26,6 @@ SLACK_CONN_PASSWORD = access_secret_data(
 )
 SLACK_WEBHOOK_URL = f"https://hooks.slack.com/services/{SLACK_CONN_PASSWORD}"
 
-test_results_dict = load_json_artifact(PATH_TO_DBT_TARGET, "run_results.json")
 
 default_args = {
     "start_date": datetime(2020, 12, 23),
@@ -75,6 +74,18 @@ dbt_test = BashOperator(
     dag=dag,
 )
 
+
+load_artifact = PythonOperator(
+    task_id="load_artifact",
+    python_callable=load_json_artifact,
+    op_kwargs={
+        "_PATH_TO_DBT_TARGET": f"{PATH_TO_DBT_TARGET}",
+        "artifact": "run_results.json",
+    },
+    do_xcom_push=True,
+    dag=dag,
+)
+
 compute_metrics_re_data = BashOperator(
     task_id="compute_metrics_re_data",
     bash_command="dbt run --target {{ params.target }} --select package:re_data --profile data_gcp_dbt "
@@ -95,7 +106,7 @@ warning_alert_slack = PythonOperator(
     task_id="warning_alert_slack",
     python_callable=dbt_test_slack_alert,
     op_kwargs={
-        "results_json": test_results_dict,
+        "results_json": "{{task_instance.xcom_pull(task_ids='load_artifact', key='return_value')}}",
     },
     provide_context=True,
     dag=dag,
@@ -153,5 +164,5 @@ re_data_notify = BashOperator(
 )
 
 (start >> wait_dbt_run >> compute_metrics_re_data >> re_data_overview >> re_data_notify)
-wait_dbt_run >> dbt_test >> warning_alert_slack
+wait_dbt_run >> dbt_test >> load_artifact >> warning_alert_slack
 wait_dbt_run >> compute_metrics_elementary

@@ -1,4 +1,5 @@
 from urllib.parse import quote
+import ast
 
 from airflow import configuration
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
@@ -123,21 +124,27 @@ def dbt_test_slack_alert(results_json, job_type=ENV_SHORT_NAME, **context):
     slack_header = f"""{ENV_EMOJI[ENV_SHORT_NAME]}
     DBT warning tests report:
     """
+    if isinstance(results_json, str):
+        results_json = ast.literal_eval(results_json)
 
-    tests_results = results_json.get("results", [])
+    if "results" in results_json:
+        tests_results = results_json["results"]
 
-    slack_msg = slack_header
-    for result in tests_results:
-        if result["status"] == "warn":
-            slack_msg = (
-                "\n".join(
-                    [slack_msg, f"""*Test* <{result['unique_id'].split('.')[2]}>"""]
+        slack_msg = slack_header
+        for result in tests_results:
+            if result["status"] == "warn":
+                slack_msg = (
+                    "\n".join(
+                        [slack_msg, f"""*Test* <{result['unique_id'].split('.')[2]}>"""]
+                    )
+                    + " has failed with severity:\n"
+                    + f"{result['status']}\n"
+                    + " and message:\n"
+                    + result["message"]
                 )
-                + " has failed with severity:\n"
-                + f"{result['status']}\n"
-                + " and message:\n"
-                + result["message"]
-            )
+    else:
+        slack_msg = slack_header
+        slack_msg += "\nNo tests have been run"
 
     if slack_msg == slack_header:
         slack_msg += "\nAll tests passed succesfully! :tada:"

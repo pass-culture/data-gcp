@@ -53,7 +53,7 @@ SELECT
     -- current data
     eud.user_department_code,
     eud.user_region_name,
-    eud.user_current_deposit_type,
+    eud.current_deposit_type AS user_current_deposit_type,
     eud.user_age,
     CASE 
         WHEN eud.user_current_deposit_type = 'GRANT_18' THEN 'Bénéficiaire 18-20 ans'
@@ -64,7 +64,7 @@ SELECT
 
 FROM firebase_home_events e
 LEFT JOIN contentful_tags contentful_tags on contentful_tags.entry_id = e.module_id
-LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON e.user_id = eud.user_id
+LEFT JOIN `{{ bigquery_analytics_dataset }}.global_user` eud ON e.user_id = eud.user_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.global_booking` ebd ON e.booking_id = ebd.booking_id
 LEFT JOIN `{{ bigquery_int_contentful_dataset }}.entry` ee on e.home_id = ee.id
 LEFT JOIN diversification_booking db

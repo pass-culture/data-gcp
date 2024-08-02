@@ -1,6 +1,6 @@
 with user_with_one_booking as(
 SELECT user_id,user_postal_code,first_booking_date as first_booking_date,CURRENT_DATE() as current_date
-FROM `{{ bigquery_analytics_dataset }}.enriched_user_data`
+FROM `{{ bigquery_analytics_dataset }}.global_user`
 where DATE(first_booking_date)=DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)
 )
 select 

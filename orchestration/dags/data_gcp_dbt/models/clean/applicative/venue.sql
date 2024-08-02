@@ -18,7 +18,7 @@ with venues as (
             ELSE "default_category" END AS venue_image_source
 
     FROM {{ source('raw', 'applicative_database_venue') }} AS v
-    LEFT JOIN {{ source('raw', 'google_places_info') }} AS gp ON v.venue_id = gp.venue_id 
+    LEFT JOIN {{ source('raw', 'applicative_database_google_places_info') }} AS gp ON v.venue_id = gp.venue_id
 ),
 
 geo_candidates as (

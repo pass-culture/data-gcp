@@ -222,7 +222,7 @@ from venues_with_geo_candidates as v
     left join {{ source("raw", "applicative_database_venue_contact") }} as vc on v.venue_id = vc.venue_id
     left join {{ source("raw", "applicative_database_venue_label") }} as vl on vl.venue_label_id = v.venue_label_id
     left join {{ source("raw", "applicative_database_accessibility_provider") }} as va on va.venue_id = v.venue_id
-    left join {{ source("raw", "google_places_info") }} AS gp ON v.venue_id = gp.venue_id
+    left join {{ source("raw", "applicative_database_google_places_info") }} AS gp ON v.venue_id = gp.venue_id
 where ST_CONTAINS(
         v.iris_shape,
         ST_GEOGPOINT(v.venue_longitude, v.venue_latitude)

@@ -13,10 +13,10 @@ select
     fe.origin,
     case
         when fe.user_id is not NULL
-            and DATETIME(fe.event_timestamp) between eud.user_deposit_creation_date
-            and eud.user_deposit_expiration_date then 'Bénéficiaire'
+            and DATETIME(fe.event_timestamp) between eud.first_deposit_creation_date
+            and eud.last_deposit_expiration_date then 'Bénéficiaire'
         when fe.user_id is not NULL
-            and DATETIME(fe.event_timestamp) > eud.user_deposit_expiration_date then 'Ancien bénéficiaire'
+            and DATETIME(fe.event_timestamp) > eud.last_deposit_expiration_date then 'Ancien bénéficiaire'
         when fe.user_id is not NULL then 'Non bénéficiaire'
         else 'Non loggué'
     end as user_role,
@@ -49,7 +49,7 @@ from {{ ref('int_firebase__native_event') }} fe
             c
         on fe.module_id = c.module_id
             and fe.offer_id = c.offer_id
-    left join {{ ref('enriched_user_data') }} eud on fe.user_id = eud.user_id
+    left join {{ ref('mrt_global__user') }} eud on fe.user_id = eud.user_id
 group by
     1,
     2,

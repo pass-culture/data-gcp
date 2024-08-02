@@ -1,15 +1,14 @@
-import os
-import pandas as pd
-from datetime import datetime
-import time
-import subprocess
-from docarray import DocumentArray, Document
 import json
-import pyarrow as pa
+import os
+import subprocess
+import time
+from datetime import datetime
+
 import lancedb
-
+import pandas as pd
+import pyarrow as pa
+from docarray import DocumentArray, Document
 from google.cloud import bigquery
-
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
@@ -133,7 +132,7 @@ def get_users_metadata():
             user_total_deposit_amount,
             user_current_deposit_type,
             COALESCE(user_theoretical_remaining_credit, user_last_deposit_amount) as user_theoretical_remaining_credit
-        FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data` 
+        FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.global__user` 
     """
     return client.query(sql).to_dataframe()
 

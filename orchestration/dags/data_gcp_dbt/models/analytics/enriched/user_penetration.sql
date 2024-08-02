@@ -23,7 +23,7 @@ user_booking as (
         DATE(DATE_TRUNC(ud.user_birth_date, month)) as born_date,
         COUNT(distinct ud.user_id) as total_users
     from {{ ref('aggregated_monthly_user_used_booking_activity') }} aa
-        inner join {{ ref('enriched_user_data') }} ud on ud.user_id = aa.user_id
+        inner join {{ ref('mrt_global__user') }} ud on ud.user_id = aa.user_id
     group by 1, 2, 3
 )
 

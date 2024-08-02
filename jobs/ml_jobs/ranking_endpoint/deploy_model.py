@@ -124,9 +124,9 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         )
         .fillna({"consult": 0, "booking": 0, "delta_diversification": 0})
         .assign(target_class="seen")
-        .where(lambda df: df["booking"] != 1, other="booked")
-        .where(lambda df: df["consult"] != 1, other="consulted")
-    )
+        .where(lambda df: df["booking"] != 1.0, other="booked")
+        .where(lambda df: df["consult"] != 1.0, other="consulted")
+    ).drop_duplicates()
     train_data, test_data = train_test_split(preprocessed_data, test_size=0.2)
     print(train_data.head())
     return train_data, test_data

@@ -21,10 +21,10 @@ from utils import (
 PARAMS = {"seen": 500_000, "consult": 500_000, "booking": 500_000}
 
 MODEL_PARAMS = {
-    "objective": "regression",
-    "metric": {"l2", "l1"},
+    "objective": "multiclass",
+    "num_class": 4,
+    "metric": "multi_logloss",
     "is_unbalance": True,
-    "num_leaves": 31,
     "learning_rate": 0.05,
     "feature_fraction": 0.9,
     "bagging_fraction": 0.8,

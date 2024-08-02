@@ -33,7 +33,7 @@ MODEL_PARAMS = {
 }
 
 
-def load_data(dataset_name, table_name):
+def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
     sql = f"""
     WITH seen AS (
       SELECT
@@ -114,15 +114,19 @@ def plot_figures(
 
 
 def train_pipeline(dataset_name, table_name, experiment_name, run_name):
-    data = load_data(dataset_name, table_name)
-    data["consult"] = data["consult"].astype(float).fillna(0)
-    data["booking"] = data["booking"].astype(float).fillna(0)
-
-    data["delta_diversification"] = (
-        data["delta_diversification"].astype(float).fillna(0)
-    )
-    data["target"] = (data["consult"] + data["booking"]) * (
-        1 + data["delta_diversification"]
+    data = (
+        load_data(dataset_name, table_name)
+        .astype(
+            {
+                "consult": "float",
+                "booking": "float",
+                "delta_diversification": "float",
+            }
+        )
+        .fillna({"consult": 0, "booking": 0, "delta_diversification": 0})
+        .assign(target_class="seen")
+        .where(lambda df: df["booking"] != 1, other="booked")
+        .where(lambda df: df["consult"] != 1, other="consulted")
     )
     train_data, test_data = train_test_split(data, test_size=0.2)
 

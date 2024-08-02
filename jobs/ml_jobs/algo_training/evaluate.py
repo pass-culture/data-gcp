@@ -83,7 +83,7 @@ def main(
         item_data=item_data,
         figures_folder=pca_plots_path,
     )
-
+    connect_remote_mlflow()
     with mlflow.start_run(
         experiment_id=experiment_id, run_id=run_id, nested=True
     ) as run:

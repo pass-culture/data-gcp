@@ -71,28 +71,13 @@ class PredictPipeline:
 
 
 class TrainPipeline:
-    def __init__(self, target: str, params: dict = None, verbose: bool = False) -> None:
+    def __init__(self, target: str, params: dict) -> None:
         self.numeric_features = NUMERIC_FEATURES
         self.categorical_features = CATEGORICAL_FEATURES
         self.preprocessor: ColumnTransformer = None
         self.train_size = 0.8
         self.target = target
-        self.params = (
-            {
-                "objective": "binary",
-                "metric": "binary_logloss",
-                "boosting_type": "gbdt",
-                "is_unbalance": True,
-                "num_leaves": 31,
-                "learning_rate": 0.05,
-                "feature_fraction": 0.9,
-                "bagging_fraction": 0.8,
-                "bagging_freq": 5,
-                "verbose": int(verbose),
-            }
-            if params is None
-            else params
-        )
+        self.params = params
 
     def set_pipeline(self):
         numeric_transformer = Pipeline(

@@ -1,4 +1,5 @@
 from urllib.parse import quote
+import ast
 
 from airflow import configuration
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
@@ -12,6 +13,11 @@ ENV_EMOJI = {
     "prod": ":volcano: *PROD* :volcano:",
     "stg": ":fire: *STAGING* :fire:",
     "dev": ":snowflake: *DEV* :snowflake:",
+}
+
+SEVERITY_TYPE_EMOJI = {
+    "warn": ":warning:",
+    "error": ":firecracker:",
 }
 
 JOB_TYPE = {
@@ -115,3 +121,45 @@ def dbt_test_fail_slack_alert(
         dag=dag,
     )
     return dbt_test_fail_slack_alert_alert.execute(context=context)
+
+
+def dbt_test_slack_alert(results_json, job_type=ENV_SHORT_NAME, **context):
+    webhook_token = JOB_TYPE.get(job_type)
+
+    slack_header = f"""{ENV_EMOJI[ENV_SHORT_NAME]}
+    *:page_facing_up: DBT tests report :page_facing_up:*
+    """
+    if isinstance(results_json, str):
+        results_json = ast.literal_eval(results_json)
+
+    if "results" in results_json:
+        tests_results = results_json["results"]
+
+        slack_msg = slack_header
+        for result in tests_results:
+            if result["status"] != "pass":
+                slack_msg = (
+                    "\n".join(
+                        [
+                            slack_msg,
+                            f"""{SEVERITY_TYPE_EMOJI[result['status']]} *Test:* {result['unique_id'].split('.')[2]}""",
+                        ]
+                    )
+                    + f" has failed with severity {result['status']}\n"
+                    + f">_{result['message']}_"
+                )
+    else:
+        slack_msg = slack_header
+        slack_msg += "\nNo tests have been run"
+
+    if slack_msg == slack_header:
+        slack_msg += "\nAll tests passed succesfully! :tada:"
+
+    dbt_test_warn_slack_alert = SlackWebhookOperator(
+        task_id="slack_alert_warn",
+        http_conn_id=SLACK_CONN_ID,
+        webhook_token=webhook_token,
+        message=slack_msg,
+        username="airflow",
+    )
+    return dbt_test_warn_slack_alert.execute(context=context)

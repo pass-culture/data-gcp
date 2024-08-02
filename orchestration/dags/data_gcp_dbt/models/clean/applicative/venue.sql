@@ -11,8 +11,14 @@ with venues as (
                 else SUBSTRING(v.venue_postal_code, 0, 2)
             end,
             v.venue_department_code
-        ) as venue_department_code
-    from {{ source('raw', 'applicative_database_venue') }} as v
+        ) AS venue_department_code,
+        CASE 
+            WHEN gp.banner_url IS NOT NULL THEN "offerer"
+            WHEN gp.venue_id IS NOT NULL THEN "google"
+            ELSE "default_category" END AS venue_image_source
+
+    FROM {{ source('raw', 'applicative_database_venue') }} AS v
+    LEFT JOIN {{ source('raw', 'applicative_database_google_places_info') }} AS gp ON v.venue_id = gp.venue_id
 ),
 
 geo_candidates as (

@@ -22,7 +22,7 @@ BASE_PATH = "data-gcp/jobs/etl_jobs/external/appsflyer"
 GCS_ETL_PARAMS = {
     "DATE": "{{ ds }}",
     "GCS_BASE_PATH": "af-xpend-cost-etl-acc-pfpgdnfn-appsflyer-data-prod/cost_etl/v1/dt={{ ds }}/b=4",
-    "PREFIX_TABLE_NAME": "gcs_appsflyer_cost",
+    "PREFIX_TABLE_NAME": "appsflyer_cost",
 }
 
 default_dag_args = {

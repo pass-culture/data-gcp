@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 
-import mlflow
 import pandas as pd
 import typer
 from sklearn.model_selection import train_test_split
@@ -11,10 +10,7 @@ from figure import plot_cm, plot_features_importance, plot_hist
 from utils import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    connect_remote_mlflow,
     deploy_container,
-    get_mlflow_experiment,
-    get_secret,
     save_experiment,
 )
 
@@ -66,7 +62,7 @@ def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
     select * FROM booking 
     """
     print(sql)
-    return pd.read_gbq(sql).sample(frac=1)
+    return pd.read_gbq(sql, location="europe-west1").sample(frac=1)
 
 
 def plot_figures(
@@ -114,9 +110,12 @@ def plot_figures(
 
 
 def train_pipeline(dataset_name, table_name, experiment_name, run_name):
-    data = (
-        load_data(dataset_name, table_name)
-        .astype(
+    # data = load_data(dataset_name, table_name)
+    # data.to_csv("data.csv", index=False)
+
+    data = pd.read_csv("data.csv")
+    preprocessed_data = (
+        data.astype(
             {
                 "consult": "float",
                 "booking": "float",
@@ -128,34 +127,36 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         .where(lambda df: df["booking"] != 1, other="booked")
         .where(lambda df: df["consult"] != 1, other="consulted")
     )
-    train_data, test_data = train_test_split(data, test_size=0.2)
+    train_data, test_data = train_test_split(preprocessed_data, test_size=0.2)
+    print(train_data.head())
+    return train_data, test_data
 
-    # Connect to MLFlow
-    client_id = get_secret("mlflow_client_id")
-    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-    figure_folder = f"/tmp/{experiment_name}/"
-    experiment = get_mlflow_experiment(experiment_name)
+    # # Connect to MLFlow
+    # client_id = get_secret("mlflow_client_id")
+    # connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
+    # figure_folder = f"/tmp/{experiment_name}/"
+    # experiment = get_mlflow_experiment(experiment_name)
 
-    mlflow.lightgbm.autolog()
-    pipeline = TrainPipeline(target="target", verbose=True, params=MODEL_PARAMS)
+    # mlflow.lightgbm.autolog()
+    # pipeline = TrainPipeline(target="target", verbose=True, params=MODEL_PARAMS)
 
-    with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
-        pipeline.set_pipeline()
-        pipeline.train(train_data)
+    # with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
+    #     pipeline.set_pipeline()
+    #     pipeline.train(train_data)
 
-        test_data = pipeline.predict(test_data)
-        train_data = pipeline.predict(train_data)
+    #     test_data = pipeline.predict(test_data)
+    #     train_data = pipeline.predict(train_data)
 
-        # Save Data
-        plot_figures(test_data, train_data, pipeline, figure_folder)
-        train_data.to_csv(f"{figure_folder}/train_predictions.csv", index=False)
-        test_data.to_csv(f"{figure_folder}/test_predictions.csv", index=False)
-        mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
+    #     # Save Data
+    #     plot_figures(test_data, train_data, pipeline, figure_folder)
+    #     train_data.to_csv(f"{figure_folder}/train_predictions.csv", index=False)
+    #     test_data.to_csv(f"{figure_folder}/test_predictions.csv", index=False)
+    #     mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
 
-    # retrain on whole
-    pipeline.train(data)
-    # save
-    pipeline.save()
+    # # retrain on whole
+    # pipeline.train(data)
+    # # save
+    # pipeline.save()
 
 
 def main(

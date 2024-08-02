@@ -1,18 +1,20 @@
 import os
-import pandas as pd
-from datetime import datetime
-import time
 import subprocess
-from google.auth.transport.requests import Request
-from google.oauth2 import id_token
-from google.cloud import secretmanager
-import mlflow
+import time
+from datetime import datetime
 
+import mlflow
+import pandas as pd
+from google.auth.transport.requests import Request
+from google.cloud import secretmanager
+from google.oauth2 import id_token
 
 MLFLOW_EHP_URI = "https://mlflow.staging.passculture.team/"
 MLFLOW_PROD_URI = "https://mlflow.passculture.team/"
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
+GCP_PROJECT_ID = (
+    "passculture-data-prod"  # os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
+)
+ENV_SHORT_NAME = "prod"  # os.environ.get("ENV_SHORT_NAME", "dev")
 BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
 MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"
 

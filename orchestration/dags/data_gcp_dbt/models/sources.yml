@@ -54,6 +54,7 @@ sources:
       - name: applicative_database_finance_event
       - name: applicative_database_finance_incident
       - name: applicative_database_future_offer
+      - name: applicative_database_google_places_info
       - name: applicative_database_internal_user
       - name: applicative_database_invoice
       - name: applicative_database_invoice_cashflow
@@ -173,8 +174,8 @@ sources:
     schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: default_item_cluster
-      
-      - name: item_embedding_extraction 
+
+      - name: item_embedding_extraction
       - name: item_embedding_reduced_64
       - name: item_embedding_reduced_32
       - name: item_embedding_reduced_16

@@ -73,7 +73,7 @@ def main(
 ) -> None:
     ###############
     # Load preprocessed data
-    logger.info("Loading offers to link...")
+    logger.info(f"Loading offers to link... {input_dataset_name}.{input_table_name}")
     df_offers_to_link_clean = pd.read_gbq(
         f"SELECT * FROM `{gcp_project}.{input_dataset_name}.{input_table_name}`"
     )
@@ -145,4 +145,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main(GCP_PROJECT_ID, ENV_SHORT_NAME)
+    typer.run(main)

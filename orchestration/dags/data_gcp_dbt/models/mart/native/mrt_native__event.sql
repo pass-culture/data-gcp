@@ -35,6 +35,7 @@ select
     o.offer_name,
     o.offer_category_id,
     o.offer_subcategory_id,
+    o.partner_id,
     v.venue_name,
     v.venue_type_label,
     c.content_type,

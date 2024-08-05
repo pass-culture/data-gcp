@@ -162,13 +162,16 @@ class TrainPipeline:
     def predict(self, df: pd.DataFrame) -> pd.DataFrame:
         processed_data = self.preprocessor.transform(df)
         probabilities = self.model.predict(processed_data)
+        predicted_class = probabilities.argmax(axis=1)
 
-        # Assuming predictions are probabilities, get the class with highest probability
-        predicted_classes = probabilities.argmax(axis=1)
-        df["predicted_class"] = predicted_classes
-
-        # Store probabilities if needed
-        for i in range(probabilities.shape[1]):
-            df[f"prob_class_{i}"] = probabilities[:, i]
-
-        return df
+        return df.assign(
+            **{
+                "predicted_class": predicted_class,
+                "score": probabilities[:, 1]
+                + probabilities[:, 2],  # consulted + booked
+                **{
+                    f"prob_class_{i}": probabilities[:, i]
+                    for i in range(probabilities.shape[1])
+                },
+            }
+        )

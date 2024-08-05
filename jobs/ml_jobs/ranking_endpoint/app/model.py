@@ -2,6 +2,7 @@ import typing as t
 
 import joblib
 import lightgbm as lgb
+import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -75,7 +76,7 @@ class TrainPipeline:
         self.numeric_features = NUMERIC_FEATURES
         self.categorical_features = CATEGORICAL_FEATURES
         self.preprocessor: ColumnTransformer = None
-        self.train_size = 0.8
+        self.train_size = 0.9
         self.target = target
         self.params = params
 
@@ -158,5 +159,14 @@ class TrainPipeline:
 
     def predict(self, df: pd.DataFrame) -> pd.DataFrame:
         processed_data = self.preprocessor.transform(df)
-        df["score"] = self.model.predict(processed_data)
+        probabilities = self.model.predict(processed_data)
+
+        # Assuming predictions are probabilities, get the class with highest probability
+        predicted_classes = probabilities.argmax(axis=1)
+        df["predicted_class"] = predicted_classes
+
+        # Store probabilities if needed
+        for i in range(probabilities.shape[1]):
+            df[f"prob_class_{i}"] = probabilities[:, i]
+
         return df

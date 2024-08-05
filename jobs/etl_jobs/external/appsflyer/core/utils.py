@@ -1,10 +1,12 @@
-import os
+import os, io
 from datetime import datetime
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager, bigquery
 import pandas as pd
 
-PROJECT_NAME = os.environ.get("PROJECT_NAME")
+from datetime import datetime
+
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 BIGQUERY_RAW_DATASET = f"raw_{ENVIRONMENT_SHORT_NAME}"
 
@@ -47,7 +49,7 @@ def __save_to_bq(df, event_date, table_name, schema_field):
     yyyymmdd = date_fmt.strftime("%Y%m%d")
     df["event_date"] = date_fmt
     bigquery_client = bigquery.Client()
-    table_id = f"{PROJECT_NAME}.{BIGQUERY_RAW_DATASET}.{table_name}${yyyymmdd}"
+    table_id = f"{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.{table_name}${yyyymmdd}"
     job_config = bigquery.LoadJobConfig(
         write_disposition="WRITE_TRUNCATE",
         time_partitioning=bigquery.TimePartitioning(
@@ -64,10 +66,31 @@ def __save_to_bq(df, event_date, table_name, schema_field):
     job.result()
 
 
-TOKEN = access_secret_data(PROJECT_NAME, f"appsflyer_token_{ENVIRONMENT_SHORT_NAME}")
+def export_polars_to_bq(data, output_table, partition_date="execution_date"):
+    client = bigquery.Client()
+    with io.BytesIO() as stream:
+        data.write_parquet(stream)
+        stream.seek(0)
+        job = client.load_table_from_file(
+            stream,
+            destination=f"{BIGQUERY_RAW_DATASET}.{output_table}",
+            project=GCP_PROJECT_ID,
+            job_config=bigquery.LoadJobConfig(
+                source_format=bigquery.SourceFormat.PARQUET,
+                write_disposition="WRITE_TRUNCATE",
+                time_partitioning=bigquery.TimePartitioning(
+                    type_=bigquery.TimePartitioningType.DAY,
+                    field=partition_date,
+                ),
+            ),
+        )
+    job.result()
+
+
+TOKEN = access_secret_data(GCP_PROJECT_ID, f"appsflyer_token_{ENVIRONMENT_SHORT_NAME}")
 IOS_APP_ID = access_secret_data(
-    PROJECT_NAME, f"appsflyer_ios_app_id_{ENVIRONMENT_SHORT_NAME}"
+    GCP_PROJECT_ID, f"appsflyer_ios_app_id_{ENVIRONMENT_SHORT_NAME}"
 )
 ANDROID_APP_ID = access_secret_data(
-    PROJECT_NAME, f"appsflyer_android_app_id_{ENVIRONMENT_SHORT_NAME}"
+    GCP_PROJECT_ID, f"appsflyer_android_app_id_{ENVIRONMENT_SHORT_NAME}"
 )

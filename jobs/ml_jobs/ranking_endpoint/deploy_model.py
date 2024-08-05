@@ -144,6 +144,8 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     data = pd.read_csv("data.csv")
     preprocessed_data = data.pipe(preprocess_data, class_mapping=CLASS_MAPPING)
     train_data, test_data = train_test_split(preprocessed_data, test_size=TEST_SIZE)
+    class_frequency = train_data.target_class.value_counts(normalize=True).to_dict()
+    class_weight = {k: 1 / v for k, v in class_frequency.items()}
 
     # Connect to MLFlow
     client_id = get_secret("mlflow_client_id")
@@ -157,7 +159,7 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
 
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
         pipeline.set_pipeline()
-        pipeline.train(train_data)
+        pipeline.train(train_data, class_weight=class_weight)
 
         predictions_on_test_data = pipeline.predict(test_data)
         predictions_on_train_data = pipeline.predict(train_data)
@@ -175,7 +177,7 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
 
     # retrain on whole
-    pipeline.train(data)
+    pipeline.train(preprocessed_data, class_weight=class_weight)
     # save
     pipeline.save()
 

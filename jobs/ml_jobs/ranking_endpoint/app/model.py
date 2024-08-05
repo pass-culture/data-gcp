@@ -131,7 +131,7 @@ class TrainPipeline:
         joblib.dump(self.preprocessor, "./metadata/preproc.joblib")
         self.model.save_model("./metadata/model.txt")
 
-    def train(self, df):
+    def train(self, df: pd.DataFrame, class_weight: dict):
         X = self.fit_transform(df)
         y = df[self.target]
         X_train, X_test, y_train, y_test = train_test_split(
@@ -142,11 +142,13 @@ class TrainPipeline:
             X_train,
             y_train,
             feature_name=self.numeric_features + self.categorical_features,
+            weight=np.array([class_weight[label] for label in y_train]),
         )
         test_data = lgb.Dataset(
             X_test,
             y_test,
             feature_name=self.numeric_features + self.categorical_features,
+            weight=np.array([class_weight[label] for label in y_test]),
         )
 
         self.model = lgb.train(

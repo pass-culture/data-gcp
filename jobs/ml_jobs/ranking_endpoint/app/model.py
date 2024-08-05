@@ -1,4 +1,4 @@
-import typing as t
+from typing import Optional
 
 import joblib
 import lightgbm as lgb
@@ -49,7 +49,7 @@ class PredictPipeline:
         self.model = lgb.Booster(model_file="./metadata/model.txt")
         self.preprocessor = joblib.load("./metadata/preproc.joblib")
 
-    def predict(self, input_data: t.List[dict]):
+    def predict(self, input_data: list[dict]):
         errors = []
         df = pd.DataFrame(input_data)
         _cols = list(df.columns)
@@ -131,7 +131,7 @@ class TrainPipeline:
         joblib.dump(self.preprocessor, "./metadata/preproc.joblib")
         self.model.save_model("./metadata/model.txt")
 
-    def train(self, df: pd.DataFrame, class_weight: dict):
+    def train(self, df: pd.DataFrame, class_weight: Optional[dict] = None):
         X = self.fit_transform(df)
         y = df[self.target]
         X_train, X_test, y_train, y_test = train_test_split(
@@ -142,13 +142,17 @@ class TrainPipeline:
             X_train,
             y_train,
             feature_name=self.numeric_features + self.categorical_features,
-            weight=np.array([class_weight[label] for label in y_train]),
+            weight=np.array([class_weight[label] for label in y_train])
+            if class_weight
+            else None,
         )
         test_data = lgb.Dataset(
             X_test,
             y_test,
             feature_name=self.numeric_features + self.categorical_features,
-            weight=np.array([class_weight[label] for label in y_test]),
+            weight=np.array([class_weight[label] for label in y_test])
+            if class_weight
+            else None,
         )
 
         self.model = lgb.train(
@@ -159,7 +163,7 @@ class TrainPipeline:
             callbacks=[lgb.early_stopping(stopping_rounds=200)],
         )
 
-    def predict(self, df: pd.DataFrame) -> pd.DataFrame:
+    def predict_classifier(self, df: pd.DataFrame) -> pd.DataFrame:
         processed_data = self.preprocessor.transform(df)
         probabilities = self.model.predict(processed_data)
         predicted_class = probabilities.argmax(axis=1)
@@ -175,3 +179,8 @@ class TrainPipeline:
                 },
             }
         )
+
+    def predict_regressor(self, df: pd.DataFrame) -> pd.DataFrame:
+        processed_data = self.preprocessor.transform(df)
+
+        return df.assign(regression_score=self.model.predict(processed_data))

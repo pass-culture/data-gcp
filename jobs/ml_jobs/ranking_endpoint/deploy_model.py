@@ -22,10 +22,21 @@ from utils import (
 
 PARAMS = {"seen": 500_000, "consult": 500_000, "booking": 500_000}
 TEST_SIZE = 0.1
-MODEL_PARAMS = {
+CLASSIFIER_MODEL_PARAMS = {
     "objective": "multiclass",
     "num_class": 3,
     "metric": "multi_logloss",
+    "learning_rate": 0.05,
+    "feature_fraction": 0.9,
+    "bagging_fraction": 0.9,
+    "bagging_freq": 5,
+    "lambda_l2": 0.1,
+    "lambda_l1": 0.1,
+    "verbose": -1,
+}
+REGRESSOR_MODEL_PARAMS = {
+    "objective": "regression",
+    "metric": {"l2", "l1"},
     "learning_rate": 0.05,
     "feature_fraction": 0.9,
     "bagging_fraction": 0.9,
@@ -132,6 +143,7 @@ def preprocess_data(data: pd.DataFrame, class_mapping: dict) -> pd.DataFrame:
             .where(df["consult"] != 1.0, other="consult")
             .where(df["booking"] != 1.0, other="booked"),
             target_class=lambda df: df["status"].map(class_mapping).astype(int),
+            target_regression=lambda df: df["delta_diversification"],
         )
     ).drop_duplicates()
 
@@ -155,18 +167,32 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
 
     # Start training
     mlflow.lightgbm.autolog()
-    pipeline = TrainPipeline(target="target_class", params=MODEL_PARAMS)
+    pipeline_classifier = TrainPipeline(
+        target="target_class", params=CLASSIFIER_MODEL_PARAMS
+    )
+    pipeline_regressor = TrainPipeline(
+        target="target_regression", params=REGRESSOR_MODEL_PARAMS
+    )
 
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
-        pipeline.set_pipeline()
-        pipeline.train(train_data, class_weight=class_weight)
+        pipeline_classifier.set_pipeline()
+        pipeline_classifier.train(train_data, class_weight=class_weight)
 
-        predictions_on_test_data = pipeline.predict(test_data)
-        predictions_on_train_data = pipeline.predict(train_data)
+        # Training regressor
+        pipeline_regressor.set_pipeline()
+        pipeline_regressor.train(train_data)
+
+        predictions_on_train_data = pipeline_classifier.predict_classifier(train_data)
+        predictions_on_test_data = pipeline_classifier.predict_classifier(test_data)
+        regression_on_train_data = pipeline_regressor.predict_regressor(train_data)
+        regression_on_test_data = pipeline_regressor.predict_regressor(test_data)
 
         # Save Data
         plot_figures(
-            predictions_on_test_data, predictions_on_train_data, pipeline, figure_folder
+            predictions_on_test_data,
+            predictions_on_train_data,
+            pipeline_classifier,
+            figure_folder,
         )
         predictions_on_train_data.to_csv(
             f"{figure_folder}/train_predictions.csv", index=False
@@ -174,12 +200,18 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         predictions_on_test_data.to_csv(
             f"{figure_folder}/test_predictions.csv", index=False
         )
+        regression_on_train_data.to_csv(
+            f"{figure_folder}/train_regression.csv", index=False
+        )
+        regression_on_test_data.to_csv(
+            f"{figure_folder}/test_regression.csv", index=False
+        )
         mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
 
-    # retrain on whole
-    pipeline.train(preprocessed_data, class_weight=class_weight)
-    # save
-    pipeline.save()
+    # # retrain on whole
+    # pipeline.train(preprocessed_data, class_weight=class_weight)
+    # # save
+    # pipeline.save()
 
 
 def main(

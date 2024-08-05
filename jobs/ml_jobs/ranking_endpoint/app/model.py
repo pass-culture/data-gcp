@@ -1,7 +1,8 @@
-import typing as t
+from typing import Optional
 
 import joblib
 import lightgbm as lgb
+import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -45,10 +46,14 @@ class PredictPipeline:
     def __init__(self) -> None:
         self.numeric_features = NUMERIC_FEATURES
         self.categorical_features = CATEGORICAL_FEATURES
-        self.model = lgb.Booster(model_file="./metadata/model.txt")
-        self.preprocessor = joblib.load("./metadata/preproc.joblib")
+        self.model_classifier = lgb.Booster(
+            model_file="./metadata/model_classifier.txt"
+        )
+        self.preprocessor_classifier = joblib.load(
+            "./metadata/preproc_classifier.joblib"
+        )
 
-    def predict(self, input_data: t.List[dict]):
+    def predict(self, input_data: list[dict]):
         errors = []
         df = pd.DataFrame(input_data)
         _cols = list(df.columns)
@@ -62,12 +67,20 @@ class PredictPipeline:
                 errors.append(x)
                 df[x] = DEFAULT_CATEGORICAL
 
-        processed_data = self.preprocessor.transform(df)
-        z = self.model.predict(processed_data)
+        processed_data_classifier = self.preprocessor_classifier.transform(df)
+        predictions_classifier = self.model_classifier.predict(
+            processed_data_classifier
+        )
 
-        for x, y in zip(input_data, z):
-            x["score"] = y
-        return input_data, errors
+        return (
+            df.assign(
+                predicted_class=predictions_classifier.argmax(axis=1),
+                consulted_score=predictions_classifier[:, 1],
+                booked_score=predictions_classifier[:, 2],
+                score=lambda df: df.consulted_score + df.booked_score,
+            ).to_dict(orient="records"),
+            errors,
+        )
 
 
 class TrainPipeline:
@@ -75,7 +88,7 @@ class TrainPipeline:
         self.numeric_features = NUMERIC_FEATURES
         self.categorical_features = CATEGORICAL_FEATURES
         self.preprocessor: ColumnTransformer = None
-        self.train_size = 0.8
+        self.train_size = 0.9
         self.target = target
         self.params = params
 
@@ -126,11 +139,11 @@ class TrainPipeline:
         processed_df = pd.DataFrame(processed_data)
         return processed_df.to_numpy()
 
-    def save(self):
-        joblib.dump(self.preprocessor, "./metadata/preproc.joblib")
-        self.model.save_model("./metadata/model.txt")
+    def save(self, model_name: str):
+        joblib.dump(self.preprocessor, f"./metadata/preproc_{model_name}.joblib")
+        self.model.save_model(f"./metadata/model_{model_name}.txt")
 
-    def train(self, df):
+    def train(self, df: pd.DataFrame, class_weight: Optional[dict] = None):
         X = self.fit_transform(df)
         y = df[self.target]
         X_train, X_test, y_train, y_test = train_test_split(
@@ -141,11 +154,21 @@ class TrainPipeline:
             X_train,
             y_train,
             feature_name=self.numeric_features + self.categorical_features,
+            weight=(
+                np.array([class_weight[label] for label in y_train])
+                if class_weight
+                else None
+            ),
         )
         test_data = lgb.Dataset(
             X_test,
             y_test,
             feature_name=self.numeric_features + self.categorical_features,
+            weight=(
+                np.array([class_weight[label] for label in y_test])
+                if class_weight
+                else None
+            ),
         )
 
         self.model = lgb.train(
@@ -156,7 +179,24 @@ class TrainPipeline:
             callbacks=[lgb.early_stopping(stopping_rounds=200)],
         )
 
-    def predict(self, df: pd.DataFrame) -> pd.DataFrame:
+    def predict_classifier(self, df: pd.DataFrame) -> pd.DataFrame:
         processed_data = self.preprocessor.transform(df)
-        df["score"] = self.model.predict(processed_data)
-        return df
+        probabilities = self.model.predict(processed_data)
+        predicted_class = probabilities.argmax(axis=1)
+
+        return df.assign(
+            **{
+                "predicted_class": predicted_class,
+                "score": probabilities[:, 1]
+                + probabilities[:, 2],  # consulted + booked
+                **{
+                    f"prob_class_{i}": probabilities[:, i]
+                    for i in range(probabilities.shape[1])
+                },
+            }
+        )
+
+    def predict_regressor(self, df: pd.DataFrame) -> pd.DataFrame:
+        processed_data = self.preprocessor.transform(df)
+
+        return df.assign(regression_score=self.model.predict(processed_data))

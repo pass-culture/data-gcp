@@ -139,7 +139,7 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     experiment = get_mlflow_experiment(experiment_name)
 
     mlflow.lightgbm.autolog()
-    pipeline = TrainPipeline(target="target", verbose=True, params=MODEL_PARAMS)
+    pipeline = TrainPipeline(target="target", params=MODEL_PARAMS)
 
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
         pipeline.set_pipeline()

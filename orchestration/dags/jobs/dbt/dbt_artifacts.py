@@ -1,4 +1,5 @@
 import datetime
+import time
 
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
@@ -102,6 +103,12 @@ compute_metrics_elementary = BashOperator(
     dag=dag,
 )
 
+sleep_op = PythonOperator(
+    dag=dag,
+    task_id="sleep_task",
+    python_callable=lambda: time.sleep(300),  # wait 5 minutes
+)
+
 warning_alert_slack = PythonOperator(
     task_id="warning_alert_slack",
     python_callable=dbt_test_slack_alert,
@@ -113,56 +120,56 @@ warning_alert_slack = PythonOperator(
 )
 
 
-with TaskGroup(group_id="re_data", dag=dag) as re_data_overview:
-    re_data_generate_json = BashOperator(
-        task_id="re_data_generate_json",
-        bash_command="""dbt run-operation generate_overview --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', interval: 'days:1', monitored_path: """
-        + f"{PATH_TO_DBT_TARGET}"
-        + "/re_data/monitored.json"
-        + ", overview_path: "
-        + f"{PATH_TO_DBT_TARGET}"
-        + "/re_data/overview.json}' "
-        + f"--target {ENV_SHORT_NAME}",
-        cwd=PATH_TO_DBT_PROJECT,
-        dag=dag,
-    )
+# with TaskGroup(group_id="re_data", dag=dag) as re_data_overview:
+#     re_data_generate_json = BashOperator(
+#         task_id="re_data_generate_json",
+#         bash_command="""dbt run-operation generate_overview --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', interval: 'days:1', monitored_path: """
+#         + f"{PATH_TO_DBT_TARGET}"
+#         + "/re_data/monitored.json"
+#         + ", overview_path: "
+#         + f"{PATH_TO_DBT_TARGET}"
+#         + "/re_data/overview.json}' "
+#         + f"--target {ENV_SHORT_NAME}",
+#         cwd=PATH_TO_DBT_PROJECT,
+#         dag=dag,
+#     )
 
-    export_tests_history = BashOperator(
-        task_id="export_tests_history",
-        bash_command="dbt run-operation export_tests_history --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', tests_history_path: "
-        + f"{PATH_TO_DBT_TARGET}"
-        + "/re_data/tests_history.json }' "
-        + f"--target {ENV_SHORT_NAME}",
-        cwd=PATH_TO_DBT_PROJECT,
-        dag=dag,
-    )
+#     export_tests_history = BashOperator(
+#         task_id="export_tests_history",
+#         bash_command="dbt run-operation export_tests_history --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', tests_history_path: "
+#         + f"{PATH_TO_DBT_TARGET}"
+#         + "/re_data/tests_history.json }' "
+#         + f"--target {ENV_SHORT_NAME}",
+#         cwd=PATH_TO_DBT_PROJECT,
+#         dag=dag,
+#     )
 
-    export_table_samples = BashOperator(
-        task_id="export_table_samples",
-        bash_command="dbt run-operation export_table_samples --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', table_samples_path: "
-        + f"""{PATH_TO_DBT_TARGET}"""
-        + "/re_data/table_samples_path.json}' "
-        + f"--target {ENV_SHORT_NAME}",
-        cwd=PATH_TO_DBT_PROJECT,
-        dag=dag,
-    )
+#     export_table_samples = BashOperator(
+#         task_id="export_table_samples",
+#         bash_command="dbt run-operation export_table_samples --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', table_samples_path: "
+#         + f"""{PATH_TO_DBT_TARGET}"""
+#         + "/re_data/table_samples_path.json}' "
+#         + f"--target {ENV_SHORT_NAME}",
+#         cwd=PATH_TO_DBT_PROJECT,
+#         dag=dag,
+#     )
 
 
-re_data_notify = BashOperator(
-    task_id="re_data_notify",
-    bash_command=f""" 
-    re_data notify slack \
-    --target {ENV_SHORT_NAME} \
-    --webhook-url  {SLACK_WEBHOOK_URL} \
-    --subtitle="More details here : link to <re_data>" \
-    --select anomaly \
-    --select test \
-    --select schema_change
-    """,
-    cwd=PATH_TO_DBT_PROJECT,
-    dag=dag,
-)
+# re_data_notify = BashOperator(
+#     task_id="re_data_notify",
+#     bash_command=f"""
+#     re_data notify slack \
+#     --target {ENV_SHORT_NAME} \
+#     --webhook-url  {SLACK_WEBHOOK_URL} \
+#     --subtitle="More details here : link to <re_data>" \
+#     --select anomaly \
+#     --select test \
+#     --select schema_change
+#     """,
+#     cwd=PATH_TO_DBT_PROJECT,
+#     dag=dag,
+# )
 
-(start >> wait_dbt_run >> compute_metrics_re_data >> re_data_overview >> re_data_notify)
-wait_dbt_run >> dbt_test >> load_artifact >> warning_alert_slack
+(start >> wait_dbt_run >> compute_metrics_re_data)
+wait_dbt_run >> dbt_test >> load_artifact >> sleep_op >> warning_alert_slack
 wait_dbt_run >> compute_metrics_elementary

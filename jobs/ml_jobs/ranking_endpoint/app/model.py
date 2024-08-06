@@ -1,14 +1,16 @@
-import pandas as pd
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OrdinalEncoder
-from sklearn.model_selection import train_test_split
-from sklearn.impute import SimpleImputer
+from typing import Optional
+
 import joblib
 import lightgbm as lgb
-import typing as t
+import numpy as np
+import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OrdinalEncoder
 
-numeric_features = [
+NUMERIC_FEATURES = [
     "user_bookings_count",
     "user_clicks_count",
     "user_favorites_count",
@@ -31,23 +33,29 @@ numeric_features = [
     "hour_of_the_day",
 ]
 
-categorical_features = [
+CATEGORICAL_FEATURES = [
     "context",
     "offer_subcategory_id",
 ]
 
-default_categorical = "UNKNOWN"
-default_numerical = -1
+DEFAULT_CATEGORICAL = "UNKNOWN"
+DEFAULT_NUMERICAL = -1
 
 
 class PredictPipeline:
     def __init__(self) -> None:
-        self.numeric_features = numeric_features
-        self.categorical_features = categorical_features
-        self.model = lgb.Booster(model_file="./metadata/model.txt")
-        self.preprocessor = joblib.load("./metadata/preproc.joblib")
+        self.numeric_features = NUMERIC_FEATURES
+        self.categorical_features = CATEGORICAL_FEATURES
+        self.model_classifier = lgb.Booster(
+            model_file="./metadata/model_classifier.txt"
+        )
+        self.model_regressor = lgb.Booster(model_file="./metadata/model_regressor.txt")
+        self.preprocessor_classifier = joblib.load(
+            "./metadata/preproc_classifier.joblib"
+        )
+        self.preprocessor_regressor = joblib.load("./metadata/preproc_regressor.joblib")
 
-    def predict(self, input_data: t.List[dict]):
+    def predict(self, input_data: list[dict]):
         errors = []
         df = pd.DataFrame(input_data)
         _cols = list(df.columns)
@@ -55,49 +63,47 @@ class PredictPipeline:
         for x in self.numeric_features:
             if x not in _cols:
                 errors.append(x)
-                df[x] = default_numerical
+                df[x] = DEFAULT_NUMERICAL
         for x in self.categorical_features:
             if x not in _cols:
                 errors.append(x)
-                df[x] = default_categorical
+                df[x] = DEFAULT_CATEGORICAL
 
-        processed_data = self.preprocessor.transform(df)
-        z = self.model.predict(processed_data)
+        processed_data_classifier = self.preprocessor_classifier.transform(df)
+        predictions_classifier = self.model_classifier.predict(
+            processed_data_classifier
+        )
+        processed_data_regressor = self.preprocessor_regressor.transform(df)
+        predictions_regressor = self.model_regressor.predict(processed_data_regressor)
 
-        for x, y in zip(input_data, z):
-            x["score"] = y
-        return input_data, errors
+        return (
+            df.assign(
+                predicted_class=predictions_classifier.argmax(axis=1),
+                regression_score=predictions_regressor,
+                consulted_score=predictions_classifier[:, 1],
+                booked_score=predictions_classifier[:, 2],
+                score=lambda df: (df.consulted_score + df.booked_score)
+                * (df.regression_score + 1),
+            ).to_dict(orient="records"),
+            errors,
+        )
 
 
 class TrainPipeline:
-    def __init__(self, target: str, params: dict = None, verbose: bool = False) -> None:
-        self.numeric_features = numeric_features
-        self.categorical_features = categorical_features
+    def __init__(self, target: str, params: dict) -> None:
+        self.numeric_features = NUMERIC_FEATURES
+        self.categorical_features = CATEGORICAL_FEATURES
         self.preprocessor: ColumnTransformer = None
-        self.train_size = 0.8
+        self.train_size = 0.9
         self.target = target
-        if params is None:
-            self.params = {
-                "objective": "binary",
-                "metric": "binary_logloss",
-                "boosting_type": "gbdt",
-                "is_unbalance": True,
-                "num_leaves": 31,
-                "learning_rate": 0.05,
-                "feature_fraction": 0.9,
-                "bagging_fraction": 0.8,
-                "bagging_freq": 5,
-                "verbose": int(verbose),
-            }
-        else:
-            self.params = params
+        self.params = params
 
     def set_pipeline(self):
         numeric_transformer = Pipeline(
             steps=[
                 (
                     "imputer",
-                    SimpleImputer(strategy="constant", fill_value=default_numerical),
+                    SimpleImputer(strategy="constant", fill_value=DEFAULT_NUMERICAL),
                 )
             ]
         )
@@ -106,7 +112,7 @@ class TrainPipeline:
             steps=[
                 (
                     "imputer",
-                    SimpleImputer(strategy="constant", fill_value=default_categorical),
+                    SimpleImputer(strategy="constant", fill_value=DEFAULT_CATEGORICAL),
                 ),
                 (
                     "encoder",
@@ -126,10 +132,10 @@ class TrainPipeline:
 
     def fit_transform(self, df):
         df[self.categorical_features] = (
-            df[self.categorical_features].astype(str).fillna(default_categorical)
+            df[self.categorical_features].astype(str).fillna(DEFAULT_CATEGORICAL)
         )
         df[self.numeric_features] = (
-            df[self.numeric_features].astype(float).fillna(default_numerical)
+            df[self.numeric_features].astype(float).fillna(DEFAULT_NUMERICAL)
         )
         return self.preprocessor.fit_transform(df)
 
@@ -139,11 +145,11 @@ class TrainPipeline:
         processed_df = pd.DataFrame(processed_data)
         return processed_df.to_numpy()
 
-    def save(self):
-        joblib.dump(self.preprocessor, "./metadata/preproc.joblib")
-        self.model.save_model("./metadata/model.txt")
+    def save(self, model_name: str):
+        joblib.dump(self.preprocessor, f"./metadata/preproc_{model_name}.joblib")
+        self.model.save_model(f"./metadata/model_{model_name}.txt")
 
-    def train(self, df):
+    def train(self, df: pd.DataFrame, class_weight: Optional[dict] = None):
         X = self.fit_transform(df)
         y = df[self.target]
         X_train, X_test, y_train, y_test = train_test_split(
@@ -154,11 +160,21 @@ class TrainPipeline:
             X_train,
             y_train,
             feature_name=self.numeric_features + self.categorical_features,
+            weight=(
+                np.array([class_weight[label] for label in y_train])
+                if class_weight
+                else None
+            ),
         )
         test_data = lgb.Dataset(
             X_test,
             y_test,
             feature_name=self.numeric_features + self.categorical_features,
+            weight=(
+                np.array([class_weight[label] for label in y_test])
+                if class_weight
+                else None
+            ),
         )
 
         self.model = lgb.train(
@@ -169,7 +185,24 @@ class TrainPipeline:
             callbacks=[lgb.early_stopping(stopping_rounds=200)],
         )
 
-    def predict(self, df: pd.DataFrame):
+    def predict_classifier(self, df: pd.DataFrame) -> pd.DataFrame:
         processed_data = self.preprocessor.transform(df)
-        df["score"] = self.model.predict(processed_data)
-        return df
+        probabilities = self.model.predict(processed_data)
+        predicted_class = probabilities.argmax(axis=1)
+
+        return df.assign(
+            **{
+                "predicted_class": predicted_class,
+                "score": probabilities[:, 1]
+                + probabilities[:, 2],  # consulted + booked
+                **{
+                    f"prob_class_{i}": probabilities[:, i]
+                    for i in range(probabilities.shape[1])
+                },
+            }
+        )
+
+    def predict_regressor(self, df: pd.DataFrame) -> pd.DataFrame:
+        processed_data = self.preprocessor.transform(df)
+
+        return df.assign(regression_score=self.model.predict(processed_data))

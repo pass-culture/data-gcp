@@ -9,6 +9,7 @@ select
     city_code,
     qpv_name,
     code_qpv,
+    qpv_communes,
     zrr,
     date_updated,
     user_iris_internal_id,

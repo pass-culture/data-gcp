@@ -165,16 +165,13 @@ bookings_per_institution as (
     group by
         1
 ),
-
+-- TODO refactor this logic once we have migrated to enriched_institution_data.
 students_per_institution as (
     select
-        educational_institution.institution_id,
-        SUM(number_of_students) as nb_of_students
-    from
-        {{ ref('educational_institution') }} as educational_institution
-        left join {{ source('analytics','number_of_students_per_eple') }} as number_of_students_per_eple on educational_institution.institution_id = number_of_students_per_eple.institution_external_id
-    group by
-        1
+        institution_id,
+        total_students
+    from {{ ref('int_applicative__educational_institution') }}
+       
 ),
 
 students_educonnectes as (
@@ -203,7 +200,7 @@ select
     educational_institution.institution_name as institution_name,
     first_deposit.ministry as ministry,
     educational_institution.institution_type,
-    eple_aggregated_type.macro_institution_type,
+    im_aggregated_type.macro_institution_type,
     institution_program.institution_program_name as institution_program_name,
     location_info.institution_academy_name,
     location_info.institution_region_name,
@@ -238,11 +235,11 @@ select
     ) as part_credit_actuel_depense_reel,
     bookings_per_institution.total_eleves_concernes as total_nb_of_tickets,
     bookings_per_institution.total_eleves_concernes_current_year as total_nb_of_tickets_current_year,
-    students_per_institution.nb_of_students as total_nb_of_students_in_institution,
+    students_per_institution.total_students as total_nb_of_students_in_institution,
     students_educonnectes.nb_jeunes_credited as nb_eleves_beneficiaires,
     SAFE_DIVIDE(
         students_educonnectes.nb_jeunes_credited,
-        students_per_institution.nb_of_students
+        students_per_institution.total_students
     ) as part_eleves_beneficiaires
 from {{ ref('educational_institution') }} as educational_institution
     left join first_deposit on educational_institution.educational_institution_id = first_deposit.institution_id
@@ -253,11 +250,11 @@ from {{ ref('educational_institution') }} as educational_institution
     left join bookings_per_institution on educational_institution.educational_institution_id = bookings_per_institution.institution_id
     left join students_per_institution on educational_institution.institution_id = students_per_institution.institution_id
     left join students_educonnectes on educational_institution.institution_id = students_educonnectes.institution_external_id
-    left join {{ source('analytics','eple') }} as eple
-        on educational_institution.institution_id = eple.id_etablissement
+    left join {{ source('seed','institution_metadata') }} as im
+        on educational_institution.institution_id = im.id_etablissement
     left join {{ ref('institution_locations') }} as location_info
         on educational_institution.institution_id = location_info.institution_id
-    left join {{ source('raw','eple_aggregated_type') }} as eple_aggregated_type
-        on educational_institution.institution_type = eple_aggregated_type.institution_type
+    left join {{ source('seed','institution_metadata_aggregated_type') }} as im_aggregated_type
+        on educational_institution.institution_type = im_aggregated_type.institution_type
     left join {{ ref('int_applicative__institution') }} as institution_program
         on educational_institution.educational_institution_id = institution_program.institution_id

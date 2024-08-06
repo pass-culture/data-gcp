@@ -1,3 +1,12 @@
+WITH educational_institution_student_headcount AS (
+    SELECT
+        institution_id,
+        sum(headcount) as total_students,
+        avg(amount_per_student) as average_outing_budget_per_student,
+    FROM {{ ref("int_gsheet__educational_institution_student_headcount") }} 
+    GROUP BY institution_id
+)
+
 select
     educational_institution_id,
     institution_id,
@@ -15,5 +24,9 @@ select
             else SUBSTRING(institution_postal_code, 0, 2)
         end,
         institution_departement_code
-    ) as institution_departement_code
+    ) as institution_departement_code,
+    total_students,
+    average_outing_budget_per_student,
+    
 from {{ source('raw', 'applicative_database_educational_institution') }}
+left join educational_institution_student_headcount using (institution_id)

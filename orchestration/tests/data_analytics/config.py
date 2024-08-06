@@ -321,12 +321,6 @@ BIGQUERY_SCHEMAS = {
         "is_physical_deposit": "BOOLEAN",
         "is_digital_deposit": "BOOLEAN",
     },
-    "eple": {
-        "id_etablissement": "STRING",
-        "nom_etablissement": "STRING",
-        "libelle_academie": "STRING",
-        "code_departement": "STRING",
-    },
     "applicative_database_collective_booking": {
         "collective_booking_id": "STRING",
         "booking_id": "STRING",

@@ -1,4 +1,4 @@
-ref_tables = {
+REF_TABLES = {
     "macro_rayons": {
         "file_type": "csv",
         "schema": {"index": "INTEGER", "macro_rayon": "STRING", "rayon": "STRING"},
@@ -96,7 +96,7 @@ ref_tables = {
             "geo_type": "STRING",
         },
     },
-    "eple": {
+    "institution_metadata": {
         "file_type": "csv",
         "schema": {
             "id_etablissement": "STRING",
@@ -151,6 +151,13 @@ ref_tables = {
             "code_type_contrat_prive": "STRING",
         },
     },
+    "institution_metadata_aggregated_type": {
+        "file_type": "csv",
+        "schema": {
+            "institution_type": "STRING",
+            "macro_institution_type": "STRING",
+        },
+    },
     "institutional_scholar_level": {
         "file_type": "csv",
         "schema": {
@@ -174,13 +181,6 @@ ref_tables = {
             "code_iris": "STRING",
             "region_name": "STRING",
             "department": "STRING",
-        },
-    },
-    "eple_aggregated_type": {
-        "file_type": "csv",
-        "schema": {
-            "institution_type": "STRING",
-            "macro_institution_type": "STRING",
         },
     },
     "geo_iris": {

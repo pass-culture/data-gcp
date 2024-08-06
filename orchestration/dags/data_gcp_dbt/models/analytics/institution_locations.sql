@@ -18,7 +18,7 @@ institutions as (
         CAST(latitude as float64) as institution_latitude,
         CAST(longitude as float64) as institution_longitude
     from
-        {{ source('analytics', 'eple') }}
+        {{ source('seed', 'institution_metadata') }}
 ),
 
 institutions_qpv as (

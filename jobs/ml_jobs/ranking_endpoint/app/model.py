@@ -76,14 +76,17 @@ class PredictPipeline:
         processed_data_regressor = self.preprocessor_regressor.transform(df)
         predictions_regressor = self.model_regressor.predict(processed_data_regressor)
 
-        return df.assign(
-            predicted_class=predictions_classifier.argmax(axis=1),
-            regression_score=predictions_regressor,
-            consulted_score=predictions_classifier[:, 1],
-            booked_score=predictions_classifier[:, 2],
-            score=lambda df: (df.consulted_score + df.booked_score)
-            * (df.regression_score + 1),
-        ).to_dict(orient="records"), errors
+        return (
+            df.assign(
+                predicted_class=predictions_classifier.argmax(axis=1),
+                regression_score=predictions_regressor,
+                consulted_score=predictions_classifier[:, 1],
+                booked_score=predictions_classifier[:, 2],
+                score=lambda df: (df.consulted_score + df.booked_score)
+                * (df.regression_score + 1),
+            ).to_dict(orient="records"),
+            errors,
+        )
 
 
 class TrainPipeline:
@@ -157,17 +160,21 @@ class TrainPipeline:
             X_train,
             y_train,
             feature_name=self.numeric_features + self.categorical_features,
-            weight=np.array([class_weight[label] for label in y_train])
-            if class_weight
-            else None,
+            weight=(
+                np.array([class_weight[label] for label in y_train])
+                if class_weight
+                else None
+            ),
         )
         test_data = lgb.Dataset(
             X_test,
             y_test,
             feature_name=self.numeric_features + self.categorical_features,
-            weight=np.array([class_weight[label] for label in y_test])
-            if class_weight
-            else None,
+            weight=(
+                np.array([class_weight[label] for label in y_test])
+                if class_weight
+                else None
+            ),
         )
 
         self.model = lgb.train(

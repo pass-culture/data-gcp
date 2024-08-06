@@ -9,14 +9,13 @@ with eple_infos as (
         institution_academy_name as institution_academie,
         eid.ministry,
         eid.institution_type,
-        eat.macro_institution_type,
+        eid.macro_institution_type,
         ey.scholar_year,
-        ed.educational_deposit_amount as institution_deposit_amount
+        ed.educational_deposit_amount as institution_deposit_amount,
+        eid.total_nb_of_students_in_institution as total_students
     from {{ ref('enriched_institution_data') }} eid
         join {{ ref('educational_deposit') }} ed on ed.educational_institution_id = eid.institution_id
         join {{ ref('educational_year') }} ey on ey.adage_id = ed.educational_year_id
-        left join {{ source('raw','eple_aggregated_type') }} as eat
-            on eid.institution_type = eat.institution_type
 ),
 
 eple_bookings as (
@@ -30,15 +29,6 @@ eple_bookings as (
     group by 1, 2
 ),
 
-total_nb_of_students as (
-    select
-        eid.institution_id,
-        eid.institution_name,
-        SUM(number_of_students) as nb_students
-    from {{ ref('enriched_institution_data') }} eid
-        left join {{ source('analytics','number_of_students_per_eple') }} ns on eid.institution_external_id = ns.institution_external_id
-    group by 1, 2
-),
 
 nb_eleves_educonnectes_per_eple as (
     select
@@ -74,14 +64,13 @@ select
     SAFE_DIVIDE(theoric_amount_spent, institution_deposit_amount) as pct_credit_theoric_amount_spent,
     real_amount_spent,
     SAFE_DIVIDE(real_amount_spent, institution_deposit_amount) as pct_credit_real_amount_spent,
-    nb_students as total_students,
+    total_students,
     educonnect_inscriptions,
     last_12_months_inscriptions,
     nb_credit_used_students,
     avg_spent_per_user,
     pct_spent as pct_spent_per_user,
-    SAFE_DIVIDE(last_12_months_inscriptions, nb_students) as pct_beneficiary_students
+    SAFE_DIVIDE(last_12_months_inscriptions, total_students) as pct_beneficiary_students
 from eple_infos
     left join eple_bookings on eple_bookings.institution_id = eple_infos.institution_id and eple_infos.scholar_year = eple_bookings.scholar_year
-    left join total_nb_of_students on eple_infos.institution_id = total_nb_of_students.institution_id
     left join nb_eleves_educonnectes_per_eple on eple_infos.institution_external_id = nb_eleves_educonnectes_per_eple.school

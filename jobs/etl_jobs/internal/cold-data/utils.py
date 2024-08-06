@@ -4,9 +4,9 @@ from google.cloud import storage, bigquery
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
-RAW_DATASET = f"raw_{ENVIRONMENT_SHORT_NAME}"
+SEED_DATASET = f"seed_{ENVIRONMENT_SHORT_NAME}"
 DATA_BUCKET = f"data-bucket-{ENVIRONMENT_SHORT_NAME}"
-BIGQUERY_IMPORT_BUCKET_FOLDER = "bigquery_imports"
+BIGQUERY_IMPORT_BUCKET_FOLDER = "bigquery_imports/seed"
 
 
 def GCS_to_bigquery(

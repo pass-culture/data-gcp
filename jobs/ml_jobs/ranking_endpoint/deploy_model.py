@@ -210,8 +210,8 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     pipeline_regressor.train(preprocessed_data)
 
     # save
-    pipeline_classifier.save()
-    pipeline_regressor.save()
+    pipeline_classifier.save(model_name="classifier")
+    pipeline_regressor.save(model_name="regressor")
 
 
 def main(

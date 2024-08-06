@@ -1,3 +1,12 @@
+{{
+    config(
+        **custom_incremental_config(
+        incremental_strategy = "insert_overwrite",
+        partition_by = {"field": "partition_date", "data_type": "date"},
+        on_schema_change = "sync_all_columns"
+    )
+) }}
+
 select
     DATE(timestamp) as partition_date,
     jsonpayload.extra.path as url_path,
@@ -59,3 +68,6 @@ select
 
 
 from {{ source("raw","stdout") }}
+    {% if is_incremental() %}
+        WHERE DATE(timestamp) between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")
+    {% endif %}

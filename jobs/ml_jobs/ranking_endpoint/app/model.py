@@ -76,13 +76,14 @@ class PredictPipeline:
         processed_data_regressor = self.preprocessor_regressor.transform(df)
         predictions_regressor = self.model_regressor.predict(processed_data_regressor)
 
-        score = (predictions_classifier[:, 1] + predictions_classifier[:, 2]) * (
-            predictions_regressor + 1
-        )
-
-        for x, y in zip(input_data, score):
-            x["score"] = y
-        return input_data, errors
+        return df.assign(
+            predicted_class=predictions_classifier.argmax(axis=1),
+            regression_score=predictions_regressor,
+            consulted_score=predictions_classifier[:, 1],
+            booked_score=predictions_classifier[:, 2],
+            score=lambda df: (df.consulted_score + df.booked_score)
+            * (df.regression_score + 1),
+        ).to_dict(orient="records"), errors
 
 
 class TrainPipeline:

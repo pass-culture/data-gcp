@@ -73,7 +73,7 @@ collective_bookings as (
         COALESCE(SUM(case when collective_booking_status in ('USED', 'REIMBURSED') then booking_amount else NULL end), 0) as real_collective_revenue
     from {{ ref('enriched_cultural_partner_data') }}
         join {{ ref('partner_type_bookability_frequency') }} using (partner_type)
-        left join {{ ref('enriched_collective_booking_data') }} collective_booking on enriched_cultural_partner_data.partner_id = collective_booking.partner_id
+        left join {{ ref('mrt_global__collective_booking') }} collective_booking on enriched_cultural_partner_data.partner_id = collective_booking.partner_id
             and not collective_booking_status = 'CANCELLED'
     group by 1, 2, 3
 ),

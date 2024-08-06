@@ -46,7 +46,7 @@ collective_data as (
     from {{ ref('mrt_global__venue') }} venue
         join {{ ref('enriched_offerer_data') }} offerer on venue.venue_managing_offerer_id = offerer.offerer_id
         left join {{ ref('mrt_global__collective_offer') }} offer on venue.venue_id = offer.venue_id
-        left join {{ ref('enriched_collective_booking_data') }} booking on offer.collective_offer_id = booking.collective_offer_id and booking.collective_booking_status in ('USED', 'REIMBURSED', 'CONFIRMED', 'PENDING')
+        left join {{ ref('mrt_global__collective_booking') }} booking on offer.collective_offer_id = booking.collective_offer_id and booking.collective_booking_status in ('USED', 'REIMBURSED', 'CONFIRMED', 'PENDING')
     where offerer_siren is not NULL
     group by 1, 2, 3, 4, 5, 6, 7, 8, 9
 ),

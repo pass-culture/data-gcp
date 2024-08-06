@@ -11,15 +11,6 @@ enriched_tables_test_config = {
             "prod": [yesterday, today],
         },
     },
-    "enriched_collective_offer_data": {
-        "dataset_name": BIGQUERY_ANALYTICS_DATASET,
-        "date_field": "collective_offer_creation_date",
-        "freshness_check": {
-            "dev": [last_week, today],
-            "stg": [yesterday, today],
-            "prod": [yesterday, today],
-        },
-    },
     "enriched_institution_data": {
         "dataset_name": BIGQUERY_ANALYTICS_DATASET,
         "date_field": "last_booking_date",

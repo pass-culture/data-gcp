@@ -7,12 +7,14 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
 )
-from common.alerts import task_fail_slack_alert
-
 from common.config import (
-    ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+    DAG_FOLDER,
+    ENV_SHORT_NAME,
 )
+from common.utils import get_airflow_schedule
+from common.alerts import task_fail_slack_alert
+from common import macros
 from common.utils import get_airflow_schedule
 
 GCE_INSTANCE = f"import-tiktok-{ENV_SHORT_NAME}"
@@ -33,6 +35,8 @@ with DAG(
     on_failure_callback=None,
     schedule_interval=get_airflow_schedule("0 1 * * *"),
     catchup=False,
+    user_defined_macros=macros.default,
+    template_searchpath=DAG_FOLDER,
     dagrun_timeout=datetime.timedelta(minutes=120),
     params={
         "branch": Param(

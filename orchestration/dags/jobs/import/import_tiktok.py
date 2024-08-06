@@ -73,7 +73,7 @@ with DAG(
         task_id="tiktok_to_bq",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command="python main.py --start-date {{ add_days(ds, params.days) }} --end-date {{ ds }} ",
+        command="python main.py --start-date {{ add_days(ds, params.n_days) }} --end-date {{ ds }} ",
         do_xcom_push=True,
     )
 

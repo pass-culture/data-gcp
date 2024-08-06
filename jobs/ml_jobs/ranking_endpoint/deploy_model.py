@@ -47,7 +47,7 @@ def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
         SELECT
             * 
         FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
-        WHERE consult
+        WHERE consult and not booking
         LIMIT {PARAMS['consult']}
 
     ),
@@ -58,15 +58,22 @@ def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
         WHERE booking
         LIMIT {PARAMS['booking']}
     )
-    
     SELECT * FROM seen 
-    UNION ALL 
+    UNION ALL
     SELECT * FROM consult 
-    UNION ALL 
-    select * FROM booking 
+    UNION ALL
+    SELECT * FROM booking
     """
     print(sql)
-    return pd.read_gbq(sql).sample(frac=1)
+
+    data = pd.read_gbq(sql).sample(frac=1)
+    n_rows_duplicated = data.duplicated().sum()
+    if n_rows_duplicated > 0:
+        raise ValueError(
+            f"Duplicated rows in data ({n_rows_duplicated} rows duplicated). Please review your SQL query."
+        )
+
+    return data
 
 
 def plot_figures(
@@ -128,7 +135,6 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
             target=lambda df: df["consult"]
             + df["booking"] * (1 + df["delta_diversification"])
         )
-        .drop_duplicates()
     )
     train_data, test_data = train_test_split(data, test_size=0.2)
 

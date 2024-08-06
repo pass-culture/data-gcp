@@ -150,9 +150,7 @@ def preprocess_data(data: pd.DataFrame, class_mapping: dict) -> pd.DataFrame:
 
 def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     # Load and preprocess the data
-    # data = load_data(dataset_name, table_name)
-    # data.to_csv("data.csv", index=False)
-    data = pd.read_csv("data.csv")
+    data = load_data(dataset_name, table_name)
     preprocessed_data = data.pipe(preprocess_data, class_mapping=CLASS_MAPPING)
     train_data, test_data = train_test_split(preprocessed_data, test_size=TEST_SIZE)
     class_frequency = train_data.target_class.value_counts(normalize=True).to_dict()

@@ -64,6 +64,7 @@ select
     ui.user_academy_name,
     ui.user_density_label,
     ui.user_macro_density_label,
+    ui.city_code,
     case when ui.qpv_name is not NULL then TRUE else FALSE end as user_is_in_qpv,
     case when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then TRUE else FALSE end as user_is_unemployed,
     case when

@@ -75,7 +75,7 @@ collec_bookings_after_activation as (
         COUNT(distinct case when collective_booking_creation_date > second_activation_date then collective_booking_id end) as collective_bookings_after_second_activation
 
     from partner_activation_stated
-        left join {{ ref('mrt_global__collective_booking') }} on partner_activation_stated.partner_id = mrt_global__collective_booking.partner_id and NOT collective_booking_is_cancelled
+        left join {{ ref('mrt_global__collective_booking') }} as mrt_global__collective_booking on partner_activation_stated.partner_id = mrt_global__collective_booking.partner_id and NOT collective_booking_is_cancelled
     group by 1
 ),
 

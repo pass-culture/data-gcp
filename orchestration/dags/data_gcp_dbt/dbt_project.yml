@@ -29,9 +29,8 @@ models:
       relation: true
       columns: true
     clean:
-      +config:
-        +meta:
-          owner: "@team-data-engineering"
+      +meta:
+        owner: "@team-data-engineering"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: clean_{{ target.name }}
       +docs:
@@ -40,6 +39,8 @@ models:
         +alias: applicative_database_
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     analytics:
+      +meta:  
+        owner: "@team-data-analytics"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: analytics_{{ target.name }}
       +re_data_monitored: true
@@ -52,18 +53,29 @@ models:
       +docs:
         node_color: "#d90000"
     intermediate:
+      +meta:
+        owner: "@team-data-engineering"
       +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"
     mart:
+      +meta:
+        owner: "@team-data-analytics"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: analytics_{{ target.name }}
+      monitoring:
+        +meta:
+          owner: "@team-data-engineering"
     export:
       +schema: export_{{ target.name }}
       +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"
+      +meta:
+        owner: "@team-data-engineering"
       backend:
         +schema: backend_{{ target.name }}
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     machine_learning:
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+      +meta:
+        owner: "@team-data-science"
 
   elementary:
     +on_schema_change: "append_new_columns"

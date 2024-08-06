@@ -50,7 +50,7 @@ select
     a.user_role
 from {{ ref("int_pcapi__adage_log") }} as a
     left join {{ source("raw","applicative_database_collective_stock") }} as s on s.collective_stock_id = a.collective_stock_id
-    left join {{ ref("enriched_collective_offer_data") }} as o on o.collective_offer_id = COALESCE(a.collective_offer_id, s.collective_offer_id)
+    left join {{ ref("mrt_global__collective_offer") }} as o on o.collective_offer_id = COALESCE(a.collective_offer_id, s.collective_offer_id)
     left join {{ ref("enriched_cultural_partner_data") }} as p on p.partner_id = o.partner_id
 where TRUE
     {% if is_incremental() %}

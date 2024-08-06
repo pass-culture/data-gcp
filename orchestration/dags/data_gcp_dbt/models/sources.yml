@@ -113,11 +113,11 @@ sources:
       - name: contentful_entry
       - name: contentful_relationship
       - name: contentful_tag
-      - name: eple_aggregated_type
       - name: firebase_events
       - name: firebase_pro_events
       - name: geoip_city_v4
       - name: gsheet_eac_webinar
+      - name: gsheet_educational_institution_student_headcount
       - name: gsheet_ml_recommendation_sensitive_item
       - name: macro_rayons
       - name: metabase_collection
@@ -156,10 +156,7 @@ sources:
       - name: adage
       - name: app_native_logs
       - name: epci
-      - name: eple
-      - name: institution_locations
       - name: linked_offers
-      - name: number_of_students_per_eple
       - name: offer_types
       - name: offer_with_mediation
       - name: population_age_and_department_france_details
@@ -170,6 +167,11 @@ sources:
       - name: siren_data_labels
       - name: user_locations
       - name: ZRR
+  - name: seed 
+    schema: seed_{{ var('ENV_SHORT_NAME') }}
+    tables:
+      - name: institution_metadata
+      - name: institution_metadata_aggregated_type
   - name: ml_preproc
     schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
     tables:

@@ -18,9 +18,11 @@ from common.operators.gce import (
 
 GCE_INSTANCE = f"import-appsflyer-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/appsflyer"
-dag_config = {
-    "PROJECT_NAME": GCP_PROJECT_ID,
-    "ENV_SHORT_NAME": ENV_SHORT_NAME,
+
+GCS_ETL_PARAMS = {
+    "DATE": "{{ ds }}",
+    "GCS_BASE_PATH": "af-xpend-cost-etl-acc-pfpgdnfn-appsflyer-data-prod/cost_etl/v1/dt={{ ds }}/b=4",
+    "PREFIX_TABLE_NAME": "appsflyer_cost",
 }
 
 default_dag_args = {
@@ -76,32 +78,35 @@ with DAG(
         task_id="activity_report_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        environment=dag_config,
-        command="python main.py --n-days {{ params.n_days }} --table-name activity_report ",
+        command="python api_import.py --n-days {{ params.n_days }} --table-name activity_report ",
     )
 
     daily_report_op = SSHGCEOperator(
         task_id="daily_report_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        environment=dag_config,
-        command="python main.py --n-days {{ params.n_days }} --table-name daily_report ",
+        command="python api_import.py --n-days {{ params.n_days }} --table-name daily_report ",
     )
 
     partner_report_op = SSHGCEOperator(
         task_id="partner_report_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        environment=dag_config,
-        command="python main.py --n-days {{ params.n_days }} --table-name partner_report ",
+        command="python api_import.py --n-days {{ params.n_days }} --table-name partner_report ",
     )
 
     in_app_event_report_op = SSHGCEOperator(
         task_id="in_app_event_report_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        environment=dag_config,
-        command="python main.py --n-days {{ params.n_days }} --table-name in_app_event_report ",
+        command="python api_import.py --n-days {{ params.n_days }} --table-name in_app_event_report ",
+    )
+
+    gcs_cost_etl_op = SSHGCEOperator(
+        task_id="gcs_cost_etl_op",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        command=f"python gcs_import.py --gcs-base-path {GCS_ETL_PARAMS['GCS_BASE_PATH']} --prefix-table-name {GCS_ETL_PARAMS['PREFIX_TABLE_NAME']} --date {GCS_ETL_PARAMS['DATE']} ",
     )
 
     gce_instance_stop = StopGCEOperator(
@@ -133,6 +138,7 @@ table_jobs = depends_loop(
     >> daily_report_op
     >> partner_report_op
     >> in_app_event_report_op
+    >> gcs_cost_etl_op
     >> gce_instance_stop
     >> start
 )

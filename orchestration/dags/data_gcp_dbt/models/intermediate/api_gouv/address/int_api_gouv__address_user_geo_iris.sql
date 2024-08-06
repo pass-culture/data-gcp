@@ -19,6 +19,7 @@ with users_updated as (
         api_adresse_city,
         qpv_name,
         code_qpv,
+        qpv_communes,
         zrr,
         date_updated
     from {{ source("raw", "user_locations") }}

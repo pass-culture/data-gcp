@@ -6,7 +6,7 @@ with offerer_offer_info as (
         v.venue_latitude,
         v.venue_longitude,
         o.collective_offer_id
-    from {{ ref('enriched_collective_offer_data') }} o
+    from {{ ref('mrt_global__collective_offer') }} o
         join
             {{ ref('venue') }}
                 v
@@ -15,7 +15,7 @@ with offerer_offer_info as (
         join
             {{ source('raw', 'applicative_database_collective_offer_template') }} t on t.collective_offer_id = o.collective_offer_id
             and collective_offer_venue_address_type != "school"
-    where offer_is_template is TRUE
+    where collective_offer_is_template is TRUE
         and o.collective_offer_is_active
 ),
 

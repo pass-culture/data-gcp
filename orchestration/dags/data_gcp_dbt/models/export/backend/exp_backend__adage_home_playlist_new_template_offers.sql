@@ -7,10 +7,10 @@ with offerer_offer_info as (
         v.venue_longitude,
         o.collective_offer_id,
         o.collective_offer_creation_date
-    from {{ ref('enriched_collective_offer_data') }} o
+    from {{ ref('mrt_global__collective_offer') }} o
         left join {{ ref('venue') }} v on v.venue_id = o.venue_id
     where o.collective_offer_creation_date >= DATE_SUB(CURRENT_DATE(), interval 2 month) -- uniquement sur les 2 derniers mois
-        and offer_is_template is TRUE
+        and collective_offer_is_template is TRUE
     qualify ROW_NUMBER() over (partition by offerer_id order by collective_offer_creation_date desc) = 1
 ),  -- on garde seulement la plus récente
 

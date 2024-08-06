@@ -5,7 +5,7 @@ with bookings_deposit_grouped_by_user as (
         count(case when not booking_is_cancelled and offer_name is not null then booking_id end) as total_non_cancelled_individual_bookings,
         sum(case when booking_is_used then booking_intermediary_amount end) as total_actual_amount_spent,
         sum(case when not booking_is_cancelled then booking_intermediary_amount end) as total_theoretical_amount_spent,
-        min(case when not booking_is_cancelled then booking_created_at end) as first_individual_booking_date,
+        min(case when not booking_is_cancelled and offer_name is not null then booking_created_at end) as first_individual_booking_date,
         max(booking_created_at) as last_individual_booking_date,
         min(case when booking_amount > 0 then booking_creation_date end) as first_booking_creation_date,
         sum(case when physical_goods and offer_url is null and not booking_is_cancelled then booking_intermediary_amount end) as total_theoretical_physical_goods_amount_spent,
@@ -16,7 +16,7 @@ with bookings_deposit_grouped_by_user as (
         min(case when not booking_is_cancelled then booking_creation_date end) as first_booking_date,
         max(case when user_booking_id_rank = 1 then offer_subcategory_id end) as first_booking_type,
         min(case when coalesce(booking_amount, 0) > 0 then booking_creation_date end) as first_paid_booking_date,
-        max(case when user_booking_rank = 2 and not booking_is_cancelled then booking_creation_date end) as second_booking_date,
+        max(case when user_booking_rank = 2 and not booking_is_cancelled then booking_created_at end) as second_booking_date,
         sum(case when deposit_rank_desc = 1
                 and not booking_is_cancelled then booking_intermediary_amount
         end) as total_deposit_theoretical_amount_spent,
@@ -128,6 +128,7 @@ select
     u.user_epci,
     u.user_density_label,
     u.user_macro_density_label,
+    u.city_code,
     u.user_region_name,
     u.user_academy_name,
     u.user_humanized_id,

@@ -34,7 +34,7 @@ select
         user_current_deposit_type,
         user_last_deposit_amount,
         user_first_deposit_type,
-        user_deposit_initial_amount
+        user_first_deposit_amount
     ) as user_params,
     "native" as origin
 from {{ ref("mrt_native__event") }}

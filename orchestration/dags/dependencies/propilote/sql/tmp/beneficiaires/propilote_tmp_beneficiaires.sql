@@ -23,7 +23,7 @@ aggregated_active_beneficiary AS (
       `{{ bigquery_analytics_dataset }}.aggregated_daily_user_used_activity` uua
   INNER JOIN last_day_of_month ldm on ldm.last_active_date = active_date 
   -- active nor suspended
-  INNER JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON eud.user_id = uua.user_id 
+  INNER JOIN `{{ bigquery_analytics_dataset }}.global_user` eud ON eud.user_id = uua.user_id
   LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
         on  eud.user_department_code = rd.num_dep 
   -- still have some credit at EOM
@@ -46,7 +46,7 @@ aggregated_total_beneficiairy AS (
         , COUNT(DISTINCT  eud.user_id) as numerator  
         , 1 as denominator
   FROM last_day_of_month ldm
-  INNER JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` eud ON date(eud.user_deposit_creation_date) <= date(ldm.last_active_date) 
+  INNER JOIN `{{ bigquery_analytics_dataset }}.global_user` eud ON date(eud.first_deposit_creation_date) <= date(ldm.last_active_date)
   LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
         on  eud.user_department_code = rd.num_dep 
   GROUP BY  1, 2, 3, 4, 5

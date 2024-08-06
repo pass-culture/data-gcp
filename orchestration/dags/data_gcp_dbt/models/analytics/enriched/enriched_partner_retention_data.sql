@@ -56,7 +56,7 @@ collective_offers_created as (
         COALESCE(COUNT(case when DATE_DIFF(last_bookable_offer_date, collective_offer_creation_date, month) <= 6 then collective_offer_id end), 0) as collective_offers_created_6_month_before_last_bookable
     from {{ ref('enriched_cultural_partner_data') }}
         join {{ ref('partner_type_bookability_frequency') }} using (partner_type)
-        left join {{ ref('enriched_collective_offer_data') }} on enriched_cultural_partner_data.partner_id = enriched_collective_offer_data.partner_id
+        left join {{ ref('mrt_global__collective_offer') }} AS mrt_global__collective_offer on enriched_cultural_partner_data.partner_id = mrt_global__collective_offer.partner_id
     group by 1, 2, 3
 ),
 
@@ -73,7 +73,7 @@ collective_bookings as (
         COALESCE(SUM(case when collective_booking_status in ('USED', 'REIMBURSED') then booking_amount else NULL end), 0) as real_collective_revenue
     from {{ ref('enriched_cultural_partner_data') }}
         join {{ ref('partner_type_bookability_frequency') }} using (partner_type)
-        left join {{ ref('enriched_collective_booking_data') }} collective_booking on enriched_cultural_partner_data.partner_id = collective_booking.partner_id
+        left join {{ ref('mrt_global__collective_booking') }} collective_booking on enriched_cultural_partner_data.partner_id = collective_booking.partner_id
             and not collective_booking_status = 'CANCELLED'
     group by 1, 2, 3
 ),

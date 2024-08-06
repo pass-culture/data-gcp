@@ -1,8 +1,8 @@
 import pandas as pd
 from datetime import date, datetime, timedelta
-from utils import IOS_APP_ID, ANDROID_APP_ID, TOKEN, save_to_bq
-from appsflyer import AppsFlyer
-from mapping import (
+from core.utils import IOS_APP_ID, ANDROID_APP_ID, TOKEN, save_to_bq
+from core.appsflyer import AppsFlyer
+from core.mapping import (
     DAILY_REPORT,
     DAILY_REPORT_MAPPING,
     INSTALLS_REPORT_MAPPING,

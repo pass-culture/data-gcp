@@ -35,15 +35,16 @@ select
     o.offer_name,
     o.offer_category_id,
     o.offer_subcategory_id,
+    o.partner_id,
     v.venue_name,
     v.venue_type_label,
     c.content_type,
     d.deposit_type as user_current_deposit_type,
-    u.user_last_deposit_amount,
-    u.user_first_deposit_type,
-    u.user_deposit_initial_amount
+    u.last_deposit_amount as user_last_deposit_amount,
+    u.first_deposit_type as user_first_deposit_type,
+    u.first_deposit_amount AS user_first_deposit_amount
 from {{ ref('int_firebase__native_event') }} as e
-    left join {{ ref('enriched_user_data') }} as u on e.user_id = u.user_id
+    left join {{ ref('mrt_global__user') }} as u on e.user_id = u.user_id
     left join {{ ref('mrt_global__offer') }} as o on e.offer_id = o.offer_id
     left join {{ ref('mrt_global__venue') }} as v on v.venue_id = COALESCE(e.venue_id, o.venue_id)
     left join {{ ref('int_contentful__entry') }} as c on c.id = e.module_id

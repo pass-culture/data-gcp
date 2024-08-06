@@ -31,7 +31,7 @@ with favorites as (
                 and favorite.offerid = booking.offer_id
         join {{ ref('mrt_global__offer') }} as offer on favorite.offerid = offer.offer_id
         join {{ source('raw', 'applicative_database_stock') }} as stock on favorite.offerid = stock.offer_id
-        join {{ ref('enriched_user_data') }} as enruser on favorite.userid = enruser.user_id
+        join {{ ref('mrt_global__user') }} as enruser on favorite.userid = enruser.user_id
         join {{ source('clean','subcategories') }} as subcategories on subcategories.id = offer.offer_subcategory_id
 
     where
@@ -44,10 +44,10 @@ with favorites as (
         and enruser.user_is_current_beneficiary = TRUE
         and enruser.last_booking_date >= date_sub(date('{{ ds() }}'), interval 8 day)
         and (
-            enruser.user_theoretical_remaining_credit
+            enruser.total_theoretical_remaining_credit
         ) > stock.stock_price
         and (
-            (subcategories.is_digital_deposit and (100 - enruser.last_deposit_theoretical_amount_spent_in_digital_goods) > stock.stock_price)
+            (subcategories.is_digital_deposit and (100 - enruser.total_last_deposit_digital_goods_amount_spent) > stock.stock_price)
             or not subcategories.is_digital_deposit
         )
 )

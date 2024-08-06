@@ -21,7 +21,7 @@ offerer_venue_info as (
         id.institution_longitude as venue_moving_longitude,
         MAX(collective_booking_creation_date) as last_booking_date,
         COUNT(distinct b.collective_booking_id) as nb_booking
-    from {{ ref('enriched_collective_booking_data') }} b
+    from {{ ref('mrt_global__collective_booking') }} b
         inner join
             {{ source('raw', 'applicative_database_collective_offer') }}
                 o

@@ -1,14 +1,14 @@
 with selected_users as (
     select
         eu.user_id,
-        eu.user_deposit_creation_date,
+        eu.first_deposit_creation_date as user_deposit_creation_date,
         eu.user_birth_date,
-        eu.user_deposit_initial_amount,
-        eu.user_last_deposit_amount,
-        eu.user_theoretical_remaining_credit,
-        eu.booking_cnt
+        eu.first_deposit_amount as user_deposit_initial_amount,
+        eu.last_deposit_amount as user_last_deposit_amount,
+        eu.total_theoretical_remaining_credit,
+        eu.total_individual_bookings as booking_cnt
     from
-        {{ ref('enriched_user_data') }} eu
+        {{ ref('mrt_global__user') }} eu
     union all
     select
         ie.user_id,
@@ -29,7 +29,7 @@ select
     eu.user_deposit_creation_date,
     eu.user_birth_date,
     eu.user_deposit_initial_amount,
-    coalesce(eu.user_theoretical_remaining_credit, eu.user_last_deposit_amount) as user_theoretical_remaining_credit,
+    coalesce(eu.total_theoretical_remaining_credit, eu.user_last_deposit_amount) as user_theoretical_remaining_credit,
     eu.booking_cnt,
     au.consult_offer,
     au.has_added_offer_to_favorites

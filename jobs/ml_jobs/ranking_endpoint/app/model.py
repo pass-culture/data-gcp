@@ -46,8 +46,14 @@ class PredictPipeline:
     def __init__(self) -> None:
         self.numeric_features = NUMERIC_FEATURES
         self.categorical_features = CATEGORICAL_FEATURES
-        self.model = lgb.Booster(model_file="./metadata/model.txt")
-        self.preprocessor = joblib.load("./metadata/preproc.joblib")
+        self.model_classifier = lgb.Booster(
+            model_file="./metadata/model_classifier.txt"
+        )
+        self.model_regressor = lgb.Booster(model_file="./metadata/model_regressor.txt")
+        self.preprocessor_classifier = joblib.load(
+            "./metadata/preproc_classifier.joblib"
+        )
+        self.preprocessor_regressor = joblib.load("./metadata/preproc_regressor.joblib")
 
     def predict(self, input_data: list[dict]):
         errors = []
@@ -63,10 +69,18 @@ class PredictPipeline:
                 errors.append(x)
                 df[x] = DEFAULT_CATEGORICAL
 
-        processed_data = self.preprocessor.transform(df)
-        z = self.model.predict(processed_data)
+        processed_data_classifier = self.preprocessor_classifier.transform(df)
+        predictions_classifier = self.model_classifier.predict(
+            processed_data_classifier
+        )
+        processed_data_regressor = self.preprocessor_regressor.transform(df)
+        predictions_regressor = self.model_regressor.predict(processed_data_regressor)
 
-        for x, y in zip(input_data, z):
+        score = (predictions_classifier[:, 1] + predictions_classifier[:, 2]) * (
+            predictions_regressor + 1
+        )
+
+        for x, y in zip(input_data, score):
             x["score"] = y
         return input_data, errors
 
@@ -127,9 +141,9 @@ class TrainPipeline:
         processed_df = pd.DataFrame(processed_data)
         return processed_df.to_numpy()
 
-    def save(self):
-        joblib.dump(self.preprocessor, "./metadata/preproc.joblib")
-        self.model.save_model("./metadata/model.txt")
+    def save(self, model_name: str):
+        joblib.dump(self.preprocessor, f"./metadata/preproc_{model_name}.joblib")
+        self.model.save_model(f"./metadata/model_{model_name}.txt")
 
     def train(self, df: pd.DataFrame, class_weight: Optional[dict] = None):
         X = self.fit_transform(df)

@@ -149,10 +149,9 @@ def preprocess_data(data: pd.DataFrame, class_mapping: dict) -> pd.DataFrame:
 
 
 def train_pipeline(dataset_name, table_name, experiment_name, run_name):
+    # Load and preprocess the data
     # data = load_data(dataset_name, table_name)
     # data.to_csv("data.csv", index=False)
-
-    # Load and preprocess the data
     data = pd.read_csv("data.csv")
     preprocessed_data = data.pipe(preprocess_data, class_mapping=CLASS_MAPPING)
     train_data, test_data = train_test_split(preprocessed_data, test_size=TEST_SIZE)
@@ -208,10 +207,13 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         )
         mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
 
-    # # retrain on whole
-    # pipeline.train(preprocessed_data, class_weight=class_weight)
-    # # save
-    # pipeline.save()
+    # retrain on whole
+    pipeline_classifier.train(preprocessed_data, class_weight=class_weight)
+    pipeline_regressor.train(preprocessed_data)
+
+    # save
+    pipeline_classifier.save()
+    pipeline_regressor.save()
 
 
 def main(

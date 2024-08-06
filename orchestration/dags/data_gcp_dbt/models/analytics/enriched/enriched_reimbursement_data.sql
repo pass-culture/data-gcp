@@ -89,7 +89,7 @@ coll_clean_pricing_line1 as (
             when category = 'offerer contribution' then pricing_line.amount
         end as offerer_contribution
     from
-        {{ ref('enriched_collective_booking_data') }} collective_booking
+        {{ ref('mrt_global__collective_booking') }} collective_booking
         left join {{ ref('pricing') }} pricing on collective_booking.collective_booking_id = pricing.collective_booking_id
         left join {{ ref('pricing_line') }} pricing_line on pricing.id = pricing_line.pricingid
 ),

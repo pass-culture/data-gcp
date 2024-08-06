@@ -26,7 +26,7 @@ eple_bookings as (
         SUM(case when collective_booking_status != 'CANCELLED' then booking_amount else NULL end) as theoric_amount_spent,
         SUM(case when collective_booking_status in ('USED', 'REIMBURSED') then booking_amount else NULL end) as real_amount_spent
     from eple_infos
-        join {{ ref('enriched_collective_booking_data') }} ecbd on ecbd.educational_institution_id = eple_infos.institution_id and ecbd.scholar_year = eple_infos.scholar_year
+        join {{ ref('mrt_global__collective_booking') }} ecbd on ecbd.educational_institution_id = eple_infos.institution_id and ecbd.scholar_year = eple_infos.scholar_year
     group by 1, 2
 ),
 

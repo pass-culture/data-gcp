@@ -92,10 +92,10 @@ indiv_offers_after_activation as (
 collec_offers_after_activation as (
     select
         partner_activation_stated.partner_id,
-        COUNT(distinct enriched_collective_offer_data.collective_offer_id) as collective_offers_created_after_first_activation,
-        COUNT(distinct case when collective_offer_creation_date > second_activation_date then enriched_collective_offer_data.collective_offer_id end) as collective_offers_created_after_second_activation
+        COUNT(distinct mrt_global__collective_offer.collective_offer_id) as collective_offers_created_after_first_activation,
+        COUNT(distinct case when collective_offer_creation_date > second_activation_date then mrt_global__collective_offer.collective_offer_id end) as collective_offers_created_after_second_activation
     from partner_activation_stated
-        left join {{ ref('enriched_collective_offer_data') }} on partner_activation_stated.partner_id = enriched_collective_offer_data.partner_id
+        left join {{ ref('mrt_global__collective_offer') }} AS mrt_global__collective_offer on partner_activation_stated.partner_id = mrt_global__collective_offer.partner_id
     group by 1
 )
 

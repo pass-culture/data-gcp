@@ -20,12 +20,12 @@ with all_bookable_data as (
     group by 1, 2, 3
     union all
     select
-        enriched_collective_offer_data.partner_id,
+        mrt_global__collective_offer.partner_id,
         partition_date,
         'collective' as offer_type,
         COUNT(distinct collective_offer_id) as nb_bookable_offers
     from {{ ref('bookable_collective_offer_history') }}
-        inner join {{ ref('enriched_collective_offer_data') }} using (collective_offer_id)
+        inner join {{ ref('mrt_global__collective_offer') }} AS mrt_global__collective_offer using (collective_offer_id)
     {% if is_incremental() %}
         where partition_date = DATE_SUB('{{ ds() }}', interval 1 day)
     {% endif %}

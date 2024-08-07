@@ -35,6 +35,9 @@ def bigquery_load_job(
             bigquery.SchemaField(column, _type) for column, _type in schema.items()
         ],
         autodetect=False,
+        schema_update_options=[
+            bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION,
+        ],
     )
     job = bigquery_client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()

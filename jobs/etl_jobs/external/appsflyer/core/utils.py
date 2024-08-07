@@ -60,6 +60,9 @@ def __save_to_bq(df, event_date, table_name, schema_field):
             bigquery.SchemaField(col, to_sql_type(_type))
             for col, _type in schema_field.items()
         ],
+        schema_update_options=[
+            bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION,
+        ],
     )
 
     job = bigquery_client.load_table_from_dataframe(df, table_id, job_config=job_config)
@@ -82,6 +85,9 @@ def export_polars_to_bq(data, output_table, partition_date="execution_date"):
                     type_=bigquery.TimePartitioningType.DAY,
                     field=partition_date,
                 ),
+                schema_update_options=[
+                    bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION,
+                ],
             ),
         )
     job.result()

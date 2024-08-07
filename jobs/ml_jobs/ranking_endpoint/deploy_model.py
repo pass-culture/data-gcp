@@ -3,7 +3,6 @@ import shutil
 from datetime import datetime
 
 import mlflow
-import numpy as np
 import pandas as pd
 import typer
 from sklearn.model_selection import train_test_split
@@ -45,8 +44,8 @@ REGRESSOR_MODEL_PARAMS = {
     "lambda_l1": 0.1,
     "verbose": -1,
 }
-PROBA_CONSULT_RANGE = np.arange(0.4, 0.6, 0.05)
-PROBA_BOOKING_RANGE = np.arange(0.4, 0.6, 0.05)
+PROBA_CONSULT_THRESHOLD = 0.5
+PROBA_BOOKING_THRESHOLD = 0.5
 CLASS_MAPPING = {"seen": 0, "consult": 1, "booked": 2}
 
 
@@ -96,32 +95,29 @@ def plot_figures(
     os.makedirs(figure_folder)
 
     for prefix, df in [("test_", test_data), ("train_", train_data)]:
-        for proba_consult in PROBA_CONSULT_RANGE:
-            plot_cm(
-                y=df["consult"],
-                y_pred=df["prob_class_1"],
-                filename=f"{figure_folder}/{prefix}cm_consult_proba_{proba_consult:.3f}.pdf",
-                perc=True,
-                proba=proba_consult,
-            )
-            for proba_booking in PROBA_BOOKING_RANGE:
-                if proba_consult == PROBA_CONSULT_RANGE[0]:
-                    plot_cm(
-                        y=df["booking"],
-                        y_pred=df["prob_class_2"],
-                        filename=f"{figure_folder}/{prefix}cm_booking_proba_{proba_booking:.3f}.pdf",
-                        perc=True,
-                        proba=proba_booking,
-                    )
-                plot_cm_multiclass(
-                    y_true=df["target_class"],
-                    y_pred_consulted=df["prob_class_1"],
-                    y_pred_booked=df["prob_class_2"],
-                    perc_consulted=proba_consult,
-                    perc_booked=proba_booking,
-                    filename=f"{figure_folder}/{prefix}cm_multiclass_consult_{proba_consult:.3f}_booking_{proba_booking:.3f}.pdf",
-                    class_names=["seen", "consult", "booked"],
-                )
+        plot_cm(
+            y=df["consult"],
+            y_pred=df["prob_class_1"],
+            filename=f"{figure_folder}/{prefix}cm_consult_proba_{PROBA_CONSULT_THRESHOLD:.3f}.pdf",
+            perc=True,
+            proba=PROBA_CONSULT_THRESHOLD,
+        )
+        plot_cm(
+            y=df["booking"],
+            y_pred=df["prob_class_2"],
+            filename=f"{figure_folder}/{prefix}cm_booking_proba_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
+            perc=True,
+            proba=PROBA_BOOKING_THRESHOLD,
+        )
+        plot_cm_multiclass(
+            y_true=df["target_class"],
+            y_pred_consulted=df["prob_class_1"],
+            y_pred_booked=df["prob_class_2"],
+            perc_consulted=PROBA_CONSULT_THRESHOLD,
+            perc_booked=PROBA_BOOKING_THRESHOLD,
+            filename=f"{figure_folder}/{prefix}cm_multiclass_consult_{PROBA_CONSULT_THRESHOLD:.3f}_booking_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
+            class_names=["seen", "consult", "booked"],
+        )
 
     plot_features_importance(
         pipeline, filename=f"{figure_folder}/plot_features_importance.pdf"

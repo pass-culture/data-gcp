@@ -4,10 +4,9 @@ from datetime import datetime
 import mlflow
 import pandas as pd
 import typer
-from sklearn.model_selection import train_test_split
-
 from app.model import TrainPipeline
 from figure import plot_cm, plot_features_importance, plot_hist
+from sklearn.model_selection import train_test_split
 from utils import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -132,8 +131,8 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         )
         .fillna({"consult": 0, "booking": 0, "delta_diversification": 0})
         .assign(
-            target=lambda df: df["consult"]
-            + df["booking"] * (1 + df["delta_diversification"])
+            target=lambda df: (df["consult"] + df["booking"])
+            * (1 + df["delta_diversification"])
         )
     )
     train_data, test_data = train_test_split(data, test_size=0.2)

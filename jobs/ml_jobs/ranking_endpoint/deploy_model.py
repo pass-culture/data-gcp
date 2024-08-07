@@ -8,7 +8,12 @@ import typer
 from sklearn.model_selection import train_test_split
 
 from app.model import TrainPipeline
-from figure import plot_cm, plot_cm_multiclass, plot_features_importance
+from figure import (
+    plot_cm,
+    plot_cm_multiclass,
+    plot_features_importance,
+    plot_regression_figures,
+)
 from utils import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -117,6 +122,12 @@ def plot_figures(
             perc_booked=PROBA_BOOKING_THRESHOLD,
             filename=f"{figure_folder}/{prefix}cm_multiclass_consult_{PROBA_CONSULT_THRESHOLD:.3f}_booking_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
             class_names=["seen", "consult", "booked"],
+        )
+        plot_regression_figures(
+            regression_target=df["target_regression"],
+            regression_score=df["regression_score"],
+            figure_folder=figure_folder,
+            prefix=prefix,
         )
 
     plot_features_importance(

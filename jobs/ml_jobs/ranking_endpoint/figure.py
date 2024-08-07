@@ -135,3 +135,57 @@ def plot_hist(df, figure_folder, prefix=""):
     ax = df["target"].hist(bins=30, histtype="barstacked", stacked=True)
     fig = ax.get_figure()
     fig.savefig(f"{figure_folder}/{prefix}target_histogram.pdf")
+
+
+def plot_regression_figures(
+    regression_target: pd.Series,
+    regression_score: pd.Series,
+    figure_folder: str,
+    prefix="",
+):
+    # Residuals
+    residuals = regression_target - regression_score
+
+    # Plot Residuals
+    filename = f"{figure_folder}/{prefix}residuals_plot.png"
+    plt.figure(figsize=(10, 5))
+    plt.scatter(regression_score, residuals, alpha=0.5)
+    plt.axhline(y=0, color="r", linestyle="--")
+    plt.title("Residuals Plot")
+    plt.xlabel("Predicted Values")
+    plt.ylabel("Residuals")
+    plt.savefig(filename, format="png", dpi=100, bbox_inches="tight")
+    plt.close()
+
+    # Regression Plot
+    filename = f"{figure_folder}/{prefix}regression_plot.png"
+    plt.figure(figsize=(10, 5))
+    plt.scatter(regression_target, regression_score, alpha=0.5)
+    plt.plot([0, 5], [0, 5], color="r", linestyle="--")
+    plt.title("Predicted vs Actual")
+    plt.xlabel("Actual Values")
+    plt.ylabel("Predicted Values")
+    plt.savefig(filename, format="png", dpi=100, bbox_inches="tight")
+    plt.close()
+
+    # Histogram of Actual vs Predicted Values
+    filename = f"{figure_folder}/{prefix}histogram_actual_vs_predicted.pdf"
+    plt.figure(figsize=(10, 5))
+    plt.hist(regression_target, bins=40, alpha=0.5, label="Actual")
+    plt.hist(regression_score, bins=40, alpha=0.5, label="Predicted")
+    plt.title("Histogram of Actual vs Predicted Values")
+    plt.xlabel("Value")
+    plt.ylabel("Frequency")
+    plt.legend()
+    plt.savefig(filename, format="pdf", dpi=300, bbox_inches="tight")
+    plt.close()
+
+    # Histogram of Residuals
+    filename = f"{figure_folder}/{prefix}histogram_residuals.pdf"
+    plt.figure(figsize=(10, 5))
+    plt.hist(residuals, bins=40, alpha=0.5, color="g")
+    plt.title("Histogram of Residuals")
+    plt.xlabel("Residuals")
+    plt.ylabel("Frequency")
+    plt.savefig(filename, format="pdf", dpi=300, bbox_inches="tight")
+    plt.close()

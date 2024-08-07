@@ -24,6 +24,7 @@ select
     stock_booking_quantity,
     list_of_eans_not_found,
     log_timestamp,
+    partition_date,
     beta_test_new_nav_is_convenient,
     beta_test_new_nav_is_pleasant,
     beta_test_new_nav_comment

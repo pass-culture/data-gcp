@@ -57,5 +57,5 @@ select
     jsonpayload.extra.comment as beta_test_new_nav_comment,
     trace
 
-
 from {{ source("raw","stdout") }}
+

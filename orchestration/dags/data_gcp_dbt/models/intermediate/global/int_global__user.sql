@@ -121,6 +121,7 @@ select
     u.user_age,
     u.user_birth_date,
     u.user_has_enabled_marketing_email,
+    u.user_has_enabled_marketing_push,
     u.user_iris_internal_id,
     u.user_is_priority_public,
     u.user_is_unemployed,

@@ -52,7 +52,7 @@ def add_days(ds, days):
         ds = datetime.now()
     if isinstance(ds, str):
         ds = datetime.strptime(ds, "%Y-%m-%d")
-    return ds + timedelta(days=days)
+    return (ds + timedelta(days=days)).strftime("%Y-%m-%d")
 
 
 def create_js_function(name, filename):

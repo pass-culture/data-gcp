@@ -1,3 +1,12 @@
+{{
+    config(
+        **custom_incremental_config(
+        incremental_strategy = "insert_overwrite",
+        partition_by = {"field": "partition_date", "data_type": "date"},
+        on_schema_change = "sync_all_columns"
+    )
+) }}
+
 select
     environement,
     user_id,
@@ -15,12 +24,12 @@ select
     stock_booking_quantity,
     list_of_eans_not_found,
     log_timestamp,
+    partition_date,
     beta_test_new_nav_is_convenient,
     beta_test_new_nav_is_pleasant,
     beta_test_new_nav_comment
 from {{ ref('int_pcapi__log') }}
-where partition_date >= DATE_SUB(CURRENT_DATE, interval 90 day)
-    and message in (
+where message in (
         "Booking has been cancelled",
         "Offer has been created",
         "Offer has been updated",
@@ -31,3 +40,6 @@ where partition_date >= DATE_SUB(CURRENT_DATE, interval 90 day)
         "Stock update blocked because of price limitation",
         "User with new nav activated submitting review"
     )
+    {% if is_incremental() %}
+        AND partition_date between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")
+    {% endif %}

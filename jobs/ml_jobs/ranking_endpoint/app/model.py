@@ -1,14 +1,15 @@
-import pandas as pd
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OrdinalEncoder
-from sklearn.model_selection import train_test_split
-from sklearn.impute import SimpleImputer
-import joblib
-import lightgbm as lgb
 import typing as t
 
-numeric_features = [
+import joblib
+import lightgbm as lgb
+import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OrdinalEncoder
+
+NUMERIC_FEATURES = [
     "user_bookings_count",
     "user_clicks_count",
     "user_favorites_count",
@@ -31,19 +32,19 @@ numeric_features = [
     "hour_of_the_day",
 ]
 
-categorical_features = [
+CATEGORICAL_FEATURES = [
     "context",
     "offer_subcategory_id",
 ]
 
-default_categorical = "UNKNOWN"
-default_numerical = -1
+DEFAULT_CATEGORICAL = "UNKNOWN"
+DEFAULT_NUMERICAL = -1
 
 
 class PredictPipeline:
     def __init__(self) -> None:
-        self.numeric_features = numeric_features
-        self.categorical_features = categorical_features
+        self.numeric_features = NUMERIC_FEATURES
+        self.categorical_features = CATEGORICAL_FEATURES
         self.model = lgb.Booster(model_file="./metadata/model.txt")
         self.preprocessor = joblib.load("./metadata/preproc.joblib")
 
@@ -55,11 +56,11 @@ class PredictPipeline:
         for x in self.numeric_features:
             if x not in _cols:
                 errors.append(x)
-                df[x] = default_numerical
+                df[x] = DEFAULT_NUMERICAL
         for x in self.categorical_features:
             if x not in _cols:
                 errors.append(x)
-                df[x] = default_categorical
+                df[x] = DEFAULT_CATEGORICAL
 
         processed_data = self.preprocessor.transform(df)
         z = self.model.predict(processed_data)
@@ -70,34 +71,20 @@ class PredictPipeline:
 
 
 class TrainPipeline:
-    def __init__(self, target: str, params: dict = None, verbose: bool = False) -> None:
-        self.numeric_features = numeric_features
-        self.categorical_features = categorical_features
+    def __init__(self, target: str, params: dict) -> None:
+        self.numeric_features = NUMERIC_FEATURES
+        self.categorical_features = CATEGORICAL_FEATURES
         self.preprocessor: ColumnTransformer = None
         self.train_size = 0.8
         self.target = target
-        if params is None:
-            self.params = {
-                "objective": "binary",
-                "metric": "binary_logloss",
-                "boosting_type": "gbdt",
-                "is_unbalance": True,
-                "num_leaves": 31,
-                "learning_rate": 0.05,
-                "feature_fraction": 0.9,
-                "bagging_fraction": 0.8,
-                "bagging_freq": 5,
-                "verbose": int(verbose),
-            }
-        else:
-            self.params = params
+        self.params = params
 
     def set_pipeline(self):
         numeric_transformer = Pipeline(
             steps=[
                 (
                     "imputer",
-                    SimpleImputer(strategy="constant", fill_value=default_numerical),
+                    SimpleImputer(strategy="constant", fill_value=DEFAULT_NUMERICAL),
                 )
             ]
         )
@@ -106,7 +93,7 @@ class TrainPipeline:
             steps=[
                 (
                     "imputer",
-                    SimpleImputer(strategy="constant", fill_value=default_categorical),
+                    SimpleImputer(strategy="constant", fill_value=DEFAULT_CATEGORICAL),
                 ),
                 (
                     "encoder",
@@ -126,10 +113,10 @@ class TrainPipeline:
 
     def fit_transform(self, df):
         df[self.categorical_features] = (
-            df[self.categorical_features].astype(str).fillna(default_categorical)
+            df[self.categorical_features].astype(str).fillna(DEFAULT_CATEGORICAL)
         )
         df[self.numeric_features] = (
-            df[self.numeric_features].astype(float).fillna(default_numerical)
+            df[self.numeric_features].astype(float).fillna(DEFAULT_NUMERICAL)
         )
         return self.preprocessor.fit_transform(df)
 
@@ -169,7 +156,7 @@ class TrainPipeline:
             callbacks=[lgb.early_stopping(stopping_rounds=200)],
         )
 
-    def predict(self, df: pd.DataFrame):
+    def predict(self, df: pd.DataFrame) -> pd.DataFrame:
         processed_data = self.preprocessor.transform(df)
         df["score"] = self.model.predict(processed_data)
         return df

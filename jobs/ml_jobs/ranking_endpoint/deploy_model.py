@@ -1,21 +1,21 @@
-import pandas as pd
+import os
 from datetime import datetime
+
+import mlflow
+import pandas as pd
 import typer
 from app.model import TrainPipeline
-import mlflow
-import os
+from figure import plot_cm, plot_features_importance, plot_hist
 from sklearn.model_selection import train_test_split
 from utils import (
-    GCP_PROJECT_ID,
     ENV_SHORT_NAME,
-    deploy_container,
-    save_experiment,
+    GCP_PROJECT_ID,
     connect_remote_mlflow,
+    deploy_container,
     get_mlflow_experiment,
     get_secret,
+    save_experiment,
 )
-from figure import plot_features_importance, plot_cm, plot_hist
-
 
 PARAMS = {"seen": 500_000, "consult": 500_000, "booking": 500_000}
 
@@ -32,7 +32,7 @@ MODEL_PARAMS = {
 }
 
 
-def load_data(dataset_name, table_name):
+def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
     sql = f"""
     WITH seen AS (
       SELECT
@@ -46,7 +46,7 @@ def load_data(dataset_name, table_name):
         SELECT
             * 
         FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
-        WHERE consult
+        WHERE consult and not booking
         LIMIT {PARAMS['consult']}
 
     ),
@@ -57,18 +57,30 @@ def load_data(dataset_name, table_name):
         WHERE booking
         LIMIT {PARAMS['booking']}
     )
-    
     SELECT * FROM seen 
-    UNION ALL 
+    UNION ALL
     SELECT * FROM consult 
-    UNION ALL 
-    select * FROM booking 
+    UNION ALL
+    SELECT * FROM booking
     """
     print(sql)
-    return pd.read_gbq(sql).sample(frac=1)
+
+    data = pd.read_gbq(sql).sample(frac=1)
+    n_rows_duplicated = data.duplicated().sum()
+    if n_rows_duplicated > 0:
+        raise ValueError(
+            f"Duplicated rows in data ({n_rows_duplicated} rows duplicated). Please review your SQL query."
+        )
+
+    return data
 
 
-def plot_figures(test_data, train_data, pipeline, figure_folder):
+def plot_figures(
+    test_data: pd.DataFrame,
+    train_data: pd.DataFrame,
+    pipeline: TrainPipeline,
+    figure_folder: str,
+):
     os.makedirs(figure_folder, exist_ok=True)
 
     for prefix, df in [("test_", test_data), ("train_", train_data)]:
@@ -108,15 +120,20 @@ def plot_figures(test_data, train_data, pipeline, figure_folder):
 
 
 def train_pipeline(dataset_name, table_name, experiment_name, run_name):
-    data = load_data(dataset_name, table_name)
-    data["consult"] = data["consult"].astype(float).fillna(0)
-    data["booking"] = data["booking"].astype(float).fillna(0)
-
-    data["delta_diversification"] = (
-        data["delta_diversification"].astype(float).fillna(0)
-    )
-    data["target"] = data["consult"] + data["booking"] * (
-        1 + data["delta_diversification"]
+    data = (
+        load_data(dataset_name, table_name)
+        .astype(
+            {
+                "consult": "float",
+                "booking": "float",
+                "delta_diversification": "float",
+            }
+        )
+        .fillna({"consult": 0, "booking": 0, "delta_diversification": 0})
+        .assign(
+            target=lambda df: (df["consult"] + df["booking"])
+            * (1 + df["delta_diversification"])
+        )
     )
     train_data, test_data = train_test_split(data, test_size=0.2)
 
@@ -127,7 +144,7 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     experiment = get_mlflow_experiment(experiment_name)
 
     mlflow.lightgbm.autolog()
-    pipeline = TrainPipeline(target="target", verbose=True, params=MODEL_PARAMS)
+    pipeline = TrainPipeline(target="target", params=MODEL_PARAMS)
 
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
         pipeline.set_pipeline()
@@ -135,9 +152,12 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
 
         test_data = pipeline.predict(test_data)
         train_data = pipeline.predict(train_data)
-        plot_figures(test_data, train_data, pipeline, figure_folder)
 
-        mlflow.log_artifacts(figure_folder, "model_plots")
+        # Save Data
+        plot_figures(test_data, train_data, pipeline, figure_folder)
+        train_data.to_csv(f"{figure_folder}/train_predictions.csv", index=False)
+        test_data.to_csv(f"{figure_folder}/test_predictions.csv", index=False)
+        mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
 
     # retrain on whole
     pipeline.train(data)

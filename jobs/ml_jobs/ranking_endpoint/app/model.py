@@ -49,11 +49,9 @@ class PredictPipeline:
         self.model_classifier = lgb.Booster(
             model_file="./metadata/model_classifier.txt"
         )
-        self.model_regressor = lgb.Booster(model_file="./metadata/model_regressor.txt")
         self.preprocessor_classifier = joblib.load(
             "./metadata/preproc_classifier.joblib"
         )
-        self.preprocessor_regressor = joblib.load("./metadata/preproc_regressor.joblib")
 
     def predict(self, input_data: list[dict]):
         errors = []
@@ -73,17 +71,13 @@ class PredictPipeline:
         predictions_classifier = self.model_classifier.predict(
             processed_data_classifier
         )
-        processed_data_regressor = self.preprocessor_regressor.transform(df)
-        predictions_regressor = self.model_regressor.predict(processed_data_regressor)
 
         return (
             df.assign(
                 predicted_class=predictions_classifier.argmax(axis=1),
-                regression_score=predictions_regressor,
                 consulted_score=predictions_classifier[:, 1],
                 booked_score=predictions_classifier[:, 2],
-                score=lambda df: (df.consulted_score + df.booked_score)
-                * (df.regression_score + 1),
+                score=lambda df: df.consulted_score + df.booked_score,
             ).to_dict(orient="records"),
             errors,
         )

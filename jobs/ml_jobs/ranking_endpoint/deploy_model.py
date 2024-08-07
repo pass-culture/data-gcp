@@ -12,7 +12,6 @@ from figure import (
     plot_cm,
     plot_cm_multiclass,
     plot_features_importance,
-    plot_regression_figures,
 )
 from utils import (
     ENV_SHORT_NAME,
@@ -123,12 +122,6 @@ def plot_figures(
             filename=f"{figure_folder}/{prefix}cm_multiclass_consult_{PROBA_CONSULT_THRESHOLD:.3f}_booking_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
             class_names=["seen", "consult", "booked"],
         )
-        plot_regression_figures(
-            regression_target=df["target_regression"],
-            regression_score=df["regression_score"],
-            figure_folder=figure_folder,
-            prefix=prefix,
-        )
 
     plot_features_importance(
         pipeline, filename=f"{figure_folder}/plot_features_importance.pdf"
@@ -150,7 +143,6 @@ def preprocess_data(data: pd.DataFrame, class_mapping: dict) -> pd.DataFrame:
             .where(df["consult"] != 1.0, other="consult")
             .where(df["booking"] != 1.0, other="booked"),
             target_class=lambda df: df["status"].map(class_mapping).astype(int),
-            target_regression=lambda df: df["delta_diversification"],
         )
     ).drop_duplicates()
 
@@ -174,24 +166,13 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     pipeline_classifier = TrainPipeline(
         target="target_class", params=CLASSIFIER_MODEL_PARAMS
     )
-    pipeline_regressor = TrainPipeline(
-        target="target_regression", params=REGRESSOR_MODEL_PARAMS
-    )
 
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
         pipeline_classifier.set_pipeline()
         pipeline_classifier.train(train_data, class_weight=class_weight)
 
-        # Training regressor
-        pipeline_regressor.set_pipeline()
-        pipeline_regressor.train(train_data)
-
-        train_predictions = train_data.pipe(
-            pipeline_classifier.predict_classifier
-        ).pipe(pipeline_regressor.predict_regressor)
-        test_predictions = test_data.pipe(pipeline_classifier.predict_classifier).pipe(
-            pipeline_regressor.predict_regressor
-        )
+        train_predictions = train_data.pipe(pipeline_classifier.predict_classifier)
+        test_predictions = test_data.pipe(pipeline_classifier.predict_classifier)
 
         # Save Data
         plot_figures(
@@ -206,11 +187,9 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
 
     # retrain on whole
     pipeline_classifier.train(preprocessed_data, class_weight=class_weight)
-    pipeline_regressor.train(preprocessed_data)
 
     # save
     pipeline_classifier.save(model_name="classifier")
-    pipeline_regressor.save(model_name="regressor")
 
 
 def main(

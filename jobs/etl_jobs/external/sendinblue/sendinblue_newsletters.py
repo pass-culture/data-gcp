@@ -129,6 +129,9 @@ class SendinblueNewsletters:
             schema=[
                 bigquery.SchemaField(column, _type) for column, _type in schema.items()
             ],
+            schema_update_options=[
+                bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION,
+            ],
         )
         job = bigquery_client.load_table_from_dataframe(
             df_to_save, table_id, job_config=job_config

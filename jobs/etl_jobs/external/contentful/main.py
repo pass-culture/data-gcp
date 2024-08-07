@@ -34,6 +34,9 @@ def save_raw_modules_to_bq(modules_df, table_name):
             type_=bigquery.TimePartitioningType.DAY,
             field="execution_date",
         ),
+        schema_update_options=[
+            bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION,
+        ],
     )
     job = bigquery_client.load_table_from_dataframe(
         modules_df, table_id, job_config=job_config

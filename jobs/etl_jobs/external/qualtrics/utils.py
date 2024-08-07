@@ -50,6 +50,9 @@ def save_partition_table_to_bq(df, table_name, schema, partition_field):
             range_=bigquery.PartitionRange(start=0, end=1000000007, interval=250063),
             field=partition_field,
         ),
+        schema_update_options=[
+            bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION,
+        ],
     )
     job = bigquery_client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()

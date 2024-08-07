@@ -1,8 +1,8 @@
-SELECT 
-    school_year,
+SELECT
+    REPLACE('nan',NULL,school_year) AS school_year,
     ministry,
     uai as institution_id,
-    is_provisional,
+    SAFE_CAST(is_provisional as BOOL) AS is_provisional,
     class,
     SAFE_CAST(amount_per_student as FLOAT64) as amount_per_student,
     SAFE_CAST(headcount as FLOAT64) as headcount,

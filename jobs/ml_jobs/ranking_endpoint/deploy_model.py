@@ -179,30 +179,22 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         pipeline_regressor.set_pipeline()
         pipeline_regressor.train(train_data)
 
-        predictions_on_train_data = pipeline_classifier.predict_classifier(train_data)
-        predictions_on_test_data = pipeline_classifier.predict_classifier(test_data)
-        regression_on_train_data = pipeline_regressor.predict_regressor(train_data)
-        regression_on_test_data = pipeline_regressor.predict_regressor(test_data)
+        train_predictions = train_data.pipe(
+            pipeline_classifier.predict_classifier
+        ).pipe(pipeline_regressor.predict_regressor)
+        test_predictions = test_data.pipe(pipeline_classifier.predict_classifier).pipe(
+            pipeline_regressor.predict_regressor
+        )
 
         # Save Data
         plot_figures(
-            predictions_on_test_data,
-            predictions_on_train_data,
+            train_predictions,
+            test_predictions,
             pipeline_classifier,
             figure_folder,
         )
-        predictions_on_train_data.to_csv(
-            f"{figure_folder}/train_predictions.csv", index=False
-        )
-        predictions_on_test_data.to_csv(
-            f"{figure_folder}/test_predictions.csv", index=False
-        )
-        regression_on_train_data.to_csv(
-            f"{figure_folder}/train_regression.csv", index=False
-        )
-        regression_on_test_data.to_csv(
-            f"{figure_folder}/test_regression.csv", index=False
-        )
+        train_predictions.to_csv(f"{figure_folder}/train_predictions.csv", index=False)
+        test_predictions.to_csv(f"{figure_folder}/test_predictions.csv", index=False)
         mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
 
     # retrain on whole

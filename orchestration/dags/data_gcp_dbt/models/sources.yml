@@ -152,7 +152,6 @@ sources:
       - name: linked_offers
       - name: offer_types
       - name: region_department # TODO migrate this table to seed
-      - name: user_locations
   - name: seed 
     schema: seed_{{ var('ENV_SHORT_NAME') }}
     tables:

@@ -40,7 +40,7 @@ users_with_geo_candidates as (
         gi.density_macro_level as user_macro_density_label,
         gi.iris_shape
     from users_updated as u
-        left join {{ source("clean", "geo_iris") }} as gi
+        left join {{ ref("int_seed__geo_iris") }} as gi
             on u.longitude between gi.min_longitude and gi.max_longitude
                 and u.latitude between gi.min_latitude and gi.max_latitude
 )

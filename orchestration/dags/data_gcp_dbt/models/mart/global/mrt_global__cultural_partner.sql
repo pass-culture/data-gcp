@@ -79,14 +79,16 @@ top_venue_per_offerer as (
         o.total_collective_real_revenue,
         o.total_real_revenue,
         "offerer" as partner_status
-    from {{ ref("mrt_global__offerer") }} as o
+    from {{ ref("int_global__offerer") }} as o
         left join {{ ref("mrt_global__venue") }} as v
             on v.offerer_id = o.offerer_id
                 and v.venue_is_permanent
         left join top_venue_per_offerer on top_venue_per_offerer.venue_managing_offerer_id = o.offerer_id
-        left join {{ source("raw", "agg_partner_cultural_sector") }} on agg_partner_cultural_sector.partner_type = COALESCE(o.partner_type, top_venue_per_offerer.partner_type)
+        left join {{ source("seed", "agg_partner_cultural_sector") }} on agg_partner_cultural_sector.partner_type = COALESCE(o.partner_type, top_venue_per_offerer.partner_type)
     where not o.is_local_authority
         and v.offerer_id is NULL
+        and o.offerer_validation_status = 'VALIDATED'
+        and o.offerer_is_active
 )
 
 union all
@@ -137,7 +139,7 @@ union all
         v.total_real_revenue,
         "venue" as partner_status
     from {{ ref("mrt_global__venue") }} as v
-        left join {{ source("raw", "agg_partner_cultural_sector") }} on agg_partner_cultural_sector.partner_type = v.venue_type_label
+        left join {{ source("seed", "agg_partner_cultural_sector") }} on agg_partner_cultural_sector.partner_type = v.venue_type_label
         left join {{ ref("mrt_global__venue_tag") }} as vt on v.venue_id = vt.venue_id and vt.venue_tag_category_label = "Comptage partenaire sectoriel"
     where venue_is_permanent
 )

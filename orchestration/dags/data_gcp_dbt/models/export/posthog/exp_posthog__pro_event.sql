@@ -31,7 +31,7 @@ select
         offerer_business_activity_label,
         offerer_legal_category_label,
         is_local_authority,
-        permanent_venues_managed,
+        total_permanent_managed_venues,
         is_synchro_adage,
         dms_accepted_at,
         first_dms_adage_status,

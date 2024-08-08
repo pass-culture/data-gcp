@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: int_seed__epci
+    description: |
+      @deprecated use int_seed__geo_iris instead
+      This model gives a detailled view of the EPCI (Etablissement Public de Coopération Intercommunale) in France.
+
+  - name: int_seed__geo_iris
+    description: |
+      This model is a seed model that contains all information at iris level for the whole France.
+
+  - name: int_seed__iris_france
+    description: |
+      @deprecated use int_seed__geo_iris instead
+      This model is a seed model that contains all information at iris level for the whole France.
+
+  - name: int_seed__qpv
+    description: |
+      @deprecated use int_seed__geo_iris instead
+      This model gives a detailled view of the QPV (Quartier Prioritaire de la Ville) in France. 
+
+  - name: int_seed__zrr
+    description: |
+      @deprecated use int_seed__geo_iris instead
+      This model gives a detailled view of the ZRR (Zone de Revitalisation Rurale) in France.

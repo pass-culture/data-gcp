@@ -163,7 +163,7 @@ offer_metadata as (
             on offer_sub_types.offer_type_domain = omi.offer_type_domain
                 and offer_sub_types.offer_type_id = omi.offer_type_id
                 and offer_sub_types.offer_sub_type_id = omi.offer_sub_type_id
-        left join {{ source('raw','macro_rayons') }} on omi.rayon = macro_rayons.rayon
+        left join {{ source('seed','macro_rayons') }} on omi.rayon = macro_rayons.rayon
 )
 
 select *

@@ -18,28 +18,28 @@ with permanent_venues as (
         end
             as partner_type_origin,
         agg_partner_cultural_sector.cultural_sector as cultural_sector,
-        enriched_offerer_data.dms_accepted_at as dms_accepted_at,
-        enriched_offerer_data.first_dms_adage_status as first_dms_adage_status,
-        enriched_offerer_data.is_reference_adage as is_reference_adage,
-        enriched_offerer_data.is_synchro_adage as is_synchro_adage,
-        case when DATE_DIFF(CURRENT_DATE, last_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_active_last_30days,
-        case when DATE_DIFF(CURRENT_DATE, last_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_active_current_year,
-        case when DATE_DIFF(CURRENT_DATE, last_individual_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_individual_active_last_30days,
-        case when DATE_DIFF(CURRENT_DATE, last_individual_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_individual_active_current_year,
-        case when DATE_DIFF(CURRENT_DATE, last_collective_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_collective_active_last_30days,
-        case when DATE_DIFF(CURRENT_DATE, last_collective_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_collective_active_current_year,
+        mrt_global__offerer.dms_accepted_at as dms_accepted_at,
+        mrt_global__offerer.first_dms_adage_status as first_dms_adage_status,
+        mrt_global__offerer.is_reference_adage as is_reference_adage,
+        mrt_global__offerer.is_synchro_adage as is_synchro_adage,
+        case when DATE_DIFF(CURRENT_DATE, mrt_global__venue.last_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_active_last_30days,
+        case when DATE_DIFF(CURRENT_DATE, mrt_global__venue.last_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_active_current_year,
+        case when DATE_DIFF(CURRENT_DATE, mrt_global__venue.last_individual_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_individual_active_last_30days,
+        case when DATE_DIFF(CURRENT_DATE, mrt_global__venue.last_individual_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_individual_active_current_year,
+        case when DATE_DIFF(CURRENT_DATE, mrt_global__venue.last_collective_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_collective_active_last_30days,
+        case when DATE_DIFF(CURRENT_DATE, mrt_global__venue.last_collective_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_collective_active_current_year,
         COALESCE(mrt_global__venue.total_created_individual_offers, 0) as individual_offers_created,
         COALESCE(mrt_global__venue.total_created_collective_offers, 0) as collective_offers_created,
         (COALESCE(mrt_global__venue.total_created_collective_offers, 0) + COALESCE(mrt_global__venue.total_created_individual_offers, 0)) as total_offers_created,
         mrt_global__venue.first_offer_creation_date as first_offer_creation_date,
         mrt_global__venue.first_individual_offer_creation_date as first_individual_offer_creation_date,
         mrt_global__venue.first_collective_offer_creation_date as first_collective_offer_creation_date,
-        last_bookable_offer_date,
-        first_bookable_offer_date,
-        first_individual_bookable_offer_date,
-        last_individual_bookable_offer_date,
-        first_collective_bookable_offer_date,
-        last_collective_bookable_offer_date,
+        mrt_global__venue.last_bookable_offer_date,
+        mrt_global__venue.first_bookable_offer_date,
+        mrt_global__venue.first_individual_bookable_offer_date,
+        mrt_global__venue.last_individual_bookable_offer_date,
+        mrt_global__venue.first_collective_bookable_offer_date,
+        mrt_global__venue.last_collective_bookable_offer_date,
         COALESCE(mrt_global__venue.total_non_cancelled_individual_bookings, 0) as non_cancelled_individual_bookings,
         COALESCE(mrt_global__venue.total_used_individual_bookings, 0) as used_individual_bookings,
         COALESCE(mrt_global__venue.total_non_cancelled_collective_bookings, 0) as confirmed_collective_bookings,
@@ -50,10 +50,10 @@ with permanent_venues as (
     from {{ ref('mrt_global__venue') }} as mrt_global__venue
         left join {{ source('analytics', 'region_department') }} as region_department
             on mrt_global__venue.venue_department_code = region_department.num_dep
-        left join {{ source('raw', 'agg_partner_cultural_sector') }} on agg_partner_cultural_sector.partner_type = mrt_global__venue.venue_type_label
+        left join {{ source('seed', 'agg_partner_cultural_sector') }} on agg_partner_cultural_sector.partner_type = mrt_global__venue.venue_type_label
         left join {{ ref('mrt_global__venue_tag') }} as mrt_global__venue_tag on mrt_global__venue.venue_id = mrt_global__venue_tag.venue_id and mrt_global__venue_tag.venue_tag_category_label = "Comptage partenaire sectoriel"
-        left join {{ ref('enriched_offerer_data') }} as enriched_offerer_data
-            on mrt_global__venue.venue_managing_offerer_id = enriched_offerer_data.offerer_id
+        left join {{ ref('mrt_global__offerer') }} as mrt_global__offerer
+            on mrt_global__venue.venue_managing_offerer_id = mrt_global__offerer.offerer_id
     where venue_is_permanent is TRUE
 ),
 
@@ -120,14 +120,14 @@ top_venue_per_offerer as (
 offerers as (
     select
         '' as venue_id,
-        enriched_offerer_data.offerer_id,
-        enriched_offerer_data.partner_id,
-        enriched_offerer_data.offerer_creation_date as partner_creation_date,
-        case when DATE_TRUNC(enriched_offerer_data.offerer_creation_date, year) <= DATE_TRUNC(DATE_SUB(DATE('{{ ds() }}'), interval 1 year), year) then TRUE else NULL end as was_registered_last_year,
-        enriched_offerer_data.offerer_name as partner_name,
+        mrt_global__offerer.offerer_id,
+        mrt_global__offerer.partner_id,
+        mrt_global__offerer.offerer_creation_date as partner_creation_date,
+        case when DATE_TRUNC(mrt_global__offerer.offerer_creation_date, year) <= DATE_TRUNC(DATE_SUB(DATE('{{ ds() }}'), interval 1 year), year) then TRUE else NULL end as was_registered_last_year,
+        mrt_global__offerer.offerer_name as partner_name,
         region_department.academy_name as partner_academy_name,
-        enriched_offerer_data.offerer_region_name as partner_region_name,
-        enriched_offerer_data.offerer_department_code as partner_department_code,
+        mrt_global__offerer.offerer_region_name as partner_region_name,
+        mrt_global__offerer.offerer_department_code as partner_department_code,
         applicative_database_offerer.offerer_postal_code as partner_postal_code,
         'offerer' as partner_status,
         COALESCE(tagged_partners.partner_type, top_venue_per_offerer.partner_type, 'Structure non tagguée') as partner_type,
@@ -138,45 +138,45 @@ offerers as (
             else NULL
         end as partner_type_origin,
         agg_partner_cultural_sector.cultural_sector as cultural_sector,
-        enriched_offerer_data.dms_accepted_at as dms_accepted_at,
-        enriched_offerer_data.first_dms_adage_status as first_dms_adage_status,
-        enriched_offerer_data.is_reference_adage as is_reference_adage,
-        enriched_offerer_data.is_synchro_adage as is_synchro_adage,
-        case when DATE_DIFF(CURRENT_DATE, enriched_offerer_data.offerer_last_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_active_last_30days,
-        case when DATE_DIFF(CURRENT_DATE, enriched_offerer_data.offerer_last_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_active_current_year,
-        case when DATE_DIFF(CURRENT_DATE, offerer_last_individual_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_individual_active_last_30days,
-        case when DATE_DIFF(CURRENT_DATE, offerer_last_individual_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_individual_active_current_year,
-        case when DATE_DIFF(CURRENT_DATE, offerer_last_collective_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_collective_active_last_30days,
-        case when DATE_DIFF(CURRENT_DATE, offerer_last_collective_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_collective_active_current_year,
-        COALESCE(enriched_offerer_data.offerer_individual_offers_created, 0) as individual_offers_created,
-        COALESCE(enriched_offerer_data.offerer_collective_offers_created, 0) as collective_offers_created,
-        COALESCE(enriched_offerer_data.offerer_individual_offers_created, 0) + COALESCE(enriched_offerer_data.offerer_collective_offers_created, 0) as total_offers_created,
-        enriched_offerer_data.offerer_first_offer_creation_date as first_offer_creation_date,
-        enriched_offerer_data.offerer_first_individual_offer_creation_date as first_individual_offer_creation_date,
-        enriched_offerer_data.offerer_first_collective_offer_creation_date as first_collective_offer_creation_date,
-        enriched_offerer_data.offerer_last_bookable_offer_date as last_bookable_offer_date,
-        enriched_offerer_data.offerer_first_bookable_offer_date as first_bookable_offer_date,
-        enriched_offerer_data.offerer_first_individual_bookable_offer_date as first_individual_bookable_offer_date,
-        enriched_offerer_data.offerer_last_individual_bookable_offer_date as last_individual_bookable_offer_date,
-        enriched_offerer_data.offerer_first_collective_bookable_offer_date as first_collective_bookable_offer_date,
-        enriched_offerer_data.offerer_last_collective_bookable_offer_date as last_collective_bookable_offer_date,
-        COALESCE(enriched_offerer_data.offerer_non_cancelled_individual_bookings, 0) as non_cancelled_individual_bookings,
-        COALESCE(enriched_offerer_data.offerer_used_individual_bookings, 0) as used_individual_bookings,
-        COALESCE(enriched_offerer_data.offerer_non_cancelled_collective_bookings, 0) as confirmed_collective_bookings,
-        COALESCE(enriched_offerer_data.offerer_used_collective_bookings, 0) as used_collective_bookings,
-        COALESCE(enriched_offerer_data.offerer_individual_real_revenue, 0) as real_individual_revenue,
-        COALESCE(enriched_offerer_data.offerer_collective_real_revenue, 0) as real_collective_revenue,
-        COALESCE(enriched_offerer_data.offerer_individual_real_revenue, 0) + COALESCE(enriched_offerer_data.offerer_collective_real_revenue, 0) as total_real_revenue
-    from {{ ref('enriched_offerer_data') }}
+        mrt_global__offerer.dms_accepted_at as dms_accepted_at,
+        mrt_global__offerer.first_dms_adage_status as first_dms_adage_status,
+        mrt_global__offerer.is_reference_adage as is_reference_adage,
+        mrt_global__offerer.is_synchro_adage as is_synchro_adage,
+        case when DATE_DIFF(CURRENT_DATE, mrt_global__offerer.last_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_active_last_30days,
+        case when DATE_DIFF(CURRENT_DATE, mrt_global__offerer.last_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_active_current_year,
+        case when DATE_DIFF(CURRENT_DATE, mrt_global__offerer.last_individual_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_individual_active_last_30days,
+        case when DATE_DIFF(CURRENT_DATE, mrt_global__offerer.last_individual_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_individual_active_current_year,
+        case when DATE_DIFF(CURRENT_DATE, mrt_global__offerer.last_collective_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_collective_active_last_30days,
+        case when DATE_DIFF(CURRENT_DATE, mrt_global__offerer.last_collective_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_collective_active_current_year,
+        COALESCE(mrt_global__offerer.total_created_individual_offers, 0) as individual_offers_created,
+        COALESCE(mrt_global__offerer.total_created_collective_offers, 0) as collective_offers_created,
+        COALESCE(mrt_global__offerer.total_created_individual_offers, 0) + COALESCE(mrt_global__offerer.total_created_collective_offers, 0) as total_offers_created,
+        mrt_global__offerer.first_offer_creation_date,
+        mrt_global__offerer.first_individual_offer_creation_date,
+        mrt_global__offerer.first_collective_offer_creation_date,
+        mrt_global__offerer.last_bookable_offer_date,
+        mrt_global__offerer.first_bookable_offer_date,
+        mrt_global__offerer.first_individual_bookable_offer_date,
+        mrt_global__offerer.last_individual_bookable_offer_date,
+        mrt_global__offerer.first_collective_bookable_offer_date,
+        mrt_global__offerer.last_collective_bookable_offer_date,
+        COALESCE(mrt_global__offerer.total_non_cancelled_individual_bookings, 0) as non_cancelled_individual_bookings,
+        COALESCE(mrt_global__offerer.total_used_individual_bookings, 0) as used_individual_bookings,
+        COALESCE(mrt_global__offerer.total_non_cancelled_collective_bookings, 0) as confirmed_collective_bookings,
+        COALESCE(mrt_global__offerer.total_used_collective_bookings, 0) as used_collective_bookings,
+        COALESCE(mrt_global__offerer.total_individual_real_revenue, 0) as real_individual_revenue,
+        COALESCE(mrt_global__offerer.total_collective_real_revenue, 0) as real_collective_revenue,
+        COALESCE(mrt_global__offerer.total_individual_real_revenue, 0) + COALESCE(mrt_global__offerer.total_collective_real_revenue, 0) as total_real_revenue
+    from {{ ref('mrt_global__offerer') }} AS mrt_global__offerer
         left join {{ source('raw', 'applicative_database_offerer') }} as applicative_database_offerer
-            on enriched_offerer_data.offerer_id = applicative_database_offerer.offerer_id
+            on mrt_global__offerer.offerer_id = applicative_database_offerer.offerer_id
         left join {{ source('analytics', 'region_department') }} as region_department
-            on enriched_offerer_data.offerer_department_code = region_department.num_dep
-        left join tagged_partners on tagged_partners.offerer_id = enriched_offerer_data.offerer_id
-        left join permanent_venues on permanent_venues.offerer_id = enriched_offerer_data.offerer_id
-        left join top_venue_per_offerer on top_venue_per_offerer.offerer_id = enriched_offerer_data.offerer_id
-        left join {{ source('raw', 'agg_partner_cultural_sector') }} on agg_partner_cultural_sector.partner_type = COALESCE(tagged_partners.partner_type, top_venue_per_offerer.partner_type)
-    where not enriched_offerer_data.is_local_authority  -- Collectivités à part
+            on mrt_global__offerer.offerer_department_code = region_department.num_dep
+        left join tagged_partners on tagged_partners.offerer_id = mrt_global__offerer.offerer_id
+        left join permanent_venues on permanent_venues.offerer_id = mrt_global__offerer.offerer_id
+        left join top_venue_per_offerer on top_venue_per_offerer.offerer_id = mrt_global__offerer.offerer_id
+        left join {{ source('seed', 'agg_partner_cultural_sector') }} on agg_partner_cultural_sector.partner_type = COALESCE(tagged_partners.partner_type, top_venue_per_offerer.partner_type)
+    where not mrt_global__offerer.is_local_authority  -- Collectivités à part
         and permanent_venues.offerer_id is NULL -- Pas déjà compté à l'échelle du lieu permanent
 )
 

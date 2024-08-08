@@ -24,7 +24,7 @@ from common.config import (
     GCP_REGION,
     DATA_GCS_BUCKET_NAME,
     BIGQUERY_ML_RECOMMENDATION_DATASET,
-    BIGQUERY_ANALYTICS_DATASET,
+    BIGQUERY_SEED_DATASET,
     DAG_FOLDER,
     RECOMMENDATION_SQL_INSTANCE,
 )
@@ -103,8 +103,8 @@ def get_table_names():
 def get_dataset_name(dataset_type):
     if dataset_type == "ml_reco":
         return BIGQUERY_ML_RECOMMENDATION_DATASET
-    if dataset_type == "analytics":
-        return BIGQUERY_ANALYTICS_DATASET
+    if dataset_type == "seed":
+        return BIGQUERY_SEED_DATASET
 
 
 with DAG(

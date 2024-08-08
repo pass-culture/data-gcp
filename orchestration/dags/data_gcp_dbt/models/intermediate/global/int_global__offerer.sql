@@ -6,14 +6,21 @@ with siren_reference_adage as (
     group by siren
 ),
 
-first_dms_adage as (
+dms_adage as (
     select
         demandeur_entreprise_siren,
         application_status,
-        processed_at
+        processed_at,
+        row_number() over (partition by demandeur_entreprise_siren order by application_submitted_at asc) AS rown_siren,
     from {{ ref('dms_pro') }}
     where procedure_id in ('57081', '57189', '61589', '65028', '80264')
-    qualify row_number() over (partition by demandeur_entreprise_siren order by application_submitted_at asc) = 1
+),
+
+first_dms_adage_accepted as (
+    select *
+    from dms_adage
+    where application_status = "accepte"
+    qualify row_number() over (partition by demandeur_entreprise_siren order by processed_at asc) = 1
 ),
 
 tagged_partners as (
@@ -116,15 +123,14 @@ from {{ ref('int_applicative__offerer') }} as ofr
     left join {{ source('analytics', 'region_department') }} as region_department on ofr.offerer_department_code = region_department.num_dep
     left join {{ source('clean', 'siren_data') }} as siren_data on siren_data.siren = ofr.offerer_siren
     left join
-        {{ source('analytics', 'siren_data_labels') }}
+        {{ source('seed', 'siren_data_labels') }}
             as siren_data_labels
         on siren_data_labels.activiteprincipaleunitelegale = siren_data.activiteprincipaleunitelegale
             and cast(siren_data_labels.categoriejuridiqueunitelegale as STRING) = cast(siren_data.categoriejuridiqueunitelegale as STRING)
-    left join first_dms_adage on first_dms_adage.demandeur_entreprise_siren = ofr.offerer_siren
-    left join first_dms_adage as first_dms_adage_accepted
-        on
-            first_dms_adage_accepted.demandeur_entreprise_siren = ofr.offerer_siren
-            and first_dms_adage_accepted.application_status = "accepte"
+    left join dms_adage as first_dms_adage on first_dms_adage.demandeur_entreprise_siren = ofr.offerer_siren
+        and first_dms_adage.rown_siren = 1
+    left join first_dms_adage_accepted
+        on first_dms_adage_accepted.demandeur_entreprise_siren = ofr.offerer_siren
     left join siren_reference_adage on ofr.offerer_siren = siren_reference_adage.siren
     left join tagged_partners on ofr.offerer_id = tagged_partners.offerer_id
     left join reimbursement_points as rp on rp.offerer_id = ofr.offerer_id

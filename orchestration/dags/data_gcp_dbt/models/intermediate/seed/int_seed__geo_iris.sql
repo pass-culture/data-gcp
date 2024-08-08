@@ -9,4 +9,4 @@ SELECT
     ST_BOUNDINGBOX(ST_GEOGFROMTEXT(iris_shape)).xmax AS max_longitude,
     ST_BOUNDINGBOX(ST_GEOGFROMTEXT(iris_shape)).ymin AS min_latitude,
     ST_BOUNDINGBOX(ST_GEOGFROMTEXT(iris_shape)).ymax AS max_latitude
-FROM `{{ bigquery_raw_dataset }}.geo_iris`
+FROM {{ source('seed', 'geo_iris') }}

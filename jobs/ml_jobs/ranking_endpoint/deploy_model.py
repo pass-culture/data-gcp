@@ -68,7 +68,7 @@ def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
         SELECT
             * 
         FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
-        WHERE consult
+        WHERE consult and not booking
         LIMIT {PARAMS['consult']}
 
     ),

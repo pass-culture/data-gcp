@@ -95,11 +95,15 @@ def plot_figures(
     test_predictions_classifier: pd.DataFrame,
     train_predictions_regressor: pd.DataFrame,
     test_predictions_regressor: pd.DataFrame,
-    pipeline: TrainPipeline,
+    pipeline_classifier: TrainPipeline,
+    pipeline_regressor: TrainPipeline,
     figure_folder: str,
 ):
+    figure_folder_classification = f"{figure_folder}/classification"
+    figure_folder_regression = f"{figure_folder}/regression"
     shutil.rmtree(figure_folder, ignore_errors=True)
-    os.makedirs(figure_folder)
+    os.makedirs(figure_folder_regression)
+    os.makedirs(figure_folder_classification)
 
     for prefix, df in [
         ("test_", test_predictions_classifier),
@@ -108,14 +112,14 @@ def plot_figures(
         plot_cm(
             y=df["consult"],
             y_pred=df["prob_class_1"],
-            filename=f"{figure_folder}/{prefix}cm_consult_proba_{PROBA_CONSULT_THRESHOLD:.3f}.pdf",
+            filename=f"{figure_folder_classification}/{prefix}cm_consult_proba_{PROBA_CONSULT_THRESHOLD:.3f}.pdf",
             perc=True,
             proba=PROBA_CONSULT_THRESHOLD,
         )
         plot_cm(
             y=df["booking"],
             y_pred=df["prob_class_2"],
-            filename=f"{figure_folder}/{prefix}cm_booking_proba_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
+            filename=f"{figure_folder_classification}/{prefix}cm_booking_proba_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
             perc=True,
             proba=PROBA_BOOKING_THRESHOLD,
         )
@@ -125,7 +129,7 @@ def plot_figures(
             y_pred_booked=df["prob_class_2"],
             perc_consulted=PROBA_CONSULT_THRESHOLD,
             perc_booked=PROBA_BOOKING_THRESHOLD,
-            filename=f"{figure_folder}/{prefix}cm_multiclass_consult_{PROBA_CONSULT_THRESHOLD:.3f}_booking_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
+            filename=f"{figure_folder_classification}/{prefix}cm_multiclass_consult_{PROBA_CONSULT_THRESHOLD:.3f}_booking_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
             class_names=["seen", "consult", "booked"],
         )
     for prefix, df in [
@@ -135,12 +139,32 @@ def plot_figures(
         plot_regression_figures(
             regression_target=df["target_regression"],
             regression_score=df["regression_score"],
-            figure_folder=figure_folder,
+            figure_folder=figure_folder_regression,
             prefix=prefix,
         )
 
+    ## Feature importances
     plot_features_importance(
-        pipeline, filename=f"{figure_folder}/plot_features_importance.pdf"
+        pipeline_classifier,
+        filename=f"{figure_folder_classification}/plot_features_importance.pdf",
+    )
+    plot_features_importance(
+        pipeline_regressor,
+        filename=f"{figure_folder_regression}/plot_features_importance.pdf",
+    )
+
+    # Save Data
+    train_predictions_classifier.to_csv(
+        f"{figure_folder_classification}/train_predictions_classifier.csv", index=False
+    )
+    test_predictions_classifier.to_csv(
+        f"{figure_folder_classification}/test_predictions_classifier.csv", index=False
+    )
+    train_predictions_regressor.to_csv(
+        f"{figure_folder_regression}/train_predictions_regressor.csv", index=False
+    )
+    test_predictions_regressor.to_csv(
+        f"{figure_folder_regression}/test_predictions_regressor.csv", index=False
     )
 
 
@@ -222,21 +246,11 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
             test_predictions_classifier=test_predictions_classifier,
             train_predictions_regressor=train_predictions_regressor,
             test_predictions_regressor=test_predictions_regressor,
-            pipeline=pipeline_classifier,
+            pipeline_classifier=pipeline_classifier,
+            pipeline_regressor=pipeline_regressor,
             figure_folder=figure_folder,
         )
-        train_predictions_classifier.to_csv(
-            f"{figure_folder}/train_predictions_classifier.csv", index=False
-        )
-        test_predictions_classifier.to_csv(
-            f"{figure_folder}/test_predictions_classifier.csv", index=False
-        )
-        train_predictions_regressor.to_csv(
-            f"{figure_folder}/train_predictions_regressor.csv", index=False
-        )
-        test_predictions_regressor.to_csv(
-            f"{figure_folder}/test_predictions_regressor.csv", index=False
-        )
+
         mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
 
     # retrain on whole

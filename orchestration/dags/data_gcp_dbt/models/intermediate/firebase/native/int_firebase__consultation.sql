@@ -13,7 +13,11 @@ SELECT DISTINCT
     offer_id,
     origin,
     unique_session_id,
+    event_name,
     CONCAT(user_id, "-",event_timestamp, "-", offer_id) AS consultation_id,
+    venue_id,
+    traffic_medium,
+    traffic_campaign,
 FROM {{ ref('int_firebase__native_event') }}
 WHERE event_name = 'ConsultOffer'
     AND user_id IS NOT NULL

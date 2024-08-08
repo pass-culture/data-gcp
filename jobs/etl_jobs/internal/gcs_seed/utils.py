@@ -36,6 +36,12 @@ def GCS_to_bigquery(
             write_disposition="WRITE_TRUNCATE",
             encoding="UTF-8",
         )
+    elif file_type == "avro":
+        job_config = bigquery.LoadJobConfig(
+            source_format=bigquery.SourceFormat.AVRO,
+            write_disposition="WRITE_TRUNCATE",
+            encoding="UTF-8",
+        )
     else:
         raise Exception("Format not found")
 

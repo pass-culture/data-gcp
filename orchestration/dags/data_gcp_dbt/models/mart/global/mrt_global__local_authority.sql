@@ -30,7 +30,7 @@ select distinct
         ) then "CC / Agglomérations / Métropoles"
         else "Non qualifiable"
     end as local_authority_type,
-    case when ofr.offerer_id in (select priority_offerer_id from {{ source("analytics","priority_local_authorities") }}) then TRUE else FALSE end as is_priority,
+    case when ofr.offerer_id in (select priority_offerer_id from {{ source("seed","priority_local_authorities") }}) then TRUE else FALSE end as is_priority,
     COALESCE(ofr.offerer_validation_date, ofr.offerer_creation_date) as local_authority_creation_date,
     case when DATE_TRUNC(COALESCE(ofr.offerer_validation_date, ofr.offerer_creation_date), year) <= DATE_TRUNC(DATE_SUB(DATE(CURRENT_DATE/*""{{ ds }}""*/), interval 1 year), year) then TRUE else FALSE end as was_registered_last_year,
     ofr.academy_name as local_authority_academy_name,

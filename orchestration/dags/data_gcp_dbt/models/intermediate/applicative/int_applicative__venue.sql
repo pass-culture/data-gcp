@@ -74,7 +74,7 @@ venues_with_geo_candidates as (
         gi.density_macro_level as venue_macro_density_label,
         gi.iris_shape
     from {{ source("raw", "applicative_database_venue") }} as v
-        left join {{ source('clean', 'geo_iris') }} as gi
+        left join {{ ref('int_seed__geo_iris') }} as gi
             on v.venue_longitude between gi.min_longitude and gi.max_longitude
                 and v.venue_latitude between gi.min_latitude and gi.max_latitude
 ),

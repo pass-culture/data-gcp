@@ -5,7 +5,7 @@ with qpv as (
         commune_qp as qpv_communes,
         geoshape
     from
-        {{ source('analytics', 'QPV') }}
+        {{ ref('int_seed__qpv') }}
     where geoshape is not NULL
 ),
 
@@ -57,7 +57,7 @@ select
     gi.density_macro_level as institution_macro_density_label,
     iris_internal_id as institution_internal_iris_id
 from institutions_qpv as iq
-    left join {{ source('clean', 'geo_iris') }} as gi
+    left join {{ ref('int_seed__geo_iris') }} as gi
         on ST_CONTAINS(
                 gi.iris_shape,
                 ST_GEOGPOINT(iq.institution_longitude, iq.institution_latitude)

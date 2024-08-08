@@ -175,7 +175,7 @@ REF_TABLES = {
             "shape": "GEOGRAPHY",
         },
     },
-    "emboitements_iris": {
+    "iris_nesting": {
         "file_type": "csv",
         "schema": {
             "code_iris": "STRING",
@@ -184,6 +184,36 @@ REF_TABLES = {
         },
     },
     "geo_iris": {
+        "file_type": "parquet",
+    },
+    "deps_qpv_2017": {
+        "file_type": "parquet",
+    },
+    "deps_statuts_2017": {
+        "file_type": "parquet",
+    },
+    "deps_zrr_2017": {
+        "file_type": "parquet",
+    },
+    "communes_population_data_insee_2018": {
+        "file_type": "parquet",
+    },
+    "epci": {
+        "file_type": "avro",
+    },
+    "zrr": {
+        "file_type": "avro",
+    },
+    "qpv": {
+        "file_type": "avro",
+    },
+    "qpv_eligible_pop": {
+        "file_type": "avro",
+    },
+    "siren_data_labels": {
+        "file_type": "parquet",
+    },
+    "population_age_and_department_france_details": {
         "file_type": "parquet",
     },
 }

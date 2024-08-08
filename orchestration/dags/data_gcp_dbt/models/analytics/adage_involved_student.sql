@@ -1,4 +1,13 @@
-with involved_students as (
+with institutional_scholar_level AS (
+    SELECT 
+        n_ms4_id AS level_id,
+        n_ms4_cod AS level_code,
+        n_ms4_lib AS level_lib
+    FROM  {{ source('seed','institutional_scholar_level') }}
+),
+
+
+involved_students as (
     select
         date(execution_date) as date,
         case
@@ -25,7 +34,7 @@ with involved_students as (
         coalesce(sum(safe_cast(total_involved_students as FLOAT64)), 0) as total_involved_students
     from {{ source('clean','adage_involved_student') }} ais
         left join {{ ref('educational_year') }} ey on safe_cast(ey.adage_id as INT) = safe_cast(ais.educational_year_adage_id as INT)
-        left join {{ source('clean','institutional_scholar_level') }} isl on ais.level = isl.level_id
+        left join institutional_scholar_level isl on ais.level = isl.level_id
     where
         metric_name = "departements"
     group by

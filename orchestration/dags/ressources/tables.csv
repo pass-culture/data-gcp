@@ -20,7 +20,7 @@ recommendable_offers_raw,is_sensitive,boolean,recommendable_offer,ml_reco
 recommendable_offers_raw,is_geolocated,boolean,recommendable_offer,ml_reco
 non_recommendable_items_data,user_id,character varying,user_booked_item,ml_reco
 non_recommendable_items_data,item_id,character varying,user_booked_item,ml_reco
-iris_france,id,character varying,iris_france,analytics
-iris_france,irisCode,character varying,iris_france,analytics
-iris_france,centroid,geography,iris_france,analytics
-iris_france,shape,geography,iris_france,analytics
+iris_france,id,character varying,iris_france,seed
+iris_france,irisCode,character varying,iris_france,seed
+iris_france,centroid,geography,iris_france,seed
+iris_france,shape,geography,iris_france,seed

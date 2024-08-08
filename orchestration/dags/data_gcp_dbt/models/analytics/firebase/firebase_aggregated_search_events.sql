@@ -220,7 +220,6 @@ SELECT
     search_native_categories_filter,
     search_accessibility_filter,
     user_location_type,
-    search_id,
     first_filter_applied,
     nb_offers_consulted,
     nb_offers_added_to_favorites,

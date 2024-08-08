@@ -130,7 +130,7 @@ def get_users_metadata():
         SELECT 
             user_id,
             user_total_deposit_amount,
-            user_current_deposit_type,
+            current_deposit_type,
             COALESCE(user_theoretical_remaining_credit, user_last_deposit_amount) as user_theoretical_remaining_credit
         FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.global_user` 
     """

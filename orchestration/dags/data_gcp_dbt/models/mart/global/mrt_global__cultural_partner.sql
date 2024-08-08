@@ -79,7 +79,7 @@ top_venue_per_offerer as (
         o.total_collective_real_revenue,
         o.total_real_revenue,
         "offerer" as partner_status
-    from {{ ref("mrt_global__offerer") }} as o
+    from {{ ref("int_global__offerer") }} as o
         left join {{ ref("mrt_global__venue") }} as v
             on v.offerer_id = o.offerer_id
                 and v.venue_is_permanent
@@ -87,6 +87,8 @@ top_venue_per_offerer as (
         left join {{ source("raw", "agg_partner_cultural_sector") }} on agg_partner_cultural_sector.partner_type = COALESCE(o.partner_type, top_venue_per_offerer.partner_type)
     where not o.is_local_authority
         and v.offerer_id is NULL
+        and o.offerer_validation_status = 'VALIDATED'
+        and o.offerer_is_active
 )
 
 union all

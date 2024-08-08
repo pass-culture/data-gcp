@@ -35,7 +35,8 @@ select
     bcs.total_collective_real_revenue,
     bcs.total_collective_current_year_real_revenue,
     bcs.total_current_year_non_cancelled_collective_bookings,
-    (DATE(cs.collective_stock_booking_limit_date_time) > CURRENT_DATE or cs.collective_stock_booking_limit_date_time is NULL)
-    and (DATE(cs.collective_stock_beginning_date_time) > CURRENT_DATE or cs.collective_stock_beginning_date_time is NULL) as collective_stock_is_bookable
+    case when
+        (DATE(cs.collective_stock_booking_limit_date_time) > CURRENT_DATE or cs.collective_stock_booking_limit_date_time is NULL)
+        and (DATE(cs.collective_stock_beginning_date_time) > CURRENT_DATE or cs.collective_stock_beginning_date_time is NULL) then true else false end as collective_stock_is_bookable
 from {{ source('raw','applicative_database_collective_stock') }} as cs
     left join collective_bookings_grouped_by_collective_stock as bcs on bcs.collective_stock_id = cs.collective_stock_id

@@ -202,7 +202,36 @@ final_data AS (
 )
 
 SELECT
-    *,
+    unique_search_id,
+    unique_session_id,
+    first_date,
+    first_timestamp,
+    app_version,
+    query_input,
+    search_type,
+    search_date_filter,
+    search_location_filter,
+    search_categories_filter,
+    search_genre_types_filter,
+    search_max_price_filter,
+    search_is_autocomplete,
+    search_is_based_on_history,
+    search_offer_is_duo_filter,
+    search_native_categories_filter,
+    search_accessibility_filter,
+    user_location_type,
+    search_id,
+    first_filter_applied,
+    nb_offers_consulted,
+    nb_offers_added_to_favorites,
+    nb_no_search_result,
+    nb_iterations_search,
+    nb_venue_playlist_displayed_on_search_results,
+    nb_venues_consulted,
+    made_another_search,
+    search_query_input_is_generic,
+    nb_offers_booked,
+    total_diversification,
     CASE
         WHEN query_input IS NOT NULL AND NOT search_query_input_is_generic THEN 'specific_search'
         ELSE 'discovery_search'

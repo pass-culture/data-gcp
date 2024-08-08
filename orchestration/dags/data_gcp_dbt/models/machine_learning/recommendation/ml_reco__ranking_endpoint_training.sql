@@ -55,12 +55,10 @@ interact as (
         fsoe.user_id,
         im.item_id,
         sum(is_consult_offer) as consult,
-        sum(is_add_to_favorites + is_booking_confirmation) as booking,
-        max(d.delta_diversification) as delta_diversification
+        sum(is_add_to_favorites + is_booking_confirmation) as booking
     from
         {{ ref('int_firebase__native_event') }} fsoe
         inner join {{ ref('offer_item_ids') }} as im on fsoe.offer_id = im.offer_id
-        left join diversification d on d.item_id = im.item_id
     where
         event_date >= date_sub(current_date, interval 14 day)
         and event_name in (
@@ -78,9 +76,10 @@ transactions as (
         e.*,
         coalesce(i.booking, 0) > 0 as booking,
         (coalesce(i.booking, 0) + coalesce(i.consult, 0)) > 0 as consult,
-        coalesce(i.delta_diversification, 0) as delta_diversification -- get all past events
+        coalesce(d.delta_diversification, 0) as delta_diversification
     from events e
         left join interact i on i.user_id = e.user_id and i.item_id = e.item_id
+        left join diversification d on d.item_id = e.item_id
 )
 
 select

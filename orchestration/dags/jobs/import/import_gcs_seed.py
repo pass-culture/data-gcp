@@ -18,7 +18,7 @@ from common.utils import (
 from common.config import GCP_PROJECT_ID, DAG_FOLDER, ENV_SHORT_NAME
 from common.config import GCP_PROJECT_ID, DAG_FOLDER
 from common.alerts import task_fail_slack_alert
-from dependencies.cold_data.import_cold_data import import_tables
+from dependencies.gcs_seed.import_gcs_seed import ANALYTICS_TABLES
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -28,17 +28,17 @@ default_dag_args = {
     "project_id": GCP_PROJECT_ID,
 }
 
-GCE_INSTANCE = f"import-cold-data-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/internal/cold-data"
+GCE_INSTANCE = f"import-gcs-seed-{ENV_SHORT_NAME}"
+BASE_PATH = "data-gcp/jobs/etl_jobs/internal/gcs_seed"
 dag_config = {
     "PROJECT_NAME": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
 }
 
 with DAG(
-    "import_cold_data",
+    "import_gcs_seed",
     default_args=default_dag_args,
-    description="Import cold data from GCS to BQ",
+    description="Import seed data from GCS to BQ",
     schedule_interval=get_airflow_schedule("00 01 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
@@ -73,8 +73,8 @@ with DAG(
         retries=2,
     )
 
-    import_cold_data_op = SSHGCEOperator(
-        task_id="import_cold_data_op",
+    import_seed_data_op = SSHGCEOperator(
+        task_id="import_seed_data_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
@@ -88,7 +88,7 @@ with DAG(
     end_raw = DummyOperator(task_id="end_raw", dag=dag)
 
     analytics_table_jobs = {}
-    for name, params in import_tables.items():
+    for name, params in ANALYTICS_TABLES.items():
         task = bigquery_job_task(dag=dag, table=name, job_params=params)
 
         analytics_table_jobs[name] = {
@@ -99,7 +99,7 @@ with DAG(
 
     end = DummyOperator(task_id="end", dag=dag)
     analytics_table_tasks = depends_loop(
-        import_tables,
+        ANALYTICS_TABLES,
         analytics_table_jobs,
         end_raw,
         dag=dag,
@@ -111,7 +111,7 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> import_cold_data_op
+        >> import_seed_data_op
         >> gce_instance_stop
         >> end_raw
         >> analytics_table_tasks

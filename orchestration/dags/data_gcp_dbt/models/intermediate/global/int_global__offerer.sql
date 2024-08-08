@@ -116,7 +116,7 @@ from {{ ref('int_applicative__offerer') }} as ofr
     left join {{ source('analytics', 'region_department') }} as region_department on ofr.offerer_department_code = region_department.num_dep
     left join {{ source('clean', 'siren_data') }} as siren_data on siren_data.siren = ofr.offerer_siren
     left join
-        {{ source('analytics', 'siren_data_labels') }}
+        {{ source('seed', 'siren_data_labels') }}
             as siren_data_labels
         on siren_data_labels.activiteprincipaleunitelegale = siren_data.activiteprincipaleunitelegale
             and cast(siren_data_labels.categoriejuridiqueunitelegale as STRING) = cast(siren_data.categoriejuridiqueunitelegale as STRING)

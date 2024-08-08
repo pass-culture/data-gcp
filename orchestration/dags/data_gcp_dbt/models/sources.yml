@@ -1,11 +1,10 @@
 version: 1
 
 sources:
-  - name: raw # this is the source_name
+  - name: raw
     schema: raw_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: adage
-      - name: agg_partner_cultural_sector # try to plug it directly to google cloud storage with dbt_external_tables package
       - name: applicative_database_accessibility_provider
       - name: applicative_database_action_history
       - name: applicative_database_address
@@ -119,7 +118,7 @@ sources:
       - name: gsheet_eac_webinar
       - name: gsheet_educational_institution_student_headcount
       - name: gsheet_ml_recommendation_sensitive_item
-      - name: macro_rayons
+      
       - name: metabase_collection
       - name: metabase_core_user
       - name: metabase_query_execution
@@ -131,7 +130,7 @@ sources:
       - name: stdout
       - name: user_locations
 
-  - name: clean # this is the source_name
+  - name: clean
     schema: clean_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: applicative_database_booking_history
@@ -141,42 +140,43 @@ sources:
       - name: applicative_database_collective_stock_history
       - name: applicative_database_collective_offer_history
       - name: applicative_database_collective_offer_template_history
-      - name: adage_involved_student # this is the table_name
+      - name: adage_involved_student
       - name: dms_jeunes_cleaned
       - name: dms_pro_cleaned
       - name: firebase_app_experiments
-      - name: geo_iris
-      - name: iris_france
-      - name: institutional_scholar_level
       - name: siren_data
       - name: subcategories
-  - name: analytics # this is the source_name
+  - name: analytics 
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: adage
       - name: app_native_logs
-      - name: epci
       - name: linked_offers
       - name: offer_types
-      - name: offer_with_mediation
-      - name: population_age_and_department_france_details
-      - name: priority_local_authorities
-      - name: QPV
-      - name: region_department
-      - name: rural_city_type_data
-      - name: siren_data_labels
+      - name: region_department # TODO migrate this table to seed
       - name: user_locations
-      - name: ZRR
   - name: seed 
     schema: seed_{{ var('ENV_SHORT_NAME') }}
     tables:
+      - name: agg_partner_cultural_sector
+      - name: epci
+      - name: geo_iris
       - name: institution_metadata
       - name: institution_metadata_aggregated_type
+      - name: institutional_scholar_level
+      - name: iris_france
+      - name: iris_nesting
+      - name: macro_rayons
+      - name: population_age_and_department_france_details
+      - name: priority_local_authorities
+      - name: qpv
+      - name: rural_city_type_data
+      - name: siren_data_labels
+      - name: zrr
   - name: ml_preproc
     schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: default_item_cluster
-
       - name: item_embedding_extraction
       - name: item_embedding_reduced_64
       - name: item_embedding_reduced_32

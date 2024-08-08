@@ -28,7 +28,7 @@ geo_candidates as (
         gi.region_name,
         gi.iris_shape
     from venues as v
-        left join {{ source('clean', 'geo_iris') }} as gi
+        left join {{ ref('int_seed__geo_iris') }} as gi
             on v.venue_longitude between gi.min_longitude and gi.max_longitude
                 and v.venue_latitude between gi.min_latitude and gi.max_latitude
 )

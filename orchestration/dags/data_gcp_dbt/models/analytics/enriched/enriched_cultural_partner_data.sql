@@ -50,7 +50,7 @@ with permanent_venues as (
     from {{ ref('mrt_global__venue') }} as mrt_global__venue
         left join {{ source('analytics', 'region_department') }} as region_department
             on mrt_global__venue.venue_department_code = region_department.num_dep
-        left join {{ source('raw', 'agg_partner_cultural_sector') }} on agg_partner_cultural_sector.partner_type = mrt_global__venue.venue_type_label
+        left join {{ source('seed', 'agg_partner_cultural_sector') }} on agg_partner_cultural_sector.partner_type = mrt_global__venue.venue_type_label
         left join {{ ref('mrt_global__venue_tag') }} as mrt_global__venue_tag on mrt_global__venue.venue_id = mrt_global__venue_tag.venue_id and mrt_global__venue_tag.venue_tag_category_label = "Comptage partenaire sectoriel"
         left join {{ ref('enriched_offerer_data') }} as enriched_offerer_data
             on mrt_global__venue.venue_managing_offerer_id = enriched_offerer_data.offerer_id
@@ -175,7 +175,7 @@ offerers as (
         left join tagged_partners on tagged_partners.offerer_id = enriched_offerer_data.offerer_id
         left join permanent_venues on permanent_venues.offerer_id = enriched_offerer_data.offerer_id
         left join top_venue_per_offerer on top_venue_per_offerer.offerer_id = enriched_offerer_data.offerer_id
-        left join {{ source('raw', 'agg_partner_cultural_sector') }} on agg_partner_cultural_sector.partner_type = COALESCE(tagged_partners.partner_type, top_venue_per_offerer.partner_type)
+        left join {{ source('seed', 'agg_partner_cultural_sector') }} on agg_partner_cultural_sector.partner_type = COALESCE(tagged_partners.partner_type, top_venue_per_offerer.partner_type)
     where not enriched_offerer_data.is_local_authority  -- Collectivités à part
         and permanent_venues.offerer_id is NULL -- Pas déjà compté à l'échelle du lieu permanent
 )

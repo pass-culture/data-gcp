@@ -310,7 +310,7 @@ from
     left join bookable_offer_history on bookable_offer_history.offerer_id = offerer.offerer_id
     left join {{ source('clean', 'siren_data') }} as siren_data on siren_data.siren = offerer.offerer_siren
     left join
-        {{ source('analytics', 'siren_data_labels') }}
+        {{ source('seed', 'siren_data_labels') }}
             as siren_data_labels
         on siren_data_labels.activiteprincipaleunitelegale = siren_data.activiteprincipaleunitelegale
             and cast(siren_data_labels.categoriejuridiqueunitelegale as STRING) = cast(siren_data.categoriejuridiqueunitelegale as STRING)

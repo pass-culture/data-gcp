@@ -466,12 +466,6 @@ BIGQUERY_SCHEMAS = {
         "categorieJuridiqueUniteLegale": "STRING",
         "update_date": "DATE",
     },
-    "siren_data_labels": {
-        "activitePrincipaleUniteLegale": "STRING",
-        "label_unite_legale": "STRING",
-        "categorieJuridiqueUniteLegale": "INT64",
-        "label_categorie_juridique": "STRING",
-    },
     "applicative_database_offerer_tag_mapping": {
         "offerer_id": "STRING",
         "tag_id": "STRING",

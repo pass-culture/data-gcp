@@ -11,7 +11,7 @@ with venue_epci as (
                 epci.epci_name,
                 geo_shape
             from
-                {{ source('analytics','epci') }} epci
+                {{ ref('int_seed__epci') }} epci
         ) c on ST_CONTAINS(
                 c.geo_shape,
                 ST_GEOGPOINT(venue.venue_longitude, venue.venue_latitude)
@@ -33,7 +33,7 @@ venue_qpv as (
                 commune_qp as qpv_communes,
                 geoshape
             from
-                {{ source('analytics','QPV') }}
+                {{ ref('int_seed__qpv') }}
         ) b on ST_CONTAINS(
                 b.geoshape,
                 ST_GEOGPOINT(venue.venue_longitude, venue.venue_latitude)
@@ -60,7 +60,7 @@ venue_zrr as (
                 zrr.code_postal,
                 zrr.geo_shape_insee
             from
-                {{ source('analytics','ZRR') }} zrr
+                {{ ref('int_seed__zrr') }} zrr
         ) d on ST_CONTAINS(
                 d.geo_shape_insee,
                 ST_GEOGPOINT(venue.venue_longitude, venue.venue_latitude)

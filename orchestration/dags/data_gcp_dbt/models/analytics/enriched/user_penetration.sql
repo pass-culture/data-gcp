@@ -10,7 +10,7 @@ with population_dpt as (
         pop.department_name,
         dep.region_name,
         SUM(population) as population
-    from {{ source('analytics','population_age_and_department_france_details') }} pop
+    from {{ source('seed','population_age_and_department_france_details') }} pop
         left join {{ source('analytics','region_department') }} dep on dep.num_dep = pop.department_code
     where pop.current_year in (2020, 2021, 2022, 2023, 2024) and CAST(age as int) between 15 and 25
     group by 1, 2, 3, 4, 5, 6

@@ -34,7 +34,7 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
 |     +-- ...
 |
 |   +-- internal
-|     +-- cold-data
+|     +-- gcs_seed
 |     +-- human_ids
 |     +-- import_api_referentials
 |     +-- ...

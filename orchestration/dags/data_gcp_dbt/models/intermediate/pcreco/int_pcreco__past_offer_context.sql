@@ -62,7 +62,7 @@ with export_table as (
     from
         {{ source('raw', 'past_offer_context') }} pso
         inner join {{ ref('offer_item_ids') }} offer_item_ids using (offer_id)
-        left join {{ source('clean', 'iris_france') }} ii on ii.id = pso.user_iris_id
+        left join {{ ref('int_seed__iris_france') }} ii on ii.id = pso.user_iris_id
 
     {% if is_incremental() %}
         where import_date between date_sub(date('{{ ds() }}'), interval 3 day) and date('{{ ds() }}')

@@ -91,15 +91,20 @@ def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
 
 
 def plot_figures(
-    test_data: pd.DataFrame,
-    train_data: pd.DataFrame,
+    train_predictions_classifier: pd.DataFrame,
+    test_predictions_classifier: pd.DataFrame,
+    train_predictions_regressor: pd.DataFrame,
+    test_predictions_regressor: pd.DataFrame,
     pipeline: TrainPipeline,
     figure_folder: str,
 ):
     shutil.rmtree(figure_folder, ignore_errors=True)
     os.makedirs(figure_folder)
 
-    for prefix, df in [("test_", test_data), ("train_", train_data)]:
+    for prefix, df in [
+        ("test_", test_predictions_classifier),
+        ("train_", train_predictions_classifier),
+    ]:
         plot_cm(
             y=df["consult"],
             y_pred=df["prob_class_1"],
@@ -123,6 +128,10 @@ def plot_figures(
             filename=f"{figure_folder}/{prefix}cm_multiclass_consult_{PROBA_CONSULT_THRESHOLD:.3f}_booking_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
             class_names=["seen", "consult", "booked"],
         )
+    for prefix, df in [
+        ("test_", test_predictions_regressor),
+        ("train_", train_predictions_regressor),
+    ]:
         plot_regression_figures(
             regression_target=df["target_regression"],
             regression_score=df["regression_score"],
@@ -162,6 +171,14 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     train_data, test_data = train_test_split(preprocessed_data, test_size=TEST_SIZE)
     class_frequency = train_data.target_class.value_counts(normalize=True).to_dict()
     class_weight = {k: 1 / v for k, v in class_frequency.items()}
+    train_data_regression, test_data_regression = train_test_split(
+        preprocessed_data.drop_duplicates(
+            subset=[
+                "offer_semantic_emb_mean",
+            ]
+        ),
+        test_size=TEST_SIZE,
+    )
 
     # Connect to MLFlow
     client_id = get_secret("mlflow_client_id")
@@ -184,24 +201,42 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
 
         # Training regressor
         pipeline_regressor.set_pipeline()
-        pipeline_regressor.train(train_data)
+        pipeline_regressor.train(train_data_regression)
 
-        train_predictions = train_data.pipe(
+        train_predictions_classifier = train_data.pipe(
             pipeline_classifier.predict_classifier
-        ).pipe(pipeline_regressor.predict_regressor)
-        test_predictions = test_data.pipe(pipeline_classifier.predict_classifier).pipe(
+        )
+        test_predictions_classifier = test_data.pipe(
+            pipeline_classifier.predict_classifier
+        )
+        train_predictions_regressor = train_data_regression.pipe(
+            pipeline_regressor.predict_regressor
+        )
+        test_predictions_regressor = test_data_regression.pipe(
             pipeline_regressor.predict_regressor
         )
 
         # Save Data
         plot_figures(
-            train_predictions,
-            test_predictions,
-            pipeline_classifier,
-            figure_folder,
+            train_predictions_classifier=train_predictions_classifier,
+            test_predictions_classifier=test_predictions_classifier,
+            train_predictions_regressor=train_predictions_regressor,
+            test_predictions_regressor=test_predictions_regressor,
+            pipeline=pipeline_classifier,
+            figure_folder=figure_folder,
         )
-        train_predictions.to_csv(f"{figure_folder}/train_predictions.csv", index=False)
-        test_predictions.to_csv(f"{figure_folder}/test_predictions.csv", index=False)
+        train_predictions_classifier.to_csv(
+            f"{figure_folder}/train_predictions_classifier.csv", index=False
+        )
+        test_predictions_classifier.to_csv(
+            f"{figure_folder}/test_predictions_classifier.csv", index=False
+        )
+        train_predictions_regressor.to_csv(
+            f"{figure_folder}/train_predictions_regressor.csv", index=False
+        )
+        test_predictions_regressor.to_csv(
+            f"{figure_folder}/test_predictions_regressor.csv", index=False
+        )
         mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
 
     # retrain on whole

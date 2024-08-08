@@ -16,17 +16,17 @@ with partner_activation as (
         case when partner.individual_offers_created > 0 then TRUE else FALSE end as has_activated_individual_part,
         case when partner.collective_offers_created > 0 then TRUE else FALSE end as has_activated_collective_part,
         case when partner_status = "venue" then venue.first_individual_offer_creation_date
-            else offerer.offerer_first_individual_offer_creation_date
+            else offerer.first_individual_offer_creation_date
         end as individual_activation_date,
         case when partner_status = "venue" then venue.first_collective_offer_creation_date
-            else offerer.offerer_first_collective_offer_creation_date
+            else offerer.first_collective_offer_creation_date
         end as collective_activation_date,
         partner.first_offer_creation_date as first_activation_date,
         partner.non_cancelled_individual_bookings as individual_bookings_after_first_activation,
         partner.confirmed_collective_bookings as collective_bookings_after_first_activation
     from {{ ref('enriched_cultural_partner_data') }} partner
         left join {{ ref('mrt_global__venue') }} venue on partner.venue_id = venue.venue_id
-        left join {{ ref('enriched_offerer_data') }} offerer on offerer.offerer_id = partner.offerer_id
+        left join {{ ref('mrt_global__offerer') }} offerer on offerer.offerer_id = partner.offerer_id
 ),
 
 partner_activation_stated as (

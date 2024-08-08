@@ -12,8 +12,8 @@ with most_active_offerer_per_user as (
         uo.user_id,
         uo.offerer_id
     from {{ ref('mrt_global__user_offerer') }} as uo
-        left join {{ ref('enriched_offerer_data') }} as o on uo.offerer_id = o.offerer_id
-    qualify ROW_NUMBER() over (partition by user_id order by no_cancelled_booking_cnt desc) = 1
+        left join {{ ref('mrt_global__offerer') }} as o on uo.offerer_id = o.offerer_id
+    qualify ROW_NUMBER() over (partition by user_id order by total_non_cancelled_bookings desc) = 1
 ),
 
 offerer_per_session as (
@@ -68,12 +68,12 @@ select
     e.download_file_type,
     e.download_files_cnt,
     COALESCE(o.offerer_name, v.offerer_name) as offerer_name,
-    o.offerer_first_individual_offer_creation_date,
-    o.offerer_first_collective_offer_creation_date,
+    o.first_individual_offer_creation_date as offerer_first_individual_offer_creation_date,
+    o.first_collective_offer_creation_date as offerer_first_collective_offer_creation_date,
     o.legal_unit_business_activity_label as offerer_business_activity_label,
     o.legal_unit_legal_category_label as offerer_legal_category_label,
     o.is_local_authority,
-    o.permanent_venues_managed,
+    o.total_permanent_managed_venues,
     o.is_synchro_adage,
     o.dms_accepted_at,
     o.first_dms_adage_status,
@@ -90,7 +90,7 @@ select
 from {{ ref('int_firebase__pro_event') }} as e
     left join offerer_per_session as ps on ps.unique_session_id = e.unique_session_id
     left join {{ ref('mrt_global__venue') }} as v on e.venue_id = v.venue_id
-    left join {{ ref('enriched_offerer_data') }} as o on COALESCE(e.offerer_id, v.venue_managing_offerer_id, ps.offerer_id) = o.offerer_id
+    left join {{ ref('mrt_global__offerer') }} as o on COALESCE(e.offerer_id, v.venue_managing_offerer_id, ps.offerer_id) = o.offerer_id
     left join {{ ref('enriched_cultural_partner_data') }} as p on v.partner_id = p.partner_id
 where TRUE
     {% if is_incremental() %}

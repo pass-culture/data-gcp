@@ -9,7 +9,7 @@ all_days_since_activation as (
             day
         ) as day
     from
-        {{ ref('enriched_offerer_data') }}
+        {{ ref('mrt_global__offerer') }}
         inner join
             {{ ref('aggregated_daily_offer_consultation_data') }}
             using

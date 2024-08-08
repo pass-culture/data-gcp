@@ -122,9 +122,9 @@ adage_status as (
         case when mrt_global__venue.venue_is_permanent then CONCAT("venue-", mrt_global__venue.venue_id)
             else CONCAT("offerer-", mrt_global__venue.venue_managing_offerer_id)
         end as partner_id,
-        enriched_offerer_data.first_dms_adage_status
+        mrt_global__offerer.first_dms_adage_status
     from {{ ref('mrt_global__venue') }} as mrt_global__venue
-        left join {{ ref('enriched_offerer_data') }} on mrt_global__venue.venue_managing_offerer_id = enriched_offerer_data.offerer_id
+        left join {{ ref('mrt_global__offerer') }} as mrt_global__offerer on mrt_global__venue.venue_managing_offerer_id = mrt_global__offerer.offerer_id
 ),
 
 siren_status as (
@@ -132,8 +132,8 @@ siren_status as (
         mrt_global__venue.partner_id,
         case when etatadministratifunitelegale = 'A' then TRUE else FALSE end as has_active_siren
     from {{ ref('mrt_global__venue') }} as mrt_global__venue
-        join {{ ref('enriched_offerer_data') }} on mrt_global__venue.venue_managing_offerer_id = enriched_offerer_data.offerer_id
-        left join {{ ref('siren_data') }} on enriched_offerer_data.offerer_siren = siren_data.siren
+        join {{ ref('mrt_global__offerer') }} as mrt_global__offerer on mrt_global__venue.venue_managing_offerer_id = mrt_global__offerer.offerer_id
+        left join {{ ref('siren_data') }} on mrt_global__offerer.offerer_siren = siren_data.siren
 ),
 
 rejected_offers as (

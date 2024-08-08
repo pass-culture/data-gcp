@@ -17,7 +17,7 @@ with individual_data as (
         SUM(case when booking.booking_status in ('USED', 'REIMBURSED') then booking.booking_intermediary_amount else NULL end) as real_amount_booked,
         SUM(case when booking.booking_status in ('CONFIRMED') then booking.booking_intermediary_amount else NULL end) as pending_amount_booked
     from {{ ref('mrt_global__venue') }} venue
-        join {{ ref('enriched_offerer_data') }} offerer on venue.venue_managing_offerer_id = offerer.offerer_id
+        join {{ ref('mrt_global__offerer') }} offerer on venue.venue_managing_offerer_id = offerer.offerer_id
         left join {{ ref('mrt_global__offer') }} offer on venue.venue_id = offer.venue_id
         left join {{ source('clean','subcategories') }} subcategories on offer.offer_subcategory_id = subcategories.id
         left join {{ ref('mrt_global__booking') }} booking on offer.offer_id = booking.offer_id and booking.booking_status in ('USED', 'REIMBURSED', 'CONFIRMED')
@@ -44,7 +44,7 @@ collective_data as (
         SUM(case when booking.collective_booking_status in ('USED', 'REIMBURSED', 'CONFIRMED') then booking.booking_amount else NULL end) as real_amount_booked,
         SUM(case when booking.collective_booking_status in ('PENDING') then booking.booking_amount else NULL end) as pending_amount_booked
     from {{ ref('mrt_global__venue') }} venue
-        join {{ ref('enriched_offerer_data') }} offerer on venue.venue_managing_offerer_id = offerer.offerer_id
+        join {{ ref('mrt_global__offerer') }} offerer on venue.venue_managing_offerer_id = offerer.offerer_id
         left join {{ ref('mrt_global__collective_offer') }} offer on venue.venue_id = offer.venue_id
         left join {{ ref('mrt_global__collective_booking') }} booking on offer.collective_offer_id = booking.collective_offer_id and booking.collective_booking_status in ('USED', 'REIMBURSED', 'CONFIRMED', 'PENDING')
     where offerer_siren is not NULL

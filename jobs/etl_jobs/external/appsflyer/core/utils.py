@@ -69,14 +69,18 @@ def __save_to_bq(df, event_date, table_name, schema_field):
     job.result()
 
 
-def export_polars_to_bq(data, output_table, partition_date="execution_date"):
+def export_polars_to_bq(
+    data, output_table, event_date, partition_date="execution_date"
+):
+    date_fmt = datetime.strptime(event_date, "%Y-%m-%d")
+    yyyymmdd = date_fmt.strftime("%Y%m%d")
     client = bigquery.Client()
     with io.BytesIO() as stream:
         data.write_parquet(stream)
         stream.seek(0)
         job = client.load_table_from_file(
             stream,
-            destination=f"{BIGQUERY_RAW_DATASET}.{output_table}",
+            destination=f"{BIGQUERY_RAW_DATASET}.{output_table}${yyyymmdd}",
             project=GCP_PROJECT_ID,
             job_config=bigquery.LoadJobConfig(
                 source_format=bigquery.SourceFormat.PARQUET,

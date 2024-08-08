@@ -66,7 +66,7 @@ SELECT
     CASE WHEN ((DATE(s.stock_booking_limit_date) > CURRENT_DATE OR s.stock_booking_limit_date IS NULL)
     AND (DATE(s.stock_beginning_date) > CURRENT_DATE OR s.stock_beginning_date IS NULL)
     -- <> available_stock > 0 OR available_stock is null
-    AND (GREATEST(s.stock_quantity - COALESCE(bs.total_bookings, 0),0) > 0 OR s.stock_quantity IS NULL)
+    AND (GREATEST(s.stock_quantity - COALESCE(bs.total_non_cancelled_bookings, 0),0) > 0 OR s.stock_quantity IS NULL) -- c'est cette condition qui fonctionne mal
     AND NOT s.stock_is_soft_deleted) THEN TRUE ELSE FALSE END AS is_bookable,
     price_category.price_category_label_id,
     price_category_label.label AS price_category_label,

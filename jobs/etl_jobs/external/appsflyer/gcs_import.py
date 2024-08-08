@@ -31,6 +31,7 @@ def run(
         print(f"Importing {f}, date {date} to {output_table}.")
         export_polars_to_bq(
             df,
+            event_date=date,
             output_table=output_table,
             partition_date="execution_date",
         )

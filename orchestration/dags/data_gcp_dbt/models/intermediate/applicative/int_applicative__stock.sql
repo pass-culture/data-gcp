@@ -67,7 +67,7 @@ select
             (DATE(s.stock_booking_limit_date) > CURRENT_DATE or s.stock_booking_limit_date is NULL)
             and (DATE(s.stock_beginning_date) > CURRENT_DATE or s.stock_beginning_date is NULL)
             -- <> available_stock > 0 OR available_stock is null
-            and (GREATEST(s.stock_quantity - COALESCE(bs.total_bookings, 0), 0) > 0 or s.stock_quantity is NULL)
+            and (GREATEST(s.stock_quantity - COALESCE(bs.total_non_cancelled_bookings, 0), 0) > 0 or s.stock_quantity is NULL)
             and not s.stock_is_soft_deleted
         ) then TRUE
         else FALSE

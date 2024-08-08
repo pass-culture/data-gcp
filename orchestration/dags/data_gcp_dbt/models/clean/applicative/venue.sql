@@ -21,9 +21,11 @@ with venues as (
     LEFT JOIN {{ source('raw', 'applicative_database_google_places_info') }} AS gp ON v.venue_id = gp.venue_id
 ),
 
-geo_candidates as (
+venues_with_geo_candidates as (
     select
-        v.*,
+        v.venue_id,
+        v.venue_latitude,
+        v.venue_longitude,
         gi.iris_internal_id,
         gi.region_name,
         gi.iris_shape
@@ -31,14 +33,20 @@ geo_candidates as (
         left join {{ source('clean', 'geo_iris') }} as gi
             on v.venue_longitude between gi.min_longitude and gi.max_longitude
                 and v.venue_latitude between gi.min_latitude and gi.max_latitude
+),
+
+venue_geo_iris as (
+    SELECT *
+    FROM venues_with_geo_candidates
+    where ST_CONTAINS(
+        iris_shape,
+        ST_GEOGPOINT(venue_longitude, venue_latitude)
+    ) or iris_shape is NULL
 )
 
 select
-    gc.*,
-    gc.iris_internal_id as venue_iris_internal_id,
-    gc.region_name as venue_region_name
-from geo_candidates gc
-where ST_CONTAINS(
-        gc.iris_shape,
-        ST_GEOGPOINT(gc.venue_longitude, gc.venue_latitude)
-    ) or gc.iris_shape is NULL
+    venues.*,
+    venue_geo_iris.iris_internal_id as venue_iris_internal_id,
+    venue_geo_iris.region_name as venue_region_name
+from venues
+left join venue_geo_iris on venue_geo_iris.venue_id = venues.venue_id

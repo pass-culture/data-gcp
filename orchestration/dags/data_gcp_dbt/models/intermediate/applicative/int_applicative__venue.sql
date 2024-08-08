@@ -62,7 +62,9 @@ bookable_offer_history as (
 
 venues_with_geo_candidates as (
     select
-        v.* except (venue_city),
+        v.venue_id,
+        v.venue_latitude,
+        v.venue_longitude,
         gi.iris_internal_id,
         gi.region_name as venue_region_name,
         gi.city_label as venue_city,
@@ -75,6 +77,15 @@ venues_with_geo_candidates as (
         left join {{ source('clean', 'geo_iris') }} as gi
             on v.venue_longitude between gi.min_longitude and gi.max_longitude
                 and v.venue_latitude between gi.min_latitude and gi.max_latitude
+),
+
+venue_geo_iris AS (
+    SELECT *
+    FROM venues_with_geo_candidates
+    where ST_CONTAINS(
+        iris_shape,
+        ST_GEOGPOINT(venue_longitude, venue_latitude)
+    ) or iris_shape is NULL
 )
 
 select
@@ -129,13 +140,13 @@ select
         v.venue_id
     ) as venue_backoffice_link,
     {{ target_schema }}.humanize_id(v.venue_id) as venue_humanized_id,
-    v.iris_internal_id as venue_iris_internal_id,
-    v.venue_region_name,
-    v.venue_city,
-    v.venue_epci,
-    v.venue_density_label,
-    v.venue_macro_density_label,
-    v.venue_academy_name,
+    venue_geo_iris.iris_internal_id as venue_iris_internal_id,
+    venue_geo_iris.venue_region_name,
+    venue_geo_iris.venue_city,
+    venue_geo_iris.venue_epci,
+    venue_geo_iris.venue_density_label,
+    venue_geo_iris.venue_macro_density_label,
+    venue_geo_iris.venue_academy_name,
     v.offerer_address_id,
     vr.venue_target as venue_targeted_audience,
     vc.venue_contact_phone_number,
@@ -213,7 +224,8 @@ select
             COALESCE(o.total_used_individual_bookings, 0) + COALESCE(co.total_used_collective_bookings, 0) desc
     ) as offerer_bookings_rank,
     case when gp.banner_url is not NULL then "offerer" when gp.venue_id is not NULL then "google" else "default_category" end as venue_image_source
-from venues_with_geo_candidates as v
+from {{ source("raw", "applicative_database_venue") }} as v
+    left join venue_geo_iris on venue_geo_iris.venue_id = v.venue_id
     left join offers_grouped_by_venue as o on o.venue_id = v.venue_id
     left join collective_offers_grouped_by_venue as co on co.venue_id = v.venue_id
     left join bookable_offer_history as boh on boh.venue_id = v.venue_id
@@ -222,7 +234,3 @@ from venues_with_geo_candidates as v
     left join {{ source("raw", "applicative_database_venue_label") }} as vl on vl.venue_label_id = v.venue_label_id
     left join {{ source("raw", "applicative_database_accessibility_provider") }} as va on va.venue_id = v.venue_id
     left join {{ source("raw", "applicative_database_google_places_info") }} AS gp ON v.venue_id = gp.venue_id
-where ST_CONTAINS(
-        v.iris_shape,
-        ST_GEOGPOINT(v.venue_longitude, v.venue_latitude)
-    ) or v.iris_shape is NULL

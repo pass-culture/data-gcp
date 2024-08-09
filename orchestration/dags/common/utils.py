@@ -8,8 +8,6 @@ from common.config import (
     GCP_PROJECT_ID,
     MLFLOW_URL,
     ENV_SHORT_NAME,
-    FAILED_STATES,
-    ALLOWED_STATES,
     LOCAL_ENV,
 )
 
@@ -66,15 +64,21 @@ def get_dependencies(tables_config):
     return dependencies
 
 
-def waiting_operator(dag, dag_id, external_task_id="end"):
+def waiting_operator(
+    dag,
+    dag_id,
+    external_task_id="end",
+    allowed_states=["success"],
+    failed_states=["failed", "upstream_failed", "skipped"],
+):
     return ExternalTaskSensor(
         task_id=f"wait_for_{dag_id}_{external_task_id}",
         external_dag_id=dag_id,
         external_task_id=external_task_id,
         check_existence=True,
         mode="reschedule",
-        allowed_states=ALLOWED_STATES,
-        failed_states=FAILED_STATES,
+        allowed_states=allowed_states,
+        failed_states=failed_states,
         email_on_retry=False,
         dag=dag,
     )

@@ -40,7 +40,7 @@ user_geo_iris as (
         referential_table='int_seed__geo_iris',
         id_column='user_id',
         prefix_name='user',
-        columns=['iris_internal_id','region_name','city_label','academy_name','density_label','density_macro_level'],
+        columns=['iris_internal_id','region_name','city_label','city_code','rural_city_type','academy_name','density_label','density_macro_level'],
         geo_shape='iris_shape'
     )
     }}
@@ -56,6 +56,8 @@ select
     user.user_latitude,
     user_geo_iris.iris_internal_id as user_iris_internal_id,
     user_geo_iris.city_label as user_city,
+    user_geo_iris.city_code as user_city_code,
+    user_geo_iris.rural_city_type as user_rural_city_type,
     user_geo_iris.density_label as user_density_label,
     user_geo_iris.density_macro_level as user_macro_density_label,
     user_geo_iris.academy_name as user_academy_name,
@@ -73,8 +75,8 @@ select
             user_latitude is NULL and 
             user_longitude is NULL 
         then NULL
-    else cast(code_qpv is not NULL as int) 
-    end as user_in_qpv,
+    else code_qpv is not NULL
+    end as user_is_in_qpv,
     date_updated,
 
 FROM {{ ref("int_api_gouv__user_address") }} user

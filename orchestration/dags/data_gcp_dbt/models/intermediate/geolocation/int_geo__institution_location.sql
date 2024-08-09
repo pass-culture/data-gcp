@@ -40,7 +40,7 @@ institution_geo_iris as (
         referential_table='int_seed__geo_iris',
         id_column='institution_id',
         prefix_name='institution',
-        columns=['iris_internal_id','region_name','city_label','academy_name','density_label','density_macro_level'],
+        columns=['iris_internal_id','region_name','city_label','city_code','rural_city_type','academy_name','density_label','density_macro_level'],
         geo_shape='iris_shape'
     )
     }}
@@ -73,8 +73,8 @@ select
             institution_latitude is NULL and 
             institution_longitude is NULL 
         then NULL
-    else cast(code_qpv is not NULL as int) 
-    end as institution_in_qpv,
+    else code_qpv is not NULL
+    end as institution_in_qpv, 
 
 FROM {{ source('raw', 'applicative_database_educational_institution') }} institution
 left join {{ ref('int_seed__institution_metadata')}} as metadata on institution.institution_id = metadata.institution_id

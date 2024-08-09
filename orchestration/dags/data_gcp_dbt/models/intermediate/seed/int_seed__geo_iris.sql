@@ -24,6 +24,7 @@ SELECT
     density_label,
     density_macro_level,
     geo_code,
+    rural_city_type_data.geo_type as rural_city_type,
     iris_internal_id,
     ST_GEOGPOINT(
         CAST(SPLIT(REPLACE(iris_centroid, 'POINT(', ''), ' ')[ORDINAL(1)] AS FLOAT64),
@@ -34,4 +35,5 @@ SELECT
     ST_BOUNDINGBOX(ST_GEOGFROMTEXT(iris_shape)).xmax AS max_longitude,
     ST_BOUNDINGBOX(ST_GEOGFROMTEXT(iris_shape)).ymin AS min_latitude,
     ST_BOUNDINGBOX(ST_GEOGFROMTEXT(iris_shape)).ymax AS max_latitude
-FROM {{ source('seed', 'geo_iris') }}
+FROM {{ source('seed', 'geo_iris') }} gi
+LEFT JOIN {{ source('seed', 'rural_city_type_data') }} using(geo_code)

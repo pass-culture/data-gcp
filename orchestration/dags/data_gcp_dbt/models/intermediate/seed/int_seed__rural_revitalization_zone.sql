@@ -1,9 +1,10 @@
 {{ config(**custom_table_config()) }} 
 
 SELECT 
-    CODGEO AS geo_code,
+    CODGEO AS geo_code, -- city_code
     LIBGEO AS geo_name,
     ZRR_SIMP AS zrr_level,
+    ZRR_SIMP IN ('C  Classée en ZRR', 'P  Commune partiellement classée en ZRR') AS is_in_zrr,
     ZONAGE_ZRR AS zrr_level_detail,
     Code_Postal AS postal_code,
     Code_INSEE AS insee_code,

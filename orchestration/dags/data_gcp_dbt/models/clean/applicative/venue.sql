@@ -19,9 +19,7 @@ with venues as (
 
     FROM {{ source('raw', 'applicative_database_venue') }} AS v
     LEFT JOIN {{ source('raw', 'applicative_database_google_places_info') }} AS gp ON v.venue_id = gp.venue_id
-),
-
-
+)
 
 select
     venues.*,

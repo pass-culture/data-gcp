@@ -31,15 +31,15 @@ ir_export AS (
         actual_amount_spent,
         user_data.user_activity,
         user_visits.total_visit_last_month,
-        geo_type,
-        code_qpv,
-        zrr,
+        -- TODO rename field in qualtrics
+        user_location.venue_rural_city_type as geo_type,
+        user_location.code_qpv as code_qpv,
+        user_location.zrr_level as zrr,
         user_seniority
 
         FROM `{{ bigquery_analytics_dataset }}.global_user` user_data
         INNER JOIN `{{ bigquery_clean_dataset }}.applicative_database_user` applicative_database_user ON user_data.user_id = applicative_database_user.user_id
-        LEFT JOIN `{{ bigquery_analytics_dataset }}.user_locations` user_locations ON user_locations.user_id = user_data.user_id
-        LEFT JOIN `{{ bigquery_seed_dataset }}.rural_city_type_data`  rural_city_type_data ON user_locations.city_code = rural_city_type_data.geo_code
+        LEFT JOIN `{{ bigquery_int_geo_dataset }}.user_location` user_location ON user_location.user_id = user_data.user_id
         LEFT JOIN `{{ bigquery_raw_dataset }}.qualtrics_opt_out_users` opt_out on opt_out.ext_ref = user_data.user_id
         LEFT JOIN user_visits ON user_data.user_id = user_visits.user_id
         LEFT JOIN answers ON user_data.user_id = answers.user_id

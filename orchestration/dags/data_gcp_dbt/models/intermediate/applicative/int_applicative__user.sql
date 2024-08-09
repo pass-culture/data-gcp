@@ -79,6 +79,6 @@ select
     currently_subscribed_themes,
     is_theme_subscribed
 from {{ source("raw", "applicative_database_user") }} as u
-    left join {{ ref("int_api_gouv__address_user_location") }} as ui on ui.user_id = u.user_id
+    left join {{ ref("int_geo__user_location") }} as ui on ui.user_id = u.user_id
     left join themes_subscribed as ts on ts.user_id = u.user_id
 where u.user_role in ("UNDERAGE_BENEFICIARY", "BENEFICIARY")

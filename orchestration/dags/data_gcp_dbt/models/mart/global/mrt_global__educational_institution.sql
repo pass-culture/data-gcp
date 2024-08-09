@@ -79,10 +79,10 @@ SELECT
     location_info.institution_longitude,
     location_info.institution_academy_name,
     location_info.institution_region_name,
-    case when location_info.institution_qpv_name is not null then TRUE ELSE FALSE END AS institution_in_qpv
+    location_info.institution_in_qpv
 FROM  {{ ref('int_applicative__educational_institution') }} AS ei
 left join deposit_grouped_by_institution AS dgi ON dgi.institution_id = ei.educational_institution_id
 left join educational_institution_student_headcount AS sh ON sh.institution_id = ei.educational_institution_id
 left join  {{ source('seed','institution_metadata_aggregated_type') }} as institution_metadata_aggregated_type
     on ei.institution_type = institution_metadata_aggregated_type.institution_type
-left join {{ ref('institution_locations') }} as location_info on ei.institution_id = location_info.institution_id
+left join {{ ref('int_geo__institution_location') }} as location_info on ei.institution_id = location_info.institution_id

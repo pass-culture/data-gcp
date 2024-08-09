@@ -1,3 +1,5 @@
+{{ config(**custom_table_config()) }} 
+
 SELECT 
     * except(iris_centroid, iris_shape),
     ST_GEOGPOINT(

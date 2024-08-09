@@ -13,6 +13,7 @@ select
     collective_booking_status,
     collective_booking_reimbursement_date,
     educational_institution_id,
+    case when collective_booking_status in ('USED', 'REIMBURSED') then true else false end as is_used_collective_booking,
     cb.educational_year_id,
     collective_booking_confirmation_date,
     collective_booking_confirmation_limit_date,

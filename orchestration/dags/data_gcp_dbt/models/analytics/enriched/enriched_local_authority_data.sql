@@ -21,7 +21,7 @@ top_ca_venue as (
     select
         venue_managing_offerer_id as offerer_id,
         mrt_global__venue.venue_type_label,
-        RANK() over (partition by venue_managing_offerer_id order by total_real_revenue desc) as ca_rank
+        ROW_NUMBER() over (partition by venue_managing_offerer_id order by total_real_revenue desc) as ca_rank
     from {{ ref('mrt_global__venue') }} as mrt_global__venue
     where total_real_revenue > 0
 ),
@@ -30,7 +30,7 @@ top_bookings_venue as (
     select
         venue_managing_offerer_id as offerer_id,
         mrt_global__venue.venue_type_label,
-        RANK() over (partition by venue_managing_offerer_id order by total_used_bookings desc) as bookings_rank
+        ROW_NUMBER() over (partition by venue_managing_offerer_id order by total_used_bookings desc) as bookings_rank
     from {{ ref('mrt_global__venue') }} as mrt_global__venue
     where total_used_bookings > 0
 ),

@@ -2,7 +2,7 @@
     select
         {{ id_column }},
         {% for column in columns %}
-            {{ column }},
+            ref_data.{{ column }},
         {% endfor %}
     from
         {% if source_table | length == 2 %}

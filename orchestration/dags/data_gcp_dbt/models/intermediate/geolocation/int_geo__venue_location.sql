@@ -54,7 +54,7 @@ select
     venue_geo_iris.iris_internal_id as venue_iris_internal_id,
     venue_geo_iris.city_label as venue_city,
     venue_geo_iris.city_code as venue_city_code,
-    user_geo_iris.rural_city_type as venue_rural_city_type,
+    venue_geo_iris.rural_city_type as venue_rural_city_type,
     venue_geo_iris.density_label as venue_density_label,
     venue_geo_iris.density_macro_level as venue_macro_density_label,
     venue_geo_iris.academy_name as venue_academy_name,

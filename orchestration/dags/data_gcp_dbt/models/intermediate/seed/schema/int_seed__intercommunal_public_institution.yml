@@ -1,0 +1,103 @@
+version: 2
+models:
+  - name: int_seed__intercommunal_public_institution
+    description: |
+      This model is a seed model that contains all information about intercommunal public institutions in France (EPCI).
+      https://www.insee.fr/fr/metadonnees/definition/c1160
+
+    columns:
+      - name: living_area_2012_name
+        description: 'The name of the living area (Bassin de Vie) as defined in 2012. This represents a geographical area where residents have a majority of their daily activities.'
+        data_type: STRING
+
+      - name: region_name
+        description: 'The official name of the region in which the municipality is located.'
+        data_type: STRING
+
+      - name: department_code
+        description: 'The official code representing the department within the region.'
+        data_type: STRING
+
+      - name: urban_unit_2010_code
+        description: 'The code identifying the urban unit (Unité Urbaine) as defined in 2010, which refers to a cluster of municipalities forming a continuous built-up area.'
+        data_type: STRING
+
+      - name: municipality_type
+        description: 'The type or category of the municipality, indicating whether it is urban, rural, or other classifications.'
+        data_type: STRING
+
+      - name: year
+        description: '2022'
+        data_type: DATE
+
+      - name: canton_code
+        description: 'The code representing the canton, a territorial division within the department.'
+        data_type: STRING
+
+      - name: urban_area_2010_name
+        description: 'The name of the urban area (Aire Urbaine) as defined in 2010, which groups municipalities around an urban center with significant commuting ties.'
+        data_type: STRING
+
+      - name: employment_zone_2010_name
+        description: 'The name of the employment zone (Zone d’Emploi) as defined in 2010, representing an area where most residents live and work.'
+        data_type: STRING
+
+      - name: municipality_code
+        description: 'The official code representing the municipality.'
+        data_type: STRING
+
+      - name: department_name
+        description: 'The official name of the department within the region.'
+        data_type: STRING
+
+      - name: urban_district_2017_code
+        description: 'The code for the urban district (Travail d’Urbanisation de l’Unité) as defined in 2017.'
+        data_type: STRING
+
+      - name: municipality_name_uppercase
+        description: 'The official name of the municipality written in uppercase letters.'
+        data_type: STRING
+
+      - name: urban_district_2017_name
+        description: 'The name of the urban district (Travail d’Urbanisation de l’Unité) as defined in 2017.'
+        data_type: STRING
+
+      - name: district_code
+        description: 'The official code representing the arrondissement or district within the department.'
+        data_type: STRING
+
+      - name: employment_zone_2010_code
+        description: 'The code representing the employment zone (Zone d’Emploi) as defined in 2010.'
+        data_type: STRING
+
+      - name: urban_area_2010_code
+        description: 'The code representing the category of the municipality within the 2010 urban area division.'
+        data_type: STRING
+
+      - name: is_mountain_area
+        description: 'Indicates whether the municipality is located within a designated mountain area as of January 1, 2017.'
+        data_type: BOOLEAN
+
+      - name: urban_area_2017_code
+        description: 'The code for the urban area (Aire Urbaine) as defined in 2017.'
+        data_type: STRING
+
+      - name: municipality_area_code
+        description: 'The ISO 3166-3 code for the geographical area of the municipality or arrondissement.'
+        data_type: STRING
+
+      - name: current_municipality_code
+        description: 'The current official code representing the municipality.'
+        data_type: STRING
+
+      - name: epci_code
+        description: 'The official code for the Public Establishment for Intercommunal Cooperation (EPCI), which represents a collective structure for municipalities to exercise shared competencies.'
+        data_type: STRING
+
+      - name: epci_name
+        description: 'The name of the Public Establishment for Intercommunal Cooperation (EPCI).'
+        data_type: STRING
+
+      - name: geo_shape
+        description: 'The geographical shape data representing the boundaries of the municipality or other territorial divisions.'
+        data_type: GEOMETRY

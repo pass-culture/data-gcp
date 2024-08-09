@@ -70,7 +70,7 @@ with collective_stocks_grouped_by_collective_offers as (
         il.institution_internal_iris_id,
         il.institution_academy_name,
         il.institution_region_name,
-        il.institution_department_code,
+        il.institution_departement_code as institution_department_code,
         il.institution_postal_code,
         il.institution_city,
         il.institution_epci,
@@ -80,7 +80,7 @@ with collective_stocks_grouped_by_collective_offers as (
     from {{ source('raw','applicative_database_collective_offer') }} as co
         left join collective_stocks_grouped_by_collective_offers as cs on cs.collective_offer_id = co.collective_offer_id
         left join {{ ref('int_applicative__educational_institution') }} as ei on ei.educational_institution_id = co.institution_id
-        left join {{ ref('institution_locations') }} as il on il.institution_id = ei.institution_id
+        left join {{ ref('int_geo__institution_location') }} as il on il.institution_id = ei.institution_id
 )
 union all
 (

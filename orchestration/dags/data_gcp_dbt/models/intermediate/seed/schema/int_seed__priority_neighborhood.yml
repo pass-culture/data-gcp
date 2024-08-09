@@ -1,0 +1,46 @@
+version: 2
+models:
+  - name: int_seed__priority_neighborhood
+    description: |
+      The priority_neighborhoods_policy table contains data on areas defined as priority neighborhoods under France's urban policy. These neighborhoods are identified as some of the most socio-economically disadvantaged in the country, facing significant challenges such as high unemployment rates, lower income levels, and limited access to services. The table provides essential details about these neighborhoods, including geographical boundaries, administrative codes, and associated municipalities
+    columns:
+      - name: department_code
+        description: 'The official department code .'
+        data_type: STRING
+
+      - name: neighborhood_code
+        description: 'The official code for the priority neighborhood as defined by the policy.'
+        data_type: STRING
+
+      - name: intercommunal_cooperation_name
+        description: 'The name of the Public Establishment for Intercommunal Cooperation (EPCI) responsible for the area.'
+        data_type: STRING
+
+      - name: affected_municipalities_names
+        description: 'Names of the municipalities affected by the priority neighborhood policy.'
+        data_type: STRING
+
+      - name: region_name
+        description: 'The official name of the region where the priority neighborhood is located.'
+        data_type: STRING
+
+      - name: department_name
+        description: 'The official name of the department.'
+        data_type: STRING
+
+      - name: priority_neighborhood
+        description: 'The name or identifier of the priority neighborhood as defined by the urban policy.'
+        data_type: STRING
+
+      - name: insee_code
+        description: 'The INSEE code identifying the neighborhood or area.'
+        data_type: STRING
+
+      - name: qp_municipality
+        description: 'The name of the municipality associated with the priority neighborhood.'
+        data_type: STRING
+
+      - name: geo_shape
+        description: 'The geographical shape data representing the boundaries of the priority neighborhood.'
+        data_type: GEOGRAPHY
+   

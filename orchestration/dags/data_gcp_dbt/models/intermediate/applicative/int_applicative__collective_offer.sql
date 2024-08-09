@@ -70,7 +70,7 @@ with collective_stocks_grouped_by_collective_offers as (
         il.institution_internal_iris_id,
         il.institution_academy_name,
         il.institution_region_name,
-        il.institution_department_code,
+        il.institution_departement_code as institution_department_code,
         il.institution_postal_code,
         il.institution_city,
         il.institution_epci,

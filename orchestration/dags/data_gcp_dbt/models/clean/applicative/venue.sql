@@ -26,4 +26,4 @@ select
     vl.venue_iris_internal_id,
     vl.venue_region_name
 from venues
-left join {{ ref('int_geo__venue_location')}} on vl.venue_id = venues.venue_id
+left join {{ ref('int_geo__venue_location')}} vl on vl.venue_id = venues.venue_id

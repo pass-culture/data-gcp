@@ -165,13 +165,13 @@ bookings_per_institution as (
     group by
         1
 ),
--- TODO refactor this logic once we have migrated to enriched_institution_data.
-students_per_institution as (
-    select
+
+students_per_institution AS (
+    SELECT
         institution_id,
-        total_students
-    from {{ ref('int_applicative__educational_institution') }}
-       
+        sum(headcount) as total_students,
+    FROM {{ ref("int_gsheet__educational_institution_student_headcount") }}
+    GROUP BY institution_id
 ),
 
 students_educonnectes as (
@@ -188,7 +188,7 @@ students_educonnectes as (
         type = 'EDUCONNECT'
         and REGEXP_EXTRACT(result_content, '"school_uai": \"(.*?)\",') is not NULL
         and (
-            user_is_active or user_suspension.action_history_reason = 'upon user request'
+            user.user_is_active or user_suspension.action_history_reason = 'upon user request'
         )
     group by
         1
@@ -250,11 +250,9 @@ from {{ ref('educational_institution') }} as educational_institution
     left join bookings_per_institution on educational_institution.educational_institution_id = bookings_per_institution.institution_id
     left join students_per_institution on educational_institution.institution_id = students_per_institution.institution_id
     left join students_educonnectes on educational_institution.institution_id = students_educonnectes.institution_external_id
-    left join {{ source('seed','institution_metadata') }} as im
-        on educational_institution.institution_id = im.id_etablissement
     left join {{ ref('institution_locations') }} as location_info
         on educational_institution.institution_id = location_info.institution_id
     left join {{ source('seed','institution_metadata_aggregated_type') }} as im_aggregated_type
         on educational_institution.institution_type = im_aggregated_type.institution_type
-    left join {{ ref('int_applicative__institution') }} as institution_program
+    left join {{ ref('int_applicative__institution_program') }} as institution_program
         on educational_institution.educational_institution_id = institution_program.institution_id

@@ -3,7 +3,7 @@ with collective_bookings_grouped_by_collective_stock as (
         cb.collective_stock_id,
         COUNT(case when cb.collective_booking_status != 'CANCELLED' then cb.collective_booking_id end) as total_non_cancelled_collective_bookings,
         COUNT(cb.collective_booking_id) as total_collective_bookings,
-        COUNT(case when cb.collective_booking_status in ('USED', 'REIMBURSED') then cb.collective_booking_id end) as total_used_collective_bookings,
+        COUNT(case when is_used_collective_booking then collective_booking_id end) as total_used_collective_bookings,
         MIN(cb.collective_booking_creation_date) as first_collective_booking_date,
         MAX(cb.collective_booking_creation_date) as last_collective_booking_date,
         SUM(case when cb.collective_booking_status != 'CANCELLED' then cs.collective_stock_price end) as total_collective_theoretic_revenue,

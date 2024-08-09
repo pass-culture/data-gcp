@@ -3,7 +3,7 @@
 ) }}
 
 {% set target_name = target.name %}
-{% set target_schema = generate_schema_name('analytics_' ~ target_name) %}
+{% set target_schema = generate_schema_name("analytics_" ~ target_name) %}
 
 select
     co.collective_offer_id,
@@ -74,5 +74,5 @@ from {{ ref('int_applicative__collective_offer') }} as co
     inner join {{ ref('int_global__venue') }} as v on v.venue_id = co.venue_id
     left join {{ source('clean', 'subcategories') }} on subcategories.id = co.collective_offer_subcategory_id
     left join {{ source('raw', 'applicative_database_national_program') }} as national_program on national_program.national_program_id = co.national_program_id
-    left join {{ ref('int_applicative__institution') }} as institution_program on co.institution_id = institution_program.institution_id
+    left join {{ ref('int_applicative__institution_program') }} as institution_program on co.institution_id = institution_program.institution_id
     left join {{ ref('int_applicative__collective_stock') }} as cs on cs.collective_offer_id = co.collective_offer_id

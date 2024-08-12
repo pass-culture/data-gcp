@@ -1,0 +1,1 @@
+SELECT * FROM {{ ref("int_geo_venue_location") }}

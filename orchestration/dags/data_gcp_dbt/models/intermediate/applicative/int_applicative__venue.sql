@@ -112,13 +112,13 @@ select
         v.venue_id
     ) as venue_backoffice_link,
     {{ target_schema }}.humanize_id(v.venue_id) as venue_humanized_id,
-    vl.venue_iris_internal_id,
-    vl.venue_region_name,
-    vl.venue_city,
-    vl.venue_epci,
-    vl.venue_density_label,
-    vl.venue_macro_density_label,
-    vl.venue_academy_name,
+    v_loc.venue_iris_internal_id,
+    v_loc.venue_region_name,
+    v_loc.venue_city,
+    v_loc.venue_epci,
+    v_loc.venue_density_label,
+    v_loc.venue_macro_density_label,
+    v_loc.venue_academy_name,
     v.offerer_address_id,
     vr.venue_target as venue_targeted_audience,
     vc.venue_contact_phone_number,
@@ -197,7 +197,7 @@ select
     ) as offerer_bookings_rank,
     case when gp.banner_url is not NULL then "offerer" when gp.venue_id is not NULL then "google" else "default_category" end as venue_image_source
 from {{ source("raw", "applicative_database_venue") }} as v
-    left join {{ ref('int_geo__venue_location')}} as vl on vl.venue_id = v.venue_id
+    left join {{ ref('int_geo__venue_location')}} as v_loc on v_loc.venue_id = v.venue_id
     left join offers_grouped_by_venue as o on o.venue_id = v.venue_id
     left join collective_offers_grouped_by_venue as co on co.venue_id = v.venue_id
     left join bookable_offer_history as boh on boh.venue_id = v.venue_id

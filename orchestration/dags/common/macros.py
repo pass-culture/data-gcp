@@ -3,6 +3,7 @@ import os
 from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_INT_FIREBASE_DATASET,
+    BIGQUERY_INT_GEOLOCATION_DATASET,
     BIGQUERY_CLEAN_DATASET,
     BIGQUERY_RAW_DATASET,
     BIGQUERY_ML_RECOMMENDATION_DATASET,
@@ -86,6 +87,7 @@ def create_dehumanize_id_function():
 default = {
     "bigquery_analytics_dataset": BIGQUERY_ANALYTICS_DATASET,
     "bigquery_int_firebase_dataset": BIGQUERY_INT_FIREBASE_DATASET,
+    "bigquery_int_geo_dataset": BIGQUERY_INT_GEOLOCATION_DATASET,
     "bigquery_tmp_dataset": BIGQUERY_TMP_DATASET,
     "bigquery_clean_dataset": BIGQUERY_CLEAN_DATASET,
     "bigquery_raw_dataset": BIGQUERY_RAW_DATASET,

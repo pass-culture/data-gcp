@@ -76,12 +76,23 @@ dbt_test = BashOperator(
 )
 
 
-load_artifact = PythonOperator(
+load_run_results = PythonOperator(
     task_id="load_artifact",
     python_callable=load_json_artifact,
     op_kwargs={
         "_PATH_TO_DBT_TARGET": f"{PATH_TO_DBT_TARGET}",
         "artifact": "run_results.json",
+    },
+    do_xcom_push=True,
+    dag=dag,
+)
+
+load_manifest = PythonOperator(
+    task_id="load_artifact",
+    python_callable=load_json_artifact,
+    op_kwargs={
+        "_PATH_TO_DBT_TARGET": f"{PATH_TO_DBT_TARGET}",
+        "artifact": "manifest.json",
     },
     do_xcom_push=True,
     dag=dag,
@@ -113,7 +124,8 @@ warning_alert_slack = PythonOperator(
     task_id="warning_alert_slack",
     python_callable=dbt_test_slack_alert,
     op_kwargs={
-        "results_json": "{{task_instance.xcom_pull(task_ids='load_artifact', key='return_value')}}",
+        "results_json": "{{task_instance.xcom_pull(task_ids='load_run_results', key='return_value')}}",
+        "manifest_json": "{{task_instance.xcom_pull(task_ids='load_manifest', key='return_value')}}",
     },
     provide_context=True,
     dag=dag,
@@ -171,5 +183,5 @@ warning_alert_slack = PythonOperator(
 # )
 
 (start >> wait_dbt_run >> compute_metrics_re_data)
-wait_dbt_run >> dbt_test >> load_artifact >> sleep_op >> warning_alert_slack
+wait_dbt_run >> dbt_test >> (load_run_results, load_manifest) >> sleep_op >> warning_alert_slack
 wait_dbt_run >> compute_metrics_elementary

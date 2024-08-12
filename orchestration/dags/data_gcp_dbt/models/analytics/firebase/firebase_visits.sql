@@ -37,6 +37,7 @@ with visits as (
         COUNTIF(event_name = "UserSetLocation") as nb_set_location,
         COUNTIF(event_name = "ConsultVideo") as nb_consult_video,
         COUNTIF(event_name = "ConsultVenue") as nb_consult_venue,
+        COUNTIF(event_name = "ConsultVenueMap") as nb_consult_venue_map,
         COUNTIF(event_name = 'screen_view') as nb_screen_view,
         COUNTIF(event_name = 'screen_view' and firebase_screen = 'Home') as nb_screen_view_home,
         COUNTIF(event_name = 'screen_view' and firebase_screen = 'Search') as nb_screen_view_search,

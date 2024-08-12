@@ -1,1 +1,1 @@
-SELECT * FROM {{ ref("int_geo_venue_location") }}
+SELECT * FROM {{ ref("int_geo_institution_location") }}

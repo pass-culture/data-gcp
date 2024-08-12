@@ -6,7 +6,7 @@ from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
 from datetime import datetime
 from common.access_gcp_secrets import access_secret_data
-from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, SLACK_CONN_ID
+from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, SLACK_CONN_ID, DATA_TEAM_SLACK_IDS
 
 
 ENV_EMOJI = {
@@ -148,13 +148,14 @@ def dbt_test_slack_alert(results_json, manifest_json, job_type=ENV_SHORT_NAME, *
                     test_nodes[result['unique_id']] = {result['unique_id']:[result['status'],result['message']]}
                 else:
                     test_nodes[result['unique_id']] = {**test_nodes[result['unique_id']],**{result['unique_id']:[result['status'],result['message']]}}
-        for node,tests_results in test_nodes.items:
+        for node,tests_results in test_nodes.items():
             tested_node = tests_manifest[node]["attached_node"]
+            owners = []
             slack_msg = (
                 "\n".join(
                     [
                         slack_msg,
-                        f"""Model {tested_node.split('.')[-1]} failed the following tests:"""]
+                        f"""Model {tested_node.split('.')[-1]} failed the following tests: {','.join([DATA_TEAM_SLACK_IDS.get(member) for member in owners])}"""]
                     + [f"""{SEVERITY_TYPE_EMOJI[res[0]]} *Test:* {tests_manifest[test]["alias"]}""" 
                     + f" has failed with severity {res[0]}\n"
                     + f">_{res[1]}_"

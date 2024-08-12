@@ -94,3 +94,5 @@ else:
         "DBT_TARGET_PATH", "/opt/airflow/dags/data_gcp_dbt/target"
     )
 EXCLUDED_TAGS = ["sandbox", "weekly", "monthly"]
+
+DATA_TEAM_SLACK_IDS = {"valentin busson":"<@U05LYE9DD17>"}

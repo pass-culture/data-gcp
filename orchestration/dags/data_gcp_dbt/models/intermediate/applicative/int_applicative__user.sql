@@ -64,8 +64,8 @@ select
     ui.user_academy_name,
     ui.user_density_label,
     ui.user_macro_density_label,
-    ui.city_code,
-    case when ui.qpv_name is not NULL then TRUE else FALSE end as user_is_in_qpv,
+    ui.user_city_code as city_code, -- TODO fix this to user_city_code and populate to child models
+    ui.user_is_in_qpv,
     case when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then TRUE else FALSE end as user_is_unemployed,
     case when
             (
@@ -79,6 +79,6 @@ select
     currently_subscribed_themes,
     is_theme_subscribed
 from {{ source("raw", "applicative_database_user") }} as u
-    left join {{ ref("int_api_gouv__address_user_location") }} as ui on ui.user_id = u.user_id
+    left join {{ ref("int_geo__user_location") }} as ui on ui.user_id = u.user_id
     left join themes_subscribed as ts on ts.user_id = u.user_id
 where u.user_role in ("UNDERAGE_BENEFICIARY", "BENEFICIARY")

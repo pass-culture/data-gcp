@@ -22,22 +22,14 @@ lieux_physique AS (
         total_created_individual_offers + total_created_collective_offers AS offers_created,
         venue_is_permanent,
         venue_region_name,
+        -- TODO rename field in qualtrics
         global_venue.venue_department_code,
-        geo_type,
-        CASE
-            WHEN code_qpv IS NULL 
-            THEN FALSE
-            ELSE TRUE
-        END AS venue_in_qpv,
-        CASE
-            WHEN ZRR_SIMP IN ('C  Classée en ZRR', 'P  Commune partiellement classée en ZRR')
-            THEN TRUE
-            ELSE FALSE
-        END AS venue_in_zrr
+        venue_location.venue_rural_city_type as geo_type,
+        venue_location.venue_in_qpv,
+        venue_location.venue_in_zrr
     FROM
         `{{ bigquery_analytics_dataset }}.global_venue` global_venue
-        LEFT JOIN `{{ bigquery_analytics_dataset }}.venue_locations` venue_locations ON venue_locations.venue_id = global_venue.venue_id
-        LEFT JOIN `{{ bigquery_seed_dataset }}.rural_city_type_data` rural_city_type_data ON CAST(rural_city_type_data.geo_code AS string) = CAST(venue_locations.codgeo AS string)
+        LEFT JOIN `{{ bigquery_int_geo_dataset }}.venue_location` venue_location ON venue_location.venue_id = global_venue.venue_id
         LEFT JOIN `{{ bigquery_raw_dataset }}.qualtrics_opt_out_users` opt_out on opt_out.ext_ref = global_venue.venue_id
         LEFT JOIN answers ON global_venue.venue_id = answers.user_id
     WHERE NOT venue_is_virtual

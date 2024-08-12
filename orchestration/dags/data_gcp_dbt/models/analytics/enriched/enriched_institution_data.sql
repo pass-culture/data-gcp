@@ -202,17 +202,18 @@ select
     educational_institution.institution_type,
     im_aggregated_type.macro_institution_type,
     institution_program.institution_program_name as institution_program_name,
+    location_info.institution_internal_iris_id,
     location_info.institution_academy_name,
     location_info.institution_region_name,
-    educational_institution.institution_departement_code,
-    educational_institution.institution_postal_code,
+    location_info.institution_department_code,
+    location_info.institution_postal_code,
     location_info.institution_city,
     location_info.institution_epci,
     location_info.institution_density_label,
     location_info.institution_macro_density_label,
     location_info.institution_latitude,
     location_info.institution_longitude,
-    case when location_info.institution_qpv_name is not NULL then TRUE else FALSE end as institution_in_qpv,
+    location_info.institution_in_qpv,
     first_deposit.first_deposit_creation_date,
     current_deposit.institution_current_deposit_amount,
     current_deposit.current_deposit_creation_date,
@@ -250,7 +251,7 @@ from {{ ref('educational_institution') }} as educational_institution
     left join bookings_per_institution on educational_institution.educational_institution_id = bookings_per_institution.institution_id
     left join students_per_institution on educational_institution.institution_id = students_per_institution.institution_id
     left join students_educonnectes on educational_institution.institution_id = students_educonnectes.institution_external_id
-    left join {{ ref('institution_locations') }} as location_info
+    left join {{ ref('int_geo__institution_location') }} as location_info
         on educational_institution.institution_id = location_info.institution_id
     left join {{ source('seed','institution_metadata_aggregated_type') }} as im_aggregated_type
         on educational_institution.institution_type = im_aggregated_type.institution_type

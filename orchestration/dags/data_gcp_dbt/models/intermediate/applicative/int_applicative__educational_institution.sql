@@ -24,7 +24,7 @@ select
             ELSE substring(ei.institution_postal_code, 0, 2)
         END,
         ei.institution_departement_code
-    ) as institution_departement_code,
+    ) as institution_department_code,
     institution_program.institution_program_name AS institution_program_name,
     ugi.total_credited_beneficiaries,
 from {{ source('raw', 'applicative_database_educational_institution') }} AS ei

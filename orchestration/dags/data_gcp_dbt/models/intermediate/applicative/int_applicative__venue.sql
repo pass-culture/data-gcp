@@ -58,34 +58,6 @@ bookable_offer_history as (
         MAX(case when collective_bookable_offers > 0 then partition_date end) as last_collective_bookable_offer_date
     from {{ ref('bookable_venue_history') }}
     group by venue_id
-),
-
-venues_with_geo_candidates as (
-    select
-        v.venue_id,
-        v.venue_latitude,
-        v.venue_longitude,
-        gi.iris_internal_id,
-        gi.region_name as venue_region_name,
-        gi.city_label as venue_city,
-        gi.epci_label as venue_epci,
-        gi.academy_name as venue_academy_name,
-        gi.density_label as venue_density_label,
-        gi.density_macro_level as venue_macro_density_label,
-        gi.iris_shape
-    from {{ source("raw", "applicative_database_venue") }} as v
-        left join {{ ref('int_seed__geo_iris') }} as gi
-            on v.venue_longitude between gi.min_longitude and gi.max_longitude
-                and v.venue_latitude between gi.min_latitude and gi.max_latitude
-),
-
-venue_geo_iris AS (
-    SELECT *
-    FROM venues_with_geo_candidates
-    where ST_CONTAINS(
-        iris_shape,
-        ST_GEOGPOINT(venue_longitude, venue_latitude)
-    ) or iris_shape is NULL
 )
 
 select
@@ -140,13 +112,13 @@ select
         v.venue_id
     ) as venue_backoffice_link,
     {{ target_schema }}.humanize_id(v.venue_id) as venue_humanized_id,
-    venue_geo_iris.iris_internal_id as venue_iris_internal_id,
-    venue_geo_iris.venue_region_name,
-    venue_geo_iris.venue_city,
-    venue_geo_iris.venue_epci,
-    venue_geo_iris.venue_density_label,
-    venue_geo_iris.venue_macro_density_label,
-    venue_geo_iris.venue_academy_name,
+    vl.venue_iris_internal_id,
+    vl.venue_region_name,
+    vl.venue_city,
+    vl.venue_epci,
+    vl.venue_density_label,
+    vl.venue_macro_density_label,
+    vl.venue_academy_name,
     v.offerer_address_id,
     vr.venue_target as venue_targeted_audience,
     vc.venue_contact_phone_number,
@@ -225,7 +197,7 @@ select
     ) as offerer_bookings_rank,
     case when gp.banner_url is not NULL then "offerer" when gp.venue_id is not NULL then "google" else "default_category" end as venue_image_source
 from {{ source("raw", "applicative_database_venue") }} as v
-    left join venue_geo_iris on venue_geo_iris.venue_id = v.venue_id
+    left join {{ ref('int_geo__venue_location')}} as vl on vl.venue_id = v.venue_id
     left join offers_grouped_by_venue as o on o.venue_id = v.venue_id
     left join collective_offers_grouped_by_venue as co on co.venue_id = v.venue_id
     left join bookable_offer_history as boh on boh.venue_id = v.venue_id

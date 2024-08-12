@@ -120,7 +120,7 @@ select
     end
         as user_is_priority_public
 from user_beneficiary as u
-    left join {{ ref('int_api_gouv__address_user_location') }} as ui on ui.user_id = u.user_id
+    left join {{ ref('int_geo__user_location') }} as ui on ui.user_id = u.user_id
     left join ranked_bookings
         on u.user_id = ranked_bookings.user_id
             and rank_ = 1

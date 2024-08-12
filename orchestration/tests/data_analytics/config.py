@@ -510,11 +510,6 @@ BIGQUERY_SCHEMAS = {
         "national_program_name": "STRING",
         "national_program_creation_date": "DATETIME",
     },
-    "institution_locations": {
-        "institution_id": "STRING",
-        "institution_latitude": "FLOAT",
-        "institution_longitude": "FLOAT",
-    },
     "adage": {
         "id": "STRING",
         "siret": "STRING",

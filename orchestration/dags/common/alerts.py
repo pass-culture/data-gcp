@@ -168,5 +168,6 @@ def dbt_test_slack_alert(results_json, job_type=ENV_SHORT_NAME, **context):
         webhook_token=webhook_token,
         message=slack_msg,
         username="airflow",
+        channel="alertes-data-quality",
     )
     return dbt_test_warn_slack_alert.execute(context=context)

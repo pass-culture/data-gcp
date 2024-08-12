@@ -30,6 +30,11 @@ JOB_TYPE = {
         "slack-composer-analytics-webhook-token",
         default=None,
     ),
+    "dbt-test": access_secret_data(
+        GCP_PROJECT_ID,
+        "slack-composer-dbt-test-webhook-token",
+        default=None,
+    ),
     "prod": access_secret_data(
         GCP_PROJECT_ID, "slack-composer-prod-webhook-token", default=None
     ),
@@ -89,47 +94,7 @@ def __task_fail_slack_alert(context, job_type):
     return None
 
 
-def dbt_test_fail_slack_alert(
-    test_output_dict, fail_type, dag, job_type=ENV_SHORT_NAME, **context
-):
-    webhook_token = JOB_TYPE.get(job_type)
-
-    slack_header = f"""{ENV_EMOJI[ENV_SHORT_NAME]}
-    DBT {fail_type} tests report:
-    """
-    slack_msg = slack_header
-    for node, failed_tests in test_output_dict.items():
-        if len(failed_tests) > 0:
-            slack_msg = (
-                "\n".join([slack_msg, f"""*model* <{node}>"""])
-                + " has failed following tests with message:\n"
-            )
-            for testdict in failed_tests:
-                if len(testdict) > 0:
-                    for test, message in testdict.items():
-                        slack_msg = "\n\t".join(
-                            [
-                                slack_msg,
-                                f"""*Test* <{test}>""" + "\n\t" + f"""{message}>""",
-                            ]
-                        )
-    if slack_msg == slack_header:
-        slack_msg += "\nAll tests passed succesfully! :tada:"
-
-    dbt_test_fail_slack_alert_alert = SlackWebhookOperator(
-        task_id=f"""slack_alert_{fail_type}""",
-        http_conn_id=SLACK_CONN_ID,
-        webhook_token=webhook_token,
-        message=slack_msg,
-        username="airflow",
-        dag=dag,
-    )
-    return dbt_test_fail_slack_alert_alert.execute(context=context)
-
-
-def dbt_test_slack_alert(
-    results_json, manifest_json, job_type=ENV_SHORT_NAME, **context
-):
+def dbt_test_slack_alert(results_json, manifest_json, job_type="dbt-test", **context):
     webhook_token = JOB_TYPE.get(job_type)
 
     slack_header = f"""{ENV_EMOJI[ENV_SHORT_NAME]}
@@ -197,6 +162,5 @@ def dbt_test_slack_alert(
         webhook_token=webhook_token,
         message=slack_msg,
         username="airflow",
-        channel="alertes-data-quality",
     )
     return dbt_test_warn_slack_alert.execute(context=context)

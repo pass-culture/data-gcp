@@ -77,7 +77,7 @@ dbt_test = BashOperator(
 
 
 load_run_results = PythonOperator(
-    task_id="load_artifact",
+    task_id="load_run_results",
     python_callable=load_json_artifact,
     op_kwargs={
         "_PATH_TO_DBT_TARGET": f"{PATH_TO_DBT_TARGET}",
@@ -88,7 +88,7 @@ load_run_results = PythonOperator(
 )
 
 load_manifest = PythonOperator(
-    task_id="load_artifact",
+    task_id="load_manifest",
     python_callable=load_json_artifact,
     op_kwargs={
         "_PATH_TO_DBT_TARGET": f"{PATH_TO_DBT_TARGET}",

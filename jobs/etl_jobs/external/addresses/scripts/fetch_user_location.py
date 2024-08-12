@@ -72,7 +72,7 @@ SELECT
 
 FROM user_candidates
 ORDER BY user_id 
-LIMIT 1000
+LIMIT 10000
 """
 
 
@@ -91,6 +91,20 @@ class AdressesDownloader:
             lambda row: quote(" ".join(filter(None, row))),
             axis=1,
         )
+
+    def fetch_coordinates_with_limit(
+        self, addresses, fetch_coordinates_func, limit_rate=50
+    ):
+        results = []
+        start_time = time.time()
+        for i, address in enumerate(addresses):
+            if i > 0 and i % limit_rate == 0:
+                elapsed_time = time.time() - start_time
+                sleep_time = max(0, 1 - elapsed_time)
+                time.sleep(sleep_time)
+                start_time = time.time()
+            results.append(fetch_coordinates_func(address))
+        return results
 
     def fetch_coordinates(self, parsed_address):
         url = f"https://api-adresse.data.gouv.fr/search/?q={parsed_address}"
@@ -117,8 +131,8 @@ class AdressesDownloader:
 
     def add_coordinates(self):
         dataframe_with_coordinates = self.user_address_dataframe.assign(
-            new_data=lambda df: df["parsed_address"].apply(
-                lambda parsed_address: self.fetch_coordinates(parsed_address)
+            new_data=lambda df: self.fetch_coordinates_with_limit(
+                df["parsed_address"], self.fetch_coordinates, limit_rate=50
             )
         )
         for new_column in ["longitude", "latitude", "city_code", "api_adresse_city"]:

@@ -95,4 +95,4 @@ else:
     )
 EXCLUDED_TAGS = ["sandbox", "weekly", "monthly"]
 
-DATA_TEAM_SLACK_IDS = {"valentin busson":"<@U05LYE9DD17>"}
+DATA_TEAM_SLACK_IDS = {"valentin busson": "<@U05LYE9DD17>"}

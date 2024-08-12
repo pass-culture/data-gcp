@@ -6,7 +6,12 @@ from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
 from datetime import datetime
 from common.access_gcp_secrets import access_secret_data
-from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, SLACK_CONN_ID, DATA_TEAM_SLACK_IDS
+from common.config import (
+    GCP_PROJECT_ID,
+    ENV_SHORT_NAME,
+    SLACK_CONN_ID,
+    DATA_TEAM_SLACK_IDS,
+)
 
 
 ENV_EMOJI = {
@@ -123,7 +128,9 @@ def dbt_test_fail_slack_alert(
     return dbt_test_fail_slack_alert_alert.execute(context=context)
 
 
-def dbt_test_slack_alert(results_json, manifest_json, job_type=ENV_SHORT_NAME, **context):
+def dbt_test_slack_alert(
+    results_json, manifest_json, job_type=ENV_SHORT_NAME, **context
+):
     webhook_token = JOB_TYPE.get(job_type)
 
     slack_header = f"""{ENV_EMOJI[ENV_SHORT_NAME]}
@@ -135,32 +142,42 @@ def dbt_test_slack_alert(results_json, manifest_json, job_type=ENV_SHORT_NAME, *
     if isinstance(manifest_json, str):
         manifest_json = ast.literal_eval(manifest_json)
 
-    tests_manifest = { node: values for node, values in manifest_json["nodes"].items() if values["resource_type"] == "test"}
+    tests_manifest = {
+        node: values
+        for node, values in manifest_json["nodes"].items()
+        if values["resource_type"] == "test"
+    }
     if "results" in results_json:
         tests_results = results_json["results"]
         slack_msg = slack_header
         test_nodes = {}
         for result in tests_results:
-            node = result['unique_id']
-            node_data = tests_manifest[result['unique_id']]
+            node = result["unique_id"]
+            node_data = tests_manifest[result["unique_id"]]
             if result["status"] != "pass":
-                if test_nodes.get(result['unique_id']) is None:
-                    test_nodes[result['unique_id']] = {result['unique_id']:[result['status'],result['message']]}
+                if test_nodes.get(result["unique_id"]) is None:
+                    test_nodes[result["unique_id"]] = {
+                        result["unique_id"]: [result["status"], result["message"]]
+                    }
                 else:
-                    test_nodes[result['unique_id']] = {**test_nodes[result['unique_id']],**{result['unique_id']:[result['status'],result['message']]}}
-        for node,tests_results in test_nodes.items():
+                    test_nodes[result["unique_id"]] = {
+                        **test_nodes[result["unique_id"]],
+                        **{result["unique_id"]: [result["status"], result["message"]]},
+                    }
+        for node, tests_results in test_nodes.items():
             tested_node = tests_manifest[node]["attached_node"]
             owners = []
-            slack_msg = (
-                "\n".join(
-                    [
-                        slack_msg,
-                        f"""Model {tested_node.split('.')[-1]} failed the following tests: {','.join([DATA_TEAM_SLACK_IDS.get(member) for member in owners])}"""]
-                    + [f"""{SEVERITY_TYPE_EMOJI[res[0]]} *Test:* {tests_manifest[test]["alias"]}""" 
+            slack_msg = "\n".join(
+                [
+                    slack_msg,
+                    f"""Model {tested_node.split('.')[-1]} failed the following tests: {','.join([DATA_TEAM_SLACK_IDS.get(member) for member in owners])}""",
+                ]
+                + [
+                    f"""{SEVERITY_TYPE_EMOJI[res[0]]} *Test:* {tests_manifest[test]["alias"]}"""
                     + f" has failed with severity {res[0]}\n"
                     + f">_{res[1]}_"
-                      for test,res in tests_results.items()]
-                )
+                    for test, res in tests_results.items()
+                ]
             )
     else:
         slack_msg = slack_header

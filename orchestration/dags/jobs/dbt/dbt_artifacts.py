@@ -183,5 +183,11 @@ warning_alert_slack = PythonOperator(
 # )
 
 (start >> wait_dbt_run >> compute_metrics_re_data)
-wait_dbt_run >> dbt_test >> (load_run_results, load_manifest) >> sleep_op >> warning_alert_slack
+(
+    wait_dbt_run
+    >> dbt_test
+    >> (load_run_results, load_manifest)
+    >> sleep_op
+    >> warning_alert_slack
+)
 wait_dbt_run >> compute_metrics_elementary

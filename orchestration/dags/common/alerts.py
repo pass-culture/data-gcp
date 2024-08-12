@@ -136,18 +136,25 @@ def dbt_test_slack_alert(results_json, job_type=ENV_SHORT_NAME, **context):
         tests_results = results_json["results"]
 
         slack_msg = slack_header
+        models_test = {}
         for result in tests_results:
             if result["status"] != "pass":
-                slack_msg = (
-                    "\n".join(
-                        [
-                            slack_msg,
-                            f"""{SEVERITY_TYPE_EMOJI[result['status']]} *Test:* {result['unique_id'].split('.')[2]}""",
-                        ]
-                    )
-                    + f" has failed with severity {result['status']}\n"
-                    + f">_{result['message']}_"
+                if models_test.get(result['unique_id'].split('.')[1]) is None:
+                    models_test[result['unique_id'].split('.')[1]] = {result['unique_id'].split('.')[2]:[result['status'],result['message']]}
+                else:
+                    models_test[result['unique_id'].split('.')[1]] = {**models_test[result['unique_id'].split('.')[1]],**{result['unique_id'].split('.')[2]:[result['status'],result['message']]}}
+        for model,tests_results in models_test.items:        
+            slack_msg = (
+                "\n".join(
+                    [
+                        slack_msg,
+                        f"""Model {model} failed the following tests:"""]
+                    + [f"""{SEVERITY_TYPE_EMOJI[res[0]]} *Test:* {test}""" 
+                    + f" has failed with severity {res[0]}\n"
+                    + f">_{res[1]}_"
+                      for test,res in tests_results.items()]
                 )
+            )
     else:
         slack_msg = slack_header
         slack_msg += "\nNo tests have been run"

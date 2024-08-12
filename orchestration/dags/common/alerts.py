@@ -10,7 +10,6 @@ from common.config import (
     GCP_PROJECT_ID,
     ENV_SHORT_NAME,
     SLACK_CONN_ID,
-    DATA_TEAM_SLACK_IDS,
 )
 
 
@@ -164,13 +163,19 @@ def dbt_test_slack_alert(
                         **test_nodes[result["unique_id"]],
                         **{result["unique_id"]: [result["status"], result["message"]]},
                     }
+        test_nodes = dict(
+            sorted(
+                test_nodes.items(),
+                key=lambda item: manifest_json["nodes"][item[0]]["meta"].get("owner"),
+            )
+        )
         for node, tests_results in test_nodes.items():
             tested_node = tests_manifest[node]["attached_node"]
-            owners = []
             slack_msg = "\n".join(
                 [
                     slack_msg,
-                    f"""Model {tested_node.split('.')[-1]} failed the following tests: {','.join([DATA_TEAM_SLACK_IDS.get(member) for member in owners])}""",
+                    f"""{manifest_json["nodes"][node]["meta"].get("owner")}""",
+                    f"""Model {tested_node.split('.')[-1]} failed the following tests: """,
                 ]
                 + [
                     f"""{SEVERITY_TYPE_EMOJI[res[0]]} *Test:* {tests_manifest[test]["alias"]}"""

@@ -6,6 +6,6 @@ SELECT
     , "postalCode" AS institution_postal_code
     , CASE
         WHEN ("postalCode" LIKE \'97%\' OR "postalCode" LIKE \'98%\') THEN SUBSTRING("postalCode",1,3) 
-        ELSE SUBSTRING("postalCode",1,2) END AS institution_departement_code
+        ELSE SUBSTRING("postalCode",1,2) END AS institution_departement_code -- TODO fix this (rename departement_code to department_code)
     , "institutionType" AS institution_type
 FROM educational_institution

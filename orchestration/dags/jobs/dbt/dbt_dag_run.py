@@ -59,6 +59,14 @@ start = DummyOperator(task_id="start", dag=dag)
 end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
 
 wait_for_raw = waiting_operator(dag=dag, dag_id="import_applicative_database")
+wait_for_firebase = waiting_operator(
+    dag=dag,
+    dag_id="import_intraday_firebase_data",
+    external_task_id="end",
+    allowed_states=["success", "upstream_failed"],
+    failed_states=["failed"],
+)
+end_wait = DummyOperator(task_id="end_wait", dag=dag, trigger_rule="none_failed")
 
 data_transfo_checkpoint = DummyOperator(task_id="data_transfo_checkpoint", dag=dag)
 
@@ -249,6 +257,11 @@ with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
             dag=dag,
         )
 
-start >> wait_for_raw >> data_transfo_checkpoint >> data_transfo
-wait_for_raw >> snapshots_checkpoint >> snapshot_group >> compile
-compile >> end
+(
+    start
+    >> [wait_for_raw, wait_for_firebase]
+    >> end_wait
+    >> data_transfo_checkpoint
+    >> data_transfo
+)
+end_wait >> snapshots_checkpoint >> snapshot_group >> compile >> end

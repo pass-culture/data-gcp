@@ -43,6 +43,9 @@ BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET", f"raw_{ENV_SHORT_N
 BIGQUERY_SEED_DATASET = os.environ.get(
     "BIGQUERY_SEED_DATASET", f"seed_{ENV_SHORT_NAME}"
 )
+BIGQUERY_INT_API_GOUV_DATASET = os.environ.get(
+    "BIGQUERY_INT_API_GOUV_DATASET", f"int_api_gouv_{ENV_SHORT_NAME}"
+)
 BIGQUERY_CLEAN_DATASET = os.environ.get(
     "BIGQUERY_CLEAN_DATASET", f"clean_{ENV_SHORT_NAME}"
 )
@@ -51,6 +54,9 @@ BIGQUERY_ANALYTICS_DATASET = os.environ.get(
 )
 BIGQUERY_INT_FIREBASE_DATASET = os.environ.get(
     "BIGQUERY_INT_FIREBASE_DATASET", f"int_firebase_{ENV_SHORT_NAME}"
+)
+BIGQUERY_INT_GEOLOCATION_DATASET = os.environ.get(
+    "BIGQUERY_INT_GEOLOCATION_DATASET", f"int_geoloc_{ENV_SHORT_NAME}"
 )
 BIGQUERY_BACKEND_DATASET = os.environ.get(
     "BIGQUERY_BACKEND_DATASET", f"backend_{ENV_SHORT_NAME}"
@@ -74,9 +80,6 @@ RECOMMENDATION_SQL_INSTANCE = os.environ.get(
 
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
-
-FAILED_STATES = ["failed", "upstream_failed", "skipped"]
-ALLOWED_STATES = ["success"]
 
 if ENV_SHORT_NAME == "prod":
     MEDIATION_URL = "passculture-metier-prod-production"

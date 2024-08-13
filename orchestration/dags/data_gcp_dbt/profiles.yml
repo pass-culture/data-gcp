@@ -2,8 +2,18 @@ config:
   send_anonymous_usage_stats: False
 
 data_gcp_dbt:
-  target: dev
+  target: local
   outputs:
+    local:
+      dataset: tmp_dev
+      job_execution_timeout_seconds: 300
+      job_retries: 1
+      location: europe-west1
+      method: oauth
+      priority: interactive
+      project: passculture-data-ehp
+      threads: 1
+      type: bigquery
     dev:
       dataset: tmp_dev
       job_execution_timeout_seconds: 300

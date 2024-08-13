@@ -1,8 +1,9 @@
 """A liveness prober dag for monitoring composer.googleapis.com/environment/healthy."""
+from datetime import timedelta
+
 import airflow
 from airflow import DAG
 from airflow.operators.bash import BashOperator
-from datetime import timedelta
 
 default_args = {
     "start_date": airflow.utils.dates.days_ago(0),

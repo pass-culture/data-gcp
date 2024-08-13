@@ -1,7 +1,6 @@
-from datetime import datetime, timedelta
 import time
-from google.cloud import storage
-from common.config import DAG_FOLDER
+from datetime import datetime, timedelta
+
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import BranchPythonOperator
@@ -14,21 +13,21 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
-    GCP_PROJECT_ID,
-    DATA_GCS_BUCKET_NAME,
     BIGQUERY_RAW_DATASET,
+    DAG_FOLDER,
+    DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
 )
 from common.operators.biquery import bigquery_job_task
+from common.utils import depends_loop, get_airflow_schedule
 from dependencies.qpi.import_qpi import (
+    ANALYTICS_TABLES,
+    CLEAN_TABLES,
     QPI_ANSWERS_SCHEMA,
     RAW_TABLES,
-    CLEAN_TABLES,
-    ANALYTICS_TABLES,
 )
-from common.utils import depends_loop
-
-from common.utils import get_airflow_schedule
+from google.cloud import storage
 
 TYPEFORM_FUNCTION_NAME = "qpi_import_" + ENV_SHORT_NAME
 QPI_ANSWERS_TABLE = "qpi_answers_v4"

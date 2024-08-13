@@ -1,9 +1,8 @@
-import requests
 import time
-
-import numpy as np
-import pandas as pd
 import zlib
+
+import pandas as pd
+import requests
 from authlib.jose import jwt
 
 OUT_COLS = [

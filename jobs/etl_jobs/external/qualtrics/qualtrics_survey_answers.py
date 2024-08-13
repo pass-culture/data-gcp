@@ -1,9 +1,9 @@
-import requests
-import zipfile
 import io
-import pandas as pd
-from utils import ENV_SHORT_NAME
+import zipfile
 
+import pandas as pd
+import requests
+from utils import ENV_SHORT_NAME
 
 FORMAT_DICT = {
     "start_date": str,

@@ -2,14 +2,13 @@ import re
 
 import pandas as pd
 import typer
-
 from metabase_api import MetabaseAPI
 from utils import (
-    PROJECT_NAME,
-    INT_METABASE_DATASET,
-    ENVIRONMENT_SHORT_NAME,
     ANALYTICS_DATASET,
+    ENVIRONMENT_SHORT_NAME,
+    INT_METABASE_DATASET,
     METABASE_API_USERNAME,
+    PROJECT_NAME,
     access_secret_data,
 )
 

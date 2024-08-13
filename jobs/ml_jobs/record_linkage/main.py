@@ -2,16 +2,16 @@ import concurrent
 import traceback
 from itertools import repeat
 from multiprocessing import cpu_count
-from loguru import logger
+
 import pandas as pd
 import recordlinkage
+import typer
+from loguru import logger
 from tools.config import (
-    ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     SUBCATEGORIES_WITH_PERFORMER,
     data_and_hyperparams_dict,
 )
-import typer
 from tools.linkage import get_linked_offers, get_linked_offers_from_graph
 
 

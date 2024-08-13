@@ -1,20 +1,20 @@
 import datetime
+
 from airflow import DAG
 from airflow.models import Param
-from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
-)
+from common import macros
+from common.alerts import task_fail_slack_alert
 from common.config import (
-    GCP_PROJECT_ID,
     DAG_FOLDER,
     ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
 )
-from common.utils import get_airflow_schedule
-from common.alerts import task_fail_slack_alert
-from common import macros
+from common.operators.gce import (
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
+)
 from common.utils import get_airflow_schedule
 
 GCE_INSTANCE = f"import-tiktok-{ENV_SHORT_NAME}"

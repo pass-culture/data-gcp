@@ -1,6 +1,7 @@
-import pandas as pd
-from tools.utils import convert_str_emb_to_float
 import numpy as np
+import pandas as pd
+
+from tools.utils import convert_str_emb_to_float
 
 
 def prepare_embedding(data: np.ndarray, pretrained_embedding_size: int) -> pd.DataFrame:

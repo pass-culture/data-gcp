@@ -1,5 +1,3 @@
-from google.cloud import storage
-
 import io
 from typing import Tuple
 from urllib.parse import urlparse

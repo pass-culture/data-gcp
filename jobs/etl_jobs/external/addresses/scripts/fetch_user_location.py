@@ -4,11 +4,13 @@ import os
 import time
 from datetime import datetime
 from urllib.parse import quote
-import requests
+
 import gcsfs
+import requests
 from shapely.geometry import Point, Polygon
-from scripts.bigquery_client import BigQueryClient
 from tqdm import tqdm
+
+from scripts.bigquery_client import BigQueryClient
 
 bigquery_client = BigQueryClient()
 

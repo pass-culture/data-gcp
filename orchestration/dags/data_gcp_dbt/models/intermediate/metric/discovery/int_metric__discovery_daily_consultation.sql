@@ -24,7 +24,7 @@ FROM {{ ref('int_firebase__consultation') }} AS c
 LEFT JOIN {{ ref('int_applicative__offer') }} AS o
     ON c.offer_id = o.offer_id
 {% if is_incremental() %}
-WHERE DATE(consultation_timestamp) = date_sub('{{ ds() }}', INTERVAL 1 day)
+WHERE consultation_date >= date_sub('{{ ds() }}', INTERVAL 3 day)
 {% endif %}
 )
 

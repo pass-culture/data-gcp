@@ -36,10 +36,10 @@ jobs:
         with:
           python-version: '3.10'
       - uses: yezz123/setup-uv@v4
-      - name : "Install Black"
-        run: uv pip install --system -r  linter-requirements.txt
-      - name: "Run Black"
-        run: black --check --verbose .
+      - name : "Install linter (Ruff)"
+        run: uv pip install --system -r  requirements.txt
+      - name: "Run linter (Ruff)"
+        run: make ruff_check
       - name: "Post to a Slack channel"
         id: "slack"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}

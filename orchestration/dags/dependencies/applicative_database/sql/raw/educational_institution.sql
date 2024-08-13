@@ -1,5 +1,5 @@
 SELECT
-    CAST(id AS varchar(255)) AS educational_institution_id
+    CAST(Id AS varchar(255)) AS educational_institution_id
     , CAST("institutionId" AS varchar(255)) AS institution_id
     , "city" AS institution_city
     , "name" AS institution_name 

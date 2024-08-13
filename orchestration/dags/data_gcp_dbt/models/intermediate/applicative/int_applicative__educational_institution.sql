@@ -23,7 +23,7 @@ select
             when substring(ei.institution_postal_code, 0, 3) in ('202', '206') then '2B'
             ELSE substring(ei.institution_postal_code, 0, 2)
         END,
-        ei.institution_departement_code
+        ei.institution_department_code
     ) as institution_department_code,
     institution_program.institution_program_name AS institution_program_name,
     ugi.total_credited_beneficiaries,

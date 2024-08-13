@@ -7,5 +7,5 @@ select
     address_city,
     address_latitude,
     address_longitude,
-    address_departement_code
+    address_department_code
 from {{ source('raw', 'applicative_database_address') }}

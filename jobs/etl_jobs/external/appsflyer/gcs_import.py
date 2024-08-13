@@ -1,8 +1,9 @@
-import pyarrow.dataset as pyd
-import polars as pl
-from core.utils import export_polars_to_bq
-import typer
 from datetime import datetime
+
+import polars as pl
+import pyarrow.dataset as pyd
+import typer
+from core.utils import export_polars_to_bq
 
 
 def run(

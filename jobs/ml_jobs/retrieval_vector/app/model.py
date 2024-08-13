@@ -1,10 +1,10 @@
 import typing as t
-from docarray import DocumentArray, Document
-import lancedb
-from filter import Filter
-import joblib
-import numpy as np
 
+import joblib
+import lancedb
+import numpy as np
+from docarray import Document, DocumentArray
+from filter import Filter
 
 DETAIL_COLUMNS = [
     "item_id",
@@ -47,7 +47,7 @@ class DefaultClient:
         # not default case
         try:
             return self.item_docs[var]
-        except:
+        except Exception:
             return None
 
     def build_query(self, params):
@@ -130,7 +130,7 @@ class DefaultClient:
                         {
                             "idx": idx,
                         },
-                        **{k: row[k] for k in row if k in DETAIL_COLUMNS + DEFAULTS}
+                        **{k: row[k] for k in row if k in DETAIL_COLUMNS + DEFAULTS},
                     )
                 )
         return predictions
@@ -144,7 +144,7 @@ class RecoClient(DefaultClient):
         default_user_embbeding = self.user_docs[self.default_token]
         try:
             return self.user_docs[var]
-        except:
+        except Exception:
             return default_user_embbeding
 
     def load(self) -> None:

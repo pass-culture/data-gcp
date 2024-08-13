@@ -1,10 +1,10 @@
 import pandas as pd
 from utils import (
+    TIKTOK_ACCOUNT_DAILY_ACTIVITY,
+    TIKTOK_ACCOUNT_HOURLY_AUDIENCE,
+    TIKTOK_VIDEO_AUDIENCE_COUNTRY,
     TIKTOK_VIDEO_DETAIL,
     TIKTOK_VIDEO_IMPRESSION_SOURCE,
-    TIKTOK_VIDEO_AUDIENCE_COUNTRY,
-    TIKTOK_ACCOUNT_HOURLY_AUDIENCE,
-    TIKTOK_ACCOUNT_DAILY_ACTIVITY,
     save_to_bq,
 )
 
@@ -169,7 +169,6 @@ def videos_import(
 
 
 def account_import(business_api, business_id: str, from_date: str, to_date: str) -> str:
-
     account_stats = business_api.get_account_data(
         business_id=business_id,
         return_json=True,

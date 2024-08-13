@@ -1,11 +1,12 @@
 import concurrent.futures
+import os
+
 import numpy as np
 import requests
-import os
 from tools.config import IMAGE_DIR, MAX_PROCESS
 
-from utils.logging import logging
 from utils import get_filename_from_url
+from utils.logging import logging
 
 
 def download_img_multiprocess(urls):
@@ -51,10 +52,9 @@ def _download_img_from_url_list(urls):
                     f.write(response.content)
                 stats.append({"status": "success", "url": url})
             else:
-
                 stats.append({"status": "skipped", "url": url})
-        except requests.exceptions.RequestException as e:
+        except requests.exceptions.RequestException:
             stats.append({"status": "error", "url": url})
-        except Exception as e:
+        except Exception:
             stats.append({"status": "error", "url": url})
     return stats

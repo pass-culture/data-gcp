@@ -5,9 +5,8 @@ import mlflow
 import pandas as pd
 import typer
 from catboost import Pool
-from mlflow import MlflowClient
-
 from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
+from mlflow import MlflowClient
 from utils.constants import (
     ENV_SHORT_NAME,
     MLFLOW_RUN_ID_FILENAME,
@@ -50,7 +49,6 @@ def evaluate(
     )
 
     eval_data_labels = eval_data.target.tolist()
-    df_proba = eval_data[["target"]]
     eval_data = eval_data.drop(columns=["target"])
     eval_pool = Pool(
         eval_data,
@@ -84,7 +82,7 @@ def evaluate(
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="r") as file:
         run_id = file.read()
-    with mlflow.start_run(experiment_id=experiment_id, run_id=run_id) as run:
+    with mlflow.start_run(experiment_id=experiment_id, run_id=run_id):
         mlflow.log_metrics(metrics)
         mlflow.log_artifacts(figure_folder, "probability_distribution")
     client = MlflowClient()

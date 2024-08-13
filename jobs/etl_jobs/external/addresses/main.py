@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from scripts import fetch_user_location
 
 STORAGE_PATH = "addresses_exports"

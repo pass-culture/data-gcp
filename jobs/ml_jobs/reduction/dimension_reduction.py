@@ -1,21 +1,19 @@
 import numpy as np
+import polars as pl
+import pyarrow.dataset as ds
 import typer
 from loguru import logger
-from tools.utils import (
-    ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
-    convert_str_emb_to_float,
-    convert_arr_emb_to_str,
-    load_config_file,
-    export_polars_to_bq,
-)
 from tools.dimension_reduction import (
-    umap_reduce_embedding_dimension,
     pca_reduce_embedding_dimension,
     pumap_reduce_embedding_dimension,
+    umap_reduce_embedding_dimension,
 )
-import pyarrow.dataset as ds
-import polars as pl
+from tools.utils import (
+    convert_arr_emb_to_str,
+    convert_str_emb_to_float,
+    export_polars_to_bq,
+    load_config_file,
+)
 
 
 def reduce_transformation(

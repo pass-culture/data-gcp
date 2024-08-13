@@ -1,25 +1,17 @@
-import datetime
 import time
 
 from airflow import DAG
+from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import datetime, timedelta
-from airflow.models import Param
-from common.alerts import task_fail_slack_alert
-from common.utils import (
-    get_airflow_schedule,
-)
-
-from common import macros
 from common.config import (
+    ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
-    ENV_SHORT_NAME,
     PATH_TO_DBT_TARGET,
 )
-
 
 default_args = {
     "start_date": datetime(2020, 12, 23),
@@ -86,7 +78,7 @@ sleep_op = PythonOperator(
 
 run_elementary = BashOperator(
     task_id="dbt_elementary",
-    bash_command=f"bash ./scripts/dbt_run_package.sh ",
+    bash_command="bash ./scripts/dbt_run_package.sh ",
     env={
         "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
         "ENV_SHORT_NAME": ENV_SHORT_NAME,

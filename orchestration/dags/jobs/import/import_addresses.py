@@ -1,28 +1,28 @@
 from datetime import datetime, timedelta
 
 from airflow import DAG
+from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
-from airflow.operators.python import BranchPythonOperator
-from airflow.models import Param
-from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
-)
-from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
 from common import macros
+from common.alerts import task_fail_slack_alert
 from common.config import (
     BIGQUERY_RAW_DATASET,
+    DAG_FOLDER,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
 )
-from common.alerts import task_fail_slack_alert
+from common.operators.gce import (
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
+)
 from common.utils import get_airflow_schedule
-
 
 USER_LOCATIONS_SCHEMA = [
     {"name": "user_id", "type": "STRING", "mode": "NULLABLE"},

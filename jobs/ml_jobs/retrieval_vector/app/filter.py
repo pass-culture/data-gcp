@@ -49,7 +49,7 @@ def _sql_parsing(data, default_logic: str = "AND"):
                         clause_list.append(_clause)
                         params_list.extend(_params)
 
-                    where_clause += f" AND ".join(clause_list)
+                    where_clause += " AND ".join(clause_list)
                     parameters.extend(params_list)
                 else:
                     op, val = items[0]

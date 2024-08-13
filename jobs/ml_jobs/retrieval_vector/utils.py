@@ -7,7 +7,7 @@ from datetime import datetime
 import lancedb
 import pandas as pd
 import pyarrow as pa
-from docarray import DocumentArray, Document
+from docarray import Document, DocumentArray
 from google.cloud import bigquery
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
@@ -112,8 +112,8 @@ def get_items_metadata():
     client = bigquery.Client()
 
     sql = f"""
-        SELECT 
-        *, 
+        SELECT
+        *,
         ROW_NUMBER() OVER (ORDER BY booking_number DESC) as booking_number_desc,
         ROW_NUMBER() OVER (ORDER BY booking_trend DESC) as booking_trend_desc,
         ROW_NUMBER() OVER (ORDER BY booking_creation_trend DESC) as booking_creation_trend_desc,
@@ -127,12 +127,12 @@ def get_users_metadata():
     client = bigquery.Client()
 
     sql = f"""
-        SELECT 
+        SELECT
             user_id,
             user_total_deposit_amount,
             current_deposit_type as user_current_deposit_type,
             COALESCE(total_theoretical_remaining_credit, last_deposit_amount) as user_theoretical_remaining_credit
-        FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.global_user` 
+        FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.global_user`
     """
     return client.query(sql).to_dataframe()
 
@@ -140,14 +140,14 @@ def get_users_metadata():
 def to_ts(f):
     try:
         return float(f.timestamp())
-    except:
+    except Exception:
         return 0.0
 
 
 def to_float(f):
     try:
         return float(f)
-    except:
+    except Exception:
         return None
 
 

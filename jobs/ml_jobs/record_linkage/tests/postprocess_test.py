@@ -5,7 +5,7 @@ from postprocess import build_item_id_from_linkage
 
 class TestPostprocess:
     @staticmethod
-    @pytest.fixture
+    @pytest.fixture()
     def expected_postprocessed_data():
         return pd.DataFrame(
             {

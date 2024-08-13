@@ -6,7 +6,6 @@ import pandas as pd
 import tensorflow as tf
 import typer
 from loguru import logger
-
 from utils.constants import (
     BIGQUERY_CLEAN_DATASET,
     GCP_PROJECT_ID,
@@ -38,7 +37,7 @@ def main(
     logger.info("-------EVALUATE START------- ")
     connect_remote_mlflow()
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
-    with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="r") as file:
+    with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt") as file:
         run_id = file.read()
     with mlflow.start_run(experiment_id=experiment_id, run_id=run_id) as run:
         artifact_uri = mlflow.get_artifact_uri("model")

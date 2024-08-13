@@ -84,7 +84,7 @@ def create_items_table(items_df: pd.DataFrame) -> None:
             make_batches(df=items_df, batch_size=LANCEDB_BATCH_SIZE),
             schema=ItemModel,
         )
-    except:
+    except Exception:
         logger.info("LanceDB table already exists...")
         tbl = db.open_table("items")
         tbl.add(

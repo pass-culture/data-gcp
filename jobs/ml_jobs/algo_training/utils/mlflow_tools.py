@@ -4,7 +4,6 @@ import os
 import mlflow
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
-
 from utils.constants import MLFLOW_SECRET_NAME, MLFLOW_URI, SA_ACCOUNT
 from utils.secrets_utils import get_secret
 

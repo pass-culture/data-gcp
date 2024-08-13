@@ -1,6 +1,5 @@
 import pandas as pd
 import typer
-
 from utils.gcs_utils import upload_parquet
 from utils.preprocessing_utils import (
     FilteringParamsType,

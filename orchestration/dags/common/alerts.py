@@ -1,17 +1,11 @@
-from urllib.parse import quote
 import ast
+from datetime import datetime
+from urllib.parse import quote
 
 from airflow import configuration
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
-
-from datetime import datetime
 from common.access_gcp_secrets import access_secret_data
-from common.config import (
-    GCP_PROJECT_ID,
-    ENV_SHORT_NAME,
-    SLACK_CONN_ID,
-)
-
+from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, SLACK_CONN_ID
 
 ENV_EMOJI = {
     "prod": ":volcano: *PROD* :volcano:",
@@ -77,7 +71,7 @@ def __task_fail_slack_alert(context, job_type):
         )
 
         slack_msg = f"""
-                {ENV_EMOJI[ENV_SHORT_NAME]}: 
+                {ENV_EMOJI[ENV_SHORT_NAME]}:
                 *Task* <{task_url}|{task_name}> has failed!
                 *Dag*: <{dag_url}|{dag_name}>
                 *Execution Time*: {execution_date}
@@ -117,7 +111,6 @@ def dbt_test_slack_alert(results_json, manifest_json, job_type="dbt-test", **con
         test_nodes = {}
         for result in tests_results:
             node = result["unique_id"]
-            node_data = tests_manifest[result["unique_id"]]
             if result["status"] != "pass":
                 if test_nodes.get(result["unique_id"]) is None:
                     test_nodes[result["unique_id"]] = {

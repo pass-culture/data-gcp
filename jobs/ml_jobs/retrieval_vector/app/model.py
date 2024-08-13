@@ -1,10 +1,8 @@
-import typing as t
-from docarray import DocumentArray, Document
-import lancedb
-from filter import Filter
 import joblib
+import lancedb
 import numpy as np
-
+from docarray import Document, DocumentArray
+from filter import Filter
 
 DETAIL_COLUMNS = [
     "item_id",
@@ -47,7 +45,7 @@ class DefaultClient:
         # not default case
         try:
             return self.item_docs[var]
-        except:
+        except Exception:
             return None
 
     def build_query(self, params):
@@ -61,12 +59,12 @@ class DefaultClient:
         vector: Document,
         similarity_metric="dot",
         n=50,
-        query_filter: t.Dict = None,
+        query_filter: dict = None,
         details: bool = False,
         item_id: str = None,
         prefilter: bool = True,
         vector_column_name: str = "vector",
-    ) -> t.List[t.Dict]:
+    ) -> list[dict]:
         results = (
             self.table.search(
                 vector.embedding,
@@ -85,12 +83,12 @@ class DefaultClient:
 
     def filter(
         self,
-        query_filter: t.Dict = None,
+        query_filter: dict = None,
         n=50,
         details: bool = False,
         prefilter: bool = True,
         vector_column_name: str = "booking_number_desc",
-    ) -> t.List[t.Dict]:
+    ) -> list[dict]:
         results = (
             self.table.search(
                 [0], vector_column_name=vector_column_name, query_type="vector"
@@ -102,7 +100,7 @@ class DefaultClient:
         )
         return self.out(results, details)
 
-    def columns(self, details: bool) -> t.Optional[t.List[str]]:
+    def columns(self, details: bool) -> list[str] | None:
         if details:
             return None
         else:
@@ -130,7 +128,7 @@ class DefaultClient:
                         {
                             "idx": idx,
                         },
-                        **{k: row[k] for k in row if k in DETAIL_COLUMNS + DEFAULTS}
+                        **{k: row[k] for k in row if k in DETAIL_COLUMNS + DEFAULTS},
                     )
                 )
         return predictions
@@ -144,7 +142,7 @@ class RecoClient(DefaultClient):
         default_user_embbeding = self.user_docs[self.default_token]
         try:
             return self.user_docs[var]
-        except:
+        except Exception:
             return default_user_embbeding
 
     def load(self) -> None:

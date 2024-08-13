@@ -5,7 +5,6 @@ import mlflow
 import tensorflow as tf
 import typer
 from loguru import logger
-
 from two_towers_model.models.match_model import MatchModel
 from two_towers_model.models.two_towers_model import TwoTowersModel
 from two_towers_model.utils.constants import CONFIGS_PATH
@@ -65,7 +64,6 @@ def train(
 
     with open(
         f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
-        mode="r",
         encoding="utf-8",
     ) as config_file:
         features = json.load(config_file)
@@ -80,7 +78,6 @@ def train(
 
     user_columns = list(user_features_config.keys())
     item_columns = list(item_features_config.keys())
-    timestamp_columns = ["event_date"]
     # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
     train_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=training_table_name

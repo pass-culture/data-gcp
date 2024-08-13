@@ -1,19 +1,21 @@
-from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
-import googleapiclient.discovery
-from googleapiclient.errors import HttpError
-import pytz, json, os, time
-import dateutil
-import typing as t
 import datetime
-from common.hooks.image import CPUImage
-from common.hooks.network import DefaultVPCNetwork
+import json
+import time
+
+import dateutil
+import googleapiclient.discovery
+import pytz
+from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from common.config import (
     ENV_SHORT_NAME,
-    GCP_REGION,
+    GCE_SA,
     GCE_ZONE,
     GCP_PROJECT_ID,
-    GCE_SA,
+    GCP_REGION,
 )
+from common.hooks.image import CPUImage
+from common.hooks.network import DefaultVPCNetwork
+from googleapiclient.errors import HttpError
 
 DEFAULT_LABELS = {
     "env": ENV_SHORT_NAME,
@@ -32,7 +34,7 @@ class GCEHook(GoogleBaseHook):
         gcp_project: str = GCP_PROJECT_ID,
         gcp_zone: str = GCE_ZONE,
         gcp_region: str = GCP_REGION,
-        gce_networks: t.List[DefaultVPCNetwork] = [DefaultVPCNetwork()],
+        gce_networks: list[DefaultVPCNetwork] = [DefaultVPCNetwork()],
         gce_sa: str = GCE_SA,
         source_image_type: CPUImage = CPUImage(),
         gcp_conn_id: str = "google_cloud_default",
@@ -240,7 +242,7 @@ class GCEHook(GoogleBaseHook):
             for x in instances
             if x.get("labels", {}).get("airflow", "") == "true"
             and x.get("labels", {}).get("env", "") == ENV_SHORT_NAME
-            and not x.get("labels", {}).get("keep_alive", "false") == "true"
+            and x.get("labels", {}).get("keep_alive", "false") != "true"
             and x.get("labels", {}).get("job_type", "default") == job_type
         ]
 

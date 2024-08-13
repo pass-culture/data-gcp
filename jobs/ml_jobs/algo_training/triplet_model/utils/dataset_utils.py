@@ -1,6 +1,6 @@
 import numpy as np
-import tensorflow as tf
 import pandas as pd
+import tensorflow as tf
 
 
 def load_triplets_dataset(
@@ -20,10 +20,10 @@ def load_triplets_dataset(
         - y = fake data as we make no predictions
     """
 
-    anchor_data = list(zip(*[input_data[col] for col in user_columns]))
-    positive_data = list(zip(*[input_data[col] for col in item_columns]))
+    anchor_data = list(zip(*[input_data[col] for col in user_columns], strict=False))
+    positive_data = list(zip(*[input_data[col] for col in item_columns], strict=False))
     input_data = input_data.sample(frac=1)
-    negative_data = list(zip(*[input_data[col] for col in item_columns]))
+    negative_data = list(zip(*[input_data[col] for col in item_columns], strict=False))
 
     anchor_dataset = tf.data.Dataset.from_tensor_slices(anchor_data)
     positive_dataset = tf.data.Dataset.from_tensor_slices(positive_data)

@@ -1,5 +1,5 @@
-SQL_ANALYTICS_PATH = f"dependencies/propilote/sql/analytics"
-SQL_TMP_PATH = f"dependencies/propilote/sql/tmp"
+SQL_ANALYTICS_PATH = "dependencies/propilote/sql/analytics"
+SQL_TMP_PATH = "dependencies/propilote/sql/tmp"
 
 kpis_list = [
     {

@@ -3,7 +3,6 @@ import pandas as pd
 import recmetrics
 from loguru import logger
 from tqdm import tqdm
-
 from utils.constants import SHUFFLE_RECOMMENDATION
 from utils.diversification import order_offers_by_score_and_diversify_categories
 
@@ -52,9 +51,6 @@ def get_prediction(prediction_input_feature, data_model_dict):
     offer_to_score = np.reshape(np.array(list(data.item_id)), (nboffers, 1))
     offer_subcategoryid = np.reshape(
         np.array(list(data.offer_subcategoryid)), (nboffers,)
-    )
-    user_input = np.reshape(
-        np.array([prediction_input_feature] * len(offer_to_score)), (nboffers, 1)
     )
     prediction_input = [
         np.array([prediction_input_feature] * len(offer_to_score)),
@@ -256,4 +252,4 @@ def mapk(actual, predicted, k=10):
             The mean average precision at k over the input lists
 
     """
-    return np.mean([apk(a, p, k) for a, p in zip(actual, predicted)])
+    return np.mean([apk(a, p, k) for a, p in zip(actual, predicted, strict=False)])

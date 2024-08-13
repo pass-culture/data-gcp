@@ -1,15 +1,10 @@
-from google.auth.transport.requests import Request
-from google.oauth2 import id_token
 from airflow.sensors.external_task import ExternalTaskSensor
-import base64
-import hashlib
-
 from common.config import (
     GCP_PROJECT_ID,
-    MLFLOW_URL,
-    ENV_SHORT_NAME,
     LOCAL_ENV,
 )
+from google.auth.transport.requests import Request
+from google.oauth2 import id_token
 
 
 def getting_service_account_token(function_name):
@@ -169,7 +164,7 @@ def from_external(conn_id, sql_path):
 
 
 def one_line_query(sql_path):
-    with open(f"{sql_path}", "r") as fp:
+    with open(f"{sql_path}") as fp:
         lines = " ".join([line.strip() for line in fp.readlines()])
     return lines
 

@@ -1,10 +1,11 @@
 import json
 from datetime import datetime
+
 import pandas as pd
 import typer
-from utils.logging import logging
-from tools.config import CONFIGS_PATH, ENV_SHORT_NAME, GCP_PROJECT_ID
+from tools.config import CONFIGS_PATH, GCP_PROJECT_ID
 from tools.embedding_extraction import extract_embedding
+from utils.logging import logging
 
 
 def preprocess(df, features):
@@ -71,7 +72,6 @@ def main(
 
     with open(
         f"{CONFIGS_PATH}/{config_file_name}.json",
-        mode="r",
         encoding="utf-8",
     ) as config_file:
         params = json.load(config_file)

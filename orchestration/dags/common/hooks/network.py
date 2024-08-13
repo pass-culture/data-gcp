@@ -1,10 +1,11 @@
 from dataclasses import dataclass
+
 from common.config import (
-    GCE_SUBNETWORK_ID,
-    GCE_NETWORK_ID,
-    GCE_VPC_SHARED_HOST_SUBNETWORK_ID,
-    GCE_VPC_SHARED_HOST_NETWORK_ID,
     ENV_SHORT_NAME,
+    GCE_NETWORK_ID,
+    GCE_SUBNETWORK_ID,
+    GCE_VPC_SHARED_HOST_NETWORK_ID,
+    GCE_VPC_SHARED_HOST_SUBNETWORK_ID,
 )
 
 

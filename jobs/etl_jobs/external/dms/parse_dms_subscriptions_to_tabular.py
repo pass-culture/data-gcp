@@ -1,7 +1,8 @@
-import pandas as pd
 import json
-import gcsfs
 import logging
+
+import gcsfs
+import pandas as pd
 import typer
 from utils import (
     destination_table_schema_jeunes,
@@ -157,12 +158,12 @@ def parse_result_pro(result, df_applications):
                         dossier_line["demandeur_entreprise_formeJuridique"] = dossier[
                             "demandeur"
                         ]["entreprise"]["formeJuridique"]
-                        dossier_line[
-                            "demandeur_entreprise_formeJuridiqueCode"
-                        ] = dossier["demandeur"]["entreprise"]["formeJuridiqueCode"]
-                        dossier_line[
-                            "demandeur_entreprise_codeEffectifEntreprise"
-                        ] = dossier["demandeur"]["entreprise"]["codeEffectifEntreprise"]
+                        dossier_line["demandeur_entreprise_formeJuridiqueCode"] = (
+                            dossier["demandeur"]["entreprise"]["formeJuridiqueCode"]
+                        )
+                        dossier_line["demandeur_entreprise_codeEffectifEntreprise"] = (
+                            dossier["demandeur"]["entreprise"]["codeEffectifEntreprise"]
+                        )
                         dossier_line["demandeur_entreprise_raisonSociale"] = dossier[
                             "demandeur"
                         ]["entreprise"]["raisonSociale"]

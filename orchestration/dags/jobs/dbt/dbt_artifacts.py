@@ -6,7 +6,6 @@ from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
-from airflow.utils.dates import timedelta
 from common import macros
 from common.access_gcp_secrets import access_secret_data
 from common.alerts import dbt_test_slack_alert, task_fail_slack_alert
@@ -26,10 +25,10 @@ SLACK_WEBHOOK_URL = f"https://hooks.slack.com/services/{SLACK_CONN_PASSWORD}"
 
 
 default_args = {
-    "start_date": datetime(2020, 12, 23),
+    "start_date": datetime.datetime(2020, 12, 23),
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
-    "retry_delay": timedelta(minutes=2),
+    "retry_delay": datetime.timedelta(minutes=2),
     "project_id": GCP_PROJECT_ID,
 }
 

@@ -1,3 +1,9 @@
+{{
+    config(
+        materialized = "table"
+    )
+}}
+
 select
     v.venue_id,
     v.venue_name,

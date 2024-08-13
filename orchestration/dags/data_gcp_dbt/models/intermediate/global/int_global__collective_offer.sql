@@ -1,5 +1,6 @@
 {{ config(
-    pre_hook="{{create_humanize_id_function()}}"
+    pre_hook="{{create_humanize_id_function()}}",
+    materialized = "table"
 ) }}
 
 {% set target_name = target.name %}

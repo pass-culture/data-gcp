@@ -1,3 +1,9 @@
+{{
+    config(
+        materialized = "table"
+    )
+}}
+
 with bookings_deposit_grouped_by_user as (
     select
         b.user_id,

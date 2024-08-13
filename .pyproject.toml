@@ -1,0 +1,21 @@
+## ruff
+# Recommended ruff config for now, to be updated as we go along.
+[tool.ruff]
+target-version = 'py310'
+
+[tool.ruff.lint.pydocstyle]
+# Automatically disable rules that are incompatible with Google docstring convention
+convention = "google"
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 100
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.flake8-type-checking]
+strict = true
+runtime-evaluated-base-classes = ["pydantic.BaseModel"]
+# Pydantic needs to be able to evaluate types at runtime
+# see https://pypi.org/project/flake8-type-checking/ for flake8-type-checking documentation
+# see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation

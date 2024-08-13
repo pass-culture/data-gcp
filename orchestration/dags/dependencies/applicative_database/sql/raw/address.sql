@@ -7,5 +7,5 @@ SELECT
     "city" as address_city,
     "latitude" as address_latitude,
     "longitude" as address_longitude,
-    "departmentCode" as address_departement_code
+    "departmentCode" as address_department_code
 FROM public.address

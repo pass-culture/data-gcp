@@ -28,7 +28,7 @@ user_subcat as (
         , b.submitted_at
         , map.subcategories 
     from unnested_base b 
-    JOIN `{{ bigquery_clean_dataset }}.QPI_mapping` map
+    JOIN `{{ bigquery_seed_dataset }}.qpi_mapping` map
     ON b.answer_ids = map.answer_id
     WHERE b.answer_ids NOT like 'PROJECTION_%'
     order by user_id

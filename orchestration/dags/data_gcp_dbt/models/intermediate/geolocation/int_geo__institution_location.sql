@@ -52,7 +52,7 @@ select
     institution.institution_id,
     institution.institution_city,
     institution.institution_postal_code,
-    institution.institution_departement_code as institution_department_code, -- TODO fix this (rename departement_code to department_code)
+    institution.institution_department_code,
     metadata.institution_latitude,
     metadata.institution_longitude,
     institution_geo_iris.iris_internal_id as institution_internal_iris_id,

@@ -5,7 +5,7 @@ from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.utils import one_line_query, get_airflow_schedule
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from common.alerts import analytics_fail_slack_alert
+from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER
 from common.operators.biquery import bigquery_job_task
 from common.config import (
@@ -21,7 +21,7 @@ from dependencies.applicative_database.import_applicative_database import (
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
     "retries": 4,
-    "on_failure_callback": analytics_fail_slack_alert,
+    "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }

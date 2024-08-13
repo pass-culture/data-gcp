@@ -1,3 +1,5 @@
+import typing as t
+
 import joblib
 import lancedb
 import numpy as np
@@ -59,12 +61,12 @@ class DefaultClient:
         vector: Document,
         similarity_metric="dot",
         n=50,
-        query_filter: dict = None,
+        query_filter: t.Dict = None,
         details: bool = False,
         item_id: str = None,
         prefilter: bool = True,
         vector_column_name: str = "vector",
-    ) -> list[dict]:
+    ) -> t.List[t.Dict]:
         results = (
             self.table.search(
                 vector.embedding,
@@ -83,12 +85,12 @@ class DefaultClient:
 
     def filter(
         self,
-        query_filter: dict = None,
+        query_filter: t.Dict = None,
         n=50,
         details: bool = False,
         prefilter: bool = True,
         vector_column_name: str = "booking_number_desc",
-    ) -> list[dict]:
+    ) -> t.List[t.Dict]:
         results = (
             self.table.search(
                 [0], vector_column_name=vector_column_name, query_type="vector"
@@ -100,7 +102,7 @@ class DefaultClient:
         )
         return self.out(results, details)
 
-    def columns(self, details: bool) -> list[str] | None:
+    def columns(self, details: bool) -> t.Optional[t.List[str]]:
         if details:
             return None
         else:

@@ -1,3 +1,4 @@
+import typing as t
 from base64 import b64encode
 from time import sleep
 
@@ -137,7 +138,7 @@ class BaseSSHGCEOperator(BaseOperator):
         self,
         instance_name: str,
         command: str,
-        environment: dict[str, str] = {},
+        environment: t.Dict[str, str] = {},
         *args,
         **kwargs,
     ):
@@ -210,7 +211,7 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
         self,
         instance_name: str,
         command: str,
-        environment: dict[str, str] = {},
+        environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
         use_pyenv: bool = False,
         *args,
@@ -299,7 +300,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         instance_name: str,
         command: str,
         base_dir: str = None,
-        environment: dict[str, str] = {},
+        environment: t.Dict[str, str] = {},
         use_pyenv: bool = False,
         *args,
         **kwargs,

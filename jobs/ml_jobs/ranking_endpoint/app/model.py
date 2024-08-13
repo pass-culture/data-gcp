@@ -1,3 +1,5 @@
+import typing as t
+
 import joblib
 import lightgbm as lgb
 import pandas as pd
@@ -46,7 +48,7 @@ class PredictPipeline:
         self.model = lgb.Booster(model_file="./metadata/model.txt")
         self.preprocessor = joblib.load("./metadata/preproc.joblib")
 
-    def predict(self, input_data: list[dict]):
+    def predict(self, input_data: t.List[dict]):
         errors = []
         df = pd.DataFrame(input_data)
         _cols = list(df.columns)

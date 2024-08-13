@@ -1,3 +1,4 @@
+import typing as t
 import uuid
 
 import numpy as np
@@ -42,7 +43,7 @@ def download_df(bucket_path):
     return ldf.collect().to_pandas()
 
 
-def bq_to_events(source_gs_path) -> list[PostHogEvent]:
+def bq_to_events(source_gs_path) -> t.List[PostHogEvent]:
     print("Download...")
     df = download_df(bucket_path=source_gs_path)
     print(f"Reformat... {df.shape[0]}")

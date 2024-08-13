@@ -1,3 +1,5 @@
+import typing as t
+
 import joblib
 from constants import MODEL_TYPE as config
 from constants import N_PROBES, NUM_RESULTS, REFINE_FACTOR
@@ -27,7 +29,7 @@ class SemanticSpace:
         similarity_metric="dot",
         n=NUM_RESULTS,
         vector_column_name: str = "vector",
-    ) -> list[dict]:
+    ) -> t.List[dict]:
         results = (
             self.table.search(
                 vector.embedding,

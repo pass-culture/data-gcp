@@ -1,6 +1,7 @@
 import datetime
 import json
 import time
+import typing as t
 
 import dateutil
 import googleapiclient.discovery
@@ -34,7 +35,7 @@ class GCEHook(GoogleBaseHook):
         gcp_project: str = GCP_PROJECT_ID,
         gcp_zone: str = GCE_ZONE,
         gcp_region: str = GCP_REGION,
-        gce_networks: list[DefaultVPCNetwork] = [DefaultVPCNetwork()],
+        gce_networks: t.List[DefaultVPCNetwork] = [DefaultVPCNetwork()],
         gce_sa: str = GCE_SA,
         source_image_type: CPUImage = CPUImage(),
         gcp_conn_id: str = "google_cloud_default",

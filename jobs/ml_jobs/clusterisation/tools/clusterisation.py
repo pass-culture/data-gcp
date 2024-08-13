@@ -1,3 +1,5 @@
+import typing as t
+
 import numpy as np
 import polars as pl
 from loguru import logger
@@ -58,7 +60,7 @@ def mbkmeans_clusters(
     k,
     mb,
     print_silhouette_values=False,
-) -> tuple[MiniBatchKMeans, np.ndarray]:
+) -> t.Tuple[MiniBatchKMeans, np.ndarray]:
     """Generate clusters and print Silhouette metrics using MBKmeans
 
     Args:

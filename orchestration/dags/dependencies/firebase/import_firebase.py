@@ -1,6 +1,6 @@
 from common.config import ENV_SHORT_NAME
 
-SQL_PATH = f"dependencies/firebase/sql"
+SQL_PATH = "dependencies/firebase/sql"
 
 
 ENV_SHORT_NAME_APP_INFO_ID_MAPPING = {

@@ -1,17 +1,17 @@
+from datetime import date, datetime, timedelta, timezone
+
 import typer
 from sendinblue_newsletters import SendinblueNewsletters
 from sendinblue_transactional import SendinblueTransactional
-from datetime import datetime, timezone, timedelta, date
 from utils import (
-    GCP_PROJECT,
     BIGQUERY_RAW_DATASET,
     BIGQUERY_TMP_DATASET,
     ENV_SHORT_NAME,
+    GCP_PROJECT,
     access_secret_data,
     campaigns_histo_schema,
     transactional_histo_schema,
 )
-
 
 API_KEY = access_secret_data(
     GCP_PROJECT, f"sendinblue-api-key-{ENV_SHORT_NAME}", version_id=1

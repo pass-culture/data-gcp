@@ -1,15 +1,15 @@
+import time
 from datetime import datetime, timedelta
-from google.cloud import bigquery
+
 import pandas as pd
 import requests
-import time
+from google.cloud import bigquery
 from scripts.utils import (
-    GCP_PROJECT,
     BIGQUERY_CLEAN_DATASET,
-    get_api_token,
+    GCP_PROJECT,
     access_secret_data,
+    get_api_token,
 )
-
 
 MAX_SIREN_CALL = 100
 MAX_SIREN_TO_UPDATE = 5000
@@ -22,13 +22,13 @@ def get_offerer_siren_list():
     client = bigquery.Client()
     query = f"""
         WITH updated_recently AS (
-            
-            SELECT 
-                DISTINCT siren 
+
+            SELECT
+                DISTINCT siren
             FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.siren_data`
             WHERE date(update_date) >= date('{last_seven_days.strftime("%Y-%m-%d")}')
         )
-        
+
         SELECT ado.offerer_siren as siren
         FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offerer` ado
         LEFT JOIN updated_recently ur on ur.siren = ado.offerer_siren
@@ -104,7 +104,7 @@ def append_info_siren_list(siren_info_list, result):
                     ][0]["caractereEmployeurUniteLegale"],
                 }
             )
-        except:
+        except Exception:
             siren_info_list.append(
                 {
                     "siren": unitesLegales["siren"],

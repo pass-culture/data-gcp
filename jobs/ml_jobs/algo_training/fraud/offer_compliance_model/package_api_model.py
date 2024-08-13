@@ -10,10 +10,9 @@ import requests
 import shap
 import typer
 from catboost import CatBoostClassifier, Pool
+from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
 from PIL import Image
 from sentence_transformers import SentenceTransformer
-
-from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
 from utils.constants import (
     ENV_SHORT_NAME,
     MODEL_DIR,

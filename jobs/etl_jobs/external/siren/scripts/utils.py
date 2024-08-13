@@ -1,7 +1,8 @@
 import os
+
+import requests
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
-import requests
 
 GCP_PROJECT = os.environ.get("PROJECT_NAME")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "")

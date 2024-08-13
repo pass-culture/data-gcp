@@ -1,6 +1,6 @@
 import numpy as np
-import tensorflow as tf
 import pandas as pd
+import tensorflow as tf
 
 
 def load_triplets_dataset(

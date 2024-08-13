@@ -1,18 +1,18 @@
+import os
 from datetime import datetime
+
+import pandas as pd
+import requests
+from google.auth.exceptions import DefaultCredentialsError
+from google.cloud import bigquery, secretmanager
 from scripts.utils import (
-    GCP_PROJECT,
+    ADAGE_INVOLVED_STUDENTS_DTYPE,
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_RAW_DATASET,
-    ADAGE_INVOLVED_STUDENTS_DTYPE,
     BQ_ADAGE_DTYPE,
+    GCP_PROJECT,
     save_to_raw_bq,
 )
-from google.cloud import bigquery
-from google.cloud import secretmanager
-from google.auth.exceptions import DefaultCredentialsError
-import requests
-import os
-import pandas as pd
 
 
 def get_endpoint():
@@ -89,41 +89,41 @@ def adding_value():
         USING `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.adage` B
         ON B.id = A.id
         WHEN MATCHED THEN
-            UPDATE SET 
-            siret = B.siret, 
+            UPDATE SET
+            siret = B.siret,
             venueId = B.venueId,
-            regionId = B.regionId, 
-            academieId = B.academieId, 
-            statutId = B.statutId , 
+            regionId = B.regionId,
+            academieId = B.academieId,
+            statutId = B.statutId ,
             labelId = B.labelId,
-            typeId = B.typeId, 
-            communeId = B.communeId, 
-            libelle = B.libelle, 
-            adresse = B.adresse, 
-            siteWeb = B.siteWeb, 
+            typeId = B.typeId,
+            communeId = B.communeId,
+            libelle = B.libelle,
+            adresse = B.adresse,
+            siteWeb = B.siteWeb,
             latitude = B.latitude,
-            longitude = B.longitude, 
-            actif = B.actif, 
-            dateModification = B.dateModification, 
+            longitude = B.longitude,
+            actif = B.actif,
+            dateModification = B.dateModification,
             statutLibelle = B.statutLibelle,
-            labelLibelle = B.labelLibelle, 
-            typeIcone = B.typeIcone, 
-            typeLibelle = B.typeLibelle, 
+            labelLibelle = B.labelLibelle,
+            typeIcone = B.typeIcone,
+            typeLibelle = B.typeLibelle,
             communeLibelle = B.communeLibelle,
-            communeDepartement = B.communeDepartement, 
-            academieLibelle = B.academieLibelle, 
-            regionLibelle = B.regionLibelle, 
+            communeDepartement = B.communeDepartement,
+            academieLibelle = B.academieLibelle,
+            regionLibelle = B.regionLibelle,
             domaines = B.domaines
         WHEN NOT MATCHED THEN
         INSERT (id,siret,venueId,regionId,academieId,
                 statutId,
                 labelId,
-                typeId, 
+                typeId,
                 communeId,
                 libelle,
                 adresse,
                 siteWeb,
-                latitude, 
+                latitude,
                 longitude,
                 actif,
                 dateModification,
@@ -139,12 +139,12 @@ def adding_value():
                                  typeId,
                                  communeId,
                                  libelle,
-                                 adresse, 
+                                 adresse,
                                  siteWeb,
                                  latitude,
                                  longitude,
                                  actif,
-                                 dateModification, 
+                                 dateModification,
                                  statutLibelle,
                                  labelLibelle,
                                  typeIcone,

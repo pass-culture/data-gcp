@@ -1,7 +1,6 @@
 
 # CI/CD
 
-
 ## Pipeline CI
 
 Vue d'ensemble du workflow d'intégration continue (CI) pour notre projet, détaillant les différents workflows réutilisables et les tâches définies dans notre configuration GitHub Actions.
@@ -10,47 +9,30 @@ Vue d'ensemble du workflow d'intégration continue (CI) pour notre projet, déta
 
 `CI_workflow.yml` est le workflow principal qui est déclenché sur les pull requests.
 
-### Tâches
+### Tâches de CI
 
-* Linter
+* **Linter** : La tâche `linter` vérifie le code pour les problèmes de style et de formatting en utilisant `ruff`. Elle se connecte à Google Cloud Secret Manager pour récupérer les secrets nécessaires et envoie éventuellement des notifications à un canal Slack si le linter échoue.
 
-La tâche `linter` vérifie le code pour les problèmes de style en utilisant `black`. Elle se connecte à Google Cloud Secret Manager pour récupérer les secrets nécessaires et envoie éventuellement des notifications à un canal Slack si le linter échoue.
+* **Recherche modifications du projet DBT** : Cette tâche recherche s'il y a eu des modifications/création/suppression de fichiers dans le projet DBT.
 
-* Recherche modifications du projet DBT
+* **Integration DBT** : Run si le projet dbt a été modifié.
 
-Cette tâche recherche s'il y a eu des modifications/création/suppression de fichiers dans le projet DBT.
+  * Installation et compilation DBT du code poussé en local (worker github).
+  * Téléchargement des `remote artefacts` (manifest.json) de la branche cible (master ou prod).
+  * Run des modèles modifiés + enfants directs
+  * Tests de qualité des modèles associés.
 
-* Integration DBT
+  Ces runs/tests ecrivent les résultats sous forme de view dans un dataset dédié (ci_stg, ci_prod). Le système de `deferal` est utilisé a l'aide du manifest télécharché pour référencer les tables dans la DB (hors ci_stg, ci_prod) et eviter de refaire toute la transformation dans le dataset ci.
 
-Si le projet dbt a été modifié:
-Installation et compilation DBT du code poussé en local (worker github).
-Téléchargement des `remote artefacts` (manifest.json) de la branche cible (master ou prod).
-Run des modèles modifiés + enfants directs + tests de qualité associés.
+* **Recherche de Tâches de Test** : Cette tâche identifie les tâches testables en analysant les fichiers modifiés et en déterminant quelles tâches doivent être testées.
 
-Ces runs/tests ecrivent les résultats sous forme de view dans un dataset dédié (ci_stg, ci_prod).
-Le système de `deferal` est utilisé a l'aide du manifest télécharché pour référencer les tables dans la DB (hors ci_stg, ci_prod) et eviter de refaire toute la transformation dans le dataset ci.
+* **Vérification de la Non-Vacuité de la Matrice** : Vérifie que les tâches à tester ont bien des tests ("matrice d'interstection" des nouvelles tâches testables et des tâches ayant des tests est non-vide).
 
+* **Tâches de Test** : Cette tâche exécute des tests sur les tâches identifiées.
 
+* **Recherche de Changements d'Orchestration** : Cette tâche vérifie les changements dans le dossier d'orchestration et détermine si des tests d'orchestration doivent être exécutés.
 
-* Recherche de Tâches de Test
-
-Cette tâche identifie les tâches testables en analysant les fichiers modifiés et en déterminant quelles tâches doivent être testées.
-
-* Vérification de la Non-Vacuité de la Matrice
-
-Vérifie que les tâches à tester ont bien des tests ("matrice d'interstection" des nouvelles tâches testables et des tâches ayant des tests est non-vide).
-
-* Tâches de Test
-
-Cette tâche exécute des tests sur les tâches identifiées.
-
-* Recherche de Changements d'Orchestration
-
-Cette tâche vérifie les changements dans le dossier d'orchestration et détermine si des tests d'orchestration doivent être exécutés.
-
-* Test d'Orchestration
-
-Cette tâche exécute des tests d'orchestration si des changements sont détectés.
+* **Test d'Orchestration** :  Cette tâche exécute des tests d'orchestration si des changements sont détectés.
 
 ### Arbre d'Exécution des Tâches (trigger: commit on open PR)
 
@@ -75,39 +57,23 @@ Vue d'ensemble du workflow de déploiement continu (CD) pour notre projet, déta
 
 Le fichier `CD_workflow.yml` est le workflow principal qui est déclenché sur les pushs vers les branches `master` et `production`. Il inclut plusieurs tâches et utilise des workflows réutilisables pour rationaliser le processus CD.
 
-### Tâches
+### Tâches de CD
 
-* Linter
+* **Linter** : La tâche `linter` vérifie le code pour les problèmes de style et de formatting en utilisant `ruff`. Elle se connecte à Google Cloud Secret Manager pour récupérer les secrets nécessaires et envoie éventuellement des notifications à un canal Slack si le linter échoue.
 
-La tâche `linter` vérifie le code pour les problèmes de style en utilisant `black`. Elle se connecte à Google Cloud Secret Manager pour récupérer les secrets nécessaires et envoie éventuellement des notifications à un canal Slack si le linter échoue.
+* **Recherche de Tâches de Test** : Cette tâche identifie les tâches testables en analysant les fichiers modifiés et déterminant quelles tâches doivent être testées.
 
-* Recherche de Tâches de Test
+* **Tâches de Test** : Cette tâche exécute des tests sur les tâches identifiées.
 
-Cette tâche identifie les tâches testables en analysant les fichiers modifiés et déterminant quelles tâches doivent être testées.
+* **Test d'Orchestration** : Cette tâche exécute des tests d'orchestration pour s'assurer que les processus sont correctement orchestrés.
 
-* Tâches de Test
+* **DBT installation et compilation** : Ces tâches installent python, DBT + dbt-packages, compile le projet dbt et deploie les dbt-packages et le manifest dans le bucket de Composer.
 
-Cette tâche exécute des tests sur les tâches identifiées.
+* **Déploiement de Composer en Dev** : Cette tâche déploie Composer dans l'environnement de développement si la branche est `production`.
 
-* Test d'Orchestration
+* **Déploiement de Composer & DBT en Staging** : Si la branche cible est master, cette tâche déploie Composer & DBT dans l'environnement de staging (upload les dags, models SQL & artfact DBT dans le bucket staging).
 
-Cette tâche exécute des tests d'orchestration pour s'assurer que les processus sont correctement orchestrés.
-
-* DBT installation et compilation
-
-Ces tâches installent python, DBT + dbt-packages, compile le projet dbt et deploie les dbt-packages et le manifest dans le bucket de Composer.
-
-* Déploiement de Composer en Dev
-
-Cette tâche déploie Composer dans l'environnement de développement si la branche est `production`.
-
-* Déploiement de Composer & DBT en Staging
-
-Si la branche cible est master, cette tâche déploie Composer & DBT dans l'environnement de staging (upload les dags, models SQL & artfact DBT dans le bucket staging).
-
-* Déploiement de Composer & DBT en Production
-
-Si la branche cible est `production`, cette tâche déploie Composer & DBT dans l'environnement de production (upload les dags, models SQL & artfact DBT dans le bucket prod).
+* **Déploiement de Composer & DBT en Production** : Si la branche cible est `production`, cette tâche déploie Composer & DBT dans l'environnement de production (upload les dags, models SQL & artfact DBT dans le bucket prod).
 
 ### Arbre d'Exécution des Tâches (trigger: merge)
 
@@ -122,6 +88,4 @@ graph TD;
     E -->|merge -> master| H[Déploiement de Composer & DBT en Staging]
     E -->|merge -> production| F[Déploiement de Composer & DBT en Dev]
     F --> G[Déploiement de Composer & DBT en Production]
-
-
 ```

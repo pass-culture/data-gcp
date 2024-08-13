@@ -5,7 +5,6 @@ from unittest import mock
 import pandas as pd
 from airflow.models import DagBag
 
-
 DAG_ID_LIST = [
     "recommendation_cloud_sql_v1",
     "export_cloudsql_tables_to_bigquery_v1",
@@ -47,9 +46,7 @@ class TestDags(unittest.TestCase):
         # Then
         self.assertFalse(
             len(self.dagbag.import_errors),
-            "There should be no DAG failures. Got: {}".format(
-                self.dagbag.import_errors
-            ),
+            f"There should be no DAG failures. Got: {self.dagbag.import_errors}",
         )
 
     def test_dag_import_is_fast(self):
@@ -62,9 +59,7 @@ class TestDags(unittest.TestCase):
         self.assertEqual(
             0,
             len(list(slow_files)),
-            "The following files take more than {threshold}s to load: {res}".format(
-                threshold=self.LOAD_SECOND_THRESHOLD, res=res
-            ),
+            f"The following files take more than {self.LOAD_SECOND_THRESHOLD}s to load: {res}",
         )
 
     def test_dags_are_loaded(self):

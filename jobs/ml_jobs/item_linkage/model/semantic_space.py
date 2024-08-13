@@ -1,12 +1,10 @@
-import json
-import typing as t
 
 import joblib
-import numpy as np
+from constants import MODEL_TYPE as config
+from constants import N_PROBES, NUM_RESULTS, REFINE_FACTOR
 from docarray import Document
 from lancedb import connect
 from sentence_transformers import SentenceTransformer
-from constants import N_PROBES, REFINE_FACTOR, NUM_RESULTS, MODEL_TYPE as config
 
 DETAIL_COLUMNS = [
     "item_id",
@@ -30,7 +28,7 @@ class SemanticSpace:
         similarity_metric="dot",
         n=NUM_RESULTS,
         vector_column_name: str = "vector",
-    ) -> t.List[t.Dict]:
+    ) -> list[dict]:
         results = (
             self.table.search(
                 vector.embedding,

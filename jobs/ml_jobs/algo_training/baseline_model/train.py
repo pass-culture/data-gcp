@@ -1,10 +1,9 @@
 import mlflow
 import tensorflow as tf
 import typer
-from loguru import logger
-
 from baseline_model.models.baseline_model import BaselineModel
 from baseline_model.models.match_model import MatchModel
+from loguru import logger
 from utils.callbacks import MLFlowLogging
 from utils.constants import (
     ENV_SHORT_NAME,

@@ -4,16 +4,15 @@ from pathlib import Path
 
 import pandas as pd
 import typer
-
 from metabase_api import MetabaseAPI
 from native import NativeCard
 from query import QueryCard
 from table import MetabaseTable, get_mapped_fields
 from utils import (
-    PROJECT_NAME,
     ENVIRONMENT_SHORT_NAME,
-    METABASE_API_USERNAME,
     INT_METABASE_DATASET,
+    METABASE_API_USERNAME,
+    PROJECT_NAME,
     access_secret_data,
     get_dependant_cards,
 )
@@ -59,7 +58,7 @@ def run(
         legacy_table_name, legacy_schema_name
     )
 
-    with open(MAPPINGS_PATH, "r") as file:
+    with open(MAPPINGS_PATH) as file:
         data = json.load(file)
         table_columns_mappings = data.get(legacy_table_name, {})
 

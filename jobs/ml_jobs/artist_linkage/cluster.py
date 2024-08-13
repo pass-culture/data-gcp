@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import rapidfuzz
 import typer
-
 from utils.clustering_utils import (
     cluster_with_distance_matrices,
     format_cluster_matrix,

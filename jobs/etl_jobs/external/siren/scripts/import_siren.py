@@ -1,15 +1,15 @@
+import time
 from datetime import datetime, timedelta
-from google.cloud import bigquery
+
 import pandas as pd
 import requests
-import time
+from google.cloud import bigquery
 from scripts.utils import (
-    GCP_PROJECT,
     BIGQUERY_CLEAN_DATASET,
-    get_api_token,
+    GCP_PROJECT,
     access_secret_data,
+    get_api_token,
 )
-
 
 MAX_SIREN_CALL = 100
 MAX_SIREN_TO_UPDATE = 5000

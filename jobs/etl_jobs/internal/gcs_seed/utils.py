@@ -1,6 +1,6 @@
 import os
-from datetime import datetime
-from google.cloud import storage, bigquery
+
+from google.cloud import bigquery
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
@@ -45,9 +45,9 @@ def GCS_to_bigquery(
     else:
         raise Exception("Format not found")
 
-    uri = "gs://{}/{}/{}.{}".format(bucket_name, folder_name, file_name, file_type)
+    uri = f"gs://{bucket_name}/{folder_name}/{file_name}.{file_type}"
 
-    table_id = "{}.{}.{}".format(gcp_project, destination_dataset, destination_table)
+    table_id = f"{gcp_project}.{destination_dataset}.{destination_table}"
 
     load_job = bigquery_client.load_table_from_uri(uri, table_id, job_config=job_config)
 
@@ -55,4 +55,4 @@ def GCS_to_bigquery(
 
     destination_table = bigquery_client.get_table(table_id)
 
-    print("Loaded {} rows.".format(destination_table.num_rows))
+    print(f"Loaded {destination_table.num_rows} rows.")

@@ -1,4 +1,3 @@
-import typing as t
 
 import joblib
 import lightgbm as lgb
@@ -48,7 +47,7 @@ class PredictPipeline:
         self.model = lgb.Booster(model_file="./metadata/model.txt")
         self.preprocessor = joblib.load("./metadata/preproc.joblib")
 
-    def predict(self, input_data: t.List[dict]):
+    def predict(self, input_data: list[dict]):
         errors = []
         df = pd.DataFrame(input_data)
         _cols = list(df.columns)
@@ -65,7 +64,7 @@ class PredictPipeline:
         processed_data = self.preprocessor.transform(df)
         z = self.model.predict(processed_data)
 
-        for x, y in zip(input_data, z):
+        for x, y in zip(input_data, z, strict=False):
             x["score"] = y
         return input_data, errors
 

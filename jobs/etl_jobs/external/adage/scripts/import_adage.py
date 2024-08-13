@@ -1,18 +1,18 @@
+import os
 from datetime import datetime
+
+import pandas as pd
+import requests
+from google.auth.exceptions import DefaultCredentialsError
+from google.cloud import bigquery, secretmanager
 from scripts.utils import (
-    GCP_PROJECT,
+    ADAGE_INVOLVED_STUDENTS_DTYPE,
     BIGQUERY_ANALYTICS_DATASET,
     BIGQUERY_RAW_DATASET,
-    ADAGE_INVOLVED_STUDENTS_DTYPE,
     BQ_ADAGE_DTYPE,
+    GCP_PROJECT,
     save_to_raw_bq,
 )
-from google.cloud import bigquery
-from google.cloud import secretmanager
-from google.auth.exceptions import DefaultCredentialsError
-import requests
-import os
-import pandas as pd
 
 
 def get_endpoint():
@@ -51,12 +51,12 @@ def get_request(ENDPOINT, API_KEY, route):
     try:
         headers = {"X-omogen-api-key": API_KEY}
 
-        req = requests.get("{}/{}".format(ENDPOINT, route), headers=headers)
+        req = requests.get(f"{ENDPOINT}/{route}", headers=headers)
         if req.status_code == 200:
             return req.json()
 
     except Exception as e:
-        print("An unexpected error has happened {}".format(e))
+        print(f"An unexpected error has happened {e}")
     return None
 
 

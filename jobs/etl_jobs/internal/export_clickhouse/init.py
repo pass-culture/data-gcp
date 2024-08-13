@@ -1,9 +1,9 @@
 import typer
 from core.utils import (
     CLICKHOUSE_CLIENT,
-    access_secret_data,
-    PROJECT_NAME,
     ENV_SHORT_NAME,
+    PROJECT_NAME,
+    access_secret_data,
 )
 
 DATABASE = ["tmp", "intermediate", "analytics"]

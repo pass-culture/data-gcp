@@ -1,10 +1,12 @@
+import os
 import shutil
 import time
-import os
+
 from sentence_transformers import SentenceTransformer
-from utils.logging import logging, log_duration
 from utils.download import IMAGE_DIR, download_img_multiprocess
 from utils.file_handler import load_img_multiprocess
+from utils.logging import log_duration, logging
+
 from tools.config import TRANSFORMER_BATCH_SIZE
 
 
@@ -39,7 +41,7 @@ def extract_embedding(df_data, params):
             log_duration(f"Processed {feature['name']}, using {model_type}", step_time)
 
     shutil.rmtree(IMAGE_DIR, ignore_errors=True)
-    log_duration(f"Done processing.", start)
+    log_duration("Done processing.", start)
     return df_encoded
 
 
@@ -89,7 +91,7 @@ def encode_img_from_path(model, paths):
                 normalize_embeddings=True,
                 show_progress_bar=False,
             )
-            for url, img_emb in zip(urls, encoded_images):
+            for url, img_emb in zip(urls, encoded_images, strict=False):
                 embeddings[url] = list(img_emb)
             stats["encoded_images"] = len(encoded_images)
         except Exception as e:

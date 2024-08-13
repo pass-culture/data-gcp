@@ -1,10 +1,8 @@
 import os
+from datetime import datetime
 
 from google.auth.exceptions import DefaultCredentialsError
-from google.cloud import secretmanager
-from google.cloud import bigquery
-
-from datetime import datetime
+from google.cloud import bigquery, secretmanager
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")

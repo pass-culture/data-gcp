@@ -1,15 +1,16 @@
-from google.cloud import bigquery
-from time import sleep
 from datetime import datetime, timedelta
-from apple_client import AppleClient
-from google_client import GoogleClient
+from time import sleep
+
 import pandas as pd
+from apple_client import AppleClient
+from google.cloud import bigquery
+from google_client import GoogleClient
 from utils import (
-    KEY_ID,
-    ISSUER_ID,
-    PRIVATE_KEY,
     BIGQUERY_RAW_DATASET,
     BUCKET_NAME,
+    ISSUER_ID,
+    KEY_ID,
+    PRIVATE_KEY,
     get_last_month,
 )
 

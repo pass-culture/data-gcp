@@ -1,17 +1,16 @@
 import collections
 import random
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
-
 from utils.constants import NUMBER_OF_PRESELECTED_OFFERS, RECOMMENDATION_NUMBER
 
 
 def order_offers_by_score_and_diversify_categories(
-    offers: Union[List[Dict[str, Any]], pd.DataFrame],
+    offers: list[dict[str, Any]] | pd.DataFrame,
     shuffle_recommendation: bool,
-) -> List[int]:
+) -> list[int]:
     """
     Group offers by category.
     Order offer groups by decreasing number of offers in each group and decreasing maximal score.
@@ -62,13 +61,13 @@ def order_offers_by_score_and_diversify_categories(
     return ordered_and_diversified_offers
 
 
-def _get_offers_grouped_by_category(offers: List[Dict[str, Any]]) -> Dict:
+def _get_offers_grouped_by_category(offers: list[dict[str, Any]]) -> dict:
     offers_by_category = dict()
     product_ids = set()
     for offer in offers:
         offer_category = offer["offer_subcategoryid"]
         offer_product_id = offer["item_id"]
-        if offer_category in offers_by_category.keys():
+        if offer_category in offers_by_category:
             if offer_product_id not in product_ids:
                 offers_by_category[offer_category].append(offer)
                 product_ids.add(offer_product_id)
@@ -79,8 +78,8 @@ def _get_offers_grouped_by_category(offers: List[Dict[str, Any]]) -> Dict:
 
 
 def _get_number_of_offers_and_max_score_by_category(
-    category_and_offers: Tuple,
-) -> Tuple:
+    category_and_offers: tuple,
+) -> tuple:
     return (
         len(category_and_offers[1]),
         max([offer["score"] for offer in category_and_offers[1]]),

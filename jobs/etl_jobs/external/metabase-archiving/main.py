@@ -1,14 +1,15 @@
 import time
+
+from archiving import MoveToArchive, get_data_archiving, preprocess_data_archiving
 from metabase_api import MetabaseAPI
-from archiving import get_data_archiving, preprocess_data_archiving, MoveToArchive
 from utils import (
-    PROJECT_NAME,
     ENVIRONMENT_SHORT_NAME,
     METABASE_API_USERNAME,
+    PROJECT_NAME,
     access_secret_data,
+    limit_inactivity_in_days,
     max_cards_to_archive,
     parent_folder_to_archive,
-    limit_inactivity_in_days,
 )
 
 METABASE_HOST = access_secret_data(

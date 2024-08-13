@@ -1,9 +1,8 @@
-import requests
 import time
-
-import numpy as np
-import pandas as pd
 import zlib
+
+import pandas as pd
+import requests
 from authlib.jose import jwt
 
 OUT_COLS = [
@@ -83,7 +82,7 @@ class AppleClient:
         with open("/tmp/report.txt", "wb") as outFile:
             outFile.write(data)
 
-        with open("/tmp/report.txt", "r") as f:
+        with open("/tmp/report.txt") as f:
             data = f.read()
 
         df = pd.DataFrame([x.rsplit("\t") for x in data.rsplit("\n")[1:]])

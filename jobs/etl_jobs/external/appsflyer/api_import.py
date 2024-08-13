@@ -1,18 +1,19 @@
+from datetime import date, timedelta
+
 import pandas as pd
-from datetime import date, datetime, timedelta
-from core.utils import IOS_APP_ID, ANDROID_APP_ID, TOKEN, save_to_bq
+import typer
 from core.appsflyer import AppsFlyer
 from core.mapping import (
-    DAILY_REPORT,
-    DAILY_REPORT_MAPPING,
-    INSTALLS_REPORT_MAPPING,
-    INSTALLS_REPORT,
     APP_REPORT,
     APP_REPORT_MAPPING,
-    PARTNER_REPORT_MAPPING,
+    DAILY_REPORT,
+    DAILY_REPORT_MAPPING,
+    INSTALLS_REPORT,
+    INSTALLS_REPORT_MAPPING,
     PARTNER_REPORT,
+    PARTNER_REPORT_MAPPING,
 )
-import typer
+from core.utils import ANDROID_APP_ID, IOS_APP_ID, TOKEN, save_to_bq
 
 APPS = {"ios": IOS_APP_ID, "android": ANDROID_APP_ID}
 import time
@@ -49,11 +50,11 @@ class ImportAppsFlyer:
             _cols = list(df.columns)
             df["app"] = app
             if "Adset Id" in _cols:
-                df["Adset Id"] = df["Adset Id"].map(lambda x: "{:.0f}".format(x))
+                df["Adset Id"] = df["Adset Id"].map(lambda x: f"{x:.0f}")
             if "Adgroup Id" in _cols:
-                df["Adgroup Id"] = df["Adgroup Id"].map(lambda x: "{:.0f}".format(x))
+                df["Adgroup Id"] = df["Adgroup Id"].map(lambda x: f"{x:.0f}")
             if "Campaign Id" in _cols:
-                df["Campaign Id"] = df["Campaign Id"].map(lambda x: "{:.0f}".format(x))
+                df["Campaign Id"] = df["Campaign Id"].map(lambda x: f"{x:.0f}")
             dfs.append(df)
             time.sleep(60)
             # Else
@@ -83,11 +84,11 @@ class ImportAppsFlyer:
             _cols = list(df.columns)
             df["app"] = app
             if "Adset Id" in _cols:
-                df["Adset Id"] = df["Adset Id"].map(lambda x: "{:.0f}".format(x))
+                df["Adset Id"] = df["Adset Id"].map(lambda x: f"{x:.0f}")
             if "Adgroup Id" in _cols:
-                df["Adgroup Id"] = df["Adgroup Id"].map(lambda x: "{:.0f}".format(x))
+                df["Adgroup Id"] = df["Adgroup Id"].map(lambda x: f"{x:.0f}")
             if "Campaign Id" in _cols:
-                df["Campaign Id"] = df["Campaign Id"].map(lambda x: "{:.0f}".format(x))
+                df["Campaign Id"] = df["Campaign Id"].map(lambda x: f"{x:.0f}")
             dfs.append(df)
             time.sleep(60)
             # Else
@@ -163,7 +164,7 @@ def run(
         raise Exception("n_days or start_date | end_date should be not None")
 
     import_app = ImportAppsFlyer(start_date, end_date)
-    if "activity_report" == table_name:
+    if table_name == "activity_report":
         print("Run activity_report...")
         save_to_bq(
             import_app.get_install_report(),
@@ -173,7 +174,7 @@ def run(
             INSTALLS_REPORT_MAPPING,
             date_column="event_time",
         )
-    if "daily_report" == table_name:
+    if table_name == "daily_report":
         print("Run daily_report...")
         save_to_bq(
             import_app.get_daily_report(),
@@ -183,7 +184,7 @@ def run(
             DAILY_REPORT_MAPPING,
             date_column="date",
         )
-    if "partner_report" == table_name:
+    if table_name == "partner_report":
         print("Run partner_report...")
         save_to_bq(
             import_app.get_partner_report(),
@@ -193,7 +194,7 @@ def run(
             DAILY_REPORT_MAPPING,
             date_column="date",
         )
-    if "in_app_event_report" == table_name:
+    if table_name == "in_app_event_report":
         print("Run in_app_event_report...")
         save_to_bq(
             import_app.get_in_app_events_report(),

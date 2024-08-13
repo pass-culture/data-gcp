@@ -1,10 +1,12 @@
 import concurrent.futures
-import numpy as np
-from tools.config import IMAGE_DIR, MAX_PROCESS
 import os
-from utils.logging import logging
+
+import numpy as np
 from PIL import Image
+from tools.config import IMAGE_DIR, MAX_PROCESS
+
 from utils import get_filename_from_url
+from utils.logging import logging
 
 
 def _load_images(batch_urls):
@@ -27,7 +29,7 @@ def _load_images(batch_urls):
                         "status": "success",
                     }
                 )
-        except Exception as e:
+        except Exception:
             images_bytes.append(
                 {
                     "image": None,

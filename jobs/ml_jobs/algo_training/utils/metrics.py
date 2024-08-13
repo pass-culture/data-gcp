@@ -3,7 +3,6 @@ import pandas as pd
 import recmetrics
 from loguru import logger
 from tqdm import tqdm
-
 from utils.constants import SHUFFLE_RECOMMENDATION
 from utils.diversification import order_offers_by_score_and_diversify_categories
 
@@ -256,4 +255,4 @@ def mapk(actual, predicted, k=10):
             The mean average precision at k over the input lists
 
     """
-    return np.mean([apk(a, p, k) for a, p in zip(actual, predicted)])
+    return np.mean([apk(a, p, k) for a, p in zip(actual, predicted, strict=False)])

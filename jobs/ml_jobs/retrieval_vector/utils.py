@@ -7,7 +7,7 @@ from datetime import datetime
 import lancedb
 import pandas as pd
 import pyarrow as pa
-from docarray import DocumentArray, Document
+from docarray import Document, DocumentArray
 from google.cloud import bigquery
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")

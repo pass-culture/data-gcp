@@ -12,9 +12,9 @@ QPI_ANSWERS_SCHEMA = [
     },
 ]
 
-SQL_RAW_PATH = f"dependencies/qpi/sql/raw"
-SQL_CLEAN_PATH = f"dependencies/qpi/sql/clean"
-SQL_ANALYTICS_PATH = f"dependencies/qpi/sql/analytics"
+SQL_RAW_PATH = "dependencies/qpi/sql/raw"
+SQL_CLEAN_PATH = "dependencies/qpi/sql/clean"
+SQL_ANALYTICS_PATH = "dependencies/qpi/sql/analytics"
 
 RAW_TABLES = {
     "qpi_answers_v4": {

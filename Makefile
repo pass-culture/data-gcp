@@ -64,3 +64,11 @@ create_microservice:
 	git add .
 	git commit -am "Add $(MS_NAME) microservice"
 	make clean_install
+
+ruff_fix:
+	ruff check --fix
+	ruff format
+
+ruff_check:
+	ruff format --check
+	ruff check

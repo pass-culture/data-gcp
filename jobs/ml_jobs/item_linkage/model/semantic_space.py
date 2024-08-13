@@ -1,4 +1,3 @@
-
 import joblib
 from constants import MODEL_TYPE as config
 from constants import N_PROBES, NUM_RESULTS, REFINE_FACTOR

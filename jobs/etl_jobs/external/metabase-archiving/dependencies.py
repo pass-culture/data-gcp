@@ -44,7 +44,6 @@ def get_query_dependencies(card_list, tables_df):
     dependencies_other = {}
 
     for card in card_list:
-
         card_id = card["id"]
         card_owner = card["creator"]["email"]
         card_name = card["name"]

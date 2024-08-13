@@ -98,9 +98,9 @@ def main(
     ###############
     # Add dataframe to link to analysis config dict
     data_and_hyperparams_dict["performer"]["dataframe_to_link"] = df_to_link_performer
-    data_and_hyperparams_dict["non_performer"][
-        "dataframe_to_link"
-    ] = df_to_link_non_performer
+    data_and_hyperparams_dict["non_performer"]["dataframe_to_link"] = (
+        df_to_link_non_performer
+    )
     ###############
     # Run linkage for each group (performer, non-performer) then concat both dataframe to get linkage on full data
     max_process = cpu_count() - 1

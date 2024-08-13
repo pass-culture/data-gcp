@@ -72,7 +72,9 @@ def get_table_data():
         data[table_name]["columns"] = {
             column_name: data_type
             for column_name, data_type in zip(
-                list(table_data.column_name.values), list(table_data.data_type.values), strict=False
+                list(table_data.column_name.values),
+                list(table_data.data_type.values),
+                strict=False,
             )
         }
         for additional_data in ["dataset_type", "bigquery_table_name"]:

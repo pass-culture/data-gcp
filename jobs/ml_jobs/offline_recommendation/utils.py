@@ -52,7 +52,6 @@ def get_offline_recos(data):
 
 
 def _get_recos(rows):
-
     results = []
     try:
         for row in rows:

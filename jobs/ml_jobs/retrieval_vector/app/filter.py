@@ -1,4 +1,3 @@
-
 LOGICAL_OPERATORS = {"$and": "AND", "$or": "OR"}
 
 COMPARISON_OPERATORS = {

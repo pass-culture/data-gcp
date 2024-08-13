@@ -188,7 +188,6 @@ class QualtricsSurvey:
         return response_processed[select_fields]
 
     def process_survey_answers(self) -> pd.DataFrame:
-
         columns = self.raw_answer_df.columns
         system_columns = [
             "StartDate",

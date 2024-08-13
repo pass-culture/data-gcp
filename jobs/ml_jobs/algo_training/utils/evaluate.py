@@ -66,9 +66,7 @@ def evaluate(
             "user_id": str,
             "item_id": str,
         }
-    )[
-        test_columns
-    ]
+    )[test_columns]
     logger.info("Merge all...")
     positive_data_test = positive_data_test.merge(
         raw_data, on=["user_id", "item_id"], how="inner"

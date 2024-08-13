@@ -1,4 +1,3 @@
-
 from common.config import ENV_SHORT_NAME
 from dependencies.great_expectations.great_expectations_context import (
     GreatExpectationsContext,

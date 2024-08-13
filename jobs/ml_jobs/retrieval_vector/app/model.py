@@ -1,4 +1,3 @@
-
 import joblib
 import lancedb
 import numpy as np
@@ -129,7 +128,7 @@ class DefaultClient:
                         {
                             "idx": idx,
                         },
-                        **{k: row[k] for k in row if k in DETAIL_COLUMNS + DEFAULTS}
+                        **{k: row[k] for k in row if k in DETAIL_COLUMNS + DEFAULTS},
                     )
                 )
         return predictions

@@ -1,4 +1,3 @@
-
 from airflow.sensors.external_task import ExternalTaskSensor
 from common.config import (
     GCP_PROJECT_ID,

@@ -23,6 +23,7 @@ install:
 	MICROSERVICE_PATH=jobs/ml_jobs/artist_linkage PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-artist-linkage REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
 	MICROSERVICE_PATH=orchestration PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-orchestration REQUIREMENTS_NAME=airflow/orchestration-requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
 	MICROSERVICE_PATH=jobs/ml_jobs/linkage_candidates_items PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-linkage-candidates-items REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice
+	make precommit_install
 
 clean_install:
 	CLEAN_INSTALL=1 make install
@@ -72,3 +73,6 @@ ruff_fix:
 ruff_check:
 	ruff check
 	ruff format --check
+
+precommit_install:
+	@eval "$$(pyenv init -)" && pyenv activate data-gcp && pre-commit install

@@ -9,6 +9,7 @@ import gcsfs
 from shapely.geometry import Point, Polygon
 from scripts.bigquery_client import BigQueryClient
 from tqdm import tqdm
+
 bigquery_client = BigQueryClient()
 
 GCP_PROJECT = os.environ["GCP_PROJECT"]
@@ -98,7 +99,7 @@ class AdressesDownloader:
         results = []
         start_time = time.time()
         for i, address in tqdm(enumerate(addresses)):
-            
+
             if i > 0 and i % limit_rate == 0:
                 elapsed_time = time.time() - start_time
                 sleep_time = max(0, 1 - elapsed_time)

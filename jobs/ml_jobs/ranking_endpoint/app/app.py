@@ -1,10 +1,9 @@
-import logging
-import sys
-
-from flask import Flask, Response, jsonify, request
+from flask import Flask, request, Response, jsonify
 from flask_cors import CORS
 from model import PredictPipeline
 from pythonjsonlogger import jsonlogger
+import logging
+import sys
 
 logger = logging.getLogger(__name__)
 stdout = logging.StreamHandler(stream=sys.stdout)

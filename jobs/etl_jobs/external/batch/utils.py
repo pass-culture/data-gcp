@@ -1,7 +1,8 @@
 import os
-
 from google.auth.exceptions import DefaultCredentialsError
-from google.cloud import bigquery, secretmanager
+from google.cloud import secretmanager, bigquery
+
+import time
 
 BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
 ENV_SHORT_NAME = os.environ.get("ENVIRONMENT_SHORT_NAME")

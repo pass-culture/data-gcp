@@ -1,16 +1,17 @@
 import numpy as np
 import pandas as pd
 import pytest
+
 from utils.metrics import get_actual_and_predicted
 
 
 class MockModel:
     @staticmethod
     def predict(input_list: list, verbose: int):
-        return np.arange(np.array(input_list).shape[1])
+        return np.arange((np.array(input_list).shape[1]))
 
 
-@pytest.fixture()
+@pytest.fixture
 def data_model_dict():
     return {
         "name": "model_name",
@@ -38,7 +39,7 @@ def data_model_dict():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def expected_output_data_model_dict():
     return {
         "name": "model_name",

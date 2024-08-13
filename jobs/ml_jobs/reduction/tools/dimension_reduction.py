@@ -1,7 +1,9 @@
 import numpy as np
-import tensorflow as tf
+import io
+from google.cloud import bigquery
 import umap
 from sklearn.decomposition import PCA
+import tensorflow as tf
 
 
 def get_sample(data, frac):

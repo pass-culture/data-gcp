@@ -1,9 +1,11 @@
-import uuid
-
 import numpy as np
-import polars as pl
+import typing as t
+from datetime import datetime
+import uuid
+from utils import PostHogEvent, ENV_SHORT_NAME
 import pyarrow.dataset as ds
-from utils import ENV_SHORT_NAME, PostHogEvent
+import polars as pl
+
 
 BATCH_SIZE = 100_000
 
@@ -27,7 +29,7 @@ def export_list_metadata(list_metadata):
 
 def row_to_dict(row, df):
     _dict = {}
-    for x, y in zip(row[1:], list(df.columns), strict=False):
+    for x, y in zip(row[1:], list(df.columns)):
         if isinstance(x, np.ndarray):
             _dict[y] = export_list_metadata(np.ndarray.flatten(x))
         else:
@@ -42,7 +44,7 @@ def download_df(bucket_path):
     return ldf.collect().to_pandas()
 
 
-def bq_to_events(source_gs_path) -> list[PostHogEvent]:
+def bq_to_events(source_gs_path) -> t.List[PostHogEvent]:
     print("Download...")
     df = download_df(bucket_path=source_gs_path)
     print(f"Reformat... {df.shape[0]}")

@@ -1,12 +1,13 @@
-import pandas as pd
 import typer
+import pandas as pd
+
 from loguru import logger
 from tools.preprocessing import (
+    prepare_embedding,
     get_item_by_categories,
     get_item_by_group,
-    prepare_embedding,
 )
-from tools.utils import load_config_file
+from tools.utils import load_config_file, TMP_DATASET
 
 
 def preprocess(

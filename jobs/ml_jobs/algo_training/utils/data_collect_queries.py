@@ -1,10 +1,10 @@
 import json
-import subprocess
-from multiprocessing import Pool, cpu_count
 
 import pandas as pd
-from loguru import logger
 from utils.constants import GCP_PROJECT_ID
+import subprocess
+from multiprocessing import Pool, cpu_count
+from loguru import logger
 
 
 def get_data_from_bigquery(

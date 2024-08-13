@@ -1,3 +1,5 @@
+from typing import Dict
+
 LOGICAL_OPERATORS = {"$and": "AND", "$or": "OR"}
 
 COMPARISON_OPERATORS = {
@@ -47,7 +49,7 @@ def _sql_parsing(data, default_logic: str = "AND"):
                         clause_list.append(_clause)
                         params_list.extend(_params)
 
-                    where_clause += " AND ".join(clause_list)
+                    where_clause += f" AND ".join(clause_list)
                     parameters.extend(params_list)
                 else:
                     op, val = items[0]
@@ -86,8 +88,8 @@ def _sql_parsing(data, default_logic: str = "AND"):
     return where_clause, tuple(parameters)
 
 
-class Filter:
-    def __init__(self, tree_data: dict = {}):
+class Filter(object):
+    def __init__(self, tree_data: Dict = {}):
         self.tree_data = tree_data
 
     def parse_where_clause(self):

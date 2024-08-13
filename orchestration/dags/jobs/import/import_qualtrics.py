@@ -1,17 +1,25 @@
 import datetime
-
 from airflow import DAG
+from airflow.providers.http.operators.http import SimpleHttpOperator
+from airflow.operators.python import PythonOperator
 from airflow.models import Param
-from common import macros
-from common.alerts import task_fail_slack_alert
-from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
 )
-from common.utils import get_airflow_schedule
+import json
+
+from common.config import DAG_FOLDER
+from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
+
+from common.utils import getting_service_account_token, get_airflow_schedule
+
+from common.alerts import task_fail_slack_alert
+
+from common import macros
+
 
 GCE_INSTANCE = f"import-qualtrics-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/qualtrics"

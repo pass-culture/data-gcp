@@ -1,23 +1,24 @@
-import subprocess
+import pandas as pd
 from datetime import datetime
-
-import numpy as np
-import tensorflow as tf
-import typer
+import subprocess
 from google.cloud import bigquery
+import typer
 from utils import (
     BIGQUERY_CLEAN_DATASET,
-    ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
     MODELS_RESULTS_TABLE_NAME,
-    create_items_table,
+    GCP_PROJECT_ID,
+    ENV_SHORT_NAME,
     deploy_container,
-    get_item_docs,
     get_items_metadata,
     get_user_docs,
+    get_item_docs,
     save_experiment,
     save_model_type,
+    create_items_table,
 )
+import tensorflow as tf
+import numpy as np
+
 
 MODEL_TYPE = {
     "n_dim": 64,
@@ -79,8 +80,8 @@ def prepare_docs():
     user_list = tf_reco.user_layer.layers[0].get_vocabulary()
     user_weights = tf_reco.user_layer.layers[1].get_weights()[0].astype(np.float32)
     # convert
-    user_embedding_dict = {x: y for x, y in zip(user_list, user_weights, strict=False)}
-    item_embedding_dict = {x: y for x, y in zip(item_list, item_weights, strict=False)}
+    user_embedding_dict = {x: y for x, y in zip(user_list, user_weights)}
+    item_embedding_dict = {x: y for x, y in zip(item_list, item_weights)}
 
     user_docs = get_user_docs(user_embedding_dict)
     user_docs.save("./metadata/user.docs")
@@ -130,7 +131,7 @@ def main(
             artifact_uri=source_artifact_uri,
         )
     print(f"Get from {source_artifact_uri} trained model")
-    print("Download...")
+    print(f"Download...")
     download_model(source_artifact_uri)
     prepare_docs()
     print("Deploy...")

@@ -1,21 +1,20 @@
 from datetime import datetime
-
-import joblib
-import numpy as np
-import polars as pl
-import pyarrow.dataset as ds
 import typer
-from hnne import HNNE
 from utils import (
-    ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    create_items_table,
+    ENV_SHORT_NAME,
     deploy_container,
-    get_item_docs,
     get_items_metadata,
     save_experiment,
     save_model_type,
+    get_item_docs,
+    create_items_table,
 )
+import pyarrow.dataset as ds
+import polars as pl
+import numpy as np
+from hnne import HNNE
+import joblib
 
 MODEL_TYPE = {
     "n_dim": 32,
@@ -40,7 +39,7 @@ def download_embeddings(bucket_path):
     )
     joblib.dump(hnne, MODEL_TYPE["reducer"])
 
-    return {x: y for x, y in zip(item_list, item_weights, strict=False)}
+    return {x: y for x, y in zip(item_list, item_weights)}
 
 
 def prepare_docs(bucket_path):
@@ -80,7 +79,7 @@ def main(
     serving_container = (
         f"eu.gcr.io/{GCP_PROJECT_ID}/{experiment_name.replace('.', '_')}:{run_id}"
     )
-    print("Download...")
+    print(f"Download...")
 
     prepare_docs(source_gs_path)
     print("Deploy...")

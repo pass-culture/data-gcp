@@ -1,8 +1,8 @@
 import os
-
 import pandas as pd
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
+
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
@@ -23,15 +23,15 @@ def access_secret_data(project_id, secret_id, default=None):
 def get_dependant_cards(legacy_table_name, legacy_schema_name):
     query = f"""
         SELECT distinct card_id, card_type
-        FROM `{PROJECT_NAME}.{INT_METABASE_DATASET}.card_dependency`
+        FROM `{PROJECT_NAME}.{INT_METABASE_DATASET}.card_dependency` 
         WHERE table_name = '{legacy_table_name}'
         and lower(card_name) not like '%archive%'
-        and schema = '{legacy_schema_name}'
+        and schema = '{legacy_schema_name}' 
     """
 
     metabase_activity_query = f"""
         SELECT *
-        FROM `{PROJECT_NAME}.{INT_METABASE_DATASET}.activity`
+        FROM `{PROJECT_NAME}.{INT_METABASE_DATASET}.activity` 
     """
 
     dependant_cards = pd.read_gbq(query)

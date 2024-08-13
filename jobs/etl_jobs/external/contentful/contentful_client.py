@@ -1,8 +1,7 @@
-from datetime import datetime
-
 import contentful
 import pandas as pd
 from utils import SPACE_ID
+from datetime import datetime
 
 BLOCK_PARAMETERS = {
     "algolia_parameters": {
@@ -451,7 +450,7 @@ class ContentfulClient:
                                     submodule_infos
                                 )
                                 self.add_parent_child_to_df(module.id, submodule.id)
-                    except KeyError:
+                    except KeyError as E:
                         continue
 
         self.df_modules = self.df_modules.replace("None", float("nan"))

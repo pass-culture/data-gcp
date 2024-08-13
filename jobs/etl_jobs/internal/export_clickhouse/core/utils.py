@@ -1,7 +1,7 @@
 import os
-
-import clickhouse_connect
 from google.cloud import secretmanager
+import clickhouse_connect
+
 
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 PROJECT_NAME = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")

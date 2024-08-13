@@ -1,3 +1,4 @@
+import typing as t
 from base64 import b64encode
 from time import sleep
 
@@ -137,7 +138,7 @@ class BaseSSHGCEOperator(BaseOperator):
         self,
         instance_name: str,
         command: str,
-        environment: dict[str, str] = {},
+        environment: t.Dict[str, str] = {},
         *args,
         **kwargs,
     ):
@@ -210,7 +211,7 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
         self,
         instance_name: str,
         command: str,
-        environment: dict[str, str] = {},
+        environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
         use_pyenv: bool = False,
         *args,
@@ -237,16 +238,16 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
     def clone_and_init_with_conda(self, branch, python_version) -> str:
         return """
         export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH
-        python -m pip install --upgrade --user urllib3
+        python -m pip install --upgrade --user urllib3 
         conda create --name data-gcp python=%s -y -q
         conda init zsh
         source ~/.zshrc
         conda activate data-gcp
 
         DIR=data-gcp &&
-        if [ -d "$DIR" ]; then
+        if [ -d "$DIR" ]; then 
             echo "Update and Checkout repo..." &&
-            cd ${DIR} &&
+            cd ${DIR} && 
             git fetch --all &&
             git reset --hard origin/%s
         else
@@ -299,7 +300,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         instance_name: str,
         command: str,
         base_dir: str = None,
-        environment: dict[str, str] = {},
+        environment: t.Dict[str, str] = {},
         use_pyenv: bool = False,
         *args,
         **kwargs,

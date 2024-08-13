@@ -1,16 +1,15 @@
-from datetime import datetime, timedelta
-from time import sleep
-
-import pandas as pd
-from apple_client import AppleClient
 from google.cloud import bigquery
+from time import sleep
+from datetime import datetime, timedelta
+from apple_client import AppleClient
 from google_client import GoogleClient
+import pandas as pd
 from utils import (
+    KEY_ID,
+    ISSUER_ID,
+    PRIVATE_KEY,
     BIGQUERY_RAW_DATASET,
     BUCKET_NAME,
-    ISSUER_ID,
-    KEY_ID,
-    PRIVATE_KEY,
     get_last_month,
 )
 
@@ -38,7 +37,7 @@ def get_apple(execution_date):
             f"DELETE FROM {BIGQUERY_RAW_DATASET}.apple_download_stats WHERE date IN ('{date_generated_str_join}')"
         )
         delete_query.result()
-    except Exception:
+    except:
         pass
     df.to_gbq(f"{BIGQUERY_RAW_DATASET}.apple_download_stats", if_exists="append")
 
@@ -51,7 +50,7 @@ def get_google(execution_date):
     try:
         current_month_google_downloads = google_client.get_downloads(current_month)
         df = pd.concat([df, current_month_google_downloads])
-    except Exception:
+    except:
         pass
 
     date_generated_str_join = "','".join(list(df["date"].unique()))
@@ -61,7 +60,7 @@ def get_google(execution_date):
             f"DELETE FROM {BIGQUERY_RAW_DATASET}.google_download_stats WHERE date IN ('{date_generated_str_join}')"
         )
         delete_query.result()
-    except Exception:
+    except:
         pass
     df.to_gbq(f"{BIGQUERY_RAW_DATASET}.google_download_stats", if_exists="append")
 

@@ -1,8 +1,7 @@
-import time
-
+import typer
 import pandas as pd
 import polars as pl
-import typer
+import time
 from loguru import logger
 from tools.clusterisation import (
     clusterisation_from_prebuild_embedding,
@@ -68,7 +67,7 @@ def generate_clustering(
     item_embedding_components = items_with_embedding[embedding_cols]
 
     ##Clusterisation step
-    logger.info("Clusterisation step...")
+    logger.info(f"Clusterisation step...")
     start = time.time()
     items_with_cluster_coordinates = clusterisation_from_prebuild_embedding(
         item_embedding_components,
@@ -83,7 +82,7 @@ def generate_clustering(
         ],
         how="horizontal",
     )
-    logger.info("Clustering postprocessing... ")
+    logger.info(f"Clustering postprocessing... ")
     return embedding_cleaning(items_fully_enriched, clustering_group, embedding_cols)
 
 

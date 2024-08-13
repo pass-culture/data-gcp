@@ -1,19 +1,19 @@
 from datetime import datetime
-
-import numpy as np
 import typer
 from utils import (
-    ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    create_items_table,
+    ENV_SHORT_NAME,
     deploy_container,
-    get_item_docs,
     get_items_metadata,
-    get_user_docs,
     get_users_metadata,
+    get_user_docs,
+    get_item_docs,
     save_experiment,
     save_model_type,
+    create_items_table,
 )
+import numpy as np
+
 
 MODEL_TYPE = {
     "n_dim": 64,

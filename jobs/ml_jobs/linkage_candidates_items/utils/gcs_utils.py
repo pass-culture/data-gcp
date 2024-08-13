@@ -1,4 +1,5 @@
 import io
+from typing import Tuple
 from urllib.parse import urlparse
 
 import pyarrow as pa
@@ -7,7 +8,7 @@ from google.cloud import storage
 from pandas import DataFrame
 
 
-def _parse_gcs_path(gcs_path: str) -> tuple[str, str]:
+def _parse_gcs_path(gcs_path: str) -> Tuple[str, str]:
     """Parse the GCS path into bucket and blob."""
     if not gcs_path.startswith("gs://"):
         raise ValueError("Path must start with 'gs://'")

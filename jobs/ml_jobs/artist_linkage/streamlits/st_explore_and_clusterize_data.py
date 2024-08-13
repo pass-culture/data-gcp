@@ -1,15 +1,16 @@
 import time
-from collections.abc import Callable
+from typing import Callable, List
 
 import jellyfish
 import numpy as np
 import pandas as pd
 import rapidfuzz
 import streamlit as st
-from preprocess import FILTERING_PARAMS
 from scipy.sparse import csr_matrix, vstack
 from sklearn.cluster import DBSCAN
 from stqdm import stqdm
+
+from preprocess import FILTERING_PARAMS
 from utils.preprocessing_utils import (
     clean_names,
     extract_first_artist,
@@ -37,9 +38,9 @@ SPARSE_FILTER_THRESHOLD = 0.2
 DTYPE_DISTANCE_MATRIX = np.uint8  # np.uint8, np.uint16, np.float32
 SCORE_MULTIPLIER = (
     255
-    if np.uint8 == DTYPE_DISTANCE_MATRIX
+    if DTYPE_DISTANCE_MATRIX == np.uint8
     else 65535
-    if np.uint16 == DTYPE_DISTANCE_MATRIX
+    if DTYPE_DISTANCE_MATRIX == np.uint16
     else 1
 )
 
@@ -134,7 +135,7 @@ def format_clustering_function(x):
 
 @st.cache_data
 def compute_distance_matrix(
-    artists_list: list[str], _st_method: Callable, st_method_name: str
+    artists_list: List[str], _st_method: Callable, st_method_name: str
 ):
     # For caching with st_method_name
     # Compute the parwise distance between the artists

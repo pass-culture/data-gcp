@@ -1,9 +1,9 @@
 import typer
 from core.utils import (
     CLICKHOUSE_CLIENT,
-    ENV_SHORT_NAME,
-    PROJECT_NAME,
     access_secret_data,
+    PROJECT_NAME,
+    ENV_SHORT_NAME,
 )
 
 DATABASE = ["tmp", "intermediate", "analytics"]
@@ -27,7 +27,7 @@ def init() -> None:
             print(f"Something went wrong: {e}")
     try:
         named_collection = f"""
-            CREATE NAMED COLLECTION gcs_credentials on cluster default AS
+            CREATE NAMED COLLECTION gcs_credentials on cluster default AS 
                 access_key_id = '{access_key_id}',
                 secret_access_key = '{secret_access_key}'
         """

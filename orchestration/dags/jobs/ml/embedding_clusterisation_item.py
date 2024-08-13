@@ -1,20 +1,20 @@
 from datetime import datetime, timedelta
-
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
+from common.operators.gce import (
+    StartGCEOperator,
+    StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+)
 from common import macros
-from common.alerts import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
 )
-from common.operators.gce import (
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
-    StartGCEOperator,
-    StopGCEOperator,
-)
+
+from common.alerts import task_fail_slack_alert
 from common.utils import get_airflow_schedule
 
 DEFAULT_REGION = "europe-west1"

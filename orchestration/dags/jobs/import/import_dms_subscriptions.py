@@ -1,4 +1,3 @@
-import time
 from datetime import date, datetime, timedelta
 
 from airflow import DAG
@@ -8,24 +7,36 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
-from common import macros
+
+from google.auth.transport.requests import Request
+from google.oauth2 import id_token
+
 from common.alerts import task_fail_slack_alert
+from common.operators.biquery import bigquery_job_task
+
+
 from common.config import (
-    BIGQUERY_RAW_DATASET,
-    DAG_FOLDER,
     DATA_GCS_BUCKET_NAME,
+    BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_RAW_DATASET,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+    DAG_FOLDER,
 )
-from common.operators.biquery import bigquery_job_task
+
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
 )
-from common.utils import get_airflow_schedule
+import time
+
+
 from dependencies.dms_subscriptions.import_dms_subscriptions import CLEAN_TABLES
+from common import macros
+from common.utils import get_airflow_schedule
+
 
 DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 GCE_INSTANCE = f"import-dms-{ENV_SHORT_NAME}"
@@ -90,7 +101,7 @@ with DAG(
     )
 
     dms_to_gcs_pro = SSHGCEOperator(
-        task_id="dms_to_gcs_pro",
+        task_id=f"dms_to_gcs_pro",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command="python main.py pro {{ params.updated_since_pro }} "
@@ -105,7 +116,7 @@ with DAG(
     )
 
     dms_to_gcs_jeunes = SSHGCEOperator(
-        task_id="dms_to_gcs_jeunes",
+        task_id=f"dms_to_gcs_jeunes",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command="python main.py jeunes {{ params.updated_since_jeunes }} "

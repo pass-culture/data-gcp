@@ -1,23 +1,33 @@
 import datetime
-
 from airflow import DAG
-from airflow.models import Param
+from airflow.providers.http.operators.http import SimpleHttpOperator
+from airflow.operators.python import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
-from common import macros
-from common.alerts import task_fail_slack_alert
-from common.config import (
-    DAG_FOLDER,
-    ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
-)
-from common.operators.biquery import bigquery_job_task
+from airflow.models import Param
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
 )
-from common.utils import get_airflow_schedule
+from common.operators.biquery import bigquery_job_task
+
+from common.config import DAG_FOLDER
+
+from common.config import (
+    BIGQUERY_ANALYTICS_DATASET,
+    BIGQUERY_RAW_DATASET,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+    DAG_FOLDER,
+)
+
+from common.utils import getting_service_account_token, get_airflow_schedule
+
+from common.alerts import task_fail_slack_alert
+
+from common import macros
+
 from dependencies.downloads.import_downloads import ANALYTICS_TABLES
 
 GCE_INSTANCE = f"import-downloads-{ENV_SHORT_NAME}"

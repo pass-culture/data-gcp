@@ -1,7 +1,7 @@
 import typer
-from extract import account_import, videos_import
 from pytiktok import BusinessAccountApi
 from utils import CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN
+from extract import account_import, videos_import
 
 
 def main(

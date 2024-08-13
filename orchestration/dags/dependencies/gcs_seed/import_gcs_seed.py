@@ -1,4 +1,4 @@
-SQL_PATH = "dependencies/gcs_seed/sql"
+SQL_PATH = f"dependencies/gcs_seed/sql"
 
 # TODO: legacy code, should be removed or refactored within DBT.
 

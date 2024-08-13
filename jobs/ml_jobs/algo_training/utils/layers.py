@@ -1,13 +1,13 @@
-import json
 from dataclasses import dataclass
-
+from loguru import logger
+import pandas as pd
 import numpy as np
 import tensorflow as tf
-from loguru import logger
-from tensorflow.keras.layers import Embedding, TextVectorization
+import json
+from tensorflow.keras.layers import Embedding, TextVectorization, Dot
 from tensorflow.keras.layers.experimental.preprocessing import (
-    IntegerLookup,
     StringLookup,
+    IntegerLookup,
 )
 
 
@@ -121,7 +121,7 @@ class PretainedEmbeddingLayer:
             try:
                 emb = json.loads(str_emb)
                 emb = emb
-            except Exception:
+            except:
                 emb = [0] * emb_size
             float_emb.append(np.array(emb))
         emb_matrix = np.matrix(float_emb)

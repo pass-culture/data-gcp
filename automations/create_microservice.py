@@ -11,7 +11,7 @@ def is_snake_case(s: str) -> bool:
 
 
 def append_to_makefile(service_name):
-    with open("Makefile") as file:
+    with open("Makefile", "r") as file:
         lines = file.readlines()
 
     install_index = next(

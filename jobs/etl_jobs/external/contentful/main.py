@@ -1,15 +1,16 @@
-from datetime import datetime
+import pandas as pd
+from google.cloud import bigquery
 
 from contentful_client import ContentfulClient
-from google.cloud import bigquery
 from utils import (
     BIGQUERY_RAW_DATASET,
-    ENTRIES_DTYPE,
-    ENV_SHORT_NAME,
     GCP_PROJECT,
-    PREVIEW_TOKEN,
+    ENV_SHORT_NAME,
+    ENTRIES_DTYPE,
     TOKEN,
+    PREVIEW_TOKEN,
 )
+from datetime import datetime
 
 CONTENTFUL_ENTRIES_TABLE_NAME = "contentful_entry"
 CONTENTFUL_RELATIONSHIP_TABLE_NAME = "contentful_relationship"

@@ -1,20 +1,22 @@
+import os
 from datetime import datetime, timedelta
 
 from airflow import DAG
-from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from common import macros
-from common.alerts import task_fail_slack_alert
-from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
-from common.operators.biquery import bigquery_job_task
+from airflow.models import Param
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
 )
-from common.utils import depends_loop, get_airflow_schedule
+from common.alerts import task_fail_slack_alert
+from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, DAG_FOLDER
+from common.utils import get_airflow_schedule, depends_loop
 from dependencies.batch.import_batch import import_batch_tables
+from common.operators.biquery import bigquery_job_task
+from common import macros
+
 
 GCE_INSTANCE = f"import-batch-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/batch"
@@ -72,21 +74,21 @@ with DAG(
     )
 
     ios_job = SSHGCEOperator(
-        task_id="import_ios",
+        task_id=f"import_ios",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
-        python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} ios
+        python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} ios      
         """,
         retries=2,
     )
 
     android_job = SSHGCEOperator(
-        task_id="import_android",
+        task_id=f"import_android",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
-        python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} android
+        python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} android      
         """,
         retries=2,
     )

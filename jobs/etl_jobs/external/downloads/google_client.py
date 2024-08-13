@@ -1,9 +1,10 @@
 import os
-import tempfile
 
 import pandas as pd
-from google.cloud import storage
+import tempfile
 from werkzeug.utils import secure_filename
+
+from google.cloud import storage
 
 OUT_COLS = [
     "date",

@@ -1,8 +1,9 @@
-import time
-import zlib
-
-import pandas as pd
 import requests
+import time
+
+import numpy as np
+import pandas as pd
+import zlib
 from authlib.jose import jwt
 
 OUT_COLS = [
@@ -74,7 +75,7 @@ class AppleClient:
             return None
         try:
             data = zlib.decompress(r.content, zlib.MAX_WBITS | 32)
-        except Exception:
+        except:
             print(f"Error with {report_date}")
             print(r.status_code)
             print(r.content)
@@ -82,7 +83,7 @@ class AppleClient:
         with open("/tmp/report.txt", "wb") as outFile:
             outFile.write(data)
 
-        with open("/tmp/report.txt") as f:
+        with open("/tmp/report.txt", "r") as f:
             data = f.read()
 
         df = pd.DataFrame([x.rsplit("\t") for x in data.rsplit("\n")[1:]])

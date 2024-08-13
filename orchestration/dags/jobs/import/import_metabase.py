@@ -1,24 +1,24 @@
 import datetime
-
 from airflow import DAG
-from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+from airflow.models import Param
 from common import macros
-from common.alerts import task_fail_slack_alert
-from common.config import (
-    DAG_FOLDER,
-    ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
-    METABASE_EXTERNAL_CONNECTION_ID,
-)
 from common.utils import (
     get_airflow_schedule,
 )
 from dependencies.metabase.import_metabase import (
-    from_external,
     import_tables,
+    from_external,
 )
+from common.config import (
+    GCP_PROJECT_ID,
+    DAG_FOLDER,
+    METABASE_EXTERNAL_CONNECTION_ID,
+    ENV_SHORT_NAME,
+)
+from common.alerts import task_fail_slack_alert
+
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),

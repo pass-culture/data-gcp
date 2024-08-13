@@ -1,7 +1,6 @@
-import time
-
 import psutil
 from loguru import logger
+import time
 
 
 def log_memory_info():

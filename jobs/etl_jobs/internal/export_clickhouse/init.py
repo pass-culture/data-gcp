@@ -27,7 +27,7 @@ def init() -> None:
             print(f"Something went wrong: {e}")
     try:
         named_collection = f"""
-            CREATE NAMED COLLECTION gcs_credentials on cluster default AS 
+            CREATE NAMED COLLECTION gcs_credentials on cluster default AS
                 access_key_id = '{access_key_id}',
                 secret_access_key = '{secret_access_key}'
         """

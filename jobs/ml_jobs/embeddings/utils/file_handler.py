@@ -10,7 +10,6 @@ from utils.logging import logging
 
 
 def _load_images(batch_urls):
-
     """
     Load an image from a file path.
     """

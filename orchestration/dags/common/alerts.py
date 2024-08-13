@@ -75,7 +75,7 @@ def __task_fail_slack_alert(context, job_type):
         )
 
         slack_msg = f"""
-                {ENV_EMOJI[ENV_SHORT_NAME]}: 
+                {ENV_EMOJI[ENV_SHORT_NAME]}:
                 *Task* <{task_url}|{task_name}> has failed!
                 *Dag*: <{dag_url}|{dag_name}>
                 *Execution Time*: {execution_date}

@@ -169,7 +169,6 @@ def videos_import(
 
 
 def account_import(business_api, business_id: str, from_date: str, to_date: str) -> str:
-
     account_stats = business_api.get_account_data(
         business_id=business_id,
         return_json=True,

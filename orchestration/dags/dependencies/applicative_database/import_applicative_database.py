@@ -18,9 +18,9 @@ def get_tables_config_dict(PATH, BQ_DESTINATION_DATASET):
             tables_config[table_name] = {}
             tables_config[table_name]["sql"] = PATH + "/" + file
             tables_config[table_name]["destination_dataset"] = BQ_DESTINATION_DATASET
-            tables_config[table_name][
-                "destination_table"
-            ] = f"applicative_database_{table_name}"
+            tables_config[table_name]["destination_table"] = (
+                f"applicative_database_{table_name}"
+            )
     return tables_config
 
 

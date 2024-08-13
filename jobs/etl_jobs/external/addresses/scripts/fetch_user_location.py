@@ -23,46 +23,46 @@ BUCKET_NAME = f"data-bucket-{ENV_SHORT_NAME}"
 
 SQL_QUERY = f"""
 WITH last_status_update AS (
-    SELECT 
-        user_id, 
-        max(dateCreated) as date_created 
+    SELECT
+        user_id,
+        max(dateCreated) as date_created
 
-    FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.applicative_database_beneficiary_fraud_check` 
+    FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.applicative_database_beneficiary_fraud_check`
     WHERE type = 'PROFILE_COMPLETION' and status = 'OK'
     group by user_id
 ),
 
 user_location_udpate AS (
-        SELECT 
-        user_id, 
-        max(date_updated) as date_updated 
+        SELECT
+        user_id,
+        max(date_updated) as date_updated
     FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.user_locations`
     group by user_id
 ),
 
 user_candidates AS (
-    SELECT 
+    SELECT
         du.user_creation_date,
-        du.user_id, 
-        REPLACE(REPLACE(du.user_address, '\\r', ''), '\\n', '') AS user_address, 
+        du.user_id,
+        REPLACE(REPLACE(du.user_address, '\\r', ''), '\\n', '') AS user_address,
         du.user_postal_code,
         du.user_city,
         du.user_department_code
     FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.applicative_database_user` du
     LEFT JOIN last_status_update lsu on lsu.user_id = du.user_id
-    LEFT JOIN user_location_udpate ul on ul.user_id = du.user_id 
+    LEFT JOIN user_location_udpate ul on ul.user_id = du.user_id
         and (
-            ul.date_updated >= GREATEST(du.user_creation_date,lsu.date_created) -- updated the profile again 
+            ul.date_updated >= GREATEST(du.user_creation_date,lsu.date_created) -- updated the profile again
         )
 
-    WHERE 
+    WHERE
         du.user_address is not NULL
         AND du.user_address <> ""
-        AND du.user_postal_code is not NULL 
-        AND du.user_city is not NULL 
+        AND du.user_postal_code is not NULL
+        AND du.user_city is not NULL
         AND du.user_department_code is not NULL
 
-        AND ul.user_id IS NULL 
+        AND ul.user_id IS NULL
 
 )
 
@@ -74,7 +74,7 @@ SELECT
   user_department_code
 
 FROM user_candidates
-ORDER BY user_id 
+ORDER BY user_id
 LIMIT 5000
 """
 
@@ -101,7 +101,6 @@ class AdressesDownloader:
         results = []
         start_time = time.time()
         for i, address in tqdm(enumerate(addresses)):
-
             if i > 0 and i % limit_rate == 0:
                 elapsed_time = time.time() - start_time
                 sleep_time = max(0, 1 - elapsed_time)
@@ -209,12 +208,12 @@ class AdressesDownloader:
         with fs.open(f"{BUCKET_NAME}/functions/georef-france-commune.json") as file:
             communes = json.load(file)
 
-        self.user_address_dataframe[
-            ["code_epci", "epci_name"]
-        ] = self.user_address_dataframe.apply(
-            lambda row: self.find_commune_informations(row["city_code"], communes),
-            axis=1,
-            result_type="expand",
+        self.user_address_dataframe[["code_epci", "epci_name"]] = (
+            self.user_address_dataframe.apply(
+                lambda row: self.find_commune_informations(row["city_code"], communes),
+                axis=1,
+                result_type="expand",
+            )
         )
 
         with fs.open(
@@ -222,14 +221,14 @@ class AdressesDownloader:
         ) as file:
             qpv = json.load(file)
 
-        self.user_address_dataframe[
-            ["qpv_communes", "qpv_name", "code_qpv"]
-        ] = self.user_address_dataframe.apply(
-            lambda row: self.find_qpv_informations(
-                row["longitude"], row["latitude"], row["user_department_code"], qpv
-            ),
-            axis=1,
-            result_type="expand",
+        self.user_address_dataframe[["qpv_communes", "qpv_name", "code_qpv"]] = (
+            self.user_address_dataframe.apply(
+                lambda row: self.find_qpv_informations(
+                    row["longitude"], row["latitude"], row["user_department_code"], qpv
+                ),
+                axis=1,
+                result_type="expand",
+            )
         )
 
         with fs.open(

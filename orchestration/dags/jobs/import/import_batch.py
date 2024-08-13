@@ -76,7 +76,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
-        python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} ios      
+        python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} ios
         """,
         retries=2,
     )
@@ -86,7 +86,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
-        python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} android      
+        python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} android
         """,
         retries=2,
     )

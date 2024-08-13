@@ -237,16 +237,16 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
     def clone_and_init_with_conda(self, branch, python_version) -> str:
         return """
         export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH
-        python -m pip install --upgrade --user urllib3 
+        python -m pip install --upgrade --user urllib3
         conda create --name data-gcp python=%s -y -q
         conda init zsh
         source ~/.zshrc
         conda activate data-gcp
 
         DIR=data-gcp &&
-        if [ -d "$DIR" ]; then 
+        if [ -d "$DIR" ]; then
             echo "Update and Checkout repo..." &&
-            cd ${DIR} && 
+            cd ${DIR} &&
             git fetch --all &&
             git reset --hard origin/%s
         else

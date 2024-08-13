@@ -112,8 +112,8 @@ def get_items_metadata():
     client = bigquery.Client()
 
     sql = f"""
-        SELECT 
-        *, 
+        SELECT
+        *,
         ROW_NUMBER() OVER (ORDER BY booking_number DESC) as booking_number_desc,
         ROW_NUMBER() OVER (ORDER BY booking_trend DESC) as booking_trend_desc,
         ROW_NUMBER() OVER (ORDER BY booking_creation_trend DESC) as booking_creation_trend_desc,
@@ -127,12 +127,12 @@ def get_users_metadata():
     client = bigquery.Client()
 
     sql = f"""
-        SELECT 
+        SELECT
             user_id,
             user_total_deposit_amount,
             current_deposit_type as user_current_deposit_type,
             COALESCE(total_theoretical_remaining_credit, last_deposit_amount) as user_theoretical_remaining_credit
-        FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.global_user` 
+        FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.global_user`
     """
     return client.query(sql).to_dataframe()
 

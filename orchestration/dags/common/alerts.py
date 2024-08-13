@@ -71,7 +71,7 @@ def __task_fail_slack_alert(context, job_type):
         )
 
         slack_msg = f"""
-                {ENV_EMOJI[ENV_SHORT_NAME]}: 
+                {ENV_EMOJI[ENV_SHORT_NAME]}:
                 *Task* <{task_url}|{task_name}> has failed!
                 *Dag*: <{dag_url}|{dag_name}>
                 *Execution Time*: {execution_date}
@@ -111,7 +111,6 @@ def dbt_test_slack_alert(results_json, manifest_json, job_type="dbt-test", **con
         test_nodes = {}
         for result in tests_results:
             node = result["unique_id"]
-            node_data = tests_manifest[result["unique_id"]]
             if result["status"] != "pass":
                 if test_nodes.get(result["unique_id"]) is None:
                     test_nodes[result["unique_id"]] = {

@@ -100,7 +100,7 @@ with DAG(
         --legacy-table-name {{ params.legacy_table_name }} \
         --new-table-name {{ params.new_table_name }} \
         --legacy-schema-name {{ params.legacy_schema_name }} \
-        --new-schema-name {{ params.new_schema_name }} 
+        --new-schema-name {{ params.new_schema_name }}
         """,
     )
 

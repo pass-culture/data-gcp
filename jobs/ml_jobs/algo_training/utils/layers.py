@@ -121,7 +121,7 @@ class PretainedEmbeddingLayer:
             try:
                 emb = json.loads(str_emb)
                 emb = emb
-            except:
+            except Exception:
                 emb = [0] * emb_size
             float_emb.append(np.array(emb))
         emb_matrix = np.matrix(float_emb)

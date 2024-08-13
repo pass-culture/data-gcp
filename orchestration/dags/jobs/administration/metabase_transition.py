@@ -16,9 +16,6 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
 )
-from common.utils import (
-    ENV_SHORT_NAME,
-)
 
 GCE_INSTANCE = f"metabase-transition-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/metabase"
@@ -103,7 +100,7 @@ with DAG(
         --legacy-table-name {{ params.legacy_table_name }} \
         --new-table-name {{ params.new_table_name }} \
         --legacy-schema-name {{ params.legacy_schema_name }} \
-        --new-schema-name {{ params.new_schema_name }} 
+        --new-schema-name {{ params.new_schema_name }}
         """,
     )
 

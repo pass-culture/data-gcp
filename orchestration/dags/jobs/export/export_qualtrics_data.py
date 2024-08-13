@@ -62,8 +62,8 @@ def get_and_send(**kwargs):
                             ' SELECT CAST("id" AS varchar(255)) AS user_id, email FROM public.user '
                         )
             )
-        SELECT 
-            ue.email, 
+        SELECT
+            ue.email,
             CURRENT_TIMESTAMP() as export_date,
             t.* except(calculation_month, export_date)
         FROM `{dataset_id}.{table_name}` t
@@ -72,7 +72,7 @@ def get_and_send(**kwargs):
         """
     else:
         sql = f"""
-        SELECT 
+        SELECT
             CURRENT_TIMESTAMP() as export_date,
             t.* except(calculation_month, export_date)
         FROM `{dataset_id}.{table_name}` t

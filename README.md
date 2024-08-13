@@ -96,6 +96,8 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
     make install
     ```
 
+  > Cette commande créé différents sous-environnements virtuels pour les différents types de jobs spécifiés dans le fichier `Makefile`. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
+
 #### 2. Config .env.local
 
 Dans le fichier `.env.local`, renseigne les valeurs des variables manquantes en utilisant [cette page](https://www.notion.so/passcultureapp/Les-secrets-du-repo-data-gcp-085759e27a664a95a65a6886831bde54)

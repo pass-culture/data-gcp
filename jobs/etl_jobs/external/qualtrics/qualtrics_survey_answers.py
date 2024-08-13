@@ -3,6 +3,7 @@ import zipfile
 
 import pandas as pd
 import requests
+
 from utils import ENV_SHORT_NAME
 
 FORMAT_DICT = {

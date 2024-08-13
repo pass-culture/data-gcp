@@ -3,6 +3,7 @@ from datetime import date, timedelta
 
 import pandas as pd
 import typer
+
 from core.appsflyer import AppsFlyer
 from core.mapping import (
     APP_REPORT,

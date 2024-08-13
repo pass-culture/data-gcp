@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import requests
 from google.cloud import bigquery
+
 from scripts.utils import (
     BIGQUERY_CLEAN_DATASET,
     GCP_PROJECT,

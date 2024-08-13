@@ -2,6 +2,7 @@ import re
 
 import pandas as pd
 import typer
+
 from metabase_api import MetabaseAPI
 from utils import (
     ANALYTICS_DATASET,

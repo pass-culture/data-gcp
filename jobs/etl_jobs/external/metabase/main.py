@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 import typer
+
 from metabase_api import MetabaseAPI
 from native import NativeCard
 from query import QueryCard

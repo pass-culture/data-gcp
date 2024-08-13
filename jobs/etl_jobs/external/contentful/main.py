@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from contentful_client import ContentfulClient
 from google.cloud import bigquery
+
+from contentful_client import ContentfulClient
 from utils import (
     BIGQUERY_RAW_DATASET,
     ENTRIES_DTYPE,

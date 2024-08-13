@@ -2,8 +2,9 @@ from datetime import datetime, timedelta
 from time import sleep
 
 import pandas as pd
-from apple_client import AppleClient
 from google.cloud import bigquery
+
+from apple_client import AppleClient
 from google_client import GoogleClient
 from utils import (
     BIGQUERY_RAW_DATASET,

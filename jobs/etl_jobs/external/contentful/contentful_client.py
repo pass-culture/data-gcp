@@ -2,6 +2,7 @@ from datetime import datetime
 
 import contentful
 import pandas as pd
+
 from utils import SPACE_ID
 
 BLOCK_PARAMETERS = {

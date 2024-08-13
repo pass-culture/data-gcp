@@ -1,5 +1,6 @@
-from bucket import BucketFolder
 from google.cloud import bigquery, storage
+
+from bucket import BucketFolder
 from tables_config import REF_TABLES
 from utils import (
     BIGQUERY_IMPORT_BUCKET_FOLDER,

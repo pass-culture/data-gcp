@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta, timezone
 
 import typer
+
 from sendinblue_newsletters import SendinblueNewsletters
 from sendinblue_transactional import SendinblueTransactional
 from utils import (

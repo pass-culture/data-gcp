@@ -1,5 +1,6 @@
 import pandas as pd
 import requests
+
 from utils import BIGQUERY_RAW_DATASET
 
 

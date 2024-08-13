@@ -1,4 +1,5 @@
 import typer
+
 from core.fs import load_sql
 from core.utils import CLICKHOUSE_CLIENT
 

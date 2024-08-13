@@ -73,7 +73,7 @@ SELECT
 
 FROM user_candidates
 ORDER BY user_id 
-LIMIT 10000
+LIMIT 5000
 """
 
 

@@ -38,7 +38,7 @@ def get_apple(execution_date):
             f"DELETE FROM {BIGQUERY_RAW_DATASET}.apple_download_stats WHERE date IN ('{date_generated_str_join}')"
         )
         delete_query.result()
-    except:
+    except Exception:
         pass
     df.to_gbq(f"{BIGQUERY_RAW_DATASET}.apple_download_stats", if_exists="append")
 
@@ -51,7 +51,7 @@ def get_google(execution_date):
     try:
         current_month_google_downloads = google_client.get_downloads(current_month)
         df = pd.concat([df, current_month_google_downloads])
-    except:
+    except Exception:
         pass
 
     date_generated_str_join = "','".join(list(df["date"].unique()))
@@ -61,7 +61,7 @@ def get_google(execution_date):
             f"DELETE FROM {BIGQUERY_RAW_DATASET}.google_download_stats WHERE date IN ('{date_generated_str_join}')"
         )
         delete_query.result()
-    except:
+    except Exception:
         pass
     df.to_gbq(f"{BIGQUERY_RAW_DATASET}.google_download_stats", if_exists="append")
 

@@ -51,7 +51,7 @@ logger.info("startup", extra=log_data)
 def input_size(size):
     try:
         return int(size)
-    except:
+    except Exception:
         return 10
 
 

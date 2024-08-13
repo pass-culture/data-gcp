@@ -33,7 +33,7 @@ def import_survey_metadata(data_center, api_token):
     if response.json()["meta"]["httpStatus"] == "200 - OK":
         surveys = pd.DataFrame(response.json()["result"]["elements"])
         surveys.to_gbq(f"clean_{ENV_SHORT_NAME}.qualtrics_survey", if_exists="replace")
-        active_surveys = list(surveys[surveys.isActive == True].id)
+        active_surveys = list(surveys[surveys.isActive is True].id)
         return active_surveys
 
 

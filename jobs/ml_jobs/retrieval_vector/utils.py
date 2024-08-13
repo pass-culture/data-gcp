@@ -140,14 +140,14 @@ def get_users_metadata():
 def to_ts(f):
     try:
         return float(f.timestamp())
-    except:
+    except Exception:
         return 0.0
 
 
 def to_float(f):
     try:
         return float(f)
-    except:
+    except Exception:
         return None
 
 

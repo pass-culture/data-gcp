@@ -1,4 +1,3 @@
-import datetime
 import time
 
 from airflow import DAG

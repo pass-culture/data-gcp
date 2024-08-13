@@ -166,7 +166,7 @@ class ModelHandler:
                     try:
                         print(f"Removing {versions.version_id}")
                         modelRegistry.delete_version(f"{versions.version_id}")
-                    except:
+                    except Exception:
                         # TODO; Model might be used by another endpoint
                         # Check if deployed or not before.
                         print(f"Could not remove {versions.version_id}")

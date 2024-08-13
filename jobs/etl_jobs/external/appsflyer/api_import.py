@@ -1,3 +1,4 @@
+import time
 from datetime import date, timedelta
 
 import pandas as pd
@@ -16,7 +17,6 @@ from core.mapping import (
 from core.utils import ANDROID_APP_ID, IOS_APP_ID, TOKEN, save_to_bq
 
 APPS = {"ios": IOS_APP_ID, "android": ANDROID_APP_ID}
-import time
 
 
 class ImportAppsFlyer:

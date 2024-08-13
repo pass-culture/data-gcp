@@ -26,7 +26,7 @@ WITH last_status_update AS (
         max(dateCreated) as date_created 
 
     FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.applicative_database_beneficiary_fraud_check` 
-    WHERE type = 'PROFILE_COMPLETION'
+    WHERE type = 'PROFILE_COMPLETION' and status = 'OK'
     group by user_id
 ),
 

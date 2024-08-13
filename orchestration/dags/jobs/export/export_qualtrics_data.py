@@ -2,9 +2,6 @@ import datetime
 
 import pandas as pd
 import requests
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import PythonOperator
 from common import macros
 from common.access_gcp_secrets import access_secret_data
 from common.alerts import task_fail_slack_alert
@@ -18,6 +15,10 @@ from common.config import (
 from common.operators.biquery import bigquery_job_task
 from common.utils import depends_loop, get_airflow_schedule
 from dependencies.qualtrics.export_qualtrics_data import analytics_tables, clean_tables
+
+from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import PythonOperator
 
 default_dag_args = {
     "start_date": datetime.datetime(2022, 6, 24),

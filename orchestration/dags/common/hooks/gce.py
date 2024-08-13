@@ -6,7 +6,6 @@ import typing as t
 import dateutil
 import googleapiclient.discovery
 import pytz
-from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from common.config import (
     ENV_SHORT_NAME,
     GCE_SA,
@@ -17,6 +16,8 @@ from common.config import (
 from common.hooks.image import CPUImage
 from common.hooks.network import DefaultVPCNetwork
 from googleapiclient.errors import HttpError
+
+from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 
 DEFAULT_LABELS = {
     "env": ENV_SHORT_NAME,

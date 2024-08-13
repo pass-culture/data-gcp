@@ -1,13 +1,14 @@
 import datetime
 
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER, GCP_PROJECT_ID
 from common.operators.biquery import bigquery_job_task
 from common.utils import get_airflow_schedule
 from dependencies.logs.import_logs import import_tables
+
+from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
 
 default_dag_args = {
     "start_date": datetime.datetime(2022, 6, 20),

@@ -1,9 +1,3 @@
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.bash_operator import BashOperator
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.dates import datetime, timedelta
-from airflow.utils.task_group import TaskGroup
 from common.alerts import task_fail_slack_alert
 from common.config import (
     ENV_SHORT_NAME,
@@ -14,6 +8,13 @@ from common.config import (
 )
 from common.dbt.utils import load_manifest
 from common.utils import get_airflow_schedule, waiting_operator
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.bash_operator import BashOperator
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.utils.dates import datetime, timedelta
+from airflow.utils.task_group import TaskGroup
 
 default_args = {
     "start_date": datetime(2020, 12, 23),

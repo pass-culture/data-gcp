@@ -1,8 +1,5 @@
 import datetime
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
@@ -16,6 +13,10 @@ from common.operators.sensor import TimeSleepSensor
 from common.utils import (
     get_airflow_schedule,
 )
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
 
 GCE_INSTANCE = f"import-adage-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/adage"

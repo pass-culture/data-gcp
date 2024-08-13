@@ -2,14 +2,15 @@ import ast
 from datetime import datetime
 from urllib.parse import quote
 
-from airflow import configuration
-from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 from common.access_gcp_secrets import access_secret_data
 from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     SLACK_CONN_ID,
 )
+
+from airflow import configuration
+from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
 ENV_EMOJI = {
     "prod": ":volcano: *PROD* :volcano:",

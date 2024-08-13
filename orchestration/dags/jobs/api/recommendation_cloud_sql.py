@@ -3,18 +3,6 @@ import time
 from datetime import datetime, timedelta
 
 import pandas as pd
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import PythonOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryDeleteTableOperator,
-    BigQueryExecuteQueryOperator,
-    BigQueryInsertJobOperator,
-)
-from airflow.providers.google.cloud.operators.cloud_sql import (
-    CloudSQLExecuteQueryOperator,
-    CloudSQLImportInstanceOperator,
-)
 from common import macros
 from common.access_gcp_secrets import access_secret_data
 from common.alerts import task_fail_slack_alert
@@ -29,6 +17,19 @@ from common.config import (
     RECOMMENDATION_SQL_INSTANCE,
 )
 from common.utils import get_airflow_schedule
+
+from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import PythonOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryDeleteTableOperator,
+    BigQueryExecuteQueryOperator,
+    BigQueryInsertJobOperator,
+)
+from airflow.providers.google.cloud.operators.cloud_sql import (
+    CloudSQLExecuteQueryOperator,
+    CloudSQLImportInstanceOperator,
+)
 
 database_instance_name = access_secret_data(
     GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}_database_instance_name", default=""

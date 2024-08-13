@@ -1,8 +1,5 @@
 import datetime
 
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import PythonOperator
 from common import macros
 from common.alerts import analytics_fail_slack_alert
 from common.config import DAG_FOLDER, GCP_PROJECT_ID
@@ -18,6 +15,10 @@ from dependencies.great_expectations.run_tests import (
     run_enriched_tests,
 )
 from dependencies.great_expectations.utils import clear_directory, ge_root_dir
+
+from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import PythonOperator
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),

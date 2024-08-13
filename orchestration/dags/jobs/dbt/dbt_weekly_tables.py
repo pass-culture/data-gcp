@@ -1,10 +1,5 @@
 import datetime
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.bash_operator import BashOperator
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python_operator import BranchPythonOperator
 from common import macros
 from common.config import (
     ENV_SHORT_NAME,
@@ -13,6 +8,12 @@ from common.config import (
     PATH_TO_DBT_TARGET,
 )
 from common.utils import get_airflow_schedule, waiting_operator
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.bash_operator import BashOperator
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python_operator import BranchPythonOperator
 
 default_args = {
     "start_date": datetime.datetime(2020, 12, 20),

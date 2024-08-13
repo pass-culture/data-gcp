@@ -5,7 +5,11 @@ from urllib.parse import quote
 from airflow import configuration
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 from common.access_gcp_secrets import access_secret_data
-from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, SLACK_CONN_ID
+from common.config import (
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+    SLACK_CONN_ID,
+)
 
 ENV_EMOJI = {
     "prod": ":volcano: *PROD* :volcano:",
@@ -106,42 +110,53 @@ def dbt_test_slack_alert(results_json, manifest_json, job_type="dbt-test", **con
         if values["resource_type"] == "test"
     }
     if "results" in results_json:
-        tests_results = results_json["results"]
-        slack_msg = slack_header
-        test_nodes = {}
-        for result in tests_results:
-            node = result["unique_id"]
-            if result["status"] != "pass":
-                if test_nodes.get(result["unique_id"]) is None:
-                    test_nodes[result["unique_id"]] = {
-                        result["unique_id"]: [result["status"], result["message"]]
-                    }
-                else:
-                    test_nodes[result["unique_id"]] = {
-                        **test_nodes[result["unique_id"]],
-                        **{result["unique_id"]: [result["status"], result["message"]]},
-                    }
-        test_nodes = dict(
-            sorted(
-                test_nodes.items(),
-                key=lambda item: manifest_json["nodes"][item[0]]["meta"].get("owner"),
+        if results_json["results"] == []:
+            slack_msg = slack_header
+            slack_msg += "\n:zero: No detected tests"
+        else:
+            tests_results = results_json["results"]
+            slack_msg = slack_header
+            test_nodes = {}
+            for result in tests_results:
+                node = result["unique_id"]
+                if result["status"] != "pass":
+                    if test_nodes.get(result["unique_id"]) is None:
+                        test_nodes[result["unique_id"]] = {
+                            result["unique_id"]: [result["status"], result["message"]]
+                        }
+                    else:
+                        test_nodes[result["unique_id"]] = {
+                            **test_nodes[result["unique_id"]],
+                            **{
+                                result["unique_id"]: [
+                                    result["status"],
+                                    result["message"],
+                                ]
+                            },
+                        }
+            test_nodes = dict(
+                sorted(
+                    test_nodes.items(),
+                    key=lambda item: manifest_json["nodes"][item[0]]["meta"].get(
+                        "owner", "@data"
+                    ),
+                )
             )
-        )
-        for node, tests_results in test_nodes.items():
-            tested_node = tests_manifest[node]["attached_node"]
-            slack_msg = "\n".join(
-                [
-                    slack_msg,
-                    f"""{manifest_json["nodes"][node]["meta"].get("owner")}""",
-                    f"""Model {tested_node.split('.')[-1]} failed the following tests: """,
-                ]
-                + [
-                    f"""{SEVERITY_TYPE_EMOJI[res[0]]} *Test:* {tests_manifest[test]["alias"]}"""
-                    + f" has failed with severity {res[0]}\n"
-                    + f">_{res[1]}_"
-                    for test, res in tests_results.items()
-                ]
-            )
+            for node, tests_results in test_nodes.items():
+                tested_node = tests_manifest[node]["attached_node"]
+                slack_msg = "\n".join(
+                    [
+                        slack_msg,
+                        f"""{manifest_json["nodes"][node]["meta"].get("owner")}""",
+                        f"""Model {tested_node.split('.')[-1]} failed the following tests: """,
+                    ]
+                    + [
+                        f"""{SEVERITY_TYPE_EMOJI[res[0]]} *Test:* {tests_manifest[test]["alias"]}"""
+                        + f" has failed with severity {res[0]}\n"
+                        + f">_{res[1]}_"
+                        for test, res in tests_results.items()
+                    ]
+                )
     else:
         slack_msg = slack_header
         slack_msg += "\nNo tests have been run"

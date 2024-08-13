@@ -52,7 +52,6 @@ def _download_img_from_url_list(urls):
                     f.write(response.content)
                 stats.append({"status": "success", "url": url})
             else:
-
                 stats.append({"status": "skipped", "url": url})
         except requests.exceptions.RequestException:
             stats.append({"status": "error", "url": url})

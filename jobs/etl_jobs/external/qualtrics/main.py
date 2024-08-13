@@ -30,7 +30,7 @@ def run(
     task: str = typer.Option(
         ...,
         help="Nom de la tache",
-    )
+    ),
 ):
     if task == "import_opt_out_users":
         import_qualtrics_opt_out(

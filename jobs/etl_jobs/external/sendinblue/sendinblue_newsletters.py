@@ -1,4 +1,3 @@
-
 import pandas as pd
 import sib_api_v3_sdk
 from google.cloud import bigquery
@@ -93,7 +92,9 @@ class SendinblueNewsletters:
                 ]
             )
             .reset_index()
-            .assign(update_date=pd.to_datetime("today"),)[
+            .assign(
+                update_date=pd.to_datetime("today"),
+            )[
                 [
                     "campaign_id",
                     "campaign_utm",

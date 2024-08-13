@@ -70,5 +70,5 @@ ruff_fix:
 	ruff format
 
 ruff_check:
-	ruff format --check
 	ruff check
+	ruff format --check

@@ -1,5 +1,3 @@
-import datetime
-
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator

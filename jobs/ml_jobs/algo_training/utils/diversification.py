@@ -44,7 +44,7 @@ def order_offers_by_score_and_diversify_categories(
 
     diversified_offers = []
     while len(diversified_offers) != np.sum(
-        [len(l) for l in offers_by_category.values()]
+        [len(offer_by_category) for offer_by_category in offers_by_category.values()]
     ):
         for offer_category in offers_by_category_ordered_by_frequency.keys():
             if offers_by_category_ordered_by_frequency[offer_category]:

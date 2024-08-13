@@ -128,7 +128,7 @@ class AdressesDownloader:
                     "api_adresse_city": data["features"][0]["properties"]["city"],
                 }
                 return api_address_informations
-            except:
+            except Exception:
                 return api_address_informations
         return api_address_informations
 
@@ -163,7 +163,7 @@ class AdressesDownloader:
                         "epci_name": communes[i]["fields"]["epci_name"],
                     }
                     return commune_data
-                except:
+                except Exception:
                     return commune_data
         return commune_data
 
@@ -191,7 +191,7 @@ class AdressesDownloader:
                             "code_qpv": qpv[i]["fields"]["code_quartier"],
                         }
                         return qpv_informations
-            except:
+            except Exception:
                 pass
         return qpv_informations
 

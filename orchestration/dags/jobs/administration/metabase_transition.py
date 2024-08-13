@@ -16,9 +16,6 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
 )
-from common.utils import (
-    ENV_SHORT_NAME,
-)
 
 GCE_INSTANCE = f"metabase-transition-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/metabase"

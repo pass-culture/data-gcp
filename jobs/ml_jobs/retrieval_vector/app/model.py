@@ -47,7 +47,7 @@ class DefaultClient:
         # not default case
         try:
             return self.item_docs[var]
-        except:
+        except Exception:
             return None
 
     def build_query(self, params):
@@ -144,7 +144,7 @@ class RecoClient(DefaultClient):
         default_user_embbeding = self.user_docs[self.default_token]
         try:
             return self.user_docs[var]
-        except:
+        except Exception:
             return default_user_embbeding
 
     def load(self) -> None:

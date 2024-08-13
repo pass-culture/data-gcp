@@ -104,7 +104,7 @@ def append_info_siren_list(siren_info_list, result):
                     ][0]["caractereEmployeurUniteLegale"],
                 }
             )
-        except:
+        except Exception:
             siren_info_list.append(
                 {
                     "siren": unitesLegales["siren"],

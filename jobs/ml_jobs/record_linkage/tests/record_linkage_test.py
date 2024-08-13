@@ -83,7 +83,7 @@ class TestPostprocess:
         assert (
             df_linked_data.linked_id.nunique()
             == expected_linked_data.linked_id.nunique()
-        ), "Number of cluster is expected"
+        ), f"Number of cluster is expected"
 
         ######
         # Extract linked offers

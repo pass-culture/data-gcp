@@ -374,6 +374,7 @@ BIGQUERY_SCHEMAS = {
         "collective_offer_mental_disability_compliant": "BOOLEAN",
         "collective_offer_motor_disability_compliant": "BOOLEAN",
         "collective_offer_visual_disability_compliant": "BOOLEAN",
+        "collective_offer_visual_disability_compliant": "BOOLEAN",
         "collective_offer_validation": "STRING",
         "collective_offer_id": "STRING",
         "offer_id": "STRING",

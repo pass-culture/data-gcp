@@ -1,8 +1,16 @@
-from common.config import ENV_SHORT_NAME
+import pandas as pd
+from google.cloud import bigquery
+
+from common.config import GCP_PROJECT_ID, ENV_SHORT_NAME, BIGQUERY_ANALYTICS_DATASET
+
 from dependencies.great_expectations.great_expectations_context import (
     GreatExpectationsContext,
 )
-from dependencies.great_expectations.utils import ge_root_dir, get_table_volume_bounds
+from dependencies.great_expectations.config_historical import (
+    historical_applicative_test_config,
+)
+from dependencies.great_expectations.config_enriched import enriched_tables_test_config
+from dependencies.great_expectations.utils import get_table_volume_bounds, ge_root_dir
 
 
 def run_applicative_history_tests(table_name, config):

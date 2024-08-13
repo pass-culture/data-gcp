@@ -2,6 +2,7 @@ import multiprocessing as mp
 import re
 import string
 import unicodedata
+from typing import List, Tuple
 
 import pandas as pd
 import recordlinkage
@@ -82,7 +83,7 @@ def get_links(
     return matches
 
 
-def _chunkify(lst: list, n: int) -> list[list]:
+def _chunkify(lst: List, n: int) -> List[List]:
     """
     Split a list into n approximately equal chunks.
 
@@ -173,7 +174,7 @@ def prepare_tables(
     indexer: recordlinkage.Index,
     linkage_candidates: pd.DataFrame,
     catalog_clean: pd.DataFrame,
-) -> tuple[pd.MultiIndex, pd.DataFrame, pd.DataFrame]:
+) -> Tuple[pd.MultiIndex, pd.DataFrame, pd.DataFrame]:
     """
     Prepare tables for record linkage.
 

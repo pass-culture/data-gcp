@@ -1,7 +1,7 @@
-from unittest.mock import Mock, patch
-
 import polars as pl
-from utils import N_RECO_DISPLAY, call_builder, get_offline_recos
+from unittest.mock import patch, Mock
+from typing import List
+from utils import N_RECO_DISPLAY, get_offline_recos, call_builder
 
 
 def base_uri(input):
@@ -30,7 +30,7 @@ class TestOfflineRecommendation:
         assert len(offline_recommendations) > 0, "Offline recommendation is not empty"
         for row in offline_recommendations.rows(named=True):
             assert isinstance(
-                row["recommendations"], list
+                row["recommendations"], List
             ), "Offline recommendation output is a List"
             assert (
                 len(row["recommendations"]) == N_RECO_DISPLAY

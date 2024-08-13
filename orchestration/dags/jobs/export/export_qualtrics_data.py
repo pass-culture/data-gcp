@@ -1,23 +1,22 @@
 import datetime
-
-import pandas as pd
-import requests
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import PythonOperator
 from common import macros
-from common.access_gcp_secrets import access_secret_data
-from common.alerts import task_fail_slack_alert
+from dependencies.qualtrics.export_qualtrics_data import clean_tables, analytics_tables
 from common.config import (
+    DAG_FOLDER,
+    GCP_PROJECT_ID,
+    ENV_SHORT_NAME,
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
     BIGQUERY_CLEAN_DATASET,
-    DAG_FOLDER,
-    ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
 )
+from common.alerts import task_fail_slack_alert
 from common.operators.biquery import bigquery_job_task
 from common.utils import depends_loop, get_airflow_schedule
-from dependencies.qualtrics.export_qualtrics_data import analytics_tables, clean_tables
+from common.access_gcp_secrets import access_secret_data
+import pandas as pd
+import requests
+from airflow.operators.python import PythonOperator
 
 default_dag_args = {
     "start_date": datetime.datetime(2022, 6, 24),
@@ -62,8 +61,8 @@ def get_and_send(**kwargs):
                             ' SELECT CAST("id" AS varchar(255)) AS user_id, email FROM public.user '
                         )
             )
-        SELECT
-            ue.email,
+        SELECT 
+            ue.email, 
             CURRENT_TIMESTAMP() as export_date,
             t.* except(calculation_month, export_date)
         FROM `{dataset_id}.{table_name}` t
@@ -72,7 +71,7 @@ def get_and_send(**kwargs):
         """
     else:
         sql = f"""
-        SELECT
+        SELECT 
             CURRENT_TIMESTAMP() as export_date,
             t.* except(calculation_month, export_date)
         FROM `{dataset_id}.{table_name}` t

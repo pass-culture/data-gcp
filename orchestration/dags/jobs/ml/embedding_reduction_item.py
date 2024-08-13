@@ -1,24 +1,27 @@
 from datetime import datetime, timedelta
-
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from common import macros
-from common.alerts import task_fail_slack_alert
-from common.config import (
-    BIGQUERY_ML_FEATURES_DATASET,
-    DAG_FOLDER,
-    ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
-    MLFLOW_BUCKET_NAME,
-)
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
 )
+from common import macros
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryInsertJobOperator,
+)
+from common.config import (
+    GCP_PROJECT_ID,
+    DAG_FOLDER,
+    ENV_SHORT_NAME,
+    MLFLOW_BUCKET_NAME,
+    BIGQUERY_ML_FEATURES_DATASET,
+)
+
+from common.alerts import task_fail_slack_alert
 from common.utils import get_airflow_schedule
 
 DEFAULT_REGION = "europe-west1"
@@ -89,7 +92,7 @@ with DAG(
     )
 
     export_bq = BigQueryInsertJobOperator(
-        task_id="store_item_embbedding_data",
+        task_id=f"store_item_embbedding_data",
         configuration={
             "extract": {
                 "sourceTable": {

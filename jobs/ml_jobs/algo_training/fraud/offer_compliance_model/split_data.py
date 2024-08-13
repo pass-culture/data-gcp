@@ -1,5 +1,6 @@
 import numpy as np
 import typer
+
 from utils.constants import (
     STORAGE_PATH,
 )

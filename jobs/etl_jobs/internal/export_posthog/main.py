@@ -1,9 +1,8 @@
-import time
-
+from utils import access_secret_data, PROJECT_NAME, ENV_SHORT_NAME
 import typer
 from bq import bq_to_events
 from event import EventExporter
-from utils import ENV_SHORT_NAME, PROJECT_NAME, access_secret_data
+import time
 
 posthog_api_key = access_secret_data(PROJECT_NAME, f"posthog_api_key_{ENV_SHORT_NAME}")
 posthog_host = access_secret_data(PROJECT_NAME, f"posthog_host_{ENV_SHORT_NAME}")
@@ -22,7 +21,7 @@ def run(
         help="source_gs_path",
     ),
 ):
-    print("Download all rows......")
+    print(f"Download all rows......")
     events = bq_to_events(source_gs_path)
     ph = EventExporter(
         posthog_api_key=posthog_api_key,

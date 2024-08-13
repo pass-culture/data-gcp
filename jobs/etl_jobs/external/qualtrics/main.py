@@ -1,22 +1,21 @@
-import time
-
 import pandas as pd
 import typer
+import time
+from utils import (
+    DATA_CENTER,
+    DIRECTORY_ID,
+    API_TOKEN,
+    OPT_OUT_EXPORT_COLUMNS,
+    save_to_raw_bq,
+    save_partition_table_to_bq,
+    IR_PRO_TABLE_SCHEMA,
+    IR_JEUNES_TABLE_SCHEMA,
+    ANSWERS_SCHEMA,
+)
 from qualtrics_opt_out import import_qualtrics_opt_out
 from qualtrics_survey_answers import (
     QualtricsSurvey,
     import_survey_metadata,
-)
-from utils import (
-    ANSWERS_SCHEMA,
-    API_TOKEN,
-    DATA_CENTER,
-    DIRECTORY_ID,
-    IR_JEUNES_TABLE_SCHEMA,
-    IR_PRO_TABLE_SCHEMA,
-    OPT_OUT_EXPORT_COLUMNS,
-    save_partition_table_to_bq,
-    save_to_raw_bq,
 )
 
 ir_surveys_mapping = {
@@ -30,7 +29,7 @@ def run(
     task: str = typer.Option(
         ...,
         help="Nom de la tache",
-    ),
+    )
 ):
     if task == "import_opt_out_users":
         import_qualtrics_opt_out(
@@ -59,7 +58,7 @@ def run(
                 dfs.append(processed_df)
         jeunes_df = pd.concat(dfs)
         save_to_raw_bq(
-            jeunes_df, "qualtrics_answers_ir_survey_jeunes", IR_JEUNES_TABLE_SCHEMA
+            jeunes_df, f"qualtrics_answers_ir_survey_jeunes", IR_JEUNES_TABLE_SCHEMA
         )
 
     elif task == "import_all_survey_answers":
@@ -79,7 +78,7 @@ def run(
                 lambda survey_id: abs(hash(str(survey_id)) % 1000000007)
             )
             save_partition_table_to_bq(
-                df, "qualtrics_answers", ANSWERS_SCHEMA, "survey_int_id"
+                df, f"qualtrics_answers", ANSWERS_SCHEMA, "survey_int_id"
             )
             if i % 10:
                 time.sleep(60)

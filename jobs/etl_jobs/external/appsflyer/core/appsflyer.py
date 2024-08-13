@@ -1,7 +1,7 @@
 from io import StringIO
 
-import pandas as df
 import requests
+import pandas as df
 from furl import furl
 
 

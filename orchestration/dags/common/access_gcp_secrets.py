@@ -1,5 +1,5 @@
-from google.api_core.exceptions import NotFound, PermissionDenied
 from google.auth.exceptions import DefaultCredentialsError
+from google.api_core.exceptions import PermissionDenied, NotFound
 from google.cloud import secretmanager
 
 
@@ -12,5 +12,5 @@ def access_secret_data(project_id, secret_id, default=None):
         except TypeError:
             response = client.access_secret_version(name)
         return response.payload.data.decode("UTF-8")
-    except (DefaultCredentialsError, PermissionDenied, NotFound):
+    except (DefaultCredentialsError, PermissionDenied, NotFound) as e:
         return default

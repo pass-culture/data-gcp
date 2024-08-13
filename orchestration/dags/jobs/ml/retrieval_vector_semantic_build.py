@@ -1,28 +1,30 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
+from common.operators.gce import (
+    StartGCEOperator,
+    StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+)
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
+from common.utils import get_airflow_schedule
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
-    BIGQUERY_TMP_DATASET,
+    GCP_PROJECT_ID,
     DAG_FOLDER,
     ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
+    BIGQUERY_TMP_DATASET,
 )
-from common.operators.gce import (
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
-    StartGCEOperator,
-    StopGCEOperator,
-)
-from common.utils import get_airflow_schedule
+
+from datetime import datetime
 
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
@@ -89,8 +91,8 @@ with DAG(
     start = DummyOperator(task_id="start", dag=dag)
 
     export_task = BigQueryExecuteQueryOperator(
-        task_id="import_retrieval_semantic_vector_table",
-        sql=(IMPORT_TRAINING_SQL_PATH / "retrieval_semantic_vector.sql").as_posix(),
+        task_id=f"import_retrieval_semantic_vector_table",
+        sql=(IMPORT_TRAINING_SQL_PATH / f"retrieval_semantic_vector.sql").as_posix(),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_retrieval_semantic_vector_data",
@@ -122,7 +124,7 @@ with DAG(
         dag=dag,
     )
     export_bq = BigQueryInsertJobOperator(
-        task_id="store_item_embbedding_data",
+        task_id=f"store_item_embbedding_data",
         configuration={
             "extract": {
                 "sourceTable": {

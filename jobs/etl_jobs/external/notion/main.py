@@ -1,18 +1,18 @@
-import os
-
-import google
-import pandas as pd
-import typer
-from handler import BQExport, NotionDocumentation, NotionGlossary
 from utils import (
-    ENVIRONMENT_SHORT_NAME,
+    PROJECT_NAME,
+    access_secret_data,
     NOTION_API_KEY_SECRET_NAME,
     NOTION_DOCUMENTATION_SECRET_NAME,
     NOTION_GLOSSARY_SECRET_NAME,
-    PROJECT_NAME,
+    ENVIRONMENT_SHORT_NAME,
     RAW_DATASET,
-    access_secret_data,
 )
+import os
+import typer
+import pandas as pd
+import google
+
+from handler import NotionDocumentation, NotionGlossary, BQExport
 
 api_token = access_secret_data(PROJECT_NAME, NOTION_API_KEY_SECRET_NAME)
 # notion2md exporter

@@ -1,4 +1,4 @@
-from common.config import ENV_SHORT_NAME, MLFLOW_URL
+from common.config import MLFLOW_URL, ENV_SHORT_NAME
 
 
 def create_algo_training_slack_block(

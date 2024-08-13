@@ -1,11 +1,12 @@
 import pandas as pd
 import pytest
+
 from preprocess import preprocess
 
 
 class TestPreprocess:
     @staticmethod
-    @pytest.fixture()
+    @pytest.fixture
     def expected_clean_data():
         return pd.DataFrame(
             {

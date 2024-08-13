@@ -1,11 +1,10 @@
+from typing import Optional, Union
 import datetime
 import decimal
-from typing import Optional
-
 from google.cloud.bigquery.table import Row
 
 JsonType = Optional[
-    Row | dict | list | str | float | int | bool | datetime.datetime | decimal.Decimal
+    Union[Row, dict, list, str, float, int, bool, datetime.datetime, decimal.Decimal]
 ]
 
 

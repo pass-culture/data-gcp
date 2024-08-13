@@ -1,18 +1,17 @@
-import json
+from flask import Flask, request, Response, jsonify, make_response
+from flask_cors import CORS
+from pythonjsonlogger import jsonlogger
+import traceback
 import logging
 import sys
-import traceback
-import uuid
-
-from docarray import Document
-from flask import Flask, Response, jsonify, make_response, request
-from flask_cors import CORS
 from model import DefaultClient, RecoClient, TextClient
-from pythonjsonlogger import jsonlogger
+from docarray import Document
+import json
+import uuid
 
 
 def load_model() -> DefaultClient:
-    with open("./metadata/model_type.json") as file:
+    with open("./metadata/model_type.json", "r") as file:
         desc = json.load(file)
         if desc["type"] == "recommendation":
             return RecoClient(
@@ -51,7 +50,7 @@ logger.info("startup", extra=log_data)
 def input_size(size):
     try:
         return int(size)
-    except Exception:
+    except:
         return 10
 
 
@@ -162,7 +161,7 @@ def predict():
             if model_type == "recommendation":
                 input_str = str(input_json["user_id"])
                 logger.info(
-                    "recommendation",
+                    f"recommendation",
                     extra={
                         "uuid": call_id,
                         "user_id": input_str,
@@ -185,7 +184,7 @@ def predict():
             if model_type == "semantic":
                 input_str = str(input_json["text"])
                 logger.info(
-                    "semantic",
+                    f"semantic",
                     extra={
                         "uuid": call_id,
                         "text": input_str,
@@ -214,7 +213,7 @@ def predict():
                 items = []
             if len(items) == 1:
                 logger.info(
-                    "similar_offer",
+                    f"similar_offer",
                     extra={
                         "uuid": call_id,
                         "item_id": items[0],
@@ -254,7 +253,7 @@ def predict():
                         item_id=vector["item_id"],
                     )
                     logger.info(
-                        "similar_offer",
+                        f"similar_offer",
                         extra={
                             "uuid": call_id,
                             "item_id": vector["item_id"],
@@ -273,7 +272,7 @@ def predict():
 
         if model_type == "filter":
             logger.info(
-                "filter",
+                f"filter",
                 extra={
                     "uuid": call_id,
                     "params": selected_params,

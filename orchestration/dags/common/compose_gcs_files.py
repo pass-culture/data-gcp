@@ -1,6 +1,5 @@
 import logging
 import math
-
 from google.cloud import storage
 
 

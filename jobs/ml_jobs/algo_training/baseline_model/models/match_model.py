@@ -1,6 +1,7 @@
-import numpy as np
 import tensorflow as tf
-from tensorflow.keras.layers import Dot, Embedding
+import numpy as np
+
+from tensorflow.keras.layers import Embedding, Dot
 from tensorflow.keras.layers.experimental.preprocessing import StringLookup
 
 

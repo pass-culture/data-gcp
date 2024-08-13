@@ -1,10 +1,11 @@
-import json
-import time
-
-import gcsfs
 import requests
+import urllib3
+import time
+import json
 import typer
+import pandas as pd
 from dms_query import DMS_QUERY
+import gcsfs
 from utils import API_URL, access_secret_data, demarches_jeunes, demarches_pro
 
 
@@ -93,7 +94,9 @@ def run_query(query_body, gcp_project_id):
         return request.json()
     else:
         raise Exception(
-            f"Query failed to run by returning code of {request.status_code}. {query_body}"
+            "Query failed to run by returning code of {}. {}".format(
+                request.status_code, query_body
+            )
         )
 
 

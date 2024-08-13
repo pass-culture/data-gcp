@@ -1,9 +1,8 @@
-from datetime import datetime
-
 import typer
+from datetime import datetime
 from core.update import (
-    create_intermediate_schema,
     create_tmp_schema,
+    create_intermediate_schema,
     update_incremental,
     update_overwrite,
 )

@@ -1,20 +1,22 @@
 import datetime
-
 from airflow import DAG
-from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from common import macros
-from common.config import (
-    BIGQUERY_ANALYTICS_DATASET,
-    DAG_FOLDER,
-    ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
-)
+from airflow.models import Param
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+)
+from common import macros
+from common.utils import (
+    ENV_SHORT_NAME,
+)
+from common.config import (
+    GCP_PROJECT_ID,
+    DAG_FOLDER,
+    ENV_SHORT_NAME,
+    BIGQUERY_ANALYTICS_DATASET,
 )
 
 GCE_INSTANCE = f"metabase-transition-{ENV_SHORT_NAME}"
@@ -100,7 +102,7 @@ with DAG(
         --legacy-table-name {{ params.legacy_table_name }} \
         --new-table-name {{ params.new_table_name }} \
         --legacy-schema-name {{ params.legacy_schema_name }} \
-        --new-schema-name {{ params.new_schema_name }}
+        --new-schema-name {{ params.new_schema_name }} 
         """,
     )
 

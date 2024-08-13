@@ -2,26 +2,26 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.models import Param
-from common import macros
-from common.alerts import task_fail_slack_alert
-from common.config import DAG_FOLDER, ENV_SHORT_NAME
-from common.operators.biquery import bigquery_job_task
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
 )
-from common.utils import get_airflow_schedule
+from common.operators.biquery import bigquery_job_task
 from dependencies.ml.linkage.import_items import (
-    ANALYTICS_DATASET,
+    SQL_IMPORT_PARAMS,
+    PREPROCESS_OUTPUT_TABLE,
+    PREPROCESS_INPUT_TABLE,
     MAIN_OUTPUT_TABLE,
     POSTPROCESS_OUTPUT_TABLE,
-    PREPROCESS_INPUT_TABLE,
-    PREPROCESS_OUTPUT_TABLE,
-    SQL_IMPORT_PARAMS,
     TMP_DATASET,
+    ANALYTICS_DATASET,
 )
+from common import macros
+from common.alerts import task_fail_slack_alert
+from common.config import ENV_SHORT_NAME, DAG_FOLDER
+from common.utils import get_airflow_schedule
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-offers-{ENV_SHORT_NAME}"

@@ -1,8 +1,10 @@
-import numpy as np
-import polars as pl
 from loguru import logger
+import pandas as pd
+import polars as pl
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.metrics import silhouette_samples
+import typing as t
+import numpy as np
 
 
 def clusterisation_from_prebuild_embedding(
@@ -20,14 +22,14 @@ def clusterisation_from_prebuild_embedding(
     Returns:
         polars.DataFrame : A DataFrame containing the items with their assigned clusters and coordinates.
     """
-    logger.info("mbkmeans_clusters: clustering...")
+    logger.info(f"mbkmeans_clusters: clustering...")
     clustering, cluster_labels = mbkmeans_clusters(
         X=embedding,
         k=target_n_clusters,
         mb=10_240,
         print_silhouette_values=False,
     )
-    logger.info("mbkmeans_clusters: done...")
+    logger.info(f"mbkmeans_clusters: done...")
     items_with_clusters = pl.DataFrame({"cluster": cluster_labels})
     cluster_center_coordinates = pl.DataFrame(
         {
@@ -48,7 +50,7 @@ def clusterisation_from_prebuild_embedding(
         on="cluster",
         how="inner",
     )
-    logger.info("mbkmeans_clusters: exported clusters...")
+    logger.info(f"mbkmeans_clusters: exported clusters...")
 
     return items_with_cluster_and_coordinates
 
@@ -58,7 +60,7 @@ def mbkmeans_clusters(
     k,
     mb,
     print_silhouette_values=False,
-) -> tuple[MiniBatchKMeans, np.ndarray]:
+) -> t.Tuple[MiniBatchKMeans, np.ndarray]:
     """Generate clusters and print Silhouette metrics using MBKmeans
 
     Args:

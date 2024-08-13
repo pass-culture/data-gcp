@@ -1,16 +1,15 @@
-from datetime import datetime, timedelta
-
 from airflow import DAG
-from airflow.models import Param
-from common import macros
-from common.alerts import task_fail_slack_alert
-from common.config import DAG_FOLDER, ENV_SHORT_NAME
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
 )
+from airflow.models import Param
+from datetime import datetime, timedelta
+from common import macros
+from common.alerts import task_fail_slack_alert
+from common.config import ENV_SHORT_NAME, DAG_FOLDER
 from common.utils import get_airflow_schedule
 
 default_args = {

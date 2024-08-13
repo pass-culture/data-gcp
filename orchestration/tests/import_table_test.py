@@ -1,10 +1,10 @@
 import unittest
 
-from common.config import DAG_FOLDER
 from dependencies.applicative_database.import_applicative_database import (
-    RAW_SQL_PATH,
     get_tables_config_dict,
+    RAW_SQL_PATH,
 )
+from common.config import DAG_FOLDER
 
 IMPORT_TABLES = [
     {"table_name": "provider", "excluded_fields": ["apiKey"]},
@@ -35,7 +35,7 @@ class TestImportTables(unittest.TestCase):
             result_path = get_tables_config_dict(
                 DAG_FOLDER + "/" + RAW_SQL_PATH, "BIGQUERY_DATASET"
             )[table_name]["sql"]
-            with open(result_path) as file:
+            with open(result_path, "r") as file:
                 result_query = file.readlines()
             for f in excluded_fields:
                 self.assertFalse(

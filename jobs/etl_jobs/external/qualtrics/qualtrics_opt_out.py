@@ -1,10 +1,13 @@
-import pandas as pd
 import requests
+import pandas as pd
+
 from utils import BIGQUERY_RAW_DATASET
 
 
 def import_qualtrics_opt_out(data_center, directory_id, api_token, export_columns):
-    next_page = f"https://{data_center}.qualtrics.com/API/v3/directories/{directory_id}/contacts/optedOutContacts"
+    next_page = "https://{0}.qualtrics.com/API/v3/directories/{1}/contacts/optedOutContacts".format(
+        data_center, directory_id
+    )
     headers = {
         "x-api-token": api_token,
     }

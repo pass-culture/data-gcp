@@ -38,8 +38,8 @@ def _remove_parenthesis(artist_df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: The DataFrame with parentheses removed from the artist names.
     """
     return artist_df.assign(
-        artist_name=lambda df: df.artist_name.str.replace(r"\([.*]+\))", "")
-        .str.split(r"\(", regex=True)
+        artist_name=lambda df: df.artist_name.str.replace("\([.*]+\))", "")
+        .str.split("\(", regex=True)
         .map(lambda ll: ll[0])
     )
 
@@ -79,7 +79,7 @@ def _extract_first_artist_pattern(artist_df: pd.DataFrame):
             - first_artist_pattern: The first artist pattern extracted from the artist_name column.
             - is_multi_artists_pattern: A boolean column indicating whether the artist_name contains multiple patterns.
     """
-    pattern = r";|/|\+|\&"
+    pattern = ";|/|\+|\&"
     return artist_df.assign(
         first_artist_pattern=lambda df: df.artist_name.str.split(
             pattern, regex=True
@@ -104,7 +104,7 @@ def _extract_first_artist_comma(artist_df: pd.DataFrame):
         pd.DataFrame: The DataFrame with additional columns 'is_multi_artists' and 'first_artist'.
 
     """
-    pattern = r"^(?![\w\-']+,).*,.*|.*,.*,.*"
+    pattern = "^(?![\w\-']+,).*,.*|.*,.*,.*"
     return artist_df.assign(
         is_multi_artists_comma=lambda df: (
             df.first_artist_pattern.str.contains(pattern, regex=True)
@@ -203,7 +203,7 @@ def _filter_artists(
     Returns:
         pd.DataFrame: The filtered DataFrame containing artists that pass the filtering criteria.
     """
-    pattern = r"[\w\-\.]+\/[\w-]+|\+"  # pattern for multi artists separated by + or /
+    pattern = "[\w\-\.]+\/[\w-]+|\+"  # pattern for multi artists separated by + or /
 
     matching_patterns_indexes = artist_df.first_artist.str.contains(pattern, regex=True)
     too_few_words_indexes = (

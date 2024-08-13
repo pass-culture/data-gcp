@@ -1,12 +1,12 @@
-import base64
-import hashlib
-import io
-import json
 import os
-
+import io
+from google.cloud import bigquery
+from google.cloud import secretmanager
 import numpy as np
+import json
+import hashlib
+import base64
 import pandas as pd
-from google.cloud import bigquery, secretmanager
 
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
@@ -32,6 +32,7 @@ def sha1_to_base64(input_string):
 def load_config_file(config_file_name, job_type):
     with open(
         f"{CONFIGS_PATH}/{job_type}/{config_file_name}.json",
+        mode="r",
         encoding="utf-8",
     ) as config_file:
         return json.load(config_file)

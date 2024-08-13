@@ -1,13 +1,13 @@
 import os
-import subprocess
-import time
-from datetime import datetime
-
-import mlflow
 import pandas as pd
+from datetime import datetime
+import time
+import subprocess
 from google.auth.transport.requests import Request
-from google.cloud import secretmanager
 from google.oauth2 import id_token
+from google.cloud import secretmanager
+import mlflow
+
 
 MLFLOW_EHP_URI = "https://mlflow.staging.passculture.team/"
 MLFLOW_PROD_URI = "https://mlflow.passculture.team/"

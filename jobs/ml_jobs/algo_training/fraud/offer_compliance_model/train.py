@@ -3,6 +3,7 @@ import json
 import mlflow
 import typer
 from catboost import CatBoostClassifier
+
 from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
 from utils.constants import (
     ENV_SHORT_NAME,
@@ -31,6 +32,7 @@ def train(
 ):
     with open(
         f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
+        mode="r",
         encoding="utf-8",
     ) as config_file:
         features = json.load(config_file)

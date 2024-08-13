@@ -1,13 +1,12 @@
-import warnings
-
 import pytest
+from google.cloud import bigquery
 from data_analytics.config import GCP_PROJECT, TEST_DATASET
 from data_analytics.utils.gcp import (
     create_dataset,
     drop_dataset,
     drop_table,
 )
-from google.cloud import bigquery
+import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 

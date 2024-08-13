@@ -7,8 +7,9 @@ import uuid
 from docarray import Document
 from flask import Flask, Response, jsonify, make_response, request
 from flask_cors import CORS
-from model import DefaultClient, RecoClient, TextClient
 from pythonjsonlogger import jsonlogger
+
+from model import DefaultClient, RecoClient, TextClient
 
 
 def load_model() -> DefaultClient:

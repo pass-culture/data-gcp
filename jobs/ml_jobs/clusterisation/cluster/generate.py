@@ -4,6 +4,7 @@ import pandas as pd
 import polars as pl
 import typer
 from loguru import logger
+
 from tools.clusterisation import (
     clusterisation_from_prebuild_embedding,
 )

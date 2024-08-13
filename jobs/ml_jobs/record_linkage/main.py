@@ -7,6 +7,7 @@ import pandas as pd
 import recordlinkage
 import typer
 from loguru import logger
+
 from tools.config import (
     GCP_PROJECT_ID,
     SUBCATEGORIES_WITH_PERFORMER,

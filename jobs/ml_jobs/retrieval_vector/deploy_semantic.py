@@ -6,6 +6,7 @@ import polars as pl
 import pyarrow.dataset as ds
 import typer
 from hnne import HNNE
+
 from utils import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,

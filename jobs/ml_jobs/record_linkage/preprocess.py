@@ -1,5 +1,6 @@
 import pandas as pd
 import typer
+
 from tools.config import GCP_PROJECT_ID
 
 

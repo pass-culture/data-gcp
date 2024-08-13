@@ -3,6 +3,7 @@ from datetime import datetime
 import pandas as pd
 import typer
 from loguru import logger
+
 from tools.config import GCP_PROJECT_ID
 
 

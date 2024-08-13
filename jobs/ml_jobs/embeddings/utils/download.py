@@ -3,8 +3,8 @@ import os
 
 import numpy as np
 import requests
-from tools.config import IMAGE_DIR, MAX_PROCESS
 
+from tools.config import IMAGE_DIR, MAX_PROCESS
 from utils import get_filename_from_url
 from utils.logging import logging
 

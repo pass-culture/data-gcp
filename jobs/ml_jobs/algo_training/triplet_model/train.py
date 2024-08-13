@@ -2,6 +2,7 @@ import mlflow
 import tensorflow as tf
 import typer
 from loguru import logger
+
 from triplet_model.models.match_model import MatchModel
 from triplet_model.models.triplet_model import TripletModel
 from triplet_model.utils.callbacks import MatchModelCheckpoint, MLFlowLogging

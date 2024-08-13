@@ -5,8 +5,9 @@ import mlflow
 import pandas as pd
 import typer
 from catboost import Pool
-from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
 from mlflow import MlflowClient
+
+from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
 from utils.constants import (
     ENV_SHORT_NAME,
     MLFLOW_RUN_ID_FILENAME,

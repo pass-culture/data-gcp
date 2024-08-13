@@ -6,8 +6,9 @@ from multiprocessing import cpu_count
 import numpy as np
 import polars as pl
 import requests
-from access_gcp_secrets import access_secret
 from google.cloud import bigquery
+
+from access_gcp_secrets import access_secret
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")

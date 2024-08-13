@@ -1,4 +1,5 @@
 import typer
+
 from utils import read_parquet, upload_parquet
 
 app = typer.Typer()

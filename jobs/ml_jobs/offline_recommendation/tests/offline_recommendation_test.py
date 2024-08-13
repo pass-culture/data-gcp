@@ -2,6 +2,7 @@ from typing import List
 from unittest.mock import Mock, patch
 
 import polars as pl
+
 from utils import N_RECO_DISPLAY, call_builder, get_offline_recos
 
 

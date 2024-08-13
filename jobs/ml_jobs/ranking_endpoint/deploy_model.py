@@ -4,9 +4,10 @@ from datetime import datetime
 import mlflow
 import pandas as pd
 import typer
+from sklearn.model_selection import train_test_split
+
 from app.model import TrainPipeline
 from figure import plot_cm, plot_features_importance, plot_hist
-from sklearn.model_selection import train_test_split
 from utils import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -36,30 +37,30 @@ def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
     sql = f"""
     WITH seen AS (
       SELECT
-          * 
-      FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
+          *
+      FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}`
       WHERE not consult and not booking
       ORDER BY offer_order ASC
       LIMIT {PARAMS['seen']}
     ),
     consult AS (
         SELECT
-            * 
-        FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
+            *
+        FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}`
         WHERE consult and not booking
         LIMIT {PARAMS['consult']}
 
     ),
     booking AS (
       SELECT
-            * 
-        FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}` 
+            *
+        FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}`
         WHERE booking
         LIMIT {PARAMS['booking']}
     )
-    SELECT * FROM seen 
+    SELECT * FROM seen
     UNION ALL
-    SELECT * FROM consult 
+    SELECT * FROM consult
     UNION ALL
     SELECT * FROM booking
     """

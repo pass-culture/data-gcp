@@ -3,6 +3,7 @@ import polars as pl
 import pyarrow.dataset as ds
 import typer
 from loguru import logger
+
 from tools.dimension_reduction import (
     pca_reduce_embedding_dimension,
     pumap_reduce_embedding_dimension,

@@ -3,11 +3,11 @@ import shutil
 import time
 
 from sentence_transformers import SentenceTransformer
+
+from tools.config import TRANSFORMER_BATCH_SIZE
 from utils.download import IMAGE_DIR, download_img_multiprocess
 from utils.file_handler import load_img_multiprocess
 from utils.logging import log_duration, logging
-
-from tools.config import TRANSFORMER_BATCH_SIZE
 
 
 def extract_embedding(df_data, params):

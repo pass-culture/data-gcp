@@ -1,10 +1,10 @@
-import os, io
+import io
+import os
 from datetime import datetime
-from google.auth.exceptions import DefaultCredentialsError
-from google.cloud import secretmanager, bigquery
-import pandas as pd
 
-from datetime import datetime
+import pandas as pd
+from google.auth.exceptions import DefaultCredentialsError
+from google.cloud import bigquery, secretmanager
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")

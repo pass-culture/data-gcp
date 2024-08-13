@@ -1,10 +1,10 @@
 import typing as t
-from docarray import DocumentArray, Document
-import lancedb
-from filter import Filter
-import joblib
-import numpy as np
 
+import joblib
+import lancedb
+import numpy as np
+from docarray import Document, DocumentArray
+from filter import Filter
 
 DETAIL_COLUMNS = [
     "item_id",

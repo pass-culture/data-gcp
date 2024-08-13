@@ -1,7 +1,8 @@
-import polars as pl
-from unittest.mock import patch, Mock
 from typing import List
-from utils import N_RECO_DISPLAY, get_offline_recos, call_builder
+from unittest.mock import Mock, patch
+
+import polars as pl
+from utils import N_RECO_DISPLAY, call_builder, get_offline_recos
 
 
 def base_uri(input):

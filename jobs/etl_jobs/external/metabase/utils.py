@@ -1,8 +1,8 @@
 import os
+
 import pandas as pd
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
-
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")

@@ -1,13 +1,13 @@
-import os
-import io
-from google.cloud import bigquery
-import requests
-import polars as pl
 import concurrent
-import numpy as np
+import io
+import os
 from multiprocessing import cpu_count
-from itertools import repeat
+
+import numpy as np
+import polars as pl
+import requests
 from access_gcp_secrets import access_secret
+from google.cloud import bigquery
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
@@ -52,7 +52,6 @@ def get_offline_recos(data):
 
 
 def _get_recos(rows):
-    import requests
 
     results = []
     try:

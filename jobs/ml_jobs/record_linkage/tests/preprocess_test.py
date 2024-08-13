@@ -1,6 +1,5 @@
 import pandas as pd
 import pytest
-
 from preprocess import preprocess
 
 

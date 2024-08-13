@@ -4,7 +4,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import typer
-
 from fraud.offer_compliance_model.package_api_model import PreprocessingPipeline
 from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
 from utils.constants import MODEL_DIR, STORAGE_PATH

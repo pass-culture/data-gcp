@@ -1,24 +1,23 @@
-import pandas as pd
-from datetime import datetime
 import subprocess
-from google.cloud import bigquery
+from datetime import datetime
+
+import numpy as np
+import tensorflow as tf
 import typer
+from google.cloud import bigquery
 from utils import (
     BIGQUERY_CLEAN_DATASET,
-    MODELS_RESULTS_TABLE_NAME,
-    GCP_PROJECT_ID,
     ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+    MODELS_RESULTS_TABLE_NAME,
+    create_items_table,
     deploy_container,
+    get_item_docs,
     get_items_metadata,
     get_user_docs,
-    get_item_docs,
     save_experiment,
     save_model_type,
-    create_items_table,
 )
-import tensorflow as tf
-import numpy as np
-
 
 MODEL_TYPE = {
     "n_dim": 64,
@@ -131,7 +130,7 @@ def main(
             artifact_uri=source_artifact_uri,
         )
     print(f"Get from {source_artifact_uri} trained model")
-    print(f"Download...")
+    print("Download...")
     download_model(source_artifact_uri)
     prepare_docs()
     print("Deploy...")

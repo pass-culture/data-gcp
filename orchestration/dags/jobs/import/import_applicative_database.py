@@ -20,7 +20,7 @@ from dependencies.applicative_database.import_applicative_database import (
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
-    "retries": 4,
+    "retries": 6,
     "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
@@ -32,7 +32,7 @@ dag = DAG(
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
     schedule_interval=get_airflow_schedule("0 1 * * *"),
     catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=240),
+    dagrun_timeout=datetime.timedelta(minutes=480),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
 )

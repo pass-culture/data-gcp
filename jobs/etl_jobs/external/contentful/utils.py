@@ -91,7 +91,4 @@ ENTRIES_DTYPE = {
     "gtl_label": str,
     "gtl_level": str,
     "revision": int,
-    "video_publication_date": "datetime64[ns]",
-    "created_at": "datetime64[ns]",
-    "updated_at": "datetime64[ns]",
 }

@@ -36,6 +36,7 @@ select
     o.venue_academy_name,
     o.venue_density_label,
     o.venue_macro_density_label,
+    o.venue_density_level,
     o.venue_label,
     o.venue_type_label,
     o.venue_managing_offerer_id as offerer_id,

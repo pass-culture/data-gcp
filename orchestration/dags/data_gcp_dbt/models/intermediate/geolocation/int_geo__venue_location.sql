@@ -39,7 +39,7 @@ venue_geo_iris as (
         referential_table='int_seed__geo_iris',
         id_column='venue_id',
         prefix_name='venue',
-        columns=['iris_internal_id','region_name','city_label','city_code','rural_city_type','academy_name','density_label','density_macro_level'],
+        columns=['iris_internal_id','region_name','city_label','city_code','rural_city_type','academy_name','density_label','density_macro_level','density_level'],
         geo_shape='iris_shape'
     )
     }}
@@ -57,6 +57,7 @@ select
     venue_geo_iris.rural_city_type as venue_rural_city_type,
     venue_geo_iris.density_label as venue_density_label,
     venue_geo_iris.density_macro_level as venue_macro_density_label,
+    venue_geo_iris.density_level AS venue_density_level,
     venue_geo_iris.academy_name as venue_academy_name,
     venue_geo_iris.region_name as venue_region_name,
     venue_epci.epci_name as venue_epci,

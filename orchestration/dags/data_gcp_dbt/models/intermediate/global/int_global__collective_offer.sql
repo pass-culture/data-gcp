@@ -22,6 +22,7 @@ select
     v.venue_academy_name,
     v.venue_density_label,
     v.venue_macro_density_label,
+    v.venue_density_level,
     v.venue_is_virtual,
     v.venue_managing_offerer_id as offerer_id,
     v.offerer_name,
@@ -47,6 +48,7 @@ select
     co.institution_epci,
     co.institution_density_label,
     co.institution_macro_density_label,
+    co.institution_density_level,
     CONCAT(
         'https://passculture.pro/offre/',
         co.collective_offer_id,

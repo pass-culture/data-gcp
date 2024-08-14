@@ -118,6 +118,7 @@ select
     v_loc.venue_epci,
     v_loc.venue_density_label,
     v_loc.venue_macro_density_label,
+    v_loc.venue_density_level,
     v_loc.venue_academy_name,
     v.offerer_address_id,
     vr.venue_target as venue_targeted_audience,

@@ -64,6 +64,7 @@ select
     ui.user_academy_name,
     ui.user_density_label,
     ui.user_macro_density_label,
+    ui.user_density_level,
     ui.user_city_code as city_code, -- TODO fix this to user_city_code and populate to child models
     ui.user_is_in_qpv,
     case when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then TRUE else FALSE end as user_is_unemployed,

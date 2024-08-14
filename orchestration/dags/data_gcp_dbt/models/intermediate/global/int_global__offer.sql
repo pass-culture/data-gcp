@@ -82,6 +82,7 @@ select
     v.venue_academy_name,
     v.venue_density_label,
     v.venue_macro_density_label,
+    v.venue_density_level,
     o.offerer_address_id,
     o.offer_publication_date,
     o.is_future_scheduled

@@ -211,6 +211,7 @@ select
     location_info.institution_epci,
     location_info.institution_density_label,
     location_info.institution_macro_density_label,
+    location_info.institution_density_level,
     location_info.institution_latitude,
     location_info.institution_longitude,
     location_info.institution_in_qpv,

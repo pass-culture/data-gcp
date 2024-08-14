@@ -80,7 +80,7 @@ for type, params in dags.items():
             dag=dag,
             table=f"{table}_fallback",
             # overwrite default configuration, execute only if the default task fails
-            job_params=dict(job_params, **{"trigger_rule": "all_failed"}),
+            job_params=dict(job_params, **{"trigger_rule": "one_failed"}),
             extra_params=dict(
                 {"prefix": prefix, "dag_type": type},
                 **job_params.get("fallback_params", {}),

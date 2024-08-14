@@ -59,6 +59,8 @@ for type, params in dags.items():
     # Cannot Schedule before 3UTC for intraday and 13UTC for daily
     start = DummyOperator(task_id="start", dag=dag)
 
+    end = DummyOperator(task_id="end", dag=dag)
+
     import_tables_temp = copy.deepcopy(import_tables)
     for table, job_params in import_tables_temp.items():
         if type == "daily" and import_tables_temp[table].get("dag_depends") is not None:
@@ -87,6 +89,9 @@ for type, params in dags.items():
             ),
         )
 
-        end = DummyOperator(task_id=f"end_{table}", dag=dag, trigger_rule="one_success")
-        start >> default_task >> [fallback_task, end]
-        fallback_task >> end
+        end_job = DummyOperator(
+            task_id=f"end_{table}", dag=dag, trigger_rule="one_success"
+        )
+
+        start >> default_task >> [fallback_task, end_job]
+        fallback_task >> end_job >> end

@@ -60,7 +60,7 @@ macros:
     description: |
       Overview
       It enables us to set up the destination dataset.
-      If we develop in dev environment (target = dev), the destination schema dataset is the default (tmp_env) specified in profile.yml.
+      If we develop in local (target = local), the destination schema dataset is the default (tmp_env) specified in profile.yml.
       If the model is in intermediate folder, schema name = int_{sub_folder_name}_{target_name}
       Else the destination schema dataset is specified in dbt_project.yml (analytics_env or clean_env)
   - name: generate_seed_geolocation_query

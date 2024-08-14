@@ -2,7 +2,7 @@
     pre_hook="{{create_humanize_id_function()}}"
 ) }}
 
-{% set target_name = target.name %}
+{% set target_name = var('ENV_SHORT_NAME') %}
 {% set target_schema = generate_schema_name('analytics_' ~ target_name) %}
 
 with user_beneficiary as (

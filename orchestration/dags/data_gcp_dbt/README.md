@@ -20,7 +20,7 @@ Try running the following commands:
 
 
 ### CLI options : 
--- target [dev/stg/prod] to select destination dbt transformed data.
+-- target [local/dev/stg/prod] to select destination dbt transformed data.
 
 
 ### Tests : 

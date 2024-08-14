@@ -25,6 +25,8 @@ clean-targets:
 
 models:
   data_gcp_dbt:
+    +labels:
+      schedule: "daily"
     +persist_docs:
       relation: true
       columns: true
@@ -39,7 +41,7 @@ models:
         +alias: applicative_database_
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     analytics:
-      +meta:  
+      +meta:
         owner: "@team-data-analytics"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: analytics_{{ target.name }}

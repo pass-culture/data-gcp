@@ -1,7 +1,7 @@
-{% for input_table in params.gcp_project_native_env %}
+{% for input_table in params.gcp_project_env %}
 
 SELECT
-    * except(event_date), 
+    * except(event_date),
     PARSE_DATE('%Y%m%d', event_date) as event_date
 FROM
     {% if params.dag_type == 'intraday' %}
@@ -14,6 +14,6 @@ WHERE
         "{{ params.app_info_ids | join('", "') }}"
     )
     OR app_info.id is NULL
-    
+
 {% if not loop.last -%} UNION ALL {%- endif %}
 {% endfor %}

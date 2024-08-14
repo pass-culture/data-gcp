@@ -24,25 +24,21 @@ ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO = {
     "prod": ["passculture.pro"],
 }[ENV_SHORT_NAME]
 
+GCP_PROJECT_NATIVE_DEFAULT_ENV = "passculture-native.analytics_267263535"
+
 GCP_PROJECT_NATIVE_ENV = {
-    "dev": ["passculture-native.analytics_267263535"],
-    "stg": ["passculture-native.analytics_267263535"],
-    "prod": ["passculture-native.analytics_267263535"],
+    "dev": [GCP_PROJECT_NATIVE_DEFAULT_ENV],
+    "stg": [GCP_PROJECT_NATIVE_DEFAULT_ENV],
+    "prod": [GCP_PROJECT_NATIVE_DEFAULT_ENV],
 }[ENV_SHORT_NAME]
 
 
+GCP_PROJECT_PRO_DEFAULT_ENV = "pc-pro-production.analytics_397565568"
+
 GCP_PROJECT_PRO_ENV = {
-    "dev": [
-        "pc-pro-testing.analytics_397508951",
-        "pc-pro-production.analytics_397565568",
-    ],
-    "stg": [
-        "pc-pro-staging.analytics_397573615",
-        "pc-pro-production.analytics_397565568",
-    ],
-    "prod": [
-        "pc-pro-production.analytics_397565568",
-    ],
+    "dev": ["pc-pro-testing.analytics_397508951", GCP_PROJECT_PRO_DEFAULT_ENV],
+    "stg": ["pc-pro-staging.analytics_397573615", GCP_PROJECT_PRO_DEFAULT_ENV],
+    "prod": [GCP_PROJECT_PRO_DEFAULT_ENV],
 }[ENV_SHORT_NAME]
 
 
@@ -57,8 +53,9 @@ import_firebase_pro_tables = {
         "clustering_fields": {"fields": ["event_name"]},
         "params": {
             "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO,
-            "gcp_project_native_env": GCP_PROJECT_PRO_ENV,
+            "gcp_project_env": GCP_PROJECT_PRO_ENV,
         },
+        "fallback_params": {"gcp_project_env": [GCP_PROJECT_PRO_DEFAULT_ENV]},
     },
 }
 
@@ -72,8 +69,9 @@ import_firebase_beneficiary_tables = {
         "clustering_fields": {"fields": ["event_name"]},
         "params": {
             "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING,
-            "gcp_project_native_env": GCP_PROJECT_NATIVE_ENV,
+            "gcp_project_env": GCP_PROJECT_NATIVE_ENV,
         },
+        "fallback_params": {"gcp_project_env": [GCP_PROJECT_NATIVE_DEFAULT_ENV]},
     }
 }
 

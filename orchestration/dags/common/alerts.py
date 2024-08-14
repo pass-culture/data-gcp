@@ -139,7 +139,7 @@ def dbt_test_slack_alert(results_json, manifest_json, job_type="dbt-test", **con
                 sorted(
                     test_nodes.items(),
                     key=lambda item: manifest_json["nodes"][item[0]]["meta"].get(
-                        "owner", "@data"
+                        "owner", "@team-data"
                     ),
                 )
             )
@@ -148,7 +148,7 @@ def dbt_test_slack_alert(results_json, manifest_json, job_type="dbt-test", **con
                 slack_msg = "\n".join(
                     [
                         slack_msg,
-                        f"""{manifest_json["nodes"][node]["meta"].get("owner")}""",
+                        f"""Ownership: {manifest_json["nodes"][node]["meta"].get("owner","@team-data")}""",
                         f"""Model {tested_node.split('.')[-1]} failed the following tests: """,
                     ]
                     + [

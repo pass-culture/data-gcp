@@ -9,7 +9,7 @@ from common.config import (
     PATH_TO_DBT_PROJECT,
     PATH_TO_DBT_TARGET,
 )
-from common.dbt.utils import load_json_artifact
+from common.dbt.utils import load_json_artifact, load_manifest
 from common.utils import get_airflow_schedule, waiting_operator
 
 from airflow import DAG
@@ -72,6 +72,11 @@ dbt_test = BashOperator(
     dag=dag,
 )
 
+sleep_op = PythonOperator(
+    dag=dag,
+    task_id="sleep_task",
+    python_callable=lambda: time.sleep(60),  # wait 1 minute
+)
 
 load_run_results = PythonOperator(
     task_id="load_run_results",
@@ -84,12 +89,11 @@ load_run_results = PythonOperator(
     dag=dag,
 )
 
-load_manifest = PythonOperator(
+load_dbt_manifest = PythonOperator(
     task_id="load_manifest",
-    python_callable=load_json_artifact,
+    python_callable=load_manifest,
     op_kwargs={
         "_PATH_TO_DBT_TARGET": f"{PATH_TO_DBT_TARGET}",
-        "artifact": "manifest.json",
     },
     do_xcom_push=True,
     dag=dag,
@@ -111,80 +115,26 @@ compute_metrics_elementary = BashOperator(
     dag=dag,
 )
 
-sleep_op = PythonOperator(
-    dag=dag,
-    task_id="sleep_task",
-    python_callable=lambda: time.sleep(300),  # wait 5 minutes
-)
 
 warning_alert_slack = PythonOperator(
     task_id="warning_alert_slack",
     python_callable=dbt_test_slack_alert,
     op_kwargs={
         "results_json": "{{task_instance.xcom_pull(task_ids='load_run_results', key='return_value')}}",
-        "manifest_json": "{{task_instance.xcom_pull(task_ids='load_manifest', key='return_value')}}",
+        "manifest_json": "{{task_instance.xcom_pull(task_ids='load_dbt_manifest', key='return_value')}}",
     },
     provide_context=True,
     dag=dag,
 )
 
 
-# with TaskGroup(group_id="re_data", dag=dag) as re_data_overview:
-#     re_data_generate_json = BashOperator(
-#         task_id="re_data_generate_json",
-#         bash_command="""dbt run-operation generate_overview --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', interval: 'days:1', monitored_path: """
-#         + f"{PATH_TO_DBT_TARGET}"
-#         + "/re_data/monitored.json"
-#         + ", overview_path: "
-#         + f"{PATH_TO_DBT_TARGET}"
-#         + "/re_data/overview.json}' "
-#         + f"--target {ENV_SHORT_NAME}",
-#         cwd=PATH_TO_DBT_PROJECT,
-#         dag=dag,
-#     )
-
-#     export_tests_history = BashOperator(
-#         task_id="export_tests_history",
-#         bash_command="dbt run-operation export_tests_history --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', tests_history_path: "
-#         + f"{PATH_TO_DBT_TARGET}"
-#         + "/re_data/tests_history.json }' "
-#         + f"--target {ENV_SHORT_NAME}",
-#         cwd=PATH_TO_DBT_PROJECT,
-#         dag=dag,
-#     )
-
-#     export_table_samples = BashOperator(
-#         task_id="export_table_samples",
-#         bash_command="dbt run-operation export_table_samples --args '{end_date: '{{ today() }}', start_date: '{{ last_week() }}', table_samples_path: "
-#         + f"""{PATH_TO_DBT_TARGET}"""
-#         + "/re_data/table_samples_path.json}' "
-#         + f"--target {ENV_SHORT_NAME}",
-#         cwd=PATH_TO_DBT_PROJECT,
-#         dag=dag,
-#     )
-
-
-# re_data_notify = BashOperator(
-#     task_id="re_data_notify",
-#     bash_command=f"""
-#     re_data notify slack \
-#     --target {ENV_SHORT_NAME} \
-#     --webhook-url  {SLACK_WEBHOOK_URL} \
-#     --subtitle="More details here : link to <re_data>" \
-#     --select anomaly \
-#     --select test \
-#     --select schema_change
-#     """,
-#     cwd=PATH_TO_DBT_PROJECT,
-#     dag=dag,
-# )
-
 (start >> wait_dbt_run >> compute_metrics_re_data)
-(
-    wait_dbt_run
-    >> dbt_test
-    >> (load_run_results, load_manifest)
-    >> sleep_op
-    >> warning_alert_slack
-)
+if ENV_SHORT_NAME == "prod":
+    (
+        wait_dbt_run
+        >> dbt_test
+        >> sleep_op
+        >> (load_run_results, load_dbt_manifest)
+        >> warning_alert_slack
+    )
 wait_dbt_run >> compute_metrics_elementary

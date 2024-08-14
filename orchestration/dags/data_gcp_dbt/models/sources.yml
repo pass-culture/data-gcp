@@ -144,7 +144,7 @@ sources:
       - name: firebase_app_experiments
       - name: siren_data
       - name: subcategories
-  - name: analytics 
+  - name: analytics
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: adage
@@ -152,7 +152,7 @@ sources:
       - name: linked_offers
       - name: offer_types
       - name: region_department # TODO migrate this table to seed
-  - name: seed 
+  - name: seed
     schema: seed_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: agg_partner_cultural_sector

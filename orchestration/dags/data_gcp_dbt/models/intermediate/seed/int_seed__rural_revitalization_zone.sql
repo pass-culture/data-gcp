@@ -1,6 +1,6 @@
-{{ config(**custom_table_config()) }} 
+{{ config(**custom_table_config()) }}
 
-SELECT 
+SELECT
     CODGEO AS geo_code, -- city_code
     LIBGEO AS geo_name,
     ZRR_SIMP AS zrr_level,

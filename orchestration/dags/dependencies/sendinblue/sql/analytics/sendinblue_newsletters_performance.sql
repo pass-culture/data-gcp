@@ -1,10 +1,10 @@
 
 -- Join with firebase_events to get the number of sessions
 -- & compute indicators.
--- *** Missing utm 
+-- *** Missing utm
 
 WITH sendinblue_newsletter as (
-    SELECT 
+    SELECT
         *
         , row_number() over( partition by campaign_id order by update_date desc) as rank_update
     FROM `{{ bigquery_raw_dataset }}.sendinblue_newsletters_histo`
@@ -29,7 +29,7 @@ user_traffic as (
     GROUP BY 1, 2
 )
 
-SELECT 
+SELECT
     campaign_id
     , campaign_utm
     , campaign_name

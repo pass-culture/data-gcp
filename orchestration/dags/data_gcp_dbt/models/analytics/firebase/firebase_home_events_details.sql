@@ -29,9 +29,9 @@ WITH firebase_home_events AS (
     FROM {{ ref('firebase_home_events') }}
     WHERE date(event_date) >= DATE_SUB(date('{{ ds() }}'), INTERVAL 12 MONTH)
 
-), 
+),
 contentful_tags AS (
-    SELECT 
+    SELECT
         entry_id,
         ARRAY_TO_STRING(
         array_agg(
@@ -40,16 +40,16 @@ contentful_tags AS (
         ) as playlist_type
     FROM {{ ref('int_contentful__tag') }}
     GROUP BY entry_id
-), 
+),
 diversification_booking AS (
     -- in case we have more than one reservation for the same offer in the same day, take average (this should not happen).
     SELECT
         DATE(booking_creation_date) as date,
         user_id,
         offer_id,
-        avg(delta_diversification) as delta_diversification 
+        avg(delta_diversification) as delta_diversification
     FROM {{ ref("diversification_booking") }}
-    GROUP BY 1,2,3 
+    GROUP BY 1,2,3
 )
 
 SELECT
@@ -71,7 +71,7 @@ SELECT
     e.module_index,
     coalesce(contentful_tags.playlist_type, 'temporaire') as playlist_type,
     ebd.booking_is_cancelled,
-    CASE WHEN 
+    CASE WHEN
         event_type = "booking" THEN db.delta_diversification
     ELSE NULL
     END AS  delta_diversification,
@@ -80,7 +80,7 @@ SELECT
     eud.user_region_name,
     eud.current_deposit_type,
     eud.user_age,
-    CASE 
+    CASE
         WHEN eud.current_deposit_type = 'GRANT_18' THEN 'Bénéficiaire 18-20 ans'
         WHEN eud.current_deposit_type = 'GRANT_15_17' THEN 'Bénéficiaire 15-17 ans'
         WHEN e.user_id IS NOT NULL THEN 'Grand Public'

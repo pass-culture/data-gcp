@@ -8,7 +8,7 @@
     )
 }}
 
-WITH 
+WITH
 
 -- Step 1: Extracting Consulted Offers
 consulted_offers AS (
@@ -154,12 +154,12 @@ conversion_metrics AS (
         COUNT(DISTINCT CASE WHEN ne.event_name = 'ConsultVenue' THEN ne.venue_id END) AS nb_venues_consulted
     FROM last_search ls
     LEFT JOIN {{ ref('int_firebase__native_event') }} ne
-        ON 
+        ON
         ne.event_name IN ('NoSearchResult', 'ConsultOffer', 'HasAddedOfferToFavorites', 'VenuePlaylistDisplayedOnSearchResults', 'ConsultVenue')
         AND ne.unique_session_id = ls.unique_session_id
         AND ne.unique_search_id = ls.unique_search_id
-        AND ne.event_date = ls.first_date 
-        
+        AND ne.event_date = ls.first_date
+
     GROUP BY ls.unique_session_id, ls.unique_search_id
 ),
 

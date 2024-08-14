@@ -12,7 +12,7 @@ with venues as (
             end,
             v.venue_department_code
         ) AS venue_department_code,
-        CASE 
+        CASE
             WHEN gp.banner_url IS NOT NULL THEN "offerer"
             WHEN gp.venue_id IS NOT NULL THEN "google"
             ELSE "default_category" END AS venue_image_source

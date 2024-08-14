@@ -26,7 +26,7 @@
                 {% else %}
                     {{ ref(referential_table) }}
                 {% endif %}
-        ) ref_data 
+        ) ref_data
         on  {{ prefix_name }}_longitude between ref_data.min_longitude and ref_data.max_longitude
         and {{ prefix_name }}_latitude between ref_data.min_latitude and ref_data.max_latitude
         and ST_CONTAINS(

@@ -1,6 +1,6 @@
-{{ config(**custom_table_config()) }} 
+{{ config(**custom_table_config()) }}
 
-SELECT 
+SELECT
     bv2012_name AS living_area_2012_name,
     reg_name AS region_name,
     dep_code AS department_code,

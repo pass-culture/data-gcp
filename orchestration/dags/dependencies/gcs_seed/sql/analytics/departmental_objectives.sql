@@ -1,4 +1,4 @@
-SELECT 
+SELECT
     objective_name
     , objective_type
     , region_name

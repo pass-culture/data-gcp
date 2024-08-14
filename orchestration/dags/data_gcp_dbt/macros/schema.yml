@@ -73,7 +73,7 @@ macros:
         id_column: The column name in the source_table that uniquely identifies each record (user_id, venue_id, ...)
         prefix_name: A prefix used to identify the latitude and longitude columns in the source_table. For example <user> for user_latitude, user_longitude or <venue> For venue_latitude, venue_longitude).
         columns: A list of column names from the referential_table that you want to include in the final result.
-        geo_shape (optional, default: 'geo_shape'): The name of the column in the referential_table that contains the geographical shapes (e.g., polygons) used for geospatial matching. 
+        geo_shape (optional, default: 'geo_shape'): The name of the column in the referential_table that contains the geographical shapes (e.g., polygons) used for geospatial matching.
 
       Example:
         See the int_geo__user_location model in the `intermediate` folder.
@@ -90,4 +90,3 @@ macros:
 
   - name: custom_incremental_config
     description: "materialize incremental models as views in CI"
-

@@ -3,7 +3,7 @@ SELECT user_id,user_postal_code,first_booking_date as first_booking_date,CURRENT
 FROM `{{ bigquery_analytics_dataset }}.global_user`
 where DATE(first_booking_date)=DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)
 )
-select 
+select
 ebd.user_id
 ,uob.user_postal_code
 ,evd.venue_latitude

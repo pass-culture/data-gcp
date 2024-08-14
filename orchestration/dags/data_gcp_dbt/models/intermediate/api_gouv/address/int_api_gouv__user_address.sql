@@ -1,4 +1,4 @@
-{{ config(**custom_table_config()) }} 
+{{ config(**custom_table_config()) }}
 
 select
     adu.user_id,

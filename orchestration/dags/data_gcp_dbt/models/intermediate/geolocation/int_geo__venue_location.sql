@@ -1,9 +1,9 @@
-{{ config(**custom_table_config()) }} 
+{{ config(**custom_table_config()) }}
 
 with venue_epci as (
     {{ generate_seed_geolocation_query(
-        source_table=['raw', 'applicative_database_venue'], 
-        referential_table='int_seed__intercommunal_public_institution', 
+        source_table=['raw', 'applicative_database_venue'],
+        referential_table='int_seed__intercommunal_public_institution',
         id_column='venue_id',
         prefix_name='venue',
         columns=['epci_code', 'epci_name']
@@ -13,8 +13,8 @@ with venue_epci as (
 
 venue_qpv as (
     {{ generate_seed_geolocation_query(
-        source_table=['raw', 'applicative_database_venue'], 
-        referential_table='int_seed__priority_neighborhood', 
+        source_table=['raw', 'applicative_database_venue'],
+        referential_table='int_seed__priority_neighborhood',
         id_column='venue_id',
         prefix_name='venue',
         columns=['code_qpv', 'qpv_name', 'qpv_communes']
@@ -24,7 +24,7 @@ venue_qpv as (
 
 venue_zrr as (
     {{ generate_seed_geolocation_query(
-        source_table=['raw', 'applicative_database_venue'], 
+        source_table=['raw', 'applicative_database_venue'],
         referential_table='int_seed__rural_revitalization_zone',
         id_column='venue_id',
         prefix_name='venue',
@@ -35,7 +35,7 @@ venue_zrr as (
 
 venue_geo_iris as (
     {{ generate_seed_geolocation_query(
-        source_table=['raw', 'applicative_database_venue'], 
+        source_table=['raw', 'applicative_database_venue'],
         referential_table='int_seed__geo_iris',
         id_column='venue_id',
         prefix_name='venue',
@@ -68,15 +68,15 @@ select
     venue_zrr.zrr_level_detail,
     venue_zrr.is_in_zrr as venue_in_zrr,
     case
-        when 
+        when
             code_qpv is NULL and
-            venue_latitude is NULL and 
-            venue_longitude is NULL 
+            venue_latitude is NULL and
+            venue_longitude is NULL
         then NULL
     else code_qpv is not NULL
     end as venue_in_qpv,
-    
-    
+
+
 from
     {{ source('raw', 'applicative_database_venue') }} venue
     left join venue_epci on venue.venue_id = venue_epci.venue_id

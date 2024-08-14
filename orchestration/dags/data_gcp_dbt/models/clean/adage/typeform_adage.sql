@@ -1,4 +1,4 @@
-SELECT 
+SELECT
   case when date like '%/%/%' then PARSE_DATE("%d/%m/%Y",date)
   else date(date)
   end as date,

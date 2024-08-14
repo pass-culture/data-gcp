@@ -58,4 +58,3 @@ select
     trace
 
 from {{ source("raw","stdout") }}
-

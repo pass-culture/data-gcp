@@ -1,10 +1,10 @@
-{{ config(**custom_table_config()) }} 
+{{ config(**custom_table_config()) }}
 
 
 with user_epci as (
     {{ generate_seed_geolocation_query(
-        source_table='int_api_gouv__user_address', 
-        referential_table='int_seed__intercommunal_public_institution', 
+        source_table='int_api_gouv__user_address',
+        referential_table='int_seed__intercommunal_public_institution',
         id_column='user_id',
         prefix_name='user',
         columns=['epci_code', 'epci_name']
@@ -14,8 +14,8 @@ with user_epci as (
 
 user_qpv as (
     {{ generate_seed_geolocation_query(
-        source_table='int_api_gouv__user_address', 
-        referential_table='int_seed__priority_neighborhood', 
+        source_table='int_api_gouv__user_address',
+        referential_table='int_seed__priority_neighborhood',
         id_column='user_id',
         prefix_name='user',
         columns=['code_qpv', 'qpv_name', 'qpv_communes']
@@ -25,7 +25,7 @@ user_qpv as (
 
 user_zrr as (
     {{ generate_seed_geolocation_query(
-        source_table='int_api_gouv__user_address', 
+        source_table='int_api_gouv__user_address',
         referential_table='int_seed__rural_revitalization_zone',
         id_column='user_id',
         prefix_name='user',
@@ -36,7 +36,7 @@ user_zrr as (
 
 user_geo_iris as (
     {{ generate_seed_geolocation_query(
-        source_table='int_api_gouv__user_address', 
+        source_table='int_api_gouv__user_address',
         referential_table='int_seed__geo_iris',
         id_column='user_id',
         prefix_name='user',
@@ -70,10 +70,10 @@ select
     user_zrr.zrr_level,
     user_zrr.zrr_level_detail,
     case
-        when 
+        when
             code_qpv is NULL and
-            user_latitude is NULL and 
-            user_longitude is NULL 
+            user_latitude is NULL and
+            user_longitude is NULL
         then NULL
     else code_qpv is not NULL
     end as user_is_in_qpv,
@@ -84,4 +84,3 @@ left join user_epci on user.user_id = user_epci.user_id
 left join user_qpv on user.user_id = user_qpv.user_id
 left join user_zrr on user.user_id = user_zrr.user_id
 left join user_geo_iris on user.user_id = user_geo_iris.user_id
-

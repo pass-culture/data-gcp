@@ -1,10 +1,10 @@
 WITH dates AS (
-    select 
+    select
         month as month
     from unnest(generate_date_array('2020-01-01', current_date(), interval 1 month)) month
 )
 
-SELECT 
+SELECT
     month
     , "{{ params.group_type }}" as dimension_name
     , {% if params.group_type == 'NAT' %}
@@ -18,9 +18,9 @@ SELECT
     , count(distinct user.user_id) as denominator -- nombre de bénéficiaires
 FROM `{{ bigquery_analytics_dataset }}.global_deposit` as `deposit`
 JOIN `{{ bigquery_analytics_dataset }}.global_user` as user
-    ON deposit.user_id = user.user_id 
+    ON deposit.user_id = user.user_id
 LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
-        on  user.user_department_code = rd.num_dep 
-JOIN dates 
+        on  user.user_department_code = rd.num_dep
+JOIN dates
     ON DATE_DIFF(month, deposit.deposit_creation_date, MONTH) = 24
-GROUP BY 1, 2, 3, 4, 5 
+GROUP BY 1, 2, 3, 4, 5

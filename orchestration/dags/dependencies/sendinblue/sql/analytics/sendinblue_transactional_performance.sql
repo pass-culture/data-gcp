@@ -1,10 +1,10 @@
 
 -- Join with firebase_events to get the number of sessions
 -- & compute indicators.
--- *** Missing utm 
+-- *** Missing utm
 
 WITH sendinblue_transactional as (
-    SELECT DISTINCT 
+    SELECT DISTINCT
         *
     FROM `{{ bigquery_clean_dataset }}.sendinblue_transactional`
 ),
@@ -27,7 +27,7 @@ user_traffic as (
     GROUP BY 1, 2
 )
 
-SELECT 
+SELECT
     template as template_id
     , tag
     , delivered_count as audience_size

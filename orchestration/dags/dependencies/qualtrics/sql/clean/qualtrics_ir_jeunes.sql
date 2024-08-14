@@ -8,8 +8,8 @@ WITH user_visits AS (
 ),
 
 previous_export AS (
-    SELECT 
-        DISTINCT user_id 
+    SELECT
+        DISTINCT user_id
     FROM  `{{ bigquery_clean_dataset }}.qualtrics_ir_jeunes`
     WHERE calculation_month >= DATE_SUB(DATE("{{ current_month(ds) }}"), INTERVAL 6 MONTH)
 
@@ -18,7 +18,7 @@ previous_export AS (
 
 answers AS (
     SELECT distinct user_id
-    FROM `{{ bigquery_analytics_dataset }}.qualtrics_answers` 
+    FROM `{{ bigquery_analytics_dataset }}.qualtrics_answers`
 ),
 
 ir_export AS (
@@ -43,7 +43,7 @@ ir_export AS (
         LEFT JOIN `{{ bigquery_raw_dataset }}.qualtrics_opt_out_users` opt_out on opt_out.ext_ref = user_data.user_id
         LEFT JOIN user_visits ON user_data.user_id = user_visits.user_id
         LEFT JOIN answers ON user_data.user_id = answers.user_id
-        WHERE 
+        WHERE
             user_data.user_id is not null
         AND user_data.current_deposit_type in ("GRANT_15_17", "GRANT_18")
         AND user_is_current_beneficiary is true
@@ -54,10 +54,10 @@ ir_export AS (
 ),
 
 grant_15_17 as (
-    SELECT 
+    SELECT
         ir.*
     FROM ir_export ir
-    LEFT JOIN previous_export pe 
+    LEFT JOIN previous_export pe
     ON pe.user_id = ir.user_id
     WHERE ir.deposit_type = "GRANT_15_7"
     AND pe.user_id IS NULL
@@ -66,10 +66,10 @@ grant_15_17 as (
 ),
 
 grant_18 as (
-    SELECT 
+    SELECT
         ir.*
     FROM ir_export ir
-    LEFT JOIN previous_export pe 
+    LEFT JOIN previous_export pe
     ON pe.user_id = ir.user_id
     WHERE deposit_type = "GRANT_18"
     AND pe.user_id IS NULL
@@ -77,14 +77,14 @@ grant_18 as (
     LIMIT {{ params.volume }}
 )
 
-SELECT  
-    DATE("{{ current_month(ds) }}") as calculation_month,
-    CURRENT_DATE as export_date,
-    * 
-FROM grant_18
-UNION ALL 
 SELECT
     DATE("{{ current_month(ds) }}") as calculation_month,
     CURRENT_DATE as export_date,
-    * 
+    *
+FROM grant_18
+UNION ALL
+SELECT
+    DATE("{{ current_month(ds) }}") as calculation_month,
+    CURRENT_DATE as export_date,
+    *
 FROM grant_15_17

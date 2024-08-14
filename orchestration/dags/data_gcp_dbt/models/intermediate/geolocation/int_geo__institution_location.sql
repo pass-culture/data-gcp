@@ -1,10 +1,10 @@
-{{ config(**custom_table_config()) }} 
+{{ config(**custom_table_config()) }}
 
 
 with institution_epci as (
     {{ generate_seed_geolocation_query(
-        source_table='int_seed__institution_metadata', 
-        referential_table='int_seed__intercommunal_public_institution', 
+        source_table='int_seed__institution_metadata',
+        referential_table='int_seed__intercommunal_public_institution',
         id_column='institution_id',
         prefix_name='institution',
         columns=['epci_code', 'epci_name']
@@ -14,8 +14,8 @@ with institution_epci as (
 
 institution_qpv as (
     {{ generate_seed_geolocation_query(
-        source_table='int_seed__institution_metadata', 
-        referential_table='int_seed__priority_neighborhood', 
+        source_table='int_seed__institution_metadata',
+        referential_table='int_seed__priority_neighborhood',
         id_column='institution_id',
         prefix_name='institution',
         columns=['code_qpv', 'qpv_name', 'qpv_communes']
@@ -25,7 +25,7 @@ institution_qpv as (
 
 institution_zrr as (
     {{ generate_seed_geolocation_query(
-        source_table='int_seed__institution_metadata', 
+        source_table='int_seed__institution_metadata',
         referential_table='int_seed__rural_revitalization_zone',
         id_column='institution_id',
         prefix_name='institution',
@@ -36,7 +36,7 @@ institution_zrr as (
 
 institution_geo_iris as (
     {{ generate_seed_geolocation_query(
-        source_table='int_seed__institution_metadata', 
+        source_table='int_seed__institution_metadata',
         referential_table='int_seed__geo_iris',
         id_column='institution_id',
         prefix_name='institution',
@@ -68,13 +68,13 @@ select
     institution_zrr.zrr_level,
     institution_zrr.zrr_level_detail,
     case
-        when 
+        when
             code_qpv is NULL and
-            institution_latitude is NULL and 
-            institution_longitude is NULL 
+            institution_latitude is NULL and
+            institution_longitude is NULL
         then NULL
     else code_qpv is not NULL
-    end as institution_in_qpv, 
+    end as institution_in_qpv,
 
 FROM {{ source('raw', 'applicative_database_educational_institution') }} institution
 left join {{ ref('int_seed__institution_metadata')}} as metadata on institution.institution_id = metadata.institution_id
@@ -82,4 +82,3 @@ left join institution_epci on institution.institution_id = institution_epci.inst
 left join institution_qpv on institution.institution_id = institution_qpv.institution_id
 left join institution_zrr on institution.institution_id = institution_zrr.institution_id
 left join institution_geo_iris on institution.institution_id = institution_geo_iris.institution_id
-

@@ -1,6 +1,6 @@
-{{ config(**custom_table_config()) }} 
+{{ config(**custom_table_config()) }}
 
-SELECT 
+SELECT
     iris_code,
     iris_label,
     city_code,

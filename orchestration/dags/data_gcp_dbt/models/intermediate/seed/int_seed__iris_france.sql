@@ -1,5 +1,5 @@
-SELECT 
-    irisf.id, 
+SELECT
+    irisf.id,
     irisf.iriscode,
     irisf.centroid,
     irisf.shape,

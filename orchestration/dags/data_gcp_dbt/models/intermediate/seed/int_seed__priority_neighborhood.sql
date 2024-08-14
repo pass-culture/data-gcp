@@ -1,6 +1,6 @@
-{{ config(**custom_table_config()) }} 
+{{ config(**custom_table_config()) }}
 
-SELECT 
+SELECT
     departement AS department_code,
     code_quartier AS code_qpv,
     commune_qp AS qpv_communes,
@@ -15,5 +15,3 @@ SELECT
     ST_BOUNDINGBOX(ST_GEOGFROMTEXT(geoshape)).ymin AS min_latitude,
     ST_BOUNDINGBOX(ST_GEOGFROMTEXT(geoshape)).ymax AS max_latitude
 FROM {{ source('seed', 'qpv') }}
-
-   

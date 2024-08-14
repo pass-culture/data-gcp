@@ -17,15 +17,15 @@ aggregated_active_beneficiary AS (
         {% endif %} as dimension_value
         , deposit_type as user_type
         , "beneficiaire_actuel" as indicator
-        , COUNT(DISTINCT uua.user_id) as numerator 
-        , 1 as denominator      
+        , COUNT(DISTINCT uua.user_id) as numerator
+        , 1 as denominator
   FROM
       `{{ bigquery_analytics_dataset }}.aggregated_daily_user_used_activity` uua
-  INNER JOIN last_day_of_month ldm on ldm.last_active_date = active_date 
+  INNER JOIN last_day_of_month ldm on ldm.last_active_date = active_date
   -- active nor suspended
   INNER JOIN `{{ bigquery_analytics_dataset }}.global_user` eud ON eud.user_id = uua.user_id
   LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
-        on  eud.user_department_code = rd.num_dep 
+        on  eud.user_department_code = rd.num_dep
   -- still have some credit at EOM
   WHERE cumulative_amount_spent < initial_deposit_amount
 
@@ -43,18 +43,18 @@ aggregated_total_beneficiairy AS (
         {% endif %} as dimension_value
         , cast(null as string) as user_type
         , "beneficiaire_total" as indicator
-        , COUNT(DISTINCT  eud.user_id) as numerator  
+        , COUNT(DISTINCT  eud.user_id) as numerator
         , 1 as denominator
   FROM last_day_of_month ldm
   INNER JOIN `{{ bigquery_analytics_dataset }}.global_user` eud ON date(eud.first_deposit_creation_date) <= date(ldm.last_active_date)
   LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
-        on  eud.user_department_code = rd.num_dep 
+        on  eud.user_department_code = rd.num_dep
   GROUP BY  1, 2, 3, 4, 5
 )
 
 
 SELECT *
-FROM aggregated_active_beneficiary 
+FROM aggregated_active_beneficiary
 UNION ALL
 SELECT *
 FROM aggregated_total_beneficiairy

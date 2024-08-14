@@ -57,7 +57,7 @@ events as (
         offer_display_order
     from
         {{ ref('int_pcreco__displayed_offer_event') }} poc
-    inner join interaction ii on ii.event_date = poc.event_date 
+    inner join interaction ii on ii.event_date = poc.event_date
         and ii.reco_call_id = poc.reco_call_id and poc.offer_display_order <= ii.last_offer_display_order
     where
         poc.event_date >= date_sub(current_date, interval 14 day)

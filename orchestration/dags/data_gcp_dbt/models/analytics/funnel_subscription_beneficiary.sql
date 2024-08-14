@@ -121,7 +121,7 @@ select
     case when uat.appsflyer_id is null then false else true end as has_accepted_tracking,
     first_deposit_type,
     first_open.platform,
-    -- certains utilisateurs s'étant déjà inscrits téléchargent l'app sur un autre device et donc créent un nouveau user_pseudo_id, la query suivante permet d'identifier ceux qui se loguent pour la première fois 
+    -- certains utilisateurs s'étant déjà inscrits téléchargent l'app sur un autre device et donc créent un nouveau user_pseudo_id, la query suivante permet d'identifier ceux qui se loguent pour la première fois
     case when timestamp(u.first_deposit_creation_date) < first_open.first_open_date then false
         when timestamp(u.user_activation_date) < first_open.first_open_date then false
         else true end

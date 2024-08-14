@@ -1,11 +1,11 @@
 WITH dates AS (
-    select 
+    select
         month as month
     from unnest(generate_date_array('2020-01-01', current_date(), interval 1 month)) month
 ),
 
 infos_users AS (
-    SELECT 
+    SELECT
         deposit.user_id
         , deposit.deposit_type
         , DATE_TRUNC(deposit_creation_date,MONTH) AS date_deposit
@@ -17,10 +17,10 @@ infos_users AS (
     FROM `{{ bigquery_analytics_dataset }}.global_deposit` as deposit
     JOIN `{{ bigquery_analytics_dataset }}.global_user` as user ON deposit.user_id = user.user_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
-        on  user.user_department_code = rd.num_dep 
+        on  user.user_department_code = rd.num_dep
 )
 
-SELECT 
+SELECT
     month -- tous les month
     , "{{ params.group_type }}" as dimension_name
     , {% if params.group_type == 'NAT' %}
@@ -30,11 +30,11 @@ SELECT
     {% endif %} as dimension_value
     , deposit_type as user_type
     , "taux_activation" as indicator
-    , COUNT(DISTINCT 
+    , COUNT(DISTINCT
         CASE
-            WHEN DATE_DIFF(first_booking_date, date_deposit, DAY) <= {{ params.months_threshold }} 
-            THEN user_id 
-            ELSE NULL 
+            WHEN DATE_DIFF(first_booking_date, date_deposit, DAY) <= {{ params.months_threshold }}
+            THEN user_id
+            ELSE NULL
         END) as numerator -- ceux qui sont bénéficiaires actuels et qui ont fait 1 résa dans les 3 month après inscription
     , COUNT(DISTINCT user_id) as denominator -- ceux qui sont bénéficiaires actuels
 FROM dates

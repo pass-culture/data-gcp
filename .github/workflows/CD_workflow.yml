@@ -1,6 +1,7 @@
 name: "Deployement workflow"
 
 on:
+ workflow_dispatch:
  push:
   branches:
     - master
@@ -58,7 +59,7 @@ jobs:
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
   composer-deploy-on-dev:
-    if: github.ref == 'refs/heads/production'
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/production' }}
     uses: ./.github/workflows/reusable_deploy_composer.yml
     needs: [test-orchestration, test-jobs, linter]
     with:

@@ -76,6 +76,7 @@ with collective_stocks_grouped_by_collective_offers as (
         il.institution_epci,
         il.institution_density_label,
         il.institution_macro_density_label,
+        il.institution_density_level,
         FALSE as collective_offer_is_template
     from {{ source('raw','applicative_database_collective_offer') }} as co
         left join collective_stocks_grouped_by_collective_offers as cs on cs.collective_offer_id = co.collective_offer_id

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import pandas as pd
 import typer
 from google.cloud import aiplatform
+
 from utils.constants import (
     BIGQUERY_CLEAN_DATASET,
     ENV_SHORT_NAME,

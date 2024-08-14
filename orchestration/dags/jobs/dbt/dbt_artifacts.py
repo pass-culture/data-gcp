@@ -1,11 +1,5 @@
 import time
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.bash_operator import BashOperator
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import PythonOperator
-from airflow.utils.dates import datetime, timedelta
 from common import macros
 from common.access_gcp_secrets import access_secret_data
 from common.alerts import dbt_test_slack_alert, task_fail_slack_alert
@@ -17,6 +11,13 @@ from common.config import (
 )
 from common.dbt.utils import load_json_artifact
 from common.utils import get_airflow_schedule, waiting_operator
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.bash_operator import BashOperator
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import PythonOperator
+from airflow.utils.dates import datetime, timedelta
 
 SLACK_CONN_PASSWORD = access_secret_data(
     GCP_PROJECT_ID, "slack-analytics-conn-password"

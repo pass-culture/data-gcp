@@ -1,7 +1,5 @@
 from datetime import datetime, timedelta
 
-from airflow import DAG
-from airflow.models import Param
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER, ENV_SHORT_NAME
@@ -22,6 +20,9 @@ from dependencies.ml.linkage.import_items import (
     SQL_IMPORT_PARAMS,
     TMP_DATASET,
 )
+
+from airflow import DAG
+from airflow.models import Param
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-offers-{ENV_SHORT_NAME}"

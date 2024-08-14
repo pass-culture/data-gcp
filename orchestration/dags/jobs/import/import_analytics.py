@@ -1,9 +1,5 @@
 import datetime
 
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.alerts import analytics_fail_slack_alert
 from common.config import (
@@ -15,6 +11,11 @@ from common.config import (
 )
 from common.utils import get_airflow_schedule, waiting_operator
 from dependencies.analytics.import_analytics import define_import_tables
+
+from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+from airflow.utils.task_group import TaskGroup
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),

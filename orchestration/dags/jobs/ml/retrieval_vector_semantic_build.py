@@ -1,12 +1,5 @@
 from datetime import datetime, timedelta
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-    BigQueryInsertJobOperator,
-)
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -23,8 +16,15 @@ from common.operators.gce import (
     StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
-
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
+    BigQueryInsertJobOperator,
+)
 
 DATE = "{{ ts_nodash }}"
 

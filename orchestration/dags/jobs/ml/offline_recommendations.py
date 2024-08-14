@@ -1,8 +1,5 @@
 from datetime import datetime, timedelta
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -21,6 +18,10 @@ from dependencies.ml.offline_recommendation.export_to_backend import (
     params as params_export,
 )
 from dependencies.ml.offline_recommendation.import_users import params
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"offline-recommendation-{ENV_SHORT_NAME}"

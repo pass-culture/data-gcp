@@ -1,7 +1,5 @@
 from datetime import datetime, timedelta
 
-from airflow import DAG
-from airflow.models import Param
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER, ENV_SHORT_NAME
@@ -12,6 +10,9 @@ from common.operators.gce import (
     StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
+
+from airflow import DAG
+from airflow.models import Param
 
 GCE_INSTANCE = f"import-documentation-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/notion"

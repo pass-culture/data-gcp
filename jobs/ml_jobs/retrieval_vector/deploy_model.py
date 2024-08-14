@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 import typer
 from google.cloud import bigquery
+
 from utils import (
     BIGQUERY_CLEAN_DATASET,
     ENV_SHORT_NAME,

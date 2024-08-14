@@ -1,7 +1,5 @@
 import datetime
 
-from airflow import DAG
-from airflow.models import Param
 from common.alerts import task_fail_slack_alert
 from common.config import (
     ENV_SHORT_NAME,
@@ -14,6 +12,9 @@ from common.operators.gce import (
     StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
+
+from airflow import DAG
+from airflow.models import Param
 
 GCE_INSTANCE = f"import-gsheet-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/gsheet"

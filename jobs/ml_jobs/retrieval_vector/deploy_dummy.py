@@ -2,6 +2,7 @@ from datetime import datetime
 
 import numpy as np
 import typer
+
 from utils import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,

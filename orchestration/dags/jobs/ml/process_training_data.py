@@ -1,10 +1,5 @@
 import datetime
 
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
-)
 from common import macros
 from common.alerts import analytics_fail_slack_alert
 from common.config import (
@@ -14,8 +9,13 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.utils import get_airflow_schedule
-
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
+
+from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryExecuteQueryOperator,
+)
 
 default_dag_args = {
     "start_date": datetime.datetime(2022, 7, 26),

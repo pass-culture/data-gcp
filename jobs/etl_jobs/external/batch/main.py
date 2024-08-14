@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 import typer
+
 from batch_client import BatchClient
 from utils import access_secret_data, bigquery_load_job
 

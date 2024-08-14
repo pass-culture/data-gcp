@@ -3,6 +3,7 @@ import os
 import google
 import pandas as pd
 import typer
+
 from handler import BQExport, NotionDocumentation, NotionGlossary
 from utils import (
     ENVIRONMENT_SHORT_NAME,

@@ -6,6 +6,7 @@ import pandas as pd
 import tensorflow as tf
 from loguru import logger
 from sklearn.decomposition import PCA
+
 from two_towers_model.utils.constants import CONFIGS_PATH
 from utils.constants import (
     EVALUATION_USER_NUMBER,

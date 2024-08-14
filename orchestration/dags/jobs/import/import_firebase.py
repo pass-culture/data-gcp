@@ -1,14 +1,15 @@
 import copy
 import datetime
 
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER, GCP_PROJECT_ID
 from common.operators.biquery import bigquery_job_task
 from common.utils import depends_loop, get_airflow_schedule
 from dependencies.firebase.import_firebase import import_tables
+
+from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
 
 dags = {
     "daily": {

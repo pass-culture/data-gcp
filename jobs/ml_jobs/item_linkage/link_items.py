@@ -7,6 +7,7 @@ from typing import List, Tuple
 import pandas as pd
 import recordlinkage
 import typer
+
 from constants import (
     FEATURES,
     MATCHES_REQUIRED,

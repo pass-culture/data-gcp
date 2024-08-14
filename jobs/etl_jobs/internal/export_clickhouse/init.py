@@ -1,4 +1,5 @@
 import typer
+
 from core.utils import (
     CLICKHOUSE_CLIENT,
     ENV_SHORT_NAME,

@@ -1,15 +1,16 @@
 from datetime import datetime, timedelta
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python_operator import BranchPythonOperator
 from common.config import DAG_FOLDER, ENV_SHORT_NAME
 from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
     StartGCEOperator,
 )
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python_operator import BranchPythonOperator
 
 DATE = "{{ ts_nodash }}"
 

@@ -1,6 +1,8 @@
 import lancedb
 import pandas as pd
 import typer
+from lancedb.pydantic import LanceModel, Vector
+from loguru import logger
 
 # Define constants
 from constants import (
@@ -12,8 +14,6 @@ from constants import (
     PARQUET_BATCH_SIZE,
     UNKNOWN_PERFORMER,
 )
-from lancedb.pydantic import LanceModel, Vector
-from loguru import logger
 from utils.common import (
     preprocess_embeddings_by_chunk,
     read_parquet_in_batches_gcs,

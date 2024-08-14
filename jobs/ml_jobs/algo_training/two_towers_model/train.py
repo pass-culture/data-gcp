@@ -5,6 +5,7 @@ import mlflow
 import tensorflow as tf
 import typer
 from loguru import logger
+
 from two_towers_model.models.match_model import MatchModel
 from two_towers_model.models.two_towers_model import TwoTowersModel
 from two_towers_model.utils.constants import CONFIGS_PATH

@@ -1,8 +1,5 @@
 from datetime import datetime, timedelta
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
 from common.alerts import task_fail_slack_alert
 from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.gce import (
@@ -12,6 +9,10 @@ from common.operators.gce import (
     StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
 
 GCE_INSTANCE = f"import-api-referentials-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/import_api_referentials"

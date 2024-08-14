@@ -1,6 +1,7 @@
 import time
 
 import typer
+
 from bq import bq_to_events
 from event import EventExporter
 from utils import ENV_SHORT_NAME, PROJECT_NAME, access_secret_data

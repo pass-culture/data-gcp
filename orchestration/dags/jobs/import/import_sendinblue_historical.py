@@ -4,10 +4,6 @@ import datetime
 from datetime import timedelta
 
 import pandas as pd
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import PythonOperator
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -31,6 +27,11 @@ from dependencies.sendinblue.import_sendinblue import (
     clean_tables,
     raw_tables,
 )
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import PythonOperator
 
 GCE_INSTANCE = f"import-sendinblue-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/sendinblue"

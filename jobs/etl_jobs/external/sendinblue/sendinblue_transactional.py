@@ -6,6 +6,7 @@ import pandas as pd
 import sib_api_v3_sdk
 from google.cloud import bigquery
 from sib_api_v3_sdk.rest import ApiException
+
 from utils import ENV_SHORT_NAME
 
 

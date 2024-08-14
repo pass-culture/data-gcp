@@ -4,6 +4,7 @@ import uuid
 import numpy as np
 import polars as pl
 import pyarrow.dataset as ds
+
 from utils import ENV_SHORT_NAME, PostHogEvent
 
 BATCH_SIZE = 100_000

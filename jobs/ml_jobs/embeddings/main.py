@@ -3,6 +3,7 @@ from datetime import datetime
 
 import pandas as pd
 import typer
+
 from tools.config import CONFIGS_PATH, GCP_PROJECT_ID
 from tools.embedding_extraction import extract_embedding
 from utils.logging import logging

@@ -1,12 +1,6 @@
 import datetime
 import os
 
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from airflow.providers.google.cloud.operators.cloud_sql import (
-    CloudSQLExecuteQueryOperator,
-)
 from common import macros
 from common.access_gcp_secrets import access_secret_data
 from common.alerts import task_fail_slack_alert
@@ -18,6 +12,13 @@ from common.utils import from_external, get_airflow_schedule
 from dependencies.export_cloudsql_tables_to_bigquery.import_cloudsql import (
     RAW_TABLES,
     TMP_TABLES,
+)
+
+from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+from airflow.providers.google.cloud.operators.cloud_sql import (
+    CloudSQLExecuteQueryOperator,
 )
 
 yesterday = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime(

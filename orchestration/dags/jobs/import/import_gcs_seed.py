@@ -1,8 +1,5 @@
 import datetime
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
@@ -18,6 +15,10 @@ from common.utils import (
     get_airflow_schedule,
 )
 from dependencies.gcs_seed.import_gcs_seed import ANALYTICS_TABLES
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),

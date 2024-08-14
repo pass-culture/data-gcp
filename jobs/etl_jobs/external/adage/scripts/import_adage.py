@@ -5,6 +5,7 @@ import pandas as pd
 import requests
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import bigquery, secretmanager
+
 from scripts.utils import (
     ADAGE_INVOLVED_STUDENTS_DTYPE,
     BIGQUERY_ANALYTICS_DATASET,

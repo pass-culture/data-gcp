@@ -1,11 +1,12 @@
 import typing as t
 
 import joblib
-from constants import MODEL_TYPE as config
-from constants import N_PROBES, NUM_RESULTS, REFINE_FACTOR
 from docarray import Document
 from lancedb import connect
 from sentence_transformers import SentenceTransformer
+
+from constants import MODEL_TYPE as config
+from constants import N_PROBES, NUM_RESULTS, REFINE_FACTOR
 
 DETAIL_COLUMNS = [
     "item_id",

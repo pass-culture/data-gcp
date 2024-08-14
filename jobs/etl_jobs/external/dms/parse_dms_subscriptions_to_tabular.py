@@ -4,6 +4,7 @@ import logging
 import gcsfs
 import pandas as pd
 import typer
+
 from utils import (
     destination_table_schema_jeunes,
     destination_table_schema_pro,

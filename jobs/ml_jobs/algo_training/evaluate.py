@@ -6,6 +6,7 @@ import pandas as pd
 import tensorflow as tf
 import typer
 from loguru import logger
+
 from utils.constants import (
     BIGQUERY_CLEAN_DATASET,
     GCP_PROJECT_ID,

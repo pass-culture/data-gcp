@@ -1,6 +1,7 @@
 import re
 
 import pandas as pd
+
 from utils import (
     ENVIRONMENT_SHORT_NAME,
     INT_METABASE_DATASET,

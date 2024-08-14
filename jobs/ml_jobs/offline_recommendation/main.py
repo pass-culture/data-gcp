@@ -2,6 +2,7 @@ import polars as pl
 import typer
 from google.cloud import bigquery
 from loguru import logger
+
 from utils import ENV_SHORT_NAME, export_polars_to_bq, get_offline_recos
 
 

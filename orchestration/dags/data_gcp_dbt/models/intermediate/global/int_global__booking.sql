@@ -1,6 +1,5 @@
 {{ config(
     pre_hook="{{create_humanize_id_function()}}",
-    materialized = "view"
 ) }}
 
 select

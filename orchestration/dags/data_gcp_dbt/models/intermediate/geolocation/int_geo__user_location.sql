@@ -60,6 +60,7 @@ select
     user_geo_iris.rural_city_type as user_rural_city_type,
     user_geo_iris.density_label as user_density_label,
     user_geo_iris.density_macro_level as user_macro_density_label,
+    user_geo_iris.density_level AS user_density_level,
     user_geo_iris.academy_name as user_academy_name,
     user_geo_iris.region_name as user_region_name,
     user_epci.epci_name as user_epci,

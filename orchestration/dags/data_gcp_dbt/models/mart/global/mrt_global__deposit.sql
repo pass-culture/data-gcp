@@ -26,6 +26,7 @@ select
     u.user_academy_name,
     u.user_density_label,
     u.user_macro_density_label,
+    u.user_density_level,
     u.user_department_code,
     u.user_age,
     u.user_creation_date,

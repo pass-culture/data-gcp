@@ -58,6 +58,7 @@ select
     institution_geo_iris.iris_internal_id as institution_internal_iris_id,
     institution_geo_iris.density_label as institution_density_label,
     institution_geo_iris.density_macro_level as institution_macro_density_label,
+    institution_geo_iris.density_level AS institution_density_level,
     institution_geo_iris.academy_name as institution_academy_name,
     institution_geo_iris.region_name as institution_region_name,
     institution_epci.epci_name as institution_epci,

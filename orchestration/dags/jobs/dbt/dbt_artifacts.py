@@ -74,7 +74,6 @@ compute_metrics_elementary = BashOperator(
 )
 
 if ENV_SHORT_NAME == "prod":
-
     dbt_test = BashOperator(
         task_id="dbt_test",
         bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",

@@ -1,9 +1,3 @@
-{{
-    config(
-        materialized = "table"
-    )
-}}
-
 with siren_reference_adage as (
     select
         siren,

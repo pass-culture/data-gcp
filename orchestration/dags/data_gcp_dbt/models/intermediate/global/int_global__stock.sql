@@ -1,9 +1,3 @@
-{{
-    config(
-        materialized = "table"
-    )
-}}
-
 select
     s.stock_beginning_date,
     s.stock_modified_date,

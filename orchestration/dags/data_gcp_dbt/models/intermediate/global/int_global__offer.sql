@@ -5,7 +5,6 @@
             "data_type": "date"
         },
         on_schema_change = "sync_all_columns",
-        materialized = "table"
     )
 }}
 

@@ -1,3 +1,8 @@
+{{ config(
+    pre_hook="{{create_humanize_id_function()}}",
+    materialized = "view"
+) }}
+
 select
     b.booking_id,
     b.booking_creation_date,

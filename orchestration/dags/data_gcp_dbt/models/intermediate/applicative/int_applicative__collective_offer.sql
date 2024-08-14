@@ -144,6 +144,7 @@ union all
         NULL as institution_epci,
         NULL as institution_density_label,
         NULL as institution_macro_density_label,
+        NULL AS institution_density_level,
         TRUE as collective_offer_is_template
     from {{ source('raw','applicative_database_collective_offer_template') }}
 )

@@ -13,7 +13,7 @@
     {%- elif ('mart' in node.path or 'export' in node.path) and target.name in ["prod", "stg", "dev"] and target.profile_name != "sandbox" -%}
         {%- set prefix = 'mrt_' if 'mart' in node.path else 'exp_' -%}
         {%- set model_name = node.name.split('__')[-1] | trim -%}
-        {{ model_name.split(prefix)[-1] ~ "_" ~ model_name }}
+        {{ node.name.split(prefix)[-1] ~ "_" ~ model_name }}
 
     {%- elif node.version -%}
         {{ node.name ~ "_v" ~ (node.version | replace(".", "_")) }}

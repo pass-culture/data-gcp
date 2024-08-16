@@ -2,7 +2,7 @@
 
     {%- set default_schema = target.dataset -%}
 
-    {%- if target.profile_name == "CI" -%}
+    {%- if target.profile_name == "CI" or target.name == "local" -%}
         {{ default_schema }}
 
     {%- elif target.name in ["prod", "stg", "dev"] and target.profile_name != "sandbox" -%}
@@ -13,7 +13,7 @@
             {{ model_parts[0] ~ "_" ~ target.name }}
         {%- endif -%}
 
-    {%- elif target.name == "local" or target.profile_name == "sandbox" -%}
+    {%- elif target.profile_name == "sandbox" -%}
         {{ custom_schema_name | trim if custom_schema_name else default_schema }}
 
     {%- else -%}

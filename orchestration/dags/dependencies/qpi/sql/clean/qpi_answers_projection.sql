@@ -26,7 +26,7 @@ clean as (
     select
         user_id
         , submitted_at
-        , unnested as subcategories.element
+        , unnested.element as subcategories
     from user_subcat
     CROSS JOIN UNNEST(user_subcat.subcategories.list) AS unnested
 ),

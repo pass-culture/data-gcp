@@ -1,21 +1,23 @@
+import time
+from datetime import date, timedelta
+
 import pandas as pd
-from datetime import date, datetime, timedelta
-from core.utils import IOS_APP_ID, ANDROID_APP_ID, TOKEN, save_to_bq
-from core.appsflyer import AppsFlyer
-from core.mapping import (
-    DAILY_REPORT,
-    DAILY_REPORT_MAPPING,
-    INSTALLS_REPORT_MAPPING,
-    INSTALLS_REPORT,
-    APP_REPORT,
-    APP_REPORT_MAPPING,
-    PARTNER_REPORT_MAPPING,
-    PARTNER_REPORT,
-)
 import typer
 
+from core.appsflyer import AppsFlyer
+from core.mapping import (
+    APP_REPORT,
+    APP_REPORT_MAPPING,
+    DAILY_REPORT,
+    DAILY_REPORT_MAPPING,
+    INSTALLS_REPORT,
+    INSTALLS_REPORT_MAPPING,
+    PARTNER_REPORT,
+    PARTNER_REPORT_MAPPING,
+)
+from core.utils import ANDROID_APP_ID, IOS_APP_ID, TOKEN, save_to_bq
+
 APPS = {"ios": IOS_APP_ID, "android": ANDROID_APP_ID}
-import time
 
 
 class ImportAppsFlyer:

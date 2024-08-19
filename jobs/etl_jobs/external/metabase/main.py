@@ -10,10 +10,10 @@ from native import NativeCard
 from query import QueryCard
 from table import MetabaseTable, get_mapped_fields
 from utils import (
-    PROJECT_NAME,
     ENVIRONMENT_SHORT_NAME,
-    METABASE_API_USERNAME,
     INT_METABASE_DATASET,
+    METABASE_API_USERNAME,
+    PROJECT_NAME,
     access_secret_data,
     get_dependant_cards,
 )

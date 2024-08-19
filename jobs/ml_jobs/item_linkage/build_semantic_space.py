@@ -1,6 +1,8 @@
 import lancedb
 import pandas as pd
 import typer
+from lancedb.pydantic import LanceModel, Vector
+from loguru import logger
 
 # Define constants
 from constants import (
@@ -12,8 +14,6 @@ from constants import (
     PARQUET_BATCH_SIZE,
     UNKNOWN_PERFORMER,
 )
-from lancedb.pydantic import LanceModel, Vector
-from loguru import logger
 from utils.common import (
     preprocess_embeddings_by_chunk,
     read_parquet_in_batches_gcs,
@@ -84,7 +84,7 @@ def create_items_table(items_df: pd.DataFrame) -> None:
             make_batches(df=items_df, batch_size=LANCEDB_BATCH_SIZE),
             schema=ItemModel,
         )
-    except:
+    except Exception:
         logger.info("LanceDB table already exists...")
         tbl = db.open_table("items")
         tbl.add(

@@ -1,17 +1,16 @@
-from urllib.parse import quote
 import ast
-
-from airflow import configuration
-from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
-
 from datetime import datetime
+from urllib.parse import quote
+
 from common.access_gcp_secrets import access_secret_data
 from common.config import (
-    GCP_PROJECT_ID,
     ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
     SLACK_CONN_ID,
 )
 
+from airflow import configuration
+from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 
 ENV_EMOJI = {
     "prod": ":volcano: *PROD* :volcano:",
@@ -77,7 +76,7 @@ def __task_fail_slack_alert(context, job_type):
         )
 
         slack_msg = f"""
-                {ENV_EMOJI[ENV_SHORT_NAME]}: 
+                {ENV_EMOJI[ENV_SHORT_NAME]}:
                 *Task* <{task_url}|{task_name}> has failed!
                 *Dag*: <{dag_url}|{dag_name}>
                 *Execution Time*: {execution_date}
@@ -121,7 +120,6 @@ def dbt_test_slack_alert(results_json, manifest_json, job_type="dbt-test", **con
             test_nodes = {}
             for result in tests_results:
                 node = result["unique_id"]
-                node_data = tests_manifest[result["unique_id"]]
                 if result["status"] != "pass":
                     if test_nodes.get(result["unique_id"]) is None:
                         test_nodes[result["unique_id"]] = {
@@ -141,7 +139,7 @@ def dbt_test_slack_alert(results_json, manifest_json, job_type="dbt-test", **con
                 sorted(
                     test_nodes.items(),
                     key=lambda item: manifest_json["nodes"][item[0]]["meta"].get(
-                        "owner", "@data"
+                        "owner", "@team-data"
                     ),
                 )
             )
@@ -150,7 +148,7 @@ def dbt_test_slack_alert(results_json, manifest_json, job_type="dbt-test", **con
                 slack_msg = "\n".join(
                     [
                         slack_msg,
-                        f"""{manifest_json["nodes"][node]["meta"].get("owner")}""",
+                        f"""Ownership: {manifest_json["nodes"][node]["meta"].get("owner","@team-data")}""",
                         f"""Model {tested_node.split('.')[-1]} failed the following tests: """,
                     ]
                     + [

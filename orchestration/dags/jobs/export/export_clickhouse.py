@@ -1,34 +1,35 @@
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.task_group import TaskGroup
-from airflow.models import Param
+import datetime
+
+from common import macros
+from common.alerts import task_fail_slack_alert
+from common.config import (
+    BIGQUERY_TMP_DATASET,
+    DAG_FOLDER,
+    DATA_GCS_BUCKET_NAME,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+)
 from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
 )
+from common.utils import get_airflow_schedule, waiting_operator
+from dependencies.export_clickhouse.export_clickhouse import (
+    TABLES_CONFIGS,
+    VIEWS_CONFIGS,
+)
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
-import datetime
-from common.config import (
-    GCP_PROJECT_ID,
-    DAG_FOLDER,
-    ENV_SHORT_NAME,
-    DATA_GCS_BUCKET_NAME,
-    BIGQUERY_TMP_DATASET,
-)
-
-from common.utils import get_airflow_schedule, waiting_operator
-from common.alerts import task_fail_slack_alert
-from dependencies.export_clickhouse.export_clickhouse import (
-    TABLES_CONFIGS,
-    VIEWS_CONFIGS,
-)
-from common import macros
+from airflow.utils.task_group import TaskGroup
 
 GCE_INSTANCE = f"export-clickhouse-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/clickhouse"
@@ -78,7 +79,7 @@ dags = {
 def choose_branch(**context):
     run_id = context["dag_run"].run_id
     if run_id.startswith("scheduled__"):
-        return [f"waiting_dbt_group.waiting_dbt_jobs"]
+        return ["waiting_dbt_group.waiting_dbt_jobs"]
     return ["shunt_manual"]
 
 
@@ -119,7 +120,6 @@ for dag_name, dag_params in dags.items():
             ),
         },
     ) as dag:
-
         branching = BranchPythonOperator(
             task_id="branching",
             python_callable=choose_branch,
@@ -144,7 +144,7 @@ for dag_name, dag_params in dags.items():
         join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
 
         gce_instance_start = StartGCEOperator(
-            task_id=f"gce_start_task",
+            task_id="gce_start_task",
             preemptible=False,
             instance_name="{{ params.instance_name }}",
             instance_type="{{ params.instance_type }}",
@@ -153,7 +153,7 @@ for dag_name, dag_params in dags.items():
         )
 
         fetch_code = CloneRepositoryGCEOperator(
-            task_id=f"fetch_code",
+            task_id="fetch_code",
             instance_name="{{ params.instance_name }}",
             python_version="3.10",
             command="{{ params.branch }}",
@@ -161,7 +161,7 @@ for dag_name, dag_params in dags.items():
         )
 
         install_dependencies = SSHGCEOperator(
-            task_id=f"install_dependencies",
+            task_id="install_dependencies",
             instance_name="{{ params.instance_name }}",
             base_dir=dag_config["BASE_DIR"],
             command="pip install -r requirements.txt --user",
@@ -246,7 +246,7 @@ for dag_name, dag_params in dags.items():
             views_refresh.append(view_task)
 
         gce_instance_stop = StopGCEOperator(
-            task_id=f"gce_stop_task", instance_name="{{ params.instance_name }}"
+            task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
         )
 
         (

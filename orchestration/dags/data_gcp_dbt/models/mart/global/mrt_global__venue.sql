@@ -23,6 +23,7 @@ select
     venue_epci,
     venue_density_label,
     venue_macro_density_label,
+    venue_density_level,
     venue_academy_name,
     venue_targeted_audience,
     banner_url,

@@ -1,0 +1,7 @@
+version: 2
+
+models:
+  - name: int_global__booking
+    config:
+      materialized: view
+  

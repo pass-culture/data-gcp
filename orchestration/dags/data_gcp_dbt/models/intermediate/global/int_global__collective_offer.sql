@@ -1,8 +1,8 @@
 {{ config(
-    pre_hook="{{create_humanize_id_function()}}"
+    pre_hook="{{create_humanize_id_function()}}",
 ) }}
 
-{% set target_name = target.name %}
+{% set target_name = var('ENV_SHORT_NAME') %}
 {% set target_schema = generate_schema_name("analytics_" ~ target_name) %}
 
 select
@@ -22,6 +22,7 @@ select
     v.venue_academy_name,
     v.venue_density_label,
     v.venue_macro_density_label,
+    v.venue_density_level,
     v.venue_is_virtual,
     v.venue_managing_offerer_id as offerer_id,
     v.offerer_name,
@@ -47,6 +48,7 @@ select
     co.institution_epci,
     co.institution_density_label,
     co.institution_macro_density_label,
+    co.institution_density_level,
     CONCAT(
         'https://passculture.pro/offre/',
         co.collective_offer_id,

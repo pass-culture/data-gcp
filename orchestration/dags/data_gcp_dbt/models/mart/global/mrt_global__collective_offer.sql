@@ -15,6 +15,7 @@ select
     venue_academy_name,
     venue_density_label,
     venue_macro_density_label,
+    venue_density_level,
     venue_is_virtual,
     offerer_id,
     offerer_name,

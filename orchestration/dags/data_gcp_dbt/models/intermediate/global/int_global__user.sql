@@ -129,6 +129,7 @@ select
     u.user_epci,
     u.user_density_label,
     u.user_macro_density_label,
+    u.user_density_level,
     u.city_code,
     u.user_region_name,
     u.user_academy_name,

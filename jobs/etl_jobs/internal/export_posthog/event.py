@@ -1,4 +1,5 @@
 from posthog import Posthog
+
 from utils import PostHogEvent
 
 

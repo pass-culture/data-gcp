@@ -1,8 +1,7 @@
-import numpy as np
 import pandas as pd
 import tensorflow as tf
 import tensorflow_recommenders as tfrs
-from loguru import logger
+
 from utils.layers import (
     IntegerEmbeddingLayer,
     PretainedEmbeddingLayer,

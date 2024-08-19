@@ -1,6 +1,7 @@
 {{
     config(
         tags = 'weekly',
+        labels = {'schedule': 'weekly'},
         **custom_incremental_config(
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "execution_date", "data_type": "date", "granularity" : "day"},

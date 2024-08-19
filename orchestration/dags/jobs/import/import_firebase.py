@@ -1,15 +1,15 @@
-import datetime
-from common import macros
-from airflow import DAG
-
-from common.utils import depends_loop, get_airflow_schedule
-from common.operators.biquery import bigquery_job_task
-from airflow.operators.dummy_operator import DummyOperator
-from common.operators.sensor import TimeSleepSensor
-from common.config import DAG_FOLDER, GCP_PROJECT_ID
-from dependencies.firebase.import_firebase import import_tables
-from common.alerts import task_fail_slack_alert
 import copy
+import datetime
+
+from common import macros
+from common.alerts import task_fail_slack_alert
+from common.config import DAG_FOLDER, GCP_PROJECT_ID
+from common.operators.biquery import bigquery_job_task
+from common.utils import get_airflow_schedule
+from dependencies.firebase.import_firebase import import_tables
+
+from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
 
 dags = {
     "daily": {
@@ -60,33 +60,39 @@ for type, params in dags.items():
     # Cannot Schedule before 3UTC for intraday and 13UTC for daily
     start = DummyOperator(task_id="start", dag=dag)
 
-    table_jobs = {}
+    end = DummyOperator(task_id="end", dag=dag)
+
     import_tables_temp = copy.deepcopy(import_tables)
     for table, job_params in import_tables_temp.items():
         if type == "daily" and import_tables_temp[table].get("dag_depends") is not None:
             del import_tables_temp[table]["dag_depends"]
         # force this to include custom yyyymmdd
         if job_params.get("partition_prefix", None) is not None:
-            job_params[
-                "destination_table"
-            ] = f"{job_params['destination_table']}{job_params['partition_prefix']}{yyyymmdd}"
+            job_params["destination_table"] = (
+                f"{job_params['destination_table']}{job_params['partition_prefix']}{yyyymmdd}"
+            )
 
-        task = bigquery_job_task(
+        default_task = bigquery_job_task(
             dag=dag,
             table=table,
             job_params=job_params,
             extra_params={"prefix": prefix, "dag_type": type},
         )
 
-        table_jobs[table] = {
-            "operator": task,
-            "depends": job_params.get("depends", []),
-            "dag_depends": job_params.get("dag_depends", [])
-            if type == "intraday"
-            else [],
-        }
-    end = DummyOperator(task_id="end", dag=dag)
-    table_jobs = depends_loop(
-        import_tables_temp, table_jobs, start, dag=dag, default_end_operator=end
-    )
-    table_jobs
+        fallback_task = bigquery_job_task(
+            dag=dag,
+            table=f"{table}_fallback",
+            # overwrite default configuration, execute only if the default task fails
+            job_params=dict(job_params, **{"trigger_rule": "one_failed"}),
+            extra_params=dict(
+                {"prefix": prefix, "dag_type": type},
+                **job_params.get("fallback_params", {}),
+            ),
+        )
+
+        end_job = DummyOperator(
+            task_id=f"end_{table}", dag=dag, trigger_rule="one_success"
+        )
+
+        start >> default_task >> [fallback_task, end_job]
+        fallback_task >> end_job >> end

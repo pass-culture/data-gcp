@@ -1,4 +1,4 @@
-{% set target_name = target.name %}
+{% set target_name = var('ENV_SHORT_NAME') %}
 {% set target_schema = generate_schema_name("analytics_" ~ target_name) %}
 
 {{ config(
@@ -118,6 +118,7 @@ select
     v_loc.venue_epci,
     v_loc.venue_density_label,
     v_loc.venue_macro_density_label,
+    v_loc.venue_density_level,
     v_loc.venue_academy_name,
     v.offerer_address_id,
     vr.venue_target as venue_targeted_audience,

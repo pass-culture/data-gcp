@@ -1,17 +1,13 @@
-import json
 import os
 
+import gcsfs
 import joblib
 import numpy as np
 import pandas as pd
 import polars as pl
-import pyarrow.dataset as ds
+import pyarrow.parquet as pq
 from hnne import HNNE
 from loguru import logger
-
-import pyarrow.parquet as pq
-import pyarrow as pa
-import gcsfs
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")

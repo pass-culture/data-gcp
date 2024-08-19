@@ -4,7 +4,7 @@
             "field": "offer_creation_date",
             "data_type": "date"
         },
-        on_schema_change = "sync_all_columns"
+        on_schema_change = "sync_all_columns",
     )
 }}
 
@@ -82,6 +82,7 @@ select
     v.venue_academy_name,
     v.venue_density_label,
     v.venue_macro_density_label,
+    v.venue_density_level,
     o.offerer_address_id,
     o.offer_publication_date,
     o.is_future_scheduled

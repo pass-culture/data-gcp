@@ -2,12 +2,13 @@ import uuid
 
 import pandas as pd
 import typer
-from constants import LOGGING_INTERVAL, MODEL_PATH, NUM_RESULTS, PARQUET_BATCH_SIZE
 from docarray import Document
 from hnne import HNNE
 from loguru import logger
-from model.semantic_space import SemanticSpace
 from tqdm import tqdm
+
+from constants import LOGGING_INTERVAL, MODEL_PATH, NUM_RESULTS, PARQUET_BATCH_SIZE
+from model.semantic_space import SemanticSpace
 from utils.common import (
     preprocess_embeddings_by_chunk,
     read_parquet_in_batches_gcs,

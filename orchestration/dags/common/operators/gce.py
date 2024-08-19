@@ -2,11 +2,6 @@ import typing as t
 from base64 import b64encode
 from time import sleep
 
-from airflow.configuration import conf
-from airflow.exceptions import AirflowException
-from airflow.models import BaseOperator
-from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
-from airflow.utils.decorators import apply_defaults
 from common.config import (
     ENV_SHORT_NAME,
     GCE_BASE_PREFIX,
@@ -18,6 +13,12 @@ from common.hooks.gce import GCEHook
 from common.hooks.image import MACHINE_TYPE
 from common.hooks.network import NETWORK_TYPE
 from paramiko.ssh_exception import SSHException
+
+from airflow.configuration import conf
+from airflow.exceptions import AirflowException
+from airflow.models import BaseOperator
+from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
+from airflow.utils.decorators import apply_defaults
 
 
 class StartGCEOperator(BaseOperator):
@@ -238,16 +239,16 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
     def clone_and_init_with_conda(self, branch, python_version) -> str:
         return """
         export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH
-        python -m pip install --upgrade --user urllib3 
+        python -m pip install --upgrade --user urllib3
         conda create --name data-gcp python=%s -y -q
         conda init zsh
         source ~/.zshrc
         conda activate data-gcp
 
         DIR=data-gcp &&
-        if [ -d "$DIR" ]; then 
+        if [ -d "$DIR" ]; then
             echo "Update and Checkout repo..." &&
-            cd ${DIR} && 
+            cd ${DIR} &&
             git fetch --all &&
             git reset --hard origin/%s
         else

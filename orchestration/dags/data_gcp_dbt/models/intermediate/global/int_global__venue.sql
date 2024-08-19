@@ -24,6 +24,7 @@ select
     v.venue_academy_name,
     v.venue_density_label,
     v.venue_macro_density_label,
+    v.venue_density_level,
     v.venue_targeted_audience,
     v.banner_url,
     v.venue_description,

@@ -64,6 +64,7 @@ select
     venue_academy_name,
     venue_density_label,
     venue_macro_density_label,
+    venue_density_level,
     venue_label,
     partner_id,
     offerer_id,

@@ -1,10 +1,8 @@
 import os
+from datetime import datetime
 
 from google.auth.exceptions import DefaultCredentialsError
-from google.cloud import secretmanager
-from google.cloud import bigquery
-
-from datetime import datetime
+from google.cloud import bigquery, secretmanager
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
@@ -24,7 +22,6 @@ def access_secret_data(project_id, secret_id, version_id=1, default=None):
 
 def save_to_raw_bq(df, table_name, schema):
     _now = datetime.today()
-    yyyymmdd = _now.strftime("%Y%m%d")
     df["execution_date"] = _now
     bigquery_client = bigquery.Client()
     table_id = f"{PROJECT_NAME}.{BIGQUERY_RAW_DATASET}.{table_name}"
@@ -42,7 +39,7 @@ def save_partition_table_to_bq(df, table_name, schema, partition_field):
     bigquery_client = bigquery.Client()
     table_id = f"{PROJECT_NAME}.{BIGQUERY_RAW_DATASET}.{table_name}"
     job_config = bigquery.LoadJobConfig(
-        write_disposition="WRITE_TRUNCATE",
+        write_disposition="WRITE_APPEND",
         schema=[
             bigquery.SchemaField(column, _type) for column, _type in schema.items()
         ],

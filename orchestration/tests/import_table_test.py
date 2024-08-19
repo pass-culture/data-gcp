@@ -1,10 +1,10 @@
 import unittest
 
-from dependencies.applicative_database.import_applicative_database import (
-    get_tables_config_dict,
-    RAW_SQL_PATH,
-)
 from common.config import DAG_FOLDER
+from dependencies.applicative_database.import_applicative_database import (
+    RAW_SQL_PATH,
+    get_tables_config_dict,
+)
 
 IMPORT_TABLES = [
     {"table_name": "provider", "excluded_fields": ["apiKey"]},

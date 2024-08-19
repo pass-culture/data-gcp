@@ -1,26 +1,27 @@
-from airflow import DAG
-from airflow.models import Param
+import datetime
+
+from common import macros
+from common.config import (
+    BIGQUERY_TMP_DATASET,
+    DAG_FOLDER,
+    DATA_GCS_BUCKET_NAME,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+)
 from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
 )
+from common.utils import get_airflow_schedule
+
+from airflow import DAG
+from airflow.models import Param
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
-import datetime
-from common.config import (
-    GCP_PROJECT_ID,
-    DAG_FOLDER,
-    ENV_SHORT_NAME,
-    DATA_GCS_BUCKET_NAME,
-    BIGQUERY_TMP_DATASET,
-)
-from common.utils import get_airflow_schedule
-from common.alerts import task_fail_slack_alert
-from common import macros
 
 DATASET_ID = f"export_{ENV_SHORT_NAME}"
 GCE_INSTANCE = f"export-posthog-{ENV_SHORT_NAME}"

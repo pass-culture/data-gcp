@@ -6,7 +6,6 @@ class NativeCard:
         self.query = self.card_info["dataset_query"]["native"]["query"]
 
     def replace_table_name(self, legacy_table_name, new_table_name):
-
         self.query = self.query.replace(legacy_table_name, new_table_name)
 
         self.card_info["dataset_query"]["native"]["query"] = self.query
@@ -14,7 +13,6 @@ class NativeCard:
     def replace_schema_name(
         self, legacy_schema_name, new_schema_name, legacy_table_name, new_table_name
     ):
-
         self.query = self.query.replace(
             f"{legacy_schema_name}.{legacy_table_name}",
             f"{new_schema_name}.{new_table_name}",

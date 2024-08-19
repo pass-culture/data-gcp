@@ -1,26 +1,27 @@
 import datetime
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.task_group import TaskGroup
+
 from common import macros
-from common.utils import one_line_query, get_airflow_schedule
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from common.alerts import task_fail_slack_alert
-from common.config import DAG_FOLDER
-from common.operators.biquery import bigquery_job_task
 from common.config import (
-    GCP_PROJECT_ID,
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
+    DAG_FOLDER,
+    GCP_PROJECT_ID,
+)
+from common.operators.biquery import bigquery_job_task
+from common.utils import get_airflow_schedule, one_line_query
+from dependencies.applicative_database.import_applicative_database import (
+    HISTORICAL_CLEAN_APPLICATIVE_TABLES,
+    RAW_TABLES,
 )
 
-from dependencies.applicative_database.import_applicative_database import (
-    RAW_TABLES,
-    HISTORICAL_CLEAN_APPLICATIVE_TABLES,
-)
+from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+from airflow.utils.task_group import TaskGroup
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
-    "retries": 4,
+    "retries": 6,
     "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
@@ -32,7 +33,7 @@ dag = DAG(
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
     schedule_interval=get_airflow_schedule("0 1 * * *"),
     catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=240),
+    dagrun_timeout=datetime.timedelta(minutes=480),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
 )

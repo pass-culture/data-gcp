@@ -1,6 +1,7 @@
 {{
     config(
         tags = "monthly",
+        labels = {'schedule': 'monthly'},
         **custom_incremental_config(
         incremental_strategy='insert_overwrite',
         partition_by={'field': 'month', 'data_type': 'date'},

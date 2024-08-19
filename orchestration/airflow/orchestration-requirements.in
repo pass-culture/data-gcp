@@ -1,4 +1,4 @@
---constraint https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+-r orchestration-composer-requirements.txt
 apache-airflow[gcp]==2.6.3
 sshtunnel~=0.4
 # tests
@@ -14,5 +14,3 @@ psycopg2-binary>=2.8
 # addons
 airflow-provider-great-expectations==0.2.6
 apache-airflow-providers-slack==7.3.1
-dbt-core==1.7.2
-dbt-bigquery~=1.7

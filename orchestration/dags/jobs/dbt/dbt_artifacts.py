@@ -107,7 +107,7 @@ if ENV_SHORT_NAME == "prod":
     )
 
     load_dbt_manifest = PythonOperator(
-        task_id="load_manifest",
+        task_id="load_dbt_manifest",
         python_callable=load_manifest,
         op_kwargs={
             "_PATH_TO_DBT_TARGET": f"{PATH_TO_DBT_TARGET}",

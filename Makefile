@@ -50,12 +50,12 @@ prerequisites_on_debian_vm:
 	sudo apt update  --fix-missing --allow-releaseinfo-change -y
 	make install_ubuntu_libs
 	sudo apt install -y libmariadb-dev
-	echo 'export PYENV_ROOT="$$HOME/.pyenv"' >> ~/.bashrc
-	echo 'export PATH="$$PYENV_ROOT/bin:$$PATH"' >> ~/.bashrc
-	echo 'eval "$$(pyenv init --path)"' >> ~/.bashrc
-	echo 'eval "$$(pyenv init -)"' >> ~/.bashrc
-	echo 'eval "$$(pyenv virtualenv-init -)"' >> ~/.bashrc
-	echo '. "$$HOME/.cargo/env"' >> ~/.bashrc
+	echo 'export PYENV_ROOT="$$HOME/.pyenv"' >> ~/.profile
+	echo 'export PATH="$$PYENV_ROOT/bin:$$PATH"' >> ~/.profile
+	echo 'eval "$$(pyenv init --path)"' >> ~/.profile
+	echo 'eval "$$(pyenv init -)"' >> ~/.profile
+	echo 'eval "$$(pyenv virtualenv-init -)"' >> ~/.profile
+	echo '. "$$HOME/.cargo/env"' >> ~/.profile
 	bash
 
 create_microservice:

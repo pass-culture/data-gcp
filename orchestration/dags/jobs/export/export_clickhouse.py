@@ -79,7 +79,7 @@ dags = {
 def choose_branch(**context):
     run_id = context["dag_run"].run_id
     if run_id.startswith("scheduled__"):
-        return ["waiting_dbt_group.waiting_dbt_jobs"]
+        return ["waiting_group.waiting_branch"]
     return ["shunt_manual"]
 
 
@@ -127,10 +127,14 @@ for dag_name, dag_params in dags.items():
             dag=dag,
         )
 
-        with TaskGroup(
-            group_id="waiting_dbt_group", dag=dag
-        ) as wait_for_dbt_daily_tasks:
-            wait = DummyOperator(task_id="waiting_dbt_jobs", dag=dag)
+        with TaskGroup(group_id="waiting_group", dag=dag) as wait_for_daily_tasks:
+            wait = DummyOperator(task_id="waiting_branch", dag=dag)
+
+            wait_for_firebase = waiting_operator(
+                dag_id="import_intraday_firebase_data", dag=dag
+            )
+
+            wait.set_downstream(wait_for_firebase)
 
             for table_config in TABLES_CONFIGS:
                 waiting_task = waiting_operator(
@@ -138,7 +142,7 @@ for dag_name, dag_params in dags.items():
                     "dbt_run_dag",
                     f"data_transformation.{table_config['dbt_model']}",
                 )
-                wait.set_downstream(waiting_task)
+                wait_for_firebase.set_downstream(waiting_task)
 
         shunt = DummyOperator(task_id="shunt_manual", dag=dag)
         join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
@@ -251,7 +255,7 @@ for dag_name, dag_params in dags.items():
 
         (
             branching
-            >> [shunt, wait_for_dbt_daily_tasks]
+            >> [shunt, wait_for_daily_tasks]
             >> join
             >> gce_instance_start
             >> fetch_code

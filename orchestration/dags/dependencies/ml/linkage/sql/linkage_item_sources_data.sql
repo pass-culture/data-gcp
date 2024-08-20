@@ -6,7 +6,6 @@ WITH k AS (
         `{{ bigquery_ml_preproc_dataset }}.item_embedding_reduced_32` ie
     INNER JOIN `{{ bigquery_analytics_dataset }}.global_offer` go on go.item_id = ie.item_id
     where go.offer_product_id is not null
-    and go.offer_subcategory_id<>'LIVRE_PAPIER'
     QUALIFY ROW_NUMBER() OVER (PARTITION BY ie.item_id ORDER BY ie.reduction_method DESC) = 1
 
 ),
@@ -41,7 +40,6 @@ offers as (
     FROM
         `{{ bigquery_analytics_dataset }}.global_offer` go
     where go.offer_product_id is not null
-    and go.offer_subcategory_id<>'LIVRE_PAPIER'
 ),sources as (
 SELECT
     CASE WHEN o.item_id like 'link-%' THEN o.offer_id ELSE o.item_id END AS item_id,
@@ -56,3 +54,4 @@ INNER JOIN z on z.item_id = o.item_id
 )
 select * from sources 
 QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY performer DESC) = 1
+order by RAND()

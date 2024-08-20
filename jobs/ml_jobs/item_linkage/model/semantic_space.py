@@ -16,10 +16,13 @@ DEFAULTS = ["_distance"]
 
 
 class SemanticSpace:
-    def __init__(self, model_path: str) -> None:
+    def __init__(self, model_path: str, reduction: bool) -> None:
         self.uri = model_path
         self._encoder = SentenceTransformer(config["transformer"])
-        self.hnne_reducer = joblib.load(config["reducer_pickle_path"])
+        if reduction:
+            self.hnne_reducer = joblib.load(config["reducer_pickle_path"])
+        else:
+            self.hnne_reducer = None
 
         db = connect(self.uri)
         self.table = db.open_table("items")

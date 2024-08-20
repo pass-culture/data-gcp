@@ -4,8 +4,6 @@ aiohttp==3.9.5
     # via gcsfs
 aiosignal==1.3.1
     # via aiohttp
-async-timeout==4.0.3
-    # via aiohttp
 attrs==23.2.0
     # via
     #   aiohttp
@@ -21,7 +19,7 @@ click==8.1.7
     #   nltk
     #   typer
 datetime==5.5
-    # via -r jobs/ml_jobs/embeddings/requirements.in
+    # via -r requirements.in
 db-dtypes==1.2.0
     # via pandas-gbq
 decorator==5.1.1
@@ -31,7 +29,6 @@ filelock==3.15.4
     #   huggingface-hub
     #   torch
     #   transformers
-    #   triton
 frozenlist==1.4.1
     # via
     #   aiohttp
@@ -41,8 +38,8 @@ fsspec==2024.6.1
     #   gcsfs
     #   torch
 gcsfs==2024.6.1
-    # via -r jobs/ml_jobs/embeddings/requirements.in
-google-api-core==2.19.1
+    # via -r requirements.in
+google-api-core[grpc]==2.19.1
     # via
     #   google-cloud-bigquery
     #   google-cloud-core
@@ -91,7 +88,7 @@ grpcio-status==1.64.1
     # via google-api-core
 huggingface-hub==0.10.1
     # via
-    #   -r jobs/ml_jobs/embeddings/requirements.in
+    #   -r requirements.in
     #   sentence-transformers
     #   transformers
 idna==3.7
@@ -107,7 +104,7 @@ joblib==1.4.2
     #   nltk
     #   scikit-learn
 loguru==0.6.0
-    # via -r jobs/ml_jobs/embeddings/requirements.in
+    # via -r requirements.in
 markupsafe==2.1.5
     # via jinja2
 mpmath==1.3.0
@@ -118,11 +115,11 @@ multidict==6.0.5
     #   yarl
 networkx==3.3
     # via torch
-nltk==3.8.1
+nltk==3.9
     # via sentence-transformers
 numpy==1.26.4
     # via
-    #   -r jobs/ml_jobs/embeddings/requirements.in
+    #   -r requirements.in
     #   db-dtypes
     #   pandas
     #   pandas-gbq
@@ -175,30 +172,30 @@ packaging==24.1
     #   transformers
 pandas==2.0.3
     # via
-    #   -r jobs/ml_jobs/embeddings/requirements.in
+    #   -r requirements.in
     #   db-dtypes
     #   pandas-gbq
 pandas-gbq==0.23.1
-    # via -r jobs/ml_jobs/embeddings/requirements.in
+    # via -r requirements.in
 pillow==10.4.0
     # via
-    #   -r jobs/ml_jobs/embeddings/requirements.in
+    #   -r requirements.in
     #   torchvision
 pluggy==0.13.1
     # via pytest
 polars==0.19.12
-    # via -r jobs/ml_jobs/embeddings/requirements.in
+    # via -r requirements.in
 proto-plus==1.24.0
     # via google-api-core
 protobuf==5.27.2
     # via
-    #   -r jobs/ml_jobs/embeddings/requirements.in
+    #   -r requirements.in
     #   google-api-core
     #   googleapis-common-protos
     #   grpcio-status
     #   proto-plus
 psutil==6.0.0
-    # via -r jobs/ml_jobs/embeddings/requirements.in
+    # via -r requirements.in
 py==1.11.0
     # via pytest
 pyarrow==16.1.0
@@ -214,7 +211,7 @@ pyasn1-modules==0.4.0
 pydata-google-auth==1.8.2
     # via pandas-gbq
 pytest==6.1.1
-    # via -r jobs/ml_jobs/embeddings/requirements.in
+    # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via
     #   google-cloud-bigquery
@@ -233,7 +230,7 @@ regex==2024.5.15
     #   transformers
 requests==2.31.0
     # via
-    #   -r jobs/ml_jobs/embeddings/requirements.in
+    #   -r requirements.in
     #   gcsfs
     #   google-api-core
     #   google-cloud-bigquery
@@ -252,14 +249,9 @@ scipy==1.14.0
     #   scikit-learn
     #   sentence-transformers
 sentence-transformers==2.2.2
-    # via -r jobs/ml_jobs/embeddings/requirements.in
+    # via -r requirements.in
 sentencepiece==0.2.0
     # via sentence-transformers
-setuptools==70.2.0
-    # via
-    #   pandas-gbq
-    #   pydata-google-auth
-    #   zope-interface
 six==1.16.0
     # via python-dateutil
 sympy==1.12.1
@@ -278,17 +270,15 @@ torchvision==0.18.1
     # via sentence-transformers
 tqdm==4.66.4
     # via
-    #   -r jobs/ml_jobs/embeddings/requirements.in
+    #   -r requirements.in
     #   huggingface-hub
     #   nltk
     #   sentence-transformers
     #   transformers
 transformers==4.25.1
     # via sentence-transformers
-triton==2.3.1
-    # via torch
 typer==0.7.0
-    # via -r jobs/ml_jobs/embeddings/requirements.in
+    # via -r requirements.in
 typing-extensions==4.12.2
     # via
     #   huggingface-hub

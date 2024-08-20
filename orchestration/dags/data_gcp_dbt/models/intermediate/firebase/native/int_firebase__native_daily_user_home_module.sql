@@ -66,7 +66,8 @@ clicked as (
             "CategoryBlockClicked",
             "HighlightBlockClicked",
             "BusinessBlockClicked",
-            "ConsultVideo"
+            "ConsultVideo",
+            "TrendsBlockClicked"
         )
         {% if is_incremental() %}
             and event_date between date_sub(date("{{ ds() }}"), interval 1 day) and date("{{ ds() }}")

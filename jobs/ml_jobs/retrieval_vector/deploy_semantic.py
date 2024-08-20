@@ -1,22 +1,17 @@
-from datetime import datetime
+import time
 
 import joblib
 import numpy as np
 import polars as pl
+import psutil
 import pyarrow.dataset as ds
 import typer
 from hnne import HNNE
-import psutil
 
 from utils import (
-    ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
     create_items_table,
-    deploy_container,
     get_item_docs,
     get_items_metadata,
-    save_experiment,
-    save_model_type,
 )
 
 MODEL_TYPE = {
@@ -43,27 +38,20 @@ def get_ram_info():
 
 def download_embeddings(bucket_path):
     # download
-    print("start")
-    get_ram_info()
-    HNNE(dim=MODEL_TYPE["n_dim"])
+    hnne = HNNE(dim=MODEL_TYPE["n_dim"])
     dataset = ds.dataset(bucket_path, format="parquet")
-    print("after dataset")
-    get_ram_info()
     ldf = pl.scan_pyarrow_dataset(dataset)
-    print("after scan")
-    get_ram_info()
-    ldf.select("item_id").collect().to_numpy().flatten()
-    print("after list")
-    get_ram_info()
-    # item_weights = np.vstack(np.vstack(ldf.select("embedding").collect())[0]).astype(
-    #     np.float32
-    # )
-    # item_weights = hnne.fit_transform(item_weights, dim=MODEL_TYPE["n_dim"]).astype(
-    #     np.float32
-    # )
-    # joblib.dump(hnne, MODEL_TYPE["reducer"])
+    item_list = ldf.select("item_id").collect().to_numpy().flatten()
+    item_weights = np.vstack(np.vstack(ldf.select("embedding").collect())[0]).astype(
+        np.float32
+    )
+    item_weights = hnne.fit_transform(item_weights, dim=MODEL_TYPE["n_dim"]).astype(
+        np.float32
+    )
+    print("size", len(item_list), item_weights.shape)
+    joblib.dump(hnne, MODEL_TYPE["reducer"])
 
-    # return {x: y for x, y in zip(item_list, item_weights)}
+    return {x: y for x, y in zip(item_list, item_weights)}
 
 
 def prepare_docs(bucket_path):
@@ -72,7 +60,14 @@ def prepare_docs(bucket_path):
     print("Get embeddings...")
     item_embedding_dict = download_embeddings(bucket_path)
     print("Preproc items...")
+    get_ram_info()
+
+    print("Before get item docs")
+    t0 = time.time()
     item_docs = get_item_docs(item_embedding_dict, items_df)
+    print("After get item docs")
+    print(f"Time: {time.time() - t0}")
+    get_ram_info()
     item_docs.save("./metadata/item.docs")
     create_items_table(
         item_embedding_dict,

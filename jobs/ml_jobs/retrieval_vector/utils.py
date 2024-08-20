@@ -5,6 +5,7 @@ from datetime import datetime
 
 import lancedb
 import pandas as pd
+import psutil
 import pyarrow as pa
 from docarray import Document, DocumentArray
 from google.cloud import bigquery
@@ -150,6 +151,19 @@ def to_float(f):
         return None
 
 
+def get_ram_info():
+    # Get memory details
+    memory_info = psutil.virtual_memory()
+
+    # Available memory in bytes
+    available_memory_bytes = memory_info.available
+
+    # Convert to GB for readability
+    available_memory_gb = available_memory_bytes / (1024**3)
+
+    print(f"Available memory: {available_memory_gb:.2f} GB")
+
+
 def save_model_type(model_type):
     with open("./metadata/model_type.json", "w") as file:
         json.dump(model_type, file)
@@ -226,13 +240,21 @@ def get_table_batches(item_embedding_dict: dict, items_df, emb_size):
 def create_items_table(
     item_embedding_dict, items_df, emb_size, uri="./metadata/vector"
 ):
+    print("Before pa table from batches")
+    get_ram_info()
     data = pa.Table.from_batches(
         get_table_batches(item_embedding_dict, items_df, emb_size)
     )
+    print("After pa table from batches")
+    get_ram_info()
     db = lancedb.connect(uri)
     db.drop_database()
     table = db.create_table("items", data=data)
+    print("After create table")
+    get_ram_info()
     table.create_index(num_partitions=1024, num_sub_vectors=32)
+    print("After create index")
+    get_ram_info()
 
 
 def get_item_docs(item_embedding_dict, items_df):

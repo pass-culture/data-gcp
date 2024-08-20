@@ -18,7 +18,7 @@ default_args = {
 }
 
 dag = DAG(
-    "dbt_manual_dag",
+    "dbt_manual_command",
     default_args=default_args,
     catchup=False,
     description="A dbt wrapper for airflow",
@@ -28,8 +28,8 @@ dag = DAG(
             default=ENV_SHORT_NAME,
             type="string",
         ),
-        "command": Param(
-            default="dbt run --models package:re_data",
+        "dbt-command": Param(
+            default="compile",
             type="string",
         ),
     },
@@ -39,7 +39,7 @@ start = DummyOperator(task_id="start", dag=dag)
 
 dbt_manual_command = BashOperator(
     task_id="dbt_manual_command",
-    bash_command="{{ params.command }}",
+    bash_command="dbt {{ params.dbt-command }} -t {{ params.target }} --vars {'ENV_SHORT_NAME':'{{ params.target }}' }",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
 )

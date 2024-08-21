@@ -47,6 +47,7 @@ select
     o.event,
     o.offer_category_id,
     o.venue_iris_internal_id,
-    o.offer_url
+    o.offer_url,
+    o.isbn
 from {{ ref('int_applicative__stock') }} as s
     left join {{ ref('int_global__offer') }} as o on s.offer_id = o.offer_id

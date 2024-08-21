@@ -11,6 +11,7 @@ from common.utils import get_airflow_schedule, waiting_operator
 
 from airflow import DAG
 from airflow.models import Param
+from airflow.models.baseoperator import chain
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.dates import datetime, timedelta
@@ -250,6 +251,28 @@ with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
             cwd=PATH_TO_DBT_PROJECT,
             dag=dag,
         )
+
+# manual trigger group
+trig_ops = {}
+with TaskGroup(group_id="manual_triggers", dag=dag) as trigger_group:
+    for model_node in dbt_models:
+        model_op = model_op_dict[model_node]
+        folder_hierarchy = manifest["nodes"][model_node]["fqn"][1:-2]
+        trig_chain = [
+            trig_ops[item]
+            if trig_ops.get(item, False)
+            else DummyOperator(task_id=item, dag=dag)
+            for item in folder_hierarchy
+        ] + [model_op]
+        trig_ops = {
+            **trig_ops,
+            **{
+                item: DummyOperator(task_id=item, dag=dag)
+                for item in folder_hierarchy
+                if trig_ops.get(item, False)
+            },
+        }
+        chain(*trig_chain)
 
 (
     start

@@ -17,6 +17,7 @@ select
     offer_type_domain,
     offer_is_bookable,
     venue_is_virtual,
+    NOT venue_is_virtual not_virtual_test,
     digital_goods,
     physical_goods,
     event,

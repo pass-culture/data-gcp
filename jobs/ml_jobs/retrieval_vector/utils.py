@@ -244,16 +244,28 @@ def create_items_table(
     get_ram_info()
     print("length of data")
     print(len(items_df))
-    data = pa.Table.from_batches(
-        get_table_batches(item_embedding_dict, items_df, emb_size)
-    )
-    print("After pa table from batches")
-    get_ram_info()
+
+    batch_size = 100000
+    num_batches = len(items_df) // batch_size + 1
+
     db = lancedb.connect(uri)
     db.drop_database()
-    table = db.create_table("items", data=data)
-    print("After create table")
-    get_ram_info()
+
+    for i in range(num_batches):
+        print(i, get_ram_info())
+        start_idx = i * batch_size
+        end_idx = min((i + 1) * batch_size, len(items_df))
+        batch_df = items_df[start_idx:end_idx]
+
+        data_batch = pa.Table.from_batches(
+            get_table_batches(item_embedding_dict, batch_df, emb_size)
+        )
+
+        if i == 0:
+            table = db.create_table("items", data=data_batch)
+        else:
+            table.add(data_batch)
+
     table.create_index(num_partitions=1024, num_sub_vectors=32)
     print("After create index")
     get_ram_info()

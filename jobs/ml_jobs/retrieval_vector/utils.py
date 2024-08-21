@@ -237,7 +237,7 @@ def create_items_table(
     db.drop_database()
 
     for i in range(num_batches):
-        print(f"Processing batch {i} // {num_batches} of batch_size {batch_size}")
+        print(f"Processing batch {i+1} // {num_batches} of batch_size {batch_size}")
         start_idx = i * batch_size
         end_idx = min((i + 1) * batch_size, len(items_df))
         batch_df = items_df[start_idx:end_idx]

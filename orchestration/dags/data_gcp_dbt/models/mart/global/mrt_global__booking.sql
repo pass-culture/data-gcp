@@ -65,7 +65,8 @@ select
     user_booking_id_rank,
     user_iris_internal_id,
     venue_iris_internal_id,
-    offer_url
+    offer_url,
+    isbn
 from {{ ref('int_global__booking') }} as b
 where deposit_type is not NULL
     and offer_id is not NULL

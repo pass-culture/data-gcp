@@ -32,7 +32,7 @@ dag = DAG(
             default=ENV_SHORT_NAME,
             type="string",
         ),
-        "dbt-command": Param(
+        "dbt_command": Param(
             default="compile",
             type="string",
         ),
@@ -43,7 +43,7 @@ start = DummyOperator(task_id="start", dag=dag)
 
 dbt_manual_command = BashOperator(
     task_id="dbt_manual_command",
-    bash_command="""dbt {{ params.dbt-command }} -t {{ params.target }} --vars "{'ENV_SHORT_NAME':'{{ params.souce_env }}'}" """,
+    bash_command="""dbt {{ params.dbt_command }} -t {{ params.target }} --vars "{'ENV_SHORT_NAME':'{{ params.source_env }}'}" """,
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
 )

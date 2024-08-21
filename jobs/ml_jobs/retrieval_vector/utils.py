@@ -242,6 +242,8 @@ def create_items_table(
 ):
     print("Before pa table from batches")
     get_ram_info()
+    print("length of data")
+    print(len(items_df))
     data = pa.Table.from_batches(
         get_table_batches(item_embedding_dict, items_df, emb_size)
     )

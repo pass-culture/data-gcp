@@ -31,7 +31,6 @@ select
     s.venue_epci,
     s.venue_density_label,
     s.venue_macro_density_label,
-    s.venue_density_level,
     s.venue_academy_name,
     s.offerer_id,
     s.offerer_name,

@@ -82,8 +82,8 @@ select
     u.user_iris_internal_id,
     s.venue_iris_internal_id,
     s.offer_url,
-    s.isbn
+    o.isbn
 from {{ ref('int_applicative__booking') }} as b
-    left join {{ ref('int_global__offer') }} as o on o.offer_id=b.offer_id
     left join {{ ref('int_global__stock') }} as s on s.stock_id = b.stock_id
+    left join {{ ref('int_global__offer') }} as o on o.offer_id=s.offer_id
     left join {{ ref('int_applicative__user') }} as u on u.user_id = b.user_id

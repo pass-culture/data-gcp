@@ -16,6 +16,7 @@ BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
 BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
 MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"
 BIGQUERY_RECOMMENDATION_DATASET = f"ml_reco_{ENV_SHORT_NAME}"
+LANCE_DB_BATCH_SIZE = 100_000
 
 item_columns = [
     "vector",
@@ -225,14 +226,30 @@ def get_table_batches(item_embedding_dict: dict, items_df, emb_size):
 
 
 def create_items_table(
-    item_embedding_dict, items_df, emb_size, uri="./metadata/vector"
-):
-    data = pa.Table.from_batches(
-        get_table_batches(item_embedding_dict, items_df, emb_size)
-    )
+    item_embedding_dict: dict,
+    items_df: pd.DataFrame,
+    emb_size: int,
+    uri: str = "./metadata/vector",
+    batch_size: int = LANCE_DB_BATCH_SIZE,
+) -> None:
+    num_batches = len(items_df) // batch_size + 1
     db = lancedb.connect(uri)
     db.drop_database()
-    table = db.create_table("items", data=data)
+
+    for i in range(num_batches):
+        print(f"Processing batch {i} // {num_batches} of batch_size {batch_size}")
+        start_idx = i * batch_size
+        end_idx = min((i + 1) * batch_size, len(items_df))
+        batch_df = items_df[start_idx:end_idx]
+
+        data_batch = pa.Table.from_batches(
+            get_table_batches(item_embedding_dict, batch_df, emb_size)
+        )
+
+        if i == 0:
+            table = db.create_table("items", data=data_batch)
+        else:
+            table.add(data_batch)
     table.create_index(num_partitions=1024, num_sub_vectors=32)
 
 

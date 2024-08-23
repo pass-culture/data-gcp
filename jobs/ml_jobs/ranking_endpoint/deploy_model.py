@@ -133,10 +133,19 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
             }
         )
         .fillna({"consult": 0, "booking": 0})
+        .rename(
+            columns={
+                "consult": ClassMapping.consulted.name,
+                "booking": ClassMapping.booked.name,
+            }
+        )
         .assign(
             status=lambda df: pd.Series([ClassMapping.seen.name] * len(df))
-            .where(df["consult"] != 1.0, other=ClassMapping.consulted.name)
-            .where(df["booking"] != 1.0, other=ClassMapping.booked.name),
+            .where(
+                df[ClassMapping.consulted.name] != 1.0,
+                other=ClassMapping.consulted.name,
+            )
+            .where(df[ClassMapping.booked.name] != 1.0, other=ClassMapping.booked.name),
             target_class=lambda df: df["status"]
             .map(
                 {

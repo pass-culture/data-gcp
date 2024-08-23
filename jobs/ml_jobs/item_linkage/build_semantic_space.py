@@ -24,29 +24,33 @@ COLUMN_NAME_LIST = ["item_id", "performer"]
 
 
 def preprocess_data_and_store_reducer(
-    chunk: pd.DataFrame, reducer_path: str
+    chunk: pd.DataFrame, reducer_path: str, reduction: bool
 ) -> pd.DataFrame:
     """
     Prepare the table by reading the parquet file from GCS, preprocessing embeddings,
     and merging the embeddings with the dataframe.
 
     Args:
-        gcs_path (str): The GCS path to the parquet file.
-        column_name_list (List[str]): The list of column names to read from the parquet file.
-
+        chunk (pd.DataFrame): The dataframe to prepare.
+        reducer_path (str): The path to store the reducer.
+        reduction (bool): Whether to reduce the embeddings.
     Returns:
         pd.DataFrame: The prepared dataframe with embeddings.
     """
     item_df = chunk.assign(
         performer=lambda df: df["performer"].fillna(value=UNKNOWN_PERFORMER),
     )
-    return item_df.assign(
-        vector=reduce_embeddings_and_store_reducer(
-            embeddings=preprocess_embeddings_by_chunk(chunk),
-            n_dim=MODEL_TYPE["n_dim"],
-            reducer_path=reducer_path,
+    if reduction:
+        item_df = item_df.assign(
+            vector=reduce_embeddings_and_store_reducer(
+                embeddings=preprocess_embeddings_by_chunk(chunk),
+                n_dim=MODEL_TYPE["n_dim"],
+                reducer_path=reducer_path,
+            )
         )
-    )
+    else:
+        item_df = item_df.assign(vector=preprocess_embeddings_by_chunk(chunk))
+    return item_df
 
 
 def create_items_table(items_df: pd.DataFrame) -> None:
@@ -104,20 +108,29 @@ def main(
         default=...,
         help="GCS parquet path",
     ),
+    reduction: str = typer.Option(
+        default="true",
+        help="Reduce the embeddings",
+    ),
+    batch_size: int = typer.Option(
+        default=PARQUET_BATCH_SIZE,
+        help="Batch size for reading the parquet file",
+    ),
 ) -> None:
     """
     Main function to download and prepare the table, create the LanceDB table, and save the model type.
 
     Args:
         input_path (str): The GCS path to the parquet file.
+        reduction (str): Whether to reduce the embeddings.
+        batch_size (int): The batch size for reading the parquet file.
     """
     logger.info("Download and prepare table...")
-
+    reduction = True if reduction == "true" else False
     total_count = 0
-    for chunk in read_parquet_in_batches_gcs(input_path, PARQUET_BATCH_SIZE):
+    for chunk in read_parquet_in_batches_gcs(input_path, batch_size):
         item_df_enriched = preprocess_data_and_store_reducer(
-            chunk,
-            MODEL_TYPE["reducer_pickle_path"],
+            chunk, MODEL_TYPE["reducer_pickle_path"], reduction=reduction
         )
         create_items_table(item_df_enriched)
         total_count += len(chunk)

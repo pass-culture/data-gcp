@@ -39,22 +39,24 @@ DAG_CONFIG = {
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}",
     "BASE_DIR": "data-gcp/jobs/ml_jobs/item_linkage/",
     "EXPERIMENT_NAME": f"linkage_semantic_vector_v1.0_{ENV_SHORT_NAME}",
+    "REDUCTION": "true",
+    "BATCH_SIZE": 100000,
     "LINKAGE_ITEM_SOURCES_DATA_REQUEST": "linkage_item_sources_data.sql",
     "LINKAGE_ITEM_CANDIDATES_DATA_REQUEST": "linkage_item_candidates_data.sql",
     "INPUT_SOURCES_TABLE": f"{DATE}_input_sources_table",
     "INPUT_CANDIDATES_TABLE": f"{DATE}_item_candidates_data",
     "LINKED_ITEMS_TABLE": "linked_items",
-    "INPUT_SOURCES_FILENAME": "item_sources_data.parquet",
-    "INPUT_CANDIDATES_FILENAME": "item_candidates_data.parquet",
+    "INPUT_SOURCES_DIR": "item_sources_data",
+    "INPUT_CANDIDATES_DIR": "item_candidates_data",
     "LINKAGE_CANDIDATES_FILENAME": "linkage_candidates_items.parquet",
-    "LINKED_ITEMS_FILENAME": "linkage_candidates_items.parquet",
+    "LINKED_ITEMS_FILENAME": "linkage_items.parquet",
 }
 GCE_PARAMS = {
     "instance_name": f"linkage-item-{ENV_SHORT_NAME}",
     "instance_type": {
-        "prod": "n1-standard-16",
-        "stg": "n1-standard-8",
         "dev": "n1-standard-2",
+        "stg": "n1-standard-8",
+        "prod": "n1-standard-32",
     },
 }
 
@@ -88,6 +90,14 @@ with DAG(
         "instance_name": Param(
             default=GCE_PARAMS["instance_name"],
             type="string",
+        ),
+        "reduction": Param(
+            default=DAG_CONFIG["REDUCTION"],
+            type="string",
+        ),
+        "batch_size": Param(
+            default=DAG_CONFIG["BATCH_SIZE"],
+            type="integer",
         ),
     },
 ) as dag:
@@ -128,7 +138,9 @@ with DAG(
                 "compression": None,
                 "destinationFormat": "PARQUET",
                 "destinationUris": os.path.join(
-                    DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_FILENAME"]
+                    DAG_CONFIG["STORAGE_PATH"],
+                    DAG_CONFIG["INPUT_SOURCES_DIR"],
+                    "data-*.parquet",
                 ),
             }
         },
@@ -148,7 +160,9 @@ with DAG(
                 "compression": None,
                 "destinationFormat": "PARQUET",
                 "destinationUris": os.path.join(
-                    DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_CANDIDATES_FILENAME"]
+                    DAG_CONFIG["STORAGE_PATH"],
+                    DAG_CONFIG["INPUT_CANDIDATES_DIR"],
+                    "data-*.parquet",
                 ),
             }
         },
@@ -161,7 +175,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={"job_type": "ml"},
+        labels={"job_type": "long_ml"},
     )
 
     fetch_code = CloneRepositoryGCEOperator(
@@ -184,7 +198,11 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
         command="python build_semantic_space.py "
-        f"--input-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['INPUT_SOURCES_FILENAME'])} ",
+        f"""--input-path {os.path.join(
+                    DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_DIR"],"data-*.parquet"
+                )} """
+        f"--reduction {DAG_CONFIG['REDUCTION']} "
+        f"--batch-size {DAG_CONFIG['BATCH_SIZE']} ",
     )
 
     get_linkage_candidates = SSHGCEOperator(
@@ -192,7 +210,11 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
         command="python linkage_candidates.py "
-        f"--input-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['INPUT_CANDIDATES_FILENAME'])} "
+        f"--batch-size {DAG_CONFIG['BATCH_SIZE']} "
+        f"--reduction {DAG_CONFIG['REDUCTION']} "
+        f"""--input-path {os.path.join(
+                    DAG_CONFIG["STORAGE_PATH"],  DAG_CONFIG["INPUT_CANDIDATES_DIR"],"data-*.parquet"
+                )} """
         f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKAGE_CANDIDATES_FILENAME'])} ",
     )
 
@@ -201,8 +223,12 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
         command="python link_items.py "
-        f"--input-sources-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['INPUT_SOURCES_FILENAME'])} "
-        f"--input-candidates-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['INPUT_CANDIDATES_FILENAME'])} "
+        f"""--input-sources-path {os.path.join(
+                    DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_DIR"]
+                )} """
+        f"""--input-candidates-path {os.path.join(
+                    DAG_CONFIG["STORAGE_PATH"],  DAG_CONFIG["INPUT_CANDIDATES_DIR"]
+                )} """
         f"--linkage-candidates-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKAGE_CANDIDATES_FILENAME'])} "
         f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKED_ITEMS_FILENAME'])} ",
     )

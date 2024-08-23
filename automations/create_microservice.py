@@ -1,5 +1,7 @@
 import re
 import shutil
+from enum import Enum
+from typing import Annotated
 
 import typer
 
@@ -42,13 +44,23 @@ def append_to_makefile(service_name):
         file.writelines(lines)
 
 
+class MicroServiceType(str, Enum):
+    ml = "ml"
+    etl_external = "etl_external"
+    etl_internal = "etl_internal"
+
+
 @app.command()
-def create_micro_service(ms_name: str = typer.Option()):
+def create_micro_service(
+    ms_name: str = typer.Option(),
+    ms_type: MicroServiceType = typer.Option(case_sensitive=False),
+):
     """
     Create a micro-service with the given name.
 
     Args:
         ms_name (str): The name of the micro-service. Must be in snake_case.
+        ms_type (MicroServiceType): The type of the micro-service. Must be one of "ml", "etl_external", or "etl_internal".
 
     Raises:
         ValueError: If the name is not in snake_case.
@@ -62,9 +74,8 @@ def create_micro_service(ms_name: str = typer.Option()):
         raise ValueError("ms_name must be snake_case")
 
     # Copying template
-    template_dir = "jobs/ml_jobs/_template"
-    destination_dir = f"jobs/ml_jobs/{ms_name}"
     ignore_patterns = "__pycache__", ".pytest_cache", ".vscode"
+    template_dir, destination_dir = get_template_and_destination_dir(ms_name, ms_type)
 
     # Copying template directory to destination directory
     shutil.copytree(
@@ -74,7 +85,22 @@ def create_micro_service(ms_name: str = typer.Option()):
     )
 
     # Appending line in Makefile
-    append_to_makefile(ms_name)
+    if ms_type == MicroServiceType.ml:
+        append_to_makefile(ms_name)
+
+
+def get_template_and_destination_dir(ms_name: str, ms_type: MicroServiceType):
+    if ms_type == MicroServiceType.ml:
+        template_dir = "jobs/ml_jobs/_template"
+        destination_dir = f"jobs/ml_jobs/{ms_name}"
+    elif ms_type == MicroServiceType.etl_external:
+        template_dir = "jobs/etl_jobs/_template"
+        destination_dir = f"jobs/etl_jobs/external/{ms_name}"
+    elif ms_type == MicroServiceType.etl_internal:
+        template_dir = "jobs/etl_jobs/_template"
+        destination_dir = f"jobs/etl_jobs/internal/{ms_name}"
+
+    return template_dir, destination_dir
 
 
 if __name__ == "__main__":

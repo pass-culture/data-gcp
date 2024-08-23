@@ -136,7 +136,7 @@ SELECT
     , COUNT(DISTINCT CASE WHEN event_name = 'BookingConfirmation' THEN offer_id ELSE NULL END) AS total_bookings
     , COUNT(DISTINCT CASE WHEN event_name = 'BookingConfirmation' AND delta_diversification IS NOT NULL THEN offer_id ELSE NULL END) AS total_non_cancelled_bookings
     , SUM(delta_diversification) AS total_diversification
-    , SUM(CASE WHEN event_name = 'VenueMapSeenDuration' THEN duration ELSE NULL END) AS total_session_venue_map_seen_duration_seconds
+    , SUM(CASE WHEN event_name = 'VenueMapSeenDuration' THEN duration_seconds ELSE NULL END) AS total_session_venue_map_seen_duration_seconds
 FROM all_events
 GROUP BY 
     unique_session_id

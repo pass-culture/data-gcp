@@ -1,4 +1,5 @@
 SELECT 
+    f.favorite_id,
     f.favorite_creation_date,
     f.favorite_created_at,
     f.user_id,

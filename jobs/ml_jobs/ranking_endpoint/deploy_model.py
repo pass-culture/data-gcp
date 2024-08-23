@@ -1,13 +1,13 @@
 import os
 import shutil
 from datetime import datetime
-from enum import Enum
 
 import mlflow
 import pandas as pd
 import typer
 from sklearn.model_selection import train_test_split
 
+from app.constants import ClassMapping
 from app.model import TrainPipeline
 from figure import (
     plot_cm,
@@ -40,12 +40,6 @@ CLASSIFIER_MODEL_PARAMS = {
 }
 PROBA_CONSULT_THRESHOLD = 0.5
 PROBA_BOOKING_THRESHOLD = 0.5
-
-
-class ClassMapping(Enum):
-    seen = 0
-    consulted = 1
-    booked = 2
 
 
 def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:

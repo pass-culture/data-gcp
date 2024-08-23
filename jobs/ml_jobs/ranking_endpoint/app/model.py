@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder
 
-from deploy_model import ClassMapping
+from app.constants import ClassMapping
 
 NUMERIC_FEATURES = [
     "user_bookings_count",

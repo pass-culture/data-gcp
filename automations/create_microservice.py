@@ -74,7 +74,7 @@ def create_micro_service(
         raise ValueError("ms_name must be snake_case")
 
     # Copying template
-    ignore_patterns = "__pycache__", ".pytest_cache", ".vscode"
+    ignore_patterns = "__pycache__", ".pytest_cache", ".vscode", ".ruff_cache"
     template_dir, destination_dir = get_template_and_destination_dir(ms_name, ms_type)
 
     # Copying template directory to destination directory

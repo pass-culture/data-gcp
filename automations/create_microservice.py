@@ -84,10 +84,6 @@ def create_micro_service(
         ignore=shutil.ignore_patterns(*ignore_patterns),
     )
 
-    # Appending line in Makefile
-    if ms_type == MicroServiceType.ml:
-        append_to_makefile(ms_name)
-
 
 def get_template_and_destination_dir(ms_name: str, ms_type: MicroServiceType):
     if ms_type == MicroServiceType.ml:

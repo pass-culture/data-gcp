@@ -128,15 +128,15 @@ SELECT
     , user_id
     , app_version
     , MIN(event_date) AS event_date
-    , COUNT(CASE WHEN event_name = 'ConsultVenueMap' THEN 1 ELSE NULL END) AS total_venue_map_consult
-    , COUNT(DISTINCT CASE WHEN event_name = 'PinMapPressed' THEN venue_id ELSE NULL END) AS total_venue_map_preview
-    , COUNT(DISTINCT CASE WHEN event_name = 'ConsultVenue' THEN venue_id ELSE NULL END) AS total_consult_venue
-    , COUNT(DISTINCT CASE WHEN event_name = 'ConsultOffer' THEN venue_id ELSE NULL END) AS total_distinct_venue_consult_offer
-    , COUNT(DISTINCT CASE WHEN event_name = 'ConsultOffer' THEN offer_id ELSE NULL END) AS total_consult_offer
-    , COUNT(DISTINCT CASE WHEN event_name = 'BookingConfirmation' THEN offer_id ELSE NULL END) AS total_bookings
-    , COUNT(DISTINCT CASE WHEN event_name = 'BookingConfirmation' AND delta_diversification IS NOT NULL THEN offer_id ELSE NULL END) AS total_non_cancelled_bookings
-    , SUM(delta_diversification) AS total_diversification
-    , SUM(CASE WHEN event_name = 'VenueMapSeenDuration' THEN duration_seconds ELSE NULL END) AS total_session_venue_map_seen_duration_seconds
+    , COUNT(CASE WHEN event_name = 'ConsultVenueMap' THEN 1 END) AS total_venue_map_consult
+    , COUNT(DISTINCT CASE WHEN event_name = 'PinMapPressed' THEN venue_id END) AS total_venue_map_preview
+    , COUNT(DISTINCT CASE WHEN event_name = 'ConsultVenue' THEN venue_id END) AS total_consult_venue
+    , COUNT(DISTINCT CASE WHEN event_name = 'ConsultOffer' THEN venue_id END) AS total_distinct_venue_consult_offer
+    , COUNT(DISTINCT CASE WHEN event_name = 'ConsultOffer' THEN offer_id END) AS total_consult_offer
+    , COUNT(DISTINCT CASE WHEN event_name = 'BookingConfirmation' THEN offer_id END) AS total_bookings
+    , COUNT(DISTINCT CASE WHEN event_name = 'BookingConfirmation' AND delta_diversification IS NOT NULL THEN offer_id END) AS total_non_cancelled_bookings
+    , SUM(COALESCE(delta_diversification,0)) AS total_diversification
+    , SUM(CASE WHEN event_name = 'VenueMapSeenDuration' THEN duration_seconds END) AS total_session_venue_map_seen_duration_seconds
 FROM all_events
 GROUP BY 
     unique_session_id

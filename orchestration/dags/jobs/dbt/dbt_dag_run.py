@@ -6,7 +6,7 @@ from common.config import (
     PATH_TO_DBT_PROJECT,
     PATH_TO_DBT_TARGET,
 )
-from common.dbt.utils import load_manifest
+from common.dbt.utils import create_nested_folder_groups, load_manifest
 from common.utils import get_airflow_schedule, waiting_operator
 
 from airflow import DAG
@@ -23,6 +23,7 @@ default_args = {
     "project_id": GCP_PROJECT_ID,
     "on_failure_callback": task_fail_slack_alert,
 }
+
 
 dag = DAG(
     "dbt_run_dag",
@@ -251,6 +252,12 @@ with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
             dag=dag,
         )
 
+# Trigger folder of models manually
+
+with TaskGroup(group_id="folders_manual_trigger", dag=dag) as trigger_block:
+    create_nested_folder_groups(dbt_models, model_op_dict, manifest, dag)
+
+
 (
     start
     >> [wait_for_raw, wait_for_firebase]
@@ -258,5 +265,6 @@ with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
     >> data_transfo_checkpoint
     >> data_transfo
 )
+start >> trigger_block
 end_wait >> snapshots_checkpoint >> snapshot_group
 (data_transfo, snapshot_group) >> compile >> end

@@ -1,6 +1,7 @@
 import os
 import shutil
 from datetime import datetime
+from enum import Enum
 
 import mlflow
 import pandas as pd
@@ -37,20 +38,14 @@ CLASSIFIER_MODEL_PARAMS = {
     "lambda_l1": 0.1,
     "verbose": -1,
 }
-REGRESSOR_MODEL_PARAMS = {
-    "objective": "regression",
-    "metric": {"l2", "l1"},
-    "learning_rate": 0.05,
-    "feature_fraction": 0.9,
-    "bagging_fraction": 0.9,
-    "bagging_freq": 5,
-    "lambda_l2": 0.1,
-    "lambda_l1": 0.1,
-    "verbose": -1,
-}
 PROBA_CONSULT_THRESHOLD = 0.5
 PROBA_BOOKING_THRESHOLD = 0.5
-CLASS_MAPPING = {"seen": 0, "consult": 1, "booked": 2}
+
+
+class ClassMapping(Enum):
+    seen = 0
+    consult = 1
+    booked = 2
 
 
 def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
@@ -141,10 +136,9 @@ def preprocess_data(data: pd.DataFrame, class_mapping: dict) -> pd.DataFrame:
             {
                 "consult": "float",
                 "booking": "float",
-                "delta_diversification": "float",
             }
         )
-        .fillna({"consult": 0, "booking": 0, "delta_diversification": 0})
+        .fillna({"consult": 0, "booking": 0})
         .assign(
             status=lambda df: pd.Series(["seen"] * len(df))
             .where(df["consult"] != 1.0, other="consult")
@@ -157,7 +151,12 @@ def preprocess_data(data: pd.DataFrame, class_mapping: dict) -> pd.DataFrame:
 def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     # Load and preprocess the data
     data = load_data(dataset_name, table_name)
-    preprocessed_data = data.pipe(preprocess_data, class_mapping=CLASS_MAPPING)
+    preprocessed_data = data.pipe(
+        preprocess_data,
+        class_mapping={
+            class_mapping.name: class_mapping.value for class_mapping in ClassMapping
+        },
+    )
     train_data, test_data = train_test_split(preprocessed_data, test_size=TEST_SIZE)
     class_frequency = train_data.target_class.value_counts(normalize=True).to_dict()
     class_weight = {k: 1 / v for k, v in class_frequency.items()}

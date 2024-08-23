@@ -44,7 +44,7 @@ PROBA_BOOKING_THRESHOLD = 0.5
 
 class ClassMapping(Enum):
     seen = 0
-    consult = 1
+    consulted = 1
     booked = 2
 
 
@@ -102,27 +102,27 @@ def plot_figures(
 
     for prefix, df in [("test_", test_data), ("train_", train_data)]:
         plot_cm(
-            y=df["consult"],
-            y_pred=df["prob_class_1"],
-            filename=f"{figure_folder}/{prefix}cm_consult_proba_{PROBA_CONSULT_THRESHOLD:.3f}.pdf",
+            y=df[ClassMapping.consulted.name],
+            y_pred=df[f"prob_class_{ClassMapping.consulted.name}"],
+            filename=f"{figure_folder}/{prefix}cm_{ClassMapping.consulted.name}_proba_{PROBA_CONSULT_THRESHOLD:.3f}.pdf",
             perc=True,
             proba=PROBA_CONSULT_THRESHOLD,
         )
         plot_cm(
-            y=df["booking"],
-            y_pred=df["prob_class_2"],
-            filename=f"{figure_folder}/{prefix}cm_booking_proba_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
+            y=df[ClassMapping.booked.name],
+            y_pred=df[f"prob_class_{ClassMapping.booked.name}"],
+            filename=f"{figure_folder}/{prefix}cm_{ClassMapping.booked.name}_proba_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
             perc=True,
             proba=PROBA_BOOKING_THRESHOLD,
         )
         plot_cm_multiclass(
             y_true=df["target_class"],
-            y_pred_consulted=df["prob_class_1"],
-            y_pred_booked=df["prob_class_2"],
+            y_pred_consulted=df[f"prob_class_{ClassMapping.consulted.name}"],
+            y_pred_booked=df[f"prob_class_{ClassMapping.booked.name}"],
             perc_consulted=PROBA_CONSULT_THRESHOLD,
             perc_booked=PROBA_BOOKING_THRESHOLD,
-            filename=f"{figure_folder}/{prefix}cm_multiclass_consult_{PROBA_CONSULT_THRESHOLD:.3f}_booking_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
-            class_names=["seen", "consult", "booked"],
+            filename=f"{figure_folder}/{prefix}cm_multiclass_{ClassMapping.consulted.name}_{PROBA_CONSULT_THRESHOLD:.3f}_{ClassMapping.booked.name}_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
+            class_names=[class_mapping.name for class_mapping in ClassMapping],
         )
 
     plot_features_importance(
@@ -130,7 +130,7 @@ def plot_figures(
     )
 
 
-def preprocess_data(data: pd.DataFrame, class_mapping: dict) -> pd.DataFrame:
+def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
     return (
         data.astype(
             {
@@ -140,10 +140,17 @@ def preprocess_data(data: pd.DataFrame, class_mapping: dict) -> pd.DataFrame:
         )
         .fillna({"consult": 0, "booking": 0})
         .assign(
-            status=lambda df: pd.Series(["seen"] * len(df))
-            .where(df["consult"] != 1.0, other="consult")
-            .where(df["booking"] != 1.0, other="booked"),
-            target_class=lambda df: df["status"].map(class_mapping).astype(int),
+            status=lambda df: pd.Series([ClassMapping.seen.name] * len(df))
+            .where(df["consult"] != 1.0, other=ClassMapping.consulted.name)
+            .where(df["booking"] != 1.0, other=ClassMapping.booked.name),
+            target_class=lambda df: df["status"]
+            .map(
+                {
+                    class_mapping.name: class_mapping.value
+                    for class_mapping in ClassMapping
+                }
+            )
+            .astype(int),
         )
     ).drop_duplicates()
 
@@ -153,9 +160,6 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     data = load_data(dataset_name, table_name)
     preprocessed_data = data.pipe(
         preprocess_data,
-        class_mapping={
-            class_mapping.name: class_mapping.value for class_mapping in ClassMapping
-        },
     )
     train_data, test_data = train_test_split(preprocessed_data, test_size=TEST_SIZE)
     class_frequency = train_data.target_class.value_counts(normalize=True).to_dict()

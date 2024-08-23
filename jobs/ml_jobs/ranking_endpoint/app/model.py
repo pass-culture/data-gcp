@@ -10,6 +10,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder
 
+from deploy_model import ClassMapping
+
 NUMERIC_FEATURES = [
     "user_bookings_count",
     "user_clicks_count",
@@ -75,8 +77,8 @@ class PredictPipeline:
         return (
             df.assign(
                 predicted_class=predictions_classifier.argmax(axis=1),
-                consulted_score=predictions_classifier[:, 1],
-                booked_score=predictions_classifier[:, 2],
+                consulted_score=predictions_classifier[:, ClassMapping.consulted.value],
+                booked_score=predictions_classifier[:, ClassMapping.booked.value],
                 score=lambda df: df.consulted_score + df.booked_score,
             ).to_dict(orient="records"),
             errors,
@@ -187,11 +189,13 @@ class TrainPipeline:
         return df.assign(
             **{
                 "predicted_class": predicted_class,
-                "score": probabilities[:, 1]
-                + probabilities[:, 2],  # consulted + booked
+                "score": probabilities[:, ClassMapping.consulted.value]
+                + probabilities[:, ClassMapping.booked.value],
                 **{
-                    f"prob_class_{i}": probabilities[:, i]
-                    for i in range(probabilities.shape[1])
+                    f"prob_class_{class_mapping.name}": probabilities[
+                        :, class_mapping.value
+                    ]
+                    for class_mapping in ClassMapping
                 },
             }
         )

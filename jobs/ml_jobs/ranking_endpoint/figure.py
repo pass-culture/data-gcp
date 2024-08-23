@@ -73,8 +73,8 @@ def compute_y_binary(
     # Apply the conditions
     y_pred_binary = np.zeros_like(y_pred_booked, dtype=int)
     y_pred_binary[mask_booked & mask_ratio] = ClassMapping.booked
-    y_pred_binary[mask_booked & ~mask_ratio] = ClassMapping.consult
-    y_pred_binary[~mask_booked & mask_consulted] = ClassMapping.consult
+    y_pred_binary[mask_booked & ~mask_ratio] = ClassMapping.consulted
+    y_pred_binary[~mask_booked & mask_consulted] = ClassMapping.consulted
 
     # Convert the result back to a pandas Series
     return pd.Series(y_pred_binary, index=y_pred_booked_series.index)

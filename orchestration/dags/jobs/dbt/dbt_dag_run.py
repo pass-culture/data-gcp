@@ -252,27 +252,71 @@ with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
             dag=dag,
         )
 
-# manual trigger group
-trig_ops = {}
-with TaskGroup(group_id="manual_triggers", dag=dag) as trigger_group:
-    for model_node in dbt_models:
-        model_op = model_op_dict[model_node]
-        folder_hierarchy = manifest["nodes"][model_node]["fqn"][1:-2]
-        trig_chain = [
-            trig_ops[item]
-            if trig_ops.get(item, False)
-            else DummyOperator(task_id=item, dag=dag)
-            for item in folder_hierarchy
-        ] + [model_op]
-        trig_ops = {
-            **trig_ops,
-            **{
-                item: DummyOperator(task_id=item, dag=dag)
-                for item in folder_hierarchy
-                if trig_ops.get(item, False)
-            },
-        }
-        chain(*trig_chain)
+# Trigger folder of models manually
+nested_folders = {
+    model_node: manifest["nodes"][model_node]["fqn"][1:-1] for model_node in dbt_models
+}
+task_groups = {}
+
+with TaskGroup(group_id="folders_manual_trigger", dag=dag) as trigger_block:
+
+    def create_nested_task_group(
+        folder_hierarchy, original_hierarchy, parent_group=None, current_path=""
+    ):
+        """
+        Recursively create nested TaskGroups based on folder hierarchy.
+        TODO: remove leaf TaskGroup and put the trigger operator in parent TaskGroup
+            hint: the recursive function is nihilpotent over original_hierarchy
+        """
+        if not folder_hierarchy:
+            return None, original_hierarchy
+
+        current_folder = folder_hierarchy[0]
+
+        # Build the full path for the group_id
+        current_path = (
+            f"{current_path}_{current_folder}" if current_path else current_folder
+        )
+        group_id = current_path
+
+        # Check if the group already exists
+        if group_id in task_groups:
+            tg, dummy_task = task_groups[group_id]
+        else:
+            # Create task group & corresponding trigger opperator
+            tg = TaskGroup(group_id=group_id, parent_group=parent_group, dag=dag)
+            dummy_task = DummyOperator(
+                task_id=f"trigger_{group_id}_folder", task_group=tg, dag=dag
+            )
+            # Add them to dictionnary
+            task_groups[group_id] = (tg, dummy_task)
+
+        # Recurse to create the nested TaskGroups
+        if len(folder_hierarchy) > 1:
+            _, original_hierarchy = create_nested_task_group(
+                folder_hierarchy[1:],
+                original_hierarchy,
+                parent_group=tg,
+                current_path=current_path,
+            )
+
+        return tg, original_hierarchy
+
+    # Create task groups for each folder hierarchy in nested_folders
+    for folder_hierarchy in nested_folders.values():
+        original_hierarchy = folder_hierarchy.copy()
+        create_nested_task_group(folder_hierarchy, original_hierarchy)
+
+    # Set the upstream for each task in model_op_dict to the corresponding trigger operator
+    for model_node, folder_hierarchy in nested_folders.items():
+        # Chain trigger tasks of folder hierarchy
+        task_chain = [
+            task_groups["_".join(folder_hierarchy[: i + 1])][1]
+            for i, _ in enumerate(folder_hierarchy)
+        ]
+        chain(*task_chain)
+        # Set model execution task's upstream to leaf folder trigger task
+        task_chain[-1] >> model_op_dict[model_node]
 
 (
     start
@@ -281,5 +325,6 @@ with TaskGroup(group_id="manual_triggers", dag=dag) as trigger_group:
     >> data_transfo_checkpoint
     >> data_transfo
 )
+start >> trigger_block
 end_wait >> snapshots_checkpoint >> snapshot_group
 (data_transfo, snapshot_group) >> compile >> end

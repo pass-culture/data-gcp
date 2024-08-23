@@ -17,7 +17,7 @@ SELECT
     , origin
     , venue_id
     , offer_id
-    , SAFE_CAST(CAST(duration AS FLOAT64) AS INT64) AS duration
+    , SAFE_CAST(duration AS INT64) AS duration_seconds
 FROM {{ ref('int_firebase__native_event') }}
 WHERE 
 (event_name IN ("ConsultVenueMap", "VenueMapSessionDuration", "VenueMapSeenDuration","PinMapPressed")

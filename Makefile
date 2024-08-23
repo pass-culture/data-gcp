@@ -39,9 +39,6 @@ install_ubuntu_libs:
 	sudo apt-get update -y
 	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev
 
-upload_dags_to_dev:
-	$(eval COMPOSER_BUCKET_PATH=$(shell gcloud composer environments describe data-composer-dev --location europe-west1 --format='value(config.dagGcsPrefix)'))
-	gsutil cp -r orchestration/dags/${path} $(COMPOSER_BUCKET_PATH)/${path}
 
 prerequisites_on_debian_vm:
 	curl https://pyenv.run | bash || echo "Pyenv already installed"
@@ -58,19 +55,24 @@ prerequisites_on_debian_vm:
 	echo '. "$$HOME/.cargo/env"' >> ~/.profile
 	bash
 
+
 create_microservice:
-	python automations/create_microservice.py --ms-name $(MS_NAME)
+	python automations/create_microservice.py --ms-name $(MS_NAME) --ms-type $(MS_TYPE)
 	git add .
-	git commit -am "Add $(MS_NAME) microservice"
-	make clean_install
+	git commit -am "Add $(MS_NAME) as $(MS_TYPE) microservice"
+
+create_microservice_ml:
+	MS_TYPE=ml MS_NAME=$(MS_NAME) make create_microservice
+
+create_microservice_etl_external:
+	MS_TYPE=etl_external MS_NAME=$(MS_NAME) make create_microservice
+
+create_microservice_etl_internal:
+	MS_TYPE=etl_internal MS_NAME=$(MS_NAME) make create_microservice
 
 ruff_fix:
 	ruff check --fix
 	ruff format
 
-ruff_check:
-	ruff check
-	ruff format --check
-
 precommit_install:
-	@eval "$$(pyenv init -)" && pyenv activate data-gcp && pre-commit install
+	pre-commit install

@@ -7,14 +7,17 @@ from common.config import (
     DAG_FOLDER,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
 )
-from common.operators.biquery import bigquery_job_task
 from common.utils import get_airflow_schedule
 from google.cloud import storage
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import BranchPythonOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryInsertJobOperator,
+)
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
@@ -98,16 +101,22 @@ with DAG(
         schema_fields=QPI_ANSWERS_SCHEMA,
     )
 
-    append_to_raw = bigquery_job_task(
-        dag=dag,
-        table="delete_temp_answer_table_raw",
-        job_params={
-            "sql": "SELECT * FROM { bigquery_tmp_dataset }.{ ds_nodash }_qpi_answers_v4",
-            "write_disposition": "WRITE_APPEND",
-            "destination_dataset": "{{ bigquery_raw_dataset }}",
-            "destination_table": "qpi_answers_v4",
-            "trigger_rule": "none_failed_or_skipped",
+    append_to_raw = BigQueryInsertJobOperator(
+        task_id="add_tmp_table_to_raw",
+        configuration={
+            "query": {
+                "query": "SELECT * FROM {{ bigquery_tmp_dataset }}.{{ ds_nodash }}_qpi_answers_v4",
+                "useLegacySql": False,
+                "destinationTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": "{{ bigquery_raw_dataset }}",
+                    "tableId": "qpi_answers_v4",
+                },
+                "writeDisposition": "WRITE_APPEND",
+            }
         },
+        trigger_rule="none_failed_or_skipped",
+        dag=dag,
     )
 
     end_raw = DummyOperator(task_id="end_raw")

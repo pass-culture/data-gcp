@@ -124,6 +124,8 @@ sources:
       - name: metabase_report_card
       - name: metabase_report_dashboard
       - name: metabase_revision
+      - name: qpi_answers_historical
+      - name: qpi_answers_v4
       - name: past_offer_context
       - name: sensitive_item_recommendation
       - name: stdout
@@ -145,7 +147,7 @@ sources:
       - name: firebase_app_experiments
       - name: siren_data
       - name: subcategories
-  - name: analytics 
+  - name: analytics
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: adage
@@ -153,7 +155,7 @@ sources:
       - name: linked_offers
       - name: offer_types
       - name: region_department # TODO migrate this table to seed
-  - name: seed 
+  - name: seed
     schema: seed_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: agg_partner_cultural_sector
@@ -168,6 +170,7 @@ sources:
       - name: population_age_and_department_france_details
       - name: priority_local_authorities
       - name: qpv
+      - name: qpi_mapping
       - name: rural_city_type_data
       - name: siren_data_labels
       - name: zrr

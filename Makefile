@@ -44,6 +44,7 @@ install_analytics:
 	make install_simplified
 	uv pip install -r orchestration/dags/dbt-requirements.txt
 	make _init_dbt
+	echo "Please setup the current venv in your IDE to make it run permanently : https://www.notion.so/passcultureapp/Comment-installer-DBT-e25f7e24813c4d48baa43d641651caf8"
 
 
 

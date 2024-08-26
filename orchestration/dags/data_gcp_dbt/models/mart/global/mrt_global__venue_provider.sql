@@ -1,7 +1,8 @@
 select
     p.provider_id,
     p.provider_name,
-    p.is_active,
+    p.provider_is_active,
+    p.venue_provider_is_active,
     p.venue_id,
     p.last_sync_date,
     p.creation_date,
@@ -21,7 +22,8 @@ from {{ ref('int_applicative__venue_provider') }} as p
 group by
     provider_id,
     provider_name,
-    is_active,
+    provider_is_active,
+    venue_provider_is_active,
     venue_id,
     venue_name,
     venue_department_code,

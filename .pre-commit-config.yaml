@@ -27,3 +27,21 @@ repos:
     language: system
     types: [python]
     stages: [commit]
+  - id: sqlfluff-format-fix
+    name: Formatting (sqlfluff)
+    entry: sqlfluff_format
+    language: system
+    types: [sql]
+    stages: [commit]
+  - id: sqlfluff-lint-fix
+    name: Linter (sqlfluff)
+    entry: sqlfluff_fix
+    language: system
+    types: [sql]
+    stages: [commit]
+  - id: sqlfluff-lint-check
+    name: Lint check (sqlfluff)
+    entry: sqlfluff_lint
+    language: system
+    types: [sql]
+    stages: [commit]

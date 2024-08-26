@@ -21,7 +21,7 @@ lieux_physique AS (
         total_created_collective_offers,
         total_created_individual_offers + total_created_collective_offers AS offers_created,
         venue_is_permanent,
-        venue_region_name,
+        global_venue.venue_region_name,
         -- TODO rename field in qualtrics
         global_venue.venue_department_code,
         venue_location.venue_rural_city_type as geo_type,

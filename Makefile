@@ -14,12 +14,11 @@ install:
 	MICROSERVICE_PATH=. PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make _install_microservice
 	pre-commit install
 
-install_analytics:
-	make install
-
 install_engineering:
 	make install
 	MICROSERVICE_PATH=orchestration PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-orchestration REQUIREMENTS_NAME=airflow/orchestration-requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make _install_microservice
+	MICROSERVICE_PATH=orchestration/dags PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-dbt REQUIREMENTS_NAME=dbt-requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make _install_microservice
+	make _init_dbt
 
 install_science:
 	make install_engineering
@@ -27,9 +26,34 @@ install_science:
 
 
 #######################################################################################
+########                          Simplified Install                           ########
+#######################################################################################
+install_simplified:
+	# Log in with GCP credentials if NO_GCP_INIT is not 1
+	@if [ "$(NO_GCP_INIT)" != "1" ]; then \
+		make _get_gcp_credentials; \
+	fi
+	make _initiate_env
+	curl -LsSf https://astral.sh/uv/install.sh | sh
+	uv python install 3.10
+	uv venv --python 3.10
+	uv pip install -r requirements.txt
+	pre-commit install
+
+install_analytics:
+	make install_simplified
+	uv pip install -r orchestration/dags/dbt-requirements.txt
+	make _init_dbt
+
+
+
+#######################################################################################
 ########                                 Utils                                 ########
 #######################################################################################
 
+_init_dbt:
+	cd orchestration/dags/data_gcp_dbt && dbt deps
+	cd orchestration/dags/data_gcp_dbt && dbt debug
 
 _install_microservice:
 	# deactivate the current venv if it exists

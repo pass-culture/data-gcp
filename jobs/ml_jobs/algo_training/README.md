@@ -1,6 +1,6 @@
 ## Algo Training
 
-Les scripts d'entraînement de l'algorithme sont exécutés via les DAG Airflow `orchestration/dags/algo_training<XXX>.py`, sur
+Les scripts d'entraînement de l'algorithme sont exécutés via les DAG Airflow `orchestration/dags/recommendation<XXX>.py`, sur
 une machine Google Compute Engine :
 
 - algo-training-dev (projet passculture-data-ehp)
@@ -27,7 +27,7 @@ On peut les tester de la façon suivante (les commandes sont écrites pour l'env
 
 ## Test du DAG algo_training en dev
 
-Afin de tester le code sur l'environnement de développement, il faut modifier le nom de la branche utilisée en 
+Afin de tester le code sur l'environnement de développement, il faut modifier le nom de la branche utilisée en
 développement dans le DAG concerné. Les deux possibilités sont de :
 
 - Faire la modification directement dans les paramètres du DAG
@@ -36,5 +36,5 @@ développement dans le DAG concerné. Les deux possibilités sont de :
 ![Trigger DAG with config](docs/trigger_DAG_with_config.png)
 ![Modify branch parameter](docs/parameters.png)
 
-De plus, afin de réduire les temps d'entraînement et d'évaluation, on peut réduire le volume de données utilisées en 
+De plus, afin de réduire les temps d'entraînement et d'évaluation, on peut réduire le volume de données utilisées en
 diminuant le nombre de jours utilisés pour l'entraînement : paramètre `event_day_number`.

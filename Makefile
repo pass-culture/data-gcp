@@ -106,3 +106,7 @@ create_microservice_etl_internal:
 ruff_fix:
 	ruff check --fix
 	ruff format
+
+ruff_check:
+	ruff check
+	ruff format --check

@@ -4,7 +4,7 @@ import pandas as pd
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, f1_score
 
-from app.constants import ClassMapping
+from app.model import ClassMapping
 
 
 def plot_features_importance(pipeline, filename):

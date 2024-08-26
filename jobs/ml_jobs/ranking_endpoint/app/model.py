@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Optional
 
 import joblib
@@ -10,7 +11,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder
 
-from app.constants import ClassMapping
+
+class ClassMapping(Enum):
+    seen = 0
+    consulted = 1
+    booked = 2
+
 
 NUMERIC_FEATURES = [
     "user_bookings_count",

@@ -19,7 +19,7 @@ dag_config = {
     "BASE_PLAYGROUND_DIR": "data-gcp/jobs/playground_vm",
     "BASE_INSTALL_DIR": "data-gcp",
     "COMMAND_INSTALL_PLAYGROUND": "pip install -r requirements.txt --user",
-    "COMMAND_INSTALL_PROJECT": "NO_GCP_INIT=1 make clean_install",
+    "COMMAND_INSTALL_PROJECT": "NO_GCP_INIT=1 make install",
 }
 
 # Params

@@ -8,6 +8,7 @@ __pycache__/
 .pytest_cache
 .coverage
 .python-version
+.ruff_cache
 .venv/
 venv/
 venv-lint/

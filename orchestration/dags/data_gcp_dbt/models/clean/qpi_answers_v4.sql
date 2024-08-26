@@ -1,8 +1,18 @@
-with base as (
+with raw_answers as (
+    SELECT
+        raw_answers.user_id
+        , submitted_at
+        , answers
+        , CAST(NULL AS STRING) AS catch_up_user_id
+    FROM {{ source("raw", "qpi_answers_v4") }} raw_answers
+),
+
+base as (
     SELECT
         *
-    FROM (select * from `{{ bigquery_raw_dataset }}.qpi_answers_v4`) as qpi, qpi.answers as answers
+    FROM (select * from raw_answers) as qpi, qpi.answers as answers
 ),
+
 unnested_base as (
     SELECT
         user_id
@@ -11,15 +21,16 @@ unnested_base as (
     FROM base
     CROSS JOIN UNNEST(base.answer_ids) AS unnested
 ),
+
 user_subcat as (
     select
         b.user_id
-        , submitted_at
+        , b.submitted_at
         , map.subcategories
     from unnested_base b
-    JOIN `{{ bigquery_seed_dataset }}.qpi_mapping` map
+    JOIN {{ source("seed", "qpi_mapping") }} map
     ON b.answer_ids = map.answer_id
-    WHERE b.answer_ids like 'PROJECTION_%'
+    WHERE b.answer_ids NOT like 'PROJECTION_%'
     order by user_id
 ),
 clean as (

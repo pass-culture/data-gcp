@@ -56,9 +56,6 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
 
 #### 0. Prérequis
 
-- [pyenv](https://github.com/pyenv/pyenv-installer)
-  - ⚠ Don't forget to [install the prerequisites](https://github.com/pyenv/pyenv/wiki/Common-build-problems#prerequisites)
-- [pyenv virtualenv](https://github.com/pyenv/pyenv-virtualenv#installation)
 - Accès aux comptes de services GCP
 - [Gcloud CLI](https://cloud.google.com/sdk/docs/install?hl=fr)
 
@@ -83,20 +80,51 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
   make install_on_debian_vm
   ```
 
-- Installation du projet
-  - La première fois : installation from scratch, avec création des environnements virtuels
+- Installation du projet :
+
+  - Pour les Data Analysts :
 
     ```bash
-    make clean_install
+    make install_analytics
     ```
 
-  - Installation rapide des nouveaux packages
+      > Cette installation est simplifiée pour les Data Analysts. Ne nécessite pas d'installer pyenv. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
 
-    ```bash
-    make install
-    ```
+  - Pour la team DE/DS
 
-  > Cette commande créé différents sous-environnements virtuels pour les différents types de jobs spécifiés dans le fichier `Makefile`. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
+    - [Prérequis] Installer [pyenv](https://github.com/pyenv/pyenv)
+
+      - Lancer la commande suivante pour installer pour gérer les versions de python avec pyenv :
+
+          ```bash
+          curl -sSL https://pyenv.run | bash
+          ```
+
+      - Si vous avez des problèmes avec penv sur MacOS, voir ce [commentaire](https://github.com/pyenv/pyenv/issues/1740#issuecomment-738749988)
+
+      - Ajouter ces lignes à votre `~/.bashrc` ou votre `~/.zshrc` afin de pouvoir activer `pyenv virtualenv`:
+
+          ```bash
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"
+          eval "$(pyenv init --path)"
+          ```
+
+      - Redémarrer votre terminal
+
+    - Pour les Data Scientists :
+
+      ```bash
+      make install_science
+      ```
+
+    - Pour les Data Engineers :
+
+      ```bash
+      make install_engineering
+      ```
+
+    > Ces commande créé différents sous-environnements virtuels pour les différents types de jobs spécifiés dans le fichier `Makefile`. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
 
 #### 2. Config .env.local
 

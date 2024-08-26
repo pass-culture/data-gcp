@@ -87,25 +87,29 @@ def main(
         input_table_name,
         max_rows_to_process,
     )
-    logging.info(f"Will process {df.shape} rows.")
-    df = preprocess(df, params["features"])
 
-    for start in range(0, df.shape[0], batch_size):
-        df_subset = df.iloc[start : start + batch_size]
-        extract_embedding(df_subset, params).assign(
-            extraction_date=datetime.now().strftime("%Y-%m-%d"),
-            extraction_datetime=datetime.now(),
-        ).to_gbq(
-            f"{output_dataset_name}.{output_table_name}",
-            project_id=gcp_project,
-            if_exists="append",
-        )
-        logging.info(
-            f"{iteration} iteration (batch {start}/{start + batch_size}), processed rows: {processed_rows}"
-        )
+    if df.shape[0] > 0:
+        logging.info(f"Will process {df.shape} rows.")
+        df = preprocess(df, params["features"])
 
-        processed_rows += df_subset.shape[0]
-        iteration += 1
+        for start in range(0, df.shape[0], batch_size):
+            df_subset = df.iloc[start : start + batch_size]
+            extract_embedding(df_subset, params).assign(
+                extraction_date=datetime.now().strftime("%Y-%m-%d"),
+                extraction_datetime=datetime.now(),
+            ).to_gbq(
+                f"{output_dataset_name}.{output_table_name}",
+                project_id=gcp_project,
+                if_exists="append",
+            )
+            logging.info(
+                f"{iteration} iteration (batch {start}/{start + batch_size}), processed rows: {processed_rows}"
+            )
+
+            processed_rows += df_subset.shape[0]
+            iteration += 1
+    else:
+        logging.info("Nothing to update !")
 
 
 if __name__ == "__main__":

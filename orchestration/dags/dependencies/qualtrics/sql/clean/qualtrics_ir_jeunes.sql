@@ -26,9 +26,9 @@ ir_export AS (
         user_data.user_id,
         user_data.current_deposit_type as deposit_type,
         user_data.user_civility,
-        no_cancelled_booking,
+        total_non_cancelled_individual_bookings,
         user_data.user_region_name,
-        actual_amount_spent,
+        total_actual_amount_spent,
         user_data.user_activity,
         user_visits.total_visit_last_month,
         -- TODO rename field in qualtrics

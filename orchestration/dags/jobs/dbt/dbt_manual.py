@@ -24,13 +24,17 @@ dag = DAG(
     description="A dbt wrapper for airflow",
     schedule_interval=None,
     params={
-        "target": Param(
-            default=ENV_SHORT_NAME,
-            type="string",
-        ),
-        "dbt-command": Param(
+        "dbt_command": Param(
             default="compile",
             type="string",
+        ),
+        "target": Param(
+            default=ENV_SHORT_NAME,
+            type=["null", "string"],
+        ),
+        "source_env": Param(
+            default=ENV_SHORT_NAME,
+            type=["null", "string"],
         ),
     },
 )
@@ -39,7 +43,7 @@ start = DummyOperator(task_id="start", dag=dag)
 
 dbt_manual_command = BashOperator(
     task_id="dbt_manual_command",
-    bash_command="dbt {{ params.dbt-command }} -t {{ params.target }} --vars {'ENV_SHORT_NAME':'{{ params.target }}' }",
+    bash_command="""dbt {{ params.dbt_command }}{% if params.target %} -t {{ params.target }}{% endif %}{% if params.source_env %} --vars "{'ENV_SHORT_NAME':'{{ params.source_env }}'}"{% endif %}""",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
 )

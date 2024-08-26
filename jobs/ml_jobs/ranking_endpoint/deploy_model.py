@@ -1,4 +1,5 @@
 import os
+import shutil
 from datetime import datetime
 
 import mlflow
@@ -6,8 +7,13 @@ import pandas as pd
 import typer
 from sklearn.model_selection import train_test_split
 
+from app.constants import ClassMapping
 from app.model import TrainPipeline
-from figure import plot_cm, plot_features_importance, plot_hist
+from figure import (
+    plot_cm,
+    plot_cm_multiclass,
+    plot_features_importance,
+)
 from utils import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -19,18 +25,21 @@ from utils import (
 )
 
 PARAMS = {"seen": 500_000, "consult": 500_000, "booking": 500_000}
-
-MODEL_PARAMS = {
-    "objective": "regression",
-    "metric": {"l2", "l1"},
-    "is_unbalance": True,
-    "num_leaves": 31,
+TEST_SIZE = 0.1
+CLASSIFIER_MODEL_PARAMS = {
+    "objective": "multiclass",
+    "num_class": 3,
+    "metric": "multi_logloss",
     "learning_rate": 0.05,
     "feature_fraction": 0.9,
-    "bagging_fraction": 0.8,
+    "bagging_fraction": 0.9,
     "bagging_freq": 5,
+    "lambda_l2": 0.1,
+    "lambda_l1": 0.1,
     "verbose": -1,
 }
+PROBA_CONSULT_THRESHOLD = 0.5
+PROBA_BOOKING_THRESHOLD = 0.5
 
 
 def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
@@ -82,88 +91,118 @@ def plot_figures(
     pipeline: TrainPipeline,
     figure_folder: str,
 ):
-    os.makedirs(figure_folder, exist_ok=True)
+    shutil.rmtree(figure_folder, ignore_errors=True)
+    os.makedirs(figure_folder)
 
     for prefix, df in [("test_", test_data), ("train_", train_data)]:
-        plot_hist(df, figure_folder, prefix=prefix)
+        plot_cm(
+            y=df[ClassMapping.consulted.name],
+            y_pred=df[f"prob_class_{ClassMapping.consulted.name}"],
+            filename=f"{figure_folder}/{prefix}cm_{ClassMapping.consulted.name}_proba_{PROBA_CONSULT_THRESHOLD:.3f}.pdf",
+            perc=True,
+            proba=PROBA_CONSULT_THRESHOLD,
+        )
+        plot_cm(
+            y=df[ClassMapping.booked.name],
+            y_pred=df[f"prob_class_{ClassMapping.booked.name}"],
+            filename=f"{figure_folder}/{prefix}cm_{ClassMapping.booked.name}_proba_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
+            perc=True,
+            proba=PROBA_BOOKING_THRESHOLD,
+        )
+        plot_cm_multiclass(
+            y_true=df["target_class"],
+            y_pred_consulted=df[f"prob_class_{ClassMapping.consulted.name}"],
+            y_pred_booked=df[f"prob_class_{ClassMapping.booked.name}"],
+            perc_consulted=PROBA_CONSULT_THRESHOLD,
+            perc_booked=PROBA_BOOKING_THRESHOLD,
+            filename=f"{figure_folder}/{prefix}cm_multiclass_{ClassMapping.consulted.name}_{PROBA_CONSULT_THRESHOLD:.3f}_{ClassMapping.booked.name}_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
+            class_names=[class_mapping.name for class_mapping in ClassMapping],
+        )
 
-        plot_cm(
-            y=df["target"],
-            y_pred=df["score"],
-            filename=f"{figure_folder}/{prefix}confusion_matrix_perc_proba_0.5.pdf",
-            perc=True,
-            proba=0.5,
-        )
-        plot_cm(
-            y=df["target"],
-            y_pred=df["score"],
-            filename=f"{figure_folder}/{prefix}confusion_matrix_total_proba_0.5.pdf",
-            perc=False,
-            proba=0.5,
-        )
-        plot_cm(
-            y=df["target"],
-            y_pred=df["score"],
-            filename=f"{figure_folder}/{prefix}confusion_matrix_perc_proba_1.5.pdf",
-            perc=True,
-            proba=1.5,
-        )
-        plot_cm(
-            y=df["target"],
-            y_pred=df["score"],
-            filename=f"{figure_folder}/{prefix}confusion_matrix_total_proba_1.5.pdf",
-            perc=False,
-            proba=1.5,
-        )
     plot_features_importance(
         pipeline, filename=f"{figure_folder}/plot_features_importance.pdf"
     )
 
 
-def train_pipeline(dataset_name, table_name, experiment_name, run_name):
-    data = (
-        load_data(dataset_name, table_name)
-        .astype(
+def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
+    return (
+        data.astype(
             {
                 "consult": "float",
                 "booking": "float",
-                "delta_diversification": "float",
             }
         )
-        .fillna({"consult": 0, "booking": 0, "delta_diversification": 0})
-        .assign(
-            target=lambda df: (df["consult"] + df["booking"])
-            * (1 + df["delta_diversification"])
+        .fillna({"consult": 0, "booking": 0})
+        .rename(
+            columns={
+                "consult": ClassMapping.consulted.name,
+                "booking": ClassMapping.booked.name,
+            }
         )
+        .assign(
+            status=lambda df: pd.Series([ClassMapping.seen.name] * len(df))
+            .where(
+                df[ClassMapping.consulted.name] != 1.0,
+                other=ClassMapping.consulted.name,
+            )
+            .where(df[ClassMapping.booked.name] != 1.0, other=ClassMapping.booked.name),
+            target_class=lambda df: df["status"]
+            .map(
+                {
+                    class_mapping.name: class_mapping.value
+                    for class_mapping in ClassMapping
+                }
+            )
+            .astype(int),
+        )
+    ).drop_duplicates()
+
+
+def train_pipeline(dataset_name, table_name, experiment_name, run_name):
+    # Load and preprocess the data
+    data = load_data(dataset_name, table_name)
+    preprocessed_data = data.pipe(
+        preprocess_data,
     )
-    train_data, test_data = train_test_split(data, test_size=0.2)
+    train_data, test_data = train_test_split(preprocessed_data, test_size=TEST_SIZE)
+    class_frequency = train_data.target_class.value_counts(normalize=True).to_dict()
+    class_weight = {k: 1 / v for k, v in class_frequency.items()}
 
     # Connect to MLFlow
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
-    figure_folder = f"/tmp/{experiment_name}/"
     experiment = get_mlflow_experiment(experiment_name)
+    figure_folder = f"/tmp/{experiment_name}/"
 
+    # Start training
     mlflow.lightgbm.autolog()
-    pipeline = TrainPipeline(target="target", params=MODEL_PARAMS)
+    pipeline_classifier = TrainPipeline(
+        target="target_class", params=CLASSIFIER_MODEL_PARAMS
+    )
 
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
-        pipeline.set_pipeline()
-        pipeline.train(train_data)
+        pipeline_classifier.set_pipeline()
+        pipeline_classifier.train(train_data, class_weight=class_weight)
 
-        test_data = pipeline.predict(test_data)
-        train_data = pipeline.predict(train_data)
+        train_predictions = train_data.pipe(pipeline_classifier.predict_classifier)
+        test_predictions = test_data.pipe(pipeline_classifier.predict_classifier)
 
         # Save Data
-        plot_figures(test_data, train_data, pipeline, figure_folder)
-        train_data.to_csv(f"{figure_folder}/train_predictions.csv", index=False)
-        test_data.to_csv(f"{figure_folder}/test_predictions.csv", index=False)
+        plot_figures(
+            train_predictions,
+            test_predictions,
+            pipeline_classifier,
+            figure_folder,
+        )
+        train_predictions.to_csv(f"{figure_folder}/train_predictions.csv", index=False)
+        test_predictions.to_csv(f"{figure_folder}/test_predictions.csv", index=False)
         mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
 
     # retrain on whole
-    pipeline.train(data)
+    pipeline_classifier.train(preprocessed_data, class_weight=class_weight)
+
     # save
-    pipeline.save()
+    pipeline_classifier.save(model_name="classifier")
 
 
 def main(

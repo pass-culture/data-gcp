@@ -16,7 +16,7 @@ data_gcp_dbt:
       type: bigquery
     dev:
       dataset: tmp_dev
-      job_execution_timeout_seconds: 300
+      job_execution_timeout_seconds: 1800
       job_retries: 1
       location: europe-west1
       method: oauth
@@ -26,7 +26,7 @@ data_gcp_dbt:
       type: bigquery
     stg:
       dataset: tmp_stg
-      job_execution_timeout_seconds: 300
+      job_execution_timeout_seconds: 1200
       job_retries: 1
       location: europe-west1
       method: oauth

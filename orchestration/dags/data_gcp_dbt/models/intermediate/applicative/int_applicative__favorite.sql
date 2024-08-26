@@ -1,4 +1,5 @@
 SELECT  
+  id AS favorite_id,
   DATE(datecreated) AS favorite_creation_date,
   datecreated AS favorite_created_at,
   userId AS user_id,

@@ -7,11 +7,10 @@ from typing import List, Tuple
 import pandas as pd
 import recordlinkage
 import typer
+from loguru import logger
 
-from constants import (
-    FEATURES,
-    MATCHES_REQUIRED,
-)
+from constants import FEATURES, MATCHES_REQUIRED
+from utils.common import read_parquet_files_from_gcs_directory
 from utils.gcs_utils import upload_parquet
 
 app = typer.Typer()
@@ -181,7 +180,7 @@ def prepare_tables(
 
     Args:
         indexer (recordlinkage.Index): Indexer for candidate generation.
-        df (pd.DataFrame): Dataframe containing linkage candidates.
+        linkage_candidates (pd.DataFrame): Dataframe containing linkage candidates.
         catalog (pd.DataFrame): Catalog dataframe with item details.
 
     Returns:
@@ -300,8 +299,11 @@ def main(
         linkage_candidates_path (str): Path to the linkage candidates data.
         output_path (str): Output GCS path.
     """
+    logger.info("Starting item linkage job")
+    logger.info("Setup indexer..")
     indexer_per_candidates = recordlinkage.index.Block(on="candidates_id")
-    item_synchro = pd.read_parquet(
+    logger.info("Reading data..")
+    item_synchro = read_parquet_files_from_gcs_directory(
         input_sources_path,
         columns=[
             "item_id",
@@ -312,7 +314,7 @@ def main(
         ],
     ).pipe(clean_catalog)
 
-    item_singletons = pd.read_parquet(
+    item_singletons = read_parquet_files_from_gcs_directory(
         input_candidates_path,
         columns=[
             "item_id",
@@ -325,22 +327,24 @@ def main(
 
     catalog_clean = pd.concat([item_synchro, item_singletons]).drop_duplicates()
     linkage_candidates = pd.read_parquet(linkage_candidates_path)
+    logger.info("Preparing tables..")
     (
         candidate_links,
         item_singletons_clean,
         item_synchro_retrived_clean,
     ) = prepare_tables(indexer_per_candidates, linkage_candidates, catalog_clean)
 
+    logger.info("Setting up matching..")
     comparator = setup_matching()
-
+    logger.info("Multiprocess matching..")
     matches = multiprocess_matching(
         candidate_links, comparator, item_singletons_clean, item_synchro_retrived_clean
     )
-
+    logger.info("Postprocessing matching..")
     linkage_final = postprocess_matching(
         matches, item_singletons_clean, item_synchro_retrived_clean
     )
-
+    logger.info("Uploading results..")
     upload_parquet(
         dataframe=linkage_final,
         gcs_path=output_path,

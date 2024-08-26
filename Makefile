@@ -65,7 +65,7 @@ _install_ubuntu_libs:
 	sudo apt-get update -y
 	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev
 
-_prerequisites_on_debian_vm:
+prerequisites_on_debian_vm:
 	curl https://pyenv.run | bash || echo "Pyenv already installed"
 	curl -LsSf https://astral.sh/uv/install.sh | sh
 	sudo rm /etc/apt/sources.list.d/kubernetes.list || echo "Kubernetes list already removed"

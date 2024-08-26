@@ -18,7 +18,6 @@ SELECT DISTINCT
     venue_id,
     traffic_medium,
     traffic_campaign,
-    origin,
     unique_search_id,
     query,
     module_id,

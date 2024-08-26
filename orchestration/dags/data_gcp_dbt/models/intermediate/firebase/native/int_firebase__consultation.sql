@@ -18,6 +18,14 @@ SELECT DISTINCT
     venue_id,
     traffic_medium,
     traffic_campaign,
+    origin,
+    unique_search_id,
+    query,
+    module_id,
+    entry_id,
+    home_type,
+    similar_offer_id,
+    similar_offer_playlist_type
 FROM {{ ref('int_firebase__native_event') }}
 WHERE event_name = 'ConsultOffer'
     AND user_id IS NOT NULL

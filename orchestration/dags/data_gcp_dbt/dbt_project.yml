@@ -96,7 +96,7 @@ snapshots:
   +docs:
     show: false
   data_gcp_dbt:
-    snapshot_applicative:
+    applicative:
       tags: applicative_history
 tests:
   +store_failures: true  # store failures for all tests

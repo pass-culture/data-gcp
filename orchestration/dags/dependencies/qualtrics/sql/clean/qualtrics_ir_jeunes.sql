@@ -38,7 +38,6 @@ ir_export AS (
         user_data.user_seniority
 
         FROM `{{ bigquery_analytics_dataset }}.global_user` user_data
-        -- INNER JOIN `{{ bigquery_clean_dataset }}.applicative_database_user` applicative_database_user ON user_data.user_id = applicative_database_user.user_id
         LEFT JOIN `{{ bigquery_int_geo_dataset }}.user_location` user_location ON user_location.user_id = user_data.user_id
         LEFT JOIN `{{ bigquery_raw_dataset }}.qualtrics_opt_out_users` opt_out on opt_out.ext_ref = user_data.user_id
         LEFT JOIN user_visits ON user_data.user_id = user_visits.user_id

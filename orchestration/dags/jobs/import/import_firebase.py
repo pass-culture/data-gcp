@@ -92,9 +92,9 @@ for dag_type, params in dags.items():
             )
 
         if dag_type == "intraday":
-            table_id = f"events{prefix}" + "{{ yyyymmdd(add_days(ds, -1)) }}"
-        else:
             table_id = f"events{prefix}" + "{{ yyyymmdd(ds) }}"
+        else:
+            table_id = f"events{prefix}" + "{{ yyyymmdd(add_days(ds, -1)) }}"
 
         check_table_task = BranchPythonOperator(
             dag=dag,

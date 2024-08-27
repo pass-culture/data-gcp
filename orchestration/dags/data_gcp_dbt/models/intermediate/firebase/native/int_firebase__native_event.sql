@@ -87,6 +87,7 @@ select
     videoduration as video_duration_seconds,
     seenduration as video_seen_duration_seconds,
     youtubeid as video_id,
+    fromMultivenueOfferId as multi_venue_offer_id,
     case when event_name = "ConsultOffer" then 1 else 0 end as is_consult_offer,
     case when event_name = "BookingConfirmation" then 1 else 0 end as is_booking_confirmation,
     case when event_name = "HasAddedOfferToFavorites" then 1 else 0 end as is_add_to_favorites,

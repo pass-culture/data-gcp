@@ -38,6 +38,7 @@ select
     o.is_national,
     o.is_active,
     o.offer_validation,
+    o.offer_last_validation_type,
     o.author,
     o.performer,
     o.stage_director,

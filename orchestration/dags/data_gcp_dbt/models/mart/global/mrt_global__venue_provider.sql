@@ -13,7 +13,7 @@ select
     v.venue_label,
     v.booking_external_url,
     v.cancel_external_url,
-    v.notification_external_url
+    v.notification_external_url,
     COUNT(distinct o.offer_id) as total_individual_offers,
     COUNT(distinct co.collective_offer_id) as total_collective_offers,
     MIN(offer_creation_date) as first_individual_offer_creation_date,

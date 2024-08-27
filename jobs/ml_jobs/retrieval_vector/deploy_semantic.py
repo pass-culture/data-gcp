@@ -57,6 +57,7 @@ def prepare_docs(bucket_path):
         items_df,
         emb_size=MODEL_TYPE["n_dim"],
         uri="./metadata/vector",
+        create_index=True if ENV_SHORT_NAME == "prod" else False,
     )
 
 

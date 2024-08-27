@@ -56,9 +56,6 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
 
 #### 0. Prérequis
 
-- [pyenv](https://github.com/pyenv/pyenv-installer)
-  - ⚠ Don't forget to [install the prerequisites](https://github.com/pyenv/pyenv/wiki/Common-build-problems#prerequisites)
-- [pyenv virtualenv](https://github.com/pyenv/pyenv-virtualenv#installation)
 - Accès aux comptes de services GCP
 - [Gcloud CLI](https://cloud.google.com/sdk/docs/install?hl=fr)
 
@@ -83,20 +80,51 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
   make install_on_debian_vm
   ```
 
-- Installation du projet
-  - La première fois : installation from scratch, avec création des environnements virtuels
+- Installation du projet :
+
+  - Pour les Data Analysts :
 
     ```bash
-    make clean_install
+    make install_analytics
     ```
 
-  - Installation rapide des nouveaux packages
+      > Cette installation est simplifiée pour les Data Analysts. Ne nécessite pas d'installer pyenv. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
 
-    ```bash
-    make install
-    ```
+  - Pour la team DE/DS
 
-  > Cette commande créé différents sous-environnements virtuels pour les différents types de jobs spécifiés dans le fichier `Makefile`. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
+    - [Prérequis] Installer [pyenv](https://github.com/pyenv/pyenv)
+
+      - Lancer la commande suivante pour installer pour gérer les versions de python avec pyenv :
+
+          ```bash
+          curl -sSL https://pyenv.run | bash
+          ```
+
+      - Si vous avez des problèmes avec penv sur MacOS, voir ce [commentaire](https://github.com/pyenv/pyenv/issues/1740#issuecomment-738749988)
+
+      - Ajouter ces lignes à votre `~/.bashrc` ou votre `~/.zshrc` afin de pouvoir activer `pyenv virtualenv`:
+
+          ```bash
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"
+          eval "$(pyenv init --path)"
+          ```
+
+      - Redémarrer votre terminal
+
+    - Pour les Data Scientists :
+
+      ```bash
+      make install_science
+      ```
+
+    - Pour les Data Engineers :
+
+      ```bash
+      make install_engineering
+      ```
+
+    > Ces commande créé différents sous-environnements virtuels pour les différents types de jobs spécifiés dans le fichier `Makefile`. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
 
 #### 2. Config .env.local
 
@@ -118,21 +146,20 @@ Pipelines détaillées dans le [README de github Action](.github/workflows/READM
 
 ### ML Jobs
 
-Pour créer un nouveau micro service de ML :
+Pour créer un nouveau micro service de ML ou d'ETL, nous pouvons utiliser les 3 commandes suivantes :
 
-```bash
-MS_NAME=mon_micro_service make create_microservice
-```
+- `MS_NAME=mon_micro_service make create_microservice_ml` :  Créé un micro service de ML dans le dossier `jobs/ml_jobs`
+- `MS_NAME=mon_micro_service make create_microservice_etl_internal` :  Créé un micro service de ML dans le dossier `jobs/etl_jobs/internal`
+- `MS_NAME=mon_micro_service make create_microservice_etl_external` :  Créé un micro service de ML dans le dossier `jobs/etl_jobs/external`
 
 où mon_micro_service est le nom du micro service. Exemple :
 
 ```bash
-MS_NAME=algo_llm make create_microservice
+MS_NAME=algo_llm make create_microservice_ml
 ```
 
 Cela va :
 
-1. créer un dossier `algo_llm` dans `jobs/ml_jobs` avec les fichiers nécessaires pour le micro service.
-2. rajouter le micro service dans la target install du Makefile
-3. Commiter les changements
-4. Lancer l'installation du nouveau micro service
+1. créer un dossier `algo_llm` dans le dossier `jobs/ml_jobs` avec les fichiers nécessaires pour le micro service.
+2. Commiter les changements
+3. Lancer l'installation du nouveau micro service

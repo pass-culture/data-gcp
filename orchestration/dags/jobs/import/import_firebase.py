@@ -10,6 +10,8 @@ from dependencies.firebase.import_firebase import import_tables
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python_operator import BranchPythonOperator
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 
 dags = {
     "daily": {
@@ -31,16 +33,35 @@ dags = {
         "yyyymmdd": "{{ yyyymmdd(ds) }}",
         "default_dag_args": {
             "start_date": datetime.datetime(2022, 6, 9),
-            "retries": 1,
-            "retry_delay": datetime.timedelta(hours=6),
+            "retries": 3,
+            "retry_delay": datetime.timedelta(minutes=30),
             "project_id": GCP_PROJECT_ID,
         },
     },
 }
 
 
-for type, params in dags.items():
-    dag_id = f"import_{type}_firebase_data"
+def check_table_exists(**kwargs):
+    import logging
+
+    job_params = kwargs["job_params"]
+    job_name = kwargs["job_name"]
+    table = kwargs["table"]
+    bq_hook = BigQueryHook()
+    client = bq_hook.get_client(project_id=GCP_PROJECT_ID)
+    for dataset_id in job_params.get("gcp_project_env", []):
+        logging.info(f"Check if {table} exists in {dataset_id}")
+        try:
+            client.get_table(f"{dataset_id}.{table}")
+        except Exception:
+            logging.info(f"Not found {table} in {dataset_id}, error. Fallback.")
+            return f"fallback_{job_name}"
+    logging.info(f"Everything is fine, proceed with default_{job_name}")
+    return f"default_{job_name}"
+
+
+for dag_type, params in dags.items():
+    dag_id = f"import_{dag_type}_firebase_data"
     prefix = params["prefix"]
     yyyymmdd = params["yyyymmdd"]
 
@@ -57,42 +78,56 @@ for type, params in dags.items():
     )
 
     globals()[dag_id] = dag
-    # Cannot Schedule before 3UTC for intraday and 13UTC for daily
+
     start = DummyOperator(task_id="start", dag=dag)
 
     end = DummyOperator(task_id="end", dag=dag)
 
     import_tables_temp = copy.deepcopy(import_tables)
-    for table, job_params in import_tables_temp.items():
-        if type == "daily" and import_tables_temp[table].get("dag_depends") is not None:
-            del import_tables_temp[table]["dag_depends"]
+    for job_name_table, job_params in import_tables_temp.items():
         # force this to include custom yyyymmdd
         if job_params.get("partition_prefix", None) is not None:
             job_params["destination_table"] = (
                 f"{job_params['destination_table']}{job_params['partition_prefix']}{yyyymmdd}"
             )
 
+        if dag_type == "intraday":
+            table_id = f"events{prefix}" + "{{ yyyymmdd(ds) }}"
+        else:
+            table_id = f"events{prefix}" + "{{ yyyymmdd(add_days(ds, -1)) }}"
+
+        check_table_task = BranchPythonOperator(
+            dag=dag,
+            task_id=f"check_table_exists_task_{job_name_table}",
+            python_callable=check_table_exists,
+            provide_context=True,
+            op_kwargs={
+                "job_params": job_params["params"],
+                "table": table_id,
+                "job_name": job_name_table,
+            },
+        )
+
         default_task = bigquery_job_task(
             dag=dag,
-            table=table,
+            table=f"default_{job_name_table}",
             job_params=job_params,
-            extra_params={"prefix": prefix, "dag_type": type},
+            extra_params={"prefix": prefix, "dag_type": dag_type},
         )
 
         fallback_task = bigquery_job_task(
             dag=dag,
-            table=f"{table}_fallback",
+            table=f"fallback_{job_name_table}",
             # overwrite default configuration, execute only if the default task fails
-            job_params=dict(job_params, **{"trigger_rule": "one_failed"}),
+            job_params=job_params,
             extra_params=dict(
-                {"prefix": prefix, "dag_type": type},
+                {"prefix": prefix, "dag_type": dag_type},
                 **job_params.get("fallback_params", {}),
             ),
         )
 
         end_job = DummyOperator(
-            task_id=f"end_{table}", dag=dag, trigger_rule="one_success"
+            task_id=f"end_{job_name_table}", dag=dag, trigger_rule="one_success"
         )
 
-        start >> default_task >> [fallback_task, end_job]
-        fallback_task >> end_job >> end
+        start >> check_table_task >> [default_task, fallback_task] >> end_job >> end

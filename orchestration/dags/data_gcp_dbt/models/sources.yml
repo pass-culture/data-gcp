@@ -111,6 +111,7 @@ sources:
       - name: applicative_database_venue_provider_external_urls
       - name: applicative_database_venue_registration
       - name: applicative_database_venue_reimbursement_point_link
+      - name: applicative_database_venue_bank_account_link
       - name: contentful_entry
       - name: contentful_relationship
       - name: contentful_tag

@@ -6,6 +6,7 @@
     )
 ) }}
 
+-- Next 4 subqueries : identify the micro-origin of each consultation that comes from a venue page or a similar offer page (origin of venue consultation and origin of inital offer consultation)
 WITH consult_venue AS (
     SELECT
         user_id,

@@ -134,3 +134,16 @@ ruff_fix:
 ruff_check:
 	ruff check
 	ruff format --check
+
+sqlfluff_fix:
+	cd orchestration/dags/data_gcp_dbt && sqlfluff fix --dialect bigquery
+
+sqlfluff_format:
+	cd orchestration/dags/data_gcp_dbt && sqlfluff format --dialect bigquery
+
+sqlfluff_check:
+	cd orchestration/dags/data_gcp_dbt && sqlfluff lint --dialect bigquery
+  
+precommit_install:
+	@eval "$$(pyenv init -)" && pyenv activate data-gcp && pre-commit install
+

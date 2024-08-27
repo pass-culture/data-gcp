@@ -155,7 +155,7 @@ providers as (
         end as partner_id,
         case when provider_id is not NULL then TRUE else FALSE end as has_provider
     from {{ ref('mrt_global__venue') }} as mrt_global__venue
-        left join {{ ref('mrt_global__venue_provider') }} as mrt_global__venue_provider on mrt_global__venue_provider.venue_id = mrt_global__venue.venue_id and is_active
+        left join {{ ref('mrt_global__venue_provider') }} as mrt_global__venue_provider on mrt_global__venue_provider.venue_id = mrt_global__venue.venue_id and venue_provider_is_active
 ),
 
 --- On estime que si une structure a un lieu rattaché à un point de remboursement, tous les lieux de la structure le sont
@@ -164,11 +164,11 @@ reimbursment_point1 as (
         mrt_global__venue.venue_managing_offerer_id as offerer_id,
         mrt_global__venue.venue_id,
         venue_is_permanent,
-        reimbursement_point_link_beginning_date,
-        reimbursement_point_link_ending_date,
-        RANK() over (partition by mrt_global__venue.venue_managing_offerer_id, mrt_global__venue.venue_id order by reimbursement_point_link_beginning_date desc) as rang
+        bank_account_link_beginning_date,
+        bank_account_link_ending_date,
+        RANK() over (partition by mrt_global__venue.venue_managing_offerer_id, mrt_global__venue.venue_id order by bank_account_link_beginning_date desc) as rang
     from {{ ref('mrt_global__venue') }} as mrt_global__venue
-        left join {{ ref('venue_reimbursement_point_link') }} as applicative_database_venue_reimbursement_point_link  on mrt_global__venue.venue_id = applicative_database_venue_reimbursement_point_link.venue_id
+        left join {{ ref('venue_bank_account_link') }} as applicative_database_venue_bank_account_link  on mrt_global__venue.venue_id = applicative_database_venue_bank_account_link.venue_id
 ),
 
 reimbursment_point2 as (
@@ -176,10 +176,10 @@ reimbursment_point2 as (
         offerer_id,
         venue_id,
         venue_is_permanent,
-        COALESCE(COUNT(case when reimbursement_point_link_beginning_date is not NULL then 1 else 0 end)) as nb_reimbursment_point
+        COALESCE(COUNT(case when bank_account_link_beginning_date is not NULL then 1 else 0 end)) as nb_reimbursment_point
     from reimbursment_point1
     where rang = 1
-        and reimbursement_point_link_ending_date is NULL
+        and bank_account_link_ending_date is NULL
     group by 1, 2, 3
 ),
 

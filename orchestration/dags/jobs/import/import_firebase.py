@@ -31,8 +31,8 @@ dags = {
         "yyyymmdd": "{{ yyyymmdd(ds) }}",
         "default_dag_args": {
             "start_date": datetime.datetime(2022, 6, 9),
-            "retries": 1,
-            "retry_delay": datetime.timedelta(hours=6),
+            "retries": 3,
+            "retry_delay": datetime.timedelta(minutes=30),
             "project_id": GCP_PROJECT_ID,
         },
     },
@@ -57,15 +57,13 @@ for type, params in dags.items():
     )
 
     globals()[dag_id] = dag
-    # Cannot Schedule before 3UTC for intraday and 13UTC for daily
+
     start = DummyOperator(task_id="start", dag=dag)
 
     end = DummyOperator(task_id="end", dag=dag)
 
     import_tables_temp = copy.deepcopy(import_tables)
     for table, job_params in import_tables_temp.items():
-        if type == "daily" and import_tables_temp[table].get("dag_depends") is not None:
-            del import_tables_temp[table]["dag_depends"]
         # force this to include custom yyyymmdd
         if job_params.get("partition_prefix", None) is not None:
             job_params["destination_table"] = (

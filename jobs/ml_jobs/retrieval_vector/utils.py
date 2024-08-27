@@ -231,6 +231,7 @@ def create_items_table(
     emb_size: int,
     uri: str = "./metadata/vector",
     batch_size: int = LANCE_DB_BATCH_SIZE,
+    create_index: bool = True,
 ) -> None:
     num_batches = len(items_df) // batch_size + 1
     db = lancedb.connect(uri)
@@ -250,7 +251,8 @@ def create_items_table(
             table = db.create_table("items", data=data_batch)
         else:
             table.add(data_batch)
-    table.create_index(num_partitions=1024, num_sub_vectors=32)
+    if create_index:
+        table.create_index(num_partitions=1024, num_sub_vectors=32)
 
 
 def get_item_docs(item_embedding_dict, items_df):

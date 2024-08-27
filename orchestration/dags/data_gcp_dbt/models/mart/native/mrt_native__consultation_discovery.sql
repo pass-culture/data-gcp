@@ -65,4 +65,4 @@ GROUP BY consult.user_id,
     user.user_is_priority_public,
     user.user_is_unemployed,
     user.user_is_in_qpv,
-    user.user_macro_density_label,
+    user.user_macro_density_label

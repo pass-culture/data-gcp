@@ -20,6 +20,7 @@ dag_config = {
     "BASE_INSTALL_DIR": "data-gcp",
     "COMMAND_INSTALL_PLAYGROUND": "pip install -r requirements.txt --user",
     "COMMAND_INSTALL_PROJECT": "NO_GCP_INIT=1 make install",
+    "COMMAND_INSTALL_PROJECT_UV": "NO_GCP_INIT=1 make install_simplified",
 }
 
 # Params
@@ -62,6 +63,7 @@ with DAG(
         "gpu_type": Param(default="nvidia-tesla-t4", type="string"),
         "keep_alive": Param(default=True, type="boolean"),
         "install_project": Param(default=True, type="boolean"),
+        "install_with_uv": Param(default=False, type="boolean"),
         "disk_size_gb": Param(default="100", type="string"),
         "gce_network_type": Param(default="GCE", type="string"),
     },
@@ -69,10 +71,14 @@ with DAG(
 
     def select_clone_task(**kwargs):
         input_parameter = kwargs["params"].get("install_project", False)
-        if input_parameter is True:
-            return "clone_and_setup_with_pyenv"
+        install_with_uv = kwargs["params"].get("install_with_uv", False)
+        if install_with_uv is True:
+            return "clone_and_setup_with_uv"
         else:
-            return "clone_and_setup_with_conda"
+            if input_parameter is True:
+                return "clone_and_setup_with_pyenv"
+            else:
+                return "clone_and_setup_with_conda"
 
     start = DummyOperator(task_id="start", dag=dag)
 
@@ -114,12 +120,31 @@ with DAG(
         retries=2,
     )
 
+    clone_and_setup_with_uv = CloneRepositoryGCEOperator(
+        task_id="clone_and_setup_with_uv",
+        instance_name="{{ params.instance_name }}",
+        python_version="3.10",
+        use_uv=True,
+        command="{{ params.branch }}",
+        retries=2,
+    )
+
     install_project_with_pyenv = SSHGCEOperator(
         task_id="install_project_with_pyenv",
         instance_name="{{ params.instance_name }}",
         use_pyenv=True,
         base_dir=dag_config["BASE_INSTALL_DIR"],
         command=dag_config["COMMAND_INSTALL_PROJECT"],
+        dag=dag,
+        retries=2,
+    )
+
+    install_project_with_uv = SSHGCEOperator(
+        task_id="install_project_with_uv",
+        instance_name="{{ params.instance_name }}",
+        use_pyenv=True,
+        base_dir=dag_config["BASE_INSTALL_DIR"],
+        command=dag_config["COMMAND_INSTALL_PROJECT_UV"],
         dag=dag,
         retries=2,
     )
@@ -136,9 +161,14 @@ with DAG(
 
     clone_and_setup_with_pyenv >> install_project_with_pyenv
     clone_and_setup_with_conda >> install_playground_with_conda
+    clone_and_setup_with_uv >> install_project_with_uv
     (
         start
         >> gce_instance_start
         >> branching_clone_task
-        >> [clone_and_setup_with_pyenv, clone_and_setup_with_conda]
+        >> [
+            clone_and_setup_with_pyenv,
+            clone_and_setup_with_conda,
+            clone_and_setup_with_uv,
+        ]
     )

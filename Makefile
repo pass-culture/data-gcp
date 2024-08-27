@@ -35,16 +35,15 @@ install_simplified:
 	fi
 	make _initiate_env
 	curl -LsSf https://astral.sh/uv/install.sh | sh
-	uv python install 3.10
 	uv venv --python 3.10
-	uv pip install -r requirements.txt
-	pre-commit install
+	source .venv/bin/activate && uv pip install -r requirements.txt && pre-commit install
 
 install_analytics:
 	make install_simplified
-	uv pip install -r orchestration/dags/dbt-requirements.txt
-	make _init_dbt
+	source .venv/bin/activate && uv pip install -r orchestration/dags/dbt-requirements.txt
+	source .venv/bin/activate && make _init_dbt
 	echo "Please setup the current venv in your IDE to make it run permanently : https://www.notion.so/passcultureapp/Comment-installer-DBT-e25f7e24813c4d48baa43d641651caf8"
+
 
 
 

@@ -7,8 +7,7 @@ import pandas as pd
 import typer
 from sklearn.model_selection import train_test_split
 
-from app.constants import ClassMapping
-from app.model import TrainPipeline
+from app.model import ClassMapping, TrainPipeline
 from figure import (
     plot_cm,
     plot_cm_multiclass,

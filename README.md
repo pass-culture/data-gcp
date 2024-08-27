@@ -146,21 +146,20 @@ Pipelines détaillées dans le [README de github Action](.github/workflows/READM
 
 ### ML Jobs
 
-Pour créer un nouveau micro service de ML :
+Pour créer un nouveau micro service de ML ou d'ETL, nous pouvons utiliser les 3 commandes suivantes :
 
-```bash
-MS_NAME=mon_micro_service make create_microservice
-```
+- `MS_NAME=mon_micro_service make create_microservice_ml` :  Créé un micro service de ML dans le dossier `jobs/ml_jobs`
+- `MS_NAME=mon_micro_service make create_microservice_etl_internal` :  Créé un micro service de ML dans le dossier `jobs/etl_jobs/internal`
+- `MS_NAME=mon_micro_service make create_microservice_etl_external` :  Créé un micro service de ML dans le dossier `jobs/etl_jobs/external`
 
 où mon_micro_service est le nom du micro service. Exemple :
 
 ```bash
-MS_NAME=algo_llm make create_microservice
+MS_NAME=algo_llm make create_microservice_ml
 ```
 
 Cela va :
 
-1. créer un dossier `algo_llm` dans `jobs/ml_jobs` avec les fichiers nécessaires pour le micro service.
-2. rajouter le micro service dans la target install du Makefile
-3. Commiter les changements
-4. Lancer l'installation du nouveau micro service
+1. créer un dossier `algo_llm` dans le dossier `jobs/ml_jobs` avec les fichiers nécessaires pour le micro service.
+2. Commiter les changements
+3. Lancer l'installation du nouveau micro service

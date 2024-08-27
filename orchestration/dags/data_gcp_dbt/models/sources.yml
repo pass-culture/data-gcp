@@ -108,6 +108,7 @@ sources:
       - name: applicative_database_venue_label
       - name: applicative_database_venue_pricing_point_link
       - name: applicative_database_venue_provider
+      - name: applicative_database_venue_provider_external_urls
       - name: applicative_database_venue_registration
       - name: applicative_database_venue_reimbursement_point_link
       - name: contentful_entry

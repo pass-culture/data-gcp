@@ -22,11 +22,16 @@ select
     ey.educational_year_expiration_date,
     CURRENT_DATE between ey.educational_year_beginning_date
     and ey.educational_year_expiration_date as is_current_educational_year,
-    RANK() over (
-        partition by educational_institution_id
-        order by
-            collective_booking_creation_date
-    ) as collective_booking_rank
+    RANK() OVER(
+        PARTITION BY cb.educational_institution_id
+        ORDER BY
+            cb.collective_booking_creation_date DESC
+    ) AS collective_booking_rank_desc,
+    RANK() OVER(
+        PARTITION BY cb.educational_institution_id
+        ORDER BY
+            cb.collective_booking_creation_date ASC
+    ) AS collective_booking_rank_asc,
 from {{ source('raw', 'applicative_database_collective_booking') }} as cb
     left join {{ source('raw', 'applicative_database_educational_year') }} as ey
         on cb.educational_year_id = ey.educational_year_id

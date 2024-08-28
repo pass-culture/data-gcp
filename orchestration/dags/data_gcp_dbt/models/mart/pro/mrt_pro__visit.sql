@@ -42,7 +42,7 @@ select
 from {{ ref('int_firebase__pro_visit') }} as fpv
     left join {{ ref('mrt_global__user_offerer') }} as uo on fpv.user_id = uo.user_id
     left join {{ ref('mrt_global__user_offerer') }} as o on uo.offerer_id = o.offerer_id
-    left join {{ ref('enriched_cultural_partner_data') }} as p on uo.offerer_id = p.offerer_id
+    left join {{ ref('mrt_global__cultural_partner') }} as p on uo.offerer_id = p.offerer_id
 where TRUE
     {% if is_incremental() %}
         and first_event_date between DATE_SUB(DATE("{{ ds() }}"), interval 3 day) and DATE("{{ ds() }}")

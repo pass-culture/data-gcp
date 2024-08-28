@@ -12,7 +12,7 @@ cultural_sector_crea_frequency as (
         cultural_sector,
         PERCENTILE_DISC(nb_mois_crea_this_year, 0.5) over (partition by cultural_sector) as median_crea_offer_frequency
     from partner_crea_frequency
-        inner join {{ ref('enriched_cultural_partner_data') }} using (partner_id)
+        inner join {{ ref('mrt_global__cultural_partner') }} using (partner_id)
 ),
 
 partner_bookability_frequency as (
@@ -29,7 +29,7 @@ cultural_sector_bookability_frequency as (
         cultural_sector,
         PERCENTILE_DISC(nb_mois_bookable_this_year, 0.5) over (partition by cultural_sector) as median_bookability_frequency
     from partner_bookability_frequency
-        inner join {{ ref('enriched_cultural_partner_data') }} using (partner_id)
+        inner join {{ ref('mrt_global__cultural_partner') }} using (partner_id)
 )
 
 select

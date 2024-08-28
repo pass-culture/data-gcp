@@ -13,8 +13,8 @@ with partner_activation as (
         partner.cultural_sector,
         offerer.legal_unit_business_activity_label,
         offerer.legal_unit_legal_category_label,
-        case when partner.individual_offers_created > 0 then TRUE else FALSE end as has_activated_individual_part,
-        case when partner.collective_offers_created > 0 then TRUE else FALSE end as has_activated_collective_part,
+        case when partner.total_created_individual_offers > 0 then TRUE else FALSE end as has_activated_individual_part,
+        case when partner.total_created_collective_offers > 0 then TRUE else FALSE end as has_activated_collective_part,
         case when partner_status = "venue" then venue.first_individual_offer_creation_date
             else offerer.first_individual_offer_creation_date
         end as individual_activation_date,
@@ -22,9 +22,9 @@ with partner_activation as (
             else offerer.first_collective_offer_creation_date
         end as collective_activation_date,
         partner.first_offer_creation_date as first_activation_date,
-        partner.non_cancelled_individual_bookings as individual_bookings_after_first_activation,
-        partner.confirmed_collective_bookings as collective_bookings_after_first_activation
-    from {{ ref('enriched_cultural_partner_data') }} partner
+        partner.total_non_cancelled_individual_bookings as individual_bookings_after_first_activation,
+        partner.total_non_cancelled_collective_bookings as collective_bookings_after_first_activation
+    from {{ ref('mrt_global__cultural_partner') }} partner
         left join {{ ref('mrt_global__venue') }} venue on partner.venue_id = venue.venue_id
         left join {{ ref('mrt_global__offerer') }} offerer on offerer.offerer_id = partner.offerer_id
 ),

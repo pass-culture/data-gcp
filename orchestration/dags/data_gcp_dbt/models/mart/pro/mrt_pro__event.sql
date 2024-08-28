@@ -85,13 +85,13 @@ select
     p.partner_name,
     p.partner_type,
     p.cultural_sector as partner_cultural_sector,
-    p.individual_offers_created as partner_nb_individual_offers,
-    p.collective_offers_created as partner_nb_collective_offers
+    p.total_created_individual_offers as total_partner_individual_offers,
+    p.total_created_collective_offers as total_partner_collective_offers
 from {{ ref('int_firebase__pro_event') }} as e
     left join offerer_per_session as ps on ps.unique_session_id = e.unique_session_id
     left join {{ ref('mrt_global__venue') }} as v on e.venue_id = v.venue_id
     left join {{ ref('mrt_global__offerer') }} as o on COALESCE(e.offerer_id, v.venue_managing_offerer_id, ps.offerer_id) = o.offerer_id
-    left join {{ ref('enriched_cultural_partner_data') }} as p on v.partner_id = p.partner_id
+    left join {{ ref('mrt_global__cultural_partner') }} as p on v.partner_id = p.partner_id
 where TRUE
     {% if is_incremental() %}
         and event_date between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")

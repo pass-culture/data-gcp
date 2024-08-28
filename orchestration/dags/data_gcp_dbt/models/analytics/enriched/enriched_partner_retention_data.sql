@@ -54,7 +54,7 @@ collective_offers_created as (
         COALESCE(COUNT(case when DATE_DIFF(CURRENT_DATE, collective_offer_creation_date, month) <= 6 then collective_offer_id end), 0) as collective_offers_created_last_6_month,
         COALESCE(COUNT(case when DATE_DIFF(last_bookable_offer_date, collective_offer_creation_date, month) <= 2 then collective_offer_id end), 0) as collective_offers_created_2_month_before_last_bookable,
         COALESCE(COUNT(case when DATE_DIFF(last_bookable_offer_date, collective_offer_creation_date, month) <= 6 then collective_offer_id end), 0) as collective_offers_created_6_month_before_last_bookable
-    from {{ ref('mrt_global__cultural_partner') }}
+    from {{ ref('mrt_global__cultural_partner') }} as mrt_global__cultural_partner
         join {{ ref('partner_type_bookability_frequency') }} using (partner_type)
         left join {{ ref('mrt_global__collective_offer') }} AS mrt_global__collective_offer on mrt_global__cultural_partner.partner_id = mrt_global__collective_offer.partner_id
     group by 1, 2, 3
@@ -71,7 +71,7 @@ collective_bookings as (
         COALESCE(COUNT(case when DATE_DIFF(last_bookable_offer_date, collective_booking_creation_date, month) <= 2 then collective_booking_id end), 0) as collective_bookings_2_month_before_last_bookable,
         COALESCE(COUNT(case when DATE_DIFF(CURRENT_DATE, collective_booking_creation_date, month) <= 6 then collective_booking_id end), 0) as collective_bookings_6_month_before_last_bookable,
         COALESCE(SUM(case when collective_booking_status in ('USED', 'REIMBURSED') then booking_amount else NULL end), 0) as real_collective_revenue
-    from {{ ref('mrt_global__cultural_partner') }}
+    from {{ ref('mrt_global__cultural_partner') }} as mrt_global__cultural_partner
         join {{ ref('partner_type_bookability_frequency') }} using (partner_type)
         left join {{ ref('mrt_global__collective_booking') }} collective_booking on mrt_global__cultural_partner.partner_id = collective_booking.partner_id
             and not collective_booking_status = 'CANCELLED'
@@ -96,7 +96,7 @@ favorites as (
         mrt_global__cultural_partner.cultural_sector,
         COALESCE(COUNT(*), 0) as favorites_cnt
     from favorites1
-        join {{ ref('mrt_global__cultural_partner') }} using (partner_id)
+        join {{ ref('mrt_global__cultural_partner') }} as mrt_global__cultural_partner using (partner_id)
         join {{ ref('partner_type_bookability_frequency') }} on mrt_global__cultural_partner.partner_type = partner_type_bookability_frequency.partner_type
     group by 1, 2, 3
 ),
@@ -113,7 +113,7 @@ consultations as (
         COALESCE(SUM(case when DATE_DIFF(venue.last_bookable_offer_date, event_date, month) <= 6 then cnt_events end)) as consult_6_month_before_last_bookable
     from {{ ref('aggregated_daily_offer_consultation_data') }} consult
         left join {{ ref('mrt_global__venue') }} venue on consult.venue_id = venue.venue_id
-        left join {{ ref('mrt_global__cultural_partner') }} on (case when venue.venue_is_permanent then CONCAT("venue-", venue.venue_id) else CONCAT("offerer-", venue.venue_managing_offerer_id) end) = mrt_global__cultural_partner.partner_id
+        left join {{ ref('mrt_global__cultural_partner') }} as mrt_global__cultural_partner on (case when venue.venue_is_permanent then CONCAT("venue-", venue.venue_id) else CONCAT("offerer-", venue.venue_managing_offerer_id) end) = mrt_global__cultural_partner.partner_id
     group by 1
 ),
 

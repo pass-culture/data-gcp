@@ -85,8 +85,8 @@ select
     p.partner_name,
     p.partner_type,
     p.cultural_sector as partner_cultural_sector,
-    p.total_created_individual_offers as total_partner_individual_offers,
-    p.total_created_collective_offers as total_partner_collective_offers
+    p.total_created_individual_offers as total_partner_created_individual_offers,
+    p.total_created_collective_offers as total_partner_created_collective_offers
 from {{ ref('int_firebase__pro_event') }} as e
     left join offerer_per_session as ps on ps.unique_session_id = e.unique_session_id
     left join {{ ref('mrt_global__venue') }} as v on e.venue_id = v.venue_id

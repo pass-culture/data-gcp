@@ -44,8 +44,8 @@ select
         partner_name,
         partner_type,
         partner_cultural_sector,
-        partner_nb_individual_offers,
-        partner_nb_collective_offers,
+        total_partner_created_individual_offers,
+        total_partner_created_collective_offers,
         user_device_category,
         user_device_operating_system,
         user_web_browser

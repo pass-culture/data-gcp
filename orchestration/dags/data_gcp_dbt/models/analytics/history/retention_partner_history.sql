@@ -3,7 +3,7 @@ with all_activated_partners_and_days_since_activation as ( -- Pour chaque partne
         partner_id,
         first_offer_creation_date,
         DATE_ADD(DATE('2022-07-01'), interval offset day) as day -- Tous les jours depuis le 1er juillet (date à laquelle on a commencé à storer la réservabilité d'une offre / d'un lieu)
-    from {{ ref('enriched_cultural_partner_data') }}
+    from {{ ref('mrt_global__cultural_partner') }}
         cross join UNNEST(GENERATE_ARRAY(0, DATE_DIFF(CURRENT_DATE(), '2022-07-01', day))) as offset
     where DATE_ADD(DATE('2022-07-01'), interval offset day) >= first_offer_creation_date -- Les jours depuis la 1ère offre
         and DATE_ADD(DATE('2022-07-01'), interval offset day) < CURRENT_DATE() -- Que des jours avant aujourd'hui

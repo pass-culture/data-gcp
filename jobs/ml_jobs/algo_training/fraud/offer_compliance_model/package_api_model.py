@@ -50,9 +50,9 @@ class PreprocessingOutput:
 
 class ApiModel(mlflow.pyfunc.PythonModel):
     TEXT_ENCODER_MODEL = SentenceTransformer(
-        "sentence-transformers/clip-ViT-B-32-multilingual-v1"
+        "sentence-transformers/clip-ViT-B-32-multilingual-v1", device="cpu"
     )
-    IMAGE_ENCODER_MODEL = SentenceTransformer("clip-ViT-B-32")
+    IMAGE_ENCODER_MODEL = SentenceTransformer("clip-ViT-B-32", device="cpu")
     SEMENTIC_CONTENT_COLUMNS = [
         "offer_name",
         "offer_description",

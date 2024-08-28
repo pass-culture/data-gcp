@@ -24,7 +24,7 @@ SELECT
     event_hour,
     event_day,
     event_month,
-    int_applicative__offer_item_id.item_id as item_id,
+    offer_item_id.item_id as item_id,
     offer.offer_subcategoryId as offer_subcategoryid,
     subcategories.category_id as offer_categoryId,
     enroffer.genres,
@@ -37,5 +37,5 @@ FROM
     JOIN `{{ bigquery_clean_dataset }}`.`applicative_database_offer` offer ON offer.offer_id = events.offer_id
     inner join `{{ bigquery_analytics_dataset }}`.`subcategories` subcategories on offer.offer_subcategoryId = subcategories.id
     inner join `{{ bigquery_analytics_dataset }}`.`global_offer` enroffer on enroffer.offer_id = offer.offer_id
-    inner join `{{ bigquery_clean_dataset }}`.`int_applicative__offer_item_id` int_applicative__offer_item_id on int_applicative__offer_item_id.offer_id = offer.offer_id
+    inner join `{{ bigquery_clean_dataset }}`.`int_applicative__offer_item_id` offer_item_id on offer_item_id.offer_id = offer.offer_id
     left join `{{ bigquery_analytics_dataset }}`.`global_user` enruser on enruser.user_id = events.user_id

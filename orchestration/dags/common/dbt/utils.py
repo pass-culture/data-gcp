@@ -1,8 +1,16 @@
 import json
 from typing import Dict, List, Optional, Tuple
+from common.config import (
+    ENV_SHORT_NAME,
+    EXCLUDED_TAGS,
+    GCP_PROJECT_ID,
+    PATH_TO_DBT_PROJECT,
+    PATH_TO_DBT_TARGET,
+)
 
 from airflow import DAG
 from airflow.models.baseoperator import chain
+from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.task_group import TaskGroup
 
@@ -221,3 +229,191 @@ def load_run_results(_PATH_TO_DBT_TARGET):
             **item,
         }
     return dict_results
+
+def load_and_process_manifest(manifest_path):
+    manifest = load_manifest(manifest_path)
+    dbt_snapshots = []
+    dbt_models = []
+    dbt_crit_tests = []
+
+    for node in manifest["nodes"].keys():
+        node_data = manifest["nodes"][node]
+        if node_data["package_name"] == "data_gcp_dbt":
+            if node_data["resource_type"] == "snapshot":
+                dbt_snapshots.append(node)
+            if node_data["resource_type"] == "model":
+                dbt_models.append(node)
+            if (
+                node_data["resource_type"] == "test"
+                and node_data["config"].get("severity", "warn").lower() == "error"
+            ):
+                dbt_crit_tests.append(node)
+    
+    models_with_dependencies = [
+        node for node in manifest["child_map"].keys() if node in dbt_models
+    ]
+    
+    models_with_crit_test_dependencies = [
+        manifest["nodes"][node].get("attached_node") for node in dbt_crit_tests
+    ]
+    
+    crit_test_parents = {
+        manifest["nodes"][test].get("attached_node", None): [
+            parent
+            for parent in set(manifest["parent_map"][test]).intersection(set(dbt_models))
+        ]
+        for test in dbt_crit_tests
+    }
+    
+    return manifest, dbt_snapshots, dbt_models, dbt_crit_tests, models_with_dependencies, models_with_crit_test_dependencies, crit_test_parents
+
+def create_test_operator(model_node, model_data, dag):
+    full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""
+    return BashOperator(
+        task_id=model_data["alias"] + "_tests",
+        bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test_model.sh ",
+        env={
+            "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+            "target": "{{ params.target }}",
+            "model": f"""{model_data['alias']}""",
+            "full_ref_str": full_ref_str,
+            "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+        },
+        append_env=True,
+        cwd=PATH_TO_DBT_PROJECT,
+        dag=dag,
+    )
+
+def create_model_operator(model_node, model_data, is_applicative, dag):
+    full_ref_str = (
+        " --full-refresh" if "{{ params.full_refresh|lower }}" == "true" else ""
+    )
+    exclusion_str = (
+        " --exclude " + " ".join([f"tag:{item}" for item in EXCLUDED_TAGS])
+        if len(EXCLUDED_TAGS) > 0
+        else ""
+    )
+    return BashOperator(
+        task_id=model_data["alias"] if is_applicative else model_data["name"],
+        bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
+        env={
+            "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+            "target": "{{ params.target }}",
+            "model": f"{model_data['name']}",
+            "full_ref_str": full_ref_str,
+            "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+            "EXCLUSION": exclusion_str,
+        },
+        append_env=True,
+        cwd=PATH_TO_DBT_PROJECT,
+        dag=dag,
+    )
+
+def setup_dependencies(model_node, manifest, model_op_dict, test_op_dict, models_with_crit_test_dependencies, final_op):
+    children = [
+        model_op_dict[child]
+        for child in manifest["child_map"][model_node]
+        if child in model_op_dict
+    ]
+    if model_node in models_with_crit_test_dependencies:
+        test_op_dict[model_node] >> (children if children else final_op)
+    else:
+        model_op_dict[model_node] >> (children if children else final_op)
+
+def create_snapshot_operator(snapshot_node, snapshot_data, dag):
+    return BashOperator(
+        task_id=snapshot_data["alias"],
+        bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_snapshot.sh ",
+        env={
+            "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+            "target": "{{ params.target }}",
+            "snapshot": f"""{snapshot_data['name']}""",
+            "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+        },
+        append_env=True,
+        cwd=PATH_TO_DBT_PROJECT,
+        dag=dag,
+    )
+
+def create_critical_tests_group(dag, dbt_models, manifest, models_with_crit_test_dependencies):
+    test_op_dict = {}
+    if any(model_node in models_with_crit_test_dependencies for model_node in dbt_models):
+        with TaskGroup(group_id="critical_tests", dag=dag) as crit_test_group:
+            for model_node in dbt_models:
+                model_data = manifest["nodes"][model_node]
+                if model_node in models_with_crit_test_dependencies:
+                    test_op_dict[model_node] = create_test_operator(model_node, model_data, dag)
+    return test_op_dict
+
+def create_data_transformation_group(dag, dbt_models, manifest, models_with_crit_test_dependencies, test_op_dict):
+    model_op_dict = {}
+    with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
+        with TaskGroup(group_id="applicative_tables", dag=dag) as applicative:
+            for model_node in dbt_models:
+                model_data = manifest["nodes"][model_node]
+                if "applicative" in model_data["alias"]:
+                    model_op_dict[model_node] = create_model_operator(model_node, model_data, True, dag)
+                    if model_node in models_with_crit_test_dependencies:
+                        model_op_dict[model_node] >> test_op_dict[model_node]
+
+        for model_node in dbt_models:
+            model_data = manifest["nodes"][model_node]
+            if "applicative" not in model_data["alias"]:
+                model_op_dict[model_node] = create_model_operator(model_node, model_data, False, dag)
+                if model_node in models_with_crit_test_dependencies:
+                    model_op_dict[model_node] >> test_op_dict[model_node]
+    return model_op_dict
+
+def set_up_model_dependencies(dag, dbt_models, manifest, model_op_dict, test_op_dict, models_with_crit_test_dependencies, compile_op):
+    for model_node in dbt_models:
+        setup_dependencies(
+            model_node, manifest, model_op_dict, test_op_dict, models_with_crit_test_dependencies, compile_op
+        )
+
+def create_snapshot_group(dag, dbt_snapshots, manifest):
+    snapshot_op_dict = {}
+    with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
+        for snapshot_node in dbt_snapshots:
+            snapshot_data = manifest["nodes"][snapshot_node]
+            snapshot_op_dict[snapshot_node] = create_snapshot_operator(snapshot_node, snapshot_data, dag)
+    return snapshot_op_dict
+
+def create_folder_manual_trigger_group(dag, dbt_models, manifest, model_op_dict):
+    with TaskGroup(group_id="folders_manual_trigger", dag=dag) as trigger_block:
+        create_nested_folder_groups(dbt_models, model_op_dict, manifest, dag)
+    return trigger_block
+
+# Main script for dbt DAG reconstruction
+def dbt_dag_reconstruction(dag, manifest, dbt_models, dbt_snapshots, models_with_crit_test_dependencies, crit_test_parents, compile_op):
+    # Create the task group for critical tests only if necessary
+    test_op_dict = create_critical_tests_group(dag, dbt_models, manifest, models_with_crit_test_dependencies)
+
+    # Create the task group for data transformation
+    model_op_dict = create_data_transformation_group(
+        dag, dbt_models, manifest, models_with_crit_test_dependencies, test_op_dict
+    )
+
+    # Set up dependencies between models and tests
+    set_up_model_dependencies(dag, dbt_models, manifest, model_op_dict, test_op_dict, models_with_crit_test_dependencies, compile_op)
+
+    # Manage test's cross dependencies
+    for test, parents in crit_test_parents.items():
+        for p in parents:
+            try:
+                model_op_dict[p] >> test_op_dict[test]
+            except KeyError:
+                pass
+
+    # Create the snapshot group
+    snapshot_op_dict = create_snapshot_group(dag, dbt_snapshots, manifest)
+
+    # Create the folder manual trigger group
+    trigger_block = create_folder_manual_trigger_group(dag, dbt_models, manifest, model_op_dict)
+
+    # Return the created operators
+    return {
+        "test_op_dict": test_op_dict,
+        "model_op_dict": model_op_dict,
+        "snapshot_op_dict": snapshot_op_dict,
+        "trigger_block": trigger_block,
+    }

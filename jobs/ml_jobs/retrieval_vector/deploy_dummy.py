@@ -11,7 +11,7 @@ from utils import (
     get_item_docs,
     get_items_metadata,
     get_user_docs,
-    get_users_metadata,
+    get_users_dummy_metadata,
     save_experiment,
     save_model_type,
 )
@@ -27,7 +27,7 @@ MODEL_TYPE = {
 def prepare_docs():
     print("Get items...")
     items_df = get_items_metadata()
-    user_df = get_users_metadata()
+    user_df = get_users_dummy_metadata()
     # default
     user_embedding_dict = {
         row.user_id: np.random.random((MODEL_TYPE["n_dim"],))

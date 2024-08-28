@@ -129,10 +129,7 @@ def get_users_metadata():
 
     sql = f"""
         SELECT
-            user_id,
-            user_total_deposit_amount,
-            current_deposit_type as user_current_deposit_type,
-            COALESCE(total_theoretical_remaining_credit, last_deposit_amount) as user_theoretical_remaining_credit
+            user_id
         FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.global_user`
     """
     return client.query(sql).to_dataframe()

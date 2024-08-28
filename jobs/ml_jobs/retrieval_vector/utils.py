@@ -124,7 +124,7 @@ def get_items_metadata():
     return client.query(sql).to_dataframe()
 
 
-def get_users_metadata():
+def get_users_dummy_metadata():
     client = bigquery.Client()
 
     sql = f"""

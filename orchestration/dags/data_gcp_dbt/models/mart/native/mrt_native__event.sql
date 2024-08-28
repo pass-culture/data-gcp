@@ -76,7 +76,10 @@ where (
         "ConsultVenueMap",
         "TrendsBlockClicked",
         "SystemBlockDisplayed",
-        "ConsultHome"
+        "ConsultHome",
+        "hasClickedDuoStep",
+        "hasChosenPrice",
+        "hasChosenTime"
     )
     or
     (

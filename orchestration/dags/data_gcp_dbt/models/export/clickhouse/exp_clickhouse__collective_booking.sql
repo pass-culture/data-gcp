@@ -12,3 +12,4 @@ select
     booking_amount
 from {{ ref('mrt_global__collective_booking') }}
 where collective_booking_status != 'CANCELLED'
+

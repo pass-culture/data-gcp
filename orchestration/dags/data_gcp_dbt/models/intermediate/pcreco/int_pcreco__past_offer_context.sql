@@ -24,7 +24,7 @@ with export_table as (
         round(offer_order) as offer_display_order,
         cast(user_id as STRING) as user_id,
         cast(offer_id as STRING) as offer_id,
-        offer_item_ids.item_id as item_id,
+        int_applicative__offer_item_id.item_id as item_id,
         struct(
             user_deposit_remaining_credit,
             user_bookings_count,
@@ -61,7 +61,7 @@ with export_table as (
         replace(json_extract(context_extra_data, "$.scorer.ranking.model_version"), '"', '') as scorer_ranking_model_version
     from
         {{ source('raw', 'past_offer_context') }} pso
-        inner join {{ ref('offer_item_ids') }} offer_item_ids using (offer_id)
+        inner join {{ ref('int_applicative__offer_item_id') }} int_applicative__offer_item_id using (offer_id)
         left join {{ ref('int_seed__iris_france') }} ii on ii.id = pso.user_iris_id
 
     {% if is_incremental() %}

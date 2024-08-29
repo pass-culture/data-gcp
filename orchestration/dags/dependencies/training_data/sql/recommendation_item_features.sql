@@ -1,6 +1,6 @@
 WITH base as(
 SELECT 
-        offer_item_ids.item_id                                          AS item_id,
+        offer_item_id.item_id                                           AS item_id,
         subcategories.category_id                                       AS offer_categoryId,
         offer.offer_subcategoryId                                       AS offer_subcategoryid,
         item_embedding_reduced.image_embedding                          AS item_image_embedding,
@@ -20,10 +20,10 @@ INNER JOIN `{{ bigquery_clean_dataset }}`.`applicative_database_offer` offer
         ON enroffer.offer_id = offer.offer_id
 INNER JOIN `{{ bigquery_analytics_dataset }}`.`subcategories` subcategories
         ON offer.offer_subcategoryId = subcategories.id
-INNER JOIN `{{ bigquery_clean_dataset }}`.`offer_item_ids` offer_item_ids
-        ON offer_item_ids.offer_id = offer.offer_id
+INNER JOIN `{{ bigquery_int_applicative_dataset }}`.`offer_item_id` offer_item_id
+        ON offer_item_id.offer_id = offer.offer_id
 INNER JOIN `{{ bigquery_ml_preproc_dataset }}`.`item_embedding_reduced_16` item_embedding_reduced
-        ON offer_item_ids.item_id = item_embedding_reduced.item_id
+        ON offer_item_id.item_id = item_embedding_reduced.item_id
 GROUP BY 1,2,3,4,5
 )
 

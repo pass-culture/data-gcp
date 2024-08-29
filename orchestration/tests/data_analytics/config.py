@@ -433,7 +433,6 @@ BIGQUERY_SCHEMAS = {
         "fieldsUpdated": "STRING",
     },
     "isbn_rayon_editor": {"isbn": "STRING", "rayon": "STRING", "book_editor": "STRING"},
-    "offer_item_ids": {"offer_id": "STRING", "item_id": "STRING"},
     "user_beneficiary": {
         "user_id": "STRING",
         "user_creation_date": "DATETIME",

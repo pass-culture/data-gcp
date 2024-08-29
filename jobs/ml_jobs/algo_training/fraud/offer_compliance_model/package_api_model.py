@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import requests
 import shap
+import torch
 import typer
 from catboost import CatBoostClassifier, Pool
 from PIL import Image
@@ -49,10 +50,11 @@ class PreprocessingOutput:
 
 
 class ApiModel(mlflow.pyfunc.PythonModel):
+    TORCH_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     TEXT_ENCODER_MODEL = SentenceTransformer(
-        "sentence-transformers/clip-ViT-B-32-multilingual-v1", device="cpu"
+        "sentence-transformers/clip-ViT-B-32-multilingual-v1", device=TORCH_DEVICE
     )
-    IMAGE_ENCODER_MODEL = SentenceTransformer("clip-ViT-B-32", device="cpu")
+    IMAGE_ENCODER_MODEL = SentenceTransformer("clip-ViT-B-32", device=TORCH_DEVICE)
     SEMENTIC_CONTENT_COLUMNS = [
         "offer_name",
         "offer_description",

@@ -118,7 +118,7 @@ models:
         tests:
           - not_null:
               config:
-                severity: warn
+                severity: error
       - name: offerer_name
         description: ''
         data_type: STRING

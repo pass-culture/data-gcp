@@ -176,7 +176,7 @@ for dag_name, dag_params in dags.items():
         for table_config in TABLES_CONFIGS:
             table_name = table_config["bigquery_table_name"]
             dataset_name = table_config["bigquery_dataset_name"]
-            partition_key = table_config.get("partition_key", "partition_date")
+            partition_key = table_config["partition_key"]
             clickhouse_table_name = table_config["clickhouse_table_name"]
             clickhouse_dataset_name = table_config["clickhouse_dataset_name"]
 

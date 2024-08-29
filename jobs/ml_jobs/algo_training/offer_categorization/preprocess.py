@@ -1,6 +1,7 @@
 import pandas as pd
 import typer
 from loguru import logger
+
 from offer_categorization.config import features
 from offer_categorization.package_api_model import PreprocessingPipeline
 

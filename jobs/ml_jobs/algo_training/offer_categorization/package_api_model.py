@@ -1,15 +1,15 @@
-from utils.constants import ENV_SHORT_NAME
 import json
 from dataclasses import dataclass
+
 import mlflow
 import numpy as np
 import pandas as pd
 import typer
 from catboost import CatBoostClassifier, Pool
 from sentence_transformers import SentenceTransformer
+
 from offer_categorization.config import features
-
-
+from utils.constants import ENV_SHORT_NAME
 from utils.mlflow_tools import connect_remote_mlflow
 
 

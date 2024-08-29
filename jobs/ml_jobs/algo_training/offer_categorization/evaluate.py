@@ -1,12 +1,13 @@
-import pandas as pd
-from catboost import Pool
 import mlflow
+import pandas as pd
 import typer
-from sklearn.metrics import classification_report, top_k_accuracy_score
+from catboost import Pool
 from loguru import logger
-from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
+from sklearn.metrics import classification_report, top_k_accuracy_score
+
 from offer_categorization.config import features
 from utils.constants import ENV_SHORT_NAME
+from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
 
 
 def main(

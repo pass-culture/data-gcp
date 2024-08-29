@@ -1,11 +1,12 @@
-import pandas as pd
 import mlflow
-from catboost import CatBoostClassifier
+import pandas as pd
 import typer
+from catboost import CatBoostClassifier
 from loguru import logger
+
 from offer_categorization.config import features
-from utils.mlflow_tools import connect_remote_mlflow
 from utils.constants import ENV_SHORT_NAME
+from utils.mlflow_tools import connect_remote_mlflow
 
 
 def get_mlflow_experiment(experiment_name: str):

@@ -118,6 +118,10 @@ for dag_name, dag_params in dags.items():
                 default=-4,
                 type="integer",
             ),
+            "max_partitions_per_insert_block": Param(
+                default=100,
+                type="integer",
+            ),
         },
     ) as dag:
         branching = BranchPythonOperator(
@@ -231,7 +235,8 @@ for dag_name, dag_params in dags.items():
                 f"--table-name {clickhouse_table_name} "
                 f"--dataset-name {clickhouse_dataset_name} "
                 f"--update-date {_ds} "
-                f"--mode {mode} ",
+                f"--mode {mode} "
+                f"--max-partitions-per-insert-block {{{{ params.max_partitions_per_insert_block }}}} ",
             )
             export_task >> export_bq >> clickhouse_export
             out_tables_tasks.append(clickhouse_export)

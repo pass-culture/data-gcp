@@ -64,7 +64,7 @@ def update_overwrite(
 ) -> None:
     print(f"Will overwrite {dataset_name}.{table_name}. New update : {update_date}")
     CLICKHOUSE_CLIENT.command(
-        f" ALTER TABLE {dataset_name}.{table_name} ON cluster default REPLACE PARTITION '{update_date}' FROM tmp.{tmp_table_name}"
+        f" ALTER TABLE {dataset_name}.{table_name} ON cluster default REPLACE PARTITION '{update_date}' FROM tmp.{tmp_table_name}",
     )
 
     remove_stale_partitions(dataset_name, table_name, update_date)
@@ -91,7 +91,11 @@ def create_intermediate_schema(table_name: str, dataset_name: str) -> None:
 
 
 def create_tmp_schema(
-    sql_file_name: str, table_name: str, update_date: str, source_gs_path: str
+    sql_file_name: str,
+    table_name: str,
+    update_date: str,
+    source_gs_path: str,
+    max_partitions_per_insert_block: int,
 ) -> None:
     CLICKHOUSE_CLIENT.command(
         f"DROP TABLE IF EXISTS tmp.{table_name} ON cluster default"
@@ -109,4 +113,9 @@ def create_tmp_schema(
     )
     print(sql_query)
     print(f"Creating tmp.{table_name} table...")
-    CLICKHOUSE_CLIENT.command(sql_query)
+    CLICKHOUSE_CLIENT.command(
+        sql_query,
+        settings={
+            "max_partitions_per_insert_block": str(max_partitions_per_insert_block)
+        },
+    )

@@ -10,7 +10,14 @@ from core.update import (
 )
 
 
-def main_update(mode, source_gs_path, table_name, dataset_name, update_date):
+def main_update(
+    mode,
+    source_gs_path,
+    table_name,
+    dataset_name,
+    update_date,
+    max_partitions_per_insert_block=100,
+):
     _id = datetime.now().strftime("%Y%m%d%H%M%S")
     tmp_table_name = f"{table_name}_{_id}"
 
@@ -20,6 +27,7 @@ def main_update(mode, source_gs_path, table_name, dataset_name, update_date):
         table_name=tmp_table_name,
         update_date=update_date,
         source_gs_path=source_gs_path,
+        max_partitions_per_insert_block=max_partitions_per_insert_block,
     )
 
     # create table schema
@@ -65,11 +73,22 @@ def run(
         None,
         help="source_gs_path",
     ),
+    max_partitions_per_insert_block: int = typer.Option(
+        100,
+        help="max number of partition to insert at once",
+    ),
 ):
     if mode in ("incremental", "overwrite"):
         if source_gs_path is None:
             raise Exception("source_gs_path should be specified")
-        main_update(mode, source_gs_path, table_name, dataset_name, update_date)
+        main_update(
+            mode,
+            source_gs_path,
+            table_name,
+            dataset_name,
+            update_date,
+            max_partitions_per_insert_block,
+        )
     else:
         raise Exception(f"wrong specified mode, got {mode} ")
 

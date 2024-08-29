@@ -51,8 +51,10 @@ iniconfig==2.0.0
     # via pytest
 loguru==0.7.2
     # via -r jobs/ml_jobs/offline_recommendation/requirements.in
-numpy==2.0.0
-    # via pyarrow
+numpy==1.26.4
+    # via
+    #   -r jobs/ml_jobs/offline_recommendation/requirements.in
+    #   pyarrow
 packaging==24.1
     # via
     #   google-cloud-bigquery

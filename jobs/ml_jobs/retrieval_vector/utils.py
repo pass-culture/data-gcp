@@ -124,15 +124,12 @@ def get_items_metadata():
     return client.query(sql).to_dataframe()
 
 
-def get_users_metadata():
+def get_users_dummy_metadata():
     client = bigquery.Client()
 
     sql = f"""
         SELECT
-            user_id,
-            user_total_deposit_amount,
-            current_deposit_type as user_current_deposit_type,
-            COALESCE(total_theoretical_remaining_credit, last_deposit_amount) as user_theoretical_remaining_credit
+            user_id
         FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.global_user`
     """
     return client.query(sql).to_dataframe()

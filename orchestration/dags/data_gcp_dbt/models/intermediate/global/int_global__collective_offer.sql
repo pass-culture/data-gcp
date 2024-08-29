@@ -36,6 +36,7 @@ select
     co.collective_offer_students,
     co.collective_offer_is_active,
     co.collective_offer_validation,
+    co.collective_offer_last_validation_type,
     co.collective_offer_is_bookable,
     co.total_collective_bookings,
     co.total_non_cancelled_collective_bookings,

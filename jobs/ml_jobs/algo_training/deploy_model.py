@@ -1,13 +1,15 @@
-from google.cloud import aiplatform
 from dataclasses import dataclass
-import typer
-from utils.constants import (
-    GCP_PROJECT_ID,
-    BIGQUERY_CLEAN_DATASET,
-    MODELS_RESULTS_TABLE_NAME,
-    ENV_SHORT_NAME,
-)
+
 import pandas as pd
+import typer
+from google.cloud import aiplatform
+
+from utils.constants import (
+    BIGQUERY_CLEAN_DATASET,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+    MODELS_RESULTS_TABLE_NAME,
+)
 
 
 @dataclass
@@ -58,7 +60,7 @@ class ModelHandler:
 
     def upload_model(self):
         experiment_name = self.model_params.experiment_name
-        print(f"Uploading model to Vertex AI model registery...")
+        print("Uploading model to Vertex AI model registery...")
         print(f"Search for existing model...  {experiment_name}")
         parent_model = aiplatform.Model.list(
             filter=f"display_name={experiment_name}",
@@ -91,7 +93,7 @@ class ModelHandler:
 
     def deploy_model(self, model):
         enpoint_name = self.endpoint_params.endpoint_name
-        print(f"Deploying model to endpoint...")
+        print("Deploying model to endpoint...")
         print(f"Search for existing endoipoint...  {enpoint_name}")
         found_endpoints = aiplatform.Endpoint.list(
             filter=f"display_name={enpoint_name}",
@@ -165,7 +167,7 @@ class ModelHandler:
                     try:
                         print(f"Removing {versions.version_id}")
                         modelRegistry.delete_version(f"{versions.version_id}")
-                    except:
+                    except Exception:
                         # TODO; Model might be used by another endpoint
                         # Check if deployed or not before.
                         print(f"Could not remove {versions.version_id}")

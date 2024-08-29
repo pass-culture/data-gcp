@@ -1,15 +1,14 @@
-import os
-import pandas as pd
-from datetime import datetime
-import time
-import subprocess
-from docarray import DocumentArray, Document
 import json
-import pyarrow as pa
+import os
+import subprocess
+import time
+from datetime import datetime
+
 import lancedb
-
+import pandas as pd
+import pyarrow as pa
+from docarray import Document, DocumentArray
 from google.cloud import bigquery
-
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
@@ -17,6 +16,7 @@ BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
 BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
 MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"
 BIGQUERY_RECOMMENDATION_DATASET = f"ml_reco_{ENV_SHORT_NAME}"
+LANCE_DB_BATCH_SIZE = 100_000
 
 item_columns = [
     "vector",
@@ -113,8 +113,8 @@ def get_items_metadata():
     client = bigquery.Client()
 
     sql = f"""
-        SELECT 
-        *, 
+        SELECT
+        *,
         ROW_NUMBER() OVER (ORDER BY booking_number DESC) as booking_number_desc,
         ROW_NUMBER() OVER (ORDER BY booking_trend DESC) as booking_trend_desc,
         ROW_NUMBER() OVER (ORDER BY booking_creation_trend DESC) as booking_creation_trend_desc,
@@ -124,16 +124,13 @@ def get_items_metadata():
     return client.query(sql).to_dataframe()
 
 
-def get_users_metadata():
+def get_users_dummy_metadata():
     client = bigquery.Client()
 
     sql = f"""
-        SELECT 
-            user_id,
-            user_total_deposit_amount,
-            user_current_deposit_type,
-            COALESCE(user_theoretical_remaining_credit, user_last_deposit_amount) as user_theoretical_remaining_credit
-        FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.enriched_user_data` 
+        SELECT
+            user_id
+        FROM `{GCP_PROJECT_ID}.{BIGQUERY_ANALYTICS_DATASET}.global_user`
     """
     return client.query(sql).to_dataframe()
 
@@ -141,14 +138,14 @@ def get_users_metadata():
 def to_ts(f):
     try:
         return float(f.timestamp())
-    except:
+    except Exception:
         return 0.0
 
 
 def to_float(f):
     try:
         return float(f)
-    except:
+    except Exception:
         return None
 
 
@@ -226,15 +223,33 @@ def get_table_batches(item_embedding_dict: dict, items_df, emb_size):
 
 
 def create_items_table(
-    item_embedding_dict, items_df, emb_size, uri="./metadata/vector"
-):
-    data = pa.Table.from_batches(
-        get_table_batches(item_embedding_dict, items_df, emb_size)
-    )
+    item_embedding_dict: dict,
+    items_df: pd.DataFrame,
+    emb_size: int,
+    uri: str = "./metadata/vector",
+    batch_size: int = LANCE_DB_BATCH_SIZE,
+    create_index: bool = True,
+) -> None:
+    num_batches = len(items_df) // batch_size + 1
     db = lancedb.connect(uri)
     db.drop_database()
-    table = db.create_table("items", data=data)
-    table.create_index(num_partitions=1024, num_sub_vectors=32)
+
+    for i in range(num_batches):
+        print(f"Processing batch {i+1} // {num_batches} of batch_size {batch_size}")
+        start_idx = i * batch_size
+        end_idx = min((i + 1) * batch_size, len(items_df))
+        batch_df = items_df[start_idx:end_idx]
+
+        data_batch = pa.Table.from_batches(
+            get_table_batches(item_embedding_dict, batch_df, emb_size)
+        )
+
+        if i == 0:
+            table = db.create_table("items", data=data_batch)
+        else:
+            table.add(data_batch)
+    if create_index:
+        table.create_index(num_partitions=1024, num_sub_vectors=32)
 
 
 def get_item_docs(item_embedding_dict, items_df):

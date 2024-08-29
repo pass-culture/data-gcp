@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+
 from tools.linkage import get_linked_offers_from_graph
 
 
@@ -83,7 +84,7 @@ class TestPostprocess:
         assert (
             df_linked_data.linked_id.nunique()
             == expected_linked_data.linked_id.nunique()
-        ), f"Number of cluster is expected"
+        ), "Number of cluster is expected"
 
         ######
         # Extract linked offers

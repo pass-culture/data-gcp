@@ -1,8 +1,10 @@
 from datetime import datetime
+
 import pandas as pd
 import typer
-from tools.config import GCP_PROJECT_ID, ENV_SHORT_NAME
 from loguru import logger
+
+from tools.config import GCP_PROJECT_ID
 
 
 def build_item_id_from_linkage(df):
@@ -29,16 +31,16 @@ def main(
         GCP_PROJECT_ID,
         help="BigQuery Project in which the offers to link is located",
     ),
-    env_short_name: str = typer.Option(
-        ENV_SHORT_NAME,
-        help="Environnement short name",
-    ),
+    input_dataset_name: str = typer.Option(..., help="Path to the dataset input name."),
+    input_table_name: str = typer.Option(..., help="Path to the intput table name."),
+    output_dataset_name: str = typer.Option(..., help="Path to the dataset name."),
+    output_table_name: str = typer.Option(..., help="Path to the output table name."),
 ):
     ####
     # Load linked offers
     logger.info("Loading data from linkage to build label for linked items ")
     df_offers_linked_full = pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.tmp_{env_short_name}.linked_offers_full`"
+        f"SELECT * FROM `{input_dataset_name}.{input_table_name}`"
     )
     logger.info(f"{len(df_offers_linked_full)} items to label")
     ####
@@ -72,7 +74,7 @@ def main(
     ] * len(df_offers_linked_export_ready)
     df_offers_linked_export_ready = df_offers_linked_export_ready.drop_duplicates()
     df_offers_linked_export_ready.to_gbq(
-        f"analytics_{env_short_name}.linked_offers",
+        f"{output_dataset_name}.{output_table_name}",
         project_id=gcp_project,
         if_exists="append",
     )

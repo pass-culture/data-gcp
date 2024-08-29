@@ -1,10 +1,10 @@
-from common.config import (
-    GCP_PROJECT_ID,
-    ENV_SHORT_NAME,
-)
 from common.access_gcp_secrets import access_secret_data
+from common.config import (
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+)
 
-SQL_PATH = f"dependencies/qualtrics/sql"
+SQL_PATH = "dependencies/qualtrics/sql"
 
 clean_tables = {
     "qualtrics_ir_jeunes": {

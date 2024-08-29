@@ -1,7 +1,6 @@
-from notion_client import Client
-from notion2md.exporter.block import StringExporter
 from google.cloud import bigquery
-from utils import ENVIRONMENT_SHORT_NAME
+from notion2md.exporter.block import StringExporter
+from notion_client import Client
 
 
 class BQExport:

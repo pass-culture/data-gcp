@@ -1,15 +1,24 @@
 import typer
-from datetime import datetime
-from utils import clickhouse_client, refresh_views
+
+from core.fs import load_sql
+from core.utils import CLICKHOUSE_CLIENT
 
 
 def run(
-    view_name: str = typer.Option(
+    table_name: str = typer.Option(
         ...,
-        help="view_name",
+        help="table_name",
+    ),
+    folder: str = typer.Option(
+        "analytics",
+        help="folder_name",
     ),
 ):
-    refresh_views(view_name)
+    sql_query = load_sql(table_name=table_name, folder=folder)
+    print("Will Execute:")
+    print(sql_query)
+    print(f"Refresh {table_name}...")
+    CLICKHOUSE_CLIENT.command(sql_query)
 
 
 if __name__ == "__main__":

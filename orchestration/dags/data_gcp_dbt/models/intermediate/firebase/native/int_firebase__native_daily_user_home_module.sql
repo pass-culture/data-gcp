@@ -1,165 +1,178 @@
 {{
     config(
-        materialized = "incremental",
+        **custom_incremental_config(
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "module_displayed_date", "data_type": "date", "granularity" : "day"},
         on_schema_change = "sync_all_columns",
     )
-}}
+) }}
 
-WITH redirections AS (
-SELECT
-    destination_entry_id AS entry_id,
-    module_id AS parent_module_id,
-    entry_id AS parent_entry_id,
-    unique_session_id
-FROM {{ref('int_firebase__native_event')}}
-WHERE event_name IN ('CategoryBlockClicked','HighlightBlockClicked')
-    {% if is_incremental() %}
-    AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
-    {% endif %}
+with redirections as (
+    select
+        destination_entry_id as entry_id,
+        module_id as parent_module_id,
+        entry_id as parent_entry_id,
+        unique_session_id
+    from {{ ref('int_firebase__native_event') }}
+    where event_name in ('CategoryBlockClicked', 'HighlightBlockClicked')
+        {% if is_incremental() %}
+            and event_date between date_sub(date("{{ ds() }}"), interval 1 day) and date("{{ ds() }}")
+        {% endif %}
 ),
 
-displayed AS (
-SELECT
-    events.unique_session_id,
-    events.user_id,
-    events.app_version,
-    events.event_date AS module_displayed_date,
-    events.event_timestamp AS module_displayed_timestamp,
-    events.module_id,
-    COALESCE(modules.title, modules.offer_title) AS module_name,
-    modules.content_type AS module_type,
-    events.entry_id AS entry_id,
-    homes.title AS entry_name,
-    redirections.parent_module_id,
-    redirections.parent_entry_id,
-    events.user_location_type,
-    CASE WHEN modules.content_type = 'recommendation' THEN events.reco_call_id ELSE NULL END AS reco_call_id
-FROM {{ref('int_firebase__native_event')}} AS events
-LEFT JOIN redirections
-    ON redirections.unique_session_id = events.unique_session_id AND redirections.entry_id = events.entry_id
-INNER JOIN {{ ref('int_contentful__entry' )}} AS modules
-    ON modules.id = events.module_id
-INNER JOIN {{ ref('int_contentful__entry' )}} AS homes
-    ON homes.id = events.entry_id
-WHERE event_name = 'ModuleDisplayedOnHomePage'
-    AND events.unique_session_id IS NOT NULL
-    {% if is_incremental() %}
-    AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
-    {% endif %}
-QUALIFY ROW_NUMBER() OVER(PARTITION BY events.unique_session_id, events.module_id ORDER BY event_timestamp ) = 1
+displayed as (
+    select
+        events.unique_session_id,
+        events.user_id,
+        events.app_version,
+        events.event_date as module_displayed_date,
+        events.event_timestamp as module_displayed_timestamp,
+        events.module_id,
+        coalesce(modules.title, modules.offer_title) as module_name,
+        modules.content_type as module_type,
+        events.entry_id as entry_id,
+        homes.title as entry_name,
+        redirections.parent_module_id,
+        redirections.parent_entry_id,
+        events.user_location_type,
+        case when modules.content_type = 'recommendation' then events.reco_call_id else NULL end as reco_call_id
+    from {{ ref('int_firebase__native_event') }} as events
+        left join redirections
+            on redirections.unique_session_id = events.unique_session_id and redirections.entry_id = events.entry_id
+        inner join {{ ref('int_contentful__entry' ) }} as modules
+            on modules.id = events.module_id
+        inner join {{ ref('int_contentful__entry' ) }} as homes
+            on homes.id = events.entry_id
+    where event_name = 'ModuleDisplayedOnHomePage'
+        and events.unique_session_id is not NULL
+        {% if is_incremental() %}
+            and event_date between date_sub(date("{{ ds() }}"), interval 1 day) and date("{{ ds() }}")
+        {% endif %}
+    qualify row_number() over (partition by events.unique_session_id, events.module_id order by event_timestamp) = 1
 ),
 
-clicked AS (
-SELECT
-    unique_session_id,
-    entry_id,
-    event_name AS click_type,
-    module_id,
-    module_list_id,
-    event_timestamp AS module_clicked_timestamp
-FROM {{ref('int_firebase__native_event')}}
-WHERE unique_session_id IS NOT NULL
-    AND event_name IN ("ExclusivityBlockClicked",
-                        "CategoryBlockClicked",
-                        "HighlightBlockClicked",
-                        "BusinessBlockClicked",
-                        "ConsultVideo")
-    {% if is_incremental() %}
-    AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
-    {% endif %}
-QUALIFY ROW_NUMBER() OVER(PARTITION BY unique_session_id, module_id ORDER BY event_timestamp) = 1
-),
-
-consultations_offer AS (
-SELECT
-    unique_session_id,
-    entry_id,
-    module_id,
-    origin,
-    offer_id,
-    venue_id,
-    event_timestamp AS consult_offer_timestamp,
-    user_location_type
-FROM {{ref('int_firebase__native_event')}}
-WHERE event_name = 'ConsultOffer'
-    AND origin IN ("home",
-                "exclusivity",
-                "venue",
-                "video",
-                "videoModal",
-                "video_carousel_block",
-                "highlightOffer")
-    AND unique_session_id IS NOT NULL
-    {% if is_incremental() %}
-    AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
-    {% endif %}
-QUALIFY ROW_NUMBER() OVER(PARTITION BY unique_session_id, offer_id ORDER BY event_timestamp DESC) = 1
-),
-
-consultations_venue AS (
-SELECT unique_session_id,
-    entry_id,
-    module_id,
-    offer_id,
-    venue_id,
-    event_timestamp AS consult_venue_timestamp,
-    user_location_type
-FROM {{ref('int_firebase__native_event')}}
-WHERE event_name = "ConsultVenue"
-    AND origin IN ("home","venueList")
-    AND unique_session_id IS NOT NULL
-    {% if is_incremental() %}
-    AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
-    {% endif %}
-QUALIFY ROW_NUMBER() OVER(PARTITION BY unique_session_id, venue_id ORDER BY event_timestamp DESC) = 1
-),
-
-consultations AS (
-SELECT o.unique_session_id,
-    COALESCE(o.entry_id, v.entry_id) AS entry_id,
-    COALESCE(o.module_id, v.module_id) AS module_id,
-    o.origin,
-    COALESCE(o.user_location_type, v.user_location_type) AS user_location_type,
-    o.offer_id,
-    v.venue_id,
-    consult_offer_timestamp,
-    consult_venue_timestamp
-FROM consultations_venue AS v
-FULL OUTER JOIN consultations_offer AS o
-    ON o.unique_session_id = v.unique_session_id
-        AND o.venue_id = v.venue_id
-        AND o.consult_offer_timestamp >= v.consult_venue_timestamp
-),
-
-favorites AS (
-SELECT consultations.unique_session_id,
-    consultations.module_id,
-    consultations.entry_id,
-    consultations.offer_id,
-    events.event_timestamp AS fav_timestamp
-FROM {{ref('int_firebase__native_event')}} AS events
-INNER JOIN consultations
-USING (unique_session_id,
+clicked as (
+    select
+        unique_session_id,
+        entry_id,
+        event_name as click_type,
         module_id,
-        offer_id)
-WHERE events.event_name = 'HasAddedOfferToFavorites'
-    AND events.origin IN ("home",
-    "exclusivity",
-    "venue",
-    "video",
-    "videoModal",
-    "video_carousel_block",
-    "highlightOffer")
-AND events.unique_session_id IS NOT NULL
-{% if is_incremental() %}
-AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 1 DAY) and DATE("{{ ds() }}")
-{% endif %}
-AND consult_offer_timestamp <= events.event_timestamp QUALIFY ROW_NUMBER() OVER(PARTITION BY unique_session_id, offer_id ORDER BY event_timestamp DESC) = 1
+        module_list_id,
+        event_timestamp as module_clicked_timestamp
+    from {{ ref('int_firebase__native_event') }}
+    where unique_session_id is not NULL
+        and event_name in (
+            "ExclusivityBlockClicked",
+            "CategoryBlockClicked",
+            "HighlightBlockClicked",
+            "BusinessBlockClicked",
+            "ConsultVideo",
+            "TrendsBlockClicked"
+        )
+        {% if is_incremental() %}
+            and event_date between date_sub(date("{{ ds() }}"), interval 1 day) and date("{{ ds() }}")
+        {% endif %}
+    qualify row_number() over (partition by unique_session_id, module_id order by event_timestamp) = 1
+),
+
+consultations_offer as (
+    select
+        unique_session_id,
+        entry_id,
+        module_id,
+        origin,
+        offer_id,
+        venue_id,
+        event_timestamp as consult_offer_timestamp,
+        user_location_type
+    from {{ ref('int_firebase__native_event') }}
+    where event_name = 'ConsultOffer'
+        and origin in (
+            "home",
+            "exclusivity",
+            "venue",
+            "video",
+            "videoModal",
+            "video_carousel_block",
+            "highlightOffer"
+        )
+        and unique_session_id is not NULL
+        {% if is_incremental() %}
+            and event_date between date_sub(date("{{ ds() }}"), interval 1 day) and date("{{ ds() }}")
+        {% endif %}
+    qualify row_number() over (partition by unique_session_id, offer_id order by event_timestamp desc) = 1
+),
+
+consultations_venue as (
+    select
+        unique_session_id,
+        entry_id,
+        module_id,
+        offer_id,
+        venue_id,
+        event_timestamp as consult_venue_timestamp,
+        user_location_type
+    from {{ ref('int_firebase__native_event') }}
+    where event_name = "ConsultVenue"
+        and origin in ("home", "venueList")
+        and unique_session_id is not NULL
+        {% if is_incremental() %}
+            and event_date between date_sub(date("{{ ds() }}"), interval 1 day) and date("{{ ds() }}")
+        {% endif %}
+    qualify row_number() over (partition by unique_session_id, venue_id order by event_timestamp desc) = 1
+),
+
+consultations as (
+    select
+        o.unique_session_id,
+        coalesce(o.entry_id, v.entry_id) as entry_id,
+        coalesce(o.module_id, v.module_id) as module_id,
+        o.origin,
+        coalesce(o.user_location_type, v.user_location_type) as user_location_type,
+        o.offer_id,
+        v.venue_id,
+        consult_offer_timestamp,
+        consult_venue_timestamp
+    from consultations_venue as v
+        full outer join consultations_offer as o
+            on o.unique_session_id = v.unique_session_id
+                and o.venue_id = v.venue_id
+                and o.consult_offer_timestamp >= v.consult_venue_timestamp
+),
+
+favorites as (
+    select
+        consultations.unique_session_id,
+        consultations.module_id,
+        consultations.entry_id,
+        consultations.offer_id,
+        events.event_timestamp as fav_timestamp
+    from {{ ref('int_firebase__native_event') }} as events
+        inner join consultations
+            using (
+                unique_session_id,
+                module_id,
+                offer_id
+            )
+    where events.event_name = 'HasAddedOfferToFavorites'
+        and events.origin in (
+            "home",
+            "exclusivity",
+            "venue",
+            "video",
+            "videoModal",
+            "video_carousel_block",
+            "highlightOffer"
+        )
+        and events.unique_session_id is not NULL
+        {% if is_incremental() %}
+            and event_date between date_sub(date("{{ ds() }}"), interval 1 day) and date("{{ ds() }}")
+        {% endif %}
+        and consult_offer_timestamp <= events.event_timestamp
+    qualify row_number() over (partition by unique_session_id, offer_id order by event_timestamp desc) = 1
 )
 
-SELECT
+select
     displayed.user_id,
     displayed.unique_session_id,
     displayed.entry_id,
@@ -182,21 +195,21 @@ SELECT
     consult_venue_timestamp,
     consult_offer_timestamp,
     fav_timestamp,
-    bookings.booking_timestamp,
-FROM displayed
-LEFT JOIN clicked
-    ON displayed.unique_session_id = clicked.unique_session_id
-    AND displayed.entry_id = clicked.entry_id
-    AND (displayed.module_id = clicked.module_id OR displayed.module_id = clicked.module_list_id)
-    AND displayed.module_displayed_timestamp <= clicked.module_clicked_timestamp
-LEFT JOIN consultations
-    ON displayed.unique_session_id = consultations.unique_session_id
-    AND consultations.module_id = displayed.module_id
-    AND consultations.consult_offer_timestamp >= module_displayed_timestamp
-LEFT JOIN favorites
-    ON favorites.unique_session_id = displayed.unique_session_id
-    AND favorites.module_id = displayed.module_id
-LEFT JOIN {{ ref( 'firebase_bookings' ) }} AS bookings
-    ON displayed.unique_session_id = bookings.unique_session_id
-    AND consultations.offer_id = bookings.offer_id
-    AND consultations.consult_offer_timestamp <= bookings.booking_timestamp
+    bookings.booking_timestamp
+from displayed
+    left join clicked
+        on displayed.unique_session_id = clicked.unique_session_id
+            and displayed.entry_id = clicked.entry_id
+            and (displayed.module_id = clicked.module_id or displayed.module_id = clicked.module_list_id)
+            and displayed.module_displayed_timestamp <= clicked.module_clicked_timestamp
+    left join consultations
+        on displayed.unique_session_id = consultations.unique_session_id
+            and consultations.module_id = displayed.module_id
+            and consultations.consult_offer_timestamp >= module_displayed_timestamp
+    left join favorites
+        on favorites.unique_session_id = displayed.unique_session_id
+            and favorites.module_id = displayed.module_id
+    left join {{ ref( 'firebase_bookings' ) }} as bookings
+        on displayed.unique_session_id = bookings.unique_session_id
+            and consultations.offer_id = bookings.offer_id
+            and consultations.consult_offer_timestamp <= bookings.booking_timestamp

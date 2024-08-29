@@ -1,19 +1,13 @@
-import pytest
-from data_analytics.utils.json import approx_equal
-from jinja2 import Environment, FileSystemLoader
-from google.cloud import bigquery
-from data_analytics.config import GCP_PROJECT, TEST_DATASET
+import warnings
 
+import pytest
+from data_analytics.config import GCP_PROJECT, TEST_DATASET
 from data_analytics.utils.gcp import (
-    create_data,
     create_dataset,
     drop_dataset,
     drop_table,
-    run_query,
 )
-from common.macros import create_humanize_id_function
-from dependencies.analytics.import_analytics import export_tables
-import warnings
+from google.cloud import bigquery
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 

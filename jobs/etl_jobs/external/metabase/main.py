@@ -1,18 +1,24 @@
-import typer
-import pandas as pd
 import datetime
+import json
+from pathlib import Path
+
+import pandas as pd
+import typer
+
 from metabase_api import MetabaseAPI
-from table import MetabaseTable, get_mapped_fields
 from native import NativeCard
 from query import QueryCard
+from table import MetabaseTable, get_mapped_fields
 from utils import (
-    PROJECT_NAME,
     ENVIRONMENT_SHORT_NAME,
+    INT_METABASE_DATASET,
     METABASE_API_USERNAME,
-    ANALYTICS_DATASET,
+    PROJECT_NAME,
     access_secret_data,
     get_dependant_cards,
 )
+
+MAPPINGS_PATH = Path("data/mappings.json")
 
 METABASE_HOST = access_secret_data(
     PROJECT_NAME, f"metabase_host_{ENVIRONMENT_SHORT_NAME}"
@@ -49,10 +55,13 @@ def run(
         help="Nom du nouveau schéma Big Query",
     ),
 ):
-
     native_cards, query_cards = get_dependant_cards(
         legacy_table_name, legacy_schema_name
     )
+
+    with open(MAPPINGS_PATH, "r") as file:
+        data = json.load(file)
+        table_columns_mappings = data.get(legacy_table_name, {})
 
     metabase = MetabaseAPI(
         username=METABASE_API_USERNAME,
@@ -71,7 +80,9 @@ def run(
     legacy_table_id = legacy_metabase_table.get_table_id()
     new_table_id = new_metabase_table.get_table_id()
 
-    metabase_field_mapping = get_mapped_fields(legacy_fields_df, new_fields_df)
+    metabase_field_mapping = get_mapped_fields(
+        legacy_fields_df, new_fields_df, table_columns_mappings
+    )
 
     if metabase_card_type == "native":
         transition_logs = []
@@ -86,6 +97,7 @@ def run(
             try:
                 native_card = NativeCard(card_id, metabase)
                 native_card.replace_table_name(legacy_table_name, new_table_name)
+                native_card.replace_column_names(table_columns_mappings)
                 native_card.update_filters(metabase_field_mapping)
                 native_card.update_query()
                 transition_log["success"] = True
@@ -110,9 +122,7 @@ def run(
                 query_card.update_dataset_query(
                     metabase_field_mapping, legacy_table_id, new_table_id
                 )
-                query_card.update_result_metadata(metabase_field_mapping)
                 query_card.update_table_id(new_table_id)
-                query_card.update_viz_settings(metabase_field_mapping)
                 query_card.update_card()
                 transition_log["success"] = True
             except Exception as e:
@@ -121,7 +131,7 @@ def run(
             transition_logs.append(transition_log)
 
     pd.DataFrame(transition_logs).to_gbq(
-        (f"{ANALYTICS_DATASET}.metabase_migration_logs"),
+        (f"{INT_METABASE_DATASET}.migration_log"),
         project_id=PROJECT_NAME,
         if_exists="append",
     )

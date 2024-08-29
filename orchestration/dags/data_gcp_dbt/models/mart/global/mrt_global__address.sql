@@ -1,4 +1,4 @@
-SELECT
+select
     address_id,
     address_ban_id,
     address_insee_code,
@@ -7,5 +7,5 @@ SELECT
     address_city,
     address_latitude,
     address_longitude,
-    address_departement_code
-FROM {{ source('raw', 'applicative_database_address') }} 
+    address_department_code
+from {{ source('raw', 'applicative_database_address') }}

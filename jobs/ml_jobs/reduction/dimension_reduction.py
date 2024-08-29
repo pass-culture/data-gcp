@@ -1,21 +1,20 @@
 import numpy as np
+import polars as pl
+import pyarrow.dataset as ds
 import typer
 from loguru import logger
-from tools.utils import (
-    ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
-    convert_str_emb_to_float,
-    convert_arr_emb_to_str,
-    load_config_file,
-    export_polars_to_bq,
-)
+
 from tools.dimension_reduction import (
-    umap_reduce_embedding_dimension,
     pca_reduce_embedding_dimension,
     pumap_reduce_embedding_dimension,
+    umap_reduce_embedding_dimension,
 )
-import pyarrow.dataset as ds
-import polars as pl
+from tools.utils import (
+    convert_arr_emb_to_str,
+    convert_str_emb_to_float,
+    export_polars_to_bq,
+    load_config_file,
+)
 
 
 def reduce_transformation(
@@ -83,6 +82,7 @@ def export_reduction_table(
 def plan(
     source_gs_path,
     embedding_columns,
+    output_dataset_name,
     output_table_prefix,
     target_dimension,
     target_name,
@@ -106,7 +106,7 @@ def plan(
         data=ldf.select(
             ["item_id", "reduction_method"] + embedding_columns + [target_name]
         ),
-        dataset=f"clean_{ENV_SHORT_NAME}",
+        dataset=output_dataset_name,
         output_table=output_table_name,
     )
     logger.info(f"Done Table... {output_table_name}")
@@ -120,9 +120,13 @@ def dimension_reduction(
         ...,
         help="Name of the dataframe we want to reduce",
     ),
-    output_table_name: str = typer.Option(
+    output_dataset_name: str = typer.Option(
         ...,
-        help="Name of the dataframe we want to clean",
+        help="Name of the output dataset",
+    ),
+    output_prefix_table_name: str = typer.Option(
+        ...,
+        help="Name of the output prefix table",
     ),
     reduction_config: str = typer.Option(
         "default",
@@ -144,7 +148,8 @@ def dimension_reduction(
         plan(
             source_gs_path,
             embedding_columns,
-            output_table_prefix=output_table_name,
+            output_dataset_name=output_dataset_name,
+            output_table_prefix=output_prefix_table_name,
             target_dimension=target_dimension,
             target_name=target_name,
             method=method,

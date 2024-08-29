@@ -1,18 +1,18 @@
 from datetime import datetime, timedelta
 
-from airflow import DAG
-from airflow.models import Param
+from common import macros
+from common.alerts import task_fail_slack_alert
+from common.config import DAG_FOLDER, ENV_SHORT_NAME
 from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
 )
-from common.alerts import task_fail_slack_alert
-from common.config import ENV_SHORT_NAME, DAG_FOLDER
 from common.utils import get_airflow_schedule
-from common import macros
 
+from airflow import DAG
+from airflow.models import Param
 
 GCE_INSTANCE = f"import-documentation-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/notion"
@@ -67,10 +67,10 @@ with DAG(
     )
 
     import_documentation = SSHGCEOperator(
-        task_id=f"import_documentation",
+        task_id="import_documentation",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command=f"""
+        command="""
         python main.py
         """,
     )

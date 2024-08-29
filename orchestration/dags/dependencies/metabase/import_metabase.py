@@ -1,6 +1,6 @@
 from common.config import DAG_FOLDER
 
-SQL_PATH = f"dependencies/metabase/sql"
+SQL_PATH = "dependencies/metabase/sql"
 
 
 import_tables = {
@@ -39,39 +39,20 @@ import_tables = {
         "destination_dataset": "{{ bigquery_raw_dataset }}",
         "destination_table": "metabase_report_dashboard",
     },
-    "collections": {
-        "sql": f"{SQL_PATH}/raw/collections.sql",
+    "collection": {
+        "sql": f"{SQL_PATH}/raw/collection.sql",
         "destination_dataset": "{{ bigquery_raw_dataset }}",
-        "destination_table": "metabase_collections",
+        "destination_table": "metabase_collection",
     },
     "view_log": {
         "sql": f"{SQL_PATH}/raw/view_log.sql",
         "destination_dataset": "{{ bigquery_raw_dataset }}",
         "destination_table": "metabase_view_log",
     },
-}
-
-analytics_tables = {
-    "metabase_costs": {
-        "sql": f"{SQL_PATH}/analytics/metabase_costs.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "metabase_costs",
-    },
-    "metabase_views": {
-        "sql": f"{SQL_PATH}/analytics/metabase_views.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "metabase_views",
-    },
-    "metabase_activity": {
-        "sql": f"{SQL_PATH}/analytics/metabase_activity.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "metabase_activity",
-        "depends": ["ref_collections_archive"],
-    },
-    "ref_collections_archive": {
-        "sql": f"{SQL_PATH}/analytics/ref_collections_archive.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "metabase_ref_collections_archive",
+    "revision": {
+        "sql": f"{SQL_PATH}/raw/revision.sql",
+        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_table": "metabase_revision",
     },
 }
 

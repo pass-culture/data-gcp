@@ -1,11 +1,11 @@
-SELECT
+select
     event_date,
-    CASE WHEN event_name="page_view" THEN CONCAT("Page: ", page_name) ELSE event_name END as event_name,
-    timestamp(event_timestamp) as event_timestamp,
+    case when event_name = "page_view" then CONCAT("Page: ", page_name) else event_name end as event_name,
+    TIMESTAMP(event_timestamp) as event_timestamp,
     user_id,
     user_pseudo_id,
     platform,
-    STRUCT(   
+    struct(
         unique_session_id,
         origin,
         offer_id,
@@ -23,7 +23,7 @@ SELECT
         download_file_type,
         download_files_cnt
     ) as extra_params,
-    STRUCT(
+    struct(
         offerer_id,
         offerer_name,
         offerer_first_individual_offer_creation_date,
@@ -31,7 +31,7 @@ SELECT
         offerer_business_activity_label,
         offerer_legal_category_label,
         is_local_authority,
-        permanent_venues_managed,
+        total_permanent_managed_venues,
         is_synchro_adage,
         dms_accepted_at,
         first_dms_adage_status,
@@ -44,13 +44,13 @@ SELECT
         partner_name,
         partner_type,
         partner_cultural_sector,
-        partner_nb_individual_offers,
-        partner_nb_collective_offers,
+        total_partner_created_individual_offers,
+        total_partner_created_collective_offers,
         user_device_category,
         user_device_operating_system,
         user_web_browser
     ) as user_params,
     "pro" as origin
-FROM {{ ref("mrt_pro__event") }}
-WHERE (NOT REGEXP_CONTAINS(event_name, '^[a-z]+(_[a-z]+)*$') OR event_name = "page_view")
-AND user_pseudo_id is NOT NULL
+from {{ ref("mrt_pro__event") }}
+where (not REGEXP_CONTAINS(event_name, '^[a-z]+(_[a-z]+)*$') or event_name = "page_view")
+    and user_pseudo_id is not NULL

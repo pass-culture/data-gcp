@@ -1,31 +1,43 @@
-import typer
 import pandas as pd
-
+import typer
 from loguru import logger
+
 from tools.preprocessing import (
-    prepare_embedding,
     get_item_by_categories,
     get_item_by_group,
+    prepare_embedding,
 )
-from tools.utils import load_config_file, TMP_DATASET
+from tools.utils import load_config_file
 
 
 def preprocess(
-    input_table: str = typer.Option(..., help="Path to data"),
-    output_table: str = typer.Option(..., help="Path to data"),
+    input_dataset_name: str = typer.Option(..., help="Input dataset name."),
+    input_table_name: str = typer.Option(..., help="Input table name."),
+    output_dataset_name: str = typer.Option(..., help="Output dataset name."),
+    output_table_name: str = typer.Option(..., help="Ouput table name."),
     config_file_name: str = typer.Option(
         "default-config",
         help="Config file name",
     ),
-    cluster_prefix: str = typer.Option(
-        "",
-        help="Table prefix",
-    ),
 ):
+    """
+    Preprocesses the data in groups based {config_file_name} for clustering.
+
+    Args:
+        input_table (str): Path to the input data.
+        output_table (str): Path to the output data.
+        config_file_name (str, optional): Config file name. Defaults to "default-config".
+
+    Returns:
+        None
+    """
+
     params = load_config_file(config_file_name, job_type="cluster")
 
     logger.info("Loading data: fetch items with metadata and pretained embedding")
-    items = pd.read_gbq(f"SELECT * from `{TMP_DATASET}.{input_table}`")
+    items: pd.DataFrame = pd.read_gbq(
+        f"SELECT * from `{input_dataset_name}.{input_table_name}`"
+    )
 
     logger.info("Build item groups...")
     item_clean = (
@@ -58,7 +70,7 @@ def preprocess(
     item_embedding_w_group = item_embedding_w_group.fillna(0)
     logger.info(f"item_embedding: {len(item_embedding_w_group)}")
     item_embedding_w_group.to_gbq(
-        f"{TMP_DATASET}.{cluster_prefix}{output_table}", if_exists="replace"
+        f"{output_dataset_name}.{output_table_name}", if_exists="replace"
     )
 
     return

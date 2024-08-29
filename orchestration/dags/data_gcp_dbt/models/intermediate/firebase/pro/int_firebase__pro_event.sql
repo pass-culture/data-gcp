@@ -1,76 +1,76 @@
 {{ config(pre_hook="{{ create_dehumanize_id_function() }}") }}
 
-{% set target_name = target.name %}
+{% set target_name = var('ENV_SHORT_NAME') %}
 {% set target_schema = generate_schema_name('analytics_' ~ target_name) %}
 
 {{
     config(
-        materialized = "incremental",
+        **custom_incremental_config(
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "event_date", "data_type": "date"},
         on_schema_change = "sync_all_columns"
     )
-}}
+) }}
 
-WITH pro_event_raw_data as(
-    SELECT 
+with pro_event_raw_data as (
+    select
         event_name,
         user_pseudo_id,
-        CASE WHEN REGEXP_CONTAINS(user_id, r"\D") THEN {{target_schema}}.dehumanize_id(user_id) ELSE user_id END AS user_id,
+        case when REGEXP_CONTAINS(user_id, r"\D") then {{ target_schema }}.dehumanize_id(user_id) else user_id end as user_id,
         platform,
         event_date,
         event_timestamp,
-        ga_session_number AS session_number,
-        ga_session_id AS session_id,
-        CONCAT(user_pseudo_id, '-',ga_session_id) AS unique_session_id,
+        ga_session_number as session_number,
+        ga_session_id as session_id,
+        CONCAT(user_pseudo_id, '-', ga_session_id) as unique_session_id,
         origin,
         destination,
         traffic_campaign,
         traffic_medium,
         traffic_source,
-        category AS user_device_category,
-        operating_system AS user_device_operating_system,
-        operating_system_version AS user_device_operating_system_version,
-        browser AS user_web_browser,
-        browser_version AS user_web_browser_version,
-        COALESCE(CAST(offerer_id AS STRING),CAST(offererId AS STRING)) AS offerer_id,
-        COALESCE(venue_id,CAST(venueId AS STRING)) AS venue_id,
+        category as user_device_category,
+        operating_system as user_device_operating_system,
+        operating_system_version as user_device_operating_system_version,
+        browser as user_web_browser,
+        browser_version as user_web_browser_version,
+        COALESCE(CAST(offerer_id as STRING), CAST(offererid as STRING)) as offerer_id,
+        COALESCE(venue_id, CAST(venueid as STRING)) as venue_id,
         page_location,
-        page_title AS page_name,
-        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*)$""", 1) AS url_first_path,
-        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*?)[\/.*?\/.*?\/|\?]""", 1) AS url_path_type,
-        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/.*?\/.*?\/(.*?)\/|\?""", 1) AS url_path_details,
-        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*?)\?""", 1) AS url_path_before_params,
-        REGEXP_EXTRACT_ALL(page_location,r'(?:\?|&)(?:([^=]+)=(?:[^&]*))') AS url_params_key,
-        REGEXP_EXTRACT_ALL(page_location,r'(?:\?|&)(?:(?:[^=]+)=([^&]*))') AS url_params_value,
-        REGEXP_REPLACE(REGEXP_REPLACE(page_location , "[A-Z \\d]+[\\?\\/\\&]?", ""), "https://passculture.pro/", "") AS url_path_agg,
+        page_title as page_name,
+        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*)$""", 1) as url_first_path,
+        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*?)[\/.*?\/.*?\/|\?]""", 1) as url_path_type,
+        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/.*?\/.*?\/(.*?)\/|\?""", 1) as url_path_details,
+        REGEXP_EXTRACT(page_location, r"""passculture\.pro\/(.*?)\?""", 1) as url_path_before_params,
+        REGEXP_EXTRACT_ALL(page_location, r'(?:\?|&)(?:([^=]+)=(?:[^&]*))') as url_params_key,
+        REGEXP_EXTRACT_ALL(page_location, r'(?:\?|&)(?:(?:[^=]+)=([^&]*))') as url_params_value,
+        REGEXP_REPLACE(REGEXP_REPLACE(page_location, "[A-Z \\d]+[\\?\\/\\&]?", ""), "https://passculture.pro/", "") as url_path_agg,
         page_referrer,
         page_number,
-        COALESCE(double_offer_id,offerId) AS offer_id,
-        offerType AS offer_type,
-        saved AS has_saved_query,
-        hasOnly6eAnd5eStudents AS has_opened_wrong_student_modal,
-        isEdition AS is_edition,
-        isDraft AS is_draft,
+        COALESCE(double_offer_id, offerid) as offer_id,
+        offertype as offer_type,
+        saved as has_saved_query,
+        hasonly6eand5estudents as has_opened_wrong_student_modal,
+        isedition as is_edition,
+        isdraft as is_draft,
         filled,
-        filledWithErrors AS filled_with_errors,
-        categorieJuridiqueUniteLegale AS onboarding_selected_legal_category,
-        format AS download_format,
-        bookingStatus AS download_booking_status,
-        buttonType AS download_button_type,
-        fileType AS download_file_type,
-        filesCount AS download_files_cnt
-FROM {{ ref("int_firebase__pro_event_flattened") }}
-{% if is_incremental() %}
-WHERE event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
-{% endif %}
+        filledwitherrors as filled_with_errors,
+        categoriejuridiqueunitelegale as onboarding_selected_legal_category,
+        format as download_format,
+        bookingstatus as download_booking_status,
+        buttontype as download_button_type,
+        filetype as download_file_type,
+        filescount as download_files_cnt
+    from {{ ref("int_firebase__pro_event_flattened") }}
+    {% if is_incremental() %}
+        where event_date between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")
+    {% endif %}
 )
 
-SELECT
-    * EXCEPT(url_first_path, url_path_type, url_path_details, url_path_before_params),
-    CASE 
-        WHEN url_path_details is NULL THEN REPLACE(COALESCE(url_path_before_params, url_first_path), "/", "-")
-        WHEN url_path_details is NOT NULL THEN CONCAT(url_path_type, "-", url_path_details)
-        ELSE url_path_type 
-    END as url_path_extract
-FROM pro_event_raw_data
+select
+    * except (url_first_path, url_path_type, url_path_details, url_path_before_params),
+    case
+        when url_path_details is NULL then REPLACE(COALESCE(url_path_before_params, url_first_path), "/", "-")
+        when url_path_details is not NULL then CONCAT(url_path_type, "-", url_path_details)
+        else url_path_type
+    end as url_path_extract
+from pro_event_raw_data

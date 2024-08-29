@@ -1,5 +1,5 @@
+from tensorflow.keras.layers import Dot, Flatten
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Embedding, Flatten, Input, Dense, Lambda, Dot
 
 
 class MatchModel(Model):

@@ -1,37 +1,35 @@
 import os
+import time
 from datetime import datetime, timedelta
 
 import pandas as pd
-from airflow import DAG
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
+from common import macros
+from common.access_gcp_secrets import access_secret_data
+from common.alerts import task_fail_slack_alert
+from common.compose_gcs_files import compose_gcs_files
+from common.config import (
+    BIGQUERY_ML_RECOMMENDATION_DATASET,
+    BIGQUERY_SEED_DATASET,
+    DAG_FOLDER,
+    DATA_GCS_BUCKET_NAME,
+    GCP_PROJECT_ID,
+    GCP_REGION,
+    RECOMMENDATION_SQL_INSTANCE,
 )
+from common.utils import get_airflow_schedule
+
+from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import PythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryDeleteTableOperator,
+    BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
 from airflow.providers.google.cloud.operators.cloud_sql import (
-    CloudSQLImportInstanceOperator,
     CloudSQLExecuteQueryOperator,
+    CloudSQLImportInstanceOperator,
 )
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import PythonOperator
-
-from common.access_gcp_secrets import access_secret_data
-from common.compose_gcs_files import compose_gcs_files
-from common.config import (
-    GCP_PROJECT_ID,
-    GCP_REGION,
-    DATA_GCS_BUCKET_NAME,
-    BIGQUERY_ML_RECOMMENDATION_DATASET,
-    BIGQUERY_ANALYTICS_DATASET,
-    DAG_FOLDER,
-    RECOMMENDATION_SQL_INSTANCE,
-)
-from common.alerts import task_fail_slack_alert
-from common import macros
-from common.utils import get_airflow_schedule
-import time
 
 database_instance_name = access_secret_data(
     GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}_database_instance_name", default=""
@@ -103,8 +101,8 @@ def get_table_names():
 def get_dataset_name(dataset_type):
     if dataset_type == "ml_reco":
         return BIGQUERY_ML_RECOMMENDATION_DATASET
-    if dataset_type == "analytics":
-        return BIGQUERY_ANALYTICS_DATASET
+    if dataset_type == "seed":
+        return BIGQUERY_SEED_DATASET
 
 
 with DAG(

@@ -1,22 +1,21 @@
 import datetime
+
+from common import macros
+from common.alerts import analytics_fail_slack_alert
+from common.config import (
+    APPLICATIVE_PREFIX,
+    BIGQUERY_ANALYTICS_DATASET,
+    BIGQUERY_CLEAN_DATASET,
+    DAG_FOLDER,
+    GCP_PROJECT_ID,
+)
+from common.utils import get_airflow_schedule, waiting_operator
+from dependencies.analytics.import_analytics import define_import_tables
+
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.task_group import TaskGroup
-from common import macros
-from common.utils import depends_loop, get_airflow_schedule
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from common.operators.biquery import bigquery_job_task
-from dependencies.analytics.import_analytics import export_tables, define_import_tables
-from common.alerts import analytics_fail_slack_alert
-from common.config import DAG_FOLDER
-from common.utils import waiting_operator
-
-from common.config import (
-    GCP_PROJECT_ID,
-    BIGQUERY_CLEAN_DATASET,
-    BIGQUERY_ANALYTICS_DATASET,
-    APPLICATIVE_PREFIX,
-)
+from airflow.utils.task_group import TaskGroup
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
@@ -65,29 +64,4 @@ with TaskGroup(group_id="analytics_copy_group", dag=dag) as analytics_copy:
 
 end_import = DummyOperator(task_id="end_import", dag=dag)
 
-
-start_analytics_table_tasks = DummyOperator(task_id="start_analytics_tasks", dag=dag)
-analytics_table_jobs = {}
-for table, job_params in export_tables.items():
-    job_params["destination_table"] = job_params.get("destination_table", table)
-    task = bigquery_job_task(dag=dag, table=table, job_params=job_params)
-    analytics_table_jobs[table] = {
-        "operator": task,
-        "depends": job_params.get("depends", []),
-        "dag_depends": job_params.get("dag_depends", []),
-    }
-
-
-end_analytics_table_tasks = DummyOperator(task_id="end_analytics_table_tasks", dag=dag)
-analytics_table_tasks = depends_loop(
-    export_tables,
-    analytics_table_jobs,
-    start_analytics_table_tasks,
-    dag,
-    default_end_operator=end_analytics_table_tasks,
-)
-
-end = DummyOperator(task_id="end", dag=dag)
-
-(start >> wait_for_dbt >> analytics_copy >> end_import >> start_analytics_table_tasks)
-(analytics_table_tasks >> end_analytics_table_tasks >> end)
+(start >> wait_for_dbt >> analytics_copy >> end_import)

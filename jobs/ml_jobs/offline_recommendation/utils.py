@@ -1,12 +1,13 @@
-import os
-import io
-from google.cloud import bigquery
-import requests
-import polars as pl
 import concurrent
-import numpy as np
+import io
+import os
 from multiprocessing import cpu_count
-from itertools import repeat
+
+import numpy as np
+import polars as pl
+import requests
+from google.cloud import bigquery
+
 from access_gcp_secrets import access_secret
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
@@ -14,7 +15,7 @@ ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 API_TOKEN_SECRET_ID = os.environ.get("API_TOKEN_SECRET_ID")
 try:
     API_TOKEN = access_secret(GCP_PROJECT, API_TOKEN_SECRET_ID)
-except:
+except Exception:
     API_TOKEN = "test_token"
 APP_CONFIG = {
     "URL": {
@@ -52,8 +53,6 @@ def get_offline_recos(data):
 
 
 def _get_recos(rows):
-    import requests
-
     results = []
     try:
         for row in rows:
@@ -61,13 +60,13 @@ def _get_recos(rows):
                 reco = similar_offers(
                     row["offer_id"], row["venue_longitude"], row["venue_latitude"]
                 )[:N_RECO_DISPLAY]
-            except:
+            except Exception:
                 reco = []
             results.append(
                 {"user_id": row["user_id"], "offer_id": row["offer_id"], "recos": reco}
             )
         return results
-    except:
+    except Exception:
         return results
 
 

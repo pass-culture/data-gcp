@@ -1,143 +1,146 @@
-WITH logs AS (
-SELECT
-    user_pseudo_id
-    , user_id
-    , event_timestamp
-    , event_date
-    , event_name
-    , firebase_screen
-    , origin
-    , platform
-    , onboarding_user_selected_age
-FROM {{ ref('int_firebase__native_event') }} f
-WHERE (event_name IN ('SelectAge','HasAcceptedAllCookies','login','OnboardingStarted','ConsultOffer','BookingConfirmation','first_open','ConsultOffer','ContinueSetEmail','ContinueSetPassword','ContinueSetBirthday','ContinueCGU','SetEmail','SetPassword','SetBirthday')
-OR firebase_screen IN ('SignupForm','ProfilSignUp', 'SignupConfirmationEmailSent', 'OnboardingWelcome','OnboardingGeolocation', 'FirstTutorial','BeneficiaryRequestSent','UnderageAccountCreated','BeneficiaryAccountCreated','FirstTutorial2','FirstTutorial3','FirstTutorial4','HasSkippedTutorial' )) 
+with logs as (
+    select
+        user_pseudo_id,
+        user_id,
+        event_timestamp,
+        event_date,
+        event_name,
+        firebase_screen,
+        origin,
+        platform,
+        onboarding_user_selected_age
+    from {{ ref('int_firebase__native_event') }} f
+    where (
+        event_name in ('SelectAge', 'HasAcceptedAllCookies', 'login', 'OnboardingStarted', 'ConsultOffer', 'BookingConfirmation', 'first_open', 'ConsultOffer', 'ContinueSetEmail', 'ContinueSetPassword', 'ContinueSetBirthday', 'ContinueCGU', 'SetEmail', 'SetPassword', 'SetBirthday')
+        or firebase_screen in ('SignupForm', 'ProfilSignUp', 'SignupConfirmationEmailSent', 'OnboardingWelcome', 'OnboardingGeolocation', 'FirstTutorial', 'BeneficiaryRequestSent', 'UnderageAccountCreated', 'BeneficiaryAccountCreated', 'FirstTutorial2', 'FirstTutorial3', 'FirstTutorial4', 'HasSkippedTutorial')
+    )
 ),
 
-    -- utilisateurs trackés par une campagne marketing --
-    user_accepted_tracking AS (
-    SELECT 
-        user_pseudo_id 
-        ,appsflyer_id
-        ,event_timestamp
-  FROM {{ ref('int_firebase__native_event') }}
-  WHERE appsflyer_id is not null
-  QUALIFY row_number() over (partition by user_pseudo_id order by event_date) = 1
+-- utilisateurs trackés par une campagne marketing --
+user_accepted_tracking as (
+    select
+        user_pseudo_id,
+        appsflyer_id,
+        event_timestamp
+    from {{ ref('int_firebase__native_event') }}
+    where appsflyer_id is not null
+    qualify row_number() over (partition by user_pseudo_id order by event_date) = 1
 ),
 
-    first_open AS(
-SELECT
-   user_pseudo_id
-   ,platform
-   ,MIN(event_timestamp) as first_open_date
-FROM logs
-WHERE event_name = 'first_open'
-GROUP BY 1,2
+first_open as (
+    select
+        user_pseudo_id,
+        platform,
+        min(event_timestamp) as first_open_date
+    from logs
+    where event_name = 'first_open'
+    group by 1, 2
 ),
 
-    -- utilisateurs ayant accepté les cookies : certains d'entre eux ne font pas l'objet dans événement "HasAcceptedAllCookies", d'où la nécessité d'ajouter d'autres événéments pour s'en assurer --
-    accepted_cookies AS(
-SELECT
-    DISTINCT user_pseudo_id
-FROM logs
-WHERE (event_name IN ('HasAcceptedAllCookies','login','OnboardingStarted','ConsultOffer','BookingConfirmation','ConsultOffer','ContinueSetEmail','ContinueSetPassword','ContinueSetBirthday','SetEmail','SetPassword','SetBirthday')
-OR firebase_screen IN ('SignupForm','ProfilSignUp', 'SignupConfirmationEmailSent', 'OnboardingWelcome','OnboardingGeolocation', 'FirstTutorial','BeneficiaryRequestSent','UnderageAccountCreated','BeneficiaryAccountCreated','FirstTutorial2','FirstTutorial3','FirstTutorial4','HasSkippedTutorial' )
-)),
-
-    onboarding_started AS(
-SELECT
-   user_pseudo_id 
-   ,MIN(event_timestamp) as onboarding_started_date
-FROM logs
-WHERE (firebase_screen IN ('OnboardingWelcome', 'FirstTutorial', 'OnboardingGeolocation','FirstTutorial2','FirstTutorial3','FirstTutorial4') OR event_name IN ('OnboardingStarted','HasSkippedTutorial'))
-GROUP BY 1
+-- utilisateurs ayant accepté les cookies : certains d'entre eux ne font pas l'objet dans événement "HasAcceptedAllCookies", d'où la nécessité d'ajouter d'autres événéments pour s'en assurer --
+accepted_cookies as (
+    select distinct user_pseudo_id
+    from logs
+    where (
+        event_name in ('HasAcceptedAllCookies', 'login', 'OnboardingStarted', 'ConsultOffer', 'BookingConfirmation', 'ConsultOffer', 'ContinueSetEmail', 'ContinueSetPassword', 'ContinueSetBirthday', 'SetEmail', 'SetPassword', 'SetBirthday')
+        or firebase_screen in ('SignupForm', 'ProfilSignUp', 'SignupConfirmationEmailSent', 'OnboardingWelcome', 'OnboardingGeolocation', 'FirstTutorial', 'BeneficiaryRequestSent', 'UnderageAccountCreated', 'BeneficiaryAccountCreated', 'FirstTutorial2', 'FirstTutorial3', 'FirstTutorial4', 'HasSkippedTutorial')
+    )
 ),
 
-    -- dernier âge selectionné pendant l'onboarding --
-    age_selected AS(
-SELECT
-   user_pseudo_id 
-   ,onboarding_user_selected_age
-   ,ROW_NUMBER()OVER (PARTITION BY user_pseudo_id ORDER BY event_timestamp DESC) AS rank_time_selected_age
-FROM logs
-WHERE ((event_name = 'SelectAge' AND (origin = 'onboarding' OR origin IS NULL)) OR event_name = 'SignUpTooYoung')
+onboarding_started as (
+    select
+        user_pseudo_id,
+        min(event_timestamp) as onboarding_started_date
+    from logs
+    where (firebase_screen in ('OnboardingWelcome', 'FirstTutorial', 'OnboardingGeolocation', 'FirstTutorial2', 'FirstTutorial3', 'FirstTutorial4') or event_name in ('OnboardingStarted', 'HasSkippedTutorial'))
+    group by 1
 ),
 
-    signup_started AS (
-SELECT 
-    user_pseudo_id
-    ,MIN(event_timestamp) as signup_started_date
-FROM logs
-WHERE firebase_screen IN ('SignupForm','ProfilSignUp')
-OR event_name IN ('ContinueSetEmail','ContinueSetPassword','ContinueSetBirthday','SetEmail','SetPassword','SetBirthday')
-GROUP BY 1
+-- dernier âge selectionné pendant l'onboarding --
+age_selected as (
+    select
+        user_pseudo_id,
+        onboarding_user_selected_age,
+        row_number() over (partition by user_pseudo_id order by event_timestamp desc) as rank_time_selected_age
+    from logs
+    where ((event_name = 'SelectAge' and (origin = 'onboarding' or origin is null)) or event_name = 'SignUpTooYoung')
 ),
 
-    signup_completed AS (
-SELECT 
-    user_pseudo_id
-    ,MIN(event_timestamp) as signup_completed_date
-FROM logs
-WHERE (firebase_screen = 'SignupConfirmationEmailSent' OR event_name = 'ContinueCGU')
-GROUP BY 1
+signup_started as (
+    select
+        user_pseudo_id,
+        min(event_timestamp) as signup_started_date
+    from logs
+    where firebase_screen in ('SignupForm', 'ProfilSignUp')
+        or event_name in ('ContinueSetEmail', 'ContinueSetPassword', 'ContinueSetBirthday', 'SetEmail', 'SetPassword', 'SetBirthday')
+    group by 1
 ),
 
-    first_login AS (
-SELECT 
-    user_pseudo_id
-    ,user_id
-    ,MIN(event_timestamp) as first_login_date
-FROM logs
-WHERE event_name = 'login' and user_id IS NOT NULL
-GROUP BY 1,2
+signup_completed as (
+    select
+        user_pseudo_id,
+        min(event_timestamp) as signup_completed_date
+    from logs
+    where (firebase_screen = 'SignupConfirmationEmailSent' or event_name = 'ContinueCGU')
+    group by 1
 ),
 
-    beneficiary_request_sent AS (
-SELECT 
-    user_pseudo_id
-    ,MIN(event_timestamp) as beneficiary_request_sent_date
-FROM logs
-WHERE firebase_screen IN ('BeneficiaryRequestSent','UnderageAccountCreated','BeneficiaryAccountCreated')
-GROUP BY 1
+first_login as (
+    select
+        user_pseudo_id,
+        user_id,
+        min(event_timestamp) as first_login_date
+    from logs
+    where event_name = 'login' and user_id is not null
+    group by 1, 2
 ),
 
-    first_offer_consulted AS (
-SELECT 
-    user_pseudo_id
-    ,MIN(event_timestamp) as first_offer_consulted_date
-FROM logs
-WHERE event_name = 'ConsultOffer'
-GROUP BY 1
+beneficiary_request_sent as (
+    select
+        user_pseudo_id,
+        min(event_timestamp) as beneficiary_request_sent_date
+    from logs
+    where firebase_screen in ('BeneficiaryRequestSent', 'UnderageAccountCreated', 'BeneficiaryAccountCreated')
+    group by 1
+),
+
+first_offer_consulted as (
+    select
+        user_pseudo_id,
+        min(event_timestamp) as first_offer_consulted_date
+    from logs
+    where event_name = 'ConsultOffer'
+    group by 1
 )
 
-SELECT 
-  first_open.user_pseudo_id
-  ,first_login.user_id
-  ,uat.appsflyer_id
-  ,CASE WHEN first_open.user_pseudo_id IN (SELECT * FROM accepted_cookies) THEN true ELSE false END AS has_accepted_app_cookies
-  ,CASE WHEN uat.appsflyer_id IS NULL THEN false ELSE true END AS has_accepted_tracking
-  ,user_first_deposit_type
-  ,first_open.platform
--- certains utilisateurs s'étant déjà inscrits téléchargent l'app sur un autre device et donc créent un nouveau user_pseudo_id, la query suivante permet d'identifier ceux qui se loguent pour la première fois 
-  ,CASE WHEN TIMESTAMP(u.user_deposit_creation_date) < first_open.first_open_date THEN false
-        WHEN TIMESTAMP(u.user_activation_date) < first_open.first_open_date THEN false
-        ELSE true END 
-    AS is_first_device_connected
-  ,age_selected.onboarding_user_selected_age
-  ,first_open.first_open_date
-  ,onboarding_started.onboarding_started_date
-  ,signup_started.signup_started_date
-  ,signup_completed.signup_completed_date
-  ,first_login.first_login_date
-  ,beneficiary_request_sent.beneficiary_request_sent_date
-  ,u.user_deposit_creation_date as deposit_created_date
-  ,u.first_booking_date as first_booking_date
-FROM first_open
-LEFT JOIN age_selected ON first_open.user_pseudo_id=age_selected.user_pseudo_id and rank_time_selected_age = 1
-LEFT JOIN onboarding_started ON first_open.user_pseudo_id=onboarding_started.user_pseudo_id
-LEFT JOIN signup_started ON first_open.user_pseudo_id=signup_started.user_pseudo_id
-LEFT JOIN signup_completed ON first_open.user_pseudo_id=signup_completed.user_pseudo_id
-LEFT JOIN first_login ON first_open.user_pseudo_id=first_login.user_pseudo_id
-LEFT JOIN beneficiary_request_sent ON first_open.user_pseudo_id=beneficiary_request_sent.user_pseudo_id
-LEFT JOIN {{ ref('enriched_user_data') }} u ON first_login.user_id=u.user_id
-LEFT JOIN user_accepted_tracking uat ON first_open.user_pseudo_id = uat.user_pseudo_id
+select
+    first_open.user_pseudo_id,
+    first_login.user_id,
+    uat.appsflyer_id,
+    case when first_open.user_pseudo_id in (select * from accepted_cookies) then true else false end as has_accepted_app_cookies,
+    case when uat.appsflyer_id is null then false else true end as has_accepted_tracking,
+    first_deposit_type,
+    first_open.platform,
+    -- certains utilisateurs s'étant déjà inscrits téléchargent l'app sur un autre device et donc créent un nouveau user_pseudo_id, la query suivante permet d'identifier ceux qui se loguent pour la première fois 
+    case when timestamp(u.first_deposit_creation_date) < first_open.first_open_date then false
+        when timestamp(u.user_activation_date) < first_open.first_open_date then false
+        else true end
+        as is_first_device_connected,
+    age_selected.onboarding_user_selected_age,
+    first_open.first_open_date,
+    onboarding_started.onboarding_started_date,
+    signup_started.signup_started_date,
+    signup_completed.signup_completed_date,
+    first_login.first_login_date,
+    beneficiary_request_sent.beneficiary_request_sent_date,
+    u.first_deposit_creation_date as deposit_created_date,
+    u.first_booking_date as first_booking_date
+from first_open
+    left join age_selected on first_open.user_pseudo_id = age_selected.user_pseudo_id and rank_time_selected_age = 1
+    left join onboarding_started on first_open.user_pseudo_id = onboarding_started.user_pseudo_id
+    left join signup_started on first_open.user_pseudo_id = signup_started.user_pseudo_id
+    left join signup_completed on first_open.user_pseudo_id = signup_completed.user_pseudo_id
+    left join first_login on first_open.user_pseudo_id = first_login.user_pseudo_id
+    left join beneficiary_request_sent on first_open.user_pseudo_id = beneficiary_request_sent.user_pseudo_id
+    left join {{ ref('mrt_global__user') }} u on first_login.user_id = u.user_id
+    left join user_accepted_tracking uat on first_open.user_pseudo_id = uat.user_pseudo_id

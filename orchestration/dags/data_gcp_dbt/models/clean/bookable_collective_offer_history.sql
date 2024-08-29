@@ -1,75 +1,79 @@
 {{
     config(
-        materialized = 'incremental',
+        **custom_incremental_config(
         incremental_strategy = 'insert_overwrite',
         partition_by = {'field': 'partition_date', 'data_type': 'date'},
     )
-}}
+) }}
 
 
-WITH bookings_per_stock AS (
-    SELECT
+with bookings_per_stock as (
+    select
         collective_stock_id,
         partition_date,
         COUNT(
-            DISTINCT CASE
-                WHEN collective_booking_status NOT IN ('CANCELLED') THEN collective_booking_id
-                ELSE NULL
-            END
-        ) AS collective_booking_stock_no_cancelled_cnt
-    FROM
-        {{ source('clean','applicative_database_collective_booking_history')}} AS collective_booking
-    {% if is_incremental() %} 
-    WHERE partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
+            distinct case
+                when collective_booking_status not in ('CANCELLED') then collective_booking_id
+                else NULL
+            end
+        ) as collective_booking_stock_no_cancelled_cnt
+    from
+        {{ source('clean','applicative_database_collective_booking_history') }} as collective_booking
+    {% if is_incremental() %}
+        where partition_date = DATE_SUB('{{ ds() }}', interval 1 day)
     {% endif %}
 
-    GROUP BY
+    group by
         1,
         2
 )
-SELECT
-    DISTINCT collective_stock.collective_offer_id,
+
+select distinct
+    collective_stock.collective_offer_id,
     collective_stock.partition_date,
-    FALSE AS collective_offer_is_template
-FROM
-    {{ source('clean','applicative_database_collective_stock_history')}} AS collective_stock
-    JOIN {{ source('clean','applicative_database_collective_offer_history')}} AS collective_offer ON collective_stock.collective_offer_id = collective_offer.collective_offer_id
-    AND collective_offer.collective_offer_is_active
-    AND collective_offer.partition_date = collective_stock.partition_date
-    AND collective_offer_validation = "APPROVED"
-    LEFT JOIN bookings_per_stock ON collective_stock.collective_stock_id = bookings_per_stock.collective_stock_id
-    AND collective_stock.partition_date = bookings_per_stock.partition_date
-WHERE
+    FALSE as collective_offer_is_template
+from
+    {{ source('clean','applicative_database_collective_stock_history') }} as collective_stock
+    join
+        {{ source('clean','applicative_database_collective_offer_history') }}
+            as collective_offer
+        on collective_stock.collective_offer_id = collective_offer.collective_offer_id
+            and collective_offer.collective_offer_is_active
+            and collective_offer.partition_date = collective_stock.partition_date
+            and collective_offer_validation = "APPROVED"
+    left join bookings_per_stock on collective_stock.collective_stock_id = bookings_per_stock.collective_stock_id
+        and collective_stock.partition_date = bookings_per_stock.partition_date
+where
     (
         (
             DATE(
                 collective_stock.collective_stock_booking_limit_date_time
             ) > collective_stock.partition_date
-            OR collective_stock.collective_stock_booking_limit_date_time IS NULL
+            or collective_stock.collective_stock_booking_limit_date_time is NULL
         )
-        AND (
+        and (
             DATE(
                 collective_stock.collective_stock_beginning_date_time
             ) > collective_stock.partition_date
-            OR collective_stock.collective_stock_beginning_date_time IS NULL
+            or collective_stock.collective_stock_beginning_date_time is NULL
         )
-        AND collective_offer.collective_offer_is_active
-        AND (
-            collective_booking_stock_no_cancelled_cnt IS NULL
+        and collective_offer.collective_offer_is_active
+        and (
+            collective_booking_stock_no_cancelled_cnt is NULL
         )
     )
-    {% if is_incremental() %} 
-    AND collective_stock.partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
+    {% if is_incremental() %}
+        and collective_stock.partition_date = DATE_SUB('{{ ds() }}', interval 1 day)
     {% endif %}
 
-UNION ALL
-SELECT
-    collective_offer_template.collective_offer_id
-    ,collective_offer_template.partition_date
-    ,TRUE AS collective_offer_is_template
-FROM
-    {{ source('clean','applicative_database_collective_offer_template_history')}} AS collective_offer_template
-    WHERE collective_offer_validation = "APPROVED"
+union all
+select
+    collective_offer_template.collective_offer_id,
+    collective_offer_template.partition_date,
+    TRUE as collective_offer_is_template
+from
+    {{ source('clean','applicative_database_collective_offer_template_history') }} as collective_offer_template
+where collective_offer_validation = "APPROVED"
     {% if is_incremental() %}
-    AND partition_date = DATE_SUB('{{ ds() }}', INTERVAL 1 DAY)
+        and partition_date = DATE_SUB('{{ ds() }}', interval 1 day)
     {% endif %}

@@ -2,11 +2,13 @@ import concurrent
 import traceback
 from itertools import repeat
 from multiprocessing import cpu_count
-from loguru import logger
+
 import pandas as pd
 import recordlinkage
+import typer
+from loguru import logger
+
 from tools.config import (
-    ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     SUBCATEGORIES_WITH_PERFORMER,
     data_and_hyperparams_dict,
@@ -61,14 +63,20 @@ def multiprocess_linkage(
 
 
 def main(
-    gcp_project,
-    env_short_name,
+    gcp_project: str = typer.Option(
+        GCP_PROJECT_ID,
+        help="BigQuery Project in which the offers to link is located",
+    ),
+    input_dataset_name: str = typer.Option(..., help="Path to the dataset input name."),
+    input_table_name: str = typer.Option(..., help="Path to the intput table name."),
+    output_dataset_name: str = typer.Option(..., help="Path to the dataset name."),
+    output_table_name: str = typer.Option(..., help="Path to the output table name."),
 ) -> None:
     ###############
     # Load preprocessed data
-    logger.info("Loading offers to link...")
+    logger.info(f"Loading offers to link... {input_dataset_name}.{input_table_name}")
     df_offers_to_link_clean = pd.read_gbq(
-        f"SELECT * FROM `{gcp_project}.tmp_{env_short_name}.items_to_link_clean`"
+        f"SELECT * FROM `{gcp_project}.{input_dataset_name}.{input_table_name}`"
     )
     logger.info(f"{len(df_offers_to_link_clean)} items to link")
     ###############
@@ -91,9 +99,9 @@ def main(
     ###############
     # Add dataframe to link to analysis config dict
     data_and_hyperparams_dict["performer"]["dataframe_to_link"] = df_to_link_performer
-    data_and_hyperparams_dict["non_performer"][
-        "dataframe_to_link"
-    ] = df_to_link_non_performer
+    data_and_hyperparams_dict["non_performer"]["dataframe_to_link"] = (
+        df_to_link_non_performer
+    )
     ###############
     # Run linkage for each group (performer, non-performer) then concat both dataframe to get linkage on full data
     max_process = cpu_count() - 1
@@ -131,11 +139,11 @@ def main(
 
     df_offers_linked_full = df_offers_linked_full.drop_duplicates()
     df_offers_linked_full.to_gbq(
-        f"tmp_{env_short_name}.linked_offers_full",
+        f"{output_dataset_name}.{output_table_name}",
         project_id=gcp_project,
         if_exists="replace",
     )
 
 
 if __name__ == "__main__":
-    main(GCP_PROJECT_ID, ENV_SHORT_NAME)
+    typer.run(main)

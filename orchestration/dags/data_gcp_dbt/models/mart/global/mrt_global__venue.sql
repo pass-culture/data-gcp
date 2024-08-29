@@ -1,4 +1,5 @@
-SELECT venue_id,
+select
+    venue_id,
     venue_name,
     venue_public_name,
     venue_booking_email,
@@ -19,6 +20,10 @@ SELECT venue_id,
     venue_humanized_id,
     venue_backoffice_link,
     venue_region_name,
+    venue_epci,
+    venue_density_label,
+    venue_macro_density_label,
+    venue_density_level,
     venue_academy_name,
     venue_targeted_audience,
     banner_url,
@@ -68,14 +73,26 @@ SELECT venue_id,
     total_bookable_offers,
     total_non_cancelled_tickets,
     total_current_year_non_cancelled_tickets,
+    is_active_last_30days,
+    is_active_current_year,
+    is_individual_active_last_30days,
+    is_individual_active_current_year,
+    is_collective_active_last_30days,
+    is_collective_active_current_year,
     offerer_id,
     offerer_name,
     offerer_validation_status,
     offerer_is_active,
+    dms_accepted_at,
+    first_dms_adage_status,
+    is_reference_adage,
+    is_synchro_adage,
     venue_pc_pro_link,
     partner_id,
     venue_iris_internal_id,
     offerer_address_id,
-FROM {{ ref('mrt_global__venue_unverified') }}
-WHERE offerer_validation_status='VALIDATED'
-    AND offerer_is_active
+    offerer_rank_desc,
+    offerer_rank_asc
+from {{ ref('int_global__venue') }}
+where offerer_validation_status = 'VALIDATED'
+    and offerer_is_active

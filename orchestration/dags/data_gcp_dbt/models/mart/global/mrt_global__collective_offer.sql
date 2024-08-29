@@ -1,4 +1,5 @@
-SELECT collective_offer_id,
+select
+    collective_offer_id,
     collective_offer_humanized_id,
     collective_offer_name,
     venue_id,
@@ -6,9 +7,15 @@ SELECT collective_offer_id,
     institution_id,
     institution_program_name,
     venue_name,
-    venue_department_code,
     venue_region_name,
+    venue_department_code,
+    venue_postal_code,
+    venue_city,
+    venue_epci,
     venue_academy_name,
+    venue_density_label,
+    venue_macro_density_label,
+    venue_density_level,
     venue_is_virtual,
     offerer_id,
     offerer_name,
@@ -41,6 +48,6 @@ SELECT collective_offer_id,
     collective_stock_beginning_date_time,
     collective_stock_booking_limit_date_time,
     collective_stock_price,
-    collective_stock_number_of_tickets,
-FROM {{ ref('mrt_global__collective_offer_unverified') }}
-WHERE collective_offer_validation = 'APPROVED'
+    collective_stock_number_of_tickets
+from {{ ref('int_global__collective_offer') }}
+where collective_offer_validation = 'APPROVED'

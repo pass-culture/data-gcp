@@ -1,7 +1,6 @@
-
 {{
   config(
-    materialized = "incremental",
+    **custom_incremental_config(
     partition_by={
       "field": "first_event_date",
       "data_type": "date",
@@ -11,54 +10,55 @@
     incremental_strategy = 'insert_overwrite',
     on_schema_change = "sync_all_columns"
   )
-}}
+) }}
 
 with visits as (
-    SELECT
+    select
         session_id,
         user_pseudo_id,
         unique_session_id,
         platform,
         app_version,
-        ANY_VALUE(session_number) AS session_number,
-        ANY_VALUE(user_id) AS user_id,
-        MIN(event_timestamp) AS first_event_timestamp,
-        date(MIN(event_timestamp)) AS first_event_date,
-        ANY_VALUE(traffic_campaign) AS traffic_campaign,
-        ANY_VALUE(traffic_medium) AS traffic_medium,
-        ANY_VALUE(traffic_source) AS traffic_source,
-        ANY_VALUE(traffic_gen) AS traffic_gen,
-        ANY_VALUE(traffic_content) AS traffic_content,
-        MAX(event_timestamp) AS last_event_timestamp,
-        COUNTIF(event_name = "ConsultOffer") AS nb_consult_offer,
-        COUNTIF(event_name = "BookingConfirmation") AS nb_booking_confirmation,
-        COUNTIF(event_name = "HasAddedOfferToFavorites") AS nb_add_to_favorites,
-        COUNTIF(event_name = "Share") AS nb_share,
-        COUNTIF(event_name = "Screenshot") AS nb_screenshot,
-        COUNTIF(event_name = "UserSetLocation") AS nb_set_location,
-        COUNTIF(event_name = "ConsultVideo") AS nb_consult_video,
-        COUNTIF(event_name = "ConsultVenue") AS nb_consult_venue,
-        COUNTIF(event_name = 'screen_view') AS nb_screen_view,
-        COUNTIF(event_name = 'screen_view' AND firebase_screen = 'Home') AS nb_screen_view_home,
-        COUNTIF(event_name = 'screen_view' AND firebase_screen = 'Search') AS nb_screen_view_search,
-        COUNTIF(event_name = 'screen_view' AND firebase_screen = 'Offer') AS nb_screen_view_offer,
-        COUNTIF(event_name = 'screen_view' AND firebase_screen = 'Profile') AS nb_screen_view_profile,
-        COUNTIF(event_name = 'screen_view' AND firebase_screen = 'Favorites') AS nb_screen_view_favorites,
-        COUNTIF(event_name = 'screen_view' AND firebase_screen IN ('Bookings','BookingDetails')) AS nb_screen_view_bookings,
-        COUNTIF((firebase_screen = 'SignupConfirmationEmailSent' OR event_name = 'ContinueCGU')) AS nb_signup_completed,
-        COUNTIF(firebase_screen IN ('BeneficiaryRequestSent','UnderageAccountCreated','BeneficiaryAccountCreated')) AS nb_benef_request_sent,
-        COUNTIF(event_name = "login") AS nb_login,
-        DATE_DIFF(MAX(event_timestamp),MIN(event_timestamp),SECOND) AS visit_duration_seconds,
-    FROM
-            {{ ref('int_firebase__native_event') }}
-    
-    WHERE
-      {% if is_incremental() %}   
-      -- lag in case session is between two days.
-      event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3+1 DAY) and DATE('{{ ds() }}') AND 
-      {% endif %}
-      
-      event_name NOT IN (
+        ANY_VALUE(session_number) as session_number,
+        ANY_VALUE(user_id) as user_id,
+        MIN(event_timestamp) as first_event_timestamp,
+        DATE(MIN(event_timestamp)) as first_event_date,
+        ANY_VALUE(traffic_campaign) as traffic_campaign,
+        ANY_VALUE(traffic_medium) as traffic_medium,
+        ANY_VALUE(traffic_source) as traffic_source,
+        ANY_VALUE(traffic_gen) as traffic_gen,
+        ANY_VALUE(traffic_content) as traffic_content,
+        MAX(event_timestamp) as last_event_timestamp,
+        COUNTIF(event_name = "ConsultOffer") as nb_consult_offer,
+        COUNTIF(event_name = "BookingConfirmation") as nb_booking_confirmation,
+        COUNTIF(event_name = "HasAddedOfferToFavorites") as nb_add_to_favorites,
+        COUNTIF(event_name = "Share") as nb_share,
+        COUNTIF(event_name = "Screenshot") as nb_screenshot,
+        COUNTIF(event_name = "UserSetLocation") as nb_set_location,
+        COUNTIF(event_name = "ConsultVideo") as nb_consult_video,
+        COUNTIF(event_name = "ConsultVenue") as nb_consult_venue,
+        COUNTIF(event_name = "ConsultVenueMap") as nb_consult_venue_map,
+        COUNTIF(event_name = 'screen_view') as nb_screen_view,
+        COUNTIF(event_name = 'screen_view' and firebase_screen = 'Home') as nb_screen_view_home,
+        COUNTIF(event_name = 'screen_view' and firebase_screen = 'Search') as nb_screen_view_search,
+        COUNTIF(event_name = 'screen_view' and firebase_screen = 'Offer') as nb_screen_view_offer,
+        COUNTIF(event_name = 'screen_view' and firebase_screen = 'Profile') as nb_screen_view_profile,
+        COUNTIF(event_name = 'screen_view' and firebase_screen = 'Favorites') as nb_screen_view_favorites,
+        COUNTIF(event_name = 'screen_view' and firebase_screen in ('Bookings', 'BookingDetails')) as nb_screen_view_bookings,
+        COUNTIF((firebase_screen = 'SignupConfirmationEmailSent' or event_name = 'ContinueCGU')) as nb_signup_completed,
+        COUNTIF(firebase_screen in ('BeneficiaryRequestSent', 'UnderageAccountCreated', 'BeneficiaryAccountCreated')) as nb_benef_request_sent,
+        COUNTIF(event_name = "login") as nb_login,
+        DATE_DIFF(MAX(event_timestamp), MIN(event_timestamp), second) as visit_duration_seconds
+    from
+        {{ ref('int_firebase__native_event') }}
+
+    where
+        {% if is_incremental() %}
+            -- lag in case session is between two days.
+            event_date between DATE_SUB(DATE('{{ ds() }}'), interval 3 + 1 day) and DATE('{{ ds() }}') and
+        {% endif %}
+
+        event_name not in (
             'app_remove',
             'os_update',
             'batch_notification_open',
@@ -66,7 +66,7 @@ with visits as (
             'batch_notification_dismiss',
             'app_update'
         )
-    GROUP BY
+    group by
         session_id,
         user_pseudo_id,
         unique_session_id,
@@ -76,6 +76,6 @@ with visits as (
 
 select * from visits
 -- incremental run only update partition of run day
-{% if is_incremental() %}   
-    where first_event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
+{% if is_incremental() %}
+    where first_event_date between DATE_SUB(DATE('{{ ds() }}'), interval 3 day) and DATE('{{ ds() }}')
 {% endif %}

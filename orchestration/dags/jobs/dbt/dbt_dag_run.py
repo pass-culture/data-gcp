@@ -1,26 +1,20 @@
-import datetime
-import json
-
-from airflow import DAG
-from airflow.operators.bash_operator import BashOperator
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.task_group import TaskGroup
-from airflow.utils.dates import datetime, timedelta
-from airflow.models import Param
-from airflow.operators.python import BranchPythonOperator
 from common.alerts import task_fail_slack_alert
-from common.utils import get_airflow_schedule, waiting_operator
-from common.dbt.utils import load_manifest
-from common import macros
-
 from common.config import (
+    ENV_SHORT_NAME,
+    EXCLUDED_TAGS,
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
-    ENV_SHORT_NAME,
     PATH_TO_DBT_TARGET,
-    EXCLUDED_TAGS,
 )
+from common.dbt.utils import create_nested_folder_groups, load_manifest
+from common.utils import get_airflow_schedule, waiting_operator
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.bash_operator import BashOperator
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.utils.dates import datetime, timedelta
+from airflow.utils.task_group import TaskGroup
 
 default_args = {
     "start_date": datetime(2020, 12, 23),
@@ -29,6 +23,7 @@ default_args = {
     "project_id": GCP_PROJECT_ID,
     "on_failure_callback": task_fail_slack_alert,
 }
+
 
 dag = DAG(
     "dbt_run_dag",
@@ -59,6 +54,30 @@ start = DummyOperator(task_id="start", dag=dag)
 end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
 
 wait_for_raw = waiting_operator(dag=dag, dag_id="import_applicative_database")
+wait_for_firebase = waiting_operator(
+    dag=dag,
+    dag_id="import_intraday_firebase_data",
+    external_task_id="end",
+    allowed_states=["success", "upstream_failed"],
+    failed_states=["failed"],
+)
+end_wait = DummyOperator(task_id="end_wait", dag=dag, trigger_rule="none_failed")
+
+data_transfo_checkpoint = DummyOperator(task_id="data_transfo_checkpoint", dag=dag)
+
+snapshots_checkpoint = DummyOperator(task_id="snapshots_checkpoint", dag=dag)
+
+compile = BashOperator(
+    task_id="compilation",
+    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_compile.sh ",
+    env={
+        "target": "{{ params.target }}",
+        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+    },
+    append_env=True,
+    cwd=PATH_TO_DBT_PROJECT,
+    dag=dag,
+)
 
 # Dbt dag reconstruction
 model_op_dict = {}
@@ -66,24 +85,23 @@ test_op_dict = {}
 
 
 manifest = load_manifest(f"{PATH_TO_DBT_TARGET}")
+dbt_snapshots = []
+dbt_models = []
+dbt_crit_tests = []
 
-dbt_models = [
-    node
-    for node in manifest["nodes"].keys()
-    if (
-        manifest["nodes"][node]["resource_type"] == "model"
-        and manifest["nodes"][node]["package_name"] == "data_gcp_dbt"
-    )
-]
-dbt_crit_tests = [
-    node
-    for node in manifest["nodes"].keys()
-    if (
-        manifest["nodes"].get(node).get("resource_type") == "test"
-        and manifest["nodes"].get(node).get("package_name") == "data_gcp_dbt"
-    )
-    and manifest["nodes"][node]["config"].get("severity", "warn").lower() == "error"
-]
+for node in manifest["nodes"].keys():
+    if manifest["nodes"][node]["package_name"] == "data_gcp_dbt":
+        if manifest["nodes"][node]["resource_type"] == "snapshot":
+            dbt_snapshots.append(node)
+        if manifest["nodes"][node]["resource_type"] == "model":
+            dbt_models.append(node)
+        if (
+            manifest["nodes"][node]["resource_type"] == "test"
+            and manifest["nodes"][node]["config"].get("severity", "warn").lower()
+            == "error"
+        ):
+            dbt_crit_tests.append(node)
+
 models_with_dependencies = [
     node for node in manifest["child_map"].keys() if node in dbt_models
 ]
@@ -203,9 +221,9 @@ with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
         )
         # replace model ascendency by test ascendency when needed
         if model_node in models_with_crit_test_dependencies:
-            test_op_dict[model_node] >> (children if len(children) > 0 else end)
+            test_op_dict[model_node] >> (children if len(children) > 0 else compile)
         else:
-            model_op_dict[model_node] >> (children if len(children) > 0 else end)
+            model_op_dict[model_node] >> (children if len(children) > 0 else compile)
 
 
 # test's cross dependencies management
@@ -216,4 +234,37 @@ for test, parents in crit_test_parents.items():
         except KeyError:
             pass
 
-start >> wait_for_raw >> data_transfo
+# snapshot group
+with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
+    for snapshot_node in dbt_snapshots:
+        snapshot_data = manifest["nodes"][snapshot_node]
+        snapshot_op = BashOperator(
+            task_id=snapshot_data["alias"],
+            bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_snapshot.sh ",
+            env={
+                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                "target": "{{ params.target }}",
+                "snapshot": f"""{snapshot_data['name']}""",
+                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+            },
+            append_env=True,
+            cwd=PATH_TO_DBT_PROJECT,
+            dag=dag,
+        )
+
+# Trigger folder of models manually
+
+with TaskGroup(group_id="folders_manual_trigger", dag=dag) as trigger_block:
+    create_nested_folder_groups(dbt_models, model_op_dict, manifest, dag)
+
+
+(
+    start
+    >> [wait_for_raw, wait_for_firebase]
+    >> end_wait
+    >> data_transfo_checkpoint
+    >> data_transfo
+)
+start >> trigger_block
+end_wait >> snapshots_checkpoint >> snapshot_group
+(data_transfo, snapshot_group) >> compile >> end

@@ -35,12 +35,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-      - name : "Install Black"
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r  linter-requirements.txt      
-      - name: "Run Black"
-        run: black --check --verbose .
+      - uses: yezz123/setup-uv@v4
+      - name : "Install linter (Ruff)"
+        run: uv pip install --system -r  requirements.txt
+      - name: "Run linter (Ruff)"
+        run: make ruff_check
       - name: "Post to a Slack channel"
         id: "slack"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
@@ -66,4 +65,3 @@ jobs:
               "unfurl_links": false,
               "unfurl_media": false
             }
-    

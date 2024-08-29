@@ -1,105 +1,124 @@
-import concurrent
-import numpy as np
+import os
 import shutil
 import time
-from multiprocessing import cpu_count
 
-from PIL import Image
 from sentence_transformers import SentenceTransformer
-from tools.logging_tools import log_duration
-from tools.config import ENV_SHORT_NAME
+
+from tools.config import TRANSFORMER_BATCH_SIZE
+from utils.download import IMAGE_DIR, download_img_multiprocess
+from utils.file_handler import load_img_multiprocess
+from utils.logging import log_duration, logging
 
 
-def extract_embedding(
-    df_data,
-    params,
-):
+def extract_embedding(df_data, params):
     """
-    Extract embedding with pretrained models
-    Two types available:
-    - image :
-        - Input: list of urls
-    - text  :
-        - Input: list of string
+    Extract embeddings with pretrained models.
+    Handles both image and text inputs.
     """
-    MODEL_DICT = {}
-    for model in params["models"]:
-        MODEL_DICT[model] = SentenceTransformer(params["models"][model])
+    models = load_models(params["models"])
     start = time.time()
-    emb_size_dict = {}
     df_encoded = df_data[["item_id"]].astype(str)
-    download_img_multiprocess(df_data.image_url.tolist())
+
+    # Download images in parallel
+    os.makedirs(IMAGE_DIR, exist_ok=True)
+    download_img_multiprocess(df_data.image.tolist())
+
     for feature in params["features"]:
         for model_type in feature["model"]:
-            model = MODEL_DICT[model_type]
-            emb_name_suffix = "" if model_type != "hybrid" else "_hybrid"
-            emb_col_name = f"""{feature["name"]}{emb_name_suffix}_embedding"""
+            step_time = time.time()
+            model = models[model_type]
+            emb_col_name = create_embedding_column_name(feature, model_type)
             if feature["type"] == "image":
                 df_encoded[emb_col_name] = encode_img_from_path(
-                    model, df_data.image_url.tolist()
+                    model, df_data.image.tolist()
                 )
-                emb_size_dict[emb_col_name] = 512
-            if feature["type"] in ["text", "macro_text"]:
-                encode = model.encode(df_data[feature["name"]].tolist())
-                df_encoded[emb_col_name] = [list(embedding) for embedding in encode]
-                emb_size_dict[emb_col_name] = len(encode[0])
+
+            elif feature["type"] in ["text", "macro_text"]:
+                df_encoded[emb_col_name] = encode_text(
+                    model, df_data[feature["name"]].tolist()
+                )
             df_encoded[emb_col_name] = df_encoded[emb_col_name].astype(str)
-    print("Removing image on local disk...")
-    shutil.rmtree("./img", ignore_errors=True)
-    log_duration(f"Embedding extraction: ", start)
-    return df_encoded, emb_size_dict
+            log_duration(f"Processed {feature['name']}, using {model_type}", step_time)
+
+    shutil.rmtree(IMAGE_DIR, ignore_errors=True)
+    log_duration("Done processing.", start)
+    return df_encoded
+
+
+def load_models(model_params):
+    """
+    Load and return the models specified in model_params.
+    """
+    return {
+        model_name: SentenceTransformer(model_path)
+        for model_name, model_path in model_params.items()
+    }
+
+
+def create_embedding_column_name(feature, model_type):
+    """
+    Create a standardized embedding column name.
+    """
+    emb_name_suffix = "" if model_type != "hybrid" else "_hybrid"
+    return f"{feature['name']}{emb_name_suffix}_embedding"
 
 
 def encode_img_from_path(model, paths):
-    offer_img_embs = []
-    offer_wo_img = 0
-    for url in paths:
-        url = str(url).replace("/", "-")
+    """
+    Encode images from local paths using the specified model.
+    """
+    start = time.time()
+    images_stats = load_img_multiprocess(urls=paths)
+    log_duration("Load all images", start)
+    start = time.time()
+
+    images = [info["image"] for info in images_stats if info["status"] == "success"]
+    urls = [info["url"] for info in images_stats if info["status"] == "success"]
+
+    stats = {
+        "total_images": len(paths),
+        "encoded_images": 0,
+        "missing_images": len(paths) - len(images),
+        "failed_encodings": 0,
+    }
+
+    embeddings = {}
+    if len(images) > 0:
         try:
-            img_emb = model.encode(Image.open(f"./img/{url}.jpeg"))
-            offer_img_embs.append(list(img_emb))
-        except:
-            offer_img_embs.append([0] * 512)
-            offer_wo_img += 1
-    print(f"{(offer_wo_img*100)/len(paths)}% offers dont have image")
-    return offer_img_embs
+            encoded_images = model.encode(
+                images,
+                batch_size=TRANSFORMER_BATCH_SIZE,
+                normalize_embeddings=True,
+                show_progress_bar=False,
+            )
+            for url, img_emb in zip(urls, encoded_images):
+                embeddings[url] = list(img_emb)
+            stats["encoded_images"] = len(encoded_images)
+        except Exception as e:
+            logging.error(f"Error encoding images: {e}")
+            stats["failed_encodings"] = len(images)
 
-
-def download_img_multiprocess(urls):
-    max_process = 2 if ENV_SHORT_NAME == "dev" else cpu_count() - 2
-    subset_length = len(urls) // max_process
-    subset_length = subset_length if subset_length > 0 else 1
-    batch_number = max_process if subset_length > 1 else 1
-    print(
-        f"Starting process... with {batch_number} CPUs, subset length: {subset_length} "
-    )
-    batch_urls = [list(chunk) for chunk in list(np.array_split(urls, batch_number))]
-    with concurrent.futures.ProcessPoolExecutor(batch_number) as executor:
-        futures = executor.map(
-            _download_img_from_url_list,
-            batch_urls,
+        logging.info(
+            f"{(stats['missing_images'])} over {stats['total_images']} of images are missing"
         )
-    print("Multiprocessing done")
-    return
+        logging.info(
+            f"{(stats['failed_encodings'])} over {stats['total_images']}  of images failed to encode"
+        )
+
+    log_duration("Predict all images", start)
+    return [embeddings.get(url, [0] * 512) for url in paths]
 
 
-def _download_img_from_url_list(urls):
-    import requests
-
-    try:
-        for url in urls:
-            try:
-                response = requests.get(url, timeout=10)
-                if (
-                    response.status_code == 200
-                    and int(response.headers.get("Content-Length")) > 500
-                ):
-                    url = str(url).replace("/", "-")
-                    filename = f"./img/{url}.jpeg"
-                    with open(filename, "wb") as f:
-                        f.write(response.content)
-            except:
-                continue
-        return
-    except:
-        return
+def encode_text(model, texts):
+    """
+    Encode texts using the specified model.
+    """
+    return [
+        list(embedding)
+        for embedding in model.encode(
+            texts,
+            batch_size=TRANSFORMER_BATCH_SIZE,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+        )
+    ]

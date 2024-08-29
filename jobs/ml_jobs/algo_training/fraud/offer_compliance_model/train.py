@@ -1,18 +1,18 @@
 import json
-import typer
+
 import mlflow
-import pandas as pd
+import typer
 from catboost import CatBoostClassifier
+
+from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
 from utils.constants import (
     ENV_SHORT_NAME,
+    MLFLOW_RUN_ID_FILENAME,
     MODEL_DIR,
     STORAGE_PATH,
-    MLFLOW_RUN_ID_FILENAME,
 )
-from utils.mlflow_tools import connect_remote_mlflow
-from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
-from utils.secrets_utils import get_secret
 from utils.data_collect_queries import read_from_gcs
+from utils.mlflow_tools import connect_remote_mlflow
 
 
 def train(
@@ -53,8 +53,8 @@ def train(
         verbose=True,
     )
 
-    client_id = get_secret("mlflow_client_id")
-    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
+    # Mlflow logging
+    connect_remote_mlflow()
     experiment_name = f"{model_name}_v1.0_{ENV_SHORT_NAME}"
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     with mlflow.start_run(experiment_id=experiment_id, run_name=run_name):
@@ -69,6 +69,8 @@ def train(
                 "train_rejected_count": train_data_labels.count(0),
             }
         )
+
+        # Log Catboost model in API
         mlflow.catboost.log_model(
             cb_model=model,
             artifact_path=f"registry_{ENV_SHORT_NAME}",

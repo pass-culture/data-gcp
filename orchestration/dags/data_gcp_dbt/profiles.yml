@@ -1,10 +1,10 @@
 config:
-    send_anonymous_usage_stats: False
+  send_anonymous_usage_stats: False
 
 data_gcp_dbt:
-  target: dev
+  target: local
   outputs:
-    dev:
+    local:
       dataset: tmp_dev
       job_execution_timeout_seconds: 300
       job_retries: 1
@@ -13,10 +13,20 @@ data_gcp_dbt:
       priority: interactive
       project: passculture-data-ehp
       threads: 1
-      type: bigquery  
+      type: bigquery
+    dev:
+      dataset: tmp_dev
+      job_execution_timeout_seconds: 1800
+      job_retries: 1
+      location: europe-west1
+      method: oauth
+      priority: interactive
+      project: passculture-data-ehp
+      threads: 1
+      type: bigquery
     stg:
       dataset: tmp_stg
-      job_execution_timeout_seconds: 300
+      job_execution_timeout_seconds: 1200
       job_retries: 1
       location: europe-west1
       method: oauth
@@ -38,7 +48,7 @@ sandbox:
   target: prod
   outputs:
     prod:
-      dataset: sandbox_prod
+      dataset: dbt_sandbox_prod
       job_execution_timeout_seconds: 3600
       job_retries: 4
       location: europe-west1
@@ -47,22 +57,22 @@ sandbox:
       project: passculture-data-prod
       threads: 1
       type: bigquery
-      
+
 elementary:
-  target: dev 
+  target: dev
   outputs:
     dev:
       dataset: dbt_artifacts_dev
       type: bigquery
       method: oauth
-      project: passculture-data-ehp 
+      project: passculture-data-ehp
       location: europe-west1
       threads: 2
     stg:
       dataset: dbt_artifacts_stg
       type: bigquery
       method: oauth
-      project: passculture-data-ehp 
+      project: passculture-data-ehp
       location: europe-west1
       threads: 2
     prod:
@@ -78,7 +88,7 @@ CI:
   outputs:
     dev:
       dataset: ci_dev
-      job_execution_timeout_seconds: 300
+      job_execution_timeout_seconds: 600
       job_retries: 1
       location: europe-west1
       method: oauth
@@ -88,7 +98,7 @@ CI:
       type: bigquery
     stg:
       dataset: ci_stg
-      job_execution_timeout_seconds: 300
+      job_execution_timeout_seconds: 600
       job_retries: 1
       location: europe-west1
       method: oauth

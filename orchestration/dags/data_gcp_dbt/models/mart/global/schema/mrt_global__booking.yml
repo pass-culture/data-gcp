@@ -1,0 +1,220 @@
+version: 2
+models:
+  - name: mrt_global__booking
+    columns:
+      - name: booking_id
+        description: ''
+        data_type: STRING
+        tests:
+          - not_null
+          - unique
+      - name: booking_creation_date
+        description: ''
+        data_type: DATE
+      - name: booking_created_at
+        description: ''
+        data_type: DATETIME
+      - name: booking_quantity
+        description: ''
+        data_type: INT64
+      - name: booking_amount
+        description: ''
+        data_type: NUMERIC
+      - name: booking_status
+        description: ''
+        data_type: STRING
+      - name: booking_is_cancelled
+        description: ''
+        data_type: BOOLEAN
+      - name: booking_is_used
+        description: ''
+        data_type: BOOLEAN
+      - name: booking_cancellation_date
+        description: ''
+        data_type: DATETIME
+      - name: booking_cancellation_reason
+        description: ''
+        data_type: STRING
+      - name: user_id
+        description: ''
+        data_type: STRING
+        tests:
+          - not_null
+      - name: deposit_id
+        description: ''
+        data_type:
+      - name: deposit_type
+        description: ''
+        data_type: STRING
+      - name: reimbursed
+        description: ''
+        data_type: BOOLEAN
+      - name: booking_intermediary_amount
+        description: ''
+        data_type: NUMERIC
+      - name: booking_rank
+        description: ''
+        data_type: INT64
+      - name: booking_used_date
+        description: ''
+        data_type: DATETIME
+      - name: stock_beginning_date
+        description: ''
+        data_type: DATETIME
+      - name: stock_id
+        description: ''
+        data_type: STRING
+        tests:
+          - not_null
+      - name: offer_id
+        description: ''
+        data_type: STRING
+        tests:
+          - not_null
+      - name: offer_name
+        description: ''
+        data_type: STRING
+      - name: venue_name
+        description: ''
+        data_type: STRING
+      - name: venue_label
+        description: ''
+        data_type: STRING
+      - name: venue_type_label
+        description: ''
+        data_type: STRING
+      - name: venue_id
+        description: ''
+        data_type: STRING
+        # tests:
+        #   - not_null
+      - name: venue_postal_code
+        description: ''
+        data_type: STRING
+      - name: venue_department_code
+        description: ''
+        data_type: STRING
+      - name: venue_region_name
+        description: ''
+        data_type: STRING
+      - name: venue_city
+        description: ''
+        data_type: STRING
+      - name: venue_epci
+        description: ''
+        data_type: STRING
+      - name: venue_density_label
+        description: ''
+        data_type: STRING
+      - name: venue_macro_density_label
+        description: ''
+        data_type: STRING
+      - name: venue_academy_name
+        description: ''
+        data_type: STRING
+      - name: offerer_id
+        description: ''
+        data_type: STRING
+        tests:
+          - not_null:
+              config:
+                severity: warn
+      - name: offerer_name
+        description: ''
+        data_type: STRING
+      - name: partner_id
+        description: ''
+        data_type: STRING
+      - name: offer_subcategory_id
+        description: ''
+        data_type: STRING
+      - name: physical_goods
+        description: ''
+        data_type: BOOLEAN
+      - name: digital_goods
+        description: ''
+        data_type: BOOLEAN
+      - name: event
+        description: ''
+        data_type: BOOLEAN
+      - name: offer_category_id
+        description: ''
+        data_type: STRING
+      - name: user_postal_code
+        description: ''
+        data_type: STRING
+      - name: user_department_code
+        description: 'set 99 when user user_creation_date does not match opening phases.
+
+          this is due to Support changes in the past which migh lead to misunderstandings.
+
+          if user_department is not in pilote (2019_02 / 2019_06) phase but has created an account before, set 99.
+
+          if user_department is not in experimentation (2019_06 / 2021_05) phase but has created an account before, set 99.'
+        data_type: STRING
+      - name: user_region_name
+        description: ''
+        data_type: STRING
+      - name: user_city
+        description: ''
+        data_type: STRING
+      - name: user_epci
+        description: ''
+        data_type: STRING
+      - name: user_academy_name
+        description: ''
+        data_type: STRING
+      - name: user_density_label
+        description: ''
+        data_type: STRING
+      - name: user_macro_density_label
+        description: ''
+        data_type: STRING
+      - name: user_creation_date
+        description: ''
+        data_type: DATETIME
+      - name: user_activity
+        description: ''
+        data_type: STRING
+      - name: user_civility
+        description: ''
+        data_type: STRING
+      - name: user_age
+        description: ''
+        data_type: NUMERIC
+      - name: user_birth_date
+        description: ''
+        data_type: DATETIME
+      - name: user_is_active
+        description: ''
+        data_type: BOOLEAN
+      - name: user_is_in_qpv
+        description: ''
+        data_type: BOOLEAN
+      - name: user_is_unemployed
+        description: ''
+        data_type: BOOLEAN
+      - name: user_is_priority_public
+        description: ''
+        data_type: BOOLEAN
+      - name: item_id
+        description: ''
+        data_type: STRING
+      - name: same_category_booking_rank
+        description: ''
+        data_type: INT64
+      - name: user_booking_rank
+        description: ''
+        data_type: INT64
+      - name: user_booking_id_rank
+        description: ''
+        data_type: INT64
+      - name: user_iris_internal_id
+        description: ''
+        data_type: STRING
+      - name: venue_iris_internal_id
+        description: ''
+        data_type: STRING
+      - name: offer_url
+        description: ''
+        data_type: STRING

@@ -1,38 +1,58 @@
-# table_config['sql'] values don't refer to sql files but tables/views in bigquery created by dbt models in folder export/clickhouse
-# however theses dbt models are prefixed exp_clickhouse__modelName and aliased in BQ database as clickhouse_modelName by get_custom_alias dbt macro
-# make sure to set table_config['sql'] values to clickhouse_modelName
-TABLES_CONFIGS = [
-    {
-        "sql": "clickhouse_booking",
-        "clickhouse_table_name": "booking",
-        "clickhouse_dataset_name": "intermediate",
-        "mode": "overwrite",
-    },
-    {
-        "sql": "clickhouse_collective_booking",
-        "clickhouse_table_name": "collective_booking",
-        "clickhouse_dataset_name": "intermediate",
-        "mode": "overwrite",
-    },
-    {
-        "sql": "clickhouse_native_event",
-        "clickhouse_table_name": "native_event",
-        "clickhouse_dataset_name": "intermediate",
-        "mode": "incremental",
-    },
+from common.config import ENV_SHORT_NAME
+
+
+def generate_table_configs(models):
+    """
+    Generates configuration for Clickhous export table from DBT models to GCS
+    DBT models are prefixed with 'exp_clickhouse__{model_name}' but will be aliased in BigQuery 'exp_{env}.clickhouse_{model_name}'.
+
+    Returns:
+        list: List of table configurations.
+    """
+
+    return [
+        {
+            "dbt_model": f"exp_clickhouse__{model_name}",
+            "bigquery_dataset_name": f"export_{ENV_SHORT_NAME}",
+            "bigquery_table_name": f"clickhouse_{model_name}",
+            "clickhouse_table_name": model_name,
+            "clickhouse_dataset_name": "intermediate",
+            "mode": mode,
+        }
+        for model_name, mode in models
+    ]
+
+
+def generate_views_configs(table_names):
+    """
+    Generates configuration for views in ClickHouse.
+
+    Returns:
+        list: List of view configurations.
+    """
+    return [
+        {
+            "clickhouse_dataset_name": dataset_name,
+            "clickhouse_table_name": table_name,
+        }
+        for dataset_name, table_name in table_names
+    ]
+
+
+# List of models to be exported
+DBT_MODELS = [
+    ("booking", "overwrite"),
+    ("collective_booking", "overwrite"),
+    ("native_event", "incremental"),
+]
+# List of aggreated tables names to be refreshed
+CLICKHOUSE_TABLES = [
+    ("analytics", "daily_aggregated_offer_event"),
+    ("analytics", "monthly_aggregated_offerer_collective_revenue"),
+    ("analytics", "monthly_aggregated_offerer_revenue"),
+    ("analytics", "yearly_aggregated_offerer_collective_revenue"),
+    ("analytics", "yearly_aggregated_offerer_revenue"),
 ]
 
-VIEWS_CONFIGS = [
-    {
-        "clickhouse_view_name": "daily_aggregated_event",
-        "clickhouse_dataset_name": "analytics",
-    },
-    {
-        "clickhouse_view_name": "monthly_aggregated_offerer_revenue",
-        "clickhouse_dataset_name": "analytics",
-    },
-    {
-        "clickhouse_view_name": "yearly_aggregated_offerer_revenue",
-        "clickhouse_dataset_name": "analytics",
-    },
-]
+TABLES_CONFIGS = generate_table_configs(models=DBT_MODELS)
+VIEWS_CONFIGS = generate_views_configs(table_names=CLICKHOUSE_TABLES)

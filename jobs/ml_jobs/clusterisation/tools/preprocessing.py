@@ -1,9 +1,19 @@
+import numpy as np
 import pandas as pd
+
 from tools.utils import convert_str_emb_to_float
-from loguru import logger
 
 
-def prepare_embedding(data, pretrained_embedding_size):
+def prepare_embedding(data: np.ndarray, pretrained_embedding_size: int) -> pd.DataFrame:
+    """
+    Prepare the embedding data for clustering.
+
+    Args:
+        data (list): The list of embeddings.
+        pretrained_embedding_size (int): The size of the pretrained embedding.
+
+    Returns:
+        pd.DataFrame : A DataFrame containing the embeddings."""
     embedding_float = convert_str_emb_to_float(data)
     embedding_df = pd.DataFrame(
         embedding_float,
@@ -12,14 +22,26 @@ def prepare_embedding(data, pretrained_embedding_size):
     return embedding_df
 
 
-def get_item_by_categories(data):
+def get_item_by_categories(data: pd.DataFrame) -> pd.DataFrame:
+    """Get the item by categories."""
     data = data.melt(id_vars=["item_id"])
     data["categ"] = data["variable"] + " " + data["value"]
     data = data.drop(columns=["variable", "value"])
     return data
 
 
-def get_item_by_group(data, group_config):
+def get_item_by_group(data: pd.DataFrame, group_config: dict) -> pd.DataFrame:
+    """
+    Retrieves items from the given DataFrame based on the specified group configuration.
+
+    Args:
+        data (pd.DataFrame): The DataFrame containing the items.
+        group_config (dict): The configuration specifying the groups and their features.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the items grouped by category.
+
+    """
     item_by_group = pd.DataFrame()
     for group in group_config:
         feature_list = "|".join(

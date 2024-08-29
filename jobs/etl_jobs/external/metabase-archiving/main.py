@@ -1,16 +1,15 @@
 import time
+
+from archiving import MoveToArchive, get_data_archiving, preprocess_data_archiving
 from metabase_api import MetabaseAPI
-from archiving import get_data_archiving, preprocess_data_archiving, move_to_archive
 from utils import (
-    PROJECT_NAME,
     ENVIRONMENT_SHORT_NAME,
     METABASE_API_USERNAME,
-    ANALYTICS_DATASET,
+    PROJECT_NAME,
     access_secret_data,
-    max_cards_to_archive,
-    sql_file,
-    parent_folder_to_archive,
     limit_inactivity_in_days,
+    max_cards_to_archive,
+    parent_folder_to_archive,
 )
 
 METABASE_HOST = access_secret_data(
@@ -34,7 +33,7 @@ def run():
         host=METABASE_HOST,
         client_id=CLIENT_ID,
     )
-    archives_df = get_data_archiving(sql_file)
+    archives_df = get_data_archiving()
 
     archives_dicts = preprocess_data_archiving(
         archives_df,
@@ -44,11 +43,9 @@ def run():
     )
 
     for card in archives_dicts[:max_cards_to_archive]:
-        archiving = move_to_archive(
+        archiving = MoveToArchive(
             movement=card,
             metabase=metabase,
-            gcp_project=PROJECT_NAME,
-            analytics_dataset=ANALYTICS_DATASET,
         )
         archiving.move_object()
         archiving.rename_archive_object()

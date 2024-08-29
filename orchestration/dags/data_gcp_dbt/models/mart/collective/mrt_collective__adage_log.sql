@@ -1,13 +1,13 @@
 {{
     config(
-        materialized = "incremental",
+        **custom_incremental_config(
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "event_date", "data_type": "date"},
         on_schema_change = "sync_all_columns"
     )
-}}
+) }}
 
-SELECT  
+select
     a.event_date,
     a.event_name,
     a.event_timestamp,
@@ -16,7 +16,7 @@ SELECT
     a.total_results,
     a.origin,
     a.collective_stock_id,
-    COALESCE(a.collective_offer_id,s.collective_offer_id) as collective_offer_id,
+    COALESCE(a.collective_offer_id, s.collective_offer_id) as collective_offer_id,
     a.header_link_name,
     a.collective_booking_id,
     a.query_id,
@@ -34,9 +34,9 @@ SELECT
     a.playlist_id,
     a.domain_id,
     a.rank_clicked,
-    a.venue_id AS adage_venue_id,
-    o.venue_id AS offer_venue_id,
-    COALESCE(a.venue_id,o.venue_id) AS venue_id,
+    a.venue_id as adage_venue_id,
+    o.venue_id as offer_venue_id,
+    COALESCE(a.venue_id, o.venue_id) as venue_id,
     o.partner_id,
     o.collective_offer_students as offer_students,
     o.collective_offer_format as offer_format,
@@ -44,15 +44,15 @@ SELECT
     p.partner_type,
     p.partner_status,
     p.cultural_sector,
-    p.confirmed_collective_bookings as partner_confirmed_collective_bookings,
+    p.total_non_cancelled_collective_bookings as partner_confirmed_collective_bookings,
     p.partner_department_code,
     a.uai,
-    a.user_role,
-FROM {{ ref("int_pcapi__adage_log") }} AS a
-LEFT JOIN {{ source("raw","applicative_database_collective_stock") }} AS s ON s.collective_stock_id = a.collective_stock_id
-LEFT JOIN {{ ref("enriched_collective_offer_data") }} AS o ON o.collective_offer_id = COALESCE(a.collective_offer_id,s.collective_offer_id)
-LEFT JOIN {{ ref("enriched_cultural_partner_data") }} AS p ON p.partner_id = o.partner_id
-WHERE TRUE
-{% if is_incremental() %}
-AND event_date BETWEEN date_sub(DATE("{{ ds() }}"), INTERVAL 2 DAY) and DATE("{{ ds() }}")
-{% endif %}
+    a.user_role
+from {{ ref("int_pcapi__adage_log") }} as a
+    left join {{ source("raw","applicative_database_collective_stock") }} as s on s.collective_stock_id = a.collective_stock_id
+    left join {{ ref("mrt_global__collective_offer") }} as o on o.collective_offer_id = COALESCE(a.collective_offer_id, s.collective_offer_id)
+    left join {{ ref("mrt_global__cultural_partner") }} as p on p.partner_id = o.partner_id
+where TRUE
+    {% if is_incremental() %}
+        and event_date between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")
+    {% endif %}

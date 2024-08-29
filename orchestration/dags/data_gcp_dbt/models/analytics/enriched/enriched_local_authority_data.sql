@@ -1,115 +1,133 @@
-WITH active_venues_last_30days AS (SELECT
-    venue_managing_offerer_id AS offerer_id
-    ,STRING_AGG(DISTINCT CONCAT(' ',CASE WHEN venue_type_label != 'Offre numérique' THEN venue_type_label END)) AS active_last_30days_physical_venues_types
-FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
-LEFT JOIN {{ ref('bookable_venue_history') }} ON mrt_global__venue.venue_id = bookable_venue_history.venue_id
-WHERE DATE_DIFF(CURRENT_DATE,partition_date,DAY) <= 30
-GROUP BY 1
-ORDER BY 1)
+with active_venues_last_30days as (
+    select
+        venue_managing_offerer_id as offerer_id,
+        STRING_AGG(distinct CONCAT(' ', case when venue_type_label != 'Offre numérique' then venue_type_label end)) as active_last_30days_physical_venues_types
+    from {{ ref('mrt_global__venue') }} as mrt_global__venue
+        left join {{ ref('bookable_venue_history') }} on mrt_global__venue.venue_id = bookable_venue_history.venue_id
+    where DATE_DIFF(CURRENT_DATE, partition_date, day) <= 30
+    group by 1
+    order by 1
+),
 
-,administrative_venues AS (SELECT
-    venue_managing_offerer_id AS offerer_id
-    ,COUNT(CASE WHEN mrt_global__venue.venue_type_label = 'Lieu administratif' THEN venue_id ELSE NULL END) AS nb_administrative_venues
-FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
-GROUP BY 1)
+administrative_venues as (
+    select
+        venue_managing_offerer_id as offerer_id,
+        COUNT(case when mrt_global__venue.venue_type_label = 'Lieu administratif' then venue_id else NULL end) as nb_administrative_venues
+    from {{ ref('mrt_global__venue') }} as mrt_global__venue
+    group by 1
+),
 
-,top_CA_venue AS
-(SELECT
-    venue_managing_offerer_id AS offerer_id
-    ,mrt_global__venue.venue_type_label
-    ,RANK() OVER(PARTITION BY venue_managing_offerer_id ORDER BY total_real_revenue DESC) AS CA_rank
-FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
-WHERE total_real_revenue > 0)
+top_ca_venue as (
+    select
+        venue_managing_offerer_id as offerer_id,
+        mrt_global__venue.venue_type_label,
+        ROW_NUMBER() over (partition by venue_managing_offerer_id order by total_real_revenue desc) as ca_rank
+    from {{ ref('mrt_global__venue') }} as mrt_global__venue
+    where total_real_revenue > 0
+),
 
-,top_bookings_venue AS
-(SELECT
-    venue_managing_offerer_id AS offerer_id
-    ,mrt_global__venue.venue_type_label
-    ,RANK() OVER(PARTITION BY venue_managing_offerer_id ORDER BY total_used_bookings DESC) AS bookings_rank
-FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
-WHERE total_used_bookings > 0)
+top_bookings_venue as (
+    select
+        venue_managing_offerer_id as offerer_id,
+        mrt_global__venue.venue_type_label,
+        ROW_NUMBER() over (partition by venue_managing_offerer_id order by total_used_bookings desc) as bookings_rank
+    from {{ ref('mrt_global__venue') }} as mrt_global__venue
+    where total_used_bookings > 0
+),
 
-,reimbursement_points AS (
-SELECT
-    venue_managing_offerer_id AS offerer_id
-    ,COUNT(DISTINCT applicative_database_venue_reimbursement_point_link.venue_id) AS nb_reimbursement_points
-FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
-LEFT JOIN {{ ref('venue_reimbursement_point_link') }}
- ON mrt_global__venue.Venue_id = applicative_database_venue_reimbursement_point_link.venue_id
-GROUP BY 1)
+reimbursement_points as (
+    select
+        venue_managing_offerer_id as offerer_id,
+        COUNT(distinct applicative_database_venue_reimbursement_point_link.venue_id) as nb_reimbursement_points
+    from {{ ref('mrt_global__venue') }} as mrt_global__venue
+        left join {{ ref('venue_reimbursement_point_link') }} as applicative_database_venue_reimbursement_point_link
+            on mrt_global__venue.venue_id = applicative_database_venue_reimbursement_point_link.venue_id
+    group by 1
+),
 
-,aggregated_venue_types AS (
-    SELECT
-        venue_managing_offerer_id AS offerer_id
-        ,STRING_AGG(DISTINCT CONCAT(' ',CASE WHEN mrt_global__venue.venue_type_label != 'Offre numérique' THEN mrt_global__venue.venue_type_label END)) AS all_physical_venues_types
-    FROM {{ ref('mrt_global__venue') }} AS mrt_global__venue
-    GROUP BY 1
+aggregated_venue_types as (
+    select
+        venue_managing_offerer_id as offerer_id,
+        STRING_AGG(distinct CONCAT(' ', case when mrt_global__venue.venue_type_label != 'Offre numérique' then mrt_global__venue.venue_type_label end)) as all_physical_venues_types
+    from {{ ref('mrt_global__venue') }} as mrt_global__venue
+    group by 1
 )
 
-SELECT DISTINCT
-    enriched_offerer_data.offerer_id
-    ,REPLACE(enriched_offerer_data.partner_id,'offerer','local-authority') AS local_authority_id
-    ,enriched_offerer_data.offerer_name AS local_authority_name
-    ,CASE
-        WHEN (LOWER(enriched_offerer_data.offerer_name) LIKE 'commune%'
-            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%ville%de%') THEN 'Communes'
-        WHEN (LOWER(enriched_offerer_data.offerer_name) LIKE '%departement%'
-            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%département%') THEN 'Départements'
-        WHEN (LOWER(enriched_offerer_data.offerer_name) LIKE 'region%'
-            OR LOWER(enriched_offerer_data.offerer_name) LIKE 'région%') THEN 'Régions'
-        WHEN (LOWER(enriched_offerer_data.offerer_name) LIKE 'ca%'
-            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%agglo%'
-            OR LOWER(enriched_offerer_data.offerer_name) LIKE 'cc%'
-            OR LOWER(enriched_offerer_data.offerer_name) LIKE 'cu%'
-            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%communaute%'
-            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%agglomeration%'
-            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%agglomération%'
-            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%metropole%'
-            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%com%com%'
-            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%petr%'
-            OR LOWER(enriched_offerer_data.offerer_name) LIKE '%intercommunal%') THEN 'CC / Agglomérations / Métropoles'
-        ELSE 'Non qualifiable' END AS local_authority_type
-    ,CASE WHEN enriched_offerer_data.offerer_id IN (SELECT priority_offerer_id FROM {{ source('analytics','priority_local_authorities') }}) THEN TRUE ELSE FALSE END AS is_priority
-    ,COALESCE(applicative_database_offerer.offerer_validation_date,applicative_database_offerer.offerer_creation_date) AS local_authority_creation_date
-    ,CASE WHEN DATE_TRUNC(COALESCE(enriched_offerer_data.offerer_validation_date,enriched_offerer_data.offerer_creation_date),YEAR) <= DATE_TRUNC(DATE_SUB(DATE(CURRENT_DATE/*'{{ ds }}'*/),INTERVAL 1 YEAR),YEAR) THEN TRUE ELSE FALSE END AS was_registered_last_year
-    ,academy_name AS local_authority_academy_name
-    ,enriched_offerer_data.offerer_region_name AS local_authority_region_name
-    ,enriched_offerer_data.offerer_department_code AS local_authority_department_code
-    ,applicative_database_offerer.offerer_postal_code AS local_authority_postal_code
-    ,CASE WHEN DATE_DIFF(CURRENT_DATE,offerer_last_bookable_offer_date,DAY) <= 30 THEN TRUE ELSE FALSE END AS is_active_last_30days
-    ,CASE WHEN DATE_DIFF(CURRENT_DATE,offerer_last_bookable_offer_date,YEAR) = 0 THEN TRUE ELSE FALSE END AS is_active_current_year
-    ,total_venues_managed
-    ,physical_venues_managed
-    ,permanent_venues_managed
-    ,CASE WHEN nb_administrative_venues >= 1 THEN TRUE ELSE FALSE END AS has_administrative_venue
-    ,all_physical_venues_types
-    ,active_last_30days_physical_venues_types
-    ,top_bookings_venue.venue_type_label AS top_bookings_venue_type
-    ,top_CA_venue.venue_type_label AS top_CA_venue_type
-    ,nb_reimbursement_points
-    ,COALESCE(offerer_individual_offers_created,0) AS individual_offers_created
-    ,COALESCE(offerer_collective_offers_created,0) AS collective_offers_created
-    ,COALESCE(offerer_individual_offers_created,0)+COALESCE(offerer_collective_offers_created,0) AS total_offers_created
-    ,offerer_first_offer_creation_date AS first_offer_creation_date
-    ,offerer_last_bookable_offer_date AS last_bookable_offer_date
-    ,offerer_first_bookable_offer_date AS first_bookable_offer_date
-    ,COALESCE(offerer_non_cancelled_individual_bookings,0) AS non_cancelled_individual_bookings
-    ,COALESCE(offerer_used_individual_bookings,0) AS used_individual_bookings
-    ,COALESCE(offerer_non_cancelled_collective_bookings,0) AS confirmed_collective_bookings
-    ,COALESCE(offerer_used_collective_bookings,0) AS used_collective_bookings
-    ,COALESCE(offerer_individual_real_revenue,0) AS individual_real_revenue
-    ,COALESCE(offerer_collective_real_revenue,0) AS collective_real_revenue
-    ,COALESCE(offerer_real_revenue,0) AS total_real_revenue
-FROM {{ ref('enriched_offerer_data') }}
-JOIN {{ ref('offerer') }} ON enriched_offerer_data.offerer_id = applicative_database_offerer.offerer_id
-JOIN {{ source('analytics','region_department') }} ON enriched_offerer_data.offerer_department_code = region_department.num_dep
-LEFT JOIN {{ ref('mrt_global__venue') }} AS mrt_global__venue ON enriched_offerer_data.offerer_id = mrt_global__venue.venue_managing_offerer_id
-LEFT JOIN aggregated_venue_types ON enriched_offerer_data.offerer_id = aggregated_venue_types.offerer_id
-LEFT JOIN active_venues_last_30days ON enriched_offerer_data.offerer_id = active_venues_last_30days.offerer_id
-LEFT JOIN administrative_venues ON enriched_offerer_data.offerer_id = administrative_venues.offerer_id
-LEFT JOIN top_CA_venue ON enriched_offerer_data.offerer_id = top_CA_venue.offerer_id
-    AND CA_rank = 1
-LEFT JOIN top_bookings_venue ON enriched_offerer_data.offerer_id = top_bookings_venue.offerer_id
-    AND bookings_rank = 1
-LEFT JOIN reimbursement_points ON enriched_offerer_data.offerer_id = reimbursement_points.offerer_id
-WHERE is_local_authority IS TRUE
+select distinct
+    mrt_global__offerer.offerer_id,
+    REPLACE(mrt_global__offerer.partner_id, 'offerer', 'local-authority') as local_authority_id,
+    mrt_global__offerer.offerer_name as local_authority_name,
+    case
+        when (
+            LOWER(mrt_global__offerer.offerer_name) like 'commune%'
+            or LOWER(mrt_global__offerer.offerer_name) like '%ville%de%'
+        ) then 'Communes'
+        when (
+            LOWER(mrt_global__offerer.offerer_name) like '%departement%'
+            or LOWER(mrt_global__offerer.offerer_name) like '%département%'
+        ) then 'Départements'
+        when (
+            LOWER(mrt_global__offerer.offerer_name) like 'region%'
+            or LOWER(mrt_global__offerer.offerer_name) like 'région%'
+        ) then 'Régions'
+        when (
+            LOWER(mrt_global__offerer.offerer_name) like 'ca%'
+            or LOWER(mrt_global__offerer.offerer_name) like '%agglo%'
+            or LOWER(mrt_global__offerer.offerer_name) like 'cc%'
+            or LOWER(mrt_global__offerer.offerer_name) like 'cu%'
+            or LOWER(mrt_global__offerer.offerer_name) like '%communaute%'
+            or LOWER(mrt_global__offerer.offerer_name) like '%agglomeration%'
+            or LOWER(mrt_global__offerer.offerer_name) like '%agglomération%'
+            or LOWER(mrt_global__offerer.offerer_name) like '%metropole%'
+            or LOWER(mrt_global__offerer.offerer_name) like '%com%com%'
+            or LOWER(mrt_global__offerer.offerer_name) like '%petr%'
+            or LOWER(mrt_global__offerer.offerer_name) like '%intercommunal%'
+        ) then 'CC / Agglomérations / Métropoles'
+        else 'Non qualifiable'
+    end as local_authority_type,
+    case when mrt_global__offerer.offerer_id in (select priority_offerer_id from {{ source('seed','priority_local_authorities') }}) then TRUE else FALSE end as is_priority,
+    COALESCE(applicative_database_offerer.offerer_validation_date, applicative_database_offerer.offerer_creation_date) as local_authority_creation_date,
+    case when DATE_TRUNC(COALESCE(mrt_global__offerer.offerer_validation_date, mrt_global__offerer.offerer_creation_date), year) <= DATE_TRUNC(DATE_SUB(DATE(CURRENT_DATE/*'{{ ds }}'*/), interval 1 year), year) then TRUE else FALSE end as was_registered_last_year,
+    mrt_global__offerer.academy_name as local_authority_academy_name,
+    mrt_global__offerer.offerer_region_name as local_authority_region_name,
+    mrt_global__offerer.offerer_department_code as local_authority_department_code,
+    applicative_database_offerer.offerer_postal_code as local_authority_postal_code,
+    case when DATE_DIFF(CURRENT_DATE, mrt_global__offerer.last_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_active_last_30days,
+    case when DATE_DIFF(CURRENT_DATE, mrt_global__offerer.last_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_active_current_year,
+    total_managed_venues,
+    total_physical_managed_venues,
+    total_permanent_managed_venues,
+    case when nb_administrative_venues >= 1 then TRUE else FALSE end as has_administrative_venue,
+    all_physical_venues_types,
+    active_last_30days_physical_venues_types,
+    top_bookings_venue.venue_type_label as top_bookings_venue_type,
+    top_ca_venue.venue_type_label as top_ca_venue_type,
+    nb_reimbursement_points,
+    COALESCE(mrt_global__offerer.total_created_individual_offers, 0) as individual_offers_created,
+    COALESCE(mrt_global__offerer.total_created_collective_offers, 0) as collective_offers_created,
+    COALESCE(mrt_global__offerer.total_created_individual_offers, 0) + COALESCE(mrt_global__offerer.total_created_collective_offers, 0) as total_offers_created,
+    mrt_global__offerer.first_offer_creation_date,
+    mrt_global__offerer.last_bookable_offer_date,
+    mrt_global__offerer.first_bookable_offer_date,
+    COALESCE(mrt_global__offerer.total_non_cancelled_individual_bookings, 0) as non_cancelled_individual_bookings,
+    COALESCE(mrt_global__offerer.total_used_individual_bookings, 0) as used_individual_bookings,
+    COALESCE(mrt_global__offerer.total_non_cancelled_collective_bookings, 0) as confirmed_collective_bookings,
+    COALESCE(mrt_global__offerer.total_used_collective_bookings, 0) as used_collective_bookings,
+    COALESCE(mrt_global__offerer.total_individual_real_revenue, 0) as individual_real_revenue,
+    COALESCE(mrt_global__offerer.total_collective_real_revenue, 0) as collective_real_revenue,
+    COALESCE(mrt_global__offerer.total_real_revenue, 0) as total_real_revenue
+from {{ ref('mrt_global__offerer') }} as mrt_global__offerer
+    join {{ ref('offerer') }} as  applicative_database_offerer on mrt_global__offerer.offerer_id = applicative_database_offerer.offerer_id
+    join {{ source('analytics','region_department') }} as region_department on mrt_global__offerer.offerer_department_code = region_department.num_dep
+    left join {{ ref('mrt_global__venue') }} as mrt_global__venue on mrt_global__offerer.offerer_id = mrt_global__venue.venue_managing_offerer_id
+    left join aggregated_venue_types on mrt_global__offerer.offerer_id = aggregated_venue_types.offerer_id
+    left join active_venues_last_30days on mrt_global__offerer.offerer_id = active_venues_last_30days.offerer_id
+    left join administrative_venues on mrt_global__offerer.offerer_id = administrative_venues.offerer_id
+    left join top_ca_venue
+        on mrt_global__offerer.offerer_id = top_ca_venue.offerer_id
+            and ca_rank = 1
+    left join top_bookings_venue
+        on mrt_global__offerer.offerer_id = top_bookings_venue.offerer_id
+            and bookings_rank = 1
+    left join reimbursement_points on mrt_global__offerer.offerer_id = reimbursement_points.offerer_id
+where is_local_authority is TRUE

@@ -1,4 +1,4 @@
-SQL_PATH = f"dependencies/export_cloudsql_tables_to_bigquery/sql"
+SQL_PATH = "dependencies/export_cloudsql_tables_to_bigquery/sql"
 SQL_TMP_PATH = SQL_PATH + "/tmp"
 SQL_RAW_PATH = SQL_PATH + "/raw"
 

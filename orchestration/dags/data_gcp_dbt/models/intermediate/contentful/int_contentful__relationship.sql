@@ -1,6 +1,6 @@
-SELECT
+select
     parent,
     child,
     execution_date
-FROM {{ source('raw', 'contentful_relationship') }}
-QUALIFY ROW_NUMBER() OVER (PARTITION BY parent,child ORDER BY execution_date DESC) = 1
+from {{ source('raw', 'contentful_relationship') }}
+qualify ROW_NUMBER() over (partition by parent, child order by execution_date desc) = 1

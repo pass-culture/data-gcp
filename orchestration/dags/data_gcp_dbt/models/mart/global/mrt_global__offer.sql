@@ -1,4 +1,4 @@
-SELECT
+select
     offer_id,
     offer_product_id,
     offer_product_humanized_id,
@@ -57,14 +57,25 @@ SELECT
     venue_id,
     venue_name,
     venue_department_code,
+    venue_region_name,
+    venue_postal_code,
+    venue_city,
+    venue_epci,
+    venue_academy_name,
+    venue_density_label,
+    venue_macro_density_label,
+    venue_density_level,
     venue_label,
     partner_id,
     offerer_id,
+    venue_managing_offerer_id,
     offerer_name,
     venue_type_label,
     venue_iris_internal_id,
-    venue_region_name,
-    offerer_address_id
-FROM {{ ref('mrt_global__offer_unverified') }} AS o
-WHERE TRUE
-    AND offer_validation = 'APPROVED'
+    offerer_address_id,
+    offer_publication_date,
+    is_future_scheduled
+from {{ ref('int_global__offer') }} as o
+where TRUE
+    and offer_validation = 'APPROVED'
+    and venue_id is not NULL

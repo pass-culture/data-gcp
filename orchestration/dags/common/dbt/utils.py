@@ -1,4 +1,92 @@
 import json
+from typing import Dict, List, Optional, Tuple
+
+from airflow import DAG
+from airflow.models.baseoperator import chain
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.utils.task_group import TaskGroup
+
+
+def get_models_folder_dict(dbt_models: List, manifest: Optional[Dict]) -> Dict:
+    """Return a dictionnary associating dbt nodes in "model" folder to the list of folder containing it
+    Exemple output:
+    {model2_id:[folder_A,subfolder_A],model2_id:[folder_A,subfolder_B,subsubfolderB],model3_id:[folder_B]}
+    """
+    return {
+        model_node: manifest["nodes"][model_node]["fqn"][1:-1]
+        for model_node in dbt_models
+    }
+
+
+def create_nested_folder_groups(
+    dbt_models: List, model_op_dict: Dict, manifest: Optional[Dict], dag: DAG
+):
+    nested_folders = get_models_folder_dict(dbt_models, manifest)
+    task_groups = {}
+
+    def create_nested_task_group(
+        folder_hierarchy: List[str],
+        original_hierarchy: List[str],
+        parent_group: Optional[TaskGroup] = None,
+        current_path: str = "",
+    ) -> Tuple[Optional[TaskGroup], List[str]]:
+        """
+        Recursively create nested TaskGroups based on folder hierarchy.
+        This function modifies task_group dictionnary declared above
+        TODO:
+            - remove leaf TaskGroup and put the trigger operator in parent TaskGroup
+            hint: the recursive function is nihilpotent over original_hierarchy
+            - internalize task_group dict and output it
+        """
+        if not folder_hierarchy:
+            return (None, original_hierarchy)
+
+        current_folder = folder_hierarchy[0]
+
+        # Build the full path for the group_id
+        current_path = (
+            f"{current_path}_{current_folder}" if current_path else current_folder
+        )
+        group_id = current_path
+
+        # Check if the group already exists
+        if group_id in task_groups:
+            tg, dummy_task = task_groups[group_id]
+        else:
+            # Create task group & corresponding trigger opperator
+            tg = TaskGroup(group_id=group_id, parent_group=parent_group, dag=dag)
+            dummy_task = DummyOperator(
+                task_id=f"trigger_{group_id}_folder", task_group=tg, dag=dag
+            )
+            # Add them to dictionnary
+            task_groups[group_id] = (tg, dummy_task)
+
+        # Recurse to create the nested TaskGroups
+        if len(folder_hierarchy) > 1:
+            _, original_hierarchy = create_nested_task_group(
+                folder_hierarchy[1:],
+                original_hierarchy,
+                parent_group=tg,
+                current_path=current_path,
+            )
+
+        return (tg, original_hierarchy)
+
+    # Create task groups for each folder hierarchy in nested_folders
+    for folder_hierarchy in nested_folders.values():
+        original_hierarchy = folder_hierarchy.copy()
+        create_nested_task_group(folder_hierarchy, original_hierarchy)
+
+    # Set the upstream for each task in model_op_dict to the corresponding trigger operator
+    for model_node, folder_hierarchy in nested_folders.items():
+        # Chain trigger tasks of folder hierarchy
+        task_chain = [
+            task_groups["_".join(folder_hierarchy[: i + 1])][1]
+            for i, _ in enumerate(folder_hierarchy)
+        ]
+        chain(*task_chain)
+        # Set model execution task's upstream to leaf folder trigger task
+        task_chain[-1] >> model_op_dict[model_node]
 
 
 def load_json_artifact(_PATH_TO_DBT_TARGET, artifact):

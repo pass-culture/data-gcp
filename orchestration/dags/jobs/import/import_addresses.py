@@ -1,34 +1,48 @@
 from datetime import datetime, timedelta
 
+from common import macros
+from common.alerts import task_fail_slack_alert
+from common.config import (
+    BIGQUERY_RAW_DATASET,
+    DAG_FOLDER,
+    DATA_GCS_BUCKET_NAME,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+)
+from common.operators.gce import (
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
+)
+from common.utils import get_airflow_schedule
+
 from airflow import DAG
+from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.http.operators.http import SimpleHttpOperator
+from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
-from airflow.operators.python import BranchPythonOperator, PythonOperator
-from airflow.models import Param
-from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
-)
-from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, DAG_FOLDER
-from common import macros
-from common.config import (
-    BIGQUERY_RAW_DATASET,
-    DATA_GCS_BUCKET_NAME,
-    ENV_SHORT_NAME,
-)
-from common.alerts import task_fail_slack_alert
-from common.utils import getting_service_account_token, get_airflow_schedule
-from common.operators.biquery import bigquery_job_task
-from dependencies.addresses.import_addresses import (
-    USER_LOCATIONS_SCHEMA,
-    CLEAN_TABLES,
-    ANALYTICS_TABLES,
-)
+
+USER_LOCATIONS_SCHEMA = [
+    {"name": "user_id", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "user_address", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "user_city", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "user_postal_code", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "user_department_code", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "longitude", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "latitude", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "city_code", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "api_adresse_city", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "code_epci", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "epci_name", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "qpv_communes", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "qpv_name", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "code_qpv", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "zrr", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "date_updated", "type": "DATETIME", "mode": "NULLABLE"},
+]
 
 GCE_INSTANCE = f"import-addresses-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/addresses"
@@ -38,9 +52,7 @@ dag_config = {
 }
 
 USER_LOCATIONS_TABLE = "user_locations"
-schedule_interval = (
-    "0 2,4,6,8,12,16 * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
-)
+schedule_interval = "0 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
 
 default_args = {
     "start_date": datetime(2021, 3, 30),
@@ -131,23 +143,6 @@ with DAG(
         field_delimiter="|",
     )
 
-    clean_tasks = []
-
-    for table, params in CLEAN_TABLES.items():
-        to_clean = bigquery_job_task(
-            dag=dag, table=f"copy_to_clean_{table}", job_params=params
-        )
-        clean_tasks.append(to_clean)
-
-    end_clean = DummyOperator(task_id="end_clean")
-
-    analytics_tasks = []
-    for table, params in ANALYTICS_TABLES.items():
-        to_analytics = bigquery_job_task(
-            dag=dag, table=f"copy_to_analytics_{table}", job_params=params
-        )
-        analytics_tasks.append(to_analytics)
-
     end = DummyOperator(task_id="end", trigger_rule="one_success")
 
     (
@@ -159,12 +154,5 @@ with DAG(
         >> gce_instance_stop
         >> branch_op
     )
-    (
-        branch_op
-        >> import_addresses_to_bigquery
-        >> clean_tasks
-        >> end_clean
-        >> analytics_tasks
-        >> end
-    )
+    (branch_op >> import_addresses_to_bigquery >> end)
     branch_op >> end

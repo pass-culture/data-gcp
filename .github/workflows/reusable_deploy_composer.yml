@@ -20,6 +20,11 @@ on:
       ENV_SHORT_NAME:
         type: string
         required: true
+      FULL_SYNC_BUCKET:
+        type: boolean
+        required: false
+        default: true
+
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER:
         required: true
@@ -37,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.GITHUB_ENV_NAME }}
     defaults:
-     run: 
+     run:
        working-directory: "./orchestration/"
     steps:
       - uses: actions/checkout@v4
@@ -78,7 +83,7 @@ jobs:
           DBT_PROFILES_DIR: "."
         run: |
           export PYTHONPATH=$PYTHONPATH:./dags
-          dbt deps 
+          dbt deps
       - name: "deploy dbt dependencies"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
@@ -96,8 +101,12 @@ jobs:
         env:
           COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
         run: gsutil cp target/manifest.json gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json
-      - name: "Deploy composer"
+      - name: "Deploy composer full sync"
+        if: ${{ inputs.FULL_SYNC_BUCKET }}
         run: gsutil -m rsync -d -r dags gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/dags
+      - name: "Deploy composer partial sync"
+        if: ${{ ! inputs.FULL_SYNC_BUCKET }}
+        run: gsutil -m rsync -r dags gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/dags
       - name: "Wait for composer to be deployed (10s x 6 times)"
         run: |
           ./wait_for_dag_deployed.sh ${{ inputs.COMPOSER_NAME }} ${{ env.GCP_REGION }} airflow_monitoring 6 10 ${{ inputs.DATA_GCP_PROJECT }}

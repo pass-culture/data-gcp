@@ -18,8 +18,9 @@ def generate_table_configs(models):
             "clickhouse_table_name": model_name,
             "clickhouse_dataset_name": "intermediate",
             "mode": mode,
+            "partition_key": partition_key,
         }
-        for model_name, mode in models
+        for model_name, mode, partition_key in models
     ]
 
 
@@ -41,9 +42,9 @@ def generate_views_configs(table_names):
 
 # List of models to be exported
 DBT_MODELS = [
-    ("booking", "overwrite"),
-    ("collective_booking", "overwrite"),
-    ("native_event", "incremental"),
+    ("booking", "overwrite", "update_date"),
+    ("collective_booking", "overwrite", "update_date"),
+    ("native_event", "incremental", "partition_date"),
 ]
 # List of aggreated tables names to be refreshed
 CLICKHOUSE_TABLES = [

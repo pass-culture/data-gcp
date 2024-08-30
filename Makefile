@@ -141,9 +141,8 @@ sqlfluff_fix:
 sqlfluff_format:
 	cd orchestration/dags/data_gcp_dbt && sqlfluff format --dialect bigquery
 
-sqlfluff_check:
+sqlfluff_lint:
 	cd orchestration/dags/data_gcp_dbt && sqlfluff lint --dialect bigquery
-  
+
 precommit_install:
 	@eval "$$(pyenv init -)" && pyenv activate data-gcp && pre-commit install
-

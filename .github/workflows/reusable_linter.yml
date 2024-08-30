@@ -40,6 +40,9 @@ jobs:
         run: uv pip install --system -r  requirements.txt
       - name: "Run linter (Ruff)"
         run: make ruff_check
+      - name: "install dbt packages"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        run: dbt deps
       - name: "Run linter (sqlfluff)"
         run: make sqlfluff_check
       - name: "Post to a Slack channel"

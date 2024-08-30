@@ -29,7 +29,7 @@ with bookings_per_stock as (
 select distinct
     stock.partition_date,
     stock.offer_id,
-    offer_item_ids.item_id,
+    int_applicative__offer_item_id.item_id,
     offer.offer_subcategoryid as offer_subcategory_id,
     subcategories.category_id as offer_category_id
 from
@@ -44,7 +44,7 @@ from
     left join bookings_per_stock
         on stock.stock_id = bookings_per_stock.stock_id
             and stock.partition_date = bookings_per_stock.partition_date
-    left join {{ ref('offer_item_ids') }} offer_item_ids on offer_item_ids.offer_id = stock.offer_id
+    left join {{ ref('int_applicative__offer_item_id') }} int_applicative__offer_item_id on int_applicative__offer_item_id.offer_id = stock.offer_id
     left join {{ source('clean', 'subcategories') }} subcategories on subcategories.id = offer.offer_subcategoryid
 where
     (

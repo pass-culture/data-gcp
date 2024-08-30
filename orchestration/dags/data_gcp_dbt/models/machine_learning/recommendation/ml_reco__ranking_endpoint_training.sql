@@ -3,7 +3,7 @@ with diversification as (
         im.item_id,
         avg(d.delta_diversification) as delta_diversification
     from {{ ref("diversification_booking") }} d
-        inner join {{ ref('offer_item_ids') }} as im on d.offer_id = im.offer_id
+        inner join {{ ref('int_applicative__offer_item_id') }} as im on d.offer_id = im.offer_id
     where
         date(booking_creation_date) > date_sub(current_date, interval 90 day)
     group by
@@ -58,7 +58,7 @@ interact as (
         sum(is_add_to_favorites + is_booking_confirmation) as booking
     from
         {{ ref('int_firebase__native_event') }} fsoe
-        inner join {{ ref('offer_item_ids') }} as im on fsoe.offer_id = im.offer_id
+        inner join {{ ref('int_applicative__offer_item_id') }} as im on fsoe.offer_id = im.offer_id
     where
         event_date >= date_sub(current_date, interval 14 day)
         and event_name in (

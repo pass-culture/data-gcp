@@ -66,7 +66,7 @@ except
     ie.image_embedding as image_embedding
 from
     base b
-    LEFT JOIN `{{ bigquery_clean_dataset }}`.offer_item_ids oii on b.offer_id = oii.offer_id
+    LEFT JOIN `{{ bigquery_int_applicative_dataset }}`.offer_item_id oii on b.offer_id = oii.offer_id
     JOIN `{{ bigquery_ml_feat_dataset }}`.item_embedding ie on oii.item_id = ie.item_id
 where
     is_rule_up_to_date

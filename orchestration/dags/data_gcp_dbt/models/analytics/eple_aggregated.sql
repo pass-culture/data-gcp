@@ -11,7 +11,7 @@ with eple_infos as (
         eid.institution_type,
         eid.macro_institution_type,
         ey.scholar_year,
-        ed.total_deposit_amount as institution_deposit_amount,
+        ed.educational_deposit_amount as institution_deposit_amount,
         eid.total_students
     from {{ ref('mrt_global__educational_institution') }} eid
         join {{ ref('educational_deposit') }} ed on ed.educational_institution_id = eid.institution_id

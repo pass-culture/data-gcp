@@ -75,6 +75,12 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
         run: PYTHONPATH=$PYTHONPATH:./dags dbt deps
+      - name: "Lint changed models (sqlfluff)"
+        env:
+          DBT_TARGET_PATH: "dags/data_gcp_dbt/target/"
+          DBT_PROFILES_DIR: "dags/data_gcp_dbt/"
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+        run: ../.github/workflows/scripts/linter_sqlfluff_dbt_changes.sh ${{ github.base_ref }} dags/data_gcp_dbt
       - name: "compile dbt project"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:

@@ -138,6 +138,9 @@ ruff_check:
 sqlfluff_fix:
 	cd orchestration/dags/data_gcp_dbt && sqlfluff fix --dialect bigquery
 
+sqlfluff_fix_ci:
+	cd dags/data_gcp_dbt && sqlfluff fix --dialect bigquery
+
 sqlfluff_format:
 	cd orchestration/dags/data_gcp_dbt && sqlfluff format --dialect bigquery
 

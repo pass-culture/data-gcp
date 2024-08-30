@@ -43,8 +43,6 @@ jobs:
       - name: "install dbt packages"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         run: dbt deps
-      - name: "Run linter (sqlfluff)"
-        run: make sqlfluff_check
       - name: "Post to a Slack channel"
         id: "slack"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}

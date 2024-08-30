@@ -29,19 +29,19 @@ repos:
     stages: [commit]
   - id: sqlfluff-format-fix
     name: Formatting (sqlfluff)
-    entry: sqlfluff_format
+    entry: make sqlfluff_format
     language: system
     types: [sql]
     stages: [commit]
-  - id: sqlfluff-lint-fix
+  - id: sqlfluff-lint-fix echo $(git diff --cached --name-only)
     name: Linter (sqlfluff)
-    entry: sqlfluff_fix
+    entry: make sqlfluff_fix $(git diff --cached --name-only)
     language: system
     types: [sql]
     stages: [commit]
   - id: sqlfluff-lint-check
     name: Lint check (sqlfluff)
-    entry: sqlfluff_lint
+    entry: make sqlfluff_lint echo $(git diff --cached --name-only)
     language: system
     types: [sql]
     stages: [commit]

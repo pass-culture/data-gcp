@@ -4,7 +4,7 @@ dialect = bigquery
 templater = dbt
 max_line_length = 0
 rules = JJ01
-processes = 1
+processes = -1
 large_file_skip_byte_limit = 25000
 ignore_templated_areas = False
 

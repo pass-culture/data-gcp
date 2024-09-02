@@ -1,12 +1,11 @@
 from common.alerts import task_fail_slack_alert
 from common.config import (
     ENV_SHORT_NAME,
-    EXCLUDED_TAGS,
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
     PATH_TO_DBT_TARGET,
 )
-from common.dbt.utils import load_and_process_manifest, dbt_dag_reconstruction
+from common.dbt.utils import dbt_dag_reconstruction, load_and_process_manifest
 from common.utils import get_airflow_schedule, waiting_operator
 
 from airflow import DAG
@@ -14,7 +13,6 @@ from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.dates import datetime, timedelta
-from airflow.utils.task_group import TaskGroup
 
 default_args = {
     "start_date": datetime(2020, 12, 23),
@@ -25,7 +23,15 @@ default_args = {
 }
 
 # Load manifest and process it
-manifest, dbt_snapshots, dbt_models, dbt_crit_tests, models_with_dependencies, models_with_crit_test_dependencies, crit_test_parents = load_and_process_manifest(f"{PATH_TO_DBT_TARGET}")
+(
+    manifest,
+    dbt_snapshots,
+    dbt_models,
+    dbt_crit_tests,
+    models_with_dependencies,
+    models_with_crit_test_dependencies,
+    crit_test_parents,
+) = load_and_process_manifest(f"{PATH_TO_DBT_TARGET}")
 
 # Initialize the DAG
 dag = DAG(
@@ -87,7 +93,7 @@ operator_dict = dbt_dag_reconstruction(
     dbt_snapshots,
     models_with_crit_test_dependencies,
     crit_test_parents,
-    compile
+    compile,
 )
 
 # DAG orchestration

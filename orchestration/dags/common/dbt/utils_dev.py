@@ -14,6 +14,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.task_group import TaskGroup
 
 
+# ruff: noqa: F841
 def load_json_artifact(_PATH_TO_DBT_TARGET: str, artifact: str) -> Dict:
     local_filepath = _PATH_TO_DBT_TARGET + "/" + artifact
     try:

@@ -7,7 +7,8 @@
 ) }}
 
 with discoveries_by_consultation as (
-SELECT consultation_id,
+SELECT 
+    consultation_id,
     MAX(CASE WHEN type = 'item' and consulted_entity is not null then 1 else 0 END) AS item_score,
     MAX(CASE WHEN type = 'offer_subcategory' and consulted_entity is not null then 1 else 0 END) AS subcategory_score,
     MAX(CASE WHEN type = 'offer_category' and consulted_entity is not null then 1 else 0 END) AS category_score,
@@ -20,6 +21,7 @@ SELECT
     consult.consultation_date,
     consult.origin,
     consult.offer_id,
+    consult.user_id,
     consult.unique_session_id,
     dc.item_discovery_score,
     dc.subcategory_discovery_score,
@@ -43,6 +45,9 @@ SELECT
     user.user_is_unemployed,
     user.user_is_in_qpv,
     user.user_macro_density_label,
+    consult.traffic_medium,
+    consult.traffic_campaign,
+    consult.module_id
 FROM {{ ref('int_firebase__native_consultation')}} AS consult
 left join discoveries_by_consultation as dc on dc.consultation_id = consult.consultation_id
 left join {{ ref('int_global__offer')}} as offer on consult.offer_id = offer.offer_id

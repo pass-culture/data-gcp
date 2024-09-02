@@ -17,6 +17,7 @@ group by consultation_id
 
 SELECT 
     consult.consultation_id,
+    consult.consultation_date,
     consult.origin,
     consult.offer_id,
     consult.unique_session_id,

@@ -1,9 +1,19 @@
 #!/bin/bash
 
+
+
+if [ -z "$1" ]; then
+    TARGET_BRANCH="master"
+else
+    TARGET_BRANCH=$1
+fi
+
+
 sqlfuff_lint_changed_sql() {
-    git fetch origin master
-    common_ancestor=$(git merge-base --fork-point origin/master HEAD)
-    sqls=$(git diff $common_ancestor --name-only | grep 'orchestration/dags/data_gcp_dbt/' | grep '\.sql$')
+    git fetch origin $TARGET_BRANCH
+    # common_ancestor=$(git merge-base --fork-point origin/master HEAD)
+    # sqls=$(git diff $common_ancestor --name-only | grep 'orchestration/dags/data_gcp_dbt/' | grep '\.sql$')
+    sqls=$(git diff origin/$TARGET_BRANCH --name-only | grep 'orchestration/dags/data_gcp_dbt/' | grep '\.sql$')
 
     if [ -z "$sqls" ]; then
         echo "no SQL files were modified"

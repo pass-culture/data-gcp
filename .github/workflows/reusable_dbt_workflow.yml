@@ -81,7 +81,8 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
-        run: ./scripts/sqlfluff_lint.sh
+          TARGET_BRANCH: ${{ github.base_ref }}
+        run: ./scripts/sqlfluff_lint.sh $TARGET_BRANCH
       - name: "compile dbt project"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:

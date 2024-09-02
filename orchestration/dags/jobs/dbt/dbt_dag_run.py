@@ -14,7 +14,6 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.dates import datetime, timedelta
 
 default_args = {
     "start_date": datetime.datetime(2020, 12, 23),

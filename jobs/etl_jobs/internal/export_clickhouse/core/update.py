@@ -3,7 +3,7 @@ from core.utils import CLICKHOUSE_CLIENT
 
 
 def update_incremental(
-    dataset_name: str, table_name: str, tmp_table_name: str, update_date: str
+    dataset_name: str, table_name: str, tmp_table_name: str, partition_date: str
 ) -> None:
     partitions_to_update = CLICKHOUSE_CLIENT.query_df(
         f"SELECT distinct partition_date FROM tmp.{tmp_table_name}"
@@ -45,6 +45,9 @@ def remove_stale_partitions(dataset_name, table_name, update_date) -> None:
     previous_partitions = CLICKHOUSE_CLIENT.query_df(
         f"SELECT distinct update_date FROM {dataset_name}.{table_name}"
     )
+    print(f"update date : {update_date}")
+    print(f"Previous partitions : {previous_partitions}")
+
     if len(previous_partitions) > 0:
         previous_partitions = [
             x for x in previous_partitions["update_date"].values if x != update_date
@@ -62,18 +65,36 @@ def remove_stale_partitions(dataset_name, table_name, update_date) -> None:
 def update_overwrite(
     dataset_name: str, table_name: str, tmp_table_name: str, update_date: str
 ) -> None:
+    total_rows = (
+        CLICKHOUSE_CLIENT.command(f"SELECT count(*) FROM {dataset_name}.{table_name}")
+        | 0
+    )
+    new_rows = (
+        CLICKHOUSE_CLIENT.command(f"SELECT count(*) FROM tmp.{tmp_table_name}") | 0
+    )
+    print(f"tmp Table {tmp_table_name} contains {new_rows}.")
+    print(f"before update. Table {table_name} contains {total_rows}.")
     print(f"Will overwrite {dataset_name}.{table_name}. New update : {update_date}")
     CLICKHOUSE_CLIENT.command(
         f" ALTER TABLE {dataset_name}.{table_name} ON cluster default REPLACE PARTITION '{update_date}' FROM tmp.{tmp_table_name}"
     )
 
+    total_rows = (
+        CLICKHOUSE_CLIENT.command(f"SELECT count(*) FROM {dataset_name}.{table_name}")
+        | 0
+    )
+    print(
+        f"after inserting partition Table contains {total_rows}. Removing temporary table."
+    )
+    # print(f"Done updating. Table contains {total_rows}. Removing temporary table.")
     remove_stale_partitions(dataset_name, table_name, update_date)
     total_rows = (
         CLICKHOUSE_CLIENT.command(f"SELECT count(*) FROM {dataset_name}.{table_name}")
         | 0
     )
-
-    print(f"Done updating. Table contains {total_rows}. Removing temporary table.")
+    print(
+        f"after pruning stale partitions Table contains {total_rows}. Removing temporary table."
+    )
     CLICKHOUSE_CLIENT.command(f" DROP TABLE tmp.{tmp_table_name} ON cluster default")
 
 
@@ -101,7 +122,6 @@ def create_tmp_schema(
         table_name=sql_file_name,
         extra_data={
             "dataset": "tmp",
-            "date": update_date,
             "tmp_table_name": table_name,
             "bucket_path": source_gs_path,
         },

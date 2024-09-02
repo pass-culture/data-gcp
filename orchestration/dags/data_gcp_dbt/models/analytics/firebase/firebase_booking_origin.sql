@@ -65,7 +65,7 @@ firebase_consult as (
         module_name,
         entry_id
     from {{ ref('int_firebase__native_event') }}
-        inner join {{ ref('offer_item_ids') }} offer_item_ids using (offer_id)
+        inner join {{ ref('int_applicative__offer_item_id') }} int_applicative__offer_item_id using (offer_id)
     where event_name = 'ConsultOffer'
         and origin not in ('offer', 'endedbookings', 'bookingimpossible', 'bookings')
     {% if is_incremental() %}

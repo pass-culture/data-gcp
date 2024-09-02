@@ -149,7 +149,7 @@ select
     future_offer.offer_publication_date,
     case when o.offer_is_active is FALSE and future_offer.offer_publication_date >= CURRENT_DATE then TRUE else FALSE end as is_future_scheduled
 from {{ ref("int_applicative__extract_offer") }} as o
-    left join {{ ref("offer_item_ids") }} as ii on ii.offer_id = o.offer_id
+    left join {{ ref("int_applicative__offer_item_id") }} as ii on ii.offer_id = o.offer_id
     left join stocks_grouped_by_offers as so on so.offer_id = o.offer_id
     left join total_favorites as tf on tf.offerid = o.offer_id
     left join {{ source("clean","subcategories") }} as subcategories on o.offer_subcategoryid = subcategories.id

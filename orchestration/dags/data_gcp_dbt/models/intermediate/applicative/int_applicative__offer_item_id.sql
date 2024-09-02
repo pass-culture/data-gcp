@@ -1,3 +1,5 @@
+{{ config(**custom_table_config()) }}
+
 with items_grouping as (
     select
         offer.offer_id,
@@ -6,8 +8,9 @@ with items_grouping as (
             when (offer.offer_product_id is not null) then CONCAT('product-', offer.offer_product_id)
             else CONCAT('offer-', offer.offer_id)
         end as item_id
-    from {{ ref('offer') }} as offer
+    from {{ source('raw','applicative_database_offer') }} as offer
         left join {{ source('analytics','linked_offers') }} linked_offers on linked_offers.offer_id = offer.offer_id
+    qualify ROW_NUMBER() over (partition by offer_id order by offer_date_updated desc) = 1
 )
 
 select

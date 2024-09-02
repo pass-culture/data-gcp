@@ -1,0 +1,4 @@
+version: 2
+models:
+  - name: mrt_global__filtered_bookable_event_offer
+    description: "This filtered model was created because it is used in the most expensive card in Metabase (card_id = 9688). The purpose is to pre-filter the rows to reduce the cost of the card."

@@ -4,7 +4,7 @@ with active_venues_last_30days as (
         STRING_AGG(distinct CONCAT(" ", case when venue_type_label != "Offre numérique" then venue_type_label end)) as active_last_30days_physical_venues_types
     from {{ ref("mrt_global__venue") }} as v
         left join {{ ref("bookable_venue_history") }} on v.venue_id = bookable_venue_history.venue_id
-    where partition_date >= DATE("{{ ds() }}") - 30
+    where DATE_DIFF(DATE("{{ ds() }}"), partition_date, day) <= 30
     group by offerer_id
 )
 

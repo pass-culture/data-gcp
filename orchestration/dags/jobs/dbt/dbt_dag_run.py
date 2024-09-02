@@ -13,22 +13,23 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.dates import datetime, timedelta
+from airflow.utils.dates import datetime
 from airflow.utils.task_group import TaskGroup
 
 default_args = {
     "start_date": datetime(2020, 12, 23),
-    "retries": 2,
-    "retry_delay": timedelta(minutes=2),
+    "retries": 6,
+    "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
     "on_failure_callback": task_fail_slack_alert,
+    "on_skipped_callback": task_fail_slack_alert,
 }
 
 
 dag = DAG(
     "dbt_run_dag",
     default_args=default_args,
-    dagrun_timeout=timedelta(minutes=240),
+    dagrun_timeout=datetime.timedelta(minutes=480),
     catchup=False,
     description="A dbt wrapper for airflow",
     schedule_interval=get_airflow_schedule("0 1 * * *"),

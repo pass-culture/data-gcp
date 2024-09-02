@@ -116,9 +116,7 @@ models:
         description: ''
         data_type: STRING
         tests:
-          - not_null:
-              config:
-                severity: warn
+          - not_null
       - name: offerer_name
         description: ''
         data_type: STRING

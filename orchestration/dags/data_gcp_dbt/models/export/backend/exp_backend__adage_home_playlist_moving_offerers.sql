@@ -28,7 +28,7 @@ offerer_venue_info as (
             on b.collective_offer_id = o.collective_offer_id
                 and o.collective_offer_venue_address_type = "school"
         join random_template_offer_per_venue v on v.venue_id = b.venue_id -- JOIN because we only keep venues that have bookings AND template offer
-        left join {{ ref('enriched_institution_data') }} id on id.institution_id = b.educational_institution_id
+        left join {{ ref('mrt_global__educational_institution') }} id on id.institution_id = b.educational_institution_id
     where collective_booking_status in (
             "CONFIRMED",
             "REIMBURSED",
@@ -51,7 +51,7 @@ institution_info as (
         institution_density_label as institution_rural_level,
         institution_latitude,
         institution_longitude
-    from {{ ref('enriched_institution_data') }} id
+    from {{ ref('mrt_global__educational_institution') }} id
 ),
 
 -- Get all venues with at least one reservation at less than 300KM.

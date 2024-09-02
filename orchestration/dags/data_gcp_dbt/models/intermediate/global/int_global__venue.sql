@@ -22,6 +22,7 @@ select
     v.venue_region_name,
     v.venue_epci,
     v.venue_academy_name,
+    v.venue_in_qpv,
     v.venue_density_label,
     v.venue_macro_density_label,
     v.venue_density_level,

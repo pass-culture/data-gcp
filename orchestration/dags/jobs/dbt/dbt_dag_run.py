@@ -1,3 +1,5 @@
+import datetime
+
 from common.alerts import task_fail_slack_alert
 from common.config import (
     ENV_SHORT_NAME,
@@ -13,11 +15,10 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.dates import datetime
 from airflow.utils.task_group import TaskGroup
 
 default_args = {
-    "start_date": datetime(2020, 12, 23),
+    "start_date": datetime.datetime(2020, 12, 23),
     "retries": 6,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,

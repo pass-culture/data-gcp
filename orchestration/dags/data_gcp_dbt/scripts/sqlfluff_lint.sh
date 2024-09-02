@@ -1,6 +1,7 @@
 #!/bin/bash
 
 sqlfuff_lint_changed_sql() {
+    git fetch origin master
     common_ancestor=$(git merge-base --fork-point origin/master HEAD)
     sqls=$(git diff $common_ancestor --name-only | grep 'orchestration/dags/data_gcp_dbt/' | grep '\.sql$')
 

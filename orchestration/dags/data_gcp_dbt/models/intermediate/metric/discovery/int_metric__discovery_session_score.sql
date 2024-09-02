@@ -1,3 +1,6 @@
+-- Ce modèle, on peut le supprimer ici (le modèle at session level sera soit dans mart pour la partie enrichi,
+-- soit dans intermediate/firebase
+
 {{
     config(
         **custom_incremental_config(

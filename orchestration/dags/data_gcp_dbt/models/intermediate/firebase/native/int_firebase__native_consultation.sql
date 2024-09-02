@@ -7,6 +7,7 @@
 ) }}
 
 SELECT DISTINCT
+    CONCAT(user_id, "-",DATE_FORMAT(event_timestamp, '%Y%m%d%H%i%s'), "-", offer_id) AS consultation_id,
     user_id,
     event_date AS consultation_date,
     event_timestamp AS consultation_timestamp,
@@ -14,7 +15,6 @@ SELECT DISTINCT
     origin,
     unique_session_id,
     event_name,
-    CONCAT(user_id, "-",event_timestamp, "-", offer_id) AS consultation_id,
     venue_id,
     traffic_medium,
     traffic_campaign,

@@ -13,6 +13,7 @@ SELECT DISTINCT
     event_timestamp AS consultation_timestamp,
     offer_id,
     origin,
+    module_id,
     unique_session_id,
     event_name,
     venue_id,

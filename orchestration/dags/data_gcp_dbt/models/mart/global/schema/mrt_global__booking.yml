@@ -118,7 +118,7 @@ models:
         tests:
           - not_null:
               config:
-                severity: error
+                +severity: "{{ var('CI_SEVERITY', 'error') }}"
       - name: offerer_name
         description: ''
         data_type: STRING

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sqlfuff_changed_sql() {
+sqlfuff_fix_changed_sql() {
     common_ancestor=$(git merge-base --fork-point origin/master HEAD)
     sqls=$(git diff $common_ancestor --name-only | grep 'orchestration/dags/data_gcp_dbt/' | grep '\.sql$')
 
@@ -19,11 +19,11 @@ sqlfuff_changed_sql() {
         done
 
         if [ -n "$existing_sqls" ]; then
-            cd orchestration/dags/data_gcp_dbt && sqlfluff lint $existing_sqls
+            cd orchestration/dags/data_gcp_dbt && sqlfluff fix $existing_sqls -p -1
         else
-            echo "No existing SQL files to lint."
+            echo "No existing SQL files to form t."
         fi
     fi
 }
 
-sqlfuff_changed_sql
+sqlfuff_fix_changed_sql

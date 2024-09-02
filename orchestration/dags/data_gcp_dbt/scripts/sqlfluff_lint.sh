@@ -1,7 +1,5 @@
 #!/bin/bash
 
-
-
 if [ -z "$1" ]; then
     TARGET_BRANCH="master"
 else
@@ -13,7 +11,7 @@ sqlfuff_lint_changed_sql() {
     git fetch origin $TARGET_BRANCH
     # common_ancestor=$(git merge-base --fork-point origin/master HEAD)
     # sqls=$(git diff $common_ancestor --name-only | grep 'orchestration/dags/data_gcp_dbt/' | grep '\.sql$')
-    sqls=$(git diff origin/$TARGET_BRANCH --name-only | grep 'orchestration/dags/data_gcp_dbt/' | grep '\.sql$')
+    sqls=$(git diff origin/$TARGET_BRANCH --name-only | grep 'orchestration/dags/data_gcp_dbt/' | grep '\.sql$' | sed 's|orchestration/dags/data_gcp_dbt/||')
 
     if [ -z "$sqls" ]; then
         echo "no SQL files were modified"
@@ -28,9 +26,10 @@ sqlfuff_lint_changed_sql() {
                 echo "Warning: Skipping non-existent file $sql"
             fi
         done
+        echo "existing_sqls: $existing_sqls"
 
         if [ -n "$existing_sqls" ]; then
-            cd orchestration/dags/data_gcp_dbt && sqlfluff lint $existing_sqls -p -1
+            sqlfluff lint $existing_sqls -p -1
         else
             echo "No existing SQL files to lint."
         fi

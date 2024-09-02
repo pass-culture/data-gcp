@@ -1,8 +1,16 @@
 #!/bin/bash
 
+if [ -z "$1" ]; then
+    TARGET_BRANCH="master"
+else
+    TARGET_BRANCH=$1
+fi
+
 sqlfuff_fix_changed_sql() {
-    common_ancestor=$(git merge-base --fork-point origin/master HEAD)
-    sqls=$(git diff $common_ancestor --name-only | grep 'orchestration/dags/data_gcp_dbt/' | grep '\.sql$')
+    git fetch origin $TARGET_BRANCH
+    # common_ancestor=$(git merge-base --fork-point origin/master HEAD)
+    # sqls=$(git diff $common_ancestor --name-only | grep 'orchestration/dags/data_gcp_dbt/' | grep '\.sql$')
+    sqls=$(git diff origin/$TARGET_BRANCH --name-only | grep 'orchestration/dags/data_gcp_dbt/' | grep '\.sql$')
 
     if [ -z "$sqls" ]; then
         echo "no SQL files were modified"
@@ -21,7 +29,7 @@ sqlfuff_fix_changed_sql() {
         if [ -n "$existing_sqls" ]; then
             cd orchestration/dags/data_gcp_dbt && sqlfluff fix $existing_sqls -p -1
         else
-            echo "No existing SQL files to form t."
+            echo "No existing SQL files to fix."
         fi
     fi
 }

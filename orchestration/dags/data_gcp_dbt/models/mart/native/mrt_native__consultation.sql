@@ -9,9 +9,9 @@
 with discoveries_by_consultation as (
 SELECT 
     consultation_id,
-    MAX(CASE WHEN type = 'item' and consulted_entity is not null then 1 else 0 END) AS item_score,
-    MAX(CASE WHEN type = 'offer_subcategory' and consulted_entity is not null then 1 else 0 END) AS subcategory_score,
-    MAX(CASE WHEN type = 'offer_category' and consulted_entity is not null then 1 else 0 END) AS category_score,
+    MAX(CASE WHEN type = 'item' then 1 else 0 END) AS item_score,
+    MAX(CASE WHEN type = 'offer_subcategory' then 1 else 0 END) AS subcategory_score,
+    MAX(CASE WHEN type = 'offer_category' then 1 else 0 END) AS category_score,
 from {{ ref('int_metric__discovery_score')}}
 group by consultation_id
 )

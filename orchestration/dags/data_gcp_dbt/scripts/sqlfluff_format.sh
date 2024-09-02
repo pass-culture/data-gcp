@@ -10,8 +10,7 @@ sqlfuff_format_changed_sql() {
     git fetch origin $TARGET_BRANCH
     # common_ancestor=$(git merge-base --fork-point origin/master HEAD)
     # sqls=$(git diff $common_ancestor --name-only | grep 'orchestration/dags/data_gcp_dbt/' | grep '\.sql$')
-    sqls=$(git diff origin/$TARGET_BRANCH --name-only | grep 'orchestration/dags/data_gcp_dbt/' | grep '\.sql$')
-
+    sqls=$(git diff origin/$TARGET_BRANCH --name-only | grep 'orchestration/dags/data_gcp_dbt/' | grep '\.sql$' | sed 's|orchestration/dags/data_gcp_dbt/||')
     if [ -z "$sqls" ]; then
         echo "no SQL files were modified"
     else
@@ -27,7 +26,7 @@ sqlfuff_format_changed_sql() {
         done
 
         if [ -n "$existing_sqls" ]; then
-            cd orchestration/dags/data_gcp_dbt && sqlfluff format $existing_sqls -p -1
+            sqlfluff format $existing_sqls -p -1
         else
             echo "No existing SQL files to format."
         fi

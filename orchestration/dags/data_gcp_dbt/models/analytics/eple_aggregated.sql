@@ -12,8 +12,8 @@ with eple_infos as (
         eid.macro_institution_type,
         ey.scholar_year,
         ed.educational_deposit_amount as institution_deposit_amount,
-        eid.total_nb_of_students_in_institution as total_students
-    from {{ ref('enriched_institution_data') }} eid
+        eid.total_students
+    from {{ ref('mrt_global__educational_institution') }} eid
         join {{ ref('educational_deposit') }} ed on ed.educational_institution_id = eid.institution_id
         join {{ ref('educational_year') }} ey on ey.adage_id = ed.educational_year_id
 ),

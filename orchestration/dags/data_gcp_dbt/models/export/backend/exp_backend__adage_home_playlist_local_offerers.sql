@@ -26,7 +26,7 @@ institution_info as (
         institution_density_label as institution_rural_level,
         institution_latitude,
         institution_longitude
-    from {{ ref('enriched_institution_data') }}
+    from {{ ref('mrt_global__educational_institution') }}
 ),
 
 -- CROSS JOIN

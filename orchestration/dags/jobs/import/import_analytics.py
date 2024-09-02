@@ -19,9 +19,10 @@ from airflow.utils.task_group import TaskGroup
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
-    "retries": 4,
-    "on_failure_callback": analytics_fail_slack_alert,
+    "retries": 6,
     "retry_delay": datetime.timedelta(minutes=5),
+    "on_failure_callback": analytics_fail_slack_alert,
+    "on_skipped_callback": analytics_fail_slack_alert,
     "project_id": GCP_PROJECT_ID,
 }
 
@@ -31,7 +32,7 @@ dag = DAG(
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
     schedule_interval=get_airflow_schedule("0 1 * * *"),
     catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=240),
+    dagrun_timeout=datetime.timedelta(minutes=480),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
 )

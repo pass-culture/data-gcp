@@ -12,6 +12,7 @@ SELECT DISTINCT
     event_timestamp AS consultation_timestamp,
     offer_id,
     origin,
+    module_id,
     unique_session_id,
     event_name,
     CONCAT(user_id, "-",event_timestamp, "-", offer_id) AS consultation_id,

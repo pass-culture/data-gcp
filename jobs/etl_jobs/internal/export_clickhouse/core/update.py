@@ -3,7 +3,7 @@ from core.utils import CLICKHOUSE_CLIENT
 
 
 def update_incremental(
-    dataset_name: str, table_name: str, tmp_table_name: str, update_date: str
+    dataset_name: str, table_name: str, tmp_table_name: str, partition_date: str
 ) -> None:
     partitions_to_update = CLICKHOUSE_CLIENT.query_df(
         f"SELECT distinct partition_date FROM tmp.{tmp_table_name}"
@@ -101,7 +101,6 @@ def create_tmp_schema(
         table_name=sql_file_name,
         extra_data={
             "dataset": "tmp",
-            "date": update_date,
             "tmp_table_name": table_name,
             "bucket_path": source_gs_path,
         },

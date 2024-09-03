@@ -153,7 +153,7 @@ from {{ ref("int_applicative__extract_offer") }} as o
     left join stocks_grouped_by_offers as so on so.offer_id = o.offer_id
     left join total_favorites as tf on tf.offerid = o.offer_id
     left join {{ source("clean","subcategories") }} as subcategories on o.offer_subcategoryid = subcategories.id
-    left join {{ ref("int_applicative__isbn_rayon_editor") }} as isbn_rayon_editor on o.isbn = int_applicative__isbn_rayon_editor.isbn
+    left join {{ ref("int_applicative__isbn_rayon_editor") }} as isbn_rayon_editor on o.isbn = isbn_rayon_editor.isbn
     left join
         {{ ref("int_applicative__mediation") }}
             as m

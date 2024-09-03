@@ -4,6 +4,8 @@
         incremental_strategy = 'insert_overwrite',
         partition_by = {'field': 'event_date', 'data_type': 'date'},
         on_schema_change = "sync_all_columns"
+        partition_by = {'field': 'event_date', 'data_type': 'date'},
+        on_schema_change = "sync_all_columns"
     )
 ) }}
 
@@ -34,12 +36,12 @@ SELECT
     offer_id,
     module_id,
     COUNT(*) as total_displays,
-    COALESCE(SUM(CASE WHEN displayed_position < 4 THEN 1 ELSE 0 END),0) as total_position_0_3_diplays,
-    COALESCE(SUM(CASE WHEN displayed_position <= 10 AND displayed_position >= 4 THEN 1 ELSE 0 END),0) AS total_position_4_10_displays,
-    COALESCE(SUM(CASE WHEN displayed_position <= 20 AND displayed_position > 10 THEN 1 ELSE 0 END),0) AS total_position_11_20_displays,
-    COALESCE(SUM(CASE WHEN displayed_position <= 30 AND displayed_position > 20 THEN 1 ELSE 0 END),0) AS total_position_21_30_displays,
-    COALESCE(SUM(CASE WHEN displayed_position <= 40 AND displayed_position > 30 THEN 1 ELSE 0 END),0) AS total_position_31_40_displays,
-    COALESCE(SUM(CASE WHEN displayed_position <= 50 AND displayed_position > 40 THEN 1 ELSE 0 END),0) AS total_position_41_50_displays,
+    SUM(CASE WHEN displayed_position < 4 THEN 1 ELSE 0 END) as total_position_0_3_diplays,
+    SUM(CASE WHEN displayed_position <= 10 AND displayed_position >= 4 THEN 1 ELSE 0 END) AS total_position_4_10_displays,
+    SUM(CASE WHEN displayed_position <= 20 AND displayed_position > 10 THEN 1 ELSE 0 END) AS total_position_11_20_displays,
+    SUM(CASE WHEN displayed_position <= 30 AND displayed_position > 20 THEN 1 ELSE 0 END) AS total_position_21_30_displays,
+    SUM(CASE WHEN displayed_position <= 40 AND displayed_position > 30 THEN 1 ELSE 0 END) AS total_position_31_40_displays,
+    SUM(CASE WHEN displayed_position <= 50 AND displayed_position > 40 THEN 1 ELSE 0 END) AS total_position_41_50_displays,
 FROM {{ ref('int_firebase__native_home_offer_displayed') }} as native 
 {% if is_incremental() %}
     WHERE date(event_date) = date_sub('{{ ds() }}', INTERVAL 3 day)
@@ -56,13 +58,13 @@ SELECT
     event_date,
     offer_id,
     module_id,
-    COALESCE(SUM(total_consultations),0) total_consultations,
-    COALESCE(SUM(CASE WHEN displayed_position < 4 THEN total_consultations END),0) AS total_position_0_3_consultations,
-    COALESCE(SUM(CASE WHEN displayed_position <= 10 AND displayed_position >= 4 THEN total_consultations END),0) AS total_position_4_10_consultations,
-    COALESCE(SUM(CASE WHEN displayed_position <= 20 AND displayed_position > 10 THEN total_consultations END),0) AS total_position_11_20_consultations,
-    COALESCE(SUM(CASE WHEN displayed_position <= 30 AND displayed_position > 20 THEN total_consultations END),0) AS total_position_21_30_consultations,
-    COALESCE(SUM(CASE WHEN displayed_position <= 40 AND displayed_position > 30 THEN total_consultations END),0) AS total_position_31_40_consultations,
-    COALESCE(SUM(CASE WHEN displayed_position <= 50 AND displayed_position > 40 THEN total_consultations END),0) AS total_position_41_50_consultations,
+    SUM(total_consultations) total_consultations,
+    SUM(CASE WHEN displayed_position < 4 THEN total_consultations END) AS total_position_0_3_consultations,
+    SUM(CASE WHEN displayed_position <= 10 AND displayed_position >= 4 THEN total_consultations END) AS total_position_4_10_consultations,
+    SUM(CASE WHEN displayed_position <= 20 AND displayed_position > 10 THEN total_consultations END) AS total_position_11_20_consultations,
+    SUM(CASE WHEN displayed_position <= 30 AND displayed_position > 20 THEN total_consultations END) AS total_position_21_30_consultations,
+    SUM(CASE WHEN displayed_position <= 40 AND displayed_position > 30 THEN total_consultations END) AS total_position_31_40_consultations,
+    SUM(CASE WHEN displayed_position <= 50 AND displayed_position > 40 THEN total_consultations END) AS total_position_41_50_consultations,
 FROM consultations_by_position
 GROUP BY event_date,
     offer_id,

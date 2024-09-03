@@ -13,7 +13,6 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
 )
-from common.utils import decode_output
 
 from airflow import DAG
 from airflow.models import Param
@@ -83,17 +82,6 @@ with DAG(
         """,
     )
 
-    decode_output = PythonOperator(
-        task_id="decode_output",
-        python_callable=decode_output,
-        op_kwargs={
-            "task_id": "get_warning_tables",
-            "key": "return_value",
-        },
-        provide_context=True,
-        do_xcom_push=True,
-    )
-
     warning_alert_slack = PythonOperator(
         task_id="warning_alert_slack",
         python_callable=bigquery_freshness_alert,
@@ -114,7 +102,6 @@ with DAG(
         >> fetch_code
         >> install_dependencies
         >> get_warning_tables
-        >> decode_output
         >> warning_alert_slack
         >> gce_instance_stop
     )

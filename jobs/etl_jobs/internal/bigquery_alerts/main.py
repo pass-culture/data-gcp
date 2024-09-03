@@ -38,7 +38,7 @@ def run():
 
     warning_tables_list = warning_tables["full_table_name"].to_list()
 
-    return warning_tables_list
+    return f"{warning_tables_list}"
 
 
 if __name__ == "__main__":

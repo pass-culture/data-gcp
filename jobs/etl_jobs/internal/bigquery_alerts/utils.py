@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import datetime
 
-GCP_PROJECT = os.environ.get("GCP_PROJECT")
+GCP_PROJECT = os.environ.get("GCP_PROJECT_ID")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 
 today = datetime.datetime.now()

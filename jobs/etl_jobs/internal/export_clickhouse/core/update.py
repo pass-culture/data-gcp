@@ -46,6 +46,7 @@ def remove_stale_partitions(dataset_name, table_name, update_date) -> None:
         f"SELECT distinct update_date FROM {dataset_name}.{table_name}"
     )
     if len(previous_partitions) > 0:
+        print(f"Found {len(previous_partitions)} partitions, will remove old ones.")
         previous_partitions = [
             x for x in previous_partitions["update_date"].values if x != update_date
         ]

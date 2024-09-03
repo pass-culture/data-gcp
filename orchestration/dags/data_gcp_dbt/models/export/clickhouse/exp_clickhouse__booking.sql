@@ -1,5 +1,4 @@
 select
-    DATE("{{ ds() }}") as update_date,
     offerer_id,
     offer_id,
     DATE(booking_creation_date) as creation_date,

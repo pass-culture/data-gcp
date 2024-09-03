@@ -1,3 +1,5 @@
+-- todo : deprecate this model
+
 {{
     config(
         **custom_incremental_config(
@@ -5,8 +7,6 @@
         partition_by = {'field': 'module_displayed_date', 'data_type': 'date'},
     )
 ) }}
-
-
 
 with child_home as (
     -- Home qui proviennent d'un category block
@@ -66,7 +66,7 @@ displayed as (
         and session_id is not null
         {% if is_incremental() %}
             --and recalculate latest day's data + previous
-            and date(event_date) >= date_sub(date(_dbt_max_partition), interval 1 day)
+            and date(event_date) >= date_sub(date(_dbt_max_partition), interval 3 day)
         {% endif %}
     qualify rank() over (partition by unique_session_id, module_id order by event_timestamp) = 1 -- get the first display event
 ),
@@ -101,6 +101,10 @@ clicked as (
     -- entry_id param is missing for event HighlightBlockClicked because it is available in a prior version of the app.
         and user_pseudo_id is not null
         and session_id is not null
+        {% if is_incremental() %}
+            --and recalculate latest day's data + previous
+            and date(event_date) >= date_sub(date(_dbt_max_partition), interval 3 day)
+        {% endif %}
     qualify rank() over (partition by unique_session_id, module_id order by event_timestamp) = 1 -- get the first click event
 ),
 
@@ -132,6 +136,10 @@ consultations as (
         where event_name = 'ConsultOffer'
             and origin in ("home", "exclusivity", "venue", "video", "videoModal", "highlightOffer")
             and user_pseudo_id is not null
+            {% if is_incremental() %}
+            --and recalculate latest day's data + previous
+            and date(event_date) >= date_sub(date(_dbt_max_partition), interval 3 day)
+        {% endif %}
         qualify rank() over (partition by unique_session_id, offer_id order by event_timestamp desc) = 1 -- get the last consultation
     ),
 
@@ -151,6 +159,10 @@ consultations as (
         where event_name = "ConsultVenue"
             and origin = "home"
             and user_pseudo_id is not null
+            {% if is_incremental() %}
+            --and recalculate latest day's data + previous
+            and date(event_date) >= date_sub(date(_dbt_max_partition), interval 3 day)
+            {% endif %}
         qualify rank() over (partition by unique_session_id, venue_id order by event_timestamp desc) = 1 -- get the last consultation
     )
 

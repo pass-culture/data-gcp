@@ -24,5 +24,7 @@ WHERE event_name = 'ConsultOffer'
     AND user_id IS NOT NULL
     AND offer_id IS NOT NULL
     {% if is_incremental() %}
-    AND date(event_date) = date_sub('{{ ds() }}', INTERVAL 3 day)
+    AND date(event_date) >= date_sub('{{ ds() }}', INTERVAL 3 day)
+    {% else %}
+    and date(event_date) >= date_sub('{{ ds() }}', INTERVAL 1 year)
     {% endif %}

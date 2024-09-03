@@ -34,5 +34,6 @@ select
 from {{ ref('int_firebase__native_event') }}
 where
     offer_id is not NULL
+    AND date(event_date) = date_sub('{{ ds() }}', INTERVAL 1 year)
 group by
     offer_id

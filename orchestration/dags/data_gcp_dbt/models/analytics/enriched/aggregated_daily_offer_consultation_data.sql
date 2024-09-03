@@ -1,3 +1,12 @@
+{{
+    config(
+        **custom_incremental_config(
+        incremental_strategy = "insert_overwrite",
+        partition_by = {"field": "event_date", "data_type": "date"},
+        on_schema_change = "sync_all_columns"
+    )
+) }}
+
 select
     fe.event_date,
     o.offerer_id,
@@ -50,6 +59,12 @@ from {{ ref('int_firebase__native_event') }} fe
         on fe.module_id = c.module_id
             and fe.offer_id = c.offer_id
     left join {{ ref('mrt_global__user') }} eud on fe.user_id = eud.user_id
+where true
+    {% if is_incremental() %}
+    and event_date between DATE_SUB(DATE("{{ ds() }}"), interval 3 day) and DATE("{{ ds() }}")
+    {% else %}
+    and date(event_date) >= date_sub('{{ ds() }}', INTERVAL 1 year)
+    {% endif %}
 group by
     1,
     2,

@@ -31,7 +31,6 @@ def main_update(mode, source_gs_path, table_name, dataset_name, update_date):
             dataset_name=dataset_name,
             table_name=table_name,
             tmp_table_name=tmp_table_name,
-            update_date=update_date,
         )
     elif mode == "overwrite":
         update_overwrite(

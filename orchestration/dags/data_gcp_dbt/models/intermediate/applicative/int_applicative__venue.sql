@@ -120,6 +120,7 @@ select
     v_loc.venue_macro_density_label,
     v_loc.venue_density_level,
     v_loc.venue_academy_name,
+    v_loc.venue_in_qpv,
     v.offerer_address_id,
     vr.venue_target as venue_targeted_audience,
     vc.venue_contact_phone_number,

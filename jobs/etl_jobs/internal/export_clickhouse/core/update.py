@@ -2,9 +2,7 @@ from core.fs import load_sql
 from core.utils import CLICKHOUSE_CLIENT
 
 
-def update_incremental(
-    dataset_name: str, table_name: str, tmp_table_name: str, update_date: str
-) -> None:
+def update_incremental(dataset_name: str, table_name: str, tmp_table_name: str) -> None:
     partitions_to_update = CLICKHOUSE_CLIENT.query_df(
         f"SELECT distinct partition_date FROM tmp.{tmp_table_name}"
     )
@@ -46,6 +44,7 @@ def remove_stale_partitions(dataset_name, table_name, update_date) -> None:
         f"SELECT distinct update_date FROM {dataset_name}.{table_name}"
     )
     if len(previous_partitions) > 0:
+        print(f"Found {len(previous_partitions)} partitions, will remove old ones.")
         previous_partitions = [
             x for x in previous_partitions["update_date"].values if x != update_date
         ]

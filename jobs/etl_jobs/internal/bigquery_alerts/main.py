@@ -6,6 +6,7 @@ from utils import (
     table_name_contains_partition_date,
 )
 import re
+import typer
 
 
 def run():

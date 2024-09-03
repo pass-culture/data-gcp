@@ -60,7 +60,7 @@ def table_name_contains_partition_date(table_name):
     return False
 
 
-def get_last_update_date(datsets_to_scan):
+def get_last_update_date(datasets_to_scan):
     table_last_update_list = []
     for dataset in datasets_to_scan:
         last_update_query = f"""

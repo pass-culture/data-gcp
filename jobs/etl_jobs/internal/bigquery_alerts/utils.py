@@ -84,7 +84,7 @@ def get_table_schedule():
             SELECT
             table_schema,
             table_name,
-            REGEXP_EXTRACT(option_value, r'"schedule",\s*"([^"]+)"') as schedule
+            REGEXP_EXTRACT(option_value, r'"schedule",\s*"([^"]+)"') as schedule_tag
             FROM
             `{GCP_PROJECT}`.`region-europe-west1`.INFORMATION_SCHEMA.TABLE_OPTIONS
             WHERE option_name = 'labels';

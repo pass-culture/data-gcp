@@ -20,14 +20,16 @@ def run():
         table_schedule_df, on=["table_schema", "table_name"], how="left"
     ).assign(
         full_table_name=lambda _df: f"{_df['table_schema']}.{_df['table_name']}",
-        tag=lambda _df: _df["tag"].fillna("default"),
+        schedule_tag=lambda _df: _df["schedule_tag"].fillna("default"),
         last_modified_time=lambda _df: pd.to_datetime(
             _df["last_modified_time"]
         ).dt.tz_localize(None),
         is_partition_table=lambda _df: _df["table_id"].apply(contains_valid_date),
     )
 
-    warning_tables = df[df["last_modified_time"] < df["tag"].map(schedule_mapping)]
+    warning_tables = df[
+        df["last_modified_time"] < df["schedule_tag"].map(schedule_mapping)
+    ]
 
     warning_tables = warning_tables[warning_tables.is_partition_table == False]
 

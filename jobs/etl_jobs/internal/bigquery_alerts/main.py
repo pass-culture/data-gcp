@@ -7,6 +7,7 @@ from utils import (
 )
 import re
 import typer
+import pandas as pd
 
 
 def run():
@@ -24,7 +25,9 @@ def run():
         last_modified_time=lambda _df: pd.to_datetime(
             _df["last_modified_time"]
         ).dt.tz_localize(None),
-        is_partition_table=lambda _df: _df["table_id"].apply(contains_valid_date),
+        is_partition_table=lambda _df: _df["table_name"].apply(
+            table_name_contains_partition_date
+        ),
     )
 
     warning_tables = df[

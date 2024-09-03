@@ -71,7 +71,7 @@ with DAG(
         retries=2,
     )
 
-    switch_metabase_cards_op = SSHGCEOperator(
+    get_warning_tables = SSHGCEOperator(
         task_id="get_warning_tables",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
@@ -101,6 +101,7 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> switch_metabase_cards_op
+        >> get_warning_tables
+        >> warning_alert_slack
         >> gce_instance_stop
     )

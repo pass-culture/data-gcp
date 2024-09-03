@@ -3,10 +3,10 @@ CREATE TABLE IF NOT EXISTS {{ dataset }}.{{ tmp_table_name }} ON cluster default
     PARTITION BY update_date
     ORDER BY (offerer_id, booking_status, offer_id)
     SETTINGS storage_policy='gcs_main'
-    
-AS 
+
+AS
     SELECT
-        cast(update_date as String) as update_date,
+        '{{ date }}' as update_date,
         cast(offerer_id as String) as offerer_id,
         cast(offer_id as String) as offer_id,
         cast(date(creation_date) as String) as creation_date,

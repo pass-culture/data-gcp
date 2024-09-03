@@ -45,6 +45,8 @@ def remove_stale_partitions(dataset_name, table_name, update_date) -> None:
     previous_partitions = CLICKHOUSE_CLIENT.query_df(
         f"SELECT distinct update_date FROM {dataset_name}.{table_name}"
     )
+    print(f"update date {update_date}")
+    print(previous_partitions)
     if len(previous_partitions) > 0:
         previous_partitions = [
             x for x in previous_partitions["update_date"].values if x != update_date
@@ -66,7 +68,13 @@ def update_overwrite(
     CLICKHOUSE_CLIENT.command(
         f" ALTER TABLE {dataset_name}.{table_name} ON cluster default REPLACE PARTITION '{update_date}' FROM tmp.{tmp_table_name}"
     )
-
+    total_rows = (
+        CLICKHOUSE_CLIENT.command(f"SELECT count(*) FROM {dataset_name}.{table_name}")
+        | 0
+    )
+    print(
+        f"before partition removal Table contains {total_rows}. Removing temporary table."
+    )
     remove_stale_partitions(dataset_name, table_name, update_date)
     total_rows = (
         CLICKHOUSE_CLIENT.command(f"SELECT count(*) FROM {dataset_name}.{table_name}")

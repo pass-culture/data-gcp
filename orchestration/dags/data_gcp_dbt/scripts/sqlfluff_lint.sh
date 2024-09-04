@@ -1,9 +1,16 @@
 #!/bin/bash
 
-if [ -z "$1" ]; then
+# Default to "master" if no branch is specified
+if [ -z "$1" ] || [ "$1" == "--check" ]; then
     TARGET_BRANCH="master"
 else
     TARGET_BRANCH=$1
+fi
+
+# Check if the --check flag is passed as any argument
+CHECK_FLAG=""
+if [[ "$*" == *"--check"* ]]; then
+    CHECK_FLAG="--bench"
 fi
 
 
@@ -29,7 +36,8 @@ sqlfuff_lint_changed_sql() {
         echo "existing_sqls: $existing_sqls"
 
         if [ -n "$existing_sqls" ]; then
-            sqlfluff lint $existing_sqls -p -1
+            # Add --check flag to sqlfluff lint if it was provided
+            sqlfluff lint $existing_sqls -p -1 $CHECK_FLAG
         else
             echo "No existing SQL files to lint."
         fi

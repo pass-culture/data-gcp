@@ -1,11 +1,15 @@
 {% macro generate_alias_name(custom_alias_name=none, node=none) -%}
 
     {%- set is_orchestrated = target.name in ["prod", "stg", "dev"] and target.profile_name != "sandbox" -%}
+    {%- set is_elementary = target.profile_name == "elementary" -%}
     {%- set is_applicative = 'applicative' in node.path -%}
     {%- set is_intermediate_or_ml = ('intermediate' in node.path or 'machine_learning' in node.path or 'backend' in node.path or node.resource_type == 'snapshot') -%}
     {%- set is_mart_or_export = ('mart' in node.path or 'export' in node.path) -%}
 
     {%- if target.profile_name == "CI" or target.name == "local" -%}
+        {{ node.name }}
+
+    {%- elif is_elementary-%}
         {{ node.name }}
 
     {%- elif is_applicative and custom_alias_name -%}

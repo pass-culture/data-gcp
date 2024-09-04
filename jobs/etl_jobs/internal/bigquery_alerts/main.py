@@ -31,7 +31,7 @@ def run():
     )
 
     warning_tables = df[
-        df["last_modified_time"] < df["schedule_tag"].map(schedule_mapping)
+        df["last_modified_time"] >= df["schedule_tag"].map(schedule_mapping)
     ]
 
     warning_tables = warning_tables[warning_tables.is_partition_table == False]

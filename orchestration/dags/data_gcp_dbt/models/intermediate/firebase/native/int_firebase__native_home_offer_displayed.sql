@@ -12,6 +12,7 @@ SELECT
   native_event.event_date,
   offer_id_split as offer_id,
   module_id,
+  entry_id,
   position + 1 as displayed_position
 FROM {{ ref('int_firebase__native_event') }} native_event,
   unnest(displayed_offers) as offer_id_split WITH OFFSET as position 

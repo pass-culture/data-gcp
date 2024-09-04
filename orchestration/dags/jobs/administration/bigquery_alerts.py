@@ -86,7 +86,7 @@ with DAG(
         task_id="warning_alert_slack",
         python_callable=bigquery_freshness_alert,
         op_kwargs={
-            "warning_table_list": "{{task_instance.xcom_pull(task_ids='decode_output', key='return_value')}}",
+            "warning_table_list": "{{task_instance.xcom_pull(task_ids='get_warning_tables', key='result')}}",
         },
         provide_context=True,
         dag=dag,

@@ -107,6 +107,6 @@ SELECT
     COALESCE(consult.total_position_31_40_consultations,0) as total_position_31_40_consultations,
     COALESCE(consult.total_position_41_50_consultations,0) as total_position_41_50_consultations
 FROM displays_by_position_bucket as display
-LEFT JOIN consultations_by_position_bucket as consult on display.offer_id = consult.offer_id AND display.event_date = consult.event_date AND display.module_id = consult.module_id AND diplay.entry_id = consult.entry_id
+LEFT JOIN consultations_by_position_bucket as consult on display.offer_id = consult.offer_id AND display.event_date = consult.event_date AND display.module_id = consult.module_id AND display.entry_id = consult.entry_id
 LEFT JOIN {{ ref('mrt_global__offer') }} as offers ON consult.offer_id = offers.offer_id 
 left join {{ ref('int_contentful__entry' ) }} as c on c.id = display.module_id

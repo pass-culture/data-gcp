@@ -36,7 +36,7 @@ def main(
     metadata = batch_client.get_campaigns_metadata()
     metadata.to_gbq(
         destination_table=f"raw_{env_short_name}.batch_campaigns_ref",
-        if_exists="append",
+        if_exists="replace",
     )
 
     campaigns_stats_df = batch_client.get_campaigns_stats()

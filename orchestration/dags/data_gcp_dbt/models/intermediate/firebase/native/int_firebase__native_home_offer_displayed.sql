@@ -2,7 +2,8 @@
     config(
         **custom_incremental_config(
         incremental_strategy = 'insert_overwrite',
-        partition_by = {'field': 'event_date', 'data_type': 'date'}
+        partition_by = {'field': 'event_date', 'data_type': 'date'},
+        on_schema_change = "sync_all_columns"
     )
 ) }}
 
@@ -11,6 +12,7 @@ SELECT
   native_event.event_date,
   offer_id_split as offer_id,
   module_id,
+  entry_id,
   position + 1 as displayed_position
 FROM {{ ref('int_firebase__native_event') }} native_event,
   unnest(displayed_offers) as offer_id_split WITH OFFSET as position 

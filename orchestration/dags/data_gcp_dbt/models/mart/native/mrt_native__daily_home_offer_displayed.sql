@@ -14,6 +14,7 @@ SELECT
     native.event_date,
     native.offer_id,
     native.module_id,
+    native.entry_id,
     native.displayed_position,
     count(distinct consult.consultation_id) as total_consultations,
 FROM {{ ref('int_firebase__native_home_offer_displayed') }} as native 
@@ -27,6 +28,7 @@ GROUP BY
     event_date,
     offer_id,
     module_id,
+    entry_id,
     displayed_position
 )
 
@@ -35,6 +37,7 @@ SELECT
     event_date,
     offer_id,
     module_id,
+    entry_id,
     COUNT(*) as total_displays,
     SUM(CASE WHEN displayed_position < 4 THEN 1 ELSE 0 END) as total_position_0_3_diplays,
     SUM(CASE WHEN displayed_position <= 10 AND displayed_position >= 4 THEN 1 ELSE 0 END) AS total_position_4_10_displays,
@@ -50,7 +53,8 @@ FROM {{ ref('int_firebase__native_home_offer_displayed') }} as native
     {% endif %}
 GROUP BY event_date,
     offer_id,
-    module_id
+    module_id,
+    entry_id
 )
 
 , consultations_by_position_bucket AS (
@@ -58,6 +62,7 @@ SELECT
     event_date,
     offer_id,
     module_id,
+    entry_id,
     SUM(total_consultations) total_consultations,
     SUM(CASE WHEN displayed_position < 4 THEN total_consultations END) AS total_position_0_3_consultations,
     SUM(CASE WHEN displayed_position <= 10 AND displayed_position >= 4 THEN total_consultations END) AS total_position_4_10_consultations,
@@ -68,13 +73,15 @@ SELECT
 FROM consultations_by_position
 GROUP BY event_date,
     offer_id,
-    module_id
+    module_id,
+    entry_id
 )
 
 SELECT 
     display.event_date,
     display.offer_id,
     display.module_id,
+    display.entry_id,
     coalesce(c.title, c.offer_title) AS module_name,
     c.content_type AS module_type,
     offers.offer_category_id,
@@ -102,6 +109,6 @@ SELECT
     COALESCE(consult.total_position_31_40_consultations,0) as total_position_31_40_consultations,
     COALESCE(consult.total_position_41_50_consultations,0) as total_position_41_50_consultations
 FROM displays_by_position_bucket as display
-LEFT JOIN consultations_by_position_bucket as consult on display.offer_id = consult.offer_id AND display.event_date = consult.event_date AND display.module_id = consult.module_id
+LEFT JOIN consultations_by_position_bucket as consult on display.offer_id = consult.offer_id AND display.event_date = consult.event_date AND display.module_id = consult.module_id AND diplay.entry_id = consult.entry_id
 LEFT JOIN {{ ref('mrt_global__offer') }} as offers ON consult.offer_id = offers.offer_id 
 left join {{ ref('int_contentful__entry' ) }} as c on c.id = display.module_id

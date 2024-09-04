@@ -105,26 +105,26 @@ offer_metadata_id as (
     select
         enriched_items.*,
         case
-            when enriched_items.offer_type_domain = "MUSIC" and offer_extracted_data.musictype != '' then offer_extracted_data.musictype
-            when enriched_items.offer_type_domain = "SHOW" and offer_extracted_data.showtype != '' then offer_extracted_data.showtype
+            when enriched_items.offer_type_domain = "MUSIC" and int_applicative__extract_offer.musictype != '' then int_applicative__extract_offer.musictype
+            when enriched_items.offer_type_domain = "SHOW" and int_applicative__extract_offer.showtype != '' then int_applicative__extract_offer.showtype
         end as offer_type_id,
         case
-            when enriched_items.offer_type_domain = "MUSIC" and offer_extracted_data.musictype != '' then offer_extracted_data.musicsubtype
-            when enriched_items.offer_type_domain = "SHOW" and offer_extracted_data.showtype != '' then offer_extracted_data.showsubtype
+            when enriched_items.offer_type_domain = "MUSIC" and int_applicative__extract_offer.musictype != '' then int_applicative__extract_offer.musicsubtype
+            when enriched_items.offer_type_domain = "SHOW" and int_applicative__extract_offer.showtype != '' then int_applicative__extract_offer.showsubtype
         end as offer_sub_type_id,
-        offer_extracted_data.rayon,
-        offer_extracted_data.genres,
-        offer_extracted_data.author,
-        offer_extracted_data.performer,
-        offer_extracted_data.titelive_gtl_id as titelive_gtl_id,
+        int_applicative__extract_offer.rayon,
+        int_applicative__extract_offer.genres,
+        int_applicative__extract_offer.author,
+        int_applicative__extract_offer.performer,
+        int_applicative__extract_offer.titelive_gtl_id as titelive_gtl_id,
         gtl.gtl_type as gtl_type,
         gtl.gtl_label_level_1,
         gtl.gtl_label_level_2,
         gtl.gtl_label_level_3,
         gtl.gtl_label_level_4
     from enriched_items
-        left join {{ ref('offer_extracted_data') }} as offer_extracted_data on offer_extracted_data.offer_id = enriched_items.offer_id
-        left join {{ ref('int_applicative__titelive_gtl') }} gtl on offer_extracted_data.titelive_gtl_id = gtl.gtl_id and gtl.gtl_type = enriched_items.offer_type_domain
+        left join {{ ref('int_applicative__extract_offer') }} as int_applicative__extract_offer on int_applicative__extract_offer.offer_id = enriched_items.offer_id
+        left join {{ ref('int_applicative__titelive_gtl') }} gtl on int_applicative__extract_offer.titelive_gtl_id = gtl.gtl_id and gtl.gtl_type = enriched_items.offer_type_domain
 
 ),
 

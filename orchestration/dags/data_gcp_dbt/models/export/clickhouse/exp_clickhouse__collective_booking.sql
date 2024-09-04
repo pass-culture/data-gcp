@@ -1,5 +1,4 @@
 select
-    DATE("{{ ds() }}") as update_date,
     offerer_id,
     collective_offer_id,
     offer_id,
@@ -12,3 +11,4 @@ select
     booking_amount
 FROM {{ ref('mrt_global__collective_booking') }}
 WHERE collective_booking_status != 'CANCELLED'
+

@@ -53,6 +53,25 @@ class BatchClient:
             operating_system=self.operating_system,
         )[["campaign_token", "dev_only", "created_date", "name", "live", "from_api"]]
 
+        # add tags
+        tags_list = []
+        for campaign in campaigns_df["campaign_token"].unique():
+            url = f"{self.base_url}{self.api_key}/campaigns/{campaign}"
+            response = session.get(url, headers=self.headers)
+            if response.status_code == 200:
+                tags_dict = {
+                    key: response.json()[key] for key in ["campaign_token", "labels"]
+                }
+                tags_list.append(tags_dict)
+
+        campaigns_with_tag_df = pd.DataFrame(tags_dict).rename(
+            columns={"labels": "tags"}
+        )
+
+        campaigns_df = campaigns_df.merge(
+            campaigns_with_tag_df, on="campaign_token", how="left"
+        )
+
         return campaigns_df
 
     def get_campaigns_stats(self):

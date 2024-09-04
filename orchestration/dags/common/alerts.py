@@ -184,7 +184,7 @@ def bigquery_freshness_alert(warning_table_list, job_type="dbt-test", **context)
         \n *Here is the list of tables that don't meet the expected update schedule :*
         """
         for table in eval(warning_table_list):
-            slack_msg += f"\n - {table}"
+            slack_msg += f"\n- {table}"
 
     else:
         slack_msg = "✅ All bigquery tables are updated according to schedule"

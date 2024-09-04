@@ -38,6 +38,8 @@ def run():
 
     warning_tables_list = warning_tables["full_table_name"].to_list()
 
+    print(f"{warning_tables_list}")
+
     return f"{warning_tables_list}"
 
 

@@ -1,0 +1,6 @@
+models:
+  - name: firebase_bookings
+    tests:
+      - elementary.volume_anomalies:
+          timestamp_column: booking_date
+          where_expression: booking_date >= DATE('2024-08-01')

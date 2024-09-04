@@ -46,6 +46,17 @@ SHEETS = {
             "Effectif": "headcount",
         },
     },
+    "gsheet_tiktok_post_objective": {
+        "spreadsheet_ids": ["1_Ld3QzjSbja42viZC2wfoU1FGpzPpEcWbt3kahG3YNs"],
+        "expected_headers_dict": {
+            "date": "date",
+            "post_name": "post_name",
+            "tiktotk_id": "tiktotk_id",
+            "macro_objective": "macro_objective",
+            "micro_objective": "micro_objective",
+            "offer_category": "offer_category",
+        },
+    },
 }
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]

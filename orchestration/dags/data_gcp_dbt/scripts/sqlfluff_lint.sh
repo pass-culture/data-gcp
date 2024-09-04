@@ -10,7 +10,7 @@ fi
 # Check if the --check flag is passed as any argument
 CHECK_FLAG=""
 if [[ "$*" == *"--check"* ]]; then
-    CHECK_FLAG="--bench"
+    CHECK_FLAG="--annotation-level failure"
 fi
 
 
@@ -38,6 +38,7 @@ sqlfuff_lint_changed_sql() {
         if [ -n "$existing_sqls" ]; then
             # Add --check flag to sqlfluff lint if it was provided
             sqlfluff lint $existing_sqls -p -1 $CHECK_FLAG
+            echo $?
         else
             echo "No existing SQL files to lint."
         fi

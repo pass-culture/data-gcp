@@ -82,7 +82,7 @@ jobs:
           DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           TARGET_BRANCH: ${{ github.base_ref }}
-        run: ./scripts/sqlfluff_format.sh $TARGET_BRANCH
+        run: ./scripts/sqlfluff_format.sh $TARGET_BRANCH --check
       - name: "Sqlfluff lint"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:

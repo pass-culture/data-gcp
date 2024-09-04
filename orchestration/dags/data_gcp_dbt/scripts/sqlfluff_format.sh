@@ -1,6 +1,7 @@
 #!/bin/bash
 
-if [ -z "$1" ]; then
+# Default to "master" if no branch is specified
+if [ -z "$1" ] || [ "$1" == "--check" ]; then
     TARGET_BRANCH="master"
 else
     TARGET_BRANCH=$1

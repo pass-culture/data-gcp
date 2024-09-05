@@ -60,7 +60,8 @@ class BatchClient:
             response = session.get(url, headers=self.headers)
             if response.status_code == 200:
                 tags_dict = {
-                    key: response.json()[key] for key in ["campaign_token", "labels"]
+                    key: response.json().get(key)
+                    for key in ["campaign_token", "labels"]
                 }
                 tags_list.append(tags_dict)
 

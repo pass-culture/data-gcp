@@ -17,4 +17,3 @@ dbt-core==1.7.2
 dbt-bigquery~=1.7
 sqlfluff==3.1.1
 sqlfluff-templater-dbt==3.1.1
-

@@ -14,6 +14,6 @@ docarray==0.21.0
 lancedb==0.8.2
 hnne==0.1.10
 sentence_transformers==3.0.1
-streamlit==1.35.0
+streamlit==1.37.0
 recordlinkage==0.16
 networkx==3.3

@@ -7,11 +7,11 @@ else
     TARGET_BRANCH=$1
 fi
 
-# Check if the --check flag is passed as any argument
-CHECK_FLAG=""
-if [[ "$*" == *"--check"* ]]; then
-    CHECK_FLAG="--annotation-level failure"
-fi
+# # Check if the --check flag is passed as any argument
+# CHECK_FLAG=""
+# if [[ "$*" == *"--check"* ]]; then
+#     CHECK_FLAG="--annotation-level failure"
+# fi
 
 
 sqlfuff_lint_changed_sql() {
@@ -36,9 +36,8 @@ sqlfuff_lint_changed_sql() {
         echo "existing_sqls: $existing_sqls"
 
         if [ -n "$existing_sqls" ]; then
-            # Add --check flag to sqlfluff lint if it was provided
-            sqlfluff lint $existing_sqls -p -1 $CHECK_FLAG
-            echo $?
+            sqlfluff lint $existing_sqls -p -1
+            # sqlfluff lint $existing_sqls -p -1 $CHECK_FLAG
         else
             echo "No existing SQL files to lint."
         fi

@@ -435,5 +435,12 @@
     "total_nb_of_students_in_institution": "total_students",
     "total_nb_of_tickets": "total_tickets",
     "total_nb_of_tickets_current_year": "total_current_year_tickets"
+  },
+  "mrt_global__stock" : {
+    "stock_id" : "stock_id",
+    "booking_quantity" : "total_bookings",
+    "booking_cancelled" : "total_cancelled_bookings",
+    "booking_non_cancelled" : "total_non_cancelled_bookings",
+    "bookings_paid" : "total_paid_bookings"
   }
 }

@@ -59,7 +59,7 @@ models_to_deploy = [
         "endpoint_name": f"recommendation_user_ranking_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
         "instance_type": low_dict[ENV_SHORT_NAME],
-        "min_nodes": {"prod": 2, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
+        "min_nodes": {"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
         "max_nodes": {"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
     },
     # semantic endpoint
@@ -67,7 +67,7 @@ models_to_deploy = [
         "experiment_name": f"retrieval_semantic_vector_v0.1_{ENV_SHORT_NAME}",
         "endpoint_name": f"recommendation_semantic_retrieval_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
-        "instance_type": standard_dict[ENV_SHORT_NAME],
+        "instance_type": high_dict[ENV_SHORT_NAME],
         "min_nodes": {"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
         "max_nodes": {"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
     },

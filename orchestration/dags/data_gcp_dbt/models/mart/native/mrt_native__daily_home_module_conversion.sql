@@ -1,3 +1,4 @@
+
 {{ config(
     partition_by={
         'field': 'module_displayed_date',

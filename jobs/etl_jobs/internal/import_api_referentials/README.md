@@ -1,4 +1,4 @@
-## Scripts 
+## Scripts
 
 ### import_api_referentials
 
@@ -9,4 +9,4 @@
     - music types `api.src.pcapi.domain.music_types`
     - movie types `api.src.pcapi.domain.movie_types`
     - book types `api.src.pcapi.domain.book_types`
-- Export `analytics_{env}.offer_types`
+- Export `raw_{env}.offer_types`

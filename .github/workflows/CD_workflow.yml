@@ -65,7 +65,7 @@ jobs:
     with:
       GITHUB_ENV_NAME: "dev"
       ENV_SHORT_NAME: "dev"
-      COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--a3134989-bucket"
+      COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--eea0a667-bucket"
       COMPOSER_NAME: "data-composer-dev"
       DATA_GCP_PROJECT: "passculture-data-ehp"
     secrets:

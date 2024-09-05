@@ -1,7 +1,7 @@
 with bookings_grouped_by_stock as (
     select
-        booking.stock_id
-        , SUM(booking.booking_quantity) as number_of_booking
+        booking.stock_id,
+        SUM(booking.booking_quantity) as number_of_booking
     from
         {{ source('raw','applicative_database_booking') }} as booking
         left join {{ source('raw','applicative_database_stock') }} as stock

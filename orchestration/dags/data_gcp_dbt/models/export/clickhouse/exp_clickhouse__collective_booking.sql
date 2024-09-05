@@ -9,6 +9,5 @@ select
     educational_institution_id,
     collective_stock_number_of_tickets as number_of_tickets,
     booking_amount
-FROM {{ ref('mrt_global__collective_booking') }}
-WHERE collective_booking_status != 'CANCELLED'
-
+from {{ ref('mrt_global__collective_booking') }}
+where collective_booking_status != 'CANCELLED'

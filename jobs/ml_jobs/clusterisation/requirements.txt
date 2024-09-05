@@ -7,7 +7,9 @@ absl-py==2.1.0
     #   tensorflow
 accelerate==0.32.0
     # via transformers
-aiohttp==3.9.5
+aiohappyeyeballs==2.4.0
+    # via aiohttp
+aiohttp==3.10.2
     # via gcsfs
 aiosignal==1.3.1
     # via aiohttp
@@ -19,13 +21,11 @@ anyio==4.4.0
     #   openai
 astunparse==1.6.3
     # via tensorflow
-async-timeout==4.0.3
-    # via aiohttp
 attrs==23.2.0
     # via aiohttp
 beautifulsoup4==4.12.3
     # via gdown
-bertopic==0.16.2
+bertopic[spacy]==0.16.2
     # via -r requirements.in
 blis==0.7.11
     # via thinc
@@ -80,15 +80,12 @@ deprecated==1.2.14
     # via flair
 distro==1.9.0
     # via openai
-exceptiongroup==1.2.1
-    # via anyio
 filelock==3.15.4
     # via
     #   gdown
     #   huggingface-hub
     #   torch
     #   transformers
-    #   triton
 flair==0.13.1
     # via -r requirements.in
 flatbuffers==24.3.25
@@ -116,7 +113,7 @@ gensim==4.3.2
     # via
     #   bpemb
     #   flair
-google-api-core==2.19.1
+google-api-core[grpc]==2.19.1
     # via
     #   google-cloud-bigquery
     #   google-cloud-core
@@ -161,7 +158,7 @@ google-resumable-media==2.7.1
     # via
     #   google-cloud-bigquery
     #   google-cloud-storage
-googleapis-common-protos==1.63.2
+googleapis-common-protos[grpc]==1.63.2
     # via
     #   google-api-core
     #   grpc-google-iam-v1
@@ -473,7 +470,7 @@ regex==2024.5.15
     #   flair
     #   segtok
     #   transformers
-requests==2.32.3
+requests[socks]==2.32.3
     # via
     #   bpemb
     #   gcsfs
@@ -531,15 +528,6 @@ sentencepiece==0.2.0
     # via
     #   bpemb
     #   transformers
-setuptools==70.2.0
-    # via
-    #   marisa-trie
-    #   pandas-gbq
-    #   pydata-google-auth
-    #   spacy
-    #   tensorboard
-    #   tensorflow
-    #   thinc
 six==1.16.0
     # via
     #   astunparse
@@ -587,8 +575,6 @@ tensorflow==2.16.2
     # via
     #   -r requirements.in
     #   umap-learn
-tensorflow-io-gcs-filesystem==0.37.1
-    # via tensorflow
 termcolor==2.4.0
     # via tensorflow
 thinc==8.2.5
@@ -623,13 +609,11 @@ tqdm==4.66.1
     #   umap-learn
 transformer-smaller-training-vocab==0.4.0
     # via flair
-transformers==4.42.3
+transformers[sentencepiece,torch]==4.42.3
     # via
     #   flair
     #   sentence-transformers
     #   transformer-smaller-training-vocab
-triton==2.3.1
-    # via torch
 typer==0.7.0
     # via
     #   -r requirements.in
@@ -637,8 +621,6 @@ typer==0.7.0
     #   weasel
 typing-extensions==4.12.2
     # via
-    #   anyio
-    #   cloudpathlib
     #   huggingface-hub
     #   openai
     #   optree
@@ -646,7 +628,7 @@ typing-extensions==4.12.2
     #   pydantic-core
     #   tensorflow
     #   torch
-umap-learn==0.5.6
+umap-learn[parametric-umap]==0.5.6
     # via
     #   -r requirements.in
     #   bertopic

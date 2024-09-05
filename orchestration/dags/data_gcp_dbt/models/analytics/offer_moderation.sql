@@ -61,14 +61,13 @@ count_bookings as (
 offer_stock_ids as (
     select
         offer_id,
-        STRING_AGG(distinct stock.stock_id, " ; " order by stock.stock_id) as stocks_ids,
+        STRING_AGG(distinct stock_id, " ; " order by stock_id) as stocks_ids,
         DATE(MIN(stock_beginning_date)) as first_stock_beginning_date,
         DATE(MAX(stock_booking_limit_date)) as last_booking_limit_date,
         SUM(stock_quantity) as offer_stock_quantity,
-        SUM(available_stock_information.available_stock_information) as available_stock_quantity
+        SUM(total_available_stock) as available_stock_quantity
     from
-        {{ ref('stock') }} stock
-        join {{ ref('available_stock_information') }} using (stock_id)
+        {{ ref('mrt_global__stock') }}
     group by
         offer_id
 ),
@@ -79,7 +78,7 @@ last_stock as (
         stock.stock_price as last_stock_price
     from
         {{ ref('offer') }} as offer
-        join {{ ref('cleaned_stock') }} as stock on stock.offer_id = offer.offer_id
+        join {{ ref('mrt_global__stock') }} as stock on stock.offer_id = offer.offer_id
     qualify ROW_NUMBER() over (partition by stock.offer_id order by stock.stock_creation_date desc, stock.stock_id desc) = 1
 ),
 
@@ -99,14 +98,13 @@ offer_status as (
         offer.offer_id,
         case
             when offer.offer_is_active = FALSE then "INACTIVE"
-            when (offer.offer_validation like "%APPROVED%" and (SUM(available_stock_information.available_stock_information) over (partition by offer.offer_id)) <= 0) then "SOLD_OUT"
+            when (offer.offer_validation like "%APPROVED%" and (SUM(stock.total_available_stock) over (partition by offer.offer_id)) <= 0) then "SOLD_OUT"
             when (offer.offer_validation like "%APPROVED%" and (MAX(EXTRACT(date from stock.stock_booking_limit_date)) over (partition by offer.offer_id) < CURRENT_DATE())) then "EXPIRED"
             else offer.offer_validation
         end as offer_status
     from
         {{ ref('offer') }} offer
-        left join {{ ref('stock') }} stock on offer.offer_id = stock.offer_id
-        join {{ ref('available_stock_information') }} using (stock_id)
+        left join {{ ref('mrt_global__stock') }} stock on offer.offer_id = stock.offer_id
 ),
 
 offerer_tags as (
@@ -140,7 +138,7 @@ select distinct
                             as offer
                         on stock.offer_id = offer.offer_id
                             and offer.offer_is_active
-                    join {{ ref('available_stock_information') }} on available_stock_information.stock_id = stock.stock_id
+                    join {{ ref('mrt_global__stock') }} as mrt_global__stock on mrt_global__stock.stock_id = stock.stock_id
                 where not stock_is_soft_deleted
                     and
                     (
@@ -154,8 +152,8 @@ select distinct
                         )
                         and offer.offer_is_active
                         and (
-                            available_stock_information.available_stock_information > 0
-                            or available_stock_information.available_stock_information is NULL
+                            mrt_global__stock.total_available_stock > 0
+                            or mrt_global__stock.total_available_stock is NULL
                         )
                     )
             ) then TRUE

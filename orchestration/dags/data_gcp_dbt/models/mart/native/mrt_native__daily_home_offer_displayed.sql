@@ -93,7 +93,7 @@ SELECT
     offers.offerer_name,
     offers.venue_type_label,
     coalesce(display.total_displays,0) as total_displays,
-    COALESCE(display.total_position_0_3_diplays,0) as total_position_0_3_diplays,
+    COALESCE(display.total_position_0_3_diplays,0) as total_position_0_3_displays,
     COALESCE(display.total_position_4_10_displays,0) as total_position_4_10_displays,
     COALESCE(display.total_position_11_20_displays,0) as total_position_11_20_displays,
     COALESCE(display.total_position_21_30_displays,0) as total_position_21_30_displays,

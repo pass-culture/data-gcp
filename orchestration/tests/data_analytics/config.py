@@ -206,13 +206,6 @@ BIGQUERY_SCHEMAS = {
         "label": "STRING",
         "venue_id": "STRING",
     },
-    "stock_booking_information": {
-        "stock_id": "STRING",
-        "booking_quantity": "INTEGER",
-        "booking_cancelled": "INTEGER",
-        "booking_non_cancelled": "INTEGER",
-        "bookings_paid": "INTEGER",
-    },
     "available_stock_information": {
         "stock_id": "STRING",
         "available_stock_information": "INTEGER",

@@ -125,9 +125,10 @@ sources:
       - name: metabase_report_card
       - name: metabase_report_dashboard
       - name: metabase_revision
+      - name: offer_types
+      - name: past_offer_context
       - name: qpi_answers_historical
       - name: qpi_answers_v4
-      - name: past_offer_context
       - name: sensitive_item_recommendation
       - name: stdout
       - name: user_locations
@@ -154,7 +155,6 @@ sources:
       - name: adage
       - name: app_native_logs
       - name: linked_offers
-      - name: offer_types
       - name: region_department # TODO migrate this table to seed
   - name: seed
     schema: seed_{{ var('ENV_SHORT_NAME') }}

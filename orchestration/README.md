@@ -10,7 +10,6 @@ Les fichiers sont organisés de la manière suivante :
 - Les fonctions communes à tous les DAGs (~utils) sont dans `dags/common`.
 - Les requêtes SQL ainsi que la config python spécifique d'un DAG sont dans `dags/dependencies/`.
 - La config DBT est dans `dags/data_gcp_dbt`.
-- La config de great_expectations est dans `dags/great_expectations` : permet de tester la qualité des données.
 - Les tests sont dans le dossier `tests/`.
 
 ## Configuration, Déploiement et Lancement des DAGs sur Cloud Composer (Airflow sur GCP)

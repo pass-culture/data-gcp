@@ -8,6 +8,7 @@ select
     stock_quantity,
     total_available_stock,
     total_cancelled_bookings,
+    total_non_cancelled_bookings,
     total_paid_bookings,
     total_bookings,
     offer_id,

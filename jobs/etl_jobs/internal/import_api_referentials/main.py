@@ -148,7 +148,7 @@ def get_types(gcp_project_id, env_short_name):
         if k in dtype_list:
             df[k] = df[k].astype(v)
     df.to_gbq(
-        f"""analytics_{env_short_name}.offer_types""",
+        f"""raw_{env_short_name}.offer_types""",
         project_id=gcp_project_id,
         if_exists="replace",
     )

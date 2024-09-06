@@ -60,13 +60,15 @@ class BatchClient:
             response = session.get(url, headers=self.headers)
             if response.status_code == 200:
                 tags_dict = {
-                    key: response.json().get(key, "")
+                    key: response.json().get(key, [])
                     for key in ["campaign_token", "labels"]
                 }
                 tags_list.append(tags_dict)
 
-        campaigns_with_tag_df = pd.DataFrame(tags_dict).rename(
-            columns={"labels": "tags"}
+        campaigns_with_tag_df = (
+            pd.DataFrame(tags_list)
+            .rename(columns={"labels": "tags"})
+            .assign(tags=lambda _df: _df["tags"].astype(str))
         )
 
         campaigns_df = campaigns_df.merge(

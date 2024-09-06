@@ -85,6 +85,14 @@ apispec==5.2.2
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   flask-appbuilder
+appdirs==1.4.4
+    # via
+    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+    #   sqlfluff
+appnope==0.1.4
+    # via
+    #   ipykernel
+    #   ipython
 argcomplete==3.1.1
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -154,7 +162,9 @@ cffi==1.15.1
 chardet==5.1.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+    #   diff-cover
     #   gcloud-aio-auth
+    #   sqlfluff
 charset-normalizer==3.1.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -168,6 +178,8 @@ click==8.1.4
     #   dbt-semantic-interfaces
     #   flask
     #   flask-appbuilder
+    #   great-expectations
+    #   sqlfluff
 clickclick==20.10.2
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -177,6 +189,8 @@ colorama==0.4.6
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   dbt-core
     #   flask-appbuilder
+    #   great-expectations
+    #   sqlfluff
 colorlog==4.8.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -219,6 +233,7 @@ dbt-core==1.7.2
     # via
     #   -r orchestration-requirements.in
     #   dbt-bigquery
+    #   sqlfluff-templater-dbt
 dbt-extractor==0.5.1
     # via dbt-core
 dbt-semantic-interfaces==0.4.4
@@ -228,6 +243,8 @@ deprecated==1.2.14
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   apache-airflow
     #   limits
+diff-cover==9.1.1
+    # via sqlfluff
 dill==0.3.1.1
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -705,9 +722,19 @@ jinja2==3.1.2
     #   apache-airflow
     #   dbt-core
     #   dbt-semantic-interfaces
+    #   diff-cover
     #   flask
     #   flask-babel
+    #   great-expectations
+    #   jinja2-simple-tags
+    #   jupyter-server
+    #   jupyterlab
+    #   jupyterlab-server
+    #   nbconvert
     #   python-nvd3
+    #   sqlfluff
+jinja2-simple-tags==0.6.1
+    # via sqlfluff-templater-dbt
 json-merge-patch==0.2
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -876,6 +903,7 @@ pathspec==0.9.0
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   apache-airflow
     #   dbt-core
+    #   sqlfluff
 pendulum==2.1.2
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -884,6 +912,7 @@ pluggy==1.2.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   apache-airflow
+    #   diff-cover
     #   pytest
 prison==0.2.1
     # via
@@ -1020,6 +1049,9 @@ pygments==2.15.1
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   apache-airflow
+    #   diff-cover
+    #   ipython
+    #   nbconvert
     #   rich
 pyjwt==2.7.0
     # via
@@ -1046,6 +1078,7 @@ pytest==7.4.0
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   -r orchestration-requirements.in
     #   pytest-cov
+    #   sqlfluff
 pytest-cov==4.1.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -1095,11 +1128,24 @@ pyyaml==6.0
     #   dbt-core
     #   dbt-semantic-interfaces
     #   google-ads
+    #   jupyter-events
+    #   sqlfluff
+pyzmq==25.1.0
+    # via
+    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+    #   ipykernel
+    #   jupyter-client
+    #   jupyter-server
 referencing==0.29.1
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   jsonschema
     #   jsonschema-specifications
+    #   jupyter-events
+regex==2023.6.3
+    # via
+    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+    #   sqlfluff
 requests==2.31.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -1149,6 +1195,12 @@ rsa==4.9
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   gcloud-aio-storage
     #   google-auth
+ruamel-yaml==0.17.17
+    # via great-expectations
+scipy==1.13.1
+    # via great-expectations
+send2trash==1.8.3
+    # via jupyter-server
 setproctitle==1.3.2
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -1211,6 +1263,12 @@ sqlalchemy-utils==0.41.1
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   flask-appbuilder
+sqlfluff==3.1.1
+    # via
+    #   -r orchestration-requirements.in
+    #   sqlfluff-templater-dbt
+sqlfluff-templater-dbt==3.1.1
+    # via -r orchestration-requirements.in
 sqlparse==0.4.4
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -1226,6 +1284,10 @@ tabulate==0.9.0
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   apache-airflow
+tblib==2.0.0
+    # via
+    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+    #   sqlfluff
 tenacity==8.2.2
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -1238,11 +1300,49 @@ text-unidecode==1.3
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   python-slugify
+tinycss2==1.3.0
+    # via nbconvert
+toml==0.10.2
+    # via sqlfluff
 tomli==2.0.1
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
     #   coverage
     #   pytest
+toolz==0.12.0
+    # via
+    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+    #   altair
+tornado==6.3.2
+    # via
+    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+    #   ipykernel
+    #   jupyter-client
+    #   jupyter-server
+    #   jupyterlab
+    #   notebook
+    #   terminado
+tqdm==4.65.0
+    # via
+    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+    #   great-expectations
+    #   sqlfluff
+traitlets==5.9.0
+    # via
+    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
+    #   comm
+    #   ipykernel
+    #   ipython
+    #   ipywidgets
+    #   jupyter-client
+    #   jupyter-core
+    #   jupyter-events
+    #   jupyter-server
+    #   jupyterlab
+    #   matplotlib-inline
+    #   nbclient
+    #   nbconvert
+    #   nbformat
 typing-extensions==4.7.1
     # via
     #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt
@@ -1253,6 +1353,7 @@ typing-extensions==4.7.1
     #   dbt-core
     #   dbt-semantic-interfaces
     #   flask-limiter
+    #   great-expectations
     #   limits
     #   looker-sdk
     #   mashumaro

@@ -15,3 +15,6 @@ psycopg2-binary>=2.8
 apache-airflow-providers-slack==7.3.1
 dbt-core==1.7.2
 dbt-bigquery~=1.7
+sqlfluff==3.1.1
+sqlfluff-templater-dbt==3.1.1
+

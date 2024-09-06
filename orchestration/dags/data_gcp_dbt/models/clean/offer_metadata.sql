@@ -6,7 +6,7 @@
 with offer_humanized_id as (
     select
         offer_id,
-        {{ target_schema }}.humanize_id(offer_id) as humanized_id
+        {{ target_schema }}.humanize_id(offer_id) as humanized_id -- noqa: PRS
     from
         {{ ref('offer') }}
     where
@@ -16,7 +16,7 @@ with offer_humanized_id as (
 mediation as (
     select
         offer_id,
-        {{ target_schema }}.humanize_id(id) as mediation_humanized_id
+        {{ target_schema }}.humanize_id(id) as mediation_humanized_id -- noqa: PRS
     from
         (
             select

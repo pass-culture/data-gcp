@@ -377,7 +377,7 @@
     "total_managed_venues": "total_managed_venues",
     "used_collective_bookings": "total_used_collective_bookings",
     "used_individual_bookings": "total_used_individual_bookings",
-    "was_registered_last_year": "was_registered_last_year"
+    "was_registered_last_year": "was_registered_last_year",
     "partner_name": "partner_name",
     "partner_postal_code": "partner_postal_code",
     "partner_region_name": "partner_region_name",
@@ -436,11 +436,11 @@
     "total_nb_of_tickets": "total_tickets",
     "total_nb_of_tickets_current_year": "total_current_year_tickets"
   },
-  "mrt_global__stock" : {
-    "stock_id" : "stock_id",
-    "booking_quantity" : "total_bookings",
-    "booking_cancelled" : "total_cancelled_bookings",
-    "booking_non_cancelled" : "total_non_cancelled_bookings",
-    "bookings_paid" : "total_paid_bookings"
+  "mrt_global__stock": {
+    "stock_id": "stock_id",
+    "booking_quantity": "total_bookings",
+    "booking_cancelled": "total_cancelled_bookings",
+    "booking_non_cancelled": "total_non_cancelled_bookings",
+    "bookings_paid": "total_paid_bookings"
   }
 }

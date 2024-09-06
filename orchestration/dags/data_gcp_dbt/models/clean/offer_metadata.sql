@@ -56,14 +56,14 @@ enriched_items as (
                 offer.offer_name is NULL
                 or offer.offer_name = 'NaN'
             ) then "None"
-            else SAFE_CAST(offer.offer_name as STRING)
+            else SAFE_CAST(offer.offer_name as string)
         end as offer_name,
         case
             when (
                 offer.offer_description is NULL
                 or offer.offer_description = 'NaN'
             ) then "None"
-            else SAFE_CAST(offer.offer_description as STRING)
+            else SAFE_CAST(offer.offer_description as string)
         end as offer_description,
         case
             when mediation.mediation_humanized_id is not NULL
@@ -75,7 +75,7 @@ enriched_items as (
             else CONCAT(
                     'https://storage.googleapis.com/',
                     {{ get_mediation_url() }} || '-assets-fine-grained/thumbs/products/',
-                    {{ target_schema }}.humanize_id(offer.offer_product_id)
+                    {{ target_schema }}.humanize_id (offer.offer_product_id)
                 )
         end as image_url
     from {{ ref('offer') }} offer
@@ -86,7 +86,7 @@ enriched_items as (
 offer_types as (
     select distinct
         UPPER(domain) as offer_type_domain,
-        CAST(type as STRING) as offer_type_id,
+        CAST(type as string) as offer_type_id,
         label as offer_type_label
     from {{ source('raw','offer_types') }} offer
 ),
@@ -94,9 +94,9 @@ offer_types as (
 offer_sub_types as (
     select distinct
         UPPER(domain) as offer_type_domain,
-        CAST(type as STRING) as offer_type_id,
+        CAST(type as string) as offer_type_id,
         label as offer_type_label,
-        SAFE_CAST(SAFE_CAST(sub_type as FLOAT64) as STRING) as offer_sub_type_id,
+        SAFE_CAST(SAFE_CAST(sub_type as float64) as string) as offer_sub_type_id,
         sub_label as offer_sub_type_label
     from {{ source('raw','offer_types') }} offer
 ),

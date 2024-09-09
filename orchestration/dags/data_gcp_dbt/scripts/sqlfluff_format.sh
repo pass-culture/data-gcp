@@ -27,7 +27,7 @@ sqlfuff_format_changed_sql() {
         done
 
         if [ -n "$existing_sqls" ]; then
-            sqlfluff format $existing_sqls -p -1
+            sqlfluff format $existing_sqls -p -1 --verbose
         else
             echo "No existing SQL files to format."
         fi

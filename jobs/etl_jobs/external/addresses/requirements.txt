@@ -27,18 +27,22 @@ gcsfs==2021.9.0
 google-api-core==1.34.1
     # via
     #   google-cloud-bigquery
+    #   google-cloud-bigquery-storage
     #   google-cloud-core
 google-auth==2.31.0
     # via
     #   gcsfs
     #   google-api-core
     #   google-auth-oauthlib
+    #   google-cloud-bigquery-storage
 google-auth-oauthlib==0.5.3
     # via
     #   -r requirements.in
     #   gcsfs
-google-cloud-bigquery==2.13.1
+google-cloud-bigquery==3.2.0
     # via -r requirements.in
+google-cloud-bigquery-storage==2.26.0
+    # via google-cloud-bigquery
 google-cloud-core==1.5.0
     # via google-cloud-bigquery
 google-crc32c==1.5.0
@@ -52,6 +56,7 @@ googleapis-common-protos==1.63.2
 grpcio==1.64.1
     # via
     #   google-api-core
+    #   google-cloud-bigquery
     #   grpcio-status
 grpcio-status==1.48.2
     # via google-api-core
@@ -69,29 +74,38 @@ numpy==1.24.4
     #   pyarrow
 oauthlib==3.2.2
     # via requests-oauthlib
-packaging==24.1
+packaging==21.3
     # via google-cloud-bigquery
 pandas==2.0.3
     # via -r requirements.in
 proto-plus==1.24.0
-    # via google-cloud-bigquery
+    # via
+    #   google-cloud-bigquery
+    #   google-cloud-bigquery-storage
 protobuf==3.20.3
     # via
     #   google-api-core
     #   google-cloud-bigquery
+    #   google-cloud-bigquery-storage
     #   googleapis-common-protos
     #   grpcio-status
     #   proto-plus
 pyarrow==3.0.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   google-cloud-bigquery
 pyasn1==0.6.0
     # via
     #   pyasn1-modules
     #   rsa
 pyasn1-modules==0.4.0
     # via google-auth
+pyparsing==3.1.4
+    # via packaging
 python-dateutil==2.9.0.post0
-    # via pandas
+    # via
+    #   google-cloud-bigquery
+    #   pandas
 pytz==2024.1
     # via pandas
 requests==2.25.0

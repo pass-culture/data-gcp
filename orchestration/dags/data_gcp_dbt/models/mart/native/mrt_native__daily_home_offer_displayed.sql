@@ -8,21 +8,21 @@
 ) }}
 
 WITH consultations_by_position as (
-SELECT 
+SELECT
     native.event_date,
     native.offer_id,
     native.module_id,
     native.entry_id,
     native.displayed_position,
     count(distinct consult.consultation_id) as total_consultations,
-FROM {{ ref('int_firebase__native_home_offer_displayed') }} as native 
-LEFT JOIN {{ ref('int_firebase__consultation')}} as consult on native.event_date = consult.consultation_date AND native.offer_id = consult.offer_id AND native.module_id = consult.module_id AND consult.origin = "home"
+FROM {{ ref('int_firebase__native_home_offer_displayed') }} as native
+LEFT JOIN {{ ref('int_firebase__native_consultation')}} as consult on native.event_date = consult.consultation_date AND native.offer_id = consult.offer_id AND native.module_id = consult.module_id AND consult.origin = "home"
 {% if is_incremental() %}
     WHERE date(event_date) = date_sub('{{ ds() }}', INTERVAL 3 day)
     {% else %}
     WHERE date(event_date) >= "2024-06-13"
     {% endif %}
-GROUP BY 
+GROUP BY
     event_date,
     offer_id,
     module_id,
@@ -31,7 +31,7 @@ GROUP BY
 )
 
 , displays_by_position_bucket AS (
-SELECT 
+SELECT
     event_date,
     offer_id,
     module_id,
@@ -43,7 +43,7 @@ SELECT
     SUM(CASE WHEN displayed_position <= 30 AND displayed_position > 20 THEN 1 ELSE 0 END) AS total_position_21_30_displays,
     SUM(CASE WHEN displayed_position <= 40 AND displayed_position > 30 THEN 1 ELSE 0 END) AS total_position_31_40_displays,
     SUM(CASE WHEN displayed_position <= 50 AND displayed_position > 40 THEN 1 ELSE 0 END) AS total_position_41_50_displays,
-FROM {{ ref('int_firebase__native_home_offer_displayed') }} as native 
+FROM {{ ref('int_firebase__native_home_offer_displayed') }} as native
 {% if is_incremental() %}
     WHERE date(event_date) = date_sub('{{ ds() }}', INTERVAL 3 day)
     {% else %}
@@ -56,7 +56,7 @@ GROUP BY event_date,
 )
 
 , consultations_by_position_bucket AS (
-SELECT 
+SELECT
     event_date,
     offer_id,
     module_id,
@@ -75,7 +75,7 @@ GROUP BY event_date,
     entry_id
 )
 
-SELECT 
+SELECT
     display.event_date,
     display.offer_id,
     display.module_id,
@@ -108,5 +108,5 @@ SELECT
     COALESCE(consult.total_position_41_50_consultations,0) as total_position_41_50_consultations
 FROM displays_by_position_bucket as display
 LEFT JOIN consultations_by_position_bucket as consult on display.offer_id = consult.offer_id AND display.event_date = consult.event_date AND display.module_id = consult.module_id AND display.entry_id = consult.entry_id
-LEFT JOIN {{ ref('mrt_global__offer') }} as offers ON consult.offer_id = offers.offer_id 
+LEFT JOIN {{ ref('mrt_global__offer') }} as offers ON consult.offer_id = offers.offer_id
 left join {{ ref('int_contentful__entry' ) }} as c on c.id = display.module_id

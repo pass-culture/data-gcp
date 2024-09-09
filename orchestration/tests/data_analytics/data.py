@@ -1,7 +1,7 @@
 from datetime import datetime
 
 # Offer_moderation =>
-# offer moderation is linked with available_stock_information, region_department, applicative_database_venue_label, siren_data, applicative_database_venue_contact and subcategories
+# offer moderation is linked with region_department, applicative_database_venue_label, siren_data, applicative_database_venue_contact and subcategories
 OFFER_MODERATION_INPUT = {
     "applicative_database_offer": [
         {
@@ -25,12 +25,6 @@ OFFER_MODERATION_INPUT = {
             "stock_beginning_date": None,
             "stock_quantity": 2,
             "stock_price": 10.00,
-        }
-    ],
-    "available_stock_information": [
-        {
-            "stock_id": "88",
-            "available_stock_information": 1,
         }
     ],
     "applicative_database_booking": [

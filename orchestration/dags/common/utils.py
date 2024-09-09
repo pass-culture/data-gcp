@@ -175,3 +175,11 @@ def get_airflow_schedule(schedule_interval, local_env=LOCAL_ENV):
         return None
     else:
         return schedule_interval
+
+
+def decode_output(task_id, key, **kwargs):
+    ti = kwargs["ti"]
+    output = ti.xcom_pull(task_ids=task_id, key=key)
+    decoded_output = output.decode("utf-8")
+
+    return decoded_output

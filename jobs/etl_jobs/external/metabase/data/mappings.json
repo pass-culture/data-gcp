@@ -386,12 +386,7 @@
     "partner_type_origin": "partner_type_origin",
     "real_collective_revenue": "total_collective_real_revenue",
     "real_individual_revenue": "total_individual_real_revenue",
-    "total_offers_created": "total_created_offers",
-    "total_real_revenue": "total_real_revenue",
-    "used_collective_bookings": "total_used_collective_bookings",
-    "used_individual_bookings": "total_used_individual_bookings",
-    "venue_id": "venue_id",
-    "was_registered_last_year": "was_registered_last_year"
+    "venue_id": "venue_id"
   },
   "enriched_institution_data": {
     "current_deposit_creation_date": "current_deposit_creation_date",
@@ -442,5 +437,9 @@
     "booking_cancelled": "total_cancelled_bookings",
     "booking_non_cancelled": "total_non_cancelled_bookings",
     "bookings_paid": "total_paid_bookings"
+  },
+  "available_stock_information": {
+    "stock_id": "stock_id",
+    "available_stock_information": "total_available_stock"
   }
 }

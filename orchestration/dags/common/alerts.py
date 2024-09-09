@@ -173,3 +173,28 @@ def dbt_test_slack_alert(results_json, manifest_json, job_type="dbt-test", **con
         username="airflow",
     )
     return dbt_test_warn_slack_alert.execute(context=context)
+
+
+def bigquery_freshness_alert(warning_table_list, job_type="dbt-test", **context):
+    webhook_token = JOB_TYPE.get(job_type)
+
+    if len(warning_table_list) > 0:
+        slack_msg = f"""{ENV_EMOJI[ENV_SHORT_NAME]}
+        *:open_file_folder: Bigquery expected schedule alerts *
+        \n *Here is the list of tables that don't meet the expected update schedule :*
+        """
+        for table in eval(warning_table_list):
+            slack_msg += f"\n- {table}"
+
+    else:
+        slack_msg = "✅ All bigquery tables are updated according to schedule"
+
+    bigquery_freshness_slack_alert = SlackWebhookOperator(
+        task_id="slack_alert_warn",
+        http_conn_id=SLACK_CONN_ID,
+        webhook_token=webhook_token,
+        message=slack_msg,
+        username="airflow",
+    )
+
+    return bigquery_freshness_slack_alert.execute(context=context)

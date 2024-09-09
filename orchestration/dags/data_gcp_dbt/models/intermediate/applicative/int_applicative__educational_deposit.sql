@@ -22,6 +22,7 @@ SELECT
             ed.educational_deposit_creation_date DESC,
             ed.educational_deposit_id DESC
     ) AS deposit_rank_desc,
+    ey.educational_year_id
 
 
 FROM {{ source("raw", "applicative_database_educational_deposit") }} AS ed

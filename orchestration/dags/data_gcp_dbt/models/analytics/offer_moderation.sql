@@ -26,7 +26,7 @@ venue_humanized_id as (
 offerer_humanized_id as (
     select
         offerer_id,
-        {{ target_schema }}.humanize_id(offerer_id) as offerer_humanized_id
+        {{ target_schema }}.humanize_id(offerer_id) as offerer_humanized_id -- noqa: PRS
     from
         {{ ref('offerer') }}
     where
@@ -86,7 +86,7 @@ last_stock as (
 offer_tags as (
     select
         offerid as offer_id,
-        STRING_AGG(name, " ; " order by CAST(criterion.id as INT) desc) as playlist_tags
+        STRING_AGG(name, " ; " order by CAST(criterion.id as int) desc) as playlist_tags
     from
         {{ ref('offer_criterion') }} offer_criterion
         join {{ ref('criterion') }} criterion on criterion.id = offer_criterion.criterionid
@@ -112,7 +112,7 @@ offer_status as (
 offerer_tags as (
     select
         offerer_id,
-        STRING_AGG(offerer_tag_label, " ; " order by CAST(offerer_id as INT)) as structure_tags
+        STRING_AGG(offerer_tag_label, " ; " order by CAST(offerer_id as int)) as structure_tags
     from
         {{ ref('offerer_tag_mapping') }} offerer_tag_mapping
         left join {{ ref('offerer_tag') }} offerer_tag on offerer_tag_mapping.tag_id = offerer_tag.offerer_tag_id

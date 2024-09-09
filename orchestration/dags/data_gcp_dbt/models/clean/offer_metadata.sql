@@ -75,7 +75,7 @@ enriched_items as (
             else CONCAT(
                     'https://storage.googleapis.com/',
                     {{ get_mediation_url() }} || '-assets-fine-grained/thumbs/products/',
-                    {{ target_schema }}.humanize_id (offer.offer_product_id)
+                    {{ target_schema }}.humanize_id (offer.offer_product_id) -- noqa: PRS
                 )
         end as image_url
     from {{ ref('offer') }} offer

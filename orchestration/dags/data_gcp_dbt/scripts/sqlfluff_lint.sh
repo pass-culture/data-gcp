@@ -36,7 +36,7 @@ sqlfuff_lint_changed_sql() {
         echo "existing_sqls: $existing_sqls"
 
         if [ -n "$existing_sqls" ]; then
-            sqlfluff lint $existing_sqls -p -1
+            sqlfluff lint $existing_sqls -p -1 --verbose
             # sqlfluff lint $existing_sqls -p -1 $SQLFLUFF_FLAG
         else
             echo "No existing SQL files to lint."

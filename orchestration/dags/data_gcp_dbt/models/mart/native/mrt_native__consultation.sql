@@ -7,7 +7,7 @@
 ) }}
 
 with discoveries_by_consultation as (
-SELECT 
+SELECT
     consultation_id,
     MAX(CASE WHEN type = 'item' then 1 else 0 END) AS item_discovery_score,
     MAX(CASE WHEN type = 'offer_subcategory' then 1 else 0 END) AS subcategory_discovery_score,
@@ -16,7 +16,7 @@ from {{ ref('int_metric__discovery_score')}}
 group by consultation_id
 )
 
-SELECT 
+SELECT
     consult.consultation_id,
     consult.consultation_date,
     consult.origin,

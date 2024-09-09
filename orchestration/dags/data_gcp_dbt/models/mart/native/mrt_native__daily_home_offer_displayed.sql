@@ -8,13 +8,13 @@
 ) }}
 
 WITH consultations_by_position as (
-SELECT
+select
     native.event_date,
     native.offer_id,
     native.module_id,
     native.entry_id,
     native.displayed_position,
-    count(distinct consult.consultation_id) as total_consultations,
+    count(distinct consult.consultation_id) as total_consultations
 FROM {{ ref('int_firebase__native_home_offer_displayed') }} as native
 LEFT JOIN {{ ref('int_firebase__native_consultation')}} as consult on native.event_date = consult.consultation_date AND native.offer_id = consult.offer_id AND native.module_id = consult.module_id AND consult.origin = "home"
 {% if is_incremental() %}
@@ -42,7 +42,7 @@ SELECT
     SUM(CASE WHEN displayed_position <= 20 AND displayed_position > 10 THEN 1 ELSE 0 END) AS total_position_11_20_displays,
     SUM(CASE WHEN displayed_position <= 30 AND displayed_position > 20 THEN 1 ELSE 0 END) AS total_position_21_30_displays,
     SUM(CASE WHEN displayed_position <= 40 AND displayed_position > 30 THEN 1 ELSE 0 END) AS total_position_31_40_displays,
-    SUM(CASE WHEN displayed_position <= 50 AND displayed_position > 40 THEN 1 ELSE 0 END) AS total_position_41_50_displays,
+    SUM(CASE WHEN displayed_position <= 50 AND displayed_position > 40 THEN 1 ELSE 0 END) AS total_position_41_50_displays
 FROM {{ ref('int_firebase__native_home_offer_displayed') }} as native
 {% if is_incremental() %}
     WHERE date(event_date) = date_sub('{{ ds() }}', INTERVAL 3 day)
@@ -67,7 +67,7 @@ SELECT
     SUM(CASE WHEN displayed_position <= 20 AND displayed_position > 10 THEN total_consultations END) AS total_position_11_20_consultations,
     SUM(CASE WHEN displayed_position <= 30 AND displayed_position > 20 THEN total_consultations END) AS total_position_21_30_consultations,
     SUM(CASE WHEN displayed_position <= 40 AND displayed_position > 30 THEN total_consultations END) AS total_position_31_40_consultations,
-    SUM(CASE WHEN displayed_position <= 50 AND displayed_position > 40 THEN total_consultations END) AS total_position_41_50_consultations,
+    SUM(CASE WHEN displayed_position <= 50 AND displayed_position > 40 THEN total_consultations END) AS total_position_41_50_consultations
 FROM consultations_by_position
 GROUP BY event_date,
     offer_id,

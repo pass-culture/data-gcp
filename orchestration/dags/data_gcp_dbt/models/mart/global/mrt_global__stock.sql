@@ -1,6 +1,7 @@
 select
     stock_id,
     stock_beginning_date,
+    stock_last_provider_id,
     stock_booking_limit_date,
     stock_creation_date,
     stock_features,

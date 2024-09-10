@@ -24,7 +24,7 @@ jobs:
      run:
        working-directory: "./orchestration/"
     env:
-      AIRFLOW_HOME: "${{ github.workspace }}"
+      AIRFLOW_HOME: "${{ github.workspace }}/orchestration/"
       DAG_FOLDER: "./dags"
       RECOMMENDATION_SQL_INSTANCE: "cloudsql-recommendation-circleci"
       RECOMMENDATION_SQL_BASE: "cloudsql-recommendation-circleci"
@@ -65,7 +65,6 @@ jobs:
           export PYTHONPATH=$PYTHONPATH:./dags
           echo $AIRFLOW_HOME
           echo "$PWD"
-          echo $AIRFLOW__CORE__SQL_ALCHEMY_CONN
           airflow db migrate
           pytest tests
       - name: "Post to a Slack channel"

@@ -88,7 +88,7 @@ offer_types as (
         UPPER(domain) as offer_type_domain,
         CAST(type as STRING) as offer_type_id,
         label as offer_type_label
-    from {{ source('analytics','offer_types') }} offer
+    from {{ source('raw','offer_types') }} offer
 ),
 
 offer_sub_types as (
@@ -98,7 +98,7 @@ offer_sub_types as (
         label as offer_type_label,
         SAFE_CAST(SAFE_CAST(sub_type as FLOAT64) as STRING) as offer_sub_type_id,
         sub_label as offer_sub_type_label
-    from {{ source('analytics','offer_types') }} offer
+    from {{ source('raw','offer_types') }} offer
 ),
 
 offer_metadata_id as (

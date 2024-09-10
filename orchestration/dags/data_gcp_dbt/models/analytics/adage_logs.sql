@@ -58,7 +58,7 @@ FROM
 WHERE
     1 =1
     {% if is_incremental() %}
-    DATE(timestamp) >= DATE("{{ add_days(ds, -7) }}")
+    DATE(timestamp) >= DATE_SUB(DATE('{{ ds() }}'), interval 7 day)
     AND DATE(timestamp) <= DATE("{{ ds }}")
     {% endif %}
     AND (

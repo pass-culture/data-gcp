@@ -24,7 +24,7 @@ FROM
 WHERE
     1 = 1
     {% if is_incremental() %}
-    AND DATE(timestamp) >= DATE("{{ add_days(ds, -7) }}")
+    AND DATE(timestamp) >= DATE_SUB(DATE('{{ ds() }}'), interval 7 day)
     AND DATE(timestamp) <= DATE("{{ ds }}")
     {% endif %}
     AND jsonPayload.extra.analyticsSource = 'backoffice'

@@ -63,6 +63,8 @@ jobs:
           GCLOUD_PROJECT: "passculture-data-ehp"
         run: |
           export PYTHONPATH=$PYTHONPATH:./dags
+          echo $AIRFLOW_HOME
+          echo $AIRFLOW__CORE__SQL_ALCHEMY_CONN
           airflow db migrate
           pytest tests
       - name: "Post to a Slack channel"

@@ -1,4 +1,5 @@
 import ast
+import json
 from datetime import datetime
 from urllib.parse import quote
 
@@ -9,7 +10,7 @@ from common.config import (
 )
 
 from airflow import configuration
-from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
+from airflow.providers.http.operators.http import HttpOperator
 
 ENV_EMOJI = {
     "prod": ":volcano: *PROD* :volcano:",
@@ -81,19 +82,21 @@ def __task_fail_slack_alert(context, job_type):
                 *Execution Time*: {execution_date}
                 """
 
-        failed_alert = SlackWebhookOperator(
-            task_id="slack_alert",
-            slack_webhook_conn_id=webhook_token,
-            message=slack_msg,
-            username="airflow",
+        failed_alert = HttpOperator(
+            task_id="failed_alert",
+            method="POST",
+            http_conn_id="http_slack_default",
+            endpoint=f"{webhook_token}",
+            data=json.dumps({"text": f"{slack_msg}"}),
+            headers={"Content-Type": "application/json"},
         )
+
         return failed_alert.execute(context=context)
     return None
 
 
 def dbt_test_slack_alert(results_json, manifest_json, job_type="dbt-test", **context):
     webhook_token = JOB_TYPE.get(job_type)
-
     slack_header = f"""{ENV_EMOJI[ENV_SHORT_NAME]}
     *:page_facing_up: DBT tests report :page_facing_up:*
     """
@@ -163,12 +166,15 @@ def dbt_test_slack_alert(results_json, manifest_json, job_type="dbt-test", **con
     if slack_msg == slack_header:
         slack_msg += "\nAll tests passed succesfully! :tada:"
 
-    dbt_test_warn_slack_alert = SlackWebhookOperator(
+    dbt_test_warn_slack_alert = HttpOperator(
         task_id="slack_alert_warn",
-        slack_webhook_conn_id=webhook_token,
-        message=slack_msg,
-        username="airflow",
+        method="POST",
+        http_conn_id="http_slack_default",
+        endpoint=f"{webhook_token}",
+        data=json.dumps({"text": f"{slack_msg}"}),
+        headers={"Content-Type": "application/json"},
     )
+
     return dbt_test_warn_slack_alert.execute(context=context)
 
 
@@ -186,11 +192,13 @@ def bigquery_freshness_alert(warning_table_list, job_type="dbt-test", **context)
     else:
         slack_msg = "✅ All bigquery tables are updated according to schedule"
 
-    bigquery_freshness_slack_alert = SlackWebhookOperator(
+    bigquery_freshness_slack_alert = HttpOperator(
         task_id="slack_alert_warn",
-        slack_webhook_conn_id=webhook_token,
-        message=slack_msg,
-        username="airflow",
+        method="POST",
+        http_conn_id="http_slack_default",
+        endpoint=f"{webhook_token}",
+        data=json.dumps({"text": f"{slack_msg}"}),
+        headers={"Content-Type": "application/json"},
     )
 
     return bigquery_freshness_slack_alert.execute(context=context)

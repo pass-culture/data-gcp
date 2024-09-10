@@ -12,7 +12,6 @@ google-cloud-secret-manager~=2.16
 # extras
 psycopg2-binary>=2.8
 # addons
-apache-airflow-providers-slack==8.6.2
 dbt-core==1.8.6
 dbt-bigquery==1.8.1
 sqlfluff==3.1.1

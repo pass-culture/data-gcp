@@ -209,7 +209,7 @@ from
     left join offerer_tags on offerer_tags.offerer_id = offerer.offerer_id
     left join {{ ref('venue_contact') }} venue_contact on venue_contact.venue_id = venue.venue_id
     left join offer_humanized_id as offer_humanized_id on offer_humanized_id.offer_id = offer.offer_id
-    left join {{ source('clean','subcategories') }} subcategories on subcategories.id = offer.offer_subcategoryid
+    left join {{ source('raw','subcategories') }} subcategories on subcategories.id = offer.offer_subcategoryid
     left join count_bookings on count_bookings.offer_id = offer.offer_id
     left join offer_stock_ids on offer_stock_ids.offer_id = offer.offer_id
     left join last_stock on last_stock.offer_id = offer.offer_id

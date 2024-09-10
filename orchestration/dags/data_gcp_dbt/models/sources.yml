@@ -149,14 +149,14 @@ sources:
       - name: dms_pro_cleaned
       - name: firebase_app_experiments
       - name: siren_data
-      
+
   - name: analytics
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: adage
       - name: app_native_logs
       - name: linked_offers
-      
+
       - name: region_department # TODO migrate this table to seed
   - name: seed
     schema: seed_{{ var('ENV_SHORT_NAME') }}

@@ -1,4 +1,4 @@
-## Scripts 
+## Scripts
 
 ### import_api_referentials
 

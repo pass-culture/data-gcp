@@ -1,5 +1,5 @@
 WITH base as(
-SELECT 
+SELECT
         offer_item_id.item_id                                           AS item_id,
         subcategories.category_id                                       AS offer_categoryId,
         offer.offer_subcategoryId                                       AS offer_subcategoryid,
@@ -27,6 +27,6 @@ INNER JOIN `{{ bigquery_ml_preproc_dataset }}`.`item_embedding_reduced_16` item_
 GROUP BY 1,2,3,4,5
 )
 
-SELECT * 
+SELECT *
 FROM base
 QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY item_booking_cnt DESC) = 1

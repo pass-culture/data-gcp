@@ -441,5 +441,11 @@
   "available_stock_information": {
     "stock_id": "stock_id",
     "available_stock_information": "total_available_stock"
+  },
+  "applicative_database_user_pro_new_nav_state": {
+    "id": "id",
+    "userId": "userId",
+    "offerId": "offerId",
+    "dateCreated": "dateCreated"
   }
 }

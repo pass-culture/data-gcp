@@ -22,4 +22,4 @@ select
     CASE WHEN new_nav.new_nav_timestamp is not null THEN "Nouvelle interface" ELSE "Ancienne interface" END as nav_type
 from {{ source("raw", "applicative_database_user_offerer") }} as uo
     left join {{ source("raw", "applicative_database_user") }} as u on uo.userid = u.user_id
-    left join {{ source("raw", "applicative_database_user_pro_new_nav_state") }} as new_nave ON uo.user_id=new_nave.user_id
+    left join {{ source("raw", "applicative_database_user_pro_new_nav_state") }} as new_nave ON uo.userid=new_nave.user_id

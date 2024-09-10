@@ -16,6 +16,10 @@ select
     u.user_phone_validation_status,
     u.user_has_validated_email,
     u.user_has_enabled_marketing_push,
-    u.user_has_enabled_marketing_email
+    u.user_has_enabled_marketing_email,
+    new_nav.eligibility_timestamp,
+    new_nav.new_nav_timestamp,
+    CASE WHEN new_nav.new_nav_timestamp is not null THEN "Nouvelle interface" ELSE "Ancienne interface" END as nav_type
 from {{ source("raw", "applicative_database_user_offerer") }} as uo
     left join {{ source("raw", "applicative_database_user") }} as u on uo.userid = u.user_id
+    left join {{ source("raw", "applicative_database_user_pro_new_nav_state") }} as new_nave ON uo.user_id=new_nave.user_id

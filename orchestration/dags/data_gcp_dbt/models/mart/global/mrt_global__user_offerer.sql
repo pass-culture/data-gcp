@@ -15,7 +15,10 @@ select
     user_phone_validation_status,
     user_has_validated_email,
     user_has_enabled_marketing_push,
-    user_has_enabled_marketing_email
+    user_has_enabled_marketing_email,
+    eligibility_timestamp,
+    new_nav_timestamp,
+    nav_type
 from {{ ref("int_applicative__user_offerer") }}
 where user_offerer_validation_status = "VALIDATED"
     and user_is_active

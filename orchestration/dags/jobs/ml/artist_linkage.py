@@ -61,6 +61,7 @@ with DAG(
     default_args=default_args,
     description="Link artists via clustering",
     schedule_interval=get_airflow_schedule(SCHEDULE_CRON),
+    catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     params={

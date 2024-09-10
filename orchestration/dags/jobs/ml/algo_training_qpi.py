@@ -9,7 +9,6 @@ from common.config import (
     ENV_SHORT_NAME,
     MLFLOW_BUCKET_NAME,
     MLFLOW_URL,
-    SLACK_CONN_ID,
     SLACK_CONN_PASSWORD,
 )
 from common.operators.gce import (
@@ -250,8 +249,7 @@ with DAG(
 
     send_slack_notif_success = SlackWebhookOperator(
         task_id="send_slack_notif_success",
-        http_conn_id=SLACK_CONN_ID,
-        webhook_token=SLACK_CONN_PASSWORD,
+        slack_webhook_conn_id=SLACK_CONN_PASSWORD,
         blocks=create_algo_training_slack_block(
             dag_config["EXPERIMENT_NAME"], MLFLOW_URL, ENV_SHORT_NAME
         ),

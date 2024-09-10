@@ -6,7 +6,6 @@ from common.access_gcp_secrets import access_secret_data
 from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    SLACK_CONN_ID,
 )
 
 from airflow import configuration
@@ -84,8 +83,7 @@ def __task_fail_slack_alert(context, job_type):
 
         failed_alert = SlackWebhookOperator(
             task_id="slack_alert",
-            http_conn_id=SLACK_CONN_ID,
-            webhook_token=webhook_token,
+            slack_webhook_conn_id=webhook_token,
             message=slack_msg,
             username="airflow",
         )
@@ -167,8 +165,7 @@ def dbt_test_slack_alert(results_json, manifest_json, job_type="dbt-test", **con
 
     dbt_test_warn_slack_alert = SlackWebhookOperator(
         task_id="slack_alert_warn",
-        http_conn_id=SLACK_CONN_ID,
-        webhook_token=webhook_token,
+        slack_webhook_conn_id=webhook_token,
         message=slack_msg,
         username="airflow",
     )
@@ -191,8 +188,7 @@ def bigquery_freshness_alert(warning_table_list, job_type="dbt-test", **context)
 
     bigquery_freshness_slack_alert = SlackWebhookOperator(
         task_id="slack_alert_warn",
-        http_conn_id=SLACK_CONN_ID,
-        webhook_token=webhook_token,
+        slack_webhook_conn_id=webhook_token,
         message=slack_msg,
         username="airflow",
     )

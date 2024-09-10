@@ -5,7 +5,7 @@ WITH qpi_v4 as (
     , subcat.category_id
     , subcategories
 FROM {{ ref("qpi_answers_v4") }} uqpi
-join {{ source("clean", "subcategories") }} subcat
+join {{ source("raw", "subcategories") }} subcat
 ON subcat.id=uqpi.subcategories
 ),
 

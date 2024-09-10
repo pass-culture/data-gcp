@@ -182,7 +182,7 @@ final_data AS (
         CASE
             WHEN EXISTS (
                 SELECT 1
-                FROM {{ source('clean', 'subcategories') }} sc
+                FROM {{ source('raw', 'subcategories') }} sc
                 WHERE LOWER(asd.query_input) LIKE CONCAT('%', LOWER(sc.category_id), '%')
                     OR LOWER(asd.query_input) LIKE CONCAT('%', LOWER(sc.id), '%')
             )

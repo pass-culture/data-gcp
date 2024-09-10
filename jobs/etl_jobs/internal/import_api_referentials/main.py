@@ -70,13 +70,9 @@ def get_subcategories(gcp_project_id, env_short_name):
     for k, v in CATEGORIES_DTYPES.items():
         if k in dtype_list:
             df[k] = df[k].astype(v)
+
     df.to_gbq(
-        f"""analytics_{env_short_name}.subcategories""",
-        project_id=gcp_project_id,
-        if_exists="replace",
-    )
-    df.to_gbq(
-        f"""clean_{env_short_name}.subcategories""",
+        f"""raw_{env_short_name}.subcategories""",
         project_id=gcp_project_id,
         if_exists="replace",
     )

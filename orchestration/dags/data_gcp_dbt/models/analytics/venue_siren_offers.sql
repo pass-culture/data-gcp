@@ -19,7 +19,7 @@ with individual_data as (
     from {{ ref('mrt_global__venue') }} venue
         join {{ ref('mrt_global__offerer') }} offerer on venue.venue_managing_offerer_id = offerer.offerer_id
         left join {{ ref('mrt_global__offer') }} offer on venue.venue_id = offer.venue_id
-        left join {{ source('clean','subcategories') }} subcategories on offer.offer_subcategory_id = subcategories.id
+        left join {{ source('raw','subcategories') }} subcategories on offer.offer_subcategory_id = subcategories.id
         left join {{ ref('mrt_global__booking') }} booking on offer.offer_id = booking.offer_id and booking.booking_status in ('USED', 'REIMBURSED', 'CONFIRMED')
     where offerer_siren is not NULL
     group by 1, 2, 3, 4, 5, 6, 7, 8, 9

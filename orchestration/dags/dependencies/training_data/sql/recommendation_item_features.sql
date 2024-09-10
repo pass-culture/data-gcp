@@ -18,7 +18,7 @@ SELECT
 FROM `{{ bigquery_analytics_dataset }}`.global_offer enroffer
 INNER JOIN `{{ bigquery_clean_dataset }}`.`applicative_database_offer` offer
         ON enroffer.offer_id = offer.offer_id
-INNER JOIN `{{ bigquery_analytics_dataset }}`.`subcategories` subcategories
+INNER JOIN `{{ bigquery_raw_dataset }}`.`subcategories` subcategories
         ON offer.offer_subcategoryId = subcategories.id
 INNER JOIN `{{ bigquery_int_applicative_dataset }}`.`offer_item_id` offer_item_id
         ON offer_item_id.offer_id = offer.offer_id

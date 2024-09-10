@@ -45,7 +45,7 @@ from
         on stock.stock_id = bookings_per_stock.stock_id
             and stock.partition_date = bookings_per_stock.partition_date
     left join {{ ref('int_applicative__offer_item_id') }} int_applicative__offer_item_id on int_applicative__offer_item_id.offer_id = stock.offer_id
-    left join {{ source('clean', 'subcategories') }} subcategories on subcategories.id = offer.offer_subcategoryid
+    left join {{ source('raw', 'subcategories') }} subcategories on subcategories.id = offer.offer_subcategoryid
 where
     (
         (

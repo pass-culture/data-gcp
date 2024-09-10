@@ -79,7 +79,7 @@ enriched_items as (
                 )
         end as image_url
     from {{ ref('offer') }} offer
-        join {{ source('clean','subcategories') }} subcategories on offer.offer_subcategoryid = subcategories.id
+        join {{ source('raw','subcategories') }} subcategories on offer.offer_subcategoryid = subcategories.id
         left join mediation on offer.offer_id = mediation.offer_id
 ),
 

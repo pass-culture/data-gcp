@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta
 
 from common import macros
@@ -9,7 +10,6 @@ from common.config import (
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
     MLFLOW_URL,
-    SLACK_CONN_ID,
     SLACK_CONN_PASSWORD,
 )
 from common.operators.gce import (
@@ -29,7 +29,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
-from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
+from airflow.providers.http.operators.http import HttpOperator
 
 DATE = "{{ ts_nodash }}"
 
@@ -218,15 +218,19 @@ with DAG(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
 
-    send_slack_notif_success = SlackWebhookOperator(
+    send_slack_notif_success = HttpOperator(
         task_id="send_slack_notif_success",
-        http_conn_id=SLACK_CONN_ID,
-        webhook_token=SLACK_CONN_PASSWORD,
-        blocks=create_algo_training_slack_block(
-            "{{ params.model_name }}", MLFLOW_URL, ENV_SHORT_NAME
+        method="POST",
+        http_conn_id="http_slack_default",
+        endpoint=f"{SLACK_CONN_PASSWORD}",
+        data=json.dumps(
+            {
+                "blocks": create_algo_training_slack_block(
+                    "{{ params.model_name }}", MLFLOW_URL, ENV_SHORT_NAME
+                )
+            }
         ),
-        username=f"Algo trainer robot - {ENV_SHORT_NAME}",
-        icon_emoji=":robot_face:",
+        headers={"Content-Type": "application/json"},
     )
 
     (

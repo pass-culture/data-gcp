@@ -64,6 +64,7 @@ jobs:
         run: |
           export PYTHONPATH=$PYTHONPATH:./dags
           echo $AIRFLOW_HOME
+          echo "$PWD"
           echo $AIRFLOW__CORE__SQL_ALCHEMY_CONN
           airflow db migrate
           pytest tests

@@ -11,7 +11,7 @@ with themes_subscribed as (
         user_id,
         currently_subscribed_themes,
         case when (currently_subscribed_themes is NULL or currently_subscribed_themes = "") then FALSE else TRUE end as is_theme_subscribed
-    from {{ source("analytics","app_native_logs") }}
+    from {{ ref("app_native_logs") }}
     where technical_message_id = "subscription_update"
     qualify ROW_NUMBER() over (partition by user_id order by partition_date desc) = 1
 )

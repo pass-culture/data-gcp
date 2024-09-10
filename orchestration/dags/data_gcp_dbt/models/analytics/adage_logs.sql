@@ -1,7 +1,15 @@
+{{
+    config(
+        **custom_incremental_config(
+        incremental_strategy='insert_overwrite',
+        partition_by={'field': 'partition_date', 'data_type': 'date'},
+    )
+) }}
+
 WITH _rows AS (
 SELECT
     DATE(timestamp) as partition_date,
-    CASE 
+    CASE
         WHEN jsonPayload.extra.path LIKE "%adage-iframe%" THEN 'adage-iframe'
         ELSE 'adage'
     END as log_source,
@@ -25,8 +33,8 @@ SELECT
     jsonPayload.extra.header_link_name as header_link_name,
     CAST(coalesce(jsonPayload.extra.bookingId, jsonPayload.extra.booking_id) as string) as booking_id,
     ARRAY_TO_STRING(jsonPayload.extra.filters, ',') AS filters,
-    CASE WHEN jsonPayload.message="SearchButtonClicked" THEN cast(jsonPayload.extra.resultscount as int) 
-    WHEN jsonPayload.message="TrackingFilter" THEN cast(jsonPayload.extra.resultnumber as int) 
+    CASE WHEN jsonPayload.message="SearchButtonClicked" THEN cast(jsonPayload.extra.resultscount as int)
+    WHEN jsonPayload.message="TrackingFilter" THEN cast(jsonPayload.extra.resultnumber as int)
     ELSE NULL END as results_count,
     jsonPayload.extra.filtervalues.eventaddresstype as address_type_filter,
     cast(jsonPayload.extra.filtervalues.query as string) as text_filter,
@@ -46,10 +54,13 @@ SELECT
     CAST(jsonPayload.extra.index as INT) as rank_clicked
 
 FROM
-    `{{ bigquery_raw_dataset }}.stdout`
+    {{ source("raw","stdout") }}
 WHERE
+    1 =1
+    {% if is_incremental() %}
     DATE(timestamp) >= DATE("{{ add_days(ds, -7) }}")
     AND DATE(timestamp) <= DATE("{{ ds }}")
+    {% endif %}
     AND (
         jsonPayload.extra.path LIKE "%adage-iframe%"
         OR jsonPayload.extra.analyticsSource = 'adage'
@@ -57,7 +68,7 @@ WHERE
 ),
 
 generate_session AS (
-    SELECT 
+    SELECT
         *,
         rnk - session_sum  as session_num,
         MIN(timestamp) OVER (PARTITION BY user_id, rnk - session_sum) as session_start
@@ -67,7 +78,7 @@ generate_session AS (
         SUM(same_session) OVER (PARTITION BY user_id  ORDER BY timestamp) as session_sum,
         ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY timestamp) as rnk
         FROM (
-            SELECT 
+            SELECT
             *,
             COALESCE(
                 CAST(
@@ -79,8 +90,10 @@ generate_session AS (
     ) _inn_ts
 )
 
-SELECT 
+SELECT
 * EXCEPT(session_num, session_start, rnk, same_session, session_sum),
 TO_HEX(MD5(CONCAT(CAST(session_start AS STRING), user_id, session_num))) as session_id
 FROM generate_session
+{% if is_incremental() %}
 WHERE partition_date = DATE("{{ ds }}")
+{% endif %}

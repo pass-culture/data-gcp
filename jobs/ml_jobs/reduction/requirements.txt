@@ -2,16 +2,17 @@
 #    uv pip compile requirements.in -o requirements.txt
 absl-py==2.1.0
     # via
+    #   keras
     #   tensorboard
     #   tensorflow
-aiohttp==3.9.5
+aiohappyeyeballs==2.4.0
+    # via aiohttp
+aiohttp==3.10.2
     # via gcsfs
 aiosignal==1.3.1
     # via aiohttp
 astunparse==1.6.3
     # via tensorflow
-async-timeout==4.0.3
-    # via aiohttp
 attrs==23.2.0
     # via aiohttp
 cachetools==5.3.3
@@ -40,7 +41,7 @@ gast==0.6.0
     # via tensorflow
 gcsfs==2023.5.0
     # via -r requirements.in
-google-api-core==2.19.1
+google-api-core[grpc]==2.19.1
     # via
     #   google-cloud-bigquery
     #   google-cloud-core
@@ -58,13 +59,11 @@ google-auth==2.31.0
     #   google-cloud-storage
     #   pandas-gbq
     #   pydata-google-auth
-    #   tensorboard
 google-auth-oauthlib==1.0.0
     # via
     #   gcsfs
     #   pandas-gbq
     #   pydata-google-auth
-    #   tensorboard
 google-cloud-bigquery==3.25.0
     # via
     #   -r requirements.in
@@ -87,7 +86,7 @@ google-resumable-media==2.7.1
     # via
     #   google-cloud-bigquery
     #   google-cloud-storage
-googleapis-common-protos==1.63.2
+googleapis-common-protos[grpc]==1.63.2
     # via
     #   google-api-core
     #   grpc-google-iam-v1
@@ -105,7 +104,9 @@ grpcio==1.64.1
 grpcio-status==1.62.2
     # via google-api-core
 h5py==3.11.0
-    # via tensorflow
+    # via
+    #   keras
+    #   tensorflow
 hdbscan==0.8.36
     # via -r requirements.in
 idna==3.7
@@ -117,7 +118,7 @@ joblib==1.4.2
     #   hdbscan
     #   pynndescent
     #   scikit-learn
-keras==2.14.0
+keras==3.5.0
     # via tensorflow
 libclang==18.1.1
     # via tensorflow
@@ -129,14 +130,22 @@ loguru==0.7.0
     # via -r requirements.in
 markdown==3.6
     # via tensorboard
+markdown-it-py==3.0.0
+    # via rich
 markupsafe==2.1.5
     # via werkzeug
-ml-dtypes==0.2.0
-    # via tensorflow
+mdurl==0.1.2
+    # via markdown-it-py
+ml-dtypes==0.4.0
+    # via
+    #   keras
+    #   tensorflow
 multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
+namex==0.0.8
+    # via keras
 numba==0.60.0
     # via
     #   -r requirements.in
@@ -148,6 +157,7 @@ numpy==1.26.4
     #   db-dtypes
     #   h5py
     #   hdbscan
+    #   keras
     #   ml-dtypes
     #   numba
     #   opt-einsum
@@ -163,11 +173,15 @@ oauthlib==3.2.2
     # via requests-oauthlib
 opt-einsum==3.3.0
     # via tensorflow
+optree==0.12.1
+    # via keras
 packaging==24.1
     # via
     #   db-dtypes
     #   google-cloud-bigquery
+    #   keras
     #   pandas-gbq
+    #   tensorboard
     #   tensorflow
 pandas==1.4.1
     # via
@@ -205,6 +219,8 @@ pyasn1-modules==0.4.0
     # via google-auth
 pydata-google-auth==1.8.2
     # via pandas-gbq
+pygments==2.18.0
+    # via rich
 pynndescent==0.5.13
     # via
     #   -r requirements.in
@@ -222,9 +238,11 @@ requests==2.32.3
     #   google-cloud-bigquery
     #   google-cloud-storage
     #   requests-oauthlib
-    #   tensorboard
+    #   tensorflow
 requests-oauthlib==2.0.0
     # via google-auth-oauthlib
+rich==13.8.1
+    # via keras
 rsa==4.9
     # via google-auth
 scikit-learn==1.5.1
@@ -238,12 +256,6 @@ scipy==1.14.0
     #   pynndescent
     #   scikit-learn
     #   umap-learn
-setuptools==70.2.0
-    # via
-    #   pandas-gbq
-    #   pydata-google-auth
-    #   tensorboard
-    #   tensorflow
 six==1.16.0
     # via
     #   astunparse
@@ -251,16 +263,12 @@ six==1.16.0
     #   python-dateutil
     #   tensorboard
     #   tensorflow
-tensorboard==2.14.1
+tensorboard==2.17.1
     # via tensorflow
 tensorboard-data-server==0.7.2
     # via tensorboard
-tensorflow==2.14.0
+tensorflow==2.17.0
     # via umap-learn
-tensorflow-estimator==2.14.0
-    # via tensorflow
-tensorflow-io-gcs-filesystem==0.37.1
-    # via tensorflow
 termcolor==2.4.0
     # via tensorflow
 threadpoolctl==3.5.0
@@ -272,8 +280,10 @@ tqdm==4.66.1
 typer==0.7.0
     # via -r requirements.in
 typing-extensions==4.12.2
-    # via tensorflow
-umap-learn==0.5.6
+    # via
+    #   optree
+    #   tensorflow
+umap-learn[parametric-umap]==0.5.6
     # via -r requirements.in
 urllib3==2.2.2
     # via requests

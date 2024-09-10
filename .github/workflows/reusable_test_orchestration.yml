@@ -21,7 +21,7 @@ jobs:
       id-token: write
       contents: write
     defaults:
-     run: 
+     run:
        working-directory: "./orchestration/"
     env:
       AIRFLOW_HOME: "./"
@@ -63,7 +63,7 @@ jobs:
           GCLOUD_PROJECT: "passculture-data-ehp"
         run: |
           export PYTHONPATH=$PYTHONPATH:./dags
-          airflow db init
+          airflow db migrate
           pytest tests
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}

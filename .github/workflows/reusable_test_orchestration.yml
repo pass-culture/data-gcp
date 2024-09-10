@@ -24,7 +24,7 @@ jobs:
      run:
        working-directory: "./orchestration/"
     env:
-      AIRFLOW_HOME: "./"
+      AIRFLOW_HOME: "${{ github.workspace }}"
       DAG_FOLDER: "./dags"
       RECOMMENDATION_SQL_INSTANCE: "cloudsql-recommendation-circleci"
       RECOMMENDATION_SQL_BASE: "cloudsql-recommendation-circleci"

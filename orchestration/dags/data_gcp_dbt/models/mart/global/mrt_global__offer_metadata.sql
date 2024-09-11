@@ -1,8 +1,8 @@
 select
     offer_id,
     offer_creation_date,
-    subcategory_id,
-    category_id,
+    offer_subcategory_id,
+    offer_category_id,
     search_group_name,
     offer_type_domain,
     offer_name,

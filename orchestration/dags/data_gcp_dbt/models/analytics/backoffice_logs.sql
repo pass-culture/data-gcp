@@ -25,7 +25,7 @@ WHERE
     1 = 1
     {% if is_incremental() %}
     AND DATE(timestamp) >= DATE_SUB(DATE('{{ ds() }}'), interval 7 day)
-    AND DATE(timestamp) <= DATE("{{ ds }}")
+    AND DATE(timestamp) <= DATE("{{ ds() }}")
     {% endif %}
     AND jsonPayload.extra.analyticsSource = 'backoffice'
 ),
@@ -58,5 +58,5 @@ SELECT
 TO_HEX(MD5(CONCAT(CAST(session_start AS STRING), user_id, session_num))) as session_id
 FROM generate_session
 {% if is_incremental() %}
-WHERE partition_date = DATE("{{ ds }}")
+WHERE partition_date = DATE("{{ ds() }}")
 {% endif %}

@@ -23,6 +23,6 @@ from
 where
     1 = 1
     {% if is_incremental() %}
-        and DATE(timestamp) = "{{ ds }}"
+        and DATE(timestamp) = "{{ ds() }}"
     {% endif %}
     and jsonpayload.extra.analyticssource = "app-pro"

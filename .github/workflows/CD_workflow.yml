@@ -93,7 +93,7 @@ jobs:
     with:
       GITHUB_ENV_NAME: "production"
       ENV_SHORT_NAME: "prod"
-      COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--d5adf2e8-bucket"
+      COMPOSER_DAGS_BUCKET: "europe-west1-data-composer--e3ff6842-bucket"
       COMPOSER_NAME: "data-composer-prod"
       DATA_GCP_PROJECT: "passculture-data-prod"
     secrets:

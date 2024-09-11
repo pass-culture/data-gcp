@@ -33,7 +33,7 @@ with favorites as (
         join {{ ref('mrt_global__offer') }} as offer on favorite.offerid = offer.offer_id
         join {{ source('raw', 'applicative_database_stock') }} as stock on favorite.offerid = stock.offer_id
         join {{ ref('mrt_global__user') }} as enruser on favorite.userid = enruser.user_id
-        join {{ source('clean','subcategories') }} as subcategories on subcategories.id = offer.offer_subcategory_id
+        join {{ source('raw','subcategories') }} as subcategories on subcategories.id = offer.offer_subcategory_id
 
     where
         datecreated <= date_sub(date('{{ ds() }}'), interval 8 day)

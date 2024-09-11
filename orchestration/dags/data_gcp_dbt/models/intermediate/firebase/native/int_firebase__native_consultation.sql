@@ -2,7 +2,8 @@
     config(
         **custom_incremental_config(
         incremental_strategy = 'insert_overwrite',
-        partition_by = {'field': 'consultation_date', 'data_type': 'date'}
+        partition_by = {'field': 'consultation_date', 'data_type': 'date'},
+        on_schema_change = "sync_all_columns"
     )
 ) }}
 

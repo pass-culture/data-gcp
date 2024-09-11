@@ -1,3 +1,11 @@
+{{
+    config(
+        **custom_incremental_config(
+        incremental_strategy='insert_overwrite',
+        partition_by={'field': 'partition_date', 'data_type': 'date'},
+    )
+) }}
+
 WITH _rows AS (
 SELECT
     DATE(timestamp) as partition_date,
@@ -12,15 +20,18 @@ SELECT
     cast(jsonPayload.extra.searchrank as int) as card_clicked_rank
 
 FROM
-    `{{ bigquery_raw_dataset }}.stdout`
+   {{ source("raw","stdout") }}
 WHERE
-    DATE(timestamp) >= DATE("{{ add_days(ds, -7) }}")
-    AND DATE(timestamp) <= DATE("{{ ds }}")
+    1 = 1
+    {% if is_incremental() %}
+    AND DATE(timestamp) >= DATE_SUB(DATE('{{ ds() }}'), interval 7 day)
+    AND DATE(timestamp) <= DATE("{{ ds() }}")
+    {% endif %}
     AND jsonPayload.extra.analyticsSource = 'backoffice'
 ),
 
 generate_session AS (
-    SELECT 
+    SELECT
         *,
         rnk - session_sum  as session_num,
         MIN(timestamp) OVER (PARTITION BY user_id, rnk - session_sum) as session_start
@@ -30,7 +41,7 @@ generate_session AS (
         SUM(same_session) OVER (PARTITION BY user_id  ORDER BY timestamp) as session_sum,
         ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY timestamp) as rnk
         FROM (
-            SELECT 
+            SELECT
             *,
             COALESCE(
                 CAST(
@@ -42,8 +53,10 @@ generate_session AS (
     ) _inn_ts
 )
 
-SELECT 
+SELECT
 * EXCEPT(session_num, session_start, rnk, same_session, session_sum),
 TO_HEX(MD5(CONCAT(CAST(session_start AS STRING), user_id, session_num))) as session_id
 FROM generate_session
-WHERE partition_date = DATE("{{ ds }}")
+{% if is_incremental() %}
+WHERE partition_date = DATE("{{ ds() }}")
+{% endif %}

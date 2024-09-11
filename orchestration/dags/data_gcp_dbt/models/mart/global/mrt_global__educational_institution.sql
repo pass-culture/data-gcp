@@ -1,17 +1,4 @@
-WITH deposit_grouped_by_institution AS (
-SELECT institution_id,
-    MAX(CASE WHEN deposit_rank_asc = 1 THEN ministry END) AS ministry,
-    MAX(CASE WHEN deposit_rank_asc = 1 THEN deposit_creation_date END) AS first_deposit_creation_date,
-    MAX(CASE WHEN is_current_deposit THEN educational_deposit_amount END) AS current_deposit_amount,
-    MAX(CASE WHEN is_current_deposit THEN deposit_creation_date END) AS current_deposit_creation_date,
-    SUM(educational_deposit_amount) AS total_deposit_amount,
-    COUNT(*) AS total_deposits,
-FROM {{ ref('int_applicative__educational_deposit') }} AS ed
-GROUP BY institution_id
-),
-
-collective_booking_grouped_by_institution AS (
-
+WITH collective_booking_grouped_by_institution AS (
 
 SELECT educational_institution_id,
     SUM(collective_stock_number_of_tickets) AS total_tickets,
@@ -42,17 +29,17 @@ educational_institution_student_headcount AS (
 )
 
 SELECT
-    ei.educational_institution_id AS institution_id,
+    ei.institution_id,
     ei.institution_id AS institution_external_id,
     ei.institution_name AS institution_name,
-    dgi.ministry,
+    ei.ministry,
     ei.institution_type,
     ei.institution_program_name,
-    dgi.first_deposit_creation_date,
-    dgi.current_deposit_amount,
-    dgi.current_deposit_creation_date,
-    dgi.total_deposit_amount,
-    dgi.total_deposits,
+    ei.first_deposit_creation_date,
+    ei.current_deposit_amount,
+    ei.current_deposit_creation_date,
+    ei.total_deposit_amount,
+    ei.total_deposits,
     cb.first_booking_date,
     cb.last_booking_date,
     cb.last_category_booked,
@@ -66,7 +53,7 @@ SELECT
     cb.total_current_year_collective_real_revenue,
     SAFE_DIVIDE(
         cb.total_current_year_collective_real_revenue,
-        dgi.current_deposit_amount
+        ei.current_deposit_amount
     ) AS ratio_current_credit_utilization,
     cb.total_tickets,
     cb.total_current_year_tickets,
@@ -91,7 +78,6 @@ SELECT
     location_info.institution_internal_iris_id,
     location_info.institution_postal_code
 FROM  {{ ref('int_applicative__educational_institution') }} AS ei
-left join deposit_grouped_by_institution AS dgi ON dgi.institution_id = ei.educational_institution_id
 left join collective_booking_grouped_by_institution as cb ON cb.educational_institution_id = ei.educational_institution_id
 left join educational_institution_student_headcount AS sh ON sh.institution_id = ei.institution_id
 left join  {{ source('seed','institution_metadata_aggregated_type') }} as institution_metadata_aggregated_type

@@ -56,9 +56,9 @@ SELECT
 FROM
     {{ source("raw","stdout") }}
 WHERE
-    1 =1
+    1 = 1
     {% if is_incremental() %}
-    DATE(timestamp) >= DATE_SUB(DATE('{{ ds() }}'), interval 7 day)
+    AND DATE(timestamp) >= DATE_SUB(DATE('{{ ds() }}'), interval 7 day)
     AND DATE(timestamp) <= DATE("{{ ds() }}")
     {% endif %}
     AND (

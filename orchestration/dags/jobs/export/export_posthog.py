@@ -57,7 +57,7 @@ schedule_dict = {"prod": "0 8 * * *", "dev": "0 12 * * *", "stg": "0 10 * * *"}
 
 for job_name, table_name in TABLE_PARAMS.items():
     with DAG(
-        f"export_posthog_{job_name}_catchup",
+        f"export_posthog_{job_name}",
         default_args={
             "start_date": datetime.datetime(2023, 9, 1),
             "retries": 1,
@@ -66,7 +66,7 @@ for job_name, table_name in TABLE_PARAMS.items():
         },
         description="Export to analytics data posthog",
         schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
-        catchup=True,
+        catchup=False,
         start_date=CATCHUP_PARAMS[job_name],
         max_active_runs=1,
         dagrun_timeout=datetime.timedelta(minutes=1440),

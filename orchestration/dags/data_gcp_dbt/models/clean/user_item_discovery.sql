@@ -28,8 +28,8 @@ new_consultation_item as (
         user_id,
         consultation_date,
         new_items,
-        offer_category_id as category_id,
-        offer_subcategory_id as subcategory_id,
+        offer_category_id,
+        offer_subcategory_id,
         {% for feature in discovery_vars("discovery_features") %}
             case
                 when consultation_date = min(consultation_date) over (partition by user_id, {{ feature }})

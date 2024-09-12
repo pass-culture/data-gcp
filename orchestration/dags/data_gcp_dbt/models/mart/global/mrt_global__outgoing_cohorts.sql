@@ -95,7 +95,7 @@ SELECT
     SUM(c.category_discovery_score) AS total_category_consulted,
     COUNT(DISTINCT c.venue_id) AS total_venue_consulted,
     COUNT(DISTINCT c.venue_type_label) AS total_venue_type_label_consulted 
-FROM analytics_prod.native_consultation c  
+FROM {{ ref("mrt_native__consultation")}} c  
 JOIN users_expired_monthly u ON c.user_id = u.user_id AND DATE_SUB(deposit_expiration_date, INTERVAL 2 YEAR) <= c.consultation_date AND deposit_expiration_date >= c.consultation_date 
 GROUP BY 1, 2 
 )

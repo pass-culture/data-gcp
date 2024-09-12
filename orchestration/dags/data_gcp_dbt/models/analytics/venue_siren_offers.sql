@@ -1,3 +1,10 @@
+{{
+    config(**custom_table_config(
+        materialized = "table",
+        cluster_by = ["offerer_siren", "venue_id"],
+    ))
+}}
+
 with individual_data as (
     select
         offerer_siren,

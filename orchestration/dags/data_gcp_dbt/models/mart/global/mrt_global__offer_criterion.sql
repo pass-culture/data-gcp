@@ -1,5 +1,5 @@
 {{
-    config(
+    custom_table_config(
         cluster_by= "offer_id"
     )
 }}

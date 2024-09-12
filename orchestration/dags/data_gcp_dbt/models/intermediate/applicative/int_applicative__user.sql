@@ -78,7 +78,7 @@ select
         else FALSE
     end as user_is_priority_public,
     currently_subscribed_themes,
-    is_theme_subscribed
+    CASE WHEN is_theme_subscribed IS NULL THEN FALSE ELSE is_theme_subscribed END AS is_theme_subscribed
 from {{ source("raw", "applicative_database_user") }} as u
     left join {{ ref("int_geo__user_location") }} as ui on ui.user_id = u.user_id
     left join themes_subscribed as ts on ts.user_id = u.user_id

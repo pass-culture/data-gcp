@@ -1,4 +1,10 @@
-SELECT 
+{{
+    config(
+        cluster_by= "offer_id"
+    )
+}}
+
+SELECT
     oc.criterion_id,
     oc.tag_name,
     oc.description,

@@ -1,8 +1,7 @@
-{{
-    custom_table_config(
-        cluster_by= "offer_id"
-    )
-}}
+{{ config(**custom_table_config(
+        cluster_by = "offer_id"
+        ))
+    }}
 
 select
     booking_id,

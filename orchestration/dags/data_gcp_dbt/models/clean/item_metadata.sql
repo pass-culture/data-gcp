@@ -16,7 +16,7 @@ enriched_items as (
         offer.*,
         offer_ids.item_id,
         IF(offer_type_label is not null, count_booking, null) as count_booking
-    from {{ ref('offer_metadata') }} offer
+    from {{ ref('int_applicative__offer_metadata') }} offer
         inner join {{ ref('int_applicative__offer_item_id') }} offer_ids on offer.offer_id = offer_ids.offer_id
         left join offer_booking_information_view obi on obi.offer_id = offer.offer_id
 )

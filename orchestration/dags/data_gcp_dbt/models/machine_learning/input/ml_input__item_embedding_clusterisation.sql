@@ -15,8 +15,8 @@ with items_w_embedding as (
 select
     ie.item_id,
     ie.hybrid_embedding,
-    im.subcategory_id as subcategory_id,
-    im.category_id as category,
+    im.offer_subcategory_id as subcategory_id,
+    im.offer_category_id as category,
     im.offer_type_id,
     im.offer_type_label,
     im.offer_sub_type_id,

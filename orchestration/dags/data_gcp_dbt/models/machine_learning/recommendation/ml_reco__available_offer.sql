@@ -19,8 +19,8 @@ get_recommendable_offers as (
         venue.venue_longitude,
         offer.offer_name as name,
         offer.offer_is_duo as offer_is_duo,
-        im.subcategory_id as subcategory_id,
-        im.category_id as category,
+        im.offer_subcategory_id as subcategory_id,
+        im.offer_category_id as category,
         im.search_group_name,
         offer.offer_url as url,
         offer.offer_created_at as offer_creation_date,
@@ -45,17 +45,17 @@ get_recommendable_offers as (
             case
                 when (
                     offer.offer_product_id not in ('3469240')
-                    and im.subcategory_id <> 'JEU_EN_LIGNE'
-                    and im.subcategory_id <> 'JEU_SUPPORT_PHYSIQUE'
-                    and im.subcategory_id <> 'ABO_JEU_VIDEO'
-                    and im.subcategory_id <> 'ABO_LUDOTHEQUE'
+                    and im.offer_subcategory_id <> 'JEU_EN_LIGNE'
+                    and im.offer_subcategory_id <> 'JEU_SUPPORT_PHYSIQUE'
+                    and im.offer_subcategory_id <> 'ABO_JEU_VIDEO'
+                    and im.offer_subcategory_id <> 'ABO_LUDOTHEQUE'
                     and (
                         offer.offer_url is NULL
                         or offer.last_stock_price = 0
-                        or im.subcategory_id = 'LIVRE_NUMERIQUE'
-                        or im.subcategory_id = 'ABO_LIVRE_NUMERIQUE'
-                        or im.subcategory_id = 'TELECHARGEMENT_LIVRE_AUDIO'
-                        or im.category_id = 'MEDIA'
+                        or im.offer_subcategory_id = 'LIVRE_NUMERIQUE'
+                        or im.offer_subcategory_id = 'ABO_LIVRE_NUMERIQUE'
+                        or im.offer_subcategory_id = 'TELECHARGEMENT_LIVRE_AUDIO'
+                        or im.offer_category_id = 'MEDIA'
                     )
                 ) then TRUE
                 else FALSE

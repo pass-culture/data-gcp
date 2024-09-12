@@ -9,6 +9,7 @@ select
         else 'Bigquery (adhoc)'
     end
         as origin,
+    gbc.referenced_tables,
     gbc.dataset_id,
     gbc.table_id,
     mc.card_name,
@@ -31,4 +32,4 @@ from {{ ref('int_gcp__bigquery_cost') }} gbc
         )
 
 where not cache_hit
-group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13

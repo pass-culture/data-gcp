@@ -5,8 +5,8 @@ select
     booking.offer_id,
     diversification_raw.booking_id,
     diversification_raw.booking_creation_date,
-    category_id as category,
-    subcategory_id as subcategory,
+    offer_metadata.offer_category_id as category,
+    offer_metadata.offer_subcategory_id as subcategory,
     offer_type_label,
     booking.venue_id as venue,
     booking.venue_name,
@@ -29,7 +29,7 @@ select
 from {{ ref('diversification_raw') }} as diversification_raw
     left join {{ ref('mrt_global__booking') }} as booking
         on booking.booking_id = diversification_raw.booking_id
-    left join {{ ref('offer_metadata') }} as offer_metadata
+    left join {{ ref('int_applicative__offer_metadata') }} as offer_metadata
         on booking.offer_id = offer_metadata.offer_id
     left join {{ ref('mrt_global__user') }} as user
         on diversification_raw.user_id = user.user_id

@@ -1,3 +1,8 @@
+{{ config(**custom_table_config(
+        cluster_by = "offer_id"
+        ))
+    }}
+
 select
     booking_id,
     booking_creation_date,

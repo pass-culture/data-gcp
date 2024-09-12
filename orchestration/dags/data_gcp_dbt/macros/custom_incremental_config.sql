@@ -3,7 +3,7 @@
     partition_by={'field': 'event_date', 'data_type': 'date'},
     on_schema_change='ignore',
     cluster_by=None,
-    require_partition_filter = false
+    require_partition_filter=false
 ) %}
     {% if target.profile_name == 'CI' %}
         {% set config_params = {'materialized': 'view'} %}

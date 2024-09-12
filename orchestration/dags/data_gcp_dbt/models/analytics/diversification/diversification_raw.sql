@@ -88,7 +88,7 @@ base_diversification as (
         left join offer_metadata
             on bookings.offer_id = offer_metadata.offer_id
         left join {{ source('raw','subcategories') }} subcategories
-            on offer_metadata.subcategory_id = subcategories.id
+            on offer_metadata.offer_subcategory_id = subcategories.id
 
 
 ),

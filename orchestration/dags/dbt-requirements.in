@@ -1,6 +1,6 @@
 dbt-core==1.8.6
 dbt-bigquery==1.8.1
-re-data==0.10.9
 click==8.0.2
 sqlfluff==3.1.1
 sqlfluff-templater-dbt==3.1.1
+elementary-data[bigquery]==0.16.1

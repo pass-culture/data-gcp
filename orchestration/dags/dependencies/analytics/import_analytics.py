@@ -1,4 +1,4 @@
-ANALYTICS_SQL_PATH = f"dependencies/analytics/sql/analytics"
+ANALYTICS_SQL_PATH = "dependencies/analytics/sql/analytics"
 
 
 def define_import_tables():
@@ -23,41 +23,3 @@ def define_import_tables():
         "venue",
         "venue_provider",
     ]
-
-
-analytics_tables = {
-    "analytics_firebase_home_events_details": {
-        "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_events_details.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_home_events_details",
-        "time_partitioning": {"field": "event_date"},
-        "clustering_fields": {"fields": ["event_type"]},
-        "dag_depends": [
-            "import_intraday_firebase_data",
-        ],  # computed once a day
-    },
-    "analytics_firebase_home_macro_conversion": {
-        "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_macro_conversion.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_home_macro_conversion",
-        "time_partitioning": {"field": "module_displayed_date"},
-        "dag_depends": ["import_intraday_firebase_data"],
-    },
-    "analytics_firebase_home_micro_conversion": {
-        "sql": f"{ANALYTICS_SQL_PATH}/firebase_home_micro_conversion.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_home_micro_conversion",
-        "time_partitioning": {"field": "module_displayed_date"},
-        "dag_depends": ["import_intraday_firebase_data"],
-    },
-    "analytics_firebase_aggregated_search_events": {
-        "sql": f"{ANALYTICS_SQL_PATH}/firebase_aggregated_search_events.sql",
-        "destination_dataset": "{{ bigquery_analytics_dataset }}",
-        "destination_table": "firebase_aggregated_search_events",
-        "time_partitioning": {"field": "first_date"},
-        "dag_depends": ["import_intraday_firebase_data"],
-        "params": {"set_date": "2023-01-01"},
-    },
-}
-
-export_tables = dict(analytics_tables)

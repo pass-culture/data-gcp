@@ -1,12 +1,10 @@
-SELECT
+select
     offerer_id,
     partner_id,
     offerer_name,
     offerer_creation_date,
     offerer_validation_date,
     first_stock_creation_date,
-    offerer_validation_status,
-    offerer_is_active,
     first_individual_offer_creation_date,
     last_individual_offer_creation_date,
     first_collective_offer_creation_date,
@@ -16,13 +14,13 @@ SELECT
     first_individual_booking_date,
     last_individual_booking_date,
     first_bookable_offer_date,
-    last_bookable_offer_date,
+    last_collective_bookable_offer_date,
     first_individual_bookable_offer_date,
     last_individual_bookable_offer_date,
     first_collective_bookable_offer_date,
-    last_collective_bookable_offer_date,
     first_booking_date,
     last_booking_date,
+    last_bookable_offer_date,
     total_non_cancelled_individual_bookings,
     total_non_cancelled_collective_bookings,
     total_non_cancelled_bookings,
@@ -45,15 +43,9 @@ SELECT
     total_bookable_collective_offers,
     total_bookable_offers,
     offerer_department_code,
-    offerer_postal_code,
     offerer_siren,
-    is_active_last_30days,
-    is_active_current_year,
-    is_individual_active_last_30days,
-    is_individual_active_current_year,
-    is_collective_active_last_30days,
-    is_collective_active_current_year,
     offerer_region_name,
+    offerer_city,
     academy_name,
     legal_unit_business_activity_code,
     legal_unit_business_activity_label,
@@ -69,7 +61,6 @@ SELECT
     dms_accepted_at,
     is_reference_adage,
     is_synchro_adage,
-    partner_type,
-FROM {{ ref('int_global__offerer') }}
-WHERE offerer_validation_status='VALIDATED'
-    AND offerer_is_active
+from {{ ref('int_global__offerer') }}
+where offerer_validation_status = 'VALIDATED'
+    and offerer_is_active

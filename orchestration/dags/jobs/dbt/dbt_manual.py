@@ -1,26 +1,14 @@
-import datetime
-import json
-
-from airflow import DAG
-from airflow.operators.bash_operator import BashOperator
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.task_group import TaskGroup
-from airflow.utils.dates import datetime, timedelta
-from airflow.models import Param
-from common.alerts import task_fail_slack_alert
-from common.utils import (
-    get_airflow_schedule,
-)
-from common.dbt.utils import rebuild_manifest
-
-from common import macros
 from common.config import (
+    ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
-    ENV_SHORT_NAME,
-    PATH_TO_DBT_TARGET,
 )
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.bash_operator import BashOperator
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.utils.dates import datetime, timedelta
 
 default_args = {
     "start_date": datetime(2020, 12, 23),
@@ -30,19 +18,23 @@ default_args = {
 }
 
 dag = DAG(
-    "dbt_manual_dag",
+    "dbt_manual_command",
     default_args=default_args,
     catchup=False,
     description="A dbt wrapper for airflow",
     schedule_interval=None,
     params={
-        "target": Param(
-            default=ENV_SHORT_NAME,
+        "dbt_command": Param(
+            default="compile",
             type="string",
         ),
-        "command": Param(
-            default="dbt run --models package:re_data",
-            type="string",
+        "target": Param(
+            default=ENV_SHORT_NAME,
+            type=["null", "string"],
+        ),
+        "source_env": Param(
+            default=ENV_SHORT_NAME,
+            type=["null", "string"],
         ),
     },
 )
@@ -51,7 +43,7 @@ start = DummyOperator(task_id="start", dag=dag)
 
 dbt_manual_command = BashOperator(
     task_id="dbt_manual_command",
-    bash_command="{{ params.command }}",
+    bash_command="""dbt {{ params.dbt_command }}{% if params.target %} -t {{ params.target }}{% endif %}{% if params.source_env %} --vars "{'ENV_SHORT_NAME':'{{ params.source_env }}'}"{% endif %}""",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
 )

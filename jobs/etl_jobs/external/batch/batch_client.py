@@ -1,10 +1,10 @@
+import time
+from datetime import datetime
+
+import pandas as pd
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-import json
-import time
-import pandas as pd
-
 
 session = requests.Session()
 retry = Retry(connect=3, backoff_factor=0.5)
@@ -53,6 +53,28 @@ class BatchClient:
             operating_system=self.operating_system,
         )[["campaign_token", "dev_only", "created_date", "name", "live", "from_api"]]
 
+        # add tags
+        tags_list = []
+        for campaign in campaigns_df["campaign_token"].unique():
+            url = f"{self.base_url}{self.api_key}/campaigns/{campaign}"
+            response = session.get(url, headers=self.headers)
+            if response.status_code == 200:
+                tags_dict = {
+                    key: response.json().get(key, [])
+                    for key in ["campaign_token", "labels"]
+                }
+                tags_list.append(tags_dict)
+
+        campaigns_with_tag_df = (
+            pd.DataFrame(tags_list)
+            .rename(columns={"labels": "tags"})
+            .assign(tags=lambda _df: _df["tags"].astype(str))
+        )
+
+        campaigns_df = campaigns_df.merge(
+            campaigns_with_tag_df, on="campaign_token", how="left"
+        )
+
         return campaigns_df
 
     def get_campaigns_stats(self):
@@ -67,8 +89,6 @@ class BatchClient:
             "campaign_token"
         ].to_list()
 
-        print(f"{len(live_campaigns_token)} campaigns to load")
-
         for campaign_token in live_campaigns_token:
             print(
                 f"Retrieving stats of the {i}th campaign. Campaign token : {campaign_token}"
@@ -80,6 +100,7 @@ class BatchClient:
                 response_df["campaign_token"] = response.json()["campaign_token"]
                 dfs_list.append(response_df)
             if i % 60 == 0:  # limit at 60 calls each minute = 5 sec by requests
+                print(f"Datetime: {datetime.now()}")
                 print("wait 1 min")
                 time.sleep(60)
 

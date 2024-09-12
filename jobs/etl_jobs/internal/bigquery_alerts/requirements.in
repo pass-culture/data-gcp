@@ -1,0 +1,4 @@
+pandas==2.2.2
+datetime==4.3
+typer==0.12.3
+pandas_gbq==0.23.1

@@ -1,4 +1,4 @@
-SQL_CLEAN_PATH = f"dependencies/dms_subscriptions/sql/clean"
+SQL_CLEAN_PATH = "dependencies/dms_subscriptions/sql/clean"
 CLEAN_TABLES = {
     "dms_jeunes": {
         "sql": f"{SQL_CLEAN_PATH}/dms_cleaned.sql",

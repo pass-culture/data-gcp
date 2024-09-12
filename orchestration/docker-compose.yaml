@@ -5,7 +5,9 @@ volumes:
 
 x-airflow-common:
   &airflow-common
-  build: airflow/
+  build:
+    context: .
+    dockerfile: ./airflow/Dockerfile
   environment:
     &airflow-common-env
     LOCAL_ENV: ${LOCAL_ENV:-1}
@@ -17,10 +19,12 @@ x-airflow-common:
     GCE_NETWORK_ID: ${GCE_NETWORK_ID:-}
     GCE_SUBNETWORK_ID: ${GCE_SUBNETWORK_ID:-}
     ENV_SHORT_NAME: ${ENV_SHORT_NAME:-}
+    GCE_SA: ${GCE_SA:-}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./airflow/config/airflow.cfg:/opt/airflow/airflow.cfg
     - ./airflow/logs:/opt/airflow/logs
+    - ./dags/data_gcp_dbt:/opt/airflow/data_gcp_dbt
   user: root
   depends_on:
     - postgres
@@ -51,7 +55,7 @@ services:
       timeout: 10s
       retries: 5
     restart: always
-    
+
 
   airflow-scheduler:
     <<: *airflow-common
@@ -73,4 +77,3 @@ services:
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
       _AIRFLOW_WWW_USER_EMAIL: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}admin@example.com
-

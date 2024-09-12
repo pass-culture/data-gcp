@@ -1,26 +1,27 @@
-from airflow import DAG
-from airflow.models import Param
+import datetime
+
+from common import macros
+from common.config import (
+    BIGQUERY_TMP_DATASET,
+    DAG_FOLDER,
+    DATA_GCS_BUCKET_NAME,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+)
 from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
 )
+from common.utils import get_airflow_schedule
+
+from airflow import DAG
+from airflow.models import Param
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
-import datetime
-from common.config import (
-    GCP_PROJECT_ID,
-    DAG_FOLDER,
-    ENV_SHORT_NAME,
-    DATA_GCS_BUCKET_NAME,
-    BIGQUERY_TMP_DATASET,
-)
-from common.utils import get_airflow_schedule
-from common.alerts import task_fail_slack_alert
-from common import macros
 
 DATASET_ID = f"export_{ENV_SHORT_NAME}"
 GCE_INSTANCE = f"export-posthog-{ENV_SHORT_NAME}"
@@ -56,7 +57,7 @@ schedule_dict = {"prod": "0 8 * * *", "dev": "0 12 * * *", "stg": "0 10 * * *"}
 
 for job_name, table_name in TABLE_PARAMS.items():
     with DAG(
-        f"export_posthog_{job_name}_catchup",
+        f"export_posthog_{job_name}",
         default_args={
             "start_date": datetime.datetime(2023, 9, 1),
             "retries": 1,
@@ -65,7 +66,7 @@ for job_name, table_name in TABLE_PARAMS.items():
         },
         description="Export to analytics data posthog",
         schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
-        catchup=True,
+        catchup=False,
         start_date=CATCHUP_PARAMS[job_name],
         max_active_runs=1,
         dagrun_timeout=datetime.timedelta(minutes=1440),

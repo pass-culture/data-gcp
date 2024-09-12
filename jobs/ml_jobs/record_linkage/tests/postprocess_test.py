@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+
 from postprocess import build_item_id_from_linkage
 
 

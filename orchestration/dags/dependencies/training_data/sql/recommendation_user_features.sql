@@ -26,6 +26,7 @@ FROM
   JOIN `{{ bigquery_ml_reco_dataset }}`.user_statistics stats_reco ON stats_reco.user_id = firebase_agg.user_id
   JOIN `{{ bigquery_int_firebase_dataset }}`.native_event firebase ON firebase.user_id = firebase_agg.user_id
   LEFT JOIN user_qpi uqpi on uqpi.user_id=firebase_agg.user_id
+WHERE firebase.event_date >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)
 GROUP BY
   firebase_agg.user_id,
   firebase_agg.consult_offer,

@@ -1,6 +1,7 @@
-SELECT
+select
     cb.collective_booking_id,
     cb.collective_stock_id,
+    cb.is_used_collective_booking,
     co.stock_id,
     co.collective_offer_id,
     co.offer_id,
@@ -16,12 +17,12 @@ SELECT
     co.partner_id,
     co.offerer_name,
     co.venue_iris_internal_id,
-    co.collective_stock_price AS booking_amount,
+    co.collective_stock_price as booking_amount,
     co.collective_stock_number_of_tickets,
     co.collective_stock_beginning_date_time,
     cb.educational_institution_id,
     cb.educational_year_id,
-    educational_year.scholar_year,
+    ey.scholar_year,
     cb.educational_redactor_id,
     co.institution_program_name,
     co.institution_internal_iris_id,
@@ -34,11 +35,13 @@ SELECT
     co.institution_epci,
     co.institution_density_label,
     co.institution_macro_density_label,
+    co.institution_density_level,
     co.venue_city,
     co.venue_epci,
     co.venue_academy_name,
     co.venue_density_label,
     co.venue_macro_density_label,
+    co.venue_density_level,
     co.venue_postal_code,
     co.collective_offer_address_type,
     cb.collective_booking_creation_date,
@@ -50,9 +53,17 @@ SELECT
     cb.collective_booking_confirmation_limit_date,
     cb.collective_booking_used_date,
     cb.collective_booking_reimbursement_date,
-    cb.collective_booking_rank,
+    cb.collective_booking_rank_asc,
+    cb.collective_booking_rank_desc,
     co.collective_offer_image_id,
-FROM {{ ref('int_applicative__collective_booking') }}  AS cb
-INNER JOIN {{ ref('int_global__collective_offer') }} AS co ON co.collective_stock_id = cb.collective_stock_id
-INNER JOIN {{ source('raw', 'applicative_database_educational_year') }} AS educational_year ON educational_year.adage_id = cb.educational_year_id
-INNER JOIN {{ ref('int_applicative__educational_institution') }} AS educational_institution ON educational_institution.educational_institution_id = cb.educational_institution_id
+    CASE
+        WHEN (
+            CAST(ey.educational_year_beginning_date AS DATE) <= CURRENT_DATE
+            AND CAST(ey.educational_year_expiration_date AS DATE) >= CURRENT_DATE
+        ) THEN TRUE
+        ELSE FALSE
+    END AS is_current_year_booking,
+from {{ ref('int_applicative__collective_booking') }} as cb
+    inner join {{ ref('int_global__collective_offer') }} as co on co.collective_stock_id = cb.collective_stock_id
+    inner join {{ source('raw', 'applicative_database_educational_year') }} as ey on ey.adage_id = cb.educational_year_id
+    inner join {{ ref('int_applicative__educational_institution') }} as educational_institution on educational_institution.educational_institution_id = cb.educational_institution_id

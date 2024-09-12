@@ -10,10 +10,10 @@ from native import NativeCard
 from query import QueryCard
 from table import MetabaseTable, get_mapped_fields
 from utils import (
-    PROJECT_NAME,
     ENVIRONMENT_SHORT_NAME,
-    METABASE_API_USERNAME,
     INT_METABASE_DATASET,
+    METABASE_API_USERNAME,
+    PROJECT_NAME,
     access_secret_data,
     get_dependant_cards,
 )
@@ -97,6 +97,7 @@ def run(
             try:
                 native_card = NativeCard(card_id, metabase)
                 native_card.replace_table_name(legacy_table_name, new_table_name)
+                native_card.replace_schema_name(legacy_schema_name, new_schema_name)
                 native_card.replace_column_names(table_columns_mappings)
                 native_card.update_filters(metabase_field_mapping)
                 native_card.update_query()
@@ -122,9 +123,7 @@ def run(
                 query_card.update_dataset_query(
                     metabase_field_mapping, legacy_table_id, new_table_id
                 )
-                query_card.update_result_metadata(metabase_field_mapping)
                 query_card.update_table_id(new_table_id)
-                query_card.update_viz_settings(metabase_field_mapping)
                 query_card.update_card()
                 transition_log["success"] = True
             except Exception as e:

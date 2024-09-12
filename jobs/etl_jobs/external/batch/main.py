@@ -1,11 +1,11 @@
-import typer
-import pandas as pd
-import numpy as np
-from google.cloud import bigquery
 from datetime import datetime, timedelta
 
-from utils import access_secret_data, bigquery_load_job
+import numpy as np
+import pandas as pd
+import typer
+
 from batch_client import BatchClient
+from utils import access_secret_data, bigquery_load_job
 
 
 def main(
@@ -36,7 +36,7 @@ def main(
     metadata = batch_client.get_campaigns_metadata()
     metadata.to_gbq(
         destination_table=f"raw_{env_short_name}.batch_campaigns_ref",
-        if_exists="append",
+        if_exists="replace",
     )
 
     campaigns_stats_df = batch_client.get_campaigns_stats()
@@ -47,7 +47,7 @@ def main(
         )
     else:
         stats = campaigns_stats_df
-        stats["versions"] = np.nan
+        stats["version"] = np.nan
     stats = stats.assign(operating_system=operating_system)
     stats.to_gbq(
         destination_table=f"raw_{env_short_name}.batch_campaigns_stats",

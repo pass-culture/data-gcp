@@ -34,6 +34,7 @@ SHEETS = {
             "1Oy9FGcpyK_GvjphDYUD7un4xRDtobDWNI9Ha9iNU_L0",  # SEM
             "1BvieY_RTjOzQMDB2rMe4QqwSPqoH7a5ARTMmSGYgNnk",  # Aix-Marseille
             "1gUd_QIEHPMD03XZA1bHG19Dgk1v8u0ioU4SGHPLIshk",  # MENJ
+            "15_JNWINeU7nfSbU6subTMK0utr_av1Z3d5-UKD2CBn8",  # Historical DATA
         ],
         "expected_headers_dict": {
             "Année scolaire": "school_year",
@@ -43,6 +44,17 @@ SHEETS = {
             "Classe": "class",
             "Montant par élève": "amount_per_student",
             "Effectif": "headcount",
+        },
+    },
+    "gsheet_tiktok_campaign_tag": {
+        "spreadsheet_ids": ["197DKa9c5TuwvOsUzhLc3Gb5ld1IhfzUsNYYaBvlfBho"],
+        "expected_headers_dict": {
+            "date": "date",
+            "post_name": "post_name",
+            "tiktotk_id": "tiktotk_id",
+            "macro_objective": "macro_objective",
+            "micro_objective": "micro_objective",
+            "offer_category": "offer_category",
         },
     },
 }

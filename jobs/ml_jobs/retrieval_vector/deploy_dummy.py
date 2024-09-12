@@ -1,19 +1,20 @@
 from datetime import datetime
+
+import numpy as np
 import typer
+
 from utils import (
-    GCP_PROJECT_ID,
     ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+    create_items_table,
     deploy_container,
-    get_items_metadata,
-    get_users_metadata,
-    get_user_docs,
     get_item_docs,
+    get_items_metadata,
+    get_user_docs,
+    get_users_dummy_metadata,
     save_experiment,
     save_model_type,
-    create_items_table,
 )
-import numpy as np
-
 
 MODEL_TYPE = {
     "n_dim": 64,
@@ -26,7 +27,7 @@ MODEL_TYPE = {
 def prepare_docs():
     print("Get items...")
     items_df = get_items_metadata()
-    user_df = get_users_metadata()
+    user_df = get_users_dummy_metadata()
     # default
     user_embedding_dict = {
         row.user_id: np.random.random((MODEL_TYPE["n_dim"],))
@@ -48,6 +49,7 @@ def prepare_docs():
         items_df,
         emb_size=MODEL_TYPE["n_dim"],
         uri="./metadata/vector",
+        create_index=True if ENV_SHORT_NAME == "prod" else False,
     )
 
 

@@ -25,13 +25,14 @@ clean-targets:
 
 models:
   data_gcp_dbt:
+    +labels:
+      schedule: "daily"
     +persist_docs:
       relation: true
       columns: true
     clean:
-      +config:
-        +meta:
-          owner: "@team-data-engineering"
+      +meta:
+        owner: "@team-data-engineering"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: clean_{{ target.name }}
       +docs:
@@ -40,6 +41,8 @@ models:
         +alias: applicative_database_
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     analytics:
+      +meta:
+        owner: "@team-data-analytics"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: analytics_{{ target.name }}
       +re_data_monitored: true
@@ -52,18 +55,31 @@ models:
       +docs:
         node_color: "#d90000"
     intermediate:
+      +meta:
+        owner: "@team-data-engineering"
       +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"
+      global:
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     mart:
+      +meta:
+        owner: "@team-data-analytics"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: analytics_{{ target.name }}
+      monitoring:
+        +meta:
+          owner: "@team-data-engineering"
     export:
       +schema: export_{{ target.name }}
       +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"
+      +meta:
+        owner: "@team-data-engineering"
       backend:
         +schema: backend_{{ target.name }}
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     machine_learning:
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+      +meta:
+        owner: "@team-data-science"
 
   elementary:
     +on_schema_change: "append_new_columns"
@@ -76,15 +92,15 @@ seeds:
   +docs:
     node_color: "#000000"
 snapshots:
-  +target_schema: snapshots_applicative_{{ target.name }}
+  +target_schema: snapshot_{{ target.name }}
   +docs:
     show: false
   data_gcp_dbt:
-    applicative_history:
+    applicative:
       tags: applicative_history
 tests:
-  # +store_failures: true  # store failures for all tests
-  +severity: "{{ var('CI_SEVERITY', 'warn') }}" # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.
+  +store_failures: true  # store failures for all tests
+  +severity: "{{ env_var('CI_SEVERITY', 'warn') }}" # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.
   +docs:
     show: true
     tags: "test"
@@ -94,5 +110,4 @@ vars:
   ENV_SHORT_NAME: dev
   re_data:save_test_history: true
   CI_MATERIALIZATION: none
-  CI_SEVERITY: none
-  region_name: "{{ 'region-europe-west1' }}"
+  region_name: region-europe-west1

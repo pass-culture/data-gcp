@@ -53,9 +53,6 @@ def get_prediction(prediction_input_feature, data_model_dict):
     offer_subcategoryid = np.reshape(
         np.array(list(data.offer_subcategoryid)), (nboffers,)
     )
-    user_input = np.reshape(
-        np.array([prediction_input_feature] * len(offer_to_score)), (nboffers, 1)
-    )
     prediction_input = [
         np.array([prediction_input_feature] * len(offer_to_score)),
         np.array(list(data.item_id)),

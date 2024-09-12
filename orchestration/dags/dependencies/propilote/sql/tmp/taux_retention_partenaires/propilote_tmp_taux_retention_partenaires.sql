@@ -15,8 +15,8 @@ all_partners AS (
     COUNT(distinct if(retention_partner_history.first_offer_creation_date <= day, retention_partner_history.partner_id, null)) AS denominator,
   FROM `{{ bigquery_analytics_dataset }}.retention_partner_history` retention_partner_history 
   INNER JOIN last_day_of_month ldm on ldm.last_active_date = retention_partner_history.day 
-  LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_cultural_partner_data` enriched_cultural_partner_data ON retention_partner_history.partner_id  = enriched_cultural_partner_data.partner_id 
-  LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` region_department ON enriched_cultural_partner_data.partner_department_code = region_department.num_dep
+  LEFT JOIN `{{ bigquery_analytics_dataset }}.global_cultural_partner` global_cultural_partner ON retention_partner_history.partner_id  = global_cultural_partner.partner_id
+  LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` region_department ON global_cultural_partner.partner_department_code = region_department.num_dep
   GROUP BY
     1,
     2,

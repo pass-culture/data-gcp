@@ -14,21 +14,21 @@ diversification as (
         {% else %}
             rd.{{ params.group_type_name }}
         {% endif %} as dimension_value
-        , user_current_deposit_type as user_type 
-        , DATE_TRUNC(user.user_deposit_creation_date, MONTH) AS month_deposit
+        , user.current_deposit_type as user_type
+        , DATE_TRUNC(user.first_deposit_creation_date, MONTH) AS month_deposit
         , DATE_TRUNC(deposit.deposit_expiration_date, MONTH) AS month_expiration
         , SUM(delta_diversification) as diversification_indicateur
     FROM `{{ bigquery_analytics_dataset }}.diversification_booking` as div
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` as user
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.global_user` as user
         ON div.user_id=user.user_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
         on  user.user_department_code = rd.num_dep 
-    LEFT JOIN `{{ bigquery_analytics_dataset }}.enriched_deposit_data` as deposit
+    LEFT JOIN `{{ bigquery_analytics_dataset }}.global_deposit` as deposit
         ON user.user_id = deposit.user_id 
     JOIN `{{ bigquery_analytics_dataset }}.global_booking` as booking
         ON booking.booking_id = div.booking_id
     WHERE NOT booking_is_cancelled 
-    AND DATE_DIFF(user.user_deposit_creation_date, booking.booking_created_at, DAY) <= 365 -- Les réservations de la première annee
+    AND DATE_DIFF(user.first_deposit_creation_date, booking.booking_created_at, DAY) <= 365 -- Les réservations de la première annee
     GROUP BY 
         1, 2, 3, 4, 5, 6
 )

@@ -60,9 +60,23 @@ macros:
     description: |
       Overview
       It enables us to set up the destination dataset.
-      If we develop in dev environment (target = dev), the destination schema dataset is the default (tmp_env) specified in profile.yml.
+      If we develop in local (target = local), the destination schema dataset is the default (tmp_env) specified in profile.yml.
       If the model is in intermediate folder, schema name = int_{sub_folder_name}_{target_name}
       Else the destination schema dataset is specified in dbt_project.yml (analytics_env or clean_env)
+  - name: generate_seed_geolocation_query
+    description: |
+      Macro that is used in the specific context of `ìntermediate/geolocation` files. It is used to generate the SQL query that will calculate location metadata of France (ZRR, QPV, IRIS, EPCI).
+
+      Parameters:
+        source_table: The table that contains latitude / longitude couple. This can either be a source table (two elements) or a ref table within the current dbt project (with one element).
+        referential_table: The table that contains geospatial reference data (e.g., geographical boundaries) against which the source data will be matched. Similar to source_table, it can be either a source or a reference.
+        id_column: The column name in the source_table that uniquely identifies each record (user_id, venue_id, ...)
+        prefix_name: A prefix used to identify the latitude and longitude columns in the source_table. For example <user> for user_latitude, user_longitude or <venue> For venue_latitude, venue_longitude).
+        columns: A list of column names from the referential_table that you want to include in the final result.
+        geo_shape (optional, default: 'geo_shape'): The name of the column in the referential_table that contains the geographical shapes (e.g., polygons) used for geospatial matching.
+
+      Example:
+        See the int_geo__user_location model in the `intermediate` folder.
 
   - name: generate_alias_name
     description: " This macro generates table aliases
@@ -71,9 +85,5 @@ macros:
     - Otherwise, it uses the model's name.
     "
 
-  - name: ml_vars
-    description: ""
-
   - name: custom_incremental_config
     description: "materialize incremental models as views in CI"
-

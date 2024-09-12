@@ -3,8 +3,8 @@ from datetime import timedelta
 from unittest import mock
 
 import pandas as pd
-from airflow.models import DagBag
 
+from airflow.models import DagBag
 
 DAG_ID_LIST = [
     "recommendation_cloud_sql_v1",
@@ -24,11 +24,14 @@ class TestDags(unittest.TestCase):
     LOAD_SECOND_THRESHOLD = timedelta(seconds=2)
 
     def setUp(self):
-        with mock.patch(
-            "common.bigquery_client.BigQueryClient.query"
-        ) as bigquery_mocker, mock.patch(
-            "common.access_gcp_secrets.access_secret_data"
-        ) as access_secret_mocker:
+        with (
+            mock.patch(
+                "common.bigquery_client.BigQueryClient.query"
+            ) as bigquery_mocker,
+            mock.patch(
+                "common.access_gcp_secrets.access_secret_data"
+            ) as access_secret_mocker,
+        ):
 
             def bigquery_client(query):
                 return (

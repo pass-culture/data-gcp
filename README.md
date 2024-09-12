@@ -19,7 +19,7 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
 |
 +-- jobs
 | +-- etl_jobs
-|   +-- external 
+|   +-- external
 |     +-- adage
 |     +-- addresses
 |     +-- appsflyer
@@ -34,7 +34,7 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
 |     +-- ...
 |
 |   +-- internal
-|     +-- cold-data
+|     +-- gcs_seed
 |     +-- human_ids
 |     +-- import_api_referentials
 |     +-- ...
@@ -56,9 +56,6 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
 
 #### 0. Prérequis
 
-- [pyenv](https://github.com/pyenv/pyenv-installer)
-  - ⚠ Don't forget to [install the prerequisites](https://github.com/pyenv/pyenv/wiki/Common-build-problems#prerequisites)
-- [pyenv virtualenv](https://github.com/pyenv/pyenv-virtualenv#installation)
 - Accès aux comptes de services GCP
 - [Gcloud CLI](https://cloud.google.com/sdk/docs/install?hl=fr)
 
@@ -83,18 +80,51 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
   make install_on_debian_vm
   ```
 
-- Installation du projet
-  - La première fois : installation from scratch, avec création des environnements virtuels
+- Installation du projet :
+
+  - Pour les Data Analysts :
 
     ```bash
-    make clean_install
+    make install_analytics
     ```
 
-  - Installation rapide des nouveaux packages
+      > Cette installation est simplifiée pour les Data Analysts. Ne nécessite pas d'installer pyenv. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
 
-    ```bash
-    make install
-    ```
+  - Pour la team DE/DS
+
+    - [Prérequis] Installer [pyenv](https://github.com/pyenv/pyenv)
+
+      - Lancer la commande suivante pour installer pour gérer les versions de python avec pyenv :
+
+          ```bash
+          curl -sSL https://pyenv.run | bash
+          ```
+
+      - Si vous avez des problèmes avec penv sur MacOS, voir ce [commentaire](https://github.com/pyenv/pyenv/issues/1740#issuecomment-738749988)
+
+      - Ajouter ces lignes à votre `~/.bashrc` ou votre `~/.zshrc` afin de pouvoir activer `pyenv virtualenv`:
+
+          ```bash
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"
+          eval "$(pyenv init --path)"
+          ```
+
+      - Redémarrer votre terminal
+
+    - Pour les Data Scientists :
+
+      ```bash
+      make install_science
+      ```
+
+    - Pour les Data Engineers :
+
+      ```bash
+      make install_engineering
+      ```
+
+    > Ces commande créé différents sous-environnements virtuels pour les différents types de jobs spécifiés dans le fichier `Makefile`. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
 
   - TROUBLESHOOTING : si l'environnment virtuel ne change pas au passage dans le dossier d'un microservice
     ```bash
@@ -116,143 +146,26 @@ Les dags sont déployés automatiquement lors d'un merge sur master / production
 
 ## CI/CD
 
-
-### Workflow CI
-
-Vue d'ensemble du workflow d'intégration continue (CI) pour notre projet, détaillant les différents workflows réutilisables et les tâches définies dans notre configuration GitHub Actions.
-
-#### Workflow de base
-
-`base_workflow.yml` est le workflow principal qui est déclenché sur les pull requests.
-
-#### Tâches
-
-* Linter
-
-La tâche `linter` vérifie le code pour les problèmes de style en utilisant `black`. Elle se connecte à Google Cloud Secret Manager pour récupérer les secrets nécessaires et envoie éventuellement des notifications à un canal Slack si le linter échoue.
-
-* Recherche modifications du projet DBT
-
-Cette tâche recherche s'il y a eu des modifications/création/suppression de fichiers dans le projet DBT.
-
-* Compilation DBT
-
-Il y a deux tâches de compilation, une pour la production et une pour staging, qui compilent le projet DBT en fonction de la branche ciblée lorsque des modifications ont eu lieu dans le projet DBT.
-
-* Recherche de Tâches de Test
-
-Cette tâche identifie les tâches testables en analysant les fichiers modifiés et en déterminant quelles tâches doivent être testées.
-
-* Vérification de la Non-Vacuité de la Matrice
-
-Vérifie que les tâches à tester ont bien des tests ("matrice d'interstection" des nouvelles tâches testables et des tâches ayant des tests est non-vide).
-
-* Tâches de Test
-
-Cette tâche exécute des tests sur les tâches identifiées.
-
-* Recherche de Changements d'Orchestration
-
-Cette tâche vérifie les changements dans le dossier d'orchestration et détermine si des tests d'orchestration doivent être exécutés.
-
-* Test d'Orchestration
-
-Cette tâche exécute des tests d'orchestration si des changements sont détectés.
-
-#### Arbre d'Exécution des Tâches
-
-```mermaid
-graph TD;
-    A[Workflow de Base] --> B[Linter]
-    A --> AA[Recherche modifications du projet DBT]
-    AA -->|PR production| C[Compilation DBT en Production]
-    AA -->|PR master| D[Compilation DBT en Staging]
-    A --> E[Recherche de Tâches de Test]
-    E --> F[Vérification de la Non-Vacuité de la Matrice]
-    F --> G[Tâches de Test]
-    A --> H[Recherche de Changements d'Orchestration]
-    H --> I[Test d'Orchestration]
-```
-
-### Workflow CD
-
-Vue d'ensemble du workflow de déploiement continu (CD) pour notre projet, détaillant les différents workflows réutilisables et les tâches définies dans notre configuration GitHub Actions.
-
-#### Workflow de Base
-
-Le fichier `deploy_composer.yml` est le workflow principal qui est déclenché sur les pushs vers les branches `master` et `production`. Il inclut plusieurs tâches et utilise des workflows réutilisables pour rationaliser le processus CD.
-
-#### Tâches
-
-* Linter
-
-La tâche `linter` vérifie le code pour les problèmes de style en utilisant `black`. Elle se connecte à Google Cloud Secret Manager pour récupérer les secrets nécessaires et envoie éventuellement des notifications à un canal Slack si le linter échoue.
-
-* Recherche de Tâches de Test
-
-Cette tâche identifie les tâches testables en analysant les fichiers modifiés et déterminant quelles tâches doivent être testées.
-
-* Tâches de Test
-
-Cette tâche exécute des tests sur les tâches identifiées.
-
-* Test d'Orchestration
-
-Cette tâche exécute des tests d'orchestration pour s'assurer que les processus sont correctement orchestrés.
-
-* DBT installation et compilation
-
-Ces tâches installent python, DBT + dbt-packages, compile le projet dbt et deploie les dbt-packages et le manifest dans le bucket de Composer.
-
-* Déploiement de Composer en Dev
-
-Cette tâche déploie Composer dans l'environnement de développement si la branche est `production`.
-
-* Déploiement de Composer en Staging
-
-Cette tâche déploie Composer dans l'environnement de staging si la branche est `master`.
-
-* Déploiement de Composer en Production
-
-Cette tâche déploie Composer dans l'environnement de production si la branche est `production`.
-
-#### Arbre d'Exécution des Tâches
-
-```mermaid
-graph TD;
-    A[Workflow de Déploiement] --> B[Linter]
-    A --> C[Recherche de Tâches de Test]
-    A --> D[Test d'Orchestration]
-    B --> E[Tâches de Test]
-    C --> E
-    D --> E
-    E -->|merge master| H[Déploiement de Composer & DBT en Staging]
-    E -->|merge production| F[Déploiement de Composer & DBT en Dev]
-    F --> G[Déploiement de Composer & DBT en Production]
-    
-
-```
-
+Pipelines détaillées dans le [README de github Action](.github/workflows/README.md)
 
 ## Automatisations
 
 ### ML Jobs
 
-Pour créer un nouveau micro service de ML :
+Pour créer un nouveau micro service de ML ou d'ETL, nous pouvons utiliser les 3 commandes suivantes :
 
-```bash
-MS_NAME=mon_micro_service make create_microservice
-```
+- `MS_NAME=mon_micro_service make create_microservice_ml` :  Créé un micro service de ML dans le dossier `jobs/ml_jobs`
+- `MS_NAME=mon_micro_service make create_microservice_etl_internal` :  Créé un micro service de ML dans le dossier `jobs/etl_jobs/internal`
+- `MS_NAME=mon_micro_service make create_microservice_etl_external` :  Créé un micro service de ML dans le dossier `jobs/etl_jobs/external`
 
 où mon_micro_service est le nom du micro service. Exemple :
 
 ```bash
-MS_NAME=algo_llm make create_microservice
+MS_NAME=algo_llm make create_microservice_ml
 ```
 
 Cela va :
 
-1. créer un dossier `algo_llm` dans `jobs/ml_jobs` avec les fichiers nécessaires pour le micro service.
-2. rajouter le micro service dans la target install du Makefile
-3. Commiter les changements
-4. Lancer l'installation du nouveau micro service
+1. créer un dossier `algo_llm` dans le dossier `jobs/ml_jobs` avec les fichiers nécessaires pour le micro service.
+2. Commiter les changements
+3. Lancer l'installation du nouveau micro service

@@ -7,23 +7,22 @@
     )
 ) }}
 
-WITH mapping_module_name_and_id AS (
-    SELECT
-        *
-    FROM
+with mapping_module_name_and_id as (
+    select *
+    from
         (
-            SELECT
+            select
                 relations.parent as module_id,
                 entries.title as module_name,
                 row_number() over (
                     partition by entries.title
                     order by
-                        updated_at DESC
+                        updated_at desc
                 ) as rnk
             from
                 {{ ref("int_contentful__relationship") }} relations
                 inner join {{ ref("int_contentful__entry") }} entries on entries.id = relations.child
-            WHERE
+            where
                 entries.content_type in (
                     "displayParameters",
                     "venuesSearchParameters",
@@ -36,15 +35,16 @@ WITH mapping_module_name_and_id AS (
     where
         rnk = 1
 ),
-firebase_events AS (
-    SELECT
+
+firebase_events as (
+    select
         coalesce(e.module_id, c_name.module_id) as module_id,
         e.*
-    EXCEPT
+        except
         (module_id, module_name)
-    FROM {{ ref('int_firebase__native_event') }} e
-        LEFT JOIN mapping_module_name_and_id c_name on c_name.module_name = e.module_name
-    WHERE
+    from {{ ref('int_firebase__native_event') }} e
+        left join mapping_module_name_and_id c_name on c_name.module_name = e.module_name
+    where
         event_name in (
             'ConsultOffer',
             "ConsultVenue",
@@ -54,16 +54,17 @@ firebase_events AS (
             'ModuleDisplayedOnHomePage',
             "CategoryBlockClicked"
         )
-        AND (
+        and (
             origin = 'home'
-            OR origin = 'exclusivity'
-            OR origin IS NULL
+            or origin = 'exclusivity'
+            or origin is NULL
         )
-        AND event_date >= DATE_SUB('{{ ds() }}', interval 3 day)
-        AND event_date <= DATE_ADD('{{ ds() }}', interval 3 day)
+        and event_date >= date_sub('{{ ds() }}', interval 3 day)
+        and event_date <= date_add('{{ ds() }}', interval 3 day)
 ),
-firebase_module_events AS (
-    SELECT
+
+firebase_module_events as (
+    select
         e.event_date,
         e.event_timestamp,
         -- user
@@ -76,67 +77,78 @@ firebase_module_events AS (
         e.event_name,
         e.offer_id,
         e.booking_id,
-        CASE WHEN entries.content_type = "recommendation" THEN e.reco_call_id ELSE NULL END AS call_id,
+        case when entries.content_type = "recommendation" then e.reco_call_id else NULL end as call_id,
         -- modules
         entries.title as module_name,
         entries.content_type,
         e.module_id,
         -- take last seen home_id
-        COALESCE(
+        coalesce(
             e.entry_id,
-            LAST_VALUE(e.entry_id IGNORE NULLS) OVER (
-                PARTITION BY user_id,
-                session_id
-                ORDER BY
-                    event_timestamp RANGE BETWEEN UNBOUNDED PRECEDING
-                    AND CURRENT ROW
+            last_value(e.entry_id ignore nulls) over (
+                partition by
+                    user_id,
+                    session_id
+                order by
+                    event_timestamp
+                range between unbounded preceding
+                and current row
             ),
-            FIRST_VALUE(e.entry_id IGNORE NULLS) OVER (
-                PARTITION BY user_id,
-                session_id
-                ORDER BY
-                    event_timestamp RANGE BETWEEN CURRENT ROW
-                    AND UNBOUNDED FOLLOWING
+            first_value(e.entry_id ignore nulls) over (
+                partition by
+                    user_id,
+                    session_id
+                order by
+                    event_timestamp
+                range between current row
+                and unbounded following
             ),
-            LAST_VALUE(e.entry_id IGNORE NULLS) OVER (
-                PARTITION BY module_id
-                ORDER BY
-                    event_date RANGE BETWEEN UNBOUNDED PRECEDING
-                    AND CURRENT ROW
+            last_value(e.entry_id ignore nulls) over (
+                partition by module_id
+                order by
+                    event_date
+                range between unbounded preceding
+                and current row
             )
-        ) AS home_id,
+        ) as home_id,
         -- take last seen module_id
-        COALESCE(
+        coalesce(
             module_index,
-            LAST_VALUE(module_index IGNORE NULLS) OVER (
-                PARTITION BY user_id,
-                session_id,
-                module_id
-                ORDER BY
-                    event_timestamp RANGE BETWEEN UNBOUNDED PRECEDING
-                    AND CURRENT ROW
+            last_value(module_index ignore nulls) over (
+                partition by
+                    user_id,
+                    session_id,
+                    module_id
+                order by
+                    event_timestamp
+                range between unbounded preceding
+                and current row
             ),
-            FIRST_VALUE(module_index IGNORE NULLS) OVER (
-                PARTITION BY user_id,
-                session_id,
-                module_id
-                ORDER BY
-                    event_timestamp RANGE BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
+            first_value(module_index ignore nulls) over (
+                partition by
+                    user_id,
+                    session_id,
+                    module_id
+                order by
+                    event_timestamp
+                range between current row and unbounded following
             ),
-            LAST_VALUE(module_index IGNORE NULLS) OVER (
-                PARTITION BY module_id
-                ORDER BY
-                    event_date RANGE BETWEEN UNBOUNDED PRECEDING
-                    AND CURRENT ROW
+            last_value(module_index ignore nulls) over (
+                partition by module_id
+                order by
+                    event_date
+                range between unbounded preceding
+                and current row
             )
-        ) AS module_index
-    FROM
+        ) as module_index
+    from
         firebase_events e
-        LEFT JOIN  {{ ref("int_contentful__entry") }} entries on entries.id = e.module_id
+        left join {{ ref("int_contentful__entry") }} entries on entries.id = e.module_id
 ),
+
 -- conversion can be Booking or Favorite
-firebase_conversion_step AS (
-    SELECT
+firebase_conversion_step as (
+    select
         conv.event_date,
         conv.event_timestamp,
         conv.session_id,
@@ -155,45 +167,46 @@ firebase_conversion_step AS (
         event.home_id,
         event.module_index,
         -- take last click event
-        ROW_NUMBER() OVER (
-            PARTITION BY conv.session_id,
-            conv.user_id,
-            conv.offer_id,
-            conv.event_name
-            ORDER BY
-                event.event_timestamp DESC
+        row_number() over (
+            partition by
+                conv.session_id,
+                conv.user_id,
+                conv.offer_id,
+                conv.event_name
+            order by
+                event.event_timestamp desc
         ) as rank
-    FROM {{ ref('int_firebase__native_event') }} conv
-        INNER JOIN firebase_module_events event on event.unique_session_id = conv.unique_session_id
-        AND event.offer_id = conv.offer_id
-        AND event.user_id = conv.user_id -- conversion event after click event
-    WHERE
-        conv.event_name IN (
+    from {{ ref('int_firebase__native_event') }} conv
+        inner join firebase_module_events event on event.unique_session_id = conv.unique_session_id
+            and event.offer_id = conv.offer_id
+            and event.user_id = conv.user_id -- conversion event after click event
+    where
+        conv.event_name in (
             'BookingConfirmation',
             'HasAddedOfferToFavorites'
         )
-        AND conv.event_timestamp > event.event_timestamp
-        AND conv.event_date >= DATE_SUB(date('{{ ds() }}'), interval 3 day)
-        AND conv.event_date <= DATE_ADD(date('{{ ds() }}'), interval 3 day)
+        and conv.event_timestamp > event.event_timestamp
+        and conv.event_date >= date_sub(date('{{ ds() }}'), interval 3 day)
+        and conv.event_date <= date_add(date('{{ ds() }}'), interval 3 day)
 ),
-event_union AS (
-    SELECT
-        *
-    FROM
+
+event_union as (
+    select *
+    from
         firebase_module_events
-    UNION
-    ALL
-    SELECT
+    union
+    all
+    select
         *
-    EXCEPT
+        except
         (rank)
-    FROM
+    from
         firebase_conversion_step
     where
         rank = 1 -- only one conversion step per event_name
 )
 
-SELECT
+select
     e.event_date,
     e.event_timestamp,
     e.session_id,
@@ -203,18 +216,18 @@ SELECT
     e.call_id,
     e.platform,
     e.event_name,
-    CASE
-        WHEN event_name = "ModuleDisplayedOnHomePage" THEN "display"
-        WHEN event_name in (
-            "ConsultOffer",
-            "ConsultVenue",
-            "BusinessBlockClicked",
-            "ExclusivityBlockClicked"
-        ) THEN "click"
-        WHEN event_name in ("SeeMoreClicked") THEN "see_more_click"
-        WHEN event_name = "HasAddedOfferToFavorites" THEN "favorite"
-        WHEN event_name = "BookingConfirmation" THEN "booking"
-    END as event_type,
+    case
+        when event_name = "ModuleDisplayedOnHomePage" then "display"
+        when event_name in (
+                "ConsultOffer",
+                "ConsultVenue",
+                "BusinessBlockClicked",
+                "ExclusivityBlockClicked"
+            ) then "click"
+        when event_name in ("SeeMoreClicked") then "see_more_click"
+        when event_name = "HasAddedOfferToFavorites" then "favorite"
+        when event_name = "BookingConfirmation" then "booking"
+    end as event_type,
     e.offer_id,
     e.booking_id,
     e.module_name,
@@ -222,10 +235,10 @@ SELECT
     e.module_id,
     e.home_id,
     e.module_index
-FROM
+from
     event_union e
 
 {% if is_incremental() %}
 -- recalculate latest day's data + previous
-where date(event_date) BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 1 DAY) and DATE('{{ ds() }}')
+    where date(event_date) between date_sub(date('{{ ds() }}'), interval 1 day) and date('{{ ds() }}')
 {% endif %}

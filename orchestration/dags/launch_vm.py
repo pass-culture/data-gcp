@@ -1,15 +1,16 @@
 from datetime import datetime, timedelta
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python_operator import BranchPythonOperator
 from common.config import DAG_FOLDER, ENV_SHORT_NAME
 from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
     StartGCEOperator,
 )
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python_operator import BranchPythonOperator
 
 DATE = "{{ ts_nodash }}"
 
@@ -18,7 +19,7 @@ dag_config = {
     "BASE_PLAYGROUND_DIR": "data-gcp/jobs/playground_vm",
     "BASE_INSTALL_DIR": "data-gcp",
     "COMMAND_INSTALL_PLAYGROUND": "pip install -r requirements.txt --user",
-    "COMMAND_INSTALL_PROJECT": "NO_GCP_INIT=1 make clean_install",
+    "COMMAND_INSTALL_PROJECT": "NO_GCP_INIT=1 make install",
 }
 
 # Params
@@ -61,6 +62,8 @@ with DAG(
         "gpu_type": Param(default="nvidia-tesla-t4", type="string"),
         "keep_alive": Param(default=True, type="boolean"),
         "install_project": Param(default=True, type="boolean"),
+        "disk_size_gb": Param(default="100", type="string"),
+        "gce_network_type": Param(default="GCE", type="string"),
     },
 ) as dag:
 
@@ -83,6 +86,8 @@ with DAG(
         accelerator_types=[
             {"name": "{{ params.gpu_type }}", "count": "{{ params.gpu_count }}"}
         ],
+        gce_network_type="{{ params.gce_network_type }}",
+        disk_size_gb="{{ params.disk_size_gb }}",
     )
 
     branching_clone_task = BranchPythonOperator(

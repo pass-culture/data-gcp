@@ -1,28 +1,26 @@
 import json
-import pandas as pd
-from loguru import logger
-import tensorflow as tf
 
-from utils.metrics import (
-    compute_metrics,
-    get_actual_and_predicted,
-    compute_diversification_score,
-)
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import pandas as pd
+import tensorflow as tf
+from loguru import logger
+from sklearn.decomposition import PCA
+
+from two_towers_model.utils.constants import CONFIGS_PATH
 from utils.constants import (
-    RECOMMENDATION_NUMBER,
-    NUMBER_OF_PRESELECTED_OFFERS,
     EVALUATION_USER_NUMBER,
     EVALUATION_USER_NUMBER_DIVERSIFICATION,
     MODEL_DIR,
+    NUMBER_OF_PRESELECTED_OFFERS,
+    RECOMMENDATION_NUMBER,
 )
-from two_towers_model.utils.constants import CONFIGS_PATH
 from utils.data_collect_queries import read_from_gcs
-
-
-from sklearn.decomposition import PCA
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-
+from utils.metrics import (
+    compute_diversification_score,
+    compute_metrics,
+    get_actual_and_predicted,
+)
 
 k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
 
@@ -44,7 +42,7 @@ def evaluate(
             prediction_input_feature = features.get(
                 "input_prediction_feature", "user_id"
             )
-    except:
+    except Exception:
         logger.info("Config file not found: setting default configuration")
         prediction_input_feature = "user_id"
 
@@ -70,9 +68,7 @@ def evaluate(
             "user_id": str,
             "item_id": str,
         }
-    )[
-        test_columns
-    ]
+    )[test_columns]
     logger.info("Merge all...")
     positive_data_test = positive_data_test.merge(
         raw_data, on=["user_id", "item_id"], how="inner"

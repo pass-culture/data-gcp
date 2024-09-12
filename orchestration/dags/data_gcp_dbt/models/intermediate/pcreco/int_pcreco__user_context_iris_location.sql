@@ -7,23 +7,24 @@
     )
 ) }}
 
-SELECT
-  event_date,
-  user_id,
-  user_context.user_iris_id,
-  COUNT(DISTINCT reco_call_id) as total_displayed_modules,
-  COUNT(DISTINCT offer_id) as total_displayed_offers,
-FROM {{ ref("int_pcreco__displayed_offer_event")}} pso
-WHERE
-user_context.user_iris_id IS NOT NULL
-AND user_context.user_is_geolocated
-AND user_id != "-1"
+select
+    event_date,
+    user_id,
+    user_context.user_iris_id,
+    COUNT(distinct reco_call_id) as total_displayed_modules,
+    COUNT(distinct offer_id) as total_displayed_offers
+from {{ ref("int_pcreco__displayed_offer_event") }} pso
+where
+    user_context.user_iris_id is not NULL
+    and user_context.user_is_geolocated
+    and user_id != "-1"
 
-{% if is_incremental() %}
-AND event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
-{% endif %}
+    {% if is_incremental() %}
+        and event_date between DATE_SUB(DATE('{{ ds() }}'), interval 3 day) and DATE('{{ ds() }}')
+    {% endif %}
 
 
-GROUP BY event_date,
+group by
+    event_date,
     user_id,
     user_iris_id

@@ -1,5 +1,2 @@
-SELECT 
-    *
-FROM {{ source('raw', 'applicative_database_invoice_line') }}
-
-
+select *
+from {{ source('raw', 'applicative_database_invoice_line') }}

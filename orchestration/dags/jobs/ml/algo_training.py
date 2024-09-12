@@ -1,36 +1,36 @@
-from datetime import datetime
-from datetime import timedelta
+import json
+from datetime import datetime, timedelta
 
+from common import macros
+from common.alerts import task_fail_slack_alert
+from common.config import (
+    BIGQUERY_RAW_DATASET,
+    BIGQUERY_TMP_DATASET,
+    DAG_FOLDER,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+    MLFLOW_BUCKET_NAME,
+    MLFLOW_URL,
+    SLACK_CONN_PASSWORD,
+)
+from common.operators.gce import (
+    CloneRepositoryGCEOperator,
+    SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
+)
+from common.utils import get_airflow_schedule
+from dependencies.ml.utils import create_algo_training_slack_block
+from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
+
+from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
-from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
-from common.utils import get_airflow_schedule
-from airflow import DAG
-from common import macros
-from common.alerts import task_fail_slack_alert
-from common.config import (
-    GCP_PROJECT_ID,
-    DAG_FOLDER,
-    ENV_SHORT_NAME,
-    MLFLOW_BUCKET_NAME,
-    SLACK_CONN_ID,
-    SLACK_CONN_PASSWORD,
-    MLFLOW_URL,
-    BIGQUERY_TMP_DATASET,
-    BIGQUERY_RAW_DATASET,
-)
-from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
-)
-from dependencies.ml.utils import create_algo_training_slack_block
-from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
+from airflow.providers.http.operators.http import HttpOperator
 
 DATE = "{{ ts_nodash }}"
 
@@ -170,13 +170,13 @@ with DAG(
         )
 
     store_data["bookings"] = BigQueryInsertJobOperator(
-        task_id=f"store_bookings_data",
+        task_id="store_bookings_data",
         configuration={
             "extract": {
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
                     "datasetId": BIGQUERY_RAW_DATASET,
-                    "tableId": f"training_data_bookings",
+                    "tableId": "training_data_bookings",
                 },
                 "compression": None,
                 "destinationUris": f"{dag_config['STORAGE_PATH']}/bookings/data-*.parquet",
@@ -216,15 +216,19 @@ with DAG(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
 
-    send_slack_notif_success = SlackWebhookOperator(
+    send_slack_notif_success = HttpOperator(
         task_id="send_slack_notif_success",
-        http_conn_id=SLACK_CONN_ID,
-        webhook_token=SLACK_CONN_PASSWORD,
-        blocks=create_algo_training_slack_block(
-            dag_config["EXPERIMENT_NAME"], MLFLOW_URL, ENV_SHORT_NAME
+        method="POST",
+        http_conn_id="http_slack_default",
+        endpoint=f"{SLACK_CONN_PASSWORD}",
+        data=json.dumps(
+            {
+                "blocks": create_algo_training_slack_block(
+                    dag_config["EXPERIMENT_NAME"], MLFLOW_URL, ENV_SHORT_NAME
+                )
+            }
         ),
-        username=f"Algo trainer robot - {ENV_SHORT_NAME}",
-        icon_emoji=":robot_face:",
+        headers={"Content-Type": "application/json"},
     )
 
     (

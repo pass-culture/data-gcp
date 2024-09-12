@@ -1,12 +1,12 @@
-import json
 import typing as t
 
 import joblib
-import numpy as np
 from docarray import Document
 from lancedb import connect
 from sentence_transformers import SentenceTransformer
-from constants import N_PROBES, REFINE_FACTOR, NUM_RESULTS, MODEL_TYPE as config
+
+from constants import MODEL_TYPE as config
+from constants import N_PROBES, NUM_RESULTS, REFINE_FACTOR
 
 DETAIL_COLUMNS = [
     "item_id",
@@ -16,10 +16,13 @@ DEFAULTS = ["_distance"]
 
 
 class SemanticSpace:
-    def __init__(self, model_path: str) -> None:
+    def __init__(self, model_path: str, reduction: bool) -> None:
         self.uri = model_path
         self._encoder = SentenceTransformer(config["transformer"])
-        self.hnne_reducer = joblib.load(config["reducer_pickle_path"])
+        if reduction:
+            self.hnne_reducer = joblib.load(config["reducer_pickle_path"])
+        else:
+            self.hnne_reducer = None
 
         db = connect(self.uri)
         self.table = db.open_table("items")
@@ -43,6 +46,6 @@ class SemanticSpace:
             .metric(similarity_metric)
             .limit(n)
             .to_pandas(flatten=True)
-            .rename(columns={"item_id": "item_id_candidate"})
+            .rename(columns={"item_id": "item_id_synchro"})
         )
         return results

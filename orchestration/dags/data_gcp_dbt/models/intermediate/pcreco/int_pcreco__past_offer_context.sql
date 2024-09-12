@@ -8,83 +8,82 @@
     )
 ) }}
 
-WITH export_table AS (
-    SELECT
+with export_table as (
+    select
         pso.id,
         date(date) as event_date,
         date as event_created_at,
         call_id as reco_call_id,
-        CASE
-            WHEN context like "similar_offer:%" THEN "similar_offer"
-            WHEN context like "recommendation_fallback:%" THEN "similar_offer"
-            WHEN context like "recommendation:%" THEN "recommendation"
-        ELSE "unknown"
-        END as playlist_origin,
+        case
+            when context like "similar_offer:%" then "similar_offer"
+            when context like "recommendation_fallback:%" then "similar_offer"
+            when context like "recommendation:%" then "recommendation"
+            else "unknown"
+        end as playlist_origin,
         context,
         round(offer_order) as offer_display_order,
-        CAST(user_id AS STRING) as user_id,
-        CAST(offer_id as STRING) as offer_id,
-        offer_item_ids.item_id as item_id,
-        STRUCT(
-          user_deposit_remaining_credit,
-          user_bookings_count,
-          user_clicks_count,
-          user_favorites_count,
-          user_iris_id,
-          ii.centroid as user_iris_centroid,
-          user_is_geolocated
+        cast(user_id as STRING) as user_id,
+        cast(offer_id as STRING) as offer_id,
+        int_applicative__offer_item_id.item_id as item_id,
+        struct(
+            user_deposit_remaining_credit,
+            user_bookings_count,
+            user_clicks_count,
+            user_favorites_count,
+            user_iris_id,
+            ii.centroid as user_iris_centroid,
+            user_is_geolocated
         ) as user_context,
-        STRUCT(
-          offer_user_distance,
-          offer_is_geolocated,
-          offer_stock_price,
-          offer_creation_date,
-          offer_stock_beginning_date,
-          offer_category,
-          offer_subcategory_id,
-          offer_booking_number,
-          offer_item_score,
-          offer_item_rank,
-          REPLACE(JSON_EXTRACT(offer_extra_data, "$.offer_ranking_origin"),  '"', '') as offer_ranking_origin,
-          CAST(JSON_EXTRACT(offer_extra_data, "$.offer_ranking_score") AS FLOAT64) as offer_ranking_score,
-          CAST(JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_7_days")  AS FLOAT64) as offer_booking_number_last_7_days,
-          CAST(JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_14_days")  AS FLOAT64) as offer_booking_number_last_14_days,
-          CAST(JSON_EXTRACT(offer_extra_data, "$.offer_booking_number_last_28_days") AS FLOAT64) as offer_booking_number_last_28_days,
-          CAST(JSON_EXTRACT(offer_extra_data, "$.offer_semantic_emb_mean") AS FLOAT64) as offer_semantic_emb_mean
+        struct(
+            offer_user_distance,
+            offer_is_geolocated,
+            offer_stock_price,
+            offer_creation_date,
+            offer_stock_beginning_date,
+            offer_category,
+            offer_subcategory_id,
+            offer_booking_number,
+            offer_item_score,
+            offer_item_rank,
+            replace(json_extract(offer_extra_data, "$.offer_ranking_origin"), '"', '') as offer_ranking_origin,
+            cast(json_extract(offer_extra_data, "$.offer_ranking_score") as FLOAT64) as offer_ranking_score,
+            cast(json_extract(offer_extra_data, "$.offer_booking_number_last_7_days") as FLOAT64) as offer_booking_number_last_7_days,
+            cast(json_extract(offer_extra_data, "$.offer_booking_number_last_14_days") as FLOAT64) as offer_booking_number_last_14_days,
+            cast(json_extract(offer_extra_data, "$.offer_booking_number_last_28_days") as FLOAT64) as offer_booking_number_last_28_days,
+            cast(json_extract(offer_extra_data, "$.offer_semantic_emb_mean") as FLOAT64) as offer_semantic_emb_mean
         ) as offer_context,
-        REPLACE(JSON_EXTRACT(context_extra_data, "$.offer_origin_id"),  '"', '') as offer_origin_id,
-        REPLACE(JSON_EXTRACT(context_extra_data, "$.model_params.name"),  '"', '') as model_params_name,
-        REPLACE(JSON_EXTRACT(context_extra_data, "$.model_params.description"),  '"', '') as model_params_description,
-        REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.retrievals[0].model_display_name"),  '"', '') as scorer_retrieval_model_display_name,
-        REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.retrievals[0].model_version"),  '"', '') as scorer_retrieval_model_version,
-        REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.ranking.model_display_name"),  '"', '') as scorer_ranking_model_display_name,
-        REPLACE(JSON_EXTRACT(context_extra_data, "$.scorer.ranking.model_version"),  '"', '') as scorer_ranking_model_version,
-    FROM
-       {{ source('raw', 'past_offer_context') }} pso
-    INNER JOIN {{ ref('offer_item_ids') }} offer_item_ids USING(offer_id)
-    LEFT JOIN {{ source('clean', 'iris_france') }}  ii on ii.id = pso.user_iris_id
+        replace(json_extract(context_extra_data, "$.offer_origin_id"), '"', '') as offer_origin_id,
+        replace(json_extract(context_extra_data, "$.model_params.name"), '"', '') as model_params_name,
+        replace(json_extract(context_extra_data, "$.model_params.description"), '"', '') as model_params_description,
+        replace(json_extract(context_extra_data, "$.scorer.retrievals[0].model_display_name"), '"', '') as scorer_retrieval_model_display_name,
+        replace(json_extract(context_extra_data, "$.scorer.retrievals[0].model_version"), '"', '') as scorer_retrieval_model_version,
+        replace(json_extract(context_extra_data, "$.scorer.ranking.model_display_name"), '"', '') as scorer_ranking_model_display_name,
+        replace(json_extract(context_extra_data, "$.scorer.ranking.model_version"), '"', '') as scorer_ranking_model_version
+    from
+        {{ source('raw', 'past_offer_context') }} pso
+        inner join {{ ref('int_applicative__offer_item_id') }} int_applicative__offer_item_id using (offer_id)
+        left join {{ ref('int_seed__iris_france') }} ii on ii.id = pso.user_iris_id
 
     {% if is_incremental() %}
-        WHERE import_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 3 DAY) and DATE('{{ ds() }}')
+        where import_date between date_sub(date('{{ ds() }}'), interval 3 day) and date('{{ ds() }}')
     {% else %}
         WHERE import_date >= date_sub(DATE('{{ ds() }}'), INTERVAL 60 DAY)
     {% endif %}
 
-    QUALIFY ROW_NUMBER() OVER (
-        PARTITION BY
+    qualify row_number() over (
+        partition by
             user_id,
             call_id,
             offer_id
-        ORDER BY
-            date DESC
-        ) = 1
+        order by
+            date desc
+    ) = 1
 )
 
-SELECT
-    et.*,
-FROM export_table et
+select et.*
+from export_table et
 {% if is_incremental() %}
-    WHERE et.event_date BETWEEN date_sub(DATE('{{ ds() }}'), INTERVAL 2 DAY) and DATE('{{ ds() }}')
+    where et.event_date between date_sub(date('{{ ds() }}'), interval 2 day) and date('{{ ds() }}')
 {% else %}
     WHERE et.event_date >= date_sub(DATE('{{ ds() }}'), INTERVAL 60 DAY)
 {% endif %}

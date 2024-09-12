@@ -2,9 +2,9 @@ config:
   send_anonymous_usage_stats: False
 
 data_gcp_dbt:
-  target: dev
+  target: local
   outputs:
-    dev:
+    local:
       dataset: tmp_dev
       job_execution_timeout_seconds: 300
       job_retries: 1
@@ -14,9 +14,19 @@ data_gcp_dbt:
       project: passculture-data-ehp
       threads: 1
       type: bigquery
+    dev:
+      dataset: tmp_dev
+      job_execution_timeout_seconds: 1800
+      job_retries: 1
+      location: europe-west1
+      method: oauth
+      priority: interactive
+      project: passculture-data-ehp
+      threads: 1
+      type: bigquery
     stg:
       dataset: tmp_stg
-      job_execution_timeout_seconds: 300
+      job_execution_timeout_seconds: 1200
       job_retries: 1
       location: europe-west1
       method: oauth
@@ -78,7 +88,7 @@ CI:
   outputs:
     dev:
       dataset: ci_dev
-      job_execution_timeout_seconds: 300
+      job_execution_timeout_seconds: 600
       job_retries: 1
       location: europe-west1
       method: oauth
@@ -88,7 +98,7 @@ CI:
       type: bigquery
     stg:
       dataset: ci_stg
-      job_execution_timeout_seconds: 300
+      job_execution_timeout_seconds: 600
       job_retries: 1
       location: europe-west1
       method: oauth

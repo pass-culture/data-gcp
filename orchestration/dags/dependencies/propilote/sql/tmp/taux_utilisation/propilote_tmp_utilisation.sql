@@ -10,12 +10,12 @@ infos_users AS (
         , deposit.deposit_type
         , DATE_TRUNC(deposit_creation_date,MONTH) AS date_deposit
         , DATE_TRUNC(deposit_expiration_date,MONTH) AS date_expiration
-        , first_booking_date 
+        , user.first_booking_date
         , user.user_department_code
         , user.user_region_name
         , rd.academy_name
-    FROM `{{ bigquery_analytics_dataset }}.enriched_deposit_data` as deposit
-    JOIN `{{ bigquery_analytics_dataset }}.enriched_user_data` as user ON deposit.user_id = user.user_id
+    FROM `{{ bigquery_analytics_dataset }}.global_deposit` as deposit
+    JOIN `{{ bigquery_analytics_dataset }}.global_user` as user ON deposit.user_id = user.user_id
     LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
         on  user.user_department_code = rd.num_dep 
 )

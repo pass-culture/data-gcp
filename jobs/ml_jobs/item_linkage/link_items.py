@@ -1,21 +1,17 @@
 import multiprocessing as mp
-import uuid
+import re
+import string
+import unicodedata
 from typing import List, Tuple
 
-import networkx as nx
 import pandas as pd
 import recordlinkage
 import typer
-from utils.gcs_utils import upload_parquet
-from constants import (
-    FEATURES,
-    MATCHES_REQUIRED,
-    UNKNOWN_NAME,
-    UNKNOWN_DESCRIPTION,
-    UNKNOWN_PERFORMER,
-    INITIAL_LINK_ID,
-)
+from loguru import logger
 
+from constants import FEATURES, MATCHES_REQUIRED
+from utils.common import read_parquet_files_from_gcs_directory
+from utils.gcs_utils import upload_parquet
 
 app = typer.Typer()
 
@@ -33,7 +29,8 @@ def setup_matching() -> recordlinkage.Compare:
             feature_name,
             feature_name,
             method=comparison_params["method"],
-            threshold=comparison_params["threshold"],
+            threshold=None,
+            missing_value=comparison_params["missing_value"],
             label=feature_name,
         )
     return comparator
@@ -60,10 +57,29 @@ def get_links(
         pd.DataFrame: Dataframe containing matched pairs.
     """
     features = comparator.compute(candidate_links, table_left, table_right)
-    matches = features[features.sum(axis=1) >= MATCHES_REQUIRED].reset_index()
-    matches = matches.rename(columns={"level_0": "index_1", "level_1": "index_2"})
-    matches["index_1"] = matches["index_1"].apply(lambda x: f"S-{x}")
-    matches["index_2"] = matches["index_2"].apply(lambda x: f"C-{x}")
+
+    def threshold(value, thr=0.70):
+        if value < thr:
+            return 0
+        else:
+            return 1
+
+    features_w_threshold = features.assign(
+        offer_name=lambda df: df["offer_name"].apply(
+            threshold, thr=FEATURES["offer_name"]["threshold"]
+        ),
+    )
+    matches = features[
+        features_w_threshold.sum(axis=1) >= MATCHES_REQUIRED
+    ].reset_index()
+    matches = matches.rename(
+        columns={
+            "level_0": "index_1",
+            "level_1": "index_2",
+            "offer_name": "offer_name_score",
+        }
+    )
+    matches
     return matches
 
 
@@ -109,49 +125,6 @@ def multiprocess_matching(
     return matches
 
 
-def link_matches_by_graph(
-    df_matches: pd.DataFrame, sources: pd.DataFrame, candidates: pd.DataFrame
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Link matches using graph connected components.
-
-    Args:
-        df_matches (pd.DataFrame): Dataframe containing matched pairs.
-        sources (pd.DataFrame): Left table for comparison.
-        candidates (pd.DataFrame): Right table for comparison.
-
-    Returns:
-        Tuple[pd.DataFrame, pd.DataFrame]: Updated left and right tables with link IDs.
-    """
-    linkage_graph = nx.from_pandas_edgelist(
-        df_matches, source="index_1", target="index_2", edge_attr=True
-    )
-
-    sources = sources.assign(link_id=INITIAL_LINK_ID)
-    candidates = candidates.assign(link_id=INITIAL_LINK_ID)
-
-    connected_ids = list(nx.connected_components(linkage_graph))
-    for clusters in range(nx.number_connected_components(linkage_graph)):
-        link_id = str(uuid.uuid4())[:8]
-        for index in connected_ids[clusters]:
-            if "S" in index:
-                index = int(index[2:])
-                sources.at[index, "link_id"] = str(link_id)
-            else:
-                index = int(index[2:])
-                candidates.at[index, "link_id"] = str(link_id)
-
-    candidates = candidates.assign(
-        link_count=candidates.groupby("link_id")["link_id"].transform("count")
-    )
-    item_linkage = candidates.loc[lambda df: df.link_id != "NC"]
-    return item_linkage
-
-
-def format_series(series: pd.Series, na_value: str):
-    return series.replace("", None).str.lower().fillna(value=na_value)
-
-
 def clean_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
     """
     Clean the catalog dataframe.
@@ -163,20 +136,38 @@ def clean_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: Cleaned catalog dataframe.
     """
     catalog = catalog.assign(
-        performer=lambda df: df["performer"]
-        .replace("", None)
-        .str.lower()
-        .fillna(value="unkn"),
-        offer_name=lambda df: df["offer_name"]
-        .replace("", None)
-        .str.lower()
-        .fillna(value="no_name"),
+        performer=lambda df: df["performer"].replace("", None).str.lower(),
+        offer_name=lambda df: df["offer_name"].replace("", None).str.lower(),
         offer_description=lambda df: df["offer_description"]
         .replace("", None)
-        .str.lower()
-        .fillna(value="no_des"),
+        .str.lower(),
     )
     return catalog
+
+
+def remove_accents(input_str):
+    """
+    Removes accents from a given string.
+    """
+    nfkd_form = unicodedata.normalize("NFKD", input_str)
+    return "".join([c for c in nfkd_form if not unicodedata.combining(c)])
+
+
+def preprocess_string(s):
+    # Lowercasing
+    if s is None:
+        return s
+    s = s.lower()
+
+    # Trimming
+    s = s.strip()
+
+    # Removing punctuation and special characters
+    s = re.sub(r"[^\w\s]", "", s)
+
+    s = re.sub(f"[{string.punctuation}]", "", s)
+
+    return remove_accents(s)
 
 
 def prepare_tables(
@@ -189,28 +180,42 @@ def prepare_tables(
 
     Args:
         indexer (recordlinkage.Index): Indexer for candidate generation.
-        df (pd.DataFrame): Dataframe containing linkage candidates.
+        linkage_candidates (pd.DataFrame): Dataframe containing linkage candidates.
         catalog (pd.DataFrame): Catalog dataframe with item details.
 
     Returns:
         Tuple[pd.MultiIndex, pd.DataFrame, pd.DataFrame]: Candidate links, cleaned left and right tables.
     """
-    sources = (
-        linkage_candidates[["item_id", "candidates_id"]]
-        .drop_duplicates()
-        .reset_index(drop=True)
-    )
-    candidates = (
+    item_singletons = (
         linkage_candidates[["item_id_candidate", "candidates_id"]]
         .drop_duplicates()
         .reset_index(drop=True)
     )
-    candidate_links = indexer.index(sources, candidates)
-    sources_clean = enriched_items(sources, catalog_clean, "item_id")
-    candidates_clean = enriched_items(
-        candidates, catalog_clean, "item_id_candidate"
-    ).drop(columns=["item_id_candidate"])
-    return candidate_links, sources_clean, candidates_clean
+    item_synchro_retrived = (
+        linkage_candidates[["item_id_synchro", "candidates_id", "_distance"]]
+        .drop_duplicates()
+        .reset_index(drop=True)
+    )
+    candidate_links = indexer.index(item_singletons, item_synchro_retrived)
+    item_singletons_clean = enriched_items(
+        item_singletons, catalog_clean, "item_id_candidate"
+    )
+    item_singletons_clean["offer_name"] = item_singletons_clean["offer_name"].astype(
+        str
+    )
+    item_singletons_clean = item_singletons_clean.assign(
+        offer_name=lambda df: df["offer_name"].apply(preprocess_string),
+    )
+    item_synchro_retrived_clean = enriched_items(
+        item_synchro_retrived, catalog_clean, "item_id_synchro"
+    )
+    item_synchro_retrived_clean["offer_name"] = item_synchro_retrived_clean[
+        "offer_name"
+    ].astype(str)
+    item_synchro_retrived_clean = item_synchro_retrived_clean.assign(
+        offer_name=lambda df: df["offer_name"].apply(preprocess_string),
+    )
+    return candidate_links, item_singletons_clean, item_synchro_retrived_clean
 
 
 def enriched_items(items_df, catalog, key):
@@ -218,61 +223,132 @@ def enriched_items(items_df, catalog, key):
     return items_df
 
 
+def postprocess_matching(matches, item_singletons_clean, item_synchro_clean):
+    matches["index_1"] = matches["index_1"].astype(str)
+    matches["index_2"] = matches["index_2"].astype(str)
+
+    item_singletons_clean = item_singletons_clean.reset_index().rename(
+        columns={"index": "index_1"}
+    )
+    item_singletons_clean["index_1"] = item_singletons_clean["index_1"].astype(str)
+
+    item_synchro_clean = item_synchro_clean.reset_index().rename(
+        columns={"index": "index_2"}
+    )
+    item_synchro_clean["index_2"] = item_synchro_clean["index_2"].astype(str)
+
+    item_singletons_renamed = item_singletons_clean.rename(
+        columns={
+            "offer_name": "offer_name_candidates",
+            "performer": "performer_candidate",
+            "offer_description": "offer_description_candidates",
+            "offer_subcategory_id": "offer_subcategory_id_candidates",
+        }
+    ).drop(columns=["item_id", "candidates_id"])
+
+    item_synchro_renamed = item_synchro_clean.rename(
+        columns={
+            "offer_name": "offer_name_synchro",
+            "performer": "performer_synchro",
+            "offer_description": "offer_description_synchro",
+            "offer_subcategory_id": "offer_subcategory_id_synchro",
+        }
+    ).drop(columns=["item_id", "candidates_id"])
+
+    linkage = pd.merge(
+        matches,
+        item_synchro_renamed,
+        left_on="index_2",
+        right_on="index_2",
+        how="left",
+    )
+    linkage_final = pd.merge(
+        linkage,
+        item_singletons_renamed,
+        left_on="index_1",
+        right_on="index_1",
+        how="left",
+    )
+    linkage_final = linkage_final.drop(columns=["index_1", "index_2"])
+    mask = (
+        linkage_final["offer_subcategory_id_candidates"]
+        == linkage_final["offer_subcategory_id_synchro"]
+    )
+
+    # Filter the DataFrame using the mask
+    filtered_linkage_final = linkage_final[mask]
+    filtered_linkage_final["link_id"] = filtered_linkage_final["item_id_synchro"].apply(
+        hash
+    )
+    return filtered_linkage_final
+
+
 @app.command()
 def main(
-    source_gcs_path: str = typer.Option("metadata/vector", help="GCS bucket path"),
-    sources_table_name: str = typer.Option(
-        "item_sources_data", help="Catalog table name"
-    ),
-    candidates_table_name: str = typer.Option(
-        "item_candidates_data", help="Catalog table name"
-    ),
-    input_table_name: str = typer.Option(
-        "linkage_candidates_items", help="Input table name"
-    ),
-    output_table_name: str = typer.Option(
-        "linkage_final_items", help="Output table name"
-    ),
+    input_sources_path: str = typer.Option(default=...),
+    input_candidates_path: str = typer.Option(default=...),
+    linkage_candidates_path: str = typer.Option(default=...),
+    output_path: str = typer.Option(default=..., help="Output GCS path"),
 ) -> None:
     """
     Main function to perform record linkage and upload the results to GCS.
 
     Args:
-        source_gcs_path (str): GCS path to the source data.
-        catalog_table_name (str): Name of the catalog table.
-        input_table_name (str): Name of the input table with linkage candidates.
-        output_table_name (str): Name of the output table to save the final linked items.
+        input_sources_path (str): Path to the sources data.
+        input_candidates_path (str): Path to the candidates data.
+        linkage_candidates_path (str): Path to the linkage candidates data.
+        output_path (str): Output GCS path.
     """
+    logger.info("Starting item linkage job")
+    logger.info("Setup indexer..")
     indexer_per_candidates = recordlinkage.index.Block(on="candidates_id")
-    sources_clean = pd.read_parquet(
-        f"{source_gcs_path}/{sources_table_name}",
-        columns=["item_id", "performer", "offer_name", "offer_description"],
+    logger.info("Reading data..")
+    item_synchro = read_parquet_files_from_gcs_directory(
+        input_sources_path,
+        columns=[
+            "item_id",
+            "performer",
+            "offer_name",
+            "offer_description",
+            "offer_subcategory_id",
+        ],
     ).pipe(clean_catalog)
-    candidates_clean = pd.read_parquet(
-        f"{source_gcs_path}/{candidates_table_name}",
-        columns=["item_id", "performer", "offer_name", "offer_description"],
-    ).pipe(clean_catalog)
-    catalog_clean = pd.concat([sources_clean, candidates_clean]).drop_duplicates()
-    linkage_candidates = pd.read_parquet(
-        f"{source_gcs_path}/{input_table_name}.parquet"
-    )
-    candidate_links, sources_df, candidates_df = prepare_tables(
-        indexer_per_candidates, linkage_candidates, catalog_clean
-    )
 
+    item_singletons = read_parquet_files_from_gcs_directory(
+        input_candidates_path,
+        columns=[
+            "item_id",
+            "performer",
+            "offer_name",
+            "offer_description",
+            "offer_subcategory_id",
+        ],
+    ).pipe(clean_catalog)
+
+    catalog_clean = pd.concat([item_synchro, item_singletons]).drop_duplicates()
+    linkage_candidates = pd.read_parquet(linkage_candidates_path)
+    logger.info("Preparing tables..")
+    (
+        candidate_links,
+        item_singletons_clean,
+        item_synchro_retrived_clean,
+    ) = prepare_tables(indexer_per_candidates, linkage_candidates, catalog_clean)
+
+    logger.info("Setting up matching..")
     comparator = setup_matching()
-
+    logger.info("Multiprocess matching..")
     matches = multiprocess_matching(
-        candidate_links, comparator, sources_df, candidates_df
+        candidate_links, comparator, item_singletons_clean, item_synchro_retrived_clean
     )
-
-    item_linkage = link_matches_by_graph(matches, sources_df, candidates_df)
-
+    logger.info("Postprocessing matching..")
+    linkage_final = postprocess_matching(
+        matches, item_singletons_clean, item_synchro_retrived_clean
+    )
+    logger.info("Uploading results..")
     upload_parquet(
-        dataframe=item_linkage,
-        gcs_path=f"{source_gcs_path}/{output_table_name}.parquet",
+        dataframe=linkage_final,
+        gcs_path=output_path,
     )
-    item_linkage.to_gbq("sandbox_prod.item_linkage", if_exists="replace")
 
 
 if __name__ == "__main__":

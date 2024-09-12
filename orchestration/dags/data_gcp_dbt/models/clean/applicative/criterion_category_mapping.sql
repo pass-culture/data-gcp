@@ -1,3 +1,2 @@
-SELECT
-    *
-FROM {{ source('raw', 'applicative_database_criterion_category_mapping') }}
+select *
+from {{ source('raw', 'applicative_database_criterion_category_mapping') }}

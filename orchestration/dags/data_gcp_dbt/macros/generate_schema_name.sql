@@ -1,31 +1,21 @@
 {% macro generate_schema_name(custom_schema_name, node=none) -%}
 
     {%- set default_schema = target.dataset -%}
-    {%- if target.profile_name == "CI" -%}
+    {%- set is_orchestrated = target.name in ["prod", "stg", "dev"] and target.profile_name != "sandbox" -%}
 
+    {%- if target.profile_name == "CI" or target.name == "local" -%}
         {{ default_schema }}
-        
-    {%- elif custom_schema_name and  ((target.name == "prod" and target.profile_name != "sandbox") or target.name == "stg") -%}
-    
-        {{ custom_schema_name | trim }}
 
-    {%- elif 'intermediate' in node.path and ((target.name == "prod" and target.profile_name != "sandbox") or target.name == "stg") -%}
-        {%- set model_parts = node.name.split('__') -%}
-         {%- set schema_name = model_parts[0] ~ "_" ~ target.name -%}
-            {{ schema_name }}
+    {%- elif is_orchestrated -%}
+        {{ custom_schema_name | trim if custom_schema_name else (
+            node.name.split('__')[0] ~ "_" ~ target.name if 'intermediate' in node.path or 'machine_learning' in node.path
+        ) }}
 
-    {%- elif 'machine_learning' in node.path and ((target.name == "prod" and target.profile_name != "sandbox") or target.name == "stg") -%}
-        {%- set model_parts = node.name.split('__') -%}
-            {%- set schema_name = model_parts[0] ~ "_" ~ target.name -%}
-                {{ schema_name }}
-
-    {%- elif custom_schema_name is none or target.name == "dev" or target.profile_name == "sandbox" -%}
-
-        {{ default_schema }}
+    {%- elif target.profile_name == "sandbox" -%}
+        {{ custom_schema_name | trim if custom_schema_name else default_schema }}
 
     {%- else -%}
-
-    {{ custom_schema_name | trim }}
+        {{ custom_schema_name | trim }}
 
     {%- endif -%}
 

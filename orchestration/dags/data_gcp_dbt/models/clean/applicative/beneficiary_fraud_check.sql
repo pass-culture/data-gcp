@@ -1,3 +1,2 @@
-SELECT 
-    *
-FROM {{ source('raw', 'applicative_database_beneficiary_fraud_check') }}
+select *
+from {{ ref('int_applicative__beneficiary_fraud_check') }}

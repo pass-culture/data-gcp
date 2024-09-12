@@ -1,6 +1,7 @@
 import typer
-from core.utils import CLICKHOUSE_CLIENT
+
 from core.fs import load_sql
+from core.utils import CLICKHOUSE_CLIENT
 
 
 def run(

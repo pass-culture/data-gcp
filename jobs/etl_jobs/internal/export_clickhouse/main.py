@@ -1,8 +1,10 @@
-import typer
 from datetime import datetime
+
+import typer
+
 from core.update import (
-    create_tmp_schema,
     create_intermediate_schema,
+    create_tmp_schema,
     update_incremental,
     update_overwrite,
 )
@@ -29,7 +31,6 @@ def main_update(mode, source_gs_path, table_name, dataset_name, update_date):
             dataset_name=dataset_name,
             table_name=table_name,
             tmp_table_name=tmp_table_name,
-            update_date=update_date,
         )
     elif mode == "overwrite":
         update_overwrite(

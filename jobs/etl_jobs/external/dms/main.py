@@ -1,11 +1,11 @@
-import requests
-import urllib3
-import time
 import json
-import typer
-import pandas as pd
-from dms_query import DMS_QUERY
+import time
+
 import gcsfs
+import requests
+import typer
+
+from dms_query import DMS_QUERY
 from utils import API_URL, access_secret_data, demarches_jeunes, demarches_pro
 
 
@@ -86,9 +86,13 @@ def get_query_body(demarche_id, end_cursor, updated_since):
 def run_query(query_body, gcp_project_id):
     time.sleep(0.2)
     DMS_TOKEN = access_secret_data(gcp_project_id, "token_dms")
-    headers = {"Authorization": "Bearer " + DMS_TOKEN}
+    headers = {
+        "Authorization": f"Bearer {DMS_TOKEN}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
     request = requests.post(
-        API_URL, json=query_body, headers=headers, verify=False
+        API_URL, json=query_body, headers=headers, verify=False, timeout=120
     )  # warn: SSL verification disabled
     if request.status_code == 200:
         return request.json()

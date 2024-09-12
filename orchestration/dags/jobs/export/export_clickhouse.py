@@ -1,37 +1,39 @@
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.task_group import TaskGroup
-from airflow.models import Param
+import datetime
+
+from common import macros
+from common.alerts import task_fail_slack_alert
+from common.config import (
+    BIGQUERY_TMP_DATASET,
+    DAG_FOLDER,
+    DATA_GCS_BUCKET_NAME,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+)
 from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
 )
+from common.utils import get_airflow_schedule, waiting_operator
+from dependencies.export_clickhouse.export_clickhouse import (
+    TABLES_CONFIGS,
+    VIEWS_CONFIGS,
+)
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
-import datetime
-from common.config import (
-    GCP_PROJECT_ID,
-    DAG_FOLDER,
-    ENV_SHORT_NAME,
-    DATA_GCS_BUCKET_NAME,
-    BIGQUERY_TMP_DATASET,
-)
-
-from common.utils import get_airflow_schedule, waiting_operator
-from common.alerts import task_fail_slack_alert
-from dependencies.export_clickhouse.export_clickhouse import (
-    TABLES_CONFIGS,
-    VIEWS_CONFIGS,
-)
-from common import macros
+from airflow.utils.task_group import TaskGroup
 
 GCE_INSTANCE = f"export-clickhouse-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/clickhouse"
+GCP_STORAGE_URI = "https://storage.googleapis.com"
 dag_config = {
     "PROJECT_NAME": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
@@ -58,7 +60,11 @@ gce_params = {
 
 dags = {
     "daily": {
-        "schedule_interval": {"prod": "0 1 * * *", "dev": None, "stg": None},
+        "schedule_interval": {
+            "prod": "0 1 * * *",
+            "stg": "0 1 * * *",
+            "dev": "0 1 * * *",
+        },
         "yyyymmdd": "{{ yyyymmdd(ds) }}",
         "default_dag_args": {
             "start_date": datetime.datetime(2024, 3, 1),
@@ -73,7 +79,7 @@ dags = {
 def choose_branch(**context):
     run_id = context["dag_run"].run_id
     if run_id.startswith("scheduled__"):
-        return [f"waiting_dbt_group.waiting_dbt_jobs"]
+        return ["waiting_group.waiting_branch"]
     return ["shunt_manual"]
 
 
@@ -114,7 +120,6 @@ for dag_name, dag_params in dags.items():
             ),
         },
     ) as dag:
-
         branching = BranchPythonOperator(
             task_id="branching",
             python_callable=choose_branch,
@@ -122,10 +127,14 @@ for dag_name, dag_params in dags.items():
             dag=dag,
         )
 
-        with TaskGroup(
-            group_id="waiting_dbt_group", dag=dag
-        ) as wait_for_dbt_daily_tasks:
-            wait = DummyOperator(task_id="waiting_dbt_jobs", dag=dag)
+        with TaskGroup(group_id="waiting_group", dag=dag) as wait_for_daily_tasks:
+            wait = DummyOperator(task_id="waiting_branch", dag=dag)
+
+            wait_for_firebase = waiting_operator(
+                dag_id="import_intraday_firebase_data", dag=dag
+            )
+
+            wait.set_downstream(wait_for_firebase)
 
             for table_config in TABLES_CONFIGS:
                 waiting_task = waiting_operator(
@@ -133,21 +142,22 @@ for dag_name, dag_params in dags.items():
                     "dbt_run_dag",
                     f"data_transformation.{table_config['dbt_model']}",
                 )
-                wait.set_downstream(waiting_task)
+                wait_for_firebase.set_downstream(waiting_task)
 
         shunt = DummyOperator(task_id="shunt_manual", dag=dag)
         join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
 
         gce_instance_start = StartGCEOperator(
-            task_id=f"gce_start_task",
+            task_id="gce_start_task",
             preemptible=False,
             instance_name="{{ params.instance_name }}",
             instance_type="{{ params.instance_type }}",
             retries=2,
+            gce_network_type="GKE",
         )
 
         fetch_code = CloneRepositoryGCEOperator(
-            task_id=f"fetch_code",
+            task_id="fetch_code",
             instance_name="{{ params.instance_name }}",
             python_version="3.10",
             command="{{ params.branch }}",
@@ -155,7 +165,7 @@ for dag_name, dag_params in dags.items():
         )
 
         install_dependencies = SSHGCEOperator(
-            task_id=f"install_dependencies",
+            task_id="install_dependencies",
             instance_name="{{ params.instance_name }}",
             base_dir=dag_config["BASE_DIR"],
             command="pip install -r requirements.txt --user",
@@ -166,7 +176,7 @@ for dag_name, dag_params in dags.items():
         for table_config in TABLES_CONFIGS:
             table_name = table_config["bigquery_table_name"]
             dataset_name = table_config["bigquery_dataset_name"]
-            partition_key = table_config.get("partition_key", "partition_date")
+            partition_key = table_config["partition_key"]
             clickhouse_table_name = table_config["clickhouse_table_name"]
             clickhouse_dataset_name = table_config["clickhouse_dataset_name"]
 
@@ -212,12 +222,16 @@ for dag_name, dag_params in dags.items():
             )
 
             clickhouse_export = SSHGCEOperator(
+                dag=dag,
                 task_id=f"{clickhouse_table_name}_export",
                 instance_name="{{ params.instance_name }}",
                 base_dir=dag_config["BASE_DIR"],
                 command="python main.py "
-                f"--source-gs-path https://storage.googleapis.com/{storage_path}/data-*.parquet --table-name {clickhouse_table_name} --dataset-name {clickhouse_dataset_name} --update-date {_ds} --mode {mode}",
-                dag=dag,
+                f"--source-gs-path {GCP_STORAGE_URI}/{storage_path}/data-*.parquet "
+                f"--table-name {clickhouse_table_name} "
+                f"--dataset-name {clickhouse_dataset_name} "
+                f"--update-date {_ds} "
+                f"--mode {mode} ",
             )
             export_task >> export_bq >> clickhouse_export
             out_tables_tasks.append(clickhouse_export)
@@ -236,12 +250,12 @@ for dag_name, dag_params in dags.items():
             views_refresh.append(view_task)
 
         gce_instance_stop = StopGCEOperator(
-            task_id=f"gce_stop_task", instance_name="{{ params.instance_name }}"
+            task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
         )
 
         (
             branching
-            >> [shunt, wait_for_dbt_daily_tasks]
+            >> [shunt, wait_for_daily_tasks]
             >> join
             >> gce_instance_start
             >> fetch_code

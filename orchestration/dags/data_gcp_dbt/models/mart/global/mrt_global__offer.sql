@@ -1,4 +1,4 @@
-SELECT
+select
     offer_id,
     offer_product_id,
     offer_product_humanized_id,
@@ -64,15 +64,18 @@ SELECT
     venue_academy_name,
     venue_density_label,
     venue_macro_density_label,
+    venue_density_level,
     venue_label,
     partner_id,
     offerer_id,
+    venue_managing_offerer_id,
     offerer_name,
     venue_type_label,
     venue_iris_internal_id,
     offerer_address_id,
     offer_publication_date,
     is_future_scheduled
-FROM {{ ref('int_global__offer') }} AS o
-WHERE TRUE
-    AND offer_validation = 'APPROVED'
+from {{ ref('int_global__offer') }} as o
+where TRUE
+    and offer_validation = 'APPROVED'
+    and venue_id is not NULL

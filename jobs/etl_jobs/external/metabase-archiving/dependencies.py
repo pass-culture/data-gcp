@@ -5,11 +5,10 @@ import typer
 
 from metabase_api import MetabaseAPI
 from utils import (
-    PROJECT_NAME,
-    INT_METABASE_DATASET,
     ENVIRONMENT_SHORT_NAME,
-    ANALYTICS_DATASET,
+    INT_METABASE_DATASET,
     METABASE_API_USERNAME,
+    PROJECT_NAME,
     access_secret_data,
 )
 
@@ -45,7 +44,6 @@ def get_query_dependencies(card_list, tables_df):
     dependencies_other = {}
 
     for card in card_list:
-
         card_id = card["id"]
         card_owner = card["creator"]["email"]
         card_name = card["name"]
@@ -104,17 +102,12 @@ def get_table_infos(metabase):
         table_infos[i] = info
         i += 1
 
-    tables_df = pd.DataFrame.from_dict(table_infos, orient="index").query(
-        f"schema == '{ANALYTICS_DATASET}'"
-    )
-
-    return tables_df
+    return pd.DataFrame.from_dict(table_infos, orient="index")
 
 
 def get_native_dependencies(cards_list, tables_df):
-    regex = (
-        f"from {ANALYTICS_DATASET}.[a-zA-Z0-9_]+|join {ANALYTICS_DATASET}.[a-zA-Z0-9_]+"
-    )
+    regex = r"from\s+[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+|join\s+[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+"
+
     i = 0
     dependencies_native = {}
     for card in cards_list:

@@ -1,8 +1,9 @@
+from common.config import GCP_PROJECT_ID
+
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCreateEmptyTableOperator,
     BigQueryInsertJobOperator,
 )
-from common.config import GCP_PROJECT_ID
 
 
 # TODO: rename table in task_id

@@ -1,17 +1,11 @@
-from google.auth.transport.requests import Request
-from google.oauth2 import id_token
-from airflow.sensors.external_task import ExternalTaskSensor
-import base64
-import hashlib
-
 from common.config import (
     GCP_PROJECT_ID,
-    MLFLOW_URL,
-    ENV_SHORT_NAME,
-    FAILED_STATES,
-    ALLOWED_STATES,
     LOCAL_ENV,
 )
+from google.auth.transport.requests import Request
+from google.oauth2 import id_token
+
+from airflow.sensors.external_task import ExternalTaskSensor
 
 
 def getting_service_account_token(function_name):
@@ -66,15 +60,21 @@ def get_dependencies(tables_config):
     return dependencies
 
 
-def waiting_operator(dag, dag_id, external_task_id="end"):
+def waiting_operator(
+    dag,
+    dag_id,
+    external_task_id="end",
+    allowed_states=["success"],
+    failed_states=["failed", "upstream_failed", "skipped"],
+):
     return ExternalTaskSensor(
         task_id=f"wait_for_{dag_id}_{external_task_id}",
         external_dag_id=dag_id,
         external_task_id=external_task_id,
         check_existence=True,
         mode="reschedule",
-        allowed_states=ALLOWED_STATES,
-        failed_states=FAILED_STATES,
+        allowed_states=allowed_states,
+        failed_states=failed_states,
         email_on_retry=False,
         dag=dag,
     )
@@ -175,3 +175,11 @@ def get_airflow_schedule(schedule_interval, local_env=LOCAL_ENV):
         return None
     else:
         return schedule_interval
+
+
+def decode_output(task_id, key, **kwargs):
+    ti = kwargs["ti"]
+    output = ti.xcom_pull(task_ids=task_id, key=key)
+    decoded_output = output.decode("utf-8")
+
+    return decoded_output

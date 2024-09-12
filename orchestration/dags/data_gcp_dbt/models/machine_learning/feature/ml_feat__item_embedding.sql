@@ -1,20 +1,20 @@
+select
+    ie.item_id,
+    ie.image_embedding,
+    ie.name_embedding,
+    ie.description_embedding,
+    ie.semantic_content_embedding,
+    ie.semantic_content_hybrid_embedding,
+    ie.label_embedding,
+    ie.label_hybrid_embedding,
+    ie.extraction_date,
+    ie.extraction_datetime
+from
+    {{ source('ml_preproc', 'item_embedding_extraction') }} ie
+    inner join {{ ref("item_metadata") }} im on ie.item_id = im.item_id
 
-
-SELECT
-    item_id,
-    image_embedding,
-    name_embedding,
-    description_embedding,
-    semantic_content_embedding,
-    semantic_content_hybrid_embedding,
-    label_embedding,
-    label_hybrid_embedding,
-    extraction_date,
-    extraction_datetime,
-FROM
-    {{ source('ml_preproc', 'item_embedding_extraction') }}
-QUALIFY ROW_NUMBER() OVER (
-    PARTITION BY item_id
-    ORDER by
-        extraction_datetime DESC
+qualify ROW_NUMBER() over (
+    partition by ie.item_id
+    order by
+        ie.extraction_datetime desc
 ) = 1

@@ -1,18 +1,18 @@
-import os
 from datetime import datetime, timedelta
 
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.models import Param
+from common.alerts import task_fail_slack_alert
+from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.gce import (
-    StartGCEOperator,
-    StopGCEOperator,
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
+    StartGCEOperator,
+    StopGCEOperator,
 )
-from common.alerts import task_fail_slack_alert
-from common.config import GCP_PROJECT_ID, GCE_ZONE, ENV_SHORT_NAME
 from common.utils import get_airflow_schedule
+
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
 
 GCE_INSTANCE = f"import-api-referentials-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/import_api_referentials"
@@ -68,20 +68,20 @@ with DAG(
     )
 
     subcategories_job = SSHGCEOperator(
-        task_id=f"import_subcategories",
+        task_id="import_subcategories",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
-        python main.py --job_type=subcategories --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}        
+        python main.py --job_type=subcategories --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}
     """,
     )
 
     types_job = SSHGCEOperator(
-        task_id=f"import_types",
+        task_id="import_types",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=f"""
-        python main.py --job_type=types --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}        
+        python main.py --job_type=types --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}
     """,
     )
 

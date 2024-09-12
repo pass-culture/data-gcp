@@ -1,8 +1,7 @@
 import os
-from google.auth.exceptions import DefaultCredentialsError
-from google.cloud import secretmanager, bigquery
 
-import time
+from google.auth.exceptions import DefaultCredentialsError
+from google.cloud import bigquery, secretmanager
 
 BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET")
 ENV_SHORT_NAME = os.environ.get("ENVIRONMENT_SHORT_NAME")
@@ -35,6 +34,9 @@ def bigquery_load_job(
             bigquery.SchemaField(column, _type) for column, _type in schema.items()
         ],
         autodetect=False,
+        schema_update_options=[
+            bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION,
+        ],
     )
     job = bigquery_client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()

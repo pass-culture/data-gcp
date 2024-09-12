@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.GITHUB_ENV_NAME }}
     defaults:
-     run: 
+     run:
        working-directory: "./orchestration/"
     steps:
       - uses: actions/checkout@v4
@@ -78,7 +78,7 @@ jobs:
           DBT_PROFILES_DIR: "."
         run: |
           export PYTHONPATH=$PYTHONPATH:./dags
-          dbt deps 
+          dbt deps
       - name: "deploy dbt dependencies"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:

@@ -29,7 +29,7 @@ select
 from {{ ref('diversification_raw') }} as diversification_raw
     left join {{ ref('mrt_global__booking') }} as booking
         on booking.booking_id = diversification_raw.booking_id
-    left join {{ ref('offer_metadata') }} as offer_metadata
+    left join {{ ref('int_applicative__offer_metadata') }} as offer_metadata
         on booking.offer_id = offer_metadata.offer_id
     left join {{ ref('mrt_global__user') }} as user
         on diversification_raw.user_id = user.user_id

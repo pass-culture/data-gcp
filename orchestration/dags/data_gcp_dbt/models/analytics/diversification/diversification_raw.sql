@@ -42,7 +42,7 @@ offer_metadata as (
         gtl_label_level_2,
         gtl_label_level_3,
         gtl_label_level_4
-    from {{ ref('offer_metadata') }}
+    from {{ ref('int_applicative__offer_metadata') }}
 ),
 
 base_diversification as (

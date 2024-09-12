@@ -87,6 +87,14 @@ select
     o.isbn,
     o.titelive_gtl_id,
     o.offerer_address_id,
+    case
+        when subcategories.category_id in ("MUSIQUE_LIVE", "MUSIQUE_ENREGISTREE") and o.musictype != '' then o.musictype
+        when subcategories.category_id = "SPECTACLE" and o.showtype != '' then o.showtype
+    end as offer_type_id,
+    case
+        when subcategories.category_id in ("MUSIQUE_LIVE", "MUSIQUE_ENREGISTREE") and o.musictype != '' then o.musicsubtype
+        when subcategories.category_id = "SPECTACLE" and  o.showtype != '' then o.showsubtype
+    end as offer_sub_type_id,
     case when (
             so.is_bookable
             and o.offer_is_active
@@ -114,6 +122,7 @@ select
     subcategories.is_digital_deposit as digital_goods,
     subcategories.is_event as event,
     subcategories.category_id as offer_category_id,
+    subcategories.search_group_name,
     isbn_rayon_editor.rayon,
     isbn_rayon_editor.book_editor,
     ii.item_id,

@@ -32,8 +32,8 @@ bookings as (
 offer_metadata as (
     select distinct
         offer_id,
-        subcategory_id,
-        category_id,
+        offer_subcategory_id,
+        offer_category_id,
         offer_type_label,
         offer_type_domain,
         gtl_type,
@@ -59,8 +59,8 @@ base_diversification as (
         bookings.offer_id,
         bookings.venue_type_label,
         is_free_offer,
-        offer_metadata.category_id as category,
-        offer_metadata.subcategory_id as sub_category,
+        offer_metadata.offer_category_id as category,
+        offer_metadata.offer_subcategory_id as sub_category,
         offer_metadata.offer_type_domain,
         offer_metadata.gtl_type,
         offer_metadata.titelive_gtl_id,

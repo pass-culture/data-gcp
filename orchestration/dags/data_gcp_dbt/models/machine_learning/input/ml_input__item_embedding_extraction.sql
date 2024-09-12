@@ -12,8 +12,8 @@ with last_extraction as (
 
 select
     im.item_id,
-    im.subcategory_id,
-    im.category_id,
+    im.offer_subcategory_id as subcategory_id,
+    im.offer_category_id as category_id,
     im.offer_name,
     im.offer_description,
     im.image_url as image,

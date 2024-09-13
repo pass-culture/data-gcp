@@ -30,6 +30,7 @@ educational_institution_student_headcount AS (
 
 SELECT
     ei.institution_id,
+    ei.educational_institution_id,
     ei.institution_id AS institution_external_id,
     ei.institution_name AS institution_name,
     ei.ministry,

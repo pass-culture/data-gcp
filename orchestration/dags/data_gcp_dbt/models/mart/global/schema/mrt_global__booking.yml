@@ -5,7 +5,7 @@ models:
       - name: booking_id
         description: ''
         data_type: STRING
-        tests:
+        data_tests:
           - not_null
           - unique
       - name: booking_creation_date
@@ -38,7 +38,7 @@ models:
       - name: user_id
         description: ''
         data_type: STRING
-        tests:
+        data_tests:
           - not_null
       - name: deposit_id
         description: ''
@@ -64,12 +64,12 @@ models:
       - name: stock_id
         description: ''
         data_type: STRING
-        tests:
+        data_tests:
           - not_null
       - name: offer_id
         description: ''
         data_type: STRING
-        tests:
+        data_tests:
           - not_null
       - name: offer_name
         description: ''
@@ -86,7 +86,7 @@ models:
       - name: venue_id
         description: ''
         data_type: STRING
-        # tests:
+        # data_tests:
         #   - not_null
       - name: venue_postal_code
         description: ''
@@ -115,7 +115,7 @@ models:
       - name: offerer_id
         description: ''
         data_type: STRING
-        tests:
+        data_tests:
           - not_null
       - name: offerer_name
         description: ''

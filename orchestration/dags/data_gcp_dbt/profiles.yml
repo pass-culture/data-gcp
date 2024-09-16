@@ -1,5 +1,3 @@
-config:
-  send_anonymous_usage_stats: False
 
 data_gcp_dbt:
   target: local

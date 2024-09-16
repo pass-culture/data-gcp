@@ -120,7 +120,7 @@ select
     tagged_partners.partner_type,
     rp.total_reimbursement_points
 from {{ ref('int_applicative__offerer') }} as ofr
-    left join {{ source('analytics', 'region_department') }} as region_department on ofr.offerer_department_code = region_department.num_dep
+    left join {{ source('seed', 'region_department') }} as region_department on ofr.offerer_department_code = region_department.num_dep
     left join {{ source('clean', 'siren_data') }} as siren_data on siren_data.siren = ofr.offerer_siren
     left join
         {{ source('seed', 'siren_data_labels') }}

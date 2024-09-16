@@ -155,7 +155,7 @@ sources:
       - name: adage
       - name: linked_offers
 
-      - name: region_department # TODO migrate this table to seed
+
   - name: seed
     schema: seed_{{ var('ENV_SHORT_NAME') }}
     tables:
@@ -173,6 +173,7 @@ sources:
       - name: qpv
       - name: qpi_mapping
       - name: rural_city_type_data
+      - name: region_department
       - name: siren_data_labels
       - name: zrr
   - name: ml_preproc

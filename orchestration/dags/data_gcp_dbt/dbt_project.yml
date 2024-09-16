@@ -4,6 +4,7 @@ config-version: 2
 
 flags:
   send_anonymous_usage_stats: False
+  partial_parse: false
 
 # This setting configures which "profile" dbt uses for this project.
 profile: 'data_gcp_dbt'

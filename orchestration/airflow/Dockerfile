@@ -6,12 +6,11 @@ ARG GCLOUD_VERSION=google-cloud-cli-411.0.0-linux-x86_64.tar.gz
 # install airflow deps
 WORKDIR ${AIRFLOW_USER_HOME}
 COPY airflow/orchestration-requirements.txt /opt/requirements.txt
-RUN pip3 install --upgrade pip
-RUN pip3 install --no-cache-dir -r /opt/requirements.txt
+RUN uv pip install --no-cache-dir -r /opt/requirements.txt
 
 # Install DBT dependencies
-COPY dags/dbt-requirements.txt /opt/dbt-requirements.txt
-RUN pip3 install --no-cache-dir -r /opt/dbt-requirements.txt
+COPY dags/data_gcp_dbt/dbt-requirements.txt /opt/dbt-requirements.txt
+RUN uv pip install --no-cache-dir -r /opt/dbt-requirements.txt
 
 # install gcloud
 USER root

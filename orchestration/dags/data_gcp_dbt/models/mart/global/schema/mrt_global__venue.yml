@@ -6,7 +6,7 @@ models:
       - name: venue_id
         description: ''
         data_type: STRING
-        tests:
+        data_tests:
           - not_null
           - unique
       - name: venue_name
@@ -39,7 +39,7 @@ models:
       - name: venue_siret
         description: ''
         data_type: STRING
-        tests:
+        data_tests:
           - unique
       - name: venue_is_virtual
         description: ''
@@ -47,7 +47,7 @@ models:
       - name: venue_managing_offerer_id
         description: ''
         data_type: STRING
-        tests:
+        data_tests:
           - not_null
       - name: venue_creation_date
         description: ''
@@ -250,7 +250,7 @@ models:
       - name: offerer_id
         description: ''
         data_type: STRING
-        tests:
+        data_tests:
           - not_null
       - name: offerer_name
         description: ''
@@ -279,7 +279,7 @@ models:
       - name: partner_id
         description: ''
         data_type: STRING
-        tests:
+        data_tests:
           - not_null
       - name: venue_iris_internal_id
         description: ''

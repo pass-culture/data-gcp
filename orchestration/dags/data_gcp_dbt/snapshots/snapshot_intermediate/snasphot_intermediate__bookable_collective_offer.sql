@@ -8,9 +8,8 @@
     }}
 
     SELECT
-        collective_offer_id,
-        collective_offer_is_bookable,
-        current_timestamp() AS snapshot_at
+        collective_offer_id
     FROM {{ ref('int_global__collective_offer') }}
+    WHERE collective_offer_is_bookable
 
 {% endsnapshot %}

@@ -4,17 +4,16 @@ models:
   - name: mrt_native__event
     columns:
       - name: event_name
-        tests:
+        data_tests:
           - not_null:
               where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
       - name: user_pseudo_id
-        tests:
+        data_tests:
           - not_null:
               where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
       - name: booking_id
-        tests:
+        data_tests:
           - relationships:
               to: ref("int_global__booking")
               field: booking_id
               where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
-              

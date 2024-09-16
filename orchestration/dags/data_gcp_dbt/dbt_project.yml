@@ -2,6 +2,9 @@ name: 'data_gcp_dbt'
 version: '1.0.0'
 config-version: 2
 
+flags:
+  send_anonymous_usage_stats: False
+
 # This setting configures which "profile" dbt uses for this project.
 profile: 'data_gcp_dbt'
 
@@ -14,8 +17,6 @@ test-paths: [ "tests" ]
 seed-paths: [ "seeds" ]
 macro-paths: [ "macros" ]
 snapshot-paths: [ "snapshots" ]
-
-target-path: "{{ env_var('DBT_TARGET_PATH', 'target') }}"
 
 # If you wish to write dbt artifacts to a custom directory, please use the --target-path CLI flag or DBT_TARGET_PATH env var instead.
 packages-install-path: "{{ env_var('DBT_TARGET_PATH', 'target') }}/dbt_packages"
@@ -91,14 +92,16 @@ seeds:
   +schema: seeds
   +docs:
     node_color: "#000000"
+
 snapshots:
   +target_schema: snapshot_{{ target.name }}
   +docs:
     show: false
   data_gcp_dbt:
-    applicative:
+    snapshot_applicative:
       tags: applicative_history
-tests:
+
+data_tests:
   +store_failures: true  # store failures for all tests
   +severity: "{{ env_var('CI_SEVERITY', 'warn') }}" # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.
   +docs:

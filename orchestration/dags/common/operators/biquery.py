@@ -1,4 +1,8 @@
-from common.config import GCP_PROJECT_ID
+from common.config import (
+    APPLICATIVE_EXTERNAL_CONNECTION_ID,
+    GCP_PROJECT_ID,
+)
+from common.utils import one_line_query
 
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCreateEmptyTableOperator,
@@ -45,4 +49,26 @@ def bigquery_view_task(dag, table, job_params, extra_params={}, exists_ok=True):
         params=dict(job_params.get("params", {}), **extra_params),
         dag=dag,
         exists_ok=exists_ok,
+    )
+
+
+def bigquery_federated_query_task(dag, task_id, job_params):
+    return BigQueryInsertJobOperator(
+        task_id=task_id,
+        configuration={
+            "query": {
+                "query": f"""SELECT * FROM EXTERNAL_QUERY('{APPLICATIVE_EXTERNAL_CONNECTION_ID}', ''' {one_line_query(job_params['sql'])} ''')""",
+                "useLegacySql": False,
+                "destinationTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": job_params["destination_dataset"],
+                    "tableId": job_params["destination_table"],
+                },
+                "writeDisposition": job_params.get(
+                    "write_disposition", "WRITE_TRUNCATE"
+                ),
+            }
+        },
+        params=dict(job_params.get("params", {})),
+        dag=dag,
     )

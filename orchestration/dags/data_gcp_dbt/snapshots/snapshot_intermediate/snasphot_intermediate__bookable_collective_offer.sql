@@ -4,6 +4,7 @@
           unique_key='collective_offer_id',
           strategy='check',
           check_cols=['collective_offer_is_bookable'],
+          invalidate_hard_deletes=true
         )
     }}
 

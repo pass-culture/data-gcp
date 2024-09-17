@@ -9,7 +9,6 @@ SELECT
     , "bookingEmail" as booking_email
     , "isActive" as offer_is_active
     , "name" as offer_name
-    , "description" as offer_description
     , "url" as offer_url
     , "durationMinutes" as offer_duration_minutes
     , "isNational" as offer_is_national

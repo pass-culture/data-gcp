@@ -5,7 +5,37 @@ from common.config import (
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 
+from airflow.models import DagRun
 from airflow.sensors.external_task import ExternalTaskSensor
+from airflow.utils.db import provide_session
+
+
+@provide_session
+def get_last_execution_date(dag_id, upper_date_limit, session=None):
+    """
+    Query the last execution_date (logical date) of the specified external DAG.
+
+    :param dag_id: The DAG ID of the DAG to query.
+    :upper_date_limit: The upper bound on the execution_date (logical date) to search for.
+    :param session: The database session.
+    :return: The last execution_date (logical date) or None if no runs are found.
+    """
+    last_dag_run = (
+        session.query(DagRun)
+        .filter(DagRun.dag_id == dag_id)  # Filter by external DAG ID
+        .filter(
+            DagRun.execution_date < upper_date_limit
+        )  # Filter by upper bound on execution_date
+        .order_by(DagRun.logical_date.desc())  # Order by execution_date (latest first)
+        .first()  # Get the most recent DAG run
+    )
+
+    if last_dag_run:
+        return (
+            last_dag_run.logical_date
+        )  # Return the last execution_date (logical date) before upper_date_limit
+    else:
+        return None  # No runs found before upper_date_limit
 
 
 def getting_service_account_token(function_name):
@@ -62,14 +92,14 @@ def get_dependencies(tables_config):
 
 def waiting_operator(
     dag,
-    dag_id,
+    external_dag_id,
     external_task_id="end",
     allowed_states=["success"],
     failed_states=["failed", "upstream_failed", "skipped"],
 ):
     return ExternalTaskSensor(
-        task_id=f"wait_for_{dag_id}_{external_task_id}",
-        external_dag_id=dag_id,
+        task_id=f"wait_for_{external_dag_id}_{external_task_id}",
+        external_dag_id=external_dag_id,
         external_task_id=external_task_id,
         check_existence=True,
         mode="reschedule",
@@ -78,6 +108,45 @@ def waiting_operator(
         email_on_retry=False,
         dag=dag,
     )
+
+
+def delayed_waiting_operator(
+    dag,
+    external_dag_id,  # Now using external_dag_id directly
+    external_task_id="end",
+    allowed_states=["success"],
+    failed_states=["failed", "upstream_failed", "skipped"],
+    logical_date=None,  # The execution date of the current DAG run
+):
+    """
+    Function to wait for the last run of the external DAG with the same schedule_interval
+    that ran on the same day as the calling DAG's execution date.
+    """
+    # Ensure execution_date is provided
+    if logical_date is None:
+        raise ValueError("Execution date is required to find matching DAG runs.")
+
+    last_external_logical_date = get_last_execution_date(external_dag_id)
+    if last_external_logical_date is None:
+        raise ValueError(
+            f"No DAG runs found for DAG '{external_dag_id}' before '{logical_date}'."
+        )
+
+    execution_delta = logical_date - last_external_logical_date
+    # Create an ExternalTaskSensor to wait for the last DAG run's task completion
+    sensor = ExternalTaskSensor(
+        task_id=f"wait_for_{external_dag_id}_{external_task_id}",
+        external_dag_id=external_dag_id,
+        external_task_id=external_task_id,
+        execution_delta=execution_delta,
+        check_existence=True,
+        mode="reschedule",
+        allowed_states=allowed_states,
+        failed_states=failed_states,
+        dag=dag,
+    )
+
+    return sensor
 
 
 def depends_loop(

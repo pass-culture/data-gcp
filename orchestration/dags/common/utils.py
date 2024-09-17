@@ -92,14 +92,14 @@ def get_dependencies(tables_config):
 
 def waiting_operator(
     dag,
-    external_dag_id,
+    dag_id,
     external_task_id="end",
     allowed_states=["success"],
     failed_states=["failed", "upstream_failed", "skipped"],
 ):
     return ExternalTaskSensor(
-        task_id=f"wait_for_{external_dag_id}_{external_task_id}",
-        external_dag_id=external_dag_id,
+        task_id=f"wait_for_{dag_id}_{external_task_id}",
+        external_dag_id=dag_id,
         external_task_id=external_task_id,
         check_existence=True,
         mode="reschedule",

@@ -26,13 +26,15 @@ def get_last_execution_date(dag_id, upper_date_limit, session=None):
         .filter(
             DagRun.execution_date < upper_date_limit
         )  # Filter by upper bound on execution_date
-        .order_by(DagRun.logical_date.desc())  # Order by execution_date (latest first)
+        .order_by(
+            DagRun.execution_date.desc()
+        )  # Order by execution_date (latest first)
         .first()  # Get the most recent DAG run
     )
 
     if last_dag_run:
         return (
-            last_dag_run.logical_date
+            last_dag_run.execution_date
         )  # Return the last execution_date (logical date) before upper_date_limit
     else:
         return None  # No runs found before upper_date_limit
@@ -112,38 +114,28 @@ def waiting_operator(
 
 def delayed_waiting_operator(
     dag,
-    external_dag_id,  # Now using external_dag_id directly
+    external_dag_id,
     external_task_id="end",
     allowed_states=["success"],
     failed_states=["failed", "upstream_failed", "skipped"],
-    logical_date=None,  # The execution date of the current DAG run
+    **kwargs,
 ):
     """
-    Function to wait for the last run of the external DAG with the same schedule_interval
-    that ran on the same day as the calling DAG's execution date.
+    Function to wait for the last run of the external DAG that ran before the calling DAG's execution date.
     """
-    # Ensure execution_date is provided
-    if logical_date is None:
-        raise ValueError("Execution date is required to find matching DAG runs.")
-
-    last_external_logical_date = get_last_execution_date(external_dag_id)
-    if last_external_logical_date is None:
-        raise ValueError(
-            f"No DAG runs found for DAG '{external_dag_id}' before '{logical_date}'."
-        )
-
-    execution_delta = logical_date - last_external_logical_date
-    # Create an ExternalTaskSensor to wait for the last DAG run's task completion
     sensor = ExternalTaskSensor(
         task_id=f"wait_for_{external_dag_id}_{external_task_id}",
         external_dag_id=external_dag_id,
         external_task_id=external_task_id,
-        execution_delta=execution_delta,
+        execution_date_fn=lambda current_execution_date: get_last_execution_date(
+            external_dag_id, current_execution_date
+        ),  # Use execution_date_fn to dynamically compute the last execution date
         check_existence=True,
         mode="reschedule",
         allowed_states=allowed_states,
         failed_states=failed_states,
         dag=dag,
+        **kwargs,
     )
 
     return sensor

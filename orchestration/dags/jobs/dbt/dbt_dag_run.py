@@ -8,7 +8,10 @@ from common.config import (
     PATH_TO_DBT_TARGET,
 )
 from common.dbt.utils import dbt_dag_reconstruction, load_and_process_manifest
-from common.utils import get_airflow_schedule, waiting_operator
+from common.utils import (
+    delayed_waiting_operator,
+    get_airflow_schedule,
+)
 
 from airflow import DAG
 from airflow.models import Param
@@ -63,10 +66,23 @@ dag = DAG(
 start = DummyOperator(task_id="start", dag=dag)
 end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
 
-wait_for_raw = waiting_operator(dag=dag, dag_id="import_applicative_database")
-wait_for_firebase = waiting_operator(
+# wait_for_raw = waiting_operator(dag=dag, dag_id="import_applicative_database")
+# wait_for_firebase = waiting_operator(
+#     dag=dag,
+#     dag_id="import_intraday_firebase_data",
+#     external_task_id="end",
+#     allowed_states=["success", "upstream_failed"],
+#     failed_states=["failed"],
+# )
+wait_for_raw = delayed_waiting_operator(
     dag=dag,
-    dag_id="import_intraday_firebase_data",
+    logical_date="{{ logical_date }}",
+    extenal_dag_id="import_applicative_database",
+)
+wait_for_firebase = delayed_waiting_operator(
+    dag=dag,
+    logical_date="{{ logical_date }}",
+    external_dag_id="import_intraday_firebase_data",
     external_task_id="end",
     allowed_states=["success", "upstream_failed"],
     failed_states=["failed"],

@@ -11,6 +11,7 @@ from common.config import (
 )
 from common.dbt.utils import load_json_artifact, load_manifest
 from common.utils import get_airflow_schedule, waiting_operator
+from jobs.crons import schedule_dict
 
 from airflow import DAG
 from airflow.models import Param
@@ -32,13 +33,13 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
     "project_id": GCP_PROJECT_ID,
 }
-
+dag_id = "dbt_artifacts"
 dag = DAG(
-    "dbt_artifacts",
+    dag_id,
     default_args=default_args,
     catchup=False,
     description="Compute data quality metrics with package elementary and re_data and send Slack notifications reports",
-    schedule_interval=get_airflow_schedule("0 1 * * *"),
+    schedule_interval=get_airflow_schedule(schedule_dict[dag_id]),
     user_defined_macros=macros.default,
     params={
         "target": Param(

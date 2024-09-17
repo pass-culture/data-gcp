@@ -8,6 +8,7 @@ from common.config import (
     PATH_TO_DBT_TARGET,
 )
 from common.utils import get_airflow_schedule, waiting_operator
+from jobs.crons import schedule_dict
 
 from airflow import DAG
 from airflow.models import Param
@@ -21,14 +22,14 @@ default_args = {
     "retry_delay": datetime.timedelta(minutes=2),
     "project_id": GCP_PROJECT_ID,
 }
-
+dag_id = "dbt_weekly"
 dag = DAG(
-    "dbt_weekly",
+    dag_id,
     default_args=default_args,
     dagrun_timeout=datetime.timedelta(minutes=60),
     catchup=False,
     description="run weekly aggregated models",
-    schedule_interval=get_airflow_schedule("0 1 * * *"),
+    schedule_interval=get_airflow_schedule(schedule_dict[dag_id]),
     user_defined_macros=macros.default,
     params={
         "target": Param(

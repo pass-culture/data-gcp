@@ -11,6 +11,7 @@ from common.config import (
 )
 from common.utils import get_airflow_schedule, waiting_operator
 from dependencies.analytics.import_analytics import define_import_tables
+from jobs.crons import schedule_dict
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
@@ -25,12 +26,12 @@ default_dag_args = {
     "on_skipped_callback": analytics_fail_slack_alert,
     "project_id": GCP_PROJECT_ID,
 }
-
+dag_id = "import_analytics_v7"
 dag = DAG(
-    "import_analytics_v7",
+    dag_id,
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
-    schedule_interval=get_airflow_schedule("0 1 * * *"),
+    schedule_interval=get_airflow_schedule(schedule_dict[dag_id]),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=480),
     user_defined_macros=macros.default,

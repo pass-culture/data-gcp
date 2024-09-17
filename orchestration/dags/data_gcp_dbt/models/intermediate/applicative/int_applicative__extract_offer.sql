@@ -1,7 +1,7 @@
 with extra_data as (
     select
         offer.offer_id,
-        p.description AS offer_description,
+        COALESCE(p.description, o.offer_description) AS offer_description,
         COALESCE(product.product_extra_data, offer.offer_extra_data) as extra_data
     from {{ source('raw', 'applicative_database_offer') }} as offer
         left join {{ ref('int_applicative__product') }} as product on CAST(product.id as string) = offer.offer_product_id
@@ -9,7 +9,8 @@ with extra_data as (
 
 extracted_offers as (
     select
-        offer.*,
+        offer.* EXCEPT(offer.offer_description),
+        ued.offer_description,
         LOWER(TRIM(JSON_EXTRACT_SCALAR(extra_data, "$.author"), " ")) as author,
         LOWER(TRIM(JSON_EXTRACT_SCALAR(extra_data, "$.performer"), " ")) as performer,
         LOWER(TRIM(JSON_EXTRACT_SCALAR(extra_data, "$.musicType"), " ")) as musictype,

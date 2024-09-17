@@ -7,7 +7,7 @@ SELECT
     booking_email,
     offer_is_active,
     offer_name,
-    p.description AS offer_description,
+    COALESCE(p.description, o.offer_description) AS offer_description,
     offer_url,
     offer_duration_minutes,
     offer_extra_data,

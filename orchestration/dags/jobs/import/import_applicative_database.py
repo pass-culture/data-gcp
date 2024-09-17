@@ -81,6 +81,7 @@ end = DummyOperator(task_id="end", dag=dag)
 (
     start
     >> sequential_tasks_group
+    >> seq_end
     >> raw_parallel_operations_group
     >> parallel_end
     >> historical_applicative_group

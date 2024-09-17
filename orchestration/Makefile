@@ -1,5 +1,11 @@
 build_and_init:
+	docker-compose down -v;
 	docker-compose build --no-cache;
+	docker-compose up -d;
+
+rebuild:
+	docker-compose down -v;
+	docker-compose build;
 	docker-compose up -d;
 
 start:
@@ -7,11 +13,6 @@ start:
 
 stop:
 	docker-compose stop;
-
-rebuild:
-	docker-compose down -v; # This stops containers and removes volumes
-	docker-compose build;
-	docker-compose up -d;
 
 show_airflow_logs:
 	docker-compose logs -f;

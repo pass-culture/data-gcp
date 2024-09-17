@@ -38,7 +38,7 @@ services:
       test: [ "CMD", "pg_isready", "-U", "airflow" ]
       interval: 5s
       retries: 5
-    restart: always
+    restart: "no"
 
   airflow-webserver:
     build:
@@ -53,7 +53,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-    restart: always
+    restart: "no"
     image: airflow-custom-image:latest
 
   airflow-scheduler:
@@ -65,7 +65,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-    restart: always
+    restart: "no"
 
   airflow-init:
     image: airflow-custom-image:latest

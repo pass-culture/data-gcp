@@ -10,7 +10,6 @@
 
     SELECT
         offer_id
-        current_timestamp() AS snapshot_at
     FROM {{ ref('int_global__offer') }}
     WHERE offer_is_bookable
 

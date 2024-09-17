@@ -5,7 +5,39 @@ from common.config import (
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 
+from airflow.models import DagRun
 from airflow.sensors.external_task import ExternalTaskSensor
+from airflow.utils.db import provide_session
+
+
+@provide_session
+def get_last_execution_date(dag_id, upper_date_limit, session=None):
+    """
+    Query the last execution_date (logical date) of the specified external DAG.
+
+    :param dag_id: The DAG ID of the DAG to query.
+    :upper_date_limit: The upper bound on the execution_date (logical date) to search for.
+    :param session: The database session.
+    :return: The last execution_date (logical date) or None if no runs are found.
+    """
+    last_dag_run = (
+        session.query(DagRun)
+        .filter(DagRun.dag_id == dag_id)  # Filter by external DAG ID
+        .filter(
+            DagRun.execution_date < upper_date_limit
+        )  # Filter by upper bound on execution_date
+        .order_by(
+            DagRun.execution_date.desc()
+        )  # Order by execution_date (latest first)
+        .first()  # Get the most recent DAG run
+    )
+
+    if last_dag_run:
+        return (
+            last_dag_run.execution_date
+        )  # Return the last execution_date (logical date) before upper_date_limit
+    else:
+        return None  # No runs found before upper_date_limit
 
 
 def getting_service_account_token(function_name):
@@ -78,6 +110,50 @@ def waiting_operator(
         email_on_retry=False,
         dag=dag,
     )
+
+
+def delayed_waiting_operator(
+    dag,
+    external_dag_id,  # External DAG ID
+    external_task_id="end",
+    allowed_states=["success"],
+    failed_states=["failed", "upstream_failed", "skipped"],
+    lower_date_limit=None,  # Optional lower bound
+    **kwargs,
+):
+    """
+    Function to wait for the last run of the external DAG that ran between the lower and upper date limits.
+    If lower_date_limit is None, it defaults to the start of the same day as execution_date.
+    """
+
+    def compute_lower_date_limit(current_execution_date):
+        """
+        Returns the lower date limit, which is either the provided lower_date_limit or
+        the start of the same day as current_execution_date.
+        """
+        if lower_date_limit:
+            return lower_date_limit
+        # Default to the start of the current execution date's day
+        return current_execution_date.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    sensor = ExternalTaskSensor(
+        task_id=f"wait_for_{external_dag_id}_{external_task_id}",
+        external_dag_id=external_dag_id,
+        external_task_id=external_task_id,
+        execution_date_fn=lambda current_execution_date: get_last_execution_date(
+            external_dag_id,
+            upper_date_limit=current_execution_date,
+            lower_date_limit=compute_lower_date_limit(current_execution_date),
+        ),  # Use execution_date_fn to dynamically compute the last execution date
+        check_existence=True,
+        mode="reschedule",
+        allowed_states=allowed_states,
+        failed_states=failed_states,
+        dag=dag,
+        **kwargs,
+    )
+
+    return sensor
 
 
 def depends_loop(

@@ -6,7 +6,7 @@ models:
       - name: offer_id
         description: ''
         data_type: STRING
-        tests:
+        data_tests:
           - not_null
           - unique
       - name: offer_product_id
@@ -30,7 +30,7 @@ models:
       - name: offer_category_id
         description: ''
         data_type: STRING
-        tests:
+        data_tests:
           - not_null
       - name: last_stock_price
         description: ''
@@ -50,7 +50,7 @@ models:
       - name: item_id
         description: ''
         data_type: STRING
-        tests:
+        data_tests:
           - not_null
       - name: offer_is_underage_selectable
         description: ''
@@ -85,7 +85,7 @@ models:
       - name: offer_subcategory_id
         description: ''
         data_type: STRING
-        tests:
+        data_tests:
           - not_null
       - name: offer_url
         description: ''
@@ -180,7 +180,7 @@ models:
       - name: venue_id
         description: ''
         data_type: STRING
-        tests:
+        data_tests:
           - not_null
       - name: venue_name
         description: ''
@@ -218,7 +218,7 @@ models:
       - name: offerer_id
         description: ''
         data_type: STRING
-        # tests:
+        # data_tests:
         #   - not_null
       - name: venue_managing_offerer_id
         description: ''

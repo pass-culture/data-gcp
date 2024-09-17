@@ -219,4 +219,7 @@ REF_TABLES = {
     "population_age_and_department_france_details": {
         "file_type": "parquet",
     },
+    "region_department": {
+        "file_type": "parquet",
+    },
 }

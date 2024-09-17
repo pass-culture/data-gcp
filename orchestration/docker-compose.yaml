@@ -3,15 +3,11 @@ version: "3.9"
 volumes:
   postgres-db-volume:
 
-x-airflow-common:
-  &airflow-common
-  build:
-    context: .
-    dockerfile: ./airflow/Dockerfile
-  environment:
-    &airflow-common-env
+
+x-airflow-common: &airflow-common
+  environment: &airflow-common-env
     LOCAL_ENV: ${LOCAL_ENV:-1}
-    GOOGLE_APPLICATION_CREDENTIALS:  ${GOOGLE_APPLICATION_CREDENTIALS:-}
+    GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
     GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
     AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-}
     AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: ${AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT:-}
@@ -39,35 +35,40 @@ services:
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "airflow"]
+      test: [ "CMD", "pg_isready", "-U", "airflow" ]
       interval: 5s
       retries: 5
-    restart: always
+    restart: "no"
 
   airflow-webserver:
+    build:
+      context: .
+      dockerfile: ./airflow/Dockerfile
     <<: *airflow-common
     command: webserver
     ports:
       - 8080:8080
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://airflow-webserver:8080/health"]
+      test: [ "CMD", "curl", "--fail", "http://airflow-webserver:8080/health" ]
       interval: 10s
       timeout: 10s
       retries: 5
-    restart: always
-
+    restart: "no"
+    image: airflow-custom-image:latest
 
   airflow-scheduler:
+    image: airflow-custom-image:latest
     <<: *airflow-common
     command: scheduler
     healthcheck:
-      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "http://airflow-webserver:8080"']
+      test: [ "CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "http://airflow-webserver:8080"' ]
       interval: 10s
       timeout: 10s
       retries: 5
-    restart: always
+    restart: "no"
 
   airflow-init:
+    image: airflow-custom-image:latest
     <<: *airflow-common
     command: version
     environment:

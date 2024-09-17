@@ -10,11 +10,13 @@ today = datetime.datetime.now()
 days3 = datetime.timedelta(days=3)
 days7 = datetime.timedelta(days=7)
 month = datetime.timedelta(weeks=4)
+year = datetime.timedelta(days=365)
 
 schedule_mapping = {
     "daily": today - days3,
     "weekly": today - days7,
     "monthly": today - month,
+    "yearly": today - year,
     "default": today - month,
 }
 

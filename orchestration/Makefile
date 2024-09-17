@@ -1,9 +1,9 @@
-build_and_init:
+build:
 	docker-compose down -v;
 	docker-compose build --no-cache;
 	docker-compose up -d;
 
-rebuild:
+build_with_cache:
 	docker-compose down -v;
 	docker-compose build;
 	docker-compose up -d;

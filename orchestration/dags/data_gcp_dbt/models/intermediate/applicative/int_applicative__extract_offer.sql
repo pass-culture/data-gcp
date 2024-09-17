@@ -1,7 +1,7 @@
 with extra_data as (
     select
         offer.offer_id,
-        COALESCE(p.description, o.offer_description) AS offer_description,
+        COALESCE(product.description, o.offer_description) AS offer_description,
         COALESCE(product.product_extra_data, offer.offer_extra_data) as extra_data
     from {{ source('raw', 'applicative_database_offer') }} as offer
         left join {{ ref('int_applicative__product') }} as product on CAST(product.id as string) = offer.offer_product_id

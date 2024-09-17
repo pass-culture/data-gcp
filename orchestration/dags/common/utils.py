@@ -114,21 +114,36 @@ def waiting_operator(
 
 def delayed_waiting_operator(
     dag,
-    external_dag_id,
+    external_dag_id,  # External DAG ID
     external_task_id="end",
     allowed_states=["success"],
     failed_states=["failed", "upstream_failed", "skipped"],
+    lower_date_limit=None,  # Optional lower bound
     **kwargs,
 ):
     """
-    Function to wait for the last run of the external DAG that ran before the calling DAG's execution date.
+    Function to wait for the last run of the external DAG that ran between the lower and upper date limits.
+    If lower_date_limit is None, it defaults to the start of the same day as execution_date.
     """
+
+    def compute_lower_date_limit(current_execution_date):
+        """
+        Returns the lower date limit, which is either the provided lower_date_limit or
+        the start of the same day as current_execution_date.
+        """
+        if lower_date_limit:
+            return lower_date_limit
+        # Default to the start of the current execution date's day
+        return current_execution_date.replace(hour=0, minute=0, second=0, microsecond=0)
+
     sensor = ExternalTaskSensor(
         task_id=f"wait_for_{external_dag_id}_{external_task_id}",
         external_dag_id=external_dag_id,
         external_task_id=external_task_id,
         execution_date_fn=lambda current_execution_date: get_last_execution_date(
-            external_dag_id, current_execution_date
+            external_dag_id,
+            upper_date_limit=current_execution_date,
+            lower_date_limit=compute_lower_date_limit(current_execution_date),
         ),  # Use execution_date_fn to dynamically compute the last execution date
         check_existence=True,
         mode="reschedule",

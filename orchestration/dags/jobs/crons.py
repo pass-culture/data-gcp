@@ -12,5 +12,5 @@ schedule_dict = {
         },
     },
     "dbt_weekly": "30 5 * * *",
-    "dbt_montly": "30 5 * * *",
+    "dbt_monthly": "30 5 * * *",
 }

@@ -33,7 +33,7 @@ class TestImportTables(unittest.TestCase):
             excluded_fields = params["excluded_fields"]
 
             result_path = get_tables_config_dict(
-                DAG_FOLDER + "/" + RAW_SQL_PATH, "BIGQUERY_DATASET"
+                DAG_FOLDER + "/" + RAW_SQL_PATH + "/parallel", "BIGQUERY_DATASET"
             )[table_name]["sql"]
             with open(result_path, "r") as file:
                 result_query = file.readlines()

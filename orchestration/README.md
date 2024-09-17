@@ -71,7 +71,7 @@ On peut qu'avoir une version de Airflow installé en local. Pour pallier ça, il
 ### Premier lancement (La première fois uniquement)
 
 ```sh
-make build_and_init
+make build
 ```
 
 ### Lancement de l'app
@@ -101,7 +101,7 @@ make stop
 Pour changer les variables d'environnement, il faut modifier le fichier `orchestration/.env` et relancer le build des conteneurs :
 
 ```sh
-make rebuild
+make build_with_cache
 ```
 
 #### Troubleshooting

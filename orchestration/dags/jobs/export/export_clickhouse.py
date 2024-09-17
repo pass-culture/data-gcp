@@ -15,7 +15,7 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
 )
-from common.utils import get_airflow_schedule, waiting_operator
+from common.utils import delayed_waiting_operator, get_airflow_schedule
 from dependencies.export_clickhouse.export_clickhouse import (
     TABLES_CONFIGS,
     VIEWS_CONFIGS,
@@ -127,17 +127,17 @@ for dag_name, dag_params in dags.items():
         with TaskGroup(group_id="waiting_group", dag=dag) as wait_for_daily_tasks:
             wait = DummyOperator(task_id="waiting_branch", dag=dag)
 
-            wait_for_firebase = waiting_operator(
-                dag_id="import_intraday_firebase_data", dag=dag
+            wait_for_firebase = delayed_waiting_operator(
+                external_dag_id="import_intraday_firebase_data", dag=dag
             )
 
             wait.set_downstream(wait_for_firebase)
 
             for table_config in TABLES_CONFIGS:
-                waiting_task = waiting_operator(
+                waiting_task = delayed_waiting_operator(
                     dag,
-                    "dbt_run_dag",
-                    f"data_transformation.{table_config['dbt_model']}",
+                    external_dag_id="dbt_run_dag",
+                    external_task_id=f"data_transformation.{table_config['dbt_model']}",
                 )
                 wait_for_firebase.set_downstream(waiting_task)
 

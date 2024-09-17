@@ -10,7 +10,7 @@ from common.config import (
     PATH_TO_DBT_TARGET,
 )
 from common.dbt.utils import load_json_artifact, load_manifest
-from common.utils import get_airflow_schedule, waiting_operator
+from common.utils import delayed_waiting_operator, get_airflow_schedule
 from jobs.crons import schedule_dict
 
 from airflow import DAG
@@ -56,7 +56,7 @@ dag = DAG(
 # Basic steps
 start = DummyOperator(task_id="start", dag=dag)
 
-wait_dbt_run = waiting_operator(dag, "dbt_run_dag")
+wait_dbt_run = delayed_waiting_operator(dag=dag, external_dag_id="dbt_run_dag")
 
 compute_metrics_re_data = BashOperator(
     task_id="compute_metrics_re_data",

@@ -9,7 +9,7 @@ from common.config import (
     DAG_FOLDER,
     GCP_PROJECT_ID,
 )
-from common.utils import get_airflow_schedule, waiting_operator
+from common.utils import delayed_waiting_operator, get_airflow_schedule
 from dependencies.analytics.import_analytics import define_import_tables
 from jobs.crons import schedule_dict
 
@@ -40,7 +40,7 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
-wait_for_dbt = waiting_operator(dag=dag, dag_id="dbt_run_dag", external_task_id="end")
+wait_for_dbt = delayed_waiting_operator(dag=dag, external_dag_id="dbt_run_dag")
 
 # TODO: remove legacy copy job
 with TaskGroup(group_id="analytics_copy_group", dag=dag) as analytics_copy:

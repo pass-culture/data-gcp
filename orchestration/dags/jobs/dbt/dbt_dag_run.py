@@ -71,15 +71,11 @@ end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
 wait_for_raw = delayed_waiting_operator(
     dag=dag,
     external_dag_id="import_applicative_database",
-    external_task_id="end",  # External task to wait for
-    allowed_states=["success"],
-    failed_states=["failed", "upstream_failed"],
 )
 
 wait_for_firebase = delayed_waiting_operator(
     dag=dag,
     external_dag_id="import_intraday_firebase_data",
-    external_task_id="end",  # External task to wait for
     allowed_states=["success", "upstream_failed"],
     failed_states=["failed"],
 )

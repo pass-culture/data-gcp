@@ -1,5 +1,5 @@
 from common import macros
-from common.alerts import dbt_test_slack_alert, task_fail_slack_alert
+from common.alerts import task_fail_slack_alert
 from common.config import (
     DATA_GCS_BUCKET_NAME,
     ELEMENTARY_PYTHON_PATH,
@@ -9,19 +9,15 @@ from common.config import (
     PATH_TO_DBT_TARGET,
     SLACK_TOKEN_ELEMENTARY,
 )
-from common.dbt.utils import load_json_artifact, load_manifest
 from common.utils import get_airflow_schedule, waiting_operator
 
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import PythonOperator
 from airflow.utils.dates import datetime, timedelta
 
 SLACK_CHANNEL = "alertes-data-quality"
-yyyy = ""
-yyyymmdd = ""
 
 default_args = {
     "start_date": datetime(2020, 12, 23),
@@ -50,7 +46,6 @@ dag = DAG(
     },
 )
 
-# Basic steps
 start = DummyOperator(task_id="start", dag=dag)
 
 wait_dbt_run = waiting_operator(dag, "dbt_run_dag")
@@ -63,7 +58,6 @@ compute_metrics_elementary = BashOperator(
     dag=dag,
 )
 
-# if ENV_SHORT_NAME == "prod":
 dbt_test = BashOperator(
     task_id="dbt_test",
     bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
@@ -76,38 +70,6 @@ dbt_test = BashOperator(
     },
     append_env=True,
     cwd=PATH_TO_DBT_PROJECT,
-    dag=dag,
-)
-
-load_run_results = PythonOperator(
-    task_id="load_run_results",
-    python_callable=load_json_artifact,
-    op_kwargs={
-        "_PATH_TO_DBT_TARGET": f"{PATH_TO_DBT_TARGET}",
-        "artifact": "run_results.json",
-    },
-    do_xcom_push=True,
-    dag=dag,
-)
-
-load_dbt_manifest = PythonOperator(
-    task_id="load_dbt_manifest",
-    python_callable=load_manifest,
-    op_kwargs={
-        "_PATH_TO_DBT_TARGET": f"{PATH_TO_DBT_TARGET}",
-    },
-    do_xcom_push=True,
-    dag=dag,
-)
-
-warning_alert_slack = PythonOperator(
-    task_id="warning_alert_slack",
-    python_callable=dbt_test_slack_alert,
-    op_kwargs={
-        "results_json": "{{task_instance.xcom_pull(task_ids='load_run_results', key='return_value')}}",
-        "manifest_json": "{{task_instance.xcom_pull(task_ids='load_dbt_manifest', key='return_value')}}",
-    },
-    provide_context=True,
     dag=dag,
 )
 
@@ -129,14 +91,10 @@ send_elementary_report = BashOperator(
     dag=dag,
 )
 
-
-# if ENV_SHORT_NAME == "prod":
 (
     start
     >> wait_dbt_run
     >> dbt_test
     >> compute_metrics_elementary
-    >> (load_run_results, load_dbt_manifest)
-    >> warning_alert_slack
     >> send_elementary_report
 )

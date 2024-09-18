@@ -6,7 +6,6 @@ import pandas as pd
 import tensorflow as tf
 import typer
 from loguru import logger
-
 from utils.constants import (
     BIGQUERY_CLEAN_DATASET,
     GCP_PROJECT_ID,
@@ -17,9 +16,10 @@ from utils.constants import (
     SERVING_CONTAINER,
     STORAGE_PATH,
 )
-from utils.data_collect_queries import read_from_gcs
-from utils.evaluate import evaluate, save_pca_representation
-from utils.mlflow_tools import connect_remote_mlflow
+
+from two_towers_model.utils.data_collect_queries import read_from_gcs
+from two_towers_model.utils.evaluate import evaluate, save_pca_representation
+from two_towers_model.utils.mlflow_tools import connect_remote_mlflow
 
 
 def main(

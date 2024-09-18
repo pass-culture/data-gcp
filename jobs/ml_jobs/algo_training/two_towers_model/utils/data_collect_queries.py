@@ -4,7 +4,6 @@ from multiprocessing import Pool, cpu_count
 
 import pandas as pd
 from loguru import logger
-
 from utils.constants import GCP_PROJECT_ID
 
 

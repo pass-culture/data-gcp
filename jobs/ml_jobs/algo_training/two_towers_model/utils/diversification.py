@@ -4,7 +4,6 @@ from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
-
 from utils.constants import NUMBER_OF_PRESELECTED_OFFERS, RECOMMENDATION_NUMBER
 
 

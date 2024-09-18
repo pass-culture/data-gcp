@@ -1,5 +1,4 @@
 from google.cloud import secretmanager
-
 from utils.constants import GCP_PROJECT_ID
 
 

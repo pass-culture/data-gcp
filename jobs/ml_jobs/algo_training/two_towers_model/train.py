@@ -8,17 +8,20 @@ from loguru import logger
 
 from two_towers_model.models.match_model import MatchModel
 from two_towers_model.models.two_towers_model import TwoTowersModel
-from two_towers_model.utils.constants import CONFIGS_PATH
-from utils.callbacks import MLFlowLogging
-from utils.constants import (
+from two_towers_model.utils.callbacks import MLFlowLogging
+from two_towers_model.utils.constants import (
+    CONFIGS_PATH,
     ENV_SHORT_NAME,
     MLFLOW_RUN_ID_FILENAME,
     MODEL_DIR,
     STORAGE_PATH,
     TRAIN_DIR,
 )
-from utils.data_collect_queries import read_from_gcs
-from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
+from two_towers_model.utils.data_collect_queries import read_from_gcs
+from two_towers_model.utils.mlflow_tools import (
+    connect_remote_mlflow,
+    get_mlflow_experiment,
+)
 
 N_EPOCHS = 100
 MIN_DELTA = 0.001  # Minimum change in the accuracy before a callback is called

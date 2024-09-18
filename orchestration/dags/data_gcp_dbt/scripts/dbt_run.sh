@@ -4,7 +4,7 @@
 while true; do
   # Generate a random 12-character string for RDID
   RDID=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 12 | head -n 1)
-  TMP_FOLDER="$PATH_TO_DBT_TARGET/$RDID"
+  TMP_FOLDER="$PATH_TO_DBT_TARGET/tmp_$RDID"
 
   # Check if the folder exists
   if [ -d "$TMP_FOLDER" ]; then

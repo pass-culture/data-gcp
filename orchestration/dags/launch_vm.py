@@ -63,7 +63,6 @@ with DAG(
         "keep_alive": Param(default=True, type="boolean"),
         "install_project": Param(default=True, type="boolean"),
         "disk_size_gb": Param(default="100", type="string"),
-        "gce_network_type": Param(default="GCE", type="string"),
     },
 ) as dag:
 
@@ -86,7 +85,6 @@ with DAG(
         accelerator_types=[
             {"name": "{{ params.gpu_type }}", "count": "{{ params.gpu_count }}"}
         ],
-        gce_network_type="{{ params.gce_network_type }}",
         disk_size_gb="{{ params.disk_size_gb }}",
     )
 

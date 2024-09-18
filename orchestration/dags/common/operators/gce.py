@@ -11,7 +11,6 @@ from common.config import (
 )
 from common.hooks.gce import GCEHook
 from common.hooks.image import MACHINE_TYPE
-from common.hooks.network import NETWORK_TYPE
 from paramiko.ssh_exception import SSHException
 
 from airflow.configuration import conf
@@ -29,7 +28,6 @@ class StartGCEOperator(BaseOperator):
         "accelerator_types",
         "gpu_count",
         "source_image_type",
-        "gce_network_type",
         "disk_size_gb",
         "labels",
     ]
@@ -43,7 +41,6 @@ class StartGCEOperator(BaseOperator):
         accelerator_types=[],
         gpu_count: int = 0,
         source_image_type: str = None,
-        gce_network_type: str = "GCE",
         disk_size_gb: str = "100",
         labels={},
         *args,
@@ -56,7 +53,6 @@ class StartGCEOperator(BaseOperator):
         self.accelerator_types = accelerator_types
         self.gpu_count = gpu_count
         self.source_image_type = source_image_type
-        self.gce_network_type = gce_network_type
         self.disk_size_gb = disk_size_gb
         self.labels = labels
 
@@ -69,15 +65,9 @@ class StartGCEOperator(BaseOperator):
         else:
             image_type = MACHINE_TYPE[self.source_image_type]
 
-        gce_networks = NETWORK_TYPE["GCE"]
-
-        if self.gce_network_type == "GKE":
-            gce_networks = NETWORK_TYPE["GKE"]
-
         hook = GCEHook(
             source_image_type=image_type,
             disk_size_gb=self.disk_size_gb,
-            gce_networks=gce_networks,
         )
         hook.start_vm(
             self.instance_name,

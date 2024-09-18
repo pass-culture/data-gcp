@@ -159,6 +159,7 @@ select
     bdgu.first_booking_creation_date,
     date_diff(bdgu.first_individual_booking_date, dgu.first_deposit_creation_date, day) as days_between_activation_date_and_first_booking_date,
     date_diff(bdgu.first_booking_creation_date, dgu.first_deposit_creation_date, day) as days_between_activation_date_and_first_booking_paid,
+    u.user_creation_date,
     coalesce(user_activation_date, user_creation_date) as user_activation_date,
     bdgu.first_booking_type,
     first_paid_booking_type.first_paid_booking_type,

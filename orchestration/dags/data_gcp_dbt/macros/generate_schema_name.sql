@@ -2,8 +2,9 @@
 
     {%- set default_schema = target.dataset -%}
     {%- set is_orchestrated = target.name in ["prod", "stg", "dev"] and target.profile_name != "sandbox" -%}
+    {%- set is_elementary = target.profile_name == "elementary" -%}
 
-    {%- if target.profile_name == "CI" or target.name == "local" -%}
+    {%- if target.profile_name == "CI" or target.name == "local" or is_elementary -%}
         {{ default_schema }}
 
     {%- elif is_orchestrated -%}

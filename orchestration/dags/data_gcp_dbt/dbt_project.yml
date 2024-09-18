@@ -85,7 +85,7 @@ models:
 
   elementary:
     +on_schema_change: "append_new_columns"
-    +enabled: false
+    +enabled: true
   re_data:
     +enabled: false
 

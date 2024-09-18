@@ -47,13 +47,6 @@ models:
         owner: "@team-data-analytics"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: analytics_{{ target.name }}
-      +re_data_monitored: true
-      +re_data_anomaly_detector:
-        name: modified_z_score
-        threshold: 3
-      +re_data_metrics_groups:
-        - table_metrics
-        - column_metrics
       +docs:
         node_color: "#d90000"
     intermediate:
@@ -86,8 +79,7 @@ models:
   elementary:
     +on_schema_change: "append_new_columns"
     +enabled: true
-  re_data:
-    +enabled: false
+    +schema: dbt_artifacts_{{ target.name }}
 
 seeds:
   +schema: seeds
@@ -112,6 +104,5 @@ data_tests:
 
 vars:
   ENV_SHORT_NAME: dev
-  re_data:save_test_history: true
   CI_MATERIALIZATION: none
   region_name: region-europe-west1

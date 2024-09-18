@@ -32,7 +32,7 @@ dag = DAG(
     dag_id,
     default_args=default_args,
     catchup=False,
-    description="Compute data quality metrics with package elementary and re_data and send Slack notifications reports",
+    description="Compute data quality metrics with package elementary and send Slack notifications reports",
     schedule_interval=get_airflow_schedule(schedule_dict[dag_id]),
     user_defined_macros=macros.default,
     params={

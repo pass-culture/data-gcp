@@ -20,5 +20,5 @@ select
     trace
 from {{ source("raw","stdout") }}
 where
-    DATE(timestamp) >= DATE_SUB(CURRENT_DATE, interval 365 day)
+    DATE(timestamp) >= DATE_SUB(CURRENT_DATE, interval 90 day)
     and jsonpayload.extra.path in ("/users/current", "/native/v1/me", "/native/v1/signin")

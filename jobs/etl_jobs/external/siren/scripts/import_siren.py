@@ -17,7 +17,6 @@ MAX_SIREN_TO_UPDATE = 5000
 
 
 def get_offerer_siren_list():
-    #
     last_seven_days = datetime.now() - timedelta(days=7)
     siren_list = []
     client = bigquery.Client()
@@ -34,6 +33,7 @@ def get_offerer_siren_list():
         FROM `{GCP_PROJECT}.{BIGQUERY_CLEAN_DATASET}.applicative_database_offerer` ado
         LEFT JOIN updated_recently ur on ur.siren = ado.offerer_siren
         WHERE ado.offerer_siren is not null AND ur.siren is NULL
+        ORDER BY RAND()
         """
     query_job = client.query(query)
     rows = query_job.result()

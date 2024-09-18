@@ -12,8 +12,6 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-}
     AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: ${AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT:-}
     AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY:-}
-    GCE_NETWORK_ID: ${GCE_NETWORK_ID:-}
-    GCE_SUBNETWORK_ID: ${GCE_SUBNETWORK_ID:-}
     ENV_SHORT_NAME: ${ENV_SHORT_NAME:-}
     GCE_SA: ${GCE_SA:-}
   volumes:
@@ -41,9 +39,7 @@ services:
     restart: "no"
 
   airflow-webserver:
-    build:
-      context: .
-      dockerfile: ./airflow/Dockerfile
+    image: airflow-custom-image:latest
     <<: *airflow-common
     command: webserver
     ports:
@@ -54,7 +50,8 @@ services:
       timeout: 10s
       retries: 5
     restart: "no"
-    image: airflow-custom-image:latest
+    depends_on:
+      - airflow-init
 
   airflow-scheduler:
     image: airflow-custom-image:latest
@@ -66,11 +63,15 @@ services:
       timeout: 10s
       retries: 5
     restart: "no"
+    depends_on:
+      - airflow-init
 
   airflow-init:
-    image: airflow-custom-image:latest
+    build:
+      context: .
+      dockerfile: ./airflow/Dockerfile
     <<: *airflow-common
-    command: version
+    command: "airflow db init"
     environment:
       <<: *airflow-common-env
       _AIRFLOW_DB_UPGRADE: 'true'
@@ -78,3 +79,5 @@ services:
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
       _AIRFLOW_WWW_USER_EMAIL: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}admin@example.com
+    depends_on:
+      - postgres

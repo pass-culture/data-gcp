@@ -1,3 +1,5 @@
+
+{{ config(timeout=2400) }}
 with
 all_days_since_activation as (
     select distinct

@@ -103,3 +103,10 @@ else:
         "DBT_TARGET_PATH", "/opt/airflow/dags/data_gcp_dbt/target"
     )
 EXCLUDED_TAGS = ["sandbox", "weekly", "monthly"]
+
+if LOCAL_ENV is None:
+    ELEMENTARY_PYTHON_PATH = (
+        "/opt/python3.11/lib/python3.11/site-packages/elementary/monitor/dbt_project/"
+    )
+
+SLACK_TOKEN_ELEMENTARY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")

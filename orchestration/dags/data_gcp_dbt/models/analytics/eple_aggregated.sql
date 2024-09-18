@@ -14,7 +14,7 @@ with eple_infos as (
         ed.educational_deposit_amount as institution_deposit_amount,
         eid.total_students
     from {{ ref('mrt_global__educational_institution') }} eid
-        join {{ ref('educational_deposit') }} ed on ed.educational_institution_id = eid.educational_institution_id
+        join {{ ref('educational_deposit') }} ed on ed.educational_institution_id = eid.institution_id
         join {{ ref('educational_year') }} ey on ey.adage_id = ed.educational_year_id
 ),
 

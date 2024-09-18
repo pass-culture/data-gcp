@@ -3,7 +3,7 @@
         config(
           unique_key='offer_id',
           strategy='check',
-          check_cols=['offer_is_bookable'],
+          check_cols=['offer_id'],
           invalidate_hard_deletes=true
         )
     }}

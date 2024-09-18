@@ -14,7 +14,7 @@ from common.config import (
     GCP_REGION,
 )
 from common.hooks.image import CPUImage
-from common.hooks.network import NETWORK_LIST, VPCNetwork
+from common.hooks.network import BASE_NETWORK_LIST, VPCNetwork
 from googleapiclient.errors import HttpError
 
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
@@ -36,7 +36,7 @@ class GCEHook(GoogleBaseHook):
         gcp_project: str = GCP_PROJECT_ID,
         gcp_zone: str = GCE_ZONE,
         gcp_region: str = GCP_REGION,
-        gce_networks: t.List[VPCNetwork] = NETWORK_LIST,
+        gce_networks: t.List[VPCNetwork] = BASE_NETWORK_LIST,
         gce_sa: str = GCE_SA,
         source_image_type: CPUImage = CPUImage(),
         gcp_conn_id: str = "google_cloud_default",

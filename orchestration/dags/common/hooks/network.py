@@ -6,6 +6,8 @@ from common.config import (
     VPC_DATA_EHP_SUBNETWORK_ID,
     VPC_DEFAULT_NETWORK_ID,
     VPC_DEFAULT_SUBNETWORK_ID,
+    VPC_HOST_EHP_NETWORK_ID,
+    VPC_HOST_EHP_SUBNETWORK_ID,
 )
 
 
@@ -18,11 +20,19 @@ class VPCNetwork:
 DEFAULT_VPC_NETWORK = VPCNetwork()
 DATA_EHP_VPC_NETWORK = VPCNetwork(
     network_id=VPC_DATA_EHP_NETWORK_ID, subnetwork_id=VPC_DATA_EHP_SUBNETWORK_ID
-)  # Allows to connect to vpc-data-ehp and communicate with services inside vpc-data-ehp
+)  # Allows to connect to vpc-data-ehp and communicate with services inside vpc-data-ehp, like api-reco
+HOST_EHP_VPC_NETWORK = VPCNetwork(
+    network_id=VPC_HOST_EHP_NETWORK_ID,
+    subnetwork_id=VPC_HOST_EHP_SUBNETWORK_ID,
+)  # Allows to connect to vpc-hosy-ehp and communicate with services inside, like Clickhouse
 
-
-NETWORK_LIST: list[VPCNetwork] = (
+BASE_NETWORK_LIST: list[VPCNetwork] = (
     [DEFAULT_VPC_NETWORK, DATA_EHP_VPC_NETWORK]
+    if ENV_SHORT_NAME != "prod"
+    else [DEFAULT_VPC_NETWORK]
+)
+GKE_NETWORK_LIST: list[VPCNetwork] = (
+    [DEFAULT_VPC_NETWORK, DATA_EHP_VPC_NETWORK, HOST_EHP_VPC_NETWORK]
     if ENV_SHORT_NAME != "prod"
     else [DEFAULT_VPC_NETWORK]
 )

@@ -26,7 +26,8 @@ VPC_DEFAULT_SUBNETWORK_ID = VPC_DEFAULT_SUBNETWORK_ID_PER_ENV[ENV_SHORT_NAME]
 # Allows to communicate with API reco and ClickHouse
 VPC_DATA_EHP_NETWORK_ID = "projects/passculture-data-ehp/global/networks/vpc-data-ehp"
 VPC_DATA_EHP_SUBNETWORK_ID = "projects/passculture-data-ehp/regions/europe-west1/subnetworks/cloudruns-ilb-subnet-ehp"
-
+VPC_HOST_EHP_NETWORK_ID = "projects/passculture-host-ehp/global/networks/vpc-host-ehp"
+VPC_HOST_EHP_SUBNETWORK_ID = "projects/passculture-host-ehp/regions/europe-west1/subnetworks/passculture-data-ehp"
 
 GCE_SA = os.environ.get("GCE_SA", f"algo-training-{ENV_SHORT_NAME}")
 GCE_BASE_PREFIX = f"composer-{ENV_SHORT_NAME}"

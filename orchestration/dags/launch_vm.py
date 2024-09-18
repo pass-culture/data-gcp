@@ -62,6 +62,7 @@ with DAG(
         "gpu_type": Param(default="nvidia-tesla-t4", type="string"),
         "keep_alive": Param(default=True, type="boolean"),
         "install_project": Param(default=True, type="boolean"),
+        "use_gke_network": Param(default=False, type="boolean"),
         "disk_size_gb": Param(default="100", type="string"),
     },
 ) as dag:
@@ -85,6 +86,7 @@ with DAG(
         accelerator_types=[
             {"name": "{{ params.gpu_type }}", "count": "{{ params.gpu_count }}"}
         ],
+        use_gke_network="{{ params.use_gke_network}}",
         disk_size_gb="{{ params.disk_size_gb }}",
     )
 

@@ -27,9 +27,8 @@ def get_last_execution_date(
     :return: The last execution_date (logical date) or None if no runs are found.
     """
     logging.info(f"Querying last execution date for DAG: {dag_id}")
-    logging.info(
-        f"Upper date limit: {upper_date_limit}, Lower date limit: {lower_date_limit}"
-    )
+    logging.info(f"Upper date limit: {upper_date_limit.replace(tzinfo=None)}")
+    logging.info(f"Lower date limit: {lower_date_limit.replace(tzinfo=None)}")
 
     query = session.query(DagRun).filter(
         DagRun.dag_id == dag_id,
@@ -37,7 +36,6 @@ def get_last_execution_date(
     )
 
     if lower_date_limit:
-        logging.info(f"Applying lower date limit: {lower_date_limit}")
         query = query.filter(DagRun.execution_date >= lower_date_limit)
 
     query = query.filter(DagRun.execution_date <= upper_date_limit)
@@ -45,10 +43,15 @@ def get_last_execution_date(
     last_dag_run = query.order_by(DagRun.execution_date.desc()).first()
 
     if last_dag_run:
-        logging.info(f"Found last execution date: {last_dag_run.execution_date}")
+        logging.info(f"Last scheduled {dag_id} found:")
+        logging.info(
+            f"Execution date:   {last_dag_run.execution_date.replace(tzinfo=None)}"
+        )
         return last_dag_run.execution_date
     else:
-        logging.warning(f"No DAG runs found before {upper_date_limit}")
+        logging.warning(
+            f"No {dag_id} scheduled DAG runs found between {lower_date_limit.replace(tzinfo=None)} and {upper_date_limit.replace(tzinfo=None)}"
+        )
         return None
 
 

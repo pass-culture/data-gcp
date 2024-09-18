@@ -11,6 +11,7 @@ from common.config import (
 )
 from common.utils import delayed_waiting_operator, get_airflow_schedule
 from jobs.crons import schedule_dict
+
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator

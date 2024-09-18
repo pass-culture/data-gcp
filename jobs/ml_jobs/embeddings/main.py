@@ -10,7 +10,18 @@ from utils.logging import logging
 
 
 def preprocess(df, features):
-    df = df.fillna(" ")
+    columns = list(
+        set(
+            [
+                content
+                for x in features
+                if x["type"] == "macro_text"
+                for content in x["content"]
+            ]
+        )
+    )
+    df = df[list(set(columns))].fillna(" ")
+
     for feature in features:
         if feature["type"] == "macro_text":
             df[feature["name"]] = (

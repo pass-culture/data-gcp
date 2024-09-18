@@ -2,10 +2,12 @@ from common import macros
 from common.alerts import dbt_test_slack_alert, task_fail_slack_alert
 from common.config import (
     DATA_GCS_BUCKET_NAME,
+    ELEMENTARY_PYTHON_PATH,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
     PATH_TO_DBT_TARGET,
+    SLACK_TOKEN_ELEMENTARY,
 )
 from common.dbt.utils import load_json_artifact, load_manifest
 from common.utils import get_airflow_schedule, waiting_operator
@@ -16,6 +18,10 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import datetime, timedelta
+
+SLACK_CHANNEL = "alertes-data-quality"
+yyyy = ""
+yyyymmdd = ""
 
 default_args = {
     "start_date": datetime(2020, 12, 23),
@@ -113,7 +119,10 @@ send_elementary_report = BashOperator(
         "PATH_TO_DBT_PROJECT": PATH_TO_DBT_PROJECT,
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
         "DATA_BUCKET_NAME": DATA_GCS_BUCKET_NAME,
-        "REPORT_FILE_PATH": "reports/elementary/202409/elementary_report_20240911.html",
+        "REPORT_FILE_PATH": "elementary_reports/{{ execution_date.year }}/elementary_report_{{ execution_date.strftime('%Y%m%d') }}.html",
+        "SLACK_TOKEN": SLACK_TOKEN_ELEMENTARY,
+        "CHANNEL_NAME": SLACK_CHANNEL,
+        "ELEMENTARY_PYTHON_PATH": ELEMENTARY_PYTHON_PATH,
     },
     append_env=True,
     cwd=PATH_TO_DBT_PROJECT,
@@ -129,6 +138,5 @@ send_elementary_report = BashOperator(
     >> compute_metrics_elementary
     >> (load_run_results, load_dbt_manifest)
     >> warning_alert_slack
-    # >> test
     >> send_elementary_report
 )

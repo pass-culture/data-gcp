@@ -20,7 +20,8 @@ def preprocess(df, features):
             ]
         )
     )
-    df = df[list(set(columns))].fillna(" ")
+    columns = list(set(columns))
+    df[columns] = df[columns].fillna(" ")
 
     for feature in features:
         if feature["type"] == "macro_text":

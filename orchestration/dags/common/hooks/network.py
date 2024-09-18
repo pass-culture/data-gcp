@@ -16,11 +16,8 @@ class VPCNetwork:
 
 
 DEFAULT_VPC_NETWORK = VPCNetwork()
-DATA_EHP_VPC_NETWORK = (
-    VPCNetwork(
-        network_id=VPC_DATA_EHP_NETWORK_ID,
-        subnetwork_id=VPC_DATA_EHP_SUBNETWORK_ID,
-    ),
+DATA_EHP_VPC_NETWORK = VPCNetwork(
+    network_id=VPC_DATA_EHP_NETWORK_ID, subnetwork_id=VPC_DATA_EHP_SUBNETWORK_ID
 )  # Allows to connect to vpc-data-ehp and communicate with services inside vpc-data-ehp
 
 

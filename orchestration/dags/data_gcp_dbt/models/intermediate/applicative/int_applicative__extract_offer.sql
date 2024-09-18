@@ -1,4 +1,4 @@
-with extra_data as (
+with offer_product_data as (
     select
         offer.offer_id,
         COALESCE(product.description, offer.offer_description) AS offer_description,
@@ -34,7 +34,7 @@ extracted_offers as (
         LOWER(TRIM(TRIM(JSON_EXTRACT(extra_data, "$.editeur"), " "), '"')) as book_editor,
         LOWER(TRIM(TRIM(JSON_EXTRACT(extra_data, "$.gtl_id"), " "), '"')) as titelive_gtl_id
     from {{ source('raw', 'applicative_database_offer') }} offer
-        left join extra_data as ued on ued.offer_id = offer.offer_id
+        left join offer_product_data as ued on ued.offer_id = offer.offer_id
 )
 
 select

@@ -201,7 +201,7 @@ from
     {{ ref('offer') }} offer
     left join {{ ref('venue') }} venue on venue.venue_id = offer.venue_id
     left join venue_humanized_id on venue_humanized_id.venue_id = venue.venue_id
-    left join {{ source('analytics', 'region_department') }} region_dept on region_dept.num_dep = venue.venue_department_code
+    left join {{ source('seed', 'region_department') }} region_dept on region_dept.num_dep = venue.venue_department_code
     left join {{ ref('venue_label') }} venue_label on venue_label.venue_label_id = venue.venue_label_id
     left join {{ ref('offerer') }} offerer on offerer.offerer_id = venue.venue_managing_offerer_id
     left join offerer_humanized_id on offerer_humanized_id.offerer_id = offerer.offerer_id

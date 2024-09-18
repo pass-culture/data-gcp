@@ -9,8 +9,9 @@ from common.config import (
     DAG_FOLDER,
     GCP_PROJECT_ID,
 )
-from common.utils import get_airflow_schedule, waiting_operator
+from common.utils import delayed_waiting_operator, get_airflow_schedule
 from dependencies.analytics.import_analytics import define_import_tables
+from jobs.crons import schedule_dict
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
@@ -25,12 +26,12 @@ default_dag_args = {
     "on_skipped_callback": analytics_fail_slack_alert,
     "project_id": GCP_PROJECT_ID,
 }
-
+dag_id = "import_analytics_v7"
 dag = DAG(
-    "import_analytics_v7",
+    dag_id,
     default_args=default_dag_args,
     description="Import tables from CloudSQL and enrich data for create dashboards with Metabase",
-    schedule_interval=get_airflow_schedule("0 1 * * *"),
+    schedule_interval=get_airflow_schedule(schedule_dict[dag_id]),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=480),
     user_defined_macros=macros.default,
@@ -39,7 +40,7 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
-wait_for_dbt = waiting_operator(dag=dag, dag_id="dbt_run_dag", external_task_id="end")
+wait_for_dbt = delayed_waiting_operator(dag=dag, external_dag_id="dbt_run_dag")
 
 # TODO: remove legacy copy job
 with TaskGroup(group_id="analytics_copy_group", dag=dag) as analytics_copy:

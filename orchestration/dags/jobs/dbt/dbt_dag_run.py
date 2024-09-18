@@ -8,7 +8,11 @@ from common.config import (
     PATH_TO_DBT_TARGET,
 )
 from common.dbt.utils import dbt_dag_reconstruction, load_and_process_manifest
-from common.utils import get_airflow_schedule, waiting_operator
+from common.utils import (
+    delayed_waiting_operator,
+    get_airflow_schedule,
+)
+from jobs.crons import schedule_dict
 
 from airflow import DAG
 from airflow.models import Param
@@ -36,13 +40,14 @@ default_args = {
 ) = load_and_process_manifest(f"{PATH_TO_DBT_TARGET}")
 
 # Initialize the DAG
+dag_id = "dbt_run_dag"
 dag = DAG(
-    "dbt_run_dag",
+    dag_id,
     default_args=default_args,
     dagrun_timeout=datetime.timedelta(minutes=480),
     catchup=False,
     description="A dbt wrapper for airflow",
-    schedule_interval=get_airflow_schedule("0 1 * * *"),
+    schedule_interval=get_airflow_schedule(schedule_dict[dag_id]),
     params={
         "target": Param(
             default=ENV_SHORT_NAME,
@@ -63,11 +68,14 @@ dag = DAG(
 start = DummyOperator(task_id="start", dag=dag)
 end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
 
-wait_for_raw = waiting_operator(dag=dag, dag_id="import_applicative_database")
-wait_for_firebase = waiting_operator(
+wait_for_raw = delayed_waiting_operator(
     dag=dag,
-    dag_id="import_intraday_firebase_data",
-    external_task_id="end",
+    external_dag_id="import_applicative_database",
+)
+
+wait_for_firebase = delayed_waiting_operator(
+    dag=dag,
+    external_dag_id="import_intraday_firebase_data",
     allowed_states=["success", "upstream_failed"],
     failed_states=["failed"],
 )

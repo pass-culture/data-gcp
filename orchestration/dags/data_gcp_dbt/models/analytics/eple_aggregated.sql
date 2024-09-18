@@ -1,6 +1,6 @@
 with eple_infos as (
     select distinct
-        institution_id,
+        eid.educational_institution_id AS institution_id,
         institution_external_id,
         institution_name,
         institution_city,

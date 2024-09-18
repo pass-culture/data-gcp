@@ -3,20 +3,20 @@ import datetime
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
-    APPLICATIVE_EXTERNAL_CONNECTION_ID,
     DAG_FOLDER,
     GCP_PROJECT_ID,
 )
-from common.operators.biquery import bigquery_job_task
-from common.utils import get_airflow_schedule, one_line_query
+from common.operators.biquery import bigquery_federated_query_task, bigquery_job_task
+from common.utils import get_airflow_schedule
 from dependencies.applicative_database.import_applicative_database import (
     HISTORICAL_CLEAN_APPLICATIVE_TABLES,
-    RAW_TABLES,
+    PARALLEL_TABLES,
+    SEQUENTIAL_TABLES,
 )
 
 from airflow import DAG
+from airflow.models.baseoperator import chain
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.utils.task_group import TaskGroup
 
 default_dag_args = {
@@ -40,47 +40,50 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
-with TaskGroup(group_id="raw_operations_group", dag=dag) as raw_operations_group:
-    import_tables_to_raw_tasks = []
-    for table, params in RAW_TABLES.items():
-        task = BigQueryInsertJobOperator(
-            task_id=f"import_to_raw_{table}",
-            configuration={
-                "query": {
-                    "query": f"""SELECT * FROM EXTERNAL_QUERY('{APPLICATIVE_EXTERNAL_CONNECTION_ID}', ''' {one_line_query(params['sql'])} ''')""",
-                    "useLegacySql": False,
-                    "destinationTable": {
-                        "projectId": GCP_PROJECT_ID,
-                        "datasetId": params["destination_dataset"],
-                        "tableId": params["destination_table"],
-                    },
-                    "writeDisposition": params.get(
-                        "write_disposition", "WRITE_TRUNCATE"
-                    ),
-                }
-            },
-            params=dict(params.get("params", {})),
-            dag=dag,
+# Sequential table import tasks
+with TaskGroup(group_id="sequential_tasks_group", dag=dag) as sequential_tasks_group:
+    seq_tasks = []
+    for table, params in SEQUENTIAL_TABLES.items():
+        task = bigquery_federated_query_task(
+            dag, task_id=f"import_sequential_to_raw_{table}", job_params=params
         )
-    import_tables_to_raw_tasks.append(task)
+        seq_tasks.append(task)
 
-middle = DummyOperator(task_id="import", dag=dag)
+seq_end = DummyOperator(task_id="seq_end", dag=dag)
 
+chain(*seq_tasks, seq_end)
+
+# Parallel table import tasks
+with TaskGroup(
+    group_id="raw_parallel_operations_group", dag=dag
+) as raw_parallel_operations_group:
+    parallel_tasks = []
+    for table, params in PARALLEL_TABLES.items():
+        task = bigquery_federated_query_task(
+            dag, task_id=f"import_parallel_to_raw_{table}", job_params=params
+        )
+        parallel_tasks.append(task)
+
+parallel_end = DummyOperator(task_id="parallel_end", dag=dag)
+
+# Historical table import tasks
 with TaskGroup(
     group_id="historical_applicative_group", dag=dag
-) as historical_applicative:
-    historical_data_applicative_tables_tasks = []
+) as historical_applicative_group:
+    historical_tasks = []
     for table, params in HISTORICAL_CLEAN_APPLICATIVE_TABLES.items():
         task = bigquery_job_task(dag, table, params)
-        historical_data_applicative_tables_tasks.append(task)
-
+        historical_tasks.append(task)
 
 end = DummyOperator(task_id="end", dag=dag)
 
+
 (
     start
-    >> raw_operations_group
-    >> middle
-    >> historical_data_applicative_tables_tasks
+    >> sequential_tasks_group
+    >> seq_end
+    >> raw_parallel_operations_group
+    >> parallel_end
+    >> historical_applicative_group
     >> end
 )

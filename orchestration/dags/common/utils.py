@@ -1,3 +1,5 @@
+import logging
+
 from common.config import (
     GCP_PROJECT_ID,
     LOCAL_ENV,
@@ -5,7 +7,49 @@ from common.config import (
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 
+from airflow.models import DagRun
 from airflow.sensors.external_task import ExternalTaskSensor
+from airflow.utils.db import provide_session
+from airflow.utils.types import DagRunType
+
+
+@provide_session
+def get_last_execution_date(
+    dag_id, upper_date_limit, lower_date_limit=None, session=None
+):
+    """
+    Query the last execution_date (logical date) of the specified external DAG between lower and upper date limits.
+
+    :param dag_id: The DAG ID of the DAG to query.
+    :upper_date_limit: The upper bound on the execution_date (logical date) to search for.
+    :lower_date_limit: The lower bound on the execution_date (logical date) to search for.
+    :param session: The database session.
+    :return: The last execution_date (logical date) or None if no runs are found.
+    """
+    logging.info(f"Querying last execution date for DAG: {dag_id}")
+    logging.info(
+        f"Upper date limit: {upper_date_limit}, Lower date limit: {lower_date_limit}"
+    )
+
+    query = session.query(DagRun).filter(
+        DagRun.dag_id == dag_id,
+        DagRun.run_type == DagRunType.SCHEDULED,
+    )
+
+    if lower_date_limit:
+        logging.info(f"Applying lower date limit: {lower_date_limit}")
+        query = query.filter(DagRun.execution_date >= lower_date_limit)
+
+    query = query.filter(DagRun.execution_date <= upper_date_limit)
+
+    last_dag_run = query.order_by(DagRun.execution_date.desc()).first()
+
+    if last_dag_run:
+        logging.info(f"Found last execution date: {last_dag_run.execution_date}")
+        return last_dag_run.execution_date
+    else:
+        logging.warning(f"No DAG runs found before {upper_date_limit}")
+        return None
 
 
 def getting_service_account_token(function_name):
@@ -78,6 +122,61 @@ def waiting_operator(
         email_on_retry=False,
         dag=dag,
     )
+
+
+def delayed_waiting_operator(
+    dag,
+    external_dag_id,
+    external_task_id="end",
+    allowed_states=["success"],
+    failed_states=["failed", "upstream_failed", "skipped"],
+    lower_date_limit=None,  # Optional lower bound
+    **kwargs,
+):
+    """
+    Function to create an ExternalTaskSensor that waits for a task in another DAG to finish,
+    with proper handling of execution dates.
+    """
+
+    # This function will be passed to execution_date_fn to compute the execution date dynamically
+    def compute_execution_date_fn(logical_date, **context):
+        """
+        Compute the execution date for the ExternalTaskSensor using Airflow's context.
+        Fetch the execution_date from the task's execution context.
+        """
+        # Fetch execution_date from Airflow's context in Airflow 1.x
+        current_execution_date = logical_date
+
+        if current_execution_date is None:
+            raise ValueError("The 'logical_date' is missing in the context.")
+
+        # Compute the lower date limit or default to the start of the same day
+        lower_limit = lower_date_limit or current_execution_date.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+
+        # Get the last execution date of the external DAG before the current execution date
+        return get_last_execution_date(
+            external_dag_id,
+            upper_date_limit=current_execution_date,
+            lower_date_limit=lower_limit,
+        )
+
+    # Create the ExternalTaskSensor
+    sensor = ExternalTaskSensor(
+        task_id=f"wait_for_{external_dag_id}_{external_task_id}",
+        external_dag_id=external_dag_id,
+        external_task_id=external_task_id,
+        execution_date_fn=compute_execution_date_fn,  # Pass the date function that uses Airflow's context
+        check_existence=True,
+        mode="reschedule",
+        allowed_states=allowed_states,
+        failed_states=failed_states,
+        dag=dag,
+        **kwargs,
+    )
+
+    return sensor
 
 
 def depends_loop(

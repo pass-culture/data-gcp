@@ -24,8 +24,14 @@ def get_tables_config_dict(PATH, BQ_DESTINATION_DATASET):
     return tables_config
 
 
-RAW_TABLES = get_tables_config_dict(
-    PATH=DAG_FOLDER + "/" + RAW_SQL_PATH, BQ_DESTINATION_DATASET=BIGQUERY_RAW_DATASET
+SEQUENTIAL_TABLES = get_tables_config_dict(
+    PATH=DAG_FOLDER + "/" + RAW_SQL_PATH + "/sequential",
+    BQ_DESTINATION_DATASET=BIGQUERY_RAW_DATASET,
+)
+
+PARALLEL_TABLES = get_tables_config_dict(
+    PATH=DAG_FOLDER + "/" + RAW_SQL_PATH + "/parallel",
+    BQ_DESTINATION_DATASET=BIGQUERY_RAW_DATASET,
 )
 
 

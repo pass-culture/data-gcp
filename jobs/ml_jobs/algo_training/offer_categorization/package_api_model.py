@@ -190,7 +190,7 @@ def package_api_model(
     mlflow.pyfunc.log_model(
         python_model=api_model,
         artifact_path=f"registry_{ENV_SHORT_NAME}",
-        # registered_model_name=api_model_name,
+        registered_model_name=api_model_name,
     )
 
     # Add metadata

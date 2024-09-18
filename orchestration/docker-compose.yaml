@@ -36,7 +36,7 @@ services:
       test: [ "CMD", "pg_isready", "-U", "airflow" ]
       interval: 5s
       retries: 5
-    restart: "no"
+    restart: "unless-stopped"
 
   airflow-webserver:
     image: airflow-custom-image:latest
@@ -49,7 +49,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-    restart: "no"
+    restart: "unless-stopped"
     depends_on:
       - airflow-init
 
@@ -62,7 +62,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-    restart: "no"
+    restart: "unless-stopped"
     depends_on:
       - airflow-init
 
@@ -79,5 +79,6 @@ services:
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
       _AIRFLOW_WWW_USER_EMAIL: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}admin@example.com
+    restart: "no"
     depends_on:
       - postgres

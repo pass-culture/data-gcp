@@ -49,6 +49,7 @@ with DAG(
     catchup=False,
     dagrun_timeout=None,
     template_searchpath=DAG_FOLDER,
+    render_template_as_native_obj=True,
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -86,7 +87,7 @@ with DAG(
         accelerator_types=[
             {"name": "{{ params.gpu_type }}", "count": "{{ params.gpu_count }}"}
         ],
-        use_gke_network="{{ params.use_gke_network}}",
+        use_gke_network="{{ params.use_gke_network }}",
         disk_size_gb="{{ params.disk_size_gb }}",
     )
 

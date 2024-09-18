@@ -31,6 +31,7 @@ class StartGCEOperator(BaseOperator):
         "source_image_type",
         "disk_size_gb",
         "labels",
+        "use_gke_network",
     ]
 
     @apply_defaults

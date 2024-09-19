@@ -2,7 +2,7 @@ import json
 
 import typer
 
-from two_towers_model.utils.constants import CONFIGS_PATH, MODEL_DIR, STORAGE_PATH
+from commons.constants import CONFIGS_PATH, MODEL_DIR, STORAGE_PATH
 from two_towers_model.utils.data_collect_queries import read_from_gcs
 
 

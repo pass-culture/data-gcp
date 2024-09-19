@@ -24,7 +24,7 @@ DATA_EHP_VPC_NETWORK = VPCNetwork(
 HOST_EHP_VPC_NETWORK = VPCNetwork(
     network_id=VPC_HOST_EHP_NETWORK_ID,
     subnetwork_id=VPC_HOST_EHP_SUBNETWORK_ID,
-)  # Allows to connect to vpc-hosy-ehp and communicate with services inside, like Clickhouse
+)  # Allows to connect to vpc-host-ehp and communicate with services inside, like Clickhouse
 
 BASE_NETWORK_LIST: list[VPCNetwork] = (
     [DEFAULT_VPC_NETWORK, DATA_EHP_VPC_NETWORK]

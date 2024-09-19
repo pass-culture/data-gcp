@@ -161,12 +161,27 @@ with DAG(
         dag=dag,
         retries=2,
     )
-    clone_and_setup_with_uv >> install_project_with_uv
-    clone_and_setup_with_pyenv >> install_project_with_pyenv
-    clone_and_setup_with_conda >> install_playground_with_conda
-    (
-        start
-        >> gce_instance_start
-        >> branching_clone_task
-        >> [clone_and_setup_with_pyenv, clone_and_setup_with_conda]
-    )
+
+    def get_op_by_name(name, step):
+        assert name in ["uv", "pyenv", "conda"]
+        assert step in ["clone", "install"]
+        if step == "clone":
+            return {
+                "uv": clone_and_setup_with_uv,
+                "pyenv": clone_and_setup_with_pyenv,
+                "conda": clone_and_setup_with_conda,
+            }[name]
+        else:
+            return {
+                "uv": install_project_with_uv,
+                "pyenv": install_project_with_pyenv,
+                "conda": install_playground_with_conda,
+            }[name]
+
+    (start >> gce_instance_start >> branching_clone_task)
+    for pkg_manager in ["uv", "pyenv", "conda"]:
+        (
+            branching_clone_task
+            >> get_op_by_name(pkg_manager, "clone")
+            >> get_op_by_name(pkg_manager, "install")
+        )

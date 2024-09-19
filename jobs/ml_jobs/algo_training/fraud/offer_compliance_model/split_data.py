@@ -1,10 +1,10 @@
 import numpy as np
 import typer
 
-from utils.constants import (
+from commons.constants import (
     STORAGE_PATH,
 )
-from utils.data_collect_queries import read_from_gcs
+from commons.data_collect_queries import read_from_gcs
 
 
 def split_data(

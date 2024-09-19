@@ -17,8 +17,8 @@ from commons.constants import (
     SERVING_CONTAINER,
     STORAGE_PATH,
 )
+from commons.data_collect_queries import read_from_gcs
 from commons.mlflow_tools import connect_remote_mlflow
-from two_towers_model.utils.data_collect_queries import read_from_gcs
 from two_towers_model.utils.evaluate import evaluate, save_pca_representation
 
 

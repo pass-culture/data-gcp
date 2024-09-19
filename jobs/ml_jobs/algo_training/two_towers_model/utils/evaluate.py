@@ -6,21 +6,21 @@ import pandas as pd
 import tensorflow as tf
 from loguru import logger
 from sklearn.decomposition import PCA
-from utils.constants import (
+
+from commons.constants import (
+    CONFIGS_PATH,
     EVALUATION_USER_NUMBER,
     EVALUATION_USER_NUMBER_DIVERSIFICATION,
     MODEL_DIR,
     NUMBER_OF_PRESELECTED_OFFERS,
     RECOMMENDATION_NUMBER,
 )
-from utils.data_collect_queries import read_from_gcs
-from utils.metrics import (
+from commons.data_collect_queries import read_from_gcs
+from two_towers_model.utils.metrics import (
     compute_diversification_score,
     compute_metrics,
     get_actual_and_predicted,
 )
-
-from two_towers_model.utils.constants import CONFIGS_PATH
 
 k_list = [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]
 

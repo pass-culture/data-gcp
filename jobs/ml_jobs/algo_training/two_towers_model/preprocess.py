@@ -3,7 +3,7 @@ import json
 import typer
 
 from commons.constants import CONFIGS_PATH, MODEL_DIR, STORAGE_PATH
-from two_towers_model.utils.data_collect_queries import read_from_gcs
+from commons.data_collect_queries import read_from_gcs
 
 
 def get_features_by_type(feature_layers: dict, layer_types: list):

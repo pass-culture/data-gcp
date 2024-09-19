@@ -2,7 +2,7 @@ import pandas as pd
 import tensorflow as tf
 import tensorflow_recommenders as tfrs
 
-from utils.layers import (
+from two_towers_model.utils.layers import (
     IntegerEmbeddingLayer,
     PretainedEmbeddingLayer,
     StringEmbeddingLayer,

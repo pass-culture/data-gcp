@@ -4,7 +4,8 @@ from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from utils.constants import NUMBER_OF_PRESELECTED_OFFERS, RECOMMENDATION_NUMBER
+
+from commons.constants import NUMBER_OF_PRESELECTED_OFFERS, RECOMMENDATION_NUMBER
 
 
 def order_offers_by_score_and_diversify_categories(

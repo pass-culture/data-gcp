@@ -14,6 +14,7 @@ from commons.constants import (
     STORAGE_PATH,
     TRAIN_DIR,
 )
+from commons.data_collect_queries import read_from_gcs
 from commons.mlflow_tools import (
     connect_remote_mlflow,
     get_mlflow_experiment,
@@ -21,7 +22,6 @@ from commons.mlflow_tools import (
 from two_towers_model.models.match_model import MatchModel
 from two_towers_model.models.two_towers_model import TwoTowersModel
 from two_towers_model.utils.callbacks import MLFlowLogging
-from two_towers_model.utils.data_collect_queries import read_from_gcs
 
 N_EPOCHS = 100
 MIN_DELTA = 0.001  # Minimum change in the accuracy before a callback is called

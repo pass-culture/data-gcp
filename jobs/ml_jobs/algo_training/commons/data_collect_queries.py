@@ -4,7 +4,8 @@ from multiprocessing import Pool, cpu_count
 
 import pandas as pd
 from loguru import logger
-from utils.constants import GCP_PROJECT_ID
+
+from commons.constants import GCP_PROJECT_ID
 
 
 def get_data_from_bigquery(

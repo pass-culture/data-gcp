@@ -3,8 +3,11 @@ import pandas as pd
 import recmetrics
 from loguru import logger
 from tqdm import tqdm
-from utils.constants import SHUFFLE_RECOMMENDATION
-from utils.diversification import order_offers_by_score_and_diversify_categories
+
+from commons.constants import SHUFFLE_RECOMMENDATION
+from two_towers_model.utils.diversification import (
+    order_offers_by_score_and_diversify_categories,
+)
 
 
 def get_actual_and_predicted(

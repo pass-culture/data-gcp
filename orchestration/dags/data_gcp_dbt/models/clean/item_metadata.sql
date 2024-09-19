@@ -3,7 +3,7 @@ with offer_booking_information_view as (
         offer.offer_id,
         COUNT(distinct booking.booking_id) as count_booking
     from
-        {{ ref('offer') }} as offer
+        {{ ref('int_applicative__offer') }} as offer
         left join {{ source('raw', 'applicative_database_stock') }} as stock on stock.offer_id = offer.offer_id
         left join {{ ref('booking') }} as booking on stock.stock_id = booking.stock_id
     where booking_is_used

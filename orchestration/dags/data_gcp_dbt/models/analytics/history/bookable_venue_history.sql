@@ -14,7 +14,7 @@ with all_bookable_data as (
         'individual' as offer_type,
         COUNT(distinct offer_id) as nb_bookable_offers
     from {{ ref('bookable_offer_history') }}
-        inner join {{ ref('offer') }} as o using (offer_id)
+        inner join {{ ref('int_applicative__offer') }} as o using (offer_id)
         left join {{ ref('venue') }} as v on o.venue_id = v.venue_id
     {% if is_incremental() %}
         where partition_date = DATE_SUB('{{ ds() }}', interval 1 day)

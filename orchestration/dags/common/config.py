@@ -106,3 +106,10 @@ if LOCAL_ENV is None:
     )
 
 SLACK_TOKEN_ELEMENTARY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")
+
+INSTALL_TYPES = {
+    "simple": "install_simplified",
+    "engineering": "install_engineering",
+    "science": "install_science",
+    "analytics": "install_analytics",
+}

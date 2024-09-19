@@ -22,4 +22,4 @@ select
     im.offer_sub_type_id,
     im.offer_sub_type_label
 from items_w_embedding ie
-    inner join {{ ref("item_metadata") }} im on ie.item_id = im.item_id
+    inner join {{ ref("ml_input__item_metadata") }} im on ie.item_id = im.item_id

@@ -83,7 +83,7 @@ get_recommendable_offers as (
     from {{ ref('mrt_global__offer') }} offer
         inner join {{ ref('mrt_global__venue') }} as venue on venue.venue_id = offer.venue_id
         inner join offers_with_mediation om on offer.offer_id = om.offer_id
-        inner join {{ ref('item_metadata') }} as im on offer.item_id = im.item_id
+        inner join {{ ref('ml_input__item_metadata') }} as im on offer.item_id = im.item_id
         left join {{ ref('int_applicative__stock') }} stock on offer.offer_id = stock.offer_id
         left join {{ ref('ml_feat__item_feature_28_day') }} as ml_feat on ml_feat.item_id = offer.item_id
         left join {{ ref('ml_reco__restrained_item') }} forbidden_offer

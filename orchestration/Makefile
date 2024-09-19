@@ -11,9 +11,9 @@ build_with_cache:
 start:
 	docker-compose up -d
 	@echo "Waiting for Airflow to start..."
-	@timeout 60 sh -c 'until curl -s http://0.0.0.0:8080 > /dev/null; do sleep 2; done' || (echo "Airflow did not start in time. Exiting." && exit 1)
+	@timeout 60 sh -c 'until curl -s http://localhost:8080 > /dev/null; do sleep 2; done' || (echo "Airflow did not start in time. Exiting." && exit 1)
 	@echo "Airflow is ready!"
-	python -m webbrowser "http://0.0.0.0:8080"
+	python -m webbrowser "http://localhost:8080"
 
 stop:
 	docker-compose stop;

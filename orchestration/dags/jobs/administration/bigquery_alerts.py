@@ -13,6 +13,7 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
 )
+from common.utils import get_airflow_schedule
 
 from airflow import DAG
 from airflow.models import Param
@@ -37,7 +38,9 @@ with DAG(
     "bigquery_alerts",
     default_args=default_dag_args,
     description="Send alerts when bigquery table is not updated in expected schedule",
-    schedule_interval=None,
+    schedule_interval=get_airflow_schedule(
+        "00 08 * * *" if ENV_SHORT_NAME == "prod" else None
+    ),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

@@ -9,7 +9,7 @@ select
     cashflow_batch.cutoff as cashflow_ending_date,
     cashflow_batch.label as cashflow_label,
     invoice.invoice_id
-from {{ ref('booking') }} as booking
+from {{ ref('int_applicative__booking') }} as booking
     join {{ source('raw', 'applicative_database_venue') }} as venue
         on booking.venue_id = venue.venue_id
     join {{ source('raw', 'applicative_database_pricing') }} pricing

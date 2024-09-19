@@ -39,7 +39,7 @@ new_consultation_item as (
         {% if not loop.last -%} , {%- endif %}
         {% endfor %}
     from new_consultation, unnest(new_consulted_items) new_items
-        left join {{ ref('item_metadata') }} metadata
+        left join {{ ref('ml_input__item_metadata') }} metadata
             on new_items = metadata.item_id
 ),
 

@@ -11,7 +11,7 @@ select
     ie.extraction_datetime
 from
     {{ source('ml_preproc', 'item_embedding_extraction') }} ie
-    inner join {{ ref("item_metadata") }} im on ie.item_id = im.item_id
+    inner join {{ ref("ml_input__item_metadata") }} im on ie.item_id = im.item_id
 
 qualify ROW_NUMBER() over (
     partition by ie.item_id

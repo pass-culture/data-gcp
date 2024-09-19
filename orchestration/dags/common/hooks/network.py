@@ -1,14 +1,24 @@
 from dataclasses import dataclass
 
-from common.config import (
-    ENV_SHORT_NAME,
-    VPC_DATA_EHP_NETWORK_ID,
-    VPC_DATA_EHP_SUBNETWORK_ID,
-    VPC_DEFAULT_NETWORK_ID,
-    VPC_DEFAULT_SUBNETWORK_ID,
-    VPC_HOST_EHP_NETWORK_ID,
-    VPC_HOST_EHP_SUBNETWORK_ID,
-)
+from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, GCP_REGION
+
+VPC_DEFAULT_NETWORK_ID_PER_ENV = {
+    "dev": f"projects/{GCP_PROJECT_ID}/global/networks/vpc-data-dev",
+    "stg": f"projects/{GCP_PROJECT_ID}/global/networks/vpc-data-staging",
+    "prod": f"projects/{GCP_PROJECT_ID}/global/networks/vpc-data-prod",
+}
+VPC_DEFAULT_SUBNETWORK_ID_PER_ENV = {
+    "dev": f"projects/{GCP_PROJECT_ID}/regions/{GCP_REGION}/subnetworks/data-dev-private",
+    "stg": f"projects/{GCP_PROJECT_ID}/regions/{GCP_REGION}/subnetworks/data-staging-private",
+    "prod": f"projects/{GCP_PROJECT_ID}/regions/{GCP_REGION}/subnetworks/data-prod-private",
+}
+VPC_DEFAULT_NETWORK_ID = VPC_DEFAULT_NETWORK_ID_PER_ENV[ENV_SHORT_NAME]
+VPC_DEFAULT_SUBNETWORK_ID = VPC_DEFAULT_SUBNETWORK_ID_PER_ENV[ENV_SHORT_NAME]
+# Allows to communicate with API reco and ClickHouse
+VPC_DATA_EHP_NETWORK_ID = "projects/passculture-data-ehp/global/networks/vpc-data-ehp"
+VPC_DATA_EHP_SUBNETWORK_ID = "projects/passculture-data-ehp/regions/europe-west1/subnetworks/cloudruns-ilb-subnet-ehp"
+VPC_HOST_EHP_NETWORK_ID = "projects/passculture-host-ehp/global/networks/vpc-host-ehp"
+VPC_HOST_EHP_SUBNETWORK_ID = "projects/passculture-host-ehp/regions/europe-west1/subnetworks/passculture-data-ehp"
 
 
 @dataclass

@@ -67,7 +67,9 @@ with DAG(
         "use_gke_network": Param(default=False, type="boolean"),
         "disk_size_gb": Param(default="100", type="string"),
         "install_with_uv": Param(default=False, type="boolean"),
-        "install_type": Param(default="simple", type="string"),
+        "install_type": Param(
+            default="simple", enum=["simple", "engineering", "science", "analytics"]
+        ),
     },
 ) as dag:
 

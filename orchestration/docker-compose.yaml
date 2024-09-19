@@ -80,5 +80,6 @@ services:
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
       _AIRFLOW_WWW_USER_EMAIL: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}admin@example.com
     restart: "no"
+    image: airflow-custom-image:latest
     depends_on:
       - postgres

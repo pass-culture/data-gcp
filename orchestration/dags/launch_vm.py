@@ -137,7 +137,7 @@ with DAG(
         use_pyenv=True,
         base_dir=dag_config["BASE_INSTALL_DIR"],
         command=dag_config["COMMAND_INSTALL_PROJECT_UV"]
-        + INSTALL_TYPES["{{ params.install_type }}"],
+        + INSTALL_TYPES[dag.params["install_type"]],
         dag=dag,
         retries=2,
     )

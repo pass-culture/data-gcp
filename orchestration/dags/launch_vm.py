@@ -26,7 +26,7 @@ dag_config = {
     "BASE_INSTALL_DIR": "data-gcp",
     "COMMAND_INSTALL_PLAYGROUND": "pip install -r requirements.txt --user",
     "COMMAND_INSTALL_PROJECT": "NO_GCP_INIT=1 make install",
-    "COMMAND_INSTALL_PROJECT_UV": "NO_GCP_INIT=1 make ",
+    "PREFIX_COMMAND_INSTALL_PROJECT_UV": "NO_GCP_INIT=1 make ",
 }
 
 # Params
@@ -85,13 +85,13 @@ with DAG(
     def select_clone_task(**kwargs):
         input_parameter = kwargs["params"].get("install_project", False)
         install_with_uv = kwargs["params"].get("install_with_uv", False)
-        if install_with_uv:
-            return "clone_and_setup_with_uv"
-        else:
-            if input_parameter:
-                return "clone_and_setup_with_pyenv"
-            else:
-                return "clone_and_setup_with_conda"
+        return (
+            "clone_and_setup_with_uv"
+            if install_with_uv
+            else "clone_and_setup_with_pyenv"
+            if input_parameter
+            else "clone_and_setup_with_conda"
+        )
 
     start = DummyOperator(task_id="start", dag=dag)
 
@@ -147,7 +147,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         use_pyenv=True,
         base_dir=dag_config["BASE_INSTALL_DIR"],
-        command=dag_config["COMMAND_INSTALL_PROJECT_UV"]
+        command=dag_config["PREFIX_COMMAND_INSTALL_PROJECT_UV"]
         + INSTALL_TYPES[dag.params["install_type"]],
         dag=dag,
         retries=2,

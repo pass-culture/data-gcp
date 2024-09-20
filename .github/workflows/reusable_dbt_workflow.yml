@@ -93,13 +93,21 @@ jobs:
       #     ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
       #     TARGET_BRANCH: ${{ github.base_ref }}
       #   run: ./scripts/sqlfluff_lint.sh $TARGET_BRANCH
-      - name: "compile dbt project"
+      - name: "Compile dbt project"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
         run: dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+      - name: "Cleaning parent models from database's ci schema"
+        working-directory: "."
+        env:
+          TARGET_BRANCH: ${{ github.base_ref }}
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+        run: .github/workflows/scripts/clean_ci_db.sh ${{ github.base_ref }} orchestration/dags/data_gcp_dbt
       - name: "Run modified models & 1st order childrens"
         working-directory: .
         env:
@@ -120,7 +128,7 @@ jobs:
           dbt test --store-failures -s "state:modified" \
           --exclude test_name:relationships config.materialized:incremental \
           --profile CI --target $ENV_SHORT_NAME --defer \
-          --state env-run-artifacts \
+          --state env-run-artifacts --favor-state \
           --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}

@@ -5,17 +5,6 @@
     pre_hook="{{create_humanize_id_function()}}"
 ) }}
 
-
-with themes_subscribed as (
-    select
-        user_id,
-        currently_subscribed_themes,
-        case when (currently_subscribed_themes is NULL or currently_subscribed_themes = "") then FALSE else TRUE end as is_theme_subscribed
-    from {{ ref("app_native_logs") }}
-    where technical_message_id = "subscription_update"
-    qualify ROW_NUMBER() over (partition by user_id order by partition_date desc) = 1
-)
-
 select
     u.user_id,
     u.user_creation_date,
@@ -76,10 +65,7 @@ select
             )
             then TRUE
         else FALSE
-    end as user_is_priority_public,
-    currently_subscribed_themes,
-    CASE WHEN is_theme_subscribed IS NULL THEN FALSE ELSE is_theme_subscribed END AS is_theme_subscribed
+    end as user_is_priority_public
 from {{ source("raw", "applicative_database_user") }} as u
     left join {{ ref("int_geo__user_location") }} as ui on ui.user_id = u.user_id
-    left join themes_subscribed as ts on ts.user_id = u.user_id
 where u.user_role in ("UNDERAGE_BENEFICIARY", "BENEFICIARY")

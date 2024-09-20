@@ -49,6 +49,7 @@ select
     o.offer_category_id,
     o.venue_iris_internal_id,
     o.offer_url,
-    o.isbn
+    o.isbn,
+    o.last_stock_price
 from {{ ref('int_applicative__stock') }} as s
     left join {{ ref('int_global__offer') }} as o on s.offer_id = o.offer_id

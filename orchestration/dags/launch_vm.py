@@ -1,6 +1,12 @@
 from datetime import datetime, timedelta
+from itertools import chain
 
-from common.config import DAG_FOLDER, ENV_SHORT_NAME, INSTALL_TYPES
+from common.config import (
+    DAG_FOLDER,
+    ENV_SHORT_NAME,
+    INSTALL_TYPES,
+    INSTANCES_TYPES,
+)
 from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
@@ -57,11 +63,14 @@ with DAG(
             type="string",
         ),
         "instance_type": Param(
-            default=gce_params["instance_type"]["prod"], type="string"
+            default=gce_params["instance_type"]["prod"],
+            enum=list(chain(*INSTANCES_TYPES["cpu"].values())),
         ),
         "instance_name": Param(default=gce_params["instance_name"], type="string"),
-        "gpu_count": Param(default=0, type="integer"),
-        "gpu_type": Param(default="nvidia-tesla-t4", type="string"),
+        "gpu_count": Param(default=0, enum=INSTANCES_TYPES["gpu"]["count"]),
+        "gpu_type": Param(
+            default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
+        ),
         "keep_alive": Param(default=True, type="boolean"),
         "install_project": Param(default=True, type="boolean"),
         "use_gke_network": Param(default=False, type="boolean"),

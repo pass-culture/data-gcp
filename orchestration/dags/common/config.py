@@ -113,3 +113,46 @@ INSTALL_TYPES = {
     "science": "install_science",
     "analytics": "install_analytics",
 }
+
+CPU_INSTANCES_TYPES = {
+    "standard": [
+        "n1-standard-1",
+        "n1-standard-2",
+        "n1-standard-4",
+        "n1-standard-8",
+        "n1-standard-16",
+        "n1-standard-32",
+        "n1-standard-64",
+        "n1-standard-96",
+    ],
+    "highmem": [
+        "n1-highmem-2",
+        "n1-highmem-4",
+        "n1-highmem-8",
+        "n1-highmem-16",
+        "n1-highmem-32",
+        "n1-highmem-64",
+        "n1-highmem-96",
+    ],
+    "highcpu": [
+        "n1-highcpu-2",
+        "n1-highcpu-4",
+        "n1-highcpu-8",
+        "n1-highcpu-16",
+        "n1-highcpu-32",
+        "n1-highcpu-64",
+        "n1-highcpu-96",
+    ],
+}
+GPU_INSTANCES_TYPES = {
+    "name": [
+        "nvidia-tesla-t4",
+        "nvidia-tesla-p4",
+        "nvidia-tesla-p100",
+        "nvidia-tesla-v100",
+        "nvidia-tesla-a100",
+    ],
+    "count": [0, 1, 2, 4],
+}
+
+INSTANCES_TYPES = {"cpu": CPU_INSTANCES_TYPES, "gpu": GPU_INSTANCES_TYPES}

@@ -49,33 +49,13 @@ select
             s.offer_subcategory_id
         order by
             b.booking_created_at
-    ) as same_category_booking_rank,
-
-    RANK() over (
-        partition by
-            b.user_id,
-            s.offer_subcategory_id,
-            booking_is_cancelled
-        order by
-            b.booking_created_at
-    ) as same_category_booking_rank_not_canceled,
-
-
-
+    ) as same_category_booking_rank
     RANK() over (
         partition by b.user_id
         order by
             b.booking_created_at asc,
             b.booking_id asc
     ) as user_booking_rank,
-
-
-    RANK() over (
-        partition by b.user_id, booking_is_cancelled
-        order by
-            b.booking_created_at asc,
-            b.booking_id asc
-    ) as user_booking_rank_not_canceled,
     s.venue_iris_internal_id,
     s.offer_url,
     s.isbn

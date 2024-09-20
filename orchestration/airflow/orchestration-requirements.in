@@ -11,3 +11,5 @@ apache-airflow-providers-postgres==5.10.2
 google-cloud-secret-manager==2.20.0
 # extras
 psycopg2-binary==2.9.9
+sqlfluff==3.1.1
+sqlfluff-templater-dbt==3.1.1

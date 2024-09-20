@@ -42,6 +42,7 @@ select
     total_bookable_individual_offers,
     total_bookable_collective_offers,
     total_bookable_offers,
+    offerer_postal_code,
     offerer_department_code,
     offerer_siren,
     offerer_region_name,

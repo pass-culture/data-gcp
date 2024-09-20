@@ -220,14 +220,13 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
     ):
         self.use_pyenv = use_pyenv
         self.use_uv = use_uv
-        if self.use_uv:
-            self.command = self.clone_and_init_with_uv(command, python_version)
-        else:
-            self.command = (
-                self.clone_and_init_with_conda(command, python_version)
-                if not self.use_pyenv
-                else self.clone_and_init_with_pyenv(command)
-            )
+        self.command = (
+            self.clone_and_init_with_uv(command, python_version)
+            if self.use_uv
+            else self.clone_and_init_with_conda(command, python_version)
+            if not self.use_pyenv
+            else self.clone_and_init_with_pyenv(command)
+        )
         self.instance_name = instance_name
         self.environment = environment
         self.python_version = python_version

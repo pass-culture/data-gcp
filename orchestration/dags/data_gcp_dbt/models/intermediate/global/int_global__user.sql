@@ -30,7 +30,7 @@ deposit_grouped_by_user as (
         min(first_paid_booking_date) as first_paid_booking_date,
         sum(case when  deposit_rank_desc = 1 then total_actual_amount_spent end) as total_deposit_actual_amount_spent,
         sum(case when deposit_rank_desc = 1 then total_theoretical_amount_spent_in_digital_goods end) as total_last_deposit_digital_goods_amount_spent,
-        max(user_activation_date) as user_activation_date
+        min(deposit_creation_date) as user_activation_date
     from {{ ref('int_global__deposit') }}
     group by user_id
 )

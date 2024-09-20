@@ -49,7 +49,7 @@ select
             s.offer_subcategory_id
         order by
             b.booking_created_at
-    ) as same_category_booking_rank
+    ) as same_category_booking_rank,
     RANK() over (
         partition by b.user_id
         order by

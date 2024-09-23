@@ -56,9 +56,7 @@ dag = DAG(
 
 start = DummyOperator(task_id="start", dag=dag)
 
-wait_for_dbt_daily = delayed_waiting_operator(
-    dag=dag, external_dag_id="dbt_run_dag", weekly=True
-)
+wait_for_dbt_daily = delayed_waiting_operator(dag=dag, external_dag_id="dbt_run_dag")
 
 weekly = BashOperator(
     task_id="run_weekly",

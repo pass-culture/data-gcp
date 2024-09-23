@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from common.config import (
@@ -133,6 +134,7 @@ def delayed_waiting_operator(
     external_task_id="end",
     allowed_states=["success"],
     failed_states=["failed", "upstream_failed", "skipped"],
+    weekly=False,
     lower_date_limit=None,  # Optional lower bound
     **kwargs,
 ):
@@ -154,9 +156,14 @@ def delayed_waiting_operator(
             raise ValueError("The 'logical_date' is missing in the context.")
 
         # Compute the lower date limit or default to the start of the same day
-        lower_limit = lower_date_limit or current_execution_date.replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        if weekly:
+            lower_limit = (current_execution_date - datetime.timedelta(days=7)).replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+        else:
+            lower_limit = lower_date_limit or current_execution_date.replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
 
         # Get the last execution date of the external DAG before the current execution date
         return get_last_execution_date(

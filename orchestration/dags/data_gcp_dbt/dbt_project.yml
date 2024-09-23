@@ -4,6 +4,8 @@ config-version: 2
 
 flags:
   send_anonymous_usage_stats: False
+  require_explicit_package_overrides_for_builtin_materializations: false
+
 
 # This setting configures which "profile" dbt uses for this project.
 profile: 'data_gcp_dbt'
@@ -105,3 +107,4 @@ vars:
   ENV_SHORT_NAME: dev
   CI_MATERIALIZATION: none
   region_name: region-europe-west1
+  mute_ensure_materialization_override: true

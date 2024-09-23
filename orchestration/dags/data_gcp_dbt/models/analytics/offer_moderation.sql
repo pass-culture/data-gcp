@@ -40,9 +40,9 @@ bookings_days as (
         COUNT(distinct booking_id) over (partition by offer.offer_id, DATE(booking_creation_date)) as cnt_bookings_day,
         IF(booking_is_cancelled, COUNT(distinct booking_id) over (partition by offer.offer_id, DATE(booking_creation_date)), NULL) as cnt_bookings_cancelled,
         IF(not booking_is_cancelled, COUNT(distinct booking_id) over (partition by offer.offer_id, DATE(booking_creation_date)), NULL) as cnt_bookings_confirm
-    from {{ ref('booking') }} booking
+    from {{ ref('int_applicative__booking') }} booking
         join {{ ref('stock') }} stock using (stock_id)
-        join {{ ref('offer') }} offer on offer.offer_id = stock.offer_id
+        join {{ ref('int_applicative__offer') }} offer on offer.offer_id = stock.offer_id
 ),
 
 count_bookings as (
@@ -77,7 +77,7 @@ last_stock as (
         offer.offer_id,
         stock.stock_price as last_stock_price
     from
-        {{ ref('offer') }} as offer
+        {{ ref('int_applicative__offer') }} as offer
         join {{ ref('mrt_global__stock') }} as stock on stock.offer_id = offer.offer_id
     qualify ROW_NUMBER() over (partition by stock.offer_id order by stock.stock_creation_date desc, stock.stock_id desc) = 1
 ),
@@ -97,13 +97,13 @@ offer_status as (
     select distinct
         offer.offer_id,
         case
-            when offer.offer_is_active = FALSE then "INACTIVE"
+            when offer.is_active = FALSE then "INACTIVE"
             when (offer.offer_validation like "%APPROVED%" and (SUM(stock.total_available_stock) over (partition by offer.offer_id)) <= 0) then "SOLD_OUT"
             when (offer.offer_validation like "%APPROVED%" and (MAX(EXTRACT(date from stock.stock_booking_limit_date)) over (partition by offer.offer_id) < CURRENT_DATE())) then "EXPIRED"
             else offer.offer_validation
         end as offer_status
     from
-        {{ ref('offer') }} offer
+        {{ ref('int_applicative__offer') }} offer
         left join {{ ref('mrt_global__stock') }} stock on offer.offer_id = stock.offer_id
 ),
 
@@ -121,7 +121,7 @@ offerer_tags as (
 select distinct
     offer.offer_id,
     offer.offer_name,
-    offer.offer_subcategoryid,
+    offer.offer_subcategory_id,
     subcategories.category_id,
     subcategories.is_physical_deposit as physical_goods,
     IF(subcategories.category_id = 'LIVRE', TRUE, FALSE) as is_book,
@@ -134,10 +134,10 @@ select distinct
                 from
                     {{ ref('stock') }} as stock
                     join
-                        {{ ref('offer') }}
+                        {{ ref('int_applicative__offer') }}
                             as offer
                         on stock.offer_id = offer.offer_id
-                            and offer.offer_is_active
+                            and offer.is_active
                     join {{ ref('mrt_global__stock') }} as mrt_global__stock on mrt_global__stock.stock_id = stock.stock_id
                 where not stock_is_soft_deleted
                     and
@@ -150,7 +150,7 @@ select distinct
                             DATE(stock.stock_beginning_date) > CURRENT_DATE
                             or stock.stock_beginning_date is NULL
                         )
-                        and offer.offer_is_active
+                        and offer.is_active
                         and (
                             mrt_global__stock.total_available_stock > 0
                             or mrt_global__stock.total_available_stock is NULL
@@ -160,7 +160,7 @@ select distinct
         else FALSE
     end as offer_is_bookable,
     offer.offer_is_duo,
-    offer.offer_is_active,
+    offer.is_active AS offer_is_active,
     offer_status.offer_status,
     IF(offer_status.offer_status = 'SOLD_OUT', TRUE, FALSE) as is_sold_out,
     venue.venue_managing_offerer_id as offerer_id,
@@ -198,7 +198,7 @@ select distinct
     offerer_tags.structure_tags
 
 from
-    {{ ref('offer') }} offer
+    {{ ref('int_applicative__offer') }} offer
     left join {{ ref('venue') }} venue on venue.venue_id = offer.venue_id
     left join venue_humanized_id on venue_humanized_id.venue_id = venue.venue_id
     left join {{ source('seed', 'region_department') }} region_dept on region_dept.num_dep = venue.venue_department_code
@@ -209,7 +209,7 @@ from
     left join offerer_tags on offerer_tags.offerer_id = offerer.offerer_id
     left join {{ ref('venue_contact') }} venue_contact on venue_contact.venue_id = venue.venue_id
     left join offer_humanized_id as offer_humanized_id on offer_humanized_id.offer_id = offer.offer_id
-    left join {{ source('raw','subcategories') }} subcategories on subcategories.id = offer.offer_subcategoryid
+    left join {{ source('raw','subcategories') }} subcategories on subcategories.id = offer.offer_subcategory_id
     left join count_bookings on count_bookings.offer_id = offer.offer_id
     left join offer_stock_ids on offer_stock_ids.offer_id = offer.offer_id
     left join last_stock on last_stock.offer_id = offer.offer_id

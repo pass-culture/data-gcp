@@ -11,8 +11,6 @@ alive-progress==2.3.1
     # via elementary-data
 annotated-types==0.7.0
     # via pydantic
-appdirs==1.4.4
-    # via sqlfluff
 attrs==23.2.0
     # via
     #   jsonschema
@@ -39,10 +37,6 @@ certifi==2024.7.4
     # via requests
 cffi==1.17.1
     # via cryptography
-chardet==5.2.0
-    # via
-    #   diff-cover
-    #   sqlfluff
 charset-normalizer==3.3.2
     # via requests
 click==8.0.2
@@ -51,11 +45,8 @@ click==8.0.2
     #   dbt-core
     #   dbt-semantic-interfaces
     #   elementary-data
-    #   sqlfluff
 colorama==0.4.6
-    # via
-    #   dbt-common
-    #   sqlfluff
+    # via dbt-common
 cryptography==43.0.1
     # via azure-storage-blob
 daff==1.3.46
@@ -80,19 +71,14 @@ dbt-core==1.8.6
     #   -r dbt-requirements.in
     #   dbt-bigquery
     #   elementary-data
-    #   sqlfluff-templater-dbt
 dbt-extractor==0.5.1
     # via dbt-core
 dbt-semantic-interfaces==0.5.1
     # via dbt-core
 deepdiff==7.0.1
     # via dbt-common
-diff-cover==9.1.1
-    # via sqlfluff
 elementary-data==0.16.1
     # via -r dbt-requirements.in
-exceptiongroup==1.2.2
-    # via pytest
 future==1.0.0
     # via parsedatetime
 google-api-core==2.19.1
@@ -150,8 +136,6 @@ idna==3.7
     # via requests
 importlib-metadata==6.11.0
     # via dbt-semantic-interfaces
-iniconfig==2.0.0
-    # via pytest
 isodate==0.6.1
     # via
     #   agate
@@ -162,11 +146,6 @@ jinja2==3.1.4
     #   dbt-common
     #   dbt-core
     #   dbt-semantic-interfaces
-    #   diff-cover
-    #   jinja2-simple-tags
-    #   sqlfluff
-jinja2-simple-tags==0.6.1
-    # via sqlfluff-templater-dbt
 jmespath==1.0.1
     # via
     #   boto3
@@ -213,7 +192,6 @@ packaging==24.0
     #   dbt-core
     #   elementary-data
     #   google-cloud-bigquery
-    #   pytest
 pandas==2.2.2
     # via
     #   db-dtypes
@@ -225,11 +203,6 @@ pathspec==0.11.2
     # via
     #   dbt-common
     #   dbt-core
-    #   sqlfluff
-pluggy==1.5.0
-    # via
-    #   diff-cover
-    #   pytest
 posthog==2.5.0
     # via elementary-data
 proto-plus==1.24.0
@@ -267,12 +240,8 @@ pydantic-core==2.23.3
     # via pydantic
 pyfiglet==0.8.post1
     # via elementary-data
-pygments==2.18.0
-    # via diff-cover
 pymsteams==0.2.3
     # via elementary-data
-pytest==8.3.2
-    # via sqlfluff
 python-dateutil==2.8.2
     # via
     #   botocore
@@ -294,15 +263,12 @@ pyyaml==6.0.1
     # via
     #   dbt-core
     #   dbt-semantic-interfaces
-    #   sqlfluff
 ratelimit==2.2.1
     # via elementary-data
 referencing==0.35.1
     # via
     #   jsonschema
     #   jsonschema-specifications
-regex==2024.7.24
-    # via sqlfluff
 requests==2.32.3
     # via
     #   azure-core
@@ -338,26 +304,12 @@ slack-sdk==3.32.0
     # via elementary-data
 soupsieve==2.6
     # via beautifulsoup4
-sqlfluff==3.1.1
-    # via
-    #   -r dbt-requirements.in
-    #   sqlfluff-templater-dbt
-sqlfluff-templater-dbt==3.1.1
-    # via -r dbt-requirements.in
 sqlparse==0.5.1
     # via dbt-core
 tabulate==0.9.0
     # via elementary-data
-tblib==3.0.0
-    # via sqlfluff
 text-unidecode==1.3
     # via python-slugify
-toml==0.10.2
-    # via sqlfluff
-tomli==2.0.1
-    # via pytest
-tqdm==4.66.5
-    # via sqlfluff
 typing-extensions==4.12.2
     # via
     #   azure-core

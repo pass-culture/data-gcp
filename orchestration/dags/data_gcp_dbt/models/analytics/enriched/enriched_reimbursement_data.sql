@@ -64,7 +64,7 @@ individuel as (
         invoice.invoice_creation_date,
         invoice.amount as invoice_amount
     from
-        {{ ref('booking') }} booking
+        {{ ref('int_applicative__booking') }} booking
         left join {{ ref('stock') }} as applicative_database_stock on booking.stock_id = applicative_database_stock.stock_id
         left join {{ ref('deposit') }} as applicative_database_deposit on booking.deposit_id = applicative_database_deposit.id
         left join {{ ref('pricing') }} as pricing on booking.booking_id = pricing.bookingid

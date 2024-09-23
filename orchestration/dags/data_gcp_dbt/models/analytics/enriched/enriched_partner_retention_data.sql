@@ -143,7 +143,7 @@ rejected_offers as (
         end as partner_id,
         COALESCE(COUNT(*), 0) as offers_cnt
     from {{ ref('mrt_global__venue') }} as mrt_global__venue
-        left join {{ ref('offer') }} as applicative_database_offer on applicative_database_offer.venue_id = mrt_global__venue.venue_id
+        left join {{ ref('int_applicative__offer') }} as offer on offer.venue_id = mrt_global__venue.venue_id
     where offer_validation = 'REJECTED'
     group by 1
 ),

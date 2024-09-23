@@ -49,6 +49,7 @@ with DAG(
     catchup=False,
     dagrun_timeout=None,
     template_searchpath=DAG_FOLDER,
+    render_template_as_native_obj=True,
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -62,8 +63,8 @@ with DAG(
         "gpu_type": Param(default="nvidia-tesla-t4", type="string"),
         "keep_alive": Param(default=True, type="boolean"),
         "install_project": Param(default=True, type="boolean"),
+        "use_gke_network": Param(default=False, type="boolean"),
         "disk_size_gb": Param(default="100", type="string"),
-        "gce_network_type": Param(default="GCE", type="string"),
     },
 ) as dag:
 
@@ -86,7 +87,7 @@ with DAG(
         accelerator_types=[
             {"name": "{{ params.gpu_type }}", "count": "{{ params.gpu_count }}"}
         ],
-        gce_network_type="{{ params.gce_network_type }}",
+        use_gke_network="{{ params.use_gke_network }}",
         disk_size_gb="{{ params.disk_size_gb }}",
     )
 

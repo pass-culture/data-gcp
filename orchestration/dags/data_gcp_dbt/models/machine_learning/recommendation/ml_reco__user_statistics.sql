@@ -6,7 +6,7 @@ with selected_users as (
         eu.first_deposit_amount as user_deposit_initial_amount,
         eu.last_deposit_amount as user_last_deposit_amount,
         eu.total_theoretical_remaining_credit,
-        eu.total_individual_bookings as booking_cnt
+        eu.total_non_cancelled_individual_bookings as booking_cnt
     from
         {{ ref('mrt_global__user') }} eu
     union all

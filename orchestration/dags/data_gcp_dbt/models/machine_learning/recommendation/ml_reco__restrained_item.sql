@@ -54,6 +54,6 @@ select
         end
     ) as blocked
 from {{ ref('mrt_global__offer') }} eod
-    inner join {{ ref('item_metadata') }} eim on eim.item_id = eod.item_id
+    inner join {{ ref('ml_input__item_metadata') }} eim on eim.item_id = eod.item_id
 where eod.offer_type_domain = "BOOK"
 group by 1

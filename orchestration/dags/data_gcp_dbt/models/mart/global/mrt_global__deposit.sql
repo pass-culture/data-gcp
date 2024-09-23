@@ -1,19 +1,3 @@
-with bookings_grouped_by_deposit as (
-    select
-        deposit_id,
-        SUM(case when booking_is_used then booking_amount * booking_quantity end) as total_actual_amount_spent,
-        SUM(booking_amount * booking_quantity) as total_theoretical_amount_spent,
-        SUM(case when digital_goods and offer_url is not NULL
-                then booking_amount * booking_quantity
-        end) as total_theoretical_amount_spent_in_digital_goods,
-        MIN(booking_creation_date) as first_individual_booking_date,
-        MAX(booking_creation_date) as last_individual_booking_date,
-        COUNT(distinct booking_id) as total_non_cancelled_individual_bookings
-    from {{ ref('mrt_global__booking') }}
-    where not booking_is_cancelled
-    group by deposit_id
-)
-
 select
     d.deposit_id,
     d.deposit_amount,
@@ -37,12 +21,12 @@ select
     d.deposit_type,
     d.deposit_rank_asc,
     d.deposit_rank_desc,
-    bgd.total_theoretical_amount_spent,
-    bgd.total_actual_amount_spent,
-    bgd.total_theoretical_amount_spent_in_digital_goods,
-    bgd.total_non_cancelled_individual_bookings,
-    bgd.first_individual_booking_date,
-    bgd.last_individual_booking_date,
+    d.total_theoretical_amount_spent,
+    d.total_actual_amount_spent,
+    d.total_theoretical_amount_spent_in_digital_goods,
+    d.total_non_cancelled_individual_bookings,
+    d.first_individual_booking_date,
+    d.last_individual_booking_date,
     DATE_DIFF(
         CURRENT_DATE(),
         CAST(d.deposit_creation_date as DATE),
@@ -54,8 +38,7 @@ select
         day
     ) as days_between_user_creation_and_deposit_creation,
     u.user_birth_date
-from {{ ref('int_applicative__deposit') }} as d
-    left join bookings_grouped_by_deposit as bgd on bgd.deposit_id = d.deposit_id
+from {{ ref('int_global__deposit') }} as d
     inner join {{ ref('int_applicative__user') }} as u on u.user_id = d.user_id
     left join {{ ref('int_applicative__action_history') }} as ah on ah.user_id = d.user_id and ah.action_history_rk = 1
 where

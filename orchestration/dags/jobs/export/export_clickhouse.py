@@ -150,7 +150,7 @@ for dag_name, dag_params in dags.items():
             instance_name="{{ params.instance_name }}",
             instance_type="{{ params.instance_type }}",
             retries=2,
-            gce_network_type="GKE",
+            use_gke_network=True,
         )
 
         fetch_code = CloneRepositoryGCEOperator(

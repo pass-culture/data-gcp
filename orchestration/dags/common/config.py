@@ -11,10 +11,6 @@ SSH_USER = os.environ.get("SSH_USER", "airflow")
 
 GCP_REGION = "europe-west1"
 GCE_ZONE = "europe-west1-b"
-GCE_SUBNETWORK_ID = os.environ.get("GCE_SUBNETWORK_ID")
-GCE_NETWORK_ID = os.environ.get("GCE_NETWORK_ID")
-GCE_VPC_SHARED_HOST_SUBNETWORK_ID = os.environ.get("GCE_VPC_SHARED_HOST_SUBNETWORK_ID")
-GCE_VPC_SHARED_HOST_NETWORK_ID = os.environ.get("GCE_VPC_SHARED_HOST_NETWORK_ID")
 
 GCE_SA = os.environ.get("GCE_SA", f"algo-training-{ENV_SHORT_NAME}")
 GCE_BASE_PREFIX = f"composer-{ENV_SHORT_NAME}"
@@ -108,5 +104,7 @@ if LOCAL_ENV is None:
     ELEMENTARY_PYTHON_PATH = (
         "/opt/python3.11/lib/python3.11/site-packages/elementary/monitor/dbt_project/"
     )
+else:
+    ELEMENTARY_PYTHON_PATH = os.environ.get("ELEMENTARY_PYTHON_PATH")
 
 SLACK_TOKEN_ELEMENTARY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")

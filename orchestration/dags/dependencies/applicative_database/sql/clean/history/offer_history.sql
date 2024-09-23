@@ -25,4 +25,4 @@ SELECT
     offer_last_validation_type,
     DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY) as partition_date
 FROM `{{ bigquery_raw_dataset }}`.`applicative_database_offer` o
-LEFT JOIN `{{ bigquery_raw_dataset }}`.`applicative_database_product` p ON o.offer_product_id = CAST(p.id as string) = p.offer_product_id
+LEFT JOIN `raw_prod`.`applicative_database_product` p ON o.offer_product_id = CAST(p.id as string)

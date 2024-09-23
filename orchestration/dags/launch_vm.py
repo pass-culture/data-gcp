@@ -1,6 +1,12 @@
 from datetime import datetime, timedelta
+from itertools import chain
 
-from common.config import DAG_FOLDER, ENV_SHORT_NAME
+from common.config import (
+    DAG_FOLDER,
+    ENV_SHORT_NAME,
+    INSTALL_TYPES,
+    INSTANCES_TYPES,
+)
 from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
@@ -20,6 +26,7 @@ dag_config = {
     "BASE_INSTALL_DIR": "data-gcp",
     "COMMAND_INSTALL_PLAYGROUND": "pip install -r requirements.txt --user",
     "COMMAND_INSTALL_PROJECT": "NO_GCP_INIT=1 make install",
+    "PREFIX_COMMAND_INSTALL_PROJECT_UV": "NO_GCP_INIT=1 make ",
 }
 
 # Params
@@ -56,24 +63,35 @@ with DAG(
             type="string",
         ),
         "instance_type": Param(
-            default=gce_params["instance_type"]["prod"], type="string"
+            default=gce_params["instance_type"]["prod"],
+            enum=list(chain(*INSTANCES_TYPES["cpu"].values())),
         ),
         "instance_name": Param(default=gce_params["instance_name"], type="string"),
-        "gpu_count": Param(default=0, type="integer"),
-        "gpu_type": Param(default="nvidia-tesla-t4", type="string"),
+        "gpu_count": Param(default=0, enum=INSTANCES_TYPES["gpu"]["count"]),
+        "gpu_type": Param(
+            default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
+        ),
         "keep_alive": Param(default=True, type="boolean"),
         "install_project": Param(default=True, type="boolean"),
         "use_gke_network": Param(default=False, type="boolean"),
         "disk_size_gb": Param(default="100", type="string"),
+        "install_with_uv": Param(default=False, type="boolean"),
+        "install_type": Param(
+            default="simple", enum=["simple", "engineering", "science", "analytics"]
+        ),
     },
 ) as dag:
 
     def select_clone_task(**kwargs):
         input_parameter = kwargs["params"].get("install_project", False)
-        if input_parameter is True:
-            return "clone_and_setup_with_pyenv"
-        else:
-            return "clone_and_setup_with_conda"
+        install_with_uv = kwargs["params"].get("install_with_uv", False)
+        return (
+            "clone_and_setup_with_uv"
+            if install_with_uv
+            else "clone_and_setup_with_pyenv"
+            if input_parameter
+            else "clone_and_setup_with_conda"
+        )
 
     start = DummyOperator(task_id="start", dag=dag)
 
@@ -97,6 +115,15 @@ with DAG(
         provide_context=True,
     )
 
+    clone_and_setup_with_uv = CloneRepositoryGCEOperator(
+        task_id="clone_and_setup_with_uv",
+        instance_name="{{ params.instance_name }}",
+        python_version="3.10",
+        use_uv=True,
+        command="{{ params.branch }}",
+        retries=2,
+    )
+
     clone_and_setup_with_pyenv = CloneRepositoryGCEOperator(
         task_id="clone_and_setup_with_pyenv",
         instance_name="{{ params.instance_name }}",
@@ -112,6 +139,17 @@ with DAG(
         python_version="3.10",
         use_pyenv=False,
         command="{{ params.branch }}",
+        retries=2,
+    )
+
+    install_project_with_uv = SSHGCEOperator(
+        task_id="install_project_with_uv",
+        instance_name="{{ params.instance_name }}",
+        use_pyenv=True,
+        base_dir=dag_config["BASE_INSTALL_DIR"],
+        command=dag_config["PREFIX_COMMAND_INSTALL_PROJECT_UV"]
+        + INSTALL_TYPES[dag.params["install_type"]],
+        dag=dag,
         retries=2,
     )
 
@@ -134,12 +172,16 @@ with DAG(
         dag=dag,
         retries=2,
     )
-
-    clone_and_setup_with_pyenv >> install_project_with_pyenv
-    clone_and_setup_with_conda >> install_playground_with_conda
     (
         start
         >> gce_instance_start
         >> branching_clone_task
-        >> [clone_and_setup_with_pyenv, clone_and_setup_with_conda]
+        >> [
+            clone_and_setup_with_pyenv,
+            clone_and_setup_with_conda,
+            clone_and_setup_with_uv,
+        ]
     )
+    clone_and_setup_with_pyenv >> install_project_with_pyenv
+    clone_and_setup_with_conda >> install_playground_with_conda
+    clone_and_setup_with_uv >> install_project_with_uv

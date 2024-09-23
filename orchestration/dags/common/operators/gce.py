@@ -214,12 +214,16 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
         environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
         use_pyenv: bool = False,
+        use_uv: bool = False,
         *args,
         **kwargs,
     ):
         self.use_pyenv = use_pyenv
+        self.use_uv = use_uv
         self.command = (
-            self.clone_and_init_with_conda(command, python_version)
+            self.clone_and_init_with_uv(command, python_version)
+            if self.use_uv
+            else self.clone_and_init_with_conda(command, python_version)
             if not self.use_pyenv
             else self.clone_and_init_with_pyenv(command)
         )
@@ -233,6 +237,29 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
             environment=self.environment,
             *args,
             **kwargs,
+        )
+
+    def clone_and_init_with_uv(self, branch, python_version) -> str:
+        return """
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        uv venv --python %s
+        DIR=data-gcp &&
+        if [ -d "$DIR" ]; then
+            echo "Update and Checkout repo..." &&
+            cd ${DIR} &&
+            git fetch --all &&
+            git reset --hard origin/%s
+        else
+            echo "Clone and checkout repo..." &&
+            git clone %s &&
+            cd ${DIR} &&
+            git checkout %s
+        fi
+        """ % (
+            python_version,
+            branch,
+            self.REPO,
+            branch,
         )
 
     def clone_and_init_with_conda(self, branch, python_version) -> str:

@@ -17,6 +17,10 @@ SELECT
     deposit.total_actual_amount_spent,
     deposit.total_theoretical_amount_spent_in_digital_goods,
     deposit.total_non_cancelled_individual_bookings,
+    deposit.total_non_cancelled_duo_bookings,
+    deposit.total_free_bookings,
+    deposit.total_distinct_booking_types,
+    deposit.total_distinct_category_booked,
     deposit.first_individual_booking_date,
     deposit.deposit_creation_date 
 FROM {{ ref("mrt_global__user") }} user 
@@ -27,31 +31,14 @@ JOIN {{ ref("mrt_global__deposit") }} deposit ON user.user_id = deposit.user_id 
 SELECT 
     user.deposit_expiration_date,
     user.user_id,
-    COUNT(DISTINCT CASE WHEN book.booking_quantity = 2 THEN book.booking_id END) duo_booking,
-    COUNT(DISTINCT book.offer_category_id) total_category_booked,
     SUM(delta_diversification) total_diversification,
     SUM(venue_id_diversification) total_venue_id_diversification,
     SUM(venue_type_label_diversification) total_venue_type_label_diversification
-FROM {{ ref("mrt_global__booking") }} book  
-JOIN users_expired_monthly user ON user.user_id = book.user_id 
+FROM users_expired_monthly user ON user.user_id = book.user_id 
 JOIN {{ ref("diversification_booking") }} ON book.booking_id = diversification_booking.booking_id 
-WHERE NOT booking_is_cancelled 
 GROUP BY 
     deposit_expiration_date,
     user_id 
-)
-
-, free_booking AS (
-SELECT 
-    deposit_expiration_date,
-    users_expired_monthly.user_id,
-    COUNT(DISTINCT booking_id) AS total_free_bookings
-FROM {{ ref("mrt_global__booking") }} 
-JOIN {{ ref("mrt_global__offer") }} on global_offer.offer_id = global_booking.offer_id AND global_offer.last_stock_price = 0 
-JOIN users_expired_monthly on global_booking.user_id = users_expired_monthly.user_id 
-GROUP BY 
-    deposit_expiration_date,
-    user_id
 )
 
 , weekly_active_user_compute as (
@@ -127,10 +114,12 @@ SELECT
     SUM(u.total_actual_amount_spent) AS total_grant_18_amount_spent,
     SUM(u.total_theoretical_amount_spent_in_digital_goods) AS total_grant_18_theoretical_amount_spent_in_digital_goods,
     SUM(u.total_non_cancelled_individual_bookings) AS total_grant_18_non_cancelled_individual_bookings,
-    SUM(f.total_free_bookings) AS total_free_bookings,
+    SUM(u.total_non_cancelled_duo_bookings) AS total_grant_18_non_cancelled_duo_bookings,
+    SUM(u.total_free_bookings) AS total_free_bookings,
     SUM(total_item_consulted) AS total_item_consulted,
     SUM(total_venue_consulted) AS total_venue_consulted,
-    AVG(b.total_category_booked) AS avg_category_booked,
+    AVG(u.total_distinct_category_booked) AS avg_category_booked,
+    AVG(u.total_distinct_booking_types) AS avg_subcategory_booked,
     AVG(total_venue_type_label_consulted) AS avg_venue_type_label_consulted,
     AVG(DATE_DIFF(u.first_individual_booking_date, u.deposit_creation_date, DAY)) AS avg_day_between_deposit_and_first_booking,
     AVG(b.total_diversification) AS avg_diversification_score,
@@ -140,7 +129,6 @@ SELECT
     AVG(monthly_active_user.monthly_active_user) AS monthly_active_user
 FROM users_expired_monthly u 
 LEFT JOIN bookings_info b on u.user_id = b.user_id AND u.deposit_expiration_date = b.deposit_expiration_date 
-LEFT JOIN free_booking f on f.user_id = u.user_id AND f.deposit_expiration_date = u.deposit_expiration_date
 LEFT JOIN weekly_active_user on weekly_active_user.deposit_expiration_date = u.deposit_expiration_date
 LEFT JOIN monthly_active_user on monthly_active_user.deposit_expiration_date = u.deposit_expiration_date 
 LEFT JOIN consultations c on u.user_id = c.user_id AND u.deposit_expiration_date = c.deposit_expiration_date 

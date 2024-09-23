@@ -18,9 +18,9 @@
 with consultation_by_sessions as (
 SELECT
     unique_session_id,
-    SUM(item_score) AS item_score,
-    SUM(subcategory_score) AS subcategory_score,
-    SUM(category_score) AS category_score,
+    SUM(item_discovery_score) AS item_discovery_score,
+    SUM(subcategory_discovery_score) AS subcategory_discovery_score,
+    SUM(category_discovery_score) AS category_discovery_score
 from {{ ref('mrt_native__consultation')}}
 group by unique_session_id
 )
@@ -37,9 +37,9 @@ SELECT
     v.traffic_campaign,
     v.traffic_medium,
     v.traffic_source,
-    s.item_score,
-    s.subcategory_score,
-    s.category_score
+    s.item_discovery_score,
+    s.subcategory_discovery_score,
+    s.category_discovery_score
 FROM {{ ref('firebase_visits') }} AS v
 LEFT JOIN consultation_by_sessions AS s ON s.unique_session_id = v.unique_session_id
 {% if is_incremental() %}

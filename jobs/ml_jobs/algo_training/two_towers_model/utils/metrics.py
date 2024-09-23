@@ -45,22 +45,25 @@ def get_prediction(prediction_input_feature, data_model_dict):
     data = data_model_dict["data"]["test"][
         ["item_id", "offer_subcategoryid"]
     ].drop_duplicates()
-    nboffers = len(data)
-    offer_to_score = data["item_id"].values.reshape((nboffers, 1))
-    offer_subcategoryid = data["offer_subcategoryid"].values.reshape((nboffers,))
+    nboffers = len(list(data.item_id))
+    offer_to_score = np.reshape(np.array(list(data.item_id)), (nboffers, 1))
+    offer_subcategoryid = np.reshape(
+        np.array(list(data.offer_subcategoryid)), (nboffers,)
+    )
     prediction_input = [
         np.array([prediction_input_feature] * len(offer_to_score)),
-        offer_to_score,
+        np.array(list(data.item_id)),
     ]
     prediction = model.predict(prediction_input, verbose=0)
     df_predicted = pd.DataFrame(
         {
-            "item_id": offer_to_score.flatten(),
-            "score": prediction.flatten(),
-            "offer_subcategoryid": offer_subcategoryid.flatten(),
+            "item_id": offer_to_score.flatten().tolist(),
+            "score": prediction.flatten().tolist(),
+            "offer_subcategoryid": offer_subcategoryid.flatten().tolist(),
         }
     )
-    df_predicted = df_predicted.sort_values("score", ascending=False)
+    df_predicted = df_predicted.sort_values(["score"], ascending=False)
+    # return only top 50 offers since max k for metrics is 40
     return df_predicted.head(50)
 
 
@@ -114,7 +117,7 @@ def compute_recall_and_precision_at_k(data_model_dict, k):
 
 def get_avg_recall_and_precision_at_k(actual, model_predictions, k):
     cf_mark = recmetrics.mark(actual, model_predictions, k)
-    cf_mapk = recmetrics.mapk(actual, model_predictions, k)
+    cf_mapk = mapk(actual, model_predictions, k)
     return cf_mark, cf_mapk
 
 
@@ -161,17 +164,11 @@ def get_avg_diversification_score(df_raw, recos, k):
 
     for reco in tqdm(recos[:max_recos]):
         df_clean = (
-            df_raw.query("item_id in @reco[:k]")
-            .drop_duplicates(
-                subset=[
-                    "offer_categoryId",
-                    "offer_subcategoryid",
-                    "genres",
-                    "rayon",
-                    "type",
-                ]
-            )
-            .fillna("NA")
+            df_raw.query(f"item_id in {tuple(reco[:k])}")[
+                ["offer_categoryId", "offer_subcategoryid", "genres", "rayon", "type"]
+            ]
+            .drop_duplicates()
+            .fillna("NA", inplace=False)
         )
         count_dist = df_clean.nunique()
         diversification = count_dist.sum()

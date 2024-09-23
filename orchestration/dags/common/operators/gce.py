@@ -40,8 +40,8 @@ class StartGCEOperator(BaseOperator):
         instance_name: str,
         instance_type: str = "n1-standard-1",
         preemptible: bool = True,
-        accelerator_types=[],
-        gpu_count: int = 0,
+        accelerator_types: list = [],
+        gpu_count: t.Optional[int] = None,
         source_image_type: str = None,
         disk_size_gb: str = "100",
         labels={},
@@ -62,7 +62,7 @@ class StartGCEOperator(BaseOperator):
 
     def execute(self, context) -> None:
         if self.source_image_type is None:
-            if len(self.accelerator_types) > 0 or self.gpu_count > 0:
+            if self.gpu_count in [1, 2, 4]:
                 image_type = MACHINE_TYPE["gpu"]
             else:
                 image_type = MACHINE_TYPE["cpu"]

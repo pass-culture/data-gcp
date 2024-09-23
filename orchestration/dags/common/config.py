@@ -146,6 +146,7 @@ CPU_INSTANCES_TYPES = {
 }
 GPU_INSTANCES_TYPES = {
     "name": [
+        None,
         "nvidia-tesla-t4",
         "nvidia-tesla-p4",
         "nvidia-tesla-p100",

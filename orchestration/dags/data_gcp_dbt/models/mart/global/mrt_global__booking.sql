@@ -52,7 +52,7 @@ select
     venue_iris_internal_id,
     offer_url,
     isbn,
-    user_iris_internal_id,
+    u.user_iris_internal_id,
     u.user_postal_code,
     u.user_department_code,
     u.user_region_name,

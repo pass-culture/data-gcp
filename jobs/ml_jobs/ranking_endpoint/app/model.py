@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 import joblib
 import lightgbm as lgb
@@ -61,34 +61,57 @@ class PredictPipeline:
             "./metadata/preproc_classifier.joblib"
         )
 
-    def predict(self, input_data: list[dict]):
-        errors = []
-        df = pd.DataFrame(input_data)
-        _cols = list(df.columns)
+    def predict(self, input_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Predict class and scores based on input data using a pre-trained model.
 
-        for x in self.numeric_features:
-            if x not in _cols:
-                errors.append(x)
-                df[x] = DEFAULT_NUMERICAL
-        for x in self.categorical_features:
-            if x not in _cols:
-                errors.append(x)
-                df[x] = DEFAULT_CATEGORICAL
+        Parameters:
+        ----------
+        input_data : List[Dict[str, Any]]
+            A list of dictionaries where each dictionary contains features used for prediction.
+            The features include both numerical and categorical ones. Missing features will be replaced
+            with default values specified in the system.
 
-        processed_data_classifier = self.preprocessor_classifier.transform(df)
+        Returns:
+        -------
+        List[Dict[str, Any]]
+            A list of dictionaries where each dictionary contains the offer_id and the score.
+        """
+
+        processed_data: List[Dict[str, Any]] = []
+
+        for item in input_data:
+            processed_item = {}
+
+            for feature in self.numeric_features:
+                processed_item[feature] = item.get(feature, DEFAULT_NUMERICAL)
+
+            for feature in self.categorical_features:
+                processed_item[feature] = item.get(feature, DEFAULT_CATEGORICAL)
+
+            processed_data.append(processed_item)
+
+        processed_data_classifier = self.preprocessor_classifier.transform(
+            pd.DataFrame(processed_data)
+        )
         predictions_classifier = self.model_classifier.predict(
             processed_data_classifier
         )
 
-        return (
-            df.assign(
-                predicted_class=predictions_classifier.argmax(axis=1),
-                consulted_score=predictions_classifier[:, ClassMapping.consulted.value],
-                booked_score=predictions_classifier[:, ClassMapping.booked.value],
-                score=lambda df: df.consulted_score + df.booked_score,
-            ).to_dict(orient="records"),
-            errors,
-        )
+        results: List[Dict[str, Any]] = []
+        for idx, prediction in enumerate(predictions_classifier):
+            score = float(
+                prediction[ClassMapping.consulted.value]
+                + prediction[ClassMapping.booked.value]
+            )
+            offer_id = input_data[idx].get("offer_id")
+            result = {
+                "offer_id": offer_id,
+                "score": score,
+            }
+            results.append(result)
+
+        return results
 
 
 class TrainPipeline:

@@ -31,31 +31,23 @@ def is_alive():
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    input_json = request.get_json()["instances"]
+    input_json = None
+    results = None
     try:
-        results, errors = model.predict(input_json)
-        log_data = {
-            "event": "predict",
-            "input_data": input_json,
-            "result": results,
-        }
-        if len(errors) > 0:
-            log_data["error"] = f""" {",".join(errors)} not found"""
-            logger.warn("predict_error", extra=log_data)
-        else:
-            logger.info("predict.", extra=log_data)
+        input_json = request.get_json()["instances"]
+        results = model.predict(input_json)
 
-        return jsonify(
-            {"predictions": sorted(results, key=lambda x: x["score"], reverse=True)}
-        )
+        return jsonify({"predictions": results}), 200
 
     except Exception as e:
+        log_data = {"event": "predict", "result": results, "request": request.json()}
+
         log_data = {"event": "error", "exception": str(e)}
-        logger.info(log_data)
+        logger.error(log_data)
         logger.exception(e)
 
-    return jsonify({"predictions": []})
+        return jsonify({"predictions": []}), 500
 
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=8080)
+    app.run()

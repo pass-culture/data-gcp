@@ -236,7 +236,7 @@ packaging==21.3
     #   gunicorn
     #   mlflow
     #   tensorflow
-pandas==1.5.3
+pandas==2.0.3
     # via
     #   -r requirements.in
     #   db-dtypes
@@ -379,6 +379,8 @@ typing-extensions==4.12.2
     #   alembic
     #   sqlalchemy
     #   tensorflow
+tzdata==2024.2
+    # via pandas
 urllib3==2.2.2
     # via
     #   databricks-cli

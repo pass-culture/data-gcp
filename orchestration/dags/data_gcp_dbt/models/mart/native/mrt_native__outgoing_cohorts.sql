@@ -1,44 +1,33 @@
 WITH users_expired_monthly AS (
 SELECT 
-    deposit.deposit_expiration_date,
-    user.user_id,
-    user.user_is_priority_public,
-    user.user_is_in_qpv,
-    user.user_is_unemployed,
-    user.user_density_label,
-    user.user_macro_density_label,
-    user.user_region_name,
-    user.user_department_code,
-    user.user_activity,
-    user.user_civility,
-    user.is_theme_subscribed,
-    deposit.deposit_source,
-    deposit.deposit_rank_desc,
-    deposit.total_actual_amount_spent,
-    deposit.total_theoretical_amount_spent_in_digital_goods,
-    deposit.total_non_cancelled_individual_bookings,
-    deposit.total_non_cancelled_duo_bookings,
-    deposit.total_free_bookings,
-    deposit.total_distinct_booking_types,
-    deposit.total_distinct_category_booked,
-    deposit.first_individual_booking_date,
-    deposit.deposit_creation_date 
+    last_deposit_expiration_date as deposit_expiration_date,
+    user_id,
+    user_is_priority_public,
+    user_is_in_qpv,
+    user_is_unemployed,
+    user_density_label,
+    user_macro_density_label,
+    user_region_name,
+    user_department_code,
+    user_activity,
+    user_civility,
+    total_deposit_amount,
+    is_theme_subscribed,
+    total_actual_amount_spent,
+    total_theoretical_digital_goods_amount_spent,
+    total_non_cancelled_individual_bookings,
+    total_non_cancelled_duo_bookings,
+    total_free_bookings,
+    total_distinct_booking_types,
+    first_individual_booking_date,
+    first_deposit_creation_date,
+    total_diversification as diversification,
+    total_venue_id_diversification as venue_id_diversification,
+    total_venue_type_label_diversification as venue_type_label_diversification,
+    total_category_diversification as category_diversification,
+    DATE_DIFF(last_deposit_expiration_date, first_deposit_creation_date, day) as seniority_days 
 FROM {{ ref("mrt_global__user") }} user 
-JOIN {{ ref("mrt_global__deposit") }} deposit ON user.user_id = deposit.user_id and deposit.deposit_type = "GRANT_18" AND deposit.deposit_expiration_date < DATE_TRUNC(current_date, MONTH)
-)
-
-, bookings_info AS (
-SELECT 
-    user.deposit_expiration_date,
-    user.user_id,
-    SUM(delta_diversification) total_diversification,
-    SUM(venue_id_diversification) total_venue_id_diversification,
-    SUM(venue_type_label_diversification) total_venue_type_label_diversification
-FROM users_expired_monthly user ON user.user_id = book.user_id 
-JOIN {{ ref("diversification_booking") }} ON book.booking_id = diversification_booking.booking_id 
-GROUP BY 
-    deposit_expiration_date,
-    user_id 
+WHERE current_deposit_type = "GRANT_18" AND last_deposit_expiration_date < DATE_TRUNC(current_date, MONTH)
 )
 
 , weekly_active_user_compute as (
@@ -52,6 +41,7 @@ GROUP BY
     deposit_expiration_date,
     connexion_week
 )
+-- merge les 2 subqueries de compute 
 
 , weekly_active_user as (
 SELECT 
@@ -81,6 +71,7 @@ FROM monthly_active_user_compute
 GROUP BY deposit_expiration_date
 )
 
+--Ajouter ça à deposit level et user level  
 , consultations as (
 SELECT 
     u.deposit_expiration_date,
@@ -118,17 +109,16 @@ SELECT
     SUM(u.total_free_bookings) AS total_free_bookings,
     SUM(total_item_consulted) AS total_item_consulted,
     SUM(total_venue_consulted) AS total_venue_consulted,
-    AVG(u.total_distinct_category_booked) AS avg_category_booked,
     AVG(u.total_distinct_booking_types) AS avg_subcategory_booked,
     AVG(total_venue_type_label_consulted) AS avg_venue_type_label_consulted,
     AVG(DATE_DIFF(u.first_individual_booking_date, u.deposit_creation_date, DAY)) AS avg_day_between_deposit_and_first_booking,
     AVG(b.total_diversification) AS avg_diversification_score,
     AVG(b.total_venue_id_diversification) AS avg_venue_id_diversification_score,
     AVG(b.total_venue_type_label_diversification) AS avg_venue_type_label_diversification_score,
+    AVG(total_category_diversification) AS avg_category_diversification_score,
     AVG(weekly_active_user.weekly_active_user) AS weekly_active_user,
     AVG(monthly_active_user.monthly_active_user) AS monthly_active_user
 FROM users_expired_monthly u 
-LEFT JOIN bookings_info b on u.user_id = b.user_id AND u.deposit_expiration_date = b.deposit_expiration_date 
 LEFT JOIN weekly_active_user on weekly_active_user.deposit_expiration_date = u.deposit_expiration_date
 LEFT JOIN monthly_active_user on monthly_active_user.deposit_expiration_date = u.deposit_expiration_date 
 LEFT JOIN consultations c on u.user_id = c.user_id AND u.deposit_expiration_date = c.deposit_expiration_date 

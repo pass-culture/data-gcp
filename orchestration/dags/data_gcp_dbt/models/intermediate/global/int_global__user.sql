@@ -33,7 +33,11 @@ deposit_grouped_by_user as (
         min(first_paid_booking_date) as first_paid_booking_date,
         sum(case when  deposit_rank_desc = 1 then total_actual_amount_spent end) as total_deposit_actual_amount_spent,
         sum(case when deposit_rank_desc = 1 then total_theoretical_amount_spent_in_digital_goods end) as total_last_deposit_digital_goods_amount_spent,
-        min(deposit_creation_date) as user_activation_date
+        min(deposit_creation_date) as user_activation_date,
+        sum(total_diversification) as total_diversification,
+        sum(total_venue_id_diversification) as total_venue_id_diversification,
+        sum(total_venue_type_label_diversification) as total_venue_type_label_diversification,
+        sum(total_category_diversification) as total_category_diversification
     from {{ ref('int_global__deposit') }}
     group by user_id
 )
@@ -80,6 +84,10 @@ select
     dgu.total_theoretical_outings_amount_spent,
     dgu.total_last_deposit_digital_goods_amount_spent,
     dgu.total_deposit_actual_amount_spent,
+    dgu.total_diversification,
+    dgu.total_venue_id_diversification,
+    dgu.total_venue_type_label_diversification,
+    dgu.total_category_diversification,
     dgu.last_deposit_amount,
     case when dgu.last_deposit_amount < 300 then 'GRANT_15_17' else 'GRANT_18' end as current_deposit_type,
     case when dgu.first_deposit_amount < 300 then 'GRANT_15_17' else 'GRANT_18' end as first_deposit_type,

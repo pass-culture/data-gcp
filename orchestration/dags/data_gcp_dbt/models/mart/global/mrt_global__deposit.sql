@@ -11,6 +11,9 @@ select
     u.user_density_label,
     u.user_macro_density_label,
     u.user_density_level,
+    u.user_is_in_qpv,
+    u.user_is_unemployed,
+    u.user_is_priority_public,
     u.user_department_code,
     u.user_age,
     u.user_creation_date,
@@ -37,7 +40,11 @@ select
         CAST(u.user_creation_date as DATE),
         day
     ) as days_between_user_creation_and_deposit_creation,
-    u.user_birth_date
+    u.user_birth_date,
+    d.total_diversification,
+    d.total_venue_id_diversification,
+    d.total_venue_type_label_diversification,
+    d.total_category_diversification
 from {{ ref('int_global__deposit') }} as d
     inner join {{ ref('int_applicative__user') }} as u on u.user_id = d.user_id
     left join {{ ref('int_applicative__action_history') }} as ah on ah.user_id = d.user_id and ah.action_history_rk = 1

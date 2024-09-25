@@ -10,7 +10,7 @@ infos_users AS (
         , deposit.deposit_type
         , DATE_TRUNC(deposit_creation_date,MONTH) AS date_deposit
         , DATE_TRUNC(deposit_expiration_date,MONTH) AS date_expiration
-        , user.first_booking_date
+        , user.first_individual_booking_date as first_booking_date
         , user.user_department_code
         , user.user_region_name
         , rd.academy_name

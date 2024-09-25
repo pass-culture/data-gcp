@@ -3,7 +3,7 @@ WITH user_visits AS (
         user_id,
         COUNT(DISTINCT CONCAT(user_pseudo_id, session_id)) AS total_visit_last_month
     FROM `{{ bigquery_int_firebase_dataset }}.native_event`
-    WHERE DATE(user_first_touch_timestamp) >= DATE_SUB(CURRENT_DATE, INTERVAL 1 MONTH)
+    WHERE DATE(event_date) >= DATE_SUB(CURRENT_DATE, INTERVAL 1 MONTH)
     GROUP BY user_id
 ),
 

@@ -1,5 +1,6 @@
 import time
 from datetime import datetime
+from urllib.parse import parse_qs, urlparse
 
 import pandas as pd
 import requests
@@ -63,6 +64,15 @@ class BatchClient:
                     key: response.json().get(key, [])
                     for key in ["campaign_token", "labels"]
                 }
+                tags_dict["deeplink"] = (
+                    response.json().get("messages", [{}])[0].get("deeplink", "")
+                )
+                if "utm_campaign" in tags_dict["deeplink"]:
+                    tags_dict["utm_campaign"] = parse_qs(
+                        urlparse(tags_dict["deeplink"]).query
+                    )["utm_campaign"][0]
+                else:
+                    tags_dict["utm_campaign"] = ""
                 tags_list.append(tags_dict)
 
         campaigns_with_tag_df = (

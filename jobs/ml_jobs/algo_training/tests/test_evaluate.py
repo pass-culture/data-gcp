@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 import pytest
-from utils.metrics import get_actual_and_predicted
+
+from two_towers_model.utils.metrics import get_actual_and_predicted
 
 
 class MockModel:

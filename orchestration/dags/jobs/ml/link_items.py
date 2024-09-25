@@ -43,8 +43,8 @@ DAG_CONFIG = {
     "BATCH_SIZE": 100000,
     "LINKAGE_ITEM_SOURCES_DATA_REQUEST": "linkage_item_sources_data.sql",
     "LINKAGE_ITEM_CANDIDATES_DATA_REQUEST": "linkage_item_candidates_data.sql",
-    "INPUT_SOURCES_TABLE": f"{DATE}_input_sources_table",
-    "INPUT_CANDIDATES_TABLE": f"{DATE}_item_candidates_data",
+    "INPUT_SOURCES_TABLE": "input_sources_table",
+    "INPUT_CANDIDATES_TABLE": "item_candidates_data",
     "LINKED_ITEMS_TABLE": "linked_items",
     "INPUT_SOURCES_DIR": "item_sources_data",
     "INPUT_CANDIDATES_DIR": "item_candidates_data",
@@ -99,6 +99,16 @@ with DAG(
             default=DAG_CONFIG["BATCH_SIZE"],
             type="integer",
         ),
+        "input_sources_table": Param(
+            default=DAG_CONFIG["INPUT_SOURCES_TABLE"], type="string"
+        ),
+        "input_candidates_table": Param(
+            default=DAG_CONFIG["INPUT_CANDIDATES_TABLE"],
+            type="string",
+        ),
+        "linked_items_table": Param(
+            default=DAG_CONFIG["LINKED_ITEMS_TABLE"], type="string"
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -110,7 +120,9 @@ with DAG(
         ).as_posix(),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DAG_CONFIG['INPUT_SOURCES_TABLE']}",
+        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}"
+        + f".{DATE}_"
+        + "{{ params.input_sources_table }}",
     )
     import_data_tasks.append(import_sources)
 
@@ -121,7 +133,9 @@ with DAG(
         ).as_posix(),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DAG_CONFIG['INPUT_CANDIDATES_TABLE']}",
+        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}"
+        + f".{DATE}_"
+        + "{{ params.input_candidates_table }}",
     )
     import_data_tasks.append(import_candidates)
     end_imports = DummyOperator(task_id="end_imports", dag=dag)
@@ -133,7 +147,7 @@ with DAG(
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
                     "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": f"{DAG_CONFIG['INPUT_SOURCES_TABLE']}",
+                    "tableId": f"{DATE}_" + "{{ params.input_sources_table }}",
                 },
                 "compression": None,
                 "destinationFormat": "PARQUET",
@@ -155,7 +169,7 @@ with DAG(
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
                     "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": DAG_CONFIG["INPUT_CANDIDATES_TABLE"],
+                    "tableId": f"{DATE}_" + "{{ params.input_candidates_table }}",
                 },
                 "compression": None,
                 "destinationFormat": "PARQUET",
@@ -239,7 +253,9 @@ with DAG(
         source_objects=os.path.join(
             GCS_FOLDER_PATH, DAG_CONFIG["LINKED_ITEMS_FILENAME"]
         ),
-        destination_project_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['LINKED_ITEMS_TABLE']}",
+        destination_project_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}"
+        + "."
+        + "{{params.linked_items_table}}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,

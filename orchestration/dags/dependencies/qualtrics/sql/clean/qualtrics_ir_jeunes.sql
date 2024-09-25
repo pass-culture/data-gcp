@@ -18,7 +18,7 @@ previous_export AS (
 
 answers AS (
     SELECT distinct user_id
-    FROM `{{ bigquery_analytics_dataset }}.qualtrics_answers`
+    FROM `{{ bigquery_raw_dataset }}.qualtrics_answers`
 ),
 
 ir_export AS (

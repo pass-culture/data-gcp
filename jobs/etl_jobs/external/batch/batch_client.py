@@ -97,19 +97,20 @@ class BatchClient:
             .assign(tags=lambda _df: _df["tags"].astype(str))
         )
 
-        campaigns_with_tag_df[["utm_campaign", "utm_campaign_a", "utm_campaign_b"]] = (
-            campaigns_with_tag_df["utm_campaign"].apply(pd.Series)
-        )
+        if campaigns_with_tag_df["utm_campaign"].apply(pd.Series).shape[1] == 3:
+            campaigns_with_tag_df[
+                ["utm_campaign", "utm_campaign_a", "utm_campaign_b"]
+            ] = campaigns_with_tag_df["utm_campaign"].apply(pd.Series)
 
-        campaigns_with_tag_df = (
-            campaigns_with_tag_df.assign(
-                utm_campaign=lambda _df: _df["utm_campaign"].fillna(
-                    _df["utm_campaign_a"]
+            campaigns_with_tag_df = (
+                campaigns_with_tag_df.assign(
+                    utm_campaign=lambda _df: _df["utm_campaign"].fillna(
+                        _df["utm_campaign_a"]
+                    )
                 )
+                .drop(["messages", "deeplink", "utm_campaign_a"], axis=1)
+                .rename(columns={"utm_campaign_b": "utm_campaign_version_b"})
             )
-            .drop(["messages", "deeplink", "utm_campaign_a"], axis=1)
-            .rename(columns={"utm_campaign_b": "utm_campaign_version_b"})
-        )
 
         campaigns_df = campaigns_df.merge(
             campaigns_with_tag_df, on="campaign_token", how="left"

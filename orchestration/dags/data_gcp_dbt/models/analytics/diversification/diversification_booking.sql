@@ -16,6 +16,7 @@ select
     user.user_civility,
     booking.booking_intermediary_amount as booking_amount,
     user.first_deposit_creation_date,
+    null as ci_test_field,
     COALESCE(
         IF(booking.physical_goods = True, 'physical', Null),
         IF(booking.digital_goods = True, 'digital', Null),

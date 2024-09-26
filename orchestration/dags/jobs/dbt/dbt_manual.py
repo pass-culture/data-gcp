@@ -26,7 +26,17 @@ dag = DAG(
     params={
         "dbt_command": Param(
             default="compile",
-            type="string",
+            enum=[
+                "compile",
+                "docs generate",
+                "parse",
+                "deps",
+                "clean",
+                "run",
+                "test",
+                "snapshot",
+                "seed",
+            ],
         ),
         "target": Param(
             default=ENV_SHORT_NAME,

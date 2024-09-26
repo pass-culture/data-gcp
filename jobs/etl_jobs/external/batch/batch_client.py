@@ -1,11 +1,12 @@
 import time
 from datetime import datetime
-from urllib.parse import parse_qs, urlparse
 
 import pandas as pd
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+from utils import get_utm_campaign
 
 session = requests.Session()
 retry = Retry(connect=3, backoff_factor=0.5)
@@ -64,21 +65,50 @@ class BatchClient:
                     key: response.json().get(key, [])
                     for key in ["campaign_token", "labels"]
                 }
-                tags_dict["deeplink"] = (
-                    response.json().get("messages", [{}])[0].get("deeplink", "")
-                )
-                if "utm_campaign" in tags_dict["deeplink"]:
-                    tags_dict["utm_campaign"] = parse_qs(
-                        urlparse(tags_dict["deeplink"]).query
-                    )["utm_campaign"][0]
-                else:
-                    tags_dict["utm_campaign"] = ""
+                tags_dict["messages"] = response.json().get("messages", [{}])
+
+                if isinstance(tags_dict["messages"], list):
+                    tags_dict["deeplink"] = tags_dict["messages"][0].get("deeplink", "")
+                    tags_dict["utm_campaign"] = get_utm_campaign(tags_dict["deeplink"])
+
+                if isinstance(tags_dict["messages"], dict):
+                    if "b" in tags_dict["messages"]:
+                        tags_dict["deeplink"] = {
+                            "a": tags_dict["messages"]["a"][0].get("deeplink", ""),
+                            "b": tags_dict["messages"]["b"][0].get("deeplink", ""),
+                        }
+                        tags_dict["utm_campaign"] = {
+                            "a": get_utm_campaign(tags_dict["deeplink"]["a"]),
+                            "b": get_utm_campaign(tags_dict["deeplink"]["b"]),
+                        }
+
+                    else:
+                        tags_dict["deeplink"] = {
+                            "a": tags_dict["messages"]["a"][0].get("deeplink", "")
+                        }
+                        tags_dict["utm_campaign"] = {
+                            "a": get_utm_campaign(tags_dict["deeplink"]["a"])
+                        }
                 tags_list.append(tags_dict)
 
         campaigns_with_tag_df = (
             pd.DataFrame(tags_list)
             .rename(columns={"labels": "tags"})
             .assign(tags=lambda _df: _df["tags"].astype(str))
+        )
+
+        campaigns_with_tag_df[["utm_campaign", "utm_campaign_a", "utm_campaign_b"]] = (
+            campaigns_with_tag_df["utm_campaign"].apply(pd.Series)
+        )
+
+        campaigns_with_tag_df = (
+            campaigns_with_tag_df.assign(
+                utm_campaign=lambda _df: _df["utm_campaign"].fillna(
+                    _df["utm_campaign_a"]
+                )
+            )
+            .drop(["messages", "deeplink", "utm_campaign_a"], axis=1)
+            .rename(columns={"utm_campaign_b": "utm_campaign_version_b"})
         )
 
         campaigns_df = campaigns_df.merge(

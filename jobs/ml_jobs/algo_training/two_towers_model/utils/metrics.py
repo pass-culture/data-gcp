@@ -34,9 +34,10 @@ def get_actual_and_predicted(
         )
         predictions_diversified.append(diversified_prediction)
 
-    df_actual["model_predicted"] = deep_reco_prediction
-    df_actual["predictions_diversified"] = predictions_diversified
-    data_model_dict["top_offers"] = df_actual
+    data_model_dict["top_offers"] = df_actual.assign(
+        model_predicted=deep_reco_prediction,
+        predictions_diversified=predictions_diversified,
+    )
     return data_model_dict
 
 

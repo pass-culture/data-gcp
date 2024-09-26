@@ -71,6 +71,7 @@ select
     u.user_is_in_qpv,
     u.user_is_unemployed,
     u.user_is_priority_public,
+    u.first_deposit_creation_date
 from {{ ref('int_global__booking') }} as b
 left join {{ ref('mrt_global__user') }} as u on u.user_id = b.user_id
 where deposit_type is not NULL

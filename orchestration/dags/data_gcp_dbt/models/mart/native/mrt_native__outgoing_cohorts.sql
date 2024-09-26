@@ -41,7 +41,6 @@ GROUP BY
     deposit_expiration_date,
     connexion_week
 )
--- merge les 2 subqueries de compute 
 
 , weekly_active_user as (
 SELECT 
@@ -71,7 +70,6 @@ FROM monthly_active_user_compute
 GROUP BY deposit_expiration_date
 )
 
---Ajouter ça à deposit level et user level  
 , consultations as (
 SELECT 
     u.deposit_expiration_date,

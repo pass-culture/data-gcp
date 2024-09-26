@@ -25,7 +25,7 @@ dag = DAG(
     schedule_interval=None,
     params={
         "dbt_command": Param(
-            default="compile",
+            "compile",
             enum=[
                 "compile",
                 "docs generate",
@@ -39,12 +39,12 @@ dag = DAG(
             ],
         ),
         "target": Param(
-            default=ENV_SHORT_NAME,
-            type=["null", "string"],
+            ENV_SHORT_NAME,
+            enum=["None", "dev", "stg", "prod"],
         ),
         "source_env": Param(
-            default=ENV_SHORT_NAME,
-            type=["null", "string"],
+            ENV_SHORT_NAME,
+            enum=["None", "dev", "stg", "prod"],
         ),
     },
 )
@@ -53,7 +53,11 @@ start = DummyOperator(task_id="start", dag=dag)
 
 dbt_manual_command = BashOperator(
     task_id="dbt_manual_command",
-    bash_command="""dbt {{ params.dbt_command }}{% if params.target %} -t {{ params.target }}{% endif %}{% if params.source_env %} --vars "{'ENV_SHORT_NAME':'{{ params.source_env }}'}"{% endif %}""",
+    bash_command="""
+    dbt {{ params.dbt_command }} \
+    {% if params.target != "None" %} -t {{ params.target }}{% endif %} \
+    {% if params.source_env != "None" %} --vars "{'ENV_SHORT_NAME':'{{ params.source_env }}'}"{% endif %}
+    """,
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
 )

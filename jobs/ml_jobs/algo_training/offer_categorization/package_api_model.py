@@ -35,7 +35,7 @@ class PreprocessingOutput:
 
 class ApiModel(mlflow.pyfunc.PythonModel):
     TEXT_ENCODER_MODEL = SentenceTransformer(
-        "sentence-transformers/clip-ViT-B-32-multilingual-v1", device="cpu"
+        "sentence-transformers/all-MiniLM-L6-v2", device="cpu"
     )
 
     def __init__(self, classification_model: CatBoostClassifier, features: dict):

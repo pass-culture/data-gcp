@@ -30,6 +30,21 @@ FROM {{ ref("mrt_global__user") }} user
 WHERE current_deposit_type = "GRANT_18" AND last_deposit_expiration_date < DATE_TRUNC(current_date, MONTH)
 )
 
+, bookings_info AS (
+SELECT 
+    user.deposit_expiration_date,
+    user.user_id,
+    SUM(delta_diversification) AS total_diversification,
+    SUM(venue_id_diversification) AS total_venue_id_diversification,
+    SUM(venue_type_label_diversification) AS total_venue_type_label_diversification,
+    SUM(category_diversification) AS total_category_diversification
+FROM users_expired_monthly user ON user.user_id = book.user_id 
+JOIN {{ ref("diversification_booking") }} ON book.booking_id = diversification_booking.booking_id 
+GROUP BY 
+    deposit_expiration_date,
+    user_id 
+)
+
 , weekly_active_user_compute as (
 SELECT 
     deposit_expiration_date,
@@ -113,13 +128,14 @@ SELECT
     AVG(b.total_diversification) AS avg_diversification_score,
     AVG(b.total_venue_id_diversification) AS avg_venue_id_diversification_score,
     AVG(b.total_venue_type_label_diversification) AS avg_venue_type_label_diversification_score,
-    AVG(total_category_diversification) AS avg_category_diversification_score,
+    AVG(b.total_category_diversification) AS avg_category_diversification_score,
     AVG(weekly_active_user.weekly_active_user) AS weekly_active_user,
     AVG(monthly_active_user.monthly_active_user) AS monthly_active_user
 FROM users_expired_monthly u 
 LEFT JOIN weekly_active_user on weekly_active_user.deposit_expiration_date = u.deposit_expiration_date
 LEFT JOIN monthly_active_user on monthly_active_user.deposit_expiration_date = u.deposit_expiration_date 
 LEFT JOIN consultations c on u.user_id = c.user_id AND u.deposit_expiration_date = c.deposit_expiration_date 
+LEFT JOIN bookings_info b on u.user_id = b.user_id AND u.deposit_expiration_date = b.deposit_expiration_date
 GROUP BY 
     expiration_month,
     user_region_name,

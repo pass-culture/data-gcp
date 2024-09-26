@@ -40,11 +40,7 @@ select
         CAST(u.user_creation_date as DATE),
         day
     ) as days_between_user_creation_and_deposit_creation,
-    u.user_birth_date,
-    d.total_diversification,
-    d.total_venue_id_diversification,
-    d.total_venue_type_label_diversification,
-    d.total_category_diversification
+    u.user_birth_date
 from {{ ref('int_global__deposit') }} as d
     inner join {{ ref('int_applicative__user') }} as u on u.user_id = d.user_id
     left join {{ ref('int_applicative__action_history') }} as ah on ah.user_id = d.user_id and ah.action_history_rk = 1

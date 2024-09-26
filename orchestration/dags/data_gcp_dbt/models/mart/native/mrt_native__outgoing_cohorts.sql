@@ -38,8 +38,8 @@ SELECT
     SUM(venue_id_diversification) AS total_venue_id_diversification,
     SUM(venue_type_label_diversification) AS total_venue_type_label_diversification,
     SUM(category_diversification) AS total_category_diversification
-FROM users_expired_monthly user ON user.user_id = book.user_id 
-JOIN {{ ref("diversification_booking") }} ON book.booking_id = diversification_booking.booking_id 
+FROM users_expired_monthly user
+JOIN {{ ref("diversification_booking") }} diversification_booking ON user.user_id = diversification_booking.user_id
 GROUP BY 
     deposit_expiration_date,
     user_id 

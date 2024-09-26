@@ -122,15 +122,15 @@ class PreprocessingPipeline:
     def prepare_features(
         cls, df: pd.DataFrame, features_description: dict
     ) -> pd.DataFrame:
-        def _is_ndarray(val):
-            return isinstance(val, np.ndarray)
+        def _is_str_emb(val):
+            return isinstance(val, str)
 
         for feature_types in features_description["preprocess_features_type"].keys():
             for col in features_description["preprocess_features_type"][feature_types]:
                 if feature_types == "text_features":
                     df[col] = df[col].fillna("").astype(str)
                 if feature_types == "embedding_features":
-                    if not df[col].apply(_is_ndarray).all():
+                    if df[col].apply(_is_str_emb).all():
                         df[col] = cls._convert_str_emb_to_float(df[col].tolist())
 
         return df

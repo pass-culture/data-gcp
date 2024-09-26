@@ -1,6 +1,6 @@
 from google.cloud import secretmanager
 
-from utils.constants import GCP_PROJECT_ID
+from commons.constants import GCP_PROJECT_ID
 
 
 def get_secret(secret_id: str):

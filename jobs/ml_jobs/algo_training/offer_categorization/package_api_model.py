@@ -8,9 +8,9 @@ import typer
 from catboost import CatBoostClassifier, Pool
 from sentence_transformers import SentenceTransformer
 
+from commons.constants import ENV_SHORT_NAME
+from commons.mlflow_tools import connect_remote_mlflow
 from offer_categorization.config import features
-from utils.constants import ENV_SHORT_NAME
-from utils.mlflow_tools import connect_remote_mlflow
 
 
 @dataclass

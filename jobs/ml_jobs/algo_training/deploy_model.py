@@ -4,7 +4,7 @@ import pandas as pd
 import typer
 from google.cloud import aiplatform
 
-from utils.constants import (
+from commons.constants import (
     BIGQUERY_CLEAN_DATASET,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,

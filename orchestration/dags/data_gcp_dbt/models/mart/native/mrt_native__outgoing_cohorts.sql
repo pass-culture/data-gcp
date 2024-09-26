@@ -22,10 +22,6 @@ SELECT
     total_distinct_grant_15_17_booking_types,
     first_individual_booking_date,
     first_deposit_creation_date,
-    total_diversification as diversification,
-    total_venue_id_diversification as venue_id_diversification,
-    total_venue_type_label_diversification as venue_type_label_diversification,
-    total_category_diversification as category_diversification,
     DATE_DIFF(last_deposit_expiration_date, first_deposit_creation_date, day) as seniority_days 
 FROM {{ ref("mrt_global__user") }} user 
 WHERE current_deposit_type = "GRANT_18" AND last_deposit_expiration_date < DATE_TRUNC(current_date, MONTH)
@@ -116,10 +112,9 @@ SELECT
     u.user_civility,
     u.is_theme_subscribed,
     COUNT(DISTINCT u.user_id) AS total_users,
-    COUNT(DISTINCT CASE WHEN u.deposit_rank_desc > 1 THEN u.user_id END) AS total_pre_grant_18_users,
-    COUNT(DISTINCT CASE WHEN b.total_category_booked >= 3 THEN u.user_id END) total_3_category_booked_users,
+    COUNT(DISTINCT CASE WHEN b.total_category_diversification >= 3 THEN u.user_id END) total_3_category_booked_users,
     SUM(u.total_actual_amount_spent) AS total_grant_18_amount_spent,
-    SUM(u.total_theoretical_amount_spent_in_digital_goods) AS total_grant_18_theoretical_amount_spent_in_digital_goods,
+    SUM(u.total_theoretical_digital_goods_amount_spent) AS total_grant_18_theoretical_digital_goods_amount_spent,
     SUM(u.total_non_cancelled_individual_bookings) AS total_grant_18_non_cancelled_individual_bookings,
     SUM(u.total_non_cancelled_duo_bookings) AS total_grant_18_non_cancelled_duo_bookings,
     SUM(u.total_free_bookings) AS total_free_bookings,
@@ -128,7 +123,7 @@ SELECT
     AVG(u.total_distinct_grant_18_booking_types) AS avg_grant_18_subcategory_booked,
     AVG(u.total_distinct_grant_15_17_booking_types) AS avg_grant_15_17_subcategory_booked,
     AVG(total_venue_type_label_consulted) AS avg_venue_type_label_consulted,
-    AVG(DATE_DIFF(u.first_individual_booking_date, u.deposit_creation_date, DAY)) AS avg_day_between_deposit_and_first_booking,
+    AVG(DATE_DIFF(u.first_individual_booking_date, u.first_deposit_creation_date, DAY)) AS avg_day_between_deposit_and_first_booking,
     AVG(b.total_diversification) AS avg_diversification_score,
     AVG(b.total_venue_id_diversification) AS avg_venue_id_diversification_score,
     AVG(b.total_venue_type_label_diversification) AS avg_venue_type_label_diversification_score,
@@ -152,4 +147,4 @@ GROUP BY
     u.user_department_code,
     u.user_activity,
     u.user_civility,
-    u.is_theme_subscribed,
+    u.is_theme_subscribed

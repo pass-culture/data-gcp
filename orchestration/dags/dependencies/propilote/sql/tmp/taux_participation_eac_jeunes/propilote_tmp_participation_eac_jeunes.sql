@@ -1,7 +1,7 @@
 WITH last_year_beginning_date as (
 SELECT 
     educational_year_beginning_date as last_year_start_date
-FROM `{{ bigquery_analytics_dataset }}.applicative_database_educational_year` 
+FROM `{{ bigquery_raw_dataset }}.applicative_database_educational_year`
 WHERE educational_year_beginning_date <= DATE_SUB(current_date(), interval 1 year) AND educational_year_expiration_date > DATE_SUB(current_date(), interval 1 year)
 )
 

@@ -1,15 +1,19 @@
 
 FROM python:3.10
 
-ARG WORKERS=3
+ARG WORKERS=5
+
+ENV VIRTUAL_ENV=/home/packages/.venv
+ADD https://astral.sh/uv/install.sh /install.sh
+RUN chmod -R 655 /install.sh && /install.sh && rm /install.sh
 
 
 COPY ./api-requirements.txt ./
-RUN pip3 install -r api-requirements.txt 
+RUN /root/.cargo/bin/uv pip3 install --no-cache -r api-requirements.txt
 
 COPY ./app /app
-COPY ./metadata /app/metadata
-WORKDIR /app
+COPY ./metadata /metadata
+WORKDIR /
 EXPOSE 8080
 ENV WORKERS=${WORKERS}
 

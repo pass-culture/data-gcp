@@ -17,11 +17,10 @@ from utils import (
 )
 
 MODEL_TYPE = {
-    "n_dim": 64,
-    "metric": "cosine",
     "type": "recommendation",
     "default_token": "[UNK]",
 }
+EMBEDDING_DIMENSION = 16
 
 
 def prepare_docs():
@@ -30,14 +29,14 @@ def prepare_docs():
     user_df = get_users_dummy_metadata()
     # default
     user_embedding_dict = {
-        row.user_id: np.random.random((MODEL_TYPE["n_dim"],))
+        row.user_id: np.random.random((EMBEDDING_DIMENSION,))
         for row in user_df.itertuples()
     }
     user_embedding_dict[MODEL_TYPE["default_token"]] = np.random.random(
-        (MODEL_TYPE["n_dim"],)
+        EMBEDDING_DIMENSION,
     )
     item_embedding_dict = {
-        row.item_id: np.random.random((MODEL_TYPE["n_dim"],))
+        row.item_id: np.random.random((EMBEDDING_DIMENSION,))
         for row in items_df.itertuples()
     }
     user_docs = get_user_docs(user_embedding_dict)
@@ -47,7 +46,7 @@ def prepare_docs():
     create_items_table(
         item_embedding_dict,
         items_df,
-        emb_size=MODEL_TYPE["n_dim"],
+        emb_size=EMBEDDING_DIMENSION,
         uri="./metadata/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,
     )

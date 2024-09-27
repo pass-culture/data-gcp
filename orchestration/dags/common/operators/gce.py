@@ -329,10 +329,12 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         base_dir: str = None,
         environment: t.Dict[str, str] = {},
         use_pyenv: bool = False,
+        use_uv: bool = False,
         *args,
         **kwargs,
     ):
         self.use_pyenv = use_pyenv
+        self.use_uv = use_uv
         self.environment = dict(self.DEFAULT_EXPORT, **environment)
         commands_list = []
 
@@ -347,12 +349,14 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         )
 
         # Conda activate if required
-        if not self.use_pyenv:
+        if not self.use_pyenv and not self.use_uv:
             commands_list.append(
                 "conda init zsh && source ~/.zshrc && conda activate data-gcp"
             )
-        else:
+        elif not self.use_uv:
             commands_list.append("source ~/.profile")
+        else:
+            commands_list.append("source .venv/bin/activate")
 
         # Default path
         if base_dir is not None:

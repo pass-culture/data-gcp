@@ -39,7 +39,7 @@ select
     ) as days_between_user_creation_and_deposit_creation,
     u.user_birth_date
 from {{ ref('int_global__deposit') }} as d
-    inner join {{ ref('int_applicative__user') }} as u on u.user_id = d.user_id
+    inner join {{ ref('int_global__user') }} as u on u.user_id = d.user_id
     left join {{ ref('int_applicative__action_history') }} as ah on ah.user_id = d.user_id and ah.action_history_rk = 1
 where
     (

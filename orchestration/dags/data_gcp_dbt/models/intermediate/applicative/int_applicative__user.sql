@@ -6,66 +6,45 @@
 ) }}
 
 select
-    u.user_id,
-    u.user_creation_date,
-    {{ target_schema }}.humanize_id(u.user_id) as user_humanized_id,
-    u.user_has_enabled_marketing_email,
+    user_id,
+    user_creation_date,
+    {{ target_schema }}.humanize_id(user_id) as user_humanized_id,
+    user_has_enabled_marketing_email,
     COALESCE(
         case
-            when u.user_postal_code = "97150" then "978"
-            when SUBSTRING(u.user_postal_code, 0, 2) = "97" then SUBSTRING(u.user_postal_code, 0, 3)
-            when SUBSTRING(u.user_postal_code, 0, 2) = "98" then SUBSTRING(u.user_postal_code, 0, 3)
-            when SUBSTRING(u.user_postal_code, 0, 3) in ("200", "201", "209", "205") then "2A"
-            when SUBSTRING(u.user_postal_code, 0, 3) in ("202", "206") then "2B"
-            else SUBSTRING(u.user_postal_code, 0, 2)
+            when user_postal_code = "97150" then "978"
+            when SUBSTRING(user_postal_code, 0, 2) = "97" then SUBSTRING(user_postal_code, 0, 3)
+            when SUBSTRING(user_postal_code, 0, 2) = "98" then SUBSTRING(user_postal_code, 0, 3)
+            when SUBSTRING(user_postal_code, 0, 3) in ("200", "201", "209", "205") then "2A"
+            when SUBSTRING(user_postal_code, 0, 3) in ("202", "206") then "2B"
+            else SUBSTRING(user_postal_code, 0, 2)
         end,
-        u.user_department_code
+        user_department_code
     ) as user_department_code,
-    u.user_postal_code,
+    user_postal_code,
     case
-        when u.user_activity in ("Alternant", "Apprenti", "Volontaire") then "Apprenti, Alternant, Volontaire en service civique rémunéré"
-        when u.user_activity in ("Inactif") then "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
-        when u.user_activity in ("Étudiant") then "Etudiant"
-        when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then "Chômeur, En recherche d'emploi"
-        else u.user_activity
+        when user_activity in ("Alternant", "Apprenti", "Volontaire") then "Apprenti, Alternant, Volontaire en service civique rémunéré"
+        when user_activity in ("Inactif") then "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
+        when user_activity in ("Étudiant") then "Etudiant"
+        when user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then "Chômeur, En recherche d'emploi"
+        else user_activity
     end as user_activity,
     case
-        when u.user_civility in ("M", "M.") then "M."
-        when u.user_civility = "Mme" then "Mme."
-        else u.user_civility
+        when user_civility in ("M", "M.") then "M."
+        when user_civility = "Mme" then "Mme."
+        else user_civility
     end as user_civility,
-    u.user_school_type,
-    u.user_is_active,
-    u.user_age,
-    u.user_role,
-    u.user_birth_date,
-    u.user_address,
-    u.user_last_connection_date,
-    u.user_is_email_validated,
-    u.user_has_seen_pro_tutorials,
-    u.user_phone_validation_status,
-    u.user_has_validated_email,
-    u.user_has_enabled_marketing_push,
-    ui.user_iris_internal_id,
-    ui.user_region_name,
-    ui.user_city,
-    ui.user_epci,
-    ui.user_academy_name,
-    ui.user_density_label,
-    ui.user_macro_density_label,
-    ui.user_density_level,
-    ui.user_city_code as city_code, -- TODO fix this to user_city_code and populate to child models
-    ui.user_is_in_qpv,
-    case when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then TRUE else FALSE end as user_is_unemployed,
-    case when
-            (
-                (ui.qpv_name is not NULL)
-                or (u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi"))
-                or (ui.user_macro_density_label = "rural")
-            )
-            then TRUE
-        else FALSE
-    end as user_is_priority_public
-from {{ source("raw", "applicative_database_user") }} as u
-    left join {{ ref("int_geo__user_location") }} as ui on ui.user_id = u.user_id
-where u.user_role in ("UNDERAGE_BENEFICIARY", "BENEFICIARY")
+    user_school_type,
+    user_is_active,
+    user_age,
+    user_role,
+    user_birth_date,
+    user_address,
+    user_last_connection_date,
+    user_is_email_validated,
+    user_has_seen_pro_tutorials,
+    user_phone_validation_status,
+    user_has_validated_email,
+    user_has_enabled_marketing_push
+from {{ source("raw", "applicative_database_user") }}
+where user_role in ("UNDERAGE_BENEFICIARY", "BENEFICIARY")

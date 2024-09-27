@@ -39,7 +39,6 @@ select
     u.user_id,
     u.user_department_code,
     u.user_postal_code,
-    u.user_city,
     u.user_activity,
     u.user_civility,
     u.user_school_type,
@@ -49,17 +48,26 @@ select
     u.user_birth_date,
     u.user_has_enabled_marketing_email,
     u.user_has_enabled_marketing_push,
-    u.user_iris_internal_id,
-    u.user_is_priority_public,
-    u.user_is_unemployed,
-    u.user_is_in_qpv,
-    u.user_epci,
-    u.user_density_label,
-    u.user_macro_density_label,
-    u.user_density_level,
-    u.city_code,
-    u.user_region_name,
-    u.user_academy_name,
+    ui.user_iris_internal_id,
+    ui.user_region_name,
+    ui.user_city,
+    ui.user_epci,
+    ui.user_academy_name,
+    ui.user_density_label,
+    ui.user_macro_density_label,
+    ui.user_density_level,
+    ui.user_city_code as city_code,
+    ui.user_is_in_qpv,
+    case when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then TRUE else FALSE end as user_is_unemployed,
+    case when
+            (
+                (ui.qpv_name is not NULL)
+                or (u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi"))
+                or (ui.user_macro_density_label = "rural")
+            )
+            then TRUE
+        else FALSE
+    end as user_is_priority_public,
     u.user_humanized_id,
     ts.currently_subscribed_themes,
     CASE WHEN ts.is_theme_subscribed IS NULL THEN FALSE ELSE ts.is_theme_subscribed END AS is_theme_subscribed,
@@ -97,5 +105,6 @@ select
     end as user_is_current_beneficiary
 from {{ ref('int_applicative__user') }} as u
     left join {{ ref('int_applicative__action_history') }} as ah on ah.user_id = u.user_id and ah.action_history_rk = 1
+    left join {{ ref("int_geo__user_location") }} as ui on ui.user_id = u.user_id
     left join themes_subscribed as ts on ts.user_id = u.user_id
     left join deposit_grouped_by_user as dgu on dgu.user_id = u.user_id

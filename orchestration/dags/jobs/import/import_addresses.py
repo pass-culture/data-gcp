@@ -79,11 +79,13 @@ with DAG(
     dagrun_timeout=timedelta(minutes=180),
     template_searchpath=DAG_FOLDER,
     user_defined_macros=macros.default,
+    render_template_as_native_obj=True,
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        )
+        ),
+        "use_uv": Param(default=False, type="boolean"),
     },
 ) as dag:
     start = DummyOperator(task_id="start")
@@ -97,6 +99,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         command="{{ params.branch }}",
         python_version="3.10",
+        use_uv="{{ params.use_uv }}",
     )
 
     install_dependencies = SSHGCEOperator(
@@ -106,6 +109,7 @@ with DAG(
         command="pip install -r requirements.txt --user",
         dag=dag,
         retries=2,
+        use_uv="{{ params.use_uv }}",
     )
 
     addresses_to_gcs = SSHGCEOperator(

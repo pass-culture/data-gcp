@@ -349,21 +349,23 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         )
 
         # Conda activate if required
-        if not self.use_pyenv and not self.use_uv:
+        if not (self.use_pyenv or self.use_uv):
             commands_list.append(
                 "conda init zsh && source ~/.zshrc && conda activate data-gcp"
             )
-        elif not self.use_uv:
-            commands_list.append("source ~/.profile")
-        else:
+        elif self.use_uv:
             commands_list.append("source .venv/bin/activate")
+        else:
+            commands_list.append("source ~/.profile")
 
         # Default path
         if base_dir is not None:
             commands_list.append(f"cd {base_dir}")
 
         # Command
-        commands_list.append(command)
+        if self.use_uv and command.startswith("pip install -r "):
+            command = f"""uv pip sync {command.split("pip install -r ")[-1]}"""  ## TO DO SWITCH COMMANDS
+            commands_list.append(command)
 
         self.command = "\n".join(commands_list)
         self.instance_name = instance_name

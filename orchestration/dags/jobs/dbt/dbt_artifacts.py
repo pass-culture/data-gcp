@@ -53,7 +53,7 @@ wait_dbt_run = delayed_waiting_operator(dag=dag, external_dag_id="dbt_run_dag")
 
 compute_metrics_elementary = BashOperator(
     task_id="compute_metrics_elementary",
-    bash_command="dbt run --no-write-json --target {{ params.target }} --select package:elementary --profile elementary "
+    bash_command="dbt run --no-write-json --target {{ params.target }} --select package:elementary "
     + f"--target-path {PATH_TO_DBT_TARGET}",
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,

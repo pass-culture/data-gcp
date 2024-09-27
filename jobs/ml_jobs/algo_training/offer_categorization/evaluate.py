@@ -5,9 +5,9 @@ from catboost import Pool
 from loguru import logger
 from sklearn.metrics import classification_report, top_k_accuracy_score
 
+from commons.constants import ENV_SHORT_NAME
+from commons.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
 from offer_categorization.config import features
-from utils.constants import ENV_SHORT_NAME
-from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
 
 
 def main(

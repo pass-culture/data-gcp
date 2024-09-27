@@ -14,7 +14,6 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python_operator import BranchPythonOperator
 
 default_args = {
     "start_date": datetime.datetime(2020, 12, 20),
@@ -78,25 +77,5 @@ weekly = BashOperator(
 
 end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
 
-shunt = DummyOperator(task_id="skip_tasks", dag=dag)
 
-
-def conditionally_create_tasks(**context):
-    execution_date = context["ds"]
-    execution_date = datetime.datetime.strptime(execution_date, "%Y-%m-%d")
-
-    if execution_date.weekday() == 0:  # Check if the day is Monday
-        return ["wait_for_dbt_run_dag_end"]
-    else:
-        return ["skip_tasks"]
-
-
-branching = BranchPythonOperator(
-    task_id="branching",
-    python_callable=conditionally_create_tasks,
-    provide_context=True,
-    dag=dag,
-)
-
-start >> branching >> wait_for_dbt_daily >> weekly >> end
-branching >> shunt >> end
+start >> wait_for_dbt_daily >> weekly >> end

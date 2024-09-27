@@ -67,8 +67,10 @@ with DAG(
             enum=list(chain(*INSTANCES_TYPES["cpu"].values())),
         ),
         "instance_name": Param(default=gce_params["instance_name"], type="string"),
-        "gpu_count": Param(default=None, enum=INSTANCES_TYPES["gpu"]["count"]),
-        "gpu_type": Param(default=None, enum=INSTANCES_TYPES["gpu"]["name"]),
+        "gpu_count": Param(default=0, enum=INSTANCES_TYPES["gpu"]["count"]),
+        "gpu_type": Param(
+            default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
+        ),
         "keep_alive": Param(default=True, type="boolean"),
         "install_project": Param(default=True, type="boolean"),
         "use_gke_network": Param(default=False, type="boolean"),
@@ -170,41 +172,16 @@ with DAG(
         dag=dag,
         retries=2,
     )
-
-    # def get_op_by_name(name, step):
-    #     assert name in ["uv", "pyenv", "conda"]
-    #     assert step in ["clone", "install"]
-    #     if step == "clone":
-    #         return {
-    #             "uv": clone_and_setup_with_uv,
-    #             "pyenv": clone_and_setup_with_pyenv,
-    #             "conda": clone_and_setup_with_conda,
-    #         }[name]
-    #     else:
-    #         return {
-    #             "uv": install_project_with_uv,
-    #             "pyenv": install_project_with_pyenv,
-    #             "conda": install_playground_with_conda,
-    #         }[name]
-
-    # (start >> gce_instance_start >> branching_clone_task)
-    # for pkg_manager in ["uv", "pyenv", "conda"]:
-    #     (
-    #         branching_clone_task
-    #         >> get_op_by_name(pkg_manager, "clone")
-    #         >> get_op_by_name(pkg_manager, "install")
-    #     )
-
-    clone_and_setup_with_pyenv >> install_project_with_pyenv
-    clone_and_setup_with_conda >> install_playground_with_conda
-    clone_and_setup_with_uv >> install_project_with_uv
     (
         start
         >> gce_instance_start
         >> branching_clone_task
         >> [
-            clone_and_setup_with_uv,
             clone_and_setup_with_pyenv,
             clone_and_setup_with_conda,
+            clone_and_setup_with_uv,
         ]
     )
+    clone_and_setup_with_pyenv >> install_project_with_pyenv
+    clone_and_setup_with_conda >> install_playground_with_conda
+    clone_and_setup_with_uv >> install_project_with_uv

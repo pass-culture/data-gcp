@@ -40,7 +40,7 @@ bookings_days as (
         COUNT(distinct booking_id) over (partition by offer.offer_id, DATE(booking_creation_date)) as cnt_bookings_day,
         IF(booking_is_cancelled, COUNT(distinct booking_id) over (partition by offer.offer_id, DATE(booking_creation_date)), NULL) as cnt_bookings_cancelled,
         IF(not booking_is_cancelled, COUNT(distinct booking_id) over (partition by offer.offer_id, DATE(booking_creation_date)), NULL) as cnt_bookings_confirm
-    from {{ ref('booking') }} booking
+    from {{ ref('int_applicative__booking') }} booking
         join {{ ref('stock') }} stock using (stock_id)
         join {{ ref('int_applicative__offer') }} offer on offer.offer_id = stock.offer_id
 ),

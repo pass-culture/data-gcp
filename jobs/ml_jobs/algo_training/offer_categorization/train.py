@@ -36,7 +36,11 @@ def main(
     logger.info("Init classifier..")
     # Add auto_class_weights to balance
     model = CatBoostClassifier(
-        one_hot_max_size=65, loss_function="MultiClass", auto_class_weights="Balanced"
+        one_hot_max_size=65,
+        loss_function="MultiClass",
+        auto_class_weights="Balanced",
+        task_type="GPU",
+        devices="0",
     )
     logger.info("Fitting model..")
     ## Model Fit

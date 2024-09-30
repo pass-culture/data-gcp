@@ -56,7 +56,8 @@ with collective_stocks_grouped_by_collective_offers as (
         co.national_program_id,
         NULL as collective_offer_template_beginning_date,
         NULL as collective_offer_template_ending_date,
-        case when cs.collective_stock_is_bookable and co.collective_offer_is_active then TRUE else FALSE end as collective_offer_is_bookable,
+        case when cs.collective_stock_is_bookable and co.collective_offer_is_active
+        and collective_offer_validation = "APPROVED" then TRUE else FALSE end as collective_offer_is_bookable,
         cs.total_non_cancelled_collective_bookings,
         cs.total_collective_bookings,
         cs.total_used_collective_bookings,
@@ -124,7 +125,7 @@ union all
         national_program_id,
         collective_offer_template_beginning_date,
         collective_offer_template_ending_date,
-        TRUE as collective_offer_is_bookable,
+        CASE WHEN collective_offer_validation = "APPROVED" THEN TRUE ELSE FALSE END as collective_offer_is_bookable,
         0 as total_non_cancelled_collective_bookings,
         0 as total_collective_bookings,
         0 as total_used_collective_bookings,

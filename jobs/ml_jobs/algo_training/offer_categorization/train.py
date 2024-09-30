@@ -40,7 +40,6 @@ def main(
         loss_function="MultiClass",
         auto_class_weights="Balanced",
         task_type="GPU",
-        devices="0",
     )
     logger.info("Fitting model..")
     ## Model Fit

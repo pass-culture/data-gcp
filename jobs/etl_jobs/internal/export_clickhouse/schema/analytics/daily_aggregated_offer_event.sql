@@ -1,5 +1,5 @@
-CREATE OR REPLACE TABLE analytics.daily_aggregated_offer_event ON cluster default 
-    ENGINE = MergeTree
+CREATE OR REPLACE TABLE analytics.daily_aggregated_offer_event ON cluster default
+    ENGINE = AggregatingMergeTree
     PARTITION BY event_date
     ORDER BY (offer_id)
     SETTINGS storage_policy='gcs_main'

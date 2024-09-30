@@ -1,4 +1,5 @@
 import os
+import re
 
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import bigquery, secretmanager
@@ -40,3 +41,13 @@ def bigquery_load_job(
     )
     job = bigquery_client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()
+
+
+def get_utm_campaign(url):
+    if "utm_campaign" in url:
+        match = re.search(r"utm_campaign=([^&]+)", url)
+        if match:
+            utm_campaign_value = match.group(1)
+            return utm_campaign_value
+        else:
+            return ""

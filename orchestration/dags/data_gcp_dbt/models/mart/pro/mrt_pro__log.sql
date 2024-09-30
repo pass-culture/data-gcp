@@ -27,9 +27,17 @@ select
     partition_date,
     beta_test_new_nav_is_convenient,
     beta_test_new_nav_is_pleasant,
-    beta_test_new_nav_comment
+    beta_test_new_nav_comment,
+    technical_message_id,
+    choice_datetime,
+    device_id,
+    analytics_source,
+    cookies_consent_mandatory,
+    cookies_consent_accepted,
+    cookies_consent_refused
 from {{ ref('int_pcapi__log') }}
-where message in (
+where ( analytics_source = "app-pro" or
+    message in (
         "Booking has been cancelled",
         "Offer has been created",
         "Offer has been updated",
@@ -39,7 +47,7 @@ where message in (
         "Some provided eans were not found",
         "Stock update blocked because of price limitation",
         "User with new nav activated submitting review"
-    )
+    ))
     {% if is_incremental() %}
         AND partition_date between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")
     {% endif %}

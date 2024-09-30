@@ -12,11 +12,9 @@ from docarray import Document, DocumentArray
 from sentence_transformers import SentenceTransformer
 
 from app.retrieval.reco_client import RecoClient
+from tests.utils import STATIC_FAKE_ITEM_DATA, TRANSFORMER, VECTOR_DIM, VECTOR_SIZE
 
 logger = logging.getLogger(__name__)
-VECTOR_DIM = 3
-TRANSFORMER = "hf-internal-testing/tiny-random-camembert"
-DETAIL_COLUMNS = ["vector", "booking_number_desc"]
 
 
 @pytest.fixture(scope="session")
@@ -25,36 +23,8 @@ def generate_fake_text_item_data() -> pd.DataFrame:
     Encode the 'title' of each item in the input list into vectors using the specified transformer.
     Returns a DataFrame with the original items and an additional 'vector' column.
     """
-    items = [
-        {
-            "item_id": 1,
-            "booking_number_desc": 1,
-            "title": "The Great Gatsby",
-            "price": 15.0,
-        },
-        {"item_id": 2, "booking_number_desc": 2, "title": "Inception", "price": 20.0},
-        {
-            "item_id": 3,
-            "booking_number_desc": 3,
-            "title": "The Silent Patient",
-            "price": 12.5,
-        },
-        {
-            "item_id": 4,
-            "booking_number_desc": 4,
-            "title": "The Shawshank Redemption",
-            "price": 25.0,
-        },
-        {"item_id": 5, "booking_number_desc": 5, "title": "Naruto T1", "price": 25.0},
-        {
-            "item_id": 6,
-            "booking_number_desc": 6,
-            "title": "The story of a Book",
-            "price": 25.0,
-        },
-    ]
     model = SentenceTransformer(TRANSFORMER)
-    df = pd.DataFrame(items)
+    df = pd.DataFrame(STATIC_FAKE_ITEM_DATA)
     df["vector"] = df["title"].apply(lambda title: model.encode(title).tolist())
     return df
 
@@ -80,8 +50,8 @@ def generate_fake_data() -> Callable[[int, int, str], pd.DataFrame]:
         data = []
         for i in range(n):
             item_id = f"{prefix_key}_{i}"
-            vector = np.random.rand(vector_dim).tolist()
-            price = np.round(np.random.rand() * 100, 2)
+            vector = np.array([(i + 1) / (j + 1) for j in range(vector_dim)])
+            price = round(i * 10 + 5, 2)
             data.append(
                 {
                     f"{prefix_key}_id": item_id,
@@ -129,7 +99,9 @@ def mock_connect_db(generate_fake_data: Callable[[int, int, str], pd.DataFrame])
 
         db = lancedb.connect(f"{uri}")
 
-        fake_data = generate_fake_data(n=10, vector_dim=3, prefix_key="item")
+        fake_data = generate_fake_data(
+            n=VECTOR_SIZE, vector_dim=VECTOR_DIM, prefix_key="item"
+        )
         arrow_table = create_pyarrow_table(fake_data)
 
         mock_load.return_value = db.create_table(
@@ -151,7 +123,7 @@ def mock_generate_fake_load_item_document(generate_fake_data):
         prefix_key = "item"
         item_docs = DocumentArray()
         for _, row in generate_fake_data(
-            n=10, vector_dim=3, prefix_key=prefix_key
+            n=VECTOR_SIZE, vector_dim=VECTOR_DIM, prefix_key=prefix_key
         ).iterrows():
             item_docs.append(
                 Document(
@@ -174,7 +146,7 @@ def mock_generate_fake_load_user_document(generate_fake_data):
         prefix_key = "user"
         user_docs = DocumentArray()
         for _, row in generate_fake_data(
-            n=10, vector_dim=3, prefix_key=prefix_key
+            n=VECTOR_SIZE, vector_dim=VECTOR_DIM, prefix_key=prefix_key
         ).iterrows():
             user_docs.append(
                 Document(id=row[f"{prefix_key}_id"], embedding=row["vector"])

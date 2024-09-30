@@ -86,6 +86,7 @@ class SimilarOfferHandler(PredictionHandler):
         """
         predictions = []
         for item_id in request_data.items:
+            logger.debug(f"Searching for item_id: {item_id}")
             vector = model.offer_vector(item_id)
             if vector is not None:
                 prediction = self._search_by_vector(
@@ -150,11 +151,9 @@ class SimilarOfferHandler(PredictionHandler):
 
         # Group predictions by item_id
         for entry in predictions:
-            # Skip the item that was used for the search
             if entry["item_id"] not in items:
                 grouped_predictions[entry["item_id"]].append(entry)
 
-        # Calculate the mean _distance for each item and store results
         averaged_predictions = []
         for item_id, entries in grouped_predictions.items():
             mean_distance = self._calculate_mean_distance(entries)
@@ -163,9 +162,8 @@ class SimilarOfferHandler(PredictionHandler):
             best_entry["_distance"] = mean_distance
             averaged_predictions.append(best_entry)
 
-        # Sort the predictions by mean _distance in ascending order and return top X
         averaged_predictions.sort(key=lambda x: x["_distance"])
-        return averaged_predictions[:size]  # Return top 'size' predictions
+        return averaged_predictions[:size]
 
     def _calculate_mean_distance(self, entries: List[Dict]) -> float:
         """

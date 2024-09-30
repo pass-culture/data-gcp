@@ -129,8 +129,10 @@ class DefaultClient:
         Returns:
             List[Dict]: A list of filtered results.
         """
+        # Approximate the query with a small near-zero value.
+        # The items are ranked from 1 to N.
         return self._perform_search(
-            vector=None,  # We do not need a vector as just filter on rank based tops
+            vector=Document(embedding=[-1e-2]),
             n=n,
             query_filter=query_filter,
             vector_column_name=vector_column_name,
@@ -204,10 +206,7 @@ class DefaultClient:
 
         results = (
             self.table.search(
-                # If no vector is provided, approximate the query with a small near-zero value.
-                # This ensures that the search can still proceed by using a minimal vector approximation.
-                # Our dataset has fewer than 100M items, the items are ranked from 1 to N,
-                query=vector.embedding if vector else [-1e-2],
+                query=vector.embedding,
                 vector_column_name=vector_column_name,
                 query_type="vector",
             )

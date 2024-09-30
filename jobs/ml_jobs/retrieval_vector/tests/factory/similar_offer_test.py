@@ -46,8 +46,8 @@ def request_data_multiple_items() -> PredictionRequest:
     """Fixture to generate request data with multiple items."""
     return PredictionRequest(
         model_type="similar_offer",
-        items=["item_1", "item_2", "item_3"],
-        size=5,
+        items=["item_1", "item_2", "item_10"],
+        size=10,
         params={},
         call_id="test-call-id-multiple",
         debug=True,

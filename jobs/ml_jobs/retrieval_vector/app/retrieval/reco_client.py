@@ -19,6 +19,7 @@ class RecoClient(DefaultClient):
         base_columns: List[str] = DEFAULT_COLUMNS,
         detail_columns: List[str] = DEFAULT_DETAIL_COLUMNS,
         output_metric_columns: List[str] = OUTPUT_METRIC_COLUMNS,
+        re_rank_weight: float = 0.5,
     ) -> None:
         super().__init__(
             base_columns=base_columns,
@@ -26,6 +27,7 @@ class RecoClient(DefaultClient):
             output_metric_columns=output_metric_columns,
         )
         self.default_token = default_token
+        self.re_rank_weight = re_rank_weight
         self.re_ranker = None
         self.user_docs = None
 
@@ -33,7 +35,9 @@ class RecoClient(DefaultClient):
         self.item_docs = self.load_item_document()
         self.user_docs = self.load_user_document()
         self.table = self.connect_db()
-        self.re_ranker = UserReranker(weight=0.5, user_docs=self.user_docs)
+        self.re_ranker = UserReranker(
+            weight=self.re_rank_weight, user_docs=self.user_docs
+        )
 
     def load_user_document(self) -> DocumentArray:
         return load_documents("./metadata/user.docs")

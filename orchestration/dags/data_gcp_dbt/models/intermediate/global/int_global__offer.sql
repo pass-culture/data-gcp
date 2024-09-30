@@ -66,6 +66,7 @@ select
     o.total_favorites,
     o.total_stock_quantity,
     o.total_first_bookings,
+    o.offer_withdrawal_type,
     v.venue_id,
     v.venue_name,
     v.venue_label,

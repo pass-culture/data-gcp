@@ -39,7 +39,7 @@ total_favorites as (
 select
     o.offer_id,
     o.offer_id_at_providers,
-    (o.offer_id_at_providers is not NULL) as is_synchronised,
+    (o.offer_last_provider_id is not NULL) as is_synchronised,
     o.offer_modified_at_last_provider_date,
     DATE(o.offer_creation_date) as offer_creation_date,
     o.offer_creation_date as offer_created_at,
@@ -87,6 +87,7 @@ select
     o.isbn,
     o.titelive_gtl_id,
     o.offerer_address_id,
+    o.offer_withdrawal_type,
     case
         when subcategories.category_id in ("MUSIQUE_LIVE", "MUSIQUE_ENREGISTREE") and o.musictype != '' then o.musictype
         when subcategories.category_id = "SPECTACLE" and o.showtype != '' then o.showtype

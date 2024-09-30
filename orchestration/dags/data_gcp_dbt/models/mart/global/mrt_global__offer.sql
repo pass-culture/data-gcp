@@ -3,6 +3,7 @@ select
     offer_product_id,
     offer_product_humanized_id,
     offer_id_at_providers,
+    offer_last_provider_id,
     is_synchronised,
     offer_name,
     offer_description,
@@ -74,7 +75,8 @@ select
     venue_iris_internal_id,
     offerer_address_id,
     offer_publication_date,
-    is_future_scheduled
+    is_future_scheduled,
+    offer_withdrawal_type
 from {{ ref('int_global__offer') }} as o
 where TRUE
     and offer_validation = 'APPROVED'

@@ -75,6 +75,7 @@ SELECT
     location_info.institution_region_name,
     location_info.institution_in_qpv,
     location_info.institution_department_code,
+    location_info.institution_department_name,
     location_info.institution_internal_iris_id,
     location_info.institution_postal_code
 FROM  {{ ref('int_applicative__educational_institution') }} AS ei

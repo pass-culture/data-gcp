@@ -57,6 +57,7 @@ select
     venue_id,
     venue_name,
     venue_department_code,
+    venue_department_name,
     venue_region_name,
     venue_postal_code,
     venue_city,

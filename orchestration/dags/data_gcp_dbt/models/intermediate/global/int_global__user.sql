@@ -53,6 +53,7 @@ select
     u.user_has_enabled_marketing_push,
     ui.user_iris_internal_id,
     ui.user_region_name,
+    ui.user_department_name,
     ui.user_city,
     ui.user_epci,
     ui.user_academy_name,

@@ -15,6 +15,7 @@ select
     u.user_is_unemployed,
     u.user_is_priority_public,
     u.user_department_code,
+    u.user_department_name,
     u.user_age,
     u.user_creation_date,
     d.deposit_source,

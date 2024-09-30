@@ -13,12 +13,12 @@ from catboost import CatBoostClassifier, Pool
 from PIL import Image
 from sentence_transformers import SentenceTransformer
 
-from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
-from utils.constants import (
+from commons.constants import (
     ENV_SHORT_NAME,
     MODEL_DIR,
 )
-from utils.mlflow_tools import connect_remote_mlflow
+from commons.mlflow_tools import connect_remote_mlflow
+from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
 
 
 @dataclass

@@ -4,42 +4,40 @@ import recmetrics
 from loguru import logger
 from tqdm import tqdm
 
-from utils.constants import SHUFFLE_RECOMMENDATION
-from utils.diversification import order_offers_by_score_and_diversify_categories
+from commons.constants import SHUFFLE_RECOMMENDATION
+from two_towers_model.utils.diversification import (
+    order_offers_by_score_and_diversify_categories,
+)
 
 
 def get_actual_and_predicted(
     data_model_dict: dict, shuffle_recommendation: bool = SHUFFLE_RECOMMENDATION
 ):
     data_test = data_model_dict["data"]["test"]
-    df_actual = (
-        data_test.copy()
-        .groupby("user_id", as_index=False)["item_id"]
-        .agg({"actual": (lambda x: list(x))})
-    )
+    df_actual = data_test.groupby("user_id")["item_id"].agg(actual=list).reset_index()
+
     deep_reco_prediction = []
     predictions_diversified = []
     user_input = data_model_dict["prediction_input_feature"]
-    for id in tqdm(range(len(df_actual))):
-        current_user = df_actual.iloc[id]["user_id"]
+
+    for _, row in tqdm(df_actual.iterrows(), total=df_actual.shape[0]):
+        current_user = row["user_id"]
         prediction_input_feature = (
-            data_test.query(f"user_id=='{current_user}'")[user_input]
+            data_test.loc[data_test["user_id"] == current_user, user_input]
             .drop_duplicates()
             .tolist()[0]
         )
-        print("prediction_input_feature: ", prediction_input_feature)
         df_predicted = get_prediction(prediction_input_feature, data_model_dict)
-        deep_reco_prediction.append(list(df_predicted.item_id))
-        # Compute diversification with score and prediction
+        deep_reco_prediction.append(df_predicted["item_id"].tolist())
         diversified_prediction = order_offers_by_score_and_diversify_categories(
-            df_predicted,
-            shuffle_recommendation,
+            df_predicted, shuffle_recommendation
         )
         predictions_diversified.append(diversified_prediction)
-    df_actual_predicted = df_actual
-    df_actual_predicted["model_predicted"] = deep_reco_prediction
-    df_actual_predicted["predictions_diversified"] = predictions_diversified
-    data_model_dict["top_offers"] = df_actual_predicted
+
+    data_model_dict["top_offers"] = df_actual.assign(
+        model_predicted=deep_reco_prediction,
+        predictions_diversified=predictions_diversified,
+    )
     return data_model_dict
 
 
@@ -77,19 +75,22 @@ def compute_metrics(data_model_dict, k):
             data_model_dict, k
         )
     except ValueError:
-        mark, mapk, mark_panachage, mapk_panachage = -1, -1, -1, -1
+        mark = mapk = mark_panachage = mapk_panachage = -1
+
     try:
         logger.info("Compute coverage")
         coverage = get_coverage_at_k(data_model_dict, k)
     except ValueError:
         coverage = -1
+
     try:
         logger.info("Compute personalization score")
         personalization_at_k, personalization_at_k_panachage = compute_personalization(
             data_model_dict, k
         )
     except ValueError:
-        personalization_at_k, personalization_at_k_panachage = -1, -1
+        personalization_at_k = personalization_at_k_panachage = -1
+
     data_model_dict["metrics"] = {
         "mark": mark,
         "mapk": mapk,
@@ -103,16 +104,15 @@ def compute_metrics(data_model_dict, k):
 
 
 def compute_recall_and_precision_at_k(data_model_dict, k):
-    actual = data_model_dict["top_offers"].actual.values.tolist()
-    model_predictions = data_model_dict["top_offers"].model_predicted.values.tolist()
-    model_predictions_panachage = data_model_dict[
-        "top_offers"
-    ].predictions_diversified.values.tolist()
+    actual = data_model_dict["top_offers"]["actual"].tolist()
+    model_predictions = data_model_dict["top_offers"]["model_predicted"].tolist()
+    model_predictions_panachage = data_model_dict["top_offers"][
+        "predictions_diversified"
+    ].tolist()
     mark, mapk = get_avg_recall_and_precision_at_k(actual, model_predictions, k)
     mark_panachage, mapk_panachage = get_avg_recall_and_precision_at_k(
         actual, model_predictions_panachage, k
     )
-
     return mark, mapk, mark_panachage, mapk_panachage
 
 
@@ -124,31 +124,23 @@ def get_avg_recall_and_precision_at_k(actual, model_predictions, k):
 
 def get_coverage_at_k(data_model_dict, k):
     catalog = data_model_dict["data"]["training_item_ids"].tolist()
-    recos = data_model_dict["top_offers"].model_predicted.values.tolist()
-    recos_at_k = []
-    for reco in recos:
-        recos_at_k.append(reco[:k])
+    recos = data_model_dict["top_offers"]["model_predicted"].tolist()
+    recos_at_k = [reco[:k] for reco in recos]
     cf_coverage = recmetrics.prediction_coverage(recos_at_k, catalog)
-
     return cf_coverage
 
 
 def compute_personalization(data_model_dict, k):
-    model_predictions = data_model_dict["top_offers"].model_predicted.values.tolist()
-    model_predictions_panachage = data_model_dict[
-        "top_offers"
-    ].predictions_diversified.values.tolist()
+    model_predictions = data_model_dict["top_offers"]["model_predicted"].tolist()
+    model_predictions_panachage = data_model_dict["top_offers"][
+        "predictions_diversified"
+    ].tolist()
     personalization_at_k = get_personalization(model_predictions, k)
     personalization_at_k_panachage = get_personalization(model_predictions_panachage, k)
     return personalization_at_k, personalization_at_k_panachage
 
 
 def get_personalization(model_predictions, k):
-    """
-    Personalization measures recommendation similarity across users.
-    A high score indicates good personalization (user's lists of recommendations are different).
-    A low score indicates poor personalization (user's lists of recommendations are very similar).
-    """
     model_predictions_at_k = [predictions[:k] for predictions in model_predictions]
     personalization = recmetrics.personalization(predicted=model_predictions_at_k)
     return personalization
@@ -156,12 +148,10 @@ def get_personalization(model_predictions, k):
 
 def compute_diversification_score(data_model_dict, k):
     df_raw = data_model_dict["data"]["raw"]
-    recos = data_model_dict["top_offers"].model_predicted.values.tolist()
+    recos = data_model_dict["top_offers"]["model_predicted"].tolist()
     avg_diversification = get_avg_diversification_score(df_raw, recos, k)
 
-    recos_panachage = data_model_dict[
-        "top_offers"
-    ].predictions_diversified.values.tolist()
+    recos_panachage = data_model_dict["top_offers"]["predictions_diversified"].tolist()
     avg_diversification_panachage = get_avg_diversification_score(
         df_raw, recos_panachage, k
     )
@@ -170,9 +160,9 @@ def compute_diversification_score(data_model_dict, k):
 
 def get_avg_diversification_score(df_raw, recos, k):
     max_recos = min(10_000, len(recos))
-
     diversification_count = 0
     logger.info("Compute average diversification")
+
     for reco in tqdm(recos[:max_recos]):
         df_clean = (
             df_raw.query(f"item_id in {tuple(reco[:k])}")[
@@ -181,37 +171,15 @@ def get_avg_diversification_score(df_raw, recos, k):
             .drop_duplicates()
             .fillna("NA", inplace=False)
         )
-        count_dist = np.array(df_clean.nunique())
-        diversification = np.sum(count_dist)
+        count_dist = df_clean.nunique()
+        diversification = count_dist.sum()
         diversification_count += diversification
-    avg_diversification = -1
-    if max_recos > 0:
-        avg_diversification = diversification_count / max_recos
+
+    avg_diversification = diversification_count / max_recos if max_recos > 0 else -1
     return avg_diversification
 
 
 def apk(actual, predicted, k=10):
-    """
-    Computes the average precision at k.
-
-    This function computes the average prescision at k between two lists of
-    items.
-
-    Parameters
-    ----------
-    actual : list
-            A list of elements that are to be predicted (order doesn't matter)
-    predicted : list
-                A list of predicted elements (order does matter)
-    k : int, optional
-        The maximum number of predicted elements
-
-    Returns
-    -------
-    score : double
-            The average precision at k over the input lists
-
-    """
     if len(predicted) > k:
         predicted = predicted[:k]
 
@@ -223,34 +191,8 @@ def apk(actual, predicted, k=10):
             num_hits += 1.0
             score += num_hits / (i + 1.0)
 
-    if not actual:
-        return 0.0
-
     return score / min(len(actual), k)
 
 
 def mapk(actual, predicted, k=10):
-    """
-    Computes the mean average precision at k.
-
-    This function computes the mean average prescision at k between two lists
-    of lists of items.
-
-    Parameters
-    ----------
-    actual : list
-            A list of lists of elements that are to be predicted
-            (order doesn't matter in the lists)
-    predicted : list
-                A list of lists of predicted elements
-                (order matters in the lists)
-    k : int, optional
-        The maximum number of predicted elements
-
-    Returns
-    -------
-    score : double
-            The mean average precision at k over the input lists
-
-    """
     return np.mean([apk(a, p, k) for a, p in zip(actual, predicted)])

@@ -256,7 +256,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"PYTHONPATH=. python evaluate.py "
+        command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} ",
         dag=dag,
     )

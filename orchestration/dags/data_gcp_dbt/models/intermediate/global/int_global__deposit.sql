@@ -10,6 +10,9 @@ with bookings_grouped_by_deposit as (
         min(case when not booking_is_cancelled then booking_creation_date end) as first_individual_booking_date,
         max(case when not booking_is_cancelled then booking_creation_date end) as last_individual_booking_date,
         count(case when not booking_is_cancelled then booking_id end) as total_non_cancelled_individual_bookings,
+        count(case when booking_intermediary_amount = 0 then booking_id end) as total_free_bookings,
+        count(case when booking_quantity = 2 AND not booking_is_cancelled THEN booking_id end) as total_non_cancelled_duo_bookings,
+        count(distinct case when not booking_is_cancelled then offer_category_id end) as total_distinct_category_booked,
         count(distinct case when not booking_is_cancelled then offer_subcategory_id end) as total_distinct_booking_types,
         sum(case when physical_goods and offer_url is null and not booking_is_cancelled then booking_intermediary_amount end) as total_theoretical_physical_goods_amount_spent,
         sum(case when not booking_is_cancelled
@@ -44,6 +47,8 @@ select
     bgd.first_individual_booking_date,
     bgd.last_individual_booking_date,
     bgd.total_non_cancelled_individual_bookings,
+    bgd.total_non_cancelled_duo_bookings,
+    bgd.total_free_bookings,
     bgd.total_distinct_booking_types,
     bgd.total_theoretical_physical_goods_amount_spent,
     bgd.total_theoretical_digital_goods_amount_spent,

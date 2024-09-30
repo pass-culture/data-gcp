@@ -4,15 +4,15 @@ import mlflow
 import typer
 from catboost import CatBoostClassifier
 
-from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
-from utils.constants import (
+from commons.constants import (
     ENV_SHORT_NAME,
     MLFLOW_RUN_ID_FILENAME,
     MODEL_DIR,
     STORAGE_PATH,
 )
-from utils.data_collect_queries import read_from_gcs
-from utils.mlflow_tools import connect_remote_mlflow
+from commons.data_collect_queries import read_from_gcs
+from commons.mlflow_tools import connect_remote_mlflow
+from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
 
 
 def train(

@@ -1,5 +1,6 @@
 import os
 
+CONFIGS_PATH = "configs"
 # Environment variables
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 STORAGE_PATH = os.environ.get("STORAGE_PATH", "")

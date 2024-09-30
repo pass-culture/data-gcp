@@ -2,7 +2,7 @@ import pandas as pd
 import tensorflow as tf
 import tensorflow_recommenders as tfrs
 
-from utils.layers import (
+from two_towers_model.utils.layers import (
     IntegerEmbeddingLayer,
     PretainedEmbeddingLayer,
     StringEmbeddingLayer,
@@ -68,7 +68,6 @@ class TwoTowersModel(tfrs.models.Model):
                 from_logits=True, reduction=tf.keras.losses.Reduction.SUM
             ),
             metrics=tfrs.metrics.FactorizedTopK(
-                # candidates=items_dataset.map(self.item_model),
                 candidates=tfrs.layers.factorized_top_k.BruteForce().index_from_dataset(
                     items_dataset.map(self.item_model)
                 ),
@@ -82,8 +81,8 @@ class TwoTowersModel(tfrs.models.Model):
             features[len(self._user_feature_names) :],
         )
 
-        user_embedding = self.user_model(user_features)
-        item_embedding = self.item_model(item_features)
+        user_embedding = tf.math.l2_normalize(self.user_model(user_features), axis=1)
+        item_embedding = tf.math.l2_normalize(self.item_model(item_features), axis=1)
         # TODO add implicit_weights = features["click"]
         # sample_weight=implicit_weights
         return self.task(user_embedding, item_embedding, compute_metrics=not training)

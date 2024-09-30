@@ -40,7 +40,7 @@ user_geo_iris as (
         referential_table='int_seed__geo_iris',
         id_column='user_id',
         prefix_name='user',
-        columns=['iris_internal_id','region_name','city_label','city_code','rural_city_type','academy_name', department_name','density_label','density_macro_level','density_level'],
+        columns=['iris_internal_id','region_name','city_label','city_code','rural_city_type','academy_name', 'department_name','density_label','density_macro_level','density_level'],
         geo_shape='iris_shape'
     )
     }}

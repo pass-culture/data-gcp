@@ -45,19 +45,6 @@ collective_offers_grouped_by_venue as (
         COUNT(distinct case when collective_offer_is_bookable then collective_offer_id end) as total_bookable_collective_offers
     from {{ ref('int_applicative__collective_offer') }}
     group by venue_id
-),
-
-bookable_offer_history as (
-    select
-        venue_id,
-        MIN(partition_date) as first_bookable_offer_date,
-        MAX(partition_date) as last_bookable_offer_date,
-        MIN(case when individual_bookable_offers > 0 then partition_date end) as first_individual_bookable_offer_date,
-        MAX(case when individual_bookable_offers > 0 then partition_date end) as last_individual_bookable_offer_date,
-        MIN(case when collective_bookable_offers > 0 then partition_date end) as first_collective_bookable_offer_date,
-        MAX(case when collective_bookable_offers > 0 then partition_date end) as last_collective_bookable_offer_date
-    from {{ ref('bookable_venue_history') }}
-    group by venue_id
 )
 
 select
@@ -157,12 +144,6 @@ select
     co.last_collective_offer_creation_date,
     COALESCE(co.total_created_collective_offers, 0) as total_created_collective_offers,
     COALESCE(o.total_created_individual_offers, 0) + COALESCE(co.total_created_collective_offers, 0) as total_created_offers,
-    boh.first_bookable_offer_date,
-    boh.last_bookable_offer_date,
-    boh.first_individual_bookable_offer_date,
-    boh.last_individual_bookable_offer_date,
-    boh.first_collective_bookable_offer_date,
-    boh.last_collective_bookable_offer_date,
     case when o.first_individual_booking_date is not NULL and co.first_collective_booking_date is not NULL then LEAST(co.first_collective_booking_date, o.first_individual_booking_date)
         else COALESCE(first_individual_booking_date, first_collective_booking_date)
     end as first_booking_date,
@@ -181,12 +162,6 @@ select
     COALESCE(o.total_bookable_individual_offers, 0) + COALESCE(co.total_bookable_collective_offers, 0) as total_bookable_offers,
     COALESCE(co.total_non_cancelled_tickets, 0) as total_non_cancelled_tickets,
     COALESCE(co.total_current_year_non_cancelled_tickets, 0) as total_current_year_non_cancelled_tickets,
-    case when DATE_DIFF(CURRENT_DATE, boh.last_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_active_last_30days,
-    case when DATE_DIFF(CURRENT_DATE, boh.last_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_active_current_year,
-    case when DATE_DIFF(CURRENT_DATE, boh.last_individual_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_individual_active_last_30days,
-    case when DATE_DIFF(CURRENT_DATE, boh.last_individual_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_individual_active_current_year,
-    case when DATE_DIFF(CURRENT_DATE, boh.last_collective_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_collective_active_last_30days,
-    case when DATE_DIFF(CURRENT_DATE, boh.last_collective_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_collective_active_current_year,
     ROW_NUMBER() over (
         partition by venue_managing_offerer_id
         order by
@@ -202,7 +177,6 @@ from {{ source("raw", "applicative_database_venue") }} as v
     left join {{ ref('int_geo__venue_location')}} as v_loc on v_loc.venue_id = v.venue_id
     left join offers_grouped_by_venue as o on o.venue_id = v.venue_id
     left join collective_offers_grouped_by_venue as co on co.venue_id = v.venue_id
-    left join bookable_offer_history as boh on boh.venue_id = v.venue_id
     left join {{ source("raw", "applicative_database_venue_registration") }} as vr on v.venue_id = vr.venue_id
     left join {{ source("raw", "applicative_database_venue_contact") }} as vc on v.venue_id = vc.venue_id
     left join {{ source("raw", "applicative_database_venue_label") }} as vl on vl.venue_label_id = v.venue_label_id

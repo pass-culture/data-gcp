@@ -26,12 +26,12 @@ class StartGCEOperator(BaseOperator):
         "instance_name",
         "instance_type",
         "preemptible",
-        "accelerator_types",
-        "gpu_count",
-        "source_image_type",
         "disk_size_gb",
         "labels",
         "use_gke_network",
+        "gce_zone",
+        "gpu_type",
+        "gpu_count",
     ]
 
     @apply_defaults
@@ -40,12 +40,12 @@ class StartGCEOperator(BaseOperator):
         instance_name: str,
         instance_type: str = "n1-standard-1",
         preemptible: bool = True,
-        accelerator_types=[],
-        gpu_count: int = 0,
-        source_image_type: str = None,
         disk_size_gb: str = "100",
         labels={},
         use_gke_network: bool = False,
+        gce_zone: str = "europe-west1-b",
+        gpu_type: t.Optional[str] = None,
+        gpu_count: int = 0,
         *args,
         **kwargs,
     ):
@@ -53,22 +53,15 @@ class StartGCEOperator(BaseOperator):
         self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
         self.instance_type = instance_type
         self.preemptible = preemptible
-        self.accelerator_types = accelerator_types
+        self.gpu_type = gpu_type
         self.gpu_count = gpu_count
-        self.source_image_type = source_image_type
         self.disk_size_gb = disk_size_gb
         self.labels = labels
         self.use_gke_network = use_gke_network
+        self.gce_zone = gce_zone
 
     def execute(self, context) -> None:
-        if self.source_image_type is None:
-            if len(self.accelerator_types) > 0 or self.gpu_count > 0:
-                image_type = MACHINE_TYPE["gpu"]
-            else:
-                image_type = MACHINE_TYPE["cpu"]
-        else:
-            image_type = MACHINE_TYPE[self.source_image_type]
-
+        image_type = MACHINE_TYPE["cpu"] if self.gpu_count == 0 else MACHINE_TYPE["gpu"]
         gce_networks = (
             GKE_NETWORK_LIST if self.use_gke_network is True else BASE_NETWORK_LIST
         )
@@ -77,13 +70,14 @@ class StartGCEOperator(BaseOperator):
             source_image_type=image_type,
             disk_size_gb=self.disk_size_gb,
             gce_networks=gce_networks,
+            gce_zone=self.gce_zone,
         )
         hook.start_vm(
             self.instance_name,
             self.instance_type,
             preemptible=self.preemptible,
-            accelerator_types=self.accelerator_types,
             labels=self.labels,
+            gpu_type=self.gpu_type,
             gpu_count=self.gpu_count,
         )
 
@@ -139,12 +133,14 @@ class BaseSSHGCEOperator(BaseOperator):
         instance_name: str,
         command: str,
         environment: t.Dict[str, str] = {},
+        gce_zone=GCE_ZONE,
         *args,
         **kwargs,
     ):
         self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
         self.command = command
         self.environment = environment
+        self.gce_zone = gce_zone
         super(BaseSSHGCEOperator, self).__init__(*args, **kwargs)
 
     def run_ssh_client_command(self, hook, context, retry=1):
@@ -186,7 +182,7 @@ class BaseSSHGCEOperator(BaseOperator):
     def execute(self, context):
         hook = ComputeEngineSSHHook(
             instance_name=self.instance_name,
-            zone=GCE_ZONE,
+            zone=self.gce_zone,
             project_id=GCP_PROJECT_ID,
             use_iap_tunnel=True,
             use_oslogin=False,

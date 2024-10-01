@@ -4,6 +4,7 @@ from itertools import chain
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
+    GCE_ZONES,
     INSTANCES_TYPES,
 )
 from common.operators.gce import (
@@ -27,7 +28,6 @@ dag_config = {
 }
 
 # Params
-# default instance type prod :  "n1-highmem-32"
 gce_params = {
     "instance_name": f"playground-vm-yourname-{ENV_SHORT_NAME}",
     "instance_type": {
@@ -43,6 +43,17 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
     "dag_config": dag_config,
 }
+dag_doc = doc_md = """
+    ### Launch VM Dag
+
+    Use this DAG to launch a VM to work on.
+
+    #### Parameters:
+    * Working with or without a GPU :
+        * if you don't need any GPU, leave the `gpu_count` parameter to 0
+        * if you need a specific GPU, you might want to check the GPU availability per GCP zone [here](https://cloud.google.com/compute/docs/gpus/gpu-regions-zones)
+    * use_gke_network: if you need your VM to comminicate with the Clickhouse cluster, set this parameter to True
+    """
 
 
 with DAG(
@@ -68,6 +79,7 @@ with DAG(
         "gpu_type": Param(
             default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
         ),
+        "gce_zone": Param(default="europe-west-1b", enum=GCE_ZONES),
         "keep_alive": Param(default=True, type="boolean"),
         "install_project": Param(default=True, type="boolean"),
         "use_gke_network": Param(default=False, type="boolean"),
@@ -77,6 +89,7 @@ with DAG(
             default="simple", enum=["simple", "engineering", "science", "analytics"]
         ),
     },
+    doc_md=dag_doc,
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
 
@@ -86,12 +99,11 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         labels={"keep_alive": "{{ params.keep_alive|lower }}"},
-        gpu_count="{{ params.gpu_count }}",
-        accelerator_types=[
-            {"name": "{{ params.gpu_type }}", "count": "{{ params.gpu_count }}"}
-        ],
         use_gke_network="{{ params.use_gke_network }}",
         disk_size_gb="{{ params.disk_size_gb }}",
+        gce_zone="{{ params.gce_zone }}",
+        gpu_type="{{ params.gpu_type }}",
+        gpu_count="{{ params.gpu_count }}",
     )
 
     clone_install = InstallDependenciesOperator(
@@ -99,6 +111,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
         installer="{{ params.installer }}",
+        gce_zone="{{ params.gce_zone }}",
         python_version="3.10",
         requirement_file="requirements.txt",
     )

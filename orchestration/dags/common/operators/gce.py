@@ -319,15 +319,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         # Default export
         commands_list.append(
             "\n".join(
-                [
-                    f"export {key}={value}"
-                    for key, value in dict(self.CONDA_EXPORT, **environment).items()
-                ]
-                if installer == "conda"
-                else [
-                    f"export {key}={value}"
-                    for key, value in dict(self.DEFAULT_EXPORT, **environment).items()
-                ]
+                [f"export {key}={value}" for key, value in self.environment.items()]
             )
         )
         # Conda activate if required
@@ -420,11 +412,11 @@ class InstallDependenciesOperator(SSHGCEOperator):
         Construct the command to clone the repo and install dependencies based on the installer.
         """
         # Define the directory where the repo will be cloned
-        repo_dir = "data-gcp"
+        ROOT_REPO_DIR = "data-gcp"
 
         # Git clone command
         clone_command = f"""
-            DIR={repo_dir} &&
+            DIR={ROOT_REPO_DIR} &&
             if [ -d "$DIR" ]; then
                 echo "Directory exists. Fetching updates..." &&
                 cd $DIR &&

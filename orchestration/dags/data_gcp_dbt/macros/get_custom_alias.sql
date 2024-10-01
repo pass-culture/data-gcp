@@ -3,10 +3,14 @@
     {%- set is_orchestrated = target.name in ["prod", "stg", "dev"] and target.profile_name != "sandbox" -%}
     {%- set is_applicative = 'applicative' in node.path -%}
     {%- set is_intermediate_or_ml = ('intermediate' in node.path or 'machine_learning' in node.path or 'backend' in node.path or node.resource_type == 'snapshot') -%}
+    {%- set is_source_snapshot = ('source' in node.path and node.resource_type == 'snapshot') -%}
     {%- set is_mart_or_export = ('mart' in node.path or 'export' in node.path) -%}
 
     {%- if target.profile_name == "CI" or target.name == "local" -%}
         {{ node.name }}
+
+    {%- elif is_source_snapshot -%}
+        {{ "applicative_database_" ~ node.name.split('__')[-1] | trim }}
 
     {%- elif is_applicative and custom_alias_name -%}
         {{ custom_alias_name ~ node.name }}

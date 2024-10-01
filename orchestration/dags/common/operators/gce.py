@@ -203,16 +203,21 @@ class BaseSSHGCEOperator(BaseOperator):
         return result
 
 
-class InstallDependenciesOperator(BaseOperator):
+class InstallDependenciesOperator(BaseSSHGCEOperator):
     REPO = "https://github.com/pass-culture/data-gcp.git"
-    template_fields = ("installer", "requirement_file")
+    template_fields = (
+        "installer",
+        "requirement_file",
+        "branch",
+    )  # Template fields for Jinja resolution
 
     @apply_defaults
     def __init__(
         self,
         instance_name: str,
         requirement_file: str = "requirements.txt",
-        installer: str = "uv",
+        installer: str = "uv",  # Default to 'uv'
+        branch: str = "main",  # Branch for repo
         environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
         *args,
@@ -222,56 +227,75 @@ class InstallDependenciesOperator(BaseOperator):
         self.requirement_file = requirement_file
         self.environment = environment
         self.python_version = python_version
-        self.installer = installer  # This will be 'uv' or 'conda'
+        self.installer = installer
+        self.branch = branch
 
-        # Construct the command based on the installer type
-        command = self.make_install_command(installer, requirement_file)
-
+        # Call the parent class constructor without creating the command here
         super(InstallDependenciesOperator, self).__init__(
             instance_name=self.instance_name,
-            command=command,
+            command="",  # Placeholder command (this will be replaced in the execute method)
             environment=self.environment,
             *args,
             **kwargs,
         )
 
+    def execute(self, context):
+        # Now the Jinja templates have been rendered; we can construct the command
+        command = self.make_install_command(
+            self.installer, self.requirement_file, self.branch
+        )
+
+        # Use the command in the parent SSH operator to execute on the remote instance
+        self.command = command
+        return super(InstallDependenciesOperator, self).execute(context)
+
     def make_install_command(
         self, installer: str, requirement_file: str, branch: str
     ) -> str:
-        cloning_command = f"""
-        DIR=data-gcp &&
-        if [ -d "$DIR" ]; then
-            echo "Update and Checkout repo..." &&
-            cd $DIR &&
-            git fetch --all &&
-            git reset --hard origin/{branch}
-        else
-            echo "Clone and checkout repo..." &&
-            git clone {self.REPO} &&
-            cd $DIR &&
-            git checkout {branch}
-        fi
         """
+        Construct the command to clone the repo and install dependencies based on the installer.
+        """
+        # Define the directory where the repo will be cloned
+        repo_dir = "data-gcp"
+
+        # Git clone command
+        clone_command = (
+            f"DIR={repo_dir} && "
+            f'if [ -d "$DIR" ]; then '
+            f'echo "Directory exists. Fetching updates..." && '
+            f"cd $DIR && "
+            f"git fetch --all && "
+            f"git reset --hard origin/{branch}; "
+            f"else "
+            f'echo "Cloning repository..." && '
+            f"git clone {self.REPO} $DIR && "
+            f"cd $DIR && "
+            f"git checkout {branch}; "
+            f"fi"
+        )
+        # Depending on the installer type, append the installation commands
         if installer == "uv":
-            install_command = f"""
-            curl -LsSf https://astral.sh/uv/install.sh | sh &&
-            uv venv --python {self.python_version} &&
-            uv pip install -r {requirement_file}
-            """
+            install_command = (
+                "curl -LsSf https://astral.sh/uv/install.sh | sh && "
+                "source $HOME/.cargo/env && "
+                f"uv venv --python {self.python_version} && "
+                f"uv pip sync {requirement_file}"
+            )
         elif installer == "conda":
-            # Use Conda installer
-            install_command = f"""
-            export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH
-            python -m pip install --upgrade --user urllib3
-            conda create -n data-gcp python={self.python_version} -y -q &&
-            conda init zsh
-            source ~/.zshrc
-            source activate data-gcp &&
-            pip install -r {requirement_file} --user
-            """
+            install_command = (
+                "export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH && "
+                "python -m pip install --upgrade --user urllib3 && "
+                f"conda create --name data-gcp python={self.python_version} -y -q && "
+                "conda init zsh && "
+                "source ~/.zshrc && "
+                "conda activate data-gcp && "
+                f"pip install -r {requirement_file} --user"
+            )
         else:
-            raise ValueError("Invalid installer: {installer}. Choose 'uv' or 'conda'.")
-        return f"{cloning_command} && {install_command}"
+            raise ValueError(f"Invalid installer: {installer}. Choose 'uv' or 'conda'.")
+
+        # Combine the git clone and installation commands without an extra '&&' at the end
+        return f"{clone_command} && {install_command}"
 
 
 class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
@@ -372,11 +396,10 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         command: str,
         base_dir: str = None,
         environment: t.Dict[str, str] = {},
-        use_uv: bool = False,
+        installer: str = "uv",
         *args,
         **kwargs,
     ):
-        self.use_uv = use_uv
         self.environment = dict(self.DEFAULT_EXPORT, **environment)
         commands_list = []
 
@@ -391,12 +414,12 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         )
 
         # Conda activate if required
-        if not self.use_uv:
+        if not installer == "uv":
             commands_list.append(
                 "conda init zsh && source ~/.zshrc && conda activate data-gcp"
             )
         else:
-            commands_list.append("source ~/.profile")
+            pass  # no need to activate uv venv ?
 
         # Default path
         if base_dir is not None:

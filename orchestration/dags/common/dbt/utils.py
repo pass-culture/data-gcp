@@ -342,25 +342,6 @@ def create_model_operator(
     )
 
 
-def setup_dependencies(
-    model_node: str,
-    manifest: Dict,
-    model_op_dict: Dict[str, BaseOperator],
-    test_op_dict: Dict[str, BaseOperator],
-    models_with_crit_test_dependencies: List[Optional[str]],
-    final_op: BaseOperator,
-) -> None:
-    children = [
-        model_op_dict[child]
-        for child in manifest["child_map"][model_node]
-        if child in model_op_dict
-    ]
-    if model_node in models_with_crit_test_dependencies:
-        test_op_dict[model_node] >> (children if children else final_op)
-    else:
-        model_op_dict[model_node] >> (children if children else final_op)
-
-
 def create_snapshot_operator(
     snapshot_node: str, snapshot_data: Dict, dag: DAG
 ) -> BashOperator:
@@ -429,14 +410,42 @@ def create_data_transformation_group(
     return model_op_dict
 
 
-def set_up_model_dependencies(
-    dag: DAG,
-    dbt_models: List[str],
+def setup_dependencies(
+    model_node: str,
     manifest: Dict,
     model_op_dict: Dict[str, BaseOperator],
     test_op_dict: Dict[str, BaseOperator],
+    snapshot_op_dict: Dict[str, BaseOperator],
     models_with_crit_test_dependencies: List[Optional[str]],
-    compile_op: BaseOperator,
+    final_op: BashOperator,
+) -> None:
+    children = [
+        model_op_dict[child]
+        for child in manifest["child_map"][model_node]
+        if child in model_op_dict
+    ] + [
+        snapshot_op_dict[child]
+        for child in manifest["child_map"][model_node]
+        if child in snapshot_op_dict
+    ]
+    if model_node in snapshot_op_dict:
+        snapshot_op_dict[model_node] >> (children if children else final_op)
+    elif model_node in models_with_crit_test_dependencies:
+        test_op_dict[model_node] >> (children if children else final_op)
+    else:
+        model_op_dict[model_node] >> (children if children else final_op)
+
+
+def set_up_model_dependencies(
+    dag: DAG,
+    dbt_models: List[str],
+    dbt_snapshots: List[str],
+    manifest: Dict,
+    model_op_dict: Dict[str, BaseOperator],
+    test_op_dict: Dict[str, BaseOperator],
+    snapshot_op_dict: Dict[str, BaseOperator],
+    models_with_crit_test_dependencies: List[Optional[str]],
+    final_op: Union[BaseOperator, BashOperator],
 ) -> None:
     for model_node in dbt_models:
         setup_dependencies(
@@ -444,8 +453,20 @@ def set_up_model_dependencies(
             manifest,
             model_op_dict,
             test_op_dict,
+            snapshot_op_dict,
             models_with_crit_test_dependencies,
-            compile_op,
+            final_op,
+        )
+    # Set up dependencies between models and snapshots
+    for snapshot_node in dbt_snapshots:
+        setup_dependencies(
+            snapshot_node,
+            manifest,
+            model_op_dict,
+            test_op_dict,
+            snapshot_op_dict,
+            models_with_crit_test_dependencies,
+            final_op,
         )
 
 
@@ -481,7 +502,7 @@ def dbt_dag_reconstruction(
     dbt_snapshots: List[str],
     models_with_crit_test_dependencies: List[Optional[str]],
     crit_test_parents: Dict[Optional[str], List[str]],
-    compile_op: BaseOperator,
+    final_op: Union[BaseOperator, BashOperator],
 ) -> Dict[str, Union[Dict[str, BashOperator], TaskGroup]]:
     # Create the task group for critical tests only if necessary
     test_op_dict = create_critical_tests_group(
@@ -492,16 +513,20 @@ def dbt_dag_reconstruction(
     model_op_dict = create_data_transformation_group(
         dag, dbt_models, manifest, models_with_crit_test_dependencies, test_op_dict
     )
+    # Create the snapshot group
+    snapshot_op_dict = create_snapshot_group(dag, dbt_snapshots, manifest)
 
-    # Set up dependencies between models and tests
+    # Set up dependencies between models, snapshots and tests
     set_up_model_dependencies(
         dag,
         dbt_models,
+        dbt_snapshots,
         manifest,
         model_op_dict,
         test_op_dict,
+        snapshot_op_dict,
         models_with_crit_test_dependencies,
-        compile_op,
+        final_op,
     )
 
     # Manage test's cross dependencies
@@ -511,9 +536,6 @@ def dbt_dag_reconstruction(
                 model_op_dict[p] >> test_op_dict[test]
             except KeyError:
                 pass
-
-    # Create the snapshot group
-    snapshot_op_dict = create_snapshot_group(dag, dbt_snapshots, manifest)
 
     # Create the folder manual trigger group
     trigger_block = create_folder_manual_trigger_group(

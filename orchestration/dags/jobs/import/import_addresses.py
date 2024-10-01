@@ -10,7 +10,7 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -83,7 +83,11 @@ with DAG(
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        )
+        ),
+        "installer": Param(
+            default="uv",
+            enum=["uv", "conda"],
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start")
@@ -92,21 +96,28 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_start_task"
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
+    # fetch_code = CloneRepositoryGCEOperator(
+    #     task_id="fetch_code",
+    #     instance_name=GCE_INSTANCE,
+    #     command="{{ params.branch }}",
+    #     python_version="3.10",
+    # )
+    fetch_code = InstallDependenciesOperator(
         task_id="fetch_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
+        branch="{{ params.branch }}",
+        installer="{{ params.installer }}",
         python_version="3.10",
     )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        command="pip install -r requirements.txt --user",
-        dag=dag,
-        retries=2,
-    )
+    # install_dependencies = SSHGCEOperator(
+    #     task_id="install_dependencies",
+    #     instance_name=GCE_INSTANCE,
+    #     base_dir=BASE_PATH,
+    #     command="pip install -r requirements.txt --user",
+    #     dag=dag,
+    #     retries=2,
+    # )
+    install_dependencies = DummyOperator(task_id="install_dependencies_dummy")
 
     addresses_to_gcs = SSHGCEOperator(
         task_id="addresses_to_gcs",

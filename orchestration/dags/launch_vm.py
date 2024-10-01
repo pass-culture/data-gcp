@@ -114,13 +114,11 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         labels={"keep_alive": "{{ params.keep_alive|lower }}"},
-        gpu_count="{{ params.gpu_count }}",
-        accelerator_types=[
-            {"name": "{{ params.gpu_type }}", "count": "{{ params.gpu_count }}"}
-        ],
         use_gke_network="{{ params.use_gke_network }}",
         disk_size_gb="{{ params.disk_size_gb }}",
         gcp_zone="{{ params.gcp_zone }}",
+        gpu_type="{{ params.gpu_type }}",
+        gpu_count="{{ params.gpu_count }}",
     )
 
     branching_clone_task = BranchPythonOperator(

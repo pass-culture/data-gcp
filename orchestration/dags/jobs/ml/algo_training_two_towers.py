@@ -121,6 +121,7 @@ with DAG(
         "gpu_type": Param(
             default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
         ),
+        "gpu_count": Param(default=1, enum=INSTANCES_TYPES["gpu"]["count"]),
         "instance_name": Param(
             default=gce_params["instance_name"]
             + "-"
@@ -168,7 +169,8 @@ with DAG(
         preemptible=False,
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
-        accelerator_types=[{"name": "nvidia-tesla-t4", "count": 1}],
+        gpu_count="{{ params.gpu_count }}",
+        gpu_type="{{ params.gpu_type }}",
         retries=2,
         labels={"job_type": "ml"},
     )

@@ -65,12 +65,12 @@ class GCEHook(GoogleBaseHook):
 
     def start_vm(
         self,
-        instance_name,
-        instance_type,
+        instance_name: str,
+        instance_type: str,
         preemptible,
         labels={},
-        gpu_count=0,
-        accelerator_types=[],
+        gpu_count: int = 0,
+        gpu_type: t.Optional[str] = None,
     ):
         instances = self.list_instances()
         instances = [x["name"] for x in instances if x["status"] == "RUNNING"]
@@ -87,7 +87,7 @@ class GCEHook(GoogleBaseHook):
             labels=labels,
             wait=True,
             preemptible=preemptible,
-            accelerator_types=accelerator_types,
+            gpu_type=gpu_type,
             gpu_count=gpu_count,
         )
 
@@ -123,23 +123,13 @@ class GCEHook(GoogleBaseHook):
         instance_type,
         name,
         labels,
-        gpu_count=0,
         metadata=None,
         wait=False,
-        accelerator_types=[],
+        gpu_count: int = 0,
+        gpu_type: t.Optional[str] = None,
         preemptible=False,
     ):
         instance_type = "zones/%s/machineTypes/%s" % (self.gcp_zone, instance_type)
-        gpu_counter = max([gpu_count] + [a_t["count"] for a_t in accelerator_types])
-        accelerator_type = [
-            {
-                "acceleratorCount": [gpu_counter],
-                "acceleratorType": "zones/%s/acceleratorTypes/%s"
-                % (self.gcp_zone, a_t.get("name", "nvidia-tesla-t4")),
-            }
-            for a_t in accelerator_types
-            if gpu_counter in [1, 2, 4]
-        ]
         metadata = (
             [{"key": key, "value": value} for key, value in metadata.items()]
             if metadata
@@ -185,9 +175,15 @@ class GCEHook(GoogleBaseHook):
             "tags": {"items": ["training"]},
             "labels": dict({**DEFAULT_LABELS, **labels}),
         }
+
         # GPUs
-        if len(accelerator_type) > 0:
-            config["guestAccelerators"] = accelerator_type
+        if gpu_count > 0:
+            config["guestAccelerators"] = [
+                {
+                    "acceleratorCount": gpu_count,
+                    "acceleratorType": f"zones/{self.gcp_zone}/acceleratorTypes/{gpu_type}",
+                }
+            ]
         if preemptible:
             config["scheduling"] = {
                 "onHostMaintenance": "terminate",

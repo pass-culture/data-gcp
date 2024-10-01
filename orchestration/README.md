@@ -69,10 +69,12 @@ On peut qu'avoir une version de Airflow installé en local. Pour pallier ça, il
    - Modifier la valeur du DAG_FOLDER
 
 ### Premier lancement (La première fois uniquement)
+sur macos installer la lib coreutils `brew install coreutils`
 
 ```sh
 make build
 ```
+
 
 ### Lancement de l'app
 

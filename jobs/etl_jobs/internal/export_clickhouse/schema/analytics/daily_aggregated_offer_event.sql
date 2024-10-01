@@ -1,4 +1,4 @@
-CREATE OR REPLACE TABLE analytics.daily_aggregated_offer_event ON cluster default 
+CREATE OR REPLACE TABLE analytics.daily_aggregated_offer_event ON cluster default
     ENGINE = MergeTree
     PARTITION BY event_date
     ORDER BY (offer_id)
@@ -13,6 +13,7 @@ FROM
     intermediate.native_event
 WHERE
     is_consult_offer = 1
+    AND event_date >= date_sub(current_date, interval 30 day)
 GROUP BY
     event_date,
     origin,

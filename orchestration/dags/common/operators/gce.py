@@ -203,102 +203,6 @@ class BaseSSHGCEOperator(BaseOperator):
         return result
 
 
-class InstallDependenciesOperator(BaseSSHGCEOperator):
-    REPO = "https://github.com/pass-culture/data-gcp.git"
-    template_fields = (
-        "installer",
-        "requirement_file",
-        "branch",
-        "instance_name",
-    )  # Template fields for Jinja resolution
-
-    @apply_defaults
-    def __init__(
-        self,
-        instance_name: str,
-        requirement_file: str = "requirements.txt",
-        installer: str = "uv",  # Default to 'uv'
-        branch: str = "main",  # Branch for repo
-        environment: t.Dict[str, str] = {},
-        python_version: str = "3.10",
-        *args,
-        **kwargs,
-    ):
-        self.instance_name = instance_name
-        self.requirement_file = requirement_file
-        self.environment = environment
-        self.python_version = python_version
-        self.installer = installer
-        self.branch = branch
-
-        # Call the parent class constructor without creating the command here
-        super(InstallDependenciesOperator, self).__init__(
-            instance_name=self.instance_name,
-            command="",  # Placeholder command (this will be replaced in the execute method)
-            environment=self.environment,
-            *args,
-            **kwargs,
-        )
-
-    def execute(self, context):
-        # Now the Jinja templates have been rendered; we can construct the command
-        command = self.make_install_command(
-            self.installer, self.requirement_file, self.branch
-        )
-
-        # Use the command in the parent SSH operator to execute on the remote instance
-        self.command = command
-        return super(InstallDependenciesOperator, self).execute(context)
-
-    def make_install_command(
-        self, installer: str, requirement_file: str, branch: str
-    ) -> str:
-        """
-        Construct the command to clone the repo and install dependencies based on the installer.
-        """
-        # Define the directory where the repo will be cloned
-        repo_dir = "data-gcp"
-
-        # Git clone command
-        clone_command = (
-            f"DIR={repo_dir} && "
-            f'if [ -d "$DIR" ]; then '
-            f'echo "Directory exists. Fetching updates..." && '
-            f"cd $DIR && "
-            f"git fetch --all && "
-            f"git reset --hard origin/{branch}; "
-            f"else "
-            f'echo "Cloning repository..." && '
-            f"git clone {self.REPO} $DIR && "
-            f"cd $DIR && "
-            f"git checkout {branch}; "
-            f"fi"
-        )
-        # Depending on the installer type, append the installation commands
-        if installer == "uv":
-            install_command = (
-                "curl -LsSf https://astral.sh/uv/install.sh | sh && "
-                "source $HOME/.cargo/env && "
-                f"uv venv --python {self.python_version} && "
-                f"uv pip sync {requirement_file}"
-            )
-        elif installer == "conda":
-            install_command = (
-                "export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH && "
-                "python -m pip install --upgrade --user urllib3 && "
-                f"conda create --name data-gcp python={self.python_version} -y -q && "
-                "conda init zsh && "
-                "source ~/.zshrc && "
-                "conda activate data-gcp && "
-                f"pip install -r {requirement_file} --user"
-            )
-        else:
-            raise ValueError(f"Invalid installer: {installer}. Choose 'uv' or 'conda'.")
-
-        # Combine the git clone and installation commands without an extra '&&' at the end
-        return f"{clone_command} && {install_command}"
-
-
 class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
     REPO = "https://github.com/pass-culture/data-gcp.git"
 
@@ -385,9 +289,12 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
 
 class SSHGCEOperator(BaseSSHGCEOperator):
     DEFAULT_EXPORT = {
-        "PATH": "/opt/conda/bin:/opt/conda/condabin:+$PATH",
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
         "GCP_PROJECT_ID": GCP_PROJECT_ID,
+    }
+    CONDA_EXPORT = {
+        **DEFAULT_EXPORT,
+        "PATH": "/opt/conda/bin:/opt/conda/condabin:+$PATH",
     }
 
     @apply_defaults
@@ -401,48 +308,36 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         *args,
         **kwargs,
     ):
-        self.environment = dict(self.DEFAULT_EXPORT, **environment)
+        self.environment = (
+            dict(self.CONDA_EXPORT, **environment)
+            if installer == "conda"
+            else dict(self.DEFAULT_EXPORT, **environment)
+        )
+
         commands_list = []
 
-        def filter_conda_paths(path_value: str) -> str:
-            # Remove '$PATH' from the path string and handle '+' if present
-            path_value = path_value.replace("+$PATH", "").strip(":")
-            extra_paths = path_value.split(":")
-            filtered_paths = [path for path in extra_paths if "conda" not in path]
-            if not filtered_paths:
-                return "$PATH"
-            return ":".join(filtered_paths) + ":+$PATH"
-
+        # Default export
+        commands_list.append(
+            "\n".join(
+                [
+                    f"export {key}={value}"
+                    for key, value in dict(self.CONDA_EXPORT, **environment).items()
+                ]
+                if installer == "conda"
+                else [
+                    f"export {key}={value}"
+                    for key, value in dict(self.DEFAULT_EXPORT, **environment).items()
+                ]
+            )
+        )
         # Conda activate if required
         if installer == "conda":
-            # Default export
-            commands_list.append(
-                "\n".join(
-                    [
-                        f"export {key}={value}"
-                        for key, value in dict(
-                            self.DEFAULT_EXPORT, **environment
-                        ).items()
-                    ]
-                )
-            )
             # Init conda
             commands_list.append(
                 "conda init zsh && source ~/.zshrc && conda activate data-gcp"
             )
-        else:
-            # Default export
-            commands_list.append(
-                "\n".join(
-                    [
-                        f"export {key}={value if key != 'PATH' else filter_conda_paths(value)}"
-                        for key, value in dict(
-                            self.DEFAULT_EXPORT, **environment
-                        ).items()
-                    ]
-                )
-            )
-            commands_list.append("source $HOME/.cargo/env")
+        elif installer == "uv":
+            commands_list.append("source .venv/bin/activate")
 
         # Default path
         if base_dir is not None:
@@ -460,3 +355,113 @@ class SSHGCEOperator(BaseSSHGCEOperator):
             *args,
             **kwargs,
         )
+
+
+class InstallDependenciesOperator(SSHGCEOperator):
+    REPO = "https://github.com/pass-culture/data-gcp.git"
+    template_fields = (
+        "installer",
+        "requirement_file",
+        "branch",
+        "instance_name",
+        "base_dir",
+    )
+
+    @apply_defaults
+    def __init__(
+        self,
+        instance_name: str,
+        requirement_file: str = "requirements.txt",
+        installer: str = "uv",  # Default to 'uv'
+        branch: str = "main",  # Branch for repo
+        environment: t.Dict[str, str] = {},
+        python_version: str = "3.10",
+        base_dir: str = "data-gcp",
+        *args,
+        **kwargs,
+    ):
+        self.instance_name = instance_name
+        self.requirement_file = requirement_file
+        self.environment = environment
+        self.python_version = python_version
+        self.installer = installer
+        self.branch = branch
+        self.base_dir = base_dir
+
+        # Call the parent class constructor but do not pass the command yet
+        super(InstallDependenciesOperator, self).__init__(
+            instance_name=self.instance_name,
+            command="",  # Placeholder command
+            environment=self.environment,
+            base_dir=self.base_dir,  # Pass base_dir to parent class
+            installer=self.installer,
+            *args,
+            **kwargs,
+        )
+
+    def execute(self, context):
+        # The templates have been rendered; we can construct the command
+        command = self.make_install_command(
+            self.installer, self.requirement_file, self.branch, self.base_dir
+        )
+
+        # Use the command in the parent SSHGCEOperator to execute on the remote instance
+        self.command = command
+        return super(InstallDependenciesOperator, self).execute(context)
+
+    def make_install_command(
+        self,
+        installer: str,
+        requirement_file: str,
+        branch: str,
+        base_dir: str = "data-gcp",
+    ) -> str:
+        """
+        Construct the command to clone the repo and install dependencies based on the installer.
+        """
+        # Define the directory where the repo will be cloned
+        repo_dir = "data-gcp"
+
+        # Git clone command
+        clone_command = (
+            f"DIR={repo_dir} && "
+            'if [ -d "$DIR" ]; then '
+            'echo "Directory exists. Fetching updates..." && '
+            "cd $DIR && "
+            "git fetch --all && "
+            f"git reset --hard origin/{branch}; "
+            "else "
+            'echo "Cloning repository..." && '
+            f"git clone {self.REPO} $DIR && "
+            "cd $DIR && "
+            f"git checkout {branch}; "
+            "fi && "
+            "cd .."
+        )
+
+        # Depending on the installer type, append the installation commands
+        if installer == "uv":
+            install_command = (
+                "curl -LsSf https://astral.sh/uv/install.sh | sh && "
+                "source $HOME/.cargo/env && "
+                f"uv venv --python {self.python_version} && "
+                "source .venv/bin/activate && "
+                f"cd {base_dir} && "
+                f"uv pip sync {requirement_file}"
+            )
+        elif installer == "conda":
+            install_command = (
+                "export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH && "
+                "python -m pip install --upgrade --user urllib3 && "
+                f"conda create --name data-gcp python={self.python_version} -y -q && "
+                "conda init zsh && "
+                "source ~/.zshrc && "
+                "conda activate data-gcp && "
+                f"cd {base_dir} && "
+                f"pip install -r {requirement_file} --user"
+            )
+        else:
+            raise ValueError(f"Invalid installer: {installer}. Choose 'uv' or 'conda'.")
+
+        # Combine the git clone and installation commands
+        return f"{clone_command} && {install_command}"

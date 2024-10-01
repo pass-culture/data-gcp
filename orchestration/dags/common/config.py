@@ -163,10 +163,4 @@ GCE_ZONES = [
     "europe-west1-b",
     "europe-west1-c",
     "europe-west1-d",
-    "europe-west2-a",
-    "europe-west2-b",
-    "europe-west3-b",
-    "europe-west4-a",
-    "europe-west4-b",
-    "europe-west4-c",
-]  # Regions with GPUs and wit lower CO2 emissions
+]  # Zones with GPUs and with lower CO2 emissions in europe-west1 (required to be in the proper VPC)

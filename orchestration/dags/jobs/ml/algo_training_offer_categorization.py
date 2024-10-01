@@ -38,7 +38,7 @@ dag_config = {
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/offer_categorization_model_v1.0_{DATE}",
     "BASE_DIR": "data-gcp/jobs/ml_jobs/algo_training",
     "MODEL_DIR": "offer_categorization",
-    "TEST_FRACTION": "3",
+    "TEST_RATIO": 0.1,
     "INPUT_TABLE_NAME": "offer_categorization_offers",
 }
 
@@ -92,7 +92,7 @@ with DAG(
         ),
         "instance_name": Param(default=gce_params["instance_name"], type="string"),
         "run_name": Param(default="default", type=["string", "null"]),
-        "test_fraction": Param(default=dag_config["TEST_FRACTION"], type="string"),
+        "test_ratio": Param(default=dag_config["TEST_RATIO"], type="string"),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -171,7 +171,7 @@ with DAG(
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/split_data.py "
         f"--clean-table-path {dag_config['STORAGE_PATH']}/{dag_config['INPUT_TABLE_NAME']}_clean_data/data_clean.parquet "
         f"--split-data-folder {dag_config['STORAGE_PATH']} "
-        "--test-fraction {{ params.test_fraction }}",
+        "--test-ratio {{ params.test_ratio }}",
         dag=dag,
     )
 

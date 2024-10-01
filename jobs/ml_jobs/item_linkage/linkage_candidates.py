@@ -50,9 +50,14 @@ def preprocess_data(chunk: pd.DataFrame, hnne_reducer: HNNE) -> pd.DataFrame:
         pd.DataFrame: The preprocessed data.
     """
     logger.info("Preprocessing data...")
+    pattern = r"\b(?:Tome|t|vol|episode|)\s*(\d+)\b"
     items_df = chunk.assign(
         performer=lambda df: df["performer"].fillna(value="unkn"),
         offer_name=lambda df: df["offer_name"].str.lower(),
+        edition=lambda df: df["offer_name"]
+        .str.extract(pattern, expand=False)
+        .astype(float)
+        .fillna(value=1),
     ).drop(columns=["embedding"])
     if hnne_reducer:
         items_df["vector"] = reduce_embeddings(
@@ -86,6 +91,8 @@ def generate_semantic_candidates(
     for index, row in data.iterrows():
         result_df = model.search(
             vector=row.vector,
+            offer_subcategory_id=row.offer_subcategory_id,
+            edition=row.edition,
             similarity_metric="cosine",
             n=NUM_RESULTS,
             vector_column_name="vector",

@@ -8,10 +8,7 @@ from sentence_transformers import SentenceTransformer
 from constants import MODEL_TYPE as config
 from constants import N_PROBES, NUM_RESULTS, REFINE_FACTOR
 
-DETAIL_COLUMNS = [
-    "item_id",
-    "performer",
-]
+DETAIL_COLUMNS = ["item_id", "performer", "edition", "offer_subcategory_id"]
 DEFAULTS = ["_distance"]
 
 
@@ -30,6 +27,8 @@ class SemanticSpace:
     def search(
         self,
         vector: Document,
+        offer_subcategory_id: str,
+        edition: float,
         similarity_metric="dot",
         n=NUM_RESULTS,
         vector_column_name: str = "vector",
@@ -39,6 +38,10 @@ class SemanticSpace:
                 vector.embedding,
                 vector_column_name=vector_column_name,
                 query_type="vector",
+            )
+            .where(
+                f"edition = {edition} AND offer_subcategory_id='{offer_subcategory_id}'",
+                prefilter=True,
             )
             .nprobes(N_PROBES)
             .refine_factor(REFINE_FACTOR)

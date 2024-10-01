@@ -4,7 +4,7 @@ from itertools import chain
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
-    GCP_ZONES,
+    GCE_ZONES,
     INSTALL_TYPES,
     INSTANCES_TYPES,
 )
@@ -82,7 +82,7 @@ with DAG(
         "gpu_type": Param(
             default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
         ),
-        "gcp_zone": Param(default="europe-west-1b", enum=GCP_ZONES),
+        "gce_zone": Param(default="europe-west-1b", enum=GCE_ZONES),
         "keep_alive": Param(default=True, type="boolean"),
         "install_project": Param(default=True, type="boolean"),
         "use_gke_network": Param(default=False, type="boolean"),
@@ -116,7 +116,7 @@ with DAG(
         labels={"keep_alive": "{{ params.keep_alive|lower }}"},
         use_gke_network="{{ params.use_gke_network }}",
         disk_size_gb="{{ params.disk_size_gb }}",
-        gcp_zone="{{ params.gcp_zone }}",
+        gce_zone="{{ params.gce_zone }}",
         gpu_type="{{ params.gpu_type }}",
         gpu_count="{{ params.gpu_count }}",
     )

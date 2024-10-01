@@ -33,7 +33,7 @@ class GCEHook(GoogleBaseHook):
     def __init__(
         self,
         gcp_project: str = GCP_PROJECT_ID,
-        gcp_zone: str = GCE_ZONE,
+        gce_zone: str = GCE_ZONE,
         gce_networks: t.List[VPCNetwork] = BASE_NETWORK_LIST,
         gce_sa: str = GCE_SA,
         source_image_type: CPUImage = CPUImage(),
@@ -43,7 +43,7 @@ class GCEHook(GoogleBaseHook):
         impersonation_chain: str = None,
     ):
         self.gcp_project = gcp_project
-        self.gcp_zone = gcp_zone
+        self.gce_zone = gce_zone
         self.gce_networks = gce_networks
         self.gce_sa = gce_sa
         self.disk_size_gb = disk_size_gb
@@ -99,7 +99,7 @@ class GCEHook(GoogleBaseHook):
         result = (
             self.get_conn()
             .instances()
-            .list(project=self.gcp_project, zone=self.gcp_zone, filter=filter)
+            .list(project=self.gcp_project, zone=self.gce_zone, filter=filter)
             .execute()
         )
         return result.get("items", [])
@@ -109,7 +109,7 @@ class GCEHook(GoogleBaseHook):
             return (
                 self.get_conn()
                 .instances()
-                .get(instance=name, project=self.gcp_project, zone=self.gcp_zone)
+                .get(instance=name, project=self.gcp_project, zone=self.gce_zone)
                 .execute()
             )
         except HttpError as e:
@@ -129,7 +129,7 @@ class GCEHook(GoogleBaseHook):
         gpu_type: t.Optional[str] = None,
         preemptible=False,
     ):
-        instance_type = "zones/%s/machineTypes/%s" % (self.gcp_zone, instance_type)
+        instance_type = "zones/%s/machineTypes/%s" % (self.gce_zone, instance_type)
         metadata = (
             [{"key": key, "value": value} for key, value in metadata.items()]
             if metadata
@@ -181,7 +181,7 @@ class GCEHook(GoogleBaseHook):
             config["guestAccelerators"] = [
                 {
                     "acceleratorCount": gpu_count,
-                    "acceleratorType": f"zones/{self.gcp_zone}/acceleratorTypes/{gpu_type}",
+                    "acceleratorType": f"zones/{self.gce_zone}/acceleratorTypes/{gpu_type}",
                 }
             ]
         if preemptible:
@@ -198,7 +198,7 @@ class GCEHook(GoogleBaseHook):
         operation = (
             self.get_conn()
             .instances()
-            .insert(project=self.gcp_project, zone=self.gcp_zone, body=config)
+            .insert(project=self.gcp_project, zone=self.gce_zone, body=config)
             .execute()
         )
 
@@ -216,7 +216,7 @@ class GCEHook(GoogleBaseHook):
             operation = (
                 self.get_conn()
                 .instances()
-                .delete(project=self.gcp_project, zone=self.gcp_zone, instance=name)
+                .delete(project=self.gcp_project, zone=self.gce_zone, instance=name)
                 .execute()
             )
             if wait:
@@ -258,7 +258,7 @@ class GCEHook(GoogleBaseHook):
                     .zoneOperations()
                     .get(
                         project=self.gcp_project,
-                        zone=self.gcp_zone,
+                        zone=self.gce_zone,
                         operation=operation,
                     )
                     .execute()

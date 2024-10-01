@@ -159,7 +159,7 @@ GPU_INSTANCES_TYPES = {
 
 INSTANCES_TYPES = {"cpu": CPU_INSTANCES_TYPES, "gpu": GPU_INSTANCES_TYPES}
 
-GCP_ZONES = [
+GCE_ZONES = [
     "europe-west1-b",
     "europe-west1-c",
     "europe-west1-d",

@@ -29,7 +29,7 @@ class StartGCEOperator(BaseOperator):
         "disk_size_gb",
         "labels",
         "use_gke_network",
-        "gcp_zone",
+        "gce_zone",
         "gpu_type",
         "gpu_count",
     ]
@@ -43,7 +43,7 @@ class StartGCEOperator(BaseOperator):
         disk_size_gb: str = "100",
         labels={},
         use_gke_network: bool = False,
-        gcp_zone: str = "europe-west1-b",
+        gce_zone: str = "europe-west1-b",
         gpu_type: t.Optional[str] = None,
         gpu_count: int = 0,
         *args,
@@ -58,7 +58,7 @@ class StartGCEOperator(BaseOperator):
         self.disk_size_gb = disk_size_gb
         self.labels = labels
         self.use_gke_network = use_gke_network
-        self.gcp_zone = gcp_zone
+        self.gce_zone = gce_zone
 
     def execute(self, context) -> None:
         image_type = MACHINE_TYPE["cpu"] if self.gpu_count == 0 else MACHINE_TYPE["gpu"]
@@ -70,7 +70,7 @@ class StartGCEOperator(BaseOperator):
             source_image_type=image_type,
             disk_size_gb=self.disk_size_gb,
             gce_networks=gce_networks,
-            gcp_zone=self.gcp_zone,
+            gce_zone=self.gce_zone,
         )
         hook.start_vm(
             self.instance_name,
@@ -133,12 +133,14 @@ class BaseSSHGCEOperator(BaseOperator):
         instance_name: str,
         command: str,
         environment: t.Dict[str, str] = {},
+        gce_zone=GCE_ZONE,
         *args,
         **kwargs,
     ):
         self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
         self.command = command
         self.environment = environment
+        self.gce_zone = gce_zone
         super(BaseSSHGCEOperator, self).__init__(*args, **kwargs)
 
     def run_ssh_client_command(self, hook, context, retry=1):
@@ -180,7 +182,7 @@ class BaseSSHGCEOperator(BaseOperator):
     def execute(self, context):
         hook = ComputeEngineSSHHook(
             instance_name=self.instance_name,
-            zone=GCE_ZONE,
+            zone=self.gce_zone,
             project_id=GCP_PROJECT_ID,
             use_iap_tunnel=True,
             use_oslogin=False,

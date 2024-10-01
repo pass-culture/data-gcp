@@ -9,6 +9,7 @@ from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+    INSTANCES_TYPES,
     MLFLOW_BUCKET_NAME,
     MLFLOW_URL,
     SLACK_CONN_PASSWORD,
@@ -116,6 +117,9 @@ with DAG(
         "instance_type": Param(
             default=gce_params["instance_type"][ENV_SHORT_NAME],
             type="string",
+        ),
+        "gpu_type": Param(
+            default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
         ),
         "instance_name": Param(
             default=gce_params["instance_name"]

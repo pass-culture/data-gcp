@@ -158,3 +158,15 @@ GPU_INSTANCES_TYPES = {
 }
 
 INSTANCES_TYPES = {"cpu": CPU_INSTANCES_TYPES, "gpu": GPU_INSTANCES_TYPES}
+
+GCP_ZONES = [
+    "europe-west1-b",
+    "europe-west1-c",
+    "europe-west1-d",
+    "europe-west2-a",
+    "europe-west2-b",
+    "europe-west3-b",
+    "europe-west4-a",
+    "europe-west4-b",
+    "europe-west4-c",
+]  # Regions with GPUs and wit lower CO2 emissions

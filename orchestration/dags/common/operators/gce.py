@@ -32,6 +32,7 @@ class StartGCEOperator(BaseOperator):
         "disk_size_gb",
         "labels",
         "use_gke_network",
+        "gcp_zone",
     ]
 
     @apply_defaults
@@ -46,6 +47,7 @@ class StartGCEOperator(BaseOperator):
         disk_size_gb: str = "100",
         labels={},
         use_gke_network: bool = False,
+        gcp_zone: str = "europe-west1-b",
         *args,
         **kwargs,
     ):
@@ -59,6 +61,7 @@ class StartGCEOperator(BaseOperator):
         self.disk_size_gb = disk_size_gb
         self.labels = labels
         self.use_gke_network = use_gke_network
+        self.gcp_zone = gcp_zone
 
     def execute(self, context) -> None:
         if self.source_image_type is None:
@@ -77,6 +80,7 @@ class StartGCEOperator(BaseOperator):
             source_image_type=image_type,
             disk_size_gb=self.disk_size_gb,
             gce_networks=gce_networks,
+            gcp_zone=self.gcp_zone,
         )
         hook.start_vm(
             self.instance_name,

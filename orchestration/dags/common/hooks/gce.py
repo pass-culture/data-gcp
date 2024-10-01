@@ -11,7 +11,6 @@ from common.config import (
     GCE_SA,
     GCE_ZONE,
     GCP_PROJECT_ID,
-    GCP_REGION,
 )
 from common.hooks.image import CPUImage
 from common.hooks.network import BASE_NETWORK_LIST, VPCNetwork
@@ -35,7 +34,6 @@ class GCEHook(GoogleBaseHook):
         self,
         gcp_project: str = GCP_PROJECT_ID,
         gcp_zone: str = GCE_ZONE,
-        gcp_region: str = GCP_REGION,
         gce_networks: t.List[VPCNetwork] = BASE_NETWORK_LIST,
         gce_sa: str = GCE_SA,
         source_image_type: CPUImage = CPUImage(),
@@ -46,7 +44,6 @@ class GCEHook(GoogleBaseHook):
     ):
         self.gcp_project = gcp_project
         self.gcp_zone = gcp_zone
-        self.gcp_region = gcp_region
         self.gce_networks = gce_networks
         self.gce_sa = gce_sa
         self.disk_size_gb = disk_size_gb

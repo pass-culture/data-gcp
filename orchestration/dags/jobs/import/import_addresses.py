@@ -102,6 +102,7 @@ with DAG(
         branch="{{ params.branch }}",
         installer="{{ params.installer }}",
         python_version="3.10",
+        base_dir=BASE_PATH,
     )
 
     addresses_to_gcs = SSHGCEOperator(

@@ -42,7 +42,11 @@ def main(
         train_labels_train,
         train_labels_val,
     ) = train_test_split(
-        train_data_clean, train_data_labels, test_size=0.1, random_state=42
+        train_data_clean,
+        train_data_labels,
+        test_size=0.1,
+        random_state=42,
+        stratify=train_data_labels,
     )
 
     logger.info("Init classifier..")

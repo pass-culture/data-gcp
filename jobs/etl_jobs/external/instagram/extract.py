@@ -198,12 +198,12 @@ class InstagramAnalytics:
         ]
         metric_dict = {
             "VIDEO": [
-                "shares",
-                "comments",
-                "likes",
+                # "shares",
+                # "comments",
+                # "likes",
                 "saved",
                 "video_views",
-                "total_interactions",
+                # "total_interactions",
                 "reach",
             ],
             "IMAGE": default_metrics,

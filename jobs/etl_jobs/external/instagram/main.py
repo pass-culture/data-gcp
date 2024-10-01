@@ -8,6 +8,7 @@ from utils import (
     ACCOUNT_ID,
     INSTAGRAM_ACCOUNT_DAILY_ACTIVITY,
     INSTAGRAM_POST_DETAIL,
+    __save_to_bq,
     save_to_bq,
 )
 
@@ -37,14 +38,15 @@ def main(
         date_column="event_date",
     )
     print(f"Fetching posts from {ACCOUNT_ID} insights")
-    export_date = datetime.now().date()
-    post_insights_df = instagram_handler.fetch_and_preprocess_posts()
-    save_to_bq(
+    export_date = datetime.now().strftime("%Y-%m-%d")
+    post_insights_df = instagram_handler.fetch_and_preprocess_posts(
+        export_date="extract_date"
+    )
+    __save_to_bq(
         post_insights_df,
         INSTAGRAM_POST_DETAIL,
-        start_date=export_date,
-        end_date=export_date,
-        date_column="extract_date",
+        event_date=export_date,
+        date_column="export_date",
     )
 
 

@@ -74,12 +74,6 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
   make install_ubuntu_libs
   ```
 
-- [VM DEBIAN] Installation d'autres librairies et fix de l'environnement pour les VM :
-
-  ```bash
-  make install_on_debian_vm
-  ```
-
 - Installation du projet :
 
   - Pour les Data Analysts :

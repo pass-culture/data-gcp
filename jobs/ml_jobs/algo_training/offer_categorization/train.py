@@ -28,6 +28,7 @@ def main(
         help="BigQuery table containing compliance training data",
     ),
     run_name: str = typer.Option("", help="Name of the MLflow run if set"),
+    num_boost_round: int = typer.Option(1000, help="Number of iterations"),
 ) -> None:
     logger.info("Training model...")
     features_config = features["default"]
@@ -52,7 +53,10 @@ def main(
     logger.info("Init classifier..")
     # Add auto_class_weights to balance
     model = CatBoostClassifier(
-        one_hot_max_size=65, loss_function="MultiClass", auto_class_weights="Balanced"
+        one_hot_max_size=65,
+        loss_function="MultiClass",
+        auto_class_weights="Balanced",
+        num_boost_round=num_boost_round,
     )
     logger.info("Fitting model..")
     ## Model Fit

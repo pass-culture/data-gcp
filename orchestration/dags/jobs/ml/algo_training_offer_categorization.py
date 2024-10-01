@@ -45,6 +45,11 @@ dag_config = {
 # Params
 train_params = {
     "config_file_name": "default",
+    "num_boost_round": {
+        "dev": 100,
+        "stg": 100,
+        "prod": 1000,
+    },
 }
 gce_params = {
     "instance_name": f"algo-training-offer-categorization-{ENV_SHORT_NAME}",
@@ -93,6 +98,9 @@ with DAG(
         "instance_name": Param(default=gce_params["instance_name"], type="string"),
         "run_name": Param(default="default", type=["string", "null"]),
         "test_ratio": Param(default=dag_config["TEST_RATIO"], type="string"),
+        "num_boost_round": Param(
+            default=train_params["num_boost_round"][ENV_SHORT_NAME], type="integer"
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -183,7 +191,8 @@ with DAG(
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
         "--model-name {{ params.model_name }} "
         f"--training-table-path {dag_config['STORAGE_PATH']}/train.parquet "
-        "--run-name {{ params.run_name }}",
+        "--run-name {{ params.run_name }} "
+        "--num-boost-round {{ params.num_boost_round }}",
         dag=dag,
     )
 

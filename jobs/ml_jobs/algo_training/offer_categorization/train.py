@@ -28,7 +28,7 @@ def main(
         help="BigQuery table containing compliance training data",
     ),
     run_name: str = typer.Option("", help="Name of the MLflow run if set"),
-    num_boost_round: int = typer.Option(1000, help="Number of iterations"),
+    num_boost_round: int = typer.Option(..., help="Number of iterations"),
 ) -> None:
     logger.info("Training model...")
     features_config = features["default"]

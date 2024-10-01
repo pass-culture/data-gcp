@@ -130,6 +130,7 @@ with DAG(
     clone_and_setup_with_uv = CloneRepositoryGCEOperator(
         task_id="clone_and_setup_with_uv",
         instance_name="{{ params.instance_name }}",
+        gce_zone="{{ params.gce_zone }}",
         python_version="3.10",
         use_uv=True,
         command="{{ params.branch }}",
@@ -139,6 +140,7 @@ with DAG(
     clone_and_setup_with_pyenv = CloneRepositoryGCEOperator(
         task_id="clone_and_setup_with_pyenv",
         instance_name="{{ params.instance_name }}",
+        gce_zone="{{ params.gce_zone }}",
         python_version="3.10",
         use_pyenv=True,
         command="{{ params.branch }}",
@@ -148,6 +150,7 @@ with DAG(
     clone_and_setup_with_conda = CloneRepositoryGCEOperator(
         task_id="clone_and_setup_with_conda",
         instance_name="{{ params.instance_name }}",
+        gce_zone="{{ params.gce_zone }}",
         python_version="3.10",
         use_pyenv=False,
         command="{{ params.branch }}",
@@ -157,6 +160,7 @@ with DAG(
     install_project_with_uv = SSHGCEOperator(
         task_id="install_project_with_uv",
         instance_name="{{ params.instance_name }}",
+        gce_zone="{{ params.gce_zone }}",
         use_pyenv=True,
         base_dir=dag_config["BASE_INSTALL_DIR"],
         command=dag_config["PREFIX_COMMAND_INSTALL_PROJECT_UV"]
@@ -168,6 +172,7 @@ with DAG(
     install_project_with_pyenv = SSHGCEOperator(
         task_id="install_project_with_pyenv",
         instance_name="{{ params.instance_name }}",
+        gce_zone="{{ params.gce_zone }}",
         use_pyenv=True,
         base_dir=dag_config["BASE_INSTALL_DIR"],
         command=dag_config["COMMAND_INSTALL_PROJECT"],
@@ -178,6 +183,7 @@ with DAG(
     install_playground_with_conda = SSHGCEOperator(
         task_id="install_playground_with_conda",
         instance_name="{{ params.instance_name }}",
+        gce_zone="{{ params.gce_zone }}",
         use_pyenv=False,
         base_dir=dag_config["BASE_PLAYGROUND_DIR"],
         command=dag_config["COMMAND_INSTALL_PLAYGROUND"],

@@ -423,45 +423,47 @@ class InstallDependenciesOperator(SSHGCEOperator):
         repo_dir = "data-gcp"
 
         # Git clone command
-        clone_command = (
-            f"DIR={repo_dir} && "
-            'if [ -d "$DIR" ]; then '
-            'echo "Directory exists. Fetching updates..." && '
-            "cd $DIR && "
-            "git fetch --all && "
-            f"git reset --hard origin/{branch}; "
-            "else "
-            'echo "Cloning repository..." && '
-            f"git clone {self.REPO} $DIR && "
-            "cd $DIR && "
-            f"git checkout {branch}; "
-            "fi && "
-            "cd .."
-        )
+        clone_command = f"""
+            DIR={repo_dir} &&
+            if [ -d "$DIR" ]; then
+                echo "Directory exists. Fetching updates..." &&
+                cd $DIR &&
+                git fetch --all &&
+                git reset --hard origin/{branch};
+            else
+                echo "Cloning repository..." &&
+                git clone {self.REPO} $DIR &&
+                cd $DIR &&
+                git checkout {branch};
+            fi &&
+            cd ..
+        """
 
-        # Depending on the installer type, append the installation commands
         if installer == "uv":
-            install_command = (
-                "curl -LsSf https://astral.sh/uv/install.sh | sh && "
-                "source $HOME/.cargo/env && "
-                f"uv venv --python {self.python_version} && "
-                "source .venv/bin/activate && "
-                f"cd {base_dir} && "
-                f"uv pip sync {requirement_file}"
-            )
+            install_command = f"""
+                curl -LsSf https://astral.sh/uv/install.sh | sh &&
+                source $HOME/.cargo/env &&
+                uv venv --python {self.python_version} &&
+                source .venv/bin/activate &&
+                cd {base_dir} &&
+                uv pip sync {requirement_file}
+            """
         elif installer == "conda":
-            install_command = (
-                "export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH && "
-                "python -m pip install --upgrade --user urllib3 && "
-                f"conda create --name data-gcp python={self.python_version} -y -q && "
-                "conda init zsh && "
-                "source ~/.zshrc && "
-                "conda activate data-gcp && "
-                f"cd {base_dir} && "
-                f"pip install -r {requirement_file} --user"
-            )
+            install_command = f"""
+                export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH &&
+                python -m pip install --upgrade --user urllib3 &&
+                conda create --name data-gcp python={self.python_version} -y -q &&
+                conda init zsh &&
+                source ~/.zshrc &&
+                conda activate data-gcp &&
+                cd {base_dir} &&
+                pip install -r {requirement_file} --user
+            """
         else:
             raise ValueError(f"Invalid installer: {installer}. Choose 'uv' or 'conda'.")
 
         # Combine the git clone and installation commands
-        return f"{clone_command} && {install_command}"
+        return f"""
+            {clone_command}
+            {install_command}
+        """

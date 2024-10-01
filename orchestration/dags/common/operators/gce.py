@@ -40,8 +40,8 @@ class StartGCEOperator(BaseOperator):
         instance_name: str,
         instance_type: str = "n1-standard-1",
         preemptible: bool = True,
-        accelerator_types=[],
-        gpu_count: int = 0,
+        accelerator_types: list = [],
+        gpu_count: t.Optional[int] = None,
         source_image_type: str = None,
         disk_size_gb: str = "100",
         labels={},
@@ -62,7 +62,7 @@ class StartGCEOperator(BaseOperator):
 
     def execute(self, context) -> None:
         if self.source_image_type is None:
-            if len(self.accelerator_types) > 0 or self.gpu_count > 0:
+            if self.gpu_count in [1, 2, 4]:
                 image_type = MACHINE_TYPE["gpu"]
             else:
                 image_type = MACHINE_TYPE["cpu"]
@@ -329,10 +329,12 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         base_dir: str = None,
         environment: t.Dict[str, str] = {},
         use_pyenv: bool = False,
+        use_uv: bool = False,
         *args,
         **kwargs,
     ):
         self.use_pyenv = use_pyenv
+        self.use_uv = use_uv
         self.environment = dict(self.DEFAULT_EXPORT, **environment)
         commands_list = []
 
@@ -347,10 +349,12 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         )
 
         # Conda activate if required
-        if not self.use_pyenv:
+        if not (self.use_pyenv or self.use_uv):
             commands_list.append(
                 "conda init zsh && source ~/.zshrc && conda activate data-gcp"
             )
+        elif self.use_uv:
+            commands_list.append("source .venv/bin/activate")
         else:
             commands_list.append("source ~/.profile")
 
@@ -359,7 +363,9 @@ class SSHGCEOperator(BaseSSHGCEOperator):
             commands_list.append(f"cd {base_dir}")
 
         # Command
-        commands_list.append(command)
+        if self.use_uv and command.startswith("pip install -r "):
+            command = f"""uv pip sync {command.split("pip install -r ")[-1]}"""  ## TO DO SWITCH COMMANDS
+            commands_list.append(command)
 
         self.command = "\n".join(commands_list)
         self.instance_name = instance_name

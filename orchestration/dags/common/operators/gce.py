@@ -403,23 +403,45 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         self.environment = dict(self.DEFAULT_EXPORT, **environment)
         commands_list = []
 
-        # Default export
-        commands_list.append(
-            "\n".join(
-                [
-                    f"export {key}={value}"
-                    for key, value in dict(self.DEFAULT_EXPORT, **environment).items()
-                ]
-            )
-        )
+        def filter_conda_paths(path_value: str) -> str:
+            # Remove '$PATH' from the path string and handle '+' if present
+            path_value = path_value.replace("+$PATH", "").strip(":")
+            extra_paths = path_value.split(":")
+            filtered_paths = [path for path in extra_paths if "conda" not in path]
+            if not filtered_paths:
+                return "$PATH"
+            return ":".join(filtered_paths) + ":+$PATH"
 
         # Conda activate if required
-        if not installer == "uv":
+        if installer == "conda":
+            # Default export
+            commands_list.append(
+                "\n".join(
+                    [
+                        f"export {key}={value}"
+                        for key, value in dict(
+                            self.DEFAULT_EXPORT, **environment
+                        ).items()
+                    ]
+                )
+            )
+            # Init conda
             commands_list.append(
                 "conda init zsh && source ~/.zshrc && conda activate data-gcp"
             )
         else:
-            pass  # no need to activate uv venv ?
+            # Default export
+            commands_list.append(
+                "\n".join(
+                    [
+                        f"export {key}={value if key != 'PATH' else filter_conda_paths(value)}"
+                        for key, value in dict(
+                            self.DEFAULT_EXPORT, **environment
+                        ).items()
+                    ]
+                )
+            )
+            commands_list.append("source $HOME/.cargo/env")
 
         # Default path
         if base_dir is not None:

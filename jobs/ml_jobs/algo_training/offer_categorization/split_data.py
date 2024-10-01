@@ -5,7 +5,7 @@ import typer
 def main(
     clean_table_path: str = typer.Option(""),
     split_data_folder: str = typer.Option(""),
-    test_ratio: float = typer.Option(3),
+    test_ratio: float = typer.Option(0.1),
 ) -> None:
     data_clean = pd.read_parquet(clean_table_path)
 

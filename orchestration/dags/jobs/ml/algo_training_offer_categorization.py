@@ -38,7 +38,7 @@ dag_config = {
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/offer_categorization_model_v1.0_{DATE}",
     "BASE_DIR": "data-gcp/jobs/ml_jobs/algo_training",
     "MODEL_DIR": "offer_categorization",
-    "TEST_RATIO": 0.1,
+    "TEST_RATIO": "0.1",
     "INPUT_TABLE_NAME": "offer_categorization_offers",
 }
 

@@ -209,6 +209,7 @@ class InstallDependenciesOperator(BaseSSHGCEOperator):
         "installer",
         "requirement_file",
         "branch",
+        "instance_name",
     )  # Template fields for Jinja resolution
 
     @apply_defaults

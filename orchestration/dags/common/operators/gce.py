@@ -213,19 +213,15 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
         command: str,
         environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
-        use_pyenv: bool = False,
         use_uv: bool = False,
         *args,
         **kwargs,
     ):
-        self.use_pyenv = use_pyenv
         self.use_uv = use_uv
         self.command = (
             self.clone_and_init_with_uv(command, python_version)
             if self.use_uv
             else self.clone_and_init_with_conda(command, python_version)
-            if not self.use_pyenv
-            else self.clone_and_init_with_pyenv(command)
         )
         self.instance_name = instance_name
         self.environment = environment
@@ -290,35 +286,15 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
             branch,
         )
 
-    def clone_and_init_with_pyenv(self, branch) -> str:
-        return """
-        python -m pip install --upgrade --user urllib3
-
-        DIR=data-gcp &&
-        if [ -d "$DIR" ]; then
-            echo "Update and Checkout repo..." &&
-            cd ${DIR} &&
-            git fetch --all &&
-            git reset --hard origin/%s
-        else
-            echo "Clone and checkout repo..." &&
-            git clone %s &&
-            cd ${DIR} &&
-            git checkout %s
-        fi
-        make prerequisites_on_debian_vm
-        """ % (
-            branch,
-            self.REPO,
-            branch,
-        )
-
 
 class SSHGCEOperator(BaseSSHGCEOperator):
     DEFAULT_EXPORT = {
-        "PATH": "/opt/conda/bin:/opt/conda/condabin:+$PATH",
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
         "GCP_PROJECT_ID": GCP_PROJECT_ID,
+    }
+    CONDA_EXPORT = {
+        **DEFAULT_EXPORT,
+        "PATH": "/opt/conda/bin:/opt/conda/condabin:+$PATH",
     }
 
     @apply_defaults
@@ -328,31 +304,32 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         command: str,
         base_dir: str = None,
         environment: t.Dict[str, str] = {},
-        use_pyenv: bool = False,
+        installer: str = "conda",
         *args,
         **kwargs,
     ):
-        self.use_pyenv = use_pyenv
-        self.environment = dict(self.DEFAULT_EXPORT, **environment)
+        self.environment = (
+            dict(self.CONDA_EXPORT, **environment)
+            if installer == "conda"
+            else dict(self.DEFAULT_EXPORT, **environment)
+        )
+
         commands_list = []
 
         # Default export
         commands_list.append(
             "\n".join(
-                [
-                    f"export {key}={value}"
-                    for key, value in dict(self.DEFAULT_EXPORT, **environment).items()
-                ]
+                [f"export {key}={value}" for key, value in self.environment.items()]
             )
         )
-
         # Conda activate if required
-        if not self.use_pyenv:
+        if installer == "conda":
+            # Init conda
             commands_list.append(
                 "conda init zsh && source ~/.zshrc && conda activate data-gcp"
             )
-        else:
-            commands_list.append("source ~/.profile")
+        elif installer == "uv":
+            commands_list.append("source .venv/bin/activate")
 
         # Default path
         if base_dir is not None:
@@ -370,3 +347,117 @@ class SSHGCEOperator(BaseSSHGCEOperator):
             *args,
             **kwargs,
         )
+
+
+class InstallDependenciesOperator(SSHGCEOperator):
+    REPO = "https://github.com/pass-culture/data-gcp.git"
+    template_fields = (
+        "installer",
+        "requirement_file",
+        "branch",
+        "instance_name",
+        "base_dir",
+    )
+
+    @apply_defaults
+    def __init__(
+        self,
+        instance_name: str,
+        requirement_file: str = "requirements.txt",
+        installer: str = "uv",  # Default to 'uv'
+        branch: str = "main",  # Branch for repo
+        environment: t.Dict[str, str] = {},
+        python_version: str = "3.10",
+        base_dir: str = "data-gcp",
+        *args,
+        **kwargs,
+    ):
+        self.instance_name = instance_name
+        self.requirement_file = requirement_file
+        self.environment = environment
+        self.python_version = python_version
+        self.installer = installer
+        self.branch = branch
+        self.base_dir = base_dir
+
+        # Call the parent class constructor but do not pass the command yet
+        super(InstallDependenciesOperator, self).__init__(
+            instance_name=self.instance_name,
+            command="",  # Placeholder command
+            environment=self.environment,
+            base_dir=self.base_dir,  # Pass base_dir to parent class
+            installer=self.installer,
+            *args,
+            **kwargs,
+        )
+
+    def execute(self, context):
+        if self.installer not in ["uv", "conda"]:
+            raise ValueError(f"Invalid installer: {self.installer}")
+        # The templates have been rendered; we can construct the command
+        command = self.make_install_command(
+            self.installer, self.requirement_file, self.branch, self.base_dir
+        )
+
+        # Use the command in the parent SSHGCEOperator to execute on the remote instance
+        self.command = command
+        return super(InstallDependenciesOperator, self).execute(context)
+
+    def make_install_command(
+        self,
+        installer: str,
+        requirement_file: str,
+        branch: str,
+        base_dir: str = "data-gcp",
+    ) -> str:
+        """
+        Construct the command to clone the repo and install dependencies based on the installer.
+        """
+        # Define the directory where the repo will be cloned
+        ROOT_REPO_DIR = "data-gcp"
+
+        # Git clone command
+        clone_command = f"""
+            DIR={ROOT_REPO_DIR} &&
+            if [ -d "$DIR" ]; then
+                echo "Directory exists. Fetching updates..." &&
+                cd $DIR &&
+                git fetch --all &&
+                git reset --hard origin/{branch};
+            else
+                echo "Cloning repository..." &&
+                git clone {self.REPO} $DIR &&
+                cd $DIR &&
+                git checkout {branch};
+            fi &&
+            cd ..
+        """
+
+        if installer == "uv":
+            install_command = f"""
+                curl -LsSf https://astral.sh/uv/install.sh | sh &&
+                source $HOME/.cargo/env &&
+                uv venv --python {self.python_version} &&
+                source .venv/bin/activate &&
+                cd {base_dir} &&
+                uv pip sync {requirement_file}
+            """
+        elif installer == "conda":
+            install_command = f"""
+                export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH &&
+                python -m pip install --upgrade --user urllib3 &&
+                conda create --name data-gcp python={self.python_version} -y -q &&
+                conda init zsh &&
+                source ~/.zshrc &&
+                conda activate data-gcp &&
+                cd {base_dir} &&
+                pip install -r {requirement_file} --user
+            """
+        else:
+            raise ValueError(f"Invalid installer: {installer}. Choose 'uv' or 'conda'.")
+
+        # Combine the git clone and installation commands
+        return f"""
+            {clone_command}
+            {install_command}
+        """

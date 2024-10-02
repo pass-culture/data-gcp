@@ -7,6 +7,7 @@ from common.config import (
     GCE_BASE_PREFIX,
     GCE_ZONE,
     GCP_PROJECT_ID,
+    INSTALL_TYPES,
     SSH_USER,
 )
 from common.hooks.gce import GCEHook
@@ -460,4 +461,115 @@ class InstallDependenciesOperator(SSHGCEOperator):
         return f"""
             {clone_command}
             {install_command}
+        """
+
+
+class QuickInstallOperator(SSHGCEOperator):
+    REPO = "https://github.com/pass-culture/data-gcp.git"
+    template_fields = (
+        "installer",
+        "branch",
+        "instance_name",
+        "install_type",
+        "python_version",
+    )
+
+    @apply_defaults
+    def __init__(
+        self,
+        instance_name: str,
+        installer: str = "uv",  # Default to 'uv'
+        branch: str = "main",  # Branch for repo
+        install_type: str = "simple",
+        environment: t.Dict[str, str] = {},
+        python_version: str = "3.10",
+        *args,
+        **kwargs,
+    ):
+        self.instance_name = instance_name
+        self.environment = environment
+        self.python_version = python_version
+        self.installer = installer
+        self.branch = branch
+        self.install_type = install_type
+
+        # Call the parent class constructor but do not pass the command yet
+        super(QuickInstallOperator, self).__init__(
+            instance_name=self.instance_name,
+            command="",  # Placeholder command
+            environment=self.environment,
+            base_dir="",  # Placeholder base_dir
+            installer=self.installer,
+            *args,
+            **kwargs,
+        )
+
+    def execute(self, context):
+        if self.installer not in ["uv", "conda"]:
+            raise ValueError(f"Invalid installer: {self.installer}")
+        if self.install_type not in ["simple", "engineering", "science", "analytics"]:
+            raise ValueError(f"Invalid install_type: {self.install_type}")
+        # The templates have been rendered; we can construct the command
+
+        command = self.make_install_command(
+            self.installer, INSTALL_TYPES[self.install_type], self.branch
+        )
+
+        # Use the command in the parent SSHGCEOperator to execute on the remote instance
+        self.command = command
+        return super(QuickInstallOperator, self).execute(context)
+
+    def make_install_command(
+        self,
+        installer: str,
+        make_install: str,
+        branch: str,
+    ) -> str:
+        """
+        Construct the command to clone the repo and install dependencies based on the installer.
+        """
+        # Define the directory where the repo will be cloned
+        ROOT_REPO_DIR = "data-gcp"
+
+        # Git clone command
+        clone_command = f"""
+            DIR={ROOT_REPO_DIR} &&
+            if [ -d "$DIR" ]; then
+                echo "Directory exists. Fetching updates..." &&
+                cd $DIR &&
+                git fetch --all &&
+                git reset --hard origin/{branch};
+            else
+                echo "Cloning repository..." &&
+                git clone {self.REPO} $DIR &&
+                cd $DIR &&
+                git checkout {branch};
+            fi &&
+        """
+
+        if installer == "uv":
+            quick_install_command = f"""
+                curl -LsSf https://astral.sh/uv/install.sh | sh &&
+                source $HOME/.cargo/env &&
+                uv venv --python {self.python_version} &&
+                source .venv/bin/activate &&
+                NO_GCP_INIT=1 make {make_install} PYTHON_VENV_VERSION={self.python_version}
+            """
+        elif installer == "conda":
+            quick_install_command = f"""
+                export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH &&
+                python -m pip install --upgrade --user urllib3 &&
+                conda create --name data-gcp python={self.python_version} -y -q &&
+                conda init zsh &&
+                source ~/.zshrc &&
+                conda activate data-gcp &&
+                NO_GCP_INIT=1 make {make_install} PYTHON_VENV_VERSION={self.python_version}
+            """
+        else:
+            raise ValueError(f"Invalid installer: {installer}. Choose 'uv' or 'conda'.")
+
+        # Combine the git clone and installation commands
+        return f"""
+            {clone_command}
+            {quick_install_command}
         """

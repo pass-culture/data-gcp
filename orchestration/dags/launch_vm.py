@@ -7,7 +7,7 @@ from common.config import (
     INSTANCES_TYPES,
 )
 from common.operators.gce import (
-    InstallDependenciesOperator,
+    QuickInstallOperator,
     StartGCEOperator,
 )
 
@@ -44,7 +44,6 @@ default_args = {
     "dag_config": dag_config,
 }
 
-
 with DAG(
     "launch_vm",
     default_args=default_args,
@@ -69,13 +68,13 @@ with DAG(
             default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
         ),
         "keep_alive": Param(default=True, type="boolean"),
-        "install_project": Param(default=True, type="boolean"),
         "use_gke_network": Param(default=False, type="boolean"),
         "disk_size_gb": Param(default="100", type="string"),
         "installer": Param(default="uv", enum=["uv", "conda"]),
-        "install_type": Param(
+        "quick_install_type": Param(
             default="simple", enum=["simple", "engineering", "science", "analytics"]
         ),
+        "python_version": Param(default="3.10", type="string"),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -94,13 +93,13 @@ with DAG(
         disk_size_gb="{{ params.disk_size_gb }}",
     )
 
-    clone_install = InstallDependenciesOperator(
+    quick_install = QuickInstallOperator(
         task_id="vm_project_install",
         instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
         installer="{{ params.installer }}",
-        python_version="3.10",
-        requirement_file="requirements.txt",
+        python_version="{{ params.python_version }}",
+        install_type="{{ params.quick_install_type }}",
     )
 
-    (start >> gce_instance_start >> clone_install)
+    (start >> gce_instance_start >> quick_install)

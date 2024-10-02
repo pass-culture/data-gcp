@@ -105,7 +105,7 @@ class CleanGCEOperator(BaseOperator):
 
 
 class StopGCEOperator(BaseOperator):
-    template_fields = ["instance_name"]
+    template_fields = ["instance_name", "gce_zone"]
 
     @apply_defaults
     def __init__(
@@ -125,7 +125,7 @@ class StopGCEOperator(BaseOperator):
 class BaseSSHGCEOperator(BaseOperator):
     MAX_RETRY = 3
     SSH_TIMEOUT = 10
-    template_fields = ["instance_name", "command", "environment"]
+    template_fields = ["instance_name", "command", "environment", "gce_zone"]
 
     @apply_defaults
     def __init__(
@@ -133,7 +133,7 @@ class BaseSSHGCEOperator(BaseOperator):
         instance_name: str,
         command: str,
         environment: t.Dict[str, str] = {},
-        gce_zone=GCE_ZONE,
+        gce_zone: str = GCE_ZONE,
         *args,
         **kwargs,
     ):

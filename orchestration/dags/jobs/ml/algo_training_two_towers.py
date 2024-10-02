@@ -8,6 +8,7 @@ from common.config import (
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
+    GCE_ZONES,
     GCP_PROJECT_ID,
     INSTANCES_TYPES,
     MLFLOW_BUCKET_NAME,
@@ -118,10 +119,11 @@ with DAG(
             default=gce_params["instance_type"][ENV_SHORT_NAME],
             type="string",
         ),
+        "gpu_count": Param(default=1, enum=INSTANCES_TYPES["gpu"]["count"]),
         "gpu_type": Param(
             default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
         ),
-        "gpu_count": Param(default=1, enum=INSTANCES_TYPES["gpu"]["count"]),
+        "gce_zone": Param(default="europe-west-1b", enum=GCE_ZONES),
         "instance_name": Param(
             default=gce_params["instance_name"]
             + "-"
@@ -169,6 +171,7 @@ with DAG(
         preemptible=False,
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
+        gce_zone="{{ params.gce_zone }}",
         gpu_count="{{ params.gpu_count }}",
         gpu_type="{{ params.gpu_type }}",
         retries=2,
@@ -178,6 +181,7 @@ with DAG(
     fetch_code = CloneRepositoryGCEOperator(
         task_id="fetch_code",
         instance_name="{{ params.instance_name }}",
+        gce_zone="{{ params.gce_zone }}",
         python_version="3.10",
         command="{{ params.branch }}",
         retries=2,
@@ -186,6 +190,7 @@ with DAG(
     install_dependencies = SSHGCEOperator(
         task_id="install_dependencies",
         instance_name="{{ params.instance_name }}",
+        gce_zone="{{ params.gce_zone }}",
         base_dir=dag_config["BASE_DIR"],
         command="pip install -r requirements.txt --user",
         dag=dag,
@@ -232,6 +237,7 @@ with DAG(
         preprocess_data[split] = SSHGCEOperator(
             task_id=f"preprocess_{split}",
             instance_name="{{ params.instance_name }}",
+            gce_zone="{{ params.gce_zone }}",
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
             command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/preprocess.py "
@@ -244,6 +250,7 @@ with DAG(
     train = SSHGCEOperator(
         task_id="train",
         instance_name="{{ params.instance_name }}",
+        gce_zone="{{ params.gce_zone }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
@@ -260,6 +267,7 @@ with DAG(
     evaluate = SSHGCEOperator(
         task_id="evaluate",
         instance_name="{{ params.instance_name }}",
+        gce_zone="{{ params.gce_zone }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "

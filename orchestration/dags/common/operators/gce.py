@@ -372,6 +372,8 @@ class InstallDependenciesOperator(SSHGCEOperator):
         *args,
         **kwargs,
     ):
+        if installer not in ["uv", "conda"]:
+            raise ValueError(f"Invalid installer: {installer}")
         self.instance_name = instance_name
         self.requirement_file = requirement_file
         self.environment = environment

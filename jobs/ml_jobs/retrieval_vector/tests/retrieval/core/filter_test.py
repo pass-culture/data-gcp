@@ -9,6 +9,7 @@ def filter_instance():
 
 
 def test_empty_tree_data(filter_instance):
+    filter_instance.tree_data = {}
     assert filter_instance.parse_where_clause() == ""
 
 

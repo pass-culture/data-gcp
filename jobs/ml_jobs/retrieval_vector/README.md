@@ -38,6 +38,12 @@ To run the tests, including unit tests and integration tests, use:
 pytest --log-cli-level=DEBUG
 ```
 
+or
+
+```sh
+PYTHONPATH=./ pytest --cov
+```
+
 This will run the entire test suite and display logs at the `DEBUG` level for troubleshooting.
 
 ### Running Individual Tests

@@ -1,7 +1,7 @@
 import pytest
 
 from app.factory.tops import SearchByTopsHandler
-from app.models import PredictionRequest
+from app.models.prediction_request import PredictionRequest
 
 
 @pytest.fixture
@@ -12,6 +12,7 @@ def request_data_default() -> PredictionRequest:
         size=5,
         params={},
         call_id="test-call-id",
+        similarity_metric="dot",
         debug=True,
         vector_column_name="booking_number_desc",
         re_rank=False,
@@ -28,6 +29,7 @@ def request_data_rerank() -> PredictionRequest:
         call_id="test-call-id",
         debug=True,
         vector_column_name="booking_number_desc",
+        similarity_metric="cosine",
         re_rank=True,
         user_id="user_1",
     )
@@ -54,14 +56,13 @@ def test_similar_offer_handler(
     result = handler.handle(reco_client, request_data)
 
     # Assertions
-    assert "predictions" in result
-    assert len(result["predictions"]) == request_data.size
+    assert len(result.predictions) == request_data.size
 
-    for prediction in result["predictions"]:
+    for prediction in result.predictions:
         for column in reco_client.detail_columns:
             assert column in prediction
 
-    distances = [prediction["_distance"] for prediction in result["predictions"]]
+    distances = [prediction["_distance"] for prediction in result.predictions]
     assert distances == sorted(
         distances
     ), "Predictions are not sorted by _distance in increasing order"

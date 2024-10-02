@@ -1,10 +1,8 @@
-from typing import Dict
-
 from app.factory.handler import PredictionHandler
 from app.logger import logger
-from app.models import PredictionRequest
+from app.models.prediction_request import PredictionRequest
+from app.models.prediction_result import PredictionResult
 from app.retrieval.client import DefaultClient
-from app.services import search_by_tops
 
 
 class SearchByTopsHandler(PredictionHandler):
@@ -12,7 +10,19 @@ class SearchByTopsHandler(PredictionHandler):
     Handler for filter predictions.
     """
 
-    def handle(self, model: DefaultClient, request_data: PredictionRequest) -> Dict:
+    def handle(
+        self, model: DefaultClient, request_data: PredictionRequest
+    ) -> PredictionResult:
+        """
+        Handles the prediction request for tops offers based.
+
+        Args:
+            model (DefaultClient): The model that performs the search.
+            request_data (PredictionRequest): The request data containing parameters and item IDs.
+
+        Returns:
+            PredictionResult: An object containing the predicted items.
+        """
         logger.debug(
             "filter",
             extra={
@@ -21,14 +31,4 @@ class SearchByTopsHandler(PredictionHandler):
                 "size": request_data.size,
             },
         )
-        return search_by_tops(
-            model=model,
-            selected_params=request_data.params,
-            size=request_data.size,
-            debug=request_data.debug,
-            call_id=request_data.call_id,
-            prefilter=request_data.is_prefilter,
-            vector_column_name=request_data.vector_column_name,
-            re_rank=request_data.re_rank,
-            user_id=request_data.user_id,
-        )
+        return self.search_by_tops(model=model, request_data=request_data)

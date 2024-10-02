@@ -2,7 +2,7 @@ import pytest
 
 from app.factory.similar_offer import SimilarOfferHandler
 from app.factory.tops import SearchByTopsHandler
-from app.models import PredictionRequest
+from app.models.prediction_request import PredictionRequest
 
 
 @pytest.fixture
@@ -78,29 +78,28 @@ def test_similar_offer_handler(
     """Test SimilarOfferHandler with different request_data scenarios."""
 
     # Get the specific request_data fixture dynamically
-    request_data = request.getfixturevalue(request_data_fixture)
+    request_data: PredictionRequest = request.getfixturevalue(request_data_fixture)
 
     # Initialize the handler
     handler = SimilarOfferHandler()
 
     # Call the handler
     result = handler.handle(reco_client, request_data, fallback_client=None)
-
+    print(result)
     # Assertions
-    assert "predictions" in result
-    assert len(result["predictions"]) == request_data.size
+    assert len(result.predictions) == request_data.size
 
     # Ensure no items in request_data.items are present in the predictions
-    for prediction in result["predictions"]:
+    for prediction in result.predictions:
         assert prediction["item_id"] not in request_data.items
 
     # Assert that the expected detail columns are present in the predictions
-    for prediction in result["predictions"]:
+    for prediction in result.predictions:
         for column in reco_client.detail_columns:
             assert column in prediction
 
     # Ensure the predictions are sorted by _distance in increasing order
-    distances = [prediction["_distance"] for prediction in result["predictions"]]
+    distances = [prediction["_distance"] for prediction in result.predictions]
     assert distances == sorted(
         distances
     ), "Predictions are not sorted by _distance in increasing order"
@@ -139,16 +138,15 @@ def test_similar_offer_fallback_handler(
     )
 
     # Assertions
-    assert "predictions" in result
-    assert len(result["predictions"]) == request_data.size
+    assert len(result.predictions) == request_data.size
 
     # Assert that the expected detail columns are present in the predictions
-    for prediction in result["predictions"]:
+    for prediction in result.predictions:
         for column in reco_client.detail_columns:
             assert column in prediction
 
     # Ensure the predictions are sorted by _distance in increasing order
-    distances = [prediction["_distance"] for prediction in result["predictions"]]
+    distances = [prediction["_distance"] for prediction in result.predictions]
     assert distances == sorted(
         distances
     ), "Predictions are not sorted by _distance in increasing order"

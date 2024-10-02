@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 LOGICAL_OPERATORS = {"$and": "AND", "$or": "OR"}
 
@@ -91,9 +91,10 @@ def _sql_parsing(data, default_logic: str = "AND"):
 
 
 class Filter(object):
-    def __init__(self, tree_data: Dict = {}):
+    def __init__(self, tree_data: Dict = {}) -> None:
         self.tree_data = tree_data
 
-    def parse_where_clause(self):
+    def parse_where_clause(self) -> Optional[str]:
         sql, params = _sql_parsing(self.tree_data or {})
-        return sql % params
+        result = sql % params
+        return result  # if result else None

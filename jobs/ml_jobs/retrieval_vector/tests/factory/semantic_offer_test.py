@@ -1,7 +1,7 @@
 import pytest
 
 from app.factory.semantic import SemanticHandler
-from app.models import PredictionRequest
+from app.models.prediction_request import PredictionRequest
 from app.retrieval.text_client import TextClient
 
 TRANSFORMER = "hf-internal-testing/tiny-random-camembert"
@@ -43,14 +43,13 @@ def test_semantic_handler(
     result = handler.handle(text_client, request_data)
 
     # Assertions
-    assert "predictions" in result
-    assert len(result["predictions"]) == request_data.size
+    assert len(result.predictions) == request_data.size
 
-    for prediction in result["predictions"]:
+    for prediction in result.predictions:
         for column in text_client.detail_columns:
             assert column in prediction
 
-    distances = [prediction["_distance"] for prediction in result["predictions"]]
+    distances = [prediction["_distance"] for prediction in result.predictions]
     assert distances == sorted(
         distances
     ), "Predictions are not sorted by _distance in increasing order"

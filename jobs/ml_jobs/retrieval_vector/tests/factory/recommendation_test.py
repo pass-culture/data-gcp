@@ -2,7 +2,7 @@ import pytest
 
 from app.factory.recommendation import RecommendationHandler
 from app.factory.tops import SearchByTopsHandler
-from app.models import PredictionRequest
+from app.models.prediction_request import PredictionRequest
 
 
 @pytest.fixture
@@ -46,16 +46,15 @@ def test_recommendation_handler(
     result = handler.handle(reco_client, request_data, fallback_client=None)
 
     # Assertions
-    assert "predictions" in result
-    assert len(result["predictions"]) == request_data.size
+    assert len(result.predictions) == request_data.size
 
     # Assert that the expected detail columns are present in the predictions
-    for prediction in result["predictions"]:
+    for prediction in result.predictions:
         for column in reco_client.detail_columns:
             assert column in prediction
 
     # Ensure the predictions are sorted by _distance in increasing order
-    distances = [prediction["_distance"] for prediction in result["predictions"]]
+    distances = [prediction["_distance"] for prediction in result.predictions]
     assert distances == sorted(
         distances
     ), "Predictions are not sorted by _distance in increasing order"
@@ -93,16 +92,15 @@ def test_recommendation_fallback_handler(
     )
 
     # Assertions
-    assert "predictions" in result
-    assert len(result["predictions"]) == request_data.size
+    assert len(result.predictions) == request_data.size
 
     # Assert that the expected detail columns are present in the predictions
-    for prediction in result["predictions"]:
+    for prediction in result.predictions:
         for column in reco_client.detail_columns:
             assert column in prediction
 
     # Ensure the predictions are sorted by _distance in increasing order
-    distances = [prediction["_distance"] for prediction in result["predictions"]]
+    distances = [prediction["_distance"] for prediction in result.predictions]
     assert distances == sorted(
         distances
     ), "Predictions are not sorted by _distance in increasing order"

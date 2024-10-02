@@ -1,11 +1,11 @@
-from typing import Dict, Optional
+from typing import Optional
 
 from app.factory.handler import PredictionHandler
 from app.factory.tops import SearchByTopsHandler
 from app.logger import logger
-from app.models import PredictionRequest
-from app.retrieval.client import DefaultClient
-from app.services import search_by_vector
+from app.models.prediction_request import PredictionRequest
+from app.models.prediction_result import PredictionResult
+from app.retrieval.reco_client import RecoClient
 
 
 class RecommendationHandler(PredictionHandler):
@@ -15,23 +15,21 @@ class RecommendationHandler(PredictionHandler):
 
     def handle(
         self,
-        model: DefaultClient,
+        model: RecoClient,
         request_data: PredictionRequest,
         fallback_client: Optional[PredictionHandler] = SearchByTopsHandler(),
-    ) -> Dict:
+    ) -> PredictionResult:
         """
         Handles the prediction request for user recommendation.
 
         Args:
-            model (DefaultClient): The model that performs the search.
+            model (RecoClient): The model that performs the search.
             request_data (PredictionRequest): The request data containing parameters and item IDs.
             fallback_client (PredictionHandler): In case something gets wrong (user not found), fallback to this handler.
 
         Returns:
-            Dict: A dictionary containing the predicted items.
+            DictPredictionResult: An object containing the recommended predicted items.
         """
-        results = {"predictions": []}
-        vector = model.user_vector(request_data.user_id)
         logger.debug(
             "recommendation",
             extra={
@@ -41,26 +39,24 @@ class RecommendationHandler(PredictionHandler):
                 "size": request_data.size,
             },
         )
+        if request_data.user_id is None:
+            raise ValueError("user_id is required for recommendation predictions.")
+
+        results = PredictionResult(predictions=[])
+        vector = model.user_vector(request_data.user_id)
+
         if vector is not None:
-            results = search_by_vector(
+            results = self.search_by_vector(
                 model=model,
                 vector=vector,
-                size=request_data.size,
-                selected_params=request_data.params,
-                debug=request_data.debug,
-                call_id=request_data.call_id,
-                prefilter=request_data.is_prefilter,
-                vector_column_name=request_data.vector_column_name,
-                similarity_metric=request_data.similarity_metric,
-                re_rank=request_data.re_rank,
-                user_id=request_data.user_id,
+                request_data=request_data,
             )
 
-        # If no predictions are found and fallback
-        if len(results["predictions"]) == 0 and fallback_client is not None:
+        # If no predictions are found and fallback is active
+        if len(results.predictions) == 0 and fallback_client is not None:
             return fallback_client.handle(
                 model,
-                PredictionRequest(
+                request_data=PredictionRequest(
                     model_type="filter",
                     size=request_data.size,
                     debug=request_data.debug,

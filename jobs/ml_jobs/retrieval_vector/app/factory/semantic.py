@@ -1,10 +1,8 @@
-from typing import Dict
-
 from app.factory.handler import PredictionHandler
 from app.logger import logger
-from app.models import PredictionRequest
-from app.retrieval.client import DefaultClient
-from app.services import search_by_vector
+from app.models.prediction_request import PredictionRequest
+from app.models.prediction_result import PredictionResult
+from app.retrieval.text_client import TextClient
 
 
 class SemanticHandler(PredictionHandler):
@@ -12,19 +10,24 @@ class SemanticHandler(PredictionHandler):
     Handler for semantic predictions.
     """
 
-    def handle(self, model: DefaultClient, request_data: PredictionRequest) -> Dict:
+    def handle(
+        self, model: TextClient, request_data: PredictionRequest
+    ) -> PredictionResult:
         """
         Handles the prediction request for semantic text based on semantic vectors.
 
         Args:
-            model (DefaultClient): The model that performs the search.
+            model (TextClient): The model that performs the search.
             request_data (PredictionRequest): The request data containing parameters and item IDs.
 
         Returns:
-            Dict: A dictionary containing the predicted similar items.
+            PredictionResult: An object containing the predicted similar items.
         """
         if request_data.text is None:
             raise ValueError("Text is required for semantic predictions.")
+
+        if request_data.re_rank:
+            raise ValueError("Re-rank is not supported for semantic predictions.")
 
         vector = model.text_vector(request_data.text)
         logger.debug(
@@ -36,15 +39,9 @@ class SemanticHandler(PredictionHandler):
                 "size": request_data.size,
             },
         )
-        return search_by_vector(
+        return self.search_by_vector(
             model=model,
             vector=vector,
-            size=request_data.size,
-            selected_params=request_data.params,
-            debug=request_data.debug,
-            call_id=request_data.call_id,
-            prefilter=request_data.is_prefilter,
-            vector_column_name=request_data.vector_column_name,
-            similarity_metric=request_data.similarity_metric,
-            re_rank=False,  # cannot re-rank semantic predictions for now
+            request_data=request_data,
+            excluded_items=request_data.excluded_items,
         )

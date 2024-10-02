@@ -1,14 +1,14 @@
 from collections import defaultdict
 from typing import Dict, List, Optional
 
-from docarray import Document
+import numpy as np
 
 from app.factory.handler import PredictionHandler
 from app.factory.tops import SearchByTopsHandler
 from app.logger import logger
-from app.models import PredictionRequest
+from app.models.prediction_request import PredictionRequest
+from app.models.prediction_result import PredictionResult
 from app.retrieval.client import DefaultClient
-from app.services import search_by_vector
 
 
 class SimilarOfferHandler(PredictionHandler):
@@ -22,7 +22,7 @@ class SimilarOfferHandler(PredictionHandler):
         model: DefaultClient,
         request_data: PredictionRequest,
         fallback_client: Optional[PredictionHandler] = SearchByTopsHandler(),
-    ) -> Dict:
+    ) -> PredictionResult:
         """
         Handles the prediction request for similar offers based on item vectors.
 
@@ -32,7 +32,7 @@ class SimilarOfferHandler(PredictionHandler):
             fallback_client (PredictionHandler): In case something gets wrong (items not found), fallback to this handler.
 
         Returns:
-            Dict: A dictionary containing the predicted similar items.
+            PredictionResult: An object containing the predicted similar items.
         """
         logger.debug(
             "similar_offers",
@@ -43,11 +43,20 @@ class SimilarOfferHandler(PredictionHandler):
                 "size": request_data.size,
             },
         )
+        if request_data.items is None or request_data.items == []:
+            raise ValueError(
+                "items or offer_id is required for similar_offer predictions."
+            )
 
-        predictions = self._get_predictions_for_items(model, request_data)
+        # Specified items are excluded in similar offer predictions context
+        excluded_items = request_data.items + request_data.excluded_items
 
-        # If no predictions are found and fallback
-        if len(predictions) == 0 and fallback_client is not None:
+        prediction_result = self._get_predictions_for_items(
+            model, request_data, excluded_items=excluded_items
+        )
+
+        # If no predictions were found and fallback is activated
+        if len(prediction_result.predictions) == 0 and fallback_client is not None:
             return fallback_client.handle(
                 model,
                 request_data=PredictionRequest(
@@ -61,19 +70,26 @@ class SimilarOfferHandler(PredictionHandler):
                     call_id=request_data.call_id,
                     user_id=request_data.user_id,
                     items=request_data.items,
+                    excluded_items=excluded_items,
                 ),
             )
 
-        # Compute the best items by calculating the mean distance and selecting the expected top X
-        if len(request_data.items) > 0:
-            predictions = self._select_best_predictions(
-                predictions, request_data.size, request_data.items
+        # If we have multiple predictions, compute the bests items by calculating the mean distance and selecting top N
+        if len(request_data.items) > 1:
+            return self._select_best_predictions(
+                prediction_result.predictions,
+                request_data.size,
+                excluded_items=excluded_items,
             )
-        return {"predictions": predictions}
+        else:
+            return prediction_result
 
     def _get_predictions_for_items(
-        self, model: DefaultClient, request_data: PredictionRequest
-    ) -> List[Dict]:
+        self,
+        model: DefaultClient,
+        request_data: PredictionRequest,
+        excluded_items: List[str] = [],
+    ) -> PredictionResult:
         """
         Retrieves predictions for each item in the list.
 
@@ -82,60 +98,28 @@ class SimilarOfferHandler(PredictionHandler):
             request_data (PredictionRequest): Request data containing search parameters.
 
         Returns:
-            List[Dict]: A list of predictions retrieved for the items.
+            List[PredictionResult]: A list of predictions retrieved for the items.
         """
-        predictions = []
+        prediction_result = PredictionResult(predictions=[])
         for item_id in request_data.items:
             logger.debug(f"Searching for item_id: {item_id}")
-            vector = model.offer_vector(item_id)
+            vector = model.item_vector(item_id)
             if vector is not None:
-                prediction = self._search_by_vector(
-                    model, request_data, vector, item_id
+                results = self.search_by_vector(
+                    model=model,
+                    vector=vector,
+                    request_data=request_data,
+                    excluded_items=excluded_items,
                 )
-                if prediction:
-                    predictions.extend(prediction["predictions"])
+                if len(results.predictions) > 0:
+                    prediction_result.predictions.extend(results.predictions)
             else:
                 logger.debug(f"No vector found for item_id: {item_id}")
-        return predictions
-
-    def _search_by_vector(
-        self,
-        model: DefaultClient,
-        request_data: PredictionRequest,
-        vector: Document,
-        item_id: str,
-    ) -> Dict:
-        """
-        Performs the search using the vector for a given item.
-
-        Args:
-            model (DefaultClient): The model used for searching.
-            request_data (PredictionRequest): Request data containing search parameters.
-            vector (Document): The vector representation of the item.
-            item_id (str): The item ID for which the search is performed.
-
-        Returns:
-            Dict: A dictionary containing the search results.
-        """
-        return search_by_vector(
-            model=model,
-            vector=vector,
-            size=request_data.size
-            + 1,  # Add 1 to the size to account for the item that will be removed
-            selected_params=request_data.params,
-            debug=request_data.debug,
-            call_id=request_data.call_id,
-            prefilter=request_data.is_prefilter,
-            vector_column_name=request_data.vector_column_name,
-            similarity_metric=request_data.similarity_metric,
-            re_rank=request_data.re_rank,
-            item_id=item_id,
-            user_id=request_data.user_id,
-        )
+        return prediction_result
 
     def _select_best_predictions(
-        self, predictions: List[Dict], size: int, items: List[str]
-    ) -> List[Dict]:
+        self, predictions: List[Dict], size: int, excluded_items: List[str]
+    ) -> PredictionResult:
         """
         Selects the best predictions by calculating the mean `_distance` value for each item,
         and then sorting and returning the top X predictions based on the smallest mean `_distance`.
@@ -143,6 +127,7 @@ class SimilarOfferHandler(PredictionHandler):
         Args:
             predictions (List[Dict]): A list of predictions.
             size (int): The number of top results to return.
+            items (List[str]): The input items to exclude from the predictions.
 
         Returns:
             List[Dict]: A list of predictions with the mean `_distance` for each item.
@@ -151,29 +136,18 @@ class SimilarOfferHandler(PredictionHandler):
 
         # Group predictions by item_id
         for entry in predictions:
-            if entry["item_id"] not in items:
+            # TODO useless now
+            # Exclude predicted item_id from input similar offer items
+            if entry["item_id"] not in excluded_items:
                 grouped_predictions[entry["item_id"]].append(entry)
 
         averaged_predictions = []
+        # Calculate mean distance over multiple predictions for the same item
         for item_id, entries in grouped_predictions.items():
-            mean_distance = self._calculate_mean_distance(entries)
-            # Use the first entry as a template, but update the distance to the mean distance
+            mean_distance = np.mean([entry["_distance"] for entry in entries])
             best_entry = entries[0].copy()
             best_entry["_distance"] = mean_distance
             averaged_predictions.append(best_entry)
 
         averaged_predictions.sort(key=lambda x: x["_distance"])
-        return averaged_predictions[:size]
-
-    def _calculate_mean_distance(self, entries: List[Dict]) -> float:
-        """
-        Calculates the mean `_distance` for a list of predictions.
-
-        Args:
-            entries (List[Dict]): A list of prediction entries for the same item.
-
-        Returns:
-            float: The mean `_distance` value for the predictions.
-        """
-        total_distance = sum(entry["_distance"] for entry in entries)
-        return total_distance / len(entries)
+        return PredictionResult(predictions=averaged_predictions[:size])

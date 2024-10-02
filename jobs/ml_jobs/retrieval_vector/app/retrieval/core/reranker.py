@@ -48,10 +48,9 @@ class UserReranker(Reranker):
         Returns:
             Optional[Document]: The user's document embedding, or None if not found.
         """
-        try:
+        if user_id in self.user_docs:
             return self.user_docs[user_id]
-        except KeyError:
-            return None
+        return None
 
     def _user_recommendation(self, vector_results: pa.Table, user_id: str) -> pa.Table:
         """

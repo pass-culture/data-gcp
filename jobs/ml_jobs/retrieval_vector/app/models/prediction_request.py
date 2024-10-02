@@ -55,6 +55,7 @@ class PredictionRequest(BaseModel):
     user_id: Optional[str] = None
     text: Optional[str] = None
     items: Optional[List[str]] = []
+    excluded_items: Optional[List[str]] = []
     offer_id: Optional[str] = None
 
     model_config = ConfigDict(protected_namespaces=())

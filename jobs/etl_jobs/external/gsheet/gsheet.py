@@ -57,6 +57,18 @@ SHEETS = {
             "offer_category": "offer_category",
         },
     },
+    "gsheet_instagram_campaign_tag": {
+        "spreadsheet_ids": ["1pHcY7jtHB4CkU2caib3i4fLhUCmacqqMkh6U8YLjqAI"],
+        "expected_headers_dict": {
+            "date": "date",
+            "post_name": "post_name",
+            "media_url": "media_url",
+            "media_id": "media_id",
+            "macro_objective": "macro_objective",
+            "micro_objective": "micro_objective",
+            "offer_category": "offer_category",
+        },
+    },
 }
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]

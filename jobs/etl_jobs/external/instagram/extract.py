@@ -1,0 +1,272 @@
+from datetime import datetime, timedelta
+
+import pandas as pd
+import requests
+
+
+class InstagramAnalytics:
+    """
+    A class to fetch and process Instagram account insights and posts data using the Instagram Graph API.
+    """
+
+    def __init__(self, account_id: str, access_token: str):
+        """
+        Initializes the InstagramAnalytics object.
+
+        Args:
+            account_id (str): The Instagram account ID.
+            access_token (str): The access token for the Instagram Graph API.
+        """
+        self.account_id = account_id
+        self.access_token = access_token
+        self.graph_uri = "https://graph.facebook.com/v14.0/"
+
+    def fetch_daily_insights_data(self, start_date: str, end_date: str) -> list:
+        """
+        Fetches daily insights data between the specified start and end dates.
+
+        Args:
+            start_date (str): Start date in 'YYYY-MM-dd' format.
+            end_date (str): End date in 'YYYY-MM-dd' format.
+
+        Returns:
+            list: A list of daily insights data.
+        """
+
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+        end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+
+        if start_dt > end_dt:
+            raise ValueError("start_date must be earlier than or equal to end_date.")
+
+        metrics = [
+            "impressions",
+            "reach",
+            "follower_count",
+            "email_contacts",
+            "phone_call_clicks",
+            "text_message_clicks",
+            "get_directions_clicks",
+            "website_clicks",
+            "profile_views",
+        ]
+        period = "day"
+        data = []
+
+        total_days = (end_dt - start_dt).days + 1
+
+        for day in range(total_days):
+            day_date = start_dt + timedelta(days=day)
+            since = int(day_date.timestamp())
+            until = int((day_date + timedelta(days=1)).timestamp()) - 1
+
+            params = {
+                "metric": ",".join(metrics),
+                "period": period,
+                "since": since,
+                "until": until,
+                "access_token": self.access_token,
+            }
+
+            response = requests.get(
+                f"{self.graph_uri}{self.account_id}/insights", params=params
+            )
+
+            if response.status_code == 200:
+                data.append(response.json())
+            else:
+                print(
+                    f"Error fetching daily insights data: {response.status_code} - {response.text}"
+                )
+
+        return data
+
+    def preprocess_insight_data(self, insights_data: list) -> pd.DataFrame:
+        """
+        Processes raw insights data into a pandas DataFrame.
+
+        Args:
+            insights_data (list): Raw insights data as returned by fetch_daily_insights_data.
+
+        Returns:
+            pd.DataFrame: Processed insights data.
+        """
+        rows = []
+        for insight in insights_data:
+            data_points = insight.get("data", [])
+            row = {}
+            for data_point in data_points:
+                metric_name = data_point.get("name")
+                value = data_point.get("values", [{}])[0].get("value")
+                end_time = data_point.get("values", [{}])[0].get("end_time")
+                row[metric_name] = value
+                row["event_date"] = end_time
+            if row:
+                rows.append(row)
+
+        df = pd.DataFrame(rows)
+        if not df.empty:
+            df["event_date"] = pd.to_datetime(df["event_date"]).dt.date
+        return df
+
+    def fetch_and_preprocess_insights(
+        self, start_date: str, end_date: str
+    ) -> pd.DataFrame:
+        """
+        Fetches and preprocesses Instagram insights data into a DataFrame with additional metadata.
+
+        Args:
+            start_date (str): Start date in 'YYYY-MM-dd' format.
+            end_date (str): End date in 'YYYY-MM-dd' format.
+
+        Returns:
+            pd.DataFrame: Processed insights data with added 'account_id' column.
+        """
+        insights_data = self.fetch_daily_insights_data(start_date, end_date)
+        df_insights = self.preprocess_insight_data(insights_data)
+        df_insights["account_id"] = self.account_id
+        return df_insights
+
+    def _get_instagram_posts(self) -> dict:
+        """
+        Fetches Instagram posts for the account.
+
+        Returns:
+            dict: JSON response containing posts data.
+        """
+        url = f"{self.graph_uri}{self.account_id}/media"
+        params = {
+            "fields": "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp",
+            "access_token": self.access_token,
+        }
+        response = requests.get(url, params=params)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(
+                f"Error fetching Instagram posts: {response.status_code} - {response.text}"
+            )
+            return {}
+
+    def fetch_posts(self) -> list:
+        """
+        Fetches all Instagram posts, handling pagination.
+
+        Returns:
+            list: A list of posts data.
+        """
+        posts_response = self._get_instagram_posts()
+        posts_data = posts_response.get("data", [])
+        next_page = posts_response.get("paging", {}).get("next")
+
+        while next_page:
+            response = requests.get(next_page)
+            if response.status_code == 200:
+                posts_response = response.json()
+                posts_data.extend(posts_response.get("data", []))
+                next_page = posts_response.get("paging", {}).get("next")
+                print(f"Importing {len(posts_response.get('data', []))} posts...")
+            else:
+                print(f"Error fetching posts: {response.status_code} - {response.text}")
+                break
+
+        return posts_data
+
+    def _get_post_insights(self, media_id: str, media_type: str) -> dict:
+        """
+        Fetches insights for a specific post.
+
+        Args:
+            media_id (str): The media ID of the post.
+            media_type (str): The media type of the post.
+
+        Returns:
+            dict: JSON response containing insights data.
+        """
+        default_metrics = [
+            "impressions",
+            "shares",
+            "comments",
+            "likes",
+            "saved",
+            "video_views",
+            "total_interactions",
+            "follows",
+            "profile_visits",
+            "profile_activity",
+            "reach",
+        ]
+        metric_dict = {
+            "VIDEO": [
+                "shares",
+                "comments",
+                "likes",
+                "saved",
+                "video_views",
+                "total_interactions",
+                "reach",
+            ],
+            "IMAGE": default_metrics,
+            "CAROUSEL_ALBUM": default_metrics,
+        }
+
+        metrics = metric_dict.get(media_type, default_metrics)
+        url = f"{self.graph_uri}{media_id}/insights"
+        params = {"metric": ",".join(metrics), "access_token": self.access_token}
+        response = requests.get(url, params=params)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(
+                f"Error fetching post insights: {response.status_code} - {response.text}"
+            )
+            return {}
+
+    def preprocess_insight_posts(self, posts: list) -> pd.DataFrame:
+        """
+        Processes posts data and their insights into a pandas DataFrame.
+
+        Args:
+            posts (list): List of posts data.
+
+        Returns:
+            pd.DataFrame: Processed posts insights data.
+        """
+        rows = []
+
+        for post in posts:
+            post_insights = self._get_post_insights(
+                post.get("id"), post.get("media_type")
+            )
+
+            row = {
+                "post_id": post.get("id"),
+                "media_type": post.get("media_type"),
+                "caption": post.get("caption"),
+                "media_url": post.get("media_url"),
+                "permalink": post.get("permalink"),
+                "posted_at": post.get("timestamp"),
+                "url_id": post.get("permalink", "").rstrip("/").split("/")[-1],
+            }
+
+            for data_point in post_insights.get("data", []):
+                metric_name = data_point.get("name")
+                value = data_point.get("values", [{}])[0].get("value")
+                row[metric_name] = value
+
+            rows.append(row)
+
+        return pd.DataFrame(rows)
+
+    def fetch_and_preprocess_posts(self, export_date: datetime) -> pd.DataFrame:
+        """
+        Fetches and preprocesses Instagram posts into a DataFrame with additional metadata.
+
+        Returns:
+            pd.DataFrame: Processed posts data with added 'export_date' and 'account_id' columns.
+        """
+        posts = self.fetch_posts()
+        df_posts = self.preprocess_insight_posts(posts)
+        df_posts["export_date"] = export_date
+        df_posts["account_id"] = self.account_id
+        return df_posts

@@ -125,7 +125,7 @@ class StopGCEOperator(BaseOperator):
 class BaseSSHGCEOperator(BaseOperator):
     MAX_RETRY = 3
     SSH_TIMEOUT = 10
-    template_fields = ["instance_name", "command", "environment"]
+    template_fields = ["instance_name", "command", "environment", "gce_zone"]
 
     @apply_defaults
     def __init__(
@@ -347,12 +347,9 @@ class SSHGCEOperator(BaseSSHGCEOperator):
 
 class InstallDependenciesOperator(SSHGCEOperator):
     REPO = "https://github.com/pass-culture/data-gcp.git"
-    template_fields = (
-        "installer",
-        "requirement_file",
-        "branch",
-        "instance_name",
-        "base_dir",
+    template_fields = set(
+        ["installer", "requirement_file", "branch", "instance_name", "base_dir"]
+        + SSHGCEOperator.template_fields
     )
 
     @apply_defaults

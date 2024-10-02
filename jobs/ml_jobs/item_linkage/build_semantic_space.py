@@ -35,13 +35,20 @@ def preprocess_data_and_store_reducer(
     Returns:
         pd.DataFrame: The prepared dataframe with embeddings.
     """
-    pattern = r"\b(?:Tome|t|vol|)\s*(\d+)\b"
+    extract_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*(\d+)\b"  # This pattern is for extracting the edition number
+    remove_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*\d+\b"  # This pattern is for removing the edition number and keyword
+
     item_df = chunk.assign(
         performer=lambda df: df["performer"].fillna(value=UNKNOWN_PERFORMER),
         edition=lambda df: df["offer_name"]
-        .str.extract(pattern, expand=False)
-        .astype(float),
+        .str.extract(extract_pattern, expand=False)
+        .astype(float)
+        .fillna(value=1),
+        offer_name=lambda df: df["offer_name"]
+        .str.replace(remove_pattern, "", regex=True)
+        .str.strip(),
     )
+
     if reduction:
         item_df = item_df.assign(
             vector=reduce_embeddings_and_store_reducer(

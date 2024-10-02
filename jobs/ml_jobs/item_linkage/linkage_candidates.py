@@ -7,7 +7,7 @@ from hnne import HNNE
 from loguru import logger
 from tqdm import tqdm
 
-from constants import MODEL_PATH, NUM_RESULTS
+from constants import MODEL_PATH, NUM_RESULTS, UNKNOWN_PERFORMER
 from model.semantic_space import SemanticSpace
 from utils.common import (
     preprocess_embeddings_by_chunk,
@@ -50,13 +50,18 @@ def preprocess_data(chunk: pd.DataFrame, hnne_reducer: HNNE) -> pd.DataFrame:
         pd.DataFrame: The preprocessed data.
     """
     logger.info("Preprocessing data...")
-    pattern = r"\b(?:Tome|t|vol|)\s*(\d+)\b"
+    extract_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*(\d+)\b"  # This pattern is for extracting the edition number
+    remove_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*\d+\b"  # This pattern is for removing the edition number and keyword
+
     items_df = chunk.assign(
-        performer=lambda df: df["performer"].fillna(value="unkn"),
-        offer_name=lambda df: df["offer_name"].str.lower(),
+        performer=lambda df: df["performer"].fillna(value=UNKNOWN_PERFORMER),
         edition=lambda df: df["offer_name"]
-        .str.extract(pattern, expand=False)
-        .astype(float),
+        .str.extract(extract_pattern, expand=False)
+        .astype(float)
+        .fillna(value=1),
+        offer_name=lambda df: df["offer_name"]
+        .str.replace(remove_pattern, "", regex=True)
+        .str.strip(),
     ).drop(columns=["embedding"])
     if hnne_reducer:
         items_df["vector"] = reduce_embeddings(

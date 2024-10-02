@@ -1,5 +1,8 @@
 #!/bin/bash
-
+# set composer bucket adresses
+COMPOSER_BUCKET_DEV="europe-west1-data-composer--eea0a667-bucket"
+COMPOSER_BUCKET_STG="europe-west1-data-composer--86238594-bucket"
+COMPOSER_BUCKET_PROD="europe-west1-data-composer--e3ff6842-bucket"
 ## dbt deferral hook
 dbt_hook() {
   # Set default values for flags
@@ -77,13 +80,13 @@ fi
 
     case "$env" in
       dev)
-        GCS_BUCKET_PATH="gs://europe-west1-data-composer--eea0a667-bucket/data/target"
+        GCS_BUCKET_PATH="gs://${COMPOSER_BUCKET_DEV}/data/target"
         ;;
       stg)
-        GCS_BUCKET_PATH="gs://europe-west1-data-composer--86238594-bucket/data/target"
+        GCS_BUCKET_PATH="gs://${COMPOSER_BUCKET_STG}/data/target"
         ;;
       prod)
-        GCS_BUCKET_PATH="gs://europe-west1-data-composer--e3ff6842-bucket/data/target"
+        GCS_BUCKET_PATH="gs://${COMPOSER_BUCKET_PROD}/data/target"
         ;;
       *)
         echo "Unknown environment: $env. Unable to pull artifacts."
@@ -198,7 +201,7 @@ dbt() {
     echo "Invoking dbt_hook for $1 command."
     # Call dbt_hook and pass all the original arguments
     dbt_hook "$@"
-  elif [[ "$1" == "--sync-artifacts" || "$1" == --sync-artifacts=* ]]; then
+  elif [[ "$1" == "--sync-artifacts" || "$1" == --sync-artifacts=* ]] ; then
     echo "Invoking dbt_hook for sync-artifacts."
     # Call dbt_hook and pass all the original arguments
     dbt_hook "$@"

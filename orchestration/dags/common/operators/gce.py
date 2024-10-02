@@ -304,7 +304,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         command: str,
         base_dir: str = None,
         environment: t.Dict[str, str] = {},
-        installer: str = "uv",
+        installer: str = "conda",
         *args,
         **kwargs,
     ):
@@ -372,8 +372,6 @@ class InstallDependenciesOperator(SSHGCEOperator):
         *args,
         **kwargs,
     ):
-        if installer not in ["uv", "conda"]:
-            raise ValueError(f"Invalid installer: {installer}")
         self.instance_name = instance_name
         self.requirement_file = requirement_file
         self.environment = environment
@@ -394,6 +392,8 @@ class InstallDependenciesOperator(SSHGCEOperator):
         )
 
     def execute(self, context):
+        if self.installer not in ["uv", "conda"]:
+            raise ValueError(f"Invalid installer: {self.installer}")
         # The templates have been rendered; we can construct the command
         command = self.make_install_command(
             self.installer, self.requirement_file, self.branch, self.base_dir

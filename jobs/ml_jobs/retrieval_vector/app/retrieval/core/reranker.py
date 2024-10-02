@@ -67,7 +67,7 @@ class UserReranker(Reranker):
 
         if user_doc:
             scores = np.dot(
-                vector_results[self.vector_column_name].to_pylist(), -user_doc.embedding
+                vector_results[self.vector_column_name].to_numpy(), -user_doc.embedding
             )
             updated_distances = self._compute_relevance_score(
                 vector_results["_distance"].to_numpy(), np.array(scores)

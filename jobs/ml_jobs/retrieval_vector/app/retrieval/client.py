@@ -24,9 +24,6 @@ class DefaultClient:
     on items stored in a LanceDB table.
     """
 
-    # Default approximate the query with a small near-zero value as the items for tops reversed ranked with a vector of 1 dimension from 1 to N. (e.g. 0 most booked, N least booked).
-    DEFAULT_APPROX_TOP_VECTOR = Document(embedding=[-0.0001])
-
     def __init__(
         self,
         base_columns: List[str] = DEFAULT_COLUMNS,
@@ -118,21 +115,46 @@ class DefaultClient:
         user_id: Optional[str] = None,
     ) -> List[Dict]:
         """
-        Filter the database based on query filters and ranked vector_column_name and optionally rerank results.
+        Perform a search query that filters and ranks items based on a specified vector column,
+        with an option for re-ranking the results.
 
-        Args:
-            query_filter (Optional[Dict]): Optional query filters.
-            n (int): Maximum number of results.
-            details (bool): Whether to include detailed fields in results.
-            vector_column_name (str): Column name to filter on.
-            re_rank (bool): Whether to apply re-ranking.
-            user_id (str): User ID for re-ranking.
+        The function leverages a constant vector `DEFAULT_APPROX_TOP_VECTOR` to approximate rankings
+        by the `vector_column_name` (default is "booking_number_desc"), typically representing
+        a "most booked" status. This approach uses a near-zero value vector with dot product similarity
+        to reverse rank items.
 
-        Returns:
-            List[Dict]: A list of filtered results.
+        ### Logic:
+        - **1D Vector Representation**: During preprocessing, each item is assigned a value between 1 (most booked)
+        and N (least booked) in a 1-dimensional vector space.
+        - **Dot Product Similarity**: A small negative value (-0.00001) is used in the dot product calculation,
+        giving priority to items closer to 0 (most booked).
+        - **Approximation**: A small vector value (-0.0001) simplifies the computation, ensuring that items
+        with higher booking counts are returned first.
+
+        ### Example:
+        Using `DEFAULT_APPROX_TOP_VECTOR`, items are ranked based on their booking count:
+
+        - Item A – 1000 bookings (Rank 1)
+        - Item B – 850 bookings (Rank 2)
+        - Item C – 500 bookings (Rank 3)
+        - ...
+
+        ### Args:
+            query_filter (Optional[Dict]): Optional filters to narrow the search (e.g., {"location": "Paris"}).
+            n (int): Maximum number of results to return. Default is 50.
+            details (bool): Whether to include additional fields in the result. Default is False.
+            vector_column_name (str): Column used for ranking. Default is "booking_number_desc".
+            similarity_metric (str): Metric for ranking, typically "dot" (dot product similarity).
+            re_rank (bool): Whether to apply a secondary re-ranking process. Default is False.
+            user_id (Optional[str]): User ID for personalized ranking. Default is None.
+
+        ### Returns:
+            List[Dict]: A list of dictionaries, where each represents a ranked item.
         """
+
+        DEFAULT_APPROX_TOP_VECTOR = Document(embedding=[-0.0001])
         return self._perform_search(
-            vector=self.DEFAULT_APPROX_TOP_VECTOR,
+            vector=DEFAULT_APPROX_TOP_VECTOR,
             n=n,
             query_filter=query_filter,
             vector_column_name=vector_column_name,

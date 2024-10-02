@@ -79,7 +79,6 @@ class SimilarOfferHandler(PredictionHandler):
             return self._select_best_predictions(
                 prediction_result.predictions,
                 request_data.size,
-                excluded_items=excluded_items,
             )
         else:
             return prediction_result
@@ -118,7 +117,7 @@ class SimilarOfferHandler(PredictionHandler):
         return prediction_result
 
     def _select_best_predictions(
-        self, predictions: List[Dict], size: int, excluded_items: List[str]
+        self, predictions: List[Dict], size: int
     ) -> PredictionResult:
         """
         Selects the best predictions by calculating the mean `_distance` value for each item,
@@ -136,14 +135,11 @@ class SimilarOfferHandler(PredictionHandler):
 
         # Group predictions by item_id
         for entry in predictions:
-            # TODO useless now
-            # Exclude predicted item_id from input similar offer items
-            if entry["item_id"] not in excluded_items:
-                grouped_predictions[entry["item_id"]].append(entry)
+            grouped_predictions[entry["item_id"]].append(entry)
 
         averaged_predictions = []
         # Calculate mean distance over multiple predictions for the same item
-        for item_id, entries in grouped_predictions.items():
+        for _, entries in grouped_predictions.items():
             mean_distance = np.mean([entry["_distance"] for entry in entries])
             best_entry = entries[0].copy()
             best_entry["_distance"] = mean_distance

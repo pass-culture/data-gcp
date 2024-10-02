@@ -9,6 +9,7 @@ from constants import MODEL_TYPE as config
 from constants import N_PROBES, NUM_RESULTS, REFINE_FACTOR
 
 DETAIL_COLUMNS = ["item_id", "performer", "edition", "offer_subcategory_id"]
+DETAIL_COLUMNS = ["item_id", "performer", "edition", "offer_subcategory_id"]
 DEFAULTS = ["_distance"]
 
 
@@ -40,7 +41,7 @@ class SemanticSpace:
                 query_type="vector",
             )
             .where(
-                f"edition = {edition} AND offer_subcategory_id={offer_subcategory_id}",
+                f"edition = {edition} AND offer_subcategory_id='{offer_subcategory_id}'",
                 prefilter=True,
             )
             .nprobes(N_PROBES)

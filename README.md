@@ -58,6 +58,11 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
 
 - Accès aux comptes de services GCP
 - [Gcloud CLI](https://cloud.google.com/sdk/docs/install?hl=fr)
+- Make installé
+  - linux : `sudo apt install make`
+  - mac : `brew install make`
+
+
 
 #### 1. Installation du projet
 

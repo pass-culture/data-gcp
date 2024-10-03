@@ -5,7 +5,7 @@ ARG WORKERS=3
 
 
 COPY ./api-requirements.txt ./
-RUN pip3 install -r api-requirements.txt 
+RUN pip3 install -r api-requirements.txt
 
 COPY ./app /app
 COPY ./metadata /app/metadata

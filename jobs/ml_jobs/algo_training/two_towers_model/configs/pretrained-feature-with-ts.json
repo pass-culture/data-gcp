@@ -19,7 +19,7 @@
       "item_image_embedding": {
         "type": "pretrained",
         "embedding_size": 16
-      },	
+      },
       "item_semantic_content_hybrid_embedding": {
         "type": "pretrained",
         "embedding_size": 16

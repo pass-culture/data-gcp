@@ -52,7 +52,7 @@ params={
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
-    
+
 >> gce_instance_start
 >> fetch_code
 >> install_dependencies

@@ -4,7 +4,7 @@ models:
     description: |
         The table lists the communes classified as Rural Revitalization Zones (ZRR).
         https://www.data.gouv.fr/fr/datasets/zones-de-revitalisation-rurale-zrr/#/information
-    
+
     columns:
       - name: geo_code
         description: 'The geographical code (CODGEO) representing the commune.'

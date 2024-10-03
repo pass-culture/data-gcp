@@ -4,9 +4,9 @@
 
 Please include a summary of the changes:
 
-This PR [adds/removes/fixes/replaces] the [feature/bug/etc]. 
+This PR [adds/removes/fixes/replaces] the [feature/bug/etc].
 
-Tag a reviewer if necessacy  @github/username 
+Tag a reviewer if necessacy  @github/username
 
 ## Jira ticket number and/or notion link
 

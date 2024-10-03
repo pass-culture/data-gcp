@@ -1,4 +1,4 @@
-CREATE OR REPLACE TABLE analytics.daily_aggregated_offer_event ON cluster default 
+CREATE OR REPLACE TABLE analytics.daily_aggregated_offer_event ON cluster default
     ENGINE = MergeTree
     PARTITION BY event_date
     ORDER BY (offer_id)

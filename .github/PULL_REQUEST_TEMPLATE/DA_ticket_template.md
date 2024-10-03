@@ -4,9 +4,9 @@
 
 Please include a summary of the changes:
 
-This PR [adds/removes/fixes/replaces] the [feature/bug/etc]. 
+This PR [adds/removes/fixes/replaces] the [feature/bug/etc].
 
-Tag a reviewer if necessacy  @github/username 
+Tag a reviewer if necessacy  @github/username
 
 ## Jira ticket number and/or notion link
 
@@ -16,9 +16,9 @@ JIRA-ticket_number
 - [ ] Fix (non-breaking change which corrects expected behavior)
 - [ ] New fields (non-breaking change)
 - [ ] New table (non-breaking change)
-- [ ] Concept change (potentially breaking change which modifies fields according to new or evolving business concepts) 
+- [ ] Concept change (potentially breaking change which modifies fields according to new or evolving business concepts)
 - [ ] Table deletion (potentially breaking change which adds functionality/ table)
-      
+
 ### Checklist before requesting a review
 - [ ] I have performed a self-review of my code
 - [ ] Fields have been snake_cased

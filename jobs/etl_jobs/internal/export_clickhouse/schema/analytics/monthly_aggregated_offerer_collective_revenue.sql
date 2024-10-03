@@ -1,4 +1,4 @@
-CREATE OR REPLACE TABLE analytics.monthy_aggregated_offerer_collective_revenue ON cluster default 
+CREATE OR REPLACE TABLE analytics.monthy_aggregated_offerer_collective_revenue ON cluster default
     ENGINE = MergeTree
     PARTITION BY creation_month
     ORDER BY (offerer_id)

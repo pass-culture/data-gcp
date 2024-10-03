@@ -14,10 +14,10 @@ To tick boxe replace [ ] with [x]
  -->
 
 
- <!-- 
+ <!--
 TO DO: check with repo admin : [https://passculture.atlassian.net/browse/PC-<num>](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/configuring-autolinks-to-reference-external-resources)
 
 JIRA-replace_with_ticket_number
 
-[Notion-link](paste within parenthesis) 
+[Notion-link](paste within parenthesis)
 -->

@@ -43,4 +43,3 @@ models:
       - name: geo_shape
         description: 'The geographical shape data representing the boundaries of the priority neighborhood.'
         data_type: GEOGRAPHY
-   

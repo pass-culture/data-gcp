@@ -26,6 +26,7 @@ dbt_run_changed_models() {
   else
     echo "Running models: ${models}"
     dbt run --model $models --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" --exclude tag:failing_ci
+    dbt run --select package:elementary --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" --exclude tag:failing_ci
   fi
 }
 

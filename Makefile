@@ -131,5 +131,5 @@ sqlfluff_check:
 precommit_install:
 	@eval "$$(pyenv init -)" && pyenv activate data-gcp && pre-commit install
 
-sqlfmt_format:
+sqlfmt:
 	sqlfmt orchestration --exclude "**/.venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "*/venv/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"

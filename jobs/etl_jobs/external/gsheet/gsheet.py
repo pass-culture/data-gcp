@@ -34,6 +34,7 @@ SHEETS = {
             "1Oy9FGcpyK_GvjphDYUD7un4xRDtobDWNI9Ha9iNU_L0",  # SEM
             "1BvieY_RTjOzQMDB2rMe4QqwSPqoH7a5ARTMmSGYgNnk",  # Aix-Marseille
             "1gUd_QIEHPMD03XZA1bHG19Dgk1v8u0ioU4SGHPLIshk",  # MENJ
+            "1DVneUFuBhQTQS6I8tN1pcOuelsglwOyBnKVsQn4MlE8",  # MA
             "15_JNWINeU7nfSbU6subTMK0utr_av1Z3d5-UKD2CBn8",  # Historical DATA
         ],
         "expected_headers_dict": {

@@ -4,6 +4,7 @@ models:
   - name: mrt_native__event
     data_tests:
       - elementary.volume_anomalies:
+          tags: [elementary]
           where_expression: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)"
           timestamp_column: event_date
           time_bucket:

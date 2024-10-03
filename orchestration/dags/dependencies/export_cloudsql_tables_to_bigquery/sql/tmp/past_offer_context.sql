@@ -1,4 +1,4 @@
-SELECT
+select
     id,
     call_id,
     context,
@@ -27,5 +27,4 @@ SELECT
     offer_order,
     offer_venue_id,
     offer_extra_data
-FROM
-    public.past_offer_context
+from public.past_offer_context

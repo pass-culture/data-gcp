@@ -1,17 +1,18 @@
-{{ config(**custom_table_config()) }} 
+{{ config(**custom_table_config()) }}
 
-SELECT 
-    CODGEO AS geo_code, -- city_code
-    LIBGEO AS geo_name,
-    ZRR_SIMP AS zrr_level,
-    ZRR_SIMP IN ('C  Classée en ZRR', 'P  Commune partiellement classée en ZRR') AS is_in_zrr,
-    ZONAGE_ZRR AS zrr_level_detail,
-    Code_Postal AS postal_code,
-    Code_INSEE AS insee_code,
-    insee_com AS insee_commune,
-    ST_GEOGFROMTEXT(geo_shape_insee) AS geo_shape,
-    ST_BOUNDINGBOX(ST_GEOGFROMTEXT(geo_shape_insee)).xmin AS min_longitude,
-    ST_BOUNDINGBOX(ST_GEOGFROMTEXT(geo_shape_insee)).xmax AS max_longitude,
-    ST_BOUNDINGBOX(ST_GEOGFROMTEXT(geo_shape_insee)).ymin AS min_latitude,
-    ST_BOUNDINGBOX(ST_GEOGFROMTEXT(geo_shape_insee)).ymax AS max_latitude
-FROM {{ source('seed', 'zrr') }}
+select
+    codgeo as geo_code,  -- city_code
+    libgeo as geo_name,
+    zrr_simp as zrr_level,
+    zrr_simp
+    in ('C  Classée en ZRR', 'P  Commune partiellement classée en ZRR') as is_in_zrr,
+    zonage_zrr as zrr_level_detail,
+    code_postal as postal_code,
+    code_insee as insee_code,
+    insee_com as insee_commune,
+    st_geogfromtext(geo_shape_insee) as geo_shape,
+    st_boundingbox(st_geogfromtext(geo_shape_insee)).xmin as min_longitude,
+    st_boundingbox(st_geogfromtext(geo_shape_insee)).xmax as max_longitude,
+    st_boundingbox(st_geogfromtext(geo_shape_insee)).ymin as min_latitude,
+    st_boundingbox(st_geogfromtext(geo_shape_insee)).ymax as max_latitude
+from {{ source("seed", "zrr") }}

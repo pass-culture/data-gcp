@@ -1,99 +1,151 @@
 {{
     config(
         **custom_incremental_config(
-        incremental_strategy='insert_overwrite',
-        partition_by={'field': 'partition_date', 'data_type': 'date'},
+            incremental_strategy="insert_overwrite",
+            partition_by={"field": "partition_date", "data_type": "date"},
+        )
     )
-) }}
+}}
 
-WITH _rows AS (
-SELECT
-    DATE(timestamp) as partition_date,
-    CASE
-        WHEN jsonPayload.extra.path LIKE "%adage-iframe%" THEN 'adage-iframe'
-        ELSE 'adage'
-    END as log_source,
-    timestamp,
+with
+    _rows as (
+        select
+            date(timestamp) as partition_date,
+            case
+                when jsonpayload.extra.path like "%adage-iframe%"
+                then 'adage-iframe'
+                else 'adage'
+            end as log_source,
+            timestamp,
 
-    jsonPayload.message,
-    jsonPayload.technical_message_id,
-    jsonPayload.extra.source as source,
-    jsonPayload.extra.userId as user_id,
-    jsonPayload.extra.uai AS uai,
-    jsonPayload.extra.user_role AS user_role,
-    jsonPayload.extra.from as origin,
-    cast(jsonPayload.extra.stockId as string) as stock_id,
-    cast(jsonPayload.extra.offerId as string) as offer_id,
-    cast(jsonPayload.extra.collective_offer_template_id as string) as collective_offer_template_id,
-    cast(jsonPayload.extra.queryid as string) as query_id,
-    jsonPayload.extra.comment as comment,
-    jsonPayload.extra.requested_date as requested_date,
-    cast(jsonPayload.extra.total_students as int) as total_students,
-    cast(jsonPayload.extra.total_teachers as int) as total_teachers,
-    jsonPayload.extra.header_link_name as header_link_name,
-    CAST(coalesce(jsonPayload.extra.bookingId, jsonPayload.extra.booking_id) as string) as booking_id,
-    ARRAY_TO_STRING(jsonPayload.extra.filters, ',') AS filters,
-    CASE WHEN jsonPayload.message="SearchButtonClicked" THEN cast(jsonPayload.extra.resultscount as int)
-    WHEN jsonPayload.message="TrackingFilter" THEN cast(jsonPayload.extra.resultnumber as int)
-    ELSE NULL END as results_count,
-    jsonPayload.extra.filtervalues.eventaddresstype as address_type_filter,
-    cast(jsonPayload.extra.filtervalues.query as string) as text_filter,
-    ARRAY_TO_STRING(jsonPayload.extra.filtervalues.departments, ',') as department_filter,
-    ARRAY_TO_STRING(jsonPayload.extra.filtervalues.academies, ',') as academy_filter,
-    ARRAY_TO_STRING(ARRAY(SELECT CAST(value AS STRING) FROM UNNEST(jsonPayload.extra.filtervalues.venue) AS value), ',') as venue_filter,
-    ARRAY_TO_STRING(ARRAY(SELECT CAST(value AS STRING) FROM UNNEST(jsonPayload.extra.filtervalues.domains) AS value), ',') as artistic_domain_filter,
-    ARRAY_TO_STRING(ARRAY(SELECT CAST(value AS STRING) FROM UNNEST(jsonPayload.extra.filtervalues.students) AS value), ',') as student_filter,
-    ARRAY_TO_STRING(jsonPayload.extra.filtervalues.formats, ',') as format_filter,
-    ARRAY_TO_STRING(jsonPayload.extra.filtervalues.categories, ',') as category_filter,
-    jsonPayload.extra.suggestiontype as suggestion_type,
-    jsonPayload.extra.suggestionvalue as suggestion_value,
-    CAST(jsonPayload.extra.isfavorite as boolean) as is_favorite,
-    CAST(CAST(jsonPayload.extra.playlistid as INT) as STRING) as playlist_id,
-    CAST(CAST(jsonPayload.extra.domainid as INT) as STRING) as domain_id,
-    CAST(CAST(jsonPayload.extra.venueid as INT) as STRING) as venue_id,
-    CAST(jsonPayload.extra.index as INT) as rank_clicked
+            jsonpayload.message,
+            jsonpayload.technical_message_id,
+            jsonpayload.extra.source as source,
+            jsonpayload.extra.userid as user_id,
+            jsonpayload.extra.uai as uai,
+            jsonpayload.extra.user_role as user_role,
+            jsonpayload.extra.from as origin,
+            cast(jsonpayload.extra.stockid as string) as stock_id,
+            cast(jsonpayload.extra.offerid as string) as offer_id,
+            cast(
+                jsonpayload.extra.collective_offer_template_id as string
+            ) as collective_offer_template_id,
+            cast(jsonpayload.extra.queryid as string) as query_id,
+            jsonpayload.extra.comment as comment,
+            jsonpayload.extra.requested_date as requested_date,
+            cast(jsonpayload.extra.total_students as int) as total_students,
+            cast(jsonpayload.extra.total_teachers as int) as total_teachers,
+            jsonpayload.extra.header_link_name as header_link_name,
+            cast(
+                coalesce(
+                    jsonpayload.extra.bookingid, jsonpayload.extra.booking_id
+                ) as string
+            ) as booking_id,
+            array_to_string(jsonpayload.extra.filters, ',') as filters,
+            case
+                when jsonpayload.message = "SearchButtonClicked"
+                then cast(jsonpayload.extra.resultscount as int)
+                when jsonpayload.message = "TrackingFilter"
+                then cast(jsonpayload.extra.resultnumber as int)
+                else null
+            end as results_count,
+            jsonpayload.extra.filtervalues.eventaddresstype as address_type_filter,
+            cast(jsonpayload.extra.filtervalues.query as string) as text_filter,
+            array_to_string(
+                jsonpayload.extra.filtervalues.departments, ','
+            ) as department_filter,
+            array_to_string(
+                jsonpayload.extra.filtervalues.academies, ','
+            ) as academy_filter,
+            array_to_string(
+                array(
+                    select cast(value as string)
+                    from unnest(jsonpayload.extra.filtervalues.venue) as value
+                ),
+                ','
+            ) as venue_filter,
+            array_to_string(
+                array(
+                    select cast(value as string)
+                    from unnest(jsonpayload.extra.filtervalues.domains) as value
+                ),
+                ','
+            ) as artistic_domain_filter,
+            array_to_string(
+                array(
+                    select cast(value as string)
+                    from unnest(jsonpayload.extra.filtervalues.students) as value
+                ),
+                ','
+            ) as student_filter,
+            array_to_string(
+                jsonpayload.extra.filtervalues.formats, ','
+            ) as format_filter,
+            array_to_string(
+                jsonpayload.extra.filtervalues.categories, ','
+            ) as category_filter,
+            jsonpayload.extra.suggestiontype as suggestion_type,
+            jsonpayload.extra.suggestionvalue as suggestion_value,
+            cast(jsonpayload.extra.isfavorite as boolean) as is_favorite,
+            cast(cast(jsonpayload.extra.playlistid as int) as string) as playlist_id,
+            cast(cast(jsonpayload.extra.domainid as int) as string) as domain_id,
+            cast(cast(jsonpayload.extra.venueid as int) as string) as venue_id,
+            cast(jsonpayload.extra.index as int) as rank_clicked
 
-FROM
-    {{ source("raw","stdout") }}
-WHERE
-    1 = 1
-    {% if is_incremental() %}
-    AND DATE(timestamp) >= DATE_SUB(DATE('{{ ds() }}'), interval 7 day)
-    AND DATE(timestamp) <= DATE("{{ ds() }}")
-    {% endif %}
-    AND (
-        jsonPayload.extra.path LIKE "%adage-iframe%"
-        OR jsonPayload.extra.analyticsSource = 'adage'
-    )
-),
+        from {{ source("raw", "stdout") }}
+        where
+            1 = 1
+            {% if is_incremental() %}
+                and date(timestamp) >= date_sub(date('{{ ds() }}'), interval 7 day)
+                and date(timestamp) <= date("{{ ds() }}")
+            {% endif %}
+            and (
+                jsonpayload.extra.path like "%adage-iframe%"
+                or jsonpayload.extra.analyticssource = 'adage'
+            )
+    ),
 
-generate_session AS (
-    SELECT
-        *,
-        rnk - session_sum  as session_num,
-        MIN(timestamp) OVER (PARTITION BY user_id, rnk - session_sum) as session_start
-    FROM (
-        SELECT
-        *,
-        SUM(same_session) OVER (PARTITION BY user_id  ORDER BY timestamp) as session_sum,
-        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY timestamp) as rnk
-        FROM (
-            SELECT
+    generate_session as (
+        select
             *,
-            COALESCE(
-                CAST(
-                    DATE_DIFF(timestamp, LAG(timestamp, 1) OVER (PARTITION BY user_id ORDER BY timestamp), MINUTE) <= 30 AS INT
-                ), 1
-            ) as same_session,
-            FROM _rows
-        ) _inn_count
-    ) _inn_ts
-)
+            rnk - session_sum as session_num,
+            min(timestamp) over (
+                partition by user_id, rnk - session_sum
+            ) as session_start
+        from
+            (
+                select
+                    *,
+                    sum(same_session) over (
+                        partition by user_id order by timestamp
+                    ) as session_sum,
+                    row_number() over (partition by user_id order by timestamp) as rnk
+                from
+                    (
+                        select
+                            *,
+                            coalesce(
+                                cast(
+                                    date_diff(
+                                        timestamp,
+                                        lag(timestamp, 1) over (
+                                            partition by user_id order by timestamp
+                                        ),
+                                        minute
+                                    )
+                                    <= 30 as int
+                                ),
+                                1
+                            ) as same_session,
+                        from _rows
+                    ) _inn_count
+            ) _inn_ts
+    )
 
-SELECT
-* EXCEPT(session_num, session_start, rnk, same_session, session_sum),
-TO_HEX(MD5(CONCAT(CAST(session_start AS STRING), user_id, session_num))) as session_id
-FROM generate_session
-{% if is_incremental() %}
-WHERE partition_date = DATE("{{ ds() }}")
-{% endif %}
+select
+    * except (session_num, session_start, rnk, same_session, session_sum),
+    to_hex(
+        md5(concat(cast(session_start as string), user_id, session_num))
+    ) as session_id
+from generate_session
+{% if is_incremental() %} where partition_date = date("{{ ds() }}") {% endif %}

@@ -25,8 +25,9 @@ select
     academie_groupe_instructeur,
     domaines,
     erreur_traitement_pass_culture,
-    case when (demandeur_entreprise_siren is NULL or demandeur_entreprise_siren = "nan")
-            then LEFT(demandeur_siret, 9)
+    case
+        when (demandeur_entreprise_siren is null or demandeur_entreprise_siren = "nan")
+        then left(demandeur_siret, 9)
         else demandeur_entreprise_siren
     end as demandeur_entreprise_siren
-from {{ source('clean','dms_pro_cleaned') }}
+from {{ source("clean", "dms_pro_cleaned") }}

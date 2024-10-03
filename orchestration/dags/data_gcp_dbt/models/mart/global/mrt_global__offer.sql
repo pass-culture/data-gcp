@@ -76,7 +76,5 @@ select
     offerer_address_id,
     offer_publication_date,
     is_future_scheduled
-from {{ ref('int_global__offer') }} as o
-where TRUE
-    and offer_validation = 'APPROVED'
-    and venue_id is not NULL
+from {{ ref("int_global__offer") }} as o
+where true and offer_validation = 'APPROVED' and venue_id is not null

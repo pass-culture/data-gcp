@@ -1,7 +1,10 @@
 {% macro generate_schema_name(custom_schema_name, node=none) -%}
 
     {%- set default_schema = target.dataset -%}
-    {%- set is_orchestrated = target.name in ["prod", "stg", "dev"] and target.profile_name != "sandbox" -%}
+    {%- set is_orchestrated = (
+        target.name in ["prod", "stg", "dev"]
+        and target.profile_name != "sandbox"
+    ) -%}
     {%- set is_elementary = target.profile_name == "elementary" -%}
 
     {%- if target.profile_name == "CI" or target.name == "local" or is_elementary -%}
@@ -15,8 +18,7 @@
     {%- elif target.profile_name == "sandbox" -%}
         {{ custom_schema_name | trim if custom_schema_name else default_schema }}
 
-    {%- else -%}
-        {{ custom_schema_name | trim }}
+    {%- else -%} {{ custom_schema_name | trim }}
 
     {%- endif -%}
 

@@ -9,11 +9,16 @@ select
     app_version,
     platform,
     trace,
-    case url_path
-        when "/native/v1/me" then "app_native"
-        when "/beneficiaries/current" then "webapp"
-        when "/users/current" then "pro"
+    case
+        url_path
+        when "/native/v1/me"
+        then "app_native"
+        when "/beneficiaries/current"
+        then "webapp"
+        when "/users/current"
+        then "pro"
     end as source
-from {{ ref('int_pcapi__log') }}
-where log_timestamp >= DATE_SUB(CURRENT_TIMESTAMP(), interval 365 day)
+from {{ ref("int_pcapi__log") }}
+where
+    log_timestamp >= date_sub(current_timestamp(), interval 365 day)
     and url_path in ("/users/current", "/native/v1/me", "/native/v1/signin")

@@ -1,10 +1,7 @@
 {{
     config(
-        partition_by={
-            "field": "offer_creation_date",
-            "data_type": "date"
-        },
-        on_schema_change = "sync_all_columns",
+        partition_by={"field": "offer_creation_date", "data_type": "date"},
+        on_schema_change="sync_all_columns",
     )
 }}
 
@@ -88,5 +85,5 @@ select
     o.offerer_address_id,
     o.offer_publication_date,
     o.is_future_scheduled
-from {{ ref('int_applicative__offer') }} as o
-    left join {{ ref('int_global__venue') }} as v on v.venue_id = o.venue_id
+from {{ ref("int_applicative__offer") }} as o
+left join {{ ref("int_global__venue") }} as v on v.venue_id = o.venue_id

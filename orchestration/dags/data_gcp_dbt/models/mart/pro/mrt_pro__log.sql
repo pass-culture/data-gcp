@@ -1,11 +1,12 @@
 {{
     config(
         **custom_incremental_config(
-        incremental_strategy = "insert_overwrite",
-        partition_by = {"field": "partition_date", "data_type": "date"},
-        on_schema_change = "sync_all_columns"
+            incremental_strategy="insert_overwrite",
+            partition_by={"field": "partition_date", "data_type": "date"},
+            on_schema_change="sync_all_columns",
+        )
     )
-) }}
+}}
 
 select
     environement,
@@ -28,8 +29,9 @@ select
     beta_test_new_nav_is_convenient,
     beta_test_new_nav_is_pleasant,
     beta_test_new_nav_comment
-from {{ ref('int_pcapi__log') }}
-where message in (
+from {{ ref("int_pcapi__log") }}
+where
+    message in (
         "Booking has been cancelled",
         "Offer has been created",
         "Offer has been updated",
@@ -41,5 +43,6 @@ where message in (
         "User with new nav activated submitting review"
     )
     {% if is_incremental() %}
-        AND partition_date between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")
+        and partition_date
+        between date_sub(date("{{ ds() }}"), interval 2 day) and date("{{ ds() }}")
     {% endif %}

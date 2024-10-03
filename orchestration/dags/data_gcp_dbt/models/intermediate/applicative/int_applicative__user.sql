@@ -1,37 +1,48 @@
-{% set target_name = var('ENV_SHORT_NAME') %}
+{% set target_name = var("ENV_SHORT_NAME") %}
 {% set target_schema = generate_schema_name("analytics_" ~ target_name) %}
 
-{{ config(
-    pre_hook="{{create_humanize_id_function()}}"
-) }}
+{{ config(pre_hook="{{create_humanize_id_function()}}") }}
 
 select
     user_id,
     user_creation_date,
     {{ target_schema }}.humanize_id(user_id) as user_humanized_id,
     user_has_enabled_marketing_email,
-    COALESCE(
+    coalesce(
         case
-            when user_postal_code = "97150" then "978"
-            when SUBSTRING(user_postal_code, 0, 2) = "97" then SUBSTRING(user_postal_code, 0, 3)
-            when SUBSTRING(user_postal_code, 0, 2) = "98" then SUBSTRING(user_postal_code, 0, 3)
-            when SUBSTRING(user_postal_code, 0, 3) in ("200", "201", "209", "205") then "2A"
-            when SUBSTRING(user_postal_code, 0, 3) in ("202", "206") then "2B"
-            else SUBSTRING(user_postal_code, 0, 2)
+            when user_postal_code = "97150"
+            then "978"
+            when substring(user_postal_code, 0, 2) = "97"
+            then substring(user_postal_code, 0, 3)
+            when substring(user_postal_code, 0, 2) = "98"
+            then substring(user_postal_code, 0, 3)
+            when substring(user_postal_code, 0, 3) in ("200", "201", "209", "205")
+            then "2A"
+            when substring(user_postal_code, 0, 3) in ("202", "206")
+            then "2B"
+            else substring(user_postal_code, 0, 2)
         end,
         user_department_code
     ) as user_department_code,
     user_postal_code,
     case
-        when user_activity in ("Alternant", "Apprenti", "Volontaire") then "Apprenti, Alternant, Volontaire en service civique rémunéré"
-        when user_activity in ("Inactif") then "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
-        when user_activity in ("Étudiant") then "Etudiant"
-        when user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then "Chômeur, En recherche d'emploi"
+        when user_activity in ("Alternant", "Apprenti", "Volontaire")
+        then "Apprenti, Alternant, Volontaire en service civique rémunéré"
+        when user_activity in ("Inactif")
+        then "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
+        when user_activity in ("Étudiant")
+        then "Etudiant"
+        when
+            user_activity
+            in ("Chômeur", "En recherche d'emploi ou chômeur", "Demandeur d'emploi")
+        then "Chômeur, En recherche d'emploi"
         else user_activity
     end as user_activity,
     case
-        when user_civility in ("M", "M.") then "M."
-        when user_civility = "Mme" then "Mme."
+        when user_civility in ("M", "M.")
+        then "M."
+        when user_civility = "Mme"
+        then "Mme."
         else user_civility
     end as user_civility,
     user_school_type,

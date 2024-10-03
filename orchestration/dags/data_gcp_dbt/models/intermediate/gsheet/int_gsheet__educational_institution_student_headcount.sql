@@ -1,10 +1,17 @@
-SELECT
-    REPLACE('nan',NULL,school_year) AS school_year,
+select
+    replace('nan', null, school_year) as school_year,
     ministry,
     uai as institution_id,
-    SAFE_CAST(is_provisional as BOOL) AS is_provisional,
+    safe_cast(is_provisional as bool) as is_provisional,
     class,
-    SAFE_CAST(amount_per_student as FLOAT64) as amount_per_student,
-    SAFE_CAST(headcount as FLOAT64) as headcount,
-FROM {{ source('raw', 'gsheet_educational_institution_student_headcount') }} 
-QUALIFY ROW_NUMBER() over ( PARTITION BY ministry, uai, class ORDER BY CAST(SPLIT(school_year, "-")[0] AS INT) DESC, CAST(is_provisional AS INT) DESC ) = 1
+    safe_cast(amount_per_student as float64) as amount_per_student,
+    safe_cast(headcount as float64) as headcount,
+from {{ source("raw", "gsheet_educational_institution_student_headcount") }}
+qualify
+    row_number() over (
+        partition by ministry, uai, class
+        order by
+            cast(split(school_year, "-")[0] as int) desc,
+            cast(is_provisional as int) desc
+    )
+    = 1

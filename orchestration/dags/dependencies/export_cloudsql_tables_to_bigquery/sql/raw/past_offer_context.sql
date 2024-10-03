@@ -1,5 +1,2 @@
-SELECT
-    *,
-    DATE("{{ today() }}") as import_date
-FROM
-    `{{ bigquery_tmp_dataset }}.past_offer_context_{{ yyyymmdd(today()) }}`
+select *, date("{{ today() }}") as import_date
+from `{{ bigquery_tmp_dataset }}.past_offer_context_{{ yyyymmdd(today()) }}`

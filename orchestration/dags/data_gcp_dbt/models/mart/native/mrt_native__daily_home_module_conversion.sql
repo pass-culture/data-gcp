@@ -1,12 +1,17 @@
 {{
     config(
         **custom_incremental_config(
-        incremental_strategy = 'insert_overwrite',
-        partition_by = {'field': 'module_displayed_date', 'data_type': 'date', 'granularity': 'day'},
-        on_schema_change = "sync_all_columns",
-        require_partition_filter = true
+            incremental_strategy="insert_overwrite",
+            partition_by={
+                "field": "module_displayed_date",
+                "data_type": "date",
+                "granularity": "day",
+            },
+            on_schema_change="sync_all_columns",
+            require_partition_filter=true,
+        )
     )
-) }}
+}}
 
 select
     uh.module_displayed_date,
@@ -27,24 +32,44 @@ select
     uh.offer_category,
     uh.playlist_reach,
     uh.playlist_recurrence,
-    COALESCE(user_role, 'Grand Public') as user_role,
-    COUNT(distinct unique_session_id) as total_session_display,
-    COUNT(distinct case when consult_offer_timestamp is not NULL or click_type is not NULL or consult_venue_timestamp is not NULL then uh.unique_session_id end) as total_session_with_click,
-    COUNT(distinct case when consult_offer_timestamp is not NULL then uh.unique_session_id end) as total_sesh_consult_offer,
-    COUNT(distinct case when fav_timestamp is not NULL then uh.unique_session_id end) as total_session_fav,
-    COUNT(distinct case when click_type = 'ConsultVideo' then uh.unique_session_id end) as total_session_with_consult_video,
-    COUNT(case when consult_offer_timestamp is not NULL then 1 end) as total_consult_offer,
-    COUNT(case when fav_timestamp is not NULL then 1 end) as total_fav,
-    COUNT(distinct case when booking_timestamp is not NULL then uh.unique_session_id end) as total_session_with_booking,
-    COUNT(case when booking_timestamp is not NULL then 1 end) as total_bookings,
-    COUNT(case when uh.booking_id is not NULL then 1 end) as total_non_cancelled_bookings,
-    SUM(db.delta_diversification) as total_diversification
-from {{ ref( 'mrt_native__daily_user_home_module' ) }} as uh
-    left join {{ ref('int_applicative__user') }} as u
-        on u.user_id = uh.user_id
-    left join {{ ref('diversification_booking') }} as db
-        on db.booking_id = uh.booking_id
-where module_displayed_date >= DATE_SUB(DATE('{{ ds() }}'), interval 6 month)
+    coalesce(user_role, 'Grand Public') as user_role,
+    count(distinct unique_session_id) as total_session_display,
+    count(
+        distinct case
+            when
+                consult_offer_timestamp is not null
+                or click_type is not null
+                or consult_venue_timestamp is not null
+            then uh.unique_session_id
+        end
+    ) as total_session_with_click,
+    count(
+        distinct case
+            when consult_offer_timestamp is not null then uh.unique_session_id
+        end
+    ) as total_sesh_consult_offer,
+    count(
+        distinct case when fav_timestamp is not null then uh.unique_session_id end
+    ) as total_session_fav,
+    count(
+        distinct case when click_type = 'ConsultVideo' then uh.unique_session_id end
+    ) as total_session_with_consult_video,
+    count(
+        case when consult_offer_timestamp is not null then 1 end
+    ) as total_consult_offer,
+    count(case when fav_timestamp is not null then 1 end) as total_fav,
+    count(
+        distinct case when booking_timestamp is not null then uh.unique_session_id end
+    ) as total_session_with_booking,
+    count(case when booking_timestamp is not null then 1 end) as total_bookings,
+    count(
+        case when uh.booking_id is not null then 1 end
+    ) as total_non_cancelled_bookings,
+    sum(db.delta_diversification) as total_diversification
+from {{ ref("mrt_native__daily_user_home_module") }} as uh
+left join {{ ref("int_applicative__user") }} as u on u.user_id = uh.user_id
+left join {{ ref("diversification_booking") }} as db on db.booking_id = uh.booking_id
+where module_displayed_date >= date_sub(date('{{ ds() }}'), interval 6 month)
 
 group by
     module_displayed_date,

@@ -8,4 +8,4 @@ select
     address_latitude,
     address_longitude,
     address_department_code
-from {{ source('raw', 'applicative_database_address') }}
+from {{ source("raw", "applicative_database_address") }}

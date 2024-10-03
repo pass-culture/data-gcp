@@ -1,207 +1,287 @@
 {{
     config(
         **custom_incremental_config(
-            incremental_strategy = "insert_overwrite",
-            partition_by = {"field": "first_date", "data_type": "date", "granularity": "day"},
-            on_schema_change = "sync_all_columns",
+            incremental_strategy="insert_overwrite",
+            partition_by={
+                "field": "first_date",
+                "data_type": "date",
+                "granularity": "day",
+            },
+            on_schema_change="sync_all_columns",
         )
     )
 }}
 
-WITH
+with
 
--- Step 1: Extracting Consulted Offers
-consulted_offers AS (
-    SELECT
-        unique_session_id,
-        user_id,
-        offer_id,
-        search_id,
-        unique_search_id,
-        event_timestamp AS consult_timestamp,
-        event_date AS consult_date
-    FROM {{ ref('int_firebase__native_event') }}
-    WHERE
-        event_name = 'ConsultOffer'
-        AND search_id IS NOT NULL
-        {% if is_incremental() %}
-            AND event_date BETWEEN DATE_SUB(DATE('{{ ds() }}'), INTERVAL 3 DAY) AND DATE('{{ ds() }}')
-        {% endif %}
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY unique_session_id, offer_id, unique_search_id ORDER BY event_timestamp) = 1
-),
-
--- Step 2: Extracting Booked Offers
-booked_offers AS (
-    SELECT
-        co.unique_session_id,
-        co.user_id,
-        co.search_id,
-        co.unique_search_id,
-        co.offer_id,
-        co.consult_timestamp,
-        db.delta_diversification
-    FROM consulted_offers co
-    JOIN {{ ref('int_firebase__native_event') }} ne
-        ON co.unique_session_id = ne.unique_session_id
-        AND co.offer_id = ne.offer_id
-        AND ne.event_name = 'BookingConfirmation'
-        AND ne.event_timestamp > co.consult_timestamp
-        {% if is_incremental() %}
-            AND ne.event_date BETWEEN DATE_SUB(DATE('{{ ds() }}'), INTERVAL 3 DAY) AND DATE('{{ ds() }}')
-        {% endif %}
-    LEFT JOIN {{ ref('diversification_booking') }} db
-        ON db.user_id = co.user_id
-        AND db.offer_id = co.offer_id
-        AND DATE(co.consult_timestamp) = DATE(db.booking_creation_date)
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY co.unique_search_id, co.unique_session_id, co.offer_id ORDER BY ne.event_timestamp) = 1
-),
-
--- Step 3: Aggregating Bookings by Search ID
-bookings_aggregated AS (
-    SELECT DISTINCT
-        search_id,
-        unique_search_id,
-        unique_session_id,
-        user_id,
-        COUNT(DISTINCT offer_id) OVER (PARTITION BY unique_search_id, unique_session_id) AS nb_offers_booked,
-        SUM(delta_diversification) OVER (PARTITION BY unique_search_id, unique_session_id) AS total_diversification
-    FROM booked_offers
-),
-
--- Step 4: Identifying the First Search Performed
-first_search AS (
-    SELECT
-        search_id,
-        unique_session_id,
-        unique_search_id,
-        CASE
-            WHEN query IS NOT NULL THEN 'text_input'
-            WHEN search_categories_filter IS NOT NULL THEN 'categories_filter'
-            WHEN search_genre_types_filter IS NOT NULL THEN 'genre_types_filter'
-            WHEN search_native_categories_filter IS NOT NULL THEN 'native_categories_filter'
-            WHEN search_date_filter IS NOT NULL THEN 'date_filter'
-            WHEN search_max_price_filter IS NOT NULL THEN 'max_price_filter'
-            WHEN search_location_filter IS NOT NULL THEN 'location_filter'
-            WHEN search_accessibility_filter IS NOT NULL THEN 'accessibility_filter'
-            ELSE 'Autre'
-        END AS first_filter_applied
-    FROM {{ ref('int_firebase__native_event') }}
-    WHERE
-        event_name = 'PerformSearch'
-        AND unique_search_id IS NOT NULL
-        {% if is_incremental() %}
-            AND event_date BETWEEN DATE_SUB(DATE('{{ ds() }}'), INTERVAL 3 DAY) AND DATE('{{ ds() }}')
-        {% endif %}
-        AND NOT (
-            event_name = 'PerformSearch'
-            AND search_type = 'Suggestions'
-            AND query IS NULL
-            AND search_categories_filter IS NULL
-            AND search_native_categories_filter IS NULL
-            AND search_location_filter = '{"locationType":"EVERYWHERE"}'
-        )
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY unique_search_id, unique_session_id ORDER BY event_timestamp) = 1
-),
-
--- Step 5: Identifying the Last Search Performed
-last_search AS (
-    SELECT
-        unique_search_id,
-        unique_session_id,
-        event_date AS first_date,
-        event_timestamp AS first_timestamp,
-        app_version,
-        query AS query_input,
-        search_type,
-        search_date_filter,
-        search_location_filter,
-        search_categories_filter,
-        search_genre_types_filter,
-        search_max_price_filter,
-        search_is_autocomplete,
-        search_is_based_on_history,
-        search_offer_is_duo_filter,
-        search_native_categories_filter,
-        search_accessibility_filter,
-        user_location_type
-    FROM {{ ref('int_firebase__native_event') }}
-    WHERE
-        event_name = 'PerformSearch'
-        {% if is_incremental() %}
-            AND event_date BETWEEN DATE_SUB(DATE('{{ ds() }}'), INTERVAL 3 DAY) AND DATE('{{ ds() }}')
-        {% endif %}
-        AND NOT (
-            event_name = 'PerformSearch'
-            AND search_type = 'Suggestions'
-            AND query IS NULL
-            AND search_categories_filter IS NULL
-            AND search_native_categories_filter IS NULL
-            AND search_location_filter = '{"locationType":"EVERYWHERE"}'
-        )
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY unique_search_id, unique_session_id ORDER BY event_timestamp DESC) = 1
-),
-
--- Step 6: Conversion Metrics per Search
-conversion_metrics AS (
-    SELECT
-        ls.unique_session_id,
-        ls.unique_search_id,
-        COUNT(DISTINCT CASE WHEN ne.event_name = 'ConsultOffer' THEN ne.offer_id END) AS nb_offers_consulted,
-        COUNT(DISTINCT CASE WHEN ne.event_name = 'HasAddedOfferToFavorites' THEN ne.offer_id END) AS nb_offers_added_to_favorites,
-        COUNT(CASE WHEN ne.event_name = 'NoSearchResult' THEN 1 END) AS nb_no_search_result,
-        COUNT(CASE WHEN ne.event_name = 'PerformSearch' THEN 1 END) AS nb_iterations_search,
-        COUNT(CASE WHEN ne.event_name = 'VenuePlaylistDisplayedOnSearchResults' THEN 1 END) AS nb_venue_playlist_displayed_on_search_results,
-        COUNT(DISTINCT CASE WHEN ne.event_name = 'ConsultVenue' THEN ne.venue_id END) AS nb_venues_consulted
-    FROM last_search ls
-    LEFT JOIN {{ ref('int_firebase__native_event') }} ne
-        ON
-        ne.event_name IN ('NoSearchResult', 'ConsultOffer', 'HasAddedOfferToFavorites', 'VenuePlaylistDisplayedOnSearchResults', 'ConsultVenue')
-        AND ne.unique_session_id = ls.unique_session_id
-        AND ne.unique_search_id = ls.unique_search_id
-        AND ne.event_date = ls.first_date
-
-    GROUP BY ls.unique_session_id, ls.unique_search_id
-),
-
--- Step 7: Aggregating All Search Data
-agg_search_data AS (
-    SELECT
-        ls.*,
-        fs.first_filter_applied,
-        cm.* EXCEPT(unique_search_id, unique_session_id)
-    FROM last_search ls
-    INNER JOIN first_search fs USING (unique_search_id, unique_session_id)
-    INNER JOIN conversion_metrics cm USING (unique_search_id, unique_session_id)
-),
-
--- Step 8: Categorizing Search Type and Calculating Additional Metrics
-final_data AS (
-    SELECT
-        asd.*,
-        LEAD(first_date) OVER (PARTITION BY unique_session_id ORDER BY first_timestamp) IS NOT NULL AS made_another_search,
-        CASE
-            WHEN EXISTS (
-                SELECT 1
-                FROM {{ source('raw', 'subcategories') }} sc
-                WHERE LOWER(asd.query_input) LIKE CONCAT('%', LOWER(sc.category_id), '%')
-                    OR LOWER(asd.query_input) LIKE CONCAT('%', LOWER(sc.id), '%')
+    -- Step 1: Extracting Consulted Offers
+    consulted_offers as (
+        select
+            unique_session_id,
+            user_id,
+            offer_id,
+            search_id,
+            unique_search_id,
+            event_timestamp as consult_timestamp,
+            event_date as consult_date
+        from {{ ref("int_firebase__native_event") }}
+        where
+            event_name = 'ConsultOffer' and search_id is not null
+            {% if is_incremental() %}
+                and event_date
+                between date_sub(date('{{ ds() }}'), interval 3 day) and date(
+                    '{{ ds() }}'
+                )
+            {% endif %}
+        qualify
+            row_number() over (
+                partition by unique_session_id, offer_id, unique_search_id
+                order by event_timestamp
             )
-            OR EXISTS (
-                SELECT 1
-                FROM {{ source('seed', 'macro_rayons') }} mr
-                WHERE LOWER(asd.query_input) LIKE CONCAT('%', LOWER(mr.macro_rayon), '%')
-                    OR LOWER(asd.query_input) LIKE CONCAT('%', LOWER(mr.rayon), '%')
-            )
-            THEN TRUE
-            ELSE FALSE
-        END AS search_query_input_is_generic,
-        bpsi.nb_offers_booked,
-        bpsi.total_diversification
-    FROM agg_search_data asd
-    LEFT JOIN bookings_aggregated bpsi USING (unique_search_id, unique_session_id)
-)
+            = 1
+    ),
 
-SELECT
+    -- Step 2: Extracting Booked Offers
+    booked_offers as (
+        select
+            co.unique_session_id,
+            co.user_id,
+            co.search_id,
+            co.unique_search_id,
+            co.offer_id,
+            co.consult_timestamp,
+            db.delta_diversification
+        from consulted_offers co
+        join
+            {{ ref("int_firebase__native_event") }} ne
+            on co.unique_session_id = ne.unique_session_id
+            and co.offer_id = ne.offer_id
+            and ne.event_name = 'BookingConfirmation'
+            and ne.event_timestamp > co.consult_timestamp
+            {% if is_incremental() %}
+                and ne.event_date
+                between date_sub(date('{{ ds() }}'), interval 3 day) and date(
+                    '{{ ds() }}'
+                )
+            {% endif %}
+        left join
+            {{ ref("diversification_booking") }} db
+            on db.user_id = co.user_id
+            and db.offer_id = co.offer_id
+            and date(co.consult_timestamp) = date(db.booking_creation_date)
+        qualify
+            row_number() over (
+                partition by co.unique_search_id, co.unique_session_id, co.offer_id
+                order by ne.event_timestamp
+            )
+            = 1
+    ),
+
+    -- Step 3: Aggregating Bookings by Search ID
+    bookings_aggregated as (
+        select distinct
+            search_id,
+            unique_search_id,
+            unique_session_id,
+            user_id,
+            count(distinct offer_id) over (
+                partition by unique_search_id, unique_session_id
+            ) as nb_offers_booked,
+            sum(delta_diversification) over (
+                partition by unique_search_id, unique_session_id
+            ) as total_diversification
+        from booked_offers
+    ),
+
+    -- Step 4: Identifying the First Search Performed
+    first_search as (
+        select
+            search_id,
+            unique_session_id,
+            unique_search_id,
+            case
+                when query is not null
+                then 'text_input'
+                when search_categories_filter is not null
+                then 'categories_filter'
+                when search_genre_types_filter is not null
+                then 'genre_types_filter'
+                when search_native_categories_filter is not null
+                then 'native_categories_filter'
+                when search_date_filter is not null
+                then 'date_filter'
+                when search_max_price_filter is not null
+                then 'max_price_filter'
+                when search_location_filter is not null
+                then 'location_filter'
+                when search_accessibility_filter is not null
+                then 'accessibility_filter'
+                else 'Autre'
+            end as first_filter_applied
+        from {{ ref("int_firebase__native_event") }}
+        where
+            event_name = 'PerformSearch' and unique_search_id is not null
+            {% if is_incremental() %}
+                and event_date
+                between date_sub(date('{{ ds() }}'), interval 3 day) and date(
+                    '{{ ds() }}'
+                )
+            {% endif %}
+            and not (
+                event_name = 'PerformSearch'
+                and search_type = 'Suggestions'
+                and query is null
+                and search_categories_filter is null
+                and search_native_categories_filter is null
+                and search_location_filter = '{"locationType":"EVERYWHERE"}'
+            )
+        qualify
+            row_number() over (
+                partition by unique_search_id, unique_session_id
+                order by event_timestamp
+            )
+            = 1
+    ),
+
+    -- Step 5: Identifying the Last Search Performed
+    last_search as (
+        select
+            unique_search_id,
+            unique_session_id,
+            event_date as first_date,
+            event_timestamp as first_timestamp,
+            app_version,
+            query as query_input,
+            search_type,
+            search_date_filter,
+            search_location_filter,
+            search_categories_filter,
+            search_genre_types_filter,
+            search_max_price_filter,
+            search_is_autocomplete,
+            search_is_based_on_history,
+            search_offer_is_duo_filter,
+            search_native_categories_filter,
+            search_accessibility_filter,
+            user_location_type
+        from {{ ref("int_firebase__native_event") }}
+        where
+            event_name = 'PerformSearch'
+            {% if is_incremental() %}
+                and event_date
+                between date_sub(date('{{ ds() }}'), interval 3 day) and date(
+                    '{{ ds() }}'
+                )
+            {% endif %}
+            and not (
+                event_name = 'PerformSearch'
+                and search_type = 'Suggestions'
+                and query is null
+                and search_categories_filter is null
+                and search_native_categories_filter is null
+                and search_location_filter = '{"locationType":"EVERYWHERE"}'
+            )
+        qualify
+            row_number() over (
+                partition by unique_search_id, unique_session_id
+                order by event_timestamp desc
+            )
+            = 1
+    ),
+
+    -- Step 6: Conversion Metrics per Search
+    conversion_metrics as (
+        select
+            ls.unique_session_id,
+            ls.unique_search_id,
+            count(
+                distinct case when ne.event_name = 'ConsultOffer' then ne.offer_id end
+            ) as nb_offers_consulted,
+            count(
+                distinct case
+                    when ne.event_name = 'HasAddedOfferToFavorites' then ne.offer_id
+                end
+            ) as nb_offers_added_to_favorites,
+            count(
+                case when ne.event_name = 'NoSearchResult' then 1 end
+            ) as nb_no_search_result,
+            count(
+                case when ne.event_name = 'PerformSearch' then 1 end
+            ) as nb_iterations_search,
+            count(
+                case
+                    when ne.event_name = 'VenuePlaylistDisplayedOnSearchResults' then 1
+                end
+            ) as nb_venue_playlist_displayed_on_search_results,
+            count(
+                distinct case when ne.event_name = 'ConsultVenue' then ne.venue_id end
+            ) as nb_venues_consulted
+        from last_search ls
+        left join
+            {{ ref("int_firebase__native_event") }} ne
+            on ne.event_name in (
+                'NoSearchResult',
+                'ConsultOffer',
+                'HasAddedOfferToFavorites',
+                'VenuePlaylistDisplayedOnSearchResults',
+                'ConsultVenue'
+            )
+            and ne.unique_session_id = ls.unique_session_id
+            and ne.unique_search_id = ls.unique_search_id
+            and ne.event_date = ls.first_date
+
+        group by ls.unique_session_id, ls.unique_search_id
+    ),
+
+    -- Step 7: Aggregating All Search Data
+    agg_search_data as (
+        select
+            ls.*,
+            fs.first_filter_applied,
+            cm.* except (unique_search_id, unique_session_id)
+        from last_search ls
+        inner join first_search fs using (unique_search_id, unique_session_id)
+        inner join conversion_metrics cm using (unique_search_id, unique_session_id)
+    ),
+
+    -- Step 8: Categorizing Search Type and Calculating Additional Metrics
+    final_data as (
+        select
+            asd.*,
+            lead(first_date) over (
+                partition by unique_session_id order by first_timestamp
+            )
+            is not null as made_another_search,
+            case
+                when
+                    exists (
+                        select 1
+                        from {{ source("raw", "subcategories") }} sc
+                        where
+                            lower(asd.query_input)
+                            like concat('%', lower(sc.category_id), '%')
+                            or lower(asd.query_input)
+                            like concat('%', lower(sc.id), '%')
+                    )
+                    or exists (
+                        select 1
+                        from {{ source("seed", "macro_rayons") }} mr
+                        where
+                            lower(asd.query_input)
+                            like concat('%', lower(mr.macro_rayon), '%')
+                            or lower(asd.query_input)
+                            like concat('%', lower(mr.rayon), '%')
+                    )
+                then true
+                else false
+            end as search_query_input_is_generic,
+            bpsi.nb_offers_booked,
+            bpsi.total_diversification
+        from agg_search_data asd
+        left join bookings_aggregated bpsi using (unique_search_id, unique_session_id)
+    )
+
+select
     unique_search_id,
     unique_session_id,
     first_date,
@@ -231,8 +311,9 @@ SELECT
     search_query_input_is_generic,
     nb_offers_booked,
     total_diversification,
-    CASE
-        WHEN query_input IS NOT NULL AND NOT search_query_input_is_generic THEN 'specific_search'
-        ELSE 'discovery_search'
-    END AS search_objective
-FROM final_data
+    case
+        when query_input is not null and not search_query_input_is_generic
+        then 'specific_search'
+        else 'discovery_search'
+    end as search_objective
+from final_data

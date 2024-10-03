@@ -1,19 +1,17 @@
-{{ config(**custom_table_config()) }} 
+{{ config(**custom_table_config()) }}
 
-SELECT 
-    departement AS department_code,
-    code_quartier AS code_qpv,
-    commune_qp AS qpv_communes,
-    noms_des_communes_concernees AS qpv_name,
-    nom_reg AS region_name,
-    nom_dep AS department_name,
-    quartier_prioritaire AS priority_neighborhood,
-    code_insee AS insee_code,
-    ST_GEOGFROMTEXT(geoshape) AS geo_shape,
-    ST_BOUNDINGBOX(ST_GEOGFROMTEXT(geoshape)).xmin AS min_longitude,
-    ST_BOUNDINGBOX(ST_GEOGFROMTEXT(geoshape)).xmax AS max_longitude,
-    ST_BOUNDINGBOX(ST_GEOGFROMTEXT(geoshape)).ymin AS min_latitude,
-    ST_BOUNDINGBOX(ST_GEOGFROMTEXT(geoshape)).ymax AS max_latitude
-FROM {{ source('seed', 'qpv') }}
-
-   
+select
+    departement as department_code,
+    code_quartier as code_qpv,
+    commune_qp as qpv_communes,
+    noms_des_communes_concernees as qpv_name,
+    nom_reg as region_name,
+    nom_dep as department_name,
+    quartier_prioritaire as priority_neighborhood,
+    code_insee as insee_code,
+    st_geogfromtext(geoshape) as geo_shape,
+    st_boundingbox(st_geogfromtext(geoshape)).xmin as min_longitude,
+    st_boundingbox(st_geogfromtext(geoshape)).xmax as max_longitude,
+    st_boundingbox(st_geogfromtext(geoshape)).ymin as min_latitude,
+    st_boundingbox(st_geogfromtext(geoshape)).ymax as max_latitude
+from {{ source("seed", "qpv") }}

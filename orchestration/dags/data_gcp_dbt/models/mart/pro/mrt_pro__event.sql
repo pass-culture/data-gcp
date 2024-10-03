@@ -1,29 +1,35 @@
 {{
     config(
         **custom_incremental_config(
-        incremental_strategy = "insert_overwrite",
-        partition_by = {"field": "event_date", "data_type": "date"},
-        on_schema_change = "sync_all_columns"
+            incremental_strategy="insert_overwrite",
+            partition_by={"field": "event_date", "data_type": "date"},
+            on_schema_change="sync_all_columns",
+        )
     )
-) }}
+}}
 
-with most_active_offerer_per_user as (
-    select distinct
-        uo.user_id,
-        uo.offerer_id
-    from {{ ref('mrt_global__user_offerer') }} as uo
-        left join {{ ref('mrt_global__offerer') }} as o on uo.offerer_id = o.offerer_id
-    qualify ROW_NUMBER() over (partition by user_id order by total_non_cancelled_bookings desc) = 1
-),
+with
+    most_active_offerer_per_user as (
+        select distinct uo.user_id, uo.offerer_id
+        from {{ ref("mrt_global__user_offerer") }} as uo
+        left join {{ ref("mrt_global__offerer") }} as o on uo.offerer_id = o.offerer_id
+        qualify
+            row_number() over (
+                partition by user_id order by total_non_cancelled_bookings desc
+            )
+            = 1
+    ),
 
-offerer_per_session as (
-    select
-        unique_session_id,
-        COALESCE(ps.offerer_id, v.venue_managing_offerer_id, mau.offerer_id) as offerer_id
-    from {{ ref('int_firebase__pro_session') }} as ps
-        left join {{ ref('mrt_global__venue') }} as v on ps.venue_id = v.venue_id
+    offerer_per_session as (
+        select
+            unique_session_id,
+            coalesce(
+                ps.offerer_id, v.venue_managing_offerer_id, mau.offerer_id
+            ) as offerer_id
+        from {{ ref("int_firebase__pro_session") }} as ps
+        left join {{ ref("mrt_global__venue") }} as v on ps.venue_id = v.venue_id
         left join most_active_offerer_per_user as mau on mau.user_id = ps.user_id
-)
+    )
 
 select
     e.event_name,
@@ -52,7 +58,7 @@ select
     e.page_number,
     e.is_edition,
     e.is_draft,
-    COALESCE(e.offerer_id, v.venue_managing_offerer_id, ps.offerer_id) as offerer_id,
+    coalesce(e.offerer_id, v.venue_managing_offerer_id, ps.offerer_id) as offerer_id,
     e.venue_id,
     e.offer_id,
     e.offer_type,
@@ -67,9 +73,11 @@ select
     e.download_button_type,
     e.download_file_type,
     e.download_files_cnt,
-    COALESCE(o.offerer_name, v.offerer_name) as offerer_name,
-    o.first_individual_offer_creation_date as offerer_first_individual_offer_creation_date,
-    o.first_collective_offer_creation_date as offerer_first_collective_offer_creation_date,
+    coalesce(o.offerer_name, v.offerer_name) as offerer_name,
+    o.first_individual_offer_creation_date
+    as offerer_first_individual_offer_creation_date,
+    o.first_collective_offer_creation_date
+    as offerer_first_collective_offer_creation_date,
     o.legal_unit_business_activity_label as offerer_business_activity_label,
     o.legal_unit_legal_category_label as offerer_legal_category_label,
     o.is_local_authority,
@@ -78,7 +86,7 @@ select
     o.dms_accepted_at,
     o.first_dms_adage_status,
     v.venue_name,
-    v.venue_siret is not NULL as venue_has_siret,
+    v.venue_siret is not null as venue_has_siret,
     v.venue_is_permanent,
     v.venue_type_label,
     p.partner_id,
@@ -87,12 +95,16 @@ select
     p.cultural_sector as partner_cultural_sector,
     p.total_created_individual_offers as total_partner_created_individual_offers,
     p.total_created_collective_offers as total_partner_created_collective_offers
-from {{ ref('int_firebase__pro_event') }} as e
-    left join offerer_per_session as ps on ps.unique_session_id = e.unique_session_id
-    left join {{ ref('mrt_global__venue') }} as v on e.venue_id = v.venue_id
-    left join {{ ref('mrt_global__offerer') }} as o on COALESCE(e.offerer_id, v.venue_managing_offerer_id, ps.offerer_id) = o.offerer_id
-    left join {{ ref('mrt_global__cultural_partner') }} as p on v.partner_id = p.partner_id
-where TRUE
+from {{ ref("int_firebase__pro_event") }} as e
+left join offerer_per_session as ps on ps.unique_session_id = e.unique_session_id
+left join {{ ref("mrt_global__venue") }} as v on e.venue_id = v.venue_id
+left join
+    {{ ref("mrt_global__offerer") }} as o
+    on coalesce(e.offerer_id, v.venue_managing_offerer_id, ps.offerer_id) = o.offerer_id
+left join {{ ref("mrt_global__cultural_partner") }} as p on v.partner_id = p.partner_id
+where
+    true
     {% if is_incremental() %}
-        and event_date between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")
+        and event_date
+        between date_sub(date("{{ ds() }}"), interval 2 day) and date("{{ ds() }}")
     {% endif %}

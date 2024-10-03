@@ -1,8 +1,28 @@
 #!/bin/bash
-# set composer bucket adresses
-COMPOSER_BUCKET_DEV="europe-west1-data-composer--eea0a667-bucket"
-COMPOSER_BUCKET_STG="europe-west1-data-composer--86238594-bucket"
-COMPOSER_BUCKET_PROD="europe-west1-data-composer--e3ff6842-bucket"
+
+# Function to find the .env file in the current or parent directories
+find_dotenv() {
+  local dir="$PWD"
+  while [[ "$dir" != "/" ]]; do
+    if [[ -f "$dir/.env.buckets" ]]; then
+      echo "$dir/.env.buckets"
+      return 0
+    fi
+    dir=$(dirname "$dir")
+  done
+  return 1  # .env not found
+}
+
+# Find and load the .env file
+DOTENV_FILE=$(find_dotenv)
+if [[ -n "$DOTENV_FILE" ]]; then
+  export $(cat "$DOTENV_FILE" | xargs)
+  echo "Loaded environment variables from $DOTENV_FILE"
+else
+  echo "Error: .env file not found in current or parent directories."
+  exit 1
+fi
+
 ## dbt deferral hook
 dbt_hook() {
   # Set default values for flags

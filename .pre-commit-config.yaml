@@ -29,9 +29,10 @@ repos:
     stages: [commit]
   - id: sqlfmt
     name: SQL Formatting (sqlfmt)
-    entry: make sqlfmt
+    entry: sqlfmt --exclude "**/.venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "*/venv/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"
     stages: [commit]
     language: system
+    types: [sql]
   # - id: sqlfluff-lint-check
   #   name: Lint check (sqlfluff)
   #   entry: orchestration/dags/data_gcp_dbt/scripts/sqlfluff_lint.sh

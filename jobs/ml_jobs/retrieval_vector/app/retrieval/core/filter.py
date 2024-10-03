@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict
 
 LOGICAL_OPERATORS = {"$and": "AND", "$or": "OR"}
 
@@ -40,7 +40,7 @@ def _sql_parsing(data, default_logic: str = "AND"):
                 items = list(value.items())
 
                 if len(items) == 0:
-                    raise ValueError(f"The query expression is illegal: {data}")
+                    raise ValueError(f"The query express is illegal: {data}")
                 elif len(items) > 1:
                     clause_list, params_list = [], []
 
@@ -61,15 +61,18 @@ def _sql_parsing(data, default_logic: str = "AND"):
                         parameters.extend(params)
                     elif op in COMPARISON_OPERATORS:
                         parameters.append(val)
-                        where_clause += f"( {key} {COMPARISON_OPERATORS[op]} %s )"
-                    elif op in MEMBERSHIP_OPERATORS:
-                        # Ensure value for $in or $nin is a list or tuple
-                        if not isinstance(val, (list, tuple)):
-                            raise ValueError(
-                                f"The operator {op} requires a list or tuple, but got {type(val).__name__}."
+                        if isinstance(val, str):
+                            where_clause += (
+                                f"""( {key} {COMPARISON_OPERATORS[op]} '{val}' )"""
                             )
+                        else:
+                            where_clause += (
+                                f"""( {key} {COMPARISON_OPERATORS[op]} {val} )"""
+                            )
+                    elif op in MEMBERSHIP_OPERATORS:
                         parameters.extend(val)
-                        where_clause += f"( {key} {MEMBERSHIP_OPERATORS[op]} ( {', '.join(['%s'] * len(val))} ) )"
+
+                        where_clause += f"""( {key} {MEMBERSHIP_OPERATORS[op]} ( '{"' , '".join(val)}' ) )"""
                     else:
                         raise ValueError(
                             f"The operator {op} is not supported yet, please double check the given filters!"
@@ -86,15 +89,14 @@ def _sql_parsing(data, default_logic: str = "AND"):
     elif isinstance(data, str):
         return data, parameters
     else:
-        raise ValueError(f"The query expression is illegal: {data}")
+        raise ValueError(f"The query express is illegal: {data}")
     return where_clause, tuple(parameters)
 
 
 class Filter(object):
-    def __init__(self, tree_data: Dict = {}) -> None:
+    def __init__(self, tree_data: Dict = {}):
         self.tree_data = tree_data
 
-    def parse_where_clause(self) -> Optional[str]:
-        sql, params = _sql_parsing(self.tree_data or {})
-        result = sql % params
-        return result  # if result else None
+    def parse_where_clause(self) -> str:
+        sql, _ = _sql_parsing(self.tree_data or {})
+        return sql

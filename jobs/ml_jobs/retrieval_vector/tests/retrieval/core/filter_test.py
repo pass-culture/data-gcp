@@ -39,19 +39,19 @@ def test_nested_logical_and_or(filter_instance):
             {"name": {"$eq": "John"}},
         ]
     }
-    expected_clause = "((( age > 30 ) OR ( price < 5000 )) AND ( name = John ))"
+    expected_clause = "((( age > 30 ) OR ( price < 5000 )) AND ( name = 'John' ))"
     assert filter_instance.parse_where_clause() == expected_clause
 
 
 def test_membership_in_operator(filter_instance):
     filter_instance.tree_data = {"category": {"$in": ["Books", "Cinema"]}}
-    expected_clause = "( category IN ( Books, Cinema ) )"
+    expected_clause = "( category IN ( 'Books' , 'Cinema' ) )"
     assert filter_instance.parse_where_clause() == expected_clause
 
 
 def test_membership_nin_operator(filter_instance):
     filter_instance.tree_data = {"category": {"$nin": ["Books", "Cinema"]}}
-    expected_clause = "( category NOT IN ( Books, Cinema ) )"
+    expected_clause = "( category NOT IN ( 'Books' , 'Cinema' ) )"
     assert filter_instance.parse_where_clause() == expected_clause
 
 
@@ -66,10 +66,3 @@ def test_multiple_conditions_on_same_key(filter_instance):
     filter_instance.tree_data = {"age": {"$gt": 30, "$lt": 50}}
     expected_clause = "( age > 30 ) AND ( age < 50 )"
     assert filter_instance.parse_where_clause() == expected_clause
-
-
-def test_non_list_value_in_in_operator(filter_instance):
-    filter_instance.tree_data = {"category": {"$in": "Books"}}
-    with pytest.raises(ValueError) as exc_info:
-        filter_instance.parse_where_clause()
-    assert "requires a list or tuple" in str(exc_info.value)

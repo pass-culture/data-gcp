@@ -2,6 +2,7 @@ select
     offer_id,
     offer_name,
     offer_creation_date,
+    venue_id,
     venue_name,
     passculture_pro_url,
     webapp_url,

@@ -45,7 +45,6 @@ default_args = {
 }
 dag_doc = doc_md = """
     ### Launch VM Dag
-
     Use this DAG to launch a VM to work on.
 
     #### Parameters:
@@ -53,6 +52,8 @@ dag_doc = doc_md = """
         * if you don't need any GPU, leave the `gpu_count` parameter to 0
         * if you need a specific GPU, you might want to check the GPU availability per GCP zone [here](https://cloud.google.com/compute/docs/gpus/gpu-regions-zones)
     * use_gke_network: if you need your VM to comminicate with the Clickhouse cluster, set this parameter to True
+    * pricing: the pricing of the VM depends on the `instance_type` and can be found [here](https://gcloud-compute.com/instances.html)
+      ** For instance, the `n1-standard-2` instance type costs $0.1157 per hour while the `n1-standard-32` instance type costs $1.852 per hour
     """
 
 

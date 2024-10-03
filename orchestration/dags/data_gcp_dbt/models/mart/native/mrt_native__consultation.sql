@@ -23,10 +23,10 @@ SELECT
     consult.offer_id,
     consult.user_id,
     consult.unique_session_id,
-    dc.item_discovery_score,
-    dc.subcategory_discovery_score,
-    dc.category_discovery_score,
-    dc.item_discovery_score + dc.subcategory_discovery_score + dc.category_discovery_score as discovery_score,
+    COALESCE(dc.item_discovery_score,0) AS item_discovery_score
+    COALESCE(dc.subcategory_discovery_score,0) AS subcategory_discovery_score
+    COALESCE(dc.category_discovery_score,0) AS category_discovery_score
+    COALESCE(dc.item_discovery_score,0) + COALESCE(dc.subcategory_discovery_score,0) + COALESCE(dc.category_discovery_score,0) as discovery_score,
     case when category_discovery_score > 0 then true else false end as is_category_discovered,
     case when subcategory_discovery_score > 0 then true else false end as is_subcategory_discovered,
     offer.item_id,

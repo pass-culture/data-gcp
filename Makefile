@@ -99,7 +99,8 @@ endif
 
 _install_ubuntu_libs:
 	sudo apt-get update -y
-	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev mysql-client pkg-config zstd
+	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev mysql-client pkg-config zstd pre-commit
+
 
 #######################################################################################
 ########                              Automations                              ########

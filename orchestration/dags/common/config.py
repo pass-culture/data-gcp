@@ -158,3 +158,9 @@ GPU_INSTANCES_TYPES = {
 }
 
 INSTANCES_TYPES = {"cpu": CPU_INSTANCES_TYPES, "gpu": GPU_INSTANCES_TYPES}
+
+GCE_ZONES = [
+    "europe-west1-b",
+    "europe-west1-c",
+    "europe-west1-d",
+]  # Zones with GPUs and with lower CO2 emissions in europe-west1 (required to be in the proper VPC)

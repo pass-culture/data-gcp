@@ -31,6 +31,7 @@ select
     o.venue_name,
     o.venue_region_name,
     o.venue_department_code,
+    o.venue_department_name,
     o.venue_postal_code,
     o.venue_city,
     o.venue_epci,

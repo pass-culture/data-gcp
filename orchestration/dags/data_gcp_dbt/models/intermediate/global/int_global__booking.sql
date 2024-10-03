@@ -26,6 +26,7 @@ select
     s.venue_id,
     s.venue_postal_code,
     s.venue_department_code,
+    s.venue_department_name,
     s.venue_region_name,
     s.venue_city,
     s.venue_epci,

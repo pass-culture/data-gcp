@@ -77,6 +77,7 @@ select
     v.venue_iris_internal_id,
     v.venue_region_name,
     v.venue_department_code,
+    v.venue_department_name,
     v.venue_postal_code,
     v.venue_city,
     v.venue_epci,

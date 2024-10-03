@@ -1,5 +1,6 @@
 select user_id,
     user_department_code,
+    user_department_name,
     user_postal_code,
     user_city,
     user_activity,

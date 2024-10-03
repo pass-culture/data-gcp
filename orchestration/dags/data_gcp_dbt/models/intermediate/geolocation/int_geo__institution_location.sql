@@ -40,7 +40,7 @@ institution_geo_iris as (
         referential_table='int_seed__geo_iris',
         id_column='institution_id',
         prefix_name='institution',
-        columns=['iris_internal_id','region_name','city_label','city_code','rural_city_type','academy_name','density_label','density_macro_level','density_level'],
+        columns=['iris_internal_id','region_name','city_label','city_code','rural_city_type','academy_name','department_name','density_label','density_macro_level','density_level'],
         geo_shape='iris_shape'
     )
     }}
@@ -61,6 +61,7 @@ select
     institution_geo_iris.density_level AS institution_density_level,
     institution_geo_iris.academy_name as institution_academy_name,
     institution_geo_iris.region_name as institution_region_name,
+    institution_geo_iris.department_name AS institution_department_name,
     institution_epci.epci_name as institution_epci,
     institution_epci.epci_code,
     institution_qpv.code_qpv,

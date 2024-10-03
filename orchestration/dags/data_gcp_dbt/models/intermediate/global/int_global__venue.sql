@@ -7,6 +7,7 @@ select
     v.venue_latitude,
     v.venue_longitude,
     v.venue_department_code,
+    v.venue_department_name,
     v.venue_postal_code,
     v.venue_city,
     v.venue_siret,

@@ -32,6 +32,7 @@ repos:
     entry: make sqlfmt
     stages: [commit]
     language: system
+    types: [sql]
   # - id: sqlfluff-lint-check
   #   name: Lint check (sqlfluff)
   #   entry: orchestration/dags/data_gcp_dbt/scripts/sqlfluff_lint.sh

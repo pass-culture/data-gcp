@@ -1,19 +1,19 @@
 WITH last_year_beginning_date as (
-SELECT 
+SELECT
     educational_year_beginning_date as last_year_start_date
 FROM `{{ bigquery_raw_dataset }}.applicative_database_educational_year`
 WHERE educational_year_beginning_date <= DATE_SUB(current_date(), interval 1 year) AND educational_year_expiration_date > DATE_SUB(current_date(), interval 1 year)
 )
 
 , last_day AS (
-SELECT 
+SELECT
     DATE_TRUNC(date,MONTH) AS date,
     MAX(date) AS last_date,
     MAX(CAST(adage_id AS INT)) AS last_adage_id
 FROM `{{ bigquery_analytics_dataset }}.adage_involved_institution`
-WHERE 
-    date <= current_date 
-AND 
+WHERE
+    date <= current_date
+AND
     date > (select last_year_start_date from last_year_beginning_date)
 GROUP BY 1
 )

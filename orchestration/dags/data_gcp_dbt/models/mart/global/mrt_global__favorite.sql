@@ -1,4 +1,4 @@
-SELECT 
+SELECT
     f.favorite_id,
     f.favorite_creation_date,
     f.favorite_created_at,
@@ -42,6 +42,6 @@ SELECT
     u.user_region_name,
     u.user_academy_name,
 
-FROM {{ ref('int_applicative__favorite')}} f 
-LEFT JOIN {{ ref('int_global__offer')}} o on f.offer_id = o.offer_id 
-LEFT JOIN {{ ref('int_global__user')}} u on u.user_id = f.user_id 
+FROM {{ ref('int_applicative__favorite')}} f
+LEFT JOIN {{ ref('int_global__offer')}} o on f.offer_id = o.offer_id
+LEFT JOIN {{ ref('int_global__user')}} u on u.user_id = f.user_id

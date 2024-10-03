@@ -112,6 +112,7 @@ select
         v.venue_id
     ) as venue_backoffice_link,
     {{ target_schema }}.humanize_id(v.venue_id) as venue_humanized_id,
+    v_loc.venue_department_name,
     v_loc.venue_iris_internal_id,
     v_loc.venue_region_name,
     v_loc.venue_city,

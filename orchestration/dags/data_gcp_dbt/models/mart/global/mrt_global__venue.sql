@@ -7,6 +7,7 @@ select
     venue_latitude,
     venue_longitude,
     venue_department_code,
+    venue_department_name,
     venue_postal_code,
     venue_city,
     venue_siret,

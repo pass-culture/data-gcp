@@ -32,7 +32,7 @@ jobs:
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
    dbt-integration-stg:
     needs: find-dbt-changes
-    if: github.base_ref == 'master' && needs.find-dbt-changes.outputs.changes == 'true'
+    # if: github.base_ref == 'master' && needs.find-dbt-changes.outputs.changes == 'true'
     with:
       TARGET_COMPOSER_BUCKET: "europe-west1-data-composer--00137508-bucket"
       ENV_SHORT_NAME: "stg"

@@ -92,10 +92,23 @@ send_elementary_report = BashOperator(
     dag=dag,
 )
 
+compile = BashOperator(
+    task_id="compilation",
+    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_compile.sh ",
+    env={
+        "target": "{{ params.target }}",
+        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+    },
+    append_env=True,
+    cwd=PATH_TO_DBT_PROJECT,
+    dag=dag,
+)
+
 (
     start
     >> wait_dbt_run
     >> dbt_test
     >> compute_metrics_elementary
     >> send_elementary_report
+    >> compile
 )

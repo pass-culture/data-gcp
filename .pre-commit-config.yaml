@@ -27,6 +27,11 @@ repos:
     language: system
     types: [python]
     stages: [commit]
+  - id: sqlfmt
+    name: SQL Formatting (sqlfmt)
+    entry: make sqlfmt
+    stages: [commit]
+    language: system
   # - id: sqlfluff-lint-check
   #   name: Lint check (sqlfluff)
   #   entry: orchestration/dags/data_gcp_dbt/scripts/sqlfluff_lint.sh

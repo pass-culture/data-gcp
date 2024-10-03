@@ -3,8 +3,10 @@ with offer_product_data as (
         offer.offer_id,
         COALESCE(product.description, offer.offer_description) AS offer_description,
         COALESCE(product.product_extra_data, offer.offer_extra_data) as extra_data
-    from {{ source('raw', 'applicative_database_offer') }} as offer
-        left join {{ ref('int_applicative__product') }} as product on CAST(product.id as string) = offer.offer_product_id
+    from {{ ref('snapshot_source__offer') }} as offer
+    left join {{ ref('int_applicative__product') }} as product
+        on CAST(product.id as string) = offer.offer_product_id
+    WHERE dbt_valid_to is null
 ),
 
 extracted_offers as (
@@ -33,8 +35,10 @@ extracted_offers as (
         LOWER(TRIM(TRIM(JSON_EXTRACT(extra_data, "$.ean"), " "), '"')) as ean,
         LOWER(TRIM(TRIM(JSON_EXTRACT(extra_data, "$.editeur"), " "), '"')) as book_editor,
         LOWER(TRIM(TRIM(JSON_EXTRACT(extra_data, "$.gtl_id"), " "), '"')) as titelive_gtl_id
-    from {{ source('raw', 'applicative_database_offer') }} offer
-        left join offer_product_data as ued on ued.offer_id = offer.offer_id
+    from {{ ref('snapshot_source__offer') }} offer
+    left join offer_product_data as ued
+        on ued.offer_id = offer.offer_id
+    where dbt_valid_to is null
 )
 
 select

@@ -1,14 +1,14 @@
 {% snapshot snapshot_source__offer %}
 
 {{
-    config(
-    strategy='timestamp',
-    unique_key='offer_id',
-    updated_at='offer_date_updated',
-    target_schema=generate_schema_name('raw_' ~ target.name),
+    config(**
+        custom_snapshot_config(
+            strategy='timestamp',
+            unique_key='offer_id',
+            updated_at='offer_date_updated',
+        )
     )
 }}
-
 
     SELECT *
     FROM EXTERNAL_QUERY("{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",

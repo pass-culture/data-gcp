@@ -58,6 +58,11 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
 
 - Accès aux comptes de services GCP
 - [Gcloud CLI](https://cloud.google.com/sdk/docs/install?hl=fr)
+- Make installé
+  - linux : `sudo apt install make`
+  - mac : `brew install make`
+
+
 
 #### 1. Installation du projet
 
@@ -72,12 +77,6 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
 
   ```bash
   make install_ubuntu_libs
-  ```
-
-- [VM DEBIAN] Installation d'autres librairies et fix de l'environnement pour les VM :
-
-  ```bash
-  make install_on_debian_vm
   ```
 
 - Installation du projet :

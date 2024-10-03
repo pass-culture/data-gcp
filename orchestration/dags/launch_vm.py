@@ -4,19 +4,16 @@ from itertools import chain
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
-    INSTALL_TYPES,
     INSTANCES_TYPES,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
-    SSHGCEOperator,
+    InstallDependenciesOperator,
     StartGCEOperator,
 )
 
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python_operator import BranchPythonOperator
 
 DATE = "{{ ts_nodash }}"
 
@@ -75,24 +72,12 @@ with DAG(
         "install_project": Param(default=True, type="boolean"),
         "use_gke_network": Param(default=False, type="boolean"),
         "disk_size_gb": Param(default="100", type="string"),
-        "install_with_uv": Param(default=False, type="boolean"),
+        "installer": Param(default="uv", enum=["uv", "conda"]),
         "install_type": Param(
             default="simple", enum=["simple", "engineering", "science", "analytics"]
         ),
     },
 ) as dag:
-
-    def select_clone_task(**kwargs):
-        input_parameter = kwargs["params"].get("install_project", False)
-        install_with_uv = kwargs["params"].get("install_with_uv", False)
-        return (
-            "clone_and_setup_with_uv"
-            if install_with_uv
-            else "clone_and_setup_with_pyenv"
-            if input_parameter
-            else "clone_and_setup_with_conda"
-        )
-
     start = DummyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
@@ -109,79 +94,13 @@ with DAG(
         disk_size_gb="{{ params.disk_size_gb }}",
     )
 
-    branching_clone_task = BranchPythonOperator(
-        task_id="branching_clone_task",
-        python_callable=select_clone_task,
-        provide_context=True,
-    )
-
-    clone_and_setup_with_uv = CloneRepositoryGCEOperator(
-        task_id="clone_and_setup_with_uv",
+    clone_install = InstallDependenciesOperator(
+        task_id="vm_project_install",
         instance_name="{{ params.instance_name }}",
+        branch="{{ params.branch }}",
+        installer="{{ params.installer }}",
         python_version="3.10",
-        use_uv=True,
-        command="{{ params.branch }}",
-        retries=2,
+        requirement_file="requirements.txt",
     )
 
-    clone_and_setup_with_pyenv = CloneRepositoryGCEOperator(
-        task_id="clone_and_setup_with_pyenv",
-        instance_name="{{ params.instance_name }}",
-        python_version="3.10",
-        use_pyenv=True,
-        command="{{ params.branch }}",
-        retries=2,
-    )
-
-    clone_and_setup_with_conda = CloneRepositoryGCEOperator(
-        task_id="clone_and_setup_with_conda",
-        instance_name="{{ params.instance_name }}",
-        python_version="3.10",
-        use_pyenv=False,
-        command="{{ params.branch }}",
-        retries=2,
-    )
-
-    install_project_with_uv = SSHGCEOperator(
-        task_id="install_project_with_uv",
-        instance_name="{{ params.instance_name }}",
-        use_pyenv=True,
-        base_dir=dag_config["BASE_INSTALL_DIR"],
-        command=dag_config["PREFIX_COMMAND_INSTALL_PROJECT_UV"]
-        + INSTALL_TYPES[dag.params["install_type"]],
-        dag=dag,
-        retries=2,
-    )
-
-    install_project_with_pyenv = SSHGCEOperator(
-        task_id="install_project_with_pyenv",
-        instance_name="{{ params.instance_name }}",
-        use_pyenv=True,
-        base_dir=dag_config["BASE_INSTALL_DIR"],
-        command=dag_config["COMMAND_INSTALL_PROJECT"],
-        dag=dag,
-        retries=2,
-    )
-
-    install_playground_with_conda = SSHGCEOperator(
-        task_id="install_playground_with_conda",
-        instance_name="{{ params.instance_name }}",
-        use_pyenv=False,
-        base_dir=dag_config["BASE_PLAYGROUND_DIR"],
-        command=dag_config["COMMAND_INSTALL_PLAYGROUND"],
-        dag=dag,
-        retries=2,
-    )
-    (
-        start
-        >> gce_instance_start
-        >> branching_clone_task
-        >> [
-            clone_and_setup_with_pyenv,
-            clone_and_setup_with_conda,
-            clone_and_setup_with_uv,
-        ]
-    )
-    clone_and_setup_with_pyenv >> install_project_with_pyenv
-    clone_and_setup_with_conda >> install_playground_with_conda
-    clone_and_setup_with_uv >> install_project_with_uv
+    (start >> gce_instance_start >> clone_install)

@@ -106,7 +106,7 @@ operator_dict = dbt_dag_reconstruction(
     compile,
 )
 
-# DAG orchestration
+##### DAG orchestration
 
 # Set dependencies for model operations
 model_tasks = list(operator_dict["model_op_dict"].values())

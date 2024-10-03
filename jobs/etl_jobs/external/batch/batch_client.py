@@ -89,6 +89,8 @@ class BatchClient:
                         tags_dict["utm_campaign"] = {
                             "a": get_utm_campaign(tags_dict["deeplink"]["a"])
                         }
+                tags_dict.pop("deeplink", None)
+                tags_dict.pop("messages", None)
                 tags_list.append(tags_dict)
 
         campaigns_with_tag_df = (
@@ -108,7 +110,7 @@ class BatchClient:
                         _df["utm_campaign_a"]
                     )
                 )
-                .drop(["messages", "deeplink", "utm_campaign_a"], axis=1)
+                .drop(["utm_campaign_a"], axis=1)
                 .rename(columns={"utm_campaign_b": "utm_campaign_version_b"})
             )
 

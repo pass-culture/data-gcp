@@ -35,12 +35,13 @@ install_simplified:
 	fi
 	make _initiate_env
 	curl -LsSf https://astral.sh/uv/install.sh | sh
+	uv || echo -e "\n \n Please restart you shell in order to allow uv commands \n \n"
 	uv venv --python 3.10
 	source .venv/bin/activate && uv pip install -r requirements.txt && pre-commit install
 
 install_analytics:
 	make install_simplified
-	source .venv/bin/activate && uv pip install -r orchestration/dags/dbt-requirements.txt
+	source .venv/bin/activate && uv pip install -r orchestration/dags/data_gcp_dbt/dbt-requirements.txt
 	source .venv/bin/activate && make _init_dbt
 	echo "Please setup the current venv in your IDE to make it run permanently : https://www.notion.so/passcultureapp/Comment-installer-DBT-e25f7e24813c4d48baa43d641651caf8"
 
@@ -88,23 +89,6 @@ endif
 _install_ubuntu_libs:
 	sudo apt-get update -y
 	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev
-
-prerequisites_on_debian_vm:
-	curl https://pyenv.run | bash || echo "Pyenv already installed"
-	curl -LsSf https://astral.sh/uv/install.sh | sh
-	sudo rm /etc/apt/sources.list.d/kubernetes.list || echo "Kubernetes list already removed"
-	sudo apt update  --fix-missing --allow-releaseinfo-change -y
-	make _install_ubuntu_libs
-	sudo apt install -y libmariadb-dev
-	echo 'export PYENV_ROOT="$$HOME/.pyenv"' >> ~/.profile
-	echo 'export PATH="$$PYENV_ROOT/bin:$$PATH"' >> ~/.profile
-	echo 'eval "$$(pyenv init --path)"' >> ~/.profile
-	echo 'eval "$$(pyenv init -)"' >> ~/.profile
-	echo 'eval "$$(pyenv virtualenv-init -)"' >> ~/.profile
-	echo '. "$$HOME/.cargo/env"' >> ~/.profile
-	bash
-
-
 
 #######################################################################################
 ########                              Automations                              ########

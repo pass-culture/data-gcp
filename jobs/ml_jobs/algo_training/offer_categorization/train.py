@@ -3,6 +3,7 @@ import pandas as pd
 import typer
 from catboost import CatBoostClassifier
 from loguru import logger
+from sklearn.model_selection import train_test_split
 
 from commons.constants import ENV_SHORT_NAME
 from commons.mlflow_tools import connect_remote_mlflow
@@ -27,29 +28,54 @@ def main(
         help="BigQuery table containing compliance training data",
     ),
     run_name: str = typer.Option("", help="Name of the MLflow run if set"),
+    num_boost_round: int = typer.Option(..., help="Number of iterations"),
 ) -> None:
     logger.info("Training model...")
     features_config = features["default"]
     train_data = pd.read_parquet(training_table_path)
     train_data_labels = train_data.offer_subcategory_id.tolist()
     train_data_clean = train_data.drop(columns=["label", "offer_subcategory_id"])
+
+    # Split the data into training and validation sets
+    (
+        train_data_clean_train,
+        train_data_clean_val,
+        train_labels_train,
+        train_labels_val,
+    ) = train_test_split(
+        train_data_clean,
+        train_data_labels,
+        test_size=0.1,
+        random_state=42,
+        stratify=train_data_labels,
+    )
+
     logger.info("Init classifier..")
     # Add auto_class_weights to balance
     model = CatBoostClassifier(
-        one_hot_max_size=65, loss_function="MultiClass", auto_class_weights="Balanced"
+        one_hot_max_size=65,
+        loss_function="MultiClass",
+        auto_class_weights="Balanced",
+        num_boost_round=num_boost_round,
     )
     logger.info("Fitting model..")
     ## Model Fit
     model.fit(
-        train_data_clean,
-        train_data_labels,
+        train_data_clean_train,
+        train_labels_train,
         cat_features=features_config["catboost_features_types"]["cat_features"],
         text_features=features_config["catboost_features_types"]["text_features"],
         embedding_features=features_config["catboost_features_types"][
             "embedding_features"
         ],
         verbose=True,
+        early_stopping_rounds=50,
+        eval_set=(
+            train_data_clean_val,
+            train_labels_val,
+        ),
     )
+
     logger.info("Log model to MLFlow..")
     connect_remote_mlflow()
     experiment_name = f"{model_name}_v1.0_{ENV_SHORT_NAME}"

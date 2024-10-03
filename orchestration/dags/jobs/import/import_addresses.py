@@ -10,7 +10,7 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -52,7 +52,9 @@ dag_config = {
 }
 
 USER_LOCATIONS_TABLE = "user_locations"
-schedule_interval = "0 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
+schedule_interval = (
+    "0 2,4,6,8,12,16 * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
+)
 
 default_args = {
     "start_date": datetime(2021, 3, 30),
@@ -83,7 +85,11 @@ with DAG(
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        )
+        ),
+        "installer": Param(
+            default="uv",
+            enum=["uv", "conda"],
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start")
@@ -92,20 +98,13 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_start_task"
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
+        branch="{{ params.branch }}",
+        installer="{{ params.installer }}",
         python_version="3.10",
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command="pip install -r requirements.txt --user",
-        dag=dag,
-        retries=2,
     )
 
     addresses_to_gcs = SSHGCEOperator(
@@ -149,7 +148,6 @@ with DAG(
         start
         >> gce_instance_start
         >> fetch_code
-        >> install_dependencies
         >> addresses_to_gcs
         >> gce_instance_stop
         >> branch_op

@@ -118,7 +118,7 @@ jobs:
           CI_SEVERITY: 'warn'
         run: |
           dbt test --store-failures -s "state:modified" \
-          --exclude test_name:relationships config.materialized:incremental \
+          --exclude test_name:relationships elementary.* config.materialized:incremental \
           --profile CI --target $ENV_SHORT_NAME --defer \
           --state env-run-artifacts --favor-state \
           --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"

@@ -38,13 +38,18 @@ dag_config = {
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/offer_categorization_model_v1.0_{DATE}",
     "BASE_DIR": "data-gcp/jobs/ml_jobs/algo_training",
     "MODEL_DIR": "offer_categorization",
-    "TEST_FRACTION": "3",
+    "TEST_RATIO": "0.1",
     "INPUT_TABLE_NAME": "offer_categorization_offers",
 }
 
 # Params
 train_params = {
     "config_file_name": "default",
+    "num_boost_round": {
+        "dev": 100,
+        "stg": 100,
+        "prod": 1000,
+    },
 }
 gce_params = {
     "instance_name": f"algo-training-offer-categorization-{ENV_SHORT_NAME}",
@@ -92,7 +97,10 @@ with DAG(
         ),
         "instance_name": Param(default=gce_params["instance_name"], type="string"),
         "run_name": Param(default="default", type=["string", "null"]),
-        "test_fraction": Param(default=dag_config["TEST_FRACTION"], type="string"),
+        "test_ratio": Param(default=dag_config["TEST_RATIO"], type="string"),
+        "num_boost_round": Param(
+            default=train_params["num_boost_round"][ENV_SHORT_NAME], type="integer"
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -131,7 +139,6 @@ with DAG(
         preemptible=False,
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
-        accelerator_types=[{"name": "nvidia-tesla-t4", "count": 1}],
         labels={"job_type": "long_ml"},
     )
 
@@ -172,7 +179,7 @@ with DAG(
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/split_data.py "
         f"--clean-table-path {dag_config['STORAGE_PATH']}/{dag_config['INPUT_TABLE_NAME']}_clean_data/data_clean.parquet "
         f"--split-data-folder {dag_config['STORAGE_PATH']} "
-        "--test-fraction {{ params.test_fraction }}",
+        "--test-ratio {{ params.test_ratio }}",
         dag=dag,
     )
 
@@ -184,7 +191,8 @@ with DAG(
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
         "--model-name {{ params.model_name }} "
         f"--training-table-path {dag_config['STORAGE_PATH']}/train.parquet "
-        "--run-name {{ params.run_name }}",
+        "--run-name {{ params.run_name }} "
+        "--num-boost-round {{ params.num_boost_round }}",
         dag=dag,
     )
 

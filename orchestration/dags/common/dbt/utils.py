@@ -436,7 +436,7 @@ def setup_dependencies(
         model_op_dict[model_node] >> (children if children else final_op)
 
 
-def set_up_model_dependencies(
+def set_up_nodes_dependencies(
     dag: DAG,
     dbt_models: List[str],
     dbt_snapshots: List[str],
@@ -517,7 +517,7 @@ def dbt_dag_reconstruction(
     snapshot_op_dict = create_snapshot_group(dag, dbt_snapshots, manifest)
 
     # Set up dependencies between models, snapshots and tests
-    set_up_model_dependencies(
+    set_up_nodes_dependencies(
         dag,
         dbt_models,
         dbt_snapshots,

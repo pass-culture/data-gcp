@@ -9,7 +9,7 @@ WHERE educational_year_beginning_date <= DATE_SUB(current_date(), interval 1 yea
 SELECT 
     DATE_TRUNC(date,MONTH) AS date,
     MAX(date) AS last_date,
-    MAX(adage_id) AS last_adage_id
+    MAX(CAST(adage_id AS INT)) AS last_adage_id
 FROM `{{ bigquery_analytics_dataset }}.adage_involved_institution`
 WHERE 
     date <= current_date 
@@ -32,7 +32,7 @@ SELECT
     , SUM(total_institutions) AS denominator -- total_institutions
 FROM `{{ bigquery_analytics_dataset }}.adage_involved_institution` as involved
 -- take only last day for each month.
-JOIN last_day ON last_day.last_date = involved.date AND DATE_TRUNC(involved.date,MONTH) = last_day.date AND last_day.last_adage_id = involved.adage_id
+JOIN last_day ON last_day.last_date = involved.date AND DATE_TRUNC(involved.date,MONTH) = last_day.date AND last_day.last_adage_id = CAST(involved.adage_id AS INT)
 LEFT JOIN `{{ bigquery_analytics_dataset }}.region_department` as rd
     ON involved.department_code = rd.num_dep
 WHERE

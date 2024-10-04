@@ -26,7 +26,7 @@ dbt_run_changed_models() {
     echo "no snapshots were modified"
   else
     echo "Running snapshots: ${snapshots}"
-    dbt snapshot --s $snapshots --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" --exclude tag:failing_ci
+    dbt snapshot -s $snapshots --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" --exclude tag:failing_ci
   fi
 
   echo ${#models}

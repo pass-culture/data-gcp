@@ -1,4 +1,4 @@
-name: "3 [on_pr] Check PR title format"
+name: "1. [on_pr] Check PR title format"
 
 on:
   pull_request:
@@ -17,4 +17,4 @@ jobs:
     steps:
       - uses: Slashgear/action-check-pr-title@v4.3.0
         with:
-          regexp: '^(\((DA-[0-9]+|DE-[0-9]+HF-[0-9]|BSR|)\) )?(build|lint|ci|docs|feat|fix|perf|refactor|test|chore)\(\w+\): \w+'
+          regexp: '^(\((DA-[0-9]+|DE-[0-9]+|HF-[0-9]+|BSR|)\) )?(build|lint|ci|docs|feat|fix|perf|refactor|test|chore)\(\w+\): \w+'

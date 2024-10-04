@@ -98,7 +98,7 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_start_task"
     )
 
-    fetch_code = InstallDependenciesOperator(
+    fetch_install_code = InstallDependenciesOperator(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
@@ -114,6 +114,7 @@ with DAG(
         environment=dag_config,
         command="python main.py ",
         do_xcom_push=True,
+        installer="{{ params.installer }}",
     )
 
     gce_instance_stop = StopGCEOperator(
@@ -147,7 +148,7 @@ with DAG(
     (
         start
         >> gce_instance_start
-        >> fetch_code
+        >> fetch_install_code
         >> addresses_to_gcs
         >> gce_instance_stop
         >> branch_op

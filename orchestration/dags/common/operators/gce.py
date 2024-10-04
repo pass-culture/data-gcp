@@ -284,6 +284,13 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
 
 
 class SSHGCEOperator(BaseSSHGCEOperator):
+    template_fields = [
+        "instance_name",
+        "command",
+        "environment",
+        "gce_zone",
+        "installer",
+    ]
     DEFAULT_EXPORT = {
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
         "GCP_PROJECT_ID": GCP_PROJECT_ID,
@@ -304,38 +311,12 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         *args,
         **kwargs,
     ):
-        self.environment = (
-            dict(self.CONDA_EXPORT, **environment)
-            if installer == "conda"
-            else dict(self.DEFAULT_EXPORT, **environment)
-        )
-
-        commands_list = []
-
-        # Default export
-        commands_list.append(
-            "\n".join(
-                [f"export {key}={value}" for key, value in self.environment.items()]
-            )
-        )
-        # Conda activate if required
-        if installer == "conda":
-            # Init conda
-            commands_list.append(
-                "conda init zsh && source ~/.zshrc && conda activate data-gcp"
-            )
-        elif installer == "uv":
-            commands_list.append("source .venv/bin/activate")
-
-        # Default path
-        if base_dir is not None:
-            commands_list.append(f"cd {base_dir}")
-
-        # Command
-        commands_list.append(command)
-
-        self.command = "\n".join(commands_list)
+        self.base_dir = base_dir
+        self.installer = installer
+        self.environment = environment
+        self.command = command
         self.instance_name = instance_name
+
         super(SSHGCEOperator, self).__init__(
             instance_name=self.instance_name,
             command=self.command,
@@ -343,6 +324,38 @@ class SSHGCEOperator(BaseSSHGCEOperator):
             *args,
             **kwargs,
         )
+
+    def execute(self, context):
+        environment = (
+            dict(self.CONDA_EXPORT, **self.environment)
+            if self.installer == "conda"
+            else dict(self.DEFAULT_EXPORT, **self.environment)
+        )
+
+        commands_list = []
+
+        commands_list.append(
+            "\n".join([f"export {key}={value}" for key, value in environment.items()])
+        )
+
+        if self.installer == "conda":
+            commands_list.append(
+                "conda init zsh && source ~/.zshrc && conda activate data-gcp"
+            )
+        elif self.installer == "uv":
+            commands_list.append("source .venv/bin/activate")
+        else:
+            commands_list.append("echo no virtual environment activation")
+
+        if self.base_dir is not None:
+            commands_list.append(f"cd {self.base_dir}")
+
+        commands_list.append(self.command)
+
+        final_command = "\n".join(commands_list)
+
+        self.command = final_command
+        return super().execute(context)
 
 
 class InstallDependenciesOperator(SSHGCEOperator):

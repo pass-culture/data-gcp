@@ -1,0 +1,5 @@
+google-cloud-secret-manager==2.2.0
+google-cloud-storage==1.38.0
+google-auth-oauthlib==0.5.3
+pandas==1.5.3
+typer==0.7.0

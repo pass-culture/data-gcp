@@ -7,6 +7,9 @@
     {%- if target.profile_name == "CI" or target.name == "local" or is_elementary -%}
         {{ default_schema }}
 
+    {%- if target.profile_name == "CI" and 'source' in node.path and node.resource_type == 'snapshot' -%}
+        {{ custom_schema_name | trim }}
+
     {%- elif is_orchestrated -%}
         {{ custom_schema_name | trim if custom_schema_name else (
             node.name.split('__')[0] ~ "_" ~ target.name if 'intermediate' in node.path or 'machine_learning' in node.path

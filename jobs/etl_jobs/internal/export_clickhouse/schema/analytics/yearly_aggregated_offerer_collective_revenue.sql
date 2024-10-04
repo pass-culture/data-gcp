@@ -1,5 +1,5 @@
 CREATE OR REPLACE TABLE analytics.yearly_aggregated_offerer_collective_revenue ON cluster default
-    ENGINE = MergeTree
+    ENGINE = SummingMergeTree()
     PARTITION BY creation_year
     ORDER BY (offerer_id)
     SETTINGS storage_policy='gcs_main'

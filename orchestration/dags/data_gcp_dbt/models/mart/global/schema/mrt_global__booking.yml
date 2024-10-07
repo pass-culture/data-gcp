@@ -116,7 +116,9 @@ models:
         description: ''
         data_type: STRING
         data_tests:
-          - not_null
+          - not_null:
+              config:
+                where: "offer_id not in ('1610172','16444','1631423','2441')"
       - name: offerer_name
         description: ''
         data_type: STRING

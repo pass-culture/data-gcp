@@ -59,7 +59,9 @@ with pro_event_raw_data as (
         bookingstatus as download_booking_status,
         buttontype as download_button_type,
         filetype as download_file_type,
-        filescount as download_files_cnt
+        filescount as download_files_cnt,
+        subcategoryId as offer_subcategory_id,
+        choosenSuggestedSubcategory as suggested_offer_subcategory_selected
     from {{ ref("int_firebase__pro_event_flattened") }}
     {% if is_incremental() %}
         where event_date between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")

@@ -1,4 +1,4 @@
-SELECT
+select
     collective_offer_audio_disability_compliant,
     collective_offer_mental_disability_compliant,
     collective_offer_motor_disability_compliant,
@@ -20,5 +20,5 @@ SELECT
     collective_offer_contact_phone,
     collective_offer_offer_venue,
     collective_offer_last_validation_type,
-    DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY) as partition_date
-FROM `{{ bigquery_raw_dataset }}`.`applicative_database_collective_offer`
+    date_add(current_date(), interval -1 day) as partition_date
+from `{{ bigquery_raw_dataset }}`.`applicative_database_collective_offer`

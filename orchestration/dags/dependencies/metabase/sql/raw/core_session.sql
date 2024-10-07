@@ -1,1 +1,1 @@
-SELECT * FROM public.core_session
+select * from public.core_session

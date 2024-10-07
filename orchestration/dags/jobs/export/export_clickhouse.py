@@ -155,11 +155,13 @@ for dag_name, dag_params in dags.items():
 
         fetch_install_code = InstallDependenciesOperator(
             task_id="fetch_install_code",
-            instance_name=GCE_INSTANCE,
+            instance_name="{{ params.instance_name }}",
             branch="{{ params.branch }}",
-            installer="{{ params.installer }}",
+            installer="uv",
             python_version="3.10",
             base_dir=dag_config["BASE_DIR"],
+            retries=2,
+            dag=dag,
         )
 
         in_tables_tasks, out_tables_tasks = [], []

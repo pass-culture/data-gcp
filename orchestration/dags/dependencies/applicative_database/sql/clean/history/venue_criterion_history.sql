@@ -1,6 +1,6 @@
-SELECT 
-    DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY) as partition_date,
+select
+    date_add(current_date(), interval -1 day) as partition_date,
     venue_id,
     venue_criterion_id,
     criterion_id
-FROM `{{ bigquery_raw_dataset }}`.applicative_database_venue_criterion
+from `{{ bigquery_raw_dataset }}`.applicative_database_venue_criterion

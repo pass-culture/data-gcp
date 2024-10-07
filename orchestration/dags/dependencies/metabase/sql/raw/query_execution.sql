@@ -1,4 +1,4 @@
-SELECT 
+select
     qe.id as execution_id,
     qe.started_at as execution_date,
     qe.hash,
@@ -10,5 +10,5 @@ SELECT
     qe.executor_id,
     qe.dashboard_id,
     qe.card_id
-FROM public.query_execution qe
-WHERE card_id is not null
+from public.query_execution qe
+where card_id is not null

@@ -25,7 +25,7 @@ GCE_INSTANCE = f"algo-custom-deployment-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
 
 
-print("Hello")
+print("Hello 2")
 
 with DAG(
     "algo_custom_deployment",

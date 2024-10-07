@@ -12,7 +12,7 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
-from common.operators.biquery import bigquery_job_task
+from common.operators.bigquery import bigquery_job_task
 from common.utils import depends_loop, get_airflow_schedule
 from dependencies.qualtrics.export_qualtrics_data import analytics_tables, clean_tables
 

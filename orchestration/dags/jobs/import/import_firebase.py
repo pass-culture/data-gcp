@@ -4,7 +4,7 @@ import datetime
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER, GCP_PROJECT_ID
-from common.operators.biquery import bigquery_job_task
+from common.operators.bigquery import bigquery_job_task
 from common.utils import get_airflow_schedule
 from dependencies.firebase.import_firebase import import_tables
 

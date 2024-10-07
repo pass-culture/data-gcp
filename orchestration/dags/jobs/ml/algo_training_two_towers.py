@@ -173,7 +173,7 @@ with DAG(
         gpu_count="{{ params.gpu_count }}",
         gpu_type="{{ params.gpu_type }}",
         retries=2,
-        labels={"job_type": "ml"},
+        labels={"job_type": "long_ml"},
     )
 
     fetch_code = CloneRepositoryGCEOperator(

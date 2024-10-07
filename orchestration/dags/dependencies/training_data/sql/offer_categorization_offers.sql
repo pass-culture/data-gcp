@@ -7,7 +7,7 @@ WITH base_offers AS (
         evd.offerer_name
     FROM
         `{{ bigquery_analytics_dataset }}.global_offer` eod
-        JOIN `{{ bigquery_analytics_dataset }}.applicative_database_offer` o USING (offer_id)
+        JOIN `{{ bigquery_raw_dataset }}.applicative_database_offer` o USING (offer_id)
         JOIN `{{ bigquery_analytics_dataset }}.global_venue` evd ON evd.venue_managing_offerer_id = eod.offerer_id
     WHERE
         DATE(eod.offer_creation_date) >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)

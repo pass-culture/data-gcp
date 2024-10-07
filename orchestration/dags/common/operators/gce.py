@@ -290,6 +290,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         "environment",
         "gce_zone",
         "installer",
+        "base_dir",
     ]
     DEFAULT_EXPORT = {
         "ENV_SHORT_NAME": ENV_SHORT_NAME,

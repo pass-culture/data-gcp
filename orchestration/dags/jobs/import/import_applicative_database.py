@@ -6,7 +6,7 @@ from common.config import (
     DAG_FOLDER,
     GCP_PROJECT_ID,
 )
-from common.operators.biquery import bigquery_federated_query_task, bigquery_job_task
+from common.operators.bigquery import bigquery_federated_query_task, bigquery_job_task
 from common.utils import get_airflow_schedule
 from dependencies.applicative_database.import_applicative_database import (
     HISTORICAL_CLEAN_APPLICATIVE_TABLES,

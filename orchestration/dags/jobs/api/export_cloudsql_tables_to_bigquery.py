@@ -7,7 +7,7 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     RECOMMENDATION_SQL_INSTANCE,
 )
-from common.operators.biquery import bigquery_job_task
+from common.operators.bigquery import bigquery_job_task
 from common.utils import from_external, get_airflow_schedule
 from dependencies.export_cloudsql_tables_to_bigquery.import_cloudsql import (
     RAW_TABLES,

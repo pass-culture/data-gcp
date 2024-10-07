@@ -20,6 +20,7 @@ SELECT
 	, "isEmailValidated" AS user_has_validated_email
 	, CAST("notificationSubscriptions" -> \'marketing_push\' AS BOOLEAN) AS user_has_enabled_marketing_push
 	, CAST("notificationSubscriptions" -> \'marketing_email\' AS BOOLEAN) AS user_has_enabled_marketing_email
+	, "notificationSubscriptions" -> \'subscribed_themes\' :: text AS user_subscribed_themes
 	, COALESCE("user"."validatedBirthDate","user"."dateOfBirth") AS user_birth_date
 	, CASE
             WHEN "user"."schoolType" = \'PUBLIC_SECONDARY_SCHOOL\' THEN \'Collège public\'

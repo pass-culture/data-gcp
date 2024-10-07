@@ -60,12 +60,13 @@ class SimilarOfferHandler(PredictionHandler):
             return fallback_client.handle(
                 model,
                 request_data=PredictionRequest(
-                    model_type="filter",
+                    model_type="tops",
                     size=request_data.size,
                     debug=request_data.debug,
                     prefilter=request_data.is_prefilter,
                     re_rank=request_data.re_rank,
                     vector_column_name="booking_number_desc",
+                    similarity_metric="dot",
                     params=request_data.params,
                     call_id=request_data.call_id,
                     user_id=request_data.user_id,

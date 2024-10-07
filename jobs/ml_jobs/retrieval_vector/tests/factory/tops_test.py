@@ -29,7 +29,7 @@ def request_data_rerank() -> PredictionRequest:
         call_id="test-call-id",
         debug=True,
         vector_column_name="booking_number_desc",
-        similarity_metric="cosine",
+        similarity_metric="l2",
         re_rank=True,
         user_id="user_1",
     )

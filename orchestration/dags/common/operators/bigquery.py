@@ -28,7 +28,7 @@ def bigquery_job_task(dag, table, job_params, extra_params={}):
                 ),
                 "timePartitioning": job_params.get("time_partitioning", None),
                 "clustering": job_params.get("clustering_fields", None),
-                "schemaUpdateOptions": ["ALLOW_FIELD_ADDITION"],
+                "schemaUpdateOptions": job_params.get("schemaUpdateOptions", None),
             }
         },
         trigger_rule=job_params.get("trigger_rule", "all_success"),

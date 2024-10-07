@@ -54,11 +54,11 @@ select
     ui.user_density_level,
     ui.user_city_code as city_code,
     ui.user_is_in_qpv,
-    case when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then TRUE else FALSE end as user_is_unemployed,
+    case when u.user_activity = "Chômeur, En recherche d'emploi" then TRUE else FALSE end as user_is_unemployed,
     case when
             (
                 (ui.qpv_name is not NULL)
-                or (u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi"))
+                or (u.user_activity = "Chômeur, En recherche d'emploi")
                 or (ui.user_macro_density_label = "rural")
             )
             then TRUE

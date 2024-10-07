@@ -1,5 +1,5 @@
 select
-    DATE(timestamp) as partition_date,
+    date(timestamp) as partition_date,
     jsonpayload.extra.path as url_path,
     timestamp as log_timestamp,
     resource.labels.namespace_name as environement,
@@ -12,71 +12,122 @@ select
     jsonpayload.extra.consent.mandatory as cookies_consent_mandatory,
     jsonpayload.extra.consent.accepted as cookies_consent_accepted,
     jsonpayload.extra.consent.refused as cookies_consent_refused,
-    jsonPayload.extra.searchtype as search_type,
-    jsonPayload.extra.searchsubtype as search_sub_type,
-    jsonPayload.extra.searchprotype as search_pro_type,
-    CAST(jsonpayload.user_id as INT64) as user_id,
+    jsonpayload.extra.searchtype as search_type,
+    jsonpayload.extra.searchsubtype as search_sub_type,
+    jsonpayload.extra.searchprotype as search_pro_type,
+    cast(jsonpayload.user_id as int64) as user_id,
     jsonpayload.extra.userid as extra_user_id,
     jsonpayload.extra.uai,
     jsonpayload.extra.user_role,
     jsonpayload.extra.from as origin,
-    COALESCE(CAST(jsonpayload.extra.stockid as STRING), CAST(jsonpayload.extra.stock_id as STRING)) as stock_id,
-    COALESCE(CAST(jsonpayload.extra.offerid as STRING), CAST(jsonpayload.extra.offer as STRING), CAST(jsonpayload.extra.offer_id as STRING)) as offer_id,
-    CAST(jsonpayload.extra.collective_offer_template_id as STRING) as collective_offer_template_id,
-    CAST(jsonpayload.extra.queryid as STRING) as query_id,
+    coalesce(
+        cast(jsonpayload.extra.stockid as string),
+        cast(jsonpayload.extra.stock_id as string)
+    ) as stock_id,
+    coalesce(
+        cast(jsonpayload.extra.offerid as string),
+        cast(jsonpayload.extra.offer as string),
+        cast(jsonpayload.extra.offer_id as string)
+    ) as offer_id,
+    cast(
+        jsonpayload.extra.collective_offer_template_id as string
+    ) as collective_offer_template_id,
+    cast(jsonpayload.extra.queryid as string) as query_id,
     jsonpayload.extra.comment,
     jsonpayload.extra.requested_date,
-    CAST(jsonpayload.extra.total_students as INT) as total_students,
-    CAST(jsonpayload.extra.total_teachers as INT) as total_teachers,
+    cast(jsonpayload.extra.total_students as int) as total_students,
+    cast(jsonpayload.extra.total_teachers as int) as total_teachers,
     jsonpayload.extra.header_link_name,
-    CAST(COALESCE(jsonpayload.extra.bookingid, jsonpayload.extra.booking_id) as STRING) as booking_id,
-    CAST(jsonpayload.extra.resultscount as INT) as results_count,
-    CAST(jsonpayload.extra.resultnumber as INT) as results_number,
+    cast(
+        coalesce(jsonpayload.extra.bookingid, jsonpayload.extra.booking_id) as string
+    ) as booking_id,
+    cast(jsonpayload.extra.resultscount as int) as results_count,
+    cast(jsonpayload.extra.resultnumber as int) as results_number,
     jsonpayload.extra.filtervalues.eventaddresstype as address_type_filter,
-    CAST(jsonpayload.extra.filtervalues.query as STRING) as text_filter,
-    CAST(jsonpayload.extra.statuscode as INT64) as status_code,
+    cast(jsonpayload.extra.filtervalues.query as string) as text_filter,
+    cast(jsonpayload.extra.statuscode as int64) as status_code,
     jsonpayload.extra.deviceid as device_id,
     jsonpayload.extra.sourceip as source_ip,
     jsonpayload.extra.appversion as app_version,
     jsonpayload.extra.duration as duration,
     jsonpayload.extra.platform,
-    ARRAY_TO_STRING(jsonpayload.extra.filtervalues.departments, ',') as department_filter,
-    ARRAY_TO_STRING(jsonpayload.extra.filtervalues.academies, ',') as academy_filter,
-    ARRAY_TO_STRING(ARRAY(select CAST(value as STRING) from UNNEST(jsonpayload.extra.filtervalues.venue) as value), ',') as venue_filter,
-    ARRAY_TO_STRING(ARRAY(select CAST(value as STRING) from UNNEST(jsonpayload.extra.filtervalues.domains) as value), ',') as artistic_domain_filter,
-    ARRAY_TO_STRING(ARRAY(select CAST(value as STRING) from UNNEST(jsonpayload.extra.filtervalues.students) as value), ',') as student_filter,
-    ARRAY_TO_STRING(jsonpayload.extra.filtervalues.formats, ',') as format_filter,
+    array_to_string(
+        jsonpayload.extra.filtervalues.departments, ','
+    ) as department_filter,
+    array_to_string(jsonpayload.extra.filtervalues.academies, ',') as academy_filter,
+    array_to_string(
+        array(
+            select cast(value as string)
+            from unnest(jsonpayload.extra.filtervalues.venue) as value
+        ),
+        ','
+    ) as venue_filter,
+    array_to_string(
+        array(
+            select cast(value as string)
+            from unnest(jsonpayload.extra.filtervalues.domains) as value
+        ),
+        ','
+    ) as artistic_domain_filter,
+    array_to_string(
+        array(
+            select cast(value as string)
+            from unnest(jsonpayload.extra.filtervalues.students) as value
+        ),
+        ','
+    ) as student_filter,
+    array_to_string(jsonpayload.extra.filtervalues.formats, ',') as format_filter,
     jsonpayload.extra.suggestiontype as suggestion_type,
     jsonpayload.extra.suggestionvalue as suggestion_value,
-    CAST(jsonpayload.extra.isfavorite as BOOLEAN) as is_favorite,
-    CAST(jsonpayload.extra.playlistid as STRING) as playlist_id,
-    CAST(jsonpayload.extra.domainid as STRING) as domain_id,
-    COALESCE(CAST(jsonpayload.extra.venueid as STRING), CAST(jsonpayload.extra.venue as STRING), CAST(jsonpayload.extra.venue_id as STRING)) as venue_id,
-    CAST(jsonpayload.extra.index as INT) as rank_clicked,
-    COALESCE(CAST(jsonpayload.extra.product as STRING), CAST(jsonpayload.extra.product_id as STRING)) as product_id,
-    CAST(jsonpayload.extra.old_quantity as INT64) as stock_old_quantity,
-    CAST(jsonpayload.extra.stock_quantity as INT64) as stock_new_quantity,
+    cast(jsonpayload.extra.isfavorite as boolean) as is_favorite,
+    cast(jsonpayload.extra.playlistid as string) as playlist_id,
+    cast(jsonpayload.extra.domainid as string) as domain_id,
+    coalesce(
+        cast(jsonpayload.extra.venueid as string),
+        cast(jsonpayload.extra.venue as string),
+        cast(jsonpayload.extra.venue_id as string)
+    ) as venue_id,
+    cast(jsonpayload.extra.index as int) as rank_clicked,
+    coalesce(
+        cast(jsonpayload.extra.product as string),
+        cast(jsonpayload.extra.product_id as string)
+    ) as product_id,
+    cast(jsonpayload.extra.old_quantity as int64) as stock_old_quantity,
+    cast(jsonpayload.extra.stock_quantity as int64) as stock_new_quantity,
     jsonpayload.extra.old_price as stock_old_price,
     jsonpayload.extra.stock_price as stock_new_price,
-    CAST(jsonpayload.extra.stock_dnbookedquantity as INT64) as stock_booking_quantity,
+    cast(jsonpayload.extra.stock_dnbookedquantity as int64) as stock_booking_quantity,
     jsonpayload.extra.eans as list_of_eans_not_found,
-    CAST(jsonpayload.extra.offerer_id as INT64) as offerer_id,
+    cast(jsonpayload.extra.offerer_id as int64) as offerer_id,
     jsonpayload.extra.isconvenient as beta_test_new_nav_is_convenient,
     jsonpayload.extra.ispleasant as beta_test_new_nav_is_pleasant,
     jsonpayload.extra.comment as beta_test_new_nav_comment,
-    jsonPayload.extra.searchquery as search_query,
-    cast(jsonPayload.extra.searchnbresults as int) as search_nb_results,
-    cast(jsonPayload.extra.searchrank as int) as card_clicked_rank,
+    jsonpayload.extra.searchquery as search_query,
+    cast(jsonpayload.extra.searchnbresults as int) as search_nb_results,
+    cast(jsonpayload.extra.searchrank as int) as card_clicked_rank,
     trace,
-    ARRAY_TO_STRING(jsonpayload.extra.newlysubscribedto.themes, ' - ') as newly_subscribed_themes,
-    CAST(jsonpayload.extra.newlysubscribedto.email as STRING) as newly_subscribed_email,
-    CAST(jsonpayload.extra.newlysubscribedto.push as STRING) as newly_subscribed_push,
-    ARRAY_TO_STRING(jsonpayload.extra.subscriptions.subscribed_themes, ' - ') as currently_subscribed_themes,
-    CAST(jsonpayload.extra.subscriptions.marketing_push as STRING) as currently_subscribed_marketing_push,
-    CAST(jsonpayload.extra.subscriptions.marketing_email as STRING) as currently_subscribed_marketing_email,
-    ARRAY_TO_STRING(jsonpayload.extra.newlyunsubscribedfrom.themes, ' - ') as newly_unsubscribed_themes,
-    CAST(jsonpayload.extra.newlyunsubscribedfrom.email as STRING) as newly_unsubscribed_email,
-    CAST(jsonpayload.extra.newlyunsubscribedfrom.push as STRING) as newly_unsubscribed_push
+    array_to_string(
+        jsonpayload.extra.newlysubscribedto.themes, ' - '
+    ) as newly_subscribed_themes,
+    cast(jsonpayload.extra.newlysubscribedto.email as string) as newly_subscribed_email,
+    cast(jsonpayload.extra.newlysubscribedto.push as string) as newly_subscribed_push,
+    array_to_string(
+        jsonpayload.extra.subscriptions.subscribed_themes, ' - '
+    ) as currently_subscribed_themes,
+    cast(
+        jsonpayload.extra.subscriptions.marketing_push as string
+    ) as currently_subscribed_marketing_push,
+    cast(
+        jsonpayload.extra.subscriptions.marketing_email as string
+    ) as currently_subscribed_marketing_email,
+    array_to_string(
+        jsonpayload.extra.newlyunsubscribedfrom.themes, ' - '
+    ) as newly_unsubscribed_themes,
+    cast(
+        jsonpayload.extra.newlyunsubscribedfrom.email as string
+    ) as newly_unsubscribed_email,
+    cast(
+        jsonpayload.extra.newlyunsubscribedfrom.push as string
+    ) as newly_unsubscribed_push
 
-from {{ source("raw","stdout") }}
-
+from {{ source("raw", "stdout") }}

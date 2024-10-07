@@ -9,12 +9,12 @@ on:
       ENV_SHORT_NAME:
         type: string
         required: true
+      APPLICATIVE_EXTERNAL_CONNECTION_ID:
+        type: string
+        required: false
       NOTIF_CHANNEL_ID:
         type: string
         required: false # Si pas fourni, alors pas de notif
-      APPLICATIVE_EXTERNAL_CONNECTION_ID: # Id de la connexion externe applicative
-        type: string
-        required: true
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER:
         required: true
@@ -25,6 +25,7 @@ jobs:
   dbt-build:
     name: "dbt-build"
     runs-on: ubuntu-latest
+    environment: ${{ inputs.GITHUB_ENV_NAME }}
     permissions:
       id-token: write
       contents: write
@@ -35,8 +36,6 @@ jobs:
       AIRFLOW_HOME: "./"
       DAG_FOLDER: "./dags/"
       DBT_FOLDER: "./dags/data_gcp_dbt/"
-      APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
-
     steps:
       - uses: actions/checkout@v4
       - name: "Connect to Secret Manager"
@@ -108,6 +107,7 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Run modified models & 1st order childrens"
         working-directory: .
@@ -116,6 +116,7 @@ jobs:
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
+          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: .github/workflows/scripts/run_dbt_changed_models.sh ${{ github.base_ref }} orchestration/dags/data_gcp_dbt
       - name: "Run modified tests"
         working-directory: "./orchestration/dags/data_gcp_dbt/"

@@ -1,11 +1,11 @@
 with themes_subscribed as (
     select
-        user_id,
+        COALESCE(CAST(user_id as STRING), CAST(extra_user_id as STRING)) AS user_id,
         currently_subscribed_themes,
-        case when (currently_subscribed_themes is NULL or currently_subscribed_themes = "") then FALSE else TRUE end as is_theme_subscribed
-    from {{ ref("app_native_logs") }}
+        case when (currently_subscribed_themes is NULL or currently_subscribed_themes = "") then FALSE else TRUE end as is_theme_subscribed,
+        ROW_NUMBER() over (partition by user_id order by partition_date desc) as rown_user
+    from {{ ref("int_pcapi__native_log") }}
     where technical_message_id = "subscription_update"
-    qualify ROW_NUMBER() over (partition by user_id order by partition_date desc) = 1
 ),
 
 deposit_grouped_by_user as (
@@ -113,5 +113,5 @@ select
 from {{ ref('int_applicative__user') }} as u
     left join {{ ref('int_applicative__action_history') }} as ah on ah.user_id = u.user_id and ah.action_history_rk = 1
     left join {{ ref("int_geo__user_location") }} as ui on ui.user_id = u.user_id
-    left join themes_subscribed as ts on ts.user_id = u.user_id
+    left join themes_subscribed as ts on ts.user_id = u.user_id and rown_user = 1
     left join deposit_grouped_by_user as dgu on dgu.user_id = u.user_id

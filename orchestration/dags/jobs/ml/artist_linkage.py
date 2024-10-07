@@ -10,7 +10,7 @@ from common.config import (
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
 )
-from common.operators.biquery import BigQueryInsertJobOperator, bigquery_job_task
+from common.operators.bigquery import BigQueryInsertJobOperator, bigquery_job_task
 from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,

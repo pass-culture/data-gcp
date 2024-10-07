@@ -3,7 +3,8 @@
         **custom_incremental_config(
         incremental_strategy = "insert_overwrite",
         partition_by = {"field": "event_date", "data_type": "date"},
-        on_schema_change = "sync_all_columns"
+        on_schema_change = "sync_all_columns",
+        require_partition_filter = true
     )
 ) }}
 
@@ -55,6 +56,8 @@ with adage_logs as (
         ) as same_session
     from {{ ref('int_pcapi__log') }}
     where
+        log_timestamp >= DATE_SUB(CURRENT_TIMESTAMP(), interval 365 day)
+        AND
         (
             url_path like "%adage-iframe%"
             or analytics_source = 'adage'

@@ -3,7 +3,8 @@
         **custom_incremental_config(
         incremental_strategy='insert_overwrite',
         partition_by={'field': 'partition_date', 'data_type': 'date'},
-        on_schema_change = "sync_all_columns"
+        on_schema_change = "sync_all_columns",
+        require_partition_filter = true
     )
 ) }}
 
@@ -41,8 +42,10 @@ select
     newly_unsubscribed_email,
     newly_unsubscribed_push
 from {{ ref('int_pcapi__log') }}
-where log_timestamp >= DATE_SUB(CURRENT_TIMESTAMP(), interval 365 day)
-    and url_path in ("/users/current", "/native/v1/me", "/native/v1/signin")
-    {% if is_incremental() %}
-        AND partition_date between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")
-    {% endif %}
+where
+log_timestamp >= DATE_SUB(CURRENT_TIMESTAMP(), interval 365 day)
+and url_path in ("/users/current", "/native/v1/me", "/native/v1/signin")
+{% if is_incremental() %}
+AND log_timestamp between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")
+AND partition_date between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")
+{% endif %}

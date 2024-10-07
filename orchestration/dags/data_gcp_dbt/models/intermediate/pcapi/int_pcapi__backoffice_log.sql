@@ -3,7 +3,8 @@
         **custom_incremental_config(
         incremental_strategy='insert_overwrite',
         partition_by={'field': 'partition_date', 'data_type': 'date'},
-        on_schema_change = "sync_all_columns"
+        on_schema_change = "sync_all_columns",
+        require_partition_filter = true
     )
 ) }}
 
@@ -23,9 +24,10 @@ SELECT
 FROM
    {{ ref("int_pcapi__log") }}
 WHERE
-    1 = 1
+    log_timestamp >= DATE_SUB(CURRENT_TIMESTAMP(), interval 365 day)
+
     {% if is_incremental() %}
-    AND DATE(log_timestamp) >= DATE_SUB(DATE('{{ ds() }}'), interval 7 day)
+    AND DATE(log_timestamp) >= DATE_SUB(DATE('{{ ds() }}'), interval 2 day)
     AND DATE(log_timestamp) <= DATE("{{ ds() }}")
     {% endif %}
     AND analytics_source = 'backoffice'

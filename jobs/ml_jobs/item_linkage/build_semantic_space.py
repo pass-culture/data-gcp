@@ -58,7 +58,7 @@ def preprocess_data_and_store_reducer(
             )
         )
     else:
-        item_df = item_df.assign(vector=preprocess_embeddings_by_chunk(chunk))
+        item_df = item_df.assign(vector=list(preprocess_embeddings_by_chunk(chunk)))
     return item_df
 
 
@@ -110,7 +110,7 @@ def create_items_table(items_df: pd.DataFrame) -> None:
 def create_index_on_items_table() -> None:
     db = lancedb.connect(MODEL_PATH)
     db.open_table("items").create_index(
-        num_partitions=NUM_PARTITIONS, num_sub_vectors=NUM_SUB_VECTORS
+        metric="dot", num_partitions=NUM_PARTITIONS, num_sub_vectors=NUM_SUB_VECTORS
     )
 
 

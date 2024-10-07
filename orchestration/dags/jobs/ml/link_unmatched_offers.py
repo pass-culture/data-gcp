@@ -17,6 +17,7 @@ from common.operators.gce import (
     StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
+from jobs.ml.constants import IMPORT_LINKAGE_SQL_PATH
 
 from airflow import DAG
 from airflow.models import Param
@@ -41,7 +42,7 @@ DAG_CONFIG = {
     "REDUCTION": "true",
     "BATCH_SIZE": 100000,
     "LINKAGE_ITEM_SOURCES_DATA_REQUEST": "linkage_item_sources_data.sql",
-    "LINKAGE_ITEM_CANDIDATES_DATA_REQUEST": "linkage_item_candidates_data.sql",
+    "LINKAGE_ITEM_CANDIDATES_DATA_REQUEST": "linkage_item_candidates_unmatched_data.sql",
     "INPUT_SOURCES_TABLE": f"{DATE}_input_sources_table",
     "INPUT_CANDIDATES_TABLE": f"{DATE}_item_candidates_data",
     "LINKED_ITEMS_TABLE": "linked_items",
@@ -51,7 +52,7 @@ DAG_CONFIG = {
     "LINKED_ITEMS_FILENAME": "linkage_unmatched_offers.parquet",
 }
 GCE_PARAMS = {
-    "instance_name": f"linkage-item-{ENV_SHORT_NAME}",
+    "instance_name": f"linkage-item-unmatched-{ENV_SHORT_NAME}",
     "instance_type": {
         "dev": "n1-standard-2",
         "stg": "n1-standard-8",
@@ -69,9 +70,9 @@ DEFAULT_ARGS = {
 SCHEDULE_DICT = {"prod": "0 4 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"}
 
 with DAG(
-    "link_items",
+    "link_unmatched_offers",
     default_args=DEFAULT_ARGS,
-    description="Process to link items using semantic vectors.",
+    description="Process to link unmatched items using semantic vectors.",
     schedule_interval=get_airflow_schedule(SCHEDULE_DICT[ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
@@ -104,7 +105,9 @@ with DAG(
     import_data_tasks = []
     import_sources = BigQueryExecuteQueryOperator(
         task_id="import_sources",
-        sql=f"select * from `sandbox_{ENV_SHORT_NAME}.unmatched_offers`",
+        sql=(
+            IMPORT_LINKAGE_SQL_PATH / DAG_CONFIG["LINKAGE_ITEM_SOURCES_DATA_REQUEST"]
+        ).as_posix(),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DAG_CONFIG['INPUT_SOURCES_TABLE']}",
@@ -113,7 +116,9 @@ with DAG(
 
     import_candidates = BigQueryExecuteQueryOperator(
         task_id="import_candidates",
-        sql=f"select * from `sandbox_{ENV_SHORT_NAME}.unmatched_offers`",
+        sql=(
+            IMPORT_LINKAGE_SQL_PATH / DAG_CONFIG["LINKAGE_ITEM_CANDIDATES_DATA_REQUEST"]
+        ).as_posix(),
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DAG_CONFIG['INPUT_CANDIDATES_TABLE']}",
@@ -128,7 +133,7 @@ with DAG(
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
                     "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": f"{DAG_CONFIG['INPUT_SOURCES_TABLE']}",
+                    "tableId": f"{DAG_CONFIG['INPUT_CANDIDATES_TABLE']}",
                 },
                 "compression": None,
                 "destinationFormat": "PARQUET",

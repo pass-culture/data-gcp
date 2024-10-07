@@ -11,8 +11,8 @@ MODEL_TYPE = {
 }
 PARQUET_BATCH_SIZE = 100000
 LANCEDB_BATCH_SIZE = 5000
-NUM_PARTITIONS = 1024 if ENV_SHORT_NAME == "prod" else 128
-NUM_SUB_VECTORS = 32 if ENV_SHORT_NAME == "prod" else 16
+NUM_PARTITIONS = 1500 if ENV_SHORT_NAME == "prod" else 128
+NUM_SUB_VECTORS = 4 if ENV_SHORT_NAME == "prod" else 16
 MODEL_PATH = "metadata/vector"
 NUM_RESULTS = 5  # Number of results to retrieve
 LOGGING_INTERVAL = 50000  # Interval for logging progress

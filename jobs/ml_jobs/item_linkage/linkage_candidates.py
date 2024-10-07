@@ -68,7 +68,7 @@ def preprocess_data(chunk: pd.DataFrame, hnne_reducer: HNNE) -> pd.DataFrame:
             preprocess_embeddings_by_chunk(chunk), hnne_reducer=hnne_reducer
         )
     else:
-        items_df["vector"] = preprocess_embeddings_by_chunk(chunk)
+        items_df["vector"] = list(preprocess_embeddings_by_chunk(chunk))
     items_df["vector"] = (
         items_df["vector"]
         .map(lambda embedding_array: Document(embedding=embedding_array))
@@ -92,12 +92,14 @@ def generate_semantic_candidates(
     """
     linkage = []
     logger.info(f"Generating semantic candidates for {len(data)} items...")
-    for index, row in data.iterrows():
+    for index, row in tqdm(
+        data.iterrows(), total=data.shape[0], desc="Processing rows", mininterval=600
+    ):
         result_df = model.search(
             vector=row.vector,
             offer_subcategory_id=row.offer_subcategory_id,
             edition=row.edition,
-            similarity_metric="cosine",
+            similarity_metric="dot",
             n=NUM_RESULTS,
             vector_column_name="vector",
         ).assign(candidates_id=str(uuid.uuid4()), item_id_candidate=row.item_id)
@@ -123,7 +125,7 @@ def main(
     """
     reduction = True if reduction == "true" else False
     model = load_model(MODEL_PATH, reduction)
-
+    tqdm.pandas()
     linkage_by_chunk = []
     for chunk in tqdm(read_parquet_in_batches_gcs(input_path, batch_size)):
         items_with_embeddings_df = preprocess_data(chunk, model.hnne_reducer)

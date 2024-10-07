@@ -12,6 +12,9 @@ on:
       NOTIF_CHANNEL_ID:
         type: string
         required: false # Si pas fourni, alors pas de notif
+      APPLICATIVE_EXTERNAL_CONNECTION_ID: # Id de la connexion externe applicative
+        type: string
+        required: true
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER:
         required: true
@@ -112,7 +115,7 @@ jobs:
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
-          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
+          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: .github/workflows/scripts/run_dbt_changed_models.sh ${{ github.base_ref }} orchestration/dags/data_gcp_dbt
       - name: "Run modified tests"
         working-directory: "./orchestration/dags/data_gcp_dbt/"

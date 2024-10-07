@@ -45,6 +45,8 @@ select
     user_has_seen_pro_tutorials,
     user_phone_validation_status,
     user_has_validated_email,
-    user_has_enabled_marketing_push
+    user_has_enabled_marketing_push,
+    user_subscribed_themes,
+    user_subscribed_themes IS NOT NULL AS is_theme_subscribed
 from {{ source("raw", "applicative_database_user") }}
 where user_role in ("UNDERAGE_BENEFICIARY", "BENEFICIARY")

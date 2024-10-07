@@ -36,12 +36,12 @@ jobs:
         with:
           python-version: '3.10'
       - uses: yezz123/setup-uv@v4
-      - name : "Install linter (Ruff)"
+      - name : "Install linters (Ruff & sqlfmt)"
         run: uv pip install --system -r  requirements.txt
       - name: "Run linter (Ruff)"
         run: make ruff_check
       - name: "Run sql linter (sqlfmt)"
-        run: make sqlfmt_fix
+        run: make sqlfmt_check
       - name: "Post to a Slack channel"
         id: "slack"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}

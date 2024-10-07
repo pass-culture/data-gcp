@@ -7,8 +7,8 @@ on:
       - opened
       - edited
       - synchronize
-
-  # Allows you to run this workflow manually from the Actions tab
+      - ready_for_review
+      - reopened
   workflow_dispatch:
 
 jobs:
@@ -17,4 +17,5 @@ jobs:
     steps:
       - uses: Slashgear/action-check-pr-title@v4.3.0
         with:
-          regexp: '^(\((DA-[0-9]+|DE-[0-9]+|HF-[0-9]+|BSR|)\) )?(build|lint|ci|docs|feat|fix|perf|refactor|test|chore)\(\w+\): \w+'
+          regexp: '^(\((DA-[0-9]+|DE-[0-9]+|HF-[0-9]+|BSR|)\) )?(build|lint|ci|docs|feat|fix|perf|refactor|test|core|dbt|)\(\w+\): \w+'
+          helpMessage: "Example can be found here https://www.notion.so/05121bf7358848a695d66d14a89a1ff1"

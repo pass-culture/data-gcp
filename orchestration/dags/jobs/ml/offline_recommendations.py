@@ -7,7 +7,7 @@ from common.config import (
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
 )
-from common.operators.biquery import bigquery_job_task
+from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,

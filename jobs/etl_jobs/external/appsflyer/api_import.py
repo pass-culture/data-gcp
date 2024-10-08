@@ -31,6 +31,12 @@ class ImportAppsFlyer:
         for app, api in self.apis.items():
             df_installs = api.installs_report(self._from, self._to, True)
             df_uninstalls = api.uninstall_events_report(self._from, self._to, True)
+            df_installs["event_date"] = df_installs["event_date"].dt.strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+            df_uninstalls["event_date"] = df_uninstalls["event_date"].dt.strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
             df_installs["app"] = app
             df_uninstalls["app"] = app
             dfs.append(df_installs)

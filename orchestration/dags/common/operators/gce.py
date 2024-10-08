@@ -351,6 +351,9 @@ class SSHGCEOperator(BaseSSHGCEOperator):
             "\n".join([f"export {key}={value}" for key, value in environment.items()])
         )
 
+        if self.base_dir is not None:
+            commands_list.append(f"cd ~/{self.base_dir}")
+
         if self.installer == "conda":
             commands_list.append(
                 "conda init zsh && source ~/.zshrc && conda activate data-gcp"
@@ -359,9 +362,6 @@ class SSHGCEOperator(BaseSSHGCEOperator):
             commands_list.append("source .venv/bin/activate")
         else:
             commands_list.append("echo no virtual environment activation")
-
-        if self.base_dir is not None:
-            commands_list.append(f"cd ~/{self.base_dir}")
 
         commands_list.append(self.command)
 
@@ -374,7 +374,14 @@ class SSHGCEOperator(BaseSSHGCEOperator):
 class InstallDependenciesOperator(SSHGCEOperator):
     REPO = "https://github.com/pass-culture/data-gcp.git"
     template_fields = set(
-        ["installer", "requirement_file", "branch", "instance_name", "base_dir"]
+        [
+            "installer",
+            "requirement_file",
+            "branch",
+            "instance_name",
+            "base_dir",
+            "python_version",
+        ]
         + SSHGCEOperator.template_fields
     )
 
@@ -457,9 +464,9 @@ class InstallDependenciesOperator(SSHGCEOperator):
             install_command = f"""
                 curl -LsSf https://astral.sh/uv/install.sh | sh &&
                 source $HOME/.cargo/env &&
+                cd {base_dir} &&
                 uv venv --python {self.python_version} &&
                 source .venv/bin/activate &&
-                cd {base_dir} &&
                 uv pip sync {requirement_file}
             """
         elif installer == "conda":
@@ -468,9 +475,9 @@ class InstallDependenciesOperator(SSHGCEOperator):
                 python -m pip install --upgrade --user urllib3 &&
                 conda create --name data-gcp python={self.python_version} -y -q &&
                 conda init zsh &&
+                cd {base_dir} &&
                 source ~/.zshrc &&
                 conda activate data-gcp &&
-                cd {base_dir} &&
                 pip install -r {requirement_file} --user
             """
         else:

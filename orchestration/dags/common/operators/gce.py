@@ -303,6 +303,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         "gce_zone",
         "installer",
         "base_dir",
+        "requirement_file",
     ]
     DEFAULT_EXPORT = {
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
@@ -321,6 +322,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         base_dir: str = None,
         environment: t.Dict[str, str] = {},
         installer: str = "conda",
+        requirement_file: str = "requirements.txt",
         *args,
         **kwargs,
     ):
@@ -329,6 +331,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         self.environment = environment
         self.command = command
         self.instance_name = instance_name
+        self.requirement_file = requirement_file
 
         super(SSHGCEOperator, self).__init__(
             instance_name=self.instance_name,
@@ -360,6 +363,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
             )
         elif self.installer == "uv":
             commands_list.append("source .venv/bin/activate")
+            commands_list.append(f"uv pip sync {self.requirement_file}")
         else:
             commands_list.append("echo no virtual environment activation")
 
@@ -413,6 +417,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
             environment=self.environment,
             base_dir=self.base_dir,  # Pass base_dir to parent class
             installer=self.installer,
+            requirement_file=self.requirement_file,
             *args,
             **kwargs,
         )

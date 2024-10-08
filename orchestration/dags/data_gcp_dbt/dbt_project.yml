@@ -91,9 +91,6 @@ snapshots:
   +target_schema: snapshot_{{ target.name }}
   +docs:
     show: false
-  data_gcp_dbt:
-    snapshot_applicative:
-      tags: applicative_history
 
 data_tests:
   +store_failures: true  # store failures for all tests

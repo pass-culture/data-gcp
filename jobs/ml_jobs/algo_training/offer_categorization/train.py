@@ -80,9 +80,9 @@ def main(
             params={
                 "environment": ENV_SHORT_NAME,
                 "train_item_count": train_data.shape[0],
-                "subcategory population": train_data["offer_subcategory_id"]
-                .value_counts()
-                .to_dict(),
+                "train_subcategory population": labels_train.value_counts().to_dict(),
+                "val_item_count": val_data.shape[0],
+                "val_subcategory population": labels_val.value_counts().to_dict(),
             }
         )
         mlflow.catboost.log_model(

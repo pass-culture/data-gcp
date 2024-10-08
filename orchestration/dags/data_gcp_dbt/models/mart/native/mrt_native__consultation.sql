@@ -157,7 +157,7 @@ SELECT
         WHEN fc.origin="offer" AND fc.multi_venue_offer_id IS NOT NULL THEN "multi_venue_offer"
         WHEN fc.origin="similar_offer" THEN CONCAT("similar_offer_",so.consult_similar_offer_origin)
         ELSE fc.origin END as consultation_micro_origin
-FROM {{ ref('int_firebase__consultation') }} fc
+FROM {{ ref('int_firebase__native_consultation') }} fc
 LEFT JOIN {{ ref('int_applicative__offer') }} AS o ON fc.offer_id = o.offer_id
 LEFT JOIN {{ ref('int_contentful__home_tag') }} AS ht ON ht.entry_id=fc.entry_id
 LEFT JOIN consult_offer_through_venue AS ov ON ov.consultation_id = fc.consultation_id AND fc.origin = "venue"

@@ -18,4 +18,6 @@ SELECT
     sum(booking_amount) AS expected_revenue
 FROM
     intermediate.booking
+WHERE
+    venue_id IS NOT NULL
 GROUP BY 1,2

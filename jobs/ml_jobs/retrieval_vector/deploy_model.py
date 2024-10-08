@@ -117,6 +117,10 @@ def main(
         None,
         help="Source run_id of the model",
     ),
+    container_worker: str = typer.Option(
+        "2",
+        help="Number of workers",
+    ),
 ) -> None:
     yyyymmdd = datetime.now().strftime("%Y%m%d")
     if model_name is None:
@@ -137,7 +141,7 @@ def main(
     prepare_docs()
     print("Deploy...")
     save_model_type(model_type=MODEL_TYPE)
-    deploy_container(serving_container, workers=3)
+    deploy_container(serving_container, workers=int(container_worker))
     save_experiment(experiment_name, model_name, serving_container, run_id=run_id)
 
 

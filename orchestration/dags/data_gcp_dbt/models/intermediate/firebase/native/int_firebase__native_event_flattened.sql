@@ -103,6 +103,7 @@ native_unnest as (
                                     "videoDuration",
                                     "seenDuration",
                                     "youtubeId",
+                                    "fromMultivenueOfferId",
                                     ])
                                     }},
         (select event_params.value.string_value from unnest(event_params) event_params where event_params.key = 'from') as origin

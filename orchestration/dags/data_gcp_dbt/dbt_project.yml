@@ -29,21 +29,9 @@ clean-targets:
 models:
   data_gcp_dbt:
     +pre-hook:
-      - "{% if target.name == 'local' %} \
-          CREATE SCHEMA IF NOT EXISTS `{{ target.project }}.tmp_{{ env_var('USER', 'anonymous_user') }}`; \
-          ALTER SCHEMA `{{ target.project }}.tmp_{{ env_var('USER', 'anonymous_user') }}` \
-          SET OPTIONS( \
-            default_table_expiration_days = 2 \
-          ); \
-        {% endif %}"
+      - "{{ create_schema_dev() }}"
     +post-hook:
-      - "{% if target.name == 'local' and config.get('materialized') == 'view' %} \
-          ALTER VIEW {{ this }} \
-          SET OPTIONS(expiration_timestamp = TIMESTAMP_SECONDS(UNIX_SECONDS(CURRENT_TIMESTAMP()) + 172800)); \
-        {% elif target.name == 'local'%} \
-          ALTER TABLE {{ this }} \
-          SET OPTIONS(expiration_timestamp = TIMESTAMP_SECONDS(UNIX_SECONDS(CURRENT_TIMESTAMP()) + 172800)); \
-        {% endif %}"
+      - "{{ set_table_expiration_dev() }}"
     +labels:
       schedule: "daily"
     +persist_docs:

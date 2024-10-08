@@ -9,7 +9,7 @@
         {{ default_schema }}
 
      {%- elif target.name == "local" -%}
-        {{ "tmp_" ~ user_name }}
+        {{ "tmp_" ~ user_name ~ "_dev"}}
 
     {%- elif is_orchestrated -%}
         {{ custom_schema_name | trim if custom_schema_name else (

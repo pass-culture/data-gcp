@@ -12,7 +12,7 @@ from common.config import (
 )
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -73,19 +73,12 @@ with DAG(
         labels={"job_type": "long_task"},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
-        python_version="3.8",
-        retries=2,
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
+        branch="{{ params.branch }}",
+        python_version="3.10",
         base_dir=BASE_PATH,
-        command="pip install -r requirements.txt --user",
         dag=dag,
         retries=2,
     )
@@ -94,6 +87,7 @@ with DAG(
         task_id="dms_to_gcs_pro",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        installer="uv",
         command="python main.py pro {{ params.updated_since_pro }} "
         + f"{GCP_PROJECT_ID} {ENV_SHORT_NAME}",
         do_xcom_push=True,
@@ -109,6 +103,7 @@ with DAG(
         task_id="dms_to_gcs_jeunes",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        installer="uv",
         command="python main.py jeunes {{ params.updated_since_jeunes }} "
         + f"{GCP_PROJECT_ID} {ENV_SHORT_NAME}",
         do_xcom_push=True,
@@ -118,6 +113,7 @@ with DAG(
         task_id="parse_api_result_jeunes",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        installer="uv",
         command="python parse_dms_subscriptions_to_tabular.py --target jeunes --updated-since {{ params.updated_since_jeunes }} "
         + f"--bucket-name {DATA_GCS_BUCKET_NAME} --project-id {GCP_PROJECT_ID}",
         do_xcom_push=True,
@@ -127,6 +123,7 @@ with DAG(
         task_id="parse_api_result_pro",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        installer="uv",
         command="python parse_dms_subscriptions_to_tabular.py --target pro --updated-since {{ params.updated_since_pro }} "
         + f"--bucket-name {DATA_GCS_BUCKET_NAME} --project-id {GCP_PROJECT_ID}",
         do_xcom_push=True,
@@ -209,13 +206,7 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task", dag=dag
     )
 
-(
-    start
-    >> gce_instance_start
-    >> fetch_code
-    >> install_dependencies
-    >> [dms_to_gcs_pro, sleep_op]
-)
+(start >> gce_instance_start >> fetch_install_code >> [dms_to_gcs_pro, sleep_op])
 (
     sleep_op
     >> dms_to_gcs_jeunes

@@ -18,6 +18,23 @@ def get_mlflow_experiment(experiment_name: str):
     return experiment
 
 
+def split_train_val(
+    train_data_clean: pd.DataFrame, train_data_labels: pd.Series
+) -> pd.DataFrame:
+    label_counts = train_data_labels.value_counts()
+    rare_classes = label_counts[label_counts < 2].index
+    train_data_clean = train_data_clean.loc[~train_data_clean.isin(rare_classes)]
+    train_data_labels = train_data_labels[~train_data_labels.isin(rare_classes)]
+
+    return train_test_split(
+        train_data_clean,
+        train_data_labels,
+        test_size=0.1,
+        random_state=42,
+        stratify=train_data_labels,
+    )
+
+
 def main(
     model_name: str = typer.Option(
         "offer_categorization",
@@ -32,23 +49,17 @@ def main(
 ) -> None:
     logger.info("Training model...")
     features_config = features["default"]
-    train_data = pd.read_parquet(training_table_path)
-    train_data_labels = train_data.offer_subcategory_id.tolist()
-    train_data_clean = train_data.drop(columns=["label", "offer_subcategory_id"])
+    data = pd.read_parquet(training_table_path)
+    data_labels = data.offer_subcategory_id
+    data_clean = data.drop(columns=["label", "offer_subcategory_id"])
 
     # Split the data into training and validation sets
     (
-        train_data_clean_train,
-        train_data_clean_val,
-        train_labels_train,
-        train_labels_val,
-    ) = train_test_split(
-        train_data_clean,
-        train_data_labels,
-        test_size=0.1,
-        random_state=42,
-        stratify=train_data_labels,
-    )
+        train_data,
+        val_data,
+        labels_train,
+        labels_val,
+    ) = split_train_val(data_clean, data_labels)
 
     logger.info("Init classifier..")
     # Add auto_class_weights to balance
@@ -61,8 +72,8 @@ def main(
     logger.info("Fitting model..")
     ## Model Fit
     model.fit(
-        train_data_clean_train,
-        train_labels_train,
+        train_data,
+        labels_train,
         cat_features=features_config["catboost_features_types"]["cat_features"],
         text_features=features_config["catboost_features_types"]["text_features"],
         embedding_features=features_config["catboost_features_types"][
@@ -71,8 +82,8 @@ def main(
         verbose=True,
         early_stopping_rounds=50,
         eval_set=(
-            train_data_clean_val,
-            train_labels_val,
+            val_data,
+            labels_val,
         ),
     )
 

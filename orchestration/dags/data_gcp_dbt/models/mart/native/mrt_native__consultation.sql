@@ -77,11 +77,15 @@ SELECT
     fc.venue_id,
     fc.traffic_medium,
     fc.traffic_campaign,
+    fc.entry_id,
+    ht.home_name,
+    ht.home_audience,
+    ht.user_lifecycle_home,
     CASE WHEN fc.origin="similar_offer" AND fc.similar_offer_playlist_type = "sameCategorySimilarOffers" THEN "same_category_similar_offer"
         WHEN fc.origin="similar_offer" AND fc.similar_offer_playlist_type = "otherCategoriesSimilarOffers" THEN "other_category_similar_offer"
         ELSE fc.origin END AS consultation_macro_origin,
-    CASE WHEN fc.origin="home" AND fc.home_type="generale" THEN "generic_home"
-        WHEN fc.origin="home" AND fc.home_type="marketing" THEN "n1_and_marketing_home"
+    CASE WHEN ht.entry_id IS NOT NULL AND ht.home_type IS NOT NULL THEN CONCAT("home_",home_type)
+        WHEN ht.entry_id IS NOT NULL AND ht.home_type IS NULL THEN "home_without_tag"
         WHEN fc.origin="search" AND fc.search_query_input_is_generic IS TRUE THEN "generic_query_search"
         WHEN fc.origin="search" AND fc.search_query_input_is_generic IS FALSE THEN "specific_query_search"
         WHEN fc.origin="search" AND fc.query is NULL THEN "landing_search"
@@ -96,6 +100,7 @@ SELECT
         ELSE fc.origin END as consultation_micro_origin
 FROM {{ ref('int_firebase__consultation') }} fc
 LEFT JOIN {{ ref('int_applicative__offer') }} AS o ON fc.offer_id = o.offer_id
+LEFT JOIN {{ ref('int_contentful__home_tag') }} AS ht ON ht.entry_id=fc.entry_id
 LEFT JOIN consult_offer_through_venue AS ov ON ov.consultation_id = fc.consultation_id AND fc.origin = "venue"
 LEFT JOIN consult_offer_through_similar_offer AS so ON so.consultation_id = fc.consultation_id AND fc.origin = "similar_offer"
 WHERE 1=1

@@ -91,7 +91,7 @@ consult_offer AS (
         venue_id,
         similar_offer_id,
         origin as consult_offer_origin
-    FROM {{ ref('int_firebase__consultation') }}
+    FROM {{ ref('int_firebase__native_consultation') }}
     WHERE 1=1
         {% if is_incremental() %}
         AND event_date = date_sub('{{ ds() }}', INTERVAL 3 day)

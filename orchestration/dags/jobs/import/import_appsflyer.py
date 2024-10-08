@@ -5,7 +5,7 @@ from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -59,18 +59,12 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_start_task"
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
-        python_version="3.9",
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
+        branch="{{ params.branch }}",
+        python_version="3.10",
         base_dir=BASE_PATH,
-        command="pip install -r requirements.txt --user",
         dag=dag,
         retries=2,
     )
@@ -79,6 +73,7 @@ with DAG(
         task_id="activity_report_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        installer="uv",
         command="python api_import.py --n-days {{ params.n_days }} --table-name activity_report ",
     )
 
@@ -86,6 +81,7 @@ with DAG(
         task_id="daily_report_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        installer="uv",
         command="python api_import.py --n-days {{ params.n_days }} --table-name daily_report ",
     )
 
@@ -93,6 +89,7 @@ with DAG(
         task_id="partner_report_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        installer="uv",
         command="python api_import.py --n-days {{ params.n_days }} --table-name partner_report ",
     )
 
@@ -100,6 +97,7 @@ with DAG(
         task_id="in_app_event_report_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        installer="uv",
         command="python api_import.py --n-days {{ params.n_days }} --table-name in_app_event_report ",
     )
 
@@ -107,6 +105,7 @@ with DAG(
         task_id="gcs_cost_etl_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        installer="uv",
         command=f"python gcs_import.py --gcs-base-path {GCS_ETL_PARAMS['GCS_BASE_PATH']} --prefix-table-name {GCS_ETL_PARAMS['PREFIX_TABLE_NAME']} --date {GCS_ETL_PARAMS['DATE']} ",
     )
 
@@ -133,8 +132,7 @@ table_jobs = depends_loop(
 
 (
     gce_instance_start
-    >> fetch_code
-    >> install_dependencies
+    >> fetch_install_code
     >> activity_report_op
     >> daily_report_op
     >> partner_report_op

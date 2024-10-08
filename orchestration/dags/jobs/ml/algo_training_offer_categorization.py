@@ -191,6 +191,7 @@ with DAG(
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
         "--model-name {{ params.model_name }} "
         f"--training-table-path {dag_config['STORAGE_PATH']}/train.parquet "
+        f"--validation-table-path {dag_config['STORAGE_PATH']}/val.parquet "
         "--run-name {{ params.run_name }} "
         "--num-boost-round {{ params.num_boost_round }}",
         dag=dag,

@@ -1,12 +1,12 @@
-CREATE OR REPLACE TABLE analytics.monthy_aggregated_offerer_collective_revenue ON cluster default
+CREATE OR REPLACE TABLE analytics.yearly_aggregated_venue_collective_revenue ON cluster default
     ENGINE = SummingMergeTree()
-    PARTITION BY creation_month
-    ORDER BY (offerer_id)
+    PARTITION BY creation_year
+    ORDER BY (venue_id)
     SETTINGS storage_policy='gcs_main'
 AS
 SELECT
-    date_trunc('MONTH', toDate (creation_date)) AS creation_month,
-    cast(offerer_id as String) as offerer_id,
+    date_trunc('YEAR', toDate (creation_date)) AS creation_year,
+    cast(venue_id as String) as venue_id,
     sum(
         case
             when collective_booking_status = 'USED'
@@ -17,5 +17,4 @@ SELECT
     sum(booking_amount) AS expected_revenue
 FROM
     intermediate.collective_booking
-GROUP BY
-    1,2
+GROUP BY 1,2

@@ -1,5 +1,5 @@
 select
-    offerer_id,
+    venue_id,
     offer_id,
     date(booking_creation_date) as creation_date,
     date(booking_used_date) as used_date,
@@ -8,4 +8,4 @@ select
     booking_quantity,
     booking_amount
 from {{ ref("mrt_global__booking") }}
-where offerer_id is not null and booking_status != 'CANCELLED'
+where venue_id is not null and booking_status != 'CANCELLED'

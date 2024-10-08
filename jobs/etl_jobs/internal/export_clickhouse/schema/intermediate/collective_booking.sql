@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS intermediate.collective_booking ON CLUSTER default
 (
     update_date String,
-    offerer_id String,
+    venue_id String,
     collective_offer_id String,
     offer_id Nullable(String),
     creation_date String,
@@ -14,6 +14,6 @@ CREATE TABLE IF NOT EXISTS intermediate.collective_booking ON CLUSTER default
 )
 ENGINE = MergeTree
 PARTITION BY update_date
-ORDER BY (offerer_id, collective_booking_status, collective_offer_id)
+ORDER BY (venue_id, collective_booking_status, collective_offer_id)
 SETTINGS storage_policy='gcs_main'
-COMMENT 'Collective offer bookings, partitioned  by update date ordered by offerer, booking status and collective offer'
+COMMENT 'Collective offer bookings, partitioned  by update date ordered by venue, booking status and collective offer'

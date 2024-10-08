@@ -49,10 +49,10 @@ DBT_MODELS = [
 # List of aggreated tables names to be refreshed
 CLICKHOUSE_TABLES = [
     ("analytics", "daily_aggregated_offer_event"),
-    ("analytics", "monthly_aggregated_offerer_collective_revenue"),
-    ("analytics", "monthly_aggregated_offerer_revenue"),
-    ("analytics", "yearly_aggregated_offerer_collective_revenue"),
-    ("analytics", "yearly_aggregated_offerer_revenue"),
+    ("analytics", "monthly_aggregated_venue_collective_revenue"),
+    ("analytics", "monthly_aggregated_venue_revenue"),
+    ("analytics", "yearly_aggregated_venue_collective_revenue"),
+    ("analytics", "yearly_aggregated_venue_revenue"),
 ]
 
 TABLES_CONFIGS = generate_table_configs(models=DBT_MODELS)

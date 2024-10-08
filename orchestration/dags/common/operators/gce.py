@@ -361,7 +361,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
             commands_list.append("echo no virtual environment activation")
 
         if self.base_dir is not None:
-            commands_list.append(f"cd {self.base_dir}")
+            commands_list.append(f"cd ~/{self.base_dir}")
 
         commands_list.append(self.command)
 
@@ -433,11 +433,12 @@ class InstallDependenciesOperator(SSHGCEOperator):
         Construct the command to clone the repo and install dependencies based on the installer.
         """
         # Define the directory where the repo will be cloned
-        ROOT_REPO_DIR = "data-gcp"
+        REPO_DIR = "data-gcp"
 
         # Git clone command
         clone_command = f"""
-            DIR={ROOT_REPO_DIR} &&
+            cd ~/ &&
+            DIR={REPO_DIR} &&
             if [ -d "$DIR" ]; then
                 echo "Directory exists. Fetching updates..." &&
                 cd $DIR &&
@@ -449,7 +450,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
                 cd $DIR &&
                 git checkout {branch};
             fi &&
-            cd ..
+            cd ~/
         """
 
         if installer == "uv":

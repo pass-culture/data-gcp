@@ -24,7 +24,7 @@ SELECT DISTINCT
     CASE
             WHEN EXISTS (
                 SELECT 1
-                FROM {{ source('clean', 'subcategories') }} sc
+                FROM {{ source('raw', 'subcategories') }} sc
                 WHERE LOWER(query) LIKE CONCAT('%', LOWER(sc.category_id), '%')
                     OR LOWER(query) LIKE CONCAT('%', LOWER(sc.id), '%')
             )

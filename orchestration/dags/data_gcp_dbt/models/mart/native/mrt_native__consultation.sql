@@ -112,7 +112,7 @@ SELECT
     CASE WHEN consult.origin="similar_offer" AND consult.similar_offer_playlist_type = "sameCategorySimilarOffers" THEN "same_category_similar_offer"
         WHEN consult.origin="similar_offer" AND consult.similar_offer_playlist_type = "otherCategoriesSimilarOffers" THEN "other_category_similar_offer"
         ELSE consult.origin END AS consultation_macro_origin,
-    CASE WHEN ht.entry_id IS NOT NULL AND ht.home_type IS NOT NULL THEN CONCAT("home_",home_type)
+    CASE WHEN ht.entry_id IS NOT NULL AND ht.home_type IS NOT NULL THEN CONCAT("home_",ht.home_type)
         WHEN ht.entry_id IS NOT NULL AND ht.home_type IS NULL THEN "home_without_tag"
         WHEN consult.origin="search" AND consult.search_query_input_is_generic IS TRUE THEN "generic_query_search"
         WHEN consult.origin="search" AND consult.search_query_input_is_generic IS FALSE THEN "specific_query_search"

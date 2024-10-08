@@ -57,7 +57,7 @@ select
     -- hub
     countif(event_name = "page_view" and page_name in ("Selection du type d’offre - pass Culture Pro", "Choix de la nature de l'offre - Créer une offre - pass Culture Pro")) as total_offer_creation_hubs,
     -- indiv
-    countif(event_name = "page_view" and page_name in ("Création - Détail de l’offre - pass Culture Pro", "Détails - Créer une offre individuelle - pass Culture Pro")) as total_started_created_individual_offers,
+    countif(event_name = "page_view" and page_name in ("Création - Détail de l’offre - pass Culture Pro", "Détails - Créer une offre individuelle - pass Culture Pro","Détails de l’offre - Créer une offre individuelle - pass Culture Pro")) as total_started_created_individual_offers,
     countif(event_name = "page_view" and page_name = "Confirmation - Offre individuelle publiée - pass Culture Pro") as total_confirmed_created_individual_offers,
     -- collectiv
     countif(event_name = "page_view" and page_location like "%/offre/creation/collectif/vitrine%") as total_started_created_template_collective_offers,

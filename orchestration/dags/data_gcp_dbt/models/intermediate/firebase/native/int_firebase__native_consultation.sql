@@ -38,7 +38,6 @@ SELECT DISTINCT
             ELSE FALSE
         END AS search_query_input_is_generic,
     query,
-    module_id,
     entry_id,
     home_type,
     similar_offer_id,

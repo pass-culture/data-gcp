@@ -1,4 +1,1 @@
-SELECT 
-    zone_id
-    ,nom
-FROM `{{ bigquery_seed_dataset }}.pilote_geographic_standards`
+select zone_id, nom from `{{ bigquery_seed_dataset }}.pilote_geographic_standards`

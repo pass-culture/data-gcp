@@ -1,1 +1,1 @@
-SELECT * FROM public.login_history
+select * from public.login_history

@@ -1,89 +1,83 @@
-WITH user_visits AS (
-    SELECT
-        user_id,
-        COUNT(DISTINCT CONCAT(user_pseudo_id, session_id)) AS total_visit_last_month
-    FROM `{{ bigquery_int_firebase_dataset }}.native_event`
-    WHERE DATE(event_date) >= DATE_SUB(CURRENT_DATE, INTERVAL 1 MONTH)
-    GROUP BY user_id
-),
+with
+    user_visits as (
+        select
+            user_id,
+            count(distinct concat(user_pseudo_id, session_id)) as total_visit_last_month
+        from `{{ bigquery_int_firebase_dataset }}.native_event`
+        where date(event_date) >= date_sub(current_date, interval 1 month)
+        group by user_id
+    ),
 
-previous_export AS (
-    SELECT
-        DISTINCT user_id
-    FROM  `{{ bigquery_clean_dataset }}.qualtrics_ir_jeunes`
-    WHERE calculation_month >= DATE_SUB(DATE("{{ current_month(ds) }}"), INTERVAL 6 MONTH)
+    previous_export as (
+        select distinct user_id
+        from `{{ bigquery_clean_dataset }}.qualtrics_ir_jeunes`
+        where
+            calculation_month
+            >= date_sub(date("{{ current_month(ds) }}"), interval 6 month)
 
+    ),
 
-),
+    answers as (
+        select distinct user_id from `{{ bigquery_raw_dataset }}.qualtrics_answers`
+    ),
 
-answers AS (
-    SELECT distinct user_id
-    FROM `{{ bigquery_raw_dataset }}.qualtrics_answers`
-),
+    ir_export as (
+        select
+            user_data.user_id,
+            user_data.current_deposit_type as deposit_type,
+            user_data.user_civility,
+            user_data.total_non_cancelled_individual_bookings as no_cancelled_booking,
+            user_data.user_region_name,
+            user_data.total_actual_amount_spent as actual_amount_spent,
+            user_data.user_activity,
+            user_visits.total_visit_last_month,
+            -- TODO rename field in qualtrics
+            user_location.user_rural_city_type as geo_type,
+            user_location.code_qpv as code_qpv,
+            user_location.zrr_level as zrr,
+            user_data.user_seniority
 
-ir_export AS (
-    SELECT
-        user_data.user_id,
-        user_data.current_deposit_type as deposit_type,
-        user_data.user_civility,
-        user_data.total_non_cancelled_individual_bookings as no_cancelled_booking,
-        user_data.user_region_name,
-        user_data.total_actual_amount_spent as actual_amount_spent,
-        user_data.user_activity,
-        user_visits.total_visit_last_month,
-        -- TODO rename field in qualtrics
-        user_location.user_rural_city_type as geo_type,
-        user_location.code_qpv as code_qpv,
-        user_location.zrr_level as zrr,
-        user_data.user_seniority
-
-        FROM `{{ bigquery_analytics_dataset }}.global_user` user_data
-        LEFT JOIN `{{ bigquery_int_geo_dataset }}.user_location` user_location ON user_location.user_id = user_data.user_id
-        LEFT JOIN `{{ bigquery_raw_dataset }}.qualtrics_opt_out_users` opt_out on opt_out.ext_ref = user_data.user_id
-        LEFT JOIN user_visits ON user_data.user_id = user_visits.user_id
-        LEFT JOIN answers ON user_data.user_id = answers.user_id
-        WHERE
+        from `{{ bigquery_analytics_dataset }}.global_user` user_data
+        left join
+            `{{ bigquery_int_geo_dataset }}.user_location` user_location
+            on user_location.user_id = user_data.user_id
+        left join
+            `{{ bigquery_raw_dataset }}.qualtrics_opt_out_users` opt_out
+            on opt_out.ext_ref = user_data.user_id
+        left join user_visits on user_data.user_id = user_visits.user_id
+        left join answers on user_data.user_id = answers.user_id
+        where
             user_data.user_id is not null
-        AND user_data.current_deposit_type in ("GRANT_15_17", "GRANT_18")
-        AND user_is_current_beneficiary is true
-        AND user_data.user_is_active is true
-        AND user_data.user_has_enabled_marketing_email is true
-        AND opt_out.contact_id IS NULL
-        AND answers.user_id IS NULL
-),
+            and user_data.current_deposit_type in ("GRANT_15_17", "GRANT_18")
+            and user_is_current_beneficiary is true
+            and user_data.user_is_active is true
+            and user_data.user_has_enabled_marketing_email is true
+            and opt_out.contact_id is null
+            and answers.user_id is null
+    ),
 
-grant_15_17 as (
-    SELECT
-        ir.*
-    FROM ir_export ir
-    LEFT JOIN previous_export pe
-    ON pe.user_id = ir.user_id
-    WHERE ir.deposit_type = "GRANT_15_7"
-    AND pe.user_id IS NULL
-    ORDER BY rand()
-    LIMIT {{ params.volume }}
-),
+    grant_15_17 as (
+        select ir.*
+        from ir_export ir
+        left join previous_export pe on pe.user_id = ir.user_id
+        where ir.deposit_type = "GRANT_15_7" and pe.user_id is null
+        order by rand()
+        limit {{ params.volume }}
+    ),
 
-grant_18 as (
-    SELECT
-        ir.*
-    FROM ir_export ir
-    LEFT JOIN previous_export pe
-    ON pe.user_id = ir.user_id
-    WHERE deposit_type = "GRANT_18"
-    AND pe.user_id IS NULL
-    ORDER BY rand()
-    LIMIT {{ params.volume }}
-)
+    grant_18 as (
+        select ir.*
+        from ir_export ir
+        left join previous_export pe on pe.user_id = ir.user_id
+        where deposit_type = "GRANT_18" and pe.user_id is null
+        order by rand()
+        limit {{ params.volume }}
+    )
 
-SELECT
-    DATE("{{ current_month(ds) }}") as calculation_month,
-    CURRENT_DATE as export_date,
-    *
-FROM grant_18
-UNION ALL
-SELECT
-    DATE("{{ current_month(ds) }}") as calculation_month,
-    CURRENT_DATE as export_date,
-    *
-FROM grant_15_17
+select
+    date("{{ current_month(ds) }}") as calculation_month, current_date as export_date, *
+from grant_18
+union all
+select
+    date("{{ current_month(ds) }}") as calculation_month, current_date as export_date, *
+from grant_15_17

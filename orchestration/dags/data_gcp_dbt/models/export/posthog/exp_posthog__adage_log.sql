@@ -37,10 +37,7 @@ select
         partner_confirmed_collective_bookings,
         partner_department_code
     ) as extra_params,
-    struct(
-        uai,
-        user_role
-    ) as user_params,
+    struct(uai, user_role) as user_params,
     'adage' as origin
-from {{ ref('mrt_collective__adage_log') }}
-where user_id is not NULL
+from {{ ref("mrt_collective__adage_log") }}
+where user_id is not null

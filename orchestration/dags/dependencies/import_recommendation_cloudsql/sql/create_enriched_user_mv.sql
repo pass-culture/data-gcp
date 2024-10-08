@@ -1,23 +1,27 @@
-DROP FUNCTION IF EXISTS get_enriched_user_{{ ts_nodash  }} CASCADE;
-CREATE OR REPLACE FUNCTION get_enriched_user_{{ ts_nodash  }}()
-RETURNS TABLE (   
-            user_id varchar,
-            user_deposit_creation_date TIMESTAMP,
-            user_birth_date TIMESTAMP,
-            user_deposit_initial_amount REAL,
-            user_theoretical_remaining_credit REAL,
-            booking_cnt INTEGER,
-            consult_offer INTEGER,
-            has_added_offer_to_favorites INTEGER
-) AS
-$body$
+drop function if exists get_enriched_user_{{ ts_nodash }}
+cascade
+;
+create or replace function get_enriched_user_{{ ts_nodash }} ()
+returns
+    table(
+        user_id varchar,
+        user_deposit_creation_date timestamp,
+        user_birth_date timestamp,
+        user_deposit_initial_amount real,
+        user_theoretical_remaining_credit real,
+        booking_cnt integer,
+        consult_offer integer,
+        has_added_offer_to_favorites integer
+    )
+as $body$
 BEGIN
-    RETURN QUERY 
+    RETURN QUERY
     SELECT *
     FROM public.enriched_user;
 END;
 $body$
-LANGUAGE plpgsql;
+language plpgsql
+;
 
 
 -- Create tmp Materialized view
@@ -27,7 +31,7 @@ SELECT * FROM get_enriched_user_{{ ts_nodash  }}()
 WITH NO DATA;
 
 
-
 CREATE UNIQUE INDEX idx_enriched_user_mv_user_tmp_{{ ts_nodash }} ON public.enriched_user_mv_tmp USING btree (user_id);
 -- Refresh state
-REFRESH MATERIALIZED VIEW enriched_user_mv_tmp;
+refresh materialized view enriched_user_mv_tmp
+;

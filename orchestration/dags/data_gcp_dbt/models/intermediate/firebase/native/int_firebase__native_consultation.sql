@@ -20,7 +20,30 @@ SELECT DISTINCT
     event_name,
     venue_id,
     traffic_medium,
-    traffic_campaign
+    traffic_campaign,
+    CASE
+            WHEN EXISTS (
+                SELECT 1
+                FROM {{ source('clean', 'subcategories') }} sc
+                WHERE LOWER(query) LIKE CONCAT('%', LOWER(sc.category_id), '%')
+                    OR LOWER(query) LIKE CONCAT('%', LOWER(sc.id), '%')
+            )
+            OR EXISTS (
+                SELECT 1
+                FROM {{ source('seed', 'macro_rayons') }} mr
+                WHERE LOWER(query) LIKE CONCAT('%', LOWER(mr.macro_rayon), '%')
+                    OR LOWER(query) LIKE CONCAT('%', LOWER(mr.rayon), '%')
+            )
+            THEN TRUE
+            ELSE FALSE
+        END AS search_query_input_is_generic,
+    query,
+    module_id,
+    entry_id,
+    home_type,
+    similar_offer_id,
+    similar_offer_playlist_type,
+    multi_venue_offer_id
 FROM {{ ref('int_firebase__native_event') }}
 WHERE event_name = 'ConsultOffer'
     AND user_id IS NOT NULL

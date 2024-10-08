@@ -156,12 +156,24 @@ class BaseSSHGCEOperator(BaseOperator):
                 if context and self.do_xcom_push:
                     ti = context.get("task_instance")
                     ti.xcom_push(key="ssh_exit", value=exit_status)
+
+                    # Ensure there are enough lines in the output
                     lines_result = agg_stdout.decode("utf-8").split("\n")
-                    if len(lines_result[-1]) > 0:
-                        result = lines_result[-1]
+                    self.log.info(f"Lines result: {lines_result}")
+                    if len(lines_result) == 0:
+                        result = ""  # No output available
+                    elif len(lines_result) == 1:
+                        result = lines_result[0]  # Only one line exists, use it
                     else:
-                        result = lines_result[-2]
+                        # Use the last or second-to-last line depending on content
+                        if len(lines_result[-1]) > 0:
+                            result = lines_result[-1]
+                        else:
+                            result = lines_result[-2]
+
+                    # Push result to XCom
                     ti.xcom_push(key="result", value=result)
+
                 if exit_status != 0:
                     raise AirflowException(
                         f"SSH operator error: exit status = {exit_status}"

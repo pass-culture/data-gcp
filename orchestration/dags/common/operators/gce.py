@@ -156,12 +156,24 @@ class BaseSSHGCEOperator(BaseOperator):
                 if context and self.do_xcom_push:
                     ti = context.get("task_instance")
                     ti.xcom_push(key="ssh_exit", value=exit_status)
+
+                    # Ensure there are enough lines in the output
                     lines_result = agg_stdout.decode("utf-8").split("\n")
-                    if len(lines_result[-1]) > 0:
-                        result = lines_result[-1]
+                    self.log.info(f"Lines result: {lines_result}")
+                    if len(lines_result) == 0:
+                        result = ""  # No output available
+                    elif len(lines_result) == 1:
+                        result = lines_result[0]  # Only one line exists, use it
                     else:
-                        result = lines_result[-2]
+                        # Use the last or second-to-last line depending on content
+                        if len(lines_result[-1]) > 0:
+                            result = lines_result[-1]
+                        else:
+                            result = lines_result[-2]
+
+                    # Push result to XCom
                     ti.xcom_push(key="result", value=result)
+
                 if exit_status != 0:
                     raise AirflowException(
                         f"SSH operator error: exit status = {exit_status}"
@@ -291,6 +303,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         "gce_zone",
         "installer",
         "base_dir",
+        "requirement_file",
     ]
     DEFAULT_EXPORT = {
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
@@ -309,6 +322,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         base_dir: str = None,
         environment: t.Dict[str, str] = {},
         installer: str = "conda",
+        requirement_file: str = "requirements.txt",
         *args,
         **kwargs,
     ):
@@ -317,6 +331,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         self.environment = environment
         self.command = command
         self.instance_name = instance_name
+        self.requirement_file = requirement_file
 
         super(SSHGCEOperator, self).__init__(
             instance_name=self.instance_name,
@@ -339,17 +354,18 @@ class SSHGCEOperator(BaseSSHGCEOperator):
             "\n".join([f"export {key}={value}" for key, value in environment.items()])
         )
 
+        if self.base_dir is not None:
+            commands_list.append(f"cd ~/{self.base_dir}")
+
         if self.installer == "conda":
             commands_list.append(
                 "conda init zsh && source ~/.zshrc && conda activate data-gcp"
             )
         elif self.installer == "uv":
             commands_list.append("source .venv/bin/activate")
+            commands_list.append(f"uv pip sync {self.requirement_file}")
         else:
             commands_list.append("echo no virtual environment activation")
-
-        if self.base_dir is not None:
-            commands_list.append(f"cd {self.base_dir}")
 
         commands_list.append(self.command)
 
@@ -362,7 +378,14 @@ class SSHGCEOperator(BaseSSHGCEOperator):
 class InstallDependenciesOperator(SSHGCEOperator):
     REPO = "https://github.com/pass-culture/data-gcp.git"
     template_fields = set(
-        ["installer", "requirement_file", "branch", "instance_name", "base_dir"]
+        [
+            "installer",
+            "requirement_file",
+            "branch",
+            "instance_name",
+            "base_dir",
+            "python_version",
+        ]
         + SSHGCEOperator.template_fields
     )
 
@@ -394,6 +417,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
             environment=self.environment,
             base_dir=self.base_dir,  # Pass base_dir to parent class
             installer=self.installer,
+            requirement_file=self.requirement_file,
             *args,
             **kwargs,
         )
@@ -421,11 +445,12 @@ class InstallDependenciesOperator(SSHGCEOperator):
         Construct the command to clone the repo and install dependencies based on the installer.
         """
         # Define the directory where the repo will be cloned
-        ROOT_REPO_DIR = "data-gcp"
+        REPO_DIR = "data-gcp"
 
         # Git clone command
         clone_command = f"""
-            DIR={ROOT_REPO_DIR} &&
+            cd ~/ &&
+            DIR={REPO_DIR} &&
             if [ -d "$DIR" ]; then
                 echo "Directory exists. Fetching updates..." &&
                 cd $DIR &&
@@ -437,16 +462,16 @@ class InstallDependenciesOperator(SSHGCEOperator):
                 cd $DIR &&
                 git checkout {branch};
             fi &&
-            cd ..
+            cd ~/
         """
 
         if installer == "uv":
             install_command = f"""
                 curl -LsSf https://astral.sh/uv/install.sh | sh &&
                 source $HOME/.cargo/env &&
+                cd {base_dir} &&
                 uv venv --python {self.python_version} &&
                 source .venv/bin/activate &&
-                cd {base_dir} &&
                 uv pip sync {requirement_file}
             """
         elif installer == "conda":
@@ -455,9 +480,9 @@ class InstallDependenciesOperator(SSHGCEOperator):
                 python -m pip install --upgrade --user urllib3 &&
                 conda create --name data-gcp python={self.python_version} -y -q &&
                 conda init zsh &&
+                cd {base_dir} &&
                 source ~/.zshrc &&
                 conda activate data-gcp &&
-                cd {base_dir} &&
                 pip install -r {requirement_file} --user
             """
         else:

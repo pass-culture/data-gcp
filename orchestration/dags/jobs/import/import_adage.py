@@ -4,7 +4,7 @@ from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -65,18 +65,12 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_start_task"
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
-        python_version="3.8",
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
+        branch="{{ params.branch }}",
+        python_version="3.10",
         base_dir=BASE_PATH,
-        command="pip install -r requirements.txt --user",
         dag=dag,
         retries=2,
     )
@@ -87,6 +81,7 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="python main.py ",
+        installer="uv",
     )
 
     gce_instance_stop = StopGCEOperator(
@@ -98,8 +93,7 @@ with DAG(
     (
         sleep_op
         >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
+        >> fetch_install_code
         >> adage_to_bq
         >> gce_instance_stop
         >> end

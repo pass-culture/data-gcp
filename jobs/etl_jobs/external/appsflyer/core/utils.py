@@ -38,7 +38,7 @@ def save_to_bq(df, table_name, start_date, end_date, schema_field, date_column):
     for event_date in _dates:
         date_str = event_date.strftime("%Y-%m-%d")
         tmp_df = df[df[date_column].dt.date == pd.to_datetime(date_str).date()]
-        tmp_df[date_column] = tmp_df[date_column].astype(str)
+        tmp_df.loc[:, date_column] = tmp_df.loc[:, date_column].astype(str)
         if tmp_df.shape[0] > 0:
             print(f"Saving.. {table_name} -> {date_str}")
             __save_to_bq(tmp_df, date_str, table_name, schema_field)
@@ -47,7 +47,7 @@ def save_to_bq(df, table_name, start_date, end_date, schema_field, date_column):
 def __save_to_bq(df, event_date, table_name, schema_field):
     date_fmt = datetime.strptime(event_date, "%Y-%m-%d")
     yyyymmdd = date_fmt.strftime("%Y%m%d")
-    df["event_date"] = date_fmt
+    df.loc[:, "event_date"] = date_fmt
     bigquery_client = bigquery.Client()
     table_id = f"{GCP_PROJECT_ID}.{BIGQUERY_RAW_DATASET}.{table_name}${yyyymmdd}"
     job_config = bigquery.LoadJobConfig(

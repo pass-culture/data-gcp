@@ -5,7 +5,7 @@ from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -55,19 +55,12 @@ with DAG(
         labels={"job_type": "long_task"},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
+        branch="{{ params.branch }}",
         python_version="3.10",
-        retries=2,
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command="pip install -r requirements.txt --user",
         dag=dag,
         retries=2,
     )
@@ -76,6 +69,7 @@ with DAG(
         task_id="import_ios",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        installer="uv",
         command=f"""
         python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} ios
         """,
@@ -86,6 +80,7 @@ with DAG(
         task_id="import_android",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        installer="uv",
         command=f"""
         python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} android
         """,
@@ -120,9 +115,9 @@ with DAG(
         default_end_operator=end,
     )
 
-    (start >> gce_instance_start >> fetch_code >> install_dependencies)
+    (start >> gce_instance_start >> fetch_install_code)
     (
-        install_dependencies
+        fetch_install_code
         >> ios_job
         >> android_job
         >> gce_instance_stop

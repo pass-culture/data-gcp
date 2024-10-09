@@ -14,3 +14,4 @@ DateTime==4.3
 gcsfs==0.8.0
 temp==2020.7.2
 Werkzeug==2.2.3
+pandas-gbq

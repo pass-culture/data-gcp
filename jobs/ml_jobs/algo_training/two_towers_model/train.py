@@ -1,7 +1,4 @@
 import json
-import os
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 import mlflow
 import tensorflow as tf
@@ -65,6 +62,9 @@ def train(
     ),
     run_name: str = typer.Option(None, help="Name of the MLflow run if set"),
 ):
+    if not tf.config.list_physical_devices("GPU"):
+        raise Exception("No Cuda device found")
+
     tf.random.set_seed(seed)
 
     with open(

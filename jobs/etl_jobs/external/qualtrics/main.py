@@ -1,6 +1,5 @@
 import time
 
-import pandas as pd
 import typer
 
 from qualtrics_opt_out import import_qualtrics_opt_out
@@ -13,11 +12,8 @@ from utils import (
     API_TOKEN,
     DATA_CENTER,
     DIRECTORY_ID,
-    IR_JEUNES_TABLE_SCHEMA,
-    IR_PRO_TABLE_SCHEMA,
     OPT_OUT_EXPORT_COLUMNS,
     save_partition_table_to_bq,
-    save_to_raw_bq,
 )
 
 ir_surveys_mapping = {
@@ -37,37 +33,11 @@ def run(
         import_qualtrics_opt_out(
             DATA_CENTER, DIRECTORY_ID, API_TOKEN, OPT_OUT_EXPORT_COLUMNS
         )
-    elif task == "import_ir_survey_answers":
-        dfs = []
-        for target, survey_id in ir_surveys_mapping.items():
-            if target == "pro":
-                qualtrics_survey = QualtricsSurvey(
-                    api_token=API_TOKEN, survey_id=survey_id, data_center=DATA_CENTER
-                )
-                qualtrics_survey.get_qualtrics_survey()
-                processed_df = qualtrics_survey.process_ir_qualtrics_data(target)
-                save_to_raw_bq(
-                    processed_df,
-                    f"qualtrics_answers_ir_survey_{target}",
-                    IR_PRO_TABLE_SCHEMA,
-                )
-            else:
-                qualtrics_survey = QualtricsSurvey(
-                    api_token=API_TOKEN, survey_id=survey_id, data_center=DATA_CENTER
-                )
-                qualtrics_survey.get_qualtrics_survey()
-                processed_df = qualtrics_survey.process_ir_qualtrics_data(target)
-                dfs.append(processed_df)
-        jeunes_df = pd.concat(dfs)
-        save_to_raw_bq(
-            jeunes_df, "qualtrics_answers_ir_survey_jeunes", IR_JEUNES_TABLE_SCHEMA
-        )
 
     elif task == "import_all_survey_answers":
         active_surveys = import_survey_metadata(
             data_center=DATA_CENTER, api_token=API_TOKEN
         )
-        dfs = []
         i = 0
         for s_id in active_surveys:
             i = i + 1

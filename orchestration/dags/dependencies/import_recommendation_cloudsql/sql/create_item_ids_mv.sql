@@ -1,17 +1,20 @@
-DROP FUNCTION IF EXISTS get_item_ids_{{ ts_nodash }} CASCADE;
-CREATE OR REPLACE FUNCTION get_item_ids_{{ ts_nodash }}()
-RETURNS TABLE (   
-    offer_id varchar,
-    item_id varchar,
-    booking_number int,
-    is_sensitive bool,
-    venue_latitude decimal,
-    venue_longitude decimal
-) AS
-$body$
+drop function if exists get_item_ids_{{ ts_nodash }}
+cascade
+;
+create or replace function get_item_ids_{{ ts_nodash }} ()
+returns
+    table(
+        offer_id varchar,
+        item_id varchar,
+        booking_number int,
+        is_sensitive bool,
+        venue_latitude decimal,
+        venue_longitude decimal
+    )
+as $body$
 BEGIN
-    RETURN QUERY 
-    SELECT 
+    RETURN QUERY
+    SELECT
         ro.offer_id::varchar as offer_id,
         max(ro.item_id)::varchar as item_id,
         max(ro.booking_number)::int as booking_number,
@@ -22,7 +25,8 @@ BEGIN
     GROUP BY ro.offer_id ;
 END;
 $body$
-LANGUAGE plpgsql;
+language plpgsql
+;
 
 
 -- Create tmp Materialized view
@@ -34,4 +38,5 @@ WITH NO DATA;
 
 CREATE UNIQUE INDEX idx_item_ids_mv_{{ ts_nodash }} ON public.item_ids_mv_tmp USING btree (offer_id);
 -- Refresh state
-REFRESH MATERIALIZED VIEW item_ids_mv_tmp;
+refresh materialized view item_ids_mv_tmp
+;

@@ -37,7 +37,10 @@ select
                                 "format",
                                 "bookingStatus",
                                 "buttonType",
-                                "fileType"
+                                "fileType",
+                                "subcategoryId",
+                                "choosenSuggestedSubcategory"
+
     ]) }},
     (select event_params.value.double_value from UNNEST(event_params) event_params where event_params.key = 'offerId') as double_offer_id,
     (select event_params.value.string_value from UNNEST(event_params) event_params where event_params.key = 'from') as origin,

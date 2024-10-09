@@ -1,19 +1,18 @@
-
 -- create tmp materialized table
-DROP FUNCTION IF EXISTS get_non_recommendable_items_{{ ts_nodash  }} CASCADE;
-CREATE OR REPLACE FUNCTION get_non_recommendable_items_{{ ts_nodash  }}()
-RETURNS TABLE (   
-                user_id varchar,
-                item_id varchar
-                ) AS
-$body$
+drop function if exists get_non_recommendable_items_{{ ts_nodash }}
+cascade
+;
+create or replace function get_non_recommendable_items_{{ ts_nodash }} ()
+returns table(user_id varchar, item_id varchar)
+as $body$
 BEGIN
-    RETURN QUERY 
+    RETURN QUERY
     SELECT *
     FROM public.non_recommendable_items_data;
 END;
 $body$
-LANGUAGE plpgsql;
+language plpgsql
+;
 
 
 -- Create tmp Materialized view
@@ -29,4 +28,5 @@ CREATE UNIQUE INDEX idx_non_recommendable_user_item_id_tmp_{{ ts_nodash  }}  ON 
 CREATE INDEX idx_non_recommendable_item_id_tmp_{{ ts_nodash  }}  ON public.non_recommendable_items_mv_tmp(user_id);
 
 -- Refresh state
-REFRESH MATERIALIZED VIEW non_recommendable_items_mv_tmp;
+refresh materialized view non_recommendable_items_mv_tmp
+;

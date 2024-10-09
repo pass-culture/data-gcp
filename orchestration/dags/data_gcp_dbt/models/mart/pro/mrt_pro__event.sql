@@ -67,6 +67,8 @@ select
     e.download_button_type,
     e.download_file_type,
     e.download_files_cnt,
+    e.offer_subcategory_id,
+    e.suggested_offer_subcategory_selected,
     COALESCE(o.offerer_name, v.offerer_name) as offerer_name,
     o.first_individual_offer_creation_date as offerer_first_individual_offer_creation_date,
     o.first_collective_offer_creation_date as offerer_first_collective_offer_creation_date,

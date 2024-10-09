@@ -1,6 +1,8 @@
 import json
 import os
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+
 import mlflow
 import tensorflow as tf
 import typer
@@ -27,7 +29,6 @@ N_EPOCHS = 100
 MIN_DELTA = 0.001  # Minimum change in the accuracy before a callback is called
 LEARNING_RATE = 0.1
 VERBOSE = 1 if ENV_SHORT_NAME == "prod" else 1
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 
 def train(

@@ -77,7 +77,8 @@ where (
         "ConsultVenueMap",
         "TrendsBlockClicked",
         "SystemBlockDisplayed",
-        "ConsultHome"
+        "ConsultHome",
+        "ConsultArtist"
     )
     or
     (

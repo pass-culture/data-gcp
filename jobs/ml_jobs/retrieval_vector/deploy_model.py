@@ -21,10 +21,10 @@ from utils import (
 )
 
 MODEL_TYPE = {
-    "n_dim": 64,
     "type": "recommendation",
     "default_token": "[UNK]",
 }
+EMBEDDING_DIMENSION = 64
 
 
 def get_model_from_mlflow(
@@ -69,7 +69,7 @@ def download_model(artifact_uri):
         print(line.rstrip().decode("utf-8"))
 
 
-def prepare_docs():
+def prepare_docs(normalize: bool = False) -> None:
     print("Get items...")
     items_df = get_items_metadata()
     # download model
@@ -80,8 +80,16 @@ def prepare_docs():
     user_list = tf_reco.user_layer.layers[0].get_vocabulary()
     user_weights = tf_reco.user_layer.layers[1].get_weights()[0].astype(np.float32)
     # convert
-    user_embedding_dict = {x: y for x, y in zip(user_list, user_weights)}
-    item_embedding_dict = {x: y for x, y in zip(item_list, item_weights)}
+    if normalize:
+        user_embedding_dict = {
+            x: y / np.linalg.norm(y) for x, y in zip(user_list, user_weights)
+        }
+        item_embedding_dict = {
+            x: y / np.linalg.norm(y) for x, y in zip(item_list, item_weights)
+        }
+    else:
+        user_embedding_dict = {x: y for x, y in zip(user_list, user_weights)}
+        item_embedding_dict = {x: y for x, y in zip(item_list, item_weights)}
 
     user_docs = get_user_docs(user_embedding_dict)
     user_docs.save("./metadata/user.docs")
@@ -90,7 +98,7 @@ def prepare_docs():
     create_items_table(
         item_embedding_dict,
         items_df,
-        emb_size=MODEL_TYPE["n_dim"],
+        emb_size=EMBEDDING_DIMENSION,
         uri="./metadata/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,
     )
@@ -117,6 +125,10 @@ def main(
         None,
         help="Source run_id of the model",
     ),
+    normalize: bool = typer.Option(
+        False,
+        help="Normalize embeddings",
+    ),
 ) -> None:
     yyyymmdd = datetime.now().strftime("%Y%m%d")
     if model_name is None:
@@ -134,7 +146,7 @@ def main(
     print(f"Get from {source_artifact_uri} trained model")
     print("Download...")
     download_model(source_artifact_uri)
-    prepare_docs()
+    prepare_docs(normalize=normalize)
     print("Deploy...")
     save_model_type(model_type=MODEL_TYPE)
     deploy_container(serving_container, workers=3)

@@ -61,9 +61,14 @@ def _sql_parsing(data, default_logic: str = "AND"):
                         parameters.extend(params)
                     elif op in COMPARISON_OPERATORS:
                         parameters.append(val)
-                        where_clause += (
-                            f"""( {key} {COMPARISON_OPERATORS[op]} {val} )"""
-                        )
+                        if isinstance(val, str):
+                            where_clause += (
+                                f"""( {key} {COMPARISON_OPERATORS[op]} '{val}' )"""
+                            )
+                        else:
+                            where_clause += (
+                                f"""( {key} {COMPARISON_OPERATORS[op]} {val} )"""
+                            )
                     elif op in MEMBERSHIP_OPERATORS:
                         parameters.extend(val)
 
@@ -92,6 +97,6 @@ class Filter(object):
     def __init__(self, tree_data: Dict = {}):
         self.tree_data = tree_data
 
-    def parse_where_clause(self):
-        sql, params = _sql_parsing(self.tree_data or {})
+    def parse_where_clause(self) -> str:
+        sql, _ = _sql_parsing(self.tree_data or {})
         return sql

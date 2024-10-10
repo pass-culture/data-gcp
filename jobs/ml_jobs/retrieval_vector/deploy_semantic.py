@@ -19,24 +19,24 @@ from utils import (
 )
 
 MODEL_TYPE = {
-    "n_dim": 32,
     "type": "semantic",
     "default_token": None,
     "transformer": "sentence-transformers/all-MiniLM-L6-v2",
     "reducer": "./metadata/reducer.pkl",
 }
+EMBEDDING_DIMENSION = 384
 
 
 def download_embeddings(bucket_path):
     # download
-    hnne = HNNE(dim=MODEL_TYPE["n_dim"])
+    hnne = HNNE(dim=EMBEDDING_DIMENSION)
     dataset = ds.dataset(bucket_path, format="parquet")
     ldf = pl.scan_pyarrow_dataset(dataset)
     item_list = ldf.select("item_id").collect().to_numpy().flatten()
     item_weights = np.vstack(np.vstack(ldf.select("embedding").collect())[0]).astype(
         np.float32
     )
-    item_weights = hnne.fit_transform(item_weights, dim=MODEL_TYPE["n_dim"]).astype(
+    item_weights = hnne.fit_transform(item_weights, dim=EMBEDDING_DIMENSION).astype(
         np.float32
     )
     joblib.dump(hnne, MODEL_TYPE["reducer"])
@@ -55,7 +55,7 @@ def prepare_docs(bucket_path):
     create_items_table(
         item_embedding_dict,
         items_df,
-        emb_size=MODEL_TYPE["n_dim"],
+        emb_size=EMBEDDING_DIMENSION,
         uri="./metadata/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,
     )

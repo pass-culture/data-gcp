@@ -37,7 +37,7 @@ select
 
 from
     {{ ref('dms_pro') }}
-    left join {{ ref('offerer') }} as offerer
+    left join {{ ref('int_source__offerer') }} as offerer
         on dms_pro.demandeur_entreprise_siren = offerer.offerer_siren and offerer.offerer_siren <> "nan"
     left join {{ ref('venue') }} as venue
         on venue.venue_managing_offerer_id = offerer.offerer_id

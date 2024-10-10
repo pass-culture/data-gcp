@@ -3,10 +3,9 @@ with offer_product_data as (
         offer.offer_id,
         COALESCE(product.description, offer.offer_description) AS offer_description,
         COALESCE(product.product_extra_data, offer.offer_extra_data) as extra_data
-    from {{ ref('snapshot_source__offer') }} as offer
+    from {{ ref('int_source__offer') }} as offer
     left join {{ ref('int_applicative__product') }} as product
         on CAST(product.id as string) = offer.offer_product_id
-    WHERE dbt_valid_to is null
 ),
 
 extracted_offers as (

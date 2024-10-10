@@ -2,9 +2,8 @@ with offer_rank as (
     select
         *,
         ROW_NUMBER() over (partition by offer_id order by offer_date_updated desc) as row_number
-    from {{ ref('snapshot_source__offer') }} as offer
-    where  dbt_valid_to is null
-        and offer_subcategoryid not in ('ACTIVATION_THING', 'ACTIVATION_EVENT')
+    from {{ ref('int_source__offer') }} as offer
+    where offer_subcategoryid not in ('ACTIVATION_THING', 'ACTIVATION_EVENT')
         and (
             booking_email != 'jeux-concours@passculture.app'
             or booking_email is NULL

@@ -13,7 +13,7 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
 )
-from common.utils import get_airflow_schedule
+from common.utils import delayed_waiting_operator, get_airflow_schedule
 
 from airflow import DAG
 from airflow.models import Param
@@ -74,6 +74,8 @@ with DAG(
         retries=2,
     )
 
+    wait_transfo = delayed_waiting_operator(dag=dag, external_dag_id="dbt_run_dag")
+
     get_warning_tables = SSHGCEOperator(
         task_id="get_warning_tables",
         instance_name=GCE_INSTANCE,
@@ -101,6 +103,7 @@ with DAG(
 
     (
         start
+        >> wait_transfo
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies

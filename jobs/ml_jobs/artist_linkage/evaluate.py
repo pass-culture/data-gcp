@@ -1,3 +1,4 @@
+import gcsfs
 import matplotlib.pyplot as plt
 import mlflow
 import pandas as pd
@@ -64,12 +65,65 @@ def get_main_matched_cluster_per_dataset(
     )
 
 
+def get_test_sets_df(test_set_dir: str) -> pd.DataFrame:
+    fs = gcsfs.GCSFileSystem()
+    GS_PREFIX = "gs://"
+
+    parquet_files = [
+        GS_PREFIX + path
+        for path in fs.glob(f"{GS_PREFIX}{test_set_dir}/**")
+        if path.endswith(".parquet")
+    ]
+
+    return pd.concat(
+        [
+            pd.read_parquet(test_set).assign(source_file_path=test_set)
+            for test_set in parquet_files
+        ]
+    )
+
+
 @app.command()
 def main(
-    input_file_path: str = typer.Option(),
+    artists_to_link_file_path: str = typer.Option(),
+    linked_artists_file_path: str = typer.Option(),
+    test_set_dir: str = typer.Option(),
     experiment_name: str = typer.Option(),
 ) -> None:
-    matched_artists_in_test_set_df = pd.read_parquet(input_file_path)
+    test_sets_df = get_test_sets_df(test_set_dir)
+    artists_to_link_df = pd.read_parquet(artists_to_link_file_path)
+    linked_artists_df = pd.read_parquet(linked_artists_file_path)
+
+    matched_artists_in_test_set_df = (
+        test_sets_df.loc[
+            :,
+            [
+                "dataset_name",
+                "is_my_artist",
+                "irrelevant_data",
+            ],
+        ]
+        .merge(
+            artists_to_link_df.loc[
+                :,
+                [
+                    "artist_name",
+                    "offer_category_id",
+                    "is_synchronised",
+                    "artist_type",
+                    "offer_number",
+                    "total_booking_count",
+                ],
+            ],
+            how="left",
+            on=["artist_name", "offer_category_id", "is_synchronised", "artist_type"],
+        )
+        .merge(
+            linked_artists_df.loc[:, ["cluster_id", "first_artist"]],
+            how="left",
+            on=["artist_name", "offer_category_id", "is_synchronised", "artist_type"],
+        )
+    ).sort_values(by=["dataset_name", "cluster_id"])
 
     main_cluster_per_dataset = get_main_matched_cluster_per_dataset(
         matched_artists_in_test_set_df
@@ -105,7 +159,7 @@ def main(
         # Log Dataset
         dataset = mlflow.data.from_pandas(
             matched_artists_in_test_set_df,
-            source=input_file_path,
+            # source=input_file_path,
             name="artists_on_test_sets",
         )
         mlflow.log_input(dataset, context="evaluation")

@@ -20,14 +20,6 @@ cd $WORKING_DIR
 dbt_run_changed_models() {
   git fetch origin $TARGET_BRANCH
   models=$(git diff origin/$TARGET_BRANCH HEAD --name-only | grep 'orchestration/dags/data_gcp_dbt/models/' | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/${children}/g" | tr '\n' ' ')
-  snapshots=$(git diff origin/$TARGET_BRANCH HEAD --name-only | grep 'orchestration/dags/data_gcp_dbt/snapshots/' | grep '\.sql$' | awk -F '/' '{ print $NF }' | sed "s/\.sql$/${children}/g" | tr '\n' ' ')
-  echo ${#snapshots}
-  if [ -z "$snapshots" ]; then
-    echo "no snapshots were modified"
-  else
-    echo "Running snapshots: ${snapshots}"
-    dbt snapshot -s $snapshots --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" --exclude tag:failing_ci
-  fi
 
   echo ${#models}
   if [ -z "$models" ]; then

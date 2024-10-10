@@ -82,4 +82,5 @@ services:
     restart: "no"
     image: airflow-custom-image:latest
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy

@@ -50,8 +50,10 @@ DBT_MODELS = [
 CLICKHOUSE_TABLES = [
     ("analytics", "daily_aggregated_offer_event"),
     ("analytics", "monthly_aggregated_venue_collective_revenue"),
+    ("analytics", "monthly_aggregated_venue_individual_revenue"),
     ("analytics", "monthly_aggregated_venue_revenue"),
     ("analytics", "yearly_aggregated_venue_collective_revenue"),
+    ("analytics", "yearly_aggregated_venue_individual_revenue"),
     ("analytics", "yearly_aggregated_venue_revenue"),
 ]
 

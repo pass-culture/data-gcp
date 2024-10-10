@@ -28,6 +28,10 @@ clean-targets:
 
 models:
   data_gcp_dbt:
+    +pre-hook:
+      - "{{ create_schema_dev() }}"
+    +post-hook:
+      - "{{ set_table_expiration_dev() }}"
     +labels:
       schedule: "daily"
     +persist_docs:

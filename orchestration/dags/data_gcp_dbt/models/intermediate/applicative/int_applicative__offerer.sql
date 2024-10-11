@@ -136,5 +136,5 @@ select
     case when DATE_DIFF(CURRENT_DATE, vgo.last_individual_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_individual_active_current_year,
     case when DATE_DIFF(CURRENT_DATE, vgo.last_collective_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_collective_active_last_30days,
     case when DATE_DIFF(CURRENT_DATE, vgo.last_collective_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_collective_active_current_year
-from {{ source("raw", "applicative_database_offerer") }} as o
+from {{ ref("int_source__offerer") }} as o
     left join venue_grouped_by_offerer as vgo on o.offerer_id = vgo.venue_managing_offerer_id

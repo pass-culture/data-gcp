@@ -1,14 +1,12 @@
-with
-    offer_product_data as (
-        select
-            offer.offer_id,
-            coalesce(product.description, offer.offer_description) as offer_description,
-            coalesce(product.product_extra_data, offer.offer_extra_data) as extra_data
-        from {{ source("raw", "applicative_database_offer") }} as offer
-        left join
-            {{ ref("int_applicative__product") }} as product
-            on cast(product.id as string) = offer.offer_product_id
-    ),
+with offer_product_data as (
+    select
+        offer.offer_id,
+        COALESCE(product.description, offer.offer_description) AS offer_description,
+        COALESCE(product.product_extra_data, offer.offer_extra_data) as extra_data
+    from {{ ref('int_source__offer') }} as offer
+    left join {{ ref('int_applicative__product') }} as product
+        on CAST(product.id as string) = offer.offer_product_id
+),
 
     extracted_offers as (
         select

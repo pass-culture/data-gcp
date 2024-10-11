@@ -1,3 +1,5 @@
+from typing import Dict, List, Tuple, Union
+
 from common.config import ENV_SHORT_NAME
 
 
@@ -24,20 +26,34 @@ def generate_table_configs(models):
     ]
 
 
-def generate_views_configs(table_names):
+def generate_analytics_configs(
+    table_list: List[Union[Tuple[str, str], Tuple[str, str, List[str]]]],
+) -> List[Dict]:
     """
     Generates configuration for views in ClickHouse.
+
+    Args:
+        table_names (list): List of tuples containing dataset name, table name, and optionally a depends list.
 
     Returns:
         list: List of view configurations.
     """
-    return [
-        {
-            "clickhouse_dataset_name": dataset_name,
-            "clickhouse_table_name": table_name,
+    configs = []
+
+    for table in table_list:
+        # Handle case with or without dependencies
+        config = {
+            "clickhouse_dataset_name": table[0],
+            "clickhouse_table_name": table[1],
         }
-        for dataset_name, table_name in table_names
-    ]
+
+        # Add depends_list if it exists
+        if len(table) == 3:
+            config["depends_list"] = table[2]
+
+        configs.append(config)
+
+    return configs
 
 
 # List of models to be exported
@@ -46,16 +62,30 @@ DBT_MODELS = [
     ("collective_booking", "overwrite", "update_date"),
     ("native_event", "incremental", "partition_date"),
 ]
-# List of aggreated tables names to be refreshed
+# List of aggreated tables names to be refreshed with compressed config: (clickhouse_dataset_name, clickhouse_table_name, optionally depends_list)
 CLICKHOUSE_TABLES = [
     ("analytics", "daily_aggregated_offer_event"),
     ("analytics", "monthly_aggregated_venue_collective_revenue"),
     ("analytics", "monthly_aggregated_venue_individual_revenue"),
-    ("analytics", "monthly_aggregated_venue_revenue"),
+    (
+        "analytics",
+        "monthly_aggregated_venue_revenue",
+        [
+            "monthly_aggregated_venue_collective_revenue",
+            "monthly_aggregated_venue_individual_revenue",
+        ],
+    ),
     ("analytics", "yearly_aggregated_venue_collective_revenue"),
     ("analytics", "yearly_aggregated_venue_individual_revenue"),
-    ("analytics", "yearly_aggregated_venue_revenue"),
+    (
+        "analytics",
+        "yearly_aggregated_venue_revenue",
+        [
+            "yearly_aggregated_venue_collective_revenue",
+            "yearly_aggregated_venue_individual_revenue",
+        ],
+    ),
 ]
 
 TABLES_CONFIGS = generate_table_configs(models=DBT_MODELS)
-VIEWS_CONFIGS = generate_views_configs(table_names=CLICKHOUSE_TABLES)
+ANALYTICS_CONFIGS = generate_analytics_configs(table_list=CLICKHOUSE_TABLES)

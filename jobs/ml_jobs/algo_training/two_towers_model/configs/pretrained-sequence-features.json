@@ -1,0 +1,54 @@
+{
+    "user_embedding_layers": {
+        "user_id": {
+            "type": "string",
+            "embedding_size": 64
+        },
+        "user_theoretical_remaining_credit": {
+            "type": "int",
+            "embedding_size": 1
+        },
+        "has_added_offer_to_favorites": {
+            "type": "int",
+            "embedding_size": 1
+        },
+        "consult_offer": {
+            "type": "int",
+            "embedding_size": 1
+        },
+        "booking_cnt": {
+            "type": "int",
+            "embedding_size": 1
+        },
+        "timestamp": {
+            "type": "timestamp",
+            "embedding_size": 16
+        },
+        "previous_item_id": {
+            "type": "sequence",
+            "embedding_size": 32
+        }
+    },
+    "item_embedding_layers": {
+        "item_id": {
+            "type": "string",
+            "embedding_size": 64
+        },
+        "offer_categoryid": {
+            "type": "string",
+            "embedding_size": 1
+        },
+        "offer_subcategoryid": {
+            "type": "string",
+            "embedding_size": 2
+        },
+        "item_image_embedding": {
+            "type": "pretrained",
+            "embedding_size": 16
+        },
+        "item_semantic_content_hybrid_embedding": {
+            "type": "pretrained",
+            "embedding_size": 16
+        }
+    }
+}

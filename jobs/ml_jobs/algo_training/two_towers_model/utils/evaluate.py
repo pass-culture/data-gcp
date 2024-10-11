@@ -16,7 +16,6 @@ from commons.constants import (
 )
 from commons.data_collect_queries import read_from_gcs
 from two_towers_model.utils.metrics import (
-    compute_diversification_score,
     compute_metrics,
     get_actual_and_predicted,
 )
@@ -127,28 +126,28 @@ def evaluate(
             }
         )
 
-        if k == RECOMMENDATION_NUMBER:
-            logger.info("Compute diversification score")
-            avg_div_score, avg_div_score_panachage = compute_diversification_score(
-                diversification_model_dict, k
-            )
-            logger.info("End of diversification score computation")
+        # if k == RECOMMENDATION_NUMBER:
+        #     logger.info("Compute diversification score")
+        #     avg_div_score, avg_div_score_panachage = compute_diversification_score(
+        #         diversification_model_dict, k
+        #     )
+        #     logger.info("End of diversification score computation")
 
-            metrics.update(
-                {
-                    f"precision_at_{k}_panachage": data_model_dict_w_metrics_at_k[
-                        "metrics"
-                    ]["mapk_panachage"],
-                    f"recall_at_{k}_panachage": data_model_dict_w_metrics_at_k[
-                        "metrics"
-                    ]["mark_panachage"],
-                    f"avg_diversification_score_at_{k}": avg_div_score,
-                    f"avg_diversification_score_at_{k}_panachage": avg_div_score_panachage,
-                    f"personalization_at_{k}_panachage": data_model_dict_w_metrics_at_k[
-                        "metrics"
-                    ]["personalization_at_k_panachage"],
-                }
-            )
+        #     metrics.update(
+        #         {
+        #             f"precision_at_{k}_panachage": data_model_dict_w_metrics_at_k[
+        #                 "metrics"
+        #             ]["mapk_panachage"],
+        #             f"recall_at_{k}_panachage": data_model_dict_w_metrics_at_k[
+        #                 "metrics"
+        #             ]["mark_panachage"],
+        #             f"avg_diversification_score_at_{k}": avg_div_score,
+        #             f"avg_diversification_score_at_{k}_panachage": avg_div_score_panachage,
+        #             f"personalization_at_{k}_panachage": data_model_dict_w_metrics_at_k[
+        #                 "metrics"
+        #             ]["personalization_at_k_panachage"],
+        #         }
+        #     )
 
     return metrics
 
@@ -162,7 +161,7 @@ def save_pca_representation(
     embeddings = loaded_model.item_layer.layers[1].get_weights()[0][1:]
 
     pca_out = PCA(n_components=2).fit_transform(embeddings)
-    categories = item_data["offer_categoryId"].unique().tolist()
+    categories = item_data["offer_category_id"].unique().tolist()
     item_representation = pd.DataFrame(
         {
             "item_id": item_ids,
@@ -174,7 +173,7 @@ def save_pca_representation(
     colormap = plt.cm.tab20.colors
     fig, ax = plt.subplots(1, 1, figsize=(15, 10))
     for idx, category in enumerate(categories):
-        data = item_representation.loc[lambda df: df["offer_categoryId"] == category]
+        data = item_representation.loc[lambda df: df["offer_category_id"] == category]
         max_plots = min(data.shape[0], 10000)
         data = data.sample(n=max_plots)
         ax.scatter(
@@ -187,8 +186,8 @@ def save_pca_representation(
         )
         logger.info(f"Plotting {len(data)} points for category {category}")
         fig_sub, ax_sub = plt.subplots(1, 1, figsize=(15, 10))
-        for idx_sub, subcategory in enumerate(data["offer_subcategoryid"].unique()):
-            data_sub = data.loc[lambda df: df["offer_subcategoryid"] == subcategory]
+        for idx_sub, subcategory in enumerate(data["offer_subcategory_id"].unique()):
+            data_sub = data.loc[lambda df: df["offer_subcategory_id"] == subcategory]
             ax_sub.scatter(
                 data_sub["x"].values,
                 data_sub["y"].values,

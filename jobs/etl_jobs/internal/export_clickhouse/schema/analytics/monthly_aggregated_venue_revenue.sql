@@ -7,11 +7,11 @@ AS
 SELECT
     creation_month,
     cast(i.venue_id as String) as venue_id,
-    coalesce(i.revenue,0) as individual_revenue,
-    coalesce(c.revenue,0) as collective_revenue,
+    sum(coalesce(i.revenue,0)) as individual_revenue,
+    sum(coalesce(c.revenue,0)) as collective_revenue,
     sum(coalesce(i.revenue,0) + coalesce(c.revenue,0)) as total_revenue,
-    coalesce(i.expected_revenue,0) as individual_expected_revenue,
-    coalesce(c.expected_revenue,0) as collective_expected_revenue,
+    sum(coalesce(i.expected_revenue,0)) as individual_expected_revenue,
+    sum(coalesce(c.expected_revenue,0)) as collective_expected_revenue,
     sum(coalesce(i.expected_revenue,0) + coalesce(c.expected_revenue,0)) as total_expected_revenue
 
 FROM

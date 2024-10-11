@@ -81,6 +81,7 @@ with DAG(
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
+    render_template_as_native_obj=True,
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -172,7 +173,7 @@ with DAG(
         gpu_count="{{ params.gpu_count }}",
         gpu_type="{{ params.gpu_type }}",
         retries=2,
-        labels={"job_type": "ml"},
+        labels={"job_type": "long_ml"},
     )
 
     fetch_code = CloneRepositoryGCEOperator(

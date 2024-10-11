@@ -24,7 +24,7 @@ jobs:
     needs: find-dbt-changes
     if: github.base_ref == 'production' && needs.find-dbt-changes.outputs.changes == 'true'
     with:
-      TARGET_COMPOSER_BUCKET: "europe-west1-data-composer--e3ff6842-bucket"
+      TARGET_COMPOSER_BUCKET: ${{ vars.COMPOSER_DAGS_BUCKET_PROD }}
       ENV_SHORT_NAME: "prod"
       APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_PROD }}
     uses: ./.github/workflows/reusable_dbt_workflow.yml
@@ -35,7 +35,7 @@ jobs:
     needs: find-dbt-changes
     if: github.base_ref == 'master' && needs.find-dbt-changes.outputs.changes == 'true'
     with:
-      TARGET_COMPOSER_BUCKET: "europe-west1-data-composer--86238594-bucket"
+      TARGET_COMPOSER_BUCKET: ${{ vars.COMPOSER_DAGS_BUCKET_STG }}
       ENV_SHORT_NAME: "stg"
       APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_STG }}
     uses: ./.github/workflows/reusable_dbt_workflow.yml

@@ -210,6 +210,9 @@ def train(
         user_embeddings = two_tower_model.user_model.predict(user_dataset)
         logger.info("Predicting final item embeddings")
         item_embeddings = two_tower_model.item_model.predict(item_dataset)
+        logger.info("Normalizing embeddings...")
+        user_embeddings = tf.math.l2_normalize(user_embeddings, axis=1)
+        item_embeddings = tf.math.l2_normalize(item_embeddings, axis=1)
         logger.info("Building and saving the MatchModel")
         match_model = MatchModel(
             user_input=train_user_data[input_prediction_feature].unique(),

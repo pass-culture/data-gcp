@@ -1,12 +1,16 @@
+import numpy as np
 import pandas as pd
 import tensorflow as tf
 import tensorflow_recommenders as tfrs
+from loguru import logger
 
 from two_towers_model.utils.layers import (
     IntegerEmbeddingLayer,
     PretainedEmbeddingLayer,
+    SequenceEmbeddingLayer,
     StringEmbeddingLayer,
     TextEmbeddingLayer,
+    TimestampEmbeddingLayer,
 )
 
 
@@ -28,7 +32,11 @@ class TwoTowersModel(tfrs.models.Model):
         """
         super().__init__()
 
+        max_timestamp = data["timestamp"].max()
+        min_timestamp = data["timestamp"].min()
+        timestamp_buckets = np.linspace(min_timestamp, max_timestamp, num=1000)
         # dict of preprocessing layers for each user feature
+        # Decide if we put the timestamp bucket in user or item layer
         user_embedding_layers = {
             name: self.load_embedding_layer(
                 layer_type=layer["type"],
@@ -52,15 +60,19 @@ class TwoTowersModel(tfrs.models.Model):
 
         self._item_feature_names = item_features_config.keys()
 
+        logger.info("Building user & item models")
+        logger.info("User features: {self._user_feature_names}")
         self.user_model = SingleTowerModel(
             data=data,
             input_embedding_layers=user_embedding_layers,
             embedding_size=embedding_size,
         )
+        logger.info(f"Item features: {self._item_feature_names} ")
         self.item_model = SingleTowerModel(
             data=data,
             input_embedding_layers=item_embedding_layers,
             embedding_size=embedding_size,
+            timestamp_buckets=timestamp_buckets,
         )
 
         self.task = tfrs.tasks.Retrieval(
@@ -76,11 +88,9 @@ class TwoTowersModel(tfrs.models.Model):
         )
 
     def compute_loss(self, features, training=False):
-        user_features, item_features = (
-            features[: len(self._user_feature_names)],
-            features[len(self._user_feature_names) :],
-        )
-
+        user_features = {name: features[name] for name in self._user_feature_names}
+        item_features = {name: features[name] for name in self._item_feature_names}
+        item_features["timestamp"] = features["timestamp"]
         user_embedding = tf.math.l2_normalize(self.user_model(user_features), axis=1)
         item_embedding = tf.math.l2_normalize(self.item_model(item_features), axis=1)
         # TODO add implicit_weights = features["click"]
@@ -102,6 +112,8 @@ class TwoTowersModel(tfrs.models.Model):
                     embedding_size=embedding_size,
                     embedding_initialisation_weights=embedding_initialisation_weights,
                 ),
+                "sequence": SequenceEmbeddingLayer(embedding_size=embedding_size),
+                # "timestamp": TimestampEmbeddingLayer(embedding_size=embedding_size),
             }[layer_type]
         except KeyError:
             raise ValueError(
@@ -115,6 +127,7 @@ class SingleTowerModel(tf.keras.models.Model):
         data: pd.DataFrame,
         input_embedding_layers: dict,
         embedding_size: int,
+        timestamp_buckets: np.ndarray = None,
     ):
         super().__init__()
 
@@ -123,16 +136,23 @@ class SingleTowerModel(tf.keras.models.Model):
 
         self._embedding_layers = {}
         for layer_name, layer_class in self.input_embedding_layers.items():
+            logger.info(f"Building layer {layer_name}")
             self._embedding_layers[layer_name] = layer_class.build_sequential_layer(
                 vocabulary=self.data[layer_name].unique()
             )
+        if timestamp_buckets is not None:
+            self._embedding_layers["timestamp"] = TimestampEmbeddingLayer(
+                embedding_size=embedding_size
+            ).build_sequential_layer(timestamp_buckets=timestamp_buckets)
+
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
         self._dense2 = tf.keras.layers.Dense(embedding_size)
 
     def call(self, features: dict, training=False):
         feature_embeddings = []
-        for idx, embedding_layer in enumerate(self._embedding_layers.values()):
-            feature_embeddings.append(embedding_layer(features[idx]))
+
+        for layer_name, embedding_layer in self._embedding_layers.items():
+            feature_embeddings.append(embedding_layer(features[layer_name]))
 
         x = tf.concat(
             feature_embeddings,

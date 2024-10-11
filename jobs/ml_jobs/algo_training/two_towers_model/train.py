@@ -1,7 +1,7 @@
 import json
-import os
 
 import mlflow
+import pandas as pd
 import tensorflow as tf
 import typer
 from loguru import logger
@@ -27,7 +27,6 @@ N_EPOCHS = 100
 MIN_DELTA = 0.001  # Minimum change in the accuracy before a callback is called
 LEARNING_RATE = 0.1
 VERBOSE = 1 if ENV_SHORT_NAME == "prod" else 1
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 
 def train(
@@ -64,6 +63,9 @@ def train(
     ),
     run_name: str = typer.Option(None, help="Name of the MLflow run if set"),
 ):
+    if not tf.config.list_physical_devices("GPU"):
+        raise Exception("No Cuda device found")
+
     tf.random.set_seed(seed)
 
     with open(
@@ -83,13 +85,25 @@ def train(
 
     user_columns = list(user_features_config.keys())
     item_columns = list(item_features_config.keys())
+    # Add 'event_date' to data
     # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
     train_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=training_table_name
-    )[user_columns + item_columns].astype(str)
+    )[user_columns + item_columns + ["timestamp"]].astype(str)
+
+    train_data["timestamp"] = train_data["timestamp"].astype(int)
+    train_data["timestamp"] = pd.to_datetime(train_data["timestamp"], unit="s")
+    train_data["timestamp"] = train_data["timestamp"].astype(int) // 10**9
+
     validation_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=validation_table_name
-    )[user_columns + item_columns].astype(str)
+    )[user_columns + item_columns + ["timestamp"]].astype(str)
+
+    validation_data["timestamp"] = validation_data["timestamp"].astype(int)
+    validation_data["timestamp"] = pd.to_datetime(
+        validation_data["timestamp"], unit="s"
+    )
+    validation_data["timestamp"] = validation_data["timestamp"].astype(int) // 10**9
 
     train_user_data = (
         train_data[user_columns]
@@ -97,36 +111,39 @@ def train(
         .reset_index(drop=True)
     )
     train_item_data = (
-        train_data[item_columns]
+        train_data[item_columns + ["timestamp"]]
         .drop_duplicates(subset=["item_id"])
         .reset_index(drop=True)
     )
 
     # Build tf datasets
     logger.info("Building tf datasets")
+    train_features = {col: train_data[col].values for col in train_data.columns}
+    validation_features = {
+        col: validation_data[col].values for col in validation_data.columns
+    }
 
-    train_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_data.values)
-        .batch(batch_size=batch_size)
-        .map(lambda x: tf.transpose(x))
+    train_dataset = tf.data.Dataset.from_tensor_slices(train_features).batch(
+        batch_size=batch_size
     )
-    validation_dataset = (
-        tf.data.Dataset.from_tensor_slices(validation_data.values)
-        .batch(batch_size=batch_size)
-        .map(lambda x: tf.transpose(x))
+    validation_dataset = tf.data.Dataset.from_tensor_slices(validation_features).batch(
+        batch_size=batch_size
     )
+    user_features = {
+        col: train_user_data[col].values for col in train_user_data.columns
+    }
 
     user_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_user_data.values)
+        tf.data.Dataset.from_tensor_slices(user_features)
         .batch(batch_size=batch_size, drop_remainder=False)
-        .map(lambda x: tf.transpose(x))
         .cache()
     )
-
+    item_features = {
+        col: train_item_data[col].values for col in train_item_data.columns
+    }
     item_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_item_data.values)
+        tf.data.Dataset.from_tensor_slices(item_features)
         .batch(batch_size=batch_size, drop_remainder=False)
-        .map(lambda x: tf.transpose(x))
         .cache()
     )
 

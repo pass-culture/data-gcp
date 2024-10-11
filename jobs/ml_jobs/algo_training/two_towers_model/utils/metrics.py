@@ -166,7 +166,7 @@ def get_avg_diversification_score(df_raw, recos, k):
     for reco in tqdm(recos[:max_recos]):
         df_clean = (
             df_raw.query(f"item_id in {tuple(reco[:k])}")[
-                ["offer_categoryId", "offer_subcategoryid", "genres", "rayon", "type"]
+                ["offer_categoryid", "offer_subcategoryid", "genres", "rayon", "type"]
             ]
             .drop_duplicates()
             .fillna("NA", inplace=False)

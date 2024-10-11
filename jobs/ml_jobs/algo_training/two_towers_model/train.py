@@ -83,16 +83,18 @@ def train(
 
     user_columns = list(user_features_config.keys())
     item_columns = list(item_features_config.keys())
+    # Add 'event_date' to data
+    context_columns = ["previous_booking_ids", "next_booking_id"]
     # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
     train_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=training_table_name
-    )[user_columns + item_columns].astype(str)
+    )[user_columns + item_columns + context_columns].astype(str)
     validation_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=validation_table_name
-    )[user_columns + item_columns].astype(str)
+    )[user_columns + item_columns + context_columns].astype(str)
 
     train_user_data = (
-        train_data[user_columns]
+        train_data[user_columns + "previous_booking_ids"]
         .drop_duplicates(subset=[input_prediction_feature])
         .reset_index(drop=True)
     )

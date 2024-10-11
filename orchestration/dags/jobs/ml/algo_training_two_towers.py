@@ -180,7 +180,7 @@ with DAG(
         task_id="fetch_code",
         instance_name="{{ params.instance_name }}",
         python_version="3.10",
-        command="{{ params.branch }}",
+        command="DE-fix-offer-categoryId-format",
         retries=2,
     )
 
@@ -264,7 +264,8 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
-        f"--experiment-name {dag_config['EXPERIMENT_NAME']} ",
+        f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
+        "--config-file-name {{ params.run_name }}",
         dag=dag,
     )
 

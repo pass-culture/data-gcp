@@ -5,6 +5,7 @@ import tensorflow_recommenders as tfrs
 from two_towers_model.utils.layers import (
     IntegerEmbeddingLayer,
     PretainedEmbeddingLayer,
+    SequenceEmbeddingLayer,
     StringEmbeddingLayer,
     TextEmbeddingLayer,
 )
@@ -28,7 +29,22 @@ class TwoTowersModel(tfrs.models.Model):
         """
         super().__init__()
 
+        # max_timestamp = (
+        #     data.map(lambda x: x["timestamp"])
+        #     .reduce(tf.cast(0, tf.int64), tf.maximum)
+        #     .numpy()
+        #     .max()
+        # )
+        # min_timestamp = (
+        #     data.map(lambda x: x["timestamp"])
+        #     .reduce(np.int64(1e9), tf.minimum)
+        #     .numpy()
+        #     .min()
+        # )
+
+        # timestamp_buckets = np.linspace(min_timestamp, max_timestamp, num=1000)
         # dict of preprocessing layers for each user feature
+        # Decide if we put the timestamp bucket in user or item layer
         user_embedding_layers = {
             name: self.load_embedding_layer(
                 layer_type=layer["type"],
@@ -102,6 +118,8 @@ class TwoTowersModel(tfrs.models.Model):
                     embedding_size=embedding_size,
                     embedding_initialisation_weights=embedding_initialisation_weights,
                 ),
+                "sequence": SequenceEmbeddingLayer(embedding_size=embedding_size),
+                # "timestamp": TimestampEmbeddingLayer(embedding_size=embedding_size),
             }[layer_type]
         except KeyError:
             raise ValueError(

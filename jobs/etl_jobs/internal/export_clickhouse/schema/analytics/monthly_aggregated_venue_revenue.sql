@@ -19,3 +19,6 @@ FROM
 LEFT JOIN
     analytics.monthy_aggregated_venue_collective_revenue c
 ON i.creation_month = c.creation_month AND i.venue_id = c.venue_id
+GROUP BY 
+    1,2 
+

@@ -19,3 +19,5 @@ FROM
 LEFT JOIN
     analytics.yearly_aggregated_venue_collective_revenue c
 ON i.creation_year = c.creation_year AND i.venue_id = c.venue_id
+GROUP BY 
+    1,2

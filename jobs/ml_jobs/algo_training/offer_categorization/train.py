@@ -3,7 +3,6 @@ import pandas as pd
 import typer
 from catboost import CatBoostClassifier
 from loguru import logger
-from sklearn.model_selection import train_test_split
 
 from commons.constants import ENV_SHORT_NAME
 from commons.mlflow_tools import connect_remote_mlflow
@@ -20,34 +19,30 @@ def get_mlflow_experiment(experiment_name: str):
 
 def main(
     model_name: str = typer.Option(
-        "offer_categorization",
+        ...,
         help="MLFlow experiment name",
     ),
     training_table_path: str = typer.Option(
-        "compliance_training_data",
+        ...,
         help="BigQuery table containing compliance training data",
     ),
-    run_name: str = typer.Option("", help="Name of the MLflow run if set"),
+    validation_table_path: str = typer.Option(
+        ...,
+        help="BigQuery table containing compliance validation data",
+    ),
+    run_name: str = typer.Option(..., help="Name of the MLflow run if set"),
     num_boost_round: int = typer.Option(..., help="Number of iterations"),
 ) -> None:
     logger.info("Training model...")
     features_config = features["default"]
-    train_data = pd.read_parquet(training_table_path)
-    train_data_labels = train_data.offer_subcategory_id.tolist()
-    train_data_clean = train_data.drop(columns=["label", "offer_subcategory_id"])
-
-    # Split the data into training and validation sets
-    (
-        train_data_clean_train,
-        train_data_clean_val,
-        train_labels_train,
-        train_labels_val,
-    ) = train_test_split(
-        train_data_clean,
-        train_data_labels,
-        test_size=0.1,
-        random_state=42,
-        stratify=train_data_labels,
+    train, val = (
+        pd.read_parquet(training_table_path),
+        pd.read_parquet(validation_table_path),
+    )
+    labels_train, labels_val = train.offer_subcategory_id, val.offer_subcategory_id
+    train_data, val_data = (
+        train.drop(columns=["label", "offer_subcategory_id"]),
+        val.drop(columns=["label", "offer_subcategory_id"]),
     )
 
     logger.info("Init classifier..")
@@ -61,8 +56,8 @@ def main(
     logger.info("Fitting model..")
     ## Model Fit
     model.fit(
-        train_data_clean_train,
-        train_labels_train,
+        train_data,
+        labels_train,
         cat_features=features_config["catboost_features_types"]["cat_features"],
         text_features=features_config["catboost_features_types"]["text_features"],
         embedding_features=features_config["catboost_features_types"][
@@ -71,8 +66,8 @@ def main(
         verbose=True,
         early_stopping_rounds=50,
         eval_set=(
-            train_data_clean_val,
-            train_labels_val,
+            val_data,
+            labels_val,
         ),
     )
 
@@ -85,9 +80,9 @@ def main(
             params={
                 "environment": ENV_SHORT_NAME,
                 "train_item_count": train_data.shape[0],
-                "subcategory population": train_data["offer_subcategory_id"]
-                .value_counts()
-                .to_dict(),
+                "train_subcategory population": labels_train.value_counts().to_dict(),
+                "val_item_count": val_data.shape[0],
+                "val_subcategory population": labels_val.value_counts().to_dict(),
             }
         )
         mlflow.catboost.log_model(

@@ -1,0 +1,21 @@
+name: "1. [on_pr] Check PR title format"
+
+on:
+  pull_request:
+    branches: [master]
+    types:
+      - opened
+      - edited
+      - synchronize
+      - ready_for_review
+      - reopened
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Slashgear/action-check-pr-title@v4.3.0
+        with:
+          regexp: '^\((DA|DE|AE|DS|HF|BSR|PC)(-[0-9]+)?\) (build|lint|ci|docs|feat|fix|perf|refactor|test|core|dbt)\(\w+\): \w+'
+          helpMessage: "Help ??? How to write a PR -> https://www.notion.so/05121bf7358848a695d66d14a89a1ff1"

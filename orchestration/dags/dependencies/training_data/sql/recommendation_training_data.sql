@@ -1,14 +1,13 @@
-SELECT
-    *
-FROM (
-  SELECT
-    *,
-    ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY event_date) AS row_index,
-    COUNT(*) OVER(PARTITION BY user_id) as total
-  FROM
-    `{{ bigquery_raw_dataset }}`.`training_data_{{ params.input_type }}`
-  WHERE
-    event_date >= DATE_SUB(DATE("{{ ds }}"), INTERVAL {{ params.event_day_number }} DAY)
-)
-WHERE row_index < {{ params.train_set_size }} * total
-OR total = 1
+select *
+from
+    (
+        select
+            *,
+            row_number() over (partition by user_id order by event_date) as row_index,
+            count(*) over (partition by user_id) as total
+        from `{{ bigquery_raw_dataset }}`.`training_data_{{ params.input_type }}`
+        where
+            event_date
+            >= date_sub(date("{{ ds }}"), interval {{ params.event_day_number }} day)
+    )
+where row_index < {{ params.train_set_size }} * total or total = 1

@@ -56,6 +56,7 @@ import_firebase_pro_tables = {
             "gcp_project_env": GCP_PROJECT_PRO_ENV,
         },
         "fallback_params": {"gcp_project_env": [GCP_PROJECT_PRO_DEFAULT_ENV]},
+        "schemaUpdateOptions": ["ALLOW_FIELD_ADDITION"],
     },
 }
 
@@ -72,6 +73,7 @@ import_firebase_beneficiary_tables = {
             "gcp_project_env": GCP_PROJECT_NATIVE_ENV,
         },
         "fallback_params": {"gcp_project_env": [GCP_PROJECT_NATIVE_DEFAULT_ENV]},
+        "schemaUpdateOptions": ["ALLOW_FIELD_ADDITION"],
     }
 }
 

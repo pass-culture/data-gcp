@@ -38,5 +38,4 @@ select
     ) as user_params,
     "native" as origin
 from {{ ref("mrt_native__event") }}
-where user_pseudo_id is not NULL
-    and mod(abs(farm_fingerprint(user_pseudo_id)), 10) = 0
+where user_pseudo_id is not null and mod(abs(farm_fingerprint(user_pseudo_id)), 10) = 0

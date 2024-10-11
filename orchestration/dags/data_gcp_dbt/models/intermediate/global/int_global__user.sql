@@ -1,14 +1,4 @@
-with themes_subscribed as (
-    select
-        user_id,
-        currently_subscribed_themes,
-        case when (currently_subscribed_themes is NULL or currently_subscribed_themes = "") then FALSE else TRUE end as is_theme_subscribed
-    from {{ ref("app_native_logs") }}
-    where technical_message_id = "subscription_update"
-    qualify ROW_NUMBER() over (partition by user_id order by partition_date desc) = 1
-),
-
-deposit_grouped_by_user as (
+with deposit_grouped_by_user as (
     select
         user_id,
         min(deposit_creation_date) as first_deposit_creation_date,
@@ -51,6 +41,8 @@ select
     u.user_birth_date,
     u.user_has_enabled_marketing_email,
     u.user_has_enabled_marketing_push,
+    u.user_subscribed_themes,
+    u.is_theme_subscribed,
     ui.user_iris_internal_id,
     ui.user_region_name,
     ui.user_department_name,
@@ -62,19 +54,17 @@ select
     ui.user_density_level,
     ui.user_city_code as city_code,
     ui.user_is_in_qpv,
-    case when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi") then TRUE else FALSE end as user_is_unemployed,
+    case when u.user_activity = "Chômeur, En recherche d'emploi" then TRUE else FALSE end as user_is_unemployed,
     case when
             (
                 (ui.qpv_name is not NULL)
-                or (u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur","Demandeur d'emploi"))
+                or (u.user_activity = "Chômeur, En recherche d'emploi")
                 or (ui.user_macro_density_label = "rural")
             )
             then TRUE
         else FALSE
     end as user_is_priority_public,
     u.user_humanized_id,
-    ts.currently_subscribed_themes,
-    CASE WHEN ts.is_theme_subscribed IS NULL THEN FALSE ELSE ts.is_theme_subscribed END AS is_theme_subscribed,
     dgu.first_deposit_creation_date,
     dgu.total_deposit_amount,
     user_activation_date,
@@ -113,5 +103,4 @@ select
 from {{ ref('int_applicative__user') }} as u
     left join {{ ref('int_applicative__action_history') }} as ah on ah.user_id = u.user_id and ah.action_history_rk = 1
     left join {{ ref("int_geo__user_location") }} as ui on ui.user_id = u.user_id
-    left join themes_subscribed as ts on ts.user_id = u.user_id
     left join deposit_grouped_by_user as dgu on dgu.user_id = u.user_id

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER, ENV_SHORT_NAME
-from common.operators.biquery import bigquery_job_task
+from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,

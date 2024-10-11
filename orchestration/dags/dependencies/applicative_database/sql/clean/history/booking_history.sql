@@ -1,4 +1,4 @@
-SELECT
+select
     booking_id,
     booking_creation_date,
     stock_id,
@@ -12,5 +12,5 @@ SELECT
     booking_cancellation_date,
     booking_cancellation_reason,
     booking_reimbursement_date,
-    DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY) as partition_date
-FROM `{{ bigquery_raw_dataset }}`.`applicative_database_booking`
+    date_add(current_date(), interval -1 day) as partition_date
+from `{{ bigquery_raw_dataset }}`.`applicative_database_booking`

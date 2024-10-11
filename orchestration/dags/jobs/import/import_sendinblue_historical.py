@@ -11,7 +11,7 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
-from common.operators.biquery import bigquery_job_task
+from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,

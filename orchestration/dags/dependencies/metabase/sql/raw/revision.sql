@@ -1,4 +1,4 @@
-SELECT 
+select
     id,
     model,
     model_id,
@@ -10,4 +10,4 @@ SELECT
     message,
     most_recent,
     metabase_version
-FROM public.revision
+from public.revision

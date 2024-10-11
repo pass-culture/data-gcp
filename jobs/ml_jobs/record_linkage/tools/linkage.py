@@ -17,7 +17,7 @@ def get_linked_offers(
     batch_id,
 ):
     """
-    Split linkage by offer_subcategoryId
+    Split linkage by offer_subcategoryid
     Setup Comparaison for linkage
     Run linkage
     """

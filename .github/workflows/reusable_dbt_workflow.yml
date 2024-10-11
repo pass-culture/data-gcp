@@ -122,6 +122,7 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
           CI_SEVERITY: 'warn'
+          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: |
           dbt test --store-failures -s "state:modified" \
           --exclude "test_name:relationships" "tag:elementary" "config.materialized:incremental" \

@@ -20,6 +20,9 @@ on:
       ENV_SHORT_NAME:
         type: string
         required: true
+      APPLICATIVE_EXTERNAL_CONNECTION_ID:
+        type: string
+        required: false
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER:
         required: true
@@ -90,6 +93,7 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: dbt docs generate --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Push manifest"
         working-directory: "./orchestration/dags/data_gcp_dbt/"

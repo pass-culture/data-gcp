@@ -164,3 +164,37 @@ class String2IntegerLayer(tf.keras.layers.Layer):
 
     def call(self, inputs):
         return tf.strings.to_number(inputs, self.output_type)
+
+
+@dataclass
+class SequenceEmbeddingLayer:
+    """ """
+
+    embedding_size: int
+    logger.info("Building layer for sequence embedding")
+
+    def build_sequential_layer(self, vocabulary: np.ndarray):
+        return tf.keras.Sequential(
+            [
+                tf.keras.layers.StringLookup(vocabulary=vocabulary, mask_token=None),
+                tf.keras.layers.Embedding(len(vocabulary) + 1, self.embedding_size),
+                tf.keras.layers.GRU(self.embedding_size),
+            ]
+        )
+
+
+@dataclass
+class TimestampEmbeddingLayer:
+    """ """
+
+    embedding_size: int
+
+    def build_sequential_layer(self, timestamp_buckets: np.ndarray):
+        return tf.keras.Sequential(
+            [
+                tf.keras.layers.Discretization(timestamp_buckets.tolist()),
+                tf.keras.layers.Embedding(
+                    len(timestamp_buckets) + 1, self.embedding_size
+                ),
+            ]
+        )

@@ -1,7 +1,7 @@
 import json
-import os
 
 import mlflow
+import numpy as np
 import tensorflow as tf
 import typer
 from loguru import logger
@@ -27,7 +27,6 @@ N_EPOCHS = 100
 MIN_DELTA = 0.001  # Minimum change in the accuracy before a callback is called
 LEARNING_RATE = 0.1
 VERBOSE = 1 if ENV_SHORT_NAME == "prod" else 1
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 
 def train(
@@ -64,6 +63,9 @@ def train(
     ),
     run_name: str = typer.Option(None, help="Name of the MLflow run if set"),
 ):
+    if not tf.config.list_physical_devices("GPU"):
+        raise Exception("No Cuda device found")
+    # IN PREDICT API use last training timestamp to retrieve
     tf.random.set_seed(seed)
 
     with open(
@@ -83,19 +85,52 @@ def train(
 
     user_columns = list(user_features_config.keys())
     item_columns = list(item_features_config.keys())
+    # Add 'event_date' to data
     # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
     train_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=training_table_name
-    )[user_columns + item_columns].astype(str)
+    )[user_columns + item_columns + ["timestamp", "previous_item_id"]]
+
+    # Step 1: Find the maximum length of arrays in the column
+    max_length = train_data["previous_item_id"].apply(len).max()
+
+    # Step 2: Pad each array in the column to the maximum length
+    train_data["previous_item_id"] = train_data["previous_item_id"].apply(
+        lambda arr: np.pad(arr, (0, max_length - len(arr)), constant_values="")
+    )
+    train_data["previous_item_id"] = list(np.stack(train_data["previous_item_id"]))
+
     validation_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=validation_table_name
-    )[user_columns + item_columns].astype(str)
+    )[user_columns + item_columns + ["timestamp", "previous_item_id"]]
 
-    train_user_data = (
-        train_data[user_columns]
-        .drop_duplicates(subset=[input_prediction_feature])
-        .reset_index(drop=True)
+    # Step 2: Pad each array in the column to the maximum length
+    validation_data["previous_item_id"] = validation_data["previous_item_id"].apply(
+        lambda arr: np.pad(arr, (0, max_length - len(arr)), constant_values="")
     )
+    validation_data["previous_item_id"] = list(
+        np.stack(validation_data["previous_item_id"].values)
+    )
+
+    train_data[user_columns + item_columns] = train_data[
+        user_columns + item_columns
+    ].astype(str)
+
+    validation_data[user_columns + item_columns] = validation_data[
+        user_columns + item_columns
+    ].astype(str)
+
+    # Add dynamtic context features user and item data (to not have only on occurrence of each)
+    idx = (
+        train_data[user_columns + ["timestamp"]]
+        .groupby([input_prediction_feature])["timestamp"]
+        .idxmax()
+    )
+    train_user_data = train_data.loc[idx]
+
+    max_timestamp = train_user_data["timestamp"].max()
+    train_user_data["timestamp"] = [max_timestamp] * len(train_user_data)
+
     train_item_data = (
         train_data[item_columns]
         .drop_duplicates(subset=["item_id"])
@@ -104,29 +139,45 @@ def train(
 
     # Build tf datasets
     logger.info("Building tf datasets")
-
-    train_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_data.values)
-        .batch(batch_size=batch_size)
-        .map(lambda x: tf.transpose(x))
+    validation_features = {
+        col: validation_data[col].values for col in validation_data.columns
+    }
+    validation_features["previous_item_id"] = np.array(
+        validation_data["previous_item_id"].tolist()
     )
-    validation_dataset = (
-        tf.data.Dataset.from_tensor_slices(validation_data.values)
-        .batch(batch_size=batch_size)
-        .map(lambda x: tf.transpose(x))
+
+    train_features = {col: train_data[col].values for col in train_data.columns}
+    train_features["previous_item_id"] = np.array(
+        train_data["previous_item_id"].tolist()
+    )
+
+    train_dataset = tf.data.Dataset.from_tensor_slices(train_features).batch(
+        batch_size=batch_size
+    )
+
+    validation_dataset = tf.data.Dataset.from_tensor_slices(validation_features).batch(
+        batch_size=batch_size
+    )
+
+    user_features = {
+        col: train_user_data[col].values for col in train_user_data.columns
+    }
+    user_features["previous_item_id"] = np.array(
+        train_user_data["previous_item_id"].tolist()
     )
 
     user_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_user_data.values)
+        tf.data.Dataset.from_tensor_slices(user_features)
         .batch(batch_size=batch_size, drop_remainder=False)
-        .map(lambda x: tf.transpose(x))
         .cache()
     )
 
+    item_features = {
+        col: train_item_data[col].values for col in train_item_data.columns
+    }
     item_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_item_data.values)
+        tf.data.Dataset.from_tensor_slices(item_features)
         .batch(batch_size=batch_size, drop_remainder=False)
-        .map(lambda x: tf.transpose(x))
         .cache()
     )
 
@@ -149,9 +200,9 @@ def train(
                 "embedding_size": embedding_size,
                 "batch_size": batch_size,
                 "epoch_number": N_EPOCHS,
-                "user_count": len(train_user_data),
+                "user_count": len(train_user_data[input_prediction_feature].unique()),
                 "user_feature_count": len(user_features_config.keys()),
-                "item_count": len(train_item_data),
+                "item_count": len(train_item_data["item_id"].unique()),
                 "item_feature_count": len(item_features_config.keys()),
             }
         )
@@ -213,10 +264,9 @@ def train(
         logger.info("Normalizing embeddings...")
         user_embeddings = tf.math.l2_normalize(user_embeddings, axis=1)
         item_embeddings = tf.math.l2_normalize(item_embeddings, axis=1)
-        logger.info("Building and saving the MatchModel")
         match_model = MatchModel(
-            user_input=train_user_data[input_prediction_feature].unique(),
-            item_ids=train_item_data["item_id"].unique(),
+            user_input=train_user_data[input_prediction_feature],
+            item_ids=train_item_data["item_id"],
             embedding_size=embedding_size,
         )
         match_model.set_embeddings(

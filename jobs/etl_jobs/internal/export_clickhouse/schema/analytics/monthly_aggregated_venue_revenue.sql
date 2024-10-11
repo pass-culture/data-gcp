@@ -15,7 +15,7 @@ SELECT
     sum(coalesce(i.expected_revenue,0) + coalesce(c.expected_revenue,0)) as total_expected_revenue
 
 FROM
-    intermediate.monthy_aggregated_venue_individual_revenue i
+    analytics.monthy_aggregated_venue_individual_revenue i
 LEFT JOIN
-    intermediate.monthy_aggregated_venue_collective_revenue c
+    analytics.monthy_aggregated_venue_collective_revenue c
 ON i.creation_month = c.creation_month AND i.venue_id = c.venue_id

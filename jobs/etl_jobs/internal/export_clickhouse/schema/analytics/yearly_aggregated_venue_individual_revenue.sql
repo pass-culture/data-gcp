@@ -1,4 +1,4 @@
-CREATE OR REPLACE TABLE analytics.yearly_aggregated_venue_revenue ON cluster default
+CREATE OR REPLACE TABLE analytics.yearly_aggregated_venue_individual_revenue ON cluster default
     ENGINE = SummingMergeTree()
     PARTITION BY creation_year
     ORDER BY (venue_id)

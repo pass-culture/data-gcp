@@ -9,9 +9,6 @@ on:
       ENV_SHORT_NAME:
         type: string
         required: true
-      APPLICATIVE_EXTERNAL_CONNECTION_ID:
-        type: string
-        required: false
       NOTIF_CHANNEL_ID:
         type: string
         required: false # Si pas fourni, alors pas de notif
@@ -97,17 +94,12 @@ jobs:
       #     ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
       #     TARGET_BRANCH: ${{ github.base_ref }}
       #   run: ./scripts/sqlfluff_lint.sh $TARGET_BRANCH
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          detached: true
       - name: "compile dbt project"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
-          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Run modified models & 1st order childrens"
         working-directory: .
@@ -116,7 +108,6 @@ jobs:
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
-          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: .github/workflows/scripts/run_dbt_changed_models.sh ${{ github.base_ref }} orchestration/dags/data_gcp_dbt
       - name: "Run modified tests"
         working-directory: "./orchestration/dags/data_gcp_dbt/"

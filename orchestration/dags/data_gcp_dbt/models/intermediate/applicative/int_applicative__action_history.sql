@@ -12,11 +12,9 @@ select
     offerer_id,
     venue_id,
     comment,
-    JSON_EXTRACT_SCALAR(action_history_json_data, "$.reason") as action_history_reason,
-    ROW_NUMBER() over (
-        partition by user_id
-        order by
-            CAST(action_history_id as INTEGER) desc
+    json_extract_scalar(action_history_json_data, "$.reason") as action_history_reason,
+    row_number() over (
+        partition by user_id order by cast(action_history_id as integer) desc
     ) as action_history_rk
-from {{ source('raw', 'applicative_database_action_history') }}
+from {{ source("raw", "applicative_database_action_history") }}
 where action_type in ('USER_SUSPENDED', 'USER_UNSUSPENDED')

@@ -1,13 +1,18 @@
 {{
     config(
         **custom_incremental_config(
-        incremental_strategy = "insert_overwrite",
-        partition_by = {"field": "event_date", "data_type": "date", "granularity" : "day"},
-        on_schema_change = "sync_all_columns",
-        cluster_by = "event_name",
-        require_partition_filter = true
+            incremental_strategy="insert_overwrite",
+            partition_by={
+                "field": "event_date",
+                "data_type": "date",
+                "granularity": "day",
+            },
+            on_schema_change="sync_all_columns",
+            cluster_by="event_name",
+            require_partition_filter=true,
+        )
     )
-) }}
+}}
 
 select
     event_date,
@@ -26,9 +31,9 @@ select
     traffic_source,
     traffic_medium,
     traffic_campaign,
-    COALESCE(CAST(double_offer_id as string), offerid) as offer_id,
+    coalesce(cast(double_offer_id as string), offerid) as offer_id,
     ga_session_id as session_id,
-    CONCAT(user_pseudo_id, "-", ga_session_id) as unique_session_id,
+    concat(user_pseudo_id, "-", ga_session_id) as unique_session_id,
     ga_session_number as session_number,
     shouldusealgoliarecommend as is_algolia_recommend,
     searchisautocomplete as search_is_autocomplete,
@@ -41,7 +46,7 @@ select
     pagename as page_name,
     origin,
     locationtype as user_location_type,
-    COALESCE(query, searchquery) as query,
+    coalesce(query, searchquery) as query,
     categoryname as category_name,
     type as filter_type,
     venueid as venue_id,
@@ -51,7 +56,7 @@ select
     step as booking_cancellation_step,
     filtertypes as search_filter_types,
     searchid as search_id,
-    CONCAT(user_pseudo_id, "-", ga_session_id, "-", searchid) as unique_search_id,
+    concat(user_pseudo_id, "-", ga_session_id, "-", searchid) as unique_search_id,
     filter,
     searchlocationfilter as search_location_filter,
     searchcategories as search_categories_filter,
@@ -66,9 +71,12 @@ select
     displayed_venues,
     traffic_gen,
     traffic_content,
-    COALESCE(entryid, homeentryid) as entry_id,
-    case when entryid in ('4XbgmX7fVVgBMoCJiLiY9n', '1ZmUjN7Za1HfxlbAOJpik2') then "generale"
-        when entryid is NULL then NULL
+    coalesce(entryid, homeentryid) as entry_id,
+    case
+        when entryid in ('4XbgmX7fVVgBMoCJiLiY9n', '1ZmUjN7Za1HfxlbAOJpik2')
+        then "generale"
+        when entryid is null
+        then null
         else "marketing"
     end as home_type,
     toentryid as destination_entry_id,
@@ -78,7 +86,7 @@ select
     model_version as reco_model_version,
     model_name as reco_model_name,
     model_endpoint as reco_model_endpoint,
-    COALESCE(age, userstatus) as onboarding_user_selected_age,
+    coalesce(age, userstatus) as onboarding_user_selected_age,
     social as selected_social_media,
     searchview as search_type,
     type as share_type,
@@ -89,24 +97,61 @@ select
     seenduration as video_seen_duration_seconds,
     youtubeid as video_id,
     case when event_name = "ConsultOffer" then 1 else 0 end as is_consult_offer,
-    case when event_name = "BookingConfirmation" then 1 else 0 end as is_booking_confirmation,
-    case when event_name = "HasAddedOfferToFavorites" then 1 else 0 end as is_add_to_favorites,
+    case
+        when event_name = "BookingConfirmation" then 1 else 0
+    end as is_booking_confirmation,
+    case
+        when event_name = "HasAddedOfferToFavorites" then 1 else 0
+    end as is_add_to_favorites,
     case when event_name = "Share" then 1 else 0 end as is_share,
     case when event_name = "Screenshot" then 1 else 0 end as is_screenshot,
     case when event_name = "UserSetLocation" then 1 else 0 end as is_set_location,
     case when event_name = "ConsultVideo" then 1 else 0 end as is_consult_video,
     case when event_name = "ConsultVenue" then 1 else 0 end as is_consult_venue,
     case when event_name = "screen_view" then 1 else 0 end as is_screen_view,
-    case when event_name = "screen_view" and firebase_screen = "Home" then 1 else 0 end as is_screen_view_home,
-    case when event_name = "screen_view" and firebase_screen = "Search" then 1 else 0 end as is_screen_view_search,
-    case when event_name = "screen_view" and firebase_screen = "Offer" then 1 else 0 end as is_screen_view_offer,
-    case when event_name = "screen_view" and firebase_screen = "Profile" then 1 else 0 end as is_screen_view_profile,
-    case when event_name = "screen_view" and firebase_screen = "Favorites" then 1 else 0 end as is_screen_view_favorites,
-    case when event_name = "screen_view" and firebase_screen in ("Bookings", "BookingDetails") then 1 else 0 end as is_screen_view_bookings,
-    case when firebase_screen = "SignupConfirmationEmailSent" or event_name = "ContinueCGU" then 1 else 0 end as is_signup_completed,
-    case when firebase_screen in ("BeneficiaryRequestSent", "UnderageAccountCreated", "BeneficiaryAccountCreated") then 1 else 0 end as is_benef_request_sent,
+    case
+        when event_name = "screen_view" and firebase_screen = "Home" then 1 else 0
+    end as is_screen_view_home,
+    case
+        when event_name = "screen_view" and firebase_screen = "Search" then 1 else 0
+    end as is_screen_view_search,
+    case
+        when event_name = "screen_view" and firebase_screen = "Offer" then 1 else 0
+    end as is_screen_view_offer,
+    case
+        when event_name = "screen_view" and firebase_screen = "Profile" then 1 else 0
+    end as is_screen_view_profile,
+    case
+        when event_name = "screen_view" and firebase_screen = "Favorites" then 1 else 0
+    end as is_screen_view_favorites,
+    case
+        when
+            event_name = "screen_view"
+            and firebase_screen in ("Bookings", "BookingDetails")
+        then 1
+        else 0
+    end as is_screen_view_bookings,
+    case
+        when
+            firebase_screen = "SignupConfirmationEmailSent"
+            or event_name = "ContinueCGU"
+        then 1
+        else 0
+    end as is_signup_completed,
+    case
+        when
+            firebase_screen in (
+                "BeneficiaryRequestSent",
+                "UnderageAccountCreated",
+                "BeneficiaryAccountCreated"
+            )
+        then 1
+        else 0
+    end as is_benef_request_sent,
     case when event_name = "login" then 1 else 0 end as is_login
 from {{ ref("int_firebase__native_event_flattened") }} as e
 {% if is_incremental() %}
-    where event_date between DATE_SUB(DATE("{{ ds() }}"), interval 3 day) and DATE("{{ ds() }}")
+    where
+        event_date
+        between date_sub(date("{{ ds() }}"), interval 3 day) and date("{{ ds() }}")
 {% endif %}

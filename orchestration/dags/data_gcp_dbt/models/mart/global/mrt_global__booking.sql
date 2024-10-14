@@ -1,7 +1,4 @@
-{{ config(**custom_table_config(
-        cluster_by = "offer_id"
-        ))
-    }}
+{{ config(**custom_table_config(cluster_by="offer_id")) }}
 
 select
     booking_id,
@@ -74,7 +71,6 @@ select
     u.user_is_unemployed,
     u.user_is_priority_public,
     u.first_deposit_creation_date
-from {{ ref('int_global__booking') }} as b
-left join {{ ref('mrt_global__user') }} as u on u.user_id = b.user_id
-where deposit_type is not NULL
-    and b.user_id is not NULL
+from {{ ref("int_global__booking") }} as b
+left join {{ ref("mrt_global__user") }} as u on u.user_id = b.user_id
+where deposit_type is not null and b.user_id is not null

@@ -17,5 +17,4 @@ select
     user_has_enabled_marketing_push,
     user_has_enabled_marketing_email
 from {{ ref("int_applicative__user_offerer") }}
-where user_offerer_validation_status = "VALIDATED"
-    and user_is_active
+where user_offerer_validation_status = "VALIDATED" and user_is_active

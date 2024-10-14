@@ -8,4 +8,4 @@ select
     tag_category_id,
     tag_category_name,
     tag_category_label
-from {{ ref('int_applicative__offerer_tag') }}
+from {{ ref("int_applicative__offerer_tag") }}

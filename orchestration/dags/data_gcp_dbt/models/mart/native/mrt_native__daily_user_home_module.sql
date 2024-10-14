@@ -1,8 +1,4 @@
-{{
-    config(
-        materialized = "view"
-    )
-}}
+{{ config(materialized="view") }}
 
 select
     user_id,
@@ -37,12 +33,16 @@ select
     playlist_tag.offer_category,
     playlist_tag.playlist_reach,
     playlist_tag.playlist_recurrence
-from {{ ref('int_firebase__native_daily_user_home_module' ) }} as displayed
-    left join {{ ref('int_contentful__entry' ) }} as parent_modules
-        on parent_modules.id = displayed.parent_module_id
-    left join {{ ref('int_contentful__entry' ) }} as parent_homes
-        on parent_homes.id = displayed.parent_entry_id
-    left join {{ ref('int_contentful__home_tag' ) }} as home_tag
-        on home_tag.entry_id = displayed.entry_id
-    left join {{ ref('int_contentful__playlist_tag' ) }} as playlist_tag
-        on playlist_tag.entry_id = displayed.module_id
+from {{ ref("int_firebase__native_daily_user_home_module") }} as displayed
+left join
+    {{ ref("int_contentful__entry") }} as parent_modules
+    on parent_modules.id = displayed.parent_module_id
+left join
+    {{ ref("int_contentful__entry") }} as parent_homes
+    on parent_homes.id = displayed.parent_entry_id
+left join
+    {{ ref("int_contentful__home_tag") }} as home_tag
+    on home_tag.entry_id = displayed.entry_id
+left join
+    {{ ref("int_contentful__playlist_tag") }} as playlist_tag
+    on playlist_tag.entry_id = displayed.module_id

@@ -95,6 +95,5 @@ select
     offerer_address_id,
     offerer_rank_desc,
     offerer_rank_asc
-from {{ ref('int_global__venue') }}
-where offerer_validation_status = 'VALIDATED'
-    and offerer_is_active
+from {{ ref("int_global__venue") }}
+where offerer_validation_status = 'VALIDATED' and offerer_is_active

@@ -1,12 +1,13 @@
 {{
     config(
         **custom_incremental_config(
-        incremental_strategy='insert_overwrite',
-        partition_by={'field': 'partition_date', 'data_type': 'date'},
-        on_schema_change = "sync_all_columns",
-        require_partition_filter = true
+            incremental_strategy="insert_overwrite",
+            partition_by={"field": "partition_date", "data_type": "date"},
+            on_schema_change="sync_all_columns",
+            require_partition_filter=true,
+        )
     )
-) }}
+}}
 
 select
     partition_date,
@@ -27,10 +28,14 @@ select
     cookies_consent_mandatory,
     cookies_consent_accepted,
     cookies_consent_refused,
-    case url_path
-        when "/native/v1/me" then "app_native"
-        when "/beneficiaries/current" then "webapp"
-        when "/users/current" then "pro"
+    case
+        url_path
+        when "/native/v1/me"
+        then "app_native"
+        when "/beneficiaries/current"
+        then "webapp"
+        when "/users/current"
+        then "pro"
     end as source,
     newly_subscribed_themes,
     newly_subscribed_email,
@@ -41,11 +46,13 @@ select
     newly_unsubscribed_themes,
     newly_unsubscribed_email,
     newly_unsubscribed_push
-from {{ ref('int_pcapi__log') }}
+from {{ ref("int_pcapi__log") }}
 where
-log_timestamp >= DATE_SUB(CURRENT_TIMESTAMP(), interval 365 day)
-and url_path in ("/users/current", "/native/v1/me", "/native/v1/signin")
-{% if is_incremental() %}
-AND log_timestamp between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")
-AND partition_date between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")
-{% endif %}
+    log_timestamp >= date_sub(current_timestamp(), interval 365 day)
+    and url_path in ("/users/current", "/native/v1/me", "/native/v1/signin")
+    {% if is_incremental() %}
+        and log_timestamp
+        between date_sub(date("{{ ds() }}"), interval 2 day) and date("{{ ds() }}")
+        and partition_date
+        between date_sub(date("{{ ds() }}"), interval 2 day) and date("{{ ds() }}")
+    {% endif %}

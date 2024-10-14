@@ -362,6 +362,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
                 "conda init zsh && source ~/.zshrc && conda activate data-gcp"
             )
         elif self.installer == "uv":
+            commands_list.append("source $HOME/.cargo/env")
             commands_list.append("source .venv/bin/activate")
             commands_list.append(f"uv pip sync {self.requirement_file}")
         else:

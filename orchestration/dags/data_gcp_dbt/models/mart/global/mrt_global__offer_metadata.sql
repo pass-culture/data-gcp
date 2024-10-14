@@ -21,4 +21,4 @@ select
     offer_type_label,
     offer_type_labels,
     offer_sub_type_label
-from {{ ref('int_applicative__offer_metadata') }}
+from {{ ref("int_applicative__offer_metadata") }}

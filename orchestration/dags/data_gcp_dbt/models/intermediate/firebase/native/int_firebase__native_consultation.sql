@@ -1,18 +1,19 @@
 {{
     config(
         **custom_incremental_config(
-        incremental_strategy = 'insert_overwrite',
-        partition_by = {'field': 'consultation_date', 'data_type': 'date'},
-        on_schema_change = "sync_all_columns",
-        require_partition_filter = true
+            incremental_strategy="insert_overwrite",
+            partition_by={"field": "consultation_date", "data_type": "date"},
+            on_schema_change="sync_all_columns",
+            require_partition_filter=true,
+        )
     )
-) }}
+}}
 
-SELECT DISTINCT
-    CONCAT(user_id, "-", event_timestamp, "-", offer_id) AS consultation_id,
+select distinct
+    concat(user_id, "-", event_timestamp, "-", offer_id) as consultation_id,
     user_id,
-    event_date AS consultation_date,
-    event_timestamp AS consultation_timestamp,
+    event_date as consultation_date,
+    event_timestamp as consultation_timestamp,
     offer_id,
     origin,
     module_id,
@@ -21,12 +22,10 @@ SELECT DISTINCT
     venue_id,
     traffic_medium,
     traffic_campaign
-FROM {{ ref('int_firebase__native_event') }}
-WHERE event_name = 'ConsultOffer'
-    AND user_id IS NOT NULL
-    AND offer_id IS NOT NULL
+from {{ ref("int_firebase__native_event") }}
+where
+    event_name = 'ConsultOffer' and user_id is not null and offer_id is not null
     {% if is_incremental() %}
-    AND date(event_date) >= date_sub('{{ ds() }}', INTERVAL 3 day)
-    {% else %}
-    AND date(event_date) >= date_sub('{{ ds() }}', INTERVAL 1 year)
+        and date(event_date) >= date_sub('{{ ds() }}', interval 3 day)
+    {% else %} and date(event_date) >= date_sub('{{ ds() }}', interval 1 year)
     {% endif %}

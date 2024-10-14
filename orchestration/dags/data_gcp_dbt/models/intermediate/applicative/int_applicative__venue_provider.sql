@@ -11,6 +11,10 @@ select
     u.booking_external_url,
     u.cancel_external_url,
     u.notification_external_url
-from {{ source('raw','applicative_database_provider') }} as p
-    inner join {{ source('raw','applicative_database_venue_provider') }} as vp on vp.provider_id = p.provider_id
-    left join {{ source('raw','applicative_database_venue_provider_external_urls') }} as u on u.venue_provider_id = vp.id
+from {{ source("raw", "applicative_database_provider") }} as p
+inner join
+    {{ source("raw", "applicative_database_venue_provider") }} as vp
+    on vp.provider_id = p.provider_id
+left join
+    {{ source("raw", "applicative_database_venue_provider_external_urls") }} as u
+    on u.venue_provider_id = vp.id

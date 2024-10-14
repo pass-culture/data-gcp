@@ -1,7 +1,7 @@
-SELECT  
-  id AS favorite_id,
-  DATE(datecreated) AS favorite_creation_date,
-  datecreated AS favorite_created_at,
-  userId AS user_id,
-  offerId AS offer_id 
-FROM {{ source('raw','applicative_database_favorite') }} 
+select
+    id as favorite_id,
+    date(datecreated) as favorite_creation_date,
+    datecreated as favorite_created_at,
+    userid as user_id,
+    offerid as offer_id
+from {{ source("raw", "applicative_database_favorite") }}

@@ -33,15 +33,16 @@ repos:
     stages: [commit]
     language: system
     types: [sql]
-  - id: sqlfluff-lint-check
-    name: Lint check (sqlfluff)
-    entry: orchestration/dags/data_gcp_dbt/scripts/sqlfluff_lint.sh
-    language: script
-    types: [sql]
-    stages: [commit]
-  - id: sqlfluff-fix
-    name: fix (sqlfluff)
-    entry: orchestration/dags/data_gcp_dbt/scripts/sqlfluff_fix.sh
-    language: script
-    types: [sql]
-    stages: [commit]
+  # TODO: Readd this once it is working
+  # - id: sqlfluff-lint-check
+  #   name: Lint check (sqlfluff)
+  #   entry: orchestration/dags/data_gcp_dbt/scripts/sqlfluff_lint.sh
+  #   language: script
+  #   types: [sql]
+  #   stages: [commit]
+  # - id: sqlfluff-fix
+  #   name: fix (sqlfluff)
+  #   entry: orchestration/dags/data_gcp_dbt/scripts/sqlfluff_fix.sh
+  #   language: script
+  #   types: [sql]
+  #   stages: [commit]

@@ -54,7 +54,7 @@ with
             sum(total_bytes_processed) as total_bytes_processed,
             count(*) as total_queries
         from
-            `{{ target.project }}.{{ var('region_name') }}`.information_schema.jobs_by_project
+            `{{ target.project }}.{{ var('region_name') }}.INFORMATION_SCHEMA.JOBS_BY_PROJECT`
             as queries
         left join
             table_references tr

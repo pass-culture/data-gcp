@@ -1,11 +1,16 @@
 {{
     config(
         **custom_incremental_config(
-        incremental_strategy = 'insert_overwrite',
-        partition_by = {'field': 'event_date', 'data_type': 'date', "granularity" : "day"},
-        on_schema_change = "sync_all_columns",
+            incremental_strategy="insert_overwrite",
+            partition_by={
+                "field": "event_date",
+                "data_type": "date",
+                "granularity": "day",
+            },
+            on_schema_change="sync_all_columns",
+        )
     )
-) }}
+}}
 
 select
     event_date,
@@ -23,7 +28,9 @@ select
 from {{ ref("int_pcreco__displayed_offer_event") }}
 
 {% if is_incremental() %}
-    where event_date between date_sub(date('{{ ds() }}'), interval 3 day) and date('{{ ds() }}')
+    where
+        event_date
+        between date_sub(date('{{ ds() }}'), interval 3 day) and date('{{ ds() }}')
 {% endif %}
 
 group by

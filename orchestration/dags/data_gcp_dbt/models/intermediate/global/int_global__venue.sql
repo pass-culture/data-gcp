@@ -92,28 +92,28 @@ select
     ofr.is_reference_adage,
     ofr.is_synchro_adage,
     ofr.total_reimbursement_points,
-    CONCAT(
+    concat(
         "https://passculture.pro/structures/",
         ofr.offerer_humanized_id,
         "/lieux/",
         venue_humanized_id
     ) as venue_pc_pro_link,
-    case when v.venue_is_permanent then CONCAT("venue-", v.venue_id)
-        else ofr.partner_id
+    case
+        when v.venue_is_permanent then concat("venue-", v.venue_id) else ofr.partner_id
     end as partner_id,
-    ROW_NUMBER() over (
+    row_number() over (
         partition by v.venue_managing_offerer_id
         order by
-            v.total_theoretic_revenue desc,
-            v.total_created_offers desc,
-            venue_name desc
+            v.total_theoretic_revenue desc, v.total_created_offers desc, venue_name desc
     ) as offerer_rank_desc,
-    ROW_NUMBER() over (
+    row_number() over (
         partition by v.venue_managing_offerer_id
         order by
             v.total_theoretic_revenue desc,
             v.total_created_offers desc,
             v.venue_name asc
     ) as offerer_rank_asc
-from {{ ref('int_applicative__venue') }} as v
-    left join {{ ref('int_global__offerer') }} as ofr on v.venue_managing_offerer_id = ofr.offerer_id
+from {{ ref("int_applicative__venue") }} as v
+left join
+    {{ ref("int_global__offerer") }} as ofr
+    on v.venue_managing_offerer_id = ofr.offerer_id

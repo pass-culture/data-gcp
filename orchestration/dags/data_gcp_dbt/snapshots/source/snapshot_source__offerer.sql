@@ -1,19 +1,27 @@
 {% snapshot snapshot_source__offerer %}
 
-{{
-    config(**
-        custom_snapshot_config(
-            strategy='check',
-            unique_key='offerer_id',
-            check_cols=['offerer_name', 'offerer_address', 'offerer_postal_code', 'offerer_is_active', 'offerer_validation_status', 'offerer_siren']
+    {{
+        config(
+            **custom_snapshot_config(
+                strategy="check",
+                unique_key="offerer_id",
+                check_cols=[
+                    "offerer_name",
+                    "offerer_address",
+                    "offerer_postal_code",
+                    "offerer_is_active",
+                    "offerer_validation_status",
+                    "offerer_siren",
+                ],
+            )
         )
-    )
-}}
+    }}
 
-
-    SELECT *
-    FROM EXTERNAL_QUERY("{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",
-    '''SELECT
+    select *
+    from
+        external_query(
+            "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",
+            '''SELECT
     "isActive" AS offerer_is_active
     , "address" AS offerer_address
     , "postalCode" AS offerer_postal_code
@@ -25,6 +33,7 @@
     , CAST("validationStatus" as varchar(255)) as offerer_validation_status
     , "dateValidated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS offerer_validation_date
 FROM public.offerer
-    ''')
+    '''
+        )
 
 {% endsnapshot %}

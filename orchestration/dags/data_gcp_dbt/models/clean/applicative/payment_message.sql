@@ -1,2 +1,1 @@
-select *
-from {{ source('raw', 'applicative_database_payment_message') }}
+select * from {{ source("raw", "applicative_database_payment_message") }}

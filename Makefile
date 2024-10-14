@@ -132,7 +132,7 @@ precommit_install:
 	@eval "$$(pyenv init -)" && pyenv activate data-gcp && pre-commit install
 
 sqlfmt_fix:
-	sqlfmt orchestration/dags/data_gcp_dbt/models/export orchestration/dags/data_gcp_dbt/models/clean orchestration/dags/data_gcp_dbt/models/analytics orchestration/dags/dependencies --exclude "**/.venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "*/venv/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"
+	sqlfmt orchestration/dags/data_gcp_dbt/models/export orchestration/dags/data_gcp_dbt/models/mart orchestration/dags/data_gcp_dbt/models/machine_learning orchestration/dags/data_gcp_dbt/models/clean orchestration/dags/data_gcp_dbt/models/analytics orchestration/dags/dependencies --exclude "**/.venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "*/venv/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"
 
 sqlfmt_check:
-	sqlfmt --check orchestration/dags/data_gcp_dbt/models/export orchestration/dags/data_gcp_dbt/models/clean orchestration/dags/data_gcp_dbt/models/analytics orchestration/dags/dependencies --exclude "**/.venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "*/venv/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"
+	sqlfmt --check orchestration/dags/data_gcp_dbt/models/export orchestration/dags/data_gcp_dbt/models/mart orchestration/dags/data_gcp_dbt/models/machine_learning orchestration/dags/data_gcp_dbt/models/clean orchestration/dags/data_gcp_dbt/models/analytics orchestration/dags/dependencies --exclude "**/.venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "*/venv/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"

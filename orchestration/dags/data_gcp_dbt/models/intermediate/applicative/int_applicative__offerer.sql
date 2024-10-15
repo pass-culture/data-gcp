@@ -261,6 +261,6 @@ select
         then true
         else false
     end as is_collective_active_current_year
-from {{ ref("int_source__offerer") }} as o
+from {{ ref("offerer") }} as o
 left join
     venue_grouped_by_offerer as vgo on o.offerer_id = vgo.venue_managing_offerer_id

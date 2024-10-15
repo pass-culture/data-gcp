@@ -20,7 +20,7 @@ with
         select
             offerer_id,
             {{ target_schema }}.humanize_id(offerer_id) as offerer_humanized_id
-        from {{ ref("int_source__offerer") }}
+        from {{ ref("offerer") }}
         where offerer_id is not null
     ),
 
@@ -275,8 +275,7 @@ left join
     {{ ref("venue_label") }} venue_label
     on venue_label.venue_label_id = venue.venue_label_id
 left join
-    {{ ref("int_source__offerer") }} offerer
-    on offerer.offerer_id = venue.venue_managing_offerer_id
+    {{ ref("offerer") }} offerer on offerer.offerer_id = venue.venue_managing_offerer_id
 left join offerer_humanized_id on offerer_humanized_id.offerer_id = offerer.offerer_id
 left join {{ ref("siren_data") }} siren_data on siren_data.siren = offerer.offerer_siren
 left join offerer_tags on offerer_tags.offerer_id = offerer.offerer_id

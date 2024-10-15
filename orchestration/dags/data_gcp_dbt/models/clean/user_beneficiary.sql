@@ -76,7 +76,9 @@ with
         join
             {{ source("raw", "applicative_database_stock") }} as stock
             on booking.stock_id = stock.stock_id
-        join {{ ref("int_source__offer") }} as offer on stock.offer_id = offer.offer_id
+        join
+            {{ source("raw", "applicative_database_offer") }} as offer
+            on stock.offer_id = offer.offer_id
     )
 
 select

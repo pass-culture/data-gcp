@@ -87,10 +87,10 @@ def get_test_sets_df(test_set_dir: str) -> pd.DataFrame:
 def main(
     artists_to_link_file_path: str = typer.Option(),
     linked_artists_file_path: str = typer.Option(),
-    test_set_dir: str = typer.Option(),
+    test_sets_dir: str = typer.Option(),
     experiment_name: str = typer.Option(),
 ) -> None:
-    test_sets_df = get_test_sets_df(test_set_dir)
+    test_sets_df = get_test_sets_df(test_sets_dir)
     artists_to_link_df = pd.read_parquet(artists_to_link_file_path)
     linked_artists_df = pd.read_parquet(linked_artists_file_path)
 

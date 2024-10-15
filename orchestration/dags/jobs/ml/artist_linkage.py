@@ -23,6 +23,9 @@ from dependencies.ml.linkage.import_artists import PARAMS as IMPORT_ARTISTS_PARA
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.python import PythonOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"artist-linkage-{ENV_SHORT_NAME}"
@@ -35,7 +38,7 @@ STORAGE_BASE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}"
 ARTISTS_TO_LINK_GCS_FILENAME = "artists_to_link.parquet"
 PREPROCESSED_GCS_FILENAME = "preprocessed_artists_to_link.parquet"
 LINKED_ARTISTS_GCS_FILENAME = "linked_artists.parquet"
-IMPORT_TEST_SET_GCS_REGEX = "labelled_test_sets/*.parquet"
+TEST_SETS_GCS_DIR = "labelled_test_sets"
 LINKED_ARTISTS_IN_TEST_SET_FILENAME = "linked_artists_in_test_set.parquet"
 
 # BQ Output Tables
@@ -131,16 +134,6 @@ with DAG(
         dag=dag,
     )
 
-    collect_test_sets_into_bq = GCSToBigQueryOperator(
-        task_id="import_test_sets_in_bq",
-        bucket=MLFLOW_BUCKET_NAME,
-        source_objects=[os.path.join(GCS_FOLDER_PATH, IMPORT_TEST_SET_GCS_REGEX)],
-        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{TEST_SET_BQ_TABLE}",
-        source_format="PARQUET",
-        write_disposition="WRITE_TRUNCATE",
-        autodetect=True,
-    )
-
     preprocess_data = SSHGCEOperator(
         task_id="preprocess_data",
         instance_name=GCE_INSTANCE,
@@ -163,63 +156,15 @@ with DAG(
         """,
     )
 
-    artist_linkage = SSHGCEOperator(
-        task_id="artist_linkage",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
-         python cluster.py \
-        --source-file-path {os.path.join(STORAGE_BASE_PATH, PREPROCESSED_GCS_FILENAME)} \
-        --output-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_GCS_FILENAME)}
-        """,
+    load_data_into_linked_artists_table = GCSToBigQueryOperator(
+        bucket=MLFLOW_BUCKET_NAME,
+        task_id="load_data_into_linked_artists_table",
+        source_objects=os.path.join(GCS_FOLDER_PATH, LINKED_ARTISTS_GCS_FILENAME),
+        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{LINKED_ARTISTS_BQ_TABLE}",
+        source_format="PARQUET",
+        write_disposition="WRITE_TRUNCATE",
+        autodetect=True,
     )
-
-    linked_artists_on_test_set = SSHGCEOperator(
-        task_id="linked_artists_on_test_set",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command=f"""
-         python project_artists_on_test_set.py \
-        --linked-artist-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_GCS_FILENAME)} \
-        --test-sets-file-path {os.path.join(STORAGE_BASE_PATH, IMPORT_TEST_SET_GCS_REGEX)} \
-        """,
-    )
-
-    # load_data_into_linked_artists_table = GCSToBigQueryOperator(
-    #     bucket=MLFLOW_BUCKET_NAME,
-    #     task_id="load_data_into_linked_artists_table",
-    #     source_objects=os.path.join(GCS_FOLDER_PATH, LINKED_ARTISTS_GCS_FILENAME),
-    #     destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{LINKED_ARTISTS_BQ_TABLE}",
-    #     source_format="PARQUET",
-    #     write_disposition="WRITE_TRUNCATE",
-    #     autodetect=True,
-    # )
-
-    # # Metrics
-    # linked_artists_on_test_set = bigquery_job_task(
-    #     dag,
-    #     f"create_bq_table_{LINKED_ARTISTS_ON_TEST_SET_PARAMS['destination_table']}",
-    #     LINKED_ARTISTS_ON_TEST_SET_PARAMS,
-    # )
-
-    # linked_artists_on_test_set_to_gcs = BigQueryInsertJobOperator(
-    #     task_id=f"{LINKED_ARTISTS_ON_TEST_SET_PARAMS['destination_table']}_to_bucket",
-    #     configuration={
-    #         "extract": {
-    #             "sourceTable": {
-    #                 "projectId": GCP_PROJECT_ID,
-    #                 "datasetId": BIGQUERY_TMP_DATASET,
-    #                 "tableId": LINKED_ARTISTS_ON_TEST_SET_PARAMS["destination_table"],
-    #             },
-    #             "compression": None,
-    #             "destinationUris": os.path.join(
-    #                 STORAGE_BASE_PATH, LINKED_ARTISTS_IN_TEST_SET_FILENAME
-    #             ),
-    #             "destinationFormat": "PARQUET",
-    #         }
-    #     },
-    #     dag=dag,
-    # )
 
     artist_metrics = (
         SSHGCEOperator(
@@ -228,7 +173,9 @@ with DAG(
             base_dir=BASE_DIR,
             command=f"""
          python evaluate.py \
-        --input-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_IN_TEST_SET_FILENAME)} \
+        --artists-to-link-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_TO_LINK_GCS_FILENAME)} \
+        --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_GCS_FILENAME)} \
+        --test-sets-dir {os.path.join(STORAGE_BASE_PATH, TEST_SETS_GCS_DIR)} \
         --experiment-name artist_linkage_v1.0_{ENV_SHORT_NAME}
         """,
         ),
@@ -236,19 +183,13 @@ with DAG(
 
     (logging_task >> gce_instance_start >> fetch_code >> install_dependencies)
     (logging_task >> data_collect >> export_input_bq_to_gcs)
-    (logging_task >> collect_test_sets_into_bq)
 
     (
         [export_input_bq_to_gcs, install_dependencies]
         >> preprocess_data
         >> artist_linkage
-        >> load_data_into_linked_artists_table
-    )
-
-    (
-        [load_data_into_linked_artists_table, collect_test_sets_into_bq]
-        >> linked_artists_on_test_set
-        >> linked_artists_on_test_set_to_gcs
         >> artist_metrics
         >> gce_instance_stop
     )
+
+    (artist_linkage >> load_data_into_linked_artists_table)

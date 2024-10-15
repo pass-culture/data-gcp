@@ -7,8 +7,8 @@ select
     extract(dayofweek from booking_creation_date) as event_day,
     extract(month from booking_creation_date) as event_month,
     offer_item_id.item_id as item_id,
-    offer.offer_subcategoryid as offer_subcategoryid,
-    subcategories.category_id as offer_categoryid,
+    offer.offer_subcategory_id as offer_subcategory_id,
+    subcategories.category_id as offer_category_id,
     enroffer.genres,
     enroffer.rayon,
     enroffer.type,
@@ -23,7 +23,7 @@ inner join
     on stock.offer_id = offer.offer_id
 inner join
     `{{ bigquery_raw_dataset }}`.`subcategories` subcategories
-    on offer.offer_subcategoryid = subcategories.id
+    on offer.offer_subcategory_id = subcategories.id
 inner join
     `{{ bigquery_analytics_dataset }}`.`global_offer` enroffer
     on enroffer.offer_id = offer.offer_id

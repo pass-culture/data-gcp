@@ -1,3 +1,9 @@
+[project]
+name = "data-gcp"
+description = "Contents all DAGs from the data team"
+readme = "README.md"
+dependencies = []
+
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.
 [tool.ruff]

@@ -168,6 +168,8 @@ kiwisolver==1.4.5
     # via matplotlib
 llvmlite==0.42.0
     # via numba
+loguru==0.7.2
+    # via -r requirements.in
 mako==1.3.5
     # via alembic
 markdown==3.6

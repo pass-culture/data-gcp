@@ -39,12 +39,9 @@ ARTISTS_TO_LINK_GCS_FILENAME = "artists_to_link.parquet"
 PREPROCESSED_GCS_FILENAME = "preprocessed_artists_to_link.parquet"
 LINKED_ARTISTS_GCS_FILENAME = "linked_artists.parquet"
 TEST_SETS_GCS_DIR = "labelled_test_sets"
-LINKED_ARTISTS_IN_TEST_SET_FILENAME = "linked_artists_in_test_set.parquet"
 
 # BQ Output Tables
 LINKED_ARTISTS_BQ_TABLE = "linked_artists"
-TEST_SET_BQ_TABLE = "test_set"
-METRICS_TABLE = "artist_metrics"
 
 default_args = {
     "start_date": datetime(2024, 7, 16),

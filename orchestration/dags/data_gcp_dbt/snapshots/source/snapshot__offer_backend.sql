@@ -1,4 +1,4 @@
-{% snapshot snapshot_source__offer %}
+{% snapshot snapshot__offer_backend %}
 
     {{
         config(

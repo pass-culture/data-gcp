@@ -85,18 +85,12 @@ def get_test_sets_df(test_set_dir: str) -> pd.DataFrame:
     )
 
 
-@app.command()
-def main(
-    artists_to_link_file_path: str = typer.Option(),
-    linked_artists_file_path: str = typer.Option(),
-    test_sets_dir: str = typer.Option(),
-    experiment_name: str = typer.Option(),
-) -> None:
-    test_sets_df = get_test_sets_df(test_sets_dir)
-    artists_to_link_df = pd.read_parquet(artists_to_link_file_path)
-    linked_artists_df = pd.read_parquet(linked_artists_file_path)
-
-    matched_artists_in_test_set_df = (
+def project_linked_artists_on_test_sets(
+    artists_to_link_df: pd.DataFrame,
+    linked_artists_df: pd.DataFrame,
+    test_sets_df: pd.DataFrame,
+) -> pd.DataFrame:
+    return (
         test_sets_df.loc[
             :,
             MERGE_COLUMNS
@@ -124,6 +118,24 @@ def main(
             on=MERGE_COLUMNS,
         )
     ).sort_values(by=["dataset_name", "cluster_id"])
+
+
+@app.command()
+def main(
+    artists_to_link_file_path: str = typer.Option(),
+    linked_artists_file_path: str = typer.Option(),
+    test_sets_dir: str = typer.Option(),
+    experiment_name: str = typer.Option(),
+) -> None:
+    test_sets_df = get_test_sets_df(test_sets_dir)
+    artists_to_link_df = pd.read_parquet(artists_to_link_file_path)
+    linked_artists_df = pd.read_parquet(linked_artists_file_path)
+
+    matched_artists_in_test_set_df = project_linked_artists_on_test_sets(
+        artists_to_link_df=artists_to_link_df,
+        linked_artists_df=linked_artists_df,
+        test_sets_df=test_sets_df,
+    )
 
     main_cluster_per_dataset = get_main_matched_cluster_per_dataset(
         matched_artists_in_test_set_df
@@ -159,7 +171,6 @@ def main(
         # Log Dataset
         dataset = mlflow.data.from_pandas(
             matched_artists_in_test_set_df,
-            # source=input_file_path,
             name="artists_on_test_sets",
         )
         mlflow.log_input(dataset, context="evaluation")

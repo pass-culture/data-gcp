@@ -5,6 +5,5 @@ ANALYTICS_TABLES = {
         "write_disposition": "WRITE_TRUNCATE",
         "destination_dataset": "{{ bigquery_analytics_dataset }}",
         "destination_table": "app_downloads_stats",
-        "schemaUpdateOptions": ["ALLOW_FIELD_ADDITION"],
     }
 }

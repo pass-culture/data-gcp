@@ -9,7 +9,7 @@ from common.config import (
 )
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
-    InstallDependenciesOperator,
+    CloneRepositoryGCEOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -56,12 +56,18 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_start_task", retries=2
     )
 
-    fetch_install_code = InstallDependenciesOperator(
-        task_id="fetch_install_code",
+    fetch_code = CloneRepositoryGCEOperator(
+        task_id="fetch_code",
         instance_name=GCE_INSTANCE,
-        branch="{{ params.branch }}",
+        command="{{ params.branch }}",
         python_version="3.9",
+    )
+
+    install_dependencies = SSHGCEOperator(
+        task_id="install_dependencies",
+        instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        command="pip install -r requirements.txt --user",
         dag=dag,
         retries=2,
     )
@@ -71,7 +77,6 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        installer="uv",
         command="python main.py ",
         do_xcom_push=True,
     )
@@ -88,7 +93,8 @@ for table, params in ANALYTICS_TABLES.items():
 end = DummyOperator(task_id="end", dag=dag)
 (
     gce_instance_start
-    >> fetch_install_code
+    >> fetch_code
+    >> install_dependencies
     >> import_downloads_data_to_bigquery
     >> gce_instance_stop
     >> analytics_tasks

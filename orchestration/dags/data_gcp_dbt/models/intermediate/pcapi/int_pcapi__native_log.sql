@@ -51,8 +51,8 @@ where
     log_timestamp >= date_sub(current_timestamp(), interval 365 day)
     and url_path in ("/users/current", "/native/v1/me", "/native/v1/signin")
     {% if is_incremental() %}
-        and log_timestamp
+        and date(log_timestamp)
         between date_sub(date("{{ ds() }}"), interval 2 day) and date("{{ ds() }}")
-        and partition_date
+        and date(partition_date)
         between date_sub(date("{{ ds() }}"), interval 2 day) and date("{{ ds() }}")
     {% endif %}

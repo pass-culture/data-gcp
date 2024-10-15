@@ -14,4 +14,4 @@ from {{ ref("int_pcapi__log") }}
 where
     log_timestamp >= date_sub(current_timestamp(), interval 365 day)
     and url_path like "/collective/%"
-    {% if is_incremental() %} and date(timestamp) = "{{ ds() }}" {% endif %}
+    {% if is_incremental() %} and date(log_timestamp) = "{{ ds() }}" {% endif %}

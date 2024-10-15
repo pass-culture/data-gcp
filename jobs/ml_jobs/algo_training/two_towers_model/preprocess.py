@@ -1,4 +1,5 @@
 import json
+from multiprocessing import cpu_count
 
 import typer
 
@@ -33,7 +34,9 @@ def preprocess(
         - Convert numerical columns to int
     """
     raw_data = read_from_gcs(
-        storage_path=STORAGE_PATH, table_name=input_dataframe_file_name
+        storage_path=STORAGE_PATH,
+        table_name=input_dataframe_file_name,
+        max_process=cpu_count() // 2,
     )
 
     with open(

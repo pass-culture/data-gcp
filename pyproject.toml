@@ -1,8 +1,20 @@
 [project]
 name = "data-gcp"
+version = "1.0.0"
 description = "Contents all DAGs from the data team"
 readme = "README.md"
-dependencies = []
+requires-python = ">=3.10"
+dependencies = [
+    "dbt-bigquery==1.8.1",
+    "dbt-core==1.8.7",
+    "mdurl==0.1.2",
+    "pre-commit~=2.0",
+    "ruff==0.5.7",
+    "shandy-sqlfmt[jinjafmt]==0.23.2",
+    "sqlfluff-templater-dbt==3.1.1",
+    "sqlfluff==3.1.1",
+    "typer==0.12.3",
+]
 
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.

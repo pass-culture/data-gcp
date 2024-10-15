@@ -1,4 +1,6 @@
-# PR title format (except for MEP)
+# PR template
+
+## PR title format (except for MEP)
 
 (ticket) type(topic): comment
 

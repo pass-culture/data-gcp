@@ -342,6 +342,8 @@ scipy==1.13.1
     # via
     #   mlflow
     #   scikit-learn
+setuptools==75.1.0
+    # via -r requirements.in
 shellingham==1.5.4
     # via typer
 six==1.16.0

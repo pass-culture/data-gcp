@@ -71,7 +71,7 @@ def get_test_sets_df(test_set_dir: str) -> pd.DataFrame:
 
     parquet_files = [
         GS_PREFIX + path
-        for path in fs.glob(f"{GS_PREFIX}{test_set_dir}/**")
+        for path in fs.glob(f"{test_set_dir}/**")
         if path.endswith(".parquet")
     ]
 

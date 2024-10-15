@@ -37,6 +37,11 @@ models:
     +persist_docs:
       relation: true
       columns: true
+    raw:
+      +meta:
+        owner: "@team-data-engineering"
+      +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+      +schema: raw_{{ target.name }}
     clean:
       +meta:
         owner: "@team-data-engineering"

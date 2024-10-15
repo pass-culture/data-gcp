@@ -6,6 +6,7 @@
                 strategy="timestamp",
                 unique_key="offer_id",
                 updated_at="offer_date_updated",
+                invalidate_hard_delete=False
             )
         )
     }}
@@ -47,7 +48,8 @@
         , CAST("bookingContact" AS varchar(255)) as booking_contact
         , CAST("offererAddressId" AS varchar(255)) as offerer_address_id
     FROM public.offer
-    '''
+    WHERE "dateUpdated" > NOW() - INTERVAL '3' DAY
+        '''
         )
 
 {% endsnapshot %}

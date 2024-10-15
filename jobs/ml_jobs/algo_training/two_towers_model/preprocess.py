@@ -36,7 +36,7 @@ def preprocess(
     raw_data = read_from_gcs(
         storage_path=STORAGE_PATH,
         table_name=input_dataframe_file_name,
-        max_process=cpu_count() // 2,
+        max_process=max(cpu_count() // 2, 1),
     )
 
     with open(
@@ -62,14 +62,12 @@ def preprocess(
     # Since we need user_id for evaluation purposes
     if "user_id" not in integer_features + string_features:
         string_features.append("user_id")
-    clean_data = (
+    (
         raw_data[integer_features + string_features]
         .fillna({col: "none" for col in string_features})
         .fillna({col: 0 for col in integer_features})
         .astype({col: "int" for col in integer_features})
-    )
-
-    clean_data.to_parquet(f"{STORAGE_PATH}/{output_dataframe_file_name}/data.parquet")
+    ).to_parquet(f"{STORAGE_PATH}/{output_dataframe_file_name}/data.parquet")
 
 
 if __name__ == "__main__":

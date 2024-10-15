@@ -1,3 +1,4 @@
+import gcsfs
 import matplotlib.pyplot as plt
 import mlflow
 import pandas as pd
@@ -10,6 +11,8 @@ from utils.mlflow import (
 
 METRICS_PER_DATASET_CSV_FILENAME = "metrics_per_dataset.csv"
 METRICS_PER_DATASET_GRAPH_FILENAME = "metrics_per_dataset.png"
+
+MERGE_COLUMNS = ["artist_name", "offer_category_id", "is_synchronised", "artist_type"]
 
 app = typer.Typer()
 
@@ -64,12 +67,75 @@ def get_main_matched_cluster_per_dataset(
     )
 
 
+def get_test_sets_df(test_set_dir: str) -> pd.DataFrame:
+    fs = gcsfs.GCSFileSystem()
+    GS_PREFIX = "gs://"
+
+    parquet_files = [
+        GS_PREFIX + path
+        for path in fs.glob(f"{test_set_dir}/**")
+        if path.endswith(".parquet")
+    ]
+
+    return pd.concat(
+        [
+            pd.read_parquet(test_set).assign(source_file_path=test_set)
+            for test_set in parquet_files
+        ]
+    )
+
+
+def project_linked_artists_on_test_sets(
+    artists_to_link_df: pd.DataFrame,
+    linked_artists_df: pd.DataFrame,
+    test_sets_df: pd.DataFrame,
+) -> pd.DataFrame:
+    return (
+        test_sets_df.loc[
+            :,
+            MERGE_COLUMNS
+            + [
+                "dataset_name",
+                "is_my_artist",
+                "irrelevant_data",
+            ],
+        ]
+        .merge(
+            artists_to_link_df.loc[
+                :,
+                MERGE_COLUMNS
+                + [
+                    "offer_number",
+                    "total_booking_count",
+                ],
+            ],
+            how="left",
+            on=MERGE_COLUMNS,
+        )
+        .merge(
+            linked_artists_df.loc[:, MERGE_COLUMNS + ["cluster_id", "first_artist"]],
+            how="left",
+            on=MERGE_COLUMNS,
+        )
+    ).sort_values(by=["dataset_name", "cluster_id"])
+
+
 @app.command()
 def main(
-    input_file_path: str = typer.Option(),
+    artists_to_link_file_path: str = typer.Option(),
+    linked_artists_file_path: str = typer.Option(),
+    test_sets_dir: str = typer.Option(),
     experiment_name: str = typer.Option(),
 ) -> None:
-    matched_artists_in_test_set_df = pd.read_parquet(input_file_path)
+    test_sets_df = get_test_sets_df(test_sets_dir)
+    artists_to_link_df = pd.read_parquet(artists_to_link_file_path)
+    linked_artists_df = pd.read_parquet(linked_artists_file_path)
+
+    matched_artists_in_test_set_df = project_linked_artists_on_test_sets(
+        artists_to_link_df=artists_to_link_df,
+        linked_artists_df=linked_artists_df,
+        test_sets_df=test_sets_df,
+    )
 
     main_cluster_per_dataset = get_main_matched_cluster_per_dataset(
         matched_artists_in_test_set_df
@@ -105,7 +171,6 @@ def main(
         # Log Dataset
         dataset = mlflow.data.from_pandas(
             matched_artists_in_test_set_df,
-            source=input_file_path,
             name="artists_on_test_sets",
         )
         mlflow.log_input(dataset, context="evaluation")

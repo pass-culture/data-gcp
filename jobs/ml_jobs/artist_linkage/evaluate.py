@@ -12,6 +12,8 @@ from utils.mlflow import (
 METRICS_PER_DATASET_CSV_FILENAME = "metrics_per_dataset.csv"
 METRICS_PER_DATASET_GRAPH_FILENAME = "metrics_per_dataset.png"
 
+MERGE_COLUMNS = ["artist_name", "offer_category_id", "is_synchronised", "artist_type"]
+
 app = typer.Typer()
 
 
@@ -97,7 +99,8 @@ def main(
     matched_artists_in_test_set_df = (
         test_sets_df.loc[
             :,
-            [
+            MERGE_COLUMNS
+            + [
                 "dataset_name",
                 "is_my_artist",
                 "irrelevant_data",
@@ -106,22 +109,19 @@ def main(
         .merge(
             artists_to_link_df.loc[
                 :,
-                [
-                    "artist_name",
-                    "offer_category_id",
-                    "is_synchronised",
-                    "artist_type",
+                MERGE_COLUMNS
+                + [
                     "offer_number",
                     "total_booking_count",
                 ],
             ],
             how="left",
-            on=["artist_name", "offer_category_id", "is_synchronised", "artist_type"],
+            on=MERGE_COLUMNS,
         )
         .merge(
-            linked_artists_df.loc[:, ["cluster_id", "first_artist"]],
+            linked_artists_df.loc[:, MERGE_COLUMNS + ["cluster_id", "first_artist"]],
             how="left",
-            on=["artist_name", "offer_category_id", "is_synchronised", "artist_type"],
+            on=MERGE_COLUMNS,
         )
     ).sort_values(by=["dataset_name", "cluster_id"])
 

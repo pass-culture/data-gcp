@@ -1,7 +1,8 @@
 select *
-from external_query(
-    "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",
-    '''SELECT
+from
+    external_query(
+        "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",
+        '''SELECT
     "isActive" AS offerer_is_active
     , "address" AS offerer_address
     , "postalCode" AS offerer_postal_code

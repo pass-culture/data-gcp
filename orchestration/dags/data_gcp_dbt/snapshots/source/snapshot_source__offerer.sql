@@ -18,6 +18,6 @@
     }}
 
     select *
-    from {{ ref('raw_backend__offerer') }}
+    from {{ ref("raw_backend__offerer") }}
 
 {% endsnapshot %}

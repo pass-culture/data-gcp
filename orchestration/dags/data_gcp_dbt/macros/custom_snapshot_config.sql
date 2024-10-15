@@ -14,7 +14,7 @@
         "partition_by": partition_by,
         "tags": tags,
         "check_cols": check_cols,
-        "invalidate_hard_delete": invalidate_hard_delete
+        "invalidate_hard_delete": invalidate_hard_delete,
     } %}
     {{ return(config_params) }}
 {% endmacro %}

@@ -6,12 +6,12 @@
                 strategy="timestamp",
                 unique_key="offer_id",
                 updated_at="offer_date_updated",
-                invalidate_hard_delete=False
+                invalidate_hard_delete=False,
             )
         )
     }}
 
     select *
-    from {{ ref('raw_backend__offer') }}
+    from {{ ref("raw_backend__offer") }}
 
 {% endsnapshot %}

@@ -1,34 +1,28 @@
 with
-TEMP as (
-    select
-        ENTRY_ID,
-        COALESCE(TITLE, OFFER_TITLE) as BLOC_NAME,
-        CONTENT_TYPE,
-        TAG_KEY,
-        TAG_VALUE
-    from
-        {{ ref("int_contentful__tag") }} TAGS
+    temp as (
+        select
+            entry_id,
+            coalesce(title, offer_title) as bloc_name,
+            content_type,
+            tag_key,
+            tag_value
+        from {{ ref("int_contentful__tag") }} tags
         inner join
-            {{ ref("int_contentful__entry") }} ENTRIES
-            on
-                ENTRIES.ID = TAGS.ENTRY_ID
-    where
-        CONTENT_TYPE != 'homepageNatif'
-)
+            {{ ref("int_contentful__entry") }} entries on entries.id = tags.entry_id
+        where content_type != 'homepageNatif'
+    )
 
 select
-    ENTRY_ID,
-    BLOC_NAME,
-    CONTENT_TYPE,
-    ARRAY_TO_STRING(TYPE_PLAYLIST, ' , ') as PLAYLIST_TYPE,
-    ARRAY_TO_STRING(CATEGORIE_OFFRE, ' , ') as OFFER_CATEGORY,
-    ARRAY_TO_STRING(PLAYLIST_PORTEE, ' , ') as PLAYLIST_REACH,
-    ARRAY_TO_STRING(PLAYLIST_RECCURENCE, ' , ') as PLAYLIST_RECURRENCE
+    entry_id,
+    bloc_name,
+    content_type,
+    array_to_string(type_playlist, ' , ') as playlist_type,
+    array_to_string(categorie_offre, ' , ') as offer_category,
+    array_to_string(playlist_portee, ' , ') as playlist_reach,
+    array_to_string(playlist_reccurence, ' , ') as playlist_recurrence
 from
-    TEMP pivot (ARRAY_AGG(
-    TAG_VALUE ignore nulls) for TAG_KEY in (
-    'type_playlist',
-    'categorie_offre',
-    'playlist_portee',
-    'playlist_reccurence'
-))
+    temp pivot (
+        array_agg(tag_value ignore nulls) for tag_key in (
+            'type_playlist', 'categorie_offre', 'playlist_portee', 'playlist_reccurence'
+        )
+    )

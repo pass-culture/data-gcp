@@ -1,4 +1,11 @@
-{% set diversification_features = ["category", "sub_category", "format", "venue_id", "extra_category", "venue_type_label"] %}
+{% set diversification_features = [
+    "category",
+    "sub_category",
+    "format",
+    "venue_id",
+    "extra_category",
+    "venue_type_label",
+] %}
 
 select
     diversification_raw.user_id,
@@ -16,18 +23,19 @@ select
     booking.user_civility,
     booking.booking_intermediary_amount as booking_amount,
     booking.first_deposit_creation_date,
-    COALESCE(
-        IF(booking.physical_goods = True, 'physical', Null),
-        IF(booking.digital_goods = True, 'digital', Null),
-        IF(booking.event = True, 'event', Null)
-    ) as format
-    , {% for feature in diversification_features %}
-        {{ feature }}_diversification
-        {% if not loop.last -%} , {%- endif %}
-    {% endfor %}
-    , delta_diversification
-from {{ ref('diversification_raw') }} as diversification_raw
-    left join {{ ref('mrt_global__booking') }} as booking
-        on booking.booking_id = diversification_raw.booking_id
-    left join {{ ref('int_applicative__offer_metadata') }} as offer_metadata
-        on booking.offer_id = offer_metadata.offer_id
+    coalesce(
+        if(booking.physical_goods = true, 'physical', null),
+        if(booking.digital_goods = true, 'digital', null),
+        if(booking.event = true, 'event', null)
+    ) as format,
+    {% for feature in diversification_features %}
+        {{ feature }}_diversification {% if not loop.last -%}, {%- endif %}
+    {% endfor %},
+    delta_diversification
+from {{ ref("diversification_raw") }} as diversification_raw
+left join
+    {{ ref("mrt_global__booking") }} as booking
+    on booking.booking_id = diversification_raw.booking_id
+left join
+    {{ ref("int_applicative__offer_metadata") }} as offer_metadata
+    on booking.offer_id = offer_metadata.offer_id

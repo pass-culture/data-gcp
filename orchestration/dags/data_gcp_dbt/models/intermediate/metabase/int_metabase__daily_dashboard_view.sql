@@ -8,11 +8,5 @@ select
     sum(running_time) as running_time,
     sum(result_rows) as result_rows,
     count(*) as total_views
-from
-    {{ ref("int_metabase__daily_query") }}
-group by
-    execution_date,
-    dashboard_id,
-    card_id,
-    card_name,
-    dashboard_name
+from {{ ref("int_metabase__daily_query") }}
+group by execution_date, dashboard_id, card_id, card_name, dashboard_name

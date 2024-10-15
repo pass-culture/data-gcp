@@ -1,4 +1,5 @@
-select user_id,
+select
+    user_id,
     user_department_code,
     user_department_name,
     user_postal_code,
@@ -23,7 +24,7 @@ select user_id,
     user_region_name,
     user_academy_name,
     user_humanized_id,
-    user_subscribed_themes AS currently_subscribed_themes,
+    user_subscribed_themes as currently_subscribed_themes,
     is_theme_subscribed,
     first_deposit_creation_date,
     first_deposit_type,
@@ -55,10 +56,8 @@ select user_id,
     first_deposit_amount,
     last_deposit_expiration_date,
     user_is_current_beneficiary,
-    DATE_DIFF(DATE('{{ ds() }}'), CAST(user_activation_date AS DATE), DAY) as user_seniority
-from {{ ref('int_global__user') }}
-where
-    (
-        user_is_active
-        or user_suspension_reason = 'upon user request'
-    )
+    date_diff(
+        date('{{ ds() }}'), cast(user_activation_date as date), day
+    ) as user_seniority
+from {{ ref("int_global__user") }}
+where (user_is_active or user_suspension_reason = 'upon user request')

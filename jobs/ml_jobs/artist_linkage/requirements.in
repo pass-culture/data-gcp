@@ -12,3 +12,5 @@ stqdm==0.0.5
 streamlit==1.35.0
 typer==0.12.3
 unidecode==1.3.8
+gcsfs==2024.9.0.post1
+setuptools==75.1.0

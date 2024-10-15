@@ -245,7 +245,7 @@ for dag_name, dag_params in dags.items():
                     task_id=f"{clickhouse_table_name}",
                     instance_name="{{ params.instance_name }}",
                     base_dir=dag_config["BASE_DIR"],
-                    command=f"python refresh.py --table-name {clickhouse_table_name} --folder-name {clickhouse_folder_name}",
+                    command=f"python refresh.py --table-name {clickhouse_table_name} --folder {clickhouse_folder_name}",
                     dag=dag,
                 )
                 analytics_task_mapping[clickhouse_table_name] = task

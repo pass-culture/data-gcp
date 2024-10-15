@@ -2,8 +2,8 @@ with
     base as (
         select
             offer_item_id.item_id as item_id,
-            subcategories.category_id as offer_categoryid,
-            offer.offer_subcategoryid as offer_subcategoryid,
+            subcategories.category_id as offer_category_id,
+            offer.offer_subcategory_id as offer_subcategory_id,
             item_embedding_reduced.image_embedding as item_image_embedding,
             item_embedding_reduced.semantic_content_embedding
             as item_semantic_content_hybrid_embedding,
@@ -22,7 +22,7 @@ with
             on enroffer.offer_id = offer.offer_id
         inner join
             `{{ bigquery_raw_dataset }}`.`subcategories` subcategories
-            on offer.offer_subcategoryid = subcategories.id
+            on offer.offer_subcategory_id = subcategories.id
         inner join
             `{{ bigquery_int_applicative_dataset }}`.`offer_item_id` offer_item_id
             on offer_item_id.offer_id = offer.offer_id

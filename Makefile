@@ -78,7 +78,7 @@ _install_microservice:
 
 
 _initiate_env:
-	cp -n .env.template .env.local
+	@if [ ! -f .env.local ]; then cp .env.template .env.local; fi
 
 
 _get_gcp_credentials:

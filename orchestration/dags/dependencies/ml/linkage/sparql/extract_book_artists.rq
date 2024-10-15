@@ -1,0 +1,34 @@
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX schema: <http://schema.org/>
+
+SELECT
+  (?person_id AS ?wiki_id)
+  (?personLabelFR AS ?artist_name_fr)
+  (?personLabelEN AS ?artist_name_en)
+  ?genre
+  ?img
+  ?description
+  ?gkg_id
+  (GROUP_CONCAT(DISTINCT(?profession); separator=" | ") AS ?professions)
+  (GROUP_CONCAT(DISTINCT(?alias_fr); separator=" | ") AS ?aliases_fr)
+  (GROUP_CONCAT(DISTINCT(?alias_en); separator=" | ") AS ?aliases_en)
+WHERE {
+  ?person_id wdt:P31 wd:Q5;  # Ensure the entity is a human (P31 = instance of, Q5 = human)
+  OPTIONAL { ?person_id schema:description ?description . FILTER (LANG(?description) = "fr") . }
+  OPTIONAL { ?person_id wdt:P106/rdfs:label ?profession . FILTER (LANG(?profession) = "fr") }
+  OPTIONAL { ?person_id rdfs:label ?personLabelFR. FILTER(LANG(?personLabelFR) = "fr") }
+  OPTIONAL { ?person_id rdfs:label ?personLabelEN. FILTER(LANG(?personLabelEN) = "en") }
+  OPTIONAL { ?person_id skos:altLabel ?alias_fr . FILTER (lang(?alias_fr) = "fr") }
+  OPTIONAL { ?person_id skos:altLabel ?alias_en . FILTER (lang(?alias_en) = "en") }
+  OPTIONAL {?person_id wdt:P5365 ?ibdbfw_id . }
+  OPTIONAL {?person_id wdt:P268 ?bnf_id . }
+  OPTIONAL {?person_id wdt:P21/rdfs:label ?genre .  FILTER (LANG(?genre) = "fr")}
+  OPTIONAL {?person_id wdt:P18 ?img . }
+  OPTIONAL {?person_id wdt:P2671 ?gkg_id .}
+  FILTER ((?personLabelFR != "") || (?personLabelEN != ""))
+  FILTER ((?ibdbfw_id != "" ) || (?bnf_id != ""))
+}
+GROUP BY ?person_id ?personLabelFR ?personLabelEN ?description ?genre ?img ?gkg_id

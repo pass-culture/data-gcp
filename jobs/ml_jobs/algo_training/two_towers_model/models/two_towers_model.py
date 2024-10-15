@@ -16,61 +16,53 @@ class TwoTowersModel(tfrs.models.Model):
         data: pd.DataFrame,
         user_features_config: dict,
         item_features_config: dict,
-        items_dataset: tf.data.Dataset,
+        item_dataset: tf.data.Dataset,
         embedding_size: int,
     ):
-        """
-        data: DataFrame of user-item interactions along with their corresponding features
-        user_features_config: dict containing the information about the user input embedding layers
-        item_features_config: dict containing the information about the item input embedding layers
-        items_dataset: TF dataset containing the features for each item
-        embedding_size: Final embedding size for the items & the users
-        """
         super().__init__()
-
-        # dict of preprocessing layers for each user feature
-        user_embedding_layers = {
-            name: self.load_embedding_layer(
-                layer_type=layer["type"],
-                embedding_size=layer["embedding_size"],
-            )
-            for name, layer in user_features_config.items()
-        }
+        self._item_feature_names = item_features_config.keys()
         self._user_feature_names = user_features_config.keys()
 
-        # dict of preprocessing layers for each item feature
-        item_embedding_layers = {
-            name: self.load_embedding_layer(
-                layer_type=layer["type"],
-                embedding_size=layer["embedding_size"],
-                embedding_initialisation_weights=data[name].drop_duplicates().tolist()
-                if layer["type"] == "pretrained"
-                else None,
-            )
-            for name, layer in item_features_config.items()
-        }
-
-        self._item_feature_names = item_features_config.keys()
-
+        # Define user and item models
         self.user_model = SingleTowerModel(
             data=data,
-            input_embedding_layers=user_embedding_layers,
+            input_embedding_layers={
+                name: self.load_embedding_layer(
+                    layer_type=layer["type"],
+                    embedding_size=layer["embedding_size"],
+                )
+                for name, layer in user_features_config.items()
+            },
             embedding_size=embedding_size,
         )
+
         self.item_model = SingleTowerModel(
             data=data,
-            input_embedding_layers=item_embedding_layers,
+            input_embedding_layers={
+                name: self.load_embedding_layer(
+                    layer_type=layer["type"],
+                    embedding_size=layer["embedding_size"],
+                    embedding_initialisation_weights=data[name]
+                    .drop_duplicates()
+                    .tolist()
+                    if layer["type"] == "pretrained"
+                    else None,
+                )
+                for name, layer in item_features_config.items()
+            },
             embedding_size=embedding_size,
         )
+
+        item_embeddings = item_dataset.map(self.item_model)
+        index_top_k = tfrs.layers.factorized_top_k.BruteForce()
+        index_top_k.index_from_dataset(item_embeddings)
 
         self.task = tfrs.tasks.Retrieval(
             loss=tf.keras.losses.CategoricalCrossentropy(
                 from_logits=True, reduction=tf.keras.losses.Reduction.SUM
             ),
             metrics=tfrs.metrics.FactorizedTopK(
-                candidates=tfrs.layers.factorized_top_k.BruteForce().index_from_dataset(
-                    items_dataset.map(self.item_model)
-                ),
+                candidates=index_top_k,
                 ks=[50],
             ),
         )
@@ -83,9 +75,12 @@ class TwoTowersModel(tfrs.models.Model):
 
         user_embedding = tf.math.l2_normalize(self.user_model(user_features), axis=1)
         item_embedding = tf.math.l2_normalize(self.item_model(item_features), axis=1)
-        # TODO add implicit_weights = features["click"]
-        # sample_weight=implicit_weights
-        return self.task(user_embedding, item_embedding, compute_metrics=not training)
+
+        return self.task(
+            user_embedding,
+            item_embedding,
+            compute_metrics=not training,
+        )
 
     @staticmethod
     def load_embedding_layer(
@@ -93,20 +88,20 @@ class TwoTowersModel(tfrs.models.Model):
         embedding_size: int,
         embedding_initialisation_weights: pd.DataFrame = None,
     ):
-        try:
-            return {
-                "string": StringEmbeddingLayer(embedding_size=embedding_size),
-                "int": IntegerEmbeddingLayer(embedding_size=embedding_size),
-                "text": TextEmbeddingLayer(embedding_size=embedding_size),
-                "pretrained": PretainedEmbeddingLayer(
-                    embedding_size=embedding_size,
-                    embedding_initialisation_weights=embedding_initialisation_weights,
-                ),
-            }[layer_type]
-        except KeyError:
+        embedding_layers = {
+            "string": StringEmbeddingLayer(embedding_size=embedding_size),
+            "int": IntegerEmbeddingLayer(embedding_size=embedding_size),
+            "text": TextEmbeddingLayer(embedding_size=embedding_size),
+            "pretrained": PretainedEmbeddingLayer(
+                embedding_size=embedding_size,
+                embedding_initialisation_weights=embedding_initialisation_weights,
+            ),
+        }
+        if layer_type not in embedding_layers:
             raise ValueError(
                 f"InvalidLayerType: The features config file contains an invalid layer type `{layer_type}`"
             )
+        return embedding_layers[layer_type]
 
 
 class SingleTowerModel(tf.keras.models.Model):
@@ -126,19 +121,21 @@ class SingleTowerModel(tf.keras.models.Model):
             self._embedding_layers[layer_name] = layer_class.build_sequential_layer(
                 vocabulary=self.data[layer_name].unique()
             )
+
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
+        self._norm1 = tf.keras.layers.LayerNormalization(axis=-1)
         self._dense2 = tf.keras.layers.Dense(embedding_size)
+        self._norm2 = tf.keras.layers.LayerNormalization(axis=-1)
 
     def call(self, features: dict, training=False):
         feature_embeddings = []
         for idx, embedding_layer in enumerate(self._embedding_layers.values()):
             feature_embeddings.append(embedding_layer(features[idx]))
 
-        x = tf.concat(
-            feature_embeddings,
-            axis=1,
-        )
+        x = tf.concat(feature_embeddings, axis=1)
 
         x = self._dense1(x)
+        x = self._norm1(x)
         x = self._dense2(x)
+        x = self._norm2(x)
         return x

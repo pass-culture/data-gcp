@@ -13,6 +13,7 @@ select
     u.user_density_level,
     u.user_is_in_qpv,
     u.user_is_unemployed,
+    u.user_is_in_education,
     u.user_is_priority_public,
     u.user_department_code,
     u.user_department_name,

@@ -15,6 +15,7 @@ select
     user_iris_internal_id,
     user_is_priority_public,
     user_is_unemployed,
+    user_is_in_education,
     user_is_in_qpv,
     user_epci,
     user_density_label,

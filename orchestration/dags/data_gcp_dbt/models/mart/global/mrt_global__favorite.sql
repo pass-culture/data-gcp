@@ -33,6 +33,7 @@ select
     u.user_age,
     u.user_is_priority_public,
     u.user_is_unemployed,
+    u.user_is_in_education,
     u.user_is_in_qpv,
     u.current_deposit_type,
     u.user_epci,

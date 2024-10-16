@@ -10,7 +10,7 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -153,19 +153,14 @@ for dag_name, dag_params in dags.items():
             use_gke_network=True,
         )
 
-        fetch_code = CloneRepositoryGCEOperator(
-            task_id="fetch_code",
+        fetch_install_code = InstallDependenciesOperator(
+            task_id="fetch_install_code",
             instance_name="{{ params.instance_name }}",
+            branch="{{ params.branch }}",
+            installer="uv",
             python_version="3.10",
-            command="{{ params.branch }}",
-            retries=2,
-        )
-
-        install_dependencies = SSHGCEOperator(
-            task_id="install_dependencies",
-            instance_name="{{ params.instance_name }}",
             base_dir=dag_config["BASE_DIR"],
-            command="pip install -r requirements.txt --user",
+            retries=2,
             dag=dag,
         )
 
@@ -223,6 +218,7 @@ for dag_name, dag_params in dags.items():
                 task_id=f"{clickhouse_table_name}_export",
                 instance_name="{{ params.instance_name }}",
                 base_dir=dag_config["BASE_DIR"],
+                installer="uv",
                 command="python main.py "
                 f"--source-gs-path {GCP_STORAGE_URI}/{storage_path}/data-*.parquet "
                 f"--table-name {clickhouse_table_name} "
@@ -245,6 +241,7 @@ for dag_name, dag_params in dags.items():
                     task_id=f"{clickhouse_table_name}",
                     instance_name="{{ params.instance_name }}",
                     base_dir=dag_config["BASE_DIR"],
+                    installer="uv",
                     command=f"python refresh.py --table-name {clickhouse_table_name} --folder {clickhouse_folder_name}",
                     dag=dag,
                 )
@@ -271,8 +268,7 @@ for dag_name, dag_params in dags.items():
             >> [shunt, wait_for_daily_tasks]
             >> join
             >> gce_instance_start
-            >> fetch_code
-            >> install_dependencies
+            >> fetch_install_code
             >> in_tables_tasks
         )
         (out_tables_tasks >> end_tables >> analytics_tg >> gce_instance_stop)

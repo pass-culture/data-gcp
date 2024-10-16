@@ -9,7 +9,7 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -131,21 +131,14 @@ for job_name, table_name in TABLE_PARAMS.items():
             retries=2,
             labels={"job_type": "long_task"},
         )
-
-        fetch_code = CloneRepositoryGCEOperator(
-            task_id=f"{table_config_name}_fetch_code",
+        fetch_install_code = InstallDependenciesOperator(
+            task_id=f"{table_config_name}_fetch_install_code",
             instance_name=instance_name,
+            branch="{{ params.branch }}",
             python_version="3.10",
-            command="{{ params.branch }}",
-            retries=2,
-        )
-
-        install_dependencies = SSHGCEOperator(
-            task_id=f"{table_config_name}_install_dependencies",
-            instance_name=instance_name,
             base_dir=DAG_CONFIG["BASE_DIR"],
-            command="pip install -r requirements.txt --user",
             dag=dag,
+            retries=2,
         )
 
         events_export = SSHGCEOperator(
@@ -153,6 +146,7 @@ for job_name, table_name in TABLE_PARAMS.items():
             instance_name=instance_name,
             base_dir=DAG_CONFIG["BASE_DIR"],
             command="python main.py " f"--source-gs-path {storage_path}",
+            installer="uv",
             dag=dag,
         )
 
@@ -164,8 +158,7 @@ for job_name, table_name in TABLE_PARAMS.items():
             export_task
             >> export_bq
             >> gce_instance_start
-            >> fetch_code
-            >> install_dependencies
+            >> fetch_install_code
             >> events_export
             >> gce_instance_stop
         )

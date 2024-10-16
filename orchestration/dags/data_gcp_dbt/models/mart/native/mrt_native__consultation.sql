@@ -20,7 +20,7 @@ with
             ) as category_discovery_score,
         from {{ ref("int_metric__discovery_score") }}
         group by consultation_id
-    )
+    ),
 
 -- Next 4 subqueries : identify the micro-origin of each consultation that comes from a venue page or a similar offer page (origin of venue consultation and origin of inital offer consultation)
 consult_venue AS (

@@ -31,7 +31,9 @@ def merge_data(
     merged_df = pd.concat(df_list).drop_duplicates(subset=["wiki_id"])
 
     for query_name, wiki_ids in wiki_ids_per_query.items():
-        merged_df.loc[lambda df: df.wiki_id.isin(wiki_ids), query_name] = True
+        merged_df = merged_df.assign(
+            **{query_name: lambda df: df.wiki_id.isin(wiki_ids)}
+        )
 
     return merged_df
 

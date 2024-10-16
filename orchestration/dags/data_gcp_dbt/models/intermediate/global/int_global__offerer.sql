@@ -1,45 +1,58 @@
-with siren_reference_adage as (
-    select
-        siren,
-        max(siren_synchro_adage) as siren_synchro_adage
-    from {{ ref('adage') }}
-    group by siren
-),
+with
+    siren_reference_adage as (
+        select siren, max(siren_synchro_adage) as siren_synchro_adage
+        from {{ ref("adage") }}
+        group by siren
+    ),
 
-dms_adage as (
-    select
-        demandeur_entreprise_siren,
-        application_status,
-        processed_at,
-        row_number() over (partition by demandeur_entreprise_siren order by application_submitted_at asc) AS rown_siren,
-    from {{ ref('dms_pro') }}
-    where procedure_id in ('57081', '57189', '61589', '65028', '80264')
-),
+    dms_adage as (
+        select
+            demandeur_entreprise_siren,
+            application_status,
+            processed_at,
+            row_number() over (
+                partition by demandeur_entreprise_siren
+                order by application_submitted_at asc
+            ) as rown_siren,
+        from {{ ref("dms_pro") }}
+        where procedure_id in ('57081', '57189', '61589', '65028', '80264')
+    ),
 
-first_dms_adage_accepted as (
-    select *
-    from dms_adage
-    where application_status = "accepte"
-    qualify row_number() over (partition by demandeur_entreprise_siren order by processed_at asc) = 1
-),
+    first_dms_adage_accepted as (
+        select *
+        from dms_adage
+        where application_status = "accepte"
+        qualify
+            row_number() over (
+                partition by demandeur_entreprise_siren order by processed_at asc
+            )
+            = 1
+    ),
 
-tagged_partners as (
-    select
-        offerer_id,
-        string_agg(distinct tag_label order by tag_label) as partner_type
-    from {{ ref("int_applicative__offerer_tag") }}
-    where tag_category_name = "comptage"
-        and tag_label not in ("Association", "EPN", "Collectivité", "Pas de tag associé", "Auto-Entrepreneur", "Compagnie", "Tourneur")
-    group by offerer_id
-),
+    tagged_partners as (
+        select
+            offerer_id,
+            string_agg(distinct tag_label order by tag_label) as partner_type
+        from {{ ref("int_applicative__offerer_tag") }}
+        where
+            tag_category_name = "comptage"
+            and tag_label not in (
+                "Association",
+                "EPN",
+                "Collectivité",
+                "Pas de tag associé",
+                "Auto-Entrepreneur",
+                "Compagnie",
+                "Tourneur"
+            )
+        group by offerer_id
+    ),
 
-reimbursement_points as (
-    select
-        offerer_id,
-        count(distinct venue_id) as total_reimbursement_points
-    from {{ ref('int_applicative__venue_reimbursement_point_link') }}
-    group by offerer_id
-)
+    reimbursement_points as (
+        select offerer_id, count(distinct venue_id) as total_reimbursement_points
+        from {{ ref("int_applicative__venue_reimbursement_point_link") }}
+        group by offerer_id
+    )
 
 select
     ofr.offerer_id,
@@ -105,7 +118,9 @@ select
     label_unite_legale as legal_unit_business_activity_label,
     siren_data.categoriejuridiqueunitelegale as legal_unit_legal_category_code,
     label_categorie_juridique as legal_unit_legal_category_label,
-    case when siren_data.activiteprincipaleunitelegale = '84.11Z' then TRUE else FALSE end as is_local_authority,
+    case
+        when siren_data.activiteprincipaleunitelegale = '84.11Z' then true else false
+    end as is_local_authority,
     ofr.total_managed_venues,
     ofr.total_physical_managed_venues,
     ofr.total_permanent_managed_venues,
@@ -113,25 +128,39 @@ select
     ofr.total_administrative_venues,
     ofr.total_venues,
     ofr.offerer_humanized_id,
-    coalesce(first_dms_adage.application_status, 'dms_adage_non_depose') as first_dms_adage_status,
+    coalesce(
+        first_dms_adage.application_status, 'dms_adage_non_depose'
+    ) as first_dms_adage_status,
     first_dms_adage_accepted.processed_at as dms_accepted_at,
-    siren_reference_adage.siren is not NULL as is_reference_adage,
-    case when siren_reference_adage.siren is NULL then FALSE else siren_synchro_adage end as is_synchro_adage,
+    siren_reference_adage.siren is not null as is_reference_adage,
+    case
+        when siren_reference_adage.siren is null then false else siren_synchro_adage
+    end as is_synchro_adage,
     tagged_partners.partner_type,
     rp.total_reimbursement_points
-from {{ ref('int_applicative__offerer') }} as ofr
-    left join {{ source('seed', 'region_department') }} as region_department on ofr.offerer_department_code = region_department.num_dep
-    left join {{ source('clean', 'siren_data') }} as siren_data on siren_data.siren = ofr.offerer_siren
-    left join
-        {{ source('seed', 'siren_data_labels') }}
-            as siren_data_labels
-        on siren_data_labels.activiteprincipaleunitelegale = siren_data.activiteprincipaleunitelegale
-            and cast(siren_data_labels.categoriejuridiqueunitelegale as STRING) = cast(siren_data.categoriejuridiqueunitelegale as STRING)
-    left join dms_adage as first_dms_adage on first_dms_adage.demandeur_entreprise_siren = ofr.offerer_siren
-        and first_dms_adage.rown_siren = 1
-    left join first_dms_adage_accepted
-        on first_dms_adage_accepted.demandeur_entreprise_siren = ofr.offerer_siren
-    left join siren_reference_adage on ofr.offerer_siren = siren_reference_adage.siren
-    left join tagged_partners on ofr.offerer_id = tagged_partners.offerer_id
-    left join reimbursement_points as rp on rp.offerer_id = ofr.offerer_id
-qualify row_number() over (partition by offerer_siren order by siren_data.update_date desc) = 1
+from {{ ref("int_applicative__offerer") }} as ofr
+left join
+    {{ source("seed", "region_department") }} as region_department
+    on ofr.offerer_department_code = region_department.num_dep
+left join
+    {{ source("clean", "siren_data") }} as siren_data
+    on siren_data.siren = ofr.offerer_siren
+left join
+    {{ source("seed", "siren_data_labels") }} as siren_data_labels
+    on siren_data_labels.activiteprincipaleunitelegale
+    = siren_data.activiteprincipaleunitelegale
+    and cast(siren_data_labels.categoriejuridiqueunitelegale as string)
+    = cast(siren_data.categoriejuridiqueunitelegale as string)
+left join
+    dms_adage as first_dms_adage
+    on first_dms_adage.demandeur_entreprise_siren = ofr.offerer_siren
+    and first_dms_adage.rown_siren = 1
+left join
+    first_dms_adage_accepted
+    on first_dms_adage_accepted.demandeur_entreprise_siren = ofr.offerer_siren
+left join siren_reference_adage on ofr.offerer_siren = siren_reference_adage.siren
+left join tagged_partners on ofr.offerer_id = tagged_partners.offerer_id
+left join reimbursement_points as rp on rp.offerer_id = ofr.offerer_id
+qualify
+    row_number() over (partition by offerer_siren order by siren_data.update_date desc)
+    = 1

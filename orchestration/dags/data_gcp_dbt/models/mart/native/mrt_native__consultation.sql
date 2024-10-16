@@ -1,20 +1,26 @@
 {{
     config(
         **custom_incremental_config(
-        incremental_strategy = 'insert_overwrite',
-        partition_by = {'field': 'consultation_date', 'data_type': 'date'}
+            incremental_strategy="insert_overwrite",
+            partition_by={"field": "consultation_date", "data_type": "date"},
+        )
     )
-) }}
+}}
 
-with discoveries_by_consultation as (
-SELECT
-    consultation_id,
-    MAX(CASE WHEN type = 'item' then 1 else 0 END) AS item_discovery_score,
-    MAX(CASE WHEN type = 'offer_subcategory' then 1 else 0 END) AS subcategory_discovery_score,
-    MAX(CASE WHEN type = 'offer_category' then 1 else 0 END) AS category_discovery_score,
-from {{ ref('int_metric__discovery_score')}}
-group by consultation_id
-),
+with
+    discoveries_by_consultation as (
+        select
+            consultation_id,
+            max(case when type = 'item' then 1 else 0 end) as item_discovery_score,
+            max(
+                case when type = 'offer_subcategory' then 1 else 0 end
+            ) as subcategory_discovery_score,
+            max(
+                case when type = 'offer_category' then 1 else 0 end
+            ) as category_discovery_score,
+        from {{ ref("int_metric__discovery_score") }}
+        group by consultation_id
+    )
 
 -- Next 4 subqueries : identify the micro-origin of each consultation that comes from a venue page or a similar offer page (origin of venue consultation and origin of inital offer consultation)
 consult_venue AS (
@@ -73,7 +79,7 @@ consult_offer_through_similar_offer AS (
     QUALIFY row_number() over (partition by co1.unique_session_id, co1.venue_id, co1.offer_id order by co1.consultation_timestamp ASC) = 1 -- keep 1st similar offer consultation after offer consultation 
 )
 
-SELECT
+select
     consult.consultation_id,
     consult.consultation_date,
     consult.origin,
@@ -83,9 +89,15 @@ SELECT
     dc.item_discovery_score,
     dc.subcategory_discovery_score,
     dc.category_discovery_score,
-    dc.item_discovery_score + dc.subcategory_discovery_score + dc.category_discovery_score as discovery_score,
-    case when category_discovery_score > 0 then true else false end as is_category_discovered,
-    case when subcategory_discovery_score > 0 then true else false end as is_subcategory_discovered,
+    dc.item_discovery_score
+    + dc.subcategory_discovery_score
+    + dc.category_discovery_score as discovery_score,
+    case
+        when category_discovery_score > 0 then true else false
+    end as is_category_discovered,
+    case
+        when subcategory_discovery_score > 0 then true else false
+    end as is_subcategory_discovered,
     offer.item_id,
     offer.offer_subcategory_id,
     offer.offer_category_id,
@@ -140,3 +152,4 @@ where consultation_date >= date_sub('{{ ds() }}', INTERVAL 3 day)
 {% else %}
 where consultation_date >= date_sub('{{ ds() }}', INTERVAL 1 year)
 {% endif %}
+

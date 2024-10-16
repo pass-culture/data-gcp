@@ -1,2 +1,1 @@
-select *
-from {{ source('raw', 'applicative_database_provider') }}
+select * from {{ source("raw", "applicative_database_provider") }}

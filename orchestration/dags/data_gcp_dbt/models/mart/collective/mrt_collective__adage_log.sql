@@ -1,11 +1,12 @@
 {{
     config(
         **custom_incremental_config(
-        incremental_strategy = "insert_overwrite",
-        partition_by = {"field": "event_date", "data_type": "date"},
-        on_schema_change = "sync_all_columns"
+            incremental_strategy="insert_overwrite",
+            partition_by={"field": "event_date", "data_type": "date"},
+            on_schema_change="sync_all_columns",
+        )
     )
-) }}
+}}
 
 select
     a.event_date,
@@ -16,7 +17,7 @@ select
     a.total_results,
     a.origin,
     a.collective_stock_id,
-    COALESCE(a.collective_offer_id, s.collective_offer_id) as collective_offer_id,
+    coalesce(a.collective_offer_id, s.collective_offer_id) as collective_offer_id,
     a.header_link_name,
     a.collective_booking_id,
     a.query_id,
@@ -36,7 +37,7 @@ select
     a.rank_clicked,
     a.venue_id as adage_venue_id,
     o.venue_id as offer_venue_id,
-    COALESCE(a.venue_id, o.venue_id) as venue_id,
+    coalesce(a.venue_id, o.venue_id) as venue_id,
     o.partner_id,
     o.collective_offer_students as offer_students,
     o.collective_offer_format as offer_format,
@@ -49,10 +50,16 @@ select
     a.uai,
     a.user_role
 from {{ ref("int_pcapi__adage_log") }} as a
-    left join {{ source("raw","applicative_database_collective_stock") }} as s on s.collective_stock_id = a.collective_stock_id
-    left join {{ ref("mrt_global__collective_offer") }} as o on o.collective_offer_id = COALESCE(a.collective_offer_id, s.collective_offer_id)
-    left join {{ ref("mrt_global__cultural_partner") }} as p on p.partner_id = o.partner_id
-where TRUE
+left join
+    {{ source("raw", "applicative_database_collective_stock") }} as s
+    on s.collective_stock_id = a.collective_stock_id
+left join
+    {{ ref("mrt_global__collective_offer") }} as o
+    on o.collective_offer_id = coalesce(a.collective_offer_id, s.collective_offer_id)
+left join {{ ref("mrt_global__cultural_partner") }} as p on p.partner_id = o.partner_id
+where
+    true
     {% if is_incremental() %}
-        and event_date between DATE_SUB(DATE("{{ ds() }}"), interval 2 day) and DATE("{{ ds() }}")
+        and event_date
+        between date_sub(date("{{ ds() }}"), interval 2 day) and date("{{ ds() }}")
     {% endif %}

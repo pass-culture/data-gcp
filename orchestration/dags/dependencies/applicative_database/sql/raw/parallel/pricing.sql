@@ -11,4 +11,5 @@ SELECT
     , "revenue"
     , CAST("pricingPointId" AS varchar(255)) as pricing_point_id
     , CAST("venueId" AS varchar(255)) as venue_id
+    , CAST("eventId" AS varchar(255)) AS event_id
 FROM public.pricing

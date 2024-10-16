@@ -1,4 +1,5 @@
 select
+    venue_id,
     offerer_id,
     offer_id,
     date(booking_creation_date) as creation_date,

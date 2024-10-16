@@ -90,7 +90,7 @@ def fetch_wikidata_qlever_csv(sparql_query):
 
 
 @app.command()
-def main(gcs_output_file_path: str = typer.Option()) -> None:
+def main(output_file_path: str = typer.Option()) -> None:
     df_list = []
     wiki_ids_per_query = {}
     for query_name, query_content in QUERIES_PATHES.items():
@@ -118,9 +118,9 @@ def main(gcs_output_file_path: str = typer.Option()) -> None:
         f"Found {len(postprocessed_df)} unique (wiki_id, alias) pairs for {postprocessed_df.wiki_id.nunique()} wiki_ids"
     )
 
-    logger.info(f"Saving results to {gcs_output_file_path}")
-    postprocessed_df.to_parquet(gcs_output_file_path, index=False)
-    logger.info(f"Results saved successfully to {gcs_output_file_path}")
+    logger.info(f"Saving results to {output_file_path}")
+    postprocessed_df.to_parquet(output_file_path, index=False)
+    logger.info(f"Results saved successfully to {output_file_path}")
 
 
 if __name__ == "__main__":

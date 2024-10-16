@@ -63,18 +63,17 @@ class TwoTowersModel(tfrs.models.Model):
         item_embedding = item_dataset.map(
             lambda item: (item[self._item_idx], self.item_model(item))
         )
-        # add ScaNN for fast metrics
+        # add ScaNN for fast metrics calculation
         index_top_k = tfrs.layers.factorized_top_k.ScaNN(num_reordering_candidates=1000)
         index_top_k.index_from_dataset(item_embedding)
 
         # add task
         self.task = tfrs.tasks.Retrieval(
             loss=tf.keras.losses.CategoricalCrossentropy(
-                from_logits=True, reduction=tf.keras.losses.Reduction.SUM
+                from_logits=True,
+                reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
             ),
-            metrics=tfrs.metrics.FactorizedTopK(
-                candidates=index_top_k, ks=[5, 50, 100]
-            ),
+            metrics=tfrs.metrics.FactorizedTopK(candidates=index_top_k, ks=[5, 10, 50]),
         )
 
     @tf.function

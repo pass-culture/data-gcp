@@ -21,9 +21,9 @@ from two_towers_model.models.two_towers_model import TwoTowersModel
 from two_towers_model.utils.callbacks import MLFlowLogging
 
 N_EPOCHS = 100
-MIN_DELTA = 0.001
+MIN_DELTA = 0.01
 LEARNING_RATE = 0.01
-VERBOSE = 1 if ENV_SHORT_NAME == "prod" else 1
+VERBOSE = 1
 
 
 def setup_gpu_environment():
@@ -174,14 +174,14 @@ def train_two_tower_model(
         validation_steps=validation_steps,
         callbacks=[
             tf.keras.callbacks.ReduceLROnPlateau(
-                monitor="val_factorized_top_k/top_50_categorical_accuracy",
+                monitor="val_loss",
                 factor=0.1,
                 patience=5,
                 min_delta=MIN_DELTA,
                 verbose=VERBOSE,
             ),
             tf.keras.callbacks.EarlyStopping(
-                monitor="val_factorized_top_k/top_50_categorical_accuracy",
+                monitor="val_loss",
                 patience=10,
                 min_delta=MIN_DELTA,
                 verbose=VERBOSE,
@@ -251,13 +251,13 @@ def train(
 ):
     setup_gpu_environment()
     tf.random.set_seed(seed)
+    run_uuid = initialize_mlflow(experiment_name, run_name)
 
     user_features_config, item_features_config, input_prediction_feature = (
         load_features(config_file_name)
     )
 
     user_columns = list(user_features_config.keys())
-
     item_columns = list(item_features_config.keys())
 
     train_data, validation_data, train_user_data, train_item_data = load_datasets(
@@ -271,8 +271,7 @@ def train(
     train_dataset, validation_dataset, user_dataset, item_dataset = build_tf_datasets(
         train_data, validation_data, train_user_data, train_item_data, batch_size
     )
-
-    run_uuid = initialize_mlflow(experiment_name, run_name)
+    validation_steps = max(int((validation_data.shape[0] // batch_size)), 1)
     log_mlflow_params(
         embedding_size,
         batch_size,
@@ -289,7 +288,6 @@ def train(
         item_features_config=item_features_config,
         user_columns=user_columns,
         item_columns=item_columns,
-        item_dataset=item_dataset,
         embedding_size=embedding_size,
     )
     # compile first
@@ -299,21 +297,13 @@ def train(
     # then task + metrics
     two_tower_model.add_task(item_dataset)
 
-    validation_steps = min(
-        max(
-            int((validation_data.shape[0] // batch_size) * validation_steps_ratio),
-            1,
-        ),
-        10,
-    )
-
     # fit
     train_two_tower_model(
         train_dataset,
         validation_dataset,
         two_tower_model,
-        validation_steps,
-        run_uuid,
+        validation_steps=validation_steps,
+        run_uuid=run_uuid,
     )
 
     save_model_and_embeddings(

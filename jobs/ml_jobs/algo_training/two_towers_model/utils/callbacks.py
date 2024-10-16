@@ -11,17 +11,21 @@ class MLFlowLogging(tf.keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         connect_remote_mlflow()
-
         mlflow.log_metrics(
-            {
-                "loss": logs.get("loss", 0),
-                "val_loss": logs.get("val_loss", 0),
-                "val_top_010_categorical_accuracy": logs.get(
-                    "val_factorized_top_k/top_10_categorical_accuracy", 0
-                ),
-                "val_top_050_categorical_accuracy": logs.get(
-                    "val_factorized_top_k/top_50_categorical_accuracy", 0
-                ),
-            },
+            dict(
+                {
+                    "loss": logs.get("loss", 0),
+                    "val_loss": logs.get("val_loss", 0),
+                    "val_top_5_categorical_accuracy": logs.get(
+                        "val_factorized_top_k/top_5_categorical_accuracy", 0
+                    ),
+                    "val_top_010_categorical_accuracy": logs.get(
+                        "val_factorized_top_k/top_10_categorical_accuracy", 0
+                    ),
+                    "val_top_050_categorical_accuracy": logs.get(
+                        "val_factorized_top_k/top_50_categorical_accuracy", 0
+                    ),
+                }
+            ),
             step=epoch,
         )

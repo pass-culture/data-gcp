@@ -13,5 +13,5 @@ FROM
 WHERE
     is_consult_offer = 1
 GROUP BY
-    event_date,
-    offer_id
+    offer_id,
+    event_date

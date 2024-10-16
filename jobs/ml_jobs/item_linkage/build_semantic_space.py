@@ -20,8 +20,6 @@ from utils.common import (
     reduce_embeddings_and_store_reducer,
 )
 
-COLUMN_NAME_LIST = ["item_id", "performer"]
-
 
 def preprocess_data_and_store_reducer(
     chunk: pd.DataFrame, reducer_path: str, reduction: bool
@@ -37,9 +35,20 @@ def preprocess_data_and_store_reducer(
     Returns:
         pd.DataFrame: The prepared dataframe with embeddings.
     """
+    extract_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*(\d+)\b"  # This pattern is for extracting the edition number
+    remove_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*\d+\b"  # This pattern is for removing the edition number and keyword
+
     item_df = chunk.assign(
         performer=lambda df: df["performer"].fillna(value=UNKNOWN_PERFORMER),
+        edition=lambda df: df["offer_name"]
+        .str.extract(extract_pattern, expand=False)
+        .astype(float)
+        .fillna(value=1),
+        offer_name=lambda df: df["offer_name"]
+        .str.replace(remove_pattern, "", regex=True)
+        .str.strip(),
     )
+
     if reduction:
         item_df = item_df.assign(
             vector=reduce_embeddings_and_store_reducer(
@@ -64,7 +73,9 @@ def create_items_table(items_df: pd.DataFrame) -> None:
     class ItemModel(LanceModel):
         vector: Vector(32)
         item_id: str
+        offer_subcategory_id: str
         performer: str
+        edition: float
 
     def make_batches(df: pd.DataFrame, batch_size: int):
         """

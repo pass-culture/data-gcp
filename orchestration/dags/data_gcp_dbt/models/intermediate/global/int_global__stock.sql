@@ -28,6 +28,7 @@ select
     o.offer_is_duo,
     o.item_id,
     o.venue_id,
+    o.venue_is_permanent,
     o.venue_name,
     o.venue_region_name,
     o.venue_department_code,
@@ -51,6 +52,8 @@ select
     o.venue_iris_internal_id,
     o.offer_url,
     o.isbn,
-    o.last_stock_price
+    o.last_stock_price,
+    o.offer_type_label,
+    o.offer_sub_type_label
 from {{ ref("int_applicative__stock") }} as s
 inner join {{ ref("int_global__offer") }} as o on s.offer_id = o.offer_id

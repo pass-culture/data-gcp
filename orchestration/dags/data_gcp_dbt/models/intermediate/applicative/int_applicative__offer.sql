@@ -46,7 +46,7 @@ with
 select
     o.offer_id,
     o.offer_id_at_providers,
-    (o.offer_id_at_providers is not null) as is_synchronised,
+    (o.offer_last_provider_id is not null) as is_synchronised,
     o.offer_modified_at_last_provider_date,
     date(o.offer_creation_date) as offer_creation_date,
     o.offer_creation_date as offer_created_at,
@@ -189,7 +189,9 @@ select
             and future_offer.offer_publication_date >= current_date
         then true
         else false
-    end as is_future_scheduled
+    end as is_future_scheduled,
+    om.offer_type_label,
+    om.offer_sub_type_label
 from {{ ref("int_applicative__extract_offer") }} as o
 left join {{ ref("int_applicative__offer_item_id") }} as ii on ii.offer_id = o.offer_id
 left join stocks_grouped_by_offers as so on so.offer_id = o.offer_id
@@ -208,6 +210,9 @@ left join
 left join
     {{ source("raw", "applicative_database_future_offer") }} as future_offer
     on future_offer.offer_id = o.offer_id
+left join
+    {{ ref("int_applicative__offer_metadata") }} as om
+    on om.offer_id = o.offer_id
 where
     o.offer_subcategoryid not in ("ACTIVATION_THING", "ACTIVATION_EVENT")
     and (booking_email <> "jeux-concours@passculture.app" or booking_email is null)

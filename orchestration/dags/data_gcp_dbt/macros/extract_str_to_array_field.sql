@@ -2,18 +2,20 @@
 
     {%- set columns = [] %}
     {%- for i in range(start, end, step) %}
-    {{- columns.append(column_name ~ '_' ~ (i + 1) ~ '_' ~ (i + step)) or "" }}
+        {{- columns.append(column_name ~ "_" ~ (i + 1) ~ "_" ~ (i + step)) or "" }}
     {%- endfor %}
-    ARRAY(
-        SELECT _col
-        FROM UNNEST(
-        ARRAY_CONCAT(
-            {%- for column in columns %}
-            SPLIT(IFNULL({{ column }}, ''), ','){% if not loop.last %}, {% endif %}
-            {%- endfor %}
-        )
-        ) AS _col
-        WHERE _col IS NOT NULL AND _col != ''
+    array(
+        select _col
+        from
+            unnest(
+                array_concat(
+                    {%- for column in columns %}
+                        split(ifnull({{ column }}, ''), ',')
+                        {% if not loop.last %}, {% endif %}
+                    {%- endfor %}
+                )
+            ) as _col
+        where _col is not null and _col != ''
     )
-    
+
 {% endmacro %}

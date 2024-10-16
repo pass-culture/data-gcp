@@ -1,4 +1,4 @@
-{{ config(**custom_table_config()) }} 
+{{ config(**custom_table_config()) }}
 
 select
     adu.user_id,
@@ -11,6 +11,7 @@ select
     ul.api_adresse_city,
     ul.date_updated
 from {{ source("raw", "user_locations") }} ul
-inner join {{ source("raw", "applicative_database_user")}} adu on ul.user_id = adu.user_id
+inner join
+    {{ source("raw", "applicative_database_user") }} adu on ul.user_id = adu.user_id
 
-QUALIFY ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY date_updated DESC) = 1
+qualify row_number() over (partition by user_id order by date_updated desc) = 1

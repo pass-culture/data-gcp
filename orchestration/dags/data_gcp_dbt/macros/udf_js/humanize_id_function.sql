@@ -1,14 +1,14 @@
 {% macro create_humanize_id_function() %}
 
-{% set target_name = target.name %}
-{% set target_schema = generate_schema_name('analytics_' ~ target_name) %}
+    {% set target_name = target.name %}
+    {% set target_schema = generate_schema_name("analytics_" ~ target_name) %}
 
-CREATE FUNCTION if not exists {{ target_schema }}.humanize_id(id STRING)
-RETURNS STRING
-LANGUAGE js
-OPTIONS (library="gs://data-bucket-{{ target_name }}/base32-encode/base32.js")
-AS 
-"""
+    create function if not exists {{ target_schema }}.humanize_id(id string)
+    returns string
+    language js
+    options (library = "gs://data-bucket-{{ target_name }}/base32-encode/base32.js")
+    as
+        """
 // turn int into bytes array
 var byteArray = [];
 var updated_id = id;
@@ -22,6 +22,7 @@ var reversedByteArray = byteArray.reverse();
 var raw_b32 = base32Encode(new Uint8Array(reversedByteArray), 'RFC4648', { padding: false });
 // replace "O" with "8" and "I" with "9"
 return raw_b32.replace(/O/g, '8').replace(/I/g, '9')
-""";
+"""
+    ;
 
 {% endmacro %}

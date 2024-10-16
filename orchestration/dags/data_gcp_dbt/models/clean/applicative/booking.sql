@@ -17,8 +17,9 @@ select
     venue_id,
     price_category_label,
     booking_reimbursement_date,
-    coalesce(booking_amount, 0) * coalesce(booking_quantity, 0) as booking_intermediary_amount,
+    coalesce(booking_amount, 0)
+    * coalesce(booking_quantity, 0) as booking_intermediary_amount,
     rank() over (partition by user_id order by booking_creation_date) as booking_rank,
     reimbursed
-from {{ source('raw','applicative_database_booking') }} booking
-    join {{ source('raw','applicative_database_stock') }} stock using (stock_id)
+from {{ source("raw", "applicative_database_booking") }} booking
+join {{ source("raw", "applicative_database_stock") }} stock using (stock_id)

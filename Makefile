@@ -78,7 +78,7 @@ _install_microservice:
 
 
 _initiate_env:
-	cp -n .env.template .env.local
+	@if [ ! -f .env.local ]; then cp .env.template .env.local; fi
 
 
 _get_gcp_credentials:
@@ -132,7 +132,7 @@ precommit_install:
 	@eval "$$(pyenv init -)" && pyenv activate data-gcp && pre-commit install
 
 sqlfmt_fix:
-	sqlfmt orchestration/dags/data_gcp_dbt/models/export orchestration/dags/dependencies --exclude "**/.venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "*/venv/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"
+	sqlfmt orchestration/dags --exclude "**/.venv/**" --exclude "**/venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"
 
 sqlfmt_check:
-	sqlfmt --check orchestration/dags/data_gcp_dbt/models/export orchestration/dags/dependencies --exclude "**/.venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "*/venv/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"
+	sqlfmt --check orchestration/dags --exclude "**/.venv/**" --exclude "**/venv/**"  --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"

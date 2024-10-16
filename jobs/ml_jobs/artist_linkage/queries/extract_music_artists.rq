@@ -1,0 +1,34 @@
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX schema: <http://schema.org/>
+
+SELECT
+  ?wiki_id
+  ?artist_name_fr
+  ?artist_name_en
+  ?description
+  ?genre
+  ?img
+  ?gkg_id
+  (GROUP_CONCAT(DISTINCT(?profession); separator=" | ") AS ?professions)
+  (GROUP_CONCAT(DISTINCT(?alias_fr); separator=" | ") AS ?aliases_fr)
+  (GROUP_CONCAT(DISTINCT(?alias_en); separator=" | ") AS ?aliases_en)
+WHERE {
+  ?wiki_id wdt:P31 wd:Q5;  # Ensure the entity is a human (P31 = instance of, Q5 = human)
+  OPTIONAL { ?wiki_id schema:description ?description . FILTER (LANG(?description) = "fr") . }
+  OPTIONAL { ?wiki_id wdt:P106/rdfs:label ?profession . FILTER (LANG(?profession) = "fr") }
+  OPTIONAL { ?wiki_id rdfs:label ?artist_name_fr. FILTER(LANG(?artist_name_fr) = "fr") }
+  OPTIONAL { ?wiki_id rdfs:label ?artist_name_en. FILTER(LANG(?artist_name_en) = "en") }
+  OPTIONAL { ?wiki_id skos:altLabel ?alias_fr . FILTER (lang(?alias_fr) = "fr") }
+  OPTIONAL { ?wiki_id skos:altLabel ?alias_en . FILTER (lang(?alias_en) = "en") }
+  OPTIONAL {?wiki_id wdt:P2373 ?genius_id . }
+  OPTIONAL {?wiki_id wdt:P10780 ?radiofr_id . }
+  OPTIONAL {?wiki_id wdt:P21/rdfs:label ?genre .  FILTER (LANG(?genre) = "fr")}
+  OPTIONAL {?wiki_id wdt:P18 ?img . }
+  OPTIONAL {?wiki_id wdt:P2671 ?gkg_id .}
+  FILTER ((?artist_name_fr != "") || (?artist_name_en != ""))
+  FILTER ((?genius_id != "" ) || (?radiofr_id != "") )
+}
+GROUP BY ?wiki_id ?artist_name_fr ?artist_name_en ?description ?genre ?img ?gkg_id

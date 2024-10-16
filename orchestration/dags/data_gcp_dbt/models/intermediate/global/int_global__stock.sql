@@ -53,4 +53,4 @@ select
     o.isbn,
     o.last_stock_price
 from {{ ref("int_applicative__stock") }} as s
-left join {{ ref("int_global__offer") }} as o on s.offer_id = o.offer_id
+inner join {{ ref("int_global__offer") }} as o on s.offer_id = o.offer_id

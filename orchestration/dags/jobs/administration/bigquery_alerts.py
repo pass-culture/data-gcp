@@ -8,7 +8,7 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -58,20 +58,12 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_start_task"
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
+        branch="{{ params.branch }}",
         python_version="3.9",
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command="pip install -r requirements.txt --user",
-        dag=dag,
-        retries=2,
     )
 
     wait_transfo = delayed_waiting_operator(dag=dag, external_dag_id="dbt_run_dag")
@@ -82,6 +74,7 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         do_xcom_push=True,
+        installer="uv",
         command="""
         python main.py
         """,
@@ -105,8 +98,7 @@ with DAG(
         start
         >> wait_transfo
         >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
+        >> fetch_install_code
         >> get_warning_tables
         >> warning_alert_slack
         >> gce_instance_stop

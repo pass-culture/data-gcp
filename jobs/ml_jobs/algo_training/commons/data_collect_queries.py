@@ -20,7 +20,7 @@ def get_data_from_bigquery(
     if subcategory_ids:
         # Convert list to tuple to use BigQuery's list format
         subcategory_ids = tuple(json.loads(subcategory_ids))
-        query_filter += f"WHERE offer_subcategoryid in {subcategory_ids}"
+        query_filter += f"WHERE offer_subcategory_id in {subcategory_ids}"
     if event_day_number:
         # Filter the event date by the last 'event_day_number' days
         query_filter += "WHERE " if len(query_filter) == 0 else " AND "

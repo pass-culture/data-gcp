@@ -21,7 +21,7 @@ def data_model_dict():
                 {
                     "user_id": ["1", "1", "2", "2", "3"],
                     "item_id": ["k", "l", "i", "k", "i"],
-                    "offer_subcategoryid": ["b", "b", "a", "b", "a"],
+                    "offer_subcategory_id": ["b", "b", "a", "b", "a"],
                     "count": [1, 1, 1, 1, 1],
                 }
             ),
@@ -29,7 +29,7 @@ def data_model_dict():
                 {
                     "user_id": ["1", "1", "1", "2", "3"],
                     "item_id": ["i", "j", "k", "j", "j"],
-                    "offer_subcategoryid": ["a", "a", "b", "a", "a"],
+                    "offer_subcategory_id": ["a", "a", "b", "a", "a"],
                     "count": [1, 1, 1, 1, 1],
                 }
             ),
@@ -49,7 +49,7 @@ def expected_output_data_model_dict():
                 {
                     "user_id": ["1", "1", "2", "2", "3"],
                     "item_id": ["k", "l", "i", "k", "i"],
-                    "offer_subcategoryid": ["b", "b", "a", "b", "a"],
+                    "offer_subcategory_id": ["b", "b", "a", "b", "a"],
                     "count": [1, 1, 1, 1, 1],
                 }
             ),
@@ -57,7 +57,7 @@ def expected_output_data_model_dict():
                 {
                     "user_id": ["1", "1", "1", "2", "3"],
                     "item_id": ["i", "j", "k", "j", "j"],
-                    "offer_subcategoryid": ["a", "a", "b", "a", "a"],
+                    "offer_subcategory_id": ["a", "a", "b", "a", "a"],
                     "count": [1, 1, 1, 1, 1],
                 }
             ),

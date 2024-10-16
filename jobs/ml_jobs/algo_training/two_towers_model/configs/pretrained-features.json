@@ -26,11 +26,11 @@
       "type": "string",
       "embedding_size": 64
     },
-    "offer_categoryId": {
+    "offer_category_id": {
       "type": "string",
       "embedding_size": 1
     },
-    "offer_subcategoryid": {
+    "offer_subcategory_id": {
       "type": "string",
       "embedding_size": 2
     },

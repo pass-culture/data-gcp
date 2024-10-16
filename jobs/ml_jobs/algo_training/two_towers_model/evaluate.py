@@ -76,7 +76,7 @@ def main(
     os.makedirs(pca_plots_path, exist_ok=True)
 
     item_data = read_from_gcs(STORAGE_PATH, "bookings", parallel=False)[
-        ["item_id", "offer_categoryId", "offer_subcategoryid"]
+        ["item_id", "offer_category_id", "offer_subcategory_id"]
     ]
     save_pca_representation(
         loaded_model=loaded_model,

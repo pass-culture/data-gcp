@@ -25,7 +25,7 @@ from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
 class PredictionInput:
     offer_name: str
     offer_description: str
-    offer_subcategoryid: str
+    offer_subcategory_id: str
     rayon: str
     macro_rayon: str
     stock_price: int

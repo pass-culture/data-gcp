@@ -20,15 +20,13 @@ class TwoTowersModel(tfrs.models.Model):
         item_features_config: OrderedDict,
         user_columns: list,
         item_columns: list,
-        item_dataset: tf.data.Dataset,
         embedding_size: int,
     ):
         super().__init__()
         self._user_feature_names = user_columns
         self._item_feature_names = item_columns
-        self._item_idx = (self._user_feature_names + self._item_feature_names).index(
-            "item_id"
-        )
+        self._item_idx = self._item_feature_names.index("item_id")
+        self._user_idx = self._user_feature_names.index("user_id")
 
         # Define user and item models
         self.user_model = SingleTowerModel(

@@ -210,9 +210,7 @@ left join
 left join
     {{ source("raw", "applicative_database_future_offer") }} as future_offer
     on future_offer.offer_id = o.offer_id
-left join
-    {{ ref("int_applicative__offer_metadata") }} as om
-    on om.offer_id = o.offer_id
+left join {{ ref("int_applicative__offer_metadata") }} as om on om.offer_id = o.offer_id
 where
     o.offer_subcategoryid not in ("ACTIVATION_THING", "ACTIVATION_EVENT")
     and (booking_email <> "jeux-concours@passculture.app" or booking_email is null)

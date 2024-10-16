@@ -131,9 +131,23 @@ jobs:
                   "author_name": "${{github.actor}}",
                   "author_link": "https://github.com/${{github.actor}}",
                   "author_icon": "https://github.com/${{github.actor}}.png",
-                  "title": "Composer déployé",
+                  "title": "Déploiement Composer",
                   "title_link": "https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}",
-                  "text": "Composer a été déployé sur l'environnement ${{ inputs.COMPOSER_NAME }}"
+                  "text": "${
+                    {
+                      job.status == 'success'
+                      ? '✅ SUCCESS'
+                      : (job.status == 'failure'
+                         ? '🚨 FAILURE'
+                         : '🚫 CANCELLED')
+                    }
+                  }: ${
+                    {
+                      github.event_name == 'workflow_dispatch'
+                      ? 'La branche ' + github.ref_name + ' a été déployée manuellement sur l\'environnement ' + inputs.COMPOSER_NAME
+                      : 'Composer a été déployé automatiquement sur l\'environnement ' + inputs.COMPOSER_NAME
+                    }
+                  }"
                 }
               ],
               "unfurl_links": false,

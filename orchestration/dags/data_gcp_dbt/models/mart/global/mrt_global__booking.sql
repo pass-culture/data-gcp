@@ -11,7 +11,7 @@ select
     b.booking_is_used,
     b.booking_cancellation_date,
     b.booking_cancellation_reason,
-    b.b.user_id,
+    b.user_id,
     b.deposit_id,
     b.deposit_type,
     b.reimbursed,

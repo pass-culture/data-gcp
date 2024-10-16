@@ -1,4 +1,5 @@
 import json
+from collections import OrderedDict
 
 import mlflow
 import tensorflow as tf
@@ -21,7 +22,7 @@ from two_towers_model.utils.callbacks import MLFlowLogging
 
 N_EPOCHS = 100
 MIN_DELTA = 0.001
-LEARNING_RATE = 0.1
+LEARNING_RATE = 0.01
 VERBOSE = 1 if ENV_SHORT_NAME == "prod" else 1
 
 
@@ -43,7 +44,7 @@ def load_features(config_file_name: str):
         mode="r",
         encoding="utf-8",
     ) as config_file:
-        features = json.load(config_file)
+        features = json.load(config_file, object_pairs_hook=OrderedDict)
     return (
         features["user_embedding_layers"],
         features["item_embedding_layers"],
@@ -91,6 +92,7 @@ def build_tf_datasets(
         tf.data.Dataset.from_tensor_slices(train_data.values)
         .batch(batch_size=batch_size)
         .map(lambda x: tf.transpose(x))
+        .cache()
         .prefetch(tf.data.AUTOTUNE)
     )
 
@@ -98,6 +100,7 @@ def build_tf_datasets(
         tf.data.Dataset.from_tensor_slices(validation_data.values)
         .batch(batch_size=batch_size)
         .map(lambda x: tf.transpose(x))
+        .cache()
         .prefetch(tf.data.AUTOTUNE)
     )
 
@@ -252,11 +255,16 @@ def train(
     user_features_config, item_features_config, input_prediction_feature = (
         load_features(config_file_name)
     )
+
+    user_columns = list(user_features_config.keys())
+
+    item_columns = list(item_features_config.keys())
+
     train_data, validation_data, train_user_data, train_item_data = load_datasets(
         training_table_name,
         validation_table_name,
-        user_columns=list(user_features_config.keys()),
-        item_columns=list(item_features_config.keys()),
+        user_columns=user_columns,
+        item_columns=item_columns,
         input_prediction_feature=input_prediction_feature,
     )
 
@@ -279,12 +287,17 @@ def train(
         data=train_data,
         user_features_config=user_features_config,
         item_features_config=item_features_config,
+        user_columns=user_columns,
+        item_columns=item_columns,
         item_dataset=item_dataset,
         embedding_size=embedding_size,
     )
+    # compile first
     two_tower_model.compile(
-        optimizer=tf.keras.optimizers.Adagrad(learning_rate=LEARNING_RATE)
+        optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE)
     )
+    # then task + metrics
+    two_tower_model.add_task(item_dataset)
 
     validation_steps = min(
         max(
@@ -293,6 +306,8 @@ def train(
         ),
         10,
     )
+
+    # fit
     train_two_tower_model(
         train_dataset,
         validation_dataset,

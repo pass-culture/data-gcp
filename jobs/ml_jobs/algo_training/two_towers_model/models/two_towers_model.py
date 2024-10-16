@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import pandas as pd
 import tensorflow as tf
 import tensorflow_recommenders as tfrs
@@ -14,14 +16,19 @@ class TwoTowersModel(tfrs.models.Model):
     def __init__(
         self,
         data: pd.DataFrame,
-        user_features_config: dict,
-        item_features_config: dict,
+        user_features_config: OrderedDict,
+        item_features_config: OrderedDict,
+        user_columns: list,
+        item_columns: list,
         item_dataset: tf.data.Dataset,
         embedding_size: int,
     ):
         super().__init__()
-        self._item_feature_names = item_features_config.keys()
-        self._user_feature_names = user_features_config.keys()
+        self._user_feature_names = user_columns
+        self._item_feature_names = item_columns
+        self._item_idx = (self._user_feature_names + self._item_feature_names).index(
+            "item_id"
+        )
 
         # Define user and item models
         self.user_model = SingleTowerModel(
@@ -53,20 +60,26 @@ class TwoTowersModel(tfrs.models.Model):
             embedding_size=embedding_size,
         )
 
-        item_embeddings = item_dataset.map(self.item_model)
-        index_top_k = tfrs.layers.factorized_top_k.BruteForce()
-        index_top_k.index_from_dataset(item_embeddings)
+    def add_task(self, item_dataset):
+        # get (item_id, item_embedding)
+        item_embedding = item_dataset.map(
+            lambda item: (item[self._item_idx], self.item_model(item))
+        )
+        # add ScaNN for fast metrics
+        index_top_k = tfrs.layers.factorized_top_k.ScaNN(num_reordering_candidates=1000)
+        index_top_k.index_from_dataset(item_embedding)
 
+        # add task
         self.task = tfrs.tasks.Retrieval(
             loss=tf.keras.losses.CategoricalCrossentropy(
                 from_logits=True, reduction=tf.keras.losses.Reduction.SUM
             ),
             metrics=tfrs.metrics.FactorizedTopK(
-                candidates=index_top_k,
-                ks=[50],
+                candidates=index_top_k, ks=[5, 50, 100]
             ),
         )
 
+    @tf.function
     def compute_loss(self, features, training=False):
         user_features, item_features = (
             features[: len(self._user_feature_names)],
@@ -75,11 +88,14 @@ class TwoTowersModel(tfrs.models.Model):
 
         user_embedding = tf.math.l2_normalize(self.user_model(user_features), axis=1)
         item_embedding = tf.math.l2_normalize(self.item_model(item_features), axis=1)
+        item_id = item_features[self._item_idx]
 
         return self.task(
             user_embedding,
             item_embedding,
             compute_metrics=not training,
+            compute_batch_metrics=not training,
+            candidate_ids=item_id,
         )
 
     @staticmethod

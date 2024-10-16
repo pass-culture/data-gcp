@@ -27,6 +27,9 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
 
+ML_DAG_TAG = "ML"
+VM_DAG_TAG = "VM"
+
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"artist-linkage-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
@@ -38,6 +41,7 @@ STORAGE_BASE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}"
 ARTISTS_TO_LINK_GCS_FILENAME = "artists_to_link.parquet"
 PREPROCESSED_GCS_FILENAME = "preprocessed_artists_to_link.parquet"
 LINKED_ARTISTS_GCS_FILENAME = "linked_artists.parquet"
+WIKIDATA_EXTRACTION_GCS_FILENAME = "wikidata_extraction.parquet"
 TEST_SETS_GCS_DIR = "labelled_test_sets"
 
 # BQ Output Tables
@@ -58,7 +62,7 @@ with DAG(
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    tags=["ML", "VM"],
+    tags=[ML_DAG_TAG, VM_DAG_TAG],
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -153,6 +157,16 @@ with DAG(
         """,
     )
 
+    extract_from_wikidata = SSHGCEOperator(
+        task_id="extract_from_wikidata",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+         python extract_from_wikidata.py \
+        --output-file-path {os.path.join(STORAGE_BASE_PATH, WIKIDATA_EXTRACTION_GCS_FILENAME)}
+        """,
+    )
+
     load_data_into_linked_artists_table = GCSToBigQueryOperator(
         bucket=MLFLOW_BUCKET_NAME,
         task_id="load_data_into_linked_artists_table",
@@ -185,6 +199,7 @@ with DAG(
         [export_input_bq_to_gcs, install_dependencies]
         >> preprocess_data
         >> artist_linkage
+        >> extract_from_wikidata
         >> artist_metrics
         >> gce_instance_stop
     )

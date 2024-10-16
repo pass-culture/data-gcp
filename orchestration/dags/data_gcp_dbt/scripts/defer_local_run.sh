@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Function to find the .env file in the current or parent directories
 find_dotenv() {
   local dir="$PWD"
   while [[ "$dir" != "/" ]]; do
@@ -34,7 +33,7 @@ dbt_hook() {
   # Parse arguments and find flags if present
   for arg in "$@"; do
     case "$arg" in
-      --defer-local-run-to=*)
+      --defer-to=*)
         DEFER_LOCAL_RUN_TO="${arg#*=}"
         ;;
       --refresh-state)
@@ -93,7 +92,7 @@ fi
     echo "Error: dbt_project.yml not found. This script must be run from within a dbt project folder."
     return 1
   fi
-
+  DBT_PROFILES_DIR=$DBT_PROJECT_DIR
   # Function to pull artifacts from a specific environment (manifest and run_results)
   pull_artifacts() {
     local env="$1"
@@ -160,7 +159,7 @@ fi
     return 0
   fi
 
-  # If --refresh-state and --defer-local-run-to are provided:
+  # If --refresh-state and --defer-to are provided:
   if [[ "$REFRESH_STATE" == true && "$DEFER_LOCAL_RUN_TO" != "none" ]]; then
     echo "Refreshing state and pulling artifacts (manifest.json and run_results.json) from $DEFER_LOCAL_RUN_TO."
 
@@ -197,20 +196,22 @@ fi
     # Set defer flags to be passed to the dbt command
     DEFER_FLAGS=(--defer --state "$ARTIFACTS_DIR" --favor-state)
   else
-    echo "Skipping artifact pulling as --defer-local-run-to=none."
+    echo "Skipping artifact pulling as --defer-to=none."
   fi
 
   # Remove specific arguments before passing the rest to dbt
   local FILTERED_ARGS=()
   for arg in "$@"; do
-    if [[ "$arg" != --defer-local-run-to=* && "$arg" != --refresh-state ]]; then
+    if [[ "$arg" != --defer-to=* && "$arg" != --refresh-state ]]; then
       FILTERED_ARGS+=("$arg")
     fi
   done
 
   # Combine filtered arguments with defer flags
   local COMBINED_ARGS=("${FILTERED_ARGS[@]}" "${DEFER_FLAGS[@]}")
+
   echo "Running dbt with arguments: ${COMBINED_ARGS[@]}"
+  export DBT_PROFILES_DIR=$DBT_PROJECT_DIR
   command dbt "${COMBINED_ARGS[@]}"
 }
 

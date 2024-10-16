@@ -227,7 +227,7 @@ packaging==23.2
     #   mlflow
     #   pytest
     #   streamlit
-pandas==2.2.0
+pandas==2.2.3
     # via
     #   -r requirements.in
     #   altair

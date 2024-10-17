@@ -63,8 +63,10 @@ class TwoTowersModel(tfrs.models.Model):
         item_embedding = item_dataset.map(
             lambda item: (item[self._item_idx], self.item_model(item))
         )
-        # add ScaNN for fast metrics calculation
-        index_top_k = tfrs.layers.factorized_top_k.ScaNN(num_reordering_candidates=1000)
+
+        index_top_k = tfrs.layers.factorized_top_k.ScaNN(
+            num_reordering_candidates=500, distance_metric="euclidean", quantize=True
+        )
         index_top_k.index_from_dataset(item_embedding)
 
         # add task
@@ -74,6 +76,8 @@ class TwoTowersModel(tfrs.models.Model):
                 reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
             ),
             metrics=tfrs.metrics.FactorizedTopK(candidates=index_top_k, ks=[5, 10, 50]),
+            num_hard_negatives=10,
+            remove_accidental_hits=True,
         )
 
     @tf.function
@@ -83,8 +87,8 @@ class TwoTowersModel(tfrs.models.Model):
             features[len(self._user_feature_names) :],
         )
 
-        user_embedding = tf.math.l2_normalize(self.user_model(user_features), axis=1)
-        item_embedding = tf.math.l2_normalize(self.item_model(item_features), axis=1)
+        user_embedding = self.user_model(user_features)
+        item_embedding = self.item_model(item_features)
         item_id = item_features[self._item_idx]
 
         return self.task(
@@ -136,9 +140,12 @@ class SingleTowerModel(tf.keras.models.Model):
             )
 
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
-        self._norm1 = tf.keras.layers.LayerNormalization(axis=-1)
+        self._dropout1 = tf.keras.layers.Dropout(0.2)
+        self._norm1 = tf.keras.layers.BatchNormalization(axis=-1)
+
         self._dense2 = tf.keras.layers.Dense(embedding_size)
-        self._norm2 = tf.keras.layers.LayerNormalization(axis=-1)
+        self._dropout2 = tf.keras.layers.Dropout(0.1)
+        self._norm2 = tf.keras.layers.BatchNormalization(axis=-1)
 
     def call(self, features: dict, training=False):
         feature_embeddings = []
@@ -148,7 +155,10 @@ class SingleTowerModel(tf.keras.models.Model):
         x = tf.concat(feature_embeddings, axis=1)
 
         x = self._dense1(x)
+        x = self._dropout1(x, training=training)
         x = self._norm1(x)
+
         x = self._dense2(x)
+        x = self._dropout2(x, training=training)
         x = self._norm2(x)
         return x

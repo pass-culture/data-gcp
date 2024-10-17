@@ -22,7 +22,7 @@ from two_towers_model.utils.callbacks import MLFlowLogging
 
 N_EPOCHS = 100
 MIN_DELTA = 0.01
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.05
 VERBOSE = 1
 
 
@@ -292,7 +292,7 @@ def train(
     )
     # compile first
     two_tower_model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE)
+        optimizer=tf.keras.optimizers.Adagrad(learning_rate=LEARNING_RATE)
     )
     # then task + metrics
     two_tower_model.add_task(item_dataset)

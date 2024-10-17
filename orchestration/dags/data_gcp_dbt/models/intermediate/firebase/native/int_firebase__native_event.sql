@@ -96,6 +96,7 @@ select
     videoduration as video_duration_seconds,
     seenduration as video_seen_duration_seconds,
     youtubeid as video_id,
+    frommultivenueofferid as multi_venue_offer_id,
     case when event_name = "ConsultOffer" then 1 else 0 end as is_consult_offer,
     case
         when event_name = "BookingConfirmation" then 1 else 0
@@ -148,7 +149,26 @@ select
         then 1
         else 0
     end as is_benef_request_sent,
-    case when event_name = "login" then 1 else 0 end as is_login
+    case when event_name = "login" then 1 else 0 end as is_login,
+    case
+        when
+            exists (
+                select 1
+                from {{ source("raw", "subcategories") }} sc
+                where
+                    lower(query) like concat('%', lower(sc.category_id), '%')
+                    or lower(query) like concat('%', lower(sc.id), '%')
+            )
+            or exists (
+                select 1
+                from {{ source("seed", "macro_rayons") }} mr
+                where
+                    lower(query) like concat('%', lower(mr.macro_rayon), '%')
+                    or lower(query) like concat('%', lower(mr.rayon), '%')
+            )
+        then true
+        else false
+    end as search_query_input_is_generic
 from {{ ref("int_firebase__native_event_flattened") }} as e
 {% if is_incremental() %}
     where

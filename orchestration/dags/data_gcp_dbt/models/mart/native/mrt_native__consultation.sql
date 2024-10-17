@@ -55,6 +55,7 @@ select
     user.user_activity,
     user.user_is_priority_public,
     user.user_is_unemployed,
+    user.user_is_in_education,
     user.user_is_in_qpv,
     user.user_macro_density_label,
     consult.traffic_medium,

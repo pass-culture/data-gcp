@@ -69,6 +69,7 @@ select
     u.user_is_active,
     u.user_is_in_qpv,
     u.user_is_unemployed,
+    u.user_is_in_education,
     u.user_is_priority_public,
     u.first_deposit_creation_date
 from {{ ref("int_global__booking") }} as b

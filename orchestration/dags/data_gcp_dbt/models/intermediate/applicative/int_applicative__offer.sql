@@ -201,7 +201,12 @@ with
                 when subcategories.category_id <> "SPECTACLE" and o.musicsubtype is not null
                 then o.musicsubtype
             end as subtype,
-            future_offer.offer_publication_date
+            future_offer.offer_publication_date,
+            case
+                when o.offer_is_active is false and future_offer.offer_publication_date >= current_date
+                then true
+                else false
+            end as is_future_scheduled
         from {{ ref("int_applicative__extract_offer") }} as o
         left join {{ ref("int_applicative__offer_item_id") }} as ii on ii.offer_id = o.offer_id
         left join stocks_grouped_by_offers as so on so.offer_id = o.offer_id

@@ -201,54 +201,7 @@ with
                 when subcategories.category_id <> "SPECTACLE" and o.musicsubtype is not null
                 then o.musicsubtype
             end as subtype,
-            future_offer.offer_publication_date,
-            case
-                when
-                    o.offer_is_active is false
-                    and future_offer.offer_publication_date >= current_date
-                then true
-                else false
-            end as is_future_scheduled,
-                case
-                when o.offer_type_domain = "MUSIC"
-                then offer_types.offer_type_label
-                when o.offer_type_domain = "SHOW"
-                then offer_types.offer_type_label
-                when o.offer_type_domain = "MOVIE"
-                then regexp_extract_all(upper(genres), r'[0-9a-zA-Z][^"]+')[safe_offset(0)]
-                when o.offer_type_domain = "BOOK"
-                then macro_rayons.macro_rayon
-            end as offer_type_label,
-                case
-                when o.offer_type_domain = "MUSIC"
-                then
-                    if(
-                        offer_types.offer_type_label is null,
-                        null,
-                        [offer_types.offer_type_label]
-                    )
-                when o.offer_type_domain = "SHOW"
-                then
-                    if(
-                        offer_types.offer_type_label is null,
-                        null,
-                        [offer_types.offer_type_label]
-                    )
-                when o.offer_type_domain = "MOVIE"
-                then regexp_extract_all(upper(genres), r'[0-9a-zA-Z][^"]+')
-                when o.offer_type_domain = "BOOK"
-                then if(macro_rayons.macro_rayon is null, null, [macro_rayons.macro_rayon])
-            end as offer_type_labels,
-            case
-                when o.offer_type_domain = "MUSIC"
-                then offer_sub_types.offer_sub_type_label
-                when o.offer_type_domain = "SHOW"
-                then offer_sub_types.offer_sub_type_label
-                when o.offer_type_domain = "MOVIE"
-                then null
-                when o.offer_type_domain = "BOOK"
-                then o.rayon
-            end as offer_sub_type_label
+            future_offer.offer_publication_date
         from {{ ref("int_applicative__extract_offer") }} as o
         left join {{ ref("int_applicative__offer_item_id") }} as ii on ii.offer_id = o.offer_id
         left join stocks_grouped_by_offers as so on so.offer_id = o.offer_id

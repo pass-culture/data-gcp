@@ -276,7 +276,7 @@ with
     isbn,
     titelive_gtl_id,
     offerer_address_id,
-    offer_type_id,
+    o.offer_type_id,
     offer_sub_type_id,
     offer_is_bookable,
     total_available_stock,

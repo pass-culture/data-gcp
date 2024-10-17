@@ -71,7 +71,6 @@ select
     s.stock_fields_updated,
     s.price_category_id,
     s.stock_features,
-    s.offerer_address_id,
     case
         when s.stock_quantity is null
         then null

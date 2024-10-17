@@ -15,7 +15,6 @@ select
     offer_id,
     offer_name,
     offer_subcategory_id,
-    offerer_address_id,
     offerer_id,
     partner_id,
     price_category_id,

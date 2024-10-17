@@ -16,7 +16,6 @@ select
     s.price_category_label_id,
     s.price_category_label,
     s.stock_features,
-    s.offerer_address_id,
     s.stock_last_provider_id,
     s.offer_id,
     o.offer_product_id,

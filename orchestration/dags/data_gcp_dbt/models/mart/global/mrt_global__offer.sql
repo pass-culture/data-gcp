@@ -3,6 +3,7 @@ select
     offer_product_id,
     offer_product_humanized_id,
     offer_id_at_providers,
+    offer_last_provider_id,
     is_synchronised,
     offer_name,
     offer_description,
@@ -56,6 +57,7 @@ select
     total_first_bookings,
     venue_id,
     venue_name,
+    venue_is_permanent,
     venue_department_code,
     venue_department_name,
     venue_region_name,
@@ -75,6 +77,8 @@ select
     venue_iris_internal_id,
     offerer_address_id,
     offer_publication_date,
-    is_future_scheduled
+    is_future_scheduled,
+    offer_type_label,
+    offer_sub_type_label
 from {{ ref("int_global__offer") }} as o
 where true and offer_validation = 'APPROVED' and venue_id is not null

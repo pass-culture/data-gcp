@@ -72,6 +72,7 @@ select
     v.offerer_name,
     v.venue_type_label,
     v.venue_iris_internal_id,
+    v.venue_is_permanent,
     v.venue_region_name,
     v.venue_department_code,
     v.venue_department_name,
@@ -84,6 +85,8 @@ select
     v.venue_density_level,
     o.offerer_address_id,
     o.offer_publication_date,
-    o.is_future_scheduled
+    o.is_future_scheduled,
+    o.offer_type_label,
+    o.offer_sub_type_label
 from {{ ref("int_applicative__offer") }} as o
 left join {{ ref("int_global__venue") }} as v on v.venue_id = o.venue_id

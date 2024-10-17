@@ -24,6 +24,7 @@ select
     s.venue_label,
     s.venue_type_label,
     s.venue_id,
+    s.venue_is_permanent,
     s.venue_postal_code,
     s.venue_department_code,
     s.venue_department_name,
@@ -52,6 +53,8 @@ select
     ) as user_booking_rank,
     s.venue_iris_internal_id,
     s.offer_url,
-    s.isbn
+    s.isbn,
+    s.offer_type_label,
+    s.offer_sub_type_label
 from {{ ref("int_applicative__booking") }} as b
 left join {{ ref("int_global__stock") }} as s on s.stock_id = b.stock_id

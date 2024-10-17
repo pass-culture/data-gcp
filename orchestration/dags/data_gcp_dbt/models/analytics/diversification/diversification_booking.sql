@@ -12,9 +12,9 @@ select
     booking.offer_id,
     diversification_raw.booking_id,
     diversification_raw.booking_creation_date,
-    offer_metadata.offer_category_id as category,
-    offer_metadata.offer_subcategory_id as subcategory,
-    offer_type_label,
+    booking.offer_category_id as category,
+    booking.offer_subcategory_id as subcategory,
+    booking.offer_type_label,
     booking.venue_id as venue,
     booking.venue_name,
     booking.user_region_name,
@@ -36,6 +36,3 @@ from {{ ref("diversification_raw") }} as diversification_raw
 left join
     {{ ref("mrt_global__booking") }} as booking
     on booking.booking_id = diversification_raw.booking_id
-left join
-    {{ ref("int_applicative__offer_metadata") }} as offer_metadata
-    on booking.offer_id = offer_metadata.offer_id

@@ -60,14 +60,13 @@ class TwoTowersModel(tfrs.models.Model):
 
     def add_task(self, item_dataset):
         # get (item_id, item_embedding)
-        item_embedding = item_dataset.map(
-            lambda item: (item[self._item_idx], self.item_model(item))
-        )
+        candidates = item_dataset.map(self.item_model)
+        identifiers = item_dataset.map(lambda item: item[self._item_idx])
 
         index_top_k = tfrs.layers.factorized_top_k.ScaNN(
-            num_reordering_candidates=500, distance_metric="euclidean", quantize=True
+            num_reordering_candidates=500, distance_measure="euclidean", quantize=True
         )
-        index_top_k.index_from_dataset(item_embedding)
+        index_top_k.index(candidates=candidates, identifiers=identifiers)
 
         # add task
         self.task = tfrs.tasks.Retrieval(

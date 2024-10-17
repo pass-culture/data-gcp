@@ -257,7 +257,7 @@ with
     offer_external_ticket_office_url,
     offer_validation,
     offer_last_validation_type,
-    offer_subcategoryid as offer_subcategory_id,
+    offer_subcategory_id,
     offer_withdrawal_delay,
     booking_contact,
     author,

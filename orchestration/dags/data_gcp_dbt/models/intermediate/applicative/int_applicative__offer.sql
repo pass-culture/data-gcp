@@ -277,7 +277,7 @@ with
     titelive_gtl_id,
     offerer_address_id,
     o.offer_type_id,
-    offer_sub_type_id,
+    o.offer_sub_type_id,
     offer_is_bookable,
     total_available_stock,
     total_bookings,

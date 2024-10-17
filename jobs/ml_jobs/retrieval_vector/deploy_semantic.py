@@ -24,7 +24,7 @@ MODEL_TYPE = {
     "transformer": "sentence-transformers/all-MiniLM-L6-v2",
     "reducer": "./metadata/reducer.pkl",
 }
-EMBEDDING_DIMENSION = 384
+EMBEDDING_DIMENSION = 32
 
 
 def download_embeddings(bucket_path):

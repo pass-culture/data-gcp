@@ -256,8 +256,8 @@ def create_items_table(
     if create_index:
         table.create_index(
             metric="dot",
-            num_partitions=1024,
-            num_sub_vectors=32,
+            num_partitions=8,
+            num_sub_vectors=4,
             vector_column_name="vector",
         )
         table.create_scalar_index("search_group_name", index_type="BITMAP")

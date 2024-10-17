@@ -64,7 +64,7 @@ class TwoTowersModel(tfrs.models.Model):
         identifiers = item_dataset.map(lambda item: item[self._item_idx])
 
         index_top_k = tfrs.layers.factorized_top_k.ScaNN(
-            num_reordering_candidates=500, distance_measure="euclidean", quantize=True
+            num_reordering_candidates=500, distance_measure="euclidean"
         )
         index_top_k.index(candidates=candidates, identifiers=identifiers)
 

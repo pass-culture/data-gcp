@@ -234,10 +234,6 @@ def train(
         ..., help="Name of the config file containing feature informations"
     ),
     batch_size: int = typer.Option(..., help="Batch size of training"),
-    validation_steps_ratio: float = typer.Option(
-        ...,
-        help="Ratio of the total validation steps that will be processed at evaluation",
-    ),
     embedding_size: int = typer.Option(..., help="Item & User embedding size"),
     seed: int = typer.Option(None, help="Seed to fix randomness in pipeline"),
     training_table_name: str = typer.Option(

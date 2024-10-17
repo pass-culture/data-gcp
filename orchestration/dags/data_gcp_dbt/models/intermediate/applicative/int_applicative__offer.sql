@@ -41,6 +41,24 @@ with
         select offerid, count(*) as total_favorites
         from {{ source("raw", "applicative_database_favorite") }}
         group by offerid
+    ),
+
+    offer_types as (
+        select distinct
+            upper(domain) as offer_type_domain,
+            cast(type as string) as offer_type_id,
+            label as offer_type_label
+        from {{ source("raw", "offer_types") }}
+    ),
+
+    offer_sub_types as (
+        select distinct
+            upper(domain) as offer_type_domain,
+            cast(type as string) as offer_type_id,
+            label as offer_type_label,
+            safe_cast(safe_cast(sub_type as float64) as string) as offer_sub_type_id,
+            sub_label as offer_sub_type_label
+        from {{ source("raw", "offer_types") }}
     )
 
 select
@@ -190,8 +208,46 @@ select
         then true
         else false
     end as is_future_scheduled,
-    om.offer_type_label,
-    om.offer_sub_type_label
+        case
+        when o.offer_type_domain = "MUSIC"
+        then offer_types.offer_type_label
+        when o.offer_type_domain = "SHOW"
+        then offer_types.offer_type_label
+        when o.offer_type_domain = "MOVIE"
+        then regexp_extract_all(upper(genres), r'[0-9a-zA-Z][^"]+')[safe_offset(0)]
+        when o.offer_type_domain = "BOOK"
+        then macro_rayons.macro_rayon
+    end as offer_type_label,
+        case
+        when o.offer_type_domain = "MUSIC"
+        then
+            if(
+                offer_types.offer_type_label is null,
+                null,
+                [offer_types.offer_type_label]
+            )
+        when o.offer_type_domain = "SHOW"
+        then
+            if(
+                offer_types.offer_type_label is null,
+                null,
+                [offer_types.offer_type_label]
+            )
+        when o.offer_type_domain = "MOVIE"
+        then regexp_extract_all(upper(genres), r'[0-9a-zA-Z][^"]+')
+        when o.offer_type_domain = "BOOK"
+        then if(macro_rayons.macro_rayon is null, null, [macro_rayons.macro_rayon])
+    end as offer_type_labels,
+    case
+        when o.offer_type_domain = "MUSIC"
+        then offer_sub_types.offer_sub_type_label
+        when o.offer_type_domain = "SHOW"
+        then offer_sub_types.offer_sub_type_label
+        when o.offer_type_domain = "MOVIE"
+        then null
+        when o.offer_type_domain = "BOOK"
+        then o.rayon
+    end as offer_sub_type_label
 from {{ ref("int_applicative__extract_offer") }} as o
 left join {{ ref("int_applicative__offer_item_id") }} as ii on ii.offer_id = o.offer_id
 left join stocks_grouped_by_offers as so on so.offer_id = o.offer_id
@@ -210,7 +266,16 @@ left join
 left join
     {{ source("raw", "applicative_database_future_offer") }} as future_offer
     on future_offer.offer_id = o.offer_id
-left join {{ ref("int_applicative__offer_metadata") }} as om on om.offer_id = o.offer_id
+left join
+    offer_types
+    on offer_types.offer_type_domain = o.offer_type_domain
+    and offer_types.offer_type_id = o.offer_type_id
+left join
+    offer_sub_types
+    on offer_sub_types.offer_type_domain = o.offer_type_domain
+    and offer_sub_types.offer_type_id = o.offer_type_id
+    and offer_sub_types.offer_sub_type_id = o.offer_sub_type_id
+left join {{ source("seed", "macro_rayons") }} on o.rayon = macro_rayons.rayon
 where
     o.offer_subcategoryid not in ("ACTIVATION_THING", "ACTIVATION_EVENT")
     and (booking_email <> "jeux-concours@passculture.app" or booking_email is null)

@@ -1,17 +1,27 @@
 with
+    topics as (
+        select start_date, end_date, response_id, venue_id, answer as topics
+        from `{{ bigquery_analytics_dataset }}.qualtrics_answers_ir_pro`
+        where question = "Q1_topics"
+    )
+
     ir as (
         select
-            start_date,
-            end_date,
-            response_id,
-            venue_id,
+            pro.start_date,
+            pro.end_date,
+            pro.response_id,
+            pro.venue_id,
             user_type,
             question,
             answer,
             execution_date,
             topics,
             anciennete_jours
-        from `{{ bigquery_analytics_dataset }}.qualtrics_answers_ir_pro`
+        from `{{ bigquery_analytics_dataset }}.qualtrics_answers_ir_pro` pro
+        left join
+            topics
+            on pro.response_id = topics.response_id
+            and pro.venue_id = topics.venue_id
     ),
     ir_per_user as (select * from ir pivot (min(answer) for question in ('Q1', 'Q2'))),
     indiv_book as (

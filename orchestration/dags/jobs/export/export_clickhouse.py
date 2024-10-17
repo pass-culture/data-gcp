@@ -40,13 +40,6 @@ dag_config = {
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
 }
 
-default_dag_args = {
-    "start_date": datetime.datetime(2023, 9, 1),
-    "retries": 1,
-    "on_failure_callback": task_fail_slack_alert,
-    "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT_ID,
-}
 DATE = "{{ yyyymmdd(ds) }}"
 
 dag_config = {
@@ -68,6 +61,8 @@ dags = {
             "retries": 1,
             "retry_delay": datetime.timedelta(minutes=20),
             "project_id": GCP_PROJECT_ID,
+            "on_failure_callback": task_fail_slack_alert,
+            "on_skipped_callback": task_fail_slack_alert,
         },
     },
 }

@@ -48,7 +48,6 @@ dag_config = {
 train_params = {
     "config_file_name": "default-features",
     "batch_size": 8192,
-    "validation_steps_ratio": 0.1 if ENV_SHORT_NAME == "prod" else 0.4,
     "embedding_size": 64,
     "train_set_size": 0.95 if ENV_SHORT_NAME == "prod" else 0.8,
     "event_day_number": {"prod": 60, "dev": 365, "stg": 20}[ENV_SHORT_NAME],
@@ -93,10 +92,6 @@ with DAG(
         ),
         "batch_size": Param(
             default=str(train_params["batch_size"]),
-            type="string",
-        ),
-        "validation_steps_ratio": Param(
-            default=str(train_params["validation_steps_ratio"]),
             type="string",
         ),
         "embedding_size": Param(
@@ -251,7 +246,6 @@ with DAG(
         "--config-file-name {{ params.config_file_name }} "
         f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
         "--batch-size {{ params.batch_size }} "
-        "--validation-steps-ratio {{ params.validation_steps_ratio }} "
         "--embedding-size {{ params.embedding_size }} "
         "--seed {{ ds_nodash }} "
         "--run-name {{ params.run_name }}",

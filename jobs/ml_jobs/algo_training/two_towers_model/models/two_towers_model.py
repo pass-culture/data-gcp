@@ -58,16 +58,20 @@ class TwoTowersModel(tfrs.models.Model):
             embedding_size=embedding_size,
         )
 
-    def add_task(self, item_dataset):
+    def add_task(self, item_dataset, use_scann=True):
         # get (item_id, item_embedding)
-        candidates = item_dataset.map(self.item_model)
-        identifiers = item_dataset.map(lambda item: item[self._item_idx])
-
-        index_top_k = tfrs.layers.factorized_top_k.ScaNN(
-            num_reordering_candidates=500, distance_measure="euclidean"
+        item_embedding = item_dataset.map(
+            lambda item: (item[self._item_idx], self.item_model(item))
         )
-        index_top_k.index(candidates=candidates, identifiers=identifiers)
+        if use_scann:
+            index_top_k = tfrs.layers.factorized_top_k.ScaNN(
+                num_reordering_candidates=1000
+            )
+        else:
+            index_top_k = tfrs.layers.factorized_top_k.Streaming()
 
+        # return task
+        index_top_k = index_top_k.index_from_dataset(item_embedding)
         # add task
         self.task = tfrs.tasks.Retrieval(
             loss=tf.keras.losses.CategoricalCrossentropy(
@@ -140,11 +144,11 @@ class SingleTowerModel(tf.keras.models.Model):
 
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
         self._dropout1 = tf.keras.layers.Dropout(0.2)
-        self._norm1 = tf.keras.layers.BatchNormalization(axis=-1)
+        self._norm1 = tf.keras.layers.BatchNormalization()
 
         self._dense2 = tf.keras.layers.Dense(embedding_size)
         self._dropout2 = tf.keras.layers.Dropout(0.1)
-        self._norm2 = tf.keras.layers.BatchNormalization(axis=-1)
+        self._norm2 = tf.keras.layers.BatchNormalization()
 
     def call(self, features: dict, training=False):
         feature_embeddings = []

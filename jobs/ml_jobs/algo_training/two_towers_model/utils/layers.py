@@ -51,7 +51,7 @@ class IntegerEmbeddingLayer:
     def build_sequential_layer(self, vocabulary: np.ndarray):
         return tf.keras.Sequential(
             [
-                StringLookup(vocabulary=vocabulary.astype(int).astype(str)),
+                StringLookup(vocabulary=vocabulary.astype(str)),
                 # We add an additional embedding to account for unknown tokens.
                 Embedding(
                     input_dim=len(vocabulary) + 1,

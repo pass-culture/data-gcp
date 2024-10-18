@@ -58,4 +58,4 @@ select
     o.offer_sub_type_label
 from {{ ref("int_applicative__booking") }} as b
 left join {{ ref("int_global__stock") }} as s on s.stock_id = b.stock_id
-left join {{ ref("int_applicative__offer_metadata") }} as o on o.offer_id=b.offer_id
+left join {{ ref("int_applicative__offer_metadata") }} as o on o.offer_id=s.offer_id

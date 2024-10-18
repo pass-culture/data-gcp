@@ -12,6 +12,6 @@
     }}
 
     select *
-    from {{ ref("raw_applicative__offer") }}
+    from {{ ref("raw_applicative__offer_lite") }}
 
 {% endsnapshot %}

@@ -12,14 +12,14 @@
         or node.resource_type == "snapshot"
     ) -%}
     {%- set is_mart_or_export = "mart" in node.path or "export" in node.path -%}
-    {%- set is_source_snapshot = (
-        "source" in node.path and node.resource_type == "snapshot"
+    {%- set is_raw_snapshot = (
+        "raw_applicative" in node.path and node.resource_type == "snapshot"
     ) -%}
     {%- set is_mart_or_export = "mart" in node.path or "export" in node.path -%}
 
     {%- if target.profile_name == "CI" or target.name == "local" -%} {{ node.name }}
 
-    {%- elif is_source_snapshot -%}
+    {%- elif is_raw_snapshot -%}
         {{ "applicative_database_" ~ node.name.split("__")[-1] | trim }}
 
     {%- elif is_applicative and custom_alias_name -%}

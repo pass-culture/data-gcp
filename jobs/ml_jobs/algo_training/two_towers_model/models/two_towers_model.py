@@ -59,19 +59,20 @@ class TwoTowersModel(tfrs.models.Model):
         )
 
     def add_task(self, item_dataset, use_scann=True):
-        # get (item_id, item_embedding)
-        item_embedding = item_dataset.map(
-            lambda item: (item[self._item_idx], self.item_model(item))
-        )
         if use_scann:
-            index_top_k = tfrs.layers.factorized_top_k.ScaNN(
-                num_reordering_candidates=1000
+            # get (item_id, item_embedding)
+            item_embedding = item_dataset.map(
+                lambda item: (item[self._item_idx], self.item_model(item))
             )
+            index_top_k = tfrs.layers.factorized_top_k.ScaNN(
+                num_reordering_candidates=500
+            )
+            index_top_k = index_top_k.index_from_dataset(item_embedding)
         else:
-            index_top_k = tfrs.layers.factorized_top_k.Streaming()
+            index_top_k = tfrs.layers.factorized_top_k.BruteForce().index_from_dataset(
+                item_dataset.map(self.item_model)
+            )
 
-        # return task
-        index_top_k = index_top_k.index_from_dataset(item_embedding)
         # add task
         self.task = tfrs.tasks.Retrieval(
             loss=tf.keras.losses.CategoricalCrossentropy(
@@ -79,27 +80,6 @@ class TwoTowersModel(tfrs.models.Model):
                 reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
             ),
             metrics=tfrs.metrics.FactorizedTopK(candidates=index_top_k, ks=[5, 10, 50]),
-            num_hard_negatives=10,
-            remove_accidental_hits=True,
-        )
-
-    @tf.function
-    def compute_loss(self, features, training=False):
-        user_features, item_features = (
-            features[: len(self._user_feature_names)],
-            features[len(self._user_feature_names) :],
-        )
-
-        user_embedding = self.user_model(user_features)
-        item_embedding = self.item_model(item_features)
-        item_id = item_features[self._item_idx]
-
-        return self.task(
-            user_embedding,
-            item_embedding,
-            compute_metrics=not training,
-            compute_batch_metrics=not training,
-            candidate_ids=item_id,
         )
 
     @staticmethod
@@ -123,6 +103,25 @@ class TwoTowersModel(tfrs.models.Model):
             )
         return embedding_layers[layer_type]
 
+    @tf.function
+    def compute_loss(self, features, training=False):
+        user_features, item_features = (
+            features[: len(self._user_feature_names)],
+            features[len(self._user_feature_names) :],
+        )
+
+        user_embedding = self.user_model(user_features)
+        item_embedding = self.item_model(item_features)
+        item_id = item_features[self._item_idx]
+
+        return self.task(
+            user_embedding,
+            item_embedding,
+            compute_metrics=not training,
+            compute_batch_metrics=not training,
+            candidate_ids=item_id,
+        )
+
 
 class SingleTowerModel(tf.keras.models.Model):
     def __init__(
@@ -144,11 +143,9 @@ class SingleTowerModel(tf.keras.models.Model):
 
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
         self._dropout1 = tf.keras.layers.Dropout(0.2)
-        self._norm1 = tf.keras.layers.BatchNormalization()
+        self._norm1 = tf.keras.layers.LayerNormalization(axis=-1)
 
         self._dense2 = tf.keras.layers.Dense(embedding_size)
-        self._dropout2 = tf.keras.layers.Dropout(0.1)
-        self._norm2 = tf.keras.layers.BatchNormalization()
 
     def call(self, features: dict, training=False):
         feature_embeddings = []
@@ -160,8 +157,6 @@ class SingleTowerModel(tf.keras.models.Model):
         x = self._dense1(x)
         x = self._dropout1(x, training=training)
         x = self._norm1(x)
-
         x = self._dense2(x)
-        x = self._dropout2(x, training=training)
-        x = self._norm2(x)
+
         return x

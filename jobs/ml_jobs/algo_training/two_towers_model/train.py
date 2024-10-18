@@ -22,7 +22,7 @@ from two_towers_model.utils.callbacks import MLFlowLogging
 
 N_EPOCHS = 100
 MIN_DELTA = 0.01
-LEARNING_RATE = 0.05
+LEARNING_RATE = 0.005
 VERBOSE = 1
 
 
@@ -58,12 +58,16 @@ def load_datasets(
     user_columns: list[str],
     item_columns: list[str],
     input_prediction_feature: str,
+    user_features_config: dict,
+    item_features_config: dict,
 ):
     """Loads and prepares training and validation datasets."""
     logger.info("Loading & processing datasets")
+
     train_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=training_table_name
     )[user_columns + item_columns].astype(str)
+
     validation_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=validation_table_name
     )[user_columns + item_columns].astype(str)
@@ -164,19 +168,24 @@ def log_mlflow_params(
 
 
 def train_two_tower_model(
-    train_dataset, validation_dataset, two_tower_model, validation_steps, run_uuid
+    train_dataset,
+    validation_dataset,
+    two_tower_model,
+    validation_steps,
+    run_uuid,
+    total_epochs=N_EPOCHS,
 ):
     """Trains the TwoTowersModel."""
     two_tower_model.fit(
         train_dataset,
-        epochs=N_EPOCHS,
+        epochs=total_epochs,
         validation_data=validation_dataset,
         validation_steps=validation_steps,
         callbacks=[
             tf.keras.callbacks.ReduceLROnPlateau(
                 monitor="val_loss",
                 factor=0.1,
-                patience=5,
+                patience=3,
                 min_delta=MIN_DELTA,
                 verbose=VERBOSE,
             ),
@@ -262,6 +271,8 @@ def train(
         user_columns=user_columns,
         item_columns=item_columns,
         input_prediction_feature=input_prediction_feature,
+        user_features_config=user_features_config,
+        item_features_config=item_features_config,
     )
 
     train_dataset, validation_dataset, user_dataset, item_dataset = build_tf_datasets(
@@ -286,12 +297,14 @@ def train(
         item_columns=item_columns,
         embedding_size=embedding_size,
     )
-    # compile first
+    # compile for ScaNN
+    two_tower_model.compile()
+    # then task + metrics
+    two_tower_model.add_task(item_dataset)
+    # compile again wit optimizer
     two_tower_model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE)
     )
-    # then task + metrics
-    two_tower_model.add_task(item_dataset)
 
     # fit
     train_two_tower_model(
@@ -301,6 +314,10 @@ def train(
         validation_steps=validation_steps,
         run_uuid=run_uuid,
     )
+    # Change metric for last evaluation
+    two_tower_model.add_task(item_dataset, use_scann=False)
+    two_tower_model.compile()
+    two_tower_model.evaluate(validation_dataset, steps=validation_steps)
 
     save_model_and_embeddings(
         user_dataset,

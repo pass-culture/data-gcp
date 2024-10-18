@@ -58,6 +58,13 @@ def preprocess(
         feature_layers=features["item_embedding_layers"],
         layer_types=["string", "text", "pretrained"],
     )
+
+    for c in integer_features:
+        raw_data[c] = raw_data[c].astype(int)
+
+    for c in string_features:
+        raw_data[c] = raw_data[c].astype(str)
+
     # This cover the case were 'user_id' is not a features of the model
     # Since we need user_id for evaluation purposes
     if "user_id" not in integer_features + string_features:

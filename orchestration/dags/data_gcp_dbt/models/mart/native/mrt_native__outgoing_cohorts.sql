@@ -57,8 +57,7 @@ with
         join
             {{ ref("mrt_global__booking") }} bookings on bookings.user_id = user.user_id
         group by deposit_expiration_date, user_id
-    )
-
+    ),
     consultations as (
         select
             u.deposit_expiration_date,

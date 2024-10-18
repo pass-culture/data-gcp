@@ -46,7 +46,7 @@ with
 select
     o.offer_id,
     o.offer_id_at_providers,
-    (o.offer_id_at_providers is not null) as is_synchronised,
+    (o.offer_last_provider_id is not null) as is_synchronised,
     o.offer_modified_at_last_provider_date,
     date(o.offer_creation_date) as offer_creation_date,
     o.offer_creation_date as offer_created_at,

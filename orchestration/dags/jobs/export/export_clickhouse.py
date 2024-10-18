@@ -86,6 +86,7 @@ for dag_name, dag_params in dags.items():
         catchup=False,
         start_date=datetime.datetime(2023, 12, 15),
         max_active_runs=1,
+        max_active_tasks=1,
         dagrun_timeout=datetime.timedelta(minutes=1440),
         user_defined_macros=macros.default,
         template_searchpath=DAG_FOLDER,

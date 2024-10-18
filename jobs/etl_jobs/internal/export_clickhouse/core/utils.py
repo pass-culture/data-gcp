@@ -17,6 +17,13 @@ def access_secret_data(project_id, secret_id, version_id="latest", default=None)
         return default
 
 
+CLICKHOUSE_USERNAME = access_secret_data(
+    PROJECT_NAME, f"clickhouse_username_{ENV_SHORT_NAME}", default="default"
+)
+CLICKHOUSE_PASSWORD = access_secret_data(
+    PROJECT_NAME, f"clickhouse-admin_password-{ENV_SHORT_NAME}"
+)
+
 CLICKHOUSE_CLIENT = clickhouse_connect.get_client(
     host=access_secret_data(
         PROJECT_NAME, f"clickhouse-svc_external_ip-{ENV_SHORT_NAME}"
@@ -24,10 +31,6 @@ CLICKHOUSE_CLIENT = clickhouse_connect.get_client(
     port=access_secret_data(
         PROJECT_NAME, f"clickhouse_port_{ENV_SHORT_NAME}", default=8123
     ),
-    username=access_secret_data(
-        PROJECT_NAME, f"clickhouse_username_{ENV_SHORT_NAME}", default="default"
-    ),
-    password=access_secret_data(
-        PROJECT_NAME, f"clickhouse-admin_password-{ENV_SHORT_NAME}"
-    ),
+    username=CLICKHOUSE_USERNAME,
+    password=CLICKHOUSE_PASSWORD,
 )

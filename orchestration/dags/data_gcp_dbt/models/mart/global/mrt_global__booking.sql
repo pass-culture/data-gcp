@@ -36,6 +36,7 @@ select
     b.venue_macro_density_label,
     b.venue_density_level,
     b.venue_academy_name,
+    b.venue_is_permanent,
     b.offerer_id,
     b.offerer_name,
     b.partner_id,
@@ -50,6 +51,8 @@ select
     b.venue_iris_internal_id,
     b.offer_url,
     b.isbn,
+    b.offer_type_label,
+    b.offer_sub_type_label,
     u.user_iris_internal_id,
     u.user_postal_code,
     u.user_department_code,
@@ -70,7 +73,7 @@ select
     u.user_is_in_qpv,
     u.user_is_unemployed,
     u.user_is_priority_public,
-    u.first_deposit_creation_date
+    u.first_deposit_creation_date,
 from {{ ref("int_global__booking") }} as b
 left join {{ ref("mrt_global__user") }} as u on u.user_id = b.user_id
 where deposit_type is not null and b.user_id is not null

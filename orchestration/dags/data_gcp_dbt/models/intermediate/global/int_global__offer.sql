@@ -82,6 +82,7 @@ select
     v.venue_density_label,
     v.venue_macro_density_label,
     v.venue_density_level,
+    v.venue_is_permanent,
     o.offerer_address_id,
     o.offer_publication_date,
     o.is_future_scheduled

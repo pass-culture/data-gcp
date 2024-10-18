@@ -174,9 +174,10 @@ def train_two_tower_model(
     validation_steps,
     run_uuid,
     total_epochs=N_EPOCHS,
+    initial_epoch=0,
 ):
     """Trains the TwoTowersModel."""
-    two_tower_model.fit(
+    return two_tower_model.fit(
         train_dataset,
         epochs=total_epochs,
         validation_data=validation_dataset,
@@ -198,6 +199,7 @@ def train_two_tower_model(
             MLFlowLogging(export_path=f"{TRAIN_DIR}/{ENV_SHORT_NAME}/{run_uuid}/"),
         ],
         verbose=VERBOSE,
+        initial_epoch=initial_epoch,
     )
 
 
@@ -307,7 +309,7 @@ def train(
     )
 
     # fit
-    train_two_tower_model(
+    results = train_two_tower_model(
         train_dataset,
         validation_dataset,
         two_tower_model,
@@ -316,7 +318,18 @@ def train(
     )
     # Change metric for last evaluation
     two_tower_model.add_task(item_dataset, use_scann=False)
-    two_tower_model.compile()
+    two_tower_model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE / 10)
+    )
+    train_two_tower_model(
+        train_dataset,
+        validation_dataset,
+        two_tower_model,
+        validation_steps=validation_steps,
+        run_uuid=run_uuid,
+        total_epochs=1,
+        initial_epoch=len(results.history["loss"]),
+    )
     two_tower_model.evaluate(validation_dataset, steps=validation_steps)
 
     save_model_and_embeddings(

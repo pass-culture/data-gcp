@@ -42,7 +42,7 @@ models:
         owner: "@team-data-engineering"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: raw_applicative_{{ target.name }}
-      backend:
+      applicative:
         +tags: "exclude_ci"
     clean:
       +meta:

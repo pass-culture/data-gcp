@@ -1,4 +1,4 @@
-{% snapshot snapshot__offer_backend %}
+{% snapshot snapshot_raw__offer %}
 
     {{
         config(
@@ -12,6 +12,6 @@
     }}
 
     select *
-    from {{ ref("raw_backend__offer") }}
+    from {{ ref("raw_applicative__offer_lite") }}
 
 {% endsnapshot %}

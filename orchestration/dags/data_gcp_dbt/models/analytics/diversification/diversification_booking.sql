@@ -36,4 +36,3 @@ from {{ ref("diversification_raw") }} as diversification_raw
 left join
     {{ ref("mrt_global__booking") }} as booking
     on booking.booking_id = diversification_raw.booking_id
-

@@ -8,5 +8,5 @@
 }}
 
 select *
-from {{ ref("snapshot__offer_backend") }}
+from {{ ref("snapshot_raw__offer") }}
 where {{ var("snapshot_filter") }}

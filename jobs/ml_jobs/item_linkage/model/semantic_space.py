@@ -1,7 +1,6 @@
 import typing as t
 
 import joblib
-from docarray import Document
 from lancedb import connect
 from sentence_transformers import SentenceTransformer
 
@@ -27,7 +26,7 @@ class SemanticSpace:
 
     def search(
         self,
-        vector: Document,
+        vector,
         offer_subcategory_id: str,
         edition: float,
         similarity_metric="dot",
@@ -36,13 +35,13 @@ class SemanticSpace:
     ) -> t.List[t.Dict]:
         results = (
             self.table.search(
-                vector.embedding,
-                vector_column_name=vector_column_name,
-                query_type="vector",
+                vector,
+                # vector_column_name=vector_column_name,
+                # query_type="vector",
             )
             .where(
-                f"edition = {edition} AND offer_subcategory_id='{offer_subcategory_id}'",
-                prefilter=True,
+                f"edition = '{edition}' AND offer_subcategory_id='{offer_subcategory_id}'",
+                prefilter=False,
             )
             .nprobes(N_PROBES)
             .refine_factor(REFINE_FACTOR)

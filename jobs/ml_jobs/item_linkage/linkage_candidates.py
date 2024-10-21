@@ -6,7 +6,8 @@ from docarray import Document
 from hnne import HNNE
 from loguru import logger
 from tqdm import tqdm
-
+import numpy as np
+from sklearn.preprocessing import normalize
 from constants import MODEL_PATH, NUM_RESULTS, UNKNOWN_PERFORMER
 from model.semantic_space import SemanticSpace
 from utils.common import (
@@ -57,8 +58,8 @@ def preprocess_data(chunk: pd.DataFrame, hnne_reducer: HNNE) -> pd.DataFrame:
         performer=lambda df: df["performer"].fillna(value=UNKNOWN_PERFORMER),
         edition=lambda df: df["offer_name"]
         .str.extract(extract_pattern, expand=False)
-        .astype(float)
-        .fillna(value=1),
+        .astype(str)
+        .fillna(value="1"),
         offer_name=lambda df: df["offer_name"]
         .str.replace(remove_pattern, "", regex=True)
         .str.strip(),
@@ -69,11 +70,16 @@ def preprocess_data(chunk: pd.DataFrame, hnne_reducer: HNNE) -> pd.DataFrame:
         )
     else:
         items_df["vector"] = list(preprocess_embeddings_by_chunk(chunk))
-    items_df["vector"] = (
-        items_df["vector"]
-        .map(lambda embedding_array: Document(embedding=embedding_array))
-        .tolist()
-    )
+    embeddings_list = items_df['vector'].tolist()
+
+    # Convert embeddings to a NumPy array
+    embeddings_array = np.array(embeddings_list)
+
+    # Normalize the embeddings
+    normalized_embeddings = normalize(embeddings_array, norm='l2')
+
+    # Update the DataFrame with normalized embeddings
+    items_df['vector'] = list(normalized_embeddings)
     return items_df
 
 
@@ -93,13 +99,13 @@ def generate_semantic_candidates(
     linkage = []
     logger.info(f"Generating semantic candidates for {len(data)} items...")
     for index, row in tqdm(
-        data.iterrows(), total=data.shape[0], desc="Processing rows", mininterval=600
+        data.iterrows(), total=data.shape[0], desc="Processing rows", mininterval=60
     ):
         result_df = model.search(
             vector=row.vector,
             offer_subcategory_id=row.offer_subcategory_id,
             edition=row.edition,
-            similarity_metric="dot",
+            similarity_metric="L2",
             n=NUM_RESULTS,
             vector_column_name="vector",
         ).assign(candidates_id=str(uuid.uuid4()), item_id_candidate=row.item_id)

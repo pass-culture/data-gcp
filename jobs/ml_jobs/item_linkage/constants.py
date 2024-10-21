@@ -17,7 +17,7 @@ MODEL_PATH = "metadata/vector"
 NUM_RESULTS = 5  # Number of results to retrieve
 LOGGING_INTERVAL = 50000  # Interval for logging progress
 
-N_PROBES = 20
+N_PROBES = 5
 REFINE_FACTOR = 10
 
 FEATURES = {

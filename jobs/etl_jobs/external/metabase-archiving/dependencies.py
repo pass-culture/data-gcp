@@ -96,7 +96,7 @@ def get_table_infos(metabase):
     for table_info in metabase.get_table():
         info = {}
         info["table_id"] = table_info["id"]
-        info["schema"] = table_info["schema"]
+        info["table_schema"] = table_info["schema"]
         info["table_name"] = table_info["name"]
 
         table_infos[i] = info
@@ -120,6 +120,11 @@ def get_native_dependencies(cards_list, tables_df):
         sql_lines = sql_lines.replace("`", "")
         table_dependency = re.findall(regex, sql_lines)
         table_dependency = list(set(table_dependency)) + list(set(table_dependency))
+        if len(table_dependency) == 1:
+            table = table_dependency[0]
+            match_schema = re.search(r"(from|join)\s+(\w+)", table)
+            if match_schema:
+                table_schema = match_schema.group(2)
 
         dependency = dict()
         dependency["card_id"] = card_id
@@ -127,6 +132,7 @@ def get_native_dependencies(cards_list, tables_df):
         dependency["card_type"] = card_type
         dependency["card_owner"] = card_owner
         dependency["table_name"] = [table.split(".")[-1] for table in table_dependency]
+        dependency["table_schema"] = table_schema
 
         dependencies_native[i] = dependency
         i += 1
@@ -135,7 +141,7 @@ def get_native_dependencies(cards_list, tables_df):
         pd.DataFrame.from_dict(dependencies_native, orient="index")
         .explode("table_name")
         .reset_index(drop=True)
-        .merge(tables_df, how="left", on="table_name")
+        .merge(tables_df, how="left", on=["table_schema", "table_name"])
     )
 
     return dependencies_native_df

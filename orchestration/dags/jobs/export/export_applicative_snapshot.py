@@ -37,6 +37,7 @@ SNAPSHOT_TABLES = get_tables_config_dict(
     PATH=DAG_FOLDER + "/" + SNAPSHOT_MODELS_PATH,
     BQ_DATASET=BIGQUERY_INT_RAW_DATASET,
     is_source=True,
+    dbt_alias=True,
 )
 
 dag_config = {
@@ -87,6 +88,7 @@ gce_instance_start = StartGCEOperator(
     instance_name=GCE_INSTANCE,
     task_id="gce_start_task",
     dag=dag,
+    preemptible=False,
 )
 fetch_install_code = InstallDependenciesOperator(
     task_id="fetch_install_code",
@@ -99,12 +101,14 @@ fetch_install_code = InstallDependenciesOperator(
 )
 with TaskGroup(group_id="applicatives_to_gcs", dag=dag) as tables_to_gcs:
     for table_name, bq_config in SNAPSHOT_TABLES.items():
+        alias = bq_config["table_alias"]
+        dataset = bq_config["source_dataset"]
         table_to_gcs = SSHGCEOperator(
             task_id=f"snapshot_to_gcs_{table_name}",
             instance_name=GCE_INSTANCE,
             base_dir=BASE_PATH,
             environment=dag_config,
-            command=f"python main.py {table_name} {bq_config['source_table']} {bq_config['source_dataset']} {GCP_PROJECT_ID} {DATA_GCS_BUCKET_NAME}",
+            command=f"python main.py --table-name {alias} --table-dataset {dataset} --project-id {GCP_PROJECT_ID} --gcs-bucket {DATA_GCS_BUCKET_NAME}",
             do_xcom_push=False,
             installer="uv",
             dag=dag,

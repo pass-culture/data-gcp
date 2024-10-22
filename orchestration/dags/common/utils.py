@@ -288,7 +288,7 @@ def decode_output(task_id, key, **kwargs):
     return decoded_output
 
 
-def get_tables_config_dict(PATH, BQ_DATASET, is_source=False):
+def get_tables_config_dict(PATH, BQ_DATASET, is_source=False, dbt_alias=False):
     """
     Generates a dictionary configuration for tables based on SQL files in a given directory.
 
@@ -320,4 +320,7 @@ def get_tables_config_dict(PATH, BQ_DATASET, is_source=False):
                 tables_config[table_name]["destination_table"] = (
                     f"applicative_database_{table_name}"
                 )
+    for table_name, table_config in tables_config.items():
+        if dbt_alias:
+            table_config["table_alias"] = table_name.split("__")[-1]
     return tables_config

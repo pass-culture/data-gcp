@@ -34,6 +34,7 @@ select
     s.venue_macro_density_label,
     s.venue_density_level,
     s.venue_academy_name,
+    s.venue_is_permanent,
     s.offerer_id,
     s.offerer_name,
     s.partner_id,
@@ -52,6 +53,9 @@ select
     ) as user_booking_rank,
     s.venue_iris_internal_id,
     s.offer_url,
-    s.isbn
+    s.isbn,
+    o.offer_type_label,
+    o.offer_sub_type_label
 from {{ ref("int_applicative__booking") }} as b
 left join {{ ref("int_global__stock") }} as s on s.stock_id = b.stock_id
+left join {{ ref("int_applicative__offer_metadata") }} as o on o.offer_id = s.offer_id

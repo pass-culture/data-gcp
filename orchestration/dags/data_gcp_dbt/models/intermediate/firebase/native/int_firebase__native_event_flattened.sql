@@ -74,6 +74,7 @@ with
                         "searchCategories",
                         "firebase_screen",
                         "firebase_previous_screen",
+                        "fromMultivenueOfferId",
                         "pageName",
                         "offerId",
                         "query",

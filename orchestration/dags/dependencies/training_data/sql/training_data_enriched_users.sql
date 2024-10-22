@@ -1,8 +1,8 @@
 with
     base as (
-        select user_id, offer_subcategoryid, sum(count) as sub_cat_count
+        select user_id, offer_subcategory_id, sum(count) as sub_cat_count
         from `{{ bigquery_clean_dataset }}`.`training_data_aggregated_users`
-        group by user_id, offer_subcategoryid
+        group by user_id, offer_subcategory_id
     ),
     user_total as (
         select user_id, sum(count) as total_count
@@ -12,7 +12,7 @@ with
     user_subcat_prop as (
         select
             b.user_id,
-            b.offer_subcategoryid,
+            b.offer_subcategory_id,
             ut.total_count,
             b.sub_cat_count,
             safe_divide(b.sub_cat_count, ut.total_count) as sub_cat_prop
@@ -21,7 +21,7 @@ with
     )
 select
     user_id,
-    offer_subcategoryid,
+    offer_subcategory_id,
     sub_cat_prop,
     sub_cat_count,
     total_count,

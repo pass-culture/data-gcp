@@ -162,7 +162,7 @@ def save_pca_representation(
     embeddings = loaded_model.item_layer.layers[1].get_weights()[0][1:]
 
     pca_out = PCA(n_components=2).fit_transform(embeddings)
-    categories = item_data["offer_categoryId"].unique().tolist()
+    categories = item_data["offer_category_id"].unique().tolist()
     item_representation = pd.DataFrame(
         {
             "item_id": item_ids,
@@ -174,7 +174,7 @@ def save_pca_representation(
     colormap = plt.cm.tab20.colors
     fig, ax = plt.subplots(1, 1, figsize=(15, 10))
     for idx, category in enumerate(categories):
-        data = item_representation.loc[lambda df: df["offer_categoryId"] == category]
+        data = item_representation.loc[lambda df: df["offer_category_id"] == category]
         max_plots = min(data.shape[0], 10000)
         data = data.sample(n=max_plots)
         ax.scatter(
@@ -187,8 +187,8 @@ def save_pca_representation(
         )
         logger.info(f"Plotting {len(data)} points for category {category}")
         fig_sub, ax_sub = plt.subplots(1, 1, figsize=(15, 10))
-        for idx_sub, subcategory in enumerate(data["offer_subcategoryid"].unique()):
-            data_sub = data.loc[lambda df: df["offer_subcategoryid"] == subcategory]
+        for idx_sub, subcategory in enumerate(data["offer_subcategory_id"].unique()):
+            data_sub = data.loc[lambda df: df["offer_subcategory_id"] == subcategory]
             ax_sub.scatter(
                 data_sub["x"].values,
                 data_sub["y"].values,

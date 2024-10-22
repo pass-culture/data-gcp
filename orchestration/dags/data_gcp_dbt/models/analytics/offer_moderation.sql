@@ -20,7 +20,7 @@ with
         select
             offerer_id,
             {{ target_schema }}.humanize_id(offerer_id) as offerer_humanized_id
-        from {{ ref("offerer") }}
+        from {{ source("raw", "applicative_database_offerer") }}
         where offerer_id is not null
     ),
 
@@ -272,15 +272,17 @@ left join
     {{ source("seed", "region_department") }} region_dept
     on region_dept.num_dep = venue.venue_department_code
 left join
-    {{ ref("venue_label") }} venue_label
+    {{ source("raw", "applicative_database_venue_label") }} venue_label
     on venue_label.venue_label_id = venue.venue_label_id
 left join
-    {{ ref("offerer") }} offerer on offerer.offerer_id = venue.venue_managing_offerer_id
+    {{ source("raw", "applicative_database_offerer") }} offerer
+    on offerer.offerer_id = venue.venue_managing_offerer_id
 left join offerer_humanized_id on offerer_humanized_id.offerer_id = offerer.offerer_id
 left join {{ ref("siren_data") }} siren_data on siren_data.siren = offerer.offerer_siren
 left join offerer_tags on offerer_tags.offerer_id = offerer.offerer_id
 left join
-    {{ ref("venue_contact") }} venue_contact on venue_contact.venue_id = venue.venue_id
+    {{ source("raw", "applicative_database_venue_contact") }} venue_contact
+    on venue_contact.venue_id = venue.venue_id
 left join
     offer_humanized_id as offer_humanized_id
     on offer_humanized_id.offer_id = offer.offer_id

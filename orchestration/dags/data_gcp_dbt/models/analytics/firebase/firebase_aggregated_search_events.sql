@@ -163,7 +163,8 @@ with
             search_offer_is_duo_filter,
             search_native_categories_filter,
             search_accessibility_filter,
-            user_location_type
+            user_location_type,
+            search_query_input_is_generic
         from {{ ref("int_firebase__native_event") }}
         where
             event_name = 'PerformSearch'
@@ -252,29 +253,6 @@ with
                 partition by unique_session_id order by first_timestamp
             )
             is not null as made_another_search,
-            case
-                when
-                    exists (
-                        select 1
-                        from {{ source("raw", "subcategories") }} sc
-                        where
-                            lower(asd.query_input)
-                            like concat('%', lower(sc.category_id), '%')
-                            or lower(asd.query_input)
-                            like concat('%', lower(sc.id), '%')
-                    )
-                    or exists (
-                        select 1
-                        from {{ source("seed", "macro_rayons") }} mr
-                        where
-                            lower(asd.query_input)
-                            like concat('%', lower(mr.macro_rayon), '%')
-                            or lower(asd.query_input)
-                            like concat('%', lower(mr.rayon), '%')
-                    )
-                then true
-                else false
-            end as search_query_input_is_generic,
             bpsi.nb_offers_booked,
             bpsi.total_diversification
         from agg_search_data asd

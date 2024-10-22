@@ -1,12 +1,29 @@
 {
     "preprocess_features_type": {
-        "text_features": ["offer_name", "offer_description", "rayon", "macro_rayon","offer_subcategoryid"],
-        "numerical_features": ["stock_price"],
-        "embedding_features": ["image_embedding"]
+        "text_features": [
+            "offer_name",
+            "offer_description",
+            "rayon",
+            "macro_rayon",
+            "offer_subcategory_id"
+        ],
+        "numerical_features": [
+            "stock_price"
+        ],
+        "embedding_features": [
+            "image_embedding"
+        ]
     },
     "catboost_features_types": {
-        "cat_features": ["offer_subcategoryid", "rayon", "macro_rayon"],
-        "text_features": ["offer_name", "offer_description"],
+        "cat_features": [
+            "offer_subcategory_id",
+            "rayon",
+            "macro_rayon"
+        ],
+        "text_features": [
+            "offer_name",
+            "offer_description"
+        ],
         "numerical_features": [
             "stock_price"
         ],

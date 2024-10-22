@@ -281,7 +281,8 @@ left join offerer_humanized_id on offerer_humanized_id.offerer_id = offerer.offe
 left join {{ ref("siren_data") }} siren_data on siren_data.siren = offerer.offerer_siren
 left join offerer_tags on offerer_tags.offerer_id = offerer.offerer_id
 left join
-    {{ ref("venue_contact") }} venue_contact on venue_contact.venue_id = venue.venue_id
+    {{ source("raw", "applicative_database_venue_contact") }} venue_contact
+    on venue_contact.venue_id = venue.venue_id
 left join
     offer_humanized_id as offer_humanized_id
     on offer_humanized_id.offer_id = offer.offer_id

@@ -1,6 +1,0 @@
-google-cloud-storage==2.16.0
-pandas==2.2.0
-pyarrow==16.1.0
-pytest==8.2.2
-typer==0.12.3
-pandas-gbq==0.24.0

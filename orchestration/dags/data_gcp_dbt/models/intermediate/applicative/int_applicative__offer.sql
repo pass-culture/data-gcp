@@ -64,7 +64,6 @@ select
         "https://passculture.pro/offre/individuelle/", o.offer_id, "/informations"
     ) as passculture_pro_url,
     concat("https://passculture.app/offre/", o.offer_id) as webapp_url,
-    o.offer_duration_minutes,
     o.offer_is_national as is_national,
     o.offer_extra_data,
     o.offer_is_duo,

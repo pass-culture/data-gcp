@@ -14,7 +14,7 @@ select
     enroffer.type,
     enroffer.venue_id,
     enroffer.venue_name,
-from `{{ bigquery_clean_dataset }}`.`applicative_database_booking` booking
+from `{{ bigquery_raw_dataset }}`.`applicative_database_booking` booking
 inner join
     `{{ bigquery_clean_dataset }}`.`applicative_database_stock` stock
     on booking.stock_id = stock.stock_id

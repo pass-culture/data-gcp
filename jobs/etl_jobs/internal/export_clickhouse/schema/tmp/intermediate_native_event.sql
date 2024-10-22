@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS {{ dataset }}.{{ tmp_table_name }} ON cluster default
     ENGINE = MergeTree
     PARTITION BY partition_date
-    ORDER BY event_name, IFNULL(venue_id, 'unknown_venue_id') ,IFNULL(offer_id, 'unknown_offer_id')
+    ORDER BY (event_name, IFNULL(venue_id, 'unknown_venue_id') ,IFNULL(offer_id, 'unknown_offer_id'))
     SETTINGS storage_policy='gcs_main'
 
 AS

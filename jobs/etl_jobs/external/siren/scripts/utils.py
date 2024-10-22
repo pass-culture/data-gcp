@@ -9,6 +9,7 @@ ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "")
 BIGQUERY_CLEAN_DATASET = os.environ.get(
     "BIGQUERY_CLEAN_DATASET", f"clean_{ENV_SHORT_NAME}"
 )
+BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET", f"raw_{ENV_SHORT_NAME}")
 BUCKET_NAME = f"data-bucket-{ENV_SHORT_NAME}"
 
 

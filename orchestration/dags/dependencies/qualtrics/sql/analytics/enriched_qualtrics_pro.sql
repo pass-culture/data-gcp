@@ -178,8 +178,8 @@ left join
     `{{ bigquery_clean_dataset }}.applicative_database_venue` venue
     on ir_per_user.venue_id = venue.venue_id
 left join
-    `{{ bigquery_clean_dataset }}.applicative_database_offerer` as offerer
+    `{{ bigquery_raw_dataset }}.applicative_database_offerer` as offerer
     on venue.venue_managing_offerer_id = offerer.offerer_id
 left join
-    `{{ bigquery_clean_dataset }}.applicative_database_venue_label` as venue_label
+    `{{ bigquery_raw_dataset }}.applicative_database_venue_label` as venue_label
     on venue_label.venue_label_id = venue.venue_label_id

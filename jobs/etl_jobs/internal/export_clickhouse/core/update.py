@@ -12,24 +12,22 @@ def update_incremental(dataset_name: str, table_name: str, tmp_table_name: str) 
     )
     if len(partitions_to_update) > 0:
         partitions_to_update = [
-            x for x in partitions_to_update["partition_date"].values
+            np.datetime64(date, "D").astype(datetime).strftime("%Y-%m-%d")
+            for date in partitions_to_update["partition_date"].values
         ]
         print(
             f"Will update {len(partitions_to_update)} partition of {dataset_name}.{table_name}. {partitions_to_update}"
         )
         for date in partitions_to_update:
-            formatted_date = (
-                np.datetime64(date, "D").astype(datetime).strftime("%Y-%m-%d")
-            )
             total_rows = (
                 CLICKHOUSE_CLIENT.command(
-                    f"SELECT count(*) FROM tmp.{tmp_table_name} WHERE partition_date = '{formatted_date}'"
+                    f"SELECT count(*) FROM tmp.{tmp_table_name} WHERE partition_date = '{date}'"
                 )
                 | 0
             )
             previous_rows = (
                 CLICKHOUSE_CLIENT.command(
-                    f"SELECT count(*) FROM {dataset_name}.{table_name} WHERE partition_date = '{formatted_date}'"
+                    f"SELECT count(*) FROM {dataset_name}.{table_name} WHERE partition_date = '{date}'"
                 )
                 | 0
             )
@@ -37,7 +35,7 @@ def update_incremental(dataset_name: str, table_name: str, tmp_table_name: str) 
                 print(
                     f"Updating partiton_date={date} for table {table_name}. Count {total_rows} (vs {previous_rows})"
                 )
-                update_sql = f""" ALTER TABLE {dataset_name}.{table_name} ON cluster default REPLACE PARTITION '{formatted_date}' FROM tmp.{tmp_table_name}"""
+                update_sql = f""" ALTER TABLE {dataset_name}.{table_name} ON cluster default REPLACE PARTITION '{date}' FROM tmp.{tmp_table_name}"""
                 print(update_sql)
                 CLICKHOUSE_CLIENT.command(update_sql)
     print("Done updating. Removing temporary table.")

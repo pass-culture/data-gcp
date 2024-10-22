@@ -1,25 +1,26 @@
 import datetime
 
+import pandas as pd
 import typer
-from pandas import pd
 
 app = typer.Typer()
 
 
 @app.command()
-def main(
+def run(
     table_name: str = typer.Option(),
-    table_schema: str = typer.Option(),
+    table_dataset: str = typer.Option(),
     project_id: str = typer.Option(),
     gcs_bucket: str = typer.Option(),
 ) -> None:
     df = pd.read_gbq(
-        f"SELECT *,exclude FROM {table_schema}.{table_name};",
-        project_id="my_project",
+        f"""SELECT * except(dbt_scd_id,dbt_updated_at,dbt_valid_from,dbt_valid_to)
+        FROM {table_dataset}.{table_name};""",
+        project_id=project_id,
     )
-    _now = datetime.today()
+    _now = datetime.datetime.now()
     yyyymmdd = _now.strftime("%Y%m%d")
-    df["snapshot_date"] = yyyymmdd
+    df["import_date"] = yyyymmdd
     output_file_path = (
         f"gs://{gcs_bucket}/historization/applicative/{table_name}/{yyyymmdd}/*.parquet"
     )

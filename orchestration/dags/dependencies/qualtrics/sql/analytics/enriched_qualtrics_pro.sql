@@ -30,7 +30,7 @@ with
             booking.venue_id,
             count(distinct booking_id) individual_bookings,
             max(booking_creation_date) last_individual_booking
-        from `{{ bigquery_clean_dataset }}.applicative_database_booking` as booking
+        from `{{ bigquery_raw_dataset }}.applicative_database_booking` as booking
         join
             ir_per_user
             on ir_per_user.venue_id = booking.venue_id

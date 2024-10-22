@@ -85,7 +85,7 @@ with
             {{ ref("invoice") }} invoice
             on invoice_cashflow.invoice_id = invoice.invoice_id
         left join
-            {{ ref("invoice_line") }} invoice_line
+            {{ source("raw", "applicative_database_invoice_line") }} invoice_line
             on invoice.invoice_id = invoice_line.invoice_id
         where not invoice.invoice_reference like '%.2'
     ),
@@ -169,7 +169,7 @@ with
             {{ ref("invoice") }} invoice
             on invoice_cashflow.invoice_id = invoice.invoice_id
         left join
-            {{ ref("invoice_line") }} invoice_line
+            {{ source("raw", "applicative_database_invoice_line") }} invoice_line
             on invoice.invoice_id = invoice_line.invoice_id
         where not invoice.invoice_reference like '%.2'
     )

@@ -1,7 +1,7 @@
-CREATE OR REPLACE TABLE analytics.dev_daily_aggregated_offer_event ON cluster default
+CREATE OR REPLACE TABLE analytics.daily_aggregated_offer_event ON cluster default
     ENGINE = SummingMergeTree()
-    PARTITION BY toYYYYMM(event_date)
-    ORDER BY (venue_id, offer_id, event_date)
+    PARTITION BY event_date
+    ORDER BY (offer_id, event_date)
     SETTINGS storage_policy = 'gcs_main'
 AS
 SELECT
@@ -13,6 +13,5 @@ FROM
 WHERE
     event_name = 'ConsultOffer'
 GROUP BY
-    venue_id,
     offer_id,
     event_date

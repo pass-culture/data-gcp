@@ -1,12 +1,12 @@
 CREATE TABLE IF NOT EXISTS {{ dataset }}.{{ tmp_table_name }} ON cluster default
     ENGINE = MergeTree
-    PARTITION BY toDate(IFNULL(toDateTime(partition_date), '1970-01-01'))
+    PARTITION BY cast(partition_date as Date)
     ORDER BY (event_name, IFNULL(venue_id, 'unknown_venue_id') ,IFNULL(offer_id, 'unknown_offer_id'))
     SETTINGS storage_policy='gcs_main'
 
 AS
     SELECT
-        toDate(IFNULL(toDateTime(partition_date), '1970-01-01')) as partition_date,
+        cast(partition_date as Date) as partition_date,
         cast(event_name as String) as event_name,
         cast(event_timestamp AS Nullable(DateTime)) AS event_timestamp,
         cast(offer_id as Nullable(String)) as offer_id,

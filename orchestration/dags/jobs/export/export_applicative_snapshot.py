@@ -12,6 +12,7 @@ from common.operators.gce import (
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
+    StopGCEOperator,
 )
 from common.utils import (
     delayed_waiting_operator,
@@ -27,12 +28,7 @@ from airflow.utils.task_group import TaskGroup
 GCE_INSTANCE = f"historize-applicative-database-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/export_applicative"
 
-DEV_BRANCH = "DE-577/migration-history-snapshot/gcs-historization-applicative"
-
-
 SNAPSHOT_MODELS_PATH = "data_gcp_dbt/models/intermediate/raw"
-
-
 SNAPSHOT_TABLES = get_tables_config_dict(
     PATH=DAG_FOLDER + "/" + SNAPSHOT_MODELS_PATH,
     BQ_DATASET=BIGQUERY_INT_RAW_DATASET,
@@ -67,7 +63,7 @@ dag = DAG(
     tags=["VM"],
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else DEV_BRANCH,
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
     },
@@ -115,13 +111,12 @@ with TaskGroup(group_id="applicatives_to_gcs", dag=dag) as tables_to_gcs:
         )
 
 
-# gce_instance_stop = StopGCEOperator(
-#     task_id="gce_stop_task",
-#     instance_name=GCE_INSTANCE,
-#     dag=dag,
-# )
+gce_instance_stop = StopGCEOperator(
+    task_id="gce_stop_task",
+    instance_name=GCE_INSTANCE,
+    dag=dag,
+)
 
-gce_instance_stop = DummyOperator(task_id="fake_gce_stop_task_for_dev", dag=dag)
 (
     start
     >> wait

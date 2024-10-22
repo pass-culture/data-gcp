@@ -24,9 +24,9 @@ select
     event_hour,
     event_day,
     event_month,
-    offer_item_id.item_id as item_id,
-    offer.offer_subcategory_id as offer_subcategory_id,
-    subcategories.category_id as offer_category_id,
+    enroffer.item_id as item_id,
+    enroffer.offer_subcategory_id as offer_subcategory_id,
+    enroffer.offer_category_id as offer_category_id,
     enroffer.genres,
     enroffer.rayon,
     enroffer.type,
@@ -34,12 +34,6 @@ select
     enroffer.venue_name,
 from events
 join
-    `{{ bigquery_clean_dataset }}`.`applicative_database_offer` offer
-    on offer.offer_id = events.offer_id
-inner join
-    `{{ bigquery_raw_dataset }}`.`subcategories` subcategories
-    on offer.offer_subcategory_id = subcategories.id
-inner join
     `{{ bigquery_analytics_dataset }}`.`global_offer` enroffer
     on enroffer.offer_id = events.offer_id
 inner join

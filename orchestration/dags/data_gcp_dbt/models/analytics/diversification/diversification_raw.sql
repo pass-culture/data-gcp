@@ -90,7 +90,9 @@ with
             -- création d'une extra catégorie pour observer la diversification en
             -- genre au sein d'une catégorie(style de musique, genre de film etc...)
             case
-                when offer_type_label is null then venue_id else offer_type_label
+                when offer_metadata.offer_type_label is null
+                then venue_id
+                else offer_metadata.offer_type_label
             end as extra_category,
             -- attribuer un numéro de réservation
             row_number() over (

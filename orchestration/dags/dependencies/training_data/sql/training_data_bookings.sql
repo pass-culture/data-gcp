@@ -18,7 +18,6 @@ from `{{ bigquery_clean_dataset }}`.`applicative_database_booking` booking
 join
     `{{ bigquery_analytics_dataset }}`.`global_offer` enroffer
     on enroffer.offer_id = booking.offer_id
-
 inner join
     `{{ bigquery_analytics_dataset }}`.`global_user` enruser
     on enruser.user_id = booking.user_id

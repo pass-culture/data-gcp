@@ -15,17 +15,94 @@ find_dotenv() {
 # Find and load the .env file
 DOTENV_FILE=$(find_dotenv)
 if [[ -n "$DOTENV_FILE" ]]; then
-  export $(cat "$DOTENV_FILE" | xargs)
+  # Load only valid environment variables from the .env file, ignoring comments and invalid lines
+  export $(grep -v '^#' "$DOTENV_FILE" | xargs)
   echo "Loaded environment variables from $DOTENV_FILE"
 else
-  echo "Error: .env file not found in current or parent directories."
+  echo "Error: .env.buckets file not found in current or parent directories."
   exit 1
 fi
+
+# Define the dbt alias or function
+dbt() {
+  # Check if the first argument is one of 'run' or 'test'
+  if [[ "$1" == "run" || "$1" == "test" ]]; then
+    echo "Invoking dbt_hook for $1 command."
+    # Call dbt_hook and pass all the original arguments
+    dbt_hook "$@"
+  elif [[ "$1" == --sync-artifacts=* ]]; then
+    echo "Invoking dbt_sync_artifacts for sync-artifacts."
+    # Extract the environment from the argument
+    DEFER_LOCAL_RUN_TO="${1#*=}"
+    # Call dbt_sync_artifacts with the extracted environment
+    dbt_sync_artifacts "$DEFER_LOCAL_RUN_TO"
+  elif [[ "$1" == "--sync-artifacts" ]]; then
+    echo "Invoking dbt_sync_artifacts for all environments."
+    # Call dbt_sync_artifacts for each environment
+    for env in dev stg prod; do
+      dbt_sync_artifacts "$env"
+    done
+  else
+    echo "Skipping dbt_hook for $1 command."
+    command dbt "$@"
+  fi
+}
+
+## dbt sync artifacts function
+dbt_sync_artifacts() {
+  local DEFER_LOCAL_RUN_TO="$1"
+
+  # Determine the GCS bucket based on DEFER_LOCAL_RUN_TO
+  case "$DEFER_LOCAL_RUN_TO" in
+    dev)
+      GCS_BUCKET_PATH="gs://${COMPOSER_BUCKET_DEV}/data/target"
+      ;;
+    stg)
+      GCS_BUCKET_PATH="gs://${COMPOSER_BUCKET_STG}/data/target"
+      ;;
+    prod)
+      GCS_BUCKET_PATH="gs://${COMPOSER_BUCKET_PROD}/data/target"
+      ;;
+    *)
+      echo "Unknown environment: $DEFER_LOCAL_RUN_TO. Skipping artifact pulling."
+      return 1
+      ;;
+  esac
+
+  # Ensure target directory exists
+  TARGET_DIR="target"
+  if [ ! -d "$TARGET_DIR" ]; then
+    echo "Target directory does not exist. Creating $TARGET_DIR"
+    mkdir -p "$TARGET_DIR"
+  fi
+
+  # Ensure the environment-specific artifacts directory exists
+  ARTIFACTS_DIR="${TARGET_DIR}/${DEFER_LOCAL_RUN_TO}-run-artifacts"
+  if [ ! -d "$ARTIFACTS_DIR" ]; then
+    echo "${DEFER_LOCAL_RUN_TO}-run-artifacts directory does not exist. Creating $ARTIFACTS_DIR"
+    mkdir -m 777 "$ARTIFACTS_DIR"
+  else
+    echo "${DEFER_LOCAL_RUN_TO}-run-artifacts directory already exists."
+  fi
+
+  # Pull only files from the remote GCS bucket
+  echo "Pulling files from $GCS_BUCKET_PATH to $ARTIFACTS_DIR"
+  gsutil cp "$GCS_BUCKET_PATH/manifest.json" "$ARTIFACTS_DIR/manifest.json"
+  gsutil cp "$GCS_BUCKET_PATH/run_results.json" "$ARTIFACTS_DIR/run_results.json"
+
+  # Check if the gsutil command succeeded
+  if [ $? -eq 0 ]; then
+    echo "Artifacts pulled successfully for $DEFER_LOCAL_RUN_TO."
+  else
+    echo "Failed to pull artifacts from $GCS_BUCKET_PATH for $DEFER_LOCAL_RUN_TO."
+    return 1
+  fi
+}
 
 ## dbt deferral hook
 dbt_hook() {
   # Set default values for flags
-  DEFER_LOCAL_RUN_TO="stg"
+  DEFER_LOCAL_RUN_TO="dev"
   REFRESH_STATE=false
   SYNC_ARTIFACTS=false
   SYNC_ENVIRONMENTS=("dev" "stg" "prod")
@@ -47,11 +124,7 @@ dbt_hook() {
         SYNC_ARTIFACTS=true
         SYNC_ARG="${arg#*=}"
 
-        # Check if the user passed "all"
-        if [[ "$SYNC_ARG" == "all" ]]; then
-          echo "Warning: '--sync-artifacts=all' is redundant. Use '--sync-artifacts' instead."
-          SYNC_ENVIRONMENTS=("dev" "stg" "prod")  # Set to default environments
-        elif [[ "$SYNC_ARG" == "dev" || "$SYNC_ARG" == "stg" || "$SYNC_ARG" == "prod" ]]; then
+        if [[ "$SYNC_ARG" == "dev" || "$SYNC_ARG" == "stg" || "$SYNC_ARG" == "prod" ]]; then
           SYNC_ENVIRONMENTS=("$SYNC_ARG")  # Use the specific environment provided
         else
           echo "Error: Invalid environment specified with --sync-artifacts. Allowed values are 'all', 'dev', 'stg', 'prod'."
@@ -61,14 +134,14 @@ dbt_hook() {
     esac
   done
 
-# Check if --sync-artifacts is used alongside other arguments
-if [[ "$SYNC_ARTIFACTS" == true ]]; then
-  if [[ "$#" -gt 1 ]]; then
-    echo "Error: The --sync-artifacts flag must be used alone. No other arguments are allowed."
-    echo "Hint: If you want to refresh artifacts and run a dbt command, use --refresh-state instead."
-    return 1  # Cancel the script
+  # Check if --sync-artifacts is used alongside other arguments
+  if [[ "$SYNC_ARTIFACTS" == true ]]; then
+    if [[ "$#" -gt 1 ]]; then
+      echo "Error: The --sync-artifacts flag must be used alone. No other arguments are allowed."
+      echo "Hint: If you want to refresh artifacts and run a dbt command, use --refresh-state instead."
+      return 1  # Cancel the script
+    fi
   fi
-fi
 
   # Set project directory (current directory by default)
   PROJECT_DIR=$(pwd)
@@ -93,6 +166,7 @@ fi
     return 1
   fi
   DBT_PROFILES_DIR=$DBT_PROJECT_DIR
+
   # Function to pull artifacts from a specific environment (manifest and run_results)
   pull_artifacts() {
     local env="$1"
@@ -215,19 +289,5 @@ fi
   command dbt "${COMBINED_ARGS[@]}"
 }
 
-# dbt alias (calls dbt_hook for run and test commands)
-dbt() {
-  # Check if the first argument is one of 'run' or 'test'
-  if [[ "$1" == "run" || "$1" == "test" ]]; then
-    echo "Invoking dbt_hook for $1 command."
-    # Call dbt_hook and pass all the original arguments
-    dbt_hook "$@"
-  elif [[ "$1" == "--sync-artifacts" || "$1" == --sync-artifacts=* ]] ; then
-    echo "Invoking dbt_hook for sync-artifacts."
-    # Call dbt_hook and pass all the original arguments
-    dbt_hook "$@"
-  else
-    echo "Skipping dbt_hook for $1 command."
-    command dbt "$@"
-  fi
-}
+# Call the dbt function with the provided arguments
+dbt "$@"

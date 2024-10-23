@@ -11,6 +11,8 @@ from utils.mlflow import (
 
 METRICS_PER_DATASET_CSV_FILENAME = "metrics_per_dataset.csv"
 METRICS_PER_DATASET_GRAPH_FILENAME = "metrics_per_dataset.png"
+GLOBAL_METRICS_FILENAME = "global_metrics.csv"
+
 
 MERGE_COLUMNS = ["artist_name", "offer_category_id", "is_synchronised", "artist_type"]
 
@@ -120,6 +122,32 @@ def project_linked_artists_on_test_sets(
     ).sort_values(by=["dataset_name", "cluster_id"])
 
 
+def get_wiki_matching_metrics(artists_df: pd.DataFrame) -> pd.DataFrame:
+    stats_dict = {}
+
+    def _get_stats_per_df(input_df: pd.DataFrame) -> dict:
+        return {
+            "weighted_wiki_matched_perc": round(
+                100
+                * input_df.loc[lambda df: df.wiki_id.notna()].total_booking_count.sum()
+                / input_df.total_booking_count.sum(),
+                2,
+            ),
+            "wiki_matched_perc": round(
+                100 * input_df.wiki_id.notna().sum() / len(input_df),
+                2,
+            ),
+            "artist_name_count": len(input_df),
+            "total_booking_count": input_df.total_booking_count.sum(),
+        }
+
+    stats_dict["TOTAL"] = _get_stats_per_df(artists_df)
+    for group_name, group_df in artists_df.groupby("offer_category_id"):
+        stats_dict[group_name] = _get_stats_per_df(group_df)
+
+    return pd.DataFrame(stats_dict).T
+
+
 @app.command()
 def main(
     artists_to_link_file_path: str = typer.Option(),
@@ -131,6 +159,10 @@ def main(
     artists_to_link_df = pd.read_parquet(artists_to_link_file_path)
     linked_artists_df = pd.read_parquet(linked_artists_file_path)
 
+    # Global Metrics
+    wiki_matching_metrics_df = get_wiki_matching_metrics(linked_artists_df)
+
+    # Test Set Metrics
     matched_artists_in_test_set_df = project_linked_artists_on_test_sets(
         artists_to_link_df=artists_to_link_df,
         linked_artists_df=linked_artists_df,
@@ -162,6 +194,10 @@ def main(
         "recall_std": metrics_per_dataset_df.recall.std(),
         "f1_mean": metrics_per_dataset_df.f1.mean(),
         "f1_std": metrics_per_dataset_df.f1.std(),
+        "weighted_wiki_matched_perc": wiki_matching_metrics_df[
+            "weighted_wiki_matched_perc"
+        ]["TOTAL"],
+        "wiki_matched_perc": wiki_matching_metrics_df["wiki_matched_perc"]["TOTAL"],
     }
 
     # MLflow Logging
@@ -177,7 +213,9 @@ def main(
 
         # Log Metrics
         metrics_per_dataset_df.to_csv(METRICS_PER_DATASET_CSV_FILENAME, index=False)
+        wiki_matching_metrics_df.to_csv(GLOBAL_METRICS_FILENAME, index=False)
         mlflow.log_artifact(METRICS_PER_DATASET_CSV_FILENAME)
+        mlflow.log_artifact(GLOBAL_METRICS_FILENAME)
         mlflow.log_metrics(metrics_dict)
 
         # Create and Log Graph

@@ -221,4 +221,4 @@ with DAG(
         >> gce_instance_stop
     )
 
-    (artist_linkage >> load_data_into_linked_artists_table)
+    (match_artists_on_wikidata >> load_data_into_linked_artists_table)

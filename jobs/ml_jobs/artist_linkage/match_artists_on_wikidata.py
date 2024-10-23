@@ -1,9 +1,6 @@
 import pandas as pd
 import typer
 
-from utils.clustering_utils import (
-    get_cluster_to_nickname_dict,
-)
 from utils.gcs_utils import upload_parquet
 
 app = typer.Typer()
@@ -119,7 +116,7 @@ def preprocess_wiki(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def get_cluster_to_id_mapping(matched_df: pd.DataFrame) -> dict:
+def get_cluster_to_wiki_mapping(matched_df: pd.DataFrame) -> dict:
     """
     Generates a mapping from cluster IDs to wiki IDs based on booking counts.
 
@@ -159,36 +156,42 @@ def main(
     wiki_file_path: str = typer.Option(),
     output_file_path: str = typer.Option(),
 ) -> None:
-    artists_df = pd.read_parquet(artists_file_path).reset_index(drop=True)
-    wiki_df = pd.read_parquet(wiki_file_path).reset_index(drop=True)
+    artists_df = (
+        pd.read_parquet(artists_file_path)
+        .reset_index(drop=True)
+        .pipe(preprocess_artists)
+    )
+    wiki_df = (
+        pd.read_parquet(wiki_file_path).reset_index(drop=True).pipe(preprocess_wiki)
+    )
 
-    # 1. Match artists on wikidata for artists with no namesake
-    matched_without_namesake_df = match_per_category_no_namesakes(
-        artists_df, wiki_df
-    ).assign(has_namesake=False)
-
-    # 2. Match artists on wikidata for namesaked artists
+    # 1. Match artists on wikidata for namesaked artists
     matched_namesakes_df = (
-        match_namesakes_per_category(
-            artists_df, wiki_df=pd.read_parquet(wiki_file_path).reset_index(drop=True)
-        )
+        match_namesakes_per_category(artists_df, wiki_df)
         .loc[lambda df: df.wiki_id.notna()]
         .assign(has_namesake=True)
-    ).loc[lambda df: ~df.tmp_id.isin(matched_namesakes_df.tmp_id.unique())]
+    )
+
+    # 2. Match artists on wikidata for artists with no namesake
+    matched_without_namesake_df = (
+        match_per_category_no_namesakes(artists_df, wiki_df)
+        .assign(has_namesake=False)
+        .loc[lambda df: ~df.tmp_id.isin(matched_namesakes_df.tmp_id.unique())]
+    )
 
     # 3. Reconciliate the two dataframes
     matched_df = pd.concat(
         [matched_without_namesake_df, matched_namesakes_df]
     ).reset_index(drop=True)
 
-    # Step 2: Map the new cluster_id based on the wiki_id
-    cluster_to_wiki_mappings = get_cluster_to_nickname_dict(matched_df)
+    # 4. Map the new cluster_id based on the wiki_id
+    cluster_to_wiki_mappings = get_cluster_to_wiki_mapping(matched_df)
     output_df = matched_df.assign(
         artist_id=lambda df: df.cluster_id.map(cluster_to_wiki_mappings).fillna(
             df.cluster_id
         ),
-        artist_nickname=lambda df: df.cluster_id.map(
-            get_cluster_to_nickname_dict(artists_df)
+        artist_id_name=lambda df: df.wiki_artist_name.fillna(
+            df.artist_nickname.str.title()
         ),
     )
 

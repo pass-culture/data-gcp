@@ -1,6 +1,6 @@
 CREATE OR REPLACE TABLE analytics.daily_aggregated_offer_event ON cluster default
     ENGINE = SummingMergeTree()
-    PARTITION BY event_date
+    PARTITION BY toYYYYMM(event_date)
     ORDER BY (IFNULL(offer_id,'unknown_offer_id'), event_date)
     SETTINGS storage_policy = 'gcs_main'
 AS

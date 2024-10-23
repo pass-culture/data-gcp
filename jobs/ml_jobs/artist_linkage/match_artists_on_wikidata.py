@@ -152,12 +152,12 @@ def get_cluster_to_wiki_mapping(matched_df: pd.DataFrame) -> dict:
 
 @app.command()
 def main(
-    artists_file_path: str = typer.Option(),
+    linked_artists_file_path: str = typer.Option(),
     wiki_file_path: str = typer.Option(),
     output_file_path: str = typer.Option(),
 ) -> None:
     artists_df = (
-        pd.read_parquet(artists_file_path)
+        pd.read_parquet(linked_artists_file_path)
         .reset_index(drop=True)
         .pipe(preprocess_artists)
     )

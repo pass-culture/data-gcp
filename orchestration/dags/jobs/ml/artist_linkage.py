@@ -42,7 +42,9 @@ ARTISTS_TO_LINK_GCS_FILENAME = "artists_to_link.parquet"
 PREPROCESSED_GCS_FILENAME = "preprocessed_artists_to_link.parquet"
 LINKED_ARTISTS_GCS_FILENAME = "linked_artists.parquet"
 WIKIDATA_EXTRACTION_GCS_FILENAME = "wikidata_extraction.parquet"
+LINKED_ARTISTS_WITH_METADATA_GCS_FILENAME = "linked_artists_with_metadata.parquet"
 TEST_SETS_GCS_DIR = "labelled_test_sets"
+
 
 # BQ Output Tables
 LINKED_ARTISTS_BQ_TABLE = "linked_artists"
@@ -167,10 +169,24 @@ with DAG(
         """,
     )
 
+    match_artists_on_wikidata = SSHGCEOperator(
+        task_id="match_artists_on_wikidata",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+         python match_artists_on_wikidata.py \
+        --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_GCS_FILENAME)} \
+        --wiki-file-path {os.path.join(STORAGE_BASE_PATH, WIKIDATA_EXTRACTION_GCS_FILENAME)} \
+        --output-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_WITH_METADATA_GCS_FILENAME)}
+        """,
+    )
+
     load_data_into_linked_artists_table = GCSToBigQueryOperator(
         bucket=MLFLOW_BUCKET_NAME,
         task_id="load_data_into_linked_artists_table",
-        source_objects=os.path.join(GCS_FOLDER_PATH, LINKED_ARTISTS_GCS_FILENAME),
+        source_objects=os.path.join(
+            GCS_FOLDER_PATH, LINKED_ARTISTS_WITH_METADATA_GCS_FILENAME
+        ),
         destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{LINKED_ARTISTS_BQ_TABLE}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
@@ -185,7 +201,7 @@ with DAG(
             command=f"""
          python evaluate.py \
         --artists-to-link-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_TO_LINK_GCS_FILENAME)} \
-        --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_GCS_FILENAME)} \
+        --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_WITH_METADATA_GCS_FILENAME)} \
         --test-sets-dir {os.path.join(STORAGE_BASE_PATH, TEST_SETS_GCS_DIR)} \
         --experiment-name artist_linkage_v1.0_{ENV_SHORT_NAME}
         """,
@@ -200,6 +216,7 @@ with DAG(
         >> preprocess_data
         >> artist_linkage
         >> extract_from_wikidata
+        >> match_artists_on_wikidata
         >> artist_metrics
         >> gce_instance_stop
     )

@@ -45,6 +45,7 @@ dag = DAG(
             type="string",
         ),
     },
+    tags=["DBT"],
 )
 
 start = DummyOperator(task_id="start", dag=dag)
@@ -54,7 +55,8 @@ wait_dbt_run = delayed_waiting_operator(dag=dag, external_dag_id="dbt_run_dag")
 compute_metrics_elementary = BashOperator(
     task_id="compute_metrics_elementary",
     bash_command="dbt run --no-write-json --target {{ params.target }} --select package:elementary "
-    + f"--target-path {PATH_TO_DBT_TARGET}",
+    + f"--target-path {PATH_TO_DBT_TARGET} --profiles-dir {PATH_TO_DBT_PROJECT} "
+    + """--vars "{{ "{" }}'ENV_SHORT_NAME':'{{ params.target }}'{{ "}" }}" """,
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
 )
@@ -78,14 +80,15 @@ send_elementary_report = BashOperator(
     task_id="send_elementary_report",
     bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/elementary_send_report.sh ",
     env={
-        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
         "PATH_TO_DBT_PROJECT": PATH_TO_DBT_PROJECT,
+        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
         "DATA_BUCKET_NAME": DATA_GCS_BUCKET_NAME,
         "REPORT_FILE_PATH": "elementary_reports/{{ execution_date.year }}/elementary_report_{{ execution_date.strftime('%Y%m%d') }}.html",
         "SLACK_TOKEN": SLACK_TOKEN_ELEMENTARY,
         "CHANNEL_NAME": SLACK_CHANNEL,
         "ELEMENTARY_PYTHON_PATH": ELEMENTARY_PYTHON_PATH,
+        "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
     },
     append_env=True,
     cwd=PATH_TO_DBT_PROJECT,
@@ -98,6 +101,7 @@ compile = BashOperator(
     env={
         "target": "{{ params.target }}",
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+        "ENV_SHORT_NAME": ENV_SHORT_NAME,
     },
     append_env=True,
     cwd=PATH_TO_DBT_PROJECT,

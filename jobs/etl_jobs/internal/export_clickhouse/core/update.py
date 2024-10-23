@@ -1,3 +1,7 @@
+from datetime import datetime
+
+import numpy as np
+
 from core.fs import load_sql
 from core.utils import CLICKHOUSE_CLIENT
 
@@ -8,7 +12,8 @@ def update_incremental(dataset_name: str, table_name: str, tmp_table_name: str) 
     )
     if len(partitions_to_update) > 0:
         partitions_to_update = [
-            x for x in partitions_to_update["partition_date"].values
+            np.datetime64(date, "D").astype(datetime).strftime("%Y-%m-%d")
+            for date in partitions_to_update["partition_date"].values
         ]
         print(
             f"Will update {len(partitions_to_update)} partition of {dataset_name}.{table_name}. {partitions_to_update}"

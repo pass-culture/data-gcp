@@ -61,7 +61,7 @@ def main(
         [
             "offer_id",
             "item_id",
-            "offer_subcategoryId",
+            "offer_subcategoryid",
             "offer_name",
             "offer_description",
             "performer",

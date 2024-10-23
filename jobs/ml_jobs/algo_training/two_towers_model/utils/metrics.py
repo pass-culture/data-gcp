@@ -46,12 +46,12 @@ def get_actual_and_predicted(
 def get_prediction(prediction_input_feature, data_model_dict):
     model = data_model_dict["model"]
     data = data_model_dict["data"]["test"][
-        ["item_id", "offer_subcategoryid"]
+        ["item_id", "offer_subcategory_id"]
     ].drop_duplicates()
     nboffers = len(list(data.item_id))
     offer_to_score = np.reshape(np.array(list(data.item_id)), (nboffers, 1))
-    offer_subcategoryid = np.reshape(
-        np.array(list(data.offer_subcategoryid)), (nboffers,)
+    offer_subcategory_id = np.reshape(
+        np.array(list(data.offer_subcategory_id)), (nboffers,)
     )
     prediction_input = [
         np.array([prediction_input_feature] * len(offer_to_score)),
@@ -62,7 +62,7 @@ def get_prediction(prediction_input_feature, data_model_dict):
         {
             "item_id": offer_to_score.flatten().tolist(),
             "score": prediction.flatten().tolist(),
-            "offer_subcategoryid": offer_subcategoryid.flatten().tolist(),
+            "offer_subcategory_id": offer_subcategory_id.flatten().tolist(),
         }
     )
     df_predicted = df_predicted.sort_values(["score"], ascending=False)
@@ -168,7 +168,7 @@ def get_avg_diversification_score(df_raw, recos, k):
     for reco in tqdm(recos[:max_recos]):
         df_clean = (
             df_raw.query(f"item_id in {tuple(reco[:k])}")[
-                ["offer_categoryId", "offer_subcategoryid", "genres", "rayon", "type"]
+                ["offer_category_id", "offer_subcategory_id", "genres", "rayon", "type"]
             ]
             .drop_duplicates()
             .fillna("NA", inplace=False)

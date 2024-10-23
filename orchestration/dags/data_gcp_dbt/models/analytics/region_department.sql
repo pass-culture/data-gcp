@@ -1,2 +1,2 @@
 -- TODO deprecated
-SELECT * FROM {{ source("seed", "region_department") }}
+select * from {{ source("seed", "region_department") }}

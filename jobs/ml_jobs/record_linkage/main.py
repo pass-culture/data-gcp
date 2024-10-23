@@ -82,17 +82,17 @@ def main(
     ###############
     # Split offers between performer and non performer
     logger.info("Split offers between offers with performer and non performer")
-    subcat_all = df_offers_to_link_clean.offer_subcategoryId.drop_duplicates().to_list()
+    subcat_all = df_offers_to_link_clean.offer_subcategoryid.drop_duplicates().to_list()
     subcat_wo_performer = [
         x for x in subcat_all if x not in SUBCATEGORIES_WITH_PERFORMER
     ]
 
     df_to_link_performer = df_offers_to_link_clean.query(
-        f"""offer_subcategoryId in {tuple(SUBCATEGORIES_WITH_PERFORMER)} """
+        f"""offer_subcategoryid in {tuple(SUBCATEGORIES_WITH_PERFORMER)} """
     )
 
     df_to_link_non_performer = df_offers_to_link_clean.query(
-        f"""offer_subcategoryId in {tuple(subcat_wo_performer)} """
+        f"""offer_subcategoryid in {tuple(subcat_wo_performer)} """
     )
     logger.info(f"{len(df_to_link_non_performer)} items without performer to link")
     logger.info(f"{len(df_to_link_performer)} items with performer to link")
@@ -113,10 +113,10 @@ def main(
         df_source = data_and_hyperparams_dict_tmp["dataframe_to_link"].copy()
         if len(df_source) > 0:
             offers_matched_by_subcat_df_list = []
-            for subcat in df_source.offer_subcategoryId.unique():
+            for subcat in df_source.offer_subcategoryid.unique():
                 offers_matched_df_list = []
                 print("Linkage for subcat: ", subcat, " on going ...")
-                df_source_tmp = df_source.query(f"offer_subcategoryId=='{subcat}'")
+                df_source_tmp = df_source.query(f"offer_subcategoryid=='{subcat}'")
                 logger.info(f"{len(df_source_tmp)} offers to link")
                 if len(df_source_tmp):
                     futures = multiprocess_linkage(

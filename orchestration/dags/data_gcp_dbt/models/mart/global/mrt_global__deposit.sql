@@ -13,6 +13,7 @@ select
     u.user_density_level,
     u.user_is_in_qpv,
     u.user_is_unemployed,
+    u.user_is_in_education,
     u.user_is_priority_public,
     u.user_department_code,
     u.user_department_name,
@@ -31,22 +32,17 @@ select
     d.total_non_cancelled_individual_bookings,
     d.first_individual_booking_date,
     d.last_individual_booking_date,
-    DATE_DIFF(
-        CURRENT_DATE(),
-        CAST(d.deposit_creation_date as DATE),
-        day
+    date_diff(
+        current_date(), cast(d.deposit_creation_date as date), day
     ) as deposit_seniority,
-    DATE_DIFF(
-        CAST(d.deposit_creation_date as DATE),
-        CAST(u.user_creation_date as DATE),
-        day
+    date_diff(
+        cast(d.deposit_creation_date as date), cast(u.user_creation_date as date), day
     ) as days_between_user_creation_and_deposit_creation,
     u.user_birth_date
-from {{ ref('int_global__deposit') }} as d
-    inner join {{ ref('int_global__user') }} as u on u.user_id = d.user_id
-    left join {{ ref('int_applicative__action_history') }} as ah on ah.user_id = d.user_id and ah.action_history_rk = 1
-where
-    (
-        u.user_is_active
-        or ah.action_history_reason = 'upon user request'
-    )
+from {{ ref("int_global__deposit") }} as d
+inner join {{ ref("int_global__user") }} as u on u.user_id = d.user_id
+left join
+    {{ ref("int_applicative__action_history") }} as ah
+    on ah.user_id = d.user_id
+    and ah.action_history_rk = 1
+where (u.user_is_active or ah.action_history_reason = 'upon user request')

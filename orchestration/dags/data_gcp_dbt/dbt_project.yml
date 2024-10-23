@@ -28,11 +28,22 @@ clean-targets:
 
 models:
   data_gcp_dbt:
+    +pre-hook:
+      - "{{ create_schema_dev() }}"
+    +post-hook:
+      - "{{ set_table_expiration_dev() }}"
     +labels:
       schedule: "daily"
     +persist_docs:
       relation: true
       columns: true
+    raw:
+      +meta:
+        owner: "@team-data-engineering"
+      +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+      +schema: raw_applicative_{{ target.name }}
+      applicative:
+        +tags: "exclude_ci"
     clean:
       +meta:
         owner: "@team-data-engineering"
@@ -91,9 +102,6 @@ snapshots:
   +target_schema: snapshot_{{ target.name }}
   +docs:
     show: false
-  data_gcp_dbt:
-    snapshot_applicative:
-      tags: applicative_history
 
 data_tests:
   +store_failures: true  # store failures for all tests
@@ -108,3 +116,4 @@ vars:
   CI_MATERIALIZATION: none
   region_name: region-europe-west1
   mute_ensure_materialization_override: true
+  snapshot_filter: "dbt_valid_to is null"

@@ -1,6 +1,5 @@
 import json
 from collections import OrderedDict
-
 import mlflow
 import tensorflow as tf
 import typer
@@ -35,7 +34,6 @@ def setup_gpu_environment():
     for gpu in physical_devices:
         tf.config.experimental.set_memory_growth(gpu, True)
     tf.config.experimental.enable_tensor_float_32_execution(False)
-
 
 def load_features(config_file_name: str):
     """Loads feature configurations from the specified JSON file."""

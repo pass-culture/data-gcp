@@ -1,17 +1,27 @@
 with
+    topics as (
+        select start_date, end_date, response_id, venue_id, answer as topics
+        from `{{ bigquery_analytics_dataset }}.qualtrics_answers_ir_pro`
+        where question = "Q1_topics"
+    )
+
     ir as (
         select
-            start_date,
-            end_date,
-            response_id,
-            venue_id,
+            pro.start_date,
+            pro.end_date,
+            pro.response_id,
+            pro.venue_id,
             user_type,
             question,
             answer,
             execution_date,
             topics,
             anciennete_jours
-        from `{{ bigquery_analytics_dataset }}.qualtrics_answers_ir_pro`
+        from `{{ bigquery_analytics_dataset }}.qualtrics_answers_ir_pro` pro
+        left join
+            topics
+            on pro.response_id = topics.response_id
+            and pro.venue_id = topics.venue_id
     ),
     ir_per_user as (select * from ir pivot (min(answer) for question in ('Q1', 'Q2'))),
     indiv_book as (
@@ -20,7 +30,7 @@ with
             booking.venue_id,
             count(distinct booking_id) individual_bookings,
             max(booking_creation_date) last_individual_booking
-        from `{{ bigquery_clean_dataset }}.applicative_database_booking` as booking
+        from `{{ bigquery_raw_dataset }}.applicative_database_booking` as booking
         join
             ir_per_user
             on ir_per_user.venue_id = booking.venue_id
@@ -168,8 +178,8 @@ left join
     `{{ bigquery_clean_dataset }}.applicative_database_venue` venue
     on ir_per_user.venue_id = venue.venue_id
 left join
-    `{{ bigquery_clean_dataset }}.applicative_database_offerer` as offerer
+    `{{ bigquery_raw_dataset }}.applicative_database_offerer` as offerer
     on venue.venue_managing_offerer_id = offerer.offerer_id
 left join
-    `{{ bigquery_clean_dataset }}.applicative_database_venue_label` as venue_label
+    `{{ bigquery_raw_dataset }}.applicative_database_venue_label` as venue_label
     on venue_label.venue_label_id = venue.venue_label_id

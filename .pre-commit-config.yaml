@@ -18,30 +18,34 @@ repos:
   - id: format-fix
     name: Formatting (ruff)
     entry: ruff format
-    language: system
+    language: python
     types: [python]
     stages: [commit]
+    additional_dependencies: [ruff==0.5.7]
   - id: lint-fix
     name: Linting (ruff)
     entry: ruff check --fix
-    language: system
+    language: python
     types: [python]
     stages: [commit]
+    additional_dependencies: [ruff==0.5.7]
   - id: sqlfmt
     name: SQL Formatting (sqlfmt)
-    entry: sqlfmt --exclude "**/.venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "*/venv/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"
+    entry: sqlfmt --exclude "**/.venv/**" --exclude "**/venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"
     stages: [commit]
-    language: system
+    language: python
+    additional_dependencies: ["shandy-sqlfmt[jinjafmt]==0.23.2"]
     types: [sql]
-  - id: sqlfluff-lint-check
-    name: Lint check (sqlfluff)
-    entry: orchestration/dags/data_gcp_dbt/scripts/sqlfluff_lint.sh
-    language: script
-    types: [sql]
-    stages: [commit]
-  - id: sqlfluff-fix
-    name: fix (sqlfluff)
-    entry: orchestration/dags/data_gcp_dbt/scripts/sqlfluff_fix.sh
-    language: script
-    types: [sql]
-    stages: [commit]
+  # TODO: Readd this once it is working
+  # - id: sqlfluff-lint-check
+  #   name: Lint check (sqlfluff)
+  #   entry: orchestration/dags/data_gcp_dbt/scripts/sqlfluff_lint.sh
+  #   language: script
+  #   types: [sql]
+  #   stages: [commit]
+  # - id: sqlfluff-fix
+  #   name: fix (sqlfluff)
+  #   entry: orchestration/dags/data_gcp_dbt/scripts/sqlfluff_fix.sh
+  #   language: script
+  #   types: [sql]
+  #   stages: [commit]

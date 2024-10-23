@@ -2,7 +2,10 @@ select
     uo.offererid as offerer_id,
     uo.user_offerer_validation_status,
     u.user_id,
-    ROW_NUMBER() over (partition by uo.offererid order by COALESCE(u.user_creation_date, u.user_creation_date)) as user_affiliation_rank,
+    row_number() over (
+        partition by uo.offererid
+        order by coalesce(u.user_creation_date, u.user_creation_date)
+    ) as user_affiliation_rank,
     u.user_creation_date,
     u.user_department_code,
     u.user_postal_code,
@@ -18,4 +21,4 @@ select
     u.user_has_enabled_marketing_push,
     u.user_has_enabled_marketing_email
 from {{ source("raw", "applicative_database_user_offerer") }} as uo
-    left join {{ source("raw", "applicative_database_user") }} as u on uo.userid = u.user_id
+left join {{ source("raw", "applicative_database_user") }} as u on uo.userid = u.user_id

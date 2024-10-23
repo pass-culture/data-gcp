@@ -8,9 +8,10 @@ select
     webapp_url,
     venue_department_code,
     venue_region_name,
+    venue_type_label,
+    venue_label,
     offer_description,
     last_stock_price,
     offer_category_id
-from {{ ref('mrt_global__offer') }}
-where event
-    AND offer_is_bookable
+from {{ ref("mrt_global__offer") }}
+where event and offer_is_bookable

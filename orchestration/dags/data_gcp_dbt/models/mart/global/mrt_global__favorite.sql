@@ -1,4 +1,4 @@
-SELECT 
+select
     f.favorite_id,
     f.favorite_creation_date,
     f.favorite_created_at,
@@ -33,6 +33,7 @@ SELECT
     u.user_age,
     u.user_is_priority_public,
     u.user_is_unemployed,
+    u.user_is_in_education,
     u.user_is_in_qpv,
     u.current_deposit_type,
     u.user_epci,
@@ -42,6 +43,6 @@ SELECT
     u.user_region_name,
     u.user_academy_name,
 
-FROM {{ ref('int_applicative__favorite')}} f 
-LEFT JOIN {{ ref('int_global__offer')}} o on f.offer_id = o.offer_id 
-LEFT JOIN {{ ref('int_global__user')}} u on u.user_id = f.user_id 
+from {{ ref("int_applicative__favorite") }} f
+left join {{ ref("int_global__offer") }} o on f.offer_id = o.offer_id
+left join {{ ref("int_global__user") }} u on u.user_id = f.user_id

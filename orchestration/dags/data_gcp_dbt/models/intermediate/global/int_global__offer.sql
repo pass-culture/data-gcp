@@ -1,10 +1,7 @@
 {{
     config(
-        partition_by={
-            "field": "offer_creation_date",
-            "data_type": "date"
-        },
-        on_schema_change = "sync_all_columns",
+        partition_by={"field": "offer_creation_date", "data_type": "date"},
+        on_schema_change="sync_all_columns",
     )
 }}
 
@@ -85,8 +82,9 @@ select
     v.venue_density_label,
     v.venue_macro_density_label,
     v.venue_density_level,
+    v.venue_is_permanent,
     o.offerer_address_id,
     o.offer_publication_date,
     o.is_future_scheduled
-from {{ ref('int_applicative__offer') }} as o
-    left join {{ ref('int_global__venue') }} as v on v.venue_id = o.venue_id
+from {{ ref("int_applicative__offer") }} as o
+left join {{ ref("int_global__venue") }} as v on v.venue_id = o.venue_id

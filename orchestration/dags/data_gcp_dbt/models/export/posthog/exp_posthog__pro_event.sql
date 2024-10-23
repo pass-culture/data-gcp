@@ -23,7 +23,9 @@ select
         download_booking_status,
         download_button_type,
         download_file_type,
-        download_files_cnt
+        download_files_cnt,
+        offer_subcategory_id,
+        suggested_offer_subcategory_selected
     ) as extra_params,
     struct(
         offerer_id,

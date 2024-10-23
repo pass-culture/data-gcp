@@ -13,4 +13,5 @@ schedule_dict = {
     "dbt_artifacts": "45 4 * * *",
     "dbt_weekly": "0 3 * * 1",
     "dbt_monthly": "30 5 * * *",
+    "historize_applicative_database": "15 3 * * *",
 }

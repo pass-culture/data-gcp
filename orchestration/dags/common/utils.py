@@ -1,4 +1,5 @@
 import logging
+import os
 
 from common.config import (
     GCP_PROJECT_ID,
@@ -285,3 +286,41 @@ def decode_output(task_id, key, **kwargs):
     decoded_output = output.decode("utf-8")
 
     return decoded_output
+
+
+def get_tables_config_dict(PATH, BQ_DATASET, is_source=False, dbt_alias=False):
+    """
+    Generates a dictionary configuration for tables based on SQL files in a given directory.
+
+    Args:
+        PATH (str): The path to the directory containing SQL files.
+        BQ_DATASET (str): The BigQuery dataset where the tables will be stored or loaded from.
+        is_source (bool): If True, use 'source_dataset' and 'source_table' keys instead of 'destination_dataset' and 'destination_table'.
+
+    Returns:
+        dict: A dictionary where each key is a table name (derived from the SQL file name) and each value is a dictionary containing:
+            - 'sql': The path to the SQL file.
+            - 'source_dataset' or 'destination_dataset': The BigQuery dataset.
+            - 'source_table' or 'destination_table': The name of the table in BigQuery.
+    """
+    tables_config = {}
+    for file in os.listdir(PATH):
+        extension = file.split(".")[-1]
+        table_name = file.split(".")[0]
+        if extension == "sql":
+            tables_config[table_name] = {}
+            tables_config[table_name]["sql"] = os.path.join(PATH, file)
+            if is_source:
+                tables_config[table_name]["source_dataset"] = BQ_DATASET
+                tables_config[table_name]["source_table"] = (
+                    f"applicative_database_{table_name}"
+                )
+            else:
+                tables_config[table_name]["destination_dataset"] = BQ_DATASET
+                tables_config[table_name]["destination_table"] = (
+                    f"applicative_database_{table_name}"
+                )
+    for table_name, table_config in tables_config.items():
+        if dbt_alias:
+            table_config["table_alias"] = table_name.split("__")[-1]
+    return tables_config

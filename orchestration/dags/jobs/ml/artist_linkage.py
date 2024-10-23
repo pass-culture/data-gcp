@@ -12,7 +12,7 @@ from common.config import (
 )
 from common.operators.bigquery import BigQueryInsertJobOperator, bigquery_job_task
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -44,7 +44,7 @@ LINKED_ARTISTS_GCS_FILENAME = "linked_artists.parquet"
 WIKIDATA_EXTRACTION_GCS_FILENAME = "wikidata_extraction.parquet"
 LINKED_ARTISTS_WITH_METADATA_GCS_FILENAME = "linked_artists_with_metadata.parquet"
 TEST_SETS_GCS_DIR = "labelled_test_sets"
-
+GCE_INSTALLER = "uv"
 
 # BQ Output Tables
 LINKED_ARTISTS_BQ_TABLE = "linked_artists"
@@ -89,18 +89,13 @@ with DAG(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
+        branch="{{ params.branch }}",
         python_version="3.10",
-        command="{{ params.branch }}",
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
-        command="""pip install -r requirements.txt --user""",
+        retries=2,
     )
 
     logging_task = PythonOperator(
@@ -141,6 +136,7 @@ with DAG(
         task_id="preprocess_data",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
+        installer=GCE_INSTALLER,
         command=f"""
          python preprocess.py \
         --source-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_TO_LINK_GCS_FILENAME)} \
@@ -152,6 +148,7 @@ with DAG(
         task_id="artist_linkage",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
+        installer=GCE_INSTALLER,
         command=f"""
          python cluster.py \
         --source-file-path {os.path.join(STORAGE_BASE_PATH, PREPROCESSED_GCS_FILENAME)} \
@@ -163,6 +160,7 @@ with DAG(
         task_id="extract_from_wikidata",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
+        installer=GCE_INSTALLER,
         command=f"""
          python extract_from_wikidata.py \
         --output-file-path {os.path.join(STORAGE_BASE_PATH, WIKIDATA_EXTRACTION_GCS_FILENAME)}
@@ -173,6 +171,7 @@ with DAG(
         task_id="match_artists_on_wikidata",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
+        installer=GCE_INSTALLER,
         command=f"""
          python match_artists_on_wikidata.py \
         --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_GCS_FILENAME)} \
@@ -198,6 +197,7 @@ with DAG(
             task_id="artist_metrics",
             instance_name=GCE_INSTANCE,
             base_dir=BASE_DIR,
+            installer=GCE_INSTALLER,
             command=f"""
          python evaluate.py \
         --artists-to-link-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_TO_LINK_GCS_FILENAME)} \
@@ -208,11 +208,11 @@ with DAG(
         ),
     )
 
-    (logging_task >> gce_instance_start >> fetch_code >> install_dependencies)
+    (logging_task >> gce_instance_start >> fetch_install_code)
     (logging_task >> data_collect >> export_input_bq_to_gcs)
 
     (
-        [export_input_bq_to_gcs, install_dependencies]
+        [export_input_bq_to_gcs, fetch_install_code]
         >> preprocess_data
         >> artist_linkage
         >> extract_from_wikidata

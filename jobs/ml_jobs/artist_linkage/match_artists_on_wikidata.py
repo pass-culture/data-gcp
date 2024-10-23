@@ -16,7 +16,6 @@ CATEGORY_MAPPING = {
     "LIVRE": ["book"],
     "CINEMA": ["movie"],
 }
-RATIO_WIKI = 0.5
 
 
 def match_per_category_no_namesakes(
@@ -25,17 +24,21 @@ def match_per_category_no_namesakes(
 ) -> pd.DataFrame:
     matched_df_list = []
     for pass_category, wiki_category in CATEGORY_MAPPING.items():
+        # Select artist df for current category
+        artists_per_category_df = artists_df.loc[
+            lambda df, pass_category=pass_category: df.offer_category_id
+            == pass_category
+        ]
+
+        # Select wikidata artists for current category (remove namesaked ones)
+        wiki_per_category_no_ns_df = wikidata_df.loc[
+            lambda df, wiki_category=wiki_category: df.loc[:, wiki_category].any(axis=1)
+        ].loc[lambda df: ~df.alias.duplicated(keep=False)]
+
         matched_df_list.append(
             pd.merge(
-                artists_df.loc[
-                    lambda df, pass_category=pass_category: df.offer_category_id
-                    == pass_category
-                ],
-                wikidata_df.loc[
-                    lambda df, wiki_category=wiki_category: df.loc[
-                        :, wiki_category
-                    ].any(axis=1)
-                ].loc[lambda df: ~df.alias.duplicated(keep=False)],
+                artists_per_category_df,
+                wiki_per_category_no_ns_df,
                 on="alias",
                 how="left",
             )
@@ -47,23 +50,39 @@ def match_namesakes_per_category(
     artists_df: pd.DataFrame,
     wikidata_df: pd.DataFrame,
 ) -> pd.DataFrame:
-    matched_df_list = []
-    for pass_category, wiki_category in CATEGORY_MAPPING.items():
-        wiki_per_category_df = wikidata_df.loc[
-            lambda df, wiki_category=wiki_category: df.loc[:, wiki_category].any(axis=1)
-        ]
-        wiki_per_category_with_duplicates_df = (
-            wiki_per_category_df.loc[lambda df: df.alias.duplicated(keep=False)]
-            .sort_values(by=["alias", "gkg"], ascending=False)
-            .drop_duplicates(subset="alias")
+    def _select_best_wiki_per_alias(df: pd.DataFrame) -> pd.DataFrame:
+        return df.sort_values(by=["alias", "gkg"], ascending=False).drop_duplicates(
+            subset="alias"
         )
+
+    matched_df_list = []
+    for pass_category, wiki_categories in CATEGORY_MAPPING.items():
+        # Select artist df for current category
+        artists_per_category_df = artists_df.loc[
+            lambda df, pass_category=pass_category: df.offer_category_id
+            == pass_category
+        ]
+
+        # Select namesaked wikidata artists for current category
+        wiki_per_category_with_ns_df = (
+            wikidata_df.loc[
+                lambda df, wiki_categories=wiki_categories: df.loc[
+                    :, wiki_categories
+                ].any(axis=1)
+            ]
+            .loc[lambda df: df.alias.duplicated(keep=False)]
+            .pipe(_select_best_wiki_per_alias)
+        )
+
+        # Select the best wiki artist per alias
+        selected_wiki_per_category_df = wiki_per_category_with_ns_df.pipe(
+            _select_best_wiki_per_alias
+        )
+
         matched_df_list.append(
             pd.merge(
-                artists_df.loc[
-                    lambda df, pass_category=pass_category: df.offer_category_id
-                    == pass_category
-                ],
-                wiki_per_category_with_duplicates_df,
+                artists_per_category_df,
+                selected_wiki_per_category_df,
                 on="alias",
                 how="left",
             )
@@ -101,6 +120,16 @@ def preprocess_wiki(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_cluster_to_id_mapping(matched_df: pd.DataFrame) -> dict:
+    """
+    Generates a mapping from cluster IDs to wiki IDs based on booking counts.
+
+    Args:
+        matched_df (pd.DataFrame): A DataFrame containing the matched data with columns 'cluster_id', 'wiki_id', and 'total_booking_count'.
+    Returns:
+        dict: A dictionary mapping each cluster ID to the corresponding wiki ID with the highest booking ratio.
+    """
+    WIKI_RATIO_THRESHOLD = 0.5
+
     booking_by_cluster_and_wiki_ids = (
         matched_df.assign(
             total_booking_count=lambda df: df.total_booking_count + 1
@@ -109,13 +138,14 @@ def get_cluster_to_id_mapping(matched_df: pd.DataFrame) -> dict:
         .sum()
     )
     sum_by_cluster_id = booking_by_cluster_and_wiki_ids.groupby("cluster_id").sum()
+
     return (
         booking_by_cluster_and_wiki_ids.reset_index()
         .assign(
             count_by_cluster=lambda df: df.cluster_id.map(sum_by_cluster_id),
             ratio=lambda df: df.total_booking_count / df.count_by_cluster,
         )
-        .loc[lambda df: df.ratio > RATIO_WIKI]
+        .loc[lambda df: df.ratio > WIKI_RATIO_THRESHOLD]
         .sort_values(by=["cluster_id", "ratio"], ascending=False)
         .drop_duplicates(subset="cluster_id")
         .set_index("cluster_id")

@@ -20,7 +20,9 @@ def get_actual_and_predicted(
     predictions_diversified = []
     user_input = data_model_dict["prediction_input_feature"]
 
-    for _, row in tqdm(df_actual.iterrows(), total=df_actual.shape[0]):
+    for _, row in tqdm(
+        df_actual.iterrows(), total=df_actual.shape[0], mininterval=10, maxinterval=60
+    ):
         current_user = row["user_id"]
         prediction_input_feature = (
             data_test.loc[data_test["user_id"] == current_user, user_input]

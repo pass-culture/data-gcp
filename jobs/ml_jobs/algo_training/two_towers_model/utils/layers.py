@@ -4,10 +4,10 @@ from dataclasses import dataclass
 import numpy as np
 import tensorflow as tf
 from loguru import logger
-from tensorflow.keras.layers import Embedding, TextVectorization
-from tensorflow.keras.layers.experimental.preprocessing import (
-    IntegerLookup,
+from tensorflow.keras.layers import (
+    Embedding,
     StringLookup,
+    TextVectorization,
 )
 
 
@@ -51,8 +51,7 @@ class IntegerEmbeddingLayer:
     def build_sequential_layer(self, vocabulary: np.ndarray):
         return tf.keras.Sequential(
             [
-                String2IntegerLayer(),
-                IntegerLookup(vocabulary=vocabulary.astype(int)),
+                StringLookup(vocabulary=vocabulary.astype(str)),
                 # We add an additional embedding to account for unknown tokens.
                 Embedding(
                     input_dim=len(vocabulary) + 1,
@@ -144,7 +143,6 @@ class PretainedEmbeddingLayer:
         pretained_layer = tf.keras.Sequential(
             [
                 StringLookup(vocabulary=vocabulary),
-                # IntegerLookup(vocabulary=vocabulary.astype(int)),
                 embedding,
             ]
         )
@@ -152,15 +150,16 @@ class PretainedEmbeddingLayer:
         return pretained_layer
 
 
-class String2IntegerLayer(tf.keras.layers.Layer):
-    """
-    Preprocessing layer which casts string representations of numbers into integers
-    """
+class L2NormalizeLayer(tf.keras.layers.Layer):
+    def __init__(self, **kwargs):
+        super(L2NormalizeLayer, self).__init__(**kwargs)
 
-    def __init__(self, output_type: tf.DType = tf.int32):
-        super().__init__()
+    @tf.function
+    def call(self, inputs, mask=None):
+        if mask is not None:
+            inputs = tf.ragged.boolean_mask(inputs, mask).to_tensor()
 
-        self.output_type = output_type
+        return tf.math.l2_normalize(inputs, axis=-1) + tf.keras.backend.epsilon()
 
-    def call(self, inputs):
-        return tf.strings.to_number(inputs, self.output_type)
+    def compute_mask(self, inputs, mask=None):
+        return mask

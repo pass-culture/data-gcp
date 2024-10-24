@@ -3,6 +3,7 @@
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
             partition_by={"field": "consultation_date", "data_type": "date"},
+            on_schema_change="sync_all_columns"
         )
     )
 }}
@@ -54,7 +55,7 @@ with
         where
             1 = 1
             {% if is_incremental() %}
-                and event_date = date_sub('{{ ds() }}', interval 3 day)
+                and consultation_date = date_sub('{{ ds() }}', interval 3 day)
             {% endif %}
     ),
 

@@ -124,8 +124,8 @@ jobs:
           echo "$output" >> $GITHUB_OUTPUT
   k8s-deploy-on-dev:
     needs: [find-build-job]
-    if: ${{ needs.find-build-job.outputs.has-changed && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/airflow-k8s' ) }}
-    uses: ./.github/workflows/reusable_deploy_k8s.yml
+    if: ${{ needs.find-build-job.outputs.has-changed && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' ) }}
+    uses: ./.github/workflows/reusable_build_image.yml
     with:
       TARGET_ENV: "dev"
       DATA_GCP_PROJECT: "passculture-data-ehp"

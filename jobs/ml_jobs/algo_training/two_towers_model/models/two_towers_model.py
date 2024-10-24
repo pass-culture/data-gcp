@@ -70,10 +70,12 @@ class TwoTowersModel(tfrs.models.Model):
     def get_metrics(self, item_dataset):
         index_top_k = tfrs.layers.factorized_top_k.BruteForce()
 
-        item_embeddings = tf.math.l2_normalize(
-            item_dataset.map(self.item_model), axis=1
+        item_tensor = tf.concat(list(item_dataset.map(self.item_model)), axis=0)
+        item_embeddings = tf.math.l2_normalize(item_tensor, axis=1)
+
+        item_ids = tf.concat(
+            list(item_dataset.map(lambda item: item[self._item_idx])), axis=0
         )
-        item_ids = item_dataset.map(lambda item: item[self._item_idx])
 
         index_top_k.index(candidates=item_embeddings, identifiers=item_ids)
 
@@ -112,7 +114,7 @@ class TwoTowersModel(tfrs.models.Model):
             self.user_model(user_features, training=training), axis=1
         )
         item_embeddings = tf.math.l2_normalize(
-            self.user_model(item_features, training=training), axis=1
+            self.item_model(item_features, training=training), axis=1
         )
 
         return self.task(

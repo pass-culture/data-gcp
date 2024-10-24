@@ -21,7 +21,7 @@ def get_actual_and_predicted(
     user_input = data_model_dict["prediction_input_feature"]
 
     for _, row in tqdm(
-        df_actual.iterrows(), total=df_actual.shape[0], mininterval=10, maxinterval=60
+        df_actual.iterrows(), total=df_actual.shape[0], mininterval=20, maxinterval=60
     ):
         current_user = row["user_id"]
         prediction_input_feature = (

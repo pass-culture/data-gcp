@@ -28,7 +28,7 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
 |     +-- downloads
 |     +-- metabase-archiving
 |     +-- qualtrics
-|     +-- sendinblue
+|     +-- brevo
 |     +-- siren
 |     +-- batch
 |     +-- ...

@@ -28,8 +28,8 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 
-GCE_INSTANCE = f"import-sendinblue-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/external/sendinblue"
+GCE_INSTANCE = f"import-brevo-{ENV_SHORT_NAME}"
+BASE_PATH = "data-gcp/jobs/etl_jobs/external/brevo"
 yesterday = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 dag_config = {
     "GCP_PROJECT": GCP_PROJECT_ID,
@@ -45,9 +45,9 @@ default_dag_args = {
 }
 
 with DAG(
-    "import_sendinblue",
+    "import_brevo",
     default_args=default_dag_args,
-    description="Import sendinblue tables",
+    description="Import brevo tables",
     schedule_interval=get_airflow_schedule("00 04 * * *")
     if ENV_SHORT_NAME in ["prod", "stg"]
     else get_airflow_schedule("00 07 * * *"),

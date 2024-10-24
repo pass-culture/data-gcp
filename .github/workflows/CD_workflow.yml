@@ -120,7 +120,7 @@ jobs:
       - name: "Container changes"
         id: "container-changes"
         run: |
-          output=${{ steps.changed-files.outputs.any_changed == 'true' }})
+          output=${{ steps.changed-files.outputs.any_changed == 'true' }}
           echo "$output" >> $GITHUB_OUTPUT
   k8s-deploy-on-dev:
     needs: [find-build-job]

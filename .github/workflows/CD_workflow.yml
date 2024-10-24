@@ -72,7 +72,6 @@ jobs:
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
-
   composer-deploy-on-stg:
     if: github.ref == 'refs/heads/master'
     uses: ./.github/workflows/reusable_deploy_composer.yml
@@ -99,6 +98,40 @@ jobs:
       COMPOSER_NAME: "data-composer-prod"
       DATA_GCP_PROJECT: "passculture-data-prod"
       APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_PROD }}
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+  find-build-job:
+    outputs:
+      has-changed: ${{ steps.container-changes.outputs.output }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: "Get changed files"
+        id: "changed-files"
+        uses: tj-actions/changed-files@v41
+        with:
+          files: "orchestration/k8s-airflow/**"
+          json: true
+          dir_names: true
+          dir_names_max_depth: 4
+      - name: "Container changes"
+        id: "container-changes"
+        run: |
+          if [ "${{ steps.changed-files.outputs.any_changed }}" == "true" ]; then
+            echo "output=true" >> $GITHUB_OUTPUT
+          else
+            echo "output=false" >> $GITHUB_OUTPUT
+          fi
+  k8s-deploy-on-dev:
+    needs: [find-build-job]
+    if: ${{ needs.find-build-job.outputs.has-changed && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' ) }}
+    uses: ./.github/workflows/reusable_build_image.yml
+    with:
+      TARGET_ENV: "dev"
+      DATA_GCP_PROJECT: "passculture-data-ehp"
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}

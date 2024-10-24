@@ -9,7 +9,7 @@ select
     offer_name,
     coalesce(p.description, o.offer_description) as offer_description,
     offer_url,
-    offer_duration_minutes,
+    0 as offer_duration_minutes,
     offer_extra_data,
     offer_is_duo,
     offer_audio_disability_compliant,

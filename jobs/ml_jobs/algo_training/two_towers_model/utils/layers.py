@@ -148,18 +148,3 @@ class PretainedEmbeddingLayer:
         )
         logger.info("Return pretrained_layer")
         return pretained_layer
-
-
-class L2NormalizeLayer(tf.keras.layers.Layer):
-    def __init__(self, **kwargs):
-        super(L2NormalizeLayer, self).__init__(**kwargs)
-
-    @tf.function
-    def call(self, inputs, mask=None):
-        if mask is not None:
-            inputs = tf.ragged.boolean_mask(inputs, mask).to_tensor()
-
-        return tf.math.l2_normalize(inputs, axis=-1) + tf.keras.backend.epsilon()
-
-    def compute_mask(self, inputs, mask=None):
-        return mask

@@ -6,7 +6,6 @@ import tensorflow_recommenders as tfrs
 
 from two_towers_model.utils.layers import (
     IntegerEmbeddingLayer,
-    L2NormalizeLayer,
     PretainedEmbeddingLayer,
     StringEmbeddingLayer,
     TextEmbeddingLayer,
@@ -28,7 +27,6 @@ class TwoTowersModel(tfrs.models.Model):
         self._item_feature_names = item_columns
         self._item_idx = self._item_feature_names.index("item_id")
         self._user_idx = self._user_feature_names.index("user_id")
-        self._sampling_idx = list(data.columns).index("sampling_probability")
 
         # Define user and item models
         self.user_model = SingleTowerModel(
@@ -67,15 +65,17 @@ class TwoTowersModel(tfrs.models.Model):
                 reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
             ),
             metrics=self.get_metrics(item_dataset) if item_dataset else None,
-            # remove_accidental_hits=True,
         )
 
     def get_metrics(self, item_dataset):
         index_top_k = tfrs.layers.factorized_top_k.BruteForce()
 
-        index_top_k.index_from_dataset(
-            item_dataset.map(lambda item: (item[self._item_idx], self.item_model(item)))
+        item_embeddings = tf.math.l2_normalize(
+            item_dataset.map(self.item_model), axis=-1
         )
+        item_ids = item_dataset.map(lambda item: item[self._item_idx])
+
+        index_top_k.index(item_ids, item_embeddings)
 
         return tfrs.metrics.FactorizedTopK(candidates=index_top_k, ks=[10, 50])
 
@@ -108,19 +108,18 @@ class TwoTowersModel(tfrs.models.Model):
         item_features = features[
             user_feature_count : user_feature_count + item_feature_count
         ]
-
-        # item_id = item_features[self._item_idx]
-        # sampling_probability = tf.strings.to_number(
-        #    features[self._sampling_idx], out_type=tf.float32
-        # )
+        user_embeddings = tf.math.l2_normalize(
+            self.user_model(user_features, training=training), axis=-1
+        )
+        item_embeddings = tf.math.l2_normalize(
+            self.user_model(item_features, training=training), axis=-1
+        )
 
         return self.task(
-            query_embeddings=self.user_model(user_features, training=training),
-            candidate_embeddings=self.item_model(item_features, training=training),
+            query_embeddings=user_embeddings,
+            candidate_embeddings=item_embeddings,
             compute_metrics=not training,
             compute_batch_metrics=not training,
-            # candidate_sampling_probability=sampling_probability,
-            # candidate_ids=item_id
         )
 
 
@@ -146,7 +145,6 @@ class SingleTowerModel(tf.keras.models.Model):
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
         self._dropout2 = tf.keras.layers.Dropout(0.1)
         self._dense2 = tf.keras.layers.Dense(embedding_size)
-        self._norm = L2NormalizeLayer()
 
     def call(self, features: list, training=False):
         feature_embeddings = []
@@ -159,5 +157,4 @@ class SingleTowerModel(tf.keras.models.Model):
         x = self._dense1(x)
         x = self._dropout2(x, training=training)
         x = self._dense2(x)
-        x = self._norm(x)
         return x

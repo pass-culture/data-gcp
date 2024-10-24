@@ -45,12 +45,16 @@ dag_config = {
 
 # Params
 train_params = {
-    "config_file_name": "default-features",
-    "batch_size": 8192,
+    "config_file_name": {
+        "prod": "pretrained-features",
+        "dev": "default-features",
+        "stg": "default-features",
+    }[ENV_SHORT_NAME],
+    "batch_size": {"prod": 2048, "dev": 8192, "stg": 4096}[ENV_SHORT_NAME],
     "embedding_size": 64,
     "train_set_size": 0.95 if ENV_SHORT_NAME == "prod" else 0.8,
-    "event_day_number": {"prod": 60, "dev": 365, "stg": 20}[ENV_SHORT_NAME],
-    "experiment_name": f"algo_training_two_towers_v1.1_{ENV_SHORT_NAME}",
+    "event_day_number": {"prod": 90, "dev": 365, "stg": 30}[ENV_SHORT_NAME],
+    "experiment_name": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",
 }
 gce_params = {
     "instance_name": f"algo-training-two-towers-{ENV_SHORT_NAME}",
@@ -68,7 +72,7 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
 }
 
-schedule_dict = {"prod": "0 12 * * 4", "dev": None, "stg": "0 12 * * 3"}
+schedule_dict = {"prod": "0 12 * * 4", "dev": "0 12 * * 2", "stg": "0 12 * * 3"}
 
 
 with DAG(

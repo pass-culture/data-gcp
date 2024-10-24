@@ -1,5 +1,6 @@
 import json
 from collections import OrderedDict
+
 import mlflow
 import tensorflow as tf
 import typer
@@ -35,6 +36,7 @@ def setup_gpu_environment():
         tf.config.experimental.set_memory_growth(gpu, True)
     tf.config.experimental.enable_tensor_float_32_execution(False)
 
+
 def load_features(config_file_name: str):
     """Loads feature configurations from the specified JSON file."""
     with open(
@@ -64,19 +66,9 @@ def load_datasets(
         storage_path=STORAGE_PATH, table_name=training_table_name
     )[user_columns + item_columns].astype(str)
 
-    item_interaction_counts = train_data["item_id"].value_counts(normalize=True)
-
-    train_data["sampling_probability"] = (
-        train_data["item_id"].map(item_interaction_counts).astype(str)
-    )
-
     validation_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=validation_table_name
     )[user_columns + item_columns].astype(str)
-
-    validation_data["sampling_probability"] = (
-        validation_data["item_id"].map(item_interaction_counts).astype(str)
-    )
 
     train_user_data = (
         train_data[user_columns]
@@ -241,9 +233,9 @@ def save_model_and_embeddings(
 ):
     """Saves the trained model and embeddings."""
     logger.info("Predicting final user embeddings")
-    user_embeddings = two_tower_model.user_model.predict(user_dataset)
+    user_embeddings = two_tower_model.user_model.predict(user_dataset, verbose=VERBOSE)
     logger.info("Predicting final item embeddings")
-    item_embeddings = two_tower_model.item_model.predict(item_dataset)
+    item_embeddings = two_tower_model.item_model.predict(item_dataset, verbose=VERBOSE)
 
     logger.info("Normalizing embeddings...")
     user_embeddings = tf.math.l2_normalize(user_embeddings, axis=1)

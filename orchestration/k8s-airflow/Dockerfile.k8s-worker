@@ -9,7 +9,7 @@ ENV PATH="/root/.cargo/bin/:$PATH"
 # Install python dependencies
 USER airflow
 WORKDIR ${AIRFLOW_USER_HOME}
-COPY k8-worker-requirements.txt /opt/requirements.txt
+COPY k8s-worker-requirements.txt /opt/requirements.txt
 RUN uv pip install --no-cache-dir -r /opt/requirements.txt
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/entrypoint"]

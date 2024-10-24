@@ -21,7 +21,7 @@ env:
   DOCKER_REGISTRY_PROJECT_ID: "passculture-infra-prod"
   DOCKER_REGISTRY_REGION: "europe-west1"
   DOCKER_REGISTRY_REPOSITORY: "pass-culture-artifact-registry"
-  SOURCE_PATH: "orchestration/k8-airflow"
+  SOURCE_PATH: "orchestration/k8s-airflow"
   DATA_GCP_PROJECT: ${{ vars.DATA_GCP_PROJECT }}
   ENV_SHORT_NAME: ${{ vars.ENV_SHORT_NAME }}
 
@@ -75,8 +75,8 @@ jobs:
         uses: docker/build-push-action@v3.2.0
         with:
           context: ${{ env.SOURCE_PATH }}
-          file: ${{ env.SOURCE_PATH }}/Dockerfile.k8-worker
+          file: ${{ env.SOURCE_PATH }}/Dockerfile.k8s-worker
           push: true
           tags: |
-            ${{ steps.vars.outputs.DOCKER_REPO }}/k8-data/airflow:${{ steps.sha.outputs.short_sha }}
-            ${{ steps.vars.outputs.DOCKER_REPO }}/k8-data/airflow:latest
+            ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:${{ steps.sha.outputs.short_sha }}
+            ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:latest

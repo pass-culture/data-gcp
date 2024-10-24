@@ -11,7 +11,6 @@ SELECT
     , "name" as offer_name
     , "description" as offer_description
     , "url" as offer_url
-    , "durationMinutes" as offer_duration_minutes
     , "isNational" as offer_is_national
     , "jsonData" as offer_extra_data
     , "isDuo" as offer_is_duo

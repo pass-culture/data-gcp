@@ -120,8 +120,11 @@ jobs:
       - name: "Container changes"
         id: "container-changes"
         run: |
-          output=${{ steps.changed-files.outputs.any_changed == 'true' }}
-          echo "$output" >> $GITHUB_OUTPUT
+          if [ "${{ steps.changed-files.outputs.any_changed }}" == "true" ]; then
+            echo "output=true" >> $GITHUB_OUTPUT
+          else
+            echo "output=false" >> $GITHUB_OUTPUT
+          fi
   k8s-deploy-on-dev:
     needs: [find-build-job]
     if: ${{ needs.find-build-job.outputs.has-changed && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' ) }}

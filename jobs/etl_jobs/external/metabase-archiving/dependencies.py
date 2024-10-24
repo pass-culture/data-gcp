@@ -119,7 +119,7 @@ def get_native_dependencies(cards_list, tables_df):
         sql_lines = card["dataset_query"]["native"]["query"].lower()
         sql_lines = sql_lines.replace("`", "")
         table_dependency = re.findall(regex, sql_lines)
-        table_dependency = list(set(table_dependency)) + list(set(table_dependency))
+        table_dependency = list(set(table_dependency))
 
         dependency = dict()
         dependency["card_id"] = card_id
@@ -127,20 +127,21 @@ def get_native_dependencies(cards_list, tables_df):
         dependency["card_type"] = card_type
         dependency["card_owner"] = card_owner
         dependency["table_name"] = [table.split(".")[-1] for table in table_dependency]
-        if len(table_dependency) == 1:
-            table = table_dependency[0]
-            match_schema = re.search(r"(from|join)\s+(\w+)", table)
+        table_schema_list = []
+        for dep in table_dependency:
+            match_schema = re.search(r"(from|join)\s+(\w+)", dep)
             if match_schema:
                 table_schema = match_schema.group(2)
-                dependency["table_schema"] = table_schema
-        else:
-            dependency["table_schema"] = table_schema
+                table_schema_list.append(table_schema)
+
+        dependency["table_schema"] = table_schema_list
+
         dependencies_native[i] = dependency
         i += 1
 
     dependencies_native_df = (
         pd.DataFrame.from_dict(dependencies_native, orient="index")
-        .explode("table_name")
+        .explode(["table_name", "table_schema"])
         .reset_index(drop=True)
         .merge(tables_df, how="left", on=["table_schema", "table_name"])
     )

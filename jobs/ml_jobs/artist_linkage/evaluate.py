@@ -156,7 +156,7 @@ def get_wiki_matching_metrics(artists_df: pd.DataFrame) -> pd.DataFrame:
     for group_name, group_df in artists_df.groupby("offer_category_id"):
         stats_dict[group_name] = _get_stats_per_df(group_df)
 
-    return pd.DataFrame(stats_dict).T
+    return pd.DataFrame(stats_dict).T.assign(category=lambda df: df.index)
 
 
 @app.command()
@@ -227,7 +227,7 @@ def main(
 
         # Log Metrics
         metrics_per_dataset_df.to_csv(METRICS_PER_DATASET_CSV_FILENAME, index=False)
-        wiki_matching_metrics_df.to_csv(GLOBAL_METRICS_FILENAME)
+        wiki_matching_metrics_df.to_csv(GLOBAL_METRICS_FILENAME, index=False)
         mlflow.log_artifact(METRICS_PER_DATASET_CSV_FILENAME)
         mlflow.log_artifact(GLOBAL_METRICS_FILENAME)
         mlflow.log_metrics(metrics_dict)

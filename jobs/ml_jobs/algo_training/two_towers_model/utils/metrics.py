@@ -165,7 +165,7 @@ def get_avg_diversification_score(df_raw, recos, k):
     diversification_count = 0
     logger.info("Compute average diversification")
 
-    for reco in tqdm(recos[:max_recos]):
+    for reco in tqdm(recos[:max_recos], mininterval=20, maxinterval=60):
         df_clean = (
             df_raw.query(f"item_id in {tuple(reco[:k])}")[
                 ["offer_category_id", "offer_subcategory_id", "genres", "rayon", "type"]

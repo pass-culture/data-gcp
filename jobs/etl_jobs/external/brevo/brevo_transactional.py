@@ -1,16 +1,16 @@
 import logging
 from datetime import datetime
 
+import brevo_python
 import numpy as np
 import pandas as pd
-import sib_api_v3_sdk
+from brevo_python.rest import ApiException
 from google.cloud import bigquery
-from sib_api_v3_sdk.rest import ApiException
 
 from utils import ENV_SHORT_NAME
 
 
-class SendinblueTransactional:
+class BrevoTransactional:
     def __init__(
         self,
         gcp_project,
@@ -28,11 +28,11 @@ class SendinblueTransactional:
         self.end_date = end_date
 
     def create_instance_transactional_email_api(self):
-        configuration = sib_api_v3_sdk.Configuration()
+        configuration = brevo_python.Configuration()
         configuration.api_key["api-key"] = self.api_key  # get secret
 
-        api_instance = sib_api_v3_sdk.TransactionalEmailsApi(
-            sib_api_v3_sdk.ApiClient(configuration)
+        api_instance = brevo_python.TransactionalEmailsApi(
+            brevo_python.ApiClient(configuration)
         )
 
         self.api_instance = api_instance

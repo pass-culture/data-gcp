@@ -41,17 +41,20 @@ dag_config = {
     "BASE_DIR": "data-gcp/jobs/ml_jobs/algo_training",
     "MODEL_DIR": "two_towers_model",
     "TRAIN_DIR": "/home/airflow/train",
-    "EXPERIMENT_NAME": f"algo_training_two_towers_v1.1_{ENV_SHORT_NAME}",
 }
 
 # Params
 train_params = {
-    "config_file_name": "default-features",
-    "batch_size": 4096,
-    "validation_steps_ratio": 0.1 if ENV_SHORT_NAME == "prod" else 0.4,
+    "config_file_name": {
+        "prod": "pretrained-features",
+        "dev": "default-features",
+        "stg": "default-features",
+    }[ENV_SHORT_NAME],
+    "batch_size": {"prod": 2048, "dev": 8192, "stg": 4096}[ENV_SHORT_NAME],
     "embedding_size": 64,
     "train_set_size": 0.95 if ENV_SHORT_NAME == "prod" else 0.8,
-    "event_day_number": {"prod": 60, "dev": 365, "stg": 20}[ENV_SHORT_NAME],
+    "event_day_number": {"prod": 90, "dev": 365, "stg": 30}[ENV_SHORT_NAME],
+    "experiment_name": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",
 }
 gce_params = {
     "instance_name": f"algo-training-two-towers-{ENV_SHORT_NAME}",
@@ -69,7 +72,7 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
 }
 
-schedule_dict = {"prod": "0 12 * * 4", "dev": None, "stg": "0 12 * * 3"}
+schedule_dict = {"prod": "0 12 * * 4", "dev": "0 12 * * 2", "stg": "0 12 * * 3"}
 
 
 with DAG(
@@ -93,10 +96,6 @@ with DAG(
         ),
         "batch_size": Param(
             default=str(train_params["batch_size"]),
-            type="string",
-        ),
-        "validation_steps_ratio": Param(
-            default=str(train_params["validation_steps_ratio"]),
             type="string",
         ),
         "embedding_size": Param(
@@ -131,6 +130,9 @@ with DAG(
         ),
         "run_name": Param(
             default=train_params["config_file_name"], type=["string", "null"]
+        ),
+        "experiment_name": Param(
+            default=train_params["experiment_name"], type=["string", "null"]
         ),
     },
 ) as dag:
@@ -249,9 +251,8 @@ with DAG(
         environment=dag_config,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
         "--config-file-name {{ params.config_file_name }} "
-        f"--experiment-name {dag_config['EXPERIMENT_NAME']} "
+        "--experiment-name {{ params.experiment_name }} "
         "--batch-size {{ params.batch_size }} "
-        "--validation-steps-ratio {{ params.validation_steps_ratio }} "
         "--embedding-size {{ params.embedding_size }} "
         "--seed {{ ds_nodash }} "
         "--run-name {{ params.run_name }}",
@@ -264,7 +265,8 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
-        f"--experiment-name {dag_config['EXPERIMENT_NAME']} ",
+        "--experiment-name {{ params.experiment_name }} "
+        "--config-file-name {{ params.config_file_name }} ",
         dag=dag,
     )
 
@@ -280,7 +282,7 @@ with DAG(
         data=json.dumps(
             {
                 "blocks": create_algo_training_slack_block(
-                    dag_config["EXPERIMENT_NAME"], MLFLOW_URL, ENV_SHORT_NAME
+                    dag_config["MODEL_DIR"], MLFLOW_URL, ENV_SHORT_NAME
                 )
             }
         ),

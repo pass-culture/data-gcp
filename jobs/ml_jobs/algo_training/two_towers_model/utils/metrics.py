@@ -20,7 +20,9 @@ def get_actual_and_predicted(
     predictions_diversified = []
     user_input = data_model_dict["prediction_input_feature"]
 
-    for _, row in tqdm(df_actual.iterrows(), total=df_actual.shape[0]):
+    for _, row in tqdm(
+        df_actual.iterrows(), total=df_actual.shape[0], mininterval=20, maxinterval=60
+    ):
         current_user = row["user_id"]
         prediction_input_feature = (
             data_test.loc[data_test["user_id"] == current_user, user_input]
@@ -163,7 +165,7 @@ def get_avg_diversification_score(df_raw, recos, k):
     diversification_count = 0
     logger.info("Compute average diversification")
 
-    for reco in tqdm(recos[:max_recos]):
+    for reco in tqdm(recos[:max_recos], mininterval=20, maxinterval=60):
         df_clean = (
             df_raw.query(f"item_id in {tuple(reco[:k])}")[
                 ["offer_category_id", "offer_subcategory_id", "genres", "rayon", "type"]

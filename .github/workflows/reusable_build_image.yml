@@ -1,0 +1,82 @@
+name: "Build and register airflow docker image"
+
+run-name: "Build image ${{ github.event.inputs.ENV }}"
+
+on:
+  workflow_call:
+    inputs:
+      TARGET_ENV:
+        type: string
+        required: true
+      DATA_GCP_PROJECT:
+        type: string
+        required: true
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER:
+        required: true
+      GCP_EHP_SERVICE_ACCOUNT:
+        required: true
+
+env:
+  DOCKER_REGISTRY_PROJECT_ID: "passculture-infra-prod"
+  DOCKER_REGISTRY_REGION: "europe-west1"
+  DOCKER_REGISTRY_REPOSITORY: "pass-culture-artifact-registry"
+  SOURCE_PATH: "orchestration/k8s-airflow"
+  DATA_GCP_PROJECT: ${{ vars.DATA_GCP_PROJECT }}
+  ENV_SHORT_NAME: ${{ vars.ENV_SHORT_NAME }}
+
+jobs:
+  build-and-push-docker-image:
+    name: "Build image job"
+    environment: ${{ inputs.TARGET_ENV }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Connect to Secret Manager"
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+      - name: "Get secrets for Slack"
+        id: 'secrets'
+        uses: 'google-github-actions/get-secretmanager-secrets@v2'
+        with:
+          secrets: |-
+            ARTIFACT_REGISTRY_SERVICE_ACCOUNT:passculture-metier-ehp/passculture-main-artifact-registry-service-account
+            ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER:passculture-metier-ehp/infra-prod-gcp-workload-identity-provider
+      - name: "Output variables"
+        id: "vars"
+        run: echo "DOCKER_REPO=${DOCKER_REGISTRY_REGION}-docker.pkg.dev/${DOCKER_REGISTRY_PROJECT_ID}/${DOCKER_REGISTRY_REPOSITORY}" | tee -a $GITHUB_OUTPUT
+      - name: "Get short SHA"
+        id: "sha"
+        run: echo "short_sha=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+      - name: "Set up Docker Buildx"
+        uses: docker/setup-buildx-action@v2.2.1
+        with:
+          driver: docker
+      - id: "openid-auth"
+        name: "Authenticate with Google Cloud"
+        uses: "google-github-actions/auth@v2"
+        with:
+          create_credentials_file: false
+          token_format: "access_token"
+          workload_identity_provider: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
+      - name: "Docker login"
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: "${{ env.DOCKER_REGISTRY_REGION }}-docker.pkg.dev"
+          username: "oauth2accesstoken"
+          password: "${{ steps.openid-auth.outputs.access_token }}"
+      - name: "Build and push docker image"
+        uses: docker/build-push-action@v3.2.0
+        with:
+          context: ${{ env.SOURCE_PATH }}
+          file: ${{ env.SOURCE_PATH }}/Dockerfile.k8s-worker
+          push: true
+          tags: |
+            ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:${{ steps.sha.outputs.short_sha }}
+            ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:latest

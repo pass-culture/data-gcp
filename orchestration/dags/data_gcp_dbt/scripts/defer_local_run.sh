@@ -3,8 +3,8 @@
 find_dotenv() {
   local dir="$PWD"
   while [[ "$dir" != "/" ]]; do
-    if [[ -f "$dir/.env.buckets" ]]; then
-      echo "$dir/.env.buckets"
+    if [[ -f "$dir/.env.dbt" ]]; then
+      echo "$dir/.env.dbt"
       return 0
     fi
     dir=$(dirname "$dir")
@@ -19,7 +19,7 @@ if [[ -n "$DOTENV_FILE" ]]; then
   export $(grep -v '^#' "$DOTENV_FILE" | xargs)
   echo "Loaded environment variables from $DOTENV_FILE"
 else
-  echo "Error: .env.buckets file not found in current or parent directories."
+  echo "Error: .env.dbt file not found in current or parent directories."
   exit 1
 fi
 
@@ -106,9 +106,11 @@ dbt_hook() {
   REFRESH_STATE=false
   SYNC_ARTIFACTS=false
   SYNC_ENVIRONMENTS=("dev" "stg" "prod")
+  TARGET_ENV="$DEFER_LOCAL_RUN_TO"
 
   # Parse arguments and find flags if present
-  for arg in "$@"; do
+  for ((i=1; i <= $#; i++)); do
+    arg="${!i}"
     case "$arg" in
       --defer-to=*)
         DEFER_LOCAL_RUN_TO="${arg#*=}"
@@ -131,8 +133,72 @@ dbt_hook() {
           return 1
         fi
         ;;
+      -t)
+        next_index=$((i + 1))
+        if ((next_index <= $#)) && [[ "${!next_index}" != -* ]]; then
+          TARGET_ENV="${!next_index}"  # Use the next argument as TARGET_ENV if it's not another flag
+          ((i++))  # Increment index to skip the next argument
+        else
+          echo "Error: -t requires a target environment (e.g., -t dev, -t stg, or -t prod)"
+          return 1
+        fi
+        ;;
+      --target)
+        next_index=$((i + 1))
+        if ((next_index <= $#)) && [[ "${!next_index}" != -* ]]; then
+          TARGET_ENV="${!next_index}"  # Use the next argument as TARGET_ENV if it's not another flag
+          ((i++))  # Increment index to skip the next argument
+        else
+          echo "Error: --target requires a target environment (e.g., --target dev, --target stg, or --target prod)"
+          return 1
+        fi
+        ;;
     esac
   done
+
+
+  # Set APPLICATIVE_EXTERNAL_CONNECTION_ID based on DEFER_LOCAL_RUN_TO or TARGET_ENV
+  if [[ "$DEFER_LOCAL_RUN_TO" == "none" && -n "$TARGET_ENV" ]]; then
+    case "$TARGET_ENV" in
+      dev)
+        export APPLICATIVE_EXTERNAL_CONNECTION_ID="$APPLICATIVE_EXTERNAL_CONNECTION_ID_DEV"
+        ;;
+      stg)
+        export APPLICATIVE_EXTERNAL_CONNECTION_ID="$APPLICATIVE_EXTERNAL_CONNECTION_ID_STG"
+        ;;
+      prod)
+        export APPLICATIVE_EXTERNAL_CONNECTION_ID="$APPLICATIVE_EXTERNAL_CONNECTION_ID_PROD"
+        ;;
+      *)
+        echo "Unknown target environment: $TARGET_ENV"
+        return 1
+        ;;
+    esac
+  elif [[ "$DEFER_LOCAL_RUN_TO" != "none" ]]; then
+    case "$DEFER_LOCAL_RUN_TO" in
+      dev)
+        export APPLICATIVE_EXTERNAL_CONNECTION_ID="$APPLICATIVE_EXTERNAL_CONNECTION_ID_DEV"
+        ;;
+      stg)
+        export APPLICATIVE_EXTERNAL_CONNECTION_ID="$APPLICATIVE_EXTERNAL_CONNECTION_ID_STG"
+        ;;
+      prod)
+        export APPLICATIVE_EXTERNAL_CONNECTION_ID="$APPLICATIVE_EXTERNAL_CONNECTION_ID_PROD"
+        ;;
+      *)
+        echo "Unknown DEFER_LOCAL_RUN_TO environment: $DEFER_LOCAL_RUN_TO"
+        return 1
+        ;;
+    esac
+  fi
+  # Determine which environment to echo
+  if [[ "$DEFER_LOCAL_RUN_TO" == "none" ]]; then
+    echo_env="${TARGET_ENV:-dev}"
+  else
+    echo_env="$DEFER_LOCAL_RUN_TO"
+  fi
+
+  echo "Set APPLICATIVE_EXTERNAL_CONNECTION_ID to $APPLICATIVE_EXTERNAL_CONNECTION_ID for environment $echo_env"
 
   # Check if --sync-artifacts is used alongside other arguments
   if [[ "$SYNC_ARTIFACTS" == true ]]; then
@@ -244,7 +310,7 @@ dbt_hook() {
     return 0
   fi
 
-  # The rest of the dbt hook logic for standard dbt run/test
+  # Dbt hook logic for dbt run/test
   ARTIFACTS_DIR="${DBT_PROJECT_DIR}/env-run-artifacts/${DEFER_LOCAL_RUN_TO}"
   DEFER_FLAGS=()  # Initialize defer flags
   if [[ "$DEFER_LOCAL_RUN_TO" != "none" ]]; then
@@ -285,9 +351,9 @@ dbt_hook() {
   local COMBINED_ARGS=("${FILTERED_ARGS[@]}" "${DEFER_FLAGS[@]}")
 
   echo "Running dbt with arguments: ${COMBINED_ARGS[@]}"
-  export DBT_PROFILES_DIR=$DBT_PROJECT_DIR
+  export DBT_PROFILES_DIR="$DBT_PROJECT_DIR"
   command dbt "${COMBINED_ARGS[@]}"
 }
 
-# Call the dbt function with the provided arguments
+# Call the dbt aliased function with the provided arguments
 dbt "$@"

@@ -11,7 +11,6 @@ with
         where
             event_name = "ConsultOffer"
             and event_date >= date_sub(date("{{ ds }}"), interval 6 month)
-            and event_date < date("{{ ds }}")
             and user_id is not null
             and offer_id is not null
             and offer_id != 'NaN'

@@ -4,6 +4,10 @@ from scripts.import_adage import (
 )
 
 
+def sum(a: str, b: int) -> str:
+    return a + b
+
+
 def run():
     import_adage()
 

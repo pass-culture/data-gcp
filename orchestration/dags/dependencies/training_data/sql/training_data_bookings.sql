@@ -21,4 +21,4 @@ join
 inner join
     `{{ bigquery_analytics_dataset }}`.`global_user` enruser
     on enruser.user_id = booking.user_id
-where booking.booking_creation_date >= date_sub(date("{{ ds }}"), interval 4 month)
+where booking.booking_creation_date >= date_sub(date("{{ ds }}"), interval 6 month)

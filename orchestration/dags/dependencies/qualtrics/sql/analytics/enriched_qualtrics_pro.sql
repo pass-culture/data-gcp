@@ -3,7 +3,7 @@ with
         select start_date, end_date, response_id, venue_id, answer as topics
         from `{{ bigquery_analytics_dataset }}.qualtrics_answers_ir_pro`
         where question = "Q1_topics"
-    )
+    ),
 
     ir as (
         select
@@ -14,7 +14,6 @@ with
             user_type,
             question,
             answer,
-            execution_date,
             topics,
             anciennete_jours
         from `{{ bigquery_analytics_dataset }}.qualtrics_answers_ir_pro` pro
@@ -126,7 +125,7 @@ select
     ir_per_user.venue_id,
     ir_per_user.response_id,
     safe_cast(ir_per_user.q1 as int) as note,
-    ir_per_user.topics,
+    ir_per_user.topics.topics as topics,
     case
         when safe_cast(ir_per_user.q1 as int) <= 6
         then "detracteur"
@@ -138,8 +137,8 @@ select
     case
         when
             (
-                lower(ir_per_user.topics) like "%inscription longue eac%"
-                or lower(ir_per_user.topics) like "%référencement adage%"
+                lower(ir_per_user.topics.topics) like "%inscription longue eac%"
+                or lower(ir_per_user.topics.topics) like "%référencement adage%"
             )
         then true
         else false

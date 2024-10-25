@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ contains('\gpt,/gpt', github.event.comment.body) }}
     steps:
+      - uses: actions/checkout@v4
       - id: auth
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2

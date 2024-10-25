@@ -6,24 +6,8 @@ on:
 jobs:
   run_code_review:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
     if: ${{ contains('\gpt,/gpt', github.event.comment.body) }}
     steps:
-      - uses: actions/checkout@v4
-      - id: auth
-        name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
-      - id: secrets
-        name: Get secrets from Secret Manager
-        uses: google-github-actions/get-secretmanager-secrets@v2
-        with:
-          secrets: |-
-            OPENAI_API_KEY:passculture-data-ehp/${{ secrets.OPENAI_SECRET_NAME }}
       - name: Check if allowed user and command
         id: check_if_run
         run: |
@@ -47,6 +31,6 @@ jobs:
         if: env.run_code_review == 'true'
         uses: mattzcarey/code-review-gpt@v0.1.10
         with:
-          OPENAI_API_KEY: ${{ steps.secrets.outputs.OPENAI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           MODEL: 'gpt-4o'
           GITHUB_TOKEN: ${{ github.token }}

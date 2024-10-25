@@ -148,16 +148,18 @@ select
         else consult.origin
     end as consultation_macro_origin,
     case
+        when concat("home_", ht.home_type) IN ("home_evenement, n_1","home_n_1, evenement") 
+        then "home_evenement_permanent"
         when ht.entry_id is not null and ht.home_type is not null
         then concat("home_", ht.home_type)
-        when ht.entry_id is not null and ht.home_type is null
+        when (ht.entry_id is not null or consult.origin = "home") and ht.home_type is null
         then "home_without_tag"
-        when consult.origin = "search" and consult.search_query_input_is_generic is true
+        when consult.origin in ("search","searchresults","searchn1") and consult.search_query_input_is_generic is true
         then "generic_query_search"
         when
-            consult.origin = "search" and consult.search_query_input_is_generic is false
+            consult.origin in ("search","searchresults","searchn1") and consult.search_query_input_is_generic is false
         then "specific_query_search"
-        when consult.origin = "search" and consult.query is null
+        when consult.origin in ("search","searchresults","searchn1") and consult.query is null
         then "landing_search"
         when consult.origin = "venue" and ov.consult_venue_origin = "offer"
         then "offer_venue"
@@ -178,6 +180,8 @@ select
         then "multi_venue_offer"
         when consult.origin = "similar_offer"
         then concat("similar_offer_", so.consult_similar_offer_origin)
+        when consult.origin in ("venueMap","venuemap")
+        then "venue_map"
         else consult.origin
     end as consultation_micro_origin
 from {{ ref("int_firebase__native_consultation") }} as consult

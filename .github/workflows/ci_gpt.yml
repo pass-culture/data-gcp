@@ -9,6 +9,9 @@ env:
 jobs:
   run_code_review:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     if: ${{ contains('\gpt,/gpt', github.event.comment.body) }}
     steps:
       - uses: actions/checkout@v4

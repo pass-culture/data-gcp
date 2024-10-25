@@ -3,10 +3,14 @@
     {% set target_name = target.name %}
     {% set target_schema = generate_schema_name("analytics_" ~ target_name) %}
 
-    create function if not exists {{ target_schema }}.humanize_id(id string)
+    create or replace function {{ target_schema }}.humanize_id(id string)
     returns string
     language js
-    options (library = "gs://data-bucket-{{ target_name }}/base32-encode/base32.js")
+    options
+        (
+            library
+            = "gs://data-bucket-{{ 'dev' if target_name == 'local' else target_name }}/base32-encode/base32.js"
+        )
     as
         """
 // turn int into bytes array

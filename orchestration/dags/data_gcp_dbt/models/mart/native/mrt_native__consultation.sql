@@ -145,6 +145,11 @@ select
             consult.origin = "similar_offer"
             and consult.similar_offer_playlist_type = "otherCategoriesSimilarOffers"
         then "other_category_similar_offer"
+        when
+            consult.origin in ("search","searchresults","searchn1")
+        then "search"
+        when consult.origin in ("venueMap","venuemap")
+        then "venue_map"
         else consult.origin
     end as consultation_macro_origin,
     case

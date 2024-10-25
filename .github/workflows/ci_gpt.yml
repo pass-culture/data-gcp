@@ -3,9 +3,6 @@ name: Code Review GPT
 on:
   pull_request_review_comment:
 
-env:
-    OPENAI_SECRET_NAME: ${{ secrets.OPENAI_SECRET_NAME }}
-
 jobs:
   run_code_review:
     runs-on: ubuntu-latest
@@ -26,7 +23,7 @@ jobs:
         uses: google-github-actions/get-secretmanager-secrets@v2
         with:
           secrets: |-
-            OPENAI_API_KEY:${{ vars.DATA_GCP_PROJECT }}/${{ env.OPENAI_SECRET_NAME }}
+            OPENAI_API_KEY:passculture-data-ehp/${{ secrets.OPENAI_SECRET_NAME }}
       - name: Check if allowed user and command
         id: check_if_run
         run: |

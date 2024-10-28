@@ -17,7 +17,7 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
 )
-from common.utils import get_airflow_schedule
+from common.utils import get_airflow_schedule, health_check
 from dependencies.ml.linkage.import_artists import PARAMS as IMPORT_ARTISTS_PARAMS
 
 from airflow import DAG
@@ -48,11 +48,12 @@ GCE_INSTALLER = "uv"
 
 # BQ Output Tables
 LINKED_ARTISTS_BQ_TABLE = "linked_artists"
+QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
 
 default_args = {
     "start_date": datetime(2024, 7, 16),
     "on_failure_callback": task_fail_slack_alert,
-    "retries": 0,
+    "retries": 5,
 }
 
 
@@ -76,6 +77,14 @@ with DAG(
         ),
     },
 ) as dag:
+    # check fribourg uni serveur availability
+    health_check_op = PythonOperator(
+        task_id="health_check_task",
+        python_callable=health_check,
+        op_args=[QLEVER_ENDPOINT],
+        dag=dag,
+    )
+
     # GCE
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -208,7 +217,7 @@ with DAG(
         ),
     )
 
-    logging_task >> (gce_instance_start, data_collect)
+    health_check_op >> logging_task >> (gce_instance_start, data_collect)
     gce_instance_start >> fetch_install_code >> (extract_from_wikidata, preprocess_data)
     preprocess_data >> artist_linkage
     extract_from_wikidata >> match_artists_on_wikidata

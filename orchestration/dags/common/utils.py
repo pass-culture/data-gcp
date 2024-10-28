@@ -1,6 +1,8 @@
 import logging
 import os
+import time
 
+import requests
 from common.config import (
     GCP_PROJECT_ID,
     LOCAL_ENV,
@@ -324,3 +326,27 @@ def get_tables_config_dict(PATH, BQ_DATASET, is_source=False, dbt_alias=False):
         if dbt_alias:
             table_config["table_alias"] = table_name.split("__")[-1]
     return tables_config
+
+
+def health_check(url: str, timeout=5, retries=4, initial_delay=5):
+    for attempt in range(retries):
+        try:
+            response = requests.get(url, timeout=timeout)
+
+            if response.status_code == 200:
+                logging.info(f"{url} is healthy on attempt {attempt + 1}.")
+            else:
+                logging.warning(
+                    f"{url} returned status code {response.status_code} on attempt {attempt + 1}."
+                )
+
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Attempt {attempt + 1}: Could not reach {url}. Error: {e}")
+
+        if attempt < retries - 1:
+            delay = initial_delay * (2**attempt)
+            logging.info(f"Retrying in {delay} seconds...")
+            time.sleep(delay)
+
+    # Raise an exception to fail the task in Airflow if all attempts fail
+    raise Exception(f"Health check failed for {url} after {retries} attempts.")

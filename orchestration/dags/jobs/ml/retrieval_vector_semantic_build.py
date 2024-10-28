@@ -146,7 +146,7 @@ with DAG(
         command="python deploy_semantic.py "
         "--experiment-name {{ params.experiment_name }} "
         "--model-name {{ params.model_name }} "
-        f"--source-gs-path {dag_config['STORAGE_PATH']}"
+        f"--source-gs-path {dag_config['STORAGE_PATH']} "
         "--container-worker {{ params.container_worker }} ",
         dag=dag,
     )

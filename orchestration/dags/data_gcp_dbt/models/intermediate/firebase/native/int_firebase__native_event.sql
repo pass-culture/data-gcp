@@ -170,8 +170,9 @@ select
         else false
     end as search_query_input_is_generic
 from {{ ref("int_firebase__native_event_flattened") }} as e
-{% if is_incremental() %}
-    where
-        event_date
+where
+    not is_anomaly
+    {% if is_incremental() %}
+        and event_date
         between date_sub(date("{{ ds() }}"), interval 3 day) and date("{{ ds() }}")
-{% endif %}
+    {% endif %}

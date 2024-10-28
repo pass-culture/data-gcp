@@ -1,0 +1,36 @@
+name: Code Review GPT
+
+on:
+  pull_request_review_comment:
+
+jobs:
+  run_code_review:
+    runs-on: ubuntu-latest
+    if: ${{ contains('\gpt,/gpt', github.event.comment.body) }}
+    steps:
+      - name: Check if allowed user and command
+        id: check_if_run
+        run: |
+          # Split allowed users into an array and check for exact match
+          IFS=',' read -ra allowed_users <<< "${{ secrets.GPT_ALLOWED_USERS }}"
+          current_user="${{ github.event.comment.user.login }}"
+
+          # Iterate over the allowed users array to check for an exact match
+          for user in "${allowed_users[@]}"; do
+            if [[ "$user" == "$current_user" ]]; then
+              echo "run_code_review=true" >> $GITHUB_ENV
+              exit 0
+            fi
+          done
+          echo "run_code_review=false" >> $GITHUB_ENV
+      - uses: actions/checkout@v3
+        if: env.run_code_review == 'true'
+        with:
+          fetch-depth: 0
+      - name: Code Review GPT
+        if: env.run_code_review == 'true'
+        uses: mattzcarey/code-review-gpt@v0.1.10
+        with:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MODEL: 'gpt-4o'
+          GITHUB_TOKEN: ${{ github.token }}

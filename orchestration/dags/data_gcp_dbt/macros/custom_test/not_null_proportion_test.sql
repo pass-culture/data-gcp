@@ -1,4 +1,5 @@
 {% test not_null_proportion(model, column_name, where_condition, warn_if) %}
+    {% set threshold_test = var("threshold_test") %}
 
     with
         validation as (
@@ -18,6 +19,6 @@
         )
     select *
     from final
-    where proportion > 0.01
+    where proportion > {{ threshold_test }}
 
 {% endtest %}

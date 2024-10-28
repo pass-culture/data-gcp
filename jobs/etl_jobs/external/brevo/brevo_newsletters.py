@@ -61,19 +61,19 @@ class BrevoNewsletters:
             camp.get("shareLink") for camp in campaigns_list
         ]
         campaign_stats["audience_size"] = [
-            group.get("globalStats")[0].get("sent")
+            group.get("globalStats").get("sent")
             if len(group.get("globalStats")) > 0
             else 0
             for group in [camp.get("statistics") for camp in campaigns_list]
         ]
         campaign_stats["unsubscriptions"] = [
-            group.get("globalStats")[0].get("unsubscriptions")
+            group.get("globalStats").get("unsubscriptions")
             if len(group.get("globalStats")) > 0
             else 0
             for group in [camp.get("statistics") for camp in campaigns_list]
         ]
         campaign_stats["open_number"] = [
-            group.get("globalStats")[0].get("uniqueViews")
+            group.get("globalStats").get("uniqueViews")
             if len(group.get("globalStats")) > 0
             else 0
             for group in [camp.get("statistics") for camp in campaigns_list]

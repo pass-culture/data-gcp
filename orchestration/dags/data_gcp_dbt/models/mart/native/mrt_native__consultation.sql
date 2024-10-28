@@ -54,7 +54,7 @@ with
         where
             1 = 1
             {% if is_incremental() %}
-                and event_date = date_sub('{{ ds() }}', interval 3 day)
+                and consultation_date = date_sub('{{ ds() }}', interval 3 day)
             {% endif %}
     ),
 

@@ -13,7 +13,7 @@ with
                 else safe_cast(o.offer_description as string)
             end as offer_description,
             o.offer_validation,
-            o.offer_subcategory_id,
+            o.offer_subcategoryid as offer_subcategory_id,
             oed.rayon,
             rayon_ref.macro_rayon as macro_rayon,
             case
@@ -41,7 +41,7 @@ with
             on oed.offer_id = o.offer_id
         left join
             `{{ bigquery_raw_dataset }}`.`subcategories` subcat
-            on subcat.id = o.offer_subcategory_id
+            on subcat.id = o.offer_subcategoryid
         left join
             `{{ bigquery_seed_dataset }}`.`macro_rayons` as rayon_ref
             on oed.rayon = rayon_ref.rayon
@@ -55,7 +55,7 @@ with
             o.offer_name,
             o.offer_description,
             o.offer_validation,
-            o.offer_subcategory_id,
+            o.offer_subcategoryid,
             subcat.id,
             o.offer_creation_date,
             oed.rayon,

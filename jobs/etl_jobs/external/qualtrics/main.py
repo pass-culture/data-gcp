@@ -57,7 +57,7 @@ def run(
 
     else:
         raise RuntimeError(
-            "Task argument must be one of import_opt_out_users or import_ir_survey_answers."
+            "Task argument must be one of import_opt_out_users or import_all_survey_answers."
         )
 
     return "Success"

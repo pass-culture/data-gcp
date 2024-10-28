@@ -1,9 +1,9 @@
 from datetime import date, datetime, timedelta, timezone
 
 import typer
-from jobs.etl_jobs.external.brevo.brevo_newsletters import BrevoNewsletters
-from jobs.etl_jobs.external.brevo.brevo_transactional import BrevoTransactional
 
+from brevo_newsletters import BrevoNewsletters
+from brevo_transactional import BrevoTransactional
 from utils import (
     BIGQUERY_RAW_DATASET,
     BIGQUERY_TMP_DATASET,

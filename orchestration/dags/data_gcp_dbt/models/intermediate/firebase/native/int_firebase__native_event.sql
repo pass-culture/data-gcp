@@ -174,4 +174,4 @@ from {{ ref("int_firebase__native_event_flattened") }} as e
     where
         event_date
         between date_sub(date("{{ ds() }}"), interval 3 day) and date("{{ ds() }}")
-{% endif %}
+{% endif %} and is_anomaly = 0

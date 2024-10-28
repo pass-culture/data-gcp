@@ -143,7 +143,7 @@ def get_wiki_matching_metrics(artists_df: pd.DataFrame) -> pd.DataFrame:
                 .sum()
                 / input_df.offer_number.replace(0, 1).sum(),
                 2,
-            ),
+            ),  # TODO: Remove the replace(0, 1) when the offer_number is fixed
             WIKI_MATCHED_PERC: round(
                 100 * input_df.wiki_id.notna().sum() / len(input_df),
                 2,

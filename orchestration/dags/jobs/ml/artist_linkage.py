@@ -26,6 +26,7 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
+from airflow.utils.task_group import TaskGroup
 
 ML_DAG_TAG = "ML"
 VM_DAG_TAG = "VM"
@@ -77,117 +78,124 @@ with DAG(
         ),
     },
 ) as dag:
-    # check fribourg uni serveur availability
-    health_check_op = PythonOperator(
-        task_id="health_check_task",
-        python_callable=health_check,
-        op_args=[QLEVER_ENDPOINT],
-        dag=dag,
-    )
+    with TaskGroup("dag_init") as dag_init:
+        # check fribourg uni serveur availability
 
-    # GCE
-    gce_instance_start = StartGCEOperator(
-        task_id="gce_start_task",
-        instance_name=GCE_INSTANCE,
-        instance_type="{{ params.instance_type }}",
-        labels={"job_type": "ml"},
-        preemptible=False,
-    )
+        health_check_task = PythonOperator(
+            task_id="health_check_task",
+            python_callable=health_check,
+            op_args=[QLEVER_ENDPOINT],
+            dag=dag,
+        )
+        logging_task = PythonOperator(
+            task_id="logging_task",
+            python_callable=lambda: print(
+                f"Task executed for branch : {dag.params.get('branch')} and instance : {dag.params.get('instance_type')} on env : {ENV_SHORT_NAME}"
+            ),
+            dag=dag,
+        )
+        health_check_task >> logging_task
+
+    with TaskGroup("vm_init") as vm_init:
+        gce_instance_start = StartGCEOperator(
+            task_id="gce_start_task",
+            instance_name=GCE_INSTANCE,
+            instance_type="{{ params.instance_type }}",
+            labels={"job_type": "ml"},
+            preemptible=False,
+        )
+        fetch_install_code = InstallDependenciesOperator(
+            task_id="fetch_install_code",
+            instance_name=GCE_INSTANCE,
+            branch="{{ params.branch }}",
+            python_version="3.10",
+            base_dir=BASE_DIR,
+            retries=2,
+        )
+        gce_instance_start >> fetch_install_code
 
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
-    fetch_install_code = InstallDependenciesOperator(
-        task_id="fetch_install_code",
-        instance_name=GCE_INSTANCE,
-        branch="{{ params.branch }}",
-        python_version="3.10",
-        base_dir=BASE_DIR,
-        retries=2,
-    )
-
-    logging_task = PythonOperator(
-        task_id="logging_task",
-        python_callable=lambda: print(
-            f"Task executed for branch : {dag.params.get('branch')} and instance : {dag.params.get('instance_type')} on env : {ENV_SHORT_NAME}"
-        ),
-        dag=dag,
-    )
-
     # Artist Linkage
-    data_collect = bigquery_job_task(
-        dag,
-        f"create_bq_table_{IMPORT_ARTISTS_PARAMS['destination_table']}",
-        IMPORT_ARTISTS_PARAMS,
-    )
+    with TaskGroup("data_collection") as collect:
+        data_collect = bigquery_job_task(
+            dag,
+            f"create_bq_table_{IMPORT_ARTISTS_PARAMS['destination_table']}",
+            IMPORT_ARTISTS_PARAMS,
+        )
 
-    export_input_bq_to_gcs = BigQueryInsertJobOperator(
-        task_id=f"{IMPORT_ARTISTS_PARAMS['destination_table']}_to_bucket",
-        configuration={
-            "extract": {
-                "sourceTable": {
-                    "projectId": GCP_PROJECT_ID,
-                    "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": IMPORT_ARTISTS_PARAMS["destination_table"],
-                },
-                "compression": None,
-                "destinationUris": os.path.join(
-                    STORAGE_BASE_PATH, ARTISTS_TO_LINK_GCS_FILENAME
-                ),
-                "destinationFormat": "PARQUET",
-            }
-        },
-        dag=dag,
-    )
+        export_input_bq_to_gcs = BigQueryInsertJobOperator(
+            task_id=f"{IMPORT_ARTISTS_PARAMS['destination_table']}_to_bucket",
+            configuration={
+                "extract": {
+                    "sourceTable": {
+                        "projectId": GCP_PROJECT_ID,
+                        "datasetId": BIGQUERY_TMP_DATASET,
+                        "tableId": IMPORT_ARTISTS_PARAMS["destination_table"],
+                    },
+                    "compression": None,
+                    "destinationUris": os.path.join(
+                        STORAGE_BASE_PATH, ARTISTS_TO_LINK_GCS_FILENAME
+                    ),
+                    "destinationFormat": "PARQUET",
+                }
+            },
+            dag=dag,
+        )
+        data_collect >> export_input_bq_to_gcs
 
-    preprocess_data = SSHGCEOperator(
-        task_id="preprocess_data",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        installer=GCE_INSTALLER,
-        command=f"""
-         python preprocess.py \
-        --source-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_TO_LINK_GCS_FILENAME)} \
-        --output-file-path {os.path.join(STORAGE_BASE_PATH, PREPROCESSED_GCS_FILENAME)}
-        """,
-    )
+    with TaskGroup("internal_linkage") as internal_linkage:
+        preprocess_data = SSHGCEOperator(
+            task_id="preprocess_data",
+            instance_name=GCE_INSTANCE,
+            base_dir=BASE_DIR,
+            installer=GCE_INSTALLER,
+            command=f"""
+             python preprocess.py \
+            --source-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_TO_LINK_GCS_FILENAME)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, PREPROCESSED_GCS_FILENAME)}
+            """,
+        )
 
-    artist_linkage = SSHGCEOperator(
-        task_id="artist_linkage",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        installer=GCE_INSTALLER,
-        command=f"""
-         python cluster.py \
-        --source-file-path {os.path.join(STORAGE_BASE_PATH, PREPROCESSED_GCS_FILENAME)} \
-        --output-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_GCS_FILENAME)}
-        """,
-    )
+        artist_linkage = SSHGCEOperator(
+            task_id="artist_linkage",
+            instance_name=GCE_INSTANCE,
+            base_dir=BASE_DIR,
+            installer=GCE_INSTALLER,
+            command=f"""
+             python cluster.py \
+            --source-file-path {os.path.join(STORAGE_BASE_PATH, PREPROCESSED_GCS_FILENAME)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_GCS_FILENAME)}
+            """,
+        )
+        preprocess_data >> artist_linkage
+    with TaskGroup("wikidata_matching") as wikidata_matching:
+        extract_from_wikidata = SSHGCEOperator(
+            task_id="extract_from_wikidata",
+            instance_name=GCE_INSTANCE,
+            base_dir=BASE_DIR,
+            installer=GCE_INSTALLER,
+            command=f"""
+             python extract_from_wikidata.py \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, WIKIDATA_EXTRACTION_GCS_FILENAME)}
+            """,
+        )
 
-    extract_from_wikidata = SSHGCEOperator(
-        task_id="extract_from_wikidata",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        installer=GCE_INSTALLER,
-        command=f"""
-         python extract_from_wikidata.py \
-        --output-file-path {os.path.join(STORAGE_BASE_PATH, WIKIDATA_EXTRACTION_GCS_FILENAME)}
-        """,
-    )
-
-    match_artists_on_wikidata = SSHGCEOperator(
-        task_id="match_artists_on_wikidata",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        installer=GCE_INSTALLER,
-        command=f"""
-         python match_artists_on_wikidata.py \
-        --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_GCS_FILENAME)} \
-        --wiki-file-path {os.path.join(STORAGE_BASE_PATH, WIKIDATA_EXTRACTION_GCS_FILENAME)} \
-        --output-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_WITH_METADATA_GCS_FILENAME)}
-        """,
-    )
+        match_artists_on_wikidata = SSHGCEOperator(
+            task_id="match_artists_on_wikidata",
+            instance_name=GCE_INSTANCE,
+            base_dir=BASE_DIR,
+            installer=GCE_INSTALLER,
+            command=f"""
+             python match_artists_on_wikidata.py \
+            --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_GCS_FILENAME)} \
+            --wiki-file-path {os.path.join(STORAGE_BASE_PATH, WIKIDATA_EXTRACTION_GCS_FILENAME)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_WITH_METADATA_GCS_FILENAME)}
+            """,
+        )
+        extract_from_wikidata >> match_artists_on_wikidata
 
     load_data_into_linked_artists_table = GCSToBigQueryOperator(
         bucket=MLFLOW_BUCKET_NAME,
@@ -217,14 +225,7 @@ with DAG(
         ),
     )
 
-    health_check_op >> logging_task >> (gce_instance_start, data_collect)
-    gce_instance_start >> fetch_install_code >> (extract_from_wikidata, preprocess_data)
-    preprocess_data >> artist_linkage
-    extract_from_wikidata >> match_artists_on_wikidata
-    data_collect >> export_input_bq_to_gcs >> preprocess_data >> artist_linkage
-    (
-        [extract_from_wikidata, artist_linkage]
-        >> match_artists_on_wikidata
-        >> [artist_metrics, load_data_into_linked_artists_table]
-    )
-    artist_metrics >> gce_instance_stop
+    dag_init >> collect >> internal_linkage
+    dag_init >> vm_init >> (internal_linkage, wikidata_matching)
+    internal_linkage >> match_artists_on_wikidata >> load_data_into_linked_artists_table
+    wikidata_matching >> artist_metrics >> gce_instance_stop

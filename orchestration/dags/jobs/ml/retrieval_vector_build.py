@@ -41,6 +41,7 @@ gce_params = {
         "stg": "n1-standard-8",
         "prod": "n1-standard-8",
     },
+    "container_worker": {"dev": "1", "stg": "1", "prod": "2"},
 }
 
 schedule_dict = {"prod": "0 4 * * *", "dev": "0 6 * * *", "stg": "0 6 * * 3"}
@@ -75,6 +76,9 @@ with DAG(
         "experiment_name": Param(default=gce_params["experiment_name"], type="string"),
         "model_name": Param(
             default=gce_params["model_name"][ENV_SHORT_NAME], type="string"
+        ),
+        "container_worker": Param(
+            default=gce_params["container_worker"][ENV_SHORT_NAME], type="string"
         ),
         "source_experiment_name": Param(
             default=gce_params["source_experiment_name"][ENV_SHORT_NAME], type="string"
@@ -129,7 +133,8 @@ with DAG(
             "--model-name {{ params.model_name }} "
             "--source-experiment-name {{ params.source_experiment_name }} "
             "--source-run-id {{ params.source_run_id }} "
-            "--source-artifact-uri {{  params.source_artifact_uri }} ",
+            "--source-artifact-uri {{  params.source_artifact_uri }} "
+            "--container-worker {{ params.container_worker }} ",
             dag=dag,
         )
 

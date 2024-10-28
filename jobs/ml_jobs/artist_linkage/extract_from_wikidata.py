@@ -1,4 +1,3 @@
-import time
 from io import StringIO
 
 import numpy as np
@@ -14,7 +13,6 @@ QUERIES_PATHES = {
     "music": "queries/extract_music_artists.rq",
     "gkg": "queries/extract_gkg_artists.rq",
 }
-QUERIES_PARAMS = {"retries": 6, "delay": 300}
 
 app = typer.Typer()
 
@@ -75,34 +73,20 @@ def postprocess_data(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def fetch_wikidata_qlever_csv(sparql_query, retries=3, delay=5):
+def fetch_wikidata_qlever_csv(sparql_query):
     headers = {"Accept": "text/csv"}
 
-    for attempt in range(QUERIES_PARAMS["retries"]):
-        try:
-            response = requests.get(
-                QLEVER_ENDPOINT, params={"query": sparql_query}, headers=headers
-            )
+    response = requests.get(
+        QLEVER_ENDPOINT, params={"query": sparql_query}, headers=headers
+    )
 
-            if response.status_code == 200:
-                response.encoding = "utf-8"
-                csv_content = response.text
-                return pd.read_csv(StringIO(csv_content))
-            else:
-                print(
-                    f"Attempt {attempt + 1} - Error: {response.status_code}, {response.text}"
-                )
+    if response.status_code == 200:
+        response.encoding = "utf-8"
 
-        except requests.exceptions.RequestException as e:
-            print(f"Attempt {attempt + 1} - Request error: {e}")
-
-        # Wait before retrying if not the last attempt
-        if attempt < QUERIES_PARAMS["retries"] - 1:
-            time.sleep(QUERIES_PARAMS["delay"])
-
-    # Return None if all attempts failed
-    print("Failed to retrieve data after multiple attempts.")
-    return None
+        csv_content = response.text
+        return pd.read_csv(StringIO(csv_content))
+    else:
+        print(f"Error: {response.status_code}, {response.text}")
 
 
 @app.command()

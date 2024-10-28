@@ -13,8 +13,11 @@ METRICS_PER_DATASET_CSV_FILENAME = "metrics_per_dataset.csv"
 METRICS_PER_DATASET_GRAPH_FILENAME = "metrics_per_dataset.png"
 GLOBAL_METRICS_FILENAME = "global_metrics.csv"
 
-
 MERGE_COLUMNS = ["artist_name", "offer_category_id", "is_synchronised", "artist_type"]
+
+WIKI_MATCHED_WEIGHTED_BY_BOOKINGS_PERC = "wiki_matched_weighted_by_bookings_perc"
+WIKI_MATCHED_WEIGHTED_BY_OFFERS_PERC = "wiki_matched_weighted_by_offers_perc"
+WIKI_MATCHED_PERC = "wiki_matched_perc"
 
 app = typer.Typer()
 
@@ -127,13 +130,21 @@ def get_wiki_matching_metrics(artists_df: pd.DataFrame) -> pd.DataFrame:
 
     def _get_stats_per_df(input_df: pd.DataFrame) -> dict:
         return {
-            "weighted_wiki_matched_perc": round(
+            WIKI_MATCHED_WEIGHTED_BY_BOOKINGS_PERC: round(
                 100
                 * input_df.loc[lambda df: df.wiki_id.notna()].total_booking_count.sum()
                 / input_df.total_booking_count.sum(),
                 2,
             ),
-            "wiki_matched_perc": round(
+            WIKI_MATCHED_WEIGHTED_BY_OFFERS_PERC: round(
+                100
+                * input_df.loc[lambda df: df.wiki_id.notna()]
+                .offer_number.replace(0, 1)
+                .sum()
+                / input_df.offer_number.replace(0, 1).sum(),
+                2,
+            ),  # TODO: Remove the replace(0, 1) when the offer_number is fixed
+            WIKI_MATCHED_PERC: round(
                 100 * input_df.wiki_id.notna().sum() / len(input_df),
                 2,
             ),
@@ -145,7 +156,7 @@ def get_wiki_matching_metrics(artists_df: pd.DataFrame) -> pd.DataFrame:
     for group_name, group_df in artists_df.groupby("offer_category_id"):
         stats_dict[group_name] = _get_stats_per_df(group_df)
 
-    return pd.DataFrame(stats_dict).T
+    return pd.DataFrame(stats_dict).T.assign(category=lambda df: df.index)
 
 
 @app.command()
@@ -194,10 +205,13 @@ def main(
         "recall_std": metrics_per_dataset_df.recall.std(),
         "f1_mean": metrics_per_dataset_df.f1.mean(),
         "f1_std": metrics_per_dataset_df.f1.std(),
-        "weighted_wiki_matched_perc": wiki_matching_metrics_df[
-            "weighted_wiki_matched_perc"
+        WIKI_MATCHED_WEIGHTED_BY_BOOKINGS_PERC: wiki_matching_metrics_df[
+            WIKI_MATCHED_WEIGHTED_BY_BOOKINGS_PERC
         ]["TOTAL"],
-        "wiki_matched_perc": wiki_matching_metrics_df["wiki_matched_perc"]["TOTAL"],
+        WIKI_MATCHED_WEIGHTED_BY_OFFERS_PERC: wiki_matching_metrics_df[
+            WIKI_MATCHED_WEIGHTED_BY_OFFERS_PERC
+        ]["TOTAL"],
+        WIKI_MATCHED_PERC: wiki_matching_metrics_df["wiki_matched_perc"]["TOTAL"],
     }
 
     # MLflow Logging

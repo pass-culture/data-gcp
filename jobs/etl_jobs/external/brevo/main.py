@@ -1,9 +1,9 @@
 from datetime import date, datetime, timedelta, timezone
 
 import typer
+from jobs.etl_jobs.external.brevo.brevo_newsletters import BrevoNewsletters
+from jobs.etl_jobs.external.brevo.brevo_transactional import BrevoTransactional
 
-from sendinblue_newsletters import SendinblueNewsletters
-from sendinblue_transactional import SendinblueTransactional
 from utils import (
     BIGQUERY_RAW_DATASET,
     BIGQUERY_TMP_DATASET,
@@ -35,8 +35,8 @@ def run(
     end_date: str = typer.Option(..., help="Date de fin d'import"),
 ):
     if target == "newsletter":
-        # Statistics for email campaigns Sendinblue
-        sendinblue_newsletters = SendinblueNewsletters(
+        # Statistics for email campaigns Brevo
+        brevo_newsletters = BrevoNewsletters(
             gcp_project=GCP_PROJECT,
             raw_dataset=BIGQUERY_RAW_DATASET,
             api_key=API_KEY,
@@ -45,14 +45,14 @@ def run(
             end_date=today,
         )
 
-        sendinblue_newsletters.create_instance_email_campaigns_api()
-        df = sendinblue_newsletters.get_data()
-        sendinblue_newsletters.save_to_historical(df, campaigns_histo_schema)
+        brevo_newsletters.create_instance_email_campaigns_api()
+        df = brevo_newsletters.get_data()
+        brevo_newsletters.save_to_historical(df, campaigns_histo_schema)
         return "success"
 
     elif target == "transactional":
-        # Statistics for transactional email Sendinblue
-        sendinblue_transactional = SendinblueTransactional(
+        # Statistics for transactional email Brevo
+        brevo_transactional = BrevoTransactional(
             gcp_project=GCP_PROJECT,
             tmp_dataset=BIGQUERY_TMP_DATASET,
             api_key=API_KEY,
@@ -60,13 +60,13 @@ def run(
             start_date=start_date,
             end_date=end_date,
         )
-        sendinblue_transactional.create_instance_transactional_email_api()
+        brevo_transactional.create_instance_transactional_email_api()
         all_events = []
         for event_type in ["delivered", "opened", "unsubscribed"]:
-            all_events.append(sendinblue_transactional.get_events(event_type))
+            all_events.append(brevo_transactional.get_events(event_type))
         all_events = sum(all_events, [])
-        df = sendinblue_transactional.parse_to_df(all_events)
-        sendinblue_transactional.save_to_historical(df, transactional_histo_schema)
+        df = brevo_transactional.parse_to_df(all_events)
+        brevo_transactional.save_to_historical(df, transactional_histo_schema)
 
         return "success"
 

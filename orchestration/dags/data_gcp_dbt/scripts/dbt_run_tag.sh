@@ -1,7 +1,18 @@
 #!/bin/bash
 
-# Step 1: Set the trap immediately at the start of the script
-trap 'if [ -d "$TMP_FOLDER" ]; then echo "Cleaning up... Deleting temporary folder: $TMP_FOLDER"; rm -rf "$TMP_FOLDER"; fi' EXIT
+# Exit immediately if a command exits with a non-zero status
+set -e
+
+# Step 1: Set the trap to clean up on script exit
+trap 'cleanup' EXIT
+
+# Cleanup function to remove temporary folder
+cleanup() {
+  if [ -d "$TMP_FOLDER" ]; then
+    echo "Cleaning up... Deleting temporary folder: $TMP_FOLDER"
+    rm -rf "$TMP_FOLDER"
+  fi
+}
 
 # Step 2: Loop to generate a new random 12-character string for RDID until a non-existing folder is found
 while true; do
@@ -26,5 +37,9 @@ find "$PATH_TO_DBT_TARGET" -maxdepth 1 -type f -exec cp {} "$TMP_FOLDER/" \;
 # Step 4: Run dbt with --target-path flag pointing to $TMP_FOLDER
 dbt run --target $target --select tag:$tag $full_ref_str --vars "{ENV_SHORT_NAME: $ENV_SHORT_NAME}" --target-path $TMP_FOLDER $EXCLUSION $GLOBAL_CLI_FLAGS
 
-# Step 5: Delete the temporary folder after dbt run completes
-rm -rf "$TMP_FOLDER"
+# Capture the exit code and propagate it
+exit_code=$?
+if [ $exit_code -ne 0 ]; then
+    echo "dbt command failed with exit code $exit_code."
+    exit $exit_code  # Ensure the script exits with dbt's exit code
+fi

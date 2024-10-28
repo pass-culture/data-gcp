@@ -1,4 +1,5 @@
 import logging
+import time
 from datetime import datetime
 
 import numpy as np
@@ -63,33 +64,21 @@ class SendinblueTransactional:
 
         return active_templates
 
-    def get_events(self, event_type):
-        active_templates = self.get_active_templates_id()
-        if ENV_SHORT_NAME != "prod" and len(active_templates) > 0:
-            active_templates = active_templates[:1]
 
-        print(f"Number of active templates : {len(active_templates)}")
+def get_events(self, event_type, max_retries=5, initial_delay=5):
+    active_templates = self.get_active_templates_id()
+    if ENV_SHORT_NAME != "prod" and len(active_templates) > 0:
+        active_templates = active_templates[:1]  # limit to 1 for non-prod environments
 
-        api_responses = []
-        for template in active_templates:
-            offset = 0
-            response = self.api_instance.get_email_event_report(
-                template_id=template,
-                start_date=self.start_date,
-                end_date=self.end_date,
-                event=event_type,
-                offset=offset,
-            ).events
-            if response is not None:
-                logging.info(
-                    f"Number of responses for template {template}: {len(response)}"
-                )
-                api_responses.append(response)
-                if ENV_SHORT_NAME != "prod":
-                    continue
-                while response is not None and len(response) == 2500:
-                    offset = offset + 2500
-                    logging.info(f"Importing offset {offset} for template {template} ")
+    print(f"Number of active templates: {len(active_templates)}")
+
+    api_responses = []
+    for template in active_templates:
+        offset = 0
+        while True:
+            for attempt in range(max_retries):
+                try:
+                    # Fetch events with the current offset
                     response = self.api_instance.get_email_event_report(
                         template_id=template,
                         start_date=self.start_date,
@@ -97,18 +86,43 @@ class SendinblueTransactional:
                         event=event_type,
                         offset=offset,
                     ).events
-                    if response is not None:
-                        api_responses.append(response)
 
-        api_responses = sum(
-            api_responses, []
-        )  # concatener tous les events dans une unique liste
+                    if response:
+                        logging.info(
+                            f"Fetched {len(response)} events for template {template} at offset {offset}"
+                        )
+                        api_responses.extend(response)
 
-        logging.info(
-            f"Number of active templates with events between {self.start_date} and {self.end_date} : {len(api_responses)}"
-        )
+                        # Break the retry loop on successful fetch
+                        break
 
-        return api_responses
+                    # Exit if no more data is available
+                    if not response or len(response) < 2500:
+                        break
+
+                except ApiException as e:
+                    if e.status == 429:  # Too many requests
+                        delay = initial_delay * (2**attempt)  # exponential backoff
+                        logging.warning(
+                            f"Rate limit hit. Retrying in {delay} seconds..."
+                        )
+                        time.sleep(delay)
+                    else:
+                        logging.error(
+                            f"Failed to fetch events for template {template}: {e}"
+                        )
+                        break  # break retry loop on non-retryable error
+
+            # Update offset for pagination; exit loop if fewer than max results are returned
+            offset += 2500
+            if not response or len(response) < 2500:
+                break  # exit loop if last response was less than max batch size
+
+    logging.info(
+        f"Total events fetched for templates between {self.start_date} and {self.end_date}: {len(api_responses)}"
+    )
+
+    return api_responses
 
     def parse_to_df(self, all_events):
         df = pd.DataFrame()

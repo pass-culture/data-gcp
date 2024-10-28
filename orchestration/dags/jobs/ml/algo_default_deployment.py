@@ -25,40 +25,41 @@ DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"algo-default-deployment-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
 
-low_dict = {
+RANKING_DICT = {
+    "prod": "n1-highcpu-4",
+    "stg": "n1-highcpu-2",
+    "dev": "n1-highcpu-2",
+}
+RETRIEVAL_DICT = {
     "prod": "n1-standard-4",
     "stg": "n1-standard-2",
     "dev": "n1-standard-2",
 }
-standard_dict = {
-    "prod": "n1-standard-8",
-    "stg": "n1-standard-4",
+SEMANTIC_DICT = {
+    "prod": "n1-standard-4",
+    "stg": "n1-standard-2",
     "dev": "n1-standard-2",
-}
-high_dict = {
-    "prod": "n1-standard-16",
-    "stg": "n1-standard-8",
-    "dev": "n1-standard-4",
 }
 
 schedule_dict = {"prod": "0 6 * * *", "dev": "0 7 * * *", "stg": "0 7 * * *"}
 
 
 models_to_deploy = [
-    {
-        "experiment_name": f"retrieval_recommendation_v1.1_{ENV_SHORT_NAME}",
-        "endpoint_name": f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
-        "version_name": "v_{{ ts_nodash }}",
-        "instance_type": standard_dict[ENV_SHORT_NAME],
-        "min_nodes": {"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
-        "max_nodes": {"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
-    },
     # ranking endpoint
     {
         "experiment_name": f"ranking_endpoint_v1.1_{ENV_SHORT_NAME}",
         "endpoint_name": f"recommendation_user_ranking_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
-        "instance_type": low_dict[ENV_SHORT_NAME],
+        "instance_type": RANKING_DICT[ENV_SHORT_NAME],
+        "min_nodes": {"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
+        "max_nodes": {"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
+    },
+    # retrieval endpoint
+    {
+        "experiment_name": f"retrieval_recommendation_v1.1_{ENV_SHORT_NAME}",
+        "endpoint_name": f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
+        "version_name": "v_{{ ts_nodash }}",
+        "instance_type": RETRIEVAL_DICT[ENV_SHORT_NAME],
         "min_nodes": {"prod": 1, "dev": 1, "stg": 1}[ENV_SHORT_NAME],
         "max_nodes": {"prod": 20, "dev": 2, "stg": 2}[ENV_SHORT_NAME],
     },

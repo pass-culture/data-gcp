@@ -208,17 +208,14 @@ with DAG(
         ),
     )
 
-    (logging_task >> gce_instance_start >> fetch_install_code)
-    (logging_task >> data_collect >> export_input_bq_to_gcs)
-
+    logging_task >> (gce_instance_start, data_collect)
+    gce_instance_start >> fetch_install_code >> (extract_from_wikidata, preprocess_data)
+    preprocess_data >> artist_linkage
+    extract_from_wikidata >> match_artists_on_wikidata
+    data_collect >> export_input_bq_to_gcs >> preprocess_data >> artist_linkage
     (
-        [export_input_bq_to_gcs, fetch_install_code]
-        >> preprocess_data
-        >> artist_linkage
-        >> extract_from_wikidata
+        (extract_from_wikidata, artist_linkage)
         >> match_artists_on_wikidata
-        >> artist_metrics
-        >> gce_instance_stop
+        >> (artist_metrics, load_data_into_linked_artists_table)
     )
-
-    (match_artists_on_wikidata >> load_data_into_linked_artists_table)
+    artist_metrics >> gce_instance_stop

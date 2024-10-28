@@ -55,6 +55,15 @@ select
         distinct case when click_type = 'ConsultVideo' then uh.unique_session_id end
     ) as total_session_with_consult_video,
     count(
+        case
+            when
+                consult_offer_timestamp is not null
+                or click_type is not null
+                or consult_venue_timestamp is not null
+            then 1
+        end
+    ) as total_click,
+    count(
         case when consult_offer_timestamp is not null then 1 end
     ) as total_consult_offer,
     count(case when fav_timestamp is not null then 1 end) as total_fav,

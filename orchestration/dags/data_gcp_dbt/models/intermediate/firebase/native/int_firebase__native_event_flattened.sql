@@ -146,5 +146,14 @@ select
         venues_41_50
     ),
     {{ extract_str_to_array_field("offers", 0, 10, 50) }} as displayed_offers,
-    {{ extract_str_to_array_field("venues", 0, 10, 50) }} as displayed_venues
+    {{ extract_str_to_array_field("venues", 0, 10, 50) }} as displayed_venues,
+    case
+        when event_name = 'BookingConfirmation' and bookingid is null
+        then true
+        when event_name = 'BookingConfirmation' and user_id is null
+        then true
+        when event_name = 'ConsultOffer' and offerid is null
+        then true
+        else false
+    end as is_anomaly
 from native_unnest

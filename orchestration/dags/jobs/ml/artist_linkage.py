@@ -223,8 +223,8 @@ with DAG(
     extract_from_wikidata >> match_artists_on_wikidata
     data_collect >> export_input_bq_to_gcs >> preprocess_data >> artist_linkage
     (
-        (extract_from_wikidata, artist_linkage)
+        [extract_from_wikidata, artist_linkage]
         >> match_artists_on_wikidata
-        >> (artist_metrics, load_data_into_linked_artists_table)
+        >> [artist_metrics, load_data_into_linked_artists_table]
     )
     artist_metrics >> gce_instance_stop

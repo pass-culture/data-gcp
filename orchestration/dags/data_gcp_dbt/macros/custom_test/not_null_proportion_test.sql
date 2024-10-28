@@ -18,6 +18,6 @@
         )
     select *
     from final
-    where proportion > {{ var("threshold_test") }}
+    where proportion > {{ var("not_null_anomaly_threshold_alert") }}
 
 {% endtest %}

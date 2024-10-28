@@ -6,8 +6,13 @@ flags:
   send_anonymous_usage_stats: False
   require_explicit_package_overrides_for_builtin_materializations: false
 
+
+# This setting configures which "profile" dbt uses for this project.
 profile: 'data_gcp_dbt'
 
+# These configurations specify where dbt should look for different types of files.
+# The `model-paths` config, for example, states that models in this project can be
+# found in the "models/" directory. You probably won't need to change these!
 model-paths: [ "models" ]
 analysis-paths: [ "analyses" ]
 test-paths: [ "tests" ]
@@ -15,8 +20,9 @@ seed-paths: [ "seeds" ]
 macro-paths: [ "macros" ]
 snapshot-paths: [ "snapshots" ]
 
+# If you wish to write dbt artifacts to a custom directory, please use the --target-path CLI flag or DBT_TARGET_PATH env var instead.
 packages-install-path: "{{ env_var('DBT_TARGET_PATH', 'target') }}/dbt_packages"
-
+# directories to be removed by `dbt clean`
 clean-targets:
   - "{{ env_var('DBT_TARGET_PATH', 'target') }}"
 
@@ -31,63 +37,66 @@ models:
     +persist_docs:
       relation: true
       columns: true
-    raw:  # Hide "raw" folder
+    raw:
       +meta:
         owner: "@team-data-engineering"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: raw_applicative_{{ target.name }}
-      +docs:
-        show: false
-    clean:  # Hide "clean" folder
+      applicative:
+        +tags: "exclude_ci"
+    clean:
       +meta:
         owner: "@team-data-engineering"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: clean_{{ target.name }}
       +docs:
-        show: false
-    analytics:  # Hide "analytics" folder
+        node_color: "#b43ddb"
+      applicative:
+        +alias: applicative_database_
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+    analytics:
       +meta:
         owner: "@team-data-analytics"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: analytics_{{ target.name }}
       +docs:
-        show: false
+        node_color: "#d90000"
     intermediate:
       +meta:
         owner: "@team-data-engineering"
       +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"
+      global:
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     mart:
       +meta:
         owner: "@team-data-analytics"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: analytics_{{ target.name }}
-    export:  # Hide "export" folder
+      monitoring:
+        +meta:
+          owner: "@team-data-engineering"
+    export:
       +schema: export_{{ target.name }}
       +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"
       +meta:
         owner: "@team-data-engineering"
-      +docs:
-        show: false
-    machine_learning:  # Hide "machine_learning" folder
+      backend:
+        +schema: backend_{{ target.name }}
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+    machine_learning:
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +meta:
         owner: "@team-data-science"
-      +docs:
-        show: false
-
-  dbt_utils:
-    +docs:
-      show: false
 
   elementary:
-    +docs:
-      show: false
+    +on_schema_change: "append_new_columns"
+    +enabled: true
+    +schema: dbt_artifacts_{{ target.name }}
 
 seeds:
   +schema: seeds
   +docs:
     node_color: "#000000"
-    show: false
 
 snapshots:
   +target_schema: snapshot_{{ target.name }}
@@ -95,11 +104,12 @@ snapshots:
     show: false
 
 data_tests:
-  +store_failures: true
-  +severity: "{{ env_var('CI_SEVERITY', 'warn') }}"
+  +store_failures: true  # store failures for all tests
+  +severity: "{{ env_var('CI_SEVERITY', 'warn') }}" # Failing tests will generate a warning by default. To raise an error, overwrite a config with severity: error.
   +docs:
-    show: false
+    show: true
     tags: "test"
+
 
 vars:
   ENV_SHORT_NAME: dev
@@ -107,3 +117,4 @@ vars:
   region_name: region-europe-west1
   mute_ensure_materialization_override: true
   snapshot_filter: "dbt_valid_to is null"
+  not_null_anomaly_threshold_alert: 0.01

@@ -84,7 +84,7 @@ with DAG(
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    render_template_as_native_obj=True,
+    render_template_as_native_obj=True,  # be careful using this because "3.10" is rendered as 3.1 if not double escaped
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -181,7 +181,7 @@ with DAG(
     fetch_code = CloneRepositoryGCEOperator(
         task_id="fetch_code",
         instance_name="{{ params.instance_name }}",
-        python_version="3.10",
+        python_version="'3.10'",
         command="{{ params.branch }}",
         retries=2,
     )

@@ -24,7 +24,7 @@
                 offer_subcategoryid,
                 cast(offer_date_updated as timestamp) as offer_updated_date,
                 offer_last_validation_type
-            from {{ source("raw", "applicative_database_offer") }}
+            from {{ ref("int_raw__offer") }}
             where
                 offer_subcategoryid not in ('ACTIVATION_THING', 'ACTIVATION_EVENT')
                 and (

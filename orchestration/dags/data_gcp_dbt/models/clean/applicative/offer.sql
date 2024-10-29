@@ -5,7 +5,7 @@ with
             row_number() over (
                 partition by offer_id order by offer_date_updated desc
             ) as row_number
-        from {{ source("raw", "applicative_database_offer") }} as offer
+        from {{ ref("int_raw__offer") }} as offer
         where
             offer_subcategoryid not in ('ACTIVATION_THING', 'ACTIVATION_EVENT')
             and (

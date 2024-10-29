@@ -19,6 +19,10 @@
         "booking_cnt": {
             "type": "int",
             "embedding_size": 1
+        },
+        "timestamp": {
+            "type": "timestamp",
+            "embedding_size": 16
         }
     },
     "item_embedding_layers": {

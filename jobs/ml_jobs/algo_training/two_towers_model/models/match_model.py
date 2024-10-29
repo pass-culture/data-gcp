@@ -1,7 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.layers import Dot, Embedding
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
+from tensorflow.keras.layers import Dot, Embedding, StringLookup
 
 
 class MatchModel(tf.keras.models.Model):
@@ -17,7 +16,7 @@ class MatchModel(tf.keras.models.Model):
 
         self.user_layer = tf.keras.Sequential(
             [
-                StringLookup(vocabulary=user_input.unique()),
+                StringLookup(vocabulary=user_input),
                 # We add an additional embedding to account for unknown tokens.
                 Embedding(
                     input_dim=len(user_input) + 1,
@@ -32,7 +31,7 @@ class MatchModel(tf.keras.models.Model):
 
         self.item_layer = tf.keras.Sequential(
             [
-                StringLookup(vocabulary=item_ids.unique()),
+                StringLookup(vocabulary=item_ids),
                 # We add an additional embedding to account for unknown tokens.
                 Embedding(
                     input_dim=len(item_ids) + 1,

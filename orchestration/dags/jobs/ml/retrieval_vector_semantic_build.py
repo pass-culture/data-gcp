@@ -85,6 +85,10 @@ with DAG(
             default=dag_config["MODEL_NAME"],
             type="string",
         ),
+        "container_worker": Param(
+            default=dag_config["container_worker"],
+            type="string",
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)

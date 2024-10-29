@@ -89,6 +89,10 @@ with DAG(
         "install_type": Param(
             default="simple", enum=["simple", "engineering", "science", "analytics"]
         ),
+        "python_version": Param(
+            default="'3.10'",
+            enum=["'3.8'", "'3.9'", "'3.10'", "'3.11'", "'3.12'", "'3.13'"],
+        ),
     },
     doc_md=dag_doc,
 ) as dag:
@@ -113,7 +117,7 @@ with DAG(
         branch="{{ params.branch }}",
         installer="{{ params.installer }}",
         gce_zone="{{ params.gce_zone }}",
-        python_version="3.10",
+        python_version="{{ params.python_version }}",
         requirement_file="requirements.txt",
     )
 

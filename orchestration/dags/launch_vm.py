@@ -65,7 +65,7 @@ with DAG(
     catchup=False,
     dagrun_timeout=None,
     template_searchpath=DAG_FOLDER,
-    render_template_as_native_obj=True,
+    render_template_as_native_obj=True,  # be careful using this because "3.10" is rendered as 3.1 if not double escaped
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",

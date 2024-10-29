@@ -86,7 +86,7 @@ with DAG(
             type="string",
         ),
         "container_worker": Param(
-            default=dag_config["container_worker"],
+            default=gce_params["container_worker"],
             type="string",
         ),
     },

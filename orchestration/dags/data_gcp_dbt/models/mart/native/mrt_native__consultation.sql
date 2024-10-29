@@ -166,25 +166,10 @@ select
         then "specific_query_search"
         when consult.origin in ("search","searchresults","searchn1") and consult.query is null
         then "landing_search"
-        when consult.origin = "venue" and ov.consult_venue_origin = "offer"
-        then "offer_venue"
-        when
-            consult.origin = "venue" and ov.consult_venue_origin = "searchVenuePlaylist"
-        then "search_venue_playlist"
-        when consult.origin = "venue" and ov.consult_venue_origin = "searchAutoComplete"
-        then "search_venue_autocomplete"
-        when consult.origin = "venue" and ov.consult_venue_origin = "venueMap"
-        then "venue_map"
-        when
-            consult.origin = "venue"
-            and ov.consult_venue_origin in ("home", "venueList")
-        then "home_venue_playlist"
-        when consult.origin = "venue" and ov.consult_venue_origin = "deeplink"
-        then "venue_deeplink"
-        when consult.origin = "offer" and consult.multi_venue_offer_id is not null
-        then "multi_venue_offer"
-        when consult.origin = "similar_offer"
-        then concat("similar_offer_", so.consult_similar_offer_origin)
+        when consult.origin = "venue" and ov.consult_venue_origin is not null
+        then concat("venue_", ov.consult_venue_origin)
+        when consult.origin = "similar_offer" and so.consult_similar_offer_origin is not null
+        then concat("similar_offer_",so.consult_similar_offer_origin)
         when consult.origin in ("venueMap","venuemap")
         then "venue_map"
         else consult.origin

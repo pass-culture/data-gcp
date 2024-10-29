@@ -17,7 +17,7 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
 )
-from common.utils import get_airflow_schedule, health_check
+from common.utils import get_airflow_schedule, sparkql_health_check
 from dependencies.ml.linkage.import_artists import PARAMS as IMPORT_ARTISTS_PARAMS
 
 from airflow import DAG
@@ -83,7 +83,7 @@ with DAG(
 
         health_check_task = PythonOperator(
             task_id="health_check_task",
-            python_callable=health_check,
+            python_callable=sparkql_health_check,
             op_args=[QLEVER_ENDPOINT],
             dag=dag,
         )

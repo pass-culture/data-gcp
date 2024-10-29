@@ -328,13 +328,14 @@ def get_tables_config_dict(PATH, BQ_DATASET, is_source=False, dbt_alias=False):
     return tables_config
 
 
-def health_check(url: str, timeout=5, retries=4, initial_delay=5):
+def sparkql_health_check(url: str, timeout=5, retries=5, initial_delay=5):
     for attempt in range(retries):
         try:
-            response = requests.get(url, timeout=timeout)
-
+            response = requests.get(url, params={"query": "ASK { }"}, timeout=timeout)
+            logging.info(f"response: {response}")
             if response.status_code == 200:
                 logging.info(f"{url} is healthy on attempt {attempt + 1}.")
+                return True  # Exit on successful health check
             else:
                 logging.warning(
                     f"{url} returned status code {response.status_code} on attempt {attempt + 1}."
@@ -348,5 +349,4 @@ def health_check(url: str, timeout=5, retries=4, initial_delay=5):
             logging.info(f"Retrying in {delay} seconds...")
             time.sleep(delay)
 
-    # Raise an exception to fail the task in Airflow if all attempts fail
     raise Exception(f"Health check failed for {url} after {retries} attempts.")

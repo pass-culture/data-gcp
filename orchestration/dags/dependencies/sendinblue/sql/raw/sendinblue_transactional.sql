@@ -18,7 +18,8 @@ with
 select distinct
     template,
     tag,
-    case when venue_id is not null then venue_id else user_id end as user_id,
+    user_id,
+    venue_id,
     event_date,
     delivered_count,
     opened_count,

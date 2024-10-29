@@ -1,0 +1,241 @@
+version: 2
+models:
+  - name: mrt_global__offer
+    description: '{{ doc("description__mrt_global__offer") }}'
+    columns:
+      - name: offer_id
+        description: '{{ doc("column__offer_id") }}'
+        data_type: STRING
+        data_tests:
+          - not_null
+          - unique
+      - name: offer_product_id
+        description: '{{ doc("column__offer_product_id") }}'
+        data_type: STRING
+      - name: offer_product_humanized_id
+        description: '{{ doc("column__offer_product_humanized_id") }}'
+        data_type: STRING
+      - name: offer_id_at_providers
+        description: '{{ doc("column__offer_id_at_providers") }}'
+        data_type: STRING
+      - name: is_synchronised
+        description: '{{ doc("column__is_synchronised") }}'
+        data_type: BOOLEAN
+      - name: offer_name
+        description: '{{ doc("column__offer_name") }}'
+        data_type: STRING
+      - name: offer_description
+        description: '{{ doc("column__offer_description") }}'
+        data_type: STRING
+      - name: offer_category_id
+        description: '{{ doc("column__offer_category_id") }}'
+        data_type: STRING
+        data_tests:
+          - not_null
+      - name: last_stock_price
+        description: '{{ doc("column__last_stock_price") }}'
+        data_type: NUMERIC
+      - name: offer_creation_date
+        description: '{{ doc("column__offer_creation_date") }}'
+        data_type: DATE
+      - name: offer_created_at
+        description: '{{ doc("column__offer_created_at") }}'
+        data_type: DATETIME
+      - name: offer_date_updated
+        description: '{{ doc("column__offer_date_updated") }}'
+        data_type: DATETIME
+      - name: offer_is_duo
+        description: '{{ doc("column__offer_is_duo") }}'
+        data_type: BOOLEAN
+      - name: item_id
+        description: '{{ doc("column__item_id") }}'
+        data_type: STRING
+        data_tests:
+          - not_null
+      - name: offer_is_underage_selectable
+        description: '{{ doc("column__offer_is_underage_selectable") }}'
+        data_type: BOOLEAN
+      - name: offer_type_domain
+        description: '{{ doc("column__offer_type_domain") }}'
+        data_type: STRING
+      - name: offer_is_bookable
+        description: '{{ doc("column__offer_is_bookable") }}'
+        data_type: BOOLEAN
+      - name: venue_is_virtual
+        description: '{{ doc("column__venue_is_virtual") }}'
+        data_type: BOOLEAN
+      - name: digital_goods
+        description: '{{ doc("column__digital_goods") }}'
+        data_type: BOOLEAN
+      - name: physical_goods
+        description: '{{ doc("column__physical_goods") }}'
+        data_type: BOOLEAN
+      - name: event
+        description: '{{ doc("column__event") }}'
+        data_type: BOOLEAN
+      - name: offer_humanized_id
+        description: '{{ doc("column__offer_humanized_id") }}'
+        data_type: STRING
+      - name: passculture_pro_url
+        description: '{{ doc("column__passculture_pro_url") }}'
+        data_type: STRING
+      - name: webapp_url
+        description: '{{ doc("column__webapp_url") }}'
+        data_type: STRING
+      - name: offer_subcategory_id
+        description: '{{ doc("column__offer_subcategory_id") }}'
+        data_type: STRING
+        data_tests:
+          - not_null
+      - name: offer_url
+        description: '{{ doc("column__offer_url") }}'
+        data_type: STRING
+      - name: is_national
+        description: '{{ doc("column__is_national") }}'
+        data_type: BOOLEAN
+      - name: is_active
+        description: '{{ doc("column__is_active") }}'
+        data_type: BOOLEAN
+      - name: offer_validation
+        description: '{{ doc("column__offer_validation") }}'
+        data_type: STRING
+      - name: author
+        description: '{{ doc("column__author") }}'
+        data_type: STRING
+      - name: performer
+        description: '{{ doc("column__performer") }}'
+        data_type: STRING
+      - name: stage_director
+        description: '{{ doc("column__stage_director") }}'
+        data_type: STRING
+      - name: theater_movie_id
+        description: '{{ doc("column__theater_movie_id") }}'
+        data_type: STRING
+      - name: theater_room_id
+        description: '{{ doc("column__theater_room_id") }}'
+        data_type: STRING
+      - name: speaker
+        description: '{{ doc("column__speaker") }}'
+        data_type: STRING
+      - name: movie_type
+        description: '{{ doc("column__movie_type") }}'
+        data_type: STRING
+      - name: visa
+        description: '{{ doc("column__visa") }}'
+        data_type: STRING
+      - name: release_date
+        description: '{{ doc("column__release_date") }}'
+        data_type: STRING
+      - name: genres
+        description: '{{ doc("column__genres") }}'
+        data_type: STRING
+      - name: companies
+        description: '{{ doc("column__companies") }}'
+        data_type: STRING
+      - name: countries
+        description: '{{ doc("column__countries") }}'
+        data_type: STRING
+      - name: casting
+        description: '{{ doc("column__casting") }}'
+        data_type: STRING
+      - name: isbn
+        description: '{{ doc("column__isbn") }}'
+        data_type: STRING
+      - name: titelive_gtl_id
+        description: '{{ doc("column__titelive_gtl_id") }}'
+        data_type: STRING
+      - name: rayon
+        description: '{{ doc("column__rayon") }}'
+        data_type: STRING
+      - name: book_editor
+        description: '{{ doc("column__book_editor") }}'
+        data_type: STRING
+      - name: type
+        description: '{{ doc("column__type") }}'
+        data_type: STRING
+      - name: sub_type
+        description: '{{ doc("column__sub_type") }}'
+        data_type: STRING
+      - name: mediation_humanized_id
+        description: '{{ doc("column__mediation_humanized_id") }}'
+        data_type: STRING
+      - name: total_individual_bookings
+        description: '{{ doc("column__total_individual_bookings") }}'
+        data_type: INT64
+      - name: total_cancelled_individual_bookings
+        description: '{{ doc("column__total_cancelled_individual_bookings") }}'
+        data_type: INT64
+      - name: total_used_individual_bookings
+        description: '{{ doc("column__total_used_individual_bookings") }}'
+        data_type: INT64
+      - name: total_favorites
+        description: '{{ doc("column__total_favorites") }}'
+        data_type: INT64
+      - name: total_stock_quantity
+        description: '{{ doc("column__total_stock_quantity") }}'
+        data_type: INT64
+      - name: total_first_bookings
+        description: '{{ doc("column__total_first_bookings") }}'
+        data_type: INT64
+      - name: venue_id
+        description: '{{ doc("column__venue_id") }}'
+        data_type: STRING
+        data_tests:
+          - not_null
+      - name: venue_name
+        description: '{{ doc("column__venue_name") }}'
+        data_type: STRING
+      - name: venue_department_code
+        description: '{{ doc("column__venue_department_code") }}'
+        data_type: STRING
+      - name: venue_region_name
+        description: '{{ doc("column__venue_region_name") }}'
+        data_type: STRING
+      - name: venue_postal_code
+        description: '{{ doc("column__venue_postal_code") }}'
+        data_type: STRING
+      - name: venue_city
+        description: '{{ doc("column__venue_city") }}'
+        data_type: STRING
+      - name: venue_epci
+        description: '{{ doc("column__venue_epci") }}'
+        data_type: STRING
+      - name: venue_academy_name
+        description: '{{ doc("column__venue_academy_name") }}'
+        data_type: STRING
+      - name: venue_density_label
+        description: '{{ doc("column__venue_density_label") }}'
+        data_type: STRING
+      - name: venue_macro_density_label
+        description: '{{ doc("column__venue_macro_density_label") }}'
+        data_type: STRING
+      - name: venue_label
+        description: '{{ doc("column__venue_label") }}'
+        data_type: STRING
+      - name: partner_id
+        description: '{{ doc("column__partner_id") }}'
+        data_type: STRING
+      - name: offerer_id
+        description: '{{ doc("column__offerer_id") }}'
+        data_type: STRING
+      - name: venue_managing_offerer_id
+        description: '{{ doc("column__venue_managing_offerer_id") }}'
+        data_type: STRING
+      - name: offerer_name
+        description: '{{ doc("column__offerer_name") }}'
+        data_type: STRING
+      - name: venue_type_label
+        description: '{{ doc("column__venue_type_label") }}'
+        data_type: STRING
+      - name: venue_iris_internal_id
+        description: '{{ doc("column__venue_iris_internal_id") }}'
+        data_type: STRING
+      - name: offerer_address_id
+        description: '{{ doc("column__offerer_address_id") }}'
+        data_type: STRING
+      - name: offer_publication_date
+        description: '{{ doc("column__offer_publication_date") }}'
+        data_type: DATETIME
+      - name: is_future_scheduled
+        description: '{{ doc("column__is_future_scheduled") }}'
+        data_type: BOOLEAN

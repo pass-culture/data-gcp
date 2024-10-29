@@ -1,0 +1,126 @@
+version: 2
+
+models:
+  - name: mrt_global__collective_booking
+    description: '{{ doc("description__mrt_global__collective_booking") }}'
+    columns:
+      - name: collective_booking_id
+        description: "{{ doc('column__collective_booking_id') }}"
+      - name: collective_stock_id
+        description: "{{ doc('column__collective_stock_id') }}"
+      - name: is_used_collective_booking
+        description: "{{ doc('column__collective_booking_is_used') }}"
+      - name: stock_id
+        description: "{{ doc('column__stock_id') }}"
+      - name: collective_offer_id
+        description: "{{ doc('column__collective_offer_id') }}"
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+      - name: collective_offer_name
+        description: "{{ doc('column__collective_offer_name') }}"
+      - name: collective_offer_subcategory_id
+        description: "{{ doc('column__collective_offer_subcategory_id') }}"
+      - name: collective_offer_category_id
+        description: "{{ doc('column__collective_offer_category_id') }}"
+      - name: collective_offer_format
+        description: "{{ doc('column__collective_offer_format') }}"
+      - name: venue_id
+        description: "{{ doc('column__venue_id') }}"
+      - name: venue_name
+        description: "{{ doc('column__venue_name') }}"
+      - name: venue_department_code
+        description: "{{ doc('column__venue_department_code') }}"
+      - name: venue_department_name
+        description: "{{ doc('column__venue_department_name') }}"
+      - name: venue_region_name
+        description: "{{ doc('column__venue_region_name') }}"
+      - name: offerer_id
+        description: "{{ doc('column__offerer_id') }}"
+      - name: partner_id
+        description: "{{ doc('column__partner_id') }}"
+      - name: offerer_name
+        description: "{{ doc('column__offerer_name') }}"
+      - name: venue_iris_internal_id
+        description: "{{ doc('column__venue_iris_internal_id') }}"
+      - name: booking_amount
+        description: "{{ doc('column__booking_amount') }}"
+      - name: collective_stock_number_of_tickets
+        description: "{{ doc('column__collective_stock_number_of_tickets') }}"
+      - name: collective_stock_beginning_date_time
+        description: "{{ doc('column__collective_stock_beginning_date_time') }}"
+      - name: educational_institution_id
+        description: "{{ doc('column__educational_institution_id') }}"
+      - name: educational_year_id
+        description: "{{ doc('column__educational_year_id') }}"
+      - name: scholar_year
+        description: "{{ doc('column__educational_scholar_year') }}"
+      - name: educational_redactor_id
+        description: "{{ doc('column__educational_redactor_id') }}"
+      - name: institution_program_name
+        description: "{{ doc('column__institution_program_name') }}"
+      - name: institution_internal_iris_id
+        description: "{{ doc('column__institution_internal_iris_id') }}"
+      - name: institution_name
+        description: "{{ doc('column__institution_name') }}"
+      - name: institution_academy_name
+        description: "{{ doc('column__institution_academy_name') }}"
+      - name: institution_region_name
+        description: "{{ doc('column__institution_region_name') }}"
+      - name: institution_department_code
+        description: "{{ doc('column__institution_department_code') }}"
+      - name: institution_department_name
+        description: "{{ doc('column__institution_department_name') }}"
+      - name: institution_postal_code
+        description: "{{ doc('column__institution_postal_code') }}"
+      - name: institution_city
+        description: "{{ doc('column__institution_city') }}"
+      - name: institution_epci
+        description: "{{ doc('column__institution_epci') }}"
+      - name: institution_density_label
+        description: "{{ doc('column__institution_density_label') }}"
+      - name: institution_macro_density_label
+        description: "{{ doc('column__institution_macro_density_label') }}"
+      - name: institution_density_level
+        description: "{{ doc('column__institution_density_level') }}"
+      - name: venue_city
+        description: "{{ doc('column__venue_city') }}"
+      - name: venue_epci
+        description: "{{ doc('column__venue_epci') }}"
+      - name: venue_academy_name
+        description: "{{ doc('column__venue_academy_name') }}"
+      - name: venue_density_label
+        description: "{{ doc('column__venue_density_label') }}"
+      - name: venue_macro_density_label
+        description: "{{ doc('column__venue_macro_density_label') }}"
+      - name: venue_density_level
+        description: "{{ doc('column__venue_density_level') }}"
+      - name: venue_postal_code
+        description: "{{ doc('column__venue_postal_code') }}"
+      - name: collective_offer_address_type
+        description: "{{ doc('column__collective_offer_address_type') }}"
+      - name: collective_booking_creation_date
+        description: "{{ doc('column__collective_booking_creation_date') }}"
+      - name: collective_booking_cancellation_date
+        description: "{{ doc('column__collective_booking_cancellation_date') }}"
+      - name: collective_booking_is_cancelled
+        description: "{{ doc('column__collective_booking_is_cancelled') }}"
+      - name: collective_booking_status
+        description: "{{ doc('column__collective_booking_status') }}"
+      - name: collective_booking_cancellation_reason
+        description: "{{ doc('column__collective_booking_cancellation_reason') }}"
+      - name: collective_booking_confirmation_date
+        description: "{{ doc('column__collective_booking_confirmation_date') }}"
+      - name: collective_booking_confirmation_limit_date
+        description: "{{ doc('column__collective_booking_confirmation_limit_date') }}"
+      - name: collective_booking_used_date
+        description: "{{ doc('column__collective_booking_used_date') }}"
+      - name: collective_booking_reimbursement_date
+        description: "{{ doc('column__collective_booking_reimbursement_date') }}"
+      - name: collective_booking_rank_asc
+        description: "{{ doc('column__collective_booking_rank_asc') }}"
+      - name: collective_booking_rank_desc
+        description: "{{ doc('column__collective_booking_rank_desc') }}"
+      - name: collective_offer_image_id
+        description: "{{ doc('column__collective_offer_image_id') }}"
+      - name: is_current_year_booking
+        description: "{{ doc('column__collective_booking_is_current') }}"

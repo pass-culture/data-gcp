@@ -1,7 +1,6 @@
 import json
 
 import mlflow
-import numpy as np
 import tensorflow as tf
 import typer
 from loguru import logger
@@ -89,40 +88,23 @@ def train(
     # We ensure that the datasets contains the features in the correct order (user_id, ..., item_id, ...)
     train_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=training_table_name
-    )[user_columns + item_columns + ["timestamp", "previous_item_id"]]
-
-    # Step 1: Find the maximum length of arrays in the column
-    max_length = train_data["previous_item_id"].apply(len).max()
-
-    # Step 2: Pad each array in the column to the maximum length
-    train_data["previous_item_id"] = train_data["previous_item_id"].apply(
-        lambda arr: np.pad(arr, (0, max_length - len(arr)), constant_values="")
-    )
-    train_data["previous_item_id"] = list(np.stack(train_data["previous_item_id"]))
+    )[user_columns + item_columns]
 
     validation_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=validation_table_name
-    )[user_columns + item_columns + ["timestamp", "previous_item_id"]]
+    )[user_columns + item_columns]
 
-    # Step 2: Pad each array in the column to the maximum length
-    validation_data["previous_item_id"] = validation_data["previous_item_id"].apply(
-        lambda arr: np.pad(arr, (0, max_length - len(arr)), constant_values="")
-    )
-    validation_data["previous_item_id"] = list(
-        np.stack(validation_data["previous_item_id"].values)
-    )
+    # train_data[user_columns + item_columns] = train_data[
+    #     user_columns + item_columns
+    # ].astype(str)
 
-    train_data[user_columns + item_columns] = train_data[
-        user_columns + item_columns
-    ].astype(str)
-
-    validation_data[user_columns + item_columns] = validation_data[
-        user_columns + item_columns
-    ].astype(str)
+    # validation_data[user_columns + item_columns] = validation_data[
+    #     user_columns + item_columns
+    # ].astype(str)
 
     # Add dynamtic context features user and item data (to not have only on occurrence of each)
     idx = (
-        train_data[user_columns + ["timestamp"]]
+        train_data[user_columns]
         .groupby([input_prediction_feature])["timestamp"]
         .idxmax()
     )
@@ -139,22 +121,14 @@ def train(
 
     # Build tf datasets
     logger.info("Building tf datasets")
-    validation_features = {
-        col: validation_data[col].values for col in validation_data.columns
-    }
-    validation_features["previous_item_id"] = np.array(
-        validation_data["previous_item_id"].tolist()
-    )
 
     train_features = {col: train_data[col].values for col in train_data.columns}
-    train_features["previous_item_id"] = np.array(
-        train_data["previous_item_id"].tolist()
-    )
-
     train_dataset = tf.data.Dataset.from_tensor_slices(train_features).batch(
         batch_size=batch_size
     )
-
+    validation_features = {
+        col: validation_data[col].values for col in validation_data.columns
+    }
     validation_dataset = tf.data.Dataset.from_tensor_slices(validation_features).batch(
         batch_size=batch_size
     )
@@ -162,9 +136,6 @@ def train(
     user_features = {
         col: train_user_data[col].values for col in train_user_data.columns
     }
-    user_features["previous_item_id"] = np.array(
-        train_user_data["previous_item_id"].tolist()
-    )
 
     user_dataset = (
         tf.data.Dataset.from_tensor_slices(user_features)

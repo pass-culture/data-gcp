@@ -32,9 +32,6 @@ class TwoTowersModel(tfrs.models.Model):
         """
         super().__init__()
 
-        max_timestamp = data["timestamp"].max()
-        min_timestamp = data["timestamp"].min()
-        timestamp_buckets = np.linspace(min_timestamp, max_timestamp, num=1000)
         # dict of preprocessing layers for each user feature
         # Decide if we put the timestamp bucket in user or item layer
         user_embedding_layers = {
@@ -66,8 +63,6 @@ class TwoTowersModel(tfrs.models.Model):
             data=data,
             input_embedding_layers=user_embedding_layers,
             embedding_size=embedding_size,
-            history_sequence=True,
-            timestamp_buckets=timestamp_buckets,
         )
         logger.info(f"Item features: {self._item_feature_names} ")
         self.item_model = SingleTowerModel(
@@ -117,7 +112,7 @@ class TwoTowersModel(tfrs.models.Model):
                     embedding_initialisation_weights=embedding_initialisation_weights,
                 ),
                 "sequence": SequenceEmbeddingLayer(embedding_size=embedding_size),
-                # "timestamp": TimestampEmbeddingLayer(embedding_size=embedding_size),
+                "timestamp": TimestampEmbeddingLayer(embedding_size=embedding_size),
             }[layer_type]
         except KeyError:
             raise ValueError(
@@ -132,7 +127,6 @@ class SingleTowerModel(tf.keras.models.Model):
         input_embedding_layers: dict,
         embedding_size: int,
         timestamp_buckets: np.ndarray = None,
-        history_sequence: bool = False,
     ):
         super().__init__()
 
@@ -145,14 +139,7 @@ class SingleTowerModel(tf.keras.models.Model):
             self._embedding_layers[layer_name] = layer_class.build_sequential_layer(
                 vocabulary=self.data[layer_name].unique()
             )
-        if timestamp_buckets is not None:
-            self._embedding_layers["timestamp"] = TimestampEmbeddingLayer(
-                embedding_size=embedding_size
-            ).build_sequential_layer(timestamp_buckets=timestamp_buckets)
-        if history_sequence:
-            self._embedding_layers["previous_item_id"] = SequenceEmbeddingLayer(
-                embedding_size=embedding_size
-            ).build_sequential_layer(vocabulary=self.data["item_id"].unique())
+
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
         self._dense2 = tf.keras.layers.Dense(embedding_size)
 
@@ -160,11 +147,6 @@ class SingleTowerModel(tf.keras.models.Model):
         feature_embeddings = []
 
         for layer_name, embedding_layer in self._embedding_layers.items():
-            # Ensure previous_item_id is in the correct 3D shape
-            # if layer_name == "previous_item_id":
-            #     features["previous_item_id"] = tf.expand_dims(
-            #         features["previous_item_id"], axis=1
-            #     )
             feature_embeddings.append(embedding_layer(features[layer_name]))
 
         x = tf.concat(

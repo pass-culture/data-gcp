@@ -10,7 +10,7 @@ with
             sum(unsubscribed_count) as unsubscribed_count
         from {{ source("raw", "sendinblue_transactional") }}
         where tag like 'jeune%'
-        group by tag, template, user_id
+        group by tag, template, user_id, event_date
     ),
 
     user_traffic as (

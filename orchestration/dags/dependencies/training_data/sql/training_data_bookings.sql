@@ -1,3 +1,4 @@
+with base as(
 select
     booking.user_id,
     cast(enruser.user_age as int64) as user_age,
@@ -7,8 +8,8 @@ select
     extract(dayofweek from booking.booking_created_at) as event_day,
     extract(month from booking.booking_created_at) as event_month,
     row_number() over (
-        partition by user_id order by booking.booking_creation_date desc
-    ) as event_rank
+        partition by booking.user_id order by booking.booking_creation_date desc
+    ) as event_rank,
     enroffer.item_id as item_id,
     enroffer.offer_subcategory_id as offer_subcategory_id,
     enroffer.offer_category_id as offer_category_id,
@@ -25,4 +26,6 @@ inner join
     `{{ bigquery_analytics_dataset }}`.`global_user` enruser
     on enruser.user_id = booking.user_id
 where booking.booking_creation_date >= date_sub(date("{{ ds }}"), interval 12 month)
+)
+select * except(event_rank) from base
 where event_rank <= 10

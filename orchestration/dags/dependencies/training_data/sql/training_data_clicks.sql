@@ -6,7 +6,7 @@ with
             event_date,
             extract(hour from event_timestamp) as event_hour,
             extract(dayofweek from event_timestamp) as event_day,
-            extract(month from event_timestamp) as event_month
+            extract(month from event_timestamp) as event_month,
             row_number() over (
                 partition by user_id order by event_timestamp desc
             ) as event_rank

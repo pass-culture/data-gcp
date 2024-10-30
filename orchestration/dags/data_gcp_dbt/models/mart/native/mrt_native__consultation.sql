@@ -176,6 +176,8 @@ select
         then "landing_search"
         when consult.origin = "venue" and ov.consult_venue_origin is not null
         then concat("venue_", ov.consult_venue_origin)
+        when consult.origin = "offer" and consult.multi_venue_offer_id is not null
+        then "multi_venue_offer"
         when
             consult.origin = "similar_offer"
             and so.consult_similar_offer_origin is not null

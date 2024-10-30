@@ -127,7 +127,7 @@ jobs:
           fi
   k8s-deploy-on-dev:
     needs: [find-build-job]
-    if: ${{ needs.find-build-job.outputs.has-changed && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' ) }}
+    if: ${{ needs.find-build-job.outputs.has-changed == 'true' && github.ref == 'refs/heads/master' }}
     uses: ./.github/workflows/reusable_build_image.yml
     with:
       TARGET_ENV: "dev"

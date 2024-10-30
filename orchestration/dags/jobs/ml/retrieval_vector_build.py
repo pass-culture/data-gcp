@@ -41,7 +41,7 @@ gce_params = {
         "stg": "n1-standard-8",
         "prod": "n1-standard-8",
     },
-    "container_worker": {"dev": "1", "stg": "1", "prod": "2"},
+    "container_worker": {"dev": "1", "stg": "1", "prod": "1"},
 }
 
 schedule_dict = {"prod": "0 4 * * *", "dev": "0 6 * * *", "stg": "0 6 * * 3"}

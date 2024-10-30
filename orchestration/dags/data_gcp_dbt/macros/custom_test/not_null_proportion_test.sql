@@ -13,11 +13,12 @@
         final as (
             select
                 cast(matching_records as float64)
-                / nullif(total_records, 0) as proportion
+                / nullif(total_records, 0)
+                * 100 as proportion
             from validation
         )
     select *
     from final
-    where proportion > {{ var("not_null_anomaly_threshold_alert") }}
+    where proportion > {{ var("not_null_anomaly_threshold_alert_percentage") }}
 
 {% endtest %}

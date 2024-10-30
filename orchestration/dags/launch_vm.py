@@ -65,7 +65,7 @@ with DAG(
     catchup=False,
     dagrun_timeout=None,
     template_searchpath=DAG_FOLDER,
-    render_template_as_native_obj=True,
+    render_template_as_native_obj=True,  # be careful using this because "3.10" is rendered as 3.1 if not double escaped
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -88,6 +88,10 @@ with DAG(
         "installer": Param(default="uv", enum=["uv", "conda"]),
         "install_type": Param(
             default="simple", enum=["simple", "engineering", "science", "analytics"]
+        ),
+        "python_version": Param(
+            default="'3.10'",
+            enum=["'3.8'", "'3.9'", "'3.10'", "'3.11'", "'3.12'", "'3.13'"],
         ),
     },
     doc_md=dag_doc,
@@ -113,7 +117,7 @@ with DAG(
         branch="{{ params.branch }}",
         installer="{{ params.installer }}",
         gce_zone="{{ params.gce_zone }}",
-        python_version="3.10",
+        python_version="{{ params.python_version }}",
         requirement_file="requirements.txt",
     )
 

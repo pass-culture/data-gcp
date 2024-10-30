@@ -1,0 +1,13 @@
+{% docs column__deposit_id %}Unique identifier for the deposit.{% enddocs %}
+{% docs column__deposit_date %}The date when the deposit was made.{% enddocs %}
+{% docs column__deposit_amount %}The total amount of the deposit.{% enddocs %}
+{% docs column__deposit_source %}Source of create the deposit (educonnect, ubble, dms). {% enddocs %}
+{% docs column__deposit_creation_date %}The date when the deposit was created.{% enddocs %}
+{% docs column__deposit_update_date %}The date when the deposit was last updated.{% enddocs %}
+{% docs column__deposit_expiration_date %}The expiration date of the deposit.{% enddocs %}
+{% docs column__deposit_type %} Type of the deposit, can be GRANT_18, GRANT_15_17. {% enddocs %}
+{% docs column__deposit_rank_asc %}Ascending rank of the deposit.{% enddocs %}
+{% docs column__deposit_rank_desc %}Descending rank of the deposit.{% enddocs %}
+{% docs column__deposit_seniority %}Total days between deposit_creation_date and today. Used for analytics purposes.{% enddocs %}
+{% docs column__days_between_user_creation_and_deposit_creation %} Total days between deposit_creation_date and user_creation_date. {% enddocs %}
+{% docs column__first_deposit_creation_date %} First deposit creation date. {% enddocs %}

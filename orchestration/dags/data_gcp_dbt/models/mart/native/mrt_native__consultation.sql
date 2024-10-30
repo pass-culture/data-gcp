@@ -3,6 +3,7 @@
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
             partition_by={"field": "consultation_date", "data_type": "date"},
+            on_schema_change="sync_all_columns",
         )
     )
 }}
@@ -144,39 +145,43 @@ select
             consult.origin = "similar_offer"
             and consult.similar_offer_playlist_type = "otherCategoriesSimilarOffers"
         then "other_category_similar_offer"
+        when consult.origin in ("search", "searchresults", "searchn1")
+        then "search"
+        when consult.origin in ("venueMap", "venuemap")
+        then "venue_map"
         else consult.origin
     end as consultation_macro_origin,
     case
+        when
+            concat("home_", ht.home_type)
+            in ("home_evenement, n_1", "home_n_1, evenement")
+        then "home_evenement_permanent"
         when ht.entry_id is not null and ht.home_type is not null
         then concat("home_", ht.home_type)
-        when ht.entry_id is not null and ht.home_type is null
+        when
+            (ht.entry_id is not null or consult.origin = "home")
+            and ht.home_type is null
         then "home_without_tag"
-        when consult.origin = "search" and consult.search_query_input_is_generic is true
+        when
+            consult.origin in ("search", "searchresults", "searchn1")
+            and consult.search_query_input_is_generic is true
         then "generic_query_search"
         when
-            consult.origin = "search" and consult.search_query_input_is_generic is false
+            consult.origin in ("search", "searchresults", "searchn1")
+            and consult.search_query_input_is_generic is false
         then "specific_query_search"
-        when consult.origin = "search" and consult.query is null
+        when
+            consult.origin in ("search", "searchresults", "searchn1")
+            and consult.query is null
         then "landing_search"
-        when consult.origin = "venue" and ov.consult_venue_origin = "offer"
-        then "offer_venue"
+        when consult.origin = "venue" and ov.consult_venue_origin is not null
+        then concat("venue_", ov.consult_venue_origin)
         when
-            consult.origin = "venue" and ov.consult_venue_origin = "searchVenuePlaylist"
-        then "search_venue_playlist"
-        when consult.origin = "venue" and ov.consult_venue_origin = "searchAutoComplete"
-        then "search_venue_autocomplete"
-        when consult.origin = "venue" and ov.consult_venue_origin = "venueMap"
-        then "venue_map"
-        when
-            consult.origin = "venue"
-            and ov.consult_venue_origin in ("home", "venueList")
-        then "home_venue_playlist"
-        when consult.origin = "venue" and ov.consult_venue_origin = "deeplink"
-        then "venue_deeplink"
-        when consult.origin = "offer" and consult.multi_venue_offer_id is not null
-        then "multi_venue_offer"
-        when consult.origin = "similar_offer"
+            consult.origin = "similar_offer"
+            and so.consult_similar_offer_origin is not null
         then concat("similar_offer_", so.consult_similar_offer_origin)
+        when consult.origin in ("venueMap", "venuemap")
+        then "venue_map"
         else consult.origin
     end as consultation_micro_origin
 from {{ ref("int_firebase__native_consultation") }} as consult

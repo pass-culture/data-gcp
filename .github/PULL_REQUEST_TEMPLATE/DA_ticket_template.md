@@ -29,9 +29,10 @@ Please include a summary of the changes:
 
 ### PR title format (except for MEP)
 
-(ticket) type(topic): comment
+There is a linter on the PR title format. Please respect the following format:
 
-with:
+<details>
+<summary>(ticket) type(topic): comment</summary>
 
 * ticket surrounded by parenthesis, with optionnaly a hyphen followed by one or more digits (e.g., -1234). The first part must be one of the following strings:
   * DA
@@ -67,3 +68,5 @@ examples:
 * :x: (DE-124) airflow(firebase): update source fiedd in DAG **(wrong type)**
 * :x: (DE-124) (DE-124) refactor(firebase refacto): update source field **(topic in two words)**
 * :white_check_mark: (BSR) docs(github): add PR title valid format in template
+
+</details>

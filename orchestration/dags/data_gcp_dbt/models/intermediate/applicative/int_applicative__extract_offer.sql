@@ -4,7 +4,7 @@ with
             offer.offer_id,
             coalesce(product.description, offer.offer_description) as offer_description,
             coalesce(product.product_extra_data, offer.offer_extra_data) as extra_data
-        from {{ source("raw", "applicative_database_offer") }} as offer
+        from {{ ref("int_raw__offer") }} as offer
         left join
             {{ ref("int_applicative__product") }} as product
             on cast(product.id as string) = offer.offer_product_id
@@ -64,7 +64,7 @@ with
             lower(
                 trim(trim(json_extract(extra_data, "$.comic_series"), " "), '"')
             ) as comic_series,
-        from {{ source("raw", "applicative_database_offer") }} offer
+        from {{ ref("int_raw__offer") }} offer
         left join offer_product_data as ued on ued.offer_id = offer.offer_id
     )
 

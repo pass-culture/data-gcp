@@ -28,7 +28,7 @@ jobs:
       id-token: write
       contents: write
     defaults:
-     run: 
+     run:
        working-directory: "./${{ inputs.JOB_PATH }}"
     steps:
       - uses: actions/checkout@v4
@@ -77,4 +77,3 @@ jobs:
               "unfurl_links": false,
               "unfurl_media": false
             }
-    

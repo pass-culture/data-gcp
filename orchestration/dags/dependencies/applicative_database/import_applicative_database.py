@@ -7,12 +7,6 @@ from common.utils import get_tables_config_dict
 RAW_SQL_PATH = "dependencies/applicative_database/sql/raw"
 CLEAN_HISTORY_SQL_PATH = "dependencies/applicative_database/sql/clean/history"
 
-
-SEQUENTIAL_TABLES = get_tables_config_dict(
-    PATH=DAG_FOLDER + "/" + RAW_SQL_PATH + "/sequential",
-    BQ_DATASET=BIGQUERY_RAW_DATASET,
-)
-
 PARALLEL_TABLES = get_tables_config_dict(
     PATH=DAG_FOLDER + "/" + RAW_SQL_PATH + "/parallel",
     BQ_DATASET=BIGQUERY_RAW_DATASET,

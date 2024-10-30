@@ -15,7 +15,7 @@ with
                 then concat('product-', offer.offer_product_id)
                 else concat('offer-', offer.offer_id)
             end as item_id
-        from {{ source("raw", "applicative_database_offer") }} as offer
+        from {{ ref("int_raw__offer") }} as offer
         left join
             {{ source("analytics", "linked_offers") }} linked_offers
             on linked_offers.offer_id = offer.offer_id

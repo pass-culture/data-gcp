@@ -79,4 +79,4 @@ jobs:
           push: true
           tags: |
             ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:${{ steps.sha.outputs.short_sha }}
-            ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:latest
+            ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:v1

@@ -5,10 +5,14 @@ select distinct
     clicks.event_hour,
     clicks.event_day,
     clicks.event_month,
-    * except (event_date, user_id, item_id, event_hour, event_day, event_month)
+    clicks.timestamp,
+    * except (
+        event_date, user_id, item_id, event_hour, event_day, event_month, timestamp
+    )
 from
     (
-        select event_date, user_id, item_id, event_hour, event_day, event_month
+        select
+            event_date, user_id, item_id, event_hour, event_day, event_month, timestamp
         from `{{ bigquery_raw_dataset }}`.training_data_clicks
     ) as clicks
 left join

@@ -1,7 +1,5 @@
 import json
 
-import numpy as np
-import pandas as pd
 import typer
 from loguru import logger
 from tqdm import tqdm
@@ -48,9 +46,11 @@ def preprocess(
         features = json.load(config_file)
     tqdm.pandas()
     integer_features = get_features_by_type(
-        feature_layers=features["user_embedding_layers"], layer_types=["int"]
+        feature_layers=features["user_embedding_layers"],
+        layer_types=["int", "timestamp"],
     ) + get_features_by_type(
-        feature_layers=features["item_embedding_layers"], layer_types=["int"]
+        feature_layers=features["item_embedding_layers"],
+        layer_types=["int", "timestamp"],
     )
     string_features = get_features_by_type(
         feature_layers=features["user_embedding_layers"],
@@ -65,16 +65,11 @@ def preprocess(
     if "user_id" not in integer_features + string_features:
         string_features.append("user_id")
     clean_data = (
-        raw_data[integer_features + string_features + ["event_date"]]
+        raw_data[integer_features + string_features]
         .fillna({col: "none" for col in string_features})
         .fillna({col: 0 for col in integer_features})
         .astype({col: "int" for col in integer_features})
     )
-    logger.info("Converting 'event_date' to timestamp..")
-    clean_data["timestamp"] = pd.to_datetime(clean_data["event_date"])
-    clean_data["timestamp"] = clean_data["timestamp"].astype(np.int64) // 10**9
-
-    clean_data = clean_data.sample(frac=1).reset_index(drop=True)
     ## Add sequential bookings_ids
     clean_data.to_parquet(f"{STORAGE_PATH}/{output_dataframe_file_name}/data.parquet")
 

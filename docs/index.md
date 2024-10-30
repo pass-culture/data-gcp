@@ -8,7 +8,7 @@ hide:
 
 # Documentation
 
-Welcome to the Pass Culture Data Documentation, your resource for understanding the data, API integrations, and cultural projects aimed at increasing cultural accessibility for youth in France.
+Welcome to the Pass Culture Data Documentation
 
 
 # Data Analytics

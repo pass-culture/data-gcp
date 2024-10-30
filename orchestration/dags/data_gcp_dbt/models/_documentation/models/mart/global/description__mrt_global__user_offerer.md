@@ -1,7 +1,7 @@
 ---
 title: User Offerer
 description: Description of the `mrt_global__user_offerer` table.
-hide: "hide"
+hide: "true"
 ---
 
 {% docs description__mrt_global__user_offerer %}

@@ -1,3 +1,8 @@
+---
+title: Metrics
+description: Description of the `metric` columns.
+---
+
 {% docs column__total_individual_bookings %} Total number of individual bookings. {% enddocs %}
 {% docs column__total_cancelled_individual_bookings %} Total number of cancelled individual bookings. {% enddocs %}
 {% docs column__total_used_individual_bookings %} Total number of used individual bookings. {% enddocs %}

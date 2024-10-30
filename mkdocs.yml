@@ -1,0 +1,86 @@
+# Project information
+site_name: Pass Culture Data Documentation
+site_url: https://pass-culture.github.io/data-gcp
+site_author: Pass Culture Team
+site_description: Documentation for Pass Culture's data repository, providing insights and resources for cultural accessibility projects.
+
+# Repository
+repo_name: pass-culture/data-gcp
+repo_url: https://github.com/pass-culture/data-gcp
+
+# Copyright
+copyright: Copyright &copy; 2024 Pass Culture
+
+hooks:
+  - docs/hooks.py
+theme:
+  name: material
+  custom_dir: docs/assets/material/overrides
+  features:
+    - announce.dismiss
+    - content.code.annotate
+    - content.code.copy
+    - content.tooltips
+    - navigation.footer
+    - navigation.indexes
+    - navigation.sections
+    - navigation.tabs
+    - navigation.top
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme:
+      primary: white
+      accent: purple
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme:
+      primary: black
+      accent: purple
+      toggle:
+        icon: material/toggle-switch-off
+        name: Switch to light mode
+  font:
+    text: "Arial, sans-serif"
+    code: Roboto Mono
+  favicon: docsassets/favicon.png  # Replace with Pass Culture favicon
+  logo: https://upload.wikimedia.org/wikipedia/commons/4/4f/Logo_du_Pass_Culture.png
+
+
+nav:
+  - Home: index.md
+  - Data Models:
+      - Overview: dbt/overview.md
+      - ... | dbt/models/mart/global/description*.md
+
+  - Glossary:
+      - Overwiew: dbt/glossary.md
+      - ... | dbt/glossary/applicative_database/column*.md
+  - Data Science:
+      - Overview: ds/overview.md
+      - Recommendation: ds/recommendation.md
+  - Data Engineering:
+      - Overview: de/overview.md
+  - About: about.md
+
+# Plugins
+plugins:
+  - search:
+      separator: "[\\s\\-.,;:_]+"
+      lang: fr
+  - include-markdown
+  - awesome-pages
+
+# Markdown Extensions
+markdown_extensions:
+  - admonition
+  - codehilite
+  - footnotes
+  - meta
+  - attr_list
+  - tables

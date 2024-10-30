@@ -40,6 +40,7 @@ with
             and event_date > date("1970-01-01")
             {% if is_incremental() %}
                 and event_date = date_sub('{{ ds() }}', interval 3 day)
+            {% else %} and event_date >= date_sub('{{ ds() }}', interval 1 year)
             {% endif %}
     ),
 
@@ -58,6 +59,7 @@ with
             consultation_date > date("1970-01-01")
             {% if is_incremental() %}
                 and consultation_date = date_sub('{{ ds() }}', interval 3 day)
+            {% else %} and consultation_date >= date_sub('{{ ds() }}', interval 1 year)
             {% endif %}
     ),
 
@@ -176,6 +178,8 @@ select
             consult.origin in ("search", "searchresults", "searchn1")
             and consult.query is null
         then "landing_search"
+        when consult.origin = "offer" and consult.multi_venue_offer_id is not null
+        then "multi_venue_offer"
         when consult.origin = "venue" and ov.consult_venue_origin is not null
         then concat("venue_", ov.consult_venue_origin)
         when

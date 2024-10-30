@@ -12,6 +12,6 @@ schedule_dict = {
     "import_analytics_v7": "45 4 * * *",
     "dbt_artifacts": "45 4 * * *",
     "dbt_weekly": "0 3 * * 1",
-    "dbt_monthly": "30 5 * * *",
+    "dbt_monthly": "30 4 1 * *",
     "historize_applicative_database": "15 3 * * *",
 }

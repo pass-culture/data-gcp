@@ -35,7 +35,9 @@ with
             origin as consult_venue_origin
         from {{ ref("int_firebase__native_event") }}
         where
-            event_name = 'ConsultVenue' and unique_session_id is not null
+            event_name = 'ConsultVenue'
+            and unique_session_id is not null
+            and event_date > date("1970-01-01")
             {% if is_incremental() %}
                 and event_date = date_sub('{{ ds() }}', interval 3 day)
             {% endif %}
@@ -53,7 +55,7 @@ with
             origin as consult_offer_origin
         from {{ ref("int_firebase__native_consultation") }}
         where
-            1 = 1
+            consultation_date > date("1970-01-01")
             {% if is_incremental() %}
                 and consultation_date = date_sub('{{ ds() }}', interval 3 day)
             {% endif %}

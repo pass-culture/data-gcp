@@ -1,7 +1,17 @@
-{% docs description__mrt_global__collective_booking %}
+---
+title: Booking
+description: Description of the `mrt_global__booking` table.
+---
 
-# Table: mrt_global__collective_booking
+{% docs description__mrt_global__booking %}
 
-The `mrt_global__collective_booking` table is designed to store comprehensive information about collective bookings.
+# Table: Global Booking
+
+The `mrt_global__booking` table is designed to store comprehensive information about bookings.
 
 {% enddocs %}
+
+
+## Table description
+
+{% docs table__mrt_global__booking  %}{% enddocs %}

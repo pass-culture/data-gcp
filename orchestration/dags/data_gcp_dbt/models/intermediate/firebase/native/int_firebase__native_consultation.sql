@@ -31,7 +31,10 @@ select distinct
     multi_venue_offer_id
 from {{ ref("int_firebase__native_event") }}
 where
-    event_name = 'ConsultOffer' and user_id is not null and offer_id is not null
+    event_name = 'ConsultOffer'
+    and user_id is not null
+    and offer_id is not null
+    and event_date > date("1970-01-01")
     {% if is_incremental() %}
         and date(event_date) >= date_sub('{{ ds() }}', interval 3 day)
     {% else %} and date(event_date) >= date_sub('{{ ds() }}', interval 1 year)

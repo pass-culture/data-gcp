@@ -60,7 +60,8 @@ left join
     on d.user_id = e.user_id
     and e.event_date between d.deposit_creation_date and d.deposit_expiration_date
 where
-    (
+    e.event_date >= date("1970-01-01")
+    and (
         event_name in (
             "ConsultOffer",
             "BookingConfirmation",

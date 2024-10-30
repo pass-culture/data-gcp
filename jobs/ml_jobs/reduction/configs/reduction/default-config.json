@@ -8,7 +8,7 @@
                 "embedding_columns": [
                     "name_embedding",
                     "image_embedding",
-                    "semantic_content_embedding"    
+                    "semantic_content_embedding"
                 ]
             },
             {

@@ -8,4 +8,4 @@ typer==0.7.0
 jinja2==3.0
 protobuf>=3.9.2
 polars>=0.18.6
-clickhouse-connect 
+clickhouse-connect

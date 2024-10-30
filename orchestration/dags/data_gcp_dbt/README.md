@@ -15,18 +15,18 @@ Try running the following commands:
 - Check out [the blog](https://blog.getdbt.com/) for the latest news on dbt's development and best practices
 
 
-### Environement variables : 
+### Environement variables :
 - ENV_SHORT_NAME : specify dev/stg/prod to select source data.
 
 
-### CLI options : 
+### CLI options :
 -- target [local/dev/stg/prod] to select destination dbt transformed data.
 
 
-### Tests : 
+### Tests :
 1. **Generic**
 
-dbt comes with 4 default tests : 
+dbt comes with 4 default tests :
 - unique : a column values should be unique
 - not_null : a column should not contain null values
 - accepted_values : a column values should be one of an element of a list
@@ -42,16 +42,16 @@ Some packages contains tests.
 - sum_2_columns_equals_another_column : test
 
 ### How to add existent test to a column ?
-Find or create the .yml file associated to the table we want to add test. 
+Find or create the .yml file associated to the table we want to add test.
 1. Add the test in `tests` section
 
 ```yaml
 version: 2
 
-models: 
+models:
   - name: enriched_venue_tags_data
     description: Venue tags data
-    columns: 
+    columns:
       - name: venue_id
         description: Unique identifier of a venue
         tests:
@@ -61,7 +61,7 @@ models:
               severity: error
 ```
 
-2. By default, in case of test failure, it will raise a warning. To raise an error, add `severity: error` below the test name. Be conscient that a warning will not block the ingestion of children models while an error will. 
+2. By default, in case of test failure, it will raise a warning. To raise an error, add `severity: error` below the test name. Be conscient that a warning will not block the ingestion of children models while an error will.
 
 3. run `dbt test` to execute all tests OR run `dbt test --select model_name` to execute all tests associalted to `model_name`.
 

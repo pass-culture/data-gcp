@@ -14,7 +14,7 @@ with
         select *
         from {{ source("raw", "firebase_events") }}
         where
-            true
+            and event_date > date("1970-01-01")
             {% if is_incremental() %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 3 day) and date(

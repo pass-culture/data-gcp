@@ -23,6 +23,7 @@ with
         from {{ ref("int_firebase__native_event") }}
         where
             event_name in ('CategoryBlockClicked', 'HighlightBlockClicked')
+            and event_date > date("1970-01-01")
             {% if is_incremental() %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(

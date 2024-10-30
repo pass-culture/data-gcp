@@ -25,5 +25,5 @@ where
     native_event.event_name = "ModuleDisplayedOnHomePage"
     {% if is_incremental() %}
         and date(event_date) = date_sub('{{ ds() }}', interval 3 day)
-    {% else %} and date(event_date) >= "2024-06-13"
+    {% else %} and date(event_date) >= "2024-06-13"  -- event implementation date
     {% endif %}

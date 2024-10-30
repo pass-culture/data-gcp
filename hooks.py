@@ -5,101 +5,173 @@ import markdown
 import shutil
 import os
 import json
+from typing import Dict, Any, Optional
 
 BASE_FOLDER = "docs/dbt"
 DBT_COPY_HOOK = {
-    "glossary" : {
-        "type" : "folder",
-        "source" : "orchestration/dags/data_gcp_dbt/models/_documentation/",
-        "destination" : "docs/dbt/"
+    "glossary": {
+        "type": "folder",
+        "source": "orchestration/dags/data_gcp_dbt/models/_documentation/",
+        "destination": BASE_FOLDER,
     },
 }
 DBT_MANIFEST = "orchestration/dags/data_gcp_dbt/target/manifest.json"
 
 
 class DBTDocsParser:
-    def __init__(self):
-        with open(DBT_MANIFEST) as f:
-            self.json = json.load(f)
-        
-        self.dbt_prefix_project = "model.data_gcp_dbt"
-    
-    def get_model_documentation(self, model_name: str):
+    """
+    Parses the DBT manifest.json file to extract documentation for models and their columns.
+    """
+
+    def __init__(
+        self,
+        manifest_path: str = DBT_MANIFEST,
+        prefix_project: str = "model.data_gcp_dbt",
+    ):
+        self.dbt_prefix_project = prefix_project
+        self.json = self._load_manifest(manifest_path)
+
+    def _load_manifest(self, path: str) -> Dict[str, Any]:
+        """Load the DBT manifest JSON file."""
+        with open(path) as f:
+            return json.load(f)
+
+    def get_model_documentation(self, model_name: str) -> str:
+        """
+        Generate markdown documentation for a DBT model's columns.
+
+        Args:
+            model_name (str): The DBT model name.
+
+        Returns:
+            str: A markdown table with column documentation.
+        """
         model_uri = f"{self.dbt_prefix_project}.{model_name}"
         model_node = self.json.get("nodes", {}).get(model_uri, {})
         model_columns = model_node.get("columns", {})
-        data = []
-        for k,v in model_columns.items():
-            data.append({"name": v['name'], "data_type" : v['data_type'], "description": v['description']})
+
+        data = [
+            {
+                "name": col["name"],
+                "data_type": col["data_type"],
+                "description": col["description"],
+            }
+            for col in model_columns.values()
+        ]
         df = pd.DataFrame(data)
         return df.to_markdown(index=False)
 
-            
-        
 
 class DocsStatementExtension(Extension):
+    """
+    Jinja2 extension to render custom DBT documentation statements in templates.
+    """
+
     tags = {"docs"}
     dbt_parser = DBTDocsParser()
-    
 
-    def parse(self, parser):
-        # Capture the line number for potential error reporting
+    def parse(self, parser) -> nodes.CallBlock:
         lineno = next(parser.stream).lineno
         token = next(parser.stream).value
         arg = nodes.Const(token)
-        # Parse the content/body between {% docs %} and {% enddocs %}
-        body = parser.parse_statements(['name:enddocs'], drop_needle=True)
+        body = parser.parse_statements(["name:enddocs"], drop_needle=True)
 
-        # Return a call to _render_custom_statement with parsed args and body
         return nodes.CallBlock(
-            self.call_method("_render_custom_statement", [arg]),
-            [],  # No positional arguments
-            [],  # No keyword arguments
-            body  # Content between `{% docs %}...{% enddocs %}`
+            self.call_method("_render_custom_statement", [arg]), [], [], body
         ).set_lineno(lineno)
 
-    def _render_custom_statement(self, arg, caller):
-        #
-        # `arg` is the identifier, `caller()` is the content between the tags
-        definition = caller()  # Get the content between {% docs %}...{% enddocs %}
+    def _render_custom_statement(self, arg: Optional[str], caller) -> str:
+        """
+        Render documentation based on the tag argument (column or table).
 
-        # Handle cases where arg may be undefined or None
-        if arg and isinstance(arg, str) and arg.startswith("column__"):
-            # Extract the part after "column__" if it matches the pattern
-            column_name = arg.split("__", 1)[1]
-            formatted_output = markdown.markdown(f"**{column_name}**: {definition}")
-        elif arg and isinstance(arg, str) and arg.startswith("table__"):
-            model_name = arg.split("__", 1)[1]
-            formatted_output = self.dbt_parser.get_model_documentation(model_name)
-        else:
-            formatted_output = markdown.markdown(f"{definition}")
-        # Render the output as Markdown
-        
-        return formatted_output
+        Args:
+            arg (Optional[str]): Argument indicating column or table reference.
+            caller: Function to fetch content between `{% docs %}` and `{% enddocs %}` tags.
 
-# Global Jinja environment
-env = None
+        Returns:
+            str: Rendered markdown content.
+        """
+        definition = caller()
 
-def on_config(config):
-    global env
-    env = Environment(loader=FileSystemLoader(config["docs_dir"]))
-    env.add_extension(DocsStatementExtension)
-    return config
+        if arg and isinstance(arg, str):
+            if arg.startswith("column__"):
+                column_name = arg.split("__", 1)[1]
+                return markdown.markdown(f"**{column_name}**: {definition}")
+            elif arg.startswith("table__"):
+                model_name = arg.split("__", 1)[1]
+                return self.dbt_parser.get_model_documentation(model_name)
+        return markdown.markdown(definition)
 
-def on_page_markdown(markdown_content, **kwargs):
-    template = env.from_string(markdown_content)
-    return template.render()
 
-def on_pre_build(config, **kwargs) -> None:
-    copy_dbt()
-    
-def copy_dbt():
-    for key, params in DBT_COPY_HOOK.items():
-        source = params['source']
-        destination = params['destination']
-        type = params['type']
-        os.makedirs(destination, exist_ok=True)
-        if type == "file":
-            shutil.copy(source, destination)
-        elif type == "folder":
-            shutil.copytree(source, destination, dirs_exist_ok=True)
+class DocsBuilder:
+    """
+    Class to handle DBT documentation build processes including setup, markdown processing, and file copying.
+    """
+
+    def __init__(self):
+        self.env: Optional[Environment] = None
+
+    def configure_environment(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Configure the Jinja2 environment.
+
+        Args:
+            config (Dict[str, Any]): Configuration dictionary.
+
+        Returns:
+            Dict[str, Any]: Updated configuration with Jinja2 environment.
+        """
+        self.env = Environment(loader=FileSystemLoader(config["docs_dir"]))
+        self.env.add_extension(DocsStatementExtension)
+        return config
+
+    def render_markdown(self, markdown_content: str) -> str:
+        """
+        Render markdown content using Jinja2 templates.
+
+        Args:
+            markdown_content (str): Raw markdown content.
+
+        Returns:
+            str: Rendered markdown content.
+        """
+        if self.env:
+            template = self.env.from_string(markdown_content)
+            return template.render()
+        return markdown_content
+
+    def pre_build_setup(self) -> None:
+        """Prepare environment before building documentation."""
+        self.copy_dbt_files()
+
+    def copy_dbt_files(self) -> None:
+        """
+        Copy DBT documentation files as specified in DBT_COPY_HOOK.
+        """
+        for key, params in DBT_COPY_HOOK.items():
+            source = params["source"]
+            destination = params["destination"]
+            os.makedirs(destination, exist_ok=True)
+            if params["type"] == "file":
+                shutil.copy(source, destination)
+            elif params["type"] == "folder":
+                shutil.copytree(source, destination, dirs_exist_ok=True)
+
+
+# Instantiate DocsBuilder and setup hooks for documentation generation
+docs_builder = DocsBuilder()
+
+
+def on_config(config: Dict[str, Any]) -> Dict[str, Any]:
+    """Hook to configure environment."""
+    return docs_builder.configure_environment(config)
+
+
+def on_page_markdown(markdown_content: str, **kwargs) -> str:
+    """Hook to render page markdown."""
+    return docs_builder.render_markdown(markdown_content)
+
+
+def on_pre_build(config: Dict[str, Any], **kwargs) -> None:
+    """Hook to execute pre-build actions."""
+    docs_builder.pre_build_setup()

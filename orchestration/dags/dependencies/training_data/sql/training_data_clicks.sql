@@ -1,44 +1,59 @@
-with
-    events as (
-        select
-            user_id,
-            offer_id,
-            event_date,
-            extract(hour from event_timestamp) as event_hour,
-            extract(dayofweek from event_timestamp) as event_day,
-            extract(month from event_timestamp) as event_month
-            row_number() over (
-                partition by user_id order by event_timestamp desc
-            ) as event_rank
-        from `{{ bigquery_int_firebase_dataset }}`.`native_event`
-        where
-            event_name = "ConsultOffer"
-            and event_date >= date_sub(date("{{ ds }}"), interval 12 month)
-            and user_id is not null
-            and offer_id is not null
-            and offer_id != 'NaN'
-    )
-select
+WITH events AS (
+    SELECT
+        user_id,
+        offer_id,
+        event_date,
+        event_timestamp,
+        EXTRACT(HOUR FROM event_timestamp) AS event_hour,
+        EXTRACT(DAYOFWEEK FROM event_timestamp) AS event_day,
+        EXTRACT(MONTH FROM event_timestamp) AS event_month
+    FROM `{{ bigquery_int_firebase_dataset }}`.`native_event`
+    WHERE
+        event_name = "ConsultOffer"
+        AND event_date >= DATE_SUB(DATE("{{ ds }}"), INTERVAL 6 MONTH)
+        AND user_id IS NOT NULL
+        AND offer_id IS NOT NULL
+        AND offer_id != 'NaN'
+),
+previous_events AS (
+    SELECT 
+        user_id,
+        STRING_AGG(enroffer.item_id ORDER BY event_timestamp DESC LIMIT 10) AS previous_item_id,
+        event_date,
+        event_hour,
+        event_day,
+        event_month
+    FROM events
+    JOIN `{{ bigquery_analytics_dataset }}`.`global_offer` enroffer
+    ON enroffer.offer_id = events.offer_id
+    GROUP BY user_id, event_date, event_hour, event_day, event_month
+)
+SELECT
     events.user_id,
-    coalesce(cast(enruser.user_age as int64), 0) as user_age,
-    "CLICK" as event_type,
-    event_date,
-    event_hour,
-    event_day,
-    event_month,
-    enroffer.item_id as item_id,
-    enroffer.offer_subcategory_id as offer_subcategory_id,
-    enroffer.offer_category_id as offer_category_id,
+    COALESCE(CAST(enruser.user_age AS INT64), 0) AS user_age,
+    "CLICK" AS event_type,
+    events.event_date,
+    events.event_hour,
+    events.event_day,
+    events.event_month,
+    cast(unix_seconds(timestamp(events.event_date)) as int64) as timestamp,
+    enroffer.item_id AS item_id,
+    enroffer.offer_subcategory_id AS offer_subcategory_id,
+    enroffer.offer_category_id AS offer_category_id,
     enroffer.genres,
     enroffer.rayon,
     enroffer.type,
     enroffer.venue_id,
-    enroffer.venue_name
-from events
-join
-    `{{ bigquery_analytics_dataset }}`.`global_offer` enroffer
-    on enroffer.offer_id = events.offer_id
-left join
-    `{{ bigquery_analytics_dataset }}`.`global_user` enruser
-    on enruser.user_id = events.user_id
-where events.event_rank <= 10
+    enroffer.venue_name,
+    previous_events.previous_item_id 
+FROM events
+JOIN `{{ bigquery_analytics_dataset }}`.`global_offer` enroffer
+    ON enroffer.offer_id = events.offer_id
+LEFT JOIN `{{ bigquery_analytics_dataset }}`.`global_user` enruser
+    ON enruser.user_id = events.user_id
+LEFT JOIN previous_events
+    ON events.user_id = previous_events.user_id 
+    AND events.event_date = previous_events.event_date
+    AND events.event_hour = previous_events.event_hour
+    AND events.event_day = previous_events.event_day
+    AND events.event_month = previous_events.event_month

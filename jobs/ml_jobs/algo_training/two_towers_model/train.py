@@ -1,12 +1,13 @@
 import json
 import pdb
 from collections import OrderedDict
-
 import mlflow
 import tensorflow as tf
 import typer
 from loguru import logger
 import numpy as np
+from multiprocessing import Pool
+import pandas as pd
 from commons.constants import (
     CONFIGS_PATH,
     ENV_SHORT_NAME,
@@ -53,6 +54,30 @@ def load_features(config_file_name: str):
     )
 
 
+def pad_list(arr):
+    """Function to pad a list to max_length."""
+    max_length = 10
+    if not arr:  # Handle empty lists
+        return [""] * max_length
+    return np.pad(arr, (0, max_length - len(arr)), constant_values="").tolist()
+
+
+def parallel_pad(data):
+    """Function to apply padding in parallel."""
+    pool = Pool()
+    try:
+        padded_lists = pool.map(pad_list, data["previous_item_id"])
+    finally:
+        pool.close()
+        pool.join()
+    return padded_lists
+
+
+def process_chunk(chunk):
+    """Function to pad lists in a DataFrame chunk."""
+    return chunk["previous_item_id"].apply(pad_list)
+
+
 def load_datasets(
     training_table_name: str,
     validation_table_name: str,
@@ -67,27 +92,57 @@ def load_datasets(
         storage_path=STORAGE_PATH, table_name=training_table_name
     )[user_columns + item_columns]
 
+    train_data["previous_item_id"] = train_data["previous_item_id"].apply(
+        lambda x: x.split(",")
+    )
+
     # Step 1: Find the maximum length of arrays in the column
     max_length = train_data["previous_item_id"].apply(len).max()
+    logger.info(f"max lenght check : {max_length}")
+    logger.info("Check previous_item_id 00")
+    # Process in chunks to avoid high memory usage
+    chunk_size = 100000  # Adjust based on your available memory
+    padded_lists = []
+    # Create a pool of worker processes
+    with Pool() as pool:
+        # Process the DataFrame in chunks
+        for start in range(0, train_data.shape[0], chunk_size):
+            end = min(start + chunk_size, train_data.shape[0])
+            chunk = train_data.iloc[start:end]
+            padded_chunk = pool.apply(process_chunk, (chunk,))
+            padded_lists.append(padded_chunk)
 
-    # Step 2: Pad each array in the column to the maximum length
-    train_data["previous_item_id"] = train_data["previous_item_id"].apply(
-        lambda arr: np.pad(arr, (0, max_length - len(arr)), constant_values="")
-    )
+    # Combine padded lists back into a single DataFrame
+    train_data["previous_item_id"] = pd.concat(padded_lists, ignore_index=True)
+
+    # train_data['previous_item_id'] = parallel_pad(train_data)
+    logger.info("Array padded")
     train_data["previous_item_id"] = list(np.stack(train_data["previous_item_id"]))
 
     validation_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=validation_table_name
     )[user_columns + item_columns]
-
-    # Step 2: Pad each array in the column to the maximum length
     validation_data["previous_item_id"] = validation_data["previous_item_id"].apply(
-        lambda arr: np.pad(arr, (0, max_length - len(arr)), constant_values="")
-    )
-    validation_data["previous_item_id"] = list(
-        np.stack(validation_data["previous_item_id"].values)
+        lambda x: x.split(",")
     )
 
+    chunk_size = 100000  # Adjust based on your available memory
+    padded_lists = []
+    # Create a pool of worker processes
+    with Pool() as pool:
+        # Process the DataFrame in chunks
+        for start in range(0, validation_data.shape[0], chunk_size):
+            end = min(start + chunk_size, validation_data.shape[0])
+            chunk = validation_data.iloc[start:end]
+            padded_chunk = pool.apply(process_chunk, (chunk,))
+            padded_lists.append(padded_chunk)
+
+    # Combine padded lists back into a single DataFrame
+    validation_data["previous_item_id"] = pd.concat(padded_lists, ignore_index=True)
+
+    validation_data["previous_item_id"] = list(
+        np.stack(validation_data["previous_item_id"])
+    )
     string_features = user_columns + item_columns
     string_features.remove("timestamp")
     string_features.remove("previous_item_id")
@@ -321,7 +376,7 @@ def train(
     ),
     run_name: str = typer.Option(None, help="Name of the MLflow run if set"),
 ):
-    # setup_gpu_environment()
+    setup_gpu_environment()
     tf.random.set_seed(seed)
     run_uuid = initialize_mlflow(experiment_name, run_name)
 
@@ -339,7 +394,6 @@ def train(
         item_columns=item_columns,
         input_prediction_feature=input_prediction_feature,
     )
-
     train_dataset, validation_dataset, user_dataset, item_dataset = build_tf_datasets(
         train_data, validation_data, train_user_data, train_item_data, batch_size
     )
@@ -354,7 +408,6 @@ def train(
         config_file_name,
     )
     logger.info("Create Model")
-    pdb.set_trace()
     two_tower_model = TwoTowersModel(
         data=train_data,
         user_features_config=user_features_config,

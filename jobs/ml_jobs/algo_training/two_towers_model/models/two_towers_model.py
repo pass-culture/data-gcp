@@ -31,8 +31,6 @@ class TwoTowersModel(tfrs.models.Model):
         self._item_feature_names = item_columns
         self._item_idx = "item_id"
         self._user_idx = self._user_feature_names.index("user_id")
-        logger.info("item_idx check...")
-        pdb.set_trace()
         # Define user and item models
         self.user_model = SingleTowerModel(
             data=data,
@@ -77,8 +75,7 @@ class TwoTowersModel(tfrs.models.Model):
 
         item_tensor = tf.concat(list(item_dataset.map(self.item_model)), axis=0)
         item_embeddings = tf.math.l2_normalize(item_tensor, axis=1)
-        logger.info("Get metrics check... ")
-        pdb.set_trace()
+
         item_ids = tf.concat(
             list(item_dataset.map(lambda item: item[self._item_idx])), axis=0
         )

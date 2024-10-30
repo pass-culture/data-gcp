@@ -82,13 +82,14 @@ def preprocess(
         features = json.load(config_file)
     tqdm.pandas()
     integer_features = get_features_by_type(
-        feature_layers=features["user_embedding_layers"], layer_types=["int"]
+        feature_layers=features["user_embedding_layers"],
+        layer_types=["int", "timestamp"],
     ) + get_features_by_type(
         feature_layers=features["item_embedding_layers"], layer_types=["int"]
     )
     string_features = get_features_by_type(
         feature_layers=features["user_embedding_layers"],
-        layer_types=["string", "text", "pretrained"],
+        layer_types=["string", "text", "pretrained", "sequence"],
     ) + get_features_by_type(
         feature_layers=features["item_embedding_layers"],
         layer_types=["string", "text", "pretrained"],
@@ -99,30 +100,12 @@ def preprocess(
     if "user_id" not in integer_features + string_features:
         string_features.append("user_id")
     clean_data = (
-        raw_data[integer_features + string_features + ["event_date"]]
+        raw_data[integer_features + string_features]
         .fillna({col: "none" for col in string_features})
         .fillna({col: 0 for col in integer_features})
         .astype({col: "int" for col in integer_features})
     )
-    # clean_data["timestamp"] = clean_data["event_date"].apply(pd.Timestamp)
-    clean_data["timestamp"] = pd.to_datetime(clean_data["event_date"])
-    clean_data["timestamp"] = clean_data["timestamp"].astype(np.int64) // 10**9
-    # booking_data=clean_data[clean_data['event_type'] == 'BOOKING']
-    # Convert 'event_date' from Unix timestamp to datetime for sorting
-
-    clean_data["event_date"] = pd.to_datetime(clean_data["event_date"])
-
-    # # Step 1: Sort the DataFrame by 'user_id' and 'event_date'
-    clean_data = clean_data.sort_values(by=["user_id", "event_date"]).reset_index(
-        drop=True
-    )
-    logger.info(f"Data shape after preprocessing: {clean_data.shape}")
-    logger.info("Collecting previous and next booking_ids..")
-    clean_data = (
-        clean_data.groupby("user_id").apply(collect_prev_next).reset_index(drop=True)
-    )
-    clean_data = clean_data.sample(frac=1).reset_index(drop=True)
-    ## Add sequential bookings_ids
+    ## Add sequential bookings_idss
     clean_data.to_parquet(f"{STORAGE_PATH}/{output_dataframe_file_name}/data.parquet")
 
 

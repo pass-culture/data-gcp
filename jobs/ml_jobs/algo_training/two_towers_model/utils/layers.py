@@ -189,7 +189,10 @@ class TimestampEmbeddingLayer:
 
     embedding_size: int
 
-    def build_sequential_layer(self, timestamp_buckets: np.ndarray):
+    def build_sequential_layer(self, vocabulary: np.ndarray):
+        max_timestamp = vocabulary.max()
+        min_timestamp = vocabulary.min()
+        timestamp_buckets = np.linspace(min_timestamp, max_timestamp, num=1000)
         return tf.keras.Sequential(
             [
                 tf.keras.layers.Discretization(timestamp_buckets.tolist()),

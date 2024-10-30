@@ -32,14 +32,14 @@ theme:
     - toc.follow
   palette:
     - media: "(prefers-color-scheme: light)"
-      scheme: 
+      scheme:
       primary: white
       accent: purple
       toggle:
         icon: material/toggle-switch
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
-      scheme: 
+      scheme:
       primary: black
       accent: purple
       toggle:
@@ -57,13 +57,13 @@ nav:
   - Data Models:
       - Overview: dbt/overview.md
       - ... | dbt/models/mart/global/description*.md
-      
-  - Glossary: 
+
+  - Glossary:
       - Overwiew: dbt/glossary.md
       - ... | dbt/glossary/applicative_database/column*.md
   - Data Science:
       - Overview: ds/overview.md
-      - Recommendation: ds/recommendation.md 
+      - Recommendation: ds/recommendation.md
   - Data Engineering:
       - Overview: de/overview.md
   - About: about.md

@@ -15,4 +15,3 @@ The `mrt_global__offer` table is designed to store comprehensive information abo
 ## Table description
 
 {% docs table__mrt_global__offer  %}{% enddocs %}
-

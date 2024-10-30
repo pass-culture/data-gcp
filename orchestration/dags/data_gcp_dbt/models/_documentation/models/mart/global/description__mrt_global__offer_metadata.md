@@ -18,4 +18,3 @@ There is also a lot of legacy columns that might change due to extensive work to
 ## Table description
 
 {% docs table__mrt_global__offer_metadata  %}{% enddocs %}
-

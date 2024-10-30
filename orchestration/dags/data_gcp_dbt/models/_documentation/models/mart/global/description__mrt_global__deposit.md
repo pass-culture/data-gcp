@@ -21,4 +21,3 @@ In this context, a "deposit" signifies a cultural credit allocated individually 
 ## Table description
 
 {% docs table__mrt_global__deposit  %}{% enddocs %}
-

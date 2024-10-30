@@ -15,4 +15,3 @@ The `Global User` table provides a comprehensive view of user data, including de
 ## Table description
 
 {% docs table__mrt_global__user  %}{% enddocs %}
-

@@ -18,4 +18,3 @@ The `mrt_global__user_offerer` table provides a detailed view for users that are
 ## Table description
 
 {% docs table__mrt_global__user_offerer  %}{% enddocs %}
-

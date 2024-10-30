@@ -21,9 +21,9 @@ class DBTDocsParser:
     def __init__(self):
         with open(DBT_MANIFEST) as f:
             self.json = json.load(f)
-        
+
         self.dbt_prefix_project = "model.data_gcp_dbt"
-    
+
     def get_model_documentation(self, model_name: str):
         model_uri = f"{self.dbt_prefix_project}.{model_name}"
         model_node = self.json.get("nodes", {}).get(model_uri, {})
@@ -34,13 +34,13 @@ class DBTDocsParser:
         df = pd.DataFrame(data)
         return df.to_markdown(index=False)
 
-            
-        
+
+
 
 class DocsStatementExtension(Extension):
     tags = {"docs"}
     dbt_parser = DBTDocsParser()
-    
+
 
     def parse(self, parser):
         # Capture the line number for potential error reporting
@@ -74,7 +74,7 @@ class DocsStatementExtension(Extension):
         else:
             formatted_output = markdown.markdown(f"{definition}")
         # Render the output as Markdown
-        
+
         return formatted_output
 
 # Global Jinja environment
@@ -92,7 +92,7 @@ def on_page_markdown(markdown_content, **kwargs):
 
 def on_pre_build(config, **kwargs) -> None:
     copy_dbt()
-    
+
 def copy_dbt():
     for key, params in DBT_COPY_HOOK.items():
         source = params['source']

@@ -23,4 +23,3 @@ The `Global Stock` table provides a detailed view of stock-related data, capturi
 ## Table description
 
 {% docs table__mrt_global__stock  %}{% enddocs %}
-

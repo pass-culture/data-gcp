@@ -14,7 +14,7 @@ The Pass Culture data project is a comprehensive data management and analytics p
 {% enddocs %}
 {# end this #}
 
-## Applicative Database 
+## Applicative Database
 
 Theses models comes from our internal systems and handle the business logic of the application. The global models are an aggregated view of intermediate models and are used as main data sources for the analytics team.
 
@@ -29,10 +29,10 @@ Theses models comes from our internal systems and handle the business logic of t
 
 - **[Global Stock](/data-gcp/dbt/models/mart/global/description__mrt_global__stock/)**: Manages inventory levels for offers, tracking availability, pricing, and booking limits.
 
-## Tracking Native Tables 
+## Tracking Native Tables
 
 The following models models that comes from our tracking systems from the mobile and web application. They are used to track user interactions within the application.
 
 ## Code & SQL
 
-Not all models are described here as we handle >1K models in DBT. If you want to have a look at the documentation or sql, please refer [at the code](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models). 
+Not all models are described here as we handle >1K models in DBT. If you want to have a look at the documentation or sql, please refer [at the code](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models).

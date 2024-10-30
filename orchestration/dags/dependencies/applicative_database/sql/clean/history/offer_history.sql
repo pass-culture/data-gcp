@@ -24,7 +24,7 @@ select
     offer_withdrawal_delay,
     offer_last_validation_type,
     date_add(current_date(), interval -1 day) as partition_date
-from `{{ bigquery_raw_dataset }}`.`applicative_database_offer` o
+from `{{ bigquery_int_raw_dataset }}`.`offer` o
 left join
     `{{ bigquery_raw_dataset }}`.`applicative_database_product` p
     on o.offer_product_id = cast(p.id as string)

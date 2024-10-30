@@ -7,7 +7,7 @@ from google.cloud import bigquery
 
 from scripts.utils import (
     BIGQUERY_CLEAN_DATASET,
-    BIGQUERY_RAW_DATASET,
+    BIGQUERY_INT_RAW_DATASET,
     GCP_PROJECT,
     access_secret_data,
     get_api_token,
@@ -31,7 +31,7 @@ def get_offerer_siren_list():
         )
 
         SELECT ado.offerer_siren as siren
-        FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.applicative_database_offerer` ado
+        FROM `{GCP_PROJECT}.{BIGQUERY_INT_RAW_DATASET}.offerer` ado
         LEFT JOIN updated_recently ur on ur.siren = ado.offerer_siren
         WHERE ado.offerer_siren is not null AND ur.siren is NULL
         ORDER BY RAND()

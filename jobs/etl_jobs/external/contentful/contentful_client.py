@@ -455,5 +455,5 @@ class ContentfulClient:
                     except KeyError:
                         continue
 
-        self.df_modules = self.df_modules.replace("None", float("nan"))
+        self.df_modules = self.df_modules.replace([None, "None"], float("nan"))
         return self.df_modules, self.df_links, self.df_tags

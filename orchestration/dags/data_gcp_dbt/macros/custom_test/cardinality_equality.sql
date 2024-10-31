@@ -10,7 +10,7 @@
         ),
 
         ratio_table as (select num_rows_table / num_rows_to * 100 as ratio from table)
-    select 100 - ratio
+    select 100 - ratio as ratio
     from ratio_table
     where 100 - ratio > {{ var("not_null_anomaly_threshold_alert_percentage") }}
 {% endtest %}

@@ -163,15 +163,17 @@ select
             and ht.home_type is null
         then "home_without_tag"
         when
-            consult.origin in ("search", "searchresults", "searchn1")
+            consult.origin in ("search", "searchresults")
+            and consult.query is not null
             and consult.search_query_input_is_generic is true
         then "generic_query_search"
         when
-            consult.origin in ("search", "searchresults", "searchn1")
+            consult.origin in ("search", "searchresults")
+            and consult.query is not null
             and consult.search_query_input_is_generic is false
         then "specific_query_search"
         when
-            consult.origin in ("search", "searchresults", "searchn1")
+            consult.origin in ("search", "searchresults","searchn1")
             and consult.query is null
         then "landing_search"
         when consult.origin = "venue" and ov.consult_venue_origin is not null

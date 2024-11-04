@@ -54,11 +54,13 @@ with DAG(
     )
 
     INSTALL_DEPS = """
+        sudo apt install -y libmariadb-dev clang libpq-dev
         git clone https://github.com/pass-culture/pass-culture-main.git
-        cd pass-culture-main
-        cp -r api/src/pcapi ..
+        cd pass-culture-main/api
+        poetry export -f requirements.txt --output requirements.txt --without-hashes
+        uv pip install -r requirements.txt
         cd ..
-        pip install -r requirements.txt --user
+        cp -r api/src/pcapi ..
     """
 
     install_dependencies = SSHGCEOperator(

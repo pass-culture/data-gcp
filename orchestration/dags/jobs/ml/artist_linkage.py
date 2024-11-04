@@ -18,6 +18,12 @@ from common.operators.gce import (
     StopGCEOperator,
 )
 from common.utils import get_airflow_schedule, sparkql_health_check
+from dependencies.ml.linkage.create_artist_table import (
+    PARAMS as CREATE_ARTIST_TABLE_PARAMS,
+)
+from dependencies.ml.linkage.create_product_artist_link_table import (
+    PARAMS as CREATE_PRODUCT_ARTIST_LINK_TABLE_PARAMS,
+)
 from dependencies.ml.linkage.import_artists import PARAMS as IMPORT_ARTISTS_PARAMS
 
 from airflow import DAG
@@ -225,7 +231,25 @@ with DAG(
         ),
     )
 
+    with TaskGroup("export_data") as export_data:
+        create_artist_table = bigquery_job_task(
+            dag,
+            f"create_bq_table_{CREATE_ARTIST_TABLE_PARAMS['destination_table']}",
+            CREATE_ARTIST_TABLE_PARAMS,
+        )
+
+        create_product_artist_link_table = bigquery_job_task(
+            dag,
+            f"create_bq_table_{CREATE_PRODUCT_ARTIST_LINK_TABLE_PARAMS['destination_table']}",
+            CREATE_PRODUCT_ARTIST_LINK_TABLE_PARAMS,
+        )
+
     dag_init >> collect >> internal_linkage
     dag_init >> vm_init >> (internal_linkage, wikidata_matching)
-    internal_linkage >> match_artists_on_wikidata >> load_data_into_linked_artists_table
+    (
+        internal_linkage
+        >> match_artists_on_wikidata
+        >> load_data_into_linked_artists_table
+        >> export_data
+    )
     wikidata_matching >> artist_metrics >> gce_instance_stop

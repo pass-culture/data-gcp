@@ -94,6 +94,7 @@ select
     venue_iris_internal_id,
     offerer_address_id,
     offerer_rank_desc,
-    offerer_rank_asc
+    offerer_rank_asc,
+    venue_image_source
 from {{ ref("int_global__venue") }}
 where offerer_validation_status = 'VALIDATED' and offerer_is_active

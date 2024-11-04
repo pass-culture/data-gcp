@@ -7,7 +7,7 @@ description: Description of the `mrt_global__stock` table.
 
 # Table: Stock
 
-The `Global Stock` table provides a detailed view of stock-related data, capturing essential information about stock availability, pricing, and associated offers.
+The `mrt_global__stock` table provides a detailed view of stock-related data, capturing essential information about stock availability, pricing, and associated offers.
 
 ## Main Fields
 - **stock_id**: Unique identifier for the stock.

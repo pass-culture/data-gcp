@@ -1,5 +1,5 @@
 ---
-title: Global Favorite
+title: Favorite
 description: Description of the `mrt_global__favorite` table.
 ---
 

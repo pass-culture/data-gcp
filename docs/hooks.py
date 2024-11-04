@@ -94,6 +94,37 @@ class DocsStatementExtension(Extension):
         return markdown.markdown(definition)
 
 
+class HideStatementExtension(Extension):
+    """
+    Jinja2 extension to hide statements in templates.
+    """
+
+    tags = {"hide"}
+
+    def parse(self, parser) -> nodes.CallBlock:
+        lineno = next(parser.stream).lineno
+        token = next(parser.stream).value
+        arg = nodes.Const(token)
+        body = parser.parse_statements(["name:endhide"], drop_needle=True)
+
+        return nodes.CallBlock(
+            self.call_method("_render_custom_statement", [arg]), [], [], body
+        ).set_lineno(lineno)
+
+    def _render_custom_statement(self, arg: Optional[str], caller) -> str:
+        """
+        Render documentation based on the tag argument (column or table).
+
+        Args:
+            arg (Optional[str]): Argument indicating column or table reference.
+            caller: Function to fetch content between `{% hide %}` and `{% endhide %}` tags.
+
+        Returns:
+            str: Rendered markdown content.
+        """
+        return markdown.markdown("")
+
+
 class DocsBuilder:
     """
     Class to handle DBT documentation build processes including setup, markdown processing, and file copying.
@@ -114,6 +145,7 @@ class DocsBuilder:
         """
         self.env = Environment(loader=FileSystemLoader(config["docs_dir"]))
         self.env.add_extension(DocsStatementExtension)
+        self.env.add_extension(HideStatementExtension)
         return config
 
     def render_markdown(self, markdown_content: str) -> str:

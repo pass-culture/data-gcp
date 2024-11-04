@@ -1,5 +1,5 @@
 ---
-title: Daily Home Offer Displayed
+title: Native Daily Home Offer Displayed
 description: Description of the `mrt_native__daily_home_offer_displayed` table.
 ---
 

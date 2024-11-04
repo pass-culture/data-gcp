@@ -1,5 +1,5 @@
-s---
-title: Daily User Home Module
+---
+title: Native Daily User Home Module
 description: Description of the `mrt_native__daily_user_home_module` table.
 ---
 

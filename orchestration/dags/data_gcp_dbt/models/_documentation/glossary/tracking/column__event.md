@@ -1,5 +1,10 @@
-/* This file is auto-generated */
-/* TODO: reorganise into concepts proper to tracking */
+!!! note
+    This file is auto-generated
+
+    Tracking that are not related to specific concepts for now
+
+    :construction_worker_tone1: Work in progress :construction_worker_tone1:
+
 
 {% docs column__event_date %}The date when the event occurred, used for partitioning the data.{% enddocs %}
 {% docs column__event_name %}The name of the event. For screen views, it concatenates the event name with the Firebase screen name.{% enddocs %}
@@ -14,6 +19,9 @@
 {% docs column__traffic_medium %}The medium through which the traffic was acquired.{% enddocs %}
 {% docs column__session_id %}Deprecated: use unique_session_id. The session identifier during which the event was recorded.{% enddocs %}
 {% docs column__unique_session_id %}A unique identifier for the session, ensuring no duplicates.{% enddocs %}
+
+{% hide columns %}
+
 {% docs column__session_number %}The number of the session during which the visit occurred, indicating the sequence of user sessions.{% enddocs %}
 {% docs column__first_event_date %}The date of the first event in the session, used for partitioning the data.{% enddocs %}
 {% docs column__first_event_timestamp %}The exact timestamp of the first event in the session.{% enddocs %}
@@ -29,3 +37,10 @@
 {% docs column__url_path_extract %}The extracted path from the URL where the event occurred.{% enddocs %}
 {% docs column__page_referrer %}The referrer page that led to the current page where the event occurred.{% enddocs %}
 {% docs column__page_number %}The number of the page in a sequence, if applicable.{% enddocs %}
+
+{% docs column__user_location_type %}The type of location associated with the user during the event.{% enddocs %}
+{% docs column__booking_cancellation_step %}The step in the booking cancellation process, if applicable.{% enddocs %}
+{% docs column__onboarding_user_selected_age %}The age selected by the user during onboarding.{% enddocs %}
+
+
+{% endhide %}

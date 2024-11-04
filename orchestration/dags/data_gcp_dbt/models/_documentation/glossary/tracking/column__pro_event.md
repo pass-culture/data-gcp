@@ -1,5 +1,13 @@
-/* This file is auto-generated */
-/* TODO: reorganise into concepts proper to tracking */
+
+!!! note
+    This file is auto-generated
+
+    Tracking that are not related to specific concepts for now
+
+    :construction_worker_tone1: Work in progress :construction_worker_tone1:
+
+
+{% hide columns %}
 
 {% docs column__is_edition %}Indicates whether the event is related to an edition or update.{% enddocs %}
 {% docs column__is_draft %}Indicates whether the event is related to a draft version.{% enddocs %}
@@ -15,3 +23,7 @@
 {% docs column__download_file_type %}The type of file downloaded during the event, if applicable.{% enddocs %}
 {% docs column__download_files_cnt %}The count of files downloaded during the event, if applicable.{% enddocs %}
 {% docs column__suggested_offer_subcategory_selected %}Indicates whether a suggested offer subcategory was selected during the event.{% enddocs %}
+
+
+-- This will be hidden
+{% endhide %}

@@ -1,4 +1,10 @@
-## Base columns for log entries coming from pcapi backend logging.
+!!! note
+    This file is auto-generated
+
+    :construction_worker_tone1: Work in progress :construction_worker_tone1:
+
+
+*Base columns for log entries coming from pcapi backend logging.*
 
 {% docs column__log_timestamp %}The timestamp when the log entry was recorded.{% enddocs %}
 {% docs column__partition_date %}The date used for partitioning the log data.{% enddocs %}
@@ -8,10 +14,11 @@
 {% docs column__device_id %}The identifier for the device used during the log entry event.{% enddocs %}
 {% docs column__analytics_source %}The source of analytics data, such as "adage" "backoffice", "app-pro", "native" associated with the log entry.{% enddocs %}
 
+{% hide columns %}
 
-## Additional specific columns
+**Additional specific columns**
 
-Theses columns are associated with logs for specific events or actions in order to assist fraud detection, tracking, and analysis.
+*Theses columns are associated with logs for specific events or actions in order to assist fraud detection, tracking, and analysis.*
 
 {% docs column__stock_old_quantity %}The previous quantity of the stock before the log entry event.{% enddocs %}
 {% docs column__stock_new_quantity %}The new quantity of the stock after the log entry event.{% enddocs %}
@@ -26,3 +33,5 @@ Theses columns are associated with logs for specific events or actions in order 
 {% docs column__cookies_consent_mandatory %}Indicates whether cookies consent is mandatory for the user.{% enddocs %}
 {% docs column__cookies_consent_accepted %}Indicates whether the user accepted cookies consent.{% enddocs %}
 {% docs column__cookies_consent_refused %}Indicates whether the user refused cookies consent.{% enddocs %}
+
+{% endhide %}

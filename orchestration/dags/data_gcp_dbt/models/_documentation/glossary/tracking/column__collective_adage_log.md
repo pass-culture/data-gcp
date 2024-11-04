@@ -1,5 +1,9 @@
-/* This file is auto-generated */
-/* TODO: reorganise into concepts proper to tracking */
+!!! note
+    This file is auto-generated
+
+    :construction_worker_tone1: Work in progress :construction_worker_tone1:
+
+{% hide columns %}
 
 {% docs column__total_results %}The total number of results returned by the query associated with the event.{% enddocs %}
 {% docs column__header_link_name %}The name of the header link clicked during the event, if applicable.{% enddocs %}
@@ -24,3 +28,5 @@
 {% docs column__offer_format %}The format of the collective offer associated with the event.{% enddocs %}
 {% docs column__partner_confirmed_collective_bookings %}The total number of confirmed collective bookings by the partner.{% enddocs %}
 {% docs column__uai %}The UAI (Unique Academic Identifier) associated with the event.{% enddocs %}
+
+{% endhide %}

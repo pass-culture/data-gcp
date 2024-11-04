@@ -1,5 +1,5 @@
 ---
-title: Consultation
+title: Native Consultation
 description: Description of the `mrt_native__consultation` table.
 ---
 

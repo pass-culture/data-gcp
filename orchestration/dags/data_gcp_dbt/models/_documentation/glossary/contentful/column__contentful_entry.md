@@ -1,6 +1,8 @@
 
-/* This file is auto-generated */
-/* TODO: reorganise into concepts proper to tracking */
+!!! note
+    This file is auto-generated
+
+    :construction_worker_tone1: Work in progress :construction_worker_tone1:
 
 {% docs column__entry_id %}The identifier for the entry associated with the consultation.{% enddocs %}
 {% docs column__entry_name %}The name of the entry displayed to the user.{% enddocs %}

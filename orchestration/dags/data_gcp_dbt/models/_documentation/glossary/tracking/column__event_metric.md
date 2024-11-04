@@ -1,5 +1,9 @@
-/* This file is auto-generated */
-/* TODO: reorganise into concepts proper to tracking */
+!!! note
+    This file is auto-generated
+
+    :construction_worker_tone1: Work in progress :construction_worker_tone1:
+
+{% hide columns %}
 
 {% docs column__total_offerers %}The total number of distinct offerers interacted with during the visit.{% enddocs %}
 {% docs column__total_partners %}The total number of distinct partners interacted with during the visit.{% enddocs %}
@@ -29,3 +33,5 @@
 {% docs column__total_position_21_30_consultations %}The number of consultations for offers displayed in positions 21 to 30.{% enddocs %}
 {% docs column__total_position_31_40_consultations %}The number of consultations for offers displayed in positions 31 to 40.{% enddocs %}
 {% docs column__total_position_41_50_consultations %}The number of consultations for offers displayed in positions 41 to 50.{% enddocs %}
+
+{% endhide %}

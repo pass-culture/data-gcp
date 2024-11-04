@@ -75,7 +75,9 @@ select
     countif(
         event_name = "page_view"
         and page_name in (
-            "Remboursements - pass Culture Pro", "Gestion financière - pass Culture Pro", "Chiffre d’affaires - pass Culture Pro"
+            "Remboursements - pass Culture Pro",
+            "Gestion financière - pass Culture Pro",
+            "Chiffre d’affaires - pass Culture Pro"
         )
     ) as total_financial_receipt_page_views,
     countif(

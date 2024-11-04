@@ -84,7 +84,6 @@ markdown_extensions:
   - meta
   - attr_list
   - tables
-  - pymdownx.emoji:
-      emoji_index: '!!python/name:material.extensions.emoji.twemoji'
+  - pymdownx.emoji
   - pymdownx.details
   - pymdownx.superfences

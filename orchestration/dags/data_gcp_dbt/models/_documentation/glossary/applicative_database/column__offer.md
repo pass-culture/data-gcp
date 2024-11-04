@@ -15,6 +15,7 @@
 # Metadata related
 
 {% docs column__offer_type_domain %} Domain type of the offer. {% enddocs %}
+{% docs column__offer_type %} Deprecated. {% enddocs %}
 {% docs column__offer_is_bookable %} Indicates if the offer is bookable. {% enddocs %}
 {% docs column__digital_goods %} Indicates if the offer includes digital goods. {% enddocs %}
 {% docs column__physical_goods %} Indicates if the offer includes physical goods. {% enddocs %}

@@ -29,7 +29,7 @@ models:
       - name: partner_type_origin
         description: "{{ doc('column__partner_type_origin') }}"
       - name: cultural_sector
-        description: "{{ doc('column__cultural_sector') }}"
+        description: "{{ doc('column__partner_cultural_sector') }}"
       - name: dms_accepted_at
         description: "{{ doc('column__offerer_dms_accepted_at') }}"
       - name: first_dms_adage_status

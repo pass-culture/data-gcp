@@ -9,4 +9,4 @@
 {% docs column__partner_type %}Type of the cultural partner, derived from venue or offerer tags.{% enddocs %}
 {% docs column__partner_type_origin %}Origin of the partner type, indicating whether it is derived from venue tags or offerer tags.{% enddocs %}
 {% docs column__partner_status %}Status of the cultural partner, indicating whether it is a venue or offerer.{% enddocs %}
-{% docs column__cultural_sector %}Cultural sector associated with the partner.{% enddocs %}
+{% docs column__partner_cultural_sector %}Cultural sector associated with the partner.{% enddocs %}

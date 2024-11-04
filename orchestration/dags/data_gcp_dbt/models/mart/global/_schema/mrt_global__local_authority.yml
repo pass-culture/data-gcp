@@ -1,0 +1,76 @@
+version: 2
+
+models:
+  - name: mrt_global__local_authority
+    description: "{{ doc('description__mrt_global__local_authority') }}"
+    columns:
+      - name: offerer_id
+        description: "{{ doc('column__offerer_id') }}"
+      - name: local_authority_id
+        description: "{{ doc('column__local_authority_id') }}"
+      - name: local_authority_name
+        description: "{{ doc('column__local_authority_name') }}"
+      - name: local_authority_type
+        description: "{{ doc('column__local_authority_type') }}"
+      - name: is_priority
+        description: "{{ doc('column__local_authority_is_priority') }}"
+      - name: local_authority_creation_date
+        description: "{{ doc('column__local_authority_creation_date') }}"
+      - name: was_registered_last_year
+        description: "{{ doc('column__local_authority_was_registered_last_year') }}"
+      - name: local_authority_academy_name
+        description: "{{ doc('column__local_authority_academy_name') }}"
+      - name: local_authority_region_name
+        description: "{{ doc('column__local_authority_region_name') }}"
+      - name: local_authority_department_code
+        description: "{{ doc('column__local_authority_department_code') }}"
+      - name: local_authority_postal_code
+        description: "{{ doc('column__local_authority_postal_code') }}"
+      - name: is_active_last_30days
+        description: "{{ doc('column__is_active_last_30days') }}"
+      - name: is_active_current_year
+        description: "{{ doc('column__is_active_current_year') }}"
+      - name: total_managed_venues
+        description: "{{ doc('column__total_managed_venues') }}"
+      - name: total_physical_managed_venues
+        description: "{{ doc('column__total_physical_managed_venues') }}"
+      - name: total_permanent_managed_venues
+        description: "{{ doc('column__total_permanent_managed_venues') }}"
+      - name: has_administrative_venue
+        description: "{{ doc('column__has_administrative_venue') }}"
+      - name: all_physical_venues_types
+        description: "{{ doc('column__all_physical_venues_types') }}"
+      - name: active_last_30days_physical_venues_types
+        description: "{{ doc('column__active_last_30days_physical_venues_types') }}"
+      - name: top_bookings_venue_type
+        description: "{{ doc('column__top_bookings_venue_type') }}"
+      - name: top_real_revenue_venue_type
+        description: "{{ doc('column__top_real_revenue_venue_type') }}"
+      - name: total_reimbursement_points
+        description: "{{ doc('column__total_reimbursement_points') }}"
+      - name: total_created_individual_offers
+        description: "{{ doc('column__total_created_individual_offers') }}"
+      - name: total_created_collective_offers
+        description: "{{ doc('column__total_created_collective_offers') }}"
+      - name: total_created_offers
+        description: "{{ doc('column__total_created_offers') }}"
+      - name: first_offer_creation_date
+        description: "{{ doc('column__first_offer_creation_date') }}"
+      - name: last_bookable_offer_date
+        description: "{{ doc('column__last_bookable_offer_date') }}"
+      - name: first_bookable_offer_date
+        description: "{{ doc('column__first_bookable_offer_date') }}"
+      - name: total_non_cancelled_individual_bookings
+        description: "{{ doc('column__total_non_cancelled_individual_bookings') }}"
+      - name: total_used_individual_bookings
+        description: "{{ doc('column__total_used_individual_bookings') }}"
+      - name: total_non_cancelled_collective_bookings
+        description: "{{ doc('column__total_non_cancelled_collective_bookings') }}"
+      - name: total_used_collective_bookings
+        description: "{{ doc('column__total_used_collective_bookings') }}"
+      - name: total_individual_real_revenue
+        description: "{{ doc('column__total_individual_real_revenue') }}"
+      - name: total_collective_real_revenue
+        description: "{{ doc('column__total_collective_real_revenue') }}"
+      - name: total_real_revenue
+        description: "{{ doc('column__total_real_revenue') }}"

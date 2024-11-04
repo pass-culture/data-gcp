@@ -36,13 +36,14 @@
 {% docs column__user_has_seen_pro_tutorials %} Indicates if the user has seen professional tutorials. {% enddocs %}
 {% docs column__user_phone_validation_status %} Status of the user's phone validation. {% enddocs %}
 {% docs column__user_has_validated_email %} Indicates if the user has validated their email. {% enddocs %}
-{% docs column__currently_subscribed_themes %} Users themes subscribed page. {% enddocs %}
-{% docs column__is_theme_subscribed %} Users has subscribed to a page. {% enddocs %}
-{% docs column__last_deposit_expiration_date %} Expiration date of the user's last deposit. {% enddocs %}
-{% docs column__first_deposit_type %} Type of the user's first deposit. {% enddocs %}
-{% docs column__current_deposit_type %} Type of the user's current deposit. {% enddocs %}
+{% docs column__user_currently_subscribed_themes %} Users themes subscribed page. {% enddocs %}
+{% docs column__user_is_theme_subscribed %} Users has subscribed to a page. {% enddocs %}
+{% docs column__user_last_deposit_expiration_date %} Expiration date of the user's last deposit. {% enddocs %}
+{% docs column__user_last_deposit_amount %} Amount of the last deposit made by the user. {% enddocs %}
+{% docs column__user_first_deposit_type %} Type of the user's first deposit. {% enddocs %}
+{% docs column__user_current_deposit_type %} Type of the user's current deposit. {% enddocs %}
 {% docs column__days_between_activation_date_and_first_booking_date %} Number of days between the user's activation date and their first booking date. {% enddocs %}
 {% docs column__days_between_activation_date_and_first_booking_paid %} Number of days between the user's activation date and their first paid booking. {% enddocs %}
-{% docs column__first_booking_type %} Type of the user's first booking. {% enddocs %}
-{% docs column__first_paid_booking_type %} Type of the user's first paid booking. {% enddocs %}
-{% docs column__first_deposit_amount %} Amount of the user's first deposit. {% enddocs %}
+{% docs column__user_first_booking_type %} Type of the user's first booking. {% enddocs %}
+{% docs column__user_first_paid_booking_type %} Type of the user's first paid booking. {% enddocs %}
+{% docs column__user_first_deposit_amount %} Amount of the user's first deposit. {% enddocs %}

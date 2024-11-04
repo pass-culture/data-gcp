@@ -1,0 +1,60 @@
+version: 2
+
+models:
+  - name: mrt_pro__log
+    description: "{{ doc('description__mrt_pro__log') }}"
+    columns:
+      - name: environement
+        description: "{{ doc('column__environement') }}"
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+      - name: offerer_id
+        description: "{{ doc('column__offerer_id') }}"
+      - name: message
+        description: "{{ doc('column__message') }}"
+      - name: booking_id
+        description: "{{ doc('column__booking_id') }}"
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+      - name: venue_id
+        description: "{{ doc('column__venue_id') }}"
+      - name: product_id
+        description: "{{ doc('column__offer_product_id') }}"
+      - name: stock_id
+        description: "{{ doc('column__stock_id') }}"
+      - name: stock_old_quantity
+        description: "{{ doc('column__stock_old_quantity') }}"
+      - name: stock_new_quantity
+        description: "{{ doc('column__stock_new_quantity') }}"
+      - name: stock_old_price
+        description: "{{ doc('column__stock_old_price') }}"
+      - name: stock_new_price
+        description: "{{ doc('column__stock_new_price') }}"
+      - name: stock_booking_quantity
+        description: "{{ doc('column__stock_booking_quantity') }}"
+      - name: list_of_eans_not_found
+        description: "{{ doc('column__list_of_eans_not_found') }}"
+      - name: log_timestamp
+        description: "{{ doc('column__log_timestamp') }}"
+      - name: partition_date
+        description: "{{ doc('column__partition_date') }}"
+      - name: beta_test_new_nav_is_convenient
+        description: "{{ doc('column__beta_test_new_nav_is_convenient') }}"
+      - name: beta_test_new_nav_is_pleasant
+        description: "{{ doc('column__beta_test_new_nav_is_pleasant') }}"
+      - name: beta_test_new_nav_comment
+        description: "{{ doc('column__beta_test_new_nav_comment') }}"
+      - name: technical_message_id
+        description: "{{ doc('column__technical_message_id') }}"
+      - name: choice_datetime
+        description: "{{ doc('column__choice_datetime') }}"
+      - name: device_id
+        description: "{{ doc('column__device_id') }}"
+      - name: analytics_source
+        description: "{{ doc('column__analytics_source') }}"
+      - name: cookies_consent_mandatory
+        description: "{{ doc('column__cookies_consent_mandatory') }}"
+      - name: cookies_consent_accepted
+        description: "{{ doc('column__cookies_consent_accepted') }}"
+      - name: cookies_consent_refused
+        description: "{{ doc('column__cookies_consent_refused') }}"

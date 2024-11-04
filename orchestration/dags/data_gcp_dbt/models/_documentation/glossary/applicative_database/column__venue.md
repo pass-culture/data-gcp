@@ -33,6 +33,9 @@
 {% docs column__venue_iris_internal_id %} Internal IRIS identifier for the venue. {% enddocs %}
 {% docs column__venue_density_level %} Density level of the venue. {% enddocs %}
 {% docs column__venue_department_name %} Department name where the venue is located. {% enddocs %}
+{% docs column__venue_has_siret %}Indicates whether the venue has a SIRET number.{% enddocs %}
+
+/* To rename into venue_*** */
 {% docs column__is_active_last_30days %} Analytical field: Indicates if it was active in the last 30 days. {% enddocs %}
 {% docs column__is_active_current_year %} Analytical field: Indicates if it is active in the current year. {% enddocs %}
 {% docs column__is_individual_active_last_30days %} Analytical field: Indicates if it had individual activity in the last 30 days. {% enddocs %}

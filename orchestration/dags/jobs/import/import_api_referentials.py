@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from common.alerts import task_fail_slack_alert
 from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -45,11 +45,12 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_start_task"
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
+    fetch_code = InstallDependenciesOperator(
         task_id="fetch_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
-        python_version="3.10",
+        branch="{{ params.branch }}",
+        python_version="3.11",
+        base_dir=BASE_PATH,
     )
 
     INSTALL_DEPS = """

@@ -65,5 +65,15 @@ select
         select event_params.value.string_value
         from unnest(event_params) event_params
         where event_params.key = 'to'
-    ) as destination
+    ) as destination,
+    (
+        select event_params.value.int_value
+        from unnest(event_params) event_params
+        where event_params.key = 'selected_offers'
+    ) as simple_collective_offer_id
+    ,(
+        select event_params.value.string_value
+        from unnest(event_params) event_params
+        where event_params.key = 'selected_offers'
+    ) as multiple_collective_offer_id
 from {{ source("raw", "firebase_pro_events") }}

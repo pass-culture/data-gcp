@@ -82,22 +82,22 @@ models:
         description: '{{ doc("column__user_humanized_id") }}'
         data_type: STRING
       - name: currently_subscribed_themes
-        description: '{{ doc("column__currently_subscribed_themes") }}'
+        description: '{{ doc("column__user_currently_subscribed_themes") }}'
         data_type: STRING
       - name: is_theme_subscribed
-        description: '{{ doc("column__is_theme_subscribed") }}'
+        description: '{{ doc("column__user_is_theme_subscribed") }}'
         data_type: BOOLEAN
       - name: first_deposit_creation_date
         description: '{{ doc("column__first_deposit_creation_date") }}'
         data_type: DATE
       - name: first_deposit_type
-        description: '{{ doc("column__first_deposit_type") }}'
+        description: '{{ doc("column__user_first_deposit_type") }}'
         data_type: STRING
       - name: total_deposit_amount
         description: '{{ doc("column__total_deposit_amount") }}'
         data_type: NUMERIC
       - name: current_deposit_type
-        description: '{{ doc("column__current_deposit_type") }}'
+        description: '{{ doc("column__user_current_deposit_type") }}'
         data_type: STRING
       - name: first_individual_booking_date
         description: '{{ doc("column__first_individual_booking_date") }}'
@@ -133,7 +133,7 @@ models:
         description: '{{ doc("column__total_deposit_actual_amount_spent") }}'
         data_type: NUMERIC
       - name: last_deposit_amount
-        description: '{{ doc("column__last_deposit_amount") }}'
+        description: '{{ doc("column__user_last_deposit_amount") }}'
         data_type: NUMERIC
       - name: total_theoretical_remaining_credit
         description: '{{ doc("column__total_theoretical_remaining_credit") }}'
@@ -154,10 +154,10 @@ models:
         description: '{{ doc("column__user_activation_date") }}'
         data_type: DATE
       - name: first_booking_type
-        description: '{{ doc("column__first_booking_type") }}'
+        description: '{{ doc("column__user_first_booking_type") }}'
         data_type: STRING
       - name: first_paid_booking_type
-        description: '{{ doc("column__first_paid_booking_type") }}'
+        description: '{{ doc("column__user_first_paid_booking_type") }}'
         data_type: STRING
       - name: total_distinct_grant_18_booking_types
         description: '{{ doc("column__total_distinct_grant_18_booking_types") }}'
@@ -169,10 +169,10 @@ models:
         description: '{{ doc("column__user_suspension_reason") }}'
         data_type: STRING
       - name: first_deposit_amount
-        description: '{{ doc("column__first_deposit_amount") }}'
+        description: '{{ doc("column__user_first_deposit_amount") }}'
         data_type: NUMERIC
       - name: last_deposit_expiration_date
-        description: '{{ doc("column__last_deposit_expiration_date") }}'
+        description: '{{ doc("column__user_last_deposit_expiration_date") }}'
         data_type: DATE
       - name: user_is_current_beneficiary
         description: '{{ doc("column__user_is_current_beneficiary") }}'

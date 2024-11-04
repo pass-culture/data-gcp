@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: mrt_global__educational_deposit
+    description: "{{ doc('description__mrt_global__educational_deposit') }}"
+    columns:
+      - name: institution_id
+        description: "{{ doc('column__institution_id') }}"
+      - name: educational_year_id
+        description: "{{ doc('column__educational_year_id') }}"
+      - name: institution_department_code
+        description: "{{ doc('column__institution_department_code') }}"
+      - name: institution_academy_name
+        description: "{{ doc('column__institution_academy_name') }}"

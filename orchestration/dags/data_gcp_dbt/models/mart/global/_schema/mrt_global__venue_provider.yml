@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: mrt_global__venue_provider
+    description: "{{ doc('description__mrt_global__venue_provider') }}"
+    columns:
+      - name: provider_id
+        description: "{{ doc('column__provider_id') }}"
+      - name: provider_name
+        description: "{{ doc('column__provider_name') }}"
+      - name: provider_is_active
+        description: "{{ doc('column__provider_is_active') }}"
+      - name: venue_provider_is_active
+        description: "{{ doc('column__venue_provider_is_active') }}"
+      - name: venue_id
+        description: "{{ doc('column__venue_id') }}"
+      - name: last_sync_date
+        description: "{{ doc('column__last_sync_date') }}"
+      - name: creation_date
+        description: "{{ doc('column__creation_date') }}"
+      - name: venue_name
+        description: "{{ doc('column__venue_name') }}"
+      - name: venue_department_code
+        description: "{{ doc('column__venue_department_code') }}"
+      - name: venue_department_name
+        description: "{{ doc('column__venue_department_name') }}"
+      - name: venue_creation_date
+        description: "{{ doc('column__venue_creation_date') }}"
+      - name: venue_is_permanent
+        description: "{{ doc('column__venue_is_permanent') }}"
+      - name: venue_label
+        description: "{{ doc('column__venue_label') }}"
+      - name: booking_external_url
+        description: "{{ doc('column__booking_external_url') }}"
+      - name: cancel_external_url
+        description: "{{ doc('column__cancel_external_url') }}"
+      - name: notification_external_url
+        description: "{{ doc('column__notification_external_url') }}"
+      - name: total_individual_offers
+        description: "{{ doc('column__total_individual_offers') }}"
+      - name: total_collective_offers
+        description: "{{ doc('column__total_collective_offers') }}"
+      - name: first_individual_offer_creation_date
+        description: "{{ doc('column__first_individual_offer_creation_date') }}"
+      - name: first_collective_offer_creation_date
+        description: "{{ doc('column__first_collective_offer_creation_date') }}"

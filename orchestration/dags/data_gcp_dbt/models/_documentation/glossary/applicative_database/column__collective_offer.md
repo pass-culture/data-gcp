@@ -24,5 +24,6 @@
 {% docs column__last_collective_bookable_offer_date %} Date of the last collective bookable offer. {% enddocs %}
 
 * To migrate to more specific files *
+{% docs column__template_id %} Identifier for the template associated with the collective offer. {% enddocs %}
 {% docs column__national_program_id %} Identifier for the national program associated with the collective offer. {% enddocs %}
 {% docs column__national_program_name %} Name of the national program associated with the collective offer. {% enddocs %}

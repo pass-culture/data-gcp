@@ -4,7 +4,8 @@ with
             author as artist_name,
             offer_category_id,
             is_synchronised,
-            count(total_individual_bookings) as offer_number,
+            count(distinct offer_id) as offer_number,
+            count(distinct item_id) as item_number,
             sum(ifnull(total_individual_bookings, 0)) as total_booking_count,
             'author' as artist_type
         from `{{ bigquery_analytics_dataset }}`.global_offer
@@ -20,7 +21,8 @@ with
             performer as artist_name,
             offer_category_id,
             is_synchronised,
-            count(total_individual_bookings) as offer_number,
+            count(distinct offer_id) as offer_number,
+            count(distinct item_id) as item_number,
             sum(ifnull(total_individual_bookings, 0)) as total_booking_count,
             'performer' as artist_type
         from `{{ bigquery_analytics_dataset }}`.global_offer

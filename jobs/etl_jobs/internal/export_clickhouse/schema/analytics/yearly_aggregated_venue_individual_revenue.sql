@@ -1,11 +1,11 @@
 CREATE OR REPLACE TABLE analytics.yearly_aggregated_venue_individual_revenue ON cluster default
     ENGINE = SummingMergeTree()
-    PARTITION BY creation_year
+    PARTITION BY expected_year
     ORDER BY (venue_id)
     SETTINGS storage_policy='gcs_main'
 AS
 SELECT
-    date_trunc('YEAR', toDate (creation_date)) AS creation_year,
+    date_trunc('YEAR', COALESCE(toDate (scheduled_date),toDate (used_dad), max(current_date(),toDate (creation_date)))) AS expected_year,
     cast(venue_id as String) as venue_id,
     sum(
         case

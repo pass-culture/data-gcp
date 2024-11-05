@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS intermediate.booking ON CLUSTER default
     offer_id String,
     creation_date String,
     used_date Nullable(String),
+    scheduled_date Nullable(String),
     booking_status String,
     deposit_type String,
     booking_quantity UInt64,

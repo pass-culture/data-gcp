@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS intermediate.collective_booking ON CLUSTER default
     offer_id Nullable(String),
     creation_date String,
     used_date Nullable(String),
+    scheduled_date Nullable(String),
     reimbursement_date Nullable(String),
     collective_booking_status String,
     educational_institution_id String,

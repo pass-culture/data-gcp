@@ -1,11 +1,11 @@
 CREATE OR REPLACE TABLE analytics.monthly_aggregated_venue_revenue ON cluster default
     ENGINE = SummingMergeTree()
-    PARTITION BY creation_month
+    PARTITION BY expected_month
     ORDER BY (venue_id)
     SETTINGS storage_policy='gcs_main'
 AS
 SELECT
-    creation_month,
+    expected_month,
     cast(i.venue_id as String) as venue_id,
     sum(coalesce(i.revenue,0)) as individual_revenue,
     sum(coalesce(c.revenue,0)) as collective_revenue,
@@ -18,6 +18,6 @@ FROM
     analytics.monthly_aggregated_venue_individual_revenue i
 LEFT JOIN
     analytics.monthly_aggregated_venue_collective_revenue c
-ON i.creation_month = c.creation_month AND i.venue_id = c.venue_id
+ON i.expected_month = c.expected_month AND i.venue_id = c.venue_id
 GROUP BY
     1,2

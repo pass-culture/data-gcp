@@ -68,8 +68,8 @@ def get_image_license(image_urls: list[str]) -> pd.DataFrame:
                 page_url = extract_page_url_from_title(title=page["title"])
                 base_response = {
                     "filename": page["title"],
-                    "image_url": image_url,
-                    "page_url": page_url,
+                    "image_file_url": image_url,
+                    "image_page_url": page_url,
                 }
 
                 if "imageinfo" in page:
@@ -82,16 +82,16 @@ def get_image_license(image_urls: list[str]) -> pd.DataFrame:
                         "value", NO_LICENSE_URL_VALUE
                     )
                     license_metadata = {
-                        "author": author,
-                        "license": license_info,
-                        "license_url": license_url,
+                        "image_author": author,
+                        "image_license": license_info,
+                        "image_license_url": license_url,
                     }
 
                 else:
                     license_metadata = {
-                        "author": NO_AUTHOR_VALUE,
-                        "license": NO_LICENSE_VALUE,
-                        "license_url": NO_LICENSE_URL_VALUE,
+                        "image_author": NO_AUTHOR_VALUE,
+                        "image_license": NO_LICENSE_VALUE,
+                        "image_license_url": NO_LICENSE_URL_VALUE,
                     }
 
                 licenses_list.append({**base_response, **license_metadata})
@@ -111,14 +111,16 @@ def main(
     artists_matched_on_wikidata: str = typer.Option(),
     output_file_path: str = typer.Option(),
 ) -> None:
-    artists_df = pd.read_parquet(artists_matched_on_wikidata)
+    artists_df = pd.read_parquet(artists_matched_on_wikidata).rename(
+        columns={"img": "image_file_url"}
+    )
 
     # Fetch the licenses from wikidata
-    image_list = artists_df.img.dropna().drop_duplicates().tolist()
+    image_list = artists_df.image_file_url.dropna().drop_duplicates().tolist()
     image_license_df = get_image_license(image_list)
 
     artists_with_licenses_df = artists_df.merge(
-        image_license_df, how="left", left_on="img", right_on="image_url"
+        image_license_df, how="left", on="image_file_url"
     )
 
     upload_parquet(

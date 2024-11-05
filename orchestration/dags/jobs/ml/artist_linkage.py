@@ -18,6 +18,9 @@ from common.operators.gce import (
     StopGCEOperator,
 )
 from common.utils import get_airflow_schedule, sparkql_health_check
+from dependencies.ml.linkage.create_artist_alias_table import (
+    PARAMS as CREATE_ARTIST_ALIAS_TABLE_PARAMS,
+)
 from dependencies.ml.linkage.create_artist_table import (
     PARAMS as CREATE_ARTIST_TABLE_PARAMS,
 )
@@ -259,6 +262,12 @@ with DAG(
             dag,
             f"create_bq_table_{CREATE_PRODUCT_ARTIST_LINK_TABLE_PARAMS['destination_table']}",
             CREATE_PRODUCT_ARTIST_LINK_TABLE_PARAMS,
+        )
+
+        create_artist_alias_table = bigquery_job_task(
+            dag,
+            f"create_bq_table_{CREATE_ARTIST_ALIAS_TABLE_PARAMS['destination_table']}",
+            CREATE_ARTIST_ALIAS_TABLE_PARAMS,
         )
 
     dag_init >> collect >> internal_linkage

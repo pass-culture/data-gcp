@@ -27,4 +27,5 @@ where
     {% if is_incremental() %}
         and partition_date
         between date_sub(date("{{ ds() }}"), interval 1 day) and date("{{ ds() }}")
+    {% else %} and partition_date >= "2024-08-01"  -- feature deployment date
     {% endif %}

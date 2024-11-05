@@ -49,7 +49,8 @@ ARTISTS_TO_LINK_GCS_FILENAME = "artists_to_link.parquet"
 PREPROCESSED_GCS_FILENAME = "preprocessed_artists_to_link.parquet"
 LINKED_ARTISTS_GCS_FILENAME = "linked_artists.parquet"
 WIKIDATA_EXTRACTION_GCS_FILENAME = "wikidata_extraction.parquet"
-LINKED_ARTISTS_WITH_METADATA_GCS_FILENAME = "linked_artists_with_metadata.parquet"
+ARTISTS_MATCHED_ON_WIKIDATA = "artists_matched_on_wikidata.parquet"
+ARTISTS_WITH_METADATA_GCS_FILENAME = "linked_artists_with_metadata.parquet"
 TEST_SETS_GCS_DIR = "labelled_test_sets"
 GCE_INSTALLER = "uv"
 
@@ -198,16 +199,32 @@ with DAG(
              python match_artists_on_wikidata.py \
             --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_GCS_FILENAME)} \
             --wiki-file-path {os.path.join(STORAGE_BASE_PATH, WIKIDATA_EXTRACTION_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_WITH_METADATA_GCS_FILENAME)}
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_MATCHED_ON_WIKIDATA)}
             """,
         )
-        extract_from_wikidata >> match_artists_on_wikidata
+
+        get_wikimedia_commons_license = SSHGCEOperator(
+            task_id="get_wikimedia_commons_license",
+            instance_name=GCE_INSTANCE,
+            base_dir=BASE_DIR,
+            installer=GCE_INSTALLER,
+            command=f"""
+             python get_wikimedia_commons_license.py \
+            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, ARTISTS_MATCHED_ON_WIKIDATA)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)}
+            """,
+        )
+        (
+            extract_from_wikidata
+            >> match_artists_on_wikidata
+            >> get_wikimedia_commons_license
+        )
 
     load_data_into_linked_artists_table = GCSToBigQueryOperator(
         bucket=MLFLOW_BUCKET_NAME,
         task_id="load_data_into_linked_artists_table",
         source_objects=os.path.join(
-            GCS_FOLDER_PATH, LINKED_ARTISTS_WITH_METADATA_GCS_FILENAME
+            GCS_FOLDER_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME
         ),
         destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{LINKED_ARTISTS_BQ_TABLE}",
         source_format="PARQUET",
@@ -224,7 +241,7 @@ with DAG(
             command=f"""
          python evaluate.py \
         --artists-to-link-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_TO_LINK_GCS_FILENAME)} \
-        --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_WITH_METADATA_GCS_FILENAME)} \
+        --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)} \
         --test-sets-dir {os.path.join(STORAGE_BASE_PATH, TEST_SETS_GCS_DIR)} \
         --experiment-name artist_linkage_v1.0_{ENV_SHORT_NAME}
         """,
@@ -248,7 +265,7 @@ with DAG(
     dag_init >> vm_init >> (internal_linkage, wikidata_matching)
     (
         internal_linkage
-        >> match_artists_on_wikidata
+        >> wikidata_matching
         >> load_data_into_linked_artists_table
         >> export_data
     )

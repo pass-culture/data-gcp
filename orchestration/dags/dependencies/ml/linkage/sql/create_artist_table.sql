@@ -4,5 +4,9 @@ select distinct
     genre,
     description,
     professions,
-    img as img_url
+    image_file_url,
+    image_page_url,
+    image_author,
+    image_license,
+    image_license_url,
 from `{{ bigquery_tmp_dataset }}.linked_artists`

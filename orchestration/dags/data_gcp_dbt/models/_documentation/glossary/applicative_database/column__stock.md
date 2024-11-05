@@ -1,5 +1,5 @@
 {% docs column__stock_id %}Unique identifier for the stock.{% enddocs %}
-{% docs column__stock_beginning_date %}The date when the stock becomes available.{% enddocs %}
+{% docs column__stock_beginning_date %}Scheduled date of the event/show (if time event).{% enddocs %}
 {% docs column__stock_last_provider_id %}Identifier for the last provider of the stock.{% enddocs %}
 {% docs column__stock_booking_limit_date %}The last date when the stock can be booked.{% enddocs %}
 {% docs column__stock_creation_date %}The date when the stock was created.{% enddocs %}

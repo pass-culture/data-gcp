@@ -12,7 +12,7 @@ RUN uv pip install --no-cache-dir -r /opt/requirements.txt
 COPY dags/data_gcp_dbt/dbt-requirements.txt /opt/dbt-requirements.txt
 RUN uv pip install --no-cache-dir -r /opt/dbt-requirements.txt
 
-# install gcloud
+# A install gcloud
 USER root
 RUN apt-get update && apt-get install -y git ca-certificates --no-install-recommends
 COPY ./airflow/etc/sa.gcpkey.json ${GCLOUD_SERVICE_KEY}

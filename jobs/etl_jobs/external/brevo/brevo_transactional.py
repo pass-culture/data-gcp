@@ -118,7 +118,6 @@ class BrevoTransactional:
             .assign(template=[event.template_id for event in all_events])
             .assign(event_date=pd.to_datetime([event._date for event in all_events]))
             .assign(tag=[event.tag for event in all_events])
-            .drop_duplicates()
         )
 
         df["event_date"] = df["event_date"].dt.date

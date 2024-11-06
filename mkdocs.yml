@@ -56,11 +56,11 @@ nav:
   - Home: index.md
   - Data Models:
       - Overview: dbt/overview.md
-      - ... | dbt/models/mart/global/description*.md
+      - ... | dbt/models/mart/*/description*.md
 
   - Glossary:
       - Overwiew: dbt/glossary.md
-      - ... | dbt/glossary/applicative_database/column*.md
+      - ... | dbt/glossary/*/column*.md
   - Data Science:
       - Overview: ds/overview.md
       - Recommendation: ds/recommendation.md
@@ -84,3 +84,6 @@ markdown_extensions:
   - meta
   - attr_list
   - tables
+  - pymdownx.emoji
+  - pymdownx.details
+  - pymdownx.superfences

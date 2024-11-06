@@ -1,0 +1,86 @@
+version: 2
+
+models:
+  - name: mrt_collective__adage_log
+    description: "{{ doc('description__mrt_collective__adage_log') }}"
+    columns:
+      - name: event_date
+        description: "{{ doc('column__event_date') }}"
+      - name: event_name
+        description: "{{ doc('column__event_name') }}"
+      - name: event_timestamp
+        description: "{{ doc('column__event_timestamp') }}"
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+      - name: session_id
+        description: "{{ doc('column__session_id') }}"
+      - name: total_results
+        description: "{{ doc('column__total_results') }}"
+      - name: origin
+        description: "{{ doc('column__origin') }}"
+      - name: collective_stock_id
+        description: "{{ doc('column__collective_stock_id') }}"
+      - name: collective_offer_id
+        description: "{{ doc('column__collective_offer_id') }}"
+      - name: header_link_name
+        description: "{{ doc('column__header_link_name') }}"
+      - name: collective_booking_id
+        description: "{{ doc('column__collective_booking_id') }}"
+      - name: query_id
+        description: "{{ doc('column__query_id') }}"
+      - name: address_type_filter
+        description: "{{ doc('column__address_type_filter') }}"
+      - name: text_filter
+        description: "{{ doc('column__text_filter') }}"
+      - name: department_filter
+        description: "{{ doc('column__department_filter') }}"
+      - name: academy_filter
+        description: "{{ doc('column__academy_filter') }}"
+      - name: artistic_domain_filter
+        description: "{{ doc('column__artistic_domain_filter') }}"
+      - name: student_filter
+        description: "{{ doc('column__student_filter') }}"
+      - name: suggestion_type
+        description: "{{ doc('column__suggestion_type') }}"
+      - name: suggestion_value
+        description: "{{ doc('column__suggestion_value') }}"
+      - name: is_favorite
+        description: "{{ doc('column__is_favorite') }}"
+      - name: venue_filter
+        description: "{{ doc('column__venue_filter') }}"
+      - name: format_filter
+        description: "{{ doc('column__format_filter') }}"
+      - name: playlist_id
+        description: "{{ doc('column__playlist_id') }}"
+      - name: domain_id
+        description: "{{ doc('column__domain_id') }}"
+      - name: rank_clicked
+        description: "{{ doc('column__rank_clicked') }}"
+      - name: adage_venue_id
+        description: "{{ doc('column__adage_venue_id') }}"
+      - name: offer_venue_id
+        description: "{{ doc('column__offer_venue_id') }}"
+      - name: venue_id
+        description: "{{ doc('column__venue_id') }}"
+      - name: partner_id
+        description: "{{ doc('column__partner_id') }}"
+      - name: offer_students
+        description: "{{ doc('column__offer_students') }}"
+      - name: offer_format
+        description: "{{ doc('column__offer_format') }}"
+      - name: partner_name
+        description: "{{ doc('column__partner_name') }}"
+      - name: partner_type
+        description: "{{ doc('column__partner_type') }}"
+      - name: partner_status
+        description: "{{ doc('column__partner_status') }}"
+      - name: cultural_sector
+        description: "{{ doc('column__partner_cultural_sector') }}"
+      - name: partner_confirmed_collective_bookings
+        description: "{{ doc('column__partner_confirmed_collective_bookings') }}"
+      - name: partner_department_code
+        description: "{{ doc('column__partner_department_code') }}"
+      - name: uai
+        description: "{{ doc('column__uai') }}"
+      - name: user_role
+        description: "{{ doc('column__user_role') }}"

@@ -9,7 +9,6 @@
 {% docs column__offerer_region_name %} Region name of the offerer. {% enddocs %}
 {% docs column__offerer_city %} City of the offerer. {% enddocs %}
 {% docs column__offerer_humanized_id %} Human-readable identifier for the offerer. {% enddocs %}
-{% docs column__offerer_address_id %} Address identifier of the offerer. {% enddocs %}
 {% docs column__offerer_legal_unit_business_activity_code %} Business activity code of the legal unit of the offerer. {% enddocs %}
 {% docs column__offerer_legal_unit_business_activity_label %} Business activity label of the legal unit of the offerer. {% enddocs %}
 {% docs column__offerer_legal_unit_legal_category_code %} Legal category code of the legal unit of the offerer. {% enddocs %}
@@ -27,3 +26,7 @@
 {% docs column__offerer_is_active %} Indicates if the offerer is active. {% enddocs %}
 {% docs column__offerer_rank_desc %} Offerer rank in descending order. {% enddocs %}
 {% docs column__offerer_rank_asc %} Offerer rank in ascending order. {% enddocs %}
+{% docs column__offerer_first_individual_offer_creation_date %}The date when the offerer's first individual offer was created.{% enddocs %}
+{% docs column__offerer_first_collective_offer_creation_date %}The date when the offerer's first collective offer was created.{% enddocs %}
+{% docs column__offerer_business_activity_label %}The business activity label of the offerer.{% enddocs %}
+{% docs column__offerer_legal_category_label %}The legal category label of the offerer.{% enddocs %}

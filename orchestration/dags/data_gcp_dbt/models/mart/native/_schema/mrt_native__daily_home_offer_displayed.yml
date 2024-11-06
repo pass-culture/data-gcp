@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: mrt_native__daily_home_offer_displayed
+    description: "{{ doc('description__mrt_native__daily_home_offer_displayed') }}"
+    columns:
+      - name: event_date
+        description: "{{ doc('column__event_date') }}"
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+      - name: module_id
+        description: "{{ doc('column__module_id') }}"
+      - name: entry_id
+        description: "{{ doc('column__entry_id') }}"
+      - name: displayed_position
+        description: "{{ doc('column__displayed_position') }}"
+      - name: total_displays
+        description: "{{ doc('column__total_displays') }}"
+      - name: total_position_0_3_displays
+        description: "{{ doc('column__total_position_0_3_displays') }}"
+      - name: total_position_4_10_displays
+        description: "{{ doc('column__total_position_4_10_displays') }}"
+      - name: total_position_11_20_displays
+        description: "{{ doc('column__total_position_11_20_displays') }}"
+      - name: total_position_21_30_displays
+        description: "{{ doc('column__total_position_21_30_displays') }}"
+      - name: total_position_31_40_displays
+        description: "{{ doc('column__total_position_31_40_displays') }}"
+      - name: total_position_41_50_displays
+        description: "{{ doc('column__total_position_41_50_displays') }}"
+      - name: total_consultations
+        description: "{{ doc('column__total_consultations') }}"
+      - name: total_position_0_3_consultations
+        description: "{{ doc('column__total_position_0_3_consultations') }}"
+      - name: total_position_4_10_consultations
+        description: "{{ doc('column__total_position_4_10_consultations') }}"
+      - name: total_position_11_20_consultations
+        description: "{{ doc('column__total_position_11_20_consultations') }}"
+      - name: total_position_21_30_consultations
+        description: "{{ doc('column__total_position_21_30_consultations') }}"
+      - name: total_position_31_40_consultations
+        description: "{{ doc('column__total_position_31_40_consultations') }}"
+      - name: total_position_41_50_consultations
+        description: "{{ doc('column__total_position_41_50_consultations') }}"

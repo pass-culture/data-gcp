@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from common.alerts import task_fail_slack_alert
 from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -45,19 +45,22 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_start_task"
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
+    fetch_code = InstallDependenciesOperator(
         task_id="fetch_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
-        python_version="3.10",
+        branch="{{ params.branch }}",
+        python_version="3.11",
+        base_dir=BASE_PATH,
     )
 
     INSTALL_DEPS = """
+        sudo apt install -y libmariadb-dev clang libpq-dev
         git clone https://github.com/pass-culture/pass-culture-main.git
-        cd pass-culture-main
-        cp -r api/src/pcapi ..
+        cd pass-culture-main/api
+        poetry export -f requirements.txt --output requirements.txt --without-hashes
+        uv pip install -r requirements.txt
         cd ..
-        pip install -r requirements.txt --user
+        cp -r api/src/pcapi ..
     """
 
     install_dependencies = SSHGCEOperator(
@@ -65,14 +68,16 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=INSTALL_DEPS,
+        installer="uv",
     )
 
     subcategories_job = SSHGCEOperator(
         task_id="import_subcategories",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        installer="uv",
         command=f"""
-        python main.py --job_type=subcategories --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}
+        CORS_ALLOWED_ORIGINS="" CORS_ALLOWED_ORIGINS_NATIVE="" CORS_ALLOWED_ORIGINS_AUTH="" CORS_ALLOWED_ORIGINS_ADAGE_IFRAME="" python main.py --job_type=subcategories --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}
     """,
     )
 
@@ -80,8 +85,9 @@ with DAG(
         task_id="import_types",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        installer="uv",
         command=f"""
-        python main.py --job_type=types --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}
+        CORS_ALLOWED_ORIGINS="" CORS_ALLOWED_ORIGINS_NATIVE="" CORS_ALLOWED_ORIGINS_AUTH="" CORS_ALLOWED_ORIGINS_ADAGE_IFRAME="" python main.py --job_type=types --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}
     """,
     )
 

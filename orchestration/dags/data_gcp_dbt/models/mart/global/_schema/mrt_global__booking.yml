@@ -9,6 +9,9 @@ models:
         data_tests:
           - not_null
           - unique
+          - cardinality_equality:
+              field: booking_id
+              to: source('raw', 'applicative_database_booking')
       - name: booking_creation_date
         description: '{{ doc("column__booking_creation_date") }}'
         data_type: DATE

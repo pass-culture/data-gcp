@@ -1,0 +1,92 @@
+version: 2
+
+models:
+  - name: mrt_global__favorite
+    description: "{{ doc('description__mrt_global__favorite') }}"
+    columns:
+      - name: favorite_id
+        description: "{{ doc('column__favorite_id') }}"
+      - name: favorite_creation_date
+        description: "{{ doc('column__favorite_creation_date') }}"
+      - name: favorite_created_at
+        description: "{{ doc('column__favorite_created_at') }}"
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+      - name: offer_name
+        description: "{{ doc('column__offer_name') }}"
+      - name: offer_category_id
+        description: "{{ doc('column__offer_category_id') }}"
+      - name: offer_creation_date
+        description: "{{ doc('column__offer_creation_date') }}"
+      - name: offer_subcategory_id
+        description: "{{ doc('column__offer_subcategory_id') }}"
+      - name: venue_id
+        description: "{{ doc('column__venue_id') }}"
+      - name: venue_name
+        description: "{{ doc('column__venue_name') }}"
+      - name: venue_label
+        description: "{{ doc('column__venue_label') }}"
+      - name: partner_id
+        description: "{{ doc('column__partner_id') }}"
+      - name: offerer_id
+        description: "{{ doc('column__offerer_id') }}"
+      - name: offerer_name
+        description: "{{ doc('column__offerer_name') }}"
+      - name: venue_type_label
+        description: "{{ doc('column__venue_type_label') }}"
+      - name: venue_region_name
+        description: "{{ doc('column__venue_region_name') }}"
+      - name: venue_department_code
+        description: "{{ doc('column__venue_department_code') }}"
+      - name: venue_department_name
+        description: "{{ doc('column__venue_department_name') }}"
+      - name: venue_postal_code
+        description: "{{ doc('column__venue_postal_code') }}"
+      - name: venue_city
+        description: "{{ doc('column__venue_city') }}"
+      - name: venue_academy_name
+        description: "{{ doc('column__venue_academy_name') }}"
+      - name: venue_density_label
+        description: "{{ doc('column__venue_density_label') }}"
+      - name: venue_macro_density_label
+        description: "{{ doc('column__venue_macro_density_label') }}"
+      - name: venue_density_level
+        description: "{{ doc('column__venue_density_level') }}"
+      - name: user_department_code
+        description: "{{ doc('column__user_department_code') }}"
+      - name: user_department_name
+        description: "{{ doc('column__user_department_name') }}"
+      - name: user_postal_code
+        description: "{{ doc('column__user_postal_code') }}"
+      - name: user_city
+        description: "{{ doc('column__user_city') }}"
+      - name: user_activity
+        description: "{{ doc('column__user_activity') }}"
+      - name: user_civility
+        description: "{{ doc('column__user_civility') }}"
+      - name: user_age
+        description: "{{ doc('column__user_age') }}"
+      - name: user_is_priority_public
+        description: "{{ doc('column__user_is_priority_public') }}"
+      - name: user_is_unemployed
+        description: "{{ doc('column__user_is_unemployed') }}"
+      - name: user_is_in_education
+        description: "{{ doc('column__user_is_in_education') }}"
+      - name: user_is_in_qpv
+        description: "{{ doc('column__user_is_in_qpv') }}"
+      - name: current_deposit_type
+        description: "{{ doc('column__user_current_deposit_type') }}"
+      - name: user_epci
+        description: "{{ doc('column__user_epci') }}"
+      - name: user_density_label
+        description: "{{ doc('column__user_density_label') }}"
+      - name: city_code
+        description: "{{ doc('column__user_city') }}"
+      - name: user_macro_density_label
+        description: "{{ doc('column__user_macro_density_label') }}"
+      - name: user_region_name
+        description: "{{ doc('column__user_region_name') }}"
+      - name: user_academy_name
+        description: "{{ doc('column__user_academy_name') }}"

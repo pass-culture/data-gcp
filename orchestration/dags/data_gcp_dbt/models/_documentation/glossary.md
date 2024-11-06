@@ -11,7 +11,7 @@ For example in case of `offer_id`, `booking_is_used`, `booking_cancellation_date
 As for the models, `applicative` means that the term or concept is associated with data that is handle by internal systems that handle the business logic of the application.
 For example, `booking`, `user`, `deposit`, `stock`.
 
-## Event
+## Tracking
 
 We also track events within the distinct applications (native, pro, adage) on distinct platform (web, mobile).
 The event concept usually refers to data that comes from our tracking systems.
@@ -24,3 +24,10 @@ Columns or tables like `log` are usually associated with logs from backend syste
 ## Other
 
 We also ingest data from other external sources which can be described in distinct folder per origin source.
+
+
+## Need help?
+
+If you have any questions or need further assistance
+
+[Email us :fontawesome-solid-paper-plane: ! ](mailto:donnees@passculture.app){ .md-button }

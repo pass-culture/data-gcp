@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: mrt_global__offerer_tag
+    description: "{{ doc('description__mrt_global__offerer_tag') }}"
+    columns:
+      - name: offerer_tag_mapping_id
+        description: "{{ doc('column__offerer_tag_mapping_id') }}"
+      - name: offerer_id
+        description: "{{ doc('column__offerer_id') }}"
+      - name: tag_id
+        description: "{{ doc('column__offerer_tag_id') }}"
+      - name: tag_name
+        description: "{{ doc('column__offerer_tag_name') }}"
+      - name: tag_label
+        description: "{{ doc('column__offerer_tag_label') }}"
+      - name: tag_description
+        description: "{{ doc('column__offerer_tag_description') }}"
+      - name: tag_category_id
+        description: "{{ doc('column__offerer_tag_category_id') }}"
+      - name: tag_category_name
+        description: "{{ doc('column__offerer_tag_category_name') }}"
+      - name: tag_category_label
+        description: "{{ doc('column__offerer_tag_category_label') }}"

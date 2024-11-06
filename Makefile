@@ -136,3 +136,6 @@ sqlfmt_fix:
 
 sqlfmt_check:
 	sqlfmt --check orchestration/dags --exclude "**/.venv/**" --exclude "**/venv/**"  --exclude "orchestration/dags/data_gcp_dbt/target/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"
+
+docs_run:
+	mkdocs serve

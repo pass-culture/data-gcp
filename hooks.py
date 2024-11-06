@@ -2,19 +2,10 @@ from jinja2 import Environment, nodes, FileSystemLoader
 from jinja2.ext import Extension
 import pandas as pd
 import markdown
-import shutil
-import os
 import json
 from typing import Dict, Any, Optional
 
-BASE_FOLDER = "docs/dbt"
-DBT_COPY_HOOK = {
-    "glossary": {
-        "type": "folder",
-        "source": "orchestration/dags/data_gcp_dbt/models/_documentation/",
-        "destination": BASE_FOLDER,
-    },
-}
+
 DBT_MANIFEST = "orchestration/dags/data_gcp_dbt/target/manifest.json"
 
 
@@ -103,6 +94,37 @@ class DocsStatementExtension(Extension):
         return markdown.markdown(definition)
 
 
+class HideStatementExtension(Extension):
+    """
+    Jinja2 extension to hide statements in templates.
+    """
+
+    tags = {"hide"}
+
+    def parse(self, parser) -> nodes.CallBlock:
+        lineno = next(parser.stream).lineno
+        token = next(parser.stream).value
+        arg = nodes.Const(token)
+        body = parser.parse_statements(["name:endhide"], drop_needle=True)
+
+        return nodes.CallBlock(
+            self.call_method("_render_custom_statement", [arg]), [], [], body
+        ).set_lineno(lineno)
+
+    def _render_custom_statement(self, arg: Optional[str], caller) -> str:
+        """
+        Render documentation based on the tag argument (column or table).
+
+        Args:
+            arg (Optional[str]): Argument indicating column or table reference.
+            caller: Function to fetch content between `{% hide %}` and `{% endhide %}` tags.
+
+        Returns:
+            str: Rendered markdown content.
+        """
+        return markdown.markdown("")
+
+
 class DocsBuilder:
     """
     Class to handle DBT documentation build processes including setup, markdown processing, and file copying.
@@ -123,6 +145,7 @@ class DocsBuilder:
         """
         self.env = Environment(loader=FileSystemLoader(config["docs_dir"]))
         self.env.add_extension(DocsStatementExtension)
+        self.env.add_extension(HideStatementExtension)
         return config
 
     def render_markdown(self, markdown_content: str) -> str:
@@ -142,20 +165,7 @@ class DocsBuilder:
 
     def pre_build_setup(self) -> None:
         """Prepare environment before building documentation."""
-        self.copy_dbt_files()
-
-    def copy_dbt_files(self) -> None:
-        """
-        Copy DBT documentation files as specified in DBT_COPY_HOOK.
-        """
-        for key, params in DBT_COPY_HOOK.items():
-            source = params["source"]
-            destination = params["destination"]
-            os.makedirs(destination, exist_ok=True)
-            if params["type"] == "file":
-                shutil.copy(source, destination)
-            elif params["type"] == "folder":
-                shutil.copytree(source, destination, dirs_exist_ok=True)
+        pass
 
 
 # Instantiate DocsBuilder and setup hooks for documentation generation

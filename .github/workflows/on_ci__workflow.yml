@@ -1,15 +1,16 @@
-name: "Integration Workflow"
+name: "2. [on_ci] Integration Workflow"
 
 on:
   pull_request:
 
 jobs:
-   linter:
+  linter:
     uses: ./.github/workflows/reusable_linter.yml
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
-   find-dbt-changes:
+
+  find-dbt-changes:
     outputs:
       changes: ${{ steps.dbt-changes.outputs.changes }}
     runs-on: ubuntu-latest
@@ -20,7 +21,8 @@ jobs:
         env:
           TARGET_BRANCH: ${{ github.base_ref }}
         run: .github/workflows/scripts/check_dbt_changes.sh $TARGET_BRANCH
-   dbt-integration-prod:
+
+  dbt-integration-prod:
     needs: find-dbt-changes
     if: github.base_ref == 'production' && needs.find-dbt-changes.outputs.changes == 'true'
     with:
@@ -31,7 +33,8 @@ jobs:
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
-   dbt-integration-stg:
+
+  dbt-integration-stg:
     needs: find-dbt-changes
     if: github.base_ref == 'master' && needs.find-dbt-changes.outputs.changes == 'true'
     with:
@@ -42,11 +45,12 @@ jobs:
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
-   find-test-jobs:
-     outputs:
-       jobs: ${{ steps.compute.outputs.jobs }}
-     runs-on: ubuntu-latest
-     steps:
+
+  find-test-jobs:
+    outputs:
+      jobs: ${{ steps.compute.outputs.jobs }}
+    runs-on: ubuntu-latest
+    steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -70,18 +74,20 @@ jobs:
         id: "find-testable-jobs"
         run: .github/workflows/scripts/find_tests.sh
       - name: "Show found files"
-        id: "compute" # Intersection de testable_jobs et de (changed-etl-files et changed-ml-files)
+        id: "compute"
         run: |
           output=$(python3 .github/workflows/scripts/find_test_intersections.py ${{ steps.changed-etl-files.outputs.all_changed_files }} ${{ steps.changed-ml-files.outputs.all_changed_files }} ${{ steps.find-testable-jobs.outputs.testable_jobs }})
           echo "Found tests: $output"
           echo "$output" >> $GITHUB_OUTPUT
-   assert-matrix-not-empty:
+
+  assert-matrix-not-empty:
     needs: find-test-jobs
     if: ${{ needs.find-test-jobs.outputs.jobs != '' && toJson(fromJson(needs.find-test-jobs.outputs.jobs)) != '[]' }}
     runs-on: ubuntu-latest
     steps:
       - run: echo "Matrix Not Empty"
-   test-jobs:
+
+  test-jobs:
     uses: ./.github/workflows/reusable_job_test.yml
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -93,17 +99,19 @@ jobs:
         job: ${{ fromJSON(needs.find-test-jobs.outputs.jobs) }}
     with:
       JOB_PATH: ${{ matrix.job }}
-   find-changed-orchestration:
-     runs-on: ubuntu-latest
-     outputs:
-       run_tests: ${{ steps.changed-orchestration-files.outputs.any_modified }}
-     steps:
+
+  find-changed-orchestration:
+    runs-on: ubuntu-latest
+    outputs:
+      run_tests: ${{ steps.changed-orchestration-files.outputs.any_modified }}
+    steps:
       - name: Get changed files in orchestration folder
         id: changed-orchestration-files
         uses: tj-actions/changed-files@v41
         with:
           files: "orchestration/**"
-   test-orchestration:
+
+  test-orchestration:
     needs: find-changed-orchestration
     if: needs.find-changed-orchestration.outputs.run_tests == 'true'
     uses: ./.github/workflows/reusable_test_orchestration.yml

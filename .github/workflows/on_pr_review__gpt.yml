@@ -1,4 +1,4 @@
-name: Code Review GPT
+name: "0. [on_review] Code Review GPT"
 
 on:
   pull_request_review_comment:

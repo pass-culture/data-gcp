@@ -34,6 +34,9 @@ def load_products() -> pd.DataFrame:
         .rename(columns={"offer_product_id": "product_id"})
         .astype({"product_id": int})
         .dropna(subset=["artist_name"])
+        .drop_duplicates(
+            subset=["product_id", "artist_type"]
+        )  # To remove offers with the same product_id and artist_type
     )
 
 
@@ -124,7 +127,4 @@ products_to_link_df = products_to_link_ids_df.merge(
 with st.expander("Products to remove", expanded=DEFAULT_EXPANDER_STATE):
     st.write(products_to_remove_df)
 with st.expander("Products to link", expanded=DEFAULT_EXPANDER_STATE):
-    st.write(products_to_link_ids_df)
-    st.write(len(products_to_link_ids_df))
     st.write(products_to_link_df)
-    st.write(len(products_to_link_df))

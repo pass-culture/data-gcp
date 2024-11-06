@@ -8,42 +8,33 @@ agate==1.9.1
     #   dbt-common
     #   dbt-core
 aiofiles==23.2.1
+    # via gcloud-aio-storage
+aiohappyeyeballs==2.4.3
+    # via aiohttp
+aiohttp==3.10.10
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   gcloud-aio-storage
-aiohttp==3.9.5
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow-providers-http
     #   gcloud-aio-auth
     #   gcsfs
 aiosignal==1.3.1
+    # via aiohttp
+alembic==1.14.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   aiohttp
-alembic==1.13.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   sqlalchemy-spanner
 alive-progress==2.3.1
     # via elementary-data
 amqp==5.2.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   kombu
-annotated-types==0.6.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   pydantic
-anyio==4.3.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   httpcore
-apache-airflow==2.9.1
+    # via kombu
+annotated-types==0.7.0
+    # via pydantic
+anyio==4.6.2.post1
+    # via httpx
+apache-airflow==2.9.3
     # via
     #   -r k8s-worker-requirements.in
     #   apache-airflow-providers-celery
+    #   apache-airflow-providers-common-compat
     #   apache-airflow-providers-common-io
     #   apache-airflow-providers-common-sql
     #   apache-airflow-providers-fab
@@ -51,161 +42,106 @@ apache-airflow==2.9.1
     #   apache-airflow-providers-google
     #   apache-airflow-providers-http
     #   apache-airflow-providers-imap
-    #   apache-airflow-providers-mysql
     #   apache-airflow-providers-postgres
     #   apache-airflow-providers-smtp
     #   apache-airflow-providers-sqlite
     #   apache-airflow-providers-ssh
 apache-airflow-providers-celery==3.6.2
+    # via -r k8s-worker-requirements.in
+apache-airflow-providers-common-compat==1.2.1
+    # via apache-airflow-providers-fab
+apache-airflow-providers-common-io==1.4.2
+    # via apache-airflow
+apache-airflow-providers-common-sql==1.19.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   -r k8s-worker-requirements.in
-apache-airflow-providers-common-io==1.3.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
-apache-airflow-providers-common-sql==1.12.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   apache-airflow-providers-google
-    #   apache-airflow-providers-mysql
     #   apache-airflow-providers-postgres
     #   apache-airflow-providers-sqlite
-apache-airflow-providers-fab==1.0.4
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
-apache-airflow-providers-ftp==3.8.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
-apache-airflow-providers-google==10.17.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
-apache-airflow-providers-http==4.10.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
-apache-airflow-providers-imap==3.5.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
-apache-airflow-providers-mysql==5.5.4
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   -r k8s-worker-requirements.in
+apache-airflow-providers-fab==1.5.0
+    # via apache-airflow
+apache-airflow-providers-ftp==3.11.1
+    # via apache-airflow
+apache-airflow-providers-google==10.15.0
+    # via apache-airflow
+apache-airflow-providers-http==4.13.2
+    # via apache-airflow
+apache-airflow-providers-imap==3.7.0
+    # via apache-airflow
 apache-airflow-providers-postgres==5.10.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   -r k8s-worker-requirements.in
-apache-airflow-providers-smtp==1.6.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
-apache-airflow-providers-sqlite==3.7.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via -r k8s-worker-requirements.in
+apache-airflow-providers-smtp==1.8.0
+    # via apache-airflow
+apache-airflow-providers-sqlite==3.9.0
+    # via apache-airflow
 apache-airflow-providers-ssh==3.10.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   -r k8s-worker-requirements.in
-apispec==6.6.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   flask-appbuilder
-argcomplete==3.3.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via -r k8s-worker-requirements.in
+apispec==6.7.1
+    # via flask-appbuilder
+argcomplete==3.5.1
+    # via apache-airflow
 asgiref==3.8.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   apache-airflow-providers-google
     #   apache-airflow-providers-http
 async-timeout==4.0.3
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   aiohttp
     #   redis
-attrs==23.2.0
+attrs==24.2.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   aiohttp
     #   apache-airflow
     #   cattrs
     #   jsonschema
     #   looker-sdk
     #   referencing
-babel==2.14.0
+babel==2.16.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   agate
     #   flask-babel
 backoff==2.2.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   gcloud-aio-auth
+    #   opentelemetry-exporter-otlp-proto-grpc
+    #   opentelemetry-exporter-otlp-proto-http
     #   posthog
-bcrypt==4.1.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   paramiko
+bcrypt==4.2.0
+    # via paramiko
 beautifulsoup4==4.12.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   elementary-data
-billiard==4.2.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   celery
-blinker==1.8.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via elementary-data
+billiard==4.2.1
+    # via celery
+blinker==1.8.2
+    # via apache-airflow
 cachelib==0.9.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   flask-caching
     #   flask-session
-cachetools==5.3.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   google-auth
-cattrs==23.2.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   looker-sdk
+cachetools==5.5.0
+    # via google-auth
+cattrs==24.1.2
+    # via looker-sdk
 celery==5.4.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow-providers-celery
     #   flower
-certifi==2024.2.2
+certifi==2024.8.30
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   httpcore
     #   httpx
     #   requests
-cffi==1.16.0
+cffi==1.17.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   cryptography
     #   pynacl
 chardet==5.2.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   gcloud-aio-auth
-charset-normalizer==3.3.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   requests
+    # via gcloud-aio-auth
+charset-normalizer==3.4.0
+    # via requests
 click==8.1.7
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   celery
     #   click-didyoumean
     #   click-plugins
@@ -217,61 +153,40 @@ click==8.1.7
     #   flask
     #   flask-appbuilder
 click-didyoumean==0.3.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   celery
+    # via celery
 click-plugins==1.1.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   celery
+    # via celery
 click-repl==0.3.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   celery
+    # via celery
 clickclick==20.10.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   connexion
+    # via connexion
 colorama==0.4.6
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   dbt-common
     #   flask-appbuilder
 colorlog==4.8.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via apache-airflow
 configupdater==3.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via apache-airflow
 connexion==2.14.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
-cron-descriptor==1.4.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
-croniter==2.0.5
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via apache-airflow
+cron-descriptor==1.4.5
+    # via apache-airflow
+croniter==5.0.1
+    # via apache-airflow
 cryptography==41.0.7
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   gcloud-aio-auth
     #   paramiko
     #   pyopenssl
 daff==1.3.46
     # via dbt-core
-db-dtypes==1.2.0
+db-dtypes==1.3.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   google-cloud-bigquery
     #   pandas-gbq
-dbt-adapters==1.7.0
+dbt-adapters==1.8.0
     # via
     #   dbt-bigquery
     #   dbt-core
@@ -279,7 +194,7 @@ dbt-bigquery==1.8.1
     # via
     #   -r k8s-worker-requirements.in
     #   elementary-data
-dbt-common==1.11.0
+dbt-common==1.12.0
     # via
     #   dbt-adapters
     #   dbt-bigquery
@@ -294,49 +209,31 @@ dbt-extractor==0.5.1
 dbt-semantic-interfaces==0.5.1
     # via dbt-core
 decorator==5.1.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   gcsfs
+    # via gcsfs
 deepdiff==7.0.1
     # via dbt-common
 deprecated==1.2.14
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   limits
     #   opentelemetry-api
-    #   opentelemetry-exporter-otlp-proto-grpc
-    #   opentelemetry-exporter-otlp-proto-http
-dill==0.3.1.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
-dnspython==2.6.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   email-validator
+    #   opentelemetry-semantic-conventions
+dill==0.3.9
+    # via apache-airflow
+dnspython==2.7.0
+    # via email-validator
 docstring-parser==0.16
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   google-cloud-aiplatform
-docutils==0.16
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   python-daemon
+    # via google-cloud-aiplatform
 elementary-data==0.4.1
     # via -r k8s-worker-requirements.in
-email-validator==2.1.1
+email-validator==2.2.0
+    # via flask-appbuilder
+exceptiongroup==1.2.2
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   flask-appbuilder
-exceptiongroup==1.2.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   anyio
     #   cattrs
 flask==2.2.5
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   apache-airflow-providers-fab
     #   connexion
@@ -349,88 +246,56 @@ flask==2.2.5
     #   flask-session
     #   flask-sqlalchemy
     #   flask-wtf
-flask-appbuilder==4.4.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-fab
+flask-appbuilder==4.5.2
+    # via apache-airflow-providers-fab
 flask-babel==2.0.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   flask-appbuilder
-flask-caching==2.2.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via flask-appbuilder
+flask-caching==2.3.0
+    # via apache-airflow
 flask-jwt-extended==4.6.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   flask-appbuilder
-flask-limiter==3.6.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   flask-appbuilder
+    # via flask-appbuilder
+flask-limiter==3.8.0
+    # via flask-appbuilder
 flask-login==0.6.3
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow-providers-fab
     #   flask-appbuilder
 flask-session==0.5.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via apache-airflow
 flask-sqlalchemy==2.5.1
+    # via flask-appbuilder
+flask-wtf==1.2.2
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   flask-appbuilder
-flask-wtf==1.2.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   flask-appbuilder
 flower==2.0.1
+    # via apache-airflow-providers-celery
+frozenlist==1.5.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-celery
-frozenlist==1.4.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   aiohttp
     #   aiosignal
-fsspec==2023.12.2
+fsspec==2024.10.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   gcsfs
     #   universal-pathlib
 gcloud-aio-auth==4.2.3
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow-providers-google
     #   gcloud-aio-bigquery
     #   gcloud-aio-storage
 gcloud-aio-bigquery==7.1.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
+    # via apache-airflow-providers-google
 gcloud-aio-storage==9.2.0
+    # via apache-airflow-providers-google
+gcsfs==2024.10.0
+    # via apache-airflow-providers-google
+google-ads==25.1.0
+    # via apache-airflow-providers-google
+google-analytics-admin==0.23.2
+    # via apache-airflow-providers-google
+google-api-core==2.22.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-gcsfs==2023.12.2.post1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-ads==24.0.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-analytics-admin==0.22.7
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-api-core==2.19.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow-providers-google
     #   dbt-bigquery
     #   google-ads
@@ -478,13 +343,10 @@ google-api-core==2.19.0
     #   google-cloud-workflows
     #   pandas-gbq
     #   sqlalchemy-bigquery
-google-api-python-client==2.127.0
+google-api-python-client==2.151.0
+    # via apache-airflow-providers-google
+google-auth==2.35.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-auth==2.29.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow-providers-google
     #   gcsfs
     #   google-analytics-admin
@@ -498,6 +360,7 @@ google-auth==2.29.0
     #   google-cloud-batch
     #   google-cloud-bigquery
     #   google-cloud-bigquery-datatransfer
+    #   google-cloud-bigtable
     #   google-cloud-build
     #   google-cloud-compute
     #   google-cloud-container
@@ -535,214 +398,131 @@ google-auth==2.29.0
     #   sqlalchemy-bigquery
 google-auth-httplib2==0.2.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow-providers-google
     #   google-api-python-client
-google-auth-oauthlib==1.2.0
+google-auth-oauthlib==1.2.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   gcsfs
     #   google-ads
     #   pandas-gbq
     #   pydata-google-auth
-google-cloud-aiplatform==1.49.0
+google-cloud-aiplatform==1.71.1
+    # via apache-airflow-providers-google
+google-cloud-appengine-logging==1.5.0
+    # via google-cloud-logging
+google-cloud-audit-log==0.3.0
+    # via google-cloud-logging
+google-cloud-automl==2.14.1
+    # via apache-airflow-providers-google
+google-cloud-batch==0.17.31
+    # via apache-airflow-providers-google
+google-cloud-bigquery==3.26.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-appengine-logging==1.4.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   google-cloud-logging
-google-cloud-audit-log==0.2.5
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   google-cloud-logging
-google-cloud-automl==2.13.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-batch==0.17.18
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-bigquery==3.21.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
     #   dbt-bigquery
     #   google-cloud-aiplatform
     #   pandas-gbq
     #   sqlalchemy-bigquery
-google-cloud-bigquery-datatransfer==3.15.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-bigtable==2.23.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-build==3.24.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-compute==1.18.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-container==2.45.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
+google-cloud-bigquery-datatransfer==3.17.1
+    # via apache-airflow-providers-google
+google-cloud-bigtable==2.26.0
+    # via apache-airflow-providers-google
+google-cloud-build==3.27.0
+    # via apache-airflow-providers-google
+google-cloud-compute==1.20.1
+    # via apache-airflow-providers-google
+google-cloud-container==2.53.0
+    # via apache-airflow-providers-google
 google-cloud-core==2.4.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   google-cloud-bigquery
     #   google-cloud-bigtable
     #   google-cloud-logging
     #   google-cloud-spanner
     #   google-cloud-storage
     #   google-cloud-translate
-google-cloud-datacatalog==3.19.0
+google-cloud-datacatalog==3.21.1
+    # via apache-airflow-providers-google
+google-cloud-dataflow-client==0.8.13
+    # via apache-airflow-providers-google
+google-cloud-dataform==0.5.13
+    # via apache-airflow-providers-google
+google-cloud-dataplex==2.3.1
+    # via apache-airflow-providers-google
+google-cloud-dataproc==5.15.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-dataflow-client==0.8.10
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-dataform==0.5.9
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-dataplex==1.13.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-dataproc==5.9.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow-providers-google
     #   dbt-bigquery
-google-cloud-dataproc-metastore==1.15.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-dlp==3.16.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-kms==2.21.4
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-language==2.13.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-logging==3.10.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-memcache==1.9.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-monitoring==2.21.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-orchestration-airflow==1.12.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-os-login==2.14.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-pubsub==2.21.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-redis==2.15.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-resource-manager==1.12.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   google-cloud-aiplatform
-google-cloud-run==0.10.5
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
+google-cloud-dataproc-metastore==1.16.0
+    # via apache-airflow-providers-google
+google-cloud-dlp==3.25.0
+    # via apache-airflow-providers-google
+google-cloud-kms==3.1.0
+    # via apache-airflow-providers-google
+google-cloud-language==2.15.0
+    # via apache-airflow-providers-google
+google-cloud-logging==3.11.3
+    # via apache-airflow-providers-google
+google-cloud-memcache==1.10.0
+    # via apache-airflow-providers-google
+google-cloud-monitoring==2.23.0
+    # via apache-airflow-providers-google
+google-cloud-orchestration-airflow==1.15.0
+    # via apache-airflow-providers-google
+google-cloud-os-login==2.15.0
+    # via apache-airflow-providers-google
+google-cloud-pubsub==2.26.1
+    # via apache-airflow-providers-google
+google-cloud-redis==2.16.0
+    # via apache-airflow-providers-google
+google-cloud-resource-manager==1.13.0
+    # via google-cloud-aiplatform
+google-cloud-run==0.10.10
+    # via apache-airflow-providers-google
 google-cloud-secret-manager==2.20.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   -r k8s-worker-requirements.in
     #   apache-airflow-providers-google
-google-cloud-spanner==3.46.0
+google-cloud-spanner==3.49.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow-providers-google
     #   sqlalchemy-spanner
-google-cloud-speech==2.26.0
+google-cloud-speech==2.28.0
+    # via apache-airflow-providers-google
+google-cloud-storage==2.18.2
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-storage==2.16.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow-providers-google
     #   dbt-bigquery
     #   gcsfs
     #   google-cloud-aiplatform
-google-cloud-storage-transfer==1.11.3
+google-cloud-storage-transfer==1.13.0
+    # via apache-airflow-providers-google
+google-cloud-tasks==2.17.0
+    # via apache-airflow-providers-google
+google-cloud-texttospeech==2.21.0
+    # via apache-airflow-providers-google
+google-cloud-translate==3.17.0
+    # via apache-airflow-providers-google
+google-cloud-videointelligence==2.14.0
+    # via apache-airflow-providers-google
+google-cloud-vision==3.8.0
+    # via apache-airflow-providers-google
+google-cloud-workflows==1.15.0
+    # via apache-airflow-providers-google
+google-crc32c==1.6.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-tasks==2.16.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-texttospeech==2.16.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-translate==3.15.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-videointelligence==2.13.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-vision==3.7.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-cloud-workflows==1.14.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-google-crc32c==1.5.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   google-cloud-storage
     #   google-resumable-media
-google-re2==1.1.20240501
+google-re2==1.1.20240702
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   apache-airflow-providers-celery
     #   apache-airflow-providers-fab
-google-resumable-media==2.7.0
+google-resumable-media==2.7.2
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   google-cloud-bigquery
     #   google-cloud-storage
-googleapis-common-protos==1.63.0
+googleapis-common-protos==1.65.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   google-ads
     #   google-api-core
     #   google-cloud-audit-log
@@ -752,9 +532,8 @@ googleapis-common-protos==1.63.0
     #   opentelemetry-exporter-otlp-proto-http
 grapheme==0.6.0
     # via alive-progress
-grpc-google-iam-v1==0.13.0
+grpc-google-iam-v1==0.13.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   google-cloud-bigtable
     #   google-cloud-build
     #   google-cloud-datacatalog
@@ -770,13 +549,11 @@ grpc-google-iam-v1==0.13.0
     #   google-cloud-secret-manager
     #   google-cloud-spanner
     #   google-cloud-tasks
+    #   google-cloud-translate
 grpc-interceptor==0.15.4
+    # via google-cloud-spanner
+grpcio==1.67.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   google-cloud-spanner
-grpcio==1.63.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   google-ads
     #   google-api-core
     #   google-cloud-pubsub
@@ -787,78 +564,56 @@ grpcio==1.63.0
     #   grpcio-status
     #   opentelemetry-exporter-otlp-proto-grpc
 grpcio-gcp==0.2.2
+    # via apache-airflow-providers-google
+grpcio-status==1.62.3
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-grpcio-status==1.62.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   google-ads
     #   google-api-core
     #   google-cloud-pubsub
-gunicorn==22.0.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+gunicorn==23.0.0
+    # via apache-airflow
 h11==0.14.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   httpcore
-httpcore==0.16.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   httpx
+    # via httpcore
+httpcore==1.0.6
+    # via httpx
 httplib2==0.22.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   google-api-python-client
     #   google-auth-httplib2
-httpx==0.23.3
+httpx==0.27.2
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   apache-airflow-providers-google
-humanize==4.9.0
+humanize==4.11.0
+    # via flower
+idna==3.10
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   flower
-idna==3.7
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   anyio
     #   email-validator
+    #   httpx
     #   requests
-    #   rfc3986
     #   yarl
 importlib-metadata==6.11.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   dbt-semantic-interfaces
     #   opentelemetry-api
-importlib-resources==6.4.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   limits
+importlib-resources==6.4.5
+    # via limits
 inflection==0.5.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   connexion
+    # via connexion
 isodate==0.6.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   agate
     #   dbt-common
 itsdangerous==2.2.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   connexion
     #   flask
     #   flask-wtf
-jinja2==3.1.3
+jinja2==3.1.4
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   dbt-common
     #   dbt-core
@@ -866,187 +621,127 @@ jinja2==3.1.3
     #   flask
     #   flask-babel
     #   python-nvd3
+jmespath==1.0.1
+    # via apache-airflow-providers-fab
 json-merge-patch==0.2
+    # via apache-airflow-providers-google
+jsonschema==4.23.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-jsonschema==4.22.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   connexion
     #   dbt-common
     #   dbt-semantic-interfaces
     #   flask-appbuilder
-jsonschema-specifications==2023.12.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   jsonschema
-kombu==5.3.7
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   celery
+jsonschema-specifications==2024.10.1
+    # via jsonschema
+kombu==5.4.2
+    # via celery
 lazy-object-proxy==1.10.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via apache-airflow
 leather==0.4.0
     # via agate
-limits==3.11.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   flask-limiter
+limits==3.13.0
+    # via flask-limiter
 linkify-it-py==2.0.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via apache-airflow
 lockfile==0.12.2
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   python-daemon
 logbook==1.5.3
     # via dbt-core
-looker-sdk==24.4.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-mako==1.3.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   alembic
+looker-sdk==24.18.1
+    # via apache-airflow-providers-google
+mako==1.3.6
+    # via alembic
 markdown-it-py==3.0.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   mdit-py-plugins
     #   rich
-markupsafe==2.1.5
+markupsafe==3.0.2
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   jinja2
     #   mako
     #   werkzeug
     #   wtforms
-marshmallow==3.21.2
+marshmallow==3.23.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   flask-appbuilder
     #   marshmallow-oneofschema
     #   marshmallow-sqlalchemy
 marshmallow-oneofschema==3.1.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via apache-airflow
 marshmallow-sqlalchemy==0.28.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   flask-appbuilder
-mashumaro==3.13.1
+    # via flask-appbuilder
+mashumaro==3.14
     # via
     #   dbt-adapters
     #   dbt-common
     #   dbt-core
-mdit-py-plugins==0.4.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+mdit-py-plugins==0.4.2
+    # via apache-airflow
 mdurl==0.1.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   markdown-it-py
+    # via markdown-it-py
 methodtools==0.4.7
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via apache-airflow
 minimal-snowplow-tracker==0.0.2
     # via dbt-core
 monotonic==1.6
     # via posthog
-more-itertools==10.2.0
+more-itertools==10.5.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow-providers-common-sql
     #   dbt-semantic-interfaces
 msgpack==1.1.0
     # via mashumaro
-multidict==6.0.5
+multidict==6.1.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   aiohttp
     #   yarl
-mysql-connector-python==8.4.0
+networkx==3.4.2
+    # via dbt-core
+numpy==2.1.3
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-mysql
-mysqlclient==2.2.4
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-mysql
-networkx==3.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   dbt-core
-numpy==1.26.4
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   db-dtypes
     #   pandas
     #   pandas-gbq
-    #   pyarrow
     #   shapely
 oauthlib==3.2.2
+    # via requests-oauthlib
+opentelemetry-api==1.28.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   requests-oauthlib
-opentelemetry-api==1.24.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
+    #   google-cloud-logging
+    #   google-cloud-pubsub
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
     #   opentelemetry-sdk
-opentelemetry-exporter-otlp==1.24.0
+    #   opentelemetry-semantic-conventions
+opentelemetry-exporter-otlp==1.15.0
+    # via apache-airflow
+opentelemetry-exporter-otlp-proto-grpc==1.15.0
+    # via opentelemetry-exporter-otlp
+opentelemetry-exporter-otlp-proto-http==1.15.0
+    # via opentelemetry-exporter-otlp
+opentelemetry-proto==1.15.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
-opentelemetry-exporter-otlp-proto-common==1.24.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-opentelemetry-exporter-otlp-proto-grpc==1.24.0
+opentelemetry-sdk==1.28.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   opentelemetry-exporter-otlp
-opentelemetry-exporter-otlp-proto-http==1.24.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   opentelemetry-exporter-otlp
-opentelemetry-proto==1.24.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   opentelemetry-exporter-otlp-proto-common
+    #   google-cloud-pubsub
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-opentelemetry-sdk==1.24.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   opentelemetry-exporter-otlp-proto-grpc
-    #   opentelemetry-exporter-otlp-proto-http
-opentelemetry-semantic-conventions==0.45b0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   opentelemetry-sdk
+opentelemetry-semantic-conventions==0.49b0
+    # via opentelemetry-sdk
 ordered-set==4.1.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   deepdiff
     #   flask-limiter
-packaging==24.0
+packaging==24.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   apispec
     #   connexion
@@ -1060,55 +755,41 @@ packaging==24.0
     #   marshmallow-sqlalchemy
     #   pandas-gbq
     #   sqlalchemy-bigquery
-pandas==2.1.4
+pandas==2.2.3
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow-providers-google
     #   db-dtypes
     #   google-cloud-bigquery
     #   pandas-gbq
-pandas-gbq==0.22.0
+pandas-gbq==0.24.0
+    # via apache-airflow-providers-google
+paramiko==3.5.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-paramiko==3.4.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow-providers-ssh
     #   sshtunnel
 parsedatetime==2.6
     # via agate
 pathspec==0.12.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   dbt-common
     #   dbt-core
 pendulum==3.0.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via apache-airflow
 pluggy==1.5.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via apache-airflow
 posthog==3.7.0
     # via elementary-data
 prison==0.2.1
+    # via flask-appbuilder
+prometheus-client==0.21.0
+    # via flower
+prompt-toolkit==3.0.48
+    # via click-repl
+propcache==0.2.0
+    # via yarl
+proto-plus==1.25.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   flask-appbuilder
-prometheus-client==0.20.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   flower
-prompt-toolkit==3.0.43
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   click-repl
-proto-plus==1.23.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow-providers-google
     #   google-ads
     #   google-analytics-admin
@@ -1150,9 +831,8 @@ proto-plus==1.23.0
     #   google-cloud-videointelligence
     #   google-cloud-vision
     #   google-cloud-workflows
-protobuf==4.25.3
+protobuf==4.25.5
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   dbt-adapters
     #   dbt-common
     #   dbt-core
@@ -1202,81 +882,57 @@ protobuf==4.25.3
     #   grpcio-status
     #   opentelemetry-proto
     #   proto-plus
-psutil==5.9.8
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+psutil==6.1.0
+    # via apache-airflow
 psycopg2-binary==2.9.9
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   -r k8s-worker-requirements.in
     #   apache-airflow-providers-postgres
-pyarrow==14.0.2
+pyarrow==18.0.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   db-dtypes
     #   google-cloud-bigquery
     #   pandas-gbq
 pyasn1==0.5.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   pyasn1-modules
     #   rsa
 pyasn1-modules==0.3.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   gcloud-aio-storage
     #   google-auth
 pycparser==2.22
+    # via cffi
+pydantic==2.9.2
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   cffi
-pydantic==2.7.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   dbt-semantic-interfaces
     #   google-cloud-aiplatform
-pydantic-core==2.18.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   pydantic
+pydantic-core==2.23.4
+    # via pydantic
 pydata-google-auth==1.8.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   pandas-gbq
+    # via pandas-gbq
 pyfiglet==1.0.2
     # via elementary-data
-pygments==2.17.2
+pygments==2.18.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   rich
-pyjwt==2.8.0
+pyjwt==2.9.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   flask-appbuilder
     #   flask-jwt-extended
     #   gcloud-aio-auth
 pynacl==1.5.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   paramiko
-pyopenssl==24.1.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
-pyparsing==3.1.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   httplib2
-python-daemon==3.0.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via paramiko
+pyopenssl==24.2.1
+    # via apache-airflow-providers-google
+pyparsing==3.2.0
+    # via httplib2
+python-daemon==3.1.0
+    # via apache-airflow
 python-dateutil==2.9.0.post0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   celery
     #   croniter
@@ -1289,48 +945,38 @@ python-dateutil==2.9.0.post0
     #   posthog
     #   time-machine
 python-nvd3==0.16.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via apache-airflow
 python-slugify==8.0.4
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   agate
     #   apache-airflow
-    #   apache-airflow-providers-google
     #   python-nvd3
 pytimeparse==1.1.8
     # via agate
-pytz==2024.1
+pytz==2024.2
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   croniter
     #   dbt-adapters
     #   dbt-core
     #   flask-babel
     #   flower
     #   pandas
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apispec
     #   clickclick
     #   connexion
     #   dbt-core
     #   dbt-semantic-interfaces
     #   google-ads
-redis==5.0.4
+redis==5.2.0
+    # via celery
+referencing==0.35.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   celery
-referencing==0.31.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   jsonschema
     #   jsonschema-specifications
-requests==2.31.0
+requests==2.32.3
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   apache-airflow-providers-http
     #   connexion
@@ -1347,40 +993,25 @@ requests==2.31.0
     #   posthog
     #   requests-oauthlib
     #   requests-toolbelt
-requests-oauthlib==1.3.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   google-auth-oauthlib
+requests-oauthlib==2.0.0
+    # via google-auth-oauthlib
 requests-toolbelt==1.0.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-http
+    # via apache-airflow-providers-http
 rfc3339-validator==0.1.4
+    # via apache-airflow
+rich==13.9.4
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
-rfc3986==1.5.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   httpx
-rich==13.7.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   flask-limiter
     #   rich-argparse
-rich-argparse==1.4.0
+rich-argparse==1.6.0
+    # via apache-airflow
+rpds-py==0.20.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
-rpds-py==0.18.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   jsonschema
     #   referencing
 rsa==4.9
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   gcloud-aio-storage
     #   google-auth
 ruamel-yaml==0.18.6
@@ -1388,22 +1019,17 @@ ruamel-yaml==0.18.6
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 setproctitle==1.3.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via apache-airflow
 setuptools==66.1.1
     # via
     #   gcloud-aio-auth
     #   pandas-gbq
     #   pydata-google-auth
     #   python-daemon
-shapely==2.0.4
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   google-cloud-aiplatform
+shapely==2.0.6
+    # via google-cloud-aiplatform
 six==1.16.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   isodate
     #   minimal-snowplow-tracker
     #   posthog
@@ -1413,17 +1039,12 @@ six==1.16.0
     #   wirerope
 sniffio==1.3.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   anyio
-    #   httpcore
     #   httpx
-soupsieve==2.5
+soupsieve==2.6
+    # via beautifulsoup4
+sqlalchemy==1.4.54
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   beautifulsoup4
-sqlalchemy==1.4.52
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   alembic
     #   apache-airflow
     #   flask-appbuilder
@@ -1433,60 +1054,37 @@ sqlalchemy==1.4.52
     #   sqlalchemy-jsonfield
     #   sqlalchemy-spanner
     #   sqlalchemy-utils
-sqlalchemy-bigquery==1.11.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
+sqlalchemy-bigquery==1.12.0
+    # via apache-airflow-providers-google
 sqlalchemy-jsonfield==1.0.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via apache-airflow
 sqlalchemy-spanner==1.7.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow-providers-google
+    # via apache-airflow-providers-google
 sqlalchemy-utils==0.41.2
+    # via flask-appbuilder
+sqlparse==0.5.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   flask-appbuilder
-sqlparse==0.5.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow-providers-common-sql
     #   dbt-core
     #   google-cloud-spanner
 sshtunnel==0.4.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   -r k8s-worker-requirements.in
     #   apache-airflow-providers-ssh
 tabulate==0.9.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
-tenacity==8.2.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
-termcolor==2.4.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via apache-airflow
+tenacity==9.0.0
+    # via apache-airflow
+termcolor==2.5.0
+    # via apache-airflow
 text-unidecode==1.3
+    # via python-slugify
+time-machine==2.16.0
+    # via pendulum
+tornado==6.4.1
+    # via flower
+typing-extensions==4.12.2
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   python-slugify
-time-machine==2.14.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   pendulum
-tornado==6.4
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   flower
-typing-extensions==4.11.0
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   alembic
     #   anyio
     #   asgiref
@@ -1499,48 +1097,36 @@ typing-extensions==4.11.0
     #   limits
     #   looker-sdk
     #   mashumaro
+    #   multidict
     #   opentelemetry-sdk
     #   pydantic
     #   pydantic-core
-tzdata==2024.1
+    #   rich
+tzdata==2024.2
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   celery
+    #   kombu
     #   pandas
     #   pendulum
 uc-micro-py==1.0.3
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   linkify-it-py
+    # via linkify-it-py
 unicodecsv==0.14.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
-universal-pathlib==0.2.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   apache-airflow
+    # via apache-airflow
+universal-pathlib==0.2.5
+    # via apache-airflow
 uritemplate==4.1.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   google-api-python-client
-urllib3==2.2.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   requests
+    # via google-api-python-client
+urllib3==2.2.3
+    # via requests
 vine==5.1.0
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   amqp
     #   celery
     #   kombu
 wcwidth==0.2.13
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   prompt-toolkit
+    # via prompt-toolkit
 werkzeug==2.2.3
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   apache-airflow
     #   connexion
     #   flask
@@ -1548,23 +1134,14 @@ werkzeug==2.2.3
     #   flask-jwt-extended
     #   flask-login
 wirerope==0.4.7
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   methodtools
+    # via methodtools
 wrapt==1.16.0
+    # via deprecated
+wtforms==3.2.1
     # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   deprecated
-wtforms==3.1.2
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
     #   flask-appbuilder
     #   flask-wtf
-yarl==1.9.4
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   aiohttp
-zipp==3.18.1
-    # via
-    #   -c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.10.txt
-    #   importlib-metadata
+yarl==1.17.1
+    # via aiohttp
+zipp==3.20.2
+    # via importlib-metadata

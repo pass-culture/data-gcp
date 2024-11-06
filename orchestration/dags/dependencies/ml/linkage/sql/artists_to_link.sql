@@ -8,7 +8,7 @@ with
             count(distinct item_id) as item_number,
             sum(ifnull(total_individual_bookings, 0)) as total_booking_count,
             'author' as artist_type
-        from `{{ bigquery_analytics_dataset }}`.global_offer
+        from `{{ bigquery_analytics_dataset }}.global_offer`
         where
             offer_category_id
             in ("CINEMA", "MUSIQUE_LIVE", "SPECTACLE", "MUSIQUE_ENREGISTREE", "LIVRE")
@@ -25,7 +25,7 @@ with
             count(distinct item_id) as item_number,
             sum(ifnull(total_individual_bookings, 0)) as total_booking_count,
             'performer' as artist_type
-        from `{{ bigquery_analytics_dataset }}`.global_offer
+        from `{{ bigquery_analytics_dataset }}.global_offer`
         where
             offer_category_id in ("MUSIQUE_LIVE", "SPECTACLE", "MUSIQUE_ENREGISTREE")
             and performer is not null

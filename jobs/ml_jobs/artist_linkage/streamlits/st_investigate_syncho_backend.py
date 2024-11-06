@@ -1,6 +1,8 @@
 import pandas as pd
 import streamlit as st
 
+DEFAULT_EXPANDER_STATE = False
+MERGE_COLUMNS = ["product_id", "artist_type"]
 st.set_page_config(layout="wide")
 
 
@@ -29,7 +31,8 @@ def load_products() -> pd.DataFrame:
         pd.read_parquet(
             "/home/laurent_pass/Téléchargements/artist_linkage_stg_tmp_artist_product.parquet"
         )
-        .astype({"offer_product_id": int})
+        .rename(columns={"offer_product_id": "product_id"})
+        .astype({"product_id": int})
         .dropna(subset=["artist_name"])
     )
 
@@ -40,17 +43,13 @@ def remove_data(product_artist_link_df):
 
 
 def count_matched_products(products_df, product_artist_link_df):
-    actual_product_ids = (
-        products_df.loc[:, ["offer_product_id", "artist_type"]].reset_index(drop=True)
-    ).astype({"offer_product_id": int, "artist_type": str})
-    linked_product_ids = product_artist_link_df.loc[
-        :, ["product_id", "artist_type"]
-    ].astype({"product_id": int, "artist_type": str})
+    actual_product_ids = products_df.loc[:, MERGE_COLUMNS].reset_index(drop=True)
+    linked_product_ids = product_artist_link_df.loc[:, MERGE_COLUMNS]
     return actual_product_ids.merge(
         linked_product_ids,
         how="outer",
-        left_on=["offer_product_id", "artist_type"],
-        right_on=["product_id", "artist_type"],
+        left_on=MERGE_COLUMNS,
+        right_on=MERGE_COLUMNS,
         indicator=True,
     ).replace(
         {
@@ -72,35 +71,60 @@ raw_products_df = load_products()
 
 
 # %% Show Dataframes
-with st.expander("Artist Table", expanded=True):
+with st.expander("Artist Table", expanded=DEFAULT_EXPANDER_STATE):
     st.dataframe(artist_df)
 
-with st.expander("Artist Alias Table", expanded=True):
+with st.expander("Artist Alias Table", expanded=DEFAULT_EXPANDER_STATE):
     st.dataframe(alias_df)
 
-with st.expander("Product Artist Link Table", expanded=True):
+with st.expander("Product Artist Link Table", expanded=DEFAULT_EXPANDER_STATE):
     st.dataframe(raw_product_artist_link_df.sort_values(by=["product_id"]))
 
-with st.expander("Product Table", expanded=True):
-    st.dataframe(raw_products_df.sort_values(by=["offer_product_id"]))
+with st.expander("Product Table", expanded=DEFAULT_EXPANDER_STATE):
+    st.dataframe(raw_products_df.sort_values(by=["product_id"]))
 st.divider()
 
 # %% Check previous matching
-st.subheader("Check previous matching")
-merged_df = count_matched_products(raw_products_df, raw_product_artist_link_df)
-st.dataframe(merged_df)
-st.write(merged_df._merge.value_counts().reset_index())
-st.divider()
+st.subheader("Check matching")
+with st.expander("Check matching", expanded=DEFAULT_EXPANDER_STATE):
+    merged_df = count_matched_products(raw_products_df, raw_product_artist_link_df)
+    st.markdown("### Before removing data")
+    st.dataframe(merged_df)
+    st.write(merged_df._merge.value_counts().reset_index())
+    st.divider()
 
-# %% Remove data to simulate real life
-products_df = raw_products_df.pipe(remove_data)
-product_artist_link_df = raw_product_artist_link_df.pipe(remove_data)
-st.dataframe(products_df)
-st.dataframe(product_artist_link_df)
+    # %% Remove data to simulate real life
+    products_df = raw_products_df.pipe(remove_data)
+    product_artist_link_df = raw_product_artist_link_df.pipe(remove_data)
+    st.markdown("### After removing data")
+    st.dataframe(products_df)
+    st.dataframe(product_artist_link_df)
 
-merged_df = count_matched_products(products_df, product_artist_link_df)
-st.dataframe(merged_df)
-st.write(merged_df._merge.value_counts().reset_index())
+    merged_df = count_matched_products(products_df, product_artist_link_df)
+    st.dataframe(merged_df)
+    st.write(merged_df._merge.value_counts().reset_index())
 
-# %% Do the Magic
+#################################################################################
+
+# %% Split products between to remove and to link
 st.subheader("Split the Dataframe into the different options")
+merged_df = count_matched_products(products_df, product_artist_link_df)
+
+products_to_remove_df = merged_df.loc[
+    lambda df: df._merge == "Removed products",
+    MERGE_COLUMNS,
+]
+products_to_link_ids_df = merged_df.loc[
+    lambda df: df._merge == "Not matched with artists",
+    MERGE_COLUMNS,
+]
+products_to_link_df = products_to_link_ids_df.merge(
+    products_df, how="left", on=MERGE_COLUMNS
+)
+with st.expander("Products to remove", expanded=DEFAULT_EXPANDER_STATE):
+    st.write(products_to_remove_df)
+with st.expander("Products to link", expanded=DEFAULT_EXPANDER_STATE):
+    st.write(products_to_link_ids_df)
+    st.write(len(products_to_link_ids_df))
+    st.write(products_to_link_df)
+    st.write(len(products_to_link_df))

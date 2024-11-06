@@ -1,6 +1,13 @@
 import pandas as pd
 import streamlit as st
 
+from match_artists_on_wikidata import preprocess_artists
+from utils.preprocessing_utils import (
+    clean_names,
+    extract_first_artist,
+    format_names,
+)
+
 DEFAULT_EXPANDER_STATE = False
 MERGE_COLUMNS = ["product_id", "artist_type"]
 st.set_page_config(layout="wide")
@@ -62,6 +69,23 @@ def count_matched_products(products_df, product_artist_link_df):
                 "both": "Matched with artists",
             }
         }
+    )
+
+
+def preprocess_before_matching(df: pd.DataFrame) -> pd.DataFrame:
+    return (
+        (df.pipe(clean_names).pipe(extract_first_artist).pipe(format_names))
+        .pipe(preprocess_artists)
+        .rename(columns={"alias": "artist_name_to_match"})
+        .filter(
+            [
+                "product_id",
+                "artist_type",
+                "offer_category_id",
+                "artist_name",
+                "artist_name_to_match",
+            ],
+        )
     )
 
 
@@ -128,3 +152,17 @@ with st.expander("Products to remove", expanded=DEFAULT_EXPANDER_STATE):
     st.write(products_to_remove_df)
 with st.expander("Products to link", expanded=DEFAULT_EXPANDER_STATE):
     st.write(products_to_link_df)
+st.divider()
+
+# %% Preprocess names to match
+st.subheader("Preprocess names")
+
+### Params
+preproc_products_to_link_df = preprocess_before_matching(products_to_link_df)
+preproc_artist_alias_df = preprocess_before_matching(
+    alias_df.rename(columns={"artist_alias_name": "artist_name"})
+)
+with st.expander("Preprocessed names", expanded=DEFAULT_EXPANDER_STATE):
+    st.write(preproc_products_to_link_df)
+with st.expander("Preprocessed aliases", expanded=DEFAULT_EXPANDER_STATE):
+    st.write(preproc_artist_alias_df)

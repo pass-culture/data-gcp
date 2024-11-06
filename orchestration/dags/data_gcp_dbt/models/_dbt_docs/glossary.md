@@ -28,6 +28,6 @@ We also ingest data from other external sources which can be described in distin
 
 ## Need help?
 
-If you have any questions or need further assistance
+If you have any questions or need further assistance.
 
-[Email us :fontawesome-solid-paper-plane: ! ](mailto:donnees@passculture.app){ .md-button }
+[Email us ✈️ ! ](mailto:donnees@passculture.app){ .md-button }

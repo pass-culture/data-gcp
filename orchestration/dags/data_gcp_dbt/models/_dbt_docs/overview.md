@@ -14,15 +14,15 @@ The Pass Culture data project is a comprehensive data management and analytics p
 Theses models comes from our internal systems and handle the business logic of the application. The global models are an aggregated view of intermediate models and are used as main data sources for the analytics team.
 
 
-- **[Global User](/data-gcp/dbt/models/mart/global/description__mrt_global__user/)**: Aggregates user-related data, including demographics, activity, and financial interactions.
+- **[Global User](models/mart/global/description__mrt_global__user.md)**: Aggregates user-related data, including demographics, activity, and financial interactions.
 
-- **[Global Deposit](/data-gcp/dbt/models/mart/global/description__mrt_global__deposit/)**: Handle the deposit amounts given to each user. It tracks spending and booking activity.
+- **[Global Deposit](models/mart/global/description__mrt_global__deposit.md)**: Handle the deposit amounts given to each user. It tracks spending and booking activity.
 
-- **[Global Offer](/data-gcp/dbt/models/mart/global/description__mrt_global__offer/)**: Contains detailed information about cultural offers, including identifiers, descriptions, categories, and metadata.
+- **[Global Offer](models/mart/global/description__mrt_global__offe.md)**: Contains detailed information about cultural offers, including identifiers, descriptions, categories, and metadata.
 
-- **[Global Booking](/data-gcp/dbt/models/mart/global/description__mrt_global__booking/)**: Tracks user bookings, including details about the booking status, amount, and associated offers.
+- **[Global Booking](models/mart/global/description__mrt_global__booking.md)**: Tracks user bookings, including details about the booking status, amount, and associated offers.
 
-- **[Global Stock](/data-gcp/dbt/models/mart/global/description__mrt_global__stock/)**: Manages inventory levels for offers, tracking availability, pricing, and booking limits.
+- **[Global Stock](models/mart/global/description__mrt_global__stock.md)**: Manages inventory levels for offers, tracking availability, pricing, and booking limits.
 
 ## Tracking Native Tables
 

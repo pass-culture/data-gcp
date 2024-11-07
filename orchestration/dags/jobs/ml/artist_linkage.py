@@ -31,7 +31,8 @@ from dependencies.ml.linkage.import_artists import PARAMS as IMPORT_ARTISTS_PARA
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.python import PythonOperator
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import BranchPythonOperator, PythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
@@ -67,6 +68,15 @@ default_args = {
     "retries": 5,
 }
 
+LINK_FROM_SCRATCH_TASK_ID = "link_from_scratch"
+LINK_NEW_PRODUCTS_TO_ARTISTS_TASK_ID = "link_new_products_to_artists"
+
+
+def _choose_linkage(**context):
+    if context["params"]["link_from_scratch"] is True:
+        return LINK_FROM_SCRATCH_TASK_ID
+    return LINK_NEW_PRODUCTS_TO_ARTISTS_TASK_ID
+
 
 with DAG(
     "artist_linkage",
@@ -85,6 +95,10 @@ with DAG(
         "instance_type": Param(
             default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-8",
             type="string",
+        ),
+        "link_from_scratch": Param(
+            default=True,
+            type="boolean",
         ),
     },
 ) as dag:
@@ -125,7 +139,18 @@ with DAG(
         gce_instance_start >> fetch_install_code
 
     gce_instance_stop = StopGCEOperator(
-        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+        task_id="gce_stop_task", instance_name=GCE_INSTANCE, trigger_rule="none_failed"
+    )
+
+    choose_linkage = BranchPythonOperator(
+        task_id="choose_path",
+        python_callable=_choose_linkage,
+        provide_context=True,
+        dag=dag,
+    )
+    link_from_scratch = DummyOperator(task_id=LINK_FROM_SCRATCH_TASK_ID)
+    link_new_products_to_artists = DummyOperator(
+        task_id=LINK_NEW_PRODUCTS_TO_ARTISTS_TASK_ID
     )
 
     # Artist Linkage
@@ -270,8 +295,17 @@ with DAG(
             CREATE_ARTIST_ALIAS_TABLE_PARAMS,
         )
 
-    dag_init >> collect >> internal_linkage
-    dag_init >> vm_init >> (internal_linkage, wikidata_matching)
+    # Common tasks
+    (
+        dag_init
+        >> vm_init
+        >> choose_linkage
+        >> [link_from_scratch, link_new_products_to_artists]
+    )
+
+    # Link From Scratch tasks
+    link_from_scratch >> collect >> internal_linkage
+    link_from_scratch >> [internal_linkage, wikidata_matching]
     (
         internal_linkage
         >> wikidata_matching
@@ -279,3 +313,6 @@ with DAG(
         >> export_data
     )
     wikidata_matching >> artist_metrics >> gce_instance_stop
+
+    # Link New Products to Artists tasks
+    link_new_products_to_artists >> gce_instance_stop

@@ -55,7 +55,9 @@ def remove_data(product_artist_link_df):
     return product_artist_link_df.sample(frac=0.95)
 
 
-def count_matched_products(products_df, product_artist_link_df):
+def count_matched_products(
+    products_df: pd.DataFrame, product_artist_link_df: pd.DataFrame
+) -> pd.DataFrame:
     actual_product_ids = products_df.loc[:, MERGE_COLUMNS].reset_index(drop=True)
     linked_product_ids = product_artist_link_df.loc[:, MERGE_COLUMNS]
     return actual_product_ids.merge(
@@ -117,16 +119,23 @@ raw_products_df = load_products()
 
 
 # %% Show Dataframes
-with st.expander("Artist Table", expanded=DEFAULT_EXPANDER_STATE):
+with st.expander(f"Artist Table ({len(artist_df)})", expanded=DEFAULT_EXPANDER_STATE):
     st.dataframe(artist_df)
 
-with st.expander("Artist Alias Table", expanded=DEFAULT_EXPANDER_STATE):
+with st.expander(
+    f"Artist Alias Table ({len(alias_df)})", expanded=DEFAULT_EXPANDER_STATE
+):
     st.dataframe(alias_df)
 
-with st.expander("Product Artist Link Table", expanded=DEFAULT_EXPANDER_STATE):
+with st.expander(
+    f"Product Artist Link Table ({len(raw_product_artist_link_df)})",
+    expanded=DEFAULT_EXPANDER_STATE,
+):
     st.dataframe(raw_product_artist_link_df.sort_values(by=["product_id"]))
 
-with st.expander("Product Table", expanded=DEFAULT_EXPANDER_STATE):
+with st.expander(
+    f"Product Table ({len(raw_products_df)})", expanded=DEFAULT_EXPANDER_STATE
+):
     st.dataframe(raw_products_df.sort_values(by=["product_id"]))
 st.divider()
 
@@ -167,9 +176,14 @@ products_to_link_ids_df = merged_df.loc[
 products_to_link_df = products_to_link_ids_df.merge(
     products_df, how="left", on=MERGE_COLUMNS
 )
-with st.expander("Products to remove", expanded=DEFAULT_EXPANDER_STATE):
+with st.expander(
+    f"Products to remove ({len(products_to_remove_df)})",
+    expanded=DEFAULT_EXPANDER_STATE,
+):
     st.write(products_to_remove_df)
-with st.expander("Products to link", expanded=DEFAULT_EXPANDER_STATE):
+with st.expander(
+    f"Products to link ({len(products_to_link_df)})", expanded=DEFAULT_EXPANDER_STATE
+):
     st.write(products_to_link_df)
 st.divider()
 
@@ -185,9 +199,15 @@ preproc_artist_alias_df = (
     .drop(columns=["artist_name"])
     .drop_duplicates()
 )
-with st.expander("Preprocessed products to link", expanded=DEFAULT_EXPANDER_STATE):
+with st.expander(
+    f"Preprocessed products to link ({len(preproc_products_to_link_df)}), after filtering",
+    expanded=DEFAULT_EXPANDER_STATE,
+):
     st.write(preproc_products_to_link_df)
-with st.expander("Preprocessed aliases", expanded=DEFAULT_EXPANDER_STATE):
+with st.expander(
+    f"Preprocessed aliases ({len(preproc_artist_alias_df)})",
+    expanded=DEFAULT_EXPANDER_STATE,
+):
     st.write(preproc_artist_alias_df)
 
 # %% Match names
@@ -257,7 +277,7 @@ for group_name, group in unlinked_products_df.drop_duplicates(
             ).astype(str),
         )
     )
-new_artists_df = (
+new_artist_df = (
     pd.concat(new_artists_id_list)
     .loc[
         :,
@@ -277,8 +297,10 @@ new_artists_df = (
         "artist_type": "type",
     }
 )
-with st.expander("New artists", expanded=DEFAULT_EXPANDER_STATE):
-    st.write(new_artists_df)
+with st.expander(
+    f"New artists ({len(new_artist_df)})", expanded=DEFAULT_EXPANDER_STATE
+):
+    st.write(new_artist_df)
 
 
 # %% Create artist alias
@@ -286,7 +308,7 @@ st.subheader("Create artist alias for new artists")
 
 new_artist_alias_df = (
     unlinked_products_df.merge(
-        new_artists_df,
+        new_artist_df,
         how="left",
         left_on=["artist_name_to_match", "artist_type", "offer_category_id"],
         right_on=["name_to_match", "type", "offer_category_id"],
@@ -302,6 +324,46 @@ new_artist_alias_df = (
     ]
     .drop_duplicates()
 )
-with st.expander("New artist alias", expanded=DEFAULT_EXPANDER_STATE):
+with st.expander(
+    f"New artist alias ({len(new_artist_alias_df)})", expanded=DEFAULT_EXPANDER_STATE
+):
     st.write(new_artist_alias_df)
-# %%
+# %% Create artist product links
+st.subheader("Create artist product links for new artists")
+new_artist_product_link_df = (
+    unlinked_products_df.drop(columns=["artist_id"])
+    .merge(
+        new_artist_df.rename(columns={"id": "artist_id"}),
+        how="left",
+        left_on=["artist_name_to_match", "artist_type", "offer_category_id"],
+        right_on=["name_to_match", "type", "offer_category_id"],
+    )
+    .loc[lambda df: df.artist_id.notna()]
+)
+with st.expander(
+    f"New artist product links ({len(new_artist_product_link_df)})",
+    expanded=DEFAULT_EXPANDER_STATE,
+):
+    st.write(new_artist_product_link_df)
+
+# %% Create delta artist product links
+st.subheader("Create delta artist product links")
+PRODUCT_LINK_COLUMNS = ["product_id", "artist_id", "artist_type"]
+delta_products_df = pd.concat(
+    [
+        linked_products_df.filter(PRODUCT_LINK_COLUMNS).assign(
+            action="add", comment="linked artist"
+        ),
+        new_artist_product_link_df.filter(PRODUCT_LINK_COLUMNS).assign(
+            action="add", comment="new artist"
+        ),
+        products_to_remove_df.filter(PRODUCT_LINK_COLUMNS).assign(
+            action="remove", comment="removed product"
+        ),
+    ]
+)
+with st.expander(
+    f"Delta artist product links ({len(delta_products_df)})",
+    expanded=DEFAULT_EXPANDER_STATE,
+):
+    st.write(delta_products_df)

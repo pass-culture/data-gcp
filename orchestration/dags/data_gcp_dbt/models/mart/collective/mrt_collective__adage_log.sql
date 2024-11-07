@@ -35,6 +35,7 @@ select
     a.playlist_id,
     a.domain_id,
     a.rank_clicked,
+    a.source,
     a.venue_id as adage_venue_id,
     o.venue_id as offer_venue_id,
     coalesce(a.venue_id, o.venue_id) as venue_id,

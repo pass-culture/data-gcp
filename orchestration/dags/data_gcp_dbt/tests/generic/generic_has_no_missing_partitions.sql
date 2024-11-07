@@ -25,6 +25,7 @@
             )
         select *
         from missing_dates
+        order by missing_partition_date desc
     {% else %} select {{ column_name }} from {{ model }} where true = false
     {% endif %}
 

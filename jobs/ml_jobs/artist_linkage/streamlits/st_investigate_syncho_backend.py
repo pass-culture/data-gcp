@@ -96,6 +96,20 @@ def preprocess_before_matching(df: pd.DataFrame) -> pd.DataFrame:
             ],
         )
         .assign(artist_name_to_match=lambda df: df.artist_name_to_match.str.strip())
+        .loc[lambda df: ~df.artist_name_to_match.isin(ARTIST_NAME_TO_FILTER)]
+    )
+
+
+def get_index_max_per_category_and_type(alias_df: pd.DataFrame) -> dict:
+    return (
+        alias_df.loc[lambda df: ~df.artist_id.str.startswith("Q")]
+        .drop_duplicates("artist_id")
+        .assign(
+            id_per_category=lambda df: df.artist_id.str.split("_").str[-1].astype(int),
+        )
+        .groupby(["offer_category_id", "artist_type"])
+        .agg({"id_per_category": max})
+        .to_dict()
     )
 
 
@@ -168,9 +182,7 @@ st.divider()
 st.subheader("Preprocess names")
 
 ### Params
-preproc_products_to_link_df = preprocess_before_matching(products_to_link_df).loc[
-    lambda df: ~df.artist_name_to_match.isin(ARTIST_NAME_TO_FILTER)
-]
+preproc_products_to_link_df = preprocess_before_matching(products_to_link_df)
 preproc_artist_alias_df = (
     preprocess_before_matching(
         alias_df.rename(columns={"artist_alias_name": "artist_name"})
@@ -206,8 +218,6 @@ with st.expander(
     st.write(unlinked_products_df.sort_values(by=["artist_name_to_match"]))
 
 
-# %% Create artists for unlinked products
-st.subheader("Create artists for unlinked products")
 count_df = (
     unlinked_products_df.groupby(
         ["artist_name_to_match", "artist_type"], as_index=False
@@ -224,3 +234,29 @@ with st.expander(
         st.write(count_df.sort_values(by=["number_of_products"], ascending=False))
     with cols[1]:
         st.write(count_df.number_of_products.value_counts())
+
+# %% Create artists for unlinked products
+# st.subheader("Create artists, alias and artist_product_links for unlinked products")
+st.subheader("Create artists alias for unlinked products")
+
+# name clusters
+index_max_per_category_and_type = get_index_max_per_category_and_type(alias_df)
+new_artists_id_list = []
+for group_name, group in unlinked_products_df.drop_duplicates(
+    ["offer_category_id", "artist_type", "artist_name_to_match"]
+).groupby(["offer_category_id", "artist_type"], as_index=False):
+    new_artists_id_list.append(
+        group.reset_index(drop=True).assign(
+            group_index=lambda df: df.index,
+            id=lambda df: df.offer_category_id
+            + "_"
+            + df.artist_type
+            + "_"
+            + df.group_index.astype(str),
+        )
+    )
+
+new_artists_df = pd.concat(new_artists_id_list).loc[
+    :, ["id", "offer_category_id", "artist_type", "artist_name", "artist_name_to_match"]
+]
+# %%

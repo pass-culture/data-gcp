@@ -15,12 +15,11 @@
 select
     partition_date as feedback_creation_date,
     user_id,
-    age,
-    bookings_count,
-    first_deposit_activation_date,
-    status,
-    technical_message_id,
-    feedback
+    age as user_age,
+    bookings_count as total_bookings,
+    first_deposit_activation_date as user_first_deposit_activation_date,
+    status as user_status,
+    feedback as user_feedback_message
 from {{ ref("int_pcapi__log") }}
 where
     technical_message_id = 'user_feedback'

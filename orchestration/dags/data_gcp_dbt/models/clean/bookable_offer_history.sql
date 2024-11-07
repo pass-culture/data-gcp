@@ -12,16 +12,13 @@ with
     bookings_per_stock as (
         select
             stock_id,
-            partition_date,
+            date_sub('{{ ds() }}', interval 1 day) as partition_date,
             count(
                 distinct case
                     when booking_status not in ('CANCELLED') then booking_id else null
                 end
             ) as booking_stock_no_cancelled_cnt
-        from {{ source("clean", "applicative_database_booking_history") }} as booking
-        {% if is_incremental() %}
-            where partition_date = date_sub('{{ ds() }}', interval 1 day)
-        {% endif %}
+        from {{ source("raw", "applicative_database_booking") }} as booking
         group by stock_id, partition_date
     )
 

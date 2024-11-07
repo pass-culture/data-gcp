@@ -70,7 +70,7 @@ SHEETS = {
             "offer_category": "offer_category",
         },
     },
-    "gsheet_meg_scholar_groups": {
+    "gsheet_meg_scholar_group": {
         "spreadsheet_ids": ["1zeh1Jbi_002q7OjioL2ErStXbEUv2j2ooOyLPjMH2gk"],
         "expected_headers_dict": {
             "institution_id": "institution_id",

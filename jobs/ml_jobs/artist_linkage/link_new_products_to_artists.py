@@ -97,8 +97,9 @@ def preprocess_before_matching(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_index_max_per_category_and_type(alias_df: pd.DataFrame) -> dict:
+    WIKI_PREFIX = "Q"
     return (
-        alias_df.loc[lambda df: ~df.artist_id.str.startswith("Q")]
+        alias_df.loc[lambda df: ~df.artist_id.str.startswith(WIKI_PREFIX)]
         .drop_duplicates(ARTIST_ID_KEY)
         .assign(
             id_per_category=lambda df: df.artist_id.str.split("_").str[-1].astype(int),

@@ -108,9 +108,9 @@ def get_index_max_per_category_and_type(alias_df: pd.DataFrame) -> dict:
             id_per_category=lambda df: df.artist_id.str.split("_").str[-1].astype(int),
         )
         .groupby(["offer_category_id", "artist_type"])
-        .agg({"id_per_category": max})
+        .agg({"id_per_category": lambda s: s.max() + 1})
         .to_dict()
-    )
+    )["id_per_category"]
 
 
 #################################################################################
@@ -245,14 +245,21 @@ new_artists_id_list = []
 for group_name, group in unlinked_products_df.drop_duplicates(
     ["offer_category_id", "artist_type", "artist_name_to_match"]
 ).groupby(["offer_category_id", "artist_type"], as_index=False):
+    offer_category_id = group_name[0]
+    artist_type = group_name[1]
     new_artists_id_list.append(
         group.reset_index(drop=True).assign(
             group_index=lambda df: df.index,
-            id=lambda df: df.offer_category_id
+            id=lambda df: offer_category_id
             + "_"
-            + df.artist_type
+            + artist_type
             + "_"
-            + df.group_index.astype(str),
+            + (
+                df.group_index
+                + index_max_per_category_and_type.get(
+                    (offer_category_id, artist_type), 0
+                )
+            ).astype(str),
         )
     )
 

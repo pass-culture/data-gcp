@@ -13,7 +13,7 @@
             ),
             missing_count as (
                 select
-                    partition_cnt - CAST(DATE_DIFF(max_date, min_date,day) + 1 AS INT64) as missing_partition_count
+                    CAST(DATE_DIFF(max_date, min_date,day) AS INT64 ) + 1 - partition_cnt  as missing_partition_count
                 from date_span
             )
             select missing_partition_count from missing_count

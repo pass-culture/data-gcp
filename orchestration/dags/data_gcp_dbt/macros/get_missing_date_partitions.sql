@@ -21,6 +21,7 @@
                 select
                     date as date
                 from
+                    date_span,
                     unnest(generate_date_array(date_span.min_date, date_span.max_date, INTERVAL 1 day)) as date
             ),
             existing_partitions as (

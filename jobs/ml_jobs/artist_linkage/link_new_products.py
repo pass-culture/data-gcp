@@ -16,21 +16,28 @@ ARTIST_NAME_TO_FILTER = {"multi-artistes", "xxx", "compilation", "tbc", "divers"
 # Columns
 ARTIST_ID_KEY = "artist_id"
 ID_KEY = "id"
-NOT_MATCHED_WITH_ARTISTS_KEY = "Not matched with artists"
-REMOVED_PRODUCTS_KEY = "Removed products"
-MATCHED_WITH_ARTISTS_KEY = "Matched with artists"
-MERGE_COLUMNS = ["product_id", "artist_type"]
+PRODUCT_ID_KEY = "product_id"
+ARTIST_NAME_KEY = "artist_name"
+ARTIST_NAME_TO_MATCH_KEY = "artist_name_to_match"
+ARTIST_TYPE_KEY = "artist_type"
+OFFER_CATEGORY_ID_KEY = "offer_category_id"
+ID_PER_CATEGORY = "id_per_category"
+
+NOT_MATCHED_WITH_ARTISTS_KEY = "not_matched_with_artists"
+REMOVED_PRODUCTS_KEY = "removed_products"
+MATCHED_WITH_ARTISTS_KEY = "matched_with_artists"
+MERGE_COLUMNS = [PRODUCT_ID_KEY, ARTIST_TYPE_KEY]
 
 
 def load_product_df(product_filepath: str) -> pd.DataFrame:
     return (
         pd.read_parquet(product_filepath)
-        .rename(columns={"offer_product_id": "product_id"})
-        .astype({"product_id": int})
-        .dropna(subset=["artist_name"])
-        .loc[lambda df: df.artist_name != ""]
+        .rename(columns={"offer_product_id": PRODUCT_ID_KEY})
+        .astype({PRODUCT_ID_KEY: int})
+        .dropna(subset=[ARTIST_NAME_KEY])
+        .loc[lambda df: df[ARTIST_NAME_KEY] != ""]
         .drop_duplicates(
-            subset=["product_id", "artist_type"]
+            subset=[PRODUCT_ID_KEY, ARTIST_TYPE_KEY]
         )  # To remove offers with the same product_id and artist_type
     )
 
@@ -73,15 +80,15 @@ def preprocess_before_matching(df: pd.DataFrame) -> pd.DataFrame:
     return (
         (df.pipe(clean_names).pipe(extract_first_artist).pipe(format_names))
         .pipe(preprocess_artists)
-        .rename(columns={"alias": "artist_name_to_match"})
+        .rename(columns={"alias": ARTIST_NAME_TO_MATCH_KEY})
         .filter(
             [
-                "product_id",
-                "artist_type",
-                "offer_category_id",
-                "artist_name",
-                "artist_name_to_match",
-                "artist_id",
+                PRODUCT_ID_KEY,
+                ARTIST_TYPE_KEY,
+                OFFER_CATEGORY_ID_KEY,
+                ARTIST_NAME_KEY,
+                ARTIST_NAME_TO_MATCH_KEY,
+                ARTIST_ID_KEY,
             ],
         )
         .assign(artist_name_to_match=lambda df: df.artist_name_to_match.str.strip())
@@ -92,14 +99,14 @@ def preprocess_before_matching(df: pd.DataFrame) -> pd.DataFrame:
 def get_index_max_per_category_and_type(alias_df: pd.DataFrame) -> dict:
     return (
         alias_df.loc[lambda df: ~df.artist_id.str.startswith("Q")]
-        .drop_duplicates("artist_id")
+        .drop_duplicates(ARTIST_ID_KEY)
         .assign(
             id_per_category=lambda df: df.artist_id.str.split("_").str[-1].astype(int),
         )
-        .groupby(["offer_category_id", "artist_type"])
-        .agg({"id_per_category": lambda s: s.max() + 1})
+        .groupby([OFFER_CATEGORY_ID_KEY, ARTIST_TYPE_KEY])
+        .agg({ID_PER_CATEGORY: lambda s: s.max() + 1})
         .to_dict()
-    )["id_per_category"]
+    )[ID_PER_CATEGORY]
 
 
 def get_new_artists(
@@ -126,8 +133,8 @@ def get_new_artists(
 
     new_artists_id_list = []
     for group_name, group in unlinked_products_df.drop_duplicates(
-        ["offer_category_id", "artist_type", "artist_name_to_match"]
-    ).groupby(["offer_category_id", "artist_type"], as_index=False):
+        [OFFER_CATEGORY_ID_KEY, ARTIST_TYPE_KEY, ARTIST_NAME_TO_MATCH_KEY]
+    ).groupby([OFFER_CATEGORY_ID_KEY, ARTIST_TYPE_KEY], as_index=False):
         offer_category_id = group_name[0]
         artist_type = group_name[1]
         new_artists_id_list.append(
@@ -146,19 +153,19 @@ def get_new_artists(
         .loc[
             :,
             [
-                "id",
-                "offer_category_id",
-                "artist_type",
-                "artist_name",
-                "artist_name_to_match",
+                ID_KEY,
+                OFFER_CATEGORY_ID_KEY,
+                ARTIST_TYPE_KEY,
+                ARTIST_NAME_KEY,
+                ARTIST_NAME_TO_MATCH_KEY,
             ],
         ]
         .reset_index(drop=True)
     ).rename(
         columns={
-            "artist_name": "name",
-            "artist_name_to_match": "name_to_match",
-            "artist_type": "type",
+            ARTIST_NAME_KEY: "name",
+            ARTIST_NAME_TO_MATCH_KEY: "name_to_match",
+            ARTIST_TYPE_KEY: "type",
         }
     )
 
@@ -173,8 +180,10 @@ def main(
     output_delta_product_artist_link_filepath: str = typer.Option(),
 ) -> None:
     alias_df = pd.read_parquet(artist_alias_file_path).dropna(subset=[ARTIST_ID_KEY])
-    product_artist_link_df = pd.read_parquet(product_artist_link_filepath).dropna(
-        subset=[ARTIST_ID_KEY]
+    product_artist_link_df = (
+        pd.read_parquet(product_artist_link_filepath)
+        .astype({PRODUCT_ID_KEY: int})
+        .dropna(subset=[ARTIST_ID_KEY])
     )
     product_df = load_product_df(product_filepath)
 
@@ -186,9 +195,9 @@ def main(
     # %% Preprocess artists before matching
     products_to_link_preproc_df = products_to_link_df.pipe(preprocess_before_matching)
     artist_alias_preproc_df = (
-        alias_df.rename(columns={"artist_alias_name": "artist_name"})
+        alias_df.rename(columns={"artist_alias_name": ARTIST_NAME_KEY})
         .pipe(preprocess_before_matching)
-        .drop(columns=["artist_name"])
+        .drop(columns=[ARTIST_NAME_KEY])
         .drop_duplicates()
     )
 
@@ -196,7 +205,7 @@ def main(
     matched_df = products_to_link_preproc_df.merge(
         artist_alias_preproc_df,
         how="left",
-        on=["artist_name_to_match", "artist_type", "offer_category_id"],
+        on=[ARTIST_NAME_TO_MATCH_KEY, ARTIST_TYPE_KEY, OFFER_CATEGORY_ID_KEY],
     )
     linked_products_df = matched_df.loc[lambda df: df.artist_id.notna()]
     unlinked_products_df = matched_df.loc[lambda df: df.artist_id.isna()]
@@ -212,16 +221,16 @@ def main(
         unlinked_products_df.merge(
             new_artist_df,
             how="left",
-            left_on=["artist_name_to_match", "artist_type", "offer_category_id"],
-            right_on=["name_to_match", "type", "offer_category_id"],
+            left_on=[ARTIST_NAME_TO_MATCH_KEY, ARTIST_TYPE_KEY, OFFER_CATEGORY_ID_KEY],
+            right_on=["name_to_match", "type", OFFER_CATEGORY_ID_KEY],
         )
         .loc[
             lambda df: df.artist_id.isna(),
             [
-                "id",
-                "offer_category_id",
-                "artist_type",
-                "artist_name",
+                ID_KEY,
+                OFFER_CATEGORY_ID_KEY,
+                ARTIST_TYPE_KEY,
+                ARTIST_NAME_KEY,
             ],
         ]
         .drop_duplicates()
@@ -229,18 +238,18 @@ def main(
 
     # %% 3. Create new product artist link table
     new_artist_product_link_df = (
-        unlinked_products_df.drop(columns=["artist_id"])
+        unlinked_products_df.drop(columns=[ARTIST_ID_KEY])
         .merge(
-            new_artist_df.rename(columns={"id": "artist_id"}),
+            new_artist_df.rename(columns={ID_KEY: ARTIST_ID_KEY}),
             how="left",
-            left_on=["artist_name_to_match", "artist_type", "offer_category_id"],
-            right_on=["name_to_match", "type", "offer_category_id"],
+            left_on=[ARTIST_NAME_TO_MATCH_KEY, ARTIST_TYPE_KEY, OFFER_CATEGORY_ID_KEY],
+            right_on=["name_to_match", "type", OFFER_CATEGORY_ID_KEY],
         )
         .loc[lambda df: df.artist_id.notna()]
     )
 
     # %% 4. Create deltas
-    PRODUCT_LINK_COLUMNS = ["product_id", "artist_id", "artist_type"]
+    PRODUCT_LINK_COLUMNS = [PRODUCT_ID_KEY, ARTIST_ID_KEY, ARTIST_TYPE_KEY]
     delta_product_df = pd.concat(
         [
             linked_products_df.filter(PRODUCT_LINK_COLUMNS).assign(

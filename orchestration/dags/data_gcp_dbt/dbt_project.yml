@@ -67,6 +67,8 @@ models:
       +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"
       global:
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+      raw:
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     mart:
       +meta:
         owner: "@team-data-analytics"

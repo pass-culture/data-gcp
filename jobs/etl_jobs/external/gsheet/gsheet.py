@@ -70,6 +70,16 @@ SHEETS = {
             "offer_category": "offer_category",
         },
     },
+    "gsheet_meg_scholar_groups": {
+        "spreadsheet_ids": ["1zeh1Jbi_002q7OjioL2ErStXbEUv2j2ooOyLPjMH2gk"],
+        "expected_headers_dict": {
+            "institution_id": "institution_id",
+            "institution_external_id": "institution_external_id",
+            "institution_name": "institution_name",
+            "meg_id": "meg_id",
+            "school_group_name": "school_group_name",
+        },
+    },
 }
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]

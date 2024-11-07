@@ -12,12 +12,7 @@ DEFAULT_EXPANDER_STATE = False
 MERGE_COLUMNS = ["product_id", "artist_type"]
 st.set_page_config(layout="wide")
 
-ARTIST_NAME_TO_FILTER = {
-    "multi-artistes",
-    "xxx",
-    "compilation",
-    "tbc",
-}
+ARTIST_NAME_TO_FILTER = {"multi-artistes", "xxx", "compilation", "tbc", "divers"}
 
 
 @st.cache_data
@@ -237,7 +232,7 @@ with st.expander(
 
 # %% Create artists for unlinked products
 # st.subheader("Create artists, alias and artist_product_links for unlinked products")
-st.subheader("Create artists alias for unlinked products")
+st.subheader("Create artists for unlinked products")
 
 # name clusters
 index_max_per_category_and_type = get_index_max_per_category_and_type(alias_df)
@@ -262,8 +257,51 @@ for group_name, group in unlinked_products_df.drop_duplicates(
             ).astype(str),
         )
     )
+new_artists_df = (
+    pd.concat(new_artists_id_list)
+    .loc[
+        :,
+        [
+            "id",
+            "offer_category_id",
+            "artist_type",
+            "artist_name",
+            "artist_name_to_match",
+        ],
+    ]
+    .reset_index(drop=True)
+).rename(
+    columns={
+        "artist_name": "name",
+        "artist_name_to_match": "name_to_match",
+        "artist_type": "type",
+    }
+)
+with st.expander("New artists", expanded=DEFAULT_EXPANDER_STATE):
+    st.write(new_artists_df)
 
-new_artists_df = pd.concat(new_artists_id_list).loc[
-    :, ["id", "offer_category_id", "artist_type", "artist_name", "artist_name_to_match"]
-]
+
+# %% Create artist alias
+st.subheader("Create artist alias for new artists")
+
+new_artist_alias_df = (
+    unlinked_products_df.merge(
+        new_artists_df,
+        how="left",
+        left_on=["artist_name_to_match", "artist_type", "offer_category_id"],
+        right_on=["name_to_match", "type", "offer_category_id"],
+    )
+    .loc[
+        lambda df: df.artist_id.isna(),
+        [
+            "id",
+            "offer_category_id",
+            "artist_type",
+            "artist_name",
+        ],
+    ]
+    .drop_duplicates()
+)
+with st.expander("New artist alias", expanded=DEFAULT_EXPANDER_STATE):
+    st.write(new_artist_alias_df)
 # %%

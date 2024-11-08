@@ -24,12 +24,16 @@ ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO = {
     "prod": ["passculture.pro"],
 }[ENV_SHORT_NAME]
 
-GCP_PROJECT_NATIVE_DEFAULT_ENV = "passculture-native.analytics_267263535"
+# double run for native while we are migrating to new project.
+GCP_PROJECT_NATIVE_DEFAULT_ENV = [
+    "passculture-native.analytics_267263535",
+    "pc-native-production.analytics_450774560",
+]
 
 GCP_PROJECT_NATIVE_ENV = {
-    "dev": [GCP_PROJECT_NATIVE_DEFAULT_ENV],
-    "stg": [GCP_PROJECT_NATIVE_DEFAULT_ENV],
-    "prod": [GCP_PROJECT_NATIVE_DEFAULT_ENV],
+    "dev": GCP_PROJECT_NATIVE_DEFAULT_ENV + ["pc-native-staging.analytics_450776578"],
+    "stg": GCP_PROJECT_NATIVE_DEFAULT_ENV + ["pc-native-testing.analytics_451612566"],
+    "prod": GCP_PROJECT_NATIVE_DEFAULT_ENV,
 }[ENV_SHORT_NAME]
 
 

@@ -46,7 +46,7 @@ dag_config = {
 # Params
 train_params = {
     "config_file_name": {
-        "prod": "pretrained-features",
+        "prod": "default-features",
         "dev": "default-features",
         "stg": "default-features",
     }[ENV_SHORT_NAME],

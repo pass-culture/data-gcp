@@ -128,6 +128,12 @@ select
     ) as newly_unsubscribed_email,
     cast(
         jsonpayload.extra.newlyunsubscribedfrom.push as string
-    ) as newly_unsubscribed_push
-
+    ) as newly_unsubscribed_push,
+    cast(jsonpayload.extra.age as int) as user_age,
+    cast(jsonpayload.extra.bookings_count as int) as total_bookings,
+    jsonpayload.extra.feedback as user_feedback_message,
+    date(
+        jsonpayload.extra.firstdepositactivationdate
+    ) as user_first_deposit_activation_date,
+    jsonpayload.extra.status as user_status
 from {{ source("raw", "stdout") }}

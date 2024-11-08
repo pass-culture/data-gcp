@@ -1,6 +1,11 @@
 {% test generic_has_no_missing_partitions(model, column_name, where_condition=null) %}
     -- Exclude from CI as this test Tables while CI only supports Views
-    {{ config(enabled=target.profile_name != "CI") }}
+    {{
+        config(
+            enabled=target.profile_name != "CI"
+            and env_var("IS_CI", "false") == "false"
+        )
+    }}
 
     {% set missing_partitions = get_missing_date_partitions(
         model, date_column_name=column_name, where_condition=where_condition

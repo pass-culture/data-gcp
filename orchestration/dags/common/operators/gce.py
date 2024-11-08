@@ -353,7 +353,6 @@ class SSHGCEOperator(BaseSSHGCEOperator):
                 "conda init zsh && source ~/.zshrc && conda activate data-gcp"
             )
         elif self.installer == "uv":
-            commands_list.append("source $HOME/.cargo/env")
             commands_list.append("source .venv/bin/activate")
         else:
             commands_list.append("echo no virtual environment activation")
@@ -455,7 +454,6 @@ class InstallDependenciesOperator(SSHGCEOperator):
         if installer == "uv":
             install_command = f"""
                 curl -LsSf https://astral.sh/uv/install.sh | sh &&
-                source $HOME/.cargo/env &&
                 cd {base_dir} &&
                 uv venv --python {self.python_version} &&
                 source .venv/bin/activate &&

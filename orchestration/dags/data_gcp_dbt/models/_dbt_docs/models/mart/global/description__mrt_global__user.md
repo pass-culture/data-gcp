@@ -11,7 +11,7 @@ The `mrt_global__user` table provides a comprehensive view of individual benefic
 {% enddocs %}
 
 All individual users who received a grant, irrespective of their grant status, are stored here.
-Demographic information (address, activity) are purely declarative. They are registered in the user's first grant application process.
+Demographic information (address, activity) are purely declarative. They are registered in the user's first grant application process. Users are invited to update those information when applying for a new grant (ie : when 15-17 users turn 18), and they can update those at any time through their app.
 
 ## Table description
 

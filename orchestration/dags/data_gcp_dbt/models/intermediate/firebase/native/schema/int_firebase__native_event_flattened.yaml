@@ -36,3 +36,6 @@ models:
         data_tests:
           - not_null_proportion:
               where_condition: "event_name = 'ConsultOffer' AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
+      - name: event_date
+        data_tests:
+          - generic_has_no_missing_partitions

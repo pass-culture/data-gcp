@@ -1,0 +1,2 @@
+{% docs user_affiliation_rank %}This column assigns a ranking to each user based on the order of their account creation date within each offerer's group. If user_affiliation_rank equals 1, it means this user was the first registered user for a said offerer.{% enddocs %}
+{% docs user_offerer_validation_status %} Status of the user's affiliation to an offerer. Can be "NEW" when this affiliation is yet to be reviewed by an existing user already associated with this offerer; "PENDING" when the affiliation application is under review and "VALIDATED" when validated. .{% enddocs %}

@@ -3,7 +3,7 @@
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
             partition_by={
-                "field": "feedback_creation_date",
+                "field": "user_feedback_creation_date",
                 "data_type": "date",
                 "granularity": "day",
             },
@@ -13,13 +13,13 @@
 }}
 
 select
-    partition_date as feedback_creation_date,
+    partition_date as user_feedback_creation_date,
     user_id,
-    age as user_age,
-    bookings_count as total_bookings,
-    first_deposit_activation_date as user_first_deposit_activation_date,
-    status as user_status,
-    feedback as user_feedback_message
+    user_age,
+    total_bookings,
+    user_first_deposit_activation_date,
+    user_status,
+    user_feedback_message
 from {{ ref("int_pcapi__log") }}
 where
     technical_message_id = 'user_feedback'

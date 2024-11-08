@@ -143,9 +143,7 @@ class SingleTowerModel(tf.keras.models.Model):
                 vocabulary=self.data[layer_name].unique()
             )
 
-        self._dropout1 = tf.keras.layers.Dropout(0.2)
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
-        self._dropout2 = tf.keras.layers.Dropout(0.1)
         self._dense2 = tf.keras.layers.Dense(embedding_size)
 
     def call(self, features: list, training=False):
@@ -154,9 +152,6 @@ class SingleTowerModel(tf.keras.models.Model):
             feature_embeddings.append(embedding_layer(features[idx]))
 
         x = tf.concat(feature_embeddings, axis=1)
-
-        x = self._dropout1(x, training=training)
         x = self._dense1(x)
-        x = self._dropout2(x, training=training)
         x = self._dense2(x)
         return x

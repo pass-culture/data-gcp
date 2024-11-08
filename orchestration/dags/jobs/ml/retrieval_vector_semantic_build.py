@@ -15,7 +15,6 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
 )
-from common.utils import get_airflow_schedule
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 from airflow import DAG
@@ -59,7 +58,7 @@ with DAG(
     "retrieval_semantic_vector_build",
     default_args=default_args,
     description="Custom training job",
-    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
+    schedule_interval=None,
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,

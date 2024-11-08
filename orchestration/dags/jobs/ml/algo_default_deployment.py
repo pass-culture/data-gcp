@@ -56,7 +56,7 @@ models_to_deploy = [
     },
     # retrieval endpoint
     {
-        "experiment_name": f"retrieval_recommendation_v1.1_{ENV_SHORT_NAME}",
+        "experiment_name": f"retrieval_recommendation_v1.2_{ENV_SHORT_NAME}",
         "endpoint_name": f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
         "version_name": "v_{{ ts_nodash }}",
         "instance_type": RETRIEVAL_DICT[ENV_SHORT_NAME],

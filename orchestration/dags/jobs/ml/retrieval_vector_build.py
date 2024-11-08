@@ -25,7 +25,7 @@ DEFAULT_REGION = "europe-west1"
 gce_params = {
     "base_dir": "data-gcp/jobs/ml_jobs/retrieval_vector",
     "instance_name": f"retrieval-recommendation-build-{ENV_SHORT_NAME}",
-    "experiment_name": f"retrieval_recommendation_v1.1_{ENV_SHORT_NAME}",
+    "experiment_name": f"retrieval_recommendation_v1.2_{ENV_SHORT_NAME}",
     "model_name": {
         "dev": "dummy_user_recommendation",
         "stg": "two_towers_user_recommendation",
@@ -33,8 +33,8 @@ gce_params = {
     },
     "source_experiment_name": {
         "dev": f"dummy_{ENV_SHORT_NAME}",
-        "stg": f"algo_training_two_towers_v1.1_{ENV_SHORT_NAME}",
-        "prod": f"algo_training_two_towers_v1.1_{ENV_SHORT_NAME}",
+        "stg": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",
+        "prod": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",
     },
     "instance_type": {
         "dev": "n1-standard-2",

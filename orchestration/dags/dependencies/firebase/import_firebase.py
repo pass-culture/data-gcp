@@ -31,8 +31,8 @@ GCP_PROJECT_NATIVE_DEFAULT_ENV = [
 ]
 
 GCP_PROJECT_NATIVE_ENV = {
-    "dev": GCP_PROJECT_NATIVE_DEFAULT_ENV + ["pc-native-staging.analytics_450776578"],
-    "stg": GCP_PROJECT_NATIVE_DEFAULT_ENV + ["pc-native-testing.analytics_451612566"],
+    "dev": GCP_PROJECT_NATIVE_DEFAULT_ENV + ["pc-native-testing.analytics_451612566"],
+    "stg": GCP_PROJECT_NATIVE_DEFAULT_ENV + ["pc-native-staging.analytics_450776578"],
     "prod": GCP_PROJECT_NATIVE_DEFAULT_ENV,
 }[ENV_SHORT_NAME]
 

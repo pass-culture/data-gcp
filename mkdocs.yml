@@ -48,7 +48,7 @@ theme:
   font:
     text: "Arial, sans-serif"
     code: Roboto Mono
-  favicon: docsassets/favicon.png  # Replace with Pass Culture favicon
+  favicon: assets/favicon.png
   logo: https://upload.wikimedia.org/wikipedia/commons/4/4f/Logo_du_Pass_Culture.png
 
 
@@ -62,10 +62,10 @@ nav:
       - Overwiew: dbt/glossary.md
       - ... | dbt/glossary/*/column*.md
   - Data Science:
-      - Overview: ds/overview.md
-      - Recommendation: ds/recommendation.md
+      - Overview: team/ds/overview.md
+      - Recommendation: team/ds/recommendation.md
   - Data Engineering:
-      - Overview: de/overview.md
+      - Overview: team/de/overview.md
   - About: about.md
 
 # Plugins

@@ -7,7 +7,7 @@ description: Description of the `mrt_global__collective_booking` table.
 
 # Table: Global Collective Booking
 
-This table is designed to store comprehensive information about collective bookings.
+This table is designed to store comprehensive information about collective bookings made by scholar institutions.
 
 {% enddocs %}
 

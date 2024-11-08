@@ -3,6 +3,10 @@ name: "2. [on_ci] Integration Workflow"
 on:
   pull_request:
 
+permissions:
+  contents: write
+  id-token: write
+
 jobs:
   linter:
     uses: ./.github/workflows/reusable_linter.yml

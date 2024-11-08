@@ -6,6 +6,7 @@ on:
   branches:
     - master
     - production
+    - CD-skip-disable-mkdoc-for-generic-test
 
 permissions:
   contents: write
@@ -107,7 +108,6 @@ jobs:
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
   mkdocs-deploy-on-prod:
-    if: github.ref == 'refs/heads/production'
     uses: ./.github/workflows/reusable_deploy_mkdocs.yml
     needs: [linter]
     with:

@@ -5,7 +5,13 @@ description: Description of the `mrt_global__venue_provider` table.
 
 {% docs description__mrt_global__venue_provider %}
 
-The `mrt_global__venue_provider` table captures data related to venue providers, including their activity status, associated venues, and offers. This table is essential for managing provider relationships, analyzing venue performance, and supporting operational strategies within the application.
+The `mrt_global__venue_provider` table lists the venues that automatically synchronize their offers on the app through a provider.
+
+It contains information on:
+
+- The cultural venue (venue_id, venue_name, venue_department_code, venue_creation_date, venue_is_permanent, venue_label)
+- The provider (provider_id, provider_name, provider_is_active)
+- The synchronized offers (total_individual_offers, total_collective_offers, first_individual_offer_creation_date, first_collective_offer_creation_date, last_sync_date)
 
 {% enddocs %}
 

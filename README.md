@@ -61,6 +61,8 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
 - Make installé
   - linux : `sudo apt install make`
   - mac : `brew install make`
+- Installer les packages prérequis
+  - `make install_prerequisites`
 
 #### 1. Installation du projet
 
@@ -103,10 +105,24 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
 
     > Ces commande créé différents sous-environnements virtuels pour les différents types de jobs spécifiés dans le fichier `Makefile`. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
 
-  - TROUBLESHOOTING : si l'environnment virtuel ne change pas au passage dans le dossier d'un microservice
+##### ⚒️ Troubleshooting ⚒️
+
+- Si vous avez une erreur liée à uv : Redémarrer un terminal et relancez la commande posant problème
+- La migration de `pyenv` à `uv` peut poser problème en mélangeant les environnements virtuels. 2 solutions s'offrent à vous :
+  - Retirer pyenv de votre PATH en supprimant les lignes suivantes de votre .bashrc/.zshrc
 
     ```bash
-    source deactivate
+    export PYENV_ROOT="$HOME/.pyenv"
+    export PATH="$PYENV_ROOT/bin:$PATH"
+    eval "$(pyenv init --path)"
+    eval "$(pyenv init -)"
+    eval "$(pyenv virtualenv-init -)"
+    ```
+
+  - Supprimer toutes les configs de pyenv dans le dossier courant
+
+    ```bash
+    make delete_python_version_files
     ```
 
 #### 2. Config .env.local

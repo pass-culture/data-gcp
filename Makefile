@@ -3,6 +3,9 @@
 #######################################################################################
 SHELL := /bin/bash
 
+install_prerequisites:
+	curl -LsSf https://astral.sh/uv/install.sh | sh
+
 install:
 	# Log in with GCP credentials if NO_GCP_INIT is not 1
 	@if [ "$(NO_GCP_INIT)" != "1" ]; then \
@@ -25,7 +28,7 @@ install_science:
 
 install_analytics:
 	make install
-	source ${HOME}/.cargo/env && source .venv/bin/activate && uv pip install -r orchestration/dags/data_gcp_dbt/dbt-requirements.txt
+	source .venv/bin/activate && uv pip install -r orchestration/dags/data_gcp_dbt/dbt-requirements.txt
 	make _init_dbt
 	echo "Please setup the current venv in your IDE to make it run permanently : https://www.notion.so/passcultureapp/Comment-installer-DBT-e25f7e24813c4d48baa43d641651caf8"
 
@@ -36,10 +39,10 @@ install_analytics:
 
 _install_microservice:
 	# Recreate the venv
-	source ${HOME}/.cargo/env && cd $(MICROSERVICE_PATH) && uv venv --python $(PHYTON_VERSION)
+	cd $(MICROSERVICE_PATH) && uv venv --python $(PHYTON_VERSION)
 
 	# Install the requirements
-	source ${HOME}/.cargo/env && cd $(MICROSERVICE_PATH) && source .venv/bin/activate && uv pip sync $(REQUIREMENTS_NAME)
+	cd $(MICROSERVICE_PATH) && source .venv/bin/activate && uv pip sync $(REQUIREMENTS_NAME)
 
 _init_dbt:
 	cd orchestration/dags/data_gcp_dbt && source .venv/bin/activate  && dbt deps

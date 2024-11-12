@@ -304,6 +304,11 @@ class SSHGCEOperator(BaseSSHGCEOperator):
     DEFAULT_EXPORT = {
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
         "GCP_PROJECT_ID": GCP_PROJECT_ID,
+        "ENVIRONMENT_NAME": {
+            "dev": "development",
+            "stg": "staging",
+            "prod": "production",
+        }[ENV_SHORT_NAME],
     }
     CONDA_EXPORT = {
         **DEFAULT_EXPORT,

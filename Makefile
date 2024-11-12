@@ -5,6 +5,7 @@ SHELL := /bin/bash
 
 install_prerequisites:
 	curl -LsSf https://astral.sh/uv/install.sh | sh
+	echo -e "\n \n Please restart you shell in order to allow uv commands \n \n"
 
 install:
 	# Log in with GCP credentials if NO_GCP_INIT is not 1

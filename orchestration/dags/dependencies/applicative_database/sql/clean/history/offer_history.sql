@@ -19,7 +19,7 @@ select
     offer_external_ticket_office_url,
     offer_validation,
     offer_subcategoryid,
-    offer_date_updated,
+    offer_updated_date,
     offer_withdrawal_type,
     offer_withdrawal_delay,
     offer_last_validation_type,

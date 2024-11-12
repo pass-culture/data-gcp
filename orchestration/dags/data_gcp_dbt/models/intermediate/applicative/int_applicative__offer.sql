@@ -50,7 +50,7 @@ select
     o.offer_modified_at_last_provider_date,
     date(o.offer_creation_date) as offer_creation_date,
     o.offer_creation_date as offer_created_at,
-    o.offer_date_updated,
+    o.offer_updated_date,
     o.offer_product_id,
     {{ target_schema }}.humanize_id(o.offer_product_id) as offer_product_humanized_id,
     o.venue_id,

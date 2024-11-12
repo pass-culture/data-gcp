@@ -3,7 +3,7 @@ with
         select
             *,
             row_number() over (
-                partition by offer_id order by offer_date_updated desc
+                partition by offer_id order by offer_updated_date desc
             ) as row_number
         from {{ ref("int_raw__offer") }} as offer
         where

@@ -28,7 +28,7 @@ from
         , CAST("validation" AS varchar(255)) as offer_validation
         , CAST("lastValidationType" AS varchar(255)) as offer_last_validation_type
         , CAST("subcategoryId" AS varchar(255)) as offer_subcategoryId
-        , "dateUpdated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as offer_date_updated
+        , "dateUpdated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as offer_updated_date
         , "withdrawalType" AS offer_withdrawal_type
         , "withdrawalDelay" AS offer_withdrawal_delay
         , CAST("bookingContact" AS varchar(255)) as booking_contact

@@ -17,7 +17,7 @@ select
     o.last_stock_price,
     o.offer_creation_date,
     o.offer_created_at,
-    o.offer_date_updated,
+    o.offer_updated_date,
     o.offer_is_duo,
     o.item_id,
     o.offer_is_underage_selectable,

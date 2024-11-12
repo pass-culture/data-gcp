@@ -22,7 +22,7 @@
                 offer_is_duo,
                 offer_validation,
                 offer_subcategoryid,
-                cast(offer_date_updated as timestamp) as offer_updated_date,
+                cast(offer_updated_date as timestamp) as offer_updated_date,
                 offer_last_validation_type
             from {{ ref("int_raw__offer") }}
             where

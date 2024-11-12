@@ -6,7 +6,6 @@
                 strategy="timestamp",
                 unique_key="collective_offer_id",
                 updated_at="collective_offer_date_updated",
-                invalidate_hard_delete=False,
             )
         )
     }}

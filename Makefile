@@ -9,77 +9,44 @@ install:
 		make _get_gcp_credentials; \
 	fi
 	make _initiate_env
-	pyenv install 3.10.4 -s
 	curl -LsSf https://astral.sh/uv/install.sh | sh
-	MICROSERVICE_PATH=. PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make _install_microservice
-	pre-commit install
+	MICROSERVICE_PATH=. PHYTON_VERSION=3.10 REQUIREMENTS_NAME=requirements.txt make _install_microservice
+	source .venv/bin/activate && pre-commit install
 
 install_engineering:
 	make install
-	MICROSERVICE_PATH=orchestration PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-orchestration REQUIREMENTS_NAME=airflow/orchestration-requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make _install_microservice
-	MICROSERVICE_PATH=orchestration/dags PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-dbt REQUIREMENTS_NAME=dbt-requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make _install_microservice
+	MICROSERVICE_PATH=orchestration PHYTON_VERSION=3.10 REQUIREMENTS_NAME=airflow/orchestration-requirements.txt make _install_microservice
+	MICROSERVICE_PATH=orchestration/dags PHYTON_VERSION=3.10 REQUIREMENTS_NAME=dbt-requirements.txt make _install_microservice
 	make _init_dbt
 
 install_science:
 	make install_engineering
-	MICROSERVICE_PATH=jobs/ml_jobs/algo_training PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-algo-training REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make _install_microservice
-
-
-#######################################################################################
-########                          Simplified Install                           ########
-#######################################################################################
-install_simplified:
-	# Log in with GCP credentials if NO_GCP_INIT is not 1
-	@if [ "$(NO_GCP_INIT)" != "1" ]; then \
-		make _get_gcp_credentials; \
-	fi
-	make _initiate_env
-	curl -LsSf https://astral.sh/uv/install.sh | sh
-	uv || echo -e "\n \n Please restart you shell in order to allow uv commands \n \n"
-	uv venv --python 3.10
-	source .venv/bin/activate && uv pip install -r requirements.txt && pre-commit install
+	MICROSERVICE_PATH=jobs/ml_jobs/algo_training PHYTON_VERSION=3.10 REQUIREMENTS_NAME=requirements.txt make _install_microservice
 
 install_analytics:
-	make install_simplified
-	source .venv/bin/activate && uv pip install -r orchestration/dags/data_gcp_dbt/dbt-requirements.txt
-	source .venv/bin/activate && make _init_dbt
+	make install
+	source ${HOME}/.cargo/env && source .venv/bin/activate && uv pip install -r orchestration/dags/data_gcp_dbt/dbt-requirements.txt
+	make _init_dbt
 	echo "Please setup the current venv in your IDE to make it run permanently : https://www.notion.so/passcultureapp/Comment-installer-DBT-e25f7e24813c4d48baa43d641651caf8"
-
-
 
 
 #######################################################################################
 ########                                 Utils                                 ########
 #######################################################################################
 
-_init_dbt:
-	cd orchestration/dags/data_gcp_dbt && dbt deps
-	cd orchestration/dags/data_gcp_dbt && dbt debug
-
 _install_microservice:
-	# deactivate the current venv if it exists
-	source deactivate || echo "No venv activated"
-
-	# Recreate the venv if RECREATE_VENV is set to 1
-	@if [ "$(RECREATE_VENV)" = "1" ]; then \
-		eval "$$(pyenv init -)" && cd $(MICROSERVICE_PATH) && rm -f .python-version && pyenv virtualenv-delete -f $(VENV_NAME); \
-	fi
-
-	# Create the venv if it does not exist
-	@if [ -z "$$(pyenv virtualenvs | grep '\s$(VENV_NAME)\s')" ]; then \
-		eval "$$(pyenv init -)" && cd $(MICROSERVICE_PATH) && pyenv virtualenv $(PHYTON_VENV_VERSION) $(VENV_NAME); \
-	fi
-
-	# Set the venv to the current directory
-	eval "$$(pyenv init -)" && cd $(MICROSERVICE_PATH) && pyenv local $(VENV_NAME)
+	# Recreate the venv
+	source ${HOME}/.cargo/env && cd $(MICROSERVICE_PATH) && uv venv --python $(PHYTON_VERSION)
 
 	# Install the requirements
-	@eval "$$(pyenv init -)" && cd $(MICROSERVICE_PATH) && pyenv activate $(VENV_NAME) && uv pip sync $(REQUIREMENTS_NAME)
+	source ${HOME}/.cargo/env && cd $(MICROSERVICE_PATH) && source .venv/bin/activate && uv pip sync $(REQUIREMENTS_NAME)
 
+_init_dbt:
+	cd orchestration/dags/data_gcp_dbt && source .venv/bin/activate  && dbt deps
+	cd orchestration/dags/data_gcp_dbt && source .venv/bin/activate  && dbt debug
 
 _initiate_env:
 	@if [ ! -f .env.local ]; then cp .env.template .env.local; fi
-
 
 _get_gcp_credentials:
 ifeq (,$(wildcard ${HOME}/.config/gcloud/application_default_credentials.json))
@@ -101,15 +68,15 @@ create_microservice:
 
 create_microservice_ml:
 	MS_TYPE=ml MS_NAME=$(MS_NAME) make create_microservice
-	MICROSERVICE_PATH=jobs/ml_jobs/$(MS_NAME) PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-$(MS_NAME) REQUIREMENTS_NAME=requirements.txt make _install_microservice
+	MICROSERVICE_PATH=jobs/ml_jobs/$(MS_NAME) PHYTON_VERSION=3.10 VENV_NAME=data-gcp-$(MS_NAME) REQUIREMENTS_NAME=requirements.txt make _install_microservice
 
 create_microservice_etl_external:
 	MS_TYPE=etl_external MS_NAME=$(MS_NAME) make create_microservice
-	MICROSERVICE_PATH=jobs/etl_jobs/external/$(MS_NAME) PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-$(MS_NAME) REQUIREMENTS_NAME=requirements.txt make _install_microservice
+	MICROSERVICE_PATH=jobs/etl_jobs/external/$(MS_NAME) PHYTON_VERSION=3.10 VENV_NAME=data-gcp-$(MS_NAME) REQUIREMENTS_NAME=requirements.txt make _install_microservice
 
 create_microservice_etl_internal:
 	MS_TYPE=etl_internal MS_NAME=$(MS_NAME) make create_microservice
-	MICROSERVICE_PATH=jobs/etl_jobs/internal/$(MS_NAME) PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-$(MS_NAME) REQUIREMENTS_NAME=requirements.txt make _install_microservice
+	MICROSERVICE_PATH=jobs/etl_jobs/internal/$(MS_NAME) PHYTON_VERSION=3.10 VENV_NAME=data-gcp-$(MS_NAME) REQUIREMENTS_NAME=requirements.txt make _install_microservice
 
 ruff_fix:
 	ruff check --fix
@@ -122,14 +89,8 @@ ruff_check:
 sqlfluff_fix:
 	cd orchestration/dags/data_gcp_dbt && sqlfluff fix --dialect bigquery
 
-sqlfluff_format:
-	cd orchestration/dags/data_gcp_dbt && sqlfluff format --dialect bigquery
-
 sqlfluff_check:
 	cd orchestration/dags/data_gcp_dbt && sqlfluff lint echo $(./scripts/test.sh) --dialect bigquery
-
-precommit_install:
-	@eval "$$(pyenv init -)" && pyenv activate data-gcp && pre-commit install
 
 sqlfmt_fix:
 	sqlfmt orchestration/dags --exclude "**/.venv/**" --exclude "**/venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"

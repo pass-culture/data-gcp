@@ -62,8 +62,6 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
   - linux : `sudo apt install make`
   - mac : `brew install make`
 
-
-
 #### 1. Installation du projet
 
 - Cloner le projet
@@ -126,10 +124,10 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
     > Ces commande créé différents sous-environnements virtuels pour les différents types de jobs spécifiés dans le fichier `Makefile`. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
 
   - TROUBLESHOOTING : si l'environnment virtuel ne change pas au passage dans le dossier d'un microservice
+
     ```bash
     source deactivate
     ```
-
 
 #### 2. Config .env.local
 

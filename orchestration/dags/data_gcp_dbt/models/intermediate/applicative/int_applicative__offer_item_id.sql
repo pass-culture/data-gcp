@@ -20,7 +20,7 @@ with
             {{ source("analytics", "linked_offers") }} linked_offers
             on linked_offers.offer_id = offer.offer_id
         qualify
-            row_number() over (partition by offer_id order by offer_date_updated desc)
+            row_number() over (partition by offer_id order by offer_updated_date desc)
             = 1
     )
 

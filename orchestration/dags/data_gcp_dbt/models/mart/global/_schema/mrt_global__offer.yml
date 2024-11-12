@@ -41,8 +41,8 @@ models:
       - name: offer_created_at
         description: '{{ doc("column__offer_created_at") }}'
         data_type: DATETIME
-      - name: offer_date_updated
-        description: '{{ doc("column__offer_date_updated") }}'
+      - name: offer_updated_date
+        description: '{{ doc("column__offer_updated_date") }}'
         data_type: DATETIME
       - name: offer_is_duo
         description: '{{ doc("column__offer_is_duo") }}'

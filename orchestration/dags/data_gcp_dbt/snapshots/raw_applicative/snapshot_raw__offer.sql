@@ -5,8 +5,7 @@
             **custom_snapshot_config(
                 strategy="timestamp",
                 unique_key="offer_id",
-                updated_at="offer_date_updated",
-                invalidate_hard_delete=False,
+                updated_at="offer_updated_date",
             )
         )
     }}

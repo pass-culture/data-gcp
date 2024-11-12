@@ -2,7 +2,7 @@
     config(
         **custom_table_config(
             materialized="table",
-            partition_by={"field": "offer_date_updated", "data_type": "datetime"},
+            partition_by={"field": "offer_updated_date", "data_type": "datetime"},
         )
     )
 }}

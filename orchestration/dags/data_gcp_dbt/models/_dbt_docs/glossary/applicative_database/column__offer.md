@@ -8,7 +8,7 @@
 {% docs column__offer_category_id %} Identifier for the category of the offer. {% enddocs %}
 {% docs column__offer_creation_date %} Date when the offer was created. {% enddocs %}
 {% docs column__offer_created_at %} Timestamp when the offer was created. {% enddocs %}
-{% docs column__offer_date_updated %} Timestamp when the offer was last updated. {% enddocs %}
+{% docs column__offer_updated_date %} Timestamp when the offer was last updated. {% enddocs %}
 {% docs column__offer_is_duo %} Indicates if the offer can be booked as a duo. {% enddocs %}
 {% docs column__offer_is_underage_selectable %} Indicates if the offer is selectable for underage users. {% enddocs %}
 

@@ -20,7 +20,7 @@ install:
 install_engineering:
 	make install
 	MICROSERVICE_PATH=orchestration PHYTON_VERSION=3.10 REQUIREMENTS_NAME=airflow/orchestration-requirements.txt make _install_microservice
-	MICROSERVICE_PATH=orchestration/dags PHYTON_VERSION=3.10 REQUIREMENTS_NAME=dbt-requirements.txt make _install_microservice
+	MICROSERVICE_PATH=orchestration/dags/data_gcp_dbt PHYTON_VERSION=3.10 REQUIREMENTS_NAME=dbt-requirements.txt make _install_microservice
 	make _init_dbt
 
 install_science:
@@ -33,6 +33,9 @@ install_analytics:
 	make _init_dbt
 	echo "Please setup the current venv in your IDE to make it run permanently : https://www.notion.so/passcultureapp/Comment-installer-DBT-e25f7e24813c4d48baa43d641651caf8"
 
+install_ubuntu_libs:
+	sudo apt-get update -y
+	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev libmariadb-dev clang
 
 #######################################################################################
 ########                                 Utils                                 ########
@@ -57,9 +60,6 @@ ifeq (,$(wildcard ${HOME}/.config/gcloud/application_default_credentials.json))
 	gcloud auth application-default login
 endif
 
-_install_ubuntu_libs:
-	sudo apt-get update -y
-	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev libmariadb-dev clang
 
 delete_python_version_files:
 	@echo "Finding all .python-version files..."

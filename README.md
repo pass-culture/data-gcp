@@ -63,6 +63,8 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
   - mac : `brew install make`
 - Installer les packages prérequis
   - `make install_prerequisites`
+- [Ubuntu]: Installer les librairies prérequises (non nécessaire sur macos)
+  - `make install_ubuntu_libs`
 
 #### 1. Installation du projet
 

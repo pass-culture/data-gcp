@@ -85,29 +85,9 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
     make install_analytics
     ```
 
-      > Cette installation est simplifiée pour les Data Analysts. Ne nécessite pas d'installer pyenv. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
+      > Cette installation est simplifiée pour les Data Analysts, afin de mettre tous les requirements nécecssaires à la DA dans un même venv. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
 
   - Pour la team DE/DS
-
-    - [Prérequis] Installer [pyenv](https://github.com/pyenv/pyenv)
-
-      - Lancer la commande suivante pour installer pour gérer les versions de python avec pyenv :
-
-          ```bash
-          curl -sSL https://pyenv.run | bash
-          ```
-
-      - Si vous avez des problèmes avec penv sur MacOS, voir ce [commentaire](https://github.com/pyenv/pyenv/issues/1740#issuecomment-738749988)
-
-      - Ajouter ces lignes à votre `~/.bashrc` ou votre `~/.zshrc` afin de pouvoir activer `pyenv virtualenv`:
-
-          ```bash
-          eval "$(pyenv init -)"
-          eval "$(pyenv virtualenv-init -)"
-          eval "$(pyenv init --path)"
-          ```
-
-      - Redémarrer votre terminal
 
     - Pour les Data Scientists :
 
@@ -135,11 +115,9 @@ Dans le fichier `.env.local`, renseigne les valeurs des variables manquantes en 
 
 ## Orchestration
 
-Orchestration des jobs dags analytics & data science.
+Les DAGs Airflow orchestrant les différents jobs DA/DE/DS sont détaillés dans [le README.md du dossier orchestration](/orchestration/README.md)
 
-[plus de détails dans dags/README.md](/orchestration/README.md)
-
-Les dags sont déployés automatiquement lors d'un merge sur master / production
+Les dags sont déployés automatiquement lors d'un merge sur master / production (voir [la doc de déploiement continu](.github/workflows/README.md))
 
 ## CI/CD
 

@@ -6,7 +6,6 @@
                 strategy="timestamp",
                 unique_key="id",
                 updated_at="dateUpdated",
-                invalidate_hard_delete=False,
             )
         )
     }}

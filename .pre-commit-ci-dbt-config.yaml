@@ -1,0 +1,19 @@
+default_install_hook_types:
+- pre-commit
+repos:
+- repo: https://github.com/dbt-checkpoint/dbt-checkpoint
+  rev: v2.0.5
+  hooks:
+  - id: check-script-semicolon
+    files: models/mart
+  - id: check-script-has-no-table-name
+    files: models/mart
+  - id: check-model-has-properties-file
+    name: Check model has properties file (mart).
+    files: models/mart
+  - id: check-model-has-all-columns
+    name: Check model have all columns defined (mart).
+    files: models/mart
+  - id: check-model-columns-have-desc
+    name: Check all columns have description (mart).
+    files: models/mart

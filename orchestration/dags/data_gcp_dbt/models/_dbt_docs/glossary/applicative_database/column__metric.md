@@ -5,7 +5,7 @@ title: Metrics
 ---
 
 {% docs column__total_actual_amount_spent %} Total actual amount spent, reflecting real transactions. {% enddocs %}
-{% docs column__total_available_stock %}Total available stock.{% enddocs %}
+{% docs column__total_available_stock %} Quantity of remaining stock. (stock_quantity - non cancelled bookings){% enddocs %}
 {% docs column__total_bookable_collective_offers %} Total number of collective offers that are bookable. {% enddocs %}
 {% docs column__total_bookable_individual_offers %} Total number of individual offers that are bookable. {% enddocs %}
 {% docs column__total_bookable_offers %} Total number of offers that are bookable, both individual and collective. {% enddocs %}

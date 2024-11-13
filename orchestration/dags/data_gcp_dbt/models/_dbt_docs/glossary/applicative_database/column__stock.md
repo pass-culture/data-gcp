@@ -11,4 +11,3 @@
 {% docs column__price_category_label_id %}Identifier for the price category label.{% enddocs %}
 {% docs column__last_stock_price %} The last recorded stock price for the offer. {% enddocs %}
 {% docs column__first_stock_creation_date %} Date of the first stock creation of the offerer. {% enddocs %}
-{% docs column__total_available_stock %} Quantity of remaining stock. (stock_quantity - non cancelled bookings)

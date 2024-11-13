@@ -63,8 +63,17 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
   - mac : `brew install make`
 - Installer les packages prérequis
   - `make install_prerequisites`
-- [Ubuntu]: Installer les librairies prérequises (non nécessaire sur macos)
-  - `make install_ubuntu_libs`
+- Installer les librairies prérequises (non nécessaire sur macos)
+  - [Ubuntu]:
+    - `make install_ubuntu_libs`
+  - [MacOS]:
+    - `make install_macos_libs`
+    - ajouter les lignes suivantes à votre `~/.zshrc`
+
+      ```bash
+      export MYSQLCLIENT_LDFLAGS="-L/opt/homebrew/opt/mysql-client/lib -lmysqlclient -rpath /usr/local/mysql/lib"
+      export MYSQLCLIENT_CFLAGS="-I/opt/homebrew/opt/mysql-client/include -I/opt/homebrew/opt/mysql-client/include/mysql"
+      ```
 
 #### 1. Installation du projet
 

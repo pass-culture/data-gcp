@@ -37,12 +37,12 @@ GCP_PROJECT_NATIVE_ENV = {
 }[ENV_SHORT_NAME]
 
 
-GCP_PROJECT_PRO_DEFAULT_ENV = "pc-pro-production.analytics_397565568"
+GCP_PROJECT_PRO_DEFAULT_ENV = ["pc-pro-production.analytics_397565568"]
 
 GCP_PROJECT_PRO_ENV = {
-    "dev": ["pc-pro-testing.analytics_397508951", GCP_PROJECT_PRO_DEFAULT_ENV],
-    "stg": ["pc-pro-staging.analytics_397573615", GCP_PROJECT_PRO_DEFAULT_ENV],
-    "prod": [GCP_PROJECT_PRO_DEFAULT_ENV],
+    "dev": ["pc-pro-testing.analytics_397508951"] + GCP_PROJECT_PRO_DEFAULT_ENV,
+    "stg": ["pc-pro-staging.analytics_397573615"] + GCP_PROJECT_PRO_DEFAULT_ENV,
+    "prod": GCP_PROJECT_PRO_DEFAULT_ENV,
 }[ENV_SHORT_NAME]
 
 
@@ -59,7 +59,7 @@ import_firebase_pro_tables = {
             "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO,
             "gcp_project_env": GCP_PROJECT_PRO_ENV,
         },
-        "fallback_params": {"gcp_project_env": [GCP_PROJECT_PRO_DEFAULT_ENV]},
+        "fallback_params": {"gcp_project_env": GCP_PROJECT_PRO_DEFAULT_ENV},
         "schemaUpdateOptions": ["ALLOW_FIELD_ADDITION"],
     },
 }
@@ -76,7 +76,7 @@ import_firebase_beneficiary_tables = {
             "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING,
             "gcp_project_env": GCP_PROJECT_NATIVE_ENV,
         },
-        "fallback_params": {"gcp_project_env": [GCP_PROJECT_NATIVE_DEFAULT_ENV]},
+        "fallback_params": {"gcp_project_env": GCP_PROJECT_NATIVE_DEFAULT_ENV},
         "schemaUpdateOptions": ["ALLOW_FIELD_ADDITION"],
     }
 }

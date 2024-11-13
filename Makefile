@@ -138,4 +138,7 @@ sqlfmt_check:
 	sqlfmt --check orchestration/dags --exclude "**/.venv/**" --exclude "**/venv/**"  --exclude "orchestration/dags/data_gcp_dbt/target/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"
 
 docs_run:
-	mkdocs serve
+	source .venv/bin/activate && mkdocs serve
+
+precommit_docs_run:
+	pre-commit run --all-files --config .pre-commit-ci-dbt-config.yaml

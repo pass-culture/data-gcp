@@ -1805,6 +1805,8 @@
       
         
       
+        
+      
     
     
       
@@ -2207,6 +2209,27 @@
   
   <span class="md-ellipsis">
     Column  user
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../glossary/applicative_database/column__user_offerer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Column  user offerer
   </span>
   
 
@@ -2957,7 +2980,13 @@
 
   <h1>Venue Provider</h1>
 
-<p>The <code>mrt_global__venue_provider</code> table captures data related to venue providers, including their activity status, associated venues, and offers. This table is essential for managing provider relationships, analyzing venue performance, and supporting operational strategies within the application.</p>
+<p>The <code>mrt_global__venue_provider</code> table lists the venues that automatically synchronize their offers on the app through a provider.</p>
+<p>It contains information on:</p>
+<ul>
+<li>The cultural venue (venue_id, venue_name, venue_department_code, venue_creation_date, venue_is_permanent, venue_label)</li>
+<li>The provider (provider_id, provider_name, provider_is_active)</li>
+<li>The synchronized offers (total_individual_offers, total_collective_offers, first_individual_offer_creation_date, first_collective_offer_creation_date, last_sync_date)</li>
+</ul>
 
 <h2 id="table-description">Table description</h2>
 <table>
@@ -2972,22 +3001,22 @@
 <tr>
 <td style="text-align: left;">provider_id</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">The unique identifier for the venue provider.</td>
+<td style="text-align: left;">The unique identifier for the venue catalogue offer synchronization provider.</td>
 </tr>
 <tr>
 <td style="text-align: left;">provider_name</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">The name of the venue provider.</td>
+<td style="text-align: left;">The name of the venue catalogue offer synchronization provider.</td>
 </tr>
 <tr>
 <td style="text-align: left;">provider_is_active</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Indicates whether the venue provider is active.</td>
+<td style="text-align: left;">Indicates whether the venue catalogue offer synchronization provider is active or not.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_provider_is_active</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Indicates whether the venue provider is active for the specific venue.</td>
+<td style="text-align: left;">Indicates whether the venue catalogue offer synchronization provider is active or not for the specific venue.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_id</td>
@@ -3012,27 +3041,27 @@
 <tr>
 <td style="text-align: left;">venue_department_code</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Department code where the venue is located.</td>
+<td style="text-align: left;">Department code of the venue.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_department_name</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Department name where the venue is located.</td>
+<td style="text-align: left;">Department name where of the venue.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_creation_date</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Date when the venue was created.</td>
+<td style="text-align: left;">Date when the venue was created on the application.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_is_permanent</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Indicates if the venue is permanent.</td>
+<td style="text-align: left;">Indicates if the venue is permanent. A permanent venue is a venue that can receive public permanently, that can propose offers, and that is managed by the partner. Permanent venues exemple : a library, a cinema. Non permanent venues example : a public garden that hosted a festival once, or a theater that hosted a concert once - it can be permanent for the partner who owns the theater, but not for the partner who is hosted once in this place.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_label</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Label of the venue.</td>
+<td style="text-align: left;">Label of the venue. The label is appended by the Ministry as token of quality and standing in its category.</td>
 </tr>
 <tr>
 <td style="text-align: left;">booking_external_url</td>

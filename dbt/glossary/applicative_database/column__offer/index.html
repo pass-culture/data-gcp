@@ -1758,6 +1758,8 @@
       
         
       
+        
+      
     
     
       
@@ -2170,6 +2172,27 @@
   
   <span class="md-ellipsis">
     Column  user
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../column__user_offerer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Column  user offerer
   </span>
   
 
@@ -2908,8 +2931,9 @@
 <p><strong>offer_product_humanized_id</strong>:  Human-readable identifier for the product associated with the offer. </p>
 <p><strong>offer_id_at_providers</strong>:  Identifier for the offer at external providers. </p>
 <p><strong>is_synchronised</strong>:  Indicates whether the offer is synchronized with API systems and has a product_id. </p>
+<p><strong>offer_description</strong>:  Offer description (synopsis, further details on the show) as provided by the cultural partner and displayed in app.</p>
+
 <p><strong>offer_name</strong>:  Name of the offer as it appears in the application. </p>
-<p><strong>offer_description</strong>:  Description of the offer. </p>
 <p><strong>offer_category_id</strong>:  Identifier for the category of the offer. </p>
 <p><strong>offer_creation_date</strong>:  Date when the offer was created. </p>
 <p><strong>offer_created_at</strong>:  Timestamp when the offer was created. </p>
@@ -2918,7 +2942,6 @@
 <p><strong>offer_is_underage_selectable</strong>:  Indicates if the offer is selectable for underage users. </p>
 
 <h1 id="metadata-related">Metadata related</h1>
-<p><strong>offer_type_domain</strong>:  Domain type of the offer. </p>
 <p><strong>offer_type</strong>:  Deprecated. </p>
 <p><strong>offer_is_bookable</strong>:  Indicates if the offer is bookable. </p>
 <p><strong>digital_goods</strong>:  Indicates if the offer includes digital goods. </p>
@@ -2932,8 +2955,8 @@
 <p><strong>is_national</strong>:  Indicates if the offer is available nationally. </p>
 <p><strong>is_active</strong>:  Indicates if the offer is active. </p>
 <p><strong>offer_validation</strong>:  Validation status of the offer. </p>
-<p><strong>author</strong>:  Author of the reserved book, if applicable. </p>
-<p><strong>performer</strong>:  Performer or group for the reserved musical offer, if applicable. </p>
+<p><strong>author</strong>:  The offer's author (a book's author, a music's singer, a movie's director).</p>
+<p><strong>performer</strong>:  Performers involved in this offer.</p>
 <p><strong>stage_director</strong>:  Stage director, if applicable. </p>
 <p><strong>theater_movie_id</strong>:  Allociné identifier for the movie, if applicable. </p>
 <p><strong>theater_room_id</strong>:  Allociné identifier for the theater room, if applicable. </p>
@@ -2956,17 +2979,18 @@
 <p><strong>item_id</strong>: Identifier for the item associated with the offer used internally by the data science team. </p>
 <p><strong>search_group_name</strong>:  Legacy: Category displayed in the application </p>
 <p><strong>image_url</strong>:  Image displayed in the passculture.app if present. </p>
-<p><strong>gtl_label_level_1</strong>:  Label of level 1 provided by Titelive. </p>
-<p><strong>gtl_label_level_2</strong>:  Label of level 2 provided by Titelive. </p>
-<p><strong>gtl_label_level_3</strong>:  Label of level 3 provided by Titelive. </p>
-<p><strong>gtl_label_level_4</strong>:  Label of level 4 provided by Titelive. </p>
-<p><strong>offer_sub_type_label</strong>:  Deprecated: Legacy identifier. Prefer using GTL. </p>
-<p><strong>offer_type_id</strong>:  Deprecated: Legacy identifier. Prefer using GTL. </p>
+<p><strong>titelive_gtl_id</strong>:  Unique identifier of the Genre Tite Live (GTL) associated to this offer.</p>
+<p><strong>gtl_type</strong>:  Type of GTL associated to this offer. Can either be "BOOK" or "MUSIC" </p>
+<p><strong>gtl_label_level_1</strong>:  Name of the level 1 GTL associated to this offer (for example, "Littératurefor a book or "Pop" for music.) </p>
+<p><strong>gtl_label_level_2</strong>:  Name of the level 2 GTL associated to this offer (for example, "Poésie" for a book or "Brit Pop" for music.) </p>
+<p><strong>gtl_label_level_3</strong>:  Name of the level 3 GTL associated to this offer (for example, "Haiku" for a book). Only available for books. </p>
+<p><strong>gtl_label_level_4</strong>:  Name of the level 4 GTL associated to this offer. Only available for books. </p>
+<p><strong>offer_type_domain</strong>:  Deprecated: The offer's category type,as many metadata info are specific to certain offer types. Can be either "BOOK", "MUSIC", "SHOW" or "MOVIE".</p>
+<p><strong>offer_type_id</strong>:  Deprecated: Unique identifier of the offer's type. Currently available to describe either music genres (pop, rock) or show type (opera, circus).</p>
 <p><strong>offer_sub_type_id</strong>:  Deprecated: Legacy identifier. Prefer using GTL.  </p>
-<p><strong>offer_type_label</strong>:  Deprecated: Legacy identifier. Prefer using GTL. </p>
+<p><strong>offer_type_label</strong>:  Deprecated: Defines the offer genre for music, books and movies. Defines the offer show type for shows. </p>
+<p><strong>offer_sub_type_label</strong>:  Deprecated: Defines the offer sub genre for music, books and movies. Defines the offer show sub type for shows. </p>
 <p><strong>offer_type_labels</strong>:  Deprecated: Legacy identifier. Prefer using GTL. </p>
-<p><strong>titelive_gtl_id</strong>:  Titelive GTL identifier, if applicable. </p>
-<p><strong>gtl_type</strong>:  Is Titelive GTL related to BOOK or CD/Vinyle. </p>
 
 <h1 id="date-related">Date related</h1>
 <p><strong>first_individual_offer_creation_date</strong>:  Date of the first individual offer creation. </p>

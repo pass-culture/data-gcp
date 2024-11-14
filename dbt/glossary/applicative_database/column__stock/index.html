@@ -1753,6 +1753,8 @@
       
         
       
+        
+      
     
     
       
@@ -2163,6 +2165,27 @@
   
   <span class="md-ellipsis">
     Column  user
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../column__user_offerer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Column  user offerer
   </span>
   
 
@@ -2897,18 +2920,18 @@
   <h1>Column  stock</h1>
 
 <p><strong>stock_id</strong>: Unique identifier for the stock.</p>
-<p><strong>stock_beginning_date</strong>: The date when the stock becomes available.</p>
-<p><strong>stock_last_provider_id</strong>: Identifier for the last provider of the stock.</p>
-<p><strong>stock_booking_limit_date</strong>: The last date when the stock can be booked.</p>
-<p><strong>stock_creation_date</strong>: The date when the stock was created.</p>
-<p><strong>stock_features</strong>: Features associated with the stock.</p>
-<p><strong>stock_price</strong>: Price of the stock.</p>
-<p><strong>stock_quantity</strong>: Quantity of the stock available.</p>
+<p><strong>stock_beginning_date</strong>: Timestamp of the beginning of the event. Only for event offers.</p>
+<p><strong>stock_last_provider_id</strong>: Identifier of the provider that synchronised this stock. Only for the synchronised offers.</p>
+<p><strong>stock_booking_limit_date</strong>: Timestamp that specifies when it is no longer possible to book the offer linked to this stock.</p>
+<p><strong>stock_creation_date</strong>: Creation date of the stock.</p>
+<p><strong>stock_features</strong>: Movie features only for synchronised cinema screening offers (ex : VO, VF, 3D). Can be a list if several features applies to the stock.</p>
+<p><strong>stock_price</strong>: Price of the stock. O if free.</p>
+<p><strong>stock_quantity</strong>: Total quantity that had been available when the stock is created. Constant. If null, the quantity is unlimited (ex : digital offers).</p>
 <p><strong>price_category_id</strong>: Identifier for the price category.</p>
-<p><strong>price_category_label</strong>: Label for the price category.</p>
+<p><strong>price_category_label</strong>: Label of the price category. Description written by the cultural partner of the price category of this stock (ex : "Pass 2 jours", "Prix +18 ans"). Null if there is no specific price category for the offer.</p>
 <p><strong>price_category_label_id</strong>: Identifier for the price category label.</p>
 <p><strong>last_stock_price</strong>:  The last recorded stock price for the offer. </p>
-<p><strong>first_stock_creation_date</strong>:  Date of the first stock creation for the offerer. </p>
+<p><strong>first_stock_creation_date</strong>:  Date of the first stock creation of the offerer. </p>
 
 
 

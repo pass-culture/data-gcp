@@ -1805,6 +1805,8 @@
       
         
       
+        
+      
     
     
       
@@ -2207,6 +2209,27 @@
   
   <span class="md-ellipsis">
     Column  user
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../glossary/applicative_database/column__user_offerer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Column  user offerer
   </span>
   
 
@@ -3001,7 +3024,7 @@
 <tr>
 <td style="text-align: left;">offer_description</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Description of the offer.</td>
+<td style="text-align: left;">Offer description (synopsis, further details on the show) as provided by the cultural partner and displayed in app.</td>
 </tr>
 <tr>
 <td style="text-align: left;">offer_category_id</td>
@@ -3046,7 +3069,7 @@
 <tr>
 <td style="text-align: left;">offer_type_domain</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Domain type of the offer.</td>
+<td style="text-align: left;">Deprecated: The offer's category type,as many metadata info are specific to certain offer types. Can be either "BOOK", "MUSIC", "SHOW" or "MOVIE".</td>
 </tr>
 <tr>
 <td style="text-align: left;">offer_is_bookable</td>
@@ -3056,7 +3079,7 @@
 <tr>
 <td style="text-align: left;">venue_is_virtual</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the venue is virtual.</td>
+<td style="text-align: left;">Indicates if the venue is virtual. Each offerer has a virtual venue, it is only used to publish digital offers.</td>
 </tr>
 <tr>
 <td style="text-align: left;">digital_goods</td>
@@ -3116,12 +3139,12 @@
 <tr>
 <td style="text-align: left;">author</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Author of the reserved book, if applicable.</td>
+<td style="text-align: left;">The offer's author (a book's author, a music's singer, a movie's director).</td>
 </tr>
 <tr>
 <td style="text-align: left;">performer</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Performer or group for the reserved musical offer, if applicable.</td>
+<td style="text-align: left;">Performers involved in this offer.</td>
 </tr>
 <tr>
 <td style="text-align: left;">stage_director</td>
@@ -3186,7 +3209,7 @@
 <tr>
 <td style="text-align: left;">titelive_gtl_id</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Titelive GTL identifier, if applicable.</td>
+<td style="text-align: left;">Unique identifier of the Genre Tite Live (GTL) associated to this offer.</td>
 </tr>
 <tr>
 <td style="text-align: left;">rayon</td>
@@ -3256,7 +3279,7 @@
 <tr>
 <td style="text-align: left;">venue_department_code</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Department code where the venue is located.</td>
+<td style="text-align: left;">Department code of the venue.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_region_name</td>
@@ -3281,22 +3304,22 @@
 <tr>
 <td style="text-align: left;">venue_academy_name</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Academy name associated with the venue.</td>
+<td style="text-align: left;">Academy of the venue.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_density_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Density label of the venue's location.</td>
+<td style="text-align: left;">Detailed density label of the venue's location.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_macro_density_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Macro density label of the venue's location.</td>
+<td style="text-align: left;">Macro density label of the venue's location (urbain, rural)</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Label of the venue.</td>
+<td style="text-align: left;">Label of the venue. The label is appended by the Ministry as token of quality and standing in its category.</td>
 </tr>
 <tr>
 <td style="text-align: left;">partner_id</td>
@@ -3306,12 +3329,12 @@
 <tr>
 <td style="text-align: left;">offerer_id</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Unique identifier for the offerer.</td>
+<td style="text-align: left;">Unique identifier of the offerer.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_managing_offerer_id</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">ID of the managing offerer for the venue.</td>
+<td style="text-align: left;">ID of the offerer who manage the venue. One offerer can have multiple venues.</td>
 </tr>
 <tr>
 <td style="text-align: left;">offerer_name</td>
@@ -3321,7 +3344,7 @@
 <tr>
 <td style="text-align: left;">venue_type_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Type label of the venue.</td>
+<td style="text-align: left;">Type of the venue ('Musée', 'Cinéma','Librairie', etc). Selected by the partner in a drop-down list.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_iris_internal_id</td>

@@ -18,7 +18,7 @@
         <link rel="prev" href="../column__stock/">
       
       
-        <link rel="next" href="../column__venue/">
+        <link rel="next" href="../column__user_offerer/">
       
       
       <link rel="icon" href="../../../../assets/favicon.png">
@@ -1753,6 +1753,8 @@
       
         
       
+        
+      
     
     
       
@@ -2167,6 +2169,27 @@
 
       </a>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../column__user_offerer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Column  user offerer
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -2896,55 +2919,54 @@
 
   <h1>Column  user</h1>
 
-<p><strong>user_academy_name</strong>:  Academy name associated with the user. </p>
-<p><strong>user_activation_date</strong>:  Date when the user was activated. </p>
-<p><strong>user_activity</strong>:  Activity status of the user. </p>
-<p><strong>user_age</strong>:  Age of the user. </p>
+<p><strong>user_academy_name</strong>:  Academy name associated with the user's registered address. </p>
+<p><strong>user_activation_date</strong>:  Date when the user's account was activated. Corresponds to the first booking date for users in experiment phase, and to user creation date for all users after the experiment phase. </p>
+<p><strong>user_activity</strong>:  User's registered activity (student, apprentice, unemployed etc). Registered at first grant deposit and updated when the user applies for its GRANT_18. </p>
+<p><strong>user_age</strong>:  Current age of the user. </p>
 <p><strong>user_birth_date</strong>:  Birth date of the user. </p>
-<p><strong>user_civility</strong>:  Civility status of the user. </p>
-<p><strong>user_city</strong>:  City where the user resides. </p>
+<p><strong>user_civility</strong>:  Registered civility of the user (male, female). </p>
+<p><strong>user_city</strong>:  City associated with the user's registered address. </p>
 <p><strong>user_creation_date</strong>:  Date when the user account was created. </p>
-<p><strong>user_department_code</strong>:  Code representing the user's department. </p>
-<p><strong>user_department_name</strong>:  Name of the user's department. </p>
-<p><strong>user_density_label</strong>:  Density label of the user's area. </p>
-<p><strong>user_density_level</strong>:  Density level of the user's area. </p>
-<p><strong>user_epci</strong>:  EPCI code associated with the user. </p>
+<p><strong>user_department_code</strong>:  Department code associated with the user's registered address. </p>
+<p><strong>user_department_name</strong>:  Department name associated with the user's registered address. </p>
+<p><strong>user_density_label</strong>:  String column.Density label (urban, rural) of the user's registered address. </p>
+<p><strong>user_density_level</strong>:  Integer column. Density level of the user's registered address. Ranges from 1 (highly urban) to 7 (highly rural). </p>
+<p><strong>user_epci</strong>:  EPCI code associated with the user's registered address. An EPCI is a French public body enabling municipalities to collaborate on shared local services and development. </p>
 <p><strong>user_humanized_id</strong>:  Human-readable identifier for the user. </p>
 <p><strong>user_id</strong>:  Unique identifier for a user. </p>
-<p><strong>user_iris_internal_id</strong>:  Internal IRIS identifier for the user. </p>
-<p><strong>user_is_active</strong>:  Indicates if the user is currently active. </p>
-<p><strong>user_is_current_beneficiary</strong>:  Indicates if the user is a current beneficiary. </p>
-<p><strong>user_is_in_education</strong>:  Indicates if the user is in education (University student, High school student...) </p>
-<p><strong>user_is_in_qpv</strong>:  Indicates if the user is in a priority neighborhood (QPV). </p>
-<p><strong>user_is_priority_public</strong>:  Indicates if the user is part of the priority public. </p>
-<p><strong>user_is_unemployed</strong>:  Indicates if the user is unemployed. </p>
-<p><strong>user_macro_density_label</strong>:  Macro density label of the user's area. </p>
-<p><strong>user_postal_code</strong>:  Postal code of the user's residence. </p>
-<p><strong>user_region_name</strong>:  Region name where the user resides. </p>
-<p><strong>user_school_type</strong>:  Type of school the user is associated with. </p>
-<p><strong>user_seniority</strong>:  Seniority of the user in days. </p>
-<p><strong>user_suspension_reason</strong>:  Reason for the user's suspension. </p>
-<p><strong>user_has_enabled_marketing_email</strong>:  Indicates if the user has enabled marketing emails. </p>
-<p><strong>user_has_enabled_marketing_push</strong>:  Indicates if the user has enabled marketing push. </p>
-<p><strong>user_affiliation_rank</strong>:  Rank of the user's affiliation. </p>
+<p><strong>user_iris_internal_id</strong>:  Internal IRIS identifier associated with the user's registered address. IRIS (Ilots Regroupés pour l'Information Statistique) are small, standardized geographic units used for detailed statistical analysis in France. </p>
+<p><strong>user_is_active</strong>:  Boolean. Indicates if the user's account is currently active (the user can access it, irrespective of grant status). </p>
+<p><strong>user_is_current_beneficiary</strong>:  Boolean. Indicates if the user still has available grant to use. </p>
+<p><strong>user_is_in_education</strong>:  Boolean. Indicates if the user is in education (University student, High school student...), as per its registered activity. </p>
+<p><strong>user_is_in_qpv</strong>:  Boolean. Indicates if the user's registered address is in a priority neighborhood (QPV). </p>
+<p><strong>user_is_priority_public</strong>:  Boolean. Indicates if the user considered as a pass Culture priority public (users that are either residing in a rural area, in a QPV or are not in education). </p>
+<p><strong>user_is_unemployed</strong>:  Boolean. Indicates if the user is unemployed as per its registered activity. </p>
+<p><strong>user_macro_density_label</strong>:  Macro density label of the user's registered address. </p>
+<p><strong>user_postal_code</strong>:  Postal code of the user's registered address. </p>
+<p><strong>user_region_name</strong>:  Region name of the user's registered address. </p>
+<p><strong>user_school_type</strong>:  Type of school the user is enrolled in (public, private etc), for GRANT_15_17 users. </p>
+<p><strong>user_seniority</strong>:  Days between user account creation date and current date. </p>
+<p><strong>user_suspension_reason</strong>:  Reason for the user's suspension (upon user request, fraud suspicion etc). </p>
+<p><strong>user_has_enabled_marketing_email</strong>:  Indicates if the user has accepted to receive marketing emails. </p>
+<p><strong>user_has_enabled_marketing_push</strong>:  Indicates if the user has accepted to received marketing push. </p>
 <p><strong>user_role</strong>:  Role assigned to the user (GRANT_18, GRANT_15_17, PRO, ADMIN). </p>
-<p><strong>user_address</strong>:  Address of the user. </p>
+<p><strong>user_address</strong>:  User's registered address. Registered at first grant deposit and updated when the user applies for its GRANT_18. </p>
 <p><strong>user_last_connection_date</strong>:  Date of the user's last connection. </p>
-<p><strong>user_is_email_validated</strong>:  Indicates if the user's email is validated. </p>
-<p><strong>user_has_seen_pro_tutorials</strong>:  Indicates if the user has seen professional tutorials. </p>
-<p><strong>user_phone_validation_status</strong>:  Status of the user's phone validation. </p>
+<p><strong>user_is_email_validated</strong>:  Boolean. Indicates if the user's email is validated. </p>
+<p><strong>user_has_seen_pro_tutorials</strong>:  Boolean. Indicates if the user has seen professional tutorials. </p>
+<p><strong>user_phone_validation_status</strong>:  Status of the user's phone validation step. </p>
 <p><strong>user_has_validated_email</strong>:  Indicates if the user has validated their email. </p>
-<p><strong>user_currently_subscribed_themes</strong>:  Users themes subscribed page. </p>
-<p><strong>user_is_theme_subscribed</strong>:  Users has subscribed to a page. </p>
+<p><strong>user_currently_subscribed_themes</strong>:  Users themes subscribed. Users can subscribe to themes (cinema, music) to receive custom communication related to those themes. </p>
+<p><strong>user_is_theme_subscribed</strong>:  Boolean. Indicates whether a user has subscribed to at least one theme. </p>
 <p><strong>user_last_deposit_expiration_date</strong>:  Expiration date of the user's last deposit. </p>
-<p><strong>user_last_deposit_amount</strong>:  Amount of the last deposit made by the user. </p>
-<p><strong>user_first_deposit_type</strong>:  Type of the user's first deposit. </p>
+<p><strong>user_last_deposit_amount</strong>:  Amount of the last deposit received by the user. </p>
+<p><strong>user_first_deposit_type</strong>:  Type of the user's first deposit (GRANT_18 or GRANT_15_17). </p>
 <p><strong>user_current_deposit_type</strong>:  Type of the user's current deposit. </p>
 <p><strong>days_between_activation_date_and_first_booking_date</strong>:  Number of days between the user's activation date and their first booking date. </p>
 <p><strong>days_between_activation_date_and_first_booking_paid</strong>:  Number of days between the user's activation date and their first paid booking. </p>
-<p><strong>user_first_booking_type</strong>:  Type of the user's first booking. </p>
-<p><strong>user_first_paid_booking_type</strong>:  Type of the user's first paid booking. </p>
-<p><strong>user_first_deposit_amount</strong>:  Amount of the user's first deposit. </p>
+<p><strong>user_first_booking_type</strong>:  Offer category of the user's first booking. </p>
+<p><strong>user_first_paid_booking_type</strong>:  Offer category of the user's first paid booking. </p>
+<p><strong>user_first_deposit_amount</strong>:  Amount of the user's first deposit received. </p>
 
 
 
@@ -2997,13 +3019,13 @@
         
         
           
-          <a href="../column__venue/" class="md-footer__link md-footer__link--next" aria-label="Next: Column  venue">
+          <a href="../column__user_offerer/" class="md-footer__link md-footer__link--next" aria-label="Next: Column  user offerer">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Column  venue
+                Column  user offerer
               </div>
             </div>
             <div class="md-footer__button md-icon">

@@ -1805,6 +1805,8 @@
       
         
       
+        
+      
     
     
       
@@ -2207,6 +2209,27 @@
   
   <span class="md-ellipsis">
     Column  user
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../glossary/applicative_database/column__user_offerer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Column  user offerer
   </span>
   
 
@@ -3059,7 +3082,7 @@ A booking is made by a user (identified via a user_id), using its grant (identif
 <tr>
 <td style="text-align: left;">stock_beginning_date</td>
 <td style="text-align: left;">DATETIME</td>
-<td style="text-align: left;">The date when the stock becomes available.</td>
+<td style="text-align: left;">Timestamp of the beginning of the event. Only for event offers.</td>
 </tr>
 <tr>
 <td style="text-align: left;">stock_id</td>
@@ -3084,12 +3107,12 @@ A booking is made by a user (identified via a user_id), using its grant (identif
 <tr>
 <td style="text-align: left;">venue_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Label of the venue.</td>
+<td style="text-align: left;">Label of the venue. The label is appended by the Ministry as token of quality and standing in its category.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_type_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Type label of the venue.</td>
+<td style="text-align: left;">Type of the venue ('Musée', 'Cinéma','Librairie', etc). Selected by the partner in a drop-down list.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_id</td>
@@ -3104,7 +3127,7 @@ A booking is made by a user (identified via a user_id), using its grant (identif
 <tr>
 <td style="text-align: left;">venue_department_code</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Department code where the venue is located.</td>
+<td style="text-align: left;">Department code of the venue.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_region_name</td>
@@ -3124,22 +3147,22 @@ A booking is made by a user (identified via a user_id), using its grant (identif
 <tr>
 <td style="text-align: left;">venue_density_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Density label of the venue's location.</td>
+<td style="text-align: left;">Detailed density label of the venue's location.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_macro_density_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Macro density label of the venue's location.</td>
+<td style="text-align: left;">Macro density label of the venue's location (urbain, rural)</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_academy_name</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Academy name associated with the venue.</td>
+<td style="text-align: left;">Academy of the venue.</td>
 </tr>
 <tr>
 <td style="text-align: left;">offerer_id</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Unique identifier for the offerer.</td>
+<td style="text-align: left;">Unique identifier of the offerer.</td>
 </tr>
 <tr>
 <td style="text-align: left;">offerer_name</td>
@@ -3179,42 +3202,42 @@ A booking is made by a user (identified via a user_id), using its grant (identif
 <tr>
 <td style="text-align: left;">user_postal_code</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Postal code of the user's residence.</td>
+<td style="text-align: left;">Postal code of the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_department_code</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Code representing the user's department.</td>
+<td style="text-align: left;">Department code associated with the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_region_name</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Region name where the user resides.</td>
+<td style="text-align: left;">Region name of the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_city</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">City where the user resides.</td>
+<td style="text-align: left;">City associated with the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_epci</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">EPCI code associated with the user.</td>
+<td style="text-align: left;">EPCI code associated with the user's registered address. An EPCI is a French public body enabling municipalities to collaborate on shared local services and development.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_academy_name</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Academy name associated with the user.</td>
+<td style="text-align: left;">Academy name associated with the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_density_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Density label of the user's area.</td>
+<td style="text-align: left;">String column.Density label (urban, rural) of the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_macro_density_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Macro density label of the user's area.</td>
+<td style="text-align: left;">Macro density label of the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_creation_date</td>
@@ -3224,17 +3247,17 @@ A booking is made by a user (identified via a user_id), using its grant (identif
 <tr>
 <td style="text-align: left;">user_activity</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Activity status of the user.</td>
+<td style="text-align: left;">User's registered activity (student, apprentice, unemployed etc). Registered at first grant deposit and updated when the user applies for its GRANT_18.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_civility</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Civility status of the user.</td>
+<td style="text-align: left;">Registered civility of the user (male, female).</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_age</td>
 <td style="text-align: left;">NUMERIC</td>
-<td style="text-align: left;">Age of the user.</td>
+<td style="text-align: left;">Current age of the user.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_birth_date</td>
@@ -3244,22 +3267,22 @@ A booking is made by a user (identified via a user_id), using its grant (identif
 <tr>
 <td style="text-align: left;">user_is_active</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the user is currently active.</td>
+<td style="text-align: left;">Boolean. Indicates if the user's account is currently active (the user can access it, irrespective of grant status).</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_is_in_qpv</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the user is in a priority neighborhood (QPV).</td>
+<td style="text-align: left;">Boolean. Indicates if the user's registered address is in a priority neighborhood (QPV).</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_is_unemployed</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the user is unemployed.</td>
+<td style="text-align: left;">Boolean. Indicates if the user is unemployed as per its registered activity.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_is_priority_public</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the user is part of the priority public.</td>
+<td style="text-align: left;">Boolean. Indicates if the user considered as a pass Culture priority public (users that are either residing in a rural area, in a QPV or are not in education).</td>
 </tr>
 <tr>
 <td style="text-align: left;">item_id</td>
@@ -3279,7 +3302,7 @@ A booking is made by a user (identified via a user_id), using its grant (identif
 <tr>
 <td style="text-align: left;">user_iris_internal_id</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Internal IRIS identifier for the user.</td>
+<td style="text-align: left;">Internal IRIS identifier associated with the user's registered address. IRIS (Ilots Regroupés pour l'Information Statistique) are small, standardized geographic units used for detailed statistical analysis in France.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_iris_internal_id</td>
@@ -3294,32 +3317,32 @@ A booking is made by a user (identified via a user_id), using its grant (identif
 <tr>
 <td style="text-align: left;">venue_department_name</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Department name where the venue is located.</td>
+<td style="text-align: left;">Department name where of the venue.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_density_level</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Density level of the venue.</td>
+<td style="text-align: left;">ID of the density level of the venue (cf venue_density_label).</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_is_permanent</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the venue is permanent.</td>
+<td style="text-align: left;">Indicates if the venue is permanent. A permanent venue is a venue that can receive public permanently, that can propose offers, and that is managed by the partner. Permanent venues exemple : a library, a cinema. Non permanent venues example : a public garden that hosted a festival once, or a theater that hosted a concert once - it can be permanent for the partner who owns the theater, but not for the partner who is hosted once in this place.</td>
 </tr>
 <tr>
 <td style="text-align: left;">offer_sub_type_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Deprecated: Legacy identifier. Prefer using GTL.</td>
+<td style="text-align: left;">Deprecated: Defines the offer sub genre for music, books and movies. Defines the offer show sub type for shows.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_activation_date</td>
 <td style="text-align: left;">DATETIME</td>
-<td style="text-align: left;">Date when the user was activated.</td>
+<td style="text-align: left;">Date when the user's account was activated. Corresponds to the first booking date for users in experiment phase, and to user creation date for all users after the experiment phase.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_is_in_education</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the user is in education (University student, High school student...)</td>
+<td style="text-align: left;">Boolean. Indicates if the user is in education (University student, High school student...), as per its registered activity.</td>
 </tr>
 <tr>
 <td style="text-align: left;">first_deposit_creation_date</td>

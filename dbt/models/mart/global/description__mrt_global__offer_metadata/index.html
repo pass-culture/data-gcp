@@ -1805,6 +1805,8 @@
       
         
       
+        
+      
     
     
       
@@ -2207,6 +2209,27 @@
   
   <span class="md-ellipsis">
     Column  user
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../glossary/applicative_database/column__user_offerer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Column  user offerer
   </span>
   
 
@@ -2960,6 +2983,11 @@
 A lot of columns are only related to one cultural activity.
 There is also a lot of legacy columns that might change due to extensive work to improve the quality of our product metadata.</p>
 
+<p>Offer metadata can either be manually provided by cultural partners upon offer creation, or automatically provided for synchronized offers.
+For synchronized offers, offer genres for books and music discs draw on the concept of Genre Tite Live (GTL).
+Titelive is a French company providing digital solutions for bookstores, publishers, and libraries to manage inventory, sales, and online catalogs.
+The concept of "Genre Tite Live" (GTL) refers to a classification system used by Titelive to categorize books and music cds based on their genre, to organize and manage collections more effectively.
+The GTL classification system consists of several hierarchical levels to categorize books and music cds, to provide a structured way to organize and retrieve products based on their content and audience.</p>
 <h2 id="table-description">Table description</h2>
 <table>
 <thead>
@@ -2998,7 +3026,7 @@ There is also a lot of legacy columns that might change due to extensive work to
 <tr>
 <td style="text-align: left;">offer_type_domain</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Domain type of the offer.</td>
+<td style="text-align: left;">Deprecated: The offer's category type,as many metadata info are specific to certain offer types. Can be either "BOOK", "MUSIC", "SHOW" or "MOVIE".</td>
 </tr>
 <tr>
 <td style="text-align: left;">offer_name</td>
@@ -3008,7 +3036,7 @@ There is also a lot of legacy columns that might change due to extensive work to
 <tr>
 <td style="text-align: left;">offer_description</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Description of the offer.</td>
+<td style="text-align: left;">Offer description (synopsis, further details on the show) as provided by the cultural partner and displayed in app.</td>
 </tr>
 <tr>
 <td style="text-align: left;">image_url</td>
@@ -3018,7 +3046,7 @@ There is also a lot of legacy columns that might change due to extensive work to
 <tr>
 <td style="text-align: left;">offer_type_id</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Deprecated: Legacy identifier. Prefer using GTL.</td>
+<td style="text-align: left;">Deprecated: Unique identifier of the offer's type. Currently available to describe either music genres (pop, rock) or show type (opera, circus).</td>
 </tr>
 <tr>
 <td style="text-align: left;">offer_sub_type_id</td>
@@ -3028,47 +3056,47 @@ There is also a lot of legacy columns that might change due to extensive work to
 <tr>
 <td style="text-align: left;">author</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Author of the reserved book, if applicable.</td>
+<td style="text-align: left;">The offer's author (a book's author, a music's singer, a movie's director).</td>
 </tr>
 <tr>
 <td style="text-align: left;">performer</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Performer or group for the reserved musical offer, if applicable.</td>
+<td style="text-align: left;">Performers involved in this offer.</td>
 </tr>
 <tr>
 <td style="text-align: left;">titelive_gtl_id</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Titelive GTL identifier, if applicable.</td>
+<td style="text-align: left;">Unique identifier of the Genre Tite Live (GTL) associated to this offer.</td>
 </tr>
 <tr>
 <td style="text-align: left;">gtl_type</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Is Titelive GTL related to BOOK or CD/Vinyle.</td>
+<td style="text-align: left;">Type of GTL associated to this offer. Can either be "BOOK" or "MUSIC"</td>
 </tr>
 <tr>
 <td style="text-align: left;">gtl_label_level_1</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Label of level 1 provided by Titelive.</td>
+<td style="text-align: left;">Name of the level 1 GTL associated to this offer (for example, "Littératurefor a book or "Pop" for music.)</td>
 </tr>
 <tr>
 <td style="text-align: left;">gtl_label_level_2</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Label of level 2 provided by Titelive.</td>
+<td style="text-align: left;">Name of the level 2 GTL associated to this offer (for example, "Poésie" for a book or "Brit Pop" for music.)</td>
 </tr>
 <tr>
 <td style="text-align: left;">gtl_label_level_3</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Label of level 3 provided by Titelive.</td>
+<td style="text-align: left;">Name of the level 3 GTL associated to this offer (for example, "Haiku" for a book). Only available for books.</td>
 </tr>
 <tr>
 <td style="text-align: left;">gtl_label_level_4</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Label of level 4 provided by Titelive.</td>
+<td style="text-align: left;">Name of the level 4 GTL associated to this offer. Only available for books.</td>
 </tr>
 <tr>
 <td style="text-align: left;">offer_type_label</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Deprecated: Legacy identifier. Prefer using GTL.</td>
+<td style="text-align: left;">Deprecated: Defines the offer genre for music, books and movies. Defines the offer show type for shows.</td>
 </tr>
 <tr>
 <td style="text-align: left;">offer_type_labels</td>
@@ -3078,7 +3106,7 @@ There is also a lot of legacy columns that might change due to extensive work to
 <tr>
 <td style="text-align: left;">offer_sub_type_label</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Deprecated: Legacy identifier. Prefer using GTL.</td>
+<td style="text-align: left;">Deprecated: Defines the offer sub genre for music, books and movies. Defines the offer show sub type for shows.</td>
 </tr>
 </tbody>
 </table>

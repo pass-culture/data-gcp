@@ -1805,6 +1805,8 @@
       
         
       
+        
+      
     
     
       
@@ -2207,6 +2209,27 @@
   
   <span class="md-ellipsis">
     Column  user
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../glossary/applicative_database/column__user_offerer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Column  user offerer
   </span>
   
 
@@ -2991,82 +3014,82 @@
 <tr>
 <td style="text-align: left;">user_civility</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Civility status of the user.</td>
+<td style="text-align: left;">Registered civility of the user (male, female).</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_region_name</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Region name where the user resides.</td>
+<td style="text-align: left;">Region name of the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_postal_code</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Postal code of the user's residence.</td>
+<td style="text-align: left;">Postal code of the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_city</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">City where the user resides.</td>
+<td style="text-align: left;">City associated with the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_epci</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">EPCI code associated with the user.</td>
+<td style="text-align: left;">EPCI code associated with the user's registered address. An EPCI is a French public body enabling municipalities to collaborate on shared local services and development.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_academy_name</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Academy name associated with the user.</td>
+<td style="text-align: left;">Academy name associated with the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_density_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Density label of the user's area.</td>
+<td style="text-align: left;">String column.Density label (urban, rural) of the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_macro_density_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Macro density label of the user's area.</td>
+<td style="text-align: left;">Macro density label of the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_density_level</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Density level of the user's area.</td>
+<td style="text-align: left;">Integer column. Density level of the user's registered address. Ranges from 1 (highly urban) to 7 (highly rural).</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_is_in_qpv</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the user is in a priority neighborhood (QPV).</td>
+<td style="text-align: left;">Boolean. Indicates if the user's registered address is in a priority neighborhood (QPV).</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_is_unemployed</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the user is unemployed.</td>
+<td style="text-align: left;">Boolean. Indicates if the user is unemployed as per its registered activity.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_is_in_education</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the user is in education (University student, High school student...)</td>
+<td style="text-align: left;">Boolean. Indicates if the user is in education (University student, High school student...), as per its registered activity.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_is_priority_public</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the user is part of the priority public.</td>
+<td style="text-align: left;">Boolean. Indicates if the user considered as a pass Culture priority public (users that are either residing in a rural area, in a QPV or are not in education).</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_department_code</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Code representing the user's department.</td>
+<td style="text-align: left;">Department code associated with the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_department_name</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Name of the user's department.</td>
+<td style="text-align: left;">Department name associated with the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_age</td>
 <td style="text-align: left;">INT64</td>
-<td style="text-align: left;">Age of the user.</td>
+<td style="text-align: left;">Current age of the user.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_creation_date</td>

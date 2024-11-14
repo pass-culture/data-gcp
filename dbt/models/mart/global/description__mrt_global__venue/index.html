@@ -1805,6 +1805,8 @@
       
         
       
+        
+      
     
     
       
@@ -2207,6 +2209,27 @@
   
   <span class="md-ellipsis">
     Column  user
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../glossary/applicative_database/column__user_offerer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Column  user offerer
   </span>
   
 
@@ -2956,7 +2979,8 @@
 
 
 <h1>Table: Venue Model</h1>
-<p>The <code>mrt_global__venue</code> table provides detailed information about venues, including their location, capacity, and associated offers.</p>
+<p>The <code>mrt_global__venue</code> table provides detailed information about venues, including their location, capacity, and associated offers.
+A venue is managed by an offerer. It can be a physical place (library, cinema, theater) or a virtual platform that proposes digital offers (streaming, audios). </p>
 
 <h2 id="table-description">Table description</h2>
 <table>
@@ -2981,12 +3005,12 @@
 <tr>
 <td style="text-align: left;">venue_public_name</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Public name of the venue.</td>
+<td style="text-align: left;">Name of the venue displayed on the application. Can be different of the venue_name if the partner want display a more descriptive name for example.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_booking_email</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Email used for booking at the venue.</td>
+<td style="text-align: left;">Email displayed on the application, can be used to book the offer or reach to the partner.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_street</td>
@@ -3006,7 +3030,7 @@
 <tr>
 <td style="text-align: left;">venue_department_code</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Department code where the venue is located.</td>
+<td style="text-align: left;">Department code of the venue.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_postal_code</td>
@@ -3026,22 +3050,22 @@
 <tr>
 <td style="text-align: left;">venue_is_virtual</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the venue is virtual.</td>
+<td style="text-align: left;">Indicates if the venue is virtual. Each offerer has a virtual venue, it is only used to publish digital offers.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_managing_offerer_id</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">ID of the managing offerer for the venue.</td>
+<td style="text-align: left;">ID of the offerer who manage the venue. One offerer can have multiple venues.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_creation_date</td>
 <td style="text-align: left;">DATETIME</td>
-<td style="text-align: left;">Date when the venue was created.</td>
+<td style="text-align: left;">Date when the venue was created on the application.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_is_permanent</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the venue is permanent.</td>
+<td style="text-align: left;">Indicates if the venue is permanent. A permanent venue is a venue that can receive public permanently, that can propose offers, and that is managed by the partner. Permanent venues exemple : a library, a cinema. Non permanent venues example : a public garden that hosted a festival once, or a theater that hosted a concert once - it can be permanent for the partner who owns the theater, but not for the partner who is hosted once in this place.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_is_acessibility_synched</td>
@@ -3051,17 +3075,17 @@
 <tr>
 <td style="text-align: left;">venue_type_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Type label of the venue.</td>
+<td style="text-align: left;">Type of the venue ('Musée', 'Cinéma','Librairie', etc). Selected by the partner in a drop-down list.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Label of the venue.</td>
+<td style="text-align: left;">Label of the venue. The label is appended by the Ministry as token of quality and standing in its category.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_humanized_id</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Human-readable identifier for the venue.</td>
+<td style="text-align: left;">Unique identifier of the venue.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_backoffice_link</td>
@@ -3081,47 +3105,47 @@
 <tr>
 <td style="text-align: left;">venue_density_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Density label of the venue's location.</td>
+<td style="text-align: left;">Detailed density label of the venue's location.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_macro_density_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Macro density label of the venue's location.</td>
+<td style="text-align: left;">Macro density label of the venue's location (urbain, rural)</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_academy_name</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Academy name associated with the venue.</td>
+<td style="text-align: left;">Academy of the venue.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_targeted_audience</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Targeted audience for the venue.</td>
+<td style="text-align: left;">Targeted audience for the venue : individual, educational, both.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_description</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Description of the venue.</td>
+<td style="text-align: left;">Description of the venue written by the partner.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_withdrawal_details</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Details for withdrawal at the venue.</td>
+<td style="text-align: left;">Facultative description of the withdrawal in the venue.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_contact_phone_number</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Contact phone number for the venue.</td>
+<td style="text-align: left;">Contact phone number of the venue displayed on the application (venue page).</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_contact_email</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Contact email for the venue.</td>
+<td style="text-align: left;">Contact email for the venue displayed on the application (venue page).</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_contact_website</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Contact website for the venue.</td>
+<td style="text-align: left;">Contact website for the venue displayed on the application.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_pc_pro_link</td>
@@ -3371,7 +3395,7 @@
 <tr>
 <td style="text-align: left;">offerer_id</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Unique identifier for the offerer.</td>
+<td style="text-align: left;">Unique identifier of the offerer.</td>
 </tr>
 <tr>
 <td style="text-align: left;">offerer_name</td>
@@ -3386,7 +3410,7 @@
 <tr>
 <td style="text-align: left;">offerer_is_active</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the offerer is active.</td>
+<td style="text-align: left;">Indicates if the offerer is active. Returns 'true' if offerer is active. Returns 'false' if the offerer has been deactivated.</td>
 </tr>
 <tr>
 <td style="text-align: left;">dms_accepted_at</td>

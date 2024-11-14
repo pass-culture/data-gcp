@@ -1753,6 +1753,8 @@
       
         
       
+        
+      
     
     
       
@@ -2163,6 +2165,27 @@
   
   <span class="md-ellipsis">
     Column  user
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../column__user_offerer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Column  user offerer
   </span>
   
 
@@ -2896,22 +2919,22 @@
 
   <h1>Column  offerer</h1>
 
-<p><strong>offerer_id</strong>:  Unique identifier for the offerer. </p>
+<p><strong>offerer_id</strong>:  Unique identifier of the offerer. </p>
 <p><strong>offerer_name</strong>:  Name of the offerer. </p>
-<p><strong>offerer_creation_date</strong>:  Date when the offerer was created. </p>
-<p><strong>offerer_validation_date</strong>:  Date when the offerer was validated. </p>
+<p><strong>offerer_creation_date</strong>:  Date when the offerer was created. Equals to the registration date of the offerer on the professional portal. </p>
+<p><strong>offerer_validation_date</strong>:  Date when the offerer was validated (validation_status = ‘VALIDATED’). </p>
 <p><strong>offerer_postal_code</strong>:  Postal code of the offerer. </p>
 <p><strong>offerer_department_code</strong>:  Department code of the offerer. </p>
-<p><strong>offerer_academy_name</strong>:  Academy name associated with the offerer. </p>
+<p><strong>offerer_academy_name</strong>:  Academy name of the offerer. </p>
 <p><strong>offerer_siren</strong>:  SIREN number of the offerer. </p>
 <p><strong>offerer_region_name</strong>:  Region name of the offerer. </p>
 <p><strong>offerer_city</strong>:  City of the offerer. </p>
-<p><strong>offerer_humanized_id</strong>:  Human-readable identifier for the offerer. </p>
+<p><strong>offerer_humanized_id</strong>:  Unique identifier of the offerer used on Flaskadmin and Matomo. </p>
 <p><strong>offerer_legal_unit_business_activity_code</strong>:  Business activity code of the legal unit of the offerer. </p>
 <p><strong>offerer_legal_unit_business_activity_label</strong>:  Business activity label of the legal unit of the offerer. </p>
 <p><strong>offerer_legal_unit_legal_category_code</strong>:  Legal category code of the legal unit of the offerer. </p>
 <p><strong>offerer_legal_unit_legal_category_label</strong>:  Legal category label of the legal unit of the offerer. </p>
-<p><strong>offerer_is_local_authority</strong>:  Indicates if the offerer is a local authority. </p>
+<p><strong>offerer_is_local_authority</strong>:  Indicates if the offerer is a local authority or not. </p>
 <p><strong>offerer_total_managed_venues</strong>:  Total number of venues managed by the offerer. </p>
 <p><strong>offerer_total_physical_managed_venues</strong>:  Total number of physical venues managed by the offerer. </p>
 <p><strong>offerer_total_permanent_managed_venues</strong>:  Total number of permanent venues managed by the offerer. </p>
@@ -2921,7 +2944,7 @@
 <p><strong>offerer_is_reference_adage</strong>:  Indicates if the offerer is a reference in adage. </p>
 <p><strong>offerer_is_synchro_adage</strong>:  Indicates if the offerer is synchronized with adage. </p>
 <p><strong>offerer_validation_status</strong>:  Validation status of the offerer. </p>
-<p><strong>offerer_is_active</strong>:  Indicates if the offerer is active. </p>
+<p><strong>offerer_is_active</strong>:  Indicates if the offerer is active. Returns 'true' if offerer is active. Returns 'false' if the offerer has been deactivated.</p>
 <p><strong>offerer_rank_desc</strong>:  Offerer rank in descending order. </p>
 <p><strong>offerer_rank_asc</strong>:  Offerer rank in ascending order. </p>
 <p><strong>offerer_first_individual_offer_creation_date</strong>: The date when the offerer's first individual offer was created.</p>

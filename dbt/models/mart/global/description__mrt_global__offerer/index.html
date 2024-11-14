@@ -1805,6 +1805,8 @@
       
         
       
+        
+      
     
     
       
@@ -2207,6 +2209,27 @@
   
   <span class="md-ellipsis">
     Column  user
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../glossary/applicative_database/column__user_offerer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Column  user offerer
   </span>
   
 
@@ -2956,7 +2979,16 @@
 
 
 <h1>Offerer Model</h1>
-<p>The <code>mrt_global__offerer</code> table provides detailed information about offerers, including their identification, creation dates, and revenue metrics.</p>
+<p>The <code>mrt_global__offerer</code> table aims to list all the offerer (identifiable by a SIREN) registered on the Culture Pass, with information on:</p>
+<ul>
+<li>The nature of the offerer (name, geographical location, legal status)</li>
+<li>The activities of this offerer (creation of offers / bookings / revenue across each category)</li>
+</ul>
+<p>\
+<strong>Business Rules</strong>
+- Only active offerer (is_active = TRUE)
+- Only offerer approved through certification (validation_status = 'VALIDATED')
+- All activation statuses (including offerer that have never published an offer)</p>
 
 <h2 id="table-description">Table description</h2>
 <table>
@@ -2971,7 +3003,7 @@
 <tr>
 <td style="text-align: left;">offerer_id</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Unique identifier for the offerer.</td>
+<td style="text-align: left;">Unique identifier of the offerer.</td>
 </tr>
 <tr>
 <td style="text-align: left;">partner_id</td>
@@ -2986,17 +3018,17 @@
 <tr>
 <td style="text-align: left;">offerer_creation_date</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Date when the offerer was created.</td>
+<td style="text-align: left;">Date when the offerer was created. Equals to the registration date of the offerer on the professional portal.</td>
 </tr>
 <tr>
 <td style="text-align: left;">offerer_validation_date</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Date when the offerer was validated.</td>
+<td style="text-align: left;">Date when the offerer was validated (validation_status = ‘VALIDATED’).</td>
 </tr>
 <tr>
 <td style="text-align: left;">first_stock_creation_date</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Date of the first stock creation for the offerer.</td>
+<td style="text-align: left;">Date of the first stock creation of the offerer.</td>
 </tr>
 <tr>
 <td style="text-align: left;">first_individual_offer_creation_date</td>
@@ -3211,7 +3243,7 @@
 <tr>
 <td style="text-align: left;">academy_name</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Academy name associated with the offerer.</td>
+<td style="text-align: left;">Academy name of the offerer.</td>
 </tr>
 <tr>
 <td style="text-align: left;">legal_unit_business_activity_code</td>
@@ -3236,7 +3268,7 @@
 <tr>
 <td style="text-align: left;">is_local_authority</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Indicates if the offerer is a local authority.</td>
+<td style="text-align: left;">Indicates if the offerer is a local authority or not.</td>
 </tr>
 <tr>
 <td style="text-align: left;">total_managed_venues</td>
@@ -3261,7 +3293,7 @@
 <tr>
 <td style="text-align: left;">offerer_humanized_id</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Human-readable identifier for the offerer.</td>
+<td style="text-align: left;">Unique identifier of the offerer used on Flaskadmin and Matomo.</td>
 </tr>
 <tr>
 <td style="text-align: left;">first_dms_adage_status</td>

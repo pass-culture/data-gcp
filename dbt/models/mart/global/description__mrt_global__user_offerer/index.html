@@ -1807,6 +1807,8 @@
       
         
       
+        
+      
     
     
       
@@ -2209,6 +2211,27 @@
   
   <span class="md-ellipsis">
     Column  user
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../glossary/applicative_database/column__user_offerer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Column  user offerer
   </span>
   
 
@@ -2960,8 +2983,11 @@
 
 
 <h1>Table: Global Offerer</h1>
-<p>The <code>mrt_global__user_offerer</code> table provides a detailed view for users that are offerers (subscribed to pass.culture through the .pro part) even if they did not created any offer.</p>
+<p>The <code>mrt_global__user_offerer</code> table provides a detailed view of user accounts affiliated to or managing a cultural offerer (identified by an offerer_id). We thus have one row per user and offerer affiliation.
+Those accounts enable them to manage the said offerer (by creating and updating offers, managing bookings etc).</p>
 
+<p>Multiple users can be affiliated to the same offerer (for example, when a cultural offerer has various staff members) and a single user can be affiliated to multiple offerers.
+Only validated user - offerer affiliations are stored in this model (pending / rejected affiliations are excluded).</p>
 <h2 id="table-description">Table description</h2>
 <table>
 <thead>
@@ -2975,7 +3001,7 @@
 <tr>
 <td style="text-align: left;">offerer_id</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Unique identifier for the offerer.</td>
+<td style="text-align: left;">Unique identifier of the offerer.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_id</td>
@@ -2985,7 +3011,7 @@
 <tr>
 <td style="text-align: left;">user_affiliation_rank</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Rank of the user's affiliation.</td>
+<td style="text-align: left;">This column assigns a ranking to each user based on the order of their account creation date within each offerer's group. If user_affiliation_rank equals 1, it means this user was the first registered user for a said offerer.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_creation_date</td>
@@ -2995,12 +3021,12 @@
 <tr>
 <td style="text-align: left;">user_department_code</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Code representing the user's department.</td>
+<td style="text-align: left;">Department code associated with the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_postal_code</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Postal code of the user's residence.</td>
+<td style="text-align: left;">Postal code of the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_role</td>
@@ -3010,12 +3036,12 @@
 <tr>
 <td style="text-align: left;">user_address</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Address of the user.</td>
+<td style="text-align: left;">User's registered address. Registered at first grant deposit and updated when the user applies for its GRANT_18.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_city</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">City where the user resides.</td>
+<td style="text-align: left;">City associated with the user's registered address.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_last_connection_date</td>
@@ -3025,22 +3051,22 @@
 <tr>
 <td style="text-align: left;">user_is_email_validated</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Indicates if the user's email is validated.</td>
+<td style="text-align: left;">Boolean. Indicates if the user's email is validated.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_is_active</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Indicates if the user is currently active.</td>
+<td style="text-align: left;">Boolean. Indicates if the user's account is currently active (the user can access it, irrespective of grant status).</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_has_seen_pro_tutorials</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Indicates if the user has seen professional tutorials.</td>
+<td style="text-align: left;">Boolean. Indicates if the user has seen professional tutorials.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_phone_validation_status</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Status of the user's phone validation.</td>
+<td style="text-align: left;">Status of the user's phone validation step.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_has_validated_email</td>
@@ -3050,12 +3076,12 @@
 <tr>
 <td style="text-align: left;">user_has_enabled_marketing_push</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Indicates if the user has enabled marketing push.</td>
+<td style="text-align: left;">Indicates if the user has accepted to received marketing push.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_has_enabled_marketing_email</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Indicates if the user has enabled marketing emails.</td>
+<td style="text-align: left;">Indicates if the user has accepted to receive marketing emails.</td>
 </tr>
 </tbody>
 </table>

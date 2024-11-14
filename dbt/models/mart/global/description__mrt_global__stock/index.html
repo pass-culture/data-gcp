@@ -1805,6 +1805,8 @@
       
         
       
+        
+      
     
     
       
@@ -2207,6 +2209,27 @@
   
   <span class="md-ellipsis">
     Column  user
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../glossary/applicative_database/column__user_offerer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Column  user offerer
   </span>
   
 
@@ -2956,15 +2979,11 @@
 
 
 <h1>Table: Stock</h1>
-<p>The <code>mrt_global__stock</code> table provides a detailed view of stock-related data, capturing essential information about stock availability, pricing, and associated offers.</p>
-<h2>Main Fields</h2>
-<ul>
-<li><strong>stock_id</strong>: Unique identifier for the stock.</li>
-<li><strong>stock_beginning_date</strong>: The date when the stock becomes available.</li>
-<li><strong>stock_price</strong>: Price of the stock.</li>
-<li><strong>stock_quantity</strong>: Quantity of the stock available.</li>
-<li><strong>offer_id</strong>: Identifier for the offer associated with the stock.</li>
-</ul>
+<p>The <code>mrt_global__stock</code> table provides a detailed view of stock-related data, capturing essential information about stock availability, pricing, 
+and associated offers. A stock has one quantity : available quantity of goods or tickets (can be null if the quantity is unlimited - ex : digital goods),
+a price, and (only for events) a date.
+One stock is linked to one offer, but one offer can be linked to several stocks, because an offer can have
+several prices (ex : some theaters has different prices for a single show), several dates (ex : a cinema has different screenings for one movie).</p>
 
 <h2 id="table-description">Table description</h2>
 <table>
@@ -2984,42 +3003,42 @@
 <tr>
 <td style="text-align: left;">stock_beginning_date</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">The date when the stock becomes available.</td>
+<td style="text-align: left;">Timestamp of the beginning of the event. Only for event offers.</td>
 </tr>
 <tr>
 <td style="text-align: left;">stock_last_provider_id</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Identifier for the last provider of the stock.</td>
+<td style="text-align: left;">Identifier of the provider that synchronised this stock. Only for the synchronised offers.</td>
 </tr>
 <tr>
 <td style="text-align: left;">stock_booking_limit_date</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">The last date when the stock can be booked.</td>
+<td style="text-align: left;">Timestamp that specifies when it is no longer possible to book the offer linked to this stock.</td>
 </tr>
 <tr>
 <td style="text-align: left;">stock_creation_date</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">The date when the stock was created.</td>
+<td style="text-align: left;">Creation date of the stock.</td>
 </tr>
 <tr>
 <td style="text-align: left;">stock_features</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Features associated with the stock.</td>
+<td style="text-align: left;">Movie features only for synchronised cinema screening offers (ex : VO, VF, 3D). Can be a list if several features applies to the stock.</td>
 </tr>
 <tr>
 <td style="text-align: left;">stock_price</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Price of the stock.</td>
+<td style="text-align: left;">Price of the stock. O if free.</td>
 </tr>
 <tr>
 <td style="text-align: left;">stock_quantity</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Quantity of the stock available.</td>
+<td style="text-align: left;">Total quantity that had been available when the stock is created. Constant. If null, the quantity is unlimited (ex : digital offers).</td>
 </tr>
 <tr>
 <td style="text-align: left;">total_available_stock</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Total available stock.</td>
+<td style="text-align: left;">Quantity of remaining stock. (stock_quantity - non cancelled bookings)</td>
 </tr>
 <tr>
 <td style="text-align: left;">total_cancelled_bookings</td>
@@ -3059,7 +3078,7 @@
 <tr>
 <td style="text-align: left;">offerer_id</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Unique identifier for the offerer.</td>
+<td style="text-align: left;">Unique identifier of the offerer.</td>
 </tr>
 <tr>
 <td style="text-align: left;">partner_id</td>
@@ -3074,7 +3093,7 @@
 <tr>
 <td style="text-align: left;">price_category_label</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Label for the price category.</td>
+<td style="text-align: left;">Label of the price category. Description written by the cultural partner of the price category of this stock (ex : "Pass 2 jours", "Prix +18 ans"). Null if there is no specific price category for the offer.</td>
 </tr>
 <tr>
 <td style="text-align: left;">price_category_label_id</td>
@@ -3084,7 +3103,7 @@
 <tr>
 <td style="text-align: left;">venue_department_code</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Department code where the venue is located.</td>
+<td style="text-align: left;">Department code of the venue.</td>
 </tr>
 </tbody>
 </table>

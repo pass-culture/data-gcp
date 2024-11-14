@@ -7,6 +7,8 @@
     )
 }}
 
-select *
+select
+    * except (stock_modified_date),
+    cast(stock_modified_date as datetime) as stock_modified_date
 from {{ ref("snapshot_raw__stock") }}
 where {{ var("snapshot_filter") }}

@@ -11,7 +11,9 @@
         )
     }}
 
-    select *
+    select
+        * except (stock_modified_date),
+        cast(stock_modified_date as timestamp) as stock_modified_date
     from
         external_query(
             "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",
@@ -20,7 +22,7 @@
         CAST("idAtProviders" AS varchar(255)) AS stock_id_at_providers
         , "dateModifiedAtLastProvider" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS stock_modified_at_last_provider_date
         , CAST("id" AS varchar(255)) AS stock_id
-        , "dateModified"::TIMESTAMPTZ AS stock_modified_date
+        , "dateModified" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS stock_modified_date
         , "price" AS stock_price
         , "quantity" AS stock_quantity
         , "bookingLimitDatetime" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS stock_booking_limit_date

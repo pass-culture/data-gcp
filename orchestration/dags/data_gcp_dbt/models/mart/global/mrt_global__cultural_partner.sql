@@ -43,6 +43,13 @@ with
             main_venue_tag_per_offerer
             on main_venue_type_per_offerer.venue_managing_offerer_id
             = main_venue_tag_per_offerer.venue_managing_offerer_id
+    ),
+
+    main_venue_tag_per_venue as (  -- WIP, temporary fix to avoid duplicates
+        select venue_id, venue_tag_name
+        from {{ ref("mrt_global__venue_tag") }}
+        where venue_tag_category_label = "Comptage partenaire sectoriel"
+        qualify row_number() over (partition by venue_id order by venue_tag_name) = 1
     )
 
     (
@@ -186,9 +193,6 @@ union all
     left join
         {{ source("seed", "agg_partner_cultural_sector") }}
         on agg_partner_cultural_sector.partner_type = v.venue_type_label
-    left join
-        {{ ref("mrt_global__venue_tag") }} as vt
-        on v.venue_id = vt.venue_id
-        and vt.venue_tag_category_label = "Comptage partenaire sectoriel"
+    left join main_venue_tag_per_venue as vt on v.venue_id = vt.venue_id
     where venue_is_permanent
 )

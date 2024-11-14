@@ -10,7 +10,11 @@
         )
     }}
 
-    select *
+    select
+        * except (collective_offer_date_updated),
+        cast(
+            collective_offer_date_updated as timestamp
+        ) as collective_offer_date_updated
     from
         external_query(
             "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",

@@ -1,4 +1,5 @@
-select *
+select
+    * except (offer_updated_date), timestamp(offer_updated_date) as offer_updated_date
 from
     external_query(
         "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",
@@ -28,12 +29,12 @@ from
         , CAST("validation" AS varchar(255)) as offer_validation
         , CAST("lastValidationType" AS varchar(255)) as offer_last_validation_type
         , CAST("subcategoryId" AS varchar(255)) as offer_subcategoryId
-        , CAST("dateUpdated" AS TIMESTAMP) AT TIME ZONE \'Europe/Paris\'  as offer_updated_date
+        , "dateUpdated"  AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as offer_updated_date
         , "withdrawalType" AS offer_withdrawal_type
         , "withdrawalDelay" AS offer_withdrawal_delay
         , CAST("bookingContact" AS varchar(255)) as booking_contact
         , CAST("offererAddressId" AS varchar(255)) as offerer_address_id
     FROM public.offer
-    WHERE "dateUpdated" > NOW() - INTERVAL '3' DAY
+    WHERE "dateUpdated" > NOW() - INTERVAL '5' DAY
     '''
     )

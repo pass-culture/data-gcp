@@ -10,7 +10,7 @@
         )
     }}
 
-    select *
+    select * except (dateupdated), cast(dateupdated as timestamp) as dateupdated
     from
         external_query(
             "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",

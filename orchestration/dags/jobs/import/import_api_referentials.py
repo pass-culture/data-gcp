@@ -58,10 +58,10 @@ with DAG(
         git clone https://github.com/pass-culture/pass-culture-main.git
         cd pass-culture-main/api
         poetry export -f requirements.txt --output requirements.txt --without-hashes
+        source .venv/bin/activate
         uv pip install -r requirements.txt
         cd ..
-        cp -r api/src/pcapi/core ..
-        cp -r api/src/pcapi/domain ..
+        cp -r api/src/pcapi ..
     """
 
     install_dependencies = SSHGCEOperator(

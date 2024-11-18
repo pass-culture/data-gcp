@@ -314,6 +314,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         **DEFAULT_EXPORT,
         "PATH": "/opt/conda/bin:/opt/conda/condabin:+$PATH",
     }
+    UV_EXPORT = {**DEFAULT_EXPORT, "PATH": "$HOME/.local/bin:$PATH"}
 
     @apply_defaults
     def __init__(
@@ -344,7 +345,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         environment = (
             dict(self.CONDA_EXPORT, **self.environment)
             if self.installer == "conda"
-            else dict(self.DEFAULT_EXPORT, **self.environment)
+            else dict(self.UV_EXPORT, **self.environment)
         )
         commands_list = []
         commands_list.append(
@@ -460,6 +461,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
         if installer == "uv":
             install_command = f"""
                 curl -LsSf https://astral.sh/uv/install.sh | sh &&
+                export PATH=$HOME/.local/bin:$PATH &&
                 source $HOME/.local/bin/env &&
                 cd {base_dir} &&
                 uv venv --python {self.python_version} &&

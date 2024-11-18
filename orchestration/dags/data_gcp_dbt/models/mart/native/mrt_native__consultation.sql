@@ -68,12 +68,6 @@ with
             and cv.venue_id = co.venue_id
             and cv.venue_consultation_timestamp <= co.consultation_timestamp
         where co.consult_offer_origin = "venue"
-        qualify
-            row_number() over (
-                partition by co.unique_session_id, co.venue_id, co.offer_id
-                order by co.consultation_timestamp asc
-            )
-            = 1  -- keep 1st offer consultation after venue consultation
     ),
 
     consult_offer_through_similar_offer as (
@@ -85,12 +79,6 @@ with
             and co1.similar_offer_id = co2.offer_id
             and co2.consultation_timestamp <= co1.consultation_timestamp
         where co1.consult_offer_origin = "similar_offer"
-        qualify
-            row_number() over (
-                partition by co1.unique_session_id, co1.venue_id, co1.offer_id
-                order by co1.consultation_timestamp asc
-            )
-            = 1  -- keep 1st similar offer consultation after offer consultation
     )
 
 select
@@ -145,13 +133,17 @@ select
             consult.origin = "similar_offer"
             and consult.similar_offer_playlist_type = "otherCategoriesSimilarOffers"
         then "other_category_similar_offer"
-        when consult.origin in ("search", "searchresults", "searchn1")
+        when consult.origin in ("search", "searchresults", "searchn1", "thematicsearch")
         then "search"
         when consult.origin in ("venueMap", "venuemap")
         then "venue_map"
+        when consult.origin in ("video", "videoModal", "video_carousel_block")
+        then "video"
         else consult.origin
     end as consultation_macro_origin,
     case
+        when consult.origin = "offer" and consult.multi_venue_offer_id is not null
+        then "multi_venue_offer"
         when
             concat("home_", ht.home_type)
             in ("home_evenement, n_1", "home_n_1, evenement")
@@ -163,15 +155,17 @@ select
             and ht.home_type is null
         then "home_without_tag"
         when
-            consult.origin in ("search", "searchresults", "searchn1")
+            consult.origin in ("search", "searchresults")
+            and consult.query is not null
             and consult.search_query_input_is_generic is true
         then "generic_query_search"
         when
-            consult.origin in ("search", "searchresults", "searchn1")
+            consult.origin in ("search", "searchresults")
+            and consult.query is not null
             and consult.search_query_input_is_generic is false
         then "specific_query_search"
         when
-            consult.origin in ("search", "searchresults", "searchn1")
+            consult.origin in ("search", "searchresults", "searchn1", "thematicsearch")
             and consult.query is null
         then "landing_search"
         when consult.origin = "venue" and ov.consult_venue_origin is not null

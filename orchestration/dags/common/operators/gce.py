@@ -245,7 +245,6 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
     def clone_and_init_with_uv(self, branch, python_version) -> str:
         return f"""
         curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh
-        source $HOME/.local/bin/env
         uv venv --python {python_version}
         DIR=data-gcp &&
         if [ -d "$DIR" ]; then
@@ -453,7 +452,6 @@ class InstallDependenciesOperator(SSHGCEOperator):
         if installer == "uv":
             install_command = f"""
                 curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh &&
-                source $HOME/.local/bin/env &&
                 cd {base_dir} &&
                 uv venv --python {self.python_version} &&
                 source .venv/bin/activate &&

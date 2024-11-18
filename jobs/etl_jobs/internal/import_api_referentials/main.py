@@ -39,7 +39,7 @@ TYPES_DTYPES = {
 
 def get_subcategories(gcp_project_id, env_short_name):
     subcategories = importlib.import_module(
-        "pcapi.core.categories.subcategories_v2"
+        "core.categories.subcategories_v2"
     ).ALL_SUBCATEGORIES
     export_subcat = []
     for subcats in subcategories:
@@ -79,10 +79,10 @@ def get_subcategories(gcp_project_id, env_short_name):
 
 
 def get_types(gcp_project_id, env_short_name):
-    show_types = importlib.import_module("pcapi.domain.show_types").SHOW_TYPES
-    music_types = importlib.import_module("pcapi.domain.music_types").OLD_MUSIC_TYPES
-    book_types = importlib.import_module("pcapi.domain.book_types").BOOK_MACRO_SECTIONS
-    movie_types = importlib.import_module("pcapi.domain.movie_types").MOVIE_TYPES
+    show_types = importlib.import_module("domain.show_types").SHOW_TYPES
+    music_types = importlib.import_module("domain.music_types").OLD_MUSIC_TYPES
+    book_types = importlib.import_module("domain.book_types").BOOK_MACRO_SECTIONS
+    movie_types = importlib.import_module("domain.movie_types").MOVIE_TYPES
 
     types = {
         "show": show_types,

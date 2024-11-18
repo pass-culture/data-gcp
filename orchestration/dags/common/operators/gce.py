@@ -306,6 +306,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         **DEFAULT_EXPORT,
         "PATH": "/opt/conda/bin:/opt/conda/condabin:+$PATH",
     }
+    UV_EXPORT = {**DEFAULT_EXPORT, "PATH": "$HOME/.local/bin:$PATH"}
 
     @apply_defaults
     def __init__(
@@ -336,7 +337,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         environment = (
             dict(self.CONDA_EXPORT, **self.environment)
             if self.installer == "conda"
-            else dict(self.DEFAULT_EXPORT, **self.environment)
+            else dict(self.UV_EXPORT, **self.environment)
         )
         commands_list = []
         commands_list.append(
@@ -351,7 +352,6 @@ class SSHGCEOperator(BaseSSHGCEOperator):
                 "conda init zsh && source ~/.zshrc && conda activate data-gcp"
             )
         elif self.installer == "uv":
-            commands_list.append("source $HOME/.local/bin/env")
             commands_list.append("source .venv/bin/activate")
         else:
             commands_list.append("echo no virtual environment activation")

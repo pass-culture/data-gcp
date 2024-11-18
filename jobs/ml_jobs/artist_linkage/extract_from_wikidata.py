@@ -11,7 +11,6 @@ QUERIES_PATHES = {
     "book": "queries/extract_book_artists.rq",
     "movie": "queries/extract_movie_artists.rq",
     "music": "queries/extract_music_artists.rq",
-    "gkg": "queries/extract_gkg_artists.rq",
 }
 
 app = typer.Typer()

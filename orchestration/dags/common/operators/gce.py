@@ -20,6 +20,8 @@ from airflow.models import BaseOperator
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.utils.decorators import apply_defaults
 
+UV_VERSION = "0.5.2"
+
 
 class StartGCEOperator(BaseOperator):
     template_fields = [
@@ -241,55 +243,44 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
         )
 
     def clone_and_init_with_uv(self, branch, python_version) -> str:
-        return """
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        source $HOME/.local/bin/env
-        uv venv --python %s
+        return f"""
+        curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh
+        uv venv --python {python_version}
         DIR=data-gcp &&
         if [ -d "$DIR" ]; then
             echo "Update and Checkout repo..." &&
-            cd ${DIR} &&
+            cd $DIR &&
             git fetch --all &&
-            git reset --hard origin/%s
+            git reset --hard origin/{branch}
         else
             echo "Clone and checkout repo..." &&
-            git clone %s &&
-            cd ${DIR} &&
-            git checkout %s
+            git clone {self.REPO} &&
+            cd $DIR &&
+            git checkout {branch}
         fi
-        """ % (
-            python_version,
-            branch,
-            self.REPO,
-            branch,
-        )
+        """
 
     def clone_and_init_with_conda(self, branch, python_version) -> str:
-        return """
+        return f"""
         export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH
         python -m pip install --upgrade --user urllib3
-        conda create --name data-gcp python=%s -y -q
+        conda create --name data-gcp python={python_version} -y -q
         conda init zsh
         source ~/.zshrc
         conda activate data-gcp
         DIR=data-gcp &&
         if [ -d "$DIR" ]; then
             echo "Update and Checkout repo..." &&
-            cd ${DIR} &&
+            cd $DIR &&
             git fetch --all &&
-            git reset --hard origin/%s
+            git reset --hard origin/{branch}
         else
             echo "Clone and checkout repo..." &&
-            git clone %s &&
-            cd ${DIR} &&
-            git checkout %s
+            git clone {self.REPO} &&
+            cd $DIR &&
+            git checkout {branch}
         fi
-        """ % (
-            python_version,
-            branch,
-            self.REPO,
-            branch,
-        )
+        """
 
 
 class SSHGCEOperator(BaseSSHGCEOperator):
@@ -314,6 +305,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         **DEFAULT_EXPORT,
         "PATH": "/opt/conda/bin:/opt/conda/condabin:+$PATH",
     }
+    UV_EXPORT = {**DEFAULT_EXPORT, "PATH": "$HOME/.local/bin:$PATH"}
 
     @apply_defaults
     def __init__(
@@ -344,7 +336,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         environment = (
             dict(self.CONDA_EXPORT, **self.environment)
             if self.installer == "conda"
-            else dict(self.DEFAULT_EXPORT, **self.environment)
+            else dict(self.UV_EXPORT, **self.environment)
         )
         commands_list = []
         commands_list.append(
@@ -459,8 +451,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
 
         if installer == "uv":
             install_command = f"""
-                curl -LsSf https://astral.sh/uv/install.sh | sh &&
-                source $HOME/.local/bin/env &&
+                curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh &&
                 cd {base_dir} &&
                 uv venv --python {self.python_version} &&
                 source .venv/bin/activate &&

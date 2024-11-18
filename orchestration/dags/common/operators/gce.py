@@ -359,6 +359,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
                 "conda init zsh && source ~/.zshrc && conda activate data-gcp"
             )
         elif self.installer == "uv":
+            commands_list.append("source $HOME/.local/bin/env")
             commands_list.append("source .venv/bin/activate")
         else:
             commands_list.append("echo no virtual environment activation")

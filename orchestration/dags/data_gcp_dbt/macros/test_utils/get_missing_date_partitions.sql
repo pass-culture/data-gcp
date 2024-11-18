@@ -66,7 +66,9 @@
 
         {% if result is not none and result.rows | length > 0 %}
             {% for row in result.rows %}
-                {% do output.append(row["missing_partition_date"]) %}
+                {% do output.append(
+                    {"missing_partition_date": row["missing_partition_date"]}
+                ) %}
             {% endfor %}
         {% endif %}
 

@@ -14,16 +14,14 @@
     {% if missing_partitions | length > 0 %}
         with
             missing_dates as (
-                select missing_partition_date, existing_partition_date
+                select missing_partition_date
                 from
                     unnest(
                         [
                             {% for partition in missing_partitions %}
                                 struct(
                                     "{{ partition['missing_partition_date'] }}"
-                                    as missing_partition_date,
-                                    "{{ partition['existing_partition_date'] }}"
-                                    as existing_partition_date
+                                    as missing_partition_date
                                 )
                                 {% if not loop.last %}, {% endif %}
                             {% endfor %}

@@ -60,7 +60,8 @@ with DAG(
         poetry export -f requirements.txt --output requirements.txt --without-hashes
         uv pip install -r requirements.txt
         cd ..
-        cp -r api/src/pcapi ..
+        cp -r api/src/pcapi/core ..
+        cp -r api/src/pcapi/domain ..
     """
 
     install_dependencies = SSHGCEOperator(

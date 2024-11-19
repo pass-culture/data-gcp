@@ -5,7 +5,7 @@ select
     ado.offer_name,
     ado.offer_description,
     oed.performer
-from `{{ bigquery_raw_dataset }}`.applicative_database_offer_legacy ado
+from `{{ bigquery_int_raw_dataset }}`.offer ado
 left join
     `{{ bigquery_int_applicative_dataset }}`.offer_item_id oii
     on oii.offer_id = ado.offer_id

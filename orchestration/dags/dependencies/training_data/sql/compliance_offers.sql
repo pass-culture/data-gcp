@@ -32,7 +32,7 @@ with
                 then false
                 else true
             end as is_rule_up_to_date
-        from `{{ bigquery_raw_dataset }}`.`applicative_database_offer_legacy` o
+        from `{{ bigquery_int_raw_dataset }}`.`offer` o
         left join
             `{{ bigquery_raw_dataset }}`.`applicative_database_stock` s
             on s.offer_id = o.offer_id  -- TODO:update join with offer_extra_data

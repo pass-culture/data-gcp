@@ -13,4 +13,4 @@ This dataset can be used to monitor the effectiveness of email campaigns, evalua
 
 ## Table description
 
-{% docs description__int_brevo__transactional_pro %}{% enddocs %}
+{% docs table__int_brevo__transactional_pro %}{% enddocs %}

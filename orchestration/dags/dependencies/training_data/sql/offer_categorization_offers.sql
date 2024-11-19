@@ -7,7 +7,10 @@ with
             evd.venue_type_label,
             evd.offerer_name
         from `{{ bigquery_analytics_dataset }}.global_offer` eod
-        join `{{ bigquery_int_raw_dataset }}.offer` o using (offer_id)
+        join
+            `{{ bigquery_raw_dataset }}.applicative_database_offer_legacy` o using (
+                offer_id
+            )
         join
             `{{ bigquery_analytics_dataset }}.global_venue` evd
             on evd.venue_managing_offerer_id = eod.offerer_id

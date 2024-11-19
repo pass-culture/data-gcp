@@ -20,6 +20,7 @@ from airflow.models import BaseOperator
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.utils.decorators import apply_defaults
 
+print("GCE Operators loaded")
 UV_VERSION = "0.5.2"
 
 

@@ -28,7 +28,7 @@ with
                     "{{ ds() }}"
                 )
             {% endif %}
-    ),
+    )
 
 select
     ne.unique_session_id,

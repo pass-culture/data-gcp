@@ -73,7 +73,6 @@ with
                     "{{ ds() }}"
                 )
             {% endif %}
-        group by module_id, unique_session_id
     ),
 
     carousel_to_item_map as (
@@ -94,7 +93,9 @@ with
             ve.unique_session_id,
             count(
                 distinct case
-                    when ve.event_name = 'ConsultOffer' then ve.offer_id else null
+                    when ve.event_name = 'ConsultOffer'
+                    then coalesce(cfci.offer_id, ve.offer_id)
+                    else null
                 end
             ) as offers_consulted,
             count(
@@ -108,7 +109,7 @@ with
                 max(ve.total_video_seen_duration_seconds),
                 max(ve.video_duration_seconds)
             ) as pct_video_seen
-        from {{ ref("int_firebase__native_video_event") }} video_events
+        from {{ ref("int_firebase__native_video_event") }} ve
         left join carousel_to_item_map ctim on ve.module_id = ctim.module_id
         left join
             consult_from_carousel_item cfci
@@ -116,9 +117,9 @@ with
             and ve.user_id = cfci.user_id
             and ve.module_id = cfci.module_id
         where
-            event_name != 'ModuleDisplayedOnHomePage'
+            ve.event_name != 'ModuleDisplayedOnHomePage'
             {% if is_incremental() %}
-                and event_date
+                and ve.event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
                 )

@@ -3,6 +3,10 @@ name: "0. [on_review] Code Review GPT"
 on:
   pull_request_review_comment:
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   run_code_review:
     runs-on: ubuntu-latest

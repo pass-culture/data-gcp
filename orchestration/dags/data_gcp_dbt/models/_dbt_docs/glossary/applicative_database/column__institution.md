@@ -23,7 +23,6 @@
 /* TODO: order into another glossary */
 
 {% docs column__educational_institution_id %} Identifier for the educational institution associated with the booking. {% enddocs %}
-{% docs column__educational_year_id %} Identifier for the educational year associated with the booking. {% enddocs %}
 {% docs column__educational_scholar_year %} Scholar year associated with the booking. {% enddocs %}
 {% docs column__educational_redactor_id %} Identifier for the educational redactor associated with the booking. {% enddocs %}
 

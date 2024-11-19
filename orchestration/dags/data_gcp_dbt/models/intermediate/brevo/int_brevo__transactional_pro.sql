@@ -1,6 +1,6 @@
 select
-    tag,
-    template,
+    tag as brevo_tag,
+    template as brevo_template_id,
     venue_id,
     event_date,
     sum(delivered_count) as delivered_count,

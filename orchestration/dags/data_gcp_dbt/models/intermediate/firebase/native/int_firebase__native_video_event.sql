@@ -15,8 +15,8 @@
 with
     all_seen as (
         select unique_session_id, user_id, video_id
-        from int_firebase_prod.native_event ne
-        join analytics_prod.contentful_entries ce on ne.module_id = ce.id
+        from {{ ref("int_firebase__native_event") }} ne
+        join {{ ref("int_contentful__entry") }} ce on ne.module_id = ce.id
         where
             ne.event_date
             between date_sub(date(current_date), interval 1 day) and date(current_date)
@@ -50,9 +50,9 @@ select
         0
     ) as total_video_seen_duration_seconds,
     coalesce(cast(video_duration_seconds as float64), 0) as video_duration_seconds
-from int_firebase_prod.native_event ne
+from {{ ref("int_firebase__native_event") }} ne
 inner join
-    analytics_prod.contentful_entries ce
+    {{ ref("int_contentful__entry") }} ce
     on ne.module_id = ce.id
     and ce.content_type in ('video', 'videoCarousel', 'videoCarouselItem')
 left join

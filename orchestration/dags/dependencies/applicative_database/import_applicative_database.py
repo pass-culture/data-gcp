@@ -12,6 +12,10 @@ PARALLEL_TABLES = get_tables_config_dict(
     BQ_DATASET=BIGQUERY_RAW_DATASET,
 )
 
+SEQUENTIAL_TABLES = get_tables_config_dict(
+    PATH=DAG_FOLDER + "/" + RAW_SQL_PATH + "/sequential",
+    BQ_DATASET=BIGQUERY_RAW_DATASET,
+)
 
 HISTORICAL_CLEAN_APPLICATIVE_TABLES = {
     "booking_history": {

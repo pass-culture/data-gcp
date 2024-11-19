@@ -63,8 +63,8 @@ with
             ne.video_id,
             ne.entry_id,
             ne.offer_id
-        from int_firebase_prod.native_video_event ne
-        join analytics_prod.contentful_entries ce on ne.module_id = ce.id
+        from {{ ref("int_firebase__native_event") }} ne
+        join {{ ref("int_contentful__entry") }} ce on ne.module_id = ce.id
         where
             ce.content_type = "videoCarouselItem" and ne.event_name = "ConsultOffer"
             {% if is_incremental() %}
@@ -81,7 +81,7 @@ with
             ce_parent.id as parent_module_id,
             replace(replace(replace(item_id, '[', ''), ']', ''), "'", '') as module_id
         from
-            analytics_prod.contentful_entries ce_parent,
+            {{ ref("int_contentful__entry") }} ce_parent,
             unnest(split(ce_parent.items)) as item_id
         where ce_parent.content_type = 'videoCarousel'
     ),

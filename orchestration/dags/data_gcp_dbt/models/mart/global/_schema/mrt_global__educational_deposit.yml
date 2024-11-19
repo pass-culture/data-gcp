@@ -12,3 +12,5 @@ models:
         description: "{{ doc('column__institution_department_code') }}"
       - name: institution_academy_name
         description: "{{ doc('column__institution_academy_name') }}"
+      - name: educational_deposit_amount
+        description: "{{ doc('column__educational_deposit_amount') }}"

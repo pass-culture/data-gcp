@@ -51,26 +51,70 @@ with
         group by module_id, unique_session_id
     ),
 
+    consult_from_carousel_item as (
+        select
+            ne.unique_session_id,
+            ne.user_id,
+            ne.event_timestamp,
+            ne.event_date,
+            ne.app_version,
+            ne.event_name,
+            ne.module_id,
+            ne.video_id,
+            ne.entry_id,
+            ne.offer_id
+        from int_firebase_prod.native_video_event ne
+        join analytics_prod.contentful_entries ce on ne.module_id = ce.id
+        where
+            ce.content_type = "videoCarouselItem" and ne.event_name = "ConsultOffer"
+            {% if is_incremental() %}
+                and ne.event_date
+                between date_sub(date("{{ ds() }}"), interval 1 day) and date(
+                    "{{ ds() }}"
+                )
+            {% endif %}
+        group by module_id, unique_session_id
+    ),
+
+    carousel_to_item_map as (
+        select
+            ce_parent.id as parent_module_id,
+            replace(replace(replace(item_id, '[', ''), ']', ''), "'", '') as module_id
+        from
+            analytics_prod.contentful_entries ce_parent,
+            unnest(split(ce_parent.items)) as item_id
+        where ce_parent.content_type = 'videoCarousel'
+    ),
+
     video_perf_per_user_and_video as (
         select
-            module_id,
-            video_id,
-            entry_id,
-            unique_session_id,
+            coalesce(ctim.parent_module_id, ve.module_id) as module_id,
+            ve.video_id,
+            ve.entry_id,
+            ve.unique_session_id,
             count(
                 distinct case
-                    when event_name = 'ConsultOffer' then offer_id else null
+                    when ve.event_name = 'ConsultOffer' then ve.offer_id else null
                 end
             ) as offers_consulted,
             count(
-                case when event_name = 'HasSeenAllVideo' then 1 else null end
+                case when ve.event_name = 'HasSeenAllVideo' then 1 else null end
             ) as seen_all_video,
-            max(total_video_seen_duration_seconds) as total_video_seen_duration_seconds,
-            max(video_duration_seconds) as video_duration_seconds,
+            max(
+                ve.total_video_seen_duration_seconds
+            ) as total_video_seen_duration_seconds,
+            max(ve.video_duration_seconds) as video_duration_seconds,
             safe_divide(
-                max(total_video_seen_duration_seconds), max(video_duration_seconds)
+                max(ve.total_video_seen_duration_seconds),
+                max(ve.video_duration_seconds)
             ) as pct_video_seen
         from {{ ref("int_firebase__native_video_event") }} video_events
+        left join carousel_to_item_map ctim on ve.module_id = ctim.module_id
+        left join
+            consult_from_carousel_item cfci
+            on ve.unique_session_id = cfci.unique_session_id
+            and ve.user_id = cfci.user_id
+            and ve.module_id = cfci.module_id
         where
             event_name != 'ModuleDisplayedOnHomePage'
             {% if is_incremental() %}
@@ -90,15 +134,17 @@ select
     user_id,
     user_role,
     unique_session_id,
-    total_homes_consulted,
-    count(distinct video_id) as total_videos_seen,
-    sum(offers_consulted) as offers_consulted,
-    count(
-        distinct case when seen_all_video > 0 then video_id else null end
+    coalesce(total_homes_consulted, 0) as total_homes_consulted,
+    coalesce(count(distinct video_id), 0) as total_videos_seen,
+    coalesce(sum(offers_consulted), 0) as offers_consulted,
+    coalesce(
+        count(distinct case when seen_all_video > 0 then video_id else null end), 0
     ) as total_videos_all_seen,
-    sum(total_video_seen_duration_seconds) as total_video_seen_duration_seconds,
-    sum(video_duration_seconds) as total_video_duration_seconds,
-    max(pct_video_seen) as pct_video_seen
+    coalesce(
+        sum(total_video_seen_duration_seconds), 0
+    ) as total_video_seen_duration_seconds,
+    coalesce(sum(video_duration_seconds), 0) as total_video_duration_seconds,
+    coalesce(max(pct_video_seen), 0) as pct_video_seen
 from displays
 left join video_perf_per_user_and_video using (module_id, entry_id, unique_session_id)
 left join video_block_redirections using (module_id, unique_session_id)

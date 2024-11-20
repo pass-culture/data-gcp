@@ -172,7 +172,8 @@ select
 from {{ ref("int_firebase__native_event_flattened") }} as e
 where
     not is_anomaly
-    and {% if is_incremental() %}
+    {% if target.profile_name != "CI" %} and {% endif %}
+    {% if is_incremental() %}
         event_date
         between date_sub(date("{{ ds() }}"), interval 3 day) and date("{{ ds() }}")
     {% endif %}

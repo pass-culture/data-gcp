@@ -65,7 +65,7 @@ with
         from consult_offer co
         left join
             consult_venue cv
-            and cv.venue_id = co.venue_id
+            on cv.venue_id = co.venue_id
             and cv.venue_consultation_timestamp <= co.consultation_timestamp
             and date(cv.venue_consultation_timestamp) = date(co.consultation_timestamp)
         where co.consult_offer_origin = "venue"
@@ -76,7 +76,7 @@ with
         from consult_offer co1
         left join
             consult_offer co2
-            and co1.similar_offer_id = co2.offer_id
+            on co1.similar_offer_id = co2.offer_id
             and co2.consultation_timestamp <= co1.consultation_timestamp
             and date(co1.consultation_timestamp) = date(co2.consultation_timestamp)
         where co1.consult_offer_origin = "similar_offer"

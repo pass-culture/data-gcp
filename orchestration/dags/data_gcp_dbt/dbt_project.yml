@@ -120,4 +120,5 @@ vars:
   region_name: region-europe-west1
   mute_ensure_materialization_override: true
   snapshot_filter: "dbt_valid_to is null"
+  full_refresh_lookback: "1 year"
   not_null_anomaly_threshold_alert_percentage: 0.01

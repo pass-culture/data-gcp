@@ -59,7 +59,9 @@ with TaskGroup(group_id="snapshots_to_gcs", dag=dag) as to_gcs:
         alias = bq_config["table_alias"]
         dataset = bq_config["source_dataset"]
         _now = datetime.datetime.now()
-        yyyymmdd = _now.strftime("%Y%m%d")
+        historization_date = _now - datetime.timedelta(days=1)
+        yyyymmdd = historization_date.strftime("%Y%m%d")
+
         waiting_task = delayed_waiting_operator(
             dag,
             external_dag_id="dbt_run_dag",

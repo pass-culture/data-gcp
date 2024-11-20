@@ -34,5 +34,7 @@ where
     event_name = 'ConsultOffer' and user_id is not null and offer_id is not null
     {% if is_incremental() %}
         and date(event_date) >= date_sub('{{ ds() }}', interval 3 day)
-    {% else %} and date(event_date) >= date_sub('{{ ds() }}', interval 1 year)
+    {% else %}
+        and date(event_date)
+        >= date_sub('{{ ds() }}', interval {{ var("full_refresh_lookback") }})
     {% endif %}

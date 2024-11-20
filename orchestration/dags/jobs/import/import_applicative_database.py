@@ -11,9 +11,11 @@ from common.utils import get_airflow_schedule
 from dependencies.applicative_database.import_applicative_database import (
     HISTORICAL_CLEAN_APPLICATIVE_TABLES,
     PARALLEL_TABLES,
+    SEQUENTIAL_TABLES,
 )
 
 from airflow import DAG
+from airflow.models.baseoperator import chain
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.task_group import TaskGroup
 
@@ -37,6 +39,19 @@ dag = DAG(
 )
 
 start = DummyOperator(task_id="start", dag=dag)
+
+# Sequential table import tasks
+with TaskGroup(group_id="sequential_tasks_group", dag=dag) as sequential_tasks_group:
+    seq_tasks = []
+    for table, params in SEQUENTIAL_TABLES.items():
+        task = bigquery_federated_query_task(
+            dag, task_id=f"import_sequential_to_raw_{table}", job_params=params
+        )
+        seq_tasks.append(task)
+
+seq_end = DummyOperator(task_id="seq_end", dag=dag)
+
+chain(*seq_tasks, seq_end)
 
 # Parallel table import tasks
 with TaskGroup(
@@ -65,6 +80,8 @@ end = DummyOperator(task_id="end", dag=dag)
 
 (
     start
+    >> sequential_tasks_group
+    >> seq_end
     >> raw_parallel_operations_group
     >> parallel_end
     >> historical_applicative_group

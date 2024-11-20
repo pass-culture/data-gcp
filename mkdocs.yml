@@ -59,7 +59,7 @@ nav:
       - ... | dbt/models/mart/*/description*.md
 
   - Glossary:
-      - Overwiew: dbt/glossary.md
+      - Overview: dbt/glossary.md
       - ... | dbt/glossary/*/column*.md
   - Data Science:
       - Overview: team/ds/overview.md

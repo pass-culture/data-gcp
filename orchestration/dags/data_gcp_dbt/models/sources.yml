@@ -11,7 +11,6 @@ sources:
       - name: applicative_database_allocine_pivot
       - name: applicative_database_allocine_venue_provider
       - name: applicative_database_bank_account
-      - name: applicative_database_bank_information
       - name: applicative_database_beneficiary_fraud_check
       - name: applicative_database_beneficiary_fraud_review
       - name: applicative_database_beneficiary_fraud_status
@@ -108,7 +107,6 @@ sources:
       - name: applicative_database_venue_provider
       - name: applicative_database_venue_provider_external_urls
       - name: applicative_database_venue_registration
-      - name: applicative_database_venue_reimbursement_point_link
       - name: brevo_transactional
       - name: contentful_entry
       - name: contentful_relationship

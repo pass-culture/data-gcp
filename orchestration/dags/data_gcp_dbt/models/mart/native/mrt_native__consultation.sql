@@ -43,15 +43,16 @@ with
 
     consult_offer as (
         select
-            user_id,
-            unique_session_id,
-            consultation_timestamp,
-            consultation_id,
-            offer_id,
-            venue_id,
-            similar_offer_id,
-            origin as consult_offer_origin
-        from {{ ref("int_firebase__native_consultation") }}
+            nc.user_id,
+            nc.unique_session_id,
+            nc.consultation_timestamp,
+            nc.consultation_id,
+            nc.offer_id,
+            go.venue_id,
+            nc.similar_offer_id,
+            nc.origin as consult_offer_origin
+        from {{ ref("int_firebase__native_consultation") }} as nc
+        left join {{ ref("int_global__offer") }} as go on nc.offer_id = go.offer_id
         where
             1 = 1
             {% if is_incremental() %}
@@ -64,9 +65,9 @@ with
         from consult_offer co
         left join
             consult_venue cv
-            on cv.unique_session_id = co.unique_session_id
             and cv.venue_id = co.venue_id
             and cv.venue_consultation_timestamp <= co.consultation_timestamp
+            and date(cv.venue_consultation_timestamp) = date(co.consultation_timestamp)
         where co.consult_offer_origin = "venue"
     ),
 
@@ -75,9 +76,9 @@ with
         from consult_offer co1
         left join
             consult_offer co2
-            on co1.unique_session_id = co2.unique_session_id
             and co1.similar_offer_id = co2.offer_id
             and co2.consultation_timestamp <= co1.consultation_timestamp
+            and date(co1.consultation_timestamp) = date(co2.consultation_timestamp)
         where co1.consult_offer_origin = "similar_offer"
     )
 
@@ -169,11 +170,11 @@ select
             and consult.query is null
         then "landing_search"
         when consult.origin = "venue" and ov.consult_venue_origin is not null
-        then concat("venue_", ov.consult_venue_origin)
+        then concat("venue_from_", ov.consult_venue_origin)
         when
             consult.origin = "similar_offer"
             and so.consult_similar_offer_origin is not null
-        then concat("similar_offer_", so.consult_similar_offer_origin)
+        then concat("similar_offer_from_", so.consult_similar_offer_origin)
         when consult.origin in ("venueMap", "venuemap")
         then "venue_map"
         else consult.origin

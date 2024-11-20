@@ -10,11 +10,11 @@ SELECT
     sum(
         case
             when booking_status = 'USED'
-            or booking_status = 'REIMBURSED' then booking_amount
+            or booking_status = 'REIMBURSED' then booking_amount*booking_quantity
             else 0
         end
     ) AS revenue,
-    sum(booking_amount) AS expected_revenue
+    sum(booking_amount*booking_quantity) AS expected_revenue
 FROM
     intermediate.booking
 WHERE

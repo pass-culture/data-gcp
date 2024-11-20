@@ -71,6 +71,7 @@ On peut qu'avoir une version de Airflow installé en local. Pour pallier ça, il
     - Récupérer le certificat bundled ou combiné de la machine locale. Voir [cette page notion](https://www.notion.so/passcultureapp/Proxyfication-des-outils-du-pass-d1f0da09eafb4158904e9197bbe7c1d4?pvs=4#10cad4e0ff98805ba61efcea26075d65) si on ne trouve pas tout de suite le fichier `*_combined.pem`.
     - Mettre le fichier `.pem` dans `/orchestration`
     - Modifier la valeur du champ `CERT_FILE_LOCAL` pour spécifier le path du fichier `.pem`.
+4. Sinon, la valeur du champ `CERT_FILE_LOCAL` doit être vide.
 
 ### Premier lancement (La première fois uniquement)
 sur macos installer la lib coreutils `brew install coreutils`

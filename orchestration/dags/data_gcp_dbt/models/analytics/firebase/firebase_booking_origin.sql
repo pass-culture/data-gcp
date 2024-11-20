@@ -109,6 +109,8 @@ with
             booking_unique_session_id,
             reco_call_id,
             all_bookings_reconciled.offer_id,
+            all_bookings_reconciled.offer_category_id,
+            all_bookings_reconciled.offer_subcategory_id,
             all_bookings_reconciled.item_id,
             booking_id,
             consult_date,

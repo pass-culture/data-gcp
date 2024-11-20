@@ -1,9 +1,20 @@
 FROM apache/airflow:2.9.1-python3.10
-ARG GCLOUD_SERVICE_KEY=/etc/sa.gcpkey.json
-ARG AIRFLOW_USER_HOME=/opt/airflow
-ARG GCLOUD_VERSION=google-cloud-cli-411.0.0-linux-x86_64.tar.gz
 
-# install airflow deps
+# Define Dockerfile Arguments
+ARG AIRFLOW_USER_HOME=/opt/airflow
+ARG GCLOUD_SERVICE_KEY=/etc/sa.gcpkey.json
+ARG GCLOUD_VERSION=google-cloud-cli-411.0.0-linux-x86_64.tar.gz
+ARG CERT_PATH_DOCKER=/usr/local/share/ca-certificates/nscacert.pem
+
+# Define Dockerfile Arguments imported from the .env file
+ARG CERT_FILE_LOCAL=$CERT_FILE_LOCAL
+
+# Set environment variales for SSL certficate
+COPY ${CERT_FILE_LOCAL} ${CERT_PATH_DOCKER}
+ENV REQUESTS_CA_BUNDLE=${CERT_PATH_DOCKER}
+ENV SSL_CERT_FILE=${CERT_PATH_DOCKER}
+
+# Install airflow deps
 WORKDIR ${AIRFLOW_USER_HOME}
 COPY airflow/orchestration-requirements.txt /opt/requirements.txt
 RUN uv pip install --no-cache-dir -r /opt/requirements.txt
@@ -12,12 +23,15 @@ RUN uv pip install --no-cache-dir -r /opt/requirements.txt
 COPY dags/data_gcp_dbt/dbt-requirements.txt /opt/dbt-requirements.txt
 RUN uv pip install --no-cache-dir -r /opt/dbt-requirements.txt
 
-# install gcloud
+# Install gcloud
 USER root
-RUN apt-get update && apt-get install -y git ca-certificates --no-install-recommends
+RUN apt-get update && apt-get install -y git ca-certificates --no-install-recommends && update-ca-certificates
 COPY ./airflow/etc/sa.gcpkey.json ${GCLOUD_SERVICE_KEY}
 RUN curl -LO -k https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} && tar xf ${GCLOUD_VERSION}
 ENV PATH=$PATH:$AIRFLOW_USER_HOME/google-cloud-sdk/bin
+RUN if [ -f "${CERT_PATH_DOCKER}" ]; then \
+        gcloud config set core/custom_ca_certs_file ${CERT_PATH_DOCKER}; \
+    fi
 RUN gcloud auth activate-service-account --key-file=${GCLOUD_SERVICE_KEY}
 
 

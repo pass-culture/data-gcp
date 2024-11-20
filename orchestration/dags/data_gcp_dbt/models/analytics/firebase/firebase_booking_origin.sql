@@ -247,7 +247,7 @@ select
     coalesce(home_id_first_touch, first_touch_map.home_id) as home_id_first_touch,
     first_touch_map.home_name as home_name_first_touch,
     first_touch_map.content_type as content_type_first_touch,
-    home_tag.home_type as home_type_first_touch
+    home_tag.home_type as home_type_first_touch,
     -- home related last_touch
     module_id_last_touch,
     coalesce(

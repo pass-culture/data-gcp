@@ -49,8 +49,9 @@ with
     ),
 
     reimbursement_points as (
-        select offerer_id, count(distinct venue_id) as total_reimbursement_points
-        from {{ ref("int_applicative__venue_reimbursement_point_link") }}
+        select offerer_id, count(distinct bank_account_id) as total_reimbursement_points
+        from {{ source("raw", "applicative_database_bank_account") }}
+        where is_active
         group by offerer_id
     )
 

@@ -63,15 +63,16 @@ On peut qu'avoir une version de Airflow installé en local. Pour pallier ça, il
 
 #### Prérequis : récupération des Credentials GCP et des variables d'environnement
 
-1. Demander le fichier `sa.gcpkey.json` à un membre de l'équipe, se le partager via 1password et le mettre dans `/airflow/etc/sa.gcpkey.json`.
-2. Récupérer le fichier .env et le mettre dans `orchestration/.env`
-   - Modifier les valeurs de _AIRFLOW_WWW_USER_USERNAME et _AIRFLOW_WWW_USER_PASSWORD dans le fichier .env
-   - Modifier la valeur du DAG_FOLDER
-3. Si l'ordinateur est soumis à une Proxy Netskope:
+1. Créer une clé en suivant ce [standard](https://www.notion.so/passcultureapp/R-cuperer-une-clef-SA-pour-Airflow-en-Local-ea66a948a6e644628bafd05e8f0c69ef)
+2. Renommer la clé en `sa.gcpkey.json` et la mettre dans `/airflow/etc/sa.gcpkey.json`
+3. Récupérer le fichier .env et le mettre dans `orchestration/.env`
+   - Modifier les valeurs de `_AIRFLOW_WWW_USER_USERNAME` et `_AIRFLOW_WWW_USER_PASSWORD` dans le fichier .env pour mettre un username et password arbitraires.
+   - Modifier la valeur du `DAG_FOLDER` en mettant le path vers le folder local.
+4. Si l'ordinateur est soumis à une Proxy Netskope:
     - Récupérer le certificat bundled ou combiné de la machine locale. Voir [cette page notion](https://www.notion.so/passcultureapp/Proxyfication-des-outils-du-pass-d1f0da09eafb4158904e9197bbe7c1d4?pvs=4#10cad4e0ff98805ba61efcea26075d65) si on ne trouve pas tout de suite le fichier `*_combined.pem`.
     - Mettre le fichier `.pem` dans `/orchestration`
     - Modifier la valeur du champ `CERT_FILE_LOCAL` pour spécifier le path du fichier `.pem`.
-4. Sinon, la valeur du champ `CERT_FILE_LOCAL` doit être vide.
+5. Sinon, la valeur du champ `CERT_FILE_LOCAL` doit être vide.
 
 ### Premier lancement (La première fois uniquement)
 sur macos installer la lib coreutils `brew install coreutils`

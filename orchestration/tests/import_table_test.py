@@ -20,7 +20,6 @@ IMPORT_TABLES = [
             "resetPasswordToken",
         ],
     },
-    {"table_name": "bank_information", "excluded_fields": ["iban", "bic"]},
     {"table_name": "payment", "excluded_fields": ["iban", "bic"]},
     {"table_name": "booking", "excluded_fields": ["token"]},
 ]

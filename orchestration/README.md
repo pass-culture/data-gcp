@@ -63,10 +63,10 @@ On peut qu'avoir une version de Airflow installé en local. Pour pallier ça, il
 
 #### Prérequis : récupération des Credentials GCP et des variables d'environnement
 
-1. Demander le fichier `sa.gcpkey.json` à un membre de l'équipe, se le partager via 1password et le mettre dans `/airflow/etc/sa.gcpkey.json`.
+1. Demander le fichier `sa.gcpkey.json` à un membre de l'équipe, se le partager via KEEPER et le mettre dans `/airflow/etc/sa.gcpkey.json`.
 2. Récupérer le fichier .env et le mettre dans `orchestration/.env`
-   - Modifier les valeurs de _AIRFLOW_WWW_USER_USERNAME et _AIRFLOW_WWW_USER_PASSWORD dans le fichier .env
-   - Modifier la valeur du DAG_FOLDER
+   - Modifier les valeurs de _AIRFLOW_WWW_USER_USERNAME et _AIRFLOW_WWW_USER_PASSWORD dans le fichier .env pour mettre un username et password arbitraires.
+   - Modifier la valeur du DAG_FOLDER en mettant le path vers le folder local.
 
 ### Premier lancement (La première fois uniquement)
 sur macos installer la lib coreutils `brew install coreutils`

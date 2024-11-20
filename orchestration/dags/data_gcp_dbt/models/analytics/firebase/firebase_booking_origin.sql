@@ -268,4 +268,4 @@ left join
     and booking_origin.home_id_last_touch = last_touch_map.home_id
 left join
     {{ ref("int_contentful__home_tag") }} as home_tag
-    on booking_origin.home_id_first_touch home_tag.entry_id
+    on booking_origin.home_id_first_touch = home_tag.entry_id

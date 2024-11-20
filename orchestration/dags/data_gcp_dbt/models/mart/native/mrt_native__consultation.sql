@@ -36,7 +36,6 @@ with
         from {{ ref("int_firebase__native_event") }}
         where
             event_name = 'ConsultVenue'
-            and unique_session_id is not null
             and {% if is_incremental() %}
                 event_date = date_sub('{{ ds() }}', interval 3 day)
             {% else %}
@@ -47,21 +46,22 @@ with
 
     consult_offer as (
         select
-            user_id,
-            unique_session_id,
-            consultation_timestamp,
-            consultation_id,
-            offer_id,
-            venue_id,
-            similar_offer_id,
-            origin as consult_offer_origin
-        from {{ ref("int_firebase__native_consultation") }}
+            nc.user_id,
+            nc.unique_session_id,
+            nc.consultation_timestamp,
+            nc.consultation_id,
+            nc.offer_id,
+            go.venue_id,
+            nc.similar_offer_id,
+            nc.origin as consult_offer_origin
+        from {{ ref("int_firebase__native_consultation") }} as nc
+        left join {{ ref("int_global__offer") }} as go on nc.offer_id = go.offer_id
         where
             1 = 1
             and {% if is_incremental() %}
-                consultation_date = date_sub('{{ ds() }}', interval 3 day)
+                nc.consultation_date = date_sub('{{ ds() }}', interval 3 day)
             {% else %}
-                consultation_date
+                nc.consultation_date
                 >= date_sub('{{ ds() }}', interval {{ var("full_refresh_lookback") }})
             {% endif %}
     ),
@@ -71,16 +71,10 @@ with
         from consult_offer co
         left join
             consult_venue cv
-            on cv.unique_session_id = co.unique_session_id
-            and cv.venue_id = co.venue_id
+            on cv.venue_id = co.venue_id
             and cv.venue_consultation_timestamp <= co.consultation_timestamp
+            and date(cv.venue_consultation_timestamp) = date(co.consultation_timestamp)
         where co.consult_offer_origin = "venue"
-        qualify
-            row_number() over (
-                partition by co.unique_session_id, co.venue_id, co.offer_id
-                order by co.consultation_timestamp asc
-            )
-            = 1  -- keep 1st offer consultation after venue consultation
     ),
 
     consult_offer_through_similar_offer as (
@@ -88,16 +82,10 @@ with
         from consult_offer co1
         left join
             consult_offer co2
-            on co1.unique_session_id = co2.unique_session_id
-            and co1.similar_offer_id = co2.offer_id
+            on co1.similar_offer_id = co2.offer_id
             and co2.consultation_timestamp <= co1.consultation_timestamp
+            and date(co1.consultation_timestamp) = date(co2.consultation_timestamp)
         where co1.consult_offer_origin = "similar_offer"
-        qualify
-            row_number() over (
-                partition by co1.unique_session_id, co1.venue_id, co1.offer_id
-                order by co1.consultation_timestamp asc
-            )
-            = 1  -- keep 1st similar offer consultation after offer consultation
     )
 
 select
@@ -152,13 +140,17 @@ select
             consult.origin = "similar_offer"
             and consult.similar_offer_playlist_type = "otherCategoriesSimilarOffers"
         then "other_category_similar_offer"
-        when consult.origin in ("search", "searchresults", "searchn1")
+        when consult.origin in ("search", "searchresults", "searchn1", "thematicsearch")
         then "search"
         when consult.origin in ("venueMap", "venuemap")
         then "venue_map"
+        when consult.origin in ("video", "videoModal", "video_carousel_block")
+        then "video"
         else consult.origin
     end as consultation_macro_origin,
     case
+        when consult.origin = "offer" and consult.multi_venue_offer_id is not null
+        then "multi_venue_offer"
         when
             concat("home_", ht.home_type)
             in ("home_evenement, n_1", "home_n_1, evenement")
@@ -170,23 +162,22 @@ select
             and ht.home_type is null
         then "home_without_tag"
         when
-            consult.origin in ("search", "searchresults", "searchn1")
+            consult.origin in ("search", "searchresults")
+            and consult.query is not null
             and consult.search_query_input_is_generic is true
         then "generic_query_search"
-        when
-            consult.origin in ("search", "searchresults", "searchn1")
-            and consult.search_query_input_is_generic is false
+        when consult.origin in ("search", "searchresults") and consult.query is not null
         then "specific_query_search"
         when
-            consult.origin in ("search", "searchresults", "searchn1")
+            consult.origin in ("search", "searchresults", "searchn1", "thematicsearch")
             and consult.query is null
         then "landing_search"
         when consult.origin = "venue" and ov.consult_venue_origin is not null
-        then concat("venue_", ov.consult_venue_origin)
+        then concat("venue_from_", ov.consult_venue_origin)
         when
             consult.origin = "similar_offer"
             and so.consult_similar_offer_origin is not null
-        then concat("similar_offer_", so.consult_similar_offer_origin)
+        then concat("similar_offer_from", so.consult_similar_offer_origin)
         when consult.origin in ("venueMap", "venuemap")
         then "venue_map"
         else consult.origin

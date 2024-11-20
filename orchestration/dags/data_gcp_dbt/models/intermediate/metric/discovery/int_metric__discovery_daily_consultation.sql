@@ -25,9 +25,13 @@ with
             o.offer_category_id,
         from {{ ref("int_firebase__native_consultation") }} as c
         left join {{ ref("int_applicative__offer") }} as o on c.offer_id = o.offer_id
-        {% if is_incremental() %}
-            where consultation_date >= date_sub('{{ ds() }}', interval 3 day)
-        {% endif %}
+        where
+            {% if is_incremental() %}
+                consultation_date >= date_sub('{{ ds() }}', interval 3 day)
+            {% else %}
+                consultation_date
+                >= date_sub('{{ ds() }}', interval {{ var("full_refresh_lookback") }})
+            {% endif %}
     )
 
 {% for entity in entities %}

@@ -35,9 +35,13 @@ with
             origin as consult_venue_origin
         from {{ ref("int_firebase__native_event") }}
         where
-            event_name = 'ConsultVenue' and unique_session_id is not null
-            {% if is_incremental() %}
-                and event_date = date_sub('{{ ds() }}', interval 3 day)
+            event_name = 'ConsultVenue'
+            and unique_session_id is not null
+            and {% if is_incremental() %}
+                event_date = date_sub('{{ ds() }}', interval 3 day)
+            {% else %}
+                event_date
+                >= date_sub('{{ ds() }}', interval {{ var("full_refresh_lookback") }})
             {% endif %}
     ),
 
@@ -54,8 +58,11 @@ with
         from {{ ref("int_firebase__native_consultation") }}
         where
             1 = 1
-            {% if is_incremental() %}
-                and consultation_date = date_sub('{{ ds() }}', interval 3 day)
+            and {% if is_incremental() %}
+                consultation_date = date_sub('{{ ds() }}', interval 3 day)
+            {% else %}
+                consultation_date
+                >= date_sub('{{ ds() }}', interval {{ var("full_refresh_lookback") }})
             {% endif %}
     ),
 
@@ -201,5 +208,8 @@ left join
 
 {% if is_incremental() %}
     where consultation_date >= date_sub('{{ ds() }}', interval 3 day)
-{% else %} where consultation_date >= date_sub('{{ ds() }}', interval 1 year)
+{% else %}
+    where
+        consultation_date
+        >= date_sub('{{ ds() }}', interval {{ var("full_refresh_lookback") }})
 {% endif %}

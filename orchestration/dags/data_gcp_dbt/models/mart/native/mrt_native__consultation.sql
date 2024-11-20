@@ -35,7 +35,7 @@ with
             origin as consult_venue_origin
         from {{ ref("int_firebase__native_event") }}
         where
-            event_name = 'ConsultVenue' and unique_session_id is not null
+            event_name = 'ConsultVenue'
             {% if is_incremental() %}
                 and event_date = date_sub('{{ ds() }}', interval 3 day)
             {% endif %}

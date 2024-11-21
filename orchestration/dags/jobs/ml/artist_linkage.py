@@ -5,7 +5,7 @@ from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
     BIGQUERY_ML_LINKAGE_DATASET,
-    BIGQUERY_TMP_DATASET,
+    BIGQUERY_ML_PREPROCESSING_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -249,7 +249,7 @@ with DAG(
         source_objects=os.path.join(
             GCS_FOLDER_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME
         ),
-        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{LINKED_ARTISTS_TABLE}",
+        destination_project_dataset_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.{LINKED_ARTISTS_TABLE}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,

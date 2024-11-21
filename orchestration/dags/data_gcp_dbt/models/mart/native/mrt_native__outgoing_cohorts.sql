@@ -53,7 +53,9 @@ with
             count(
                 distinct bookings.venue_type_label
             ) as total_distinct_venue_type_booked,
-            count(distinct bookings.venue_id) as total_distinct_venue_booked
+            count(
+                distinct if(bookings.venue_is_virtual is false, bookings.venue_id, null)
+            ) as total_distinct_venue_booked
         from users_expired_monthly user
         join
             {{ ref("mrt_global__booking") }} bookings on bookings.user_id = user.user_id

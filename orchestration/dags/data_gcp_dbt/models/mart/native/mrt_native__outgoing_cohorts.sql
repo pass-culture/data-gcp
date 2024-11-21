@@ -14,7 +14,7 @@ with
             user_activity,
             user_civility,
             total_deposit_amount,
-            is_theme_subscribed,
+            is_theme_subscribed as user_is_theme_subscribed,
             total_actual_amount_spent,
             total_theoretical_digital_goods_amount_spent,
             total_non_cancelled_individual_bookings,
@@ -80,7 +80,7 @@ with
     )
 
 select
-    date_trunc(u.deposit_expiration_date, month) as expiration_month,
+    date_trunc(u.deposit_expiration_date, month) as user_expiration_month,
     u.total_deposit_amount,
     u.user_is_priority_public,
     u.user_is_in_qpv,
@@ -92,7 +92,7 @@ select
     u.user_department_code,
     u.user_activity,
     u.user_civility,
-    u.is_theme_subscribed,
+    u.user_is_theme_subscribed,
     coalesce(count(distinct u.user_id), 0) as total_users,
     coalesce(
         count(
@@ -148,7 +148,7 @@ left join
     on u.user_id = b.user_id
     and u.deposit_expiration_date = b.deposit_expiration_date
 group by
-    expiration_month,
+    user_expiration_month,
     u.total_deposit_amount,
     u.user_is_priority_public,
     u.user_is_in_qpv,
@@ -160,4 +160,4 @@ group by
     u.user_department_code,
     u.user_activity,
     u.user_civility,
-    u.is_theme_subscribed
+    u.user_is_theme_subscribed

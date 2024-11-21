@@ -64,3 +64,4 @@ title: Metrics
 {% docs column__total_used_bookings %} Total number of bookings that were used. {% enddocs %}
 {% docs column__total_used_collective_bookings %} Total number of collective bookings that were used. {% enddocs %}
 {% docs column__total_used_individual_bookings %} Total number of used individual bookings. {% enddocs %}
+{% docs column__total_users %} xxxxx {% enddocs %}

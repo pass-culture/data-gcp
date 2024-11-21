@@ -1,0 +1,65 @@
+version: 2
+
+models:
+  - name: mrt_native__outgoing_cohorts
+    description: "{{ doc('description__mrt_native__outgoing_cohorts') }}"
+    columns:
+      - name: user_expiration_month
+        description: "{{ doc('column__user_expiration_month') }}"
+      - name: total_deposit_amount
+        description: "{{ doc('column__total_deposit_amount') }}"
+      - name: user_is_priority_public
+        description: "{{ doc('column__user_is_priority_public') }}"
+      - name: user_is_in_qpv
+        description: "{{ doc('column__user_is_in_qpv') }}"
+      - name: user_is_unemployed
+        description: "{{ doc('column__user_is_unemployed') }}"
+      - name: user_is_in_education
+        description: "{{ doc('column__user_is_in_education') }}"
+      - name: user_density_label
+        description: "{{ doc('column__user_density_label') }}"
+      - name: user_macro_density_label
+        description: "{{ doc('column__user_macro_density_label') }}"
+      - name: user_region_name
+        description: "{{ doc('column__user_region_name') }}"
+      - name: user_department_code
+        description: "{{ doc('column__user_department_code') }}"
+      - name: user_activity
+        description: "{{ doc('column__user_activity') }}"
+      - name: user_civility
+        description: "{{ doc('column__user_civility') }}"
+      - name: user_is_theme_subscribed
+        description: "{{ doc('column__user_is_theme_subscribed') }}"
+      - name: total_users
+        description: "{{ doc('column__total_users') }}"
+      - name: total_3_category_booked_users
+        description: "{{ doc('column__total_3_category_booked_users') }}"
+      - name: total_amount_spent
+        description: "{{ doc('column__total_amount_spent') }}"
+      - name: total_theoretical_digital_goods_amount_spent
+        description: "{{ doc('column__total_theoretical_digital_goods_amount_spent') }}"
+      - name: total_non_cancelled_individual_bookings
+        description: "{{ doc('column__total_non_cancelled_individual_bookings') }}"
+      - name: total_non_cancelled_duo_bookings
+        description: "{{ doc('column__total_non_cancelled_duo_bookings') }}"
+      - name: total_free_bookings
+        description: "{{ doc('column__total_free_bookings') }}"
+      - name: total_item_consulted
+        description: "{{ doc('column__total_item_consulted') }}"
+      - name: total_venue_consulted
+        description: "{{ doc('column__total_venue_consulted') }}"
+      - name: total_grant_18_subcategory_booked
+        description: "{{ doc('column__total_grant_18_subcategory_booked') }}"
+      - name: total_grant_15_17_subcategory_booked
+        description: "{{ doc('column__total_grant_15_17_subcategory_booked') }}"
+      - name: total_venue_type_label_consulted
+        description: "{{ doc('column__total_venue_type_label_consulted') }}"
+      - name: total_day_between_deposit_and_first_booking
+        description: "{{ doc('column__total_day_between_deposit_and_first_booking') }}"
+      - name: total_diversification_score
+        description: "{{ doc('column__total_diversification_score') }}"
+      - name: total_venue_id_booked
+        description: "{{ doc('column__total_venue_id_booked') }}"
+      - name: total_venue_type_booked
+        description: "{{ doc('column__total_venue_type_booked') }}"
+      - name: total_category_booked

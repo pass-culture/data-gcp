@@ -32,8 +32,22 @@ with
             and performer != ""
         group by performer, offer_category_id, is_synchronised
     )
-select *
+select
+    artist_name,
+    offer_category_id,
+    is_synchronised,
+    offer_number,
+    item_number,
+    total_booking_count,
+    artist_type
 from authors_table
 union all
-select *
+select
+    artist_name,
+    offer_category_id,
+    is_synchronised,
+    offer_number,
+    item_number,
+    total_booking_count,
+    artist_type
 from performers_table

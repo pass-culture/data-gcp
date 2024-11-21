@@ -59,7 +59,7 @@ TEST_SETS_GCS_DIR = "labelled_test_sets"
 GCE_INSTALLER = "uv"
 
 # BQ Tables
-ARTISTS_TO_LINK_TABLE = "artists_to_link"
+ARTISTS_TO_LINK_TABLE = "artist_name_to_link"
 LINKED_ARTISTS_TABLE = "linked_artists"
 QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
 

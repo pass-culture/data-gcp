@@ -1,0 +1,27 @@
+version: 2
+
+models:
+  - name: ml_linkage__artist_name_to_link
+    description: This model contains the different artist_name we will match to create the artist table.
+    columns:
+      - name: artist_name
+        description: The name of the artist.
+      - name: offer_category_id
+        description: The id of the offer category.
+        data_tests:
+          - not_null
+      - name: is_synchronised
+        description: Whether the artist_name comes from synchronized or not offers
+        data_tests:
+          - not_null
+      - name: offer_number
+        description: The number of offers for the artist_name.
+      - name: item_number
+        description: The number of items for the artist_name.
+      - name: total_booking_count
+        description: The total number of bookings for the artist_name.
+      - name: artist_type
+        description: The type of the artist (author or performer).
+        data_tests:
+          - accepted_values:
+              values: [author, performer]

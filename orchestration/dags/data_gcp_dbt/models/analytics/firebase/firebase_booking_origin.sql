@@ -47,6 +47,8 @@ with
             f_events.unique_session_id as booking_unique_session_id,
             f_events.app_version as booking_app_version,
             booking.offer_id,
+            booking.offer_category_id,
+            booking.offer_subcategory_id,
             booking.deposit_id,
             booking.booking_status,
             booking.booking_is_cancelled,
@@ -178,6 +180,8 @@ with
             all_bookings_reconciled.booking_app_version,
             all_bookings_reconciled.booking_unique_session_id,
             all_bookings_reconciled.offer_id,
+            all_bookings_reconciled.offer_category_id,
+            all_bookings_reconciled.offer_subcategory_id,
             all_bookings_reconciled.item_id,
             all_bookings_reconciled.booking_id,
             all_bookings_reconciled.deposit_id,
@@ -219,6 +223,8 @@ select
     booking_app_version,
     booking_unique_session_id,
     offer_id,
+    offer_category_id,
+    offer_subcategory_id,
     item_id,
     booking_id,
     booking_status,
@@ -243,6 +249,7 @@ select
     coalesce(home_id_first_touch, first_touch_map.home_id) as home_id_first_touch,
     first_touch_map.home_name as home_name_first_touch,
     first_touch_map.content_type as content_type_first_touch,
+    home_tag.home_type as home_type_first_touch,
     -- home related last_touch
     module_id_last_touch,
     coalesce(
@@ -261,3 +268,6 @@ left join
     mapping_module as last_touch_map
     on booking_origin.module_id_last_touch = last_touch_map.module_id
     and booking_origin.home_id_last_touch = last_touch_map.home_id
+left join
+    {{ ref("int_contentful__home_tag") }} as home_tag
+    on booking_origin.home_id_first_touch = home_tag.entry_id

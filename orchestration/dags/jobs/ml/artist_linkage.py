@@ -10,8 +10,10 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
+    PATH_TO_DBT_PROJECT,
+    PATH_TO_DBT_TARGET,
 )
-from common.operators.bigquery import BigQueryInsertJobOperator, bigquery_job_task
+from common.operators.bigquery import BigQueryInsertJobOperator
 from common.operators.gce import (
     InstallDependenciesOperator,
     SSHGCEOperator,
@@ -19,18 +21,10 @@ from common.operators.gce import (
     StopGCEOperator,
 )
 from common.utils import get_airflow_schedule, sparkql_health_check
-from dependencies.ml.linkage.create_artist_alias_table import (
-    PARAMS as CREATE_ARTIST_ALIAS_TABLE_PARAMS,
-)
-from dependencies.ml.linkage.create_artist_table import (
-    PARAMS as CREATE_ARTIST_TABLE_PARAMS,
-)
-from dependencies.ml.linkage.create_product_artist_link_table import (
-    PARAMS as CREATE_PRODUCT_ARTIST_LINK_TABLE_PARAMS,
-)
 
 from airflow import DAG
 from airflow.models import Param
+from airflow.operators.bash import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import BranchPythonOperator, PythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
@@ -62,7 +56,6 @@ GCE_INSTALLER = "uv"
 ARTISTS_TO_LINK_TABLE = "artist_name_to_link"
 LINKED_ARTISTS_TABLE = "linked_artists"
 QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
-
 default_args = {
     "start_date": datetime(2024, 7, 16),
     "on_failure_callback": task_fail_slack_alert,
@@ -71,6 +64,13 @@ default_args = {
 
 LINK_FROM_SCRATCH_TASK_ID = "link_from_scratch"
 LINK_NEW_PRODUCTS_TO_ARTISTS_TASK_ID = "link_new_products_to_artists"
+
+# DBT
+DBT_MODELS_TO_RUN = [
+    "artist_table+",
+    "product_artist_link_table+",
+    "artist_alias_table+",
+]
 
 
 def _choose_linkage(**context):
@@ -271,24 +271,19 @@ with DAG(
         ),
     )
 
-    with TaskGroup("export_data") as export_data:
-        create_artist_table = bigquery_job_task(
-            dag,
-            f"create_bq_table_{CREATE_ARTIST_TABLE_PARAMS['destination_table']}",
-            CREATE_ARTIST_TABLE_PARAMS,
-        )
-
-        create_product_artist_link_table = bigquery_job_task(
-            dag,
-            f"create_bq_table_{CREATE_PRODUCT_ARTIST_LINK_TABLE_PARAMS['destination_table']}",
-            CREATE_PRODUCT_ARTIST_LINK_TABLE_PARAMS,
-        )
-
-        create_artist_alias_table = bigquery_job_task(
-            dag,
-            f"create_bq_table_{CREATE_ARTIST_ALIAS_TABLE_PARAMS['destination_table']}",
-            CREATE_ARTIST_ALIAS_TABLE_PARAMS,
-        )
+    export_data_with_dbt = BashOperator(
+        task_id="export_data_with_dbt",
+        bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
+        env={
+            "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+            "target": "{{ params.target }}",
+            "model": DBT_MODELS_TO_RUN.join(" "),
+            "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+        },
+        append_env=True,
+        cwd=PATH_TO_DBT_PROJECT,
+        dag=dag,
+    )
 
     # Common tasks
     (
@@ -305,7 +300,7 @@ with DAG(
         internal_linkage
         >> wikidata_matching
         >> load_data_into_linked_artists_table
-        >> export_data
+        >> export_data_with_dbt
     )
     wikidata_matching >> artist_metrics >> gce_instance_stop
 

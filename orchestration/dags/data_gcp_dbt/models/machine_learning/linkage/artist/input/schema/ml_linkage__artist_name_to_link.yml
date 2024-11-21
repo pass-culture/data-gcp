@@ -3,6 +3,13 @@ version: 2
 models:
   - name: ml_linkage__artist_name_to_link
     description: This model contains the different artist_name we will match to create the artist table.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - artist_name
+            - offer_category_id
+            - is_synchronised
+            - artist_type
     columns:
       - name: artist_name
         description: The name of the artist.

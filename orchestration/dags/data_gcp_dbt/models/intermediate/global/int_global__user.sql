@@ -83,12 +83,8 @@ select
     end as user_is_unemployed,
     case
         when
-            u.user_activity in (
-                "Collégien",
-                "Etudiant",
-                "Lycéen",
-                "Apprenti, Alternant, Volontaire en service civique rémunéré"
-            )
+            u.user_activity
+            in ("Collégien", "Etudiant", "Lycéen", "Apprenti", "Alternant")
         then true
         else false
     end as user_is_in_education,
@@ -97,12 +93,8 @@ select
             (
                 (ui.qpv_name is not null)
                 or (
-                    u.user_activity not in (
-                        "Collégien",
-                        "Etudiant",
-                        "Lycéen",
-                        "Apprenti, Alternant, Volontaire en service civique rémunéré"
-                    )
+                    u.user_activity
+                    not in ("Collégien", "Etudiant", "Lycéen", "Apprenti", "Alternant")
                 )
                 or (ui.user_macro_density_label = "rural")
             )

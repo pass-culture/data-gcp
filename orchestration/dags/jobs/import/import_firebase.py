@@ -9,9 +9,33 @@ from common.utils import get_airflow_schedule
 from dependencies.firebase.import_firebase import import_tables
 
 from airflow import DAG
+from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import BranchPythonOperator
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+
+
+def validate_string_or_list(value):
+    """Validate that the input is either a string or a list of strings."""
+    if isinstance(value, str):
+        return value
+    elif isinstance(value, list) and all(isinstance(item, str) for item in value):
+        if len(value) < 2:
+            raise ValueError("custom_day list should contain at least two dates.")
+        return value
+    else:
+        raise ValueError("Value must be a string or a list of strings.")
+
+
+def get_first_and_last_days(custom_day):
+    """Extract the first and last days from a list of dates in YYYYMMDD format."""
+    if isinstance(custom_day, list):
+        first_day = f"{{{{ yyyymmdd('{custom_day[0]}') }}}}"
+        last_day = f"{{{{ yyyymmdd('{custom_day[-1]}') }}}}"
+        return first_day, last_day
+    else:
+        raise ValueError("custom_day should be a list of dates in YYYY-MM-DD format.")
+
 
 dags = {
     "daily": {
@@ -36,6 +60,30 @@ dags = {
             "retries": 3,
             "retry_delay": datetime.timedelta(minutes=30),
             "project_id": GCP_PROJECT_ID,
+        },
+    },
+    "specific_day": {
+        "prefix": "_",
+        "schedule_interval": None,
+        "default_dag_args": {
+            "start_date": datetime.datetime(2022, 6, 9),
+            "retries": 3,
+            "retry_delay": datetime.timedelta(minutes=30),
+            "project_id": GCP_PROJECT_ID,
+        },
+        "input_params": {
+            "custom_day": Param(
+                default=(datetime.datetime.now() - datetime.timedelta(days=1)).strftime(
+                    "%Y-%m-%d"
+                ),  # yesterday
+                type=validate_string_or_list,
+                description="Enter a date in YYYY-MM-DD format (string) or a list of (string) dates",
+            ),
+            "target": Param(
+                default="both",
+                type=["native", "pro", "both"],
+                description="Specify the target type: 'native', 'pro', or 'both'.",
+            ),
         },
     },
 }
@@ -63,7 +111,16 @@ def check_table_exists(**kwargs):
 for dag_type, params in dags.items():
     dag_id = f"import_{dag_type}_firebase_data"
     prefix = params["prefix"]
-    yyyymmdd = params["yyyymmdd"]
+    yyyymmdd = params.get("yyyymmdd")
+
+    if dag_type == "specific_day":
+        if isinstance(params["input_params"]["custom_day"], list):
+            first_day, last_day = get_first_and_last_days(
+                params["input_params"]["custom_day"]
+            )
+            yyyymmdd = f"{first_day}to{last_day}"
+        else:
+            yyyymmdd = "{{ yyyymmdd(params.custom_day) }}"
 
     dag = DAG(
         dag_id,
@@ -75,7 +132,11 @@ for dag_type, params in dags.items():
         dagrun_timeout=datetime.timedelta(minutes=90),
         user_defined_macros=macros.default,
         template_searchpath=DAG_FOLDER,
+        params=params.get("input_params", {}),
+        render_template_as_native_obj=True,
     )
+    if dag_type == "specific_day":
+        yyyymmdd = "{{ yyyymmdd(params.custom_day) }}"
 
     globals()[dag_id] = dag
 
@@ -84,16 +145,24 @@ for dag_type, params in dags.items():
     end = DummyOperator(task_id="end", dag=dag)
 
     import_tables_temp = copy.deepcopy(import_tables)
+    target = params.get("input_params", {}).get("target", "both")
     for job_name_table, job_params in import_tables_temp.items():
-        # force this to include custom yyyymmdd
-        if job_params.get("partition_prefix", None) is not None:
-            job_params["destination_table"] = (
-                f"{job_params['destination_table']}{job_params['partition_prefix']}{yyyymmdd}"
+        if (
+            target != "both" and target not in job_name_table
+        ) or dag_type != "specific_day":
+            continue
+        if dag_type == "specific_day" and isinstance(
+            params["input_params"]["custom_day"].default, list
+        ):
+            first_day, last_day = get_first_and_last_days(
+                params["input_params"]["custom_day"].default
             )
-
-        if dag_type == "intraday":
+            table_id = f"events{prefix}{first_day}to{last_day}"
+        elif dag_type == "specific_day":
+            table_id = f"events{prefix}" + "{{ yyyymmdd(params.custom_day) }}"
+        elif dag_type == "intraday":
             table_id = f"events{prefix}" + "{{ yyyymmdd(ds) }}"
-        else:
+        elif dag_type == "daily":
             table_id = f"events{prefix}" + "{{ yyyymmdd(add_days(ds, -1)) }}"
 
         check_table_task = BranchPythonOperator(

@@ -16,6 +16,7 @@ with
     displays as (
         select
             module_id,
+            content_type,
             event_date,
             app_version,
             entry_id,
@@ -139,8 +140,8 @@ with
     )
 
 select
-    module_id,
-    content_type,
+    displays.module_id,
+    coalesce(ctim.content_type, displays.content_type) content_type,
     event_date,
     app_version,
     entry_id,
@@ -159,9 +160,10 @@ select
 from displays
 left join video_perf_per_user_and_video using (module_id, entry_id, unique_session_id)
 left join video_block_redirections using (module_id, unique_session_id)
+left join carousel_to_item_map ctim on displays.module_id = ctim.module_id
 group by
-    module_id,
-    content_type,
+    displays.module_id,
+    coalesce(ctim.content_type, displays.content_type),
     event_date,
     app_version,
     entry_id,

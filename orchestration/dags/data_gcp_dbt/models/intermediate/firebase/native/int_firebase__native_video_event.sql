@@ -38,6 +38,7 @@ select
     ne.app_version,
     ne.event_name,
     ne.module_id,
+    ce.content_type,
     ne.video_id,
     ne.entry_id,
     ne.offer_id,

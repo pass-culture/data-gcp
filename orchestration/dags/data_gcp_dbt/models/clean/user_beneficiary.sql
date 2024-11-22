@@ -31,8 +31,12 @@ with
             ) as user_department_code,
             u.user_postal_code,
             case
-                when user_activity in ("Alternant", "Apprenti", "Volontaire")
-                then "Apprenti, Alternant, Volontaire en service civique rémunéré"
+                when user_activity in ("Alternant")
+                then "Alternant"
+                when user_activity in ("Apprenti")
+                then "Apprenti"
+                when user_activity in ("Volontaire")
+                then "Volontaire en service civique rémunéré"
                 when user_activity in ("Inactif")
                 then "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
                 when user_activity in ("Étudiant")
@@ -143,12 +147,8 @@ select
     end as user_is_unemployed,
     case
         when
-            u.user_activity in (
-                "Collégien",
-                "Etudiant",
-                "Lycéen",
-                "Apprenti, Alternant, Volontaire en service civique rémunéré"
-            )
+            u.user_activity
+            in ("Collégien", "Etudiant", "Lycéen", "Apprenti", "Alternant")
         then true
         else false
     end as user_is_in_education,
@@ -157,12 +157,8 @@ select
             (
                 (ui.qpv_name is not null)
                 or ui.user_macro_density_label = "rural"
-                or u.user_activity not in (
-                    "Collégien",
-                    "Etudiant",
-                    "Lycéen",
-                    "Apprenti, Alternant, Volontaire en service civique rémunéré"
-                )
+                or u.user_activity
+                not in ("Collégien", "Etudiant", "Lycéen", "Apprenti", "Alternant")
             )
         then true
         else false

@@ -23,7 +23,7 @@ models:
       - name: session_number
         description: '{{ doc("column__session_number") }}'
       - name: offer_consultation_number
-        description: '{{ doc("column__total_consultation") }}'
+        description: '{{ doc("column__total_consultations") }}'
       - name: booking_number
         description: '{{ doc("column__total_bookings") }}'
       - name: favorites_number

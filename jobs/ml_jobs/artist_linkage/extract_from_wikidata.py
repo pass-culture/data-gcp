@@ -7,6 +7,7 @@ import typer
 from loguru import logger
 
 QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
+QLEVER_HEADERS = {"Accept": "text/csv", "Content-Type": "application/sparql-query"}
 QUERIES_PATHES = {
     "book": "queries/extract_book_artists.rq",
     "movie": "queries/extract_movie_artists.rq",
@@ -73,11 +74,22 @@ def postprocess_data(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def fetch_wikidata_qlever_csv(sparql_query):
-    headers = {"Accept": "text/csv"}
-
+def clear_qlever_cache():
     response = requests.get(
-        QLEVER_ENDPOINT, params={"query": sparql_query}, headers=headers
+        QLEVER_ENDPOINT, params={"cmd": "clear-cache"}, headers=QLEVER_HEADERS
+    )
+
+    if response.status_code == 200:
+        logger.info(f"Cache cleared for {QLEVER_ENDPOINT}")
+    else:
+        raise requests.RequestException(
+            f"Cannot reset cache: {response.status_code}, {response.text}"
+        )
+
+
+def fetch_wikidata_qlever_csv(sparql_query):
+    response = requests.get(
+        QLEVER_ENDPOINT, params={"query": sparql_query}, headers=QLEVER_HEADERS
     )
 
     if response.status_code == 200:
@@ -86,13 +98,19 @@ def fetch_wikidata_qlever_csv(sparql_query):
         csv_content = response.text
         return pd.read_csv(StringIO(csv_content))
     else:
-        print(f"Error: {response.status_code}, {response.text}")
+        raise requests.RequestException(
+            f"Error while fetching data from {QLEVER_ENDPOINT}: {response.status_code}, {response.text}"
+        )
 
 
 @app.command()
 def main(output_file_path: str = typer.Option()) -> None:
     df_list = []
     wiki_ids_per_query = {}
+
+    # Clear cache on qlever to prevent any resource issues
+    clear_qlever_cache()
+
     for query_name, query_content in QUERIES_PATHES.items():
         logger.info(f"Fetch the data in CSV format for {query_name}")
 

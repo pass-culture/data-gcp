@@ -5,9 +5,9 @@ with
             template,
             user_id,
             event_date,
-            sum(delivered_count) as delivered_count,
-            sum(opened_count) as opened_count,
-            sum(unsubscribed_count) as unsubscribed_count
+            sum(delivered_count) as total_delivered,
+            sum(opened_count) as total_opened,
+            sum(unsubscribed_count) as total_unsubscribed
         from {{ source("raw", "sendinblue_transactional") }}
         where tag like 'jeune%'
         group by tag, template, user_id, event_date
@@ -50,9 +50,9 @@ select
     template as brevo_template_id,
     tag as brevo_tag,
     event_date,
-    delivered_count,
-    opened_count,
-    unsubscribed_count,
+    total_delivered,
+    total_opened,
+    total_unsubscribed,
     user_current_deposit_type,
     session_number,
     total_consultations,

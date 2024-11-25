@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: int_brevo__transactional_jeune
-    description: '{{ doc("description__int_brevo__transactional_jeune") }}'
+  - name: int_brevo__transactional_native
+    description: '{{ doc("description__int_brevo__transactional_native") }}'
     columns:
       - name: user_id
         description: '{{ doc("column__user_id") }}'
@@ -12,12 +12,12 @@ models:
         description: '{{ doc("column__brevo_tag") }}'
       - name: event_date
         description: '{{ doc("column__event_date") }}'
-      - name: delivered_count
-        description: '{{ doc("column__delivered_count") }}'
-      - name: opened_count
-        description: '{{ doc("column__opened_count") }}'
-      - name: unsubscribed_count
-        description: '{{ doc("column__unsubscribed_count") }}'
+      - name: total_delivered
+        description: '{{ doc("column__total_delivered") }}'
+      - name: total_opened
+        description: '{{ doc("column__total_opened") }}'
+      - name: total_unsubscribed
+        description: '{{ doc("column__total_unsubscribed") }}'
       - name: user_current_deposit_type
         description: '{{ doc("column__user_current_deposit_type") }}'
       - name: session_number

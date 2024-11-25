@@ -21,9 +21,9 @@ models:
         description: Whether the artist_name comes from synchronized or not offers
         data_tests:
           - not_null
-      - name: offer_number
+      - name: total_offer_count
         description: The number of offers for the artist_name.
-      - name: item_number
+      - name: total_item_count
         description: The number of items for the artist_name.
       - name: total_booking_count
         description: The total number of bookings for the artist_name.

@@ -4,8 +4,8 @@ with
             author as artist_name,
             offer_category_id,
             is_synchronised,
-            count(distinct offer_id) as offer_number,
-            count(distinct item_id) as item_number,
+            count(distinct offer_id) as total_offer_count,
+            count(distinct item_id) as total_item_count,
             sum(ifnull(total_individual_bookings, 0)) as total_booking_count,
             'author' as artist_type
         from {{ ref("mrt_global__offer") }}
@@ -21,8 +21,8 @@ with
             performer as artist_name,
             offer_category_id,
             is_synchronised,
-            count(distinct offer_id) as offer_number,
-            count(distinct item_id) as item_number,
+            count(distinct offer_id) as total_offer_count,
+            count(distinct item_id) as total_item_count,
             sum(ifnull(total_individual_bookings, 0)) as total_booking_count,
             'performer' as artist_type
         from {{ ref("mrt_global__offer") }}
@@ -36,8 +36,8 @@ select
     artist_name,
     offer_category_id,
     is_synchronised,
-    offer_number,
-    item_number,
+    total_offer_count,
+    total_item_count,
     total_booking_count,
     artist_type
 from authors_table
@@ -46,8 +46,8 @@ select
     artist_name,
     offer_category_id,
     is_synchronised,
-    offer_number,
-    item_number,
+    total_offer_count,
+    total_item_count,
     total_booking_count,
     artist_type
 from performers_table

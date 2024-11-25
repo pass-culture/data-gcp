@@ -9,4 +9,4 @@ select distinct
     image_author,
     image_license,
     image_license_url,
-from `{{ bigquery_tmp_dataset }}.linked_artists`
+from `{{ bigquery_ml_preproc_dataset }}.linked_artists`

@@ -26,7 +26,7 @@ with
     ),
     artist_table as (
         select artist_name, offer_category_id, artist_type, artist_id
-        from `{{ bigquery_tmp_dataset }}.linked_artists`
+        from `{{ bigquery_ml_preproc_dataset }}.linked_artists`
     )
 select distinct
     product_artists.offer_product_id as product_id,

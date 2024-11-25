@@ -56,7 +56,7 @@ nav:
   - Home: index.md
   - Data Models:
       - Overview: dbt/overview.md
-      - ... | dbt/models/mart/*/description*.md
+      - ... | dbt/models/**/description*.md
 
   - Glossary:
       - Overview: dbt/glossary.md

@@ -30,7 +30,7 @@ install_science:
 install_analytics:
 	make install
 	source .venv/bin/activate && uv pip install -r orchestration/dags/data_gcp_dbt/dbt-requirements.txt
-	make _init_dbt
+	source .venv/bin/activate && make _init_dbt
 	echo "Please setup the current venv in your IDE to make it run permanently : https://www.notion.so/passcultureapp/Comment-installer-DBT-e25f7e24813c4d48baa43d641651caf8"
 
 install_ubuntu_libs:
@@ -53,8 +53,7 @@ _install_microservice:
 	cd $(MICROSERVICE_PATH) && source .venv/bin/activate && uv pip sync $(REQUIREMENTS_NAME)
 
 _init_dbt:
-	cd orchestration/dags/data_gcp_dbt && source .venv/bin/activate  && dbt deps
-	cd orchestration/dags/data_gcp_dbt && source .venv/bin/activate  && dbt debug
+	cd orchestration/dags/data_gcp_dbt && (source .venv/bin/activate || echo "\n Warning: No .venv found in data_gcp_dbt. Ignore this if you are in the analytics team. \n")  && dbt deps && dbt debug
 
 _initiate_env:
 	@if [ ! -f .env.local ]; then cp .env.template .env.local; fi

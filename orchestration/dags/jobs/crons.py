@@ -6,6 +6,11 @@ schedule_dict = {
         "daily": {
             "prod": "45 3 * * *",
             "stg": "45 3 * * *",
+            "dev": None,
+        },
+        "batch": {
+            "prod": None,
+            "stg": None,
             "dev": "45 3 * * *",
         },
     },

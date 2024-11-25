@@ -12,9 +12,9 @@ models:
         description: "{{ doc('column__venue_id') }}"
       - name: event_date
         description: "{{ doc('column__event_date') }}"
-      - name: delivered_count
-        description: "{{ doc('column__delivered_count') }}"
-      - name: opened_count
-        description: "{{ doc('column__opened_count') }}"
-      - name: unsubscribed_count
-        description: "{{ doc('column__unsubscribed_count') }}"
+      - name: total_delivered
+        description: "{{ doc('column__total_delivered') }}"
+      - name: total_opened
+        description: "{{ doc('column__total_opened') }}"
+      - name: total_unsubscribed
+        description: "{{ doc('column__total_unsubscribed') }}"

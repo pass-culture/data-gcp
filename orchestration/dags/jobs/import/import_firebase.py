@@ -14,8 +14,9 @@ from airflow.operators.python_operator import BranchPythonOperator
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 
 dags = {
+    # Reimport the data from the last two days
     "daily": {
-        "prefix": "_",
+        "prefix": "_intraday_",
         "schedule_interval": "00 13 * * *",
         # two days ago
         "yyyymmdd": "{{ yyyymmdd(add_days(ds, -1)) }}",
@@ -26,6 +27,7 @@ dags = {
             "project_id": GCP_PROJECT_ID,
         },
     },
+    # Import data from the last day
     "intraday": {
         "prefix": "_intraday_",
         "schedule_interval": "00 01 * * *",

@@ -172,7 +172,9 @@ def main(
     test_sets_dir: str = typer.Option(),
     experiment_name: str = typer.Option(),
 ) -> None:
-    test_sets_df = get_test_sets_df(test_sets_dir)
+    test_sets_df = get_test_sets_df(test_sets_dir).rename(
+        columns={"is_synchronised": OFFER_IS_SYNCHRONISED}
+    )
     artists_to_link_df = pd.read_parquet(artists_to_link_file_path)
     linked_artists_df = pd.read_parquet(linked_artists_file_path)
 

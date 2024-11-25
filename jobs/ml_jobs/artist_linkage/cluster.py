@@ -41,8 +41,10 @@ def main(
             f"Matching artists names for group {group_name} containing {len(group_df.preprocessed_artist_name.unique())} artists"
         )
 
-        ratio_synchronised_data = group_df[OFFER_IS_SYNCHRONISED].sum() / len(
-            group_df[OFFER_IS_SYNCHRONISED]
+        ratio_synchronised_data = (
+            group_df[OFFER_IS_SYNCHRONISED].sum() / len(group_df[OFFER_IS_SYNCHRONISED])
+            if len(group_df[OFFER_IS_SYNCHRONISED]) > 0
+            else 0
         )
         if ratio_synchronised_data >= RATIO_SYNCHRONISED_DATA_THRESHOLD:
             # Cluster by exactly matching on preprocessed_artist_name for synchronised data

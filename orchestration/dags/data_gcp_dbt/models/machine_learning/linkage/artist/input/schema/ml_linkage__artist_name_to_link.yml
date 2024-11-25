@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: ml_linkage__artist_name_to_link
-    description: This model contains the different artist_name we will match to create the artist table.
+    description: "{{ doc('description__ml_linkage__artist_name_to_link') }}"
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns:
@@ -12,23 +12,23 @@ models:
             - artist_type
     columns:
       - name: artist_name
-        description: The name of the artist.
+        description: "{{ doc('column__artist_name') }}"
       - name: offer_category_id
-        description: The id of the offer category.
+        description: "{{ doc('column__offer_category_id') }}"
         data_tests:
           - not_null
       - name: offer_is_synchronised
-        description: Whether the artist_name comes from synchronized or not offers
+        description: "{{ doc('column__is_synchronised') }}"
         data_tests:
           - not_null
       - name: total_offer_count
-        description: The number of offers for the artist_name.
+        description: "{{ doc('column__total_offer_count') }}"
       - name: total_item_count
-        description: The number of items for the artist_name.
+        description: "{{ doc('column__total_item_count') }}"
       - name: total_booking_count
-        description: The total number of bookings for the artist_name.
+        description: "{{ doc('column__total_booking_count') }}"
       - name: artist_type
-        description: The type of the artist (author or performer).
+        description: "{{ doc('column__artist_type') }}"
         data_tests:
           - accepted_values:
               values: [author, performer]

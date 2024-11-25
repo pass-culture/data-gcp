@@ -4,6 +4,7 @@ import mlflow
 import pandas as pd
 import typer
 
+from constants import TOTAL_OFFER_COUNT
 from utils.mlflow import (
     connect_remote_mlflow,
     get_mlflow_experiment,
@@ -26,10 +27,10 @@ app = typer.Typer()
 def compute_metrics_per_slice(
     artists_per_slice: pd.api.typing.DataFrameGroupBy,
 ) -> pd.Series:
-    tp = artists_per_slice.loc[artists_per_slice.tp].offer_number.sum()
-    fp = artists_per_slice.loc[artists_per_slice.fp].offer_number.sum()
-    fn = artists_per_slice.loc[artists_per_slice.fn].offer_number.sum()
-    tn = artists_per_slice.loc[artists_per_slice.tn].offer_number.sum()
+    tp = artists_per_slice.loc[artists_per_slice.tp][TOTAL_OFFER_COUNT].sum()
+    fp = artists_per_slice.loc[artists_per_slice.fp][TOTAL_OFFER_COUNT].sum()
+    fn = artists_per_slice.loc[artists_per_slice.fn][TOTAL_OFFER_COUNT].sum()
+    tn = artists_per_slice.loc[artists_per_slice.tn][TOTAL_OFFER_COUNT].sum()
 
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0
@@ -59,14 +60,14 @@ def get_main_matched_cluster_per_dataset(
             .groupby(["dataset_name", "cluster_id"])
             .agg(
                 {
-                    "offer_number": "sum",
+                    TOTAL_OFFER_COUNT: "sum",
                 }
             )
-            .sort_values(["dataset_name", "offer_number"], ascending=[True, False])
+            .sort_values(["dataset_name", TOTAL_OFFER_COUNT], ascending=[True, False])
         )
         .reset_index()
         .drop_duplicates(subset=["dataset_name"], keep="first")
-        .drop(columns=["offer_number"])
+        .drop(columns=[TOTAL_OFFER_COUNT])
         .set_index("dataset_name")
         .to_dict()["cluster_id"]
     )
@@ -110,7 +111,7 @@ def project_linked_artists_on_test_sets(
                 :,
                 MERGE_COLUMNS
                 + [
-                    "offer_number",
+                    TOTAL_OFFER_COUNT,
                     "total_booking_count",
                 ],
             ],
@@ -138,12 +139,12 @@ def get_wiki_matching_metrics(artists_df: pd.DataFrame) -> pd.DataFrame:
             ),
             WIKI_MATCHED_WEIGHTED_BY_OFFERS_PERC: round(
                 100
-                * input_df.loc[lambda df: df.wiki_id.notna()]
-                .offer_number.replace(0, 1)
+                * input_df.loc[lambda df: df.wiki_id.notna()][TOTAL_OFFER_COUNT]
+                .replace(0, 1)
                 .sum()
-                / input_df.offer_number.replace(0, 1).sum(),
+                / input_df[TOTAL_OFFER_COUNT].sum(),
                 2,
-            ),  # TODO: Remove the replace(0, 1) when the offer_number is fixed
+            ),
             WIKI_MATCHED_PERC: round(
                 100 * input_df.wiki_id.notna().sum() / len(input_df),
                 2,

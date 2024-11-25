@@ -5,6 +5,8 @@ import pandas as pd
 import rapidfuzz
 from unidecode import unidecode
 
+from constants import TOTAL_OFFER_COUNT
+
 ### Cleaning
 
 
@@ -197,7 +199,7 @@ def _filter_artists(
 
     Args:
         artist_df (pd.DataFrame): The DataFrame containing artist information.
-            Required columns: first_artist, artist_word_count, offer_number, total_booking_count.
+            Required columns: first_artist, artist_word_count, total_offer_count, total_booking_count.
         filtering_params (FilteringParamsType): A dictionary of filtering parameters.
 
     Returns:
@@ -209,7 +211,7 @@ def _filter_artists(
     too_few_words_indexes = (
         artist_df.artist_word_count < filtering_params["min_word_count"]
     ) & (
-        (artist_df.offer_number < filtering_params["min_offer_count"])
+        (artist_df[TOTAL_OFFER_COUNT] < filtering_params["min_offer_count"])
         | (artist_df.total_booking_count < filtering_params["min_booking_count"])
     )
     too_many_words_indexes = (
@@ -231,7 +233,7 @@ def filter_artists(
 
     Args:
         artist_df (pd.DataFrame): The DataFrame containing artist data.
-            Required columns: first_artist, artist_word_count, offer_number, total_booking_count.
+            Required columns: first_artist, artist_word_count, total_offer_count, total_booking_count.
         filtering_params (FilteringParamsType): The filtering parameters to be applied.
 
     Returns:

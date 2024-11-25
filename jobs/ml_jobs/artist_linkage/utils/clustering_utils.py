@@ -8,6 +8,8 @@ from scipy.sparse import csr_matrix, vstack
 from sklearn.cluster import DBSCAN
 from tqdm import tqdm
 
+from constants import TOTAL_OFFER_COUNT
+
 
 def _get_score_multiplier(dtype_distance_matrix: np.dtype) -> int:
     """
@@ -194,7 +196,7 @@ def get_cluster_to_nickname_dict(merged_df: pd.DataFrame) -> dict:
 
     Parameters:
         merged_df (pd.DataFrame): The merged DataFrame containing cluster information.
-            Required columns: cluster_id, offer_number, artist_name.
+            Required columns: cluster_id, total_offer_count, artist_name.
 
     Returns:
         dict: A dictionary mapping cluster IDs to artist nicknames.
@@ -204,7 +206,7 @@ def get_cluster_to_nickname_dict(merged_df: pd.DataFrame) -> dict:
 
     return (
         merged_df.groupby("cluster_id")
-        .apply(lambda df: df["offer_number"].idxmax())
+        .apply(lambda df: df[TOTAL_OFFER_COUNT].idxmax())
         .reset_index(name="index_nickname")
         .merge(
             merged_df.first_artist.where(

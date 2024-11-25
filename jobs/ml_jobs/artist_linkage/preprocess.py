@@ -1,7 +1,7 @@
 import pandas as pd
 import typer
 
-from constants import TOTAL_OFFER_COUNT
+from constants import OFFER_IS_SYNCHRONISED, TOTAL_OFFER_COUNT
 from utils.gcs_utils import upload_parquet
 from utils.preprocessing_utils import (
     FilteringParamsType,
@@ -35,7 +35,7 @@ def main(
         [
             "artist_name",
             "offer_category_id",
-            "is_synchronised",
+            OFFER_IS_SYNCHRONISED,
             TOTAL_OFFER_COUNT,
             "total_booking_count",
             "artist_type",

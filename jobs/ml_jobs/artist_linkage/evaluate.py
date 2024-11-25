@@ -4,7 +4,7 @@ import mlflow
 import pandas as pd
 import typer
 
-from constants import TOTAL_OFFER_COUNT
+from constants import OFFER_IS_SYNCHRONISED, TOTAL_OFFER_COUNT
 from utils.mlflow import (
     connect_remote_mlflow,
     get_mlflow_experiment,
@@ -14,7 +14,12 @@ METRICS_PER_DATASET_CSV_FILENAME = "metrics_per_dataset.csv"
 METRICS_PER_DATASET_GRAPH_FILENAME = "metrics_per_dataset.png"
 GLOBAL_METRICS_FILENAME = "global_metrics.csv"
 
-MERGE_COLUMNS = ["artist_name", "offer_category_id", "is_synchronised", "artist_type"]
+MERGE_COLUMNS = [
+    "artist_name",
+    "offer_category_id",
+    OFFER_IS_SYNCHRONISED,
+    "artist_type",
+]
 
 WIKI_MATCHED_WEIGHTED_BY_BOOKINGS_PERC = "wiki_matched_weighted_by_bookings_perc"
 WIKI_MATCHED_WEIGHTED_BY_OFFERS_PERC = "wiki_matched_weighted_by_offers_perc"

@@ -5,6 +5,7 @@ import pandas as pd
 import rapidfuzz
 import typer
 
+from constants import OFFER_IS_SYNCHRONISED
 from utils.clustering_utils import (
     cluster_with_distance_matrices,
     format_cluster_matrix,
@@ -40,13 +41,13 @@ def main(
             f"Matching artists names for group {group_name} containing {len(group_df.preprocessed_artist_name.unique())} artists"
         )
 
-        ratio_synchronised_data = group_df.is_synchronised.sum() / len(
-            group_df.is_synchronised
+        ratio_synchronised_data = group_df[OFFER_IS_SYNCHRONISED].sum() / len(
+            group_df[OFFER_IS_SYNCHRONISED]
         )
         if ratio_synchronised_data >= RATIO_SYNCHRONISED_DATA_THRESHOLD:
             # Cluster by exactly matching on preprocessed_artist_name for synchronised data
             clusters_by_group_df = (
-                group_df.loc[lambda df: df.is_synchronised]
+                group_df.loc[lambda df: df[OFFER_IS_SYNCHRONISED]]
                 .groupby("preprocessed_artist_name")
                 .apply(lambda g: set(g.preprocessed_artist_name))
                 .rename("preprocessed_artist_name")

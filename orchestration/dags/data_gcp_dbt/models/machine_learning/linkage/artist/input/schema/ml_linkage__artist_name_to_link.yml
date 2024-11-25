@@ -8,7 +8,7 @@ models:
           combination_of_columns:
             - artist_name
             - offer_category_id
-            - is_synchronised
+            - offer_is_synchronised
             - artist_type
     columns:
       - name: artist_name
@@ -17,7 +17,7 @@ models:
         description: The id of the offer category.
         data_tests:
           - not_null
-      - name: is_synchronised
+      - name: offer_is_synchronised
         description: Whether the artist_name comes from synchronized or not offers
         data_tests:
           - not_null

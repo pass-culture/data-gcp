@@ -1,5 +1,5 @@
 select distinct
-    artist_id as id,
+    artist_id,
     artist_id_name as artist_name,
     genre as artist_genre,
     description as artist_description,

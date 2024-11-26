@@ -162,6 +162,35 @@ def get_cluster_to_wiki_mapping(matched_df: pd.DataFrame) -> dict:
     )
 
 
+def get_artist_representative(df: pd.DataFrame) -> pd.DataFrame:
+    scored_df = df.assign(
+        alias_score=lambda df: (
+            1e3 * (df.wiki_id.notna().astype(float))
+            + 1e2 * (df.image_file_url.notna().astype(float))
+            + 1e1 * (df.description.notna().astype(float))
+            + 1e0
+            * (
+                df.gkg_id.notna().astype(float)
+                + df.book.fillna(False).astype(float)
+                + df.music.fillna(False).astype(float)
+                + df.movie.fillna(False).astype(float)
+            )
+            + df.total_booking_count / df.total_booking_count.max()
+        ).fillna(0.0),
+    )
+
+    # Add a flag `is_cluster_representative` stating that the row will be used to create the artist table.
+    representative_idx = scored_df.loc[
+        scored_df.groupby("artist_id")["alias_score"].idxmax()
+    ].index
+
+    return scored_df.assign(
+        is_cluster_representative=lambda df: df.index.to_series().apply(
+            lambda idx: idx in representative_idx
+        )
+    ).sort_values(["artist_id", "alias_score"], ascending=[True, False])
+
+
 @app.command()
 def main(
     linked_artists_file_path: str = typer.Option(),
@@ -201,7 +230,7 @@ def main(
 
     # 4. Map the new cluster_id based on the wiki_id
     cluster_to_wiki_mappings = get_cluster_to_wiki_mapping(matched_df)
-    output_df = matched_df.assign(
+    rematched_df = matched_df.assign(
         artist_id=lambda df: df.cluster_id.map(cluster_to_wiki_mappings).fillna(
             df.cluster_id
         ),
@@ -210,6 +239,10 @@ def main(
         ),
     )
 
+    # 5. Add a flag  indicating whether the row will be used to build the artist table
+    output_df = rematched_df.pipe(get_artist_representative)
+
+    # 6. Upload the output dataframe
     upload_parquet(
         dataframe=output_df,
         gcs_path=output_file_path,

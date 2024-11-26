@@ -275,7 +275,6 @@ with DAG(
         task_id="export_data_with_dbt",
         bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
         env={
-            "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
             "target": "{{ params.target }}",
             "model": " ".join(DBT_MODELS_TO_RUN),
             "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,

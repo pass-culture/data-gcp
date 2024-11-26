@@ -10,8 +10,6 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
-    PATH_TO_DBT_PROJECT,
-    PATH_TO_DBT_TARGET,
 )
 from common.operators.bigquery import BigQueryInsertJobOperator
 from common.operators.gce import (
@@ -24,7 +22,6 @@ from common.utils import get_airflow_schedule, sparkql_health_check
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.bash import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import BranchPythonOperator, PythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
@@ -271,19 +268,6 @@ with DAG(
         ),
     )
 
-    export_data_with_dbt = BashOperator(
-        task_id="export_data_with_dbt",
-        bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
-        env={
-            "target": ENV_SHORT_NAME,
-            "model": " ".join(DBT_MODELS_TO_RUN),
-            "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-        },
-        append_env=True,
-        cwd=PATH_TO_DBT_PROJECT,
-        dag=dag,
-    )
-
     # Common tasks
     (
         dag_init
@@ -295,12 +279,7 @@ with DAG(
     # Link From Scratch tasks
     link_from_scratch >> collect >> internal_linkage
     link_from_scratch >> [internal_linkage, wikidata_matching]
-    (
-        internal_linkage
-        >> wikidata_matching
-        >> load_data_into_linked_artists_table
-        >> export_data_with_dbt
-    )
+    (internal_linkage >> wikidata_matching >> load_data_into_linked_artists_table)
     wikidata_matching >> artist_metrics >> gce_instance_stop
 
     # Link New Products to Artists tasks

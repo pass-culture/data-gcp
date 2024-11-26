@@ -69,6 +69,15 @@ On peut qu'avoir une version de Airflow installé en local. Pour pallier ça, il
    - Modifier les valeurs de `_AIRFLOW_WWW_USER_USERNAME` et `_AIRFLOW_WWW_USER_PASSWORD` dans le fichier .env pour mettre un username et password arbitraires.
    - Modifier la valeur du `DAG_FOLDER` en mettant le path vers le folder local.
 
+4. Si la machine locale est derrière un Proxy Netskope:
+    - Récupérer le certificat **bundled** ou **combiné** de la machine locale. Voir [cette page notion](https://www.notion.so/passcultureapp/Proxyfication-des-outils-du-pass-d1f0da09eafb4158904e9197bbe7c1d4?pvs=4#10cad4e0ff98805ba61efcea26075d65) si on ne trouve pas tout de suite le fichier `*_combined.pem`.
+    - Mettre le fichier du certificat bundled dans `/orchestration` sous le nom `nscacert_combined.pem `
+    - Dans le fichier `.env`, modifier la valeur de `DOCKERFILE_PATH` en  `airflow/Dockerfile.netskope`
+
+5. Si la machine locale n'est pas derrière un proxy:
+    - Dans le fichier `.env`, modifier la valeur de `DOCKERFILE_PATH` en  `airflow/Dockerfile`
+
+
 ### Premier lancement (La première fois uniquement)
 sur macos installer la lib coreutils `brew install coreutils`
 

@@ -103,7 +103,9 @@ def preprocess_artists(df: pd.DataFrame) -> pd.DataFrame:
         preprocessed_first_artist=lambda df: normalize_string_series(df.first_artist),
         part_1=lambda df: df.preprocessed_first_artist.str.split(",").str[0],
         part_2=lambda df: df.preprocessed_first_artist.str.split(",").str[1],
-        alias=lambda df: df.part_1.where(df.part_2.isna(), df.part_2 + " " + df.part_1),
+        alias=lambda df: df.part_1.where(
+            df.part_2.isna(), df.part_2.astype(str) + " " + df.part_1.astype(str)
+        ),
         tmp_id=lambda df: df.index,
     )
 

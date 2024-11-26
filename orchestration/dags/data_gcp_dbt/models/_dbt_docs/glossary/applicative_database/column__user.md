@@ -16,7 +16,7 @@
 {% docs column__user_iris_internal_id %} Internal IRIS identifier associated with the user's registered address. IRIS (Ilots Regroupés pour l'Information Statistique) are small, standardized geographic units used for detailed statistical analysis in France. {% enddocs %}
 {% docs column__user_is_active %} Boolean. Indicates if the user's account is currently active (the user can access it, irrespective of grant status). {% enddocs %}
 {% docs column__user_is_current_beneficiary %} Boolean. Indicates if the user still has available grant to use. {% enddocs %}
-{% docs column__user_is_in_education %} Boolean. Indicates if the user is in education (University student, High school student...), as per its registered activity. {% enddocs %}
+{% docs column__user_is_in_education %} Boolean. Indicates if the user is in education, based on their registered activity. According to the INSEE, a user is considered to be in education if they fall under one of the following categories: Middle school student (Collégien), High school student (Lycéen), University student (Étudiant), Apprentice (Apprenti), Work-study student (Alternant). {% enddocs %}
 {% docs column__user_is_in_qpv %} Boolean. Indicates if the user's registered address is in a priority neighborhood (QPV). {% enddocs %}
 {% docs column__user_is_priority_public %} Boolean. Indicates if the user considered as a pass Culture priority public (users that are either residing in a rural area, in a QPV or are not in education). {% enddocs %}
 {% docs column__user_is_unemployed %} Boolean. Indicates if the user is unemployed as per its registered activity. {% enddocs %}

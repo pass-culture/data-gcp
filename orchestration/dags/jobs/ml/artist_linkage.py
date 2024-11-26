@@ -4,7 +4,8 @@ from datetime import datetime
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
-    BIGQUERY_TMP_DATASET,
+    BIGQUERY_ML_LINKAGE_DATASET,
+    BIGQUERY_ML_PREPROCESSING_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -27,7 +28,6 @@ from dependencies.ml.linkage.create_artist_table import (
 from dependencies.ml.linkage.create_product_artist_link_table import (
     PARAMS as CREATE_PRODUCT_ARTIST_LINK_TABLE_PARAMS,
 )
-from dependencies.ml.linkage.import_artists import PARAMS as IMPORT_ARTISTS_PARAMS
 
 from airflow import DAG
 from airflow.models import Param
@@ -58,8 +58,9 @@ ARTISTS_WITH_METADATA_GCS_FILENAME = "linked_artists_with_metadata.parquet"
 TEST_SETS_GCS_DIR = "labelled_test_sets"
 GCE_INSTALLER = "uv"
 
-# BQ Output Tables
-LINKED_ARTISTS_BQ_TABLE = "linked_artists"
+# BQ Tables
+ARTISTS_TO_LINK_TABLE = "artist_name_to_link"
+LINKED_ARTISTS_TABLE = "linked_artists"
 QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
 
 default_args = {
@@ -155,20 +156,14 @@ with DAG(
 
     # Artist Linkage
     with TaskGroup("data_collection") as collect:
-        data_collect = bigquery_job_task(
-            dag,
-            f"create_bq_table_{IMPORT_ARTISTS_PARAMS['destination_table']}",
-            IMPORT_ARTISTS_PARAMS,
-        )
-
-        export_input_bq_to_gcs = BigQueryInsertJobOperator(
-            task_id=f"{IMPORT_ARTISTS_PARAMS['destination_table']}_to_bucket",
+        import_artists_to_link_to_bucket = BigQueryInsertJobOperator(
+            task_id="import_artists_to_link_to_bucket",
             configuration={
                 "extract": {
                     "sourceTable": {
                         "projectId": GCP_PROJECT_ID,
-                        "datasetId": BIGQUERY_TMP_DATASET,
-                        "tableId": IMPORT_ARTISTS_PARAMS["destination_table"],
+                        "datasetId": BIGQUERY_ML_LINKAGE_DATASET,
+                        "tableId": ARTISTS_TO_LINK_TABLE,
                     },
                     "compression": None,
                     "destinationUris": os.path.join(
@@ -179,7 +174,7 @@ with DAG(
             },
             dag=dag,
         )
-        data_collect >> export_input_bq_to_gcs
+        import_artists_to_link_to_bucket
 
     with TaskGroup("internal_linkage") as internal_linkage:
         preprocess_data = SSHGCEOperator(
@@ -254,7 +249,7 @@ with DAG(
         source_objects=os.path.join(
             GCS_FOLDER_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME
         ),
-        destination_project_dataset_table=f"{BIGQUERY_TMP_DATASET}.{LINKED_ARTISTS_BQ_TABLE}",
+        destination_project_dataset_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.{LINKED_ARTISTS_TABLE}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,

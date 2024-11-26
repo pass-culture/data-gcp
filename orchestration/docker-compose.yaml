@@ -67,7 +67,7 @@ services:
   airflow-init:
     build:
       context: .
-      dockerfile: ./airflow/Dockerfile
+      dockerfile: ${DOCKERFILE_PATH:-airflow/Dockerfile}
     <<: *airflow-common
     command: "airflow db init"
     environment:

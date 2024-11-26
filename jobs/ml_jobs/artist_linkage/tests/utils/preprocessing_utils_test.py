@@ -1,5 +1,6 @@
 import pandas as pd
 
+from constants import TOTAL_OFFER_COUNT
 from utils.preprocessing_utils import (
     FilteringParamsType,
     clean_names,
@@ -89,7 +90,7 @@ class TestPreprocessingUtils:
             df = pd.DataFrame(
                 {
                     "first_artist": ["a", "b", "ab", "abc"],
-                    "offer_number": [1, 5, 5, 5],
+                    TOTAL_OFFER_COUNT: [1, 5, 5, 5],
                     "total_booking_count": [5, 5, 5, 5],
                 }
             )
@@ -104,7 +105,7 @@ class TestPreprocessingUtils:
             expected_df = pd.DataFrame(
                 {
                     "first_artist": ["", "ab", "abc"],
-                    "offer_number": [5, 5, 5],
+                    TOTAL_OFFER_COUNT: [5, 5, 5],
                     "total_booking_count": [5, 5, 5],
                     "artist_word_count": [0, 0, 1],
                 }
@@ -118,7 +119,7 @@ class TestPreprocessingUtils:
             df = pd.DataFrame(
                 {
                     "first_artist": ["abc dqsdqs dsqdsqd dqdqs", "abcd", "abcde"],
-                    "offer_number": [5, 5, 5],
+                    TOTAL_OFFER_COUNT: [5, 5, 5],
                     "total_booking_count": [5, 5, 5],
                 }
             )
@@ -137,7 +138,7 @@ class TestPreprocessingUtils:
             df = pd.DataFrame(
                 {
                     "first_artist": ["abc", "abcd", "abcde"],
-                    "offer_number": [1, 2, 3],
+                    TOTAL_OFFER_COUNT: [1, 2, 3],
                     "total_booking_count": [1, 2, 3],
                 }
             )

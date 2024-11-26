@@ -9,7 +9,7 @@
         {% endif %}
     where
         app_info.id in ("{{ params.app_info_ids | join('", "') }}")
-        or app_info.id is null
+        or app_info.id is null  -- WEB
 
     {% if not loop.last -%}
         union all

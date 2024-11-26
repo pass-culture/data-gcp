@@ -10,6 +10,7 @@ from scipy.sparse import csr_matrix, vstack
 from sklearn.cluster import DBSCAN
 from stqdm import stqdm
 
+from constants import OFFER_IS_SYNCHRONISED
 from preprocess import FILTERING_PARAMS
 from utils.preprocessing_utils import (
     clean_names,
@@ -62,7 +63,9 @@ category_df = artist_df.dropna().loc[
     lambda df: df.offer_category_id == selected_category
 ]
 filtered_df = (
-    category_df.loc[lambda df: df.is_synchronised if only_synchronized else df.index]
+    category_df.loc[
+        lambda df: df[OFFER_IS_SYNCHRONISED] if only_synchronized else df.index
+    ]
     .loc[lambda df: df.total_booking_count > 0 if only_booked else df.index]
     .loc[
         lambda df: (

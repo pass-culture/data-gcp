@@ -4,6 +4,7 @@ import pytest
 import rapidfuzz
 from rapidfuzz import fuzz
 
+from constants import TOTAL_OFFER_COUNT
 from utils import clustering_utils
 from utils.clustering_utils import (
     cluster_with_distance_matrices,
@@ -16,7 +17,7 @@ class TestGetClusterToNicknameDict:
         df = pd.DataFrame(
             {
                 "cluster_id": [],
-                "offer_number": [],
+                TOTAL_OFFER_COUNT: [],
                 "artist_name": [],
             }
         )
@@ -27,7 +28,7 @@ class TestGetClusterToNicknameDict:
         df = pd.DataFrame(
             {
                 "cluster_id": ["cluster1", "cluster1"],
-                "offer_number": [1, 2],
+                TOTAL_OFFER_COUNT: [1, 2],
                 "artist_name": ["artist 1", "2, artist"],
                 "first_artist": ["artist 1", "2, artist"],
                 "is_multi_artists": [False, False],
@@ -40,7 +41,7 @@ class TestGetClusterToNicknameDict:
         df = pd.DataFrame(
             {
                 "cluster_id": ["cluster1", "cluster1", "cluster2", "cluster2"],
-                "offer_number": [1, 2, 3, 4],
+                TOTAL_OFFER_COUNT: [1, 2, 3, 4],
                 "first_artist": ["artist1", "artist2", "artist3", "artist4"],
                 "artist_name": ["artist1", "artist2", "artist3", "artist4"],
                 "is_multi_artists": [False, False, False, False],
@@ -53,7 +54,7 @@ class TestGetClusterToNicknameDict:
         df = pd.DataFrame(
             {
                 "cluster_id": ["cluster1", "cluster1", "cluster2", "cluster2"],
-                "offer_number": [1, 2, 5, 4],
+                TOTAL_OFFER_COUNT: [1, 2, 5, 4],
                 "artist_name": [
                     "artist1",
                     "artist2 A ; artist2 B",

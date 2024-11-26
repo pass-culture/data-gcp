@@ -4,7 +4,7 @@ from datetime import datetime
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
-    BIGQUERY_ML_LINKAGE_DATASET,
+    BIGQUERY_ML_LINKAGE_ARTIST_DATASET,
     BIGQUERY_ML_PREPROCESSING_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
@@ -67,9 +67,9 @@ LINK_NEW_PRODUCTS_TO_ARTISTS_TASK_ID = "link_new_products_to_artists"
 
 # DBT
 DBT_MODELS_TO_RUN = [
-    "artist_table+",
-    "product_artist_link_table+",
-    "artist_alias_table+",
+    "artist+",
+    "product_artist_link+",
+    "artist_alias+",
 ]
 
 
@@ -162,7 +162,7 @@ with DAG(
                 "extract": {
                     "sourceTable": {
                         "projectId": GCP_PROJECT_ID,
-                        "datasetId": BIGQUERY_ML_LINKAGE_DATASET,
+                        "datasetId": BIGQUERY_ML_LINKAGE_ARTIST_DATASET,
                         "tableId": ARTISTS_TO_LINK_TABLE,
                     },
                     "compression": None,

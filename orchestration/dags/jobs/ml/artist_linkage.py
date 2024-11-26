@@ -277,7 +277,7 @@ with DAG(
         env={
             "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
             "target": "{{ params.target }}",
-            "model": DBT_MODELS_TO_RUN.join(" "),
+            "model": " ".join(DBT_MODELS_TO_RUN),
             "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
         },
         append_env=True,

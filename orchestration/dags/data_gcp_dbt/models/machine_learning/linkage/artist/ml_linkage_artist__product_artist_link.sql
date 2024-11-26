@@ -18,10 +18,10 @@ with
         where offer_product_id != ""
     ),
     product_artists as (
-        select *
+        select offer_product_id, artist_name, offer_category_id, artist_type
         from product_author
         union all
-        select *
+        select offer_product_id, artist_name, offer_category_id, artist_type
         from product_performer
     ),
     artist_table as (
@@ -29,7 +29,7 @@ with
         from {{ source("ml_preproc", "linked_artists") }}
     )
 select distinct
-    product_artists.offer_product_id as product_id,
+    product_artists.offer_product_id,
     artist_table.artist_id,
     product_artists.artist_type
 from product_artists

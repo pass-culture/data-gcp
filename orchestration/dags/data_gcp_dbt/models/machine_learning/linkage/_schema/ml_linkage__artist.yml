@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: ml_linkage_artist__artist
-    description: "{{ doc('description__ml_linkage_artist__artist') }}"
+  - name: ml_linkage__artist
+    description: "{{ doc('description__ml_linkage__artist') }}"
     columns:
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"

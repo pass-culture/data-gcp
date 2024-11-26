@@ -1,7 +1,7 @@
 select distinct
     artist_id,
     artist_id_name as artist_name,
-    genre as artist_genre,
+    genre as artist_gender,
     description as artist_description,
     professions as artist_professions,
     image_file_url as wikidata_image_file_url,

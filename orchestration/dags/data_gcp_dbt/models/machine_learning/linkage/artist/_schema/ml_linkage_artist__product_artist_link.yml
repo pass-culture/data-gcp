@@ -3,7 +3,6 @@ version: 2
 models:
   - name: ml_linkage_artist__product_artist_link
     description: "{{ doc('description__ml_linkage_artist__product_artist_link') }}"
-    data_tests:
     columns:
       - name: offer_product_id
         description: "{{ doc('column__offer_product_id') }}"

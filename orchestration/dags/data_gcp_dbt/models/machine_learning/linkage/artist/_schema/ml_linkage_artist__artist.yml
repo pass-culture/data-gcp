@@ -3,7 +3,6 @@ version: 2
 models:
   - name: ml_linkage_artist__artist
     description: "{{ doc('description__ml_linkage_artist__artist') }}"
-    data_tests:
     columns:
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"
@@ -12,6 +11,8 @@ models:
           - not_null
       - name: artist_name
         description: "{{ doc('column__artist_name') }}"
+      - name: artist_gender
+        description: "{{ doc('column__artist_gender') }}"
       - name: artist_description
         description: "{{ doc('column__artist_description') }}"
       - name: artist_professions

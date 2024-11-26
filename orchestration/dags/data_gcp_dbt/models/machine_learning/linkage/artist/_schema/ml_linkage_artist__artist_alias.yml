@@ -22,5 +22,5 @@ models:
         data_tests:
           - accepted_values:
               values: [author, performer]
-      - name: column__artist_offer_name
-        description: "{{ doc('column__column__artist_offer_name') }}"
+      - name: artist_offer_name
+        description: "{{ doc('column__artist_offer_name') }}"

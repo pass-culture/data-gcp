@@ -183,4 +183,5 @@ sources:
       - name: item_embedding_reduced_32
       - name: item_embedding_reduced_16
       - name: item_embedding_reduced_5
+      - name: linked_artists
       - name: unconstrained_item_cluster

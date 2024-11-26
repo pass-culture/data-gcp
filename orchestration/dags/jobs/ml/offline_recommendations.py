@@ -6,6 +6,7 @@ from common.config import (
     DAG_FOLDER,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
 )
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
@@ -35,6 +36,8 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
 }
 dag_config = {
+    "GCP_PROJECT_ID": GCP_PROJECT_ID,
+    "ENV_SHORT_NAME": ENV_SHORT_NAME,
     "TOKENIZERS_PARALLELISM": "false",
     "API_TOKEN_SECRET_ID": f"api-reco-token-{ENV_SHORT_NAME}",
 }

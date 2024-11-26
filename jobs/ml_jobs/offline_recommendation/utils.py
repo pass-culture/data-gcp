@@ -2,10 +2,11 @@ import concurrent
 import io
 import os
 from multiprocessing import cpu_count
-
+import pdb
 import numpy as np
 import polars as pl
 import requests
+from loguru import logger
 from google.cloud import bigquery
 
 from access_gcp_secrets import access_secret
@@ -19,9 +20,9 @@ except Exception:
     API_TOKEN = "test_token"
 APP_CONFIG = {
     "URL": {
-        "dev": "https://apireco.testing.passculture.team",
+        "dev": "https://api-reco-dev.data.ehp.internal.passculture.team",
         "stg": "https://apireco.staging.passculture.team/",
-        "prod": "https://apireco.passculture.app",
+        "prod": "https://apireco-prod-962488981524.europe-west1.run.app",
     },
     "TOKEN": API_TOKEN,
     "route": "similar_offers",
@@ -42,6 +43,7 @@ def get_offline_recos(data):
         for chunk in list(np.array_split(data.rows(named=True), batch_number))
     ]
 
+    logger.info(f"And {len(batch_rows)} batches..")
     with concurrent.futures.ProcessPoolExecutor(batch_number) as executor:
         futures = executor.map(
             _get_recos,
@@ -53,20 +55,29 @@ def get_offline_recos(data):
 
 
 def _get_recos(rows):
+    # logger.info("get recos")
+    # pdb.set_trace()
     results = []
     try:
         for row in rows:
             try:
+                # logger.info("Request check")
+                # pdb.set_trace()
                 reco = similar_offers(
                     row["offer_id"], row["venue_longitude"], row["venue_latitude"]
                 )[:N_RECO_DISPLAY]
+                # logger.info("Request Sucess!")
+                # pdb.set_trace()
             except Exception:
+                # logger.info("Request failed!")
+                # pdb.set_trace()
                 reco = []
-            results.append(
-                {"user_id": row["user_id"], "offer_id": row["offer_id"], "recos": reco}
-            )
+        results.append(
+            {"user_id": row["user_id"], "offer_id": row["offer_id"], "recos": reco}
+        )
         return results
     except Exception:
+        logger.info("get recos failed")
         return results
 
 
@@ -74,7 +85,10 @@ def similar_offers(offer_id, longitude, latitude):
     params_filter = {
         "is_reco_shuffled": False,
     }
-    return call_API(offer_id, longitude, latitude, params_filter)["results"]
+    res = call_API(offer_id, longitude, latitude, params_filter)["results"]
+    # logger.info(f"Check on res:{res}")
+    # pdb.set_trace()
+    return res
 
 
 def call_API(input, longitude, latitude, params_filter):

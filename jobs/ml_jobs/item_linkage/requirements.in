@@ -17,3 +17,4 @@ sentence_transformers==3.0.1
 streamlit==1.35.0
 recordlinkage==0.16
 networkx==3.3
+tornado==6.4.2

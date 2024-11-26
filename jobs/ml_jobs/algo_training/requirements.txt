@@ -867,8 +867,9 @@ torch==2.0.1
     #   triton
 torchvision==0.15.2
     # via sentence-transformers
-tornado==6.4.1
+tornado==6.4.2
     # via
+    #   -r requirements.in
     #   ipykernel
     #   jupyter-client
     #   jupyter-server

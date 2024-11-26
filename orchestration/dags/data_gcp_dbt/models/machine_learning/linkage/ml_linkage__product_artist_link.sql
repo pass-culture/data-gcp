@@ -26,7 +26,7 @@ with
     ),
     artist_table as (
         select artist_name, offer_category_id, artist_type, artist_id
-        from {{ source("ml_preproc", "linked_artists") }}
+        from {{ source("ml_preproc", "artist_linked") }}
     )
 select distinct
     product_artists.offer_product_id,

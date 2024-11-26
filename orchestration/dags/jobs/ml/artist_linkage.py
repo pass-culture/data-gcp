@@ -67,9 +67,9 @@ LINK_NEW_PRODUCTS_TO_ARTISTS_TASK_ID = "link_new_products_to_artists"
 
 # DBT
 DBT_MODELS_TO_RUN = [
-    "artist+",
-    "product_artist_link+",
-    "artist_alias+",
+    "ml_linkage_artist__artist+",
+    "ml_linkage_artist__product_artist_link+",
+    "ml_linkage_artist__artist_alias+",
 ]
 
 

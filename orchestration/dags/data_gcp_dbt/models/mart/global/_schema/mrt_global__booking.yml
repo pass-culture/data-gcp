@@ -230,3 +230,18 @@ models:
       - name: first_deposit_creation_date
         description: '{{ doc("column__first_deposit_creation_date") }}'
         data_type: DATETIME
+      - name: user_density_level
+        description: '{{ doc("column__user_density_level") }}'
+        data_type: STRING
+      - name: isbn
+        description: '{{ doc("column__isbn") }}'
+        data_type: STRING
+      - name: user_department_name
+        description: '{{ doc("column__user_department_name") }}'
+        data_type: STRING
+      - name: venue_is_virtual
+        description: '{{ doc("column__venue_is_virtual") }}'
+        data_type: BOOLEAN
+      - name: offer_type_label
+        description: "{{ doc('column__offer_type_label') }}"
+        data_type: STRING

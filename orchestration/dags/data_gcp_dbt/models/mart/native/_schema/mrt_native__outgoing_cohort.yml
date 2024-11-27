@@ -63,3 +63,4 @@ models:
       - name: total_venue_type_booked
         description: "{{ doc('column__total_venue_type_booked') }}"
       - name: total_category_booked
+        description: "{{ doc('column__total_category_booked') }}"

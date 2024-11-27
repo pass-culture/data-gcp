@@ -65,6 +65,7 @@ select
     u.user_density_label,
     u.user_macro_density_label,
     u.user_density_level,
+    u.user_creation_date,
     u.user_activation_date,
     u.user_activity,
     u.user_civility,

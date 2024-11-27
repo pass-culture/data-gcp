@@ -73,8 +73,14 @@ with
             consult_venue cv
             on cv.venue_id = co.venue_id
             and cv.venue_consultation_timestamp <= co.consultation_timestamp
-            and date(cv.venue_consultation_timestamp) = date(co.consultation_timestamp)
+            and cv.unique_session_id = co.unique_session_id
         where co.consult_offer_origin = "venue"
+        qualify
+            row_number() over (
+                partition by cv.venue_id, cv.unique_session_id
+                order by cv.venue_consultation_timestamp
+            )
+            = 1
     ),
 
     consult_offer_through_similar_offer as (
@@ -84,8 +90,14 @@ with
             consult_offer co2
             on co1.similar_offer_id = co2.offer_id
             and co2.consultation_timestamp <= co1.consultation_timestamp
-            and date(co1.consultation_timestamp) = date(co2.consultation_timestamp)
+            and co1.unique_session_id = co2.unique_session_id
         where co1.consult_offer_origin = "similar_offer"
+        qualify
+            row_number() over (
+                partition by co2.offer_id, co2.unique_session_id
+                order by co2.consultation_timestamp
+            )
+            = 1
     )
 
 select

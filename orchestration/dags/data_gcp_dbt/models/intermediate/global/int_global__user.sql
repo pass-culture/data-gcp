@@ -17,15 +17,11 @@ with
             min(first_individual_booking_date) as first_individual_booking_date,
             max(last_individual_booking_date) as last_individual_booking_date,
             sum(
-                case
-                    when deposit_type = "GRANT_18" then total_distinct_booking_types
-                end
-            ) as total_distinct_grant_18_booking_types,
+                case when deposit_type = "GRANT_18" then total_subcategory_booked end
+            ) as total_grant_18_subcategory_booked,
             sum(
-                case
-                    when deposit_type = "GRANT_15_17" then total_distinct_booking_types
-                end
-            ) as total_distinct_grant_15_17_booking_types,
+                case when deposit_type = "GRANT_15_17" then total_subcategory_booked end
+            ) as total_grant_15_17_subcategory_booked,
             sum(
                 total_theoretical_physical_goods_amount_spent
             ) as total_theoretical_physical_goods_amount_spent,
@@ -146,8 +142,8 @@ select
     ) as days_between_activation_date_and_first_booking_paid,
     dgu.first_booking_type,
     dgu.first_paid_booking_type,
-    dgu.total_distinct_grant_18_booking_types,
-    dgu.total_distinct_grant_15_17_booking_types,
+    dgu.total_grant_18_subcategory_booked,
+    dgu.total_grant_15_17_subcategory_booked,
     ah.action_history_reason as user_suspension_reason,
     dgu.first_deposit_amount,
     dgu.last_deposit_expiration_date as last_deposit_expiration_date,

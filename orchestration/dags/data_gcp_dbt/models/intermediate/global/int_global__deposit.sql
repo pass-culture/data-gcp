@@ -42,7 +42,7 @@ with
                 distinct case
                     when not booking_is_cancelled then offer_subcategory_id
                 end
-            ) as total_distinct_booking_types,
+            ) as total_subcategory_booked,
             sum(
                 case
                     when
@@ -103,7 +103,7 @@ select
     bgd.total_non_cancelled_individual_bookings,
     bgd.total_non_cancelled_duo_bookings,
     bgd.total_free_bookings,
-    bgd.total_distinct_booking_types,
+    bgd.total_subcategory_booked,
     bgd.total_theoretical_physical_goods_amount_spent,
     bgd.total_theoretical_digital_goods_amount_spent,
     bgd.total_theoretical_outings_amount_spent,

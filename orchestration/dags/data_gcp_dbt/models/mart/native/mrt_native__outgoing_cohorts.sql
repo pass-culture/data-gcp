@@ -20,8 +20,8 @@ with
             total_non_cancelled_individual_bookings,
             total_non_cancelled_duo_bookings,
             total_free_bookings,
-            total_distinct_grant_18_booking_types,
-            total_distinct_grant_15_17_booking_types,
+            total_grant_18_subcategory_booked,
+            total_grant_15_17_subcategory_booked,
             first_individual_booking_date,
             first_deposit_creation_date,
             date_diff(
@@ -114,10 +114,10 @@ select
     coalesce(sum(total_item_consulted), 0) as total_item_consulted,
     coalesce(sum(total_venue_consulted), 0) as total_venue_consulted,
     coalesce(
-        sum(u.total_distinct_grant_18_booking_types), 0
+        sum(u.total_grant_18_subcategory_booked), 0
     ) as total_grant_18_subcategory_booked,
     coalesce(
-        sum(u.total_distinct_grant_15_17_booking_types), 0
+        sum(u.total_grant_15_17_subcategory_booked), 0
     ) as total_grant_15_17_subcategory_booked,
     coalesce(
         sum(total_venue_type_label_consulted), 0

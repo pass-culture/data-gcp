@@ -53,7 +53,6 @@ GCE_INSTALLER = "uv"
 # BQ Tables
 ARTISTS_TO_LINK_TABLE = "artist_name_to_link"
 ARTIST_LINK_TABLE = "artist_linked"
-QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
 default_args = {
     "start_date": datetime(2024, 7, 16),
     "on_failure_callback": task_fail_slack_alert,

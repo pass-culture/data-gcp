@@ -37,7 +37,7 @@ WIKIDATA_EXTRACTION_GCS_FILENAME = "wikidata_extraction.parquet"
 QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
 
 default_args = {
-    "start_date": datetime(2024, 7, 16),
+    "start_date": datetime(2024, 12, 1),
     "on_failure_callback": task_fail_slack_alert,
     "retries": 5,
 }
@@ -61,15 +61,10 @@ with DAG(
             default="n1-standard-2" if ENV_SHORT_NAME == "dev" else "n1-standard-8",
             type="string",
         ),
-        "link_from_scratch": Param(
-            default=True,
-            type="boolean",
-        ),
     },
 ) as dag:
     with TaskGroup("dag_init") as dag_init:
         # check fribourg uni serveur availability
-
         health_check_task = PythonOperator(
             task_id="health_check_task",
             python_callable=sparkql_health_check,

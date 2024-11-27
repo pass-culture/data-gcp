@@ -70,13 +70,17 @@ def get_last_date_from_bucket(gcs_path: str) -> str:
     bucket = client.get_bucket(bucket_name)
     blobs = bucket.list_blobs(prefix=base_path)
 
-    dates = sorted(
-        {blob.name.split("/")[-1] for blob in blobs if len(blob.name.split("/")) > 1},
-        reverse=True,
-    )
+    dates = []
+    for blob in blobs:
+        if len(blob.name.split("/")) > 3:
+            raise ValueError(
+                f"Invalid blob name {blob.name}. Expected format: {gcs_path}/YYYYMMDD/file"
+            )
+        elif len(blob.name.split("/")) == 3:
+            dates.append(blob.name.split("/")[-2])
 
     if not dates:
         raise ValueError(
             f"No dates found in bucket {bucket_name} with base path {base_path}"
         )
-    return dates[0]
+    return sorted(dates, reverse=True)[0]

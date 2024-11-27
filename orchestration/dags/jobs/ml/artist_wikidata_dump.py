@@ -24,15 +24,15 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
 
 DEFAULT_REGION = "europe-west1"
-GCE_INSTANCE = f"artist-linkage-{ENV_SHORT_NAME}"
+GCE_INSTANCE = f"artist-wikidata-dump-{ENV_SHORT_NAME}"
 GCE_INSTALLER = "uv"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
 SCHEDULE_CRON = "0 3 1 * *"
 
 # GCS Paths / Filenames
-GCS_FOLDER_PATH = f"artist_linkage_{ENV_SHORT_NAME}"
+GCS_FOLDER_PATH = "dump_wikidata"
 STORAGE_PATH = (
-    f"gs://{DATA_GCS_BUCKET_NAME}/{GCS_FOLDER_PATH}/{datetime.now().strftime('%Y%m%d')}"
+    f"gs://{DATA_GCS_BUCKET_NAME}/dump_wikidata/{datetime.now().strftime('%Y%m%d')}"
 )
 WIKIDATA_EXTRACTION_GCS_FILENAME = "wikidata_extraction.parquet"
 QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"

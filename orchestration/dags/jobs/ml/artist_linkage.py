@@ -20,7 +20,7 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
 )
-from common.utils import get_airflow_schedule, sparkql_health_check
+from common.utils import get_airflow_schedule
 
 from airflow import DAG
 from airflow.models import Param
@@ -94,13 +94,6 @@ with DAG(
 ) as dag:
     with TaskGroup("dag_init") as dag_init:
         # check fribourg uni serveur availability
-
-        health_check_task = PythonOperator(
-            task_id="health_check_task",
-            python_callable=sparkql_health_check,
-            op_args=[QLEVER_ENDPOINT],
-            dag=dag,
-        )
         logging_task = PythonOperator(
             task_id="logging_task",
             python_callable=lambda: print(
@@ -108,7 +101,6 @@ with DAG(
             ),
             dag=dag,
         )
-        health_check_task >> logging_task
 
     with TaskGroup("vm_init") as vm_init:
         gce_instance_start = StartGCEOperator(
@@ -191,17 +183,6 @@ with DAG(
         )
         preprocess_data >> artist_linkage
     with TaskGroup("wikidata_matching") as wikidata_matching:
-        extract_from_wikidata = SSHGCEOperator(
-            task_id="extract_from_wikidata",
-            instance_name=GCE_INSTANCE,
-            base_dir=BASE_DIR,
-            installer=GCE_INSTALLER,
-            command=f"""
-             python extract_from_wikidata.py \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, WIKIDATA_EXTRACTION_GCS_FILENAME)}
-            """,
-        )
-
         match_artists_on_wikidata = SSHGCEOperator(
             task_id="match_artists_on_wikidata",
             instance_name=GCE_INSTANCE,
@@ -226,11 +207,7 @@ with DAG(
             --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)}
             """,
         )
-        (
-            extract_from_wikidata
-            >> match_artists_on_wikidata
-            >> get_wikimedia_commons_license
-        )
+        (match_artists_on_wikidata >> get_wikimedia_commons_license)
 
     load_data_into_artist_linked_table = GCSToBigQueryOperator(
         bucket=MLFLOW_BUCKET_NAME,

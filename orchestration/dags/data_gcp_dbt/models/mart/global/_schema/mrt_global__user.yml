@@ -159,11 +159,11 @@ models:
       - name: first_paid_booking_type
         description: '{{ doc("column__user_first_paid_booking_type") }}'
         data_type: STRING
-      - name: total_distinct_grant_18_booking_types
-        description: '{{ doc("column__total_distinct_grant_18_booking_types") }}'
+      - name: total_grant_18_subcategory_booked
+        description: '{{ doc("column__total_grant_18_subcategory_booked") }}'
         data_type: INT64
-      - name: total_distinct_grant_15_17_booking_types
-        description: '{{ doc("column__total_distinct_grant_15_17_booking_types") }}'
+      - name: total_grant_15_17_subcategory_booked
+        description: '{{ doc("column__total_grant_15_17_subcategory_booked") }}'
         data_type: INT64
       - name: user_suspension_reason
         description: '{{ doc("column__user_suspension_reason") }}'

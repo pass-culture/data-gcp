@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import typer
 
@@ -16,9 +18,10 @@ CATEGORY_MAPPING = {
 
 
 def load_wikidata(wiki_base_path: str, wiki_file_name: str) -> pd.DataFrame:
-    latest_path = (
-        f"{wiki_base_path}/{get_last_date_from_bucket(wiki_base_path)}/{wiki_file_name}"
+    latest_path = os.path.join(
+        wiki_base_path, get_last_date_from_bucket(wiki_base_path), wiki_file_name
     )
+
     return pd.read_parquet(latest_path)
 
 

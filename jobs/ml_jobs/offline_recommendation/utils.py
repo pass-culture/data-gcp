@@ -72,9 +72,9 @@ def _get_recos(rows):
                 # logger.info("Request failed!")
                 # pdb.set_trace()
                 reco = []
-        results.append(
-            {"user_id": row["user_id"], "offer_id": row["offer_id"], "recos": reco}
-        )
+            results.append(
+                {"user_id": row["user_id"], "offer_id": row["offer_id"], "recos": reco}
+            )
         return results
     except Exception:
         logger.info("get recos failed")

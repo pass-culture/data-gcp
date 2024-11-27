@@ -57,6 +57,7 @@ with
         from users_expired_monthly user
         join
             {{ ref("mrt_global__booking") }} bookings on bookings.user_id = user.user_id
+        where not booking_is_cancelled
         group by deposit_expiration_date, user_id
     ),
     consultations as (

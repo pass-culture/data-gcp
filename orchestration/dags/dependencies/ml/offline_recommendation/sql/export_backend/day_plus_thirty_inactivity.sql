@@ -1,0 +1,1 @@
+select * from `{{ bigquery_tmp_dataset }}.offline_recommendation_{{ yyyymmdd(ds) }}_day_plus_fifty_after_deposit`

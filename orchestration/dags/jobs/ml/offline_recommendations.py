@@ -127,6 +127,8 @@ with DAG(
         >> install_dependencies
         >> get_offline_predictions[0]
         >> get_offline_predictions[1]
+        >> get_offline_predictions[2]
+        >> get_offline_predictions[3]
         >> export_to_backend_tasks
         >> end
     )

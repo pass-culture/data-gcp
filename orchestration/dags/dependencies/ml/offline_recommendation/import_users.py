@@ -1,6 +1,11 @@
 SQL_PATH = "dependencies/ml/offline_recommendation/sql/import"
 DATE = "{{ yyyymmdd(ds) }}"
-queries = ["first_booking", "day_plus_two_after_booking"]
+queries = [
+    "first_booking",
+    "day_plus_two_after_booking",
+    "day_plus_fifty_after_deposit",
+    "day_plus_thirty_inactivity",
+]
 params = []
 for query in queries:
     params.append(

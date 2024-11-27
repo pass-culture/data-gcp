@@ -4,5 +4,5 @@ SELECT
  ,"productId" as productId
  ,"imageType" as imageType
  ,"lastProviderId" as lastProviderId
- ,"UUID" AS uuid
+ ,"uuid" AS uuid
 FROM public.product_mediation

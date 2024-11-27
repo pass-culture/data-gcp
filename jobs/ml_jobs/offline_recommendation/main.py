@@ -22,7 +22,9 @@ def offline_recommendation(
         .to_arrow()
     )
 
-    logger.info("Offline recommendation: Get recommendations from API...")
+    logger.info(
+        f"Offline recommendation: Get recommendations from API... for {len(data)} users"
+    )
     offline_recommendations = get_offline_recos(data)
 
     logger.info("Offline recommendation: Store recos to BQ...")

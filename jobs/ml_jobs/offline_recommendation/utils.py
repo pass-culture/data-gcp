@@ -11,11 +11,11 @@ from google.cloud import bigquery
 
 from access_gcp_secrets import access_secret
 
-GCP_PROJECT = os.environ.get("GCP_PROJECT", "passculture-data-ehp")
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 API_TOKEN_SECRET_ID = os.environ.get("API_TOKEN_SECRET_ID")
 try:
-    API_TOKEN = access_secret(GCP_PROJECT, API_TOKEN_SECRET_ID)
+    API_TOKEN = access_secret(GCP_PROJECT_ID, API_TOKEN_SECRET_ID)
 except Exception:
     API_TOKEN = "test_token"
 APP_CONFIG = {
@@ -125,7 +125,7 @@ def export_polars_to_bq(client, data, dataset, output_table):
         job = client.load_table_from_file(
             stream,
             destination=f"{dataset}.{output_table}",
-            project=GCP_PROJECT,
+            project=GCP_PROJECT_ID,
             job_config=bigquery.LoadJobConfig(
                 source_format=bigquery.SourceFormat.PARQUET,
             ),

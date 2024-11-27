@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: mrt_native__outgoing_cohorts
-    description: "{{ doc('description__mrt_native__outgoing_cohorts') }}"
+  - name: mrt_native__outgoing_cohort
+    description: "{{ doc('description__mrt_native__outgoing_cohort') }}"
     columns:
       - name: user_expiration_month
         description: "{{ doc('column__user_expiration_month') }}"

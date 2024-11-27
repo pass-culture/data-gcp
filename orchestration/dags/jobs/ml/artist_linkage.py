@@ -9,7 +9,9 @@ from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+    ML_AIRFLOW_DAG_TAG,
     MLFLOW_BUCKET_NAME,
+    VM_AIRFLOW_DAG_TAG,
 )
 from common.operators.bigquery import BigQueryInsertJobOperator
 from common.operators.gce import (
@@ -28,9 +30,6 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
 from airflow.utils.task_group import TaskGroup
-
-ML_DAG_TAG = "ML"
-VM_DAG_TAG = "VM"
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"artist-linkage-{ENV_SHORT_NAME}"
@@ -77,7 +76,7 @@ with DAG(
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    tags=[ML_DAG_TAG, VM_DAG_TAG],
+    tags=[ML_AIRFLOW_DAG_TAG, VM_AIRFLOW_DAG_TAG],
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",

@@ -13,6 +13,7 @@ from common.operators.gce import (
     CloneRepositoryGCEOperator,
     SSHGCEOperator,
     StartGCEOperator,
+    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 from dependencies.ml.offline_recommendation.export_to_backend import (
@@ -31,11 +32,11 @@ DATE = "{{ yyyymmdd(ds) }}"
 STORAGE_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/offline_recommendation_{ENV_SHORT_NAME}/offline_recommendation_{DATE}"
 default_args = {
     "start_date": datetime(2023, 8, 2),
-    "on_failure_callback": task_fail_slack_alert,
+    # "on_failure_callback": task_fail_slack_alert,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
-dag_config = {
+DAG_CONFIG = {
     "GCP_PROJECT_ID": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
     "TOKENIZERS_PARALLELISM": "false",
@@ -45,7 +46,7 @@ with DAG(
     "offline_recommendation",
     default_args=default_args,
     description="Produce offline recommendation",
-    schedule_interval=get_airflow_schedule("0 0 * * 0"),
+    schedule_interval=get_airflow_schedule("0 2 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,
@@ -79,7 +80,7 @@ with DAG(
                 task_id=f"""get_offline_predictions_{query_params["table"]}""",
                 instance_name=GCE_INSTANCE,
                 base_dir=BASE_DIR,
-                environment=dag_config,
+                environment=DAG_CONFIG,
                 command="PYTHONPATH=. python main.py "
                 f"""--input-table {query_params["destination_table"]} --output-table offline_recommendation_{query_params["destination_table"]}""",
             )
@@ -117,6 +118,10 @@ with DAG(
                 extra_params={},
             )
         )
+    
+    gce_instance_stop = StopGCEOperator(
+        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+    )
 
     end = DummyOperator(task_id="end", dag=dag)
     (
@@ -130,5 +135,6 @@ with DAG(
         >> get_offline_predictions[2]
         >> get_offline_predictions[3]
         >> export_to_backend_tasks
+        >> gce_instance_stop
         >> end
     )

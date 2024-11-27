@@ -5,7 +5,7 @@ CREATE OR REPLACE TABLE analytics.monthly_aggregated_venue_collective_revenue ON
     SETTINGS storage_policy='gcs_main'
 AS
 SELECT
-    date_trunc('MONTH', toDate (creation_date)) AS creation_month,
+    coalesce(date_trunc('MONTH', toDate (stock_beginning_date)),date_trunc('MONTH', toDate (reimbursement_date)),date_trunc('MONTH', toDate (used_date)),date_trunc('MONTH', toDate (creation_date))) AS creation_month,
     cast(venue_id as String) as venue_id,
     sum(
         case

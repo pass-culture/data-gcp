@@ -1,3 +1,5 @@
+{{ config(**custom_table_config(materialized="view")) }}
+
 with
     authors_table as (
         select

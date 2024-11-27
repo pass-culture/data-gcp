@@ -1,3 +1,5 @@
+{{ config(**custom_table_config(materialized="view")) }}
+
 with
     product_author as (
         select distinct
@@ -5,7 +7,7 @@ with
             author as artist_name,
             offer_category_id,
             "author" as artist_type
-        from `{{ bigquery_analytics_dataset }}.global_offer`
+        from {{ ref("mrt_global__offer") }}
         where offer_product_id != ""
     ),
     product_performer as (
@@ -14,22 +16,22 @@ with
             performer as artist_name,
             offer_category_id,
             "performer" as artist_type
-        from `{{ bigquery_analytics_dataset }}.global_offer`
+        from {{ ref("mrt_global__offer") }}
         where offer_product_id != ""
     ),
     product_artists as (
-        select *
+        select offer_product_id, artist_name, offer_category_id, artist_type
         from product_author
         union all
-        select *
+        select offer_product_id, artist_name, offer_category_id, artist_type
         from product_performer
     ),
     artist_table as (
         select artist_name, offer_category_id, artist_type, artist_id
-        from `{{ bigquery_ml_preproc_dataset }}.linked_artists`
+        from {{ source("ml_preproc", "artist_linked") }}
     )
 select distinct
-    product_artists.offer_product_id as product_id,
+    product_artists.offer_product_id,
     artist_table.artist_id,
     product_artists.artist_type
 from product_artists

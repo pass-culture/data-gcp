@@ -11,7 +11,7 @@ from common.config import (
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
 )
-from common.operators.bigquery import BigQueryInsertJobOperator, bigquery_job_task
+from common.operators.bigquery import BigQueryInsertJobOperator
 from common.operators.gce import (
     InstallDependenciesOperator,
     SSHGCEOperator,
@@ -19,15 +19,6 @@ from common.operators.gce import (
     StopGCEOperator,
 )
 from common.utils import get_airflow_schedule, sparkql_health_check
-from dependencies.ml.linkage.create_artist_alias_table import (
-    PARAMS as CREATE_ARTIST_ALIAS_TABLE_PARAMS,
-)
-from dependencies.ml.linkage.create_artist_table import (
-    PARAMS as CREATE_ARTIST_TABLE_PARAMS,
-)
-from dependencies.ml.linkage.create_product_artist_link_table import (
-    PARAMS as CREATE_PRODUCT_ARTIST_LINK_TABLE_PARAMS,
-)
 
 from airflow import DAG
 from airflow.models import Param
@@ -51,18 +42,17 @@ GCS_FOLDER_PATH = f"artist_linkage_{ENV_SHORT_NAME}"
 STORAGE_BASE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}"
 ARTISTS_TO_LINK_GCS_FILENAME = "artists_to_link.parquet"
 PREPROCESSED_GCS_FILENAME = "preprocessed_artists_to_link.parquet"
-LINKED_ARTISTS_GCS_FILENAME = "linked_artists.parquet"
+ARTIST_LINKED_GCS_FILENAME = "artist_linked.parquet"
 WIKIDATA_EXTRACTION_GCS_FILENAME = "wikidata_extraction.parquet"
 ARTISTS_MATCHED_ON_WIKIDATA = "artists_matched_on_wikidata.parquet"
-ARTISTS_WITH_METADATA_GCS_FILENAME = "linked_artists_with_metadata.parquet"
+ARTISTS_WITH_METADATA_GCS_FILENAME = "artist_linked_with_metadata.parquet"
 TEST_SETS_GCS_DIR = "labelled_test_sets"
 GCE_INSTALLER = "uv"
 
 # BQ Tables
 ARTISTS_TO_LINK_TABLE = "artist_name_to_link"
-LINKED_ARTISTS_TABLE = "linked_artists"
+ARTIST_LINK_TABLE = "artist_linked"
 QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
-
 default_args = {
     "start_date": datetime(2024, 7, 16),
     "on_failure_callback": task_fail_slack_alert,
@@ -197,7 +187,7 @@ with DAG(
             command=f"""
              python cluster.py \
             --source-file-path {os.path.join(STORAGE_BASE_PATH, PREPROCESSED_GCS_FILENAME)} \
-            --output-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_GCS_FILENAME)}
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTIST_LINKED_GCS_FILENAME)}
             """,
         )
         preprocess_data >> artist_linkage
@@ -220,7 +210,7 @@ with DAG(
             installer=GCE_INSTALLER,
             command=f"""
              python match_artists_on_wikidata.py \
-            --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, LINKED_ARTISTS_GCS_FILENAME)} \
+            --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, ARTIST_LINKED_GCS_FILENAME)} \
             --wiki-file-path {os.path.join(STORAGE_BASE_PATH, WIKIDATA_EXTRACTION_GCS_FILENAME)} \
             --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_MATCHED_ON_WIKIDATA)}
             """,
@@ -243,13 +233,13 @@ with DAG(
             >> get_wikimedia_commons_license
         )
 
-    load_data_into_linked_artists_table = GCSToBigQueryOperator(
+    load_data_into_artist_linked_table = GCSToBigQueryOperator(
         bucket=MLFLOW_BUCKET_NAME,
-        task_id="load_data_into_linked_artists_table",
+        task_id="load_data_into_artist_linked_table",
         source_objects=os.path.join(
             GCS_FOLDER_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME
         ),
-        destination_project_dataset_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.{LINKED_ARTISTS_TABLE}",
+        destination_project_dataset_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.{ARTIST_LINK_TABLE}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,
@@ -271,25 +261,6 @@ with DAG(
         ),
     )
 
-    with TaskGroup("export_data") as export_data:
-        create_artist_table = bigquery_job_task(
-            dag,
-            f"create_bq_table_{CREATE_ARTIST_TABLE_PARAMS['destination_table']}",
-            CREATE_ARTIST_TABLE_PARAMS,
-        )
-
-        create_product_artist_link_table = bigquery_job_task(
-            dag,
-            f"create_bq_table_{CREATE_PRODUCT_ARTIST_LINK_TABLE_PARAMS['destination_table']}",
-            CREATE_PRODUCT_ARTIST_LINK_TABLE_PARAMS,
-        )
-
-        create_artist_alias_table = bigquery_job_task(
-            dag,
-            f"create_bq_table_{CREATE_ARTIST_ALIAS_TABLE_PARAMS['destination_table']}",
-            CREATE_ARTIST_ALIAS_TABLE_PARAMS,
-        )
-
     # Common tasks
     (
         dag_init
@@ -301,12 +272,7 @@ with DAG(
     # Link From Scratch tasks
     link_from_scratch >> collect >> internal_linkage
     link_from_scratch >> [internal_linkage, wikidata_matching]
-    (
-        internal_linkage
-        >> wikidata_matching
-        >> load_data_into_linked_artists_table
-        >> export_data
-    )
+    (internal_linkage >> wikidata_matching >> load_data_into_artist_linked_table)
     wikidata_matching >> artist_metrics >> gce_instance_stop
 
     # Link New Products to Artists tasks

@@ -184,4 +184,5 @@ sources:
       - name: item_embedding_reduced_16
       - name: item_embedding_reduced_5
       - name: artist_linked
+        description: This table contains the artist_linkage dag
       - name: unconstrained_item_cluster

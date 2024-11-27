@@ -32,10 +32,11 @@ select
     e.event_day,
     e.event_month,
     e.offer_id,
-    e.item_id,
+    go.item_id,
     eom.offer_subcategory_id,
     eom.search_group_name
 from events e
+join `{{ bigquery_analytics_dataset }}.global_offer` go on e.offer_id = go.offer_id
 join user_with_first_deposit uob on e.user_id = uob.user_id
 join
     `{{ bigquery_int_applicative_dataset }}.offer_metadata` eom

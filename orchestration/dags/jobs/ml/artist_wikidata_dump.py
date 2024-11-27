@@ -7,8 +7,6 @@ from common.config import (
     DAG_FOLDER,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
-    ML_AIRFLOW_DAG_TAG,
-    VM_AIRFLOW_DAG_TAG,
 )
 from common.operators.gce import (
     InstallDependenciesOperator,
@@ -51,7 +49,6 @@ with DAG(
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    tags=[ML_AIRFLOW_DAG_TAG, VM_AIRFLOW_DAG_TAG],
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -85,7 +82,6 @@ with DAG(
             task_id="gce_start_task",
             instance_name=GCE_INSTANCE,
             instance_type="{{ params.instance_type }}",
-            labels={"job_type": "ml"},
             preemptible=False,
         )
         fetch_install_code = InstallDependenciesOperator(

@@ -71,7 +71,7 @@ def get_last_date_from_bucket(gcs_path: str) -> str:
     blobs = bucket.list_blobs(prefix=base_path)
 
     dates = sorted(
-        {blob.name.split("/")[1] for blob in blobs if len(blob.name.split("/")) > 1},
+        {blob.name.split("/")[-1] for blob in blobs if len(blob.name.split("/")) > 1},
         reverse=True,
     )
 

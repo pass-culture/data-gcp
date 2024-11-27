@@ -1,7 +1,7 @@
 import pandas as pd
 import typer
 
-from utils.gcs_utils import upload_parquet
+from utils.gcs_utils import get_last_date_from_bucket, upload_parquet
 
 app = typer.Typer()
 
@@ -13,6 +13,13 @@ CATEGORY_MAPPING = {
     "LIVRE": ["book"],
     "CINEMA": ["movie"],
 }
+
+
+def load_wikidata(wiki_base_path: str, wiki_file_name: str) -> pd.DataFrame:
+    latest_path = (
+        f"{wiki_base_path}/{get_last_date_from_bucket(wiki_base_path)}/{wiki_file_name}"
+    )
+    return pd.read_parquet(latest_path)
 
 
 def match_per_category_no_namesakes(
@@ -155,7 +162,8 @@ def get_cluster_to_wiki_mapping(matched_df: pd.DataFrame) -> dict:
 @app.command()
 def main(
     linked_artists_file_path: str = typer.Option(),
-    wiki_file_path: str = typer.Option(),
+    wiki_base_path: str = typer.Option(),
+    wiki_file_name: str = typer.Option(),
     output_file_path: str = typer.Option(),
 ) -> None:
     artists_df = (
@@ -164,7 +172,9 @@ def main(
         .pipe(preprocess_artists)
     )
     wiki_df = (
-        pd.read_parquet(wiki_file_path).reset_index(drop=True).pipe(preprocess_wiki)
+        load_wikidata(wiki_base_path=wiki_base_path, wiki_file_name=wiki_file_name)
+        .reset_index(drop=True)
+        .pipe(preprocess_wiki)
     )
 
     # 1. Match artists on wikidata for namesaked artists

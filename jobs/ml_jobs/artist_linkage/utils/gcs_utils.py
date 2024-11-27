@@ -54,3 +54,29 @@ def upload_parquet(dataframe: DataFrame, gcs_path: str) -> None:
     # Upload the in-memory Parquet file to GCS
     blob.upload_from_file(file_stream, content_type="application/octet-stream")
     print(f"DataFrame uploaded as Parquet file to gs://{bucket_name}/{blob_name}.")
+
+
+def get_last_date_from_bucket(gcs_path: str) -> str:
+    """
+    Get the last date from the GCS path.
+
+    Args:
+        gcs_path (str): The GCS path to be used. (ex: gs://bucket-name/path/to/base/path)
+    """
+    client = storage.Client()
+    storage_path = gcs_path.replace("gs://", "")
+    bucket_name = storage_path.split("/")[0]
+    base_path = storage_path.replace(f"{bucket_name}/", "")
+    bucket = client.get_bucket(bucket_name)
+    blobs = bucket.list_blobs(prefix=base_path)
+
+    dates = sorted(
+        {blob.name.split("/")[1] for blob in blobs if len(blob.name.split("/")) > 1},
+        reverse=True,
+    )
+
+    if not dates:
+        raise ValueError(
+            f"No dates found in bucket {bucket_name} with base path {base_path}"
+        )
+    return dates[0]

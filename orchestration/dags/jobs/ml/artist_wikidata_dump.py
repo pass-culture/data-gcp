@@ -30,7 +30,6 @@ BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
 SCHEDULE_CRON = "0 3 1 * *"
 
 # GCS Paths / Filenames
-GCS_FOLDER_PATH = "dump_wikidata"
 STORAGE_PATH = (
     f"gs://{DATA_GCS_BUCKET_NAME}/dump_wikidata/{datetime.now().strftime('%Y%m%d')}"
 )

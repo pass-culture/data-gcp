@@ -7,6 +7,7 @@ from common.config import (
     BIGQUERY_ML_LINKAGE_DATASET,
     BIGQUERY_ML_PREPROCESSING_DATASET,
     DAG_FOLDER,
+    DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     ML_AIRFLOW_DAG_TAG,
@@ -39,6 +40,7 @@ SCHEDULE_CRON = "0 3 * * 1"
 # GCS Paths / Filenames
 GCS_FOLDER_PATH = f"artist_linkage_{ENV_SHORT_NAME}"
 STORAGE_BASE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}"
+WIKIDATA_STORAGE_BASE_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/dump_wikidata"
 ARTISTS_TO_LINK_GCS_FILENAME = "artists_to_link.parquet"
 PREPROCESSED_GCS_FILENAME = "preprocessed_artists_to_link.parquet"
 ARTIST_LINKED_GCS_FILENAME = "artist_linked.parquet"
@@ -191,7 +193,8 @@ with DAG(
             command=f"""
              python match_artists_on_wikidata.py \
             --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, ARTIST_LINKED_GCS_FILENAME)} \
-            --wiki-file-path {os.path.join(STORAGE_BASE_PATH, WIKIDATA_EXTRACTION_GCS_FILENAME)} \
+            --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
+            --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
             --output-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_MATCHED_ON_WIKIDATA)}
             """,
         )

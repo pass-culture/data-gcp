@@ -62,13 +62,6 @@ default_args = {
 LINK_FROM_SCRATCH_TASK_ID = "link_from_scratch"
 LINK_NEW_PRODUCTS_TO_ARTISTS_TASK_ID = "link_new_products_to_artists"
 
-# DBT
-DBT_MODELS_TO_RUN = [
-    "ml_linkage__artist+",
-    "ml_linkage__product_artist_link+",
-    "ml_linkage__artist_alias+",
-]
-
 
 def _choose_linkage(**context):
     if context["params"]["link_from_scratch"] is True:

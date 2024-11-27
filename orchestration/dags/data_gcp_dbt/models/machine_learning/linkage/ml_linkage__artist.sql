@@ -1,3 +1,5 @@
+{{ config(**custom_table_config(materialized="view")) }}
+
 select distinct
     artist_id,
     artist_id_name as artist_name,

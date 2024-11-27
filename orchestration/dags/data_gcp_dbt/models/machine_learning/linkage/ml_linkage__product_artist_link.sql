@@ -1,3 +1,5 @@
+{{ config(**custom_table_config(materialized="view")) }}
+
 with
     product_author as (
         select distinct

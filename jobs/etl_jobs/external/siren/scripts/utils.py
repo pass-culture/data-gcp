@@ -33,7 +33,10 @@ def get_api_token(consumer_key):
     data = {"grant_type": "client_credentials"}
 
     response = requests.post(
-        "https://api.insee.fr/token", headers=headers, data=data, verify=False
+        "https://api.insee.fr/token",
+        headers=headers,
+        data=data,
+        verify="/etc/ssl/certs/ca-certificates.crt",
     )
     result_token = response.json()
 

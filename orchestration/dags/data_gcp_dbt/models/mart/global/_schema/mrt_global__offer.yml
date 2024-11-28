@@ -19,7 +19,7 @@ models:
         description: '{{ doc("column__offer_id_at_providers") }}'
         data_type: STRING
       - name: is_synchronised
-        description: '{{ doc("column__is_synchronised") }}'
+        description: '{{ doc("column__offer_is_synchronised") }}'
         data_type: BOOLEAN
       - name: offer_name
         description: '{{ doc("column__offer_name") }}'

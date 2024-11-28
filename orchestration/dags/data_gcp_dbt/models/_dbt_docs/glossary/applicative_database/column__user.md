@@ -41,6 +41,7 @@
 {% docs column__user_last_deposit_amount %} Amount of the last deposit received by the user. {% enddocs %}
 {% docs column__user_first_deposit_type %} Type of the user's first deposit (GRANT_18 or GRANT_15_17). {% enddocs %}
 {% docs column__user_current_deposit_type %} Type of the user's current deposit. {% enddocs %}
+{% docs column__user_expiration_month %} Month of the user's credit expiration {% enddocs %}
 {% docs column__days_between_activation_date_and_first_booking_date %} Number of days between the user's activation date and their first booking date. {% enddocs %}
 {% docs column__days_between_activation_date_and_first_booking_paid %} Number of days between the user's activation date and their first paid booking. {% enddocs %}
 {% docs column__user_first_booking_type %} Offer category of the user's first booking. {% enddocs %}

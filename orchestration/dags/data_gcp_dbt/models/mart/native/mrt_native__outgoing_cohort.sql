@@ -14,14 +14,14 @@ with
             user_activity,
             user_civility,
             total_deposit_amount,
-            is_theme_subscribed,
+            is_theme_subscribed as user_is_theme_subscribed,
             total_actual_amount_spent,
             total_theoretical_digital_goods_amount_spent,
             total_non_cancelled_individual_bookings,
             total_non_cancelled_duo_bookings,
             total_free_bookings,
-            total_distinct_grant_18_booking_types,
-            total_distinct_grant_15_17_booking_types,
+            total_grant_18_subcategory_booked,
+            total_grant_15_17_subcategory_booked,
             first_individual_booking_date,
             first_deposit_creation_date,
             date_diff(
@@ -53,10 +53,13 @@ with
             count(
                 distinct bookings.venue_type_label
             ) as total_distinct_venue_type_booked,
-            count(distinct bookings.venue_id) as total_distinct_venue_booked
+            count(
+                distinct if(bookings.venue_is_virtual is false, bookings.venue_id, null)
+            ) as total_distinct_venue_booked
         from users_expired_monthly user
         join
             {{ ref("mrt_global__booking") }} bookings on bookings.user_id = user.user_id
+        where not booking_is_cancelled
         group by deposit_expiration_date, user_id
     ),
     consultations as (
@@ -78,7 +81,7 @@ with
     )
 
 select
-    date_trunc(u.deposit_expiration_date, month) as expiration_month,
+    date_trunc(u.deposit_expiration_date, month) as user_expiration_month,
     u.total_deposit_amount,
     u.user_is_priority_public,
     u.user_is_in_qpv,
@@ -90,7 +93,7 @@ select
     u.user_department_code,
     u.user_activity,
     u.user_civility,
-    u.is_theme_subscribed,
+    u.user_is_theme_subscribed,
     coalesce(count(distinct u.user_id), 0) as total_users,
     coalesce(
         count(
@@ -112,10 +115,10 @@ select
     coalesce(sum(total_item_consulted), 0) as total_item_consulted,
     coalesce(sum(total_venue_consulted), 0) as total_venue_consulted,
     coalesce(
-        sum(u.total_distinct_grant_18_booking_types), 0
+        sum(u.total_grant_18_subcategory_booked), 0
     ) as total_grant_18_subcategory_booked,
     coalesce(
-        sum(u.total_distinct_grant_15_17_booking_types), 0
+        sum(u.total_grant_15_17_subcategory_booked), 0
     ) as total_grant_15_17_subcategory_booked,
     coalesce(
         sum(total_venue_type_label_consulted), 0
@@ -146,7 +149,7 @@ left join
     on u.user_id = b.user_id
     and u.deposit_expiration_date = b.deposit_expiration_date
 group by
-    expiration_month,
+    user_expiration_month,
     u.total_deposit_amount,
     u.user_is_priority_public,
     u.user_is_in_qpv,
@@ -158,4 +161,4 @@ group by
     u.user_department_code,
     u.user_activity,
     u.user_civility,
-    u.is_theme_subscribed
+    u.user_is_theme_subscribed

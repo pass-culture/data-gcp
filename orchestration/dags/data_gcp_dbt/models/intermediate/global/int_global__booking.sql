@@ -35,6 +35,7 @@ select
     s.venue_density_level,
     s.venue_academy_name,
     s.venue_is_permanent,
+    s.venue_is_virtual,
     s.offerer_id,
     s.offerer_name,
     s.partner_id,

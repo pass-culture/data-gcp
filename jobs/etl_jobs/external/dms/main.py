@@ -92,8 +92,8 @@ def run_query(query_body, gcp_project_id):
         "Accept": "application/json",
     }
     request = requests.post(
-        API_URL, json=query_body, headers=headers, verify=False, timeout=120
-    )  # warn: SSL verification disabled
+        API_URL, json=query_body, headers=headers, verify=True, timeout=120
+    )
     if request.status_code == 200:
         return request.json()
     else:

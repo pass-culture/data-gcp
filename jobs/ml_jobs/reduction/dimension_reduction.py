@@ -18,13 +18,13 @@ from tools.utils import (
 
 
 def reduce_transformation(
-    X, target_dimension, emb_col, method="PUMAP", max_dimension=32
+    X, target_dimension, emb_col, method="PUMAP", max_dimension=32, seed=0
 ):
     if method in ("UMAP", "PUMAP"):
         logger.info(f"Reducing first with PCA {emb_col}...")
         current_dimension = X.shape[1]
         if current_dimension > max_dimension:
-            X = pca_reduce_embedding_dimension(X, dimension=max_dimension)
+            X = pca_reduce_embedding_dimension(X, dimension=max_dimension, seed=seed)
         else:
             logger.info(
                 f"Current dimension {current_dimension} lower than {max_dimension}"
@@ -40,9 +40,9 @@ def reduce_transformation(
         )
     elif method == "PCA":
         logger.info(f"Reducing with PCA {emb_col}...")
-        X = pca_reduce_embedding_dimension(X, dimension=target_dimension)
+        X = pca_reduce_embedding_dimension(X, dimension=target_dimension, seed=seed)
     else:
-        raise Exception("Metohd not found.")
+        raise Exception("Method not found.")
     return X
 
 
@@ -53,13 +53,19 @@ def export_reduction_table(
     embedding_columns,
     method="PUMAP",
     max_dimension=32,
+    seed=0,
 ):
     concat_X = []
     for emb_col in embedding_columns:
         logger.info(f"Convert serialized embeddings... {emb_col}...")
         X = np.array(convert_str_emb_to_float(df[emb_col]))
         X = reduce_transformation(
-            X, target_dimension, emb_col, method=method, max_dimension=max_dimension
+            X,
+            target_dimension,
+            emb_col,
+            method=method,
+            max_dimension=max_dimension,
+            seed=seed,
         )
         concat_X.append(X)
         logger.info(f"Process done {emb_col}...")
@@ -73,6 +79,7 @@ def export_reduction_table(
         emb_col=target_name,
         method=method,
         max_dimension=max_dimension,
+        seed=seed,
     )
     df = df.with_columns(pl.Series(name=target_name, values=convert_arr_emb_to_str(X)))
 
@@ -88,6 +95,7 @@ def plan(
     target_name,
     method,
     max_dimension,
+    seed,
 ):
     dataset = ds.dataset(source_gs_path, format="parquet")
     ldf = pl.scan_pyarrow_dataset(dataset)
@@ -101,6 +109,7 @@ def plan(
         embedding_columns=embedding_columns,
         method=method,
         max_dimension=max_dimension,
+        seed=seed,
     )
     export_polars_to_bq(
         data=ldf.select(
@@ -132,6 +141,10 @@ def dimension_reduction(
         "default",
         help="String for the configuration plan to execute",
     ),
+    seed: int = typer.Option(
+        0,
+        help="Seed to fix random state of PCA space reduction",
+    ),
 ) -> None:
     """ """
     config_json = load_config_file(config_file_name, job_type="reduction")[
@@ -154,6 +167,7 @@ def dimension_reduction(
             target_name=target_name,
             method=method,
             max_dimension=pre_reduction_dim,
+            seed=seed,
         )
 
 

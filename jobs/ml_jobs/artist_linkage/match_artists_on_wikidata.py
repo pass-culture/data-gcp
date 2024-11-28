@@ -228,13 +228,13 @@ def get_artist_representative(matched_df: pd.DataFrame) -> pd.DataFrame:
     """
     Determine the representative artist for each artist cluster based on various attributes.
     This function assigns a score to each artist based on the presence of certain attributes
-    (wiki_id, image_file_url, description, gkg_id, book, music, movie) and the total booking count.
+    (wiki_id, img, description, gkg_id, book, music, movie) and the total booking count.
     The artist with the highest score within each artist cluster is flagged as the representative.
     Args:
         df (pd.DataFrame): DataFrame containing artist data with the following columns:
         - artist_id: Identifier for the artist.
         - wiki_id: Wikipedia ID of the artist.
-        - image_file_url: URL of the artist's image.
+        - img: URL of the artist's image.
         - description: Description of the artist.
         - gkg_id: GKG ID of the artist.
         - book: Boolean indicating if the artist is associated with books.
@@ -250,7 +250,7 @@ def get_artist_representative(matched_df: pd.DataFrame) -> pd.DataFrame:
     scored_df = matched_df.assign(
         alias_score=lambda df: (
             1e3 * (df.wiki_id.notna().astype(float))
-            + 1e2 * (df.image_file_url.notna().astype(float))
+            + 1e2 * (df.img.notna().astype(float))
             + 1e1 * (df.description.notna().astype(float))
             + 1e0
             * (

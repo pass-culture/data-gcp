@@ -4,7 +4,7 @@ import pandas as pd
 import typer
 from loguru import logger
 
-from utils.gcs_utils import get_last_date_from_bucket, upload_parquet
+from utils.gcs_utils import get_last_date_from_bucket
 
 app = typer.Typer()
 
@@ -255,11 +255,11 @@ def get_artist_representative(matched_df: pd.DataFrame) -> pd.DataFrame:
             + 1e0
             * (
                 df.gkg_id.notna().astype(float)
-                + df.book.fillna(False).astype(float)
-                + df.music.fillna(False).astype(float)
-                + df.movie.fillna(False).astype(float)
+                + df.book.fillna(False).infer_objects(copy=False).astype(float)
+                + df.music.fillna(False).infer_objects(copy=False).astype(float)
+                + df.movie.fillna(False).infer_objects(copy=False).astype(float)
             )
-            + df.total_booking_count / df.total_booking_count.max()
+            + df.total_booking_count / max(1, (df.total_booking_count.max()))
         ).fillna(0.0),
     )
 
@@ -327,10 +327,7 @@ def main(
     output_df = rematched_df.pipe(get_artist_representative)
 
     # 6. Upload the output dataframe
-    upload_parquet(
-        dataframe=output_df,
-        gcs_path=output_file_path,
-    )
+    output_df.to_parquet(output_file_path)
 
 
 if __name__ == "__main__":

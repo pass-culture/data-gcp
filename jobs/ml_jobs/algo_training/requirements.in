@@ -6,7 +6,7 @@ google-cloud-secret-manager==2.4.0
 keras==2.15
 loguru==0.6.0
 matplotlib==3.8.4
-mlflow==2.3.2
+mlflow==2.18.0
 numpy==1.26.4
 pandas-gbq>=0.17.1
 pandas==1.5.3

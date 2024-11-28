@@ -2,6 +2,7 @@ import os
 
 import pandas as pd
 import typer
+from loguru import logger
 
 from utils.gcs_utils import get_last_date_from_bucket, upload_parquet
 
@@ -21,6 +22,7 @@ def load_wikidata(wiki_base_path: str, wiki_file_name: str) -> pd.DataFrame:
     latest_path = os.path.join(
         wiki_base_path, get_last_date_from_bucket(wiki_base_path), wiki_file_name
     )
+    logger.info(f"Loading Wikidata from {latest_path}")
 
     return pd.read_parquet(latest_path)
 
@@ -29,6 +31,14 @@ def match_per_category_no_namesakes(
     artists_df: pd.DataFrame,
     wikidata_df: pd.DataFrame,
 ) -> pd.DataFrame:
+    """
+    Matches artists from a DataFrame with Wikidata entries per category, excluding namesakes.
+    Args:
+        artists_df (pd.DataFrame): DataFrame containing artist data with a column 'offer_category_id' and 'alias'.
+        wikidata_df (pd.DataFrame): DataFrame containing Wikidata artist data with a column 'alias' and category columns.
+    Returns:
+        pd.DataFrame: DataFrame with matched artists per category, excluding namesakes.
+    """
     matched_df_list = []
     for pass_category, wiki_category in CATEGORY_MAPPING.items():
         # Select artist df for current category
@@ -57,6 +67,15 @@ def match_namesakes_per_category(
     artists_df: pd.DataFrame,
     wikidata_df: pd.DataFrame,
 ) -> pd.DataFrame:
+    """
+    Matches artists with the same name (namesakes) per category between two dataframes: artists_df and wikidata_df.
+    Args:
+        artists_df (pd.DataFrame): DataFrame containing artist data with at least 'offer_category_id' and 'alias' columns.
+        wikidata_df (pd.DataFrame): DataFrame containing Wikidata artist data with at least 'alias' column and category columns.
+    Returns:
+        pd.DataFrame: DataFrame containing matched artists with the best Wikidata entry per alias for each category.
+    """
+
     def _select_best_wiki_per_alias(df: pd.DataFrame) -> pd.DataFrame:
         return df.sort_values(by=["alias", "gkg"], ascending=False).drop_duplicates(
             subset="alias"
@@ -98,6 +117,15 @@ def match_namesakes_per_category(
 
 
 def normalize_string_series(s: pd.Series) -> pd.Series:
+    """
+    Normalize a pandas Series of strings by converting to lowercase, removing accents,
+    encoding to ASCII, stripping whitespace, and removing periods.
+    Args:
+        s (pd.Series): A pandas Series containing strings to be normalized.
+    Returns:
+        pd.Series: A pandas Series with normalized strings.
+    """
+
     return (
         s.str.lower()
         .str.normalize("NFKD")
@@ -109,6 +137,20 @@ def normalize_string_series(s: pd.Series) -> pd.Series:
 
 
 def preprocess_artists(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Preprocesses the artist names in the given DataFrame.
+    This function performs the following steps:
+    1. Normalizes the 'first_artist' column.
+    2. Splits the normalized 'first_artist' into two parts based on the comma.
+    3. Creates an 'alias' column by combining the two parts if the second part is not NaN.
+    4. Adds a temporary ID column based on the DataFrame's index.
+    5. Drops the intermediate columns used for processing.
+    Args:
+        df (pd.DataFrame): The input DataFrame containing artist names.
+    Returns:
+        pd.DataFrame: The preprocessed DataFrame with the new 'alias' and 'tmp_id' columns.
+    """
+
     return df.assign(
         preprocessed_first_artist=lambda df: normalize_string_series(df.first_artist),
         part_1=lambda df: df.preprocessed_first_artist.str.split(",").str[0],
@@ -117,10 +159,19 @@ def preprocess_artists(df: pd.DataFrame) -> pd.DataFrame:
             df.part_2.isna(), df.part_2.astype(str) + " " + df.part_1.astype(str)
         ),
         tmp_id=lambda df: df.index,
-    )
+    ).drop(columns=["part_1", "part_2", "preprocessed_first_artist"])
 
 
 def preprocess_wiki(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Preprocess the given DataFrame by normalizing the 'alias' column, renaming the 'artist_name' column to
+    'wiki_artist_name', and dropping duplicate rows based on 'wiki_id' and 'alias' columns.
+    Args:
+        df (pd.DataFrame): The input DataFrame containing artist data with columns 'alias', 'artist_name', and 'wiki_id'.
+    Returns:
+        pd.DataFrame: The preprocessed DataFrame with normalized 'alias', renamed 'wiki_artist_name', and duplicates removed.
+    """
+
     return (
         df.assign(alias=lambda df: df.alias.pipe(normalize_string_series))
         .rename(columns={"artist_name": "wiki_artist_name"})
@@ -130,13 +181,24 @@ def preprocess_wiki(df: pd.DataFrame) -> pd.DataFrame:
 
 def get_cluster_to_wiki_mapping(matched_df: pd.DataFrame) -> dict:
     """
-    Generates a mapping from cluster IDs to wiki IDs based on booking counts.
-
+    Generates a mapping of cluster IDs to Wikipedia IDs based on booking data.
     Args:
-        matched_df (pd.DataFrame): A DataFrame containing the matched data with columns 'cluster_id', 'wiki_id', and 'total_booking_count'.
+        matched_df (pd.DataFrame): A DataFrame containing columns 'cluster_id', 'wiki_id', and 'total_booking_count'.
     Returns:
-        dict: A dictionary mapping each cluster ID to the corresponding wiki ID with the highest booking ratio.
+        dict: A dictionary where keys are cluster IDs and values are Wikipedia IDs.
+    The function performs the following steps:
+    1. Adds 1 to the 'total_booking_count' to account for offers with no bookings.
+    2. Groups the data by 'cluster_id' and 'wiki_id' and sums the 'total_booking_count'.
+    3. Calculates the total booking count for each 'cluster_id'.
+    4. Computes the ratio of bookings for each 'wiki_id' within a cluster.
+    5. Filters out entries where the ratio is below the WIKI_RATIO_THRESHOLD.
+    6. Sorts the data by 'cluster_id' and 'ratio' in descending order.
+    7. Drops duplicate 'cluster_id' entries, keeping the one with the highest ratio.
+    8. Creates a dictionary mapping 'cluster_id' to 'wiki_id'.
+    Note:
+        The WIKI_RATIO_THRESHOLD is set to 0.5.
     """
+
     WIKI_RATIO_THRESHOLD = 0.5
 
     booking_by_cluster_and_wiki_ids = (
@@ -162,8 +224,30 @@ def get_cluster_to_wiki_mapping(matched_df: pd.DataFrame) -> dict:
     )
 
 
-def get_artist_representative(df: pd.DataFrame) -> pd.DataFrame:
-    scored_df = df.assign(
+def get_artist_representative(matched_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Determine the representative artist for each artist cluster based on various attributes.
+    This function assigns a score to each artist based on the presence of certain attributes
+    (wiki_id, image_file_url, description, gkg_id, book, music, movie) and the total booking count.
+    The artist with the highest score within each artist cluster is flagged as the representative.
+    Args:
+        df (pd.DataFrame): DataFrame containing artist data with the following columns:
+        - artist_id: Identifier for the artist.
+        - wiki_id: Wikipedia ID of the artist.
+        - image_file_url: URL of the artist's image.
+        - description: Description of the artist.
+        - gkg_id: GKG ID of the artist.
+        - book: Boolean indicating if the artist is associated with books.
+        - music: Boolean indicating if the artist is associated with music.
+        - movie: Boolean indicating if the artist is associated with movies.
+        - total_booking_count: Total booking count for the artist.
+    Returns:
+        pd.DataFrame: DataFrame with an additional column `is_cluster_representative` indicating
+                  whether the row is the representative for the artist cluster, and sorted by
+                  artist_id and alias_score in descending order.
+    """
+
+    scored_df = matched_df.assign(
         alias_score=lambda df: (
             1e3 * (df.wiki_id.notna().astype(float))
             + 1e2 * (df.image_file_url.notna().astype(float))
@@ -239,7 +323,7 @@ def main(
         ),
     )
 
-    # 5. Add a flag  indicating whether the row will be used to build the artist table
+    # 5. Add a flag indicating whether the row will be used to build the artist table
     output_df = rematched_df.pipe(get_artist_representative)
 
     # 6. Upload the output dataframe

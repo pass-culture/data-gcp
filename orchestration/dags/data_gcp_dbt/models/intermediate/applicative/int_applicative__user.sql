@@ -26,8 +26,12 @@ select
     ) as user_department_code,
     user_postal_code,
     case
-        when user_activity in ("Alternant", "Apprenti", "Volontaire")
-        then "Apprenti, Alternant, Volontaire en service civique rémunéré"
+        when user_activity in ("Alternant")
+        then "Alternant"
+        when user_activity in ("Apprenti")
+        then "Apprenti"
+        when user_activity in ("Volontaire")
+        then "Volontaire en service civique rémunéré"
         when user_activity in ("Inactif")
         then "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
         when user_activity in ("Étudiant")

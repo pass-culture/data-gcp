@@ -88,7 +88,9 @@ def main(
         ],
         how="left",
         on=["preprocessed_artist_name", "offer_category_id", "artist_type"],
-    )
+    ).loc[
+        lambda df: df.cluster_id.notna()
+    ]  # Arise from not syncrhonized offers for mostly synchronized categories
 
     output_df = merged_df.assign(
         artist_nickname=lambda df: df.cluster_id.map(

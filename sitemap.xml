@@ -2,294 +2,314 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://pass-culture.github.io/data-gcp/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/about/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/home/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/overview/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__address/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__booking/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__collective_booking/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__collective_offer/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__collective_stock/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__cultural_partner/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__deposit/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__educational_deposit/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__favorite/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__institution/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__local_authority/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__metric/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__offer/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__offer_criterion/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__offerer/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__offerer_address/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__offerer_tag/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__stock/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__user/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__user_offerer/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__venue/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__venue_provider/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__venue_tag/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/contentful/column__contentful_entry/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/ml/column__artist/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
+    </url>
+    <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/ml/column__wikidata/</loc>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/pcapi/column__log/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/pcreco/column_id/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/tracking/columm__native_search/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/tracking/column__collective_adage_log/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/tracking/column__event/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/tracking/column__event_metric/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/tracking/column__native_consultation/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/tracking/column__native_home_module/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/tracking/column__pro_event/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
-         <loc>https://pass-culture.github.io/data-gcp/dbt/models/machine_learning/linkage/artist/description__ml_linkage__artist_name_to_link/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/machine_learning/linkage/description__ml_linkage__artist/</loc>
+         <lastmod>2024-11-28</lastmod>
+    </url>
+    <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/machine_learning/linkage/description__ml_linkage__artist_alias/</loc>
+         <lastmod>2024-11-28</lastmod>
+    </url>
+    <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/machine_learning/linkage/description__ml_linkage__artist_name_to_link/</loc>
+         <lastmod>2024-11-28</lastmod>
+    </url>
+    <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/machine_learning/linkage/description__ml_linkage__product_artist_link/</loc>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/collective/description__mrt_collective__adage_log/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__address/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__booking/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__collective_booking/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__collective_offer/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__cultural_partner/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__deposit/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__educational_deposit/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__educational_institution/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__favorite/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__local_authority/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__offer/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__offer_criterion/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__offer_metadata/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__offerer/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__offerer_address/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__offerer_tag/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__stock/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__user/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__user_offerer/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__venue/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__venue_provider/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__venue_tag/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/native/description__mrt_native__consultation/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/native/description__mrt_native__daily_home_offer_displayed/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/native/description__mrt_native__daily_user_home_module/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/native/description__mrt_native__event/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
+    </url>
+    <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/native/description__mrt_native__outgoing_cohort/</loc>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/pro/description__mrt_pro__event/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/pro/description__mrt_pro__log/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/pro/description__mrt_pro__visit/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/team/de/overview/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/team/ds/overview/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/team/ds/recommendation/</loc>
-         <lastmod>2024-11-26</lastmod>
+         <lastmod>2024-11-28</lastmod>
     </url>
 </urlset>

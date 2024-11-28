@@ -628,6 +628,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
       
@@ -667,43 +673,20 @@
   
   
   
-    
-    
-      
+    <li class="md-nav__item">
+      <a href="../../../machine_learning/linkage/description__ml_linkage__artist/" class="md-nav__link">
         
-      
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2_1_1_1_1" >
-        
-          
-          <label class="md-nav__link" for="__nav_2_2_1_1_1_1" id="__nav_2_2_1_1_1_1_label" tabindex="0">
-            
   
   <span class="md-ellipsis">
     Artist
   </span>
   
 
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="6" aria-labelledby="__nav_2_2_1_1_1_1_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_2_1_1_1_1">
-            <span class="md-nav__icon md-icon"></span>
-            Artist
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -712,7 +695,28 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../machine_learning/linkage/artist/description__ml_linkage__artist_name_to_link/" class="md-nav__link">
+      <a href="../../../machine_learning/linkage/description__ml_linkage__artist_alias/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Artist Alias
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../machine_learning/linkage/description__ml_linkage__artist_name_to_link/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -726,9 +730,22 @@
 
               
             
-          </ul>
-        </nav>
-      
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../machine_learning/linkage/description__ml_linkage__product_artist_link/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Product Artist Link
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -1495,6 +1512,8 @@
       
         
       
+        
+      
     
     
       
@@ -1603,6 +1622,27 @@
   
   <span class="md-ellipsis">
     Native Event
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../native/description__mrt_native__outgoing_cohort/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Outgoing Cohort
   </span>
   
 
@@ -2598,6 +2638,8 @@
       
         
       
+        
+      
     
     
       
@@ -2643,6 +2685,27 @@
   
   <span class="md-ellipsis">
     Column  artist
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../glossary/ml/column__wikidata/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Column  wikidata
   </span>
   
 
@@ -3609,7 +3672,12 @@ A booking is made by a user (identified via a user_id), using its grant (identif
 <tr>
 <td style="text-align: left;">offer_sub_type_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Deprecated: Defines the offer sub genre for music, books and movies. Defines the offer show sub type for shows.</td>
+<td style="text-align: left;">Deprecated: Defines the offer sub genre for music, books and movies. Defines the</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">offer show sub type for shows.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_activation_date</td>
@@ -3625,6 +3693,36 @@ A booking is made by a user (identified via a user_id), using its grant (identif
 <td style="text-align: left;">first_deposit_creation_date</td>
 <td style="text-align: left;">DATETIME</td>
 <td style="text-align: left;">First deposit creation date.</td>
+</tr>
+<tr>
+<td style="text-align: left;">user_density_level</td>
+<td style="text-align: left;">STRING</td>
+<td style="text-align: left;">Integer column. Density level of the user's registered address. Ranges from 1 (highly urban) to 7 (highly rural).</td>
+</tr>
+<tr>
+<td style="text-align: left;">isbn</td>
+<td style="text-align: left;">STRING</td>
+<td style="text-align: left;">ISBN of the book, if applicable.</td>
+</tr>
+<tr>
+<td style="text-align: left;">user_department_name</td>
+<td style="text-align: left;">STRING</td>
+<td style="text-align: left;">Department name associated with the user's registered address.</td>
+</tr>
+<tr>
+<td style="text-align: left;">venue_is_virtual</td>
+<td style="text-align: left;">BOOLEAN</td>
+<td style="text-align: left;">Indicates if the venue is virtual. Each offerer has a virtual venue, it is only used to publish digital offers.</td>
+</tr>
+<tr>
+<td style="text-align: left;">offer_type_label</td>
+<td style="text-align: left;">STRING</td>
+<td style="text-align: left;">Deprecated: Defines the offer genre for music, books and movies. Defines the offer</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">show type for shows.</td>
 </tr>
 </tbody>
 </table>

@@ -31,8 +31,8 @@ title: Metrics
 {% docs column__total_deposit_actual_amount_spent %} Total actual amount spent from deposits. {% enddocs %}
 {% docs column__total_deposit_amount %} Total amount deposited by the user. {% enddocs %}
 {% docs column__total_deposits %}The total number of deposits for the educational institution.{% enddocs %}
-{% docs column__total_distinct_grant_15_17_booking_types %} Total distinct booking types for grant 15-17. {% enddocs %}
-{% docs column__total_distinct_grant_18_booking_types %} Total distinct booking types for grant 18. {% enddocs %}
+{% docs column__total_grant_18_subcategory_booked %} The total number of subcategory booked on grant_18 deposit. {% enddocs %}
+{% docs column__total_grant_15_17_subcategory_booked %} The total number of subcategory booked on grant_15_17 deposit. {% enddocs %}
 {% docs column__total_favorites %} Total number of times this offer was favorited. {% enddocs %}
 {% docs column__total_first_bookings %} Total number of bookings that are first bookings. {% enddocs %}
 {% docs column__total_free_bookings %} Total number of free bookings made by the user. {% enddocs %}
@@ -64,3 +64,14 @@ title: Metrics
 {% docs column__total_used_bookings %} Total number of bookings that were used. {% enddocs %}
 {% docs column__total_used_collective_bookings %} Total number of collective bookings that were used. {% enddocs %}
 {% docs column__total_used_individual_bookings %} Total number of used individual bookings. {% enddocs %}
+{% docs column__total_users %} The total number of users {% enddocs %}
+{% docs column__total_3_category_booked_users %} The total number of users who made bookings in three categories or more. {% enddocs %}
+{% docs column__total_amount_spent %} The total amount of credit spent by the user. {% enddocs %}
+{% docs column__total_item_consulted %} The total number of items consulted by the user. {% enddocs %}
+{% docs column__total_venue_consulted %} The total number of venues consulted by the user. {% enddocs %}
+{% docs column__total_venue_type_label_consulted %} The total number of venues type label consulted by the user. {% enddocs %}
+{% docs column__total_day_between_deposit_and_first_booking %} The total number of days elapsed between the user deposit creation date and the user first booking date. {% enddocs %}
+{% docs column__total_diversification_score %} The total diversification score of the users. {% enddocs %}
+{% docs column__total_venue_id_booked %} The total number of distinct venues booked by the users. Virtual venues are excluded. {% enddocs %}
+{% docs column__total_venue_type_booked %} The total number of distinct venue type booked by the users. {% enddocs %}
+{% docs column__total_category_booked %} The total number of distinct categories booked by the users. {% enddocs %}

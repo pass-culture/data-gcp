@@ -105,7 +105,8 @@ where
                 "FirstTutorial2",
                 "FirstTutorial3",
                 "FirstTutorial4",
-                "HasSkippedTutorial"
+                "HasSkippedTutorial",
+                "AccountCreated"
             )
         )
     )

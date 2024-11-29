@@ -15,6 +15,7 @@ select
     b.deposit_id,
     b.deposit_type,
     b.reimbursed,
+    b.booking_reimbursement_date,
     b.booking_intermediary_amount,
     b.booking_rank,
     b.booking_used_date,

@@ -14,6 +14,7 @@ AS
         cast(date(creation_date) as String) as creation_date,
         cast(date(used_date) as Nullable(String)) as used_date,
         cast(date(reimbursement_date) as Nullable(String)) as reimbursement_date,
+        cast(date(stock_beginning_date) as Nullable(String)) as stock_beginning_date,
         cast(collective_booking_status as String) as collective_booking_status,
         cast(educational_institution_id as String) as educational_institution_id,
         cast(number_of_tickets as UInt64) as number_of_tickets,

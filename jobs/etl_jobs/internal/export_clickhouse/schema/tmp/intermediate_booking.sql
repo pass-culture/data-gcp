@@ -12,6 +12,8 @@ AS
         cast(offer_id as String) as offer_id,
         cast(date(creation_date) as String) as creation_date,
         cast(date(used_date) as Nullable(String)) as used_date,
+        cast(date(reimbursement_date) as Nullable(String)) as reimbursement_date,
+        cast(date(stock_beginning_date) as Nullable(String)) as stock_beginning_date,
         cast(booking_status as String) as booking_status,
         cast(deposit_type as String) as deposit_type,
         cast(booking_quantity as UInt64) as booking_quantity,

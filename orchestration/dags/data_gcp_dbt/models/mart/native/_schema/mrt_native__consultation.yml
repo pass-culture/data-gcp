@@ -6,6 +6,9 @@ models:
     columns:
       - name: consultation_id
         description: "{{ doc('column__consultation_id') }}"
+        data_tests:
+          - not_null
+          - unique
       - name: consultation_date
         description: "{{ doc('column__consultation_date') }}"
       - name: origin

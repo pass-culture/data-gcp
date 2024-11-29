@@ -13,6 +13,7 @@
 {% docs column__venue_managing_offerer_id %} ID of the offerer who manage the venue. One offerer can have multiple venues. {% enddocs %}
 {% docs column__venue_creation_date %} Date when the venue was created on the application. {% enddocs %}
 {% docs column__venue_is_permanent %} Indicates if the venue is permanent. A permanent venue is a venue that can receive public permanently, that can propose offers, and that is managed by the partner. Permanent venues exemple : a library, a cinema. Non permanent venues example : a public garden that hosted a festival once, or a theater that hosted a concert once - it can be permanent for the partner who owns the theater, but not for the partner who is hosted once in this place. {% enddocs %}
+{% docs column__venue_is_open_to_public %} This field will replace the venue_is_permanent field (mid-2025), as part of the offer-adresse project. It is a venue that can receive public permanently, that can propose offers, and that is managed by the partner. {% enddocs %}
 {% docs column__venue_is_acessibility_synched %} Indicates if the venue's accessibility is synchronized. {% enddocs %}
 {% docs column__venue_type_label %} Type of the venue ('Musée', 'Cinéma','Librairie', etc). Selected by the partner in a drop-down list. {% enddocs %}
 {% docs column__venue_label %} Label of the venue. The label is appended by the Ministry as token of quality and standing in its category. {% enddocs %}

@@ -60,4 +60,5 @@ SELECT
     , "description" AS venue_description
     , "withdrawalDetails" AS venue_withdrawal_details
     , "offererAddressId" AS offerer_address_id
+    , "isOpenToPublic" AS venue_is_open_to_public
 FROM public.venue

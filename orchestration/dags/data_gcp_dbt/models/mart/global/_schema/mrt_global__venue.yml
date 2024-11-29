@@ -55,6 +55,9 @@ models:
       - name: venue_is_permanent
         description: '{{ doc("column__venue_is_permanent") }}'
         data_type: BOOLEAN
+      - name: venue_is_open_to_public
+        description: '{{ doc("column__venue_is_open_to_public") }}'
+        data_type: BOOLEAN
       - name: venue_is_acessibility_synched
         description: '{{ doc("column__venue_is_acessibility_synched") }}'
         data_type: BOOLEAN

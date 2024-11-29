@@ -15,6 +15,7 @@ select
     venue_managing_offerer_id,
     venue_creation_date,
     venue_is_permanent,
+    venue_is_open_to_public,
     venue_is_acessibility_synched,
     venue_type_label,
     venue_label,

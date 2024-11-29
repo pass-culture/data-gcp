@@ -135,5 +135,7 @@ select
     date(
         jsonpayload.extra.firstdepositactivationdate
     ) as user_first_deposit_activation_date,
-    jsonpayload.extra.status as user_status
+    jsonpayload.extra.status as user_status,
+    jsonpayload.extra.user_satisfaction,
+    jsonpayload.extra.user_comment
 from {{ source("raw", "stdout") }}

@@ -7,5 +7,6 @@ select
     address_city,
     address_latitude,
     address_longitude,
-    address_department_code
+    address_department_code,
+    null as undocumented_test_field
 from {{ source("raw", "applicative_database_address") }}

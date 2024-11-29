@@ -38,6 +38,5 @@
 {% docs column__page_referrer %}The referrer page that led to the current page where the event occurred.{% enddocs %}
 {% docs column__page_number %}The number of the page in a sequence, if applicable.{% enddocs %}
 
-{% docs column__user_location_type %}The type of location associated with the user during the event.{% enddocs %}
 
 {% endhide %}

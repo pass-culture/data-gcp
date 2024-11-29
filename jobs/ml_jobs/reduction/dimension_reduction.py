@@ -1,3 +1,5 @@
+import secrets
+
 import numpy as np
 import polars as pl
 import pyarrow.dataset as ds
@@ -18,8 +20,14 @@ from tools.utils import (
 
 
 def reduce_transformation(
-    X, target_dimension, emb_col, method="PUMAP", max_dimension=32, seed=0
+    X,
+    target_dimension,
+    emb_col,
+    method="PUMAP",
+    max_dimension=32,
 ):
+    seed = secrets.randbelow(1000)
+    logger.info(f"Seed for PCA reduction set to {seed}")
     if method in ("UMAP", "PUMAP"):
         logger.info(f"Reducing first with PCA {emb_col}...")
         current_dimension = X.shape[1]
@@ -30,14 +38,14 @@ def reduce_transformation(
                 f"Current dimension {current_dimension} lower than {max_dimension}"
             )
 
-    if method == "UMAP":
-        logger.info(f"Reducing with UMAP {emb_col}...")
-        X = umap_reduce_embedding_dimension(X, target_dimension)
-    elif method == "PUMAP":
-        logger.info(f"Reducing with PUMAP {emb_col}...")
-        X = pumap_reduce_embedding_dimension(
-            X, target_dimension, batch_size=2048, train_frac=0.1
-        )
+        if method == "UMAP":
+            logger.info(f"Reducing with UMAP {emb_col}...")
+            X = umap_reduce_embedding_dimension(X, target_dimension)
+        elif method == "PUMAP":
+            logger.info(f"Reducing with PUMAP {emb_col}...")
+            X = pumap_reduce_embedding_dimension(
+                X, target_dimension, batch_size=2048, train_frac=0.1
+            )
     elif method == "PCA":
         logger.info(f"Reducing with PCA {emb_col}...")
         X = pca_reduce_embedding_dimension(X, dimension=target_dimension, seed=seed)
@@ -53,7 +61,6 @@ def export_reduction_table(
     embedding_columns,
     method="PUMAP",
     max_dimension=32,
-    seed=0,
 ):
     concat_X = []
     for emb_col in embedding_columns:
@@ -65,7 +72,6 @@ def export_reduction_table(
             emb_col,
             method=method,
             max_dimension=max_dimension,
-            seed=seed,
         )
         concat_X.append(X)
         logger.info(f"Process done {emb_col}...")
@@ -79,7 +85,6 @@ def export_reduction_table(
         emb_col=target_name,
         method=method,
         max_dimension=max_dimension,
-        seed=seed,
     )
     df = df.with_columns(pl.Series(name=target_name, values=convert_arr_emb_to_str(X)))
 
@@ -95,7 +100,6 @@ def plan(
     target_name,
     method,
     max_dimension,
-    seed,
 ):
     dataset = ds.dataset(source_gs_path, format="parquet")
     ldf = pl.scan_pyarrow_dataset(dataset)
@@ -109,7 +113,6 @@ def plan(
         embedding_columns=embedding_columns,
         method=method,
         max_dimension=max_dimension,
-        seed=seed,
     )
     export_polars_to_bq(
         data=ldf.select(
@@ -141,10 +144,6 @@ def dimension_reduction(
         "default",
         help="String for the configuration plan to execute",
     ),
-    seed: int = typer.Option(
-        0,
-        help="Seed to fix random state of PCA space reduction",
-    ),
 ) -> None:
     """ """
     config_json = load_config_file(config_file_name, job_type="reduction")[
@@ -167,7 +166,6 @@ def dimension_reduction(
             target_name=target_name,
             method=method,
             max_dimension=pre_reduction_dim,
-            seed=seed,
         )
 
 

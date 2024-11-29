@@ -1,5 +1,5 @@
 import os
-import random
+import secrets
 import shutil
 from datetime import datetime
 
@@ -165,7 +165,7 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         preprocess_data,
     )
 
-    seed = random.randint(0, 1000)
+    seed = secrets.randbelow(1000)
     train_data, test_data = train_test_split(
         preprocessed_data, test_size=TEST_SIZE, random_state=seed
     )

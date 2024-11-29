@@ -1,4 +1,4 @@
-import random
+import secrets
 import typing as t
 
 import numpy as np
@@ -73,7 +73,7 @@ def mbkmeans_clusters(
     Returns:
         Trained clustering model and labels based on X.
     """
-    seed = random.randint(0, 1000)
+    seed = secrets.randbelow(1000)
     km = MiniBatchKMeans(n_clusters=k, batch_size=mb, random_state=seed, verbose=1).fit(
         X
     )

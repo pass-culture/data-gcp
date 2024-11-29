@@ -14,6 +14,25 @@ fi
 TARGET_BRANCH=$1
 WORKING_DIR=$2
 children="+1"
+
+
+OPTIONAL_FLAGS=""
+
+if [ $# -gt 2 ]; then
+  # There are more than 2 arguments
+  # Process arguments from $3 onwards
+  for arg in "${@:3}"; do
+    if [[ "$arg" == --* ]]; then
+      OPTIONAL_FLAGS="$OPTIONAL_FLAGS $arg"
+      echo "Optional flag added: $arg"
+    else
+      echo "Error: Optional flags must start with '--'."
+      exit 1
+    fi
+  done
+fi
+
+
 cd $WORKING_DIR
 
 
@@ -26,7 +45,7 @@ dbt_run_changed_models() {
     echo "no models were modified"
   else
     echo "Running models: ${models}"
-    dbt run --model $models --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" --exclude tag:failing_ci tag:exclude_ci
+    dbt run --model $models --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" --exclude tag:failing_ci tag:exclude_ci $OPTIONAL_FLAGS
   fi
 
 }

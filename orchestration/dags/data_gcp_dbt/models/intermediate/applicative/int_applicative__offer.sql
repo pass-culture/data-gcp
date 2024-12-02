@@ -92,8 +92,8 @@ select
     o.companies,
     o.countries,
     o.casting,
-    isbn,
-    ean,
+    o.isbn,
+    o.ean,
     o.titelive_gtl_id,
     o.offerer_address_id,
     case

@@ -20,4 +20,4 @@ The key actions, listed in the event_name column, include (but are not limited t
 
 For each recorded key event, additional event parameters are also stored to provide more context about the action. These parameters can include unique identifiers (e.g., the offer_id of the offer viewed, etc.) or the screen from which the action was initiated (column origin). 
 
-{% docs table__mrt_pro__visit %}{% enddocs %}
+{% docs table__mrt_pro__event %}{% enddocs %}

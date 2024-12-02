@@ -40,3 +40,4 @@ left join
     on product_artists.artist_name = artist_table.artist_name
     and product_artists.offer_category_id = artist_table.offer_category_id
     and product_artists.artist_type = artist_table.artist_type
+where artist_table.artist_id is not null

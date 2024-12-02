@@ -1,6 +1,6 @@
 {% docs column__partner_id %} Unique identifier of the partner.{% enddocs %}
 {% docs column__partner_creation_date %}Creation date of the cultural partner (offerer or venue).{% enddocs %}
-{% docs column__partner_was_registered_last_year %}Boolean for analytical purpose. On year between registration of partner (venue or offerer) and current date.  {% enddocs %}
+{% docs column__partner_was_registered_last_year %}Boolean for analytical purpose. On year between registration of partner (creation of the venue or the offerer) and current date.  {% enddocs %}
 {% docs column__partner_name %}Name of the cultural partner.{% enddocs %}
 {% docs column__partner_academy_name %}Name of the academy associated with the cultural partner.{% enddocs %}
 {% docs column__partner_region_name %}Name of the region where the cultural partner is located.{% enddocs %}

@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import rapidfuzz
 import typer
+from loguru import logger
 
 from constants import OFFER_IS_SYNCHRONISED
 from utils.clustering_utils import (
@@ -11,7 +12,6 @@ from utils.clustering_utils import (
     format_cluster_matrix,
     get_cluster_to_nickname_dict,
 )
-from utils.gcs_utils import upload_parquet
 
 app = typer.Typer()
 
@@ -37,7 +37,7 @@ def main(
         ["offer_category_id", "artist_type"]
     ):
         t0 = time.time()
-        print(
+        logger.info(
             f"Matching artists names for group {group_name} containing {len(group_df.preprocessed_artist_name.unique())} artists"
         )
 
@@ -74,7 +74,7 @@ def main(
                 artist_type=group_name[1],
             )
         )
-        print("Time to compute the matching", time.time() - t0)
+        logger.info("Time to compute the matching", time.time() - t0)
     clusters_df = pd.concat(clusters_df_list)
 
     merged_df = preprocessed_df.merge(
@@ -98,10 +98,7 @@ def main(
         )
     )
 
-    upload_parquet(
-        dataframe=output_df,
-        gcs_path=output_file_path,
-    )
+    output_df.to_parquet(output_file_path)
 
 
 if __name__ == "__main__":

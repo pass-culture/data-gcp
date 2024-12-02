@@ -293,3 +293,8 @@ models:
       - name: offerer_rank_asc
         description: '{{ doc("column__offerer_rank_asc") }}'
         data_type: INT64
+      - name: venue_density_level
+      - name: venue_in_qpv
+      - name: venue_department_name
+      - name: banner_url
+      - name: venue_image_source

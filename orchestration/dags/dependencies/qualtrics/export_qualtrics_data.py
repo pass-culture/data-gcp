@@ -28,6 +28,7 @@ clean_tables = {
             GCP_PROJECT_ID, f"qualtrics_ir_ac_automation_id_{ENV_SHORT_NAME}"
         ),
         "include_email": False,
+        "schemaUpdateOptions": ["ALLOW_FIELD_ADDITION"],
     },
 }
 

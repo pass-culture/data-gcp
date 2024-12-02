@@ -21,7 +21,6 @@ with
         from unnested_base b
         join {{ source("seed", "qpi_mapping") }} map on b.answer_ids = map.answer_id
         where b.answer_ids not like 'PROJECTION_%'
-        order by user_id
     ),
     clean as (
         select user_id, submitted_at, unnested.element as subcategories
@@ -37,7 +36,6 @@ with
                 partition by user_id, subcategories order by subcategories desc
             ) row_number
         from clean
-        order by user_id
     )
 select * except (row_number)
 from base_deduplicate

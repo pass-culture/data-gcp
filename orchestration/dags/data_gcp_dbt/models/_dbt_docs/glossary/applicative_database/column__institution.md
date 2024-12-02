@@ -11,7 +11,7 @@
 {% docs column__institution_city %} City where the educational institution is located. {% enddocs %}
 {% docs column__institution_epci %} EPCI code of the educational institution. {% enddocs %}
 {% docs column__institution_density_label %} Density label of the educational institution's area. {% enddocs %}
-{% docs column__institution_macro_density_label %} Macro density label of the educational institution : rural or urbain. {% enddocs %}
+{% docs column__institution_macro_density_label %} Macro density label of the educational institution : rural or urban. {% enddocs %}
 {% docs column__institution_density_level %} Density level of the educational institution's area. {% enddocs %}
 {% docs column__institution_type %} Type of institution. {% enddocs %}
 {% docs column__macro_institution_type %} Type of macro institution. Values can be : COLLEGE; ECOLE; LYCEE. {% enddocs %}

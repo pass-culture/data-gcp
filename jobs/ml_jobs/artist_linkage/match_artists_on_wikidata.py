@@ -1,4 +1,5 @@
 import os
+import uuid
 
 import pandas as pd
 import typer
@@ -220,7 +221,26 @@ def get_cluster_to_wiki_mapping(matched_df: pd.DataFrame) -> dict:
         .sort_values(by=["cluster_id", "ratio"], ascending=False)
         .drop_duplicates(subset="cluster_id")
         .set_index("cluster_id")
-        .wiki_id.to_dict()
+        .assign(internal_id=lambda df: "MULTI_" + df.wiki_id)
+        .internal_id.to_dict()
+    )
+
+
+def get_cluster_to_artist_id_mapping(df: pd.DataFrame) -> dict:
+    """
+    Generates a mapping from cluster IDs to unique artist IDs.
+    Args:
+        df (pd.DataFrame): A DataFrame containing a column 'cluster_id' with cluster identifiers.
+    Returns:
+        dict: A dictionary where keys are cluster IDs and values are unique artist IDs.
+    """
+
+    return (
+        df.drop_duplicates(subset="cluster_id")
+        .assign(artist_id=lambda df: [uuid.uuid4() for _ in range(len(df))])
+        .astype({"artist_id": str})  # Convert UUID to string for pyarrow compatibility
+        .set_index("cluster_id")
+        .artist_id.to_dict()
     )
 
 
@@ -308,19 +328,22 @@ def main(
     )
 
     # 3. Reconciliate the two dataframes
-    matched_df = pd.concat(
-        [matched_without_namesake_df, matched_namesakes_df]
-    ).reset_index(drop=True)
+    matched_df = (
+        pd.concat([matched_without_namesake_df, matched_namesakes_df])
+        .reset_index(drop=True)
+        .assign(
+            artist_id_name=lambda df: df.wiki_artist_name.fillna(
+                df.artist_nickname.str.title()
+            ),
+        )
+    )
 
-    # 4. Map the new cluster_id based on the wiki_id
-    cluster_to_wiki_mappings = get_cluster_to_wiki_mapping(matched_df)
+    # 4. Map the new cluster_id based on the wiki_id and define new artist_id
     rematched_df = matched_df.assign(
-        artist_id=lambda df: df.cluster_id.map(cluster_to_wiki_mappings).fillna(
+        cluster_id=lambda df: df.cluster_id.map(get_cluster_to_wiki_mapping(df)).fillna(
             df.cluster_id
         ),
-        artist_id_name=lambda df: df.wiki_artist_name.fillna(
-            df.artist_nickname.str.title()
-        ),
+        artist_id=lambda df: df.cluster_id.map(get_cluster_to_artist_id_mapping(df)),
     )
 
     # 5. Add a flag indicating whether the row will be used to build the artist table

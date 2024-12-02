@@ -5,7 +5,7 @@
 
 {% docs column__consultation_id %}The unique identifier for each consultation event.{% enddocs %}
 {% docs column__consultation_date %}The date on which the consultation took place.{% enddocs %}
-{% docs column__consultation_macro_origin %}The macro origin of the consultation, indicating the broader context of its initiation. It is the main canal on last touch : search, home, similar_offer, deeplink..{% enddocs %}
+{% docs column__consultation_macro_origin %}The macro origin of the consultation, indicating the broader context of its initiation : search, home, similar_offer, deeplink..{% enddocs %}
 {% docs column__consultation_micro_origin %}The micro origin of the consultation, which provides more granular information on the canal : type of home, type of research, origin of venue consultation which stems from offer consultation...{% enddocs %}
 
 

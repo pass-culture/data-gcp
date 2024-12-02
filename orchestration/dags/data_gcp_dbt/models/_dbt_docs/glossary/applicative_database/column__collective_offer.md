@@ -22,8 +22,6 @@
 {% docs column__last_collective_offer_creation_date %} Date of the last collective offer creation. {% enddocs %}
 {% docs column__first_collective_bookable_offer_date %} Date of the first collective bookable offer. {% enddocs %}
 {% docs column__last_collective_bookable_offer_date %} Date of the last collective bookable offer. {% enddocs %}
-{% docs column__educational_domain_id %} Unique id of the educational domain of the collective offer. {% enddocs %}
-{% docs column__educational_domain_name %} Unique name corresponding to the id of the educational domain of the collective offer. {% enddocs %}
 
 * To migrate to more specific files *
 {% docs column__template_id %} Identifier for the template associated with the collective offer. {% enddocs %}

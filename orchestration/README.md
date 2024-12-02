@@ -77,9 +77,6 @@ On peut qu'avoir une version de Airflow installé en local. Pour pallier ça, il
     - Si la machine locale n'est pas derrière un proxy:
         - Dans le fichier `.env`, modifier la valeur de `DOCKERFILE_PATH` en  `airflow/Dockerfile`
 
-**Remarque:**
-Si lors du build, vous recevez une erreur ``python not found``, ajoutez `SHELL := /bin/bash` en première ligne dans le fichier `Makefile`.
-
 ### Premier lancement (La première fois uniquement)
 sur macos installer la lib coreutils `brew install coreutils`
 

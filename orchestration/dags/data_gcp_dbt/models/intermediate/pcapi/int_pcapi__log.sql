@@ -137,5 +137,9 @@ select
     ) as user_first_deposit_activation_date,
     jsonpayload.extra.status as user_status,
     cast(jsonpayload.extra.user_satisfaction as string) as user_satisfaction,
-    cast(jsonpayload.extra.user_comment as string) as user_comment
+    cast(jsonpayload.extra.user_comment as string) as user_comment,
+    cast(jsonpayload.extra.offer_subcategory as string) as offer_subcategory_chosen
+    array_to_string(
+        jsonpayload.extra.offer_subcategories, ","
+    ) as offer_subcategories_suggested
 from {{ source("raw", "stdout") }}

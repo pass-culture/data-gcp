@@ -75,5 +75,5 @@ title: Metrics
 {% docs column__total_venue_id_booked %} The total number of distinct venues booked by the users. Virtual venues are excluded. {% enddocs %}
 {% docs column__total_venue_type_booked %} The total number of distinct venue type booked by the users. {% enddocs %}
 {% docs column__total_category_booked %} The total number of distinct categories booked by the users. {% enddocs %}
-{% docs column__ratio_current_credit_utilization %}The ratio of current credit utilization for the educational institution based on all booking status.{% enddocs %}
+{% docs column__ratio_current_credit_utilization %} The ratio of current credit utilization for the educational institution based on validated bookings {% enddocs %}
 {% docs column__ratio_beneficiary_students %}The ratio of beneficiary students for the educational institution.{% enddocs %}

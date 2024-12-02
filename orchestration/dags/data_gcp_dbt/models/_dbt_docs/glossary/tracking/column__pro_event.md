@@ -11,19 +11,28 @@
 
 {% docs column__is_edition %}Indicates whether the event is related to an edition or update.{% enddocs %}
 {% docs column__is_draft %}Indicates whether the event is related to a draft version.{% enddocs %}
+{% docs column__is_edition %}Indicates whether the event is related to an edition or update. If false, it is a creation of a new offer, if true it is an update of an existing offer.{% enddocs %}
+{% docs column__is_draft %}Indicates whether the event is related to an offer which is draft (not visible in the native application).{% enddocs %}
 {% docs column__has_saved_query %}Indicates whether the event is associated with a saved query.{% enddocs %}
 {% docs column__has_opened_wrong_student_modal %}Indicates whether the wrong student modal was opened during the event.{% enddocs %}
 {% docs column__filled %}Indicates whether the event form or data was filled.{% enddocs %}
 {% docs column__filled_with_errors %}Indicates whether the event form or data was filled with errors.{% enddocs %}
+{% docs column__has_opened_wrong_student_modal %} !outdated - will be deleted soon! Indicates whether the pro user tried to select scholar levels that were not authorized yet to book offers.{% enddocs %}
+{% docs column__filled %}Indicates if a form was filled.{% enddocs %}
+{% docs column__filled_with_errors %}Indicates if a form was filled and triggered errors during the filling.{% enddocs %}
 {% docs column__onboarding_selected_legal_category %}The legal category selected during onboarding, if applicable.{% enddocs %}
 {% docs column__download_format %}The format of the download associated with the event, if applicable.{% enddocs %}
 {% docs column__download_booking_status %}The booking status of the download associated with the event, if applicable.{% enddocs %}
+{% docs column__download_format %}The format of the download associated with the event, if applicable (excel, csv).{% enddocs %}
+{% docs column__download_booking_status %}The booking status of the download associated with the event, if applicable (validated, all).{% enddocs %}
 {% docs column__url_path_agg %}The aggregated URL path associated with the event.{% enddocs %}
 {% docs column__download_button_type %}The type of download button used during the event, if applicable.{% enddocs %}
 {% docs column__download_file_type %}The type of file downloaded during the event, if applicable.{% enddocs %}
 {% docs column__download_files_cnt %}The count of files downloaded during the event, if applicable.{% enddocs %}
+{% docs column__download_button_type %}The type of download button used during the event, if applicable (unique, multiple).{% enddocs %}
+{% docs column__download_file_type %}The type of file downloaded during the event, if applicable (details, justificatifs){% enddocs %}
+{% docs column__download_files_cnt %}The number of files downloaded during the event, if applicable.{% enddocs %}
 {% docs column__suggested_offer_subcategory_selected %}Indicates whether a suggested offer subcategory was selected during the event.{% enddocs %}
-
 
 -- This will be hidden
 {% endhide %}

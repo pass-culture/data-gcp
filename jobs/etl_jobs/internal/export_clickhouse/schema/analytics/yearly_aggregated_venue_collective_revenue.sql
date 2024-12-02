@@ -5,7 +5,7 @@ CREATE OR REPLACE TABLE analytics.yearly_aggregated_venue_collective_revenue ON 
     SETTINGS storage_policy='gcs_main'
 AS
 SELECT
-    date_trunc('YEAR', toDate (creation_date)) AS creation_year,
+    date_trunc('YEAR', coalesce(toDate (used_date), toDate (creation_date))) AS creation_year,
     cast(venue_id as String) as venue_id,
     sum(
         case

@@ -92,7 +92,8 @@ select
     o.companies,
     o.countries,
     o.casting,
-    o.isbn,
+    case when isbn_is_valid then o.isbn else null end as isbn,
+    case when ean_is_valid then o.ean else null end as ean,
     o.titelive_gtl_id,
     o.offerer_address_id,
     case
@@ -189,7 +190,7 @@ select
         then true
         else false
     end as is_future_scheduled
-from {{ ref("int_applicative__extract_offer") }} as o
+from {{ ref("int_applicative__clean_offer") }} as o
 left join {{ ref("int_applicative__offer_item_id") }} as ii on ii.offer_id = o.offer_id
 left join stocks_grouped_by_offers as so on so.offer_id = o.offer_id
 left join total_favorites as tf on tf.offerid = o.offer_id

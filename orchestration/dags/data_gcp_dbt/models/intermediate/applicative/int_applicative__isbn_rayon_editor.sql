@@ -1,12 +1,7 @@
 with
     matching_isbn_with_rayon as (
-        select
-            isbn,
-            rayon,
-            row_number() over (
-                partition by isbn order by count(distinct offer_id) desc
-            ) as rank_rayon
-        from {{ ref("int_applicative__extract_offer") }}
+        select isbn, rayon
+        from {{ ref("int_applicative__clean_offer") }}
         where
             offer_subcategoryid
             in ('LIVRE_PAPIER', 'LIVRE_NUMERIQUE', 'LIVRE_AUDIO_PHYSIQUE')
@@ -19,13 +14,8 @@ with
     ),
 
     matching_isbn_with_editor as (
-        select
-            isbn,
-            book_editor,
-            row_number() over (
-                partition by isbn order by count(distinct offer_id) desc
-            ) as rank_editor
-        from {{ ref("int_applicative__extract_offer") }}
+        select isbn, book_editor
+        from {{ ref("int_applicative__clean_offer") }}
         where
             offer_subcategoryid
             in ('LIVRE_PAPIER', 'LIVRE_NUMERIQUE', 'LIVRE_AUDIO_PHYSIQUE')

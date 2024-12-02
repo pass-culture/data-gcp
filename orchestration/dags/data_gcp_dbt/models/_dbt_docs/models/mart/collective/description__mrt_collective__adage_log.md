@@ -14,4 +14,4 @@ The `mrt_collective__adage_log` table captures detailed log data from a distant 
 This table contains only informations about teachers navigation on Adage platform.
 Each row corresponds to an event.
 
-{% docs table__mrt_pro__visit %}{% enddocs %}
+{% docs table__mrt_collective__adage_log %}{% enddocs %}

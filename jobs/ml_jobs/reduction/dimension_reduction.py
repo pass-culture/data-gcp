@@ -20,19 +20,32 @@ from tools.utils import (
 
 
 def reduce_transformation(
-    X,
-    target_dimension,
-    emb_col,
-    method="PUMAP",
-    max_dimension=32,
-):
+    X: np.ndarray,
+    target_dimension: int,
+    emb_col: str,
+    method: str = "PUMAP",
+    max_dimension: int = 32,
+) -> np.ndarray:
     """
     Reduces X dimension according to method among ["PCA", "UMAP", "PUMAP"]
-    If chosen method is PCA:
+    If chosen method is "PCA":
         - only PCA reduction is preformed
-    If chosen method is UMAP or PUMAP:
-        - First we reduce X with a PCA
-        - Then we reduce X AGAIN with UMAP or PUMAP
+    If chosen method is "UMAP" or "PUMAP":
+        If X's second dimension is bigger than max_dimension:
+            - we first reduce X with PCA so its second dimesnion is equal to the max_dimension
+            - then we perform the UMAP or the PUMAP.
+        If X's second dimension is smaller than max_dimension:
+            - we directly reduce with the UMAP or the PUMAP.
+
+    Args:
+        X (np.ndarray): The numpy array to reduce
+        target_dimension (int): number of components to keep during reduction
+        emb_col(str): name of the column which X is extracted from in the original dataframe
+        method (str): the reduction method to use. Options are ["PCA", "UMAP", "PUMAP"]
+        max_dimension (int): dimension threshold for X's second dimension to decide whether to perform a PCA before the UMAP/PUMAP or not
+
+    Returns:
+        X (np.ndarray): the reduced array
     """
     seed = secrets.randbelow(1000)
     logger.info(f"Seed for PCA reduction set to {seed}")

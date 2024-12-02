@@ -6,7 +6,7 @@ CREATE OR REPLACE TABLE analytics.monthly_aggregated_venue_individual_revenue ON
 AS
 
 SELECT
-    date_trunc('MONTH', toDate (creation_date)) AS creation_month,
+    date_trunc('MONTH', coalesce(toDate (used_date), toDate (creation_date))) AS creation_month,
     cast(venue_id as String) as venue_id,
     sum(
         case

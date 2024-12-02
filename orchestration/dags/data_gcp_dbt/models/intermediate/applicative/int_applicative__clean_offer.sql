@@ -39,7 +39,7 @@ with
 select
     * except (ean, isbn),
     case
-        when isbn_is_valid
+        when isbn_is_valid = 'valid'
         then if(length(ean) = 13, coalesce(ean, isbn), isbn)
         else null
     end as isbn,

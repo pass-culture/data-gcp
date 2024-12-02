@@ -92,8 +92,8 @@ select
     o.companies,
     o.countries,
     o.casting,
-    case when isbn_is_valid then o.isbn else null end as isbn,
-    case when ean_is_valid then o.ean else null end as ean,
+    isbn,
+    ean,
     o.titelive_gtl_id,
     o.offerer_address_id,
     case

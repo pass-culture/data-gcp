@@ -7,7 +7,7 @@ ARG GCLOUD_VERSION=google-cloud-cli-411.0.0-linux-x86_64.tar.gz
 ARG CERT_PATH_DOCKER=/usr/local/share/ca-certificates/nscacert.pem
 
 # Set environment variales for SSL certficate
-COPY nscacert_combined.pem ${CERT_PATH_DOCKER}
+COPY airflow/etc/nscacert_combined.pem ${CERT_PATH_DOCKER}
 ENV REQUESTS_CA_BUNDLE=${CERT_PATH_DOCKER}
 ENV SSL_CERT_FILE=${CERT_PATH_DOCKER}
 

@@ -102,7 +102,6 @@ seeds:
 
 snapshots:
   +target_schema: snapshot_{{ target.name }}
-  +invalidate_hard_deletes: true
   +docs:
     show: false
 

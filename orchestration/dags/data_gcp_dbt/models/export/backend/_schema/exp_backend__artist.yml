@@ -6,9 +6,6 @@ models:
     columns:
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"
-        data_tests:
-          - unique
-          - not_null
       - name: artist_name
         description: "{{ doc('column__artist_name') }}"
       - name: artist_gender

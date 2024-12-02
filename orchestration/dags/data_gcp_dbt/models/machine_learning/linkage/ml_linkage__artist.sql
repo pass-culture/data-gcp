@@ -3,7 +3,6 @@
 select
     artist_id,
     artist_id_name as artist_name,
-    wiki_id as artist_wiki_id,
     genre as artist_gender,
     description as artist_description,
     professions as artist_professions,

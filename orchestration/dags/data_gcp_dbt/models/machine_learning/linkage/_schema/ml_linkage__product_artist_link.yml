@@ -8,5 +8,10 @@ models:
         description: "{{ doc('column__offer_product_id') }}"
       - name: artist_id
         description: "{{ doc('column__artist_id') }}"
+        data_tests:
+          - not_null
       - name: artist_type
         description: "{{ doc('column__artist_type') }}"
+        data_tests:
+          - accepted_values:
+              values: [author, performer]

@@ -77,7 +77,7 @@ def mbkmeans_clusters(
     km = MiniBatchKMeans(n_clusters=k, batch_size=mb, random_state=seed, verbose=1).fit(
         X
     )
-    logger.info(f"Random state for   MiniBatchKMeans fixed to seed={seed}")
+    logger.info(f"Random state for MiniBatchKMeans fixed to seed={seed}")
     logger.info(f"For n_clusters = {k}")
     logger.info(f"Inertia:{km.inertia_}")
 

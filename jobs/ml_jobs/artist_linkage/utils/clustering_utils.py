@@ -4,6 +4,7 @@ from typing import Callable, Generator, List
 import numpy as np
 import pandas as pd
 import rapidfuzz
+from loguru import logger
 from scipy.sparse import csr_matrix, vstack
 from sklearn.cluster import DBSCAN
 from tqdm import tqdm
@@ -91,7 +92,7 @@ def _compute_distance_matrix(
     # Concatenate the sparse matrices
     complete_sparse_matrix = vstack(blocks=sparse_matrices, format="csr")
 
-    print("Memory used", complete_sparse_matrix.data.nbytes / 1024**2, "MB")
+    logger.info("Memory used", complete_sparse_matrix.data.nbytes / 1024**2, "MB")
 
     return complete_sparse_matrix
 
@@ -133,7 +134,7 @@ def cluster_with_distance_matrices(
         dtype_distance_matrix=dtype_distance_matrix,
         sparse_filter_threshold=sparse_filter_threshold,
     )
-    print("Time to compute the distance matrix", time.time() - t0)
+    logger.info("Time to compute the distance matrix", time.time() - t0)
 
     # Perform clustering with DBSCAN
     t0 = time.time()
@@ -144,7 +145,7 @@ def cluster_with_distance_matrices(
     )
     clustering.fit(complete_sparse_matrix)
     clusters = clustering.labels_
-    print("Time to compute the clustering", time.time() - t0)
+    logger.info("Time to compute the clustering", time.time() - t0)
 
     return (
         pd.DataFrame({"preprocessed_artist_name": artists_list})

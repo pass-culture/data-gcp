@@ -1,6 +1,6 @@
 {{ config(**custom_table_config(materialized="view")) }}
 
-select distinct
+select
     artist_id,
     artist_id_name as artist_name,
     genre as artist_gender,
@@ -12,3 +12,4 @@ select distinct
     image_license as wikidata_image_license,
     image_license_url as wikidata_image_license_url,
 from {{ source("ml_preproc", "artist_linked") }}
+where is_cluster_representative = true

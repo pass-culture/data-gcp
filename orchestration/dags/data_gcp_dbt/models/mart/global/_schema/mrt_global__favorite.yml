@@ -82,8 +82,8 @@ models:
         description: "{{ doc('column__user_epci') }}"
       - name: user_density_label
         description: "{{ doc('column__user_density_label') }}"
-      - name: city_code
-        description: "{{ doc('column__user_city') }}"
+      - name: user_city_code
+        description: "{{ doc('column__user_city_code') }}"
       - name: user_macro_density_label
         description: "{{ doc('column__user_macro_density_label') }}"
       - name: user_region_name

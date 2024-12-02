@@ -5,6 +5,7 @@
 {% docs column__user_birth_date %} Birth date of the user. {% enddocs %}
 {% docs column__user_civility %} Registered civility of the user (male, female). {% enddocs %}
 {% docs column__user_city %} City associated with the user's registered address. {% enddocs %}
+{% docs column__user_city_code %} The INSEE code of the city associated with the user's registered address. {% enddocs %}
 {% docs column__user_creation_date %} Date when the user account was created. {% enddocs %}
 {% docs column__user_department_code %} Department code associated with the user's registered address. {% enddocs %}
 {% docs column__user_department_name %} Department name associated with the user's registered address. {% enddocs %}

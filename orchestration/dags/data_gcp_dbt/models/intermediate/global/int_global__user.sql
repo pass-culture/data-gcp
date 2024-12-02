@@ -72,7 +72,7 @@ select
     ui.user_density_label,
     ui.user_macro_density_label,
     ui.user_density_level,
-    ui.user_city_code as city_code,
+    ui.user_city_code,
     ui.user_is_in_qpv,
     case
         when u.user_activity = "Chômeur, En recherche d'emploi" then true else false

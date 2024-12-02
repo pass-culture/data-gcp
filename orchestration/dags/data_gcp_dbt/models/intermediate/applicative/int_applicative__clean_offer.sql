@@ -43,5 +43,5 @@ select
         then if(length(ean) = 13, coalesce(ean, isbn), isbn)
         else null
     end as isbn,
-    case when ean_is_valid then ean else null end as ean
+    case when ean_is_valid = 'valid' then ean else null end as ean
 from validity_isbn_ean

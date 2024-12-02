@@ -25,11 +25,10 @@
 {% docs column__stock_old_price %}The previous price of the stock before the log entry event.{% enddocs %}
 {% docs column__stock_new_price %}The new price of the stock after the log entry event.{% enddocs %}
 {% docs column__stock_booking_quantity %}The quantity of stock booked during the log entry event.{% enddocs %}
-{% docs column__list_of_eans_not_found %}A list of EANs (European Article Numbers) that were not found during the log entry event.{% enddocs %}
-{% docs column__beta_test_new_nav_is_convenient %}Feedback on whether the new navigation is convenient, collected during beta testing.{% enddocs %}
-{% docs column__beta_test_new_nav_is_pleasant %}Feedback on whether the new navigation is pleasant, collected during beta testing.{% enddocs %}
-{% docs column__beta_test_new_nav_comment %}Comments on the new navigation, collected during beta testing.{% enddocs %}
-{% docs column__choice_datetime %}The date and time when a choice was made, associated with the log entry.{% enddocs %}
+{% docs column__list_of_eans_not_found %}A list of EANs (European Article Numbers) that were not found during the log entry event, offer creation or synchronisation.{% enddocs %}
+{% docs column__beta_test_new_nav_is_convenient %}Feedback on whether navigation on the new pro website is convenient, collected during beta testing (04/2024-11/2024).{% enddocs %}
+{% docs column__beta_test_new_nav_is_pleasant %}Feedback on whether navigation on the new pro website is pleasant, collected during beta testing (04/2024-11/2024).{% enddocs %}
+{% docs column__beta_test_new_nav_comment %}Textual reviews on the new pro website interface, collected from users during beta testing (04/2024-11/2024).{% enddocs %}
 {% docs column__cookies_consent_mandatory %}Indicates whether cookies consent is mandatory for the user.{% enddocs %}
 {% docs column__cookies_consent_accepted %}Indicates whether the user accepted cookies consent.{% enddocs %}
 {% docs column__cookies_consent_refused %}Indicates whether the user refused cookies consent.{% enddocs %}

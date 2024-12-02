@@ -138,6 +138,7 @@ select
     jsonpayload.extra.status as user_status,
     cast(jsonpayload.extra.user_satisfaction as string) as user_satisfaction,
     cast(jsonpayload.extra.user_comment as string) as user_comment,
+    cast(offer_data_api_call_id as string) as offer_data_api_call_id,
     cast(jsonpayload.extra.offer_subcategory as string) as offer_subcategory_chosen,
     array_to_string(
         jsonpayload.extra.offer_subcategories, ","

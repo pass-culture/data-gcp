@@ -38,6 +38,7 @@ select
     cookies_consent_refused,
     user_satisfaction,
     user_comment,
+    offer_data_api_call_id,
     offer_subcategory_chosen,
     offer_subcategories_suggested
 from {{ ref("int_pcapi__log") }}

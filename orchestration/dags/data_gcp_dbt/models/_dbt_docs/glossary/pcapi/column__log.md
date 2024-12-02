@@ -13,6 +13,7 @@
 {% docs column__technical_message_id %}The technical identifier for the message associated with the log entry.{% enddocs %}
 {% docs column__device_id %}The identifier for the device used during the log entry event.{% enddocs %}
 {% docs column__analytics_source %}The source of analytics data, such as "adage" "backoffice", "app-pro", "native" associated with the log entry.{% enddocs %}
+{% docs column__choice_datetime %}The timestamp when the cookie conset was recorded.{% enddocs %}
 
 {% hide columns %}
 

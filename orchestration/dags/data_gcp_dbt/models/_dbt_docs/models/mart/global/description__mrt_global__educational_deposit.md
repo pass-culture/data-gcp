@@ -5,7 +5,7 @@ description: Description of the `mrt_global__educational_deposit` table.
 
 {% docs description__mrt_global__educational_deposit %}
 
-The `mrt_global__educational_deposit` table lists all credits received by educational institutions as part of the collective component of the Culture Pass.
+The `mrt_global__educational_deposit` table lists all credits received by educational institutions as part of the collective component of the pass Culture.
 
 {% enddocs %}
 

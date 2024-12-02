@@ -26,6 +26,14 @@ def reduce_transformation(
     method="PUMAP",
     max_dimension=32,
 ):
+    """
+    Reduces X dimension according to method among ["PCA", "UMAP", "PUMAP"]
+    If chosen method is PCA:
+        - only PCA reduction is preformed
+    If chosen method is UMAP or PUMAP:
+        - First we reduce X with a PCA
+        - Then we reduce X AGAIN with UMAP or PUMAP
+    """
     seed = secrets.randbelow(1000)
     logger.info(f"Seed for PCA reduction set to {seed}")
     if method in ("UMAP", "PUMAP"):

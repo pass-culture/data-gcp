@@ -86,7 +86,6 @@ def run(
     except Exception as e:
         print(e)
         print("One of the table is  not found")
-        return "Table not found"
 
     if metabase_card_type == "native":
         transition_logs = []

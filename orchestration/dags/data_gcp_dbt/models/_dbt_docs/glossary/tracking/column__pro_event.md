@@ -15,7 +15,6 @@
 {% docs column__has_opened_wrong_student_modal %}Indicates whether the wrong student modal was opened during the event.{% enddocs %}
 {% docs column__filled %}Indicates whether the event form or data was filled.{% enddocs %}
 {% docs column__filled_with_errors %}Indicates whether the event form or data was filled with errors.{% enddocs %}
-{% docs column__has_opened_wrong_student_modal %} !outdated - will be deleted soon! Indicates whether the pro user tried to select scholar levels that were not authorized yet to book offers.{% enddocs %}
 {% docs column__onboarding_selected_legal_category %}The legal category selected during onboarding, if applicable.{% enddocs %}
 {% docs column__download_format %}The format of the download associated with the event, if applicable.{% enddocs %}
 {% docs column__download_booking_status %}The booking status of the download associated with the event, if applicable.{% enddocs %}

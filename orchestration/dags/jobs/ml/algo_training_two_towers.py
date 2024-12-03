@@ -324,6 +324,7 @@ with DAG(
         >> preprocess_data["test"]
         >> train
         >> evaluate
+        >> upload_embeddings
         >> gce_instance_stop
         >> send_slack_notif_success
     )

@@ -45,7 +45,7 @@ def reduce_transformation(
         max_dimension (int): dimension threshold for X's second dimension to decide whether to perform a PCA before the UMAP/PUMAP or not
 
     Returns:
-        X (np.ndarray): the reduced array
+        np.ndarray: the reduced array
     """
     seed = secrets.randbelow(1000)
     logger.info(f"Seed for PCA reduction set to {seed}")

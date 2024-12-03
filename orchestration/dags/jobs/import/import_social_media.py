@@ -5,10 +5,11 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
+    GCE_UV_INSTALLER,
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -54,19 +55,13 @@ with DAG(
             instance_name=GCE_INSTANCE, task_id=f"{social_network}_gce_start_task"
         )
 
-        fetch_code = CloneRepositoryGCEOperator(
-            task_id=f"{social_network}_fetch_code",
+        fetch_install_code = InstallDependenciesOperator(
+            task_id="fetch_install_code",
             instance_name=GCE_INSTANCE,
-            command="{{ params.branch }}",
+            branch="{{ params.branch }}",
             python_version="3.10",
-        )
-
-        install_dependencies = SSHGCEOperator(
-            task_id=f"{social_network}_install_dependencies",
-            instance_name=GCE_INSTANCE,
             base_dir=BASE_PATH,
-            command="pip install -r requirements.txt --user",
-            dag=dag,
+            installer=GCE_UV_INSTALLER,
             retries=2,
         )
 
@@ -74,6 +69,7 @@ with DAG(
             task_id=f"{social_network}_to_bq",
             instance_name=GCE_INSTANCE,
             base_dir=BASE_PATH,
+            installer=GCE_UV_INSTALLER,
             command="python main.py --start-date {{ add_days(ds, params.n_days) }} --end-date {{ ds }} ",
             do_xcom_push=True,
         )
@@ -82,10 +78,4 @@ with DAG(
             task_id=f"{social_network}_gce_stop_task", instance_name=GCE_INSTANCE
         )
 
-        (
-            gce_instance_start
-            >> fetch_code
-            >> install_dependencies
-            >> job_to_bq
-            >> gce_instance_stop
-        )
+        (gce_instance_start >> fetch_install_code >> job_to_bq >> gce_instance_stop)

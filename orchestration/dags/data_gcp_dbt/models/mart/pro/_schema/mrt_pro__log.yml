@@ -62,9 +62,9 @@ models:
         description: "{{ doc('column__user_satisfaction') }}"
       - name: user_comment
         description: "{{ doc('column__user_comment') }}"
-      - name: offer_data_api_call_id
-        description: "{{ doc('column__offer_data_api_call_id') }}"
-      - name: offer_subcategories_chosen
-        description: "{{ doc('column__offer_subcategory_chosen') }}"
-      - name: offer_subcategories_suggested
-        description: "{{ doc('column__offer_subcategories_suggested') }}"
+      - name: suggested_offer_api_id
+        description: "{{ doc('column__suggested_offer_api_id') }}"
+      - name: suggested_offer_api_subcategory
+        description: "{{ doc('column__suggested_offer_api_subcategory') }}"
+      - name: suggested_offer_api_subcategories
+        description: "{{ doc('column__suggested_offer_api_subcategories') }}"

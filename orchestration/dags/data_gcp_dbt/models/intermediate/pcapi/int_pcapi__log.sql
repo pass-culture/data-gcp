@@ -138,9 +138,11 @@ select
     jsonpayload.extra.status as user_status,
     cast(jsonpayload.extra.user_satisfaction as string) as user_satisfaction,
     cast(jsonpayload.extra.user_comment as string) as user_comment,
-    cast(offer_data_api_call_id as string) as offer_data_api_call_id,
-    cast(jsonpayload.extra.offer_subcategory as string) as offer_subcategory_chosen,
+    cast(jsonpayload.extra.offer_data_api_call_id as string) as suggested_offer_api_id,
+    cast(
+        jsonpayload.extra.offer_subcategory as string
+    ) as suggested_offer_api_subcategory,
     array_to_string(
         jsonpayload.extra.offer_subcategories, ","
-    ) as offer_subcategories_suggested
+    ) as suggested_offer_api_subcategories
 from {{ source("raw", "stdout") }}

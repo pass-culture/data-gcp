@@ -38,9 +38,9 @@ select
     cookies_consent_refused,
     user_satisfaction,
     user_comment,
-    offer_data_api_call_id,
-    offer_subcategory_chosen,
-    offer_subcategories_suggested
+    suggested_offer_api_id,
+    suggested_offer_api_subcategory,
+    suggested_offer_api_subcategories
 from {{ ref("int_pcapi__log") }}
 where
     (

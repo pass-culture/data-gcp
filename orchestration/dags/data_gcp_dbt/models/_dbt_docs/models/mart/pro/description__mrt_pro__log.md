@@ -21,6 +21,6 @@ Detail of logs supported (field message) :
             "Some provided eans were not found" : as part of offer manual creation and offer synchronisation with API, our teams need to detect EANs which do not belong to our database
             "Stock update blocked because of price limitation" : fraud teams need to detect fraud attempt from cultural parterns who try to raise their price
             "User with new nav activated submitting review" and "User submitting review" : product teams gather user reviews enabled on the website
-            "Offer Categorisation Data API" : data science team need to measure performance of their predictiv model for individual offer creation (suggestion of subcategories)
+            "Offer Categorisation Data API" : data science team need to measure performance of their predictive model for individual offer creation (suggestion of subcategories)
 
 {% docs table__mrt_pro__log %}{% enddocs %}

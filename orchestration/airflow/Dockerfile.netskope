@@ -7,7 +7,7 @@ ARG GCLOUD_VERSION=google-cloud-cli-411.0.0-linux-x86_64.tar.gz
 ARG CERT_PATH_DOCKER=/usr/local/share/ca-certificates/nscacert.pem
 
 # Set environment variales for SSL certficate
-COPY nscacert_combined.pem ${CERT_PATH_DOCKER}
+COPY airflow/etc/nscacert_combined.pem ${CERT_PATH_DOCKER}
 ENV REQUESTS_CA_BUNDLE=${CERT_PATH_DOCKER}
 ENV SSL_CERT_FILE=${CERT_PATH_DOCKER}
 
@@ -24,7 +24,7 @@ RUN uv pip install --no-cache-dir -r /opt/dbt-requirements.txt
 USER root
 RUN apt-get update && apt-get install -y git ca-certificates --no-install-recommends && update-ca-certificates
 COPY ./airflow/etc/sa.gcpkey.json ${GCLOUD_SERVICE_KEY}
-RUN curl -LO -k https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} && tar xf ${GCLOUD_VERSION}
+RUN curl -LO https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} && tar xf ${GCLOUD_VERSION}
 ENV PATH=$PATH:$AIRFLOW_USER_HOME/google-cloud-sdk/bin
 RUN gcloud config set core/custom_ca_certs_file ${CERT_PATH_DOCKER}
 RUN gcloud auth activate-service-account --key-file=${GCLOUD_SERVICE_KEY}

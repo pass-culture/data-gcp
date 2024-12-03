@@ -7,8 +7,6 @@ import requests
 import typer
 from tqdm import tqdm
 
-from utils.gcs_utils import upload_parquet
-
 logging.basicConfig(level=logging.INFO)
 app = typer.Typer()
 
@@ -123,10 +121,7 @@ def main(
         image_license_df, how="left", on="image_file_url"
     )
 
-    upload_parquet(
-        dataframe=artists_with_licenses_df,
-        gcs_path=output_file_path,
-    )
+    artists_with_licenses_df.to_parquet(output_file_path)
 
 
 if __name__ == "__main__":

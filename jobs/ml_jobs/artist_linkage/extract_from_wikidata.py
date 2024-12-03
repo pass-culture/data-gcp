@@ -121,7 +121,7 @@ def main(output_file_path: str = typer.Option()) -> None:
         data_df = fetch_wikidata_qlever_csv(query_string).pipe(extract_wiki_id)
 
         if not data_df.empty:
-            print(f"Retrieved {len(data_df)} rows.")
+            logger.info(f"Retrieved {len(data_df)} rows.")
             df_list.append(data_df)
             wiki_ids_per_query[query_name] = data_df.wiki_id.unique()
         else:

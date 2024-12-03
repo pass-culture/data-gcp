@@ -19,7 +19,7 @@ select
     user_is_in_qpv,
     user_epci,
     user_density_label,
-    city_code,
+    user_city_code,
     user_macro_density_label,
     user_density_level,
     user_region_name,

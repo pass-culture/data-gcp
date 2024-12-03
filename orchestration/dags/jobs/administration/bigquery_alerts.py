@@ -1,7 +1,7 @@
 import datetime
 
 from common import macros
-from common.alerts import bigquery_freshness_alert
+from common.alerts import bigquery_freshness_alert, task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
@@ -32,6 +32,7 @@ default_dag_args = {
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
+    "on_failure_callback": task_fail_slack_alert,
 }
 
 with DAG(

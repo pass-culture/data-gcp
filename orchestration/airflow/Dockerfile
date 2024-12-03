@@ -16,7 +16,7 @@ RUN uv pip install --no-cache-dir -r /opt/dbt-requirements.txt
 USER root
 RUN apt-get update && apt-get install -y git ca-certificates --no-install-recommends
 COPY ./airflow/etc/sa.gcpkey.json ${GCLOUD_SERVICE_KEY}
-RUN curl -LO -k https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} && tar xf ${GCLOUD_VERSION}
+RUN curl -LO https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} && tar xf ${GCLOUD_VERSION}
 ENV PATH=$PATH:$AIRFLOW_USER_HOME/google-cloud-sdk/bin
 RUN gcloud auth activate-service-account --key-file=${GCLOUD_SERVICE_KEY}
 

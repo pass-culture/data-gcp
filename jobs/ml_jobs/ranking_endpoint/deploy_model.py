@@ -1,4 +1,5 @@
 import os
+import secrets
 import shutil
 from datetime import datetime
 
@@ -163,7 +164,11 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     preprocessed_data = data.pipe(
         preprocess_data,
     )
-    train_data, test_data = train_test_split(preprocessed_data, test_size=TEST_SIZE)
+
+    seed = secrets.randbelow(1000)
+    train_data, test_data = train_test_split(
+        preprocessed_data, test_size=TEST_SIZE, random_state=seed
+    )
     class_frequency = train_data.target_class.value_counts(normalize=True).to_dict()
     class_weight = {k: 1 / v for k, v in class_frequency.items()}
 
@@ -196,6 +201,7 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         train_predictions.to_csv(f"{figure_folder}/train_predictions.csv", index=False)
         test_predictions.to_csv(f"{figure_folder}/test_predictions.csv", index=False)
         mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
+        mlflow.log_param("seed", seed)
 
     # retrain on whole
     pipeline_classifier.train(preprocessed_data, class_weight=class_weight)

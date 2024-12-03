@@ -63,8 +63,8 @@ models:
       - name: user_density_label
         description: '{{ doc("column__user_density_label") }}'
         data_type: STRING
-      - name: city_code
-        description: '{{ doc("column__user_city") }}'
+      - name: user_city_code
+        description: '{{ doc("column__user_city_code") }}'
         data_type: STRING
       - name: user_macro_density_label
         description: '{{ doc("column__user_macro_density_label") }}'

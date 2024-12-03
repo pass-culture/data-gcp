@@ -26,7 +26,7 @@ def get_dependant_cards(legacy_table_name, legacy_schema_name):
         FROM `{PROJECT_NAME}.{INT_METABASE_DATASET}.card_dependency`
         WHERE table_name = '{legacy_table_name}'
         and lower(card_name) not like '%archive%'
-        and schema = '{legacy_schema_name}'
+        and table_schema = '{legacy_schema_name}'
     """
 
     metabase_activity_query = f"""

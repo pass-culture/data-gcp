@@ -2,9 +2,9 @@ from datetime import datetime, timedelta
 
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import DAG_FOLDER, ENV_SHORT_NAME
+from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCE_UV_INSTALLER
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -49,25 +49,18 @@ with DAG(
         "default_region": Param(default=DEFAULT_REGION, type="string"),
         "instance_type": Param(default="n1-standard-2", type="string"),
     },
-) as dag:
+):
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task", instance_name=GCE_INSTANCE, retries=2
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
+        branch="{{ params.branch }}",
         python_version="3.10",
-        retries=2,
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
-        command="""pip install -r requirements.txt --user""",
-        dag=dag,
+        installer=GCE_UV_INSTALLER,
         retries=2,
     )
 
@@ -86,17 +79,11 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=template_command,
-        dag=dag,
+        installer=GCE_UV_INSTALLER,
     )
 
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
-    (
-        gce_instance_start
-        >> fetch_code
-        >> install_dependencies
-        >> deploy_model
-        >> gce_instance_stop
-    )
+    (gce_instance_start >> fetch_install_code >> deploy_model >> gce_instance_stop)

@@ -74,15 +74,19 @@ def run(
         legacy_table_name, legacy_schema_name, metabase
     )
     new_metabase_table = MetabaseTable(new_table_name, new_schema_name, metabase)
-    legacy_fields_df = legacy_metabase_table.get_fields()
     new_fields_df = new_metabase_table.get_fields()
-
-    legacy_table_id = legacy_metabase_table.get_table_id()
     new_table_id = new_metabase_table.get_table_id()
+    try:
+        legacy_fields_df = legacy_metabase_table.get_fields()
+        legacy_table_id = legacy_metabase_table.get_table_id()
+        metabase_field_mapping = get_mapped_fields(
+            legacy_fields_df, new_fields_df, table_columns_mappings
+        )
 
-    metabase_field_mapping = get_mapped_fields(
-        legacy_fields_df, new_fields_df, table_columns_mappings
-    )
+    except Exception as e:
+        print(e)
+        print("One of the table is  not found")
+        return "Table not found"
 
     if metabase_card_type == "native":
         transition_logs = []
@@ -104,7 +108,7 @@ def run(
                 )
                 native_card.replace_table_name(legacy_table_name, new_table_name)
                 native_card.replace_column_names(table_columns_mappings)
-                native_card.update_filters(metabase_field_mapping)
+                # native_card.update_filters(metabase_field_mapping)
                 native_card.update_query()
                 transition_log["success"] = True
             except Exception as e:

@@ -92,8 +92,8 @@ select
     o.companies,
     o.countries,
     o.casting,
-    o.isbn,
-    o.ean,
+    offer_ean.isbn,
+    offer_ean.ean,
     o.titelive_gtl_id,
     o.offerer_address_id,
     case
@@ -198,7 +198,8 @@ left join
     {{ source("raw", "subcategories") }} as subcategories
     on o.offer_subcategoryid = subcategories.id
 left join
-    {{ ref("int_applicative__offer_ean") }} as offer_ean on o.isbn = offer_ean.isbn
+    {{ ref("int_applicative__offer_ean") }} as offer_ean
+    on o.offer_id = offer_ean.offer_id
 left join
     {{ ref("int_applicative__mediation") }} as m
     on o.offer_id = m.offer_id

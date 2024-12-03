@@ -1,14 +1,17 @@
 with
     clean_references as (
         select
-            * except (isbn, ean, titelive_gtl_id),
+            offer_id,
+            offer_subcategoryid,
             regexp_replace(ean, r'[\\s\\-\\t]', '') as ean,
             regexp_replace(isbn, r'[\\s\\-\\t]', '') as isbn,
             case
                 when length(cast(titelive_gtl_id as string)) = 7
                 then concat('0', cast(titelive_gtl_id as string))
                 else cast(titelive_gtl_id as string)
-            end as titelive_gtl_id
+            end as titelive_gtl_id,
+            rayon,
+            book_editor
         from {{ ref("int_applicative__extract_offer") }} o
     ),
 
@@ -74,7 +77,9 @@ with
     )
 
 select
-    clean_isbn.* except (rayon, book_editor),
+    clean_isbn.offer_id,
+    clean_isbn.ean,
+    clean_isbn.isbn,
     matching_isbn_with_rayon.rayon as rayon,
     matching_isbn_with_editor.book_editor as book_editor
 from clean_isbn

@@ -5,11 +5,12 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
+    GCE_UV_INSTALLER,
     GCP_PROJECT_ID,
 )
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -56,19 +57,13 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_start_task", retries=2
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
+        branch="{{ params.branch }}",
         python_version="3.9",
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command="pip install -r requirements.txt --user",
-        dag=dag,
+        installer=GCE_UV_INSTALLER,
         retries=2,
     )
 
@@ -78,6 +73,7 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="python main.py ",
+        installer=GCE_UV_INSTALLER,
         do_xcom_push=True,
     )
 
@@ -93,8 +89,7 @@ for table, params in ANALYTICS_TABLES.items():
 end = DummyOperator(task_id="end", dag=dag)
 (
     gce_instance_start
-    >> fetch_code
-    >> install_dependencies
+    >> fetch_install_code
     >> import_downloads_data_to_bigquery
     >> gce_instance_stop
     >> analytics_tasks

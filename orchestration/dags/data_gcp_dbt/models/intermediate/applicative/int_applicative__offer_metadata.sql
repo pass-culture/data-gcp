@@ -31,20 +31,40 @@ select
     o.titelive_gtl_id,
     o.offer_type_id,
     o.offer_sub_type_id,
+    pm.uuid as uuid,
+    p.thumbcount as thumbcount,
     case
+        when o.offer_product_id is not null
+        then
+            case
+                when pm.uuid is not null
+                then
+                    concat(
+                        'https://storage.googleapis.com/',
+                        {{ get_mediation_url() }}
+                        || '-assets-fine-grained/thumbs/mediations/',
+                        pm.uuid
+                    )
+                else
+                    concat(
+                        'https://storage.googleapis.com/',
+                        {{ get_mediation_url() }}
+                        || '-assets-fine-grained/thumbs/mediations/',
+                        o.offer_product_humanized_id,
+                        '_',
+                        p.thumbcount - 1
+                    )
+            end
         when o.mediation_humanized_id is not null
         then
             concat(
                 'https://storage.googleapis.com/',
                 {{ get_mediation_url() }} || '-assets-fine-grained/thumbs/mediations/',
-                mediation_humanized_id
+                o.mediation_humanized_id,
+                '_',
+                m.thumb_count - 1
             )
-        else
-            concat(
-                'https://storage.googleapis.com/',
-                {{ get_mediation_url() }} || '-assets-fine-grained/thumbs/products/',
-                offer_product_humanized_id
-            )
+        else null
     end as image_url,
     gtl.gtl_type,
     gtl.gtl_label_level_1,
@@ -112,3 +132,10 @@ left join
     and offer_sub_types.offer_type_id = o.offer_type_id
     and offer_sub_types.offer_sub_type_id = o.offer_sub_type_id
 left join {{ source("seed", "macro_rayons") }} on o.rayon = macro_rayons.rayon
+left join
+    {{ ref("int_applicative__mediation") }} as m
+    on o.offer_id = m.offer_id
+left join
+    {{ ref("int_applicative__product_mediation") }} as pm
+    on o.offer_product_id = pm.product_id
+left join {{ ref("int_applicative__product") }} as p on o.offer_product_id = p.id

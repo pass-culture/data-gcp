@@ -1,4 +1,5 @@
 import json
+import secrets
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -161,7 +162,9 @@ def save_pca_representation(
     item_ids = loaded_model.item_layer.layers[0].get_vocabulary()[1:]
     embeddings = loaded_model.item_layer.layers[1].get_weights()[0][1:]
 
-    pca_out = PCA(n_components=2).fit_transform(embeddings)
+    seed = secrets.randbelow(1000)
+    logger.info(f"Random state for PCA fixed to seed={seed}")
+    pca_out = PCA(n_components=2, random_state=seed).fit_transform(embeddings)
     categories = item_data["offer_category_id"].unique().tolist()
     item_representation = pd.DataFrame(
         {

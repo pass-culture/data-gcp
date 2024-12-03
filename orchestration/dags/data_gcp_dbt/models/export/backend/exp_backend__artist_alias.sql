@@ -1,4 +1,4 @@
-select distinct
+select
     artist_id,
     artist_offer_name,
     artist_cluster_id,

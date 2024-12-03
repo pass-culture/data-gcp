@@ -10,7 +10,7 @@ left join
     `{{ bigquery_int_applicative_dataset }}`.offer_item_id oii
     on oii.offer_id = ado.offer_id
 left join
-    `{{ bigquery_int_applicative_dataset }}`.clean_offer oed
+    `{{ bigquery_int_applicative_dataset }}`.extract_offer oed
     on oed.offer_id = ado.offer_id
 left join
     `{{ bigquery_analytics_dataset }}`.linked_offers ol

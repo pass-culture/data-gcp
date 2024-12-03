@@ -138,8 +138,8 @@ select
     subcategories.is_event as event,
     subcategories.category_id as offer_category_id,
     subcategories.search_group_name,
-    isbn_rayon_editor.rayon,
-    isbn_rayon_editor.book_editor,
+    offer_ean.rayon,
+    offer_ean.book_editor,
     ii.item_id,
     m.mediation_humanized_id,
     {{ target_schema }}.humanize_id(o.offer_id) as offer_humanized_id,
@@ -190,7 +190,7 @@ select
         then true
         else false
     end as is_future_scheduled
-from {{ ref("int_applicative__clean_offer") }} as o
+from {{ ref("int_applicative__extract_offer") }} as o
 left join {{ ref("int_applicative__offer_item_id") }} as ii on ii.offer_id = o.offer_id
 left join stocks_grouped_by_offers as so on so.offer_id = o.offer_id
 left join total_favorites as tf on tf.offerid = o.offer_id
@@ -198,8 +198,7 @@ left join
     {{ source("raw", "subcategories") }} as subcategories
     on o.offer_subcategoryid = subcategories.id
 left join
-    {{ ref("int_applicative__isbn_rayon_editor") }} as isbn_rayon_editor
-    on o.isbn = isbn_rayon_editor.isbn
+    {{ ref("int_applicative__offer_ean") }} as offer_ean on o.isbn = offer_ean.isbn
 left join
     {{ ref("int_applicative__mediation") }} as m
     on o.offer_id = m.offer_id
@@ -210,4 +209,4 @@ left join
     on future_offer.offer_id = o.offer_id
 where
     o.offer_subcategoryid not in ("ACTIVATION_THING", "ACTIVATION_EVENT")
-    and (booking_email <> "jeux-concours@passculture.app" or booking_email is null)
+    and (o.booking_email <> "jeux-concours@passculture.app" or o.booking_email is null)

@@ -37,7 +37,7 @@ with
             `{{ bigquery_raw_dataset }}`.`applicative_database_stock` s
             on s.offer_id = o.offer_id  -- TODO:update join with offer_extra_data
         left join
-            `{{ bigquery_int_applicative_dataset }}`.`clean_offer` oed
+            `{{ bigquery_int_applicative_dataset }}`.`extract_offer` oed
             on oed.offer_id = o.offer_id
         left join
             `{{ bigquery_raw_dataset }}`.`subcategories` subcat

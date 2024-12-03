@@ -11,7 +11,7 @@ from common.config import (
     MLFLOW_BUCKET_NAME,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -68,6 +68,7 @@ DEFAULT_ARGS = {
 }
 
 SCHEDULE_DICT = {"prod": "0 4 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"}
+GCE_INSTALLER = "uv"
 
 with DAG(
     "link_items",
@@ -178,25 +179,21 @@ with DAG(
         labels={"job_type": "long_ml"},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
+        branch="{{ params.branch }}",
+        installer=GCE_INSTALLER,
         python_version="3.10",
-        command="{{ params.branch }}",
-        retries=2,
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
-        command="pip install -r requirements.txt --user",
+        retries=2,
     )
 
     build_linkage_vector = SSHGCEOperator(
         task_id="build_linkage_vector",
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
+        installer=GCE_INSTALLER,
         command="python build_semantic_space.py "
         f"""--input-path {os.path.join(
                     DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_DIR"],"data-*.parquet"
@@ -209,6 +206,7 @@ with DAG(
         task_id="get_linkage_candidates",
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
+        installer=GCE_INSTALLER,
         command="python linkage_candidates.py "
         f"--batch-size {DAG_CONFIG['BATCH_SIZE']} "
         f"--reduction {DAG_CONFIG['REDUCTION']} "
@@ -222,6 +220,7 @@ with DAG(
         task_id="link_items",
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
+        installer=GCE_INSTALLER,
         command="python link_items.py "
         f"""--input-sources-path {os.path.join(
                     DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_DIR"]
@@ -256,8 +255,7 @@ with DAG(
         >> export_to_bq_tasks
         >> end_exports
         >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
+        >> fetch_install_code
         >> build_linkage_vector
         >> get_linkage_candidates
         >> link_items

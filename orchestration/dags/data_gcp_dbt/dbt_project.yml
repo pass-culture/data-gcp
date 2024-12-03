@@ -51,6 +51,7 @@ models:
       +schema: clean_{{ target.name }}
       +docs:
         node_color: "#b43ddb"
+        show: false
       applicative:
         +alias: applicative_database_
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
@@ -61,6 +62,7 @@ models:
       +schema: analytics_{{ target.name }}
       +docs:
         node_color: "#d90000"
+        show: false
     intermediate:
       +meta:
         owner: "@team-data-engineering"
@@ -94,6 +96,8 @@ models:
     +on_schema_change: "append_new_columns"
     +enabled: true
     +schema: dbt_artifacts_{{ target.name }}
+    +docs:
+      show: false
 
 seeds:
   +schema: seeds

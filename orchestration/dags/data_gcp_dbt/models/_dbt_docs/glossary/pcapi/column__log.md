@@ -33,5 +33,10 @@
 {% docs column__cookies_consent_mandatory %}Indicates whether cookies consent is mandatory for the user.{% enddocs %}
 {% docs column__cookies_consent_accepted %}Indicates whether the user accepted cookies consent.{% enddocs %}
 {% docs column__cookies_consent_refused %}Indicates whether the user refused cookies consent.{% enddocs %}
+{% docs column__user_satisfaction %}Textual reviews on the pro website interface and navigation, collected from November 2024.{% enddocs %}
+{% docs column__user_comment %}Multi-choice feedback on pro website from very bad to excellent, collected from November 2024.{% enddocs %}
+{% docs column__offer_data_api_call_id %}API call ID as part of individual offer creation predictiv model of suggested subcategories.{% enddocs %}
+{% docs column__offer_subcategory_chosen %}Subcategory chosen by the user as part of individual offer creation(predictiv model).{% enddocs %}
+{% docs column__offer_subcategories_suggested %}Subcategories suggested to the user as part of individual offer creation (predictiv model).{% enddocs %}
 
 {% endhide %}

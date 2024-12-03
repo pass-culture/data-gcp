@@ -6,10 +6,11 @@ description: Description the distinct models in the data project.
 ## Introduction
 
 
-The Pass Culture data project is a comprehensive data management and analytics platform designed to support cultural
-offers. It leverages dbt to transform raw data into structured formats, facilitating efficient querying and reporting.
-The project organizes data into marts, focusing on key areas such as users, offers, bookings, stock, and deposits.
+The Pass Culture data project is a central platform for managing and analyzing data from various sources. It transforms raw data into organized formats using dbt, making it easy to use for reporting, analytics, and machine learning.
 
+The project structure moves data through three stages: raw sources, intermediate models by source, and final global models (marts), which are the primary data sources for the analytics team. It also supports reverse ETL to share data with internal systems like ClickHouse, PostHog, and backend services.
+
+This data warehouse is essential for analytics, managed by the data analysts, and for machine learning systems maintained by the data science team. The entire data infrastructure is built and maintained by the data engineering team.
 
 ## Applicative Database
 
@@ -39,7 +40,7 @@ track user interactions within the application.
 
 ## Code & SQL
 
-Not all models are fully described here as we handle more than 1K models our DBT project.
+Not all models are (yet) fully described here, as our data warehouse holds an extensive collection of models.
 
 If you want to have a look at the documentation or sql, please refer [at the
 code](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models).

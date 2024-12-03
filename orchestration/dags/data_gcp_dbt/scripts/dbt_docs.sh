@@ -1,6 +1,4 @@
 #!/bin/bash
-dbt compile
+dbt compile --target='prod' --threads=16 --vars '{"ENV_SHORT_NAME": "prod"}'
 
-dbt docs generate --target='prod'
-
-dbt docs serve
+dbt docs generate --static --target='prod' --threads=16 --vars '{"ENV_SHORT_NAME": "prod"}'

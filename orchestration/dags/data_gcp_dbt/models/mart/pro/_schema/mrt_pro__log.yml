@@ -58,3 +58,13 @@ models:
         description: "{{ doc('column__cookies_consent_accepted') }}"
       - name: cookies_consent_refused
         description: "{{ doc('column__cookies_consent_refused') }}"
+      - name: user_satisfaction
+        description: "{{ doc('column__user_satisfaction') }}"
+      - name: user_comment
+        description: "{{ doc('column__user_comment') }}"
+      - name: suggested_offer_api_id
+        description: "{{ doc('column__suggested_offer_api_id') }}"
+      - name: suggested_offer_api_subcategory
+        description: "{{ doc('column__suggested_offer_api_subcategory') }}"
+      - name: suggested_offer_api_subcategories
+        description: "{{ doc('column__suggested_offer_api_subcategories') }}"

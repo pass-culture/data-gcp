@@ -35,7 +35,12 @@ select
     analytics_source,
     cookies_consent_mandatory,
     cookies_consent_accepted,
-    cookies_consent_refused
+    cookies_consent_refused,
+    user_satisfaction,
+    user_comment,
+    suggested_offer_api_id,
+    suggested_offer_api_subcategory,
+    suggested_offer_api_subcategories
 from {{ ref("int_pcapi__log") }}
 where
     (
@@ -49,7 +54,9 @@ where
             "Successfully updated stock",
             "Some provided eans were not found",
             "Stock update blocked because of price limitation",
-            "User with new nav activated submitting review"
+            "User with new nav activated submitting review",
+            "User submitting review",
+            "Offer Categorisation Data API"
         )
     )
     {% if is_incremental() %}

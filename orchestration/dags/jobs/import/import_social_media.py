@@ -47,35 +47,35 @@ with DAG(
             type="integer",
         ),
     },
-) as dag:
+):
     for social_network in ["tiktok", "instagram"]:
-        GCE_INSTANCE = f"import-{social_network}-{ENV_SHORT_NAME}"
-        BASE_PATH = f"data-gcp/jobs/etl_jobs/external/{social_network}"
+        gce_instance = f"import-{social_network}-{ENV_SHORT_NAME}"
+        base_path = f"data-gcp/jobs/etl_jobs/external/{social_network}"
         gce_instance_start = StartGCEOperator(
-            instance_name=GCE_INSTANCE, task_id=f"{social_network}_gce_start_task"
+            instance_name=gce_instance, task_id=f"{social_network}_gce_start_task"
         )
 
         fetch_install_code = InstallDependenciesOperator(
-            task_id="fetch_install_code",
-            instance_name=GCE_INSTANCE,
+            task_id=f"{social_network}_fetch_install_code",
+            instance_name=gce_instance,
             branch="{{ params.branch }}",
             python_version="3.10",
-            base_dir=BASE_PATH,
+            base_dir=base_path,
             installer=GCE_UV_INSTALLER,
             retries=2,
         )
 
         job_to_bq = SSHGCEOperator(
             task_id=f"{social_network}_to_bq",
-            instance_name=GCE_INSTANCE,
-            base_dir=BASE_PATH,
+            instance_name=gce_instance,
+            base_dir=base_path,
             installer=GCE_UV_INSTALLER,
             command="python main.py --start-date {{ add_days(ds, params.n_days) }} --end-date {{ ds }} ",
             do_xcom_push=True,
         )
 
         gce_instance_stop = StopGCEOperator(
-            task_id=f"{social_network}_gce_stop_task", instance_name=GCE_INSTANCE
+            task_id=f"{social_network}_gce_stop_task", instance_name=gce_instance
         )
 
         (gce_instance_start >> fetch_install_code >> job_to_bq >> gce_instance_stop)

@@ -80,6 +80,7 @@ select
     clean_isbn.offer_id,
     clean_isbn.ean,
     clean_isbn.isbn,
+    clean_isbn.titelive_gtl_id,
     matching_isbn_with_rayon.rayon as rayon,
     matching_isbn_with_editor.book_editor as book_editor
 from clean_isbn

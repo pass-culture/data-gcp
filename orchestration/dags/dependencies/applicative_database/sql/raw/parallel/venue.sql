@@ -59,5 +59,5 @@ SELECT
     , "dmsToken" AS dms_token
     , "description" AS venue_description
     , "withdrawalDetails" AS venue_withdrawal_details
-    , "offererAddressId" AS offerer_address_id
+    , CAST("offererAddressId" AS varchar(255)) AS offerer_address_id
 FROM public.venue

@@ -283,7 +283,7 @@ models:
           - not_null
       - name: offerer_address_id
         description: '{{ doc("column__offerer_address_id") }}'
-        data_type: INT64
+        data_type: STRING
       - name: offerer_rank_desc
         description: '{{ doc("column__offerer_rank_desc") }}'
         data_type: INT64

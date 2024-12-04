@@ -122,6 +122,51 @@ select
     case
         when siren_data.activiteprincipaleunitelegale = '84.11Z' then true else false
     end as is_local_authority,
+    case
+        when
+            (
+                lower(ofr.offerer_name) like "commune%"
+                or lower(ofr.offerer_name) like "%ville%de%"
+            )
+        then "Communes"
+        when
+            (
+                lower(ofr.offerer_name) like "%departement%"
+                or lower(ofr.offerer_name) like "%département%"
+            )
+        then "Départements"
+        when
+            (
+                lower(ofr.offerer_name) like "region%"
+                or lower(ofr.offerer_name) like "région%"
+            )
+        then "Régions"
+        when
+            (
+                lower(ofr.offerer_name) like "ca%"
+                or lower(ofr.offerer_name) like "%agglo%"
+                or lower(ofr.offerer_name) like "cc%"
+                or lower(ofr.offerer_name) like "cu%"
+                or lower(ofr.offerer_name) like "%communaute%"
+                or lower(ofr.offerer_name) like "%agglomeration%"
+                or lower(ofr.offerer_name) like "%agglomération%"
+                or lower(ofr.offerer_name) like "%metropole%"
+                or lower(ofr.offerer_name) like "%com%com%"
+                or lower(ofr.offerer_name) like "%petr%"
+                or lower(ofr.offerer_name) like "%intercommunal%"
+            )
+        then "CC / Agglomérations / Métropoles"
+        else "Non qualifiable"
+    end as local_authority_type,
+    case
+        when
+            ofr.offerer_id in (
+                select priority_offerer_id
+                from {{ source("seed", "priority_local_authorities") }}
+            )
+        then true
+        else false
+    end as local_authority_is_priority,
     ofr.total_managed_venues,
     ofr.total_physical_managed_venues,
     ofr.total_permanent_managed_venues,

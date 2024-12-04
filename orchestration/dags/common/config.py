@@ -173,7 +173,7 @@ GCE_ZONES = [
     "europe-west1-c",
     "europe-west1-d",
 ]  # Zones with GPUs and with lower CO2 emissions in europe-west1 (required to be in the proper VPC)
-
+GCE_UV_INSTALLER = "uv"
 
 # Airflow tags
 ML_AIRFLOW_DAG_TAG = "ML"

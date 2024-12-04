@@ -286,7 +286,7 @@ models:
           - not_null
       - name: offerer_address_id
         description: '{{ doc("column__offerer_address_id") }}'
-        data_type: INT64
+        data_type: STRING
       - name: offerer_rank_desc
         description: '{{ doc("column__offerer_rank_desc") }}'
         data_type: INT64
@@ -294,7 +294,17 @@ models:
         description: '{{ doc("column__offerer_rank_asc") }}'
         data_type: INT64
       - name: venue_density_level
+        description: '{{ doc("column__venue_density_level") }}'
+        data_type: STRING
       - name: venue_in_qpv
+        description: '{{ doc("column__venue_in_qpv") }}'
+        data_type: BOOLEAN
       - name: venue_department_name
+        description: '{{ doc("column__venue_department_name") }}'
+        data_type: STRING
       - name: banner_url
+        description: '{{ doc("column__banner_url") }}'
+        data_type: STRING
       - name: venue_image_source
+        description: '{{ doc("column__venue_image_source") }}'
+        data_type: STRING

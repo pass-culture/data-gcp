@@ -70,7 +70,11 @@ with DAG(
             instance_name=gce_instance,
             base_dir=base_path,
             installer=GCE_UV_INSTALLER,
-            command="python main.py --start-date {{ add_days(yesterday(), params.n_days) }} --end-date {{ yesterday() }} ",
+            command="""
+            python main.py \
+            --start-date {{ add_days(yesterday() if dag_run.conf is not none else ds, params.n_days) }} \
+            --end-date {{ yesterday() if dag_run.conf is not none else ds }}
+            """,
             do_xcom_push=True,
         )
 

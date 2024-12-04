@@ -72,8 +72,8 @@ with DAG(
             installer=GCE_UV_INSTALLER,
             command="""
             python main.py \
-            --start-date {{ add_days(yesterday() if dag_run.conf is not none else ds, params.n_days) }} \
-            --end-date {{ yesterday() if dag_run.conf is not none else ds }}
+            --start-date {{ add_days(yesterday() if dag_run.run_type == 'manual' else ds, params.n_days) }} \
+            --end-date {{ yesterday() if dag_run.run_type == 'manual' else ds }}
             """,
             do_xcom_push=True,
         )

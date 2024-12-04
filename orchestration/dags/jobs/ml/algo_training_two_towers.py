@@ -275,7 +275,7 @@ with DAG(
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/upload_embeddings_to_bq.py "
         "--experiment-name {{ params.experiment_name }} "
         "--run-name {{ params.run_name }} "
-        "--dataset_id {{ BIGQUERY_RAW_DATASET }}",
+        "--dataset-id {{ BIGQUERY_RAW_DATASET }}",
         dag=dag,
     )
 

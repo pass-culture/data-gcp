@@ -1,5 +1,6 @@
 import datetime
 
+import pendulum
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -37,6 +38,7 @@ with DAG(
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     dagrun_timeout=datetime.timedelta(minutes=120),
+    timezone=pendulum.timezone("UTC"),
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",

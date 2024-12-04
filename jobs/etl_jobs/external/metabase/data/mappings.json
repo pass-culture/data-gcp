@@ -441,5 +441,8 @@
   "available_stock_information": {
     "stock_id": "stock_id",
     "available_stock_information": "total_available_stock"
+  },
+  "native_outgoing_cohort": {
+    "expiration_month": "user_expiration_month"
   }
 }

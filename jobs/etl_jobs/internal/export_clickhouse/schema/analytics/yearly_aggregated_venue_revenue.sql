@@ -1,23 +1,34 @@
 CREATE OR REPLACE TABLE analytics.yearly_aggregated_venue_revenue ON cluster default
-    ENGINE = SummingMergeTree()
-    PARTITION BY creation_year
-    ORDER BY (venue_id)
-    SETTINGS storage_policy='gcs_main'
+ENGINE = SummingMergeTree()
+PARTITION BY creation_year
+ORDER BY (venue_id)
+SETTINGS storage_policy = 'gcs_main'
 AS
+WITH
+    -- Generate a sequence of years from 2020 to the current year
+    year_spans AS (
+        SELECT
+            toDate(CONCAT(toString(number + 2020), '-01-01')) AS creation_year
+        FROM numbers((YEAR(today()) - 2020) + 1)
+    )
 SELECT
-    i.creation_year,
-    cast(i.venue_id as String) as venue_id,
-    sum(coalesce(i.revenue,0)) as individual_revenue,
-    sum(coalesce(c.revenue,0)) as collective_revenue,
-    sum(coalesce(i.revenue,0) + coalesce(c.revenue,0)) as total_revenue,
-    sum(coalesce(i.expected_revenue,0)) as individual_expected_revenue,
-    sum(coalesce(c.expected_revenue,0)) as collective_expected_revenue,
-    sum(coalesce(i.expected_revenue,0) + coalesce(c.expected_revenue,0)) as total_expected_revenue
-
+    s.creation_year AS creation_year,
+    COALESCE(c.venue_id, i.venue_id) AS venue_id,
+    SUM(COALESCE(c.revenue, 0)) AS collective_revenue,
+    SUM(COALESCE(i.revenue, 0)) AS individual_revenue,
+    SUM(COALESCE(c.expected_revenue, 0)) AS collective_expected_revenue,
+    SUM(COALESCE(i.expected_revenue, 0)) AS individual_expected_revenue,
+    SUM(COALESCE(c.revenue, 0) + COALESCE(i.revenue, 0)) AS total_revenue,
+    SUM(COALESCE(c.expected_revenue, 0) + COALESCE(i.expected_revenue, 0)) AS total_expected_revenue
 FROM
-    analytics.yearly_aggregated_venue_individual_revenue i
-LEFT JOIN
-    analytics.yearly_aggregated_venue_collective_revenue c
-ON i.creation_year = c.creation_year AND i.venue_id = c.venue_id
+    year_spans s
+LEFT JOIN analytics.yearly_aggregated_venue_collective_revenue c
+    ON s.creation_year = c.creation_year
+LEFT JOIN analytics.yearly_aggregated_venue_individual_revenue i
+    ON s.creation_year = i.creation_year
 GROUP BY
-    1,2
+    s.creation_year,
+    COALESCE(c.venue_id, i.venue_id)
+ORDER BY
+    venue_id,
+    s.creation_year

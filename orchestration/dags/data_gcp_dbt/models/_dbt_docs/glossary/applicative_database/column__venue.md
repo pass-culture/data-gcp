@@ -37,7 +37,6 @@
 {% docs column__venue_has_siret %}Indicates whether the venue has a SIRET.{% enddocs %}
 {% docs column__venue_in_qpv %}Indicates whether the venue is in a
 City Policy Priority Neighborhood.{% enddocs %}
-{% docs column__venue_department_name %}Department name where the venue is located.{% enddocs %}
 {% docs column__venue_image_source %}Origin of venue image : google, offerer, default_category.{% enddocs %}
 {% docs column__banner_url %}Venue image url.{% enddocs %}
 {% docs column__venue_density_level %}Venue density level from 1 to 7.{% enddocs %}

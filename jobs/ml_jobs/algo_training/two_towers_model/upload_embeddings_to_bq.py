@@ -1,3 +1,5 @@
+import datetime
+
 import mlflow.tensorflow
 import numpy as np
 import pandas as pd
@@ -30,7 +32,6 @@ def main(
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="r") as file:
         run_id = file.read()
-    # TODO start_run resumes a run but we only want to retrieve?
     with mlflow.start_run(experiment_id=experiment_id, run_id=run_id) as run:
         artifact_uri = mlflow.get_artifact_uri("model")
         loaded_model = tf.keras.models.load_model(
@@ -48,7 +49,12 @@ def main(
     user_table_id = f"{GCP_PROJECT_ID}.{dataset_id}.two_tower_user_embedding"
     user_embedding_df = pd.DataFrame(
         {
-            "train_date": [run.info.start_time] * len(user_list),
+            "train_date": [
+                datetime.datetime.fromtimestamp(
+                    run.info.start_time / 1000, tz=datetime.timezone.utc
+                )
+            ]
+            * len(user_list),
             "mlflow_run_id": [run_id] * len(user_list),
             "mlflow_experiment_name": [str(experiment_name)] * len(user_list),
             "mlflow_run_name": [run_name] * len(user_list),
@@ -87,7 +93,12 @@ def main(
 
     item_embedding_df = pd.DataFrame(
         {
-            "train_date": [run.info.start_time] * len(user_list),
+            "train_date": [
+                datetime.datetime.fromtimestamp(
+                    run.info.start_time / 1000, tz=datetime.timezone.utc
+                )
+            ]
+            * len(item_list),
             "mlflow_run_id": [run_id] * len(item_list),
             "mlflow_experiment_name": [str(experiment_name)] * len(item_list),
             "mlflow_run_name": [run_name] * len(item_list),

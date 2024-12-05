@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
+    BIGQUERY_ML_RECOMMENDATION_DATASET,
     BIGQUERY_RAW_DATASET,
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
@@ -219,8 +220,8 @@ with DAG(
             "extract": {
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "datasetId": BIGQUERY_RAW_DATASET,
-                    "tableId": "training_data_bookings",
+                    "datasetId": BIGQUERY_ML_RECOMMENDATION_DATASET,
+                    "tableId": "training_data_booking",
                 },
                 "compression": None,
                 "destinationUris": f"{dag_config['STORAGE_PATH']}/bookings/data-*.parquet",

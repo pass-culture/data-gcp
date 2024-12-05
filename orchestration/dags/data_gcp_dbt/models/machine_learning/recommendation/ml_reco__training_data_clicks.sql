@@ -17,24 +17,20 @@ with
     )
 select
     events.user_id,
-    coalesce(cast(enruser.user_age as int64), 0) as user_age,
+    coalesce(cast(user.user_age as int64), 0) as user_age,
     "CLICK" as event_type,
     event_date,
     event_hour,
     event_day,
     event_month,
-    enroffer.item_id as item_id,
-    enroffer.offer_subcategory_id as offer_subcategory_id,
-    enroffer.offer_category_id as offer_category_id,
-    enroffer.genres,
-    enroffer.rayon,
-    enroffer.type,
-    enroffer.venue_id,
-    enroffer.venue_name
+    offer.item_id as item_id,
+    offer.offer_subcategory_id as offer_subcategory_id,
+    offer.offer_category_id as offer_category_id,
+    offer.genres,
+    offer.rayon,
+    offer.type,
+    offer.venue_id,
+    offer.venue_name
 from events
-join
-    `{{ bigquery_analytics_dataset }}`.`global_offer` enroffer
-    on enroffer.offer_id = events.offer_id
-left join
-    `{{ bigquery_analytics_dataset }}`.`global_user` enruser
-    on enruser.user_id = events.user_id
+join {{ ref("int_global__offer") }} offer on offer.offer_id = events.offer_id
+left join {{ ref("int_global__offer") }} user on user.user_id = events.user_id

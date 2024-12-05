@@ -9,6 +9,7 @@ from common.config import (
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
+    GCE_UV_INSTALLER,
     GCP_PROJECT_ID,
     INSTANCES_TYPES,
     MLFLOW_BUCKET_NAME,
@@ -16,7 +17,7 @@ from common.config import (
     SLACK_CONN_PASSWORD,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -180,20 +181,14 @@ with DAG(
         labels={"job_type": "long_ml"},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
+        branch="{{ params.branch }}",
         python_version="'3.10'",
-        command="{{ params.branch }}",
-        retries=2,
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
-        command="pip install -r requirements.txt --user",
-        dag=dag,
+        installer=GCE_UV_INSTALLER,
+        retries=2,
     )
 
     store_data = {}
@@ -239,6 +234,7 @@ with DAG(
             instance_name="{{ params.instance_name }}",
             base_dir=dag_config["BASE_DIR"],
             environment=dag_config,
+            installer=GCE_UV_INSTALLER,
             command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/preprocess.py "
             "--config-file-name {{ params.config_file_name }} "
             f"--input-dataframe-file-name raw_recommendation_{split}_data "
@@ -251,6 +247,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
+        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
         "--config-file-name {{ params.config_file_name }} "
         "--experiment-name {{ params.experiment_name }} "
@@ -266,6 +263,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
+        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
         "--experiment-name {{ params.experiment_name }} "
         "--config-file-name {{ params.config_file_name }} ",
@@ -301,8 +299,7 @@ with DAG(
         >> import_tables["training"]
         >> [import_tables["validation"], import_tables["test"]]
         >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
+        >> fetch_install_code
         >> [
             store_data["training"],
             store_data["validation"],

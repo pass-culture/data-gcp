@@ -5,7 +5,6 @@ from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
     BIGQUERY_ML_RECOMMENDATION_DATASET,
-    BIGQUERY_RAW_DATASET,
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
@@ -142,19 +141,6 @@ with DAG(
     start = DummyOperator(task_id="start", dag=dag)
 
     import_tables = {}
-    for table in [
-        "recommendation_user_features",
-        "recommendation_item_features",
-        "training_data_enriched_clicks",
-    ]:
-        import_tables[table] = BigQueryExecuteQueryOperator(
-            task_id=f"import_{table}",
-            sql=(IMPORT_TRAINING_SQL_PATH / f"{table}.sql").as_posix(),
-            write_disposition="WRITE_TRUNCATE",
-            use_legacy_sql=False,
-            destination_dataset_table=f"{BIGQUERY_RAW_DATASET}.{table}",
-            dag=dag,
-        )
 
     # The params.input_type tells the .sql files which table to take as input
     for dataset in ["training", "validation", "test"]:

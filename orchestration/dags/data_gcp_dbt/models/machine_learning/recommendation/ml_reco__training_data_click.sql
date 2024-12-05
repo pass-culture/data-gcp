@@ -1,3 +1,5 @@
+{{ config(**custom_table_config(materialized="view")) }}
+
 with
     events as (
         select
@@ -7,7 +9,7 @@ with
             extract(hour from event_timestamp) as event_hour,
             extract(dayofweek from event_timestamp) as event_day,
             extract(month from event_timestamp) as event_month
-        from `{{ bigquery_int_firebase_dataset }}`.`native_event`
+        from {{ ref("int_firebase__native_event") }}
         where
             event_name = "ConsultOffer"
             and event_date >= date_sub(date("{{ ds }}"), interval 6 month)

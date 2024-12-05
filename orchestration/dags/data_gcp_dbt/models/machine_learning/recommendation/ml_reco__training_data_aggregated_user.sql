@@ -3,13 +3,13 @@
 with
     base as (
         select *
-        from {{ ref("ml_reco__training_data_bookings") }}
+        from {{ ref("ml_reco__training_data_booking") }}
         union all
         select *
-        from {{ ref("ml_reco__training_data_clicks") }}
+        from {{ ref("ml_reco__training_data_click") }}
         union all
         select *
-        from {{ ref("ml_reco__training_data_favorites") }}
+        from {{ ref("ml_reco__training_data_favorite") }}
         order by user_id
     )
 select

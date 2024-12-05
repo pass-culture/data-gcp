@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
-    BIGQUERY_TMP_DATASET,
+    BIGQUERY_ML_COMPLIANCE_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -20,13 +20,11 @@ from common.operators.gce import (
 )
 from common.utils import get_airflow_schedule
 from dependencies.ml.utils import create_algo_training_slack_block
-from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
 from airflow.providers.http.operators.http import HttpOperator
@@ -96,36 +94,22 @@ with DAG(
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
 
-    import_tables = {}
-    for table in [
-        "compliance_offers",
-    ]:
-        import_tables[table] = BigQueryExecuteQueryOperator(
-            task_id=f"import_{table}",
-            sql=(IMPORT_TRAINING_SQL_PATH / f"{table}.sql").as_posix(),
-            write_disposition="WRITE_TRUNCATE",
-            use_legacy_sql=False,
-            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_{table}_raw_data",
-            dag=dag,
-        )
-
-        store_data = {}
-        store_data["raw"] = BigQueryInsertJobOperator(
-            task_id="store_raw_data",
-            configuration={
-                "extract": {
-                    "sourceTable": {
-                        "projectId": GCP_PROJECT_ID,
-                        "datasetId": BIGQUERY_TMP_DATASET,
-                        "tableId": f"{DATE}_{table}_raw_data",
-                    },
-                    "compression": None,
-                    "destinationUris": f"{dag_config['STORAGE_PATH']}/{table}_raw_data/data-*.parquet",
-                    "destinationFormat": "PARQUET",
-                }
-            },
-            dag=dag,
-        )
+    import_offer_as_parquet = BigQueryInsertJobOperator(
+        task_id="import_offer_as_parquet",
+        configuration={
+            "extract": {
+                "sourceTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": BIGQUERY_ML_COMPLIANCE_DATASET,
+                    "tableId": "offer",
+                },
+                "compression": None,
+                "destinationUris": f"{dag_config['STORAGE_PATH']}/compliance_raw_data/data-*.parquet",
+                "destinationFormat": "PARQUET",
+            }
+        },
+        dag=dag,
+    )
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -234,8 +218,7 @@ with DAG(
 
     (
         start
-        >> import_tables["compliance_offers"]
-        >> store_data["raw"]
+        >> import_offer_as_parquet
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies

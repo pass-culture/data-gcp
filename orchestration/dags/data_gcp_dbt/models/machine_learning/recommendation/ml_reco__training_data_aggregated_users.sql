@@ -1,18 +1,20 @@
+{{ config(**custom_table_config(materialized="view")) }}
+
 with
     base as (
         select *
-        from `{{ bigquery_raw_dataset }}`.`training_data_bookings`
+        from {{ ref("ml_reco__training_data_bookings") }}
         union all
         select *
-        from `{{ bigquery_raw_dataset }}`.`training_data_clicks`
+        from {{ ref("ml_reco__training_data_clicks") }}
         union all
         select *
-        from `{{ bigquery_raw_dataset }}`.`training_data_favorites`
-        order by item_id
+        from {{ ref("ml_reco__training_data_favorites") }}
+        order by user_id
     )
 select
-    item_id,
     user_id,
+    item_id,
     event_type,
     offer_subcategory_id,
     event_date,
@@ -22,8 +24,8 @@ select
     count(*) as count
 from base
 group by
-    item_id,
     user_id,
+    item_id,
     event_type,
     offer_subcategory_id,
     event_date,

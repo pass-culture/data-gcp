@@ -1,12 +1,14 @@
+{{ config(**custom_table_config(materialized="view")) }}
+
 with
     base as (
         select user_id, offer_subcategory_id, sum(count) as sub_cat_count
-        from `{{ bigquery_clean_dataset }}`.`training_data_aggregated_users`
+        from {{ ref("ml_reco__training_data_aggregated_users") }}
         group by user_id, offer_subcategory_id
     ),
     user_total as (
         select user_id, sum(count) as total_count
-        from `{{ bigquery_clean_dataset }}`.`training_data_aggregated_users`
+        from {{ ref("ml_reco__training_data_aggregated_users") }}
         group by user_id
     ),
     user_subcat_prop as (

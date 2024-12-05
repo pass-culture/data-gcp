@@ -19,4 +19,4 @@ select
 from {{ ref("int_global__booking") }} booking
 join {{ ref("int_global__offer") }} offer on offer.offer_id = booking.offer_id
 inner join {{ ref("int_global__user") }} user on user.user_id = booking.user_id
-where booking.booking_creation_date >= date_sub(date("{{ ds }}"), interval 6 month)
+where booking.booking_creation_date >= date_sub(date("{{ ds() }}"), interval 6 month)

@@ -12,7 +12,7 @@ with
         from {{ ref("int_firebase__native_event") }}
         where
             event_name = "HasAddedOfferToFavorites"
-            and event_date >= date_sub(date("{{ ds }}"), interval 6 month)
+            and event_date >= date_sub(date("{{ ds() }}"), interval 6 month)
             and user_id is not null
             and offer_id is not null
             and offer_id != 'NaN'

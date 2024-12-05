@@ -9,7 +9,7 @@ select distinct
 from
     (
         select event_date, user_id, item_id, event_hour, event_day, event_month
-        from `{{ bigquery_raw_dataset }}`.training_data_clicks
+        from `{{ bigquery_ml_reco_dataset }}`.training_data_click
     ) as clicks
 left join
     `{{ bigquery_raw_dataset }}`.recommendation_user_features as user_features

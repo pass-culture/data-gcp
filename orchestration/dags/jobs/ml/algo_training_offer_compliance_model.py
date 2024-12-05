@@ -138,7 +138,7 @@ with DAG(
         installer=GCE_UV_INSTALLER,
         command=f"mkdir -p img && PYTHONPATH=. python {dag_config['MODEL_DIR']}/preprocess.py "
         "--config-file-name {{ params.config_file_name }} "
-        "--input-dataframe-file-name compliance_offers_raw_data "
+        "--input-dataframe-file-name compliance_raw_data "
         "--output-dataframe-file-name compliance_clean_data ",
         dag=dag,
     )

@@ -1,5 +1,3 @@
-{{ config(**custom_table_config(materialized="view")) }}
-
 select
     booking.user_id,
     cast(user.user_age as int64) as user_age,

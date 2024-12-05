@@ -7,6 +7,7 @@ from common.config import (
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
+    GCE_UV_INSTALLER,
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
 )
@@ -68,7 +69,6 @@ DEFAULT_ARGS = {
 }
 
 SCHEDULE_DICT = {"prod": "0 4 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"}
-GCE_INSTALLER = "uv"
 
 with DAG(
     "link_items",
@@ -183,7 +183,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
-        installer=GCE_INSTALLER,
+        installer=GCE_UV_INSTALLER,
         python_version="3.10",
         base_dir=DAG_CONFIG["BASE_DIR"],
         retries=2,
@@ -193,7 +193,7 @@ with DAG(
         task_id="build_linkage_vector",
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
-        installer=GCE_INSTALLER,
+        installer=GCE_UV_INSTALLER,
         command="python build_semantic_space.py "
         f"""--input-path {os.path.join(
                     DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_DIR"],"data-*.parquet"
@@ -206,7 +206,7 @@ with DAG(
         task_id="get_linkage_candidates",
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
-        installer=GCE_INSTALLER,
+        installer=GCE_UV_INSTALLER,
         command="python linkage_candidates.py "
         f"--batch-size {DAG_CONFIG['BATCH_SIZE']} "
         f"--reduction {DAG_CONFIG['REDUCTION']} "
@@ -220,7 +220,7 @@ with DAG(
         task_id="link_items",
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
-        installer=GCE_INSTALLER,
+        installer=GCE_UV_INSTALLER,
         command="python link_items.py "
         f"""--input-sources-path {os.path.join(
                     DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_DIR"]

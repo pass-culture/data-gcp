@@ -1,5 +1,5 @@
 ---
-title: Transactional jeune
+title: Transactional native
 description: Description of the `int_brevo__transactional_native` table.
 ---
 

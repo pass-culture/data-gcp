@@ -48,6 +48,8 @@ select
     institution_internal_iris_id,
     collective_stock_beginning_date_time,
     collective_stock_booking_limit_date_time,
+    collective_offer_template_beginning_date,
+    collective_offer_template_ending_date,
     collective_stock_price,
     collective_stock_number_of_tickets
 from {{ ref("int_global__collective_offer") }}

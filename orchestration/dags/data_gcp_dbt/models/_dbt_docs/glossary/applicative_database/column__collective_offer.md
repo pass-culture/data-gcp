@@ -22,6 +22,8 @@
 {% docs column__last_collective_offer_creation_date %} Date of the last collective offer creation. {% enddocs %}
 {% docs column__first_collective_bookable_offer_date %} Date of the first collective bookable offer. {% enddocs %}
 {% docs column__last_collective_bookable_offer_date %} Date of the last collective bookable offer. {% enddocs %}
+{% docs column__collective_offer_template_beginning_date %} Beginning publication date for template offer (if null : permanent). {% enddocs %}
+{% docs column__collective_offer_template_ending_date %} Ending publication date for template offer (if null : permanent). {% enddocs %}
 
 * To migrate to more specific files *
 {% docs column__template_id %} Identifier for the template associated with the collective offer. {% enddocs %}

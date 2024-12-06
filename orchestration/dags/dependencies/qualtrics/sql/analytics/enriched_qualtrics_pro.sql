@@ -71,7 +71,7 @@ with
             collective_offer.venue_id,
             count(distinct collective_offer_id) collective_offers_created
         from
-            `{{ bigquery_clean_dataset }}.applicative_database_collective_offer`
+            `{{ bigquery_raw_dataset }}.applicative_database_collective_offer`
             as collective_offer
         join
             ir_per_user

@@ -40,6 +40,10 @@ select
             user_activity
             in ("Chômeur", "En recherche d'emploi ou chômeur", "Demandeur d'emploi")
         then "Chômeur, En recherche d'emploi"
+        when
+            user_activity
+            in ("Apprenti, Alternant, Volontaire en service civique rémunéré")
+        then null
         else user_activity
     end as user_activity,
     case

@@ -4,7 +4,6 @@ import time
 import gcsfs
 import requests
 import typer
-
 from dms_query import DMS_QUERY
 from utils import API_URL, access_secret_data, demarches_jeunes, demarches_pro
 
@@ -44,11 +43,13 @@ def fetch_dms_pro(updated_since, env_short_name, gcp_project_id):
 def fetch_result(demarches_ids, updated_since, env_short_name, gcp_project_id):
     result = {}
     for demarche_id in demarches_ids:
+        print(f"Fetching demarche {demarche_id}")
         end_cursor = ""
         query_body = get_query_body(demarche_id, "", updated_since)
         has_next_page = True
         while has_next_page:
             has_next_page = False
+            print(f"Fetching demarche {demarche_id} with cursor {end_cursor}")
             resultTemp = run_query(query_body, gcp_project_id)
             if "errors" in resultTemp:
                 print(resultTemp)

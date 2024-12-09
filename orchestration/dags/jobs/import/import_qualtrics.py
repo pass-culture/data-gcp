@@ -2,9 +2,9 @@ import datetime
 
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
+from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCE_UV_INSTALLER, GCP_PROJECT_ID
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -52,19 +52,13 @@ with DAG(
         labels={"job_type": "long_task"},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
+        branch="{{ params.branch }}",
         python_version="3.9",
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command="pip install -r requirements.txt --user",
-        dag=dag,
+        installer=GCE_UV_INSTALLER,
         retries=2,
     )
 
@@ -73,6 +67,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
+        installer=GCE_UV_INSTALLER,
         command="python main.py --task import_opt_out_users",
         do_xcom_push=True,
     )
@@ -82,6 +77,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
+        installer=GCE_UV_INSTALLER,
         command="python main.py --task import_all_survey_answers",
         do_xcom_push=True,
     )
@@ -89,6 +85,6 @@ with DAG(
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
-    (gce_instance_start >> fetch_code >> install_dependencies)
-    (install_dependencies >> import_opt_out_to_bigquery >> gce_instance_stop)
-    (install_dependencies >> import_all_answers_to_bigquery >> gce_instance_stop)
+    (gce_instance_start >> fetch_install_code)
+    (fetch_install_code >> import_opt_out_to_bigquery >> gce_instance_stop)
+    (fetch_install_code >> import_all_answers_to_bigquery >> gce_instance_stop)

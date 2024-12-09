@@ -102,6 +102,10 @@ models:
         description: "{{ doc('column__collective_stock_beginning_date_time') }}"
       - name: collective_stock_booking_limit_date_time
         description: "{{ doc('column__collective_stock_booking_limit_date_time') }}"
+      - name: collective_offer_template_beginning_date
+        description: "{{ doc('column__collective_offer_template_beginning_date') }}"
+      - name: collective_offer_template_ending_date
+        description: "{{ doc('column__collective_offer_template_ending_date') }}"
       - name: collective_stock_price
         description: "{{ doc('column__collective_stock_price') }}"
       - name: collective_stock_number_of_tickets

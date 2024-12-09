@@ -163,7 +163,7 @@ def parse_result_pro(result, df_applications):
                         dossier_line["demandeur_entreprise_siretSiegeSocial"] = dossier[
                             "demandeur"
                         ]["entreprise"]["siretSiegeSocial"]
-                if dossier["champs"]:
+                if "champs"in dossier.keys():
                     for champs in dossier["champs"]:
                         if champs["id"] == "Q2hhbXAtMjY3NDMyMQ==":
                             dossier_line["numero_identifiant_lieu"] = champs[
@@ -190,7 +190,7 @@ def parse_result_pro(result, df_applications):
                     dossier_line["academie_groupe_instructeur"] = dossier[
                         "groupeInstructeur"
                     ]["label"]
-                if dossier["annotations"]:
+                if "annotations" in dossier.keys():
                     for annotation in dossier["annotations"]:
                         if annotation["label"] == "Erreur traitement pass Culture":
                             dossier_line["erreur_traitement_pass_culture"] = annotation[

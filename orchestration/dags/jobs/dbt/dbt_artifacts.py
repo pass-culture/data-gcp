@@ -10,7 +10,7 @@ from common.config import (
     SLACK_TOKEN_ELEMENTARY,
 )
 from common.utils import delayed_waiting_operator, get_airflow_schedule
-from jobs.crons import schedule_dict
+from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
@@ -33,7 +33,7 @@ dag = DAG(
     default_args=default_args,
     catchup=False,
     description="Compute data quality metrics with package elementary and send Slack notifications reports",
-    schedule_interval=get_airflow_schedule(schedule_dict[dag_id]),
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[dag_id]),
     user_defined_macros=macros.default,
     params={
         "target": Param(

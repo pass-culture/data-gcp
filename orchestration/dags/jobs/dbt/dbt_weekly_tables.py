@@ -8,7 +8,7 @@ from common.config import (
     PATH_TO_DBT_TARGET,
 )
 from common.utils import delayed_waiting_operator, get_airflow_schedule
-from jobs.crons import schedule_dict
+from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
@@ -28,7 +28,7 @@ dag = DAG(
     dagrun_timeout=datetime.timedelta(minutes=60),
     catchup=False,
     description="run weekly aggregated models",
-    schedule_interval=get_airflow_schedule(schedule_dict[dag_id]),
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[dag_id]),
     user_defined_macros=macros.default,
     params={
         "target": Param(

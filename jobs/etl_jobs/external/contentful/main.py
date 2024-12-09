@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import pandas as pd
 from google.cloud import bigquery
 
 from contentful_client import ContentfulClient
@@ -18,6 +19,7 @@ CONTENTFUL_TAG_TABLE_NAME = "contentful_tag"
 
 
 def save_raw_modules_to_bq(modules_df, table_name):
+    modules_df = modules_df.where(pd.notnull(modules_df), None)
     _now = datetime.today()
     yyyymmdd = _now.strftime("%Y%m%d")
     modules_df["execution_date"] = _now
@@ -71,6 +73,12 @@ def run():
     for k, v in ENTRIES_DTYPE.items():
         if k in df_modules.columns:
             df_modules[k] = df_modules[k].astype(v)
+
+    df_modules = df_modules.applymap(
+        lambda x: None
+        if pd.isna(x) or str(x).lower() == "none" or str(x).lower() == "nan"
+        else x
+    )
 
     save_raw_modules_to_bq(
         df_modules.drop_duplicates(),

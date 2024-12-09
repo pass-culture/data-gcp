@@ -86,6 +86,7 @@ with DAG(
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     render_template_as_native_obj=True,  # be careful using this because "3.10" is rendered as 3.1 if not double escaped
+    doc_md="This DAG is used to train a two-towers model. It takes the data from ml_reco__training_data_click which is computed every day.",
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",

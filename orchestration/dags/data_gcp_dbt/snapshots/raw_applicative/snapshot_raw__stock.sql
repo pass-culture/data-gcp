@@ -3,9 +3,19 @@
     {{
         config(
             **custom_snapshot_config(
-                strategy="timestamp",
+                strategy="check",
                 unique_key="stock_id",
-                updated_at="stock_modified_date",
+                check_cols=[
+                    "stock_id_at_providers",
+                    "stock_modified_at_last_provider_date",
+                    "stock_modified_date",
+                    "stock_booking_limit_date",
+                    "stock_last_provider_id",
+                    "offer_id",
+                    "stock_creation_date",
+                    "price_category_id",
+                    "stock_features",
+                ],
                 invalidate_hard_delete=false,
             )
         )

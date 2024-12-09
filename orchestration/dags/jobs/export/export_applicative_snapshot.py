@@ -13,7 +13,7 @@ from common.utils import (
     get_airflow_schedule,
     get_tables_config_dict,
 )
-from jobs.crons import schedule_dict
+from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
@@ -48,7 +48,7 @@ dag = DAG(
     default_args=default_dag_args,
     dagrun_timeout=datetime.timedelta(minutes=480),
     description="historize applicative database current state to gcs bucket",
-    schedule_interval=get_airflow_schedule(schedule_dict[dag_id]),
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[dag_id]),
     catchup=False,
 )
 

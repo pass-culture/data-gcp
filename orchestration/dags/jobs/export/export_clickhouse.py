@@ -20,7 +20,7 @@ from dependencies.export_clickhouse.export_clickhouse import (
     ANALYTICS_CONFIGS,
     TABLES_CONFIGS,
 )
-from jobs.crons import schedule_dict
+from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
@@ -54,7 +54,7 @@ gce_params = {
 
 dags = {
     "daily": {
-        "schedule_interval": schedule_dict["clickhouse_exports"]["daily"],
+        "schedule_interval": SCHEDULE_DICT["clickhouse_exports"]["daily"],
         "yyyymmdd": "{{ yyyymmdd(ds) }}",
         "default_dag_args": {
             "start_date": datetime.datetime(2024, 3, 1),

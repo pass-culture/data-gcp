@@ -100,11 +100,6 @@ def parse_result_jeunes(result, df_applications):
                         ],
                         "passed_in_instruction_at": dossier["datePassageEnInstruction"],
                         "processed_at": dossier["dateTraitement"],
-                        "application_motivation": dossier["motivation"].replace(
-                            "\n", " "
-                        )
-                        if dossier["motivation"]
-                        else None,
                         "instructors": "",
                     }
                     for champ in dossier["champs"]:
@@ -141,9 +136,6 @@ def parse_result_pro(result, df_applications):
                     "application_submitted_at": dossier["datePassageEnConstruction"],
                     "passed_in_instruction_at": dossier["datePassageEnInstruction"],
                     "processed_at": dossier["dateTraitement"],
-                    "application_motivation": dossier["motivation"].replace("\n", " ")
-                    if dossier["motivation"]
-                    else None,
                     "instructors": "",
                 }
                 if "siret" in dossier["demandeur"] and dossier["demandeur"]["siret"]:

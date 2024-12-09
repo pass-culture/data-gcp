@@ -3,7 +3,7 @@ from google.cloud import secretmanager
 
 API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
 demarches_jeunes = [47380, 47480]
-demarches_pro = [50362, 55475, 57081, 57189, 61589, 62703, 65028, 81184]
+demarches_pro = [50362, 55475, 57081, 57189, 61589, 62703, 65028, 80264,81184]
 
 # find and replace string to str
 destination_table_schema_jeunes = [
@@ -16,7 +16,6 @@ destination_table_schema_jeunes = [
     {"name": "application_submitted_at", "type": "TIMESTAMP"},
     {"name": "passed_in_instruction_at", "type": "TIMESTAMP"},
     {"name": "processed_at", "type": "TIMESTAMP"},
-    {"name": "application_motivation", "type": "STRING"},
     {"name": "instructors", "type": "STRING"},
     {"name": "applicant_department", "type": "STRING"},
     {"name": "applicant_postal_code", "type": "STRING"},
@@ -32,7 +31,6 @@ destination_table_schema_pro = [
     {"name": "application_submitted_at", "type": "TIMESTAMP"},
     {"name": "passed_in_instruction_at", "type": "TIMESTAMP"},
     {"name": "processed_at", "type": "TIMESTAMP"},
-    {"name": "application_motivation", "type": "STRING"},
     {"name": "instructors", "type": "STRING"},
     {"name": "demandeur_siret", "type": "STRING"},
     {"name": "demandeur_naf", "type": "STRING"},

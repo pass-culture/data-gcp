@@ -4,7 +4,6 @@ import time
 import gcsfs
 import requests
 import typer
-
 from dms_query import DMS_QUERY
 from utils import API_URL, access_secret_data, demarches_jeunes, demarches_pro
 
@@ -44,11 +43,13 @@ def fetch_dms_pro(updated_since, env_short_name, gcp_project_id):
 def fetch_result(demarches_ids, updated_since, env_short_name, gcp_project_id):
     result = {}
     for demarche_id in demarches_ids:
+        print(f"Fetching demarche {demarche_id}")
         end_cursor = ""
-        query_body = get_query_body(demarche_id, "", updated_since)
+        query_body = get_query_body(demarche_id, "", updated_since,20)
         has_next_page = True
         while has_next_page:
             has_next_page = False
+            print(f"Fetching demarche {demarche_id} with cursor {end_cursor}")
             resultTemp = run_query(query_body, gcp_project_id)
             if "errors" in resultTemp:
                 print(resultTemp)
@@ -66,18 +67,19 @@ def fetch_result(demarches_ids, updated_since, env_short_name, gcp_project_id):
                     end_cursor = resultTemp["data"]["demarche"]["dossiers"]["pageInfo"][
                         "endCursor"
                     ]
-                    query_body = get_query_body(demarche_id, end_cursor, updated_since)
+                    query_body = get_query_body(demarche_id, end_cursor, updated_since,20)
 
     if not isinstance(result["data"], list):
         result["data"] = [result["data"]]
     return result
 
 
-def get_query_body(demarche_id, end_cursor, updated_since):
+def get_query_body(demarche_id, end_cursor, updated_since,maxLength):
     variables = {
         "demarcheNumber": demarche_id,
         "after": end_cursor,
         "updatedSince": updated_since,
+        "maxLength":maxLength
     }
     query_body = {"query": DMS_QUERY, "variables": variables}
     return query_body

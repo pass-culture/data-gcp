@@ -1,8 +1,8 @@
 DMS_QUERY = """
-query getDemarches($demarcheNumber: Int!, $after: String,  $updatedSince: ISO8601DateTime) {
+query getDemarches($demarcheNumber: Int!, $after: String,  $updatedSince: ISO8601DateTime, $maxLength: Int) {
     demarche(number:$demarcheNumber) {
         title
-        dossiers(first: 5, after: $after, updatedSince: $updatedSince) {
+        dossiers(first:5, after: $after, updatedSince: $updatedSince) {
             edges {
                 node {
                     ...DossierFragment
@@ -26,7 +26,7 @@ fragment DossierFragment on Dossier {
     datePassageEnConstruction
     datePassageEnInstruction
     dateTraitement
-
+    
     instructeurs {
         email
     }
@@ -80,7 +80,7 @@ fragment RootChampFragment on Champ {
 fragment ChampFragment on Champ {
     id
     label
-    stringValue
+    stringValue(maxLength: $maxLength): String
     ... on LinkedDropDownListChamp {
         primaryValue
         secondaryValue

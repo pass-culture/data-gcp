@@ -92,7 +92,8 @@ select
     o.companies,
     o.countries,
     o.casting,
-    o.isbn,
+    offer_ean.isbn,
+    offer_ean.ean,
     o.titelive_gtl_id,
     o.offerer_address_id,
     case
@@ -137,8 +138,8 @@ select
     subcategories.is_event as event,
     subcategories.category_id as offer_category_id,
     subcategories.search_group_name,
-    isbn_rayon_editor.rayon,
-    isbn_rayon_editor.book_editor,
+    offer_ean.rayon,
+    offer_ean.book_editor,
     ii.item_id,
     m.mediation_humanized_id,
     {{ target_schema }}.humanize_id(o.offer_id) as offer_humanized_id,
@@ -197,8 +198,8 @@ left join
     {{ source("raw", "subcategories") }} as subcategories
     on o.offer_subcategoryid = subcategories.id
 left join
-    {{ ref("int_applicative__isbn_rayon_editor") }} as isbn_rayon_editor
-    on o.isbn = isbn_rayon_editor.isbn
+    {{ ref("int_applicative__offer_ean") }} as offer_ean
+    on o.offer_id = offer_ean.offer_id
 left join
     {{ ref("int_applicative__mediation") }} as m
     on o.offer_id = m.offer_id
@@ -209,4 +210,4 @@ left join
     on future_offer.offer_id = o.offer_id
 where
     o.offer_subcategoryid not in ("ACTIVATION_THING", "ACTIVATION_EVENT")
-    and (booking_email <> "jeux-concours@passculture.app" or booking_email is null)
+    and (o.booking_email <> "jeux-concours@passculture.app" or o.booking_email is null)

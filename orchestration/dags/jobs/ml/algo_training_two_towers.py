@@ -115,7 +115,7 @@ with DAG(
         ),
         # TODO: Voir si on peut le supprimer, sinon mettre un enum
         "input_type": Param(
-            default="enriched_click",
+            default="click",
             type="string",
         ),
         "instance_type": Param(

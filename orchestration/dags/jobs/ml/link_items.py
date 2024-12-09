@@ -7,6 +7,7 @@ from common.config import (
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
+    GCE_UV_INSTALLER,
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
 )
@@ -17,6 +18,7 @@ from common.operators.gce import (
     StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
+from jobs.crons import SCHEDULE_DICT
 from jobs.ml.constants import IMPORT_LINKAGE_SQL_PATH
 
 from airflow import DAG
@@ -50,6 +52,7 @@ DAG_CONFIG = {
     "INPUT_CANDIDATES_DIR": "item_candidates_data",
     "LINKAGE_CANDIDATES_FILENAME": "linkage_candidates_items.parquet",
     "LINKED_ITEMS_FILENAME": "linkage_items.parquet",
+    "ID": "link_items",
 }
 GCE_PARAMS = {
     "instance_name": f"linkage-item-{ENV_SHORT_NAME}",
@@ -67,14 +70,14 @@ DEFAULT_ARGS = {
     "retry_delay": timedelta(minutes=2),
 }
 
-SCHEDULE_DICT = {"prod": "0 4 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"}
-GCE_INSTALLER = "uv"
 
 with DAG(
-    "link_items",
+    DAG_CONFIG["ID"],
     default_args=DEFAULT_ARGS,
     description="Process to link items using semantic vectors.",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[ENV_SHORT_NAME]),
+    schedule_interval=get_airflow_schedule(
+        SCHEDULE_DICT[DAG_CONFIG["ID"]][ENV_SHORT_NAME]
+    ),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
@@ -183,7 +186,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
-        installer=GCE_INSTALLER,
+        installer=GCE_UV_INSTALLER,
         python_version="3.10",
         base_dir=DAG_CONFIG["BASE_DIR"],
         retries=2,
@@ -193,7 +196,7 @@ with DAG(
         task_id="build_linkage_vector",
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
-        installer=GCE_INSTALLER,
+        installer=GCE_UV_INSTALLER,
         command="python build_semantic_space.py "
         f"""--input-path {os.path.join(
                     DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_DIR"],"data-*.parquet"
@@ -206,7 +209,7 @@ with DAG(
         task_id="get_linkage_candidates",
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
-        installer=GCE_INSTALLER,
+        installer=GCE_UV_INSTALLER,
         command="python linkage_candidates.py "
         f"--batch-size {DAG_CONFIG['BATCH_SIZE']} "
         f"--reduction {DAG_CONFIG['REDUCTION']} "
@@ -220,7 +223,7 @@ with DAG(
         task_id="link_items",
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
-        installer=GCE_INSTALLER,
+        installer=GCE_UV_INSTALLER,
         command="python link_items.py "
         f"""--input-sources-path {os.path.join(
                     DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_DIR"]

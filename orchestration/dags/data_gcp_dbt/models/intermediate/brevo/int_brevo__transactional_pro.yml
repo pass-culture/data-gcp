@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: int_brevo__transactional_pro
+    description: "{{ doc('description__int_brevo__transactional_pro') }}"
+    columns:
+      - name: tag
+        description: "{{ doc('column__brevo_tag') }}"
+      - name: template
+        description: "{{ doc('column__brevo_template_id') }}"
+      - name: venue_id
+        description: "{{ doc('column__venue_id') }}"
+      - name: event_date
+        description: "{{ doc('column__event_date') }}"
+      - name: total_delivered
+        description: "{{ doc('column__total_delivered') }}"
+      - name: total_opened
+        description: "{{ doc('column__total_opened') }}"
+      - name: total_unsubscribed
+        description: "{{ doc('column__total_unsubscribed') }}"

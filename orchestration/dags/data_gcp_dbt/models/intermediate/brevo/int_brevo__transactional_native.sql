@@ -5,9 +5,9 @@ with
             template,
             user_id,
             event_date,
-            sum(delivered_count) as delivered_count,
-            sum(opened_count) as opened_count,
-            sum(unsubscribed_count) as unsubscribed_count
+            sum(delivered_count) as total_delivered,
+            sum(opened_count) as total_opened,
+            sum(unsubscribed_count) as total_unsubscribed
         from {{ source("raw", "sendinblue_transactional") }}
         where tag like 'jeune%'
         group by tag, template, user_id, event_date
@@ -23,17 +23,17 @@ with
                 distinct case
                     when event_name = 'ConsultOffer' then offer_id else null
                 end
-            ) as offer_consultation_number,
+            ) as total_consultations,
             count(
                 distinct case
                     when event_name = 'BookingConfirmation' then booking_id else null
                 end
-            ) as booking_number,
+            ) as total_bookings,
             count(
                 distinct case
                     when event_name = 'HasAddedOfferToFavorites' then offer_id else null
                 end
-            ) as favorites_number
+            ) as total_favorites
         from {{ ref("int_firebase__native_event") }} firebase
         left join {{ ref("mrt_global__user") }} user on firebase.user_id = user.user_id
         where
@@ -47,17 +47,17 @@ with
 
 select
     brevo_perf_by_user.user_id,
-    template as template_id,
-    tag,
+    template as brevo_template_id,
+    tag as brevo_tag,
     event_date,
-    delivered_count,
-    opened_count,
-    unsubscribed_count,
+    total_delivered,
+    total_opened,
+    total_unsubscribed,
     user_current_deposit_type,
     session_number,
-    offer_consultation_number,
-    booking_number,
-    favorites_number
+    total_consultations,
+    total_bookings,
+    total_favorites
 from brevo_perf_by_user
 left join
     user_traffic

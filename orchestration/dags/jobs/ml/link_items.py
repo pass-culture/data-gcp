@@ -18,6 +18,7 @@ from common.operators.gce import (
     StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
+from jobs.crons import SCHEDULE_DICT
 from jobs.ml.constants import IMPORT_LINKAGE_SQL_PATH
 
 from airflow import DAG
@@ -51,6 +52,7 @@ DAG_CONFIG = {
     "INPUT_CANDIDATES_DIR": "item_candidates_data",
     "LINKAGE_CANDIDATES_FILENAME": "linkage_candidates_items.parquet",
     "LINKED_ITEMS_FILENAME": "linkage_items.parquet",
+    "ID": "link_items",
 }
 GCE_PARAMS = {
     "instance_name": f"linkage-item-{ENV_SHORT_NAME}",
@@ -68,13 +70,14 @@ DEFAULT_ARGS = {
     "retry_delay": timedelta(minutes=2),
 }
 
-SCHEDULE_DICT = {"prod": "0 4 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"}
 
 with DAG(
-    "link_items",
+    DAG_CONFIG["ID"],
     default_args=DEFAULT_ARGS,
     description="Process to link items using semantic vectors.",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[ENV_SHORT_NAME]),
+    schedule_interval=get_airflow_schedule(
+        SCHEDULE_DICT[DAG_CONFIG["ID"]][ENV_SHORT_NAME]
+    ),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,

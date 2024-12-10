@@ -9,7 +9,6 @@ SELECT
   ?artist_name_fr
   ?artist_name_en
   ?description
-  ?genre
   ?img
   ?gkg_id
   (GROUP_CONCAT(DISTINCT(?profession); separator=" | ") AS ?professions)
@@ -25,10 +24,9 @@ WHERE {
   OPTIONAL { ?wiki_id skos:altLabel ?alias_en . FILTER (lang(?alias_en) = "en") }
   OPTIONAL {?wiki_id wdt:P2373 ?genius_id . }
   OPTIONAL {?wiki_id wdt:P10780 ?radiofr_id . }
-  OPTIONAL {?wiki_id wdt:P21/rdfs:label ?genre .  FILTER (LANG(?genre) = "fr")}
   OPTIONAL {?wiki_id wdt:P18 ?img . }
   OPTIONAL {?wiki_id wdt:P2671 ?gkg_id .}
   FILTER ((?artist_name_fr != "") || (?artist_name_en != ""))
   FILTER ((?genius_id != "" ) || (?radiofr_id != "") )
 }
-GROUP BY ?wiki_id ?artist_name_fr ?artist_name_en ?description ?genre ?img ?gkg_id
+GROUP BY ?wiki_id ?artist_name_fr ?artist_name_en ?description ?img ?gkg_id

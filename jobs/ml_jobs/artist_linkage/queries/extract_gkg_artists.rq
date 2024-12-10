@@ -9,7 +9,6 @@ SELECT
   ?artist_name_fr
   ?artist_name_en
   ?description
-  ?genre
   ?img
   ?gkg_id
   (GROUP_CONCAT(DISTINCT(?alias_fr); separator=" | ") AS ?aliases_fr)
@@ -21,10 +20,9 @@ SELECT
   OPTIONAL { ?wiki_id rdfs:label ?artist_name_en . FILTER (LANG(?artist_name_en) = "en") }
   OPTIONAL { ?wiki_id skos:altLabel ?alias_fr . FILTER (lang(?alias_fr) = "fr") }
   OPTIONAL { ?wiki_id skos:altLabel ?alias_en . FILTER (lang(?alias_en) = "en") }
-  OPTIONAL { ?wiki_id wdt:P21/rdfs:label ?genre .  FILTER (LANG(?genre) = "fr") }
   OPTIONAL { ?wiki_id wdt:P18 ?img . }
   OPTIONAL { ?wiki_id wdt:P2671 ?gkg_id . }
   FILTER (?artist_name_en != "" || ?artist_name_fr != "")
   FILTER ((?gkg_id != ""))
 }
-GROUP BY ?wiki_id ?artist_name_fr ?artist_name_en ?description ?genre ?img ?gkg_id
+GROUP BY ?wiki_id ?artist_name_fr ?artist_name_en ?description ?img ?gkg_id

@@ -3,7 +3,6 @@ with
         select item_embeddings.item_id, item_embeddings.hybrid_embedding,
         from {{ source("ml_preproc", "item_embedding_reduced_32") }} item_embeddings
         inner join
-        from
             {{ ref("ml_reco__recommendable_item") }} recommendable_item
             on recommendable_item.item_id = item_embeddings.item_id
     ),

@@ -102,7 +102,7 @@ with DAG(
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
                     "datasetId": BIGQUERY_ML_COMPLIANCE_DATASET,
-                    "tableId": "offer",
+                    "tableId": "training_data_offer",
                 },
                 "compression": None,
                 "destinationUris": f"{dag_config['STORAGE_PATH']}/compliance_raw_data/data-*.parquet",

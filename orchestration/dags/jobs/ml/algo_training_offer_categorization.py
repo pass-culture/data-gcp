@@ -38,7 +38,7 @@ dag_config = {
     "BASE_DIR": "data-gcp/jobs/ml_jobs/algo_training",
     "MODEL_DIR": "offer_categorization",
     "TEST_RATIO": "0.1",
-    "INPUT_TABLE_NAME": "training_data",
+    "INPUT_TABLE_NAME": "training_data_offer",
 }
 
 # Params

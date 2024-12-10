@@ -8,8 +8,8 @@ WITH
     -- Generate a sequence of years from 2020 to the current year
     year_spans AS (
         SELECT
-            toDate(CONCAT(toString(number + 2020), '-01-01')) AS year
-        FROM numbers((YEAR(today()) - 2020) + 1)
+            toStartOfYear(toDate(CONCAT(toString(2020), '-01-01')) + INTERVAL number YEAR) AS month
+        FROM numbers(DATEDIFF(year, toDate('2020-01-01'), toStartOfYEAR(today())) + 1)
     )
 SELECT
     s.year AS year,

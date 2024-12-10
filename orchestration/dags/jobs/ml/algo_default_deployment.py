@@ -2,9 +2,9 @@ from datetime import datetime, timedelta
 
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import DAG_FOLDER, ENV_SHORT_NAME
+from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCE_UV_INSTALLER
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -13,6 +13,7 @@ from common.utils import get_airflow_schedule
 
 from airflow import DAG
 from airflow.models import Param
+from airflow.utils.task_group import TaskGroup
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
@@ -89,59 +90,48 @@ with DAG(
         labels={"job_type": "ml"},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
+        branch="{{ params.branch }}",
         python_version="3.10",
+        base_dir=BASE_DIR,
+        installer=GCE_UV_INSTALLER,
         retries=2,
     )
 
-    fetch_code.set_upstream(gce_instance_start)
+    deploy_model_taks = {}
+    seq_task = fetch_install_code
+    with TaskGroup("deploy_models", dag=dag) as deploy_models:
+        for model_params in models_to_deploy:
+            experiment_name = model_params["experiment_name"]
+            endpoint_name = model_params["endpoint_name"]
+            version_name = model_params["version_name"]
+            instance_type = model_params["instance_type"]
+            min_nodes = model_params["min_nodes"]
+            max_nodes = model_params["max_nodes"]
+            deploy_command = f"""
+                python deploy_model.py \
+                    --region {DEFAULT_REGION} \
+                    --experiment-name {experiment_name} \
+                    --endpoint-name {endpoint_name} \
+                    --version-name {version_name} \
+                    --instance-type {instance_type} \
+                    --min-nodes {min_nodes} \
+                    --max-nodes {max_nodes}
+            """
 
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command="""pip install -r requirements.txt --user""",
-        dag=dag,
-    )
-
-    install_dependencies.set_upstream(fetch_code)
-
-    tasks = []
-    seq_task = install_dependencies
-    for model_params in models_to_deploy:
-        experiment_name = model_params["experiment_name"]
-        endpoint_name = model_params["endpoint_name"]
-        version_name = model_params["version_name"]
-        instance_type = model_params["instance_type"]
-        min_nodes = model_params["min_nodes"]
-        max_nodes = model_params["max_nodes"]
-        deploy_command = f"""
-            python deploy_model.py \
-                --region {DEFAULT_REGION} \
-                --experiment-name {experiment_name} \
-                --endpoint-name {endpoint_name} \
-                --version-name {version_name} \
-                --instance-type {instance_type} \
-                --min-nodes {min_nodes} \
-                --max-nodes {max_nodes}
-        """
-
-        deploy_model = SSHGCEOperator(
-            task_id=f"deploy_model_{experiment_name}_{endpoint_name}",
-            instance_name=GCE_INSTANCE,
-            base_dir=BASE_DIR,
-            command=deploy_command,
-            dag=dag,
-        )
-
-        deploy_model.set_upstream(seq_task)
-        seq_task = deploy_model
+            deploy_model_taks[endpoint_name] = SSHGCEOperator(
+                task_id=f"deploy_model_{experiment_name}_{endpoint_name}",
+                instance_name=GCE_INSTANCE,
+                base_dir=BASE_DIR,
+                installer=GCE_UV_INSTALLER,
+                command=deploy_command,
+                dag=dag,
+            )
 
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
-    gce_instance_stop.set_upstream(seq_task)
+    gce_instance_start >> fetch_install_code >> deploy_models >> gce_instance_stop

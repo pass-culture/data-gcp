@@ -11,8 +11,6 @@ models:
           - not_null
       - name: artist_name
         description: "{{ doc('column__artist_name') }}"
-      - name: artist_gender
-        description: "{{ doc('column__artist_gender') }}"
       - name: artist_description
         description: "{{ doc('column__artist_description') }}"
       - name: artist_professions

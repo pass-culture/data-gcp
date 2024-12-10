@@ -3,25 +3,24 @@ from datetime import datetime, timedelta
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
-    BIGQUERY_TMP_DATASET,
+    BIGQUERY_ML_RETRIEVAL_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
+    GCE_UV_INSTALLER,
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
 )
-from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
 
@@ -92,15 +91,6 @@ with DAG(
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
 
-    export_task = BigQueryExecuteQueryOperator(
-        task_id="import_retrieval_semantic_vector_table",
-        sql=(IMPORT_TRAINING_SQL_PATH / "retrieval_semantic_vector.sql").as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_retrieval_semantic_vector_data",
-        dag=dag,
-    )
-
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         preemptible=False,
@@ -110,29 +100,24 @@ with DAG(
         labels={"job_type": "ml"},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
+        branch="{{ params.branch }}",
         python_version="3.10",
-        command="{{ params.branch }}",
+        base_dir=dag_config["BASE_DIR"],
         retries=2,
+        installer=GCE_UV_INSTALLER,
     )
 
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
-        command="pip install -r requirements.txt --user",
-        dag=dag,
-    )
     export_bq = BigQueryInsertJobOperator(
         task_id="store_item_embbedding_data",
         configuration={
             "extract": {
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": f"{DATE}_retrieval_semantic_vector_data",
+                    "datasetId": BIGQUERY_ML_RETRIEVAL_DATASET,
+                    "tableId": "semantic_vector_build_data",
                 },
                 "compression": None,
                 "destinationUris": f"{dag_config['STORAGE_PATH']}/data-*.parquet",
@@ -151,6 +136,7 @@ with DAG(
         "--model-name {{ params.model_name }} "
         f"--source-gs-path {dag_config['STORAGE_PATH']} "
         "--container-worker {{ params.container_worker }} ",
+        installer=GCE_UV_INSTALLER,
         dag=dag,
     )
 
@@ -160,11 +146,9 @@ with DAG(
 
     (
         start
-        >> export_task
         >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
-        >> export_bq
+        >> fetch_install_code
         >> sim_offers
         >> gce_instance_stop
     )
+    (start >> export_bq >> sim_offers)

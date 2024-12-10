@@ -32,6 +32,8 @@ DATA_GCS_BUCKET_NAME = os.environ.get(
     "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
 )
 
+# BQ Datasets
+# TODO: Move this in a special file + construct as fstring and not env variables
 BIGQUERY_SANDBOX_DATASET = os.environ.get(
     "BIGQUERY_SANDBOX_DATASET", f"sandbox_{ENV_SHORT_NAME}"
 )
@@ -76,6 +78,7 @@ BIGQUERY_ML_PREPROCESSING_DATASET = os.environ.get(
 BIGQUERY_ML_LINKAGE_DATASET = os.environ.get(
     "BIGQUERY_ML_LINKAGE_DATASET", f"ml_linkage_{ENV_SHORT_NAME}"
 )
+BIGQUERY_ML_RETRIEVAL_DATASET = f"ml_retrieval_{ENV_SHORT_NAME}"
 BIGQUERY_INT_RAW_DATASET = os.environ.get(
     "BIGQUERY_INT_RAW_DATASET", f"int_raw_{ENV_SHORT_NAME}"
 )

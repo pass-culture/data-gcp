@@ -31,8 +31,6 @@ select
     o.titelive_gtl_id,
     o.offer_type_id,
     o.offer_sub_type_id,
-    o.offer_product_id,
-    p.thumbcount,
     case
         when o.offer_product_id is not null
         then
@@ -64,8 +62,7 @@ select
                                 || '-assets-fine-grained/thumbs/products/',
                                 o.offer_product_humanized_id
                             )
-                        else 
-                            null
+                        else null
                     end
             end
         when o.mediation_humanized_id is not null

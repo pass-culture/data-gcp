@@ -31,6 +31,8 @@ select
     o.titelive_gtl_id,
     o.offer_type_id,
     o.offer_sub_type_id,
+    o.offer_product_id,
+    p.thumbcount,
     case
         when o.offer_product_id is not null
         then
@@ -54,13 +56,16 @@ select
                                 '_',
                                 p.thumbcount - 1
                             )
-                        else
+                        when p.thumbcount = 1
+                        then
                             concat(
                                 'https://storage.googleapis.com/',
                                 {{ get_mediation_url() }}
                                 || '-assets-fine-grained/thumbs/products/',
                                 o.offer_product_humanized_id
                             )
+                        else 
+                            null
                     end
             end
         when o.mediation_humanized_id is not null

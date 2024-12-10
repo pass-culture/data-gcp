@@ -26,10 +26,8 @@ LEFT JOIN analytics.yearly_aggregated_venue_collective_revenue c
     ON s.year = toStartOfYear(c.year)
 LEFT JOIN analytics.yearly_aggregated_venue_individual_revenue i
     ON s.year = toStartOfYear(i.year)
-WHERE COALESCE(c.venue_id, i.venue_id) is not null
+WHERE venue_id is not null
 GROUP BY
-    s.year,
-    COALESCE(c.venue_id, i.venue_id)
+    1,2
 ORDER BY
-    venue_id,
-    s.year
+    1,2

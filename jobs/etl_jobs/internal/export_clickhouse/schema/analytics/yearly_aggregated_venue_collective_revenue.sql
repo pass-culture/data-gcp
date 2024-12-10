@@ -19,4 +19,4 @@ FROM
     intermediate.collective_booking
 WHERE
     venue_id IS NOT NULL
-GROUP BY year, venue_id
+GROUP BY 1,2

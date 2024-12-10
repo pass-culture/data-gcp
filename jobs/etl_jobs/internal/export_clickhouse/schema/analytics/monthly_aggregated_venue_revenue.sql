@@ -26,10 +26,8 @@ LEFT JOIN analytics.monthly_aggregated_venue_collective_revenue c
     ON s.month = toStartOfMonth(c.month)
 LEFT JOIN analytics.monthly_aggregated_venue_individual_revenue i
     ON s.month = toStartOfMonth(i.month)
-WHERE COALESCE(c.venue_id, i.venue_id) is not null
+WHERE venue_id is not null
 GROUP BY
-    s.month,
-    COALESCE(c.venue_id, i.venue_id)
+    1,2
 ORDER BY
-    s.month,
-    venue_id;
+    1,2

@@ -26,6 +26,7 @@ LEFT JOIN analytics.yearly_aggregated_venue_collective_revenue c
     ON s.month = c.month
 LEFT JOIN analytics.yearly_aggregated_venue_individual_revenue i
     ON s.month = i.month
+WHERE COALESCE(c.venue_id, i.venue_id) is not null
 GROUP BY
     s.month,
     COALESCE(c.venue_id, i.venue_id)

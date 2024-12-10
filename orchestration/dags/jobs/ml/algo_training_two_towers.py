@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
+    BIGQUERY_ML_RECOMMENDATION_DATASET,
     BIGQUERY_RAW_DATASET,
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
@@ -22,6 +23,7 @@ from common.operators.gce import (
 )
 from common.utils import get_airflow_schedule
 from dependencies.ml.utils import create_algo_training_slack_block
+from jobs.crons import SCHEDULE_DICT
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 from airflow import DAG
@@ -34,10 +36,11 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from airflow.providers.http.operators.http import HttpOperator
 
 DATE = "{{ ts_nodash }}"
+DAG_NAME = "algo_training_two_towers"
 
 # Environment variables to export before running commands
 dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_two_towers_{DATE}",
+    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/{DAG_NAME}_{DATE}",
     "BASE_DIR": "data-gcp/jobs/ml_jobs/algo_training",
     "MODEL_DIR": "two_towers_model",
     "TRAIN_DIR": "/home/airflow/train",
@@ -54,7 +57,7 @@ train_params = {
     "embedding_size": 64,
     "train_set_size": 0.95 if ENV_SHORT_NAME == "prod" else 0.8,
     "event_day_number": {"prod": 90, "dev": 365, "stg": 30}[ENV_SHORT_NAME],
-    "experiment_name": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",
+    "experiment_name": f"{DAG_NAME}_v1.2_{ENV_SHORT_NAME}",
 }
 gce_params = {
     "instance_name": f"algo-training-two-towers-{ENV_SHORT_NAME}",
@@ -72,19 +75,18 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
 }
 
-schedule_dict = {"prod": "0 12 * * 4", "dev": "0 12 * * 2", "stg": "0 12 * * 3"}
-
 
 with DAG(
-    "algo_training_two_towers",
+    DAG_NAME,
     default_args=default_args,
     description="Custom training job",
-    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     render_template_as_native_obj=True,  # be careful using this because "3.10" is rendered as 3.1 if not double escaped
+    doc_md="This DAG is used to train a two-towers model. It takes the data from ml_reco__training_data_click which is computed every day.",
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -219,8 +221,8 @@ with DAG(
             "extract": {
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "datasetId": BIGQUERY_RAW_DATASET,
-                    "tableId": "training_data_bookings",
+                    "datasetId": BIGQUERY_ML_RECOMMENDATION_DATASET,
+                    "tableId": "training_data_booking",
                 },
                 "compression": None,
                 "destinationUris": f"{dag_config['STORAGE_PATH']}/bookings/data-*.parquet",

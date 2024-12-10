@@ -5,7 +5,7 @@ CREATE OR REPLACE TABLE analytics.yearly_aggregated_venue_individual_revenue ON 
     SETTINGS storage_policy='gcs_main'
 AS
 SELECT
-    date_trunc('YEAR', coalesce(toDate (used_date), toDate (creation_date))) AS year,
+    toStartOfYear(coalesce(toDate(used_date), toDate(creation_date))) AS year,
     cast(venue_id as String) as venue_id,
     sum(
         case

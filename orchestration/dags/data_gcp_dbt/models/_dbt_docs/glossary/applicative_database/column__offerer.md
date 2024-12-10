@@ -30,3 +30,5 @@
 {% docs column__offerer_first_collective_offer_creation_date %}The date when the offerer's first collective offer was created.{% enddocs %}
 {% docs column__offerer_business_activity_label %}The business activity label of the offerer.{% enddocs %}
 {% docs column__offerer_legal_category_label %}The legal category label of the offerer.{% enddocs %}
+{% docs column__local_authority_type %}When the offerer is a local authority, the type of the local authority, such as Commune, Département, or Région.{% enddocs %}
+{% docs column__local_authority_is_priority %}Indicates whether the local authority is internally seen as a priority partner.{% enddocs %}

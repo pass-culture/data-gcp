@@ -129,3 +129,7 @@ models:
         description: '{{ doc("column__offerer_is_reference_adage") }}'
       - name: is_synchro_adage
         description: '{{ doc("column__offerer_is_synchro_adage") }}'
+      - name: local_authority_type
+        description: '{{ doc("column__local_authority_type") }}'
+      - name: local_authority_is_priority
+        description: '{{ doc("column__local_authority_is_priority") }}'

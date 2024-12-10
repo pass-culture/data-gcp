@@ -7,7 +7,7 @@ with
             venue.venue_type_label,
             venue.offerer_name
         from {{ ref("mrt_global__offer") }} offer
-        inner join {{ ref("int_raw__offer") }} using (offer_id)  -- Pourquoi ce Join @lrainteau-pass?
+        inner join {{ ref("int_raw__offer") }} o using (offer_id)  -- Pourquoi ce Join @lrainteau-pass?
         inner join
             {{ ref("mrt_global__venue") }} venue
             on venue.venue_managing_offerer_id = offer.offerer_id

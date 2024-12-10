@@ -114,7 +114,7 @@ with DAG(
                     "tableId": dag_config["INPUT_TABLE_NAME"],
                 },
                 "compression": None,
-                "destinationUris": f"{dag_config['STORAGE_PATH']}/{dag_config["INPUT_TABLE_NAME"]}_raw_data/data-*.parquet",
+                "destinationUris": f"{dag_config['STORAGE_PATH']}/{dag_config['INPUT_TABLE_NAME']}_raw_data/data-*.parquet",
                 "destinationFormat": "PARQUET",
             }
         },

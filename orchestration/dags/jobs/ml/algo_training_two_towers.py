@@ -5,6 +5,7 @@ from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
     BIGQUERY_ML_RECOMMENDATION_DATASET,
+    BIGQUERY_RAW_DATASET,
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,

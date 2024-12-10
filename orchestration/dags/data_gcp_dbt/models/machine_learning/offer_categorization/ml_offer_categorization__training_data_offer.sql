@@ -18,7 +18,11 @@ with
         group by 1, 2, 3, 4, 5
     )
 select
-    base_offers.*,
+    base_offers.offer_id,
+    base_offers.item_id,
+    base_offers.offer_subcategory_id,
+    base_offers.venue_type_label,
+    base_offers.offerer_name,
     ie.name_embedding as name_embedding,
     ie.description_embedding as description_embedding
 from base_offers

@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: ml_retrieval__semantic_vector_item_embedding
+    description: "{{ doc('description__ml_retrieval__semantic_vector_item_embedding') }}"
+    columns:
+      - name: item_id
+        description: "{{ doc('column__item_id') }}"
+      - name: embedding
+        description: "{{ doc('column__embedding_hybrid') }}"

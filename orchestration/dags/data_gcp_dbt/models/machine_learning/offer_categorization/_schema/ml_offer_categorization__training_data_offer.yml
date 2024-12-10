@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: ml_offer_categorization__training_data_offer
+    description: "{{ doc('description__ml_offer_categorization__training_data_offer') }}"
+    columns:
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+      - name: item_id
+        description: "{{ doc('column__item_id') }}"
+      - name: offer_subcategory_id
+        description: "{{ doc('column__offer_subcategory_id') }}"
+      - name: venue_type_label
+        description: "{{ doc('column__venue_type_label') }}"
+      - name: offerer_name
+        description: "{{ doc('column__offerer_name') }}"
+      - name: name_embedding
+        description: "{{ doc('column__embedding_offer_name') }}"
+      - name: description_embedding
+        description: "{{ doc('column__embedding_offer_description') }}"

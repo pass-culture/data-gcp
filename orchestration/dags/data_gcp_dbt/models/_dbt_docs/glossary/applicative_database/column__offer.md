@@ -47,6 +47,7 @@ cultural partner and displayed in app.{% enddocs %}
 {% docs column__casting %} Actors in the film, if applicable. {% enddocs %}
 {% docs column__isbn %} ISBN of the book, if applicable. {% enddocs %}
 {% docs column__rayon %} Literary genre, if applicable. {% enddocs %}
+{% docs column__offer_macro_rayon %} Semantic clustering of `column__rayon`. {% enddocs %}
 {% docs column__book_editor %} Editor of the book, if applicable. {% enddocs %}
 {% docs column__type %} Type of the offer. {% enddocs %}
 {% docs column__sub_type %} Sub-type of the offer. {% enddocs %}

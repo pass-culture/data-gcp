@@ -22,10 +22,10 @@ SELECT
     SUM(COALESCE(c.expected_revenue, 0) + COALESCE(i.expected_revenue, 0)) AS total_expected_revenue
 FROM
     month_spans s
-LEFT JOIN analytics.yearly_aggregated_venue_collective_revenue c
-    ON s.month = c.month
-LEFT JOIN analytics.yearly_aggregated_venue_individual_revenue i
-    ON s.month = i.month
+LEFT JOIN analytics.monthly_aggregated_venue_collective_revenue c
+    ON s.month = toStartOfMonth(c.month)
+LEFT JOIN analytics.monthly_aggregated_venue_individual_revenue i
+    ON s.month = toStartOfMonth(i.month)
 WHERE COALESCE(c.venue_id, i.venue_id) is not null
 GROUP BY
     s.month,

@@ -9,7 +9,7 @@ WITH
     month_spans AS (
         SELECT
             toStartOfMonth(toDate(CONCAT(toString(2020), '-01-01')) + INTERVAL number MONTH) AS month
-        FROM numbers(DATEDIFF(MONTH, toDate('2020-01-01'), toStartOfMonth(today())) + 1)
+        FROM numbers(DATEDIFF(month, toDate('2020-01-01'), toStartOfMonth(today())) + 1)
     )
 SELECT
     s.month AS month,
@@ -22,10 +22,11 @@ SELECT
     SUM(COALESCE(c.expected_revenue, 0) + COALESCE(i.expected_revenue, 0)) AS total_expected_revenue
 FROM
     month_spans s
-LEFT JOIN analytics.yearly_aggregated_venue_collective_revenue c
-    ON s.month = toStartOfMonth(c.creation_year)
-LEFT JOIN analytics.yearly_aggregated_venue_individual_revenue i
-    ON s.month = toStartOfMonth(i.creation_year)
+LEFT JOIN analytics.monthly_aggregated_venue_collective_revenue c
+    ON s.month = toStartOfMonth(c.month)
+LEFT JOIN analytics.monthly_aggregated_venue_individual_revenue i
+    ON s.month = toStartOfMonth(i.month)
+WHERE COALESCE(c.venue_id, i.venue_id) is not null
 GROUP BY
     s.month,
     COALESCE(c.venue_id, i.venue_id)

@@ -5,7 +5,7 @@ CREATE OR REPLACE TABLE analytics.yearly_aggregated_venue_collective_revenue ON 
     SETTINGS storage_policy='gcs_main'
 AS
 SELECT
-    date_trunc('YEAR', coalesce(toDate (used_date), toDate (creation_date))) AS year,
+    toStartOfYear(coalesce(toDate(used_date), toDate(creation_date))) AS year,
     cast(venue_id as String) as venue_id,
     sum(
         case
@@ -19,4 +19,4 @@ FROM
     intermediate.collective_booking
 WHERE
     venue_id IS NOT NULL
-GROUP BY 1,2
+GROUP BY year, venue_id

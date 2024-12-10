@@ -8,8 +8,8 @@ WITH
     -- Generate a sequence of years from 2020 to the current year
     year_spans AS (
         SELECT
-            toDate(CONCAT(toString(number + 2020), '-01-01')) AS year
-        FROM numbers((YEAR(today()) - 2020) + 1)
+            toStartOfYear(toDate(CONCAT(toString(2020), '-01-01')) + INTERVAL number YEAR) AS year
+        FROM numbers(DATEDIFF(year, toDate('2020-01-01'), toStartOfYear(today())) + 1)
     )
 SELECT
     s.year AS year,
@@ -23,9 +23,9 @@ SELECT
 FROM
     year_spans s
 LEFT JOIN analytics.yearly_aggregated_venue_collective_revenue c
-    ON s.year = c.year
+    ON s.year = toStartOfYear(c.year)
 LEFT JOIN analytics.yearly_aggregated_venue_individual_revenue i
-    ON s.year = i.year
+    ON s.year = toStartOfYear(i.year)
 GROUP BY
     s.year,
     COALESCE(c.venue_id, i.venue_id)

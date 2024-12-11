@@ -21,7 +21,6 @@ with
             ne.event_date
             between date_sub(date(current_date), interval 1 day) and date(current_date)
             and ne.event_name = "HasSeenAllVideo"
-            and ce.content_type in ("videoCarousel")
             {% if is_incremental() %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
@@ -65,7 +64,6 @@ left join
 where
     ne.event_name in (
         'ConsultVideo',
-        'HasSeenAllVideo',
         'HasDismissedModal',
         'VideoPaused',
         'ModuleDisplayedOnHomePage',

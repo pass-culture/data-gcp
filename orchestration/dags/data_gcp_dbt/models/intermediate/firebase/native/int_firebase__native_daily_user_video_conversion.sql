@@ -90,23 +90,37 @@ with
         where ce_parent.content_type = 'videoCarousel'
     ),
 
+    consult_reattribution as (
+        select
+            cfci.event_name,
+            cfci.offer_id,
+            ctim.parent_module_id as module_id,
+            ctim.content_type,
+            cfci.unique_session_id,
+            cfci.user_id,
+            cfci.event_timestamp,
+            cfci.event_date,
+            cfci.app_version,
+            cfci.video_id,
+            cfci.entry_id
+        from consult_from_carousel_item cfci
+        left join carousel_to_item_map ctim on cfci.module_id = ctim.module_id
+    ),
+
     video_perf_per_user_and_video as (
         select
-            coalesce(ctim.parent_module_id, ve.module_id) as module_id,
-            coalesce(ctim.content_type, ve.content_type) as content_type,
+            coalesce(cr.module_id, ve.module_id) as module_id,
+            coalesce(cr.content_type, ve.content_type) as content_type,
             ve.video_id,
             ve.entry_id,
             ve.unique_session_id,
             count(
                 distinct case
-                    when ve.event_name = 'ConsultOffer'
-                    then coalesce(cfci.offer_id, ve.offer_id)
+                    when cr.event_name = 'ConsultOffer'
+                    then coalesce(cr.offer_id, ve.offer_id)
                     else null
                 end
             ) as offers_consulted,
-            count(
-                case when ve.event_name = 'HasSeenAllVideo' then 1 else null end
-            ) as seen_all_video,
             max(
                 ve.total_video_seen_duration_seconds
             ) as total_video_seen_duration_seconds,
@@ -116,12 +130,8 @@ with
                 max(ve.video_duration_seconds)
             ) as pct_video_seen
         from {{ ref("int_firebase__native_video_event") }} ve
-        left join carousel_to_item_map ctim on ve.module_id = ctim.module_id
         left join
-            consult_from_carousel_item cfci
-            on ve.unique_session_id = cfci.unique_session_id
-            and ve.user_id = cfci.user_id
-            and ve.module_id = cfci.module_id
+            consult_reattribution cr on ve.unique_session_id = cr.unique_session_id
         where
             ve.event_name != 'ModuleDisplayedOnHomePage'
             {% if is_incremental() %}
@@ -132,8 +142,8 @@ with
             {% else %} and date(ve.event_date) >= "2024-01-01"
             {% endif %}
         group by
-            coalesce(ctim.parent_module_id, ve.module_id),
-            coalesce(ctim.content_type, ve.content_type),
+            coalesce(cr.module_id, ve.module_id),
+            coalesce(cr.content_type, ve.content_type),
             video_id,
             entry_id,
             unique_session_id
@@ -141,7 +151,7 @@ with
 
 select
     displays.module_id,
-    coalesce(ctim.content_type, displays.content_type) content_type,
+    video_perf_per_user_and_video.content_type,
     event_date,
     app_version,
     entry_id,
@@ -151,7 +161,6 @@ select
     unique_session_id,
     coalesce(total_homes_consulted, 0) as total_homes_consulted,
     coalesce(sum(offers_consulted), 0) as offers_consulted,
-    coalesce(seen_all_video, 0) as seen_all_video,
     coalesce(
         sum(total_video_seen_duration_seconds), 0
     ) as total_video_seen_duration_seconds,
@@ -160,10 +169,9 @@ select
 from displays
 left join video_perf_per_user_and_video using (module_id, entry_id, unique_session_id)
 left join video_block_redirections using (module_id, unique_session_id)
-left join carousel_to_item_map ctim on displays.module_id = ctim.module_id
 group by
     displays.module_id,
-    coalesce(ctim.content_type, displays.content_type),
+    video_perf_per_user_and_video.content_type,
     event_date,
     app_version,
     entry_id,
@@ -171,5 +179,4 @@ group by
     user_id,
     user_role,
     unique_session_id,
-    total_homes_consulted,
-    seen_all_video
+    total_homes_consulted

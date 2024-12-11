@@ -1,6 +1,5 @@
 import datetime
 
-import mlflow
 import mlflow.tensorflow
 import numpy as np
 import pandas as pd

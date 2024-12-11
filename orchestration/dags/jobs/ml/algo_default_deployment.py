@@ -100,7 +100,7 @@ with DAG(
         retries=2,
     )
 
-    deploy_model_taks = {}
+    deploy_model_tasks = {}
     seq_task = fetch_install_code
     with TaskGroup("deploy_models", dag=dag) as deploy_models:
         for model_params in models_to_deploy:
@@ -121,7 +121,7 @@ with DAG(
                     --max-nodes {max_nodes}
             """
 
-            deploy_model_taks[endpoint_name] = SSHGCEOperator(
+            deploy_model_tasks[endpoint_name] = SSHGCEOperator(
                 task_id=f"deploy_model_{experiment_name}_{endpoint_name}",
                 instance_name=GCE_INSTANCE,
                 base_dir=BASE_DIR,

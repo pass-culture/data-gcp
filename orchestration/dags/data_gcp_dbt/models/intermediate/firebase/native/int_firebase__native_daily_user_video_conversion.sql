@@ -156,8 +156,8 @@ with
 
 select
     displays.module_id,
-    video_perf_per_user_and_video.content_type,
-    video_perf_per_user_and_video.module_name,
+    displays.content_type,
+    displays.module_name,
     event_date,
     app_version,
     entry_id,
@@ -177,8 +177,8 @@ left join video_perf_per_user_and_video using (module_id, entry_id, unique_sessi
 left join video_block_redirections using (module_id, unique_session_id)
 group by
     displays.module_id,
-    video_perf_per_user_and_video.content_type,
-    video_perf_per_user_and_video.module_name,
+    displays.content_type,
+    displays.module_name,
     event_date,
     app_version,
     entry_id,

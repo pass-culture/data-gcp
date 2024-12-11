@@ -29,7 +29,9 @@ select
     coalesce(
         count(
             distinct case
-                when total_video_seen_duration_seconds = total_video_duration_seconds
+                when
+                    total_video_seen_duration_seconds = total_video_duration_seconds
+                    and total_video_duration_seconds <> 0.0
                 then video_id
                 else null
             end

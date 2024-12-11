@@ -4,29 +4,28 @@ from datetime import datetime, timedelta
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
-    BIGQUERY_TMP_DATASET,
+    BIGQUERY_ML_OFFER_CATEGORIZATION_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
+    GCE_UV_INSTALLER,
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
     MLFLOW_URL,
     SLACK_CONN_PASSWORD,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 from dependencies.ml.utils import create_algo_training_slack_block
-from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
 from airflow.providers.http.operators.http import HttpOperator
@@ -39,7 +38,7 @@ dag_config = {
     "BASE_DIR": "data-gcp/jobs/ml_jobs/algo_training",
     "MODEL_DIR": "offer_categorization",
     "TEST_RATIO": "0.1",
-    "INPUT_TABLE_NAME": "offer_categorization_offers",
+    "INPUT_TABLE_NAME": "training_data_offer",
 }
 
 # Params
@@ -105,29 +104,17 @@ with DAG(
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
 
-    import_tables = {}
-    table = dag_config["INPUT_TABLE_NAME"]
-    import_tables[table] = BigQueryExecuteQueryOperator(
-        task_id=f"import_{table}",
-        sql=(IMPORT_TRAINING_SQL_PATH / f"{table}.sql").as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_{table}_raw_data",
-        dag=dag,
-    )
-
-    store_data = {}
-    store_data["raw"] = BigQueryInsertJobOperator(
+    store_input_data = BigQueryInsertJobOperator(
         task_id="store_raw_data",
         configuration={
             "extract": {
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": f"{DATE}_{table}_raw_data",
+                    "datasetId": BIGQUERY_ML_OFFER_CATEGORIZATION_DATASET,
+                    "tableId": dag_config["INPUT_TABLE_NAME"],
                 },
                 "compression": None,
-                "destinationUris": f"{dag_config['STORAGE_PATH']}/{table}_raw_data/data-*.parquet",
+                "destinationUris": f"{dag_config['STORAGE_PATH']}/{dag_config['INPUT_TABLE_NAME']}_raw_data/data-*.parquet",
                 "destinationFormat": "PARQUET",
             }
         },
@@ -142,20 +129,13 @@ with DAG(
         labels={"job_type": "long_ml"},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
+        branch="{{ params.branch }}",
         python_version="3.10",
-        command="{{ params.branch }}",
-        retries=2,
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
-        command="pip install -r requirements.txt --user",
-        dag=dag,
+        installer=GCE_UV_INSTALLER,
         retries=2,
     )
 
@@ -164,11 +144,11 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
+        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/preprocess.py "
         "--config-name {{ params.config_file_name }} "
         f"--input-table-path {dag_config['STORAGE_PATH']}/{dag_config['INPUT_TABLE_NAME']}_raw_data/ "
         f"--output-file-dir {dag_config['STORAGE_PATH']}/{dag_config['INPUT_TABLE_NAME']}_clean_data ",
-        dag=dag,
     )
 
     split_data = SSHGCEOperator(
@@ -176,11 +156,11 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
+        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/split_data.py "
         f"--clean-table-path {dag_config['STORAGE_PATH']}/{dag_config['INPUT_TABLE_NAME']}_clean_data/data_clean.parquet "
         f"--split-data-folder {dag_config['STORAGE_PATH']} "
         "--test-ratio {{ params.test_ratio }}",
-        dag=dag,
     )
 
     train = SSHGCEOperator(
@@ -188,13 +168,13 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
+        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
         "--model-name {{ params.model_name }} "
         f"--training-table-path {dag_config['STORAGE_PATH']}/train.parquet "
         f"--validation-table-path {dag_config['STORAGE_PATH']}/val.parquet "
         "--run-name {{ params.run_name }} "
         "--num-boost-round {{ params.num_boost_round }}",
-        dag=dag,
     )
 
     evaluate = SSHGCEOperator(
@@ -202,11 +182,11 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
+        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
         "--model-name {{ params.model_name }} "
         f"--validation-table-path {dag_config['STORAGE_PATH']}/test.parquet "
         "--run-name {{ params.run_name }}",
-        dag=dag,
     )
 
     package_api_model = SSHGCEOperator(
@@ -214,9 +194,9 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
+        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/package_api_model.py "
         "--model-name {{ params.model_name }} ",
-        dag=dag,
     )
 
     gce_instance_stop = StopGCEOperator(
@@ -240,11 +220,8 @@ with DAG(
 
     (
         start
-        >> import_tables[dag_config["INPUT_TABLE_NAME"]]
-        >> store_data["raw"]
         >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
+        >> fetch_install_code
         >> preprocess
         >> split_data
         >> train
@@ -253,3 +230,4 @@ with DAG(
         >> gce_instance_stop
         >> send_slack_notif_success
     )
+    (start >> store_input_data >> preprocess)

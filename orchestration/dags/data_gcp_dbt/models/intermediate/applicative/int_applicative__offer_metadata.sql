@@ -54,13 +54,15 @@ select
                                 '_',
                                 p.thumbcount - 1
                             )
-                        else
+                        when p.thumbcount = 1
+                        then
                             concat(
                                 'https://storage.googleapis.com/',
                                 {{ get_mediation_url() }}
                                 || '-assets-fine-grained/thumbs/products/',
                                 o.offer_product_humanized_id
                             )
+                        else null
                     end
             end
         when o.mediation_humanized_id is not null

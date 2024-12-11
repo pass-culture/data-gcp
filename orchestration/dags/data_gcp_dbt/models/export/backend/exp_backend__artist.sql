@@ -1,7 +1,6 @@
 select
     artist_id,
     artist_name,
-    artist_gender,
     artist_description,
     wikidata_image_file_url,
     wikidata_image_author,

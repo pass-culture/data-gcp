@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: ml_reco__training_data_user_feature
+    description: "{{ doc('description__ml_reco__training_data_user_feature') }}"
+    columns:
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+      - name: consult_offer
+        description: "{{ doc('column__consult_offer') }}"
+      - name: booking_cnt
+        description: "{{ doc('column__booking_cnt') }}"
+      - name: user_theoretical_remaining_credit
+        description: "{{ doc('column__user_theoretical_remaining_credit') }}"
+      - name: has_added_offer_to_favorites
+        description: "{{ doc('column__has_added_offer_to_favorites') }}"
+      - name: user_queries
+        description: "{{ doc('column__user_queries') }}"
+      - name: qpi_subcategory_ids
+        description: "{{ doc('column__qpi_subcategory_ids') }}"

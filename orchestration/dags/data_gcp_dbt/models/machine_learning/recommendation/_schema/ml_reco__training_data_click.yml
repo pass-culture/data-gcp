@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: ml_reco__training_data_click
+    description: "{{ doc('description__ml_reco__training_data_click') }}"
+    columns:
+      - name: event_date
+        description: "{{ doc('column__event_date') }}"
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+      - name: item_id
+        description: "{{ doc('column__item_id') }}"
+      - name: event_hour
+        description: "{{ doc('column__event_hour') }}"
+      - name: event_day
+        description: "{{ doc('column__event_day') }}"
+      - name: event_month
+        description: "{{ doc('column__event_month') }}"
+      - name: consult_offer
+        description: "{{ doc('column__consult_offer') }}"
+      - name: booking_cnt
+        description: "{{ doc('column__booking_cnt') }}"
+      - name: user_theoretical_remaining_credit
+        description: "{{ doc('column__user_theoretical_remaining_credit') }}"
+      - name: has_added_offer_to_favorites
+        description: "{{ doc('column__has_added_offer_to_favorites') }}"
+      - name: user_queries
+        description: "{{ doc('column__user_queries') }}"
+      - name: qpi_subcategory_ids
+        description: "{{ doc('column__qpi_subcategory_ids') }}"
+      - name: offer_subcategory_id
+        description: "{{ doc('column__offer_subcategory_id') }}"
+      - name: offer_category_id
+        description: "{{ doc('column__offer_category_id') }}"
+      - name: item_image_embedding
+        description: "{{ doc('column__item_image_embedding') }}"
+      - name: item_semantic_content_hybrid_embedding
+        description: "{{ doc('column__item_semantic_content_hybrid_embedding') }}"
+      - name: item_names
+        description: "{{ doc('column__item_names') }}"
+      - name: item_favourite_cnt
+        description: "{{ doc('column__item_favourite_cnt') }}"

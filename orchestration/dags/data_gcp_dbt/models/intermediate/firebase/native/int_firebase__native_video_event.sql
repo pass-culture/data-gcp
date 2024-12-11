@@ -39,6 +39,7 @@ select
     ne.event_name,
     ne.module_id,
     ce.content_type,
+    ce.title as module_name,
     ne.video_id,
     ne.entry_id,
     ne.offer_id,

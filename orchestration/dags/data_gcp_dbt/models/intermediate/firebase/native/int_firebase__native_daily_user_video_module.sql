@@ -14,18 +14,27 @@
 
 select
     module_id,
+    module_name,
     event_date,
     app_version,
     entry_id,
     user_id,
     user_role,
     unique_session_id,
+    content_type,
     coalesce(sum(total_homes_consulted), 0) as total_homes_consulted,
     coalesce(count(distinct video_id), 0) as total_videos_seen,
-    case when count(distinct video_id) > 1 then "TRUE" else "FALSE" end as has_swiped,
+    case when count(distinct video_id) > 1 then true else false end as has_swiped,
     coalesce(sum(offers_consulted), 0) as offers_consulted,
     coalesce(
-        count(distinct case when seen_all_video > 0 then video_id else null end), 0
+        count(
+            distinct case
+                when total_video_seen_duration_seconds = total_video_duration_seconds
+                then video_id
+                else null
+            end
+        ),
+        0
     ) as total_videos_all_seen,
     coalesce(
         sum(total_video_seen_duration_seconds), 0
@@ -42,4 +51,12 @@ where
     {% else %} and date(event_date) >= "2024-01-01"
     {% endif %}
 group by
-    module_id, event_date, app_version, entry_id, user_id, user_role, unique_session_id
+    module_id,
+    module_name,
+    event_date,
+    app_version,
+    entry_id,
+    user_id,
+    user_role,
+    unique_session_id,
+    content_type

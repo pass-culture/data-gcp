@@ -17,6 +17,7 @@ with
         select
             module_id,
             content_type,
+            module_name,
             event_date,
             app_version,
             entry_id,
@@ -84,6 +85,7 @@ with
             ce_parent.id as parent_module_id,
             replace(replace(replace(item_id, '[', ''), ']', ''), "'", '') as module_id,
             ce_parent.content_type as content_type,
+            ce_parent.title as module_name
         from
             {{ ref("int_contentful__entry") }} ce_parent,
             unnest(split(ce_parent.items)) as item_id
@@ -96,6 +98,7 @@ with
             cfci.offer_id,
             ctim.parent_module_id as module_id,
             ctim.content_type,
+            ctim.module_name,
             cfci.unique_session_id,
             cfci.user_id,
             cfci.event_timestamp,
@@ -111,6 +114,7 @@ with
         select
             coalesce(cr.module_id, ve.module_id) as module_id,
             coalesce(cr.content_type, ve.content_type) as content_type,
+            coalesce(cr.module_name, ve.module_name) as module_name,
             ve.video_id,
             ve.entry_id,
             ve.unique_session_id,
@@ -144,6 +148,7 @@ with
         group by
             coalesce(cr.module_id, ve.module_id),
             coalesce(cr.content_type, ve.content_type),
+            coalesce(cr.module_name, ve.module_name),
             video_id,
             entry_id,
             unique_session_id
@@ -152,6 +157,7 @@ with
 select
     displays.module_id,
     video_perf_per_user_and_video.content_type,
+    video_perf_per_user_and_video.module_name,
     event_date,
     app_version,
     entry_id,
@@ -172,6 +178,7 @@ left join video_block_redirections using (module_id, unique_session_id)
 group by
     displays.module_id,
     video_perf_per_user_and_video.content_type,
+    video_perf_per_user_and_video.module_name,
     event_date,
     app_version,
     entry_id,

@@ -273,6 +273,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
+        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/upload_embeddings_to_bq.py "
         "--experiment-name {{ params.experiment_name }} "
         "--run-name {{ params.run_name }} "

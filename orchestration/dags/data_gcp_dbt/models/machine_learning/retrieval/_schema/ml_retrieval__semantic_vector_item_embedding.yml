@@ -7,4 +7,4 @@ models:
       - name: item_id
         description: "{{ doc('column__item_id') }}"
       - name: embedding
-        description: "{{ doc('column__embedding_hybrid') }}"
+        description: "{{ doc('column__embedding_offer_hybrid') }}"

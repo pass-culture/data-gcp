@@ -17,26 +17,26 @@ models:
       - name: event_month
         description: "{{ doc('column__event_month') }}"
       - name: consult_offer
-        description: "{{ doc('column__consult_offer') }}"
+        description: "{{ doc('column__total_consultations') }}"
       - name: booking_cnt
-        description: "{{ doc('column__booking_cnt') }}"
+        description: "{{ doc('column__total_bookings') }}"
       - name: user_theoretical_remaining_credit
-        description: "{{ doc('column__user_theoretical_remaining_credit') }}"
+        description: "{{ doc('column__total_theoretical_remaining_credit') }}"
       - name: has_added_offer_to_favorites
-        description: "{{ doc('column__has_added_offer_to_favorites') }}"
+        description: "{{ doc('column__user_has_added_offer_to_favorites') }}"
       - name: user_queries
-        description: "{{ doc('column__user_queries') }}"
+        description: "{{ doc('column__search_query') }}"
       - name: qpi_subcategory_ids
-        description: "{{ doc('column__qpi_subcategory_ids') }}"
+        description: "{{ doc('column__user_qpi_subcategories') }}"
       - name: offer_subcategory_id
         description: "{{ doc('column__offer_subcategory_id') }}"
       - name: offer_category_id
         description: "{{ doc('column__offer_category_id') }}"
       - name: item_image_embedding
-        description: "{{ doc('column__item_image_embedding') }}"
+        description: "{{ doc('column__embedding_offer_image') }}"
       - name: item_semantic_content_hybrid_embedding
-        description: "{{ doc('column__item_semantic_content_hybrid_embedding') }}"
+        description: "{{ doc('column__embedding_offer_hybrid') }}"
       - name: item_names
-        description: "{{ doc('column__item_names') }}"
+        description: "{{ doc('column__offer_name') }}"
       - name: item_favourite_cnt
-        description: "{{ doc('column__item_favourite_cnt') }}"
+        description: "{{ doc('column__total_favorites') }}"

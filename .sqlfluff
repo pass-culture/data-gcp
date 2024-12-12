@@ -4,6 +4,9 @@ dialect = bigquery
 templater = dbt
 exclude_rules = layout.indent, layout.cte_bracket, layout.select_targets, layout.spacing, layout.keyword_newline
 max_line_length = 0
+; large_file_skip_byte_limit = 25000
+; ignore_templated_areas = False
+; processes = 1
 
 [sqlfluff:rules]
 capitalisation_policy = lower
@@ -12,29 +15,10 @@ extended_capitalisation_policy = lower
 [sqlfluff:rules:convention.terminator]
 multiline_newline = True
 
-; ; rules = JJ01
-; ; processes = 1
-; ; large_file_skip_byte_limit = 25000
-; ; ignore_templated_areas = False
-
-; ; [sqlfluff:indentation]
-; ; # While implicit indents are not enabled by default. Many of the
-; ; # SQLFluff maintainers do use them in their projects.
-; ; allow_implicit_indents = True
-; ; indent_unit = space
-; ; indented_ctes = False
-; ; indented_joins = True
-; ; indented_using_on = True
-; ; indented_on_contents = True
-; ; tab_space_size = 4
-; ; template_blocks_indent = True
-
-; [sqlfluff:templater:jinja]
-; # Templater configuration
-; # Apply indentation rules within Jinja templates
-; apply_template_indentation = True
-; apply_dbt_builtins = True
-; load_macros_from_path = ./macros, ./target/dbt_packages/dbt_utils/macros, ./target/dbt_packages/dbt_date/macros, ./target/dbt_packages/dbt_airflow_macros/macros
+[sqlfluff:templater:jinja]
+apply_template_indentation = True
+apply_dbt_builtins = True
+load_macros_from_path = ./macros, ./target/dbt_packages/dbt_utils/macros, ./target/dbt_packages/dbt_date/macros, ./target/dbt_packages/dbt_airflow_macros/macros
 
 [sqlfluff:templater:dbt]
 apply_dbt_builtins = True
@@ -43,48 +27,33 @@ profiles_dir = ./orchestration/dags/data_gcp_dbt
 profile = data_gcp_dbt
 target = stg
 
-; [sqlfluff:templater:dbt:context]
-; ENV_SHORT_NAME = "stg"
+[sqlfluff:templater:dbt:context]
+ENV_SHORT_NAME = "stg"
 
-; [sqlfluff:templater]
-; unwrap_wrapped_queries = True
-; apply_dbt_builtins = True
+templater = dbt
+# This change (from jinja to dbt templater) will make linting slower
+# because linting will first compile dbt code into data warehouse code.
+runaway_limit = 10
+max_line_length = 80
+indent_unit = space
 
-; ; [sqlfluff:layout:type:comma]
-; ; # Layout configuration
-; ; spacing_before = touch
-; ; line_position = trailing
+[sqlfluff:rules:aliasing.table]
+aliasing = explicit
 
-; ; [sqlfluff:layout:type:end_of_file]
-; ; spacing_before = touch
+[sqlfluff:rules:aliasing.column]
+aliasing = explicit
 
-; ; [sqlfluff:layout:type:comment]
-; ; spacing_before = any
-; ; spacing_after = any
+[sqlfluff:rules:aliasing.expression]
+allow_scalar = False
 
-; ; [sqlfluff:layout:type:template_loop]
-; ; spacing_before = any
-; ; spacing_after = any
+[sqlfluff:rules:capitalisation.identifiers]
+extended_capitalisation_policy = lower
 
-; ; [sqlfluff:rules:capitalisation.keywords]
-; ; # Rules configuration
-; ; capitalisation_policy = lower
+[sqlfluff:rules:capitalisation.functions]
+capitalisation_policy = lower
 
-; ; [sqlfluff:rules:capitalisation.functions]
-; ; capitalisation_policy = lower
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = lower
 
-; ; [sqlfluff:rules:capitalisation.identifiers]
-; ; capitalisation_policy = lower
-
-; ; [sqlfluff:rules:structure.join_condition_order]
-; ; preferred_first_table_in_join_clause = earlier
-
-; ; [sqlfluff:rules:aliasing.table]
-; ; aliasing = explicit
-
-; ; [sqlfluff:rules.aliasing]
-; ; unused = true
-
-; ; [sqlfluff:rules:ambiguous.column_references]
-; ; # Number in group by and order by
-; ; group_by_and_order_by_style = implicit
+[sqlfluff:rules:ambiguous.column_references]
+group_by_and_order_by_style = implicit

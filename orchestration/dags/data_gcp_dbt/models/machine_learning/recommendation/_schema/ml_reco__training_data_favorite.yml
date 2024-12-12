@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: ml_reco__training_data_favorite
+    description: "{{ doc('description__ml_reco__training_data_favorite') }}"
+    columns:
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+      - name: user_age
+        description: "{{ doc('column__user_age') }}"
+      - name: event_type
+        description: "{{ doc('column__event_type') }}"
+      - name: event_date
+        description: "{{ doc('column__event_date') }}"
+      - name: event_hour
+        description: "{{ doc('column__event_hour') }}"
+      - name: event_day
+        description: "{{ doc('column__event_day') }}"
+      - name: event_month
+        description: "{{ doc('column__event_month') }}"
+      - name: item_id
+        description: "{{ doc('column__item_id') }}"
+      - name: offer_subcategory_id
+        description: "{{ doc('column__offer_subcategory_id') }}"
+      - name: offer_category_id
+        description: "{{ doc('column__offer_category_id') }}"
+      - name: genres
+        description: "{{ doc('column__genres') }}"
+      - name: rayon
+        description: "{{ doc('column__rayon') }}"
+      - name: type
+        description: "{{ doc('column__type') }}"
+      - name: venue_id
+        description: "{{ doc('column__venue_id') }}"
+      - name: venue_name
+        description: "{{ doc('column__venue_name') }}"

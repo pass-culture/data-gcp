@@ -6,11 +6,12 @@ from common.config import (
     BIGQUERY_ML_FEATURES_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
+    GCE_UV_INSTALLER,
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -24,7 +25,7 @@ from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobO
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"emb-reduction-{ENV_SHORT_NAME}"
-BASE_DIR = "data-gcp/jobs/ml_jobs/reduction"
+BASE_PATH = "data-gcp/jobs/ml_jobs/reduction"
 DATE = "{{ yyyymmdd(ds) }}"
 
 default_args = {
@@ -74,19 +75,13 @@ with DAG(
         labels={"job_type": "long_ml"},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
+        branch="{{ params.branch }}",
         python_version="3.10",
-        command="{{ params.branch }}",
-        retries=2,
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command="""pip install -r requirements.txt --user""",
+        base_dir=BASE_PATH,
+        installer=GCE_UV_INSTALLER,
     )
 
     export_bq = BigQueryInsertJobOperator(
@@ -109,8 +104,9 @@ with DAG(
     reduce_dimension = SSHGCEOperator(
         task_id="reduce_dimension",
         instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
+        base_dir=BASE_PATH,
         environment=dag_config,
+        installer=GCE_UV_INSTALLER,
         command="PYTHONPATH=. python dimension_reduction.py "
         "--config-file-name {{ params.reduction_config_file_name }} "
         f"--source-gs-path {dag_config['STORAGE_PATH']} "
@@ -128,8 +124,7 @@ with DAG(
         start
         >> export_bq
         >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
+        >> fetch_install_code
         >> reduce_dimension
         >> gce_instance_stop
         >> end

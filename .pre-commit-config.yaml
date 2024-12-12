@@ -45,16 +45,3 @@ repos:
       - id: sqlfluff-fix
         additional_dependencies:
           ["dbt-bigquery==1.8.1", "sqlfluff-templater-dbt"]
-    # TODO: Readd this once it is working
-    # - id: sqlfluff-lint-check
-    #   name: Lint check (sqlfluff)
-    #   entry: orchestration/dags/data_gcp_dbt/scripts/sqlfluff_lint.sh
-    #   language: script
-    #   types: [sql]
-    #   stages: [commit]
-    # - id: sqlfluff-fix
-    #   name: fix (sqlfluff)
-    #   entry: orchestration/dags/data_gcp_dbt/scripts/sqlfluff_fix.sh
-    #   language: script
-    #   types: [sql]
-    #   stages: [commit]

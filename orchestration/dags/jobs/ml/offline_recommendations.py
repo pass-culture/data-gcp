@@ -6,10 +6,11 @@ from common.config import (
     DAG_FOLDER,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
+    GCE_UV_INSTALLER,
 )
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
 )
@@ -25,7 +26,7 @@ from airflow.operators.dummy_operator import DummyOperator
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"offline-recommendation-{ENV_SHORT_NAME}"
-BASE_DIR = "data-gcp/jobs/ml_jobs/offline_recommendation"
+BASE_PATH = "data-gcp/jobs/ml_jobs/offline_recommendation"
 DATE = "{{ yyyymmdd(ds) }}"
 STORAGE_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/offline_recommendation_{ENV_SHORT_NAME}/offline_recommendation_{DATE}"
 default_args = {
@@ -75,8 +76,9 @@ with DAG(
             SSHGCEOperator(
                 task_id=f"""get_offline_predictions_{query_params["table"]}""",
                 instance_name=GCE_INSTANCE,
-                base_dir=BASE_DIR,
+                base_dir=BASE_PATH,
                 environment=dag_config,
+                installer=GCE_UV_INSTALLER,
                 command="PYTHONPATH=. python main.py "
                 f"""--input-table {query_params["destination_table"]} --output-table offline_recommendation_{query_params["destination_table"]}""",
             )
@@ -90,20 +92,16 @@ with DAG(
         labels={"job_type": "ml"},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        installer=GCE_UV_INSTALLER,
         python_version="3.10",
-        command="{{ params.branch }}",
         retries=2,
     )
 
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command="""pip install -r requirements.txt --user""",
-    )
     export_to_backend_tasks = []
     for query_params in params_export:
         export_to_backend_tasks.append(
@@ -120,8 +118,7 @@ with DAG(
         start
         >> import_data_tasks
         >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
+        >> fetch_install_code
         >> get_offline_predictions[0]
         >> get_offline_predictions[1]
         >> export_to_backend_tasks

@@ -69,14 +69,14 @@ with DAG(
         job_name = cluster_config["name"]
         cluster_config_file_name = cluster_config["cluster_config_file_name"]
         cluster_prefix = cluster_config["cluster_prefix"]
-        GCE_INSTANCE = f"clusterisation-{job_name}-{ENV_SHORT_NAME}"
+        gce_instance = f"clusterisation-{job_name}-{ENV_SHORT_NAME}"
 
         start = DummyOperator(task_id=f"start_{job_name}", dag=dag)
         end = DummyOperator(task_id=f"end_{job_name}", dag=dag)
 
         gce_instance_start = StartGCEOperator(
             task_id=f"gce_start_{job_name}_task",
-            instance_name=GCE_INSTANCE,
+            instance_name=gce_instance,
             preemptible=False,
             instance_type="{{ params.instance_type }}",
             retries=2,
@@ -85,7 +85,7 @@ with DAG(
 
         fetch_install_code = InstallDependenciesOperator(
             task_id=f"fetch_install_code_{job_name}",
-            instance_name=GCE_INSTANCE,
+            instance_name=gce_instance,
             branch="{{ params.branch }}",
             python_version="3.10",
             base_dir=BASE_PATH,
@@ -94,7 +94,7 @@ with DAG(
 
         preprocess_clustering = SSHGCEOperator(
             task_id=f"preprocess_{job_name}_clustering",
-            instance_name=GCE_INSTANCE,
+            instance_name=gce_instance,
             base_dir=BASE_PATH,
             installer=GCE_UV_INSTALLER,
             command="PYTHONPATH=. python cluster/preprocess.py "
@@ -107,7 +107,7 @@ with DAG(
 
         generate_clustering = SSHGCEOperator(
             task_id=f"generate_{job_name}_clustering",
-            instance_name=GCE_INSTANCE,
+            instance_name=gce_instance,
             base_dir=BASE_PATH,
             installer=GCE_UV_INSTALLER,
             command="PYTHONPATH=. python cluster/generate.py "
@@ -119,7 +119,7 @@ with DAG(
         )
 
         gce_instance_stop = StopGCEOperator(
-            task_id=f"gce_{job_name}_stop_task", instance_name=GCE_INSTANCE
+            task_id=f"gce_{job_name}_stop_task", instance_name=gce_instance
         )
 
         (

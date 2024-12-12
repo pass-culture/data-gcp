@@ -147,7 +147,7 @@ def main(
     with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="r") as file:
         run_id = file.read()
     with mlflow.start_run(experiment_id=experiment_id, run_id=run_id) as run:
-        model_uri = mlflow.get_model_uri("model")
+        model_uri = mlflow.get_artifact_uri("model")
         loaded_model = tf.keras.models.load_model(
             model_uri,
             compile=False,

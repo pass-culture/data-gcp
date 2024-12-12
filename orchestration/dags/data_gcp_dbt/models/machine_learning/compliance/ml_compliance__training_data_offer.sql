@@ -1,7 +1,7 @@
 with
     base as (
         select
-            offer.offer_id,
+             offer.offer_id,
             case
                 when (offer.offer_name is null or offer.offer_name= 'NaN')
                 then "None"
@@ -12,7 +12,7 @@ with
                     (offer.offer_description is null or offer.offer_description = 'NaN')
                 then "None"
                 else safe_cast(offer.offer_description as string)
-            end as offer_description,
+            end AS offer_description,
             offer.offer_validation,
             offer.offer_subcategoryid as offer_subcategory_id,
             extract_offer.rayon,

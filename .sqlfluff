@@ -2,43 +2,15 @@
 # Global configuration
 dialect = bigquery
 templater = dbt
-max_line_length = 0
-indent_unit = space
+exclude_rules = layout.indent, layout.cte_bracket, layout.select_targets, layout.spacing
+max_line_length = 88
 
-[sqlfluff:indentation]
-tab_space_size = 4
-
-[sqlfluff:layout:type:comma]
-spacing_before = touch
-line_position = trailing
-
-[sqlfluff:rules:capitalisation.keywords]
+[sqlfluff:rules]
 capitalisation_policy = lower
-
-[sqlfluff:rules:aliasing.table]
-aliasing = explicit
-
-[sqlfluff:rules:aliasing.column]
-aliasing = explicit
-
-[sqlfluff:rules:aliasing.expression]
-allow_scalar = False
-
-[sqlfluff:rules:capitalisation.identifiers]
 extended_capitalisation_policy = lower
 
-[sqlfluff:rules:capitalisation.functions]
-capitalisation_policy = lower
-
-[sqlfluff:rules:capitalisation.literals]
-capitalisation_policy = lower
-
-[sqlfluff:rules:ambiguous.column_references]  # Number in group by
-group_by_and_order_by_style = implicit
-
-
-
-
+[sqlfluff:rules:convention.terminator]
+multiline_newline = True
 
 
 

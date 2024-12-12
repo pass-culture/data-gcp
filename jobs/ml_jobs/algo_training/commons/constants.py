@@ -30,3 +30,6 @@ MLFLOW_URI = (
     if ENV_SHORT_NAME == "prod"
     else "https://mlflow.staging.passculture.team/"
 )
+
+# Embeddings storage variables
+EMBEDDING_EXPIRATION_DELAY_MS = 1000 * 60 * 60 * 24 * 30 * 6  # 6 Months

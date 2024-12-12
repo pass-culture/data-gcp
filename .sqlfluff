@@ -29,8 +29,8 @@ load_macros_from_path = ./macros, ./target/dbt_packages/dbt_utils/macros, ./targ
 
 [sqlfluff:templater:dbt]
 apply_dbt_builtins = True
-project_dir = ./
-profiles_dir = ./
+project_dir = ./orchestration/dags/data_gcp_dbt
+profiles_dir = ./orchestration/dags/data_gcp_dbt
 profile = data_gcp_dbt
 target = stg
 

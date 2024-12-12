@@ -359,7 +359,7 @@ def package_api_model(
     training_run_id = client.get_latest_versions(f"{model_name}_{ENV_SHORT_NAME}")[
         0
     ].run_id
-    api_model_version = client.get_latest_versions(api_model_name)[0].version
+    api_model_version = client.get_latest_versions(api_model_name,stages=['production'])[0].version
     client.set_model_version_tag(
         name=api_model_name,
         version=api_model_version,

@@ -38,7 +38,7 @@ Tracking that are not related to specific concepts for now
 {% docs column__url_path_extract %}The extracted path from the URL where the event occurred.{% enddocs %}
 {% docs column__page_referrer %}The referrer page that led to the current page where the event occurred.{% enddocs %}
 {% docs column__page_number %}The number of the page in a sequence, if applicable.{% enddocs %}
-{% docs column__event_type %}The type of the interaction event.{% enddocs %}
+{% docs column__event_type %}The type of the interaction event (booking / click / favorite).{% enddocs %}
 {% docs column__event_hour %}The hour of the interaction event.{% enddocs %}
 {% docs column__event_day %}The day of the interaction event.{% enddocs %}
 {% docs column__event_month %}The month of the interaction event.{% enddocs %}

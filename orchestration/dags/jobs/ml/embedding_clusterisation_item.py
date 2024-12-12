@@ -5,9 +5,10 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
+    GCE_UV_INSTALLER,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -20,7 +21,7 @@ from airflow.operators.dummy_operator import DummyOperator
 
 DEFAULT_REGION = "europe-west1"
 
-BASE_DIR = "data-gcp/jobs/ml_jobs/clusterisation"
+BASE_PATH = "data-gcp/jobs/ml_jobs/clusterisation"
 DATE = "{{ yyyymmdd(ds) }}"
 
 default_args = {
@@ -68,39 +69,34 @@ with DAG(
         job_name = cluster_config["name"]
         cluster_config_file_name = cluster_config["cluster_config_file_name"]
         cluster_prefix = cluster_config["cluster_prefix"]
-        gce_instance = f"clusterisation-{job_name}-{ENV_SHORT_NAME}"
+        GCE_INSTANCE = f"clusterisation-{job_name}-{ENV_SHORT_NAME}"
 
         start = DummyOperator(task_id=f"start_{job_name}", dag=dag)
         end = DummyOperator(task_id=f"end_{job_name}", dag=dag)
 
         gce_instance_start = StartGCEOperator(
             task_id=f"gce_start_{job_name}_task",
-            instance_name=gce_instance,
+            instance_name=GCE_INSTANCE,
             preemptible=False,
             instance_type="{{ params.instance_type }}",
             retries=2,
             labels={"job_type": "long_ml"},
         )
 
-        fetch_code = CloneRepositoryGCEOperator(
-            task_id=f"fetch_{job_name}_code",
-            instance_name=gce_instance,
+        fetch_install_code = InstallDependenciesOperator(
+            task_id=f"fetch_install_code_{job_name}",
+            instance_name=GCE_INSTANCE,
+            branch="{{ params.branch }}",
             python_version="3.10",
-            command="{{ params.branch }}",
-            retries=2,
-        )
-
-        install_dependencies = SSHGCEOperator(
-            task_id=f"install_{job_name}_dependencies",
-            instance_name=gce_instance,
-            base_dir=BASE_DIR,
-            command="""pip install -r requirements.txt --user""",
+            base_dir=BASE_PATH,
+            installer=GCE_UV_INSTALLER,
         )
 
         preprocess_clustering = SSHGCEOperator(
             task_id=f"preprocess_{job_name}_clustering",
-            instance_name=gce_instance,
-            base_dir=BASE_DIR,
+            instance_name=GCE_INSTANCE,
+            base_dir=BASE_PATH,
+            installer=GCE_UV_INSTALLER,
             command="PYTHONPATH=. python cluster/preprocess.py "
             f"--input-dataset-name ml_input_{ENV_SHORT_NAME} "
             f"--input-table-name item_embedding_clusterisation "
@@ -111,8 +107,9 @@ with DAG(
 
         generate_clustering = SSHGCEOperator(
             task_id=f"generate_{job_name}_clustering",
-            instance_name=gce_instance,
-            base_dir=BASE_DIR,
+            instance_name=GCE_INSTANCE,
+            base_dir=BASE_PATH,
+            installer=GCE_UV_INSTALLER,
             command="PYTHONPATH=. python cluster/generate.py "
             f"--input-dataset-name tmp_{ENV_SHORT_NAME} "
             f"--input-table-name {DATE}_{cluster_prefix}_import_item_clusters_preprocess "
@@ -122,14 +119,13 @@ with DAG(
         )
 
         gce_instance_stop = StopGCEOperator(
-            task_id=f"gce_{job_name}_stop_task", instance_name=gce_instance
+            task_id=f"gce_{job_name}_stop_task", instance_name=GCE_INSTANCE
         )
 
         (
             start
             >> gce_instance_start
-            >> fetch_code
-            >> install_dependencies
+            >> fetch_install_code
             >> preprocess_clustering
             >> generate_clustering
             >> gce_instance_stop

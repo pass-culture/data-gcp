@@ -3,22 +3,72 @@
 dialect = bigquery
 templater = dbt
 max_line_length = 0
-rules = JJ01
-processes = 1
-large_file_skip_byte_limit = 25000
-ignore_templated_areas = False
+indent_unit = space
 
 [sqlfluff:indentation]
-# While implicit indents are not enabled by default. Many of the
-# SQLFluff maintainers do use them in their projects.
-allow_implicit_indents = True
-indent_unit = space
-indented_ctes = False
-indented_joins = True
-indented_using_on = True
-indented_on_contents = True
 tab_space_size = 4
-template_blocks_indent = True
+
+[sqlfluff:layout:type:comma]
+spacing_before = touch
+line_position = trailing
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = lower
+
+[sqlfluff:rules:aliasing.table]
+aliasing = explicit
+
+[sqlfluff:rules:aliasing.column]
+aliasing = explicit
+
+[sqlfluff:rules:aliasing.expression]
+allow_scalar = False
+
+[sqlfluff:rules:capitalisation.identifiers]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = lower
+
+[sqlfluff:rules:ambiguous.column_references]  # Number in group by
+group_by_and_order_by_style = implicit
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+; rules = JJ01
+; processes = 1
+; large_file_skip_byte_limit = 25000
+; ignore_templated_areas = False
+
+; [sqlfluff:indentation]
+; # While implicit indents are not enabled by default. Many of the
+; # SQLFluff maintainers do use them in their projects.
+; allow_implicit_indents = True
+; indent_unit = space
+; indented_ctes = False
+; indented_joins = True
+; indented_using_on = True
+; indented_on_contents = True
+; tab_space_size = 4
+; template_blocks_indent = True
 
 [sqlfluff:templater:jinja]
 # Templater configuration
@@ -41,41 +91,41 @@ ENV_SHORT_NAME = "stg"
 unwrap_wrapped_queries = True
 apply_dbt_builtins = True
 
-[sqlfluff:layout:type:comma]
-# Layout configuration
-spacing_before = touch
-line_position = trailing
+; [sqlfluff:layout:type:comma]
+; # Layout configuration
+; spacing_before = touch
+; line_position = trailing
 
-[sqlfluff:layout:type:end_of_file]
-spacing_before = touch
+; [sqlfluff:layout:type:end_of_file]
+; spacing_before = touch
 
-[sqlfluff:layout:type:comment]
-spacing_before = any
-spacing_after = any
+; [sqlfluff:layout:type:comment]
+; spacing_before = any
+; spacing_after = any
 
-[sqlfluff:layout:type:template_loop]
-spacing_before = any
-spacing_after = any
+; [sqlfluff:layout:type:template_loop]
+; spacing_before = any
+; spacing_after = any
 
-[sqlfluff:rules:capitalisation.keywords]
-# Rules configuration
-capitalisation_policy = lower
+; [sqlfluff:rules:capitalisation.keywords]
+; # Rules configuration
+; capitalisation_policy = lower
 
-[sqlfluff:rules:capitalisation.functions]
-capitalisation_policy = lower
+; [sqlfluff:rules:capitalisation.functions]
+; capitalisation_policy = lower
 
-[sqlfluff:rules:capitalisation.identifiers]
-capitalisation_policy = lower
+; [sqlfluff:rules:capitalisation.identifiers]
+; capitalisation_policy = lower
 
-[sqlfluff:rules:structure.join_condition_order]
-preferred_first_table_in_join_clause = earlier
+; [sqlfluff:rules:structure.join_condition_order]
+; preferred_first_table_in_join_clause = earlier
 
-[sqlfluff:rules:aliasing.table]
-aliasing = explicit
+; [sqlfluff:rules:aliasing.table]
+; aliasing = explicit
 
-[sqlfluff:rules.aliasing]
-unused = true
+; [sqlfluff:rules.aliasing]
+; unused = true
 
-[sqlfluff:rules:ambiguous.column_references]
-# Number in group by and order by
-group_by_and_order_by_style = implicit
+; [sqlfluff:rules:ambiguous.column_references]
+; # Number in group by and order by
+; group_by_and_order_by_style = implicit

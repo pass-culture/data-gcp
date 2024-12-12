@@ -3,7 +3,7 @@ with
         select
             offer.offer_id,
             case
-                when (offer.offer_name is null or offer.offer_name = 'NaN')
+                when (offer.offer_name is null or offer.offer_name= 'NaN')
                 then "None"
                 else safe_cast(offer.offer_name as string)
             end as offer_name,

@@ -88,15 +88,12 @@ with
 
     offer_tags as (
         select
-            offerid as offer_id,
+            offer_id,
             string_agg(
-                name, " ; " order by cast(criterion.id as int) desc
+                tag_name, " ; " order by cast(oc.criterion_id as int) desc
             ) as playlist_tags
-        from {{ ref("offer_criterion") }} offer_criterion
-        join
-            {{ ref("criterion") }} criterion
-            on criterion.id = offer_criterion.criterionid
-        group by offerid
+        from {{ ref("mrt_global__offer_criterion") }} oc
+        group by offer_id
     ),
 
     offer_status as (

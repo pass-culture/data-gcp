@@ -202,9 +202,9 @@ select distinct
     region_dept.region_name,
     venue.venue_department_code,
     venue.venue_postal_code,
-    venue.venue_type_code as venue_type_label,
+    venue.venue_type_label,
     if(
-        venue_label.venue_label in (
+        venue.venue_label in (
             "SMAC - Scène de musiques actuelles",
             "Théâtre lyrique conventionné d'intérêt national",
             "CNCM - Centre national de création musicale",
@@ -224,7 +224,7 @@ select distinct
         true,
         false
     ) as is_dgca,
-    venue_label.venue_label as venue_label,
+    venue.venue_label,
     venue_humanized_id.venue_humanized_id,
     venue.venue_booking_email,
     venue_contact.venue_contact_phone_number,
@@ -266,14 +266,11 @@ select distinct
     offerer_tags.structure_tags
 
 from {{ ref("int_applicative__offer") }} offer
-left join {{ ref("venue") }} venue on venue.venue_id = offer.venue_id
+left join {{ ref("int_global__venue") }} venue on venue.venue_id = offer.venue_id
 left join venue_humanized_id on venue_humanized_id.venue_id = venue.venue_id
 left join
     {{ source("seed", "region_department") }} region_dept
     on region_dept.num_dep = venue.venue_department_code
-left join
-    {{ source("raw", "applicative_database_venue_label") }} venue_label
-    on venue_label.venue_label_id = venue.venue_label_id
 left join
     {{ ref("int_raw__offerer") }} offerer
     on offerer.offerer_id = venue.venue_managing_offerer_id

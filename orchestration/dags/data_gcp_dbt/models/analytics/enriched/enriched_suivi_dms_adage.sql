@@ -63,7 +63,7 @@ left join
     on dms_pro.demandeur_entreprise_siren = offerer.offerer_siren
     and offerer.offerer_siren <> "nan"
 left join
-    {{ ref("venue") }} as venue
+    {{ ref("int_global__venue") }} as venue
     on venue.venue_managing_offerer_id = offerer.offerer_id
     and venue_name <> 'Offre numérique'
 left join

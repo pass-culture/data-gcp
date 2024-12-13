@@ -19,7 +19,9 @@ join
     {{ source("raw", "applicative_database_educational_institution") }} as institution
     on collective_booking.educational_institution_id
     = institution.educational_institution_id
-join {{ ref("venue") }} as venue on collective_booking.venue_id = venue.venue_id
+join
+    {{ source("raw", "applicative_database_venue") }} as venue
+    on collective_booking.venue_id = venue.venue_id
 join
     {{ source("raw", "applicative_database_pricing") }} pricing
     on collective_booking.collective_booking_id = pricing.collective_booking_id

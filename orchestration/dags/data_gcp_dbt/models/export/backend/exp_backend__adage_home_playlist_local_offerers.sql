@@ -9,7 +9,7 @@ with
             o.collective_offer_id
         from {{ ref("mrt_global__collective_offer") }} o
         join
-            {{ ref("venue") }}
+            {{ ref("int_global__venue") }}
             v on v.venue_id = o.venue_id and venue_is_permanent is true
         join
             {{ source("raw", "applicative_database_collective_offer_template") }} t

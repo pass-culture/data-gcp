@@ -17,7 +17,9 @@ with
             count(distinct offer_id) as nb_bookable_offers
         from {{ ref("bookable_offer_history") }}
         inner join {{ ref("int_applicative__offer") }} as o using (offer_id)
-        left join {{ ref("venue") }} as v on o.venue_id = v.venue_id
+        left join
+            {{ source("raw", "applicative_database_venue") }} as v
+            on o.venue_id = v.venue_id
         {% if is_incremental() %}
             where partition_date = date_sub('{{ ds() }}', interval 1 day)
         {% endif %}

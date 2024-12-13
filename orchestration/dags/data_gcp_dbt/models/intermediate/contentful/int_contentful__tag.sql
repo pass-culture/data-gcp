@@ -1,6 +1,6 @@
 select
     tag_id,
-    tag_name,
+    {{ clean_str(tag_name) }} as tag_name,
     entry_id,
     tag_key,
     tag_value,

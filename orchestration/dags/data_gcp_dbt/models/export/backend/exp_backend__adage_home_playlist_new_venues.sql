@@ -9,7 +9,7 @@ with
             o.collective_offer_id,
             o.collective_offer_creation_date
         from {{ ref("mrt_global__collective_offer") }} o
-        left join {{ ref("venue") }} v on v.venue_id = o.venue_id
+        left join {{ ref("int_global__venue") }} v on v.venue_id = o.venue_id
         where
             collective_offer_is_template is true
             and v.venue_is_permanent
@@ -36,7 +36,8 @@ with
             and collective_offer_venue_humanized_id is not null
             and collective_offer_venue_humanized_id != a.venue_id
         left join
-            {{ ref("venue") }} v on v.venue_id = a.collective_offer_venue_humanized_id
+            {{ ref("int_global__venue") }} v
+            on v.venue_id = a.collective_offer_venue_humanized_id
     ),
 
     -- Get institutions

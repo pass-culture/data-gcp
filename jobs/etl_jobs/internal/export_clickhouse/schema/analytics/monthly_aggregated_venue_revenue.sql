@@ -5,28 +5,46 @@ ORDER BY (venue_id)
 SETTINGS storage_policy = 'gcs_main'
 AS
 WITH
-    -- Generate a sequence of months from January 2020 to the current month
+    -- Generate a sequence of months from January 2018 to the current month
     month_spans AS (
         SELECT
-            toStartOfMonth(toDate(CONCAT(toString(2020), '-01-01')) + INTERVAL number MONTH) AS month
-        FROM numbers(DATEDIFF(month, toDate('2020-01-01'), toStartOfMonth(today())) + 1)
-    )
+            toStartOfMonth(toDate(CONCAT('2018-01-01')) + INTERVAL number MONTH) AS month
+        FROM numbers(0,DATEDIFF(month, toDate('2018-01-01'), toStartOfMonth(today())) + 1)
+    ),
+revenue_union as (
+    SELECT
+        venue_id,
+        toStartOfMonth(month) AS month,
+        revenue AS collective_revenue,
+        0 AS individual_revenue,
+        expected_revenue AS collective_expected_revenue,
+        0 AS individual_expected_revenue
+    FROM
+        analytics.monthly_aggregated_venue_collective_revenue
+    UNION ALL
+    SELECT
+        venue_id,
+        toStartOfMonth(month) AS month,
+        0 AS collective_revenue,
+        revenue AS individual_revenue,
+        0 AS collective_expected_revenue,
+        expected_revenue AS individual_expected_revenue
+    FROM
+        analytics.monthly_aggregated_venue_individual_revenue
+)
 SELECT
     s.month AS month,
-    COALESCE(c.venue_id, i.venue_id) AS venue_id,
-    SUM(COALESCE(c.revenue, 0)) AS collective_revenue,
-    SUM(COALESCE(i.revenue, 0)) AS individual_revenue,
-    SUM(COALESCE(c.expected_revenue, 0)) AS collective_expected_revenue,
-    SUM(COALESCE(i.expected_revenue, 0)) AS individual_expected_revenue,
-    SUM(COALESCE(c.revenue, 0) + COALESCE(i.revenue, 0)) AS total_revenue,
-    SUM(COALESCE(c.expected_revenue, 0) + COALESCE(i.expected_revenue, 0)) AS total_expected_revenue
+    ru.venue_id AS venue_id,
+    SUM(ru.collective_revenue) AS collective_revenue,
+    SUM(ru.individual_revenue) AS individual_revenue,
+    SUM(ru.collective_expected_revenue) AS collective_expected_revenue,
+    SUM(ru.individual_expected_revenue) AS individual_expected_revenue,
+    SUM(ru.collective_revenue + ru.individual_revenue) AS total_revenue,
+    SUM(ru.collective_expected_revenue + ru.individual_expected_revenue) AS total_expected_revenue
 FROM
     month_spans s
-LEFT JOIN analytics.monthly_aggregated_venue_collective_revenue c
-    ON s.month = toStartOfMonth(c.month)
-LEFT JOIN analytics.monthly_aggregated_venue_individual_revenue i
-    ON s.month = toStartOfMonth(i.month)
-WHERE venue_id is not null
+LEFT JOIN revenue_union ru
+    ON s.month = ru.month
 GROUP BY
     1,2
 ORDER BY

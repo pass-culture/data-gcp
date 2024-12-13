@@ -5,9 +5,10 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
+    GCE_UV_INSTALLER,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -20,7 +21,7 @@ from airflow.operators.dummy_operator import DummyOperator
 
 DEFAULT_REGION = "europe-west1"
 
-BASE_DIR = "data-gcp/jobs/ml_jobs/clusterisation"
+BASE_PATH = "data-gcp/jobs/ml_jobs/clusterisation"
 DATE = "{{ yyyymmdd(ds) }}"
 
 default_args = {
@@ -82,25 +83,20 @@ with DAG(
             labels={"job_type": "long_ml"},
         )
 
-        fetch_code = CloneRepositoryGCEOperator(
-            task_id=f"fetch_{job_name}_code",
+        fetch_install_code = InstallDependenciesOperator(
+            task_id=f"fetch_install_code_{job_name}",
             instance_name=gce_instance,
+            branch="{{ params.branch }}",
             python_version="3.10",
-            command="{{ params.branch }}",
-            retries=2,
-        )
-
-        install_dependencies = SSHGCEOperator(
-            task_id=f"install_{job_name}_dependencies",
-            instance_name=gce_instance,
-            base_dir=BASE_DIR,
-            command="""pip install -r requirements.txt --user""",
+            base_dir=BASE_PATH,
+            installer=GCE_UV_INSTALLER,
         )
 
         preprocess_clustering = SSHGCEOperator(
             task_id=f"preprocess_{job_name}_clustering",
             instance_name=gce_instance,
-            base_dir=BASE_DIR,
+            base_dir=BASE_PATH,
+            installer=GCE_UV_INSTALLER,
             command="PYTHONPATH=. python cluster/preprocess.py "
             f"--input-dataset-name ml_input_{ENV_SHORT_NAME} "
             f"--input-table-name item_embedding_clusterisation "
@@ -112,7 +108,8 @@ with DAG(
         generate_clustering = SSHGCEOperator(
             task_id=f"generate_{job_name}_clustering",
             instance_name=gce_instance,
-            base_dir=BASE_DIR,
+            base_dir=BASE_PATH,
+            installer=GCE_UV_INSTALLER,
             command="PYTHONPATH=. python cluster/generate.py "
             f"--input-dataset-name tmp_{ENV_SHORT_NAME} "
             f"--input-table-name {DATE}_{cluster_prefix}_import_item_clusters_preprocess "
@@ -128,8 +125,7 @@ with DAG(
         (
             start
             >> gce_instance_start
-            >> fetch_code
-            >> install_dependencies
+            >> fetch_install_code
             >> preprocess_clustering
             >> generate_clustering
             >> gce_instance_stop

@@ -53,6 +53,8 @@ select
     legal_unit_legal_category_code,
     legal_unit_legal_category_label,
     is_local_authority,
+    local_authority_type,
+    local_authority_is_priority,
     total_managed_venues,
     total_physical_managed_venues,
     total_permanent_managed_venues,

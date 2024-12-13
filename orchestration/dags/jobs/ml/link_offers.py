@@ -2,10 +2,10 @@ from datetime import datetime, timedelta
 
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import DAG_FOLDER, ENV_SHORT_NAME
+from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCE_UV_INSTALLER
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -26,7 +26,7 @@ from airflow.models import Param
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-offers-{ENV_SHORT_NAME}"
-BASE_DIR = "data-gcp/jobs/ml_jobs/record_linkage"
+BASE_PATH = "data-gcp/jobs/ml_jobs/record_linkage"
 
 
 default_args = {
@@ -72,24 +72,20 @@ with DAG(
         preemptible=False,
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
+        branch="{{ params.branch }}",
         python_version="3.10",
-        command="{{ params.branch }}",
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command="""pip install -r requirements.txt --user""",
+        base_dir=BASE_PATH,
+        installer=GCE_UV_INSTALLER,
     )
 
     preprocess = SSHGCEOperator(
         task_id="preprocess",
         instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
+        base_dir=BASE_PATH,
+        installer=GCE_UV_INSTALLER,
         command=f"""
          python preprocess.py \
         --input-dataset-name {TMP_DATASET} \
@@ -102,7 +98,8 @@ with DAG(
     record_linkage = SSHGCEOperator(
         task_id="record_linkage",
         instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
+        base_dir=BASE_PATH,
+        installer=GCE_UV_INSTALLER,
         command=f"""
          python main.py \
         --input-dataset-name {TMP_DATASET} \
@@ -115,7 +112,8 @@ with DAG(
     postprocess = SSHGCEOperator(
         task_id="postprocess",
         instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
+        base_dir=BASE_PATH,
+        installer=GCE_UV_INSTALLER,
         command=f"""
          python postprocess.py \
         --input-dataset-name {TMP_DATASET} \
@@ -132,8 +130,7 @@ with DAG(
     (
         data_collect
         >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
+        >> fetch_install_code
         >> preprocess
         >> record_linkage
         >> postprocess

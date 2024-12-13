@@ -5,6 +5,7 @@ from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
     BIGQUERY_ML_RECOMMENDATION_DATASET,
+    BIGQUERY_RAW_DATASET,
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
@@ -267,6 +268,19 @@ with DAG(
         dag=dag,
     )
 
+    upload_embeddings = SSHGCEOperator(
+        task_id="upload_embeddings",
+        instance_name="{{ params.instance_name }}",
+        base_dir=dag_config["BASE_DIR"],
+        environment=dag_config,
+        installer=GCE_UV_INSTALLER,
+        command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/upload_embeddings_to_bq.py "
+        "--experiment-name {{ params.experiment_name }} "
+        "--run-name {{ params.run_name }} "
+        f"--dataset-id { BIGQUERY_RAW_DATASET }",
+        dag=dag,
+    )
+
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
@@ -293,6 +307,7 @@ with DAG(
         >> preprocess_data
         >> train
         >> evaluate
+        >> upload_embeddings
         >> gce_instance_stop
         >> send_slack_notif_success
     )

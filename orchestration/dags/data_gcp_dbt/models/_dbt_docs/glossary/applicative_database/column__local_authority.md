@@ -1,7 +1,5 @@
 {% docs column__local_authority_id %}The unique identifier for the local authority.{% enddocs %}
 {% docs column__local_authority_name %}The name of the local authority (offerer name).{% enddocs %}
-{% docs column__local_authority_type %}The type of the local authority, such as Commune, Département, or Région.{% enddocs %}
-{% docs column__local_authority_is_priority %}Indicates whether the local authority is internally seen as a priority partner.{% enddocs %}
 {% docs column__local_authority_creation_date %}The date when the local authority (the offerer) was created.{% enddocs %}
 {% docs column__local_authority_was_registered_last_year %}Indicates whether the local authority was registered last year.{% enddocs %}
 {% docs column__local_authority_academy_name %}Academy name associated with the local authority's registered address.{% enddocs %}

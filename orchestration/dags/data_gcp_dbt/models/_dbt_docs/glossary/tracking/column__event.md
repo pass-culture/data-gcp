@@ -1,9 +1,9 @@
 !!! note
-    This file is auto-generated
+This file is auto-generated
 
-    Tracking that are not related to specific concepts for now
+Tracking that are not related to specific concepts for now
 
-    :construction_worker_tone1: Work in progress :construction_worker_tone1:
+:construction_worker_tone1: Work in progress :construction_worker_tone1:
 
 
 {% docs column__event_date %}The date when the event occurred, used for partitioning the data.{% enddocs %}
@@ -19,6 +19,7 @@
 {% docs column__traffic_medium %}The medium of the marketing campaign (email, push notification ...)that generated the session.{% enddocs %}
 {% docs column__session_id %}Deprecated: use unique_session_id. The session identifier during which the event was recorded.{% enddocs %}
 {% docs column__unique_session_id %}A unique identifier for the session, ensuring no duplicates.{% enddocs %}
+
 
 {% hide columns %}
 
@@ -37,6 +38,10 @@
 {% docs column__url_path_extract %}The extracted path from the URL where the event occurred.{% enddocs %}
 {% docs column__page_referrer %}The referrer page that led to the current page where the event occurred.{% enddocs %}
 {% docs column__page_number %}The number of the page in a sequence, if applicable.{% enddocs %}
+{% docs column__event_type %}The type of the interaction event (booking / click / favorite).{% enddocs %}
+{% docs column__event_hour %}The hour of the interaction event.{% enddocs %}
+{% docs column__event_day %}The day of the interaction event.{% enddocs %}
+{% docs column__event_month %}The month of the interaction event.{% enddocs %}
 
 
 {% endhide %}

@@ -2,9 +2,9 @@ from datetime import datetime, timedelta
 
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
+from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCE_UV_INSTALLER, GCP_PROJECT_ID
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -16,7 +16,7 @@ from airflow.models import Param
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"extract-items-embeddings-{ENV_SHORT_NAME}"
-BASE_DIR = "data-gcp/jobs/ml_jobs/embeddings"
+BASE_PATH = "data-gcp/jobs/ml_jobs/embeddings"
 DATE = "{{ yyyymmdd(ds) }}"
 default_args = {
     "start_date": datetime(2023, 9, 6),
@@ -76,26 +76,21 @@ with DAG(
         labels={"job_type": "ml"},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
+        branch="{{ params.branch }}",
         python_version="3.10",
-        command="{{ params.branch }}",
-        retries=2,
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command="""pip install -r requirements.txt --user""",
+        base_dir=BASE_PATH,
+        installer=GCE_UV_INSTALLER,
     )
 
     extract_embedding = SSHGCEOperator(
         task_id="extract_embedding",
         instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
+        base_dir=BASE_PATH,
         environment=DAG_CONFIG,
+        installer=GCE_UV_INSTALLER,
         command="mkdir -p img && PYTHONPATH=. python main.py "
         f"--gcp-project {GCP_PROJECT_ID} "
         "--config-file-name {{ params.config_file_name }} "
@@ -111,10 +106,4 @@ with DAG(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
-    (
-        gce_instance_start
-        >> fetch_code
-        >> install_dependencies
-        >> extract_embedding
-        >> gce_instance_stop
-    )
+    (gce_instance_start >> fetch_install_code >> extract_embedding >> gce_instance_stop)

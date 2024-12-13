@@ -123,6 +123,8 @@ models:
         description: '{{ doc("column__offerer_humanized_id") }}'
       - name: first_dms_adage_status
         description: '{{ doc("column__offerer_first_dms_adage_status") }}'
+      - name: dms_submitted_at
+        description: '{{ doc("column__offerer_dms_submitted_at") }}'
       - name: dms_accepted_at
         description: '{{ doc("column__offerer_dms_accepted_at") }}'
       - name: is_reference_adage

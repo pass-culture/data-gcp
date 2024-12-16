@@ -10,6 +10,7 @@ with
             demandeur_entreprise_siren,
             application_status,
             processed_at,
+            application_submitted_at,
             row_number() over (
                 partition by demandeur_entreprise_siren
                 order by application_submitted_at asc
@@ -177,6 +178,7 @@ select
     coalesce(
         first_dms_adage.application_status, 'dms_adage_non_depose'
     ) as first_dms_adage_status,
+    first_dms_adage.application_submitted_at as dms_submitted_at,
     first_dms_adage_accepted.processed_at as dms_accepted_at,
     siren_reference_adage.siren is not null as is_reference_adage,
     case

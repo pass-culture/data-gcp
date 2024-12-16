@@ -20,6 +20,7 @@
 {% docs column__offerer_total_venues %} Total number of venues associated with the offerer. {% enddocs %}
 {% docs column__offerer_first_dms_adage_status %} First DMS adage status of the offerer. {% enddocs %}
 {% docs column__offerer_dms_accepted_at %} Date when the offerer was accepted in DMS. {% enddocs %}
+{% docs column__offerer_dms_submitted_at %} Date when the offerer sumitted his first DMS record. {% enddocs %}
 {% docs column__offerer_is_reference_adage %} Indicates if the offerer is a reference in adage. {% enddocs %}
 {% docs column__offerer_is_synchro_adage %} Indicates if the offerer is synchronized with adage. {% enddocs %}
 {% docs column__offerer_validation_status %} Validation status of the offerer. {% enddocs %}

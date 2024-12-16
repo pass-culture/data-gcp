@@ -8,6 +8,7 @@ select
     safe_cast(price_max as float64) as price_max,
     safe_cast(min_offers as int64) as min_offers,
     {{ clean_str("title") }} as title,
+    {{ clean_str("offer_title") }} as offer_title,
     * except (
         ending_datetime,
         beginning_datetime,
@@ -17,7 +18,8 @@ select
         is_thing,
         price_max,
         min_offers,
-        title
+        title,
+        offer_title
     )
 from {{ source("raw", "contentful_entry") }}
 qualify row_number() over (partition by id order by execution_date desc) = 1

@@ -8,7 +8,10 @@ with
             )
     ),
     venue_emails as (
-        select venue_managing_offerer_id as offerer_id, venue_id, venue_booking_email
+        select
+            venue_managing_offerer_id as offerer_id,
+            venue_id,
+            venue_booking_email as venue_email
         from `{{ bigquery_raw_dataset }}.applicative_database_venue`
     ),
     collective_offer_emails as (

@@ -61,6 +61,7 @@ select
     total_venues,
     offerer_humanized_id,
     first_dms_adage_status,
+    dms_submitted_at,
     dms_accepted_at,
     is_reference_adage,
     is_synchro_adage,

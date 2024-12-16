@@ -3,6 +3,14 @@ version: 2
 models:
   - name: ml_reco__training_data_click
     description: "{{ doc('description__ml_reco__training_data_click') }}"
+    data_tests:
+      - elementary.volume_anomalies:
+          training_period:
+            period: day
+            count: 7
+          detection_period:
+            period: day
+            count: 1
     columns:
       - name: event_date
         description: "{{ doc('column__event_date') }}"

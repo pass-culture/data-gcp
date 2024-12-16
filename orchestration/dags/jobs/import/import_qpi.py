@@ -56,9 +56,9 @@ def verify_folder():
     for s in stats:
         blob_list.append(s)
     if len(blob_list) > 0:
-        return "Files"
+        return "import_historical_answers_to_bigquery"
     else:
-        return "Empty"
+        return "end"
 
 
 with DAG(
@@ -76,8 +76,6 @@ with DAG(
     checking_folder_QPI = BranchPythonOperator(
         task_id="checking_folder_QPI", python_callable=verify_folder
     )
-    file = DummyOperator(task_id="Files")
-    empty = DummyOperator(task_id="Empty")
 
     import_historical_answers_to_bigquery = GCSToBigQueryOperator(
         task_id="import_historical_answers_to_bigquery",
@@ -119,17 +117,14 @@ with DAG(
         dag=dag,
     )
 
-    end_raw = DummyOperator(task_id="end_raw")
-
-    end = DummyOperator(task_id="end")
+    end = DummyOperator(task_id="end", trigger_rule="none_failed")
 
     (
         start
         >> checking_folder_QPI
-        >> file
         >> import_historical_answers_to_bigquery
         >> import_answers_to_bigquery
         >> append_to_raw
-        >> end_raw
+        >> end
     )
-    (checking_folder_QPI >> empty >> end)
+    (checking_folder_QPI >> end)

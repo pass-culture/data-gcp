@@ -5,6 +5,7 @@ models:
     description: "{{ doc('description__ml_linkage__artist') }}"
     data_tests:
       - elementary.volume_anomalies:
+          tags: [elementary]
           training_period:
             period: day
             count: 7

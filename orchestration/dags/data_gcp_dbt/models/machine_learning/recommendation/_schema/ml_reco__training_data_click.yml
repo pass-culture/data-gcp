@@ -5,6 +5,7 @@ models:
     description: "{{ doc('description__ml_reco__training_data_click') }}"
     data_tests:
       - elementary.volume_anomalies:
+          tags: [elementary]
           training_period:
             period: day
             count: 7

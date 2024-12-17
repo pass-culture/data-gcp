@@ -5,211 +5,153 @@ import gcsfs
 import pandas as pd
 import typer
 
-from utils import (
-    destination_table_schema_jeunes,
-    destination_table_schema_pro,
-)
+from utils import destination_table_schema_jeunes, destination_table_schema_pro
 
-# attention si modif destination_table_schema_jeunes, destination_table_schema_pro dans utils servent a la logique du code
-# dans orchestration/dags/jobs/import/import_dms_subscriptions.py ce sont les "vrais schemas" : INT64 au lieu de TIMESTAMP
-
-
-def parse_api_result(updated_since, dms_target, GCP_PROJECT_ID, data_gcs_bucket_name):
-    logging.info("Start parsing api result")
-    logging.info(f"updated_since: {updated_since}")
-    logging.info(f"dms_target: {dms_target}")
-    if dms_target == "jeunes":
-        df_applications = pd.DataFrame(
-            columns=[col["name"] for col in destination_table_schema_jeunes]
-        )
-        fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
-        with fs.open(
-            f"gs://{data_gcs_bucket_name}/dms_export/unsorted_dms_{dms_target}_{updated_since}.json"
-        ) as json_file:
-            result = json.load(json_file)
-        parse_result_jeunes(result, df_applications)
-        save_results(
-            df_applications,
-            dms_target="jeunes",
-            updated_since=updated_since,
-            data_gcs_bucket_name=data_gcs_bucket_name,
-        )
-    if dms_target == "pro":
-        df_applications = pd.DataFrame(
-            columns=[col["name"] for col in destination_table_schema_pro]
-        )
-        fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
-        with fs.open(
-            f"gs://{data_gcs_bucket_name}/dms_export/unsorted_dms_{dms_target}_{updated_since}.json"
-        ) as json_file:
-            result = json.load(json_file)
-        parse_result_pro(result, df_applications)
-        save_results(
-            df_applications,
-            dms_target="pro",
-            updated_since=updated_since,
-            data_gcs_bucket_name=data_gcs_bucket_name,
-        )
-    return
+# Constants for targets
+SCHEMAS = {
+    "jeunes": destination_table_schema_jeunes,
+    "pro": destination_table_schema_pro,
+}
 
 
-def save_results(df_applications, dms_target, updated_since, data_gcs_bucket_name):
-    destination_table_schema = (
-        destination_table_schema_jeunes
-        if dms_target == "jeunes"
-        else destination_table_schema_pro
-    )
-    for column in destination_table_schema:
-        name = column["name"]
-        type = column["type"]
-        if type == "TIMESTAMP":
-            df_applications[f"{name}"] = pd.to_datetime(
-                df_applications[f"{name}"], utc=True, origin="unix", errors="coerce"
-            )
-
-        elif type == "STRING":
-            df_applications[f"{name}"] = df_applications[f"{name}"].astype(str)
-
-    df_applications["update_date"] = pd.to_datetime(
-        pd.Timestamp.today(), utc=True, origin="unix"
-    )
-
-    df_applications.to_parquet(
-        f"gs://{data_gcs_bucket_name}/dms_export/dms_{dms_target}_{updated_since}.parquet",
-        engine="pyarrow",
-        index=False,
-    )
-    return
+def load_json_from_gcs(bucket_name, file_path, project_id):
+    """Load JSON file from Google Cloud Storage."""
+    fs = gcsfs.GCSFileSystem(project=project_id)
+    with fs.open(f"gs://{bucket_name}/{file_path}") as json_file:
+        return json.load(json_file)
 
 
-def parse_result_jeunes(result, df_applications):
-    for data in result["data"]:
-        if data["demarche"]["dossiers"]["edges"] is not None:
-            for node in data["demarche"]["dossiers"]["edges"]:
-                dossier = node["node"]
-                if dossier is not None:
-                    dossier_line = {
-                        "procedure_id": dossier["demarche_id"],
-                        "application_id": dossier["id"],
-                        "application_number": dossier["number"],
-                        "application_archived": dossier["archived"],
-                        "application_status": dossier["state"],
-                        "last_update_at": dossier["dateDerniereModification"],
-                        "application_submitted_at": dossier[
-                            "datePassageEnConstruction"
-                        ],
-                        "passed_in_instruction_at": dossier["datePassageEnInstruction"],
-                        "processed_at": dossier["dateTraitement"],
-                        "instructors": "",
-                    }
-                    for champ in dossier["champs"]:
-                        if not champ or "id" not in champ:
-                            continue
-                        if champ["id"] == "Q2hhbXAtNTk2NDUz":
-                            dossier_line["applicant_department"] = champ["stringValue"]
-                        elif champ["id"] == "Q2hhbXAtNTgyMjIx":
-                            dossier_line["applicant_postal_code"] = champ["stringValue"]
+def parse_api_result(updated_since, dms_target, project_id, bucket_name):
+    """Parse API result based on target type."""
+    logging.info(f"Start parsing API result for {dms_target} since {updated_since}")
 
-                    instructeurs = []
-                    for instructeur in dossier["instructeurs"]:
-                        instructeurs.append(instructeur["email"])
-                    if instructeurs != []:
-                        dossier_line["instructors"] = "; ".join(instructeurs)
+    # Load appropriate schema
+    schema = SCHEMAS.get(dms_target)
+    if not schema:
+        raise ValueError(f"Unsupported target: {dms_target}")
 
-                    df_applications.loc[len(df_applications)] = dossier_line
-    return
+    # Initialize DataFrame
+    df_applications = pd.DataFrame(columns=[col["name"] for col in schema])
+
+    # Load JSON data
+    file_path = f"dms_export/unsorted_dms_{dms_target}_{updated_since}.json"
+    result = load_json_from_gcs(bucket_name, file_path, project_id)
+
+    # Parse data
+    parse_result(result, df_applications, dms_target)
+
+    # Save results
+    save_results(df_applications, dms_target, updated_since, bucket_name)
 
 
-def parse_result_pro(result, df_applications):
-    logging.info(f"Size of json to parse: {len(result['data'])}")
+def parse_result(result, df_applications, dms_target):
+    """General parser that delegates to target-specific logic."""
+    logging.info(f"Parsing data for target: {dms_target}")
     for data in result["data"]:
         for node in data["demarche"]["dossiers"]["edges"]:
-            dossier = node["node"]
-            if dossier is not None:
-                dossier_line = {
-                    "procedure_id": dossier["demarche_id"],
-                    "application_id": dossier["id"],
-                    "application_number": dossier["number"],
-                    "application_archived": dossier["archived"],
-                    "application_status": dossier["state"],
-                    "last_update_at": dossier["dateDerniereModification"],
-                    "application_submitted_at": dossier["datePassageEnConstruction"],
-                    "passed_in_instruction_at": dossier["datePassageEnInstruction"],
-                    "processed_at": dossier["dateTraitement"],
-                    "instructors": "",
-                }
-                if "siret" in dossier["demandeur"] and dossier["demandeur"]["siret"]:
-                    dossier_line["demandeur_siret"] = dossier["demandeur"]["siret"]
-                    dossier_line["demandeur_naf"] = dossier["demandeur"]["naf"]
-                    dossier_line["demandeur_libelleNaf"] = dossier["demandeur"][
-                        "libelleNaf"
-                    ].replace("\n", " ")
-                    if dossier["demandeur"]["entreprise"]:
-                        dossier_line["demandeur_entreprise_siren"] = dossier[
-                            "demandeur"
-                        ]["entreprise"]["siren"]
-                        dossier_line["demandeur_entreprise_formeJuridique"] = dossier[
-                            "demandeur"
-                        ]["entreprise"]["formeJuridique"]
-                        dossier_line["demandeur_entreprise_formeJuridiqueCode"] = (
-                            dossier["demandeur"]["entreprise"]["formeJuridiqueCode"]
-                        )
-                        dossier_line["demandeur_entreprise_codeEffectifEntreprise"] = (
-                            dossier["demandeur"]["entreprise"]["codeEffectifEntreprise"]
-                        )
-                        dossier_line["demandeur_entreprise_raisonSociale"] = dossier[
-                            "demandeur"
-                        ]["entreprise"]["raisonSociale"]
-                        dossier_line["demandeur_entreprise_siretSiegeSocial"] = dossier[
-                            "demandeur"
-                        ]["entreprise"]["siretSiegeSocial"]
-                if "champs" in dossier.keys():
-                    for champs in dossier["champs"]:
-                        if champs["id"] == "Q2hhbXAtMjY3NDMyMQ==":
-                            dossier_line["numero_identifiant_lieu"] = champs[
-                                "stringValue"
-                            ]
-                        elif champs["id"] == "Q2hhbXAtMjQzODcyMA==":
-                            dossier_line["statut"] = champs["stringValue"]
-                        elif champs["id"] == "Q2hhbXAtMjQzMTg1OA==":
-                            dossier_line["typologie"] = champs["stringValue"]
-                        elif champs["id"] == "Q2hhbXAtMjQzMjIxMg==":
-                            dossier_line["academie_historique_intervention"] = champs[
-                                "stringValue"
-                            ]
-                        elif champs["id"] == "Q2hhbXAtMjQzMjM1Mw==":
-                            dossier_line["domaines"] = champs["stringValue"]
-                else:
-                    dossier_line["numero_identifiant_lieu"] = None
-                instructeurs = []
-                for instructeur in dossier["instructeurs"]:
-                    instructeurs.append(instructeur["email"])
-                if instructeurs != []:
-                    dossier_line["instructors"] = "; ".join(instructeurs)
-                if dossier["groupeInstructeur"]:
-                    dossier_line["academie_groupe_instructeur"] = dossier[
-                        "groupeInstructeur"
-                    ]["label"]
-                if "annotations" in dossier.keys():
-                    for annotation in dossier["annotations"]:
-                        if annotation["label"] == "Erreur traitement pass Culture":
-                            dossier_line["erreur_traitement_pass_culture"] = annotation[
-                                "stringValue"
-                            ]
-                else:
-                    dossier_line["erreur_traitement_pass_culture"] = None
+            dossier = node.get("node")
+            if dossier:
+                dossier_line = extract_common_fields(dossier)
+
+                if dms_target == "jeunes":
+                    enrich_jeunes_data(dossier, dossier_line)
+                elif dms_target == "pro":
+                    enrich_pro_data(dossier, dossier_line)
+
                 df_applications.loc[len(df_applications)] = dossier_line
-    return
+
+
+def extract_common_fields(dossier):
+    """Extract fields common to both targets."""
+    return {
+        "procedure_id": dossier["demarche_id"],
+        "application_id": dossier["id"],
+        "application_number": dossier["number"],
+        "application_archived": dossier["archived"],
+        "application_status": dossier["state"],
+        "last_update_at": dossier["dateDerniereModification"],
+        "application_submitted_at": dossier["datePassageEnConstruction"],
+        "passed_in_instruction_at": dossier["datePassageEnInstruction"],
+        "processed_at": dossier["dateTraitement"],
+        "instructors": "; ".join(
+            [instructor["email"] for instructor in dossier.get("instructeurs", [])]
+        )
+        or "",
+    }
+
+
+def enrich_jeunes_data(dossier, dossier_line):
+    """Enrich data for 'jeunes' target."""
+    for champ in dossier.get("champs", []):
+        if champ.get("id") == "Q2hhbXAtNTk2NDUz":
+            dossier_line["applicant_department"] = champ["stringValue"]
+        elif champ.get("id") == "Q2hhbXAtNTgyMjIx":
+            dossier_line["applicant_postal_code"] = champ["stringValue"]
+
+
+def enrich_pro_data(dossier, dossier_line):
+    """Enrich data for 'pro' target."""
+    demandeur = dossier.get("demandeur", {})
+    if "siret" in demandeur:
+        dossier_line.update(
+            {
+                "demandeur_siret": demandeur["siret"],
+                "demandeur_naf": demandeur.get("naf"),
+                "demandeur_libelleNaf": demandeur.get("libelleNaf", "").replace(
+                    "\n", " "
+                ),
+            }
+        )
+        if entreprise := demandeur.get("entreprise"):
+            dossier_line.update(
+                {
+                    "demandeur_entreprise_siren": entreprise.get("siren"),
+                    "demandeur_entreprise_formeJuridique": entreprise.get(
+                        "formeJuridique"
+                    ),
+                    "demandeur_entreprise_formeJuridiqueCode": entreprise.get(
+                        "formeJuridiqueCode"
+                    ),
+                    "demandeur_entreprise_codeEffectifEntreprise": entreprise.get(
+                        "codeEffectifEntreprise"
+                    ),
+                    "demandeur_entreprise_raisonSociale": entreprise.get(
+                        "raisonSociale"
+                    ),
+                    "demandeur_entreprise_siretSiegeSocial": entreprise.get(
+                        "siretSiegeSocial"
+                    ),
+                }
+            )
+
+
+def save_results(df_applications, dms_target, updated_since, bucket_name):
+    """Format and save DataFrame to GCS."""
+    schema = SCHEMAS[dms_target]
+    for column in schema:
+        col_name, col_type = column["name"], column["type"]
+        if col_type == "TIMESTAMP":
+            df_applications[col_name] = pd.to_datetime(
+                df_applications[col_name], utc=True, errors="coerce"
+            )
+        elif col_type == "STRING":
+            df_applications[col_name] = df_applications[col_name].astype(str)
+
+    df_applications["update_date"] = pd.Timestamp.utcnow()
+    output_path = (
+        f"gs://{bucket_name}/dms_export/dms_{dms_target}_{updated_since}.parquet"
+    )
+    df_applications.to_parquet(output_path, engine="pyarrow", index=False)
+    logging.info(f"Results saved to {output_path}")
 
 
 def parse_results_to_table(
-    target: str = typer.Option(None, help="pro ou jeunes"),
+    target: str = typer.Option(None, help="pro or jeunes"),
     updated_since: str = typer.Option(None, help="updated since"),
-    bucket_name: str = typer.Option(None, help="data gcs bucket name"),
-    project_id: str = typer.Option(None, help="gcp project id"),
+    bucket_name: str = typer.Option(None, help="data GCS bucket name"),
+    project_id: str = typer.Option(None, help="GCP project ID"),
 ):
     parse_api_result(updated_since, target, project_id, bucket_name)
-    return
 
 
 if __name__ == "__main__":

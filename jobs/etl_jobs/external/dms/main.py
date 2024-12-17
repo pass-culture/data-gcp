@@ -25,7 +25,7 @@ def run(target, updated_since):
         return updated_since
 
     if target == "pro":
-        fetch_dms(updated_since, demarches=demarches_pro, targer=target)
+        fetch_dms(updated_since, demarches=demarches_pro, target=target)
         return updated_since
 
 

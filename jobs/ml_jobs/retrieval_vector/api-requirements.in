@@ -10,3 +10,4 @@ python-json-logger==2.0.7
 lancedb==0.13.0
 docarray==0.21.0
 hnne==0.1.10
+google-cloud-logging

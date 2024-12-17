@@ -32,6 +32,11 @@ DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 GCE_INSTANCE = f"import-dms-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/dms"
 
+dag_config = {
+    "GCP_PROJECT_ID": GCP_PROJECT_ID,
+    "ENV_SHORT_NAME": ENV_SHORT_NAME,
+}
+
 default_args = {
     "start_date": datetime(2020, 12, 1),
     "on_failure_callback": task_fail_slack_alert,
@@ -49,7 +54,9 @@ with DAG(
     dagrun_timeout=timedelta(minutes=300),
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production"
+            if ENV_SHORT_NAME == "prod"
+            else "master",
             type="string",
         ),
         "updated_since_jeunes": Param(
@@ -89,6 +96,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         installer="uv",
+        environment=dag_config,
         command="python main.py pro {{ params.updated_since_pro }} "
         + f"{GCP_PROJECT_ID} {ENV_SHORT_NAME}",
         do_xcom_push=True,
@@ -105,6 +113,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         installer="uv",
+        environment=dag_config,
         command="python main.py jeunes {{ params.updated_since_jeunes }} "
         + f"{GCP_PROJECT_ID} {ENV_SHORT_NAME}",
         do_xcom_push=True,
@@ -115,6 +124,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         installer="uv",
+        environment=dag_config,
         command="python parse_dms_subscriptions_to_tabular.py --target jeunes --updated-since {{ params.updated_since_jeunes }} "
         + f"--bucket-name {DATA_GCS_BUCKET_NAME} --project-id {GCP_PROJECT_ID}",
         do_xcom_push=True,
@@ -125,6 +135,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         installer="uv",
+        environment=dag_config,
         command="python parse_dms_subscriptions_to_tabular.py --target pro --updated-since {{ params.updated_since_pro }} "
         + f"--bucket-name {DATA_GCS_BUCKET_NAME} --project-id {GCP_PROJECT_ID}",
         do_xcom_push=True,

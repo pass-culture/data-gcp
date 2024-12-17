@@ -14,7 +14,7 @@ from utils import (
 # dans orchestration/dags/jobs/import/import_dms_subscriptions.py ce sont les "vrais schemas" : INT64 au lieu de TIMESTAMP
 
 
-def parse_api_result(updated_since, dms_target, gcp_project_id, data_gcs_bucket_name):
+def parse_api_result(updated_since, dms_target, GCP_PROJECT_ID, data_gcs_bucket_name):
     logging.info("Start parsing api result")
     logging.info(f"updated_since: {updated_since}")
     logging.info(f"dms_target: {dms_target}")
@@ -22,7 +22,7 @@ def parse_api_result(updated_since, dms_target, gcp_project_id, data_gcs_bucket_
         df_applications = pd.DataFrame(
             columns=[col["name"] for col in destination_table_schema_jeunes]
         )
-        fs = gcsfs.GCSFileSystem(project=gcp_project_id)
+        fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
         with fs.open(
             f"gs://{data_gcs_bucket_name}/dms_export/unsorted_dms_{dms_target}_{updated_since}.json"
         ) as json_file:
@@ -38,7 +38,7 @@ def parse_api_result(updated_since, dms_target, gcp_project_id, data_gcs_bucket_
         df_applications = pd.DataFrame(
             columns=[col["name"] for col in destination_table_schema_pro]
         )
-        fs = gcsfs.GCSFileSystem(project=gcp_project_id)
+        fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
         with fs.open(
             f"gs://{data_gcs_bucket_name}/dms_export/unsorted_dms_{dms_target}_{updated_since}.json"
         ) as json_file:
@@ -163,7 +163,7 @@ def parse_result_pro(result, df_applications):
                         dossier_line["demandeur_entreprise_siretSiegeSocial"] = dossier[
                             "demandeur"
                         ]["entreprise"]["siretSiegeSocial"]
-                if "champs"in dossier.keys():
+                if "champs" in dossier.keys():
                     for champs in dossier["champs"]:
                         if champs["id"] == "Q2hhbXAtMjY3NDMyMQ==":
                             dossier_line["numero_identifiant_lieu"] = champs[

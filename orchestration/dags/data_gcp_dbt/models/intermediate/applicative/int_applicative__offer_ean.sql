@@ -41,11 +41,7 @@ with
     clean_isbn as (
         select
             * except (ean, isbn),
-            case
-                when isbn_is_valid = 'valid'
-                then isbn
-                else null
-            end as isbn,
+            case when isbn_is_valid = 'valid' then isbn else null end as isbn,
             case when ean_is_valid = 'valid' then ean else null end as ean
         from validity_isbn_ean
     ),
@@ -79,7 +75,11 @@ with
 select
     clean_isbn.offer_id,
     clean_isbn.ean,
-    if(length(clean_isbn.ean) = 13, coalesce(clean_isbn.ean, clean_isbn.isbn), clean_isbn.isbn) as isbn -- TODO(legacy): isbn is overwritted by ean
+    if(
+        length(clean_isbn.ean) = 13,
+        coalesce(clean_isbn.ean, clean_isbn.isbn),
+        clean_isbn.isbn
+    ) as isbn  -- TODO(legacy): isbn is overwritted by ean
     clean_isbn.titelive_gtl_id,
     matching_isbn_with_rayon.rayon as rayon,
     matching_isbn_with_editor.book_editor as book_editor

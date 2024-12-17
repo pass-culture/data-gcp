@@ -79,7 +79,7 @@ select
         length(clean_isbn.ean) = 13,
         coalesce(clean_isbn.ean, clean_isbn.isbn),
         clean_isbn.isbn
-    ) as isbn  -- TODO(legacy): isbn is overwritted by ean
+    ) as isbn,  -- TODO(legacy): isbn is overwritted by ean
     clean_isbn.titelive_gtl_id,
     matching_isbn_with_rayon.rayon as rayon,
     matching_isbn_with_editor.book_editor as book_editor

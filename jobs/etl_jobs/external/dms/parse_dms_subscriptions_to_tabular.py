@@ -5,7 +5,11 @@ import gcsfs
 import pandas as pd
 import typer
 
-from utils import destination_table_schema_jeunes, destination_table_schema_pro
+from constants import (
+    GCP_PROJECT_ID,
+    destination_table_schema_jeunes,
+    destination_table_schema_pro,
+)
 
 # Constants for targets
 SCHEMAS = {
@@ -14,14 +18,14 @@ SCHEMAS = {
 }
 
 
-def load_json_from_gcs(bucket_name, file_path, project_id):
+def load_json_from_gcs(bucket_name, file_path):
     """Load JSON file from Google Cloud Storage."""
-    fs = gcsfs.GCSFileSystem(project=project_id)
+    fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
     with fs.open(f"gs://{bucket_name}/{file_path}") as json_file:
         return json.load(json_file)
 
 
-def parse_api_result(updated_since, dms_target, project_id, bucket_name):
+def parse_api_result(updated_since, dms_target, bucket_name):
     """Parse API result based on target type."""
     logging.info(f"Start parsing API result for {dms_target} since {updated_since}")
 
@@ -35,7 +39,7 @@ def parse_api_result(updated_since, dms_target, project_id, bucket_name):
 
     # Load JSON data
     file_path = f"dms_export/unsorted_dms_{dms_target}_{updated_since}.json"
-    result = load_json_from_gcs(bucket_name, file_path, project_id)
+    result = load_json_from_gcs(bucket_name, file_path)
 
     # Parse data
     parse_result(result, df_applications, dms_target)
@@ -149,9 +153,8 @@ def parse_results_to_table(
     target: str = typer.Option(None, help="pro or jeunes"),
     updated_since: str = typer.Option(None, help="updated since"),
     bucket_name: str = typer.Option(None, help="data GCS bucket name"),
-    project_id: str = typer.Option(None, help="GCP project ID"),
 ):
-    parse_api_result(updated_since, target, project_id, bucket_name)
+    parse_api_result(updated_since, target, bucket_name)
 
 
 if __name__ == "__main__":

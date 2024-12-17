@@ -8,9 +8,7 @@ from constants import (
     DMS_TOKEN,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    demarches_jeunes,
-    demarches_pro,
-    demarches_reduced,
+    demarches,
 )
 from dms_query_w_champs import DMS_QUERY as DMS_QUERY
 from dms_query_wo_champs import DMS_QUERY as DMS_QUERY_REDUCED
@@ -21,11 +19,11 @@ def run(target, updated_since):
     print("updated_since", updated_since)
 
     if target == "jeunes":
-        fetch_dms(updated_since, demarches=demarches_jeunes, target=target)
+        fetch_dms(updated_since, demarches=demarches[target], target=target)
         return updated_since
 
     if target == "pro":
-        fetch_dms(updated_since, demarches=demarches_pro, target=target)
+        fetch_dms(updated_since, demarches=demarches[target], target=target)
         return updated_since
 
 
@@ -43,7 +41,7 @@ def fetch_result(demarches_ids, updated_since):
     for demarche_id in demarches_ids:
         print(f"Fetching demarche {demarche_id}")
 
-        if demarche_id in demarches_reduced:
+        if demarche_id in demarches["reduced"]:
             dms_query = DMS_QUERY_REDUCED
             print("dms query: reduced")
         else:

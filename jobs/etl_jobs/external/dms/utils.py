@@ -4,8 +4,6 @@ import gcsfs
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 
-from constants import GCP_PROJECT_ID
-
 
 def access_secret_data(project_id, secret_id, version_id="latest", default=None):
     try:
@@ -29,8 +27,8 @@ def mergeDictionary(dict_1, dict_2):
     return dict_3
 
 
-def save_json(json_object, filename):
-    fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
+def save_json(json_object, filename, project_id):
+    fs = gcsfs.GCSFileSystem(project=project_id)
     with fs.open(filename, "w") as json_file:
         json_file.write(json.dumps(json_object))
     result = filename + " upload complete"

@@ -9,7 +9,9 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
         # Ensure 'severity' is at the top level
         if "severity" not in log_record and "levelname" in log_record:
             log_record["severity"] = log_record["levelname"]
-        return super().process_log_record(log_record)
+        # Move message out of nested structure if needed
+        log_record["message"] = log_record.get("message", "")
+        return log_record
 
 
 def get_logger() -> logging.Logger:
@@ -22,12 +24,13 @@ def get_logger() -> logging.Logger:
     )
     stdout.setFormatter(formatter)
     logger.addHandler(stdout)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)  # Allow all log levels
     return logger
 
 
 logger = get_logger()
 
+# Test log messages
 logger.info("Info Log")
 logger.warning("Warning Log")
 logger.debug("Debug Log")

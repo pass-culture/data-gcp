@@ -70,7 +70,8 @@ with
             ) as url_path_agg,
             page_referrer,
             page_number,
-            coalesce(double_offer_id, offerid) as offer_id,
+            CASE WHEN offer_type != 'collective' THEN coalesce(double_offer_id, offerid) ELSE NULL END as offer_id,
+            CASE WHEN offer_type = 'collective' THEN offerId ELSE NULL END AS collective_offer_id
             offertype as offer_type,
             saved as has_saved_query,
             hasonly6eand5estudents as has_opened_wrong_student_modal,
@@ -85,7 +86,8 @@ with
             filetype as download_file_type,
             filescount as download_files_cnt,
             subcategoryid as offer_subcategory_id,
-            choosensuggestedsubcategory as suggested_offer_subcategory_selected
+            choosensuggestedsubcategory as suggested_offer_subcategory_selected,
+            status AS collective_offer_status
         from {{ ref("int_firebase__pro_event_flattened") }}
         {% if is_incremental() %}
             where

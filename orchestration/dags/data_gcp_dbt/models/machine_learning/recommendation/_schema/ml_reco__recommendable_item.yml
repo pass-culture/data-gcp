@@ -23,8 +23,12 @@ models:
         description: "{{ doc('column__clustering_cluster_id') }}"
       - name: category
         description: "{{ doc('column__offer_category_id') }}"
+        data_tests:
+          - not_null
       - name: subcategory_id
         description: "{{ doc('column__offer_subcategory_id') }}"
+        data_tests:
+          - not_null
       - name: search_group_name
         description: "{{ doc('column__search_group_name') }}"
       - name: is_numerical

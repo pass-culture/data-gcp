@@ -3,8 +3,8 @@ with
         select
             offer_id,
             offer_subcategoryid,
-            regexp_replace(ean, r'[\\s\\-\\t]', '') as ean,
-            regexp_replace(isbn, r'[\\s\\-\\t]', '') as isbn,
+            regexp_replace(ean, r'[\\s\\-\\tA-Za-z]', '') as ean,
+            regexp_replace(isbn, r'[\\s\\-\\tA-Za-z]', '') as isbn,
             case
                 when length(cast(titelive_gtl_id as string)) = 7
                 then concat('0', cast(titelive_gtl_id as string))
@@ -19,7 +19,7 @@ with
         select
             *,
             case
-                when length(isbn) = 10 and regexp_contains(isbn, r'^\d{9}[0-9Xx]$')
+                when length(isbn) = 10 and regexp_contains(isbn, r'^\d{10}$')
                 then 'valid'
                 when length(isbn) = 13 and regexp_contains(isbn, r'^\d{13}$')
                 then 'valid'
@@ -28,7 +28,7 @@ with
                 else 'invalid'
             end as isbn_is_valid,
             case
-                when length(ean) = 10 and regexp_contains(ean, r'^\d{9}[0-9Xx]$')
+                when length(ean) = 10 and regexp_contains(ean, r'^\d{10}$')
                 then 'valid'
                 when length(ean) = 13 and regexp_contains(ean, r'^\d{13}$')
                 then 'valid'
@@ -42,8 +42,8 @@ with
         select
             * except (ean, isbn),
             case
-                when isbn_is_valid = 'valid' or isbn_is_valid is null
-                then if(length(ean) = 13, coalesce(ean, isbn), isbn)
+                when isbn_is_valid = 'valid'
+                then isbn
                 else null
             end as isbn,
             case when ean_is_valid = 'valid' then ean else null end as ean
@@ -79,7 +79,7 @@ with
 select
     clean_isbn.offer_id,
     clean_isbn.ean,
-    clean_isbn.isbn,
+    if(length(clean_isbn.ean) = 13, coalesce(clean_isbn.ean, clean_isbn.isbn), clean_isbn.isbn) as isbn -- TODO(legacy): isbn is overwritted by ean
     clean_isbn.titelive_gtl_id,
     matching_isbn_with_rayon.rayon as rayon,
     matching_isbn_with_editor.book_editor as book_editor

@@ -5,6 +5,7 @@ models:
     description: "{{ doc('description__ml_compliance__training_data_offer') }}"
     data_tests:
       - elementary.volume_anomalies:
+          tags: [elementary]
           training_period:
             period: day
             count: 7

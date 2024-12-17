@@ -29,6 +29,8 @@ cultural partner and displayed in app.{% enddocs %}
 {% docs column__offer_subcategory_id %} Identifier for the subcategory of the offer. {% enddocs %}
 {% docs column__offer_url %} URL to the offer. {% enddocs %}
 {% docs column__is_national %} Indicates if the offer is available nationally. {% enddocs %}
+{% docs column__offer_is_numerical %} Indicates if the offer is digital (based on an url). {% enddocs %}
+{% docs column__offer_is_geolocated %} Indicates if the offer is geolocated. {% enddocs %}
 {% docs column__is_active %} Indicates if the offer is active. {% enddocs %}
 {% docs column__offer_validation %} Validation status of the offer. {% enddocs %}
 {% docs column__author %} The offer's author (a book's author, a music's singer, a movie's director).{% enddocs %}

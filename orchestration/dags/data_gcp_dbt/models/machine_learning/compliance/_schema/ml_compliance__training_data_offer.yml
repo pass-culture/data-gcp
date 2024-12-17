@@ -3,9 +3,20 @@ version: 2
 models:
   - name: ml_compliance__training_data_offer
     description: "{{ doc('description__ml_compliance__training_data_offer') }}"
+    data_tests:
+      - elementary.volume_anomalies:
+          tags: [elementary]
+          training_period:
+            period: day
+            count: 7
+          detection_period:
+            period: day
+            count: 1
     columns:
       - name: offer_id
         description: "{{ doc('column__offer_id') }}"
+        data_tests:
+          - not_null
       - name: offer_name
         description: "{{ doc('column__offer_name') }}"
       - name: offer_description
@@ -14,6 +25,8 @@ models:
         description: "{{ doc('column__offer_validation') }}"
       - name: offer_subcategory_id
         description: "{{ doc('column__offer_subcategory_id') }}"
+        data_tests:
+          - not_null
       - name: rayon
         description: "{{ doc('column__rayon') }}"
       - name: macro_rayon
@@ -22,5 +35,9 @@ models:
         description: "{{ doc('column__stock_price') }}"
       - name: semantic_content_embedding
         description: "{{ doc('column__embedding_offer_semantic_content') }}"
+        data_tests:
+          - not_null
       - name: image_embedding
         description: "{{ doc('column__embedding_offer_image') }}"
+        data_tests:
+          - not_null

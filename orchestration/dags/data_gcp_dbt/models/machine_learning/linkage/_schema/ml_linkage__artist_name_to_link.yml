@@ -22,11 +22,11 @@ models:
         data_tests:
           - not_null
       - name: total_offer_count
-        description: "{{ doc('column__total_offer_count') }}"
+        description: "{{ doc('column__artist_total_offer_count') }}"
       - name: total_item_count
-        description: "{{ doc('column__total_item_count') }}"
+        description: "{{ doc('column__artist_total_item_count') }}"
       - name: total_booking_count
-        description: "{{ doc('column__total_booking_count') }}"
+        description: "{{ doc('column__artist_total_booking_count') }}"
       - name: artist_type
         description: "{{ doc('column__artist_type') }}"
         data_tests:

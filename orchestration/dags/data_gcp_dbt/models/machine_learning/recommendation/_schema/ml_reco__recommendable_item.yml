@@ -3,9 +3,20 @@ version: 2
 models:
   - name: ml_reco__recommendable_item
     description: "{{ doc('description__ml_reco__recommendable_item') }}"
+    data_tests:
+      - elementary.volume_anomalies:
+          training_period:
+            period: day
+            count: 7
+          detection_period:
+            period: day
+            count: 1
     columns:
       - name: item_id
         description: "{{ doc('column__item_id') }}"
+        data_tests:
+          - not_null
+          - unique
       - name: topic_id
         description: "{{ doc('column__clustering_topic_id') }}"
       - name: cluster_id
@@ -40,12 +51,28 @@ models:
         description: "{{ doc('column__gtl_label_level_4') }}"
       - name: booking_number
         description: "{{ doc('column__reco_total_bookings') }}"
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
       - name: booking_number_last_7_days
         description: "{{ doc('column__reco_total_bookings_last_7_days') }}"
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
       - name: booking_number_last_14_days
         description: "{{ doc('column__reco_total_bookings_last_14_days') }}"
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
       - name: booking_number_last_28_days
         description: "{{ doc('column__reco_total_bookings_last_28_days') }}"
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
       - name: is_underage_recommendable
         description: "{{ doc('column__reco_item_is_underage_recommendable') }}"
       - name: is_sensitive

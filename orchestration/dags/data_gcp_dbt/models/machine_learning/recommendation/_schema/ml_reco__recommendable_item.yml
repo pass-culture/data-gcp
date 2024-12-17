@@ -7,21 +7,21 @@ models:
       - name: item_id
         description: "{{ doc('column__item_id') }}"
       - name: topic_id
-        description: "{{ doc('column__topic_id') }}"
+        description: "{{ doc('column__clustering_topic_id') }}"
       - name: cluster_id
-        description: "{{ doc('column__cluster_id') }}"
+        description: "{{ doc('column__clustering_cluster_id') }}"
       - name: category
-        description: "{{ doc('column__category') }}"
+        description: "{{ doc('column__offer_category_id') }}"
       - name: subcategory_id
-        description: "{{ doc('column__subcategory_id') }}"
+        description: "{{ doc('column__offer_subcategory_id') }}"
       - name: search_group_name
         description: "{{ doc('column__search_group_name') }}"
       - name: is_numerical
-        description: "{{ doc('column__is_numerical') }}"
+        description: "{{ doc('column__offer_is_numerical') }}"
       - name: is_national
         description: "{{ doc('column__is_national') }}"
       - name: is_geolocated
-        description: "{{ doc('column__is_geolocated') }}"
+        description: "{{ doc('column__offer_is_geolocated') }}"
       - name: offer_is_duo
         description: "{{ doc('column__offer_is_duo') }}"
       - name: offer_type_domain
@@ -29,29 +29,29 @@ models:
       - name: offer_type_label
         description: "{{ doc('column__offer_type_label') }}"
       - name: gtl_id
-        description: "{{ doc('column__gtl_id') }}"
+        description: "{{ doc('column__titelive_gtl_id') }}"
       - name: gtl_l1
-        description: "{{ doc('column__gtl_l1') }}"
+        description: "{{ doc('column__gtl_label_level_1') }}"
       - name: gtl_l2
-        description: "{{ doc('column__gtl_l2') }}"
+        description: "{{ doc('column__gtl_label_level_2') }}"
       - name: gtl_l3
-        description: "{{ doc('column__gtl_l3') }}"
+        description: "{{ doc('column__gtl_label_level_3') }}"
       - name: gtl_l4
-        description: "{{ doc('column__gtl_l4') }}"
+        description: "{{ doc('column__gtl_label_level_4') }}"
       - name: booking_number
-        description: "{{ doc('column__booking_number') }}"
+        description: "{{ doc('column__reco_total_bookings') }}"
       - name: booking_number_last_7_days
-        description: "{{ doc('column__booking_number_last_7_days') }}"
+        description: "{{ doc('column__reco_total_bookings_last_7_days') }}"
       - name: booking_number_last_14_days
-        description: "{{ doc('column__booking_number_last_14_days') }}"
+        description: "{{ doc('column__reco_total_bookings_last_14_days') }}"
       - name: booking_number_last_28_days
-        description: "{{ doc('column__booking_number_last_28_days') }}"
+        description: "{{ doc('column__reco_total_bookings_last_28_days') }}"
       - name: is_underage_recommendable
-        description: "{{ doc('column__is_underage_recommendable') }}"
+        description: "{{ doc('column__reco_item_is_underage_recommendable') }}"
       - name: is_sensitive
-        description: "{{ doc('column__is_sensitive') }}"
+        description: "{{ doc('column__reco_item_is_sensitive') }}"
       - name: is_restrained
-        description: "{{ doc('column__is_restrained') }}"
+        description: "{{ doc('column__reco_item_is_restrained') }}"
       - name: offer_creation_date
         description: "{{ doc('column__offer_creation_date') }}"
       - name: stock_beginning_date
@@ -59,26 +59,26 @@ models:
       - name: stock_price
         description: "{{ doc('column__stock_price') }}"
       - name: total_offers
-        description: "{{ doc('column__total_offers') }}"
+        description: "{{ doc('column__reco_total_offers') }}"
       - name: semantic_emb_mean
-        description: "{{ doc('column__semantic_emb_mean') }}"
+        description: "{{ doc('column__reco_mean_semantic_embedding') }}"
       - name: booking_trend
-        description: "{{ doc('column__booking_trend') }}"
+        description: "{{ doc('column__reco_booking_trend') }}"
       - name: stock_date_penalty_factor
-        description: "{{ doc('column__stock_date_penalty_factor') }}"
+        description: "{{ doc('column__reco_stock_date_penalty_factor') }}"
       - name: creation_date_penalty_factor
-        description: "{{ doc('column__creation_date_penalty_factor') }}"
+        description: "{{ doc('column__reco_creation_date_penalty_factor') }}"
       - name: example_offer_name
-        description: "{{ doc('column__example_offer_name') }}"
+        description: "{{ doc('column__reco_example_offer_name') }}"
       - name: example_offer_id
-        description: "{{ doc('column__example_offer_id') }}"
+        description: "{{ doc('column__reco_example_offer_id') }}"
       - name: example_venue_id
-        description: "{{ doc('column__example_venue_id') }}"
+        description: "{{ doc('column__reco_example_venue_id') }}"
       - name: example_venue_longitude
-        description: "{{ doc('column__example_venue_longitude') }}"
+        description: "{{ doc('column__reco_example_venue_longitude') }}"
       - name: example_venue_latitude
-        description: "{{ doc('column__example_venue_latitude') }}"
+        description: "{{ doc('column__reco_example_venue_latitude') }}"
       - name: booking_release_trend
-        description: "{{ doc('column__booking_release_trend') }}"
+        description: "{{ doc('column__reco_booking_release_trend') }}"
       - name: booking_creation_trend
-        description: "{{ doc('column__booking_creation_trend') }}"
+        description: "{{ doc('column__reco_booking_creation_trend') }}"

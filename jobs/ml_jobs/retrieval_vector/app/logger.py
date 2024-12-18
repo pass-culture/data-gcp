@@ -1,44 +1,69 @@
 import logging
-import sys
 
-from pythonjsonlogger import jsonlogger
+import google.cloud.logging
 
 
-class VertexAIJsonFormatter(jsonlogger.JsonFormatter):
-    def process_log_record(self, log_record):
-        """
-        Ensures that the `severity` field aligns with the logger's log level
-        and is placed in the format Google Cloud Logging expects.
-        """
-        # Map `levelname` to `severity` for Google Cloud compatibility
-        log_record["severity"] = log_record.get("levelname", "DEFAULT")
-        return log_record
+class CustomLogger:
+    def __init__(self, logger=None):
+        self.logger = logger
+
+    def info(
+        self,
+        message=None,
+    ):
+        self.logger.info(message)
+
+    def warn(
+        self,
+        message=None,
+    ):
+        self.logger.warning(message)
+
+    def debug(
+        self,
+        message=None,
+    ):
+        self.logger.debug(message)
+
+    def error(
+        self,
+        message=None,
+    ):
+        self.logger.error(message)
 
 
 def get_vertexai_logger() -> logging.Logger:
-    """
-    Configures and returns a logger suitable for Vertex AI applications.
+    # """
+    # Configures and returns a logger suitable for Vertex AI applications.
 
-    Returns:
-        logging.Logger: A configured logger.
-    """
-    logger = logging.getLogger("vertexai-logger")
-    logger.setLevel(logging.DEBUG)  # Capture all log levels (DEBUG and above)
+    # Returns:
+    #     logging.Logger: A configured logger.
+    # """
+    # logger = logging.getLogger("vertexai-logger")
+    # logger.setLevel(logging.DEBUG)  # Capture all log levels (DEBUG and above)
 
-    # Create a StreamHandler to output logs to stdout
-    stdout_handler = logging.StreamHandler(stream=sys.stdout)
+    # # Create a StreamHandler to output logs to stdout
+    # stdout_handler = logging.StreamHandler(stream=sys.stdout)
 
-    # Apply the VertexAIJsonFormatter to format logs in JSON
-    formatter = VertexAIJsonFormatter(
-        "%(timestamp)s %(severity)s %(name)s %(message)s",
-        rename_fields={"asctime": "timestamp", "levelname": "severity"},
-    )
-    stdout_handler.setFormatter(formatter)
+    # # Apply the VertexAIJsonFormatter to format logs in JSON
+    # formatter = VertexAIJsonFormatter(
+    #     "%(timestamp)s %(severity)s %(name)s %(message)s",
+    #     rename_fields={"asctime": "timestamp", "levelname": "severity"},
+    # )
+    # stdout_handler.setFormatter(formatter)
 
-    # Attach the handler to the logger
-    logger.addHandler(stdout_handler)
+    # # Attach the handler to the logger
+    # logger.addHandler(stdout_handler)
+    client = google.cloud.logging.Client()
+    handler = client.get_default_handler()
+    handler.setLevel(logging.INFO)
+    handler.filters = []
+    api_logger = logging.getLogger("vertexai-logger")
+    api_logger.handlers = []
+    api_logger.addHandler(handler)
+    api_logger.setLevel(logging.DEBUG)
 
-    return logger
+    return CustomLogger(logger=api_logger)
 
 
 # Example usage

@@ -3,7 +3,8 @@ import pandas as pd
 import typer
 from lancedb.pydantic import LanceModel, Vector
 from loguru import logger
-
+import numpy as np
+from sklearn.preprocessing import normalize
 # Define constants
 from constants import (
     LANCEDB_BATCH_SIZE,
@@ -20,8 +21,6 @@ from utils.common import (
     reduce_embeddings_and_store_reducer,
 )
 
-COLUMN_NAME_LIST = ["item_id", "performer"]
-
 
 def preprocess_data_and_store_reducer(
     chunk: pd.DataFrame, reducer_path: str, reduction: bool
@@ -37,9 +36,20 @@ def preprocess_data_and_store_reducer(
     Returns:
         pd.DataFrame: The prepared dataframe with embeddings.
     """
+    extract_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*(\d+)\b"  # This pattern is for extracting the edition number
+    remove_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*\d+\b"  # This pattern is for removing the edition number and keyword
+
     item_df = chunk.assign(
         performer=lambda df: df["performer"].fillna(value=UNKNOWN_PERFORMER),
+        edition=lambda df: df["offer_name"]
+        .str.extract(extract_pattern, expand=False)
+        .astype(str)
+        .fillna(value="1"),
+        offer_name=lambda df: df["offer_name"]
+        .str.replace(remove_pattern, "", regex=True)
+        .str.strip(),
     )
+
     if reduction:
         item_df = item_df.assign(
             vector=reduce_embeddings_and_store_reducer(
@@ -49,7 +59,17 @@ def preprocess_data_and_store_reducer(
             )
         )
     else:
-        item_df = item_df.assign(vector=preprocess_embeddings_by_chunk(chunk))
+        item_df = item_df.assign(vector=list(preprocess_embeddings_by_chunk(chunk)))
+    embeddings_list = item_df['vector'].tolist()
+
+    # Convert embeddings to a NumPy array
+    embeddings_array = np.array(embeddings_list)
+
+    # Normalize the embeddings
+    normalized_embeddings = normalize(embeddings_array, norm='l2')
+
+    # Update the DataFrame with normalized embeddings
+    item_df['vector'] = list(normalized_embeddings)
     return item_df
 
 
@@ -64,7 +84,9 @@ def create_items_table(items_df: pd.DataFrame) -> None:
     class ItemModel(LanceModel):
         vector: Vector(32)
         item_id: str
+        offer_subcategory_id: str
         performer: str
+        edition: str
 
     def make_batches(df: pd.DataFrame, batch_size: int):
         """
@@ -98,8 +120,7 @@ def create_items_table(items_df: pd.DataFrame) -> None:
 
 def create_index_on_items_table() -> None:
     db = lancedb.connect(MODEL_PATH)
-    db.open_table("items").create_index(
-        num_partitions=NUM_PARTITIONS, num_sub_vectors=NUM_SUB_VECTORS
+    db.open_table("items").create_index(num_partitions=NUM_PARTITIONS, num_sub_vectors=NUM_SUB_VECTORS
     )
 
 

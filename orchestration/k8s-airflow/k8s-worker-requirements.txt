@@ -30,7 +30,7 @@ annotated-types==0.7.0
     # via pydantic
 anyio==4.6.2.post1
     # via httpx
-apache-airflow==2.9.3
+apache-airflow==2.10.1
     # via
     #   -r k8s-worker-requirements.in
     #   apache-airflow-providers-celery
@@ -49,7 +49,9 @@ apache-airflow==2.9.3
 apache-airflow-providers-celery==3.6.2
     # via -r k8s-worker-requirements.in
 apache-airflow-providers-common-compat==1.2.1
-    # via apache-airflow-providers-fab
+    # via
+    #   apache-airflow
+    #   apache-airflow-providers-fab
 apache-airflow-providers-common-io==1.4.2
     # via apache-airflow
 apache-airflow-providers-common-sql==1.19.0
@@ -164,7 +166,7 @@ colorama==0.4.6
     # via
     #   dbt-common
     #   flask-appbuilder
-colorlog==4.8.0
+colorlog==6.9.0
     # via apache-airflow
 configupdater==3.2
     # via apache-airflow
@@ -532,6 +534,8 @@ googleapis-common-protos==1.65.0
     #   opentelemetry-exporter-otlp-proto-http
 grapheme==0.6.0
     # via alive-progress
+greenlet==3.1.1
+    # via sqlalchemy
 grpc-google-iam-v1==0.13.1
     # via
     #   google-cloud-bigtable
@@ -996,7 +1000,9 @@ requests==2.32.3
 requests-oauthlib==2.0.0
     # via google-auth-oauthlib
 requests-toolbelt==1.0.0
-    # via apache-airflow-providers-http
+    # via
+    #   apache-airflow
+    #   apache-airflow-providers-http
 rfc3339-validator==0.1.4
     # via apache-airflow
 rich==13.9.4

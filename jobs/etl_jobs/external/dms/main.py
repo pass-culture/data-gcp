@@ -40,14 +40,12 @@ def fetch_result(demarches_ids, updated_since):
     result = {}
     for demarche_id in demarches_ids:
         print(f"Fetching demarche {demarche_id}")
-
         if demarche_id in demarches["reduced"]:
             dms_query = DMS_QUERY_REDUCED
             print("dms query: reduced")
         else:
             dms_query = DMS_QUERY
             print("dms query : default")
-
         end_cursor = ""
         query_body = get_query_body(demarche_id, dms_query, "", updated_since)
         has_next_page = True

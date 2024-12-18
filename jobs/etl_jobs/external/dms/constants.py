@@ -53,7 +53,7 @@ EXTRA_SCHEMAS = {
         {"name": "applicant_department", "type": "STRING"},
         {"name": "applicant_postal_code", "type": "STRING"},
     ],
-    "pro" :[{"name": field, "type": "STRING"} for field in fields],
+    "pro": [{"name": field, "type": "STRING"} for field in fields],
 }
 
 

@@ -30,29 +30,30 @@ BASE_SCHEMA = [
 ]
 
 # Additional Schema Columns for 'jeunes' and 'pro'
+fields = [
+    "demandeur_siret",
+    "demandeur_naf",
+    "demandeur_libelleNaf",
+    "demandeur_entreprise_siren",
+    "demandeur_entreprise_formeJuridique",
+    "demandeur_entreprise_formeJuridiqueCode",
+    "demandeur_entreprise_codeEffectifEntreprise",
+    "demandeur_entreprise_raisonSociale",
+    "demandeur_entreprise_siretSiegeSocial",
+    "numero_identifiant_lieu",
+    "statut",
+    "typologie",
+    "academie_historique_intervention",
+    "academie_groupe_instructeur",
+    "domaines",
+    "erreur_traitement_pass_culture",
+]
 EXTRA_SCHEMAS = {
     "jeunes": [
         {"name": "applicant_department", "type": "STRING"},
         {"name": "applicant_postal_code", "type": "STRING"},
     ],
-    "pro": [
-        {"name": "demandeur_siret", "type": "STRING"},
-        {"name": "demandeur_naf", "type": "STRING"},
-        {"name": "demandeur_libelleNaf", "type": "STRING"},
-        {"name": "demandeur_entreprise_siren", "type": "STRING"},
-        {"name": "demandeur_entreprise_formeJuridique", "type": "STRING"},
-        {"name": "demandeur_entreprise_formeJuridiqueCode", "type": "STRING"},
-        {"name": "demandeur_entreprise_codeEffectifEntreprise", "type": "STRING"},
-        {"name": "demandeur_entreprise_raisonSociale", "type": "STRING"},
-        {"name": "demandeur_entreprise_siretSiegeSocial", "type": "STRING"},
-        {"name": "numero_identifiant_lieu", "type": "STRING"},
-        {"name": "statut", "type": "STRING"},
-        {"name": "typologie", "type": "STRING"},
-        {"name": "academie_historique_intervention", "type": "STRING"},
-        {"name": "academie_groupe_instructeur", "type": "STRING"},
-        {"name": "domaines", "type": "STRING"},
-        {"name": "erreur_traitement_pass_culture", "type": "STRING"},
-    ],
+    "pro" :[{"name": field, "type": "STRING"} for field in fields],
 }
 
 

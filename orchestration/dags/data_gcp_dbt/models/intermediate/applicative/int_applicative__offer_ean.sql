@@ -3,16 +3,16 @@ with
         select
             offer_id,
             offer_subcategoryid,
+            rayon,
+            book_editor,
             regexp_replace(ean, r'[\\s\\-\\tA-Za-z]', '') as ean,
             regexp_replace(isbn, r'[\\s\\-\\tA-Za-z]', '') as isbn,
             case
                 when length(cast(titelive_gtl_id as string)) = 7
                 then concat('0', cast(titelive_gtl_id as string))
                 else cast(titelive_gtl_id as string)
-            end as titelive_gtl_id,
-            rayon,
-            book_editor
-        from {{ ref("int_applicative__extract_offer") }} o
+            end as titelive_gtl_id
+        from {{ ref("int_applicative__extract_offer") }}
     ),
 
     validity_isbn_ean as (
@@ -38,14 +38,16 @@ with
             end as ean_is_valid
         from clean_references
     ),
-    clean_isbn as (
+
+clean_isbn as (
         select
             * except (ean, isbn),
-            case when isbn_is_valid = 'valid' then isbn else null end as isbn,
-            case when ean_is_valid = 'valid' then ean else null end as ean
+            case when isbn_is_valid = 'valid' then isbn end as isbn,
+            case when ean_is_valid = 'valid' then ean end as ean
         from validity_isbn_ean
     ),
-    matching_isbn_with_rayon as (
+
+matching_isbn_with_rayon as (
         select isbn, rayon
         from clean_isbn
         where
@@ -58,7 +60,8 @@ with
             row_number() over (partition by isbn order by count(distinct offer_id) desc)
             = 1
     ),
-    matching_isbn_with_editor as (
+
+matching_isbn_with_editor as (
         select isbn, book_editor
         from clean_isbn
         where
@@ -75,14 +78,14 @@ with
 select
     clean_isbn.offer_id,
     clean_isbn.ean,
+    clean_isbn.titelive_gtl_id,  -- TODO(legacy): isbn is overwritted by ean
+    matching_isbn_with_rayon.rayon,
+    matching_isbn_with_editor.book_editor,
     if(
         length(clean_isbn.ean) = 13,
         coalesce(clean_isbn.ean, clean_isbn.isbn),
         clean_isbn.isbn
-    ) as isbn,  -- TODO(legacy): isbn is overwritted by ean
-    clean_isbn.titelive_gtl_id,
-    matching_isbn_with_rayon.rayon as rayon,
-    matching_isbn_with_editor.book_editor as book_editor
+    ) as isbn
 from clean_isbn
-left join matching_isbn_with_rayon using (isbn)
+left join matching_isbn_with_rayon on clean_isbn.isbn = matching_isbn_with_rayon.isbn
 left join matching_isbn_with_editor using (isbn)

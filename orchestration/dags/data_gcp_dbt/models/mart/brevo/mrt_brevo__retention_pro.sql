@@ -1,8 +1,7 @@
 select
-    btp.offerer_id,
     btp.brevo_tag,
+    btp.offerer_id,
     go.offerer_name,
-    btp.event_date,
     go.last_individual_offer_creation_date,
     go.last_collective_offer_creation_date,
     go.last_individual_bookable_offer_date,

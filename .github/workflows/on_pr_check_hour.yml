@@ -1,0 +1,27 @@
+name: "1. [on_pr] Prevent Merges on Master Allowed Hours"
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+  schedule:
+    - cron: '*/5 12-17 * * *'
+
+jobs:
+  check_time:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get current time (UTC)
+        id: get_time
+        run: echo "current_hour=$(date -u +'%H')" >> $GITHUB_ENV
+
+      - name: Block merge if outside allowed hours
+        run: |
+          if [ $((10#$current_hour)) -ge 18 ] || [ $((10#$current_hour)) -lt 12 ]; then
+            echo "Merges are not allowed between 18:00 and 12:00 UTC."
+            exit 1
+          else
+            echo "Merge allowed."
+          fi
+        env:
+          current_hour: ${{ env.current_hour }}

@@ -1,17 +1,15 @@
-import json
 import logging
 
 from google.cloud import logging as cloud_logging
-from google.cloud.logging.handlers import CloudLoggingHandler
-from google.cloud.logging.handlers.transports import BackgroundThreadTransport
+from google.cloud.logging_v2.handlers import CloudLoggingHandler
+from google.cloud.logging_v2.handlers.transports import BackgroundThreadTransport
 
 
-class StructuredLogger(logging.LoggerAdapter):
-    """A logger adapter to format log messages as structured JSON."""
+class CustomCloudLoggingHandler(CloudLoggingHandler):
+    """Custom Cloud Logging handler to ensure severity is set correctly."""
 
-    def process(self, msg, kwargs):
-        # Extract severity from the log record
-        log_level = kwargs.get("level", self.logger.level)
+    def emit(self, record):
+        # Map Python log levels to Google Cloud severity levels
         severity_map = {
             logging.DEBUG: "DEBUG",
             logging.INFO: "INFO",
@@ -19,35 +17,35 @@ class StructuredLogger(logging.LoggerAdapter):
             logging.ERROR: "ERROR",
             logging.CRITICAL: "CRITICAL",
         }
-        severity = severity_map.get(log_level, "DEFAULT")
 
-        # Return a structured JSON message
-        return json.dumps({"message": msg, "severity": severity}), kwargs
+        # Set the severity on the record
+        record.severity = severity_map.get(record.levelno, "DEFAULT")
+        super().emit(record)
 
 
 def setup_logger():
     # Create the Google Cloud Logging client
     client = cloud_logging.Client()
 
-    # Create a Cloud Logging handler
-    cloud_handler = CloudLoggingHandler(client, transport=BackgroundThreadTransport)
+    # Use the custom Cloud Logging handler
+    cloud_handler = CustomCloudLoggingHandler(
+        client, transport=BackgroundThreadTransport
+    )
 
     # Set up a standard Python logger
-    base_logger = logging.getLogger("hypercorn")
-    base_logger.setLevel(logging.INFO)  # Set base level to INFO
-    base_logger.addHandler(cloud_handler)
+    logger = logging.getLogger("hypercorn")
+    logger.setLevel(logging.INFO)  # Set base level to INFO
+    logger.addHandler(cloud_handler)
 
     # Add a console handler for local debugging (optional)
     console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter("%(message)s"))
-    base_logger.addHandler(console_handler)
+    console_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+    logger.addHandler(console_handler)
 
-    # Wrap the logger with the StructuredLogger
-    structured_logger = StructuredLogger(base_logger, {})
-    return structured_logger
+    return logger
 
 
-# Setup the structured logger
+# Setup the logger
 logger = setup_logger()
 
 # Test logging with different levels

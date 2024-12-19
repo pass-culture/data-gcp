@@ -50,7 +50,7 @@ select
                 "subcategoryId",
                 "choosenSuggestedSubcategory",
                 "status",
-                "selected_offers"
+                "selected_offers",
             ]
         )
     }},

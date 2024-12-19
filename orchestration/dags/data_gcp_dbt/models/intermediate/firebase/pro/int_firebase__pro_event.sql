@@ -122,10 +122,10 @@ with
 
     final as (
         select
-            * except (selected_offers_array, item.offerid, item.offerstatus),
-            coalesce(json_extract_scalar(item, "$.offerId"), offerid) as offer_id,
+            * except (selected_offers_array, offer_id, offer_status),
+            coalesce(json_extract_scalar(item, "$.offerId"), cast(offer_id as string)) as offer_id,
             coalesce(
-                json_extract_scalar(item, "$.offerStatus"), offerstatus
+                json_extract_scalar(item, "$.offerStatus"), offer_status
             ) as offer_status,
         from
             clean_url_path_and_multiple_selection, unnest(selected_offers_array) as item

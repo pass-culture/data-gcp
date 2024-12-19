@@ -71,7 +71,7 @@ with
             ) as url_path_agg,
             page_referrer,
             page_number,
-            coalesce(double_offer_id, offerid) as offerid,
+            coalesce(double_offer_id, offerid) as offer_id,
             offertype as offer_type,
             saved as has_saved_query,
             hasonly6eand5estudents as has_opened_wrong_student_modal,
@@ -87,7 +87,7 @@ with
             filescount as download_files_cnt,
             subcategoryid as offer_subcategory_id,
             choosensuggestedsubcategory as suggested_offer_subcategory_selected,
-            status as offerstatus,
+            status as offer_status,
             selected_offers
         from {{ ref("int_firebase__pro_event_flattened") }}
         {% if is_incremental() %}

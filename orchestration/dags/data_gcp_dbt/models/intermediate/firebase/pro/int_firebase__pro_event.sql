@@ -123,7 +123,9 @@ with
     final as (
         select
             * except (selected_offers_array, offer_id, offer_status),
-            coalesce(json_extract_scalar(item, "$.offerId"), cast(offer_id as string)) as offer_id,
+            coalesce(
+                json_extract_scalar(item, "$.offerId"), cast(offer_id as string)
+            ) as offer_id,
             coalesce(
                 json_extract_scalar(item, "$.offerStatus"), offer_status
             ) as offer_status,

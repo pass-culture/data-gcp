@@ -26,7 +26,6 @@ packages-install-path: "{{ env_var('DBT_TARGET_PATH', 'target') }}/dbt_packages"
 clean-targets:
   - "{{ env_var('DBT_TARGET_PATH', 'target') }}"
 
-
 models:
   data_gcp_dbt:
     +pre-hook:

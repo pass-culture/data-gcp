@@ -58,10 +58,10 @@ class ZendeskAPI:
 
     def fetch_tickets(self, updated_at: str) -> List[Dict[str, Any]]:
         """
-        Fetches closed tickets created after the specified date.
+        Fetches closed tickets udpdated after the specified date.
 
         Args:
-            updated_at (str): The creation date filter for tickets.
+            updated_at (str): The modification date filter for tickets.
 
         Returns:
             List[Dict[str, Any]]: List of ticket dictionaries.

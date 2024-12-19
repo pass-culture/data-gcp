@@ -39,7 +39,7 @@ with
         from clean_references
     ),
 
-clean_isbn as (
+    clean_isbn as (
         select
             * except (ean, isbn),
             case when isbn_is_valid = 'valid' then isbn end as isbn,
@@ -47,7 +47,7 @@ clean_isbn as (
         from validity_isbn_ean
     ),
 
-matching_isbn_with_rayon as (
+    matching_isbn_with_rayon as (
         select isbn, rayon
         from clean_isbn
         where
@@ -61,7 +61,7 @@ matching_isbn_with_rayon as (
             = 1
     ),
 
-matching_isbn_with_editor as (
+    matching_isbn_with_editor as (
         select isbn, book_editor
         from clean_isbn
         where

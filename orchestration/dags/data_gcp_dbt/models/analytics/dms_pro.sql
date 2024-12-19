@@ -8,7 +8,6 @@ select
     application_submitted_at,
     passed_in_instruction_at,
     processed_at,
-    application_motivation,
     instructors,
     demandeur_siret,
     demandeur_naf,

@@ -14,7 +14,6 @@ select
             cast((passed_in_instruction_at / 1000) as integer)
         ) as passed_in_instruction_at,
         timestamp_micros(cast((processed_at / 1000) as integer)) as processed_at,
-        application_motivation,
         instructors,
         demandeur_siret,
         demandeur_naf,
@@ -54,7 +53,6 @@ select
             cast((passed_in_instruction_at / 1000) as integer)
         ) as passed_in_instruction_at,
         timestamp_micros(cast((processed_at / 1000) as integer)) as processed_at,
-        application_motivation,
         instructors,
         applicant_department,
         applicant_postal_code

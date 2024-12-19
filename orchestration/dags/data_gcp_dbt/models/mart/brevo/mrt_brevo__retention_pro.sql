@@ -1,4 +1,4 @@
-SELECT
+select
     btp.offerer_id,
     btp.brevo_tag,
     go.offerer_name,
@@ -9,20 +9,29 @@ SELECT
     go.last_collective_bookable_offer_date,
     go.last_individual_booking_date,
     go.last_collective_booking_date,
-    DATE(go.offerer_creation_date) AS offerer_creation_date,
-    MIN(btp.event_date) AS first_open_date,
-    MAX(btp.event_date) AS last_open_date,
-    COUNT(DISTINCT CASE WHEN btp.email_is_opened THEN btp.event_date END) AS nb_open_days,
-    MIN(CASE WHEN btp.individual_bookable_offers > 0 THEN bvh.partition_date END) AS first_individual_bookable_date_after_mail,
-    MIN(CASE WHEN btp.collective_bookable_offers > 0 THEN bvh.partition_date END) AS first_collective_bookable_date_after_mail
-FROM {{ ref("mrt_brevo__transactional_pro") }} AS btp
-LEFT JOIN {{ ref("int_global__offerer") }} AS go ON btp.offerer_id = go.offerer_id
-LEFT JOIN {{ ref("mrt_global__venue") }} AS gv ON btp.offerer_id = gv.venue_managing_offerer_id
-LEFT JOIN {{ ref("bookable_venue_history") }} AS bvh ON gv.venue_id = bvh.venue_id
-    AND btp.event_date <= bvh.partition_date
-WHERE btp.offerer_id IS NOT null
-    AND btp.email_is_opened
-    AND (btp.brevo_tag LIKE "%retention%"
-    OR btp.brevo_tag LIKE "%inactiv%")
-GROUP BY
-    1,2,3,4,5,6,7,8,9,10
+    date(go.offerer_creation_date) as offerer_creation_date,
+    min(btp.event_date) as first_open_date,
+    max(btp.event_date) as last_open_date,
+    count(
+        distinct case when btp.email_is_opened then btp.event_date end
+    ) as nb_open_days,
+    min(
+        case when btp.individual_bookable_offers > 0 then bvh.partition_date end
+    ) as first_individual_bookable_date_after_mail,
+    min(
+        case when btp.collective_bookable_offers > 0 then bvh.partition_date end
+    ) as first_collective_bookable_date_after_mail
+from {{ ref("mrt_brevo__transactional_pro") }} as btp
+left join {{ ref("int_global__offerer") }} as go on btp.offerer_id = go.offerer_id
+left join
+    {{ ref("mrt_global__venue") }} as gv
+    on btp.offerer_id = gv.venue_managing_offerer_id
+left join
+    {{ ref("bookable_venue_history") }} as bvh
+    on gv.venue_id = bvh.venue_id
+    and btp.event_date <= bvh.partition_date
+where
+    btp.offerer_id is not null
+    and btp.email_is_opened
+    and (btp.brevo_tag like "%retention%" or btp.brevo_tag like "%inactiv%")
+group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10

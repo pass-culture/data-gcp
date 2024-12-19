@@ -57,6 +57,7 @@ def postprocess_data(df: pd.DataFrame) -> pd.DataFrame:
             .str.replace(f"{SEPARATOR_KEY}{EMPTY_ALIAS_KEYWORD}", "")
             .str.replace(f"{EMPTY_ALIAS_KEYWORD}{SEPARATOR_KEY}", ""),
             aliases_list=lambda df: df.aliases.str.split(SEPARATOR_KEY),
+            img=lambda df: df.img.str.replace("http://", "https://"),
         )
         .drop(
             columns=[
@@ -70,7 +71,6 @@ def postprocess_data(df: pd.DataFrame) -> pd.DataFrame:
         .explode("aliases_list")
         .rename(columns={"aliases_list": "alias"})
         .loc[lambda df: df.alias != EMPTY_ALIAS_KEYWORD]
-        .replace(lambda df: df.img.replace("http://", "https://"))
         .drop_duplicates()
     )
 

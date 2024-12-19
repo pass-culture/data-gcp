@@ -28,7 +28,7 @@ with
                 else 'invalid'
             end as isbn_is_valid,
             case
-                when length(ean) = 10 and regexp_contains(isbn, r'^\d{10}$')
+                when length(ean) = 10 and regexp_contains(ean, r'^\d{10}$')
                 then 'valid'
                 when length(ean) = 13 and regexp_contains(ean, r'^\d{13}$')
                 then 'valid'

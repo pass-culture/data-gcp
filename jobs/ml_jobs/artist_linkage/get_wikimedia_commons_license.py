@@ -13,6 +13,14 @@ app = typer.Typer()
 NO_AUTHOR_VALUE = "Auteur inconnu"
 NO_LICENSE_URL_VALUE = "URL de la licence inconnue"
 NO_LICENSE_VALUE = "Licence inconnue"
+ALLOWED_LICENSES = [
+    "CC BY 4.0",
+    "CC BY-SA 4.0",
+    "CC BY 3.0",
+    "CC BY-SA 3.0",
+    "Public domain",
+    "CC0",
+]
 
 
 def extract_title_from_url(url: str) -> str:
@@ -104,6 +112,25 @@ def get_image_license(image_urls: list[str]) -> pd.DataFrame:
     return pd.DataFrame(licenses_list)
 
 
+def remove_image_with_improper_license(df: pd.DataFrame) -> pd.DataFrame:
+    indexes_to_remove_images = df.image_license.notna() & ~df.image_license.isin(
+        ALLOWED_LICENSES
+    )
+    df.loc[
+        indexes_to_remove_images,
+        [
+            "image_file_url",
+            "filename",
+            "image_page_url",
+            "image_author",
+            "image_license",
+            "image_license_url",
+        ],
+    ] = None
+
+    return df
+
+
 @app.command()
 def main(
     artists_matched_on_wikidata: str = typer.Option(),
@@ -119,7 +146,7 @@ def main(
 
     artists_with_licenses_df = artists_df.merge(
         image_license_df, how="left", on="image_file_url"
-    )
+    ).pipe(remove_image_with_improper_license)
 
     artists_with_licenses_df.to_parquet(output_file_path)
 

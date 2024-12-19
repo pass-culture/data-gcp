@@ -48,6 +48,8 @@ select
                 "fileType",
                 "subcategoryId",
                 "choosenSuggestedSubcategory",
+                "status",
+                "selected_offers"
             ]
         )
     }},

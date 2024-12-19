@@ -114,14 +114,7 @@ def get_image_license(image_urls: list[str]) -> pd.DataFrame:
 
 def remove_image_with_improper_license(df: pd.DataFrame) -> pd.DataFrame:
     indexes_to_remove_images = df.image_license.notna() & ~df.image_license.isin(
-        [
-            "CC BY 4.0",
-            "CC BY-SA 4.0",
-            "CC BY 3.0",
-            "CC BY-SA 3.0",
-            "Public domain",
-            "CC0",
-        ]
+        ALLOWED_LICENSES
     )
     df.loc[
         indexes_to_remove_images,

@@ -1,16 +1,38 @@
 import logging
 
-import google.cloud.logging
+from google.cloud import logging as cloud_logging
 from google.cloud.logging.handlers import CloudLoggingHandler
 from google.cloud.logging.handlers.transports import BackgroundThreadTransport
 
 
 def setup_logger():
     # Create the Google Cloud Logging client
-    client = google.cloud.logging.Client()
+    client = cloud_logging.Client()
 
     # Create a Cloud Logging handler
     cloud_handler = CloudLoggingHandler(client, transport=BackgroundThreadTransport)
+
+    # Customize the handler to ensure correct severity levels
+    class CustomCloudLoggingHandler(CloudLoggingHandler):
+        def emit(self, record):
+            # Map Python log level to Google Cloud severity
+            if record.levelno == logging.DEBUG:
+                record.severity = "DEBUG"
+            elif record.levelno == logging.INFO:
+                record.severity = "INFO"
+            elif record.levelno == logging.WARNING:
+                record.severity = "WARNING"
+            elif record.levelno == logging.ERROR:
+                record.severity = "ERROR"
+            elif record.levelno == logging.CRITICAL:
+                record.severity = "CRITICAL"
+            else:
+                record.severity = "DEFAULT"
+            super().emit(record)
+
+    cloud_handler = CustomCloudLoggingHandler(
+        client, transport=BackgroundThreadTransport
+    )
 
     # Set up a standard Python logger
     logger = logging.getLogger("hypercorn")

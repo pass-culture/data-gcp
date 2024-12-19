@@ -1,24 +1,33 @@
+import json
 import logging
+import sys
 
-# Imports the Cloud Logging client library
-import google.cloud.logging
+from google.cloud import logging as cloud_logging
+from google.cloud.logging_v2.handlers import CloudLoggingHandler
 
 
 def setup_logger():
-    # Instantiates a client
-    client = google.cloud.logging.Client()
+    class StructuredLogHandler(logging.StreamHandler):
+        def emit(self, record):
+            log_entry = {"message": record.getMessage(), "severity": record.levelname}
+            self.stream.write(json.dumps(log_entry) + "\n")
 
-    # Retrieves a Cloud Logging handler based on the environment
-    # you're running in and integrates the handler with the
-    # Python logging module. By default this captures all logs
-    # at INFO level and higher
-    client.setup_logging()
+    # Initialize the Cloud Logging client
+    client = cloud_logging.Client()
+    cloud_handler = CloudLoggingHandler(client)
 
-    # Set up a standard Python logger
-    logger = logging.getLogger("hypercorn")
-    logger.setLevel(logging.INFO)  # Set base level to INFO
+    # Create a logger
+    logger = logging.getLogger("cloudLogger")
+    logger.setLevel(logging.DEBUG)  # Capture all levels of logging
 
-    return logger
+    # Create a structured log handler for stdout
+    structured_handler = StructuredLogHandler(stream=sys.stdout)
+    structured_handler.setLevel(logging.DEBUG)  # Capture all levels of logging
+
+    # Add the handlers to the logger
+    logger.addHandler(structured_handler)
+    logger.addHandler(cloud_handler)
+    logger.propagate = False
 
 
 # Setup the logger

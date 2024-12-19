@@ -44,7 +44,7 @@ with DAG(
             type="string",
         ),
         "ndays": Param(
-            default=14 if ENV_SHORT_NAME == "prod" else 1,
+            default=7 if ENV_SHORT_NAME == "prod" else 1,
             type="integer",
         ),
     },

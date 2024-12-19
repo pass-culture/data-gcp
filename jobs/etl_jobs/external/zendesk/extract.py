@@ -56,25 +56,25 @@ class ZendeskAPI:
             logger.error(f"Error fetching macros: {e}")
             raise RuntimeError(f"Error fetching macros: {e}")
 
-    def fetch_tickets(self, created_at: str) -> List[Dict[str, Any]]:
+    def fetch_tickets(self, updated_at: str) -> List[Dict[str, Any]]:
         """
         Fetches closed tickets created after the specified date.
 
         Args:
-            created_at (str): The creation date filter for tickets.
+            updated_at (str): The creation date filter for tickets.
 
         Returns:
             List[Dict[str, Any]]: List of ticket dictionaries.
         """
         try:
-            logger.info(f"Fetching tickets created after {created_at}.")
+            logger.info(f"Fetching tickets updated_at after {updated_at}.")
             tickets = [
                 ticket.to_dict()
                 for ticket in self.client.search_export(
                     type="ticket",
                     status="closed",
                     sort_order="desc",
-                    query=f"created_at>={created_at}",
+                    query=f"updated_at>={updated_at}",
                 )
             ]
             logger.info(f"Fetched {len(tickets)} tickets.")
@@ -96,18 +96,18 @@ class ZendeskAPI:
         logger.info(f"Macro statistics DataFrame created with {len(df)} rows.")
         return df
 
-    def create_ticket_stat_df(self, created_at: str) -> pd.DataFrame:
+    def create_ticket_stat_df(self, updated_at: str) -> pd.DataFrame:
         """
         Creates a DataFrame from ticket statistics.
 
         Args:
-            created_at (str): The creation date filter for tickets.
+            updated_at (str): The updated_at filter for tickets.
 
         Returns:
             pd.DataFrame: DataFrame containing ticket statistics.
         """
         logger.info("Creating ticket statistics DataFrame.")
-        tickets = self.fetch_tickets(created_at)
+        tickets = self.fetch_tickets(updated_at)
         df = pd.DataFrame([self._flatten_ticket_data(ticket) for ticket in tickets])
         logger.info(f"Ticket statistics DataFrame created with {len(df)} rows.")
         return df
@@ -127,9 +127,7 @@ class ZendeskAPI:
             field_key = TICKET_CUSTOM_FIELDS.get(custom_field["id"])
             if field_key:
                 value = custom_field.get("value")
-                flattened[field_key] = (
-                    ",".join(value) if isinstance(value, list) else value
-                )
+                flattened[field_key] = value
         flattened["user_id"] = self._get_user_id(ticket.get("requester_id"))
         return flattened
 
@@ -145,7 +143,12 @@ class ZendeskAPI:
         """
         try:
             user_dict = self.client.users(id=zendesk_id).to_dict()
-            return user_dict.get("user_fields", {}).get("user_id")
+            user = user_dict.get("user_fields", {}).get("user_id")
+            if user is not None:
+                return str(user)
+            else:
+                return None
+
         except RecordNotFoundException:
             logger.warning(f"User {zendesk_id} not found.")
             return None

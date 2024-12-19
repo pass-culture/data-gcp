@@ -15,10 +15,10 @@ select
         distinct case when btp.email_is_opened then btp.event_date end
     ) as nb_open_days,
     min(
-        case when btp.individual_bookable_offers > 0 then bvh.partition_date end
+        case when bvh.individual_bookable_offers > 0 then bvh.partition_date end
     ) as first_individual_bookable_date_after_mail,
     min(
-        case when btp.collective_bookable_offers > 0 then bvh.partition_date end
+        case when bvh.collective_bookable_offers > 0 then bvh.partition_date end
     ) as first_collective_bookable_date_after_mail
 from {{ ref("mrt_brevo__transactional_pro") }} as btp
 left join {{ ref("int_global__offerer") }} as go on btp.offerer_id = go.offerer_id

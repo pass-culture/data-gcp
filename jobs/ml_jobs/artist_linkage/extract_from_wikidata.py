@@ -70,6 +70,7 @@ def postprocess_data(df: pd.DataFrame) -> pd.DataFrame:
         .explode("aliases_list")
         .rename(columns={"aliases_list": "alias"})
         .loc[lambda df: df.alias != EMPTY_ALIAS_KEYWORD]
+        .replace(lambda df: df.img.replace("http://", "https://"))
         .drop_duplicates()
     )
 

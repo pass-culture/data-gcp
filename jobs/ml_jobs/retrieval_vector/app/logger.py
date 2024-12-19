@@ -1,46 +1,22 @@
 import logging
 
-from google.cloud import logging as cloud_logging
-from google.cloud.logging_v2.handlers import CloudLoggingHandler
-from google.cloud.logging_v2.handlers.transports import BackgroundThreadTransport
-
-
-class CustomCloudLoggingHandler(CloudLoggingHandler):
-    """Custom Cloud Logging handler to ensure severity is set correctly."""
-
-    def emit(self, record):
-        # Map Python log levels to Google Cloud severity levels
-        severity_map = {
-            logging.DEBUG: "DEBUG",
-            logging.INFO: "INFO",
-            logging.WARNING: "WARNING",
-            logging.ERROR: "ERROR",
-            logging.CRITICAL: "CRITICAL",
-        }
-
-        # Set the severity on the record
-        record.severity = severity_map.get(record.levelno, "DEFAULT")
-        super().emit(record)
+# Imports the Cloud Logging client library
+import google.cloud.logging
 
 
 def setup_logger():
-    # Create the Google Cloud Logging client
-    client = cloud_logging.Client()
+    # Instantiates a client
+    client = google.cloud.logging.Client()
 
-    # Use the custom Cloud Logging handler
-    cloud_handler = CustomCloudLoggingHandler(
-        client, transport=BackgroundThreadTransport
-    )
+    # Retrieves a Cloud Logging handler based on the environment
+    # you're running in and integrates the handler with the
+    # Python logging module. By default this captures all logs
+    # at INFO level and higher
+    client.setup_logging()
 
     # Set up a standard Python logger
     logger = logging.getLogger("hypercorn")
     logger.setLevel(logging.INFO)  # Set base level to INFO
-    logger.addHandler(cloud_handler)
-
-    # Add a console handler for local debugging (optional)
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
-    logger.addHandler(console_handler)
 
     return logger
 

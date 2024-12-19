@@ -5,6 +5,7 @@
 
 {% hide columns %}
 
+
 {% docs column__total_results %}The total number of results returned by the query associated with the event.{% enddocs %}
 {% docs column__header_link_name %}The name of the header link clicked during the event, if applicable.{% enddocs %}
 {% docs column__query_id %}The identifier for the query associated with the event.{% enddocs %}

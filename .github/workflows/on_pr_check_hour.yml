@@ -19,6 +19,7 @@ jobs:
 
       - name: Block merge if outside allowed hours
         run: |
+          echo "Current hour: ${{ env.current_hour }}"
           if [ $((10#$current_hour)) -ge 18 ] || [ $((10#$current_hour)) -lt 12 ]; then
             echo "Merges are not allowed between 18:00 and 12:00 UTC."
             exit 1

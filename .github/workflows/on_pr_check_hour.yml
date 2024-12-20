@@ -1,6 +1,8 @@
 name: "1. [on_pr] Prevent Merges on Master Allowed Hours"
 on:
   pull_request:
+    branches:
+      - master
     types:
       - opened
       - synchronize

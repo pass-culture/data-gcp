@@ -1570,6 +1570,8 @@
       
         
       
+        
+      
     
     
       
@@ -1615,6 +1617,27 @@
   
   <span class="md-ellipsis">
     Transactional pro
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../brevo/description__mrt_brevo_retention_pro/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Retention pro
   </span>
   
 
@@ -4323,9 +4346,17 @@
 
   <h1>Pro Event</h1>
 
-<p>The <code>mrt_pro__event</code> table captures detailed event data from professional applications. It includes information about user interactions, session details, and associated offers and venues. This table is essential for analyzing user behavior and engagement within the app, providing insights into user journeys and the effectiveness of marketing campaigns.</p>
+<p>The <code>mrt_pro__event</code>table captures detailed event data (screens seen, clicks, scrolls) from pass Culture professional website 'Portail Pro' where cultural partners can manage their profile and create offers.</p>
 
 <h2 id="table-description">Table description</h2>
+<p>Only datas for professional users who have accepted tracking cookies (approximately 80% of traffic) 
+are recorded in this table. Each row in this table corresponds to an event, an action triggered by the user while navigating the website.</p>
+<p>The key actions, listed in the event_name column, include (but are not limited to):</p>
+<ul>
+<li>hasClickedOffer: the pro user clicks on an offer to consult it.</li>
+<li>hasClickedShowBooking: the pro user displays a booking on one of its offers.</li>
+</ul>
+<p>For each recorded key event, additional event parameters are also stored to provide more context about the action. These parameters can include unique identifiers (e.g., the offer_id of the offer viewed, etc.) or the screen from which the action was initiated (column origin). </p>
 <table>
 <thead>
 <tr>

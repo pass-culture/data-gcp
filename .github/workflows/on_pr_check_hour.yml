@@ -5,7 +5,7 @@ on:
       - opened
       - synchronize
   schedule:
-    - cron: '0 12,18 * * *'
+    - cron: '33 13,18 * * *'
 
 jobs:
   check_time:

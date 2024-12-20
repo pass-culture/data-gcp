@@ -24,6 +24,5 @@
 {% docs column__download_files_cnt %}The count of files downloaded during the event, if applicable.{% enddocs %}
 {% docs column__suggested_offer_subcategory_selected %}Indicates whether a suggested offer subcategory was selected during the event.{% enddocs %}
 
-
 -- This will be hidden
 {% endhide %}

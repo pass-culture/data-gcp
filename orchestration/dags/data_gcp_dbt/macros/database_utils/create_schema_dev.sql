@@ -1,7 +1,7 @@
 {% macro create_schema_dev() %}
     -- If your username is incomptatible with BigQuery dataset naming constraints:
     -- https://cloud.google.com/bigquery/docs/datasets?hl=en#dataset-naming
-    {% set user_name = env_var("PERSONAL_DBT_USER") or env_var(
+    {% set user_name = env_var("PERSONAL_DBT_USER", false) or env_var(
         "USER", "anonymous_user"
     ) %}
     {% if target.name == "local" %}

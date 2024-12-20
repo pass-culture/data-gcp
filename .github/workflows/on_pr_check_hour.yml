@@ -7,7 +7,7 @@ on:
       - opened
       - synchronize
   schedule:
-    - cron: '0 12,18 * * *'
+    - cron: '0 10,11,16,17 * * 1-5' # Paris time with both daylight savings in UTC during weekdays
 
 jobs:
   check_time:

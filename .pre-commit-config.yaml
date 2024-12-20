@@ -32,7 +32,7 @@ repos:
       - id: sqlfmt
         name: SQL Formatting (sqlfmt)
         entry: sqlfmt --exclude "**/.venv/**" --exclude "**/venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"
-        stages: [push]
+        stages: [commit,push]
         language: python
         additional_dependencies: ["shandy-sqlfmt[jinjafmt]==0.23.2"]
         types: [sql]

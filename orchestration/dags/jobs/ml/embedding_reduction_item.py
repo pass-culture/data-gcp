@@ -6,7 +6,6 @@ from common.config import (
     BIGQUERY_ML_FEATURES_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
-    GCE_UV_INSTALLER,
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
 )
@@ -81,7 +80,6 @@ with DAG(
         branch="{{ params.branch }}",
         python_version="3.10",
         base_dir=BASE_PATH,
-        installer=GCE_UV_INSTALLER,
     )
 
     export_bq = BigQueryInsertJobOperator(
@@ -106,7 +104,6 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        installer=GCE_UV_INSTALLER,
         command="PYTHONPATH=. python dimension_reduction.py "
         "--config-file-name {{ params.reduction_config_file_name }} "
         f"--source-gs-path {dag_config['STORAGE_PATH']} "

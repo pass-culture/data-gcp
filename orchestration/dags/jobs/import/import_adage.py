@@ -81,7 +81,6 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="python main.py ",
-        installer="uv",
     )
 
     gce_instance_stop = StopGCEOperator(

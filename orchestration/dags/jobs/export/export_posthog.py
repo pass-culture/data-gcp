@@ -149,7 +149,6 @@ for job_name, table_name in TABLE_PARAMS.items():
             instance_name=instance_name,
             base_dir=DAG_CONFIG["BASE_DIR"],
             command="python main.py " f"--source-gs-path {storage_path}",
-            installer="uv",
             dag=dag,
         )
 

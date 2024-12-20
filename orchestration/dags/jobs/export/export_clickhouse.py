@@ -153,7 +153,6 @@ for dag_name, dag_params in dags.items():
             task_id="fetch_install_code",
             instance_name="{{ params.instance_name }}",
             branch="{{ params.branch }}",
-            installer="uv",
             python_version="3.10",
             base_dir=dag_config["BASE_DIR"],
             retries=2,
@@ -214,7 +213,6 @@ for dag_name, dag_params in dags.items():
                 task_id=f"{clickhouse_table_name}_export",
                 instance_name="{{ params.instance_name }}",
                 base_dir=dag_config["BASE_DIR"],
-                installer="uv",
                 command="python main.py "
                 f"--source-gs-path {GCP_STORAGE_URI}/{storage_path}/data-*.parquet "
                 f"--table-name {clickhouse_table_name} "
@@ -237,7 +235,6 @@ for dag_name, dag_params in dags.items():
                     task_id=f"{clickhouse_table_name}",
                     instance_name="{{ params.instance_name }}",
                     base_dir=dag_config["BASE_DIR"],
-                    installer="uv",
                     command=f"python refresh.py --table-name {clickhouse_table_name} --folder {clickhouse_folder_name}",
                     dag=dag,
                 )

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCE_UV_INSTALLER
+from common.config import DAG_FOLDER, ENV_SHORT_NAME
 from common.operators.gce import (
     InstallDependenciesOperator,
     SSHGCEOperator,
@@ -102,7 +102,6 @@ with DAG(
         python_version="3.10",
         base_dir="{{ params.base_dir }}",
         retries=2,
-        installer=GCE_UV_INSTALLER,
     )
 
     if ENV_SHORT_NAME == "dev":
@@ -111,7 +110,6 @@ with DAG(
             task_id="containerize_retrieval_vector",
             instance_name="{{ params.instance_name }}",
             base_dir="{{ params.base_dir }}",
-            installer=GCE_UV_INSTALLER,
             command="python deploy_dummy.py "
             "--experiment-name {{ params.experiment_name }} "
             "--model-name {{ params.model_name }} ",
@@ -121,7 +119,6 @@ with DAG(
             task_id="containerize_retrieval_vector",
             instance_name="{{ params.instance_name }}",
             base_dir="{{ params.base_dir }}",
-            installer=GCE_UV_INSTALLER,
             command="python deploy_model.py "
             "--experiment-name {{ params.experiment_name }} "
             "--model-name {{ params.model_name }} "

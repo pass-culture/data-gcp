@@ -30,11 +30,13 @@ SHEETS = {
     },
     "gsheet_educational_institution_student_headcount": {
         "spreadsheet_ids": [
-            "1H8ZH4IWVhtvCS6T0smSMrRu490rrNZIl--7dpRbersc",  # MASA
-            "1oKulYPFMNaJaZ3gpK-kuYnBKJxngQFwjQ4rA1YTWMDM",  # SEM
-            "1UKa67aDp0X1zO6tVm7GppC0HMHrlKIk9T_PCmEHjv74",  # Aix-Marseille
-            "1AwclRi49IJaTO3CfjegYu9siYFVobA839vNhYjsEgeM",  # MENJ
-            "1DVneUFuBhQTQS6I8tN1pcOuelsglwOyBnKVsQn4MlE8",  # MA
+            "1ntswOFC_eG_OCisuTJN8cwKp8dPOms1-MamQQbcLXTg",  # MASAF Final (2024-2025) -
+            "1fbrPv2mgo09xAtZ4BiQcM5B6ufwunCn6ymtCjJJQaaY",  # MEN Final (2024-2025) -
+            "1H8ZH4IWVhtvCS6T0smSMrRu490rrNZIl--7dpRbersc",  # MASA Provisional (2024-2025)
+            "1oKulYPFMNaJaZ3gpK-kuYnBKJxngQFwjQ4rA1YTWMDM",  # SEM Provisional (2024-2025)
+            "1UKa67aDp0X1zO6tVm7GppC0HMHrlKIk9T_PCmEHjv74",  # Aix-Marseille Provisional (2024-2025)
+            "1AwclRi49IJaTO3CfjegYu9siYFVobA839vNhYjsEgeM",  # MENJ Provisional (2024-2025)
+            "1DVneUFuBhQTQS6I8tN1pcOuelsglwOyBnKVsQn4MlE8",  # MA Provisional (2024-2025)
             "1J5l4zsGJiKLmYV68EjnsiN_8X7BFkR48fIecFgzhdkU",  # Historical DATA
         ],
         "expected_headers_dict": {

@@ -5,7 +5,7 @@
     partition_by={"field": "dbt_valid_to", "data_type": "timestamp"},
     tags=["source_snapshot"],
     check_cols=None,
-    invalidate_hard_delete=True,
+    invalidate_hard_delete=False,
     target_schema=generate_schema_name("raw_applicative_" ~ target.name)
 ) %}
     {% set config_params = {

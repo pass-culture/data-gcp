@@ -14,7 +14,7 @@ def extract_hourly_activity_data(json_data: list[dict]) -> pd.DataFrame:
     hourly_activity_data = []
     for entry in json_data:
         date = entry["date"]
-        for activity in entry["audience_activity"]:
+        for activity in entry.get("audience_activity", []):
             hourly_activity_data.append(
                 {"date": date, "hour": activity["hour"], "audience": activity["count"]}
             )
@@ -194,14 +194,17 @@ def account_import(business_api, business_id: str, from_date: str, to_date: str)
     tiktok_hourly_audience_activity_df = extract_hourly_activity_data(
         json_data=account_stats["data"]["metrics"]
     )
-    tiktok_hourly_audience_activity_df["account"] = account_stats["data"]["username"]
-    save_to_bq(
-        tiktok_hourly_audience_activity_df,
-        TIKTOK_ACCOUNT_HOURLY_AUDIENCE,
-        from_date,
-        to_date,
-        "date",
-    )
+    if tiktok_hourly_audience_activity_df.shape[0] > 0:
+        tiktok_hourly_audience_activity_df["account"] = account_stats["data"][
+            "username"
+        ]
+        save_to_bq(
+            tiktok_hourly_audience_activity_df,
+            TIKTOK_ACCOUNT_HOURLY_AUDIENCE,
+            from_date,
+            to_date,
+            "date",
+        )
 
     # Creating the tiktok_daily_activity dataframe
     tiktok_daily_activity_df = create_daily_activity_df(

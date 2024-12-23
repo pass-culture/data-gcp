@@ -10,9 +10,12 @@ from common.operators.gce import (
     StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
+from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
+
+DAG_NAME = "retrieval_vector_build"
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
@@ -44,14 +47,14 @@ gce_params = {
     "container_worker": {"dev": "1", "stg": "1", "prod": "1"},
 }
 
-schedule_dict = {"prod": "0 4 * * *", "dev": "0 6 * * *", "stg": "0 6 * * 3"}
+schedule_dict = {"prod": "0 6 * * *", "dev": "0 6 * * *", "stg": "0 6 * * 3"}
 
 
 with DAG(
-    "retrieval_vector_build",
+    DAG_NAME,
     default_args=default_args,
     description="Custom Building job",
-    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,

@@ -9,45 +9,42 @@
     )
 }}
 
-WITH temp AS (
-SELECT
-    user_id,
-    action_date AS user_information_modified_at,
-    date(action_date) AS event_date,
-    replace(
-        cast(
-            json_extract_scalar(
-                action_history_json_data, '$.modified_info.postalCode.new_info'
-            ) AS string
-        ),
-        '"',
-        ''
-    ) AS user_postal_code,
-    replace(
-        cast(
-            json_extract_scalar(
-                action_history_json_data, '$.modified_info.activity.new_info'
-            ) AS string
-        ),
-        '"',
-        ''
-    ) AS user_activity
-FROM {{ source("raw", "applicative_database_action_history") }}
-WHERE
-    action_type = 'INFO_MODIFIED'
-    {% if is_incremental() %}
-        and date(action_date) >= date_sub('{{ ds() }}', interval 1 day)
-    {% else %}
-        AND date(action_date)
-        >= date_sub('{{ ds() }}', INTERVAL {{ var("full_refresh_lookback") }})
-    {% endif %}
-)
+with
+    temp as (
+        select
+            user_id,
+            action_date as user_information_modified_at,
+            date(action_date) as event_date,
+            replace(
+                cast(
+                    json_extract_scalar(
+                        action_history_json_data, '$.modified_info.postalCode.new_info'
+                    ) as string
+                ),
+                '"',
+                ''
+            ) as user_postal_code,
+            replace(
+                cast(
+                    json_extract_scalar(
+                        action_history_json_data, '$.modified_info.activity.new_info'
+                    ) as string
+                ),
+                '"',
+                ''
+            ) as user_activity
+        from {{ source("raw", "applicative_database_action_history") }}
+        where
+            action_type = 'INFO_MODIFIED'
+            {% if is_incremental() %}
+                and date(action_date) >= date_sub('{{ ds() }}', interval 1 day)
+            {% else %}
+                and date(action_date)
+                >= date_sub('{{ ds() }}', interval {{ var("full_refresh_lookback") }})
+            {% endif %}
+    )
 
-SELECT
-    user_id,
-    user_information_modified_at,
-    event_date,
-    user_postal_code,
-    user_activity
-FROM temp
-WHERE (user_activity IS NOT null OR user_postal_code IS NOT null)
+select
+    user_id, user_information_modified_at, event_date, user_postal_code, user_activity
+from temp
+where (user_activity is not null or user_postal_code is not null)

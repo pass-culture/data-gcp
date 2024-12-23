@@ -9,54 +9,56 @@
     )
 }}
 
-SELECT
+select
     user_id,
-    action_date AS information_modified_at,
-    DATE(action_date) AS event_date,
-    REPLACE(
-        CAST(
-            JSON_EXTRACT_SCALAR(
+    action_date as information_modified_at,
+    date(action_date) as event_date,
+    replace(
+        cast(
+            json_extract_scalar(
                 action_history_json_data, '$.modified_info.postalCode.new_info'
-            ) AS string
+            ) as string
         ),
         '"',
         ''
-    ) AS user_postal_code,
-    REPLACE(
-        CAST(
-            JSON_EXTRACT_SCALAR(
+    ) as user_postal_code,
+    replace(
+        cast(
+            json_extract_scalar(
                 action_history_json_data, '$.modified_info.activity.new_info'
-            ) AS string
+            ) as string
         ),
         '"',
         ''
-    ) AS user_activity
-FROM {{ source("raw", "applicative_database_action_history") }}
-WHERE action_type = 'INFO_MODIFIED'
+    ) as user_activity
+from {{ source("raw", "applicative_database_action_history") }}
+where
+    action_type = 'INFO_MODIFIED'
     {% if is_incremental() %}
         and date(action_date) >= date_sub('{{ ds() }}', interval 1 day)
     {% else %}
-        AND DATE(action_date)
-        >= DATE_SUB('{{ ds() }}', INTERVAL {{ var("full_refresh_lookback") }})
+        and date(action_date)
+        >= date_sub('{{ ds() }}', interval {{ var("full_refresh_lookback") }})
     {% endif %}
-AND (
-  REPLACE(
-        CAST(
-            JSON_EXTRACT_SCALAR(
-                action_history_json_data, '$.modified_info.postalCode.new_info'
-            ) AS string
-        ),
-        '"',
-        ''
-    )  IS NOT null
-    OR
-REPLACE(
-        CAST(
-            JSON_EXTRACT_SCALAR(
-                action_history_json_data, '$.modified_info.activity.new_info'
-            ) AS string
-        ),
-        '"',
-        ''
-    ) IS NOT null
-)
+    and (
+        replace(
+            cast(
+                json_extract_scalar(
+                    action_history_json_data, '$.modified_info.postalCode.new_info'
+                ) as string
+            ),
+            '"',
+            ''
+        )
+        is not null
+        or replace(
+            cast(
+                json_extract_scalar(
+                    action_history_json_data, '$.modified_info.activity.new_info'
+                ) as string
+            ),
+            '"',
+            ''
+        )
+        is not null
+    )

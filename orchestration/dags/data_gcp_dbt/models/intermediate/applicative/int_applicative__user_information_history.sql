@@ -9,56 +9,45 @@
     )
 }}
 
-select
+WITH temp AS (
+SELECT
     user_id,
-    action_date as information_modified_at,
-    date(action_date) as event_date,
+    action_date AS user_information_modified_at,
+    date(action_date) AS event_date,
     replace(
         cast(
             json_extract_scalar(
                 action_history_json_data, '$.modified_info.postalCode.new_info'
-            ) as string
+            ) AS string
         ),
         '"',
         ''
-    ) as user_postal_code,
+    ) AS user_postal_code,
     replace(
         cast(
             json_extract_scalar(
                 action_history_json_data, '$.modified_info.activity.new_info'
-            ) as string
+            ) AS string
         ),
         '"',
         ''
-    ) as user_activity
-from {{ source("raw", "applicative_database_action_history") }}
-where
+    ) AS user_activity
+FROM {{ source("raw", "applicative_database_action_history") }}
+WHERE
     action_type = 'INFO_MODIFIED'
     {% if is_incremental() %}
         and date(action_date) >= date_sub('{{ ds() }}', interval 1 day)
     {% else %}
-        and date(action_date)
-        >= date_sub('{{ ds() }}', interval {{ var("full_refresh_lookback") }})
+        AND date(action_date)
+        >= date_sub('{{ ds() }}', INTERVAL {{ var("full_refresh_lookback") }})
     {% endif %}
-    and (
-        replace(
-            cast(
-                json_extract_scalar(
-                    action_history_json_data, '$.modified_info.postalCode.new_info'
-                ) as string
-            ),
-            '"',
-            ''
-        )
-        is not null
-        or replace(
-            cast(
-                json_extract_scalar(
-                    action_history_json_data, '$.modified_info.activity.new_info'
-                ) as string
-            ),
-            '"',
-            ''
-        )
-        is not null
-    )
+)
+
+SELECT
+    user_id,
+    user_information_modified_at,
+    event_date,
+    user_postal_code,
+    user_activity
+FROM temp
+WHERE (user_activity IS NOT null OR user_postal_code IS NOT null)

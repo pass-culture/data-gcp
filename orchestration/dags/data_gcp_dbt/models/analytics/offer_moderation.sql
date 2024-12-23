@@ -230,14 +230,12 @@ select distinct
     ) as is_collectivity,
     offer_humanized_id.offer_humanized_id as offer_humanized_id,
     concat(
-        'https://passculture.pro/offre/individuelle/',
-        offer_humanized_id.offer_humanized_id,
-        '/informations'
-    ) as passculture_pro_url,
+        'https://backoffice.passculture.team/pro/offer/',
+        offer.offer_id) as passculture_pro_url,
     concat('https://passculture.app/offre/', offer.offer_id) as webapp_url,
     concat(
-        "https://passculture.pro/offres?structure=",
-        offerer_humanized_id.offerer_humanized_id
+        "https://backoffice.passculture.team/pro/offerer/",
+        venue.venue_managing_offerer_id
     ) as link_pc_pro,
     count_bookings.first_booking_date as first_booking_date,
     coalesce(count_bookings.max_bookings_in_day, 0) as max_bookings_in_day,

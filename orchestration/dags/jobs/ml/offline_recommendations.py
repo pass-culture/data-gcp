@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     DATA_GCS_BUCKET_NAME,
@@ -41,6 +40,7 @@ DAG_CONFIG = {
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
     "TOKENIZERS_PARALLELISM": "false",
     "API_TOKEN_SECRET_ID": f"api-reco-token-{ENV_SHORT_NAME}",
+    "API_URL_SECRET_ID": "api-reco-internal-url",
 }
 with DAG(
     "offline_recommendation",
@@ -118,7 +118,7 @@ with DAG(
                 extra_params={},
             )
         )
-    
+
     gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )

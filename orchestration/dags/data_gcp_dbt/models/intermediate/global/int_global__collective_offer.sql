@@ -57,7 +57,9 @@ select
     co.institution_macro_density_label,
     co.institution_density_level,
     concat(
-        'https://backoffice.passculture.team/pro/collective-offer/', co.collective_offer_id, 'details'
+        'https://backoffice.passculture.team/pro/collective-offer/',
+        co.collective_offer_id,
+        'details'
     ) as passculture_pro_url,
     co.collective_offer_is_template,
     co.collective_offer_image_id,

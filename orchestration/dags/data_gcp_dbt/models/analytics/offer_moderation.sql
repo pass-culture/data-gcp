@@ -230,8 +230,8 @@ select distinct
     ) as is_collectivity,
     offer_humanized_id.offer_humanized_id as offer_humanized_id,
     concat(
-        'https://backoffice.passculture.team/pro/offer/',
-        offer.offer_id) as passculture_pro_url,
+        'https://backoffice.passculture.team/pro/offer/', offer.offer_id
+    ) as passculture_pro_url,
     concat('https://passculture.app/offre/', offer.offer_id) as webapp_url,
     concat(
         "https://backoffice.passculture.team/pro/offerer/",

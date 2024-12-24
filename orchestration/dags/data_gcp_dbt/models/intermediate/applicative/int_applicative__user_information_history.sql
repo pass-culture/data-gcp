@@ -13,7 +13,7 @@ with
     user_attribute_changes as (
         select
             user_id,
-            action_date as user_information_modified_at,
+            action_date as user_modified_at,
             date(action_date) as event_date,
             replace(
                 cast(
@@ -45,6 +45,6 @@ with
     )
 
 select
-    user_id, user_information_modified_at, event_date, user_postal_code, user_activity
+    user_id, user_modified_at, event_date, user_postal_code, user_activity
 from user_attribute_changes
 where (user_activity is not null or user_postal_code is not null)

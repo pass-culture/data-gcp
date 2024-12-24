@@ -9,8 +9,8 @@ models:
       - name: event_date
         description: '{{ doc("column__event_date") }}'
         data_type: DATE
-      - name: user_information_modified_at
-        description: '{{ doc("column__user_information_modified_at") }}'
+      - name: user_modified_at
+        description: '{{ doc("column__user_modified_at") }}'
         data_type: DATETIME
       - name: user_postal_code
         description: '{{ doc("column__user_postal_code") }}'

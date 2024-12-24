@@ -44,7 +44,6 @@ with
             {% endif %}
     )
 
-select
-    user_id, user_modified_at, event_date, user_postal_code, user_activity
+select user_id, user_modified_at, event_date, user_postal_code, user_activity
 from user_attribute_changes
 where (user_activity is not null or user_postal_code is not null)

@@ -23,7 +23,7 @@ dag_config = {
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
-    "retries": 1,
+    "retries": 2,
     "on_failure_callback": task_fail_slack_alert,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
@@ -46,7 +46,9 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        instance_type="n1-standard-2",
     )
 
     fetch_install_code = InstallDependenciesOperator(

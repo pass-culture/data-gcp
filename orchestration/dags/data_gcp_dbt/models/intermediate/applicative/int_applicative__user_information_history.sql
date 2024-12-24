@@ -10,7 +10,7 @@
 }}
 
 with
-    temp as (
+    user_attribute_changes as (
         select
             user_id,
             action_date as user_information_modified_at,
@@ -46,5 +46,5 @@ with
 
 select
     user_id, user_information_modified_at, event_date, user_postal_code, user_activity
-from temp
+from user_attribute_changes
 where (user_activity is not null or user_postal_code is not null)

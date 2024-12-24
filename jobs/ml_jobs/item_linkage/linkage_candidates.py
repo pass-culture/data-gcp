@@ -1,14 +1,19 @@
 import uuid
 
+import numpy as np
 import pandas as pd
 import typer
-from docarray import Document
 from hnne import HNNE
 from loguru import logger
-from tqdm import tqdm
-import numpy as np
 from sklearn.preprocessing import normalize
-from constants import MODEL_PATH, NUM_RESULTS, UNKNOWN_PERFORMER
+from tqdm import tqdm
+
+from constants import (
+    MODEL_PATH,
+    NUM_RESULTS,
+    SYNCHRO_SUBCATEGORIES,
+    UNKNOWN_PERFORMER,
+)
 from model.semantic_space import SemanticSpace
 from utils.common import (
     preprocess_embeddings_by_chunk,
@@ -16,8 +21,6 @@ from utils.common import (
     reduce_embeddings,
 )
 from utils.gcs_utils import upload_parquet
-
-COLUMN_NAME_LIST = ["item_id", "performer", "offer_name"]
 
 app = typer.Typer()
 
@@ -39,13 +42,16 @@ def load_model(model_path: str, reduction: bool) -> SemanticSpace:
     return model
 
 
-def preprocess_data(chunk: pd.DataFrame, hnne_reducer: HNNE) -> pd.DataFrame:
+def preprocess_data(
+    chunk: pd.DataFrame, hnne_reducer: HNNE, linkage_type: str
+) -> pd.DataFrame:
     """
     Preprocess the data by reading the parquet file, filling missing values, and merging embeddings.
 
     Args:
         chunk (pd.DataFrame): The data to preprocess.
         hnne_reducer (HNNE): The HNNE reducer to use.
+        linkage_type (str): Type of linkage to perform
 
     Returns:
         pd.DataFrame: The preprocessed data.
@@ -53,7 +59,8 @@ def preprocess_data(chunk: pd.DataFrame, hnne_reducer: HNNE) -> pd.DataFrame:
     logger.info("Preprocessing data...")
     extract_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*(\d+)\b"  # This pattern is for extracting the edition number
     remove_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*\d+\b"  # This pattern is for removing the edition number and keyword
-
+    if linkage_type == "product":
+        chunk = chunk[chunk.offer_subcategory_id.isin(SYNCHRO_SUBCATEGORIES)]
     items_df = chunk.assign(
         performer=lambda df: df["performer"].fillna(value=UNKNOWN_PERFORMER),
         edition=lambda df: df["offer_name"]
@@ -64,22 +71,23 @@ def preprocess_data(chunk: pd.DataFrame, hnne_reducer: HNNE) -> pd.DataFrame:
         .str.replace(remove_pattern, "", regex=True)
         .str.strip(),
     ).drop(columns=["embedding"])
+
     if hnne_reducer:
         items_df["vector"] = reduce_embeddings(
             preprocess_embeddings_by_chunk(chunk), hnne_reducer=hnne_reducer
         )
     else:
         items_df["vector"] = list(preprocess_embeddings_by_chunk(chunk))
-    embeddings_list = items_df['vector'].tolist()
+    embeddings_list = items_df["vector"].tolist()
 
     # Convert embeddings to a NumPy array
     embeddings_array = np.array(embeddings_list)
 
     # Normalize the embeddings
-    normalized_embeddings = normalize(embeddings_array, norm='l2')
+    normalized_embeddings = normalize(embeddings_array, norm="l2")
 
     # Update the DataFrame with normalized embeddings
-    items_df['vector'] = list(normalized_embeddings)
+    items_df["vector"] = list(normalized_embeddings)
     return items_df
 
 
@@ -116,6 +124,7 @@ def generate_semantic_candidates(
 @app.command()
 def main(
     batch_size: int = typer.Option(default=..., help="Batch size"),
+    linkage_type: str = typer.Option(default=..., help="Linkage type"),
     reduction: str = typer.Option(default=..., help="Reduce embeddings"),
     input_path: str = typer.Option(default=..., help="Input table path"),
     output_path: str = typer.Option(default=..., help="Output table path"),
@@ -134,7 +143,9 @@ def main(
     tqdm.pandas()
     linkage_by_chunk = []
     for chunk in tqdm(read_parquet_in_batches_gcs(input_path, batch_size)):
-        items_with_embeddings_df = preprocess_data(chunk, model.hnne_reducer)
+        items_with_embeddings_df = preprocess_data(
+            chunk, model.hnne_reducer, linkage_type
+        )
         linkage_candidates_chunk = generate_semantic_candidates(
             model, items_with_embeddings_df
         )

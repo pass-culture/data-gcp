@@ -1,10 +1,11 @@
 import lancedb
+import numpy as np
 import pandas as pd
 import typer
 from lancedb.pydantic import LanceModel, Vector
 from loguru import logger
-import numpy as np
 from sklearn.preprocessing import normalize
+
 # Define constants
 from constants import (
     LANCEDB_BATCH_SIZE,
@@ -13,6 +14,7 @@ from constants import (
     NUM_PARTITIONS,
     NUM_SUB_VECTORS,
     PARQUET_BATCH_SIZE,
+    SYNCHRO_SUBCATEGORIES,
     UNKNOWN_PERFORMER,
 )
 from utils.common import (
@@ -23,7 +25,7 @@ from utils.common import (
 
 
 def preprocess_data_and_store_reducer(
-    chunk: pd.DataFrame, reducer_path: str, reduction: bool
+    chunk: pd.DataFrame, reducer_path: str, reduction: bool, linkage_type: str
 ) -> pd.DataFrame:
     """
     Prepare the table by reading the parquet file from GCS, preprocessing embeddings,
@@ -33,6 +35,7 @@ def preprocess_data_and_store_reducer(
         chunk (pd.DataFrame): The dataframe to prepare.
         reducer_path (str): The path to store the reducer.
         reduction (bool): Whether to reduce the embeddings.
+        linkage_type (str): Type of linkage to perform
     Returns:
         pd.DataFrame: The prepared dataframe with embeddings.
     """
@@ -58,18 +61,20 @@ def preprocess_data_and_store_reducer(
                 reducer_path=reducer_path,
             )
         )
+    if linkage_type == "product":
+        item_df = item_df[item_df.offer_subcategory_id.isin(SYNCHRO_SUBCATEGORIES)]
     else:
         item_df = item_df.assign(vector=list(preprocess_embeddings_by_chunk(chunk)))
-    embeddings_list = item_df['vector'].tolist()
+    embeddings_list = item_df["vector"].tolist()
 
     # Convert embeddings to a NumPy array
     embeddings_array = np.array(embeddings_list)
 
     # Normalize the embeddings
-    normalized_embeddings = normalize(embeddings_array, norm='l2')
+    normalized_embeddings = normalize(embeddings_array, norm="l2")
 
     # Update the DataFrame with normalized embeddings
-    item_df['vector'] = list(normalized_embeddings)
+    item_df["vector"] = list(normalized_embeddings)
     return item_df
 
 
@@ -120,7 +125,8 @@ def create_items_table(items_df: pd.DataFrame) -> None:
 
 def create_index_on_items_table() -> None:
     db = lancedb.connect(MODEL_PATH)
-    db.open_table("items").create_index(num_partitions=NUM_PARTITIONS, num_sub_vectors=NUM_SUB_VECTORS
+    db.open_table("items").create_index(
+        num_partitions=NUM_PARTITIONS, num_sub_vectors=NUM_SUB_VECTORS
     )
 
 
@@ -128,6 +134,9 @@ def main(
     input_path: str = typer.Option(
         default=...,
         help="GCS parquet path",
+    ),
+    linkage_type: str = typer.Option(
+        default="product", help="Type of linkage to perform"
     ),
     reduction: str = typer.Option(
         default="true",
@@ -151,7 +160,10 @@ def main(
     total_count = 0
     for chunk in read_parquet_in_batches_gcs(input_path, batch_size):
         item_df_enriched = preprocess_data_and_store_reducer(
-            chunk, MODEL_TYPE["reducer_pickle_path"], reduction=reduction
+            chunk,
+            MODEL_TYPE["reducer_pickle_path"],
+            reduction=reduction,
+            linkage_type=linkage_type,
         )
         create_items_table(item_df_enriched)
         total_count += len(chunk)

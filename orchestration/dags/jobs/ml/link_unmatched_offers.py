@@ -33,7 +33,7 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
 DATE = "{{ ts_nodash }}"
 
 # Environment variables to export before running commands
-GCS_FOLDER_PATH = f"linkage_item_{ENV_SHORT_NAME}/linkage_{DATE}"
+GCS_FOLDER_PATH = f"linkage_item_{ENV_SHORT_NAME}/linkage_unmatched_{DATE}"
 DAG_CONFIG = {
     "GCS_FOLDER_PATH": GCS_FOLDER_PATH,
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}",

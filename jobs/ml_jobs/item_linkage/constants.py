@@ -2,6 +2,13 @@ import os
 
 GCP_PROJECT = os.environ.get("PROJECT_NAME")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "")
+SYNCHRO_SUBCATEGORIES = [
+    "SUPPORT_PHYSIQUE_MUSIQUE_VINYLE",
+    "LIVRE_PAPIER",
+    "SUPPORT_PHYSIQUE_MUSIQUE_CD",
+    "SEANCE_CINE",
+]
+COLUMN_NAME_LIST = ["item_id", "performer", "offer_name"]
 
 MODEL_TYPE = {
     "n_dim": 32,

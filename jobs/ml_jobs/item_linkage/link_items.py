@@ -262,25 +262,51 @@ def postprocess_matching(matches, item_singletons_clean, item_synchro_clean):
         right_on="index_2",
         how="left",
     )
-    linkage_final = pd.merge(
+    linkage_full = pd.merge(
         linkage,
         item_singletons_renamed,
         left_on="index_1",
         right_on="index_1",
         how="left",
     )
-    linkage_final = linkage_final.drop(columns=["index_1", "index_2"])
+    linkage_full = linkage_full.drop(columns=["index_1", "index_2"])
     mask = (
-        linkage_final["offer_subcategory_id_candidates"]
-        == linkage_final["offer_subcategory_id_synchro"]
+        linkage_full["offer_subcategory_id_candidates"]
+        == linkage_full["offer_subcategory_id_synchro"]
     )
 
     # Filter the DataFrame using the mask
-    filtered_linkage_final = linkage_final[mask]
-    filtered_linkage_final["link_id"] = filtered_linkage_final["item_id_synchro"].apply(
-        hash
+    filtered_linkage = linkage_full[mask]
+    filtered_linkage["link_id"] = filtered_linkage["item_id_synchro"].apply(hash)
+    max_scores = filtered_linkage.groupby("item_id_candidate")[
+        "offer_name_score"
+    ].transform("max")
+
+    # Filter the DataFrame to keep rows where offer_name_score is equal to the maximum score for that item_id_candidate
+    linkage_final = filtered_linkage[filtered_linkage["offer_name_score"] == max_scores]
+
+    return linkage_final
+
+
+def extract_unmatched_elements(candidates, output):
+    merged_df = candidates.merge(
+        output, on="item_id_candidate", how="left", indicator=True
     )
-    return filtered_linkage_final
+
+    # Get unmatched offers
+    unmatched_elements = merged_df[merged_df["_merge"] == "left_only"].drop(
+        columns=["_merge"]
+    )
+    unmatched_elements_clean = unmatched_elements[
+        [
+            "item_id_candidate",
+            "offer_name",
+            "offer_description",
+            "performer",
+            "offer_subcategory_id_x",
+        ]
+    ].rename(columns={"offer_subcategory_id_x": "offer_subcategory_id"})
+    return unmatched_elements_clean
 
 
 @app.command()
@@ -289,6 +315,9 @@ def main(
     input_candidates_path: str = typer.Option(default=...),
     linkage_candidates_path: str = typer.Option(default=...),
     output_path: str = typer.Option(default=..., help="Output GCS path"),
+    unmatched_elements_path: str = typer.Option(
+        default=..., help="Output GCS path for unmatched elements"
+    ),
 ) -> None:
     """
     Main function to perform record linkage and upload the results to GCS.
@@ -298,6 +327,7 @@ def main(
         input_candidates_path (str): Path to the candidates data.
         linkage_candidates_path (str): Path to the linkage candidates data.
         output_path (str): Output GCS path.
+        unmatched_elements_path (str): Output GCS path for unmatched elements.
     """
     logger.info("Starting item linkage job")
     logger.info("Setup indexer..")
@@ -326,7 +356,9 @@ def main(
     ).pipe(clean_catalog)
 
     catalog_clean = pd.concat([item_synchro, item_singletons]).drop_duplicates()
-    linkage_candidates = pd.read_parquet(linkage_candidates_path)
+    linkage_candidates = pd.read_parquet(linkage_candidates_path).rename(
+        columns={"item_id": "item_id_candidate"}
+    )
     logger.info("Preparing tables..")
     (
         candidate_links,
@@ -344,10 +376,18 @@ def main(
     linkage_final = postprocess_matching(
         matches, item_singletons_clean, item_synchro_retrived_clean
     )
+    logger.info("Extracting unmatched elements..")
+    unmatched_elements = extract_unmatched_elements(linkage_candidates, linkage_final)
     logger.info("Uploading results..")
+    logger.info("Uploading linkage output..")
     upload_parquet(
         dataframe=linkage_final,
         gcs_path=output_path,
+    )
+    logger.info("Uploading unmatched elements..")
+    upload_parquet(
+        dataframe=unmatched_elements,
+        gcs_path=unmatched_elements_path,
     )
 
 

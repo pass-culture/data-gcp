@@ -50,6 +50,7 @@ DAG_CONFIG = {
     "INPUT_CANDIDATES_DIR": "item_candidates_data",
     "LINKAGE_CANDIDATES_FILENAME": "linkage_candidates_items.parquet",
     "LINKED_ITEMS_FILENAME": "linkage_items.parquet",
+    "UNMATCHED_ITEMS_FILENAME": "unmatched_items.parquet",
 }
 GCE_PARAMS = {
     "instance_name": f"linkage-item-{ENV_SHORT_NAME}",
@@ -193,24 +194,26 @@ with DAG(
         command="pip install -r requirements.txt --user",
     )
 
-    build_linkage_vector = SSHGCEOperator(
-        task_id="build_linkage_vector",
+    build_product_linkage_vector = SSHGCEOperator(
+        task_id="build_product_linkage_vector",
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
         command="python build_semantic_space.py "
         f"""--input-path {os.path.join(
                     DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_DIR"],"data-*.parquet"
                 )} """
+        f"--linkage-type product "
         f"--reduction {DAG_CONFIG['REDUCTION']} "
         f"--batch-size {DAG_CONFIG['BATCH_SIZE']} ",
     )
 
-    get_linkage_candidates = SSHGCEOperator(
-        task_id="get_linkage_candidates",
+    get_product_linkage_candidates = SSHGCEOperator(
+        task_id="get_product_linkage_candidates",
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
         command="python linkage_candidates.py "
         f"--batch-size {DAG_CONFIG['BATCH_SIZE']} "
+        f"--linkage-type product "
         f"--reduction {DAG_CONFIG['REDUCTION']} "
         f"""--input-path {os.path.join(
                     DAG_CONFIG["STORAGE_PATH"],  DAG_CONFIG["INPUT_CANDIDATES_DIR"],"data-*.parquet"
@@ -218,8 +221,8 @@ with DAG(
         f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKAGE_CANDIDATES_FILENAME'])} ",
     )
 
-    link_items = SSHGCEOperator(
-        task_id="link_items",
+    link_products = SSHGCEOperator(
+        task_id="link_products",
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
         command="python link_items.py "
@@ -230,7 +233,8 @@ with DAG(
                     DAG_CONFIG["STORAGE_PATH"],  DAG_CONFIG["INPUT_CANDIDATES_DIR"]
                 )} """
         f"--linkage-candidates-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKAGE_CANDIDATES_FILENAME'])} "
-        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKED_ITEMS_FILENAME'])} ",
+        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKED_ITEMS_FILENAME'])} "
+        f"--unmatched-elements-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['UNMATCHED_ITEMS_FILENAME'])} ",
     )
 
     load_link_items_into_bq = GCSToBigQueryOperator(
@@ -258,9 +262,9 @@ with DAG(
         >> gce_instance_start
         >> fetch_code
         >> install_dependencies
-        >> build_linkage_vector
-        >> get_linkage_candidates
-        >> link_items
+        >> build_product_linkage_vector
+        >> get_product_linkage_candidates
+        >> link_products
         >> load_link_items_into_bq
         >> gce_instance_stop
     )

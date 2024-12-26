@@ -9,7 +9,6 @@ from common.config import (
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
-    GCE_UV_INSTALLER,
     GCP_PROJECT_ID,
     INSTANCES_TYPES,
     MLFLOW_BUCKET_NAME,
@@ -160,7 +159,6 @@ with DAG(
         branch="{{ params.branch }}",
         python_version="'3.10'",
         base_dir=dag_config["BASE_DIR"],
-        installer=GCE_UV_INSTALLER,
         retries=2,
     )
 
@@ -227,7 +225,6 @@ with DAG(
                 instance_name="{{ params.instance_name }}",
                 base_dir=dag_config["BASE_DIR"],
                 environment=dag_config,
-                installer=GCE_UV_INSTALLER,
                 command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/preprocess.py "
                 "--config-file-name {{ params.config_file_name }} "
                 f"--input-dataframe-file-name raw_recommendation_{split}_data "
@@ -245,7 +242,6 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
         "--config-file-name {{ params.config_file_name }} "
         "--experiment-name {{ params.experiment_name }} "
@@ -261,7 +257,6 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
         "--experiment-name {{ params.experiment_name }} "
         "--config-file-name {{ params.config_file_name }} ",
@@ -273,7 +268,6 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/upload_embeddings_to_bq.py "
         "--experiment-name {{ params.experiment_name }} "
         "--run-name {{ params.run_name }} "

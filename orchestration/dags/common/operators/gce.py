@@ -221,7 +221,7 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
         command: str,
         environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
-        use_uv: bool = False,
+        use_uv: bool = True,
         *args,
         **kwargs,
     ):
@@ -314,7 +314,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         command: str,
         base_dir: str = None,
         environment: t.Dict[str, str] = {},
-        installer: str = "conda",
+        installer: str = "uv",
         *args,
         **kwargs,
     ):

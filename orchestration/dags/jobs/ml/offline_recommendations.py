@@ -6,7 +6,6 @@ from common.config import (
     DAG_FOLDER,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
-    GCE_UV_INSTALLER,
 )
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
@@ -78,7 +77,6 @@ with DAG(
                 instance_name=GCE_INSTANCE,
                 base_dir=BASE_PATH,
                 environment=dag_config,
-                installer=GCE_UV_INSTALLER,
                 command="PYTHONPATH=. python main.py "
                 f"""--input-table {query_params["destination_table"]} --output-table offline_recommendation_{query_params["destination_table"]}""",
             )
@@ -97,7 +95,6 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        installer=GCE_UV_INSTALLER,
         python_version="3.10",
         retries=2,
     )

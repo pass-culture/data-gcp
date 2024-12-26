@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCE_UV_INSTALLER
+from common.config import DAG_FOLDER, ENV_SHORT_NAME
 from common.operators.gce import (
     InstallDependenciesOperator,
     SSHGCEOperator,
@@ -96,7 +96,6 @@ with DAG(
         branch="{{ params.branch }}",
         python_version="3.10",
         base_dir=BASE_DIR,
-        installer=GCE_UV_INSTALLER,
         retries=2,
     )
 
@@ -123,7 +122,6 @@ with DAG(
                 task_id=f"deploy_model_{experiment_name}_{endpoint_name}",
                 instance_name=GCE_INSTANCE,
                 base_dir=BASE_DIR,
-                installer=GCE_UV_INSTALLER,
                 command=deploy_command,
                 dag=dag,
             )

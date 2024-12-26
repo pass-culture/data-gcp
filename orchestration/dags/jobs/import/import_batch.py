@@ -69,7 +69,6 @@ with DAG(
         task_id="import_ios",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer="uv",
         command=f"""
         python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} ios
         """,
@@ -80,7 +79,6 @@ with DAG(
         task_id="import_android",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer="uv",
         command=f"""
         python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} android
         """,

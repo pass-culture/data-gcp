@@ -75,7 +75,6 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         do_xcom_push=True,
-        installer="uv",
         command="""
         python main.py
         """,

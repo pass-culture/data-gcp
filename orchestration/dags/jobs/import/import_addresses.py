@@ -86,10 +86,6 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "installer": Param(
-            default="uv",
-            enum=["uv", "conda"],
-        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start")
@@ -102,7 +98,6 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        installer="{{ params.installer }}",
         python_version="3.10",
         base_dir=BASE_PATH,
     )
@@ -114,7 +109,6 @@ with DAG(
         environment=dag_config,
         command="python main.py ",
         do_xcom_push=True,
-        installer="{{ params.installer }}",
     )
 
     gce_instance_stop = StopGCEOperator(

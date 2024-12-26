@@ -6,7 +6,6 @@ from common.config import (
     BIGQUERY_ML_RETRIEVAL_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
-    GCE_UV_INSTALLER,
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
 )
@@ -107,7 +106,6 @@ with DAG(
         python_version="3.10",
         base_dir=dag_config["BASE_DIR"],
         retries=2,
-        installer=GCE_UV_INSTALLER,
     )
 
     export_bq = BigQueryInsertJobOperator(
@@ -136,7 +134,6 @@ with DAG(
         "--model-name {{ params.model_name }} "
         f"--source-gs-path {dag_config['STORAGE_PATH']} "
         "--container-worker {{ params.container_worker }} ",
-        installer=GCE_UV_INSTALLER,
         dag=dag,
     )
 

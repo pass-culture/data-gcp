@@ -93,7 +93,6 @@ with DAG(
         task_id="dms_to_gcs_pro",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer="uv",
         environment=dag_config,
         command="python main.py pro {{ params.updated_since_pro }} ",
         do_xcom_push=True,
@@ -109,7 +108,6 @@ with DAG(
         task_id="dms_to_gcs_jeunes",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer="uv",
         environment=dag_config,
         command="python main.py jeunes {{ params.updated_since_jeunes }} ",
         do_xcom_push=True,
@@ -119,7 +117,6 @@ with DAG(
         task_id="parse_api_result_jeunes",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer="uv",
         environment=dag_config,
         command="python parse_dms_subscriptions_to_tabular.py --target jeunes --updated-since {{ params.updated_since_jeunes }} "
         + f"--bucket-name {DATA_GCS_BUCKET_NAME} ",
@@ -130,7 +127,6 @@ with DAG(
         task_id="parse_api_result_pro",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer="uv",
         environment=dag_config,
         command="python parse_dms_subscriptions_to_tabular.py --target pro --updated-since {{ params.updated_since_pro }} "
         + f"--bucket-name {DATA_GCS_BUCKET_NAME} ",

@@ -240,10 +240,8 @@ multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
-networkx==3.3
-    # via
-    #   -r requirements.in
-    #   torch
+networkx==3.4.0
+    # via torch
 numba==0.60.0
     # via
     #   hnne

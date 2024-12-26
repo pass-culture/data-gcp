@@ -38,19 +38,23 @@ DAG_CONFIG = {
     "GCS_FOLDER_PATH": GCS_FOLDER_PATH,
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}",
     "BASE_DIR": "data-gcp/jobs/ml_jobs/item_linkage/",
-    "EXPERIMENT_NAME": f"linkage_semantic_vector_v1.0_{ENV_SHORT_NAME}",
     "REDUCTION": "true",
     "BATCH_SIZE": 100000,
     "LINKAGE_ITEM_SOURCES_DATA_REQUEST": "linkage_item_sources_data.sql",
     "LINKAGE_ITEM_CANDIDATES_DATA_REQUEST": "linkage_item_candidates_data.sql",
     "INPUT_SOURCES_TABLE": f"{DATE}_input_sources_table",
-    "INPUT_CANDIDATES_TABLE": f"{DATE}_item_candidates_data",
-    "LINKED_ITEMS_TABLE": "linked_items",
-    "INPUT_SOURCES_DIR": "item_sources_data",
-    "INPUT_CANDIDATES_DIR": "item_candidates_data",
-    "LINKAGE_CANDIDATES_FILENAME": "linkage_candidates_items.parquet",
-    "LINKED_ITEMS_FILENAME": "linkage_items.parquet",
-    "UNMATCHED_ITEMS_FILENAME": "unmatched_items.parquet",
+    "INPUT_CANDIDATES_TABLE": f"{DATE}_input_candidates_data",
+    "LINKED_PRODUCT_TABLE": "linked_products",
+    "LINKED_OFFER_TABLE": "linked_offers",
+    "INPUT_SOURCES_DIR": "sources_data",
+    "INPUT_CANDIDATES_DIR": "candidates_data",
+    "PRODUCT_LINKAGE_CANDIDATES_FILENAME": "linkage_candidates_product.parquet",
+    "OFFER_LINKAGE_CANDIDATES_FILENAME": "linkage_candidates_offer.parquet",
+    "LINKED_PRODUCT_FILENAME": "linked_products.parquet",
+    "LINKED_OFFER_FILENAME": "linked_offers.parquet",
+    "LINKED_OFFER_W_ID_FILENAME": "linked_offers_w_id.parquet",
+    "UNMATCHED_PRODUCT_FILENAME": "unmatched_products.parquet",
+    "UNMATCHED_OFFER_FILENAME": "unmatched_offers.parquet",
 }
 GCE_PARAMS = {
     "instance_name": f"linkage-item-{ENV_SHORT_NAME}",
@@ -232,18 +236,80 @@ with DAG(
         f"""--input-candidates-path {os.path.join(
                     DAG_CONFIG["STORAGE_PATH"],  DAG_CONFIG["INPUT_CANDIDATES_DIR"]
                 )} """
-        f"--linkage-candidates-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKAGE_CANDIDATES_FILENAME'])} "
-        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKED_ITEMS_FILENAME'])} "
-        f"--unmatched-elements-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['UNMATCHED_ITEMS_FILENAME'])} ",
+        f"--linkage-candidates-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['PRODUCT_LINKAGE_CANDIDATES_FILENAME'])} "
+        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKED_PRODUCT_FILENAME'])} "
+        f"--unmatched-elements-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['UNMATCHED_PRODUCT_FILENAME'])} ",
     )
 
-    load_link_items_into_bq = GCSToBigQueryOperator(
+    load_linked_product_into_bq = GCSToBigQueryOperator(
         bucket=MLFLOW_BUCKET_NAME,
-        task_id="load_linked_artists_into_bq",
+        task_id="load_linked_product_into_bq",
         source_objects=os.path.join(
-            GCS_FOLDER_PATH, DAG_CONFIG["LINKED_ITEMS_FILENAME"]
+            GCS_FOLDER_PATH, DAG_CONFIG["LINKED_PRODUCT_FILENAME"]
         ),
-        destination_project_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['LINKED_ITEMS_TABLE']}",
+        destination_project_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['LINKED_PRODUCT_TABLE']}",
+        source_format="PARQUET",
+        write_disposition="WRITE_TRUNCATE",
+        autodetect=True,
+    )
+
+    build_offer_linkage_vector = SSHGCEOperator(
+        task_id="build_product_linkage_vector",
+        instance_name="{{ params.instance_name }}",
+        base_dir=DAG_CONFIG["BASE_DIR"],
+        command="python build_semantic_space.py "
+        f"""--input-path {os.path.join(
+                    DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_CANDIDATES_DIR"],"data-*.parquet"
+                )} """
+        f"--linkage-type offer "
+        f"--reduction {DAG_CONFIG['REDUCTION']} "
+        f"--batch-size {DAG_CONFIG['BATCH_SIZE']} "
+        f"--unmatched-elements-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['UNMATCHED_PRODUCT_FILENAME'])} ",
+    )
+
+    get_offer_linkage_candidates = SSHGCEOperator(
+        task_id="get_product_linkage_candidates",
+        instance_name="{{ params.instance_name }}",
+        base_dir=DAG_CONFIG["BASE_DIR"],
+        command="python linkage_candidates.py "
+        f"--batch-size {DAG_CONFIG['BATCH_SIZE']} "
+        f"--linkage-type product "
+        f"--reduction {DAG_CONFIG['REDUCTION']} "
+        f"""--input-path {os.path.join(
+                    DAG_CONFIG["STORAGE_PATH"],  DAG_CONFIG["INPUT_CANDIDATES_DIR"],"data-*.parquet"
+                )} """
+        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['OFFER_LINKAGE_CANDIDATES_FILENAME'])} "
+        f"--unmatched-elements-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['UNMATCHED_PRODUCT_FILENAME'])} ",
+    )
+
+    link_offers = SSHGCEOperator(
+        task_id="link_offers",
+        instance_name="{{ params.instance_name }}",
+        base_dir=DAG_CONFIG["BASE_DIR"],
+        command="python link_items.py "
+        f"""--input-sources-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['UNMATCHED_PRODUCT_FILENAME'])} """
+        f"""--input-candidates-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['UNMATCHED_PRODUCT_FILENAME'])} """
+        f"--linkage-candidates-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['OFFER_LINKAGE_CANDIDATES_FILENAME'])} "
+        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKED_OFFER_FILENAME'])} "
+        f"--unmatched-elements-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['UNMATCHED_OFFER_FILENAME'])} ",
+    )
+
+    assign_linked_ids = SSHGCEOperator(
+        task_id="assign_linked_ids",
+        instance_name="{{ params.instance_name }}",
+        base_dir=DAG_CONFIG["BASE_DIR"],
+        command="python link_items.py "
+        f"--input-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKED_OFFER_FILENAME'])} "
+        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKED_OFFER_W_ID_FILENAME'])} ",
+    )
+
+    load_linked_offer_into_bq = GCSToBigQueryOperator(
+        bucket=MLFLOW_BUCKET_NAME,
+        task_id="load_linked_offer_into_bq",
+        source_objects=os.path.join(
+            GCS_FOLDER_PATH, DAG_CONFIG["LINKED_OFFER_W_ID_FILENAME"]
+        ),
+        destination_project_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['LINKED_OFFER_TABLE']}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,
@@ -265,6 +331,11 @@ with DAG(
         >> build_product_linkage_vector
         >> get_product_linkage_candidates
         >> link_products
-        >> load_link_items_into_bq
+        >> load_linked_product_into_bq
+        >> build_offer_linkage_vector
+        >> get_offer_linkage_candidates
+        >> link_offers
+        >> assign_linked_ids
+        >> load_linked_offer_into_bq
         >> gce_instance_stop
     )

@@ -13,7 +13,7 @@ DEFAULTS = ["_distance"]
 
 
 class SemanticSpace:
-    def __init__(self, model_path: str, reduction: bool) -> None:
+    def __init__(self, model_path: str, linkage_type: str, reduction: bool) -> None:
         self.uri = model_path
         self._encoder = SentenceTransformer(config["transformer"])
         if reduction:
@@ -22,7 +22,7 @@ class SemanticSpace:
             self.hnne_reducer = None
 
         db = connect(self.uri)
-        self.table = db.open_table("items")
+        self.table = db.open_table(linkage_type)
 
     def search(
         self,

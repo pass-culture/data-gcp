@@ -25,7 +25,7 @@ from utils.gcs_utils import upload_parquet
 app = typer.Typer()
 
 
-def load_model(model_path: str, reduction: bool) -> SemanticSpace:
+def load_model(model_path: str, linkage_type: str, reduction: bool) -> SemanticSpace:
     """
     Load the SemanticSpace model from the given path.
 
@@ -37,7 +37,7 @@ def load_model(model_path: str, reduction: bool) -> SemanticSpace:
         SemanticSpace: The loaded model.
     """
     logger.info("Loading model...")
-    model = SemanticSpace(model_path, reduction)
+    model = SemanticSpace(model_path, linkage_type, reduction)
     logger.info("Model loaded.")
     return model
 
@@ -128,21 +128,30 @@ def main(
     reduction: str = typer.Option(default=..., help="Reduce embeddings"),
     input_path: str = typer.Option(default=..., help="Input table path"),
     output_path: str = typer.Option(default=..., help="Output table path"),
+    unmatched_elements_path: str = typer.Option(default=..., help="Unmatched elements"),
 ) -> None:
     """
     Main function to preprocess data, prepare vectors, generate semantic candidates, and upload the results to GCS.
 
     Args:
         batch_size (int): The size of each batch.
+        linkage_type (str): The type of linkage to perform.
         reduction (str): Whether to reduce the embeddings.
         input_path (str): The path to the input table.
         output_path (str): The path to the output table.
+        unmatched_elements_path (str): The path to the unmatched elements table.
     """
     reduction = True if reduction == "true" else False
-    model = load_model(MODEL_PATH, reduction)
+    model = load_model(MODEL_PATH, linkage_type, reduction)
+    if linkage_type == "offer":
+        unmatched_elements = pd.read_parquet(unmatched_elements_path)
     tqdm.pandas()
     linkage_by_chunk = []
     for chunk in tqdm(read_parquet_in_batches_gcs(input_path, batch_size)):
+        if linkage_type == "offer":
+            chunk = chunk.merge(
+                unmatched_elements[["item_id"]], on="item_id", how="inner"
+            )
         items_with_embeddings_df = preprocess_data(
             chunk, model.hnne_reducer, linkage_type
         )

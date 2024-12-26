@@ -78,7 +78,7 @@ def preprocess_data_and_store_reducer(
     return item_df
 
 
-def create_items_table(items_df: pd.DataFrame) -> None:
+def create_items_table(items_df: pd.DataFrame, linkage_type: str) -> None:
     """
     Create a LanceDB table from the given dataframe and create an index on it.
 
@@ -117,7 +117,7 @@ def create_items_table(items_df: pd.DataFrame) -> None:
         )
     except Exception:
         logger.info("LanceDB table already exists...")
-        tbl = db.open_table("items")
+        tbl = db.open_table(linkage_type)
         tbl.add(
             make_batches(df=items_df, batch_size=LANCEDB_BATCH_SIZE),
         )
@@ -146,6 +146,9 @@ def main(
         default=PARQUET_BATCH_SIZE,
         help="Batch size for reading the parquet file",
     ),
+    unmatched_elements_path: str = typer.Option(
+        default=..., help="GCS parquet unmatched elements path"
+    ),
 ) -> None:
     """
     Main function to download and prepare the table, create the LanceDB table, and save the model type.
@@ -157,15 +160,21 @@ def main(
     """
     logger.info("Download and prepare table...")
     reduction = True if reduction == "true" else False
+    if linkage_type == "offer":
+        unmatched_elements = pd.read_parquet(unmatched_elements_path)
     total_count = 0
     for chunk in read_parquet_in_batches_gcs(input_path, batch_size):
+        if linkage_type == "offer":
+            chunk = chunk.merge(
+                unmatched_elements[["item_id"]], on="item_id", how="inner"
+            )
         item_df_enriched = preprocess_data_and_store_reducer(
             chunk,
             MODEL_TYPE["reducer_pickle_path"],
             reduction=reduction,
             linkage_type=linkage_type,
         )
-        create_items_table(item_df_enriched)
+        create_items_table(item_df_enriched, linkage_type)
         total_count += len(chunk)
     logger.info(f"Total rows processed: {total_count}")
     create_index_on_items_table()

@@ -289,6 +289,7 @@ def postprocess_matching(matches, item_singletons_clean, item_synchro_clean):
 
 
 def extract_unmatched_elements(candidates, output):
+    candidates = candidates.rename(columns={"item_id": "item_id_candidate"})
     merged_df = candidates.merge(
         output, on="item_id_candidate", how="left", indicator=True
     )
@@ -305,7 +306,12 @@ def extract_unmatched_elements(candidates, output):
             "performer",
             "offer_subcategory_id_x",
         ]
-    ].rename(columns={"offer_subcategory_id_x": "offer_subcategory_id"})
+    ].rename(
+        columns={
+            "item_id_candidate": "item_id",
+            "offer_subcategory_id_x": "offer_subcategory_id",
+        }
+    )
     return unmatched_elements_clean
 
 
@@ -377,7 +383,7 @@ def main(
         matches, item_singletons_clean, item_synchro_retrived_clean
     )
     logger.info("Extracting unmatched elements..")
-    unmatched_elements = extract_unmatched_elements(linkage_candidates, linkage_final)
+    unmatched_elements = extract_unmatched_elements(item_singletons, linkage_final)
     logger.info("Uploading results..")
     logger.info("Uploading linkage output..")
     upload_parquet(

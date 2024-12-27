@@ -113,7 +113,7 @@ def create_items_table(items_df: pd.DataFrame, linkage_type: str) -> None:
     try:
         logger.info("Creating LanceDB table...")
         db.create_table(
-            "items",
+            linkage_type,
             make_batches(df=items_df, batch_size=LANCEDB_BATCH_SIZE),
             schema=ItemModel,
         )
@@ -125,9 +125,9 @@ def create_items_table(items_df: pd.DataFrame, linkage_type: str) -> None:
         )
 
 
-def create_index_on_items_table() -> None:
+def create_index_on_items_table(linkage_type: str) -> None:
     db = lancedb.connect(MODEL_PATH)
-    db.open_table("items").create_index(
+    db.open_table(linkage_type).create_index(
         num_partitions=NUM_PARTITIONS, num_sub_vectors=NUM_SUB_VECTORS
     )
 
@@ -149,7 +149,7 @@ def main(
         help="Batch size for reading the parquet file",
     ),
     unmatched_elements_path: Optional[str] = typer.Option(
-        default=..., help="GCS parquet unmatched elements path"
+        default=None, help="GCS parquet unmatched elements path"
     ),
 ) -> None:
     """
@@ -179,7 +179,7 @@ def main(
         create_items_table(item_df_enriched, linkage_type)
         total_count += len(chunk)
     logger.info(f"Total rows processed: {total_count}")
-    create_index_on_items_table()
+    create_index_on_items_table(linkage_type)
     logger.info
     logger.info("LanceDB table and index created!")
 

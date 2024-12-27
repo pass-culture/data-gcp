@@ -130,7 +130,7 @@ def main(
     input_path: str = typer.Option(default=..., help="Input table path"),
     output_path: str = typer.Option(default=..., help="Output table path"),
     unmatched_elements_path: Optional[str] = typer.Option(
-        default=..., help="Unmatched elements"
+        default=None, help="Unmatched elements"
     ),
 ) -> None:
     """

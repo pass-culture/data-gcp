@@ -322,7 +322,7 @@ def main(
     linkage_candidates_path: str = typer.Option(default=...),
     output_path: str = typer.Option(default=..., help="Output GCS path"),
     unmatched_elements_path: Optional[str] = typer.Option(
-        default=..., help="Output GCS path for unmatched elements"
+        default=None, help="Output GCS path for unmatched elements"
     ),
 ) -> None:
     """

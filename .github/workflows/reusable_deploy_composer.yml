@@ -114,10 +114,10 @@ jobs:
           gsutil cp target/semantic_manifest.json gs://$COMPOSER_DAGS_BUCKET/data/target/semantic_manifest.json
           gsutil cp target/static_index.html gs://$COMPOSER_DAGS_BUCKET/plugins/static/dbt_docs/index.html
 
-      - name: "Deploy composer"
+      - name: "Deploy composer (dags)"
         run: gsutil -m rsync -d -r dags gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/dags
 
-      - name: "Deploy composer"
+      - name: "Deploy composer (plugins)"
         run: gsutil -m rsync -d -r plugins gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/plugins
 
       - name: "Wait for composer to be deployed (10s x 6 times)"

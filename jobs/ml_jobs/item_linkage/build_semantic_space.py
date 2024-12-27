@@ -17,7 +17,6 @@ from constants import (
     NUM_SUB_VECTORS,
     PARQUET_BATCH_SIZE,
     SYNCHRO_SUBCATEGORIES,
-    UNKNOWN_PERFORMER,
 )
 from utils.common import (
     preprocess_embeddings_by_chunk,
@@ -41,19 +40,20 @@ def preprocess_data_and_store_reducer(
     Returns:
         pd.DataFrame: The prepared dataframe with embeddings.
     """
-    extract_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*(\d+)\b"  # This pattern is for extracting the edition number
-    remove_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*\d+\b"  # This pattern is for removing the edition number and keyword
+    # extract_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*(\d+)\b"  # This pattern is for extracting the edition number
+    # remove_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*\d+\b"  # This pattern is for removing the edition number and keyword
 
-    item_df = chunk.assign(
-        performer=lambda df: df["performer"].fillna(value=UNKNOWN_PERFORMER),
-        edition=lambda df: df["offer_name"]
-        .str.extract(extract_pattern, expand=False)
-        .astype(str)
-        .fillna(value="1"),
-        offer_name=lambda df: df["offer_name"]
-        .str.replace(remove_pattern, "", regex=True)
-        .str.strip(),
-    )
+    # item_df = chunk.assign(
+    #     performer=lambda df: df["performer"].fillna(value=UNKNOWN_PERFORMER),
+    #     edition=lambda df: df["offer_name"]
+    #     .str.extract(extract_pattern, expand=False)
+    #     .astype(str)
+    #     .fillna(value="1"),
+    #     offer_name=lambda df: df["offer_name"]
+    #     .str.replace(remove_pattern, "", regex=True)
+    #     .str.strip(),
+    # )
+    item_df = chunk
 
     if reduction:
         item_df = item_df.assign(
@@ -62,9 +62,7 @@ def preprocess_data_and_store_reducer(
                 n_dim=MODEL_TYPE["n_dim"],
                 reducer_path=reducer_path,
             )
-        )
-    if linkage_type == "product":
-        item_df = item_df[item_df.offer_subcategory_id.isin(SYNCHRO_SUBCATEGORIES)]
+        ).drop(columns=["embedding"])
     else:
         item_df = item_df.assign(vector=list(preprocess_embeddings_by_chunk(chunk)))
     embeddings_list = item_df["vector"].tolist()
@@ -77,6 +75,8 @@ def preprocess_data_and_store_reducer(
 
     # Update the DataFrame with normalized embeddings
     item_df["vector"] = list(normalized_embeddings)
+    if linkage_type == "product":
+        item_df = item_df[item_df.offer_subcategory_id.isin(SYNCHRO_SUBCATEGORIES)]
     return item_df
 
 
@@ -113,7 +113,7 @@ def create_items_table(items_df: pd.DataFrame, linkage_type: str) -> None:
     try:
         logger.info("Creating LanceDB table...")
         db.create_table(
-            "items",
+            linkage_type,
             make_batches(df=items_df, batch_size=LANCEDB_BATCH_SIZE),
             schema=ItemModel,
         )
@@ -125,9 +125,9 @@ def create_items_table(items_df: pd.DataFrame, linkage_type: str) -> None:
         )
 
 
-def create_index_on_items_table() -> None:
+def create_index_on_items_table(linkage_type: str) -> None:
     db = lancedb.connect(MODEL_PATH)
-    db.open_table("items").create_index(
+    db.open_table(linkage_type).create_index(
         num_partitions=NUM_PARTITIONS, num_sub_vectors=NUM_SUB_VECTORS
     )
 
@@ -149,7 +149,7 @@ def main(
         help="Batch size for reading the parquet file",
     ),
     unmatched_elements_path: Optional[str] = typer.Option(
-        default=..., help="GCS parquet unmatched elements path"
+        default=None, help="GCS parquet unmatched elements path"
     ),
 ) -> None:
     """
@@ -170,16 +170,13 @@ def main(
             chunk = chunk.merge(
                 unmatched_elements[["item_id"]], on="item_id", how="inner"
             )
-        item_df_enriched = preprocess_data_and_store_reducer(
-            chunk,
-            MODEL_TYPE["reducer_pickle_path"],
-            reduction=reduction,
-            linkage_type=linkage_type,
-        )
-        create_items_table(item_df_enriched, linkage_type)
+        if linkage_type == "product":
+            chunk = chunk[chunk.offer_subcategory_id.isin(SYNCHRO_SUBCATEGORIES)]
+
+        create_items_table(chunk, linkage_type)
         total_count += len(chunk)
     logger.info(f"Total rows processed: {total_count}")
-    create_index_on_items_table()
+    create_index_on_items_table(linkage_type)
     logger.info
     logger.info("LanceDB table and index created!")
 

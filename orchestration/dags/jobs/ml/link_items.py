@@ -199,6 +199,34 @@ with DAG(
         command="pip install -r requirements.txt --user",
     )
 
+    process_sources = SSHGCEOperator(
+        task_id="process_sources",
+        command="python preprocess_catalog.py "
+        f"--input-path {os.path.join(
+            DAG_CONFIG['STORAGE_PATH'], DAG_CONFIG['INPUT_SOURCES_DIR'], 'data-*.parquet'
+        )} "
+        f"--output-path {os.path.join(
+            DAG_CONFIG['STORAGE_PATH'], 'sources_clean'
+        )} "
+        f"--reduction {DAG_CONFIG['REDUCTION']} "
+        f"--batch-size {DAG_CONFIG['BATCH_SIZE']} ",
+        dag=dag,  # Replace with your DAG instance
+    )
+
+    process_candidates = SSHGCEOperator(
+        task_id="process_candidates",
+        command="python preprocess_catalog.py "
+        f"--input-path {os.path.join(
+            DAG_CONFIG['STORAGE_PATH'], DAG_CONFIG['INPUT_CANDIDATES_DIR'], 'data-*.parquet'
+        )} "
+        f"--output-path {os.path.join(
+            DAG_CONFIG['STORAGE_PATH'], 'candidates_clean'
+        )} "
+        f"--reduction {DAG_CONFIG['REDUCTION']} "
+        f"--batch-size {DAG_CONFIG['BATCH_SIZE']} ",
+        dag=dag,  # Replace with your DAG instance
+    )
+
     build_product_linkage_vector = SSHGCEOperator(
         task_id="build_product_linkage_vector",
         instance_name="{{ params.instance_name }}",
@@ -231,6 +259,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
         command="python link_items.py "
+        "--linkage-type product "
         f"""--input-sources-path {os.path.join(
                     DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_DIR"]
                 )} """
@@ -288,6 +317,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
         command="python link_items.py "
+        "--linkage-type offer "
         f"""--input-sources-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['UNMATCHED_PRODUCT_FILENAME'])} """
         f"""--input-candidates-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['UNMATCHED_PRODUCT_FILENAME'])} """
         f"--linkage-candidates-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['OFFER_LINKAGE_CANDIDATES_FILENAME'])} "
@@ -299,7 +329,7 @@ with DAG(
         task_id="assign_linked_ids",
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
-        command="python link_items.py "
+        command="python assign_linked_ids.py "
         f"--input-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKED_OFFER_FILENAME'])} "
         f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKED_OFFER_W_ID_FILENAME'])} ",
     )

@@ -1,7 +1,4 @@
 import multiprocessing as mp
-import re
-import string
-import unicodedata
 from typing import List, Optional, Tuple
 
 import pandas as pd
@@ -125,51 +122,6 @@ def multiprocess_matching(
     return matches
 
 
-def clean_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
-    """
-    Clean the catalog dataframe.
-
-    Args:
-        catalog (pd.DataFrame): Catalog dataframe.
-
-    Returns:
-        pd.DataFrame: Cleaned catalog dataframe.
-    """
-    catalog = catalog.assign(
-        performer=lambda df: df["performer"].replace("", None).str.lower(),
-        offer_name=lambda df: df["offer_name"].replace("", None).str.lower(),
-        offer_description=lambda df: df["offer_description"]
-        .replace("", None)
-        .str.lower(),
-    )
-    return catalog
-
-
-def remove_accents(input_str):
-    """
-    Removes accents from a given string.
-    """
-    nfkd_form = unicodedata.normalize("NFKD", input_str)
-    return "".join([c for c in nfkd_form if not unicodedata.combining(c)])
-
-
-def preprocess_string(s):
-    # Lowercasing
-    if s is None:
-        return s
-    s = s.lower()
-
-    # Trimming
-    s = s.strip()
-
-    # Removing punctuation and special characters
-    s = re.sub(r"[^\w\s]", "", s)
-
-    s = re.sub(f"[{string.punctuation}]", "", s)
-
-    return remove_accents(s)
-
-
 def prepare_tables(
     indexer: recordlinkage.Index,
     linkage_candidates: pd.DataFrame,
@@ -203,18 +155,18 @@ def prepare_tables(
     item_singletons_clean["offer_name"] = item_singletons_clean["offer_name"].astype(
         str
     )
-    item_singletons_clean = item_singletons_clean.assign(
-        offer_name=lambda df: df["offer_name"].apply(preprocess_string),
-    )
+    # item_singletons_clean = item_singletons_clean.assign(
+    #     offer_name=lambda df: df["offer_name"].apply(preprocess_string),
+    # )
     item_synchro_retrived_clean = enriched_items(
         item_synchro_retrived, catalog_clean, "item_id_synchro"
     )
     item_synchro_retrived_clean["offer_name"] = item_synchro_retrived_clean[
         "offer_name"
     ].astype(str)
-    item_synchro_retrived_clean = item_synchro_retrived_clean.assign(
-        offer_name=lambda df: df["offer_name"].apply(preprocess_string),
-    )
+    # item_synchro_retrived_clean = item_synchro_retrived_clean.assign(
+    #     offer_name=lambda df: df["offer_name"].apply(preprocess_string),
+    # )
     return candidate_links, item_singletons_clean, item_synchro_retrived_clean
 
 
@@ -284,51 +236,61 @@ def postprocess_matching(matches, item_singletons_clean, item_synchro_clean):
 
     # Filter the DataFrame to keep rows where offer_name_score is equal to the maximum score for that item_id_candidate
     linkage_final = filtered_linkage[filtered_linkage["offer_name_score"] == max_scores]
-
+    linkage_final = linkage_final.rename(
+        columns={"offer_subcategory_id_candidates": "offer_subcategory_id"}
+    ).drop(columns=["offer_subcategory_id_synchro"])
     return linkage_final
 
 
 def extract_unmatched_elements(candidates, output):
+    output_light = output[["item_id_candidate"]].drop_duplicates()
     candidates = candidates.rename(columns={"item_id": "item_id_candidate"})
+    logger.info(f"candidates : {candidates.columns}")
+    logger.info(f"output_light : {output_light.columns}")
     merged_df = candidates.merge(
-        output, on="item_id_candidate", how="left", indicator=True
+        output_light, on="item_id_candidate", how="left", indicator=True
     )
 
     # Get unmatched offers
     unmatched_elements = merged_df[merged_df["_merge"] == "left_only"].drop(
         columns=["_merge"]
     )
+    logger.info(f"Unmatched elements: {unmatched_elements.columns}")
     unmatched_elements_clean = unmatched_elements[
         [
             "item_id_candidate",
             "offer_name",
             "offer_description",
+            "edition",
             "performer",
-            "offer_subcategory_id_x",
+            "offer_subcategory_id",
         ]
     ].rename(
         columns={
             "item_id_candidate": "item_id",
-            "offer_subcategory_id_x": "offer_subcategory_id",
+            # "offer_subcategory_id_x": "offer_subcategory_id",
         }
     )
+    logger.info(f"Unmatched elements: {unmatched_elements_clean.columns}")
     return unmatched_elements_clean
 
 
 @app.command()
 def main(
+    linkage_type: str = typer.Option(default=..., help="Type of linkage to perform"),
     input_sources_path: str = typer.Option(default=...),
     input_candidates_path: str = typer.Option(default=...),
     linkage_candidates_path: str = typer.Option(default=...),
     output_path: str = typer.Option(default=..., help="Output GCS path"),
     unmatched_elements_path: Optional[str] = typer.Option(
-        default=..., help="Output GCS path for unmatched elements"
+        default=None, help="Output GCS path for unmatched elements"
     ),
 ) -> None:
     """
     Main function to perform record linkage and upload the results to GCS.
 
     Args:
+        linkage_type (str): Type of linkage to perform.
         input_sources_path (str): Path to the sources data.
         input_candidates_path (str): Path to the candidates data.
         linkage_candidates_path (str): Path to the linkage candidates data.
@@ -339,27 +301,23 @@ def main(
     logger.info("Setup indexer..")
     indexer_per_candidates = recordlinkage.index.Block(on="candidates_id")
     logger.info("Reading data..")
+    load_columns = [
+        "item_id",
+        "performer",
+        "edition",
+        "offer_name",
+        "offer_description",
+        "offer_subcategory_id",
+    ]
     item_synchro = read_parquet_files_from_gcs_directory(
         input_sources_path,
-        columns=[
-            "item_id",
-            "performer",
-            "offer_name",
-            "offer_description",
-            "offer_subcategory_id",
-        ],
-    ).pipe(clean_catalog)
+        columns=load_columns,
+    )
 
     item_singletons = read_parquet_files_from_gcs_directory(
         input_candidates_path,
-        columns=[
-            "item_id",
-            "performer",
-            "offer_name",
-            "offer_description",
-            "offer_subcategory_id",
-        ],
-    ).pipe(clean_catalog)
+        columns=load_columns,
+    )
 
     catalog_clean = pd.concat([item_synchro, item_singletons]).drop_duplicates()
     linkage_candidates = pd.read_parquet(linkage_candidates_path).rename(

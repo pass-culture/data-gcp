@@ -13,7 +13,6 @@ from constants import (
     MODEL_PATH,
     NUM_RESULTS,
     SYNCHRO_SUBCATEGORIES,
-    UNKNOWN_PERFORMER,
 )
 from model.semantic_space import SemanticSpace
 from utils.common import (
@@ -58,21 +57,21 @@ def preprocess_data(
         pd.DataFrame: The preprocessed data.
     """
     logger.info("Preprocessing data...")
-    extract_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*(\d+)\b"  # This pattern is for extracting the edition number
-    remove_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*\d+\b"  # This pattern is for removing the edition number and keyword
+    # extract_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*(\d+)\b"  # This pattern is for extracting the edition number
+    # remove_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*\d+\b"  # This pattern is for removing the edition number and keyword
     if linkage_type == "product":
         chunk = chunk[chunk.offer_subcategory_id.isin(SYNCHRO_SUBCATEGORIES)]
-    items_df = chunk.assign(
-        performer=lambda df: df["performer"].fillna(value=UNKNOWN_PERFORMER),
-        edition=lambda df: df["offer_name"]
-        .str.extract(extract_pattern, expand=False)
-        .astype(str)
-        .fillna(value="1"),
-        offer_name=lambda df: df["offer_name"]
-        .str.replace(remove_pattern, "", regex=True)
-        .str.strip(),
-    ).drop(columns=["embedding"])
-
+    # items_df = chunk.assign(
+    #     performer=lambda df: df["performer"].fillna(value=UNKNOWN_PERFORMER),
+    #     edition=lambda df: df["offer_name"]
+    #     .str.extract(extract_pattern, expand=False)
+    #     .astype(str)
+    #     .fillna(value="1"),
+    #     offer_name=lambda df: df["offer_name"]
+    #     .str.replace(remove_pattern, "", regex=True)
+    #     .str.strip(),
+    # ).drop(columns=["embedding"])
+    items_df = chunk.drop(columns=["embedding"])
     if hnne_reducer:
         items_df["vector"] = reduce_embeddings(
             preprocess_embeddings_by_chunk(chunk), hnne_reducer=hnne_reducer
@@ -130,7 +129,7 @@ def main(
     input_path: str = typer.Option(default=..., help="Input table path"),
     output_path: str = typer.Option(default=..., help="Output table path"),
     unmatched_elements_path: Optional[str] = typer.Option(
-        default=..., help="Unmatched elements"
+        default=None, help="Unmatched elements"
     ),
 ) -> None:
     """
@@ -148,19 +147,19 @@ def main(
     model = load_model(MODEL_PATH, linkage_type, reduction)
     if linkage_type == "offer":
         unmatched_elements = pd.read_parquet(unmatched_elements_path)
+        logger.info(f"unmatched_elements: {len(unmatched_elements)} items")
     tqdm.pandas()
     linkage_by_chunk = []
     for chunk in tqdm(read_parquet_in_batches_gcs(input_path, batch_size)):
         if linkage_type == "offer":
+            logger.info("Merging unmatched elements...")
             chunk = chunk.merge(
                 unmatched_elements[["item_id"]], on="item_id", how="inner"
             )
-        items_with_embeddings_df = preprocess_data(
-            chunk, model.hnne_reducer, linkage_type
-        )
-        linkage_candidates_chunk = generate_semantic_candidates(
-            model, items_with_embeddings_df
-        )
+        if linkage_type == "product":
+            chunk = chunk[chunk.offer_subcategory_id.isin(SYNCHRO_SUBCATEGORIES)]
+        logger.info(f"chunk length: {len(chunk)} ")
+        linkage_candidates_chunk = generate_semantic_candidates(model, chunk)
         linkage_by_chunk.append(linkage_candidates_chunk)
     linkage_candidates = pd.concat(linkage_by_chunk)
     upload_parquet(dataframe=linkage_candidates, gcs_path=output_path)

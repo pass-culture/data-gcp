@@ -11,7 +11,7 @@ from common.config import (
     MLFLOW_BUCKET_NAME,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -183,11 +183,12 @@ with DAG(
         labels={"job_type": "long_ml"},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
+        branch="{{ params.branch }}",
         python_version="3.10",
-        command="{{ params.branch }}",
+        base_dir=DAG_CONFIG["BASE_DIR"],
         retries=2,
     )
 
@@ -222,7 +223,7 @@ with DAG(
         f"""--input-path {os.path.join(
                     DAG_CONFIG["STORAGE_PATH"],  DAG_CONFIG["INPUT_CANDIDATES_DIR"],"data-*.parquet"
                 )} """
-        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKAGE_CANDIDATES_FILENAME'])} ",
+        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['PRODUCT_LINKAGE_CANDIDATES_FILENAME'])} ",
     )
 
     link_products = SSHGCEOperator(
@@ -254,7 +255,7 @@ with DAG(
     )
 
     build_offer_linkage_vector = SSHGCEOperator(
-        task_id="build_product_linkage_vector",
+        task_id="build_offer_linkage_vector",
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
         command="python build_semantic_space.py "
@@ -268,7 +269,7 @@ with DAG(
     )
 
     get_offer_linkage_candidates = SSHGCEOperator(
-        task_id="get_product_linkage_candidates",
+        task_id="get_offer_linkage_candidates",
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
         command="python linkage_candidates.py "
@@ -326,7 +327,7 @@ with DAG(
         >> export_to_bq_tasks
         >> end_exports
         >> gce_instance_start
-        >> fetch_code
+        >> fetch_install_code
         >> install_dependencies
         >> build_product_linkage_vector
         >> get_product_linkage_candidates

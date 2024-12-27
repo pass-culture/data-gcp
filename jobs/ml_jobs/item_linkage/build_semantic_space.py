@@ -1,3 +1,5 @@
+from typing import Optional
+
 import lancedb
 import numpy as np
 import pandas as pd
@@ -146,7 +148,7 @@ def main(
         default=PARQUET_BATCH_SIZE,
         help="Batch size for reading the parquet file",
     ),
-    unmatched_elements_path: str = typer.Option(
+    unmatched_elements_path: Optional[str] = typer.Option(
         default=..., help="GCS parquet unmatched elements path"
     ),
 ) -> None:

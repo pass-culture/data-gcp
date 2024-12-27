@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -128,7 +129,9 @@ def main(
     reduction: str = typer.Option(default=..., help="Reduce embeddings"),
     input_path: str = typer.Option(default=..., help="Input table path"),
     output_path: str = typer.Option(default=..., help="Output table path"),
-    unmatched_elements_path: str = typer.Option(default=..., help="Unmatched elements"),
+    unmatched_elements_path: Optional[str] = typer.Option(
+        default=..., help="Unmatched elements"
+    ),
 ) -> None:
     """
     Main function to preprocess data, prepare vectors, generate semantic candidates, and upload the results to GCS.

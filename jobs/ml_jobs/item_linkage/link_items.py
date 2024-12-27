@@ -2,7 +2,7 @@ import multiprocessing as mp
 import re
 import string
 import unicodedata
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import pandas as pd
 import recordlinkage
@@ -321,7 +321,7 @@ def main(
     input_candidates_path: str = typer.Option(default=...),
     linkage_candidates_path: str = typer.Option(default=...),
     output_path: str = typer.Option(default=..., help="Output GCS path"),
-    unmatched_elements_path: str = typer.Option(
+    unmatched_elements_path: Optional[str] = typer.Option(
         default=..., help="Output GCS path for unmatched elements"
     ),
 ) -> None:

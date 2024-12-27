@@ -5,6 +5,8 @@ from loguru import logger
 
 from utils.gcs_utils import upload_parquet
 
+app = typer.Typer()
+
 
 def build_graph_and_assign_ids(linked_offers, df_matches):
     G = nx.Graph()
@@ -42,10 +44,10 @@ def post_process_graph_matching(linked_offers: pd.DataFrame) -> pd.DataFrame:
         [
             "item_id_synchro",
             "item_id_candidate",
-            "offer_subcategory_id_synchro",
+            "offer_subcategory_id",
             "new_item_id",
         ]
-    ].rename(columns={"offer_subcategory_id_synchro": "offer_subcategory_id"})
+    ]
 
     linked_offers_w_id_clean = linked_offers_w_id[
         linked_offers_w_id["item_id_synchro"] != linked_offers_w_id["item_id_candidate"]
@@ -66,12 +68,15 @@ def post_process_graph_matching(linked_offers: pd.DataFrame) -> pd.DataFrame:
     return linked_offers_w_id_clean
 
 
-def assign_linked_ids(
+@app.command()
+def main(
     input_path: str = typer.Option(default=..., help="GCS parquet path"),
     output_path: str = typer.Option(default=..., help="GCS parquet output path"),
 ) -> None:
     linked_offers = pd.read_parquet(input_path)
-    df_matches = linked_offers[["item_id_synchro", "item_id_candidate"]]
+    df_matches = linked_offers[
+        ["item_id_synchro", "item_id_candidate", "offer_subcategory_id"]
+    ]
     # Step 1: Build the graph
     linked_offers_w_id = build_graph_and_assign_ids(linked_offers, df_matches)
 
@@ -85,3 +90,7 @@ def assign_linked_ids(
         gcs_path=output_path,
     )
     return
+
+
+if __name__ == "__main__":
+    app()

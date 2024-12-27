@@ -1,7 +1,7 @@
 import os
 
-GCP_PROJECT = os.environ.get("PROJECT_NAME")
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "")
+GCP_PROJECT = os.environ.get("GCP_PROJECT")
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 SYNCHRO_SUBCATEGORIES = [
     "SUPPORT_PHYSIQUE_MUSIQUE_VINYLE",
     "LIVRE_PAPIER",
@@ -37,3 +37,6 @@ UNKNOWN_PERFORMER = "unkn"
 UNKNOWN_NAME = "no_name"
 UNKNOWN_DESCRIPTION = "no_des"
 INITIAL_LINK_ID = "NC"
+
+extract_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*(\d+)\b"  # This pattern is for extracting the edition number
+remove_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*\d+\b"  # This pattern is for removing the edition number and keyword

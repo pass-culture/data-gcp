@@ -9,14 +9,13 @@ from airflow.security import permissions
 from airflow.www.auth import has_access
 
 
-# TODO handle this locally also
-def get_airlfow_home():
+def get_airflow_home() -> str:
     if os.environ.get("LOCAL_ENV", None) == "1":
         return "/opt/airflow/"
     return "/home/airflow/gcs"
 
 
-AIRFLOW_HOME = get_airlfow_home()
+AIRFLOW_HOME = get_airflow_home()
 
 
 class DBTDocs(AppBuilderBaseView):

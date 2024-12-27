@@ -5,7 +5,6 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
-    GCE_UV_INSTALLER,
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
@@ -61,7 +60,6 @@ with DAG(
             branch="{{ params.branch }}",
             python_version="3.10",
             base_dir=base_path,
-            installer=GCE_UV_INSTALLER,
             retries=2,
         )
 
@@ -69,7 +67,6 @@ with DAG(
             task_id=f"{social_network}_to_bq",
             instance_name=gce_instance,
             base_dir=base_path,
-            installer=GCE_UV_INSTALLER,
             command="""
             python main.py \
             --start-date {{ add_days(yesterday() if dag_run.run_type == 'manual' else ds, params.n_days) }} \

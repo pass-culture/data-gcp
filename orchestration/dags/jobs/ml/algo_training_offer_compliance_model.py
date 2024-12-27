@@ -7,7 +7,6 @@ from common.config import (
     BIGQUERY_ML_COMPLIANCE_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
-    GCE_UV_INSTALLER,
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
     MLFLOW_URL,
@@ -126,7 +125,6 @@ with DAG(
         branch="{{ params.branch }}",
         python_version="3.10",
         base_dir=dag_config["BASE_DIR"],
-        installer=GCE_UV_INSTALLER,
         retries=2,
     )
 
@@ -135,7 +133,6 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        installer=GCE_UV_INSTALLER,
         command=f"mkdir -p img && PYTHONPATH=. python {dag_config['MODEL_DIR']}/preprocess.py "
         "--config-file-name {{ params.config_file_name }} "
         "--input-dataframe-file-name compliance_raw_data "
@@ -148,7 +145,6 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/split_data.py "
         f"--clean-table-name compliance_clean_data "
         "--training-table-name compliance_training_data "
@@ -161,7 +157,6 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
         "--model-name {{ params.model_name }} "
         "--config-file-name {{ params.config_file_name }} "
@@ -175,7 +170,6 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
         "--model-name {{ params.model_name }} "
         "--config-file-name {{ params.config_file_name }} "
@@ -189,7 +183,6 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/package_api_model.py "
         "--model-name {{ params.model_name }} "
         "--config-file-name {{ params.config_file_name }} ",

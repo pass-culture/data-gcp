@@ -7,7 +7,6 @@ from common.config import (
     BIGQUERY_ML_OFFER_CATEGORIZATION_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
-    GCE_UV_INSTALLER,
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
     MLFLOW_URL,
@@ -135,7 +134,6 @@ with DAG(
         branch="{{ params.branch }}",
         python_version="3.10",
         base_dir=dag_config["BASE_DIR"],
-        installer=GCE_UV_INSTALLER,
         retries=2,
     )
 
@@ -144,7 +142,6 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/preprocess.py "
         "--config-name {{ params.config_file_name }} "
         f"--input-table-path {dag_config['STORAGE_PATH']}/{dag_config['INPUT_TABLE_NAME']}_raw_data/ "
@@ -156,7 +153,6 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/split_data.py "
         f"--clean-table-path {dag_config['STORAGE_PATH']}/{dag_config['INPUT_TABLE_NAME']}_clean_data/data_clean.parquet "
         f"--split-data-folder {dag_config['STORAGE_PATH']} "
@@ -168,7 +164,6 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
         "--model-name {{ params.model_name }} "
         f"--training-table-path {dag_config['STORAGE_PATH']}/train.parquet "
@@ -182,7 +177,6 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
         "--model-name {{ params.model_name }} "
         f"--validation-table-path {dag_config['STORAGE_PATH']}/test.parquet "
@@ -194,7 +188,6 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        installer=GCE_UV_INSTALLER,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/package_api_model.py "
         "--model-name {{ params.model_name }} ",
     )

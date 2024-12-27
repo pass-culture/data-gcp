@@ -5,7 +5,6 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
-    GCE_UV_INSTALLER,
     GCP_PROJECT_ID,
 )
 from common.operators.bigquery import bigquery_job_task
@@ -63,7 +62,6 @@ with DAG(
         branch="{{ params.branch }}",
         python_version="3.9",
         base_dir=BASE_PATH,
-        installer=GCE_UV_INSTALLER,
         retries=2,
     )
 
@@ -73,7 +71,6 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="python main.py ",
-        installer=GCE_UV_INSTALLER,
         do_xcom_push=True,
     )
 

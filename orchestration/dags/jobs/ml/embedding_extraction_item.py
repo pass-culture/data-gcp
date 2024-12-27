@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCE_UV_INSTALLER, GCP_PROJECT_ID
+from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.gce import (
     InstallDependenciesOperator,
     SSHGCEOperator,
@@ -82,7 +82,6 @@ with DAG(
         branch="{{ params.branch }}",
         python_version="3.10",
         base_dir=BASE_PATH,
-        installer=GCE_UV_INSTALLER,
     )
 
     extract_embedding = SSHGCEOperator(
@@ -90,7 +89,6 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=DAG_CONFIG,
-        installer=GCE_UV_INSTALLER,
         command="mkdir -p img && PYTHONPATH=. python main.py "
         f"--gcp-project {GCP_PROJECT_ID} "
         "--config-file-name {{ params.config_file_name }} "

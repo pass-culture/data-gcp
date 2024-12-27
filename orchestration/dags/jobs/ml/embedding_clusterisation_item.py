@@ -5,7 +5,6 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
-    GCE_UV_INSTALLER,
 )
 from common.operators.gce import (
     InstallDependenciesOperator,
@@ -89,14 +88,12 @@ with DAG(
             branch="{{ params.branch }}",
             python_version="3.10",
             base_dir=BASE_PATH,
-            installer=GCE_UV_INSTALLER,
         )
 
         preprocess_clustering = SSHGCEOperator(
             task_id=f"preprocess_{job_name}_clustering",
             instance_name=gce_instance,
             base_dir=BASE_PATH,
-            installer=GCE_UV_INSTALLER,
             command="PYTHONPATH=. python cluster/preprocess.py "
             f"--input-dataset-name ml_input_{ENV_SHORT_NAME} "
             f"--input-table-name item_embedding_clusterisation "
@@ -109,7 +106,6 @@ with DAG(
             task_id=f"generate_{job_name}_clustering",
             instance_name=gce_instance,
             base_dir=BASE_PATH,
-            installer=GCE_UV_INSTALLER,
             command="PYTHONPATH=. python cluster/generate.py "
             f"--input-dataset-name tmp_{ENV_SHORT_NAME} "
             f"--input-table-name {DATE}_{cluster_prefix}_import_item_clusters_preprocess "

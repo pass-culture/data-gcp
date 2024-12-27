@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from common.alerts import task_fail_slack_alert
-from common.config import ENV_SHORT_NAME, GCE_UV_INSTALLER, GCP_PROJECT_ID
+from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.gce import (
     InstallDependenciesOperator,
     SSHGCEOperator,
@@ -51,7 +51,6 @@ with DAG(
         branch="{{ params.branch }}",
         python_version="3.11",
         base_dir=BASE_PATH,
-        installer=GCE_UV_INSTALLER,
     )
 
     INSTALL_DEPS = """
@@ -69,14 +68,12 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=INSTALL_DEPS,
-        installer=GCE_UV_INSTALLER,
     )
 
     subcategories_job = SSHGCEOperator(
         task_id="import_subcategories",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer=GCE_UV_INSTALLER,
         command=f"""
         CORS_ALLOWED_ORIGINS="" CORS_ALLOWED_ORIGINS_NATIVE="" CORS_ALLOWED_ORIGINS_AUTH="" CORS_ALLOWED_ORIGINS_ADAGE_IFRAME="" python main.py --job_type=subcategories --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}
     """,
@@ -86,7 +83,6 @@ with DAG(
         task_id="import_types",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer=GCE_UV_INSTALLER,
         command=f"""
         CORS_ALLOWED_ORIGINS="" CORS_ALLOWED_ORIGINS_NATIVE="" CORS_ALLOWED_ORIGINS_AUTH="" CORS_ALLOWED_ORIGINS_ADAGE_IFRAME="" python main.py --job_type=types --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}
     """,

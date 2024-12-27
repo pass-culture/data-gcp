@@ -68,7 +68,6 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        installer="uv",
         command="python main.py --ndays {{ params.ndays }} ",
         do_xcom_push=True,
     )

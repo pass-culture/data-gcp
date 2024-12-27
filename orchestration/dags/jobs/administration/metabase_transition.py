@@ -89,7 +89,6 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        installer="uv",
         command="""
         python main.py \
         --metabase-card-type {{ params.metabase_card_type }} \

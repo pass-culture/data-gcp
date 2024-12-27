@@ -2,7 +2,7 @@ import datetime
 
 from common import macros
 from common.alerts import task_fail_slack_alert
-from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCE_UV_INSTALLER, GCP_PROJECT_ID
+from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
     InstallDependenciesOperator,
@@ -65,7 +65,6 @@ with DAG(
         branch="{{ params.branch }}",
         python_version="3.9",
         base_dir=BASE_PATH,
-        installer=GCE_UV_INSTALLER,
         retries=2,
     )
 
@@ -73,7 +72,6 @@ with DAG(
         task_id="activity_report_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer=GCE_UV_INSTALLER,
         command="python api_import.py --n-days {{ params.n_days }} --table-name activity_report ",
     )
 
@@ -81,7 +79,6 @@ with DAG(
         task_id="daily_report_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer=GCE_UV_INSTALLER,
         command="python api_import.py --n-days {{ params.n_days }} --table-name daily_report ",
     )
 
@@ -89,7 +86,6 @@ with DAG(
         task_id="partner_report_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer=GCE_UV_INSTALLER,
         command="python api_import.py --n-days {{ params.n_days }} --table-name partner_report ",
     )
 
@@ -97,7 +93,6 @@ with DAG(
         task_id="in_app_event_report_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer=GCE_UV_INSTALLER,
         command="python api_import.py --n-days {{ params.n_days }} --table-name in_app_event_report ",
     )
 
@@ -105,7 +100,6 @@ with DAG(
         task_id="gcs_cost_etl_op",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer=GCE_UV_INSTALLER,
         command=f"python gcs_import.py --gcs-base-path {GCS_ETL_PARAMS['GCS_BASE_PATH']} --prefix-table-name {GCS_ETL_PARAMS['PREFIX_TABLE_NAME']} --date {GCS_ETL_PARAMS['DATE']} ",
     )
 

@@ -174,7 +174,7 @@ left join
     on ir_per_user.venue_id = first_dms_adage.venue_id
     and ir_per_user.response_id = first_dms_adage.response_id
 left join
-    `{{ bigquery_clean_dataset }}.applicative_database_venue` venue
+    `{{ bigquery_raw_dataset }}.applicative_database_venue` venue
     on ir_per_user.venue_id = venue.venue_id
 left join
     `{{ bigquery_int_raw_dataset }}.offerer` as offerer

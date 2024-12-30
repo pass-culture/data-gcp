@@ -7,6 +7,8 @@ ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags/")
 LOCAL_ENV = os.environ.get("LOCAL_ENV", None)
 
+GCS_COMPOSER_BUCKET = os.environ.get("GCS_BUCKET", None)
+
 SSH_USER = os.environ.get("SSH_USER", "airflow")
 
 GCP_REGION = "europe-west1"

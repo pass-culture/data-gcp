@@ -96,29 +96,24 @@ jobs:
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: dbt docs generate --static --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
 
-      - name: "Push manifest"
+      - name: "Push manifest (dbt)"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
         run: gsutil cp target/manifest.json gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json
-
-      - name: "Push documentation"
-        working-directory: "./orchestration/dags/data_gcp_dbt/"
-        env:
-          COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
-        run: |
-          gsutil cp target/catalog.json gs://$COMPOSER_DAGS_BUCKET/data/target/catalog.json
-          gsutil cp target/index.html gs://$COMPOSER_DAGS_BUCKET/data/target/index.html
-          gsutil cp target/graph.gpickle gs://$COMPOSER_DAGS_BUCKET/data/target/graph.gpickle
-          gsutil cp target/graph_summary.json gs://$COMPOSER_DAGS_BUCKET/data/target/graph_summary.json
-          gsutil cp target/semantic_manifest.json gs://$COMPOSER_DAGS_BUCKET/data/target/semantic_manifest.json
-          gsutil cp target/static_index.html gs://$COMPOSER_DAGS_BUCKET/plugins/static/dbt_docs/index.html
 
       - name: "Deploy composer (dags)"
         run: gsutil -m rsync -d -r dags gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/dags
 
       - name: "Deploy composer (plugins)"
         run: gsutil -m rsync -d -r plugins gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/plugins
+
+      - name: "Push documentation (dbt)"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
+        run: |
+          gsutil cp target/static_index.html gs://$COMPOSER_DAGS_BUCKET/plugins/static/dbt_docs/index.html
 
       - name: "Wait for composer to be deployed (10s x 6 times)"
         run: |

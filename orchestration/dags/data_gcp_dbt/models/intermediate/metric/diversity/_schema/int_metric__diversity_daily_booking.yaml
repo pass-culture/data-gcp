@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: int_metric__diversity_daily_booking
+    description: "{{ doc('description__int_metric__diversity_daily_booking') }}"
+    columns:
+      - name: booking_id
+        description: "{{ doc('column__booking_id') }}"
+      - name: booking_created_at
+        description: "{{ doc('column__booking_created_at') }}"
+      - name: booking_creation_date
+        description: "{{ doc('column__booking_creation_date') }}"
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+      - name: booking_rank
+        description: "{{ doc('column__booking_rank') }}"
+      - name: diversity_booking_entity_rank
+        description: "{{ doc('column_diversity__booking_entity_rank') }}"
+      - name: diversity_booked_entity_type
+        description: "{{ doc('column__diversity_booked_entity_type') }}"
+      - name: diversity_booked_entity
+        description: "{{ doc('column__diversity_booked_entity') }}"
+      - name: diversity_score
+        description: "{{ doc('column__diversity_score') }}"

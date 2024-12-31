@@ -30,11 +30,13 @@ SHEETS = {
     },
     "gsheet_educational_institution_student_headcount": {
         "spreadsheet_ids": [
-            "1H8ZH4IWVhtvCS6T0smSMrRu490rrNZIl--7dpRbersc",  # MASA
-            "1oKulYPFMNaJaZ3gpK-kuYnBKJxngQFwjQ4rA1YTWMDM",  # SEM
-            "1UKa67aDp0X1zO6tVm7GppC0HMHrlKIk9T_PCmEHjv74",  # Aix-Marseille
-            "1AwclRi49IJaTO3CfjegYu9siYFVobA839vNhYjsEgeM",  # MENJ
-            "1DVneUFuBhQTQS6I8tN1pcOuelsglwOyBnKVsQn4MlE8",  # MA
+            "1ntswOFC_eG_OCisuTJN8cwKp8dPOms1-MamQQbcLXTg",  # MASA Final (2024-2025) -
+            "1fbrPv2mgo09xAtZ4BiQcM5B6ufwunCn6ymtCjJJQaaY",  # MEN Final (2024-2025) -
+            "1H8ZH4IWVhtvCS6T0smSMrRu490rrNZIl--7dpRbersc",  # MASA Provisional (2024-2025)
+            "1oKulYPFMNaJaZ3gpK-kuYnBKJxngQFwjQ4rA1YTWMDM",  # SEM Provisional (2024-2025)
+            "1WeG4CG5DRUdmvZe7sS47onGBk5nRND4VQzk2qAoNK1U",  # Aix-Marseille Provisional (2024-2025)
+            "1AwclRi49IJaTO3CfjegYu9siYFVobA839vNhYjsEgeM",  # MENJ Provisional (2024-2025)
+            "1DVneUFuBhQTQS6I8tN1pcOuelsglwOyBnKVsQn4MlE8",  # MA Provisional (2024-2025)
             "1J5l4zsGJiKLmYV68EjnsiN_8X7BFkR48fIecFgzhdkU",  # Historical DATA
         ],
         "expected_headers_dict": {
@@ -78,6 +80,25 @@ SHEETS = {
             "institution_name": "institution_name",
             "meg_id": "meg_id",
             "school_group_name": "school_group_name",
+        },
+    },
+    "gsheet_movie_arthouse_and_heritage_label": {
+        "spreadsheet_ids": ["1zNoM1F0B09jNfPSGIioLxFU7911R0DREP9sL94CN2BY"],
+        "expected_headers_dict": {
+            "movie_status": "movie_status",
+            "movie_visa": "movie_visa",
+            "movie_title": "movie_title",
+            "movie_director": "movie_director",
+            "movie_distributor": "movie_distributor",
+            "movie_release_date": "movie_release_date",
+            "Label Recherche & Découverte": "movie_is_research_discovery_label",
+            "Soutien Inédits": "movie_is_unreleased_support",
+            "15/25": "movie_is_15_25",
+            "Soutien GNCR": "movie_is_gncr_support",
+            "Soutien ACID": "movie_is_acid_support",
+            "Label Patrimoine & Répertoire": "movie_is_heritage_repertory_label",
+            "Label Jeune Public": "movie_is_young_audience_label",
+            "movie_production_country": "movie_production_country",
         },
     },
 }

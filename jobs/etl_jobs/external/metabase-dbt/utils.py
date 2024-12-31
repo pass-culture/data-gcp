@@ -6,6 +6,11 @@ from google.cloud import secretmanager
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 INT_METABASE_DATASET = f"int_metabase_{ENVIRONMENT_SHORT_NAME}"
+METABASE_DEFAULT_DATABASE = {
+    "prod": "Analytics",
+    "stg": "Data Analytics Stg",
+    "dev": "Data Analytics Dev",
+}
 
 
 def access_secret_data(project_id, secret_id, default=None):

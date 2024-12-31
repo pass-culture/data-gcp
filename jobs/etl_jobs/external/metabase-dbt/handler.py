@@ -150,7 +150,11 @@ class MetabaseDBTHandler:
             raise
 
     def export_model(
-        self, schema_filters: List[str], model_names: List[str], docs_url: str = None
+        self,
+        metabase_database: str,
+        schema_filters: List[str],
+        model_names: List[str],
+        docs_url: str = None,
     ) -> None:
         """
         Exports the DBT models to Metabase, appending tags and filtering by specified models.
@@ -161,7 +165,7 @@ class MetabaseDBTHandler:
         logger.info(f"Exporting models to Metabase: {model_names}")
         try:
             self.client.export_models(
-                metabase_database="Analytics",
+                metabase_database=metabase_database,
                 schema_filter=Filter(include=schema_filters),
                 model_filter=Filter(include=model_names),
                 append_tags=False,

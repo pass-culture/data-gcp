@@ -1,6 +1,7 @@
 import typer
 
 from handler import BigqueryDBTHandler, MetabaseDBTHandler
+from utils import ENVIRONMENT_SHORT_NAME, METABASE_DEFAULT_DATABASE
 
 app = typer.Typer()
 
@@ -23,7 +24,11 @@ def export_models(
     handler = MetabaseDBTHandler(
         composer_bucket_name, composer_bucket_manifest_path, local_manifest_path
     )
-    handler.export_model(schema_filters=["analytics_prod"], model_names=["mrt_*"])
+    handler.export_model(
+        metabase_database=METABASE_DEFAULT_DATABASE,
+        schema_filters=[f"analytics_{ENVIRONMENT_SHORT_NAME}"],
+        model_names=["mrt_*"],
+    )
 
 
 @app.command()

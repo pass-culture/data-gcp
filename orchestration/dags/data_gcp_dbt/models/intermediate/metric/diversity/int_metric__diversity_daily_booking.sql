@@ -82,8 +82,6 @@ select
     user_id,
     booking_creation_date,
     case
-        when diversity_booking_entity_rank = 1
-        then score_multiplier
-    else 0
+        when diversity_booking_entity_rank = 1 then score_multiplier else 0
     end as diversity_score
 from entity_calculations

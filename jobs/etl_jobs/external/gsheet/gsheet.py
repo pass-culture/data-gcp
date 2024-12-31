@@ -82,6 +82,25 @@ SHEETS = {
             "school_group_name": "school_group_name",
         },
     },
+    "gsheet_art_house_and_heritage_movies": {
+        "spreadsheet_ids": ["1zNoM1F0B09jNfPSGIioLxFU7911R0DREP9sL94CN2BY"],
+        "expected_headers_dict": {
+            "movie_status": "movie_status",
+            "movie_visa": "movie_visa",
+            "movie_title": "movie_title",
+            "movie_director": "movie_director",
+            "movie_distributor": "movie_distributor",
+            "movie_release_date": "movie_release_date",
+            "Label Recherche & Découverte": "is_research_discovery_label",
+            "Soutien Inédits": "is_unreleased_support",
+            "15/25": "is_15_25",
+            "Soutien GNCR": "is_gncr_support",
+            "Soutien ACID": "is_acid_support",
+            "Label Patrimoine & Répertoire": "is_heritage_repertory_label",
+            "Label Jeune Public": "is_young_audience_label",
+            "movie_production_country": "movie_production_country",
+        },
+    },
 }
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]

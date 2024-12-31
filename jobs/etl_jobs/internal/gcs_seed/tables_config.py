@@ -222,23 +222,4 @@ REF_TABLES = {
     "region_department": {
         "file_type": "parquet",
     },
-    "labeled_films": {
-        "file_type": "csv",
-        "schema": {
-            "film_status": "STRING",
-            "film_visa": "STRING",
-            "film_title": "STRING",
-            "film_director": "STRING",
-            "film_distributor": "STRING",
-            "film_release_date": "DATE",
-            "is_label_recherche_decouverte": "BOOLEAN",
-            "is_soutien_ap_inedit": "BOOLEAN",
-            "is_15_25": "BOOLEAN",
-            "is_soutien_gr": "BOOLEAN",
-            "is_soutien_acid": "BOOLEAN",
-            "is_label_patrimoine_repertoire": "BOOLEAN",
-            "is_label_jeune_public": "BOOLEAN",
-            "film_production_country": "STRING",
-        },
-    },
 }

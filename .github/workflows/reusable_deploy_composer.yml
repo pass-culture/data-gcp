@@ -79,7 +79,7 @@ jobs:
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
-        run: gsutil cp 'gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/exposures/*.yml' ./models/ 2>/dev/null
+        run: gsutil cp 'gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/exposures/*' ./models/
 
       - name: "Install dbt dependencies"
         working-directory: "./orchestration/dags/data_gcp_dbt/"

@@ -10,7 +10,7 @@ METABASE_DEFAULT_DATABASE = {
     "prod": "Analytics",
     "stg": "Data Analytics Stg",
     "dev": "Data Analytics Dev",
-}
+}[ENVIRONMENT_SHORT_NAME]
 
 
 def access_secret_data(project_id, secret_id, default=None):

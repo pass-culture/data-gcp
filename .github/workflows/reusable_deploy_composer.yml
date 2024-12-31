@@ -74,6 +74,13 @@ jobs:
           service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v2'
+
+      - name: "Pull dbt exposures from GCS locally"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
+        run: gsutil cp gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/exposures/*.yml ./models/
+
       - name: "Install dbt dependencies"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
@@ -82,11 +89,7 @@ jobs:
         run: |
           export PYTHONPATH=$PYTHONPATH:./dags
           dbt deps
-      - name: "deploy dbt dependencies"
-        working-directory: "./orchestration/dags/data_gcp_dbt/"
-        env:
-          COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
-        run: gsutil -m rsync -d -r target/dbt_packages gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/target/dbt_packages
+
       - name: "compile dbt & generate dbt docs"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
@@ -96,24 +99,30 @@ jobs:
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: dbt docs generate --static --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
 
-      - name: "Push manifest (dbt)"
+      - name: "Push dependencies (dbt) to GCS (data/target/dbt_packages)"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
+        run: gsutil -m rsync -d -r target/dbt_packages gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/target/dbt_packages
+
+      - name: "Push manifest (dbt) to GCS (data/target)"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
           COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
         run: gsutil cp target/manifest.json gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json
+
+      - name: "Push documentation (dbt) to GCS (plugins/static/dbt_docs)"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
+        run: |
+          gsutil cp target/static_index.html gs://$COMPOSER_DAGS_BUCKET/plugins/static/dbt_docs/index.html
 
       - name: "Deploy composer (dags)"
         run: gsutil -m rsync -d -r dags gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/dags
 
       - name: "Deploy composer (plugins)"
         run: gsutil -m rsync -d -r plugins gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/plugins
-
-      - name: "Push documentation (dbt)"
-        working-directory: "./orchestration/dags/data_gcp_dbt/"
-        env:
-          COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
-        run: |
-          gsutil cp target/static_index.html gs://$COMPOSER_DAGS_BUCKET/plugins/static/dbt_docs/index.html
 
       - name: "Wait for composer to be deployed (10s x 6 times)"
         run: |

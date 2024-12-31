@@ -59,7 +59,7 @@ def __task_fail_slack_alert(context, job_type):
     # alerts only for scheduled task.
     if is_scheduled:
         webhook_token = JOB_TYPE.get(job_type)
-        dag_url = "{base_url}/grid?dag_id={dag_id}".format(
+        dag_url = "{base_url}/dags/{dag_id}/grid".format(
             base_url=configuration.get("webserver", "BASE_URL"),
             dag_id=context["dag"].dag_id,
         )

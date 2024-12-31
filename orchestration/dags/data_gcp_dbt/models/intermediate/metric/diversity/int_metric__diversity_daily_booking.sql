@@ -42,7 +42,7 @@ with
             venue_type_label,
             offer_category_id,
             venue_id,
-            coalesce(offer_type_label, venue_id) as extra_category,  -- venue_id is used as extra_category when offer_type_label is null
+            coalesce(offer_type_label, venue_id) as extra_category,  -- TODO: venue_id is used as extra_category when offer_type_label is null
             row_number() over (
                 partition by user_id order by booking_created_at
             ) as booking_rank
@@ -82,10 +82,8 @@ select
     user_id,
     booking_creation_date,
     case
-        when booking_rank = 1
-        then score_multiplier
         when diversity_booking_entity_rank = 1
         then score_multiplier
-        else 0
+    else 0
     end as diversity_score
 from entity_calculations

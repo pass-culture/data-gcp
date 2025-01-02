@@ -34,4 +34,5 @@ SELECT
     , "contactForm" AS collective_offer_contact_form
     , "contactEmail" AS collective_offer_contact_email
     , "contactPhone" AS collective_offer_contact_phone
+    , "rejectionReason" AS collective_offer_rejection_reason
 FROM public.collective_offer_template

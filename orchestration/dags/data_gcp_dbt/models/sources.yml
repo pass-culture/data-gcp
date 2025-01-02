@@ -132,6 +132,8 @@ sources:
       - name: subcategories
       - name: offer_types
       - name: user_locations
+      - name: zendesk_macro_usage
+      - name: zendesk_ticket
 
   - name: clean
     schema: clean_{{ var('ENV_SHORT_NAME') }}

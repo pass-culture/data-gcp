@@ -155,7 +155,13 @@ select distinct
     offer.offer_external_ticket_office_url,
     if(offer.offer_id_at_providers is null, "manuel", "synchro") as input_type,
     case
-        when offer.is_active and offer.offer_id in (select offer_id from {{ ref("int_global__stock") }} where stock.is_bookable)
+        when
+            offer.is_active
+            and offer.offer_id in (
+                select offer_id
+                from {{ ref("int_global__stock") }}
+                where stock.is_bookable
+            )
         then true
         else false
     end as offer_is_bookable,

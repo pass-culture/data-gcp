@@ -61,7 +61,7 @@ select
     o.offer_description,
     o.offer_url,
     concat(
-        "https://passculture.pro/offre/individuelle/", o.offer_id, "/informations"
+        "https://backoffice.passculture.team/pro/offer/", o.offer_id
     ) as passculture_pro_url,
     concat("https://passculture.app/offre/", o.offer_id) as webapp_url,
     o.offer_is_national as is_national,

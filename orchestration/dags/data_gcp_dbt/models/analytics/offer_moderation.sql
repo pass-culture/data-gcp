@@ -157,11 +157,8 @@ select distinct
     case
         when
             offer.is_active
-            and offer.offer_id in (
-                select offer_id
-                from {{ ref("int_global__stock") }}
-                where is_bookable
-            )
+            and offer.offer_id
+            in (select offer_id from {{ ref("int_global__stock") }} where is_bookable)
         then true
         else false
     end as offer_is_bookable,

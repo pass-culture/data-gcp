@@ -160,7 +160,7 @@ select distinct
             and offer.offer_id in (
                 select offer_id
                 from {{ ref("int_global__stock") }}
-                where stock.is_bookable
+                where is_bookable
             )
         then true
         else false

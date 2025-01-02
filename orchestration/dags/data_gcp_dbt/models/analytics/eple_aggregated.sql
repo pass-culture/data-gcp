@@ -17,7 +17,7 @@ with
         from {{ ref("mrt_global__educational_institution") }} eid
         join
             {{ ref("mrt_global__educational_deposit") }} ed
-            on ed.educational_institution_id = eid.institution_id
+            on ed.institution_id = eid.institution_id
         join {{ ref("educational_year") }} ey on ey.adage_id = ed.educational_year_id
     ),
 

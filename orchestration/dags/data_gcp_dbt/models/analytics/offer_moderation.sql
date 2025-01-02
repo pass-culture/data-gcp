@@ -46,7 +46,7 @@ with
                 null
             ) as cnt_bookings_confirm
         from {{ ref("int_applicative__booking") }} booking
-        join {{ ref("stock") }} stock using (stock_id)
+        join {{ ref("int_global__stock") }} stock using (stock_id)
         join
             {{ ref("int_applicative__offer") }} offer on offer.offer_id = stock.offer_id
     ),
@@ -158,7 +158,7 @@ select distinct
         when
             offer.offer_id in (
                 select stock.offer_id
-                from {{ ref("stock") }} as stock
+                from {{ ref("int_global__stock") }} as stock
                 join
                     {{ ref("int_applicative__offer") }} as offer
                     on stock.offer_id = offer.offer_id

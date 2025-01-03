@@ -8,6 +8,7 @@ select
     cost_report.total_costs,
     cost_report.total_installs,
     cohort_report.total_registrations,
+    cohort_report.total_beneficiaries,
     cohort_report.total_beneficiaries_underage,
     cohort_report.total_beneficiaries_18,
     cohort_report.total_beneficiaries_17,

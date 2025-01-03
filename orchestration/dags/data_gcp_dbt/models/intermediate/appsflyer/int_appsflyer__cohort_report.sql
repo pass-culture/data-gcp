@@ -8,48 +8,113 @@
     )
 }}
 
-WITH
+with
 
--- Aggregates user events, picking the latest version per install_date and days_post_attribution
-cohort_unified AS (
-  SELECT
-    app_id,
-    media_source,
-    campaign,
-    adset,
-    ad,
-    days_post_attribution,
-    version,
-    CAST(conversion_date AS DATE) AS install_date,
-    SUM(IF(event_name = 'af_complete_registration', CAST(unique_users AS INT64), 0)) AS registration,
-    SUM(IF(event_name = 'af_complete_beneficiary', CAST(unique_users AS INT64), 0)) AS beneficiary,
-    SUM(IF(event_name = 'af_complete_beneficiary_18', CAST(unique_users AS INT64), 0)) AS beneficiary_18,
-    SUM(IF(event_name = 'af_complete_beneficiary_underage', CAST(unique_users AS INT64), 0)) AS beneficiary_underage,
-    SUM(IF(event_name = 'af_complete_beneficiary_17', CAST(unique_users AS INT64), 0)) AS beneficiary_17,
-    SUM(IF(event_name = 'af_complete_beneficiary_16', CAST(unique_users AS INT64), 0)) AS beneficiary_16,
-    SUM(IF(event_name = 'af_complete_beneficiary_15', CAST(unique_users AS INT64), 0)) AS beneficiary_15
-FROM {{ source("appsflyer_import", "cohort_unified_timezone_versioned") }}
-{% if is_incremental() %}
-WHERE CAST(conversion_date AS DATE) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND CURRENT_DATE()
-{% endif %}
-GROUP BY install_date, app_id, media_source, campaign, adset, ad, days_post_attribution, version
-QUALIFY ROW_NUMBER() OVER (
-    PARTITION BY install_date, app_id, media_source, campaign,  adset, ad, days_post_attribution ORDER BY version DESC) = 1)
+    -- Aggregates user events, picking the latest version per install_date and
+    -- days_post_attribution
+    cohort_unified as (
+        select
+            app_id,
+            media_source,
+            campaign,
+            adset,
+            ad,
+            days_post_attribution,
+            version,
+            cast(conversion_date as date) as install_date,
+            sum(
+                if(
+                    event_name = 'af_complete_registration',
+                    cast(unique_users as int64),
+                    0
+                )
+            ) as registration,
+            sum(
+                if(
+                    event_name = 'af_complete_beneficiary',
+                    cast(unique_users as int64),
+                    0
+                )
+            ) as beneficiary,
+            sum(
+                if(
+                    event_name = 'af_complete_beneficiary_18',
+                    cast(unique_users as int64),
+                    0
+                )
+            ) as beneficiary_18,
+            sum(
+                if(
+                    event_name = 'af_complete_beneficiary_underage',
+                    cast(unique_users as int64),
+                    0
+                )
+            ) as beneficiary_underage,
+            sum(
+                if(
+                    event_name = 'af_complete_beneficiary_17',
+                    cast(unique_users as int64),
+                    0
+                )
+            ) as beneficiary_17,
+            sum(
+                if(
+                    event_name = 'af_complete_beneficiary_16',
+                    cast(unique_users as int64),
+                    0
+                )
+            ) as beneficiary_16,
+            sum(
+                if(
+                    event_name = 'af_complete_beneficiary_15',
+                    cast(unique_users as int64),
+                    0
+                )
+            ) as beneficiary_15
+        from {{ source("appsflyer_import", "cohort_unified_timezone_versioned") }}
+        {% if is_incremental() %}
+            where
+                cast(conversion_date as date)
+                between date_sub(current_date(), interval 7 day) and current_date()
+        {% endif %}
+        group by
+            install_date,
+            app_id,
+            media_source,
+            campaign,
+            adset,
+            ad,
+            days_post_attribution,
+            version
+        qualify
+            row_number() over (
+                partition by
+                    install_date,
+                    app_id,
+                    media_source,
+                    campaign,
+                    adset,
+                    ad,
+                    days_post_attribution
+                order by version desc
+            )
+            = 1
+    )
 
 -- Consolidates user events by install_date
-SELECT
+select
     install_date,
     app_id,
     media_source,
     campaign,
     adset,
     ad,
-    SUM(registration) AS total_registrations,
-    SUM(beneficiary) AS total_beneficiaries,
-    SUM(beneficiary_underage) AS total_beneficiaries_underage,
-    SUM(beneficiary_18) AS total_beneficiaries_18,
-    SUM(beneficiary_17) AS total_beneficiaries_17,
-    SUM(beneficiary_16) AS total_beneficiaries_16,
-    SUM(beneficiary_15) AS total_beneficiaries_15
-FROM cohort_unified
-GROUP BY install_date, app_id, media_source, campaign, adset, ad
+    sum(registration) as total_registrations,
+    sum(beneficiary) as total_beneficiaries,
+    sum(beneficiary_underage) as total_beneficiaries_underage,
+    sum(beneficiary_18) as total_beneficiaries_18,
+    sum(beneficiary_17) as total_beneficiaries_17,
+    sum(beneficiary_16) as total_beneficiaries_16,
+    sum(beneficiary_15) as total_beneficiaries_15
+from cohort_unified
+group by install_date, app_id, media_source, campaign, adset, ad

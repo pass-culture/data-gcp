@@ -9,20 +9,27 @@
 }}
 
 -- Summarizes cost and installs, picking the latest execution per date
-SELECT
-  app_id,
-  os,
-  media_source,
-  campaign,
-  adset,
-  ad,
-  CAST(date AS DATE) AS git,
-  CAST(execution_date AS DATE) AS execution_date,
-  CAST(SUM(cost) AS INT64) AS total_costs,
-  SUM(installs) AS total_installs
-FROM {{ source("raw", "appsflyer_cost_channel") }}
+select
+    app_id,
+    os,
+    media_source,
+    campaign,
+    adset,
+    ad,
+    cast(date as date) as git,
+    cast(execution_date as date) as execution_date,
+    cast(sum(cost) as int64) as total_costs,
+    sum(installs) as total_installs
+from {{ source("raw", "appsflyer_cost_channel") }}
 {% if is_incremental() %}
-WHERE CAST(execution_date AS DATE) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND CURRENT_DATE()
+    where
+        cast(execution_date as date)
+        between date_sub(current_date(), interval 7 day) and current_date()
 {% endif %}
-GROUP BY install_date, execution_date, app_id, os, media_source, campaign, adset, ad
-QUALIFY ROW_NUMBER() OVER (PARTITION BY install_date, app_id, os, media_source, campaign, adset, ad ORDER BY execution_date DESC) = 1
+group by install_date, execution_date, app_id, os, media_source, campaign, adset, ad
+qualify
+    row_number() over (
+        partition by install_date, app_id, os, media_source, campaign, adset, ad
+        order by execution_date desc
+    )
+    = 1

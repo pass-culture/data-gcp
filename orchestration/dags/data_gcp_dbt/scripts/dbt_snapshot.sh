@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 
-source ./helpers.sh
+SCRIPT_DIR=$(dirname "$0")
+source "$SCRIPT_DIR/helpers.sh"
 
 # Step 1: Create the temporary folder
 create_tmp_folder "$PATH_TO_DBT_TARGET"

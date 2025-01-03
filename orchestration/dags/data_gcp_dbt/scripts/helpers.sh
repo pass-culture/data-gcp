@@ -16,9 +16,16 @@ create_tmp_folder() {
 
   # Default values for optional parameters
   folder_prefix=${folder_prefix:-tmp}
+  ts_prefix=$(date +%Y%m%d_%H%M%S)
+
+  # Ensure the "exec" directory exists, create it if it doesn't
+  if [ ! -d "${base_dir}/${folder_prefix}" ]; then
+    echo "Directory '${base_dir}/${folder_prefix}' does not exist. Creating it..."
+    mkdir -p "${base_dir}/${folder_prefix}" || { echo "ERROR: Failed to create '${base_dir}/${folder_prefix}'"; exit 1; }
+  fi
 
   # Create a unique temporary folder using mktemp
-  TMP_FOLDER=$(mktemp -d "${base_dir}/${folder_prefix}_XXXXXXXXXXXX")
+  TMP_FOLDER=$(mktemp -d "${base_dir}/${folder_prefix}/exec_${ts_prefix}_XXXXXXXXXXXX")
 
   # Check if mktemp succeeded
   if [ ! -d "$TMP_FOLDER" ]; then

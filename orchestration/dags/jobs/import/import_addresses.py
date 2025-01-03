@@ -53,7 +53,7 @@ dag_config = {
 
 USER_LOCATIONS_TABLE = "user_locations"
 schedule_interval = (
-    "0 2,4,6,8,12,16 * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
+    "0 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
 )
 
 default_args = {

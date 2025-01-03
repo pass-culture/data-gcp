@@ -61,8 +61,7 @@ with
             invoice.amount as invoice_amount
         from {{ ref("int_applicative__booking") }} booking
         left join
-            {{ ref("stock") }} as applicative_database_stock
-            on booking.stock_id = applicative_database_stock.stock_id
+            {{ ref("int_global__stock") }} as stock on booking.stock_id = stock.stock_id
         left join
             {{ ref("deposit") }} as applicative_database_deposit
             on booking.deposit_id = applicative_database_deposit.id

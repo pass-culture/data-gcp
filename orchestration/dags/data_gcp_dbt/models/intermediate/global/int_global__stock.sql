@@ -18,6 +18,7 @@ select
     s.stock_features,
     s.stock_last_provider_id,
     s.offer_id,
+    s.is_bookable,
     o.offer_product_id,
     o.offer_id_at_providers,
     o.offer_name,

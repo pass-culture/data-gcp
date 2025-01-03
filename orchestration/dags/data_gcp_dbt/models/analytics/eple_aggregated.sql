@@ -5,9 +5,9 @@ with
             institution_external_id,
             institution_name,
             institution_city,
-            institution_department_code,
+            eid.institution_department_code,
             institution_region_name as region_name,
-            institution_academy_name as institution_academie,
+            eid.institution_academy_name as institution_academie,
             eid.ministry,
             eid.institution_type,
             eid.macro_institution_type,
@@ -16,8 +16,8 @@ with
             eid.total_students
         from {{ ref("mrt_global__educational_institution") }} eid
         join
-            {{ ref("educational_deposit") }} ed
-            on ed.educational_institution_id = eid.institution_id
+            {{ ref("mrt_global__educational_deposit") }} ed
+            on ed.institution_id = eid.institution_id
         join {{ ref("educational_year") }} ey on ey.adage_id = ed.educational_year_id
     ),
 

@@ -16,7 +16,7 @@ select
     campaign,
     adset,
     ad,
-    cast(date as date) as git,
+    cast(date as date) as install_date,
     cast(execution_date as date) as execution_date,
     cast(sum(cost) as int64) as total_costs,
     sum(installs) as total_installs

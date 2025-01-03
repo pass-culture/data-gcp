@@ -85,7 +85,9 @@ with
             filetype as download_file_type,
             filescount as download_files_cnt,
             subcategoryid as offer_subcategory_id,
-            choosensuggestedsubcategory as suggested_offer_subcategory_selected
+            choosensuggestedsubcategory as suggested_offer_subcategory_selected,
+            status as offer_status,
+            selected_offers
         from {{ ref("int_firebase__pro_event_flattened") }}
         {% if is_incremental() %}
             where
@@ -94,15 +96,41 @@ with
                     "{{ ds() }}"
                 )
         {% endif %}
+    ),
+
+    clean_url_path_and_multiple_selection as (
+        select
+            * except (
+                url_first_path,
+                url_path_type,
+                url_path_details,
+                url_path_before_params,
+                selected_offers
+            ),
+            case
+                when url_path_details is null
+                then replace(coalesce(url_path_before_params, url_first_path), "/", "-")
+                when url_path_details is not null
+                then concat(url_path_type, "-", url_path_details)
+                else url_path_type
+            end as url_path_extract,
+            json_extract_array(selected_offers) as selected_offers_array,
+            array_length(json_extract_array(selected_offers)) > 1 as multiple_selection
+        from pro_event_raw_data
+    ),
+
+    final as (
+        select
+            * except (selected_offers_array, offer_id, offer_status),
+            coalesce(
+                json_extract_scalar(item, "$.offerId"), cast(offer_id as string)
+            ) as offer_id,
+            coalesce(
+                json_extract_scalar(item, "$.offerStatus"), offer_status
+            ) as offer_status,
+        from
+            clean_url_path_and_multiple_selection, unnest(selected_offers_array) as item
     )
 
-select
-    * except (url_first_path, url_path_type, url_path_details, url_path_before_params),
-    case
-        when url_path_details is null
-        then replace(coalesce(url_path_before_params, url_first_path), "/", "-")
-        when url_path_details is not null
-        then concat(url_path_type, "-", url_path_details)
-        else url_path_type
-    end as url_path_extract
-from pro_event_raw_data
+select * except (item)
+from final

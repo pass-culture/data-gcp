@@ -108,6 +108,7 @@ sources:
       - name: applicative_database_venue_provider
       - name: applicative_database_venue_provider_external_urls
       - name: applicative_database_venue_registration
+      - name: appsflyer_cost_channel
       - name: brevo_transactional
       - name: contentful_entry
       - name: contentful_relationship
@@ -154,7 +155,6 @@ sources:
       - name: adage
       - name: linked_offers
 
-
   - name: seed
     schema: seed_{{ var('ENV_SHORT_NAME') }}
     tables:
@@ -175,6 +175,7 @@ sources:
       - name: region_department
       - name: siren_data_labels
       - name: zrr
+
   - name: ml_preproc
     schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
     tables:
@@ -187,3 +188,8 @@ sources:
       - name: artist_linked
         description: This table contains the artist_linkage dag
       - name: unconstrained_item_cluster
+
+  - name: appsflyer_import
+    schema: appsflyer_import_{{ var('ENV_SHORT_NAME') }}
+    tables:
+      - name: cohort_unified_timezone_versioned

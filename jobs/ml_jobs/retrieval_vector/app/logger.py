@@ -57,3 +57,5 @@ def setup_logging(stdout_log_level: int, stderr_log_level: int) -> None:
 
 
 setup_logging(stdout_log_level=STDOUT_LOG_LEVEL, stderr_log_level=STDERR_LOG_LEVEL)
+
+logger = logging.getLogger("api_logger")

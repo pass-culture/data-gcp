@@ -4,12 +4,12 @@ select
     user_id,
     platform,
     event_date,
-    timestamp_micros(event_timestamp) as event_timestamp,
     device.category,
     device.operating_system,
     device.operating_system_version,
     device.web_info.browser,
     device.web_info.browser_version,
+    timestamp_micros(event_timestamp) as event_timestamp,
     {{
         extract_params_int_value(
             [
@@ -48,22 +48,24 @@ select
                 "fileType",
                 "subcategoryId",
                 "choosenSuggestedSubcategory",
+                "status",
+                "selected_offers",
             ]
         )
     }},
     (
         select event_params.value.double_value
-        from unnest(event_params) event_params
+        from unnest(event_params) as event_params
         where event_params.key = 'offerId'
     ) as double_offer_id,
     (
         select event_params.value.string_value
-        from unnest(event_params) event_params
+        from unnest(event_params) as event_params
         where event_params.key = 'from'
     ) as origin,
     (
         select event_params.value.string_value
-        from unnest(event_params) event_params
+        from unnest(event_params) as event_params
         where event_params.key = 'to'
     ) as destination
 from {{ source("raw", "firebase_pro_events") }}

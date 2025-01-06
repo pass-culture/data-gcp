@@ -7,6 +7,6 @@ select
     zt.technical_partner,
     zt.typology_support_pro as zendesk_typology_support_pro,
     zt.typology_support_native as zendesk_typology_support_native,
-    date(zt.created_at) as zendesk_ticket_created_date
+    date(zt.created_at) as ticket_created_date
 from {{ source("raw", "zendesk_ticket") }} as zt
 qualify row_number() over (partition by zt.id order by zt.updated_at desc) = 1

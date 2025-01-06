@@ -1,32 +1,34 @@
 with
     events as (
         select
-            user_id,
-            offer_id,
-            event_date,
-            extract(hour from event_timestamp) as event_hour,
-            extract(dayofweek from event_timestamp) as event_day,
-            extract(month from event_timestamp) as event_month
-        from {{ ref("int_firebase__native_event") }}
+            native_event.user_id,
+            native_event.offer_id,
+            native_event.event_date,
+            extract(hour from native_event.event_timestamp) as event_hour,
+            extract(dayofweek from native_event.event_timestamp) as event_day,
+            extract(month from native_event.event_timestamp) as event_month
+        from {{ ref("int_firebase__native_event") }} as native_event
         where
-            event_name = "ConsultOffer"
-            and event_date >= date_sub(date('{{ ds() }}'), interval 6 month)
-            and user_id is not null
-            and offer_id is not null
-            and offer_id != 'NaN'
+            native_event.event_name = "ConsultOffer"
+            and native_event.event_date >= date_sub(date("{{ ds() }}"), interval 6 month)
+            and native_event.user_id is not null
+            and native_event.offer_id is not null
+            and native_event.offer_id != "NaN"
     ),
-    click as (
+
+click as (
         select
-            event_date,
-            events.user_id as user_id,
-            offer.item_id as item_id,
-            event_hour,
-            event_day,
-            event_month,
+            events.event_date,
+            events.user_id,
+            events.item_id,
+            events.event_hour,
+            events.event_day,
+            events.event_month
         from events
-        join {{ ref("int_global__offer") }} offer on offer.offer_id = events.offer_id
-        left join {{ ref("int_global__user") }} user on user.user_id = events.user_id
+        inner join {{ ref("int_global__offer") }} as offer on events.offer_id = offer.offer_id
+        left join {{ ref("int_global__user") }} as user_table on events.user_id = user_table.user_id
     )
+
 select distinct
     click.event_date,
     click.user_id,
@@ -53,9 +55,9 @@ select distinct
     item_feature.item_booking_cnt,
     item_feature.item_favourite_cnt
 from click
-left join
+inner join
     {{ ref("ml_reco__training_data_user_feature") }} as user_feature
-    on user_feature.user_id = click.user_id
-left join
+    on click.user_id = user_feature.user_id
+inner join
     {{ ref("ml_reco__training_data_item_feature") }} as item_feature
-    on item_feature.item_id = click.item_id
+    on click.item_id = item_feature.item_id

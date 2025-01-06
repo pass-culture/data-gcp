@@ -46,7 +46,7 @@ with
                 null
             ) as cnt_bookings_confirm
         from {{ ref("int_applicative__booking") }} booking
-        join {{ ref("stock") }} stock using (stock_id)
+        join {{ ref("int_global__stock") }} stock using (stock_id)
         join
             {{ ref("int_applicative__offer") }} offer on offer.offer_id = stock.offer_id
     ),
@@ -156,34 +156,9 @@ select distinct
     if(offer.offer_id_at_providers is null, "manuel", "synchro") as input_type,
     case
         when
-            offer.offer_id in (
-                select stock.offer_id
-                from {{ ref("stock") }} as stock
-                join
-                    {{ ref("int_applicative__offer") }} as offer
-                    on stock.offer_id = offer.offer_id
-                    and offer.is_active
-                join
-                    {{ ref("mrt_global__stock") }} as mrt_global__stock
-                    on mrt_global__stock.stock_id = stock.stock_id
-                where
-                    not stock_is_soft_deleted
-                    and (
-                        (
-                            date(stock.stock_booking_limit_date) > current_date
-                            or stock.stock_booking_limit_date is null
-                        )
-                        and (
-                            date(stock.stock_beginning_date) > current_date
-                            or stock.stock_beginning_date is null
-                        )
-                        and offer.is_active
-                        and (
-                            mrt_global__stock.total_available_stock > 0
-                            or mrt_global__stock.total_available_stock is null
-                        )
-                    )
-            )
+            offer.is_active
+            and offer.offer_id
+            in (select offer_id from {{ ref("int_global__stock") }} where is_bookable)
         then true
         else false
     end as offer_is_bookable,

@@ -15,7 +15,8 @@ with
                 when category = 'offerer contribution' then pricing_line.amount
             end as offerer_contribution
         from {{ ref("mrt_global__booking") }} as booking
-        left join {{ ref("pricing") }} as pricing on booking.booking_id = pricing.bookingid
+        left join
+            {{ ref("pricing") }} as pricing on booking.booking_id = pricing.bookingid
         left join
             {{ ref("pricing_line") }} as pricing_line
             on pricing.id = pricing_line.pricingid
@@ -73,7 +74,8 @@ with
             {{ ref("cashflow_pricing") }} as cashflow_pricing
             on pricing.id = cashflow_pricing.pricingid
         left join
-            {{ ref("cashflow") }} as cashflow on cashflow_pricing.cashflowid = cashflow.id
+            {{ ref("cashflow") }} as cashflow
+            on cashflow_pricing.cashflowid = cashflow.id
         left join
             {{ ref("cashflow_batch") }} as cashflow_batch
             on cashflow.batchid = cashflow_batch.id
@@ -157,7 +159,8 @@ with
             {{ ref("cashflow_pricing") }} as cashflow_pricing
             on pricing.id = cashflow_pricing.pricingid
         left join
-            {{ ref("cashflow") }} as cashflow on cashflow_pricing.cashflowid = cashflow.id
+            {{ ref("cashflow") }} as cashflow
+            on cashflow_pricing.cashflowid = cashflow.id
         left join
             {{ ref("cashflow_batch") }} as cashflow_batch
             on cashflow.batchid = cashflow_batch.id

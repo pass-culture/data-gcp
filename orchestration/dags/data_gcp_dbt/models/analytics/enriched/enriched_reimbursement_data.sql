@@ -1,7 +1,7 @@
 with
     clean_payment_status as (
         select paymentid, max(date) as last_status_date
-        from {{ ref("payment_status") }} payment_statuts
+        from {{ ref("payment_status") }}
         group by 1
     ),
 
@@ -14,10 +14,10 @@ with
             case
                 when category = 'offerer contribution' then pricing_line.amount
             end as offerer_contribution
-        from {{ ref("mrt_global__booking") }} booking
-        left join {{ ref("pricing") }} pricing on booking.booking_id = pricing.bookingid
+        from {{ ref("mrt_global__booking") }} as booking
+        left join {{ ref("pricing") }} as pricing on booking.booking_id = pricing.bookingid
         left join
-            {{ ref("pricing_line") }} pricing_line
+            {{ ref("pricing_line") }} as pricing_line
             on pricing.id = pricing_line.pricingid
     ),
 
@@ -32,7 +32,7 @@ with
 
     individuel as (
         select distinct
-            applicative_database_deposit.type as booking_type,
+            deposit.deposit_type as booking_type,
             '' as collective_booking_id,
             booking.booking_id,
             booking.booking_status,
@@ -59,32 +59,32 @@ with
             invoice.invoice_reference,
             invoice.invoice_creation_date,
             invoice.amount as invoice_amount
-        from {{ ref("int_applicative__booking") }} booking
+        from {{ ref("int_applicative__booking") }} as booking
         left join
             {{ ref("int_global__stock") }} as stock on booking.stock_id = stock.stock_id
         left join
-            {{ ref("deposit") }} as applicative_database_deposit
-            on booking.deposit_id = applicative_database_deposit.id
+            {{ ref("int_global__deposit") }} as deposit
+            on booking.deposit_id = deposit.deposit_id
         left join
             {{ ref("pricing") }} as pricing on booking.booking_id = pricing.bookingid
         left join
             clean_pricing_line2 on booking.booking_id = clean_pricing_line2.booking_id
         left join
-            {{ ref("cashflow_pricing") }} cashflow_pricing
+            {{ ref("cashflow_pricing") }} as cashflow_pricing
             on pricing.id = cashflow_pricing.pricingid
         left join
-            {{ ref("cashflow") }} cashflow on cashflow_pricing.cashflowid = cashflow.id
+            {{ ref("cashflow") }} as cashflow on cashflow_pricing.cashflowid = cashflow.id
         left join
-            {{ ref("cashflow_batch") }} cashflow_batch
+            {{ ref("cashflow_batch") }} as cashflow_batch
             on cashflow.batchid = cashflow_batch.id
         left join
-            {{ ref("invoice_cashflow") }} invoice_cashflow
+            {{ ref("invoice_cashflow") }} as invoice_cashflow
             on cashflow.id = invoice_cashflow.cashflow_id
         left join
-            {{ ref("invoice") }} invoice
+            {{ ref("invoice") }} as invoice
             on invoice_cashflow.invoice_id = invoice.invoice_id
         left join
-            {{ source("raw", "applicative_database_invoice_line") }} invoice_line
+            {{ source("raw", "applicative_database_invoice_line") }} as invoice_line
             on invoice.invoice_id = invoice_line.invoice_id
         where not invoice.invoice_reference like '%.2'
     ),
@@ -98,12 +98,12 @@ with
             case
                 when category = 'offerer contribution' then pricing_line.amount
             end as offerer_contribution
-        from {{ ref("mrt_global__collective_booking") }} collective_booking
+        from {{ ref("mrt_global__collective_booking") }} as collective_booking
         left join
-            {{ ref("pricing") }} pricing
+            {{ ref("pricing") }} as pricing
             on collective_booking.collective_booking_id = pricing.collective_booking_id
         left join
-            {{ ref("pricing_line") }} pricing_line
+            {{ ref("pricing_line") }} as pricing_line
             on pricing.id = pricing_line.pricingid
     ),
 
@@ -145,30 +145,30 @@ with
             invoice.invoice_reference,
             invoice.invoice_creation_date,
             invoice.amount as invoice_amount
-        from {{ ref("collective_booking") }} collective_booking
+        from {{ ref("collective_booking") }} as collective_booking
         left join
-            {{ ref("pricing") }} pricing
+            {{ ref("pricing") }} as pricing
             on collective_booking.collective_booking_id = pricing.collective_booking_id
         left join
             coll_clean_pricing_line2
             on collective_booking.collective_booking_id
             = coll_clean_pricing_line2.collective_booking_id
         left join
-            {{ ref("cashflow_pricing") }} cashflow_pricing
+            {{ ref("cashflow_pricing") }} as cashflow_pricing
             on pricing.id = cashflow_pricing.pricingid
         left join
-            {{ ref("cashflow") }} cashflow on cashflow_pricing.cashflowid = cashflow.id
+            {{ ref("cashflow") }} as cashflow on cashflow_pricing.cashflowid = cashflow.id
         left join
-            {{ ref("cashflow_batch") }} cashflow_batch
+            {{ ref("cashflow_batch") }} as cashflow_batch
             on cashflow.batchid = cashflow_batch.id
         left join
-            {{ ref("invoice_cashflow") }} invoice_cashflow
+            {{ ref("invoice_cashflow") }} as invoice_cashflow
             on cashflow.id = invoice_cashflow.cashflow_id
         left join
-            {{ ref("invoice") }} invoice
+            {{ ref("invoice") }} as invoice
             on invoice_cashflow.invoice_id = invoice.invoice_id
         left join
-            {{ source("raw", "applicative_database_invoice_line") }} invoice_line
+            {{ source("raw", "applicative_database_invoice_line") }} as invoice_line
             on invoice.invoice_id = invoice_line.invoice_id
         where not invoice.invoice_reference like '%.2'
     )

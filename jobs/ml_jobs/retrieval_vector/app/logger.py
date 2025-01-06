@@ -4,7 +4,7 @@ import sys
 from pythonjsonlogger import jsonlogger
 
 STDERR_LOG_LEVEL = logging.WARNING
-STDOUT_LOG_LEVEL = logging.DEBUG
+STDOUT_LOG_LEVEL = logging.INFO
 
 
 class CustomLogFilter(logging.Filter):

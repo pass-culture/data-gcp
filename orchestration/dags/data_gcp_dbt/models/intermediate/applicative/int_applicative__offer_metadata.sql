@@ -162,6 +162,7 @@ left join
     {{ ref("int_applicative__product_mediation") }} as pm
     on o.offer_product_id = pm.product_id
 left join {{ ref("int_applicative__product") }} as p on o.offer_product_id = p.id
-left join  {{ ref("int_seed_movie_arthouse_and_heritage_label") }} as mahl
+left join
+    {{ ref("int_seed_movie_arthouse_and_heritage_label") }} as mahl
     on mahl.movie_visa = o.visa
 qualify row_number() over (partition by offer_id order by pm.image_type) = 1

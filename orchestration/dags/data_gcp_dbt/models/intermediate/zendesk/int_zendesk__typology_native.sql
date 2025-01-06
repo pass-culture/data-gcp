@@ -5,8 +5,7 @@ with
             zt.zendesk_ticket_created_at,
             zt.zendesk_ticket_created_date,
             -- Generate zendesk_typology_id as a hash of the base string
-            "support_pro" as zendesk_typology_type,
-            zt.technical_partner,
+            "support_native" as zendesk_typology_type,
             -- Split the typology into primary and secondary parts
             to_hex(sha256(concat(spt_unnest))) as zendesk_typology_id,
             split(spt_unnest, "__")[safe_offset(0)] as zendesk_typology_primary,
@@ -14,7 +13,7 @@ with
 
         from
             {{ ref("int_zendesk__ticket") }} as zt,
-            unnest(zt.zendesk_typology_support_pro) as spt_unnest
+            unnest(zt.zendesk_typology_support_native) as spt_unnest
     )
 
 select
@@ -24,6 +23,5 @@ select
     zendesk_typology_type,
     zendesk_typology_id,
     zendesk_typology_primary,
-    zendesk_typology_secondary,
-    technical_partner
+    zendesk_typology_secondary
 from formatted_typologies

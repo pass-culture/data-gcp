@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: int_zendesk__typology_pro
-    description: '{{ doc("description__int_zendesk__typology_pro") }}'
+  - name: int_zendesk__typology_native
+    description: '{{ doc("description__int_zendesk__typology_native") }}'
     columns:
       - name: zendesk_ticket_created_at
         description: '{{ doc("column__zendesk_ticket_created_at") }}'
@@ -18,5 +18,3 @@ models:
         description: '{{ doc("column__zendesk_typology_primary") }}'
       - name: zendesk_typology_secondary
         description: '{{ doc("column__zendesk_typology_secondary") }}'
-      - name: technical_partner
-        description: '{{ doc("column__technical_partner") }}'

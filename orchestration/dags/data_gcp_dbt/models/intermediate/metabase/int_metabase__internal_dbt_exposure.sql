@@ -12,12 +12,12 @@ with
     )
 
 select
-    collection_id as metabase_collection_id,
-    collection_name as metabase_collection_name,
-    count(distinct card_id) as total_metabase_cards,
-    count(distinct metabase_user_id) as total_metabase_users,
+    dq.collection_id as metabase_collection_id,
+    dq.collection_name as metabase_collection_name,
+    count(distinct dq.card_id) as total_metabase_cards,
+    count(distinct dq.metabase_user_id) as total_metabase_users,
     count(*) as total_metabase_queries
 from {{ ref("int_metabase__daily_query") }} as dq
 inner join collection_status as cs on dq.card_collection_id = cs.collection_id
-where date(execution_date) >= date_sub(current_date, interval 90 day)
+where date(dq.execution_date) >= date_sub(current_date, interval 90 day)
 group by 1, 2

@@ -161,6 +161,7 @@ sources:
       - name: agg_partner_cultural_sector
       - name: epci
       - name: geo_iris
+      - name: gsheet_movie_arthouse_and_heritage_label
       - name: institution_metadata
       - name: institution_metadata_aggregated_type
       - name: institutional_scholar_level

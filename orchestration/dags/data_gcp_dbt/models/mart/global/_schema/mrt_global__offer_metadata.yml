@@ -26,6 +26,12 @@ models:
         description: "{{ doc('column__offer_type_id') }}"
       - name: offer_sub_type_id
         description: "{{ doc('column__offer_sub_type_id') }}"
+      - name: isbn
+        description: "{{ doc('column__isbn') }}"
+      - name: visa
+        description: "{{ doc('column__visa') }}"
+      - name: movie_label
+        description: "{{ doc('column__movie_label') }}"
       - name: author
         description: "{{ doc('column__author') }}"
       - name: performer

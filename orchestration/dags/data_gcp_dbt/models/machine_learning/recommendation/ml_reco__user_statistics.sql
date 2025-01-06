@@ -20,7 +20,8 @@ with
             0 as booking_cnt
         from {{ source("raw", "applicative_database_internal_user") }} as ie
         left join
-            {{ source("raw", "applicative_database_user") }} as u on ie.user_id = u.user_id
+            {{ source("raw", "applicative_database_user") }} as u
+            on ie.user_id = u.user_id
     )
 
 select
@@ -32,8 +33,14 @@ select
     au.consult_offer,
     au.has_added_offer_to_favorites,
     coalesce(
-        selected_users.total_theoretical_remaining_credit, selected_users.user_last_deposit_amount
+        selected_users.total_theoretical_remaining_credit,
+        selected_users.user_last_deposit_amount
     ) as user_theoretical_remaining_credit
 from selected_users
-left join {{ ref("firebase_aggregated_users") }} as au on selected_users.user_id = au.user_id
-qualify row_number() over (partition by selected_users.user_id order by selected_users.booking_cnt desc) = 1
+left join
+    {{ ref("firebase_aggregated_users") }} as au on selected_users.user_id = au.user_id
+qualify
+    row_number() over (
+        partition by selected_users.user_id order by selected_users.booking_cnt desc
+    )
+    = 1

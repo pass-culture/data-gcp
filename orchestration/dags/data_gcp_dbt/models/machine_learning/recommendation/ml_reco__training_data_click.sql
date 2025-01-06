@@ -10,13 +10,14 @@ with
         from {{ ref("int_firebase__native_event") }} as native_event
         where
             native_event.event_name = "ConsultOffer"
-            and native_event.event_date >= date_sub(date("{{ ds() }}"), interval 6 month)
+            and native_event.event_date
+            >= date_sub(date("{{ ds() }}"), interval 6 month)
             and native_event.user_id is not null
             and native_event.offer_id is not null
             and native_event.offer_id != "NaN"
     ),
 
-click as (
+    click as (
         select
             events.event_date,
             events.user_id,
@@ -25,8 +26,11 @@ click as (
             events.event_day,
             events.event_month
         from events
-        inner join {{ ref("int_global__offer") }} as offers on events.offer_id = offers.offer_id
-        left join {{ ref("int_global__user") }} as users on events.user_id = users.user_id
+        inner join
+            {{ ref("int_global__offer") }} as offers
+            on events.offer_id = offers.offer_id
+        left join
+            {{ ref("int_global__user") }} as users on events.user_id = users.user_id
     )
 
 select distinct

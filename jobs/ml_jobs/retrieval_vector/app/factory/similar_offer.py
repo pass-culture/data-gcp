@@ -5,7 +5,7 @@ import numpy as np
 
 from app.factory.handler import PredictionHandler
 from app.factory.tops import SearchByTopsHandler
-from app.logger import logger
+from app.logging.logger import logger
 from app.models.prediction_request import PredictionRequest
 from app.models.prediction_result import PredictionResult
 from app.retrieval.client import DefaultClient

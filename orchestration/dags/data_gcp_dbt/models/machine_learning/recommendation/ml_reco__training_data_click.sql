@@ -25,8 +25,8 @@ click as (
             events.event_day,
             events.event_month
         from events
-        inner join {{ ref("int_global__offer") }} as offer on events.offer_id = offer.offer_id
-        left join {{ ref("int_global__user") }} as user_table on events.user_id = user_table.user_id
+        inner join {{ ref("int_global__offer") }} as offers on events.offer_id = offers.offer_id
+        left join {{ ref("int_global__user") }} as users on events.user_id = users.user_id
     )
 
 select distinct

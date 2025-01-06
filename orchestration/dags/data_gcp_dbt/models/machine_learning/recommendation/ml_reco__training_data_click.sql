@@ -21,7 +21,7 @@ with
         select
             events.event_date,
             events.user_id,
-            events.item_id,
+            offers.item_id,
             events.event_hour,
             events.event_day,
             events.event_month

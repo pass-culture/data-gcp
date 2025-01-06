@@ -31,4 +31,5 @@ SELECT
     , CAST("imageId" AS varchar(255)) AS collective_offer_image_id
     , CAST("providerId" AS varchar(255)) AS provider_id
     , CAST("nationalProgramId" AS varchar(255)) AS national_program_id
+    , "rejectionReason" AS collective_offer_rejection_reason
 FROM public.collective_offer

@@ -12,8 +12,8 @@ with
     )
 
 select
-    dq.collection_id as metabase_collection_id,
-    dq.collection_name as metabase_collection_name,
+    cs.collection_id as metabase_collection_id,
+    cs.collection_name as metabase_collection_name,
     count(distinct dq.card_id) as total_metabase_cards,
     count(distinct dq.metabase_user_id) as total_metabase_users,
     count(*) as total_metabase_queries

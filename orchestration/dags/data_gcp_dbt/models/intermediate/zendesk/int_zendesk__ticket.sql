@@ -1,8 +1,8 @@
 select
-    zt.id as zendesk_ticket_id,
-    zt.created_at as zendesk_ticket_created_at,
-    zt.updated_at as zendesk_ticket_updated_at,
-    zt.level as zendesk_ticket_level,
+    zt.id as ticket_id,
+    zt.created_at as ticket_created_at,
+    zt.updated_at as ticket_updated_at,
+    zt.level as ticket_level,
     zt.user_id,
     zt.technical_partner,
     zt.typology_support_pro as zendesk_typology_support_pro,

@@ -4,16 +4,16 @@ models:
   - name: int_zendesk__ticket
     description: '{{ doc("description__int_zendesk__ticket") }}'
     columns:
-      - name: zendesk_ticket_id
-        description: '{{ doc("column__zendesk_ticket_id") }}'
-      - name: zendesk_ticket_created_date
-        description: '{{ doc("column__zendesk_ticket_created_date") }}'
-      - name: zendesk_ticket_created_at
-        description: '{{ doc("column__zendesk_ticket_created_at") }}'
-      - name: zendesk_ticket_updated_at
-        description: '{{ doc("column__zendesk_ticket_updated_at") }}'
-      - name: zendesk_ticket_level
-        description: '{{ doc("column__zendesk_ticket_level") }}'
+      - name: ticket_id
+        description: '{{ doc("column__ticket_id") }}'
+      - name: ticket_created_date
+        description: '{{ doc("column__ticket_created_date") }}'
+      - name: ticket_created_at
+        description: '{{ doc("column__ticket_created_at") }}'
+      - name: ticket_updated_at
+        description: '{{ doc("column__ticket_updated_at") }}'
+      - name: ticket_level
+        description: '{{ doc("column__ticket_level") }}'
       - name: user_id
         description: '{{ doc("column__user_id") }}'
       - name: technical_partner

@@ -1,9 +1,9 @@
 with
     formatted_typologies as (
         select
-            zt.zendesk_ticket_id,
-            zt.zendesk_ticket_created_at,
-            zt.zendesk_ticket_created_date,
+            zt.ticket_id,
+            zt.ticket_created_at,
+            zt.ticket_created_date,
             -- Generate zendesk_typology_id as a hash of the base string
             "support_native" as zendesk_typology_type,
             -- Split the typology into primary and secondary parts
@@ -17,9 +17,9 @@ with
     )
 
 select
-    zendesk_ticket_created_at,
-    zendesk_ticket_created_date,
-    zendesk_ticket_id,
+    ticket_created_at,
+    ticket_created_date,
+    ticket_id,
     zendesk_typology_type,
     zendesk_typology_id,
     zendesk_typology_primary,

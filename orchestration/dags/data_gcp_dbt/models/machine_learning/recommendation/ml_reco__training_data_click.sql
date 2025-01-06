@@ -59,9 +59,9 @@ select distinct
     item_features.item_booking_cnt,
     item_features.item_favourite_cnt
 from clicks
-inner join
+inner join  -- Could be a left join if ml_reco__training_data_user_feature would not remove users
     {{ ref("ml_reco__training_data_user_feature") }} as user_features
     on clicks.user_id = user_features.user_id
-inner join
+inner join  -- Could be a left join if ml_reco__training_data_item_feature would not remove users
     {{ ref("ml_reco__training_data_item_feature") }} as item_features
     on clicks.item_id = item_features.item_id

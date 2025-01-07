@@ -5,30 +5,37 @@ select
     rank_execution.card_creation_date,
     rank_execution.card_update_date,
     rank_execution.card_collection_id,
-    location,
-    avg_running_time,
-    avg_result_rows,
-    total_users,
-    total_views,
-    nbr_dashboards,
-    last_execution_date,
-    context as last_execution_context,
-    total_errors,
+    public_collections.location,
+    aggregated_activity.avg_running_time,
+    aggregated_activity.avg_result_rows,
+    aggregated_activity.total_users,
+    aggregated_activity.total_views,
+    aggregated_activity.nbr_dashboards,
+    aggregated_activity.last_execution_date,
+    rank_execution.context as last_execution_context,
+    aggregated_activity.total_errors,
     case
-        when location like '/610%' or card_collection_id = 610
+        when
+            public_collections.location like '/610%'
+            or rank_execution.card_collection_id = 610
         then 'archive'
-        when location like '/607%'
+        when public_collections.location like '/607%'
         then 'externe'
-        when location like '/606/614%' or card_collection_id = 614
+        when
+            public_collections.location like '/606/614%'
+            or rank_execution.card_collection_id = 614
         then 'operationnel'
-        when location like '/606/615%' or card_collection_id = 615
+        when
+            public_collections.location like '/606/615%'
+            or rank_execution.card_collection_id = 615
         then 'adhoc'
-        when location like '/608%'
+        when public_collections.location like '/608%'
         then 'interne'
-        when location like '/1783%'
+        when public_collections.location like '/1783%'
         then 'restreint'
         else 'other'
     end as parent_folder
+
 from {{ ref("int_metabase__daily_query") }} as rank_execution
 inner join
     {{ ref("int_metabase__aggregated_card_activity") }} as aggregated_activity

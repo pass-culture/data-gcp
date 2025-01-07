@@ -15,7 +15,7 @@
 ] %}
 
 with
-    users as (select distinct user_id from {{ ref("user") }}),
+    users as (select distinct user_id from {{ ref("int_global__user") }}),
 
     bookings as (
         select

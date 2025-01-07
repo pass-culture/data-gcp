@@ -298,15 +298,15 @@ with
                 when mrt_global__venue.venue_is_permanent
                 then concat("venue-", mrt_global__venue.venue_id)
                 else concat("offerer-", mrt_global__venue.venue_managing_offerer_id)
-            end as partner_id,
-            applicative_database_favorite.*
+            end as partner_id_f1,
+            favorite.*
         from {{ ref("mrt_global__venue") }} as mrt_global__venue
         left join
             {{ ref("mrt_global__offer") }} as mrt_global__offer
             on mrt_global__venue.venue_id = mrt_global__offer.venue_id
         left join
-            {{ ref("favorite") }} as applicative_database_favorite
-            on mrt_global__offer.offer_id = applicative_database_favorite.offerid
+            {{ ref("mrt_global__favorite") }} as favorite
+            on mrt_global__offer.offer_id = favorite.offer_id
     ),
 
     favorites as (
@@ -318,7 +318,7 @@ with
         from favorites1
         join
             {{ ref("mrt_global__cultural_partner") }} as mrt_global__cultural_partner
-            using (partner_id)
+            on mrt_global__cultural_partner.partner_id = favorites1.partner_id_f1
         join
             {{ ref("partner_type_bookability_frequency") }}
             on mrt_global__cultural_partner.partner_type

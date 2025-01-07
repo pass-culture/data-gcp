@@ -45,10 +45,12 @@ with
 
     headlines_grouped_by_offers as (
         select
-            offer_id
-            , max(headline_offer_end_date) AS offer_last_headline_date
-            , count(*) as total_offer_headlines
-            , count(case when headline_offer_end_date is not null then 1 end) as total_headline_offers_not_expired
+            offer_id,
+            max(headline_offer_end_date) as offer_last_headline_date,
+            count(*) as total_offer_headlines,
+            count(
+                case when headline_offer_end_date is not null then 1 end
+            ) as total_headline_offers_not_expired
         from {{ ref("int_applicative__headline_offer") }}
         group by offer_id
     )
@@ -203,9 +205,13 @@ select
     ho.total_offer_headlines,
     case
         when
-            (ho.offer_last_headline_date >= current_date
-            or ho.total_headline_offers_not_expired > 0)
-            and (so.is_bookable and o.offer_is_active and o.offer_validation = "APPROVED")
+            (
+                ho.offer_last_headline_date >= current_date
+                or ho.total_headline_offers_not_expired > 0
+            )
+            and (
+                so.is_bookable and o.offer_is_active and o.offer_validation = "APPROVED"
+            )
         then true
         else false
     end as offer_is_headlined

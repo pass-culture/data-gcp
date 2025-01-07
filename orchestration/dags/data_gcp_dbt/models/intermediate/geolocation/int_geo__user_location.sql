@@ -18,7 +18,7 @@ with
         {{
             generate_seed_geolocation_query(
                 source_table="int_api_gouv__user_address",
-                referential_table="int_seed__priority_neighborhood",
+                referential_table="int_seed__priority_urban_district",
                 id_column="user_id",
                 prefix_name="user",
                 columns=["code_qpv", "qpv_name", "qpv_communes"],
@@ -86,14 +86,14 @@ select
     user_qpv.qpv_communes,
     user_zrr.zrr_level,
     user_zrr.zrr_level_detail,
+    date_updated,
     case
         when code_qpv is null and user_latitude is null and user_longitude is null
         then null
         else code_qpv is not null
-    end as user_is_in_qpv,
-    date_updated,
+    end as user_is_in_qpv
 
-from {{ ref("int_api_gouv__user_address") }} user
+from {{ ref("int_api_gouv__user_address") }} as user
 left join user_epci on user.user_id = user_epci.user_id
 left join user_qpv on user.user_id = user_qpv.user_id
 left join user_zrr on user.user_id = user_zrr.user_id

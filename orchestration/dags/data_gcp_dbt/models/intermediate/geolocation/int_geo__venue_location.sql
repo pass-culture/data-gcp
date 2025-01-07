@@ -17,7 +17,7 @@ with
         {{
             generate_seed_geolocation_query(
                 source_table=["raw", "applicative_database_venue"],
-                referential_table="int_seed__priority_neighborhood",
+                referential_table="int_seed__priority_urban_district",
                 id_column="venue_id",
                 prefix_name="venue",
                 columns=["code_qpv", "qpv_name", "qpv_communes"],
@@ -89,9 +89,9 @@ select
         when code_qpv is null and venue_latitude is null and venue_longitude is null
         then null
         else code_qpv is not null
-    end as venue_in_qpv,
+    end as venue_in_qpv
 
-from {{ source("raw", "applicative_database_venue") }} venue
+from {{ source("raw", "applicative_database_venue") }} as venue
 left join venue_epci on venue.venue_id = venue_epci.venue_id
 left join venue_qpv on venue.venue_id = venue_qpv.venue_id
 left join venue_zrr on venue.venue_id = venue_zrr.venue_id

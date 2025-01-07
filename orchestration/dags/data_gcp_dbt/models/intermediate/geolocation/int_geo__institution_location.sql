@@ -18,7 +18,7 @@ with
         {{
             generate_seed_geolocation_query(
                 source_table="int_seed__institution_metadata",
-                referential_table="int_seed__priority_neighborhood",
+                referential_table="int_seed__priority_urban_district",
                 id_column="institution_id",
                 prefix_name="institution",
                 columns=["code_qpv", "qpv_name", "qpv_communes"],
@@ -91,9 +91,9 @@ select
             and institution_longitude is null
         then null
         else code_qpv is not null
-    end as institution_in_qpv,
+    end as institution_in_qpv
 
-from {{ source("raw", "applicative_database_educational_institution") }} institution
+from {{ source("raw", "applicative_database_educational_institution") }} as institution
 left join
     {{ ref("int_seed__institution_metadata") }} as metadata
     on institution.institution_id = metadata.institution_id

@@ -41,6 +41,16 @@ with
         select offerid, count(*) as total_favorites
         from {{ source("raw", "applicative_database_favorite") }}
         group by offerid
+    ),
+
+    headlines_grouped_by_offers as (
+        select
+            offer_id
+            , max(headline_offer_end_date) AS offer_last_headline_date
+            , count(*) as total_offer_headlines
+            , count(case when headline_offer_end_date is not null then 1 end) as total_headline_offers_not_expired
+        from {{ ref("int_applicative__headline_offer") }}
+        group by offer_id
     )
 
 select
@@ -189,7 +199,16 @@ select
             and future_offer.offer_publication_date >= current_date
         then true
         else false
-    end as is_future_scheduled
+    end as is_future_scheduled,
+    ho.total_offer_headlines,
+    case
+        when
+            (ho.offer_last_headline_date >= current_date
+            or ho.total_headline_offers_not_expired > 0)
+            and (so.is_bookable and o.offer_is_active and o.offer_validation = "APPROVED")
+        then true
+        else false
+    end as offer_is_headlined
 from {{ ref("int_applicative__extract_offer") }} as o
 left join {{ ref("int_applicative__offer_item_id") }} as ii on ii.offer_id = o.offer_id
 left join stocks_grouped_by_offers as so on so.offer_id = o.offer_id
@@ -211,3 +230,4 @@ left join
 where
     o.offer_subcategoryid not in ("ACTIVATION_THING", "ACTIVATION_EVENT")
     and (o.booking_email <> "jeux-concours@passculture.app" or o.booking_email is null)
+left join headlines_grouped_by_offers as ho on ho.offer_id = o.offer_id

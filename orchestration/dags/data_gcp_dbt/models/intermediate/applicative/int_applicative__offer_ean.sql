@@ -1,26 +1,26 @@
-WITH
+with
     -- Step 1: Initial Data Cleaning and Transformation
-    base_cleaning AS (
-        SELECT
+    base_cleaning as (
+        select
             offer_id,
             offer_subcategoryid,
-            rayon AS category_rayon,
-            book_editor AS publisher_name,
-            REGEXP_REPLACE(ean, r'[\\s\\-\\tA-Za-z]', '') AS cleaned_ean,
-            REGEXP_REPLACE(isbn, r'[\\s\\-\\tA-Za-z]', '') AS cleaned_isbn,
-            LENGTH(REGEXP_REPLACE(isbn, r'[\\s\\-\\tA-Za-z]', '')) AS isbn_length,
-            LENGTH(REGEXP_REPLACE(ean, r'[\\s\\-\\tA-Za-z]', '')) AS ean_length,
-            CASE
-                WHEN LENGTH(CAST(titelive_gtl_id AS STRING)) = 7
-                THEN CONCAT('0', CAST(titelive_gtl_id AS STRING))
-                ELSE CAST(titelive_gtl_id AS STRING)
-            END AS normalized_gtl_id
-        FROM {{ ref("int_applicative__extract_offer") }}
+            rayon as category_rayon,
+            book_editor as publisher_name,
+            regexp_replace(ean, r'[\\s\\-\\tA-Za-z]', '') as cleaned_ean,
+            regexp_replace(isbn, r'[\\s\\-\\tA-Za-z]', '') as cleaned_isbn,
+            length(regexp_replace(isbn, r'[\\s\\-\\tA-Za-z]', '')) as isbn_length,
+            length(regexp_replace(ean, r'[\\s\\-\\tA-Za-z]', '')) as ean_length,
+            case
+                when length(cast(titelive_gtl_id as string)) = 7
+                then concat('0', cast(titelive_gtl_id as string))
+                else cast(titelive_gtl_id as string)
+            end as normalized_gtl_id
+        from {{ ref("int_applicative__extract_offer") }}
     ),
 
     -- Step 2: Validate ISBN and EAN
-    validate_identifiers AS (
-        SELECT
+    validate_identifiers as (
+        select
             offer_id,
             offer_subcategoryid,
             cleaned_ean,
@@ -30,24 +30,30 @@ WITH
             normalized_gtl_id,
             category_rayon,
             publisher_name,
-            CASE
-                WHEN isbn_length = 10 AND REGEXP_CONTAINS(cleaned_isbn, r'^\d{10}$') THEN 'valid'
-                WHEN isbn_length = 13 AND REGEXP_CONTAINS(cleaned_isbn, r'^\d{13}$') THEN 'valid'
-                WHEN cleaned_isbn IS null THEN 'missing'
-                ELSE 'invalid_format'
-            END AS isbn_status,
-            CASE
-                WHEN ean_length = 10 AND REGEXP_CONTAINS(cleaned_ean, r'^\d{10}$') THEN 'valid'
-                WHEN ean_length = 13 AND REGEXP_CONTAINS(cleaned_ean, r'^\d{13}$') THEN 'valid'
-                WHEN cleaned_ean IS null THEN 'missing'
-                ELSE 'invalid_format'
-            END AS ean_status
-        FROM base_cleaning
+            case
+                when isbn_length = 10 and regexp_contains(cleaned_isbn, r'^\d{10}$')
+                then 'valid'
+                when isbn_length = 13 and regexp_contains(cleaned_isbn, r'^\d{13}$')
+                then 'valid'
+                when cleaned_isbn is null
+                then 'missing'
+                else 'invalid_format'
+            end as isbn_status,
+            case
+                when ean_length = 10 and regexp_contains(cleaned_ean, r'^\d{10}$')
+                then 'valid'
+                when ean_length = 13 and regexp_contains(cleaned_ean, r'^\d{13}$')
+                then 'valid'
+                when cleaned_ean is null
+                then 'missing'
+                else 'invalid_format'
+            end as ean_status
+        from base_cleaning
     ),
 
     -- Step 3: Filter Valid ISBN and EAN
-    filter_valid_identifiers AS (
-        SELECT
+    filter_valid_identifiers as (
+        select
             offer_id,
             offer_subcategoryid,
             normalized_gtl_id,
@@ -55,68 +61,70 @@ WITH
             publisher_name,
             ean_length,
             isbn_length,
-            CASE WHEN isbn_status = 'valid' THEN cleaned_isbn END AS valid_isbn,
-            CASE WHEN ean_status = 'valid' THEN cleaned_ean END AS valid_ean
-        FROM validate_identifiers
+            case when isbn_status = 'valid' then cleaned_isbn end as valid_isbn,
+            case when ean_status = 'valid' then cleaned_ean end as valid_ean
+        from validate_identifiers
     ),
 
     -- Step 4: Coalesce EAN and ISBN into Primary ISBN
-    clean_offer_ean_cte AS (
-        SELECT
+    clean_offer_ean_cte as (
+        select
             offer_id,
             offer_subcategoryid,
             category_rayon,
             publisher_name,
-            normalized_gtl_id AS titelive_gtl_id,
-            valid_ean AS ean,
-            IF(ean_length = 13, valid_ean, valid_isbn) AS isbn
-        FROM filter_valid_identifiers
+            normalized_gtl_id as titelive_gtl_id,
+            valid_ean as ean,
+            if(ean_length = 13, valid_ean, valid_isbn) as isbn
+        from filter_valid_identifiers
     ),
 
     -- Step 5: Determine the Most Frequent Rayon per ISBN
-    determine_rayon_by_isbn AS (
-        SELECT
-            isbn,
-            category_rayon
-        FROM clean_offer_ean_cte
-        WHERE
-            offer_subcategoryid IN ('LIVRE_PAPIER', 'LIVRE_NUMERIQUE', 'LIVRE_AUDIO_PHYSIQUE')
-            AND category_rayon IS NOT null
-            AND isbn IS NOT null
-        GROUP BY isbn, category_rayon
-        QUALIFY ROW_NUMBER() OVER (
-            PARTITION BY isbn
-            ORDER BY COUNT(DISTINCT offer_id) DESC, MAX(offer_id) DESC
-        ) = 1
+    determine_rayon_by_isbn as (
+        select isbn, category_rayon
+        from clean_offer_ean_cte
+        where
+            offer_subcategoryid
+            in ('LIVRE_PAPIER', 'LIVRE_NUMERIQUE', 'LIVRE_AUDIO_PHYSIQUE')
+            and category_rayon is not null
+            and isbn is not null
+        group by isbn, category_rayon
+        qualify
+            row_number() over (
+                partition by isbn
+                order by count(distinct offer_id) desc, max(offer_id) desc
+            )
+            = 1
     ),
 
     -- Step 6: Determine the Most Frequent Publisher per ISBN
-    determine_editor_by_isbn AS (
-        SELECT
-            isbn,
-            publisher_name
-        FROM clean_offer_ean_cte
-        WHERE
-            offer_subcategoryid IN ('LIVRE_PAPIER', 'LIVRE_NUMERIQUE', 'LIVRE_AUDIO_PHYSIQUE')
-            AND publisher_name IS NOT null
-            AND isbn IS NOT null
-        GROUP BY isbn, publisher_name
-        QUALIFY ROW_NUMBER() OVER (
-            PARTITION BY isbn
-            ORDER BY COUNT(DISTINCT offer_id) DESC, MAX(offer_id) DESC
-        ) = 1
+    determine_editor_by_isbn as (
+        select isbn, publisher_name
+        from clean_offer_ean_cte
+        where
+            offer_subcategoryid
+            in ('LIVRE_PAPIER', 'LIVRE_NUMERIQUE', 'LIVRE_AUDIO_PHYSIQUE')
+            and publisher_name is not null
+            and isbn is not null
+        group by isbn, publisher_name
+        qualify
+            row_number() over (
+                partition by isbn
+                order by count(distinct offer_id) desc, max(offer_id) desc
+            )
+            = 1
     )
 
 -- Final Selection of Processed Data
-SELECT
+select
     clean_offer_ean_cte.offer_id,
     clean_offer_ean_cte.ean,
     clean_offer_ean_cte.isbn,
     clean_offer_ean_cte.titelive_gtl_id,
-    determine_rayon_by_isbn.category_rayon AS rayon,
-    determine_editor_by_isbn.publisher_name AS book_editor
-FROM clean_offer_ean_cte
-LEFT JOIN determine_rayon_by_isbn
-    ON clean_offer_ean_cte.isbn = determine_rayon_by_isbn.isbn
-LEFT JOIN determine_editor_by_isbn
-    ON clean_offer_ean_cte.isbn = determine_editor_by_isbn.isbn
+    determine_rayon_by_isbn.category_rayon as rayon,
+    determine_editor_by_isbn.publisher_name as book_editor
+from clean_offer_ean_cte
+left join
+    determine_rayon_by_isbn on clean_offer_ean_cte.isbn = determine_rayon_by_isbn.isbn
+left join
+    determine_editor_by_isbn on clean_offer_ean_cte.isbn = determine_editor_by_isbn.isbn

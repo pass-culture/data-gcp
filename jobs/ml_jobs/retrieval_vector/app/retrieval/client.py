@@ -6,7 +6,7 @@ from docarray import Document, DocumentArray
 from lancedb.rerankers import Reranker
 from lancedb.table import Table
 
-from app.logger import logger
+from app.logging.logger import logger
 from app.retrieval.constants import (
     DEFAULT_COLUMNS,
     DEFAULT_DETAIL_COLUMNS,

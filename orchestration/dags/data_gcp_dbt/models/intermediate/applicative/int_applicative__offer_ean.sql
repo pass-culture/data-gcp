@@ -4,8 +4,8 @@ with
         select
             offer_id,
             offer_subcategoryid,
-            rayon as category_rayon,
-            book_editor as publisher_name,
+            rayon,
+            book_editor,
             regexp_replace(ean, r'[\\s\\-\\tA-Za-z]', '') as cleaned_ean,
             regexp_replace(isbn, r'[\\s\\-\\tA-Za-z]', '') as cleaned_isbn,
             length(regexp_replace(isbn, r'[\\s\\-\\tA-Za-z]', '')) as isbn_length,
@@ -28,8 +28,8 @@ with
             isbn_length,
             ean_length,
             normalized_gtl_id,
-            category_rayon,
-            publisher_name,
+            rayon,
+            book_editor,
             case
                 when isbn_length = 10 and regexp_contains(cleaned_isbn, r'^\d{10}$')
                 then 'valid'
@@ -57,8 +57,8 @@ with
             offer_id,
             offer_subcategoryid,
             normalized_gtl_id,
-            category_rayon,
-            publisher_name,
+            rayon,
+            book_editor,
             ean_length,
             isbn_length,
             case when isbn_status = 'valid' then cleaned_isbn end as valid_isbn,
@@ -71,8 +71,8 @@ with
         select
             offer_id,
             offer_subcategoryid,
-            category_rayon,
-            publisher_name,
+            rayon,
+            book_editor,
             normalized_gtl_id as titelive_gtl_id,
             valid_ean as ean,
             if(ean_length = 13, valid_ean, valid_isbn) as isbn
@@ -81,14 +81,14 @@ with
 
     -- Step 5: Determine the Most Frequent Rayon per ISBN
     determine_rayon_by_isbn as (
-        select isbn, category_rayon
+        select isbn, rayon
         from clean_offer_ean_cte
         where
             offer_subcategoryid
             in ('LIVRE_PAPIER', 'LIVRE_NUMERIQUE', 'LIVRE_AUDIO_PHYSIQUE')
-            and category_rayon is not null
+            and rayon is not null
             and isbn is not null
-        group by isbn, category_rayon
+        group by isbn, rayon
         qualify
             row_number() over (
                 partition by isbn
@@ -99,14 +99,14 @@ with
 
     -- Step 6: Determine the Most Frequent Publisher per ISBN
     determine_editor_by_isbn as (
-        select isbn, publisher_name
+        select isbn, book_editor
         from clean_offer_ean_cte
         where
             offer_subcategoryid
             in ('LIVRE_PAPIER', 'LIVRE_NUMERIQUE', 'LIVRE_AUDIO_PHYSIQUE')
-            and publisher_name is not null
+            and book_editor is not null
             and isbn is not null
-        group by isbn, publisher_name
+        group by isbn, book_editor
         qualify
             row_number() over (
                 partition by isbn
@@ -121,8 +121,8 @@ select
     clean_offer_ean_cte.ean,
     clean_offer_ean_cte.isbn,
     clean_offer_ean_cte.titelive_gtl_id,
-    determine_rayon_by_isbn.category_rayon as rayon,
-    determine_editor_by_isbn.publisher_name as book_editor
+    determine_rayon_by_isbn.rayon,
+    determine_editor_by_isbn.book_editor
 from clean_offer_ean_cte
 left join
     determine_rayon_by_isbn on clean_offer_ean_cte.isbn = determine_rayon_by_isbn.isbn

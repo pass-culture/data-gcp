@@ -46,6 +46,7 @@ with
                     k8s_pod_role = 'backoffice'
                     and message not like 'HTTP request at /(health/api)%'
                     and message not like 'HTTP request at /static%'
+                    and message not like 'pro/titelive/%'
                 )
             )
     ),

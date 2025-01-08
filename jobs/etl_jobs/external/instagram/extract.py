@@ -222,7 +222,6 @@ class InstagramAnalytics:
             "comments",
             "likes",
             "saved",
-            "video_views",
             "total_interactions",
             "follows",
             "profile_visits",

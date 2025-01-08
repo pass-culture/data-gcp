@@ -57,15 +57,19 @@ def main(
         print(f"Fetching account {account_id} insights")
 
         account_insights_json = instagram_handler.fetch_lifetime_account_insights_data()
-        account_insights_df = pd.DataFrame([account_insights_json])
-        account_insights_df["export_date"] = export_date
+        if account_insights_json is not None:
+            account_insights_df = pd.DataFrame([account_insights_json])
+            account_insights_df["export_date"] = export_date
 
-        save_to_bq(
-            account_insights_df,
-            INSTAGRAM_ACCOUNT_INSIGHTS,
-            event_date=export_date,
-            date_column="export_date",
-        )
+            save_to_bq(
+                account_insights_df,
+                INSTAGRAM_ACCOUNT_INSIGHTS,
+                event_date=export_date,
+                date_column="export_date",
+            )
+        else:
+            print("Could not determine account stats")
+            raise Exception()
     if "post" in job_list:
         print(f"Fetching posts from {account_id} insights")
 

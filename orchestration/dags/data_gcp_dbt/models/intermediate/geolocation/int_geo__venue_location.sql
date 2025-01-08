@@ -86,7 +86,10 @@ select
     venue_zrr.zrr_level_detail,
     venue_zrr.is_in_zrr as venue_in_zrr,
     case
-        when venue_qpv.qpv_code is null and venue.venue_latitude is null and venue.venue_longitude is null
+        when
+            venue_qpv.qpv_code is null
+            and venue.venue_latitude is null
+            and venue.venue_longitude is null
         then null
         else venue_qpv.qpv_code is not null
     end as venue_in_qpv

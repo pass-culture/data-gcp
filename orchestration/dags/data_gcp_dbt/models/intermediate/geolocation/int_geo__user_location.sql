@@ -88,7 +88,10 @@ select
     user_zrr.zrr_level_detail,
     user.updated_date,
     case
-        when user_qpv.qpv_code is null and user.user_latitude is null and user.user_longitude is null
+        when
+            user_qpv.qpv_code is null
+            and user.user_latitude is null
+            and user.user_longitude is null
         then null
         else user_qpv.qpv_code is not null
     end as user_is_in_qpv

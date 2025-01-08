@@ -30,9 +30,9 @@ with
             user_data.user_region_name,
             user_data.total_actual_amount_spent as actual_amount_spent,
             user_data.user_activity,
-            user_visits.total_visit_last_month, -- TODO legacy: rename field in qualtrics
+            user_visits.total_visit_last_month,  -- TODO legacy: rename field in qualtrics
             user_location.user_rural_city_type as geo_type,
-            user_location.qpv_code as code_qpv, -- TODO legacy: rename field in qualtrics
+            user_location.qpv_code as code_qpv,  -- TODO legacy: rename field in qualtrics
             user_location.zrr_level as zrr,
             user_data.user_seniority
 

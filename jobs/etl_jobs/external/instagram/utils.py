@@ -16,7 +16,7 @@ def access_secret_data(project_id, secret_id, version_id=1, default=None):
         return default
 
 
-def save_to_bq(df, table_name, start_date, end_date, date_column):
+def save_multiple_partitions_to_bq(df, table_name, start_date, end_date, date_column):
     df[date_column] = pd.to_datetime(df[date_column])
     _dates = pd.date_range(start_date, end_date)
     print(f"Will Save.. {table_name} -> {df.shape[0]}")
@@ -26,10 +26,10 @@ def save_to_bq(df, table_name, start_date, end_date, date_column):
         tmp_df.loc[:, date_column] = tmp_df[date_column].astype(str)
         if tmp_df.shape[0] > 0:
             print(f"Saving.. {table_name} -> {date_str}")
-            __save_to_bq(tmp_df, table_name, date_str, date_column)
+            df_to_bq(tmp_df, table_name, date_str, date_column)
 
 
-def __save_to_bq(df, table_name, event_date, date_column="export_date"):
+def df_to_bq(df, table_name, event_date, date_column="export_date"):
     date_fmt = datetime.strptime(event_date, "%Y-%m-%d")
     yyyymmdd = date_fmt.strftime("%Y%m%d")
     df.loc[:, date_column] = date_fmt

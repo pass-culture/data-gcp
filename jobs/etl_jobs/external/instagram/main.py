@@ -10,8 +10,8 @@ from utils import (
     INSTAGRAM_ACCOUNT_DAILY_ACTIVITY,
     INSTAGRAM_ACCOUNT_INSIGHTS,
     INSTAGRAM_POST_DETAIL,
-    __save_to_bq,
-    save_to_bq,
+    df_to_bq,
+    save_multiple_partitions_to_bq,
 )
 
 
@@ -46,7 +46,7 @@ def main(
         account_insights_df = instagram_handler.fetch_and_preprocess_insights(
             start_date=start_date, end_date=end_date
         )
-        save_to_bq(
+        save_multiple_partitions_to_bq(
             account_insights_df,
             INSTAGRAM_ACCOUNT_DAILY_ACTIVITY,
             start_date=start_date,
@@ -61,7 +61,7 @@ def main(
             account_insights_df = pd.DataFrame([account_insights_json])
             account_insights_df["export_date"] = export_date
 
-            save_to_bq(
+            df_to_bq(
                 account_insights_df,
                 INSTAGRAM_ACCOUNT_INSIGHTS,
                 event_date=export_date,
@@ -76,7 +76,7 @@ def main(
         post_insights_df = instagram_handler.fetch_and_preprocess_posts(
             export_date="extract_date"
         )
-        __save_to_bq(
+        df_to_bq(
             post_insights_df,
             INSTAGRAM_POST_DETAIL,
             event_date=export_date,

@@ -60,4 +60,4 @@ INSTAGRAM_ACCOUNT_INSIGHTS = "instagram_account"
 ACCESS_TOKEN = access_secret_data(
     GCP_PROJECT_ID, f"facebook-access-token-{ENV_SHORT_NAME}", version_id="latest"
 )
-ACCOUNT_ID = "17841410129457081"
+INSTAGRAM_ACCOUNTS_ID = ["17841410129457081", "17841463525422101"]

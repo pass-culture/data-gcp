@@ -127,6 +127,39 @@ class InstagramAnalytics:
         df_insights["account_id"] = self.account_id
         return df_insights
 
+    def fetch_lifetime_account_insights_data(self) -> dict:
+        """
+        Fetches lifetime insights.
+
+        Returns:
+            list: A list of lifetime insights data.
+        """
+
+        metrics = [
+            "followers_count",
+            "follows_count",
+            "media_count",
+            "id",
+            "biography",
+            "name",
+            "username",
+        ]
+
+        params = {
+            "fields": ",".join(metrics),
+            "access_token": self.access_token,
+        }
+
+        response = requests.get(f"{self.graph_uri}{self.account_id}", params=params)
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(
+                f"Error fetching daily insights data: {response.status_code} - {response.text}"
+            )
+            return None
+
     def _get_instagram_posts(self) -> dict:
         """
         Fetches Instagram posts for the account.

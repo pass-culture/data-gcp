@@ -55,6 +55,7 @@ ENV_SHORT_NAME = os.environ["ENV_SHORT_NAME"]
 BIGQUERY_RAW_DATASET = f"raw_{ENV_SHORT_NAME}"
 INSTAGRAM_POST_DETAIL = "instagram_post_detail"
 INSTAGRAM_ACCOUNT_DAILY_ACTIVITY = "instagram_account_daily_activity"
+INSTAGRAM_ACCOUNT_INSIGHTS = "instagram_account"
 
 ACCESS_TOKEN = access_secret_data(
     GCP_PROJECT_ID, f"facebook-access-token-{ENV_SHORT_NAME}", version_id="latest"

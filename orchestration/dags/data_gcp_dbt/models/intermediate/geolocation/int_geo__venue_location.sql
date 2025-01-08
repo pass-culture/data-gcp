@@ -20,7 +20,7 @@ with
                 referential_table="int_seed__priority_urban_district",
                 id_column="venue_id",
                 prefix_name="venue",
-                columns=["code_qpv", "qpv_name", "qpv_communes"],
+                columns=["qpv_code", "qpv_name", "qpv_municipality"],
             )
         }}
     ),
@@ -79,16 +79,16 @@ select
     venue_geo_iris.department_name as venue_department_name,
     venue_epci.epci_name as venue_epci,
     venue_epci.epci_code,
-    venue_qpv.code_qpv,
+    venue_qpv.qpv_code,
     venue_qpv.qpv_name,
-    venue_qpv.qpv_communes,
+    venue_qpv.qpv_municipality,
     venue_zrr.zrr_level,
     venue_zrr.zrr_level_detail,
     venue_zrr.is_in_zrr as venue_in_zrr,
     case
-        when code_qpv is null and venue_latitude is null and venue_longitude is null
+        when venue_qpv.qpv_code is null and venue.venue_latitude is null and venue.venue_longitude is null
         then null
-        else code_qpv is not null
+        else venue_qpv.qpv_code is not null
     end as venue_in_qpv
 
 from {{ source("raw", "applicative_database_venue") }} as venue

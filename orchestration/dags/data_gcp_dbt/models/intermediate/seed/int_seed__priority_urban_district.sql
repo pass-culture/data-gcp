@@ -7,9 +7,9 @@ select
     qpv.qpv_municipality,
     qpv.qpv_name,
     qpv.insee_code,
-    st_geogfromtext(qpv.geo_shape) as qpv_geo_shape,
-    st_boundingbox(st_geogfromtext(qpv.geo_shape)).xmin as qpv_min_longitude,
-    st_boundingbox(st_geogfromtext(qpv.geo_shape)).xmax as qpv_max_longitude,
-    st_boundingbox(st_geogfromtext(qpv.geo_shape)).ymin as qpv_min_latitude,
-    st_boundingbox(st_geogfromtext(qpv.geo_shape)).ymax as qpv_max_latitude
+    st_geogfromtext(qpv.geo_shape) as geo_shape,
+    st_boundingbox(st_geogfromtext(qpv.geo_shape)).xmin as min_longitude,
+    st_boundingbox(st_geogfromtext(qpv.geo_shape)).xmax as max_longitude,
+    st_boundingbox(st_geogfromtext(qpv.geo_shape)).ymin as min_latitude,
+    st_boundingbox(st_geogfromtext(qpv.geo_shape)).ymax as max_latitude
 from {{ source("seed", "2024_insee_priority_urban_district") }} as qpv

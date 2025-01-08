@@ -27,22 +27,22 @@ models:
         description: '{{ doc("column__insee_code") }}'
         data_type: STRING
 
-      - name: qpv_geo_shape
+      - name: geo_shape
         description: '{{ doc("column__qpv_geo_shape") }}'
         data_type: GEOGRAPHY
 
-      - name: qpv_min_longitude
+      - name: min_longitude
         description: '{{ doc("column__qpv_min_longitude") }}'
         data_type: FLOAT
 
-      - name: qpv_max_longitude
+      - name: max_longitude
         description: '{{ doc("column__qpv_max_longitude") }}'
         data_type: FLOAT
 
-      - name: qpv_min_latitude
+      - name: min_latitude
         description: '{{ doc("column__qpv_min_latitude") }}'
         data_type: FLOAT
 
-      - name: qpv_max_latitude
+      - name: max_latitude
         description: '{{ doc("column__qpv_max_latitude") }}'
         data_type: FLOAT

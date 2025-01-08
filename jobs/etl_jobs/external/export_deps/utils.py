@@ -1,8 +1,6 @@
 import os
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import padding
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 
@@ -32,33 +30,24 @@ def save_key(key):
     pass
 
 
-# Encrypt the Parquet file using AES-256
-def encrypt_file(input_file, output_file, key):
+def encrypt_file_aes_gcm(input_file, output_file, key):
     try:
-        # Ensure the key is 32 bytes (AES-256 requires this)
-        if len(key) != 32:
-            raise ValueError("Key must be 32 bytes long for AES-256 encryption.")
-
+        # Read the plaintext from the input file
         with open(input_file, "rb") as f:
             plaintext = f.read()
 
-        # Generate a random IV (16 bytes for AES)
-        iv = os.urandom(16)
+        # Generate a random nonce (12 bytes recommended for AES-GCM)
+        nonce = os.urandom(12)
 
-        # Create an AES-256 cipher object
-        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
-        encryptor = cipher.encryptor()
+        # Create an AES-GCM cipher object
+        aesgcm = AESGCM(key)
 
-        # Pad the plaintext to make it compatible with AES block size
-        padder = padding.PKCS7(algorithms.AES.block_size).padder()
-        padded_plaintext = padder.update(plaintext) + padder.finalize()
+        # Encrypt the plaintext
+        ciphertext = aesgcm.encrypt(nonce, plaintext, None)
 
-        # Encrypt the data
-        ciphertext = encryptor.update(padded_plaintext) + encryptor.finalize()
-
-        # Write the IV and ciphertext to the output file
+        # Write the nonce and ciphertext to the output file
         with open(output_file, "wb") as f:
-            f.write(iv + ciphertext)
+            f.write(nonce + ciphertext)
 
         print(f"File encrypted successfully: {output_file}")
     except Exception as e:
@@ -66,28 +55,21 @@ def encrypt_file(input_file, output_file, key):
         raise
 
 
-def decrypt_file(input_file, output_file, key):
+def decrypt_file_aes_gcm(input_file, output_file, key):
     try:
-        # Ensure the key is 32 bytes (AES-256 requires this)
-        if len(key) != 32:
-            raise ValueError("Key must be 32 bytes long for AES-256 decryption.")
-
+        # Read the nonce and ciphertext from the input file
         with open(input_file, "rb") as f:
-            iv = f.read(16)  # First 16 bytes are the IV
-            ciphertext = f.read()
+            data = f.read()
+        nonce = data[:12]  # Extract the first 12 bytes as the nonce
+        ciphertext = data[12:]  # The rest is the ciphertext
 
-        # Create an AES-256 cipher object
-        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
-        decryptor = cipher.decryptor()
+        # Create an AES-GCM cipher object
+        aesgcm = AESGCM(key)
 
         # Decrypt the ciphertext
-        padded_plaintext = decryptor.update(ciphertext) + decryptor.finalize()
+        plaintext = aesgcm.decrypt(nonce, ciphertext, None)
 
-        # Remove padding from plaintext
-        unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
-        plaintext = unpadder.update(padded_plaintext) + unpadder.finalize()
-
-        # Write the decrypted data to the output file
+        # Write the plaintext to the output file
         with open(output_file, "wb") as f:
             f.write(plaintext)
 
@@ -95,6 +77,15 @@ def decrypt_file(input_file, output_file, key):
     except Exception as e:
         print(f"Error decrypting file: {e}")
         raise
+
+
+def make_obfuscation_query(select_query, obfuscation_kwargs):
+    # TO DO: how to store secretly and maintain the obfuscation functions and their parameters
+    obf_functions = obfuscation_kwargs.get("functions")
+    obf_functions_kwargs = obfuscation_kwargs.get("functions_kwargs")
+    obf_fields = obfuscation_kwargs.get("obf_fields")
+    obf_query = f"""WITH original_data as ({select_query}), SELECT {[func(field,**kwargs) for (func,field,kwargs) in zip(obf_functions,obf_fields,obf_functions_kwargs)].join(',')} FROM original_data"""
+    return obf_query
 
 
 def obfuscate_data(input_parquet_file, **kwargs):
@@ -111,16 +102,7 @@ def obfuscate_data(input_parquet_file, **kwargs):
     # SELECT * FROM parquet_scan('{input_parquet_file}');
     # """
 
-    def obfuscation_query(select_query, obfuscation_kwargs):
-        obf_functions = obfuscation_kwargs.get("functions")
-        obf_functions_kwargs = obfuscation_kwargs.get("functions_kwargs")
-        obf_fields = obfuscation_kwargs.get("obf_fields")
-
-        obf_query = f"""WITH original_data as ({select_query}), SELECT {[func(field,**kwargs) for (func,field,kwargs) in zip(obf_functions,obf_fields,obf_functions_kwargs)].join(',')} FROM original_data"""
-        return obf_query
-
-    # TO DO: how to store secretly and maintain the obfuscation functions and their parameters
-
+    # obfuscation_query = make_obfuscation_query(query, obfuscation_kwargs)
     # result = conn.execute(obfuscation_query).fetchdf()
     # # Save the data back into a Parquet file
     # obfuscated_parquet_file = 'unencrypted_output.parquet'

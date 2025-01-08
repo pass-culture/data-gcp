@@ -116,8 +116,20 @@ class InstagramAnalytics:
         Returns:
             pd.DataFrame: Processed insights data with added 'account_id' column.
         """
+        # Deprecated metrics that are no longer available in the API
+        deprecated_metrics = [
+            "email_contacts",
+            "phone_call_clicks",
+            "text_message_clicks",
+            "get_directions_clicks",
+            "website_clicks",
+            "profile_views",
+        ]
         insights_data = self.fetch_daily_insights_data(start_date, end_date)
         df_insights = self.preprocess_insight_data(insights_data)
+        for c in deprecated_metrics:
+            df_insights[c] = None
+
         df_insights["account_id"] = self.account_id
         return df_insights
 

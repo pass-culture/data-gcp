@@ -31,26 +31,34 @@ def main(
 ):
     job_list = jobs.split(",")
     export_date = datetime.now().strftime("%Y-%m-%d")
-    for account_id in INSTAGRAM_ACCOUNTS_ID:
-        instagram_handler = InstagramAnalytics(
-            account_id=account_id, access_token=ACCESS_TOKEN
-        )
-        if "daily_stats" in job_list:
+
+    if "daily_stats" in job_list:
+        dfs = []
+        for account_id in INSTAGRAM_ACCOUNTS_ID:
+            instagram_handler = InstagramAnalytics(
+                account_id=account_id, access_token=ACCESS_TOKEN
+            )
             print(
                 f"Fetching account {account_id} daily insights from {start_date} to {end_date}"
             )
 
-            account_insights_df = instagram_handler.fetch_and_preprocess_insights(
+            account_daily_insights_df = instagram_handler.fetch_and_preprocess_insights(
                 start_date=start_date, end_date=end_date
             )
-            save_multiple_partitions_to_bq(
-                account_insights_df,
-                INSTAGRAM_ACCOUNT_DAILY_ACTIVITY,
-                start_date=start_date,
-                end_date=end_date,
-                date_column="event_date",
+            dfs.append(account_daily_insights_df)
+        save_multiple_partitions_to_bq(
+            pd.concat(dfs, ignore_index=True),
+            INSTAGRAM_ACCOUNT_DAILY_ACTIVITY,
+            start_date=start_date,
+            end_date=end_date,
+            date_column="event_date",
+        )
+    if "account" in job_list:
+        dfs = []
+        for account_id in INSTAGRAM_ACCOUNTS_ID:
+            instagram_handler = InstagramAnalytics(
+                account_id=account_id, access_token=ACCESS_TOKEN
             )
-        if "account" in job_list:
             print(f"Fetching account {account_id} insights")
 
             account_insights_json = (
@@ -59,28 +67,35 @@ def main(
             if account_insights_json is not None:
                 account_insights_df = pd.DataFrame([account_insights_json])
                 account_insights_df["export_date"] = export_date
+                dfs.append(account_insights_df)
 
-                df_to_bq(
-                    account_insights_df,
-                    INSTAGRAM_ACCOUNT_INSIGHTS,
-                    event_date=export_date,
-                    date_column="export_date",
-                )
             else:
                 print("Could not determine account stats")
                 raise Exception()
-        if "post" in job_list:
+        df_to_bq(
+            pd.concat(dfs, ignore_index=True),
+            INSTAGRAM_ACCOUNT_INSIGHTS,
+            event_date=export_date,
+            date_column="export_date",
+        )
+    if "post" in job_list:
+        dfs = []
+        for account_id in INSTAGRAM_ACCOUNTS_ID:
+            instagram_handler = InstagramAnalytics(
+                account_id=account_id, access_token=ACCESS_TOKEN
+            )
             print(f"Fetching posts from {account_id} insights")
 
             post_insights_df = instagram_handler.fetch_and_preprocess_posts(
                 export_date="extract_date"
             )
-            df_to_bq(
-                post_insights_df,
-                INSTAGRAM_POST_DETAIL,
-                event_date=export_date,
-                date_column="export_date",
-            )
+            dfs.append(post_insights_df)
+        df_to_bq(
+            pd.concat(dfs, ignore_index=True),
+            INSTAGRAM_POST_DETAIL,
+            event_date=export_date,
+            date_column="export_date",
+        )
 
 
 if __name__ == "__main__":

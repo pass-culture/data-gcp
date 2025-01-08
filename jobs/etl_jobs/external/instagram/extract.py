@@ -43,12 +43,6 @@ class InstagramAnalytics:
             "impressions",
             "reach",
             "follower_count",
-            "email_contacts",
-            "phone_call_clicks",
-            "text_message_clicks",
-            "get_directions_clicks",
-            "website_clicks",
-            "profile_views",
         ]
         period = "day"
         data = []

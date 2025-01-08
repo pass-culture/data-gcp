@@ -53,7 +53,7 @@ def main(
             end_date=end_date,
             date_column="event_date",
         )
-    if "daily_stats" in job_list:
+    if "account" in job_list:
         print(f"Fetching account {account_id} insights")
 
         account_insights_json = instagram_handler.fetch_lifetime_account_insights_data()

@@ -31,8 +31,8 @@ select
     o.titelive_gtl_id,
     o.offer_type_id,
     o.offer_sub_type_id,
-    o.offer_isbn,
-    o.offer_visa,
+    o.isbn as offer_isbn,
+    o.visa as offer_visa,
     mahl.movie_label,
     case
         when o.mediation_humanized_id is not null

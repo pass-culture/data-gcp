@@ -26,9 +26,9 @@ models:
         description: "{{ doc('column__offer_type_id') }}"
       - name: offer_sub_type_id
         description: "{{ doc('column__offer_sub_type_id') }}"
-      - name: isbn
+      - name: offer_isbn
         description: "{{ doc('column__isbn') }}"
-      - name: visa
+      - name: offer_visa
         description: "{{ doc('column__visa') }}"
       - name: movie_label
         description: "{{ doc('column__movie_label') }}"

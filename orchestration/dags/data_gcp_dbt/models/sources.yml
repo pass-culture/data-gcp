@@ -117,6 +117,7 @@ sources:
       - name: gsheet_eac_webinar
       - name: gsheet_educational_institution_student_headcount
       - name: gsheet_ml_recommendation_sensitive_item
+      - name: gsheet_movie_arthouse_and_heritage_label
       - name: metabase_collection
       - name: metabase_core_user
       - name: metabase_query_execution
@@ -161,7 +162,6 @@ sources:
       - name: agg_partner_cultural_sector
       - name: epci
       - name: geo_iris
-      - name: gsheet_movie_arthouse_and_heritage_label
       - name: institution_metadata
       - name: institution_metadata_aggregated_type
       - name: institutional_scholar_level

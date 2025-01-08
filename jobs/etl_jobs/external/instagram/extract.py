@@ -240,7 +240,6 @@ class InstagramAnalytics:
                 "comments",
                 "likes",
                 "saved",
-                "video_views",
                 "total_interactions",
                 "reach",
             ],
@@ -303,8 +302,13 @@ class InstagramAnalytics:
         Returns:
             pd.DataFrame: Processed posts data with added 'export_date' and 'account_id' columns.
         """
+        deprecated_metrics = [
+            "video_views",
+        ]
         posts = self.fetch_posts()
         df_posts = self.preprocess_insight_posts(posts)
         df_posts["export_date"] = export_date
         df_posts["account_id"] = self.account_id
+        for c in deprecated_metrics:
+            df_posts[c] = None
         return df_posts

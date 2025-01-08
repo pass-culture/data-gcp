@@ -49,12 +49,12 @@ with
             ) as dms_application_company_head_office_siret,
             nullif(
                 regexp_replace(numero_identifiant_lieu, 'PRO-', ''), 'nan'
-            ) as dms_application_place_identifier_number,
+            ) as dms_application_venue_identifier_number,
             nullif(statut, 'nan') as dms_application_company_status,
             nullif(typologie, 'nan') as dms_application_company_typology,
             nullif(
                 academie_historique_intervention, 'nan'
-            ) as dms_application_academic_area_historical_intervention,
+            ) as dms_application_academy_area_historical_intervention,
             nullif(
                 case
                     when procedure_id = '65028'
@@ -62,7 +62,7 @@ with
                     else academie_groupe_instructeur
                 end,
                 'nan'
-            ) as dms_application_academic_area_instructor_group,
+            ) as dms_application_academy_area_instructor_group,
             nullif(domaines, 'nan') as dms_application_domains,
             nullif(
                 erreur_traitement_pass_culture, 'nan'
@@ -135,11 +135,11 @@ select distinct
         "company_legal_form_code",
         "company_corporate_name",
         "company_head_office_siret",
-        "place_identifier_number",
+        "venue_identifier_number",
         "company_status",
         "company_typology",
-        "academic_area_historical_intervention",
-        "academic_area_instructor_group",
+        "academy_area_historical_intervention",
+        "academy_area_instructor_group",
         "domains",
         "processing_error_pass_culture",
     ] %}

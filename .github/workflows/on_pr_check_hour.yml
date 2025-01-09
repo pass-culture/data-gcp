@@ -18,13 +18,5 @@ jobs:
         with:
           lock: true ## required
           token: ${{ secrets.GITHUB_TOKEN }} # required
-          repository: ${{ github.repository }} # optional
+          repository: data-gcp # optional
           branch: master # optional
-      # - name: Make API Request with PAT
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #     gh api \
-      #         -H "Accept: application/vnd.github+json" \
-      #         -H "X-GitHub-Api-Version: 2022-11-28" \
-      #         /repos/${{ github.repository }}/branches/master/protection

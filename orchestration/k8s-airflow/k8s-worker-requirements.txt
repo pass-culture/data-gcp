@@ -97,6 +97,8 @@ attrs==24.2.0
     #   jsonschema
     #   looker-sdk
     #   referencing
+authlib==1.4.0
+    # via flask-oidc
 babel==2.16.0
     # via
     #   agate
@@ -114,7 +116,9 @@ beautifulsoup4==4.12.3
 billiard==4.2.1
     # via celery
 blinker==1.8.2
-    # via apache-airflow
+    # via
+    #   apache-airflow
+    #   flask-oidc
 cachelib==0.9.0
     # via
     #   flask-caching
@@ -177,6 +181,7 @@ croniter==5.0.1
 cryptography==41.0.7
     # via
     #   apache-airflow
+    #   authlib
     #   gcloud-aio-auth
     #   paramiko
     #   pyopenssl
@@ -245,6 +250,7 @@ flask==2.2.5
     #   flask-jwt-extended
     #   flask-limiter
     #   flask-login
+    #   flask-oidc
     #   flask-openid
     #   flask-session
     #   flask-sqlalchemy
@@ -263,6 +269,8 @@ flask-login==0.6.3
     # via
     #   apache-airflow-providers-fab
     #   flask-appbuilder
+flask-oidc==2.2.2
+    # via -r k8s-worker-requirements.in
 flask-openid==1.3.1
     # via -r k8s-worker-requirements.in
 flask-session==0.5.0
@@ -992,6 +1000,7 @@ requests==2.32.3
     #   dbt-common
     #   dbt-core
     #   elementary-data
+    #   flask-oidc
     #   gcsfs
     #   google-api-core
     #   google-cloud-bigquery

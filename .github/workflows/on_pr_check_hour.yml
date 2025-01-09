@@ -5,6 +5,7 @@ on:
   #   - cron: '0 10,11,16,17 * * 1-5' # Paris time with both daylight savings in UTC during weekdays
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   call-github-api:

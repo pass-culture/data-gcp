@@ -14,7 +14,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         id: lock
-        uses: JustinDFuller/github-action-lock-branch@v1
+        uses: JustinDFuller/github-action-lock-branch@v0.1
         with:
           lock: true ## required
           token: ${{ secrets.GITHUB_TOKEN }} # required

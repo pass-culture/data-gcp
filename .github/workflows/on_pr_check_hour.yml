@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: Make API Request with PAT
         env:
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh api \
               -H "Accept: application/vnd.github+json" \

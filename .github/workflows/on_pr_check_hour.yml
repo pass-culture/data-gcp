@@ -19,6 +19,9 @@ jobs:
       #   run: |
       #     gh auth login --with-token <<< "$GITHUB_TOKEN"
 
-      - name: Get Branch Protection Rules
+      - name: Make API Request with PAT
         run: |
-          gh pr review 3696 -a -b "c'est l'heure" -R ${{ github.repository }}
+          gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              /repos/${{ github.repository }}/branches/master/protection

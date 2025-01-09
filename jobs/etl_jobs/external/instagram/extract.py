@@ -127,10 +127,9 @@ class InstagramAnalytics:
         ]
         insights_data = self.fetch_daily_insights_data(start_date, end_date)
         df_insights = self.preprocess_insight_data(insights_data)
-        for c in deprecated_metrics:
-            df_insights[c] = None
-
         df_insights["account_id"] = self.account_id
+        for c in deprecated_metrics:
+            df_insights[c] = 0
         return df_insights
 
     def fetch_lifetime_account_insights_data(self) -> dict:
@@ -310,5 +309,5 @@ class InstagramAnalytics:
         df_posts["export_date"] = export_date
         df_posts["account_id"] = self.account_id
         for c in deprecated_metrics:
-            df_posts[c] = None
+            df_posts[c] = 0
         return df_posts

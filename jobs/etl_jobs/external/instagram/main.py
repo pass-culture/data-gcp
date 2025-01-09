@@ -7,9 +7,12 @@ from extract import InstagramAnalytics
 from utils import (
     ACCESS_TOKEN,
     INSTAGRAM_ACCOUNT_DAILY_ACTIVITY,
+    INSTAGRAM_ACCOUNT_DAILY_ACTIVITY_DTYPE,
     INSTAGRAM_ACCOUNT_INSIGHTS,
+    INSTAGRAM_ACCOUNT_INSIGHTS_DTYPE,
     INSTAGRAM_ACCOUNTS_ID,
     INSTAGRAM_POST_DETAIL,
+    INSTAGRAM_POST_DETAIL_DTYPE,
     df_to_bq,
     save_multiple_partitions_to_bq,
 )
@@ -52,6 +55,7 @@ def main(
             start_date=start_date,
             end_date=end_date,
             date_column="event_date",
+            schema=INSTAGRAM_ACCOUNT_DAILY_ACTIVITY_DTYPE,
         )
     if "account" in job_list:
         dfs = []
@@ -77,6 +81,7 @@ def main(
             INSTAGRAM_ACCOUNT_INSIGHTS,
             event_date=export_date,
             date_column="export_date",
+            schema=INSTAGRAM_ACCOUNT_INSIGHTS_DTYPE,
         )
     if "post" in job_list:
         dfs = []
@@ -95,6 +100,7 @@ def main(
             INSTAGRAM_POST_DETAIL,
             event_date=export_date,
             date_column="export_date",
+            schema=INSTAGRAM_POST_DETAIL_DTYPE,
         )
 
 

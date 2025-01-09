@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: int_zendesk__daily_macro_usage
+    description: '{{ doc("description__int_zendesk__daily_macro_usage") }}'
+    columns:
+      - name: zendesk_macro_usage_date
+        description: '{{ doc("column__zendesk_macro_usage_date") }}'
+      - name: zendesk_macro_id
+        description: '{{ doc("column__zendesk_macro_id") }}'
+      - name: zendesk_macro_title
+        description: '{{ doc("column__zendesk_macro_title") }}'
+      - name: total_zendesk_macro_usage
+        description: '{{ doc("column__total_zendesk_macro_usage") }}'

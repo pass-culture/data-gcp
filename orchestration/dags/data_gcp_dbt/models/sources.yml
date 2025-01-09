@@ -126,12 +126,16 @@ sources:
       - name: qpi_answers_historical
       - name: qpi_answers_v4
       - name: past_offer_context
+      - name: raw_dms_jeunes
+      - name: raw_dms_pro
       - name: sendinblue_transactional
       - name: sensitive_item_recommendation
       - name: stdout
       - name: subcategories
       - name: offer_types
       - name: user_locations
+      - name: zendesk_macro_usage
+      - name: zendesk_ticket
 
   - name: clean
     schema: clean_{{ var('ENV_SHORT_NAME') }}

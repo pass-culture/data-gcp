@@ -20,4 +20,9 @@ SCHEDULE_DICT = {
     "import_applicative_database": "0 1 * * *",
     "import_intraday_firebase_data": "0 1 * * *",
     "link_items": {"prod": "0 4 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"},
+    "retrieval_vector_build": {
+        "prod": "0 6 * * *",
+        "dev": "0 6 * * *",
+        "stg": "0 6 * * 3",
+    },
 }

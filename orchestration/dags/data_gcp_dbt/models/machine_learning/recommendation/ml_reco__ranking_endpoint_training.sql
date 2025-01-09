@@ -48,7 +48,7 @@ with
         where
             event_date >= date_sub(
                 current_date,
-                interval {% if ENV_SHORT_NAME == "prod" %} 14
+                interval {% if var("ENV_SHORT_NAME") == "prod" %} 14
                 {% else %} 365
                 {% endif %} day
             )  -- 14 days in prod, 1 year in other environments otherwise the data could be empty in ehp

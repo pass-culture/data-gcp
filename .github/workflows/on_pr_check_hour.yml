@@ -10,7 +10,7 @@ jobs:
   call-github-api:
     runs-on: ubuntu-latest
     env:
-      GH_TOKEN : ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN : ${{ github.token }}
     steps:
       # - name: Authenticate with PAT
       #   env:

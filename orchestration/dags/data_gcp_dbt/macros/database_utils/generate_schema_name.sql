@@ -1,7 +1,7 @@
 {% macro generate_schema_name(custom_schema_name, node=none) -%}
 
     {%- set default_schema = target.dataset -%}
-    {%- set user_name = env_var("USER", "anonymous_user") -%}
+    {% set user_name = env_var("PERSONAL_DBT_USER", "unset_user") %}
     {%- set is_orchestrated = (
         target.name in ["prod", "stg", "dev"]
         and target.profile_name != "sandbox"

@@ -10,13 +10,14 @@ jobs:
   call-github-api:
     runs-on: ubuntu-latest
     steps:
-      - name: Lock branch
+      - name: Authenticate with PAT
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        id: lock
-        uses: JustinDFuller/github-action-lock-branch@v0.1
-        with:
-          lock: true ## required
-          token: ${{ secrets.GITHUB_TOKEN }} # required
-          repository: data-gcp # optional
-          branch: master # optional
+          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
+        run: |
+          gh auth login --with-token <<< "$GITHUB_TOKEN"
+
+      - name: Get Branch Protection Rules
+        run: |
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            repos/${{ github.repository }}/branches/master/protection

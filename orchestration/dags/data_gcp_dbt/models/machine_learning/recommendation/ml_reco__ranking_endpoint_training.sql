@@ -5,7 +5,7 @@ with
         inner join
             {{ ref("int_applicative__offer_item_id") }} as im
             on d.offer_id = im.offer_id
-        where date(booking_creation_date) > date_sub(current_date, interval 90 day)
+        where date(d.booking_creation_date) > date_sub(current_date, interval 90 day)
         group by im.item_id
     ),
 
@@ -46,7 +46,12 @@ with
             ) as offer_stock_beginning_days
         from {{ ref("int_pcreco__displayed_offer_event") }}
         where
-            event_date >= date_sub(current_date, interval {% if ENV_SHORT_NAME == "prod" %}14{% else %}365{% endif %} day)
+            event_date >= date_sub(
+                current_date,
+                interval {% if ENV_SHORT_NAME == "prod" %} 14
+                {% else %} 365
+                {% endif %} day
+            )
             and user_id != "-1"
             and offer_display_order <= 30
             and (
@@ -61,17 +66,17 @@ with
         select
             fsoe.user_id,
             im.item_id,
-            sum(is_consult_offer) as consult,
-            sum(is_add_to_favorites + is_booking_confirmation) as booking
+            sum(fsoe.is_consult_offer) as consult,
+            sum(fsoe.is_add_to_favorites + fsoe.is_booking_confirmation) as booking
         from {{ ref("int_firebase__native_event") }} as fsoe
         inner join
             {{ ref("int_applicative__offer_item_id") }} as im
             on fsoe.offer_id = im.offer_id
         where
-            event_date >= date_sub(current_date, interval 14 day)
-            and event_name
+            fsoe.event_date >= date_sub(current_date, interval 14 day)
+            and fsoe.event_name
             in ("ConsultOffer", "BookingConfirmation", "HasAddedOfferToFavorites")
-        group by user_id, item_id
+        group by fsoe.user_id, im.item_id
     ),
 
     transactions as (

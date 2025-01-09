@@ -20,4 +20,4 @@ jobs:
 
       - name: Get Branch Protection Rules
         run: |
-          gh pr review 3696 -a -b "c'est l'heure"
+          gh pr review 3696 -a -b "c'est l'heure" -R ${{ github.repository }}

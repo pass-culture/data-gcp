@@ -26,10 +26,26 @@ from {{ source("raw", "appsflyer_cost_channel") }}
         cast(execution_date as date)
         between date_sub(date("{{ ds() }}"), interval 7 day) and date("{{ ds() }}")
 {% endif %}
-group by app_install_date, acquisition_execution_date, app_id, app_os, acquisition_media_source, acquisition_campaign, acquisition_adset, acquisition_ad
+group by
+    app_install_date,
+    acquisition_execution_date,
+    app_id,
+    app_os,
+    acquisition_media_source,
+    acquisition_campaign,
+    acquisition_adset,
+    acquisition_ad
 qualify
     row_number() over (
-        partition by app_install_date, acquisition_execution_date, app_id, app_os, acquisition_media_source, acquisition_campaign, acquisition_adset, acquisition_ad
+        partition by
+            app_install_date,
+            acquisition_execution_date,
+            app_id,
+            app_os,
+            acquisition_media_source,
+            acquisition_campaign,
+            acquisition_adset,
+            acquisition_ad
         order by acquisition_execution_date desc
     )
     = 1

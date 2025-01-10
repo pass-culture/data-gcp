@@ -162,7 +162,7 @@ def main(
         linkage_candidates_chunk = generate_semantic_candidates(model, chunk)
         linkage_by_chunk.append(linkage_candidates_chunk)
     linkage_candidates = pd.concat(linkage_by_chunk)
-    upload_parquet(dataframe=linkage_candidates, gcs_path=output_path)
+    upload_parquet(dataframe=linkage_candidates, gcs_path=f"{output_path}/data.parquet")
 
 
 if __name__ == "__main__":

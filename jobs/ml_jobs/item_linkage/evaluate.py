@@ -298,14 +298,10 @@ def main(
         "offer_description",
         "offer_subcategory_id",
     ]
-    if linkage_type == "product":
-        product_linkage_candidates_clean = read_parquet_files_from_gcs_directory(
-            input_candidates_path, columns=load_columns
-        )
-    else:
-        product_linkage_candidates_clean = pd.read_parquet(
-            input_candidates_path, columns=load_columns
-        )
+
+    product_linkage_candidates_clean = read_parquet_files_from_gcs_directory(
+        input_candidates_path, columns=load_columns
+    )
 
     # Load linkage results
     product_final_linkage = pd.read_parquet(linkage_path)
@@ -314,7 +310,9 @@ def main(
     product_linkage_candidates_clean = product_linkage_candidates_clean.rename(
         columns={"item_id": "item_id_candidate"}
     )
-
+    logger.info(
+        f"product_linkage_candidates_clean: {product_linkage_candidates_clean.columns}"
+    )
     # Prepare evaluation paths
     paths = build_evaluation_paths(linkage_type)
     logger.info(f"paths: {paths}")

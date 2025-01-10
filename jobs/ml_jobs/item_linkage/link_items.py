@@ -346,12 +346,12 @@ def main(
     logger.info("Uploading linkage output..")
     upload_parquet(
         dataframe=linkage_final,
-        gcs_path=output_path,
+        gcs_path=f"{output_path}/data.parquet",
     )
     logger.info("Uploading unmatched elements..")
     upload_parquet(
         dataframe=unmatched_elements,
-        gcs_path=unmatched_elements_path,
+        gcs_path=f"{unmatched_elements_path}/data.parquet",
     )
 
 

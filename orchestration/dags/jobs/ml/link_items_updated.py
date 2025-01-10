@@ -56,8 +56,8 @@ DAG_CONFIG = {
     "FILES": lambda linkage_type: {
         "LINKAGE_CANDIDATES": f"linkage_candidates_{linkage_type}",
         "LINKED": f"linked_{linkage_type}",
-        "UNMATCHED": f"unmatched_{linkage_type}.parquet",
-        "LINKED_W_ID": f"linked_{linkage_type}_w_id.parquet",  # for offers
+        "UNMATCHED": f"unmatched_{linkage_type}",
+        "LINKED_W_ID": f"linked_{linkage_type}",  # for offers
     },
     "BIGQUERY": {
         "INPUT_SOURCES_TABLE": f"{DATE}_input_sources_table",

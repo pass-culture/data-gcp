@@ -7,6 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: List workflow open branch with associated PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           prs=$(gh pr list --json headRefName)
           # Loop over the PRs
@@ -17,6 +19,8 @@ jobs:
             RUN_IDS+=($(gh run list -b $branch -w 134227518 --json workflowDatabaseId | jq -r '.[]'))
           done
       - name : Re-run workflows
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo $RUN_IDS
           for RUN_ID in $RUN_IDS; do

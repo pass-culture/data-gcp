@@ -13,5 +13,7 @@ on:
 
 
 jobs:
+  env:
+    GH_TOKEN: ${{ secrets.github_token }}
   rerun_workflow:
     uses: ./.github/workflows/reusable_rerun_workflow.yml

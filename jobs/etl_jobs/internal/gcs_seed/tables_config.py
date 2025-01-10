@@ -210,7 +210,7 @@ REF_TABLES = {
     "qpv": {
         "file_type": "avro",
     },
-    "2024_insee_priority_urban_district": {
+    "2024_insee_qpv": {
         "file_type": "avro",
     },
     "qpv_eligible_pop": {

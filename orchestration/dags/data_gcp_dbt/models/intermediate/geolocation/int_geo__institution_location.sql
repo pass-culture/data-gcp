@@ -18,10 +18,12 @@ with
         {{
             generate_seed_geolocation_query(
                 source_table="int_seed__institution_metadata",
-                referential_table="int_seed__priority_urban_district",
+                referential_table="int_seed__qpv",
                 id_column="institution_id",
                 prefix_name="institution",
                 columns=["qpv_code", "qpv_name", "qpv_municipality"],
+                geo_shape="qpv_geo_shape",
+                geolocalisation_prefix="qpv_"
             )
         }}
     ),

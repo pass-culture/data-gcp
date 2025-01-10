@@ -169,7 +169,7 @@ sources:
       - name: macro_rayons
       - name: population_age_and_department_france_details
       - name: priority_local_authorities
-      - name: 2024_insee_priority_urban_district
+      - name: 2024_insee_qpv
       - name: qpi_mapping
       - name: rural_city_type_data
       - name: region_department

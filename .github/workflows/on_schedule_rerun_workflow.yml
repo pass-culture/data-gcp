@@ -1,0 +1,10 @@
+name: "rerun_workflow"
+on:
+  schedule:
+    - cron: '0 10,11,16,17 * * 1-5' # Paris time with both daylight savings in UTC during weekdays
+  workflow_dispatch:
+
+
+jobs:
+  rerun_workflow:
+    uses: ./.github/workflows/reusable_rerun_workflow.yml

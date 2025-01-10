@@ -43,12 +43,6 @@ class InstagramAnalytics:
             "impressions",
             "reach",
             "follower_count",
-            "email_contacts",
-            "phone_call_clicks",
-            "text_message_clicks",
-            "get_directions_clicks",
-            "website_clicks",
-            "profile_views",
         ]
         period = "day"
         data = []
@@ -122,10 +116,54 @@ class InstagramAnalytics:
         Returns:
             pd.DataFrame: Processed insights data with added 'account_id' column.
         """
+        # Deprecated metrics that are no longer available in the API
+        deprecated_metrics = [
+            "email_contacts",
+            "phone_call_clicks",
+            "text_message_clicks",
+            "get_directions_clicks",
+            "website_clicks",
+            "profile_views",
+        ]
         insights_data = self.fetch_daily_insights_data(start_date, end_date)
         df_insights = self.preprocess_insight_data(insights_data)
         df_insights["account_id"] = self.account_id
+        for c in deprecated_metrics:
+            df_insights[c] = 0
         return df_insights
+
+    def fetch_lifetime_account_insights_data(self) -> dict:
+        """
+        Fetches lifetime insights.
+
+        Returns:
+            list: A list of lifetime insights data.
+        """
+
+        metrics = [
+            "followers_count",
+            "follows_count",
+            "media_count",
+            "id",
+            "biography",
+            "name",
+            "username",
+        ]
+
+        params = {
+            "fields": ",".join(metrics),
+            "access_token": self.access_token,
+        }
+
+        response = requests.get(f"{self.graph_uri}{self.account_id}", params=params)
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(
+                f"Error fetching daily insights data: {response.status_code} - {response.text}"
+            )
+            return None
 
     def _get_instagram_posts(self) -> dict:
         """
@@ -189,7 +227,6 @@ class InstagramAnalytics:
             "comments",
             "likes",
             "saved",
-            "video_views",
             "total_interactions",
             "follows",
             "profile_visits",
@@ -202,7 +239,6 @@ class InstagramAnalytics:
                 "comments",
                 "likes",
                 "saved",
-                "video_views",
                 "total_interactions",
                 "reach",
             ],
@@ -265,8 +301,13 @@ class InstagramAnalytics:
         Returns:
             pd.DataFrame: Processed posts data with added 'export_date' and 'account_id' columns.
         """
+        deprecated_metrics = [
+            "video_views",
+        ]
         posts = self.fetch_posts()
         df_posts = self.preprocess_insight_posts(posts)
         df_posts["export_date"] = export_date
         df_posts["account_id"] = self.account_id
+        for c in deprecated_metrics:
+            df_posts[c] = 0
         return df_posts

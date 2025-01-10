@@ -4,6 +4,9 @@ on:
     types:
       - opened
       - edited
+      - synchronize
+      - ready_for_review
+      - reopened
   schedule:
     - cron: '0 10,11,16,17 * * 1-5' # Paris time with both daylight savings in UTC during weekdays
   workflow_dispatch:

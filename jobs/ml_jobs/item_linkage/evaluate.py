@@ -8,7 +8,7 @@ import typer
 from loguru import logger
 from matplotlib.backends.backend_pdf import PdfPages
 
-from constants import ENV_SHORT_NAME
+from constants import ENV_SHORT_NAME, METADATA_FEATURES
 from utils.common import read_parquet_files_from_gcs_directory
 from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
 
@@ -290,41 +290,26 @@ def main(
     ),
     linkage_path: str = typer.Option(default=..., help="Path to linkage output"),
 ) -> None:
-    # Load input candidates based on linkage type
-    load_columns = [
-        "item_id",
-        "performer",
-        "offer_name",
-        "offer_description",
-        "offer_subcategory_id",
-    ]
-
-    product_linkage_candidates_clean = read_parquet_files_from_gcs_directory(
-        input_candidates_path, columns=load_columns
+    linkage_candidates_clean = read_parquet_files_from_gcs_directory(
+        input_candidates_path, columns=METADATA_FEATURES
     )
 
-    # Load linkage results
-    product_final_linkage = pd.read_parquet(linkage_path)
+    linkage = read_parquet_files_from_gcs_directory(linkage_path)
 
-    # Rename columns for consistency
-    product_linkage_candidates_clean = product_linkage_candidates_clean.rename(
+    linkage_candidates_clean = linkage_candidates_clean.rename(
         columns={"item_id": "item_id_candidate"}
     )
-    logger.info(
-        f"product_linkage_candidates_clean: {product_linkage_candidates_clean.columns}"
-    )
-    # Prepare evaluation paths
+    logger.info(f"linkage_candidates_clean: {linkage_candidates_clean.columns}")
     paths = build_evaluation_paths(linkage_type)
     logger.info(f"paths: {paths}")
-    # Run evaluations
     evaluate_matching(
-        product_linkage_candidates_clean,
-        product_final_linkage,
+        linkage_candidates_clean,
+        linkage,
         output_file=paths["evaluation_plots"],
     )
     evaluate_matching_by_subcategory(
-        product_linkage_candidates_clean,
-        product_final_linkage,
+        linkage_candidates_clean,
+        linkage,
         output_file=paths["subcategory_evaluation_plots"],
     )
 
@@ -338,10 +323,6 @@ def main(
             "plots",
             artifact_path="plots",
         )
-        # mlflow.log_artifact(
-        #     paths["subcategory_evaluation_plots"],
-        #     artifact_path=paths["subcategory_evaluation_plots"],
-        # )
 
     return
 

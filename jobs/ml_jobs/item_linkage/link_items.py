@@ -6,7 +6,7 @@ import recordlinkage
 import typer
 from loguru import logger
 
-from constants import FEATURES, MATCHES_REQUIRED
+from constants import MATCHES_REQUIRED, MATCHING_FEATURES, METADATA_FEATURES
 from utils.common import read_parquet_files_from_gcs_directory
 from utils.gcs_utils import upload_parquet
 
@@ -21,7 +21,7 @@ def setup_matching() -> recordlinkage.Compare:
         recordlinkage.Compare: Configured comparison model.
     """
     comparator = recordlinkage.Compare()
-    for feature_name, comparison_params in FEATURES.items():
+    for feature_name, comparison_params in MATCHING_FEATURES.items():
         comparator.string(
             feature_name,
             feature_name,
@@ -54,30 +54,23 @@ def get_links(
         pd.DataFrame: Dataframe containing matched pairs.
     """
     features = comparator.compute(candidate_links, table_left, table_right)
-
-    def threshold(value, thr=0.70):
-        if value < thr:
-            return 0
-        else:
-            return 1
-
     features_w_threshold = features.assign(
         offer_name=lambda df: df["offer_name"].apply(
-            threshold, thr=FEATURES["offer_name"]["threshold"]
-        ),
+            lambda value: 1
+            if value >= MATCHING_FEATURES["offer_name"]["threshold"]
+            else 0
+        )
     )
     matches = features[
         features_w_threshold.sum(axis=1) >= MATCHES_REQUIRED
     ].reset_index()
-    matches = matches.rename(
+    return matches.rename(
         columns={
             "level_0": "index_1",
             "level_1": "index_2",
             "offer_name": "offer_name_score",
         }
     )
-    matches
-    return matches
 
 
 def _chunkify(lst: List, n: int) -> List[List]:
@@ -115,11 +108,9 @@ def multiprocess_matching(
     n_processors = mp.cpu_count()
     chunks = _chunkify(candidate_links, n_processors)
     args = [(chunk, cpr_cl, table_left, table_right) for chunk in chunks]
-
     with mp.Pool(processes=n_processors) as pool:
         results = pool.starmap(get_links, args)
-    matches = pd.concat(results)
-    return matches
+    return pd.concat(results)
 
 
 def prepare_tables(
@@ -152,111 +143,105 @@ def prepare_tables(
     item_singletons_clean = enriched_items(
         item_singletons, catalog_clean, "item_id_candidate"
     )
-    item_singletons_clean["offer_name"] = item_singletons_clean["offer_name"].astype(
-        str
-    )
-    # item_singletons_clean = item_singletons_clean.assign(
-    #     offer_name=lambda df: df["offer_name"].apply(preprocess_string),
-    # )
     item_synchro_retrived_clean = enriched_items(
         item_synchro_retrived, catalog_clean, "item_id_synchro"
     )
-    item_synchro_retrived_clean["offer_name"] = item_synchro_retrived_clean[
-        "offer_name"
-    ].astype(str)
-    # item_synchro_retrived_clean = item_synchro_retrived_clean.assign(
-    #     offer_name=lambda df: df["offer_name"].apply(preprocess_string),
-    # )
     return candidate_links, item_singletons_clean, item_synchro_retrived_clean
 
 
 def enriched_items(items_df, catalog, key):
-    items_df = items_df.merge(catalog, left_on=key, right_on="item_id", how="left")
-    return items_df
+    """
+    Enrich items dataframe with catalog data.
+
+    Args:
+        items_df (pd.DataFrame): Items dataframe.
+        catalog (pd.DataFrame): Catalog dataframe.
+        key (str): Key to merge on.
+
+    Returns:
+        pd.DataFrame: Enriched items dataframe.
+    """
+    return items_df.merge(catalog, left_on=key, right_on="item_id", how="left")
 
 
 def postprocess_matching(matches, item_singletons_clean, item_synchro_clean):
-    matches["index_1"] = matches["index_1"].astype(str)
-    matches["index_2"] = matches["index_2"].astype(str)
+    """
+    Postprocess the matching results.
 
-    item_singletons_clean = item_singletons_clean.reset_index().rename(
-        columns={"index": "index_1"}
+    Args:
+        matches (pd.DataFrame): Matched pairs dataframe.
+        item_singletons_clean (pd.DataFrame): Cleaned singletons dataframe.
+        item_synchro_clean (pd.DataFrame): Cleaned synchro dataframe.
+
+    Returns:
+        pd.DataFrame: Final linkage dataframe.
+    """
+
+    def rename_columns(df, prefix):
+        return df.rename(
+            columns={
+                "offer_name": f"offer_name_{prefix}",
+                "performer": f"performer_{prefix}",
+                "offer_description": f"offer_description_{prefix}",
+                "offer_subcategory_id": f"offer_subcategory_id_{prefix}",
+            }
+        ).drop(columns=["item_id", "candidates_id"])
+
+    matches[["index_1", "index_2"]] = matches[["index_1", "index_2"]].astype(str)
+    item_singletons_clean = (
+        item_singletons_clean.reset_index()
+        .rename(columns={"index": "index_1"})
+        .astype({"index_1": str})
     )
-    item_singletons_clean["index_1"] = item_singletons_clean["index_1"].astype(str)
-
-    item_synchro_clean = item_synchro_clean.reset_index().rename(
-        columns={"index": "index_2"}
+    item_synchro_clean = (
+        item_synchro_clean.reset_index()
+        .rename(columns={"index": "index_2"})
+        .astype({"index_2": str})
     )
-    item_synchro_clean["index_2"] = item_synchro_clean["index_2"].astype(str)
 
-    item_singletons_renamed = item_singletons_clean.rename(
-        columns={
-            "offer_name": "offer_name_candidates",
-            "performer": "performer_candidate",
-            "offer_description": "offer_description_candidates",
-            "offer_subcategory_id": "offer_subcategory_id_candidates",
-        }
-    ).drop(columns=["item_id", "candidates_id"])
+    item_singletons_renamed = rename_columns(item_singletons_clean, "candidates")
+    item_synchro_renamed = rename_columns(item_synchro_clean, "synchro")
 
-    item_synchro_renamed = item_synchro_clean.rename(
-        columns={
-            "offer_name": "offer_name_synchro",
-            "performer": "performer_synchro",
-            "offer_description": "offer_description_synchro",
-            "offer_subcategory_id": "offer_subcategory_id_synchro",
-        }
-    ).drop(columns=["item_id", "candidates_id"])
-
-    linkage = pd.merge(
-        matches,
-        item_synchro_renamed,
-        left_on="index_2",
-        right_on="index_2",
-        how="left",
-    )
+    linkage = pd.merge(matches, item_synchro_renamed, on="index_2", how="left")
     linkage_full = pd.merge(
-        linkage,
-        item_singletons_renamed,
-        left_on="index_1",
-        right_on="index_1",
-        how="left",
-    )
-    linkage_full = linkage_full.drop(columns=["index_1", "index_2"])
-    mask = (
+        linkage, item_singletons_renamed, on="index_1", how="left"
+    ).drop(columns=["index_1", "index_2"])
+    filtered_linkage = linkage_full[
         linkage_full["offer_subcategory_id_candidates"]
         == linkage_full["offer_subcategory_id_synchro"]
-    )
-
-    # Filter the DataFrame using the mask
-    filtered_linkage = linkage_full[mask]
+    ]
     filtered_linkage["link_id"] = filtered_linkage["item_id_synchro"].apply(hash)
     max_scores = filtered_linkage.groupby("item_id_candidate")[
         "offer_name_score"
     ].transform("max")
-
-    # Filter the DataFrame to keep rows where offer_name_score is equal to the maximum score for that item_id_candidate
-    linkage_final = filtered_linkage[filtered_linkage["offer_name_score"] == max_scores]
-    linkage_final = linkage_final.rename(
-        columns={"offer_subcategory_id_candidates": "offer_subcategory_id"}
-    ).drop(columns=["offer_subcategory_id_synchro"])
+    linkage_final = (
+        filtered_linkage[filtered_linkage["offer_name_score"] == max_scores]
+        .rename(columns={"offer_subcategory_id_candidates": "offer_subcategory_id"})
+        .drop(columns=["offer_subcategory_id_synchro"])
+    )
     return linkage_final
 
 
 def extract_unmatched_elements(candidates, output):
+    """
+    Extract unmatched elements from the candidates.
+
+    Args:
+        candidates (pd.DataFrame): Candidates dataframe.
+        output (pd.DataFrame): Output dataframe.
+
+    Returns:
+        pd.DataFrame: Unmatched elements dataframe.
+    """
     output_light = output[["item_id_candidate"]].drop_duplicates()
     candidates = candidates.rename(columns={"item_id": "item_id_candidate"})
-    logger.info(f"candidates : {candidates.columns}")
-    logger.info(f"output_light : {output_light.columns}")
     merged_df = candidates.merge(
         output_light, on="item_id_candidate", how="left", indicator=True
     )
-
-    # Get unmatched offers
     unmatched_elements = merged_df[merged_df["_merge"] == "left_only"].drop(
         columns=["_merge"]
     )
-    logger.info(f"Unmatched elements: {unmatched_elements.columns}")
-    unmatched_elements_clean = unmatched_elements[
+    return unmatched_elements[
         [
             "item_id_candidate",
             "offer_name",
@@ -265,14 +250,7 @@ def extract_unmatched_elements(candidates, output):
             "performer",
             "offer_subcategory_id",
         ]
-    ].rename(
-        columns={
-            "item_id_candidate": "item_id",
-            # "offer_subcategory_id_x": "offer_subcategory_id",
-        }
-    )
-    logger.info(f"Unmatched elements: {unmatched_elements_clean.columns}")
-    return unmatched_elements_clean
+    ].rename(columns={"item_id_candidate": "item_id"})
 
 
 @app.command()
@@ -298,60 +276,31 @@ def main(
         unmatched_elements_path (str): Output GCS path for unmatched elements.
     """
     logger.info("Starting item linkage job")
-    logger.info("Setup indexer..")
     indexer_per_candidates = recordlinkage.index.Block(on="candidates_id")
-    logger.info("Reading data..")
-    load_columns = [
-        "item_id",
-        "performer",
-        "edition",
-        "offer_name",
-        "offer_description",
-        "offer_subcategory_id",
-    ]
     item_synchro = read_parquet_files_from_gcs_directory(
-        input_sources_path,
-        columns=load_columns,
+        input_sources_path, columns=METADATA_FEATURES
     )
-
     item_singletons = read_parquet_files_from_gcs_directory(
-        input_candidates_path,
-        columns=load_columns,
+        input_candidates_path, columns=METADATA_FEATURES
     )
-
     catalog_clean = pd.concat([item_synchro, item_singletons]).drop_duplicates()
     linkage_candidates = pd.read_parquet(linkage_candidates_path).rename(
         columns={"item_id": "item_id_candidate"}
     )
-    logger.info("Preparing tables..")
-    (
-        candidate_links,
-        item_singletons_clean,
-        item_synchro_retrived_clean,
-    ) = prepare_tables(indexer_per_candidates, linkage_candidates, catalog_clean)
-
-    logger.info("Setting up matching..")
+    candidate_links, item_singletons_clean, item_synchro_retrived_clean = (
+        prepare_tables(indexer_per_candidates, linkage_candidates, catalog_clean)
+    )
     comparator = setup_matching()
-    logger.info("Multiprocess matching..")
     matches = multiprocess_matching(
         candidate_links, comparator, item_singletons_clean, item_synchro_retrived_clean
     )
-    logger.info("Postprocessing matching..")
     linkage_final = postprocess_matching(
         matches, item_singletons_clean, item_synchro_retrived_clean
     )
-    logger.info("Extracting unmatched elements..")
     unmatched_elements = extract_unmatched_elements(item_singletons, linkage_final)
-    logger.info("Uploading results..")
-    logger.info("Uploading linkage output..")
+    upload_parquet(dataframe=linkage_final, gcs_path=f"{output_path}/data.parquet")
     upload_parquet(
-        dataframe=linkage_final,
-        gcs_path=f"{output_path}/data.parquet",
-    )
-    logger.info("Uploading unmatched elements..")
-    upload_parquet(
-        dataframe=unmatched_elements,
-        gcs_path=f"{unmatched_elements_path}/data.parquet",
+        dataframe=unmatched_elements, gcs_path=f"{unmatched_elements_path}/data.parquet"
     )
 
 

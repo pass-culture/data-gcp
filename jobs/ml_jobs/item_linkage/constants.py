@@ -2,14 +2,22 @@ import os
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
+DETAIL_COLUMNS = ["item_id", "performer", "edition", "offer_subcategory_id"]
 SYNCHRO_SUBCATEGORIES = [
     "SUPPORT_PHYSIQUE_MUSIQUE_VINYLE",
     "LIVRE_PAPIER",
     "SUPPORT_PHYSIQUE_MUSIQUE_CD",
     "SEANCE_CINE",
 ]
-COLUMN_NAME_LIST = ["item_id", "performer", "offer_name"]
-
+METADATA_FEATURES = [
+    "item_id",
+    "performer",
+    "offer_name",
+    "offer_description",
+    "edition",
+    "offer_subcategory_id",
+]
+RETRIEVAL_FILTERS = ["edition", "offer_subcategory_id"]
 MODEL_TYPE = {
     "n_dim": 32,
     "type": "semantic",
@@ -27,7 +35,7 @@ LOGGING_INTERVAL = 50000  # Interval for logging progress
 N_PROBES = 5
 REFINE_FACTOR = 10
 
-FEATURES = {
+MATCHING_FEATURES = {
     "offer_name": {"method": "jarowinkler", "threshold": 0.90, "missing_value": 0},
     # "offer_description": {"method": "jarowinkler", "threshold": 0.5,"missing_value":0},
     # "performer": {"method": "jarowinkler", "threshold": 0.95,"missing_value":1},

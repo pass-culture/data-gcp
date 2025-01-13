@@ -9,10 +9,7 @@ on:
       - opened
       - synchronize
 
-permissions:
-  contents: write
-  pull-requests: write
-  actions: write
+permissions:  write-all
 
 jobs:
   re-run-worflow:

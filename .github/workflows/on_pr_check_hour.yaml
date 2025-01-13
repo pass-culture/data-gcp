@@ -21,7 +21,7 @@ jobs:
         run: |
           echo "Paris hour: ${{ env.paris_hour }}"
           if [ $((10#$paris_hour)) -ge 18 ] || [ $((10#$paris_hour)) -lt 12 ]; then
-                      echo "Merges are not allowed between 18:00 and 12:00 TZ:Europe/Paris + daylight saving."
+            echo "Merges are not allowed between 18:00 and 12:00 TZ:Europe/Paris + daylight saving."
             exit 1
           else
             echo "Merge allowed."

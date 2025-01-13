@@ -17,14 +17,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WORKFLOW_ID: 134227518
+          REPOSITORY: ${{ github.repository }}
         run: |
-          prs=$(gh pr list --json headRefName)
+          prs=$(gh pr list --json headRefName -R $REPOSITORY)
           # Loop over the PRs
           RUN_IDS=()
           echo "$prs" | jq -c '.[]' | while read -r pr; do
             branch=$(echo "$pr" | jq -r '.headRefName')
             echo "Branch $branch to re-run"
-            RUN_IDS+=($(gh run list -b $branch -w $WORKFLOW_ID --json workflowDatabaseId | jq -r '.[]'))
+            RUN_IDS+=($(gh run list -b $branch -w $WORKFLOW_ID --json workflowDatabaseId -R $REPOSITORY | jq -r '.[]'))
           done
       - name : Re-run workflows
         env:
@@ -33,5 +34,5 @@ jobs:
           echo $RUN_IDS
           for RUN_ID in $RUN_IDS; do
             echo "Processing $RUN_ID"
-            gh run rerun $RUN_ID
+            gh run rerun $RUN_ID -R $REPOSITORY
           done

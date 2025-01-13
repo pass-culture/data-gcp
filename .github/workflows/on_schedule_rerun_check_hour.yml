@@ -21,17 +21,16 @@ jobs:
       - name: List workflow open branch with associated PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WORKFLOW_ID: 134227518
+          WORKFLOW_ID: 134227518 # id of the workflow "on_pr_check_hour.yaml"
           REPOSITORY: ${{ github.repository }}
         run: |
           prs=$(gh pr list --json headRefName -R $REPOSITORY)
           # Loop over the PRs
-          RUN_IDS=()
           echo "$prs" | jq -c '.[]' | while read -r pr; do
             branch=$(echo "$pr" | jq -r '.headRefName')
             echo "Branch $branch to re-run"
             RUN_ID=($(gh run list -b $branch -w $WORKFLOW_ID --json databaseId -R $REPOSITORY | jq -r '.[0].databaseId'))
-            echo "gh run rerun $RUN_ID -R $REPOSITORY"
+            echo "Running command 'gh run rerun $RUN_ID -R $REPOSITORY'"
             if [[ "$RUN_ID" == "null" ]]; then
               echo "RUN_id is null"
             else

@@ -12,6 +12,10 @@ models:
           detection_period:
             period: day
             count: 1
+      - not_null_multiple_columns:
+          columns:
+            - user_id
+            - item_id
     columns:
       - name: event_date
         description: "{{ doc('column__event_date') }}"

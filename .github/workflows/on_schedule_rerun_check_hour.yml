@@ -27,12 +27,17 @@ jobs:
             echo "Branch $branch to re-run"
             RUN_IDS+=($(gh run list -b $branch -w $WORKFLOW_ID --json workflowDatabaseId -R $REPOSITORY | jq -r '.[]'))
           done
-      - name : Re-run workflows
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
           echo $RUN_IDS
           for RUN_ID in $RUN_IDS; do
             echo "Processing $RUN_ID"
             gh run rerun $RUN_ID -R $REPOSITORY
           done
+      # - name : Re-run workflows
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     echo $RUN_IDS
+      #     for RUN_ID in $RUN_IDS; do
+      #       echo "Processing $RUN_ID"
+      #       gh run rerun $RUN_ID -R $REPOSITORY
+      #     done

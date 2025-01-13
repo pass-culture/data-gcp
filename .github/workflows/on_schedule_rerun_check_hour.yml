@@ -33,14 +33,9 @@ jobs:
             echo $(gh run list -b $branch -w $WORKFLOW_ID --json databaseId -R $REPOSITORY | jq -r '.[0].databaseId')
             RUN_ID=($(gh run list -b $branch -w $WORKFLOW_ID --json databaseId -R $REPOSITORY | jq -r '.[0].databaseId'))
             echo "gh run rerun $RUN_ID -R $REPOSITORY"
-            gh run rerun $RUN_ID -R $REPOSITORY
+            if [[ -z "$parameter" ]]; then
+              echo "RUN_id is null"
+            else
+              gh run rerun $RUN_ID -R $REPOSITORY
+            fi
           done
-      # - name : Re-run workflows
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #     echo $RUN_IDS
-      #     for RUN_ID in $RUN_IDS; do
-      #       echo "Processing $RUN_ID"
-      #       gh run rerun $RUN_ID -R $REPOSITORY
-      #     done

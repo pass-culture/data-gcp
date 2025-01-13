@@ -4,7 +4,6 @@ import unicodedata
 
 import numpy as np
 import pandas as pd
-from utils import import_with_auto_mock
 
 CATEGORIES_DTYPES = {
     "id": str,
@@ -39,13 +38,9 @@ TYPES_DTYPES = {
 
 
 def get_subcategories(gcp_project_id, env_short_name):
-# Example usage:
-    try:
-        # Dynamically import your GitHub module.
-        subcategories = import_with_auto_mock("pcapi.core.categories.subcategories_v2").ALL_SUBCATEGORIES
-        print("Module imported successfully.")
-    except ModuleNotFoundError as e:
-        print(f"Error: {e}")
+    subcategories = importlib.import_module(
+        "pcapi.core.categories.subcategories_v2"
+    ).ALL_SUBCATEGORIES
     export_subcat = []
     for subcats in subcategories:
         _exports = {

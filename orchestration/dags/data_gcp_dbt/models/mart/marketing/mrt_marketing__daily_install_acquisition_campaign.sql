@@ -20,13 +20,13 @@ with
             acquisition_campaign,
             acquisition_adset,
             acquisition_ad,
-            sum(registration) as total_registrations,
-            sum(beneficiary) as total_beneficiaries,
-            sum(beneficiary_underage) as total_beneficiaries_underage,
-            sum(beneficiary_18) as total_beneficiaries_18,
-            sum(beneficiary_17) as total_beneficiaries_17,
-            sum(beneficiary_16) as total_beneficiaries_16,
-            sum(beneficiary_15) as total_beneficiaries_15
+            sum(total_registrations) as total_registrations,
+            sum(total_beneficiaries) as total_beneficiaries,
+            sum(total_beneficiaries_underage) as total_beneficiaries_underage,
+            sum(total_beneficiaries_18) as total_beneficiaries_18,
+            sum(total_beneficiaries_17) as total_beneficiaries_17,
+            sum(total_beneficiaries_16) as total_beneficiaries_16,
+            sum(total_beneficiaries_15) as total_beneficiaries_15
         from {{ ref("int_appsflyer__daily_install_attribution") }}
         {% if is_incremental() %}
             where

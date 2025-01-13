@@ -22,29 +22,29 @@ select
     cast(conversion_date as date) as app_install_date,
     sum(
         if(event_name = 'af_complete_registration', cast(unique_users as int64), 0)
-    ) as registration,
+    ) as total_registrations,
     sum(
         if(event_name = 'af_complete_beneficiary', cast(unique_users as int64), 0)
-    ) as beneficiary,
+    ) as total_beneficiaries,
     sum(
         if(event_name = 'af_complete_beneficiary_18', cast(unique_users as int64), 0)
-    ) as beneficiary_18,
+    ) as total_beneficiaries_18,
     sum(
         if(
             event_name = 'af_complete_beneficiary_underage',
             cast(unique_users as int64),
             0
         )
-    ) as beneficiary_underage,
+    ) as total_beneficiaries_underage,
     sum(
         if(event_name = 'af_complete_beneficiary_17', cast(unique_users as int64), 0)
-    ) as beneficiary_17,
+    ) as total_beneficiaries_17,
     sum(
         if(event_name = 'af_complete_beneficiary_16', cast(unique_users as int64), 0)
-    ) as beneficiary_16,
+    ) as total_beneficiaries_16,
     sum(
         if(event_name = 'af_complete_beneficiary_15', cast(unique_users as int64), 0)
-    ) as beneficiary_15
+    ) as total_beneficiaries_15
 from {{ source("appsflyer_import", "cohort_unified_timezone_versioned") }}
 where
     cast(days_post_attribution as int64) < 14

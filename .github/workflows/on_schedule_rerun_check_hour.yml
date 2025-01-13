@@ -9,6 +9,11 @@ on:
       - opened
       - synchronize
 
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
 jobs:
   re-run-worflow:
     runs-on: ubuntu-latest

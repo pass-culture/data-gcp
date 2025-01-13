@@ -1,6 +1,7 @@
-name: "rerun_workflow"
+name: "on_schedule_rerun_check_hour"
 on:
-  workflow_call:
+  schedule:
+    - cron: '0 10,11,16,17 * * 1-5' # Paris time with both daylight savings in UTC during weekdays
 
 jobs:
   re-run-worflow:
@@ -9,6 +10,7 @@ jobs:
       - name: List workflow open branch with associated PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_ID: 134227518
         run: |
           prs=$(gh pr list --json headRefName)
           # Loop over the PRs
@@ -16,7 +18,7 @@ jobs:
           echo "$prs" | jq -c '.[]' | while read -r pr; do
             branch=$(echo "$pr" | jq -r '.headRefName')
             echo "Branch $branch to re-run"
-            RUN_IDS+=($(gh run list -b $branch -w 134227518 --json workflowDatabaseId | jq -r '.[]'))
+            RUN_IDS+=($(gh run list -b $branch -w $WORKFLOW_ID --json workflowDatabaseId | jq -r '.[]'))
           done
       - name : Re-run workflows
         env:

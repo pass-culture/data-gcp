@@ -1,4 +1,4 @@
-{% test not_null_multiple_columns(model, columns) %}
+{% test not_null_count_multiple_columns(model, columns) %}
 
     {% if not columns %}
         {{

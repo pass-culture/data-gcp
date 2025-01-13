@@ -2,12 +2,6 @@ name: "on_schedule_rerun_check_hour"
 on:
   schedule:
     - cron: '0 10,11,16,17 * * 1-5' # Paris time with both daylight savings in UTC during weekdays
-  pull_request:
-    branches:
-      - master
-    types:
-      - opened
-      - synchronize
 
 permissions:
   contents: write

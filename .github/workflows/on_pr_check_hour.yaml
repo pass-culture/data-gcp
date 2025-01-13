@@ -6,6 +6,8 @@ on:
     types:
       - opened
       - synchronize
+  workflow_run:
+    workflows: ["on_schedule_rerun_check_hour"]
 
 jobs:
   check_time:

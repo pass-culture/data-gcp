@@ -9,7 +9,7 @@ on:
       - opened
       - synchronize
 
-permissions:  write-all
+permissions: write-all
 
 jobs:
   re-run-worflow:

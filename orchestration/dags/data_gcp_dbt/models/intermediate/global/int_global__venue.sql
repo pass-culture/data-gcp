@@ -85,6 +85,8 @@ select
     v.is_collective_active_last_30days,
     v.is_collective_active_current_year,
     v.venue_image_source,
+    v.total_distinct_headline_offers,
+    v.venue_has_headline_offer,
     ofr.offerer_id,
     ofr.offerer_name,
     ofr.offerer_validation_status,

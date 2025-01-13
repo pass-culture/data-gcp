@@ -23,7 +23,7 @@ with
                 prefix_name="institution",
                 columns=["qpv_code", "qpv_name", "qpv_municipality"],
                 geo_shape="qpv_geo_shape",
-                geolocalisation_prefix="qpv_"
+                geolocalisation_prefix="qpv_",
             )
         }}
     ),

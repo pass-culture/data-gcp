@@ -30,9 +30,11 @@
                 {% endif %}
         ) ref_data
         on {{ prefix_name }}_longitude
-        between ref_data.{{ geolocalisation_prefix }}min_longitude and ref_data.{{ geolocalisation_prefix }}max_longitude
+        between ref_data.{{ geolocalisation_prefix }}min_longitude
+        and ref_data.{{ geolocalisation_prefix }}max_longitude
         and {{ prefix_name }}_latitude
-        between ref_data.{{ geolocalisation_prefix }}min_latitude and ref_data.{{ geolocalisation_prefix }}max_latitude
+        between ref_data.{{ geolocalisation_prefix }}min_latitude
+        and ref_data.{{ geolocalisation_prefix }}max_latitude
         and st_contains(
             ref_data.geo_shape,
             st_geogpoint({{ prefix_name }}_longitude, {{ prefix_name }}_latitude)

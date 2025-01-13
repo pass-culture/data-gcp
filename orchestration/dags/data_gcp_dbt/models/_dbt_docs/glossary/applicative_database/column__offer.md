@@ -80,6 +80,7 @@ show type for shows. {% enddocs %}
 {% docs column__offer_sub_type_label %} Deprecated: Defines the offer sub genre for music, books and movies. Defines the
 offer show sub type for shows. {% enddocs %}
 {% docs column__offer_type_labels %} Deprecated: Legacy identifier. Prefer using GTL. {% enddocs %}
+{% docs column__movie_label %} Movie label (A&E, Patrimoine) as indicated by the CNC. {% enddocs %}
 
 # Date related
 

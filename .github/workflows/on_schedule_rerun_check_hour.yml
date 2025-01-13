@@ -25,8 +25,8 @@ jobs:
           echo "$prs" | jq -c '.[]' | while read -r pr; do
             branch=$(echo "$pr" | jq -r '.headRefName')
             echo "Branch $branch to re-run"
-            echo $(gh run list -b $branch -w $WORKFLOW_ID --json workflowDatabaseId -R $REPOSITORY | jq -r '.[]')
-            RUN_IDS+=($(gh run list -b $branch -w $WORKFLOW_ID --json workflowDatabaseId -R $REPOSITORY | jq -r '.[]'))
+            echo $(gh run list -b $branch -w $WORKFLOW_ID --json databaseId -R $REPOSITORY | jq -r '.[]')
+            RUN_IDS+=($(gh run list -b $branch -w $WORKFLOW_ID --json databaseId -R $REPOSITORY | jq -r '.[]'))
           done
           echo $RUN_IDS
           for RUN_ID in $RUN_IDS; do

@@ -18,7 +18,7 @@ with
         join
             {{ ref("mrt_global__educational_deposit") }} ed
             on ed.institution_id = eid.institution_id
-        join {{ ref("educational_year") }} ey on ey.adage_id = ed.educational_year_id
+        join {{ ref("educational_year") }} ey on ey.educational_year_id = ed.educational_year_id
     ),
 
     eple_bookings as (
@@ -103,7 +103,6 @@ select
     nb_credit_used_students,
     avg_spent_per_user,
     pct_spent as pct_spent_per_user,
-    safe_divide(last_12_months_inscriptions, total_students) as pct_beneficiary_students
 from eple_infos
 left join
     eple_bookings

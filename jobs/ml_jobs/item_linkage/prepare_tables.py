@@ -38,6 +38,10 @@ def filter_sources_candidates(
 # Main Typer Command
 @app.command()
 def main(
+    linkage_type: str = typer.Option(
+        default="true",
+        help="Type of linkage to perform",
+    ),
     input_sources_path: str = typer.Option(..., help="Path to the input catalog"),
     input_candidates_path: str = typer.Option(..., help="Path to the input catalog"),
     output_sources_path: str = typer.Option(
@@ -45,10 +49,6 @@ def main(
     ),
     output_candidates_path: str = typer.Option(
         ..., help="Path to save the processed catalog"
-    ),
-    linkage_type: str = typer.Option(
-        default="true",
-        help="Type of linkage to perform",
     ),
     unmatched_elements_path: Optional[str] = typer.Option(
         default=None, help="Unmatched elements"
@@ -66,8 +66,8 @@ def main(
         input_candidates_path,
         columns=["item_id"],
     )
-    logger.info(f"Sources: {len(sources)} items")
-    logger.info(f"Candidates: {len(candidates)} items")
+    logger.info(f"Sources clean: {len(sources)} items")
+    logger.info(f"Candidates clean: {len(candidates)} items")
     sources, candidates = filter_sources_candidates(
         linkage_type, unmatched_elements_path, sources, candidates
     )

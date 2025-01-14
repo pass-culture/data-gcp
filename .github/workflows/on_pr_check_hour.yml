@@ -7,8 +7,11 @@ on:
       - opened
       - synchronize
       - edited
-  schedule:
-    - cron: "0 10,11,16,17 * * 1-5" # Paris time with both daylight savings in UTC during weekdays
+  workflow_run:
+    workflows:
+      - on_schedule_rerun_check_hour
+    types:
+      - completed
 
 jobs:
   check_time:

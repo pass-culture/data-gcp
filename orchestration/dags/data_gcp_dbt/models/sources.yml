@@ -153,6 +153,7 @@ sources:
       - name: dms_jeunes_cleaned
       - name: dms_pro_cleaned
       - name: qualtrics_ac
+      - name: qualtrics_survey
       - name: siren_data
 
   - name: analytics

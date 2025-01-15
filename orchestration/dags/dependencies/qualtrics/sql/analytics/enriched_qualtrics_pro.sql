@@ -58,7 +58,7 @@ with
             response_id,
             offer.venue_id,
             count(distinct offer_id) individual_offers_created
-        from `{{ bigquery_clean_dataset }}.applicative_database_offer` as offer
+        from `{{ bigquery_int_raw_dataset }}.offer` as offer
         join
             ir_per_user
             on ir_per_user.venue_id = offer.venue_id

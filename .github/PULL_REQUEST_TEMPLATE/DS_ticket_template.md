@@ -70,7 +70,7 @@ The second part to specify the type of change one of the following :
   * perf
   * refactor
   * test
-  * core
+  * chore
   * dbt
 
 * topic within parenthesis: 1 word e.g., (dag)

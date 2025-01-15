@@ -65,17 +65,26 @@ On peut qu'avoir une version de Airflow installé en local. Pour pallier ça, il
 
 1. Créer une clé en suivant ce [standard](https://www.notion.so/passcultureapp/R-cuperer-une-clef-SA-pour-Airflow-en-Local-ea66a948a6e644628bafd05e8f0c69ef)
 2. Renommer la clé en `sa.gcpkey.json` et la mettre dans `/airflow/etc/sa.gcpkey.json`
-3. Récupérer le fichier .env et le mettre dans `orchestration/.env`
+3. Uniquement si la machine locale est derrière un Proxy Netskope:
+    - Récupérer le certificat **bundled** ou **combiné** de la machine locale. Voir [cette page notion](https://www.notion.so/passcultureapp/Proxyfication-des-outils-du-pass-d1f0da09eafb4158904e9197bbe7c1d4?pvs=4#10cad4e0ff98805ba61efcea26075d65) si on ne trouve pas tout de suite le fichier `*_combined.pem`.
+    - Mettre le fichier du certificat bundled dans `/airflow/etc/nscacert_combined.pem `
+4. Récupérer le fichier **.env** et le mettre dans `orchestration/.env`, puis:
    - Modifier les valeurs de `_AIRFLOW_WWW_USER_USERNAME` et `_AIRFLOW_WWW_USER_PASSWORD` dans le fichier .env pour mettre un username et password arbitraires.
    - Modifier la valeur du `DAG_FOLDER` en mettant le path vers le folder local.
-4. Remplir la valeur de DOCKERFILE_PATH en fonction de si on utilise netskope ou non:
-    - Si la machine locale est derrière un Proxy Netskope:
-        - Récupérer le certificat **bundled** ou **combiné** de la machine locale. Voir [cette page notion](https://www.notion.so/passcultureapp/Proxyfication-des-outils-du-pass-d1f0da09eafb4158904e9197bbe7c1d4?pvs=4#10cad4e0ff98805ba61efcea26075d65) si on ne trouve pas tout de suite le fichier `*_combined.pem`.
-        - Mettre le fichier du certificat bundled dans `/orchestration/airflow/etc` sous le nom `nscacert_combined.pem `
-        - Dans le fichier `.env`, modifier la valeur de `DOCKERFILE_PATH` en  `airflow/Dockerfile.netskope`
-
-    - Si la machine locale n'est pas derrière un proxy:
-        - Dans le fichier `.env`, modifier la valeur de `DOCKERFILE_PATH` en  `airflow/Dockerfile`
+   - Modifier la valeur de `NETWORK_MODE`:
+        - `NETWORK_MODE="proxy"`  si vous êtes sous un proxy
+        - `NETWORK_MODE="default"`  sinon
+    - En fonction de si l'on souhaite lancer airflow en `dev`ou en `stg`, décommenter les variables :
+        - En `dev`:
+        ```
+        ENV_SHORT_NAME=dev
+        DATA_GCS_BUCKET_NAME=data-bucket-dev
+        ```
+        - en `stg`:
+        ```
+        ENV_SHORT_NAME=stg
+        DATA_GCS_BUCKET_NAME=data-bucket-stg
+        ```
 
 ### Premier lancement (La première fois uniquement)
 sur macos installer la lib coreutils `brew install coreutils`
@@ -83,7 +92,10 @@ sur macos installer la lib coreutils `brew install coreutils`
 ```sh
 make build
 ```
-
+Ou si on ne veut build que le dockerfile
+```
+docker build -t <nom de l'image docker> <path vers le dockerfile> --build-arg NETWORK_MODE=<proxy ou default>
+```
 
 ### Lancement de l'app
 

@@ -18,10 +18,12 @@ with
         {{
             generate_seed_geolocation_query(
                 source_table="int_api_gouv__user_address",
-                referential_table="int_seed__priority_neighborhood",
+                referential_table="int_seed__qpv",
                 id_column="user_id",
                 prefix_name="user",
-                columns=["code_qpv", "qpv_name", "qpv_communes"],
+                columns=["qpv_code", "qpv_name", "qpv_municipality"],
+                geo_shape="qpv_geo_shape",
+                geolocalisation_prefix="qpv_",
             )
         }}
     ),
@@ -81,19 +83,22 @@ select
     user_geo_iris.region_name as user_region_name,
     user_epci.epci_name as user_epci,
     user_epci.epci_code,
-    user_qpv.code_qpv,
+    user_qpv.qpv_code,
     user_qpv.qpv_name,
-    user_qpv.qpv_communes,
+    user_qpv.qpv_municipality,
     user_zrr.zrr_level,
     user_zrr.zrr_level_detail,
+    user.updated_date,
     case
-        when code_qpv is null and user_latitude is null and user_longitude is null
+        when
+            user_qpv.qpv_code is null
+            and user.user_latitude is null
+            and user.user_longitude is null
         then null
-        else code_qpv is not null
-    end as user_is_in_qpv,
-    date_updated,
+        else user_qpv.qpv_code is not null
+    end as user_is_in_qpv
 
-from {{ ref("int_api_gouv__user_address") }} user
+from {{ ref("int_api_gouv__user_address") }} as user
 left join user_epci on user.user_id = user_epci.user_id
 left join user_qpv on user.user_id = user_qpv.user_id
 left join user_zrr on user.user_id = user_zrr.user_id

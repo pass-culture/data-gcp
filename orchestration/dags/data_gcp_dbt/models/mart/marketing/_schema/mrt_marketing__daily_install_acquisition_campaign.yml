@@ -1,0 +1,51 @@
+version: 2
+
+models:
+  - name: mrt_marketing__daily_install_acquisition_campaign
+    description: '{{ doc("description__mrt_marketing__daily_install_acquisition_campaign") }}'
+    columns:
+      - name: app_install_date
+        description: '{{ doc("column__app_install_date") }}'
+        data_type: DATE
+      - name: app_os
+        description: '{{ doc("column__app_os") }}'
+        data_type: STRING
+      - name: acquisition_media_source
+        description: '{{ doc("column__acquisition_media_source") }}'
+        data_type: STRING
+      - name: acquisition_campaign
+        description: '{{ doc("column__acquisition_campaign") }}'
+        data_type: STRING
+      - name: acquisition_adset
+        description: '{{ doc("column__acquisition_adset") }}'
+        data_type: STRING
+      - name: acquisition_ad
+        description: '{{ doc("column__acquisition_ad") }}'
+        data_type: STRING
+      - name: total_costs
+        description: '{{ doc("column__total_costs") }}'
+        data_type: INT64
+      - name: total_installs
+        description: '{{ doc("column__total_installs") }}'
+        data_type: INT64
+      - name: total_registrations
+        description: '{{ doc("column__total_registrations") }}'
+        data_type: INT64
+      - name: total_beneficiaries
+        description: '{{ doc("column__total_beneficiaries") }}'
+        data_type: INT64
+      - name: total_beneficiaries_18
+        description: '{{ doc("column__total_beneficiaries_18") }}'
+        data_type: INT64
+      - name: total_beneficiaries_underage
+        description: '{{ doc("column__total_beneficiaries_underage") }}'
+        data_type: INT64
+      - name: total_beneficiaries_17
+        description: '{{ doc("column__total_beneficiaries_17") }}'
+        data_type: INT64
+      - name: total_beneficiaries_16
+        description: '{{ doc("column__total_beneficiaries_16") }}'
+        data_type: INT64
+      - name: total_beneficiaries_15
+        description: '{{ doc("column__total_beneficiaries_15") }}'
+        data_type: INT64

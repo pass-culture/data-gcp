@@ -156,4 +156,4 @@ left join
     on ah.user_id = u.user_id
     and ah.action_history_rk = 1
 left join {{ ref("int_geo__user_location") }} as ui on ui.user_id = u.user_id
-left join deposit_grouped_by_user as dgu on dgu.user_id = u.user_id
+inner join deposit_grouped_by_user as dgu on dgu.user_id = u.user_id

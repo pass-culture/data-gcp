@@ -43,7 +43,7 @@ with
             count(distinct collective_booking_id) collective_bookings,
             max(collective_booking_creation_date) last_collective_booking
         from
-            `{{ bigquery_clean_dataset }}.applicative_database_collective_booking`
+            `{{ bigquery_raw_dataset }}.applicative_database_collective_booking`
             as collective_booking
         join
             ir_per_user

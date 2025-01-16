@@ -103,6 +103,10 @@ def preprocess_embedding_and_store_reducer(
         pd.DataFrame: The prepared dataframe with embeddings.
     """
     item_df = chunk
+    # Remove all zeroes embeddings before reducing
+    item_df = item_df[
+        item_df["embedding"].apply(lambda vec: not np.all(np.array(vec) == 0))
+    ]
 
     if reduction:
         item_df = item_df.assign(
@@ -116,10 +120,9 @@ def preprocess_embedding_and_store_reducer(
         item_df = item_df.assign(
             vector=list(preprocess_embeddings_by_chunk(chunk))
         ).drop(columns=["embedding"])
-    embeddings_list = item_df["vector"].tolist()
 
     # Convert embeddings to a NumPy array
-    embeddings_array = np.array(embeddings_list)
+    embeddings_array = np.array(item_df["vector"].tolist())
 
     # Normalize the embeddings
     normalized_embeddings = normalize(embeddings_array, norm="l2")

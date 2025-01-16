@@ -41,17 +41,29 @@ offers as (
         `{{ bigquery_analytics_dataset }}.global_offer` go
     where go.offer_product_id is null
 ),
+bookings as(
+    SELECT
+        bo.booking_id,
+        bo.offer_id,
+        SUM(bo.booking_quantity) as booking_count
+    FROM offers o
+    JOIN
+        `{{ bigquery_analytics_dataset }}.global_booking` bo on bo.offer_id=o.offer_id
+    group by 1,2
+),
 candidates as(
     SELECT
-        CASE WHEN o.item_id like 'link-%' THEN o.offer_id ELSE o.item_id END AS item_id,
+        CASE WHEN o.item_id like 'link-%' THEN CONCAT('offer-', o.offer_id) ELSE o.item_id END AS item_id,
         z.embedding,
         o.offer_name,
         o.offer_description,
         o.performer,
         o.offer_subcategory_id
+        b.booking_count
     FROM
         offers o
     INNER JOIN z on z.item_id = o.item_id
+    LEFT JOIN bookings b on b.offer_id = o.offer_id
 )
 select * from candidates
 QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY performer DESC) = 1

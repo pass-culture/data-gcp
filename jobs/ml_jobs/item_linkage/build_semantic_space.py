@@ -76,10 +76,6 @@ def main(
     linkage_type: str = typer.Option(
         default="product", help="Type of linkage to perform"
     ),
-    reduction: str = typer.Option(
-        default="true",
-        help="Reduce the embeddings",
-    ),
     batch_size: int = typer.Option(
         default=PARQUET_BATCH_SIZE,
         help="Batch size for reading the parquet file",
@@ -90,7 +86,7 @@ def main(
 
     Args:
         input_path (str): The GCS path to the parquet file.
-        reduction (str): Whether to reduce the embeddings.
+        linkage_type (str): The type of linkage to perform.
         batch_size (int): The batch size for reading the parquet file.
     """
     logger.info("Download and prepare table...")

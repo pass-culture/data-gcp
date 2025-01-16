@@ -75,6 +75,7 @@ def preprocess_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
         .str.extract(extract_pattern, expand=False)
         .astype(str)
         .fillna(value="1"),
+        # Ne pas ecraser la colonne offer_name et passer vers une colonne oeuvre
         offer_name=lambda df: df["offer_name"]
         .str.replace(remove_pattern, "", regex=True)
         .str.strip()

@@ -255,7 +255,6 @@ def extract_unmatched_elements(candidates, output):
 
 @app.command()
 def main(
-    linkage_type: str = typer.Option(default=..., help="Type of linkage to perform"),
     input_sources_path: str = typer.Option(default=...),
     input_candidates_path: str = typer.Option(default=...),
     linkage_candidates_path: str = typer.Option(default=...),
@@ -268,7 +267,6 @@ def main(
     Main function to perform record linkage and upload the results to GCS.
 
     Args:
-        linkage_type (str): Type of linkage to perform.
         input_sources_path (str): Path to the sources data.
         input_candidates_path (str): Path to the candidates data.
         linkage_candidates_path (str): Path to the linkage candidates data.

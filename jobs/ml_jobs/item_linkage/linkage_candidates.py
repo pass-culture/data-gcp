@@ -15,7 +15,7 @@ from utils.gcs_utils import upload_parquet
 app = typer.Typer()
 
 
-def load_model(model_path: str, linkage_type: str, reduction: bool) -> SemanticSpace:
+def load_model(model_path: str, linkage_type: str) -> SemanticSpace:
     """
     Load the SemanticSpace model from the given path.
 
@@ -27,7 +27,7 @@ def load_model(model_path: str, linkage_type: str, reduction: bool) -> SemanticS
         SemanticSpace: The loaded model.
     """
     logger.info("Loading model...")
-    model = SemanticSpace(model_path, linkage_type, reduction)
+    model = SemanticSpace(model_path, linkage_type)
     logger.info("Model loaded.")
     return model
 
@@ -47,13 +47,14 @@ def generate_semantic_candidates(
     """
     linkage = []
     logger.info(f"Generating semantic candidates for {len(data)} items...")
+    # Check if Lancedb allow chunk vector search
     for index, row in tqdm(
         data.iterrows(), total=data.shape[0], desc="Processing rows", mininterval=60
     ):
         result_df = model.search(
             vector=row.vector,
             filters=RETRIEVAL_FILTERS,
-            similarity_metric="L2",
+            similarity_metric="cosine",
             n=NUM_RESULTS,
             vector_column_name="vector",
         ).assign(candidates_id=str(uuid.uuid4()), item_id_candidate=row.item_id)
@@ -65,7 +66,6 @@ def generate_semantic_candidates(
 def main(
     batch_size: int = typer.Option(default=..., help="Batch size"),
     linkage_type: str = typer.Option(default=..., help="Linkage type"),
-    reduction: str = typer.Option(default=..., help="Reduce embeddings"),
     input_path: str = typer.Option(default=..., help="Input table path"),
     output_path: str = typer.Option(default=..., help="Output table path"),
 ) -> None:
@@ -75,13 +75,11 @@ def main(
     Args:
         batch_size (int): The size of each batch.
         linkage_type (str): The type of linkage to perform.
-        reduction (str): Whether to reduce the embeddings.
         input_path (str): The path to the input table.
         output_path (str): The path to the output table.
         unmatched_elements_path (str): The path to the unmatched elements table.
     """
-    reduction = True if reduction == "true" else False
-    model = load_model(MODEL_PATH, linkage_type, reduction)
+    model = load_model(MODEL_PATH, linkage_type)
 
     tqdm.pandas()
     linkage_by_chunk = []

@@ -1,5 +1,6 @@
 from typing import Optional
 
+import pandas as pd
 import typer
 from loguru import logger
 
@@ -21,16 +22,27 @@ def filter_sources_candidates(
             candidates.offer_subcategory_id.isin(SYNCHRO_SUBCATEGORIES)
         ]
     elif linkage_type == "offer":
+        sources = sources[~sources.offer_subcategory_id.isin(SYNCHRO_SUBCATEGORIES)]
+        candidates = candidates[
+            ~candidates.offer_subcategory_id.isin(SYNCHRO_SUBCATEGORIES)
+        ]
+
         unmatched_elements = read_parquet_files_from_gcs_directory(
             unmatched_elements_path,
             columns=["item_id"],
         )
-        sources = sources.merge(
+
+        # non synchro product & offer UNION unmatched elements from offer to product linkage
+
+        unmatched_sources = sources.merge(
             unmatched_elements[["item_id"]], on="item_id", how="inner"
         )
-        candidates = candidates.merge(
+
+        sources = pd.concat([sources, unmatched_sources])
+        unmatched_candidates = candidates.merge(
             unmatched_elements[["item_id"]], on="item_id", how="inner"
         )
+        candidates = pd.concat([candidates, unmatched_candidates])
 
     return sources, candidates
 

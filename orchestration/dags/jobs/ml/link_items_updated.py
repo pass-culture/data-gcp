@@ -292,7 +292,7 @@ with DAG(
         prepare_product_linkage_table = create_ssh_task(
             task_id="prepare_product_linkage_table",
             command="python prepare_tables.py "
-            "linkage-type product "
+            "--linkage-type product "
             f"--input-sources-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['SOURCES_CLEAN'])}/data-*.parquet "
             f"--input-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['CANDIDATES_CLEAN'])}/data-*.parquet "
             f"--output-sources-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['PRODUCT_SOURCES_READY'])}/data-*.parquet "
@@ -307,7 +307,6 @@ with DAG(
             command="python build_semantic_space.py "
             f"--input-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['PRODUCT_SOURCES_READY'])}/data-*.parquet "
             f"--linkage-type product "
-            f"--reduction {DAG_CONFIG['PARAMS']['REDUCTION']} "
             f"--batch-size {DAG_CONFIG['PARAMS']['BATCH_SIZE']} ",
             instance_name="{{ params.instance_name }}",
             base_dir=DAG_CONFIG["DIRS"]["BASE"],
@@ -319,7 +318,6 @@ with DAG(
             command="python linkage_candidates.py "
             f"--batch-size {DAG_CONFIG['PARAMS']['BATCH_SIZE']} "
             f"--linkage-type product "
-            f"--reduction {DAG_CONFIG['PARAMS']['REDUCTION']} "
             f"--input-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['PRODUCT_CANDIDATES_READY'])}/data-*.parquet "
             f"--output-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('product')['LINKAGE_CANDIDATES'])} ",
             instance_name="{{ params.instance_name }}",
@@ -330,7 +328,6 @@ with DAG(
         link_products = create_ssh_task(
             task_id="link_products",
             command="python link_items.py "
-            "--linkage-type product "
             f"--input-sources-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['PRODUCT_SOURCES_READY'])} "
             f"--input-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['PRODUCT_CANDIDATES_READY'])} "
             f"--linkage-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('product')['LINKAGE_CANDIDATES'])} "
@@ -387,10 +384,11 @@ with DAG(
             task_id="prepare_offer_linkage_table",
             command="python prepare_tables.py "
             "linkage-type offer "
-            f"--input-sources-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['SOURCES_CLEAN'])}/data-*.parquet "
+            f"--input-sources-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['CANDIDATES_CLEAN'])}/data-*.parquet "
             f"--input-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['CANDIDATES_CLEAN'])}/data-*.parquet "
             f"--output-sources-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['OFFER_SOURCES_READY'])}/data-*.parquet "
-            f"--output-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['OFFER_CANDIDATES_READY'])}/data-*.parquet ",
+            f"--output-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['OFFER_CANDIDATES_READY'])}/data-*.parquet "
+            f"--unmatched-elements-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('product')['UNMATCHED'])} ",
             instance_name="{{ params.instance_name }}",
             base_dir=DAG_CONFIG["DIRS"]["BASE"],
         )
@@ -400,7 +398,6 @@ with DAG(
             command="python build_semantic_space.py "
             f"--input-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['OFFER_SOURCES_READY'])}/data-*.parquet "
             f"--linkage-type offer "
-            f"--reduction {DAG_CONFIG['PARAMS']['REDUCTION']} "
             f"--batch-size {DAG_CONFIG['PARAMS']['BATCH_SIZE']} "
             f"--unmatched-elements-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('product')['UNMATCHED'])} ",
             instance_name="{{ params.instance_name }}",
@@ -413,7 +410,6 @@ with DAG(
             command="python linkage_candidates.py "
             f"--batch-size {DAG_CONFIG['PARAMS']['BATCH_SIZE']} "
             f"--linkage-type offer "
-            f"--reduction {DAG_CONFIG['PARAMS']['REDUCTION']} "
             f"--input-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['OFFER_CANDIDATES_READY'])}/data-*.parquet "
             f"--output-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('offer')['LINKAGE_CANDIDATES'])} "
             f"--unmatched-elements-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('product')['UNMATCHED'])} ",
@@ -425,8 +421,6 @@ with DAG(
         link_offers = create_ssh_task(
             task_id="link_offers",
             command="python link_items.py "
-            "--linkage-type offer "
-            # As per original snippet, we can pass unmatched products as the source
             f"--input-sources-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['OFFER_SOURCES_READY'])}/data-*.parquet "
             f"--input-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['OFFER_CANDIDATES_READY'])}/data-*.parquet "
             f"--linkage-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('offer')['LINKAGE_CANDIDATES'])} "

@@ -49,7 +49,9 @@ with
             max(
                 collective_booking.collective_booking_creation_date
             ) as last_collective_booking
-        from {{ source("raw", "applicative_database_booking") }} as collective_booking
+        from
+            {{ source("raw", "applicative_database_collective_booking") }}
+            as collective_booking
         inner join
             ir_per_user as ir
             on collective_booking.venue_id = ir.venue_id
@@ -189,4 +191,3 @@ left join
 left join
     {{ source("raw", "applicative_database_venue_label") }} as venue_label
     on venue.venue_label_id = venue_label.venue_label_id
-;

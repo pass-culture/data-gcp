@@ -10,6 +10,7 @@ from constants import (
     NUM_PARTITIONS,
     NUM_SUB_VECTORS,
     PARQUET_BATCH_SIZE,
+    RETRIEVAL_FILTERS,
 )
 from utils.common import (
     read_parquet_in_batches_gcs,
@@ -53,9 +54,11 @@ def create_items_table(items_df: pd.DataFrame, linkage_type: str) -> None:
             make_batches(df=items_df, batch_size=LANCEDB_BATCH_SIZE),
             schema=ItemModel,
         )
+        logger.info("LanceDB table created!")
     except Exception:
         logger.info("LanceDB table already exists...")
         tbl = db.open_table(linkage_type)
+        logger.info("Inserting data into LanceDB table...")
         tbl.add(
             make_batches(df=items_df, batch_size=LANCEDB_BATCH_SIZE),
         )
@@ -63,9 +66,10 @@ def create_items_table(items_df: pd.DataFrame, linkage_type: str) -> None:
 
 def create_index_on_items_table(linkage_type: str) -> None:
     db = lancedb.connect(MODEL_PATH)
-    db.open_table(linkage_type).create_index(
-        num_partitions=NUM_PARTITIONS, num_sub_vectors=NUM_SUB_VECTORS
-    )
+    table = db.open_table(linkage_type)
+    table.create_index(num_partitions=NUM_PARTITIONS, num_sub_vectors=NUM_SUB_VECTORS)
+    for feature in RETRIEVAL_FILTERS:
+        table.create_scalar_index(feature)
 
 
 def main(

@@ -45,7 +45,7 @@ with
             collective_booking.venue_id,
             count(distinct collective_booking_id) as collective_bookings,
             max(collective_booking_creation_date) as last_collective_booking
-        from {{ ref("int_applicative__collective_booking") }} as collective_booking
+        from {{ source("raw", "applicative_database_booking") }} as collective_booking
         inner join
             ir_per_user
             on collective_booking.venue_id = ir_per_user.venue_id
@@ -60,7 +60,7 @@ with
             response_id,
             offer.venue_id,
             count(distinct offer_id) as individual_offers_created
-        from {{ ref("int_applicative__offer") }} as offer
+        from {{ ref("int_raw__offer") }} as offer
         inner join
             ir_per_user
             on offer.venue_id = ir_per_user.venue_id

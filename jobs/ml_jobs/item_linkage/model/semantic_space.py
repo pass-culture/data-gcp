@@ -13,7 +13,7 @@ class SemanticSpace:
         db = connect(self.uri)
         self.table = db.open_table(linkage_type)
 
-    def build_filter(filters: list) -> str:
+    def build_filter(self, filters: list) -> str:
         return " AND ".join([f"{feature} = '{feature}'" for feature in filters])
 
     def search(

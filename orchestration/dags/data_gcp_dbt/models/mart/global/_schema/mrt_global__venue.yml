@@ -55,6 +55,9 @@ models:
       - name: venue_is_permanent
         description: '{{ doc("column__venue_is_permanent") }}'
         data_type: BOOLEAN
+      - name: venue_is_open_to_public
+        description: '{{ doc("column__venue_is_open_to_public") }}'
+        data_type: BOOLEAN
       - name: venue_is_acessibility_synched
         description: '{{ doc("column__venue_is_acessibility_synched") }}'
         data_type: BOOLEAN
@@ -290,3 +293,18 @@ models:
       - name: offerer_rank_asc
         description: '{{ doc("column__offerer_rank_asc") }}'
         data_type: INT64
+      - name: venue_density_level
+        description: '{{ doc("column__venue_density_level") }}'
+        data_type: STRING
+      - name: venue_in_qpv
+        description: '{{ doc("column__venue_in_qpv") }}'
+        data_type: BOOLEAN
+      - name: venue_department_name
+        description: '{{ doc("column__venue_department_name") }}'
+        data_type: STRING
+      - name: banner_url
+        description: '{{ doc("column__banner_url") }}'
+        data_type: STRING
+      - name: venue_image_source
+        description: '{{ doc("column__venue_image_source") }}'
+        data_type: STRING

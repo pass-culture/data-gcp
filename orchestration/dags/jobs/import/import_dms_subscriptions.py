@@ -32,6 +32,11 @@ DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 GCE_INSTANCE = f"import-dms-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/dms"
 
+dag_config = {
+    "GCP_PROJECT_ID": GCP_PROJECT_ID,
+    "ENV_SHORT_NAME": ENV_SHORT_NAME,
+}
+
 default_args = {
     "start_date": datetime(2020, 12, 1),
     "on_failure_callback": task_fail_slack_alert,
@@ -68,6 +73,7 @@ with DAG(
 
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,
+        instance_type="n1-standard-4",
         task_id="gce_start_task",
         retries=2,
         labels={"job_type": "long_task"},
@@ -87,9 +93,8 @@ with DAG(
         task_id="dms_to_gcs_pro",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer="uv",
-        command="python main.py pro {{ params.updated_since_pro }} "
-        + f"{GCP_PROJECT_ID} {ENV_SHORT_NAME}",
+        environment=dag_config,
+        command="python main.py pro {{ params.updated_since_pro }} ",
         do_xcom_push=True,
     )
 
@@ -103,9 +108,8 @@ with DAG(
         task_id="dms_to_gcs_jeunes",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer="uv",
-        command="python main.py jeunes {{ params.updated_since_jeunes }} "
-        + f"{GCP_PROJECT_ID} {ENV_SHORT_NAME}",
+        environment=dag_config,
+        command="python main.py jeunes {{ params.updated_since_jeunes }} ",
         do_xcom_push=True,
     )
 
@@ -113,9 +117,9 @@ with DAG(
         task_id="parse_api_result_jeunes",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer="uv",
+        environment=dag_config,
         command="python parse_dms_subscriptions_to_tabular.py --target jeunes --updated-since {{ params.updated_since_jeunes }} "
-        + f"--bucket-name {DATA_GCS_BUCKET_NAME} --project-id {GCP_PROJECT_ID}",
+        + f"--bucket-name {DATA_GCS_BUCKET_NAME} ",
         do_xcom_push=True,
     )
 
@@ -123,9 +127,9 @@ with DAG(
         task_id="parse_api_result_pro",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer="uv",
+        environment=dag_config,
         command="python parse_dms_subscriptions_to_tabular.py --target pro --updated-since {{ params.updated_since_pro }} "
-        + f"--bucket-name {DATA_GCS_BUCKET_NAME} --project-id {GCP_PROJECT_ID}",
+        + f"--bucket-name {DATA_GCS_BUCKET_NAME} ",
         do_xcom_push=True,
     )
 
@@ -147,7 +151,6 @@ with DAG(
             {"name": "application_submitted_at", "type": "INT64"},
             {"name": "passed_in_instruction_at", "type": "INT64"},
             {"name": "processed_at", "type": "INT64"},
-            {"name": "application_motivation", "type": "STRING"},
             {"name": "instructors", "type": "STRING"},
             {"name": "applicant_department", "type": "STRING"},
             {"name": "applicant_postal_code", "type": "STRING"},
@@ -172,7 +175,6 @@ with DAG(
             {"name": "application_submitted_at", "type": "INT64"},
             {"name": "passed_in_instruction_at", "type": "INT64"},
             {"name": "processed_at", "type": "INT64"},
-            {"name": "application_motivation", "type": "STRING"},
             {"name": "instructors", "type": "STRING"},
             {"name": "demandeur_siret", "type": "STRING"},
             {"name": "demandeur_naf", "type": "STRING"},

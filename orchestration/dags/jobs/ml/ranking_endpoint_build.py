@@ -4,7 +4,7 @@ from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER, ENV_SHORT_NAME
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -22,7 +22,7 @@ default_args = {
 }
 
 DEFAULT_REGION = "europe-west1"
-BASE_DIR = "data-gcp/jobs/ml_jobs/ranking_endpoint"
+BASE_PATH = "data-gcp/jobs/ml_jobs/ranking_endpoint"
 gce_params = {
     "instance_name": f"ranking-endpoint-build-{ENV_SHORT_NAME}",
     "experiment_name": f"ranking_endpoint_v1.1_{ENV_SHORT_NAME}",
@@ -74,34 +74,24 @@ with DAG(
         labels={"job_type": "ml"},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
-        command="{{ params.branch }}",
+        branch="{{ params.branch }}",
         python_version="3.10",
-        retries=2,
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name="{{ params.instance_name }}",
-        base_dir=BASE_DIR,
-        command="""pip install -r requirements.txt --user""",
-        dag=dag,
-        retries=2,
+        base_dir=BASE_PATH,
     )
 
     deploy_model = SSHGCEOperator(
         task_id="containerize_model",
         instance_name="{{ params.instance_name }}",
-        base_dir=BASE_DIR,
+        base_dir=BASE_PATH,
         command="python deploy_model.py "
         "--experiment-name {{ params.experiment_name }} "
         "--run-name {{ params.run_name }} "
         "--model-name {{ params.model_name }} "
         "--dataset-name {{ params.dataset_name }} "
         "--table-name {{ params.table_name }}",
-        dag=dag,
     )
 
     gce_instance_stop = StopGCEOperator(
@@ -109,10 +99,4 @@ with DAG(
         instance_name="{{ params.instance_name }}",
     )
 
-    (
-        gce_instance_start
-        >> fetch_code
-        >> install_dependencies
-        >> deploy_model
-        >> gce_instance_stop
-    )
+    (gce_instance_start >> fetch_install_code >> deploy_model >> gce_instance_stop)

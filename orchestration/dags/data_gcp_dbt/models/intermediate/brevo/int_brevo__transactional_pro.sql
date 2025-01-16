@@ -1,11 +1,11 @@
 select
-    tag,
-    template,
-    venue_id,
+    tag as brevo_tag,
+    template as brevo_template_id,
+    offerer_id,
+    user_id,
     event_date,
-    sum(delivered_count) as delivered_count,
-    sum(opened_count) as opened_count,
-    sum(unsubscribed_count) as unsubscribed_count
+    delivered_count as total_delivered,
+    opened_count as total_opened,
+    unsubscribed_count as total_unsubscribed
 from {{ source("raw", "sendinblue_transactional") }}
 where tag like 'pro%'
-group by tag, template, venue_id, event_date

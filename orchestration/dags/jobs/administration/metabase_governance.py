@@ -39,7 +39,9 @@ with DAG(
     "metabase_governance",
     default_args=default_dag_args,
     description="Import metabase tables from CloudSQL & archive old cards",
-    schedule_interval=get_airflow_schedule("00 08 * * *"),
+    schedule_interval=get_airflow_schedule("00 08 * * *")
+    if ENV_SHORT_NAME == "prod"
+    else None,
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -69,7 +71,6 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        installer="uv",
         command="python main.py ",
         do_xcom_push=True,
     )
@@ -79,7 +80,6 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        installer="uv",
         command="python dependencies.py ",
         do_xcom_push=True,
     )

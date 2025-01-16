@@ -14,16 +14,23 @@ with
         select
             partition_date,
             log_timestamp,
-            message,
             technical_message_id,
             user_id,
             search_type,
+            search_nb_results,
+            card_clicked_rank,
+            case
+                when message like 'HTTP request%'
+                then
+                    regexp_replace(
+                        regexp_replace(message, r'HTTP request at /', ''), r'/\d+', ''
+                    )
+                else message
+            end as message,
             coalesce(search_sub_type, lower(search_pro_type)) as search_protype,
             case
-                when search_query like "%@%" then "xxx@xxx.com" else search_query
-            end as search_query,
-            search_nb_results,
-            card_clicked_rank
+                when search_query like '%@%' then 'xxx@xxx.com' else search_query
+            end as search_query
 
         from {{ ref("int_pcapi__log") }}
         where
@@ -31,9 +38,17 @@ with
 
             {% if is_incremental() %}
                 and date(log_timestamp) >= date_sub(date('{{ ds() }}'), interval 2 day)
-                and date(log_timestamp) <= date("{{ ds() }}")
+                and date(log_timestamp) <= date('{{ ds() }}')
             {% endif %}
-            and analytics_source = 'backoffice'
+            and (
+                (analytics_source = 'backoffice')
+                or (
+                    k8s_pod_role = 'backoffice'
+                    and message not like 'HTTP request at /(health/api)%'
+                    and message not like 'HTTP request at /static%'
+                    and message not like 'pro/titelive/%'
+                )
+            )
     ),
 
     generate_session as (
@@ -69,10 +84,10 @@ with
                                     <= 30 as int
                                 ),
                                 1
-                            ) as same_session,
+                            ) as same_session
                         from backoffice_logs
-                    ) _inn_count
-            ) _inn_ts
+                    ) as _inn_count
+            ) as _inn_ts
     )
 
 select
@@ -81,4 +96,4 @@ select
         md5(concat(cast(session_start as string), user_id, session_num))
     ) as session_id
 from generate_session
-{% if is_incremental() %} where partition_date = date("{{ ds() }}") {% endif %}
+{% if is_incremental() %} where partition_date = date('{{ ds() }}') {% endif %}

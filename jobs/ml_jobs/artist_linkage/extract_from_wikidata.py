@@ -57,6 +57,7 @@ def postprocess_data(df: pd.DataFrame) -> pd.DataFrame:
             .str.replace(f"{SEPARATOR_KEY}{EMPTY_ALIAS_KEYWORD}", "")
             .str.replace(f"{EMPTY_ALIAS_KEYWORD}{SEPARATOR_KEY}", ""),
             aliases_list=lambda df: df.aliases.str.split(SEPARATOR_KEY),
+            img=lambda df: df.img.str.replace("http://", "https://"),
         )
         .drop(
             columns=[

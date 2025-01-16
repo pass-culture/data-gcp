@@ -1,18 +1,17 @@
 CREATE OR REPLACE TABLE analytics.monthly_aggregated_venue_collective_revenue ON cluster default
-    ENGINE = SummingMergeTree()
-    PARTITION BY creation_month
-    ORDER BY (venue_id)
-    SETTINGS storage_policy='gcs_main'
+ENGINE = SummingMergeTree()
+PARTITION BY month
+ORDER BY (venue_id)
+SETTINGS storage_policy='gcs_main'
 AS
 SELECT
-    date_trunc('MONTH', coalesce(toDate (used_date), toDate (creation_date))) AS creation_month,
-    cast(venue_id as String) as venue_id,
+    toStartOfMonth(coalesce(toDate(used_date), toDate(creation_date))) AS month,
+    cast(venue_id AS String) AS venue_id,
     sum(
-        case
-            when collective_booking_status = 'USED'
-            or collective_booking_status = 'REIMBURSED' then booking_amount
-            else 0
-        end
+        CASE
+            WHEN collective_booking_status IN ('USED', 'REIMBURSED') THEN booking_amount
+            ELSE 0
+        END
     ) AS revenue,
     sum(booking_amount) AS expected_revenue
 FROM

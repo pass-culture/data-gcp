@@ -1,6 +1,6 @@
 ---
 title: Product Artist Link
-description: Description of the `ml_linkage___artist_link` table.
+description: Description of the `ml_linkage__product_artist_link` table.
 ---
 
 {% docs description__ml_linkage__product_artist_link %}

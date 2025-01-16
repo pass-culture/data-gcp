@@ -46,7 +46,7 @@ with
                 null
             ) as cnt_bookings_confirm
         from {{ ref("int_applicative__booking") }} booking
-        join {{ ref("stock") }} stock using (stock_id)
+        join {{ ref("int_global__stock") }} stock using (stock_id)
         join
             {{ ref("int_applicative__offer") }} offer on offer.offer_id = stock.offer_id
     ),
@@ -88,15 +88,12 @@ with
 
     offer_tags as (
         select
-            offerid as offer_id,
+            offer_id,
             string_agg(
-                name, " ; " order by cast(criterion.id as int) desc
+                tag_name, " ; " order by cast(oc.criterion_id as int) desc
             ) as playlist_tags
-        from {{ ref("offer_criterion") }} offer_criterion
-        join
-            {{ ref("criterion") }} criterion
-            on criterion.id = offer_criterion.criterionid
-        group by offerid
+        from {{ ref("mrt_global__offer_criterion") }} oc
+        group by offer_id
     ),
 
     offer_status as (
@@ -159,34 +156,9 @@ select distinct
     if(offer.offer_id_at_providers is null, "manuel", "synchro") as input_type,
     case
         when
-            offer.offer_id in (
-                select stock.offer_id
-                from {{ ref("stock") }} as stock
-                join
-                    {{ ref("int_applicative__offer") }} as offer
-                    on stock.offer_id = offer.offer_id
-                    and offer.is_active
-                join
-                    {{ ref("mrt_global__stock") }} as mrt_global__stock
-                    on mrt_global__stock.stock_id = stock.stock_id
-                where
-                    not stock_is_soft_deleted
-                    and (
-                        (
-                            date(stock.stock_booking_limit_date) > current_date
-                            or stock.stock_booking_limit_date is null
-                        )
-                        and (
-                            date(stock.stock_beginning_date) > current_date
-                            or stock.stock_beginning_date is null
-                        )
-                        and offer.is_active
-                        and (
-                            mrt_global__stock.total_available_stock > 0
-                            or mrt_global__stock.total_available_stock is null
-                        )
-                    )
-            )
+            offer.is_active
+            and offer.offer_id
+            in (select offer_id from {{ ref("int_global__stock") }} where is_bookable)
         then true
         else false
     end as offer_is_bookable,
@@ -202,9 +174,9 @@ select distinct
     region_dept.region_name,
     venue.venue_department_code,
     venue.venue_postal_code,
-    venue.venue_type_code as venue_type_label,
+    venue.venue_type_label,
     if(
-        venue_label.venue_label in (
+        venue.venue_label in (
             "SMAC - Scène de musiques actuelles",
             "Théâtre lyrique conventionné d'intérêt national",
             "CNCM - Centre national de création musicale",
@@ -224,7 +196,7 @@ select distinct
         true,
         false
     ) as is_dgca,
-    venue_label.venue_label as venue_label,
+    venue.venue_label,
     venue_humanized_id.venue_humanized_id,
     venue.venue_booking_email,
     venue_contact.venue_contact_phone_number,
@@ -233,14 +205,12 @@ select distinct
     ) as is_collectivity,
     offer_humanized_id.offer_humanized_id as offer_humanized_id,
     concat(
-        'https://passculture.pro/offre/individuelle/',
-        offer_humanized_id.offer_humanized_id,
-        '/informations'
+        'https://backoffice.passculture.team/pro/offer/', offer.offer_id
     ) as passculture_pro_url,
     concat('https://passculture.app/offre/', offer.offer_id) as webapp_url,
     concat(
-        "https://passculture.pro/offres?structure=",
-        offerer_humanized_id.offerer_humanized_id
+        "https://backoffice.passculture.team/pro/offerer/",
+        venue.venue_managing_offerer_id
     ) as link_pc_pro,
     count_bookings.first_booking_date as first_booking_date,
     coalesce(count_bookings.max_bookings_in_day, 0) as max_bookings_in_day,
@@ -266,14 +236,11 @@ select distinct
     offerer_tags.structure_tags
 
 from {{ ref("int_applicative__offer") }} offer
-left join {{ ref("venue") }} venue on venue.venue_id = offer.venue_id
+left join {{ ref("int_global__venue") }} venue on venue.venue_id = offer.venue_id
 left join venue_humanized_id on venue_humanized_id.venue_id = venue.venue_id
 left join
     {{ source("seed", "region_department") }} region_dept
     on region_dept.num_dep = venue.venue_department_code
-left join
-    {{ source("raw", "applicative_database_venue_label") }} venue_label
-    on venue_label.venue_label_id = venue.venue_label_id
 left join
     {{ ref("int_raw__offerer") }} offerer
     on offerer.offerer_id = venue.venue_managing_offerer_id

@@ -127,6 +127,7 @@ select
     v.venue_label_id,
     v.venue_creation_date,
     v.venue_is_permanent,
+    v.venue_is_open_to_public,
     v.banner_url,
     v.venue_audiodisabilitycompliant,
     v.venue_mentaldisabilitycompliant,

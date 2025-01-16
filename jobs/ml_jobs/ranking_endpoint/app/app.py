@@ -1,21 +1,7 @@
-import logging
-import sys
-
+from custom_logging import logger
 from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 from model import PredictPipeline
-from pythonjsonlogger import jsonlogger
-
-logger = logging.getLogger(__name__)
-stdout = logging.StreamHandler(stream=sys.stdout)
-fmt = jsonlogger.JsonFormatter(
-    "%(name)s %(asctime)s %(levelname)s %(filename)s %(lineno)s %(process)d %(message)s",
-    rename_fields={"levelname": "severity", "asctime": "timestamp"},
-)
-
-stdout.setFormatter(fmt)
-logger.addHandler(stdout)
-logger.setLevel(logging.INFO)
 
 app = Flask(__name__)
 CORS(app)

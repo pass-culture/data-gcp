@@ -17,10 +17,12 @@ with
         {{
             generate_seed_geolocation_query(
                 source_table=["raw", "applicative_database_venue"],
-                referential_table="int_seed__priority_neighborhood",
+                referential_table="int_seed__qpv",
                 id_column="venue_id",
                 prefix_name="venue",
-                columns=["code_qpv", "qpv_name", "qpv_communes"],
+                columns=["qpv_code", "qpv_name", "qpv_municipality"],
+                geo_shape="qpv_geo_shape",
+                geolocalisation_prefix="qpv_",
             )
         }}
     ),
@@ -79,19 +81,22 @@ select
     venue_geo_iris.department_name as venue_department_name,
     venue_epci.epci_name as venue_epci,
     venue_epci.epci_code,
-    venue_qpv.code_qpv,
+    venue_qpv.qpv_code,
     venue_qpv.qpv_name,
-    venue_qpv.qpv_communes,
+    venue_qpv.qpv_municipality,
     venue_zrr.zrr_level,
     venue_zrr.zrr_level_detail,
     venue_zrr.is_in_zrr as venue_in_zrr,
     case
-        when code_qpv is null and venue_latitude is null and venue_longitude is null
+        when
+            venue_qpv.qpv_code is null
+            and venue.venue_latitude is null
+            and venue.venue_longitude is null
         then null
-        else code_qpv is not null
-    end as venue_in_qpv,
+        else venue_qpv.qpv_code is not null
+    end as venue_in_qpv
 
-from {{ source("raw", "applicative_database_venue") }} venue
+from {{ source("raw", "applicative_database_venue") }} as venue
 left join venue_epci on venue.venue_id = venue_epci.venue_id
 left join venue_qpv on venue.venue_id = venue_qpv.venue_id
 left join venue_zrr on venue.venue_id = venue_zrr.venue_id

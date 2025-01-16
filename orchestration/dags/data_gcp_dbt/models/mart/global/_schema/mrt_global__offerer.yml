@@ -123,9 +123,15 @@ models:
         description: '{{ doc("column__offerer_humanized_id") }}'
       - name: first_dms_adage_status
         description: '{{ doc("column__offerer_first_dms_adage_status") }}'
+      - name: dms_submitted_at
+        description: '{{ doc("column__offerer_dms_submitted_at") }}'
       - name: dms_accepted_at
         description: '{{ doc("column__offerer_dms_accepted_at") }}'
       - name: is_reference_adage
         description: '{{ doc("column__offerer_is_reference_adage") }}'
       - name: is_synchro_adage
         description: '{{ doc("column__offerer_is_synchro_adage") }}'
+      - name: local_authority_type
+        description: '{{ doc("column__local_authority_type") }}'
+      - name: local_authority_is_priority
+        description: '{{ doc("column__local_authority_is_priority") }}'

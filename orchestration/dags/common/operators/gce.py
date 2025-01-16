@@ -4,6 +4,7 @@ from time import sleep
 
 from common.config import (
     ENV_SHORT_NAME,
+    ENVIRONMENT_NAME,
     GCE_BASE_PREFIX,
     GCE_ZONE,
     GCP_PROJECT_ID,
@@ -221,7 +222,7 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
         command: str,
         environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
-        use_uv: bool = False,
+        use_uv: bool = True,
         *args,
         **kwargs,
     ):
@@ -295,11 +296,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
     DEFAULT_EXPORT = {
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
         "GCP_PROJECT_ID": GCP_PROJECT_ID,
-        "ENVIRONMENT_NAME": {
-            "dev": "development",
-            "stg": "staging",
-            "prod": "production",
-        }[ENV_SHORT_NAME],
+        "ENVIRONMENT_NAME": ENVIRONMENT_NAME,
     }
     CONDA_EXPORT = {
         **DEFAULT_EXPORT,
@@ -314,7 +311,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         command: str,
         base_dir: str = None,
         environment: t.Dict[str, str] = {},
-        installer: str = "conda",
+        installer: str = "uv",
         *args,
         **kwargs,
     ):

@@ -45,8 +45,8 @@ with DAG(
         instance_name=GCE_INSTANCE, task_id="gce_start_task"
     )
 
-    fetch_code = InstallDependenciesOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
         python_version="3.11",
@@ -63,19 +63,17 @@ with DAG(
         cp -r api/src/pcapi ..
     """
 
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
+    fetch_install_pc_main_dependencies = SSHGCEOperator(
+        task_id="install_pc_main_dependencies",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         command=INSTALL_DEPS,
-        installer="uv",
     )
 
     subcategories_job = SSHGCEOperator(
         task_id="import_subcategories",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer="uv",
         command=f"""
         CORS_ALLOWED_ORIGINS="" CORS_ALLOWED_ORIGINS_NATIVE="" CORS_ALLOWED_ORIGINS_AUTH="" CORS_ALLOWED_ORIGINS_ADAGE_IFRAME="" python main.py --job_type=subcategories --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}
     """,
@@ -85,7 +83,6 @@ with DAG(
         task_id="import_types",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        installer="uv",
         command=f"""
         CORS_ALLOWED_ORIGINS="" CORS_ALLOWED_ORIGINS_NATIVE="" CORS_ALLOWED_ORIGINS_AUTH="" CORS_ALLOWED_ORIGINS_ADAGE_IFRAME="" python main.py --job_type=types --gcp_project_id={GCP_PROJECT_ID} --env_short_name={ENV_SHORT_NAME}
     """,
@@ -98,8 +95,8 @@ with DAG(
     (
         start
         >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
+        >> fetch_install_code
+        >> fetch_install_pc_main_dependencies
         >> subcategories_job
         >> types_job
         >> gce_instance_stop

@@ -48,3 +48,6 @@
 {% docs column__user_first_booking_type %} Offer category of the user's first booking. {% enddocs %}
 {% docs column__user_first_paid_booking_type %} Offer category of the user's first paid booking. {% enddocs %}
 {% docs column__user_first_deposit_amount %} Amount of the user's first deposit received. {% enddocs %}
+{% docs column__user_has_added_offer_to_favorites %} Boolean. Indicates if the user has added any offer to their favorites. {% enddocs %}
+{% docs column__user_qpi_subcategories %} QPI stands for 'Initial Practice Questionnaires'. We asked young users about their cultural practices before using the Pass, resulting in a list of subcategories used during the cold start to display offers based on these initial practices. {% enddocs %}
+{% docs column__user_modified_at %} Timestamp at which user has updated its informations. {% enddocs %}

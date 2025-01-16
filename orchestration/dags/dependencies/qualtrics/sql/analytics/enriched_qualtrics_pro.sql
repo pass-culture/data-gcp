@@ -43,7 +43,7 @@ with
             count(distinct collective_booking_id) collective_bookings,
             max(collective_booking_creation_date) last_collective_booking
         from
-            `{{ bigquery_clean_dataset }}.applicative_database_collective_booking`
+            `{{ bigquery_raw_dataset }}.applicative_database_collective_booking`
             as collective_booking
         join
             ir_per_user
@@ -58,7 +58,7 @@ with
             response_id,
             offer.venue_id,
             count(distinct offer_id) individual_offers_created
-        from `{{ bigquery_clean_dataset }}.applicative_database_offer` as offer
+        from `{{ bigquery_int_raw_dataset }}.offer` as offer
         join
             ir_per_user
             on ir_per_user.venue_id = offer.venue_id
@@ -71,7 +71,7 @@ with
             collective_offer.venue_id,
             count(distinct collective_offer_id) collective_offers_created
         from
-            `{{ bigquery_clean_dataset }}.applicative_database_collective_offer`
+            `{{ bigquery_raw_dataset }}.applicative_database_collective_offer`
             as collective_offer
         join
             ir_per_user
@@ -174,7 +174,7 @@ left join
     on ir_per_user.venue_id = first_dms_adage.venue_id
     and ir_per_user.response_id = first_dms_adage.response_id
 left join
-    `{{ bigquery_clean_dataset }}.applicative_database_venue` venue
+    `{{ bigquery_raw_dataset }}.applicative_database_venue` venue
     on ir_per_user.venue_id = venue.venue_id
 left join
     `{{ bigquery_int_raw_dataset }}.offerer` as offerer

@@ -57,7 +57,9 @@ select
     co.institution_macro_density_label,
     co.institution_density_level,
     concat(
-        'https://passculture.pro/offre/', co.collective_offer_id, '/collectif/edition'
+        'https://backoffice.passculture.team/pro/collective-offer/',
+        co.collective_offer_id,
+        'details'
     ) as passculture_pro_url,
     co.collective_offer_is_template,
     co.collective_offer_image_id,
@@ -73,6 +75,9 @@ select
     co.institution_internal_iris_id,
     cs.collective_stock_beginning_date_time,
     cs.collective_stock_booking_limit_date_time,
+    co.collective_offer_template_beginning_date,
+    co.collective_offer_template_ending_date,
+    co.collective_offer_rejection_reason,
     cs.collective_stock_price,
     cs.collective_stock_number_of_tickets,
     cs.collective_stock_id,

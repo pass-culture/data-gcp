@@ -1,6 +1,6 @@
 ---
 title: Artist
-description: Description of the `ml_linkage__ table.
+description: Description of the `ml_linkage__artist` table.
 ---
 
 {% docs description__ml_linkage__artist %}

@@ -17,6 +17,7 @@ def _load_images(batch_urls):
     images_bytes = []
     for url in batch_urls:
         filename = get_filename_from_url(url)
+        # TODO: refactor this to remove the try if possible, otherwise an Exception more specialized
         try:
             img_path = os.path.join(IMAGE_DIR, f"{filename}.jpeg")
             with Image.open(img_path) as img:

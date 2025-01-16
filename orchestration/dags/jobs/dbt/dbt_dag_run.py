@@ -12,7 +12,7 @@ from common.utils import (
     delayed_waiting_operator,
     get_airflow_schedule,
 )
-from jobs.crons import schedule_dict
+from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
@@ -47,7 +47,7 @@ dag = DAG(
     dagrun_timeout=datetime.timedelta(minutes=480),
     catchup=False,
     description="A dbt wrapper for airflow",
-    schedule_interval=get_airflow_schedule(schedule_dict[dag_id]),
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[dag_id]),
     params={
         "target": Param(
             default=ENV_SHORT_NAME,

@@ -48,7 +48,6 @@ WIKIDATA_EXTRACTION_GCS_FILENAME = "wikidata_extraction.parquet"
 ARTISTS_MATCHED_ON_WIKIDATA = "artists_matched_on_wikidata.parquet"
 ARTISTS_WITH_METADATA_GCS_FILENAME = "artist_linked_with_metadata.parquet"
 TEST_SETS_GCS_DIR = "labelled_test_sets"
-GCE_INSTALLER = "uv"
 
 # BQ Tables
 ARTISTS_TO_LINK_TABLE = "artist_name_to_link"
@@ -162,7 +161,6 @@ with DAG(
             task_id="preprocess_data",
             instance_name=GCE_INSTANCE,
             base_dir=BASE_DIR,
-            installer=GCE_INSTALLER,
             command=f"""
              python preprocess.py \
             --source-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_TO_LINK_GCS_FILENAME)} \
@@ -174,7 +172,6 @@ with DAG(
             task_id="artist_linkage",
             instance_name=GCE_INSTANCE,
             base_dir=BASE_DIR,
-            installer=GCE_INSTALLER,
             command=f"""
              python cluster.py \
             --source-file-path {os.path.join(STORAGE_BASE_PATH, PREPROCESSED_GCS_FILENAME)} \
@@ -187,7 +184,6 @@ with DAG(
             task_id="match_artists_on_wikidata",
             instance_name=GCE_INSTANCE,
             base_dir=BASE_DIR,
-            installer=GCE_INSTALLER,
             command=f"""
              python match_artists_on_wikidata.py \
             --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, ARTIST_LINKED_GCS_FILENAME)} \
@@ -201,7 +197,6 @@ with DAG(
             task_id="get_wikimedia_commons_license",
             instance_name=GCE_INSTANCE,
             base_dir=BASE_DIR,
-            installer=GCE_INSTALLER,
             command=f"""
              python get_wikimedia_commons_license.py \
             --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, ARTISTS_MATCHED_ON_WIKIDATA)} \
@@ -227,7 +222,6 @@ with DAG(
             task_id="artist_metrics",
             instance_name=GCE_INSTANCE,
             base_dir=BASE_DIR,
-            installer=GCE_INSTALLER,
             command=f"""
          python evaluate.py \
         --artists-to-link-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_TO_LINK_GCS_FILENAME)} \

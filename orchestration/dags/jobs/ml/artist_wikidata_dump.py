@@ -23,7 +23,6 @@ from airflow.utils.task_group import TaskGroup
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"artist-wikidata-dump-{ENV_SHORT_NAME}"
-GCE_INSTALLER = "uv"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
 SCHEDULE_CRON = "0 3 1 * *"
 
@@ -91,7 +90,6 @@ with DAG(
             python_version="3.10",
             base_dir=BASE_DIR,
             retries=2,
-            installer=GCE_INSTALLER,
         )
         gce_instance_start >> fetch_install_code
 
@@ -99,7 +97,6 @@ with DAG(
         task_id="extract_from_wikidata",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
-        installer=GCE_INSTALLER,
         command=f"""
              python extract_from_wikidata.py \
             --output-file-path {os.path.join(STORAGE_PATH, WIKIDATA_EXTRACTION_GCS_FILENAME)}

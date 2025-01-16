@@ -1,51 +1,45 @@
 default_install_hook_types:
-# Mandatory to install both pre-commit and pre-push hooks (see https://pre-commit.com/#top_level-default_install_hook_types)
-# Add new hook types here to ensure automatic installation when running `pre-commit install`
-- pre-commit
-- pre-push
+  # Mandatory to install both pre-commit and pre-push hooks (see https://pre-commit.com/#top_level-default_install_hook_types)
+  # Add new hook types here to ensure automatic installation when running `pre-commit install`
+  - pre-commit
+  - pre-push
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.3.0
-  hooks:
-  - id: trailing-whitespace
-  - id: end-of-file-fixer
-  - id: check-yaml
-  - id: check-json
-  - id: check-added-large-files
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
 
-- repo: local
-  hooks:
-  - id: format-fix
-    name: Formatting (ruff)
-    entry: ruff format
-    language: python
-    types: [python]
-    stages: [commit]
-    additional_dependencies: [ruff==0.5.7]
-  - id: lint-fix
-    name: Linting (ruff)
-    entry: ruff check --fix
-    language: python
-    types: [python]
-    stages: [commit]
-    additional_dependencies: [ruff==0.5.7]
-  - id: sqlfmt
-    name: SQL Formatting (sqlfmt)
-    entry: sqlfmt --exclude "**/.venv/**" --exclude "**/venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"
-    stages: [commit]
-    language: python
-    additional_dependencies: ["shandy-sqlfmt[jinjafmt]==0.23.2"]
-    types: [sql]
-  # TODO: Readd this once it is working
-  # - id: sqlfluff-lint-check
-  #   name: Lint check (sqlfluff)
-  #   entry: orchestration/dags/data_gcp_dbt/scripts/sqlfluff_lint.sh
-  #   language: script
-  #   types: [sql]
-  #   stages: [commit]
-  # - id: sqlfluff-fix
-  #   name: fix (sqlfluff)
-  #   entry: orchestration/dags/data_gcp_dbt/scripts/sqlfluff_fix.sh
-  #   language: script
-  #   types: [sql]
-  #   stages: [commit]
+  - repo: local
+    hooks:
+      - id: format-fix
+        name: Formatting (ruff)
+        entry: ruff format
+        language: python
+        types: [python]
+        stages: [commit]
+        additional_dependencies: [ruff==0.5.7]
+      - id: lint-fix
+        name: Linting (ruff)
+        entry: ruff check --fix
+        language: python
+        types: [python]
+        stages: [commit]
+        additional_dependencies: [ruff==0.5.7]
+      - id: sqlfmt
+        name: SQL Formatting (sqlfmt)
+        entry: sqlfmt --exclude "**/.venv/**" --exclude "**/venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/dbt_packages/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"
+        stages: [push]
+        language: python
+        additional_dependencies: ["shandy-sqlfmt[jinjafmt]==0.23.2"]
+        types: [sql]
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.3.0
+    hooks:
+      - id: sqlfluff-fix
+        additional_dependencies:
+          ["dbt-bigquery==1.8.1", "sqlfluff-templater-dbt"]
+        stages: [commit]

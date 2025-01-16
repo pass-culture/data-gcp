@@ -5,7 +5,7 @@ import pyarrow as pa
 from docarray import Document, DocumentArray
 from lancedb.rerankers import Reranker
 
-from app.logger import logger
+from app.logging.logger import logger
 
 
 class UserReranker(Reranker):

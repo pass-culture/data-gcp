@@ -48,8 +48,8 @@ with
             co.collective_offer_name,
             co.collective_offer_description,
             co.collective_offer_duration_minutes,
-            date(collective_offer_creation_date) as collective_offer_creation_date,
-            collective_offer_creation_date as collective_offer_created_at,
+            date(co.collective_offer_creation_date) as collective_offer_creation_date,
+            co.collective_offer_creation_date as collective_offer_created_at,
             co.collective_offer_subcategory_id,
             co.collective_offer_format,
             co.collective_offer_date_updated,
@@ -73,14 +73,12 @@ with
             co.national_program_id,
             null as collective_offer_template_beginning_date,
             null as collective_offer_template_ending_date,
-            case
-                when
-                    cs.collective_stock_is_bookable
-                    and co.collective_offer_is_active
-                    and collective_offer_validation = "APPROVED"
-                then true
-                else false
-            end as collective_offer_is_bookable,
+            coalesce(
+                cs.collective_stock_is_bookable
+                and co.collective_offer_is_active
+                and co.collective_offer_validation = "APPROVED",
+                false
+            ) as collective_offer_is_bookable,
             cs.total_non_cancelled_collective_bookings,
             cs.total_collective_bookings,
             cs.total_used_collective_bookings,
@@ -102,17 +100,18 @@ with
             il.institution_density_label,
             il.institution_macro_density_label,
             il.institution_density_level,
+            co.collective_offer_rejection_reason,
             false as collective_offer_is_template
         from {{ source("raw", "applicative_database_collective_offer") }} as co
         left join
             collective_stocks_grouped_by_collective_offers as cs
-            on cs.collective_offer_id = co.collective_offer_id
+            on co.collective_offer_id = cs.collective_offer_id
         left join
             {{ ref("int_applicative__educational_institution") }} as ei
-            on ei.educational_institution_id = co.institution_id
+            on co.institution_id = ei.educational_institution_id
         left join
             {{ ref("int_geo__institution_location") }} as il
-            on il.institution_id = ei.institution_id
+            on ei.institution_id = il.institution_id
     )
 union all
 (
@@ -155,9 +154,9 @@ union all
         national_program_id,
         collective_offer_template_beginning_date,
         collective_offer_template_ending_date,
-        case
-            when collective_offer_validation = "APPROVED" then true else false
-        end as collective_offer_is_bookable,
+        coalesce(
+            collective_offer_validation = "APPROVED", false
+        ) as collective_offer_is_bookable,
         0 as total_non_cancelled_collective_bookings,
         0 as total_collective_bookings,
         0 as total_used_collective_bookings,
@@ -179,6 +178,7 @@ union all
         null as institution_density_label,
         null as institution_macro_density_label,
         null as institution_density_level,
+        collective_offer_rejection_reason,
         true as collective_offer_is_template
     from {{ source("raw", "applicative_database_collective_offer_template") }}
 )

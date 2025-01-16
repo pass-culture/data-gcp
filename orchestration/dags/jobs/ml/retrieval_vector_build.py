@@ -4,7 +4,7 @@ from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER, ENV_SHORT_NAME
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
     StopGCEOperator,
@@ -95,20 +95,12 @@ with DAG(
         labels={"job_type": "ml"},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
-        command="{{ params.branch }}",
+        branch="{{ params.branch }}",
         python_version="3.10",
-        retries=2,
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name="{{ params.instance_name }}",
         base_dir="{{ params.base_dir }}",
-        command="""pip install -r requirements.txt --user""",
-        dag=dag,
         retries=2,
     )
 
@@ -121,7 +113,6 @@ with DAG(
             command="python deploy_dummy.py "
             "--experiment-name {{ params.experiment_name }} "
             "--model-name {{ params.model_name }} ",
-            dag=dag,
         )
     else:
         retrieval = SSHGCEOperator(
@@ -135,7 +126,6 @@ with DAG(
             "--source-run-id {{ params.source_run_id }} "
             "--source-artifact-uri {{  params.source_artifact_uri }} "
             "--container-worker {{ params.container_worker }} ",
-            dag=dag,
         )
 
     gce_instance_stop = StopGCEOperator(
@@ -143,10 +133,4 @@ with DAG(
         instance_name="{{ params.instance_name }}",
     )
 
-    (
-        gce_instance_start
-        >> fetch_code
-        >> install_dependencies
-        >> retrieval
-        >> gce_instance_stop
-    )
+    (gce_instance_start >> fetch_install_code >> retrieval >> gce_instance_stop)

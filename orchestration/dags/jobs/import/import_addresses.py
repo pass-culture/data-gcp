@@ -52,9 +52,7 @@ dag_config = {
 }
 
 USER_LOCATIONS_TABLE = "user_locations"
-schedule_interval = (
-    "0 2,4,6,8,12,16 * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
-)
+schedule_interval = "0 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
 
 default_args = {
     "start_date": datetime(2021, 3, 30),
@@ -86,10 +84,6 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "installer": Param(
-            default="uv",
-            enum=["uv", "conda"],
-        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start")
@@ -102,7 +96,6 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        installer="{{ params.installer }}",
         python_version="3.10",
         base_dir=BASE_PATH,
     )
@@ -114,7 +107,6 @@ with DAG(
         environment=dag_config,
         command="python main.py ",
         do_xcom_push=True,
-        installer="{{ params.installer }}",
     )
 
     gce_instance_stop = StopGCEOperator(

@@ -92,11 +92,16 @@ sur macos installer la lib coreutils `brew install coreutils`
 ```sh
 make build
 ```
-Ou si on ne veut build que le dockerfile
+
+### Troubleshooting Dockerfile
+* Si on  veut  build le dockerfile avec un arg spécifique:
 ```
 docker build -t <nom de l'image docker> <path vers le dockerfile> --build-arg NETWORK_MODE=<proxy ou default>
 ```
-
+* Si on  veut  build le dockerfile avec une target spécifique (le dockerfile est en [multistage](https://docs.docker.com/build/building/multi-stage/)):
+```
+docker build --no-cache -f Dockerfile --target <nom de la target> .
+```
 ### Lancement de l'app
 
 1. Lancer les différents conteneurs

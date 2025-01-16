@@ -69,7 +69,7 @@ services:
   airflow-init:
     build:
       context: .
-      dockerfile: ${DOCKERFILE_PATH:-Dockerfile}
+      dockerfile: ${DOCKERFILE_PATH:-airflow/Dockerfile}
       target: final-builder
       args:
         - NETWORK_MODE=${NETWORK_MODE:-default}

@@ -1,3 +1,6 @@
+version: 2
+
+models:
   - name: int_global__booking
     columns:
       - name: booking_id

@@ -60,7 +60,7 @@ def evaluate_matching(linkage_candidates, linked_items, output_file="evaluation_
     ].value_counts()
     match_frequency_df = match_frequency.reset_index()
     match_frequency_df.columns = [candidate_id_col, "match_count"]
-    match_frequency_df.dropna(inplace=True)
+    match_frequency_df.fillna(0, inplace=True)
     # Identify duplicate matches
     duplicate_matches_df = match_frequency_df[match_frequency_df["match_count"] > 1]
     num_duplicate_matches = duplicate_matches_df.shape[0]

@@ -118,7 +118,7 @@ def evaluate_matching(linkage_candidates, linked_items, output_file="evaluation_
         plt.figure(figsize=(10, 6))
         sns.histplot(
             match_frequency_df["match_count"],
-            bins=range(1, match_frequency_df["match_count"].max() + 2),
+            bins=range(1, int(match_frequency_df["match_count"].max()) + 2),
             kde=False,
             color="skyblue",
         )

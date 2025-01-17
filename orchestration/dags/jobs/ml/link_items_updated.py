@@ -340,10 +340,10 @@ with DAG(
         load_linked_product_into_bq = GCSToBigQueryOperator(
             task_id="load_linked_product_into_bq",
             bucket=MLFLOW_BUCKET_NAME,
-            source_objects=build_path(
+            source_objects=f"""{build_path(
                 DAG_CONFIG["BASE_PATHS"]["GCS_FOLDER"],
                 DAG_CONFIG["FILES"]("product")["LINKED"],
-            ),
+            )}/data.parquet""",
             destination_project_dataset_table=(
                 f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['BIGQUERY']['LINKED_PRODUCT_TABLE']}"
             ),

@@ -57,7 +57,7 @@ def read_parquet_in_batches_gcs(gcs_path, batch_size):
         logger.error(f"Failed to read Parquet files in batches: {e}")
 
 
-def read_parquet_files_from_gcs_directory(gcs_directory_path, columns):
+def read_parquet_files_from_gcs_directory(gcs_directory_path, columns=None):
     """
     Reads and concatenates all Parquet files from a given GCS directory.
 

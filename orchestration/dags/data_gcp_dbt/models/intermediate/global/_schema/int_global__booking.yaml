@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: int_global__booking
+    columns:
+      - name: booking_id
+        data_type: STRING
+        data_tests:
+          - cardinality_equality:
+              field: booking_id
+              to: source('raw', 'applicative_database_booking')
+              lookback_month: 6
+              lookback_fields: ['booking_creation_date','booking_creation_date']

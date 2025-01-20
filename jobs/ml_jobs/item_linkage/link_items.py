@@ -285,9 +285,9 @@ def main(
     logger.info(f"Loaded {len(item_singletons)} items from candidates")
     catalog_clean = pd.concat([item_synchro, item_singletons]).drop_duplicates()
     logger.info(f"Catalog cleaned: {len(catalog_clean)} items")
-    linkage_candidates = pd.read_parquet(linkage_candidates_path).rename(
-        columns={"item_id": "item_id_candidate"}
-    )
+    linkage_candidates = read_parquet_files_from_gcs_directory(
+        linkage_candidates_path
+    ).rename(columns={"item_id": "item_id_candidate"})
     logger.info(f"Loaded {len(linkage_candidates)} linkage candidates")
     candidate_links, item_singletons_clean, item_synchro_retrived_clean = (
         prepare_tables(indexer_per_candidates, linkage_candidates, catalog_clean)

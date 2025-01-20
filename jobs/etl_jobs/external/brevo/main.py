@@ -14,11 +14,14 @@ from utils import (
     transactional_histo_schema,
 )
 
-API_KEY = access_secret_data(
+NATIVE_API_KEY = access_secret_data(
     GCP_PROJECT, f"sendinblue-api-key-{ENV_SHORT_NAME}", version_id=1
 )
 
-NEWSLETTERS_TABLE_NAME = "sendinblue_newsletters"
+PRO_API_KEY = access_secret_data(
+    GCP_PROJECT, f"sendinblue-pro-api-key-{ENV_SHORT_NAME}", version_id=1
+)
+
 TRANSACTIONAL_TABLE_NAME = "sendinblue_transactional_detailed"
 UPDATE_WINDOW = 31 if ENV_SHORT_NAME == "prod" else 500
 
@@ -31,9 +34,22 @@ def run(
         ...,
         help="Nom de la tache",
     ),
+    audience: str = typer.Option(
+        ...,
+        help="Nom de l'audience, native ou pro",
+    ),
     start_date: str = typer.Option(..., help="Date de début d'import"),
     end_date: str = typer.Option(..., help="Date de fin d'import"),
 ):
+    if audience == "native":
+        API_KEY = NATIVE_API_KEY
+        NEWSLETTERS_TABLE_NAME = "sendinblue_newsletters"
+    elif audience == "pro":
+        API_KEY = PRO_API_KEY
+        NEWSLETTERS_TABLE_NAME = "sendinblue_pro_newsletters"
+    else:
+        return "Invalid audience. Must be one of native/pro."
+
     if target == "newsletter":
         # Statistics for email campaigns Brevo
         brevo_newsletters = BrevoNewsletters(

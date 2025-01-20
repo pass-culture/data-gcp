@@ -71,6 +71,10 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
+        "base_dir": Param(
+            default="data-gcp",
+            type="string",
+        ),
         "instance_type": Param(
             default=gce_params["instance_type"]["prod"],
             enum=list(chain(*INSTANCES_TYPES["cpu"].values())),
@@ -118,7 +122,7 @@ with DAG(
         installer="{{ params.installer }}",
         gce_zone="{{ params.gce_zone }}",
         python_version="{{ params.python_version }}",
+        base_dir="{{ params.base_dir }}",
         requirement_file="requirements.txt",
     )
-
     (start >> gce_instance_start >> clone_install)

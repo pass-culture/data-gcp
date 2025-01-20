@@ -278,24 +278,37 @@ def main(
     item_synchro = read_parquet_files_from_gcs_directory(
         input_sources_path, columns=METADATA_FEATURES
     )
+    logger.info(f"Loaded {len(item_synchro)} items from sources")
     item_singletons = read_parquet_files_from_gcs_directory(
         input_candidates_path, columns=METADATA_FEATURES
     )
+    logger.info(f"Loaded {len(item_singletons)} items from candidates")
     catalog_clean = pd.concat([item_synchro, item_singletons]).drop_duplicates()
+    logger.info(f"Catalog cleaned: {len(catalog_clean)} items")
     linkage_candidates = pd.read_parquet(linkage_candidates_path).rename(
         columns={"item_id": "item_id_candidate"}
     )
+    logger.info(f"Loaded {len(linkage_candidates)} linkage candidates")
     candidate_links, item_singletons_clean, item_synchro_retrived_clean = (
         prepare_tables(indexer_per_candidates, linkage_candidates, catalog_clean)
     )
+    logger.info(f"Prepared tables for linkage: {len(candidate_links)} candidate links")
+    logger.info(f"Prepared tables for linkage: {len(item_singletons_clean)} singletons")
+    logger.info(
+        f"Prepared tables for linkage: {len(item_synchro_retrived_clean)} item synchro retrived"
+    )
+    logger.info("Starting record linkage...")
     comparator = setup_matching()
     matches = multiprocess_matching(
         candidate_links, comparator, item_singletons_clean, item_synchro_retrived_clean
     )
+    logger.info(f"Found {len(matches)} matches")
     linkage_final = postprocess_matching(
         matches, item_singletons_clean, item_synchro_retrived_clean
     )
+    logger.info(f"Final linkage: {len(linkage_final)} linked items ")
     unmatched_elements = extract_unmatched_elements(item_singletons, linkage_final)
+    logger.info(f"Unmatched elements: {len(unmatched_elements)}")
     upload_parquet(dataframe=linkage_final, gcs_path=f"{output_path}/data.parquet")
     upload_parquet(
         dataframe=unmatched_elements, gcs_path=f"{unmatched_elements_path}/data.parquet"

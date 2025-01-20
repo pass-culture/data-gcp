@@ -3,6 +3,7 @@ import pandas as pd
 import typer
 from loguru import logger
 
+from utils.common import read_parquet_files_from_gcs_directory
 from utils.gcs_utils import upload_parquet
 
 app = typer.Typer()
@@ -36,6 +37,8 @@ def build_graph_and_assign_ids(linked_offers, df_matches):
     linked_offers["new_item_id"] = linked_offers["item_id_synchro"].map(
         offer_id_mapping
     )
+    counts = linked_offers.groupby("new_item_id")["new_item_id"].transform("size")
+    linked_offers = linked_offers[counts > 1]
     return linked_offers
 
 
@@ -65,6 +68,10 @@ def post_process_graph_matching(linked_offers: pd.DataFrame) -> pd.DataFrame:
     )
 
     linked_offers_w_id_clean = pd.concat([df_1, df_2])
+    linked_offers_w_id_clean = linked_offers_w_id_clean.drop_duplicates()
+    linked_offers_w_id_clean = linked_offers_w_id_clean.rename(
+        columns={"item_id": "item_id_candidate"}
+    )
     return linked_offers_w_id_clean
 
 
@@ -73,7 +80,8 @@ def main(
     input_path: str = typer.Option(default=..., help="GCS parquet path"),
     output_path: str = typer.Option(default=..., help="GCS parquet output path"),
 ) -> None:
-    linked_offers = pd.read_parquet(input_path)
+    linked_offers = read_parquet_files_from_gcs_directory(input_path)
+    logger.info(f"linked_offers: {linked_offers.columns}")
     df_matches = linked_offers[
         ["item_id_synchro", "item_id_candidate", "offer_subcategory_id"]
     ]
@@ -84,10 +92,23 @@ def main(
     # print(df_offers)
 
     linked_offers_w_id_clean = post_process_graph_matching(linked_offers_w_id)
+    logger.info(f"linked_offers_w_id_clean: {linked_offers_w_id_clean.columns}")
+    candidates_metadata = linked_offers[
+        [
+            "item_id_candidate",
+            "performer_candidates",
+            "offer_name_candidates",
+            "offer_description_candidates",
+            "offer_subcategory_id",
+        ]
+    ]
+    linked_offers_w_id_clean = linked_offers_w_id_clean.merge(
+        candidates_metadata, on="item_id_candidate", how="left"
+    ).drop_duplicates()
     logger.info("Uploading linkage output..")
     upload_parquet(
         dataframe=linked_offers_w_id_clean,
-        gcs_path=output_path,
+        gcs_path=f"{output_path}/data.parquet",
     )
     return
 

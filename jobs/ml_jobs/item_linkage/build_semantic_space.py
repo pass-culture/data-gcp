@@ -1,3 +1,5 @@
+from typing import Optional
+
 import lancedb
 import pandas as pd
 import typer
@@ -29,8 +31,8 @@ def create_items_table(items_df: pd.DataFrame, linkage_type: str) -> None:
         vector: Vector(32)
         item_id: str
         offer_subcategory_id: str
-        performer: str
-        edition: str
+        performer: Optional[str]
+        edition: Optional[str]
 
     def make_batches(df: pd.DataFrame, batch_size: int):
         """
@@ -67,9 +69,17 @@ def create_items_table(items_df: pd.DataFrame, linkage_type: str) -> None:
 def create_index_on_items_table(linkage_type: str) -> None:
     db = lancedb.connect(MODEL_PATH)
     table = db.open_table(linkage_type)
-    table.create_index(num_partitions=NUM_PARTITIONS, num_sub_vectors=NUM_SUB_VECTORS)
+    logger.info(f"Creating index on LanceDB table {len(table)}...")
+    table.create_index(
+        index_type="IVF_PQ",
+        num_partitions=NUM_PARTITIONS,
+        num_sub_vectors=NUM_SUB_VECTORS,
+    )
+
+    # table.create_index(num_partitions=NUM_PARTITIONS, num_sub_vectors=NUM_SUB_VECTORS)
     for feature in RETRIEVAL_FILTERS:
-        table.create_scalar_index(feature)
+        logger.info(f"Creating index on feature: {feature}")
+        table.create_scalar_index(feature, index_type="BITMAP")
 
 
 def main(
@@ -96,6 +106,12 @@ def main(
     logger.info("Download and prepare table...")
     total_count = 0
     for chunk in read_parquet_in_batches_gcs(input_path, batch_size):
+        chunk = chunk[
+            ["item_id", "vector", "offer_subcategory_id", "performer", "edition"]
+        ]
+        chunk = chunk.fillna("")
+        logger.info(f"Processing chunk of length: {len(chunk)}")
+        logger.info(f"chunk columns: {chunk.columns}")
         create_items_table(chunk, linkage_type)
         total_count += len(chunk)
     logger.info(f"Total rows processed: {total_count}")

@@ -43,7 +43,6 @@ offers as (
 ),
 bookings as(
     SELECT
-        bo.booking_id,
         bo.offer_id,
         SUM(bo.booking_quantity) as booking_count
     FROM offers o

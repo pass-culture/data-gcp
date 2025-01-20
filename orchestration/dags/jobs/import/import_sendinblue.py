@@ -181,16 +181,20 @@ with DAG(
         default_end_operator=end,
     )
 
+    (gce_instance_start >> fetch_install_code)
+
     (
-        gce_instance_start >> fetch_install_code
+        fetch_install_code
+        >> import_pro_transactional_data_to_tmp
+        >> import_pro_newsletter_data_to_raw
+        >> gce_instance_stop
     )
 
     (
-        fetch_install_code >> import_pro_transactional_data_to_tmp >> import_pro_newsletter_data_to_raw >> gce_instance_stop
-    )
-
-    (
-        fetch_install_code >> import_native_transactional_data_to_tmp >> import_native_newsletter_data_to_raw >> gce_instance_stop
+        fetch_install_code
+        >> import_native_transactional_data_to_tmp
+        >> import_native_newsletter_data_to_raw
+        >> gce_instance_stop
     )
 
     (

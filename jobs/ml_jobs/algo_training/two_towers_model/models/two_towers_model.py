@@ -60,10 +60,6 @@ class TwoTowersModel(tfrs.models.Model):
 
     def set_task(self, item_dataset=None):
         self.task = tfrs.tasks.Retrieval(
-            loss=tf.keras.losses.CategoricalCrossentropy(
-                from_logits=True,
-                reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
-            ),
             metrics=self.get_metrics(item_dataset) if item_dataset else None,
         )
 
@@ -71,7 +67,8 @@ class TwoTowersModel(tfrs.models.Model):
         index_top_k = tfrs.layers.factorized_top_k.BruteForce()
 
         item_tensor = tf.concat(list(item_dataset.map(self.item_model)), axis=0)
-        item_embeddings = tf.math.l2_normalize(item_tensor, axis=1)
+        item_embeddings = item_tensor
+        # item_embeddings = tf.math.l2_normalize(item_tensor, axis=1)
 
         item_ids = tf.concat(
             list(item_dataset.map(lambda item: item[self._item_idx])), axis=0
@@ -110,12 +107,9 @@ class TwoTowersModel(tfrs.models.Model):
         item_features = features[
             user_feature_count : user_feature_count + item_feature_count
         ]
-        user_embeddings = tf.math.l2_normalize(
-            self.user_model(user_features, training=training), axis=1
-        )
-        item_embeddings = tf.math.l2_normalize(
-            self.item_model(item_features, training=training), axis=1
-        )
+
+        user_embeddings = self.user_model(user_features, training=training)
+        item_embeddings = self.item_model(item_features, training=training)
 
         return self.task(
             query_embeddings=user_embeddings,
@@ -145,6 +139,7 @@ class SingleTowerModel(tf.keras.models.Model):
 
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
         self._dense2 = tf.keras.layers.Dense(embedding_size)
+        self._norm = tf.keras.layers.LayerNormalization(name="normalize_dense")
 
     def call(self, features: list, training=False):
         feature_embeddings = []
@@ -154,4 +149,4 @@ class SingleTowerModel(tf.keras.models.Model):
         x = tf.concat(feature_embeddings, axis=1)
         x = self._dense1(x)
         x = self._dense2(x)
-        return x
+        return self._norm(x)

@@ -143,9 +143,10 @@ class SingleTowerModel(tf.keras.models.Model):
                 vocabulary=self.data[layer_name].unique()
             )
 
-        self._dense1 = tf.keras.layers.Dense(embedding_size * 4, activation="relu")
-        self._dense2 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
-        self._dense3 = tf.keras.layers.Dense(embedding_size)
+        self._dense1 = tf.keras.layers.Dense(embedding_size * 8, activation="relu")
+        self._dense2 = tf.keras.layers.Dense(embedding_size * 4, activation="relu")
+        self._dense3 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
+        self._dense4 = tf.keras.layers.Dense(embedding_size)
 
     def call(self, features: list, training=False):
         feature_embeddings = []
@@ -155,4 +156,5 @@ class SingleTowerModel(tf.keras.models.Model):
         x = tf.concat(feature_embeddings, axis=1)
         x = self._dense1(x)
         x = self._dense2(x)
-        return self._dense3(x)
+        x = self._dense3(x)
+        return self._dense4(x)

@@ -50,6 +50,7 @@ select
                 "choosenSuggestedSubcategory",
                 "status",
                 "selected_offers",
+                "imageCreationStage",
             ]
         )
     }},

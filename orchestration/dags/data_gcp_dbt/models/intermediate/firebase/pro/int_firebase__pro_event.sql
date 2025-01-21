@@ -87,7 +87,8 @@ with
             subcategoryid as offer_subcategory_id,
             choosensuggestedsubcategory as suggested_offer_subcategory_selected,
             status as offer_status,
-            selected_offers
+            selected_offers,
+            imageCreationStage as image_creation_stage
         from {{ ref("int_firebase__pro_event_flattened") }}
         {% if is_incremental() %}
             where

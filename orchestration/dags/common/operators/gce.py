@@ -227,11 +227,8 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
         **kwargs,
     ):
         self.use_uv = use_uv
-        self.command = (
-            self.clone_and_init_with_uv(command, python_version)
-            if self.use_uv
-            else self.clone_and_init_with_conda(command, python_version)
-        )
+        self.command = self.clone_and_init_with_uv(command, python_version)
+
         self.instance_name = instance_name
         self.environment = environment
         self.python_version = python_version
@@ -261,28 +258,6 @@ class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
         fi
         """
 
-    def clone_and_init_with_conda(self, branch, python_version) -> str:
-        return f"""
-        export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH
-        python -m pip install --upgrade --user urllib3
-        conda create --name data-gcp python={python_version} -y -q
-        conda init zsh
-        source ~/.zshrc
-        conda activate data-gcp
-        DIR=data-gcp &&
-        if [ -d "$DIR" ]; then
-            echo "Update and Checkout repo..." &&
-            cd $DIR &&
-            git fetch --all &&
-            git reset --hard origin/{branch}
-        else
-            echo "Clone and checkout repo..." &&
-            git clone {self.REPO} &&
-            cd $DIR &&
-            git checkout {branch}
-        fi
-        """
-
 
 class SSHGCEOperator(BaseSSHGCEOperator):
     template_fields = [
@@ -298,10 +273,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         "GCP_PROJECT_ID": GCP_PROJECT_ID,
         "ENVIRONMENT_NAME": ENVIRONMENT_NAME,
     }
-    CONDA_EXPORT = {
-        **DEFAULT_EXPORT,
-        "PATH": "/opt/conda/bin:/opt/conda/condabin:+$PATH",
-    }
+
     UV_EXPORT = {**DEFAULT_EXPORT, "PATH": "$HOME/.local/bin:$PATH"}
 
     @apply_defaults
@@ -330,11 +302,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         )
 
     def execute(self, context):
-        environment = (
-            dict(self.CONDA_EXPORT, **self.environment)
-            if self.installer == "conda"
-            else dict(self.UV_EXPORT, **self.environment)
-        )
+        environment = dict(self.UV_EXPORT, **self.environment)
         commands_list = []
         commands_list.append(
             "\n".join([f"export {key}={value}" for key, value in environment.items()])
@@ -343,11 +311,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         if self.base_dir is not None:
             commands_list.append(f"cd ~/{self.base_dir}")
 
-        if self.installer == "conda":
-            commands_list.append(
-                "conda init zsh && source ~/.zshrc && conda activate data-gcp"
-            )
-        elif self.installer == "uv":
+        if self.installer == "uv":
             commands_list.append("source .venv/bin/activate")
         else:
             commands_list.append("echo no virtual environment activation")
@@ -378,7 +342,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
         self,
         instance_name: str,
         requirement_file: str = "requirements.txt",
-        installer: str = "uv",  # Default to 'uv'
+        installer: str = "uv",  # 'uv'
         branch: str = "main",  # Branch for repo
         environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
@@ -405,7 +369,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
         )
 
     def execute(self, context):
-        if self.installer not in ["uv", "conda"]:
+        if self.installer not in ["uv"]:
             raise ValueError(f"Invalid installer: {self.installer}")
         # The templates have been rendered; we can construct the command
         command = self.make_install_command(
@@ -454,19 +418,8 @@ class InstallDependenciesOperator(SSHGCEOperator):
                 source .venv/bin/activate &&
                 uv pip sync {requirement_file}
             """
-        elif installer == "conda":
-            install_command = f"""
-                export PATH=/opt/conda/bin:/opt/conda/condabin:+$PATH &&
-                python -m pip install --upgrade --user urllib3 &&
-                conda create --name data-gcp python={self.python_version} -y -q &&
-                conda init zsh &&
-                cd {base_dir} &&
-                source ~/.zshrc &&
-                conda activate data-gcp &&
-                pip install -r {requirement_file} --user
-            """
         else:
-            raise ValueError(f"Invalid installer: {installer}. Choose 'uv' or 'conda'.")
+            raise ValueError(f"Invalid installer: {installer}. Only uv available")
         # Combine the git clone and installation commands
         return f"""
             {clone_command}

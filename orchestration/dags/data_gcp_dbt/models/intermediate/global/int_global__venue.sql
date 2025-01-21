@@ -85,6 +85,7 @@ select
     v.is_collective_active_last_30days,
     v.is_collective_active_current_year,
     v.venue_image_source,
+    v.venue_adage_inscription_date,
     ofr.offerer_id,
     ofr.offerer_name,
     ofr.offerer_validation_status,

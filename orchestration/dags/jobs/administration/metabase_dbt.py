@@ -86,7 +86,6 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_PATH,
         environment=dag_config,
-        installer="uv",
         command="python main.py export-models --composer-bucket-name {{ params.composer_bucket_name}} ",
         do_xcom_push=True,
     )
@@ -96,7 +95,6 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_PATH,
         environment=dag_config,
-        installer="uv",
         command="python main.py export-exposures --composer-bucket-name {{ params.composer_bucket_name}} --exposure-dataset-name {{ params.exposure_dataset_name }} --exposure-table-name {{ params.exposure_table_name }}",
         do_xcom_push=True,
     )

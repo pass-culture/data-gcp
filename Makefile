@@ -3,9 +3,43 @@
 #######################################################################################
 SHELL := /bin/bash
 
+export PERSONAL_DBT_USER :=
+
+configure_personal_user:
+	@read -p "Enter your username (e.g., adamasio for Alain Damasio): " username; \
+	if ! echo "$$username" | grep -Eq "^[a-z]+$$"; then \
+	    echo "Invalid username. Use lowercase letters only, no spaces, underscores, or numbers."; \
+	    exit 1; \
+	fi; \
+	echo "Using username: $$username"; \
+	if echo "$$SHELL" | grep -q "zsh"; then \
+	    shell_file="$$(echo $$HOME/.zshrc)"; \
+	elif echo "$$SHELL" | grep -q "bash"; then \
+	    shell_file="$$(echo $$HOME/.bashrc)"; \
+	else \
+	    echo "Unable to detect active shell. Defaulting to ~/.bashrc."; \
+	    shell_file="$$(echo $$HOME/.bashrc)"; \
+	fi; \
+	echo "Configuring shell file: $$shell_file"; \
+	if [ ! -f "$$shell_file" ]; then \
+	    echo "Shell file $$shell_file does not exist. Creating it now."; \
+	    touch "$$shell_file"; \
+	fi; \
+	if grep -q "^export PERSONAL_DBT_USER=" "$$shell_file" 2>/dev/null; then \
+	    sed -i.bak "/^export PERSONAL_DBT_USER=/d" "$$shell_file"; \
+	    echo "export PERSONAL_DBT_USER=$$username" >> "$$shell_file"; \
+	else \
+	    echo "export PERSONAL_DBT_USER=$$username" >> "$$shell_file"; \
+	fi; \
+	echo "Environment variable PERSONAL_DBT_USER set to $$username in $$shell_file."; \
+	echo "Please run 'source $$shell_file' or restart your terminal to apply changes."
+
+
+
 install_prerequisites:
 	curl -LsSf https://astral.sh/uv/install.sh | sh
 	echo -e "\n \n Please restart you shell in order to allow uv commands \n \n"
+
 
 install:
 	# Log in with GCP credentials if NO_GCP_INIT is not 1
@@ -13,6 +47,7 @@ install:
 		make _get_gcp_credentials; \
 	fi
 	make _initiate_env
+	make configure_personal_user
 	curl -LsSf https://astral.sh/uv/install.sh | sh
 	MICROSERVICE_PATH=. PHYTON_VERSION=3.10 REQUIREMENTS_NAME=requirements.txt make _install_microservice
 	source .venv/bin/activate && pre-commit install
@@ -38,7 +73,7 @@ install_ubuntu_libs:
 	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev libmariadb-dev clang
 
 install_macos_libs:
-	brew install -y mysql-client@8.4 pkg-config
+	brew install mysql-client@8.4 pkg-config
 
 
 #######################################################################################

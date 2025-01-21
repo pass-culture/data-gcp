@@ -70,7 +70,9 @@ with
             ) as url_path_agg,
             page_referrer,
             page_number,
-            coalesce(double_offer_id, offerid) as offer_id,
+            coalesce(
+                cast(double_offer_id as string), cast(offerid as string)
+            ) as offer_id,
             offertype as offer_type,
             saved as has_saved_query,
             hasonly6eand5estudents as has_opened_wrong_student_modal,
@@ -87,7 +89,8 @@ with
             subcategoryid as offer_subcategory_id,
             choosensuggestedsubcategory as suggested_offer_subcategory_selected,
             status as offer_status,
-            selected_offers
+            json_extract_array(selected_offers) as selected_offers_array,
+            array_length(json_extract_array(selected_offers)) > 1 as multiple_selection
         from {{ ref("int_firebase__pro_event_flattened") }}
         {% if is_incremental() %}
             where
@@ -96,41 +99,133 @@ with
                     "{{ ds() }}"
                 )
         {% endif %}
+
     ),
 
-    clean_url_path_and_multiple_selection as (
+    unnested_events as (
         select
-            * except (
-                url_first_path,
-                url_path_type,
-                url_path_details,
-                url_path_before_params,
-                selected_offers
-            ),
-            case
-                when url_path_details is null
-                then replace(coalesce(url_path_before_params, url_first_path), "/", "-")
-                when url_path_details is not null
-                then concat(url_path_type, "-", url_path_details)
-                else url_path_type
-            end as url_path_extract,
-            json_extract_array(selected_offers) as selected_offers_array,
-            array_length(json_extract_array(selected_offers)) > 1 as multiple_selection
-        from pro_event_raw_data
-    ),
-
-    final as (
-        select
-            * except (selected_offers_array, offer_id, offer_status),
-            coalesce(
-                json_extract_scalar(item, "$.offerId"), cast(offer_id as string)
-            ) as offer_id,
-            coalesce(
-                json_extract_scalar(item, "$.offerStatus"), offer_status
-            ) as offer_status,
-        from
-            clean_url_path_and_multiple_selection, unnest(selected_offers_array) as item
+            *,
+            json_extract_scalar(item, "$.offerId") as offer_id_from_array,
+            json_extract_scalar(item, "$.offerStatus") as offer_status_from_array,
+            multiple_selection as is_multiple_selection
+        from pro_event_raw_data, unnest(selected_offers_array) as item
     )
 
-select * except (item)
-from final
+select
+    event_name,
+    user_pseudo_id,
+    user_id,
+    platform,
+    event_date,
+    event_timestamp,
+    session_number,
+    session_id,
+    unique_session_id,
+    origin,
+    destination,
+    traffic_campaign,
+    traffic_medium,
+    traffic_source,
+    user_device_category,
+    user_device_operating_system,
+    user_device_operating_system_version,
+    user_web_browser,
+    user_web_browser_version,
+    offerer_id,
+    venue_id,
+    page_location,
+    page_name,
+    url_first_path,
+    case
+        when url_path_details is null
+        then replace(coalesce(url_path_before_params, url_first_path), "/", "-")
+        when url_path_details is not null
+        then concat(url_path_type, "-", url_path_details)
+        else url_path_type
+    end as url_path_extract,
+    url_path_details,
+    url_params_key,
+    url_params_value,
+    url_path_agg,
+    download_file_type,
+    page_referrer,
+    page_number,
+    has_saved_query,
+    has_opened_wrong_student_modal,
+    is_edition,
+    is_draft,
+    filled,
+    filled_with_errors,
+    onboarding_selected_legal_category,
+    download_format,
+    download_booking_status,
+    download_button_type,
+    download_files_cnt,
+    offer_subcategory_id,
+    suggested_offer_subcategory_selected,
+    is_multiple_selection as multiple_selection,  -- Utilisation du champ correct
+    coalesce(cast(offer_id_from_array as string), cast(offer_id as string)) as offer_id,
+    coalesce(offer_status_from_array, offer_status) as offer_status,
+    cast(offer_type as string) as offer_type
+from unnested_events
+
+union all
+
+select
+    event_name,
+    user_pseudo_id,
+    user_id,
+    platform,
+    event_date,
+    event_timestamp,
+    session_number,
+    session_id,
+    unique_session_id,
+    origin,
+    destination,
+    traffic_campaign,
+    traffic_medium,
+    traffic_source,
+    user_device_category,
+    user_device_operating_system,
+    user_device_operating_system_version,
+    user_web_browser,
+    user_web_browser_version,
+    offerer_id,
+    venue_id,
+    page_location,
+    page_name,
+    url_first_path,
+    case
+        when url_path_details is null
+        then replace(coalesce(url_path_before_params, url_first_path), "/", "-")
+        when url_path_details is not null
+        then concat(url_path_type, "-", url_path_details)
+        else url_path_type
+    end as url_path_extract,
+    url_path_details,
+    url_params_key,
+    url_params_value,
+    url_path_agg,
+    download_file_type,
+    page_referrer,
+    page_number,
+    has_saved_query,
+    has_opened_wrong_student_modal,
+    is_edition,
+    is_draft,
+    filled,
+    filled_with_errors,
+    onboarding_selected_legal_category,
+    download_format,
+    download_booking_status,
+    download_button_type,
+    download_files_cnt,
+    offer_subcategory_id,
+    suggested_offer_subcategory_selected,
+    false as multiple_selection,
+    cast(offer_id as string) as offer_id,
+    cast(offer_status as string) as offer_status,
+    cast(offer_type as string) as offer_type
+from pro_event_raw_data
+where selected_offers_array is null

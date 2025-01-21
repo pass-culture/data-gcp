@@ -192,8 +192,15 @@ sources:
       - name: artist_linked
         description: This table contains the artist_linkage dag
       - name: unconstrained_item_cluster
+<<<<<<< HEAD
 
   - name: appsflyer_import
     schema: appsflyer_import_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: cohort_unified_timezone_versioned
+=======
+      - name: two_tower_user_embedding_history
+        description: Partitionned table containing the history of the two tower user emebddings
+      - name: two_tower_item_embedding_history
+        description: Partitionned table containing the history of the two tower item emebddings
+>>>>>>> a2973bf5 (new model for latest two tower embeddings)

@@ -17,7 +17,8 @@ from airflow.utils.session import create_session
 # SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/your/webhook/url"
 
 
-def generate_dag_status_report():
+def generate_dag_status_report(**context):
+    current_dag_id = context["dag"].dag_id  # Get the current DAG ID
     dag_statuses = {"complete": 0, "running": 0, "error": 0, "dags_in_error": []}
 
     with create_session() as session:
@@ -40,6 +41,7 @@ def generate_dag_status_report():
                 (DagRun.dag_id == subquery.c.dag_id)
                 & (DagRun.execution_date == subquery.c.latest_execution_date),
             )
+            .filter(DagRun.dag_id != current_dag_id)  # Exclude the current DAG
             .all()
         )
 

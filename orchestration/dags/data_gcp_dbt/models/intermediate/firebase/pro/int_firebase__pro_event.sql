@@ -89,7 +89,7 @@ with
             subcategoryid as offer_subcategory_id,
             choosensuggestedsubcategory as suggested_offer_subcategory_selected,
             status as offer_status,
-            imageCreationStage as image_creation_stage
+            imageCreationStage as image_creation_stage,
             json_extract_array(selected_offers) as selected_offers_array,
             array_length(json_extract_array(selected_offers)) > 1 as multiple_selection
         from {{ ref("int_firebase__pro_event_flattened") }}

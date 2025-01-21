@@ -61,7 +61,7 @@ class TwoTowersModel(tfrs.models.Model):
     def set_task(self, item_dataset=None):
         self.task = tfrs.tasks.Retrieval(
             loss=tf.keras.losses.CategoricalCrossentropy(
-                from_logits=True,
+                from_logits=False,
                 reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
             ),
             metrics=self.get_metrics(item_dataset) if item_dataset else None,

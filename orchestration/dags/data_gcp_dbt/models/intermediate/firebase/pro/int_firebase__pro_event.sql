@@ -87,6 +87,7 @@ WITH pro_event_raw_data AS (
             choosensuggestedsubcategory as suggested_offer_subcategory_selected,
             status as offer_status,
             JSON_EXTRACT_ARRAY(selected_offers) AS selected_offers_array
+            ,array_length(json_extract_array(selected_offers)) > 1 as multiple_selection
   from {{ ref("int_firebase__pro_event_flattened") }}
         {% if is_incremental() %}
             where

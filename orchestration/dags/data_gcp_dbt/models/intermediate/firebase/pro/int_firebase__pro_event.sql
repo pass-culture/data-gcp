@@ -107,9 +107,8 @@ unnested_events AS (
       multiple_selection AS is_multiple_selection
   FROM
       pro_event_raw_data, UNNEST(selected_offers_array) AS item
-),
+)
 
-combined_events AS (
   SELECT
       event_name,
       user_pseudo_id,
@@ -146,6 +145,7 @@ combined_events AS (
       url_params_key,
       url_params_value,
       url_path_agg,
+      download_file_type,
       page_referrer,
       page_number,
       has_saved_query,
@@ -206,6 +206,7 @@ combined_events AS (
       url_params_key,
       url_params_value,
       url_path_agg,
+      download_file_type,
       page_referrer,
       page_number,
       has_saved_query,
@@ -229,11 +230,4 @@ combined_events AS (
       pro_event_raw_data
   WHERE
       selected_offers_array IS NULL
-)
-
-SELECT DISTINCT
-    *
-FROM
-    combined_events
-
 

@@ -15,7 +15,6 @@
 
 WITH pro_event_raw_data AS (
   SELECT
-      select
             event_name,
             user_pseudo_id,
             case

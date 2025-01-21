@@ -101,25 +101,25 @@ def build_tf_datasets(
 
     validation_dataset = (
         tf.data.Dataset.from_tensor_slices(validation_data.values)
+        .cache()
         .batch(batch_size=batch_size)
         .map(lambda x: tf.transpose(x))
-        .cache()
         .prefetch(tf.data.AUTOTUNE)
     )
 
     user_dataset = (
         tf.data.Dataset.from_tensor_slices(train_user_data.values)
+        .cache()
         .batch(batch_size, drop_remainder=False)
         .map(lambda x: tf.transpose(x))
-        .cache()
         .prefetch(tf.data.AUTOTUNE)
     )
 
     item_dataset = (
         tf.data.Dataset.from_tensor_slices(train_item_data.values)
+        .cache()
         .batch(batch_size, drop_remainder=False)
         .map(lambda x: tf.transpose(x))
-        .cache()
         .prefetch(tf.data.AUTOTUNE)
     )
 

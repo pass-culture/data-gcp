@@ -227,6 +227,7 @@ select
     false as multiple_selection,
     cast(offer_id as string) as offer_id,
     cast(offer_status as string) as offer_status,
-    cast(offer_type as string) as offer_type
+    cast(offer_type as string) as offer_type,
+    image_creation_stage
 from pro_event_raw_data
 where selected_offers_array is null

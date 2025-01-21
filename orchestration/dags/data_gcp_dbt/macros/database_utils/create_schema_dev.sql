@@ -1,5 +1,4 @@
-{% macro create_schema_dev
-() %}
+{% macro create_schema_dev() %}
     {% if target.name == "local" %}
         {% set user_name = env_var("PERSONAL_DBT_USER", "unset_user") %}
         CREATE SCHEMA IF NOT EXISTS `{{ target.project }}.tmp_{{ user_name }}_dev`;

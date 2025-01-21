@@ -67,13 +67,6 @@ WITH pro_event_raw_data AS (
                 "https://passculture.pro/",
                 ""
             ) as url_path_agg,
-            case
-                when url_path_details is null
-                then replace(coalesce(url_path_before_params, url_first_path), "/", "-")
-                when url_path_details is not null
-                then concat(url_path_type, "-", url_path_details)
-                else url_path_type
-            end as url_path_extract,
             page_referrer,
             page_number,
             coalesce(CAST(double_offer_id AS STRING), CAST(offerid AS STRING)) as offer_id,
@@ -142,7 +135,13 @@ combined_events AS (
       page_location,
       page_name,
       url_first_path,
-      url_path_type,
+      case
+                when url_path_details is null
+                then replace(coalesce(url_path_before_params, url_first_path), "/", "-")
+                when url_path_details is not null
+                then concat(url_path_type, "-", url_path_details)
+                else url_path_type
+            end as url_path_extract,
       url_path_details,
       url_params_key,
       url_params_value,
@@ -197,7 +196,13 @@ combined_events AS (
       page_location,
       page_name,
       url_first_path,
-      url_path_type,
+      case
+                when url_path_details is null
+                then replace(coalesce(url_path_before_params, url_first_path), "/", "-")
+                when url_path_details is not null
+                then concat(url_path_type, "-", url_path_details)
+                else url_path_type
+            end as url_path_extract,
       url_path_details,
       url_params_key,
       url_params_value,

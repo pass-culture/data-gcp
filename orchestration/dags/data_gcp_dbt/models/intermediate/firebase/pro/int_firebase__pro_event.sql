@@ -69,7 +69,7 @@ WITH pro_event_raw_data AS (
             ) as url_path_agg,
             page_referrer,
             page_number,
-            coalesce(double_offer_id, offerid) as offer_id,
+            coalesce(CAST(double_offer_id AS STRING), CAST(offerid AS STRING)) as offer_id,
             offertype as offer_type,
             saved as has_saved_query,
             hasonly6eand5estudents as has_opened_wrong_student_modal,
@@ -156,7 +156,7 @@ combined_events AS (
       offer_subcategory_id,
       suggested_offer_subcategory_selected,
       is_multiple_selection AS multiple_selection, -- Utilisation du champ correct
-      COALESCE(offer_id_from_array, offer_id) AS offer_id,
+      COALESCE(CAST(offer_id_from_array AS STRING), CAST(offer_id AS STRING)) AS offer_id,
       COALESCE(offer_status_from_array, offer_status) AS offer_status,
       CAST(offer_type AS STRING) AS offer_type
   FROM

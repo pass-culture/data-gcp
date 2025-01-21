@@ -59,9 +59,10 @@ user_candidates AS (
         AND du.user_department_code is not NULL
         AND (
             ul.user_id IS NULL
-            OR (
-                ul.date_updated < GREATEST(du.user_creation_date,lsu.date_created) -- updated the profile again
-            )
+            -- Temp : remove condition to prioritize adress new users
+            -- OR (
+            --    ul.date_updated < GREATEST(du.user_creation_date,lsu.date_created) -- updated the profile again
+            -- )
         )
 )
 

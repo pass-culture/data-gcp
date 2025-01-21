@@ -60,7 +60,7 @@ def upload_embeddings_to_bigquery(
 
     bq_client = bigquery.Client(project=GCP_PROJECT_ID)
 
-    table_id = f"{GCP_PROJECT_ID}.{dataset_id}.two_tower_{field_str}_embedding"
+    table_id = f"{GCP_PROJECT_ID}.{dataset_id}.two_tower_{field_str}_embedding_hisory"
 
     embedding_df = pd.DataFrame(
         {

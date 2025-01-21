@@ -264,14 +264,22 @@ def main(
     ),
 ) -> None:
     """
-    Main function to perform record linkage and upload the results to GCS.
+    Perform record linkage and upload the results to GCS.
+
+    This function:
+      1) Reads the sources data from the specified path.
+      2) Reads the candidates data from the specified path.
+      3) Reads the existing linkage candidates.
+      4) Performs record linkage using configured block and compare operations.
+      5) Identifies any unmatched records and optionally saves them.
+      6) Writes the final linkage output to the specified GCS path.
 
     Args:
         input_sources_path (str): Path to the sources data.
         input_candidates_path (str): Path to the candidates data.
         linkage_candidates_path (str): Path to the linkage candidates data.
-        output_path (str): Output GCS path.
-        unmatched_elements_path (str): Output GCS path for unmatched elements.
+        output_path (str): The GCS path to save the final linkage results.
+        unmatched_elements_path (Optional[str]): Optional path to save the unmatched elements.
     """
     logger.info("Starting item linkage job")
     indexer_per_candidates = recordlinkage.index.Block(on="candidates_id")

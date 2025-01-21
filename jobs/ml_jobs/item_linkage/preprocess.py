@@ -8,7 +8,6 @@ import typer
 from loguru import logger
 from sklearn.preprocessing import normalize
 
-# Constants
 from constants import (
     MODEL_TYPE,
     PARQUET_BATCH_SIZE,
@@ -23,11 +22,9 @@ from utils.common import (
 )
 from utils.gcs_utils import upload_parquet
 
-# Typer app instance
 app = typer.Typer()
 
 
-# Helper Functions
 def remove_accents(input_str):
     """
     Removes accents from a given string.
@@ -55,7 +52,6 @@ def preprocess_string(s):
     return remove_accents(s)
 
 
-# Preprocessing Function
 def preprocess_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
     """
     Preprocess the entire catalog DataFrame.
@@ -76,7 +72,6 @@ def preprocess_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
         .astype(str)
         .replace("nan", None)
         .fillna(value="0"),
-        # Ne pas ecraser la colonne offer_name et passer vers une colonne oeuvre
         offer_name=lambda df: df["offer_name"]
         .str.replace(remove_pattern, "", regex=True)
         .str.strip()
@@ -104,7 +99,6 @@ def preprocess_embedding_and_store_reducer(
         pd.DataFrame: The prepared dataframe with embeddings.
     """
     item_df = chunk
-    # Remove all zeroes embeddings before reducing
     item_df = item_df[
         item_df["embedding"].apply(lambda vec: not np.all(np.array(vec) == 0))
     ]
@@ -122,13 +116,10 @@ def preprocess_embedding_and_store_reducer(
             vector=list(preprocess_embeddings_by_chunk(chunk))
         ).drop(columns=["embedding"])
 
-    # Convert embeddings to a NumPy array
     embeddings_array = np.array(item_df["vector"].tolist())
 
-    # Normalize the embeddings
     normalized_embeddings = normalize(embeddings_array, norm="l2")
 
-    # Update the DataFrame with normalized embeddings
     item_df["vector"] = list(normalized_embeddings)
 
     return item_df
@@ -149,7 +140,12 @@ def main(
     ),
 ):
     """
-    Main function to preprocess catalog data.
+    Process the input catalog in batches,clean and preprocess the tables and optionally reduce the embeddings
+    Args:
+        input_path (str): Path to the input catalog.
+        output_path (str): Path to save the processed catalog.
+        reduction (str): Flag ("true"/"false") indicating whether to reduce embeddings.
+        batch_size (int): Number of rows to process per chunk when reading the Parquet file.
     """
     reduction = True if reduction == "true" else False
     for i, chunk in enumerate(read_parquet_in_batches_gcs(input_path, batch_size)):

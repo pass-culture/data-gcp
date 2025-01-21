@@ -76,7 +76,6 @@ def create_index_on_items_table(linkage_type: str) -> None:
         num_sub_vectors=NUM_SUB_VECTORS,
     )
 
-    # table.create_index(num_partitions=NUM_PARTITIONS, num_sub_vectors=NUM_SUB_VECTORS)
     for feature in RETRIEVAL_FILTERS:
         logger.info(f"Creating index on feature: {feature}")
         table.create_scalar_index(feature, index_type="BITMAP")
@@ -96,7 +95,11 @@ def main(
     ),
 ) -> None:
     """
-    Main function to download and prepare the table, create the LanceDB table, and save the model type.
+    Create the LanceDB table
+
+    This function:
+      1) Downloads and prepares the table from the specified input path.
+      2) Creates the LanceDB table with the specified linkage type.
 
     Args:
         input_path (str): The GCS path to the parquet file.

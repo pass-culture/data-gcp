@@ -8,7 +8,7 @@ import typer
 from loguru import logger
 from matplotlib.backends.backend_pdf import PdfPages
 
-from constants import ENV_SHORT_NAME, METADATA_FEATURES
+from constants import ENV_SHORT_NAME, EVALUATION_FEATURES
 from utils.common import read_parquet_files_from_gcs_directory
 from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
 
@@ -31,7 +31,6 @@ def evaluate_matching(linkage_candidates, linked_items, output_file="evaluation_
     - booking_count_coverage_df (pd.DataFrame): DataFrame containing booking count coverage data.
     """
     candidate_id_col = "item_id_candidate"
-    # Merge the DataFrames to determine which offers have been matched
     merged_df = pd.merge(
         linkage_candidates,
         linked_items,
@@ -61,7 +60,6 @@ def evaluate_matching(linkage_candidates, linked_items, output_file="evaluation_
     match_frequency_df = match_frequency.reset_index()
     match_frequency_df.columns = [candidate_id_col, "match_count"]
     match_frequency_df.fillna(0, inplace=True)
-    # Identify duplicate matches
     duplicate_matches_df = match_frequency_df[match_frequency_df["match_count"] > 1]
     num_duplicate_matches = duplicate_matches_df.shape[0]
     percentage_duplicates = (
@@ -69,16 +67,6 @@ def evaluate_matching(linkage_candidates, linked_items, output_file="evaluation_
         if total_matched_offers > 0
         else 0
     )
-
-    # Compile metrics into a DataFrame
-    # metrics = {
-    #     "Total Offers": [total_offers],
-    #     "Total Matched Offers": [total_matched_offers],
-    #     "Coverage (%)": [coverage_percentage],
-    #     "Number of Duplicate Matches": [num_duplicate_matches],
-    #     "Percentage of Duplicates (%)": [percentage_duplicates],
-    # }
-    # metrics_df = pd.DataFrame(metrics)
 
     # Calculate Booking Count Coverage
     if "booking_count" in linkage_candidates.columns:
@@ -238,6 +226,7 @@ def evaluate_matching_by_subcategory(
         plt.xlabel("Offer Subcategory ID")
         plt.ylabel("Coverage (%)")
         plt.xticks(rotation=45)
+        plt.xticks(fontsize=6)
         plt.tight_layout()
         pdf.savefig()
         plt.close()
@@ -254,6 +243,7 @@ def evaluate_matching_by_subcategory(
         plt.xlabel("Offer Subcategory ID")
         plt.ylabel("Percentage of Duplicates (%)")
         plt.xticks(rotation=45)
+        plt.xticks(fontsize=6)
         plt.tight_layout()
         pdf.savefig()
         plt.close()
@@ -290,8 +280,22 @@ def main(
     ),
     linkage_path: str = typer.Option(default=..., help="Path to linkage output"),
 ) -> None:
+    """
+    Evaluation of linkage results.
+
+    This function:
+      1) Reads the linkage candidates from the specified path.
+      2) Reads the final linkage output from another path.
+      3) Renames columns as needed for consistency.
+      4) Delegates to an evaluation function for further analysis.
+
+    Args:
+        linkage_type (str): The type of linkage to evaluate.
+        input_candidates_path (str): The GCS path where linkage candidates are found.
+        linkage_path (str): The GCS path where the final linkage output is found.
+    """
     linkage_candidates_clean = read_parquet_files_from_gcs_directory(
-        input_candidates_path, columns=METADATA_FEATURES
+        input_candidates_path, columns=EVALUATION_FEATURES
     )
 
     linkage = read_parquet_files_from_gcs_directory(linkage_path)
@@ -313,7 +317,6 @@ def main(
         output_file=paths["subcategory_evaluation_plots"],
     )
 
-    # Log results to MLflow
     experiment_name = f"item_linkage_v2.0_{ENV_SHORT_NAME}"
     connect_remote_mlflow()
     experiment = get_mlflow_experiment(experiment_name)

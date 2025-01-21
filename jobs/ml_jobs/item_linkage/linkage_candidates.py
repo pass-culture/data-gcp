@@ -51,15 +51,10 @@ def build_filter_dict(row, filter: list = RETRIEVAL_FILTERS):
     return filters
 
 
-# Example semaphore defined outside (adjust permits as needed)
 search_semaphore = asyncio.Semaphore(100)
-# Tweak this based on your machine and desired parallelism:
 BATCH_SIZE = 10000
 
 
-# -----------------------
-# 1) Search function
-# -----------------------
 async def limited_search(
     model, vector, filters, similarity_metric, n, vector_column_name
 ):
@@ -73,9 +68,6 @@ async def limited_search(
         )
 
 
-# -----------------------
-# 2) Main function
-# -----------------------
 async def generate_semantic_candidates(
     model: SemanticSpace, data: pd.DataFrame
 ) -> pd.DataFrame:
@@ -92,7 +84,6 @@ async def generate_semantic_candidates(
     linkage = []
     logger.info(f"Generating semantic candidates for {len(data)} items...")
 
-    # Create all tasks first
     tasks = []
     for index, row in tqdm(
         data.iterrows(), total=data.shape[0], desc="Processing rows", mininterval=60
@@ -111,17 +102,14 @@ async def generate_semantic_candidates(
     logger.info("Tasks ready!")
     logger.info(f"Tasks length: {len(tasks)}")
 
-    # Gather results in batches to control concurrency
     results = []
     for i in tqdm(range(0, len(tasks), BATCH_SIZE), desc="Gathering batches"):
         batch = tasks[i : i + BATCH_SIZE]
-        # Wait for this batch to complete
         batch_results = await asyncio.gather(*batch)
         results.extend(batch_results)
 
     logger.info("Finished gathering all batches!")
 
-    # Now, zip your final results with the original rows
     for result_df, row in zip(results, data.itertuples()):
         result_df = result_df.assign(
             candidates_id=str(uuid.uuid4()), item_id_candidate=row.item_id
@@ -140,14 +128,19 @@ def main(
     output_path: str = typer.Option(default=..., help="Output table path"),
 ) -> None:
     """
-    Main function to preprocess data, prepare vectors, generate semantic candidates, and upload the results to GCS.
+    Generate semantic candidates for linkage,
+
+    This function:
+      1) Loads a semantic model based on the specified linkage type.
+      2) Reads the input data in chunks of size batch_size.
+      3) Generates semantic candidates using the model.
+      4) Saves or uploads the resulting data to the specified output path.
 
     Args:
-        batch_size (int): The size of each batch.
-        linkage_type (str): The type of linkage to perform.
-        input_path (str): The path to the input table.
-        output_path (str): The path to the output table.
-        unmatched_elements_path (str): The path to the unmatched elements table.
+        batch_size (int): The size of each batch for reading the input data.
+        linkage_type (str): The type of linkage (e.g., for different model behaviors).
+        input_path (str): The path to the table or file containing input data.
+        output_path (str): The path where the output table will be saved.
     """
     model = load_model(MODEL_PATH, linkage_type)
 

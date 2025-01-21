@@ -16,8 +16,8 @@ METADATA_FEATURES = [
     "offer_description",
     "edition",
     "offer_subcategory_id",
-    "booking_count",
 ]
+EVALUATION_FEATURES = ["item_id", "offer_subcategory_id", "booking_count"]
 RETRIEVAL_FILTERS = ["edition", "offer_subcategory_id"]
 MODEL_TYPE = {
     "n_dim": 32,

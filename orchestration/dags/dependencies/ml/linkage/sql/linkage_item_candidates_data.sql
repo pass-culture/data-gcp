@@ -48,7 +48,7 @@ bookings as(
     FROM offers o
     JOIN
         `{{ bigquery_analytics_dataset }}.global_booking` bo on bo.offer_id=o.offer_id
-    group by 1,2
+    group by 1
 ),
 candidates as(
     SELECT
@@ -57,7 +57,7 @@ candidates as(
         o.offer_name,
         o.offer_description,
         o.performer,
-        o.offer_subcategory_id
+        o.offer_subcategory_id,
         b.booking_count
     FROM
         offers o

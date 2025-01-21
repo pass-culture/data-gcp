@@ -11,11 +11,9 @@ app = typer.Typer()
 
 def build_graph_and_assign_ids(linked_offers, df_matches):
     G = nx.Graph()
-    # Step 2: Add edges
     edges = df_matches[["item_id_synchro", "item_id_candidate"]].values.tolist()
     G.add_edges_from(edges)
 
-    # Add any offer_ids that might not be in the matches as isolated nodes
     all_offer_ids = set(linked_offers["item_id_synchro"])
     matched_offer_ids = set(df_matches["item_id_synchro"]).union(
         df_matches["item_id_candidate"]
@@ -23,17 +21,14 @@ def build_graph_and_assign_ids(linked_offers, df_matches):
     unmatched_offer_ids = all_offer_ids - matched_offer_ids
     G.add_nodes_from(unmatched_offer_ids)
 
-    # Step 3: Find connected components
     connected_components = list(nx.connected_components(G))
 
-    # Step 4: Assign new unique offer IDs
     offer_id_mapping = {}
     for idx, component in enumerate(connected_components):
         new_offer_id = f"new_item_{idx}"
         for offer_id in component:
             offer_id_mapping[offer_id] = new_offer_id
 
-    # Step 5: Map back to the original dataframe
     linked_offers["new_item_id"] = linked_offers["item_id_synchro"].map(
         offer_id_mapping
     )
@@ -80,16 +75,25 @@ def main(
     input_path: str = typer.Option(default=..., help="GCS parquet path"),
     output_path: str = typer.Option(default=..., help="GCS parquet output path"),
 ) -> None:
+    """
+    Build a graph, assign IDs, and post-process the results.
+
+    This function:
+      1) Builds a graph and assigns IDs to the linked offers.
+      3) Post-processes the graph matching results.
+      4) Saves the cleaned results to the specified output path.
+
+    Args:
+        input_path (str): The GCS path to the input parquet file containing linked offers.
+        output_path (str): The GCS path to save the output parquet file with processed results.
+    """
     linked_offers = read_parquet_files_from_gcs_directory(input_path)
     logger.info(f"linked_offers: {linked_offers.columns}")
     df_matches = linked_offers[
         ["item_id_synchro", "item_id_candidate", "offer_subcategory_id"]
     ]
-    # Step 1: Build the graph
-    linked_offers_w_id = build_graph_and_assign_ids(linked_offers, df_matches)
 
-    # Display the updated dataframe
-    # print(df_offers)
+    linked_offers_w_id = build_graph_and_assign_ids(linked_offers, df_matches)
 
     linked_offers_w_id_clean = post_process_graph_matching(linked_offers_w_id)
     logger.info(f"linked_offers_w_id_clean: {linked_offers_w_id_clean.columns}")

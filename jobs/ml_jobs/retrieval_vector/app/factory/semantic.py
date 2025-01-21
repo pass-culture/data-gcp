@@ -1,5 +1,5 @@
 from app.factory.handler import PredictionHandler
-from app.logger import logger
+from app.logging.logger import logger
 from app.models.prediction_request import PredictionRequest
 from app.models.prediction_result import PredictionResult
 from app.retrieval.text_client import TextClient

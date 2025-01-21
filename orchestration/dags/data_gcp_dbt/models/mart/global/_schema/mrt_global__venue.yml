@@ -308,3 +308,6 @@ models:
       - name: venue_image_source
         description: '{{ doc("column__venue_image_source") }}'
         data_type: STRING
+      - name: venue_adage_inscription_date
+        description: '{{ doc("column__venue_adage_inscription_date") }}'
+        data_type: DATE

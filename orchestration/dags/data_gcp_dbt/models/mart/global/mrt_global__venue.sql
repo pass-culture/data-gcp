@@ -96,6 +96,7 @@ select
     offerer_address_id,
     offerer_rank_desc,
     offerer_rank_asc,
-    venue_image_source
+    venue_image_source,
+    venue_adage_inscription_date
 from {{ ref("int_global__venue") }}
 where offerer_validation_status = 'VALIDATED' and offerer_is_active

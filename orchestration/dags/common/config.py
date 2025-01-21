@@ -4,8 +4,15 @@ from common.access_gcp_secrets import access_secret_data
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
+ENVIRONMENT_NAME = {
+    "dev": "development",
+    "stg": "staging",
+    "prod": "production",
+}[ENV_SHORT_NAME]
 DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags/")
 LOCAL_ENV = os.environ.get("LOCAL_ENV", None)
+
+GCS_COMPOSER_BUCKET = os.environ.get("GCS_BUCKET", f"airflow-{ENVIRONMENT_NAME}-bucket")
 
 SSH_USER = os.environ.get("SSH_USER", "airflow")
 

@@ -83,12 +83,21 @@ with DAG(
         retries=2,
     )
 
-    import_transactional_data_to_tmp = SSHGCEOperator(
-        task_id="import_transactional_data_to_tmp",
+    import_pro_transactional_data_to_tmp = SSHGCEOperator(
+        task_id="import_pro_transactional_data_to_tmp",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command='python main.py --target transactional --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
+        command='python main.py --target transactional --audience pro --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
+        do_xcom_push=True,
+    )
+
+    import_native_transactional_data_to_tmp = SSHGCEOperator(
+        task_id="import_native_transactional_data_to_tmp",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command='python main.py --target transactional --audience native --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
         do_xcom_push=True,
     )
 
@@ -101,22 +110,32 @@ with DAG(
             "operator": task,
         }
 
+    end_job = DummyOperator(task_id="end_job", dag=dag)
     end_raw = DummyOperator(task_id="end_raw", dag=dag)
 
     raw_table_tasks = depends_loop(
         raw_tables,
         raw_table_jobs,
-        import_transactional_data_to_tmp,
+        end_job,
         dag=dag,
         default_end_operator=end_raw,
     )
 
-    import_newsletter_data_to_raw = SSHGCEOperator(
-        task_id="import_newsletter_data_to_raw",
+    import_pro_newsletter_data_to_raw = SSHGCEOperator(
+        task_id="import_pro_newsletter_data_to_raw",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py --target newsletter --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
+        command="python main.py --target newsletter --audience pro --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
+        do_xcom_push=True,
+    )
+
+    import_native_newsletter_data_to_raw = SSHGCEOperator(
+        task_id="import_native_newsletter_data_to_raw",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="python main.py --target newsletter --audience native --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
         do_xcom_push=True,
     )
 
@@ -162,12 +181,25 @@ with DAG(
         default_end_operator=end,
     )
 
+    (gce_instance_start >> fetch_install_code)
+
     (
-        gce_instance_start
-        >> fetch_install_code
-        >> import_newsletter_data_to_raw
-        >> import_transactional_data_to_tmp
+        fetch_install_code
+        >> import_pro_transactional_data_to_tmp
+        >> import_pro_newsletter_data_to_raw
         >> gce_instance_stop
+    )
+
+    (
+        fetch_install_code
+        >> import_native_transactional_data_to_tmp
+        >> import_native_newsletter_data_to_raw
+        >> gce_instance_stop
+    )
+
+    (
+        gce_instance_stop
+        >> end_job
         >> raw_table_tasks
         >> end_raw
         >> clean_table_tasks

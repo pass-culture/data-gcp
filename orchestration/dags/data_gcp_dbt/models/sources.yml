@@ -108,6 +108,7 @@ sources:
       - name: applicative_database_venue_provider
       - name: applicative_database_venue_provider_external_urls
       - name: applicative_database_venue_registration
+      - name: appsflyer_cost_channel
       - name: brevo_transactional
       - name: contentful_entry
       - name: contentful_relationship
@@ -126,12 +127,16 @@ sources:
       - name: qpi_answers_historical
       - name: qpi_answers_v4
       - name: past_offer_context
+      - name: raw_dms_jeunes
+      - name: raw_dms_pro
       - name: sendinblue_transactional
       - name: sensitive_item_recommendation
       - name: stdout
       - name: subcategories
       - name: offer_types
       - name: user_locations
+      - name: zendesk_macro_usage
+      - name: zendesk_ticket
 
   - name: clean
     schema: clean_{{ var('ENV_SHORT_NAME') }}
@@ -154,7 +159,6 @@ sources:
       - name: adage
       - name: linked_offers
 
-
   - name: seed
     schema: seed_{{ var('ENV_SHORT_NAME') }}
     tables:
@@ -169,12 +173,13 @@ sources:
       - name: macro_rayons
       - name: population_age_and_department_france_details
       - name: priority_local_authorities
-      - name: qpv
+      - name: 2024_insee_qpv
       - name: qpi_mapping
       - name: rural_city_type_data
       - name: region_department
       - name: siren_data_labels
       - name: zrr
+
   - name: ml_preproc
     schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
     tables:
@@ -187,3 +192,8 @@ sources:
       - name: artist_linked
         description: This table contains the artist_linkage dag
       - name: unconstrained_item_cluster
+
+  - name: appsflyer_import
+    schema: appsflyer_import_{{ var('ENV_SHORT_NAME') }}
+    tables:
+      - name: cohort_unified_timezone_versioned

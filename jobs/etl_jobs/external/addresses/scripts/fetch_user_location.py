@@ -51,19 +51,19 @@ user_candidates AS (
     FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.applicative_database_user` du
     LEFT JOIN last_status_update lsu on lsu.user_id = du.user_id
     LEFT JOIN user_location_udpate ul on ul.user_id = du.user_id
-        and (
-            ul.date_updated >= GREATEST(du.user_creation_date,lsu.date_created) -- updated the profile again
-        )
-
     WHERE
         du.user_address is not NULL
         AND du.user_address <> ""
         AND du.user_postal_code is not NULL
         AND du.user_city is not NULL
         AND du.user_department_code is not NULL
-
-        AND ul.user_id IS NULL
-
+        AND (
+            ul.user_id IS NULL
+            -- Temp : remove condition to prioritize adress new users
+            -- OR (
+            --    ul.date_updated < GREATEST(du.user_creation_date,lsu.date_created) -- updated the profile again
+            -- )
+        )
 )
 
 SELECT

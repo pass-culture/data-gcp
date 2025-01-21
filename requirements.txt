@@ -312,7 +312,7 @@ tzdata==2024.2
     # via pandas
 urllib3==2.2.2
     # via requests
-virtualenv==20.26.3
+virtualenv==20.28.1
     # via pre-commit
 watchdog==5.0.3
     # via mkdocs

@@ -18,10 +18,12 @@ with
         {{
             generate_seed_geolocation_query(
                 source_table="int_seed__institution_metadata",
-                referential_table="int_seed__priority_neighborhood",
+                referential_table="int_seed__qpv",
                 id_column="institution_id",
                 prefix_name="institution",
-                columns=["code_qpv", "qpv_name", "qpv_communes"],
+                columns=["qpv_code", "qpv_name", "qpv_municipality"],
+                geo_shape="qpv_geo_shape",
+                geolocalisation_prefix="qpv_",
             )
         }}
     ),
@@ -79,21 +81,21 @@ select
     institution_geo_iris.department_name as institution_department_name,
     institution_epci.epci_name as institution_epci,
     institution_epci.epci_code,
-    institution_qpv.code_qpv,
+    institution_qpv.qpv_code,
     institution_qpv.qpv_name,
-    institution_qpv.qpv_communes,
+    institution_qpv.qpv_municipality,
     institution_zrr.zrr_level,
     institution_zrr.zrr_level_detail,
     case
         when
-            code_qpv is null
-            and institution_latitude is null
-            and institution_longitude is null
+            institution_qpv.qpv_code is null
+            and metadata.institution_latitude is null
+            and metadata.institution_longitude is null
         then null
-        else code_qpv is not null
-    end as institution_in_qpv,
+        else institution_qpv.qpv_code is not null
+    end as institution_in_qpv
 
-from {{ source("raw", "applicative_database_educational_institution") }} institution
+from {{ source("raw", "applicative_database_educational_institution") }} as institution
 left join
     {{ ref("int_seed__institution_metadata") }} as metadata
     on institution.institution_id = metadata.institution_id

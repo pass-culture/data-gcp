@@ -4,7 +4,7 @@ from typing import Dict, List
 
 from docarray import Document
 
-from app.logger import logger
+from app.logging.logger import logger
 from app.models.prediction_request import PredictionRequest
 from app.models.prediction_result import PredictionResult
 from app.retrieval.client import DefaultClient

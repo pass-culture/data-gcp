@@ -13,8 +13,9 @@
     )
 }}
 
-WITH pro_event_raw_data AS (
-  SELECT
+with
+    pro_event_raw_data as (
+        select
             event_name,
             user_pseudo_id,
             case
@@ -69,7 +70,9 @@ WITH pro_event_raw_data AS (
             ) as url_path_agg,
             page_referrer,
             page_number,
-            coalesce(CAST(double_offer_id AS STRING), CAST(offerid AS STRING)) as offer_id,
+            coalesce(
+                cast(double_offer_id as string), cast(offerid as string)
+            ) as offer_id,
             offertype as offer_type,
             saved as has_saved_query,
             hasonly6eand5estudents as has_opened_wrong_student_modal,
@@ -86,9 +89,9 @@ WITH pro_event_raw_data AS (
             subcategoryid as offer_subcategory_id,
             choosensuggestedsubcategory as suggested_offer_subcategory_selected,
             status as offer_status,
-            JSON_EXTRACT_ARRAY(selected_offers) AS selected_offers_array
-            ,array_length(json_extract_array(selected_offers)) > 1 as multiple_selection
-  from {{ ref("int_firebase__pro_event_flattened") }}
+            json_extract_array(selected_offers) as selected_offers_array,
+            array_length(json_extract_array(selected_offers)) > 1 as multiple_selection
+        from {{ ref("int_firebase__pro_event_flattened") }}
         {% if is_incremental() %}
             where
                 event_date
@@ -97,137 +100,132 @@ WITH pro_event_raw_data AS (
                 )
         {% endif %}
 
-),
+    ),
 
-unnested_events AS (
-  SELECT
-      *,
-      JSON_EXTRACT_SCALAR(item, "$.offerId") AS offer_id_from_array,
-      JSON_EXTRACT_SCALAR(item, "$.offerStatus") AS offer_status_from_array,
-      multiple_selection AS is_multiple_selection
-  FROM
-      pro_event_raw_data, UNNEST(selected_offers_array) AS item
-)
+    unnested_events as (
+        select
+            *,
+            json_extract_scalar(item, "$.offerId") as offer_id_from_array,
+            json_extract_scalar(item, "$.offerStatus") as offer_status_from_array,
+            multiple_selection as is_multiple_selection
+        from pro_event_raw_data, unnest(selected_offers_array) as item
+    )
 
-  SELECT
-      event_name,
-      user_pseudo_id,
-      user_id,
-      platform,
-      event_date,
-      event_timestamp,
-      session_number,
-      session_id,
-      unique_session_id,
-      origin,
-      destination,
-      traffic_campaign,
-      traffic_medium,
-      traffic_source,
-      user_device_category,
-      user_device_operating_system,
-      user_device_operating_system_version,
-      user_web_browser,
-      user_web_browser_version,
-      offerer_id,
-      venue_id,
-      page_location,
-      page_name,
-      url_first_path,
-      case
-                when url_path_details is null
-                then replace(coalesce(url_path_before_params, url_first_path), "/", "-")
-                when url_path_details is not null
-                then concat(url_path_type, "-", url_path_details)
-                else url_path_type
-            end as url_path_extract,
-      url_path_details,
-      url_params_key,
-      url_params_value,
-      url_path_agg,
-      download_file_type,
-      page_referrer,
-      page_number,
-      has_saved_query,
-      has_opened_wrong_student_modal,
-      is_edition,
-      is_draft,
-      filled,
-      filled_with_errors,
-      onboarding_selected_legal_category,
-      download_format,
-      download_booking_status,
-      download_button_type,
-      download_files_cnt,
-      offer_subcategory_id,
-      suggested_offer_subcategory_selected,
-      is_multiple_selection AS multiple_selection, -- Utilisation du champ correct
-      COALESCE(CAST(offer_id_from_array AS STRING), CAST(offer_id AS STRING)) AS offer_id,
-      COALESCE(offer_status_from_array, offer_status) AS offer_status,
-      CAST(offer_type AS STRING) AS offer_type
-  FROM
-      unnested_events
+select
+    event_name,
+    user_pseudo_id,
+    user_id,
+    platform,
+    event_date,
+    event_timestamp,
+    session_number,
+    session_id,
+    unique_session_id,
+    origin,
+    destination,
+    traffic_campaign,
+    traffic_medium,
+    traffic_source,
+    user_device_category,
+    user_device_operating_system,
+    user_device_operating_system_version,
+    user_web_browser,
+    user_web_browser_version,
+    offerer_id,
+    venue_id,
+    page_location,
+    page_name,
+    url_first_path,
+    case
+        when url_path_details is null
+        then replace(coalesce(url_path_before_params, url_first_path), "/", "-")
+        when url_path_details is not null
+        then concat(url_path_type, "-", url_path_details)
+        else url_path_type
+    end as url_path_extract,
+    url_path_details,
+    url_params_key,
+    url_params_value,
+    url_path_agg,
+    download_file_type,
+    page_referrer,
+    page_number,
+    has_saved_query,
+    has_opened_wrong_student_modal,
+    is_edition,
+    is_draft,
+    filled,
+    filled_with_errors,
+    onboarding_selected_legal_category,
+    download_format,
+    download_booking_status,
+    download_button_type,
+    download_files_cnt,
+    offer_subcategory_id,
+    suggested_offer_subcategory_selected,
+    is_multiple_selection as multiple_selection,  -- Utilisation du champ correct
+    coalesce(cast(offer_id_from_array as string), cast(offer_id as string)) as offer_id,
+    coalesce(offer_status_from_array, offer_status) as offer_status,
+    cast(offer_type as string) as offer_type
+from unnested_events
 
-  UNION ALL
+union all
 
-  SELECT
-      event_name,
-      user_pseudo_id,
-      user_id,
-      platform,
-      event_date,
-      event_timestamp,
-      session_number,
-      session_id,
-      unique_session_id,
-      origin,
-      destination,
-      traffic_campaign,
-      traffic_medium,
-      traffic_source,
-      user_device_category,
-      user_device_operating_system,
-      user_device_operating_system_version,
-      user_web_browser,
-      user_web_browser_version,
-      offerer_id,
-      venue_id,
-      page_location,
-      page_name,
-      url_first_path,
-      case
-                when url_path_details is null
-                then replace(coalesce(url_path_before_params, url_first_path), "/", "-")
-                when url_path_details is not null
-                then concat(url_path_type, "-", url_path_details)
-                else url_path_type
-            end as url_path_extract,
-      url_path_details,
-      url_params_key,
-      url_params_value,
-      url_path_agg,
-      download_file_type,
-      page_referrer,
-      page_number,
-      has_saved_query,
-      has_opened_wrong_student_modal,
-      is_edition,
-      is_draft,
-      filled,
-      filled_with_errors,
-      onboarding_selected_legal_category,
-      download_format,
-      download_booking_status,
-      download_button_type,
-      download_files_cnt,
-      offer_subcategory_id,
-      suggested_offer_subcategory_selected,
-      FALSE AS multiple_selection,
-      CAST(offer_id AS STRING) AS offer_id,
-      CAST(offer_status AS STRING) AS offer_status,
-      CAST(offer_type AS STRING) AS offer_type
-  FROM
-      pro_event_raw_data
-  WHERE
-      selected_offers_array IS NULL
-
+select
+    event_name,
+    user_pseudo_id,
+    user_id,
+    platform,
+    event_date,
+    event_timestamp,
+    session_number,
+    session_id,
+    unique_session_id,
+    origin,
+    destination,
+    traffic_campaign,
+    traffic_medium,
+    traffic_source,
+    user_device_category,
+    user_device_operating_system,
+    user_device_operating_system_version,
+    user_web_browser,
+    user_web_browser_version,
+    offerer_id,
+    venue_id,
+    page_location,
+    page_name,
+    url_first_path,
+    case
+        when url_path_details is null
+        then replace(coalesce(url_path_before_params, url_first_path), "/", "-")
+        when url_path_details is not null
+        then concat(url_path_type, "-", url_path_details)
+        else url_path_type
+    end as url_path_extract,
+    url_path_details,
+    url_params_key,
+    url_params_value,
+    url_path_agg,
+    download_file_type,
+    page_referrer,
+    page_number,
+    has_saved_query,
+    has_opened_wrong_student_modal,
+    is_edition,
+    is_draft,
+    filled,
+    filled_with_errors,
+    onboarding_selected_legal_category,
+    download_format,
+    download_booking_status,
+    download_button_type,
+    download_files_cnt,
+    offer_subcategory_id,
+    suggested_offer_subcategory_selected,
+    false as multiple_selection,
+    cast(offer_id as string) as offer_id,
+    cast(offer_status as string) as offer_status,
+    cast(offer_type as string) as offer_type
+from pro_event_raw_data
+where selected_offers_array is null

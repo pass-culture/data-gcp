@@ -1,7 +1,7 @@
 with
     topics as (
         select start_date, end_date, response_id, venue_id, answer as topics
-        from {{ ref("qualtrics_answers_ir_pro") }}
+        from {{ ref("int_qualtrics__ir_answer_pro") }}
         where question = 'Q1_topics'
     ),
 
@@ -16,7 +16,7 @@ with
             pro.answer,
             topics.topics,
             pro.anciennete_jours
-        from {{ ref("qualtrics_answers_ir_pro") }} as pro
+        from {{ ref("int_qualtrics__ir_answer_pro") }} as pro
         left join
             topics
             on pro.response_id = topics.response_id

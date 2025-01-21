@@ -167,7 +167,8 @@ select
     is_multiple_selection as multiple_selection,  -- Utilisation du champ correct
     coalesce(cast(offer_id_from_array as string), cast(offer_id as string)) as offer_id,
     coalesce(offer_status_from_array, offer_status) as offer_status,
-    cast(offer_type as string) as offer_type
+    cast(offer_type as string) as offer_type,
+    image_creation_stage
 from unnested_events
 
 union all

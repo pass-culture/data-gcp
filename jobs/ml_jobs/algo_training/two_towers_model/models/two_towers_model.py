@@ -12,6 +12,7 @@ from two_towers_model.utils.layers import (
 )
 
 DROPOUT_RATE = 0.3
+L2_REGULARIZATION = 0.001
 
 
 class TwoTowersModel(tfrs.models.Model):
@@ -143,9 +144,16 @@ class SingleTowerModel(tf.keras.models.Model):
                 vocabulary=self.data[layer_name].unique()
             )
 
-        self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
+        self._dense1 = tf.keras.layers.Dense(
+            embedding_size * 2,
+            activation="relu",
+            kernel_regularizer=tf.keras.regularizers.l2(L2_REGULARIZATION),
+        )
         self.dropout1 = tf.keras.layers.Dropout(DROPOUT_RATE)
-        self._dense2 = tf.keras.layers.Dense(embedding_size)
+        self._dense2 = tf.keras.layers.Dense(
+            embedding_size,
+            kernel_regularizer=tf.keras.regularizers.l2(L2_REGULARIZATION),
+        )
         self._norm = tf.keras.layers.LayerNormalization(name="normalize_dense")
 
     def call(self, features: list, training=False):

@@ -15,7 +15,7 @@ with
             pro.question,
             pro.answer,
             topics.topics,
-            pro.anciennete_jours
+            pro.seniority_day_cnt
         from {{ ref("int_qualtrics__ir_answer_pro") }} as pro
         left join
             topics
@@ -29,7 +29,7 @@ with
         select
             ir.response_id,
             booking.venue_id,
-            count(distinct booking.booking_id) as individual_bookings,
+            count(distinct booking.booking_id) as total_individual_bookings,
             max(booking.booking_creation_date) as last_individual_booking
         from {{ ref("int_applicative__booking") }} as booking
         inner join
@@ -45,7 +45,7 @@ with
             collective_booking.venue_id,
             count(
                 distinct collective_booking.collective_booking_id
-            ) as collective_bookings,
+            ) as total_collective_bookings,
             max(
                 collective_booking.collective_booking_creation_date
             ) as last_collective_booking
@@ -64,7 +64,7 @@ with
         select
             ir.response_id,
             offer.venue_id,
-            count(distinct offer.offer_id) as individual_offers_created
+            count(distinct offer.offer_id) as total_individual_offers_created
         from {{ ref("int_raw__offer") }} as offer
         inner join
             ir_per_user as ir
@@ -79,7 +79,7 @@ with
             collective_offer.venue_id,
             count(
                 distinct collective_offer.collective_offer_id
-            ) as collective_offers_created
+            ) as total_collective_offers_created
         from {{ ref("int_applicative__collective_offer") }} as collective_offer
         inner join
             ir_per_user as ir
@@ -139,7 +139,7 @@ select
         when extract(day from date(ir.start_date)) >= 16
         then date_add(date_trunc(date(ir.start_date), month), interval 1 month)
         else date_trunc(date(ir.start_date), month)
-    end as mois_releve,
+    end as survey_month,
     safe_cast(ir.q1 as int) as note,
     case
         when safe_cast(ir.q1 as int) <= 6
@@ -154,22 +154,22 @@ select
             or lower(ir.topics) like '%référencement adage%'
         ),
         false
-    ) as mauvaise_exp_adage,
+    ) as is_bad_adage_ux,
     case
         when venue.venue_is_permanent
         then concat('venue-', venue.venue_id)
         else concat('offerer-', offerer.offerer_id)
     end as partner_id,
-    coalesce(indiv_book.individual_bookings, 0) as individual_bookings,
-    coalesce(collective_book.collective_bookings, 0) as collective_bookings,
-    coalesce(indiv_book.individual_bookings, 0)
-    + coalesce(collective_book.collective_bookings, 0) as total_bookings,
-    coalesce(indiv_offer.individual_offers_created, 0) as individual_offers_created,
+    coalesce(indiv_book.total_individual_bookings, 0) as total_individual_bookings,
+    coalesce(collective_book.total_collective_bookings, 0) as total_collective_bookings,
+    coalesce(indiv_book.total_individual_bookings, 0)
+    + coalesce(collective_book.total_collective_bookings, 0) as total_bookings,
+    coalesce(indiv_offer.total_individual_offers_created, 0) as total_individual_offers_created,
     coalesce(
-        collective_offer.collective_offers_created, 0
-    ) as collective_offers_created,
-    coalesce(indiv_offer.individual_offers_created, 0)
-    + coalesce(collective_offer.collective_offers_created, 0) as total_offers_created,
+        collective_offer.total_collective_offers_created, 0
+    ) as total_collective_offers_created,
+    coalesce(indiv_offer.total_individual_offers_created, 0)
+    + coalesce(collective_offer.total_collective_offers_created, 0) as total_offers_created,
     coalesce(
         first_dms_adage.dms_adage_application_status, 'dms_adage_non_depose'
     ) as dms_adage_application_status

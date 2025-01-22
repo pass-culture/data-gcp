@@ -1,3 +1,4 @@
+{% set survey_id_pro = 'SV_eOOPuFjgZo1emR8' %}
 with
     base as (
         select
@@ -23,14 +24,14 @@ with
             end as question,
             replace(replace(extra_data, "d'un", 'dun'), 'nan', "'nan'") as extra_data
         from {{ source("raw", "qualtrics_answers") }}
-        where survey_id = 'SV_eOOPuFjgZo1emR8'
+        where survey_id = '{{ survey_id_pro }}'
     )
 
 select
     *,
-    trim(json_extract(extra_data, '$.anciennete_jours'), '"') as anciennete_jours,
+    trim(json_extract(extra_data, '$.anciennete_jours'), '"') as seniority_day_cnt,
     trim(
         json_extract(extra_data, '$.non_cancelled_bookings'), '"'
-    ) as non_cancelled_bookings,
-    trim(json_extract(extra_data, '$.offers_created'), '"') as offers_created
+    ) as total_non_cancelled_bookings,
+    trim(json_extract(extra_data, '$.offers_created'), '"') as total_offers_created
 from base

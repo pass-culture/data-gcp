@@ -12,21 +12,21 @@ with
     lieux_physique as (
         select
             global_venue.venue_id,
-            venue_booking_email as email,
-            venue_type_label,
-            total_non_cancelled_bookings,
-            total_created_individual_offers,
-            total_created_collective_offers,
-            venue_is_permanent,
+            global_venue.venue_booking_email as email,
+            global_venue.venue_type_label,
+            global_venue.total_non_cancelled_bookings,
+            global_venue.total_created_individual_offers,
+            global_venue.total_created_collective_offers,
+            global_venue.venue_is_permanent,
             global_venue.venue_region_name,
             global_venue.venue_department_code,
             venue_location.venue_rural_city_type as geo_type,
             -- TODO rename field in qualtrics
             venue_location.venue_in_qpv,
             venue_location.venue_in_zrr,
-            date_diff(current_date, venue_creation_date, day) as anciennete_en_jours,
-            total_created_individual_offers
-            + total_created_collective_offers as offers_created
+            date_diff(current_date(),  global_venue.venue_creation_date, day) as seniority_day_cnt,
+            global_venue.total_created_individual_offers
+            + global_venue.total_created_collective_offers as offers_created
         from {{ ref("mrt_global__venue") }} as global_venue
         left join
             {{ ref("int_geo__venue_location") }} as venue_location
@@ -36,7 +36,7 @@ with
             on global_venue.venue_id = opt_out.ext_ref
         left join answers on global_venue.venue_id = answers.user_id
         where
-            not venue_is_virtual
+            not  global_venue.venue_is_virtual
             and opt_out.contact_id is null
             and answers.user_id is null
     ),

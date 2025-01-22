@@ -18,14 +18,14 @@ with
         group by user_id
     ),
     {% if is_incremental() %}
-    previous_export as (
-        select distinct user_id
-        from {{ this }}
-        where
-            calculation_month
-            >= date_sub(date_trunc(date("{{ ds() }}"), month), interval 6 month)
+        previous_export as (
+            select distinct user_id
+            from {{ this }}
+            where
+                calculation_month
+                >= date_sub(date_trunc(date("{{ ds() }}"), month), interval 6 month)
 
-    ),
+        ),
     {% endif %}
 
     answers as (select distinct user_id from {{ source("raw", "qualtrics_answers") }}),
@@ -70,8 +70,7 @@ with
         {% if is_incremental() %}
             left join previous_export as pe on ir.user_id = pe.user_id
             where ir.deposit_type = "GRANT_15_7" and pe.user_id is null
-        {% else %}
-            where ir.deposit_type = "GRANT_15_7"
+        {% else %} where ir.deposit_type = "GRANT_15_7"
         {% endif %}
         order by rand()
         limit {{ qualtrics_volumes() }}
@@ -83,8 +82,7 @@ with
         {% if is_incremental() %}
             left join previous_export as pe on ir.user_id = pe.user_id
             where ir.deposit_type = "GRANT_18" and pe.user_id is null
-        {% else %}
-            where ir.deposit_type = "GRANT_18"
+        {% else %} where ir.deposit_type = "GRANT_18"
         {% endif %}
         order by rand()
         limit {{ qualtrics_volumes() }}

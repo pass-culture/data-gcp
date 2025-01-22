@@ -164,12 +164,15 @@ select
     coalesce(collective_book.total_collective_bookings, 0) as total_collective_bookings,
     coalesce(indiv_book.total_individual_bookings, 0)
     + coalesce(collective_book.total_collective_bookings, 0) as total_bookings,
-    coalesce(indiv_offer.total_individual_offers_created, 0) as total_individual_offers_created,
+    coalesce(
+        indiv_offer.total_individual_offers_created, 0
+    ) as total_individual_offers_created,
     coalesce(
         collective_offer.total_collective_offers_created, 0
     ) as total_collective_offers_created,
-    coalesce(indiv_offer.total_individual_offers_created, 0)
-    + coalesce(collective_offer.total_collective_offers_created, 0) as total_offers_created,
+    coalesce(indiv_offer.total_individual_offers_created, 0) + coalesce(
+        collective_offer.total_collective_offers_created, 0
+    ) as total_offers_created,
     coalesce(
         first_dms_adage.dms_adage_application_status, 'dms_adage_non_depose'
     ) as dms_adage_application_status

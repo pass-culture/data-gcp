@@ -1,4 +1,4 @@
-{% set survey_id_pro = 'SV_eOOPuFjgZo1emR8' %}
+{% set survey_id_pro = "SV_eOOPuFjgZo1emR8" %}
 with
     base as (
         select

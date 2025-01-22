@@ -179,9 +179,12 @@ def train_two_tower_model(
     two_tower_model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE)
     )
+
+    repeated_train_dataset = train_dataset.repeat()
     two_tower_model.fit(
-        train_dataset,
+        repeated_train_dataset,
         epochs=N_EPOCHS,
+        steps_per_epoch=1000,  # 8500 -> 1000
         validation_data=validation_dataset,
         validation_steps=validation_steps,
         callbacks=[

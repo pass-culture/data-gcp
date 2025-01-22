@@ -11,6 +11,8 @@ from two_towers_model.utils.layers import (
     TextEmbeddingLayer,
 )
 
+DROPOUT_RATE = 0.3
+
 
 class TwoTowersModel(tfrs.models.Model):
     def __init__(
@@ -142,6 +144,7 @@ class SingleTowerModel(tf.keras.models.Model):
             )
 
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
+        self.dropout1 = tf.keras.layers.Dropout(DROPOUT_RATE)
         self._dense2 = tf.keras.layers.Dense(embedding_size)
         self._norm = tf.keras.layers.LayerNormalization(name="normalize_dense")
 
@@ -152,5 +155,6 @@ class SingleTowerModel(tf.keras.models.Model):
 
         x = tf.concat(feature_embeddings, axis=1)
         x = self._dense1(x)
+        x = self.dropout1(x, training=training)
         x = self._dense2(x)
         return self._norm(x)

@@ -1,3 +1,13 @@
+{{
+    config(
+        **custom_incremental_config(
+            incremental_strategy="insert_overwrite",
+            partition_by={"field": "export_date", "data_type": "date"},
+            on_schema_change="ignore",
+        )
+    )
+}}
+
 with
     user_visits as (
         select
@@ -7,7 +17,7 @@ with
         where date(event_date) >= date_sub(current_date, interval 1 month)
         group by user_id
     ),
-
+    {% if is_incremental() %}
     previous_export as (
         select distinct user_id
         from {{ this }}
@@ -16,6 +26,7 @@ with
             >= date_sub(date_trunc(date("{{ ds() }}"), month), interval 6 month)
 
     ),
+    {% endif %}
 
     answers as (select distinct user_id from {{ source("raw", "qualtrics_answers") }}),
 
@@ -46,8 +57,8 @@ with
         where
             user_data.user_id is not null
             and user_data.current_deposit_type in ("GRANT_15_17", "GRANT_18")
-            and user_is_current_beneficiary is true
-            and user_data.user_is_active is true
+            and user_data.user_is_current_beneficiary is true
+            and user_data.user_data.user_is_active is true
             and user_data.user_has_enabled_marketing_email is true
             and opt_out.contact_id is null
             and answers.user_id is null
@@ -56,8 +67,12 @@ with
     grant_15_17 as (
         select ir.*
         from ir_export as ir
-        left join previous_export as pe on ir.user_id = pe.user_id
-        where ir.deposit_type = "GRANT_15_7" and pe.user_id is null
+        {% if is_incremental() %}
+            left join previous_export as pe on ir.user_id = pe.user_id
+            where ir.deposit_type = "GRANT_15_7" and pe.user_id is null
+        {% else %}
+            where ir.deposit_type = "GRANT_15_7"
+        {% endif %}
         order by rand()
         limit {{ qualtrics_volumes() }}
     ),
@@ -65,8 +80,12 @@ with
     grant_18 as (
         select ir.*
         from ir_export as ir
-        left join previous_export as pe on ir.user_id = pe.user_id
-        where deposit_type = "GRANT_18" and pe.user_id is null
+        {% if is_incremental() %}
+            left join previous_export as pe on ir.user_id = pe.user_id
+            where ir.deposit_type = "GRANT_18" and pe.user_id is null
+        {% else %}
+            where ir.deposit_type = "GRANT_18"
+        {% endif %}
         order by rand()
         limit {{ qualtrics_volumes() }}
     )

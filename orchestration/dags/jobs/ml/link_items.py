@@ -16,7 +16,6 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
 )
-from common.utils import get_airflow_schedule
 from jobs.ml.constants import IMPORT_LINKAGE_SQL_PATH
 
 from airflow import DAG
@@ -29,33 +28,53 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
+from airflow.utils.task_group import TaskGroup
 
 DATE = "{{ ts_nodash }}"
 
-# Environment variables to export before running commands
-GCS_FOLDER_PATH = f"linkage_item_{ENV_SHORT_NAME}/linkage_{DATE}"
+# -------------------------------------------------------------------------
+# DAG CONFIG
+# -------------------------------------------------------------------------
+
 DAG_CONFIG = {
-    "GCS_FOLDER_PATH": GCS_FOLDER_PATH,
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}",
-    "BASE_DIR": "data-gcp/jobs/ml_jobs/item_linkage/",
-    "REDUCTION": "true",
-    "BATCH_SIZE": 100000,
-    "LINKAGE_ITEM_SOURCES_DATA_REQUEST": "linkage_item_sources_data.sql",
-    "LINKAGE_ITEM_CANDIDATES_DATA_REQUEST": "linkage_item_candidates_data.sql",
-    "INPUT_SOURCES_TABLE": f"{DATE}_input_sources_table",
-    "INPUT_CANDIDATES_TABLE": f"{DATE}_input_candidates_data",
-    "LINKED_PRODUCT_TABLE": "linked_products",
-    "LINKED_OFFER_TABLE": "linked_offers",
-    "INPUT_SOURCES_DIR": "sources_data",
-    "INPUT_CANDIDATES_DIR": "candidates_data",
-    "PRODUCT_LINKAGE_CANDIDATES_FILENAME": "linkage_candidates_product.parquet",
-    "OFFER_LINKAGE_CANDIDATES_FILENAME": "linkage_candidates_offer.parquet",
-    "LINKED_PRODUCT_FILENAME": "linked_products.parquet",
-    "LINKED_OFFER_FILENAME": "linked_offers.parquet",
-    "LINKED_OFFER_W_ID_FILENAME": "linked_offers_w_id.parquet",
-    "UNMATCHED_PRODUCT_FILENAME": "unmatched_products.parquet",
-    "UNMATCHED_OFFER_FILENAME": "unmatched_offers.parquet",
+    "ENVIROMENT": {
+        "GCP_PROJECT": GCP_PROJECT_ID,
+        "ENV_SHORT_NAME": ENV_SHORT_NAME,
+    },
+    "BASE_PATHS": {
+        "GCS_FOLDER": f"linkage_item_{ENV_SHORT_NAME}/linkage_{DATE}",
+        "STORAGE": f"gs://{MLFLOW_BUCKET_NAME}/linkage_item_{ENV_SHORT_NAME}/linkage_{DATE}",
+    },
+    "DIRS": {
+        "BASE": "data-gcp/jobs/ml_jobs/item_linkage/",
+        "INPUT_SOURCES": "sources_data",
+        "INPUT_CANDIDATES": "candidates_data",
+        "SOURCES_CLEAN": "sources_clean",
+        "CANDIDATES_CLEAN": "candidates_clean",
+        "PRODUCT_SOURCES_READY": "product_sources_ready",
+        "PRODUCT_CANDIDATES_READY": "product_candidates_ready",
+        "OFFER_SOURCES_READY": "offer_sources_ready",
+        "OFFER_CANDIDATES_READY": "offer_candidates_ready",
+    },
+    "FILES": lambda linkage_type: {
+        "LINKAGE_CANDIDATES": f"linkage_candidates_{linkage_type}",
+        "LINKED": f"linked_{linkage_type}",
+        "UNMATCHED": f"unmatched_{linkage_type}",
+        "LINKED_W_ID": f"linked_{linkage_type}_w_id",  # for offers
+    },
+    "BIGQUERY": {
+        "INPUT_SOURCES_TABLE": f"{DATE}_input_sources_table",
+        "INPUT_CANDIDATES_TABLE": f"{DATE}_input_candidates_data",
+        "LINKED_PRODUCT_TABLE": "linked_product",
+        "LINKED_OFFER_TABLE": "linked_offer",
+        "ITEM_MAPPING_TABLE": "item_offer_mapping",
+    },
+    "PARAMS": {
+        "REDUCTION": "true",
+        "BATCH_SIZE": 100000,
+    },
 }
+
 GCE_PARAMS = {
     "instance_name": f"linkage-item-{ENV_SHORT_NAME}",
     "instance_type": {
@@ -67,18 +86,41 @@ GCE_PARAMS = {
 
 DEFAULT_ARGS = {
     "start_date": datetime(2022, 11, 30),
-    # "on_failure_callback": task_fail_slack_alert,
-    "retries": 0,
-    "retry_delay": timedelta(minutes=2),
+    "retries": 3,
+    "retry_delay": timedelta(minutes=5),
 }
 
 SCHEDULE_DICT = {"prod": "0 4 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"}
 
+
+# -------------------------------------------------------------------------
+# HELPER FUNCTIONS
+# -------------------------------------------------------------------------
+def build_path(base_path, sub_path):
+    """Helper to build GCS/OS paths."""
+    return os.path.join(base_path, sub_path)
+
+
+def create_ssh_task(task_id, command, instance_name, base_dir):
+    """Helper to create an SSHGCEOperator with minimal boilerplate."""
+    return SSHGCEOperator(
+        task_id=task_id,
+        instance_name=instance_name,
+        base_dir=base_dir,
+        environment=DAG_CONFIG["ENVIROMENT"],
+        command=command,
+    )
+
+
+# -------------------------------------------------------------------------
+# DAG DEFINITION
+# -------------------------------------------------------------------------
 with DAG(
-    "link_items",
+    "link_items_updated",
     default_args=DEFAULT_ARGS,
-    description="Process to link items using semantic vectors.",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[ENV_SHORT_NAME]),
+    description="Process to link items using semantic vectors (grouped by product/offer).",
+    schedule_interval=None,
+    # schedule_interval=get_airflow_schedule(SCHEDULE_DICT[ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
@@ -97,83 +139,98 @@ with DAG(
             type="string",
         ),
         "reduction": Param(
-            default=DAG_CONFIG["REDUCTION"],
+            default=DAG_CONFIG["PARAMS"]["REDUCTION"],
             type="string",
         ),
         "batch_size": Param(
-            default=DAG_CONFIG["BATCH_SIZE"],
+            default=DAG_CONFIG["PARAMS"]["BATCH_SIZE"],
             type="integer",
         ),
     },
 ) as dag:
-    start = DummyOperator(task_id="start", dag=dag)
-    import_data_tasks = []
-    import_sources = BigQueryExecuteQueryOperator(
-        task_id="import_sources",
-        sql=(
-            IMPORT_LINKAGE_SQL_PATH / DAG_CONFIG["LINKAGE_ITEM_SOURCES_DATA_REQUEST"]
-        ).as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DAG_CONFIG['INPUT_SOURCES_TABLE']}",
-    )
-    import_data_tasks.append(import_sources)
+    # ---------------------------------------------------------------------
+    # START / END
+    # ---------------------------------------------------------------------
+    start = DummyOperator(task_id="start")
+    end = DummyOperator(task_id="end")
 
-    import_candidates = BigQueryExecuteQueryOperator(
-        task_id="import_candidates",
-        sql=(
-            IMPORT_LINKAGE_SQL_PATH / DAG_CONFIG["LINKAGE_ITEM_CANDIDATES_DATA_REQUEST"]
-        ).as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DAG_CONFIG['INPUT_CANDIDATES_TABLE']}",
-    )
-    import_data_tasks.append(import_candidates)
-    end_imports = DummyOperator(task_id="end_imports", dag=dag)
-    export_to_bq_tasks = []
-    export_sources_bq = BigQueryInsertJobOperator(
-        task_id="export_sources_bq",
-        configuration={
-            "extract": {
-                "sourceTable": {
-                    "projectId": GCP_PROJECT_ID,
-                    "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": f"{DAG_CONFIG['INPUT_SOURCES_TABLE']}",
-                },
-                "compression": None,
-                "destinationFormat": "PARQUET",
-                "destinationUris": os.path.join(
-                    DAG_CONFIG["STORAGE_PATH"],
-                    DAG_CONFIG["INPUT_SOURCES_DIR"],
-                    "data-*.parquet",
-                ),
-            }
-        },
-    )
+    # ---------------------------------------------------------------------
+    # 1) IMPORT DATA
+    # ---------------------------------------------------------------------
+    with TaskGroup(
+        "import_data", tooltip="Import data from SQL to BQ"
+    ) as import_data_group:
+        import_sources = BigQueryExecuteQueryOperator(
+            task_id="import_sources",
+            sql=(IMPORT_LINKAGE_SQL_PATH / "linkage_item_sources_data.sql").as_posix(),
+            write_disposition="WRITE_TRUNCATE",
+            use_legacy_sql=False,
+            destination_dataset_table=(
+                f"{BIGQUERY_TMP_DATASET}.{DAG_CONFIG['BIGQUERY']['INPUT_SOURCES_TABLE']}"
+            ),
+        )
 
-    export_to_bq_tasks.append(export_sources_bq)
+        import_candidates = BigQueryExecuteQueryOperator(
+            task_id="import_candidates",
+            sql=(
+                IMPORT_LINKAGE_SQL_PATH / "linkage_item_candidates_data.sql"
+            ).as_posix(),
+            write_disposition="WRITE_TRUNCATE",
+            use_legacy_sql=False,
+            destination_dataset_table=(
+                f"{BIGQUERY_TMP_DATASET}.{DAG_CONFIG['BIGQUERY']['INPUT_CANDIDATES_TABLE']}"
+            ),
+        )
 
-    export_candidates_bq = BigQueryInsertJobOperator(
-        task_id="export_candidates_bq",
-        configuration={
-            "extract": {
-                "sourceTable": {
-                    "projectId": GCP_PROJECT_ID,
-                    "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": DAG_CONFIG["INPUT_CANDIDATES_TABLE"],
-                },
-                "compression": None,
-                "destinationFormat": "PARQUET",
-                "destinationUris": os.path.join(
-                    DAG_CONFIG["STORAGE_PATH"],
-                    DAG_CONFIG["INPUT_CANDIDATES_DIR"],
-                    "data-*.parquet",
-                ),
-            }
-        },
-    )
-    export_to_bq_tasks.append(export_candidates_bq)
-    end_exports = DummyOperator(task_id="end_exports", dag=dag)
+    # ---------------------------------------------------------------------
+    # 2) EXPORT DATA (FROM BQ TO GCS)
+    # ---------------------------------------------------------------------
+    with TaskGroup(
+        "export_data", tooltip="Export data from BQ to GCS"
+    ) as export_data_group:
+        export_sources_bq = BigQueryInsertJobOperator(
+            task_id="export_sources_bq",
+            configuration={
+                "extract": {
+                    "sourceTable": {
+                        "projectId": GCP_PROJECT_ID,
+                        "datasetId": BIGQUERY_TMP_DATASET,
+                        "tableId": DAG_CONFIG["BIGQUERY"]["INPUT_SOURCES_TABLE"],
+                    },
+                    "compression": None,
+                    "destinationFormat": "PARQUET",
+                    "destinationUris": os.path.join(
+                        DAG_CONFIG["BASE_PATHS"]["STORAGE"],
+                        DAG_CONFIG["DIRS"]["INPUT_SOURCES"],
+                        "data-*.parquet",
+                    ),
+                }
+            },
+        )
+
+        export_candidates_bq = BigQueryInsertJobOperator(
+            task_id="export_candidates_bq",
+            configuration={
+                "extract": {
+                    "sourceTable": {
+                        "projectId": GCP_PROJECT_ID,
+                        "datasetId": BIGQUERY_TMP_DATASET,
+                        "tableId": DAG_CONFIG["BIGQUERY"]["INPUT_CANDIDATES_TABLE"],
+                    },
+                    "compression": None,
+                    "destinationFormat": "PARQUET",
+                    "destinationUris": os.path.join(
+                        DAG_CONFIG["BASE_PATHS"]["STORAGE"],
+                        DAG_CONFIG["DIRS"]["INPUT_CANDIDATES"],
+                        "data-*.parquet",
+                    ),
+                }
+            },
+        )
+
+    # ---------------------------------------------------------------------
+    # 3) GCE INSTANCE START + CODE FETCH + INSTALL DEPS
+    # ---------------------------------------------------------------------
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         preemptible=False,
@@ -188,185 +245,276 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
         python_version="3.10",
-        base_dir=DAG_CONFIG["BASE_DIR"],
+        base_dir=DAG_CONFIG["DIRS"]["BASE"],
         retries=2,
     )
 
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name="{{ params.instance_name }}",
-        base_dir=DAG_CONFIG["BASE_DIR"],
-        command="pip install -r requirements.txt --user",
-    )
+    # install_dependencies = SSHGCEOperator(
+    #     task_id="install_dependencies",
+    #     instance_name="{{ params.instance_name }}",
+    #     base_dir=DAG_CONFIG["DIRS"]["BASE"],
+    #     command="uv pip install -r requirements.txt --user",
+    # )
 
-    process_sources = SSHGCEOperator(
-        task_id="process_sources",
-        command="python preprocess_catalog.py "
-        f"--input-path {os.path.join(
-            DAG_CONFIG['STORAGE_PATH'], DAG_CONFIG['INPUT_SOURCES_DIR'], 'data-*.parquet'
-        )} "
-        f"--output-path {os.path.join(
-            DAG_CONFIG['STORAGE_PATH'], 'sources_clean'
-        )} "
-        f"--reduction {DAG_CONFIG['REDUCTION']} "
-        f"--batch-size {DAG_CONFIG['BATCH_SIZE']} ",
-        dag=dag,  # Replace with your DAG instance
-    )
+    # ---------------------------------------------------------------------
+    # 4) PREPROCESS DATA (sources / candidates)
+    # ---------------------------------------------------------------------
+    with TaskGroup(
+        "process_data", tooltip="Preprocess data tasks"
+    ) as process_data_group:
+        process_sources = create_ssh_task(
+            task_id="process_sources",
+            command="python preprocess.py "
+            f"--input-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['INPUT_SOURCES'])}/data-*.parquet "
+            f"--output-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['SOURCES_CLEAN'])} "
+            f"--reduction {DAG_CONFIG['PARAMS']['REDUCTION']} "
+            f"--batch-size {DAG_CONFIG['PARAMS']['BATCH_SIZE']} ",
+            instance_name="{{ params.instance_name }}",
+            base_dir=DAG_CONFIG["DIRS"]["BASE"],
+        )
 
-    process_candidates = SSHGCEOperator(
-        task_id="process_candidates",
-        command="python preprocess_catalog.py "
-        f"--input-path {os.path.join(
-            DAG_CONFIG['STORAGE_PATH'], DAG_CONFIG['INPUT_CANDIDATES_DIR'], 'data-*.parquet'
-        )} "
-        f"--output-path {os.path.join(
-            DAG_CONFIG['STORAGE_PATH'], 'candidates_clean'
-        )} "
-        f"--reduction {DAG_CONFIG['REDUCTION']} "
-        f"--batch-size {DAG_CONFIG['BATCH_SIZE']} ",
-        dag=dag,  # Replace with your DAG instance
-    )
+        process_candidates = create_ssh_task(
+            task_id="process_candidates",
+            command="python preprocess.py "
+            f"--input-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['INPUT_CANDIDATES'])}/data-*.parquet "
+            f"--output-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['CANDIDATES_CLEAN'])} "
+            f"--reduction {DAG_CONFIG['PARAMS']['REDUCTION']} "
+            f"--batch-size {DAG_CONFIG['PARAMS']['BATCH_SIZE']} ",
+            instance_name="{{ params.instance_name }}",
+            base_dir=DAG_CONFIG["DIRS"]["BASE"],
+        )
 
-    build_product_linkage_vector = SSHGCEOperator(
-        task_id="build_product_linkage_vector",
-        instance_name="{{ params.instance_name }}",
-        base_dir=DAG_CONFIG["BASE_DIR"],
-        command="python build_semantic_space.py "
-        f"""--input-path {os.path.join(
-                    DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_DIR"],"data-*.parquet"
-                )} """
-        f"--linkage-type product "
-        f"--reduction {DAG_CONFIG['REDUCTION']} "
-        f"--batch-size {DAG_CONFIG['BATCH_SIZE']} ",
-    )
+    # ---------------------------------------------------------------------
+    # 5) PRODUCT WORKFLOW
+    # ---------------------------------------------------------------------
+    with TaskGroup(
+        "product_workflow", tooltip="All tasks related to product linkage"
+    ) as product_workflow:
+        prepare_offer_to_product_candidates = create_ssh_task(
+            task_id="prepare_offer_to_product_candidates",
+            command="python prepare_tables.py "
+            "--linkage-type product "
+            f"--input-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['CANDIDATES_CLEAN'])}/data-*.parquet "
+            f"--output-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['PRODUCT_CANDIDATES_READY'])} "
+            f"--input-sources-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['SOURCES_CLEAN'])}/data-*.parquet "
+            f"--output-sources-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['PRODUCT_SOURCES_READY'])} "
+            f"--batch-size {DAG_CONFIG['PARAMS']['BATCH_SIZE']} ",
+            instance_name="{{ params.instance_name }}",
+            base_dir=DAG_CONFIG["DIRS"]["BASE"],
+        )
 
-    get_product_linkage_candidates = SSHGCEOperator(
-        task_id="get_product_linkage_candidates",
-        instance_name="{{ params.instance_name }}",
-        base_dir=DAG_CONFIG["BASE_DIR"],
-        command="python linkage_candidates.py "
-        f"--batch-size {DAG_CONFIG['BATCH_SIZE']} "
-        f"--linkage-type product "
-        f"--reduction {DAG_CONFIG['REDUCTION']} "
-        f"""--input-path {os.path.join(
-                    DAG_CONFIG["STORAGE_PATH"],  DAG_CONFIG["INPUT_CANDIDATES_DIR"],"data-*.parquet"
-                )} """
-        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['PRODUCT_LINKAGE_CANDIDATES_FILENAME'])} ",
-    )
+        # 5.1) Build product semantic space
+        build_product_linkage_vector = create_ssh_task(
+            task_id="build_product_linkage_vector",
+            command="python build_semantic_space.py "
+            f"--input-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['PRODUCT_SOURCES_READY'])}/data-*.parquet "
+            f"--linkage-type product "
+            f"--batch-size {DAG_CONFIG['PARAMS']['BATCH_SIZE']} ",
+            instance_name="{{ params.instance_name }}",
+            base_dir=DAG_CONFIG["DIRS"]["BASE"],
+        )
 
-    link_products = SSHGCEOperator(
-        task_id="link_products",
-        instance_name="{{ params.instance_name }}",
-        base_dir=DAG_CONFIG["BASE_DIR"],
-        command="python link_items.py "
-        "--linkage-type product "
-        f"""--input-sources-path {os.path.join(
-                    DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_DIR"]
-                )} """
-        f"""--input-candidates-path {os.path.join(
-                    DAG_CONFIG["STORAGE_PATH"],  DAG_CONFIG["INPUT_CANDIDATES_DIR"]
-                )} """
-        f"--linkage-candidates-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['PRODUCT_LINKAGE_CANDIDATES_FILENAME'])} "
-        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKED_PRODUCT_FILENAME'])} "
-        f"--unmatched-elements-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['UNMATCHED_PRODUCT_FILENAME'])} ",
-    )
+        # 5.2) Get product linkage candidates
+        get_product_linkage_candidates = create_ssh_task(
+            task_id="get_product_linkage_candidates",
+            command="python linkage_candidates.py "
+            f"--batch-size {DAG_CONFIG['PARAMS']['BATCH_SIZE']} "
+            f"--linkage-type product "
+            f"--input-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['PRODUCT_CANDIDATES_READY'])}/data-*.parquet "
+            f"--output-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('product')['LINKAGE_CANDIDATES'])} ",
+            instance_name="{{ params.instance_name }}",
+            base_dir=DAG_CONFIG["DIRS"]["BASE"],
+        )
 
-    load_linked_product_into_bq = GCSToBigQueryOperator(
-        bucket=MLFLOW_BUCKET_NAME,
-        task_id="load_linked_product_into_bq",
-        source_objects=os.path.join(
-            GCS_FOLDER_PATH, DAG_CONFIG["LINKED_PRODUCT_FILENAME"]
-        ),
-        destination_project_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['LINKED_PRODUCT_TABLE']}",
-        source_format="PARQUET",
+        # 5.3) Link products
+        link_products = create_ssh_task(
+            task_id="link_products",
+            command="python link_items.py "
+            '--linkage-type product '
+            f"--input-sources-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['PRODUCT_SOURCES_READY'])} "
+            f"--input-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['PRODUCT_CANDIDATES_READY'])} "
+            f"--linkage-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('product')['LINKAGE_CANDIDATES'])} "
+            f"--output-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('product')['LINKED'])} "
+            f"--unmatched-elements-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('product')['UNMATCHED'])} ",
+            instance_name="{{ params.instance_name }}",
+            base_dir=DAG_CONFIG["DIRS"]["BASE"],
+        )
+
+        # 5.4) Load linked product into BigQuery
+        load_linked_product_into_bq = GCSToBigQueryOperator(
+            task_id="load_linked_product_into_bq",
+            bucket=MLFLOW_BUCKET_NAME,
+            source_objects=f"""{build_path(
+                DAG_CONFIG["BASE_PATHS"]["GCS_FOLDER"],
+                DAG_CONFIG["FILES"]("product")["LINKED"],
+            )}/data.parquet""",
+            destination_project_dataset_table=(
+                f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['BIGQUERY']['LINKED_PRODUCT_TABLE']}"
+            ),
+            source_format="PARQUET",
+            write_disposition="WRITE_TRUNCATE",
+            autodetect=True,
+        )
+
+        # 5.5) Evaluate product linkage (optional, if you want it in the same group)
+        evaluate_product = create_ssh_task(
+            task_id="evaluate_product_linkage",
+            command="python evaluate.py "
+            f"--input-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['PRODUCT_CANDIDATES_READY'])} "
+            f"--linkage-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('product')['LINKED'])} "
+            "--linkage-type product ",
+            instance_name="{{ params.instance_name }}",
+            base_dir=DAG_CONFIG["DIRS"]["BASE"],
+        )
+
+        # Set product-workflow sequence
+        (
+            prepare_offer_to_product_candidates
+            >> build_product_linkage_vector
+            >> get_product_linkage_candidates
+            >> link_products
+            >> load_linked_product_into_bq
+            >> evaluate_product
+        )
+
+    # ---------------------------------------------------------------------
+    # 6) OFFER WORKFLOW
+    # ---------------------------------------------------------------------
+    with TaskGroup(
+        "offer_workflow", tooltip="All tasks related to offer linkage"
+    ) as offer_workflow:
+        prepare_offer_to_offer_candidates = create_ssh_task(
+            task_id="prepare_offer_to_offer_candidates",
+            command="python prepare_tables.py "
+            "--linkage-type offer "
+            f"--input-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['CANDIDATES_CLEAN'])}/data-*.parquet "
+            f"--output-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['OFFER_CANDIDATES_READY'])} "
+            f"--batch-size {DAG_CONFIG['PARAMS']['BATCH_SIZE']} "
+            f"--unmatched-elements-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('product')['UNMATCHED'])} ",
+            instance_name="{{ params.instance_name }}",
+            base_dir=DAG_CONFIG["DIRS"]["BASE"],
+        )
+        # 6.1) Build offer semantic space
+        build_offer_linkage_vector = create_ssh_task(
+            task_id="build_offer_linkage_vector",
+            command="python build_semantic_space.py "
+            f"--input-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['OFFER_CANDIDATES_READY'])}/data-*.parquet "
+            f"--linkage-type offer "
+            f"--batch-size {DAG_CONFIG['PARAMS']['BATCH_SIZE']} ",
+            instance_name="{{ params.instance_name }}",
+            base_dir=DAG_CONFIG["DIRS"]["BASE"],
+        )
+
+        # 6.2) Get offer linkage candidates
+        get_offer_linkage_candidates = create_ssh_task(
+            task_id="get_offer_linkage_candidates",
+            command="python linkage_candidates.py "
+            f"--batch-size {DAG_CONFIG['PARAMS']['BATCH_SIZE']} "
+            f"--linkage-type offer "
+            f"--input-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['OFFER_CANDIDATES_READY'])}/data-*.parquet "
+            f"--output-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('offer')['LINKAGE_CANDIDATES'])} ",
+            instance_name="{{ params.instance_name }}",
+            base_dir=DAG_CONFIG["DIRS"]["BASE"],
+        )
+
+        # 6.3) Link offers
+        link_offers = create_ssh_task(
+            task_id="link_offers",
+            command="python link_items.py "
+            "--linkage-type offer "
+            f"--input-sources-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['OFFER_CANDIDATES_READY'])} "
+            f"--input-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['OFFER_CANDIDATES_READY'])} "
+            f"--linkage-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('offer')['LINKAGE_CANDIDATES'])} "
+            f"--output-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('offer')['LINKED'])} "
+            f"--unmatched-elements-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('offer')['UNMATCHED'])} ",
+            instance_name="{{ params.instance_name }}",
+            base_dir=DAG_CONFIG["DIRS"]["BASE"],
+        )
+
+        # 6.4) Assign IDs to newly linked offers
+        assign_linked_ids = create_ssh_task(
+            task_id="assign_linked_ids",
+            command="python assign_linked_ids.py "
+            f"--input-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('offer')['LINKED'])} "
+            f"--output-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('offer')['LINKED_W_ID'])} ",
+            instance_name="{{ params.instance_name }}",
+            base_dir=DAG_CONFIG["DIRS"]["BASE"],
+        )
+
+        # 6.5) Load linked offers into BigQuery
+        load_linked_offer_into_bq = GCSToBigQueryOperator(
+            task_id="load_linked_offer_into_bq",
+            bucket=MLFLOW_BUCKET_NAME,
+            source_objects=f"""{build_path(
+                DAG_CONFIG["BASE_PATHS"]["GCS_FOLDER"],
+                DAG_CONFIG["FILES"]("offer")["LINKED_W_ID"],
+            )}/data.parquet""",
+            destination_project_dataset_table=(
+                f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['BIGQUERY']['LINKED_OFFER_TABLE']}"
+            ),
+            source_format="PARQUET",
+            write_disposition="WRITE_TRUNCATE",
+            autodetect=True,
+        )
+
+        # 6.6) Evaluate offer linkage (optional, if you want it in the same group)
+        evaluate_offer = create_ssh_task(
+            task_id="evaluate_offer_linkage",
+            command="python evaluate.py "
+            f"--input-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['OFFER_CANDIDATES_READY'])} "
+            f"--linkage-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('offer')['LINKED_W_ID'])} "
+            "--linkage-type offer ",
+            instance_name="{{ params.instance_name }}",
+            base_dir=DAG_CONFIG["DIRS"]["BASE"],
+        )
+
+        # Set offer-workflow sequence
+        (
+            prepare_offer_to_offer_candidates
+            >> build_offer_linkage_vector
+            >> get_offer_linkage_candidates
+            >> link_offers
+            >> assign_linked_ids
+            >> load_linked_offer_into_bq
+            >> evaluate_offer
+        )
+    # - ---------------------------------------------------------------------
+    #  7) Export item mapping to BigQuery
+    # ---------------------------------------------------------------------
+    export_item_mapping = BigQueryExecuteQueryOperator(
+        task_id="export_item_mapping",
+        sql=(IMPORT_LINKAGE_SQL_PATH / "build_mapping.sql").as_posix(),
         write_disposition="WRITE_TRUNCATE",
-        autodetect=True,
-    )
-
-    build_offer_linkage_vector = SSHGCEOperator(
-        task_id="build_offer_linkage_vector",
-        instance_name="{{ params.instance_name }}",
-        base_dir=DAG_CONFIG["BASE_DIR"],
-        command="python build_semantic_space.py "
-        f"""--input-path {os.path.join(
-                    DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_CANDIDATES_DIR"],"data-*.parquet"
-                )} """
-        f"--linkage-type offer "
-        f"--reduction {DAG_CONFIG['REDUCTION']} "
-        f"--batch-size {DAG_CONFIG['BATCH_SIZE']} "
-        f"--unmatched-elements-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['UNMATCHED_PRODUCT_FILENAME'])} ",
-    )
-
-    get_offer_linkage_candidates = SSHGCEOperator(
-        task_id="get_offer_linkage_candidates",
-        instance_name="{{ params.instance_name }}",
-        base_dir=DAG_CONFIG["BASE_DIR"],
-        command="python linkage_candidates.py "
-        f"--batch-size {DAG_CONFIG['BATCH_SIZE']} "
-        f"--linkage-type product "
-        f"--reduction {DAG_CONFIG['REDUCTION']} "
-        f"""--input-path {os.path.join(
-                    DAG_CONFIG["STORAGE_PATH"],  DAG_CONFIG["INPUT_CANDIDATES_DIR"],"data-*.parquet"
-                )} """
-        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['OFFER_LINKAGE_CANDIDATES_FILENAME'])} "
-        f"--unmatched-elements-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['UNMATCHED_PRODUCT_FILENAME'])} ",
-    )
-
-    link_offers = SSHGCEOperator(
-        task_id="link_offers",
-        instance_name="{{ params.instance_name }}",
-        base_dir=DAG_CONFIG["BASE_DIR"],
-        command="python link_items.py "
-        "--linkage-type offer "
-        f"""--input-sources-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['UNMATCHED_PRODUCT_FILENAME'])} """
-        f"""--input-candidates-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['UNMATCHED_PRODUCT_FILENAME'])} """
-        f"--linkage-candidates-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['OFFER_LINKAGE_CANDIDATES_FILENAME'])} "
-        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKED_OFFER_FILENAME'])} "
-        f"--unmatched-elements-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['UNMATCHED_OFFER_FILENAME'])} ",
-    )
-
-    assign_linked_ids = SSHGCEOperator(
-        task_id="assign_linked_ids",
-        instance_name="{{ params.instance_name }}",
-        base_dir=DAG_CONFIG["BASE_DIR"],
-        command="python assign_linked_ids.py "
-        f"--input-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKED_OFFER_FILENAME'])} "
-        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKED_OFFER_W_ID_FILENAME'])} ",
-    )
-
-    load_linked_offer_into_bq = GCSToBigQueryOperator(
-        bucket=MLFLOW_BUCKET_NAME,
-        task_id="load_linked_offer_into_bq",
-        source_objects=os.path.join(
-            GCS_FOLDER_PATH, DAG_CONFIG["LINKED_OFFER_W_ID_FILENAME"]
+        use_legacy_sql=False,
+        destination_dataset_table=(
+            f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['BIGQUERY']['ITEM_MAPPING_TABLE']}"
         ),
-        destination_project_dataset_table=f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['LINKED_OFFER_TABLE']}",
-        source_format="PARQUET",
-        write_disposition="WRITE_TRUNCATE",
-        autodetect=True,
     )
-
+    # ---------------------------------------------------------------------
+    # 8) GCE INSTANCE STOP
+    # ---------------------------------------------------------------------
     gce_instance_stop = StopGCEOperator(
-        task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
+        task_id="gce_stop_task",
+        instance_name="{{ params.instance_name }}",
     )
 
+    # ---------------------------------------------------------------------
+    # DAG SEQUENCE
+    # ---------------------------------------------------------------------
+    start >> import_data_group >> export_data_group >> gce_instance_start
     (
-        start
-        >> import_data_tasks
-        >> end_imports
-        >> export_to_bq_tasks
-        >> end_exports
-        >> gce_instance_start
+        gce_instance_start
         >> fetch_install_code
-        >> install_dependencies
-        >> build_product_linkage_vector
-        >> get_product_linkage_candidates
-        >> link_products
-        >> load_linked_product_into_bq
-        >> build_offer_linkage_vector
-        >> get_offer_linkage_candidates
-        >> link_offers
-        >> assign_linked_ids
-        >> load_linked_offer_into_bq
-        >> gce_instance_stop
+        # >> install_dependencies
+        >> process_data_group
     )
+
+    # product_workflow starts after we process data
+    process_data_group >> product_workflow
+
+    # offer_workflow also depends on the product workflow’s “link_products”
+    # to have the unmatched product ready. We can chain them here:
+    product_workflow >> offer_workflow
+
+    # then stop GCE and end
+    offer_workflow >> export_item_mapping >> gce_instance_stop >> end

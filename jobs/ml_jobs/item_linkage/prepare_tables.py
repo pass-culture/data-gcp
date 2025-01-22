@@ -18,7 +18,7 @@ app = typer.Typer()
 def filter_candidates(
     linkage_type: str,
     data: pd.DataFrame,
-    unmatched_elements: Optional[pd.DataFrame] = None,
+    unmatched_elements_ids: Optional[pd.DataFrame] = None,
 ) -> pd.DataFrame:
     """
     Filter candidates according to the linkage type.
@@ -27,9 +27,9 @@ def filter_candidates(
         return data[data.offer_subcategory_id.isin(SYNCHRO_SUBCATEGORIES)]
     elif linkage_type == "offer":
         data_offer = data[~data.offer_subcategory_id.isin(SYNCHRO_SUBCATEGORIES)]
-        if unmatched_elements is not None:
+        if unmatched_elements_ids is not None:
             unmatched_candidates = data.merge(
-                unmatched_elements[["item_id"]], on="item_id", how="inner"
+                unmatched_elements_ids, on="item_id", how="inner"
             )
             return pd.concat([data_offer, unmatched_candidates], ignore_index=True)
         return data_offer
@@ -43,15 +43,21 @@ def process_in_batches(
     output_path: str,
     linkage_type: str,
     batch_size: int,
-    unmatched_elements: Optional[pd.DataFrame] = None,
+    unmatched_elements_path: Optional[str] = None,
 ):
     """
     Generic routine to read Parquet in batches from GCS, filter, and upload.
     """
+    if unmatched_elements_path:
+        unmatched_elements_ids = read_parquet_files_from_gcs_directory(
+            unmatched_elements_path, columns=["item_id"]
+        )
+    else:
+        unmatched_elements_ids = None
     for i, chunk in enumerate(read_parquet_in_batches_gcs(input_path, batch_size)):
         logger.info(f"{label} - raw count: {len(chunk)} items")
 
-        chunk_ready = filter_candidates(linkage_type, chunk, unmatched_elements)
+        chunk_ready = filter_candidates(linkage_type, chunk, unmatched_elements_ids)
         logger.info(f"{label} - post-filter count: {len(chunk_ready)} items")
 
         chunk_output_path = f"{output_path}/data-{i + 1}.parquet"
@@ -101,13 +107,6 @@ def main(
     """
     logger.info(f"Preparing tables for {linkage_type} linkage...")
 
-    if unmatched_elements_path:
-        unmatched_elements = read_parquet_files_from_gcs_directory(
-            unmatched_elements_path, columns=["item_id"]
-        )
-    else:
-        unmatched_elements = None
-
     logger.info("Processing candidates...")
     process_in_batches(
         label="Candidates",
@@ -115,7 +114,7 @@ def main(
         output_path=output_candidates_path,
         linkage_type=linkage_type,
         batch_size=batch_size,
-        unmatched_elements=unmatched_elements,
+        unmatched_elements_path=unmatched_elements_path,
     )
 
     if input_sources_path and output_sources_path:
@@ -126,7 +125,7 @@ def main(
             output_path=output_sources_path,
             linkage_type=linkage_type,
             batch_size=batch_size,
-            unmatched_elements=None,
+            unmatched_elements_path=None,
         )
 
 

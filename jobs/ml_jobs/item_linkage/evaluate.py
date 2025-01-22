@@ -8,7 +8,12 @@ import typer
 from loguru import logger
 from matplotlib.backends.backend_pdf import PdfPages
 
-from constants import ENV_SHORT_NAME, EVALUATION_FEATURES
+from constants import (
+    EVALUATION_FEATURES,
+    EXPERIMENT_NAME,
+    MLFLOW_RUN_ID_FILENAME,
+    RUN_NAME,
+)
 from utils.common import read_parquet_files_from_gcs_directory
 from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
 
@@ -68,28 +73,9 @@ def evaluate_matching(linkage_candidates, linked_items, output_file="evaluation_
         else 0
     )
 
-    # Calculate Booking Count Coverage
-    if "booking_count" in linkage_candidates.columns:
-        booking_coverage = (
-            merged_df.groupby("booking_count")
-            .agg(
-                total_offers=("booking_count", "count"),
-                matched_offers=("is_matched", "sum"),
-            )
-            .reset_index()
-        )
-        booking_coverage["coverage_percentage"] = (
-            booking_coverage["matched_offers"] / booking_coverage["total_offers"] * 100
-        )
-        booking_count_coverage_df = booking_coverage.copy()
-    else:
-        booking_count_coverage_df = pd.DataFrame()
-        print("Warning: 'booking_count' column not found in linkage_candidates.")
-
-    # Generate plots and save them to a single PDF file
     with PdfPages(output_file) as pdf:
         # Coverage Pie Chart
-        plt.figure(figsize=(6, 6))
+        plt.figure(figsize=(12, 12))
         plt.pie(
             [coverage_percentage, 100 - coverage_percentage],
             labels=["Matched Offers", "Unmatched Offers"],
@@ -103,7 +89,7 @@ def evaluate_matching(linkage_candidates, linked_items, output_file="evaluation_
         plt.close()
 
         # Match Frequency Histogram
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(16, 9))
         sns.histplot(
             match_frequency_df["match_count"],
             bins=range(1, int(match_frequency_df["match_count"].max()) + 2),
@@ -119,7 +105,7 @@ def evaluate_matching(linkage_candidates, linked_items, output_file="evaluation_
         plt.close()
 
         # Percentage of Duplicate Matches
-        plt.figure(figsize=(6, 6))
+        plt.figure(figsize=(16, 9))
         plt.bar(
             ["Duplicates", "Unique Matches"],
             [percentage_duplicates, 100 - percentage_duplicates],
@@ -132,20 +118,29 @@ def evaluate_matching(linkage_candidates, linked_items, output_file="evaluation_
         pdf.savefig()
         plt.close()
 
-        # Booking Count Coverage Plot (if applicable)
-        if not booking_count_coverage_df.empty:
-            plt.figure(figsize=(10, 6))
-            sns.barplot(
-                data=booking_count_coverage_df,
-                x="booking_count",
-                y="coverage_percentage",
-                palette="viridis",
+        if "booking_count" in linkage_candidates.columns:
+            logger.info("Plot Booking Count Coverage...")
+
+            total_booking_count = merged_df["booking_count"].sum()
+            matched_booking_count = merged_df[merged_df["is_matched"]][
+                "booking_count"
+            ].sum()
+
+            # Calculate the coverage percentage
+            bookin_coverage_percentage = (
+                matched_booking_count / total_booking_count
+            ) * 100
+
+            plt.figure(figsize=(12, 12))
+            plt.pie(
+                [bookin_coverage_percentage, 100 - bookin_coverage_percentage],
+                labels=["Matched offers", "Unmatched offers"],
+                autopct="%1.1f%%",
+                startangle=140,
+                colors=["#66b3ff", "#ffcc99"],
             )
-            plt.title("Coverage by Booking Count")
-            plt.xlabel("Booking Count")
-            plt.ylabel("Coverage Percentage (%)")
-            plt.ylim(0, 100)
-            plt.tight_layout()
+            plt.title("Overall Booking Coverage")
+            plt.axis("equal")
             pdf.savefig()
             plt.close()
 
@@ -166,12 +161,12 @@ def evaluate_matching_by_subcategory(
     Returns:
     - subcat_metrics_df (pd.DataFrame): DataFrame containing metrics per subcategory.
     """
-    required_columns = ["item_id_candidate", "offer_subcategory_id"]
+    required_columns = ["item_id_candidate", "offer_subcategory_id_candidate"]
     for col in required_columns:
         if col not in linkage_candidates.columns or col not in linked_items.columns:
             raise ValueError(f"Both DataFrames must contain '{col}' column.")
 
-    # Merge DataFrames on 'item_id_candidate' and 'offer_subcategory_id'
+    # Merge DataFrames on 'item_id_candidate' and 'offer_subcategory_id_candidate'
     merged_df = pd.merge(
         linkage_candidates,
         linked_items,
@@ -185,7 +180,7 @@ def evaluate_matching_by_subcategory(
 
     # Group by subcategory and calculate metrics
     subcat_metrics = (
-        merged_df.groupby("offer_subcategory_id")
+        merged_df.groupby("offer_subcategory_id_candidate")
         .apply(
             lambda df: pd.Series(
                 {
@@ -215,10 +210,10 @@ def evaluate_matching_by_subcategory(
     # Generate plots and save them to a single PDF file
     with PdfPages(output_file) as pdf:
         # Coverage by Subcategory
-        plt.figure(figsize=(12, 6))
+        plt.figure(figsize=(24, 12))
         sns.barplot(
             data=subcat_metrics,
-            x="offer_subcategory_id",
+            x="offer_subcategory_id_candidate",
             y="Coverage (%)",
             palette="Blues_d",
         )
@@ -232,10 +227,10 @@ def evaluate_matching_by_subcategory(
         plt.close()
 
         # Percentage of Duplicate Matches by Subcategory
-        plt.figure(figsize=(12, 6))
+        plt.figure(figsize=(24, 12))
         sns.barplot(
             data=subcat_metrics,
-            x="offer_subcategory_id",
+            x="offer_subcategory_id_candidate",
             y="Percentage of Duplicates (%)",
             palette="Reds_d",
         )
@@ -247,6 +242,56 @@ def evaluate_matching_by_subcategory(
         plt.tight_layout()
         pdf.savefig()
         plt.close()
+
+        if (
+            "booking_count" in linkage_candidates.columns
+            and "offer_subcategory_id_candidate" in linkage_candidates.columns
+        ):
+            logger.info("Plot Booking Count Coverage by Offer Subcategory ID...")
+
+            # Calculate total booking counts for all offers and matched offers
+            total_booking_counts = (
+                merged_df.groupby("offer_subcategory_id_candidate")["booking_count"]
+                .sum()
+                .reset_index()
+            )
+            matched_booking_counts = (
+                merged_df[merged_df["is_matched"]]
+                .groupby("offer_subcategory_id_candidate")["booking_count"]
+                .sum()
+                .reset_index()
+            )
+
+            # Merge the total and matched booking counts
+            booking_coverage = pd.merge(
+                total_booking_counts,
+                matched_booking_counts,
+                on="offer_subcategory_id_candidate",
+                suffixes=("_total", "_matched"),
+            )
+
+            # Calculate the coverage percentage
+            booking_coverage["coverage_percentage"] = (
+                booking_coverage["booking_count_matched"]
+                / booking_coverage["booking_count_total"]
+                * 100
+            )
+
+            # Plot the data
+            plt.figure(figsize=(14, 8))
+            sns.barplot(
+                data=booking_coverage,
+                x="offer_subcategory_id_candidate",
+                y="coverage_percentage",
+                palette="viridis",
+            )
+            plt.xlabel("Offer Subcategory ID")
+            plt.ylabel("Coverage Percentage")
+            plt.title("Booking Count Coverage by Offer Subcategory ID")
+            plt.xticks(rotation=45, ha="right")
+            plt.tight_layout()
+            pdf.savefig()
+            plt.close()
 
     return
 
@@ -284,7 +329,7 @@ def main(
     Evaluation of linkage results.
 
     This function:
-      1) Reads the linkage candidates from the specified path.
+      1) Reads the candidates from the specified path.
       2) Reads the final linkage output from another path.
       3) Renames columns as needed for consistency.
       4) Delegates to an evaluation function for further analysis.
@@ -294,37 +339,43 @@ def main(
         input_candidates_path (str): The GCS path where linkage candidates are found.
         linkage_path (str): The GCS path where the final linkage output is found.
     """
-    linkage_candidates_clean = read_parquet_files_from_gcs_directory(
+    # Increase plot size and resolution
+    candidates_clean = read_parquet_files_from_gcs_directory(
         input_candidates_path, columns=EVALUATION_FEATURES
+    )
+    candidates_clean = candidates_clean.rename(
+        columns={
+            "item_id": "item_id_candidate",
+            "offer_subcategory_id": "offer_subcategory_id_candidate",
+        }
     )
 
     linkage = read_parquet_files_from_gcs_directory(linkage_path)
-
-    linkage_candidates_clean = linkage_candidates_clean.rename(
-        columns={"item_id": "item_id_candidate"}
-    )
-    logger.info(f"linkage_candidates_clean: {linkage_candidates_clean.columns}")
+    logger.info(f"linkage: {linkage.columns}")
+    logger.info(f"candidates_clean: {candidates_clean.columns}")
     paths = build_evaluation_paths(linkage_type)
     logger.info(f"paths: {paths}")
     evaluate_matching(
-        linkage_candidates_clean,
+        candidates_clean,
         linkage,
         output_file=paths["evaluation_plots"],
     )
     evaluate_matching_by_subcategory(
-        linkage_candidates_clean,
+        candidates_clean,
         linkage,
         output_file=paths["subcategory_evaluation_plots"],
     )
 
-    experiment_name = f"item_linkage_v2.0_{ENV_SHORT_NAME}"
     connect_remote_mlflow()
-    experiment = get_mlflow_experiment(experiment_name)
-
-    with mlflow.start_run(experiment_id=experiment.experiment_id):
+    experiment = get_mlflow_experiment(EXPERIMENT_NAME)
+    with open(f"{MLFLOW_RUN_ID_FILENAME}.txt", mode="r") as file:
+        run_id = file.read()
+    with mlflow.start_run(
+        experiment_id=experiment.experiment_id, run_id=run_id, run_name=RUN_NAME
+    ):
         mlflow.log_artifact(
             "plots",
-            artifact_path="plots",
+            artifact_path="",
         )
 
     return

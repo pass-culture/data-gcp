@@ -42,7 +42,7 @@ offers as (
     where go.offer_product_id is not null
 ),sources as (
 SELECT
-    CASE WHEN o.item_id like 'link-%' THEN o.offer_id ELSE o.item_id END AS item_id,
+    CASE WHEN o.item_id like 'link-%' THEN CONCAT('offer-', o.offer_id) ELSE o.item_id END AS item_id,
     z.embedding,
     o.offer_name,
     o.offer_description,
@@ -52,6 +52,6 @@ FROM
     offers o
 INNER JOIN z on z.item_id = o.item_id
 )
-select * from sources 
+select * from sources
 QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY performer DESC) = 1
 order by RAND()

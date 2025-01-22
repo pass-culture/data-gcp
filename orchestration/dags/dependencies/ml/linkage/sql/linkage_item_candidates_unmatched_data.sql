@@ -43,7 +43,7 @@ offers as (
 ),
 candidates as(
     SELECT
-        CASE WHEN o.item_id like 'link-%' THEN o.offer_id ELSE o.item_id END AS item_id,
+        CASE WHEN o.item_id like 'link-%' THEN CONCAT('offer-', o.offer_id) ELSE o.item_id END AS item_id,
         z.embedding,
         o.offer_name,
         o.offer_description,

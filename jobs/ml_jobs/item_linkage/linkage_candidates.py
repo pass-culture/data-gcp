@@ -6,7 +6,13 @@ import typer
 from loguru import logger
 from tqdm import tqdm
 
-from constants import MODEL_PATH, NUM_RESULTS, RETRIEVAL_FILTERS
+from constants import (
+    BATCH_SIZE_RETRIEVAL,
+    MODEL_PATH,
+    NUM_RESULTS,
+    RETRIEVAL_FILTERS,
+    SEMAPHORE_RETRIEVAL,
+)
 from model.semantic_space import SemanticSpace
 from utils.common import (
     read_parquet_in_batches_gcs,
@@ -14,8 +20,7 @@ from utils.common import (
 from utils.gcs_utils import upload_parquet
 
 app = typer.Typer()
-MAX_CONCURRENT_SEARCHES = 400
-search_semaphore = asyncio.Semaphore(MAX_CONCURRENT_SEARCHES)
+search_semaphore = asyncio.Semaphore(SEMAPHORE_RETRIEVAL)
 
 
 def load_model(model_path: str, linkage_type: str) -> SemanticSpace:
@@ -51,20 +56,12 @@ def build_filter_dict(row, filter: list = RETRIEVAL_FILTERS):
     return filters
 
 
-search_semaphore = asyncio.Semaphore(100)
-BATCH_SIZE = 10000
-
-
-async def limited_search(
-    model, vector, filters, similarity_metric, n, vector_column_name
-):
+async def limited_search(model, vector, filters, n):
     async with search_semaphore:
         return await model.search(
             vector=vector,
             filters=filters,
-            similarity_metric=similarity_metric,
             n=n,
-            vector_column_name=vector_column_name,
         )
 
 
@@ -93,9 +90,7 @@ async def generate_semantic_candidates(
                 model=model,
                 vector=row.vector,
                 filters=build_filter_dict(row, RETRIEVAL_FILTERS),
-                similarity_metric="cosine",
                 n=NUM_RESULTS,
-                vector_column_name="vector",
             )
         )
 
@@ -103,8 +98,8 @@ async def generate_semantic_candidates(
     logger.info(f"Tasks length: {len(tasks)}")
 
     results = []
-    for i in tqdm(range(0, len(tasks), BATCH_SIZE), desc="Gathering batches"):
-        batch = tasks[i : i + BATCH_SIZE]
+    for i in tqdm(range(0, len(tasks), BATCH_SIZE_RETRIEVAL), desc="Gathering batches"):
+        batch = tasks[i : i + BATCH_SIZE_RETRIEVAL]
         batch_results = await asyncio.gather(*batch)
         results.extend(batch_results)
 

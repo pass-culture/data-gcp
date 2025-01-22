@@ -1,8 +1,10 @@
 import os
+from datetime import datetime
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
-DETAIL_COLUMNS = ["item_id", "performer", "edition", "offer_subcategory_id"]
+EXPERIMENT_NAME = f"item_linkage_v2.0_{ENV_SHORT_NAME}"
+DETAIL_COLUMNS = ["item_id"]
 SYNCHRO_SUBCATEGORIES = [
     "SUPPORT_PHYSIQUE_MUSIQUE_VINYLE",
     "LIVRE_PAPIER",
@@ -14,11 +16,16 @@ METADATA_FEATURES = [
     "performer",
     "offer_name",
     "offer_description",
+    "oeuvre",
     "edition",
     "offer_subcategory_id",
 ]
 EVALUATION_FEATURES = ["item_id", "offer_subcategory_id", "booking_count"]
+RUN_NAME = f"run_{datetime.today().strftime('%Y-%m-%d')}"
+MLFLOW_RUN_ID_FILENAME = "mlflow_run_uuid"
 RETRIEVAL_FILTERS = ["edition", "offer_subcategory_id"]
+BATCH_SIZE_RETRIEVAL = 10000
+SEMAPHORE_RETRIEVAL = 100
 MODEL_TYPE = {
     "n_dim": 32,
     "type": "semantic",
@@ -36,10 +43,16 @@ LOGGING_INTERVAL = 50000  # Interval for logging progress
 N_PROBES = 5
 REFINE_FACTOR = 10
 
+# Parametrize thr depending on linkage type
+# Hard for offer to product (even exact match)
+# Softer for offer to offer
 MATCHING_FEATURES = {
-    "offer_name": {"method": "jarowinkler", "threshold": 0.90, "missing_value": 0},
-    # "offer_description": {"method": "jarowinkler", "threshold": 0.5,"missing_value":0},
-    # "performer": {"method": "jarowinkler", "threshold": 0.95,"missing_value":1},
+    "product": {
+        "oeuvre": {"method": "jarowinkler", "threshold": 0.95, "missing_value": 0},
+    },
+    "offer": {
+        "oeuvre": {"method": "jarowinkler", "threshold": 0.95, "missing_value": 0}
+    },
 }
 MATCHES_REQUIRED = 1
 UNKNOWN_PERFORMER = "unkn"
@@ -47,5 +60,7 @@ UNKNOWN_NAME = "no_name"
 UNKNOWN_DESCRIPTION = "no_des"
 INITIAL_LINK_ID = "NC"
 
-extract_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*(\d+)\b"  # This pattern is for extracting the edition number
-remove_pattern = r"\b(?:Tome|tome|t|vol|episode|)\s*\d+\b"  # This pattern is for removing the edition number and keyword
+extract_pattern = (
+    r"\b(?:tome|t|vol|episode)\s*(\d+)\b|\b(?:tome|t|vol|episode)(\d+)\b|(\d+)$"
+)
+remove_pattern = r"\b(?:tome|t|vol|episode)\s*\d+\b|\b(?:tome|t|vol|episode)\d+\b|\d+$"

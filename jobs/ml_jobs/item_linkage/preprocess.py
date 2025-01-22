@@ -49,6 +49,7 @@ def preprocess_string(s):
     s = s.strip()
     s = re.sub(r"[^\w\s]", "", s)
     s = re.sub(f"[{string.punctuation}]", "", s)
+    s = s.strip()
     return remove_accents(s)
 
 
@@ -66,20 +67,27 @@ def preprocess_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
         performer=lambda df: df["performer"]
         .fillna(value=UNKNOWN_PERFORMER)
         .replace("", None)
-        .str.lower(),
+        .apply(preprocess_string),
+        offer_name=lambda df: df["offer_name"]
+        .str.strip()
+        .replace("", None)
+        .str.lower()
+        .apply(preprocess_string),
         edition=lambda df: df["offer_name"]
-        .str.extract(extract_pattern, expand=False)
+        .str.lower()
+        .str.extract(extract_pattern, expand=False)[0]
         .astype(str)
         .replace("nan", None)
         .fillna(value="0"),
-        offer_name=lambda df: df["offer_name"]
+        oeuvre=lambda df: df["offer_name"]
+        .str.lower()
         .str.replace(remove_pattern, "", regex=True)
         .str.strip()
         .replace("", None)
         .apply(preprocess_string),
         offer_description=lambda df: df["offer_description"]
         .replace("", None)
-        .str.lower(),
+        .apply(preprocess_string),
     )
 
 
@@ -150,14 +158,14 @@ def main(
     reduction = True if reduction == "true" else False
     for i, chunk in enumerate(read_parquet_in_batches_gcs(input_path, batch_size)):
         logger.info(f"Processing chunk {i + 1}...")
-        preprocessed_chunk = preprocess_catalog(chunk)
-        clean_chunk = preprocess_embedding_and_store_reducer(
-            preprocessed_chunk, MODEL_TYPE["reducer_pickle_path"], reduction
+        clean_catalog = preprocess_catalog(chunk)
+        chunk_ready = preprocess_embedding_and_store_reducer(
+            clean_catalog, MODEL_TYPE["reducer_pickle_path"], reduction
         )
         chunk_output_path = f"{output_path}/data-{i + 1}.parquet"
         logger.info(f"Saving processed chunk to {chunk_output_path}...")
         upload_parquet(
-            dataframe=clean_chunk,
+            dataframe=chunk_ready,
             gcs_path=chunk_output_path,
         )
         logger.info(f"Chunk {i + 1} processed and saved.")

@@ -31,7 +31,6 @@ def create_items_table(items_df: pd.DataFrame, linkage_type: str) -> None:
         vector: Vector(32)
         item_id: str
         offer_subcategory_id: str
-        performer: Optional[str]
         edition: Optional[str]
 
     def make_batches(df: pd.DataFrame, batch_size: int):
@@ -109,10 +108,7 @@ def main(
     logger.info("Download and prepare table...")
     total_count = 0
     for chunk in read_parquet_in_batches_gcs(input_path, batch_size):
-        chunk = chunk[
-            ["item_id", "vector", "offer_subcategory_id", "performer", "edition"]
-        ]
-        chunk = chunk.fillna("")
+        chunk = chunk[["item_id", "vector"] + RETRIEVAL_FILTERS]
         logger.info(f"Processing chunk of length: {len(chunk)}")
         logger.info(f"chunk columns: {chunk.columns}")
         create_items_table(chunk, linkage_type)

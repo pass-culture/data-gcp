@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
+    BIGQUERY_ML_PREPROCESSING_DATASET,
     BIGQUERY_ML_RECOMMENDATION_DATASET,
-    BIGQUERY_RAW_DATASET,
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
@@ -271,7 +271,7 @@ with DAG(
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/upload_embeddings_to_bq.py "
         "--experiment-name {{ params.experiment_name }} "
         "--run-name {{ params.run_name }} "
-        f"--dataset-id { BIGQUERY_RAW_DATASET }",
+        f"--dataset-id { BIGQUERY_ML_PREPROCESSING_DATASET }",
         dag=dag,
     )
 

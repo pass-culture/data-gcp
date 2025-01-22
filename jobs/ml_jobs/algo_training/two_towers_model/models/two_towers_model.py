@@ -12,7 +12,7 @@ from two_towers_model.utils.layers import (
 )
 
 DROPOUT_RATE = 0.3
-L2_REGULARIZATION = 0.001
+L2_REGULARIZATION = 0.00001
 
 
 class TwoTowersModel(tfrs.models.Model):

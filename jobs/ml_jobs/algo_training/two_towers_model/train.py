@@ -90,6 +90,15 @@ def build_tf_datasets(
     """Builds TensorFlow datasets for training and evaluation."""
     logger.info("Building tf datasets")
 
+    # HACK
+    ratio = 0.1
+    len_train_data = len(train_data)
+    validation_data = train_data.sample(frac=ratio)
+    new_len_train_data = int(0.9 * len_train_data // batch_size * batch_size)
+    train_data = train_data.loc[~train_data.index.isin(validation_data.index)].iloc[
+        :new_len_train_data
+    ]
+
     train_dataset = (
         tf.data.Dataset.from_tensor_slices(train_data.values)
         .cache()

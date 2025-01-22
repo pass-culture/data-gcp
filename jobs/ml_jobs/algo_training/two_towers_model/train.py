@@ -237,9 +237,9 @@ def save_model_and_embeddings(
     logger.info("Predicting final item embeddings")
     item_embeddings = two_tower_model.item_model.predict(item_dataset, verbose=VERBOSE)
 
-    logger.info("Normalizing embeddings...")
-    user_embeddings = tf.math.l2_normalize(user_embeddings, axis=1)
-    item_embeddings = tf.math.l2_normalize(item_embeddings, axis=1)
+    # logger.info("Normalizing embeddings...")
+    # user_embeddings = tf.math.l2_normalize(user_embeddings, axis=1)
+    # item_embeddings = tf.math.l2_normalize(item_embeddings, axis=1)
 
     logger.info("Building and saving the MatchModel")
     match_model = MatchModel(

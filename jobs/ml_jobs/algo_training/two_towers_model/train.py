@@ -208,6 +208,7 @@ def train_two_tower_model(
                 monitor="val_loss",
                 patience=10,
                 min_delta=MIN_DELTA,
+                restore_best_weights=True,
                 verbose=1,
             ),
             MLFlowLogging(

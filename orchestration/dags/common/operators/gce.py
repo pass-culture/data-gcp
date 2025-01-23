@@ -124,6 +124,24 @@ class StopGCEOperator(BaseOperator):
         hook.delete_vm(self.instance_name)
 
 
+class EteindreGCEOperator(BaseOperator):
+    template_fields = ["instance_name"]
+
+    @apply_defaults
+    def __init__(
+        self,
+        instance_name: str,
+        *args,
+        **kwargs,
+    ):
+        super(EteindreGCEOperator, self).__init__(*args, **kwargs)
+        self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
+
+    def execute(self, context):
+        hook = GCEHook()
+        hook.stop_vm(self.instance_name)
+
+
 class BaseSSHGCEOperator(BaseOperator):
     MAX_RETRY = 3
     SSH_TIMEOUT = 10

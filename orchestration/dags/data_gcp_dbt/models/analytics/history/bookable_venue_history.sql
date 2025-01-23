@@ -31,7 +31,8 @@ with
         inner join {{ ref("int_applicative__offer") }} as o using (offer_id)
         inner join
             {{ source("raw", "applicative_database_venue") }} as v using (venue_id)
-        group by o.venue_id, v.venue_managing_offerer_id, date('{{ ds() }}'), 'individual'
+        group by
+            o.venue_id, v.venue_managing_offerer_id, date('{{ ds() }}'), 'individual'
         union all
         select
             o.venue_id,
@@ -41,7 +42,8 @@ with
             count(
                 case
                     when
-                        date_sub('{{ ds() }}', interval 1 day) >= date(sb.dbt_valid_from)
+                        date_sub('{{ ds() }}', interval 1 day)
+                        >= date(sb.dbt_valid_from)
                         and (
                             sb.dbt_valid_to is null
                             or date_sub('{{ ds() }}', interval 1 day)
@@ -57,7 +59,8 @@ with
             )
         inner join
             {{ source("raw", "applicative_database_venue") }} as v using (venue_id)
-        group by o.venue_id, v.venue_managing_offerer_id, date('{{ ds() }}'), 'collective'
+        group by
+            o.venue_id, v.venue_managing_offerer_id, date('{{ ds() }}'), 'collective'
     ),
 
     pivoted_data as (

@@ -14,7 +14,7 @@ with
             case
                 when category = 'offerer contribution' then pricing_line.amount
             end as offerer_contribution
-        from {{ ref("mrt_global__booking") }} as booking
+        from {{ ref("int_applicative__booking") }} as booking
         left join
             {{ ref("pricing") }} as pricing on booking.booking_id = pricing.bookingid
         left join

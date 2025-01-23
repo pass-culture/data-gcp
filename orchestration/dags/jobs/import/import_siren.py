@@ -23,6 +23,7 @@ FUNCTION_NAME = f"siren_import_{ENV_SHORT_NAME}"
 SIREN_FILENAME = "siren_data.csv"
 schedule_interval = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 */6 * * *"
 
+DAG_NAME = "import_siren_v1"
 GCE_INSTANCE = f"import-siren-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/siren"
 dag_config = {
@@ -38,7 +39,7 @@ default_dag_args = {
 }
 
 with DAG(
-    "import_siren_v1",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Import Siren from INSEE API",
     on_failure_callback=None,
@@ -55,7 +56,9 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

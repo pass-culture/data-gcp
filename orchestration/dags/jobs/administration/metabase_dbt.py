@@ -21,6 +21,7 @@ from common.utils import (
 from airflow import DAG
 from airflow.models import Param
 
+DAG_NAME = "metabase-dbt"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/metabase-dbt"
 dag_config = {
     "PROJECT_NAME": GCP_PROJECT_ID,
@@ -36,7 +37,7 @@ default_dag_args = {
 }
 
 with DAG(
-    "metabase_dbt",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Import metabase tables from CloudSQL & archive old cards",
     schedule_interval=get_airflow_schedule("0 */6 * * 1-5")
@@ -70,7 +71,9 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        instance_name="{{ params.instance_name }}", task_id="gce_start_task"
+        instance_name="{{ params.instance_name }}",
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
     fetch_install_code = InstallDependenciesOperator(
         task_id="fetch_install_code",

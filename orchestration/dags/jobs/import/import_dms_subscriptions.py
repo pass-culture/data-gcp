@@ -31,6 +31,7 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
 DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 GCE_INSTANCE = f"import-dms-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/dms"
+DAG_NAME = "import_dms_subscriptions"
 
 dag_config = {
     "GCP_PROJECT_ID": GCP_PROJECT_ID,
@@ -46,7 +47,7 @@ default_args = {
 
 
 with DAG(
-    "import_dms_subscriptions",
+    DAG_NAME,
     default_args=default_args,
     description="Import DMS subscriptions",
     schedule_interval=get_airflow_schedule("0 1 * * *"),
@@ -76,7 +77,7 @@ with DAG(
         instance_type="n1-standard-4",
         task_id="gce_start_task",
         retries=2,
-        labels={"job_type": "long_task"},
+        labels={"job_type": "long_task", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

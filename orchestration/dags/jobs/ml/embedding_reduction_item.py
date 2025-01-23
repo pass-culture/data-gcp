@@ -26,7 +26,7 @@ DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"emb-reduction-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/ml_jobs/reduction"
 DATE = "{{ yyyymmdd(ds) }}"
-
+DAG_NAME = "embedding_reduction_item"
 default_args = {
     "start_date": datetime(2023, 8, 2),
     "on_failure_callback": task_fail_slack_alert,
@@ -39,7 +39,7 @@ dag_config = {
 
 
 with DAG(
-    "embedding_reduction_item",
+    DAG_NAME,
     default_args=default_args,
     description="Reduce embeddings",
     schedule_interval=get_airflow_schedule("0 0 * * 0"),  # every sunday
@@ -71,7 +71,7 @@ with DAG(
         preemptible=False,
         instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={"job_type": "long_ml"},
+        labels={"job_type": "long_ml", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

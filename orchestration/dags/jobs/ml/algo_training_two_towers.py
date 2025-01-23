@@ -150,7 +150,7 @@ with DAG(
         gpu_count="{{ params.gpu_count }}",
         gpu_type="{{ params.gpu_type }}",
         retries=2,
-        labels={"job_type": "long_ml"},
+        labels={"job_type": "long_ml", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

@@ -22,6 +22,7 @@ DEFAULT_REGION = "europe-west1"
 
 BASE_PATH = "data-gcp/jobs/ml_jobs/clusterisation"
 DATE = "{{ yyyymmdd(ds) }}"
+DAG_NAME = "embedding_clusterisation_item"
 
 default_args = {
     "start_date": datetime(2023, 8, 2),
@@ -45,7 +46,7 @@ CLUSTERING_CONFIG = [
 
 
 with DAG(
-    "embedding_clusterisation_item",
+    DAG_NAME,
     default_args=default_args,
     description="Cluster items from metadata embeddings",
     schedule_interval=get_airflow_schedule("0 0 * * 0"),  # every sunday
@@ -79,7 +80,7 @@ with DAG(
             preemptible=False,
             instance_type="{{ params.instance_type }}",
             retries=2,
-            labels={"job_type": "long_ml"},
+            labels={"job_type": "long_ml", "dag_name": DAG_NAME},
         )
 
         fetch_install_code = InstallDependenciesOperator(

@@ -24,7 +24,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 
 DATE = "{{ ts_nodash }}"
-
+DAG_NAME = "retrieval_semantic_vector_build"
 # Environment variables to export before running commands
 dag_config = {
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/retrieval_vector_{ENV_SHORT_NAME}/semantic_{DATE}/{DATE}_item_embbedding_data",
@@ -53,7 +53,7 @@ default_args = {
 schedule_dict = {"prod": "0 4 * * *", "dev": "0 6 * * *", "stg": "0 6 * * 3"}
 
 with DAG(
-    "retrieval_semantic_vector_build",
+    DAG_NAME,
     default_args=default_args,
     description="Custom training job",
     schedule_interval=None,
@@ -96,7 +96,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={"job_type": "ml"},
+        labels={"job_type": "ml", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

@@ -7,6 +7,7 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
+from common.operators.gce import StopGCEOperator
 
 from airflow import configuration
 from airflow.providers.http.operators.http import HttpOperator
@@ -51,6 +52,18 @@ def task_fail_slack_alert(context):
 
 def analytics_fail_slack_alert(context):
     return __task_fail_slack_alert(context, job_type="analytics")
+
+
+def on_failure_callback_stop_vm(context):
+    operator = StopGCEOperator(
+        task_id="gce_stop_task", instance_name=context["params"]["instance_name"]
+    )
+    return operator.execute(context=context)
+
+
+def on_failure_combined_callback(context):
+    task_fail_slack_alert(context)
+    on_failure_callback_stop_vm(context)
 
 
 def __task_fail_slack_alert(context, job_type):

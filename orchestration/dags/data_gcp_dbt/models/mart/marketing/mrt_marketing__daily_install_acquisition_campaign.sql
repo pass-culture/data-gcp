@@ -61,7 +61,8 @@ select
     daily_attribution_summary.total_beneficiaries_16,
     daily_attribution_summary.total_beneficiaries_15
 from daily_attribution_summary
-left join {{ ref("int_appsflyer__daily_install_cost") }} as daily_install_cost
+left join
+    {{ ref("int_appsflyer__daily_install_cost") }} as daily_install_cost
     on daily_install_cost.app_install_date = daily_attribution_summary.app_install_date
     and daily_install_cost.app_os = daily_attribution_summary.app_os
     and daily_install_cost.acquisition_media_source

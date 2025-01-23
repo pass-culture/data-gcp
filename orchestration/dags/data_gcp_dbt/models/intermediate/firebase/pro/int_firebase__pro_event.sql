@@ -44,7 +44,11 @@ with
             ) as offerer_id,
             coalesce(venue_id, cast(venueid as string)) as venue_id,
             page_location,
-            page_title as page_name,
+            case 
+                when page_title like "%- Espace partenaires pass Culture%"
+                then replace(page_title,"- Espace partenaires pass Culture","- pass Culture Pro")
+                else page_title
+            end as page_name,
             regexp_extract(
                 page_location, r"""passculture\.pro\/(.*)$""", 1
             ) as url_first_path,
@@ -135,7 +139,11 @@ select
     offerer_id,
     venue_id,
     page_location,
-    page_name,
+    case 
+        when page_title like "%- Espace partenaires pass Culture%"
+        then replace(page_title,"- Espace partenaires pass Culture","- pass Culture Pro")
+        else page_title
+    end as page_name,
     url_first_path,
     case
         when url_path_details is null

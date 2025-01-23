@@ -16,6 +16,7 @@ from airflow.models import Param
 
 GCE_INSTANCE = f"import-contentful-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/contentful"
+DAG_NAME = "import_contentful"
 dag_config = {
     "GCP_PROJECT": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
@@ -30,7 +31,7 @@ default_dag_args = {
 }
 
 with DAG(
-    "import_contentful",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Import contentful tables",
     schedule_interval=get_airflow_schedule("00 01 * * *"),
@@ -49,6 +50,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         task_id="gce_start_task",
         instance_type="n1-standard-2",
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

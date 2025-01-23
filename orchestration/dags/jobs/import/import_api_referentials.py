@@ -16,6 +16,7 @@ from airflow.operators.dummy_operator import DummyOperator
 
 GCE_INSTANCE = f"import-api-referentials-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/import_api_referentials"
+DAG_NAME = "import_api_referentials"
 
 default_args = {
     "start_date": datetime(2022, 4, 13),
@@ -26,7 +27,7 @@ default_args = {
 
 
 with DAG(
-    "import_api_referentials",
+    DAG_NAME,
     default_args=default_args,
     description="Continuous update of api model to BQ",
     schedule_interval=get_airflow_schedule("0 0 * * 1"),  # import every monday at 00:00
@@ -42,7 +43,9 @@ with DAG(
     start = DummyOperator(task_id="start")
 
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

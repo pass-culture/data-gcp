@@ -23,6 +23,8 @@ from airflow.operators.dummy_operator import DummyOperator
 
 GCE_INSTANCE = f"import-downloads-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/downloads"
+DAG_NAME = "import_downloads"
+
 dag_config = {
     "PROJECT_NAME": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
@@ -37,7 +39,7 @@ default_dag_args = {
 }
 
 with DAG(
-    "import_downloads",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Import downloads tables",
     schedule_interval=get_airflow_schedule("00 01 * * *"),
@@ -53,7 +55,10 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task", retries=2
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        retries=2,
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

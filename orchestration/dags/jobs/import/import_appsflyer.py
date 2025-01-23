@@ -19,6 +19,7 @@ from airflow.operators.dummy_operator import DummyOperator
 
 GCE_INSTANCE = f"import-appsflyer-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/appsflyer"
+DAG_NAME = "import_appsflyer"
 
 GCS_ETL_PARAMS = {
     "DATE": "{{ ds }}",
@@ -36,7 +37,7 @@ default_dag_args = {
 schedule_dict = {"prod": "00 01 * * *", "dev": None, "stg": "00 02 * * *"}
 
 with DAG(
-    "import_appsflyer",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Import Appsflyer tables",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
@@ -56,7 +57,9 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

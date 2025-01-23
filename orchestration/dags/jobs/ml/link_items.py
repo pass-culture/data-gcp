@@ -178,7 +178,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={"job_type": "long_ml"},
+        labels={"job_type": "long_ml", "dag_name": DAG_CONFIG["ID"]},
     )
 
     fetch_install_code = InstallDependenciesOperator(

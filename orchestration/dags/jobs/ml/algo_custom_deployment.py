@@ -23,9 +23,10 @@ default_args = {
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"algo-custom-deployment-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
+DAG_NAME = "algo_custom_deployment"
 
 with DAG(
-    "algo_custom_deployment",
+    DAG_NAME,
     default_args=default_args,
     description="ML Custom Deployment job",
     schedule_interval=None,
@@ -51,7 +52,10 @@ with DAG(
     },
 ):
     gce_instance_start = StartGCEOperator(
-        task_id="gce_start_task", instance_name=GCE_INSTANCE, retries=2
+        task_id="gce_start_task",
+        instance_name=GCE_INSTANCE,
+        retries=2,
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

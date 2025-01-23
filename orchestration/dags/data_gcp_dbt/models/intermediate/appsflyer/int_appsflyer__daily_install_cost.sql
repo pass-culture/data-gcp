@@ -8,44 +8,68 @@
     )
 }}
 
--- Summarizes cost and installs, picking the latest execution per date
-select
-    app_id,
-    os as app_os,
-    media_source as acquisition_media_source,
-    campaign as acquisition_campaign,
-    adset as acquisition_adset,
-    ad as acquisition_ad,
-    cast(date as date) as app_install_date,
-    cast(execution_date as date) as acquisition_execution_date,
-    cast(sum(cost) as int64) as total_costs,
-    sum(installs) as total_installs
-from {{ source("raw", "appsflyer_cost_channel") }}
+WITH
+
+-- Summarizes campaign cost and installs, picking the latest execution per date
+campaign_installs AS (
+SELECT
+    os AS app_os,
+    media_source AS acquisition_media_source,
+    IF(campaign = '', 'None', campaign) AS acquisition_campaign,
+    IF(adset = '', 'None', adset) AS acquisition_adset,
+    IF(ad = '', 'None', ad) AS acquisition_ad,
+    CAST(date AS date) AS app_install_date,
+    CAST(execution_date AS date) AS acquisition_execution_date,
+    CAST(SUM(cost) AS int64) AS total_costs,
+    SUM(installs) AS total_installs
+FROM {{ source("raw", "appsflyer_cost_channel") }}
 {% if is_incremental() %}
-    where
-        cast(execution_date as date)
-        between date_sub(date("{{ ds() }}"), interval 7 day) and date("{{ ds() }}")
+    WHERE
+        CAST(execution_date AS date)
+        BETWEEN DATE_SUB(DATE('{{ ds() }}'), INTERVAL 7 DAY) AND DATE('{{ ds() }}')
 {% endif %}
-group by
+GROUP BY
     app_install_date,
     acquisition_execution_date,
-    app_id,
     app_os,
     acquisition_media_source,
     acquisition_campaign,
     acquisition_adset,
     acquisition_ad
-qualify
-    row_number() over (
-        partition by
+QUALIFY
+    ROW_NUMBER() OVER (
+        PARTITION BY
             app_install_date,
-            acquisition_execution_date,
-            app_id,
             app_os,
             acquisition_media_source,
             acquisition_campaign,
             acquisition_adset,
             acquisition_ad
-        order by acquisition_execution_date desc
+        ORDER BY acquisition_execution_date DESC
     )
-    = 1
+    = 1),
+
+-- Summarizes organic installs
+organic_installs AS
+
+(
+SELECT
+  platform AS app_os,
+  media_source AS acquisition_media_source,
+  'None' AS acquisition_campaign,
+  'None' AS acquisition_adset,
+  'None' AS acquisition_ad,
+  DATE(install_time) AS app_install_date,
+  DATE(install_time) AS acquisition_execution_date,
+  0 AS total_costs,
+  COUNT(*) AS total_installs
+FROM `passculture-data-prod.appsflyer_import_prod.installs`
+WHERE media_source = 'organic'
+GROUP BY app_install_date, platform, acquisition_media_source, acquisition_campaign, acquisition_adset, acquisition_ad, acquisition_execution_date)
+
+
+SELECT *
+FROM campaign_installs
+UNION ALL
+SELECT *
+FROM organic_installs

@@ -1,5 +1,4 @@
 {% docs column__app_install_date %} The installation date of the app. {% enddocs %}
-{% docs column__app_id %} The app ID in the AppsFlyer platform. Values are 'app.passculture.webapp' for android and 'id1557887412' for ios. {% enddocs %}
 {% docs column__app_os %} The operating system of the user's device. Possible values: 'android', 'ios'. {% enddocs %}
 {% docs column__acquisition_media_source %} The entity responsible for displaying advertisements, such as Facebook or Google Ads.. {% enddocs %}
 {% docs column__acquisition_campaign %} The name of the advertising campaign. {% enddocs %}

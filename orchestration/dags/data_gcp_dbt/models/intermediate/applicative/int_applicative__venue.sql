@@ -85,27 +85,6 @@ with
             ) as total_bookable_collective_offers
         from {{ ref("int_applicative__collective_offer") }}
         group by venue_id
-    ),
-
-    bookable_offer_history as (
-        select
-            venue_id,
-            min(partition_date) as first_bookable_offer_date,
-            max(partition_date) as last_bookable_offer_date,
-            min(
-                case when individual_bookable_offers > 0 then partition_date end
-            ) as first_individual_bookable_offer_date,
-            max(
-                case when individual_bookable_offers > 0 then partition_date end
-            ) as last_individual_bookable_offer_date,
-            min(
-                case when collective_bookable_offers > 0 then partition_date end
-            ) as first_collective_bookable_offer_date,
-            max(
-                case when collective_bookable_offers > 0 then partition_date end
-            ) as last_collective_bookable_offer_date
-        from {{ ref("bookable_venue_history") }}
-        group by venue_id
     )
 
 select
@@ -232,12 +211,6 @@ select
     coalesce(co.total_created_collective_offers, 0) as total_created_collective_offers,
     coalesce(o.total_created_individual_offers, 0)
     + coalesce(co.total_created_collective_offers, 0) as total_created_offers,
-    boh.first_bookable_offer_date,
-    boh.last_bookable_offer_date,
-    boh.first_individual_bookable_offer_date,
-    boh.last_individual_bookable_offer_date,
-    boh.first_collective_bookable_offer_date,
-    boh.last_collective_bookable_offer_date,
     case
         when
             o.first_individual_booking_date is not null
@@ -293,36 +266,6 @@ select
     coalesce(
         co.total_current_year_non_cancelled_tickets, 0
     ) as total_current_year_non_cancelled_tickets,
-    case
-        when date_diff(current_date, boh.last_bookable_offer_date, day) <= 30
-        then true
-        else false
-    end as is_active_last_30days,
-    case
-        when date_diff(current_date, boh.last_bookable_offer_date, year) = 0
-        then true
-        else false
-    end as is_active_current_year,
-    case
-        when date_diff(current_date, boh.last_individual_bookable_offer_date, day) <= 30
-        then true
-        else false
-    end as is_individual_active_last_30days,
-    case
-        when date_diff(current_date, boh.last_individual_bookable_offer_date, year) = 0
-        then true
-        else false
-    end as is_individual_active_current_year,
-    case
-        when date_diff(current_date, boh.last_collective_bookable_offer_date, day) <= 30
-        then true
-        else false
-    end as is_collective_active_last_30days,
-    case
-        when date_diff(current_date, boh.last_collective_bookable_offer_date, year) = 0
-        then true
-        else false
-    end as is_collective_active_current_year,
     row_number() over (
         partition by venue_managing_offerer_id
         order by
@@ -346,7 +289,6 @@ from {{ source("raw", "applicative_database_venue") }} as v
 left join {{ ref("int_geo__venue_location") }} as v_loc on v_loc.venue_id = v.venue_id
 left join offers_grouped_by_venue as o on o.venue_id = v.venue_id
 left join collective_offers_grouped_by_venue as co on co.venue_id = v.venue_id
-left join bookable_offer_history as boh on boh.venue_id = v.venue_id
 left join
     {{ source("raw", "applicative_database_venue_registration") }} as vr
     on v.venue_id = vr.venue_id

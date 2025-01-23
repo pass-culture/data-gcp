@@ -1,5 +1,18 @@
+WITH bookable_offer_history as (
+    select
+        venue_id,
+        MIN(partition_date) as first_bookable_offer_date,
+        MAX(partition_date) as last_bookable_offer_date,
+        MIN(case when individual_bookable_offers > 0 then partition_date end) as first_individual_bookable_offer_date,
+        MAX(case when individual_bookable_offers > 0 then partition_date end) as last_individual_bookable_offer_date,
+        MIN(case when collective_bookable_offers > 0 then partition_date end) as first_collective_bookable_offer_date,
+        MAX(case when collective_bookable_offers > 0 then partition_date end) as last_collective_bookable_offer_date
+    from {{ ref('bookable_venue_history') }}
+    group by venue_id
+)
+
 select
-    venue_id,
+    v.venue_id,
     venue_name,
     venue_public_name,
     venue_booking_email,
@@ -76,12 +89,12 @@ select
     total_bookable_offers,
     total_non_cancelled_tickets,
     total_current_year_non_cancelled_tickets,
-    is_active_last_30days,
-    is_active_current_year,
-    is_individual_active_last_30days,
-    is_individual_active_current_year,
-    is_collective_active_last_30days,
-    is_collective_active_current_year,
+    case when DATE_DIFF(CURRENT_DATE, boh.last_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_active_last_30days,
+    case when DATE_DIFF(CURRENT_DATE, boh.last_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_active_current_year,
+    case when DATE_DIFF(CURRENT_DATE, boh.last_individual_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_individual_active_last_30days,
+    case when DATE_DIFF(CURRENT_DATE, boh.last_individual_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_individual_active_current_year,
+    case when DATE_DIFF(CURRENT_DATE, boh.last_collective_bookable_offer_date, day) <= 30 then TRUE else FALSE end as is_collective_active_last_30days,
+    case when DATE_DIFF(CURRENT_DATE, boh.last_collective_bookable_offer_date, year) = 0 then TRUE else FALSE end as is_collective_active_current_year,
     offerer_id,
     offerer_name,
     offerer_validation_status,
@@ -98,5 +111,6 @@ select
     offerer_rank_asc,
     venue_image_source,
     venue_adage_inscription_date
-from {{ ref("int_global__venue") }}
+from {{ ref("int_global__venue") }} as v
+left join bookable_offer_history as boh on boh.venue_id = v.venue_id
 where offerer_validation_status = 'VALIDATED' and offerer_is_active

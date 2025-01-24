@@ -2,6 +2,7 @@ from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
     DATA_GCS_BUCKET_NAME,
+    DBT_SCRIPTS_PATH,
     ELEMENTARY_PYTHON_PATH,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -63,7 +64,7 @@ compute_metrics_elementary = BashOperator(
 
 dbt_test = BashOperator(
     task_id="dbt_test",
-    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
+    bash_command=f"bash {DBT_SCRIPTS_PATH}" + "dbt_test.sh ",
     env={
         "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
         "target": "{{ params.target }}",
@@ -78,7 +79,7 @@ dbt_test = BashOperator(
 
 send_elementary_report = BashOperator(
     task_id="send_elementary_report",
-    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/elementary_send_report.sh ",
+    bash_command=f"bash {DBT_SCRIPTS_PATH}" + "elementary_send_report.sh ",
     env={
         "PATH_TO_DBT_PROJECT": PATH_TO_DBT_PROJECT,
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
@@ -97,7 +98,7 @@ send_elementary_report = BashOperator(
 
 compile = BashOperator(
     task_id="compilation",
-    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_compile.sh ",
+    bash_command=f"bash {DBT_SCRIPTS_PATH}" + "dbt_compile.sh ",
     env={
         "target": "{{ params.target }}",
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,

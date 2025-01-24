@@ -1,6 +1,7 @@
 import datetime
 
 from common.config import (
+    DBT_SCRIPTS_PATH,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
@@ -64,7 +65,7 @@ shunt = DummyOperator(task_id="skip_tasks", dag=dag)
 monthly = BashOperator(
     task_id="run_monthly",
     dag=dag,
-    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run_tag.sh ",
+    bash_command=f"bash {DBT_SCRIPTS_PATH}" + "dbt_run_tag.sh ",
     env={
         "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
         "target": "{{ params.target }}",

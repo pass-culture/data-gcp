@@ -12,6 +12,7 @@ ENVIRONMENT_NAME = {
 DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags/")
 LOCAL_ENV = os.environ.get("LOCAL_ENV", None)
 
+
 GCS_COMPOSER_BUCKET = os.environ.get("GCS_BUCKET", f"airflow-{ENVIRONMENT_NAME}-bucket")
 
 SSH_USER = os.environ.get("SSH_USER", "airflow")
@@ -119,6 +120,10 @@ if LOCAL_ENV is None:
     )
 else:
     ELEMENTARY_PYTHON_PATH = os.environ.get("ELEMENTARY_PYTHON_PATH")
+
+DBT_SCRIPTS_PATH = (
+    "" if os.environ.get("IS_KUBE", None) else f"{PATH_TO_DBT_PROJECT}/scripts/"
+)
 
 SLACK_TOKEN_ELEMENTARY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")
 

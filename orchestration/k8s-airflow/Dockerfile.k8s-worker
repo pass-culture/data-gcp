@@ -8,6 +8,12 @@ COPY --from=ghcr.io/astral-sh/uv:0.3.4 /uv /bin/uv
 # Add binary to PATH
 ENV PATH="/root/.cargo/bin/:$PATH"
 
+# Bake dbt scripts in the image
+RUN mkdir -p /usr/local/bin/scripts
+COPY ../dags/data_gcp_dbt/script/*.sh dbt_compile.sh /usr/local/dbt_scripts/
+RUN find /usr/local/bin/scripts -type f -name '*.sh' -exec chmod +x {} \;
+ENV PATH="/usr/local/bin/scripts:$PATH"
+
 # To Do: check if export reco job needs python package:
 #    'apache-airflow-providers-mysql==5.5.4' added to k8s-requirements.in
 # If so:

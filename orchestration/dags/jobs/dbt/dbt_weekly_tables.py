@@ -2,6 +2,7 @@ import datetime
 
 from common import macros
 from common.config import (
+    DBT_SCRIPTS_PATH,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
@@ -61,7 +62,7 @@ wait_for_dbt_daily = delayed_waiting_operator(dag=dag, external_dag_id="dbt_run_
 weekly = BashOperator(
     task_id="run_weekly",
     dag=dag,
-    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run_tag.sh ",
+    bash_command=f"bash {DBT_SCRIPTS_PATH}" + "dbt_run_tag.sh ",
     env={
         "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
         "target": "{{ params.target }}",

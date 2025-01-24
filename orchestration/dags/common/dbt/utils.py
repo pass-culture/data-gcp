@@ -2,6 +2,7 @@ import json
 from typing import Dict, List, Optional, Tuple, Union
 
 from common.config import (
+    DBT_SCRIPTS_PATH,
     EXCLUDED_TAGS,
     PATH_TO_DBT_PROJECT,
     PATH_TO_DBT_TARGET,
@@ -300,7 +301,7 @@ def create_test_operator(model_node: str, model_data: Dict, dag: DAG) -> BashOpe
     full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""
     return BashOperator(
         task_id=model_data["alias"] + "_tests",
-        bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test_model.sh ",
+        bash_command=f"bash {DBT_SCRIPTS_PATH}" + "dbt_test_model.sh ",
         env={
             "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
             "target": "{{ params.target }}",
@@ -327,7 +328,7 @@ def create_model_operator(
     )
     return BashOperator(
         task_id=model_data["alias"] if is_applicative else model_data["name"],
-        bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
+        bash_command=f"bash {DBT_SCRIPTS_PATH}" + "dbt_run.sh ",
         env={
             "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
             "target": "{{ params.target }}",
@@ -347,7 +348,7 @@ def create_snapshot_operator(
 ) -> BashOperator:
     return BashOperator(
         task_id=snapshot_data["alias"],
-        bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_snapshot.sh ",
+        bash_command=f"bash {DBT_SCRIPTS_PATH}" + "dbt_snapshot.sh ",
         env={
             "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
             "target": "{{ params.target }}",

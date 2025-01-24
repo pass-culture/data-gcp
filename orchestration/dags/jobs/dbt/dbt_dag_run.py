@@ -2,6 +2,7 @@ import datetime
 
 from common.alerts import task_fail_slack_alert
 from common.config import (
+    DBT_SCRIPTS_PATH,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
@@ -85,7 +86,7 @@ snapshots_checkpoint = DummyOperator(task_id="snapshots_checkpoint", dag=dag)
 
 compile = BashOperator(
     task_id="compilation",
-    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_compile.sh ",
+    bash_command=f"bash {DBT_SCRIPTS_PATH}" + "dbt_compile.sh ",
     env={
         "target": "{{ params.target }}",
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,

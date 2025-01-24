@@ -8,8 +8,8 @@ from common.config import (
     INSTANCES_TYPES,
 )
 from common.operators.gce import (
-    EteindreGCEOperator,
     StartGCEOperator,
+    StopGCEOperator,
 )
 
 from airflow import DAG
@@ -114,7 +114,7 @@ with DAG(
         gpu_type="{{ params.gpu_type }}",
         gpu_count="{{ params.gpu_count }}",
     )
-    gce_instance_stop = EteindreGCEOperator(
+    gce_instance_stop = StopGCEOperator(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
     (start >> gce_instance_start >> gce_instance_stop)

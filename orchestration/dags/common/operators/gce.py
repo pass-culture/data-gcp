@@ -106,6 +106,24 @@ class CleanGCEOperator(BaseOperator):
         )
 
 
+class DeleteGCEOperator(BaseOperator):
+    template_fields = ["instance_name"]
+
+    @apply_defaults
+    def __init__(
+        self,
+        instance_name: str,
+        *args,
+        **kwargs,
+    ):
+        super(DeleteGCEOperator, self).__init__(*args, **kwargs)
+        self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
+
+    def execute(self, context):
+        hook = GCEHook()
+        hook.delete_vm(self.instance_name)
+
+
 class StopGCEOperator(BaseOperator):
     template_fields = ["instance_name"]
 
@@ -117,24 +135,6 @@ class StopGCEOperator(BaseOperator):
         **kwargs,
     ):
         super(StopGCEOperator, self).__init__(*args, **kwargs)
-        self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
-
-    def execute(self, context):
-        hook = GCEHook()
-        hook.delete_vm(self.instance_name)
-
-
-class EteindreGCEOperator(BaseOperator):
-    template_fields = ["instance_name"]
-
-    @apply_defaults
-    def __init__(
-        self,
-        instance_name: str,
-        *args,
-        **kwargs,
-    ):
-        super(EteindreGCEOperator, self).__init__(*args, **kwargs)
         self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
 
     def execute(self, context):

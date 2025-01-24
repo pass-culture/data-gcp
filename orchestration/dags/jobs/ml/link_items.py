@@ -11,10 +11,10 @@ from common.config import (
     MLFLOW_BUCKET_NAME,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 from jobs.crons import SCHEDULE_DICT
@@ -242,7 +242,7 @@ with DAG(
         autodetect=True,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
 

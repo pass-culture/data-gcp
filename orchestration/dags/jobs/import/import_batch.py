@@ -5,10 +5,10 @@ from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import depends_loop, get_airflow_schedule
 from dependencies.batch.import_batch import import_batch_tables
@@ -86,7 +86,7 @@ with DAG(
         retries=2,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task"
     )
 

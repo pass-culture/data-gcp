@@ -16,10 +16,10 @@ from common.config import (
 )
 from common.operators.bigquery import BigQueryInsertJobOperator
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 
@@ -121,7 +121,7 @@ with DAG(
         )
         gce_instance_start >> fetch_install_code
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE, trigger_rule="none_failed"
     )
 

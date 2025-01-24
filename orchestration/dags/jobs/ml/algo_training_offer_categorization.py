@@ -13,10 +13,10 @@ from common.config import (
     SLACK_CONN_PASSWORD,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 from dependencies.ml.utils import create_algo_training_slack_block
@@ -193,7 +193,7 @@ with DAG(
         "--model-name {{ params.model_name }} ",
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
 

@@ -10,10 +10,10 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 
@@ -152,7 +152,7 @@ for job_name, table_name in TABLE_PARAMS.items():
             dag=dag,
         )
 
-        gce_instance_stop = StopGCEOperator(
+        gce_instance_stop = DeleteGCEOperator(
             task_id=f"{table_config_name}_gce_stop_task", instance_name=instance_name
         )
 

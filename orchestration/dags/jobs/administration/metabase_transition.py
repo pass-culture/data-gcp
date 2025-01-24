@@ -8,10 +8,10 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 
 from airflow import DAG
@@ -99,7 +99,7 @@ with DAG(
         """,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 

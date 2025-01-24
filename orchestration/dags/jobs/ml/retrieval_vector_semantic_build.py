@@ -10,10 +10,10 @@ from common.config import (
     MLFLOW_BUCKET_NAME,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 
 from airflow import DAG
@@ -137,7 +137,7 @@ with DAG(
         dag=dag,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
 

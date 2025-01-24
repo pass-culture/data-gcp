@@ -32,7 +32,11 @@ select
         if(event_name = 'af_complete_beneficiary', safe_cast(unique_users as int64), 0)
     ) as total_beneficiaries,
     sum(
-        if(event_name = 'af_complete_beneficiary_18', safe_cast(unique_users as int64), 0)
+        if(
+            event_name = 'af_complete_beneficiary_18',
+            safe_cast(unique_users as int64),
+            0
+        )
     ) as total_beneficiaries_18,
     sum(
         if(
@@ -42,13 +46,25 @@ select
         )
     ) as total_beneficiaries_underage,
     sum(
-        if(event_name = 'af_complete_beneficiary_17', safe_cast(unique_users as int64), 0)
+        if(
+            event_name = 'af_complete_beneficiary_17',
+            safe_cast(unique_users as int64),
+            0
+        )
     ) as total_beneficiaries_17,
     sum(
-        if(event_name = 'af_complete_beneficiary_16', safe_cast(unique_users as int64), 0)
+        if(
+            event_name = 'af_complete_beneficiary_16',
+            safe_cast(unique_users as int64),
+            0
+        )
     ) as total_beneficiaries_16,
     sum(
-        if(event_name = 'af_complete_beneficiary_15', safe_cast(unique_users as int64), 0)
+        if(
+            event_name = 'af_complete_beneficiary_15',
+            safe_cast(unique_users as int64),
+            0
+        )
     ) as total_beneficiaries_15
 from {{ source("appsflyer_import", "cohort_unified_timezone_versioned") }}
 where

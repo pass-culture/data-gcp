@@ -25,7 +25,9 @@ with
         from {{ source("raw", "appsflyer_cost_channel") }}
         {% if is_incremental() %}
             where
-                date(execution_date) between date_sub(date('{{ ds() }}'), interval 7 day) and date(
+                date(
+                    execution_date
+                ) between date_sub(date('{{ ds() }}'), interval 7 day) and date(
                     '{{ ds() }}'
                 )
         {% endif %}

@@ -5,7 +5,7 @@ description: Description of the `int_firebase__pro_experiment` table.
 
 {% docs description__int_firebase__pro_experiment %}
 
-The `int_firebase__pro_experiment` table assigns each user of the professional portal to a version of an A/B test every day, for all A/B tests in production.
+The `int_firebase__pro_experiment` table assigns each user of the cultural partner web portal to a version of an A/B test every day, for all A/B tests in production.
 {% enddocs %}
 
 ## Table description

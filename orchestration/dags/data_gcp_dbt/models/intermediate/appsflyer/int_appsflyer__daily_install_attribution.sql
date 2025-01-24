@@ -12,49 +12,70 @@
 -- Aggregates user events, picking the latest version per app_install_date and
 -- acquisition_days_post_attribution
 select
-    app_id,
-    media_source as acquisition_media_source,
-    campaign as acquisition_campaign,
-    adset as acquisition_adset,
-    ad as acquisition_ad,
     version as acquisition_version,
-    cast(days_post_attribution as int64) as acquisition_days_post_attribution,
-    cast(conversion_date as date) as app_install_date,
+    safe_cast(days_post_attribution as int64) as acquisition_days_post_attribution,
+    date(conversion_date) as app_install_date,
+    case
+        when app_id = 'app.passculture.webapp'
+        then 'android'
+        when app_id = 'id1557887412'
+        then 'ios'
+    end as app_os,
+    coalesce(media_source, 'None') as acquisition_media_source,
+    coalesce(campaign, 'None') as acquisition_campaign,
+    coalesce(adset, 'None') as acquisition_adset,
+    coalesce(ad, 'None') as acquisition_ad,
     sum(
-        if(event_name = 'af_complete_registration', cast(unique_users as int64), 0)
+        if(event_name = 'af_complete_registration', safe_cast(unique_users as int64), 0)
     ) as total_registrations,
     sum(
-        if(event_name = 'af_complete_beneficiary', cast(unique_users as int64), 0)
+        if(event_name = 'af_complete_beneficiary', safe_cast(unique_users as int64), 0)
     ) as total_beneficiaries,
     sum(
-        if(event_name = 'af_complete_beneficiary_18', cast(unique_users as int64), 0)
+        if(
+            event_name = 'af_complete_beneficiary_18',
+            safe_cast(unique_users as int64),
+            0
+        )
     ) as total_beneficiaries_18,
     sum(
         if(
             event_name = 'af_complete_beneficiary_underage',
-            cast(unique_users as int64),
+            safe_cast(unique_users as int64),
             0
         )
     ) as total_beneficiaries_underage,
     sum(
-        if(event_name = 'af_complete_beneficiary_17', cast(unique_users as int64), 0)
+        if(
+            event_name = 'af_complete_beneficiary_17',
+            safe_cast(unique_users as int64),
+            0
+        )
     ) as total_beneficiaries_17,
     sum(
-        if(event_name = 'af_complete_beneficiary_16', cast(unique_users as int64), 0)
+        if(
+            event_name = 'af_complete_beneficiary_16',
+            safe_cast(unique_users as int64),
+            0
+        )
     ) as total_beneficiaries_16,
     sum(
-        if(event_name = 'af_complete_beneficiary_15', cast(unique_users as int64), 0)
+        if(
+            event_name = 'af_complete_beneficiary_15',
+            safe_cast(unique_users as int64),
+            0
+        )
     ) as total_beneficiaries_15
 from {{ source("appsflyer_import", "cohort_unified_timezone_versioned") }}
 where
-    cast(days_post_attribution as int64) < 14
+    safe_cast(days_post_attribution as int64) < 14
     {% if is_incremental() %}
-        and cast(conversion_date as date)
-        between date_sub(date("{{ ds() }}"), interval 14 day) and date("{{ ds() }}")
+        and date(conversion_date)
+        between date_sub(date('{{ ds() }}'), interval 14 day) and date('{{ ds() }}')
     {% endif %}
 group by
     app_install_date,
-    app_id,
+    app_os,
     acquisition_media_source,
     acquisition_campaign,
     acquisition_adset,
@@ -65,7 +86,7 @@ qualify
     row_number() over (
         partition by
             app_install_date,
-            app_id,
+            app_os,
             acquisition_media_source,
             acquisition_campaign,
             acquisition_adset,

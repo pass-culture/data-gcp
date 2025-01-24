@@ -4,8 +4,8 @@ models:
   - name: int_appsflyer__daily_install_attribution
     description: '{{ doc("description__int_appsflyer__daily_install_attribution") }}'
     columns:
-      - name: app_id
-        description: '{{ doc("column__app_id") }}'
+      - name: app_os
+        description: '{{ doc("column__app_os") }}'
         data_type: STRING
       - name: acquisition_media_source
         description: '{{ doc("column__acquisition_media_source") }}'

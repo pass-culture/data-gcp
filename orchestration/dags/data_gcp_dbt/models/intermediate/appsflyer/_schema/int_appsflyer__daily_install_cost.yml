@@ -4,9 +4,6 @@ models:
   - name: int_appsflyer__daily_install_cost
     description: '{{ doc("description__int_appsflyer__daily_install_cost") }}'
     columns:
-      - name: app_id
-        description: '{{ doc("column__app_id") }}'
-        data_type: STRING
       - name: app_os
         description: '{{ doc("column__app_os") }}'
         data_type: STRING

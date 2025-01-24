@@ -57,6 +57,7 @@ user_candidates AS (
         AND du.user_postal_code is not NULL
         AND du.user_city is not NULL
         AND du.user_department_code is not NULL
+        AND user_role in ('BENEFICIARY', 'UNDERAGE_BENEFICIARY')
         AND (
             ul.user_id IS NULL
             -- Temp : remove condition to prioritize adress new users

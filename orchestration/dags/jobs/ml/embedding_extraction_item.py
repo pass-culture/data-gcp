@@ -33,10 +33,10 @@ INPUT_DATASET_NAME = f"ml_input_{ENV_SHORT_NAME}"
 INPUT_TABLE_NAME = "item_embedding_extraction"
 OUTPUT_DATASET_NAME = f"ml_preproc_{ENV_SHORT_NAME}"
 OUTPUT_TABLE_NAME = "item_embedding_extraction"
-
+DAG_NAME = "embeddings_extraction_item"
 
 with DAG(
-    "embeddings_extraction_item",
+    DAG_NAME,
     default_args=default_args,
     description="Extact items metadata embeddings",
     schedule_interval=get_airflow_schedule("0 12 * * *"),  # every day
@@ -73,7 +73,7 @@ with DAG(
         preemptible=False,
         instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={"job_type": "ml"},
+        labels={"job_type": "ml", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

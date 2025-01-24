@@ -27,7 +27,7 @@ from airflow.models import Param
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-offers-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/ml_jobs/record_linkage"
-
+DAG_NAME = "link_offers"
 
 default_args = {
     "start_date": datetime(2022, 1, 5),
@@ -37,7 +37,7 @@ default_args = {
 }
 
 with DAG(
-    "link_offers",
+    DAG_NAME,
     default_args=default_args,
     description="Link offers via recordLinkage",
     schedule_interval=get_airflow_schedule("0 0 * * *"),
@@ -68,7 +68,7 @@ with DAG(
         task_id="gce_start_task",
         instance_name=GCE_INSTANCE,
         instance_type="{{ params.instance_type }}",
-        labels={"job_type": "ml"},
+        labels={"job_type": "ml", "dag_name": DAG_NAME},
         preemptible=False,
     )
 

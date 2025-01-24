@@ -36,6 +36,7 @@ DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"artist-linkage-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
 SCHEDULE_CRON = "0 3 * * 1"
+DAG_NAME = "artist_linkage"
 
 # GCS Paths / Filenames
 GCS_FOLDER_PATH = f"artist_linkage_{ENV_SHORT_NAME}"
@@ -69,7 +70,7 @@ def _choose_linkage(**context):
 
 
 with DAG(
-    "artist_linkage",
+    DAG_NAME,
     default_args=default_args,
     description="Link artists via clustering",
     schedule_interval=get_airflow_schedule(SCHEDULE_CRON),
@@ -108,6 +109,7 @@ with DAG(
             instance_name=GCE_INSTANCE,
             instance_type="{{ params.instance_type }}",
             preemptible=False,
+            labels={"dag_name": DAG_NAME},
         )
         fetch_install_code = InstallDependenciesOperator(
             task_id="fetch_install_code",

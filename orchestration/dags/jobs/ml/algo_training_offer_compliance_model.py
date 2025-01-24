@@ -30,6 +30,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from airflow.providers.http.operators.http import HttpOperator
 
 DATE = "{{ ts_nodash }}"
+DAG_NAME = "algo_training_offer_compliance_model"
 
 # Environment variables to export before running commands
 dag_config = {
@@ -64,7 +65,7 @@ schedule_dict = {"prod": "0 12 * * 5", "dev": "0 0 * * *", "stg": "0 12 * * 3"}
 
 
 with DAG(
-    "algo_training_offer_compliance_model",
+    DAG_NAME,
     default_args=default_args,
     description="Custom training job",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
@@ -116,7 +117,7 @@ with DAG(
         preemptible=False,
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
-        labels={"job_type": "ml"},
+        labels={"job_type": "ml", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

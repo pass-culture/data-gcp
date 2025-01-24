@@ -14,12 +14,10 @@ from utils import (
     transactional_histo_schema,
 )
 
-NATIVE_API_KEY = access_secret_data(
-    GCP_PROJECT, f"sendinblue-api-key-{ENV_SHORT_NAME}", version_id=1
-)
+NATIVE_API_KEY = access_secret_data(GCP_PROJECT, f"sendinblue-api-key-{ENV_SHORT_NAME}")
 
 PRO_API_KEY = access_secret_data(
-    GCP_PROJECT, f"sendinblue-pro-api-key-{ENV_SHORT_NAME}", version_id=1
+    GCP_PROJECT, f"sendinblue-pro-api-key-{ENV_SHORT_NAME}"
 )
 
 TRANSACTIONAL_TABLE_NAME = "sendinblue_transactional_detailed"

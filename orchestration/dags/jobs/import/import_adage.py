@@ -20,6 +20,7 @@ from airflow.operators.dummy_operator import DummyOperator
 
 GCE_INSTANCE = f"import-adage-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/adage"
+DAG_NAME = "import_adage_v1"
 
 dag_config = {
     "PROJECT_NAME": GCP_PROJECT_ID,
@@ -34,7 +35,7 @@ default_dag_args = {
 
 
 with DAG(
-    "import_adage_v1",
+    DAG_NAME,
     start_date=datetime.datetime(2020, 12, 1),
     default_args=default_dag_args,
     description="Import Adage from API",
@@ -62,7 +63,9 @@ with DAG(
     )
 
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

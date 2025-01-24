@@ -23,6 +23,8 @@ default_args = {
 
 DEFAULT_REGION = "europe-west1"
 BASE_PATH = "data-gcp/jobs/ml_jobs/ranking_endpoint"
+DAG_NAME = "ranking_endpoint_build"
+
 gce_params = {
     "instance_name": f"ranking-endpoint-build-{ENV_SHORT_NAME}",
     "experiment_name": f"ranking_endpoint_v1.1_{ENV_SHORT_NAME}",
@@ -38,7 +40,7 @@ schedule_dict = {"prod": "0 20 * * 5", "dev": "0 20 * * *", "stg": "0 20 * * 3"}
 
 
 with DAG(
-    "ranking_endpoint_build",
+    DAG_NAME,
     default_args=default_args,
     description="Train and build Ranking Endpoint",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
@@ -71,7 +73,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={"job_type": "ml"},
+        labels={"job_type": "ml", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

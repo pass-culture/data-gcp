@@ -107,7 +107,7 @@ with DAG(
         preemptible=False,
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
-        labels={"keep_alive": "{{ params.keep_alive|lower }}"},
+        labels={"keep_alive": "{{ params.keep_alive|lower }}", "dag_name": "launch_vm"},
         use_gke_network="{{ params.use_gke_network }}",
         disk_size_gb="{{ params.disk_size_gb }}",
         gce_zone="{{ params.gce_zone }}",

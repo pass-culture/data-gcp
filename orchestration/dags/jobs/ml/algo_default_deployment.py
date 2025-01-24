@@ -25,6 +25,7 @@ default_args = {
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"algo-default-deployment-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
+DAG_NAME = "algo_default_deployment"
 
 RANKING_DICT = {
     "prod": "n1-highcpu-4",
@@ -68,7 +69,7 @@ models_to_deploy = [
 
 
 with DAG(
-    "algo_default_deployment",
+    DAG_NAME,
     default_args=default_args,
     description="ML Default Deployment job",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
@@ -87,7 +88,7 @@ with DAG(
         task_id="gce_start_task",
         instance_name=GCE_INSTANCE,
         retries=2,
-        labels={"job_type": "ml"},
+        labels={"job_type": "ml", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

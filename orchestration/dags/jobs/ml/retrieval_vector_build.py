@@ -22,6 +22,8 @@ default_args = {
 }
 
 DEFAULT_REGION = "europe-west1"
+DAG_NAME = "retrieval_vector_build"
+
 gce_params = {
     "base_dir": "data-gcp/jobs/ml_jobs/retrieval_vector",
     "instance_name": f"retrieval-recommendation-build-{ENV_SHORT_NAME}",
@@ -48,7 +50,7 @@ schedule_dict = {"prod": "0 4 * * *", "dev": "0 6 * * *", "stg": "0 6 * * 3"}
 
 
 with DAG(
-    "retrieval_vector_build",
+    DAG_NAME,
     default_args=default_args,
     description="Custom Building job",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
@@ -92,7 +94,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={"job_type": "ml"},
+        labels={"job_type": "ml", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

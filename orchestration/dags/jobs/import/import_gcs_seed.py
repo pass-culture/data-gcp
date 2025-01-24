@@ -30,13 +30,14 @@ default_dag_args = {
 
 GCE_INSTANCE = f"import-gcs-seed-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/gcs_seed"
+DAG_NAME = "import_gcs_seed"
 dag_config = {
     "PROJECT_NAME": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
 }
 
 with DAG(
-    "import_gcs_seed",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Import seed data from GCS to BQ",
     schedule_interval=get_airflow_schedule("00 01 * * *"),
@@ -54,7 +55,9 @@ with DAG(
     start = DummyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

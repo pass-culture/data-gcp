@@ -19,6 +19,7 @@ from airflow.operators.dummy_operator import DummyOperator
 
 GCE_INSTANCE = f"import-batch-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/batch"
+DAG_NAME = "import_batch"
 
 default_args = {
     "start_date": datetime(2022, 4, 13),
@@ -29,7 +30,7 @@ default_args = {
 
 
 with DAG(
-    "import_batch",
+    DAG_NAME,
     default_args=default_args,
     description="Import batch push notifications statistics",
     schedule_interval=get_airflow_schedule("0 0 * * *"),  # import every day at 00:00
@@ -52,7 +53,7 @@ with DAG(
         task_id="gce_start_task",
         retries=2,
         preemptible=False,
-        labels={"job_type": "long_task"},
+        labels={"job_type": "long_task", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

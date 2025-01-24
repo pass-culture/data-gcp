@@ -1,25 +1,3 @@
-with
-    bookable_offer_history as (
-        select
-            venue_id,
-            min(partition_date) as first_bookable_offer_date,
-            max(partition_date) as last_bookable_offer_date,
-            min(
-                case when individual_bookable_offers > 0 then partition_date end
-            ) as first_individual_bookable_offer_date,
-            max(
-                case when individual_bookable_offers > 0 then partition_date end
-            ) as last_individual_bookable_offer_date,
-            min(
-                case when collective_bookable_offers > 0 then partition_date end
-            ) as first_collective_bookable_offer_date,
-            max(
-                case when collective_bookable_offers > 0 then partition_date end
-            ) as last_collective_bookable_offer_date
-        from {{ ref("bookable_venue_history") }}
-        group by venue_id
-    )
-
 select
     v.venue_id,
     v.venue_name,
@@ -114,28 +92,6 @@ select
     v.offerer_rank_asc,
     v.venue_image_source,
     v.venue_adage_inscription_date,
-    coalesce(
-        date_diff(current_date, boh.last_bookable_offer_date, day) <= 30, false
-    ) as is_active_last_30days,
-    coalesce(
-        date_diff(current_date, boh.last_bookable_offer_date, year) = 0, false
-    ) as is_active_current_year,
-    coalesce(
-        date_diff(current_date, boh.last_individual_bookable_offer_date, day) <= 30,
-        false
-    ) as is_individual_active_last_30days,
-    coalesce(
-        date_diff(current_date, boh.last_individual_bookable_offer_date, year) = 0,
-        false
-    ) as is_individual_active_current_year,
-    coalesce(
-        date_diff(current_date, boh.last_collective_bookable_offer_date, day) <= 30,
-        false
-    ) as is_collective_active_last_30days,
-    coalesce(
-        date_diff(current_date, boh.last_collective_bookable_offer_date, year) = 0,
-        false
-    ) as is_collective_active_current_year
+    
 from {{ ref("int_global__venue") }} as v
-left join bookable_offer_history as boh on v.venue_id = boh.venue_id
 where v.offerer_validation_status = 'VALIDATED' and v.offerer_is_active

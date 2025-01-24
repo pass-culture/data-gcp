@@ -14,7 +14,7 @@ with
             row_number() over (
                 partition by demandeur_entreprise_siren
                 order by application_submitted_at asc
-            ) as rown_siren,
+            ) as rown_siren
         from {{ ref("dms_pro") }}
         where procedure_id in ('57081', '57189', '61589', '65028', '80264')
     ),
@@ -22,7 +22,7 @@ with
     first_dms_adage_accepted as (
         select *
         from dms_adage
-        where application_status = "accepte"
+        where application_status = 'accepte'
         qualify
             row_number() over (
                 partition by demandeur_entreprise_siren order by processed_at asc
@@ -36,15 +36,15 @@ with
             string_agg(distinct tag_label order by tag_label) as partner_type
         from {{ ref("int_applicative__offerer_tag") }}
         where
-            tag_category_name = "comptage"
+            tag_category_name = 'comptage'
             and tag_label not in (
-                "Association",
-                "EPN",
-                "Collectivité",
-                "Pas de tag associé",
-                "Auto-Entrepreneur",
-                "Compagnie",
-                "Tourneur"
+                'Association',
+                'EPN',
+                'Collectivité',
+                'Pas de tag associé',
+                'Auto-Entrepreneur',
+                'Compagnie',
+                'Tourneur'
             )
         group by offerer_id
     ),
@@ -54,7 +54,28 @@ with
         from {{ source("raw", "applicative_database_bank_account") }}
         where is_active
         group by offerer_id
-    )
+    ),
+
+    bookable_offer_history as (
+    select
+        offerer_id,
+        min(partition_date) as first_bookable_offer_date,
+        max(partition_date) as last_bookable_offer_date,
+        min(
+            case when individual_bookable_offers > 0 then partition_date end
+        ) as first_individual_bookable_offer_date,
+        max(
+            case when individual_bookable_offers > 0 then partition_date end
+        ) as last_individual_bookable_offer_date,
+        min(
+            case when collective_bookable_offers > 0 then partition_date end
+        ) as first_collective_bookable_offer_date,
+        max(
+            case when collective_bookable_offers > 0 then partition_date end
+        ) as last_collective_bookable_offer_date
+    from {{ ref("bookable_venue_history") }}
+    group by offerer_id
+)
 
 select
     ofr.offerer_id,
@@ -73,12 +94,12 @@ select
     ofr.last_offer_creation_date,
     ofr.first_individual_booking_date,
     ofr.last_individual_booking_date,
-    ofr.first_bookable_offer_date,
-    ofr.last_bookable_offer_date,
-    ofr.first_individual_bookable_offer_date,
-    ofr.last_individual_bookable_offer_date,
-    ofr.first_collective_bookable_offer_date,
-    ofr.last_collective_bookable_offer_date,
+    boh.first_bookable_offer_date,
+    boh.last_bookable_offer_date,
+    boh.first_individual_bookable_offer_date,
+    boh.last_individual_bookable_offer_date,
+    boh.first_collective_bookable_offer_date,
+    boh.last_collective_bookable_offer_date,
     ofr.first_booking_date,
     ofr.last_booking_date,
     ofr.total_non_cancelled_individual_bookings,
@@ -105,12 +126,12 @@ select
     ofr.offerer_department_code,
     ofr.offerer_postal_code,
     ofr.offerer_siren,
-    ofr.is_active_last_30days,
-    ofr.is_active_current_year,
-    ofr.is_individual_active_last_30days,
-    ofr.is_individual_active_current_year,
-    ofr.is_collective_active_last_30days,
-    ofr.is_collective_active_current_year,
+    coalesce(date_diff(current_date, boh.last_bookable_offer_date, day) <= 30, false) as is_active_last_30days,
+    coalesce(date_diff(current_date, boh.last_bookable_offer_date, year) = 0, false) as is_active_current_year,
+    coalesce(date_diff(current_date, boh.last_individual_bookable_offer_date, day) <= 30, false) as is_individual_active_last_30days,
+    coalesce(date_diff(current_date, boh.last_individual_bookable_offer_date, year) = 0, false) as is_individual_active_current_year,
+    coalesce(date_diff(current_date, boh.last_collective_bookable_offer_date, day) <= 30, false) as is_collective_active_last_30days,
+    coalesce(date_diff(current_date, boh.last_collective_bookable_offer_date, year) = 0, false) as is_collective_active_current_year,
     ofr.top_real_revenue_venue_type,
     ofr.top_bookings_venue_type,
     region_department.region_name as offerer_region_name,
@@ -120,44 +141,42 @@ select
     label_unite_legale as legal_unit_business_activity_label,
     siren_data.categoriejuridiqueunitelegale as legal_unit_legal_category_code,
     label_categorie_juridique as legal_unit_legal_category_label,
-    case
-        when siren_data.activiteprincipaleunitelegale = '84.11Z' then true else false
-    end as is_local_authority,
+    coalesce(siren_data.activiteprincipaleunitelegale = '84.11Z', false) as is_local_authority,
     case
         when
             (
-                lower(ofr.offerer_name) like "commune%"
-                or lower(ofr.offerer_name) like "%ville%de%"
+                lower(ofr.offerer_name) like 'commune%'
+                or lower(ofr.offerer_name) like '%ville%de%'
             )
-        then "Communes"
+        then 'Communes'
         when
             (
-                lower(ofr.offerer_name) like "%departement%"
-                or lower(ofr.offerer_name) like "%département%"
+                lower(ofr.offerer_name) like '%departement%'
+                or lower(ofr.offerer_name) like '%département%'
             )
-        then "Départements"
+        then 'Départements'
         when
             (
-                lower(ofr.offerer_name) like "region%"
-                or lower(ofr.offerer_name) like "région%"
+                lower(ofr.offerer_name) like 'region%'
+                or lower(ofr.offerer_name) like 'région%'
             )
-        then "Régions"
+        then 'Régions'
         when
             (
-                lower(ofr.offerer_name) like "ca%"
-                or lower(ofr.offerer_name) like "%agglo%"
-                or lower(ofr.offerer_name) like "cc%"
-                or lower(ofr.offerer_name) like "cu%"
-                or lower(ofr.offerer_name) like "%communaute%"
-                or lower(ofr.offerer_name) like "%agglomeration%"
-                or lower(ofr.offerer_name) like "%agglomération%"
-                or lower(ofr.offerer_name) like "%metropole%"
-                or lower(ofr.offerer_name) like "%com%com%"
-                or lower(ofr.offerer_name) like "%petr%"
-                or lower(ofr.offerer_name) like "%intercommunal%"
+                lower(ofr.offerer_name) like 'ca%'
+                or lower(ofr.offerer_name) like '%agglo%'
+                or lower(ofr.offerer_name) like 'cc%'
+                or lower(ofr.offerer_name) like 'cu%'
+                or lower(ofr.offerer_name) like '%communaute%'
+                or lower(ofr.offerer_name) like '%agglomeration%'
+                or lower(ofr.offerer_name) like '%agglomération%'
+                or lower(ofr.offerer_name) like '%metropole%'
+                or lower(ofr.offerer_name) like '%com%com%'
+                or lower(ofr.offerer_name) like '%petr%'
+                or lower(ofr.offerer_name) like '%intercommunal%'
             )
-        then "CC / Agglomérations / Métropoles"
-        else "Non qualifiable"
+        then 'CC / Agglomérations / Métropoles'
+        else 'Non qualifiable'
     end as local_authority_type,
     case
         when
@@ -192,23 +211,24 @@ left join
     on ofr.offerer_department_code = region_department.num_dep
 left join
     {{ source("clean", "siren_data") }} as siren_data
-    on siren_data.siren = ofr.offerer_siren
+    on ofr.offerer_siren = siren_data.siren
 left join
     {{ source("seed", "siren_data_labels") }} as siren_data_labels
-    on siren_data_labels.activiteprincipaleunitelegale
-    = siren_data.activiteprincipaleunitelegale
+    on siren_data.activiteprincipaleunitelegale
+    = siren_data_labels.activiteprincipaleunitelegale
     and cast(siren_data_labels.categoriejuridiqueunitelegale as string)
     = cast(siren_data.categoriejuridiqueunitelegale as string)
 left join
     dms_adage as first_dms_adage
-    on first_dms_adage.demandeur_entreprise_siren = ofr.offerer_siren
+    on ofr.offerer_siren = first_dms_adage.demandeur_entreprise_siren
     and first_dms_adage.rown_siren = 1
 left join
     first_dms_adage_accepted
-    on first_dms_adage_accepted.demandeur_entreprise_siren = ofr.offerer_siren
+    on ofr.offerer_siren = first_dms_adage_accepted.demandeur_entreprise_siren
 left join siren_reference_adage on ofr.offerer_siren = siren_reference_adage.siren
 left join tagged_partners on ofr.offerer_id = tagged_partners.offerer_id
-left join reimbursement_points as rp on rp.offerer_id = ofr.offerer_id
+left join reimbursement_points as rp on ofr.offerer_id = rp.offerer_id
+left join bookable_offer_history as boh on ofr.offerer_id = boh.offerer_id
 qualify
     row_number() over (partition by offerer_siren order by siren_data.update_date desc)
     = 1

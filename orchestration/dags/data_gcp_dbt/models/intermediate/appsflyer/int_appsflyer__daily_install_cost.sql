@@ -18,16 +18,14 @@ with
             if(campaign = '', 'None', campaign) as acquisition_campaign,
             if(adset = '', 'None', adset) as acquisition_adset,
             if(ad = '', 'None', ad) as acquisition_ad,
-            cast(date as date) as app_install_date,
-            cast(execution_date as date) as acquisition_execution_date,
-            cast(sum(cost) as int64) as total_costs,
+            date(date) as app_install_date,
+            date(execution_date) as acquisition_execution_date,
+            safe_cast(sum(cost) as int64) as total_costs,
             sum(installs) as total_installs
         from {{ source("raw", "appsflyer_cost_channel") }}
         {% if is_incremental() %}
             where
-                cast(
-                    execution_date as date
-                ) between date_sub(date('{{ ds() }}'), interval 7 day) and date(
+                date(execution_date) between date_sub(date('{{ ds() }}'), interval 7 day) and date(
                     '{{ ds() }}'
                 )
         {% endif %}

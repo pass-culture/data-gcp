@@ -190,7 +190,7 @@ def train_two_tower_model(
     # No validation on metrics during training
     two_tower_model.set_task(item_dataset=None)
     two_tower_model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE)
+        optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE, clipnorm=1.0),
     )
 
     repeated_train_dataset = train_dataset.repeat()

@@ -196,6 +196,12 @@ def train_two_tower_model(
 ):
     # No validation on metrics during training
     two_tower_model.set_task(item_dataset=None)
+
+    def step_decay(epoch):
+        drop_factor = 0.2
+        drop_every = 5
+        return LEARNING_RATE * (drop_factor ** (epoch // drop_every))
+
     two_tower_model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE)
     )
@@ -208,13 +214,7 @@ def train_two_tower_model(
         validation_data=validation_dataset,
         validation_steps=validation_steps,
         callbacks=[
-            tf.keras.callbacks.ReduceLROnPlateau(
-                monitor="val_loss",
-                factor=0.5,
-                patience=2,
-                min_delta=MIN_DELTA,
-                verbose=1,
-            ),
+            tf.keras.callbacks.LearningRateScheduler(step_decay),
             tf.keras.callbacks.EarlyStopping(
                 monitor="val_loss",
                 patience=10,

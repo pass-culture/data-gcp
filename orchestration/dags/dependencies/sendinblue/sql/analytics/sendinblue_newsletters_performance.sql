@@ -24,7 +24,7 @@ with
         select
             campaign_id,
             campaign_utm,
-            campaign_name,
+            concat("PRO - ",campaign_name) as campaign_name,
             campaign_sent_date,
             share_link,
             update_date,

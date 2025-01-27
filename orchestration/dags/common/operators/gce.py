@@ -9,6 +9,7 @@ from common.config import (
     GCE_ZONE,
     GCP_PROJECT_ID,
     SSH_USER,
+    UV_VERSION,
 )
 from common.hooks.gce import GCEHook
 from common.hooks.image import MACHINE_TYPE
@@ -20,8 +21,6 @@ from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.utils.decorators import apply_defaults
-
-UV_VERSION = "0.5.2"
 
 
 class StartGCEOperator(BaseOperator):

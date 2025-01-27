@@ -181,3 +181,6 @@ GCE_ZONES = [
 # Airflow tags
 ML_AIRFLOW_DAG_TAG = "ML"
 VM_AIRFLOW_DAG_TAG = "VM"
+
+# UV Version
+UV_VERSION = "0.5.2"

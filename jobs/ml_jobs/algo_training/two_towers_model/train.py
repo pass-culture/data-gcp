@@ -196,7 +196,7 @@ def train_two_tower_model(
 ):
     # No validation on metrics during training
     initial_learning_rate = LEARNING_RATE
-    decay_rate = 0.9  # Reduce by 4% decay_steps
+    decay_rate = 0.93
     decay_steps = 500  # Adjust depending on dataset size
 
     lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(

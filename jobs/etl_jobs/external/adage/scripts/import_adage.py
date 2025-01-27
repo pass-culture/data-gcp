@@ -12,6 +12,7 @@ from scripts.utils import (
     BIGQUERY_RAW_DATASET,
     BQ_ADAGE_DTYPE,
     GCP_PROJECT,
+    RequestReturnedNoneError,
     save_to_raw_bq,
 )
 
@@ -67,7 +68,9 @@ def import_adage():
     data = get_request(ENDPOINT, API_KEY, route="partenaire-culturel")
 
     if data is None:
-        raise Exception("Adage API returned None for endpoint partenaire-culturel")
+        raise RequestReturnedNoneError(
+            "Adage API returned None for endpoint partenaire-culturel"
+        )
     else:
         df = pd.DataFrame(data)
         _cols = list(df.columns)
@@ -181,7 +184,7 @@ def get_adage_stats():
         results = get_request(ENDPOINT, API_KEY, route=f"stats-pass-culture/{_id}")
 
         if results is None:
-            raise Exception(
+            raise RequestReturnedNoneError(
                 f"Adage API returned None for endpoint stats-pass-culture/{_id}"
             )
         else:

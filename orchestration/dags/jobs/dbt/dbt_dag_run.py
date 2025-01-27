@@ -1,4 +1,5 @@
 import datetime
+import os
 
 from common.alerts import task_fail_slack_alert
 from common.config import (
@@ -86,7 +87,7 @@ snapshots_checkpoint = DummyOperator(task_id="snapshots_checkpoint", dag=dag)
 
 compile = BashOperator(
     task_id="compilation",
-    bash_command=f"bash {DBT_SCRIPTS_PATH}" + "dbt_compile.sh ",
+    bash_command=f"bash {os.path.join(DBT_SCRIPTS_PATH, 'dbt_compile.sh')}",
     env={
         "target": "{{ params.target }}",
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,

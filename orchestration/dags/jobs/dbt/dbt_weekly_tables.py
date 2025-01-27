@@ -1,4 +1,5 @@
 import datetime
+import os
 
 from common import macros
 from common.config import (
@@ -62,7 +63,7 @@ wait_for_dbt_daily = delayed_waiting_operator(dag=dag, external_dag_id="dbt_run_
 weekly = BashOperator(
     task_id="run_weekly",
     dag=dag,
-    bash_command=f"bash {DBT_SCRIPTS_PATH}" + "dbt_run_tag.sh ",
+    bash_command=f"bash {os.path.join(DBT_SCRIPTS_PATH, 'dbt_run_tag.sh')}",
     env={
         "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
         "target": "{{ params.target }}",

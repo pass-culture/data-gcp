@@ -67,7 +67,7 @@ with
             date(install_time) as acquisition_execution_date,
             0 as total_costs,
             count(*) as total_installs
-        from `passculture-data-prod.appsflyer_import_prod.installs`
+        from {{ source("appsflyer_import", "installs") }}
         where media_source = 'organic'
         group by
             app_install_date,

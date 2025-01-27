@@ -198,7 +198,7 @@ def train_two_tower_model(
     two_tower_model.set_task(item_dataset=None)
 
     def step_decay(epoch):
-        drop_factor = 0.2
+        drop_factor = 0.05
         drop_every = 5
         return LEARNING_RATE * (drop_factor ** (epoch // drop_every))
 

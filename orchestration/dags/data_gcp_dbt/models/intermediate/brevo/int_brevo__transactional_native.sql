@@ -21,9 +21,7 @@ with
             current_deposit_type as user_current_deposit_type,
             count(distinct session_id) as session_number,
             count(
-                distinct case
-                    when event_name = 'ConsultOffer' then offer_id
-                end
+                distinct case when event_name = 'ConsultOffer' then offer_id end
             ) as total_consultations,
             count(
                 distinct case
@@ -36,7 +34,8 @@ with
                 end
             ) as total_favorites
         from {{ ref("int_firebase__native_event") }} as firebase
-        left join {{ ref("mrt_global__user") }} as user on firebase.user_id = user.user_id
+        left join
+            {{ ref("mrt_global__user") }} as user on firebase.user_id = user.user_id
         where
             traffic_campaign is not null
             and lower(traffic_medium) like '%email%'

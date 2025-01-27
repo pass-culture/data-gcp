@@ -141,8 +141,10 @@ class SingleTowerModel(tf.keras.models.Model):
                 vocabulary=self.data[layer_name].unique()
             )
 
-        self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
-        self._dense2 = tf.keras.layers.Dense(embedding_size)
+        self._dense1 = tf.keras.layers.Dense(embedding_size * 2, use_bias=False)
+        self._batch_norm1 = tf.keras.layers.BatchNormalization()
+        self._dense2 = tf.keras.layers.Dense(embedding_size, use_bias=False)
+        self._batch_norm2 = tf.keras.layers.BatchNormalization()
         self._norm = tf.keras.layers.LayerNormalization(name="normalize_dense")
 
     def call(self, features: list, training=False):
@@ -152,5 +154,8 @@ class SingleTowerModel(tf.keras.models.Model):
 
         x = tf.concat(feature_embeddings, axis=1)
         x = self._dense1(x)
+        x = self._batch_norm1(x, training=training)
+        x = tf.nn.relu(x)
         x = self._dense2(x)
+        x = self._batch_norm2(x, training=training)
         return self._norm(x)

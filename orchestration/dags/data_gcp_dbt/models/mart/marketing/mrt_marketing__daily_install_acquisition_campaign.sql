@@ -15,7 +15,7 @@ with
     daily_attribution_summary as (
         select
             app_install_date,
-            app_id,
+            app_os,
             acquisition_media_source,
             acquisition_campaign,
             acquisition_adset,
@@ -37,7 +37,7 @@ with
         {% endif %}
         group by
             app_install_date,
-            app_id,
+            app_os,
             acquisition_media_source,
             acquisition_campaign,
             acquisition_adset,
@@ -45,12 +45,12 @@ with
     )
 
 select
-    daily_install_cost.app_install_date,
-    daily_install_cost.app_os,
-    daily_install_cost.acquisition_media_source,
-    daily_install_cost.acquisition_campaign,
-    daily_install_cost.acquisition_adset,
-    daily_install_cost.acquisition_ad,
+    daily_attribution_summary.app_install_date,
+    daily_attribution_summary.app_os,
+    daily_attribution_summary.acquisition_media_source,
+    daily_attribution_summary.acquisition_campaign,
+    daily_attribution_summary.acquisition_adset,
+    daily_attribution_summary.acquisition_ad,
     daily_install_cost.total_costs,
     daily_install_cost.total_installs,
     daily_attribution_summary.total_registrations,
@@ -60,11 +60,11 @@ select
     daily_attribution_summary.total_beneficiaries_17,
     daily_attribution_summary.total_beneficiaries_16,
     daily_attribution_summary.total_beneficiaries_15
-from {{ ref("int_appsflyer__daily_install_cost") }} as daily_install_cost
-inner join
-    daily_attribution_summary
+from daily_attribution_summary
+left join
+    {{ ref("int_appsflyer__daily_install_cost") }} as daily_install_cost
     on daily_install_cost.app_install_date = daily_attribution_summary.app_install_date
-    and daily_install_cost.app_id = daily_attribution_summary.app_id
+    and daily_install_cost.app_os = daily_attribution_summary.app_os
     and daily_install_cost.acquisition_media_source
     = daily_attribution_summary.acquisition_media_source
     and daily_install_cost.acquisition_campaign

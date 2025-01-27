@@ -106,7 +106,7 @@ def build_tf_datasets(
     train_dataset = (
         tf.data.Dataset.from_tensor_slices(train_data.values)
         .cache()
-        .shuffle(buffer_size=len(train_data), reshuffle_each_iteration=True)
+        .shuffle(buffer_size=new_len_train_data, reshuffle_each_iteration=True)
         .batch(batch_size=batch_size)
         .map(lambda x: tf.transpose(x))
         .prefetch(tf.data.AUTOTUNE)
@@ -136,7 +136,13 @@ def build_tf_datasets(
         .prefetch(tf.data.AUTOTUNE)
     )
 
-    return train_dataset, validation_dataset, user_dataset, item_dataset
+    return (
+        train_dataset,
+        validation_dataset,
+        user_dataset,
+        item_dataset,
+        new_len_train_data,
+    )
 
 
 def initialize_mlflow(experiment_name: str, run_name: str):
@@ -311,10 +317,13 @@ def train(
         input_prediction_feature=input_prediction_feature,
     )
 
-    train_dataset, validation_dataset, user_dataset, item_dataset = build_tf_datasets(
-        train_data, validation_data, train_user_data, train_item_data, batch_size
+    train_dataset, validation_dataset, user_dataset, item_dataset, len_train_data = (
+        build_tf_datasets(
+            train_data, validation_data, train_user_data, train_item_data, batch_size
+        )
     )
     validation_steps = max(int((validation_data.shape[0] // batch_size)), 1)
+    training_steps = (len_train_data / 5) // batch_size
     log_mlflow_params(
         embedding_size,
         batch_size,
@@ -339,6 +348,7 @@ def train(
         train_dataset,
         validation_dataset,
         two_tower_model,
+        training_steps=training_steps,
         validation_steps=validation_steps,
         run_uuid=run_uuid,
     )

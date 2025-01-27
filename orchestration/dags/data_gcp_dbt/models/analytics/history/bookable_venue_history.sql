@@ -32,7 +32,7 @@ with
         inner join
             {{ source("raw", "applicative_database_venue") }} as v using (venue_id)
         group by
-            o.venue_id, v.venue_managing_offerer_id, date('{{ ds() }}'), 'individual'
+            venue_id, offerer_id, partition_date, offer_type
         union all
         select
             o.venue_id,
@@ -60,7 +60,7 @@ with
         inner join
             {{ source("raw", "applicative_database_venue") }} as v using (venue_id)
         group by
-            o.venue_id, v.venue_managing_offerer_id, date('{{ ds() }}'), 'collective'
+            venue_id, offerer_id, partition_date, offer_type
     ),
 
     pivoted_data as (

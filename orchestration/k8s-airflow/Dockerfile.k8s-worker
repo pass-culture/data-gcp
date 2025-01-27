@@ -1,18 +1,14 @@
 # To Do: try slim: apache/airflow:slim-2.9.3-python3.10
 FROM apache/airflow:2.9.3-python3.10
 ARG AIRFLOW_USER_HOME=/opt/airflow
+ARG DAG_FOLDER=dags
+ARG DOCKER_FOLDER=k8s-airflow
 ARG GCLOUD_VERSION=google-cloud-cli-411.0.0-linux-x86_64.tar.gz
 
 # Copy uv binary from the uv image
 COPY --from=ghcr.io/astral-sh/uv:0.3.4 /uv /bin/uv
 # Add binary to PATH
 ENV PATH="/root/.cargo/bin/:$PATH"
-
-# Bake dbt scripts in the image
-RUN mkdir -p /usr/local/bin/dbt_scripts
-COPY ../dags/data_gcp_dbt/scripts/*.sh dbt_compile.sh /usr/local/bin/dbt_scripts/
-RUN find /usr/local/bin/dbt_scripts -type f -name '*.sh' -exec chmod +x {} \;
-ENV PATH="/usr/local/bin/dbt_scripts:$PATH"
 
 # To Do: check if export reco job needs python package:
 #    'apache-airflow-providers-mysql==5.5.4' added to k8s-requirements.in
@@ -24,9 +20,10 @@ ENV PATH="/usr/local/bin/dbt_scripts:$PATH"
 #     libmariadb-dev \
 #     build-essential \
     # && rm -rf /var/lib/apt/lists/*
-# install gcloud
+
 USER root
 
+# install gcloud
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     ca-certificates && \
@@ -37,9 +34,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV PATH=$PATH:$AIRFLOW_USER_HOME/google-cloud-sdk/bin
 
 # Install python dependencies
-USER airflow
+
 WORKDIR ${AIRFLOW_USER_HOME}
-COPY k8s-worker-requirements.txt /opt/requirements.txt
+RUN mkdir -p ${AIRFLOW_USER_HOME}/dbt_scripts
+# Copy all shell scripts  into that directory
+COPY ${DAG_FOLDER}/data_gcp_dbt/scripts/*.sh ${AIRFLOW_USER_HOME}/dbt_scripts/
+
+# Make scripts executable and ensure 'airflow' user owns them
+RUN chmod +x ${AIRFLOW_USER_HOME}/dbt_scripts/*.sh \
+    && chown -R airflow:root ${AIRFLOW_USER_HOME}/dbt_scripts
+
+# Put dbt_scripts folder on PATH
+ENV PATH="${AIRFLOW_USER_HOME}/dbt_scripts:$PATH"
+
+USER airflow
+COPY ${DOCKER_FOLDER}/k8s-worker-requirements.txt /opt/requirements.txt
 RUN uv pip install --no-cache-dir -r /opt/requirements.txt
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/entrypoint"]

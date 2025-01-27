@@ -190,13 +190,25 @@ def train_two_tower_model(
     train_dataset,
     validation_dataset,
     two_tower_model,
+    training_steps,
     validation_steps,
     run_uuid,
 ):
     # No validation on metrics during training
+    initial_learning_rate = LEARNING_RATE
+    decay_rate = 0.96  # Reduce by 4% per epoch
+    decay_steps = 500  # Adjust depending on dataset size
+
+    lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+        initial_learning_rate,
+        decay_steps=decay_steps,
+        decay_rate=decay_rate,
+        staircase=True,  # If True, decreases in steps rather than smoothly
+    )
+
     two_tower_model.set_task(item_dataset=None)
     two_tower_model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE)
+        optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule)
     )
 
     repeated_train_dataset = train_dataset.repeat()

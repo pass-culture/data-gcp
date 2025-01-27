@@ -5,16 +5,16 @@ with
             min(partition_date) as first_bookable_offer_date,
             max(partition_date) as last_bookable_offer_date,
             min(
-                case when individual_bookable_offers > 0 then partition_date end
+                case when total_individual_bookable_offers > 0 then partition_date end
             ) as first_individual_bookable_offer_date,
             max(
-                case when individual_bookable_offers > 0 then partition_date end
+                case when total_individual_bookable_offers > 0 then partition_date end
             ) as last_individual_bookable_offer_date,
             min(
-                case when collective_bookable_offers > 0 then partition_date end
+                case when total_collective_bookable_offers > 0 then partition_date end
             ) as first_collective_bookable_offer_date,
             max(
-                case when collective_bookable_offers > 0 then partition_date end
+                case when total_collective_bookable_offers > 0 then partition_date end
             ) as last_collective_bookable_offer_date
         from {{ ref("bookable_venue_history") }}
         group by venue_id

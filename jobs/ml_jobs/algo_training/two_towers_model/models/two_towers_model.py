@@ -146,7 +146,9 @@ class SingleTowerModel(tf.keras.models.Model):
 
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
         self._dense2 = tf.keras.layers.Dense(embedding_size)
-        self._norm = tf.keras.layers.LayerNormalization(name="normalize_dense")
+
+        self._norm = tf.keras.layers.UnitNormalization(axis=-1, name="l2_normalize")
+        # self._norm = tf.keras.layers.LayerNormalization(axis=-1)
 
     def call(self, features: list, training=False):
         feature_embeddings = []

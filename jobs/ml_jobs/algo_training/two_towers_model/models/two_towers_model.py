@@ -11,6 +11,8 @@ from two_towers_model.utils.layers import (
     TextEmbeddingLayer,
 )
 
+TEMPERATURE = 0.05
+
 
 class TwoTowersModel(tfrs.models.Model):
     def __init__(
@@ -65,6 +67,7 @@ class TwoTowersModel(tfrs.models.Model):
                 reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
             ),
             metrics=self.get_metrics(item_dataset) if item_dataset else None,
+            temperature=TEMPERATURE,
         )
 
     def get_metrics(self, item_dataset):

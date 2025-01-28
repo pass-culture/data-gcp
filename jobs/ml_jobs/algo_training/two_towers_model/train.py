@@ -228,22 +228,23 @@ def train_two_tower_model(
         ],
         verbose=VERBOSE,
     )
-    # Compile one last time and evaluate.
-    two_tower_model.compile()
-    two_tower_model.task.factorized_metrics = [
-        two_tower_model.get_metrics(item_dataset=item_dataset)
-    ]
-    logger.info("Evaluate on train dataset")
-    train_params = two_tower_model.evaluate(
-        train_dataset, verbose=VERBOSE, return_dict=True
-    )
-    mlflow.log_metrics({f"training_{k}": v for k, v in train_params.items()})
 
-    logger.info("Evaluate on validation dataset")
-    validation_results = two_tower_model.evaluate(
-        validation_dataset, steps=validation_steps, verbose=VERBOSE, return_dict=True
-    )
-    mlflow.log_metrics({f"validation_{k}": v for k, v in validation_results.items()})
+    # # Compile one last time and evaluate.
+    # two_tower_model.compile()
+    # two_tower_model.task.factorized_metrics = [
+    #     two_tower_model.get_metrics(item_dataset=item_dataset)
+    # ]
+    # logger.info("Evaluate on train dataset")
+    # train_params = two_tower_model.evaluate(
+    #     train_dataset, verbose=VERBOSE, return_dict=True
+    # )
+    # mlflow.log_metrics({f"training_{k}": v for k, v in train_params.items()})
+
+    # logger.info("Evaluate on validation dataset")
+    # validation_results = two_tower_model.evaluate(
+    #     validation_dataset, steps=validation_steps, verbose=VERBOSE, return_dict=True
+    # )
+    # mlflow.log_metrics({f"validation_{k}": v for k, v in validation_results.items()})
 
 
 def save_model_and_embeddings(

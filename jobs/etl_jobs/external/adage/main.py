@@ -14,4 +14,4 @@ def run():
 if __name__ == "__main__":
     logger = logging.getLogger(__name__)
     run()
-    logger.info(" Adage import task completed successfully ")
+    logger.info("Adage import task completed successfully")

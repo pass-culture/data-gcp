@@ -1,7 +1,7 @@
 import datetime
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
@@ -9,10 +9,10 @@ from common.config import (
     GCS_COMPOSER_BUCKET,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import (
     get_airflow_schedule,
@@ -30,8 +30,8 @@ dag_config = {
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
-    "retries": 1,
-    "on_failure_callback": task_fail_slack_alert,
+    "retries": 0,
+    "on_failure_callback": on_failure_combined_callback,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }
@@ -102,7 +102,7 @@ with DAG(
         do_xcom_push=True,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
     )

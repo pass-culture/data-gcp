@@ -8,10 +8,10 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 
@@ -78,7 +78,7 @@ with DAG(
             do_xcom_push=True,
         )
 
-        gce_instance_stop = StopGCEOperator(
+        gce_instance_stop = DeleteGCEOperator(
             task_id=f"{social_network}_gce_stop_task", instance_name=gce_instance
         )
 

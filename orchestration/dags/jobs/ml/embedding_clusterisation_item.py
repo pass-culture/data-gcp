@@ -7,10 +7,10 @@ from common.config import (
     ENV_SHORT_NAME,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 
@@ -115,7 +115,7 @@ with DAG(
             f"--config-file-name {cluster_config_file_name} ",
         )
 
-        gce_instance_stop = StopGCEOperator(
+        gce_instance_stop = DeleteGCEOperator(
             task_id=f"gce_{job_name}_stop_task", instance_name=gce_instance
         )
 

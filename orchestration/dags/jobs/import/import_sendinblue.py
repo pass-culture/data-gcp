@@ -9,10 +9,10 @@ from common.config import (
 )
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import (
     depends_loop,
@@ -142,7 +142,7 @@ with DAG(
         do_xcom_push=True,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 

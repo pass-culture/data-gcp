@@ -3,10 +3,10 @@ from datetime import datetime, timedelta
 from common.alerts import task_fail_slack_alert
 from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 
@@ -91,7 +91,7 @@ with DAG(
     """,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task"
     )
 

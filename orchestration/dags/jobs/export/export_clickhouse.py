@@ -10,10 +10,10 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import delayed_waiting_operator, get_airflow_schedule
 from dependencies.export_clickhouse.export_clickhouse import (
@@ -254,7 +254,7 @@ for dag_name, dag_params in dags.items():
                                 >> analytics_task_mapping[clickhouse_table_name]
                             )
 
-        gce_instance_stop = StopGCEOperator(
+        gce_instance_stop = DeleteGCEOperator(
             task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
         )
 

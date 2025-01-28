@@ -12,7 +12,7 @@ models:
           - unique
           - not_null
       - name: user_embedding
-        description: "{{ doc('column__user_embedding') }}"
+        description: "{{ doc('column__two_tower_user_embedding') }}"
         data_type: ARRAY(FLOAT64)
         data_tests:
           - unique

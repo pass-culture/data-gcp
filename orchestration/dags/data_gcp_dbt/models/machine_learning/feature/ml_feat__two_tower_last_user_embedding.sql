@@ -1,5 +1,3 @@
-{{ config(**custom_table_config(materialized="view")) }}
-
 select
     main_table.user_id,
     main_table.user_embedding,

@@ -3,7 +3,10 @@ version: 2
 models:
   - name: ml_feat__two_tower_last_user_embedding
     description: "{{ doc('description__ml_feat__two_tower_last_user_embedding') }}"
-
+    config:
+      materialized: view
+      contract:
+        enforced: true
     columns:
       - name: user_id
         description: "{{ doc('column__user_id') }}"
@@ -13,7 +16,7 @@ models:
           - not_null
       - name: user_embedding
         description: "{{ doc('column__two_tower_user_embedding') }}"
-        data_type: ARRAY(FLOAT64)
+        data_type: ARRAY<FLOAT64>
         data_tests:
           - unique
           - not_null

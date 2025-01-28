@@ -57,25 +57,25 @@ with
     ),
 
     bookable_offer_history as (
-    select
-        offerer_id,
-        min(partition_date) as first_bookable_offer_date,
-        max(partition_date) as last_bookable_offer_date,
-        min(
-            case when total_individual_bookable_offers > 0 then partition_date end
-        ) as first_individual_bookable_offer_date,
-        max(
-            case when total_individual_bookable_offers > 0 then partition_date end
-        ) as last_individual_bookable_offer_date,
-        min(
-            case when total_collective_bookable_offers > 0 then partition_date end
-        ) as first_collective_bookable_offer_date,
-        max(
-            case when total_collective_bookable_offers > 0 then partition_date end
-        ) as last_collective_bookable_offer_date
-    from {{ ref("bookable_venue_history") }}
-    group by offerer_id
-)
+        select
+            offerer_id,
+            min(partition_date) as first_bookable_offer_date,
+            max(partition_date) as last_bookable_offer_date,
+            min(
+                case when total_individual_bookable_offers > 0 then partition_date end
+            ) as first_individual_bookable_offer_date,
+            max(
+                case when total_individual_bookable_offers > 0 then partition_date end
+            ) as last_individual_bookable_offer_date,
+            min(
+                case when total_collective_bookable_offers > 0 then partition_date end
+            ) as first_collective_bookable_offer_date,
+            max(
+                case when total_collective_bookable_offers > 0 then partition_date end
+            ) as last_collective_bookable_offer_date
+        from {{ ref("bookable_venue_history") }}
+        group by offerer_id
+    )
 
 select
     ofr.offerer_id,
@@ -126,12 +126,28 @@ select
     ofr.offerer_department_code,
     ofr.offerer_postal_code,
     ofr.offerer_siren,
-    coalesce(date_diff(current_date, boh.last_bookable_offer_date, day) <= 30, false) as is_active_last_30days,
-    coalesce(date_diff(current_date, boh.last_bookable_offer_date, year) = 0, false) as is_active_current_year,
-    coalesce(date_diff(current_date, boh.last_individual_bookable_offer_date, day) <= 30, false) as is_individual_active_last_30days,
-    coalesce(date_diff(current_date, boh.last_individual_bookable_offer_date, year) = 0, false) as is_individual_active_current_year,
-    coalesce(date_diff(current_date, boh.last_collective_bookable_offer_date, day) <= 30, false) as is_collective_active_last_30days,
-    coalesce(date_diff(current_date, boh.last_collective_bookable_offer_date, year) = 0, false) as is_collective_active_current_year,
+    coalesce(
+        date_diff(current_date, boh.last_bookable_offer_date, day) <= 30, false
+    ) as is_active_last_30days,
+    coalesce(
+        date_diff(current_date, boh.last_bookable_offer_date, year) = 0, false
+    ) as is_active_current_year,
+    coalesce(
+        date_diff(current_date, boh.last_individual_bookable_offer_date, day) <= 30,
+        false
+    ) as is_individual_active_last_30days,
+    coalesce(
+        date_diff(current_date, boh.last_individual_bookable_offer_date, year) = 0,
+        false
+    ) as is_individual_active_current_year,
+    coalesce(
+        date_diff(current_date, boh.last_collective_bookable_offer_date, day) <= 30,
+        false
+    ) as is_collective_active_last_30days,
+    coalesce(
+        date_diff(current_date, boh.last_collective_bookable_offer_date, year) = 0,
+        false
+    ) as is_collective_active_current_year,
     ofr.top_real_revenue_venue_type,
     ofr.top_bookings_venue_type,
     region_department.region_name as offerer_region_name,
@@ -141,7 +157,9 @@ select
     label_unite_legale as legal_unit_business_activity_label,
     siren_data.categoriejuridiqueunitelegale as legal_unit_legal_category_code,
     label_categorie_juridique as legal_unit_legal_category_label,
-    coalesce(siren_data.activiteprincipaleunitelegale = '84.11Z', false) as is_local_authority,
+    coalesce(
+        siren_data.activiteprincipaleunitelegale = '84.11Z', false
+    ) as is_local_authority,
     case
         when
             (

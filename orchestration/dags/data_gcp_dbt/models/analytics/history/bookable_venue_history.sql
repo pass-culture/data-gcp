@@ -31,8 +31,7 @@ with
         inner join {{ ref("int_applicative__offer") }} as o using (offer_id)
         inner join
             {{ source("raw", "applicative_database_venue") }} as v using (venue_id)
-        group by
-            venue_id, offerer_id, partition_date, offer_type
+        group by venue_id, offerer_id, partition_date, offer_type
         union all
         select
             o.venue_id,
@@ -59,8 +58,7 @@ with
             )
         inner join
             {{ source("raw", "applicative_database_venue") }} as v using (venue_id)
-        group by
-            venue_id, offerer_id, partition_date, offer_type
+        group by venue_id, offerer_id, partition_date, offer_type
     ),
 
     pivoted_data as (

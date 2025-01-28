@@ -1,5 +1,5 @@
 ---
-title: Publication Detail
+title: TikTok publication detail
 description: Description of the `int_tiktok__publication_detail` table.
 ---
 

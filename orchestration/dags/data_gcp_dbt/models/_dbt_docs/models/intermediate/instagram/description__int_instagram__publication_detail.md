@@ -1,5 +1,5 @@
 ---
-title: Publication detail
+title: Instagram publication detail
 description: Description of the `int_instagram__publication_detail` table.
 ---
 

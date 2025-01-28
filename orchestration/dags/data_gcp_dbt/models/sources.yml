@@ -117,7 +117,10 @@ sources:
       - name: firebase_pro_events
       - name: gsheet_eac_webinar
       - name: gsheet_educational_institution_student_headcount
+      - name: gsheet_instagram_campaign_tag
       - name: gsheet_ml_recommendation_sensitive_item
+      - name: gsheet_tiktok_campaign_tag
+      - name: instagram_post_detail
       - name: metabase_collection
       - name: metabase_core_user
       - name: metabase_query_execution
@@ -133,6 +136,7 @@ sources:
       - name: sensitive_item_recommendation
       - name: stdout
       - name: subcategories
+      - name: tiktok_video_detail
       - name: offer_types
       - name: user_locations
       - name: zendesk_macro_usage

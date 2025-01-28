@@ -1,0 +1,90 @@
+version: 2
+
+models:
+  - name: mrt_marketing__social_network_publication
+    description: '{{ doc("description__mrt_marketing__social_network_publication") }}'
+    columns:
+      - name: publication_id
+        description: '{{ doc("column__publication_id") }}'
+        type: STRING
+      - name: publication_creation_date
+        description: '{{ doc("column__publication_creation_date") }}'
+        type: DATE
+      - name: publication_caption
+        description: '{{ doc("column__publication_caption") }}'
+        type: STRING
+      - name: publication_link
+        description: '{{ doc("column__publication_link") }}'
+        type: STRING
+      - name: publication_export_date
+        description: '{{ doc("column__publication_export_date") }}'
+        type: DATE
+      - name: publication_account_name
+        description: '{{ doc("column__publication_account_name") }}'
+        type: STRING
+      - name: publication_is_tagged
+        description: '{{ doc("column__publication_is_tagged") }}'
+        type: BOOLEAN
+      - name: publication_reach
+        description: '{{ doc("column__publication_reach") }}'
+        type: INT64
+      - name: publication_video_views
+        description: '{{ doc("column__publication_video_views") }}'
+        type: INT64
+      - name: publication_likes
+        description: '{{ doc("column__publication_likes") }}'
+        type: INT64
+      - name: publication_shares
+        description: '{{ doc("column__publication_shares") }}'
+        type: INT64
+      - name: publication_comments
+        description: '{{ doc("column__publication_comments") }}'
+        type: INT64
+      - name: publication_engagement_rate
+        description: '{{ doc("column__publication_engagement_rate") }}'
+        type: FLOAT64
+      - name: publication_tag_post_name
+        description: '{{ doc("column__publication_tag_post_name") }}'
+        type: STRING
+      - name: publication_tag_macro_objective
+        description: '{{ doc("column__publication_tag_macro_objective") }}'
+        type: STRING
+      - name: publication_tag_micro_objective
+        description: '{{ doc("column__publication_tag_micro_objective") }}'
+        type: STRING
+      - name: publication_tag_offer_category
+        description: '{{ doc("column__publication_tag_offer_category") }}'
+        type: STRING
+      - name: instagram_publication_media_type
+        description: '{{ doc("column__instagram_publication_media_type") }}'
+        type: STRING
+      - name: instagram_publication_saved
+        description: '{{ doc("column__instagram_publication_saved") }}'
+        type: INT64
+      - name: instagram_publication_total_interactions
+        description: '{{ doc("column__instagram_publication_total_interactions") }}'
+        type: INT64
+      - name: instagram_publication_impressions
+        description: '{{ doc("column__instagram_publication_impressions") }}'
+        type: INT64
+      - name: instagram_publication_follows
+        description: '{{ doc("column__instagram_publication_follows") }}'
+        type: INT64
+      - name: instagram_publication_profile_visits
+        description: '{{ doc("column__instagram_publication_profile_visits") }}'
+        type: INT64
+      - name: instagram_publication_profile_activity
+        description: '{{ doc("column__instagram_publication_profile_activity") }}'
+        type: INT64
+      - name: tiktok_publication_average_time_watched
+        description: '{{ doc("column__tiktok_publication_average_time_watched") }}'
+        type: FLOAT64
+      - name: tiktok_publication_total_time_watched
+        description: '{{ doc("column__tiktok_publication_total_time_watched") }}'
+        type: INT64
+      - name: tiktok_publication_video_duration
+        description: '{{ doc("column__tiktok_publication_video_duration") }}'
+        type: FLOAT64
+      - name: tiktok_publication_full_video_watched_rate
+        description: '{{ doc("column__tiktok_publication_full_video_watched_rate") }}'
+        type: FLOAT64

@@ -1,0 +1,69 @@
+version: 2
+
+models:
+  - name: int_tiktok__publication_detail
+    description: '{{ doc("description__int_tiktok__publication_detail") }}'
+    columns:
+      - name: publication_id
+        description: '{{ doc("column__publication_id") }}'
+        data_type: STRING
+      - name: publication_creation_date
+        description: '{{ doc("column__publication_creation_date") }}'
+        data_type: DATE
+      - name: publication_caption
+        description: '{{ doc("column__publication_caption") }}'
+        data_type: STRING
+      - name: publication_link
+        description: '{{ doc("column__publication_link") }}'
+        data_type: STRING
+      - name: publication_export_date
+        description: '{{ doc("column__publication_export_date") }}'
+        data_type: DATE
+      - name: publication_account_name
+        description: '{{ doc("column__publication_account_name") }}'
+        data_type: STRING
+      - name: publication_is_tagged
+        description: '{{ doc("column__publication_is_tagged") }}'
+        data_type: BOOLEAN
+      - name: publication_reach
+        description: '{{ doc("column__publication_reach") }}'
+        data_type: INT64
+      - name: publication_video_views
+        description: '{{ doc("column__publication_video_views") }}'
+        data_type: INT64
+      - name: publication_likes
+        description: '{{ doc("column__publication_likes") }}'
+        data_type: INT64
+      - name: publication_shares
+        description: '{{ doc("column__publication_shares") }}'
+        data_type: INT64
+      - name: publication_comments
+        description: '{{ doc("column__publication_comments") }}'
+        data_type: INT64
+      - name: tiktok_publication_average_time_watched
+        description: '{{ doc("column__tiktok_publication_average_time_watched") }}'
+        data_type: FLOAT64
+      - name: tiktok_publication_total_time_watched
+        description: '{{ doc("column__tiktok_publication_total_time_watched") }}'
+        data_type: INT64
+      - name: tiktok_publication_video_duration
+        description: '{{ doc("column__tiktok_publication_video_duration") }}'
+        data_type: FLOAT64
+      - name: tiktok_publication_full_video_watched_rate
+        description: '{{ doc("column__tiktok_publication_full_video_watched_rate") }}'
+        data_type: FLOAT64
+      - name: publication_engagement_rate
+        description: '{{ doc("column__publication_engagement_rate") }}'
+        data_type: FLOAT64
+      - name: publication_tag_post_name
+        description: '{{ doc("column__publication_tag_post_name") }}'
+        data_type: STRING
+      - name: publication_tag_macro_objective
+        description: '{{ doc("column__publication_tag_macro_objective") }}'
+        data_type: STRING
+      - name: publication_tag_micro_objective
+        description: '{{ doc("column__publication_tag_micro_objective") }}'
+        data_type: STRING
+      - name: publication_tag_offer_category
+        description: '{{ doc("column__publication_tag_offer_category") }}'
+        data_type: STRING

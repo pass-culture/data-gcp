@@ -33,6 +33,7 @@ from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
 
+DAG_NAME = "import_sendinblue_historical"
 GCE_INSTANCE = f"import-sendinblue-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/sendinblue"
 yesterday = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
@@ -74,7 +75,7 @@ def get_start_date(end_date):
 # start_date = end_date - 7
 
 with DAG(
-    "import_sendinblue_historical",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Import historic sendinblue tables",
     schedule_interval=get_airflow_schedule("00 13 * * *"),
@@ -94,7 +95,9 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

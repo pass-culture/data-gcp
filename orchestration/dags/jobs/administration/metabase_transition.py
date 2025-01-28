@@ -18,6 +18,7 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 
+DAG_NAME = "metabase_transition"
 GCE_INSTANCE = f"metabase-transition-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/metabase"
 dag_config = {
@@ -33,7 +34,7 @@ default_dag_args = {
 }
 
 with DAG(
-    "metabase_transition",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Switch metabase tables following dbt migration",
     schedule_interval=None,
@@ -71,7 +72,9 @@ with DAG(
     start = DummyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

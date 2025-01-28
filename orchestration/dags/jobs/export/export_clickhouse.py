@@ -76,8 +76,9 @@ def choose_branch(**context):
 
 
 for dag_name, dag_params in dags.items():
+    DAG_NAME = f"export_clickhouse_{dag_name}"
     with DAG(
-        f"export_clickhouse_{dag_name}",
+        DAG_NAME,
         default_args=dag_params["default_dag_args"],
         description="Export data to clickhouse",
         schedule_interval=get_airflow_schedule(
@@ -147,6 +148,7 @@ for dag_name, dag_params in dags.items():
             instance_type="{{ params.instance_type }}",
             retries=2,
             use_gke_network=True,
+            labels={"dag_name": DAG_NAME},
         )
 
         fetch_install_code = InstallDependenciesOperator(

@@ -16,6 +16,7 @@ from common.utils import get_airflow_schedule
 from airflow import DAG
 from airflow.models import Param
 
+DAG_NAME = "import_gsheet"
 GCE_INSTANCE = f"import-gsheet-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/gsheet"
 dag_config = {
@@ -32,7 +33,7 @@ default_dag_args = {
 
 
 with DAG(
-    "import_gsheet",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Import Adhoc Gsheet",
     on_failure_callback=None,
@@ -47,7 +48,9 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

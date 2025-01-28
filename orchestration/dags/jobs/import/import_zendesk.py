@@ -14,6 +14,7 @@ from common.utils import get_airflow_schedule
 from airflow import DAG
 from airflow.models import Param
 
+DAG_NAME = "import_zendesk"
 GCE_INSTANCE = f"import-zendesk-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/zendesk"
 dag_config = {
@@ -30,7 +31,7 @@ default_dag_args = {
 }
 
 with DAG(
-    "import_zendesk",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Import zendesk tables",
     schedule_interval=get_airflow_schedule("00 01 * * *"),
@@ -50,7 +51,9 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

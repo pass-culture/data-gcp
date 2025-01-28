@@ -57,8 +57,9 @@ GCE_PARAMS = {
 schedule_dict = {"prod": "0 8 * * *", "dev": "0 12 * * *", "stg": "0 10 * * *"}
 
 for job_name, table_name in TABLE_PARAMS.items():
+    DAG_NAME = f"export_posthog_{job_name}"
     with DAG(
-        f"export_posthog_{job_name}",
+        DAG_NAME,
         default_args={
             "start_date": datetime.datetime(2023, 9, 1),
             "retries": 1,
@@ -132,7 +133,7 @@ for job_name, table_name in TABLE_PARAMS.items():
             instance_name=instance_name,
             instance_type="{{ params.instance_type }}",
             retries=2,
-            labels={"job_type": "long_task"},
+            labels={"job_type": "long_task", "dag_name": DAG_NAME},
         )
         fetch_install_code = InstallDependenciesOperator(
             task_id=f"{table_config_name}_fetch_install_code",

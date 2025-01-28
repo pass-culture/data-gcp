@@ -18,6 +18,7 @@ from common.utils import get_airflow_schedule
 from airflow import DAG
 from airflow.models import Param
 
+DAG_NAME = "import_social_network"
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
     "on_failure_callback": task_fail_slack_alert,
@@ -27,7 +28,7 @@ default_dag_args = {
 
 
 with DAG(
-    "import_social_network",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Import Social Network Data",
     on_failure_callback=None,
@@ -51,7 +52,9 @@ with DAG(
         gce_instance = f"import-{social_network}-{ENV_SHORT_NAME}"
         base_path = f"data-gcp/jobs/etl_jobs/external/{social_network}"
         gce_instance_start = StartGCEOperator(
-            instance_name=gce_instance, task_id=f"{social_network}_gce_start_task"
+            instance_name=gce_instance,
+            task_id=f"{social_network}_gce_start_task",
+            labels={"dag_name": DAG_NAME},
         )
 
         fetch_install_code = InstallDependenciesOperator(

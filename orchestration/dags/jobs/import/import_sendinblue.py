@@ -28,6 +28,7 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 
+DAG_NAME = "import_brevo"
 GCE_INSTANCE = f"import-brevo-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/brevo"
 yesterday = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
@@ -45,7 +46,7 @@ default_dag_args = {
 }
 
 with DAG(
-    "import_brevo",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Import brevo tables",
     schedule_interval=get_airflow_schedule("00 04 * * *")
@@ -71,7 +72,9 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

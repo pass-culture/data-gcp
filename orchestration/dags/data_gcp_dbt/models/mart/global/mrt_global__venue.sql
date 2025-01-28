@@ -97,7 +97,6 @@ select
     v.offerer_rank_desc,
     v.offerer_rank_asc,
     v.venue_image_source,
-    v.venue_adage_inscription_date,
-    
+    v.venue_adage_inscription_date
 from {{ ref("int_global__venue") }} as v
 where v.offerer_validation_status = 'VALIDATED' and v.offerer_is_active

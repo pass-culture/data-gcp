@@ -73,9 +73,7 @@ with
                 )
             ) as all_physical_venues_types,
             count(
-                case
-                    when venue_type_label = "Lieu administratif" then venue_id
-                end
+                case when venue_type_label = "Lieu administratif" then venue_id end
             ) as total_administrative_venues,
             max(
                 case when offerer_real_revenue_rank = 1 then venue_type_label end

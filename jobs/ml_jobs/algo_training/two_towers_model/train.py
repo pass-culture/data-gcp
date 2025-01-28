@@ -22,7 +22,7 @@ from two_towers_model.utils.callbacks import MLFlowLogging
 
 N_EPOCHS = 100
 MIN_DELTA = 0.001
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.1
 VERBOSE = 2
 
 

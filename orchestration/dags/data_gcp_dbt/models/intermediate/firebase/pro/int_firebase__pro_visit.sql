@@ -76,8 +76,7 @@ select
         event_name = "page_view"
         and page_name in (
             "Remboursements - pass Culture Pro",
-            "Gestion financière - pass Culture Pro",
-            "Chiffre d’affaires - pass Culture Pro"
+            "Gestion financière - pass Culture Pro"
         )
     ) as total_financial_receipt_page_views,
     countif(
@@ -88,7 +87,11 @@ select
         and page_name = "Informations bancaires - pass Culture Pro"
     ) as total_banking_info_page_views,
     countif(
-        event_name = "page_view" and page_name = "Statistiques - pass Culture Pro"
+        event_name = "page_view"
+        and page_name in (
+            "Statistiques - pass Culture Pro",
+            "Chiffre d’affaires - pass Culture Pro"
+        )
     ) as total_stat_page_views,
 
     -- count offer creation

@@ -210,7 +210,7 @@ select
         then least(vgo.last_collective_booking_date, vgo.last_individual_booking_date)
         else
             coalesce(vgo.last_individual_booking_date, vgo.last_collective_booking_date)
-    end as last_booking_date
+    end as last_booking_date,
 from {{ ref("int_raw__offerer") }} as o
 left join
     venue_grouped_by_offerer as vgo on o.offerer_id = vgo.venue_managing_offerer_id

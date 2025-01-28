@@ -143,7 +143,6 @@ class SingleTowerModel(tf.keras.models.Model):
 
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
         self._dense2 = tf.keras.layers.Dense(embedding_size)
-        self._norm = tf.keras.layers.LayerNormalization(name="normalize_dense")
 
     def call(self, features: list, training=False):
         feature_embeddings = []
@@ -152,5 +151,4 @@ class SingleTowerModel(tf.keras.models.Model):
 
         x = tf.concat(feature_embeddings, axis=1)
         x = self._dense1(x)
-        x = self._dense2(x)
-        return self._norm(x)
+        return self._dense2(x)

@@ -33,14 +33,14 @@ with
         select
             aa.active_month,
             aa.user_department_code as department_code,
-            date(date_trunc('month', ud.user_birth_date)) as born_date,
+            date(date_trunc(ud.user_birth_date, 'month')) as born_date,
             count(distinct ud.user_id) as total_users
         from {{ ref("aggregated_monthly_user_used_booking_activity") }} as aa
         inner join {{ ref("mrt_global__user") }} as ud on aa.user_id = ud.user_id
         group by
             aa.active_month,
             aa.user_department_code,
-            date(date_trunc('month', ud.user_birth_date))
+            date(date_trunc(ud.user_birth_date, 'month'))
     )
 
 select

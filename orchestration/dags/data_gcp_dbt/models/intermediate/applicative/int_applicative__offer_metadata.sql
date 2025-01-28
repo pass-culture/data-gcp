@@ -31,6 +31,9 @@ select
     o.titelive_gtl_id,
     o.offer_type_id,
     o.offer_sub_type_id,
+    o.isbn as offer_isbn,
+    o.visa as offer_visa,
+    mahl.movie_label,
     case
         when o.mediation_humanized_id is not null
         then
@@ -159,4 +162,7 @@ left join
     {{ ref("int_applicative__product_mediation") }} as pm
     on o.offer_product_id = pm.product_id
 left join {{ ref("int_applicative__product") }} as p on o.offer_product_id = p.id
+left join
+    {{ ref("int_seed__movie_arthouse_and_heritage_label") }} as mahl
+    on mahl.movie_visa = o.visa
 qualify row_number() over (partition by offer_id order by pm.image_type) = 1

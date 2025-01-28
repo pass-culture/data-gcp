@@ -118,6 +118,7 @@ sources:
       - name: gsheet_eac_webinar
       - name: gsheet_educational_institution_student_headcount
       - name: gsheet_ml_recommendation_sensitive_item
+      - name: gsheet_movie_arthouse_and_heritage_label
       - name: metabase_collection
       - name: metabase_core_user
       - name: metabase_query_execution

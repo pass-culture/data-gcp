@@ -18,7 +18,7 @@ SELECT DISTINCT
         WHERE up.key = 'offerer_id'
     ) AS offerer_id,
     event_params.key AS experiment_name,
-    CAST(event_params.value.string_value AS BOOLEAN) AS experiment_value
+    SAFE_CAST(event_params.value.string_value AS BOOLEAN) AS experiment_value
 FROM 
     {{ source("raw", "firebase_pro_events") }},
     UNNEST(event_params) AS event_params
@@ -31,5 +31,7 @@ WHERE
     {% if is_incremental() %}
         AND event_date BETWEEN DATE_SUB(DATE("{{ ds() }}"), INTERVAL 1 DAY)
         AND DATE("{{ ds() }}")
+    {% else %} 
+        AND event_date >= DATE_SUB(DATE("{{ ds() }}"), INTERVAL 6 MONTH)
     {% endif %}
 

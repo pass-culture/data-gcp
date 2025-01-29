@@ -22,7 +22,7 @@
 {% docs column__download_button_type %}The type of download button used during the event, if applicable.{% enddocs %}
 {% docs column__download_file_type %}The type of file downloaded during the event, if applicable.{% enddocs %}
 {% docs column__download_files_cnt %}The count of files downloaded during the event, if applicable.{% enddocs %}
-{% docs column__suggested_offer_subcategory_selected %}Indicates whether a suggested offer subcategory was selected during the event.
+{% docs column__suggested_offer_subcategory_selected %}Indicates whether a suggested offer subcategory was selected during the event.{% enddocs %}
 {% docs column__image_creation_stage %}Indicates the different stages of image upload while creating/editing an offer/a partner page.{% enddocs %}
 
 -- This will be hidden

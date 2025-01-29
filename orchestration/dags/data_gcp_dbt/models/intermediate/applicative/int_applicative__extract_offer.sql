@@ -39,7 +39,9 @@ select
     lower(trim(json_extract(extra_data, "$.countries"), " ")) as countries,
     lower(trim(json_extract(extra_data, "$.cast"), " ")) as casting,
     lower(trim(trim(json_extract(extra_data, "$.isbn"), " "), '"')) as isbn,
-    lower(coalesce(ean, trim(trim(json_extract(extra_data, "$.ean"), " "), '"'))) as ean,
+    lower(
+        coalesce(ean, trim(trim(json_extract(extra_data, "$.ean"), " "), '"'))
+    ) as ean,
     lower(trim(trim(json_extract(extra_data, "$.editeur"), " "), '"')) as book_editor,
     lower(
         trim(trim(json_extract(extra_data, "$.gtl_id"), " "), '"')

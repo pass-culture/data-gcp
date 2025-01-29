@@ -73,8 +73,7 @@ with
             collective as total_collective_bookable_offers
         from
             all_bookable_data pivot (
-                sum(nb_bookable_offers) for offer_type
-                in ('individual', 'collective')
+                sum(nb_bookable_offers) for offer_type in ('individual', 'collective')
             )
     )
 

@@ -63,4 +63,3 @@ left join
     on pop.active_month = ub.active_month
     and pop.born_date = ub.born_date
     and pop.department_code = ub.department_code
-;

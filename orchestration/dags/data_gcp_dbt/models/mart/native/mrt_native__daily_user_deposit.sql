@@ -27,7 +27,7 @@ with
                     interval 1 day
                 )
             ) as day
-)
+    )
 
 select
     __days.day as user_snapshot_date,

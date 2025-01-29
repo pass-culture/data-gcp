@@ -44,14 +44,12 @@ select
     ) as nb_sesh_consult,
     count(
         distinct case
-            when nb_add_to_favorites > 0
-            then firebase_visits.unique_session_id
+            when nb_add_to_favorites > 0 then firebase_visits.unique_session_id
         end
     ) as nb_sesh_add_to_fav,
     count(
         distinct case
-            when nb_booking_confirmation > 0
-            then firebase_visits.unique_session_id
+            when nb_booking_confirmation > 0 then firebase_visits.unique_session_id
         end
     ) as nb_sesh_booking,
     coalesce(sum(nb_consult_offer), 0) as nb_consult_offer,
@@ -61,31 +59,29 @@ select
     coalesce(sum(total_delta_diversification), 0) as total_delta_diversification,
     count(
         distinct case
-            when nb_signup_completed > 0
-            then firebase_visits.unique_session_id
+            when nb_signup_completed > 0 then firebase_visits.unique_session_id
         end
     ) as nb_signup,
     count(
         distinct case
-            when nb_benef_request_sent > 0
-            then firebase_visits.unique_session_id
+            when nb_benef_request_sent > 0 then firebase_visits.unique_session_id
         end
     ) as nb_benef_request_sent
 from {{ ref("firebase_visits") }} as firebase_visits
 inner join
-    {{ ref("firebase_session_origin") }}
-    as firebase_session_origin
+    {{ ref("firebase_session_origin") }} as firebase_session_origin
     on firebase_session_origin.unique_session_id = firebase_visits.unique_session_id
     and firebase_session_origin.traffic_campaign is not null
 left join
-    {{ ref("mrt_native__daily_user_deposit") }}
-    as daily_activity
+    {{ ref("mrt_native__daily_user_deposit") }} as daily_activity
     on daily_activity.user_id = firebase_visits.user_id
     and daily_activity.user_snapshot_date = date(firebase_visits.first_event_timestamp)
     {% if is_incremental() %}
-    and daily_activity.user_snapshot_date between date_sub(date('{{ ds() }}'), interval 1 day) and date('{{ ds() }}')
+        and daily_activity.user_snapshot_date
+        between date_sub(date('{{ ds() }}'), interval 1 day) and date('{{ ds() }}')
     {% endif %}
-    and daily_activity.user_snapshot_date between date_sub(date('{{ ds() }}'), interval 48 month) and date('{{ ds() }}')
+    and daily_activity.user_snapshot_date
+    between date_sub(date('{{ ds() }}'), interval 48 month) and date('{{ ds() }}')
 left join
     bookings_and_diversification_per_sesh
     on bookings_and_diversification_per_sesh.unique_session_id

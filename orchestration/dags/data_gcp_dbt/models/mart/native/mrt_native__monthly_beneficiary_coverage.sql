@@ -6,7 +6,7 @@ with
             date(date_trunc(dud.user_birth_date, month)) as birth_month,
             count(distinct dud.user_id) as total_users
         from {{ ref("mrt_native__daily_user_deposit") }} as dud
-        where user_snapshot_date > date_sub(current_date(), interval 48 month) -- 4 years
+        where user_snapshot_date > date_sub(current_date(), interval 48 month)  -- 4 years
         group by
             date(date_trunc(dud.user_snapshot_date, month)),
             date(date_trunc(dud.user_birth_date, month)),
@@ -17,7 +17,7 @@ with
         select
             pop.snapshot_month,
             pop.population_birth_month,
-            cast(pop.population_decimal_age as STRING) as population_decimal_age,
+            cast(pop.population_decimal_age as string) as population_decimal_age,
             pop.department_code,
             pop.region_name,
             pop.academy_name,
@@ -32,9 +32,10 @@ with
                 then '18_19'
                 else '20_25'
             end as population_age_bracket,
-            pop.population_decimal_age
-            in (15, 15.5, 16, 16.5, 17, 17.5, 18, 18.5, 19) as population_age_decimal_set
-        from {{ ref('int_seed__monthly_france_population_snapshot') }} as pop
+            pop.population_decimal_age in (
+                15, 15.5, 16, 16.5, 17, 17.5, 18, 18.5, 19
+            ) as population_age_decimal_set
+        from {{ ref("int_seed__monthly_france_population_snapshot") }} as pop
         left join
             user_deposit as ub
             on pop.snapshot_month = ub.snapshot_month

@@ -13,7 +13,7 @@ with
         from `{{ bigquery_analytics_dataset }}.monthly_beneficiary_coverage` as up
         where
             population_decimal_age = "19"
-        and active_month <= date_trunc(current_date, month)
+            and active_month <= date_trunc(current_date, month)
         group by 1, 2, 3, 4, 5
     ),
 

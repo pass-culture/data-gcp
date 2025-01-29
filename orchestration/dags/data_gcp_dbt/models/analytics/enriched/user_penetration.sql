@@ -6,7 +6,7 @@ with
     -- Population data aggregated by department
     population_dpt as (
         select
-            pop.population_decimal_age as decimal_age, -- Keep legacy before removal
+            pop.population_decimal_age as decimal_age,  -- Keep legacy before removal
             pop.department_code,
             pop.department_name,
             dep.region_name,

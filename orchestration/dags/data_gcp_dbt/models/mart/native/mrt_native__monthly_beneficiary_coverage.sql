@@ -23,9 +23,11 @@ with
             coalesce(pop.population, 0) as total_population,
             coalesce(ub.total_users, 0) as total_users,
             case
-                when pop.population_decimal_age >= 15 and pop.population_decimal_age < 18
+                when
+                    pop.population_decimal_age >= 15 and pop.population_decimal_age < 18
                 then '15_17'
-                when pop.population_decimal_age >= 18 and pop.population_decimal_age < 20
+                when
+                    pop.population_decimal_age >= 18 and pop.population_decimal_age < 20
                 then '18_19'
                 else '20_25'
             end as age_bracket,

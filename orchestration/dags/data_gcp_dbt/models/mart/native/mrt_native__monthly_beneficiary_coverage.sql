@@ -1,44 +1,45 @@
-WITH user_deposit as (
-    select
-        date(date_trunc(dud.user_snapshot_date, month)) as snapshot_month,
-        date(date_trunc(dud.user_birth_date, month)) as birth_month,
-        dud.user_department_code as department_code,
-        count(distinct dud.user_id) as total_users
-    from {{ ref("mrt_native__daily_user_deposit") }} as dud
-    group by
-        date(date_trunc(dud.user_snapshot_date, month)),
-        date(date_trunc(dud.user_birth_date, month)),
-        dud.user_department_code
-),
+with
+    user_deposit as (
+        select
+            date(date_trunc(dud.user_snapshot_date, month)) as snapshot_month,
+            date(date_trunc(dud.user_birth_date, month)) as birth_month,
+            dud.user_department_code as department_code,
+            count(distinct dud.user_id) as total_users
+        from {{ ref("mrt_native__daily_user_deposit") }} as dud
+        group by
+            date(date_trunc(dud.user_snapshot_date, month)),
+            date(date_trunc(dud.user_birth_date, month)),
+            dud.user_department_code
+    ),
 
-beneficiary_coverage AS (
-    select
-        pop.snapshot_month,
-        pop.birth_month,
-        pop.decimal_age,
-        pop.department_code,
-        pop.region_name,
-        pop.academy_name,
-        coalesce(pop.population, 0) as total_population,
-        coalesce(ub.total_users, 0) as total_users,
-        case
-            when pop.decimal_age >= 15 and pop.decimal_age < 18
-            then '15_17'
-            when pop.decimal_age >= 18 and pop.decimal_age < 20
-            then '18_19'
-            else '20_25'
-        end as age_bracket,
-        pop.decimal_age in (15, 15.5, 16, 16.5, 17, 17.5, 18, 18.5, 19) as age_decimal_set
-    from ref('int_seed__monthly_france_population_snapshot') as pop
-    left join
-        user_deposit as ub
-        on pop.snapshot_month = ub.snapshot_month
-        and pop.population_birth_month = ub.birth_month
-        and pop.department_code = ub.department_code
-)
+    beneficiary_coverage as (
+        select
+            pop.snapshot_month,
+            pop.birth_month,
+            pop.decimal_age,
+            pop.department_code,
+            pop.region_name,
+            pop.academy_name,
+            coalesce(pop.population, 0) as total_population,
+            coalesce(ub.total_users, 0) as total_users,
+            case
+                when pop.decimal_age >= 15 and pop.decimal_age < 18
+                then '15_17'
+                when pop.decimal_age >= 18 and pop.decimal_age < 20
+                then '18_19'
+                else '20_25'
+            end as age_bracket,
+            pop.decimal_age
+            in (15, 15.5, 16, 16.5, 17, 17.5, 18, 18.5, 19) as age_decimal_set
+        from ref('int_seed__monthly_france_population_snapshot') as pop
+        left join
+            user_deposit as ub
+            on pop.snapshot_month = ub.snapshot_month
+            and pop.population_birth_month = ub.birth_month
+            and pop.department_code = ub.department_code
+    )
 
-
-SELECT
+select
     snapshot_month,
     birth_month,
     decimal_age,

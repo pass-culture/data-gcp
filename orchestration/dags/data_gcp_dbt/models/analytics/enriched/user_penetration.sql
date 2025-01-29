@@ -1,5 +1,4 @@
 -- TODO: deprecated
-
 -- Temporary fix for CI, query unable to be run as view
 {{ config(tags="failing_ci") }}
 

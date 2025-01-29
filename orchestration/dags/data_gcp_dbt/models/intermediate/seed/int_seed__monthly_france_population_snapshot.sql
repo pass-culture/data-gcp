@@ -1,4 +1,3 @@
-
 select
     date(pop.current_date) as snapshot_month,
     date(pop.born_date) as population_birth_month,

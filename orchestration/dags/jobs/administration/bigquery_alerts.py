@@ -8,10 +8,10 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import delayed_waiting_operator, get_airflow_schedule
 
@@ -26,6 +26,7 @@ dag_config = {
     "PROJECT_NAME": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
 }
+DAG_NAME = "bigquery_alerts"
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -36,7 +37,7 @@ default_dag_args = {
 }
 
 with DAG(
-    "bigquery_alerts",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Send alerts when bigquery table is not updated in expected schedule",
     schedule_interval=get_airflow_schedule(
@@ -56,7 +57,9 @@ with DAG(
     start = DummyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -90,7 +93,7 @@ with DAG(
         dag=dag,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 

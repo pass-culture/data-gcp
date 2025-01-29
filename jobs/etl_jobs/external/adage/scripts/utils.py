@@ -54,6 +54,12 @@ BQ_ADAGE_DTYPE = {
 }
 
 
+class RequestReturnedNoneError(Exception):
+    """Custom exception for when a request returns None."""
+
+    pass
+
+
 def save_to_raw_bq(df, table_name):
     _now = datetime.today()
     yyyymmdd = _now.strftime("%Y%m%d")

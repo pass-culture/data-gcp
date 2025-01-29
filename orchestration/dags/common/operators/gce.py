@@ -9,6 +9,7 @@ from common.config import (
     GCE_ZONE,
     GCP_PROJECT_ID,
     SSH_USER,
+    UV_VERSION,
 )
 from common.hooks.gce import GCEHook
 from common.hooks.image import MACHINE_TYPE
@@ -20,8 +21,6 @@ from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.utils.decorators import apply_defaults
-
-UV_VERSION = "0.5.2"
 
 
 class StartGCEOperator(BaseOperator):
@@ -106,6 +105,24 @@ class CleanGCEOperator(BaseOperator):
         )
 
 
+class DeleteGCEOperator(BaseOperator):
+    template_fields = ["instance_name"]
+
+    @apply_defaults
+    def __init__(
+        self,
+        instance_name: str,
+        *args,
+        **kwargs,
+    ):
+        super(DeleteGCEOperator, self).__init__(*args, **kwargs)
+        self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
+
+    def execute(self, context):
+        hook = GCEHook()
+        hook.delete_vm(self.instance_name)
+
+
 class StopGCEOperator(BaseOperator):
     template_fields = ["instance_name"]
 
@@ -121,7 +138,7 @@ class StopGCEOperator(BaseOperator):
 
     def execute(self, context):
         hook = GCEHook()
-        hook.delete_vm(self.instance_name)
+        hook.stop_vm(self.instance_name)
 
 
 class BaseSSHGCEOperator(BaseOperator):

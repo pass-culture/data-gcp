@@ -12,10 +12,10 @@ from common.config import (
 )
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 from dependencies.dms_subscriptions.import_dms_subscriptions import CLEAN_TABLES
@@ -205,7 +205,7 @@ with DAG(
 
     end = DummyOperator(task_id="end")
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task", dag=dag
     )
 

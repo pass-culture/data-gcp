@@ -4,10 +4,10 @@ from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.operators.sensor import TimeSleepSensor
 from common.utils import (
@@ -86,7 +86,7 @@ with DAG(
         command="python main.py ",
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task"
     )
 

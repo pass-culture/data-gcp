@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: ml_feat__two_tower_last_user_embedding
+    description: "{{ doc('description__ml_feat__two_tower_last_user_embedding') }}"
+    config:
+      materialized: view
+      contract:
+        enforced: true
+    columns:
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+        data_type: STRING
+        data_tests:
+          - unique
+          - not_null
+      - name: user_embedding
+        description: "{{ doc('column__two_tower_user_embedding') }}"
+        data_type: ARRAY<FLOAT64>
+        data_tests:
+          - unique
+          - not_null
+      - name: train_date
+        description: "{{ doc('column__train_date') }}"
+        data_type: DATE
+        data_tests:
+          - not_null
+      - name: mlflow_run_id
+        description: "{{ doc('column__mlflow_run_id') }}"
+        data_type: STRING
+        data_tests:
+          - not_null
+      - name: mlflow_experiment_name
+        description: "{{ doc('column__mlflow_experiment_name') }}"
+        data_type: STRING
+        data_tests:
+          - not_null
+      - name: mlflow_run_name
+        description: "{{ doc('column__mlflow_run_name') }}"
+        data_type: STRING
+        data_tests:
+          - not_null

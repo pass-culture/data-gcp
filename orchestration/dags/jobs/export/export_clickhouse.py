@@ -10,10 +10,10 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import delayed_waiting_operator, get_airflow_schedule
 from dependencies.export_clickhouse.export_clickhouse import (
@@ -76,8 +76,9 @@ def choose_branch(**context):
 
 
 for dag_name, dag_params in dags.items():
+    DAG_NAME = f"export_clickhouse_{dag_name}"
     with DAG(
-        f"export_clickhouse_{dag_name}",
+        DAG_NAME,
         default_args=dag_params["default_dag_args"],
         description="Export data to clickhouse",
         schedule_interval=get_airflow_schedule(
@@ -147,6 +148,7 @@ for dag_name, dag_params in dags.items():
             instance_type="{{ params.instance_type }}",
             retries=2,
             use_gke_network=True,
+            labels={"dag_name": DAG_NAME},
         )
 
         fetch_install_code = InstallDependenciesOperator(
@@ -252,7 +254,7 @@ for dag_name, dag_params in dags.items():
                                 >> analytics_task_mapping[clickhouse_table_name]
                             )
 
-        gce_instance_stop = StopGCEOperator(
+        gce_instance_stop = DeleteGCEOperator(
             task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
         )
 

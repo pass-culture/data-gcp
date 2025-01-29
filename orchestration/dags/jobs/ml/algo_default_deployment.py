@@ -4,10 +4,10 @@ from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import DAG_FOLDER, ENV_SHORT_NAME
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 
@@ -127,7 +127,7 @@ with DAG(
                 dag=dag,
             )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 

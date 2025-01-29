@@ -12,8 +12,8 @@ with
             sum(population_last_12_months) as denominator
         from `{{ bigquery_analytics_dataset }}.monthly_beneficiary_coverage` as up
         where
-            population_decimal_age = 19
-            and active_month <= date_trunc(current_date, month)
+            population_decimal_age = "19"
+        and active_month <= date_trunc(current_date, month)
         group by 1, 2, 3, 4, 5
     ),
 
@@ -30,7 +30,7 @@ with
             sum(population_last_12_months) as denominator
         from `{{ bigquery_analytics_dataset }}.monthly_beneficiary_coverage` as up
         where
-            population_decimal_age = 18
+            population_decimal_age = "18"
             and active_month <= date_trunc(current_date, month)
         group by 1, 2, 3, 4, 5
     ),
@@ -48,7 +48,7 @@ with
             sum(population_last_12_months) as denominator
         from `{{ bigquery_analytics_dataset }}.monthly_beneficiary_coverage` as up
         where
-            population_decimal_age = 17
+            population_decimal_age = "17"
             and active_month <= date_trunc(current_date, month)
         group by 1, 2, 3, 4, 5
     ),
@@ -66,7 +66,7 @@ with
             sum(population_last_12_months) as denominator
         from `{{ bigquery_analytics_dataset }}.monthly_beneficiary_coverage` as up
         where
-            population_decimal_age = 16
+            population_decimal_age = "16"
             and active_month <= date_trunc(current_date, month)
         group by 1, 2, 3, 4, 5
     )

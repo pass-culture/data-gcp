@@ -1,11 +1,11 @@
 select
-    date(pop.current_date) as snapshot_month,
-    date(pop.born_date) as population_birth_month,
     pop.decimal_age as population_decimal_age,
     pop.department_code,
     pop.department_name,
-    pop.academy_name,
+    dep.academy_name,
     dep.region_name,
+    date(pop.current_date) as snapshot_month,
+    date(pop.born_date) as population_birth_month,
     sum(pop.population) as population
 from {{ source("seed", "population_age_and_department_france_details") }} as pop
 left join
@@ -20,5 +20,5 @@ group by
     pop.decimal_age,
     pop.department_code,
     pop.department_name,
-    pop.academy_name,
+    dep.academy_name,
     dep.region_name

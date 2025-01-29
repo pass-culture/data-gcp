@@ -3,7 +3,7 @@ with
         select
             date_trunc(user_snapshot_date, month) as month,
             max(user_snapshot_date) as last_active_date
-        from `{{ bigquery_analytics_dataset }}.daily_user_deposit`
+        from `{{ bigquery_analytics_dataset }}.native_daily_user_deposit`
         group by date_trunc(user_snapshot_date, month)
     ),
 
@@ -13,7 +13,7 @@ with
             user_id,
             deposit_amount,
             coalesce(sum(booking_intermediary_amount), 0) as amount_spent,
-        from `{{ bigquery_analytics_dataset }}.daily_user_deposit` uua
+        from `{{ bigquery_analytics_dataset }}.native_daily_user_deposit` uua
         left join
             {{ ref("mrt_global__booking") }} ebd
             on ebd.deposit_id = uua.deposit_id

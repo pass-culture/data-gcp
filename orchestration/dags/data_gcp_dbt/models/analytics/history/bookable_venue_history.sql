@@ -13,52 +13,55 @@ with
         select
             o.venue_id,
             v.venue_managing_offerer_id as offerer_id,
-            date('{{ ds() }}') as partition_date,
+            partition_date,
             'individual' as offer_type,
-            count(
-                case
-                    when
-                        date_sub('{{ ds() }}', interval 1 day) >= date(s.dbt_valid_from)
-                        and (
-                            s.dbt_valid_to is null
-                            or date_sub('{{ ds() }}', interval 1 day)
-                            <= date(s.dbt_valid_to)
-                        )
-                    then s.offer_id
-                end
-            ) as total_bookable_offers
-        from {{ ref("snapshot__bookable_offer") }} as s
+            count(distinct offer_id) as nb_bookable_offers
+        from {{ ref("bookable_offer_history") }}
         inner join {{ ref("int_applicative__offer") }} as o using (offer_id)
-        inner join
-            {{ source("raw", "applicative_database_venue") }} as v using (venue_id)
-        group by venue_id, offerer_id, partition_date, offer_type
+        left join
+            {{ source("raw", "applicative_database_venue") }} as v
+            on o.venue_id = v.venue_id
+        {% if is_incremental() %}
+            where partition_date = date_sub('{{ ds() }}', interval 1 day)
+        {% endif %}
+        group by 1, 2, 3, 4
         union all
         select
-            o.venue_id,
-            v.venue_managing_offerer_id as offerer_id,
-            date('{{ ds() }}') as partition_date,
+            venue_id,
+            venue_managing_offerer_id as offerer_id,
+            partition_date,
             'collective' as offer_type,
-            count(
-                case
-                    when
-                        date_sub('{{ ds() }}', interval 1 day)
-                        >= date(sb.dbt_valid_from)
-                        and (
-                            sb.dbt_valid_to is null
-                            or date_sub('{{ ds() }}', interval 1 day)
-                            <= date(sb.dbt_valid_to)
-                        )
-                    then sb.collective_offer_id
-                end
-            ) as total_bookable_offers
-        from {{ ref("snapshot__bookable_collective_offer") }} as sb
+            count(distinct collective_offer_id) as nb_bookable_offers
+        from {{ ref("bookable_collective_offer_history") }}
         inner join
-            {{ source("raw", "applicative_database_collective_offer") }} as o using (
+            {{ source("raw", "applicative_database_collective_offer") }} using (
                 collective_offer_id
             )
+        inner join {{ source("raw", "applicative_database_venue") }} using (venue_id)
+        where
+            collective_offer_validation = 'APPROVED'
+            {% if is_incremental() %}
+                and partition_date = date_sub('{{ ds() }}', interval 1 day)
+            {% endif %}
+        group by 1, 2, 3, 4
+        union all
+        select
+            venue_id,
+            venue_managing_offerer_id as offerer_id,
+            partition_date,
+            'collective' as offer_type,
+            count(distinct collective_offer_id) as nb_bookable_offers
+        from {{ ref("bookable_collective_offer_history") }}
         inner join
-            {{ source("raw", "applicative_database_venue") }} as v using (venue_id)
-        group by venue_id, offerer_id, partition_date, offer_type
+            {{ source("raw", "applicative_database_collective_offer_template") }}
+            using (collective_offer_id)
+        inner join {{ source("raw", "applicative_database_venue") }} using (venue_id)
+        where
+            collective_offer_validation = 'APPROVED'
+            {% if is_incremental() %}
+                and partition_date = date_sub('{{ ds() }}', interval 1 day)
+            {% endif %}
+        group by 1, 2, 3, 4
     ),
 
     pivoted_data as (
@@ -79,8 +82,8 @@ select
     venue_id,
     offerer_id,
     partition_date,
-    coalesce(total_individual_bookable_offers, 0) as total_individual_bookable_offers,
-    coalesce(total_collective_bookable_offers, 0) as total_collective_bookable_offers,
-    coalesce(total_individual_bookable_offers, 0)
-    + coalesce(total_collective_bookable_offers, 0) as total_bookable_offers
+    coalesce(individual_bookable_offers, 0) as individual_bookable_offers,
+    coalesce(collective_bookable_offers, 0) as collective_bookable_offers,
+    coalesce(individual_bookable_offers, 0)
+    + coalesce(collective_bookable_offers, 0) as total_bookable_offers
 from pivoted_data

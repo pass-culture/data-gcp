@@ -73,7 +73,7 @@ with
             collective as total_collective_bookable_offers
         from
             all_bookable_data pivot (
-                sum(total_bookable_offers) for offer_type
+                sum(nb_bookable_offers) for offer_type
                 in ('individual', 'collective')
             )
     )
@@ -82,8 +82,8 @@ select
     venue_id,
     offerer_id,
     partition_date,
-    coalesce(individual_bookable_offers, 0) as individual_bookable_offers,
-    coalesce(collective_bookable_offers, 0) as collective_bookable_offers,
-    coalesce(individual_bookable_offers, 0)
-    + coalesce(collective_bookable_offers, 0) as total_bookable_offers
+    coalesce(total_individual_bookable_offers, 0) as total_individual_bookable_offers,
+    coalesce(total_collective_bookable_offers, 0) as total_collective_bookable_offers,
+    coalesce(total_individual_bookable_offers, 0)
+    + coalesce(total_collective_bookable_offers, 0) as total_bookable_offers
 from pivoted_data

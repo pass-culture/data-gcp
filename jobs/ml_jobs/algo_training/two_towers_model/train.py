@@ -78,13 +78,18 @@ def load_datasets(
         read_from_gcs(storage_path=STORAGE_PATH, table_name=training_table_name)[
             user_columns + item_columns
         ]
-        .astype(str)
         .drop_duplicates(subset=["user_id", "item_id"])
+        .astype(str)
+        .pipe(compute_candidate_sampling_probabilities)
     )
 
-    validation_data = read_from_gcs(
-        storage_path=STORAGE_PATH, table_name=validation_table_name
-    )[user_columns + item_columns].astype(str)
+    validation_data = (
+        read_from_gcs(storage_path=STORAGE_PATH, table_name=validation_table_name)[
+            user_columns + item_columns
+        ]
+        .astype(str)
+        .pipe(compute_candidate_sampling_probabilities)
+    )
 
     train_user_data = (
         train_data[user_columns]
@@ -98,6 +103,17 @@ def load_datasets(
     )
 
     return train_data, validation_data, train_user_data, train_item_data
+
+
+def compute_candidate_sampling_probabilities(data: pd.DataFrame):
+    dict = data["item_id"].value_counts(normalize=True).to_dict()
+    return data.assign(
+        **{
+            "candidate_sampling_probability": data["item_id"]
+            .map(dict)
+            .astype("float32")
+        }
+    )
 
 
 def build_tf_datasets(

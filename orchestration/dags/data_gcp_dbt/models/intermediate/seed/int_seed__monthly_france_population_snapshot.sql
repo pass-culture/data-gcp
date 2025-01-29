@@ -1,7 +1,7 @@
 select
     date(pop.current_date) as snapshot_month,
     date(pop.born_date) as population_birth_month,
-    pop.population_decimal_age,
+    pop.decimal_age as population_decimal_age,
     pop.department_code,
     pop.department_name,
     pop.academy_name,

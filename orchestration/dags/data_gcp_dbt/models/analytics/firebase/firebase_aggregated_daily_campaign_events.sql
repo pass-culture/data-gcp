@@ -82,10 +82,10 @@ inner join
     on firebase_session_origin.unique_session_id = firebase_visits.unique_session_id
     and firebase_session_origin.traffic_campaign is not null
 left join
-    {{ ref("aggregated_daily_user_used_activity") }}
+    {{ ref("mrt_native__daily_user_deposit") }}
     daily_activity
     on daily_activity.user_id = firebase_visits.user_id
-    and daily_activity.active_date = date(firebase_visits.first_event_timestamp)
+    and daily_activity.user_snapshot_date = date(firebase_visits.first_event_timestamp)
 left join
     bookings_and_diversification_per_sesh
     on bookings_and_diversification_per_sesh.unique_session_id

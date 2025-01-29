@@ -1,3 +1,5 @@
+-- TODO: deprecated
+
 select
     date_trunc(active_date, month) as active_month,
     months_since_deposit_created,

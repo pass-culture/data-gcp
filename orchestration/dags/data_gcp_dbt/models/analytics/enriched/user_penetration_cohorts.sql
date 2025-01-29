@@ -1,3 +1,5 @@
+-- TODO: deprecated
+
 with
     cohorted_population as (
         select

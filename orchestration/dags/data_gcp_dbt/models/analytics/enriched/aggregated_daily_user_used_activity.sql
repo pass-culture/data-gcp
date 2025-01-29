@@ -1,3 +1,5 @@
+-- TODO: deprecated
+
 with
     days as (
         select *

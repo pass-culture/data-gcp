@@ -110,6 +110,7 @@ class TwoTowersModel(tfrs.models.Model):
     def compute_loss(self, features, training=False):
         user_features = {name: features[name] for name in self._user_feature_names}
         item_features = {name: features[name] for name in self._item_feature_names}
+        candidate_sampling_probability = features["candidate_sampling_probability"]
 
         user_embeddings = self.user_model(user_features, training=training)
         item_embeddings = self.item_model(item_features, training=training)
@@ -119,6 +120,7 @@ class TwoTowersModel(tfrs.models.Model):
             candidate_embeddings=item_embeddings,
             compute_metrics=not training,
             compute_batch_metrics=not training,
+            candidate_sampling_probability=candidate_sampling_probability,
         )
 
 

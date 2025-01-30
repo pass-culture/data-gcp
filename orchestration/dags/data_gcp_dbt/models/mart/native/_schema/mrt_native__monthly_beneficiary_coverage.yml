@@ -3,7 +3,7 @@ models:
   - name: mrt_native__monthly_beneficiary_coverage
     description: '{{ doc("description__mrt_native__monthly_beneficiary_coverage") }}'
     columns:
-      - name: snapshot_month
+      - name: population_snapshot_month
         description: '{{ doc("column__population_snapshot_month") }}'
         data_type: DATE
 

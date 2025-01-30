@@ -6,10 +6,10 @@ with
             offer_subcategoryid,
             rayon,
             book_editor,
-            regexp_replace(ean, r'[\\s\\-\\tA-Za-z]', '') as cleaned_ean,
+            regexp_replace(offer_ean, r'[\\s\\-\\tA-Za-z]', '') as cleaned_ean,
             regexp_replace(isbn, r'[\\s\\-\\tA-Za-z]', '') as cleaned_isbn,
             length(regexp_replace(isbn, r'[\\s\\-\\tA-Za-z]', '')) as isbn_length,
-            length(regexp_replace(ean, r'[\\s\\-\\tA-Za-z]', '')) as ean_length,
+            length(regexp_replace(offer_ean, r'[\\s\\-\\tA-Za-z]', '')) as ean_length,
             case
                 when length(cast(titelive_gtl_id as string)) = 7
                 then concat('0', cast(titelive_gtl_id as string))

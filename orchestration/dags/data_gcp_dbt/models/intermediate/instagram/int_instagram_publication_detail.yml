@@ -1,0 +1,78 @@
+version: 2
+
+models:
+  - name: int_instagram__publication_detail
+    description: '{{ doc("description__int_instagram__publication_detail") }}'
+    columns:
+      - name: publication_id
+        description: '{{ doc("column__publication_id") }}'
+        data_type: STRING
+      - name: publication_creation_date
+        description: '{{ doc("column__publication_creation_date") }}'
+        data_type: DATE
+      - name: publication_caption
+        description: '{{ doc("column__publication_caption") }}'
+        data_type: STRING
+      - name: publication_link
+        description: '{{ doc("column__publication_link") }}'
+        data_type: STRING
+      - name: publication_export_date
+        description: '{{ doc("column__publication_export_date") }}'
+        data_type: DATE
+      - name: publication_account_name
+        description: '{{ doc("column__publication_account_name") }}'
+        data_type: STRING
+      - name: is_publication_tagged
+        description: '{{ doc("column__is_publication_tagged") }}'
+        data_type: BOOLEAN
+      - name: publication_reach
+        description: '{{ doc("column__publication_reach") }}'
+        data_type: INT64
+      - name: publication_video_views
+        description: '{{ doc("column__publication_video_views") }}'
+        data_type: INT64
+      - name: publication_likes
+        description: '{{ doc("column__publication_likes") }}'
+        data_type: INT64
+      - name: publication_shares
+        description: '{{ doc("column__publication_shares") }}'
+        data_type: INT64
+      - name: publication_comments
+        description: '{{ doc("column__publication_comments") }}'
+        data_type: INT64
+      - name: total_instagram_publication_interactions
+        description: '{{ doc("column__total_instagram_publication_interactions") }}'
+        data_type: INT64
+      - name: publication_engagement_rate
+        description: '{{ doc("column__publication_engagement_rate") }}'
+        data_type: FLOAT64
+      - name: publication_tag_post_name
+        description: '{{ doc("column__publication_tag_post_name") }}'
+        data_type: STRING
+      - name: publication_tag_macro_objective
+        description: '{{ doc("column__publication_tag_macro_objective") }}'
+        data_type: STRING
+      - name: publication_tag_micro_objective
+        description: '{{ doc("column__publication_tag_micro_objective") }}'
+        data_type: STRING
+      - name: publication_tag_offer_category
+        description: '{{ doc("column__publication_tag_offer_category") }}'
+        data_type: STRING
+      - name: instagram_publication_media_type
+        description: '{{ doc("column__instagram_publication_media_type") }}'
+        data_type: STRING
+      - name: instagram_publication_saved
+        description: '{{ doc("column__instagram_publication_saved") }}'
+        data_type: INT64
+      - name: instagram_publication_impressions
+        description: '{{ doc("column__instagram_publication_impressions") }}'
+        data_type: INT64
+      - name: instagram_publication_follows
+        description: '{{ doc("column__instagram_publication_follows") }}'
+        data_type: INT64
+      - name: instagram_publication_profile_visits
+        description: '{{ doc("column__instagram_publication_profile_visits") }}'
+        data_type: INT64
+      - name: instagram_publication_profile_activity
+        description: '{{ doc("column__instagram_publication_profile_activity") }}'
+        data_type: INT64

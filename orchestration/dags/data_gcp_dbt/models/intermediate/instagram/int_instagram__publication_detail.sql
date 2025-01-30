@@ -45,13 +45,13 @@ select
         (post_detail.likes + post_detail.shares + post_detail.comments),
         post_detail.reach
     ) as publication_engagement_rate,
-    campaign_tag.media_id is not null as publication_is_tagged,
+    campaign_tag.media_id is not null as is_publication_tagged,
 
     -- Instagram specific metrics
     safe_cast(post_detail.saved as int64) as instagram_publication_saved,
     safe_cast(
         post_detail.total_interactions as int64
-    ) as instagram_publication_total_interactions,
+    ) as total_instagram_publication_interactions,
     safe_cast(post_detail.impressions as int64) as instagram_publication_impressions,
     safe_cast(post_detail.follows as int64) as instagram_publication_follows,
     safe_cast(

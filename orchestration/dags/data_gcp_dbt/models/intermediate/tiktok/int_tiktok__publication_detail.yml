@@ -22,8 +22,8 @@ models:
       - name: publication_account_name
         description: '{{ doc("column__publication_account_name") }}'
         data_type: STRING
-      - name: publication_is_tagged
-        description: '{{ doc("column__publication_is_tagged") }}'
+      - name: is_publication_tagged
+        description: '{{ doc("column__is_publication_tagged") }}'
         data_type: BOOLEAN
       - name: publication_reach
         description: '{{ doc("column__publication_reach") }}'
@@ -40,11 +40,11 @@ models:
       - name: publication_comments
         description: '{{ doc("column__publication_comments") }}'
         data_type: INT64
-      - name: tiktok_publication_average_time_watched
-        description: '{{ doc("column__tiktok_publication_average_time_watched") }}'
+      - name: average_tiktok_publication_time_watched
+        description: '{{ doc("column__average_tiktok_publication_time_watched") }}'
         data_type: FLOAT64
-      - name: tiktok_publication_total_time_watched
-        description: '{{ doc("column__tiktok_publication_total_time_watched") }}'
+      - name: total_tiktok_publication_time_watched
+        description: '{{ doc("column__total_tiktok_publication_time_watched") }}'
         data_type: INT64
       - name: tiktok_publication_video_duration
         description: '{{ doc("column__tiktok_publication_video_duration") }}'

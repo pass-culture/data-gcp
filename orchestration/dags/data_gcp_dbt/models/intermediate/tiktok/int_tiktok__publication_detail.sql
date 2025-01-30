@@ -28,7 +28,7 @@ select
     -- Content information
     campaign_tag.micro_objective as publication_tag_micro_objective,
     campaign_tag.offer_category as publication_tag_offer_category,
-    video_detail.average_time_watched as tiktok_publication_average_time_watched,
+    video_detail.average_time_watched as average_tiktok_publication_time_watched,
 
     -- Campaign tags
     video_detail.video_duration as tiktok_publication_video_duration,
@@ -44,10 +44,10 @@ select
         (video_detail.likes + video_detail.shares + video_detail.comments),
         video_detail.reach
     ) as publication_engagement_rate,
-    campaign_tag.tiktotk_id is not null as publication_is_tagged,
+    campaign_tag.tiktotk_id is not null as is_publication_tagged,
     safe_cast(
         video_detail.total_time_watched as int64
-    ) as tiktok_publication_total_time_watched
+    ) as total_tiktok_publication_time_watched
 
 from {{ source("raw", "tiktok_video_detail") }} as video_detail
 left join

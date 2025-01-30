@@ -2,7 +2,6 @@
 
 {%- set instagram_specific_fields = [
     "publication_saved",
-    "publication_total_interactions",
     "publication_impressions",
     "publication_follows",
     "publication_profile_visits",
@@ -10,8 +9,6 @@
 ] -%}
 
 {%- set tiktok_specific_fields = [
-    "publication_average_time_watched",
-    "publication_total_time_watched",
     "publication_video_duration",
     "publication_full_video_watched_rate",
 ] -%}
@@ -46,7 +43,7 @@
         -- Content information
         publication_caption,
         publication_link,
-        publication_is_tagged,
+        is_publication_tagged,
         {% if social_network == "instagram" %} instagram_publication_media_type
         {% else %} null as instagram_publication_media_type
         {% endif %},
@@ -58,6 +55,9 @@
         publication_tag_offer_category,
 
         -- Instagram specific metrics
+        {% if social_network == "instagram" %} total_instagram_publication_interactions
+        {% else %} null as total_instagram_publication_interactions
+        {% endif %},
         {% for field in instagram_specific_fields %}
             {% if social_network == "instagram" %} instagram_{{ field }}
             {% else %} null
@@ -65,6 +65,12 @@
         {% endfor %}
 
         -- Tiktok specific metrics
+        {% if social_network == "tiktok" %} average_tiktok_publication_time_watched
+        {% else %} null as average_tiktok_publication_time_watched
+        {% endif %},
+        {% if social_network == "tiktok" %} total_tiktok_publication_time_watched
+        {% else %} null as total_tiktok_publication_time_watched
+        {% endif %},
         {% for field in tiktok_specific_fields %}
             {% if social_network == "tiktok" %} tiktok_{{ field }}
             {% else %} null

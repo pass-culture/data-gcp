@@ -5,4 +5,4 @@
 {% docs column__instagram_publication_profile_visits %} The number of times users visited the profile after seeing this publication. {% enddocs %}
 {% docs column__instagram_publication_profile_activity %}
 The total number of actions taken on the profile from this publication, including: Website clicks, Email button clicks... {% enddocs %}
-{% docs column__instagram_publication_total_interactions %} The sum of all engagement actions on the publication, including: Likes, Comments, Shares, Saves, Video views (if applicable). {% enddocs %}
+{% docs column__total_instagram_publication_interactions %} The sum of all engagement actions on the publication, including: Likes, Comments, Shares, Saves, Video views (if applicable). {% enddocs %}

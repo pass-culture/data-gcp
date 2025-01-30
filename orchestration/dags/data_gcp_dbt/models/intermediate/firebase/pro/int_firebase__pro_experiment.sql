@@ -3,34 +3,31 @@
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
             partition_by={"field": "event_date", "data_type": "date"},
-            on_schema_change="sync_all_columns"
+            on_schema_change="sync_all_columns",
         )
     )
 }}
 
-SELECT DISTINCT
+select distinct
     event_date,
     user_pseudo_id,
     user_id,
-    event_params.key AS experiment_name,
+    event_params.key as experiment_name,
     (
-        SELECT value.int_value
-        FROM UNNEST(user_properties) AS up
-        WHERE up.key = 'offerer_id'
-    ) AS offerer_id,
-    SAFE_CAST(event_params.value.string_value AS BOOLEAN) AS experiment_value
-FROM
-    {{ source("raw", "firebase_pro_events") }},
-    UNNEST(event_params) AS event_params
-WHERE
+        select value.int_value
+        from unnest(user_properties) as up
+        where up.key = 'offerer_id'
+    ) as offerer_id,
+    safe_cast(event_params.value.string_value as boolean) as experiment_value
+from {{ source("raw", "firebase_pro_events") }}, unnest(event_params) as event_params
+where
     (
         event_params.key = 'PRO_DIDACTIC_ONBOARDING_AB_TEST'
-        OR event_params.key LIKE 'PRO_EXPERIMENT%'
+        or event_params.key like 'PRO_EXPERIMENT%'
     )
-    AND event_params.value.string_value IS NOT null
+    and event_params.value.string_value is not null
     {% if is_incremental() %}
-        AND event_date BETWEEN DATE_SUB(DATE("{{ ds() }}"), INTERVAL 1 DAY)
-        AND DATE("{{ ds() }}")
-    {% else %}
-        AND event_date >= DATE_SUB(DATE("{{ ds() }}"), INTERVAL 6 MONTH)
+        and event_date
+        between date_sub(date("{{ ds() }}"), interval 1 day) and date("{{ ds() }}")
+    {% else %} and event_date >= date_sub(date("{{ ds() }}"), interval 6 month)
     {% endif %}

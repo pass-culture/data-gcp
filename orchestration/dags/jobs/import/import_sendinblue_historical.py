@@ -5,7 +5,7 @@ from datetime import timedelta
 
 import pandas as pd
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
@@ -46,7 +46,7 @@ dag_config = {
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }

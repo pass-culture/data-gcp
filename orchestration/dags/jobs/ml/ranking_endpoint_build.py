@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import DAG_FOLDER, ENV_SHORT_NAME
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -16,7 +16,7 @@ from airflow.models import Param
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }

@@ -1,6 +1,6 @@
 import datetime
 
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -26,7 +26,7 @@ dag_config = {
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 1,
     "project_id": GCP_PROJECT_ID,
 }

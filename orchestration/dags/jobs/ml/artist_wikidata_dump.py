@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
     DAG_FOLDER,
     DATA_GCS_BUCKET_NAME,
@@ -36,7 +36,7 @@ QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
 
 default_args = {
     "start_date": datetime(2024, 12, 1),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 5,
 }
 

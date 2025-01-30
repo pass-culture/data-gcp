@@ -3,7 +3,7 @@ select
 from
     external_query(
         "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",
-        """SELECT
+        '''SELECT
         CAST("idAtProvider" AS varchar(255)) as offer_id_at_providers
         , "dateModifiedAtLastProvider" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as offer_modified_at_last_provider_date
         , CAST("id" AS varchar(255)) as offer_id
@@ -37,5 +37,5 @@ from
         , CAST("offererAddressId" AS varchar(255)) as offerer_address_id
     FROM public.offer
     WHERE "dateUpdated" > NOW() - INTERVAL '5' DAY
-    """
+    '''
     )

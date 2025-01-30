@@ -83,12 +83,16 @@ select
     lower(trim(json_extract_scalar(offer.extra_data, "$.author"), " ")) as author,
     lower(trim(json_extract_scalar(offer.extra_data, "$.performer"), " ")) as performer,
     lower(trim(json_extract_scalar(offer.extra_data, "$.musicType"), " ")) as musictype,
-    lower(trim(json_extract_scalar(offer.extra_data, "$.musicSubType"), " ")) as musicsubtype,
+    lower(
+        trim(json_extract_scalar(offer.extra_data, "$.musicSubType"), " ")
+    ) as musicsubtype,
     lower(
         trim(json_extract_scalar(offer.extra_data, "$.stageDirector"), " ")
     ) as stagedirector,
     lower(trim(json_extract_scalar(offer.extra_data, "$.showType"), " ")) as showtype,
-    lower(trim(json_extract_scalar(offer.extra_data, "$.showSubType"), " ")) as showsubtype,
+    lower(
+        trim(json_extract_scalar(offer.extra_data, "$.showSubType"), " ")
+    ) as showsubtype,
     lower(trim(json_extract_scalar(offer.extra_data, "$.speaker"), " ")) as speaker,
     lower(trim(json_extract_scalar(offer.extra_data, "$.rayon"), " ")) as rayon,
     lower(
@@ -99,13 +103,17 @@ select
     ) as theater_room_id,
     lower(trim(json_extract_scalar(offer.extra_data, "$.type"), " ")) as movie_type,
     lower(trim(json_extract_scalar(offer.extra_data, "$.visa"), " ")) as visa,
-    lower(trim(json_extract_scalar(offer.extra_data, "$.releaseDate"), " ")) as releasedate,
+    lower(
+        trim(json_extract_scalar(offer.extra_data, "$.releaseDate"), " ")
+    ) as releasedate,
     lower(trim(json_extract(offer.extra_data, "$.genres"), " ")) as genres,
     lower(trim(json_extract(offer.extra_data, "$.companies"), " ")) as companies,
     lower(trim(json_extract(offer.extra_data, "$.countries"), " ")) as countries,
     lower(trim(json_extract(offer.extra_data, "$.cast"), " ")) as casting,
     lower(trim(trim(json_extract(offer.extra_data, "$.isbn"), " "), '"')) as isbn,
-    lower(trim(trim(json_extract(offer.extra_data, "$.editeur"), " "), '"')) as book_editor,
+    lower(
+        trim(trim(json_extract(offer.extra_data, "$.editeur"), " "), '"')
+    ) as book_editor,
     lower(
         trim(trim(json_extract(offer.extra_data, "$.gtl_id"), " "), '"')
     ) as titelive_gtl_id,

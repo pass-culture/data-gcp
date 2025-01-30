@@ -1,15 +1,15 @@
 with
     last_day_of_month as (
         select
-            date_trunc(user_snapshot_date, month) as month,
-            max(user_snapshot_date) as last_active_date
+            date_trunc(deposit_active_date, month) as month,
+            max(deposit_active_date) as last_active_date
         from `{{ bigquery_analytics_dataset }}.native_daily_user_deposit`
-        group by date_trunc(user_snapshot_date, month)
+        group by date_trunc(deposit_active_date, month)
     ),
 
     user_amount_spent_per_day as (
         select
-            user_snapshot_date,
+            deposit_active_date,
             user_id,
             deposit_amount,
             coalesce(sum(booking_intermediary_amount), 0) as amount_spent,
@@ -17,9 +17,9 @@ with
         left join
             {{ ref("mrt_global__booking") }} ebd
             on ebd.deposit_id = uua.deposit_id
-            and uua.user_snapshot_date = date(booking_used_date)
+            and uua.deposit_active_date = date(booking_used_date)
             and booking_is_used
-        group by user_snapshot_date, user_id, deposit_amount
+        group by deposit_active_date, user_id, deposit_amount
     ),
 
     user_cumulative_amount_spent as (
@@ -27,7 +27,7 @@ with
             user_id,
             deposit_id,
             sum(amount_spent) over (
-                partition by user_id, deposit_id order by user_snapshot_date asc
+                partition by user_id, deposit_id order by deposit_active_date asc
             ) as cumulative_amount_spent,
         from user_amount_spent_per_day
     ),

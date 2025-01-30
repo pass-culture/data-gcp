@@ -75,12 +75,12 @@ inner join
 left join
     {{ ref("mrt_native__daily_user_deposit") }} as daily_activity
     on daily_activity.user_id = firebase_visits.user_id
-    and daily_activity.user_snapshot_date = date(firebase_visits.first_event_timestamp)
+    and daily_activity.deposit_active_date = date(firebase_visits.first_event_timestamp)
     {% if is_incremental() %}
-        and daily_activity.user_snapshot_date
+        and daily_activity.deposit_active_date
         between date_sub(date('{{ ds() }}'), interval 1 day) and date('{{ ds() }}')
     {% endif %}
-    and daily_activity.user_snapshot_date
+    and daily_activity.deposit_active_date
     between date_sub(date('{{ ds() }}'), interval 48 month) and date('{{ ds() }}')
 left join
     bookings_and_diversification_per_sesh

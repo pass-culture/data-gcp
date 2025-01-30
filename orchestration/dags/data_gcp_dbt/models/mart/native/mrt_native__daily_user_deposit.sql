@@ -3,7 +3,7 @@
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
             partition_by={
-                "field": "user_snapshot_date",
+                "field": "deposit_active_date",
                 "data_type": "date",
                 "granularity": "day",
             },
@@ -30,7 +30,7 @@ with
     )
 
 select
-    __days.day as user_snapshot_date,
+    __days.day as deposit_active_date,
     mrt_global__deposit.user_id,
     mrt_global__deposit.user_department_code,
     mrt_global__deposit.user_region_name,

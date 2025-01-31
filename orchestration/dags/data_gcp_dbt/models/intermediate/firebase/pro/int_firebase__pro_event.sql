@@ -44,9 +44,14 @@ with
             ) as offerer_id,
             coalesce(venue_id, cast(venueid as string)) as venue_id,
             page_location,
-            case 
+            case
                 when page_title like "%- Espace partenaires pass Culture%"
-                then replace(page_title,"- Espace partenaires pass Culture","- pass Culture Pro")
+                then
+                    replace(
+                        page_title,
+                        "- Espace partenaires pass Culture",
+                        "- pass Culture Pro"
+                    )
                 else page_title
             end as page_name,
             regexp_extract(
@@ -93,7 +98,7 @@ with
             subcategoryid as offer_subcategory_id,
             choosensuggestedsubcategory as suggested_offer_subcategory_selected,
             status as offer_status,
-            imageCreationStage as image_creation_stage,
+            imagecreationstage as image_creation_stage,
             json_extract_array(selected_offers) as selected_offers_array,
             array_length(json_extract_array(selected_offers)) > 1 as multiple_selection
         from {{ ref("int_firebase__pro_event_flattened") }}

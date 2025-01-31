@@ -2,6 +2,7 @@ with
     all_activated_partners_and_days_since_activation as (  -- Pour chaque partner_id, une ligne par jour depuis la 1ère offre publiée
         select
             partner_id,
+            partner_type,
             first_offer_creation_date,
             first_individual_offer_creation_date,
             first_collective_offer_creation_date,
@@ -36,6 +37,7 @@ with
     all_days_and_bookability as (
         select
             all_activated_partners_and_days_since_activation.partner_id,
+            partner_type,
             first_offer_creation_date,
             first_individual_offer_creation_date,
             first_collective_offer_creation_date,
@@ -61,6 +63,7 @@ with
 
 select
     partner_id,
+    partner_type,
     first_offer_creation_date,
     day,
     total_bookable_offers,

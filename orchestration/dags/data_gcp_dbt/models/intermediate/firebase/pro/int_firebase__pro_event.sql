@@ -44,7 +44,16 @@ with
             ) as offerer_id,
             coalesce(venue_id, cast(venueid as string)) as venue_id,
             page_location,
-            page_title as page_name,
+            case
+                when page_title like "%- Espace partenaires pass Culture%"
+                then
+                    replace(
+                        page_title,
+                        "- Espace partenaires pass Culture",
+                        "- pass Culture Pro"
+                    )
+                else page_title
+            end as page_name,
             regexp_extract(
                 page_location, r"""passculture\.pro\/(.*)$""", 1
             ) as url_first_path,
@@ -89,6 +98,7 @@ with
             subcategoryid as offer_subcategory_id,
             choosensuggestedsubcategory as suggested_offer_subcategory_selected,
             status as offer_status,
+            imagecreationstage as image_creation_stage,
             json_extract_array(selected_offers) as selected_offers_array,
             array_length(json_extract_array(selected_offers)) > 1 as multiple_selection
         from {{ ref("int_firebase__pro_event_flattened") }}
@@ -166,7 +176,8 @@ select
     is_multiple_selection as multiple_selection,  -- Utilisation du champ correct
     coalesce(cast(offer_id_from_array as string), cast(offer_id as string)) as offer_id,
     coalesce(offer_status_from_array, offer_status) as offer_status,
-    cast(offer_type as string) as offer_type
+    cast(offer_type as string) as offer_type,
+    image_creation_stage
 from unnested_events
 
 union all
@@ -226,6 +237,7 @@ select
     false as multiple_selection,
     cast(offer_id as string) as offer_id,
     cast(offer_status as string) as offer_status,
-    cast(offer_type as string) as offer_type
+    cast(offer_type as string) as offer_type,
+    image_creation_stage
 from pro_event_raw_data
 where selected_offers_array is null

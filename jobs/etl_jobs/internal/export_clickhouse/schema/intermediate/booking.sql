@@ -1,15 +1,15 @@
 CREATE TABLE IF NOT EXISTS intermediate.booking ON CLUSTER default
 (
-    update_date String,
-    venue_id String,
-    offerer_id String,
-    offer_id String,
-    creation_date String,
-    used_date Nullable(String),
-    booking_status String,
-    deposit_type String,
-    booking_quantity UInt64,
-    booking_amount Float64
+    update_date String CODEC(ZSTD),
+    venue_id String CODEC(ZSTD),
+    offerer_id String CODEC(ZSTD),
+    offer_id String CODEC(ZSTD),
+    creation_date String CODEC(ZSTD),
+    used_date Nullable(String) CODEC(ZSTD),
+    booking_status String CODEC(ZSTD),
+    deposit_type String CODEC(ZSTD),
+    booking_quantity UInt64 CODEC(T64, ZSTD(3)),
+    booking_amount Float64 CODEC(LZ4HC(9))
 )
 ENGINE = MergeTree
 PARTITION BY update_date

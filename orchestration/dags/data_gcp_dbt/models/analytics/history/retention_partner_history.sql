@@ -95,7 +95,7 @@ select
             rows between unbounded preceding and current row
         ),
         day
-    ) as days_since_last_bookable_date
+    ) as days_since_last_bookable_date,
     date_diff(
         day,
         max(case when total_bookable_offers != 0 or individual_scheduled_offers != 0 then day end) over (

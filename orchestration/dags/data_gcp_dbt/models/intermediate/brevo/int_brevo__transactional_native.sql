@@ -11,7 +11,7 @@ with
             sum(unsubscribed_count) as total_unsubscribed
         from {{ source("raw", "sendinblue_transactional") }}
         where target = 'native'
-        group by tag, template, user_id, event_date
+        group by tag, template, target, user_id, event_date
     ),
 
     user_traffic as (

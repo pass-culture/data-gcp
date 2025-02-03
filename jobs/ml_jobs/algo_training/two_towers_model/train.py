@@ -2,6 +2,7 @@ import json
 from collections import OrderedDict
 
 import mlflow
+import pandas as pd
 import tensorflow as tf
 import typer
 from loguru import logger
@@ -50,6 +51,17 @@ def load_features(config_file_name: str):
         features["item_embedding_layers"],
         features.get("input_prediction_feature", "user_id"),
     )
+
+
+def convert_df_to_tensor_dict(df: pd.DataFrame) -> dict[str, tf.Tensor]:
+    features_dict = {}
+
+    for column in df.columns:
+        if df[column].dtype == "object":
+            features_dict[column] = df[column].astype(str).values
+        else:
+            features_dict[column] = df[column].values
+    return features_dict
 
 
 def load_datasets(
@@ -104,34 +116,36 @@ def build_tf_datasets(
     ]
 
     train_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_data.values)
+        tf.data.Dataset.from_tensor_slices(train_data.pipe(convert_df_to_tensor_dict))
         .cache()
         .shuffle(buffer_size=new_len_train_data, reshuffle_each_iteration=True)
         .batch(batch_size=batch_size)
-        .map(lambda x: tf.transpose(x))
         .prefetch(tf.data.AUTOTUNE)
     )
 
     validation_dataset = (
-        tf.data.Dataset.from_tensor_slices(validation_data.values)
+        tf.data.Dataset.from_tensor_slices(
+            validation_data.pipe(convert_df_to_tensor_dict)
+        )
         .batch(batch_size=batch_size)
-        .map(lambda x: tf.transpose(x))
         .cache()
         .prefetch(tf.data.AUTOTUNE)
     )
 
     user_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_user_data.values)
+        tf.data.Dataset.from_tensor_slices(
+            train_user_data.pipe(convert_df_to_tensor_dict)
+        )
         .batch(batch_size, drop_remainder=False)
-        .map(lambda x: tf.transpose(x))
         .cache()
         .prefetch(tf.data.AUTOTUNE)
     )
 
     item_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_item_data.values)
+        tf.data.Dataset.from_tensor_slices(
+            train_item_data.pipe(convert_df_to_tensor_dict)
+        )
         .batch(batch_size, drop_remainder=False)
-        .map(lambda x: tf.transpose(x))
         .cache()
         .prefetch(tf.data.AUTOTUNE)
     )

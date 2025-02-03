@@ -1,3 +1,4 @@
+-- TODO: deprecated
 -- Temporary fix for CI, query unable to be run as view
 {{ config(tags="failing_ci") }}
 
@@ -5,7 +6,7 @@ with
     -- Population data aggregated by department
     population_dpt as (
         select
-            pop.decimal_age,
+            pop.population_decimal_age as decimal_age,  -- Keep legacy before removal
             pop.department_code,
             pop.department_name,
             dep.region_name,
@@ -22,7 +23,7 @@ with
         group by
             date(pop.current_date),
             date(pop.born_date),
-            pop.decimal_age,
+            pop.population_decimal_age,
             pop.department_code,
             pop.department_name,
             dep.region_name

@@ -3,6 +3,7 @@ from collections import OrderedDict
 import pandas as pd
 import tensorflow as tf
 import tensorflow_recommenders as tfrs
+from loguru import logger
 
 from two_towers_model.utils.layers import (
     NumericalFeatureProcessor,
@@ -135,8 +136,14 @@ class SingleTowerModel(tf.keras.models.Model):
 
         self._embedding_layers = {}
         for layer_name, layer_class in self.input_embedding_layers.items():
+            # For numerical features, pass 2D data (samples, 1) to adapt normalization
+            if isinstance(layer_class, NumericalFeatureProcessor):
+                training_data = self.data[layer_name].values.reshape(-1, 1)
+            else:
+                training_data = self.data[layer_name].unique()
+
             self._embedding_layers[layer_name] = layer_class.build_sequential_layer(
-                vocabulary=self.data[layer_name].unique()
+                vocabulary=training_data
             )
 
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
@@ -148,8 +155,16 @@ class SingleTowerModel(tf.keras.models.Model):
     def call(self, features: dict, training=False):
         feature_embeddings = []
 
+        feature_embeddings = []
         for feature_name, embedding_layer in self._embedding_layers.items():
-            feature_embeddings.append(embedding_layer(features[feature_name]))
+            # Log input tensor shape
+            logger.debug(
+                f"Processing {feature_name} with shape: {features[feature_name].shape}"
+            )
+            processed = embedding_layer(features[feature_name])
+            # Log output embedding shape
+            logger.debug(f"Processed {feature_name} embedding shape: {processed.shape}")
+            feature_embeddings.append(processed)
 
         x = tf.concat(feature_embeddings, axis=1)
         x = self._dense1(x)

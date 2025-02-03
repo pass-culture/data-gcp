@@ -213,6 +213,9 @@ REF_TABLES = {
     "2024_insee_qpv": {
         "file_type": "avro",
     },
+    "2024_insee_qpv_population": {
+        "file_type": "parquet",
+    },
     "qpv_eligible_pop": {
         "file_type": "avro",
     },

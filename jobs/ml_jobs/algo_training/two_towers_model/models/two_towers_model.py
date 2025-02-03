@@ -5,7 +5,7 @@ import tensorflow as tf
 import tensorflow_recommenders as tfrs
 
 from two_towers_model.utils.layers import (
-    IntegerEmbeddingLayer,
+    NumericalFeatureProcessor,
     PretainedEmbeddingLayer,
     StringEmbeddingLayer,
     TextEmbeddingLayer,
@@ -93,7 +93,7 @@ class TwoTowersModel(tfrs.models.Model):
     ):
         embedding_layers = {
             "string": StringEmbeddingLayer(embedding_size=embedding_size),
-            "int": IntegerEmbeddingLayer(embedding_size=embedding_size),
+            "int": NumericalFeatureProcessor(output_size=embedding_size),
             "text": TextEmbeddingLayer(embedding_size=embedding_size),
             "pretrained": PretainedEmbeddingLayer(
                 embedding_size=embedding_size,

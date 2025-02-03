@@ -62,6 +62,29 @@ class IntegerEmbeddingLayer:
 
 
 @dataclass
+class NumericalFeatureProcessor:
+    """
+    A preprocessing layer for continuous numerical features:
+    1. Normalizes the input (mean=0, variance=1).
+    2. Applies a Dense layer to project the feature into a learned space.
+    """
+
+    output_size: int  # Number of units in the Dense layer
+
+    def build_sequential_layer(self, vocabulary: np.ndarray):
+        # Ensure training_data is 1D (samples,) or 2D (samples, 1)
+        training_data = np.reshape(vocabulary, (-1, 1))
+
+        # Create and adapt the normalization layer to the data
+        normalization = tf.keras.layers.Normalization()
+        normalization.adapt(training_data)
+
+        return tf.keras.Sequential(
+            [normalization, tf.keras.layers.Dense(self.output_size)]
+        )
+
+
+@dataclass
 class TextEmbeddingLayer:
     """
     Preprocessing layer which maps text features to integer sequences.

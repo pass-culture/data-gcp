@@ -60,7 +60,7 @@ def convert_df_to_tensor_dict(df: pd.DataFrame) -> dict[str, tf.Tensor]:
         if df[column].dtype == "object":
             features_dict[column] = df[column].astype(str).values
         else:
-            features_dict[column] = df[column].values
+            features_dict[column] = df[column].values.reshape(-1, 1)
     return features_dict
 
 

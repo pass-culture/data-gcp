@@ -72,12 +72,14 @@ class NumericalFeatureProcessor:
     output_size: int  # Number of units in the Dense layer
 
     def build_sequential_layer(self, vocabulary: np.ndarray):
-        # Ensure training_data is 1D (samples,) or 2D (samples, 1)
-        training_data = np.reshape(vocabulary, (-1, 1))
+        # Precompute mean/variance offline
+        mean = np.mean(vocabulary)
+        variance = np.var(vocabulary)
 
         # Create and adapt the normalization layer to the data
-        normalization = tf.keras.layers.Normalization()
-        normalization.adapt(training_data)
+        normalization = tf.keras.layers.Normalization(
+            input_shape=(1,), mean=mean, variance=variance
+        )
 
         return tf.keras.Sequential(
             [normalization, tf.keras.layers.Dense(self.output_size)]

@@ -1,10 +1,35 @@
 with
     last_day_of_month as (
         select
-            date_trunc(active_date, month) as month,
-            max(active_date) as last_active_date
-        from `{{ bigquery_analytics_dataset }}.aggregated_daily_user_used_activity`
-        group by 1
+            date_trunc(deposit_active_date, month) as month,
+            max(deposit_active_date) as last_active_date
+        from `{{ bigquery_analytics_dataset }}.native_daily_user_deposit`
+        group by date_trunc(deposit_active_date, month)
+    ),
+
+    user_amount_spent_per_day as (
+        select
+            deposit_active_date,
+            user_id,
+            deposit_amount,
+            coalesce(sum(booking_intermediary_amount), 0) as amount_spent,
+        from `{{ bigquery_analytics_dataset }}.native_daily_user_deposit` uua
+        left join
+            {{ ref("mrt_global__booking") }} ebd
+            on ebd.deposit_id = uua.deposit_id
+            and uua.deposit_active_date = date(booking_used_date)
+            and booking_is_used
+        group by deposit_active_date, user_id, deposit_amount
+    ),
+
+    user_cumulative_amount_spent as (
+        select
+            user_id,
+            deposit_id,
+            sum(amount_spent) over (
+                partition by user_id, deposit_id order by deposit_active_date asc
+            ) as cumulative_amount_spent,
+        from user_amount_spent_per_day
     ),
 
     aggregated_active_beneficiary as (
@@ -18,7 +43,7 @@ with
             "beneficiaire_actuel" as indicator,
             count(distinct uua.user_id) as numerator,
             1 as denominator
-        from `{{ bigquery_analytics_dataset }}.aggregated_daily_user_used_activity` uua
+        from user_cumulative_amount_spent uua
         inner join last_day_of_month ldm on ldm.last_active_date = active_date
         -- active nor suspended
         inner join

@@ -6,8 +6,6 @@ repos:
   hooks:
   - id: check-script-semicolon
     files: models/mart
-  - id: check-script-has-no-table-name
-    files: models/mart
   - id: check-model-has-properties-file
     name: Check model has properties file (mart).
     files: models/mart

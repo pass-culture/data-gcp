@@ -3,6 +3,7 @@
 {% docs column__deposit_amount %}The total amount of the deposit.{% enddocs %}
 {% docs column__deposit_source %} Creation source of the deposit (educonnect, ubble, dms). {% enddocs %}
 {% docs column__deposit_creation_date %}The date when the deposit was created.{% enddocs %}
+{% docs column__deposit_active_date %} Active date of a deposit.{% enddocs %}
 {% docs column__deposit_update_date %}The date when the deposit was last updated (only for GRANT_15_17).{% enddocs %}
 {% docs column__deposit_expiration_date %}The expiration date of the deposit. 24 months after deposit creation for GRANT_18; at the user's 18th birthday for GRANT_15_17.{% enddocs %}
 {% docs column__deposit_type %} Type of the deposit, can be GRANT_18, GRANT_15_17. {% enddocs %}

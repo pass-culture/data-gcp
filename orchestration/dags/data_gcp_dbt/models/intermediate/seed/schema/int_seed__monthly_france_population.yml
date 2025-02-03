@@ -1,0 +1,36 @@
+version: 2
+models:
+  - name: int_seed__monthly_france_population
+    description: '{{ doc("description__population_estimation") }}'
+    columns:
+      - name: population_snapshot_month
+        description: '{{ doc("column__population_snapshot_month") }}'
+        data_type: STRING
+
+      - name: population_decimal_age
+        description: '{{ doc("column__population_decimal_age") }}'
+        data_type: FLOAT
+
+      - name: population_department_code
+        description: '{{ doc("column__population_department_code") }}'
+        data_type: STRING
+
+      - name: population_department_name
+        description: '{{ doc("column__population_department_name") }}'
+        data_type: STRING
+
+      - name: population_academy_name
+        description: '{{ doc("column__population_academy_name") }}'
+        data_type: STRING
+
+      - name: population_region_name
+        description: '{{ doc("column__population_region_name") }}'
+        data_type: STRING
+
+      - name: population_birth_month
+        description: '{{ doc("column__population_birth_month") }}'
+        data_type: INTEGER
+
+      - name: total_population
+        description: '{{ doc("column__total_population") }}'
+        data_type: INTEGER

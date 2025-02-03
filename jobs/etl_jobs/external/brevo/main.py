@@ -61,6 +61,7 @@ def run(
 
         brevo_newsletters.create_instance_email_campaigns_api()
         df = brevo_newsletters.get_data()
+        df["campaign_target"] = audience
         brevo_newsletters.save_to_historical(df, campaigns_histo_schema)
         return "success"
 
@@ -80,6 +81,7 @@ def run(
             all_events.append(brevo_transactional.get_events(event_type))
         all_events = sum(all_events, [])
         df = brevo_transactional.parse_to_df(all_events)
+        df["target"] = audience
         brevo_transactional.save_to_historical(df, transactional_histo_schema)
 
         return "success"

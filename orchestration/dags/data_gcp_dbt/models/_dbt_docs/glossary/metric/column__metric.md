@@ -63,7 +63,10 @@ title: Metrics
 {% docs column__total_used_bookings %} Total number of bookings that were used. {% enddocs %}
 {% docs column__total_used_collective_bookings %} Total number of collective bookings that were used. {% enddocs %}
 {% docs column__total_used_individual_bookings %} Total number of used individual bookings. {% enddocs %}
-{% docs column__total_users %} The total number of users {% enddocs %}
+{% docs column__total_users %} The total number of users. {% enddocs %}
+{% docs column__total_users_last_12_months %} Rolling sum of distinct users over the last 12 months for a given age and department. {% enddocs %}
+{% docs column__total_population %} The total number of french population. {% enddocs %}
+{% docs column__total_population_last_12_months %} Rolling sum of french population over the last 12 months for a given age and department. {% enddocs %}
 {% docs column__total_3_category_booked_users %} The total number of users who made bookings in three categories or more. {% enddocs %}
 {% docs column__total_amount_spent %} The total amount of credit spent by the user. {% enddocs %}
 {% docs column__total_item_consulted %} The total number of items consulted by the user. {% enddocs %}

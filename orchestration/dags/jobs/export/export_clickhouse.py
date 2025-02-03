@@ -1,7 +1,7 @@
 import datetime
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback, task_fail_slack_alert
 from common.config import (
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
@@ -61,7 +61,7 @@ dags = {
             "retries": 1,
             "retry_delay": datetime.timedelta(minutes=20),
             "project_id": GCP_PROJECT_ID,
-            "on_failure_callback": task_fail_slack_alert,
+            "on_failure_callback": on_failure_combined_callback,
             "on_skipped_callback": task_fail_slack_alert,
         },
     },

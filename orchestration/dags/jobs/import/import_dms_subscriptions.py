@@ -2,7 +2,7 @@ import time
 from datetime import date, datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
@@ -40,7 +40,7 @@ dag_config = {
 
 default_args = {
     "start_date": datetime(2020, 12, 1),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 2,
     "retry_delay": timedelta(minutes=5),
 }

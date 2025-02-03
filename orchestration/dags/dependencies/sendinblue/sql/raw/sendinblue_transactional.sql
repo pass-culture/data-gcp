@@ -34,6 +34,7 @@ select distinct
     template,
     tag,
     user_id,
+    target,
     coalesce(venue_emails.offerer_id, co.offerer_id) as offerer_id,
     event_date,
     delivered_count,

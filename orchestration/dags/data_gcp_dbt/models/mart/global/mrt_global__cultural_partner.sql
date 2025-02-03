@@ -49,9 +49,10 @@ with
     main_venue_tag_per_venue as (  -- WIP, temporary fix to avoid duplicates
         select venue_id, "Culture scientifique" as venue_tag_name
         from {{ ref("mrt_global__venue_tag") }}
-        where venue_tag_category_label = "Comptage partenaire sectoriel"
-        and venue_tag_name = "CSTI"
-        
+        where
+            venue_tag_category_label = "Comptage partenaire sectoriel"
+            and venue_tag_name = "CSTI"
+
         qualify row_number() over (partition by venue_id order by venue_tag_name) = 1
     )
 

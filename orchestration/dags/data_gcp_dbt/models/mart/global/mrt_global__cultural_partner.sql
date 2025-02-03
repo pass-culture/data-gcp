@@ -3,11 +3,12 @@ with
         select
             venue_id,
             venue_managing_offerer_id,
-            venue_tag_name as partner_type,
+            "Culture scientifique" as partner_type,
             "venue_tag" as partner_type_origin
         from {{ ref("mrt_global__venue_tag") }}
         where
             venue_tag_category_label = "Comptage partenaire sectoriel"
+            and venue_tag_name = "CSTI"
             and offerer_rank_desc = 1
     ),
 
@@ -46,9 +47,11 @@ with
     ),
 
     main_venue_tag_per_venue as (  -- WIP, temporary fix to avoid duplicates
-        select venue_id, venue_tag_name
+        select venue_id, "Culture scientifique" as venue_tag_name
         from {{ ref("mrt_global__venue_tag") }}
         where venue_tag_category_label = "Comptage partenaire sectoriel"
+        and venue_tag_name = "CSTI"
+        
         qualify row_number() over (partition by venue_id order by venue_tag_name) = 1
     )
 

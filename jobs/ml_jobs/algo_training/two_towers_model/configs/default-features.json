@@ -6,19 +6,19 @@
     },
     "user_theoretical_remaining_credit": {
       "type": "int",
-      "embedding_size": 1
+      "embedding_size": 32
     },
     "has_added_offer_to_favorites": {
       "type": "int",
-      "embedding_size": 1
+      "embedding_size": 32
     },
     "consult_offer": {
       "type": "int",
-      "embedding_size": 1
+      "embedding_size": 32
     },
     "booking_cnt": {
       "type": "int",
-      "embedding_size": 1
+      "embedding_size": 32
     }
   },
   "item_embedding_layers": {
@@ -28,39 +28,39 @@
     },
     "offer_category_id": {
       "type": "string",
-      "embedding_size": 1
+      "embedding_size": 32
     },
     "offer_subcategory_id": {
       "type": "string",
-      "embedding_size": 1
+      "embedding_size": 32
     },
     "item_names": {
       "type": "text",
-      "embedding_size": 4
+      "embedding_size": 32
     },
     "item_rayons": {
       "type": "text",
-      "embedding_size": 4
+      "embedding_size": 32
     },
     "item_author": {
       "type": "text",
-      "embedding_size": 4
+      "embedding_size": 32
     },
     "item_performer": {
       "type": "text",
-      "embedding_size": 4
+      "embedding_size": 32
     },
     "item_mean_stock_price": {
       "type": "int",
-      "embedding_size": 1
+      "embedding_size": 32
     },
     "item_booking_cnt": {
       "type": "int",
-      "embedding_size": 1
+      "embedding_size": 32
     },
     "item_favourite_cnt": {
       "type": "int",
-      "embedding_size": 1
+      "embedding_size": 32
     }
   }
 }

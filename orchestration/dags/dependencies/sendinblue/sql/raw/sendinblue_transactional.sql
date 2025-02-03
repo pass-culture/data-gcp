@@ -30,15 +30,12 @@ with
         left join
             venue_emails on collective_offer_emails.venue_id = venue_emails.venue_id
     ),
-    distinct_venue_emails as (
-        select distinct offerer_id, venue_email
-        from venue_emails
-    )
+    distinct_venue_emails as (select distinct offerer_id, venue_email from venue_emails)
 select distinct
     template,
     tag,
     user_id,
-    TO_HEX(SHA256(email)) as email_id,
+    to_hex(sha256(email)) as email_id,
     target,
     coalesce(distinct_venue_emails.offerer_id, co.offerer_id) as offerer_id,
     event_date,

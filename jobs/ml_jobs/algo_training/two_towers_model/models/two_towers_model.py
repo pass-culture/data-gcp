@@ -107,13 +107,8 @@ class TwoTowersModel(tfrs.models.Model):
         return embedding_layers[layer_type]
 
     def compute_loss(self, features, training=False):
-        user_feature_count = len(self._user_feature_names)
-        item_feature_count = len(self._item_feature_names)
-
-        user_features = features[:user_feature_count]
-        item_features = features[
-            user_feature_count : user_feature_count + item_feature_count
-        ]
+        user_features = {name: features[name] for name in self._user_feature_names}
+        item_features = {name: features[name] for name in self._item_feature_names}
 
         user_embeddings = self.user_model(user_features, training=training)
         item_embeddings = self.item_model(item_features, training=training)
@@ -150,10 +145,11 @@ class SingleTowerModel(tf.keras.models.Model):
         self._norm = tf.keras.layers.UnitNormalization(axis=-1, name="l2_normalize")
         # self._norm = tf.keras.layers.LayerNormalization(axis=-1)
 
-    def call(self, features: list, training=False):
+    def call(self, features: dict, training=False):
         feature_embeddings = []
-        for idx, embedding_layer in enumerate(self._embedding_layers.values()):
-            feature_embeddings.append(embedding_layer(features[idx]))
+
+        for feature_name, embedding_layer in self._embedding_layers.items():
+            feature_embeddings.append(embedding_layer(features[feature_name]))
 
         x = tf.concat(feature_embeddings, axis=1)
         x = self._dense1(x)

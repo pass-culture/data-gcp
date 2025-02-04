@@ -8,7 +8,7 @@ with
         from {{ ref("mrt_global__venue_tag") }}
         where
             venue_tag_category_label = "Comptage partenaire sectoriel"
-            and venue_tag_name = "Culture scientifique"
+            and venue_tag_name != "Educ pop"
             and offerer_rank_desc = 1
     ),
 
@@ -47,11 +47,11 @@ with
     ),
 
     main_venue_tag_per_venue as (  -- WIP, temporary fix to avoid duplicates
-        select venue_id, venue_tag_name as venue_tag_name
+        select venue_id, venue_tag_name
         from {{ ref("mrt_global__venue_tag") }}
         where
             venue_tag_category_label = "Comptage partenaire sectoriel"
-            and venue_tag_name = "Culture scientifique"
+            and venue_tag_name != "Educ pop"
 
         qualify row_number() over (partition by venue_id order by venue_tag_name) = 1
     )

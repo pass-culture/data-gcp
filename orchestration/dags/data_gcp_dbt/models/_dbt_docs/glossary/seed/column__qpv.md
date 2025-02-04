@@ -39,3 +39,31 @@ The minimum latitude of the bounding box surrounding the QPV geographical shape.
 {% docs column__qpv_max_latitude %}
 The maximum latitude of the bounding box surrounding the QPV geographical shape.
 {% enddocs %}
+
+{% docs column__qpv_municipality_array %}
+An array of municipality codes associated with the QPV.
+{% enddocs %}
+
+{% docs column__qpv_municipality_name_array %}
+An array of municipality names associated with the QPV.
+{% enddocs %}
+
+{% docs column__qpv_epci_2022_array %}
+An array of EPCI (inter-municipal cooperation organizations) codes associated with the QPV in 2022.
+{% enddocs %}
+
+{% docs column__qpv_department_array %}
+An array of department codes in which the QPV is located.
+{% enddocs %}
+
+{% docs column__qpv_region_code %}
+The official code of the region where the QPV is located.
+{% enddocs %}
+
+{% docs column__qpv_urban_unit_2020_code %}
+The official code of the urban unit (unité urbaine) in 2020.
+{% enddocs %}
+
+{% docs column__qpv_municipal_population_2020 %}
+The municipal population of the QPV in 2020.
+{% enddocs %}

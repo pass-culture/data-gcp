@@ -4,7 +4,7 @@ with
             date_trunc(deposit_active_date, month) as month,
             max(deposit_active_date) as last_active_date
         from `{{ bigquery_analytics_dataset }}.native_daily_user_deposit`
-        where deposit_active_date > date_sub(CURRENT_DATE, INTERVAL 24 MONTH)
+        where deposit_active_date > date_sub(current_date, interval 24 month)
         group by date_trunc(deposit_active_date, month)
     ),
 
@@ -16,11 +16,12 @@ with
             uua.deposit_amount,
             coalesce(sum(booking_intermediary_amount), 0) as amount_spent,
         from `{{ bigquery_analytics_dataset }}.native_daily_user_deposit` uua
-        left join `{{ bigquery_analytics_dataset }}.global_booking` ebd
+        left join
+            `{{ bigquery_analytics_dataset }}.global_booking` ebd
             on ebd.deposit_id = uua.deposit_id
             and uua.deposit_active_date = date(booking_used_date)
             and booking_is_used
-        where deposit_active_date > date_sub(CURRENT_DATE, INTERVAL 24 MONTH)
+        where deposit_active_date > date_sub(current_date, interval 24 month)
         group by deposit_active_date, user_id, deposit_type, deposit_amount
     ),
 
@@ -48,7 +49,8 @@ with
             count(distinct uua.user_id) as numerator,
             1 as denominator
         from user_cumulative_amount_spent uua
-        inner join last_day_of_month ldm on ldm.last_active_date = uua.deposit_active_date
+        inner join
+            last_day_of_month ldm on ldm.last_active_date = uua.deposit_active_date
         -- active nor suspended
         inner join
             `{{ bigquery_analytics_dataset }}.global_user` eud

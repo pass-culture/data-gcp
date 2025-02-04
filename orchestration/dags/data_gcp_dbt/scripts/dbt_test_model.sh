@@ -10,7 +10,7 @@ create_tmp_folder "$PATH_TO_DBT_TARGET"
 copy_files_to_tmp_folder "$PATH_TO_DBT_TARGET"
 
 # Step 4: Run dbt with --target-path flag pointing to $TMP_FOLDER
-dbt test --target $target --select $model --target-path $TMP_FOLDER --vars "{ENV_SHORT_NAME: $ENV_SHORT_NAME}" $GLOBAL_CLI_FLAGS
+dbt test --target $target --select $model,"tag:critical" --target-path $TMP_FOLDER --vars "{ENV_SHORT_NAME: $ENV_SHORT_NAME}" $GLOBAL_CLI_FLAGS
 
 # Capture the exit code and propagate it
 exit_code=$?

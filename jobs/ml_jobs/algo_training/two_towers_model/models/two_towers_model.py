@@ -76,7 +76,6 @@ class TwoTowersModel(tfrs.models.Model):
 
         item_tensor = tf.concat(list(item_dataset.map(self.item_model)), axis=0)
         item_embeddings = item_tensor
-        # item_embeddings = tf.math.l2_normalize(item_tensor, axis=1)
 
         item_ids = tf.concat(
             list(item_dataset.map(lambda item: item[self._item_idx])), axis=0

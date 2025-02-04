@@ -223,14 +223,14 @@ def train_two_tower_model(
         callbacks=[
             tf.keras.callbacks.ReduceLROnPlateau(
                 monitor="val_loss",
-                factor=0.5,
-                patience=2,
+                factor=0.1,
+                patience=1,
                 min_delta=MIN_DELTA,
                 verbose=1,
             ),
             tf.keras.callbacks.EarlyStopping(
                 monitor="val_loss",
-                patience=10,
+                patience=2,
                 min_delta=MIN_DELTA,
                 restore_best_weights=True,
                 verbose=1,

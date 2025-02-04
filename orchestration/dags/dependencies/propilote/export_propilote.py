@@ -60,7 +60,7 @@ tmp_tables_detailed = {
         "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_couverture_region",
         "params": {
             "group_type": "REG",
-            "group_type_name": "region_name",
+            "group_type_name": "population_region_name",
         },
     },
     "propilote_taux_couverture_departement": {
@@ -69,7 +69,7 @@ tmp_tables_detailed = {
         "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_couverture_departement",
         "params": {
             "group_type": "DEPT",
-            "group_type_name": "department_code",
+            "group_type_name": "population_department_code",
         },
     },
     "propilote_taux_couverture_academie": {
@@ -78,7 +78,7 @@ tmp_tables_detailed = {
         "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_couverture_academie",
         "params": {
             "group_type": "ACAD",
-            "group_type_name": "academy_name",
+            "group_type_name": "population_academy_name",
         },
     },
     "propilote_taux_couverture_all": {

@@ -10,7 +10,7 @@ with
             "taux_couverture" as indicator,
             sum(total_users_last_12_months) as numerator,
             sum(population_last_12_months) as denominator
-        from `{{ bigquery_analytics_dataset }}.monthly_beneficiary_coverage` as up
+        from `{{ bigquery_analytics_dataset }}.native_monthly_beneficiary_coverage` as up
         where
             population_decimal_age = "19"
             and active_month <= date_trunc(current_date, month)
@@ -28,7 +28,7 @@ with
             "taux_couverture" as indicator,
             sum(total_users_last_12_months) as numerator,
             sum(population_last_12_months) as denominator
-        from `{{ bigquery_analytics_dataset }}.monthly_beneficiary_coverage` as up
+        from `{{ bigquery_analytics_dataset }}.native_monthly_beneficiary_coverage` as up
         where
             population_decimal_age = "18"
             and active_month <= date_trunc(current_date, month)
@@ -46,7 +46,7 @@ with
             "taux_couverture" as indicator,
             sum(total_users_last_12_months) as numerator,
             sum(population_last_12_months) as denominator
-        from `{{ bigquery_analytics_dataset }}.monthly_beneficiary_coverage` as up
+        from `{{ bigquery_analytics_dataset }}.native_monthly_beneficiary_coverage` as up
         where
             population_decimal_age = "17"
             and active_month <= date_trunc(current_date, month)
@@ -64,7 +64,7 @@ with
             "taux_couverture" as indicator,
             sum(total_users_last_12_months) as numerator,
             sum(population_last_12_months) as denominator
-        from `{{ bigquery_analytics_dataset }}.monthly_beneficiary_coverage` as up
+        from `{{ bigquery_analytics_dataset }}.native_monthly_beneficiary_coverage` as up
         where
             population_decimal_age = "16"
             and active_month <= date_trunc(current_date, month)

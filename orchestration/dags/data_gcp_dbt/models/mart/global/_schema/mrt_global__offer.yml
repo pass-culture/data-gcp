@@ -8,7 +8,9 @@ models:
         data_type: STRING
         data_tests:
           - not_null
-          - unique
+          - unique:
+              config:
+                severity: error
       - name: offer_product_id
         description: '{{ doc("column__offer_product_id") }}'
         data_type: STRING

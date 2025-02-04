@@ -9,6 +9,7 @@ models:
         data_tests:
           - not_null
           - unique:
+              tags: ['critical']
               config:
                 severity: error
       - name: offer_product_id

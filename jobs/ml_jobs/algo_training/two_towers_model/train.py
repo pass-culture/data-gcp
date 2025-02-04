@@ -117,19 +117,10 @@ def build_tf_datasets(
     """Builds TensorFlow datasets for training and evaluation."""
     logger.info("Building tf datasets")
 
-    # HACK
-    ratio = 0.1
-    len_train_data = len(train_data)
-    validation_data = train_data.sample(frac=ratio)
-    new_len_train_data = int(0.9 * len_train_data // batch_size * batch_size)
-    train_data = train_data.loc[~train_data.index.isin(validation_data.index)].iloc[
-        :new_len_train_data
-    ]
-
     train_dataset = (
         tf.data.Dataset.from_tensor_slices(train_data.pipe(convert_df_to_tensor_dict))
         .cache()
-        .shuffle(buffer_size=new_len_train_data, reshuffle_each_iteration=True)
+        .shuffle(buffer_size=len(train_data), reshuffle_each_iteration=True)
         .batch(batch_size=batch_size)
         .prefetch(tf.data.AUTOTUNE)
     )
@@ -166,7 +157,6 @@ def build_tf_datasets(
         validation_dataset,
         user_dataset,
         item_dataset,
-        new_len_train_data,
     )
 
 
@@ -215,7 +205,6 @@ def train_two_tower_model(
     train_dataset,
     validation_dataset,
     two_tower_model,
-    training_steps,
     validation_steps,
     run_uuid,
 ):
@@ -229,7 +218,6 @@ def train_two_tower_model(
     two_tower_model.fit(
         repeated_train_dataset,
         epochs=N_EPOCHS,
-        steps_per_epoch=training_steps,
         validation_data=validation_dataset,
         validation_steps=validation_steps,
         callbacks=[
@@ -344,13 +332,10 @@ def train(
         input_prediction_feature=input_prediction_feature,
     )
 
-    train_dataset, validation_dataset, user_dataset, item_dataset, len_train_data = (
-        build_tf_datasets(
-            train_data, validation_data, train_user_data, train_item_data, batch_size
-        )
+    train_dataset, validation_dataset, user_dataset, item_dataset = build_tf_datasets(
+        train_data, validation_data, train_user_data, train_item_data, batch_size
     )
     validation_steps = max(int((validation_data.shape[0] // batch_size)), 1)
-    training_steps = (len_train_data / 5) // batch_size
     log_mlflow_params(
         embedding_size,
         batch_size,
@@ -375,7 +360,6 @@ def train(
         train_dataset,
         validation_dataset,
         two_tower_model,
-        training_steps=training_steps,
         validation_steps=validation_steps,
         run_uuid=run_uuid,
     )

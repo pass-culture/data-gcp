@@ -6,7 +6,6 @@ import tensorflow as tf
 from loguru import logger
 from tensorflow.keras.layers import (
     Embedding,
-    IntegerLookup,
     StringLookup,
     TextVectorization,
 )
@@ -52,7 +51,7 @@ class IntegerEmbeddingLayer:
     def build_sequential_layer(self, vocabulary: np.ndarray):
         return tf.keras.Sequential(
             [
-                IntegerLookup(vocabulary=vocabulary.astype(str)),
+                StringLookup(vocabulary=vocabulary.astype(str)),
                 # We add an additional embedding to account for unknown tokens.
                 Embedding(
                     input_dim=len(vocabulary) + 1,

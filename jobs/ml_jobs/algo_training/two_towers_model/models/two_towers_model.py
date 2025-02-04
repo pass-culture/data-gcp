@@ -137,7 +137,7 @@ class SingleTowerModel(tf.keras.models.Model):
 
         self._embedding_layers = {}
         for layer_name, layer_class in self.input_embedding_layers.items():
-            # For numerical features, pass 2D data (samples, 1) to adapt normalization
+            # If layer is NumericalFeatureProcessor, we need whole data to compute mean and std
             if isinstance(layer_class, NumericalFeatureProcessor):
                 training_data = self.data[layer_name].values.reshape(-1, 1)
             else:
@@ -149,22 +149,15 @@ class SingleTowerModel(tf.keras.models.Model):
 
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
         self._dense2 = tf.keras.layers.Dense(embedding_size)
-
         self._norm = tf.keras.layers.UnitNormalization(axis=-1, name="l2_normalize")
-        # self._norm = tf.keras.layers.LayerNormalization(axis=-1)
 
     def call(self, features: dict, training=False):
         feature_embeddings = []
-
-        feature_embeddings = []
         for feature_name, embedding_layer in self._embedding_layers.items():
-            # Log input tensor shape
-            logger.debug(
-                f"Processing {feature_name} with shape: {features[feature_name].shape}"
-            )
             processed = embedding_layer(features[feature_name])
-            # Log output embedding shape
-            logger.debug(f"Processed {feature_name} embedding shape: {processed.shape}")
+            logger.debug(
+                f"Processed {feature_name} embedding shape: {processed.shape} for layer {embedding_layer} of class {type(embedding_layer)}"
+            )
             feature_embeddings.append(processed)
 
         x = tf.concat(feature_embeddings, axis=1)

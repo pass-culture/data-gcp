@@ -214,9 +214,8 @@ def train_two_tower_model(
         optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE)
     )
 
-    repeated_train_dataset = train_dataset.repeat()
     two_tower_model.fit(
-        repeated_train_dataset,
+        train_dataset,
         epochs=N_EPOCHS,
         validation_data=validation_dataset,
         validation_steps=validation_steps,

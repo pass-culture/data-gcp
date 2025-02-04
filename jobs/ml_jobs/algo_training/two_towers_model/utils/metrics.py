@@ -165,17 +165,36 @@ def get_avg_diversification_score(df_raw, recos, k):
     diversification_count = 0
     logger.info("Compute average diversification")
 
+    # Preprocess feature data for quick lookup
+    feature_columns = [
+        "offer_category_id",
+        "offer_subcategory_id",
+        "genres",
+        "rayon",
+        "type",
+    ]
+    df_clean = df_raw[["item_id"] + feature_columns].drop_duplicates().fillna("NA")
+
+    # Create dictionary mapping items to their unique feature sets
+    item_feature_map = {}
+    for item_id, group in df_clean.groupby("item_id"):
+        features = {
+            tuple(row)
+            for row in group[feature_columns].itertuples(index=False, name=None)
+        }
+        item_feature_map[item_id] = features
+
+    # Process recommendations
     for reco in tqdm(recos[:max_recos], mininterval=20, maxinterval=60):
-        df_clean = (
-            df_raw.query(f"item_id in {tuple(reco[:k])}")[
-                ["offer_category_id", "offer_subcategory_id", "genres", "rayon", "type"]
-            ]
-            .drop_duplicates()
-            .fillna("NA", inplace=False)
-        )
-        count_dist = df_clean.nunique()
-        diversification = count_dist.sum()
-        diversification_count += diversification
+        seen_features = set()
+        for item in reco[:k]:  # Process first k items directly
+            seen_features.update(item_feature_map.get(item, set()))
+
+        if seen_features:
+            # Calculate unique counts per feature column
+            transposed = zip(*seen_features)
+            diversification = sum(len(set(col)) for col in transposed)
+            diversification_count += diversification
 
     avg_diversification = diversification_count / max_recos if max_recos > 0 else -1
     return avg_diversification

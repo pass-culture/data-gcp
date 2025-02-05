@@ -139,7 +139,7 @@ class SingleTowerModel(tf.keras.models.Model):
         for layer_name, layer_class in self.input_embedding_layers.items():
             # If layer is NumericalFeatureProcessor, we need whole data to compute mean and std
             if isinstance(layer_class, NumericalFeatureProcessor):
-                training_data = self.data[layer_name].values.reshape(-1, 1)
+                training_data = self.data[layer_name].values
             else:
                 training_data = self.data[layer_name].unique()
 
@@ -155,9 +155,7 @@ class SingleTowerModel(tf.keras.models.Model):
         feature_embeddings = []
         for feature_name, embedding_layer in self._embedding_layers.items():
             processed = embedding_layer(features[feature_name])
-            logger.debug(
-                f"Processed {feature_name} embedding shape: {processed.shape} for layer {embedding_layer} of class {type(embedding_layer)}"
-            )
+            logger.debug(f"Processed {feature_name} embedding shape: {processed.shape}")
             feature_embeddings.append(processed)
 
         x = tf.concat(feature_embeddings, axis=1)

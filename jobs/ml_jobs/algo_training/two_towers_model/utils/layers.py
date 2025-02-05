@@ -73,8 +73,8 @@ class NumericalFeatureProcessor:
 
     def build_sequential_layer(self, vocabulary: np.ndarray):
         # Precompute mean/variance offline
-        mean = np.mean(vocabulary)
-        variance = np.var(vocabulary)
+        mean = np.mean(vocabulary.astype(np.float32))
+        variance = np.var(vocabulary.astype(np.float32))
 
         # Create and adapt the normalization layer to the data
         normalization = tf.keras.layers.Normalization(

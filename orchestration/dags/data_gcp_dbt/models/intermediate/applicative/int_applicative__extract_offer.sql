@@ -66,7 +66,7 @@ select
     offer.offer_url,
     offer.offer_duration_minutes,
     offer.offer_is_national,
-    offer.extra_data,
+    offer.extra_data as offer_extra_data,
     offer.offer_ean,
     offer.offer_fields_updated,
     offer.offer_withdrawal_details,

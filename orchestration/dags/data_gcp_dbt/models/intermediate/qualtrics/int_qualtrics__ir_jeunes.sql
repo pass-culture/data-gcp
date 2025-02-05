@@ -58,7 +58,7 @@ with
             user_data.user_id is not null
             and user_data.current_deposit_type in ("GRANT_15_17", "GRANT_18")
             and user_data.user_is_current_beneficiary is true
-            and user_data.user_data.user_is_active is true
+            and user_data.user_is_active is true
             and user_data.user_has_enabled_marketing_email is true
             and opt_out.contact_id is null
             and answers.user_id is null

@@ -21,7 +21,6 @@ This table is used to:
 - `mrt_native__daily_user_deposit`: Tracks daily user deposits.
 - `int_seed__monthly_france_population`: Provides population estimates by age and department.
 
-{% enddocs %}
 
 ## Table description
 

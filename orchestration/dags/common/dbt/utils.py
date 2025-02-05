@@ -304,7 +304,7 @@ def create_test_operator(model_node: str, model_data: Dict, dag: DAG) -> BashOpe
         env={
             "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
             "target": "{{ params.target }}",
-            "model": f"""{model_data['alias']}""",
+            "model": f"""{model_data['name']},tag:critical""",
             "full_ref_str": full_ref_str,
             "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
         },

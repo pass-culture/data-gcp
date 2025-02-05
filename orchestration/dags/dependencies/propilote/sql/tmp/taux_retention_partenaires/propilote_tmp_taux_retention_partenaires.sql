@@ -35,7 +35,7 @@ with
             `{{ bigquery_analytics_dataset }}.global_cultural_partner` global_cultural_partner
             on retention_partner_history.partner_id = global_cultural_partner.partner_id
         left join
-            `{{ bigquery_analytics_dataset }}.region_department` region_department
+            `{{ bigquery_seed_dataset }}.region_department` region_department
             on global_cultural_partner.partner_department_code
             = region_department.num_dep
         group by 1, 2, 3

@@ -123,4 +123,4 @@ select
     lower(
         trim(trim(json_extract(offer.extra_data, "$.comic_series"), " "), '"')
     ) as comic_series
-from offer_product_data
+from offer_product_data as offer

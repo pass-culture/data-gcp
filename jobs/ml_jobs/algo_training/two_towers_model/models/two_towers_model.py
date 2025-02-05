@@ -6,7 +6,7 @@ import tensorflow_recommenders as tfrs
 from loguru import logger
 
 from two_towers_model.utils.layers import (
-    IntegerEmbeddingLayer,
+    NumericalFeatureProcessor,
     PretainedEmbeddingLayer,
     StringEmbeddingLayer,
     TextEmbeddingLayer,
@@ -94,8 +94,8 @@ class TwoTowersModel(tfrs.models.Model):
     ):
         embedding_layers = {
             "string": StringEmbeddingLayer(embedding_size=embedding_size),
-            # "int": NumericalFeatureProcessor(output_size=embedding_size),
-            "int": IntegerEmbeddingLayer(embedding_size=embedding_size),
+            "int": NumericalFeatureProcessor(output_size=embedding_size),
+            # "int": IntegerEmbeddingLayer(embedding_size=embedding_size),
             "text": TextEmbeddingLayer(embedding_size=embedding_size),
             "pretrained": PretainedEmbeddingLayer(
                 embedding_size=embedding_size,
@@ -139,8 +139,12 @@ class SingleTowerModel(tf.keras.models.Model):
 
         self._embedding_layers = {}
         for layer_name, layer_class in self.input_embedding_layers.items():
+            if isinstance(layer_class, NumericalFeatureProcessor):
+                training_data = self.data[layer_name]
+            else:
+                training_data = self.data[layer_name].unique()
             self._embedding_layers[layer_name] = layer_class.build_sequential_layer(
-                vocabulary=self.data[layer_name].unique()
+                vocabulary=training_data
             )
 
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")

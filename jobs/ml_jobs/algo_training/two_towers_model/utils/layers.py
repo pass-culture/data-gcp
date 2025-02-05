@@ -37,31 +37,6 @@ class StringEmbeddingLayer:
 
 
 @dataclass
-class IntegerEmbeddingLayer:
-    """
-    A preprocessing layer which maps integer features into embeddings.
-
-    When output_mode is "int", input integers are converted to their index in the vocabulary (an integer).
-    When output_mode is "multi_hot", "count", or "tf_idf", input integers are encoded into an array where each dimension
-    corresponds to an element in the vocabulary.
-    """
-
-    embedding_size: int
-
-    def build_sequential_layer(self, vocabulary: np.ndarray):
-        return tf.keras.Sequential(
-            [
-                StringLookup(vocabulary=vocabulary.astype(str)),
-                # We add an additional embedding to account for unknown tokens.
-                Embedding(
-                    input_dim=len(vocabulary) + 1,
-                    output_dim=self.embedding_size,
-                ),
-            ]
-        )
-
-
-@dataclass
 class NumericalFeatureProcessor:
     """
     A preprocessing layer for continuous numerical features:

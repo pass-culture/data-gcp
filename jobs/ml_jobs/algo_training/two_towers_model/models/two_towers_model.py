@@ -7,7 +7,6 @@ from loguru import logger
 
 from two_towers_model.utils.layers import (
     IntegerEmbeddingLayer,
-    NumericalFeatureProcessor,
     PretainedEmbeddingLayer,
     StringEmbeddingLayer,
     TextEmbeddingLayer,
@@ -140,14 +139,8 @@ class SingleTowerModel(tf.keras.models.Model):
 
         self._embedding_layers = {}
         for layer_name, layer_class in self.input_embedding_layers.items():
-            # For numerical features, pass 2D data (samples, 1) to adapt normalization
-            if isinstance(layer_class, NumericalFeatureProcessor):
-                training_data = self.data[layer_name].values.reshape(-1, 1)
-            else:
-                training_data = self.data[layer_name].unique()
-
             self._embedding_layers[layer_name] = layer_class.build_sequential_layer(
-                vocabulary=training_data
+                vocabulary=self.data[layer_name].unique()
             )
 
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")

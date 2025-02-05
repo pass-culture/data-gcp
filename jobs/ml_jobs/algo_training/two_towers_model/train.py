@@ -60,7 +60,7 @@ def convert_df_to_tensor_dict(df: pd.DataFrame) -> dict[str, tf.Tensor]:
         if df[column].dtype == "object":
             features_dict[column] = df[column].astype(str).values
         else:
-            features_dict[column] = df[column].values.reshape(-1, 1)
+            features_dict[column] = df[column].values
     return features_dict
 
 
@@ -78,8 +78,8 @@ def load_datasets(
         read_from_gcs(storage_path=STORAGE_PATH, table_name=training_table_name)[
             user_columns + item_columns
         ]
-        .astype("str")
         .drop_duplicates(subset=["user_id", "item_id"])
+        .astype("str")
         .pipe(compute_candidate_sampling_probabilities)
     )
 
@@ -88,7 +88,6 @@ def load_datasets(
             user_columns + item_columns
         ]
         .astype("str")
-        .drop_duplicates(subset=["user_id", "item_id"])
         .pipe(compute_candidate_sampling_probabilities)
     )
 

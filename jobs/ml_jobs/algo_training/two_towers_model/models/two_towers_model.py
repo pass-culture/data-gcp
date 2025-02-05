@@ -74,10 +74,7 @@ class TwoTowersModel(tfrs.models.Model):
     def get_metrics(self, item_dataset):
         index_top_k = tfrs.layers.factorized_top_k.BruteForce()
 
-        item_tensor = tf.concat(list(item_dataset.map(self.item_model)), axis=0)
-        item_embeddings = item_tensor
-        # item_embeddings = tf.math.l2_normalize(item_tensor, axis=1)
-
+        item_embeddings = tf.concat(list(item_dataset.map(self.item_model)), axis=0)
         item_ids = tf.concat(
             list(item_dataset.map(lambda item: item[self._item_idx])), axis=0
         )
@@ -95,7 +92,6 @@ class TwoTowersModel(tfrs.models.Model):
         embedding_layers = {
             "string": StringEmbeddingLayer(embedding_size=embedding_size),
             "int": NumericalFeatureProcessor(output_size=embedding_size),
-            # "int": IntegerEmbeddingLayer(embedding_size=embedding_size),
             "text": TextEmbeddingLayer(embedding_size=embedding_size),
             "pretrained": PretainedEmbeddingLayer(
                 embedding_size=embedding_size,
@@ -151,19 +147,13 @@ class SingleTowerModel(tf.keras.models.Model):
         self._dense2 = tf.keras.layers.Dense(embedding_size)
 
         self._norm = tf.keras.layers.UnitNormalization(axis=-1, name="l2_normalize")
-        # self._norm = tf.keras.layers.LayerNormalization(axis=-1)
 
     def call(self, features: dict, training=False):
         feature_embeddings = []
 
         feature_embeddings = []
         for feature_name, embedding_layer in self._embedding_layers.items():
-            # Log input tensor shape
-            logger.debug(
-                f"Processing {feature_name} with shape: {features[feature_name].shape}"
-            )
             processed = embedding_layer(features[feature_name])
-            # Log output embedding shape
             logger.debug(f"Processed {feature_name} embedding shape: {processed.shape}")
             feature_embeddings.append(processed)
 

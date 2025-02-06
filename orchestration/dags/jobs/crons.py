@@ -6,7 +6,7 @@ SCHEDULE_DICT = {
     },
     "clickhouse_exports": {
         "daily": {
-            "prod": "45 4 * * *",
+            "prod": "0 6 * * *",
             "stg": "45 4 * * *",
             "dev": "45 4 * * *",
         },

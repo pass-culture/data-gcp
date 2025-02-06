@@ -13,12 +13,7 @@
     "publication_full_video_watched_rate",
 ] -%}
 
-{{
-    config(
-    materialized = 'table',
-    cluster_by = ['publication_account_name']
-)
-}}
+{{ config(materialized="table", cluster_by=["publication_account_name"]) }}
 
 {% for social_network in social_networks %}
     select

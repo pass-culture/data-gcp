@@ -201,6 +201,7 @@ def train_two_tower_model(
     training_steps,
     validation_steps,
     run_uuid,
+    remove_accidental_hits,
 ):
     # No validation on metrics during training
     two_tower_model.set_task(item_dataset=None)
@@ -304,6 +305,10 @@ def train(
         help="BigQuery table containing validation data",
     ),
     run_name: str = typer.Option(None, help="Name of the MLflow run if set"),
+    remove_accidental_hits: bool = typer.Option(
+        False,
+        help="Remove users - items accidental hits from batch -> sampled soft max loss",
+    ),
 ):
     setup_gpu_environment()
     tf.random.set_seed(seed)
@@ -317,16 +322,19 @@ def train(
     item_columns = list(item_features_config.keys())
 
     train_data, validation_data, train_user_data, train_item_data = load_datasets(
-        training_table_name,
-        validation_table_name,
-        user_columns=user_columns,
-        item_columns=item_columns,
-        input_prediction_feature=input_prediction_feature,
+        load_datasets(
+            training_table_name,
+            validation_table_name,
+            user_columns=user_columns,
+            item_columns=item_columns,
+            input_prediction_feature=input_prediction_feature,
+        )
     )
 
     train_dataset, validation_dataset, user_dataset, item_dataset = build_tf_datasets(
         train_data, validation_data, train_user_data, train_item_data, batch_size
     )
+
     log_mlflow_params(
         config_file_name=config_file_name,
         extra_params={
@@ -337,6 +345,7 @@ def train(
             "item_count": len(train_item_data),
             "item_feature_count": len(item_features_config.keys()),
             "epoch_count_per_shuffle": EPOCH_COUNT_PER_SHUFFLE,
+            "remove_accidental_hits": remove_accidental_hits,
         },
     )
 
@@ -348,6 +357,7 @@ def train(
         user_columns=user_columns,
         item_columns=item_columns,
         embedding_size=embedding_size,
+        remove_accidental_hits=remove_accidental_hits,
     )
 
     logger.info("Training Model")

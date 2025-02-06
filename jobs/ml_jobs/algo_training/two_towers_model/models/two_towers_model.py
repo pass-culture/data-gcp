@@ -24,12 +24,14 @@ class TwoTowersModel(tfrs.models.Model):
         user_columns: list,
         item_columns: list,
         embedding_size: int,
+        remove_accidental_hits: bool = True,
     ):
         super().__init__()
         self._user_feature_names = user_columns
         self._item_feature_names = item_columns
         self._item_idx = self._item_feature_names.index("item_id")
         self._user_idx = self._user_feature_names.index("user_id")
+        self.remove_accidental_hits = remove_accidental_hits
 
         # Define user and item models
         self.user_model = SingleTowerModel(
@@ -62,14 +64,21 @@ class TwoTowersModel(tfrs.models.Model):
         )
 
     def set_task(self, item_dataset=None):
-        self.task = tfrs.tasks.Retrieval(
-            tf.keras.losses.CategoricalCrossentropy(
-                from_logits=True,
-                reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
-            ),
-            metrics=self.get_metrics(item_dataset) if item_dataset else None,
-            temperature=TEMPERATURE,
-        )
+        if self.remove_accidental_hits:
+            self.task = tfrs.tasks.Retrieval(
+                tf.keras.losses.CategoricalCrossentropy(
+                    from_logits=True,
+                    reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
+                ),
+                metrics=self.get_metrics(item_dataset) if item_dataset else None,
+                temperature=TEMPERATURE,
+            )
+        else:
+            self.task = tfrs.tasks.Retrieval(
+                loss=tfrs.losses.SampledSoftmaxLoss(remove_accidental_hits=True),
+                metrics=self.get_metrics(item_dataset) if item_dataset else None,
+                temperature=TEMPERATURE,
+            )
 
     def get_metrics(self, item_dataset):
         index_top_k = tfrs.layers.factorized_top_k.BruteForce()

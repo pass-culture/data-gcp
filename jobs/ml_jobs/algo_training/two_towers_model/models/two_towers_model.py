@@ -12,7 +12,7 @@ from two_towers_model.utils.layers import (
     TextEmbeddingLayer,
 )
 
-TEMPERATURE = 0.05
+TEMPERATURE = 1.0
 
 
 class TwoTowersModel(tfrs.models.Model):
@@ -146,8 +146,6 @@ class SingleTowerModel(tf.keras.models.Model):
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
         self._dense2 = tf.keras.layers.Dense(embedding_size)
 
-        self._norm = tf.keras.layers.UnitNormalization(axis=-1, name="l2_normalize")
-
     def call(self, features: dict, training=False):
         feature_embeddings = []
 
@@ -159,5 +157,4 @@ class SingleTowerModel(tf.keras.models.Model):
 
         x = tf.concat(feature_embeddings, axis=1)
         x = self._dense1(x)
-        x = self._dense2(x)
-        return self._norm(x)
+        return self._dense2(x)

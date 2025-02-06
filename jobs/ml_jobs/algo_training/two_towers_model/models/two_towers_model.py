@@ -1,9 +1,9 @@
 from collections import OrderedDict
+from typing import Any, Callable, Dict, List, Union
 
 import pandas as pd
 import tensorflow as tf
 import tensorflow_recommenders as tfrs
-from loguru import logger
 
 from two_towers_model.utils.layers import (
     NumericalFeatureProcessor,
@@ -21,112 +21,107 @@ class TwoTowersModel(tfrs.models.Model):
         data: pd.DataFrame,
         user_features_config: OrderedDict,
         item_features_config: OrderedDict,
-        user_columns: list,
-        item_columns: list,
-        embedding_size: int,
+        user_columns: List[str],
+        item_columns: List[str],
+        user_tower_params: Dict[str, Any],
+        item_tower_params: Dict[str, Any],
         remove_accidental_hits: bool = True,
     ):
         super().__init__()
+
+        # Keep references
         self._user_feature_names = user_columns
         self._item_feature_names = item_columns
-        self._item_idx = self._item_feature_names.index("item_id")
-        self._user_idx = self._user_feature_names.index("user_id")
         self.remove_accidental_hits = remove_accidental_hits
 
-        # Define user and item models
+        # Build user embedding layers from user_features_config
+        user_embedding_layers = {}
+        for name, layer in user_features_config.items():
+            # e.g. layer["type"] might be "text", "string", "int", or "pretrained"
+            # optionally you might read layer["embedding_size"]
+            user_embedding_layers[name] = self.load_embedding_layer(
+                layer_type=layer["type"],
+                embedding_size=layer.get(
+                    "embedding_size", user_tower_params.get("base_embedding_size", 64)
+                ),
+            )
+
+        # Build item embedding layers from item_features_config
+        item_embedding_layers = {}
+        for name, layer in item_features_config.items():
+            if layer["type"] == "pretrained":
+                init_weights = data[name].drop_duplicates().tolist()
+            else:
+                init_weights = None
+
+            item_embedding_layers[name] = self.load_embedding_layer(
+                layer_type=layer["type"],
+                embedding_size=layer.get(
+                    "embedding_size", item_tower_params.get("base_embedding_size", 64)
+                ),
+                embedding_initialisation_weights=init_weights,
+            )
+
+        # Create user tower (SingleTowerModel) with user_tower_params
         self.user_model = SingleTowerModel(
             data=data,
-            input_embedding_layers={
-                name: self.load_embedding_layer(
-                    layer_type=layer["type"],
-                    embedding_size=layer["embedding_size"],
-                )
-                for name, layer in user_features_config.items()
-            },
-            embedding_size=embedding_size,
+            input_embedding_layers=user_embedding_layers,
+            **user_tower_params,  # e.g. base_embedding_size=128, hidden_layer_dims=[256,128], etc.
         )
 
+        # Create item tower (SingleTowerModel) with item_tower_params
         self.item_model = SingleTowerModel(
-            data=data,
-            input_embedding_layers={
-                name: self.load_embedding_layer(
-                    layer_type=layer["type"],
-                    embedding_size=layer["embedding_size"],
-                    embedding_initialisation_weights=data[name]
-                    .drop_duplicates()
-                    .tolist()
-                    if layer["type"] == "pretrained"
-                    else None,
-                )
-                for name, layer in item_features_config.items()
-            },
-            embedding_size=embedding_size,
+            data=data, input_embedding_layers=item_embedding_layers, **item_tower_params
         )
 
-    def set_task(self, item_dataset=None):
-        if self.remove_accidental_hits:
-            self.task = tfrs.tasks.Retrieval(
-                tf.keras.losses.CategoricalCrossentropy(
-                    from_logits=True,
-                    reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
-                ),
-                metrics=self.get_metrics(item_dataset) if item_dataset else None,
-                temperature=TEMPERATURE,
-            )
-        else:
-            self.task = tfrs.tasks.Retrieval(
-                loss=tfrs.losses.SampledSoftmaxLoss(remove_accidental_hits=True),
-                metrics=self.get_metrics(item_dataset) if item_dataset else None,
-                temperature=TEMPERATURE,
-            )
-
-    def get_metrics(self, item_dataset):
-        index_top_k = tfrs.layers.factorized_top_k.BruteForce()
-
-        item_embeddings = tf.concat(list(item_dataset.map(self.item_model)), axis=0)
-        item_ids = tf.concat(
-            list(item_dataset.map(lambda item: item[self._item_idx])), axis=0
-        )
-
-        index_top_k.index(candidates=item_embeddings, identifiers=item_ids)
-
-        return tfrs.metrics.FactorizedTopK(candidates=index_top_k, ks=[10, 50])
+        # You’ll typically set up the retrieval task externally or inside a method:
+        self.task = None  # we will define via set_task(...) below
 
     @staticmethod
     def load_embedding_layer(
-        layer_type: str,
-        embedding_size: int,
-        embedding_initialisation_weights: pd.DataFrame = None,
+        layer_type: str, embedding_size: int, embedding_initialisation_weights=None
     ):
-        embedding_layers = {
-            "string": StringEmbeddingLayer(embedding_size=embedding_size),
-            "int": NumericalFeatureProcessor(output_size=embedding_size),
-            "text": TextEmbeddingLayer(embedding_size=embedding_size),
-            "pretrained": PretainedEmbeddingLayer(
+        """Returns an appropriate embedding layer based on the type."""
+        if layer_type == "text":
+            return TextEmbeddingLayer(embedding_size=embedding_size)
+        elif layer_type == "string":
+            return StringEmbeddingLayer(embedding_size=embedding_size)
+        elif layer_type == "int":
+            return NumericalFeatureProcessor(output_size=embedding_size)
+        elif layer_type == "pretrained":
+            return PretainedEmbeddingLayer(
                 embedding_size=embedding_size,
                 embedding_initialisation_weights=embedding_initialisation_weights,
-            ),
-        }
-        if layer_type not in embedding_layers:
-            raise ValueError(
-                f"InvalidLayerType: The features config file contains an invalid layer type `{layer_type}`"
             )
-        return embedding_layers[layer_type]
+        else:
+            raise ValueError(f"Unknown layer_type: {layer_type}")
+
+    def set_task(self, item_dataset):
+        """Create a TFRS retrieval task with optional negative sampling + metrics."""
+        self.task = tfrs.tasks.Retrieval(
+            loss=tfrs.losses.SampledSoftmaxLoss(
+                remove_accidental_hits=self.remove_accidental_hits
+            ),
+            metrics=tfrs.metrics.FactorizedTopK(
+                candidates=item_dataset.map(self.item_model)  # or a BruteForce index
+            ),
+        )
 
     def compute_loss(self, features, training=False):
+        """Called by TFRS at training time."""
+        # Extract user & item features from the input
         user_features = {name: features[name] for name in self._user_feature_names}
         item_features = {name: features[name] for name in self._item_feature_names}
-        candidate_sampling_probability = features["candidate_sampling_probability"]
 
+        # Compute embeddings
         user_embeddings = self.user_model(user_features, training=training)
         item_embeddings = self.item_model(item_features, training=training)
 
+        # Pass to the TFRS retrieval task
         return self.task(
             query_embeddings=user_embeddings,
             candidate_embeddings=item_embeddings,
             compute_metrics=not training,
-            compute_batch_metrics=not training,
-            candidate_sampling_probability=candidate_sampling_probability,
         )
 
 
@@ -134,39 +129,71 @@ class SingleTowerModel(tf.keras.models.Model):
     def __init__(
         self,
         data: pd.DataFrame,
-        input_embedding_layers: dict,
-        embedding_size: int,
+        input_embedding_layers: Dict[str, Any],
+        base_embedding_size: int,
+        hidden_layer_dims: List[int] = None,  # e.g., [128, 64]
+        hidden_activation: Union[str, Callable] = "relu",
+        dropout_rate: float = 0.0,
+        use_batch_norm: bool = False,
+        use_unit_norm: bool = True,
     ):
         super().__init__()
 
         self.data = data
         self.input_embedding_layers = input_embedding_layers
+        self.use_unit_norm = use_unit_norm
 
+        if hidden_layer_dims is None:
+            # Default to a simple MLP if not specified
+            hidden_layer_dims = [base_embedding_size * 2, base_embedding_size]
+
+        # Build the embedding sub-layers
         self._embedding_layers = {}
         for layer_name, layer_class in self.input_embedding_layers.items():
             if isinstance(layer_class, NumericalFeatureProcessor):
+                # For numerical features, pass the raw data
                 training_data = self.data[layer_name]
             else:
+                # For categorical/text features, pass unique tokens
                 training_data = self.data[layer_name].unique()
+
             self._embedding_layers[layer_name] = layer_class.build_sequential_layer(
                 vocabulary=training_data
             )
 
-        self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
-        self._dense2 = tf.keras.layers.Dense(embedding_size)
+        # Build the dense stack (MLP)
+        self._mlp_layers = []
+        for dim in hidden_layer_dims:
+            self._mlp_layers.append(
+                tf.keras.layers.Dense(dim, activation=hidden_activation)
+            )
+            if use_batch_norm:
+                self._mlp_layers.append(tf.keras.layers.BatchNormalization())
+            if dropout_rate > 0.0:
+                self._mlp_layers.append(tf.keras.layers.Dropout(dropout_rate))
 
-        self._norm = tf.keras.layers.UnitNormalization(axis=-1, name="l2_normalize")
+        # Final normalization
+        if use_unit_norm:
+            self._norm = tf.keras.layers.UnitNormalization(axis=-1, name="l2_normalize")
+        else:
+            self._norm = None
 
-    def call(self, features: dict, training=False):
-        feature_embeddings = []
-
+    def call(self, features: Dict[str, tf.Tensor], training=False):
+        # 1) Build embeddings from each feature
         feature_embeddings = []
         for feature_name, embedding_layer in self._embedding_layers.items():
-            processed = embedding_layer(features[feature_name])
-            logger.debug(f"Processed {feature_name} embedding shape: {processed.shape}")
+            processed = embedding_layer(features[feature_name], training=training)
             feature_embeddings.append(processed)
 
+        # 2) Concatenate all embeddings
         x = tf.concat(feature_embeddings, axis=1)
-        x = self._dense1(x)
-        x = self._dense2(x)
-        return self._norm(x)
+
+        # 3) Pass through the MLP (the dense stack)
+        for layer in self._mlp_layers:
+            x = layer(x, training=training)
+
+        # 4) Optional final normalization
+        if self._norm is not None:
+            x = self._norm(x)
+
+        return x

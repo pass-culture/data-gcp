@@ -20,9 +20,10 @@ from commons.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
 from two_towers_model.models.match_model import MatchModel
 from two_towers_model.models.two_towers_model import TwoTowersModel
 from two_towers_model.utils.callbacks import MLFlowLogging
+from two_towers_model.utils.logging import get_git_current_branch
 
 N_EPOCHS = 100
-STEPS_PER_EPOCH = 5
+EPOCH_COUNT_PER_SHUFFLE = 5
 MIN_DELTA = 0.001
 LEARNING_RATE = 0.1
 VERBOSE = 2
@@ -117,12 +118,11 @@ def build_tf_datasets(
 ):
     """Builds TensorFlow datasets for training and evaluation."""
     logger.info("Building tf datasets")
-    len_train_data = len(train_data)
 
     train_dataset = (
         tf.data.Dataset.from_tensor_slices(train_data.pipe(convert_df_to_tensor_dict))
         .cache()
-        .shuffle(buffer_size=len_train_data, reshuffle_each_iteration=True)
+        .shuffle(buffer_size=len(train_data), reshuffle_each_iteration=True)
         .batch(batch_size=batch_size)
         .prefetch(tf.data.AUTOTUNE)
     )
@@ -159,7 +159,6 @@ def build_tf_datasets(
         validation_dataset,
         user_dataset,
         item_dataset,
-        len_train_data,
     )
 
 
@@ -176,26 +175,17 @@ def initialize_mlflow(experiment_name: str, run_name: str):
 
 
 def log_mlflow_params(
-    embedding_size,
-    batch_size,
-    train_user_data,
-    train_item_data,
-    user_features_config,
-    item_features_config,
-    config_file_name,
-):
+    config_file_name: str,
+    extra_params: dict,
+) -> None:
     """Logs parameters and additional information to MLFlow."""
     mlflow.log_params(
         {
             "environment": ENV_SHORT_NAME,
-            "embedding_size": embedding_size,
-            "batch_size": batch_size,
-            "epoch_number": N_EPOCHS,
-            "user_count": len(train_user_data),
-            "user_feature_count": len(user_features_config.keys()),
-            "item_count": len(train_item_data),
-            "item_feature_count": len(item_features_config.keys()),
             "learning_rate": LEARNING_RATE,
+            "epoch_number": N_EPOCHS,
+            "git_branch": get_git_current_branch(),
+            **extra_params,
         }
     )
     mlflow.log_artifact(
@@ -247,6 +237,7 @@ def train_two_tower_model(
         verbose=VERBOSE,
     )
 
+    # TODO @Carole: Move this in evaluate if needed, otherwise delete it
     # # Compile one last time and evaluate.
     # two_tower_model.compile()
     # two_tower_model.task.factorized_metrics = [
@@ -333,22 +324,22 @@ def train(
         input_prediction_feature=input_prediction_feature,
     )
 
-    train_dataset, validation_dataset, user_dataset, item_dataset, len_train_data = (
-        build_tf_datasets(
-            train_data, validation_data, train_user_data, train_item_data, batch_size
-        )
+    train_dataset, validation_dataset, user_dataset, item_dataset = build_tf_datasets(
+        train_data, validation_data, train_user_data, train_item_data, batch_size
     )
-    validation_steps = max(int((validation_data.shape[0] // batch_size)), 1)
-    training_steps = (len_train_data / STEPS_PER_EPOCH) // batch_size
     log_mlflow_params(
-        embedding_size,
-        batch_size,
-        train_user_data,
-        train_item_data,
-        user_features_config,
-        item_features_config,
-        config_file_name,
+        config_file_name=config_file_name,
+        extra_params={
+            "embedding_size": embedding_size,
+            "batch_size": batch_size,
+            "user_count": len(train_user_data),
+            "user_feature_count": len(user_features_config.keys()),
+            "item_count": len(train_item_data),
+            "item_feature_count": len(item_features_config.keys()),
+            "epoch_count_per_shuffle": EPOCH_COUNT_PER_SHUFFLE,
+        },
     )
+
     logger.info("Create Model")
     two_tower_model = TwoTowersModel(
         data=train_data,
@@ -359,6 +350,9 @@ def train(
         embedding_size=embedding_size,
     )
 
+    logger.info("Training Model")
+    training_steps = max((len(train_data) / EPOCH_COUNT_PER_SHUFFLE) // batch_size, 1)
+    validation_steps = max(len(validation_data) // batch_size, 1)
     train_two_tower_model(
         item_dataset,
         train_dataset,
@@ -369,6 +363,7 @@ def train(
         run_uuid=run_uuid,
     )
 
+    logger.info("Compute embeddings and save Model")
     save_model_and_embeddings(
         user_dataset,
         item_dataset,

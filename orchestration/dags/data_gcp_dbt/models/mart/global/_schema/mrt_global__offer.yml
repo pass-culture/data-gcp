@@ -242,3 +242,15 @@ models:
       - name: is_future_scheduled
         description: '{{ doc("column__is_future_scheduled") }}'
         data_type: BOOLEAN
+      - name: total_offer_headlines
+        description: '{{ doc("column__total_offer_headlines") }}'
+        data_type: INT64
+      - name: is_headlined
+        description: '{{ doc("column__is_headlined") }}'
+        data_type: BOOLEAN
+      - name: offer_first_headline_date
+        description: '{{ doc("column__offer_first_headline_date") }}'
+        data_type: DATETIME
+      - name: offer_last_headline_date
+        description: '{{ doc("column__offer_last_headline_date") }}'
+        data_type: DATETIME

@@ -38,7 +38,9 @@ with
             count(
                 distinct case when total_offer_headlines > 0 then o.offer_id end
             ) as total_distinct_headline_offers,
-            max(offer_is_headlined) as venue_has_headline_offer
+            max(is_headlined) as venue_has_headline_offer,
+            min(offer_first_headline_date) as venue_first_headline_offer_date,
+            max(offer_last_headline_date) as venue_last_headline_offer_date
         from {{ ref("int_applicative__offer") }}
         group by venue_id
     ),
@@ -346,8 +348,12 @@ select
         then "google"
         else "default_category"
     end as venue_image_source,
-    coalesce(o.total_distinct_headline_offers, 0) as total_distinct_headline_offers,
-    coalesce(o.venue_has_headline_offer, false) as venue_has_headline_offer
+    coalesce(
+        o.total_distinct_headline_offers, 0
+    ) as venue_total_distinct_headline_offers,
+    coalesce(o.venue_has_headline_offer, false) as venue_has_headline_offer,
+    o.venue_first_headline_offer_date,
+    o.venue_last_headline_offer_date
 from {{ source("raw", "applicative_database_venue") }} as v
 left join {{ ref("int_geo__venue_location") }} as v_loc on v_loc.venue_id = v.venue_id
 left join offers_grouped_by_venue as o on o.venue_id = v.venue_id

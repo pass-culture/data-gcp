@@ -79,6 +79,8 @@ select
     offer_publication_date,
     is_future_scheduled,
     total_offer_headlines,
-    offer_is_headlined
+    is_headlined,
+    offer_first_headline_date,
+    offer_last_headline_date
 from {{ ref("int_global__offer") }} as o
 where true and offer_validation = 'APPROVED' and venue_id is not null

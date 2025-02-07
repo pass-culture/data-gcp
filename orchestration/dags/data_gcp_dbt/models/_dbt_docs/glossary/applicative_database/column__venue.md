@@ -39,6 +39,10 @@
 City Policy Priority Neighborhood.{% enddocs %}
 {% docs column__venue_image_source %}Origin of venue image : google, offerer, default_category.{% enddocs %}
 {% docs column__venue_adage_inscription_date %}Date when the venue was synchonized on Adage (able to publish collective offers) .{% enddocs %}
+{% docs column__venue_total_distinct_headline_offers %}Number of distinct offers which were headlined on the app venue page.{% enddocs %}
+{% docs column__venue_has_headline_offer %}Indicates if an offer is currently headlined on the app venue page.{% enddocs %}
+{% docs column__venue_first_headline_offer_date %}First date of headline offer on the app venue page.{% enddocs %}
+{% docs column__venue_last_headline_offer_date %}Last date of headline offer on the app venue page.{% enddocs %}
 
 /* To rename into venue_*** */
 {% docs column__is_active_last_30days %} Analytical field: Indicates if it was active in the last 30 days. {% enddocs %}

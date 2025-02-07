@@ -2,7 +2,7 @@ import time
 from datetime import date, datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
@@ -12,10 +12,10 @@ from common.config import (
 )
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 from dependencies.dms_subscriptions.import_dms_subscriptions import CLEAN_TABLES
@@ -31,6 +31,7 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
 DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 GCE_INSTANCE = f"import-dms-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/dms"
+DAG_NAME = "import_dms_subscriptions"
 
 dag_config = {
     "GCP_PROJECT_ID": GCP_PROJECT_ID,
@@ -39,14 +40,14 @@ dag_config = {
 
 default_args = {
     "start_date": datetime(2020, 12, 1),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 2,
     "retry_delay": timedelta(minutes=5),
 }
 
 
 with DAG(
-    "import_dms_subscriptions",
+    DAG_NAME,
     default_args=default_args,
     description="Import DMS subscriptions",
     schedule_interval=get_airflow_schedule("0 1 * * *"),
@@ -76,7 +77,7 @@ with DAG(
         instance_type="n1-standard-4",
         task_id="gce_start_task",
         retries=2,
-        labels={"job_type": "long_task"},
+        labels={"job_type": "long_task", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -204,7 +205,7 @@ with DAG(
 
     end = DummyOperator(task_id="end")
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task", dag=dag
     )
 

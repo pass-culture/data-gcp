@@ -150,6 +150,7 @@ select
     v.dms_token,
     v.venue_description,
     v.venue_withdrawal_details,
+    v.venue_adage_inscription_date,
     coalesce(
         case
             when v.venue_postal_code = "97150"

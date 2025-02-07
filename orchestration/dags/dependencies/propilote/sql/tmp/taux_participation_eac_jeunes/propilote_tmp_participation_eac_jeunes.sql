@@ -37,7 +37,7 @@ join
     and date_trunc(involved.date, month) = last_day.date
     and last_day.last_adage_id = cast(involved.adage_id as int)
 left join
-    `{{ bigquery_analytics_dataset }}.region_department` as rd
+    `{{ bigquery_seed_dataset }}.region_department` as rd
     on involved.department_code = rd.num_dep
 -- on selectionne uniquement l'année scolaire qui correspond à la date de calcul
 where

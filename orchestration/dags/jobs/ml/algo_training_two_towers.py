@@ -2,10 +2,10 @@ import json
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
+    BIGQUERY_ML_PREPROCESSING_DATASET,
     BIGQUERY_ML_RECOMMENDATION_DATASET,
-    BIGQUERY_RAW_DATASET,
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
@@ -16,10 +16,10 @@ from common.config import (
     SLACK_CONN_PASSWORD,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 from dependencies.ml.utils import create_algo_training_slack_block
@@ -71,7 +71,7 @@ gce_params = {
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -150,7 +150,7 @@ with DAG(
         gpu_count="{{ params.gpu_count }}",
         gpu_type="{{ params.gpu_type }}",
         retries=2,
-        labels={"job_type": "long_ml"},
+        labels={"job_type": "long_ml", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -271,11 +271,11 @@ with DAG(
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/upload_embeddings_to_bq.py "
         "--experiment-name {{ params.experiment_name }} "
         "--run-name {{ params.run_name }} "
-        f"--dataset-id { BIGQUERY_RAW_DATASET }",
+        f"--dataset-id { BIGQUERY_ML_PREPROCESSING_DATASET }",
         dag=dag,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
 

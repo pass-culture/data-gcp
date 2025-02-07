@@ -87,6 +87,7 @@ select
     v.venue_image_source,
     v.total_distinct_headline_offers,
     v.venue_has_headline_offer,
+    v.venue_adage_inscription_date,
     ofr.offerer_id,
     ofr.offerer_name,
     ofr.offerer_validation_status,

@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 
@@ -20,7 +20,7 @@ BASE_PATH = "data-gcp/jobs/ml_jobs/embeddings"
 DATE = "{{ yyyymmdd(ds) }}"
 default_args = {
     "start_date": datetime(2023, 9, 6),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -33,10 +33,10 @@ INPUT_DATASET_NAME = f"ml_input_{ENV_SHORT_NAME}"
 INPUT_TABLE_NAME = "item_embedding_extraction"
 OUTPUT_DATASET_NAME = f"ml_preproc_{ENV_SHORT_NAME}"
 OUTPUT_TABLE_NAME = "item_embedding_extraction"
-
+DAG_NAME = "embeddings_extraction_item"
 
 with DAG(
-    "embeddings_extraction_item",
+    DAG_NAME,
     default_args=default_args,
     description="Extact items metadata embeddings",
     schedule_interval=get_airflow_schedule("0 12 * * *"),  # every day
@@ -73,7 +73,7 @@ with DAG(
         preemptible=False,
         instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={"job_type": "ml"},
+        labels={"job_type": "ml", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -100,7 +100,7 @@ with DAG(
         f"--output-table-name {OUTPUT_TABLE_NAME} ",
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 

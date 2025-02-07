@@ -14,11 +14,12 @@ from utils import (
     transactional_histo_schema,
 )
 
-API_KEY = access_secret_data(
-    GCP_PROJECT, f"sendinblue-api-key-{ENV_SHORT_NAME}", version_id=1
+NATIVE_API_KEY = access_secret_data(GCP_PROJECT, f"sendinblue-api-key-{ENV_SHORT_NAME}")
+
+PRO_API_KEY = access_secret_data(
+    GCP_PROJECT, f"sendinblue-pro-api-key-{ENV_SHORT_NAME}"
 )
 
-NEWSLETTERS_TABLE_NAME = "sendinblue_newsletters"
 TRANSACTIONAL_TABLE_NAME = "sendinblue_transactional_detailed"
 UPDATE_WINDOW = 31 if ENV_SHORT_NAME == "prod" else 500
 
@@ -31,9 +32,22 @@ def run(
         ...,
         help="Nom de la tache",
     ),
+    audience: str = typer.Option(
+        ...,
+        help="Nom de l'audience, native ou pro",
+    ),
     start_date: str = typer.Option(..., help="Date de début d'import"),
     end_date: str = typer.Option(..., help="Date de fin d'import"),
 ):
+    if audience == "native":
+        API_KEY = NATIVE_API_KEY
+        NEWSLETTERS_TABLE_NAME = "sendinblue_newsletters"
+    elif audience == "pro":
+        API_KEY = PRO_API_KEY
+        NEWSLETTERS_TABLE_NAME = "sendinblue_pro_newsletters"
+    else:
+        return "Invalid audience. Must be one of native/pro."
+
     if target == "newsletter":
         # Statistics for email campaigns Brevo
         brevo_newsletters = BrevoNewsletters(
@@ -47,6 +61,7 @@ def run(
 
         brevo_newsletters.create_instance_email_campaigns_api()
         df = brevo_newsletters.get_data()
+        df["campaign_target"] = audience
         brevo_newsletters.save_to_historical(df, campaigns_histo_schema)
         return "success"
 
@@ -66,6 +81,7 @@ def run(
             all_events.append(brevo_transactional.get_events(event_type))
         all_events = sum(all_events, [])
         df = brevo_transactional.parse_to_df(all_events)
+        df["target"] = audience
         brevo_transactional.save_to_historical(df, transactional_histo_schema)
 
         return "success"

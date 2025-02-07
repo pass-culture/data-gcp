@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
     BIGQUERY_ML_FEATURES_DATASET,
     DAG_FOLDER,
@@ -10,10 +10,10 @@ from common.config import (
     MLFLOW_BUCKET_NAME,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 
@@ -26,10 +26,10 @@ DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"emb-reduction-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/ml_jobs/reduction"
 DATE = "{{ yyyymmdd(ds) }}"
-
+DAG_NAME = "embedding_reduction_item"
 default_args = {
     "start_date": datetime(2023, 8, 2),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -39,7 +39,7 @@ dag_config = {
 
 
 with DAG(
-    "embedding_reduction_item",
+    DAG_NAME,
     default_args=default_args,
     description="Reduce embeddings",
     schedule_interval=get_airflow_schedule("0 0 * * 0"),  # every sunday
@@ -71,7 +71,7 @@ with DAG(
         preemptible=False,
         instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={"job_type": "long_ml"},
+        labels={"job_type": "long_ml", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -113,7 +113,7 @@ with DAG(
         retries=2,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 

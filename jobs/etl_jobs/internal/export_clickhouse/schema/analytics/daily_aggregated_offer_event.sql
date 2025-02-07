@@ -12,6 +12,10 @@ FROM
     intermediate.native_event
 WHERE
     event_name = 'ConsultOffer'
+{% if env_short_name != 'prod' %}
+    AND partition_date >= today() - INTERVAL 7 DAY
+{% else %} AND 1=1
+{% endif %}
 GROUP BY
     offer_id,
     event_date

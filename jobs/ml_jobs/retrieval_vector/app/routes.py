@@ -2,7 +2,7 @@ from flask import Blueprint, Response, jsonify, request
 from pydantic import ValidationError
 
 from app.factory.handler_factory import PredictionHandlerFactory
-from app.logger import logger
+from app.logging.logger import logger
 from app.models.prediction_request import PredictionRequest
 from app.models.prediction_result import PredictionResult
 from app.retrieval.model_config import load_model

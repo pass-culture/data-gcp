@@ -98,6 +98,7 @@ select
     offerer_rank_asc,
     venue_image_source,
     total_distinct_headline_offers,
-    venue_has_headline_offer
+    venue_has_headline_offer,
+    venue_adage_inscription_date
 from {{ ref("int_global__venue") }}
 where offerer_validation_status = 'VALIDATED' and offerer_is_active

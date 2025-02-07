@@ -5,7 +5,7 @@ from datetime import timedelta
 
 import pandas as pd
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
@@ -13,10 +13,10 @@ from common.config import (
 )
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import (
     depends_loop,
@@ -33,6 +33,7 @@ from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import PythonOperator
 
+DAG_NAME = "import_sendinblue_historical"
 GCE_INSTANCE = f"import-sendinblue-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/sendinblue"
 yesterday = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
@@ -45,7 +46,7 @@ dag_config = {
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }
@@ -74,7 +75,7 @@ def get_start_date(end_date):
 # start_date = end_date - 7
 
 with DAG(
-    "import_sendinblue_historical",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Import historic sendinblue tables",
     schedule_interval=get_airflow_schedule("00 13 * * *"),
@@ -94,7 +95,9 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -156,7 +159,7 @@ with DAG(
         default_end_operator=end_raw,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 

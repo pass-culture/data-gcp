@@ -75,6 +75,7 @@ select
     e.download_files_cnt,
     e.offer_subcategory_id,
     e.suggested_offer_subcategory_selected,
+    e.image_creation_stage,
     coalesce(o.offerer_name, v.offerer_name) as offerer_name,
     o.first_individual_offer_creation_date
     as offerer_first_individual_offer_creation_date,

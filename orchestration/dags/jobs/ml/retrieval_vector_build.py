@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import DAG_FOLDER, ENV_SHORT_NAME
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 
@@ -16,12 +16,14 @@ from airflow.models import Param
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
 
 DEFAULT_REGION = "europe-west1"
+DAG_NAME = "retrieval_vector_build"
+
 gce_params = {
     "base_dir": "data-gcp/jobs/ml_jobs/retrieval_vector",
     "instance_name": f"retrieval-recommendation-build-{ENV_SHORT_NAME}",
@@ -48,7 +50,7 @@ schedule_dict = {"prod": "0 4 * * *", "dev": "0 6 * * *", "stg": "0 6 * * 3"}
 
 
 with DAG(
-    "retrieval_vector_build",
+    DAG_NAME,
     default_args=default_args,
     description="Custom Building job",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
@@ -92,7 +94,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={"job_type": "ml"},
+        labels={"job_type": "ml", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -128,7 +130,7 @@ with DAG(
             "--container-worker {{ params.container_worker }} ",
         )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
     )

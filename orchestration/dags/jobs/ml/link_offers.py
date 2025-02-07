@@ -1,14 +1,14 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import DAG_FOLDER, ENV_SHORT_NAME
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 from dependencies.ml.linkage.import_items import (
@@ -27,17 +27,17 @@ from airflow.models import Param
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"link-offers-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/ml_jobs/record_linkage"
-
+DAG_NAME = "link_offers"
 
 default_args = {
     "start_date": datetime(2022, 1, 5),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
 
 with DAG(
-    "link_offers",
+    DAG_NAME,
     default_args=default_args,
     description="Link offers via recordLinkage",
     schedule_interval=get_airflow_schedule("0 0 * * *"),
@@ -68,7 +68,7 @@ with DAG(
         task_id="gce_start_task",
         instance_name=GCE_INSTANCE,
         instance_type="{{ params.instance_type }}",
-        labels={"job_type": "ml"},
+        labels={"job_type": "ml", "dag_name": DAG_NAME},
         preemptible=False,
     )
 
@@ -119,7 +119,7 @@ with DAG(
         """,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 

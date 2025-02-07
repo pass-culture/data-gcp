@@ -69,6 +69,8 @@ models:
         description: "{{ doc('column__traffic_medium') }}"
       - name: traffic_campaign
         description: "{{ doc('column__traffic_campaign') }}"
+      - name: traffic_source
+        description: "{{ doc('column__traffic_source') }}"
       - name: module_id
         description: "{{ doc('column__module_id') }}"
       - name: entry_id

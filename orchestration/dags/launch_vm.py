@@ -71,6 +71,10 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
+        "base_dir": Param(
+            default="data-gcp",
+            type="string",
+        ),
         "instance_type": Param(
             default=gce_params["instance_type"]["prod"],
             enum=list(chain(*INSTANCES_TYPES["cpu"].values())),
@@ -85,7 +89,7 @@ with DAG(
         "install_project": Param(default=True, type="boolean"),
         "use_gke_network": Param(default=False, type="boolean"),
         "disk_size_gb": Param(default="100", type="string"),
-        "installer": Param(default="uv", enum=["uv", "conda"]),
+        "installer": Param(default="uv", enum=["uv"]),
         "install_type": Param(
             default="simple", enum=["simple", "engineering", "science", "analytics"]
         ),
@@ -103,7 +107,7 @@ with DAG(
         preemptible=False,
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
-        labels={"keep_alive": "{{ params.keep_alive|lower }}"},
+        labels={"keep_alive": "{{ params.keep_alive|lower }}", "dag_name": "launch_vm"},
         use_gke_network="{{ params.use_gke_network }}",
         disk_size_gb="{{ params.disk_size_gb }}",
         gce_zone="{{ params.gce_zone }}",
@@ -115,10 +119,9 @@ with DAG(
         task_id="vm_project_install",
         instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
-        installer="{{ params.installer }}",
         gce_zone="{{ params.gce_zone }}",
         python_version="{{ params.python_version }}",
+        base_dir="{{ params.base_dir }}",
         requirement_file="requirements.txt",
     )
-
     (start >> gce_instance_start >> clone_install)

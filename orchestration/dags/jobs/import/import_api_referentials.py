@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
 
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 
@@ -16,17 +16,18 @@ from airflow.operators.dummy_operator import DummyOperator
 
 GCE_INSTANCE = f"import-api-referentials-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/import_api_referentials"
+DAG_NAME = "import_api_referentials"
 
 default_args = {
     "start_date": datetime(2022, 4, 13),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
 
 
 with DAG(
-    "import_api_referentials",
+    DAG_NAME,
     default_args=default_args,
     description="Continuous update of api model to BQ",
     schedule_interval=get_airflow_schedule("0 0 * * 1"),  # import every monday at 00:00
@@ -42,7 +43,9 @@ with DAG(
     start = DummyOperator(task_id="start")
 
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -88,7 +91,7 @@ with DAG(
     """,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task"
     )
 

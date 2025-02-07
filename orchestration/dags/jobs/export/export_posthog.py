@@ -1,7 +1,7 @@
 import datetime
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback, task_fail_slack_alert
 from common.config import (
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
@@ -10,10 +10,10 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 
@@ -57,14 +57,15 @@ GCE_PARAMS = {
 schedule_dict = {"prod": "0 8 * * *", "dev": "0 12 * * *", "stg": "0 10 * * *"}
 
 for job_name, table_name in TABLE_PARAMS.items():
+    DAG_NAME = f"export_posthog_{job_name}"
     with DAG(
-        f"export_posthog_{job_name}",
+        DAG_NAME,
         default_args={
             "start_date": datetime.datetime(2023, 9, 1),
             "retries": 1,
             "retry_delay": datetime.timedelta(minutes=5),
             "project_id": GCP_PROJECT_ID,
-            "on_failure_callback": task_fail_slack_alert,
+            "on_failure_callback": on_failure_combined_callback,
             "on_skipped_callback": task_fail_slack_alert,
         },
         description="Export to analytics data posthog",
@@ -132,7 +133,7 @@ for job_name, table_name in TABLE_PARAMS.items():
             instance_name=instance_name,
             instance_type="{{ params.instance_type }}",
             retries=2,
-            labels={"job_type": "long_task"},
+            labels={"job_type": "long_task", "dag_name": DAG_NAME},
         )
         fetch_install_code = InstallDependenciesOperator(
             task_id=f"{table_config_name}_fetch_install_code",
@@ -152,7 +153,7 @@ for job_name, table_name in TABLE_PARAMS.items():
             dag=dag,
         )
 
-        gce_instance_stop = StopGCEOperator(
+        gce_instance_stop = DeleteGCEOperator(
             task_id=f"{table_config_name}_gce_stop_task", instance_name=instance_name
         )
 

@@ -1,7 +1,7 @@
 import typer
 
 from core.fs import load_sql
-from core.utils import CLICKHOUSE_CLIENT
+from core.utils import CLICKHOUSE_CLIENT, ENV_SHORT_NAME
 
 
 def run(
@@ -14,7 +14,11 @@ def run(
         help="folder_name",
     ),
 ):
-    sql_query = load_sql(table_name=table_name, folder=folder)
+    sql_query = load_sql(
+        table_name=table_name,
+        folder=folder,
+        extra_data={"env_short_name": ENV_SHORT_NAME},
+    )
     print("Will Execute:")
     print(sql_query)
     print(f"Refresh {table_name}...")

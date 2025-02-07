@@ -22,7 +22,7 @@ join
     `{{ bigquery_analytics_dataset }}.global_user` as user
     on deposit.user_id = user.user_id
 left join
-    `{{ bigquery_analytics_dataset }}.region_department` as rd
+    `{{ bigquery_seed_dataset }}.region_department` as rd
     on user.user_department_code = rd.num_dep
 join dates on date_diff(month, deposit.deposit_creation_date, month) = 24
 group by 1, 2, 3, 4, 5

@@ -4,11 +4,39 @@
 with
     sendinblue_newsletter as (
         select
-            *,
+            campaign_id,
+            campaign_utm,
+            campaign_name,
+            campaign_target,
+            campaign_sent_date,
+            share_link,
+            update_date,
+            audience_size,
+            open_number,
+            unsubscriptions,
             row_number() over (
                 partition by campaign_id order by update_date desc
             ) as rank_update
         from `{{ bigquery_raw_dataset }}.sendinblue_newsletters_histo`
+        qualify rank_update = 1
+
+        union all
+
+        select
+            campaign_id,
+            campaign_utm,
+            campaign_name,
+            campaign_target,
+            campaign_sent_date,
+            share_link,
+            update_date,
+            audience_size,
+            open_number,
+            unsubscriptions,
+            row_number() over (
+                partition by campaign_id order by update_date desc
+            ) as rank_update
+        from `{{ bigquery_raw_dataset }}.sendinblue_pro_newsletters_histo`
         qualify rank_update = 1
     ),
 

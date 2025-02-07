@@ -25,16 +25,19 @@ with
             unnest(emails_array) as booking_email
     ),
     collective_offer_emails_offerer as (
-        select offerer_id, collective_offer_email
+        select distinct offerer_id, collective_offer_email
         from collective_offer_emails
         left join
             venue_emails on collective_offer_emails.venue_id = venue_emails.venue_id
-    )
+    ),
+    distinct_venue_emails as (select distinct offerer_id, venue_email from venue_emails)
 select distinct
     template,
     tag,
     user_id,
-    coalesce(venue_emails.offerer_id, co.offerer_id) as offerer_id,
+    to_hex(sha256(email)) as email_id,
+    target,
+    coalesce(distinct_venue_emails.offerer_id, co.offerer_id) as offerer_id,
     event_date,
     delivered_count,
     opened_count,
@@ -43,5 +46,5 @@ select distinct
 from
     `{{ bigquery_tmp_dataset }}.{{ yyyymmdd(today()) }}_sendinblue_transactional_detailed_histo` s
 left join user_emails on s.email = user_emails.user_email
-left join venue_emails on s.email = venue_emails.venue_email
+left join distinct_venue_emails on s.email = distinct_venue_emails.venue_email
 left join collective_offer_emails_offerer as co on s.email = co.collective_offer_email

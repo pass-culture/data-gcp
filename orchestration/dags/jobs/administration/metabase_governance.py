@@ -1,17 +1,17 @@
 import datetime
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import (
     get_airflow_schedule,
@@ -20,6 +20,7 @@ from common.utils import (
 from airflow import DAG
 from airflow.models import Param
 
+DAG_NAME = "metabase_governance"
 GCE_INSTANCE = f"metabase-governance-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/metabase-archiving"
 dag_config = {
@@ -30,13 +31,13 @@ dag_config = {
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }
 
 with DAG(
-    "metabase_governance",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Import metabase tables from CloudSQL & archive old cards",
     schedule_interval=get_airflow_schedule("00 08 * * *")
@@ -54,7 +55,9 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
     fetch_install_code = InstallDependenciesOperator(
         task_id="fetch_install_code",
@@ -84,7 +87,7 @@ with DAG(
         do_xcom_push=True,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 

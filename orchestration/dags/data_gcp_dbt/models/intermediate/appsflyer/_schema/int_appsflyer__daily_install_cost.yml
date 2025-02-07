@@ -1,0 +1,33 @@
+version: 2
+
+models:
+  - name: int_appsflyer__daily_install_cost
+    description: '{{ doc("description__int_appsflyer__daily_install_cost") }}'
+    columns:
+      - name: app_os
+        description: '{{ doc("column__app_os") }}'
+        data_type: STRING
+      - name: acquisition_media_source
+        description: '{{ doc("column__acquisition_media_source") }}'
+        data_type: STRING
+      - name: acquisition_campaign
+        description: '{{ doc("column__acquisition_campaign") }}'
+        data_type: STRING
+      - name: acquisition_adset
+        description: '{{ doc("column__acquisition_adset") }}'
+        data_type: STRING
+      - name: acquisition_ad
+        description: '{{ doc("column__acquisition_ad") }}'
+        data_type: STRING
+      - name: app_install_date
+        description: '{{ doc("column__app_install_date") }}'
+        data_type: DATE
+      - name: acquisition_execution_date
+        description: '{{ doc("column__acquisition_execution_date") }}'
+        data_type: DATE
+      - name: total_costs
+        description: '{{ doc("column__total_costs") }}'
+        data_type: INT64
+      - name: total_installs
+        description: '{{ doc("column__total_installs") }}'
+        data_type: INT64

@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
     BIGQUERY_ML_OFFER_CATEGORIZATION_DATASET,
     DAG_FOLDER,
@@ -13,10 +13,10 @@ from common.config import (
     SLACK_CONN_PASSWORD,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 from dependencies.ml.utils import create_algo_training_slack_block
@@ -30,6 +30,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from airflow.providers.http.operators.http import HttpOperator
 
 DATE = "{{ ts_nodash }}"
+DAG_NAME = "algo_training_offer_categorization_model"
 
 # Environment variables to export before running commands
 dag_config = {
@@ -60,7 +61,7 @@ gce_params = {
 
 default_args = {
     "start_date": datetime(2023, 5, 9),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -69,7 +70,7 @@ schedule_dict = {"prod": "0 12 * * 5", "dev": "0 0 * * *", "stg": "0 12 * * 3"}
 
 
 with DAG(
-    "algo_training_offer_categorization_model",
+    DAG_NAME,
     default_args=default_args,
     description="Offer categorization training job",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
@@ -125,7 +126,7 @@ with DAG(
         preemptible=False,
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
-        labels={"job_type": "long_ml"},
+        labels={"job_type": "long_ml", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -192,7 +193,7 @@ with DAG(
         "--model-name {{ params.model_name }} ",
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
 

@@ -1,14 +1,14 @@
 import datetime
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import depends_loop, get_airflow_schedule
 from dependencies.appsflyer.import_appsflyer import dag_tables
@@ -19,6 +19,7 @@ from airflow.operators.dummy_operator import DummyOperator
 
 GCE_INSTANCE = f"import-appsflyer-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/appsflyer"
+DAG_NAME = "import_appsflyer"
 
 GCS_ETL_PARAMS = {
     "DATE": "{{ ds }}",
@@ -29,14 +30,14 @@ GCS_ETL_PARAMS = {
 default_dag_args = {
     "start_date": datetime.datetime(2022, 1, 1),
     "retries": 1,
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }
 schedule_dict = {"prod": "00 01 * * *", "dev": None, "stg": "00 02 * * *"}
 
 with DAG(
-    "import_appsflyer",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Import Appsflyer tables",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
@@ -56,7 +57,9 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -103,7 +106,7 @@ with DAG(
         command=f"python gcs_import.py --gcs-base-path {GCS_ETL_PARAMS['GCS_BASE_PATH']} --prefix-table-name {GCS_ETL_PARAMS['PREFIX_TABLE_NAME']} --date {GCS_ETL_PARAMS['DATE']} ",
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 

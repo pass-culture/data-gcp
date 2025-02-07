@@ -8,6 +8,8 @@ models:
         description: "{{ doc('column__brevo_tag') }}"
       - name: template
         description: "{{ doc('column__brevo_template_id') }}"
+      - name: email_id
+        description: "{{ doc('column__brevo_email_id') }}"
       - name: venue_id
         description: "{{ doc('column__venue_id') }}"
       - name: event_date

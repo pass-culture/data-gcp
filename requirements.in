@@ -1,6 +1,6 @@
 ruff==0.5.7
 typer==0.12.3
-pre-commit~=2.0
+pre-commit~=2.21
 shandy-sqlfmt[jinjafmt]==0.23.2
 sqlfluff==3.1.1
 sqlfluff-templater-dbt==3.1.1

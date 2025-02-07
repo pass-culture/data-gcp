@@ -12,6 +12,7 @@ from scripts.utils import (
     BIGQUERY_RAW_DATASET,
     BQ_ADAGE_DTYPE,
     GCP_PROJECT,
+    RequestReturnedNoneError,
     save_to_raw_bq,
 )
 
@@ -65,19 +66,25 @@ def import_adage():
     client = bigquery.Client()
     client.query(create_adage_historical_table()).result()
     data = get_request(ENDPOINT, API_KEY, route="partenaire-culturel")
-    df = pd.DataFrame(data)
-    _cols = list(df.columns)
-    for k, v in BQ_ADAGE_DTYPE.items():
-        if k not in _cols:
-            df[k] = None
-        df[k] = df[k].astype(str)
 
-    df.to_gbq(
-        f"""{BIGQUERY_RAW_DATASET}.adage""",
-        project_id=GCP_PROJECT,
-        if_exists="replace",
-    )
-    client.query(adding_value()).result()
+    if data is None:
+        raise RequestReturnedNoneError(
+            "Adage API returned None for endpoint partenaire-culturel"
+        )
+    else:
+        df = pd.DataFrame(data)
+        _cols = list(df.columns)
+        for k, v in BQ_ADAGE_DTYPE.items():
+            if k not in _cols:
+                df[k] = None
+            df[k] = df[k].astype(str)
+
+        df.to_gbq(
+            f"""{BIGQUERY_RAW_DATASET}.adage""",
+            project_id=GCP_PROJECT,
+            if_exists="replace",
+        )
+        client.query(adding_value()).result()
 
 
 def create_adage_historical_table():
@@ -175,10 +182,36 @@ def get_adage_stats():
     export = []
     for _id in ids:
         results = get_request(ENDPOINT, API_KEY, route=f"stats-pass-culture/{_id}")
-        for metric_name, rows in results.items():
-            for metric_id, v in rows.items():
-                if v["niveaux"] != []:
-                    for level in v["niveaux"].keys():
+
+        if results is None:
+            raise RequestReturnedNoneError(
+                f"Adage API returned None for endpoint stats-pass-culture/{_id}"
+            )
+        else:
+            for metric_name, rows in results.items():
+                for metric_id, v in rows.items():
+                    if v["niveaux"] != []:
+                        for level in v["niveaux"].keys():
+                            export.append(
+                                dict(
+                                    {
+                                        "metric_name": metric_name,
+                                        "metric_id": metric_id,
+                                        "educational_year_adage_id": _id,
+                                        "metric_key": v[stats_dict[metric_name]],
+                                        "level": level,
+                                        "involved_students": v["niveaux"][level][
+                                            "eleves"
+                                        ],
+                                        "institutions": v["etabs"],
+                                        "total_involved_students": v["niveaux"][level][
+                                            "totalEleves"
+                                        ],
+                                        "total_institutions": v["totalEtabs"],
+                                    }
+                                )
+                            )
+                    else:
                         export.append(
                             dict(
                                 {
@@ -186,32 +219,14 @@ def get_adage_stats():
                                     "metric_id": metric_id,
                                     "educational_year_adage_id": _id,
                                     "metric_key": v[stats_dict[metric_name]],
-                                    "level": level,
-                                    "involved_students": v["niveaux"][level]["eleves"],
+                                    "level": None,
+                                    "involved_students": v["eleves"],
                                     "institutions": v["etabs"],
-                                    "total_involved_students": v["niveaux"][level][
-                                        "totalEleves"
-                                    ],
+                                    "total_involved_students": v["totalEleves"],
                                     "total_institutions": v["totalEtabs"],
                                 }
                             )
                         )
-                else:
-                    export.append(
-                        dict(
-                            {
-                                "metric_name": metric_name,
-                                "metric_id": metric_id,
-                                "educational_year_adage_id": _id,
-                                "metric_key": v[stats_dict[metric_name]],
-                                "level": None,
-                                "involved_students": v["eleves"],
-                                "institutions": v["etabs"],
-                                "total_involved_students": v["totalEleves"],
-                                "total_institutions": v["totalEtabs"],
-                            }
-                        )
-                    )
 
     df = pd.DataFrame(export)
     # force types

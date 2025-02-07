@@ -1,33 +1,34 @@
 import datetime
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 
 from airflow import DAG
 from airflow.models import Param
 
+DAG_NAME = "import_social_network"
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 1,
     "project_id": GCP_PROJECT_ID,
 }
 
 
 with DAG(
-    "import_social_network",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Import Social Network Data",
     on_failure_callback=None,
@@ -51,7 +52,9 @@ with DAG(
         gce_instance = f"import-{social_network}-{ENV_SHORT_NAME}"
         base_path = f"data-gcp/jobs/etl_jobs/external/{social_network}"
         gce_instance_start = StartGCEOperator(
-            instance_name=gce_instance, task_id=f"{social_network}_gce_start_task"
+            instance_name=gce_instance,
+            task_id=f"{social_network}_gce_start_task",
+            labels={"dag_name": DAG_NAME},
         )
 
         fetch_install_code = InstallDependenciesOperator(
@@ -75,7 +78,7 @@ with DAG(
             do_xcom_push=True,
         )
 
-        gce_instance_stop = StopGCEOperator(
+        gce_instance_stop = DeleteGCEOperator(
             task_id=f"{social_network}_gce_stop_task", instance_name=gce_instance
         )
 

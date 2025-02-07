@@ -92,7 +92,7 @@ class GCEHook(GoogleBaseHook):
         )
 
     def delete_vm(self, instance_name):
-        self.log.info(f"Removing {instance_name} on compute engine")
+        self.log.info(f"Deleting {instance_name} on compute engine")
         self.__delete_instance(instance_name, wait=True)
 
     def list_instances(self, filter=None):
@@ -228,6 +228,29 @@ class GCEHook(GoogleBaseHook):
                 return None
             else:
                 raise
+
+    def __stop_instance(self, name, wait=False):
+        self.log.info(f"Stopping {name}")
+        try:
+            operation = (
+                self.get_conn()
+                .instances()
+                .stop(project=self.gcp_project, zone=self.gce_zone, instance=name)
+                .execute()
+            )
+            if wait:
+                self.wait_for_operation(operation["name"])
+            else:
+                return operation["name"]
+        except HttpError as e:
+            if e.resp.status == 404:
+                return None
+            else:
+                raise
+
+    def stop_vm(self, instance_name):
+        self.log.info(f"Stopping {instance_name} on compute engine")
+        self.__stop_instance(instance_name, wait=True)
 
     def delete_instances(self, job_type="default", timeout_in_minutes=60 * 12):
         instances = self.list_instances()

@@ -61,8 +61,13 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
 - Make installé
   - linux : `sudo apt install make`
   - mac : `brew install make`
-- Installer les packages prérequis
-  - `make install_prerequisites`
+- Cloner le projet
+
+  ```bash
+  git clone git@github.com:pass-culture/data-gcp.git
+  cd data-gcp
+  ```
+
 - Installer les librairies prérequises (non nécessaire sur macos)
   - [Ubuntu]:
     - `make install_ubuntu_libs`
@@ -77,18 +82,6 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
 
 #### 1. Installation du projet
 
-- Cloner le projet
-
-  ```bash
-  git clone git@github.com:pass-culture/data-gcp.git
-  cd data-gcp
-  ```
-
-- [LINUX] Installation de quelques librairies nécessaires à l'install du projet
-
-  ```bash
-  make install_ubuntu_libs
-  ```
 
 - Installation du projet :
 

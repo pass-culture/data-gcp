@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import DAG_FOLDER, ENV_SHORT_NAME
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 
@@ -17,7 +17,7 @@ from airflow.utils.task_group import TaskGroup
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -25,6 +25,7 @@ default_args = {
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"algo-default-deployment-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
+DAG_NAME = "algo_default_deployment"
 
 RANKING_DICT = {
     "prod": "n1-highcpu-4",
@@ -68,7 +69,7 @@ models_to_deploy = [
 
 
 with DAG(
-    "algo_default_deployment",
+    DAG_NAME,
     default_args=default_args,
     description="ML Default Deployment job",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
@@ -87,7 +88,7 @@ with DAG(
         task_id="gce_start_task",
         instance_name=GCE_INSTANCE,
         retries=2,
-        labels={"job_type": "ml"},
+        labels={"job_type": "ml", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -126,7 +127,7 @@ with DAG(
                 dag=dag,
             )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 

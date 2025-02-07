@@ -10,6 +10,7 @@
 select
     brevo_tag,
     brevo_template_id,
+    email_id,
     offerer_id,
     event_date,
     case when total_delivered > 0 then true else false end as email_is_delivered,

@@ -108,6 +108,7 @@ sources:
       - name: applicative_database_venue_provider
       - name: applicative_database_venue_provider_external_urls
       - name: applicative_database_venue_registration
+      - name: appsflyer_cost_channel
       - name: brevo_transactional
       - name: contentful_entry
       - name: contentful_relationship
@@ -116,7 +117,10 @@ sources:
       - name: firebase_pro_events
       - name: gsheet_eac_webinar
       - name: gsheet_educational_institution_student_headcount
+      - name: gsheet_instagram_campaign_tag
       - name: gsheet_ml_recommendation_sensitive_item
+      - name: gsheet_tiktok_campaign_tag
+      - name: instagram_post_detail
       - name: metabase_collection
       - name: metabase_core_user
       - name: metabase_query_execution
@@ -126,12 +130,17 @@ sources:
       - name: qpi_answers_historical
       - name: qpi_answers_v4
       - name: past_offer_context
+      - name: raw_dms_jeunes
+      - name: raw_dms_pro
       - name: sendinblue_transactional
       - name: sensitive_item_recommendation
       - name: stdout
       - name: subcategories
+      - name: tiktok_video_detail
       - name: offer_types
       - name: user_locations
+      - name: zendesk_macro_usage
+      - name: zendesk_ticket
 
   - name: clean
     schema: clean_{{ var('ENV_SHORT_NAME') }}
@@ -154,7 +163,6 @@ sources:
       - name: adage
       - name: linked_offers
 
-
   - name: seed
     schema: seed_{{ var('ENV_SHORT_NAME') }}
     tables:
@@ -169,12 +177,14 @@ sources:
       - name: macro_rayons
       - name: population_age_and_department_france_details
       - name: priority_local_authorities
-      - name: qpv
+      - name: 2024_insee_qpv
+      - name: 2024_insee_qpv_population
       - name: qpi_mapping
       - name: rural_city_type_data
       - name: region_department
       - name: siren_data_labels
       - name: zrr
+
   - name: ml_preproc
     schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
     tables:
@@ -187,3 +197,13 @@ sources:
       - name: artist_linked
         description: This table contains the artist_linkage dag
       - name: unconstrained_item_cluster
+      - name: two_tower_user_embedding_history
+        description: Partitionned table containing the history of the two tower user emebddings
+      - name: two_tower_item_embedding_history
+        description: Partitionned table containing the history of the two tower item emebddings
+
+  - name: appsflyer_import
+    schema: appsflyer_import_{{ var('ENV_SHORT_NAME') }}
+    tables:
+      - name: cohort_unified_timezone_versioned
+      - name: installs

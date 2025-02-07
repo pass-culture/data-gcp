@@ -61,7 +61,7 @@ class BrevoNewsletters:
             camp.get("shareLink") for camp in campaigns_list
         ]
         campaign_stats["audience_size"] = [
-            group.get("globalStats").get("sent")
+            group.get("globalStats").get("delivered")
             if len(group.get("globalStats")) > 0
             else 0
             for group in [camp.get("statistics") for camp in campaigns_list]

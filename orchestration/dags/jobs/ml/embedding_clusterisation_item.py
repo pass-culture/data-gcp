@@ -1,16 +1,16 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
 )
 from common.operators.gce import (
+    DeleteGCEOperator,
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 
@@ -22,10 +22,11 @@ DEFAULT_REGION = "europe-west1"
 
 BASE_PATH = "data-gcp/jobs/ml_jobs/clusterisation"
 DATE = "{{ yyyymmdd(ds) }}"
+DAG_NAME = "embedding_clusterisation_item"
 
 default_args = {
     "start_date": datetime(2023, 8, 2),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -45,7 +46,7 @@ CLUSTERING_CONFIG = [
 
 
 with DAG(
-    "embedding_clusterisation_item",
+    DAG_NAME,
     default_args=default_args,
     description="Cluster items from metadata embeddings",
     schedule_interval=get_airflow_schedule("0 0 * * 0"),  # every sunday
@@ -79,7 +80,7 @@ with DAG(
             preemptible=False,
             instance_type="{{ params.instance_type }}",
             retries=2,
-            labels={"job_type": "long_ml"},
+            labels={"job_type": "long_ml", "dag_name": DAG_NAME},
         )
 
         fetch_install_code = InstallDependenciesOperator(
@@ -114,7 +115,7 @@ with DAG(
             f"--config-file-name {cluster_config_file_name} ",
         )
 
-        gce_instance_stop = StopGCEOperator(
+        gce_instance_stop = DeleteGCEOperator(
             task_id=f"gce_{job_name}_stop_task", instance_name=gce_instance
         )
 

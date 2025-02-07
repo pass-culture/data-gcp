@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 
-from app.logger import logger
+from app.logging.logger import logger
 from app.routes import api
 
 app = Flask(__name__)

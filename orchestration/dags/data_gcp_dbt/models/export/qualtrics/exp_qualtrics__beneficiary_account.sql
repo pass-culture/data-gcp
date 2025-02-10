@@ -8,14 +8,14 @@ with
         group by user_id
     ),
 
-        previous_export as (
-            select distinct user_id
-            from {{ source("raw", "qualtrics_exported_beneficiary_account") }}
-            where
-                calculation_month
-                >= date_sub(date_trunc(date("{{ ds() }}"), month), interval 6 month)
+    previous_export as (
+        select distinct user_id
+        from {{ source("raw", "qualtrics_exported_beneficiary_account") }}
+        where
+            calculation_month
+            >= date_sub(date_trunc(date("{{ ds() }}"), month), interval 6 month)
 
-        ),
+    ),
 
     answers as (select distinct user_id from {{ source("raw", "qualtrics_answers") }}),
 
@@ -77,12 +77,8 @@ with
         limit 8000
     )
 
-select
-    CURRENT_DATE as export_date,
-    *
+select current_date as export_date, *
 from grant_18
 union all
-select
-    current_date as export_date,
-    *
+select current_date as export_date, *
 from grant_15_17

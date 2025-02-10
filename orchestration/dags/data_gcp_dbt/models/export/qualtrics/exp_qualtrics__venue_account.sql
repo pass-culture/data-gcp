@@ -52,7 +52,5 @@ with
         limit 3500
     )
 
-select
-    CURRENT_DATE as export_date,
-    *
+select current_date as export_date, *
 from generate_export

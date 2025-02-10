@@ -1,5 +1,4 @@
 -- TODO : legacy table : should be removed or migrated to a Metabase MODEL.
-
 with
     topics as (
         select start_date, end_date, response_id, venue_id, answer as topics

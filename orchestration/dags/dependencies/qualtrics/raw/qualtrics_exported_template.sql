@@ -1,5 +1,4 @@
- SELECT *,
-        date_trunc(date("{{ ds }}"), month) as calculation_month
+select *, date_trunc(date("{{ ds }}"), month) as calculation_month
 
-FROM `{{ bigquery_export_dataset }}.{{ params.table_name }}`
-LIMIT {{ params.volume }}
+from `{{ bigquery_export_dataset }}.{{ params.table_name }}`
+limit {{ params.volume }}

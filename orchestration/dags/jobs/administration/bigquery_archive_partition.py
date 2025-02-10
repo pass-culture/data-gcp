@@ -11,6 +11,7 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
+from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
@@ -44,7 +45,7 @@ dag_config = {
 dag = DAG(
     DAG_NAME,
     default_args=dag_config,
-    schedule_interval="@daily",  # Runs daily
+    schedule_interval=SCHEDULE_DICT[DAG_NAME],  # Runs daily
     catchup=False,
     params={
         "branch": Param(

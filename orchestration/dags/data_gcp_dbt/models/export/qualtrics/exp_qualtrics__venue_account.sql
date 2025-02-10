@@ -1,7 +1,7 @@
 with
     previous_export as (
         select distinct email
-        from {{ source("clean", "qualtrics_ac") }}
+        from {{ source("raw", "qualtrics_exported_venue_account") }}
         where
             calculation_month
             >= date_sub(date_trunc(date("{{ ds() }}"), month), interval 6 month)
@@ -49,11 +49,10 @@ with
         left join previous_export as pe on lp.email = pe.email
         where pe.email is null
         order by rand()
-        limit {{ qualtrics_volumes() }}
+        limit 3500
     )
 
 select
-    date_trunc(date("{{ ds() }}"), month) as calculation_month,
-    current_date as export_date,
+    CURRENT_DATE as export_date,
     *
 from generate_export

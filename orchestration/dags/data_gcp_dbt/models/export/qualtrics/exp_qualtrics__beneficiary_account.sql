@@ -1,13 +1,3 @@
-{{
-    config(
-        **custom_incremental_config(
-            incremental_strategy="insert_overwrite",
-            partition_by={"field": "export_date", "data_type": "date"},
-            on_schema_change="ignore",
-        )
-    )
-}}
-
 with
     user_visits as (
         select
@@ -17,16 +7,15 @@ with
         where date(event_date) >= date_sub(current_date, interval 1 month)
         group by user_id
     ),
-    {% if is_incremental() %}
+
         previous_export as (
             select distinct user_id
-            from {{ this }}
+            from {{ source("raw", "qualtrics_exported_beneficiary_account") }}
             where
                 calculation_month
                 >= date_sub(date_trunc(date("{{ ds() }}"), month), interval 6 month)
 
         ),
-    {% endif %}
 
     answers as (select distinct user_id from {{ source("raw", "qualtrics_answers") }}),
 
@@ -73,7 +62,7 @@ with
         {% else %} where ir.deposit_type = "GRANT_15_7"
         {% endif %}
         order by rand()
-        limit {{ qualtrics_volumes() }}
+        limit 8000
     ),
 
     grant_18 as (
@@ -85,17 +74,15 @@ with
         {% else %} where ir.deposit_type = "GRANT_18"
         {% endif %}
         order by rand()
-        limit {{ qualtrics_volumes() }}
+        limit 8000
     )
 
 select
-    date_trunc(date("{{ ds() }}"), month) as calculation_month,
-    current_date as export_date,
+    CURRENT_DATE as export_date,
     *
 from grant_18
 union all
 select
-    date_trunc(date("{{ ds() }}"), month) as calculation_month,
     current_date as export_date,
     *
 from grant_15_17

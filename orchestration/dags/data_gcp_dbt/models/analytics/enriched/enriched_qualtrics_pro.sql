@@ -1,7 +1,9 @@
+-- TODO : legacy table : should be removed or migrated to a Metabase MODEL.
+
 with
     topics as (
         select start_date, end_date, response_id, venue_id, answer as topics
-        from {{ ref("int_qualtrics__ir_answer_pro") }}
+        from {{ ref("int_qualtrics__nps_pro_answer") }}
         where question = 'Q1_topics'
     ),
 
@@ -16,7 +18,7 @@ with
             pro.answer,
             topics.topics,
             pro.seniority_day_cnt
-        from {{ ref("int_qualtrics__ir_answer_pro") }} as pro
+        from {{ ref("int_qualtrics__nps_pro_answer") }} as pro
         left join
             topics
             on pro.response_id = topics.response_id

@@ -46,11 +46,9 @@ QUALTRICS_DATA_CENTER = access_secret_data(
 )
 QUALTRICS_BASE_URL = f"https://{QUALTRICS_DATA_CENTER}.qualtrics.com/automations-file-service/automations/"
 
-EXPORT_DATASET_ID = f"export_{ENV_SHORT_NAME}"
-
 EXPORT_TABLES = {
     "qualtrics_beneficiary_account": {
-        "sql": "dependencies/qualtrics/raw/qualtrics_exported_template.sql",
+        "sql": "dependencies/qualtrics/sql/raw/qualtrics_exported_template.sql",
         "destination_dataset": "{{ bigquery_raw_dataset }}",
         "destination_table": "qualtrics_exported_beneficiary_account${{ yyyymmdd(current_month(ds)) }}",
         "time_partitioning": {"field": "calculation_month"},
@@ -65,7 +63,7 @@ EXPORT_TABLES = {
         "schemaUpdateOptions": ["ALLOW_FIELD_ADDITION"],
     },
     "qualtrics_venue_account": {
-        "sql": "dependencies/qualtrics/raw/qualtrics_exported_template.sql",
+        "sql": "dependencies/qualtrics/sql/raw/qualtrics_exported_template.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",
         "destination_table": "qualtrics_exported_venue_account${{ yyyymmdd(current_month(ds)) }}",
         "time_partitioning": {"field": "calculation_month"},
@@ -127,7 +125,7 @@ def get_and_send(**kwargs):
 start = DummyOperator(task_id="start", dag=dag)
 clean_table_jobs = {}
 for table, job_params in EXPORT_TABLES.items():
-    # export table to raw table to store exported data
+    # export table to raw table to store exported data before uploading to qualtrics
     task = bigquery_job_task(dag, table, job_params)
 
     export_task = PythonOperator(

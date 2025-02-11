@@ -131,8 +131,10 @@ class AdressesDownloader:
                     "api_adresse_city": data["features"][0]["properties"]["city"],
                 }
                 return api_address_informations
-            except Exception:
-                print(f"Error while fetching coordinates for address {parsed_address}")
+            except Exception as e:
+                print(
+                    f"Error while fetching coordinates for address {parsed_address}, got exception {e} with response {data}"
+                )
                 return api_address_informations
         return api_address_informations
 

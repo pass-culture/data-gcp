@@ -101,6 +101,7 @@ default = {
     "bigquery_int_api_gouv_dataset": BIGQUERY_INT_API_GOUV_DATASET,
     "bigquery_sandbox_dataset": BIGQUERY_SANDBOX_DATASET,
     "bigquery_backend_dataset": BIGQUERY_BACKEND_DATASET,
+    "bigquery_export_dataset": f"{GCP_PROJECT_ID}.export_{ENV_SHORT_NAME}",
     "bigquery_ml_reco_dataset": BIGQUERY_ML_RECOMMENDATION_DATASET,
     "bigquery_ml_feat_dataset": BIGQUERY_ML_FEATURES_DATASET,
     "bigquery_ml_preproc_dataset": BIGQUERY_ML_PREPROCESSING_DATASET,

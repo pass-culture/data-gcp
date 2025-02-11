@@ -48,8 +48,10 @@ with
                     max(offer_is_duo) as offer_is_duo,
                     max(default_max_distance) as default_max_distance
                 from {{ ref("ml_reco__available_offer") }} offer
-                left join `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id` as iom
-                on offer.offer_id = iom.offer_id
+                left join
+                    `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id`
+                    as iom
+                    on offer.offer_id = iom.offer_id
                 group by 1, 2, 3, 4, 5, 6, 7, 8
             )
     )

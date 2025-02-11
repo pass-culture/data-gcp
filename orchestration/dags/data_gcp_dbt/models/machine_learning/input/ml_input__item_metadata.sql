@@ -31,7 +31,9 @@ with
         left join
             {{ ref("int_applicative__offer_metadata") }} as om
             on o.offer_id = om.offer_id
-        left join `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id` as iom
+        left join
+            `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id`
+            as iom
             on o.offer_id = iom.offer_id
 
     )

@@ -132,7 +132,7 @@ class AdressesDownloader:
                 }
                 return api_address_informations
             except Exception:
-                print("Error while fetching coordinates for address {parsed_address}")
+                print(f"Error while fetching coordinates for address {parsed_address}")
                 return api_address_informations
         return api_address_informations
 

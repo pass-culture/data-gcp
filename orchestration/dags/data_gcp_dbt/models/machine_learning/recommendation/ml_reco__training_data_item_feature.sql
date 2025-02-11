@@ -1,7 +1,7 @@
 with
     base as (
         select
-            offer.item_id as item_id,
+            iom.item_id as item_id,
             offer.offer_category_id as offer_category_id,
             offer.offer_subcategory_id as offer_subcategory_id,
             item_embedding_reduced.image_embedding as item_image_embedding,
@@ -20,9 +20,11 @@ with
         inner join
             {{ source("ml_preproc", "item_embedding_reduced_16") }} item_embedding_reduced
             on offer.item_id = item_embedding_reduced.item_id
+        left join `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id` as iom
+            on offer.offer_id = iom.offer_id
         group by 1, 2, 3, 4, 5
     )
 
 select *
-from base
+from base b
 qualify row_number() over (partition by item_id order by item_booking_cnt desc) = 1

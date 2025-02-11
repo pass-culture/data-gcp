@@ -14,7 +14,7 @@ with
     get_recommendable_offers as (
         select
             offer.offer_id as offer_id,
-            offer.item_id as item_id,
+            iom.item_id as item_id,
             offer.offer_product_id as product_id,
             venue.venue_id as venue_id,
             venue.venue_latitude,
@@ -113,6 +113,8 @@ with
         left join
             {{ source("raw", "gsheet_ml_recommendation_sensitive_item") }} sensitive_offer
             on offer.item_id = sensitive_offer.item_id
+        left join `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id` as iom
+            on offer.offer_id = iom.offer_id
         where
             offer.is_active = true
             and offer.offer_is_bookable = true

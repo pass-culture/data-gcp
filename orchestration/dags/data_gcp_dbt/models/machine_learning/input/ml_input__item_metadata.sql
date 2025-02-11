@@ -2,7 +2,7 @@ with
     enriched_items as (
         select
             o.offer_id,
-            o.item_id,
+            iom.item_id,
             if(
                 offer_type_label is not null, o.total_used_individual_bookings, null
             ) as total_used_individual_bookings,
@@ -31,6 +31,9 @@ with
         left join
             {{ ref("int_applicative__offer_metadata") }} as om
             on o.offer_id = om.offer_id
+        left join `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id` as iom
+            on o.offer_id = iom.offer_id
+
     )
 
 select * except (total_used_individual_bookings, offer_id)

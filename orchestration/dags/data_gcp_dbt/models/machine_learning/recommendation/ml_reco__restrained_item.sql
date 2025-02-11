@@ -1,7 +1,7 @@
 {{ config(materialized="view") }}
 
 select
-    eod.item_id,
+    iom.item_id,
     max(
         case
             -- LVL1
@@ -77,6 +77,8 @@ select
         end
     ) as blocked
 from {{ ref("mrt_global__offer") }} eod
-inner join {{ ref("ml_input__item_metadata") }} eim on eim.item_id = eod.item_id
+left join `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id` as iom
+            on eod.offer_id = iom.offer_id
+inner join {{ ref("ml_input__item_metadata") }} eim on eim.item_id = iom.item_id
 where eod.offer_type_domain = "BOOK"
 group by 1

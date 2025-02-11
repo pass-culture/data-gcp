@@ -7,7 +7,7 @@ with
 
     offer_details as (
         select
-            eod.item_id,
+            iom.item_id,
             eod.offer_id,
             eod.offer_name,
             v.venue_id,
@@ -15,9 +15,11 @@ with
             v.venue_latitude
         from {{ ref("mrt_global__offer") }} eod
         left join venues v on v.venue_id = eod.venue_id
+        left join `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id` as iom
+            on eod.offer_id = iom.offer_id
         qualify
             row_number() over (
-                partition by eod.item_id
+                partition by iom.item_id
                 order by eod.total_used_individual_bookings desc
             )
             = 1

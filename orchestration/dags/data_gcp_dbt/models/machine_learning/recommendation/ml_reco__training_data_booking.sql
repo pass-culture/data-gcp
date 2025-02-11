@@ -6,7 +6,7 @@ select
     extract(hour from booking.booking_created_at) as event_hour,
     extract(dayofweek from booking.booking_created_at) as event_day,
     extract(month from booking.booking_created_at) as event_month,
-    offer.item_id as item_id,
+    iom.item_id as item_id,
     offer.offer_subcategory_id as offer_subcategory_id,
     offer.offer_category_id as offer_category_id,
     offer.genres,
@@ -17,4 +17,6 @@ select
 from {{ ref("int_global__booking") }} booking
 join {{ ref("int_global__offer") }} offer on offer.offer_id = booking.offer_id
 inner join {{ ref("int_global__user") }} user on user.user_id = booking.user_id
+left join `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id` as iom
+            on offer.offer_id = iom.offer_id
 where booking.booking_creation_date >= date_sub(date("{{ ds() }}"), interval 6 month)

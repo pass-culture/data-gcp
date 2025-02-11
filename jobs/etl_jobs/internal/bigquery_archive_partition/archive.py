@@ -49,8 +49,8 @@ def export_partitions(table, config):
             )
             AS
             SELECT *
-            FROM `passculture-data-ehp.raw_dev.past_offer_context`
-            WHERE DATE(import_date) = '{partition_date}';
+            FROM `{GCP_PROJECT_ID}.{dataset_id}.{table}`
+            WHERE DATE({partition_column}) = '{partition_date}';
         """
         query_export_job = client.query(query_export)
         query_export_job.result()

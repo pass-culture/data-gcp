@@ -35,9 +35,10 @@ WITH last_status_update AS (
 user_location_udpate AS (
         SELECT
         user_id,
-        max(date_updated) as date_updated
+        longitude,
+        date_updated
     FROM `{GCP_PROJECT}.{BIGQUERY_RAW_DATASET}.user_locations`
-    group by user_id
+    qualify row_number() over (partition by user_id order by date_updated desc) = 1
 ),
 
 user_candidates AS (

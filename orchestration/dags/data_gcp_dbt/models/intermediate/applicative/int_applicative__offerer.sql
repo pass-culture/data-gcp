@@ -57,20 +57,6 @@ with
             sum(total_real_revenue) as total_real_revenue,
             sum(total_created_offers) as total_created_offers,
             sum(total_bookable_offers) as total_bookable_offers,
-            min(first_bookable_offer_date) as first_bookable_offer_date,
-            max(last_bookable_offer_date) as last_bookable_offer_date,
-            min(
-                first_individual_bookable_offer_date
-            ) as first_individual_bookable_offer_date,
-            max(
-                last_individual_bookable_offer_date
-            ) as last_individual_bookable_offer_date,
-            min(
-                first_collective_bookable_offer_date
-            ) as first_collective_bookable_offer_date,
-            max(
-                last_collective_bookable_offer_date
-            ) as last_collective_bookable_offer_date,
             count(distinct venue_id) as total_managed_venues,
             count(
                 distinct case when not venue_is_virtual then venue_id end
@@ -87,9 +73,7 @@ with
                 )
             ) as all_physical_venues_types,
             count(
-                case
-                    when venue_type_label = "Lieu administratif" then venue_id else null
-                end
+                case when venue_type_label = "Lieu administratif" then venue_id end
             ) as total_administrative_venues,
             max(
                 case when offerer_real_revenue_rank = 1 then venue_type_label end
@@ -169,12 +153,6 @@ select
     coalesce(vgo.total_real_revenue, 0) as total_real_revenue,
     coalesce(vgo.total_created_offers, 0) as total_created_offers,
     coalesce(vgo.total_bookable_offers, 0) as total_bookable_offers,
-    vgo.first_bookable_offer_date,
-    vgo.last_bookable_offer_date,
-    vgo.first_individual_bookable_offer_date,
-    vgo.last_individual_bookable_offer_date,
-    vgo.first_collective_bookable_offer_date,
-    vgo.last_collective_bookable_offer_date,
     vgo.total_venues,
     vgo.top_real_revenue_venue_type,
     vgo.top_bookings_venue_type,
@@ -231,36 +209,6 @@ select
         else
             coalesce(vgo.last_individual_booking_date, vgo.last_collective_booking_date)
     end as last_booking_date,
-    case
-        when date_diff(current_date, vgo.last_bookable_offer_date, day) <= 30
-        then true
-        else false
-    end as is_active_last_30days,
-    case
-        when date_diff(current_date, vgo.last_bookable_offer_date, year) = 0
-        then true
-        else false
-    end as is_active_current_year,
-    case
-        when date_diff(current_date, vgo.last_individual_bookable_offer_date, day) <= 30
-        then true
-        else false
-    end as is_individual_active_last_30days,
-    case
-        when date_diff(current_date, vgo.last_individual_bookable_offer_date, year) = 0
-        then true
-        else false
-    end as is_individual_active_current_year,
-    case
-        when date_diff(current_date, vgo.last_collective_bookable_offer_date, day) <= 30
-        then true
-        else false
-    end as is_collective_active_last_30days,
-    case
-        when date_diff(current_date, vgo.last_collective_bookable_offer_date, year) = 0
-        then true
-        else false
-    end as is_collective_active_current_year
 from {{ ref("int_raw__offerer") }} as o
 left join
     venue_grouped_by_offerer as vgo on o.offerer_id = vgo.venue_managing_offerer_id

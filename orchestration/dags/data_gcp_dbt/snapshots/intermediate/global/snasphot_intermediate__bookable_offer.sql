@@ -8,7 +8,7 @@
     }}
 
     select offer_id
-    from {{ ref("int_global__offer") }}
+    from {{ ref("int_applicative__offer") }}
     where offer_is_bookable
 
 {% endsnapshot %}

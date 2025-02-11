@@ -3,12 +3,11 @@
         config(
             unique_key="offer_id",
             strategy="check",
-            check_cols=["offer_id"],
+            check_cols=["offer_is_bookable"],
         )
     }}
 
-    select offer_id
+    select offer_id, offer_is_bookable
     from {{ ref("int_applicative__offer") }}
-    where offer_is_bookable
 
 {% endsnapshot %}

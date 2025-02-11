@@ -1,21 +1,24 @@
-{% test is_valid_booking_intermediary_amout(
-    model, column_name, max_amout=300, where_condition=None
-) %}
+{% test is_valid_booking_intermediary_amout(model, column_name,max_amout = 300) %}
 
-    with
-        validation as (
-            select {{ column_name }} as amount_field
-            from {{ model }}
-            {% if where_condition is not none %} where {{ where_condition }} {% endif %}
-        ),
+with validation as (
 
-        errors as (
-            select amount_field
-            from validation
-            where amount_field is null or amount_field > {{ max_amout }}
-        )
+    select
+        {{ column_name }} as amount_field
 
-    select *
-    from errors
+    from {{ model }}
+
+),
+
+errors as (
+
+    select
+        amount_field
+    from validation
+    where amount_field is Null or amount_field > {{ max_amout }}
+
+)
+
+select *
+from errors
 
 {% endtest %}

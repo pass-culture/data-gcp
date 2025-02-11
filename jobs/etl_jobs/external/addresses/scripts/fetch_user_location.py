@@ -60,6 +60,7 @@ user_candidates AS (
         AND user_role in ('BENEFICIARY', 'UNDERAGE_BENEFICIARY')
         AND (
             ul.user_id IS NULL
+            OR ul.longitude IS NULL
             -- Temp : remove condition to prioritize adress new users
             -- OR (
             --    ul.date_updated < GREATEST(du.user_creation_date,lsu.date_created) -- updated the profile again
@@ -130,6 +131,7 @@ class AdressesDownloader:
                 }
                 return api_address_informations
             except Exception:
+                print("Error while fetching coordinates for address {parsed_address}")
                 return api_address_informations
         return api_address_informations
 

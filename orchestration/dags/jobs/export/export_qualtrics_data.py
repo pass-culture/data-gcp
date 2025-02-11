@@ -7,7 +7,7 @@ from common.access_gcp_secrets import access_secret_data
 from common.alerts import task_fail_slack_alert
 from common.config import (
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
-    BIGQUERY_CLEAN_DATASET,
+    BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -47,9 +47,9 @@ QUALTRICS_DATA_CENTER = access_secret_data(
 QUALTRICS_BASE_URL = f"https://{QUALTRICS_DATA_CENTER}.qualtrics.com/automations-file-service/automations/"
 
 EXPORT_TABLES = {
-    "qualtrics_beneficiary_account": {
+    "qualtrics_exported_beneficiary_account": {
         "sql": "dependencies/qualtrics/sql/raw/qualtrics_exported_template.sql",
-        "destination_dataset": "{{ bigquery_raw_dataset }}",
+        "destination_dataset": BIGQUERY_RAW_DATASET,
         "destination_table": "qualtrics_exported_beneficiary_account${{ yyyymmdd(current_month(ds)) }}",
         "time_partitioning": {"field": "calculation_month"},
         "params": {
@@ -62,9 +62,9 @@ EXPORT_TABLES = {
         "include_email": True,
         "schemaUpdateOptions": ["ALLOW_FIELD_ADDITION"],
     },
-    "qualtrics_venue_account": {
+    "qualtrics_exported_venue_account": {
         "sql": "dependencies/qualtrics/sql/raw/qualtrics_exported_template.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
+        "destination_dataset": BIGQUERY_RAW_DATASET,
         "destination_table": "qualtrics_exported_venue_account${{ yyyymmdd(current_month(ds)) }}",
         "time_partitioning": {"field": "calculation_month"},
         "params": {
@@ -127,6 +127,7 @@ clean_table_jobs = {}
 for table, job_params in EXPORT_TABLES.items():
     # export table to raw table to store exported data before uploading to qualtrics
     task = bigquery_job_task(dag, table, job_params)
+    task.set_upstream(start)
 
     export_task = PythonOperator(
         task_id=f"export_to_qualtrics_{table}",
@@ -134,7 +135,7 @@ for table, job_params in EXPORT_TABLES.items():
         provide_context=True,
         op_kwargs={
             "table_name": table,
-            "dataset_id": BIGQUERY_CLEAN_DATASET,
+            "dataset_id": job_params["destination_dataset"],
             "automation_id": job_params["qualtrics_automation_id"],
             "include_email": job_params["include_email"],
         },

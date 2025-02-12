@@ -3,10 +3,7 @@ import json
 from datetime import datetime
 
 from common.access_gcp_secrets import access_secret_data
-from common.config import (
-    ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
-)
+from common.config import AIRFLOW_URI, ENV_SHORT_NAME, GCP_PROJECT_ID
 from common.operators.gce import StopGCEOperator
 
 from airflow import configuration
@@ -66,14 +63,22 @@ def on_failure_combined_callback(context):
     on_failure_callback_stop_vm(context)
 
 
+def get_airflow_uri(configuration):
+    base_url = configuration.get("webserver", "BASE_URL")
+    if "localhost" in base_url:
+        return AIRFLOW_URI
+    return base_url
+
+
 def __task_fail_slack_alert(context, job_type):
     run_id = context["dag_run"].run_id
     is_scheduled = run_id.startswith("scheduled__")
     # alerts only for scheduled task.
     if is_scheduled:
         webhook_token = JOB_TYPE.get(job_type)
+
         dag_url = "{base_url}/dags/{dag_id}/grid".format(
-            base_url=configuration.get("webserver", "BASE_URL"),
+            base_url=get_airflow_uri(configuration),
             dag_id=context["dag"].dag_id,
         )
         last_task = context.get("task_instance")

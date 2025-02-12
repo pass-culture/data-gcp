@@ -36,7 +36,7 @@ with
             ) as total_bookable_individual_offers,
             count(distinct venue_id) as total_venues,
             count(
-                distinct case when total_headlines > 0 then o.offer_id end
+                distinct case when total_headlines > 0 then offer_id end
             ) as total_distinct_headline_offers,
             max(is_headlined) as has_headline_offer,
             min(first_headline_date) as first_headline_offer_date,

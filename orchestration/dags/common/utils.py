@@ -1,16 +1,20 @@
+import json
 import logging
 import os
 import time
 
 import requests
+from common.access_gcp_secrets import create_key_if_not_exists
 from common.config import (
     GCP_PROJECT_ID,
     LOCAL_ENV,
 )
 from google.auth.transport.requests import Request
+from google.cloud import storage
 from google.oauth2 import id_token
 
 from airflow.models import DagRun
+from airflow.operators.python import PythonOperator
 from airflow.sensors.external_task import ExternalTaskSensor
 from airflow.utils.db import provide_session
 from airflow.utils.types import DagRunType
@@ -132,48 +136,98 @@ def waiting_operator(
 
 def delayed_waiting_operator(
     dag,
-    external_dag_id,
-    external_task_id="end",
-    allowed_states=["success"],
-    failed_states=["failed", "upstream_failed", "skipped"],
-    lower_date_limit=None,  # Optional lower bound
+    external_dag_id: str,
+    external_task_id: str = "end",
+    allowed_states: list = ["success"],
+    failed_states: list = ["failed", "upstream_failed", "skipped"],
+    lower_date_limit=None,
+    skip_manually_triggered: bool = False,
     **kwargs,
 ):
     """
-    Function to create an ExternalTaskSensor that waits for a task in another DAG to finish,
-    with proper handling of execution dates.
+    Creates an ExternalTaskSensor that waits for a task in another DAG to finish,
+    with two key features:
+    1. Uses execution_date_fn to dynamically determine the last execution date of the external DAG.
+    2. Skips waiting for manually triggered DAG runs.
+
+    Args:
+        dag: The DAG where this task will be added.
+        external_dag_id (str): The ID of the external DAG.
+        external_task_id (str): Task ID within the external DAG to wait for.
+        allowed_states (list): List of states considered as successful.
+        failed_states (list): List of states considered as failed.
+        lower_date_limit (datetime, optional): Lower bound for execution date filtering.
+        skip_manually_triggered (bool, optional): If True, skips waiting when DAG is manually triggered.
+        **kwargs: Additional arguments for the Airflow task.
+
+    Returns:
+        ExternalTaskSensor or PythonOperator: The sensor for scheduled DAG runs or a PythonOperator that skips waiting for manual DAG runs.
     """
 
-    # This function will be passed to execution_date_fn to compute the execution date dynamically
+    task_id = f"wait_for_{external_dag_id}_{external_task_id}"
+
+    # Function to compute the last execution date of the external DAG
     def compute_execution_date_fn(logical_date, **context):
         """
         Compute the execution date for the ExternalTaskSensor using Airflow's context.
-        Fetch the execution_date from the task's execution context.
         """
-        # Fetch execution_date from Airflow's context in Airflow 1.x
-        current_execution_date = logical_date
-
-        if current_execution_date is None:
+        if logical_date is None:
             raise ValueError("The 'logical_date' is missing in the context.")
 
-        # Compute the lower date limit or default to the start of the same day
-        lower_limit = lower_date_limit or current_execution_date.replace(
+        # Compute lower date limit (defaults to start of the same day if None)
+        lower_limit = lower_date_limit or logical_date.replace(
             hour=0, minute=0, second=0, microsecond=0
         )
 
-        # Get the last execution date of the external DAG before the current execution date
+        # Fetch last execution date of the external DAG before the current execution date
         return get_last_execution_date(
             external_dag_id,
-            upper_date_limit=current_execution_date,
+            upper_date_limit=logical_date,
             lower_date_limit=lower_limit,
         )
 
-    # Create the ExternalTaskSensor
-    sensor = ExternalTaskSensor(
-        task_id=f"wait_for_{external_dag_id}_{external_task_id}",
+    # If manual triggers should be skipped, create a PythonOperator instead
+    if skip_manually_triggered:
+
+        def handle_manual_trigger(**context):
+            """
+            Skips waiting for manually triggered DAG runs, but waits for scheduled DAGs.
+            """
+            dag_run = context.get("dag_run")
+            if dag_run and dag_run.run_id.startswith("manual__"):
+                logging.info(f"Skipping wait for manual trigger: {dag_run.run_id}")
+                return None  # Skip waiting
+
+            logging.info(
+                f"Waiting for external task {external_dag_id}.{external_task_id}"
+            )
+
+            # Create a sensor dynamically at runtime
+            sensor = ExternalTaskSensor(
+                task_id=task_id,
+                external_dag_id=external_dag_id,
+                external_task_id=external_task_id,
+                execution_date_fn=compute_execution_date_fn,
+                allowed_states=allowed_states,
+                failed_states=failed_states,
+                dag=None,  # Important: don't attach to DAG since this is runtime execution
+            )
+            return sensor.poke(
+                context=context
+            )  # Check external task status dynamically
+
+        return PythonOperator(
+            task_id=task_id,
+            python_callable=handle_manual_trigger,
+            dag=dag,
+        )
+
+    # If manual triggers are NOT skipped, return the normal ExternalTaskSensor
+    return ExternalTaskSensor(
+        task_id=task_id,
         external_dag_id=external_dag_id,
         external_task_id=external_task_id,
-        execution_date_fn=compute_execution_date_fn,  # Pass the date function that uses Airflow's context
+        execution_date_fn=compute_execution_date_fn,
         check_existence=True,
         mode="reschedule",
         allowed_states=allowed_states,
@@ -181,8 +235,6 @@ def delayed_waiting_operator(
         dag=dag,
         **kwargs,
     )
-
-    return sensor
 
 
 def depends_loop(
@@ -350,3 +402,135 @@ def sparkql_health_check(url: str, timeout=5, retries=5, initial_delay=5):
             time.sleep(delay)
 
     raise Exception(f"Health check failed for {url} after {retries} attempts.")
+
+
+def get_json_from_gcs(bucket_name, blob_name):
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+    return json.loads(blob.download_as_text())
+
+
+def save_json_to_gcs(data_dict, bucket_name, blob_name):
+    """
+    Upload a dictionary as JSON to Google Cloud Storage.
+
+    Args:
+        data_dict (dict): The dictionary to be uploaded
+        bucket_name (str): Name of the GCS bucket
+        blob_name (str): Path/name of the blob in the bucket
+    """
+    try:
+        # Initialize the client
+        client = storage.Client()
+
+        # Get bucket
+        bucket = client.bucket(bucket_name)
+
+        # Get blob
+        blob = bucket.blob(blob_name)
+
+        # Convert dict to JSON string
+        json_data = json.dumps(data_dict, indent=2)  # Added indent for readability
+
+        # Upload to GCS with explicit encoding
+        blob.upload_from_string(
+            data=json_data,
+            content_type="application/json",
+            num_retries=3,  # Add retries
+            timeout=120,  # Add timeout in seconds
+        )
+        print(f"Successfully uploaded to gs://{bucket_name}/{blob_name}")
+
+    except Exception as e:
+        print(f"Error uploading to GCS: {str(e)}")
+        raise
+
+
+def build_export_context(**kwargs):
+    """
+    SINGLE FUNCTION that handles:
+        1) Gathering export info from GCS & Secret Manager.
+        2) Generating export logs & encryption key.
+        3) Generating export configurations dynamically.
+        4) Pushing ALL relevant fields to XCom, including 'export_context' & 'export_configs'.
+    """
+    ti = kwargs["ti"]
+    partner_name = kwargs["partner_name"]
+    logs_bucket = kwargs["bucket"]
+    export_date = kwargs["export_date"]
+    parquet_storage_gcs_bucket = kwargs["parquet_storage_gcs_bucket"]
+
+    # 1) Fetch next_exported_tables.json, obfuscation_config from GCS
+    table_list = get_json_from_gcs(
+        logs_bucket, f"{partner_name}/next_exported_tables.json"
+    ).get("exported_tables", [])
+
+    obfuscation_config = (
+        get_json_from_gcs(logs_bucket, f"{partner_name}/next_obfuscation_config.json")
+        or {}
+    )
+
+    # 2) Fetch partner-specific salt from Secret Manager or create it if not exists
+    partner_salt = create_key_if_not_exists(
+        project_id=GCP_PROJECT_ID,
+        secret_id=f"dbt_export_private_obfuscation_salt_{partner_name}",
+        key_length=32,
+    )
+
+    # 3) Fetch target bucket config
+    target_bucket_config = get_json_from_gcs(
+        logs_bucket, f"{partner_name}/target_bucket_config.json"
+    )
+
+    # 4) Generate export logs
+    export_logs = {
+        "partner_name": partner_name,
+        "export_date": export_date,
+        "exported_tables": table_list,
+        "obfuscation_config": obfuscation_config,
+    }
+
+    # Save logs to GCS if needed
+    save_json_to_gcs(
+        export_logs,
+        logs_bucket,
+        f"{partner_name}/{export_date}/export_logs.json",
+    )
+
+    # 5) Build export context for BigQuery to GCS export
+    export_context = {
+        "table_list": table_list,
+        "project_id": GCP_PROJECT_ID,
+        "source_dataset": f"export_{partner_name}",
+        "destination_bucket": parquet_storage_gcs_bucket,
+        "destination_path": f"{partner_name}/{export_date}",
+    }
+    ti.xcom_push(key="export_context", value=export_context)
+
+    # 6) Generate dynamic export configurations
+    export_configs = []
+    for table_name in table_list:
+        config = {
+            "source_project_dataset_table": f"{GCP_PROJECT_ID}.{export_context['source_dataset']}.{table_name}",
+            "destination_cloud_storage_uris": [
+                f"gs://{export_context['destination_bucket']}/{export_context['destination_path']}/{table_name}/*.parquet"
+            ],
+        }
+        export_configs.append(config)
+        logging.info(f"Generated export config for table {table_name}: {config}")
+
+    if not export_configs:
+        raise ValueError("No export configurations were generated")
+
+    # Push required values to XCom
+    ti.xcom_push(key="partner_name", value=partner_name)
+    ti.xcom_push(key="export_date", value=export_date)
+    ti.xcom_push(key="partner_salt", value=partner_salt)
+    ti.xcom_push(key="target_bucket_config", value=target_bucket_config)
+    ti.xcom_push(key="obfuscation_config", value=obfuscation_config)
+    ti.xcom_push(key="table_list", value=table_list)
+
+    logging.info(f"[build_export_context] for {partner_name}: {export_context}")
+    logging.info(f"Generated {len(export_configs)} export configurations")
+    return export_configs

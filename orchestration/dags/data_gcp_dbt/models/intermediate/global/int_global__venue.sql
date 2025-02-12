@@ -1,3 +1,25 @@
+with
+    bookable_offer_history as (
+        select
+            venue_id,
+            min(partition_date) as first_bookable_offer_date,
+            max(partition_date) as last_bookable_offer_date,
+            min(
+                case when total_individual_bookable_offers > 0 then partition_date end
+            ) as first_individual_bookable_offer_date,
+            max(
+                case when total_individual_bookable_offers > 0 then partition_date end
+            ) as last_individual_bookable_offer_date,
+            min(
+                case when total_collective_bookable_offers > 0 then partition_date end
+            ) as first_collective_bookable_offer_date,
+            max(
+                case when total_collective_bookable_offers > 0 then partition_date end
+            ) as last_collective_bookable_offer_date
+        from {{ ref("bookable_venue_history") }}
+        group by venue_id
+    )
+
 select
     v.venue_id,
     v.venue_name,
@@ -61,12 +83,12 @@ select
     v.last_collective_offer_creation_date,
     v.total_created_collective_offers,
     v.total_created_offers,
-    v.first_bookable_offer_date,
-    v.last_bookable_offer_date,
-    v.first_individual_bookable_offer_date,
-    v.last_individual_bookable_offer_date,
-    v.first_collective_bookable_offer_date,
-    v.last_collective_bookable_offer_date,
+    boh.first_bookable_offer_date,
+    boh.last_bookable_offer_date,
+    boh.first_individual_bookable_offer_date,
+    boh.last_individual_bookable_offer_date,
+    boh.first_collective_bookable_offer_date,
+    boh.last_collective_bookable_offer_date,
     v.first_booking_date,
     v.last_booking_date,
     v.first_offer_creation_date,
@@ -78,12 +100,28 @@ select
     v.total_non_cancelled_tickets,
     v.total_current_year_non_cancelled_tickets,
     v.offerer_address_id,
-    v.is_active_last_30days,
-    v.is_active_current_year,
-    v.is_individual_active_last_30days,
-    v.is_individual_active_current_year,
-    v.is_collective_active_last_30days,
-    v.is_collective_active_current_year,
+    coalesce(
+        date_diff(current_date, boh.last_bookable_offer_date, day) <= 30, false
+    ) as is_active_last_30days,
+    coalesce(
+        date_diff(current_date, boh.last_bookable_offer_date, year) = 0, false
+    ) as is_active_current_year,
+    coalesce(
+        date_diff(current_date, boh.last_individual_bookable_offer_date, day) <= 30,
+        false
+    ) as is_individual_active_last_30days,
+    coalesce(
+        date_diff(current_date, boh.last_individual_bookable_offer_date, year) = 0,
+        false
+    ) as is_individual_active_current_year,
+    coalesce(
+        date_diff(current_date, boh.last_collective_bookable_offer_date, day) <= 30,
+        false
+    ) as is_collective_active_last_30days,
+    coalesce(
+        date_diff(current_date, boh.last_collective_bookable_offer_date, year) = 0,
+        false
+    ) as is_collective_active_current_year,
     v.venue_image_source,
     v.total_distinct_headline_offers,
     v.has_headline_offer,
@@ -124,3 +162,4 @@ from {{ ref("int_applicative__venue") }} as v
 left join
     {{ ref("int_global__offerer") }} as ofr
     on v.venue_managing_offerer_id = ofr.offerer_id
+left join bookable_offer_history as boh on boh.venue_id = v.venue_id

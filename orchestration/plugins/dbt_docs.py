@@ -5,6 +5,7 @@ from flask import abort
 from flask_appbuilder import BaseView as AppBuilderBaseView
 from flask_appbuilder import expose
 
+from airflow.exceptions import AirflowConfigException
 from airflow.security import permissions
 from airflow.www.auth import has_access
 
@@ -12,7 +13,13 @@ from airflow.www.auth import has_access
 def get_airflow_home() -> str:
     if os.environ.get("LOCAL_ENV", None) == "1":
         return "/opt/airflow/"
-    return "/home/airflow/gcs"
+    if os.environ.get("DAG_FOLDER", None) == "/opt/airflow/dags":
+        return "/opt/airflow/"
+    if os.environ.get("DAG_FOLDER", None) == "/home/airflow/gcs/dags":
+        return "/home/airflow/gcs"
+    raise AirflowConfigException(
+        "Airflow home not found, failed to determine environment"
+    )
 
 
 AIRFLOW_HOME = get_airflow_home()

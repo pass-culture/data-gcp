@@ -24,6 +24,7 @@ where
     (
         event_params.key = 'PRO_DIDACTIC_ONBOARDING_AB_TEST'
         or event_params.key like 'PRO_EXPERIMENT%'
+        or event_params.key = 'AB_COLLECTIVE_DESCRIPTION_TEMPLATE'
     )
     and event_params.value.string_value is not null
     {% if is_incremental() %}

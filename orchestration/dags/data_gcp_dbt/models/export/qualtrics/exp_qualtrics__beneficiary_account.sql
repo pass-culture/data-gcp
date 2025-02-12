@@ -3,23 +3,21 @@ with
         select
             user_id,
             count(distinct concat(user_pseudo_id, session_id)) as total_visit_last_month
-        from `{{ bigquery_int_firebase_dataset }}.native_event`
+        from {{ ref("int_firebase__native_event") }}
         where date(event_date) >= date_sub(current_date, interval 1 month)
         group by user_id
     ),
 
     previous_export as (
         select distinct user_id
-        from `{{ bigquery_clean_dataset }}.qualtrics_ir_jeunes`
+        from {{ source("raw", "qualtrics_exported_beneficiary_account") }}
         where
             calculation_month
-            >= date_sub(date("{{ current_month(ds) }}"), interval 6 month)
+            >= date_sub(date_trunc(date("{{ ds() }}"), month), interval 6 month)
 
     ),
 
-    answers as (
-        select distinct user_id from `{{ bigquery_raw_dataset }}.qualtrics_answers`
-    ),
+    answers as (select distinct user_id from {{ source("raw", "qualtrics_answers") }}),
 
     ir_export as (
         select
@@ -36,19 +34,19 @@ with
             user_location.zrr_level as zrr,
             user_data.user_seniority
 
-        from `{{ bigquery_analytics_dataset }}.global_user` user_data
+        from {{ ref("mrt_global__user") }} as user_data
         left join
-            `{{ bigquery_int_geo_dataset }}.user_location` user_location
-            on user_location.user_id = user_data.user_id
+            {{ ref("int_geo__user_location") }} as user_location
+            on user_data.user_id = user_location.user_id
         left join
-            `{{ bigquery_raw_dataset }}.qualtrics_opt_out_users` opt_out
-            on opt_out.ext_ref = user_data.user_id
+            {{ source("raw", "qualtrics_opt_out_users") }} as opt_out
+            on user_data.user_id = opt_out.ext_ref
         left join user_visits on user_data.user_id = user_visits.user_id
         left join answers on user_data.user_id = answers.user_id
         where
             user_data.user_id is not null
             and user_data.current_deposit_type in ("GRANT_15_17", "GRANT_18")
-            and user_is_current_beneficiary is true
+            and user_data.user_is_current_beneficiary is true
             and user_data.user_is_active is true
             and user_data.user_has_enabled_marketing_email is true
             and opt_out.contact_id is null
@@ -57,26 +55,30 @@ with
 
     grant_15_17 as (
         select ir.*
-        from ir_export ir
-        left join previous_export pe on pe.user_id = ir.user_id
-        where ir.deposit_type = "GRANT_15_7" and pe.user_id is null
+        from ir_export as ir
+        {% if is_incremental() %}
+            left join previous_export as pe on ir.user_id = pe.user_id
+            where ir.deposit_type = "GRANT_15_7" and pe.user_id is null
+        {% else %} where ir.deposit_type = "GRANT_15_7"
+        {% endif %}
         order by rand()
-        limit {{ params.volume }}
+        limit 8000
     ),
 
     grant_18 as (
         select ir.*
-        from ir_export ir
-        left join previous_export pe on pe.user_id = ir.user_id
-        where deposit_type = "GRANT_18" and pe.user_id is null
+        from ir_export as ir
+        {% if is_incremental() %}
+            left join previous_export as pe on ir.user_id = pe.user_id
+            where ir.deposit_type = "GRANT_18" and pe.user_id is null
+        {% else %} where ir.deposit_type = "GRANT_18"
+        {% endif %}
         order by rand()
-        limit {{ params.volume }}
+        limit 8000
     )
 
-select
-    date("{{ current_month(ds) }}") as calculation_month, current_date as export_date, *
+select current_date as export_date, *
 from grant_18
 union all
-select
-    date("{{ current_month(ds) }}") as calculation_month, current_date as export_date, *
+select current_date as export_date, *
 from grant_15_17

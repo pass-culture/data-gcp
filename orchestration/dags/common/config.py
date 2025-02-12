@@ -11,6 +11,11 @@ ENVIRONMENT_NAME = {
 }[ENV_SHORT_NAME]
 DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags/")
 LOCAL_ENV = os.environ.get("LOCAL_ENV", None)
+AIRFLOW_URI = {
+    "dev": "airflow-dev.data.ehp.passculture.team",
+    "stg": "airflow-stg.data.ehp.passculture.team",
+    "prod": "airflow.data.passculture.team",
+}[ENV_SHORT_NAME]
 
 GCS_COMPOSER_BUCKET = os.environ.get("GCS_BUCKET", f"airflow-{ENVIRONMENT_NAME}-bucket")
 

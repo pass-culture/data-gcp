@@ -48,7 +48,7 @@ with
             offer_id,
             case
                 when
-                    headline_ending_time is null or headline_ending_time >= current_date
+                    date(headline_ending_time) is null or date(headline_ending_time) >= current_date
                 then true
                 else false
             end as is_headlined,

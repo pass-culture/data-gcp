@@ -48,7 +48,8 @@ with
             offer_id,
             case
                 when
-                    date(headline_ending_time) is null or date(headline_ending_time) >= current_date
+                    date(headline_ending_time) is null
+                    or date(headline_ending_time) >= current_date
                 then true
                 else false
             end as is_headlined,
@@ -56,7 +57,7 @@ with
             max(date(headline_ending_time)) as last_headline_date,
             count(distinct offer_id) as total_headlines
         from {{ source("raw", "applicative_database_headline_offer") }}
-        group by offer_id
+        group by offer_id, is_headlined
     )
 
 select

@@ -9,7 +9,9 @@
 
 select
     co.collective_offer_id,
-    {{ target_schema }}.humanize_id(co.collective_offer_id) as collective_offer_humanized_id,
+    {{ target_schema }}.humanize_id(
+        co.collective_offer_id
+    ) as collective_offer_humanized_id,
     co.collective_offer_name,
     co.venue_id,
     v.partner_id,

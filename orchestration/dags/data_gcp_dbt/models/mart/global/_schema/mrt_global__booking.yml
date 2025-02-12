@@ -68,6 +68,7 @@ models:
         data_type: NUMERIC
         data_tests:
           - is_valid_booking_intermediary_amout:
+              where_condition: "date(booking_creation_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)"
               tags: ['critical']
               config:
                 severity: error

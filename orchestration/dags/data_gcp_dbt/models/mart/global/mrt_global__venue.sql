@@ -97,10 +97,10 @@ select
     offerer_rank_desc,
     offerer_rank_asc,
     venue_image_source,
-    venue_total_distinct_headline_offers,
-    venue_has_headline_offer,
-    venue_first_headline_offer_date,
-    venue_last_headline_offer_date,
+    total_distinct_headline_offers,
+    has_headline_offer,
+    first_headline_offer_date,
+    last_headline_offer_date,
     venue_adage_inscription_date
 from {{ ref("int_global__venue") }}
 where offerer_validation_status = 'VALIDATED' and offerer_is_active

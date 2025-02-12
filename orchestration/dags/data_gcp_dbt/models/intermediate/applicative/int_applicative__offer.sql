@@ -52,9 +52,9 @@ with
                 then true
                 else false
             end as is_headlined,
-            min(date(headline_beginning_time)) as offer_first_headline_date,
-            max(date(headline_ending_time)) as offer_last_headline_date,
-            count(distinct offer_id) as total_offer_headlines
+            min(date(headline_beginning_time)) as first_headline_date,
+            max(date(headline_ending_time)) as last_headline_date,
+            count(distinct offer_id) as total_headlines
         from {{ source("raw", "applicative_database_headline_offer") }}
         group by offer_id
     )
@@ -206,7 +206,7 @@ select
         then true
         else false
     end as is_future_scheduled,
-    ho.total_offer_headlines,
+    ho.total_headlines,
     case
         when
             is_headlined
@@ -216,8 +216,8 @@ select
         then true
         else false
     end as is_headlined,
-    offer_first_headline_date,
-    offer_last_headline_date
+    first_headline_date,
+    last_headline_date
 from {{ ref("int_applicative__extract_offer") }} as o
 left join {{ ref("int_applicative__offer_item_id") }} as ii on ii.offer_id = o.offer_id
 left join stocks_grouped_by_offers as so on so.offer_id = o.offer_id

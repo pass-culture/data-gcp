@@ -81,7 +81,7 @@ show type for shows. {% enddocs %}
 offer show sub type for shows. {% enddocs %}
 {% docs column__offer_type_labels %} Deprecated: Legacy identifier. Prefer using GTL. {% enddocs %}
 {% docs column__is_headlined %} Indicates if the offer is currently headlined on the app venue page. {% enddocs %}
-{% docs column__total_offer_headlines %} Number of different times the offer was headlined on the app venue page. (an offer headline can be desactivated and reactivated) {% enddocs %}
+{% docs column__total_headlines %} Number of different times the offer was headlined on the app venue page. (an offer headline can be desactivated and reactivated) {% enddocs %}
 
 # Date related
 
@@ -93,5 +93,5 @@ offer show sub type for shows. {% enddocs %}
 {% docs column__last_individual_bookable_offer_date %} Date of the last individual bookable offer. {% enddocs %}
 {% docs column__first_offer_creation_date %} Date of the first offer creation. {% enddocs %}
 {% docs column__last_offer_creation_date %} Date of the last offer creation. {% enddocs %}
-{% docs column__offer_first_headline_date %} First date of headline on the app venue page. {% enddocs %}
-{% docs column__offer_last_headline_date %} Last date of headline on the app venue page. {% enddocs %}
+{% docs column__first_headline_date %} First date of headline on the app venue page. {% enddocs %}
+{% docs column__last_headline_date %} Last date of headline on the app venue page. {% enddocs %}

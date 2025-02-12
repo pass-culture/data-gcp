@@ -96,4 +96,3 @@ select
         md5(concat(cast(session_start as string), user_id, session_num))
     ) as session_id
 from generate_session
-{% if is_incremental() %} where partition_date = date('{{ ds() }}') {% endif %}

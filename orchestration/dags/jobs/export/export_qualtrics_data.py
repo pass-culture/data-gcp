@@ -86,7 +86,7 @@ def get_and_send(**kwargs):
     dataset_id = kwargs["dataset_id"]
     automation_id = kwargs["automation_id"]
     include_email = kwargs["include_email"]
-    current_month = ds.strftime("%Y-%m-%d")
+    execution_date = ds.strftime("%Y-%m-%d")
     if include_email:
         sql = f"""
             WITH user_email AS (
@@ -101,7 +101,7 @@ def get_and_send(**kwargs):
             t.* except(calculation_month, export_date)
         FROM `{dataset_id}.{table_name}` t
         LEFT JOIN user_email ue on ue.user_id = t.user_id
-        WHERE t.calculation_month = date_trunc(date("{ current_month }"), month)
+        WHERE t.calculation_month = date_trunc(date("{ execution_date }"), month)
         """
     else:
         sql = f"""
@@ -109,7 +109,7 @@ def get_and_send(**kwargs):
             CURRENT_TIMESTAMP() as export_date,
             t.* except(calculation_month, export_date)
         FROM `{dataset_id}.{table_name}` t
-        WHERE t.calculation_month = date_trunc(date("{ current_month }"), month)
+        WHERE t.calculation_month = date_trunc(date("{ execution_date }"), month)
         """
     df = pd.read_gbq(sql)
     export = df.to_csv(index=False)

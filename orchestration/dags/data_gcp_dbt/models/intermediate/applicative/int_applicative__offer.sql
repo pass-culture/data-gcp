@@ -236,7 +236,7 @@ left join
 left join
     {{ source("raw", "applicative_database_future_offer") }} as future_offer
     on future_offer.offer_id = o.offer_id
+left join headline_offer as ho on ho.offer_id = o.offer_id
 where
     o.offer_subcategoryid not in ("ACTIVATION_THING", "ACTIVATION_EVENT")
     and (o.booking_email <> "jeux-concours@passculture.app" or o.booking_email is null)
-left join headline_offer as ho on ho.offer_id = o.offer_id

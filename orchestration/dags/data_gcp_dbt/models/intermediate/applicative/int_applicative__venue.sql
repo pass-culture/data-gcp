@@ -348,9 +348,7 @@ select
         then "google"
         else "default_category"
     end as venue_image_source,
-    coalesce(
-        o.total_distinct_headline_offers, 0
-    ) as total_distinct_headline_offers,
+    coalesce(o.total_distinct_headline_offers, 0) as total_distinct_headline_offers,
     coalesce(o.has_headline_offer, false) as has_headline_offer,
     o.first_headline_offer_date,
     o.last_headline_offer_date

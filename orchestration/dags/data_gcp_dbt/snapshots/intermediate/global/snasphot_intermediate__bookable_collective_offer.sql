@@ -8,7 +8,7 @@
     }}
 
     select collective_offer_id
-    from {{ ref("int_global__collective_offer") }}
+    from {{ ref("int_applicative__collective_offer") }}
     where collective_offer_is_bookable
 
 {% endsnapshot %}

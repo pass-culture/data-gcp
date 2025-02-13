@@ -193,7 +193,7 @@ def apk(actual, predicted, k=10):
             num_hits += 1.0
             score += num_hits / (i + 1.0)
 
-    return score / min(len(actual), k)
+    return score / min(len(predicted), k)
 
 
 def mapk(actual, predicted, k=10):

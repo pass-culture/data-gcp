@@ -127,6 +127,10 @@ sources:
       - name: metabase_report_card
       - name: metabase_report_dashboard
       - name: metabase_revision
+      - name: qualtrics_answers
+      - name: qualtrics_opt_out_users
+      - name: qualtrics_exported_beneficiary_account
+      - name: qualtrics_exported_venue_account
       - name: qpi_answers_historical
       - name: qpi_answers_v4
       - name: past_offer_context

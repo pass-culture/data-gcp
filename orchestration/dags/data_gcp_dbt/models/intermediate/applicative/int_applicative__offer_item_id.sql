@@ -1,15 +1,11 @@
-{{ config(**custom_table_config())}}
+{{ config(**custom_table_config()) }}
 
 with
     items_grouping as (
         select
             offer.offer_id,
             case
-                when
-                    (
-                        linked_offers.item_id is not null
-                        and offer_product_id is null
-                    )
+                when (linked_offers.item_id is not null and offer_product_id is null)
                 then linked_offers.item_id
                 when (offer.offer_product_id is not null)
                 then concat('product-', offer.offer_product_id)

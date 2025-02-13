@@ -37,6 +37,6 @@ from events
 join {{ ref("int_global__offer") }} offer on offer.offer_id = events.offer_id
 inner join {{ ref("int_global__user") }} user on user.user_id = events.user_id
 left join
-    `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id`
+    `passculture-data-prod.int_applicative_prod.temp_int_applicative__offer_item_id`
     as iom
     on offer.offer_id = iom.offer_id

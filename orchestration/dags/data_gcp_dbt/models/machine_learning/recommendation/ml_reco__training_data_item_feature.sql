@@ -21,7 +21,7 @@ with
             {{ source("ml_preproc", "item_embedding_reduced_16") }} item_embedding_reduced
             on offer.item_id = item_embedding_reduced.item_id
         left join
-            `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id`
+            `passculture-data-prod.int_applicative_prod.temp_int_applicative__offer_item_id`
             as iom
             on offer.offer_id = iom.offer_id
         group by 1, 2, 3, 4, 5

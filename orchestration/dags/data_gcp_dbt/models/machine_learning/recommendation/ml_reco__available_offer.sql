@@ -114,7 +114,7 @@ with
             {{ source("raw", "gsheet_ml_recommendation_sensitive_item") }} sensitive_offer
             on offer.item_id = sensitive_offer.item_id
         left join
-            `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id`
+            `passculture-data-prod.int_applicative_prod.temp_int_applicative__offer_item_id`
             as iom
             on offer.offer_id = iom.offer_id
         where

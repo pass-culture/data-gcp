@@ -78,7 +78,7 @@ select
     ) as blocked
 from {{ ref("mrt_global__offer") }} eod
 left join
-    `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id`
+    `passculture-data-prod.int_applicative_prod.temp_int_applicative__offer_item_id`
     as iom
     on eod.offer_id = iom.offer_id
 inner join {{ ref("ml_input__item_metadata") }} eim on eim.item_id = iom.item_id

@@ -2,7 +2,7 @@ version: 1
 
 sources:
   - name: raw
-    schema: raw_{{ var('ENV_SHORT_NAME') }}
+    schema: raw_prod
     tables:
       - name: adage
       - name: applicative_database_accessibility_provider
@@ -186,7 +186,7 @@ sources:
       - name: zrr
 
   - name: ml_preproc
-    schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
+    schema: ml_preproc_prod
     tables:
       - name: default_item_cluster
       - name: item_embedding_extraction

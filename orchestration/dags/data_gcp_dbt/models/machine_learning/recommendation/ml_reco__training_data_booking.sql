@@ -18,7 +18,7 @@ from {{ ref("int_global__booking") }} booking
 join {{ ref("int_global__offer") }} offer on offer.offer_id = booking.offer_id
 inner join {{ ref("int_global__user") }} user on user.user_id = booking.user_id
 left join
-    `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id`
+    `passculture-data-prod.int_applicative_prod.temp_int_applicative__offer_item_id`
     as iom
     on offer.offer_id = iom.offer_id
 where booking.booking_creation_date >= date_sub(date("{{ ds() }}"), interval 6 month)

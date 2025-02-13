@@ -32,7 +32,7 @@ with
         left join
             {{ ref("int_global__user") }} as users on events.user_id = users.user_id
         left join
-            `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id`
+            `passculture-data-prod.int_applicative_prod.temp_int_applicative__offer_item_id`
             as iom
             on offers.offer_id = iom.offer_id
     )

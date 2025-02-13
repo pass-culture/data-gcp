@@ -16,7 +16,7 @@ with
         from {{ ref("mrt_global__offer") }} eod
         left join venues v on v.venue_id = eod.venue_id
         left join
-            `passculture-data-ehp.int_applicative_stg.temp_int_applicative__offer_item_id`
+            `passculture-data-prod.int_applicative_prod.temp_int_applicative__offer_item_id`
             as iom
             on eod.offer_id = iom.offer_id
         qualify

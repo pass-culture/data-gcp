@@ -1,4 +1,6 @@
-{% test not_null_proportion_native_event(model, column_name, where_condition, warn_if) %}
+{% test not_null_proportion_native_event(
+    model, column_name, where_condition, warn_if
+) %}
 
     with
         validation as (
@@ -19,6 +21,8 @@
         )
     select *
     from final
-    where proportion > {{ var("not_null_anomaly_threshold_alert_percentage_native_event") }}
+    where
+        proportion
+        > {{ var("not_null_anomaly_threshold_alert_percentage_native_event") }}
 
 {% endtest %}

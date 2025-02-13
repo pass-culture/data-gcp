@@ -77,6 +77,7 @@ select
     cs.collective_stock_booking_limit_date_time,
     co.collective_offer_template_beginning_date,
     co.collective_offer_template_ending_date,
+    co.collective_offer_last_validation_date,
     co.collective_offer_rejection_reason,
     cs.collective_stock_price,
     cs.collective_stock_number_of_tickets,

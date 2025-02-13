@@ -36,10 +36,11 @@ def export_partitions(table, config):
     look_back_months = config["look_back_months"][ENV_SHORT_NAME]
     dataset_id = config["dataset_id"]
     partition_column = config["partition_column"]
+    folder = config["folder"]
 
     for partition_date in partitions:
         partition_str = partition_date.strftime("%Y%m%d")  # Convert to YYYYMMDD format
-        gcs_uri = f"{EXPORT_PATH}/{table}/{partition_str}_{table}_*.parquet"
+        gcs_uri = f"{EXPORT_PATH}/{folder}/{table}/{partition_str}_{table}_*.parquet"
         query_export = f"""
             EXPORT DATA
             OPTIONS (

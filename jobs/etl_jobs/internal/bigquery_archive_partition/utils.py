@@ -6,4 +6,4 @@ DATA_GCS_BUCKET_NAME = os.environ.get(
     "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
 )
 
-EXPORT_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/archive"
+EXPORT_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/historization"

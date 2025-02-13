@@ -24,11 +24,13 @@ TABLES = {
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "import_date",
         "look_back_months": {"dev": 1, "stg": 1, "prod": 3},
+        "folder": "recommendation",
     },
     "firebase_events": {
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "event_date",
         "look_back_months": {"dev": 1, "stg": 3, "prod": 24},
+        "folder": "tracking",
     },
 }
 

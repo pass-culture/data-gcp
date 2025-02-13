@@ -26,7 +26,6 @@ on:
       IS_COMPOSER:
         type: boolean
         required: true
-        default: true
         description: "Temporary; If false, the workflow will not wait for the composer to be deployed as we are not deploying a composer but custom airflow"
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER:

@@ -15,7 +15,8 @@ select distinct
     global_offer.offer_subcategory_id,
     subcategories.category_id as offer_category_id
 from {{ ref("snapshot__bookable_offer") }} as offer
-left join {{ ref("int_global__offer") }} as global_offer
+left join
+    {{ ref("int_global__offer") }} as global_offer
     on offer.offer_id = global_offer.offer_id
 left join
     {{ ref("int_applicative__offer_item_id") }} as int_applicative__offer_item_id
@@ -23,8 +24,6 @@ left join
 left join
     {{ source("raw", "subcategories") }} as subcategories
     on global_offer.offer_subcategory_id = subcategories.id
-where date('{{ ds() }}') >= date(offer.dbt_valid_from)
-and (
-offer.dbt_valid_to is null
-or date('{{ ds() }}') <= date(offer.dbt_valid_to)
-)
+where
+    date('{{ ds() }}') >= date(offer.dbt_valid_from)
+    and (offer.dbt_valid_to is null or date('{{ ds() }}') <= date(offer.dbt_valid_to))

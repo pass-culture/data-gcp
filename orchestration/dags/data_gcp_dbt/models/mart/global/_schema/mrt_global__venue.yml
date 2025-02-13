@@ -308,6 +308,18 @@ models:
       - name: venue_image_source
         description: '{{ doc("column__venue_image_source") }}'
         data_type: STRING
+      - name: total_distinct_headline_offers
+        description: '{{ doc("column__total_distinct_headline_offers") }}'
+        data_type: INT64
+      - name: has_headline_offer
+        description: '{{ doc("column__has_headline_offer") }}'
+        data_type: BOOLEAN
+      - name: first_headline_offer_date
+        description: '{{ doc("column__first_headline_offer_date") }}'
+        data_type: DATETIME
+      - name: last_headline_offer_date
+        description: '{{ doc("column__last_headline_offer_date") }}'
+        data_type: DATETIME
       - name: venue_adage_inscription_date
         description: '{{ doc("column__venue_adage_inscription_date") }}'
         data_type: DATE

@@ -30,11 +30,11 @@ models:
               to: ref("int_global__booking")
               field: booking_id
               where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
-          - not_null_proportion:
+          - not_null_proportion_native_event:
               where_condition: "event_name = 'BookingConfirmation' AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
       - name: offerId
         data_tests:
-          - not_null_proportion:
+          - not_null_proportion_native_event:
               where_condition: "event_name = 'ConsultOffer' AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
       - name: event_date
         data_tests:

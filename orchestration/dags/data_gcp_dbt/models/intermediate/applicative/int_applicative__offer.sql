@@ -207,7 +207,6 @@ select
         then true
         else false
     end as is_future_scheduled,
-    end as is_future_scheduled,
     ho.total_headlines,
     case
         when

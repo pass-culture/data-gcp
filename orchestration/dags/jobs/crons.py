@@ -22,3 +22,8 @@ SCHEDULE_DICT = {
     "import_intraday_firebase_data": "0 1 * * *",
     "link_items": {"prod": "0 4 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"},
 }
+
+
+ENCRYPTED_EXPORT_DICT = {
+    "20c702271b0187d039734307766eead8": {"prod": None},
+}

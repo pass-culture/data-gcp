@@ -1,0 +1,5 @@
+duckdb
+google-cloud-storage
+boto3
+botocore
+typer

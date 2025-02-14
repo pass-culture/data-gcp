@@ -4,6 +4,7 @@ SCHEDULE_DICT = {
         "dev": "0 12 * * 2",
         "stg": "0 12 * * 3",
     },
+    "bigquery_export_old_partitions": "0 7 1 * *",
     "clickhouse_exports": {
         "daily": {
             "prod": "0 6 * * *",
@@ -20,4 +21,9 @@ SCHEDULE_DICT = {
     "import_applicative_database": "0 1 * * *",
     "import_intraday_firebase_data": "0 1 * * *",
     "link_items": {"prod": "0 4 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"},
+}
+
+
+ENCRYPTED_EXPORT_DICT = {
+    "20c702271b0187d039734307766eead8": {"prod": None},
 }

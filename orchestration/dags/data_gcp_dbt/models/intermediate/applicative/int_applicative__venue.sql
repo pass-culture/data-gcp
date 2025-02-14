@@ -35,7 +35,6 @@ with
                 distinct case when offer_is_bookable then offer_id end
             ) as total_bookable_individual_offers,
             count(distinct venue_id) as total_venues,
-            count(distinct venue_id) as total_venues,
             count(
                 distinct case when total_headlines > 0 then offer_id end
             ) as total_distinct_headline_offers,

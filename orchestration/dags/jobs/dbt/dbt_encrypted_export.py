@@ -13,6 +13,11 @@ from common.operators.gce import (
     StartGCEOperator,
     StopGCEOperator,
 )
+from common.utils import (
+    build_export_context,
+    delayed_waiting_operator,
+    get_json_from_gcs,
+)
 from jobs.crons import ENCRYPTED_EXPORT_DICT
 
 from airflow import DAG
@@ -24,11 +29,6 @@ from airflow.providers.google.cloud.transfers.bigquery_to_gcs import (
     BigQueryToGCSOperator,
 )
 from airflow.utils.task_group import TaskGroup
-from dags.common.utils import (
-    build_export_context,
-    delayed_waiting_operator,
-    get_json_from_gcs,
-)
 
 default_args = {
     "start_date": datetime.datetime(2020, 12, 1),

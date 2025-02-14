@@ -77,10 +77,6 @@ select
     venue_iris_internal_id,
     offerer_address_id,
     offer_publication_date,
-    is_future_scheduled,
-    total_headlines,
-    is_headlined,
-    first_headline_date,
-    last_headline_date
+    is_future_scheduled
 from {{ ref("int_global__offer") }} as o
 where true and offer_validation = 'APPROVED' and venue_id is not null

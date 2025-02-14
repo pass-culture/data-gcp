@@ -6338,6 +6338,46 @@
 <td style="text-align: left;">BOOLEAN</td>
 <td style="text-align: left;">Indicates if the offer is scheduled for the future.</td>
 </tr>
+<tr>
+<td style="text-align: left;">total_headlines</td>
+<td style="text-align: left;">INT64</td>
+<td style="text-align: left;">Number of different times the offer was headlined on the app venue page. (an offer headline can be desactivated and reactivated)</td>
+</tr>
+<tr>
+<td style="text-align: left;">is_headlined</td>
+<td style="text-align: left;">BOOLEAN</td>
+<td style="text-align: left;">Indicates if the offer is currently headlined on the app venue page.</td>
+</tr>
+<tr>
+<td style="text-align: left;">first_headline_date</td>
+<td style="text-align: left;">DATETIME</td>
+<td style="text-align: left;">First date of headline on the app venue page.</td>
+</tr>
+<tr>
+<td style="text-align: left;">last_headline_date</td>
+<td style="text-align: left;">DATETIME</td>
+<td style="text-align: left;">Last date of headline on the app venue page.</td>
+</tr>
+<tr>
+<td style="text-align: left;">venue_density_level</td>
+<td style="text-align: left;">STRING</td>
+<td style="text-align: left;">ID of the density level of the venue (cf venue_density_label).</td>
+</tr>
+<tr>
+<td style="text-align: left;">venue_department_name</td>
+<td style="text-align: left;">STRING</td>
+<td style="text-align: left;">Department name where of the venue.</td>
+</tr>
+<tr>
+<td style="text-align: left;">venue_is_permanent</td>
+<td style="text-align: left;">BOOLEAN</td>
+<td style="text-align: left;">Indicates if the venue is permanent. A permanent venue is a venue that can receive public permanently, that can propose offers, and that is managed by the partner. Permanent venues exemple : a library, a cinema. Non permanent venues example : a public garden that hosted a festival once, or a theater that hosted a concert once - it can be permanent for the partner who owns the theater, but not for the partner who is hosted once in this place.</td>
+</tr>
+<tr>
+<td style="text-align: left;">offer_last_provider_id</td>
+<td style="text-align: left;">STRING</td>
+<td style="text-align: left;">Id of the offer's last provider.</td>
+</tr>
 </tbody>
 </table>
 

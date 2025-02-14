@@ -1,3 +1,4 @@
+import json
 from utils import ENV_SHORT_NAME, GCP_PROJECT_ID, EXPORT_PATH
 from google.cloud import bigquery
 
@@ -7,7 +8,7 @@ def store_partitions_in_temp(table, config):
 
     partition_column = config["partition_column"]
     dataset_id = config["dataset_id"]
-    look_back_months = config["look_back_months"][ENV_SHORT_NAME]
+    look_back_months = json.loads(config["look_back_months"])[ENV_SHORT_NAME]
 
     query_temp = f"""CREATE OR REPLACE TABLE `{GCP_PROJECT_ID}.tmp_{ENV_SHORT_NAME}.{table}_old_partitions`
         as
@@ -33,7 +34,7 @@ def export_partitions(table, config):
     if not partitions:
         print("No partitions to export.")
 
-    look_back_months = config["look_back_months"][ENV_SHORT_NAME]
+    look_back_months = json.loads(config["look_back_months"])[ENV_SHORT_NAME]
     dataset_id = config["dataset_id"]
     partition_column = config["partition_column"]
     folder = config["folder"]
@@ -61,7 +62,7 @@ def delete_partitions(table, config):
     client = bigquery.Client()
     dataset_id = config["dataset_id"]
     partition_column = config["partition_column"]
-    look_back_months = config["look_back_months"][ENV_SHORT_NAME]
+    look_back_months = json.loads(config["look_back_months"])[ENV_SHORT_NAME]
 
     query_delete = f"""DELETE FROM `{GCP_PROJECT_ID}.{dataset_id}.{table}`
         WHERE {partition_column} < DATE_SUB(CURRENT_DATE(), INTERVAL {look_back_months} MONTH);

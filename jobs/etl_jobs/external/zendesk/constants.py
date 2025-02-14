@@ -41,6 +41,7 @@ TICKET_BASE_COLUMNS = [
     "id",
     "group_id",
     "assignee_id",
+    "recipient",
     "brand_id",
     "created_at",
     "updated_at",
@@ -105,6 +106,9 @@ TICKET_COLUMN_BQ_SCHEMA_FIELD = [
     ),
     bigquery.SchemaField(
         "brand_id", bigquery.enums.SqlTypeNames.INTEGER, mode="NULLABLE"
+    ),
+    bigquery.SchemaField(
+        "recipient", bigquery.enums.SqlTypeNames.STRING, mode="NULLABLE"
     ),
     bigquery.SchemaField(
         "created_at", bigquery.enums.SqlTypeNames.STRING, mode="NULLABLE"

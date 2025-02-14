@@ -123,10 +123,6 @@ select
         false
     ) as is_collective_active_current_year,
     v.venue_image_source,
-    v.total_distinct_headline_offers,
-    v.has_headline_offer,
-    v.first_headline_offer_date,
-    v.last_headline_offer_date,
     v.venue_adage_inscription_date,
     ofr.offerer_id,
     ofr.offerer_name,

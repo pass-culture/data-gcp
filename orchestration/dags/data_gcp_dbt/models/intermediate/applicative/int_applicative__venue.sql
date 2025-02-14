@@ -34,7 +34,7 @@ with
             count(
                 distinct case when offer_is_bookable then offer_id end
             ) as total_bookable_individual_offers,
-            count(distinct venue_id) as total_venues,
+            count(distinct venue_id) as total_venues_from_offer,
             count(
                 distinct case when total_headlines > 0 then offer_id end
             ) as total_distinct_headline_offers,
@@ -262,7 +262,7 @@ select
             )
     end as last_offer_creation_date,
     coalesce(o.total_bookable_individual_offers, 0) as total_bookable_individual_offers,
-    coalesce(o.total_venues, 0) as total_venues,
+    coalesce(o.total_venues_from_offer, 0) as total_venues,
     coalesce(
         co.total_bookable_collective_offers, 0
     ) as total_bookable_collective_offers,

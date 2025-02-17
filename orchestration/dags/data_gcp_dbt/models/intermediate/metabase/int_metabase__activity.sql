@@ -10,10 +10,12 @@ select
     aggregated_activity.avg_result_rows,
     aggregated_activity.total_users,
     aggregated_activity.total_views,
+    aggregated_activity.total_views_6_months,
     aggregated_activity.nbr_dashboards,
     aggregated_activity.last_execution_date,
     rank_execution.context as last_execution_context,
     aggregated_activity.total_errors,
+    DATE_DIFF(CURRENT_DATE(), DATE(aggregated_activity.last_execution_date), day) as days_since_last_execution,
     case
         when
             public_collections.location like '/610%'
@@ -35,7 +37,6 @@ select
         then 'restreint'
         else 'other'
     end as parent_folder
-
 from {{ ref("int_metabase__daily_query") }} as rank_execution
 inner join
     {{ ref("int_metabase__aggregated_card_activity") }} as aggregated_activity

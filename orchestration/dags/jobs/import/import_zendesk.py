@@ -90,7 +90,7 @@ with DAG(
         task_id="import_to_bigquery",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_PATH,
-        command="python main.py --ndays {{ params.ndays }} --job {{ params.job }} --prior_date {{ params.prior_date }} ",
+        command="python main.py --ndays {{ params.ndays }} --job {{ params.job }} --prior-date {{ params.prior_date }} ",
         do_xcom_push=True,
     )
 

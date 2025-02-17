@@ -7,8 +7,14 @@ models:
         description: '{{ doc("column__booking_id") }}'
         data_type: STRING
         data_tests:
-          - not_null
-          - unique
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: error
+          - unique:
+              tags: ['critical']
+              config:
+                severity: error
       - name: booking_creation_date
         description: '{{ doc("column__booking_creation_date") }}'
         data_type: DATE
@@ -40,7 +46,10 @@ models:
         description: '{{ doc("column__user_id") }}'
         data_type: STRING
         data_tests:
-          - not_null
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: error
       - name: deposit_id
         description: '{{ doc("column__deposit_id") }}'
         data_type: STRING
@@ -53,6 +62,12 @@ models:
       - name: booking_intermediary_amount
         description: '{{ doc("column__booking_intermediary_amount") }}'
         data_type: NUMERIC
+        data_tests:
+          - is_valid_booking_intermediary_amout:
+              where_condition: "date(booking_creation_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)"
+              tags: ['critical']
+              config:
+                severity: error
       - name: booking_rank
         description: '{{ doc("column__booking_rank") }}'
         data_type: INT64
@@ -71,7 +86,10 @@ models:
         description: '{{ doc("column__offer_id") }}'
         data_type: STRING
         data_tests:
-          - not_null
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: error
       - name: offer_name
         description: '{{ doc("column__offer_name") }}'
         data_type: STRING

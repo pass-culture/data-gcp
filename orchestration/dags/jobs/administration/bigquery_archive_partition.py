@@ -24,13 +24,13 @@ TABLES = {
     "past_offer_context": {
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "import_date",
-        "look_back_months": '{"dev": 1, "stg": 1, "prod": 3}',
+        "look_back_months": 3,
         "folder": "recommendation",
     },
     "firebase_events": {
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "event_date",
-        "look_back_months": '{"dev": 1, "stg": 3, "prod": 24}',
+        "look_back_months": 24,
         "folder": "tracking",
     },
 }
@@ -85,7 +85,7 @@ fetch_install_code = InstallDependenciesOperator(
 tasks = []
 for table, config in TABLES.items():
     config = json.dumps(config)
-    config = config.replace('"', '\\"')  # Escape double quotes
+    config = config.replace('"', '"')  # Escape double quotes
     export_old_partitions_to_gcs = SSHGCEOperator(
         task_id=f"export_old_partitions_to_gcs_{table}",
         instance_name="{{ params.instance_name }}",

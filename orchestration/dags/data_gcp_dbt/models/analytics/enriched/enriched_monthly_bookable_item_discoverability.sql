@@ -86,7 +86,8 @@ with
                 end
             ) as nb_monthly_other_channel_offer_consult
         from
-            {{ ref("firebase_daily_offer_consultation_data") }} as firebase_daily_offer_consultation_data
+            {{ ref("firebase_daily_offer_consultation_data") }}
+            as firebase_daily_offer_consultation_data
         {% if is_incremental() %}  -- recalculate latest day's DATA + previous
             where
                 date(event_date)

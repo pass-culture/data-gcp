@@ -14,9 +14,6 @@ ENV_EMOJI = {
     "prod": ":volcano: *PROD* :volcano:",
     "stg": ":fire: *STAGING* :fire:",
     "dev": ":snowflake: *DEV* :snowflake:",
-    "prod_k8s": ":volcano: *PROD* (k8s) :volcano:",
-    "stg_k8s": ":fire: *STAGING* (k8s) :fire:",
-    "dev_k8s": ":snowflake: *DEV* (k8s) :snowflake:",
 }
 
 SEVERITY_TYPE_EMOJI = {
@@ -69,11 +66,12 @@ def on_failure_combined_callback(context):
 
 def get_env_emoji():
     base_url = configuration.get("webserver", "BASE_URL")
+    base_emoji = ENV_EMOJI[ENV_SHORT_NAME]
     if LOCAL_ENV:
         return ENV_EMOJI["local"]
     if "localhost" in base_url:
-        return ENV_EMOJI[f"{ENV_SHORT_NAME}_k8s"]
-    return ENV_EMOJI[ENV_SHORT_NAME]
+        return f"{base_emoji} (k8s)"
+    return base_emoji
 
 
 def get_airflow_uri():

@@ -85,7 +85,6 @@ fetch_install_code = InstallDependenciesOperator(
 tasks = []
 for table, config in TABLES.items():
     config = json.dumps(config)
-    config = config.replace('"', '"')  # Escape double quotes
     export_old_partitions_to_gcs = SSHGCEOperator(
         task_id=f"export_old_partitions_to_gcs_{table}",
         instance_name="{{ params.instance_name }}",

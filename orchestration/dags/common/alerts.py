@@ -10,6 +10,7 @@ from common.operators.gce import StopGCEOperator
 from airflow import configuration
 
 HTTP_HOOK = "https://hooks.slack.com/services/"
+DEFAULT_HEADERS = {"Content-Type": "application/json"}
 ENV_EMOJI = {
     "prod": ":volcano: *PROD* :volcano:",
     "stg": ":fire: *STAGING* :fire:",
@@ -89,9 +90,8 @@ def __task_fail_slack_alert(context, job_type):
 
     # alerts only for scheduled task.
     if is_scheduled:
-        base_url = get_airflow_uri(configuration)
+        base_url = get_airflow_uri()
         webhook_token = JOB_TYPE.get(job_type)
-        headers = {"Content-Type": "application/json"}
 
         last_task = context.get("task_instance")
         dag_id = context.get("dag").dag_id
@@ -116,7 +116,7 @@ def __task_fail_slack_alert(context, job_type):
         response = requests.post(
             f"{HTTP_HOOK}{webhook_token}",
             data=json.dumps({"text": f"{slack_msg}"}),
-            headers=headers,
+            headers=DEFAULT_HEADERS,
         )
         if response.status_code != 200:
             raise ValueError(
@@ -200,7 +200,7 @@ def dbt_test_slack_alert(results_json, manifest_json, job_type="dbt-test", **con
     response = requests.post(
         f"{HTTP_HOOK}{webhook_token}",
         data=json.dumps({"text": f"{slack_msg}"}),
-        headers={"Content-Type": "application/json"},
+        headers=DEFAULT_HEADERS,
     )
     if response.status_code != 200:
         raise ValueError(
@@ -230,7 +230,7 @@ def bigquery_freshness_alert(warning_table_list, job_type="dbt-test", **context)
     response = requests.post(
         f"{HTTP_HOOK}{webhook_token}",
         data=json.dumps({"text": f"{slack_msg}"}),
-        headers={"Content-Type": "application/json"},
+        headers=DEFAULT_HEADERS,
     )
     if response.status_code != 200:
         raise ValueError(

@@ -10,11 +10,7 @@ class Archive:
         self.dataset_id = config["dataset_id"]
         self.client = bigquery.Client()
         self.folder = config["folder"]
-
-        if ENV_SHORT_NAME == "prod":
-            self.look_back_months = config["look_back_months"]
-        else:
-            self.look_back_months = 3
+        self.look_back_months = config["look_back_months"]
 
     def store_partitions_in_temp(self):
         query_temp = f"""CREATE OR REPLACE TABLE `{GCP_PROJECT_ID}.tmp_{ENV_SHORT_NAME}.{self.table}_old_partitions`

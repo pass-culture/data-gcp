@@ -24,13 +24,17 @@ TABLES = {
     "past_offer_context": {
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "import_date",
-        "look_back_months": "3",
+        "look_back_months": json.loads('{"dev": 1, "stg": 1, "prod": 3}')[
+            ENV_SHORT_NAME
+        ],
         "folder": "recommendation",
     },
     "firebase_events": {
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "event_date",
-        "look_back_months": "24",
+        "look_back_months": json.loads('{"dev": 1, "stg": 3, "prod": 24}')[
+            ENV_SHORT_NAME
+        ],
         "folder": "tracking",
     },
 }

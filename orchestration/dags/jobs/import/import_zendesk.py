@@ -23,16 +23,11 @@ from airflow.models import Param
 DAG_NAME = "import_zendesk"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/zendesk"
 
-dag_config = {
-    "GCP_PROJECT": GCP_PROJECT_ID,
-    "ENV_SHORT_NAME": ENV_SHORT_NAME,
-}
 
 default_dag_args = {
-    "start_date": datetime.datetime(2020, 12, 21),
-    "retries": 1,
+    "start_date": datetime.datetime(2020, 12, 1),
     "on_failure_callback": on_failure_combined_callback,
-    "retry_delay": datetime.timedelta(minutes=5),
+    "retries": 1,
     "project_id": GCP_PROJECT_ID,
 }
 
@@ -45,7 +40,6 @@ with DAG(
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    render_template_as_native_obj=True,
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -62,7 +56,7 @@ with DAG(
             help="Specify the job to run: 'macro_stat', 'ticket_stat', or 'both'.",
         ),
         "prior_date": Param(
-            default=None,
+            default=datetime.datetime.now().strftime("%Y-%m-%d"),
             type="string",
             help="Optional prior date (YYYY-MM-DD) to calculate the ndays range from instead of now().",
         ),
@@ -96,8 +90,7 @@ with DAG(
         task_id="import_to_bigquery",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_PATH,
-        environment=dag_config,
-        command="python main.py --ndays {{ params.ndays }} --job {{ params.job }} {% if params.prior_date %} --prior_date {{ params.prior_date }} {% endif %}",
+        command="python main.py --ndays {{ params.ndays }} --job {{ params.job }} --prior_date {{ params.prior_date }} ",
         do_xcom_push=True,
     )
 

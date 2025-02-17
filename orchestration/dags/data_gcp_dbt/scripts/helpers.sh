@@ -3,6 +3,36 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+clean_old_folders() {
+  local base_dir=$1 # Base directory where the temporary folder will be created (required)
+  local folder_prefix=$2 # Optional folder prefix (default: "tmp")
+
+  # Validate required parameters
+  if [ -z "$base_dir" ] || [ -z "$folder_prefix" ]; then
+    echo "ERROR: Base directory and folder prefix are required for cleanup."
+    return 1
+  fi
+
+  # Ensure directory exists before attempting cleanup
+  if [ ! -d "${base_dir}/${folder_prefix}" ]; then
+    echo "WARNING: Directory '${base_dir}/${folder_prefix}' does not exist. Skipping cleanup."
+    return 0
+  fi
+
+  folder_prefix=${folder_prefix:-tmp}
+
+  # Using lock to prevent concurrency issues
+  (
+    flock -x 200 || exit 1  # Exclusive lock
+    echo "Cleaning up old temporary folders in '${base_dir}/${folder_prefix}'..."
+
+    # Find and remove old folders safely
+    find "${base_dir}/${folder_prefix}" -type d -name "exec_*" -mtime +1 -exec rm -rf {} + 2>/dev/null
+
+    echo "Cleanup completed."
+  ) 200> "${base_dir}/${folder_prefix}/cleanup.lock"
+}
+
 # Function to create a temporary folder using mktemp
 create_tmp_folder() {
   local base_dir=$1  # Base directory where the temporary folder will be created (required)

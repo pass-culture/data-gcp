@@ -14,7 +14,7 @@ with
             partition_date,
             'individual' as offer_type,
             count(distinct offer_id) as nb_bookable_offers
-        from {{ ref("bookable_offer_history") }}
+        from {{ ref("int_history__bookable_offer") }}
         inner join {{ ref("mrt_global__offer") }} as mrt_global__offer using (offer_id)
         {% if is_incremental() %}
             where partition_date = date_sub('{{ ds() }}', interval 1 day)

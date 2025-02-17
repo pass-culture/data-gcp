@@ -50,10 +50,6 @@ models:
               tags: ['critical']
               config:
                 severity: error
-          - not_null:
-              tags: ['critical']
-              config:
-                severity: error
       - name: deposit_id
         description: '{{ doc("column__deposit_id") }}'
         data_type: STRING
@@ -90,10 +86,6 @@ models:
         description: '{{ doc("column__offer_id") }}'
         data_type: STRING
         data_tests:
-          - not_null:
-              tags: ['critical']
-              config:
-                severity: error
           - not_null:
               tags: ['critical']
               config:

@@ -24,13 +24,13 @@ TABLES = {
     "past_offer_context": {
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "import_date",
-        "look_back_months": 3,
+        "look_back_months": "3",
         "folder": "recommendation",
     },
     "firebase_events": {
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "event_date",
-        "look_back_months": 24,
+        "look_back_months": "24",
         "folder": "tracking",
     },
 }
@@ -91,7 +91,7 @@ for table, config in TABLES.items():
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_PATH,
         environment=dag_config,
-        command=f'python main.py --table {table} --config "{config}" ',
+        command=f"python main.py --table {table} --config '{config}' ",
         do_xcom_push=True,
     )
     tasks.append(export_old_partitions_to_gcs)

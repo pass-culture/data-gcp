@@ -8,9 +8,9 @@ clean_old_folders() {
   local folder_prefix=$2 # Optional folder prefix (default: "tmp")
 
   # Validate required parameters
-  if [ -z "$base_dir" ] || [ -z "$folder_prefix" ]; then
-    echo "ERROR: Base directory and folder prefix are required for cleanup."
-    return 1
+  if [ -z "$base_dir" ]; then
+    echo "ERROR: Base directory is required for folder cleanup."
+    exit 1
   fi
 
   # Ensure directory exists before attempting cleanup

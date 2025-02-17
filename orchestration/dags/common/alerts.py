@@ -4,7 +4,7 @@ from datetime import datetime
 
 import requests
 from common.access_gcp_secrets import access_secret_data
-from common.config import AIRFLOW_URI, ENV_SHORT_NAME, GCP_PROJECT_ID
+from common.config import AIRFLOW_URI, ENV_SHORT_NAME, GCP_PROJECT_ID, LOCAL_ENV
 from common.operators.gce import StopGCEOperator
 
 from airflow import configuration
@@ -14,6 +14,9 @@ ENV_EMOJI = {
     "prod": ":volcano: *PROD* :volcano:",
     "stg": ":fire: *STAGING* :fire:",
     "dev": ":snowflake: *DEV* :snowflake:",
+    "prod_k8s": ":volcano: *PROD* (k8s) :volcano:",
+    "stg_k8s": ":fire: *STAGING* (k8s) :fire:",
+    "dev_k8s": ":snowflake: *DEV* (k8s) :snowflake:",
 }
 
 SEVERITY_TYPE_EMOJI = {
@@ -64,37 +67,51 @@ def on_failure_combined_callback(context):
     on_failure_callback_stop_vm(context)
 
 
-def get_airflow_uri(configuration):
+def get_env_emoji():
     base_url = configuration.get("webserver", "BASE_URL")
+    if LOCAL_ENV:
+        return ENV_EMOJI["local"]
     if "localhost" in base_url:
-        return AIRFLOW_URI
+        return ENV_EMOJI[f"{ENV_SHORT_NAME}_k8s"]
+    return ENV_EMOJI[ENV_SHORT_NAME]
+
+
+def get_airflow_uri():
+    base_url = configuration.get("webserver", "BASE_URL")
+    if LOCAL_ENV:
+        return base_url
+    if "localhost" in base_url:
+        return f"https://{AIRFLOW_URI}"
     return base_url
 
 
 def __task_fail_slack_alert(context, job_type):
     run_id = context["dag_run"].run_id
     is_scheduled = run_id.startswith("scheduled__")
+
     # alerts only for scheduled task.
     if is_scheduled:
+        base_url = get_airflow_uri(configuration)
         webhook_token = JOB_TYPE.get(job_type)
         headers = {"Content-Type": "application/json"}
 
-        dag_url = "{base_url}/dags/{dag_id}/grid".format(
-            base_url=get_airflow_uri(configuration),
-            dag_id=context["dag"].dag_id,
-        )
         last_task = context.get("task_instance")
-        dag_name = context.get("dag").dag_id
-        task_name = last_task.task_id
-        task_url = last_task.log_url
+        dag_id = context.get("dag").dag_id
+        task_id = last_task.task_id
+
+        dag_url = f"{base_url}/dags/{dag_id}/grid"
+        task_url = (
+            f"{dag_url}?dag_run_id={run_id}&task_id={task_id}&map_index=-1&tab=logs"
+        )
+
         execution_date = datetime.strftime(
             context.get("execution_date"), "%Y-%m-%d %H:%M:%S"
         )
 
         slack_msg = f"""
-                {ENV_EMOJI[ENV_SHORT_NAME]}:
-                *Task* <{task_url}|{task_name}> has failed!
-                *Dag*: <{dag_url}|{dag_name}>
+                {get_env_emoji()}:
+                *Task* <{task_url}|{task_id}> has failed!
+                *Dag*: <{dag_url}|{dag_id}>
                 *Execution Time*: {execution_date}
                 """
 

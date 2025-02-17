@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import json 
 
 from common.alerts import on_failure_combined_callback
 from common.config import (
@@ -23,7 +24,7 @@ TABLES = {
     "past_offer_context": {
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "import_date",
-        "look_back_months": "{\"dev\": 1, \"stg\": 1, \"prod\": 3}",
+        "look_back_months": '{"dev": 1, "stg": 1, "prod": 3}',
         "folder": "recommendation",
     },
     "firebase_events": {
@@ -83,12 +84,14 @@ fetch_install_code = InstallDependenciesOperator(
 
 tasks = []
 for table, config in TABLES.items():
+    config = json.dumps(config)
+    config = config.replace('"', '\\"')  # Escape double quotes
     export_old_partitions_to_gcs = SSHGCEOperator(
         task_id=f"export_old_partitions_to_gcs_{table}",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_PATH,
         environment=dag_config,
-        command=f"python main.py --table {table} --config '{config}' ",
+        command=f'python main.py --table {table} --config "{config}" ',
         do_xcom_push=True,
     )
     tasks.append(export_old_partitions_to_gcs)

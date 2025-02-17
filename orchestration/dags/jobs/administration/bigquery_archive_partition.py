@@ -1,5 +1,5 @@
+import json
 from datetime import datetime, timedelta
-import json 
 
 from common.alerts import on_failure_combined_callback
 from common.config import (
@@ -30,7 +30,7 @@ TABLES = {
     "firebase_events": {
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "event_date",
-        "look_back_months": "{\"dev\": 1, \"stg\": 3, \"prod\": 24}",
+        "look_back_months": '{"dev": 1, "stg": 3, "prod": 24}',
         "folder": "tracking",
     },
 }

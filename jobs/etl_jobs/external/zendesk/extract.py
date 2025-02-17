@@ -56,29 +56,41 @@ class ZendeskAPI:
             logger.error(f"Error fetching macros: {e}")
             raise RuntimeError(f"Error fetching macros: {e}")
 
-    def fetch_tickets(self, updated_at: str) -> List[Dict[str, Any]]:
+    def fetch_tickets(
+        self, from_date: str, to_date: str = None
+    ) -> List[Dict[str, Any]]:
         """
-        Fetches closed tickets udpdated after the specified date.
+        Fetches closed tickets updated within the specified date range.
 
         Args:
-            updated_at (str): The modification date filter for tickets.
+            from_date (str): The start date for fetching tickets (YYYY-MM-DD).
+            to_date (str, optional): The end date for fetching tickets (YYYY-MM-DD). Defaults to None.
 
         Returns:
             List[Dict[str, Any]]: List of ticket dictionaries.
         """
         try:
-            logger.info(f"Fetching tickets updated_at after {updated_at}.")
+            if to_date:
+                logger.info(
+                    f"Fetching tickets updated between {from_date} and {to_date}."
+                )
+                query = f"updated_at>={from_date} updated_at<={to_date}"
+            else:
+                logger.info(f"Fetching tickets updated after {from_date}.")
+                query = f"updated_at>={from_date}"
+
             tickets = [
                 ticket.to_dict()
                 for ticket in self.client.search_export(
                     type="ticket",
                     status="closed",
                     sort_order="desc",
-                    query=f"updated_at>={updated_at}",
+                    query=query,
                 )
             ]
             logger.info(f"Fetched {len(tickets)} tickets.")
             return tickets
+
         except APIException as e:
             logger.error(f"Error fetching tickets: {e}")
             raise RuntimeError(f"Error fetching tickets: {e}")
@@ -96,7 +108,9 @@ class ZendeskAPI:
         logger.info(f"Macro statistics DataFrame created with {len(df)} rows.")
         return df
 
-    def create_ticket_stat_df(self, updated_at: str) -> pd.DataFrame:
+    def create_ticket_stat_df(
+        self, from_date: str, to_date: str = None
+    ) -> pd.DataFrame:
         """
         Creates a DataFrame from ticket statistics.
 
@@ -107,7 +121,7 @@ class ZendeskAPI:
             pd.DataFrame: DataFrame containing ticket statistics.
         """
         logger.info("Creating ticket statistics DataFrame.")
-        tickets = self.fetch_tickets(updated_at)
+        tickets = self.fetch_tickets(from_date, to_date)
         df = pd.DataFrame([self._flatten_ticket_data(ticket) for ticket in tickets])
         logger.info(f"Ticket statistics DataFrame created with {len(df)} rows.")
         return df

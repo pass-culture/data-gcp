@@ -17,7 +17,12 @@ select
     avg(result_rows) as avg_result_rows,
     count(distinct metabase_user_id) as total_users,
     count(distinct execution_id) as total_views,
-    count(distinct case when date(execution_date) > date_sub(current_date(), interval 6 month) then execution_id end) as total_views_6_months,
+    count(
+        distinct case
+            when date(execution_date) > date_sub(current_date(), interval 6 month)
+            then execution_id
+        end
+    ) as total_views_6_months,
     count(distinct dashboard_id) as nbr_dashboards,
     max(execution_date) as last_execution_date,
     sum(case when error is null then 0 else 1 end) as total_errors

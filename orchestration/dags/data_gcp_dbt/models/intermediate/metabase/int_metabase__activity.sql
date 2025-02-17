@@ -15,7 +15,9 @@ select
     aggregated_activity.last_execution_date,
     rank_execution.context as last_execution_context,
     aggregated_activity.total_errors,
-    DATE_DIFF(CURRENT_DATE(), DATE(aggregated_activity.last_execution_date), day) as days_since_last_execution,
+    date_diff(
+        current_date(), date(aggregated_activity.last_execution_date), day
+    ) as days_since_last_execution,
     case
         when
             public_collections.location like '/610%'

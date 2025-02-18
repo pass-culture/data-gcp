@@ -6,7 +6,7 @@ select
     qpv.codereg as qpv_region_code,
     qpv.codeuu2020 as qpv_urban_unit_2020_code,
     qpv.popmuniqpv as qpv_municipal_population_2020,
-    (qpv.popMuniqpv * qpv.partPop15_24) / 10 / 100 as qpv_estimated_18_population_2020,
+    (qpv.popmuniqpv * qpv.partpop15_24) / 10 / 100 as qpv_estimated_18_population_2020,
     split(qpv.listedepcom, ',') as qpv_municipality_array,
     split(qpv.listelibdepcom, ',') as qpv_municipality_name_array,
     split(qpv.listeepci2022, ',') as qpv_epci_2022_array,

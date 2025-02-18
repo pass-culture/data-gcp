@@ -12,7 +12,7 @@ METABASE_API_USERNAME = "metabase-data-bot@passculture.app"
 
 parent_folder_to_archive = ["interne", "operationnel", "adhoc"]
 limit_inactivity_in_days = {"interne": 90, "operationnel": 30, "adhoc": 90}
-max_cards_to_archive = 1
+max_cards_to_archive = 50
 
 
 rules = [
@@ -41,7 +41,7 @@ rules = [
         "rule_id": 2,
         "rule_name": "operationnel_archiving",
         "rule_description": "Règle d'archive de la collection operationnel : 30 jours d'inactivité",
-        "rule_sql": f"""
+        "rule_archiving_sql": f"""
             WHERE
                 parent_folder = 'operationnel'
             AND

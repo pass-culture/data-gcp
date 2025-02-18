@@ -17,13 +17,25 @@ class ListArchive:
 
     def get_data_archiving(self):
         """Run SQL query and save data in a dataframe."""
+        print("📢 get_data_archiving() is called")
+
         if self.rules_sql:
-            self.archive_df = pd.read_gbq(
-                f""" SELECT * FROM `{INT_METABASE_DATASET}.activity` {self.rules_sql}"""
+            query = (
+                f"""SELECT * FROM `{INT_METABASE_DATASET}.activity` {self.rules_sql}"""
             )
+            self.archive_df = pd.read_gbq(query)
+            print(
+                "✅ ",
+                len(self.archive_df),
+                " cards are ready to be archived in folder ",
+                self.metabase_folder,
+            )
+        else:
+            print("⚠️ self.rules_sql is emplty or None")
 
     def preprocess_data_archiving(self, object_type):
-        if ENVIRONMENT_SHORT_NAME == "prod":
+        print("📢 preprocess_data_archiving() is called")
+        try:
             self.archive_df[
                 "destination_collection_id"
             ] = (  # Get the archive collection id
@@ -35,8 +47,11 @@ class ListArchive:
             self.archive_df = self.archive_df[
                 ~self.archive_df["archive_location_level_2"].isna()
             ]  # Remove elements for which destination collection is empty.
-
-        if ENVIRONMENT_SHORT_NAME == "dev" or ENVIRONMENT_SHORT_NAME == "stg":
+        except Exception:
+            print(
+                "⚠️ Error retrieving destination_collection_id in ",
+                ENVIRONMENT_SHORT_NAME,
+            )
             self.archive_df["destination_collection_id"] = 29
 
         if object_type == "card":

@@ -34,7 +34,7 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Import contentful tables",
-    schedule_interval=get_airflow_schedule("00 01 * * *"),
+    schedule_interval=get_airflow_schedule("30 01 * * *"),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,

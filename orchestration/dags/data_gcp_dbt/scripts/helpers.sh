@@ -3,6 +3,48 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+clean_old_folders() {
+  local base_dir=$1  # Base directory where the temporary folder will be created (required)
+  local folder_prefix=$2  # Optional folder prefix (default: "tmp")
+  local days_old=$3  # Optional number of days to keep, default is 1 day
+
+  folder_prefix=${folder_prefix:-tmp}
+  days_old=${days_old:-1}
+
+  # Validate required parameters
+  if [ -z "$base_dir" ]; then
+    echo "ERROR: Base directory is required for folder cleanup."
+    exit 1
+  fi
+
+  # Ensure directory exists before attempting cleanup
+  if [ ! -d "${base_dir}/${folder_prefix}" ]; then
+    echo "WARNING: Directory '${base_dir}/${folder_prefix}' does not exist. Skipping cleanup."
+    return 0
+  fi
+
+
+
+  echo "Cleaning up old temporary folders in '${base_dir}/${folder_prefix}'..."
+
+  # Calculate the cutoff date (current date - days_old)
+  cutoff_date=$(date -d "-${days_old} days" +"%Y%m%d")
+
+  # Loop through directories matching "exec_*"
+  find "${base_dir}/${folder_prefix}" -type d -name "exec_*" | while read -r folder; do
+    # Extract the date part from the folder name (assumes format: exec_YYYYMMDD_HHMMSS_xxx)
+    folder_date=$(basename "$folder" | awk -F'_' '{print $2}')
+
+    # Check if folder_date is older than cutoff_date
+    if [[ "$folder_date" =~ ^[0-9]{8}$ ]] && [[ "$folder_date" -lt "$cutoff_date" ]]; then
+      echo "Removing: $folder"
+      rm -rf "$folder"
+    fi
+  done
+
+  echo "Cleanup completed."
+}
+
 # Function to create a temporary folder using mktemp
 create_tmp_folder() {
   local base_dir=$1  # Base directory where the temporary folder will be created (required)

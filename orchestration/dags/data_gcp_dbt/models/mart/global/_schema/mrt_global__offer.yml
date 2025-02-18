@@ -7,7 +7,10 @@ models:
         description: '{{ doc("column__offer_id") }}'
         data_type: STRING
         data_tests:
-          - not_null
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: error
           - unique:
               tags: ['critical']
               config:
@@ -89,7 +92,10 @@ models:
         description: '{{ doc("column__offer_subcategory_id") }}'
         data_type: STRING
         data_tests:
-          - not_null
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: error
       - name: offer_url
         description: '{{ doc("column__offer_url") }}'
         data_type: STRING

@@ -83,6 +83,16 @@ end_wait = DummyOperator(task_id="end_wait", dag=dag, trigger_rule="none_failed"
 data_transfo_checkpoint = DummyOperator(task_id="data_transfo_checkpoint", dag=dag)
 snapshots_checkpoint = DummyOperator(task_id="snapshots_checkpoint", dag=dag)
 
+
+clean = BashOperator(
+    task_id="cleanup",
+    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_clean_tmp_folders.sh ",
+    env={
+        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+    },
+)
+
+
 compile = BashOperator(
     task_id="compilation",
     bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_compile.sh ",
@@ -122,4 +132,4 @@ snapshot_tasks = list(operator_dict["snapshot_op_dict"].values())
 )
 start >> operator_dict["trigger_block"]
 end_wait >> snapshots_checkpoint >> snapshot_tasks
-(model_tasks + snapshot_tasks) >> compile >> end
+(model_tasks + snapshot_tasks) >> compile >> clean >> end

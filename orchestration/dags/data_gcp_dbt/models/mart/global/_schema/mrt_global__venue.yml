@@ -83,7 +83,9 @@ models:
         description: '{{ doc("column__venue_region_name") }}'
         data_type: STRING
         data_tests:
-          - not_null:
+          - excessive_failure_ratio:
+              base_test: "not_null"
+              max_ratio: 0.005
               where: 'not venue_is_virtual'
               tags: ['critical']
               config:

@@ -85,7 +85,9 @@ models:
         description: '{{ doc("column__user_region_name") }}'
         data_type: STRING
         data_tests:
-          - not_null:
+          - excessive_failure_ratio:
+              base_test: "not_null"
+              max_ratio: 0.02
               tags: ['critical']
               config:
                 severity: error

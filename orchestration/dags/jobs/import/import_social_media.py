@@ -32,7 +32,7 @@ with DAG(
     default_args=default_dag_args,
     description="Import Social Network Data",
     on_failure_callback=None,
-    schedule_interval=get_airflow_schedule("0 1 * * *"),
+    schedule_interval=get_airflow_schedule("0 2 * * *"),
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,

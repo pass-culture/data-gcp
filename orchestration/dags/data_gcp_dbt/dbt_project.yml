@@ -124,3 +124,7 @@ vars:
   full_refresh_lookback: "1 year"
   not_null_anomaly_threshold_alert_percentage: 1
   not_null_anomaly_threshold_alert_percentage_native_event: 5
+  test_severity:
+    dev: warn
+    stg: warn
+

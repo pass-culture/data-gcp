@@ -1,6 +1,7 @@
+import json
 from datetime import datetime, timedelta
 
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -23,22 +24,30 @@ TABLES = {
     "past_offer_context": {
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "import_date",
-        "look_back_months": {"dev": 1, "stg": 1, "prod": 3},
+        "look_back_months": json.loads('{"dev": 1, "stg": 1, "prod": 3}')[
+            ENV_SHORT_NAME
+        ],
         "folder": "recommendation",
     },
     "firebase_events": {
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "event_date",
-        "look_back_months": {"dev": 1, "stg": 3, "prod": 24},
+        "look_back_months": json.loads('{"dev": 1, "stg": 3, "prod": 24}')[
+            ENV_SHORT_NAME
+        ],
         "folder": "tracking",
     },
 }
 
-# Default DAG args
 dag_config = {
-    "start_date": datetime(2020, 12, 1),
+    "PROJECT_NAME": GCP_PROJECT_ID,
+    "ENV_SHORT_NAME": ENV_SHORT_NAME,
+}
+
+default_dag_args = {
+    "start_date": datetime(2020, 12, 21),
     "retries": 1,
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retry_delay": timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }
@@ -46,7 +55,7 @@ dag_config = {
 # Define the DAG
 dag = DAG(
     DAG_NAME,
-    default_args=dag_config,
+    default_args=default_dag_args,
     schedule_interval=SCHEDULE_DICT[DAG_NAME],  # Runs daily
     catchup=False,
     params={
@@ -79,12 +88,13 @@ fetch_install_code = InstallDependenciesOperator(
 
 tasks = []
 for table, config in TABLES.items():
+    config = json.dumps(config)
     export_old_partitions_to_gcs = SSHGCEOperator(
         task_id=f"export_old_partitions_to_gcs_{table}",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_PATH,
         environment=dag_config,
-        command=f'python main.py --table {table} --config "{config}" ',
+        command=f"python main.py --table {table} --config '{config}' ",
         do_xcom_push=True,
     )
     tasks.append(export_old_partitions_to_gcs)

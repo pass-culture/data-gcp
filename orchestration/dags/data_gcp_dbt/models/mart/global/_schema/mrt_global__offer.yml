@@ -7,11 +7,14 @@ models:
         description: '{{ doc("column__offer_id") }}'
         data_type: STRING
         data_tests:
-          - not_null
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
           - unique:
               tags: ['critical']
               config:
-                severity: error
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: offer_product_id
         description: '{{ doc("column__offer_product_id") }}'
         data_type: STRING
@@ -89,7 +92,10 @@ models:
         description: '{{ doc("column__offer_subcategory_id") }}'
         data_type: STRING
         data_tests:
-          - not_null
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: offer_url
         description: '{{ doc("column__offer_url") }}'
         data_type: STRING

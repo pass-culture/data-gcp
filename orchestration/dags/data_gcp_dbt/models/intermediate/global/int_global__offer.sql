@@ -85,6 +85,10 @@ select
     v.venue_is_permanent,
     o.offerer_address_id,
     o.offer_publication_date,
-    o.is_future_scheduled
+    o.is_future_scheduled,
+    o.total_headlines,
+    o.is_headlined,
+    o.first_headline_date,
+    o.last_headline_date
 from {{ ref("int_applicative__offer") }} as o
 left join {{ ref("int_global__venue") }} as v on v.venue_id = o.venue_id

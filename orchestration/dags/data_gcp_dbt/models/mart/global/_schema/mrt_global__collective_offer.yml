@@ -1,0 +1,112 @@
+version: 2
+
+models:
+  - name: mrt_global__collective_offer
+    description: '{{ doc("description__mrt_global__collective_offer") }}'
+    columns:
+      - name: collective_offer_id
+        description: "{{ doc('column__collective_offer_id') }}"
+      - name: collective_offer_humanized_id
+        description: "{{ doc('column__collective_offer_humanized_id') }}"
+      - name: collective_offer_name
+        description: "{{ doc('column__collective_offer_name') }}"
+      - name: venue_id
+        description: "{{ doc('column__venue_id') }}"
+      - name: partner_id
+        description: "{{ doc('column__partner_id') }}"
+      - name: institution_id
+        description: "{{ doc('column__institution_id') }}"
+      - name: institution_program_name
+        description: "{{ doc('column__institution_program_name') }}"
+      - name: venue_name
+        description: "{{ doc('column__venue_name') }}"
+      - name: venue_region_name
+        description: "{{ doc('column__venue_region_name') }}"
+      - name: venue_department_code
+        description: "{{ doc('column__venue_department_code') }}"
+      - name: venue_department_name
+        description: "{{ doc('column__venue_department_name') }}"
+      - name: venue_postal_code
+        description: "{{ doc('column__venue_postal_code') }}"
+      - name: venue_city
+        description: "{{ doc('column__venue_city') }}"
+      - name: venue_epci
+        description: "{{ doc('column__venue_epci') }}"
+      - name: venue_academy_name
+        description: "{{ doc('column__venue_academy_name') }}"
+      - name: venue_density_label
+        description: "{{ doc('column__venue_density_label') }}"
+      - name: venue_macro_density_label
+        description: "{{ doc('column__venue_macro_density_label') }}"
+      - name: venue_density_level
+        description: "{{ doc('column__venue_density_level') }}"
+      - name: venue_is_virtual
+        description: "{{ doc('column__venue_is_virtual') }}"
+      - name: offerer_id
+        description: "{{ doc('column__offerer_id') }}"
+      - name: offerer_name
+        description: "{{ doc('column__offerer_name') }}"
+      - name: venue_iris_internal_id
+        description: "{{ doc('column__venue_iris_internal_id') }}"
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+      - name: collective_offer_creation_date
+        description: "{{ doc('column__collective_offer_creation_date') }}"
+      - name: collective_offer_date_updated
+        description: "{{ doc('column__collective_offer_date_updated') }}"
+      - name: collective_offer_subcategory_id
+        description: "{{ doc('column__collective_offer_subcategory_id') }}"
+      - name: collective_offer_category_id
+        description: "{{ doc('column__collective_offer_category_id') }}"
+      - name: collective_offer_format
+        description: "{{ doc('column__collective_offer_format') }}"
+      - name: collective_offer_students
+        description: "{{ doc('column__collective_offer_students') }}"
+      - name: collective_offer_is_active
+        description: "{{ doc('column__collective_offer_is_active') }}"
+      - name: collective_offer_is_bookable
+        description: "{{ doc('column__collective_offer_is_bookable') }}"
+      - name: total_collective_bookings
+        description: "{{ doc('column__total_collective_bookings') }}"
+      - name: total_non_cancelled_collective_bookings
+        description: "{{ doc('column__total_non_cancelled_collective_bookings') }}"
+      - name: total_used_collective_bookings
+        description: "{{ doc('column__total_used_collective_bookings') }}"
+      - name: passculture_pro_url
+        description: "{{ doc('column__passculture_pro_url') }}"
+      - name: collective_offer_is_template
+        description: "{{ doc('column__collective_offer_is_template') }}"
+      - name: collective_offer_image_id
+        description: "{{ doc('column__collective_offer_image_id') }}"
+      - name: provider_id
+        description: "{{ doc('column__provider_id') }}"
+      - name: national_program_id
+        description: "{{ doc('column__national_program_id') }}"
+      - name: national_program_name
+        description: "{{ doc('column__national_program_name') }}"
+      - name: template_id
+        description: "{{ doc('column__template_id') }}"
+      - name: collective_offer_address_type
+        description: "{{ doc('column__collective_offer_address_type') }}"
+      - name: collective_offer_contact_url
+        description: "{{ doc('column__collective_offer_contact_url') }}"
+      - name: collective_offer_contact_form
+        description: "{{ doc('column__collective_offer_contact_form') }}"
+      - name: collective_offer_contact_email
+        description: "{{ doc('column__collective_offer_contact_email') }}"
+      - name: collective_offer_contact_phone
+        description: "{{ doc('column__collective_offer_contact_phone') }}"
+      - name: institution_internal_iris_id
+        description: "{{ doc('column__institution_internal_iris_id') }}"
+      - name: collective_stock_beginning_date_time
+        description: "{{ doc('column__collective_stock_beginning_date_time') }}"
+      - name: collective_stock_booking_limit_date_time
+        description: "{{ doc('column__collective_stock_booking_limit_date_time') }}"
+      - name: collective_offer_template_beginning_date
+        description: "{{ doc('column__collective_offer_template_beginning_date') }}"
+      - name: collective_offer_template_ending_date
+        description: "{{ doc('column__collective_offer_template_ending_date') }}"
+      - name: collective_stock_price
+        description: "{{ doc('column__collective_stock_price') }}"
+      - name: collective_stock_number_of_tickets
+        description: "{{ doc('column__collective_stock_number_of_tickets') }}"

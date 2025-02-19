@@ -2,7 +2,7 @@ import time
 from datetime import date, datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
@@ -10,12 +10,12 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
-from common.operators.biquery import bigquery_job_task
+from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    DeleteGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import get_airflow_schedule
 from dependencies.dms_subscriptions.import_dms_subscriptions import CLEAN_TABLES
@@ -31,20 +31,26 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
 DMS_FUNCTION_NAME = "dms_" + ENV_SHORT_NAME
 GCE_INSTANCE = f"import-dms-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/dms"
+DAG_NAME = "import_dms_subscriptions"
+
+dag_config = {
+    "GCP_PROJECT_ID": GCP_PROJECT_ID,
+    "ENV_SHORT_NAME": ENV_SHORT_NAME,
+}
 
 default_args = {
     "start_date": datetime(2020, 12, 1),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 2,
     "retry_delay": timedelta(minutes=5),
 }
 
 
 with DAG(
-    "import_dms_subscriptions",
+    DAG_NAME,
     default_args=default_args,
     description="Import DMS subscriptions",
-    schedule_interval=get_airflow_schedule("0 1 * * *"),
+    schedule_interval=get_airflow_schedule("0 2 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=300),
     params={
@@ -68,24 +74,18 @@ with DAG(
 
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,
+        instance_type="n1-standard-4",
         task_id="gce_start_task",
         retries=2,
-        labels={"job_type": "long_task"},
+        labels={"job_type": "long_task", "dag_name": DAG_NAME},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
+        branch="{{ params.branch }}",
         python_version="3.8",
-        retries=2,
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command="pip install -r requirements.txt --user",
         dag=dag,
         retries=2,
     )
@@ -94,8 +94,8 @@ with DAG(
         task_id="dms_to_gcs_pro",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command="python main.py pro {{ params.updated_since_pro }} "
-        + f"{GCP_PROJECT_ID} {ENV_SHORT_NAME}",
+        environment=dag_config,
+        command="python main.py pro {{ params.updated_since_pro }} ",
         do_xcom_push=True,
     )
 
@@ -109,8 +109,8 @@ with DAG(
         task_id="dms_to_gcs_jeunes",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command="python main.py jeunes {{ params.updated_since_jeunes }} "
-        + f"{GCP_PROJECT_ID} {ENV_SHORT_NAME}",
+        environment=dag_config,
+        command="python main.py jeunes {{ params.updated_since_jeunes }} ",
         do_xcom_push=True,
     )
 
@@ -118,8 +118,9 @@ with DAG(
         task_id="parse_api_result_jeunes",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        environment=dag_config,
         command="python parse_dms_subscriptions_to_tabular.py --target jeunes --updated-since {{ params.updated_since_jeunes }} "
-        + f"--bucket-name {DATA_GCS_BUCKET_NAME} --project-id {GCP_PROJECT_ID}",
+        + f"--bucket-name {DATA_GCS_BUCKET_NAME} ",
         do_xcom_push=True,
     )
 
@@ -127,8 +128,9 @@ with DAG(
         task_id="parse_api_result_pro",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        environment=dag_config,
         command="python parse_dms_subscriptions_to_tabular.py --target pro --updated-since {{ params.updated_since_pro }} "
-        + f"--bucket-name {DATA_GCS_BUCKET_NAME} --project-id {GCP_PROJECT_ID}",
+        + f"--bucket-name {DATA_GCS_BUCKET_NAME} ",
         do_xcom_push=True,
     )
 
@@ -150,7 +152,6 @@ with DAG(
             {"name": "application_submitted_at", "type": "INT64"},
             {"name": "passed_in_instruction_at", "type": "INT64"},
             {"name": "processed_at", "type": "INT64"},
-            {"name": "application_motivation", "type": "STRING"},
             {"name": "instructors", "type": "STRING"},
             {"name": "applicant_department", "type": "STRING"},
             {"name": "applicant_postal_code", "type": "STRING"},
@@ -175,7 +176,6 @@ with DAG(
             {"name": "application_submitted_at", "type": "INT64"},
             {"name": "passed_in_instruction_at", "type": "INT64"},
             {"name": "processed_at", "type": "INT64"},
-            {"name": "application_motivation", "type": "STRING"},
             {"name": "instructors", "type": "STRING"},
             {"name": "demandeur_siret", "type": "STRING"},
             {"name": "demandeur_naf", "type": "STRING"},
@@ -205,17 +205,11 @@ with DAG(
 
     end = DummyOperator(task_id="end")
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task", dag=dag
     )
 
-(
-    start
-    >> gce_instance_start
-    >> fetch_code
-    >> install_dependencies
-    >> [dms_to_gcs_pro, sleep_op]
-)
+(start >> gce_instance_start >> fetch_install_code >> [dms_to_gcs_pro, sleep_op])
 (
     sleep_op
     >> dms_to_gcs_jeunes

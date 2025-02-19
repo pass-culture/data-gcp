@@ -3,6 +3,7 @@ select
     offer_product_id,
     offer_product_humanized_id,
     offer_id_at_providers,
+    offer_last_provider_id,
     is_synchronised,
     offer_name,
     offer_description,
@@ -10,7 +11,7 @@ select
     last_stock_price,
     offer_creation_date,
     offer_created_at,
-    offer_date_updated,
+    offer_updated_date,
     offer_is_duo,
     item_id,
     offer_is_underage_selectable,
@@ -57,6 +58,7 @@ select
     venue_id,
     venue_name,
     venue_department_code,
+    venue_department_name,
     venue_region_name,
     venue_postal_code,
     venue_city,
@@ -66,6 +68,7 @@ select
     venue_macro_density_label,
     venue_density_level,
     venue_label,
+    venue_is_permanent,
     partner_id,
     offerer_id,
     venue_managing_offerer_id,
@@ -75,7 +78,5 @@ select
     offerer_address_id,
     offer_publication_date,
     is_future_scheduled
-from {{ ref('int_global__offer') }} as o
-where TRUE
-    and offer_validation = 'APPROVED'
-    and venue_id is not NULL
+from {{ ref("int_global__offer") }} as o
+where true and offer_validation = 'APPROVED' and venue_id is not null

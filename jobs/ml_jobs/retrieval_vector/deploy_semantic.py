@@ -19,24 +19,24 @@ from utils import (
 )
 
 MODEL_TYPE = {
-    "n_dim": 32,
     "type": "semantic",
     "default_token": None,
     "transformer": "sentence-transformers/all-MiniLM-L6-v2",
     "reducer": "./metadata/reducer.pkl",
 }
+EMBEDDING_DIMENSION = 32
 
 
 def download_embeddings(bucket_path):
     # download
-    hnne = HNNE(dim=MODEL_TYPE["n_dim"])
+    hnne = HNNE(dim=EMBEDDING_DIMENSION)
     dataset = ds.dataset(bucket_path, format="parquet")
     ldf = pl.scan_pyarrow_dataset(dataset)
     item_list = ldf.select("item_id").collect().to_numpy().flatten()
     item_weights = np.vstack(np.vstack(ldf.select("embedding").collect())[0]).astype(
         np.float32
     )
-    item_weights = hnne.fit_transform(item_weights, dim=MODEL_TYPE["n_dim"]).astype(
+    item_weights = hnne.fit_transform(item_weights, dim=EMBEDDING_DIMENSION).astype(
         np.float32
     )
     joblib.dump(hnne, MODEL_TYPE["reducer"])
@@ -55,7 +55,7 @@ def prepare_docs(bucket_path):
     create_items_table(
         item_embedding_dict,
         items_df,
-        emb_size=MODEL_TYPE["n_dim"],
+        emb_size=EMBEDDING_DIMENSION,
         uri="./metadata/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,
     )
@@ -74,6 +74,10 @@ def main(
         None,
         help="GCS parquet path",
     ),
+    container_worker: str = typer.Option(
+        "1",
+        help="Number of workers",
+    ),
 ) -> None:
     yyyymmdd = datetime.now().strftime("%Y%m%d")
     if model_name is None:
@@ -87,7 +91,7 @@ def main(
     prepare_docs(source_gs_path)
     print("Deploy...")
     save_model_type(model_type=MODEL_TYPE)
-    deploy_container(serving_container, workers=3)
+    deploy_container(serving_container, workers=int(container_worker))
     save_experiment(experiment_name, model_name, serving_container, run_id=run_id)
 
 

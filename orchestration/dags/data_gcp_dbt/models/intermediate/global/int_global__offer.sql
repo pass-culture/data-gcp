@@ -1,10 +1,7 @@
 {{
     config(
-        partition_by={
-            "field": "offer_creation_date",
-            "data_type": "date"
-        },
-        on_schema_change = "sync_all_columns",
+        partition_by={"field": "offer_creation_date", "data_type": "date"},
+        on_schema_change="sync_all_columns",
     )
 }}
 
@@ -20,7 +17,7 @@ select
     o.last_stock_price,
     o.offer_creation_date,
     o.offer_created_at,
-    o.offer_date_updated,
+    o.offer_updated_date,
     o.offer_is_duo,
     o.item_id,
     o.offer_is_underage_selectable,
@@ -77,6 +74,7 @@ select
     v.venue_iris_internal_id,
     v.venue_region_name,
     v.venue_department_code,
+    v.venue_department_name,
     v.venue_postal_code,
     v.venue_city,
     v.venue_epci,
@@ -84,8 +82,9 @@ select
     v.venue_density_label,
     v.venue_macro_density_label,
     v.venue_density_level,
+    v.venue_is_permanent,
     o.offerer_address_id,
     o.offer_publication_date,
     o.is_future_scheduled
-from {{ ref('int_applicative__offer') }} as o
-    left join {{ ref('int_global__venue') }} as v on v.venue_id = o.venue_id
+from {{ ref("int_applicative__offer") }} as o
+left join {{ ref("int_global__venue") }} as v on v.venue_id = o.venue_id

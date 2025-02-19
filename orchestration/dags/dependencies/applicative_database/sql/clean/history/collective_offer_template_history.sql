@@ -1,13 +1,17 @@
-WITH add_domains AS(
-SELECT 
-    collective_offer_template_id as collective_offer_id
-    ,STRING_AGG(educational_domain_name) as educational_domains
-FROM `{{ bigquery_raw_dataset }}`.`applicative_database_collective_offer_template_domain`
-LEFT JOIN `{{ bigquery_raw_dataset }}`.`applicative_database_educational_domain` USING(educational_domain_id)
-GROUP BY 1
-)
+with
+    add_domains as (
+        select
+            collective_offer_template_id as collective_offer_id,
+            string_agg(educational_domain_name) as educational_domains
+        from
+            `{{ bigquery_raw_dataset }}`.`applicative_database_collective_offer_template_domain`
+        left join
+            `{{ bigquery_raw_dataset }}`.`applicative_database_educational_domain`
+            using (educational_domain_id)
+        group by 1
+    )
 
-SELECT
+select
     collective_offer_audio_disability_compliant,
     collective_offer_mental_disability_compliant,
     collective_offer_motor_disability_compliant,
@@ -32,7 +36,7 @@ SELECT
     collective_offer_image_id,
     educational_domains,
     collective_offer_venue_address_type,
-    DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY) as partition_date
-FROM
+    date_add(current_date(), interval -1 day) as partition_date
+from
     `{{ bigquery_raw_dataset }}`.`applicative_database_collective_offer_template` template
-LEFT JOIN add_domains ON template.collective_offer_id=add_domains.collective_offer_id
+left join add_domains on template.collective_offer_id = add_domains.collective_offer_id

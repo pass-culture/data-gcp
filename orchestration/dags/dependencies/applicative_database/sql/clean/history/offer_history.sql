@@ -1,4 +1,4 @@
-SELECT
+select
     offer_modified_at_last_provider_date,
     offer_id,
     offer_creation_date,
@@ -7,9 +7,9 @@ SELECT
     booking_email,
     offer_is_active,
     offer_name,
-    COALESCE(p.description, o.offer_description) AS offer_description,
+    coalesce(p.description, o.offer_description) as offer_description,
     offer_url,
-    offer_duration_minutes,
+    0 as offer_duration_minutes,
     offer_extra_data,
     offer_is_duo,
     offer_audio_disability_compliant,
@@ -19,10 +19,12 @@ SELECT
     offer_external_ticket_office_url,
     offer_validation,
     offer_subcategoryid,
-    offer_date_updated,
+    offer_updated_date,
     offer_withdrawal_type,
     offer_withdrawal_delay,
     offer_last_validation_type,
-    DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY) as partition_date
-FROM `{{ bigquery_raw_dataset }}`.`applicative_database_offer` o
-LEFT JOIN `{{ bigquery_raw_dataset }}`.`applicative_database_product` p ON o.offer_product_id = CAST(p.id as string)
+    date_add(current_date(), interval -1 day) as partition_date
+from `{{ bigquery_raw_dataset }}`.`applicative_database_offer_legacy` o
+left join
+    `{{ bigquery_raw_dataset }}`.`applicative_database_product` p
+    on o.offer_product_id = cast(p.id as string)

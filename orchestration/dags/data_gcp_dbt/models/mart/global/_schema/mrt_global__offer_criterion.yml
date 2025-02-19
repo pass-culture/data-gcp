@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: mrt_global__offer_criterion
+    description: "{{ doc('description__mrt_global__offer_criterion') }}"
+    columns:
+      - name: criterion_id
+        description: "{{ doc('column__criterion_id') }}"
+      - name: tag_name
+        description: "{{ doc('column__criterion_tag_name') }}"
+      - name: description
+        description: "{{ doc('column__criterion_description') }}"
+      - name: criterion_category_label
+        description: "{{ doc('column__criterion_category_label') }}"
+      - name: criterion_beginning_date
+        description: "{{ doc('column__criterion_beginning_date') }}"
+      - name: criterion_ending_date
+        description: "{{ doc('column__criterion_ending_date') }}"
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+      - name: offer_name
+        description: "{{ doc('column__offer_name') }}"

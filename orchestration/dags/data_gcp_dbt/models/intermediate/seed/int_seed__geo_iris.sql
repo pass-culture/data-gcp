@@ -1,6 +1,6 @@
-{{ config(**custom_table_config()) }} 
+{{ config(**custom_table_config()) }}
 
-SELECT 
+select
     iris_code,
     iris_label,
     city_code,
@@ -19,21 +19,24 @@ SELECT
     timezone,
     academy_name,
     territorial_authority_label,
-    has_qpv,
     density_level,
     density_label,
     density_macro_level,
     geo_code,
     rural_city_type_data.geo_type as rural_city_type,
     iris_internal_id,
-    ST_GEOGPOINT(
-        CAST(SPLIT(REPLACE(iris_centroid, 'POINT(', ''), ' ')[ORDINAL(1)] AS FLOAT64),
-        CAST(SPLIT(REPLACE(REPLACE(iris_centroid, 'POINT(', ''), ')', ''), ' ')[ORDINAL(2)] AS FLOAT64)
-    ) AS iris_centroid,
-    ST_GEOGFROMTEXT(iris_shape) AS iris_shape,
-    ST_BOUNDINGBOX(ST_GEOGFROMTEXT(iris_shape)).xmin min_longitude,
-    ST_BOUNDINGBOX(ST_GEOGFROMTEXT(iris_shape)).xmax AS max_longitude,
-    ST_BOUNDINGBOX(ST_GEOGFROMTEXT(iris_shape)).ymin AS min_latitude,
-    ST_BOUNDINGBOX(ST_GEOGFROMTEXT(iris_shape)).ymax AS max_latitude
-FROM {{ source('seed', 'geo_iris') }} gi
-LEFT JOIN {{ source('seed', 'rural_city_type_data') }} using(geo_code)
+    st_geogpoint(
+        cast(split(replace(iris_centroid, 'POINT(', ''), ' ')[ordinal(1)] as float64),
+        cast(
+            split(replace(replace(iris_centroid, 'POINT(', ''), ')', ''), ' ')[
+                ordinal(2)
+            ] as float64
+        )
+    ) as iris_centroid,
+    st_geogfromtext(iris_shape) as iris_shape,
+    st_boundingbox(st_geogfromtext(iris_shape)).xmin as min_longitude,
+    st_boundingbox(st_geogfromtext(iris_shape)).xmax as max_longitude,
+    st_boundingbox(st_geogfromtext(iris_shape)).ymin as min_latitude,
+    st_boundingbox(st_geogfromtext(iris_shape)).ymax as max_latitude
+from {{ source("seed", "geo_iris") }} as gi
+left join {{ source("seed", "rural_city_type_data") }} using (geo_code)

@@ -12,7 +12,7 @@ from common.utils import (
     delayed_waiting_operator,
     get_airflow_schedule,
 )
-from jobs.crons import schedule_dict
+from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
@@ -47,7 +47,7 @@ dag = DAG(
     dagrun_timeout=datetime.timedelta(minutes=480),
     catchup=False,
     description="A dbt wrapper for airflow",
-    schedule_interval=get_airflow_schedule(schedule_dict[dag_id]),
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[dag_id]),
     params={
         "target": Param(
             default=ENV_SHORT_NAME,
@@ -83,6 +83,16 @@ end_wait = DummyOperator(task_id="end_wait", dag=dag, trigger_rule="none_failed"
 data_transfo_checkpoint = DummyOperator(task_id="data_transfo_checkpoint", dag=dag)
 snapshots_checkpoint = DummyOperator(task_id="snapshots_checkpoint", dag=dag)
 
+
+clean = BashOperator(
+    task_id="cleanup",
+    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_clean_tmp_folders.sh ",
+    env={
+        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+    },
+)
+
+
 compile = BashOperator(
     task_id="compilation",
     bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_compile.sh ",
@@ -106,7 +116,7 @@ operator_dict = dbt_dag_reconstruction(
     compile,
 )
 
-# DAG orchestration
+##### DAG orchestration
 
 # Set dependencies for model operations
 model_tasks = list(operator_dict["model_op_dict"].values())
@@ -122,4 +132,4 @@ snapshot_tasks = list(operator_dict["snapshot_op_dict"].values())
 )
 start >> operator_dict["trigger_block"]
 end_wait >> snapshots_checkpoint >> snapshot_tasks
-(model_tasks + snapshot_tasks) >> compile >> end
+(model_tasks + snapshot_tasks) >> compile >> clean >> end

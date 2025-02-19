@@ -26,6 +26,7 @@ select
     s.venue_id,
     s.venue_postal_code,
     s.venue_department_code,
+    s.venue_department_name,
     s.venue_region_name,
     s.venue_city,
     s.venue_epci,
@@ -33,6 +34,8 @@ select
     s.venue_macro_density_label,
     s.venue_density_level,
     s.venue_academy_name,
+    s.venue_is_permanent,
+    s.venue_is_virtual,
     s.offerer_id,
     s.offerer_name,
     s.partner_id,
@@ -43,21 +46,17 @@ select
     s.offer_category_id,
     s.last_stock_price,
     s.item_id,
-    RANK() over (
-        partition by
-            b.user_id,
-            s.offer_subcategory_id
-        order by
-            b.booking_created_at
+    rank() over (
+        partition by b.user_id, s.offer_subcategory_id order by b.booking_created_at
     ) as same_category_booking_rank,
-    RANK() over (
-        partition by b.user_id
-        order by
-            b.booking_created_at asc,
-            b.booking_id asc
+    rank() over (
+        partition by b.user_id order by b.booking_created_at asc, b.booking_id asc
     ) as user_booking_rank,
     s.venue_iris_internal_id,
     s.offer_url,
-    s.isbn
-from {{ ref('int_applicative__booking') }} as b
-    left join {{ ref('int_global__stock') }} as s on s.stock_id = b.stock_id
+    s.isbn,
+    o.offer_type_label,
+    o.offer_sub_type_label
+from {{ ref("int_applicative__booking") }} as b
+inner join {{ ref("int_global__stock") }} as s on s.stock_id = b.stock_id
+left join {{ ref("int_applicative__offer_metadata") }} as o on o.offer_id = s.offer_id

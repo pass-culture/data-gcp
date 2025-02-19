@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: mrt_global__user_offerer
+    description: '{{ doc("description__mrt_global__user_offerer") }}'
+    columns:
+      - name: offerer_id
+        description: "{{ doc('column__offerer_id') }}"
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+      - name: user_affiliation_rank
+        description: "{{ doc('column__user_affiliation_rank') }}"
+      - name: user_creation_date
+        description: "{{ doc('column__user_creation_date') }}"
+      - name: user_department_code
+        description: "{{ doc('column__user_department_code') }}"
+      - name: user_postal_code
+        description: "{{ doc('column__user_postal_code') }}"
+      - name: user_role
+        description: "{{ doc('column__user_role') }}"
+      - name: user_address
+        description: "{{ doc('column__user_address') }}"
+      - name: user_city
+        description: "{{ doc('column__user_city') }}"
+      - name: user_last_connection_date
+        description: "{{ doc('column__user_last_connection_date') }}"
+      - name: user_is_email_validated
+        description: "{{ doc('column__user_is_email_validated') }}"
+      - name: user_is_active
+        description: "{{ doc('column__user_is_active') }}"
+      - name: user_has_seen_pro_tutorials
+        description: "{{ doc('column__user_has_seen_pro_tutorials') }}"
+      - name: user_phone_validation_status
+        description: "{{ doc('column__user_phone_validation_status') }}"
+      - name: user_has_validated_email
+        description: "{{ doc('column__user_has_validated_email') }}"
+      - name: user_has_enabled_marketing_push
+        description: "{{ doc('column__user_has_enabled_marketing_push') }}"
+      - name: user_has_enabled_marketing_email
+        description: "{{ doc('column__user_has_enabled_marketing_email') }}"

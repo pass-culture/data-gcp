@@ -1,14 +1,14 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
-from common.operators.biquery import bigquery_job_task
+from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    DeleteGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import depends_loop, get_airflow_schedule
 from dependencies.batch.import_batch import import_batch_tables
@@ -19,17 +19,18 @@ from airflow.operators.dummy_operator import DummyOperator
 
 GCE_INSTANCE = f"import-batch-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/batch"
+DAG_NAME = "import_batch"
 
 default_args = {
     "start_date": datetime(2022, 4, 13),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
 
 
 with DAG(
-    "import_batch",
+    DAG_NAME,
     default_args=default_args,
     description="Import batch push notifications statistics",
     schedule_interval=get_airflow_schedule("0 0 * * *"),  # import every day at 00:00
@@ -52,22 +53,15 @@ with DAG(
         task_id="gce_start_task",
         retries=2,
         preemptible=False,
-        labels={"job_type": "long_task"},
+        labels={"job_type": "long_task", "dag_name": DAG_NAME},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
+        branch="{{ params.branch }}",
         python_version="3.10",
-        retries=2,
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command="pip install -r requirements.txt --user",
         dag=dag,
         retries=2,
     )
@@ -92,7 +86,7 @@ with DAG(
         retries=2,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         instance_name=GCE_INSTANCE, task_id="gce_stop_task"
     )
 
@@ -120,9 +114,9 @@ with DAG(
         default_end_operator=end,
     )
 
-    (start >> gce_instance_start >> fetch_code >> install_dependencies)
+    (start >> gce_instance_start >> fetch_install_code)
     (
-        install_dependencies
+        fetch_install_code
         >> ios_job
         >> android_job
         >> gce_instance_stop

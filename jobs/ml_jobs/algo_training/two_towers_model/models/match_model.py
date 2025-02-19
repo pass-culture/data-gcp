@@ -1,7 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.layers import Dot, Embedding
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
+from tensorflow.keras.layers import Dot, Embedding, StringLookup
 
 
 class MatchModel(tf.keras.models.Model):

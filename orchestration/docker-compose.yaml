@@ -1,5 +1,3 @@
-version: "3.9"
-
 volumes:
   postgres-db-volume:
 
@@ -13,9 +11,11 @@ x-airflow-common: &airflow-common
     AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: ${AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT:-}
     AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY:-}
     ENV_SHORT_NAME: ${ENV_SHORT_NAME:-}
+    APPLICATIVE_EXTERNAL_CONNECTION_ID: ${APPLICATIVE_EXTERNAL_CONNECTION_ID:-}
     GCE_SA: ${GCE_SA:-}
   volumes:
     - ./dags:/opt/airflow/dags
+    - ./plugins:/opt/airflow/plugins
     - ./airflow/config/airflow.cfg:/opt/airflow/airflow.cfg
     - ./airflow/logs:/opt/airflow/logs
     - ./dags/data_gcp_dbt:/opt/airflow/data_gcp_dbt
@@ -69,7 +69,10 @@ services:
   airflow-init:
     build:
       context: .
-      dockerfile: ./airflow/Dockerfile
+      dockerfile: ${DOCKERFILE_PATH:-airflow/Dockerfile}
+      target: final-builder
+      args:
+        - NETWORK_MODE=${NETWORK_MODE:-default}
     <<: *airflow-common
     command: "airflow db init"
     environment:
@@ -82,4 +85,5 @@ services:
     restart: "no"
     image: airflow-custom-image:latest
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy

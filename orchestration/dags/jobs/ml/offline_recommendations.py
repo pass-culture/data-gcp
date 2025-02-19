@@ -1,15 +1,15 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
     DAG_FOLDER,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
 )
-from common.operators.biquery import bigquery_job_task
+from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
 )
@@ -25,12 +25,14 @@ from airflow.operators.dummy_operator import DummyOperator
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"offline-recommendation-{ENV_SHORT_NAME}"
-BASE_DIR = "data-gcp/jobs/ml_jobs/offline_recommendation"
+BASE_PATH = "data-gcp/jobs/ml_jobs/offline_recommendation"
 DATE = "{{ yyyymmdd(ds) }}"
 STORAGE_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/offline_recommendation_{ENV_SHORT_NAME}/offline_recommendation_{DATE}"
+DAG_NAME = "offline_recommendation"
+
 default_args = {
     "start_date": datetime(2023, 8, 2),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -39,7 +41,7 @@ dag_config = {
     "API_TOKEN_SECRET_ID": f"api-reco-token-{ENV_SHORT_NAME}",
 }
 with DAG(
-    "offline_recommendation",
+    DAG_NAME,
     default_args=default_args,
     description="Produce offline recommendation",
     schedule_interval=get_airflow_schedule("0 0 * * 0"),
@@ -75,7 +77,7 @@ with DAG(
             SSHGCEOperator(
                 task_id=f"""get_offline_predictions_{query_params["table"]}""",
                 instance_name=GCE_INSTANCE,
-                base_dir=BASE_DIR,
+                base_dir=BASE_PATH,
                 environment=dag_config,
                 command="PYTHONPATH=. python main.py "
                 f"""--input-table {query_params["destination_table"]} --output-table offline_recommendation_{query_params["destination_table"]}""",
@@ -87,23 +89,18 @@ with DAG(
         instance_name=GCE_INSTANCE,
         instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={"job_type": "ml"},
+        labels={"job_type": "ml", "dag_name": DAG_NAME},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
         python_version="3.10",
-        command="{{ params.branch }}",
         retries=2,
     )
 
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_DIR,
-        command="""pip install -r requirements.txt --user""",
-    )
     export_to_backend_tasks = []
     for query_params in params_export:
         export_to_backend_tasks.append(
@@ -120,8 +117,7 @@ with DAG(
         start
         >> import_data_tasks
         >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
+        >> fetch_install_code
         >> get_offline_predictions[0]
         >> get_offline_predictions[1]
         >> export_to_backend_tasks

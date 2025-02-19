@@ -4,9 +4,12 @@ from typing import Callable, Generator, List
 import numpy as np
 import pandas as pd
 import rapidfuzz
+from loguru import logger
 from scipy.sparse import csr_matrix, vstack
 from sklearn.cluster import DBSCAN
 from tqdm import tqdm
+
+from constants import TOTAL_OFFER_COUNT
 
 
 def _get_score_multiplier(dtype_distance_matrix: np.dtype) -> int:
@@ -89,7 +92,7 @@ def _compute_distance_matrix(
     # Concatenate the sparse matrices
     complete_sparse_matrix = vstack(blocks=sparse_matrices, format="csr")
 
-    print("Memory used", complete_sparse_matrix.data.nbytes / 1024**2, "MB")
+    logger.info("Memory used", complete_sparse_matrix.data.nbytes / 1024**2, "MB")
 
     return complete_sparse_matrix
 
@@ -131,7 +134,7 @@ def cluster_with_distance_matrices(
         dtype_distance_matrix=dtype_distance_matrix,
         sparse_filter_threshold=sparse_filter_threshold,
     )
-    print("Time to compute the distance matrix", time.time() - t0)
+    logger.info("Time to compute the distance matrix", time.time() - t0)
 
     # Perform clustering with DBSCAN
     t0 = time.time()
@@ -142,7 +145,7 @@ def cluster_with_distance_matrices(
     )
     clustering.fit(complete_sparse_matrix)
     clusters = clustering.labels_
-    print("Time to compute the clustering", time.time() - t0)
+    logger.info("Time to compute the clustering", time.time() - t0)
 
     return (
         pd.DataFrame({"preprocessed_artist_name": artists_list})
@@ -194,7 +197,7 @@ def get_cluster_to_nickname_dict(merged_df: pd.DataFrame) -> dict:
 
     Parameters:
         merged_df (pd.DataFrame): The merged DataFrame containing cluster information.
-            Required columns: cluster_id, offer_number, artist_name.
+            Required columns: cluster_id, total_offer_count, artist_name.
 
     Returns:
         dict: A dictionary mapping cluster IDs to artist nicknames.
@@ -204,7 +207,7 @@ def get_cluster_to_nickname_dict(merged_df: pd.DataFrame) -> dict:
 
     return (
         merged_df.groupby("cluster_id")
-        .apply(lambda df: df["offer_number"].idxmax())
+        .apply(lambda df: df[TOTAL_OFFER_COUNT].idxmax())
         .reset_index(name="index_nickname")
         .merge(
             merged_df.first_artist.where(

@@ -154,7 +154,9 @@ def save_model_type(model_type):
         json.dump(model_type, file)
 
 
-def get_table_batches(item_embedding_dict: dict, items_df, emb_size):
+def get_table_batches(
+    item_embedding_dict: dict, items_df: pd.DataFrame, emb_size: int, total_size: int
+):
     for row in items_df.itertuples():
         embedding_id = item_embedding_dict.get(row.item_id, None)
         if embedding_id is not None:
@@ -164,7 +166,8 @@ def get_table_batches(item_embedding_dict: dict, items_df, emb_size):
                     pa.array([embedding_id], pa.list_(pa.float32(), emb_size)),
                     pa.array([_item_id], pa.utf8()),
                     pa.array(
-                        [[float(row.booking_number_desc)]], pa.list_(pa.float32(), 1)
+                        [[float(row.booking_number_desc)]],
+                        pa.list_(pa.float32(), 1),
                     ),
                     pa.array(
                         [[float(row.booking_trend_desc)]],
@@ -241,7 +244,9 @@ def create_items_table(
         batch_df = items_df[start_idx:end_idx]
 
         data_batch = pa.Table.from_batches(
-            get_table_batches(item_embedding_dict, batch_df, emb_size)
+            get_table_batches(
+                item_embedding_dict, batch_df, emb_size, total_size=len(items_df)
+            )
         )
 
         if i == 0:
@@ -249,7 +254,15 @@ def create_items_table(
         else:
             table.add(data_batch)
     if create_index:
-        table.create_index(num_partitions=1024, num_sub_vectors=32)
+        table.create_index(
+            metric="dot",
+            num_partitions=8,
+            num_sub_vectors=4,
+            vector_column_name="vector",
+        )
+        table.create_scalar_index("search_group_name", index_type="BITMAP")
+        table.create_scalar_index("subcategory_id", index_type="BITMAP")
+        table.create_scalar_index("stock_price", index_type="BTREE")
 
 
 def get_item_docs(item_embedding_dict, items_df):

@@ -20,7 +20,9 @@ def get_actual_and_predicted(
     predictions_diversified = []
     user_input = data_model_dict["prediction_input_feature"]
 
-    for _, row in tqdm(df_actual.iterrows(), total=df_actual.shape[0]):
+    for _, row in tqdm(
+        df_actual.iterrows(), total=df_actual.shape[0], mininterval=20, maxinterval=60
+    ):
         current_user = row["user_id"]
         prediction_input_feature = (
             data_test.loc[data_test["user_id"] == current_user, user_input]
@@ -44,12 +46,12 @@ def get_actual_and_predicted(
 def get_prediction(prediction_input_feature, data_model_dict):
     model = data_model_dict["model"]
     data = data_model_dict["data"]["test"][
-        ["item_id", "offer_subcategoryid"]
+        ["item_id", "offer_subcategory_id"]
     ].drop_duplicates()
     nboffers = len(list(data.item_id))
     offer_to_score = np.reshape(np.array(list(data.item_id)), (nboffers, 1))
-    offer_subcategoryid = np.reshape(
-        np.array(list(data.offer_subcategoryid)), (nboffers,)
+    offer_subcategory_id = np.reshape(
+        np.array(list(data.offer_subcategory_id)), (nboffers,)
     )
     prediction_input = [
         np.array([prediction_input_feature] * len(offer_to_score)),
@@ -60,7 +62,7 @@ def get_prediction(prediction_input_feature, data_model_dict):
         {
             "item_id": offer_to_score.flatten().tolist(),
             "score": prediction.flatten().tolist(),
-            "offer_subcategoryid": offer_subcategoryid.flatten().tolist(),
+            "offer_subcategory_id": offer_subcategory_id.flatten().tolist(),
         }
     )
     df_predicted = df_predicted.sort_values(["score"], ascending=False)
@@ -163,10 +165,10 @@ def get_avg_diversification_score(df_raw, recos, k):
     diversification_count = 0
     logger.info("Compute average diversification")
 
-    for reco in tqdm(recos[:max_recos]):
+    for reco in tqdm(recos[:max_recos], mininterval=20, maxinterval=60):
         df_clean = (
             df_raw.query(f"item_id in {tuple(reco[:k])}")[
-                ["offer_categoryId", "offer_subcategoryid", "genres", "rayon", "type"]
+                ["offer_category_id", "offer_subcategory_id", "genres", "rayon", "type"]
             ]
             .drop_duplicates()
             .fillna("NA", inplace=False)
@@ -191,7 +193,7 @@ def apk(actual, predicted, k=10):
             num_hits += 1.0
             score += num_hits / (i + 1.0)
 
-    return score / min(len(actual), k)
+    return score / min(len(predicted), k)
 
 
 def mapk(actual, predicted, k=10):

@@ -59,5 +59,7 @@ SELECT
     , "dmsToken" AS dms_token
     , "description" AS venue_description
     , "withdrawalDetails" AS venue_withdrawal_details
-    , "offererAddressId" AS offerer_address_id
+    , CAST("offererAddressId"AS varchar(255)) AS offerer_address_id
+    , "isOpenToPublic" AS venue_is_open_to_public
+    ,"adageInscriptionDate" AS venue_adage_inscription_date
 FROM public.venue

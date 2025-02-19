@@ -1,0 +1,92 @@
+version: 2
+
+models:
+  - name: mrt_global__educational_institution
+    description: "{{ doc('description__mrt_global__educational_institution') }}"
+    columns:
+      - name: institution_id
+        description: "{{ doc('column__institution_id') }}"
+      - name: institution_external_id
+        description: "{{ doc('column__institution_external_id') }}"
+      - name: institution_name
+        description: "{{ doc('column__institution_name') }}"
+      - name: ministry
+        description: "{{ doc('column__ministry') }}"
+      - name: institution_type
+        description: "{{ doc('column__institution_type') }}"
+      - name: institution_program_name
+        description: "{{ doc('column__institution_program_name') }}"
+      - name: first_deposit_creation_date
+        description: "{{ doc('column__first_deposit_creation_date') }}"
+      - name: current_deposit_amount
+        description: "{{ doc('column__current_deposit_amount') }}"
+      - name: current_deposit_creation_date
+        description: "{{ doc('column__current_deposit_creation_date') }}"
+      - name: total_deposit_amount
+        description: "{{ doc('column__total_deposit_amount') }}"
+      - name: total_deposits
+        description: "{{ doc('column__total_deposits') }}"
+      - name: first_booking_date
+        description: "{{ doc('column__first_booking_date') }}"
+      - name: last_booking_date
+        description: "{{ doc('column__last_booking_date') }}"
+      - name: last_category_booked
+        description: "{{ doc('column__last_category_booked') }}"
+      - name: total_non_cancelled_collective_bookings
+        description: "{{ doc('column__total_non_cancelled_collective_bookings') }}"
+      - name: total_current_year_non_cancelled_collective_bookings
+        description: "{{ doc('column__total_current_year_non_cancelled_collective_bookings') }}"
+      - name: total_collective_theoretic_revenue
+        description: "{{ doc('column__total_collective_theoretic_revenue') }}"
+      - name: total_current_year_collective_theoretic_revenue
+        description: "{{ doc('column__total_current_year_collective_theoretic_revenue') }}"
+      - name: total_used_collective_bookings
+        description: "{{ doc('column__total_used_collective_bookings') }}"
+      - name: total_current_year_used_collective_bookings
+        description: "{{ doc('column__total_current_year_used_collective_bookings') }}"
+      - name: total_collective_real_revenue
+        description: "{{ doc('column__total_collective_real_revenue') }}"
+      - name: total_current_year_collective_real_revenue
+        description: "{{ doc('column__total_current_year_collective_real_revenue') }}"
+      - name: ratio_current_credit_utilization
+        description: "{{ doc('column__ratio_current_credit_utilization') }}"
+      - name: total_tickets
+        description: "{{ doc('column__total_tickets') }}"
+      - name: total_current_year_tickets
+        description: "{{ doc('column__total_current_year_tickets') }}"
+      - name: total_credited_beneficiaries
+        description: "{{ doc('column__total_credited_beneficiaries') }}"
+      - name: ratio_beneficiary_students
+        description: "{{ doc('column__ratio_beneficiary_students') }}"
+      - name: total_students
+        description: "{{ doc('column__total_students') }}"
+      - name: macro_institution_type
+        description: "{{ doc('column__macro_institution_type') }}"
+      - name: institution_city
+        description: "{{ doc('column__institution_city') }}"
+      - name: institution_epci
+        description: "{{ doc('column__institution_epci') }}"
+      - name: institution_density_label
+        description: "{{ doc('column__institution_density_label') }}"
+      - name: institution_macro_density_label
+        description: "{{ doc('column__institution_macro_density_label') }}"
+      - name: institution_density_level
+        description: "{{ doc('column__institution_density_level') }}"
+      - name: institution_latitude
+        description: "{{ doc('column__institution_latitude') }}"
+      - name: institution_longitude
+        description: "{{ doc('column__institution_longitude') }}"
+      - name: institution_academy_name
+        description: "{{ doc('column__institution_academy_name') }}"
+      - name: institution_region_name
+        description: "{{ doc('column__institution_region_name') }}"
+      - name: institution_in_qpv
+        description: "{{ doc('column__institution_in_qpv') }}"
+      - name: institution_department_code
+        description: "{{ doc('column__institution_department_code') }}"
+      - name: institution_department_name
+        description: "{{ doc('column__institution_department_name') }}"
+      - name: institution_internal_iris_id
+        description: "{{ doc('column__institution_internal_iris_id') }}"
+      - name: institution_postal_code
+        description: "{{ doc('column__institution_postal_code') }}"

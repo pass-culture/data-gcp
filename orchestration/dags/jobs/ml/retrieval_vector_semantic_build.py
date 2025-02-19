@@ -1,33 +1,30 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
-    BIGQUERY_TMP_DATASET,
+    BIGQUERY_ML_RETRIEVAL_DATASET,
     DAG_FOLDER,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    DeleteGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
-from common.utils import get_airflow_schedule
-from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
 
 DATE = "{{ ts_nodash }}"
-
+DAG_NAME = "retrieval_semantic_vector_build"
 # Environment variables to export before running commands
 dag_config = {
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/retrieval_vector_{ENV_SHORT_NAME}/semantic_{DATE}/{DATE}_item_embbedding_data",
@@ -43,11 +40,12 @@ gce_params = {
         "stg": "n1-standard-8",
         "prod": "n1-standard-16",
     },
+    "container_worker": {"dev": "1", "stg": "1", "prod": "1"},
 }
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -55,10 +53,10 @@ default_args = {
 schedule_dict = {"prod": "0 4 * * *", "dev": "0 6 * * *", "stg": "0 6 * * 3"}
 
 with DAG(
-    "retrieval_semantic_vector_build",
+    DAG_NAME,
     default_args=default_args,
     description="Custom training job",
-    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
+    schedule_interval=None,
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
@@ -84,18 +82,13 @@ with DAG(
             default=dag_config["MODEL_NAME"],
             type="string",
         ),
+        "container_worker": Param(
+            default=gce_params["container_worker"][ENV_SHORT_NAME],
+            type="string",
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
-
-    export_task = BigQueryExecuteQueryOperator(
-        task_id="import_retrieval_semantic_vector_table",
-        sql=(IMPORT_TRAINING_SQL_PATH / "retrieval_semantic_vector.sql").as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_retrieval_semantic_vector_data",
-        dag=dag,
-    )
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -103,32 +96,26 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={"job_type": "ml"},
+        labels={"job_type": "ml", "dag_name": DAG_NAME},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
+        branch="{{ params.branch }}",
         python_version="3.10",
-        command="{{ params.branch }}",
+        base_dir=dag_config["BASE_DIR"],
         retries=2,
     )
 
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name="{{ params.instance_name }}",
-        base_dir=dag_config["BASE_DIR"],
-        command="pip install -r requirements.txt --user",
-        dag=dag,
-    )
     export_bq = BigQueryInsertJobOperator(
         task_id="store_item_embbedding_data",
         configuration={
             "extract": {
                 "sourceTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "datasetId": BIGQUERY_TMP_DATASET,
-                    "tableId": f"{DATE}_retrieval_semantic_vector_data",
+                    "datasetId": BIGQUERY_ML_RETRIEVAL_DATASET,
+                    "tableId": "semantic_vector_item_embedding",
                 },
                 "compression": None,
                 "destinationUris": f"{dag_config['STORAGE_PATH']}/data-*.parquet",
@@ -145,21 +132,20 @@ with DAG(
         command="python deploy_semantic.py "
         "--experiment-name {{ params.experiment_name }} "
         "--model-name {{ params.model_name }} "
-        f"--source-gs-path {dag_config['STORAGE_PATH']}",
+        f"--source-gs-path {dag_config['STORAGE_PATH']} "
+        "--container-worker {{ params.container_worker }} ",
         dag=dag,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
 
     (
         start
-        >> export_task
         >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
-        >> export_bq
+        >> fetch_install_code
         >> sim_offers
         >> gce_instance_stop
     )
+    (start >> export_bq >> sim_offers)

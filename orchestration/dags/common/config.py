@@ -4,8 +4,20 @@ from common.access_gcp_secrets import access_secret_data
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
+ENVIRONMENT_NAME = {
+    "dev": "development",
+    "stg": "staging",
+    "prod": "production",
+}[ENV_SHORT_NAME]
 DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags/")
 LOCAL_ENV = os.environ.get("LOCAL_ENV", None)
+AIRFLOW_URI = {
+    "dev": "airflow-dev.data.ehp.passculture.team",
+    "stg": "airflow-stg.data.ehp.passculture.team",
+    "prod": "airflow.data.passculture.team",
+}[ENV_SHORT_NAME]
+
+GCS_COMPOSER_BUCKET = os.environ.get("GCS_BUCKET", f"airflow-{ENVIRONMENT_NAME}-bucket")
 
 SSH_USER = os.environ.get("SSH_USER", "airflow")
 
@@ -32,10 +44,15 @@ DATA_GCS_BUCKET_NAME = os.environ.get(
     "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
 )
 
+# BQ Datasets
+# TODO: Move this in a special file + construct as fstring and not env variables
 BIGQUERY_SANDBOX_DATASET = os.environ.get(
     "BIGQUERY_SANDBOX_DATASET", f"sandbox_{ENV_SHORT_NAME}"
 )
 BIGQUERY_RAW_DATASET = os.environ.get("BIGQUERY_RAW_DATASET", f"raw_{ENV_SHORT_NAME}")
+BIGQUERY_INT_RAW_DATASET = os.environ.get(
+    "BIGQUERY_INT_RAW_DATASET", f"int_raw_{ENV_SHORT_NAME}"
+)
 BIGQUERY_SEED_DATASET = os.environ.get(
     "BIGQUERY_SEED_DATASET", f"seed_{ENV_SHORT_NAME}"
 )
@@ -60,14 +77,15 @@ BIGQUERY_INT_GEOLOCATION_DATASET = os.environ.get(
 BIGQUERY_BACKEND_DATASET = os.environ.get(
     "BIGQUERY_BACKEND_DATASET", f"backend_{ENV_SHORT_NAME}"
 )
-BIGQUERY_ML_RECOMMENDATION_DATASET = os.environ.get(
-    "BIGQUERY_ML_RECOMMENDATION_DATASET", f"ml_reco_{ENV_SHORT_NAME}"
-)
-BIGQUERY_ML_FEATURES_DATASET = os.environ.get(
-    "BIGQUERY_ML_FEATURES_DATASET", f"ml_feat_{ENV_SHORT_NAME}"
-)
-BIGQUERY_ML_PREPROCESSING_DATASET = os.environ.get(
-    "BIGQUERY_ML_PREPROCESSING_DATASET", f"ml_preproc_{ENV_SHORT_NAME}"
+BIGQUERY_ML_COMPLIANCE_DATASET = f"ml_compliance_{ENV_SHORT_NAME}"
+BIGQUERY_ML_FEATURES_DATASET = f"ml_feat_{ENV_SHORT_NAME}"
+BIGQUERY_ML_LINKAGE_DATASET = f"ml_linkage_{ENV_SHORT_NAME}"
+BIGQUERY_ML_OFFER_CATEGORIZATION_DATASET = f"ml_offer_categorization_{ENV_SHORT_NAME}"
+BIGQUERY_ML_PREPROCESSING_DATASET = f"ml_preproc_{ENV_SHORT_NAME}"
+BIGQUERY_ML_RECOMMENDATION_DATASET = f"ml_reco_{ENV_SHORT_NAME}"
+BIGQUERY_ML_RETRIEVAL_DATASET = f"ml_retrieval_{ENV_SHORT_NAME}"
+BIGQUERY_INT_RAW_DATASET = os.environ.get(
+    "BIGQUERY_INT_RAW_DATASET", f"int_raw_{ENV_SHORT_NAME}"
 )
 BIGQUERY_TMP_DATASET = os.environ.get("BIGQUERY_TMP_DATASET", f"tmp_{ENV_SHORT_NAME}")
 
@@ -158,3 +176,16 @@ GPU_INSTANCES_TYPES = {
 }
 
 INSTANCES_TYPES = {"cpu": CPU_INSTANCES_TYPES, "gpu": GPU_INSTANCES_TYPES}
+
+GCE_ZONES = [
+    "europe-west1-b",
+    "europe-west1-c",
+    "europe-west1-d",
+]  # Zones with GPUs and with lower CO2 emissions in europe-west1 (required to be in the proper VPC)
+
+# Airflow tags
+ML_AIRFLOW_DAG_TAG = "ML"
+VM_AIRFLOW_DAG_TAG = "VM"
+
+# UV Version
+UV_VERSION = "0.5.2"

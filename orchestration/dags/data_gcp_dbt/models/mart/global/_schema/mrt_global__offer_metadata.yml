@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: mrt_global__offer_metadata
+    description: '{{ doc("description__mrt_global__offer_metadata") }}'
+    columns:
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+      - name: offer_creation_date
+        description: "{{ doc('column__offer_creation_date') }}"
+      - name: offer_subcategory_id
+        description: "{{ doc('column__offer_subcategory_id') }}"
+      - name: offer_category_id
+        description: "{{ doc('column__offer_category_id') }}"
+      - name: search_group_name
+        description: "{{ doc('column__search_group_name') }}"
+      - name: offer_type_domain
+        description: "{{ doc('column__offer_type_domain') }}"
+      - name: offer_name
+        description: "{{ doc('column__offer_name') }}"
+      - name: offer_description
+        description: "{{ doc('column__offer_description') }}"
+      - name: image_url
+        description: "{{ doc('column__image_url') }}"
+      - name: offer_type_id
+        description: "{{ doc('column__offer_type_id') }}"
+      - name: offer_sub_type_id
+        description: "{{ doc('column__offer_sub_type_id') }}"
+      - name: author
+        description: "{{ doc('column__author') }}"
+      - name: performer
+        description: "{{ doc('column__performer') }}"
+      - name: titelive_gtl_id
+        description: "{{ doc('column__titelive_gtl_id') }}"
+      - name: gtl_type
+        description: "{{ doc('column__gtl_type') }}"
+      - name: gtl_label_level_1
+        description: "{{ doc('column__gtl_label_level_1') }}"
+      - name: gtl_label_level_2
+        description: "{{ doc('column__gtl_label_level_2') }}"
+      - name: gtl_label_level_3
+        description: "{{ doc('column__gtl_label_level_3') }}"
+      - name: gtl_label_level_4
+        description: "{{ doc('column__gtl_label_level_4') }}"
+      - name: offer_type_label
+        description: "{{ doc('column__offer_type_label') }}"
+      - name: offer_type_labels
+        description: "{{ doc('column__offer_type_labels') }}"
+      - name: offer_sub_type_label
+        description: "{{ doc('column__offer_sub_type_label') }}"

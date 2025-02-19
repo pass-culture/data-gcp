@@ -9,6 +9,9 @@ ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "")
 BIGQUERY_CLEAN_DATASET = os.environ.get(
     "BIGQUERY_CLEAN_DATASET", f"clean_{ENV_SHORT_NAME}"
 )
+BIGQUERY_INT_RAW_DATASET = os.environ.get(
+    "BIGQUERY_INT_RAW_DATASET", f"int_raw_{ENV_SHORT_NAME}"
+)
 BUCKET_NAME = f"data-bucket-{ENV_SHORT_NAME}"
 
 
@@ -30,7 +33,10 @@ def get_api_token(consumer_key):
     data = {"grant_type": "client_credentials"}
 
     response = requests.post(
-        "https://api.insee.fr/token", headers=headers, data=data, verify=False
+        "https://api.insee.fr/token",
+        headers=headers,
+        data=data,
+        verify="/etc/ssl/certs/ca-certificates.crt",
     )
     result_token = response.json()
 

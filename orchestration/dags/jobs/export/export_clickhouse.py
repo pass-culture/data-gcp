@@ -1,7 +1,7 @@
 import datetime
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback, task_fail_slack_alert
 from common.config import (
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
@@ -10,17 +10,17 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    DeleteGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import delayed_waiting_operator, get_airflow_schedule
 from dependencies.export_clickhouse.export_clickhouse import (
+    ANALYTICS_CONFIGS,
     TABLES_CONFIGS,
-    VIEWS_CONFIGS,
 )
-from jobs.crons import schedule_dict
+from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
@@ -40,13 +40,6 @@ dag_config = {
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
 }
 
-default_dag_args = {
-    "start_date": datetime.datetime(2023, 9, 1),
-    "retries": 1,
-    "on_failure_callback": task_fail_slack_alert,
-    "retry_delay": datetime.timedelta(minutes=5),
-    "project_id": GCP_PROJECT_ID,
-}
 DATE = "{{ yyyymmdd(ds) }}"
 
 dag_config = {
@@ -61,13 +54,15 @@ gce_params = {
 
 dags = {
     "daily": {
-        "schedule_interval": schedule_dict["clickhouse_exports"]["daily"],
+        "schedule_interval": SCHEDULE_DICT["clickhouse_exports"]["daily"],
         "yyyymmdd": "{{ yyyymmdd(ds) }}",
         "default_dag_args": {
             "start_date": datetime.datetime(2024, 3, 1),
             "retries": 1,
             "retry_delay": datetime.timedelta(minutes=20),
             "project_id": GCP_PROJECT_ID,
+            "on_failure_callback": on_failure_combined_callback,
+            "on_skipped_callback": task_fail_slack_alert,
         },
     },
 }
@@ -81,8 +76,9 @@ def choose_branch(**context):
 
 
 for dag_name, dag_params in dags.items():
+    DAG_NAME = f"export_clickhouse_{dag_name}"
     with DAG(
-        f"export_clickhouse_{dag_name}",
+        DAG_NAME,
         default_args=dag_params["default_dag_args"],
         description="Export data to clickhouse",
         schedule_interval=get_airflow_schedule(
@@ -94,6 +90,7 @@ for dag_name, dag_params in dags.items():
         dagrun_timeout=datetime.timedelta(minutes=1440),
         user_defined_macros=macros.default,
         template_searchpath=DAG_FOLDER,
+        tags=["Incremental"],
         params={
             "branch": Param(
                 default="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -151,21 +148,16 @@ for dag_name, dag_params in dags.items():
             instance_type="{{ params.instance_type }}",
             retries=2,
             use_gke_network=True,
+            labels={"dag_name": DAG_NAME},
         )
 
-        fetch_code = CloneRepositoryGCEOperator(
-            task_id="fetch_code",
+        fetch_install_code = InstallDependenciesOperator(
+            task_id="fetch_install_code",
             instance_name="{{ params.instance_name }}",
+            branch="{{ params.branch }}",
             python_version="3.10",
-            command="{{ params.branch }}",
-            retries=2,
-        )
-
-        install_dependencies = SSHGCEOperator(
-            task_id="install_dependencies",
-            instance_name="{{ params.instance_name }}",
             base_dir=dag_config["BASE_DIR"],
-            command="pip install -r requirements.txt --user",
+            retries=2,
             dag=dag,
         )
 
@@ -234,19 +226,35 @@ for dag_name, dag_params in dags.items():
             out_tables_tasks.append(clickhouse_export)
 
         end_tables = DummyOperator(task_id="end_tables_export")
-        views_refresh = []
-        for view_config in VIEWS_CONFIGS:
-            clickhouse_table_name = view_config["clickhouse_table_name"]
-            view_task = SSHGCEOperator(
-                task_id=f"refresh_{clickhouse_table_name}",
-                instance_name="{{ params.instance_name }}",
-                base_dir=dag_config["BASE_DIR"],
-                command="python refresh.py " f"--table-name {clickhouse_table_name}",
-                dag=dag,
-            )
-            views_refresh.append(view_task)
 
-        gce_instance_stop = StopGCEOperator(
+        with TaskGroup("analytics_stage", dag=dag) as analytics_tg:
+            analytics_task_mapping = {}
+            for config in ANALYTICS_CONFIGS:
+                clickhouse_table_name = config["clickhouse_table_name"]
+                clickhouse_folder_name = config["clickhouse_dataset_name"]
+
+                task = SSHGCEOperator(
+                    task_id=f"{clickhouse_table_name}",
+                    instance_name="{{ params.instance_name }}",
+                    base_dir=dag_config["BASE_DIR"],
+                    command=f"python refresh.py --table-name {clickhouse_table_name} --folder {clickhouse_folder_name}",
+                    dag=dag,
+                )
+                analytics_task_mapping[clickhouse_table_name] = task
+
+            for config in ANALYTICS_CONFIGS:
+                clickhouse_table_name = config["clickhouse_table_name"]
+                # Set upstream dependencies if the config has a "depends_list"
+                if "depends_list" in config:
+                    for dependency in config["depends_list"]:
+                        # Set the upstream dependency
+                        if dependency in analytics_task_mapping:
+                            (
+                                analytics_task_mapping[dependency]
+                                >> analytics_task_mapping[clickhouse_table_name]
+                            )
+
+        gce_instance_stop = DeleteGCEOperator(
             task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
         )
 
@@ -255,8 +263,7 @@ for dag_name, dag_params in dags.items():
             >> [shunt, wait_for_daily_tasks]
             >> join
             >> gce_instance_start
-            >> fetch_code
-            >> install_dependencies
+            >> fetch_install_code
             >> in_tables_tasks
         )
-        (out_tables_tasks >> end_tables >> views_refresh >> gce_instance_stop)
+        (out_tables_tasks >> end_tables >> analytics_tg >> gce_instance_stop)

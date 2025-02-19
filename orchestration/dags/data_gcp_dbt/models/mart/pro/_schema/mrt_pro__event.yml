@@ -1,0 +1,134 @@
+version: 2
+
+models:
+  - name: mrt_pro__event
+    description: "{{ doc('description__mrt_pro__event') }}"
+    columns:
+      - name: event_name
+        description: "{{ doc('column__event_name') }}"
+      - name: page_name
+        description: "{{ doc('column__page_name') }}"
+      - name: user_pseudo_id
+        description: "{{ doc('column__user_pseudo_id') }}"
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+      - name: event_date
+        description: "{{ doc('column__event_date') }}"
+      - name: event_timestamp
+        description: "{{ doc('column__event_timestamp') }}"
+      - name: session_number
+        description: "{{ doc('column__session_number') }}"
+      - name: session_id
+        description: "{{ doc('column__session_id') }}"
+      - name: unique_session_id
+        description: "{{ doc('column__unique_session_id') }}"
+      - name: origin
+        description: "{{ doc('column__origin') }}"
+      - name: destination
+        description: "{{ doc('column__destination') }}"
+      - name: traffic_campaign
+        description: "{{ doc('column__traffic_campaign') }}"
+      - name: traffic_medium
+        description: "{{ doc('column__traffic_medium') }}"
+      - name: traffic_source
+        description: "{{ doc('column__traffic_source') }}"
+      - name: platform
+        description: "{{ doc('column__platform') }}"
+      - name: user_device_category
+        description: "{{ doc('column__user_device_category') }}"
+      - name: user_device_operating_system
+        description: "{{ doc('column__user_device_operating_system') }}"
+      - name: user_device_operating_system_version
+        description: "{{ doc('column__user_device_operating_system_version') }}"
+      - name: user_web_browser
+        description: "{{ doc('column__user_web_browser') }}"
+      - name: user_web_browser_version
+        description: "{{ doc('column__user_web_browser_version') }}"
+      - name: page_location
+        description: "{{ doc('column__page_location') }}"
+      - name: url_path_extract
+        description: "{{ doc('column__url_path_extract') }}"
+      - name: page_referrer
+        description: "{{ doc('column__page_referrer') }}"
+      - name: page_number
+        description: "{{ doc('column__page_number') }}"
+      - name: is_edition
+        description: "{{ doc('column__is_edition') }}"
+      - name: is_draft
+        description: "{{ doc('column__is_draft') }}"
+      - name: offerer_id
+        description: "{{ doc('column__offerer_id') }}"
+      - name: venue_id
+        description: "{{ doc('column__venue_id') }}"
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+      - name: offer_type
+        description: "{{ doc('column__offer_type') }}"
+      - name: has_saved_query
+        description: "{{ doc('column__has_saved_query') }}"
+      - name: has_opened_wrong_student_modal
+        description: "{{ doc('column__has_opened_wrong_student_modal') }}"
+      - name: filled
+        description: "{{ doc('column__filled') }}"
+      - name: filled_with_errors
+        description: "{{ doc('column__filled_with_errors') }}"
+      - name: onboarding_selected_legal_category
+        description: "{{ doc('column__onboarding_selected_legal_category') }}"
+      - name: download_format
+        description: "{{ doc('column__download_format') }}"
+      - name: download_booking_status
+        description: "{{ doc('column__download_booking_status') }}"
+      - name: url_path_agg
+        description: "{{ doc('column__url_path_agg') }}"
+      - name: download_button_type
+        description: "{{ doc('column__download_button_type') }}"
+      - name: download_file_type
+        description: "{{ doc('column__download_file_type') }}"
+      - name: download_files_cnt
+        description: "{{ doc('column__download_files_cnt') }}"
+      - name: offer_subcategory_id
+        description: "{{ doc('column__offer_subcategory_id') }}"
+      - name: suggested_offer_subcategory_selected
+        description: "{{ doc('column__suggested_offer_subcategory_selected') }}"
+      - name: offerer_name
+        description: "{{ doc('column__offerer_name') }}"
+      - name: offerer_first_individual_offer_creation_date
+        description: "{{ doc('column__offerer_first_individual_offer_creation_date') }}"
+      - name: offerer_first_collective_offer_creation_date
+        description: "{{ doc('column__offerer_first_collective_offer_creation_date') }}"
+      - name: offerer_business_activity_label
+        description: "{{ doc('column__offerer_business_activity_label') }}"
+      - name: offerer_legal_category_label
+        description: "{{ doc('column__offerer_legal_category_label') }}"
+      - name: is_local_authority
+        description: "{{ doc('column__offerer_is_local_authority') }}"
+      - name: total_permanent_managed_venues
+        description: "{{ doc('column__total_permanent_managed_venues') }}"
+      - name: is_synchro_adage
+        description: "{{ doc('column__offerer_is_synchro_adage') }}"
+      - name: dms_accepted_at
+        description: "{{ doc('column__offerer_dms_accepted_at') }}"
+      - name: first_dms_adage_status
+        description: "{{ doc('column__offerer_first_dms_adage_status') }}"
+      - name: venue_name
+        description: "{{ doc('column__venue_name') }}"
+      - name: venue_has_siret
+        description: "{{ doc('column__venue_has_siret') }}"
+      - name: venue_is_permanent
+        description: "{{ doc('column__venue_is_permanent') }}"
+      - name: venue_type_label
+        description: "{{ doc('column__venue_type_label') }}"
+      - name: partner_id
+        description: "{{ doc('column__partner_id') }}"
+      - name: partner_name
+        description: "{{ doc('column__partner_name') }}"
+      - name: partner_type
+        description: "{{ doc('column__partner_type') }}"
+      - name: partner_cultural_sector
+        description: "{{ doc('column__partner_cultural_sector') }}"
+      - name: total_partner_created_individual_offers
+        description: "{{ doc('column__total_partner_created_individual_offers') }}"
+      - name: total_partner_created_collective_offers
+        description: "{{ doc('column__total_partner_created_collective_offers') }}"
+      - name: image_creation_stage
+        description: "{{ doc('column__image_creation_stage') }}"

@@ -16,9 +16,9 @@ select
     s.price_category_label_id,
     s.price_category_label,
     s.stock_features,
-    s.offerer_address_id,
     s.stock_last_provider_id,
     s.offer_id,
+    s.is_bookable,
     o.offer_product_id,
     o.offer_id_at_providers,
     o.offer_name,
@@ -31,6 +31,7 @@ select
     o.venue_name,
     o.venue_region_name,
     o.venue_department_code,
+    o.venue_department_name,
     o.venue_postal_code,
     o.venue_city,
     o.venue_epci,
@@ -50,6 +51,8 @@ select
     o.venue_iris_internal_id,
     o.offer_url,
     o.isbn,
-    o.last_stock_price
-from {{ ref('int_applicative__stock') }} as s
-    left join {{ ref('int_global__offer') }} as o on s.offer_id = o.offer_id
+    o.last_stock_price,
+    o.venue_is_permanent,
+    o.venue_is_virtual
+from {{ ref("int_applicative__stock") }} as s
+inner join {{ ref("int_global__offer") }} as o on s.offer_id = o.offer_id

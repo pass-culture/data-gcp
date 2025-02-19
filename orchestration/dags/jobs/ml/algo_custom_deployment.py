@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import DAG_FOLDER, ENV_SHORT_NAME
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    DeleteGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 
 from airflow import DAG
@@ -15,7 +15,7 @@ from airflow.models import Param
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -23,9 +23,10 @@ default_args = {
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"algo-custom-deployment-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/algo_training"
+DAG_NAME = "algo_custom_deployment"
 
 with DAG(
-    "algo_custom_deployment",
+    DAG_NAME,
     default_args=default_args,
     description="ML Custom Deployment job",
     schedule_interval=None,
@@ -49,25 +50,20 @@ with DAG(
         "default_region": Param(default=DEFAULT_REGION, type="string"),
         "instance_type": Param(default="n1-standard-2", type="string"),
     },
-) as dag:
+):
     gce_instance_start = StartGCEOperator(
-        task_id="gce_start_task", instance_name=GCE_INSTANCE, retries=2
-    )
-
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+        task_id="gce_start_task",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
-        python_version="3.10",
         retries=2,
+        labels={"dag_name": DAG_NAME},
     )
 
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
+        branch="{{ params.branch }}",
+        python_version="3.10",
         base_dir=BASE_DIR,
-        command="""pip install -r requirements.txt --user""",
-        dag=dag,
         retries=2,
     )
 
@@ -86,17 +82,10 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=template_command,
-        dag=dag,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
-    (
-        gce_instance_start
-        >> fetch_code
-        >> install_dependencies
-        >> deploy_model
-        >> gce_instance_stop
-    )
+    (gce_instance_start >> fetch_install_code >> deploy_model >> gce_instance_stop)

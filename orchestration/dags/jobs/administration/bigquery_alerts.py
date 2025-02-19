@@ -1,19 +1,19 @@
 import datetime
 
 from common import macros
-from common.alerts import bigquery_freshness_alert
+from common.alerts import bigquery_freshness_alert, on_failure_combined_callback
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    DeleteGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
-from common.utils import get_airflow_schedule
+from common.utils import delayed_waiting_operator, get_airflow_schedule
 
 from airflow import DAG
 from airflow.models import Param
@@ -26,16 +26,18 @@ dag_config = {
     "PROJECT_NAME": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
 }
+DAG_NAME = "bigquery_alerts"
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
+    "on_failure_callback": on_failure_combined_callback,
 }
 
 with DAG(
-    "bigquery_alerts",
+    DAG_NAME,
     default_args=default_dag_args,
     description="Send alerts when bigquery table is not updated in expected schedule",
     schedule_interval=get_airflow_schedule(
@@ -55,24 +57,20 @@ with DAG(
     start = DummyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
+        branch="{{ params.branch }}",
         python_version="3.9",
+        base_dir=BASE_PATH,
     )
 
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        command="pip install -r requirements.txt --user",
-        dag=dag,
-        retries=2,
-    )
+    wait_transfo = delayed_waiting_operator(dag=dag, external_dag_id="dbt_run_dag")
 
     get_warning_tables = SSHGCEOperator(
         task_id="get_warning_tables",
@@ -95,15 +93,15 @@ with DAG(
         dag=dag,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
     (
         start
+        >> wait_transfo
         >> gce_instance_start
-        >> fetch_code
-        >> install_dependencies
+        >> fetch_install_code
         >> get_warning_tables
         >> warning_alert_slack
         >> gce_instance_stop

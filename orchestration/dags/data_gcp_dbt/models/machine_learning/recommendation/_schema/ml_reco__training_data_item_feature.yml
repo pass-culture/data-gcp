@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: ml_reco__training_data_item_feature
+    description: "{{ doc('description__ml_reco__training_data_item_feature') }}"
+    columns:
+      - name: item_id
+        description: "{{ doc('column__item_id') }}"
+      - name: offer_category_id
+        description: "{{ doc('column__offer_category_id') }}"
+      - name: offer_subcategory_id
+        description: "{{ doc('column__offer_subcategory_id') }}"
+      - name: item_image_embedding
+        description: "{{ doc('column__embedding_offer_image') }}"
+      - name: item_semantic_content_hybrid_embedding
+        description: "{{ doc('column__embedding_offer_hybrid') }}"
+      - name: item_names
+        description: "{{ doc('column__offer_name') }}"
+      - name: item_descriptions
+        description: "{{ doc('column__offer_description') }}"
+      - name: item_rayons
+        description: "{{ doc('column__rayon') }}"
+      - name: item_author
+        description: "{{ doc('column__author') }}"
+      - name: item_performer
+        description: "{{ doc('column__performer') }}"
+      - name: item_mean_stock_price
+        description: "{{ doc('column__mean_stock_price_per_item') }}"
+      - name: item_booking_cnt
+        description: "{{ doc('column__total_bookings') }}"
+      - name: item_favourite_cnt
+        description: "{{ doc('column__total_favorites') }}"

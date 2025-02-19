@@ -1,0 +1,40 @@
+version: 2
+models:
+  - name: int_seed__qpv_population
+    description: '{{ doc("description__int_seed__qpv_population") }}'
+    columns:
+      - name: qpv_code
+        description: '{{ doc("column__qpv_code") }}'
+        data_type: STRING
+
+      - name: qpv_name
+        description: '{{ doc("column__qpv_name") }}'
+        data_type: STRING
+
+      - name: qpv_municipality_array
+        description: '{{ doc("column__qpv_municipality_array") }}'
+        data_type: ARRAY<STRING>
+
+      - name: qpv_municipality_name_array
+        description: '{{ doc("column__qpv_municipality_name_array") }}'
+        data_type: ARRAY<STRING>
+
+      - name: qpv_epci_2022_array
+        description: '{{ doc("column__qpv_epci_2022_array") }}'
+        data_type: ARRAY<STRING>
+
+      - name: qpv_department_array
+        description: '{{ doc("column__qpv_department_array") }}'
+        data_type: ARRAY<STRING>
+
+      - name: qpv_region_code
+        description: '{{ doc("column__qpv_region_code") }}'
+        data_type: STRING
+
+      - name: qpv_urban_unit_2020_code
+        description: '{{ doc("column__qpv_urban_unit_2020_code") }}'
+        data_type: STRING
+
+      - name: qpv_municipal_population_2020
+        description: '{{ doc("column__qpv_municipal_population_2020") }}'
+        data_type: INTEGER

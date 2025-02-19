@@ -11,7 +11,6 @@ from common.config import (
     GCE_SA,
     GCE_ZONE,
     GCP_PROJECT_ID,
-    GCP_REGION,
 )
 from common.hooks.image import CPUImage
 from common.hooks.network import BASE_NETWORK_LIST, VPCNetwork
@@ -34,8 +33,7 @@ class GCEHook(GoogleBaseHook):
     def __init__(
         self,
         gcp_project: str = GCP_PROJECT_ID,
-        gcp_zone: str = GCE_ZONE,
-        gcp_region: str = GCP_REGION,
+        gce_zone: str = GCE_ZONE,
         gce_networks: t.List[VPCNetwork] = BASE_NETWORK_LIST,
         gce_sa: str = GCE_SA,
         source_image_type: CPUImage = CPUImage(),
@@ -45,8 +43,7 @@ class GCEHook(GoogleBaseHook):
         impersonation_chain: str = None,
     ):
         self.gcp_project = gcp_project
-        self.gcp_zone = gcp_zone
-        self.gcp_region = gcp_region
+        self.gce_zone = gce_zone
         self.gce_networks = gce_networks
         self.gce_sa = gce_sa
         self.disk_size_gb = disk_size_gb
@@ -68,12 +65,12 @@ class GCEHook(GoogleBaseHook):
 
     def start_vm(
         self,
-        instance_name,
-        instance_type,
+        instance_name: str,
+        instance_type: str,
         preemptible,
         labels={},
-        gpu_count=0,
-        accelerator_types=[],
+        gpu_count: int = 0,
+        gpu_type: t.Optional[str] = None,
     ):
         instances = self.list_instances()
         instances = [x["name"] for x in instances if x["status"] == "RUNNING"]
@@ -90,19 +87,19 @@ class GCEHook(GoogleBaseHook):
             labels=labels,
             wait=True,
             preemptible=preemptible,
-            accelerator_types=accelerator_types,
+            gpu_type=gpu_type,
             gpu_count=gpu_count,
         )
 
     def delete_vm(self, instance_name):
-        self.log.info(f"Removing {instance_name} on compute engine")
+        self.log.info(f"Deleting {instance_name} on compute engine")
         self.__delete_instance(instance_name, wait=True)
 
     def list_instances(self, filter=None):
         result = (
             self.get_conn()
             .instances()
-            .list(project=self.gcp_project, zone=self.gcp_zone, filter=filter)
+            .list(project=self.gcp_project, zone=self.gce_zone, filter=filter)
             .execute()
         )
         return result.get("items", [])
@@ -112,7 +109,7 @@ class GCEHook(GoogleBaseHook):
             return (
                 self.get_conn()
                 .instances()
-                .get(instance=name, project=self.gcp_project, zone=self.gcp_zone)
+                .get(instance=name, project=self.gcp_project, zone=self.gce_zone)
                 .execute()
             )
         except HttpError as e:
@@ -126,23 +123,13 @@ class GCEHook(GoogleBaseHook):
         instance_type,
         name,
         labels,
-        gpu_count=0,
         metadata=None,
         wait=False,
-        accelerator_types=[],
+        gpu_count: int = 0,
+        gpu_type: t.Optional[str] = None,
         preemptible=False,
     ):
-        instance_type = "zones/%s/machineTypes/%s" % (self.gcp_zone, instance_type)
-        gpu_counter = max([gpu_count] + [a_t["count"] for a_t in accelerator_types])
-        accelerator_type = [
-            {
-                "acceleratorCount": [gpu_counter],
-                "acceleratorType": "zones/%s/acceleratorTypes/%s"
-                % (self.gcp_zone, a_t.get("name", "nvidia-tesla-t4")),
-            }
-            for a_t in accelerator_types
-            if gpu_counter in [1, 2, 4]
-        ]
+        instance_type = "zones/%s/machineTypes/%s" % (self.gce_zone, instance_type)
         metadata = (
             [{"key": key, "value": value} for key, value in metadata.items()]
             if metadata
@@ -188,9 +175,15 @@ class GCEHook(GoogleBaseHook):
             "tags": {"items": ["training"]},
             "labels": dict({**DEFAULT_LABELS, **labels}),
         }
+
         # GPUs
-        if len(accelerator_type) > 0:
-            config["guestAccelerators"] = accelerator_type
+        if gpu_count > 0:
+            config["guestAccelerators"] = [
+                {
+                    "acceleratorCount": gpu_count,
+                    "acceleratorType": f"zones/{self.gce_zone}/acceleratorTypes/{gpu_type}",
+                }
+            ]
         if preemptible:
             config["scheduling"] = {
                 "onHostMaintenance": "terminate",
@@ -205,7 +198,7 @@ class GCEHook(GoogleBaseHook):
         operation = (
             self.get_conn()
             .instances()
-            .insert(project=self.gcp_project, zone=self.gcp_zone, body=config)
+            .insert(project=self.gcp_project, zone=self.gce_zone, body=config)
             .execute()
         )
 
@@ -223,7 +216,7 @@ class GCEHook(GoogleBaseHook):
             operation = (
                 self.get_conn()
                 .instances()
-                .delete(project=self.gcp_project, zone=self.gcp_zone, instance=name)
+                .delete(project=self.gcp_project, zone=self.gce_zone, instance=name)
                 .execute()
             )
             if wait:
@@ -235,6 +228,29 @@ class GCEHook(GoogleBaseHook):
                 return None
             else:
                 raise
+
+    def __stop_instance(self, name, wait=False):
+        self.log.info(f"Stopping {name}")
+        try:
+            operation = (
+                self.get_conn()
+                .instances()
+                .stop(project=self.gcp_project, zone=self.gce_zone, instance=name)
+                .execute()
+            )
+            if wait:
+                self.wait_for_operation(operation["name"])
+            else:
+                return operation["name"]
+        except HttpError as e:
+            if e.resp.status == 404:
+                return None
+            else:
+                raise
+
+    def stop_vm(self, instance_name):
+        self.log.info(f"Stopping {instance_name} on compute engine")
+        self.__stop_instance(instance_name, wait=True)
 
     def delete_instances(self, job_type="default", timeout_in_minutes=60 * 12):
         instances = self.list_instances()
@@ -265,7 +281,7 @@ class GCEHook(GoogleBaseHook):
                     .zoneOperations()
                     .get(
                         project=self.gcp_project,
-                        zone=self.gcp_zone,
+                        zone=self.gce_zone,
                         operation=operation,
                     )
                     .execute()

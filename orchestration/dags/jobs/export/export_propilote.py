@@ -1,9 +1,9 @@
 import datetime
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import DAG_FOLDER, GCP_PROJECT_ID
-from common.operators.biquery import bigquery_job_task
+from common.operators.bigquery import bigquery_job_task
 from common.utils import depends_loop, get_airflow_schedule
 from dependencies.propilote.export_propilote import propilote_tables
 
@@ -15,7 +15,7 @@ default_dag_args = {
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
 }
 
 dag = DAG(

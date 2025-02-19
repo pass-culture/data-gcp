@@ -1,0 +1,105 @@
+name: "Deploy MkDocs to GitHub Pages"
+
+on:
+  workflow_call:
+    inputs:
+      NOTIF_CHANNEL_ID:
+        type: string
+        required: false # If not provided, no notification
+      ENV_SHORT_NAME:
+        type: string
+        required: true
+      APPLICATIVE_EXTERNAL_CONNECTION_ID:
+        type: string
+        required: false
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER:
+        required: true
+      GCP_EHP_SERVICE_ACCOUNT:
+        required: true
+
+
+jobs:
+  mkdocs-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+    env:
+      DBT_FOLDER: "./orchestration/dags/data_gcp_dbt"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Connect to Secret Manager
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Set up UV
+        uses: yezz123/setup-uv@v4
+
+      - name: Install Default Python requirements
+        run: uv pip install --system -r requirements.txt
+
+      - name: Install DBT Python requirements
+        run: uv pip install --system -r ${{ env.DBT_FOLDER }}/dbt-requirements.txt
+
+      - name: "compile dbt project"
+        working-directory: ${{ env.DBT_FOLDER }}
+        env:
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
+          IS_CI: "true"
+        run: dbt deps && dbt compile --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+
+      - name: Build MkDocs site
+        working-directory: "."
+        run: mkdocs build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+
+      - name: "Get secrets for Slack"
+        id: 'secrets'
+        uses: 'google-github-actions/get-secretmanager-secrets@v2'
+        with:
+          secrets: |-
+            SLACK_BOT_TOKEN:passculture-metier-ehp/passculture-ci-slack-bot-token
+
+      - name: "Post to a Slack channel"
+        id: "slack"
+        if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
+        uses: slackapi/slack-github-action@v1.23.0
+        env:
+          SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.SLACK_BOT_TOKEN }}
+        with:
+          channel-id: ${{ inputs.NOTIF_CHANNEL_ID }}
+          payload: |
+            {
+              "attachments": [
+                {
+                  "mrkdwn_in": ["text"],
+                  "color": "#A30002",
+                  "author_name": "${{github.actor}}",
+                  "author_link": "https://github.com/${{github.actor}}",
+                  "author_icon": "https://github.com/${{github.actor}}.png",
+                  "title": "MkDocs Deploy Job Failed",
+                  "title_link": "https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}",
+                  "text": ":fire: Deploy Job échoué :no_entry:"
+                }
+              ],
+              "unfurl_links": false,
+              "unfurl_media": false
+            }

@@ -1,4 +1,4 @@
-SELECT
+select
     collective_stock_id,
     stock_id,
     collective_stock_creation_date,
@@ -9,5 +9,5 @@ SELECT
     collective_stock_booking_limit_date_time,
     collective_stock_number_of_tickets,
     collective_stock_price_detail,
-    DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY) as partition_date
-FROM `{{ bigquery_raw_dataset }}`.`applicative_database_collective_stock`
+    date_add(current_date(), interval -1 day) as partition_date
+from `{{ bigquery_raw_dataset }}`.`applicative_database_collective_stock`

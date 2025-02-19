@@ -1,3 +1,25 @@
+with
+    bookable_offer_history as (
+        select
+            venue_id,
+            min(partition_date) as first_bookable_offer_date,
+            max(partition_date) as last_bookable_offer_date,
+            min(
+                case when total_individual_bookable_offers > 0 then partition_date end
+            ) as first_individual_bookable_offer_date,
+            max(
+                case when total_individual_bookable_offers > 0 then partition_date end
+            ) as last_individual_bookable_offer_date,
+            min(
+                case when total_collective_bookable_offers > 0 then partition_date end
+            ) as first_collective_bookable_offer_date,
+            max(
+                case when total_collective_bookable_offers > 0 then partition_date end
+            ) as last_collective_bookable_offer_date
+        from {{ ref("bookable_venue_history") }}
+        group by venue_id
+    )
+
 select
     v.venue_id,
     v.venue_name,
@@ -7,6 +29,7 @@ select
     v.venue_latitude,
     v.venue_longitude,
     v.venue_department_code,
+    v.venue_department_name,
     v.venue_postal_code,
     v.venue_city,
     v.venue_siret,
@@ -14,6 +37,7 @@ select
     v.venue_managing_offerer_id,
     v.venue_creation_date,
     v.venue_is_permanent,
+    v.venue_is_open_to_public,
     v.venue_is_acessibility_synched,
     v.venue_type_label,
     v.venue_label,
@@ -59,12 +83,12 @@ select
     v.last_collective_offer_creation_date,
     v.total_created_collective_offers,
     v.total_created_offers,
-    v.first_bookable_offer_date,
-    v.last_bookable_offer_date,
-    v.first_individual_bookable_offer_date,
-    v.last_individual_bookable_offer_date,
-    v.first_collective_bookable_offer_date,
-    v.last_collective_bookable_offer_date,
+    boh.first_bookable_offer_date,
+    boh.last_bookable_offer_date,
+    boh.first_individual_bookable_offer_date,
+    boh.last_individual_bookable_offer_date,
+    boh.first_collective_bookable_offer_date,
+    boh.last_collective_bookable_offer_date,
     v.first_booking_date,
     v.last_booking_date,
     v.first_offer_creation_date,
@@ -76,12 +100,30 @@ select
     v.total_non_cancelled_tickets,
     v.total_current_year_non_cancelled_tickets,
     v.offerer_address_id,
-    v.is_active_last_30days,
-    v.is_active_current_year,
-    v.is_individual_active_last_30days,
-    v.is_individual_active_current_year,
-    v.is_collective_active_last_30days,
-    v.is_collective_active_current_year,
+    coalesce(
+        date_diff(current_date, boh.last_bookable_offer_date, day) <= 30, false
+    ) as is_active_last_30days,
+    coalesce(
+        date_diff(current_date, boh.last_bookable_offer_date, year) = 0, false
+    ) as is_active_current_year,
+    coalesce(
+        date_diff(current_date, boh.last_individual_bookable_offer_date, day) <= 30,
+        false
+    ) as is_individual_active_last_30days,
+    coalesce(
+        date_diff(current_date, boh.last_individual_bookable_offer_date, year) = 0,
+        false
+    ) as is_individual_active_current_year,
+    coalesce(
+        date_diff(current_date, boh.last_collective_bookable_offer_date, day) <= 30,
+        false
+    ) as is_collective_active_last_30days,
+    coalesce(
+        date_diff(current_date, boh.last_collective_bookable_offer_date, year) = 0,
+        false
+    ) as is_collective_active_current_year,
+    v.venue_image_source,
+    v.venue_adage_inscription_date,
     ofr.offerer_id,
     ofr.offerer_name,
     ofr.offerer_validation_status,
@@ -91,28 +133,29 @@ select
     ofr.is_reference_adage,
     ofr.is_synchro_adage,
     ofr.total_reimbursement_points,
-    CONCAT(
+    concat(
         "https://passculture.pro/structures/",
         ofr.offerer_humanized_id,
         "/lieux/",
         venue_humanized_id
     ) as venue_pc_pro_link,
-    case when v.venue_is_permanent then CONCAT("venue-", v.venue_id)
-        else ofr.partner_id
+    case
+        when v.venue_is_permanent then concat("venue-", v.venue_id) else ofr.partner_id
     end as partner_id,
-    ROW_NUMBER() over (
+    row_number() over (
         partition by v.venue_managing_offerer_id
         order by
-            v.total_theoretic_revenue desc,
-            v.total_created_offers desc,
-            venue_name desc
+            v.total_theoretic_revenue desc, v.total_created_offers desc, venue_name desc
     ) as offerer_rank_desc,
-    ROW_NUMBER() over (
+    row_number() over (
         partition by v.venue_managing_offerer_id
         order by
             v.total_theoretic_revenue desc,
             v.total_created_offers desc,
             v.venue_name asc
     ) as offerer_rank_asc
-from {{ ref('int_applicative__venue') }} as v
-    left join {{ ref('int_global__offerer') }} as ofr on v.venue_managing_offerer_id = ofr.offerer_id
+from {{ ref("int_applicative__venue") }} as v
+left join
+    {{ ref("int_global__offerer") }} as ofr
+    on v.venue_managing_offerer_id = ofr.offerer_id
+left join bookable_offer_history as boh on boh.venue_id = v.venue_id

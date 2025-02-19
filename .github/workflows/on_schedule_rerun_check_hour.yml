@@ -1,0 +1,33 @@
+name: "on_schedule_rerun_check_hour"
+on:
+  schedule:
+    - cron: "0 10,11,16,17 * * 1-5" # Paris time with both daylight savings in UTC during weekdays
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  re-run-worflow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: List workflow open branch with associated PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_ID: 134227518 # id of the workflow "on_pr_check_hour.yaml"
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          prs=$(gh pr list --json headRefName -R $REPOSITORY)
+          # Loop over the PRs
+          echo "$prs" | jq -c '.[]' | while read -r pr; do
+            branch=$(echo "$pr" | jq -r '.headRefName')
+            echo "Branch $branch to re-run"
+            RUN_ID=($(gh run list -b $branch -w $WORKFLOW_ID --json databaseId -R $REPOSITORY | jq -r '.[0].databaseId'))
+            echo "Running command 'gh run rerun $RUN_ID -R $REPOSITORY'"
+            if [[ "$RUN_ID" == "null" ]]; then
+              echo "RUN_id is null"
+            else
+              gh run rerun $RUN_ID -R $REPOSITORY
+            fi
+          done

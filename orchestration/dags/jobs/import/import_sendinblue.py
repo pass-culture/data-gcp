@@ -1,18 +1,18 @@
 import datetime
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.alerts import on_failure_combined_callback
 from common.config import (
     DAG_FOLDER,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
-from common.operators.biquery import bigquery_job_task
+from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
-    CloneRepositoryGCEOperator,
+    DeleteGCEOperator,
+    InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
 )
 from common.utils import (
     depends_loop,
@@ -28,8 +28,9 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 
-GCE_INSTANCE = f"import-sendinblue-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/external/sendinblue"
+DAG_NAME = "import_brevo"
+GCE_INSTANCE = f"import-brevo-{ENV_SHORT_NAME}"
+BASE_PATH = "data-gcp/jobs/etl_jobs/external/brevo"
 yesterday = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 dag_config = {
     "GCP_PROJECT": GCP_PROJECT_ID,
@@ -39,15 +40,15 @@ dag_config = {
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 1,
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_combined_callback,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }
 
 with DAG(
-    "import_sendinblue",
+    DAG_NAME,
     default_args=default_dag_args,
-    description="Import sendinblue tables",
+    description="Import brevo tables",
     schedule_interval=get_airflow_schedule("00 04 * * *")
     if ENV_SHORT_NAME in ["prod", "stg"]
     else get_airflow_schedule("00 07 * * *"),
@@ -71,31 +72,35 @@ with DAG(
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE, task_id="gce_start_task"
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": DAG_NAME},
     )
 
-    fetch_code = CloneRepositoryGCEOperator(
-        task_id="fetch_code",
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
-        command="{{ params.branch }}",
+        branch="{{ params.branch }}",
         python_version="3.9",
-    )
-
-    install_dependencies = SSHGCEOperator(
-        task_id="install_dependencies",
-        instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command="pip install -r requirements.txt --user",
-        dag=dag,
         retries=2,
     )
 
-    import_transactional_data_to_tmp = SSHGCEOperator(
-        task_id="import_transactional_data_to_tmp",
+    import_pro_transactional_data_to_tmp = SSHGCEOperator(
+        task_id="import_pro_transactional_data_to_tmp",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command='python main.py --target transactional --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
+        command='python main.py --target transactional --audience pro --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
+        do_xcom_push=True,
+    )
+
+    import_native_transactional_data_to_tmp = SSHGCEOperator(
+        task_id="import_native_transactional_data_to_tmp",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command='python main.py --target transactional --audience native --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
         do_xcom_push=True,
     )
 
@@ -108,26 +113,36 @@ with DAG(
             "operator": task,
         }
 
+    end_job = DummyOperator(task_id="end_job", dag=dag)
     end_raw = DummyOperator(task_id="end_raw", dag=dag)
 
     raw_table_tasks = depends_loop(
         raw_tables,
         raw_table_jobs,
-        import_transactional_data_to_tmp,
+        end_job,
         dag=dag,
         default_end_operator=end_raw,
     )
 
-    import_newsletter_data_to_raw = SSHGCEOperator(
-        task_id="import_newsletter_data_to_raw",
+    import_pro_newsletter_data_to_raw = SSHGCEOperator(
+        task_id="import_pro_newsletter_data_to_raw",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py --target newsletter --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
+        command="python main.py --target newsletter --audience pro --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
         do_xcom_push=True,
     )
 
-    gce_instance_stop = StopGCEOperator(
+    import_native_newsletter_data_to_raw = SSHGCEOperator(
+        task_id="import_native_newsletter_data_to_raw",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=dag_config,
+        command="python main.py --target newsletter --audience native --start-date {{ params.start_date }} --end-date {{ params.end_date }}",
+        do_xcom_push=True,
+    )
+
+    gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task", instance_name=GCE_INSTANCE
     )
 
@@ -169,13 +184,25 @@ with DAG(
         default_end_operator=end,
     )
 
+    (gce_instance_start >> fetch_install_code)
+
     (
-        gce_instance_start
-        >> fetch_code
-        >> install_dependencies
-        >> import_newsletter_data_to_raw
-        >> import_transactional_data_to_tmp
+        fetch_install_code
+        >> import_pro_transactional_data_to_tmp
+        >> import_pro_newsletter_data_to_raw
         >> gce_instance_stop
+    )
+
+    (
+        fetch_install_code
+        >> import_native_transactional_data_to_tmp
+        >> import_native_newsletter_data_to_raw
+        >> gce_instance_stop
+    )
+
+    (
+        gce_instance_stop
+        >> end_job
         >> raw_table_tasks
         >> end_raw
         >> clean_table_tasks

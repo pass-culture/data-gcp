@@ -24,21 +24,25 @@ ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO = {
     "prod": ["passculture.pro"],
 }[ENV_SHORT_NAME]
 
-GCP_PROJECT_NATIVE_DEFAULT_ENV = "passculture-native.analytics_267263535"
+
+GCP_PROJECT_NATIVE_DEFAULT_ENV = [
+    "pc-native-production.analytics_450774560",
+]
 
 GCP_PROJECT_NATIVE_ENV = {
-    "dev": [GCP_PROJECT_NATIVE_DEFAULT_ENV],
-    "stg": [GCP_PROJECT_NATIVE_DEFAULT_ENV],
-    "prod": [GCP_PROJECT_NATIVE_DEFAULT_ENV],
+    "dev": GCP_PROJECT_NATIVE_DEFAULT_ENV + ["pc-native-testing.analytics_451612566"],
+    "stg": GCP_PROJECT_NATIVE_DEFAULT_ENV + ["pc-native-staging.analytics_450776578"],
+    # keep double run for native while we are migrating to new project.
+    "prod": GCP_PROJECT_NATIVE_DEFAULT_ENV + ["passculture-native.analytics_267263535"],
 }[ENV_SHORT_NAME]
 
 
-GCP_PROJECT_PRO_DEFAULT_ENV = "pc-pro-production.analytics_397565568"
+GCP_PROJECT_PRO_DEFAULT_ENV = ["pc-pro-production.analytics_397565568"]
 
 GCP_PROJECT_PRO_ENV = {
-    "dev": ["pc-pro-testing.analytics_397508951", GCP_PROJECT_PRO_DEFAULT_ENV],
-    "stg": ["pc-pro-staging.analytics_397573615", GCP_PROJECT_PRO_DEFAULT_ENV],
-    "prod": [GCP_PROJECT_PRO_DEFAULT_ENV],
+    "dev": ["pc-pro-testing.analytics_397508951"] + GCP_PROJECT_PRO_DEFAULT_ENV,
+    "stg": ["pc-pro-staging.analytics_397573615"] + GCP_PROJECT_PRO_DEFAULT_ENV,
+    "prod": GCP_PROJECT_PRO_DEFAULT_ENV,
 }[ENV_SHORT_NAME]
 
 
@@ -55,7 +59,8 @@ import_firebase_pro_tables = {
             "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO,
             "gcp_project_env": GCP_PROJECT_PRO_ENV,
         },
-        "fallback_params": {"gcp_project_env": [GCP_PROJECT_PRO_DEFAULT_ENV]},
+        "fallback_params": {"gcp_project_env": GCP_PROJECT_PRO_DEFAULT_ENV},
+        "schemaUpdateOptions": ["ALLOW_FIELD_ADDITION"],
     },
 }
 
@@ -71,7 +76,8 @@ import_firebase_beneficiary_tables = {
             "app_info_ids": ENV_SHORT_NAME_APP_INFO_ID_MAPPING,
             "gcp_project_env": GCP_PROJECT_NATIVE_ENV,
         },
-        "fallback_params": {"gcp_project_env": [GCP_PROJECT_NATIVE_DEFAULT_ENV]},
+        "fallback_params": {"gcp_project_env": GCP_PROJECT_NATIVE_DEFAULT_ENV},
+        "schemaUpdateOptions": ["ALLOW_FIELD_ADDITION"],
     }
 }
 

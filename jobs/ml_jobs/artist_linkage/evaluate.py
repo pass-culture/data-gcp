@@ -1,8 +1,10 @@
+import gcsfs
 import matplotlib.pyplot as plt
 import mlflow
 import pandas as pd
 import typer
 
+from constants import OFFER_IS_SYNCHRONISED, TOTAL_OFFER_COUNT
 from utils.mlflow import (
     connect_remote_mlflow,
     get_mlflow_experiment,
@@ -10,6 +12,18 @@ from utils.mlflow import (
 
 METRICS_PER_DATASET_CSV_FILENAME = "metrics_per_dataset.csv"
 METRICS_PER_DATASET_GRAPH_FILENAME = "metrics_per_dataset.png"
+GLOBAL_METRICS_FILENAME = "global_metrics.csv"
+
+MERGE_COLUMNS = [
+    "artist_name",
+    "offer_category_id",
+    OFFER_IS_SYNCHRONISED,
+    "artist_type",
+]
+
+WIKI_MATCHED_WEIGHTED_BY_BOOKINGS_PERC = "wiki_matched_weighted_by_bookings_perc"
+WIKI_MATCHED_WEIGHTED_BY_OFFERS_PERC = "wiki_matched_weighted_by_offers_perc"
+WIKI_MATCHED_PERC = "wiki_matched_perc"
 
 app = typer.Typer()
 
@@ -18,10 +32,10 @@ app = typer.Typer()
 def compute_metrics_per_slice(
     artists_per_slice: pd.api.typing.DataFrameGroupBy,
 ) -> pd.Series:
-    tp = artists_per_slice.loc[artists_per_slice.tp].offer_number.sum()
-    fp = artists_per_slice.loc[artists_per_slice.fp].offer_number.sum()
-    fn = artists_per_slice.loc[artists_per_slice.fn].offer_number.sum()
-    tn = artists_per_slice.loc[artists_per_slice.tn].offer_number.sum()
+    tp = artists_per_slice.loc[artists_per_slice.tp][TOTAL_OFFER_COUNT].sum()
+    fp = artists_per_slice.loc[artists_per_slice.fp][TOTAL_OFFER_COUNT].sum()
+    fn = artists_per_slice.loc[artists_per_slice.fn][TOTAL_OFFER_COUNT].sum()
+    tn = artists_per_slice.loc[artists_per_slice.tn][TOTAL_OFFER_COUNT].sum()
 
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0
@@ -51,25 +65,128 @@ def get_main_matched_cluster_per_dataset(
             .groupby(["dataset_name", "cluster_id"])
             .agg(
                 {
-                    "offer_number": "sum",
+                    TOTAL_OFFER_COUNT: "sum",
                 }
             )
-            .sort_values(["dataset_name", "offer_number"], ascending=[True, False])
+            .sort_values(["dataset_name", TOTAL_OFFER_COUNT], ascending=[True, False])
         )
         .reset_index()
         .drop_duplicates(subset=["dataset_name"], keep="first")
-        .drop(columns=["offer_number"])
+        .drop(columns=[TOTAL_OFFER_COUNT])
         .set_index("dataset_name")
         .to_dict()["cluster_id"]
     )
 
 
+def get_test_sets_df(test_set_dir: str) -> pd.DataFrame:
+    fs = gcsfs.GCSFileSystem()
+    GS_PREFIX = "gs://"
+
+    parquet_files = [
+        GS_PREFIX + path
+        for path in fs.glob(f"{test_set_dir}/**")
+        if path.endswith(".parquet")
+    ]
+
+    return pd.concat(
+        [
+            pd.read_parquet(test_set).assign(source_file_path=test_set)
+            for test_set in parquet_files
+        ]
+    )
+
+
+def project_linked_artists_on_test_sets(
+    artists_to_link_df: pd.DataFrame,
+    linked_artists_df: pd.DataFrame,
+    test_sets_df: pd.DataFrame,
+) -> pd.DataFrame:
+    return (
+        test_sets_df.loc[
+            :,
+            MERGE_COLUMNS
+            + [
+                "dataset_name",
+                "is_my_artist",
+                "irrelevant_data",
+            ],
+        ]
+        .merge(
+            artists_to_link_df.loc[
+                :,
+                MERGE_COLUMNS
+                + [
+                    TOTAL_OFFER_COUNT,
+                    "total_booking_count",
+                ],
+            ],
+            how="left",
+            on=MERGE_COLUMNS,
+        )
+        .merge(
+            linked_artists_df.loc[:, MERGE_COLUMNS + ["cluster_id", "first_artist"]],
+            how="left",
+            on=MERGE_COLUMNS,
+        )
+    ).sort_values(by=["dataset_name", "cluster_id"])
+
+
+def get_wiki_matching_metrics(artists_df: pd.DataFrame) -> pd.DataFrame:
+    stats_dict = {}
+
+    def _get_stats_per_df(input_df: pd.DataFrame) -> dict:
+        return {
+            WIKI_MATCHED_WEIGHTED_BY_BOOKINGS_PERC: round(
+                100
+                * input_df.loc[lambda df: df.wiki_id.notna()].total_booking_count.sum()
+                / input_df.total_booking_count.sum(),
+                2,
+            ),
+            WIKI_MATCHED_WEIGHTED_BY_OFFERS_PERC: round(
+                100
+                * input_df.loc[lambda df: df.wiki_id.notna()][TOTAL_OFFER_COUNT]
+                .replace(0, 1)
+                .sum()
+                / input_df[TOTAL_OFFER_COUNT].sum(),
+                2,
+            ),
+            WIKI_MATCHED_PERC: round(
+                100 * input_df.wiki_id.notna().sum() / len(input_df),
+                2,
+            ),
+            "artist_name_count": len(input_df),
+            "total_booking_count": input_df.total_booking_count.sum(),
+        }
+
+    stats_dict["TOTAL"] = _get_stats_per_df(artists_df)
+    for group_name, group_df in artists_df.groupby("offer_category_id"):
+        stats_dict[group_name] = _get_stats_per_df(group_df)
+
+    return pd.DataFrame(stats_dict).T.assign(category=lambda df: df.index)
+
+
 @app.command()
 def main(
-    input_file_path: str = typer.Option(),
+    artists_to_link_file_path: str = typer.Option(),
+    linked_artists_file_path: str = typer.Option(),
+    test_sets_dir: str = typer.Option(),
     experiment_name: str = typer.Option(),
 ) -> None:
-    matched_artists_in_test_set_df = pd.read_parquet(input_file_path)
+    test_sets_df = get_test_sets_df(test_sets_dir).rename(
+        columns={"is_synchronised": OFFER_IS_SYNCHRONISED}
+    )
+    artists_to_link_df = pd.read_parquet(artists_to_link_file_path)
+    linked_artists_df = pd.read_parquet(linked_artists_file_path)
+
+    # Global Metrics
+    wiki_matching_metrics_df = get_wiki_matching_metrics(linked_artists_df)
+
+    # Test Set Metrics
+    matched_artists_in_test_set_df = project_linked_artists_on_test_sets(
+        artists_to_link_df=artists_to_link_df,
+        linked_artists_df=linked_artists_df,
+        test_sets_df=test_sets_df,
+    )
 
     main_cluster_per_dataset = get_main_matched_cluster_per_dataset(
         matched_artists_in_test_set_df
@@ -96,6 +213,13 @@ def main(
         "recall_std": metrics_per_dataset_df.recall.std(),
         "f1_mean": metrics_per_dataset_df.f1.mean(),
         "f1_std": metrics_per_dataset_df.f1.std(),
+        WIKI_MATCHED_WEIGHTED_BY_BOOKINGS_PERC: wiki_matching_metrics_df[
+            WIKI_MATCHED_WEIGHTED_BY_BOOKINGS_PERC
+        ]["TOTAL"],
+        WIKI_MATCHED_WEIGHTED_BY_OFFERS_PERC: wiki_matching_metrics_df[
+            WIKI_MATCHED_WEIGHTED_BY_OFFERS_PERC
+        ]["TOTAL"],
+        WIKI_MATCHED_PERC: wiki_matching_metrics_df["wiki_matched_perc"]["TOTAL"],
     }
 
     # MLflow Logging
@@ -105,14 +229,15 @@ def main(
         # Log Dataset
         dataset = mlflow.data.from_pandas(
             matched_artists_in_test_set_df,
-            source=input_file_path,
             name="artists_on_test_sets",
         )
         mlflow.log_input(dataset, context="evaluation")
 
         # Log Metrics
         metrics_per_dataset_df.to_csv(METRICS_PER_DATASET_CSV_FILENAME, index=False)
+        wiki_matching_metrics_df.to_csv(GLOBAL_METRICS_FILENAME, index=False)
         mlflow.log_artifact(METRICS_PER_DATASET_CSV_FILENAME)
+        mlflow.log_artifact(GLOBAL_METRICS_FILENAME)
         mlflow.log_metrics(metrics_dict)
 
         # Create and Log Graph

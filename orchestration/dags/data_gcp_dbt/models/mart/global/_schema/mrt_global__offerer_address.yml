@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: mrt_global__offerer_address
+    description: "{{ doc('description__mrt_global__offerer_address') }}"
+    columns:
+      - name: offerer_address_id
+        description: "{{ doc('column__offerer_address_id') }}"
+      - name: offerer_address_label
+        description: "{{ doc('column__offerer_address_label') }}"
+      - name: address_id
+        description: "{{ doc('column__address_id') }}"
+      - name: offerer_id
+        description: "{{ doc('column__offerer_id') }}"
+      - name: address_street
+        description: "{{ doc('column__address_street') }}"
+      - name: address_postal_code
+        description: "{{ doc('column__address_postal_code') }}"
+      - name: address_city
+        description: "{{ doc('column__address_city') }}"
+      - name: address_department_code
+        description: "{{ doc('column__address_department_code') }}"

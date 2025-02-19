@@ -44,7 +44,13 @@ def create_clusters(
             )
         )
 
+    logger.info(
+        f"Exporting clusters to table: {output_dataset_name}.{output_table_name}"
+    )
     export_polars_to_bq(pl.concat(results), output_dataset_name, output_table_name)
+    logger.info(
+        f"Clusters successfully exported to: {output_dataset_name}.{output_table_name}"
+    )
 
 
 def generate_clustering(

@@ -4,13 +4,14 @@ import numpy as np
 import pandas as pd
 import rapidfuzz
 import typer
+from loguru import logger
 
+from constants import OFFER_IS_SYNCHRONISED
 from utils.clustering_utils import (
     cluster_with_distance_matrices,
     format_cluster_matrix,
     get_cluster_to_nickname_dict,
 )
-from utils.gcs_utils import upload_parquet
 
 app = typer.Typer()
 
@@ -36,17 +37,19 @@ def main(
         ["offer_category_id", "artist_type"]
     ):
         t0 = time.time()
-        print(
+        logger.info(
             f"Matching artists names for group {group_name} containing {len(group_df.preprocessed_artist_name.unique())} artists"
         )
 
-        ratio_synchronised_data = group_df.is_synchronised.sum() / len(
-            group_df.is_synchronised
+        ratio_synchronised_data = (
+            group_df[OFFER_IS_SYNCHRONISED].sum() / len(group_df[OFFER_IS_SYNCHRONISED])
+            if len(group_df[OFFER_IS_SYNCHRONISED]) > 0
+            else 0
         )
         if ratio_synchronised_data >= RATIO_SYNCHRONISED_DATA_THRESHOLD:
             # Cluster by exactly matching on preprocessed_artist_name for synchronised data
             clusters_by_group_df = (
-                group_df.loc[lambda df: df.is_synchronised]
+                group_df.loc[lambda df: df[OFFER_IS_SYNCHRONISED]]
                 .groupby("preprocessed_artist_name")
                 .apply(lambda g: set(g.preprocessed_artist_name))
                 .rename("preprocessed_artist_name")
@@ -71,7 +74,7 @@ def main(
                 artist_type=group_name[1],
             )
         )
-        print("Time to compute the matching", time.time() - t0)
+        logger.info("Time to compute the matching", time.time() - t0)
     clusters_df = pd.concat(clusters_df_list)
 
     merged_df = preprocessed_df.merge(
@@ -85,7 +88,9 @@ def main(
         ],
         how="left",
         on=["preprocessed_artist_name", "offer_category_id", "artist_type"],
-    )
+    ).loc[
+        lambda df: df.cluster_id.notna()
+    ]  # Arise from not syncrhonized offers for mostly synchronized categories
 
     output_df = merged_df.assign(
         artist_nickname=lambda df: df.cluster_id.map(
@@ -93,10 +98,7 @@ def main(
         )
     )
 
-    upload_parquet(
-        dataframe=output_df,
-        gcs_path=output_file_path,
-    )
+    output_df.to_parquet(output_file_path)
 
 
 if __name__ == "__main__":

@@ -1,23 +1,23 @@
-{% set target_name = var('ENV_SHORT_NAME') %}
+{% set target_name = var("ENV_SHORT_NAME") %}
 {% set target_schema = generate_schema_name("analytics_" ~ target_name) %}
 
-{{ config(
-    pre_hook="{{create_humanize_id_function()}}"
-) }}
+{{ config(pre_hook="{{create_humanize_id_function()}}") }}
 
 select
-    THUMBCOUNT as THUMB_COUNT,
-    IDATPROVIDERS as ID_AT_PROVIDERS,
-    DATEMODIFIEDATLASTPROVIDER as DATE_MODIFIED_AT_LAST_PROVIDER,
-    ID,
-    DATECREATED as DATE_CREATED,
-    AUTHORID as AUTHOR_ID,
-    LASTPROVIDERID as LAST_PROVIDER_ID,
-    OFFERID as OFFER_ID,
-    CREDIT,
-    ISACTIVE as IS_ACTIVE,
-    FIELDSUPDATED as FIELDS_UPDATED,
-    case when ISACTIVE and THUMBCOUNT > 0 then 1 else 0 end as IS_MEDIATION,
-    {{ target_schema }}.humanize_id(ID) as MEDIATION_HUMANIZED_ID,
-    ROW_NUMBER() over (partition by OFFERID order by DATEMODIFIEDATLASTPROVIDER desc) as MEDIATION_ROWN
-from {{ source('raw', 'applicative_database_mediation') }}
+    thumbcount as thumb_count,
+    idatproviders as id_at_providers,
+    datemodifiedatlastprovider as date_modified_at_last_provider,
+    id,
+    datecreated as date_created,
+    authorid as author_id,
+    lastproviderid as last_provider_id,
+    offerid as offer_id,
+    credit,
+    isactive as is_active,
+    fieldsupdated as fields_updated,
+    case when isactive and thumbcount > 0 then 1 else 0 end as is_mediation,
+    {{ target_schema }}.humanize_id(id) as mediation_humanized_id,
+    row_number() over (
+        partition by offerid order by datemodifiedatlastprovider desc
+    ) as mediation_rown
+from {{ source("raw", "applicative_database_mediation") }}

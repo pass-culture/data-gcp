@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: mrt_pro__visit
+    description: "{{ doc('description__mrt_pro__visit') }}"
+    columns:
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+      - name: user_pseudo_id
+        description: "{{ doc('column__user_pseudo_id') }}"
+      - name: session_id
+        description: "{{ doc('column__session_id') }}"
+      - name: unique_session_id
+        description: "{{ doc('column__unique_session_id') }}"
+      - name: session_number
+        description: "{{ doc('column__session_number') }}"
+      - name: first_event_date
+        description: "{{ doc('column__first_event_date') }}"
+      - name: first_event_timestamp
+        description: "{{ doc('column__first_event_timestamp') }}"
+      - name: last_event_timestamp
+        description: "{{ doc('column__last_event_timestamp') }}"
+      - name: visit_duration_seconds
+        description: "{{ doc('column__visit_duration_seconds') }}"
+      - name: total_offerers
+        description: "{{ doc('column__total_offerers') }}"
+      - name: total_partners
+        description: "{{ doc('column__total_partners') }}"
+      - name: total_managed_offers
+        description: "{{ doc('column__total_managed_offers') }}"
+      - name: total_managed_tickets
+        description: "{{ doc('column__total_managed_tickets') }}"
+      - name: total_managed_bookings
+        description: "{{ doc('column__total_managed_bookings') }}"
+      - name: total_managed_finance
+        description: "{{ doc('column__total_managed_finance') }}"
+      - name: total_managed_venues
+        description: "{{ doc('column__total_managed_venues') }}"
+      - name: total_managed_profiles
+        description: "{{ doc('column__total_managed_profiles') }}"
+      - name: total_stat_page_views
+        description: "{{ doc('column__total_stat_page_views') }}"
+      - name: total_consulted_help
+        description: "{{ doc('column__total_consulted_help') }}"

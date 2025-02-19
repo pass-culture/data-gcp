@@ -3,6 +3,7 @@ import os
 import clickhouse_connect
 from google.cloud import secretmanager
 
+ENVIRONMENT_NAME = os.environ.get("ENVIRONMENT_NAME", "development")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 PROJECT_NAME = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 
@@ -18,16 +19,14 @@ def access_secret_data(project_id, secret_id, version_id="latest", default=None)
 
 
 CLICKHOUSE_CLIENT = clickhouse_connect.get_client(
-    host=access_secret_data(
-        PROJECT_NAME, f"clickhouse-svc_external_ip-{ENV_SHORT_NAME}"
-    ),
+    host=access_secret_data(PROJECT_NAME, f"data-{ENVIRONMENT_NAME}_clickhouse_ip"),
     port=access_secret_data(
         PROJECT_NAME, f"clickhouse_port_{ENV_SHORT_NAME}", default=8123
     ),
     username=access_secret_data(
-        PROJECT_NAME, f"clickhouse_username_{ENV_SHORT_NAME}", default="default"
+        PROJECT_NAME, f"data-{ENVIRONMENT_NAME}_clickhouse_user", default="default"
     ),
     password=access_secret_data(
-        PROJECT_NAME, f"clickhouse-admin_password-{ENV_SHORT_NAME}"
+        PROJECT_NAME, f"data-{ENVIRONMENT_NAME}_clickhouse_password"
     ),
 )

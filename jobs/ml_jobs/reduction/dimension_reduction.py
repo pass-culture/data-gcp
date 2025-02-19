@@ -1,3 +1,5 @@
+import secrets
+
 import numpy as np
 import polars as pl
 import pyarrow.dataset as ds
@@ -18,31 +20,58 @@ from tools.utils import (
 
 
 def reduce_transformation(
-    X, target_dimension, emb_col, method="PUMAP", max_dimension=32
-):
+    X: np.ndarray,
+    target_dimension: int,
+    emb_col: str,
+    method: str = "PUMAP",
+    max_dimension: int = 32,
+) -> np.ndarray:
+    """
+    Reduces X dimension according to method among ["PCA", "UMAP", "PUMAP"]
+    If chosen method is "PCA":
+        - only PCA reduction is preformed
+    If chosen method is "UMAP" or "PUMAP":
+        If X's second dimension is bigger than max_dimension:
+            - we first reduce X with PCA so its second dimesnion is equal to the max_dimension
+            - then we perform the UMAP or the PUMAP.
+        If X's second dimension is smaller than max_dimension:
+            - we directly reduce with the UMAP or the PUMAP.
+
+    Args:
+        X (np.ndarray): The numpy array to reduce
+        target_dimension (int): number of components to keep during reduction
+        emb_col(str): name of the column which X is extracted from in the original dataframe
+        method (str): the reduction method to use. Options are ["PCA", "UMAP", "PUMAP"]
+        max_dimension (int): dimension threshold for X's second dimension to decide whether to perform a PCA before the UMAP/PUMAP or not
+
+    Returns:
+        np.ndarray: the reduced array
+    """
+    seed = secrets.randbelow(1000)
+    logger.info(f"Seed for PCA reduction set to {seed}")
     if method in ("UMAP", "PUMAP"):
         logger.info(f"Reducing first with PCA {emb_col}...")
         current_dimension = X.shape[1]
         if current_dimension > max_dimension:
-            X = pca_reduce_embedding_dimension(X, dimension=max_dimension)
+            X = pca_reduce_embedding_dimension(X, dimension=max_dimension, seed=seed)
         else:
             logger.info(
                 f"Current dimension {current_dimension} lower than {max_dimension}"
             )
 
-    if method == "UMAP":
-        logger.info(f"Reducing with UMAP {emb_col}...")
-        X = umap_reduce_embedding_dimension(X, target_dimension)
-    elif method == "PUMAP":
-        logger.info(f"Reducing with PUMAP {emb_col}...")
-        X = pumap_reduce_embedding_dimension(
-            X, target_dimension, batch_size=2048, train_frac=0.1
-        )
+        if method == "UMAP":
+            logger.info(f"Reducing with UMAP {emb_col}...")
+            X = umap_reduce_embedding_dimension(X, target_dimension)
+        elif method == "PUMAP":
+            logger.info(f"Reducing with PUMAP {emb_col}...")
+            X = pumap_reduce_embedding_dimension(
+                X, target_dimension, batch_size=2048, train_frac=0.1
+            )
     elif method == "PCA":
         logger.info(f"Reducing with PCA {emb_col}...")
-        X = pca_reduce_embedding_dimension(X, dimension=target_dimension)
+        X = pca_reduce_embedding_dimension(X, dimension=target_dimension, seed=seed)
     else:
-        raise Exception("Metohd not found.")
+        raise Exception("Method not found.")
     return X
 
 
@@ -59,7 +88,11 @@ def export_reduction_table(
         logger.info(f"Convert serialized embeddings... {emb_col}...")
         X = np.array(convert_str_emb_to_float(df[emb_col]))
         X = reduce_transformation(
-            X, target_dimension, emb_col, method=method, max_dimension=max_dimension
+            X,
+            target_dimension,
+            emb_col,
+            method=method,
+            max_dimension=max_dimension,
         )
         concat_X.append(X)
         logger.info(f"Process done {emb_col}...")

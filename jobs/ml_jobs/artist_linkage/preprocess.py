@@ -1,7 +1,7 @@
 import pandas as pd
 import typer
 
-from utils.gcs_utils import upload_parquet
+from constants import OFFER_IS_SYNCHRONISED, TOTAL_OFFER_COUNT
 from utils.preprocessing_utils import (
     FilteringParamsType,
     clean_names,
@@ -34,8 +34,8 @@ def main(
         [
             "artist_name",
             "offer_category_id",
-            "is_synchronised",
-            "offer_number",
+            OFFER_IS_SYNCHRONISED,
+            TOTAL_OFFER_COUNT,
             "total_booking_count",
             "artist_type",
             "is_multi_artists",
@@ -44,10 +44,7 @@ def main(
         ],
     ]
 
-    upload_parquet(
-        dataframe=preprocessed_df,
-        gcs_path=output_file_path,
-    )
+    preprocessed_df.to_parquet(output_file_path)
 
 
 if __name__ == "__main__":

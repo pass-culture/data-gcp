@@ -7,7 +7,7 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     RECOMMENDATION_SQL_INSTANCE,
 )
-from common.operators.biquery import bigquery_job_task
+from common.operators.bigquery import bigquery_job_task
 from common.utils import from_external, get_airflow_schedule
 from dependencies.export_cloudsql_tables_to_bigquery.import_cloudsql import (
     RAW_TABLES,
@@ -50,7 +50,7 @@ default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
-    "retry_delay": datetime.timedelta(minutes=5),
+    "retry_delay": datetime.timedelta(minutes=60),
     "project_id": GCP_PROJECT_ID,
 }
 
@@ -60,7 +60,7 @@ dag = DAG(
     description="Export tables from recommendation CloudSQL to BigQuery",
     schedule_interval=get_airflow_schedule("0 1 * * *"),
     catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=90),
+    dagrun_timeout=datetime.timedelta(minutes=180),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
 )

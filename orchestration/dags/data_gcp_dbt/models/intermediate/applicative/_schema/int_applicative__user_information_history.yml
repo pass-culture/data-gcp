@@ -1,0 +1,20 @@
+version: 2
+models:
+  - name: int_applicative__user_information_history
+    description: '{{ doc("description__int_applicative__user_information_history") }}'
+    columns:
+      - name: user_id
+        description: '{{ doc("column__user_id") }}'
+        data_type: STRING
+      - name: event_date
+        description: '{{ doc("column__event_date") }}'
+        data_type: DATE
+      - name: user_modified_at
+        description: '{{ doc("column__user_modified_at") }}'
+        data_type: DATETIME
+      - name: user_postal_code
+        description: '{{ doc("column__user_postal_code") }}'
+        data_type: STRING
+      - name: user_activity
+        description: '{{ doc("column__user_activity") }}'
+        data_type: STRING

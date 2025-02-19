@@ -4,53 +4,64 @@ absl-py==2.1.0
     # via
     #   tensorboard
     #   tensorflow
-aiohttp==3.9.5
+aiohappyeyeballs==2.4.4
+    # via aiohttp
+aiohttp==3.11.10
     # via gcsfs
 aiosignal==1.3.1
     # via aiohttp
-alembic==1.13.2
+alembic==1.14.0
     # via mlflow
+annotated-types==0.7.0
+    # via pydantic
 astunparse==1.6.3
     # via tensorflow
-async-timeout==4.0.3
+async-timeout==5.0.1
     # via aiohttp
-attrs==23.2.0
+attrs==24.2.0
     # via aiohttp
-blinker==1.8.2
+blinker==1.9.0
     # via flask
-cachetools==5.3.3
-    # via google-auth
-certifi==2024.7.4
+cachetools==5.5.0
+    # via
+    #   google-auth
+    #   mlflow-skinny
+certifi==2024.8.30
     # via requests
-charset-normalizer==3.3.2
+charset-normalizer==3.4.0
     # via requests
 click==8.1.7
     # via
-    #   databricks-cli
     #   flask
-    #   mlflow
+    #   mlflow-skinny
     #   typer
-cloudpickle==2.2.1
-    # via mlflow
+cloudpickle==3.1.0
+    # via mlflow-skinny
+contourpy==1.3.1
+    # via matplotlib
 cycler==0.12.1
     # via matplotlib
-databricks-cli==0.18.0
-    # via mlflow
+databricks-sdk==0.39.0
+    # via mlflow-skinny
 datetime==4.3
     # via -r requirements.in
-db-dtypes==1.2.0
+db-dtypes==1.3.1
     # via pandas-gbq
 decorator==5.1.1
     # via gcsfs
-docker==6.1.3
+deprecated==1.2.15
+    # via
+    #   opentelemetry-api
+    #   opentelemetry-semantic-conventions
+docker==7.1.0
     # via mlflow
-entrypoints==0.4
-    # via mlflow
-flask==3.0.3
+flask==3.1.0
     # via mlflow
 flatbuffers==24.3.25
     # via tensorflow
-frozenlist==1.4.1
+fonttools==4.55.3
+    # via matplotlib
+frozenlist==1.5.0
     # via
     #   aiohttp
     #   aiosignal
@@ -63,7 +74,7 @@ gcsfs==2023.5.0
 gitdb==4.0.11
     # via gitpython
 gitpython==3.1.43
-    # via mlflow
+    # via mlflow-skinny
 google-api-core==1.34.1
     # via
     #   google-cloud-aiplatform
@@ -74,8 +85,9 @@ google-api-core==1.34.1
     #   google-cloud-secret-manager
     #   google-cloud-storage
     #   pandas-gbq
-google-auth==2.31.0
+google-auth==2.37.0
     # via
+    #   databricks-sdk
     #   gcsfs
     #   google-api-core
     #   google-auth-oauthlib
@@ -99,13 +111,13 @@ google-cloud-bigquery==3.25.0
     # via
     #   google-cloud-aiplatform
     #   pandas-gbq
-google-cloud-bigquery-storage==2.25.0
+google-cloud-bigquery-storage==2.27.0
     # via pandas-gbq
 google-cloud-core==2.4.1
     # via
     #   google-cloud-bigquery
     #   google-cloud-storage
-google-cloud-resource-manager==1.12.3
+google-cloud-resource-manager==1.13.1
     # via google-cloud-aiplatform
 google-cloud-secret-manager==2.4.0
     # via -r requirements.in
@@ -113,28 +125,36 @@ google-cloud-storage==2.14.0
     # via
     #   gcsfs
     #   google-cloud-aiplatform
-google-crc32c==1.5.0
+google-crc32c==1.6.0
     # via
     #   google-cloud-storage
     #   google-resumable-media
 google-pasta==0.2.0
     # via tensorflow
-google-resumable-media==2.7.1
+google-resumable-media==2.7.2
     # via
     #   google-cloud-bigquery
     #   google-cloud-storage
-googleapis-common-protos==1.63.2
+googleapis-common-protos==1.66.0
     # via
     #   google-api-core
     #   grpc-google-iam-v1
     #   grpcio-status
-greenlet==3.0.3
+graphene==3.4.3
+    # via mlflow
+graphql-core==3.2.5
+    # via
+    #   graphene
+    #   graphql-relay
+graphql-relay==3.2.0
+    # via graphene
+greenlet==3.1.1
     # via sqlalchemy
 grpc-google-iam-v1==0.12.7
     # via
     #   google-cloud-resource-manager
     #   google-cloud-secret-manager
-grpcio==1.64.1
+grpcio==1.68.1
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -144,19 +164,18 @@ grpcio==1.64.1
     #   tensorflow
 grpcio-status==1.48.2
     # via google-api-core
-gunicorn==21.2.0
+gunicorn==23.0.0
     # via mlflow
-h5py==3.11.0
+h5py==3.12.1
     # via tensorflow
-idna==3.7
+idna==3.10
     # via
     #   requests
     #   yarl
-importlib-metadata==6.11.0
+importlib-metadata==8.5.0
     # via
-    #   flask
-    #   markdown
-    #   mlflow
+    #   mlflow-skinny
+    #   opentelemetry-api
 itsdangerous==2.2.0
     # via flask
 jinja2==3.1.4
@@ -169,50 +188,52 @@ keras==2.14.0
     # via
     #   -r requirements.in
     #   tensorflow
-kiwisolver==1.4.5
+kiwisolver==1.4.7
     # via matplotlib
 libclang==18.1.1
     # via tensorflow
-libcst==1.4.0
+libcst==1.5.1
     # via google-cloud-secret-manager
 lightgbm==4.0.0
     # via -r requirements.in
 loguru==0.6.0
     # via -r requirements.in
-mako==1.3.5
+mako==1.3.8
     # via alembic
-markdown==3.6
+markdown==3.7
     # via
     #   mlflow
     #   tensorboard
-markupsafe==2.1.5
+markupsafe==3.0.2
     # via
     #   jinja2
     #   mako
     #   werkzeug
-matplotlib==3.1.0
+matplotlib==3.9.3
     # via
     #   -r requirements.in
     #   mlflow
     #   seaborn
 ml-dtypes==0.2.0
     # via tensorflow
-mlflow==2.8.1
+mlflow==2.20.1
     # via -r requirements.in
-multidict==6.0.5
+mlflow-skinny==2.20.1
+    # via mlflow
+multidict==6.1.0
     # via
     #   aiohttp
     #   yarl
 numpy==1.26.4
     # via
     #   -r requirements.in
+    #   contourpy
     #   db-dtypes
     #   h5py
     #   lightgbm
     #   matplotlib
     #   ml-dtypes
     #   mlflow
-    #   opt-einsum
     #   pandas
     #   pandas-gbq
     #   pyarrow
@@ -222,19 +243,26 @@ numpy==1.26.4
     #   tensorboard
     #   tensorflow
 oauthlib==3.2.2
+    # via requests-oauthlib
+opentelemetry-api==1.29.0
     # via
-    #   databricks-cli
-    #   requests-oauthlib
-opt-einsum==3.3.0
+    #   mlflow-skinny
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
+opentelemetry-sdk==1.29.0
+    # via mlflow-skinny
+opentelemetry-semantic-conventions==0.50b0
+    # via opentelemetry-sdk
+opt-einsum==3.4.0
     # via tensorflow
 packaging==21.3
     # via
     #   db-dtypes
-    #   docker
     #   google-cloud-aiplatform
     #   google-cloud-bigquery
     #   gunicorn
-    #   mlflow
+    #   matplotlib
+    #   mlflow-skinny
     #   tensorflow
 pandas==2.0.3
     # via
@@ -245,9 +273,15 @@ pandas==2.0.3
     #   seaborn
 pandas-gbq==0.17.9
     # via -r requirements.in
+pillow==11.0.0
+    # via matplotlib
 polars==0.18.6
     # via -r requirements.in
-proto-plus==1.24.0
+propcache==0.2.1
+    # via
+    #   aiohttp
+    #   yarl
+proto-plus==1.25.0
     # via
     #   google-cloud-aiplatform
     #   google-cloud-bigquery-storage
@@ -263,7 +297,7 @@ protobuf==3.20.3
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
-    #   mlflow
+    #   mlflow-skinny
     #   proto-plus
     #   tensorboard
     #   tensorflow
@@ -272,45 +306,45 @@ pyarrow==9.0.0
     #   db-dtypes
     #   mlflow
     #   pandas-gbq
-pyasn1==0.6.0
+pyasn1==0.6.1
     # via
     #   pyasn1-modules
     #   rsa
-pyasn1-modules==0.4.0
+pyasn1-modules==0.4.1
     # via google-auth
-pydata-google-auth==1.8.2
+pydantic==2.10.6
+    # via mlflow-skinny
+pydantic-core==2.27.2
+    # via pydantic
+pydata-google-auth==1.9.0
     # via pandas-gbq
-pyjwt==2.8.0
-    # via databricks-cli
-pyparsing==3.1.2
+pyparsing==3.2.0
     # via
     #   matplotlib
     #   packaging
 python-dateutil==2.9.0.post0
     # via
     #   google-cloud-bigquery
+    #   graphene
     #   matplotlib
     #   pandas
-pytz==2023.4
+pytz==2024.2
     # via
     #   datetime
-    #   mlflow
     #   pandas
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via
     #   libcst
-    #   mlflow
-querystring-parser==1.2.4
-    # via mlflow
+    #   mlflow-skinny
 requests==2.32.3
     # via
-    #   databricks-cli
+    #   databricks-sdk
     #   docker
     #   gcsfs
     #   google-api-core
     #   google-cloud-bigquery
     #   google-cloud-storage
-    #   mlflow
+    #   mlflow-skinny
     #   requests-oauthlib
     #   tensorboard
 requests-oauthlib==2.0.0
@@ -321,14 +355,14 @@ scikit-learn==1.3.0
     # via
     #   -r requirements.in
     #   mlflow
-scipy==1.13.1
+scipy==1.14.1
     # via
     #   lightgbm
     #   mlflow
     #   scikit-learn
-seaborn==0.12.2
+seaborn==0.13.2
     # via -r requirements.in
-setuptools==70.2.0
+setuptools==75.6.0
     # via
     #   pandas-gbq
     #   pydata-google-auth
@@ -337,25 +371,21 @@ setuptools==70.2.0
     #   zope-interface
 shapely==1.8.5.post1
     # via google-cloud-aiplatform
-six==1.16.0
+six==1.17.0
     # via
     #   astunparse
-    #   databricks-cli
     #   google-pasta
     #   python-dateutil
-    #   querystring-parser
     #   tensorboard
     #   tensorflow
 smmap==5.0.1
     # via gitdb
-sqlalchemy==2.0.31
+sqlalchemy==2.0.36
     # via
     #   alembic
     #   mlflow
-sqlparse==0.5.0
-    # via mlflow
-tabulate==0.9.0
-    # via databricks-cli
+sqlparse==0.5.3
+    # via mlflow-skinny
 tensorboard==2.14.1
     # via tensorflow
 tensorboard-data-server==0.7.2
@@ -366,7 +396,7 @@ tensorflow-estimator==2.14.0
     # via tensorflow
 tensorflow-io-gcs-filesystem==0.37.1
     # via tensorflow
-termcolor==2.4.0
+termcolor==2.5.0
     # via tensorflow
 threadpoolctl==3.5.0
     # via scikit-learn
@@ -377,28 +407,33 @@ typer==0.7.0
 typing-extensions==4.12.2
     # via
     #   alembic
+    #   graphene
+    #   mlflow-skinny
+    #   multidict
+    #   opentelemetry-sdk
+    #   pydantic
+    #   pydantic-core
     #   sqlalchemy
     #   tensorflow
 tzdata==2024.2
     # via pandas
-urllib3==2.2.2
+urllib3==2.2.3
     # via
-    #   databricks-cli
     #   docker
     #   requests
-websocket-client==1.8.0
-    # via docker
-werkzeug==3.0.3
+werkzeug==3.1.3
     # via
     #   flask
     #   tensorboard
-wheel==0.43.0
+wheel==0.45.1
     # via astunparse
 wrapt==1.14.1
-    # via tensorflow
-yarl==1.9.4
+    # via
+    #   deprecated
+    #   tensorflow
+yarl==1.18.3
     # via aiohttp
-zipp==3.19.2
+zipp==3.21.0
     # via importlib-metadata
-zope-interface==6.4.post2
+zope-interface==7.2
     # via datetime

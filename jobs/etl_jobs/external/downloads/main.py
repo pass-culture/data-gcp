@@ -3,6 +3,7 @@ from time import sleep
 
 import pandas as pd
 from google.cloud import bigquery
+from pandas_gbq import to_gbq
 
 from apple_client import AppleClient
 from google_client import GoogleClient
@@ -41,7 +42,8 @@ def get_apple(execution_date):
         delete_query.result()
     except Exception:
         pass
-    df.to_gbq(f"{BIGQUERY_RAW_DATASET}.apple_download_stats", if_exists="append")
+
+    to_gbq(df, f"{BIGQUERY_RAW_DATASET}.apple_download_stats", if_exists="append")
 
 
 def get_google(execution_date):
@@ -64,7 +66,7 @@ def get_google(execution_date):
         delete_query.result()
     except Exception:
         pass
-    df.to_gbq(f"{BIGQUERY_RAW_DATASET}.google_download_stats", if_exists="append")
+    to_gbq(df, f"{BIGQUERY_RAW_DATASET}.google_download_stats", if_exists="append")
 
 
 def run():

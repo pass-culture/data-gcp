@@ -53,15 +53,17 @@ select
     legal_unit_legal_category_code,
     legal_unit_legal_category_label,
     is_local_authority,
+    local_authority_type,
+    local_authority_is_priority,
     total_managed_venues,
     total_physical_managed_venues,
     total_permanent_managed_venues,
     total_venues,
     offerer_humanized_id,
     first_dms_adage_status,
+    dms_submitted_at,
     dms_accepted_at,
     is_reference_adage,
     is_synchro_adage,
-from {{ ref('int_global__offerer') }}
-where offerer_validation_status = 'VALIDATED'
-    and offerer_is_active
+from {{ ref("int_global__offerer") }}
+where offerer_validation_status = 'VALIDATED' and offerer_is_active

@@ -20,7 +20,7 @@ def get_data_from_bigquery(
     if subcategory_ids:
         # Convert list to tuple to use BigQuery's list format
         subcategory_ids = tuple(json.loads(subcategory_ids))
-        query_filter += f"WHERE offer_subcategoryid in {subcategory_ids}"
+        query_filter += f"WHERE offer_subcategory_id in {subcategory_ids}"
     if event_day_number:
         # Filter the event date by the last 'event_day_number' days
         query_filter += "WHERE " if len(query_filter) == 0 else " AND "
@@ -41,11 +41,11 @@ def read_parquet(file):
     return pd.read_parquet(file)
 
 
-def read_from_gcs(storage_path, table_name, parallel=True):
+def read_from_gcs(storage_path, table_name, parallel=True, max_process=cpu_count() - 1):
     bucket_name = f"{storage_path}/{table_name}/*.parquet"
     result = subprocess.run(["gsutil", "ls", bucket_name], stdout=subprocess.PIPE)
     files = [file.strip().decode("utf-8") for file in result.stdout.splitlines()]
-    max_process = cpu_count() - 1
+
     if parallel and len(files) > max_process // 2:
         logger.info(f"Will load {len(files)} with {max_process} processes...")
         with Pool(processes=max_process) as pool:

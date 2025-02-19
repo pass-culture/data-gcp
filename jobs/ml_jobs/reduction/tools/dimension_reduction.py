@@ -48,8 +48,5 @@ def pumap_reduce_embedding_dimension(data, dimension, train_frac=0.1, batch_size
     return embedder.fit(get_sample(data, train_frac)).transform(data)
 
 
-def pca_reduce_embedding_dimension(
-    data,
-    dimension,
-):
-    return PCA(n_components=dimension).fit_transform(data)
+def pca_reduce_embedding_dimension(data, dimension, seed=0):
+    return PCA(n_components=dimension, random_state=seed).fit_transform(data)

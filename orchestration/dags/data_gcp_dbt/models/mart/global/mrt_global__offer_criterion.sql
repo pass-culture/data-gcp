@@ -1,9 +1,6 @@
-{{ config(**custom_table_config(
-        cluster_by = "offer_id"
-        ))
-    }}
+{{ config(**custom_table_config(cluster_by="offer_id")) }}
 
-SELECT
+select
     oc.criterion_id,
     oc.tag_name,
     oc.description,
@@ -12,4 +9,4 @@ SELECT
     oc.criterion_ending_date,
     oc.offer_id,
     oc.offer_name
-from {{ ref("int_applicative__offer_criterion") }} as oc 
+from {{ ref("int_applicative__offer_criterion") }} as oc

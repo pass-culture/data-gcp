@@ -20,7 +20,7 @@ SCHEDULE_DICT = {
     "import_analytics_v7": "45 4 * * *",
     "import_applicative_database": "0 1 * * *",
     "import_intraday_firebase_data": "0 1 * * *",
-    "link_items": {"prod": "0 4 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"},
+    "link_items": {"prod": "0 20 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"},
 }
 
 

@@ -19,7 +19,7 @@ with
             offer_category_id,
             count(distinct offer_id) as nb_bookable_offers,
             count(distinct partition_date) as nb_bookable_days
-        from {{ ref("bookable_offer_history") }} bookable_offer_history
+        from {{ ref("int_history__bookable_offer") }}
         {% if is_incremental() %}  -- recalculate latest day's DATA + previous
             where
                 date(partition_date)
@@ -38,7 +38,7 @@ with
             item_id,
             sum(nb_daily_consult) as nb_monthly_consult,
             sum(
-                case when origin = 'search' then nb_daily_consult else null end
+                case when origin = 'search' then nb_daily_consult end
             ) as nb_monthly_search_consult,
             sum(
                 case
@@ -52,20 +52,18 @@ with
                             'exclusivity'
                         )
                     then nb_daily_consult
-                    else null
                 end
             ) as nb_monthly_home_consult,
             sum(
-                case when origin = 'venue' then nb_daily_consult else null end
+                case when origin = 'venue' then nb_daily_consult end
             ) as nb_monthly_venue_consult,
             sum(
-                case when origin = 'favorites' then nb_daily_consult else null end
+                case when origin = 'favorites' then nb_daily_consult end
             ) as nb_monthly_favorites_consult,
             sum(
                 case
                     when origin in ('similar_offer', 'same_artist_playlist')
                     then nb_daily_consult
-                    else null
                 end
             ) as nb_monthly_similar_offer_consult,
             sum(
@@ -85,11 +83,11 @@ with
                             'same_artist_playlist'
                         )
                     then nb_daily_consult
-                    else null
                 end
             ) as nb_monthly_other_channel_offer_consult
         from
-            {{ ref("firebase_daily_offer_consultation_data") }} firebase_daily_offer_consultation_data
+            {{ ref("firebase_daily_offer_consultation_data") }}
+            as firebase_daily_offer_consultation_data
         {% if is_incremental() %}  -- recalculate latest day's DATA + previous
             where
                 date(event_date)

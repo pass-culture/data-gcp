@@ -43,7 +43,7 @@ SEMANTIC_DICT = {
     "dev": "n1-standard-2",
 }
 
-schedule_dict = {"prod": "0 6 * * *", "dev": "0 7 * * *", "stg": "0 7 * * *"}
+schedule_dict = {"prod": "0 7 * * *", "dev": "0 7 * * *", "stg": "0 7 * * *"}
 
 
 models_to_deploy = [

@@ -65,7 +65,7 @@ with DAG(
     "import_qpi_answers_v1",
     default_args=default_args,
     description="Importing new data from QPI every day.",
-    schedule_interval=get_airflow_schedule("0 1 * * *"),
+    schedule_interval=get_airflow_schedule("0 2 * * *"),
     catchup=False,
     dagrun_timeout=timedelta(minutes=180),
     template_searchpath=DAG_FOLDER,

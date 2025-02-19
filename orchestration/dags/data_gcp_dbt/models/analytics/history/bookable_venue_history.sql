@@ -17,7 +17,7 @@ with
             partition_date,
             'individual' as offer_type,
             count(distinct offer_id) as nb_bookable_offers
-        from {{ ref("bookable_offer_history") }}
+        from {{ ref("int_history__bookable_offer") }}
         inner join {{ ref("int_applicative__offer") }} as o using (offer_id)
         left join
             {{ source("raw", "applicative_database_venue") }} as v

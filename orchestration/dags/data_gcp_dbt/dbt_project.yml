@@ -123,3 +123,6 @@ vars:
   snapshot_filter: "dbt_valid_to is null"
   full_refresh_lookback: "1 year"
   not_null_anomaly_threshold_alert_percentage: 0.99
+  test_severity:
+    dev: warn
+    stg: warn

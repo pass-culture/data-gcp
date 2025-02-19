@@ -8,13 +8,59 @@ ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 ANALYTICS_DATASET = f"analytics_{ENVIRONMENT_SHORT_NAME}"
 CLEAN_DATASET = f"clean_{ENVIRONMENT_SHORT_NAME}"
 INT_METABASE_DATASET = f"int_metabase_{ENVIRONMENT_SHORT_NAME}"
-# METABASE_API_USERNAME = os.environ.get("METABASE_API_USERNAME")
-# METABASE_HOST = os.environ.get("METABASE_HOST")
 METABASE_API_USERNAME = "metabase-data-bot@passculture.app"
 
-parent_folder_to_archive = ["interne", "operationnel"]
-limit_inactivity_in_days = 100
+parent_folder_to_archive = ["interne", "operationnel", "adhoc"]
+limit_inactivity_in_days = {"interne": 90, "operationnel": 30, "adhoc": 90}
 max_cards_to_archive = 50
+
+
+rules = [
+    {
+        "rule_id": 1,
+        "rule_name": "interne_archiving",
+        "rule_description": """
+            Règle d'archive de la collection interne : 90 jours d'inactivité ou moins de 5 vues en 6 mois et pas de dashboard associé
+            Règle d'alerte de la collection interne : moins de 5 vues en 6 mois et au moins 1 dashboard associé
+        """,
+        "rule_archiving_sql": f"""
+            WHERE
+                parent_folder = 'interne'
+            AND
+                days_since_last_execution >= {limit_inactivity_in_days['interne']}
+            OR (total_views_6_months <=  5 and nbr_dashboards = 0)
+        """,
+        "rule_alerting_sql": """
+            WHERE
+                parent_folder = 'interne'
+            AND total_views_6_months <=  5
+            AND nbr_dashboards > 0
+        """,
+    },
+    {
+        "rule_id": 2,
+        "rule_name": "operationnel_archiving",
+        "rule_description": "Règle d'archive de la collection operationnel : 30 jours d'inactivité",
+        "rule_archiving_sql": f"""
+            WHERE
+                parent_folder = 'operationnel'
+            AND
+                days_since_last_execution >= {limit_inactivity_in_days['operationnel']}
+        """,
+    },
+    {
+        "rule_id": 3,
+        "rule_name": "adhoc_archiving",
+        "rule_description": "Règle d'archive de la collection adhoc : 90 jours d'inactivité ou moins de 5 vues en 6 mois",
+        "rule_archiving_sql": f"""
+            WHERE
+                parent_folder = 'adhoc'
+            AND
+                days_since_last_execution >= {limit_inactivity_in_days['adhoc']}
+            OR total_views_6_months <= 5
+        """,
+    },
+]
 
 
 def access_secret_data(project_id, secret_id, default=None):

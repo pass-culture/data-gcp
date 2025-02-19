@@ -1,4 +1,4 @@
-SELECT
+select
     iris_internal_id,
     iris_label,
     city_code,
@@ -7,5 +7,4 @@ SELECT
     sub_district_code,
     department_code,
     department_name,
-FROM
-    {{ ref('int_seed__geo_iris') }}
+from {{ ref("int_seed__geo_iris") }}

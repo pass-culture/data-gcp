@@ -95,7 +95,8 @@ for partner_id, partner_name in partner_dict.items():
                 "args": (
                     "{"
                     "export_tables: {{ ti.xcom_pull(task_ids='build_export_context', key='table_list') | tojson }}, "
-                    "export_schema: export_{{ ti.xcom_pull(task_ids='build_export_context', key='partner_name') }}, "
+                    "export_schema: tmp_export_{{ ti.xcom_pull(task_ids='build_export_context', key='partner_name') }}, "
+                    "expiration_days : 1, " -- TODO check this
                     f"secret_partner_value: '{access_secret_data(GCP_PROJECT_ID,f'dbt_export_private_partner_salt_{partner_name}')}', "
                     "fields_obfuscation_config: {{ ti.xcom_pull(task_ids='build_export_context', key='obfuscation_config').obfuscated_fields | tojson if ti.xcom_pull(task_ids='build_export_context', key='obfuscation_config') else '{}' }}"
                     "}"

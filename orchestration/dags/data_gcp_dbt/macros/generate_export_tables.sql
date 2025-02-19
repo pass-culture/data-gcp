@@ -2,6 +2,7 @@
     export_tables,
     secret_partner_value,
     export_schema,
+    -- TODO add expiration date logic
     fields_obfuscation_config={"string_field_dummy_example": "upper({})"}
 ) %}
     -- Log the target schema and table
@@ -15,6 +16,7 @@
             ~ "."
             ~ export_schema
             ~ "`;"
+            -- TODO add expiration date logic (check create_schema_dev)
         ) %}
 
         -- Loop over the export tables and execute SQL for each

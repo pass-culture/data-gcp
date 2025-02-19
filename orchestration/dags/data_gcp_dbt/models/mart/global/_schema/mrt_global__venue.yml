@@ -7,8 +7,14 @@ models:
         description: '{{ doc("column__venue_id") }}'
         data_type: STRING
         data_tests:
-          - not_null
-          - unique
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - unique:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: venue_name
         description: '{{ doc("column__venue_name") }}'
         data_type: STRING
@@ -76,6 +82,14 @@ models:
       - name: venue_region_name
         description: '{{ doc("column__venue_region_name") }}'
         data_type: STRING
+        data_tests:
+          - excessive_failure_ratio:
+              base_test: "not_null"
+              max_ratio: 0.005
+              where: 'not venue_is_virtual'
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: venue_epci
         description: '{{ doc("column__venue_epci") }}'
         data_type: STRING

@@ -10,15 +10,6 @@ from hnne import HNNE
 from loguru import logger
 from tqdm import tqdm
 
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
-
-item_columns = [
-    "semantic_vector",
-    "item_id",
-    "performer" "offer_name",
-]
-
 
 def read_parquet_in_batches_gcs(gcs_path, batch_size):
     """
@@ -66,7 +57,7 @@ def read_parquet_in_batches_gcs(gcs_path, batch_size):
         logger.error(f"Failed to read Parquet files in batches: {e}")
 
 
-def read_parquet_files_from_gcs_directory(gcs_directory_path, columns):
+def read_parquet_files_from_gcs_directory(gcs_directory_path, columns=None):
     """
     Reads and concatenates all Parquet files from a given GCS directory.
 

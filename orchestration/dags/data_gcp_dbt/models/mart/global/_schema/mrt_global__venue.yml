@@ -10,11 +10,11 @@ models:
           - not_null:
               tags: ['critical']
               config:
-                severity: error
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
           - unique:
               tags: ['critical']
               config:
-                severity: error
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: venue_name
         description: '{{ doc("column__venue_name") }}'
         data_type: STRING
@@ -89,7 +89,7 @@ models:
               where: 'not venue_is_virtual'
               tags: ['critical']
               config:
-                severity: error
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: venue_epci
         description: '{{ doc("column__venue_epci") }}'
         data_type: STRING

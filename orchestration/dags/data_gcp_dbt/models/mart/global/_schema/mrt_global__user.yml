@@ -10,11 +10,11 @@ models:
           - unique:
               tags: ['critical']
               config:
-                severity: error
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
           - not_null:
               tags: ['critical']
               config:
-                severity: error
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: user_department_code
         description: '{{ doc("column__user_department_code") }}'
         data_type: STRING
@@ -90,7 +90,7 @@ models:
               max_ratio: 0.02
               tags: ['critical']
               config:
-                severity: error
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: user_academy_name
         description: '{{ doc("column__user_academy_name") }}'
         data_type: STRING

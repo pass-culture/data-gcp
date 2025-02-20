@@ -31,6 +31,7 @@ with
             sum(
                 total_theoretical_outings_amount_spent
             ) as total_theoretical_outings_amount_spent,
+            sum(diversity_score) as total_user_diversity_score,
             max(first_booking_type) as first_booking_type,
             max(first_paid_booking_type) as first_paid_booking_type,
             min(first_paid_booking_date) as first_paid_booking_date,
@@ -74,41 +75,11 @@ select
     ui.user_density_level,
     ui.user_city_code,
     ui.user_is_in_qpv,
-    case
-        when u.user_activity = "Chômeur, En recherche d'emploi" then true else false
-    end as user_is_unemployed,
-    case
-        when
-            u.user_activity
-            in ("Collégien", "Etudiant", "Lycéen", "Apprenti", "Alternant")
-        then true
-        else false
-    end as user_is_in_education,
-    case
-        when
-            (
-                (ui.qpv_name is not null)
-                or (
-                    u.user_activity
-                    not in ("Collégien", "Etudiant", "Lycéen", "Apprenti", "Alternant")
-                )
-                or (ui.user_macro_density_label = "rural")
-            )
-        then true
-        else false
-    end as user_is_priority_public,
     u.user_humanized_id,
     dgu.first_deposit_creation_date,
     dgu.total_deposit_amount,
-    user_activation_date,
+    dgu.user_activation_date,
     dgu.first_individual_booking_date,
-    coalesce(
-        dgu.total_non_cancelled_individual_bookings, 0
-    ) as total_non_cancelled_individual_bookings,
-    coalesce(dgu.total_free_bookings, 0) as total_free_bookings,
-    coalesce(
-        dgu.total_non_cancelled_duo_bookings, 0
-    ) as total_non_cancelled_duo_bookings,
     dgu.total_actual_amount_spent,
     dgu.total_theoretical_amount_spent,
     dgu.total_theoretical_digital_goods_amount_spent,
@@ -116,44 +87,58 @@ select
     dgu.total_theoretical_outings_amount_spent,
     dgu.total_last_deposit_digital_goods_amount_spent,
     dgu.total_deposit_actual_amount_spent,
+    dgu.total_user_diversity_score,
     dgu.last_deposit_amount,
-    case
-        when dgu.last_deposit_amount < 300 then 'GRANT_15_17' else 'GRANT_18'
-    end as current_deposit_type,
-    case
-        when dgu.first_deposit_amount < 300 then 'GRANT_15_17' else 'GRANT_18'
-    end as first_deposit_type,
-    dgu.last_deposit_amount
-    - dgu.total_theoretical_amount_spent as total_theoretical_remaining_credit,
     dgu.last_individual_booking_date as last_booking_date,
-    date_diff(
-        dgu.first_individual_booking_date, dgu.first_deposit_creation_date, day
-    ) as days_between_activation_date_and_first_booking_date,
-    date_diff(
-        dgu.first_individual_booking_date, dgu.first_deposit_creation_date, day
-    ) as days_between_activation_date_and_first_booking_paid,
     dgu.first_booking_type,
     dgu.first_paid_booking_type,
     dgu.total_grant_18_subcategory_booked,
     dgu.total_grant_15_17_subcategory_booked,
     ah.action_history_reason as user_suspension_reason,
     dgu.first_deposit_amount,
-    dgu.last_deposit_expiration_date as last_deposit_expiration_date,
+    dgu.last_deposit_expiration_date,
+    coalesce(u.user_activity = "Chômeur, En recherche d'emploi", false) as user_is_unemployed,
+    coalesce(u.user_activity
+            in ("Collégien", "Etudiant", "Lycéen", "Apprenti", "Alternant"), false) as user_is_in_education,
+    coalesce((
+                (ui.qpv_name is not null)
+                or (
+                    u.user_activity
+                    not in ("Collégien", "Etudiant", "Lycéen", "Apprenti", "Alternant")
+                )
+                or (ui.user_macro_density_label = "rural")
+            ), false) as user_is_priority_public,
+    coalesce(
+        dgu.total_non_cancelled_individual_bookings, 0
+    ) as total_non_cancelled_individual_bookings,
+    coalesce(dgu.total_free_bookings, 0) as total_free_bookings,
+    coalesce(
+        dgu.total_non_cancelled_duo_bookings, 0
+    ) as total_non_cancelled_duo_bookings,
     case
-        when
-            (
+        when dgu.last_deposit_amount < 300 then "GRANT_15_17" else "GRANT_18"
+    end as current_deposit_type,
+    case
+        when dgu.first_deposit_amount < 300 then "GRANT_15_17" else "GRANT_18"
+    end as first_deposit_type,
+    dgu.last_deposit_amount
+    - dgu.total_theoretical_amount_spent as total_theoretical_remaining_credit,
+    date_diff(
+        dgu.first_individual_booking_date, dgu.first_deposit_creation_date, day
+    ) as days_between_activation_date_and_first_booking_date,
+    date_diff(
+        dgu.first_individual_booking_date, dgu.first_deposit_creation_date, day
+    ) as days_between_activation_date_and_first_booking_paid,
+    coalesce((
                 timestamp(dgu.last_deposit_expiration_date) >= current_timestamp()
                 and coalesce(dgu.total_deposit_actual_amount_spent, 0)
                 < dgu.last_deposit_amount
             )
-            and u.user_is_active
-        then true
-        else false
-    end as user_is_current_beneficiary
+            and u.user_is_active, false) as user_is_current_beneficiary
 from {{ ref("int_applicative__user") }} as u
 left join
     {{ ref("int_applicative__action_history") }} as ah
-    on ah.user_id = u.user_id
+    on u.user_id = ah.user_id
     and ah.action_history_rk = 1
-left join {{ ref("int_geo__user_location") }} as ui on ui.user_id = u.user_id
-left join deposit_grouped_by_user as dgu on dgu.user_id = u.user_id
+left join {{ ref("int_geo__user_location") }} as ui on u.user_id = ui.user_id
+left join deposit_grouped_by_user as dgu on u.user_id = dgu.user_id

@@ -54,6 +54,7 @@ select
     b.isbn,
     b.offer_type_label,
     b.offer_sub_type_label,
+    b.booking_diversity_score,
     u.user_iris_internal_id,
     u.user_postal_code,
     u.user_department_code,
@@ -79,4 +80,4 @@ select
     u.first_deposit_creation_date
 from {{ ref("int_global__booking") }} as b
 left join {{ ref("mrt_global__user") }} as u on u.user_id = b.user_id
-where deposit_type is not null and b.user_id is not null
+where b.deposit_type is not null and b.user_id is not null

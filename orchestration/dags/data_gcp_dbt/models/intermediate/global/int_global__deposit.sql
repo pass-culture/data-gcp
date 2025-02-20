@@ -67,6 +67,7 @@ with
                     then booking_intermediary_amount
                 end
             ) as total_theoretical_outings_amount_spent,
+            sum(diversity_score) as total_deposit_diversity_score,
             max(
                 case when user_booking_rank = 1 then offer_subcategory_id end
             ) as first_booking_type,
@@ -78,7 +79,7 @@ with
             ) as first_paid_booking_type,
             min(
                 case when booking_intermediary_amount = 0 then booking_creation_date end
-            ) as first_paid_booking_date,
+            ) as first_paid_booking_date
         from {{ ref("int_global__booking") }}
         group by deposit_id
     )
@@ -107,8 +108,9 @@ select
     bgd.total_theoretical_physical_goods_amount_spent,
     bgd.total_theoretical_digital_goods_amount_spent,
     bgd.total_theoretical_outings_amount_spent,
+    bgd.total_deposit_diversity_score,
     bgd.first_booking_type,
     bgd.first_paid_booking_type,
     bgd.first_paid_booking_date
 from {{ ref("int_applicative__deposit") }} as d
-left join bookings_grouped_by_deposit as bgd on bgd.deposit_id = d.deposit_id
+left join bookings_grouped_by_deposit as bgd on d.deposit_id = bgd.deposit_id

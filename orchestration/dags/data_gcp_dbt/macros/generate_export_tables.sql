@@ -2,7 +2,7 @@
     export_tables,
     secret_partner_value,
     export_schema,
-    -- TODO add expiration date logic
+    export_schema_expiration_day,
     fields_obfuscation_config={"string_field_dummy_example": "upper({})"}
 ) %}
     -- Log the target schema and table
@@ -10,14 +10,10 @@
 
     {% if execute %}
         -- Create the schema if it doesn't exist
-        {% do run_query(
-            "CREATE SCHEMA IF NOT EXISTS `"
-            ~ target.database
-            ~ "."
-            ~ export_schema
-            ~ "`;"
-            -- TODO add expiration date logic (check create_schema_dev)
-        ) %}
+        {% do run_query("CREATE SCHEMA IF NOT EXISTS `"~ target.database~ "."~ export_schema~ "`;") %}
+
+        {% do run_query("ALTER SCHEMA `" ~ target.database ~ "." ~ export_schema ~ "` SET OPTIONS(default_table_expiration_days = " ~ export_schema_expiration_day ~ ");") %}
+
 
         -- Loop over the export tables and execute SQL for each
         {% for table in export_tables %}

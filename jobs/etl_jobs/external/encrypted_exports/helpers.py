@@ -6,11 +6,15 @@ import duckdb
 import boto3
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
-
+from google.auth.exceptions import DefaultCredentialsError
+from google.cloud import bigquery, secretmanager
 from google.cloud import storage
 from botocore.client import Config
 
 FILE_EXTENSION = ".parquet"
+PROJECT_NAME = os.environ.get("PROJECT_NAME")
+ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
+PREFIX_S3_SECRET = "dbt_export_s3_config"
 
 
 def prepare_directories(
@@ -90,27 +94,17 @@ def encrypt_and_upload_file(
     os.remove(encrypted_file_path)
 
 
-def parse_s3_config(target_bucket_config: str) -> Dict[str, Any]:
-    """
-    Parse the target bucket configuration from a JSON string or a dictionary-like string.
+def load_target_bucket_config(partner_name: str) -> Dict[str, Any]:
+    secret_id = f"{PREFIX_S3_SECRET}_{partner_name}"
 
-    Args:
-        target_bucket_config (str): The configuration as a JSON string or dict-like string.
-
-    Returns:
-        Dict[str, Any]: The parsed configuration dictionary.
-
-    Raises:
-        ValueError: If the configuration format is invalid.
-    """
     try:
-        s3_config: Dict[str, Any] = json.loads(target_bucket_config)
-    except json.JSONDecodeError:
-        try:
-            s3_config = ast.literal_eval(target_bucket_config)  # type: ignore
-        except (ValueError, SyntaxError):
-            raise ValueError(f"Invalid config format: {target_bucket_config}")
-    return s3_config
+        client = secretmanager.SecretManagerServiceClient()
+        name = f"projects/{PROJECT_NAME}/secrets/{secret_id}/versions/latest"
+        response = client.access_secret_version(request={"name": name})
+        access_secret_data = response.payload.data.decode("UTF-8")
+        return json.loads(access_secret_data)
+    except DefaultCredentialsError:
+        return {}
 
 
 def init_s3_client(s3_config: Dict[str, Any]) -> boto3.client:
@@ -247,7 +241,6 @@ def process_encryption(
 
 def process_transfer(
     partner_name: str,
-    target_bucket_config: str,
     gcs_bucket: str,
     export_date: str,
     table_list: List[str],
@@ -265,13 +258,11 @@ def process_transfer(
 
     Args:
         partner_name (str): Name of the partner.
-        target_bucket_config (str): JSON or dict-like string with target bucket configuration.
         gcs_bucket (str): GCS bucket name.
         export_date (str): Export date.
         table_list (List[str]): List of tables to process.
     """
-    s3_config = parse_s3_config(target_bucket_config)
-    print(f"Parsed configuration: {s3_config}")
+    s3_config = load_target_bucket_config(partner_name)
 
     s3_client = init_s3_client(s3_config)
     tmp_encrypted_folder = "tmp_encrypted_parquet"

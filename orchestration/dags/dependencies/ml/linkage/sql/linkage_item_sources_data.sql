@@ -12,50 +12,46 @@ with
             )
             = 1
 
-),
-z AS (
-    SELECT
-        item_id,
-        ARRAY(
-            SELECT
-                cast(e as float64)
-            FROM
-                UNNEST(
-                    SPLIT(
-                        SUBSTR(
-                            name_embedding,
-                            2,
-                            LENGTH(name_embedding) - 2
-                        )
-                    )
-                ) e
-        ) AS embedding,
-    FROM
-        k
-),
-offers as (
-    SELECT
-        go.offer_id,
-        go.item_id,
-        go.offer_name,
-        go.offer_description,
-        go.performer,
-        go.offer_subcategory_id
-    FROM
-        `{{ bigquery_analytics_dataset }}.global_offer` go
-    where go.offer_product_id is not null
-),sources as (
-SELECT
-    CASE WHEN o.item_id like 'link-%' THEN CONCAT('offer-', o.offer_id) ELSE o.item_id END AS item_id,
-    z.embedding,
-    o.offer_name,
-    o.offer_description,
-    o.performer,
-    o.offer_subcategory_id
-FROM
-    offers o
-INNER JOIN z on z.item_id = o.item_id
-)
-select * from sources
-QUALIFY ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY performer DESC) = 1
-order by RAND()
+    ),
+    z as (
+        select
+            item_id,
+            array(
+                select cast(e as float64)
+                from
+                    unnest(
+                        split(substr(name_embedding, 2, length(name_embedding) - 2))
+                    ) e
+            ) as embedding,
+        from k
+    ),
+    offers as (
+        select
+            go.offer_id,
+            go.item_id,
+            go.offer_name,
+            go.offer_description,
+            go.performer,
+            go.offer_subcategory_id
+        from `{{ bigquery_analytics_dataset }}.global_offer` go
+        where go.offer_product_id is not null
+    ),
+    sources as (
+        select
+            case
+                when o.item_id like 'link-%'
+                then concat('offer-', o.offer_id)
+                else o.item_id
+            end as item_id,
+            z.embedding,
+            o.offer_name,
+            o.offer_description,
+            o.performer,
+            o.offer_subcategory_id
+        from offers o
+        inner join z on z.item_id = o.item_id
+    )
+select *
+from sources
+qualify row_number() over (partition by item_id order by performer desc) = 1
+order by rand()

@@ -7,8 +7,14 @@ models:
         description: '{{ doc("column__venue_id") }}'
         data_type: STRING
         data_tests:
-          - not_null
-          - unique
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - unique:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: venue_name
         description: '{{ doc("column__venue_name") }}'
         data_type: STRING
@@ -76,6 +82,14 @@ models:
       - name: venue_region_name
         description: '{{ doc("column__venue_region_name") }}'
         data_type: STRING
+        data_tests:
+          - excessive_failure_ratio:
+              base_test: "not_null"
+              max_ratio: 0.005
+              where: 'not venue_is_virtual'
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: venue_epci
         description: '{{ doc("column__venue_epci") }}'
         data_type: STRING
@@ -308,6 +322,18 @@ models:
       - name: venue_image_source
         description: '{{ doc("column__venue_image_source") }}'
         data_type: STRING
+      - name: total_distinct_headline_offers
+        description: '{{ doc("column__total_distinct_headline_offers") }}'
+        data_type: INT64
+      - name: has_headline_offer
+        description: '{{ doc("column__has_headline_offer") }}'
+        data_type: BOOLEAN
+      - name: first_headline_offer_date
+        description: '{{ doc("column__first_headline_offer_date") }}'
+        data_type: DATETIME
+      - name: last_headline_offer_date
+        description: '{{ doc("column__last_headline_offer_date") }}'
+        data_type: DATETIME
       - name: venue_adage_inscription_date
         description: '{{ doc("column__venue_adage_inscription_date") }}'
         data_type: DATE

@@ -1,5 +1,4 @@
 import os
-import ast
 import io
 import json
 import duckdb
@@ -7,12 +6,11 @@ import boto3
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
 from google.auth.exceptions import DefaultCredentialsError
-from google.cloud import bigquery, secretmanager
-from google.cloud import storage
+from google.cloud import storage, secretmanager
 from botocore.client import Config
 
 FILE_EXTENSION = ".parquet"
-PROJECT_NAME = os.environ.get("PROJECT_NAME")
+PROJECT_NAME = os.environ.get("GCP_PROJECT_ID")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 PREFIX_S3_SECRET = "dbt_export_s3_config"
 

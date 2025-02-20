@@ -1,27 +1,29 @@
+import asyncio
 import uuid
 
 import pandas as pd
 import typer
-from docarray import Document
-from hnne import HNNE
 from loguru import logger
 from tqdm import tqdm
 
-from constants import MODEL_PATH, NUM_RESULTS
+from constants import (
+    BATCH_SIZE_RETRIEVAL,
+    MODEL_PATH,
+    NUM_RESULTS,
+    RETRIEVAL_FILTERS,
+    SEMAPHORE_RETRIEVAL,
+)
 from model.semantic_space import SemanticSpace
 from utils.common import (
-    preprocess_embeddings_by_chunk,
     read_parquet_in_batches_gcs,
-    reduce_embeddings,
 )
 from utils.gcs_utils import upload_parquet
 
-COLUMN_NAME_LIST = ["item_id", "performer", "offer_name"]
-
 app = typer.Typer()
+search_semaphore = asyncio.Semaphore(SEMAPHORE_RETRIEVAL)
 
 
-def load_model(model_path: str, reduction: bool) -> SemanticSpace:
+def load_model(model_path: str, linkage_type: str) -> SemanticSpace:
     """
     Load the SemanticSpace model from the given path.
 
@@ -33,42 +35,37 @@ def load_model(model_path: str, reduction: bool) -> SemanticSpace:
         SemanticSpace: The loaded model.
     """
     logger.info("Loading model...")
-    model = SemanticSpace(model_path, reduction)
+    model = SemanticSpace(model_path, linkage_type)
     logger.info("Model loaded.")
     return model
 
 
-def preprocess_data(chunk: pd.DataFrame, hnne_reducer: HNNE) -> pd.DataFrame:
+def build_filter_dict(row, filter: list = RETRIEVAL_FILTERS):
     """
-    Preprocess the data by reading the parquet file, filling missing values, and merging embeddings.
+    Build filters for the given row.
 
     Args:
-        chunk (pd.DataFrame): The data to preprocess.
-        hnne_reducer (HNNE): The HNNE reducer to use.
+        row (pd.Series): The row to build filters for.
 
     Returns:
-        pd.DataFrame: The preprocessed data.
+        dict: The filters.
     """
-    logger.info("Preprocessing data...")
-    items_df = chunk.assign(
-        performer=lambda df: df["performer"].fillna(value="unkn"),
-        offer_name=lambda df: df["offer_name"].str.lower(),
-    ).drop(columns=["embedding"])
-    if hnne_reducer:
-        items_df["vector"] = reduce_embeddings(
-            preprocess_embeddings_by_chunk(chunk), hnne_reducer=hnne_reducer
+    filters = {}
+    for f in filter:
+        filters[f] = row[f]
+    return filters
+
+
+async def limited_search(model, vector, filters, n):
+    async with search_semaphore:
+        return await model.search(
+            vector=vector,
+            filters=filters,
+            n=n,
         )
-    else:
-        items_df["vector"] = preprocess_embeddings_by_chunk(chunk)
-    items_df["vector"] = (
-        items_df["vector"]
-        .map(lambda embedding_array: Document(embedding=embedding_array))
-        .tolist()
-    )
-    return items_df
 
 
-def generate_semantic_candidates(
+async def generate_semantic_candidates(
     model: SemanticSpace, data: pd.DataFrame
 ) -> pd.DataFrame:
     """
@@ -83,45 +80,83 @@ def generate_semantic_candidates(
     """
     linkage = []
     logger.info(f"Generating semantic candidates for {len(data)} items...")
-    for index, row in data.iterrows():
-        result_df = model.search(
-            vector=row.vector,
-            similarity_metric="cosine",
-            n=NUM_RESULTS,
-            vector_column_name="vector",
-        ).assign(candidates_id=str(uuid.uuid4()), item_id_candidate=row.item_id)
+
+    tasks = []
+    for index, row in tqdm(
+        data.iterrows(), total=data.shape[0], desc="Processing rows", mininterval=60
+    ):
+        tasks.append(
+            limited_search(
+                model=model,
+                vector=row.vector,
+                filters=build_filter_dict(row, RETRIEVAL_FILTERS),
+                n=NUM_RESULTS,
+            )
+        )
+
+    logger.info("Tasks ready!")
+    logger.info(f"Tasks length: {len(tasks)}")
+
+    results = []
+    for i in tqdm(range(0, len(tasks), BATCH_SIZE_RETRIEVAL), desc="Gathering batches"):
+        batch = tasks[i : i + BATCH_SIZE_RETRIEVAL]
+        batch_results = await asyncio.gather(*batch)
+        results.extend(batch_results)
+
+    logger.info("Finished gathering all batches!")
+
+    for result_df, row in zip(results, data.itertuples()):
+        result_df = result_df.assign(
+            candidates_id=str(uuid.uuid4()), item_id_candidate=row.item_id
+        )
         linkage.append(result_df)
+
+    logger.info(f"linkage length: {len(linkage)}")
     return pd.concat(linkage)
 
 
 @app.command()
 def main(
     batch_size: int = typer.Option(default=..., help="Batch size"),
-    reduction: str = typer.Option(default=..., help="Reduce embeddings"),
+    linkage_type: str = typer.Option(default=..., help="Linkage type"),
     input_path: str = typer.Option(default=..., help="Input table path"),
     output_path: str = typer.Option(default=..., help="Output table path"),
 ) -> None:
     """
-    Main function to preprocess data, prepare vectors, generate semantic candidates, and upload the results to GCS.
+    Generate semantic candidates for linkage,
+
+    This function:
+      1) Loads a semantic model based on the specified linkage type.
+      2) Reads the input data in chunks of size batch_size.
+      3) Generates semantic candidates using the model.
+      4) Saves or uploads the resulting data to the specified output path.
 
     Args:
-        batch_size (int): The size of each batch.
-        reduction (str): Whether to reduce the embeddings.
-        input_path (str): The path to the input table.
-        output_path (str): The path to the output table.
+        batch_size (int): The size of each batch for reading the input data.
+        linkage_type (str): The type of linkage (e.g., for different model behaviors).
+        input_path (str): The path to the table or file containing input data.
+        output_path (str): The path where the output table will be saved.
     """
-    reduction = True if reduction == "true" else False
-    model = load_model(MODEL_PATH, reduction)
+    model = load_model(MODEL_PATH, linkage_type)
 
+    tqdm.pandas()
     linkage_by_chunk = []
-    for chunk in tqdm(read_parquet_in_batches_gcs(input_path, batch_size)):
-        items_with_embeddings_df = preprocess_data(chunk, model.hnne_reducer)
-        linkage_candidates_chunk = generate_semantic_candidates(
-            model, items_with_embeddings_df
-        )
-        linkage_by_chunk.append(linkage_candidates_chunk)
+
+    async def process_chunks():
+        for chunk in tqdm(read_parquet_in_batches_gcs(input_path, batch_size)):
+            logger.info(f"chunk length: {len(chunk)} ")
+            linkage_candidates_chunk = await generate_semantic_candidates(model, chunk)
+            logger.info(
+                f"linkage_candidates_chunk length: {len(linkage_candidates_chunk)} "
+            )
+            linkage_by_chunk.append(linkage_candidates_chunk)
+            logger.info(f"linkage_by_chunk length: {len(linkage_by_chunk)} ")
+
+    asyncio.run(process_chunks())
     linkage_candidates = pd.concat(linkage_by_chunk)
-    upload_parquet(dataframe=linkage_candidates, gcs_path=output_path)
+    logger.info(f"linkage_candidates length: {len(linkage_candidates)} ")
+    logger.info("Uploading linkage output..")
+    upload_parquet(dataframe=linkage_candidates, gcs_path=f"{output_path}/data.parquet")
 
 
 if __name__ == "__main__":

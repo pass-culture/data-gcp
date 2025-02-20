@@ -1,59 +1,25 @@
+from typing import Optional
+
 import lancedb
 import pandas as pd
 import typer
 from lancedb.pydantic import LanceModel, Vector
 from loguru import logger
 
-# Define constants
 from constants import (
     LANCEDB_BATCH_SIZE,
     MODEL_PATH,
-    MODEL_TYPE,
     NUM_PARTITIONS,
     NUM_SUB_VECTORS,
     PARQUET_BATCH_SIZE,
-    UNKNOWN_PERFORMER,
+    RETRIEVAL_FILTERS,
 )
 from utils.common import (
-    preprocess_embeddings_by_chunk,
     read_parquet_in_batches_gcs,
-    reduce_embeddings_and_store_reducer,
 )
 
-COLUMN_NAME_LIST = ["item_id", "performer"]
 
-
-def preprocess_data_and_store_reducer(
-    chunk: pd.DataFrame, reducer_path: str, reduction: bool
-) -> pd.DataFrame:
-    """
-    Prepare the table by reading the parquet file from GCS, preprocessing embeddings,
-    and merging the embeddings with the dataframe.
-
-    Args:
-        chunk (pd.DataFrame): The dataframe to prepare.
-        reducer_path (str): The path to store the reducer.
-        reduction (bool): Whether to reduce the embeddings.
-    Returns:
-        pd.DataFrame: The prepared dataframe with embeddings.
-    """
-    item_df = chunk.assign(
-        performer=lambda df: df["performer"].fillna(value=UNKNOWN_PERFORMER),
-    )
-    if reduction:
-        item_df = item_df.assign(
-            vector=reduce_embeddings_and_store_reducer(
-                embeddings=preprocess_embeddings_by_chunk(chunk),
-                n_dim=MODEL_TYPE["n_dim"],
-                reducer_path=reducer_path,
-            )
-        )
-    else:
-        item_df = item_df.assign(vector=preprocess_embeddings_by_chunk(chunk))
-    return item_df
-
-
-def create_items_table(items_df: pd.DataFrame) -> None:
+def create_items_table(items_df: pd.DataFrame, linkage_type: str) -> None:
     """
     Create a LanceDB table from the given dataframe and create an index on it.
 
@@ -64,7 +30,8 @@ def create_items_table(items_df: pd.DataFrame) -> None:
     class ItemModel(LanceModel):
         vector: Vector(32)
         item_id: str
-        performer: str
+        offer_subcategory_id: str
+        edition: Optional[str]
 
     def make_batches(df: pd.DataFrame, batch_size: int):
         """
@@ -84,23 +51,33 @@ def create_items_table(items_df: pd.DataFrame) -> None:
     try:
         logger.info("Creating LanceDB table...")
         db.create_table(
-            "items",
+            linkage_type,
             make_batches(df=items_df, batch_size=LANCEDB_BATCH_SIZE),
             schema=ItemModel,
         )
+        logger.info("LanceDB table created!")
     except Exception:
         logger.info("LanceDB table already exists...")
-        tbl = db.open_table("items")
+        tbl = db.open_table(linkage_type)
+        logger.info("Inserting data into LanceDB table...")
         tbl.add(
             make_batches(df=items_df, batch_size=LANCEDB_BATCH_SIZE),
         )
 
 
-def create_index_on_items_table() -> None:
+def create_index_on_items_table(linkage_type: str) -> None:
     db = lancedb.connect(MODEL_PATH)
-    db.open_table("items").create_index(
-        num_partitions=NUM_PARTITIONS, num_sub_vectors=NUM_SUB_VECTORS
+    table = db.open_table(linkage_type)
+    logger.info(f"Creating index on LanceDB table {len(table)}...")
+    table.create_index(
+        index_type="IVF_PQ",
+        num_partitions=NUM_PARTITIONS,
+        num_sub_vectors=NUM_SUB_VECTORS,
     )
+
+    for feature in RETRIEVAL_FILTERS:
+        logger.info(f"Creating index on feature: {feature}")
+        table.create_scalar_index(feature, index_type="BITMAP")
 
 
 def main(
@@ -108,9 +85,8 @@ def main(
         default=...,
         help="GCS parquet path",
     ),
-    reduction: str = typer.Option(
-        default="true",
-        help="Reduce the embeddings",
+    linkage_type: str = typer.Option(
+        default="product", help="Type of linkage to perform"
     ),
     batch_size: int = typer.Option(
         default=PARQUET_BATCH_SIZE,
@@ -118,24 +94,27 @@ def main(
     ),
 ) -> None:
     """
-    Main function to download and prepare the table, create the LanceDB table, and save the model type.
+    Create the LanceDB table
+
+    This function:
+      1) Downloads and prepares the table from the specified input path.
+      2) Creates the LanceDB table with the specified linkage type.
 
     Args:
         input_path (str): The GCS path to the parquet file.
-        reduction (str): Whether to reduce the embeddings.
+        linkage_type (str): The type of linkage to perform.
         batch_size (int): The batch size for reading the parquet file.
     """
     logger.info("Download and prepare table...")
-    reduction = True if reduction == "true" else False
     total_count = 0
     for chunk in read_parquet_in_batches_gcs(input_path, batch_size):
-        item_df_enriched = preprocess_data_and_store_reducer(
-            chunk, MODEL_TYPE["reducer_pickle_path"], reduction=reduction
-        )
-        create_items_table(item_df_enriched)
+        chunk = chunk[["item_id", "vector"] + RETRIEVAL_FILTERS]
+        logger.info(f"Processing chunk of length: {len(chunk)}")
+        logger.info(f"chunk columns: {chunk.columns}")
+        create_items_table(chunk, linkage_type)
         total_count += len(chunk)
     logger.info(f"Total rows processed: {total_count}")
-    create_index_on_items_table()
+    create_index_on_items_table(linkage_type)
     logger.info
     logger.info("LanceDB table and index created!")
 

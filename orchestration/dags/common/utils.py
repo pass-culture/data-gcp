@@ -518,7 +518,6 @@ def build_export_context(**kwargs):
         raise ValueError("No export configurations were generated")
 
     # Push required values to XCom
-    # TODO secrets dans un json dans le secret manager
     ti.xcom_push(key="partner_name", value=partner_name)
     ti.xcom_push(key="export_date", value=export_date)
     ti.xcom_push(key="partner_salt", value=partner_salt)

@@ -31,7 +31,7 @@ with
             sum(
                 total_theoretical_outings_amount_spent
             ) as total_theoretical_outings_amount_spent,
-            sum(diversity_score) as total_user_diversity_score,
+            sum(total_deposit_diversity_score) as total_user_diversity_score,
             max(first_booking_type) as first_booking_type,
             max(first_paid_booking_type) as first_paid_booking_type,
             min(first_paid_booking_date) as first_paid_booking_date,

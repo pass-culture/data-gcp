@@ -97,17 +97,24 @@ select
     ah.action_history_reason as user_suspension_reason,
     dgu.first_deposit_amount,
     dgu.last_deposit_expiration_date,
-    coalesce(u.user_activity = "Chômeur, En recherche d'emploi", false) as user_is_unemployed,
-    coalesce(u.user_activity
-            in ("Collégien", "Etudiant", "Lycéen", "Apprenti", "Alternant"), false) as user_is_in_education,
-    coalesce((
-                (ui.qpv_name is not null)
-                or (
-                    u.user_activity
-                    not in ("Collégien", "Etudiant", "Lycéen", "Apprenti", "Alternant")
-                )
-                or (ui.user_macro_density_label = "rural")
-            ), false) as user_is_priority_public,
+    coalesce(
+        u.user_activity = "Chômeur, En recherche d'emploi", false
+    ) as user_is_unemployed,
+    coalesce(
+        u.user_activity in ("Collégien", "Etudiant", "Lycéen", "Apprenti", "Alternant"),
+        false
+    ) as user_is_in_education,
+    coalesce(
+        (
+            (ui.qpv_name is not null)
+            or (
+                u.user_activity
+                not in ("Collégien", "Etudiant", "Lycéen", "Apprenti", "Alternant")
+            )
+            or (ui.user_macro_density_label = "rural")
+        ),
+        false
+    ) as user_is_priority_public,
     coalesce(
         dgu.total_non_cancelled_individual_bookings, 0
     ) as total_non_cancelled_individual_bookings,
@@ -129,12 +136,15 @@ select
     date_diff(
         dgu.first_individual_booking_date, dgu.first_deposit_creation_date, day
     ) as days_between_activation_date_and_first_booking_paid,
-    coalesce((
-                timestamp(dgu.last_deposit_expiration_date) >= current_timestamp()
-                and coalesce(dgu.total_deposit_actual_amount_spent, 0)
-                < dgu.last_deposit_amount
-            )
-            and u.user_is_active, false) as user_is_current_beneficiary
+    coalesce(
+        (
+            timestamp(dgu.last_deposit_expiration_date) >= current_timestamp()
+            and coalesce(dgu.total_deposit_actual_amount_spent, 0)
+            < dgu.last_deposit_amount
+        )
+        and u.user_is_active,
+        false
+    ) as user_is_current_beneficiary
 from {{ ref("int_applicative__user") }} as u
 left join
     {{ ref("int_applicative__action_history") }} as ah

@@ -31,7 +31,7 @@ with
             sum(
                 total_theoretical_outings_amount_spent
             ) as total_theoretical_outings_amount_spent,
-            sum(total_deposit_diversity_score) as total_user_diversity_score,
+            sum(total_diversity_score) as total_diversity_score,
             max(first_booking_type) as first_booking_type,
             max(first_paid_booking_type) as first_paid_booking_type,
             min(first_paid_booking_date) as first_paid_booking_date,
@@ -87,7 +87,7 @@ select
     dgu.total_theoretical_outings_amount_spent,
     dgu.total_last_deposit_digital_goods_amount_spent,
     dgu.total_deposit_actual_amount_spent,
-    dgu.total_user_diversity_score,
+    dgu.total_diversity_score,
     dgu.last_deposit_amount,
     dgu.last_individual_booking_date as last_booking_date,
     dgu.first_booking_type,

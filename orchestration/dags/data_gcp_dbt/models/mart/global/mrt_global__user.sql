@@ -42,7 +42,7 @@ select
     total_theoretical_outings_amount_spent,
     total_last_deposit_digital_goods_amount_spent,
     total_deposit_actual_amount_spent,
-    total_user_diversity_score,
+    total_diversity_score,
     last_deposit_amount,
     total_theoretical_remaining_credit,
     user_creation_date,

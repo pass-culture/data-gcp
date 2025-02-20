@@ -196,3 +196,6 @@ models:
       - name: user_seniority
         description: '{{ doc("column__user_seniority") }}'
         data_type: INT64
+      - name: total_diversity_score
+        description: '{{ doc("column__total_diversity_score") }}'
+        data_type: INT64

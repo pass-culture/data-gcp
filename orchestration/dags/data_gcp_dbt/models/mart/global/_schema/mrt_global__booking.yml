@@ -260,3 +260,6 @@ models:
       - name: offer_type_label
         description: "{{ doc('column__offer_type_label') }}"
         data_type: STRING
+      - name: diversity_score
+        description: "{{ doc('column__diversity_score') }}"
+        data_type: INT64

@@ -67,7 +67,7 @@ with
                     then booking_intermediary_amount
                 end
             ) as total_theoretical_outings_amount_spent,
-            sum(booking_diversity_score) as total_deposit_diversity_score,
+            sum(diversity_score) as total_diversity_score,
             max(
                 case when user_booking_rank = 1 then offer_subcategory_id end
             ) as first_booking_type,
@@ -108,7 +108,7 @@ select
     bgd.total_theoretical_physical_goods_amount_spent,
     bgd.total_theoretical_digital_goods_amount_spent,
     bgd.total_theoretical_outings_amount_spent,
-    bgd.total_deposit_diversity_score,
+    bgd.total_diversity_score,
     bgd.first_booking_type,
     bgd.first_paid_booking_type,
     bgd.first_paid_booking_date

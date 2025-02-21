@@ -95,7 +95,8 @@ for partner_id, partner_name in partner_dict.items():
                 "args": (
                     "{"
                     "export_tables: {{ ti.xcom_pull(task_ids='build_export_context', key='table_list') | tojson }}, "
-                    "export_schema: export_{{ ti.xcom_pull(task_ids='build_export_context', key='partner_name') }}, "
+                    "export_schema: tmp_export_{{ ti.xcom_pull(task_ids='build_export_context', key='partner_name') }}, "
+                    "export_schema_expiration_day : 1,"
                     f"secret_partner_value: '{access_secret_data(GCP_PROJECT_ID,f'dbt_export_private_partner_salt_{partner_name}')}', "
                     "fields_obfuscation_config: {{ ti.xcom_pull(task_ids='build_export_context', key='obfuscation_config').obfuscated_fields | tojson if ti.xcom_pull(task_ids='build_export_context', key='obfuscation_config') else '{}' }}"
                     "}"
@@ -148,7 +149,6 @@ for partner_id, partner_name in partner_dict.items():
             command=(
                 "python main.py transfer "
                 "--partner-name \"{{ ti.xcom_pull(task_ids='build_export_context', key='partner_name') }}\" "
-                "--target-bucket-config \"{{ ti.xcom_pull(task_ids='build_export_context', key='target_bucket_config') }}\" "
                 f'--gcs-bucket "{BASE_BUCKET}" '
                 "--export-date \"{{ ti.xcom_pull(task_ids='build_export_context', key='export_date') }}\" "
                 "--table-list '{{ ti.xcom_pull(task_ids='build_export_context', key='table_list') | tojson }}' "

@@ -2,6 +2,7 @@
     export_tables,
     secret_partner_value,
     export_schema,
+    export_schema_expiration_day=1,
     fields_obfuscation_config={"string_field_dummy_example": "upper({})"}
 ) %}
     -- Log the target schema and table
@@ -15,6 +16,16 @@
             ~ "."
             ~ export_schema
             ~ "`;"
+        ) %}
+
+        {% do run_query(
+            "ALTER SCHEMA `"
+            ~ target.database
+            ~ "."
+            ~ export_schema
+            ~ "` SET OPTIONS(default_table_expiration_days = "
+            ~ export_schema_expiration_day
+            ~ ");"
         ) %}
 
         -- Loop over the export tables and execute SQL for each

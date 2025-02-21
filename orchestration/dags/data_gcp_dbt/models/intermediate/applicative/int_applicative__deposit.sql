@@ -24,7 +24,10 @@ select
         when lower(d.source) like "%ubble%"
         then "UBBLE"
         when
-            (lower(d.source) like "%dms%" or lower(d.source) like "%démarches simplifiées%")
+            (
+                lower(d.source) like "%dms%"
+                or lower(d.source) like "%démarches simplifiées%"
+            )
         then "DMS"
         else d.source
     end as deposit_source,

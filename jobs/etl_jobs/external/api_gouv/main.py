@@ -25,12 +25,12 @@ def user_adress(
         return
 
     for chunk in chunks(
-        df[["user_id", "full_address"]].to_dict(orient="records"), chunk_size
+        df[["user_id", "user_full_address"]].to_dict(orient="records"), chunk_size
     ):
-        results = geocode(chunk)
+        results = geocode(chunk, columns=["user_full_address"])
         df_results = pd.DataFrame(results, columns=EXPECTED_ADRESS_COLUMNS)
         df_results["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        save(df, destination_dataset_id, destination_table_name)
+        save(df_results, destination_dataset_id, destination_table_name)
 
 
 if __name__ == "__main__":

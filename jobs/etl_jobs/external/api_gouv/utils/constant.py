@@ -1,6 +1,6 @@
 EXPECTED_ADRESS_COLUMNS = [
     "user_id",
-    "full_address",
+    "user_full_address",
     "longitude",
     "latitude",
     "result_score",

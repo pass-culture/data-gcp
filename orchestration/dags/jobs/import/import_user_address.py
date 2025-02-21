@@ -58,6 +58,8 @@ with DAG(
         "source_table_name": "user_address_candidate_queue",
         "destination_dataset_id": BIGQUERY_RAW_DATASET,
         "destination_table_name": "user_address",
+        "max_rows": 100_000,
+        "chunk_size": 500,
     },
 ) as dag:
     start = DummyOperator(task_id="start")
@@ -81,7 +83,14 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py user-adress --source-dataset-id {{ params.source_dataset_id }} --source-table-name {{ params.source_table_name }} --destination-dataset-id {{ params.destination_dataset_id }} --destination-table-name {{ params.destination_table_name }}",
+        command="""python main.py \
+            --source-dataset-id {{ params.source_dataset_id }} \
+            --source-table-name {{ params.source_table_name }} \
+            --destination-dataset-id {{ params.destination_dataset_id }} \
+            --destination-table-name {{ params.destination_table_name }}
+            --max-rows {{ params.max_rows }}
+            --chunk-size {{ params.chunk_size }}
+        """,
         do_xcom_push=True,
     )
 

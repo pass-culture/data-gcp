@@ -2,7 +2,7 @@
     export_tables,
     secret_partner_value,
     export_schema,
-    export_schema_expiration_day,
+    export_schema_expiration_day=1,
     fields_obfuscation_config={"string_field_dummy_example": "upper({})"}
 ) %}
     -- Log the target schema and table

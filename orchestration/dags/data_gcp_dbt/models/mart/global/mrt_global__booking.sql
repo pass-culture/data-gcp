@@ -12,6 +12,7 @@ select
     b.booking_cancellation_date,
     b.booking_cancellation_reason,
     b.user_id,
+    b.user_age_at_booking,
     b.deposit_id,
     b.deposit_type,
     b.reimbursed,
@@ -79,4 +80,4 @@ select
     u.first_deposit_creation_date
 from {{ ref("int_global__booking") }} as b
 left join {{ ref("mrt_global__user") }} as u on u.user_id = b.user_id
-where deposit_type is not null and b.user_id is not null
+where b.deposit_type is not null and b.user_id is not null

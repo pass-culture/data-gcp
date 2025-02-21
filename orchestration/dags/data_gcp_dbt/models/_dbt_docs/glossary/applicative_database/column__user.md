@@ -51,3 +51,4 @@
 {% docs column__user_has_added_offer_to_favorites %} Boolean. Indicates if the user has added any offer to their favorites. {% enddocs %}
 {% docs column__user_qpi_subcategories %} QPI stands for 'Initial Practice Questionnaires'. We asked young users about their cultural practices before using the Pass, resulting in a list of subcategories used during the cold start to display offers based on these initial practices. {% enddocs %}
 {% docs column__user_modified_at %} Timestamp at which user has updated its informations. {% enddocs %}
+{% docs column__user_age_at_booking %} The age of the user at the time of booking, calculated as the difference between the booking date and the user's date of birth. {% enddocs %}

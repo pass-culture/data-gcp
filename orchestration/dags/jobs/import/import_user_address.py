@@ -58,7 +58,7 @@ with DAG(
         "source_table_name": "user_address_candidate_queue",
         "destination_dataset_id": BIGQUERY_RAW_DATASET,
         "destination_table_name": "user_address",
-        "max_rows": 100_000,
+        "max_rows": 50_000,
         "chunk_size": 500,
     },
 ) as dag:

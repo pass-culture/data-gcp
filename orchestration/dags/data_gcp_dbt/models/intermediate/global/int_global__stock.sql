@@ -17,6 +17,7 @@ select
     s.price_category_label,
     s.stock_features,
     s.stock_last_provider_id,
+    s.stock_is_soft_deleted,
     s.offer_id,
     s.is_bookable,
     o.offer_product_id,

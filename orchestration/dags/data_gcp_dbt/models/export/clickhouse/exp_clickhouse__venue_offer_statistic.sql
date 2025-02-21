@@ -26,7 +26,7 @@ with
                     then collective_offer_id
                 end
             ) as total_inactive_non_rejected_collective_offers
-        from {{ ref("int_applicative__collective_offer") }}
+        from {{ ref("int_global__collective_offer") }}
         group by venue_id
     ),
 
@@ -38,10 +38,7 @@ with
                     when
                         o.is_active = true
                         and o.offer_validation = 'APPROVED'
-                        and (
-                            s.booking_limit_datetime is null
-                            or s.booking_limit_datetime > current_timestamp()
-                        )
+                        and s.is_bookable = true
                     then o.offer_id
                 end
             ) as total_active_offers,
@@ -57,11 +54,11 @@ with
                     then o.offer_id
                 end
             ) as total_inactive_non_rejected_offers
-        from {{ ref("int_applicative__offer") }} as o
+        from {{ ref("int_global__offer") }} as o
         left join
-            {{ ref("int_applicative__stock") }} as s
+            {{ ref("int_global__stock") }} as s
             on o.offer_id = s.offer_id
-            and s.is_soft_deleted = false
+            and s.stock_is_soft_deleted = false
         group by o.venue_id
     )
 
@@ -77,6 +74,6 @@ select
     coalesce(
         cos.total_inactive_non_rejected_collective_offers, 0
     ) as total_inactive_non_rejected_collective_offers
-from {{ ref("int_applicative__venue") }} as v
+from {{ ref("int_global__venue") }} as v
 left join individual_offer_status as ios on v.venue_id = ios.venue_id
 left join collective_offer_status as cos on v.venue_id = cos.venue_id

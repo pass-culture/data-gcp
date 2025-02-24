@@ -471,16 +471,10 @@ def build_export_context(**kwargs):
         or {}
     )
 
-    # 2) Fetch partner-specific salt from Secret Manager or create it if not exists
     partner_salt = create_key_if_not_exists(
         project_id=GCP_PROJECT_ID,
         secret_id=f"dbt_export_private_obfuscation_salt_{partner_name}",
         key_length=32,
-    )
-
-    # 3) Fetch target bucket config
-    target_bucket_config = get_json_from_gcs(
-        logs_bucket, f"{partner_name}/target_bucket_config.json"
     )
 
     # 4) Generate export logs
@@ -502,7 +496,7 @@ def build_export_context(**kwargs):
     export_context = {
         "table_list": table_list,
         "project_id": GCP_PROJECT_ID,
-        "source_dataset": f"export_{partner_name}",
+        "source_dataset": f"tmp_export_{partner_name}",
         "destination_bucket": parquet_storage_gcs_bucket,
         "destination_path": f"{partner_name}/{export_date}",
     }
@@ -527,7 +521,6 @@ def build_export_context(**kwargs):
     ti.xcom_push(key="partner_name", value=partner_name)
     ti.xcom_push(key="export_date", value=export_date)
     ti.xcom_push(key="partner_salt", value=partner_salt)
-    ti.xcom_push(key="target_bucket_config", value=target_bucket_config)
     ti.xcom_push(key="obfuscation_config", value=obfuscation_config)
     ti.xcom_push(key="table_list", value=table_list)
 

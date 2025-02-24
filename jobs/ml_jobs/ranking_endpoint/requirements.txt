@@ -16,8 +16,6 @@ annotated-types==0.7.0
     # via pydantic
 astunparse==1.6.3
     # via tensorflow
-async-timeout==5.0.1
-    # via aiohttp
 attrs==24.2.0
     # via aiohttp
 blinker==1.9.0
@@ -194,7 +192,7 @@ libclang==18.1.1
     # via tensorflow
 libcst==1.5.1
     # via google-cloud-secret-manager
-lightgbm==4.0.0
+lightgbm==4.6.0
     # via -r requirements.in
 loguru==0.6.0
     # via -r requirements.in
@@ -409,7 +407,6 @@ typing-extensions==4.12.2
     #   alembic
     #   graphene
     #   mlflow-skinny
-    #   multidict
     #   opentelemetry-sdk
     #   pydantic
     #   pydantic-core

@@ -50,6 +50,9 @@ models:
               tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+      - name: user_age_at_booking
+        description: '{{ doc("column__user_age_at_booking") }}'
+        data_type: INT64
       - name: deposit_id
         description: '{{ doc("column__deposit_id") }}'
         data_type: STRING

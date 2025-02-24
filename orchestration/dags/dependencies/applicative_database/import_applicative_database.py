@@ -53,13 +53,6 @@ HISTORICAL_CLEAN_APPLICATIVE_TABLES = {
         "time_partitioning": {"field": "partition_date"},
         "clustering_fields": {"fields": ["partition_date"]},
     },
-    "offer_history": {
-        "sql": f"{CLEAN_HISTORY_SQL_PATH}/offer_history.sql",
-        "destination_dataset": "{{ bigquery_clean_dataset }}",
-        "destination_table": "applicative_database_offer_history${{ yyyymmdd(yesterday()) }}",
-        "time_partitioning": {"field": "partition_date"},
-        "clustering_fields": {"fields": ["partition_date"]},
-    },
     "offerer_tag_history": {
         "sql": f"{CLEAN_HISTORY_SQL_PATH}/offerer_tag_history.sql",
         "destination_dataset": "{{ bigquery_clean_dataset }}",

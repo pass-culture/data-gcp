@@ -35,12 +35,16 @@ def get_datasets_to_scan():
         dataset
         for dataset in datasets
         if dataset.startswith("int_")
+        or dataset.startswith("ml_")
         or dataset
         in [
             f"analytics_{ENV_SHORT_NAME}",
             f"clean_{ENV_SHORT_NAME}",
             f"raw_{ENV_SHORT_NAME}",
+            f"raw_applicative_{ENV_SHORT_NAME}",
+            f"snapshot_{ENV_SHORT_NAME}",
             f"backend_{ENV_SHORT_NAME}",
+            f"appsflyer_import_{ENV_SHORT_NAME}",
         ]
     ]
 

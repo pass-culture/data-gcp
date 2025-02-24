@@ -7,7 +7,7 @@ with
     ),
 
     user_location_update as (
-        select user_id, max(updated_at) as last_calculation_at
+        select user_id, datetime(max(updated_at)) as last_calculation_at
         from {{ source("raw", "user_address") }}
         group by user_id
     ),

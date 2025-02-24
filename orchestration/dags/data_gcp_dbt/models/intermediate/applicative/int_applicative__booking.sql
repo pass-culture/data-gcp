@@ -18,7 +18,6 @@ select
     b.price_category_label,
     b.booking_reimbursement_date,
     d.deposit_type,
-    -- b.user_recredit_type
     date(b.booking_creation_date) as booking_creation_date,
     if(
         extract(dayofyear from date(b.booking_creation_date))

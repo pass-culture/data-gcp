@@ -20,59 +20,14 @@ from utils.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
 app = typer.Typer()
 
 
-def evaluate_matching(linkage_candidates, linked_items, output_file="evaluation_plots"):
-    """
-    Evaluates the matching between offers and products by computing various metrics,
-    including coverage, and generating plots to visualize the results.
-
-    Parameters:
-    - linkage_candidates (pd.DataFrame): DataFrame containing all candidate offers.
-    - linked_items (pd.DataFrame): DataFrame containing the results of the matching.
-    - output_file (str): Filename to save the plots.
-
-    Returns:
-    - metrics_df (pd.DataFrame): DataFrame containing computed metrics.
-    - match_frequency_df (pd.DataFrame): DataFrame containing match frequency data.
-    - booking_count_coverage_df (pd.DataFrame): DataFrame containing booking count coverage data.
-    """
-    candidate_id_col = "item_id_candidate"
-    merged_df = pd.merge(
-        linkage_candidates,
-        linked_items,
-        on=candidate_id_col,
-        how="left",
-        indicator=True,
-    )
-
-    # Identify matched and unmatched offers
-    merged_df["is_matched"] = merged_df["_merge"] == "both"
-
-    # Calculate total number of offers and matched offers
-    total_offers = linkage_candidates[candidate_id_col].nunique()
-    total_matched_offers = merged_df[merged_df["is_matched"]][
-        candidate_id_col
-    ].nunique()
-
-    # Calculate coverage
-    coverage_percentage = (
-        (total_matched_offers / total_offers) * 100 if total_offers > 0 else 0
-    )
-
-    # Calculate match frequency
-    match_frequency = merged_df[merged_df["is_matched"]][
-        candidate_id_col
-    ].value_counts()
-    match_frequency_df = match_frequency.reset_index()
-    match_frequency_df.columns = [candidate_id_col, "match_count"]
-    match_frequency_df.fillna(0, inplace=True)
-    duplicate_matches_df = match_frequency_df[match_frequency_df["match_count"] > 1]
-    num_duplicate_matches = duplicate_matches_df.shape[0]
-    percentage_duplicates = (
-        (num_duplicate_matches / total_matched_offers) * 100
-        if total_matched_offers > 0
-        else 0
-    )
-
+def plot_graphs(
+    linkage_candidates,
+    output_file,
+    merged_df,
+    coverage_percentage,
+    match_frequency_df,
+    percentage_duplicates,
+):
     with PdfPages(output_file) as pdf:
         # Coverage Pie Chart
         plt.figure(figsize=(12, 12))
@@ -144,70 +99,8 @@ def evaluate_matching(linkage_candidates, linked_items, output_file="evaluation_
             pdf.savefig()
             plt.close()
 
-    return
 
-
-def evaluate_matching_by_subcategory(
-    linkage_candidates, linked_items, output_file="subcategory_evaluation_plots"
-):
-    """
-    Evaluates the matching process within each subcategory, including coverage.
-
-    Parameters:
-    - linkage_candidates (pd.DataFrame): DataFrame containing all candidate offers.
-    - linked_items (pd.DataFrame): DataFrame containing the results of the matching.
-    - output_file (str): Filename to save the plots.
-
-    Returns:
-    - subcat_metrics_df (pd.DataFrame): DataFrame containing metrics per subcategory.
-    """
-    required_columns = ["item_id_candidate", "offer_subcategory_id_candidate"]
-    for col in required_columns:
-        if col not in linkage_candidates.columns or col not in linked_items.columns:
-            raise ValueError(f"Both DataFrames must contain '{col}' column.")
-
-    # Merge DataFrames on 'item_id_candidate' and 'offer_subcategory_id_candidate'
-    merged_df = pd.merge(
-        linkage_candidates,
-        linked_items,
-        on=required_columns,
-        how="left",
-        indicator=True,
-    )
-
-    # Identify matched offers
-    merged_df["is_matched"] = merged_df["_merge"] == "both"
-
-    # Group by subcategory and calculate metrics
-    subcat_metrics = (
-        merged_df.groupby("offer_subcategory_id_candidate")
-        .apply(
-            lambda df: pd.Series(
-                {
-                    "Total Offers": df["item_id_candidate"].nunique(),
-                    "Matched Offers": df[df["is_matched"]][
-                        "item_id_candidate"
-                    ].nunique(),
-                    "Total Matches": df[df["is_matched"]].shape[0],
-                    "Duplicate Matches": df[df["is_matched"]]["item_id_candidate"]
-                    .value_counts()
-                    .gt(1)
-                    .sum(),
-                }
-            )
-        )
-        .reset_index()
-    )
-
-    # Calculate additional metrics
-    subcat_metrics["Coverage (%)"] = (
-        subcat_metrics["Matched Offers"] / subcat_metrics["Total Offers"] * 100
-    )
-    subcat_metrics["Percentage of Duplicates (%)"] = (
-        subcat_metrics["Duplicate Matches"] / subcat_metrics["Matched Offers"] * 100
-    ).fillna(0)
-
-    # Generate plots and save them to a single PDF file
+def plot_subcat_graphs(linkage_candidates, output_file, merged_df, subcat_metrics):
     with PdfPages(output_file) as pdf:
         # Coverage by Subcategory
         plt.figure(figsize=(24, 12))
@@ -293,21 +186,144 @@ def evaluate_matching_by_subcategory(
             pdf.savefig()
             plt.close()
 
-    return
+
+def evaluate_matching(
+    linkage_candidates: pd.DataFrame,
+    linked_items: pd.DataFrame,
+    output_file: str,
+):
+    """
+    Evaluates the matching between offers and products by computing various metrics,
+    including coverage, and generating plots to visualize the results.
+
+    Parameters:
+    - linkage_candidates (pd.DataFrame): DataFrame containing all candidate offers.
+    - linked_items (pd.DataFrame): DataFrame containing the results of the matching.
+    - output_file (str): Filename to save the plots.
+    """
+    CANDIDATE_ID_COL = "item_id_candidate"
+    merged_df = pd.merge(
+        linkage_candidates,
+        linked_items,
+        on=CANDIDATE_ID_COL,
+        how="left",
+        indicator=True,
+    )
+
+    # Identify matched and unmatched offers
+    merged_df = merged_df.assign(is_matched=lambda df: df._merge == "both")
+    # merged_df["is_matched"] = merged_df["_merge"] == "both"
+
+    # Calculate total number of offers and matched offers
+    total_offers = linkage_candidates[CANDIDATE_ID_COL].nunique()
+    total_matched_offers = merged_df[merged_df["is_matched"]][
+        CANDIDATE_ID_COL
+    ].nunique()
+
+    # Calculate coverage
+    coverage_percentage = (
+        (total_matched_offers / total_offers) * 100 if total_offers > 0 else 0
+    )
+
+    # Calculate match frequency
+    match_frequency = merged_df[merged_df["is_matched"]][
+        CANDIDATE_ID_COL
+    ].value_counts()
+    match_frequency_df = match_frequency.reset_index()
+    match_frequency_df.columns = [CANDIDATE_ID_COL, "match_count"]
+    match_frequency_df.fillna(0, inplace=True)
+    duplicate_matches_df = match_frequency_df[match_frequency_df["match_count"] > 1]
+    num_duplicate_matches = duplicate_matches_df.shape[0]
+    percentage_duplicates = (
+        (num_duplicate_matches / total_matched_offers) * 100
+        if total_matched_offers > 0
+        else 0
+    )
+
+    plot_graphs(
+        linkage_candidates,
+        output_file,
+        merged_df,
+        coverage_percentage,
+        match_frequency_df,
+        percentage_duplicates,
+    )
 
 
-def build_evaluation_paths(linkage_type: str, base_dir: str = "plots") -> dict:
+def evaluate_matching_by_subcategory(
+    linkage_candidates: pd.DataFrame,
+    linked_items: pd.DataFrame,
+    output_file: str,
+):
+    """
+    Evaluates the matching process within each subcategory, including coverage.
+
+    Parameters:
+    - linkage_candidates (pd.DataFrame): DataFrame containing all candidate offers.
+    - linked_items (pd.DataFrame): DataFrame containing the results of the matching.
+    - output_file (str): Filename to save the plots.
+    """
+    required_columns = ["item_id_candidate", "offer_subcategory_id_candidate"]
+    for col in required_columns:
+        if col not in linkage_candidates.columns or col not in linked_items.columns:
+            raise ValueError(f"Both DataFrames must contain '{col}' column.")
+
+    # Merge DataFrames on 'item_id_candidate' and 'offer_subcategory_id_candidate'
+    merged_df = pd.merge(
+        linkage_candidates,
+        linked_items,
+        on=required_columns,
+        how="left",
+        indicator=True,
+    )
+
+    # Identify matched offers
+    merged_df = merged_df.assign(is_matched=lambda df: df._merge == "both")
+    # merged_df["is_matched"] = merged_df["_merge"] == "both"
+
+    # Group by subcategory and calculate metrics
+    subcat_metrics = (
+        merged_df.groupby("offer_subcategory_id_candidate")
+        .apply(
+            lambda df: pd.Series(
+                {
+                    "Total Offers": df["item_id_candidate"].nunique(),
+                    "Matched Offers": df[df["is_matched"]][
+                        "item_id_candidate"
+                    ].nunique(),
+                    "Total Matches": df[df["is_matched"]].shape[0],
+                    "Duplicate Matches": df[df["is_matched"]]["item_id_candidate"]
+                    .value_counts()
+                    .gt(1)
+                    .sum(),
+                }
+            )
+        )
+        .reset_index()
+    )
+
+    # Calculate additional metrics
+    subcat_metrics = subcat_metrics.assign(
+        coverage_pct=lambda df: df["Matched Offers"] / df["Total Offers"] * 100,
+        duplicates_pct=lambda df: df["Duplicate Matches"] / df["Matched Offers"] * 100,
+    ).fillna(0)
+
+    # Generate plots and save them to a single PDF file
+    plot_subcat_graphs(linkage_candidates, output_file, merged_df, subcat_metrics)
+
+
+def build_evaluation_paths(linkage_type: str) -> dict:
     """
     Build evaluation paths for storing evaluation plots.
 
     Args:
         linkage_type (str): Type of linkage (product/offer).
-        base_dir (str): Base directory for evaluation plots.
 
     Returns:
         dict: Paths for overall and subcategory evaluation plots.
     """
-    evaluation_dir = os.path.join(base_dir, linkage_type)
+    BASE_DIR = "plots"
+    evaluation_dir = os.path.join(BASE_DIR, linkage_type)
     os.makedirs(evaluation_dir, exist_ok=True)
     return {
         "evaluation_plots": os.path.join(evaluation_dir, "evaluation_plots.pdf"),

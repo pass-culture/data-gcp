@@ -48,12 +48,14 @@ def process_in_batches(
     """
     Generic routine to read Parquet in batches from GCS, filter, and upload.
     """
-    if unmatched_elements_path:
-        unmatched_elements_ids = read_parquet_files_from_gcs_directory(
+    unmatched_elements_ids = (
+        read_parquet_files_from_gcs_directory(
             unmatched_elements_path, columns=["item_id"]
         )
-    else:
-        unmatched_elements_ids = None
+        if unmatched_elements_path
+        else None
+    )
+
     for i, chunk in enumerate(read_parquet_in_batches_gcs(input_path, batch_size)):
         logger.info(f"{label} - raw count: {len(chunk)} items")
 

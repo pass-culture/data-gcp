@@ -247,12 +247,6 @@ with DAG(
         retries=2,
     )
 
-    # install_dependencies = SSHGCEOperator(
-    #     task_id="install_dependencies",
-    #     instance_name="{{ params.instance_name }}",
-    #     base_dir=DAG_CONFIG["DIRS"]["BASE"],
-    #     command="uv pip install -r requirements.txt --user",
-    # )
     # ---------------------------------------------------------------------
     # 4) PREPROCESS DATA (sources / candidates)
     # ---------------------------------------------------------------------

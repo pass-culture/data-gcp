@@ -12,8 +12,6 @@ from constants import (
     MODEL_TYPE,
     PARQUET_BATCH_SIZE,
     UNKNOWN_PERFORMER,
-    extract_pattern,
-    remove_pattern,
 )
 from utils.common import (
     preprocess_embeddings_by_chunk,
@@ -21,6 +19,13 @@ from utils.common import (
     reduce_embeddings_and_store_reducer,
 )
 from utils.gcs_utils import upload_parquet
+
+EXTRACT_EDITION_PATTERN = (
+    r"\b(?:tome|t|vol|episode)\s*(\d+)\b|\b(?:tome|t|vol|episode)(\d+)\b|(\d+)$"
+)
+REMOVE_EDITION_PATTERN = (
+    r"\b(?:tome|t|vol|episode)\s*\d+\b|\b(?:tome|t|vol|episode)\d+\b|\d+$"
+)
 
 app = typer.Typer()
 
@@ -75,13 +80,13 @@ def preprocess_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
         .apply(preprocess_string),
         edition=lambda df: df["offer_name"]
         .str.lower()
-        .str.extract(extract_pattern, expand=False)[0]
+        .str.extract(EXTRACT_EDITION_PATTERN, expand=False)[0]
         .astype(str)
         .replace("nan", None)
         .fillna(value="0"),
         oeuvre=lambda df: df["offer_name"]
         .str.lower()
-        .str.replace(remove_pattern, "", regex=True)
+        .str.replace(REMOVE_EDITION_PATTERN, "", regex=True)
         .str.strip()
         .replace("", None)
         .apply(preprocess_string),

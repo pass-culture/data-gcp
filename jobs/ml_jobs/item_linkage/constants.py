@@ -43,9 +43,6 @@ LOGGING_INTERVAL = 50000  # Interval for logging progress
 N_PROBES = 5
 REFINE_FACTOR = 10
 
-# Parametrize thr depending on linkage type
-# Hard for offer to product (even exact match)
-# Softer for offer to offer
 MATCHING_FEATURES = {
     "product": {
         "oeuvre": {"method": "jarowinkler", "threshold": 0.95, "missing_value": 0},
@@ -59,8 +56,3 @@ UNKNOWN_PERFORMER = "unkn"
 UNKNOWN_NAME = "no_name"
 UNKNOWN_DESCRIPTION = "no_des"
 INITIAL_LINK_ID = "NC"
-
-extract_pattern = (
-    r"\b(?:tome|t|vol|episode)\s*(\d+)\b|\b(?:tome|t|vol|episode)(\d+)\b|(\d+)$"
-)
-remove_pattern = r"\b(?:tome|t|vol|episode)\s*\d+\b|\b(?:tome|t|vol|episode)\d+\b|\d+$"

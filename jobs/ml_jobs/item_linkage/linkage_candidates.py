@@ -40,7 +40,7 @@ def load_model(model_path: str, linkage_type: str) -> SemanticSpace:
     return model
 
 
-def build_filter_dict(row, filter: list = RETRIEVAL_FILTERS):
+def build_filter_dict(row: pd.Series, filter: list) -> dict:
     """
     Build filters for the given row.
 

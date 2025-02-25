@@ -223,7 +223,9 @@ def postprocess_matching(matches, item_singletons_clean, sources_clean):
     return linkage_final, num_duplicate_matches
 
 
-def extract_unmatched_elements(candidates, output):
+def extract_unmatched_elements(
+    candidates: pd.DataFrame, output: pd.DataFrame
+) -> pd.DataFrame:
     """
     Extract unmatched elements from the candidates.
 
@@ -234,11 +236,11 @@ def extract_unmatched_elements(candidates, output):
     Returns:
         pd.DataFrame: Unmatched elements dataframe.
     """
-    output_light = output[["item_id_candidate"]].drop_duplicates()
+    item_id_candidates = output[["item_id_candidate"]].drop_duplicates()
     merged_df = (
         candidates[["item_id"]]
         .merge(
-            output_light,
+            item_id_candidates,
             left_on="item_id",
             right_on="item_id_candidate",
             how="left",
@@ -284,9 +286,7 @@ def main(
     """
     logger.info("Starting item linkage job")
     indexer_per_candidates = recordlinkage.index.Block(on="candidates_id")
-    # Import sources and candidates to enriched linkage candidates
-    # Linkage candidates only contain item_id_synchro,item_id_candidate and _distance
-    # TODO: Create a metadata table in prepare tables step
+
     sources = read_parquet_files_from_gcs_directory(
         input_sources_path, columns=METADATA_FEATURES
     )

@@ -15,9 +15,7 @@ with
             v.venue_managing_offerer_id as offerer_id,
             date('{{ ds() }}') as partition_date,
             'individual' as offer_type,
-            count(
-                distinct s.offer_id
-            ) as total_bookable_offers
+            count(distinct s.offer_id) as total_bookable_offers
         from {{ ref("snapshot__bookable_offer") }} as s
         inner join {{ ref("int_applicative__offer") }} as o using (offer_id)
         inner join
@@ -32,9 +30,7 @@ with
             v.venue_managing_offerer_id as offerer_id,
             date('{{ ds() }}') as partition_date,
             'collective' as offer_type,
-            count(
-                distinct sb.collective_offer_id
-            ) as total_bookable_offers
+            count(distinct sb.collective_offer_id) as total_bookable_offers
         from {{ ref("snapshot__bookable_collective_offer") }} as sb
         inner join
             {{ source("raw", "applicative_database_collective_offer") }} as o using (

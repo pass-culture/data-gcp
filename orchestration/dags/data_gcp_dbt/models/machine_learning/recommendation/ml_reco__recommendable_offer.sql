@@ -5,7 +5,10 @@ with
         select
             available_offers.*,
             row_number() over (
-                partition by available_offers.offer_id order by available_offers.stock_price asc, available_offers.stock_beginning_date asc
+                partition by available_offers.offer_id
+                order by
+                    available_offers.stock_price asc,
+                    available_offers.stock_beginning_date asc
             ) as stock_rank
         from
             (
@@ -33,7 +36,7 @@ with
                     max(is_restrained) as is_restrained,
                     max(subcategory_id) as subcategory_id,
                     max(search_group_name) as search_group_name,
-                    max(name) as name, -- noqa: RF04
+                    max(name) as name,  -- noqa: RF04
                     max(gtl_id) as gtl_id,
                     max(gtl_l1) as gtl_l1,
                     max(gtl_l2) as gtl_l2,

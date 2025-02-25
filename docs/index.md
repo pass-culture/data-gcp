@@ -38,13 +38,13 @@ The data engineering and data science teams work together to build and maintain 
 You will find technical related documentation about models and architectural description of our open source models.
 
 <div class="home-features">
-    <a href="/data-gcp/de/overview">
+    <a href="/data-gcp/team/de/overview">
         <div class="feature">
             <h2>🛠️ Data Engineering</h2>
             <p>Documentation about our data architecture.</p>
         </div>
     </a>
-    <a href="/data-gcp/ds/overview">
+    <a href="/data-gcp/team/ds/overview">
         <div class="feature">
             <h2>🧪 Data Science</h2>
             <p>Documentation about our models and data science work. </p>

@@ -17,4 +17,5 @@ SELECT
     , CAST("venueId" AS varchar(255)) as venue_id
     ,"priceCategoryLabel" AS price_category_label
     , "reimbursementDate" AS booking_reimbursement_date
+    , "usedRecreditType" AS booking_used_recredit_type
 FROM public.booking

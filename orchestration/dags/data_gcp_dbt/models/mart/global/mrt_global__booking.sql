@@ -19,6 +19,7 @@ select
     b.booking_intermediary_amount,
     b.booking_rank,
     b.booking_used_date,
+    b.booking_used_recredit_type,
     b.stock_beginning_date,
     b.stock_id,
     b.offer_id,

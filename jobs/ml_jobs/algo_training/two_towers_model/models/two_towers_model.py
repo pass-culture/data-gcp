@@ -63,7 +63,7 @@ class TwoTowersModel(tfrs.models.Model):
 
     def set_task(self, item_dataset=None):
         self.task = tfrs.tasks.Retrieval(
-            tf.keras.losses.CategoricalCrossentropy(
+            loss=tf.keras.losses.CategoricalCrossentropy(
                 from_logits=True,
                 reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
             ),
@@ -140,7 +140,7 @@ class SingleTowerModel(tf.keras.models.Model):
             else:
                 training_data = self.data[layer_name].unique()
             self._embedding_layers[layer_name] = layer_class.build_sequential_layer(
-                vocabulary=training_data
+                input_data=training_data
             )
 
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")

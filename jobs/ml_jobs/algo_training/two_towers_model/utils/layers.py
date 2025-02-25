@@ -37,27 +37,27 @@ class StringEmbeddingLayer:
 
 
 @dataclass
-class IntegerEmbeddingLayer:
+class NumericalFeatureProcessor:
     """
-    A preprocessing layer which maps integer features into embeddings.
-
-    When output_mode is "int", input integers are converted to their index in the vocabulary (an integer).
-    When output_mode is "multi_hot", "count", or "tf_idf", input integers are encoded into an array where each dimension
-    corresponds to an element in the vocabulary.
+    A preprocessing layer for continuous numerical features:
+    1. Normalizes the input (mean=0, variance=1).
+    2. Applies a Dense layer to project the feature into a learned space.
     """
 
-    embedding_size: int
+    output_size: int  # Number of units in the Dense layer
 
     def build_sequential_layer(self, vocabulary: np.ndarray):
+        # Precompute mean/variance offline
+        mean = np.mean(vocabulary.astype("float32"))
+        variance = np.var(vocabulary.astype("float32"))
+
+        # Create and adapt the normalization layer to the data
+        normalization = tf.keras.layers.Normalization(
+            input_shape=(1,), mean=mean, variance=variance
+        )
+
         return tf.keras.Sequential(
-            [
-                StringLookup(vocabulary=vocabulary.astype(str)),
-                # We add an additional embedding to account for unknown tokens.
-                Embedding(
-                    input_dim=len(vocabulary) + 1,
-                    output_dim=self.embedding_size,
-                ),
-            ]
+            [normalization, tf.keras.layers.Dense(self.output_size)]
         )
 
 

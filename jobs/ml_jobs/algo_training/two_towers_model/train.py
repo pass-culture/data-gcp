@@ -194,13 +194,36 @@ def log_mlflow_params(
 
 
 def train_two_tower_model(
-    train_dataset,
-    validation_dataset,
-    two_tower_model,
-    training_steps,
-    validation_steps,
-    run_uuid,
+    train_dataset: tf.data.Dataset,
+    validation_dataset: tf.data.Dataset,
+    two_tower_model: TwoTowersModel,
+    training_steps: int,
+    validation_steps: int,
+    run_uuid: int,
 ):
+    """
+    Trains a two-tower model with early stopping and learning rate reduction.
+
+    This function compiles and fits a two-tower model using the provided datasets.
+    It configures the model with Adam optimizer and sets up callbacks for
+    learning rate reduction, early stopping, and MLFlow logging.
+
+    Args:
+        train_dataset (tf.data.Dataset): TensorFlow dataset for training.
+        validation_dataset (tf.data.Dataset): TensorFlow dataset for validation.
+        two_tower_model (TwoTowersModel): The initialized two-tower model to be trained.
+        training_steps (int): Number of steps per epoch during training.
+        validation_steps (int): Number of steps for validation.
+        run_uuid (str): Unique identifier for the training run, used for logging.
+
+    Returns:
+        None: The model is trained in-place.
+
+    Note:
+        In this training, we shuffle the training data every EPOCH_COUNT_PER_SHUFFLE epochs. This is done
+            in order to activate the optimizer's learning rate reduction and early stopping callbacks.
+    """
+
     # No validation on metrics during training
     two_tower_model.set_task(item_dataset=None)
     two_tower_model.compile(

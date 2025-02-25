@@ -87,8 +87,8 @@ with DAG(
             --source-dataset-id {{ params.source_dataset_id }} \
             --source-table-name {{ params.source_table_name }} \
             --destination-dataset-id {{ params.destination_dataset_id }} \
-            --destination-table-name {{ params.destination_table_name }}
-            --max-rows {{ params.max_rows }}
+            --destination-table-name {{ params.destination_table_name }} \
+            --max-rows {{ params.max_rows }} \
             --chunk-size {{ params.chunk_size }}
         """,
         do_xcom_push=True,

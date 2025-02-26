@@ -23,6 +23,7 @@ WITH effective_revenue as (
 )
 , expected_revenue as (
     SELECT
+        toStartOfYear(toDate(now())) AS year,
         cast(venue_id as String) as venue_id,
         sum(
             case
@@ -35,7 +36,7 @@ WITH effective_revenue as (
         intermediate.collective_booking
     WHERE
         venue_id IS NOT NULL
-    GROUP BY 1
+    GROUP BY 1, 2
 ),
 SELECT
     year,
@@ -47,3 +48,4 @@ SELECT
 FROM effective_revenue
 LEFT JOIN expected_revenue
 ON effective_revenue.venue_id = expected_revenue.venue_id
+AND effective_revenue.year = expected_revenue.year

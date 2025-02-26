@@ -34,20 +34,25 @@
 with
     raw_data as (
         select
-            booking_id,
-            booking_created_at,
-            booking_creation_date,
-            user_id,
-            offer_subcategory_id,
-            venue_type_label,
-            offer_category_id,
-            venue_id,
-            coalesce(offer_type_label, venue_id) as extra_category,  -- TODO: venue_id is used as extra_category when offer_type_label is null
+            b.booking_id,
+            b.booking_created_at,
+            b.booking_creation_date,
+            b.user_id,
+            b.deposit_id,
+            s.offer_subcategory_id,
+            s.venue_type_label,
+            s.offer_category_id,
+            s.venue_id,
+            coalesce(om.offer_type_label, s.venue_id) as extra_category,  -- TODO: venue_id is used as extra_category when offer_type_label is null
             row_number() over (
-                partition by user_id order by booking_created_at
+                partition by b.user_id order by b.booking_created_at
             ) as booking_rank
-        from {{ ref("int_global__booking") }}
-        where booking_status != 'CANCELLED'
+        from {{ ref("int_applicative__booking") }} as b
+        left join {{ ref("int_global__stock") }} as s on b.stock_id = s.stock_id
+        left join
+            {{ ref("int_applicative__offer_metadata") }} as om
+            on s.offer_id = om.offer_id
+        where b.booking_status != 'CANCELLED'
     ),
 
     entity_calculations as (
@@ -58,6 +63,7 @@ with
                 booking_creation_date,
                 booking_rank,
                 user_id,
+                deposit_id,
                 {{ entity.entity }} as diversity_booked_entity,
                 '{{ entity.type }}' as diversity_booked_entity_type,
                 {{ entity.score_multiplier }} as score_multiplier,
@@ -80,6 +86,7 @@ select
     diversity_booked_entity_type,
     diversity_booked_entity,
     user_id,
+    deposit_id,
     booking_creation_date,
     case
         when diversity_booking_entity_rank = 1 then score_multiplier else 0

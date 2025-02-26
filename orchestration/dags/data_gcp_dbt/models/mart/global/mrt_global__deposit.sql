@@ -33,6 +33,7 @@ select
     d.total_actual_amount_spent,
     d.total_theoretical_amount_spent_in_digital_goods,
     d.total_non_cancelled_individual_bookings,
+    d.total_diversity_score,
     d.first_individual_booking_date,
     d.last_individual_booking_date,
     u.user_birth_date,

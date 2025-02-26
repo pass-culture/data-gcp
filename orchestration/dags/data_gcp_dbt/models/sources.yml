@@ -144,6 +144,7 @@ sources:
       - name: tiktok_video_detail
       - name: offer_types
       - name: user_locations
+      - name: user_address
       - name: zendesk_macro_usage
       - name: zendesk_ticket
 

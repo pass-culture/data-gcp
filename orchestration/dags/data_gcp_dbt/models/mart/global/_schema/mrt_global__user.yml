@@ -205,3 +205,6 @@ models:
       - name: total_recredit_amount
         description: '{{ doc("column__total_recredit_amount") }}'
         data_type: FLOAT64
+      - name: total_diversity_score
+        description: '{{ doc("column__total_diversity_score") }}'
+        data_type: INT64

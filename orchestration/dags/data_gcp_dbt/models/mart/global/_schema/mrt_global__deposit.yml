@@ -108,6 +108,9 @@ models:
       - name: total_non_cancelled_individual_bookings
         description: '{{ doc("column__total_non_cancelled_individual_bookings") }}'
         data_type: INT64
+      - name: total_diversity_score
+        description: '{{ doc("column__total_diversity_score")}}'
+        data_type: INT64
       - name: first_individual_booking_date
         description: '{{ doc("column__first_individual_booking_date") }}'
         data_type: DATE

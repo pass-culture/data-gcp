@@ -56,6 +56,7 @@ select
     b.isbn,
     b.offer_type_label,
     b.offer_sub_type_label,
+    b.diversity_score,
     u.user_iris_internal_id,
     u.user_postal_code,
     u.user_department_code,

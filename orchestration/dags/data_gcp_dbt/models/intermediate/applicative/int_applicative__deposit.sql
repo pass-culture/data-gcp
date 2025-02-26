@@ -7,7 +7,8 @@ with
             count(distinct "id") as total_recredit,
             sum("amount") as total_recredit_amount
         from {{ source("raw", "applicative_database_recredit") }}
-        group by "depositId")
+        group by "depositId"
+    )
 
 select
     d.id as deposit_id,

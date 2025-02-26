@@ -8,12 +8,14 @@ from common.config import (
     BIGQUERY_ML_RECOMMENDATION_DATASET,
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
+    DS_AIRFLOW_DAG_TAG,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     INSTANCES_TYPES,
     MLFLOW_BUCKET_NAME,
     MLFLOW_URL,
     SLACK_CONN_PASSWORD,
+    VM_AIRFLOW_DAG_TAG,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -88,6 +90,7 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     render_template_as_native_obj=True,  # be careful using this because "3.10" is rendered as 3.1 if not double escaped
     doc_md="This DAG is used to train a two-towers model. It takes the data from ml_reco__training_data_click which is computed every day.",
+    tags=[DS_AIRFLOW_DAG_TAG, VM_AIRFLOW_DAG_TAG],
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -271,7 +274,7 @@ with DAG(
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/upload_embeddings_to_bq.py "
         "--experiment-name {{ params.experiment_name }} "
         "--run-name {{ params.run_name }} "
-        f"--dataset-id { BIGQUERY_ML_PREPROCESSING_DATASET }",
+        f"--dataset-id {BIGQUERY_ML_PREPROCESSING_DATASET}",
         dag=dag,
     )
 

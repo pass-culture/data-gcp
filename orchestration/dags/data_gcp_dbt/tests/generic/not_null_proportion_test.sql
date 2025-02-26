@@ -1,4 +1,10 @@
-{% test not_null_proportion(model, column_name, where_condition, warn_if, anomaly_threshold_alert_percentage) %}
+{% test not_null_proportion(
+    model,
+    column_name,
+    where_condition,
+    warn_if,
+    anomaly_threshold_alert_percentage
+) %}
 
     with
         validation as (

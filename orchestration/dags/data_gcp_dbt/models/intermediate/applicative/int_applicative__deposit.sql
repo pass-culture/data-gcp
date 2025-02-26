@@ -1,7 +1,16 @@
+with
+
+    recredits_grouped_by_deposit as (
+        select
+            "depositId" as deposit_id,
+            max("dateCreated") as last_recredit_date,
+            count(distinct "id") as total_recredit,
+            sum("amount") as total_recredit_amount
+        from {{ source("raw", "applicative_database_recredit") }}
+        group by "depositId")
+
 select
     d.id as deposit_id,
-    -- HOTFIX: Adjust 'amount' from 90 to 80 to correct a discrepancy (55 deposit are
-    -- concerned)
     u.user_id,
     u.user_birth_date,
     d.source,
@@ -9,6 +18,11 @@ select
     d.dateupdated as deposit_update_date,
     d.expirationdate as deposit_expiration_date,
     d.type as deposit_type,
+    rd.last_recredit_date,
+    rd.total_recredit,
+    rd.total_recredit_amount,
+    -- HOTFIX: Adjust 'amount' from 90 to 80 to correct a discrepancy (55 deposit are
+    -- concerned)
     case
         when d.type = "GRANT_15_17" and d.amount > 80
         then 80
@@ -39,3 +53,4 @@ select
     ) as deposit_rank_desc
 from {{ source("raw", "applicative_database_deposit") }} as d
 left join {{ ref("int_applicative__user") }} as u on d.userid = u.user_id
+left join recredits_grouped_by_deposit as rd on d.id = rd.deposit_id

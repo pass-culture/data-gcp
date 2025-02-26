@@ -3,7 +3,7 @@ with
     recredits_grouped_by_deposit as (
         select
             deposit_id,
-            max(recredit_creation_date) as last_recredit_date,
+            max(date(recredit_creation_date)) as last_recredit_date,
             count(distinct recredit_id) as total_recredit,
             sum(recredit_amount) as total_recredit_amount
         from {{ source("raw", "applicative_database_recredit") }}

@@ -15,20 +15,20 @@ revenue_union as (
     SELECT
         venue_id,
         toStartOfYear(year) AS year,
-        revenue AS collective_revenue,
-        0 AS individual_revenue,
-        expected_revenue AS collective_expected_revenue,
-        0 AS individual_expected_revenue
+        collective_revenue,
+        individual_revenue,
+        collective_expected_revenue,
+        individual_expected_revenue
     FROM
         analytics.yearly_aggregated_venue_collective_revenue
     UNION ALL
     SELECT
         venue_id,
         toStartOfYear(year) AS year,
-        0 AS collective_revenue,
-        revenue AS individual_revenue,
-        0 AS collective_expected_revenue,
-        expected_revenue AS individual_expected_revenue
+        collective_revenue,
+        individual_revenue,
+        collective_expected_revenue,
+        individual_expected_revenue
     FROM
         analytics.yearly_aggregated_venue_individual_revenue
 )

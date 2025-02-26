@@ -87,6 +87,15 @@ models:
       - name: deposit_rank_desc
         description: '{{ doc("column__deposit_rank_desc") }}'
         data_type: INT64
+      - name: last_recredit_date
+        description: '{{ doc("column__last_recredit_date") }}'
+        data_type: DATE
+      - name: total_recredit
+        description: '{{ doc("column__total_recredit") }}'
+        data_type: INT64
+      - name: total_recredit_amount
+        description: '{{ doc("column__total_recredit_amount") }}'
+        data_type: FLOAT64
       - name: total_theoretical_amount_spent
         description: '{{ doc("column__total_theoretical_amount_spent") }}'
         data_type: NUMERIC

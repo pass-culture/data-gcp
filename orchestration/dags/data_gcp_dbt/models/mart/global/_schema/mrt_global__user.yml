@@ -196,6 +196,15 @@ models:
       - name: user_seniority
         description: '{{ doc("column__user_seniority") }}'
         data_type: INT64
+      - name: last_recredit_date
+        description: '{{ doc("column__last_recredit_date") }}'
+        data_type: DATE
+      - name: total_recredit
+        description: '{{ doc("column__total_recredit") }}'
+        data_type: INT64
+      - name: total_recredit_amount
+        description: '{{ doc("column__total_recredit_amount") }}'
+        data_type: FLOAT64
       - name: total_diversity_score
         description: '{{ doc("column__total_diversity_score") }}'
         data_type: INT64

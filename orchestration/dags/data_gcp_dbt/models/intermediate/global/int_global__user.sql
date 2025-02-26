@@ -44,7 +44,10 @@ with
                     then total_theoretical_amount_spent_in_digital_goods
                 end
             ) as total_last_deposit_digital_goods_amount_spent,
-            min(deposit_creation_date) as user_activation_date
+            min(deposit_creation_date) as user_activation_date,
+            max(last_recredit_date) as last_recredit_date,
+            sum(total_recredit) as total_recredit,
+            sum(total_recredit_amount) as total_recredit_amount
         from {{ ref("int_global__deposit") }}
         group by user_id
     )
@@ -97,6 +100,9 @@ select
     ah.action_history_reason as user_suspension_reason,
     dgu.first_deposit_amount,
     dgu.last_deposit_expiration_date,
+    dgu.last_recredit_date,
+    dgu.total_recredit,
+    dgu.total_recredit_amount,
     coalesce(
         u.user_activity = "Chômeur, En recherche d'emploi", false
     ) as user_is_unemployed,

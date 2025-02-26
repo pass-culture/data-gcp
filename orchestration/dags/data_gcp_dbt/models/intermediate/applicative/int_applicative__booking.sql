@@ -17,6 +17,7 @@ select
     b.venue_id,
     b.price_category_label,
     b.booking_reimbursement_date,
+    b.booking_used_recredit_type,
     d.deposit_type,
     date(b.booking_creation_date) as booking_creation_date,
     if(

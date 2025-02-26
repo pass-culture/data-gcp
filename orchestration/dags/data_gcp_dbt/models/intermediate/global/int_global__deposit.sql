@@ -78,7 +78,7 @@ with
             ) as first_paid_booking_type,
             min(
                 case when booking_intermediary_amount = 0 then booking_creation_date end
-            ) as first_paid_booking_date,
+            ) as first_paid_booking_date
         from {{ ref("int_global__booking") }}
         group by deposit_id
     )
@@ -95,6 +95,9 @@ select
     d.deposit_source,
     d.deposit_rank_asc,
     d.deposit_rank_desc,
+    d.last_recredit_date,
+    d.total_recredit,
+    d.total_recredit_amount,
     bgd.total_actual_amount_spent,
     bgd.total_theoretical_amount_spent,
     bgd.total_theoretical_amount_spent_in_digital_goods,
@@ -111,4 +114,4 @@ select
     bgd.first_paid_booking_type,
     bgd.first_paid_booking_date
 from {{ ref("int_applicative__deposit") }} as d
-left join bookings_grouped_by_deposit as bgd on bgd.deposit_id = d.deposit_id
+left join bookings_grouped_by_deposit as bgd on d.deposit_id = bgd.deposit_id

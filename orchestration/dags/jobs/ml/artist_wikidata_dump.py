@@ -6,7 +6,9 @@ from common.alerts import on_failure_combined_callback
 from common.config import (
     DAG_FOLDER,
     DATA_GCS_BUCKET_NAME,
+    DS_AIRFLOW_DAG_TAG,
     ENV_SHORT_NAME,
+    VM_AIRFLOW_DAG_TAG,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -49,6 +51,7 @@ with DAG(
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
+    tags=[DS_AIRFLOW_DAG_TAG, VM_AIRFLOW_DAG_TAG],
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",

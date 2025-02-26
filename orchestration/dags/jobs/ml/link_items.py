@@ -6,9 +6,11 @@ from common.config import (
     BIGQUERY_SANDBOX_DATASET,
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
+    DS_AIRFLOW_DAG_TAG,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
+    VM_AIRFLOW_DAG_TAG,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -81,6 +83,7 @@ with DAG(
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
+    tags=[DS_AIRFLOW_DAG_TAG, VM_AIRFLOW_DAG_TAG],
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -195,9 +198,13 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
         command="python build_semantic_space.py "
-        f"""--input-path {os.path.join(
-                    DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_DIR"],"data-*.parquet"
-                )} """
+        f"""--input-path {
+            os.path.join(
+                DAG_CONFIG["STORAGE_PATH"],
+                DAG_CONFIG["INPUT_SOURCES_DIR"],
+                "data-*.parquet",
+            )
+        } """
         f"--reduction {DAG_CONFIG['REDUCTION']} "
         f"--batch-size {DAG_CONFIG['BATCH_SIZE']} ",
     )
@@ -209,10 +216,14 @@ with DAG(
         command="python linkage_candidates.py "
         f"--batch-size {DAG_CONFIG['BATCH_SIZE']} "
         f"--reduction {DAG_CONFIG['REDUCTION']} "
-        f"""--input-path {os.path.join(
-                    DAG_CONFIG["STORAGE_PATH"],  DAG_CONFIG["INPUT_CANDIDATES_DIR"],"data-*.parquet"
-                )} """
-        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKAGE_CANDIDATES_FILENAME'])} ",
+        f"""--input-path {
+            os.path.join(
+                DAG_CONFIG["STORAGE_PATH"],
+                DAG_CONFIG["INPUT_CANDIDATES_DIR"],
+                "data-*.parquet",
+            )
+        } """
+        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'], DAG_CONFIG['LINKAGE_CANDIDATES_FILENAME'])} ",
     )
 
     link_items = SSHGCEOperator(
@@ -220,14 +231,14 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=DAG_CONFIG["BASE_DIR"],
         command="python link_items.py "
-        f"""--input-sources-path {os.path.join(
-                    DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_DIR"]
-                )} """
-        f"""--input-candidates-path {os.path.join(
-                    DAG_CONFIG["STORAGE_PATH"],  DAG_CONFIG["INPUT_CANDIDATES_DIR"]
-                )} """
-        f"--linkage-candidates-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKAGE_CANDIDATES_FILENAME'])} "
-        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'],DAG_CONFIG['LINKED_ITEMS_FILENAME'])} ",
+        f"""--input-sources-path {
+            os.path.join(DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_SOURCES_DIR"])
+        } """
+        f"""--input-candidates-path {
+            os.path.join(DAG_CONFIG["STORAGE_PATH"], DAG_CONFIG["INPUT_CANDIDATES_DIR"])
+        } """
+        f"--linkage-candidates-path {os.path.join(DAG_CONFIG['STORAGE_PATH'], DAG_CONFIG['LINKAGE_CANDIDATES_FILENAME'])} "
+        f"--output-path {os.path.join(DAG_CONFIG['STORAGE_PATH'], DAG_CONFIG['LINKED_ITEMS_FILENAME'])} ",
     )
 
     load_link_items_into_bq = GCSToBigQueryOperator(

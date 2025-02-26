@@ -36,7 +36,7 @@ models:
               anomaly_threshold_alert_percentage: 5
       - name: offerId
         data_tests:
-          - not_null_proportion_native_event:
+          - not_null_proportion:
               where_condition: "event_name = 'ConsultOffer' AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
               anomaly_threshold_alert_percentage: 5
       - name: event_date

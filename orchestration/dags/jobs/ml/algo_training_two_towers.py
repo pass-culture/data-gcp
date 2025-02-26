@@ -54,6 +54,7 @@ train_params = {
         "dev": "default-features",
         "stg": "default-features",
     }[ENV_SHORT_NAME],
+    "run_name": "updated-loss-202502",
     "batch_size": {"prod": 2048, "dev": 8192, "stg": 4096}[ENV_SHORT_NAME],
     "embedding_size": 64,
     "train_set_size": 0.95 if ENV_SHORT_NAME == "prod" else 0.8,
@@ -132,9 +133,7 @@ with DAG(
             + train_params["config_file_name"],
             type="string",
         ),
-        "run_name": Param(
-            default=train_params["config_file_name"], type=["string", "null"]
-        ),
+        "run_name": Param(default=train_params["run_name"], type=["string", "null"]),
         "experiment_name": Param(
             default=train_params["experiment_name"], type=["string", "null"]
         ),
@@ -271,7 +270,7 @@ with DAG(
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/upload_embeddings_to_bq.py "
         "--experiment-name {{ params.experiment_name }} "
         "--run-name {{ params.run_name }} "
-        f"--dataset-id { BIGQUERY_ML_PREPROCESSING_DATASET }",
+        f"--dataset-id {BIGQUERY_ML_PREPROCESSING_DATASET}",
         dag=dag,
     )
 

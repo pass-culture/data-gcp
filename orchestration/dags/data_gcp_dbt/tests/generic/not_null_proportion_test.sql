@@ -1,4 +1,4 @@
-{% test not_null_proportion(model, column_name, where_condition, warn_if) %}
+{% test not_null_proportion(model, column_name, where_condition, warn_if, anomaly_threshold_alert_percentage) %}
 
     with
         validation as (
@@ -19,6 +19,5 @@
         )
     select *
     from final
-    where proportion > {{ var("not_null_anomaly_threshold_alert_percentage") }}
-
+    where proportion > {{ anomaly_threshold_alert_percentage }}
 {% endtest %}

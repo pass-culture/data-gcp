@@ -3,13 +3,16 @@ from collections import OrderedDict
 import pandas as pd
 import tensorflow as tf
 import tensorflow_recommenders as tfrs
+from loguru import logger
 
 from two_towers_model.utils.layers import (
-    IntegerEmbeddingLayer,
+    NumericalFeatureProcessor,
     PretainedEmbeddingLayer,
     StringEmbeddingLayer,
     TextEmbeddingLayer,
 )
+
+TEMPERATURE = 0.05
 
 
 class TwoTowersModel(tfrs.models.Model):
@@ -65,14 +68,13 @@ class TwoTowersModel(tfrs.models.Model):
                 reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
             ),
             metrics=self.get_metrics(item_dataset) if item_dataset else None,
+            temperature=TEMPERATURE,
         )
 
     def get_metrics(self, item_dataset):
         index_top_k = tfrs.layers.factorized_top_k.BruteForce()
 
-        item_tensor = tf.concat(list(item_dataset.map(self.item_model)), axis=0)
-        item_embeddings = tf.math.l2_normalize(item_tensor, axis=1)
-
+        item_embeddings = tf.concat(list(item_dataset.map(self.item_model)), axis=0)
         item_ids = tf.concat(
             list(item_dataset.map(lambda item: item[self._item_idx])), axis=0
         )
@@ -89,7 +91,7 @@ class TwoTowersModel(tfrs.models.Model):
     ):
         embedding_layers = {
             "string": StringEmbeddingLayer(embedding_size=embedding_size),
-            "int": IntegerEmbeddingLayer(embedding_size=embedding_size),
+            "int": NumericalFeatureProcessor(output_size=embedding_size),
             "text": TextEmbeddingLayer(embedding_size=embedding_size),
             "pretrained": PretainedEmbeddingLayer(
                 embedding_size=embedding_size,
@@ -103,25 +105,19 @@ class TwoTowersModel(tfrs.models.Model):
         return embedding_layers[layer_type]
 
     def compute_loss(self, features, training=False):
-        user_feature_count = len(self._user_feature_names)
-        item_feature_count = len(self._item_feature_names)
+        user_features = {name: features[name] for name in self._user_feature_names}
+        item_features = {name: features[name] for name in self._item_feature_names}
+        candidate_sampling_probability = features["candidate_sampling_probability"]
 
-        user_features = features[:user_feature_count]
-        item_features = features[
-            user_feature_count : user_feature_count + item_feature_count
-        ]
-        user_embeddings = tf.math.l2_normalize(
-            self.user_model(user_features, training=training), axis=1
-        )
-        item_embeddings = tf.math.l2_normalize(
-            self.item_model(item_features, training=training), axis=1
-        )
+        user_embeddings = self.user_model(user_features, training=training)
+        item_embeddings = self.item_model(item_features, training=training)
 
         return self.task(
             query_embeddings=user_embeddings,
             candidate_embeddings=item_embeddings,
             compute_metrics=not training,
             compute_batch_metrics=not training,
+            candidate_sampling_probability=candidate_sampling_probability,
         )
 
 
@@ -139,19 +135,29 @@ class SingleTowerModel(tf.keras.models.Model):
 
         self._embedding_layers = {}
         for layer_name, layer_class in self.input_embedding_layers.items():
+            if isinstance(layer_class, NumericalFeatureProcessor):
+                training_data = self.data[layer_name]
+            else:
+                training_data = self.data[layer_name].unique()
             self._embedding_layers[layer_name] = layer_class.build_sequential_layer(
-                vocabulary=self.data[layer_name].unique()
+                input_data=training_data
             )
 
         self._dense1 = tf.keras.layers.Dense(embedding_size * 2, activation="relu")
         self._dense2 = tf.keras.layers.Dense(embedding_size)
 
-    def call(self, features: list, training=False):
+        self._norm = tf.keras.layers.UnitNormalization(axis=-1, name="l2_normalize")
+
+    def call(self, features: dict, training=False):
         feature_embeddings = []
-        for idx, embedding_layer in enumerate(self._embedding_layers.values()):
-            feature_embeddings.append(embedding_layer(features[idx]))
+
+        feature_embeddings = []
+        for feature_name, embedding_layer in self._embedding_layers.items():
+            processed = embedding_layer(features[feature_name])
+            logger.debug(f"Processed {feature_name} embedding shape: {processed.shape}")
+            feature_embeddings.append(processed)
 
         x = tf.concat(feature_embeddings, axis=1)
         x = self._dense1(x)
         x = self._dense2(x)
-        return x
+        return self._norm(x)

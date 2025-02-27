@@ -194,7 +194,7 @@ class DAG_TAGS(Enum):
 
 
 # Airflow tags
-DS_AIRFLOW_DAG_TAG = "DS"
+DAG_TAGS.DS.value = "DS"
 DE_AIRFLOW_DAG_TAG = "DE"
 VM_AIRFLOW_DAG_TAG = "VM"
 DBT_AIRFLOW_DAG_TAG = "DBT"

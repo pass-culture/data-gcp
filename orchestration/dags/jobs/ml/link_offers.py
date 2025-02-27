@@ -4,7 +4,7 @@ from common import macros
 from common.alerts import on_failure_combined_callback
 from common.config import (
     DAG_FOLDER,
-    DS_AIRFLOW_DAG_TAG,
+    DAG_TAGS,
     ENV_SHORT_NAME,
     VM_AIRFLOW_DAG_TAG,
 )
@@ -50,7 +50,7 @@ with DAG(
     dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    tags=[DS_AIRFLOW_DAG_TAG, VM_AIRFLOW_DAG_TAG],
+    tags=[DAG_TAGS.DS.value, VM_AIRFLOW_DAG_TAG],
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",

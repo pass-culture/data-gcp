@@ -1,4 +1,5 @@
 import os
+from enum import Enum
 
 from common.access_gcp_secrets import access_secret_data
 
@@ -182,6 +183,15 @@ GCE_ZONES = [
     "europe-west1-c",
     "europe-west1-d",
 ]  # Zones with GPUs and with lower CO2 emissions in europe-west1 (required to be in the proper VPC)
+
+
+class DAG_TAGS(Enum):
+    DS = "DS"
+    DE = "DE"
+    VM = "VM"
+    DBT = "DBT"
+    INCREMENTAL = "INCREMENTAL"
+
 
 # Airflow tags
 DS_AIRFLOW_DAG_TAG = "DS"

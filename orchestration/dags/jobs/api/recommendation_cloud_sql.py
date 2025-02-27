@@ -12,6 +12,7 @@ from common.config import (
     BIGQUERY_SEED_DATASET,
     DAG_FOLDER,
     DATA_GCS_BUCKET_NAME,
+    DS_AIRFLOW_DAG_TAG,
     GCP_PROJECT_ID,
     GCP_REGION,
     RECOMMENDATION_SQL_INSTANCE,
@@ -114,6 +115,7 @@ with DAG(
     dagrun_timeout=timedelta(minutes=480),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
+    tags=[DS_AIRFLOW_DAG_TAG],
 ) as dag:
     start = DummyOperator(task_id="start")
     start_drop_restore = DummyOperator(task_id="start_drop_restore")

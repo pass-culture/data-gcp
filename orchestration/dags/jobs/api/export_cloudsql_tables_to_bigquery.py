@@ -5,6 +5,7 @@ from common import macros
 from common.access_gcp_secrets import access_secret_data
 from common.alerts import task_fail_slack_alert
 from common.config import (
+    DS_AIRFLOW_DAG_TAG,
     RECOMMENDATION_SQL_INSTANCE,
 )
 from common.operators.bigquery import bigquery_job_task
@@ -63,6 +64,7 @@ dag = DAG(
     dagrun_timeout=datetime.timedelta(minutes=180),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
+    tags=[DS_AIRFLOW_DAG_TAG],
 )
 
 start = DummyOperator(task_id="start", dag=dag)

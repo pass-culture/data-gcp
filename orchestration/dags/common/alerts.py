@@ -4,7 +4,13 @@ from datetime import datetime
 
 import requests
 from common.access_gcp_secrets import access_secret_data
-from common.config import AIRFLOW_URI, ENV_SHORT_NAME, GCP_PROJECT_ID, LOCAL_ENV
+from common.config import (
+    AIRFLOW_URI,
+    DAG_TAGS,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+    LOCAL_ENV,
+)
 from common.operators.gce import StopGCEOperator
 
 from airflow import configuration
@@ -43,6 +49,8 @@ JOB_TYPE = {
         GCP_PROJECT_ID, "slack-composer-ehp-webhook-token", default=None
     ),
 }
+
+GROUP_SLACK_IDS = {DAG_TAGS.DS.value: "S08CVKQ4K9S", DAG_TAGS.DE.value: "S08CT44F7J6"}
 
 
 def task_fail_slack_alert(context):
@@ -106,11 +114,20 @@ def __task_fail_slack_alert(context, job_type):
             context.get("execution_date"), "%Y-%m-%d %H:%M:%S"
         )
 
+        dag_tags = context.get("dag").tags
+        if DAG_TAGS.DS.value in dag_tags:
+            owner_tag = DAG_TAGS.DS.value
+        else:
+            owner_tag = DAG_TAGS.DE.value
+
+        owner_slack_id = GROUP_SLACK_IDS.get(owner_tag, None)
+
         slack_msg = f"""
                 {get_env_emoji()}:
                 *Task* <{task_url}|{task_id}> has failed!
                 *Dag*: <{dag_url}|{dag_id}>
                 *Execution Time*: {execution_date}
+                *Owner*: <!subteam^{owner_slack_id}>
                 """
 
         response = requests.post(

@@ -2,6 +2,7 @@ import datetime
 
 from common.access_gcp_secrets import access_secret_data
 from common.config import (
+    DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
@@ -68,6 +69,7 @@ for partner_id, partner_name in partner_dict.items():
                 type="string",
             ),
         },
+        tags=[DAG_TAGS.DBT.value, DAG_TAGS.DE.value],
     ) as dag:
         build_context = PythonOperator(
             task_id="build_export_context",
@@ -97,7 +99,7 @@ for partner_id, partner_name in partner_dict.items():
                     "export_tables: {{ ti.xcom_pull(task_ids='build_export_context', key='table_list') | tojson }}, "
                     "export_schema: tmp_export_{{ ti.xcom_pull(task_ids='build_export_context', key='partner_name') }}, "
                     "export_schema_expiration_day : 1,"
-                    f"secret_partner_value: '{access_secret_data(GCP_PROJECT_ID,f'dbt_export_private_partner_salt_{partner_name}')}', "
+                    f"secret_partner_value: '{access_secret_data(GCP_PROJECT_ID, f'dbt_export_private_partner_salt_{partner_name}')}', "
                     "fields_obfuscation_config: {{ ti.xcom_pull(task_ids='build_export_context', key='obfuscation_config').obfuscated_fields | tojson if ti.xcom_pull(task_ids='build_export_context', key='obfuscation_config') else '{}' }}"
                     "}"
                 ),
@@ -138,7 +140,7 @@ for partner_id, partner_name in partner_dict.items():
                 f'--gcs-bucket "{BASE_BUCKET}" '
                 "--export-date \"{{ ti.xcom_pull(task_ids='build_export_context', key='export_date') }}\" "
                 "--table-list '{{ ti.xcom_pull(task_ids='build_export_context', key='table_list') | tojson }}' "
-                f"--encryption-key '{access_secret_data(GCP_PROJECT_ID,f'dbt_export_encryption_key_{partner_name}')}' "
+                f"--encryption-key '{access_secret_data(GCP_PROJECT_ID, f'dbt_export_encryption_key_{partner_name}')}' "
             ),
         )
 

@@ -7,12 +7,11 @@ from common.config import (
     BIGQUERY_ML_LINKAGE_DATASET,
     BIGQUERY_ML_PREPROCESSING_DATASET,
     DAG_FOLDER,
+    DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    ML_AIRFLOW_DAG_TAG,
     MLFLOW_BUCKET_NAME,
-    VM_AIRFLOW_DAG_TAG,
 )
 from common.operators.bigquery import BigQueryInsertJobOperator
 from common.operators.gce import (
@@ -77,7 +76,7 @@ with DAG(
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    tags=[ML_AIRFLOW_DAG_TAG, VM_AIRFLOW_DAG_TAG],
+    tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",

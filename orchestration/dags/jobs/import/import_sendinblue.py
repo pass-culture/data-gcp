@@ -4,6 +4,7 @@ from common import macros
 from common.alerts import on_failure_combined_callback
 from common.config import (
     DAG_FOLDER,
+    DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
@@ -70,6 +71,7 @@ with DAG(
             type="string",
         ),
     },
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,

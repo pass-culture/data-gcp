@@ -6,6 +6,7 @@ from common.alerts import on_failure_combined_callback
 from common.config import (
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
+    DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -69,6 +70,7 @@ with DAG(
     },
     template_searchpath=DAG_FOLDER,
     user_defined_macros=macros.default,
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
     start = DummyOperator(task_id="start")
 

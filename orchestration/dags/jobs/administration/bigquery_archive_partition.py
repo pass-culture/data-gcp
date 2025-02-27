@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from common.alerts import on_failure_combined_callback
 from common.config import (
+    DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
@@ -68,6 +69,7 @@ dag = DAG(
             type="string",
         ),
     },
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 )
 
 gce_instance_start = StartGCEOperator(

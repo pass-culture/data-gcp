@@ -131,7 +131,7 @@ def __task_fail_slack_alert(context, job_type):
                 f"Request to Slack returned an error {response.status_code}, response: {response.text}"
             )
 
-        return None
+    return None
 
 
 def dbt_test_slack_alert(results_json, manifest_json, job_type="dbt-test", **context):

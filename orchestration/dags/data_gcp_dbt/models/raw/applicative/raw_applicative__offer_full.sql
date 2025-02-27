@@ -6,8 +6,6 @@
         to_hex(md5(to_json_string(offer))) as custom_scd_id
     from {{ source("raw", "applicative_database_offer_legacy") }} as offer
 
-{% else %}
-
-select 1 as dummy_column
+{% else %} select 1 as dummy_column
 
 {% endif %}

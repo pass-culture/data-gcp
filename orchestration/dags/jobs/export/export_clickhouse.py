@@ -9,7 +9,6 @@ from common.config import (
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    INCREMENTAL_AIRFLOW_DAG_TAG,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -92,7 +91,7 @@ for dag_name, dag_params in dags.items():
         dagrun_timeout=datetime.timedelta(minutes=1440),
         user_defined_macros=macros.default,
         template_searchpath=DAG_FOLDER,
-        tags=[INCREMENTAL_AIRFLOW_DAG_TAG, DAG_TAGS.DE.value, DAG_TAGS.VM.value],
+        tags=[DAG_TAGS.INCREMENTAL.value, DAG_TAGS.DE.value, DAG_TAGS.VM.value],
         params={
             "branch": Param(
                 default="production" if ENV_SHORT_NAME == "prod" else "master",

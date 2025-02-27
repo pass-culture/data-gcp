@@ -193,10 +193,5 @@ class DAG_TAGS(Enum):
     INCREMENTAL = "INCREMENTAL"
 
 
-# Airflow tags
-DAG_TAGS.DBT.value = "DBT"
-INCREMENTAL_AIRFLOW_DAG_TAG = "INCREMENTAL"
-
-
 # UV Version
 UV_VERSION = "0.5.2"

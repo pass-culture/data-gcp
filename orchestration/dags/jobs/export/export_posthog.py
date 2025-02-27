@@ -5,8 +5,8 @@ from common.alerts import on_failure_combined_callback, task_fail_slack_alert
 from common.config import (
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
+    DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
-    DE_AIRFLOW_DAG_TAG,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     VM_AIRFLOW_DAG_TAG,
@@ -96,7 +96,7 @@ for job_name, table_name in TABLE_PARAMS.items():
                 type="integer",
             ),
         },
-        tags=[DE_AIRFLOW_DAG_TAG, VM_AIRFLOW_DAG_TAG],
+        tags=[DAG_TAGS.DE.value, VM_AIRFLOW_DAG_TAG],
     ) as dag:
         table_config_name = f"export_{job_name}"
         table_id = f"{DATE}_{table_config_name}"
@@ -152,7 +152,7 @@ for job_name, table_name in TABLE_PARAMS.items():
             task_id=f"{table_config_name}_events_export",
             instance_name=instance_name,
             base_dir=DAG_CONFIG["BASE_DIR"],
-            command="python main.py " f"--source-gs-path {storage_path}",
+            command=f"python main.py --source-gs-path {storage_path}",
             dag=dag,
         )
 

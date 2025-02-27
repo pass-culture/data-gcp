@@ -4,7 +4,7 @@ from common import macros
 from common.alerts import on_failure_combined_callback
 from common.config import (
     DAG_FOLDER,
-    DE_AIRFLOW_DAG_TAG,
+    DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     GCS_COMPOSER_BUCKET,
@@ -71,7 +71,7 @@ with DAG(
             type="string",
         ),
     },
-    tags=[VM_AIRFLOW_DAG_TAG, DE_AIRFLOW_DAG_TAG],
+    tags=[VM_AIRFLOW_DAG_TAG, DAG_TAGS.DE.value],
 ) as dag:
     gce_instance_start = StartGCEOperator(
         instance_name="{{ params.instance_name }}",

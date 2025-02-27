@@ -4,7 +4,7 @@ from common import macros
 from common.config import (
     BIGQUERY_ANALYTICS_DATASET,
     DAG_FOLDER,
-    DE_AIRFLOW_DAG_TAG,
+    DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     VM_AIRFLOW_DAG_TAG,
@@ -70,7 +70,7 @@ with DAG(
             type="string",
         ),
     },
-    tags=[DE_AIRFLOW_DAG_TAG, VM_AIRFLOW_DAG_TAG],
+    tags=[DAG_TAGS.DE.value, VM_AIRFLOW_DAG_TAG],
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
 

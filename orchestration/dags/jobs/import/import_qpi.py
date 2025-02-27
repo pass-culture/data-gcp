@@ -5,8 +5,8 @@ from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
+    DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
-    DE_AIRFLOW_DAG_TAG,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
@@ -71,7 +71,7 @@ with DAG(
     dagrun_timeout=timedelta(minutes=180),
     template_searchpath=DAG_FOLDER,
     user_defined_macros=macros.default,
-    tags=[DE_AIRFLOW_DAG_TAG],
+    tags=[DAG_TAGS.DE.value],
 ) as dag:
     start = DummyOperator(task_id="start")
 

@@ -5,8 +5,8 @@ from common.alerts import on_failure_combined_callback
 from common.config import (
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
+    DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
-    DE_AIRFLOW_DAG_TAG,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     VM_AIRFLOW_DAG_TAG,
@@ -89,7 +89,7 @@ with DAG(
             type="string",
         ),
     },
-    tags=[DE_AIRFLOW_DAG_TAG, VM_AIRFLOW_DAG_TAG],
+    tags=[DAG_TAGS.DE.value, VM_AIRFLOW_DAG_TAG],
 ) as dag:
     start = DummyOperator(task_id="start")
 

@@ -2,7 +2,7 @@ import datetime
 
 from common.alerts import on_failure_combined_callback
 from common.config import (
-    DE_AIRFLOW_DAG_TAG,
+    DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     VM_AIRFLOW_DAG_TAG,
@@ -48,7 +48,7 @@ with DAG(
             type="string",
         )
     },
-    tags=[DE_AIRFLOW_DAG_TAG, VM_AIRFLOW_DAG_TAG],
+    tags=[DAG_TAGS.DE.value, VM_AIRFLOW_DAG_TAG],
 ) as dag:
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,

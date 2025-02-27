@@ -9,7 +9,7 @@ from common.config import (
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
-    DE_AIRFLOW_DAG_TAG,
+    DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
@@ -37,7 +37,7 @@ dag = DAG(
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    tags=[DE_AIRFLOW_DAG_TAG],
+    tags=[DAG_TAGS.DE.value],
 )
 
 QUALTRICS_TOKEN = access_secret_data(
@@ -103,7 +103,7 @@ def get_and_send(**kwargs):
             t.* except(calculation_month, export_date)
         FROM `{dataset_id}.{table_name}` t
         LEFT JOIN user_email ue on ue.user_id = t.user_id
-        WHERE t.calculation_month = date_trunc(date("{ execution_date }"), month)
+        WHERE t.calculation_month = date_trunc(date("{execution_date}"), month)
         """
     else:
         sql = f"""
@@ -111,7 +111,7 @@ def get_and_send(**kwargs):
             CURRENT_TIMESTAMP() as export_date,
             t.* except(calculation_month, export_date)
         FROM `{dataset_id}.{table_name}` t
-        WHERE t.calculation_month = date_trunc(date("{ execution_date }"), month)
+        WHERE t.calculation_month = date_trunc(date("{execution_date}"), month)
         """
     df = pd.read_gbq(sql)
     export = df.to_csv(index=False)

@@ -8,7 +8,6 @@ from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    VM_AIRFLOW_DAG_TAG,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -63,7 +62,7 @@ with DAG(
         "max_rows": 50_000,
         "chunk_size": 500,
     },
-    tags=[DAG_TAGS.DE.value, VM_AIRFLOW_DAG_TAG],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
     start = DummyOperator(task_id="start")
 

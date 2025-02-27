@@ -8,7 +8,6 @@ from common.config import (
     DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
-    VM_AIRFLOW_DAG_TAG,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -51,7 +50,7 @@ with DAG(
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    tags=[DAG_TAGS.DS.value, VM_AIRFLOW_DAG_TAG],
+    tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",

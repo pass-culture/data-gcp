@@ -8,7 +8,6 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     GCS_COMPOSER_BUCKET,
-    VM_AIRFLOW_DAG_TAG,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -71,7 +70,7 @@ with DAG(
             type="string",
         ),
     },
-    tags=[VM_AIRFLOW_DAG_TAG, DAG_TAGS.DE.value],
+    tags=[DAG_TAGS.VM.value, DAG_TAGS.DE.value],
 ) as dag:
     gce_instance_start = StartGCEOperator(
         instance_name="{{ params.instance_name }}",

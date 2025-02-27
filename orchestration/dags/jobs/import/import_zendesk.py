@@ -9,7 +9,6 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     INSTANCES_TYPES,
-    VM_AIRFLOW_DAG_TAG,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -70,7 +69,7 @@ with DAG(
             enum=list(chain(*INSTANCES_TYPES["cpu"].values())),
         ),
     },
-    tags=[DAG_TAGS.DE.value, VM_AIRFLOW_DAG_TAG],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
     gce_instance_start = StartGCEOperator(
         instance_name="{{ params.instance_name }}",

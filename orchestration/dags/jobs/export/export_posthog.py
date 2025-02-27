@@ -9,7 +9,6 @@ from common.config import (
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    VM_AIRFLOW_DAG_TAG,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -96,7 +95,7 @@ for job_name, table_name in TABLE_PARAMS.items():
                 type="integer",
             ),
         },
-        tags=[DAG_TAGS.DE.value, VM_AIRFLOW_DAG_TAG],
+        tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
     ) as dag:
         table_config_name = f"export_{job_name}"
         table_id = f"{DATE}_{table_config_name}"

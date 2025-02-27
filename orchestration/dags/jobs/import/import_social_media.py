@@ -7,7 +7,6 @@ from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    VM_AIRFLOW_DAG_TAG,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -49,7 +48,7 @@ with DAG(
             type="integer",
         ),
     },
-    tags=[DAG_TAGS.DE.value, VM_AIRFLOW_DAG_TAG],
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ):
     for social_network in ["tiktok", "instagram"]:
         gce_instance = f"import-{social_network}-{ENV_SHORT_NAME}"

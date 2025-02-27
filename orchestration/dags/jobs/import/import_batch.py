@@ -2,7 +2,13 @@ from datetime import datetime, timedelta
 
 from common import macros
 from common.alerts import on_failure_combined_callback
-from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
+from common.config import (
+    DAG_FOLDER,
+    DE_AIRFLOW_DAG_TAG,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+    VM_AIRFLOW_DAG_TAG,
+)
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -44,6 +50,7 @@ with DAG(
     },
     template_searchpath=DAG_FOLDER,
     user_defined_macros=macros.default,
+    tags=[DE_AIRFLOW_DAG_TAG, VM_AIRFLOW_DAG_TAG],
 ) as dag:
     start = DummyOperator(task_id="start")
 

@@ -3,8 +3,10 @@ from datetime import datetime, timedelta
 
 from common.alerts import on_failure_combined_callback
 from common.config import (
+    DE_AIRFLOW_DAG_TAG,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+    VM_AIRFLOW_DAG_TAG,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -68,6 +70,7 @@ dag = DAG(
             type="string",
         ),
     },
+    tags=[DE_AIRFLOW_DAG_TAG, VM_AIRFLOW_DAG_TAG],
 )
 
 gce_instance_start = StartGCEOperator(

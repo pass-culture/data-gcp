@@ -6,8 +6,11 @@ from common.config import (
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     DATA_GCS_BUCKET_NAME,
+    DE_AIRFLOW_DAG_TAG,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+    INCREMENTAL_AIRFLOW_DAG_TAG,
+    VM_AIRFLOW_DAG_TAG,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -90,7 +93,7 @@ for dag_name, dag_params in dags.items():
         dagrun_timeout=datetime.timedelta(minutes=1440),
         user_defined_macros=macros.default,
         template_searchpath=DAG_FOLDER,
-        tags=["Incremental"],
+        tags=[INCREMENTAL_AIRFLOW_DAG_TAG, DE_AIRFLOW_DAG_TAG, VM_AIRFLOW_DAG_TAG],
         params={
             "branch": Param(
                 default="production" if ENV_SHORT_NAME == "prod" else "master",

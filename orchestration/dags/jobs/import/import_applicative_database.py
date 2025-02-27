@@ -4,6 +4,7 @@ from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
+    DE_AIRFLOW_DAG_TAG,
     GCP_PROJECT_ID,
 )
 from common.operators.bigquery import bigquery_federated_query_task, bigquery_job_task
@@ -36,6 +37,7 @@ dag = DAG(
     dagrun_timeout=datetime.timedelta(minutes=480),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
+    tags=[DE_AIRFLOW_DAG_TAG],
 )
 
 start = DummyOperator(task_id="start", dag=dag)

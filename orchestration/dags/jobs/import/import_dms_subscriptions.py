@@ -7,8 +7,10 @@ from common.config import (
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
     DATA_GCS_BUCKET_NAME,
+    DE_AIRFLOW_DAG_TAG,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+    VM_AIRFLOW_DAG_TAG,
 )
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
@@ -69,6 +71,7 @@ with DAG(
     },
     template_searchpath=DAG_FOLDER,
     user_defined_macros=macros.default,
+    tags=[DE_AIRFLOW_DAG_TAG, VM_AIRFLOW_DAG_TAG],
 ) as dag:
     start = DummyOperator(task_id="start")
 

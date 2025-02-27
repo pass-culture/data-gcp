@@ -9,6 +9,7 @@ from common.config import (
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
+    DE_AIRFLOW_DAG_TAG,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
@@ -36,6 +37,7 @@ dag = DAG(
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
+    tags=[DE_AIRFLOW_DAG_TAG],
 )
 
 QUALTRICS_TOKEN = access_secret_data(

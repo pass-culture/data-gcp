@@ -2,6 +2,8 @@ import datetime
 
 from common.alerts import task_fail_slack_alert
 from common.config import (
+    DBT_AIRFLOW_DAG_TAG,
+    DE_AIRFLOW_DAG_TAG,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
@@ -62,6 +64,7 @@ dag = DAG(
             type="boolean",
         ),
     },
+    tags=[DBT_AIRFLOW_DAG_TAG, DE_AIRFLOW_DAG_TAG],
 )
 
 # Define initial and final tasks

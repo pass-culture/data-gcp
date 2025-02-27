@@ -6,8 +6,10 @@ from common.config import (
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
     DATA_GCS_BUCKET_NAME,
+    DE_AIRFLOW_DAG_TAG,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+    VM_AIRFLOW_DAG_TAG,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -87,6 +89,7 @@ with DAG(
             type="string",
         ),
     },
+    tags=[DE_AIRFLOW_DAG_TAG, VM_AIRFLOW_DAG_TAG],
 ) as dag:
     start = DummyOperator(task_id="start")
 

@@ -2,7 +2,7 @@ import datetime
 
 from common import macros
 from common.alerts import on_failure_combined_callback
-from common.config import DAG_FOLDER, GCP_PROJECT_ID
+from common.config import DAG_FOLDER, DE_AIRFLOW_DAG_TAG, GCP_PROJECT_ID
 from common.operators.bigquery import bigquery_job_task
 from common.utils import depends_loop, get_airflow_schedule
 from dependencies.propilote.export_propilote import propilote_tables
@@ -27,6 +27,7 @@ dag = DAG(
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
+    tags=[DE_AIRFLOW_DAG_TAG],
 )
 
 

@@ -3,7 +3,6 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
-    DBT_AIRFLOW_DAG_TAG,
     ELEMENTARY_PYTHON_PATH,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -47,7 +46,7 @@ dag = DAG(
             type="string",
         ),
     },
-    tags=[DBT_AIRFLOW_DAG_TAG, DAG_TAGS.DE.value],
+    tags=[DAG_TAGS.DBT.value, DAG_TAGS.DE.value],
 )
 
 start = DummyOperator(task_id="start", dag=dag)

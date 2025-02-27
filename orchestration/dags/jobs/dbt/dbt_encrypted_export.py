@@ -3,7 +3,6 @@ import datetime
 from common.access_gcp_secrets import access_secret_data
 from common.config import (
     DAG_TAGS,
-    DBT_AIRFLOW_DAG_TAG,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
@@ -70,7 +69,7 @@ for partner_id, partner_name in partner_dict.items():
                 type="string",
             ),
         },
-        tags=[DBT_AIRFLOW_DAG_TAG, DAG_TAGS.DE.value],
+        tags=[DAG_TAGS.DBT.value, DAG_TAGS.DE.value],
     ) as dag:
         build_context = PythonOperator(
             task_id="build_export_context",

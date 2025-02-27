@@ -3,7 +3,6 @@ import datetime
 from common import macros
 from common.config import (
     DAG_TAGS,
-    DBT_AIRFLOW_DAG_TAG,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
@@ -54,7 +53,7 @@ dag = DAG(
             type="string",
         ),
     },
-    tags=[DBT_AIRFLOW_DAG_TAG, DAG_TAGS.DE.value],
+    tags=[DAG_TAGS.DBT.value, DAG_TAGS.DE.value],
 )
 
 start = DummyOperator(task_id="start", dag=dag)

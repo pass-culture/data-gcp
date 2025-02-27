@@ -194,7 +194,7 @@ class DAG_TAGS(Enum):
 
 
 # Airflow tags
-DBT_AIRFLOW_DAG_TAG = "DBT"
+DAG_TAGS.DBT.value = "DBT"
 INCREMENTAL_AIRFLOW_DAG_TAG = "INCREMENTAL"
 
 

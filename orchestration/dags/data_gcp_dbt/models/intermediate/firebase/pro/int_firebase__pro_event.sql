@@ -100,7 +100,8 @@ with
             status as offer_status,
             imagecreationstage as image_creation_stage,
             json_extract_array(selected_offers) as selected_offers_array,
-            array_length(json_extract_array(selected_offers)) > 1 as multiple_selection
+            array_length(json_extract_array(selected_offers)) > 1 as multiple_selection,
+            actionType as headline_offer_action_type
         from {{ ref("int_firebase__pro_event_flattened") }}
         {% if is_incremental() %}
             where
@@ -177,7 +178,8 @@ select
     coalesce(cast(offer_id_from_array as string), cast(offer_id as string)) as offer_id,
     coalesce(offer_status_from_array, offer_status) as offer_status,
     cast(offer_type as string) as offer_type,
-    image_creation_stage
+    image_creation_stage,
+    headline_offer_action_type
 from unnested_events
 
 union all
@@ -238,6 +240,7 @@ select
     cast(offer_id as string) as offer_id,
     cast(offer_status as string) as offer_status,
     cast(offer_type as string) as offer_type,
-    image_creation_stage
+    image_creation_stage,
+    headline_offer_action_type
 from pro_event_raw_data
 where selected_offers_array is null

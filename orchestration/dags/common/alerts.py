@@ -44,6 +44,8 @@ JOB_TYPE = {
     ),
 }
 
+GROUP_SLACK_IDS = {"DS": "S08CVKQ4K9S", "DE": "S08CT44F7J6"}
+
 
 def task_fail_slack_alert(context):
     return __task_fail_slack_alert(context, job_type=ENV_SHORT_NAME)
@@ -106,11 +108,17 @@ def __task_fail_slack_alert(context, job_type):
             context.get("execution_date"), "%Y-%m-%d %H:%M:%S"
         )
 
+        owner_tag = [
+            owner for owner in context.get("dag").tags if owner in ["DS", "DE"]
+        ][0]
+        owner_slack_id = GROUP_SLACK_IDS.get(owner_tag, None)
+
         slack_msg = f"""
                 {get_env_emoji()}:
                 *Task* <{task_url}|{task_id}> has failed!
                 *Dag*: <{dag_url}|{dag_id}>
                 *Execution Time*: {execution_date}
+                *Owner*: <!subteam^{owner_slack_id}>
                 """
 
         response = requests.post(
@@ -123,7 +131,7 @@ def __task_fail_slack_alert(context, job_type):
                 f"Request to Slack returned an error {response.status_code}, response: {response.text}"
             )
 
-    return None
+        return None
 
 
 def dbt_test_slack_alert(results_json, manifest_json, job_type="dbt-test", **context):

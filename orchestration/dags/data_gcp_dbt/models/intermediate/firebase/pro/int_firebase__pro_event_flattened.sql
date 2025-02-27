@@ -51,6 +51,7 @@ select
                 "status",
                 "selected_offers",
                 "imageCreationStage",
+                "actionType",
             ]
         )
     }},

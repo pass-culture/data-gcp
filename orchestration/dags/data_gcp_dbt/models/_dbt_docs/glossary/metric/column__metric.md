@@ -80,3 +80,4 @@ title: Metrics
 {% docs column__ratio_current_credit_utilization %} The ratio of current credit utilization for the educational institution based on validated bookings {% enddocs %}
 {% docs column__ratio_beneficiary_students %}The ratio of beneficiary students for the educational institution.{% enddocs %}
 {% docs column__mean_stock_price_per_item %} The average stock price for the item. {% enddocs %}
+{% docs column__total_diversity_score %} The total diversity score of the user or the deposit {% enddocs %}

@@ -77,6 +77,9 @@ models:
       - name: booking_used_date
         description: '{{ doc("column__booking_used_date") }}'
         data_type: DATETIME
+      - name: booking_used_recredit_type
+        description: '{{ doc("column__booking_used_recredit_type") }}'
+        data_type: STRING
       - name: stock_beginning_date
         description: '{{ doc("column__stock_beginning_date") }}'
         data_type: DATETIME
@@ -263,3 +266,6 @@ models:
       - name: offer_type_label
         description: "{{ doc('column__offer_type_label') }}"
         data_type: STRING
+      - name: diversity_score
+        description: "{{ doc('column__diversity_score') }}"
+        data_type: INT64

@@ -9,6 +9,7 @@ from common.config import (
     GCP_PROJECT_ID,
     LOCAL_ENV,
 )
+from google.api_core.exceptions import NotFound
 from google.auth.transport.requests import Request
 from google.cloud import storage
 from google.oauth2 import id_token
@@ -404,11 +405,18 @@ def sparkql_health_check(url: str, timeout=5, retries=5, initial_delay=5):
     raise Exception(f"Health check failed for {url} after {retries} attempts.")
 
 
-def get_json_from_gcs(bucket_name, blob_name):
-    client = storage.Client()
-    bucket = client.bucket(bucket_name)
-    blob = bucket.blob(blob_name)
-    return json.loads(blob.download_as_text())
+def get_json_from_gcs(bucket_name: str, blob_name: str) -> dict:
+    """
+    Fetch a JSON file from Google Cloud Storage.
+    """
+    try:
+        client = storage.Client()
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob(blob_name)
+        return json.loads(blob.download_as_text())
+    except NotFound as e:
+        logging.error(f"Error fetching JSON from GCS: {str(e)}")
+        return {}
 
 
 def save_json_to_gcs(data_dict, bucket_name, blob_name):

@@ -27,7 +27,7 @@
     from
         external_query(
             "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",
-            '''SELECT
+            """SELECT
         CAST("id" AS varchar(255)) as booking_id
         , "dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as booking_creation_date
         , CAST("stockId" AS varchar(255)) as stock_id
@@ -46,8 +46,9 @@
         , CAST("venueId" AS varchar(255)) as venue_id
         ,"priceCategoryLabel" AS price_category_label
         , "reimbursementDate" AS booking_reimbursement_date
+        , "usedRecreditType" AS booking_used_recredit_type
     FROM public.booking
-    '''
+    """
         )
 
 {% endsnapshot %}

@@ -6,7 +6,6 @@
     {%- if execution_date is string -%} {%- set formatted_date = execution_date -%}
     {%- else -%} {%- set formatted_date = execution_date.strftime("%Y-%m-%d") -%}
     {%- endif -%}
-    {{ print("Execution date: " ~ formatted_date) }}
     {%- if formatted_date[-2:] == "01" -%} {{ return("TRUE") }}
     {%- else -%} {{ return("FALSE") }}
     {%- endif -%}

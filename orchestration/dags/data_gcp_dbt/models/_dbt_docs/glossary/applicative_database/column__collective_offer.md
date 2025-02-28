@@ -25,7 +25,6 @@
 {% docs column__collective_offer_template_beginning_date %} Beginning publication date for template offer (if null : permanent). {% enddocs %}
 {% docs column__collective_offer_template_ending_date %} Ending publication date for template offer (if null : permanent). {% enddocs %}
 {% docs column__collective_offer_rejection_reason %} For offers rejected by pass Culture team, rejection's reason (ineligble offers, missing information etc). {% enddocs %}
-{% docs column__is_local_authority %} Indicates if the offerer is a local authority or not. {% enddocs %}
 
 * To migrate to more specific files *
 {% docs column__template_id %} Identifier for the template associated with the collective offer. {% enddocs %}

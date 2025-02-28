@@ -19,3 +19,4 @@
 {% docs column__first_booking_date %} Date of the first booking. {% enddocs %}
 {% docs column__last_booking_date %} Date of the last booking. {% enddocs %}
 {% docs column__last_individual_booking_date %} Date of the last individual booking. {% enddocs %}
+

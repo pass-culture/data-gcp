@@ -269,3 +269,6 @@ models:
       - name: diversity_score
         description: "{{ doc('column__diversity_score') }}"
         data_type: INT64
+      - name: is_local_authority
+        description: "{{ doc('column__is_local_authority') }}"
+        data_type: BOOLEAN

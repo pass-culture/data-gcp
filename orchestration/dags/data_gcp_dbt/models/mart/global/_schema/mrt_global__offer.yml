@@ -272,3 +272,6 @@ models:
       - name: offer_last_provider_id
         description: '{{ doc("column__offer_last_provider_id") }}'
         data_type: STRING
+      - name: is_local_authority
+        description: "{{ doc('column__is_local_authority') }}"
+        data_type: BOOLEAN

@@ -124,3 +124,12 @@ models:
         description: "{{ doc('column__collective_offer_image_id') }}"
       - name: is_current_year_booking
         description: "{{ doc('column__collective_booking_is_current') }}"
+      - name: is_local_authority
+        description: "{{ doc('column__is_local_authority') }}"
+        data_type: BOOLEAN
+      - name: venue_is_permanent
+        description: "{{ doc('column__venue_is_permanent') }}"
+        data_type: BOOLEAN
+      - name: venue_type_label
+        description: "{{ doc('column__venue_type_label') }}"
+        data_type: STRING

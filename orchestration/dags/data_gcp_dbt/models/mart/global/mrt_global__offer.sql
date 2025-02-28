@@ -76,6 +76,7 @@ select
     venue_type_label,
     venue_iris_internal_id,
     offerer_address_id,
+    is_local_authority,
     offer_publication_date,
     is_future_scheduled,
     total_headlines,

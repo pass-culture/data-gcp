@@ -22,6 +22,8 @@ argparse==1.4.0
     # via unittest2
 astunparse==1.6.3
     # via tensorflow
+async-timeout==4.0.3
+    # via aiohttp
 attrs==24.2.0
     # via
     #   aiohttp
@@ -73,6 +75,8 @@ docker==7.1.0
     #   mlflow
 ecdsa==0.19.0
     # via python-jose
+exceptiongroup==1.2.2
+    # via pytest
 filelock==3.16.1
     # via
     #   huggingface-hub
@@ -550,6 +554,10 @@ threadpoolctl==3.5.0
     # via scikit-learn
 tokenizers==0.20.0
     # via transformers
+tomli==2.2.1
+    # via
+    #   coverage
+    #   pytest
 torch==2.4.1
     # via
     #   sentence-transformers
@@ -580,6 +588,7 @@ typing-extensions==4.12.2
     #   alembic
     #   huggingface-hub
     #   mlflow-skinny
+    #   multidict
     #   opentelemetry-sdk
     #   pydantic
     #   pydantic-core

@@ -9,4 +9,5 @@ SELECT
     , CAST("collectiveBookingId" AS varchar(255)) AS collective_booking_id
     , CAST("venueId" AS varchar(255)) AS venue_id
     , CAST("pricingPointId" AS varchar(255)) AS pricing_point_id
+    , CAST("bookingFinanceIncidentId" AS varchar(255)) AS booking_finance_incident_id
 FROM finance_event

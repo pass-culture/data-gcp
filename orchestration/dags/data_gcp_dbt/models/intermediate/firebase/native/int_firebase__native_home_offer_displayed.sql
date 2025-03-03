@@ -15,9 +15,11 @@ select
     offer_id_split as offer_id,
     module_id,
     entry_id,
+    user_id,
+    unique_session_id,
     position + 1 as displayed_position
 from
-    {{ ref("int_firebase__native_event") }} native_event,
+    {{ ref("int_firebase__native_event") }} as native_event,
     unnest(displayed_offers) as offer_id_split
 with
 offset as position

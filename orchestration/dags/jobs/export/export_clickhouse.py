@@ -5,6 +5,7 @@ from common.alerts import on_failure_combined_callback, task_fail_slack_alert
 from common.config import (
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
+    DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -90,7 +91,7 @@ for dag_name, dag_params in dags.items():
         dagrun_timeout=datetime.timedelta(minutes=1440),
         user_defined_macros=macros.default,
         template_searchpath=DAG_FOLDER,
-        tags=["Incremental"],
+        tags=[DAG_TAGS.INCREMENTAL.value, DAG_TAGS.DE.value, DAG_TAGS.VM.value],
         params={
             "branch": Param(
                 default="production" if ENV_SHORT_NAME == "prod" else "master",

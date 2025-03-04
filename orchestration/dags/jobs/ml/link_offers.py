@@ -2,7 +2,11 @@ from datetime import datetime, timedelta
 
 from common import macros
 from common.alerts import on_failure_combined_callback
-from common.config import DAG_FOLDER, ENV_SHORT_NAME
+from common.config import (
+    DAG_FOLDER,
+    DAG_TAGS,
+    ENV_SHORT_NAME,
+)
 from common.operators.bigquery import bigquery_job_task
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -45,6 +49,7 @@ with DAG(
     dagrun_timeout=timedelta(minutes=180),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
+    tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",

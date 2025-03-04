@@ -11,6 +11,7 @@ from common.config import (
     BIGQUERY_ML_RECOMMENDATION_DATASET,
     BIGQUERY_SEED_DATASET,
     DAG_FOLDER,
+    DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
     GCP_PROJECT_ID,
     GCP_REGION,
@@ -114,6 +115,7 @@ with DAG(
     dagrun_timeout=timedelta(minutes=480),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
+    tags=[DAG_TAGS.DS.value],
 ) as dag:
     start = DummyOperator(task_id="start")
     start_drop_restore = DummyOperator(task_id="start_drop_restore")

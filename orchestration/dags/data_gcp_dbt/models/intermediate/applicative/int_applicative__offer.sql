@@ -41,38 +41,6 @@ with
         select offerid, count(*) as total_favorites
         from {{ source("raw", "applicative_database_favorite") }}
         group by offerid
-    ),
-
-    headline_offer_flattened as (
-        select
-            offer_id,
-            case
-                when
-                    date(headline_ending_time) is null
-                    or date(headline_ending_time) >= current_date
-                then true
-                else false
-            end as is_headlined,
-            min(date(headline_beginning_time)) as first_headline_date,
-            max(date(headline_ending_time)) as last_headline_date,
-            count(distinct offer_id) as total_headlines
-        from {{ ref("int_applicative__headline_offer") }}
-        group by offer_id, is_headlined
-    ),
-
-    headline_grouped_by_offer as (
-        select
-            offer_id,
-            sum(total_headlines) as total_headlines,
-            max(is_headlined) as is_headlined,
-            min(first_headline_date) as first_headline_date,
-            case
-                when count(offer_id) > count(last_headline_date)
-                then null
-                else max(last_headline_date)
-            end as last_headline_date
-        from headline_offer_flattened
-        group by offer_id
     )
 
 select
@@ -252,7 +220,7 @@ left join
 left join
     {{ source("raw", "applicative_database_future_offer") }} as future_offer
     on future_offer.offer_id = o.offer_id
-left join headline_grouped_by_offer as ho on ho.offer_id = o.offer_id
+left join {{ ref("int_applicative__headline_offer") }} as ho on ho.offer_id = o.offer_id
 where
     o.offer_subcategoryid not in ("ACTIVATION_THING", "ACTIVATION_EVENT")
     and (o.booking_email <> "jeux-concours@passculture.app" or o.booking_email is null)

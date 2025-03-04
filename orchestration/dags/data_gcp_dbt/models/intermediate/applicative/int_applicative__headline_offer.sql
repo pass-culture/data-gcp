@@ -4,7 +4,13 @@ with
             offer_id,
             venue_id,
             case
-                when date(headline_ending_time) is null then true else false
+                when
+                    safe.parse_timestamp(
+                        '%Y-%m-%d %H:%M:%E6S', regexp_extract(timespan, r',"([^"]+)"')
+                    )
+                    is null
+                then true
+                else false
             end as is_headlined,
             safe.parse_timestamp(
                 '%Y-%m-%d %H:%M:%E6S', regexp_extract(timespan, r'"([^"]+)"')

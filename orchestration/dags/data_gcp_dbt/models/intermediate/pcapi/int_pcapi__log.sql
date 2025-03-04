@@ -99,7 +99,7 @@ select
     array_to_string(
         jsonpayload.extra.filtervalues.departments, ','
     ) as department_filter,
-    jsonPayload.extra.filtervalues.geolocradius as academy_filter,
+    jsonpayload.extra.filtervalues.geolocradius as academy_filter,
     array_to_string(
         jsonpayload.extra.filtervalues.geolocradius, ','
     ) as geoloc_radius_filter,

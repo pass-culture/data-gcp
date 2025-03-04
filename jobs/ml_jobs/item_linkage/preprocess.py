@@ -54,7 +54,6 @@ def preprocess_string(s):
     s = s.strip()
     s = re.sub(r"[^\w\s]", "", s)
     s = re.sub(f"[{string.punctuation}]", "", s)
-    s = s.strip()
     s = remove_accents(s)
     return s
 

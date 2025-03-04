@@ -32,19 +32,19 @@ def setup_matching(linkage_type: str) -> recordlinkage.Compare:
     """
     comparator = recordlinkage.Compare()
     for feature_name, comparison_params in MATCHING_FEATURES[linkage_type].items():
-        if comparison_params["method"] == "string":
+        if comparison_params["method"] == "exact":
+            comparator.exact(
+                feature_name,
+                feature_name,
+                missing_value=comparison_params["missing_value"],
+                label=feature_name,
+            )
+        else:
             comparator.string(
                 feature_name,
                 feature_name,
                 method=comparison_params["method"],
                 threshold=None,
-                missing_value=comparison_params["missing_value"],
-                label=feature_name,
-            )
-        if comparison_params["method"] == "exact":
-            comparator.exact(
-                feature_name,
-                feature_name,
                 missing_value=comparison_params["missing_value"],
                 label=feature_name,
             )
@@ -73,18 +73,22 @@ def get_links(
     Returns:
         pd.DataFrame: Dataframe containing matched pairs.
     """
+
+    def threshold(value, thr=0.70):
+        if value < thr:
+            return 0
+        else:
+            return 1
+
     features = comparator.compute(candidate_links, table_left, table_right)
     features_w_threshold = features.assign(
         oeuvre=lambda df: df["oeuvre"].apply(
-            lambda value: 1
-            if value >= MATCHING_FEATURES[linkage_type]["oeuvre"]["threshold"]
-            else 0
+            threshold, thr=MATCHING_FEATURES[linkage_type]["oeuvre"]["threshold"]
         )
     )
     matches = features[
         features_w_threshold.sum(axis=1) >= MATCHES_REQUIRED
     ].reset_index()
-    matches["match_count"] = features_w_threshold.sum(axis=1)
     return matches.rename(
         columns={
             "level_0": "index_1",
@@ -194,7 +198,7 @@ def postprocess_matching(matches, item_singletons_clean, sources_clean):
         .astype({"index_2": str})
     )
 
-    matches = matches[["index_1", "index_2"]].astype(str)
+    matches[["index_1", "index_2"]] = matches[["index_1", "index_2"]].astype(str)
 
     linkage_raw = (
         matches.merge(sources_clean, on="index_2", how="left")

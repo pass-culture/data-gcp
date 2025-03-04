@@ -48,14 +48,15 @@ def preprocess_string(s):
     Returns:
         str: Processed string.
     """
-    if s is None:
-        return s
+    if s is None or s == "":
+        return None
     s = s.lower()
     s = s.strip()
     s = re.sub(r"[^\w\s]", "", s)
     s = re.sub(f"[{string.punctuation}]", "", s)
     s = s.strip()
-    return remove_accents(s)
+    s = remove_accents(s)
+    return s
 
 
 def preprocess_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
@@ -71,28 +72,15 @@ def preprocess_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
     return catalog.assign(
         performer=lambda df: df["performer"]
         .fillna(value=UNKNOWN_PERFORMER)
-        .replace("", None)
         .apply(preprocess_string),
-        offer_name=lambda df: df["offer_name"]
-        .str.strip()
-        .replace("", None)
-        .str.lower()
-        .apply(preprocess_string),
+        offer_name=lambda df: df["offer_name"].apply(preprocess_string),
         edition=lambda df: df["offer_name"]
-        .str.lower()
         .str.extract(EXTRACT_EDITION_PATTERN, expand=False)[0]
-        .astype(str)
-        .replace("nan", None)
-        .fillna(value="0"),
+        .replace("nan", "0"),
         oeuvre=lambda df: df["offer_name"]
-        .str.lower()
-        .str.replace(REMOVE_EDITION_PATTERN, "", regex=True)
-        .str.strip()
-        .replace("", None)
-        .apply(preprocess_string),
-        offer_description=lambda df: df["offer_description"]
-        .replace("", None)
-        .apply(preprocess_string),
+        .apply(preprocess_string)
+        .str.replace(REMOVE_EDITION_PATTERN, "", regex=True),
+        offer_description=lambda df: df["offer_description"].apply(preprocess_string),
     )
 
 

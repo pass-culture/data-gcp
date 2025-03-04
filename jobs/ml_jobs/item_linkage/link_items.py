@@ -182,8 +182,6 @@ def postprocess_matching(matches, item_singletons_clean, sources_clean):
         pd.DataFrame: Final linkage dataframe.
     """
 
-    matches[["index_1", "index_2"]] = matches[["index_1", "index_2"]].astype(str)
-
     item_singletons_clean = (
         item_singletons_clean.reset_index()
         .rename(columns={"index": "index_1"})
@@ -195,6 +193,8 @@ def postprocess_matching(matches, item_singletons_clean, sources_clean):
         .rename(columns={"index": "index_2"})
         .astype({"index_2": str})
     )
+
+    matches = matches[["index_1", "index_2"]].astype(str)
 
     linkage_raw = (
         matches.merge(sources_clean, on="index_2", how="left")

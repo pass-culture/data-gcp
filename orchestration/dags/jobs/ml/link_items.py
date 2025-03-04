@@ -37,6 +37,7 @@ DATE = "{{ ts_nodash }}"
 # -------------------------------------------------------------------------
 
 DAG_CONFIG = {
+    "ID": "link_items",
     "ENVIROMENT": {
         "GCP_PROJECT": GCP_PROJECT_ID,
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
@@ -114,7 +115,7 @@ def create_ssh_task(task_id, command, instance_name, base_dir):
 # DAG DEFINITION
 # -------------------------------------------------------------------------
 with DAG(
-    "link_items_updated",
+    "link_items",
     default_args=DEFAULT_ARGS,
     description="Process to link items using semantic vectors (grouped by product/offer).",
     schedule_interval=None,

@@ -83,6 +83,7 @@ offer show sub type for shows. {% enddocs %}
 {% docs column__is_headlined %} Indicates if the offer is currently headlined on the app venue page. {% enddocs %}
 {% docs column__total_headlines %} Number of different times the offer was headlined on the app venue page. (an offer headline can be desactivated and reactivated) {% enddocs %}
 {% docs column__offer_last_provider_id %} Id of the offer's last provider. {% enddocs %}
+{% docs column__is_local_authority %} Indicates if the offerer is a local authority or not. {% enddocs %}
 
 # Date related
 

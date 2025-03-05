@@ -3,7 +3,7 @@ title: Special_event
 description: Description of the `mrt_global__special_event` table.
 ---
 
-{% docs mrt_global__special_event %}
+{% docs description__mrt_global__special_event %}
 
 # Special event Model
 
@@ -20,4 +20,4 @@ The `mrt_global__special_event` table aims to register and analyse users' applic
 
 ## Table description
 
-{% docs table__mrt_global__offerer  %}{% enddocs %}
+{% docs table__mrt_global__special_event  %}{% enddocs %}

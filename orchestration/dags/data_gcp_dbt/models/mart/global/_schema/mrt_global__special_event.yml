@@ -4,23 +4,23 @@ models:
   - name: mrt_global__special_event
     description: '{{ doc("description__mrt_global__special_event") }}'
     columns:
-      - name: event_id
-        description: "{{ doc('column__event_id') }}"
-      - name: event_title
-        description: "{{ doc('column__event_title') }}"
+      - name: special_event_id
+        description: "{{ doc('column__special_event_id') }}"
+      - name: special_event_title
+        description: "{{ doc('column__special_event_title') }}"
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
       - name: venue_id
         description: "{{ doc('column__venue_id') }}"
-      - name: event_creation_date
-        description: "{{ doc('column__event_creation_date') }}"
-      - name: event_date
-        description: "{{ doc('column__event_date') }}"
-      - name: event_response_id
-        description: "{{ doc('column__event_response_id') }}"
+      - name: special_event_creation_date
+        description: "{{ doc('column__special_event_creation_date') }}"
+      - name: special_event_date
+        description: "{{ doc('column__special_event_date') }}"
+      - name: special_event_response_id
+        description: "{{ doc('column__special_event_response_id') }}"
       - name: user_id
         description: "{{ doc('column__user_id') }}"
-      - name: response_status
-        description: "{{ doc('column__response_status') }}"
-      - name: response_submitted_date
-        description: "{{ doc('column__response_submitted_date') }}"
+      - name: special_event_response_status
+        description: "{{ doc('column__special_event_response_status') }}"
+      - name: special_event_response_submitted_date
+        description: "{{ doc('column__special_event_response_submitted_date') }}"

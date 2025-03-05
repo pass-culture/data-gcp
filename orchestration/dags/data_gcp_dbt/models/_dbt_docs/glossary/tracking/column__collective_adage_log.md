@@ -30,6 +30,6 @@
 {% docs column__partner_confirmed_collective_bookings %}The total number of confirmed collective bookings by the partner.{% enddocs %}
 {% docs column__uai %}The UAI (Unique Academic Identifier) associated with the event.{% enddocs %}
 {% docs column__geoloc_radius_filter %}The distance filter applied during the search event (maximal radius around the school, km), if applicable (facultative).{% enddocs %}
-
+{% docs column__source %}When the event OfferListSwitch is triggered, it specifies from the initial offer list view (grid, map).{% enddocs %}
 
 {% endhide %}

@@ -1,4 +1,4 @@
-SELECT
+select
     event_id,
     event_title,
     offerer_id,
@@ -9,4 +9,4 @@ SELECT
     user_id,
     response_status,
     response_submitted_date
-FROM {{ ref("int_applicative__special_event") }}
+from {{ ref("int_applicative__special_event") }}

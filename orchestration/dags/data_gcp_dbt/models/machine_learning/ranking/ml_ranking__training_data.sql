@@ -1,4 +1,4 @@
-select
+select distinct
     offer_displayed.event_date,
     offer_displayed.user_id,
     offer_displayed.unique_session_id,
@@ -16,8 +16,7 @@ select
     home_module.consult_offer_timestamp,
     home_module.module_displayed_timestamp,
     offer_displayed.event_timestamp as offer_displayed_timestamp
-from
-    {{ ref("int_firebase__native_home_offer_displayed") }} as offer_displayed
+from {{ ref("int_firebase__native_home_offer_displayed") }} as offer_displayed
 left join
     {{ ref("int_firebase__native_daily_user_home_module") }} as home_module
     on offer_displayed.module_id = home_module.module_id
@@ -25,8 +24,10 @@ left join
     and offer_displayed.unique_session_id = home_module.unique_session_id
     and offer_displayed.event_timestamp = home_module.module_displayed_timestamp
 where
-    offer_displayed.event_date between DATE_SUB(DATE("{{ ds() }}"), interval 3 day) and DATE("{{ ds() }}")
-    and home_module.module_displayed_date between DATE_SUB(DATE("{{ ds() }}"), interval 3 day) and DATE("{{ ds() }}")
+    offer_displayed.event_date
+    between date_sub(date("{{ ds() }}"), interval 3 day) and date("{{ ds() }}")
+    and home_module.module_displayed_date
+    between date_sub(date("{{ ds() }}"), interval 3 day) and date("{{ ds() }}")
 order by
     offer_displayed.unique_session_id,
     offer_displayed.module_id,

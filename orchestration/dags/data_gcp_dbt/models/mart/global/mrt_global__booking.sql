@@ -42,6 +42,7 @@ select
     b.venue_is_virtual,
     b.offerer_id,
     b.offerer_name,
+    b.is_local_authority,
     b.partner_id,
     b.offer_subcategory_id,
     b.physical_goods,

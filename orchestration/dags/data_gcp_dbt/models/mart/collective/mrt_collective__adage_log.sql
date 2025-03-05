@@ -25,6 +25,7 @@ select
     a.text_filter,
     a.department_filter,
     a.academy_filter,
+    a.geoloc_radius_filter,
     a.artistic_domain_filter,
     a.student_filter,
     a.suggestion_type,

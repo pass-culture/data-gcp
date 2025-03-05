@@ -25,6 +25,7 @@ offset as position
 where
     native_event.event_name = "ModuleDisplayedOnHomePage"
     {% if is_incremental() %}
-        and date(native_event.event_date) between date_sub("{{ ds() }}", interval 3 day) and DATE("{{ ds() }}")
+        and date(native_event.event_date)
+        between date_sub("{{ ds() }}", interval 3 day) and date("{{ ds() }}")
     {% else %} and date(native_event.event_date) >= "2024-06-13"
     {% endif %}

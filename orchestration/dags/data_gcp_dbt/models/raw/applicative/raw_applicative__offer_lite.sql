@@ -1,5 +1,7 @@
 select
-    * except (offer_updated_date), timestamp(offer_updated_date) as offer_updated_date
+    * except (offer_updated_date),
+    timestamp(offer_updated_date) as offer_updated_date,
+    to_hex(md5(to_json_string(offer))) as custom_scd_id
 from
     external_query(
         "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",
@@ -38,4 +40,4 @@ from
     FROM public.offer
     WHERE "dateUpdated" > NOW() - INTERVAL '5' DAY
     '''
-    )
+    ) as offer

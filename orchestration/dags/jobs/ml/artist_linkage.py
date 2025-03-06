@@ -108,7 +108,7 @@ with DAG(
             instance_name=GCE_INSTANCE,
             instance_type="{{ params.instance_type }}",
             preemptible=False,
-            labels={"dag_name": DAG_NAME},
+            labels={"job_type": "long_task", "dag_name": DAG_NAME},
         )
         fetch_install_code = InstallDependenciesOperator(
             task_id="fetch_install_code",

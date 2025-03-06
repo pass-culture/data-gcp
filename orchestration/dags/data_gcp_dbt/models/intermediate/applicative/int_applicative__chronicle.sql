@@ -1,4 +1,4 @@
-SELECT
+select
     c.chronicle_id,
     oc.offer_id,
     pc.product_id,
@@ -10,8 +10,12 @@ SELECT
     c.user_age,
     c.ean,
     c.chronicle_content,
-    DATE(c.chronicle_creation_date) AS chronicle_creation_date
+    date(c.chronicle_creation_date) as chronicle_creation_date
 
-FROM {{ ref("raw_applicative__chronicle") }} AS c
-LEFT JOIN {{ ref("raw_applicative__offer_chronicle") }} AS oc ON c.chronicle_id = oc.chronicle_id
-LEFT JOIN {{ ref("raw_applicative__product_chronicle") }} AS pc ON c.chronicle_id = pc.chronicle_id
+from {{ ref("raw_applicative__chronicle") }} as c
+left join
+    {{ ref("raw_applicative__offer_chronicle") }} as oc
+    on c.chronicle_id = oc.chronicle_id
+left join
+    {{ ref("raw_applicative__product_chronicle") }} as pc
+    on c.chronicle_id = pc.chronicle_id

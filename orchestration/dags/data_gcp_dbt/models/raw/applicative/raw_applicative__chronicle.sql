@@ -1,4 +1,8 @@
-select * from external_query("{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}", """
+select *
+from
+    external_query(
+        "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",
+        """
 SELECT
     CAST("id" AS varchar(255)) AS chronicle_id,
     CAST("userId" AS varchar(255)) AS user_id,
@@ -11,4 +15,5 @@ SELECT
     "dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS chronicle_creation_date,
     CAST("ean" AS varchar(255)) AS ean,
     FROM public.chronicle
-""")
+"""
+    )

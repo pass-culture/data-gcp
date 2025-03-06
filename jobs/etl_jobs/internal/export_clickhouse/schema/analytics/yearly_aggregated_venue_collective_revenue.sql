@@ -14,7 +14,7 @@ WITH effective_revenue as (
                 or collective_booking_status = 'REIMBURSED' then booking_amount
                 else 0
             end
-        ) AS collective_revenue,
+        ) AS collective_revenue
     FROM
         intermediate.collective_booking
     WHERE
@@ -37,7 +37,7 @@ WITH effective_revenue as (
     WHERE
         venue_id IS NOT NULL
     GROUP BY 1, 2
-),
+)
 SELECT
     year,
     venue_id,

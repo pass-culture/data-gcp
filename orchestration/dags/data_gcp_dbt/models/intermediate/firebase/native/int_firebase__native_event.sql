@@ -7,7 +7,7 @@
                 "data_type": "date",
                 "granularity": "day",
             },
-            on_schema_change="sync_all_columns",
+            on_schema_change="append_new_columns",
             cluster_by="event_name",
             require_partition_filter=true,
         )

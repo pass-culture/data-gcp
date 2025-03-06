@@ -242,7 +242,6 @@ select
     consultations.offer_id,
     consultations.venue_id,
     bookings.booking_id,
-    favorites.offer_id as favorite_id,
     module_displayed_date,
     module_displayed_timestamp,
     module_clicked_timestamp,

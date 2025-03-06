@@ -18,7 +18,10 @@ with
             home_module.module_clicked_timestamp,
             home_module.consult_offer_timestamp,
             home_module.module_displayed_timestamp,
-            offer_displayed.event_timestamp as offer_displayed_timestamp
+            offer_displayed.event_timestamp as offer_displayed_timestamp,
+            home_module.offer_id is not null as is_consulted,
+            home_module.fav_timestamp is not null as is_added_to_favorite,
+            home_module.booking_id is not null as is_booked
         from {{ ref("int_firebase__native_home_offer_displayed") }} as offer_displayed
         left join
             {{ ref("int_firebase__native_daily_user_home_module") }} as home_module

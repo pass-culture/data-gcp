@@ -40,6 +40,7 @@ title: Metrics
 {% docs column__total_individual_real_revenue %} Total actual revenue from individual bookings. {% enddocs %}
 {% docs column__total_individual_theoretic_revenue %} Total theoretical revenue from individual bookings. {% enddocs %}
 {% docs column__total_last_deposit_digital_goods_amount_spent %} Total amount spent on digital goods from the last deposit. {% enddocs %}
+{% docs column__total_last_deposit_theoretical_amount_spent %} Total theoretical amount spent from the last deposit. {% enddocs %}
 {% docs column__total_non_cancelled_bookings %} Total number of bookings that were not cancelled, both individual and collective. {% enddocs %}
 {% docs column__total_non_cancelled_collective_bookings %} Total number of collective bookings that were not cancelled. {% enddocs %}
 {% docs column__total_non_cancelled_duo_bookings %} Total number of non-cancelled duo bookings made by the user. {% enddocs %}

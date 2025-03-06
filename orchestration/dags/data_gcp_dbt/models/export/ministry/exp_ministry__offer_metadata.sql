@@ -1,4 +1,4 @@
-SELECT
+select
     offer_id,
     offer_creation_date,
     offer_subcategory_id,
@@ -12,4 +12,4 @@ SELECT
     gtl_label_level_2,
     gtl_label_level_3,
     gtl_label_level_4
-FROM {{ref("mrt_global__offer_metadata")}}
+from {{ ref("mrt_global__offer_metadata") }}

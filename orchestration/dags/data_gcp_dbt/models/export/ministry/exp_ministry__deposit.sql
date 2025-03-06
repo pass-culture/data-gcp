@@ -1,4 +1,4 @@
-SELECT
+select
     deposit_id,
     deposit_amount,
     user_id,
@@ -13,4 +13,4 @@ SELECT
     last_individual_booking_date,
     deposit_seniority,
     days_between_user_creation_and_deposit_creation
-FROM {{ref("mrt_global__deposit")}}
+from {{ ref("mrt_global__deposit") }}

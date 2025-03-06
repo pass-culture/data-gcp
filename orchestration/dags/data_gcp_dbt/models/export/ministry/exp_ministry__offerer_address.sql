@@ -1,4 +1,4 @@
-SELECT
+select
     offerer_address_id,
     offerer_address_label,
     address_id,
@@ -7,4 +7,4 @@ SELECT
     address_postal_code,
     address_city,
     address_department_code
-FROM {{ref("mrt_global__offerer_address")}}
+from {{ ref("mrt_global__offerer_address") }}

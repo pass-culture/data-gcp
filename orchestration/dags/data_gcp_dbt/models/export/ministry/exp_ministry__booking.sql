@@ -1,4 +1,4 @@
-SELECT
+select
     booking_id,
     booking_creation_date,
     booking_quantity,
@@ -23,4 +23,4 @@ SELECT
     same_category_booking_rank,
     user_booking_rank,
     isbn
-FROM {{ ref("mrt_global__booking") }}
+from {{ ref("mrt_global__booking") }}

@@ -1,4 +1,4 @@
-SELECT
+select
     stock_id,
     stock_beginning_date,
     stock_last_provider_id,
@@ -16,4 +16,4 @@ SELECT
     price_category_label,
     price_category_label_id,
     venue_department_code
-FROM {{ref("mrt_global__stock")}}
+from {{ ref("mrt_global__stock") }}

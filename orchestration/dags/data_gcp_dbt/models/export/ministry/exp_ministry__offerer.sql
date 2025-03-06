@@ -1,4 +1,4 @@
-SELECT
+select
     offerer_id,
     partner_id,
     offerer_name,
@@ -19,4 +19,4 @@ SELECT
     legal_unit_business_activity_label,
     legal_unit_legal_category_code,
     legal_unit_legal_category_label
-FROM {{ ref("mrt_global__offerer") }}
+from {{ ref("mrt_global__offerer") }}

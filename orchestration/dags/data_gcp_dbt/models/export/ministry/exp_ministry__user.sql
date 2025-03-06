@@ -1,4 +1,4 @@
-SELECT
+select
     user_id,
     user_department_code,
     user_department_name,
@@ -41,4 +41,4 @@ SELECT
     last_deposit_expiration_date,
     user_is_current_beneficiary,
     user_seniority
-FROM {{ref("mrt_global__user")}}
+from {{ ref("mrt_global__user") }}

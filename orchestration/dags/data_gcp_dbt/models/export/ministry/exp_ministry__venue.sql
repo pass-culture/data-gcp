@@ -1,4 +1,4 @@
-SELECT
+select
     venue_id,
     venue_name,
     venue_public_name,
@@ -20,4 +20,4 @@ SELECT
     venue_macro_density_label,
     venue_description,
     offerer_id,
-FROM {{ref("mrt_global__venue")}}
+from {{ ref("mrt_global__venue") }}

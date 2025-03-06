@@ -44,10 +44,18 @@ with
                     then total_theoretical_amount_spent_in_digital_goods
                 end
             ) as total_last_deposit_digital_goods_amount_spent,
+            sum(
+                case
+                    when deposit_rank_desc = 1
+                    then total_theoretical_amount_spent
+                end
+            ) as total_last_deposit_theoretical_amount_spent,
             min(deposit_creation_date) as user_activation_date,
             max(last_recredit_date) as last_recredit_date,
             sum(total_recredit) as total_recredit,
-            sum(total_recredit_amount) as total_recredit_amount
+            sum(total_recredit_amount) as total_recredit_amount,
+            max(case when deposit_rank_asc = 1 then deposit_type end) as first_deposit_type,
+            max(case when deposit_rank_desc = 1 then deposit_type end) as current_deposit_type
         from {{ ref("int_global__deposit") }}
         group by user_id
     )
@@ -89,6 +97,7 @@ select
     dgu.total_theoretical_physical_goods_amount_spent,
     dgu.total_theoretical_outings_amount_spent,
     dgu.total_last_deposit_digital_goods_amount_spent,
+    dgu.total_last_deposit_theoretical_amount_spent,
     dgu.total_deposit_actual_amount_spent,
     dgu.total_diversity_score,
     dgu.last_deposit_amount,
@@ -103,6 +112,8 @@ select
     dgu.last_recredit_date,
     dgu.total_recredit,
     dgu.total_recredit_amount,
+    dgu.first_deposit_type,
+    dgu.current_deposit_type,
     coalesce(
         u.user_activity = "Chômeur, En recherche d'emploi", false
     ) as user_is_unemployed,
@@ -128,14 +139,8 @@ select
     coalesce(
         dgu.total_non_cancelled_duo_bookings, 0
     ) as total_non_cancelled_duo_bookings,
-    case
-        when dgu.last_deposit_amount < 300 then "GRANT_15_17" else "GRANT_18"
-    end as current_deposit_type,
-    case
-        when dgu.first_deposit_amount < 300 then "GRANT_15_17" else "GRANT_18"
-    end as first_deposit_type,
     dgu.last_deposit_amount
-    - dgu.total_theoretical_amount_spent as total_theoretical_remaining_credit,
+    - dgu.total_last_deposit_theoretical_amount_spent as total_theoretical_remaining_credit,
     date_diff(
         dgu.first_individual_booking_date, dgu.first_deposit_creation_date, day
     ) as days_between_activation_date_and_first_booking_date,

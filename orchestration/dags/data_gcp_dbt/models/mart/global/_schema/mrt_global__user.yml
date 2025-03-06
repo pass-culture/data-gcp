@@ -145,6 +145,9 @@ models:
       - name: total_last_deposit_digital_goods_amount_spent
         description: '{{ doc("column__total_last_deposit_digital_goods_amount_spent") }}'
         data_type: NUMERIC
+      - name: total_last_deposit_theoretical_amount_spent
+        description: '{{ doc("column__total_last_deposit_theoretical_amount_spent") }}'
+        data_type: NUMERIC
       - name: total_deposit_actual_amount_spent
         description: '{{ doc("column__total_deposit_actual_amount_spent") }}'
         data_type: NUMERIC

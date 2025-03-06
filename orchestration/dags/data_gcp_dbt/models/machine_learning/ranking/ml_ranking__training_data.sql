@@ -11,6 +11,7 @@ with
             offer_displayed.displayed_position,
             home_module.offer_id as offer_id_clicked,
             home_module.booking_id,
+            home_module.favorite_id,
             home_module.click_type,
             home_module.reco_call_id,
             home_module.user_location_type,
@@ -44,6 +45,7 @@ select
 
     offer_with_metatadata.offer_id_clicked,
     offer_with_metatadata.booking_id,
+    offer_with_metatadata.favorite_id,
 
     offer_with_metatadata.click_type,
     offer_with_metatadata.reco_call_id,
@@ -60,7 +62,12 @@ select
         when offer_with_metatadata.booking_id is not null
         then offer_with_metatadata.booking_id = offer_with_metatadata.offer_id
         else false
-    end as is_booked
+    end as is_booked,
+    case
+        when offer_with_metatadata.favorite_id is not null
+        then offer_with_metatadata.favorite_id = offer_with_metatadata.offer_id
+        else false
+    end as is_added_to_favorite
 from offer_with_metatadata
 order by
     offer_with_metatadata.unique_session_id,

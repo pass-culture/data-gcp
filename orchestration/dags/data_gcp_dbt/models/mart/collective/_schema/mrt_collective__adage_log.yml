@@ -84,3 +84,7 @@ models:
         description: "{{ doc('column__uai') }}"
       - name: user_role
         description: "{{ doc('column__user_role') }}"
+      - name: geoloc_radius_filter
+        description: "{{ doc('column__geoloc_radius_filter') }}"
+      - name: source
+        description: "{{ doc('column__source') }}"

@@ -45,7 +45,7 @@ REFINE_FACTOR = 10
 
 MATCHING_FEATURES = {
     "product": {
-        "oeuvre": {"method": "jarowinkler", "threshold": 0.95, "missing_value": 0},
+        "oeuvre": {"method": "jarowinkler", "threshold": 0.90, "missing_value": 0},
     },
     "offer": {
         "oeuvre": {"method": "jarowinkler", "threshold": 0.95, "missing_value": 0}

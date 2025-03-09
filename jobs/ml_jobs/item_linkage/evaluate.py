@@ -107,7 +107,7 @@ def plot_subcat_graphs(linkage_candidates, output_file, merged_df, subcat_metric
         sns.barplot(
             data=subcat_metrics,
             x="offer_subcategory_id_candidate",
-            y="Coverage (%)",
+            y="coverage_pct",
             palette="Blues_d",
         )
         plt.title("Coverage by Subcategory")
@@ -124,7 +124,7 @@ def plot_subcat_graphs(linkage_candidates, output_file, merged_df, subcat_metric
         sns.barplot(
             data=subcat_metrics,
             x="offer_subcategory_id_candidate",
-            y="Percentage of Duplicates (%)",
+            y="duplicates_pct",
             palette="Reds_d",
         )
         plt.title("Percentage of Duplicate Matches by Subcategory")

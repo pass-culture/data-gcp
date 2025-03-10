@@ -41,10 +41,8 @@ WITH effective_revenue as (
 SELECT
     year,
     venue_id,
-    0 as individual_revenue,
-    0 as individual_expected_revenue,
-    collective_revenue,
-    collective_revenue + collective_expected_revenue as collective_expected_revenue
+    collective_revenue as revenue,
+    collective_revenue + collective_expected_revenue as expected_revenue
 FROM effective_revenue
 LEFT JOIN expected_revenue
 ON effective_revenue.venue_id = expected_revenue.venue_id

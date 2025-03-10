@@ -50,7 +50,7 @@ The two-tower model consists of two separate neural networks: a user single towe
 
 *: *note that there are two parameters named `embedding_size`, one is for the size of the user and item final embedding vector that is created at the end of each single tower. And another `embedding size` defined for each feature type in the config file.*
 
-Below is the architecture of the current two-tower model with features from `default-features.json`:
+Below is an example architecture of the two-tower model with features from `default-features.json` as of March 2025. Please review yourself current architecture and not rely entirely on this graph:
 ```mermaid
 graph LR
 subgraph User Tower

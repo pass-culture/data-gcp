@@ -68,7 +68,6 @@ with DAG(
 ) as dag:
     start = EmptyOperator(task_id="start", dag=dag)
 
-    query = PAST_OFFER_CONTEXT_TMP_QUERY["sql"]
     get_past_offer_context_from_cloudsql = BigQueryInsertJobOperator(
         task_id="get_past_offer_context_from_cloudsql",
         configuration={

@@ -6,19 +6,19 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Description of the `mrt_global__collective_offer` table.">
+        <meta name="description" content="Description of the `mrt_global__special_event` table.">
       
       
         <meta name="author" content="Pass Culture Team">
       
       
-        <link rel="canonical" href="https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__collective_offer/">
+        <link rel="canonical" href="https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__special_event/">
       
       
-        <link rel="prev" href="../description__mrt_global__collective_booking/">
+        <link rel="prev" href="../description__mrt_global__offerer_tag/">
       
       
-        <link rel="next" href="../description__mrt_global__collective_offer_domain/">
+        <link rel="next" href="../description__mrt_global__stock/">
       
       
       <link rel="icon" href="../../../../../assets/favicon.png">
@@ -26,7 +26,7 @@
     
     
       
-        <title>Collective Offer - Pass Culture Data Documentation</title>
+        <title>Special_event - Pass Culture Data Documentation</title>
       
     
     
@@ -115,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Collective Offer
+              Special_event
             
           </span>
         </div>
@@ -2700,28 +2700,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Collective Offer
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../description__mrt_global__collective_offer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2730,33 +2712,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#table-description" class="md-nav__link">
-    <span class="md-ellipsis">
-      Table description
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -3018,10 +2973,28 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../description__mrt_global__special_event/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Special_event
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3030,6 +3003,33 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-description" class="md-nav__link">
+    <span class="md-ellipsis">
+      Table description
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -5929,12 +5929,15 @@
   
 
 
-<h1>Table: Collective Offer</h1>
-<p>The <code>mrt_global__collective_offer</code> table is designed to store comprehensive information about collecttives offers.</p>
+<h1>Special event Model</h1>
+<p>The <code>mrt_global__special_event</code> table aims to register and analyse users' application to special events.
+Special events are unique experiences developed for pass Culture beneficiaries in partnership with cultural actors, for which a lottery or a selection process based on motivation and objective criteria may be conducted.</p>
+<p>\
+<strong>Business Rules</strong></p>
+<ul>
+<li>user_id can be empty field if the declarative email does not match any registered user.</li>
+</ul>
 
-<p>Cultural partners can create two types of collective offers :
-- collectives offers that can directly be booked by school teachers, with a set price and date. Those collective offers can be linked exclusively to a specific school (in this case, institution_id is not null). Those collective offers can be identified using the column collective_offer_is_template = 'False'.
-- collective offer templates, with no set price and date. Those collective offers enable cultural partners to be visible towards school teachers, the latter being able to contact cultural partners to co-create a specific collective offer. Those collective offers can be identified using the column collective_offer_is_template = 'True'.</p>
 <h2 id="table-description">Table description</h2>
 <table>
 <thead>
@@ -5946,99 +5949,14 @@
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;">collective_offer_id</td>
+<td style="text-align: left;">special_event_id</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Identifier for the collective offer.</td>
+<td style="text-align: left;">Unique identifier of a special event .</td>
 </tr>
 <tr>
-<td style="text-align: left;">collective_offer_humanized_id</td>
+<td style="text-align: left;">special_event_title</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Human-readable identifier for the collective offer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_offer_name</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Name of the collective offer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Unique identifier for the venue.</td>
-</tr>
-<tr>
-<td style="text-align: left;">partner_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Unique identifier of the partner.</td>
-</tr>
-<tr>
-<td style="text-align: left;">institution_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Id of the institution.</td>
-</tr>
-<tr>
-<td style="text-align: left;">institution_program_name</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Name of the program at the educational institution.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_name</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Name of the venue.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_region_name</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Region name where the venue is located.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_department_code</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Department code of the venue.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_department_name</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Department name where of the venue.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_postal_code</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Postal code of the venue.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_city</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">City where the venue is located.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_epci</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">EPCI code of the venue.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_academy_name</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Academy of the venue.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_density_label</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Detailed density label of the venue's location.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_macro_density_label</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Macro density label of the venue's location (urbain, rural)</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_density_level</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">ID of the density level of the venue (cf venue_density_label).</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_is_virtual</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Indicates if the venue is virtual. Each offerer has a virtual venue, it is only used to publish digital offers.</td>
+<td style="text-align: left;">Title of the special event .</td>
 </tr>
 <tr>
 <td style="text-align: left;">offerer_id</td>
@@ -6046,184 +5964,39 @@
 <td style="text-align: left;">Unique identifier of the offerer.</td>
 </tr>
 <tr>
-<td style="text-align: left;">offerer_name</td>
+<td style="text-align: left;">venue_id</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Name of the offerer.</td>
+<td style="text-align: left;">Unique identifier for the venue.</td>
 </tr>
 <tr>
-<td style="text-align: left;">venue_iris_internal_id</td>
+<td style="text-align: left;">special_event_creation_date</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Internal IRIS identifier for the venue.</td>
+<td style="text-align: left;">Date when the special event was created .</td>
 </tr>
 <tr>
-<td style="text-align: left;">offer_id</td>
+<td style="text-align: left;">special_event_date</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Unique identifier for the offer.</td>
+<td style="text-align: left;">Date when the special event will occur .</td>
 </tr>
 <tr>
-<td style="text-align: left;">collective_offer_creation_date</td>
+<td style="text-align: left;">special_event_response_id</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Creation date of the collective offer.</td>
+<td style="text-align: left;">Unique identifier of a response of a user to a special event .</td>
 </tr>
 <tr>
-<td style="text-align: left;">collective_offer_date_updated</td>
+<td style="text-align: left;">user_id</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Date when the collective offer was last updated.</td>
+<td style="text-align: left;">Unique identifier for a user.</td>
 </tr>
 <tr>
-<td style="text-align: left;">collective_offer_subcategory_id</td>
+<td style="text-align: left;">special_event_response_status</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Subcategory identifier for the collective offer.</td>
+<td style="text-align: left;">Status of the response to the user's candidacy to a special event .</td>
 </tr>
 <tr>
-<td style="text-align: left;">collective_offer_category_id</td>
+<td style="text-align: left;">special_event_response_submitted_date</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Category identifier for the collective offer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_offer_format</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">List of the different cultural formats of the collective offer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_offer_students</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Number of students that this collective offer can host.</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_offer_is_active</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Boolean. Indicates if the collective offer is active (has not been deactivated) .</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_offer_is_bookable</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Indicates if the collective offer is bookable (is visible in-app and can be booked by users).</td>
-</tr>
-<tr>
-<td style="text-align: left;">total_collective_bookings</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Total number of collective bookings.</td>
-</tr>
-<tr>
-<td style="text-align: left;">total_non_cancelled_collective_bookings</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Total number of collective bookings that were not cancelled.</td>
-</tr>
-<tr>
-<td style="text-align: left;">total_used_collective_bookings</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Total number of collective bookings that were used.</td>
-</tr>
-<tr>
-<td style="text-align: left;">passculture_pro_url</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">URL to the offer on PassCulture Pro.</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_offer_is_template</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Indicates if the collective offer is a template offer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_offer_image_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Image identifier for the collective offer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">provider_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The unique identifier for the synchronization provider.</td>
-</tr>
-<tr>
-<td style="text-align: left;">national_program_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Identifier for the national program associated with the collective offer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">national_program_name</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Name of the national program associated with the collective offer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">template_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Identifier for the template associated with the collective offer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_offer_address_type</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Type of address where the collective offer takes place (at school, at the offerer's venue or elsewhere ).</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_offer_contact_url</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Contact URL for the collective offer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_offer_contact_form</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Contact form for the collective offer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_offer_contact_email</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Contact email for the collective offer's owner.</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_offer_contact_phone</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Contact phone number for the collective offer's owner.</td>
-</tr>
-<tr>
-<td style="text-align: left;">institution_internal_iris_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Internal IRIS identifier for the educational institution.</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_stock_beginning_date_time</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Beginning date and time for the collective stock.</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_stock_booking_limit_date_time</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Limit booking date time for the collective stock offer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_offer_template_beginning_date</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Beginning publication date for template offer (if null : permanent).</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_offer_template_ending_date</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Ending publication date for template offer (if null : permanent).</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_stock_price</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Stock price of the collective offer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">collective_stock_number_of_tickets</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Number of tickets available in the collective stock.</td>
-</tr>
-<tr>
-<td style="text-align: left;">is_local_authority</td>
-<td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the offerer is a local authority or not.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_is_permanent</td>
-<td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the venue is permanent. A permanent venue is a venue that can receive public permanently, that can propose offers, and that is managed by the partner. Permanent venues exemple : a library, a cinema. Non permanent venues example : a public garden that hosted a festival once, or a theater that hosted a concert once - it can be permanent for the partner who owns the theater, but not for the partner who is hosted once in this place.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_type_label</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Type of the venue ('Musée', 'Cinéma','Librairie', etc). Selected by the partner in a drop-down list.</td>
+<td style="text-align: left;">Date when the response was given to the user .</td>
 </tr>
 </tbody>
 </table>
@@ -6265,7 +6038,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../description__mrt_global__collective_booking/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Collective Booking">
+          <a href="../description__mrt_global__offerer_tag/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Offerer Tag">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -6275,20 +6048,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Collective Booking
+                Offerer Tag
               </div>
             </div>
           </a>
         
         
           
-          <a href="../description__mrt_global__collective_offer_domain/" class="md-footer__link md-footer__link--next" aria-label="Next: Collective Offer Domain">
+          <a href="../description__mrt_global__stock/" class="md-footer__link md-footer__link--next" aria-label="Next: Stock">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Collective Offer Domain
+                Stock
               </div>
             </div>
             <div class="md-footer__button md-icon">

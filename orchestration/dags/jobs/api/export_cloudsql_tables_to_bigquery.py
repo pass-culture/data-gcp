@@ -5,7 +5,10 @@ from common import macros
 from common.access_gcp_secrets import access_secret_data
 from common.alerts import task_fail_slack_alert
 from common.config import (
+    DAG_FOLDER,
     DAG_TAGS,
+    GCP_PROJECT_ID,
+    GCP_REGION,
     RECOMMENDATION_SQL_INSTANCE,
 )
 from common.operators.bigquery import bigquery_job_task
@@ -22,9 +25,6 @@ from airflow.providers.google.cloud.operators.cloud_sql import (
     CloudSQLExecuteQueryOperator,
 )
 
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
-LOCATION = os.environ.get("REGION")
-DAG_FOLDER = os.environ.get("DAG_FOLDER")
 DEFAULT_DAG_ARGS = {
     "start_date": datetime.datetime(2020, 12, 1),
     "retries": 1,
@@ -40,10 +40,10 @@ DATABASE_INSTANCE_NAME = access_secret_data(
 DATABASE_URL = access_secret_data(
     GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}_database_url", default=""
 )
-CONNECTION_ID = f"{GCP_PROJECT_ID}.{LOCATION}.{DATABASE_INSTANCE_NAME}"
+CONNECTION_ID = f"{GCP_PROJECT_ID}.{GCP_REGION}.{DATABASE_INSTANCE_NAME}"
 os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     DATABASE_URL.replace("postgresql://", "gcpcloudsql://")
-    + f"?database_type=postgres&project_id={GCP_PROJECT_ID}&location={LOCATION}&instance={DATABASE_INSTANCE_NAME}&use_proxy=True&sql_proxy_use_tcp=True"
+    + f"?database_type=postgres&project_id={GCP_PROJECT_ID}&location={GCP_REGION}&instance={DATABASE_INSTANCE_NAME}&use_proxy=True&sql_proxy_use_tcp=True"
 )
 
 

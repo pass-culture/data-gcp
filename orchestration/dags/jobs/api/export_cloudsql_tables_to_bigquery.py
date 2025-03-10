@@ -10,13 +10,13 @@ from common.config import (
 )
 from common.operators.bigquery import bigquery_job_task
 from common.utils import from_external, get_airflow_schedule
-from dependencies.export_cloudsql_tables_to_bigquery.import_cloudsql import (
-    RAW_TABLES,
-    TMP_TABLES,
+from dependencies.export_cloudsql_tables_to_bigquery.config import (
+    PAST_OFFER_CONTEXT_RAW_QUERY,
+    PAST_OFFER_CONTEXT_TMP_QUERY,
 )
 
 from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.providers.google.cloud.operators.cloud_sql import (
     CloudSQLExecuteQueryOperator,
@@ -55,7 +55,7 @@ default_dag_args = {
     "project_id": GCP_PROJECT_ID,
 }
 
-dag = DAG(
+with DAG(
     "export_cloudsql_tables_to_bigquery_v1",
     default_args=default_dag_args,
     description="Export tables from recommendation CloudSQL to BigQuery",
@@ -65,67 +65,49 @@ dag = DAG(
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     tags=[DAG_TAGS.DS.value],
-)
+) as dag:
+    start = EmptyOperator(task_id="start", dag=dag)
 
-start = DummyOperator(task_id="start", dag=dag)
-
-export_tmp_table_tasks = []
-for table, params in TMP_TABLES.items():
-    query = params["sql"]
-    if query is None:
-        query = f"SELECT * FROM public.{table}"
-    task = BigQueryInsertJobOperator(
-        task_id=table,
+    query = PAST_OFFER_CONTEXT_TMP_QUERY["sql"]
+    get_past_offer_context_from_cloudsql = BigQueryInsertJobOperator(
+        task_id="get_past_offer_context_from_cloudsql",
         configuration={
             "query": {
-                "query": from_external(conn_id=CONNECTION_ID, sql_path=params["sql"]),
+                "query": from_external(
+                    conn_id=CONNECTION_ID, sql_path=PAST_OFFER_CONTEXT_TMP_QUERY["sql"]
+                ),
                 "useLegacySql": False,
                 "destinationTable": {
                     "projectId": GCP_PROJECT_ID,
-                    "datasetId": params["destination_dataset"],
-                    "tableId": params["destination_table"],
+                    "datasetId": PAST_OFFER_CONTEXT_TMP_QUERY["destination_dataset"],
+                    "tableId": PAST_OFFER_CONTEXT_TMP_QUERY["destination_table"],
                 },
-                "writeDisposition": params["write_disposition"],
+                "writeDisposition": PAST_OFFER_CONTEXT_TMP_QUERY["write_disposition"],
             }
         },
-        params=dict(params.get("params", {})),
-        dag=dag,
     )
 
-    export_tmp_table_tasks.append(task)
+    export_past_offer_context_to_bigquery = bigquery_job_task(
+        dag=dag,
+        table="export_past_offer_context_to_bigquery",
+        job_params=PAST_OFFER_CONTEXT_RAW_QUERY,
+    )
 
-end_export_tmp_tables = DummyOperator(task_id="export_tmp_tables", dag=dag)
-
-
-delete_rows = []
-for delete_table_rows in [
-    "past_offer_context",
-]:
-    delete_job = drop_table_task = CloudSQLExecuteQueryOperator(
-        task_id=f"drop_yesterday_rows_{delete_table_rows}",
+    drop_past_offer_context_yesterday_rows = CloudSQLExecuteQueryOperator(
+        task_id="drop_past_offer_context_yesterday_rows",
         gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql=f"DELETE FROM public.{delete_table_rows} where date <= '{yesterday}'",
+        sql="DELETE FROM public.past_offer_context where date <= {{ macros.ds_add(ds, -1) }}",
         autocommit=True,
         dag=dag,
     )
-    delete_rows.append(delete_job)
 
-end_delete_rows = DummyOperator(task_id="end_delete_rows", dag=dag)
+    end = EmptyOperator(task_id="end", dag=dag)
 
-
-export_raw_table_tasks = []
-for table, params in RAW_TABLES.items():
-    task = bigquery_job_task(dag, f"import_{table}_in_raw", params)
-    export_raw_table_tasks.append(task)
-
-end_raw = DummyOperator(task_id="end_raw", dag=dag)
 
 (
     start
-    >> export_tmp_table_tasks
-    >> end_export_tmp_tables
-    >> delete_rows
-    >> end_delete_rows
-    >> export_raw_table_tasks
-    >> end_raw
+    >> get_past_offer_context_from_cloudsql
+    >> export_past_offer_context_to_bigquery
+    >> drop_past_offer_context_yesterday_rows
+    >> end
 )

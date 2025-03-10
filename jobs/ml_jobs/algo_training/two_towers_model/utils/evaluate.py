@@ -1,26 +1,237 @@
-import json
 import secrets
+from typing import Optional, Tuple
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import tensorflow as tf
 from loguru import logger
+from recommenders.evaluation.python_evaluation import (
+    catalog_coverage,
+    map_at_k,
+    novelty,
+    precision_at_k,
+    r_precision_at_k,
+    recall_at_k,
+)
 from sklearn.decomposition import PCA
+from tqdm import tqdm
 
 from commons.constants import (
-    CONFIGS_PATH,
     EVALUATION_USER_NUMBER,
-    EVALUATION_USER_NUMBER_DIVERSIFICATION,
-    MODEL_DIR,
-    NUMBER_OF_PRESELECTED_OFFERS,
-    RECOMMENDATION_NUMBER,
 )
 from commons.data_collect_queries import read_from_gcs
-from two_towers_model.utils.metrics import (
-    compute_diversification_score,
-    compute_metrics,
-    get_actual_and_predicted,
-)
+
+
+def prepare_data_for_evaluation(
+    storage_path: str,
+    training_dataset_name: str,
+    test_dataset_name: str,
+    n_users_to_test: Optional[int] = None,
+) -> Tuple[pd.DataFrame, pd.DataFrame, Optional[pd.Series]]:
+    """
+    Prepares training and test datasets for evaluation by loading the data from storage,
+    filtering necessary columns, removing duplicates, and optionally truncating the test users.
+
+    Args:
+        storage_path (str): Path to the storage location (GCS bucket path).
+        training_dataset_name (str): Name of the training dataset file.
+        test_dataset_name (str): Name of the test dataset file.
+        n_users_to_test (Optional[int], optional): Number of users to include for evaluation.
+            If provided, limits evaluation to the first `n_users_to_test` in the test dataset.
+
+    Returns:
+        Tuple[pd.DataFrame, pd.DataFrame, Optional[pd.Series]]:
+            - Filtered test dataset as a DataFrame.
+            - Filtered training dataset as a DataFrame.
+            - Series of user IDs to evaluate (or None if all users are included).
+    """
+
+    list_columns_to_keep = ["user_id", "item_id", "offer_subcategory_id"]
+
+    logger.info("Load training")
+    training_data = read_from_gcs(storage_path, training_dataset_name, parallel=False)[
+        list_columns_to_keep
+    ].drop_duplicates()
+    logger.info(
+        f"Number of unique (user, item, offer_subcategory_id) interactions in training data: {training_data.shape[0]}"
+    )
+
+    logger.info("Load test data")
+    test_data = (
+        read_from_gcs(storage_path, test_dataset_name, parallel=False)
+        .astype({"user_id": str, "item_id": str, "offer_subcategory_id": str})[
+            list_columns_to_keep
+        ]
+        .drop_duplicates()
+    )
+    logger.info(
+        f"Number of unique (user, item, offer_subcategory_id) interactions in test data: {test_data.shape[0]}"
+    )
+
+    ## Truncate test data if n_users is provided
+    total_n_users = len(test_data["user_id"].unique())
+    if n_users_to_test:
+        users_to_test = test_data["user_id"].unique()[
+            : min(n_users_to_test, total_n_users)
+        ]
+        logger.info(f"Computing metrics for {len(users_to_test)} users")
+    else:
+        users_to_test = None
+        logger.info(f"Computing metrics for all users ({total_n_users}) users)")
+
+    return test_data, training_data, users_to_test
+
+
+def generate_predictions(
+    model, test_data: pd.DataFrame, users_to_test: Optional[pd.Series]
+) -> pd.DataFrame:
+    """
+    Generates item dot product scores for each user in the test dataset using the provided model.
+    The scores are computed for each user with all unique (item_id, offer_subcategory_id) in test_dataset which are stored in offers_to_score.
+    offers_to_score does not contain previously seen items during training which prevents data leak.
+
+    Args:
+        model: Trained Two tower retrieval model.
+        test_data (pd.DataFrame): DataFrame containing test user-item interactions with at least
+            'user_id', 'item_id', and 'offer_subcategory_id' columns.
+        users_to_test (Optional[pd.Series]): Series of user IDs to generate predictions for.
+            If None, predictions are generated for all users in the test_data.
+
+    Returns:
+        pd.DataFrame: DataFrame with columns ['user_id', 'item_id', 'score'], where score represents
+                        the predicted interaction score (dot product between user and item two tower embeddings).
+    """
+
+    # Get unique items to score
+    offers_to_score = (
+        test_data[["item_id", "offer_subcategory_id"]]
+        .drop_duplicates()
+        .item_id.to_numpy()
+    )
+
+    # Create empty DataFrame to store predictions
+    df_predictions = pd.DataFrame(columns=["user_id", "item_id", "score"])
+
+    if users_to_test is not None:
+        test_data = test_data[test_data.user_id.isin(users_to_test)]
+
+    for current_user in tqdm(test_data["user_id"].unique()):
+        input_feature = current_user
+
+        # Prepare input for prediction
+        prediction_input = [
+            np.array([input_feature] * len(offers_to_score)),
+            offers_to_score,
+        ]
+
+        # Generate predictions
+        prediction = model.predict(prediction_input, verbose=0)
+
+        # Append predictions to final predictions DataFrame
+        current_user_predictions = pd.DataFrame(
+            {
+                "user_id": [current_user] * len(offers_to_score),
+                "item_id": offers_to_score.flatten().tolist(),
+                "score": prediction.flatten().tolist(),
+            }
+        )
+        df_predictions = pd.concat([df_predictions, current_user_predictions])
+
+    return df_predictions
+
+
+def compute_metrics(
+    test_data: pd.DataFrame,
+    df_predictions: pd.DataFrame,
+    training_data: pd.DataFrame,
+    k: int,
+) -> dict:
+    """
+    Evaluates the quality of retrievals using several standard metrics.
+
+    Args:
+        test_data (pd.DataFrame): DataFrame containing ground truth user-item interactions
+            with columns 'user_id' and 'item_id'.
+        df_predictions (pd.DataFrame): DataFrame containing predicted scores for user-item pairs
+            with columns 'user_id', 'item_id', and 'score'.
+        training_data (pd.DataFrame): DataFrame containing historical training data with
+            'user_id' and 'item_id' columns, used for coverage and novelty computations.
+        k (int): Number of top retrievals to consider for evaluation (e.g., precision@k, recall@k).
+
+    Returns:
+        dict: Dictionary containing evaluation metrics including:
+            - precision@k
+            - recall@k
+            - RPrecision@k
+            - map@k
+            - novelty
+            - coverage
+    """
+    # Column definitions
+    col_user = "user_id"
+    col_item = "item_id"
+    col_prediction = "score"
+
+    # Calculate metrics
+    precision = precision_at_k(
+        test_data,
+        df_predictions,
+        col_user=col_user,
+        col_item=col_item,
+        col_prediction=col_prediction,
+        relevancy_method="top_k",
+        k=k,
+    )
+
+    recall = recall_at_k(
+        test_data,
+        df_predictions,
+        col_user=col_user,
+        col_item=col_item,
+        col_prediction=col_prediction,
+        relevancy_method="top_k",
+        k=k,
+    )
+
+    RPrecision = r_precision_at_k(
+        test_data,
+        df_predictions,
+        col_user=col_user,
+        col_item=col_item,
+        col_prediction=col_prediction,
+        relevancy_method="top_k",
+        k=k,
+    )
+
+    map = map_at_k(
+        test_data,
+        df_predictions,
+        col_user=col_user,
+        col_item=col_item,
+        col_prediction=col_prediction,
+        relevancy_method="top_k",
+        k=k,
+    )
+
+    coverage = catalog_coverage(
+        training_data, test_data, col_user=col_user, col_item=col_item
+    )
+
+    novelty_metric = novelty(
+        training_data, test_data, col_user=col_user, col_item=col_item
+    )
+
+    ## Assemble metrics in dict
+    metrics = {
+        f"precision@{k}": precision,
+        f"recall@{k}": recall,
+        f"RPrecision@{k}": RPrecision,
+        f"map@{k}": map,
+        f"novelty@{k}": novelty_metric,
+        f"coverage@{k}": coverage,
+    }
+    return metrics
 
 
 def evaluate(
@@ -28,128 +239,38 @@ def evaluate(
     storage_path: str,
     training_dataset_name: str = "recommendation_training_data",
     test_dataset_name: str = "recommendation_test_data",
-    config_file_name: str = "user-qpi-features",
-):
-    try:
-        with open(
-            f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
-            mode="r",
-            encoding="utf-8",
-        ) as config_file:
-            features = json.load(config_file)
-            prediction_input_feature = features.get(
-                "input_prediction_feature", "user_id"
-            )
-    except Exception:
-        logger.info("Config file not found: setting default configuration")
-        prediction_input_feature = "user_id"
+    list_k: list = [10, 40],
+) -> dict:
+    """
+    Runs the full evaluation pipeline for a retrieval model, including data preparation,
+    prediction generation, and computation of evaluation metrics for different values of k.
 
-    logger.info("Load raw data")
-    raw_data = read_from_gcs(storage_path, "bookings", parallel=False).astype(
-        {"user_id": str, "item_id": str}
+    Args:
+        model (tf.keras.models.Model): Trained retrieval model used to generate predictions.
+        storage_path (str): Path to the storage location containing the datasets.
+        training_dataset_name (str, optional): Name of the training dataset file. Defaults to "recommendation_training_data".
+        test_dataset_name (str, optional): Name of the test dataset file. Defaults to "recommendation_test_data".
+        list_k (list, optional): List of cutoff values (k) for which evaluation metrics should be computed. Defaults to [10, 40].
+
+    Returns:
+        dict: Dictionary containing evaluation metrics for each value of k in list_k.
+    """
+
+    logger.info("Get data for evaluation")
+    test_data, training_data, users_to_test = prepare_data_for_evaluation(
+        storage_path=storage_path,
+        training_dataset_name=training_dataset_name,
+        test_dataset_name=test_dataset_name,
+        n_users_to_test=EVALUATION_USER_NUMBER,
     )
-    logger.info(f"raw_data: {raw_data.shape[0]}")
-
-    training_item_ids = read_from_gcs(
-        storage_path, training_dataset_name, parallel=False
-    )["item_id"].unique()
-    logger.info(f"training_item_ids: {training_item_ids.shape[0]}")
-
-    logger.info("Load test data")
-    test_columns = [prediction_input_feature, "item_id"]
-    if "user_id" not in test_columns:
-        test_columns.append("user_id")
-    positive_data_test = read_from_gcs(
-        storage_path, test_dataset_name, parallel=False
-    ).astype({"user_id": str, "item_id": str})[test_columns]
-    logger.info("Merge all data")
-    positive_data_test = positive_data_test.merge(
-        raw_data, on=["user_id", "item_id"], how="inner"
-    ).drop_duplicates()
-    logger.info(f"positive_data_test: {positive_data_test.shape[0]}")
-
-    users_to_test = positive_data_test["user_id"].unique()[
-        : min(EVALUATION_USER_NUMBER, positive_data_test["user_id"].nunique())
-    ]
-
-    data_model_dict = {
-        "data": {
-            "raw": raw_data,
-            "training_item_ids": training_item_ids,
-            "test": positive_data_test.loc[
-                lambda df: df["user_id"].isin(users_to_test)
-            ],
-        },
-        "model": model,
-        "prediction_input_feature": prediction_input_feature,
-    }
-
-    diversification_users_to_test = positive_data_test["user_id"].unique()[
-        : min(
-            EVALUATION_USER_NUMBER_DIVERSIFICATION,
-            positive_data_test["user_id"].nunique(),
-        )
-    ]
-
-    diversification_model_dict = {
-        "data": {
-            "raw": raw_data,
-            "training_item_ids": training_item_ids,
-            "test": positive_data_test.loc[
-                lambda df: df["user_id"].isin(diversification_users_to_test)
-            ],
-        },
-        "model": model,
-    }
 
     logger.info("Get predictions")
-    data_model_dict_w_actual_and_predicted = get_actual_and_predicted(data_model_dict)
-    diversification_model_dict["top_offers"] = data_model_dict_w_actual_and_predicted[
-        "top_offers"
-    ].loc[lambda df: df["user_id"].isin(diversification_users_to_test)]
+    df_predictions = generate_predictions(model, test_data, users_to_test)
 
+    logger.info("Compute metrics")
     metrics = {}
-    for k in [RECOMMENDATION_NUMBER, NUMBER_OF_PRESELECTED_OFFERS]:
-        logger.info(f"Computing metrics for k={k}")
-        data_model_dict_w_metrics_at_k = compute_metrics(
-            data_model_dict_w_actual_and_predicted, k
-        )
-
-        metrics.update(
-            {
-                f"precision_at_{k}": data_model_dict_w_metrics_at_k["metrics"]["mapk"],
-                f"recall_at_{k}": data_model_dict_w_metrics_at_k["metrics"]["mark"],
-                f"coverage_at_{k}": data_model_dict_w_metrics_at_k["metrics"][
-                    "coverage"
-                ],
-                f"personalization_at_{k}": data_model_dict_w_metrics_at_k["metrics"][
-                    "personalization_at_k"
-                ],
-            }
-        )
-
-        if k == RECOMMENDATION_NUMBER:
-            logger.info("Compute diversification score")
-            avg_div_score, avg_div_score_panachage = compute_diversification_score(
-                diversification_model_dict, k
-            )
-            logger.info("End of diversification score computation")
-
-            metrics.update(
-                {
-                    f"precision_at_{k}_panachage": data_model_dict_w_metrics_at_k[
-                        "metrics"
-                    ]["mapk_panachage"],
-                    f"recall_at_{k}_panachage": data_model_dict_w_metrics_at_k[
-                        "metrics"
-                    ]["mark_panachage"],
-                    f"avg_diversification_score_at_{k}": avg_div_score,
-                    f"avg_diversification_score_at_{k}_panachage": avg_div_score_panachage,
-                    f"personalization_at_{k}_panachage": data_model_dict_w_metrics_at_k[
-                        "metrics"
-                    ]["personalization_at_k_panachage"],
-                }
-            )
+    for k in list_k:
+        metrics.update(compute_metrics(test_data, df_predictions, training_data, k=k))
 
     return metrics
 
@@ -158,7 +279,20 @@ def save_pca_representation(
     loaded_model: tf.keras.models.Model,
     item_data: pd.DataFrame,
     figures_folder: str,
-):
+) -> None:
+    """
+    Computes a 2D PCA projection of item embeddings from the retrieval model
+    and generates scatter plots for visualizing item distributions by category and subcategory.
+
+    Args:
+        loaded_model (tf.keras.models.Model): Trained retrieval model from which item embeddings are extracted.
+        item_data (pd.DataFrame): DataFrame containing metadata for items, including 'item_id',
+            'offer_category_id', and 'offer_subcategory_id'.
+        figures_folder (str): Path to the folder where the generated plots will be saved.
+
+    Returns:
+        None. Saves visualizations as PDF files in the specified folder.
+    """
     item_ids = loaded_model.item_layer.layers[0].get_vocabulary()[1:]
     embeddings = loaded_model.item_layer.layers[1].get_weights()[0][1:]
 

@@ -9,6 +9,7 @@ from common.config import (
     GCP_PROJECT_ID,
     LOCAL_ENV,
 )
+from google.api_core.exceptions import NotFound
 from google.auth.transport.requests import Request
 from google.cloud import storage
 from google.oauth2 import id_token
@@ -404,11 +405,18 @@ def sparkql_health_check(url: str, timeout=5, retries=5, initial_delay=5):
     raise Exception(f"Health check failed for {url} after {retries} attempts.")
 
 
-def get_json_from_gcs(bucket_name, blob_name):
-    client = storage.Client()
-    bucket = client.bucket(bucket_name)
-    blob = bucket.blob(blob_name)
-    return json.loads(blob.download_as_text())
+def get_json_from_gcs(bucket_name: str, blob_name: str) -> dict:
+    """
+    Fetch a JSON file from Google Cloud Storage.
+    """
+    try:
+        client = storage.Client()
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob(blob_name)
+        return json.loads(blob.download_as_text())
+    except NotFound as e:
+        logging.error(f"Error fetching JSON from GCS: {str(e)}")
+        return {}
 
 
 def save_json_to_gcs(data_dict, bucket_name, blob_name):
@@ -471,16 +479,10 @@ def build_export_context(**kwargs):
         or {}
     )
 
-    # 2) Fetch partner-specific salt from Secret Manager or create it if not exists
     partner_salt = create_key_if_not_exists(
         project_id=GCP_PROJECT_ID,
         secret_id=f"dbt_export_private_obfuscation_salt_{partner_name}",
         key_length=32,
-    )
-
-    # 3) Fetch target bucket config
-    target_bucket_config = get_json_from_gcs(
-        logs_bucket, f"{partner_name}/target_bucket_config.json"
     )
 
     # 4) Generate export logs
@@ -502,7 +504,7 @@ def build_export_context(**kwargs):
     export_context = {
         "table_list": table_list,
         "project_id": GCP_PROJECT_ID,
-        "source_dataset": f"export_{partner_name}",
+        "source_dataset": f"tmp_export_{partner_name}",
         "destination_bucket": parquet_storage_gcs_bucket,
         "destination_path": f"{partner_name}/{export_date}",
     }
@@ -527,7 +529,6 @@ def build_export_context(**kwargs):
     ti.xcom_push(key="partner_name", value=partner_name)
     ti.xcom_push(key="export_date", value=export_date)
     ti.xcom_push(key="partner_salt", value=partner_salt)
-    ti.xcom_push(key="target_bucket_config", value=target_bucket_config)
     ti.xcom_push(key="obfuscation_config", value=obfuscation_config)
     ti.xcom_push(key="table_list", value=table_list)
 

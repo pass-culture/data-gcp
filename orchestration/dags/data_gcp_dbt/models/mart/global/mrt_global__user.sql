@@ -42,6 +42,7 @@ select
     total_theoretical_outings_amount_spent,
     total_last_deposit_digital_goods_amount_spent,
     total_deposit_actual_amount_spent,
+    total_diversity_score,
     last_deposit_amount,
     total_theoretical_remaining_credit,
     user_creation_date,
@@ -57,6 +58,9 @@ select
     first_deposit_amount,
     last_deposit_expiration_date,
     user_is_current_beneficiary,
+    last_recredit_date,
+    total_recredit,
+    total_recredit_amount,
     date_diff(
         date('{{ ds() }}'), cast(user_activation_date as date), day
     ) as user_seniority

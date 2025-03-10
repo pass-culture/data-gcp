@@ -2,6 +2,7 @@ import json
 from collections import OrderedDict
 
 import mlflow
+import pandas as pd
 import tensorflow as tf
 import typer
 from loguru import logger
@@ -19,10 +20,12 @@ from commons.mlflow_tools import connect_remote_mlflow, get_mlflow_experiment
 from two_towers_model.models.match_model import MatchModel
 from two_towers_model.models.two_towers_model import TwoTowersModel
 from two_towers_model.utils.callbacks import MLFlowLogging
+from two_towers_model.utils.logging import get_git_current_branch
 
 N_EPOCHS = 100
+EPOCH_COUNT_PER_SHUFFLE = 5
 MIN_DELTA = 0.001
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.1
 VERBOSE = 2
 
 
@@ -52,6 +55,17 @@ def load_features(config_file_name: str):
     )
 
 
+def convert_df_to_tensor_dict(df: pd.DataFrame) -> dict[str, tf.Tensor]:
+    features_dict = {}
+
+    for column in df.columns:
+        if df[column].dtype == "object":
+            features_dict[column] = df[column].astype(str).values
+        else:
+            features_dict[column] = df[column].values
+    return features_dict
+
+
 def load_datasets(
     training_table_name: str,
     validation_table_name: str,
@@ -62,13 +76,17 @@ def load_datasets(
     """Loads and prepares training and validation datasets."""
     logger.info("Loading & processing datasets")
 
-    train_data = read_from_gcs(
-        storage_path=STORAGE_PATH, table_name=training_table_name
-    )[user_columns + item_columns].astype(str)
+    train_data = (
+        read_from_gcs(storage_path=STORAGE_PATH, table_name=training_table_name)[
+            user_columns + item_columns
+        ]
+        .drop_duplicates(subset=["user_id", "item_id"])
+        .pipe(compute_candidate_sampling_probabilities)
+    )
 
     validation_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=validation_table_name
-    )[user_columns + item_columns].astype(str)
+    )[user_columns + item_columns].pipe(compute_candidate_sampling_probabilities)
 
     train_user_data = (
         train_data[user_columns]
@@ -84,6 +102,17 @@ def load_datasets(
     return train_data, validation_data, train_user_data, train_item_data
 
 
+def compute_candidate_sampling_probabilities(data: pd.DataFrame):
+    dict = data["item_id"].value_counts(normalize=True).to_dict()
+    return data.assign(
+        **{
+            "candidate_sampling_probability": data["item_id"]
+            .map(dict)
+            .astype("float32")
+        }
+    )
+
+
 def build_tf_datasets(
     train_data, validation_data, train_user_data, train_item_data, batch_size
 ):
@@ -91,39 +120,46 @@ def build_tf_datasets(
     logger.info("Building tf datasets")
 
     train_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_data.values)
+        tf.data.Dataset.from_tensor_slices(train_data.pipe(convert_df_to_tensor_dict))
         .cache()
         .shuffle(buffer_size=len(train_data), reshuffle_each_iteration=True)
         .batch(batch_size=batch_size)
-        .map(lambda x: tf.transpose(x))
         .prefetch(tf.data.AUTOTUNE)
     )
 
     validation_dataset = (
-        tf.data.Dataset.from_tensor_slices(validation_data.values)
+        tf.data.Dataset.from_tensor_slices(
+            validation_data.pipe(convert_df_to_tensor_dict)
+        )
         .batch(batch_size=batch_size)
-        .map(lambda x: tf.transpose(x))
         .cache()
         .prefetch(tf.data.AUTOTUNE)
     )
 
     user_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_user_data.values)
+        tf.data.Dataset.from_tensor_slices(
+            train_user_data.pipe(convert_df_to_tensor_dict)
+        )
         .batch(batch_size, drop_remainder=False)
-        .map(lambda x: tf.transpose(x))
         .cache()
         .prefetch(tf.data.AUTOTUNE)
     )
 
     item_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_item_data.values)
+        tf.data.Dataset.from_tensor_slices(
+            train_item_data.pipe(convert_df_to_tensor_dict)
+        )
         .batch(batch_size, drop_remainder=False)
-        .map(lambda x: tf.transpose(x))
         .cache()
         .prefetch(tf.data.AUTOTUNE)
     )
 
-    return train_dataset, validation_dataset, user_dataset, item_dataset
+    return (
+        train_dataset,
+        validation_dataset,
+        user_dataset,
+        item_dataset,
+    )
 
 
 def initialize_mlflow(experiment_name: str, run_name: str):
@@ -139,26 +175,17 @@ def initialize_mlflow(experiment_name: str, run_name: str):
 
 
 def log_mlflow_params(
-    embedding_size,
-    batch_size,
-    train_user_data,
-    train_item_data,
-    user_features_config,
-    item_features_config,
-    config_file_name,
-):
+    config_file_name: str,
+    extra_params: dict,
+) -> None:
     """Logs parameters and additional information to MLFlow."""
     mlflow.log_params(
         {
             "environment": ENV_SHORT_NAME,
-            "embedding_size": embedding_size,
-            "batch_size": batch_size,
-            "epoch_number": N_EPOCHS,
-            "user_count": len(train_user_data),
-            "user_feature_count": len(user_features_config.keys()),
-            "item_count": len(train_item_data),
-            "item_feature_count": len(item_features_config.keys()),
             "learning_rate": LEARNING_RATE,
+            "epoch_number": N_EPOCHS,
+            "git_branch": get_git_current_branch(),
+            **extra_params,
         }
     )
     mlflow.log_artifact(
@@ -167,21 +194,47 @@ def log_mlflow_params(
 
 
 def train_two_tower_model(
-    item_dataset,
-    train_dataset,
-    validation_dataset,
-    two_tower_model,
-    validation_steps,
-    run_uuid,
+    train_dataset: tf.data.Dataset,
+    validation_dataset: tf.data.Dataset,
+    two_tower_model: TwoTowersModel,
+    training_steps: int,
+    validation_steps: int,
+    run_uuid: int,
 ):
+    """
+    Trains a two-tower model with early stopping and learning rate reduction.
+
+    This function compiles and fits a two-tower model using the provided datasets.
+    It configures the model with Adam optimizer and sets up callbacks for
+    learning rate reduction, early stopping, and MLFlow logging.
+
+    Args:
+        train_dataset (tf.data.Dataset): TensorFlow dataset for training.
+        validation_dataset (tf.data.Dataset): TensorFlow dataset for validation.
+        two_tower_model (TwoTowersModel): The initialized two-tower model to be trained.
+        training_steps (int): Number of steps per epoch during training.
+        validation_steps (int): Number of steps for validation.
+        run_uuid (str): Unique identifier for the training run, used for logging.
+
+    Returns:
+        None: The model is trained in-place.
+
+    Note:
+        In this training, we shuffle the training data every EPOCH_COUNT_PER_SHUFFLE epochs. This is done
+            in order to activate the optimizer's learning rate reduction and early stopping callbacks.
+    """
+
     # No validation on metrics during training
     two_tower_model.set_task(item_dataset=None)
     two_tower_model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE)
     )
+
+    repeated_train_dataset = train_dataset.repeat()
     two_tower_model.fit(
-        train_dataset,
+        repeated_train_dataset,
         epochs=N_EPOCHS,
+        steps_per_epoch=training_steps,
         validation_data=validation_dataset,
         validation_steps=validation_steps,
         callbacks=[
@@ -196,6 +249,7 @@ def train_two_tower_model(
                 monitor="val_loss",
                 patience=10,
                 min_delta=MIN_DELTA,
+                restore_best_weights=True,
                 verbose=1,
             ),
             MLFlowLogging(
@@ -204,22 +258,6 @@ def train_two_tower_model(
         ],
         verbose=VERBOSE,
     )
-    # Compile one last time and evaluate.
-    two_tower_model.compile()
-    two_tower_model.task.factorized_metrics = [
-        two_tower_model.get_metrics(item_dataset=item_dataset)
-    ]
-    logger.info("Evaluate on train dataset")
-    train_params = two_tower_model.evaluate(
-        train_dataset, verbose=VERBOSE, return_dict=True
-    )
-    mlflow.log_metrics({f"training_{k}": v for k, v in train_params.items()})
-
-    logger.info("Evaluate on validation dataset")
-    validation_results = two_tower_model.evaluate(
-        validation_dataset, steps=validation_steps, verbose=VERBOSE, return_dict=True
-    )
-    mlflow.log_metrics({f"validation_{k}": v for k, v in validation_results.items()})
 
 
 def save_model_and_embeddings(
@@ -236,10 +274,6 @@ def save_model_and_embeddings(
     user_embeddings = two_tower_model.user_model.predict(user_dataset, verbose=VERBOSE)
     logger.info("Predicting final item embeddings")
     item_embeddings = two_tower_model.item_model.predict(item_dataset, verbose=VERBOSE)
-
-    logger.info("Normalizing embeddings...")
-    user_embeddings = tf.math.l2_normalize(user_embeddings, axis=1)
-    item_embeddings = tf.math.l2_normalize(item_embeddings, axis=1)
 
     logger.info("Building and saving the MatchModel")
     match_model = MatchModel(
@@ -297,16 +331,19 @@ def train(
     train_dataset, validation_dataset, user_dataset, item_dataset = build_tf_datasets(
         train_data, validation_data, train_user_data, train_item_data, batch_size
     )
-    validation_steps = max(int((validation_data.shape[0] // batch_size)), 1)
     log_mlflow_params(
-        embedding_size,
-        batch_size,
-        train_user_data,
-        train_item_data,
-        user_features_config,
-        item_features_config,
-        config_file_name,
+        config_file_name=config_file_name,
+        extra_params={
+            "embedding_size": embedding_size,
+            "batch_size": batch_size,
+            "user_count": len(train_user_data),
+            "user_feature_count": len(user_features_config.keys()),
+            "item_count": len(train_item_data),
+            "item_feature_count": len(item_features_config.keys()),
+            "epoch_count_per_shuffle": EPOCH_COUNT_PER_SHUFFLE,
+        },
     )
+
     logger.info("Create Model")
     two_tower_model = TwoTowersModel(
         data=train_data,
@@ -317,15 +354,19 @@ def train(
         embedding_size=embedding_size,
     )
 
+    logger.info("Training Model")
+    training_steps = max((len(train_data) / EPOCH_COUNT_PER_SHUFFLE) // batch_size, 1)
+    validation_steps = max(len(validation_data) // batch_size, 1)
     train_two_tower_model(
-        item_dataset,
         train_dataset,
         validation_dataset,
         two_tower_model,
+        training_steps=training_steps,
         validation_steps=validation_steps,
         run_uuid=run_uuid,
     )
 
+    logger.info("Compute embeddings and save Model")
     save_model_and_embeddings(
         user_dataset,
         item_dataset,

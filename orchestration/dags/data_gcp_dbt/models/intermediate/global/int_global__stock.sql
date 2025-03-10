@@ -17,6 +17,7 @@ select
     s.price_category_label,
     s.stock_features,
     s.stock_last_provider_id,
+    s.stock_is_soft_deleted,
     s.offer_id,
     s.is_bookable,
     o.offer_product_id,
@@ -53,6 +54,7 @@ select
     o.isbn,
     o.last_stock_price,
     o.venue_is_permanent,
-    o.venue_is_virtual
+    o.venue_is_virtual,
+    o.is_local_authority
 from {{ ref("int_applicative__stock") }} as s
 inner join {{ ref("int_global__offer") }} as o on s.offer_id = o.offer_id

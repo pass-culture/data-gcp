@@ -4,6 +4,7 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     BIGQUERY_INT_RAW_DATASET,
     DAG_FOLDER,
+    DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -50,6 +51,7 @@ dag = DAG(
     description="historize applicative database current state to gcs bucket",
     schedule_interval=get_airflow_schedule(SCHEDULE_DICT[dag_id]),
     catchup=False,
+    tags=[DAG_TAGS.DE.value],
 )
 
 start = DummyOperator(task_id="start", dag=dag)

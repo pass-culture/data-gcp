@@ -15,22 +15,14 @@ with
             v.venue_managing_offerer_id as offerer_id,
             date('{{ ds() }}') as partition_date,
             'individual' as offer_type,
-            count(
-                case
-                    when
-                        date_sub('{{ ds() }}', interval 1 day) >= date(s.dbt_valid_from)
-                        and (
-                            s.dbt_valid_to is null
-                            or date_sub('{{ ds() }}', interval 1 day)
-                            <= date(s.dbt_valid_to)
-                        )
-                    then s.offer_id
-                end
-            ) as total_bookable_offers
+            count(distinct s.offer_id) as total_bookable_offers
         from {{ ref("snapshot__bookable_offer") }} as s
         inner join {{ ref("int_applicative__offer") }} as o using (offer_id)
         inner join
             {{ source("raw", "applicative_database_venue") }} as v using (venue_id)
+        where
+            date('{{ ds() }}') >= date(s.dbt_valid_from)
+            and (s.dbt_valid_to is null or date('{{ ds() }}') <= date(s.dbt_valid_to))
         group by venue_id, offerer_id, partition_date, offer_type
         union all
         select
@@ -38,19 +30,7 @@ with
             v.venue_managing_offerer_id as offerer_id,
             date('{{ ds() }}') as partition_date,
             'collective' as offer_type,
-            count(
-                case
-                    when
-                        date_sub('{{ ds() }}', interval 1 day)
-                        >= date(sb.dbt_valid_from)
-                        and (
-                            sb.dbt_valid_to is null
-                            or date_sub('{{ ds() }}', interval 1 day)
-                            <= date(sb.dbt_valid_to)
-                        )
-                    then sb.collective_offer_id
-                end
-            ) as total_bookable_offers
+            count(distinct sb.collective_offer_id) as total_bookable_offers
         from {{ ref("snapshot__bookable_collective_offer") }} as sb
         inner join
             {{ source("raw", "applicative_database_collective_offer") }} as o using (
@@ -58,6 +38,9 @@ with
             )
         inner join
             {{ source("raw", "applicative_database_venue") }} as v using (venue_id)
+        where
+            date('{{ ds() }}') >= date(sb.dbt_valid_from)
+            and (sb.dbt_valid_to is null or date('{{ ds() }}') <= date(sb.dbt_valid_to))
         group by venue_id, offerer_id, partition_date, offer_type
     ),
 

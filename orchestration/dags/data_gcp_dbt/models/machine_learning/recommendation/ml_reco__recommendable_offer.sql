@@ -3,9 +3,12 @@
 with
     recommendable_offers_data as (
         select
-            *,
+            available_offers.*,
             row_number() over (
-                partition by offer_id order by stock_price, stock_beginning_date asc
+                partition by available_offers.offer_id
+                order by
+                    available_offers.stock_price asc,
+                    available_offers.stock_beginning_date asc
             ) as stock_rank
         from
             (
@@ -33,7 +36,7 @@ with
                     max(is_restrained) as is_restrained,
                     max(subcategory_id) as subcategory_id,
                     max(search_group_name) as search_group_name,
-                    max(name) as name,
+                    max(name) as name,  -- noqa: RF04
                     max(gtl_id) as gtl_id,
                     max(gtl_l1) as gtl_l1,
                     max(gtl_l2) as gtl_l2,
@@ -43,13 +46,13 @@ with
                     max(cluster_id) as cluster_id,
                     max(semantic_emb_mean) as semantic_emb_mean,
                     max(is_national) as is_national,
-                    min(url is not null) as is_numerical,
-                    max((url is null and not is_national)) as is_geolocated,
+                    max(url is not null) as is_numerical,
+                    max(url is null) as is_geolocated,
                     max(offer_is_duo) as offer_is_duo,
                     max(default_max_distance) as default_max_distance
                 from {{ ref("ml_reco__available_offer") }}
                 group by 1, 2, 3, 4, 5, 6, 7, 8
-            )
+            ) as available_offers
     )
 
 select
@@ -91,5 +94,5 @@ select
     ro.is_restrained,
     ro.default_max_distance,
     row_number() over () as unique_id
-from recommendable_offers_data ro
-where stock_rank < 30  -- only next 30 events
+from recommendable_offers_data as ro
+where ro.stock_rank < 30  -- only next 30 events

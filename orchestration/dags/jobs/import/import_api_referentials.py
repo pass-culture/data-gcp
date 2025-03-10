@@ -1,7 +1,11 @@
 from datetime import datetime, timedelta
 
 from common.alerts import on_failure_combined_callback
-from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID
+from common.config import (
+    DAG_TAGS,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+)
 from common.operators.gce import (
     DeleteGCEOperator,
     InstallDependenciesOperator,
@@ -41,6 +45,7 @@ with DAG(
             type="string",
         )
     },
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
     start = DummyOperator(task_id="start")
 

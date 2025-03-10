@@ -2,7 +2,12 @@ import datetime
 
 from common import macros
 from common.alerts import on_failure_combined_callback
-from common.config import DAG_FOLDER, ENV_SHORT_NAME, GCP_PROJECT_ID
+from common.config import (
+    DAG_FOLDER,
+    DAG_TAGS,
+    ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+)
 from common.operators.gce import (
     DeleteGCEOperator,
     InstallDependenciesOperator,
@@ -51,6 +56,7 @@ with DAG(
             type="string",
         )
     },
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
     # Cannot Schedule before 5AM UTC+2 as data from API is not available.
     sleep_op = TimeSleepSensor(

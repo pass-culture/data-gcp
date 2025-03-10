@@ -12,12 +12,14 @@ select
     b.booking_cancellation_date,
     b.booking_cancellation_reason,
     b.user_id,
+    b.user_age_at_booking,
     b.deposit_id,
     b.deposit_type,
     b.reimbursed,
     b.booking_intermediary_amount,
     b.booking_rank,
     b.booking_used_date,
+    b.booking_used_recredit_type,
     b.stock_beginning_date,
     b.stock_id,
     b.offer_id,
@@ -40,6 +42,7 @@ select
     b.venue_is_virtual,
     b.offerer_id,
     b.offerer_name,
+    b.is_local_authority,
     b.partner_id,
     b.offer_subcategory_id,
     b.physical_goods,
@@ -54,6 +57,7 @@ select
     b.isbn,
     b.offer_type_label,
     b.offer_sub_type_label,
+    b.diversity_score,
     u.user_iris_internal_id,
     u.user_postal_code,
     u.user_department_code,
@@ -79,4 +83,4 @@ select
     u.first_deposit_creation_date
 from {{ ref("int_global__booking") }} as b
 left join {{ ref("mrt_global__user") }} as u on u.user_id = b.user_id
-where deposit_type is not null and b.user_id is not null
+where b.deposit_type is not null and b.user_id is not null

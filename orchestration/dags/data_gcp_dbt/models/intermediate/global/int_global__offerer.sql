@@ -166,18 +166,21 @@ select
                 lower(ofr.offerer_name) like 'commune%'
                 or lower(ofr.offerer_name) like '%ville%de%'
             )
+            and siren_data.activiteprincipaleunitelegale = '84.11Z'
         then 'Communes'
         when
             (
                 lower(ofr.offerer_name) like '%departement%'
                 or lower(ofr.offerer_name) like '%département%'
             )
+            and siren_data.activiteprincipaleunitelegale = '84.11Z'
         then 'Départements'
         when
             (
                 lower(ofr.offerer_name) like 'region%'
                 or lower(ofr.offerer_name) like 'région%'
             )
+            and siren_data.activiteprincipaleunitelegale = '84.11Z'
         then 'Régions'
         when
             (
@@ -193,8 +196,10 @@ select
                 or lower(ofr.offerer_name) like '%petr%'
                 or lower(ofr.offerer_name) like '%intercommunal%'
             )
+            and siren_data.activiteprincipaleunitelegale = '84.11Z'
         then 'CC / Agglomérations / Métropoles'
-        else 'Non qualifiable'
+        when siren_data.activiteprincipaleunitelegale = '84.11Z'
+        then 'Non qualifiable'
     end as local_authority_type,
     case
         when

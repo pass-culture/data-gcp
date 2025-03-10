@@ -1,6 +1,5 @@
 select
     b.booking_id,
-    date(b.booking_creation_date) as booking_creation_date,
     b.booking_creation_date as booking_created_at,
     b.stock_id,
     b.booking_quantity,
@@ -18,9 +17,19 @@ select
     b.venue_id,
     b.price_category_label,
     b.booking_reimbursement_date,
+    b.booking_used_recredit_type,
+    d.deposit_type,
+    date(b.booking_creation_date) as booking_creation_date,
+    if(
+        extract(dayofyear from date(b.booking_creation_date))
+        < extract(dayofyear from d.user_birth_date),
+        date_diff(date(b.booking_creation_date), d.user_birth_date, year) - 1,
+        date_diff(date(b.booking_creation_date), d.user_birth_date, year)
+    ) as user_age_at_booking,
     coalesce(b.booking_amount, 0)
     * coalesce(b.booking_quantity, 0) as booking_intermediary_amount,
-    rank() over (partition by b.user_id order by booking_creation_date) as booking_rank,
-    d.deposit_type
+    rank() over (
+        partition by b.user_id order by b.booking_creation_date
+    ) as booking_rank
 from {{ source("raw", "applicative_database_booking") }} as b
 left join {{ ref("int_applicative__deposit") }} as d on b.deposit_id = d.deposit_id

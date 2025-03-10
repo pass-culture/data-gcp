@@ -132,3 +132,5 @@ models:
         description: "{{ doc('column__total_partner_created_collective_offers') }}"
       - name: image_creation_stage
         description: "{{ doc('column__image_creation_stage') }}"
+      - name: headline_offer_action_type
+        description: "{{ doc('column__headline_offer_action_type') }}"

@@ -6,6 +6,7 @@ from common.config import (
     BIGQUERY_SANDBOX_DATASET,
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
+    DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
@@ -124,6 +125,7 @@ with DAG(
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
+    tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",

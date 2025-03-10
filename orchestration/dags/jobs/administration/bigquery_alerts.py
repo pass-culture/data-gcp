@@ -4,6 +4,7 @@ from common import macros
 from common.alerts import bigquery_freshness_alert, on_failure_combined_callback
 from common.config import (
     DAG_FOLDER,
+    DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
@@ -53,6 +54,7 @@ with DAG(
             type="string",
         ),
     },
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
 

@@ -22,32 +22,10 @@ from airflow.providers.google.cloud.operators.cloud_sql import (
     CloudSQLExecuteQueryOperator,
 )
 
-yesterday = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime(
-    "%Y-%m-%d"
-) + " 00:00:00"
-
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 LOCATION = os.environ.get("REGION")
 DAG_FOLDER = os.environ.get("DAG_FOLDER")
-
-# Recreate proprely the connection url
-database_instance_name = access_secret_data(
-    GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}_database_instance_name", default=""
-)
-
-database_url = access_secret_data(
-    GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}_database_url", default=""
-)
-
-CONNECTION_ID = f"{GCP_PROJECT_ID}.{LOCATION}.{database_instance_name}"
-
-os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
-    database_url.replace("postgresql://", "gcpcloudsql://")
-    + f"?database_type=postgres&project_id={GCP_PROJECT_ID}&location={LOCATION}&instance={database_instance_name}&use_proxy=True&sql_proxy_use_tcp=True"
-)
-
-
-default_dag_args = {
+DEFAULT_DAG_ARGS = {
     "start_date": datetime.datetime(2020, 12, 1),
     "retries": 1,
     "on_failure_callback": task_fail_slack_alert,
@@ -55,9 +33,23 @@ default_dag_args = {
     "project_id": GCP_PROJECT_ID,
 }
 
+# Recreate proprely the connection url
+DATABASE_INSTANCE_NAME = access_secret_data(
+    GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}_database_instance_name", default=""
+)
+DATABASE_URL = access_secret_data(
+    GCP_PROJECT_ID, f"{RECOMMENDATION_SQL_INSTANCE}_database_url", default=""
+)
+CONNECTION_ID = f"{GCP_PROJECT_ID}.{LOCATION}.{DATABASE_INSTANCE_NAME}"
+os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
+    DATABASE_URL.replace("postgresql://", "gcpcloudsql://")
+    + f"?database_type=postgres&project_id={GCP_PROJECT_ID}&location={LOCATION}&instance={DATABASE_INSTANCE_NAME}&use_proxy=True&sql_proxy_use_tcp=True"
+)
+
+
 with DAG(
     "export_cloudsql_tables_to_bigquery_v1",
-    default_args=default_dag_args,
+    default_args=DEFAULT_DAG_ARGS,
     description="Export tables from recommendation CloudSQL to BigQuery",
     schedule_interval=get_airflow_schedule("0 1 * * *"),
     catchup=False,

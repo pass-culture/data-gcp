@@ -4,3 +4,4 @@ elementary-data[bigquery]==0.16.1
 dbt-score==0.7.1
 dbt-coverage==0.3.8
 dbt-metabase==1.4.0
+dotenv==0.9.9

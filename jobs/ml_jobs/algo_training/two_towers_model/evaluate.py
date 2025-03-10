@@ -31,9 +31,6 @@ def main(
     test_dataset_name: str = typer.Option(
         "recommendation_test_data", help="Name of the test dataset in storage"
     ),
-    config_file_name: str = typer.Option(
-        "config_file_name", help="List of input features for prediction"
-    ),
 ):
     logger.info("-------EVALUATE START------- ")
     connect_remote_mlflow()
@@ -65,12 +62,13 @@ def main(
     )
 
     metrics = evaluate(
-        loaded_model,
-        STORAGE_PATH,
-        training_dataset_name,
-        test_dataset_name,
-        config_file_name,
+        model=loaded_model,
+        storage_path=STORAGE_PATH,
+        training_dataset_name=training_dataset_name,
+        test_dataset_name=test_dataset_name,
+        list_k=[10, 40],
     )
+
     # Export the PCA representations of the item embeddings
     pca_plots_path = f"{MODEL_DIR}/pca_plots/"
     os.makedirs(pca_plots_path, exist_ok=True)

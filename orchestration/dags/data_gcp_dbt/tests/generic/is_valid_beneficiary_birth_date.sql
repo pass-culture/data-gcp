@@ -1,6 +1,4 @@
-{% test is_valid_beneficiary_birth_date(
-    model, column_name, where_condition=None
-) %}
+{% test is_valid_beneficiary_birth_date(model, column_name, where_condition=None) %}
 
     with
         validation as (
@@ -12,7 +10,9 @@
         errors as (
             select birth_date
             from validation
-            where birth_date not between DATE("2001-05-01") AND DATE_SUB(current_date, interval 15 year)
+            where
+                birth_date not between date("2001-05-01")
+                and date_sub(current_date, interval 15 year)
         )
 
     select *

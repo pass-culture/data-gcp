@@ -16,7 +16,7 @@ select
     o.venue_name,
     o.offer_id,
     o.offer_name,
-    c.tag_name as name, -- noqa: RF04
+    c.tag_name as name,  -- noqa: RF04
     fe.event_name,
     fe.traffic_medium,
     fe.traffic_campaign,
@@ -35,18 +35,18 @@ select
         then 'Non bénéficiaire'
         else 'Non loggué'
     end as user_role,
-    {{ calculate_exact_age('fe.event_date', 'eud.user_birth_date') }} as user_age,
+    {{ calculate_exact_age("fe.event_date", "eud.user_birth_date") }} as user_age,
     count(*) as cnt_events
 from {{ ref("int_firebase__native_event") }} as fe
 inner join
-    {{ ref("mrt_global__offer") }}
-    as o
+    {{ ref("mrt_global__offer") }} as o
     on fe.offer_id = o.offer_id
     and fe.event_name
     in ('ConsultOffer', 'ConsultWholeOffer', 'ConsultDescriptionDetails')
 left join
-    {{ ref("int_contentful__algolia_modules_criterion") }}
-    as c on fe.module_id = c.module_id and fe.offer_id = c.offer_id
+    {{ ref("int_contentful__algolia_modules_criterion") }} as c
+    on fe.module_id = c.module_id
+    and fe.offer_id = c.offer_id
 left join {{ ref("mrt_global__user") }} as eud on fe.user_id = eud.user_id
 where
     true

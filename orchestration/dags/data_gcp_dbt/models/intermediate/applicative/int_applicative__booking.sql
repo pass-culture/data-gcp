@@ -20,7 +20,8 @@ select
     b.booking_used_recredit_type,
     d.deposit_type,
     date(b.booking_creation_date) as booking_creation_date,
-    {{ calculate_exact_age('b.booking_creation_date', 'd.user_birth_date') }} as user_age_at_booking,
+    {{ calculate_exact_age("b.booking_creation_date", "d.user_birth_date") }}
+    as user_age_at_booking,
     coalesce(b.booking_amount, 0)
     * coalesce(b.booking_quantity, 0) as booking_intermediary_amount,
     rank() over (

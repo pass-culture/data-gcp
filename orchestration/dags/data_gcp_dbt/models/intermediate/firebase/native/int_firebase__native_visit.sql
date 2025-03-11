@@ -34,7 +34,7 @@ with
             max(event_timestamp) as last_event_timestamp,
             countif(event_name = 'ConsultOffer') as total_consulted_offer,
             countif(event_name = 'BookingConfirmation') as total_confirmed_booking,
-            countif(event_name = 'HasAddedOfferToFavorites') as nb_add_to_favorites,
+            countif(event_name = 'HasAddedOfferToFavorites') as total_added_to_favorites,
             countif(event_name = 'Share') as total_share,
             countif(event_name = 'Screenshot') as nb_screenshot,
             countif(event_name = 'UserSetLocation') as nb_set_location,

@@ -66,7 +66,7 @@ def main(
         storage_path=STORAGE_PATH,
         training_dataset_name=training_dataset_name,
         test_dataset_name=test_dataset_name,
-        list_k=[10, 40],
+        list_k=[100, 250, 1000],
     )
 
     # Export the PCA representations of the item embeddings

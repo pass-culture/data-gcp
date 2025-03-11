@@ -5,13 +5,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from common.constants import EVALUATION_USER_NUMBER
 from loguru import logger
 from recommenders.evaluation.python_evaluation import (
     catalog_coverage,
-    map_at_k,
     novelty,
     precision_at_k,
-    r_precision_at_k,
     recall_at_k,
 )
 from sklearn.decomposition import PCA
@@ -20,80 +19,60 @@ from tqdm import tqdm
 from commons.data_collect_queries import read_from_gcs
 
 
-def prepare_data_for_evaluation(
+def load_data_for_evaluation(
     storage_path: str,
     training_dataset_name: str,
     test_dataset_name: str,
-    n_users_to_test: Optional[int] = None,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Optional[pd.Series]]:
     """
-    Prepares training and test datasets for evaluation by loading the data from storage,
-    filtering necessary columns, removing duplicates, and optionally truncating the test users.
+    Loads training and test datasets for evaluation by loading the data from storage,
+    filtering necessary columns and removing duplicates
 
     Args:
         storage_path (str): Path to the storage location (GCS bucket path).
         training_dataset_name (str): Name of the training dataset file.
         test_dataset_name (str): Name of the test dataset file.
-        n_users_to_test (Optional[int], optional): Number of users to include for evaluation.
-            If provided, limits evaluation to the first `n_users_to_test` in the test dataset.
 
     Returns:
-        Tuple[pd.DataFrame, pd.DataFrame, Optional[pd.Series]]:
-            - Filtered test dataset as a DataFrame.
-            - Filtered training dataset as a DataFrame.
-            - Series of user IDs to evaluate (or None if all users are included).
+        Dict(str, pd.DataFrame): Dictionary containing training and test datasets.
     """
 
-    list_columns_to_keep = ["user_id", "item_id", "offer_subcategory_id"]
+    list_columns_to_keep = ["user_id", "item_id"]
 
     logger.info("Load training")
     training_data = read_from_gcs(storage_path, training_dataset_name, parallel=False)[
         list_columns_to_keep
     ].drop_duplicates()
     logger.info(
-        f"Number of unique (user, item, offer_subcategory_id) interactions in training data: {training_data.shape[0]}"
+        f"Number of unique (user, item) interactions in training data: {training_data.shape[0]}"
     )
 
     logger.info("Load test data")
     test_data = (
         read_from_gcs(storage_path, test_dataset_name, parallel=False)
-        .astype({"user_id": str, "item_id": str, "offer_subcategory_id": str})[
-            list_columns_to_keep
-        ]
+        .astype({"user_id": str, "item_id": str})[list_columns_to_keep]
         .drop_duplicates()
     )
     logger.info(
-        f"Number of unique (user, item, offer_subcategory_id) interactions in test data: {test_data.shape[0]}"
+        f"Number of unique (user, item, ) interactions in test data: {test_data.shape[0]}"
     )
 
-    ## Truncate test data if n_users is provided
-    total_n_users = len(test_data["user_id"].unique())
-    if n_users_to_test:
-        users_to_test = test_data["user_id"].unique()[
-            : min(n_users_to_test, total_n_users)
-        ]
-        logger.info(f"Computing metrics for {len(users_to_test)} users")
-    else:
-        users_to_test = None
-        logger.info(f"Computing metrics for all users ({total_n_users}) users)")
-
-    return test_data, training_data, users_to_test
+    return {"train": training_data, "test": test_data}
 
 
 def generate_predictions(
-    model, test_data: pd.DataFrame, users_to_test: Optional[pd.Series]
+    model, test_data: pd.DataFrame, all_users: bool
 ) -> pd.DataFrame:
     """
     Generates item dot product scores for each user in the test dataset using the provided model.
-    The scores are computed for each user with all unique (item_id, offer_subcategory_id) in test_dataset which are stored in offers_to_score.
+    The scores are computed for each user with all unique (item_id) in test_dataset which are stored in offers_to_score.
     offers_to_score does not contain previously seen items during training which prevents data leak.
 
     Args:
         model: Trained Two tower retrieval model.
         test_data (pd.DataFrame): DataFrame containing test user-item interactions with at least
-            'user_id', 'item_id', and 'offer_subcategory_id' columns.
-        users_to_test (Optional[pd.Series]): Series of user IDs to generate predictions for.
-            If None, predictions are generated for all users in the test_data.
+            'user_id' and 'item_id' columns.
+        all_users : bool: If True, evaluate all users in the test dataset. If False, evaluate only a subset of users.
 
     Returns:
         pd.DataFrame: DataFrame with columns ['user_id', 'item_id', 'score'], where score represents
@@ -101,24 +80,25 @@ def generate_predictions(
     """
 
     # Get unique items to score
-    offers_to_score = (
-        test_data[["item_id", "offer_subcategory_id"]]
-        .drop_duplicates()
-        .item_id.to_numpy()
-    )
+    offers_to_score = test_data.item_id.unique().to_numpy()
 
-    # Create empty DataFrame to store predictions
-    df_predictions = pd.DataFrame(columns=["user_id", "item_id", "score"])
-
-    if users_to_test is not None:
+    ## Truncate test data if not all users are to be evaluated
+    total_n_users = len(test_data["user_id"].unique())
+    if not all_users:
+        users_to_test = test_data["user_id"].unique()[
+            : min(EVALUATION_USER_NUMBER, total_n_users)
+        ]
         test_data = test_data[test_data.user_id.isin(users_to_test)]
+        logger.info(f"Computing metrics for {len(users_to_test)} users")
+    else:
+        logger.info(f"Computing metrics for all users ({total_n_users}) users)")
 
+    # Create List to store predictions for each user
+    list_df_predictions = []
     for current_user in tqdm(test_data["user_id"].unique()):
-        input_feature = current_user
-
         # Prepare input for prediction
         prediction_input = [
-            np.array([input_feature] * len(offers_to_score)),
+            np.array([current_user] * len(offers_to_score)),
             offers_to_score,
         ]
 
@@ -133,8 +113,9 @@ def generate_predictions(
                 "score": prediction.flatten().tolist(),
             }
         )
-        df_predictions = pd.concat([df_predictions, current_user_predictions])
+        list_df_predictions.append(current_user_predictions)
 
+    df_predictions = pd.concat([list_df_predictions], ignore_index=True)
     return df_predictions
 
 
@@ -156,6 +137,7 @@ def compute_metrics(
         training_data (pd.DataFrame): DataFrame containing historical training data with
             'user_id' and 'item_id' columns, used for coverage and novelty computations.
         k (int): Number of top retrievals to consider for evaluation (e.g., precision@k, recall@k).
+        prefix (str): prefix to add to the metric names. Defaults to "".
 
     Returns:
         dict: Dictionary containing evaluation metrics including:
@@ -192,26 +174,6 @@ def compute_metrics(
         k=k,
     )
 
-    RPrecision = r_precision_at_k(
-        test_data,
-        df_predictions,
-        col_user=col_user,
-        col_item=col_item,
-        col_prediction=col_prediction,
-        relevancy_method="top_k",
-        k=k,
-    )
-
-    map = map_at_k(
-        test_data,
-        df_predictions,
-        col_user=col_user,
-        col_item=col_item,
-        col_prediction=col_prediction,
-        relevancy_method="top_k",
-        k=k,
-    )
-
     coverage = catalog_coverage(
         training_data, test_data, col_user=col_user, col_item=col_item
     )
@@ -224,8 +186,6 @@ def compute_metrics(
     metrics = {
         f"{prefix}precision@{k}": precision,
         f"{prefix}recall@{k}": recall,
-        f"{prefix}RPrecision@{k}": RPrecision,
-        f"{prefix}map@{k}": map,
         f"{prefix}novelty@{k}": novelty_metric,
         f"{prefix}coverage@{k}": coverage,
     }
@@ -235,10 +195,12 @@ def compute_metrics(
 def evaluate(
     model: tf.keras.models.Model,
     storage_path: str,
-    training_dataset_name: str = "recommendation_training_data",
-    test_dataset_name: str = "recommendation_test_data",
-    list_k: list = [10, 40],
-    dummy: bool = False,
+    training_dataset_name: str,
+    test_dataset_name: str,
+    list_k: list,
+    all_users: bool,
+    dummy: bool,
+    quantile_threshold: float = 0.99,
 ) -> dict:
     """
     Runs the full evaluation pipeline for a retrieval model, including data preparation,
@@ -247,48 +209,75 @@ def evaluate(
     Args:
         model (tf.keras.models.Model): Trained retrieval model used to generate predictions.
         storage_path (str): Path to the storage location containing the datasets.
-        training_dataset_name (str, optional): Name of the training dataset file. Defaults to "recommendation_training_data".
-        test_dataset_name (str, optional): Name of the test dataset file. Defaults to "recommendation_test_data".
-        list_k (list, optional): List of cutoff values (k) for which evaluation metrics should be computed. Defaults to [10, 40].
+        training_dataset_name (str): Name of the training dataset file.
+        test_dataset_name (str): Name of the test dataset file.
+        list_k (list): List of cutoff values (k) for which evaluation metrics should be computed.
+        all_users (bool): If True, evaluate all users in the test dataset. If False, evaluate only a subset of users.
+        dummy (bool): If True, also compute metrics for random and popularity baselines.
+        quantile_threshold (float): Percentage (0-1) of top popular items to consider for the popularity baseline.
 
     Returns:
         dict: Dictionary containing evaluation metrics for each value of k in list_k.
     """
 
     logger.info("Get data for evaluation")
-    test_data, training_data, users_to_test = prepare_data_for_evaluation(
+    data_dict = load_data_for_evaluation(
         storage_path=storage_path,
         training_dataset_name=training_dataset_name,
         test_dataset_name=test_dataset_name,
-        n_users_to_test=10,  # EVALUATION_USER_NUMBER,
     )
 
-    logger.info("Get predictions")
-    df_predictions = generate_predictions(model, test_data, users_to_test)
+    logger.info("Getting predictions")
+    df_predictions = generate_predictions(
+        model=model, test_data=data_dict["test"], all_users=all_users
+    )
 
-    logger.info("Compute metrics")
+    logger.info("Computing model metrics")
     metrics = {}
     for k in list_k:
-        metrics.update(compute_metrics(test_data, df_predictions, training_data, k=k))
+        metrics.update(
+            compute_metrics(
+                test_data=data_dict["test"],
+                df_predictions=df_predictions,
+                training_data=data_dict["train"],
+                k=k,
+                prefix="",
+            )
+        )
 
     if dummy:
         logger.info("Generating random and popularity baselines")
         df_random = generate_random_baseline(
-            test_data, users_to_test, num_recommendations=10
+            test_data=data_dict["test"],
+            all_users=all_users,
+            num_recommendations=max(list_k),
         )
         df_popular = generate_popularity_baseline(
-            training_data, test_data, users_to_test, num_recommendations=10
+            training_data=data_dict["train"],
+            test_data=data_dict["test"],
+            all_users=all_users,
+            num_recommendations=max(list_k),
+            quantile_threshold=quantile_threshold,
         )
 
+        logger.info("Computing metrics for random and popularity baselines")
         for k in list_k:
             metrics.update(
                 compute_metrics(
-                    test_data, df_random, training_data, k=k, prefix="random_"
+                    test_data=data_dict["test"],
+                    df_predictions=df_random,
+                    training_data=data_dict["train"],
+                    k=k,
+                    prefix="random_",
                 )
             )
             metrics.update(
                 compute_metrics(
-                    test_data, df_popular, training_data, k=k, prefix="popular_"
+                    test_data=data_dict["test"],
+                    df_predictions=df_popular,
+                    training_data=data_dict["train"],
+                    k=k,
+                    prefix="popular_",
                 )
             )
 
@@ -364,14 +353,18 @@ def save_pca_representation(
 
 
 ## Baselines: random and most popular
-def generate_random_baseline(data_test, users_to_test=None, num_recommendations=10):
+def generate_random_baseline(data_test, all_users, num_recommendations):
     """
     Generate random recommendations for each user.
     """
     unique_items = data_test["item_id"].unique()
     df_random = data_test[["user_id"]].drop_duplicates().copy()
-    if users_to_test is not None:
+    if not all_users:
+        users_to_test = df_random["user_id"].unique()[
+            : min(EVALUATION_USER_NUMBER, len(df_random["user_id"].unique()))
+        ]
         df_random = df_random[df_random.user_id.isin(users_to_test)]
+
     df_random = df_random.loc[df_random.index.repeat(num_recommendations)]
     df_random["item_id"] = np.random.choice(
         unique_items, size=len(df_random), replace=True
@@ -383,9 +376,9 @@ def generate_random_baseline(data_test, users_to_test=None, num_recommendations=
 def generate_popularity_baseline(
     training_data,
     test_data,
-    users_to_test=None,
-    num_recommendations=10,
-    quantile_threshold=0.9,
+    all_users,
+    num_recommendations,
+    quantile_threshold,
 ):
     """
     Recommend the most popular items based on past bookings.
@@ -417,8 +410,12 @@ def generate_popularity_baseline(
 
     # Generate recommendations for each user
     df_popular = test_data[["user_id"]].drop_duplicates().copy()
-    if users_to_test is not None:
+    if not all_users:
+        users_to_test = df_popular["user_id"].unique()[
+            : min(EVALUATION_USER_NUMBER, len(df_popular["user_id"].unique()))
+        ]
         df_popular = df_popular[df_popular.user_id.isin(users_to_test)]
+
     df_popular = df_popular.loc[
         df_popular.index.repeat(num_recommendations)
     ].reset_index(drop=True)

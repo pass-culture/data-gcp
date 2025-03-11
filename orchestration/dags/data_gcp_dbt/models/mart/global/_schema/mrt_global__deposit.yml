@@ -15,6 +15,8 @@ models:
       - name: user_id
         description: '{{ doc("column__user_id") }}'
         data_type: STRING
+        data_tests:
+          - not_null
       - name: user_civility
         description: '{{ doc("column__user_civility") }}'
 

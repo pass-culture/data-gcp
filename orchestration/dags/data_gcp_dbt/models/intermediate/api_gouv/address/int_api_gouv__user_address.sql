@@ -4,8 +4,8 @@
 select
     ul.user_id,
     ul.result_postcode as user_postal_code,
-    cast(ul.longitude as float) as user_longitude,
-    cast(ul.latitude as float) as user_latitude,
+    SAFE_CAST(ul.longitude as FLOAT64) as user_longitude,
+    SAFE_CAST(ul.latitude as FLOAT64) as user_latitude,
     ul.result_citycode as user_city_code,
     ul.result_city as user_city,
     ul.user_full_address as user_raw_address,

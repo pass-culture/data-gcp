@@ -43,27 +43,55 @@ with
             countif(event_name = 'ConsultVenueMap') as nb_consult_venue_map,
             countif(event_name = 'ConsultArtist') as nb_consult_artist,
             countif(event_name = 'screen_view') as nb_screen_view,
-            countif(event_name = 'screen_view' and firebase_screen = 'Home') as nb_screen_view_home,
-            countif(event_name = 'screen_view' and firebase_screen = 'Search') as nb_screen_view_search,
-            countif(event_name = 'screen_view' and firebase_screen = 'Offer') as nb_screen_view_offer,
-            countif(event_name = 'screen_view' and firebase_screen = 'Profile') as nb_screen_view_profile,
-            countif(event_name = 'screen_view' and firebase_screen = 'Favorites') as nb_screen_view_favorites,
-            countif(event_name = 'screen_view' and firebase_screen in ('Bookings', 'BookingDetails')) as nb_screen_view_bookings,
-            countif(firebase_screen = 'SignupConfirmationEmailSent' or event_name = 'ContinueCGU') as nb_signup_completed,
-            countif(firebase_screen in ('BeneficiaryRequestSent','UnderageAccountCreated','BeneficiaryAccountCreated')) as nb_benef_request_sent,
+            countif(
+                event_name = 'screen_view' and firebase_screen = 'Home'
+            ) as nb_screen_view_home,
+            countif(
+                event_name = 'screen_view' and firebase_screen = 'Search'
+            ) as nb_screen_view_search,
+            countif(
+                event_name = 'screen_view' and firebase_screen = 'Offer'
+            ) as nb_screen_view_offer,
+            countif(
+                event_name = 'screen_view' and firebase_screen = 'Profile'
+            ) as nb_screen_view_profile,
+            countif(
+                event_name = 'screen_view' and firebase_screen = 'Favorites'
+            ) as nb_screen_view_favorites,
+            countif(
+                event_name = 'screen_view'
+                and firebase_screen in ('Bookings', 'BookingDetails')
+            ) as nb_screen_view_bookings,
+            countif(
+                firebase_screen = 'SignupConfirmationEmailSent'
+                or event_name = 'ContinueCGU'
+            ) as nb_signup_completed,
+            countif(
+                firebase_screen in (
+                    'BeneficiaryRequestSent',
+                    'UnderageAccountCreated',
+                    'BeneficiaryAccountCreated'
+                )
+            ) as nb_benef_request_sent,
             countif(event_name = 'login') as nb_login,
-            date_diff(max(event_timestamp), min(event_timestamp), second) as visit_duration_seconds
+            date_diff(
+                max(event_timestamp), min(event_timestamp), second
+            ) as visit_duration_seconds
         from {{ ref("int_firebase__native_event") }}
 
         where
             {% if is_incremental() %}
                 -- lag in case session is between two days.
                 event_date
-                between date_sub(date('{{ ds() }}'), interval 3 + 1 day) and date('{{ ds() }}')
+                between date_sub(date('{{ ds() }}'), interval 3 + 1 day) and date(
+                    '{{ ds() }}'
+                )
                 and
             {% else %}
                 event_date
-                between date_sub(date('{{ ds() }}'), interval 3 + 1 day) and date('{{ ds() }}')
+                between date_sub(date('{{ ds() }}'), interval 3 + 1 day) and date(
+                    '{{ ds() }}'
+                )
                 and
             {% endif %}
 
@@ -81,11 +109,11 @@ with
 select *
 from visits
 {% if is_incremental() %}
-where
-    first_event_date
-    between date_sub(date('{{ ds() }}'), interval 3 day) and date('{{ ds() }}')
+    where
+        first_event_date
+        between date_sub(date('{{ ds() }}'), interval 3 day) and date('{{ ds() }}')
 {% else %}
-where
-    first_event_date
-    >= date_sub('{{ ds() }}', interval {{ var('full_refresh_lookback') }})
+    where
+        first_event_date
+        >= date_sub('{{ ds() }}', interval {{ var("full_refresh_lookback") }})
 {% endif %}

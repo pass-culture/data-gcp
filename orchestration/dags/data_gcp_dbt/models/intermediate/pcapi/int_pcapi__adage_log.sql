@@ -34,6 +34,7 @@ with
             text_filter,
             department_filter,
             academy_filter,
+            geoloc_radius_filter,
             venue_filter,
             artistic_domain_filter,
             student_filter,

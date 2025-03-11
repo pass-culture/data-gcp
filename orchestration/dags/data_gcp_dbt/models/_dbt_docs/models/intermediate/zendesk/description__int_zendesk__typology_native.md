@@ -5,7 +5,7 @@ description: Description of the `int_zendesk__typology_native` table.
 
 {% docs description__int_zendesk__typology_native %}
 
-View Zendesk closed tickets where suport team has used the native typology flag.
+View Zendesk closed tickets where the support team has used the native typology flag.
 
 {% enddocs %}
 

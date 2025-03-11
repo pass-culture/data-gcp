@@ -26,6 +26,7 @@ from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobO
 from airflow.providers.google.cloud.operators.cloud_sql import (
     CloudSQLExecuteQueryOperator,
 )
+from airflow.utils.task_group import TaskGroup
 
 DEFAULT_DAG_ARGS = {
     "start_date": datetime.datetime(2020, 12, 1),
@@ -102,31 +103,34 @@ with DAG(
         job_params=PAST_OFFER_CONTEXT_RAW_QUERY,
     )
 
-    fetch_dates_imported_in_raw_task = PythonOperator(
-        task_id="fetch_dates_imported_in_raw_task",
-        python_callable=fetch_dates_imported_in_raw,
-        provide_context=True,
-        dag=dag,
-    )
+    with TaskGroup(
+        "drop_past_offer_context_yesterday_rows"
+    ) as drop_past_offer_context_yesterday_rows:
+        fetch_dates_imported_in_raw_task = PythonOperator(
+            task_id="fetch_dates_imported_in_raw_task",
+            python_callable=fetch_dates_imported_in_raw,
+            provide_context=True,
+        )
 
-    drop_past_offer_context_yesterday_rows = CloudSQLExecuteQueryOperator(
-        task_id="drop_past_offer_context_yesterday_rows",
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql="""
-        DELETE FROM public.past_offer_context
-        WHERE date <= '{{ macros.ds_add(ds, -1) }}'
-        {% set dates_imported_in_raw = ti.xcom_pull(task_ids='fetch_dates_imported_in_raw_task') %}
-        {% if dates_imported_in_raw %}
-            AND CAST(date AS DATE) IN (
-                {% for d in dates_imported_in_raw %}
-                    '{{ d }}'{% if not loop.last %}, {% endif %}
-                {% endfor %}
-            )
-        {% endif %}
-        """,
-        autocommit=True,
-        dag=dag,
-    )
+        drop_rows_in_cloudsql = CloudSQLExecuteQueryOperator(
+            task_id="drop_past_offer_context_yesterday_rows",
+            gcp_cloudsql_conn_id="proxy_postgres_tcp",
+            sql="""
+            DELETE FROM public.past_offer_context
+            WHERE date <= '{{ macros.ds_add(ds, -1) }}'
+            {% set dates_imported_in_raw = ti.xcom_pull(task_ids='drop_past_offer_context_yesterday_rows.fetch_dates_imported_in_raw_task') %}
+            {% if dates_imported_in_raw %}
+                AND CAST(date AS DATE) IN (
+                    {% for d in dates_imported_in_raw %}
+                        '{{ d }}'{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                )
+            {% endif %}
+            """,
+            autocommit=True,
+        )
+
+        fetch_dates_imported_in_raw_task >> drop_rows_in_cloudsql
 
     end = EmptyOperator(task_id="end", dag=dag)
 
@@ -135,7 +139,6 @@ with DAG(
     start
     >> get_past_offer_context_from_cloudsql
     >> export_past_offer_context_to_bigquery
-    >> fetch_dates_imported_in_raw_task
     >> drop_past_offer_context_yesterday_rows
     >> end
 )

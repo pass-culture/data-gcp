@@ -46,9 +46,9 @@ select
     offer_with_metatadata.offer_id,
     offer_with_metatadata.displayed_position,
 
-    offer_with_metatadata.offer_id_clicked,
-    offer_with_metatadata.booking_id,
-    offer_with_metatadata.favorite_id,
+    -- offer_with_metatadata.offer_id_clicked,
+    -- offer_with_metatadata.booking_id,
+    -- offer_with_metatadata.favorite_id,
 
     offer_with_metatadata.click_type,
     offer_with_metatadata.reco_call_id,
@@ -56,21 +56,24 @@ select
     offer_with_metatadata.module_clicked_timestamp,
     offer_with_metatadata.consult_offer_timestamp,
     offer_with_metatadata.offer_displayed_timestamp,
-    case
-        when offer_with_metatadata.offer_id_clicked is not null
-        then offer_with_metatadata.offer_id_clicked = offer_with_metatadata.offer_id
-        else false
-    end as is_clicked,
-    case
-        when offer_with_metatadata.booking_id is not null
-        then offer_with_metatadata.booking_id = offer_with_metatadata.offer_id
-        else false
-    end as is_booked,
-    case
-        when offer_with_metatadata.favorite_id is not null
-        then offer_with_metatadata.favorite_id = offer_with_metatadata.offer_id
-        else false
-    end as is_added_to_favorite
+    offer_with_metatadata.is_consulted,
+    offer_with_metatadata.is_added_to_favorite,
+    offer_with_metatadata.is_booked
+    -- case
+    --     when offer_with_metatadata.offer_id_clicked is not null
+    --     then offer_with_metatadata.offer_id_clicked = offer_with_metatadata.offer_id
+    --     else false
+    -- end as is_clicked,
+    -- case
+    --     when offer_with_metatadata.booking_id is not null
+    --     then offer_with_metatadata.booking_id = offer_with_metatadata.offer_id
+    --     else false
+    -- end as is_booked,
+    -- case
+    --     when offer_with_metatadata.favorite_id is not null
+    --     then offer_with_metatadata.favorite_id = offer_with_metatadata.offer_id
+    --     else false
+    -- end as is_added_to_favorite
 from offer_with_metatadata
 order by
     offer_with_metatadata.unique_session_id,

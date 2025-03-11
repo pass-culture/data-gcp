@@ -19,9 +19,13 @@ select
         then "Inactif (ni en emploi ni au chômage), En incapacité de travailler"
         when u.user_activity in ("Étudiant")
         then "Etudiant"
-        when u.user_activity in ("Chômeur", "En recherche d'emploi ou chômeur", "Demandeur d'emploi")
+        when
+            u.user_activity
+            in ("Chômeur", "En recherche d'emploi ou chômeur", "Demandeur d'emploi")
         then "Chômeur, En recherche d'emploi"
-        when u.user_activity in ("Apprenti, Alternant, Volontaire en service civique rémunéré")
+        when
+            u.user_activity
+            in ("Apprenti, Alternant, Volontaire en service civique rémunéré")
         then null
         else u.user_activity
     end as user_activity,

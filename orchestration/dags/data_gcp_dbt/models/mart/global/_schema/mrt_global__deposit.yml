@@ -17,6 +17,7 @@ models:
         data_type: STRING
       - name: user_civility
         description: '{{ doc("column__user_civility") }}'
+
         data_type: STRING
       - name: user_region_name
         description: '{{ doc("column__user_region_name") }}'

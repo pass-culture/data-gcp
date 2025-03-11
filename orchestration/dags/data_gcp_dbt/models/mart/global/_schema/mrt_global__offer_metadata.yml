@@ -6,6 +6,9 @@ models:
     columns:
       - name: offer_id
         description: "{{ doc('column__offer_id') }}"
+        data_tests:
+          - not_null
+          - unique
       - name: offer_creation_date
         description: "{{ doc('column__offer_creation_date') }}"
       - name: offer_subcategory_id

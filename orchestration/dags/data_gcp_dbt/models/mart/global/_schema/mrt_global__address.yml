@@ -6,6 +6,9 @@ models:
     columns:
       - name: address_id
         description: "{{ doc('column__address_id') }}"
+        data_tests:
+          - not_null
+          - unique
       - name: address_ban_id
         description: "{{ doc('column__address_ban_id') }}"
       - name: address_insee_code

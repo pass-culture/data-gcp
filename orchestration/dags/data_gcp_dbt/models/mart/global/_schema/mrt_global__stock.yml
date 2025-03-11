@@ -5,6 +5,9 @@ models:
     columns:
       - name: stock_id
         description: '{{ doc("column__stock_id") }}'
+        data_tests:
+          - not_null
+          - unique
       - name: stock_beginning_date
         description: '{{ doc("column__stock_beginning_date") }}'
       - name: stock_last_provider_id

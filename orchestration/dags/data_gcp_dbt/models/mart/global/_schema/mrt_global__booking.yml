@@ -56,6 +56,8 @@ models:
       - name: deposit_id
         description: '{{ doc("column__deposit_id") }}'
         data_type: STRING
+        data_test:
+          - not_null
       - name: deposit_type
         description: '{{ doc("column__deposit_type") }}'
         data_type: STRING

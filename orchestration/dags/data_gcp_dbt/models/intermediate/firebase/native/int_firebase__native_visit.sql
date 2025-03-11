@@ -35,7 +35,7 @@ with
             countif(event_name = 'ConsultOffer') as nb_consult_offer,
             countif(event_name = 'BookingConfirmation') as nb_booking_confirmation,
             countif(event_name = 'HasAddedOfferToFavorites') as nb_add_to_favorites,
-            countif(event_name = 'Share') as nb_share,
+            countif(event_name = 'Share') as total_share,
             countif(event_name = 'Screenshot') as nb_screenshot,
             countif(event_name = 'UserSetLocation') as nb_set_location,
             countif(event_name = 'ConsultVideo') as nb_consult_video,

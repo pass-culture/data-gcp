@@ -67,7 +67,7 @@ def fetch_dates_imported_in_raw(**context):
 
 
 with DAG(
-    "export_cloudsql_tables_to_bigquery_v1",
+    "export_cloudsql_tables_to_bigquery_v2",
     default_args=DEFAULT_DAG_ARGS,
     description="Export tables from recommendation CloudSQL to BigQuery",
     schedule_interval=get_airflow_schedule("0 1 * * *"),

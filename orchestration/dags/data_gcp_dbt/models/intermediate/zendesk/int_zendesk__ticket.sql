@@ -1,7 +1,7 @@
 select
     zt.id as ticket_id,
-    zt.created_at as ticket_created_at,
-    zt.updated_at as ticket_updated_at,
+    timestamp(zt.created_at) as ticket_created_at,
+    timestamp(zt.updated_at) as ticket_updated_at,
     zt.level as ticket_level,
     zt.user_id,
     zt.technical_partner,

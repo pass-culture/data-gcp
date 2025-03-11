@@ -17,13 +17,12 @@ from dependencies.export_cloudsql_tables_to_bigquery.config import (
     PAST_OFFER_CONTEXT_RAW_QUERY,
     PAST_OFFER_CONTEXT_TMP_QUERY,
 )
+from google.cloud import bigquery
 
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from airflow.providers.google.cloud.operators.cloud_sql import (
-    CloudSQLExecuteQueryOperator,
-)
 
 DEFAULT_DAG_ARGS = {
     "start_date": datetime.datetime(2020, 12, 1),
@@ -45,6 +44,23 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     DATABASE_URL.replace("postgresql://", "gcpcloudsql://")
     + f"?database_type=postgres&project_id={GCP_PROJECT_ID}&location={GCP_REGION}&instance={DATABASE_INSTANCE_NAME}&use_proxy=True&sql_proxy_use_tcp=True"
 )
+
+
+def fetch_dates_imported_in_raw(**context):
+    base_table = PAST_OFFER_CONTEXT_RAW_QUERY["destination_table"].split("$")[0]
+    client = bigquery.Client(project=GCP_PROJECT_ID)
+    query = f"""
+    SELECT DISTINCT FORMAT_DATE('%Y%m%d', date) as event_date
+    FROM `{GCP_PROJECT_ID}.{PAST_OFFER_CONTEXT_RAW_QUERY["destination_dataset"]}.{base_table}`
+    WHERE import_date = "{context["ds"]}"
+    """
+
+    print(f"Executing query: {query}")
+    query_job = client.query(query)
+    results = query_job.result()
+    print(results)
+    dates = [row.event_date for row in results]
+    return dates
 
 
 with DAG(
@@ -84,13 +100,24 @@ with DAG(
         job_params=PAST_OFFER_CONTEXT_RAW_QUERY,
     )
 
-    drop_past_offer_context_yesterday_rows = CloudSQLExecuteQueryOperator(
-        task_id="drop_past_offer_context_yesterday_rows",
-        gcp_cloudsql_conn_id="proxy_postgres_tcp",
-        sql="DELETE FROM public.past_offer_context where date <= {{ macros.ds_add(ds, -1) }}",
-        autocommit=True,
+    # check_query = f"""
+    # SELECT distinct event_date FROM `{GCP_PROJECT_ID}.{PAST_OFFER_CONTEXT_TMP_QUERY["destination_dataset"]}.{PAST_OFFER_CONTEXT_TMP_QUERY["destination_table"]}` where event_date > "2025-03-01"
+    # """
+
+    fetch_dates_imported_in_raw_task = PythonOperator(
+        task_id="fetch_dates_imported_in_raw_task",
+        python_callable=fetch_dates_imported_in_raw,
+        provide_context=True,
         dag=dag,
     )
+
+    # drop_past_offer_context_yesterday_rows = CloudSQLExecuteQueryOperator(
+    #     task_id="drop_past_offer_context_yesterday_rows",
+    #     gcp_cloudsql_conn_id="proxy_postgres_tcp",
+    #     sql="DELETE FROM public.past_offer_context where date <= {{ macros.ds_add(ds, -1) }}",
+    #     autocommit=True,
+    #     dag=dag,
+    # )
 
     end = EmptyOperator(task_id="end", dag=dag)
 
@@ -99,6 +126,7 @@ with DAG(
     start
     >> get_past_offer_context_from_cloudsql
     >> export_past_offer_context_to_bigquery
-    >> drop_past_offer_context_yesterday_rows
+    >> fetch_dates_imported_in_raw_task
+    # >> drop_past_offer_context_yesterday_rows
     >> end
 )

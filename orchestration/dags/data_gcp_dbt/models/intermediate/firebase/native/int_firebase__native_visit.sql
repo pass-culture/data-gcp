@@ -36,62 +36,32 @@ with
             countif(event_name = 'BookingConfirmation') as total_confirmed_booking,
             countif(event_name = 'HasAddedOfferToFavorites') as total_added_to_favorites,
             countif(event_name = 'Share') as total_share,
-            countif(event_name = 'Screenshot') as nb_screenshot,
-            countif(event_name = 'UserSetLocation') as nb_set_location,
-            countif(event_name = 'ConsultVideo') as nb_consult_video,
-            countif(event_name = 'ConsultVenue') as nb_consult_venue,
-            countif(event_name = 'ConsultVenueMap') as nb_consult_venue_map,
-            countif(event_name = 'ConsultArtist') as nb_consult_artist,
-            countif(event_name = 'screen_view') as nb_screen_view,
-            countif(
-                event_name = 'screen_view' and firebase_screen = 'Home'
-            ) as nb_screen_view_home,
-            countif(
-                event_name = 'screen_view' and firebase_screen = 'Search'
-            ) as nb_screen_view_search,
-            countif(
-                event_name = 'screen_view' and firebase_screen = 'Offer'
-            ) as nb_screen_view_offer,
-            countif(
-                event_name = 'screen_view' and firebase_screen = 'Profile'
-            ) as nb_screen_view_profile,
-            countif(
-                event_name = 'screen_view' and firebase_screen = 'Favorites'
-            ) as nb_screen_view_favorites,
-            countif(
-                event_name = 'screen_view'
-                and firebase_screen in ('Bookings', 'BookingDetails')
-            ) as nb_screen_view_bookings,
-            countif(
-                firebase_screen = 'SignupConfirmationEmailSent'
-                or event_name = 'ContinueCGU'
-            ) as nb_signup_completed,
-            countif(
-                firebase_screen in (
-                    'BeneficiaryRequestSent',
-                    'UnderageAccountCreated',
-                    'BeneficiaryAccountCreated'
-                )
-            ) as nb_benef_request_sent,
-            countif(event_name = 'login') as nb_login,
-            date_diff(
-                max(event_timestamp), min(event_timestamp), second
-            ) as visit_duration_seconds
+            countif(event_name = 'Screenshot') as total_screenshot,
+            countif(event_name = 'UserSetLocation') as total_set_location,
+            countif(event_name = 'ConsultVideo') as total_consult_video,
+            countif(event_name = 'ConsultVenue') as total_consult_venue,
+            countif(event_name = 'ConsultVenueMap') as total_consult_venue_map,
+            countif(event_name = 'ConsultArtist') as total_consult_artist,
+            countif(event_name = 'screen_view') as total_screen_view,
+            countif(event_name = 'screen_view' and firebase_screen = 'Home') as total_screen_view_home,
+            countif(event_name = 'screen_view' and firebase_screen = 'Search') as total_screen_view_search,
+            countif(event_name = 'screen_view' and firebase_screen = 'Offer') as total_screen_view_offer,
+            countif(event_name = 'screen_view' and firebase_screen = 'Profile') as total_screen_view_profile,
+            countif(event_name = 'screen_view' and firebase_screen = 'Favorites') as total_screen_view_favorites,
+            countif(event_name = 'screen_view'and firebase_screen in ('Bookings', 'BookingDetails')) as total_screen_view_bookings,
+            countif(firebase_screen = 'SignupConfirmationEmailSent'or event_name = 'ContinueCGU') as total_signup_completed,
+            countif(firebase_screen in ('BeneficiaryRequestSent','UnderageAccountCreated','BeneficiaryAccountCreated')) as total_benef_request_sent,
+            countif(event_name = 'login') as total_login,
+            date_diff(max(event_timestamp), min(event_timestamp), second) as visit_duration_seconds
         from {{ ref("int_firebase__native_event") }}
 
         where
             {% if is_incremental() %}
                 -- lag in case session is between two days.
-                event_date
-                between date_sub(date('{{ ds() }}'), interval 3 + 1 day) and date(
-                    '{{ ds() }}'
-                )
+                event_date between date_sub(date('{{ ds() }}'), interval 3 day) and date('{{ ds() }}')
                 and
             {% else %}
-                event_date
-                between date_sub(date('{{ ds() }}'), interval 3 + 1 day) and date(
-                    '{{ ds() }}'
-                )
+                event_date between date_sub(date('{{ ds() }}'), interval 3 day) and date('{{ ds() }}')
                 and
             {% endif %}
 

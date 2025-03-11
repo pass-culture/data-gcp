@@ -117,7 +117,7 @@ with DAG(
             gcp_cloudsql_conn_id="proxy_postgres_tcp",
             sql="""
             DELETE FROM public.past_offer_context
-            WHERE date <= '{{ macros.ds_add(ds, -1) }}'
+            WHERE CAST(date AS DATE) <= '{{ macros.ds_add(ds, -1) }}'
             {% set dates_imported_in_raw = ti.xcom_pull(task_ids='drop_past_offer_context_yesterday_rows.fetch_dates_imported_in_raw_task') %}
             {% if dates_imported_in_raw %}
                 AND CAST(date AS DATE) IN (

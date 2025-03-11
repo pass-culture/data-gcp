@@ -13,7 +13,7 @@ select
     venue_is_virtual,
     venue_managing_offerer_id,
     venue_creation_date,
-    venue_is_accessibility_synched,
+    venue_is_acessibility_synched,
     venue_type_label,
     venue_label,
     venue_density_label,

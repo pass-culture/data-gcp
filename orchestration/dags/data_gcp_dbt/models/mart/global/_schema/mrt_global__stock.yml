@@ -34,6 +34,8 @@ models:
         description: '{{ doc("column__total_bookings") }}'
       - name: offer_id
         description: '{{ doc("column__offer_id") }}'
+        data_tests:
+          - not_null
       - name: offer_name
         description: '{{ doc("column__offer_name") }}'
       - name: offer_subcategory_id

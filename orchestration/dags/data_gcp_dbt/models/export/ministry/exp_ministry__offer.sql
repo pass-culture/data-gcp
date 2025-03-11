@@ -46,5 +46,5 @@ select
     venue_type_label,
     venue_iris_internal_id,
     offerer_address_id,
-    offerer_publication_date
+    offer_publication_date
 from {{ ref("mrt_global__offer") }}

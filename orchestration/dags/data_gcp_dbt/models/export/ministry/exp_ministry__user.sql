@@ -24,7 +24,7 @@ select
     user_academy_name,
     first_deposit_creation_date,
     first_deposit_type,
-    current_deposit_amount,
+    current_deposit_type,
     first_individual_booking_date,
     user_creation_date,
     last_booking_date,

@@ -1,12 +1,12 @@
 with
-    offer_with_metatadata as (
+    home_interactions as (
         select distinct
             offer_displayed.event_date,
             offer_displayed.user_id,
             offer_displayed.unique_session_id,
             offer_displayed.module_id,
             home_module.module_name,
-            home_module.module_type,
+            home_module.module_type as context,
             offer_displayed.offer_id,
             offer_displayed.displayed_position,
             home_module.offer_id as offer_id_clicked,
@@ -36,26 +36,23 @@ with
     )
 
 select
-    offer_with_metatadata.event_date,
-    offer_with_metatadata.user_id,
-    offer_with_metatadata.unique_session_id,
-    offer_with_metatadata.module_id,
-    offer_with_metatadata.module_name,
-    offer_with_metatadata.module_type,
-    offer_with_metatadata.offer_id,
-    offer_with_metatadata.displayed_position,
-    offer_with_metatadata.click_type,
-    offer_with_metatadata.reco_call_id,
-    offer_with_metatadata.user_location_type,
-    offer_with_metatadata.module_clicked_timestamp,
-    offer_with_metatadata.consult_offer_timestamp,
-    offer_with_metatadata.offer_displayed_timestamp,
-    offer_with_metatadata.is_consulted,
-    offer_with_metatadata.is_added_to_favorite,
-    offer_with_metatadata.is_booked
-from offer_with_metatadata
-order by
-    offer_with_metatadata.unique_session_id,
-    offer_with_metatadata.offer_displayed_timestamp,
-    offer_with_metatadata.module_id,
-    offer_with_metatadata.displayed_position
+    home_interactions.event_date,
+    home_interactions.user_id,
+    home_interactions.unique_session_id,
+    home_interactions.module_id,
+    home_interactions.module_name,
+    home_interactions.module_type as context,
+    home_interactions.offer_id,
+    home_interactions.displayed_position,
+    home_interactions.click_type,
+    home_interactions.reco_call_id,
+    home_interactions.user_location_type,
+    home_interactions.module_clicked_timestamp,
+    home_interactions.consult_offer_timestamp,
+    home_interactions.offer_displayed_timestamp,
+    home_interactions.is_consulted as consult,
+    home_interactions.is_added_to_favorite as favorite,
+    home_interactions.is_booked as booking,
+    format_date("%A", home_interactions.event_date) as day_of_week,
+    extract(hour from home_interactions.event_date) as hour_of_day
+from home_interactions

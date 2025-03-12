@@ -17,6 +17,8 @@ models:
         description: "{{ doc('column__address_street') }}"
       - name: address_postal_code
         description: "{{ doc('column__address_postal_code') }}"
+        data_tests:
+          - not_null
       - name: address_city
         description: "{{ doc('column__address_city') }}"
       - name: address_latitude

@@ -45,7 +45,7 @@ models:
       - name: user_birth_date
         description: '{{ doc("column__user_birth_date") }}'
         data_type: DATE
-        data_test:
+        data_tests:
           - is_valid_beneficiary_birth_date
       - name: user_has_enabled_marketing_email
         description: '{{ doc("column__user_has_enabled_marketing_email") }}'

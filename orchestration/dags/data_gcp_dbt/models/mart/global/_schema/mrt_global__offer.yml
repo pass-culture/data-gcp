@@ -224,9 +224,13 @@ models:
       - name: partner_id
         description: '{{ doc("column__partner_id") }}'
         data_type: STRING
+        data_tests:
+          - not_null
       - name: offerer_id
         description: '{{ doc("column__offerer_id") }}'
         data_type: STRING
+        data_tests:
+          - not_null
       - name: venue_managing_offerer_id
         description: '{{ doc("column__venue_managing_offerer_id") }}'
         data_type: STRING
@@ -242,6 +246,8 @@ models:
       - name: offerer_address_id
         description: '{{ doc("column__offerer_address_id") }}'
         data_type: STRING
+        data_tests:
+          - not_null
       - name: offer_publication_date
         description: '{{ doc("column__offer_publication_date") }}'
         data_type: DATETIME

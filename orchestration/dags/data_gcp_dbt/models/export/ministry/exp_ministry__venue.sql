@@ -20,4 +20,5 @@ select
     venue_macro_density_label,
     venue_description,
     offerer_id,
+    partner_id
 from {{ ref("mrt_global__venue") }}

@@ -68,17 +68,18 @@ with
         {% endif %}
     ),
 
-    offers as (
+    offer_features as (
         select
             offer_id,
             item_id,
             offer_category_id,
             offer_subcategory_id,
-            offer_url is null as is_geolocated,
-            date_diff(
-                current_date(), offer_creation_date, day
-            ) as offer_created_delta_in_days
-        from {{ ref("int_global__offer") }}
+            is_geolocated,
+            offer_created_delta_in_days,
+            offer_mean_stock_price,
+            offer_max_stock_beginning_days
+        from {{ ref("ml_feat__offer_feature") }}
+
     ),
 
     item_embeddings as (
@@ -98,26 +99,6 @@ with
             booking_number_last_14_days,
             booking_number_last_7_days
         from {{ ref("ml_feat__item_feature_28_day") }}
-    ),
-
-    stocks as (
-        select offer_id, stock_price, stock_beginning_date
-        from {{ ref("int_global__stock") }}
-        where
-            stock_price is not null
-            and stock_booking_limit_date
-            >= date_sub(date("{{ ds() }}"), interval 28 day)
-    ),
-
-    stock_aggregations as (
-        select
-            offer_id,
-            avg(stock_price) as offer_mean_stock_price,
-            max(
-                date_diff(date("{{ ds() }}"), stock_beginning_date, day)
-            ) as offer_max_stock_beginning_days
-        from stocks
-        group by offer_id
     )
 
 select
@@ -140,13 +121,13 @@ select
     home_interactions.is_booked,
     home_interactions.day_of_week,
     home_interactions.hour_of_day,
-    offers.item_id,
-    offers.offer_category_id,
-    offers.offer_subcategory_id,
-    offers.is_geolocated,
-    offers.offer_created_delta_in_days,
-    stock_aggregations.offer_mean_stock_price,
-    stock_aggregations.offer_stock_beginning_days,
+    offer_features.item_id,
+    offer_features.offer_category_id,
+    offer_features.offer_subcategory_id,
+    offer_features.is_geolocated,
+    offer_features.offer_created_delta_in_days,
+    offer_features.offer_mean_stock_price,
+    offer_features.offer_max_stock_beginning_days,
     item_embeddings.item_embedding as item_last_embedding,
     item_features_28_day.booking_number_last_28_days
     as item_booking_number_last_28_days,
@@ -156,11 +137,10 @@ select
     user_embeddings.user_embedding as user_last_embedding
 
 from home_interactions
-left join offers on home_interactions.offer_id = offers.offer_id
-left join item_embeddings on offers.item_id = item_embeddings.item_id
+left join offer_features on home_interactions.offer_id = offer_features.offer_id
+left join item_embeddings on offer_features.item_id = item_embeddings.item_id
 left join user_embeddings on home_interactions.user_id = user_embeddings.user_id
-left join item_features_28_day on offers.item_id = item_features_28_day.item_id
-left join stock_aggregations on home_interactions.offer_id = stock_aggregations.offer_id
+left join item_features_28_day on offer_features.item_id = item_features_28_day.item_id
 order by
     home_interactions.event_date,
     home_interactions.user_id,

@@ -60,7 +60,9 @@ with
             day_of_week,
             hour_of_day
         from home_displays
+        {% if var("ENV_SHORT_NAME") != "prod" %}
         where is_consulted is true or is_added_to_favorite is true or is_booked is true
+        {% endif %}
     ),
 
     offers as (

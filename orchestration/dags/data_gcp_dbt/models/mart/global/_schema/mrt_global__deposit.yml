@@ -81,6 +81,9 @@ models:
       - name: deposit_type
         description: '{{ doc("column__deposit_type") }}'
         data_type: STRING
+      - name: deposit_beneficiary_type
+        description: '{{ doc("column__deposit_beneficiary_type") }}'
+        data_type: STRING
       - name: deposit_rank_asc
         description: '{{ doc("column__deposit_rank_asc") }}'
         data_type: INT64

@@ -24,6 +24,7 @@ select
     d.deposit_update_date,
     d.deposit_expiration_date,
     d.deposit_type,
+    d.deposit_beneficiary_type,
     d.deposit_rank_asc,
     d.deposit_rank_desc,
     d.last_recredit_date,

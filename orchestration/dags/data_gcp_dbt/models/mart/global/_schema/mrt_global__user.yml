@@ -115,6 +115,12 @@ models:
       - name: current_deposit_type
         description: '{{ doc("column__user_current_deposit_type") }}'
         data_type: STRING
+      - name: user_first_deposit_beneficiary_type
+        description: '{{ doc("column__user_first_deposit_beneficiary_type") }}'
+        data_type: STRING
+      - name: user_current_deposit_beneficiary_type
+        description: '{{ doc("column__user_current_deposit_beneficiary_type") }}'
+        data_type: STRING
       - name: first_individual_booking_date
         description: '{{ doc("column__first_individual_booking_date") }}'
         data_type: DATE

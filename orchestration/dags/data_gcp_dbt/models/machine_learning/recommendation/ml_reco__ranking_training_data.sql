@@ -81,37 +81,23 @@ with
         from {{ ref("int_global__offer") }}
     ),
 
-    item_embedding as (
+    item_embeddings as (
         select item_id, item_embedding
         from {{ ref("ml_feat__two_tower_last_item_embedding") }}
     ),
 
-    user_embedding as (
+    user_embeddings as (
         select user_id, user_embedding
         from {{ ref("ml_feat__two_tower_last_user_embedding") }}
     ),
 
-    booking_last_28_days as (
+    item_features_28_day as (
         select
-            booking_id,
-            booking_creation_date,
-            offer_id,
-            booking_creation_date
-            >= date_sub(date("{{ ds() }}"), interval 14 day) as is_newer_than_14_days,
-            booking_creation_date
-            >= date_sub(date("{{ ds() }}"), interval 7 day) as is_newer_than_7_days
-        from {{ ref("int_global__booking") }}
-        where booking_creation_date >= date_sub(date("{{ ds() }}"), interval 28 day)
-    ),
-
-    booking_aggregations as (
-        select
-            offer_id,
-            count(*) as booking_number_last_28_days,
-            sum(cast(is_newer_than_14_days as int64)) as booking_number_last_14_days,
-            sum(cast(is_newer_than_7_days as int64)) as booking_number_last_7_days
-        from booking_last_28_days
-        group by offer_id
+            item_id,
+            booking_number_last_28_days,
+            booking_number_last_14_days,
+            booking_number_last_7_days
+        from {{ ref("ml_feat__item_feature_28_day") }}
     ),
 
     stocks as (
@@ -129,7 +115,7 @@ with
             avg(stock_price) as offer_mean_stock_price,
             max(
                 date_diff(date("{{ ds() }}"), stock_beginning_date, day)
-            ) as offer_stock_beginning_days
+            ) as offer_max_stock_beginning_days
         from stocks
         group by offer_id
     )
@@ -159,20 +145,21 @@ select
     offers.offer_subcategory_id,
     offers.is_geolocated,
     offers.offer_created_delta_in_days,
-    item_embedding.item_embedding as item_last_embedding,
-    user_embedding.user_embedding as user_last_embedding,
-    booking_aggregations.booking_number_last_28_days,
-    booking_aggregations.booking_number_last_14_days,
-    booking_aggregations.booking_number_last_7_days,
     stock_aggregations.offer_mean_stock_price,
-    stock_aggregations.offer_stock_beginning_days
+    stock_aggregations.offer_stock_beginning_days,
+    item_embeddings.item_embedding as item_last_embedding,
+    item_features_28_day.booking_number_last_28_days
+    as item_booking_number_last_28_days,
+    item_features_28_day.booking_number_last_14_days
+    as item_booking_number_last_14_days,
+    item_features_28_day.booking_number_last_7_days as item_booking_number_last_7_days,
+    user_embeddings.user_embedding as user_last_embedding
 
 from home_interactions
 left join offers on home_interactions.offer_id = offers.offer_id
-left join item_embedding on offers.item_id = item_embedding.item_id
-left join user_embedding on home_interactions.user_id = user_embedding.user_id
-left join
-    booking_aggregations on home_interactions.offer_id = booking_aggregations.offer_id
+left join item_embeddings on offers.item_id = item_embeddings.item_id
+left join user_embeddings on home_interactions.user_id = user_embeddings.user_id
+left join item_features_28_day on offers.item_id = item_features_28_day.item_id
 left join stock_aggregations on home_interactions.offer_id = stock_aggregations.offer_id
 order by
     home_interactions.event_date,

@@ -110,6 +110,26 @@ with
             sum(cast(is_newer_than_7_days as int64)) as booking_number_last_7_days
         from booking_last_28_days
         group by offer_id
+    ),
+
+    stocks as (
+        select
+            offer_id,
+            stock_price,
+            stock_beginning_date
+        from {{ ref("int_global__stock") }}
+        where
+            stock_price is not null
+            and stock_booking_limit_date >= date_sub(date("{{ ds() }}"), interval 28 day)
+    ),
+
+    stock_aggregations as (
+        select
+            offer_id,
+            avg(stock_price) as offer_mean_stock_price,
+            max(date_diff(date("{{ ds() }}"), stock_beginning_date, day)) as offer_stock_beginning_days
+        from stocks
+        group by offer_id
     )
 
 
@@ -142,11 +162,14 @@ select
     user_embedding.user_embedding as user_last_embedding,
     booking_aggregations.booking_number_last_28_days,
     booking_aggregations.booking_number_last_14_days,
-    booking_aggregations.booking_number_last_7_days
+    booking_aggregations.booking_number_last_7_days,
+    stock_aggregations.offer_mean_stock_price,
+    stock_aggregations.offer_stock_beginning_days
 
 from home_interactions
 left join offers on home_interactions.offer_id = offers.offer_id
 left join item_embedding on offers.item_id = item_embedding.item_id
 left join user_embedding on home_interactions.user_id = user_embedding.user_id
 left join booking_aggregations on home_interactions.offer_id = booking_aggregations.offer_id
+left join stock_aggregations on home_interactions.offer_id = stock_aggregations.offer_id
 -- order by event_date, user_id, unique_session_id, module_id, displayed_position

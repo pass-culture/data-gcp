@@ -6,16 +6,28 @@ models:
     columns:
       - name: item_id
         description: "{{ doc('column__item_id') }}"
+        data_tests:
+          - not_null
       - name: offer_category_id
         description: "{{ doc('column__offer_category_id') }}"
+        data_tests:
+          - not_null
       - name: offer_subcategory_id
         description: "{{ doc('column__offer_subcategory_id') }}"
+        data_tests:
+          - not_null
       - name: item_image_embedding
         description: "{{ doc('column__embedding_offer_image') }}"
+        data_tests:
+          - not_null
       - name: item_semantic_content_hybrid_embedding
         description: "{{ doc('column__embedding_offer_hybrid') }}"
+        data_tests:
+          - not_null
       - name: item_names
         description: "{{ doc('column__offer_name') }}"
+        data_tests:
+          - not_null
       - name: item_descriptions
         description: "{{ doc('column__offer_description') }}"
       - name: item_rayons
@@ -26,7 +38,13 @@ models:
         description: "{{ doc('column__performer') }}"
       - name: item_mean_stock_price
         description: "{{ doc('column__mean_stock_price_per_item') }}"
+        data_tests:
+          - not_null
       - name: item_booking_cnt
         description: "{{ doc('column__total_bookings') }}"
+        data_tests:
+          - not_null
       - name: item_favourite_cnt
         description: "{{ doc('column__total_favorites') }}"
+        data_tests:
+          - not_null

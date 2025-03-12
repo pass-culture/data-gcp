@@ -53,12 +53,17 @@ select
         partition by d.userid order by d.datecreated desc, d.id desc
     ) as deposit_rank_desc,
     case
-        when d.type = "GRANT_15_17" then "15_17_pre_reform"
-        when d.type = "GRANT_18" and d.amount = 300 then "18_pre_reform"
-        when d.type = "GRANT_18" and d.amount > 300 then "18_experiment_phase"
-        when d.type = "GRANT_17_18" and d.amount < 150 then "17_post_reform"
-        when d.type = "GRANT_17_18" and d.amount >= 150 then "18_post_reform"
-	  end as deposit_beneficiary_type
+        when d.type = "GRANT_15_17"
+        then "15_17_pre_reform"
+        when d.type = "GRANT_18" and d.amount = 300
+        then "18_pre_reform"
+        when d.type = "GRANT_18" and d.amount > 300
+        then "18_experiment_phase"
+        when d.type = "GRANT_17_18" and d.amount < 150
+        then "17_post_reform"
+        when d.type = "GRANT_17_18" and d.amount >= 150
+        then "18_post_reform"
+    end as deposit_beneficiary_type
 from {{ source("raw", "applicative_database_deposit") }} as d
 left join {{ ref("int_applicative__user") }} as u on d.userid = u.user_id
 left join recredits_grouped_by_deposit as rd on d.id = rd.deposit_id

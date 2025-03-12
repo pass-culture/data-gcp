@@ -10,8 +10,7 @@
         errors as (
             select booking_status
             from validation
-            where
-                booking_status not in ("CANCELLED","CONFIRMED","REIMBURSED","USED")
+            where booking_status not in ("CANCELLED", "CONFIRMED", "REIMBURSED", "USED")
         )
 
     select *

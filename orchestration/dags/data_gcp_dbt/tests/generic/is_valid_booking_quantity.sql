@@ -8,10 +8,7 @@
         ),
 
         errors as (
-            select booking_quantity
-            from validation
-            where
-                booking_quantity not in (1,2)
+            select booking_quantity from validation where booking_quantity not in (1, 2)
         )
 
     select *

@@ -60,7 +60,7 @@ with
             day_of_week,
             hour_of_day
         from home_displays
-        where is_consulted is true or is_added_to_favorite is true or is_booked is true
+        -- where is_consulted is true or is_added_to_favorite is true or is_booked is true
     ),
 
     offers as (
@@ -122,4 +122,4 @@ from home_interactions
 left join offers on home_interactions.offer_id = offers.offer_id
 left join item_embedding on offers.item_id = item_embedding.item_id
 left join user_embedding on home_interactions.user_id = user_embedding.user_id
-order by event_date, user_id, unique_session_id, module_id, displayed_position
+-- order by event_date, user_id, unique_session_id, module_id, displayed_position

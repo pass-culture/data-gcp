@@ -88,7 +88,30 @@ with
             user_id,
             user_embedding
         from {{ ref("ml_feat__two_tower_last_user_embedding") }}
+    ),
+
+    booking_last_28_days as (
+        select
+            booking_id,
+            booking_creation_date,
+            offer_id,
+            booking_creation_date >= date_sub(date("{{ ds() }}"), interval 14 day) as is_newer_than_14_days,
+            booking_creation_date >= date_sub(date("{{ ds() }}"), interval 7 day) as is_newer_than_7_days
+        from {{ ref("int_global__booking") }}
+        where
+            booking_creation_date >= date_sub(date("{{ ds() }}"), interval 28 day)
+    ),
+
+    booking_aggregations as (
+        select
+            offer_id,
+            count(*) as booking_number_last_28_days,
+            sum(cast(is_newer_than_14_days as int64)) as booking_number_last_14_days,
+            sum(cast(is_newer_than_7_days as int64)) as booking_number_last_7_days
+        from booking_last_28_days
+        group by offer_id
     )
+
 
 select
     home_interactions.event_date,
@@ -115,11 +138,15 @@ select
     offers.offer_subcategory_id,
     offers.is_geolocated,
     offers.offer_created_delta_in_days,
-    item_embedding.item_embedding,
-    user_embedding.user_embedding
+    item_embedding.item_embedding as item_last_embedding,
+    user_embedding.user_embedding as user_last_embedding,
+    booking_aggregations.booking_number_last_28_days,
+    booking_aggregations.booking_number_last_14_days,
+    booking_aggregations.booking_number_last_7_days
 
 from home_interactions
 left join offers on home_interactions.offer_id = offers.offer_id
 left join item_embedding on offers.item_id = item_embedding.item_id
 left join user_embedding on home_interactions.user_id = user_embedding.user_id
+left join booking_aggregations on home_interactions.offer_id = booking_aggregations.offer_id
 -- order by event_date, user_id, unique_session_id, module_id, displayed_position

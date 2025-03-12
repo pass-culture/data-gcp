@@ -60,7 +60,7 @@ with
             day_of_week,
             hour_of_day
         from home_displays
-        -- where is_consulted is true or is_added_to_favorite is true or is_booked is true
+    -- where is_consulted is true or is_added_to_favorite is true or is_booked is true
     ),
 
     offers as (
@@ -77,16 +77,12 @@ with
     ),
 
     item_embedding as (
-        select
-            item_id,
-            item_embedding
+        select item_id, item_embedding
         from {{ ref("ml_feat__two_tower_last_item_embedding") }}
     ),
 
     user_embedding as (
-        select
-            user_id,
-            user_embedding
+        select user_id, user_embedding
         from {{ ref("ml_feat__two_tower_last_user_embedding") }}
     ),
 
@@ -95,11 +91,12 @@ with
             booking_id,
             booking_creation_date,
             offer_id,
-            booking_creation_date >= date_sub(date("{{ ds() }}"), interval 14 day) as is_newer_than_14_days,
-            booking_creation_date >= date_sub(date("{{ ds() }}"), interval 7 day) as is_newer_than_7_days
+            booking_creation_date
+            >= date_sub(date("{{ ds() }}"), interval 14 day) as is_newer_than_14_days,
+            booking_creation_date
+            >= date_sub(date("{{ ds() }}"), interval 7 day) as is_newer_than_7_days
         from {{ ref("int_global__booking") }}
-        where
-            booking_creation_date >= date_sub(date("{{ ds() }}"), interval 28 day)
+        where booking_creation_date >= date_sub(date("{{ ds() }}"), interval 28 day)
     ),
 
     booking_aggregations as (
@@ -113,25 +110,24 @@ with
     ),
 
     stocks as (
-        select
-            offer_id,
-            stock_price,
-            stock_beginning_date
+        select offer_id, stock_price, stock_beginning_date
         from {{ ref("int_global__stock") }}
         where
             stock_price is not null
-            and stock_booking_limit_date >= date_sub(date("{{ ds() }}"), interval 28 day)
+            and stock_booking_limit_date
+            >= date_sub(date("{{ ds() }}"), interval 28 day)
     ),
 
     stock_aggregations as (
         select
             offer_id,
             avg(stock_price) as offer_mean_stock_price,
-            max(date_diff(date("{{ ds() }}"), stock_beginning_date, day)) as offer_stock_beginning_days
+            max(
+                date_diff(date("{{ ds() }}"), stock_beginning_date, day)
+            ) as offer_stock_beginning_days
         from stocks
         group by offer_id
     )
-
 
 select
     home_interactions.event_date,
@@ -170,6 +166,8 @@ from home_interactions
 left join offers on home_interactions.offer_id = offers.offer_id
 left join item_embedding on offers.item_id = item_embedding.item_id
 left join user_embedding on home_interactions.user_id = user_embedding.user_id
-left join booking_aggregations on home_interactions.offer_id = booking_aggregations.offer_id
-left join stock_aggregations on home_interactions.offer_id = stock_aggregations.offer_id
--- order by event_date, user_id, unique_session_id, module_id, displayed_position
+left join
+    booking_aggregations on home_interactions.offer_id = booking_aggregations.offer_id
+left join
+    stock_aggregations on home_interactions.offer_id = stock_aggregations.offer_id
+    -- order by event_date, user_id, unique_session_id, module_id, displayed_position

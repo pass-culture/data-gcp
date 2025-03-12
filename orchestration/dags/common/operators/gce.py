@@ -289,6 +289,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
         "GCP_PROJECT_ID": GCP_PROJECT_ID,
         "ENVIRONMENT_NAME": ENVIRONMENT_NAME,
+        "CC": "gcc",
     }
 
     UV_EXPORT = {**DEFAULT_EXPORT, "PATH": "$HOME/.local/bin:$PATH"}

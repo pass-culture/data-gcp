@@ -50,7 +50,7 @@ models:
       - name: venue_is_virtual
         description: '{{ doc("column__venue_is_virtual") }}'
         data_type: BOOLEAN
-      - name: venue_managing_non_id
+      - name: venue_managing_offerer_id
         description: '{{ doc("column__venue_managing_offerer_id") }}'
         data_type: STRING
         data_tests:

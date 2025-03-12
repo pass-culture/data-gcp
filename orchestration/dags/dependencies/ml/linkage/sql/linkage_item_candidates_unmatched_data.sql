@@ -5,7 +5,7 @@ with
         inner join
             `{{ bigquery_analytics_dataset }}.global_offer` go
             on go.item_id = ie.item_id
-        where go.offer_product_id is not null
+        where go.offer_product_id is null
         qualify
             row_number() over (
                 partition by ie.item_id order by ie.reduction_method desc
@@ -34,9 +34,9 @@ with
             go.performer,
             go.offer_subcategory_id
         from `{{ bigquery_analytics_dataset }}.global_offer` go
-        where go.offer_product_id is not null
+        where go.offer_product_id is null
     ),
-    sources as (
+    candidates as (
         select
             case
                 when o.item_id like 'link-%'
@@ -50,8 +50,11 @@ with
             o.offer_subcategory_id
         from offers o
         inner join prepocess_embeddings on prepocess_embeddings.item_id = o.item_id
+        inner join
+            `{{ bigquery_sandbox_dataset }}.unmatched_offers` uo
+            on uo.item_id_candidate = o.item_id
     )
 select *
-from sources
+from candidates
 qualify row_number() over (partition by item_id order by performer desc) = 1
 order by rand()

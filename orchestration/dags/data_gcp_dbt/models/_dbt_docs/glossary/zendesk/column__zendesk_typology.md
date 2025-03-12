@@ -7,7 +7,7 @@
 ## Intermediate fields
 
 
-{% docs column__zendesk_typology_type %}The type of typology, which is "support_pro".{% enddocs %}
+{% docs column__zendesk_typology_type %}The type of typology, which can be "support_pro" or "support_native".{% enddocs %}
 {% docs column__zendesk_typology_id %}A unique identifier for the typology.{% enddocs %}
 {% docs column__zendesk_typology_primary %}The primary part of the typology.{% enddocs %}
 {% docs column__zendesk_typology_secondary %}The secondary part of the typology.{% enddocs %}

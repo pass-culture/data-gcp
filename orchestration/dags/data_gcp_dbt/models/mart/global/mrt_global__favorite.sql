@@ -36,7 +36,7 @@ select
     u.user_is_in_education,
     u.user_is_in_qpv,
     u.current_deposit_type,
-    u.current_deposit_beneficiary_type,
+    u.user_current_deposit_beneficiary_type,
     u.user_epci,
     u.user_density_label,
     u.user_city_code,

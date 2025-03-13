@@ -78,8 +78,8 @@ models:
         description: "{{ doc('column__user_is_in_qpv') }}"
       - name: current_deposit_type
         description: "{{ doc('column__user_current_deposit_type') }}"
-      - name: user_current_deposit_beneficiary_type
-        description: "{{ doc('column__user_current_deposit_beneficiary_type') }}"
+      - name: user_current_deposit_reform_category
+        description: "{{ doc('column__user_current_deposit_reform_category') }}"
       - name: user_epci
         description: "{{ doc('column__user_epci') }}"
       - name: user_density_label

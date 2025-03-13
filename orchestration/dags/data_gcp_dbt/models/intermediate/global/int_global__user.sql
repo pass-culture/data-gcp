@@ -58,11 +58,11 @@ with
                 case when deposit_rank_desc = 1 then deposit_type end
             ) as current_deposit_type,
             max(
-                case when deposit_rank_asc = 1 then deposit_beneficiary_type end
-            ) as user_first_deposit_beneficiary_type,
+                case when deposit_rank_asc = 1 then deposit_reform_category end
+            ) as user_first_deposit_reform_category,
             max(
-                case when deposit_rank_desc = 1 then deposit_beneficiary_type end
-            ) as user_current_deposit_beneficiary_type
+                case when deposit_rank_desc = 1 then deposit_reform_category end
+            ) as user_current_deposit_reform_category
         from {{ ref("int_global__deposit") }}
         group by user_id
     )
@@ -121,8 +121,8 @@ select
     dgu.total_recredit_amount,
     dgu.first_deposit_type,
     dgu.current_deposit_type,
-    dgu.user_first_deposit_beneficiary_type,
-    dgu.user_current_deposit_beneficiary_type,
+    dgu.user_first_deposit_reform_category,
+    dgu.user_current_deposit_reform_category,
     coalesce(
         u.user_activity = "Chômeur, En recherche d'emploi", false
     ) as user_is_unemployed,

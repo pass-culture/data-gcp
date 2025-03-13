@@ -59,8 +59,8 @@ models:
       - name: deposit_type
         description: '{{ doc("column__deposit_type") }}'
         data_type: STRING
-      - name: deposit_beneficiary_type
-        description: '{{ doc("column__deposit_beneficiary_type") }}'
+      - name: deposit_reform_category
+        description: '{{ doc("column__deposit_reform_category") }}'
         data_type: STRING
       - name: reimbursed
         description: '{{ doc("column__booking_reimbursed") }}'

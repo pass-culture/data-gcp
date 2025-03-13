@@ -31,6 +31,8 @@ select
     first_deposit_type,
     total_deposit_amount,
     current_deposit_type,
+    user_first_deposit_reform_category,
+    user_current_deposit_reform_category,
     first_individual_booking_date,
     total_non_cancelled_individual_bookings,
     total_non_cancelled_duo_bookings,

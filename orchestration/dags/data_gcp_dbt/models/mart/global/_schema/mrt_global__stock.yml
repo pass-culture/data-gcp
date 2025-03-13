@@ -5,6 +5,9 @@ models:
     columns:
       - name: stock_id
         description: '{{ doc("column__stock_id") }}'
+        data_tests:
+          - not_null
+          - unique
       - name: stock_beginning_date
         description: '{{ doc("column__stock_beginning_date") }}'
       - name: stock_last_provider_id
@@ -31,14 +34,21 @@ models:
         description: '{{ doc("column__total_bookings") }}'
       - name: offer_id
         description: '{{ doc("column__offer_id") }}'
+        data_tests:
+          - not_null
       - name: offer_name
         description: '{{ doc("column__offer_name") }}'
       - name: offer_subcategory_id
         description: '{{ doc("column__offer_subcategory_id") }}'
       - name: offerer_id
         description: '{{ doc("column__offerer_id") }}'
+        data_tests:
+          - not_null
       - name: partner_id
         description: '{{ doc("column__partner_id") }}'
+        # failed : investigation
+        # data_tests:
+        #   - not_null
       - name: price_category_id
         description: '{{ doc("column__price_category_id") }}'
       - name: price_category_label

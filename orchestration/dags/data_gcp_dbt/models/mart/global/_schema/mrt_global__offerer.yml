@@ -5,8 +5,13 @@ models:
     columns:
       - name: offerer_id
         description: '{{ doc("column__offerer_id") }}'
+        data_tests:
+          - not_null
+          - unique
       - name: partner_id
         description: '{{ doc("column__partner_id") }}'
+        data_tests:
+          - not_null
       - name: offerer_name
         description: '{{ doc("column__offerer_name") }}'
       - name: offerer_creation_date

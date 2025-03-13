@@ -5,6 +5,13 @@
 }}
 
 with
+    iris_data as (
+        select
+            id as iris_id,
+            centroid
+        from {{ ref("int_seed__iris_france") }}
+    ),
+
     date_series as (
         select date_sub(date('{{ ds() }}'), interval feature_date day) as event_date
         from unnest(generate_array(0, 59)) as feature_date
@@ -117,17 +124,29 @@ with
             distinct_past_positions as pp
             on ud.user_id = pp.user_id
             and ud.event_date = pp.event_date
+    ),
+
+    bookings as (
+        select
+            user_id,
+            count(*) as user_bookings_count
+        from {{ ref("int_applicative__booking") }}
+        where not booking_is_cancelled
+        group by user_id
     )
 
 select
-    dp.user_id,
-    dp.event_date,
-    dp.last_known_user_iris_id,
-    dp.last_known_user_iris_date,
-    iris.centroid as last_known_user_centroid,
-    st_x(iris.centroid) as last_known_user_centroid_x,
-    st_y(iris.centroid) as last_known_user_centroid_y
-from daily_positions as dp
+    daily_positions.user_id,
+    daily_positions.event_date,
+    daily_positions.last_known_user_iris_id,
+    daily_positions.last_known_user_iris_date,
+    iris_data.centroid as last_known_user_centroid,
+    bookings.user_bookings_count,
+    st_x(iris_data.centroid) as last_known_user_centroid_x,
+    st_y(iris_data.centroid) as last_known_user_centroid_y
+from daily_positions
 left join
-    {{ ref("int_seed__iris_france") }} as iris on dp.last_known_user_iris_id = iris.id
-order by dp.user_id, dp.event_date
+    iris_data on daily_positions.last_known_user_iris_id = iris_data.iris_id
+left join
+    bookings on daily_positions.user_id = bookings.user_id
+order by daily_positions.user_id, daily_positions.event_date

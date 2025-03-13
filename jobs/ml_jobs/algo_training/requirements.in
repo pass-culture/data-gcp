@@ -1,6 +1,6 @@
 catboost==1.2
 datetime==4.3
-gcsfs== 2023.5.0
+gcsfs==2023.5.0
 google-cloud-aiplatform==1.22.0
 google-cloud-secret-manager==2.4.0
 keras==2.15
@@ -8,8 +8,10 @@ loguru==0.6.0
 matplotlib==3.8.4
 mlflow==2.20.1
 numpy==1.26.4
-pandas-gbq>=0.17.1
+pandas-gbq==0.13.2
 pandas==2.2.0
+pyarrow>=10.0.1
+fastparquet==2024.11.0
 polars==0.18.6
 protobuf>=3.9.2
 pytest==6.2.5

@@ -4,6 +4,7 @@
             unique_key="collective_offer_id",
             strategy="check",
             check_cols=["collective_offer_id"],
+            invalidate_hard_delete=True,
         )
     }}
 

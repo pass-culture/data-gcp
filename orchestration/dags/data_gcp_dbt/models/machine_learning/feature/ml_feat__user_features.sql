@@ -4,33 +4,130 @@
     )
 }}
 
-with user_iris_data as (
-    select
-        user_id,
-        user_context.user_iris_id,
-        event_date,
-        row_number() over(partition by user_id order by event_date desc) as row_num
-    from {{ ref('int_pcreco__past_offer_context') }}
-    where user_context.user_iris_id is not null and event_date >= date_sub(date('{{ ds() }}'), interval 60 day)
-),
+with
+    date_series as (
+        select date_sub(date('{{ ds() }}'), interval feature_date day) as event_date
+        from unnest(generate_array(0, 59)) as feature_date
+    ),
 
-last_user_iris_data as (
-    select
-    user_id,
-    user_iris_id as last_known_user_iris_id,
-    event_date as last_known_user_iris_date
-from user_iris_data
-where row_num = 1
-)
+    user_iris_data as (
+        select distinct user_id, user_context.user_iris_id, event_date
+        from {{ ref("int_pcreco__past_offer_context") }}
+        where
+            user_context.user_iris_id is not null
+            and event_date >= date_sub(date('{{ ds() }}'), interval 60 day)
+    ),
+
+    distinct_users as (select distinct user_id from user_iris_data),
+
+    user_days as (
+        select users.user_id, dates.event_date
+        from distinct_users as users
+        cross join date_series as dates
+    ),
+
+    -- Create a table of all possible user/date combinations with their closest future
+    -- position
+    future_positions as (
+        select
+            ud.user_id,
+            ud.event_date,
+            first_value(uid.user_iris_id) over (
+                partition by ud.user_id, ud.event_date
+                order by uid.event_date
+                rows between unbounded preceding and unbounded following
+            ) as future_iris_id,
+            first_value(uid.event_date) over (
+                partition by ud.user_id, ud.event_date
+                order by uid.event_date
+                rows between unbounded preceding and unbounded following
+            ) as future_date
+        from user_days as ud
+        left join
+            user_iris_data as uid
+            on ud.user_id = uid.user_id
+            and ud.event_date <= uid.event_date
+    ),
+
+    -- Create a table of all possible user/date combinations with their closest past
+    -- position
+    past_positions as (
+        select
+            ud.user_id,
+            ud.event_date,
+            first_value(uid.user_iris_id) over (
+                partition by ud.user_id, ud.event_date
+                order by uid.event_date desc
+                rows between unbounded preceding and unbounded following
+            ) as past_iris_id,
+            first_value(uid.event_date) over (
+                partition by ud.user_id, ud.event_date
+                order by uid.event_date desc
+                rows between unbounded preceding and unbounded following
+            ) as past_date
+        from user_days as ud
+        left join
+            user_iris_data as uid
+            on ud.user_id = uid.user_id
+            and ud.event_date > uid.event_date
+    ),
+
+    -- Deduplicate the future positions (take one row per user/date)
+    distinct_future_positions as (
+        select user_id, event_date, future_iris_id, future_date
+        from future_positions
+        group by user_id, event_date, future_iris_id, future_date
+    ),
+
+    -- Deduplicate the past positions (take one row per user/date)
+    distinct_past_positions as (
+        select user_id, event_date, past_iris_id, past_date
+        from past_positions
+        group by user_id, event_date, past_iris_id, past_date
+    ),
+
+    -- Combine positions, prioritizing:
+    -- 1. Current day position (when future_date = event_date)
+    -- 2. Past position
+    -- 3. Future position (only when no past positions available)
+    daily_positions as (
+        select
+            ud.user_id,
+            ud.event_date,
+            case
+                when fp.future_date = ud.event_date
+                then fp.future_iris_id  -- Same day (highest priority)
+                when pp.past_iris_id is not null
+                then pp.past_iris_id  -- Past position (second priority)
+                else fp.future_iris_id  -- Future position (lowest priority)
+            end as last_known_user_iris_id,
+            case
+                when fp.future_date = ud.event_date
+                then fp.future_date  -- Same day
+                when pp.past_iris_id is not null
+                then pp.past_date  -- Past position
+                else fp.future_date  -- Future position
+            end as last_known_user_iris_date
+        from user_days as ud
+        left join
+            distinct_future_positions as fp
+            on ud.user_id = fp.user_id
+            and ud.event_date = fp.event_date
+        left join
+            distinct_past_positions as pp
+            on ud.user_id = pp.user_id
+            and ud.event_date = pp.event_date
+    )
 
 select
-    last_user_iris_data.user_id,
-    last_user_iris_data.last_known_user_iris_id,
-    last_user_iris_data.last_known_user_iris_date,
+    dp.user_id,
+    dp.event_date,
+    dp.last_known_user_iris_id,
+    dp.last_known_user_iris_date,
     iris.centroid as last_known_user_centroid,
     st_x(iris.centroid) as last_known_user_centroid_x,
     st_y(iris.centroid) as last_known_user_centroid_y
-from last_user_iris_data
-left join {{ ref('int_seed__iris_france') }} as iris
-on last_user_iris_data.last_known_user_iris_id = iris.id
-order by last_user_iris_data.centroid
+from daily_positions as dp
+left join
+    {{ ref("int_seed__iris_france") }} as iris on dp.last_known_user_iris_id = iris.id
+order by dp.user_id, dp.event_date

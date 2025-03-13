@@ -184,6 +184,7 @@ sources:
       - name: priority_local_authorities
       - name: 2024_insee_qpv
       - name: 2024_insee_qpv_population
+      - name: 2025_insee_postal_code
       - name: qpi_mapping
       - name: rural_city_type_data
       - name: region_department

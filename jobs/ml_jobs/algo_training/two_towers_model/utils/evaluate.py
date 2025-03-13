@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from common.constants import EVALUATION_USER_NUMBER
 from loguru import logger
 from recommenders.evaluation.python_evaluation import (
     catalog_coverage,
@@ -16,6 +15,7 @@ from recommenders.evaluation.python_evaluation import (
 from sklearn.decomposition import PCA
 from tqdm import tqdm
 
+from commons.constants import EVALUATION_USER_NUMBER
 from commons.data_collect_queries import read_from_gcs
 
 

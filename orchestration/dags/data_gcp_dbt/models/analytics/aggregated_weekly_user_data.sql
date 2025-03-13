@@ -64,6 +64,7 @@ with
             ) as user_age,
             deposit_active_weeks.deposit_id,
             deposit_active_weeks.deposit_type,
+            deposit_active_weeks.deposit_reform_category,
             deposit_active_weeks.deposit_amount,
             seniority_weeks,
             date_diff(
@@ -85,7 +86,7 @@ with
         left join
             {{ ref("diversification_booking") }} as diversification_booking
             on ebd.booking_id = diversification_booking.booking_id
-        group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+        group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
     ),
 
     cum_booking_history as (
@@ -176,7 +177,7 @@ with
             {{ ref("firebase_session_origin") }} as firebase_session_origin using (
                 user_pseudo_id, session_id
             )
-        group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+        group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
     ),
 
     visits_ranked as (

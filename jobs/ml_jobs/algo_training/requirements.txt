@@ -89,14 +89,14 @@ contourpy==1.3.1
     # via matplotlib
 cornac==2.2.1
     # via recommenders
+cramjam==2.9.1
+    # via fastparquet
 cycler==0.12.1
     # via matplotlib
 databricks-sdk==0.43.0
     # via mlflow-skinny
 datetime==4.3
     # via -r requirements.in
-db-dtypes==1.4.1
-    # via pandas-gbq
 debugpy==1.8.12
     # via ipykernel
 decorator==5.1.1
@@ -117,6 +117,8 @@ exceptiongroup==1.2.2
     #   hypothesis
 fastjsonschema==2.21.1
     # via nbformat
+fastparquet==2024.11.0
+    # via -r requirements.in
 filelock==3.17.0
     # via
     #   huggingface-hub
@@ -145,6 +147,7 @@ frozenlist==1.5.0
     #   aiosignal
 fsspec==2023.5.0
     # via
+    #   fastparquet
     #   gcsfs
     #   huggingface-hub
 future==1.0.0
@@ -167,12 +170,10 @@ google-api-core==1.34.1
     # via
     #   google-cloud-aiplatform
     #   google-cloud-bigquery
-    #   google-cloud-bigquery-storage
     #   google-cloud-core
     #   google-cloud-resource-manager
     #   google-cloud-secret-manager
     #   google-cloud-storage
-    #   pandas-gbq
 google-auth==2.38.0
     # via
     #   databricks-sdk
@@ -180,7 +181,6 @@ google-auth==2.38.0
     #   google-api-core
     #   google-auth-oauthlib
     #   google-cloud-bigquery
-    #   google-cloud-bigquery-storage
     #   google-cloud-core
     #   google-cloud-resource-manager
     #   google-cloud-storage
@@ -199,8 +199,6 @@ google-cloud-bigquery==3.25.0
     # via
     #   google-cloud-aiplatform
     #   pandas-gbq
-google-cloud-bigquery-storage==2.28.0
-    # via pandas-gbq
 google-cloud-core==2.4.1
     # via
     #   google-cloud-bigquery
@@ -459,7 +457,7 @@ numpy==1.26.4
     #   category-encoders
     #   contourpy
     #   cornac
-    #   db-dtypes
+    #   fastparquet
     #   h5py
     #   hyperopt
     #   lightgbm
@@ -468,11 +466,9 @@ numpy==1.26.4
     #   mlflow
     #   numba
     #   pandas
-    #   pandas-gbq
     #   pandera
     #   patsy
     #   powerlaw
-    #   pyarrow
     #   scann
     #   scikit-learn
     #   scikit-surprise
@@ -561,7 +557,7 @@ overrides==7.7.0
     # via jupyter-server
 packaging==21.3
     # via
-    #   db-dtypes
+    #   fastparquet
     #   google-cloud-aiplatform
     #   google-cloud-bigquery
     #   gunicorn
@@ -585,7 +581,7 @@ pandas==2.2.0
     #   -r requirements.in
     #   catboost
     #   category-encoders
-    #   db-dtypes
+    #   fastparquet
     #   mlflow
     #   pandas-gbq
     #   pandera
@@ -593,7 +589,7 @@ pandas==2.2.0
     #   seaborn
     #   shap
     #   statsmodels
-pandas-gbq==0.17.9
+pandas-gbq==0.13.2
     # via -r requirements.in
 pandera==0.23.1
     # via recommenders
@@ -634,7 +630,6 @@ propcache==0.2.1
 proto-plus==1.26.0
     # via
     #   google-cloud-aiplatform
-    #   google-cloud-bigquery-storage
     #   google-cloud-resource-manager
     #   google-cloud-secret-manager
 protobuf==3.20.3
@@ -642,7 +637,6 @@ protobuf==3.20.3
     #   -r requirements.in
     #   google-api-core
     #   google-cloud-aiplatform
-    #   google-cloud-bigquery-storage
     #   google-cloud-resource-manager
     #   googleapis-common-protos
     #   grpc-google-iam-v1
@@ -664,11 +658,10 @@ py==1.11.0
     # via pytest
 py4j==0.10.9.9
     # via hyperopt
-pyarrow==9.0.0
+pyarrow==18.1.0
     # via
-    #   db-dtypes
+    #   -r requirements.in
     #   mlflow
-    #   pandas-gbq
 pyasn1==0.6.1
     # via
     #   pyasn1-modules

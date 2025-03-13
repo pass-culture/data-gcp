@@ -33,7 +33,7 @@ with
             count(distinct sb.collective_offer_id) as total_bookable_offers
         from {{ ref("snapshot__bookable_collective_offer") }} as sb
         inner join
-            {{ source("raw", "applicative_database_collective_offer") }} as o using (
+            {{ ref("int_applicative__collective_offer") }} as o using (
                 collective_offer_id
             )
         inner join

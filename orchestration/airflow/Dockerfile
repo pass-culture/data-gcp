@@ -4,10 +4,11 @@ ARG NETWORK_MODE=default
 ################################
 ## Stage 1 Builder with proxy ##
 FROM apache/airflow:2.9.1-python3.10 AS base-proxy
-ARG CERT_PATH_DOCKER=/usr/local/share/ca-certificates/nscacert.pem
+ARG CERT_PATH_DOCKER=/usr/local/share/ca-certificates/nscacert_combined.pem
 COPY airflow/etc/nscacert_combined.pem ${CERT_PATH_DOCKER}
 ENV REQUESTS_CA_BUNDLE=${CERT_PATH_DOCKER}
 ENV SSL_CERT_FILE=${CERT_PATH_DOCKER}
+ENV CURL_CA_BUNDLE=${CERT_PATH_DOCKER}
 
 ##################################
 ## Stage 1 Builder without proxy ##

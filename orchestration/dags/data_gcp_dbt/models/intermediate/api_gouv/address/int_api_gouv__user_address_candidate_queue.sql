@@ -11,23 +11,23 @@ with profile_completion_check as (
 
 profile_completion as (
   select
-    user_last_modified_at,
-    user_id,
+    pcc.user_last_modified_at,
+    pcc.user_id,
     trim(
         concat(
-            replace(replace(adu.user_address, '\\r', ''), '\\n', ''),
+            replace(replace(pcc.user_address, '\\r', ''), '\\n', ''),
             ' ',
-            adu.user_postal_code,
+            pcc.user_postal_code,
             ' ',
-            adu.user_city
+            pcc.user_city
         )
     )
     as user_full_address
-  from profile_completion_check as adu
+  from profile_completion_check as pcc
   where
     -- beneficiary update should have all fields
-    coalesce(adu.user_address, '') <> ''
-    and adu.user_postal_code is not null
+    coalesce(pcc.user_address, '') <> ''
+    and pcc.user_postal_code is not null
 ),
 
 applicative_database_user as (
@@ -84,7 +84,8 @@ user_location_update as (
 select
     uc.user_id,
     uc.user_full_address,
-    uc.user_last_modified_at as user_address_last_calculation_at
+    uc.user_last_modified_at as user_address_last_calculation_at,
+    u.user_creation_date as user_creation_at
 
 from user_candidates as uc
 left join user_location_update as ulu on uc.user_id = ulu.user_id

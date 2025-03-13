@@ -24,7 +24,6 @@ select
     offerer_name,
     is_local_authority,
     venue_iris_internal_id,
-    offer_id,
     collective_offer_creation_date,
     collective_offer_date_updated,
     collective_offer_subcategory_id,

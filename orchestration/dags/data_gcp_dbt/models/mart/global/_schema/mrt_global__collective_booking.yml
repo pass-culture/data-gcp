@@ -14,8 +14,6 @@ models:
         description: "{{ doc('column__stock_id') }}"
       - name: collective_offer_id
         description: "{{ doc('column__collective_offer_id') }}"
-      - name: offer_id
-        description: "{{ doc('column__offer_id') }}"
       - name: collective_offer_name
         description: "{{ doc('column__collective_offer_name') }}"
       - name: collective_offer_subcategory_id

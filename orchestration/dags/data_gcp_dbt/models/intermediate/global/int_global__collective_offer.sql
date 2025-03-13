@@ -35,7 +35,6 @@ select
     v.is_local_authority,
     v.venue_type_label,
     v.venue_is_permanent,
-    co.offer_id,
     co.collective_offer_creation_date,
     co.collective_offer_date_updated,
     co.collective_offer_subcategory_id,

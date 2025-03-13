@@ -6,10 +6,13 @@
 
 with
     iris_data as (
-        select
-            id as iris_id,
-            centroid
-        from {{ ref("int_seed__iris_france") }}
+        select id as iris_id, centroid from {{ ref("int_seed__iris_france") }}
+    ),
+
+    bookings_raw as (
+        select user_id, booking_creation_date as event_date
+        from {{ ref("int_applicative__booking") }}
+        where not booking_is_cancelled
     ),
 
     date_series as (
@@ -25,7 +28,7 @@ with
             and event_date >= date_sub(date('{{ ds() }}'), interval 60 day)
     ),
 
-    distinct_users as (select distinct user_id from user_iris_data),
+    distinct_users as (select distinct user_id from bookings_raw union distinct select distinct user_id from user_iris_data),
 
     user_days as (
         select users.user_id, dates.event_date
@@ -126,13 +129,26 @@ with
             and ud.event_date = pp.event_date
     ),
 
-    bookings as (
+    bookings_by_date as (
+        select user_id, event_date, count(*) as daily_bookings_count
+        from bookings_raw
+        group by user_id, event_date
+    ),
+
+    cumulative_bookings as (
         select
-            user_id,
-            count(*) as user_bookings_count
-        from {{ ref("int_applicative__booking") }}
-        where not booking_is_cancelled
-        group by user_id
+            ud.user_id,
+            ud.event_date,
+            sum(
+                case
+                    when bd.event_date <= ud.event_date
+                    then bd.daily_bookings_count
+                    else 0
+                end
+            ) as user_bookings_count
+        from user_days as ud
+        left join bookings_by_date as bd on ud.user_id = bd.user_id
+        group by ud.user_id, ud.event_date
     )
 
 select
@@ -141,12 +157,13 @@ select
     daily_positions.last_known_user_iris_id,
     daily_positions.last_known_user_iris_date,
     iris_data.centroid as last_known_user_centroid,
-    bookings.user_bookings_count,
+    coalesce(cb.user_bookings_count, 0) as user_bookings_count,
     st_x(iris_data.centroid) as last_known_user_centroid_x,
     st_y(iris_data.centroid) as last_known_user_centroid_y
 from daily_positions
+left join iris_data on daily_positions.last_known_user_iris_id = iris_data.iris_id
 left join
-    iris_data on daily_positions.last_known_user_iris_id = iris_data.iris_id
-left join
-    bookings on daily_positions.user_id = bookings.user_id
+    cumulative_bookings as cb
+    on daily_positions.user_id = cb.user_id
+    and daily_positions.event_date = cb.event_date
 order by daily_positions.user_id, daily_positions.event_date

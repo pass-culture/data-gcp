@@ -17,9 +17,7 @@ with
             and event_date >= date_sub(date('{{ ds() }}'), interval 60 day)
     ),
 
-    date_series as (
-        select distinct event_date from user_iris_data order by event_date
-    ),
+    date_series as (select distinct event_date from user_iris_data order by event_date),
 
     distinct_users as (select distinct user_id from user_iris_data),
 
@@ -121,7 +119,6 @@ with
             on ud.user_id = pp.user_id
             and ud.event_date = pp.event_date
     )
-
 
 select
     daily_positions.user_id,

@@ -27,7 +27,13 @@ with
         select distinct event_date from daily_positions order by event_date
     ),
 
-    distinct_users as (select distinct user_id from bookings_raw union distinct select distinct user_id from daily_positions),
+    distinct_users as (
+        select distinct user_id
+        from bookings_raw
+        union distinct
+        select distinct user_id
+        from daily_positions
+    ),
 
     user_days as (
         select users.user_id, dates.event_date

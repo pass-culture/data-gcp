@@ -33,8 +33,6 @@ select
     user_activation_date,
     first_booking_type,
     first_paid_booking_type,
-    total_grant_18_subcategory_booked,
-    total_grant_15_17_subcategory_booked,
     user_suspension_reason,
     first_deposit_amount,
     last_deposit_amount,

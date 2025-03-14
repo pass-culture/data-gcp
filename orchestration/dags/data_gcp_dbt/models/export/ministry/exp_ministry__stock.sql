@@ -13,6 +13,5 @@ select
     offerer_id,
     price_category_id,
     price_category_label,
-    price_category_label_id,
-    venue_department_code
+    price_category_label_id
 from {{ ref("mrt_global__stock") }}

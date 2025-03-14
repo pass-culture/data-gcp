@@ -33,7 +33,8 @@ models:
         description: '{{ doc("column__booking_status") }}'
         data_type: STRING
         data_tests:
-          - is_valid_booking_status
+          - accepted_values:
+              values: ['CANCELLED', 'BLA', 'BLOU', 'returned']
       - name: booking_is_cancelled
         description: '{{ doc("column__booking_is_cancelled") }}'
         data_type: BOOLEAN

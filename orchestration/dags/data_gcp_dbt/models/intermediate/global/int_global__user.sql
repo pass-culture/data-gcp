@@ -69,8 +69,6 @@ with
 
 select
     u.user_id,
-    u.user_department_code,
-    u.user_postal_code,
     u.user_activity,
     u.user_civility,
     u.user_school_type,
@@ -83,6 +81,8 @@ select
     u.user_subscribed_themes,
     u.is_theme_subscribed,
     ui.user_iris_internal_id,
+    ui.user_department_code,
+    ui.user_postal_code,
     ui.user_region_name,
     ui.user_department_name,
     ui.user_city,

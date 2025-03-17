@@ -139,10 +139,10 @@ def compute_metrics(
 
     Returns:
         Dict[str, float]: Dictionary containing:
-            - {prefix}precision@k
-            - {prefix}recall@k
-            - {prefix}coverage@k
-            - {prefix}novelty@k
+            - {prefix}precision_at_k
+            - {prefix}recall_at_k
+            - {prefix}coverage_at_k
+            - {prefix}novelty_at_k
     """
 
     # Column definitions
@@ -185,10 +185,10 @@ def compute_metrics(
 
     ## Assemble metrics in dict
     metrics = {
-        f"{prefix}precision@{k}": precision,
-        f"{prefix}recall@{k}": recall,
-        f"{prefix}novelty@{k}": novelty_metric,
-        f"{prefix}coverage@{k}": coverage,
+        f"{prefix}precision_at_{k}": precision,
+        f"{prefix}recall_at_{k}": recall,
+        f"{prefix}novelty_at_{k}": novelty_metric,
+        f"{prefix}coverage_at_{k}": coverage,
     }
     return metrics
 

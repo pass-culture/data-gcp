@@ -77,7 +77,12 @@ with
             is_geolocated,
             offer_created_delta_in_days,
             offer_mean_stock_price,
-            offer_max_stock_beginning_days
+            offer_max_stock_beginning_days,
+            offer_iris_id,
+            offer_centroid,
+            offer_centroid_x,
+            offer_centroid_y
+
         from {{ ref("ml_feat__offer_feature") }}
 
     ),
@@ -146,6 +151,10 @@ select
     offer_features.offer_created_delta_in_days,
     offer_features.offer_mean_stock_price,
     offer_features.offer_max_stock_beginning_days,
+    offer_features.offer_iris_id,
+    offer_features.offer_centroid,
+    offer_features.offer_centroid_x,
+    offer_features.offer_centroid_y,
     item_embeddings.item_embedding as item_last_embedding,
     item_features_28_day.booking_number_last_28_days
     as item_booking_number_last_28_days,

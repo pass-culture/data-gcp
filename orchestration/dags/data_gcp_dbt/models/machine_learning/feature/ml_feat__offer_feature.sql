@@ -1,4 +1,8 @@
 with
+    iris_data as (
+        select id as iris_id, centroid from {{ ref("int_seed__iris_france") }}
+    ),
+
     offers as (
         select
             offer_id,
@@ -9,6 +13,8 @@ with
             date_diff(
                 current_date(), offer_creation_date, day
             ) as offer_created_delta_in_days
+
+
         from {{ ref("int_global__offer") }}
     ),
 
@@ -40,7 +46,12 @@ select
     offers.is_geolocated,
     offers.offer_created_delta_in_days,
     stock_aggregations.offer_mean_stock_price,
-    stock_aggregations.offer_max_stock_beginning_days
+    stock_aggregations.offer_max_stock_beginning_days,
+    iris_data.iris_id as offer_iris_id,
+    iris_data.centroid as offer_centroid,
+    st_x(iris_data.centroid) as offer_centroid_x,
+    st_y(iris_data.centroid) as offer_centroid_y
 
 from offers
 left join stock_aggregations on offers.offer_id = stock_aggregations.offer_id
+left join iris_data on offers.offer_id = iris_data.iris_id

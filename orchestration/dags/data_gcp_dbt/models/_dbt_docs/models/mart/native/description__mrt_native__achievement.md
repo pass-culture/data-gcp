@@ -12,4 +12,4 @@ The `mrt_native__achievement`table lists all achievements earned by users follow
 
 ## Table description
 
-{% docs table__mrt_native__achievement  %}{% enddocs %}
+{% docs table__mrt_native__achievement %}{% enddocs %}

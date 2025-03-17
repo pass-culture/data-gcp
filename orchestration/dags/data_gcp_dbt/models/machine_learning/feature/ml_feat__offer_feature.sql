@@ -40,7 +40,7 @@ select
     offers.is_geolocated,
     offers.offer_created_delta_in_days,
     stock_aggregations.offer_mean_stock_price,
-    stock_aggregations.offer_stock_beginning_days
+    stock_aggregations.offer_max_stock_beginning_days
 
 from offers
 left join stock_aggregations on offers.offer_id = stock_aggregations.offer_id

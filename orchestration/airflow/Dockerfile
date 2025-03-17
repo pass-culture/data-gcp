@@ -9,6 +9,7 @@ COPY airflow/etc/nscacert_combined.pem ${CERT_PATH_DOCKER}
 ENV REQUESTS_CA_BUNDLE=${CERT_PATH_DOCKER}
 ENV SSL_CERT_FILE=${CERT_PATH_DOCKER}
 ENV CURL_CA_BUNDLE=${CERT_PATH_DOCKER}
+ENV HTTPLIB2_CA_CERTS=${CERT_PATH_DOCKER}
 
 ##################################
 ## Stage 1 Builder without proxy ##

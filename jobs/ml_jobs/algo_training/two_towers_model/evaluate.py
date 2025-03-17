@@ -32,7 +32,8 @@ def main(
         "recommendation_test_data", help="Name of the test dataset in storage"
     ),
     list_k: list[int] = typer.Option(
-        [100, 250, 1000], help="List of k values (top-k cutoff) for metrics evaluation."
+        [10, 50, 100, 250, 1000],
+        help="List of k values (top-k cutoff) for metrics evaluation.",
     ),
     all_users: bool = typer.Option(
         False, help="Whether to evaluate for all users or not"

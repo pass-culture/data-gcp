@@ -171,10 +171,7 @@ def compute_metrics(
         k=k,
     )
 
-    # TODO change coveage and novelty calls after filtering items in training data, also slice reco_df to top k
-    # Note that coverage and novelty are computed for each k:
-    # coverage@k will mean if we only retrieved k items, how many of the catalogue would be covered. Same for novelty.
-    # is this a good approach for our usecase?
+    # These metrics are not computed correctly for now, will be fixed once we filter the (user_id, item_id) pairs that are both in train and test sets.
     coverage = catalog_coverage(
         training_data, test_data, col_user=col_user, col_item=col_item
     )

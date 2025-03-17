@@ -1,6 +1,6 @@
 version: 2
 models:
-  - name: achievement
+  - name: int_applicative__achievement
     description: '{{ doc("description__int_applicative__achievement") }}'
     columns:
       - name: achievement_id

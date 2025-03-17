@@ -1,6 +1,6 @@
 version: 2
 models:
-  - name: achievement
+  - name: mrt_native__achievement
     description: '{{ doc("description__mrt_native__achievement") }}'
     columns:
       - name: achievement_id

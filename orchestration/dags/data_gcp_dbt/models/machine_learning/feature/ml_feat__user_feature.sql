@@ -5,16 +5,6 @@
 }}
 
 with
-    bookings_raw as (
-        select user_id, booking_creation_date as event_date
-        from {{ ref("int_applicative__booking") }}
-        where not booking_is_cancelled
-    ),
-
-    favorites_raw as (
-        select user_id, favorite_creation_date as event_date
-        from {{ ref("int_applicative__favorite") }}
-    ),
 
     daily_positions as (
         select
@@ -27,84 +17,54 @@ with
         from {{ ref("ml_feat__user_daily_iris_location") }}
     ),
 
+    aggregated_weekly_user_data as (
+        select
+            user_id,
+            active_week,
+            nb_consult_offer as user_clicks_count,
+            nb_booking_confirmation as user_bookings_count,
+            nb_add_to_favorites as user_favorites_count
+        from {{ ref("aggregated_weekly_user_data") }}
+    ),
+
     date_series as (
         select distinct event_date from daily_positions order by event_date
     ),
 
     distinct_users as (
         select distinct user_id
-        from bookings_raw
+        from aggregated_weekly_user_data
         union distinct
         select distinct user_id
         from daily_positions
     ),
 
     user_days as (
-        select users.user_id, dates.event_date
+        select users.user_id, dates.event_date, date_trunc(dates.event_date, week(monday)) as active_week
         from distinct_users as users
         cross join date_series as dates
-    ),
-
-    bookings_by_date as (
-        select user_id, event_date, count(*) as daily_bookings_count
-        from bookings_raw
-        group by user_id, event_date
-    ),
-
-    favorites_by_date as (
-        select user_id, event_date, count(*) as daily_favorites_count
-        from favorites_raw
-        group by user_id, event_date
-    ),
-
-    cumulative_bookings as (
-        select
-            user_days.user_id,
-            user_days.event_date,
-            sum(
-                case
-                    when bookings_by_date.event_date <= user_days.event_date
-                    then bookings_by_date.daily_bookings_count
-                    else 0
-                end
-            ) as user_bookings_count
-        from user_days
-        left join bookings_by_date on user_days.user_id = bookings_by_date.user_id
-        group by user_days.user_id, user_days.event_date
-    ),
-
-    cumulative_favorites as (
-        select
-            user_days.user_id,
-            user_days.event_date,
-            sum(
-                case
-                    when favorites_by_date.event_date <= user_days.event_date
-                    then favorites_by_date.daily_favorites_count
-                    else 0
-                end
-            ) as user_favorites_count
-        from user_days
-        left join favorites_by_date on user_days.user_id = favorites_by_date.user_id
-        group by user_days.user_id, user_days.event_date
     )
 
+
+
 select
-    daily_positions.user_id,
-    daily_positions.event_date,
+    user_days.user_id,
+    user_days.event_date,
+    user_days.active_week,
     daily_positions.user_iris_id,
     daily_positions.user_centroid,
     daily_positions.user_centroid_x,
     daily_positions.user_centroid_y,
-    cumulative_bookings.user_bookings_count,
-    cumulative_favorites.user_favorites_count
-from cumulative_bookings
+    aggregated_weekly_user_data.user_bookings_count,
+    aggregated_weekly_user_data.user_clicks_count,
+    aggregated_weekly_user_data.user_favorites_count
+from user_days
 left join
     daily_positions
-    on cumulative_bookings.user_id = daily_positions.user_id
-    and cumulative_bookings.event_date = daily_positions.event_date
+    on user_days.user_id = daily_positions.user_id
+    and user_days.event_date = daily_positions.event_date
 left join
-    cumulative_favorites
-    on daily_positions.user_id = cumulative_favorites.user_id
-    and daily_positions.event_date = cumulative_favorites.event_date
-order by daily_positions.user_id, daily_positions.event_date
+    aggregated_weekly_user_data
+    on user_days.user_id = aggregated_weekly_user_data.user_id
+    and user_days.active_week = aggregated_weekly_user_data.active_week
+order by user_days.user_id, user_days.event_date

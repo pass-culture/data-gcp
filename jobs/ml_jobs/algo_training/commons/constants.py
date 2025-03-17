@@ -1,13 +1,18 @@
 import os
 
 CONFIGS_PATH = "configs"
+
 # Environment variables
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
 MODEL_DIR = os.environ.get("MODEL_DIR", "")
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 TRAIN_DIR = os.environ.get("TRAIN_DIR", "/home/airflow/train")
 MODEL_NAME = os.environ.get("MODEL_NAME", "")
+
+if ENV_SHORT_NAME == "prod":
+    GCP_PROJECT_ID = "passculture-data-prod"
+else:
+    GCP_PROJECT_ID = "passculture-data-ehp"
 
 # Infra Parameters
 BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"

@@ -3,6 +3,7 @@
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
             partition_by={"field": "event_date", "data_type": "date"},
+            cluster_by=["module_id", "user_id", "unique_session_id", "offer_id"],
             on_schema_change="append_new_columns",
             require_partition_filter=true,
         )

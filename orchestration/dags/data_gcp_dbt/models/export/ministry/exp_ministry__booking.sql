@@ -1,3 +1,10 @@
+{{
+    config(
+        tags="monthly",
+        labels={"schedule": "monthly"}
+    )
+}}
+
 select
     booking_id,
     booking_creation_date,

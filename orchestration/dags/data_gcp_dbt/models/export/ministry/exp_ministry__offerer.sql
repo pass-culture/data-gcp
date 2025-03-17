@@ -1,3 +1,10 @@
+{{
+    config(
+        tags="monthly",
+        labels={"schedule": "monthly"}
+    )
+}}
+
 select
     offerer_id,
     partner_id,

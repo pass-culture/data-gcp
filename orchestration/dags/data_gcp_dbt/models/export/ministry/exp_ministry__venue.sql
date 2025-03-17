@@ -1,3 +1,10 @@
+{{
+    config(
+        tags="monthly",
+        labels={"schedule": "monthly"}
+    )
+}}
+
 select
     venue_id,
     venue_name,

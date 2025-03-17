@@ -1,3 +1,10 @@
+{{
+    config(
+        tags="monthly",
+        labels={"schedule": "monthly"}
+    )
+}}
+
 select
     deposit_id,
     deposit_amount,

@@ -105,11 +105,17 @@ with
         select
             user_id,
             event_date,
+            active_week,
             user_iris_id,
             user_centroid,
             user_centroid_x,
             user_centroid_y,
-            user_bookings_count
+            user_bookings_count,
+            user_clicks_count,
+            user_favorites_count,
+            user_diversification_count,
+            user_deposit_amount,
+            user_amount_spent
         from {{ ref("ml_feat__user_feature") }}
     )
 
@@ -151,7 +157,12 @@ select
     user_features.user_centroid,
     user_features.user_centroid_x,
     user_features.user_centroid_y,
-    user_features.user_bookings_count
+    user_features.user_bookings_count,
+    user_features.user_clicks_count,
+    user_features.user_favorites_count,
+    user_features.user_diversification_count,
+    user_features.user_deposit_amount,
+    user_features.user_amount_spent
 
 from home_interactions
 left join offer_features on home_interactions.offer_id = offer_features.offer_id

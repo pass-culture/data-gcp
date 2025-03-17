@@ -23,7 +23,10 @@ with
             active_week,
             nb_consult_offer as user_clicks_count,
             nb_booking_confirmation as user_bookings_count,
-            nb_add_to_favorites as user_favorites_count
+            nb_add_to_favorites as user_favorites_count,
+            delta_diversification_cumsum as user_diversification_count,
+            deposit_amount as user_deposit_amount,
+            cumulative_amount_spent as user_amount_spent
         from {{ ref("aggregated_weekly_user_data") }}
     ),
 
@@ -57,7 +60,10 @@ select
     daily_positions.user_centroid_y,
     aggregated_weekly_user_data.user_bookings_count,
     aggregated_weekly_user_data.user_clicks_count,
-    aggregated_weekly_user_data.user_favorites_count
+    aggregated_weekly_user_data.user_favorites_count,
+    aggregated_weekly_user_data.user_diversification_count,
+    aggregated_weekly_user_data.user_deposit_amount,
+    aggregated_weekly_user_data.user_amount_spent
 from user_days
 left join
     daily_positions

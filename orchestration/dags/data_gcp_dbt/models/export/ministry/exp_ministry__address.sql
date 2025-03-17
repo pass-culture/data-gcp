@@ -1,9 +1,4 @@
-{{
-    config(
-        tags="monthly",
-        labels={"schedule": "monthly"}
-    )
-}}
+{{ config(tags="monthly", labels={"schedule": "monthly"}) }}
 
 select
     address_id,

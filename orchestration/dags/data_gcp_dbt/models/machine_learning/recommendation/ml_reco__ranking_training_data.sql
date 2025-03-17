@@ -171,7 +171,8 @@ select
     user_features.user_favorites_count,
     user_features.user_diversification_count,
     user_features.user_deposit_amount,
-    user_features.user_amount_spent
+    user_features.user_amount_spent,
+    st_distance(offer_features.offer_centroid,user_features.user_centroid) as offer_user_distance
 
 from home_interactions
 left join offer_features on home_interactions.offer_id = offer_features.offer_id

@@ -48,6 +48,7 @@ with
             upcg.user_creation_at,
             upcg.user_department_code,
             uag.user_address_geocode_updated_at,
+            uag.user_raw_address,
             coalesce(uag.geocode_type, upcg.geocode_type) as geocode_type,
             coalesce(uag.user_postal_code, upcg.user_postal_code) as user_postal_code,
             coalesce(uag.user_longitude, upcg.user_longitude) as user_longitude,
@@ -64,6 +65,7 @@ select
     user_longitude,
     user_latitude,
     user_address_geocode_updated_at,
+    user_raw_address,
     coalesce(
         case
             when user_postal_code = "97150"

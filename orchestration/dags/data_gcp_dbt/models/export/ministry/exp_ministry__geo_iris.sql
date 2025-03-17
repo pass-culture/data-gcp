@@ -8,5 +8,5 @@ select
     district_code,
     sub_district_code,
     department_code,
-    department_name,
+    department_name
 from {{ ref("int_seed__geo_iris") }}

@@ -1,7 +1,7 @@
 version: 2
 models:
   - name: achievement
-    description: '{{ doc("description__achievements") }}'
+    description: '{{ doc("description__achievement") }}'
     columns:
       - name: achievement_id
         description: '{{ doc("column__achievement_id") }}'

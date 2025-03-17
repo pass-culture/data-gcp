@@ -31,9 +31,9 @@ with
             and offer_displayed.event_timestamp = home_module.module_displayed_timestamp
         where
             offer_displayed.event_date
-            between date_sub(date("{{ ds() }}"), interval 3 day) and date("{{ ds() }}")
+            between date_sub(date("{{ ds() }}"), interval 28 day) and date("{{ ds() }}")
             and home_module.module_displayed_date
-            between date_sub(date("{{ ds() }}"), interval 3 day) and date("{{ ds() }}")
+            between date_sub(date("{{ ds() }}"), interval 28 day) and date("{{ ds() }}")
     ),
 
     home_interactions as (
@@ -50,7 +50,6 @@ with
             booking_id,
             click_type,
             reco_call_id,
-            user_location_type,
             module_clicked_timestamp,
             consult_offer_timestamp,
             offer_displayed_timestamp,
@@ -58,7 +57,8 @@ with
             is_added_to_favorite,
             is_booked,
             day_of_week,
-            hour_of_day
+            hour_of_day,
+            coalesce(user_location_type = "UserGeolocation", false) as interaction_is_geolocated
         from home_displays
         {% if var("ENV_SHORT_NAME") != "prod" %}
             where
@@ -99,6 +99,18 @@ with
             booking_number_last_14_days,
             booking_number_last_7_days
         from {{ ref("ml_feat__item_feature_28_day") }}
+    ),
+
+    user_features as (
+        select
+            user_id,
+            event_date,
+            user_iris_id,
+            user_centroid,
+            user_centroid_x,
+            user_centroid_y,
+            user_bookings_count
+        from {{ ref("ml_feat__user_feature") }}
     )
 
 select
@@ -112,7 +124,7 @@ select
     home_interactions.displayed_position,
     home_interactions.click_type,
     home_interactions.reco_call_id,
-    home_interactions.user_location_type,
+    home_interactions.interaction_is_geolocated,
     home_interactions.module_clicked_timestamp,
     home_interactions.consult_offer_timestamp,
     home_interactions.offer_displayed_timestamp,
@@ -124,7 +136,7 @@ select
     offer_features.item_id,
     offer_features.offer_category_id,
     offer_features.offer_subcategory_id,
-    offer_features.is_geolocated,
+    offer_features.is_geolocated as offer_is_geolocated,
     offer_features.offer_created_delta_in_days,
     offer_features.offer_mean_stock_price,
     offer_features.offer_max_stock_beginning_days,
@@ -134,13 +146,19 @@ select
     item_features_28_day.booking_number_last_14_days
     as item_booking_number_last_14_days,
     item_features_28_day.booking_number_last_7_days as item_booking_number_last_7_days,
-    user_embeddings.user_embedding as user_last_embedding
+    user_embeddings.user_embedding as user_last_embedding,
+    user_features.user_iris_id,
+    user_features.user_centroid,
+    user_features.user_centroid_x,
+    user_features.user_centroid_y,
+    user_features.user_bookings_count
 
 from home_interactions
 left join offer_features on home_interactions.offer_id = offer_features.offer_id
 left join item_embeddings on offer_features.item_id = item_embeddings.item_id
 left join user_embeddings on home_interactions.user_id = user_embeddings.user_id
 left join item_features_28_day on offer_features.item_id = item_features_28_day.item_id
+left join user_features on home_interactions.user_id = user_features.user_id and home_interactions.event_date = user_features.event_date
 order by
     home_interactions.event_date,
     home_interactions.user_id,

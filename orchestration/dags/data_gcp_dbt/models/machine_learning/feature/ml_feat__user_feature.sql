@@ -15,11 +15,10 @@ with
         select
             user_id,
             event_date,
-            last_known_user_iris_id,
-            last_known_user_iris_date,
-            last_known_user_centroid,
-            last_known_user_centroid_x,
-            last_known_user_centroid_y
+            user_iris_id,
+            user_centroid,
+            user_centroid_x,
+            user_centroid_y
         from {{ ref("ml_feat__user_daily_iris_location") }}
     ),
 
@@ -66,11 +65,10 @@ with
 select
     daily_positions.user_id,
     daily_positions.event_date,
-    daily_positions.last_known_user_iris_id,
-    daily_positions.last_known_user_iris_date,
-    daily_positions.last_known_user_centroid,
-    daily_positions.last_known_user_centroid_x,
-    daily_positions.last_known_user_centroid_y,
+    daily_positions.user_iris_id,
+    daily_positions.user_centroid,
+    daily_positions.user_centroid_x,
+    daily_positions.user_centroid_y,
     cumulative_bookings.user_bookings_count
 from cumulative_bookings
 left join

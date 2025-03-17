@@ -101,14 +101,14 @@ with
                 when pp.past_iris_id is not null
                 then pp.past_iris_id  -- Past position (second priority)
                 else fp.future_iris_id  -- Future position (lowest priority)
-            end as last_known_user_iris_id,
+            end as user_iris_id,
             case
                 when fp.future_date = ud.event_date
                 then fp.future_date  -- Same day
                 when pp.past_iris_id is not null
                 then pp.past_date  -- Past position
                 else fp.future_date  -- Future position
-            end as last_known_user_iris_date
+            end as user_iris_source_date
         from user_days as ud
         left join
             distinct_future_positions as fp
@@ -123,11 +123,11 @@ with
 select
     daily_positions.user_id,
     daily_positions.event_date,
-    daily_positions.last_known_user_iris_id,
-    daily_positions.last_known_user_iris_date,
-    iris_data.centroid as last_known_user_centroid,
-    st_x(iris_data.centroid) as last_known_user_centroid_x,
-    st_y(iris_data.centroid) as last_known_user_centroid_y
+    daily_positions.user_iris_id,
+    daily_positions.user_iris_source_date,
+    iris_data.centroid as user_centroid,
+    st_x(iris_data.centroid) as user_centroid_x,
+    st_y(iris_data.centroid) as user_centroid_y
 from daily_positions
-left join iris_data on daily_positions.last_known_user_iris_id = iris_data.iris_id
+left join iris_data on daily_positions.user_iris_id = iris_data.iris_id
 order by daily_positions.user_id, daily_positions.event_date

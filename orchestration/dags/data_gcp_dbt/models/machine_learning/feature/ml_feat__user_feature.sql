@@ -43,12 +43,13 @@ with
     ),
 
     user_days as (
-        select users.user_id, dates.event_date, date_trunc(dates.event_date, week(monday)) as active_week
+        select
+            users.user_id,
+            dates.event_date,
+            date_trunc(dates.event_date, week(monday)) as active_week
         from distinct_users as users
         cross join date_series as dates
     )
-
-
 
 select
     user_days.user_id,

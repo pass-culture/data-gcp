@@ -58,7 +58,9 @@ with
             is_booked,
             day_of_week,
             hour_of_day,
-            coalesce(user_location_type = "UserGeolocation", false) as interaction_is_geolocated
+            coalesce(
+                user_location_type = "UserGeolocation", false
+            ) as interaction_is_geolocated
         from home_displays
         {% if var("ENV_SHORT_NAME") != "prod" %}
             where
@@ -172,14 +174,19 @@ select
     user_features.user_diversification_count,
     user_features.user_deposit_amount,
     user_features.user_amount_spent,
-    st_distance(offer_features.offer_centroid,user_features.user_centroid) as offer_user_distance
+    st_distance(
+        offer_features.offer_centroid, user_features.user_centroid
+    ) as offer_user_distance
 
 from home_interactions
 left join offer_features on home_interactions.offer_id = offer_features.offer_id
 left join item_embeddings on offer_features.item_id = item_embeddings.item_id
 left join user_embeddings on home_interactions.user_id = user_embeddings.user_id
 left join item_features_28_day on offer_features.item_id = item_features_28_day.item_id
-left join user_features on home_interactions.user_id = user_features.user_id and home_interactions.event_date = user_features.event_date
+left join
+    user_features
+    on home_interactions.user_id = user_features.user_id
+    and home_interactions.event_date = user_features.event_date
 order by
     home_interactions.event_date,
     home_interactions.user_id,

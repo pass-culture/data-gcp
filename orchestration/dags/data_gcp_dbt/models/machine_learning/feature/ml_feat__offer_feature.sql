@@ -14,7 +14,6 @@ with
                 current_date(), offer_creation_date, day
             ) as offer_created_delta_in_days
 
-
         from {{ ref("int_global__offer") }}
     ),
 

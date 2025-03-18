@@ -10,8 +10,8 @@ with
             question_id,
             question_str,
             answer,
-            DATE(start_date) as start_date,
-            DATE(end_date) as end_date,
+            date(start_date) as start_date,
+            date(end_date) as end_date,
             case
                 when survey_id = '{{ survey_id_15_17 }}'
                 then 'GRANT_15_17'
@@ -19,8 +19,13 @@ with
                 then 'GRANT_18'
             end as user_type,
             case when question = 'Q3 - Topics' then 'Q3_topics' end as question,
-            REPLACE(extra_data, 'nan', "'nan'") as extra_data,
-            COALESCE(question = 'Q1' and question_str = 'Recommanderais-tu le pass Culture à un ami ou un collègue ?', false) as is_nps_question
+            replace(extra_data, 'nan', "'nan'") as extra_data,
+            coalesce(
+                question = 'Q1'
+                and question_str
+                = 'Recommanderais-tu le pass Culture à un ami ou un collègue ?',
+                false
+            ) as is_nps_question
         from {{ source("raw", "qualtrics_answers") }}
         where
             survey_id in ('{{ survey_id_15_17 }}', '{{ survey_id_18 }}')
@@ -29,10 +34,10 @@ with
 
 select
     *,
-    TRIM(
-        JSON_EXTRACT(extra_data, '$.theoretical_amount_spent'), '"'
+    trim(
+        json_extract(extra_data, '$.theoretical_amount_spent'), '"'
     ) as theoretical_amount_spent,
-    TRIM(JSON_EXTRACT(extra_data, '$.user_activity'), '"') as user_activity,
-    TRIM(JSON_EXTRACT(extra_data, '$.user_civility'), '"') as user_civility
+    trim(json_extract(extra_data, '$.user_activity'), '"') as user_activity,
+    trim(json_extract(extra_data, '$.user_civility'), '"') as user_civility
 from base
-qualify ROW_NUMBER() over (partition by response_id order by start_date desc) = 1
+qualify row_number() over (partition by response_id order by start_date desc) = 1

@@ -23,7 +23,12 @@ with
                 then 'Q1_nps_group'
             end as question,
             replace(replace(extra_data, "d'un", 'dun'), 'nan', "'nan'") as extra_data,
-            coalesce(question = 'Q1' and question_str = 'Recommanderiez-vous le pass Culture à une autre structure culturelle ?', false) as is_nps_question
+            coalesce(
+                question = 'Q1'
+                and question_str
+                = 'Recommanderiez-vous le pass Culture à une autre structure culturelle ?',
+                false
+            ) as is_nps_question
         from {{ source("raw", "qualtrics_answers") }}
         where survey_id = '{{ survey_id_pro }}'
     )

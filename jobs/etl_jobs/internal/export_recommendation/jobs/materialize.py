@@ -1,5 +1,8 @@
 import logging
+from datetime import datetime
 from pathlib import Path
+
+import jinja2
 
 from config import MaterializedView
 from jobs.import_sql import get_db_connection
@@ -7,6 +10,30 @@ from jobs.import_sql import get_db_connection
 logger = logging.getLogger(__name__)
 
 SQL_PATH = Path(__file__).parent.parent / "sql"
+
+
+def render_sql_template(template_content: str, **kwargs) -> str:
+    """
+    Render a SQL template using Jinja2.
+
+    Args:
+        template_content: The SQL template content
+        **kwargs: Variables to pass to the template
+
+    Returns:
+        The rendered SQL
+    """
+    # Create a Jinja2 environment with proper settings
+    env = jinja2.Environment(
+        autoescape=False,  # No HTML escaping for SQL
+        undefined=jinja2.StrictUndefined,  # Raise errors for undefined variables
+    )
+
+    # Create a template from the content
+    template = env.from_string(template_content)
+
+    # Render the template with the provided variables
+    return template.render(**kwargs)
 
 
 def refresh_materialized_view(view: MaterializedView) -> None:
@@ -19,37 +46,38 @@ def refresh_materialized_view(view: MaterializedView) -> None:
     logger.info(f"Refreshing materialized view {view.value}")
 
     try:
-        with get_db_connection() as conn:
+        # Get SQL file path
+        sql_file = SQL_PATH / f"create_{view.value}.sql"
+        if not sql_file.exists():
+            raise ValueError(f"SQL file not found: {sql_file}")
+
+        # Read SQL file content
+        with open(sql_file) as f:
+            sql_template = f.read()
+
+        # Generate a timestamp for the template
+        now = datetime.now()
+        ts_nodash = now.strftime("%Y%m%d%H%M%S")
+
+        # Render the SQL template with variables
+        sql_content = render_sql_template(
+            sql_template, ts_nodash=ts_nodash, view_name=view.value
+        )
+
+        logger.info(f"Rendered SQL template with ts_nodash={ts_nodash}")
+
+        # Connect to the database
+        conn = get_db_connection()
+
+        with conn:
             with conn.cursor() as cursor:
-                # Create temp view using the SQL file
-                sql_file = SQL_PATH / f"create_{view.value}.sql"
-                if not sql_file.exists():
-                    raise ValueError(f"SQL file not found: {sql_file}")
+                # Execute the SQL script directly
+                cursor.execute(sql_content)
 
-                with open(sql_file) as f:
-                    create_view_sql = f.read()
-
-                # Create temp view
-                cursor.execute(f"""
-                    CREATE MATERIALIZED VIEW {view.value}_tmp
-                    AS {create_view_sql};
-                """)
-
-                # Rename views
-                cursor.execute(
-                    f"ALTER MATERIALIZED VIEW IF EXISTS {view.value} RENAME TO {view.value}_old;"
-                )
-                cursor.execute(
-                    f"ALTER MATERIALIZED VIEW {view.value}_tmp RENAME TO {view.value};"
-                )
-
-                # Drop old view
-                cursor.execute(
-                    f"DROP MATERIALIZED VIEW IF EXISTS {view.value}_old CASCADE;"
-                )
+                # Commit the transaction
                 conn.commit()
 
-        logger.info(f"Successfully refreshed materialized view {view.value}")
+                logger.info(f"Successfully refreshed materialized view {view.value}")
 
     except Exception as e:
         logger.error(f"Failed to refresh materialized view {view.value}: {str(e)}")

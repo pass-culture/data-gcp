@@ -9,6 +9,7 @@ BIGQUERY_ML_RECOMMENDATION_DATASET = f"ml_reco_{ENV_SHORT_NAME}"
 BIGQUERY_ML_RETRIEVAL_DATASET = f"ml_retrieval_{ENV_SHORT_NAME}"
 BIGQUERY_SEED_DATASET = f"seed_{ENV_SHORT_NAME}"
 RECOMMENDATION_SQL_INSTANCE = f"cloudsql-recommendation-{ENV_SHORT_NAME}-ew1"
+REGION = "europe-west1"
 
 
 def access_secret_data(project_id, secret_id, version_id="latest", default=None):

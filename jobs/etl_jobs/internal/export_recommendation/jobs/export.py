@@ -15,7 +15,7 @@ def export_table_to_gcs(
     bucket_path: str,
     execution_date: datetime,
 ) -> None:
-    """Export a BigQuery table to GCS.
+    """Export a BigQuery table to GCS in Parquet format.
 
     Args:
         table_name: Name of the table to export
@@ -23,7 +23,7 @@ def export_table_to_gcs(
         bucket_path: Full GCS path for export (e.g. gs://bucket/path)
         execution_date: Execution date for the export
     """
-    logger.info(f"Starting export of {table_name} to GCS")
+    logger.info(f"Starting export of {table_name} to GCS in Parquet format")
 
     client = bigquery.Client()
 
@@ -33,6 +33,7 @@ def export_table_to_gcs(
 
     try:
         # Execute query to temporary table in tmp_{ENV_SHORT_NAME} dataset
+        logger.info(f"Creating temporary table {temp_table_name} with filtered data")
         query_job = client.query(
             query,
             job_config=bigquery.QueryJobConfig(
@@ -42,19 +43,19 @@ def export_table_to_gcs(
         )
         query_job.result()
 
-        # Export to GCS
+        # Export to GCS in Parquet format
         dataset_ref = bigquery.DatasetReference(PROJECT_NAME, f"tmp_{ENV_SHORT_NAME}")
         table_ref = dataset_ref.table(temp_table_name)
 
-        destination_uri = f"{bucket_path}/{table_name}-*.csv.gz"
+        destination_uri = f"{bucket_path}/{table_name}-*.parquet"
 
+        logger.info(f"Exporting {table_name} to {destination_uri} in Parquet format")
         extract_job = client.extract_table(
             table_ref,
             destination_uri,
             job_config=bigquery.ExtractJobConfig(
-                compression="GZIP",
-                field_delimiter=",",
-                print_header=False,
+                destination_format="PARQUET",
+                compression="SNAPPY",
             ),
         )
         extract_job.result()

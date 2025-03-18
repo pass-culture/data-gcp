@@ -36,7 +36,7 @@ def parse_date(date_str: str) -> datetime:
 
 
 @app.command()
-def export(
+def export_gcs(
     table_name: Annotated[str, typer.Option(help="Name of the table to export")],
     bucket_path: Annotated[
         str, typer.Option(help="GCS bucket path for temporary storage")
@@ -57,7 +57,7 @@ def export(
 
 
 @app.command()
-def import_table(
+def import_to_gcloud(
     table_name: Annotated[str, typer.Option(help="Name of the table to import")],
     bucket_path: Annotated[
         str, typer.Option(help="GCS bucket path for temporary storage")
@@ -78,7 +78,7 @@ def import_table(
 
 
 @app.command()
-def materialize(
+def materialize_gcloud(
     view_name: Annotated[
         str, typer.Option(help="Name of the materialized view to refresh")
     ],

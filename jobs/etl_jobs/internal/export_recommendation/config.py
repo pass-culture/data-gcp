@@ -18,14 +18,6 @@ class MaterializedView(Enum):
     RECOMMENDABLE_OFFERS = "recommendable_offers_raw_mv"
 
 
-CONCURRENT_MATERIALIZED_VIEWS = [
-    MaterializedView.ENRICHED_USER,
-    MaterializedView.ITEM_IDS,
-    MaterializedView.NON_RECOMMENDABLE_ITEMS,
-    MaterializedView.IRIS_FRANCE,
-]
-
-
 @dataclass
 class TableConfig:
     columns: Dict[str, str]
@@ -51,6 +43,17 @@ class TableConfig:
     def select_columns(self) -> str:
         """Generate BigQuery select statement columns."""
         return ", ".join([f"`{col}`" for col in self.column_names])
+
+    @property
+    def duckdb_select_columns(self) -> str:
+        """Generate DuckDB select statement with proper column conversions for geography types."""
+        select_cols = []
+        for col_name, col_type in self.columns.items():
+            if col_type.lower() == "geography":
+                select_cols.append(f"ST_AsText({col_name}) as {col_name}")
+            else:
+                select_cols.append(col_name)
+        return ", ".join(select_cols)
 
     def get_export_query(self, project_id: str) -> str:
         """Generate BigQuery export query with proper column selection."""
@@ -110,8 +113,8 @@ TABLES_CONFIG: Dict[str, Dict] = {
         "columns": {
             "id": "character varying",
             "irisCode": "character varying",
-            "centroid": "geography",
-            "shape": "geography",
+            "centroid": "geometry",
+            "shape": "geometry",
         },
         "bigquery_table_name": "iris_france",
         "dataset_type": DatasetType.SEED,

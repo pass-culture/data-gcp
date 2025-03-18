@@ -9,7 +9,8 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from common.utils import delayed_waiting_operator
+from common.utils import delayed_waiting_operator, get_airflow_schedule
+from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
@@ -18,22 +19,15 @@ from airflow.providers.google.cloud.operators.gcs import GCSDeleteObjectsOperato
 from airflow.utils.task_group import TaskGroup
 
 default_args = {
-    "start_date": datetime(2024, 1, 1),
+    "start_date": datetime(2025, 3, 10),
     "on_failure_callback": on_failure_combined_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
 
 DEFAULT_REGION = "europe-west1"
-GCE_INSTANCE = f"recommendation-export-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/etl_jobs/internal/export_recommendation"
-DAG_NAME = "sync_recommendation_tables"
-
-MACHINE_TYPE_DICT = {
-    "prod": "n1-standard-4",
-    "stg": "n1-standard-2",
-    "dev": "n1-standard-2",
-}
+DAG_ID = "sync_bq_to_cloudsql_recommendation_tables"
 
 # Table dependencies configuration
 TABLE_DEPENDENCIES = {
@@ -67,11 +61,18 @@ MATERIALIZED_VIEWS = [
     "recommendable_offers_raw_mv",
 ]
 
+INSTANCE_TYPE = {
+    "dev": "n1-standard-2",
+    "stg": "n1-standard-4",
+    "prod": "n1-standard-4",
+}[ENV_SHORT_NAME]
+
+
 with DAG(
-    DAG_NAME,
+    DAG_ID,
     default_args=default_args,
     description="Sync BigQuery tables to Cloud SQL for recommendation engine",
-    schedule_interval=None,  # Triggered by upstream dependencies
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_ID]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=480),
     user_defined_macros=macros.default,
@@ -81,7 +82,15 @@ with DAG(
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        )
+        ),
+        "instance_type": Param(
+            default=INSTANCE_TYPE,
+            type="string",
+        ),
+        "instance_name": Param(
+            default=f"recommendation-export-{ENV_SHORT_NAME}",
+            type="string",
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start")
@@ -98,15 +107,16 @@ with DAG(
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
-        instance_name=GCE_INSTANCE,
-        machine_type=MACHINE_TYPE_DICT[ENV_SHORT_NAME],
+        instance_name="{{ params.instance_name }}",
+        instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={"job_type": "etl", "dag_name": DAG_NAME},
+        labels={"job_type": "long_task", "dag_name": DAG_ID},
+        preemptible=False,
     )
 
     fetch_install_code = InstallDependenciesOperator(
         task_id="fetch_install_code",
-        instance_name=GCE_INSTANCE,
+        instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
         python_version="3.10",
         base_dir=BASE_DIR,
@@ -117,7 +127,7 @@ with DAG(
     with TaskGroup("export_tables", dag=dag) as export_tables:
         for table_name in TABLES_TO_PROCESS:
             export_command = f"""
-                python main.py run export \
+                python main.py export-gcs \
                     --table-name {table_name} \
                     --bucket-path gs://{DATA_GCS_BUCKET_NAME}/export/recommendation_exports/{{{{ ds_nodash }}}} \
                     --date {{{{ ds_nodash }}}}
@@ -125,7 +135,7 @@ with DAG(
 
             SSHGCEOperator(
                 task_id=f"export_{table_name}",
-                instance_name=GCE_INSTANCE,
+                instance_name="{{ params.instance_name }}",
                 base_dir=BASE_DIR,
                 command=export_command,
                 dag=dag,
@@ -135,7 +145,7 @@ with DAG(
     with TaskGroup("import_tables", dag=dag) as import_tables:
         for table_name in TABLES_TO_PROCESS:
             import_command = f"""
-                python main.py run import \
+                python main.py import-to-gcloud \
                     --table-name {table_name} \
                     --bucket-path gs://{DATA_GCS_BUCKET_NAME}/export/recommendation_exports/{{{{ ds_nodash }}}} \
                     --date {{{{ ds_nodash }}}}
@@ -143,7 +153,7 @@ with DAG(
 
             SSHGCEOperator(
                 task_id=f"import_{table_name}",
-                instance_name=GCE_INSTANCE,
+                instance_name="{{ params.instance_name }}",
                 base_dir=BASE_DIR,
                 command=import_command,
                 dag=dag,
@@ -161,13 +171,13 @@ with DAG(
     with TaskGroup("refresh_materialized_views", dag=dag) as refresh_views:
         for view in MATERIALIZED_VIEWS:
             refresh_command = f"""
-                python main.py run materialize \
+                python main.py materialize-gcloud \
                     --view-name {view}
             """
 
             SSHGCEOperator(
                 task_id=f"refresh_{view}",
-                instance_name=GCE_INSTANCE,
+                instance_name="{{ params.instance_name }}",
                 base_dir=BASE_DIR,
                 command=refresh_command,
                 dag=dag,
@@ -175,7 +185,7 @@ with DAG(
 
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task",
-        instance_name=GCE_INSTANCE,
+        instance_name="{{ params.instance_name }}",
     )
 
     # Set dependencies

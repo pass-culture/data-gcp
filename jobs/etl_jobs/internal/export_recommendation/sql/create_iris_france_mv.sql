@@ -23,7 +23,7 @@ BEGIN
     SELECT
     irf.id::int as id,
     cast_to_int(irf."irisCode",0) as iriscode,
-    irf.centroid as centroid,
+    irf.centroid::geography as centroid,
     ST_SetSRID(irf.shape::geometry, 0) as shape
     FROM public.iris_france irf;
 END;

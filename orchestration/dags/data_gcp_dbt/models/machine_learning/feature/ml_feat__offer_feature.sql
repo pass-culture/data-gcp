@@ -23,7 +23,7 @@ with
         where
             stock_price is not null
             and stock_booking_limit_date
-            >= date_sub(date("{{ ds() }}"), interval 28 day)
+            >= date_sub(date("{{ ds() }}"), interval 60 day)
     ),
 
     stock_aggregations as (

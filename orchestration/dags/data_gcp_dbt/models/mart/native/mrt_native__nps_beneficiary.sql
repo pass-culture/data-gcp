@@ -41,6 +41,7 @@ select
     u.user_region_name,
     u.user_activity,
     u.user_is_in_qpv,
+    b.total_bookings,
     safe_cast(r.answer as int64) as rating,
     date_diff(r.end_date, u.user_activation_date, day) as user_seniority
 from {{ ref("int_qualtrics__nps_beneficiary_answer") }} as r

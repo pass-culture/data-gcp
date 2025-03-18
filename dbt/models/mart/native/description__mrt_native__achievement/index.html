@@ -6,19 +6,19 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Description of the `mrt_native__consultation` table.">
+        <meta name="description" content="Description of the `mrt_native__achievement` table.">
       
       
         <meta name="author" content="Pass Culture Team">
       
       
-        <link rel="canonical" href="https://pass-culture.github.io/data-gcp/dbt/models/mart/native/description__mrt_native__consultation/">
+        <link rel="canonical" href="https://pass-culture.github.io/data-gcp/dbt/models/mart/native/description__mrt_native__achievement/">
       
       
-        <link rel="prev" href="../description__mrt_native__achievement/">
+        <link rel="prev" href="../../marketing/description__mrt_marketing__social_network_publication/">
       
       
-        <link rel="next" href="../description__mrt_native__daily_home_offer_displayed/">
+        <link rel="next" href="../description__mrt_native__consultation/">
       
       
       <link rel="icon" href="../../../../../assets/favicon.png">
@@ -26,7 +26,7 @@
     
     
       
-        <title>Native Consultation - Pass Culture Data Documentation</title>
+        <title>Achievement - Pass Culture Data Documentation</title>
       
     
     
@@ -115,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Native Consultation
+              Achievement
             
           </span>
         </div>
@@ -3305,27 +3305,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../description__mrt_native__achievement/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Achievement
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -3340,7 +3319,7 @@
           
   
   <span class="md-ellipsis">
-    Native Consultation
+    Achievement
   </span>
   
 
@@ -3351,7 +3330,7 @@
         
   
   <span class="md-ellipsis">
-    Native Consultation
+    Achievement
   </span>
   
 
@@ -3383,6 +3362,27 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../description__mrt_native__consultation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Native Consultation
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -5998,14 +5998,11 @@
   
 
 
-  <h1>Native Consultation</h1>
+  <h1>Achievement</h1>
 
-<p>The <code>mrt_native__consultation</code> table provides detailed insights into user consultations within the native application. It captures user identifiers, session details, traffic origin and discovery scores, enabling analysis of user interactions and engagement with offers and venues. This table is essential for understanding user behavior and optimizing the user experience by analyzing the pathways through which users interact with the application.</p>
+<p>The <code>mrt_native__achievement</code>table lists all achievements earned by users following their bookings. The achievements feature helps users try different types of cultural activities. By collecting achievements across various categories, users are motivated to explore new cultural experiences they might not have tried otherwise.</p>
 
 <h2 id="table-description">Table description</h2>
-<p>Main focus of the table :
-- It computes the discovery score linked to each consultation, which represents the ability of each user to consult diversified offers. Discovery score is the addition of 3 increments (0 or 1) : item (=1 if the user consults a new offer),category (=1 is the user consults an offer from a new category, which reflects a cultural sector. Exemple : book, cinema, live show..), subcategory (=1 is the user consults an offer from a new subcategory, which is more granular than categories. Exemple : audio book, cinema subscription, festival..)
-- It provides more information on consultation origin : marketing campaigns linked, home datas (name, audience type..), consultation macro origin (main canal : search, home, similar_offer, deeplink..) and consultation micro origin (more granular information on the canal : type of home, type of research, origin of venue consultation which stems from offer consultation...)</p>
 <table>
 <thead>
 <tr>
@@ -6016,199 +6013,34 @@
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;">consultation_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The unique identifier for each consultation event.</td>
-</tr>
-<tr>
-<td style="text-align: left;">consultation_date</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The date on which the consultation took place.</td>
-</tr>
-<tr>
-<td style="text-align: left;">origin</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The origin of the event, indicating where it was triggered from.</td>
-</tr>
-<tr>
-<td style="text-align: left;">offer_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Unique identifier for the offer.</td>
+<td style="text-align: left;">achievement_id</td>
+<td style="text-align: left;">STRING</td>
+<td style="text-align: left;">The unique identifier for the achievement.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_id</td>
-<td style="text-align: left;"></td>
+<td style="text-align: left;">STRING</td>
 <td style="text-align: left;">Unique identifier for a user.</td>
 </tr>
 <tr>
-<td style="text-align: left;">unique_session_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">A unique identifier for the session, ensuring no duplicates.</td>
+<td style="text-align: left;">booking_id</td>
+<td style="text-align: left;">STRING</td>
+<td style="text-align: left;">Unique identifier for a booking.</td>
 </tr>
 <tr>
-<td style="text-align: left;">item_discovery_score</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The discovery score increment related to the discovery of a new item_id. =1 if the user consults a new offer, 0 if not.</td>
+<td style="text-align: left;">achievement_name</td>
+<td style="text-align: left;">STRING</td>
+<td style="text-align: left;">The name of the achievement.</td>
 </tr>
 <tr>
-<td style="text-align: left;">subcategory_discovery_score</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The discovery score increment related to the discovery of a new subcategory. =1 if the user consults an offer from a new subcategory, which is more granular than categories. Exemple : audio book, cinema subscription, festival..</td>
+<td style="text-align: left;">achievement_unlocked_date</td>
+<td style="text-align: left;">DATE</td>
+<td style="text-align: left;">The date when the achievement was unlocked.</td>
 </tr>
 <tr>
-<td style="text-align: left;">category_discovery_score</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The discovery score increment related to the discovery of a new category. =1 if the user consults an offer from a new category, which reflects a cultural sector. Exemple : book, cinema, live show..)</td>
-</tr>
-<tr>
-<td style="text-align: left;">discovery_score</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The total discovery score. It is the addition of item_discovery_score, subcategory_discovery_score and category_discovery_score</td>
-</tr>
-<tr>
-<td style="text-align: left;">is_category_discovered</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">A boolean indicating if a category was discovered during the consultation.</td>
-</tr>
-<tr>
-<td style="text-align: left;">is_subcategory_discovered</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">A boolean indicating if a subcategory was discovered during the consultation.</td>
-</tr>
-<tr>
-<td style="text-align: left;">item_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Identifier for the item associated with the offer used internally by the data science team.</td>
-</tr>
-<tr>
-<td style="text-align: left;">offer_subcategory_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Identifier for the subcategory of the offer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">offer_category_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Identifier for the category of the offer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">offer_name</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Name of the offer as it appears in the application.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Unique identifier for the venue.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_name</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Name of the venue.</td>
-</tr>
-<tr>
-<td style="text-align: left;">venue_type_label</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Type of the venue ('Musée', 'Cinéma','Librairie', etc). Selected by the partner in a drop-down list.</td>
-</tr>
-<tr>
-<td style="text-align: left;">partner_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Unique identifier of the partner.</td>
-</tr>
-<tr>
-<td style="text-align: left;">offerer_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Unique identifier of the offerer.</td>
-</tr>
-<tr>
-<td style="text-align: left;">user_region_name</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Region name of the user's registered address.</td>
-</tr>
-<tr>
-<td style="text-align: left;">user_department_code</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Department code associated with the user's registered address.</td>
-</tr>
-<tr>
-<td style="text-align: left;">user_activity</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">User's registered activity (student, apprentice, unemployed etc). Registered at first grant deposit and updated when the user applies for its GRANT_18.</td>
-</tr>
-<tr>
-<td style="text-align: left;">user_is_priority_public</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Boolean. Indicates if the user considered as a pass Culture priority public (users that are either residing in a rural area, in a QPV or are not in education).</td>
-</tr>
-<tr>
-<td style="text-align: left;">user_is_unemployed</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Boolean. Indicates if the user is unemployed as per its registered activity.</td>
-</tr>
-<tr>
-<td style="text-align: left;">user_is_in_education</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Boolean. Indicates if the user is in education, based on their registered activity. According to the INSEE, a user is considered to be in education if they fall under one of the following categories: Middle school student (Collégien), High school student (Lycéen), University student (Étudiant), Apprentice (Apprenti), Work-study student (Alternant).</td>
-</tr>
-<tr>
-<td style="text-align: left;">user_is_in_qpv</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Boolean. Indicates if the user's registered address is in a priority neighborhood (QPV).</td>
-</tr>
-<tr>
-<td style="text-align: left;">user_macro_density_label</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Macro density label of the user's registered address.</td>
-</tr>
-<tr>
-<td style="text-align: left;">traffic_medium</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The medium of the marketing campaign (email, push notification ...)that generated the session.</td>
-</tr>
-<tr>
-<td style="text-align: left;">traffic_campaign</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The name of the marketing campaign that generated the session.</td>
-</tr>
-<tr>
-<td style="text-align: left;">traffic_source</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The source of the marketing campaign (Instagram, Snapchat ...) that generated the session.</td>
-</tr>
-<tr>
-<td style="text-align: left;">module_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The identifier for the module associated with the consultation.</td>
-</tr>
-<tr>
-<td style="text-align: left;">entry_id</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The identifier for the entry associated with the consultation.</td>
-</tr>
-<tr>
-<td style="text-align: left;">home_name</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The name of the home associated with the consultation.</td>
-</tr>
-<tr>
-<td style="text-align: left;">home_audience</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The audience type for the home.</td>
-</tr>
-<tr>
-<td style="text-align: left;">user_lifecycle_home</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The lifecycle stage of the user in relation to the home.</td>
-</tr>
-<tr>
-<td style="text-align: left;">consultation_macro_origin</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The macro origin of the consultation, indicating the broader context of its initiation : search, home, similar_offer, deeplink..</td>
-</tr>
-<tr>
-<td style="text-align: left;">consultation_micro_origin</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">The micro origin of the consultation, which provides more granular information on the canal : type of home, type of research, origin of venue consultation which stems from offer consultation...</td>
+<td style="text-align: left;">achievement_seen_date</td>
+<td style="text-align: left;">DATE</td>
+<td style="text-align: left;">The date when the achievement was seen by the user, after it has been unlocked.</td>
 </tr>
 </tbody>
 </table>
@@ -6250,7 +6082,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../description__mrt_native__achievement/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Achievement">
+          <a href="../../marketing/description__mrt_marketing__social_network_publication/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Social Network Publication">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -6260,20 +6092,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Achievement
+                Social Network Publication
               </div>
             </div>
           </a>
         
         
           
-          <a href="../description__mrt_native__daily_home_offer_displayed/" class="md-footer__link md-footer__link--next" aria-label="Next: Native Daily Home Offer Displayed">
+          <a href="../description__mrt_native__consultation/" class="md-footer__link md-footer__link--next" aria-label="Next: Native Consultation">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Native Daily Home Offer Displayed
+                Native Consultation
               </div>
             </div>
             <div class="md-footer__button md-icon">

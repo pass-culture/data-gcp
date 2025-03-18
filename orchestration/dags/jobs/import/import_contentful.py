@@ -48,7 +48,8 @@ with DAG(
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        )
+        ),
+        "instance_name": Param(default=GCE_INSTANCE, type="string"),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:

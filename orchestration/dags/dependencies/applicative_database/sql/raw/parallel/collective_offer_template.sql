@@ -6,7 +6,6 @@ SELECT
     , "lastValidationDate" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_offer_last_validation_date
     , CAST("validation" AS VARCHAR) AS collective_offer_validation
     , CAST("id" AS varchar(255)) AS collective_offer_id
-    , CAST("offerId" AS varchar(255)) AS offer_id
     , "isActive" AS collective_offer_is_active
     , CAST("venueId" AS varchar(255)) AS venue_id
     , "name" AS collective_offer_name

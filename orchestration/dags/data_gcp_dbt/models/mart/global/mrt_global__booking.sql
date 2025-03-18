@@ -15,6 +15,7 @@ select
     b.user_age_at_booking,
     b.deposit_id,
     b.deposit_type,
+    b.deposit_reform_category,
     b.reimbursed,
     b.booking_intermediary_amount,
     b.booking_rank,

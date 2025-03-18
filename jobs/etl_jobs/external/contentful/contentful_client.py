@@ -130,19 +130,6 @@ CONTENTFUL_MODULES = [
         ],
     },
     {
-        "name": "venuesPlaylistAppV2",
-        "additional_fields": [
-            "title",
-            "venues_search_parameters",
-            "display_parameters",
-            "home_entry_id",
-        ],
-        "children": [
-            BLOCK_PARAMETERS["venues_search_parameters"],
-            BLOCK_PARAMETERS["display_parameters"],
-        ],
-    },
-    {
         "name": "algolia",
         "additional_fields": [
             "title",

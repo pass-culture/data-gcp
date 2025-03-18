@@ -56,15 +56,19 @@ with
             ) as first_deposit_type,
             max(
                 case when deposit_rank_desc = 1 then deposit_type end
-            ) as current_deposit_type
+            ) as current_deposit_type,
+            max(
+                case when deposit_rank_asc = 1 then deposit_reform_category end
+            ) as user_first_deposit_reform_category,
+            max(
+                case when deposit_rank_desc = 1 then deposit_reform_category end
+            ) as user_current_deposit_reform_category
         from {{ ref("int_global__deposit") }}
         group by user_id
     )
 
 select
     u.user_id,
-    u.user_department_code,
-    u.user_postal_code,
     u.user_activity,
     u.user_civility,
     u.user_school_type,
@@ -77,6 +81,8 @@ select
     u.user_subscribed_themes,
     u.is_theme_subscribed,
     ui.user_iris_internal_id,
+    ui.user_department_code,
+    ui.user_postal_code,
     ui.user_region_name,
     ui.user_department_name,
     ui.user_city,
@@ -115,6 +121,8 @@ select
     dgu.total_recredit_amount,
     dgu.first_deposit_type,
     dgu.current_deposit_type,
+    dgu.user_first_deposit_reform_category,
+    dgu.user_current_deposit_reform_category,
     coalesce(
         u.user_activity = "Chômeur, En recherche d'emploi", false
     ) as user_is_unemployed,

@@ -1,6 +1,5 @@
 SELECT
     CAST("id" AS varchar(255)) AS collective_stock_id
-    , CAST("stockId" AS varchar(255)) AS stock_id
     , "dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_stock_creation_date
     , "dateModified" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_stock_modification_date
     , "startDatetime" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_stock_beginning_date_time

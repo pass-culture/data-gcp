@@ -2,7 +2,6 @@ select
     cb.collective_booking_id,
     cb.collective_stock_id,
     cb.is_used_collective_booking,
-    co.stock_id,
     co.collective_offer_id,
     co.collective_offer_name,
     co.collective_offer_subcategory_id,

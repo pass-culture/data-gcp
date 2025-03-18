@@ -150,4 +150,4 @@ from get_recommendable_offers
 where
     (stock_beginning_date >= current_date)
     or (stock_beginning_date is null)
-    and not is_blocked
+    and (not is_blocked) and (not is_sensitive) and (not is_restrained)

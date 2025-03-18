@@ -5,12 +5,10 @@ SCHEDULE_DICT = {
         "stg": "0 12 * * 3",
     },
     "bigquery_export_old_partitions": "0 7 1 * *",
-    "clickhouse_exports": {
-        "daily": {
-            "prod": "0 6 * * *",
-            "stg": "45 4 * * *",
-            "dev": "45 4 * * *",
-        },
+    "export_clickhouse_daily": {
+        "prod": "0 6 * * *",
+        "stg": "45 4 * * *",
+        "dev": "45 4 * * *",
     },
     "dbt_artifacts": "0 5 * * *",
     "dbt_monthly": "30 4 1 * *",

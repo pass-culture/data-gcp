@@ -55,7 +55,7 @@ gce_params = {
 
 dags = {
     "daily": {
-        "schedule_interval": SCHEDULE_DICT["clickhouse_exports"]["daily"],
+        "schedule_interval": SCHEDULE_DICT["export_clickhouse_daily"],
         "yyyymmdd": "{{ yyyymmdd(ds) }}",
         "default_dag_args": {
             "start_date": datetime.datetime(2024, 3, 1),

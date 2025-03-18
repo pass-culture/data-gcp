@@ -11,7 +11,7 @@ with
         from {{ ref("int_firebase__native_home_offer_displayed") }}
         where
             event_date
-            between date_sub(date("{{ ds() }}"), interval 28 day) and date("{{ ds() }}")
+            between date_sub(date("{{ ds() }}"), interval 4 day) and date("{{ ds() }}")
             and module_id is not null
             and user_id is not null
             and unique_session_id is not null
@@ -37,7 +37,7 @@ with
         from {{ ref("int_firebase__native_daily_user_home_module") }}
         where
             module_displayed_date
-            between date_sub(date("{{ ds() }}"), interval 28 day) and date("{{ ds() }}")
+            between date_sub(date("{{ ds() }}"), interval 4 day) and date("{{ ds() }}")
             and module_id is not null
             and user_id is not null
             and unique_session_id is not null

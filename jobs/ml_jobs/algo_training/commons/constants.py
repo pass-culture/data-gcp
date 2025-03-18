@@ -9,10 +9,9 @@ MODEL_DIR = os.environ.get("MODEL_DIR", "")
 TRAIN_DIR = os.environ.get("TRAIN_DIR", "/home/airflow/train")
 MODEL_NAME = os.environ.get("MODEL_NAME", "")
 
-if ENV_SHORT_NAME == "prod":
-    GCP_PROJECT_ID = "passculture-data-prod"
-else:
-    GCP_PROJECT_ID = "passculture-data-ehp"
+GCP_PROJECT_ID = (
+    "passculture-data-prod" if ENV_SHORT_NAME == "prod" else "passculture-data-ehp"
+)
 
 # Infra Parameters
 BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"

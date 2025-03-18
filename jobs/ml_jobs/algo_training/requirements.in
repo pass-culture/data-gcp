@@ -2,7 +2,7 @@ catboost==1.2
 datetime==4.3
 gcsfs==2023.5.0
 google-cloud-aiplatform==1.22.0
-google-cloud-secret-manager
+google-cloud-secret-manager==2.23.1
 keras==2.15
 loguru==0.6.0
 matplotlib==3.8.4

@@ -21,16 +21,16 @@ from commons.data_collect_queries import read_from_gcs
 
 def load_data_for_evaluation(
     storage_path: str,
-    training_dataset_name: str,
+    train_dataset_name: str,
     test_dataset_name: str,
 ) -> Dict[str, pd.DataFrame]:
     """
-    Loads training and test datasets for evaluation by reading data from storage,
+    Loads train and test datasets for evaluation by reading data from storage,
     keeping only necessary columns and removing duplicates.
 
     Args:
         storage_path (str): Path to the storage location (e.g., GCS bucket path).
-        training_dataset_name (str): Name of the training dataset file.
+        train_dataset_name (str): Name of the train dataset file.
         test_dataset_name (str): Name of the test dataset file.
 
     Returns:
@@ -39,12 +39,12 @@ def load_data_for_evaluation(
 
     list_columns_to_keep = ["user_id", "item_id"]
 
-    logger.info("Load training")
-    training_data = read_from_gcs(storage_path, training_dataset_name, parallel=False)[
+    logger.info("Load train")
+    train_data = read_from_gcs(storage_path, train_dataset_name, parallel=False)[
         list_columns_to_keep
     ].drop_duplicates()
     logger.info(
-        f"Number of unique (user, item) interactions in training data: {training_data.shape[0]}"
+        f"Number of unique (user, item) interactions in train data: {train_data.shape[0]}"
     )
 
     logger.info("Load test data")
@@ -57,7 +57,7 @@ def load_data_for_evaluation(
         f"Number of unique (user, item, ) interactions in test data: {test_data.shape[0]}"
     )
 
-    return {"train": training_data, "test": test_data}
+    return {"train": train_data, "test": test_data}
 
 
 def generate_predictions(
@@ -66,7 +66,7 @@ def generate_predictions(
     """
     Generates item dot product scores for each user in the test dataset using the provided model.
     The scores are computed for each user with all unique (item_id) in test_dataset which are stored in offers_to_score.
-    offers_to_score does not contain previously seen items during training which prevents data leak.
+    offers_to_score does not contain previously seen items during train which prevents data leak.
 
     Args:
         model: Trained Two tower retrieval model.
@@ -122,7 +122,7 @@ def generate_predictions(
 def compute_metrics(
     test_data: pd.DataFrame,
     df_predictions: pd.DataFrame,
-    training_data: pd.DataFrame,
+    train_data: pd.DataFrame,
     k: int,
     prefix: Optional[str] = "",
 ) -> Dict[str, float]:
@@ -133,7 +133,7 @@ def compute_metrics(
         test_data (pd.DataFrame): Ground truth user-item interactions (columns: 'user_id', 'item_id').
         df_predictions (pd.DataFrame): Predicted scores for user-item pairs
                                        (columns: 'user_id', 'item_id', 'score').
-        training_data (pd.DataFrame): Historical training interactions (columns: 'user_id', 'item_id').
+        train_data (pd.DataFrame): Historical train interactions (columns: 'user_id', 'item_id').
         k (int): Cutoff for top-k retrieval.
         prefix (str, optional): Prefix for metric keys in output dictionary. Defaults to "".
 
@@ -173,11 +173,11 @@ def compute_metrics(
 
     # These metrics are not computed correctly for now, will be fixed once we filter the (user_id, item_id) pairs that are both in train and test sets.
     coverage = catalog_coverage(
-        training_data, test_data, col_user=col_user, col_item=col_item
+        train_data, test_data, col_user=col_user, col_item=col_item
     )
 
     novelty_metric = novelty(
-        training_data, test_data, col_user=col_user, col_item=col_item
+        train_data, test_data, col_user=col_user, col_item=col_item
     )
 
     ## Assemble metrics in dict
@@ -193,7 +193,7 @@ def compute_metrics(
 def evaluate(
     model: tf.keras.models.Model,
     storage_path: str,
-    training_dataset_name: str,
+    train_dataset_name: str,
     test_dataset_name: str,
     list_k: List[int],
     all_users: bool,
@@ -211,7 +211,7 @@ def evaluate(
     Args:
         model (tf.keras.models.Model): Trained two-tower retrieval model.
         storage_path (str): Path to data storage.
-        training_dataset_name (str): Filename of training dataset in storage.
+        train_dataset_name (str): Filename of train dataset in storage.
         test_dataset_name (str): Filename of test dataset in storage.
         list_k (List[int]): List of k values (top-k cutoff) for metrics evaluation.
         all_users (bool): Whether to evaluate all users or a subset.
@@ -222,64 +222,57 @@ def evaluate(
         Dict[str, float]: Dictionary containing evaluation metrics for each k value.
     """
 
-    logger.info("Get data for evaluation")
+    logger.info("Getting data for evaluation")
     data_dict = load_data_for_evaluation(
         storage_path=storage_path,
-        training_dataset_name=training_dataset_name,
+        train_dataset_name=train_dataset_name,
         test_dataset_name=test_dataset_name,
     )
 
-    logger.info("Getting predictions")
+    list_predictions_to_evaluate = []
+    logger.info("Inferring model predictions")
     df_predictions = generate_predictions(
         model=model, test_data=data_dict["test"], all_users=all_users
     )
-
-    logger.info("Computing model metrics")
-    metrics = {}
-    for k in list_k:
-        metrics.update(
-            compute_metrics(
-                test_data=data_dict["test"],
-                df_predictions=df_predictions,
-                training_data=data_dict["train"],
-                k=k,
-                prefix="",
-            )
-        )
+    list_predictions_to_evaluate.append({"predictions": df_predictions, "prefix": ""})
 
     if dummy:
-        logger.info("Generating random and popularity baselines")
+        # Extract unique users from model predictions to ensure consistent user set
+        predicted_users = df_predictions["user_id"].unique().tolist()
+        logger.info(f"Using {len(predicted_users)} users for baseline evaluations")
+
+        logger.info("Generating random baseline predictions")
         df_random = generate_random_baseline(
             test_data=data_dict["test"],
-            all_users=all_users,
             num_recommendations=max(list_k),
+            specific_users=predicted_users,
         )
-        df_popular = generate_popularity_baseline(
-            training_data=data_dict["train"],
-            test_data=data_dict["test"],
-            all_users=all_users,
-            num_recommendations=max(list_k),
-            quantile_threshold=quantile_threshold,
+        list_predictions_to_evaluate.append(
+            {"predictions": df_random, "prefix": "random_"}
         )
 
-        logger.info("Computing metrics for random and popularity baselines")
+        logger.info("Generating popularity baseline predictions")
+        df_popular = generate_popularity_baseline(
+            test_data=data_dict["test"],
+            num_recommendations=max(list_k),
+            specific_users=predicted_users,
+        )
+        list_predictions_to_evaluate.append(
+            {"predictions": df_popular, "prefix": "popular_"}
+        )
+
+    logger.info("Computing metrics")
+    metrics = {}
+
+    for predictions in list_predictions_to_evaluate:
         for k in list_k:
             metrics.update(
                 compute_metrics(
                     test_data=data_dict["test"],
-                    df_predictions=df_random,
-                    training_data=data_dict["train"],
+                    df_predictions=predictions["predictions"],
+                    train_data=data_dict["train"],
                     k=k,
-                    prefix="random_",
-                )
-            )
-            metrics.update(
-                compute_metrics(
-                    test_data=data_dict["test"],
-                    df_predictions=df_popular,
-                    training_data=data_dict["train"],
-                    k=k,
-                    prefix="popular_",
+                    prefix=predictions["prefix"],
                 )
             )
 
@@ -359,17 +352,16 @@ def save_pca_representation(
 
 def generate_random_baseline(
     test_data: pd.DataFrame,
-    all_users: bool,
     num_recommendations: int,
+    specific_users: List[str],
 ) -> pd.DataFrame:
     """
     Generate random item recommendations for each user.
 
     Args:
         test_data (pd.DataFrame): DataFrame with at least a 'user_id' and 'item_id' column.
-        all_users (bool): If True, generate recommendations for all users in test_data.
-                          If False, limit to a sample of users (EVALUATION_USER_NUMBER).
         num_recommendations (int): Number of random items to recommend per user.
+        specific_users (List[str]): List of user IDs to generate recommendations for.
 
     Returns:
         pd.DataFrame: DataFrame with columns ['user_id', 'item_id', 'score'], where score is random.
@@ -378,85 +370,54 @@ def generate_random_baseline(
     unique_items = test_data["item_id"].unique()
 
     # Unique users
-    df_users = test_data[["user_id"]].drop_duplicates().copy()
+    df_users = pd.DataFrame({"user_id": specific_users}).drop_duplicates()
 
-    # Optionally sample users
-    if not all_users:
-        users_to_test = df_users["user_id"].unique()[
-            : min(EVALUATION_USER_NUMBER, len(df_users))
-        ]
-        df_users = df_users[df_users["user_id"].isin(users_to_test)]
-
-    # Repeat each user for num_recommendations
-    df_random = df_users.loc[df_users.index.repeat(num_recommendations)].reset_index(
-        drop=True
+    # Repeat each user for num_recommendations and assign random items and scores
+    df_random = (
+        df_users.loc[df_users.index.repeat(num_recommendations)]
+        .reset_index(drop=True)
+        .assign(
+            item_id=np.random.choice(
+                unique_items, size=len(df_users) * num_recommendations, replace=True
+            ),
+            score=np.random.rand(len(df_users) * num_recommendations),
+        )
     )
-
-    # Assign random items and scores
-    df_random["item_id"] = np.random.choice(
-        unique_items, size=len(df_random), replace=True
-    )
-    df_random["score"] = np.random.rand(len(df_random))
-
     return df_random
 
 
 def generate_popularity_baseline(
-    training_data: pd.DataFrame,
     test_data: pd.DataFrame,
-    all_users: bool,
     num_recommendations: int,
-    quantile_threshold: float,
+    specific_users: List[str],
 ) -> pd.DataFrame:
     """
     Recommend the most popular items based on past interactions.
 
     Args:
-        training_data (pd.DataFrame): Historical user-item interaction data with at least 'item_id'.
         test_data (pd.DataFrame): DataFrame with at least 'user_id' column.
-        all_users (bool): If True, recommend for all users. If False, limit to a sample of users.
         num_recommendations (int): Number of items to recommend per user.
-        quantile_threshold (float): Threshold to consider top X% most popular items (0-1 range).
+        specific_users (List[str]): List of user IDs to generate recommendations for.
 
     Returns:
         pd.DataFrame: Recommendations DataFrame with columns ['user_id', 'item_id', 'score'].
     """
 
     # Compute item popularity
-    item_popularity = training_data["item_id"].value_counts().reset_index()
-    item_popularity.columns = ["item_id", "popularity"]
-
-    # Select top items based on quantile threshold
-    popularity_cutoff = item_popularity["popularity"].quantile(quantile_threshold)
-    top_items = item_popularity[item_popularity["popularity"] >= popularity_cutoff][
-        "item_id"
-    ].tolist()
-
-    # If not enough items, take top N
-    if len(top_items) < num_recommendations:
-        top_items = item_popularity["item_id"].tolist()[:num_recommendations]
+    top_items = test_data["item_id"].value_counts().index.tolist()[:num_recommendations]
 
     # Prepare users to recommend to
-    df_users = test_data[["user_id"]].drop_duplicates().copy()
+    df_users = pd.DataFrame({"user_id": specific_users}).drop_duplicates()
 
-    if not all_users:
-        users_to_test = df_users["user_id"].unique()[
-            : min(EVALUATION_USER_NUMBER, len(df_users))
-        ]
-        df_users = df_users[df_users["user_id"].isin(users_to_test)]
-
-    # Expand users to assign num_recommendations per user
-    df_popular = df_users.loc[df_users.index.repeat(num_recommendations)].reset_index(
-        drop=True
+    # Repeat users and assign items and scores
+    df_popular = (
+        df_users.loc[df_users.index.repeat(num_recommendations)]
+        .reset_index(drop=True)
+        .assign(
+            item_id=np.random.choice(
+                top_items, size=len(df_users) * num_recommendations, replace=True
+            ),
+            score=np.random.rand(len(df_users) * num_recommendations),
+        )
     )
-
-    # Assign items (cycled if fewer top items than recommendations needed)
-    repeated_items = (top_items * (len(df_popular) // len(top_items) + 1))[
-        : len(df_popular)
-    ]
-    df_popular["item_id"] = repeated_items
-
-    # Assign random score per recommendation
-    df_popular["score"] = np.random.rand(len(df_popular))
-
     return df_popular

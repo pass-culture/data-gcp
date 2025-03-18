@@ -12,7 +12,6 @@
         formated_collective_stock as (
             select
                 collective_stock_id,
-                stock_id,
                 collective_stock_creation_date,
                 cast(
                     collective_stock_modification_date as timestamp

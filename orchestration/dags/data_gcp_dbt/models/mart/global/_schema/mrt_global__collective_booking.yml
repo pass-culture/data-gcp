@@ -10,8 +10,6 @@ models:
         description: "{{ doc('column__collective_stock_id') }}"
       - name: is_used_collective_booking
         description: "{{ doc('column__collective_booking_is_used') }}"
-      - name: stock_id
-        description: "{{ doc('column__stock_id') }}"
       - name: collective_offer_id
         description: "{{ doc('column__collective_offer_id') }}"
       - name: collective_offer_name

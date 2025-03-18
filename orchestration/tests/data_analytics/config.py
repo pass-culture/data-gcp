@@ -390,7 +390,6 @@ BIGQUERY_SCHEMAS = {
     },
     "applicative_database_collective_stock": {
         "collective_stock_id": "STRING",
-        "stock_id": "STRING",
         "collective_stock_creation_date": "DATETIME",
         "collective_stock_modification_date": "DATETIME",
         "collective_stock_beginning_date_time": "DATETIME",

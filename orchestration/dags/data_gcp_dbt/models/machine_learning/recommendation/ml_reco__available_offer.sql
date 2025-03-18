@@ -13,20 +13,20 @@ with
 
     get_recommendable_offers as (
         select
-            offer.offer_id as offer_id,
-            offer.item_id as item_id,
+            offer.offer_id,
+            offer.item_id,
             offer.offer_product_id as product_id,
-            venue.venue_id as venue_id,
+            venue.venue_id,
             venue.venue_latitude,
             venue.venue_longitude,
             offer.offer_name as name,
-            offer.offer_is_duo as offer_is_duo,
+            offer.offer_is_duo,
             im.offer_subcategory_id as subcategory_id,
             im.offer_category_id as category,
             im.search_group_name,
             offer.offer_url as url,
             offer.offer_created_at as offer_creation_date,
-            stock.stock_beginning_date as stock_beginning_date,
+            stock.stock_beginning_date,
             offer.last_stock_price as stock_price,
             offer.titelive_gtl_id as gtl_id,
             im.gtl_type,
@@ -50,27 +50,24 @@ with
             any_value(ml_feat.topic_id) as topic_id,
             min(offer.is_national) as is_national,
             max(
-                case
-                    when
-                        (
-                            offer.offer_product_id not in ('3469240')
-                            and im.offer_subcategory_id <> 'JEU_EN_LIGNE'
-                            and im.offer_subcategory_id <> 'JEU_SUPPORT_PHYSIQUE'
-                            and im.offer_subcategory_id <> 'ABO_JEU_VIDEO'
-                            and im.offer_subcategory_id <> 'ABO_LUDOTHEQUE'
-                            and (
-                                offer.offer_url is null
-                                or offer.last_stock_price = 0
-                                or im.offer_subcategory_id = 'LIVRE_NUMERIQUE'
-                                or im.offer_subcategory_id = 'ABO_LIVRE_NUMERIQUE'
-                                or im.offer_subcategory_id
-                                = 'TELECHARGEMENT_LIVRE_AUDIO'
-                                or im.offer_category_id = 'MEDIA'
-                            )
+                coalesce(
+                    (
+                        offer.offer_product_id not in ('3469240')
+                        and im.offer_subcategory_id <> 'JEU_EN_LIGNE'
+                        and im.offer_subcategory_id <> 'JEU_SUPPORT_PHYSIQUE'
+                        and im.offer_subcategory_id <> 'ABO_JEU_VIDEO'
+                        and im.offer_subcategory_id <> 'ABO_LUDOTHEQUE'
+                        and (
+                            offer.offer_url is null
+                            or offer.last_stock_price = 0
+                            or im.offer_subcategory_id = 'LIVRE_NUMERIQUE'
+                            or im.offer_subcategory_id = 'ABO_LIVRE_NUMERIQUE'
+                            or im.offer_subcategory_id = 'TELECHARGEMENT_LIVRE_AUDIO'
+                            or im.offer_category_id = 'MEDIA'
                         )
-                    then true
-                    else false
-                end
+                    ),
+                    false
+                )
             ) as is_underage_recommendable,
             max(coalesce(forbidden_offer.restrained, false)) as is_restrained,
             max(coalesce(forbidden_offer.blocked, false)) as is_blocked,
@@ -96,27 +93,33 @@ with
                     else 50000
                 end
             ) as default_max_distance
-        from {{ ref("mrt_global__offer") }} offer
+        from {{ ref("mrt_global__offer") }} as offer
         inner join
-            {{ ref("mrt_global__venue") }} as venue on venue.venue_id = offer.venue_id
-        inner join offers_with_mediation om on offer.offer_id = om.offer_id
+            {{ ref("mrt_global__venue") }} as venue on offer.venue_id = venue.venue_id
+        inner join offers_with_mediation as om on offer.offer_id = om.offer_id
         inner join
             {{ ref("ml_input__item_metadata") }} as im on offer.item_id = im.item_id
         left join
-            {{ ref("int_applicative__stock") }} stock on offer.offer_id = stock.offer_id
+            {{ ref("int_applicative__stock") }} as stock
+            on offer.offer_id = stock.offer_id
         left join
             {{ ref("ml_feat__item_feature_28_day") }} as ml_feat
-            on ml_feat.item_id = offer.item_id
+            on offer.item_id = ml_feat.item_id
         left join
-            {{ ref("ml_reco__restrained_item") }} forbidden_offer
+            {{ ref("ml_reco__restrained_item") }} as forbidden_offer
             on offer.item_id = forbidden_offer.item_id
         left join
-            {{ source("raw", "gsheet_ml_recommendation_sensitive_item") }} sensitive_offer
+            {{ source("raw", "gsheet_ml_recommendation_sensitive_item") }}
+            as sensitive_offer
             on offer.item_id = sensitive_offer.item_id
         where
             offer.is_active = true
             and offer.offer_is_bookable = true
             and offer.offer_validation = 'APPROVED'
+            and not (
+                offer.offer_subcategory_id = 'LIVRE_PAPIER'
+                and offer.titelive_gtl_id is null
+            )  -- TODO: See if it is still required after filter on is_restrained
         group by
             1,
             2,
@@ -147,4 +150,6 @@ from get_recommendable_offers
 where
     (stock_beginning_date >= current_date)
     or (stock_beginning_date is null)
-    and not is_blocked
+    and (not is_blocked)  -- TODO: Move in recommendable offer
+    and (not is_sensitive)  -- TODO: Move in recommendable offer
+    and (not is_restrained)  -- TODO: Move in recommendable offer

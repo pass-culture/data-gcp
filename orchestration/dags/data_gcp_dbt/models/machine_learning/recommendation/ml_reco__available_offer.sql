@@ -119,7 +119,7 @@ with
             and not (
                 offer.offer_subcategory_id = 'LIVRE_PAPIER'
                 and offer.titelive_gtl_id is null
-            )
+            )  -- TODO: See if it is still required after filter on is_restrained
         group by
             1,
             2,
@@ -150,6 +150,6 @@ from get_recommendable_offers
 where
     (stock_beginning_date >= current_date)
     or (stock_beginning_date is null)
-    and (not is_blocked)
-    and (not is_sensitive)
-    and (not is_restrained)
+    and (not is_blocked)  -- TODO: Move in recommendable offer
+    and (not is_sensitive)  -- TODO: Move in recommendable offer
+    and (not is_restrained)  -- TODO: Move in recommendable offer

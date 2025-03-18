@@ -6,12 +6,20 @@ models:
     columns:
       - name: offerer_address_id
         description: "{{ doc('column__offerer_address_id') }}"
+        data_tests:
+          - not_null
+          - unique
       - name: offerer_address_label
         description: "{{ doc('column__offerer_address_label') }}"
       - name: address_id
         description: "{{ doc('column__address_id') }}"
+        data_tests:
+          - not_null
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
+        # failed : investigation
+        # data_tests:
+        # - not_null
       - name: address_street
         description: "{{ doc('column__address_street') }}"
       - name: address_postal_code

@@ -22,7 +22,8 @@ with
                 when question = 'Q1_NPS_GROUP'
                 then 'Q1_nps_group'
             end as question,
-            replace(replace(extra_data, "d'un", 'dun'), 'nan', "'nan'") as extra_data
+            replace(replace(extra_data, "d'un", 'dun'), 'nan', "'nan'") as extra_data,
+            coalesce(question = 'Q1' and question_str = 'Recommanderiez-vous le pass Culture à une autre structure culturelle ?', false) as is_nps_question
         from {{ source("raw", "qualtrics_answers") }}
         where survey_id = '{{ survey_id_pro }}'
     )
@@ -35,3 +36,4 @@ select
     ) as total_non_cancelled_bookings,
     trim(json_extract(extra_data, '$.offers_created'), '"') as total_offers_created
 from base
+qualify row_number() over (partition by response_id order by start_date desc) = 1

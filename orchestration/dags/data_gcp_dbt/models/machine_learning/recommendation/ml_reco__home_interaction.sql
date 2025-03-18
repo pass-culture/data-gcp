@@ -61,15 +61,17 @@ select distinct
     filtered_home_module.booking_id,
     filtered_home_module.click_type,
     filtered_home_module.reco_call_id,
-    filtered_home_module.user_location_type,
     filtered_home_module.module_clicked_timestamp,
     filtered_home_module.consult_offer_timestamp,
     filtered_offer_displayed.event_timestamp as offer_displayed_timestamp,
+    filtered_home_module.user_location_type
+    = "UserGeolocation" as interaction_is_geolocated,
     filtered_home_module.offer_id_clicked is not null as is_consulted,
     filtered_home_module.fav_timestamp is not null as is_added_to_favorite,
     filtered_home_module.booking_id is not null as is_booked,
     format_date("%A", filtered_offer_displayed.event_timestamp) as day_of_week,
     extract(hour from filtered_offer_displayed.event_timestamp) as hour_of_day
+
 from filtered_offer_displayed
 inner join
     filtered_home_module

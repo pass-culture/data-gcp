@@ -20,7 +20,8 @@ with
             is_added_to_favorite,
             is_booked,
             day_of_week,
-            hour_of_day
+            hour_of_day,
+            interaction_is_geolocated
         from {{ ref("ml_reco__home_interaction") }}
     ),
 

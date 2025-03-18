@@ -52,7 +52,6 @@ with
 
 select
     cs.collective_stock_id,
-    cs.stock_id,
     cs.collective_stock_creation_date,
     cs.collective_stock_modification_date,
     cs.collective_stock_beginning_date_time,

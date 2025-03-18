@@ -1,6 +1,5 @@
 select
     collective_stock_id,
-    stock_id,
     collective_stock_creation_date,
     collective_stock_modification_date,
     collective_stock_beginning_date_time,

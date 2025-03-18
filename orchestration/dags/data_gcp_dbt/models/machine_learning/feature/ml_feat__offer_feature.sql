@@ -9,6 +9,7 @@ with
             item_id,
             offer_category_id,
             offer_subcategory_id,
+            venue_iris_internal_id as offer_iris_id,
             offer_url is null as is_geolocated,
             date_diff(
                 current_date(), offer_creation_date, day
@@ -43,14 +44,14 @@ select
     offers.offer_category_id,
     offers.offer_subcategory_id,
     offers.is_geolocated,
+    offers.offer_iris_id,
     offers.offer_created_delta_in_days,
     stock_aggregations.offer_mean_stock_price,
     stock_aggregations.offer_max_stock_beginning_days,
-    iris_data.iris_id as offer_iris_id,
     iris_data.centroid as offer_centroid,
     st_x(iris_data.centroid) as offer_centroid_x,
     st_y(iris_data.centroid) as offer_centroid_y
 
 from offers
 left join stock_aggregations on offers.offer_id = stock_aggregations.offer_id
-left join iris_data on offers.offer_id = iris_data.iris_id
+left join iris_data on offers.offer_iris_id = iris_data.iris_id

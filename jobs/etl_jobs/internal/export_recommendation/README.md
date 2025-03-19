@@ -93,3 +93,109 @@ Temporary tables are created in the `tmp_{ENV_SHORT_NAME}` dataset during export
 - DuckDB's PostgreSQL extension allows direct data transfer between Parquet files and PostgreSQL
 - This approach eliminates the need for intermediate data transformations and type handling
 - Highly efficient for processing millions of rows
+
+# Data Export/Import Management
+
+This tool manages the bidirectional data flow between BigQuery and CloudSQL for recommendation data:
+
+1. **BigQuery to CloudSQL**: Exports tables from BigQuery, uploads to GCS, and imports into CloudSQL
+2. **CloudSQL to BigQuery**: Exports tables from CloudSQL to BigQuery using hourly incremental exports
+
+## Prerequisites
+
+- Python 3.10+
+- Google Cloud SDK installed and configured
+- Access to relevant Google Cloud resources (BQ, GCS, CloudSQL)
+- Required dependencies installed (`pip install -r requirements.txt`)
+
+## BigQuery to CloudSQL Export
+
+### Usage
+
+```bash
+# Export from BigQuery to GCS
+python main.py export-gcs \
+  --table-name <table_name> \
+  --bucket-path gs://<bucket-name>/path \
+  --date <YYYYMMDD>
+
+# Import from GCS to CloudSQL
+python main.py import-to-gcloud \
+  --table-name <table_name> \
+  --bucket-path gs://<bucket-name>/path \
+  --date <YYYYMMDD>
+
+# Refresh a materialized view in CloudSQL
+python main.py materialize-gcloud \
+  --view-name <view_name>
+```
+
+## CloudSQL to BigQuery Hourly Export
+
+### Overview
+
+The hourly export functionality allows exporting data incrementally from CloudSQL to BigQuery at hourly intervals. This is particularly useful for high-volume tables like `past_offer_context` that need more frequent updates.
+
+### Usage
+
+```bash
+# Full hourly export process (CloudSQL -> GCS -> BigQuery)
+python main.py hourly_export_process \
+  --table-name past_offer_context \
+  --bucket-path gs://<bucket-name>/export/cloudsql_hourly \
+  --date <YYYYMMDD> \
+  --hour <0-23> \
+  [--delete-from-source] \
+  [--recover-missed]
+
+# Individual steps can also be run separately:
+
+# 1. Export data from CloudSQL to GCS only
+python main.py hourly_export_cloudsql_to_gcs \
+  --table-name past_offer_context \
+  --bucket-path gs://<bucket-name>/export/cloudsql_hourly \
+  --date <YYYYMMDD> \
+  --hour <0-23> \
+  [--recover-missed]
+
+# 2. Load data from GCS to BigQuery only
+python main.py hourly_load_gcs_to_bigquery \
+  --table-name past_offer_context \
+  --bucket-path gs://<bucket-name>/export/cloudsql_hourly \
+  --date <YYYYMMDD> \
+  --hour <0-23>
+```
+
+### Recovery Mode
+
+The tool has a built-in recovery mechanism to handle failures:
+
+- When `--recover-missed` is enabled (default in the Airflow DAG), the tool will:
+  1. Check for any gaps in the export history by examining GCS
+  2. Automatically export any missing data since the last successful export
+  3. Process each missing hour in chronological order
+  4. Add all data to the appropriate daily partitions in BigQuery
+
+This ensures that no data is lost even if some hourly jobs fail, making the system resilient to temporary outages or infrastructure issues.
+
+### Notes on Hourly Exports
+
+- Data is exported based on the `date` column and hour range
+- Exports only include data for the specified hour
+- Data is written to daily partitions in BigQuery, with an additional `import_hour` column
+- The `--delete-from-source` flag will remove processed data from CloudSQL after successful export, helping to prevent duplicate data and reduce database size
+
+## Airflow Integration
+
+The exports are scheduled and orchestrated using Airflow DAGs:
+
+- `sync_bq_to_cloudsql_recommendation_tables` - Daily export from BigQuery to CloudSQL
+- `export_cloudsql_tables_to_bigquery_hourly` - Hourly export from CloudSQL to BigQuery
+
+## Architecture
+
+The tool uses DuckDB as an intermediate layer for efficient data processing and transformation, enabling:
+
+1. High-performance data exports and imports
+2. Memory-efficient processing of large datasets
+3. Direct interaction with GCS and databases without excessive memory usage

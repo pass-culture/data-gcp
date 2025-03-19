@@ -2,7 +2,7 @@
 
 ### import_api_referentials
 
-- Recupère les sous_categories `api.src.pcapi.core.categories.subcategories_v2`
+- Recupère les sous_categories `api.src.pcapi.core.categories.subcategories`
 - Export `raw_{env}.subcategories`
 - Récupère les types d'offres :
     - show types `api.src.pcapi.domain.show_types`

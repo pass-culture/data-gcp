@@ -39,7 +39,7 @@ TYPES_DTYPES = {
 
 def get_subcategories(gcp_project_id, env_short_name):
     subcategories = importlib.import_module(
-        "pcapi.core.categories.subcategories_v2"
+        "pcapi.core.categories.subcategories"
     ).ALL_SUBCATEGORIES
     export_subcat = []
     for subcats in subcategories:

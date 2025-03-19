@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from common import macros
 from common.config import (
+    BIGQUERY_ML_LINKAGE_DATASET,
     BIGQUERY_SANDBOX_DATASET,
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
@@ -17,6 +18,7 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
+from crons import SCHEDULE_DICT
 from jobs.ml.constants import IMPORT_LINKAGE_SQL_PATH
 
 from airflow import DAG
@@ -116,11 +118,10 @@ def create_ssh_task(task_id, command, instance_name, base_dir):
 # DAG DEFINITION
 # -------------------------------------------------------------------------
 with DAG(
-    "link_items",
+    DAG_CONFIG["ID"],
     default_args=DEFAULT_ARGS,
     description="Process to link items using semantic vectors (grouped by product/offer).",
-    schedule_interval=None,
-    # schedule_interval=get_airflow_schedule(SCHEDULE_DICT[ENV_SHORT_NAME]),
+    schedule_interval=SCHEDULE_DICT[DAG_CONFIG["ID"]][ENV_SHORT_NAME],
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
@@ -324,7 +325,7 @@ with DAG(
         link_products = create_ssh_task(
             task_id="link_products",
             command="python link_items.py "
-            '--linkage-type product '
+            "--linkage-type product "
             f"--input-sources-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['PRODUCT_SOURCES_READY'])} "
             f"--input-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['DIRS']['PRODUCT_CANDIDATES_READY'])} "
             f"--linkage-candidates-path {build_path(DAG_CONFIG['BASE_PATHS']['STORAGE'], DAG_CONFIG['FILES']('product')['LINKAGE_CANDIDATES'])} "
@@ -338,10 +339,12 @@ with DAG(
         load_linked_product_into_bq = GCSToBigQueryOperator(
             task_id="load_linked_product_into_bq",
             bucket=MLFLOW_BUCKET_NAME,
-            source_objects=f"""{build_path(
-                DAG_CONFIG["BASE_PATHS"]["GCS_FOLDER"],
-                DAG_CONFIG["FILES"]("product")["LINKED"],
-            )}/data.parquet""",
+            source_objects=f"""{
+                build_path(
+                    DAG_CONFIG["BASE_PATHS"]["GCS_FOLDER"],
+                    DAG_CONFIG["FILES"]("product")["LINKED"],
+                )
+            }/data.parquet""",
             destination_project_dataset_table=(
                 f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['BIGQUERY']['LINKED_PRODUCT_TABLE']}"
             ),
@@ -439,10 +442,12 @@ with DAG(
         load_linked_offer_into_bq = GCSToBigQueryOperator(
             task_id="load_linked_offer_into_bq",
             bucket=MLFLOW_BUCKET_NAME,
-            source_objects=f"""{build_path(
-                DAG_CONFIG["BASE_PATHS"]["GCS_FOLDER"],
-                DAG_CONFIG["FILES"]("offer")["LINKED_W_ID"],
-            )}/data.parquet""",
+            source_objects=f"""{
+                build_path(
+                    DAG_CONFIG["BASE_PATHS"]["GCS_FOLDER"],
+                    DAG_CONFIG["FILES"]("offer")["LINKED_W_ID"],
+                )
+            }/data.parquet""",
             destination_project_dataset_table=(
                 f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['BIGQUERY']['LINKED_OFFER_TABLE']}"
             ),
@@ -481,7 +486,7 @@ with DAG(
         write_disposition="WRITE_TRUNCATE",
         use_legacy_sql=False,
         destination_dataset_table=(
-            f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['BIGQUERY']['ITEM_MAPPING_TABLE']}"
+            f"{BIGQUERY_ML_LINKAGE_DATASET}.{DAG_CONFIG['BIGQUERY']['ITEM_MAPPING_TABLE']}"
         ),
     )
 

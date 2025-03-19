@@ -1,4 +1,3 @@
-
 select
     venue_id,
     venue_name,

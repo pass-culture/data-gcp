@@ -1,4 +1,3 @@
-
 select
     address_id,
     address_ban_id,

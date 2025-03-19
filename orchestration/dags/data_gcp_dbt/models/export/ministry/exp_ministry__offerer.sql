@@ -1,4 +1,3 @@
-
 select
     offerer_id,
     partner_id,

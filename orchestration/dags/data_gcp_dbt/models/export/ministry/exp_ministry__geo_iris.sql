@@ -1,4 +1,3 @@
-
 select
     iris_internal_id,
     iris_label,

@@ -1,4 +1,3 @@
-
 select
     booking_id,
     booking_creation_date,

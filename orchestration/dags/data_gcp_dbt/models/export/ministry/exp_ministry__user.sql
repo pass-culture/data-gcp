@@ -1,4 +1,3 @@
-
 select
     user_id,
     user_department_code,

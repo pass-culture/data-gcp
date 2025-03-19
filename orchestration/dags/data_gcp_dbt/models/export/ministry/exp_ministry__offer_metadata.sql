@@ -1,4 +1,3 @@
-
 select
     offer_id,
     offer_creation_date,

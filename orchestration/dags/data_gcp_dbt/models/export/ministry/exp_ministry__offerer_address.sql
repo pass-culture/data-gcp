@@ -1,4 +1,3 @@
-
 select
     offerer_address_id,
     offerer_address_label,

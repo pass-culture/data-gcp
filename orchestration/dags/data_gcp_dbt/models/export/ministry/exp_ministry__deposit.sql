@@ -1,4 +1,3 @@
-
 select
     deposit_id,
     deposit_amount,

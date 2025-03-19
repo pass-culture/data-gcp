@@ -16,11 +16,7 @@ with
                 else concat('offer-', offer.offer_id)
             end as item_id,
             case
-                when
-                    (
-                        linkage_v2.item_id is not null
-                        and offer_product_id is null
-                    )
+                when (linkage_v2.item_id is not null and offer_product_id is null)
                 then linkage_v2.item_id
                 when (offer.offer_product_id is not null)
                 then concat('product-', offer.offer_product_id)
@@ -38,7 +34,7 @@ with
             = 1
     )
 
-select offer_id, max(item_id) as item_id,max(new_item_id) as new_item_id
+select offer_id, max(item_id) as item_id, max(new_item_id) as new_item_id
 from items_grouping
 where offer_id is not null and item_id is not null
 group by offer_id

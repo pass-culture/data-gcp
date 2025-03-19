@@ -6,9 +6,7 @@ from typing import List
 from urllib.parse import urlparse
 
 import duckdb
-import psycopg2
 from google.cloud import storage
-from psycopg2.extensions import connection
 
 from config import TableConfig
 from utils import (
@@ -18,39 +16,6 @@ from utils import (
 )
 
 logger = logging.getLogger(__name__)
-
-# Constants for processing
-MAX_RETRIES = 5
-
-
-def get_db_connection() -> connection:
-    """Create a database connection with retries."""
-    database_url = access_secret_data(
-        PROJECT_NAME,
-        f"{RECOMMENDATION_SQL_INSTANCE}_database_url",
-    )
-
-    retry_count = 0
-    conn = None
-
-    while retry_count < MAX_RETRIES and conn is None:
-        try:
-            conn = psycopg2.connect(database_url)
-            conn.autocommit = False
-            return conn
-        except Exception as e:
-            retry_count += 1
-            if retry_count >= MAX_RETRIES:
-                logger.error(
-                    f"Failed to connect to database after {MAX_RETRIES} attempts: {str(e)}"
-                )
-                raise
-
-            wait_time = min(30, 5 * retry_count)
-            logger.warning(
-                f"Database connection failed (attempt {retry_count}/{MAX_RETRIES}). Retrying in {wait_time}s..."
-            )
-            time.sleep(wait_time)
 
 
 def download_and_process_parquet_files(bucket_path: str, table_name: str) -> List[str]:

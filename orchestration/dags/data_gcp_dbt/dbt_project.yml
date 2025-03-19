@@ -86,6 +86,10 @@ models:
       backend:
         +schema: backend_{{ target.name }}
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+      ministry:
+        +tags: "monthly"
+        +labels:
+          schedule: "monthly"
     machine_learning:
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +meta:

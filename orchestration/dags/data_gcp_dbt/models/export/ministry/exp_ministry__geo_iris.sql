@@ -1,4 +1,3 @@
-{{ config(tags="monthly", labels={"schedule": "monthly"}) }}
 
 select
     iris_internal_id,

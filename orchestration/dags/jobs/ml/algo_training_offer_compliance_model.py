@@ -35,10 +35,7 @@ DAG_NAME = "algo_training_offer_compliance_model"
 # Environment variables to export before running commands
 dag_config = {
     "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/algo_training_offer_compliance_model_v1.0_{DATE}",
-    "BASE_DIR": "data-gcp/jobs/ml_jobs/algo_training",
-    "MODEL_DIR": "fraud/offer_compliance_model",
-    "TRAIN_DIR": "/home/airflow/train",
-    "TOKENIZERS_PARALLELISM": "false",
+    "BASE_DIR": "data-gcp/jobs/ml_jobs/offer_compliance",
 }
 
 # Params
@@ -134,7 +131,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"mkdir -p img && PYTHONPATH=. python {dag_config['MODEL_DIR']}/preprocess.py "
+        command="mkdir -p img && PYTHONPATH=. python preprocess.py "
         "--config-file-name {{ params.config_file_name }} "
         "--input-dataframe-file-name compliance_raw_data "
         "--output-dataframe-file-name compliance_clean_data ",
@@ -146,8 +143,8 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/split_data.py "
-        f"--clean-table-name compliance_clean_data "
+        command="PYTHONPATH=. python split_data.py "
+        "--clean-table-name compliance_clean_data "
         "--training-table-name compliance_training_data "
         "--validation-table-name compliance_validation_data ",
         dag=dag,
@@ -158,7 +155,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/train.py "
+        command="PYTHONPATH=. python train.py "
         "--model-name {{ params.model_name }} "
         "--config-file-name {{ params.config_file_name }} "
         "--training-table-name compliance_training_data "
@@ -171,7 +168,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
+        command="PYTHONPATH=. python evaluate.py "
         "--model-name {{ params.model_name }} "
         "--config-file-name {{ params.config_file_name }} "
         "--validation-table-name compliance_validation_data "
@@ -184,7 +181,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
-        command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/package_api_model.py "
+        command="PYTHONPATH=. python package_api_model.py "
         "--model-name {{ params.model_name }} "
         "--config-file-name {{ params.config_file_name }} ",
         dag=dag,

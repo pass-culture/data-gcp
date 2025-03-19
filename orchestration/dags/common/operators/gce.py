@@ -433,7 +433,11 @@ class InstallDependenciesOperator(SSHGCEOperator):
                 cd {base_dir} &&
                 uv venv --python {self.python_version} &&
                 source .venv/bin/activate &&
-                uv pip sync {requirement_file}
+                if [ -f "{requirement_file}" ]; then
+                    uv pip sync {requirement_file}
+                else
+                    uv sync
+                fi
             """
         else:
             raise ValueError(f"Invalid installer: {installer}. Only uv available")

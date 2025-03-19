@@ -13,8 +13,9 @@ from commons.constants import (
 )
 from commons.data_collect_queries import read_from_gcs
 from commons.mlflow_tools import connect_remote_mlflow
-from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
 from mlflow import MlflowClient
+
+from utils.constants import CONFIGS_PATH
 
 
 def evaluate(

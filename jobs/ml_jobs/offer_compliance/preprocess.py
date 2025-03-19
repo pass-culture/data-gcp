@@ -8,8 +8,9 @@ import pandas as pd
 import typer
 from commons.constants import MODEL_DIR, STORAGE_PATH
 from commons.data_collect_queries import read_from_gcs
-from fraud.offer_compliance_model.package_api_model import PreprocessingPipeline
-from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
+
+from package_api_model import PreprocessingPipeline
+from utils.constants import CONFIGS_PATH
 
 
 def filter_df_for_training(df: pd.DataFrame, features: dict) -> pd.DataFrame:

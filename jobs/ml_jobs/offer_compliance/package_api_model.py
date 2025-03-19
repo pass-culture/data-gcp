@@ -15,9 +15,10 @@ from commons.constants import (
     MODEL_DIR,
 )
 from commons.mlflow_tools import connect_remote_mlflow
-from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
 from PIL import Image
 from sentence_transformers import SentenceTransformer
+
+from utils.constants import CONFIGS_PATH
 
 
 @dataclass

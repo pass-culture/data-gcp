@@ -1,3 +1,11 @@
+{{
+    config(
+        materialized="table",
+        tags=["weekly"],
+        labels={"schedule": "weekly"},
+    )
+}}
+
 with
     home_interactions as (
         select

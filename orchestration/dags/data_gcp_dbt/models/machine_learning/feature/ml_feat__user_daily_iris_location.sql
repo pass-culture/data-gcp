@@ -1,6 +1,8 @@
 {{
     config(
         materialized="table",
+        tags=["weekly"],
+        labels={"schedule": "weekly"},
     )
 }}
 

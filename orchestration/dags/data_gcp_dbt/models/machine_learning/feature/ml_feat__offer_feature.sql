@@ -1,3 +1,11 @@
+{{
+    config(
+        materialized="table",
+        tags=["weekly"],
+        labels={"schedule": "weekly"},
+    )
+}}
+
 with
     iris_data as (
         select id as iris_id, centroid from {{ ref("int_seed__iris_france") }}

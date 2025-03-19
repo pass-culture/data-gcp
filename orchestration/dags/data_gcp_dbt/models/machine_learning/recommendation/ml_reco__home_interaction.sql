@@ -1,3 +1,11 @@
+{{
+    config(
+        materialized="table",
+        tags=["weekly"],
+        labels={"schedule": "weekly"},
+    )
+}}
+
 select distinct
     offer_displayed.event_date,
     offer_displayed.user_id,

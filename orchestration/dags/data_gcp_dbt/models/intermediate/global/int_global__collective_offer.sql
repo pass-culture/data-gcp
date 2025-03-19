@@ -32,7 +32,9 @@ select
     v.venue_managing_offerer_id as offerer_id,
     v.offerer_name,
     v.venue_iris_internal_id,
-    co.offer_id,
+    v.is_local_authority,
+    v.venue_type_label,
+    v.venue_is_permanent,
     co.collective_offer_creation_date,
     co.collective_offer_date_updated,
     co.collective_offer_subcategory_id,
@@ -81,8 +83,7 @@ select
     co.collective_offer_rejection_reason,
     cs.collective_stock_price,
     cs.collective_stock_number_of_tickets,
-    cs.collective_stock_id,
-    cs.stock_id
+    cs.collective_stock_id
 from {{ ref("int_applicative__collective_offer") }} as co
 inner join {{ ref("int_global__venue") }} as v on v.venue_id = co.venue_id
 left join

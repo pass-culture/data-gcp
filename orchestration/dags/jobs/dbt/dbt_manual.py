@@ -1,4 +1,5 @@
 from common.config import (
+    DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
@@ -47,6 +48,7 @@ dag = DAG(
             enum=["None", "dev", "stg", "prod"],
         ),
     },
+    tags=[DAG_TAGS.DBT.value, DAG_TAGS.DE.value],
 )
 
 start = DummyOperator(task_id="start", dag=dag)

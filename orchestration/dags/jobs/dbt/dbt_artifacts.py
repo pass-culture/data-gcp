@@ -1,6 +1,7 @@
 from common import macros
 from common.alerts import task_fail_slack_alert
 from common.config import (
+    DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
     ELEMENTARY_PYTHON_PATH,
     ENV_SHORT_NAME,
@@ -45,7 +46,7 @@ dag = DAG(
             type="string",
         ),
     },
-    tags=["DBT"],
+    tags=[DAG_TAGS.DBT.value, DAG_TAGS.DE.value],
 )
 
 start = DummyOperator(task_id="start", dag=dag)

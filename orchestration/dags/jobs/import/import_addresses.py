@@ -5,6 +5,7 @@ from common.alerts import on_failure_combined_callback
 from common.config import (
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
+    DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -54,7 +55,7 @@ dag_config = {
 }
 
 USER_LOCATIONS_TABLE = "user_locations"
-schedule_interval = "0 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
+schedule_interval = None  # TODO : legacy job to be removed in another PR
 
 default_args = {
     "start_date": datetime(2021, 3, 30),
@@ -87,6 +88,7 @@ with DAG(
             type="string",
         ),
     },
+    tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
     start = DummyOperator(task_id="start")
 

@@ -3,7 +3,7 @@
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
             partition_by={"field": "event_date", "data_type": "date"},
-            on_schema_change="sync_all_columns",
+            on_schema_change="append_new_columns",
         )
     )
 }}
@@ -76,6 +76,7 @@ select
     e.offer_subcategory_id,
     e.suggested_offer_subcategory_selected,
     e.image_creation_stage,
+    e.headline_offer_action_type,
     coalesce(o.offerer_name, v.offerer_name) as offerer_name,
     o.first_individual_offer_creation_date
     as offerer_first_individual_offer_creation_date,

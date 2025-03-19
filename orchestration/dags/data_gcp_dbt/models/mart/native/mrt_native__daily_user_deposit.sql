@@ -7,7 +7,7 @@
                 "data_type": "date",
                 "granularity": "day",
             },
-            on_schema_change="sync_all_columns",
+            on_schema_change="append_new_columns",
             require_partition_filter=true,
         )
     )
@@ -39,12 +39,8 @@ select
     mrt_global__deposit.deposit_amount,
     mrt_global__deposit.deposit_creation_date,
     mrt_global__deposit.deposit_type,
-    if(
-        extract(dayofyear from __days.day) < extract(dayofyear from __days.day),
-        date_diff(__days.day, mrt_global__deposit.user_birth_date, year) - 1,
-        date_diff(__days.day, mrt_global__deposit.user_birth_date, year)
-    ) as user_age
-
+    {{ calculate_exact_age("__days.day", "mrt_global__deposit.user_birth_date") }}
+    as user_age
 from {{ ref("mrt_global__deposit") }} as mrt_global__deposit
 inner join
     __days

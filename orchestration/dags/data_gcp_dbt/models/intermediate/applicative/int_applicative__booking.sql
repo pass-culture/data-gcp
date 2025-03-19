@@ -19,13 +19,10 @@ select
     b.booking_reimbursement_date,
     b.booking_used_recredit_type,
     d.deposit_type,
+    d.deposit_reform_category,
     date(b.booking_creation_date) as booking_creation_date,
-    if(
-        extract(dayofyear from date(b.booking_creation_date))
-        < extract(dayofyear from d.user_birth_date),
-        date_diff(date(b.booking_creation_date), d.user_birth_date, year) - 1,
-        date_diff(date(b.booking_creation_date), d.user_birth_date, year)
-    ) as user_age_at_booking,
+    {{ calculate_exact_age("b.booking_creation_date", "d.user_birth_date") }}
+    as user_age_at_booking,
     coalesce(b.booking_amount, 0)
     * coalesce(b.booking_quantity, 0) as booking_intermediary_amount,
     rank() over (

@@ -44,7 +44,7 @@ class MatchModel(tf.keras.models.Model):
             ]
         )
 
-        self.dot = Dot(axes=1, normalize=True)
+        self.dot = Dot(axes=1)
         self.flatten = tf.keras.layers.Flatten()
 
         self.initialize_weights()

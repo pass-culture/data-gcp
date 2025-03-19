@@ -13,7 +13,6 @@
                 collective_offer_last_validation_date,
                 collective_offer_validation,
                 collective_offer_id,
-                offer_id,
                 collective_offer_is_active,
                 venue_id,
                 collective_offer_name,

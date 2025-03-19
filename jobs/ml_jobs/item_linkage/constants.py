@@ -1,8 +1,31 @@
 import os
+from datetime import datetime
 
-GCP_PROJECT = os.environ.get("PROJECT_NAME")
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "")
-
+GCP_PROJECT = os.environ.get("GCP_PROJECT")
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
+EXPERIMENT_NAME = f"item_linkage_v2.0_{ENV_SHORT_NAME}"
+DETAIL_COLUMNS = ["item_id"]
+SYNCHRO_SUBCATEGORIES = [
+    "SUPPORT_PHYSIQUE_MUSIQUE_VINYLE",
+    "LIVRE_PAPIER",
+    "SUPPORT_PHYSIQUE_MUSIQUE_CD",
+    "SEANCE_CINE",
+]
+METADATA_FEATURES = [
+    "item_id",
+    "performer",
+    "offer_name",
+    "offer_description",
+    "oeuvre",
+    "edition",
+    "offer_subcategory_id",
+]
+EVALUATION_FEATURES = ["item_id", "offer_subcategory_id", "booking_count"]
+RUN_NAME = f"run_{datetime.today().strftime('%Y-%m-%d')}"
+MLFLOW_RUN_ID_FILENAME = "mlflow_run_uuid"
+RETRIEVAL_FILTERS = ["edition", "offer_subcategory_id"]
+BATCH_SIZE_RETRIEVAL = 10000
+SEMAPHORE_RETRIEVAL = 100
 MODEL_TYPE = {
     "n_dim": 32,
     "type": "semantic",
@@ -11,19 +34,22 @@ MODEL_TYPE = {
 }
 PARQUET_BATCH_SIZE = 100000
 LANCEDB_BATCH_SIZE = 5000
-NUM_PARTITIONS = 1024 if ENV_SHORT_NAME == "prod" else 128
-NUM_SUB_VECTORS = 32 if ENV_SHORT_NAME == "prod" else 16
+NUM_PARTITIONS = 1500 if ENV_SHORT_NAME == "prod" else 128
+NUM_SUB_VECTORS = 4 if ENV_SHORT_NAME == "prod" else 16
 MODEL_PATH = "metadata/vector"
 NUM_RESULTS = 5  # Number of results to retrieve
 LOGGING_INTERVAL = 50000  # Interval for logging progress
 
-N_PROBES = 20
+N_PROBES = 5
 REFINE_FACTOR = 10
 
-FEATURES = {
-    "offer_name": {"method": "jarowinkler", "threshold": 0.90, "missing_value": 0},
-    # "offer_description": {"method": "jarowinkler", "threshold": 0.5,"missing_value":0},
-    # "performer": {"method": "jarowinkler", "threshold": 0.95,"missing_value":1},
+MATCHING_FEATURES = {
+    "product": {
+        "oeuvre": {"method": "jarowinkler", "threshold": 0.90, "missing_value": 0},
+    },
+    "offer": {
+        "oeuvre": {"method": "jarowinkler", "threshold": 0.95, "missing_value": 0}
+    },
 }
 MATCHES_REQUIRED = 1
 UNKNOWN_PERFORMER = "unkn"

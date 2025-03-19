@@ -6,12 +6,20 @@ models:
     columns:
       - name: offer_id
         description: "{{ doc('column__offer_id') }}"
+        data_tests:
+          - not_null
+          - unique
       - name: offer_creation_date
         description: "{{ doc('column__offer_creation_date') }}"
       - name: offer_subcategory_id
         description: "{{ doc('column__offer_subcategory_id') }}"
+        data_tests:
+          - not_null
       - name: offer_category_id
         description: "{{ doc('column__offer_category_id') }}"
+        # failed : investigation
+        # data_tests:
+        #   - not_null
       - name: search_group_name
         description: "{{ doc('column__search_group_name') }}"
       - name: offer_type_domain

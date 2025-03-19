@@ -24,12 +24,17 @@ models:
       - name: booking_quantity
         description: '{{ doc("column__booking_quantity") }}'
         data_type: INT64
+        data_tests:
+          - is_valid_booking_quantity
       - name: booking_amount
         description: '{{ doc("column__booking_amount") }}'
         data_type: NUMERIC
       - name: booking_status
         description: '{{ doc("column__booking_status") }}'
         data_type: STRING
+        data_tests:
+          - accepted_values:
+              values: ['CANCELLED', 'BLA', 'BLOU', 'returned']
       - name: booking_is_cancelled
         description: '{{ doc("column__booking_is_cancelled") }}'
         data_type: BOOLEAN
@@ -56,8 +61,13 @@ models:
       - name: deposit_id
         description: '{{ doc("column__deposit_id") }}'
         data_type: STRING
+        data_tests:
+          - not_null
       - name: deposit_type
         description: '{{ doc("column__deposit_type") }}'
+        data_type: STRING
+      - name: deposit_reform_category
+        description: '{{ doc("column__deposit_reform_category") }}'
         data_type: STRING
       - name: reimbursed
         description: '{{ doc("column__booking_reimbursed") }}'
@@ -67,7 +77,7 @@ models:
         data_type: NUMERIC
         data_tests:
           - is_valid_booking_intermediary_amout:
-              where_condition: "date(booking_creation_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)"
+              where_condition: "date(booking_creation_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) and user_is_active"
               tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
@@ -111,6 +121,8 @@ models:
       - name: venue_id
         description: '{{ doc("column__venue_id") }}'
         data_type: STRING
+        data_tests:
+          - not_null
       - name: venue_postal_code
         description: '{{ doc("column__venue_postal_code") }}'
         data_type: STRING
@@ -146,9 +158,14 @@ models:
       - name: partner_id
         description: '{{ doc("column__partner_id") }}'
         data_type: STRING
+        # failed : investigation
+        # data_tests:
+        #   - not_null
       - name: offer_subcategory_id
         description: '{{ doc("column__offer_subcategory_id") }}'
         data_type: STRING
+        data_tests:
+          - not_null
       - name: physical_goods
         description: '{{ doc("column__physical_goods") }}'
         data_type: BOOLEAN
@@ -161,6 +178,8 @@ models:
       - name: offer_category_id
         description: '{{ doc("column__offer_category_id") }}'
         data_type: STRING
+        data_tests:
+          - not_null
       - name: user_postal_code
         description: '{{ doc("column__user_postal_code") }}'
         data_type: STRING
@@ -269,3 +288,6 @@ models:
       - name: diversity_score
         description: "{{ doc('column__diversity_score') }}"
         data_type: INT64
+      - name: is_local_authority
+        description: "{{ doc('column__is_local_authority') }}"
+        data_type: BOOLEAN

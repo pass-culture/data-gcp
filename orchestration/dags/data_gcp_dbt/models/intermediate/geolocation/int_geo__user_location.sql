@@ -66,7 +66,7 @@ with
 
 select
     user.user_id,
-    user.user_address,
+    user.user_raw_address,
     user.user_postal_code,
     user.user_department_code,
     user.user_longitude,
@@ -88,7 +88,7 @@ select
     user_qpv.qpv_municipality,
     user_zrr.zrr_level,
     user_zrr.zrr_level_detail,
-    user.updated_date,
+    user.user_address_geocode_updated_at,
     case
         when
             user_qpv.qpv_code is null

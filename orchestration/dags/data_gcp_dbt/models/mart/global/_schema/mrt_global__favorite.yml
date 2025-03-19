@@ -6,6 +6,9 @@ models:
     columns:
       - name: favorite_id
         description: "{{ doc('column__favorite_id') }}"
+        data_tests:
+          - not_null
+          - unique
       - name: favorite_creation_date
         description: "{{ doc('column__favorite_creation_date') }}"
       - name: favorite_created_at
@@ -78,6 +81,8 @@ models:
         description: "{{ doc('column__user_is_in_qpv') }}"
       - name: current_deposit_type
         description: "{{ doc('column__user_current_deposit_type') }}"
+      - name: user_current_deposit_reform_category
+        description: "{{ doc('column__user_current_deposit_reform_category') }}"
       - name: user_epci
         description: "{{ doc('column__user_epci') }}"
       - name: user_density_label

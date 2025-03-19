@@ -1,5 +1,5 @@
 with
-    k as (
+    import_embeddings as (
         select ie.item_id, ie.name_embedding
         from `{{ bigquery_ml_preproc_dataset }}.item_embedding_reduced_32` ie
         inner join
@@ -11,9 +11,8 @@ with
                 partition by ie.item_id order by ie.reduction_method desc
             )
             = 1
-
     ),
-    z as (
+    prepocess_embeddings as (
         select
             item_id,
             array(
@@ -23,7 +22,7 @@ with
                         split(substr(name_embedding, 2, length(name_embedding) - 2))
                     ) e
             ) as embedding,
-        from k
+        from import_embeddings
     ),
     offers as (
         select
@@ -36,18 +35,30 @@ with
         from `{{ bigquery_analytics_dataset }}.global_offer` go
         where go.offer_product_id is null
     ),
+    bookings as (
+        select bo.offer_id, sum(bo.booking_quantity) as booking_count
+        from offers o
+        join
+            `{{ bigquery_analytics_dataset }}.global_booking` bo
+            on bo.offer_id = o.offer_id
+        group by 1
+    ),
     candidates as (
         select
             case
-                when o.item_id like 'link-%' then o.offer_id else o.item_id
+                when o.item_id like 'link-%'
+                then concat('offer-', o.offer_id)
+                else o.item_id
             end as item_id,
-            z.embedding,
+            prepocess_embeddings.embedding,
             o.offer_name,
             o.offer_description,
             o.performer,
-            o.offer_subcategory_id
+            o.offer_subcategory_id,
+            b.booking_count
         from offers o
-        inner join z on z.item_id = o.item_id
+        inner join prepocess_embeddings on prepocess_embeddings.item_id = o.item_id
+        left join bookings b on b.offer_id = o.offer_id
     )
 select *
 from candidates

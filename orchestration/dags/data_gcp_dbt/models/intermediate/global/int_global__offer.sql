@@ -1,7 +1,7 @@
 {{
     config(
         partition_by={"field": "offer_creation_date", "data_type": "date"},
-        on_schema_change="sync_all_columns",
+        on_schema_change="append_new_columns",
     )
 }}
 
@@ -83,6 +83,7 @@ select
     v.venue_macro_density_label,
     v.venue_density_level,
     v.venue_is_permanent,
+    v.is_local_authority,
     o.offerer_address_id,
     o.offer_publication_date,
     o.is_future_scheduled,

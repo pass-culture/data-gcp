@@ -1,0 +1,23 @@
+version: 2
+models:
+  - name: int_applicative__achievement
+    description: '{{ doc("description__int_applicative__achievement") }}'
+    columns:
+      - name: achievement_id
+        description: '{{ doc("column__achievement_id") }}'
+        data_type: STRING
+      - name: user_id
+        description: '{{ doc("column__user_id") }}'
+        data_type: STRING
+      - name: booking_id
+        description: '{{ doc("column__booking_id") }}'
+        data_type: STRING
+      - name: achievement_name
+        description: '{{ doc("column__achievement_name") }}'
+        data_type: STRING
+      - name: achievement_unlocked_date
+        description: '{{ doc("column__achievement_unlocked_date") }}'
+        data_type: DATE
+      - name: achievement_seen_date
+        description: '{{ doc("column__achievement_seen_date") }}'
+        data_type: DATE

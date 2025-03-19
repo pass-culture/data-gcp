@@ -69,4 +69,4 @@ from
     FROM public.offer
     WHERE "dateUpdated" > NOW() - INTERVAL '5' DAY
     """
-) as offer
+    ) as offer

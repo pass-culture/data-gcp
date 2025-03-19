@@ -38,7 +38,7 @@
             offer_external_ticket_office_url,
             offer_validation,
             offer_last_validation_type,
-            offer_subcategoryId,
+            offer_subcategoryid,
             offer_updated_date,
             offer_withdrawal_type,
             offer_withdrawal_delay,

@@ -3,11 +3,11 @@ with
         select
             r.user_id,
             r.response_id,
-            deposit_type,
-            deposit_creation_date,
+            d.deposit_type,
+            d.deposit_creation_date,
             row_number() over (
                 partition by r.user_id, r.response_id
-                order by deposit_creation_date desc
+                order by d.deposit_creation_date desc
             ) as rank
         from {{ ref("mrt_global__deposit") }} as d
         inner join
@@ -20,10 +20,10 @@ with
         select
             r.user_id,
             r.response_id,
-            booking_rank as total_bookings,
+            b.booking_rank as total_bookings,
             row_number() over (
                 partition by r.user_id, r.response_id
-                order by booking_creation_date desc
+                order by b.booking_creation_date desc
             ) as rank
         from {{ ref("mrt_global__booking") }} as b
         inner join
@@ -42,7 +42,7 @@ select
     u.user_activity,
     u.user_is_in_qpv,
     b.total_bookings,
-    safe_cast(r.answer as int64) as rating,
+    safe_cast(r.answer as int64) as response_rating,
     date_diff(r.end_date, u.user_activation_date, day) as user_seniority
 from {{ ref("int_qualtrics__nps_beneficiary_answer") }} as r
 inner join {{ ref("mrt_global__user") }} as u on r.user_id = u.user_id

@@ -3,16 +3,16 @@ import json
 import mlflow
 import typer
 from catboost import CatBoostClassifier
-from commons.constants import (
+
+from constants import (
+    CONFIGS_PATH,
     ENV_SHORT_NAME,
     MLFLOW_RUN_ID_FILENAME,
     MODEL_DIR,
     STORAGE_PATH,
 )
-from commons.data_collect_queries import read_from_gcs
-from commons.mlflow_tools import connect_remote_mlflow
-
-from utils.constants import CONFIGS_PATH
+from utils.data_collect_queries import read_from_gcs
+from utils.mlflow_tools import connect_remote_mlflow
 
 
 def train(

@@ -10,15 +10,15 @@ import requests
 import shap
 import typer
 from catboost import CatBoostClassifier, Pool
-from commons.constants import (
-    ENV_SHORT_NAME,
-    MODEL_DIR,
-)
-from commons.mlflow_tools import connect_remote_mlflow
 from PIL import Image
 from sentence_transformers import SentenceTransformer
 
-from utils.constants import CONFIGS_PATH
+from constants import (
+    CONFIGS_PATH,
+    ENV_SHORT_NAME,
+    MODEL_DIR,
+)
+from utils.mlflow_tools import connect_remote_mlflow
 
 
 @dataclass

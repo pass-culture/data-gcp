@@ -5,8 +5,6 @@ import mlflow
 import pandas as pd
 import typer
 from catboost import Pool
-from mlflow import MlflowClient
-
 from commons.constants import (
     ENV_SHORT_NAME,
     MLFLOW_RUN_ID_FILENAME,
@@ -16,6 +14,7 @@ from commons.constants import (
 from commons.data_collect_queries import read_from_gcs
 from commons.mlflow_tools import connect_remote_mlflow
 from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
+from mlflow import MlflowClient
 
 
 def evaluate(
@@ -40,7 +39,6 @@ def evaluate(
     """
     with open(
         f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
-        mode="r",
         encoding="utf-8",
     ) as config_file:
         features = json.load(config_file)
@@ -71,7 +69,7 @@ def evaluate(
         thread_count=-1,
     )
     # Format metrics for MLFlow
-    for key in metrics.keys():
+    for key in metrics:
         metrics[key] = metrics[key][0]
 
     # Build and save probability distribution
@@ -81,7 +79,7 @@ def evaluate(
     )
     experiment_name = f"{model_name}_v1.0_{ENV_SHORT_NAME}"
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
-    with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="r") as file:
+    with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt") as file:
         run_id = file.read()
     with mlflow.start_run(experiment_id=experiment_id, run_id=run_id):
         mlflow.log_metrics(metrics)

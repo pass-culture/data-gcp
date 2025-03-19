@@ -10,15 +10,14 @@ import requests
 import shap
 import typer
 from catboost import CatBoostClassifier, Pool
-from PIL import Image
-from sentence_transformers import SentenceTransformer
-
 from commons.constants import (
     ENV_SHORT_NAME,
     MODEL_DIR,
 )
 from commons.mlflow_tools import connect_remote_mlflow
 from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
+from PIL import Image
+from sentence_transformers import SentenceTransformer
 
 
 @dataclass
@@ -53,7 +52,7 @@ class ApiModel(mlflow.pyfunc.PythonModel):
         "sentence-transformers/clip-ViT-B-32-multilingual-v1", device="cpu"
     )
     IMAGE_ENCODER_MODEL = SentenceTransformer("clip-ViT-B-32", device="cpu")
-    SEMENTIC_CONTENT_COLUMNS = [
+    SEMENTIC_CONTENT_COLUMNS = [  # noqa: RUF012
         "offer_name",
         "offer_description",
         "offer_type_label",
@@ -89,7 +88,7 @@ class ApiModel(mlflow.pyfunc.PythonModel):
             data (list): Input data to be predicted.
 
         Returns:
-            tuple: A tuple containing the predicted class labels and the main contribution.
+            tuple: the predicted class labels and the main contribution.
                 offer validition probability
                 offer rejection probability (=1-proba_val)
                 main features contributing to increase validation probability
@@ -132,16 +131,18 @@ class ClassificationPipeline:
                 top_reg: main features contributing to reduce validation probability
         """
 
-        proba_predicted = self.classification_model.predict(
-            preprocessing_output.pool,
-            prediction_type="Probability",
-            ntree_start=0,
-            ntree_end=0,
-            thread_count=1,
-            verbose=None,
-        )[0]
-        proba_rejection = list(proba_predicted)[0] * 100
-        proba_validation = list(proba_predicted)[1] * 100
+        proba_predicted = list(
+            self.classification_model.predict(
+                preprocessing_output.pool,
+                prediction_type="Probability",
+                ntree_start=0,
+                ntree_end=0,
+                thread_count=1,
+                verbose=None,
+            )[0]
+        )
+        proba_rejection = proba_predicted[0] * 100
+        proba_validation = proba_predicted[1] * 100
         top_validation, top_rejection = self._get_prediction_main_contribution(
             preprocessing_output.data_with_embeddings_df, preprocessing_output.pool
         )
@@ -274,15 +275,17 @@ class PreprocessingPipeline:
         def _is_str_emb(val):
             return isinstance(val, str)
 
-        for feature_types in features_description["preprocess_features_type"].keys():
+        for feature_types in features_description["preprocess_features_type"]:
             for col in features_description["preprocess_features_type"][feature_types]:
                 if feature_types == "text_features":
                     df[col] = df[col].fillna("").astype(str)
                 if feature_types == "numerical_features":
                     df[col] = df[col].fillna(0).astype(int)
-                if feature_types == "embedding_features":
-                    if df[col].apply(_is_str_emb).all():
-                        df[col] = cls._convert_str_emb_to_float(df[col].tolist())
+                if (
+                    feature_types == "embedding_features"
+                    and df[col].apply(_is_str_emb).all()
+                ):
+                    df[col] = cls._convert_str_emb_to_float(df[col].tolist())
 
         return df
 
@@ -332,7 +335,6 @@ def package_api_model(
 ):
     with open(
         f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
-        mode="r",
         encoding="utf-8",
     ) as config_file:
         features = json.load(config_file)

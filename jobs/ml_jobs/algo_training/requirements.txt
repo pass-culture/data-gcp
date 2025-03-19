@@ -54,8 +54,6 @@ cachetools==5.5.1
     # via
     #   google-auth
     #   mlflow-skinny
-catboost==1.2
-    # via -r requirements.in
 category-encoders==2.8.0
     # via recommenders
 certifi==2025.1.31
@@ -78,9 +76,6 @@ cloudpickle==3.1.1
     # via
     #   hyperopt
     #   mlflow-skinny
-    #   shap
-cmake==3.31.4
-    # via triton
 comm==0.2.2
     # via ipykernel
 configargparse==1.7
@@ -124,9 +119,7 @@ fastparquet==2024.11.0
 filelock==3.17.0
     # via
     #   huggingface-hub
-    #   torch
     #   transformers
-    #   triton
 flask==3.1.0
     # via
     #   flask-cors
@@ -238,8 +231,6 @@ graphql-core==3.2.6
     #   graphql-relay
 graphql-relay==3.2.0
     # via graphene
-graphviz==0.20.3
-    # via catboost
 greenlet==3.1.1
     # via
     #   gevent
@@ -270,7 +261,6 @@ httpx==0.28.1
     # via jupyterlab
 huggingface-hub==0.28.1
     # via
-    #   sentence-transformers
     #   tokenizers
     #   transformers
 hyperopt==0.2.7
@@ -308,7 +298,6 @@ jinja2==3.1.5
     #   jupyterlab-server
     #   mlflow
     #   nbconvert
-    #   torch
 joblib==1.4.2
     # via
     #   nltk
@@ -370,8 +359,6 @@ libclang==18.1.1
     # via tensorflow
 lightgbm==4.6.0
     # via recommenders
-lit==18.1.8
-    # via triton
 llvmlite==0.44.0
     # via numba
 locust==2.33.1
@@ -393,7 +380,6 @@ markupsafe==3.0.2
 matplotlib==3.8.4
     # via
     #   -r requirements.in
-    #   catboost
     #   mlflow
     #   powerlaw
     #   seaborn
@@ -412,9 +398,7 @@ mlflow==2.20.1
 mlflow-skinny==2.20.1
     # via mlflow
 mpmath==1.3.0
-    # via
-    #   powerlaw
-    #   sympy
+    # via powerlaw
 msgpack==1.1.0
     # via locust
 multidict==6.1.0
@@ -435,13 +419,9 @@ nbformat==5.10.4
 nest-asyncio==1.6.0
     # via ipykernel
 networkx==3.4.2
-    # via
-    #   hyperopt
-    #   torch
+    # via hyperopt
 nltk==3.9.1
-    # via
-    #   recommenders
-    #   sentence-transformers
+    # via recommenders
 notebook==7.3.2
     # via recommenders
 notebook-shim==0.2.4
@@ -449,13 +429,10 @@ notebook-shim==0.2.4
     #   jupyterlab
     #   notebook
 numba==0.61.0
-    # via
-    #   recommenders
-    #   shap
+    # via recommenders
 numpy==1.26.4
     # via
     #   -r requirements.in
-    #   catboost
     #   category-encoders
     #   contourpy
     #   cornac
@@ -478,63 +455,37 @@ numpy==1.26.4
     #   scikit-surprise
     #   scipy
     #   seaborn
-    #   sentence-transformers
-    #   shap
     #   statsmodels
     #   tensorboard
     #   tensorflow
-    #   torchvision
     #   transformers
-nvidia-cublas-cu11==11.10.3.66
-    # via
-    #   nvidia-cudnn-cu11
-    #   nvidia-cusolver-cu11
-    #   torch
 nvidia-cublas-cu12==12.2.5.6
     # via
     #   nvidia-cudnn-cu12
     #   nvidia-cusolver-cu12
     #   tensorflow
-nvidia-cuda-cupti-cu11==11.7.101
-    # via torch
 nvidia-cuda-cupti-cu12==12.2.142
     # via tensorflow
 nvidia-cuda-nvcc-cu12==12.2.140
     # via tensorflow
-nvidia-cuda-nvrtc-cu11==11.7.99
-    # via torch
 nvidia-cuda-nvrtc-cu12==12.2.140
     # via
     #   nvidia-cudnn-cu12
     #   tensorflow
-nvidia-cuda-runtime-cu11==11.7.99
-    # via torch
 nvidia-cuda-runtime-cu12==12.2.140
     # via tensorflow
-nvidia-cudnn-cu11==8.5.0.96
-    # via torch
 nvidia-cudnn-cu12==8.9.4.25
     # via tensorflow
-nvidia-cufft-cu11==10.9.0.58
-    # via torch
 nvidia-cufft-cu12==11.0.8.103
     # via tensorflow
-nvidia-curand-cu11==10.2.10.91
-    # via torch
 nvidia-curand-cu12==10.3.3.141
     # via tensorflow
-nvidia-cusolver-cu11==11.4.0.1
-    # via torch
 nvidia-cusolver-cu12==11.5.2.141
     # via tensorflow
-nvidia-cusparse-cu11==11.7.4.91
-    # via torch
 nvidia-cusparse-cu12==12.1.2.141
     # via
     #   nvidia-cusolver-cu12
     #   tensorflow
-nvidia-nccl-cu11==2.14.3
-    # via torch
 nvidia-nccl-cu12==2.16.5
     # via tensorflow
 nvidia-nvjitlink-cu12==12.2.140
@@ -542,8 +493,6 @@ nvidia-nvjitlink-cu12==12.2.140
     #   nvidia-cusolver-cu12
     #   nvidia-cusparse-cu12
     #   tensorflow
-nvidia-nvtx-cu11==11.7.91
-    # via torch
 oauthlib==3.2.2
     # via requests-oauthlib
 opentelemetry-api==1.30.0
@@ -578,14 +527,12 @@ packaging==21.3
     #   pandas-gbq
     #   pandera
     #   pytest
-    #   shap
     #   statsmodels
     #   tensorflow
     #   transformers
 pandas==2.2.0
     # via
     #   -r requirements.in
-    #   catboost
     #   category-encoders
     #   db-dtypes
     #   fastparquet
@@ -594,7 +541,6 @@ pandas==2.2.0
     #   pandera
     #   recommenders
     #   seaborn
-    #   shap
     #   statsmodels
 pandas-gbq==0.23.1
     # via -r requirements.in
@@ -613,13 +559,9 @@ pexpect==4.9.0
 pickleshare==0.7.5
     # via ipython
 pillow==11.1.0
-    # via
-    #   matplotlib
-    #   torchvision
+    # via matplotlib
 platformdirs==4.3.6
     # via jupyter-core
-plotly==4.14.3
-    # via catboost
 pluggy==1.5.0
     # via pytest
 polars==0.18.6
@@ -750,14 +692,11 @@ requests==2.32.3
     #   mlflow-skinny
     #   requests-oauthlib
     #   tensorboard
-    #   torchvision
     #   transformers
 requests-oauthlib==2.0.0
     # via google-auth-oauthlib
 retrying==1.3.4
-    # via
-    #   plotly
-    #   recommenders
+    # via recommenders
 rfc3339-validator==0.1.4
     # via
     #   jsonschema
@@ -781,13 +720,10 @@ scikit-learn==1.6.1
     #   category-encoders
     #   mlflow
     #   recommenders
-    #   sentence-transformers
-    #   shap
 scikit-surprise==1.1.4
     # via recommenders
 scipy==1.15.1
     # via
-    #   catboost
     #   category-encoders
     #   cornac
     #   hyperopt
@@ -796,52 +732,34 @@ scipy==1.15.1
     #   powerlaw
     #   scikit-learn
     #   scikit-surprise
-    #   sentence-transformers
-    #   shap
     #   statsmodels
 seaborn==0.13.2
     # via recommenders
 send2trash==1.8.3
     # via jupyter-server
-sentence-transformers==2.2.2
-    # via -r requirements.in
-sentencepiece==0.2.0
-    # via sentence-transformers
 setuptools==75.8.0
     # via
     #   ipython
     #   jupyterlab
     #   locust
-    #   nvidia-cublas-cu11
-    #   nvidia-cuda-cupti-cu11
-    #   nvidia-cuda-runtime-cu11
-    #   nvidia-curand-cu11
-    #   nvidia-cusparse-cu11
-    #   nvidia-nvtx-cu11
     #   pandas-gbq
     #   pydata-google-auth
     #   tensorboard
     #   tensorflow
     #   zope-event
     #   zope-interface
-shap==0.41.0
-    # via -r requirements.in
 shapely==1.8.5.post1
     # via google-cloud-aiplatform
 six==1.17.0
     # via
     #   astunparse
-    #   catboost
     #   google-pasta
     #   hyperopt
-    #   plotly
     #   python-dateutil
     #   retrying
     #   rfc3339-validator
     #   tensorboard
     #   tensorflow
-slicer==0.0.7
-    # via shap
 smmap==5.0.2
     # via gitdb
 sniffio==1.3.1
@@ -860,8 +778,6 @@ statsmodels==0.14.4
     # via
     #   category-encoders
     #   recommenders
-sympy==1.13.3
-    # via torch
 tensorboard==2.15.2
     # via tensorflow
 tensorboard-data-server==0.7.2
@@ -895,13 +811,6 @@ tomli==2.2.1
     # via
     #   jupyterlab
     #   locust
-torch==2.0.1
-    # via
-    #   sentence-transformers
-    #   torchvision
-    #   triton
-torchvision==0.15.2
-    # via sentence-transformers
 tornado==6.4.2
     # via
     #   -r requirements.in
@@ -918,8 +827,6 @@ tqdm==4.64.1
     #   huggingface-hub
     #   hyperopt
     #   nltk
-    #   sentence-transformers
-    #   shap
     #   transformers
 traitlets==5.14.3
     # via
@@ -936,11 +843,7 @@ traitlets==5.14.3
     #   nbconvert
     #   nbformat
 transformers==4.48.3
-    # via
-    #   recommenders
-    #   sentence-transformers
-triton==2.0.0
-    # via torch
+    # via recommenders
 typeguard==4.4.2
     # via pandera
 typer==0.7.0
@@ -965,7 +868,6 @@ typing-extensions==4.12.2
     #   referencing
     #   sqlalchemy
     #   tensorflow
-    #   torch
     #   typeguard
     #   typing-inspect
 typing-inspect==0.9.0
@@ -997,14 +899,7 @@ werkzeug==3.1.3
     #   locust
     #   tensorboard
 wheel==0.45.1
-    # via
-    #   astunparse
-    #   nvidia-cublas-cu11
-    #   nvidia-cuda-cupti-cu11
-    #   nvidia-cuda-runtime-cu11
-    #   nvidia-curand-cu11
-    #   nvidia-cusparse-cu11
-    #   nvidia-nvtx-cu11
+    # via astunparse
 wrapt==1.14.1
     # via
     #   deprecated

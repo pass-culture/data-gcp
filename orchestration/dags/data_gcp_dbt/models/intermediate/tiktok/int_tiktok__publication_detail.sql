@@ -4,6 +4,7 @@
             incremental_strategy="insert_overwrite",
             partition_by={"field": "publication_export_date", "data_type": "date"},
             cluster_by="publication_account_name",
+            on_schema_change="append_new_columns",
         )
     )
 }}

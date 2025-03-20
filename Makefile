@@ -123,12 +123,12 @@ delete_python_version_files:
 
 create_microservice:
 	python automations/create_microservice.py --ms-name $(MS_NAME) --ms-type $(MS_TYPE)
+	cd $(MS_BASE_PATH)/$(MS_NAME) && uv init --no-workspace -p 3.12 && uv add -r requirements.in && uv sync && rm requirements.in pyproject.toml.template
 	git add .
 	git commit -am "Add $(MS_NAME) as $(MS_TYPE) microservice"
 
 create_microservice_ml:
-	MS_TYPE=ml MS_NAME=$(MS_NAME) make create_microservice
-	MICROSERVICE_PATH=jobs/ml_jobs/$(MS_NAME) PHYTON_VERSION=3.10 VENV_NAME=data-gcp-$(MS_NAME) REQUIREMENTS_NAME=requirements.txt make _install_microservice
+	MS_TYPE=ml MS_NAME=$(MS_NAME) MS_BASE_PATH=jobs/ml_jobs make create_microservice
 
 create_microservice_etl_external:
 	MS_TYPE=etl_external MS_NAME=$(MS_NAME) make create_microservice

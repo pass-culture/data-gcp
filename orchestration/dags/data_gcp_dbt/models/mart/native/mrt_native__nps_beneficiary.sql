@@ -4,7 +4,6 @@ with
             r.user_id,
             r.response_id,
             d.deposit_type,
-            d.deposit_creation_date,
             row_number() over (
                 partition by r.user_id, r.response_id
                 order by d.deposit_creation_date desc

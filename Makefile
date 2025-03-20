@@ -123,9 +123,9 @@ delete_python_version_files:
 
 create_microservice:
 	python automations/create_microservice.py --ms-name $(MS_NAME) --ms-type $(MS_TYPE)
-	cd $(MS_BASE_PATH)/$(MS_NAME) && uv init --no-workspace -p 3.12 && uv add -r requirements.in && uv sync && rm requirements.in pyproject.toml.template
-	git add .
-	git commit -am "Add $(MS_NAME) as $(MS_TYPE) microservice"
+	cd $(MS_BASE_PATH)/$(MS_NAME) && uv init --no-workspace -p 3.12 && uv add -r requirements.in && uv sync
+	cd $(MS_BASE_PATH)/$(MS_NAME) && cat pyproject.toml.template >> pyproject.toml && rm requirements.in pyproject.toml.template
+	git add . && git commit -am "auto: Add $(MS_NAME) as $(MS_TYPE) microservice"
 
 create_microservice_ml:
 	MS_TYPE=ml MS_NAME=$(MS_NAME) MS_BASE_PATH=jobs/ml_jobs make create_microservice

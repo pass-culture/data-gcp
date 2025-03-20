@@ -8,7 +8,7 @@ ENV_LONG_NAME = {
     "prod": "production",
     "stg": "stg",
     "dev": "dev",
-}
+}[ENV_SHORT_NAME]
 PROJECT_NAME = os.environ.get("GCP_PROJECT_ID")
 BIGQUERY_ML_RECOMMENDATION_DATASET = f"ml_reco_{ENV_SHORT_NAME}"
 BIGQUERY_ML_RETRIEVAL_DATASET = f"ml_retrieval_{ENV_SHORT_NAME}"

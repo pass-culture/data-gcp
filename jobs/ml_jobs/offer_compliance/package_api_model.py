@@ -16,7 +16,6 @@ from sentence_transformers import SentenceTransformer
 from constants import (
     CONFIGS_PATH,
     ENV_SHORT_NAME,
-    MODEL_DIR,
 )
 from utils.mlflow_tools import connect_remote_mlflow
 
@@ -335,7 +334,7 @@ def package_api_model(
     ),
 ):
     with open(
-        f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
+        f"{CONFIGS_PATH}/{config_file_name}.json",
         encoding="utf-8",
     ) as config_file:
         features = json.load(config_file)

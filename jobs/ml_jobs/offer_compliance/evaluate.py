@@ -11,7 +11,6 @@ from constants import (
     CONFIGS_PATH,
     ENV_SHORT_NAME,
     MLFLOW_RUN_ID_FILENAME,
-    MODEL_DIR,
     STORAGE_PATH,
 )
 from utils.data_collect_queries import read_from_gcs
@@ -39,7 +38,7 @@ def evaluate(
         - Convert numerical columns to int
     """
     with open(
-        f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
+        f"{CONFIGS_PATH}/{config_file_name}.json",
         encoding="utf-8",
     ) as config_file:
         features = json.load(config_file)
@@ -74,13 +73,13 @@ def evaluate(
         metrics[key] = metrics[key][0]
 
     # Build and save probability distribution
-    figure_folder = f"{MODEL_DIR}/probability_distribution/"
+    figure_folder = "probability_distribution/"
     save_probability_distribution_plot(
         model, eval_pool, eval_data_labels, figure_folder
     )
     experiment_name = f"{model_name}_v1.0_{ENV_SHORT_NAME}"
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
-    with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt") as file:
+    with open(f"{MLFLOW_RUN_ID_FILENAME}.txt") as file:
         run_id = file.read()
     with mlflow.start_run(experiment_id=experiment_id, run_id=run_id):
         mlflow.log_metrics(metrics)

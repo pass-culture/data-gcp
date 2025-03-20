@@ -8,7 +8,6 @@ from constants import (
     CONFIGS_PATH,
     ENV_SHORT_NAME,
     MLFLOW_RUN_ID_FILENAME,
-    MODEL_DIR,
     STORAGE_PATH,
 )
 from utils.data_collect_queries import read_from_gcs
@@ -31,7 +30,7 @@ def train(
     run_name: str = typer.Option(None, help="Name of the MLflow run if set"),
 ):
     with open(
-        f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json",
+        f"{CONFIGS_PATH}/{config_file_name}.json",
         encoding="utf-8",
     ) as config_file:
         features = json.load(config_file)
@@ -58,7 +57,7 @@ def train(
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
     with mlflow.start_run(experiment_id=experiment_id, run_name=run_name):
         run_uuid = mlflow.active_run().info.run_uuid
-        with open(f"{MODEL_DIR}/{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
+        with open(f"{MLFLOW_RUN_ID_FILENAME}.txt", mode="w") as file:
             file.write(run_uuid)
         mlflow.log_params(
             params={

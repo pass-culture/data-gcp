@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import typer
 
-from constants import CONFIGS_PATH, MODEL_DIR, STORAGE_PATH
+from constants import CONFIGS_PATH, STORAGE_PATH
 from package_api_model import PreprocessingPipeline
 from utils.data_collect_queries import read_from_gcs
 
@@ -38,7 +38,7 @@ def preprocess(
         help="Name of the cleaned dataframe",
     ),
 ):
-    config_file_path = Path(f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json")
+    config_file_path = Path(f"{CONFIGS_PATH}/{config_file_name}.json")
     features = json.loads(config_file_path.read_text(encoding="utf-8"))
 
     offer_compliance_raw = read_from_gcs(

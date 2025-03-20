@@ -14,7 +14,6 @@ from commons.constants import (
     MODEL_DIR,
     MODEL_NAME,
     MODELS_RESULTS_TABLE_NAME,
-    SERVING_CONTAINER,
     STORAGE_PATH,
 )
 from commons.data_collect_queries import read_from_gcs
@@ -70,7 +69,6 @@ def main(
         "run_start_time": run.info.start_time,
         "run_end_time": run.info.start_time,
         "artifact_uri": artifact_uri,
-        "serving_container": SERVING_CONTAINER,
     }
 
     pd.DataFrame.from_dict([log_results], orient="columns").to_gbq(

@@ -249,6 +249,63 @@ python two_towers_model/train.py \
 -   `--validation_table_name`: The BigQuery table containing the validation data.
 -   `--run_name`: Name of the MLflow run if set
 
+
+## Evaluation of Two Tower model
+
+The evaluation system of the Two-Tower model consists in computing the following metrics with the [recommenders](https://github.com/recommenders-team/recommenders/tree/main/recommenders/evaluation) library:
+- Precision@k
+- Recall@k
+- Catalog Coverage
+- Novelty
+
+### Main Evaluation Script (`evaluate.py`)
+This script handles the MLflow integration and orchestrates the evaluation process. It:
+- Loads the trained model from MLflow
+- Computes the aforementionned metrics on test data
+- Generates PCA visualizations of item embeddings
+- Logs evaluation results and PCA visualizations back to MLflow
+- Supports evaluation with different top-k values
+- Supports evaluation on all users or a subset of users.
+- Can evaluate against random and popularity-based baselines.
+
+#### Baselines
+- Random baseline: generates random prediction item for each user.
+- Popularity-based baseline: generates recommendations using top q% most popular items, q being a quantile parameter. E.G. if q=0.99, then the popularity baseline model will predict items from the 0.1% most clicked and booked items.
+
+#### Visualization
+- PCA-based visualization of item embeddings
+- Category and subcategory-based scatter plots
+
+### Usage
+To run the evaluation:
+
+```bash
+python evaluate.py \
+    --experiment-name "your_experiment" \
+    --model-name "your_model" \
+    --training-dataset-name "recommendation_training_data" \
+    --test-dataset-name "recommendation_test_data" \
+    --list-k 10 50 100 250 1000 \
+    --all-users \
+    --dummy \
+    --quantile-threshold 0.99
+```
+
+Key parameters:
+- `experiment-name`: Name of the MLflow experiment
+- `model-name`: Name of the model to evaluate
+- `training-dataset-name`: Name of the training dataset in storage
+- `test-dataset-name`: Name of the test dataset in storage
+- `list-k`: List of k values for top-k metrics
+- `all-users`: Whether to evaluate all users or a subset
+- `dummy`: Whether to compute metrics for random and popularity baselines
+- `quantile-threshold`: Threshold for top popular items in popularity baseline
+
+The evaluation results will be:
+1. Logged to MLflow with all computed metrics
+2. Saved to BigQuery in the models results table
+
+
 ## Embeddings historization
 After training and evaluating the two towers model, we save user and items embeddings in two partitionned BigQuery table in `raw_<env>` dataset. `<env>` is **dev**, **stg** or **prod**. Each partition corresponds one model i.e. one embedding for each user or item. The idea is to have a history of how users and items embeddings change after each training. The two tables are:
 * `two_tower_user_embedding` : contains all information about the model (experiment_id, run_id, etc) and the vector embedding (64,) for each user.

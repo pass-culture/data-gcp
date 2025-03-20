@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS {{ dataset }}.{{ tmp_table_name }} ON cluster default
 AS
     SELECT
         '{{ date }}' as update_date,
-        cast(offerer_id as String) as offerer_id,
         cast(venue_id as String) as venue_id,
+        cast(offerer_id as String) as offerer_id,
         cast(collective_offer_id as String) as collective_offer_id,
         cast(date(creation_date) as String) as creation_date,
         cast(date(used_date) as Nullable(String)) as used_date,

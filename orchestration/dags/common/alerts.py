@@ -14,6 +14,7 @@ from common.config import (
 from common.operators.gce import StopGCEOperator
 
 from airflow import configuration
+from airflow.utils.context import Context
 
 HTTP_HOOK = "https://hooks.slack.com/services/"
 DEFAULT_HEADERS = {"Content-Type": "application/json"}
@@ -61,11 +62,19 @@ def analytics_fail_slack_alert(context):
     return __task_fail_slack_alert(context, job_type="analytics")
 
 
-def on_failure_callback_stop_vm(context):
-    operator = StopGCEOperator(
-        task_id="gce_stop_task", instance_name=context["params"]["instance_name"]
-    )
-    return operator.execute(context=context)
+def on_failure_callback_stop_vm(context: Context):
+    """
+    This callback stops the VM associated with the failing task,
+    assuming the failing task has an `instance_name` attribute.
+    """
+    failing_task = context["task"]
+    # If the failing task has an instance_name, use StopGCEOperator to stop it.
+    if hasattr(failing_task, "instance_name"):
+        instance_name = failing_task.instance_name
+        stop_vm_operator = StopGCEOperator(
+            task_id="stop_vm_on_failure_callback", instance_name=instance_name
+        )
+        stop_vm_operator.execute(context=context)
 
 
 def on_failure_combined_callback(context):

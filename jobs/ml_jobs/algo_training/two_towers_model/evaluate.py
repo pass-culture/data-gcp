@@ -18,8 +18,8 @@ from commons.constants import (
 )
 from commons.data_collect_queries import read_from_gcs
 from commons.mlflow_tools import connect_remote_mlflow
-from two_towers_model.utils.evaluate import evaluate
-from two_towers_model.utils.evaluation_plots import (
+from two_towers_model.utils.evaluation.evaluate import evaluate
+from two_towers_model.utils.evaluation.evaluation_plots import (
     plot_metrics_evolution,
     save_pca_representation,
 )

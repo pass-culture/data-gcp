@@ -38,3 +38,12 @@ développement dans le DAG concerné. Les deux possibilités sont de :
 
 De plus, afin de réduire les temps d'entraînement et d'évaluation, on peut réduire le volume de données utilisées en
 diminuant le nombre de jours utilisés pour l'entraînement : paramètre `event_day_number`.
+
+### Visualization
+- PCA-based visualization of item embeddings
+- Category and subcategory-based scatter plots
+- Three separate metric plots:
+  1. Precision and Recall evolution with k
+  2. Coverage evolution with k
+  3. Novelty evolution with k
+- All plots are saved as PDF/PNG files in the model directory

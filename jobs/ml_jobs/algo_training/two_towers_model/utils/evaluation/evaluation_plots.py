@@ -77,16 +77,20 @@ def save_pca_representation(
 
 def plot_metrics_evolution(metrics, list_k, figures_folder):
     """
-    Plot the evolution of metrics with different k values
+    Plot the evolution of metrics with different k values.
+    Creates two separate plots:
+    1. Precision, Recall and Coverage values in[0,1]
+    2. Novelty values in R
 
     Args:
         metrics: Dictionary containing metrics for different k values
-        figures_folder: Folder to save the plot
+        list_k: List of k values used for evaluation
+        figures_folder: Folder to save the plots
 
     Returns:
         None
     """
-    logger.info("Creating metrics evolution plot")
+    logger.info("Creating metrics evolution plots")
 
     # Prepare data for plotting
     precision_values = [
@@ -110,22 +114,27 @@ def plot_metrics_evolution(metrics, list_k, figures_folder):
         if metric_name.startswith("novelty")
     ]
 
-    # Create plot
-    fig, ax = plt.subplots(figsize=(12, 8))
+    # Plot 1: Precision and Recall
+    fig1, ax1 = plt.subplots(figsize=(12, 8))
+    ax1.plot(list_k, precision_values, marker="o", label="Precision")
+    ax1.plot(list_k, recall_values, marker="s", label="Recall")
+    ax1.plot(list_k, coverage_values, marker="^", color="green")
+    ax1.set_xlabel("k (Number of recommendations)")
+    ax1.set_ylabel("Score")
+    ax1.set_title("Evolution of Precision, Recall and Coverage with k")
+    ax1.grid(True)
+    ax1.legend()
+    plot_path1 = f"{figures_folder}/precision_recall_coverage_evolution.png"
+    fig1.savefig(plot_path1)
+    logger.info(f"Precision, Recall and Coverage evolution plot saved to {plot_path1}")
 
-    # Plot each metric
-    ax.plot(list_k, precision_values, marker="o", label="Precision")
-    ax.plot(list_k, recall_values, marker="s", label="Recall")
-    ax.plot(list_k, coverage_values, marker="^", label="Coverage")
-    ax.plot(list_k, novelty_values, marker="d", label="Novelty")
-
-    ax.set_xlabel("k (Number of recommendations)")
-    ax.set_ylabel("Score")
-    ax.set_title("Evolution of Metrics with k")
-    ax.grid(True)
-    ax.legend()
-
-    # Save the plot
-    plot_path = f"{figures_folder}/metrics_evolution.png"
-    fig.savefig(plot_path)
-    logger.info(f"Metrics evolution plot saved to {plot_path}")
+    # Plot 2: Novelty
+    fig2, ax2 = plt.subplots(figsize=(12, 8))
+    ax2.plot(list_k, novelty_values, marker="d", color="purple")
+    ax2.set_xlabel("k (Number of recommendations)")
+    ax2.set_ylabel("Novelty")
+    ax2.set_title("Evolution of Novelty with k")
+    ax2.grid(True)
+    plot_path2 = f"{figures_folder}/novelty_evolution.png"
+    fig2.savefig(plot_path2)
+    logger.info(f"Novelty evolution plot saved to {plot_path2}")

@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 from commons.constants import EVALUATION_USER_NUMBER
 from commons.data_collect_queries import read_from_gcs
-from two_towers_model.utils.evaluation_baselines import (
+from two_towers_model.utils.evaluation.evaluation_baselines import (
     generate_popularity_baseline,
     generate_random_baseline,
 )
@@ -62,29 +62,36 @@ def load_data_for_evaluation(
 
 
 def generate_predictions(
-    model, test_data: pd.DataFrame, all_users: bool
+    model,
+    test_data: pd.DataFrame,
+    training_data: pd.DataFrame,
+    all_users: bool,
+    batch_size: int = 4000,  # Optimized for 24GB RAM: 4000 users × 100k items × 4MB ≈ 16GB
+    top_k: int = 1100,  # 1000 items + 100 items to hedge against filtering items seen during training
 ) -> pd.DataFrame:
     """
     Generates item dot product scores for each user in the test dataset using the provided model.
     The scores are computed for each user with all unique (item_id) in test_dataset which are stored in offers_to_score.
-    offers_to_score does not contain previously seen items during train which prevents data leak.
+    After prediction, removes items that users have already interacted with in training data.
+    Returns only top-k items per user after filtering.
 
     Args:
         model: Trained Two tower retrieval model.
         test_data (pd.DataFrame): DataFrame containing test user-item interactions with at least
             'user_id' and 'item_id' columns.
-        all_users : bool: If True, evaluate all users in the test dataset. If False, evaluate only a subset of users.
+        training_data (pd.DataFrame): DataFrame containing training user-item interactions.
+        all_users (bool): If True, evaluate all users in the test dataset. If False, evaluate only a subset of users.
+        batch_size (int): Number of users to process in each batch. Defaults to 4000, optimized for 24GB RAM.
+        top_k (int): Number of top items to keep per user after filtering. Defaults to 1100 (1000 items + 100 items to hedge against filtering items seen during training).
 
     Returns:
-        pd.DataFrame: DataFrame with columns ['user_id', 'item_id', 'score'], where score represents
-                        the predicted interaction score (dot product between user and item two tower embeddings).
+        pd.DataFrame: DataFrame with columns ['user_id', 'item_id', 'score'], containing top-k items per user
+                     after removing training interactions.
     """
-    ## TODO UNCOMMENT THIS AFTER BATCHING IS DONE
-    ## Get unique items to score
-    # offers_to_score = test_data.item_id.unique()
-    # logger.info(f"Number of unique items to score: {len(offers_to_score)}")
+    # Get unique items to score before filtering users
+    offers_to_score = test_data.item_id.unique()
 
-    ## Truncate test data if not all users are to be evaluated
+    # Filter users if needed
     total_n_users = len(test_data["user_id"].unique())
     if not all_users:
         users_to_test = test_data["user_id"].unique()[
@@ -93,37 +100,49 @@ def generate_predictions(
         test_data = test_data[test_data.user_id.isin(users_to_test)]
         logger.info(f"Computing metrics for {len(users_to_test)} users")
     else:
-        logger.info(f"Computing metrics for all users ({total_n_users}) users)")
+        logger.info(f"Computing metrics for all users ({total_n_users} users)")
 
-    # TODO DELETE THIS AFTER BATCHING IS DONE
-    offers_to_score = test_data.item_id.unique()
-    logger.info(f"Number of unique items to score: {len(offers_to_score)}")
-
-    # Create List to store predictions for each user
+    # Process users in batches
     list_df_predictions = []
-    for current_user in tqdm(
-        test_data["user_id"].unique(), mininterval=20, maxinterval=60
-    ):
-        # Prepare input for prediction
-        prediction_input = [
-            np.array([current_user] * len(offers_to_score)),
-            offers_to_score,
-        ]
+    unique_users = test_data["user_id"].unique()
 
-        # Generate predictions
-        prediction = model.predict(prediction_input, verbose=0)
+    for i in tqdm(range(0, len(unique_users), batch_size)):
+        batch_users = unique_users[i : i + batch_size]
 
-        # Append predictions to final predictions DataFrame
-        current_user_predictions = pd.DataFrame(
+        # Prepare input for batch prediction
+        user_input = np.repeat(batch_users, len(offers_to_score))
+        item_input = np.tile(offers_to_score, len(batch_users))
+
+        # Generate predictions for the batch
+        prediction_input = [user_input, item_input]
+        predictions = model.predict(prediction_input, verbose=0)
+
+        # Create DataFrame for this batch
+        batch_predictions = pd.DataFrame(
             {
-                "user_id": [current_user] * len(offers_to_score),
-                "item_id": offers_to_score.flatten().tolist(),
-                "score": prediction.flatten().tolist(),
+                "user_id": user_input,
+                "item_id": item_input,
+                "score": predictions.flatten(),
             }
         )
-        list_df_predictions.append(current_user_predictions)
 
+        # Keep top-k items per user
+        batch_predictions = batch_predictions.sort_values("score", ascending=False)
+        batch_predictions = batch_predictions.groupby("user_id").head(top_k)
+
+        list_df_predictions.append(batch_predictions)
+
+    # Combine all batches
     df_predictions = pd.concat(list_df_predictions, ignore_index=True)
+
+    # Filter out items that users have already interacted with in training data by performing an anti-join
+    df_predictions = df_predictions.merge(
+        training_data, on=["user_id", "item_id"], how="left", indicator=True
+    )
+    df_predictions = df_predictions[df_predictions["_merge"] == "left_only"].drop(
+        columns=["_merge"]
+    )
+
     return df_predictions
 
 
@@ -179,13 +198,12 @@ def compute_metrics(
         k=k,
     )
 
-    # These metrics are not computed correctly for now, will be fixed once we filter the (user_id, item_id) pairs that are both in train and test sets.
     coverage = catalog_coverage(
-        train_data, test_data, col_user=col_user, col_item=col_item
+        train_data, df_predictions, col_user=col_user, col_item=col_item
     )
 
     novelty_metric = novelty(
-        train_data, test_data, col_user=col_user, col_item=col_item
+        train_data, df_predictions, col_user=col_user, col_item=col_item
     )
 
     ## Assemble metrics in dict

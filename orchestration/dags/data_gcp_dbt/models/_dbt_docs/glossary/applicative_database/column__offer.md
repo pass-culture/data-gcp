@@ -97,4 +97,3 @@ offer show sub type for shows. {% enddocs %}
 {% docs column__last_offer_creation_date %} Date of the last offer creation. {% enddocs %}
 {% docs column__first_headline_date %} First date of headline on the app venue page. {% enddocs %}
 {% docs column__last_headline_date %} Last date of headline on the app venue page. {% enddocs %}
-

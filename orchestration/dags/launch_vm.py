@@ -89,7 +89,6 @@ with DAG(
         "install_project": Param(default=True, type="boolean"),
         "use_gke_network": Param(default=False, type="boolean"),
         "disk_size_gb": Param(default="100", type="string"),
-        "installer": Param(default="uv", enum=["uv"]),
         "install_type": Param(
             default="simple", enum=["simple", "engineering", "science", "analytics"]
         ),

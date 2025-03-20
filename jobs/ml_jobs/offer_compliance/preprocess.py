@@ -1,18 +1,21 @@
+import functools
 import json
+import operator
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import typer
 
-from commons.constants import MODEL_DIR, STORAGE_PATH
-from commons.data_collect_queries import read_from_gcs
-from fraud.offer_compliance_model.package_api_model import PreprocessingPipeline
-from fraud.offer_compliance_model.utils.constants import CONFIGS_PATH
+from constants import CONFIGS_PATH, STORAGE_PATH
+from package_api_model import PreprocessingPipeline
+from utils.data_collect_queries import read_from_gcs
 
 
 def filter_df_for_training(df: pd.DataFrame, features: dict) -> pd.DataFrame:
-    scoring_features = sum(features["catboost_features_types"].values(), [])
+    scoring_features = functools.reduce(
+        operator.iadd, features["catboost_features_types"].values(), []
+    )
     # Set target
     df["target"] = np.where(df["offer_validation"] == "APPROVED", 1, 0)
     scoring_features.append("target")
@@ -35,7 +38,7 @@ def preprocess(
         help="Name of the cleaned dataframe",
     ),
 ):
-    config_file_path = Path(f"{MODEL_DIR}/{CONFIGS_PATH}/{config_file_name}.json")
+    config_file_path = Path(f"{CONFIGS_PATH}/{config_file_name}.json")
     features = json.loads(config_file_path.read_text(encoding="utf-8"))
 
     offer_compliance_raw = read_from_gcs(

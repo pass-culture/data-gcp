@@ -19,7 +19,11 @@ from commons.constants import (
 )
 from commons.data_collect_queries import read_from_gcs
 from commons.mlflow_tools import connect_remote_mlflow
-from two_towers_model.utils.evaluate import evaluate, save_pca_representation
+from two_towers_model.utils.evaluate import (
+    evaluate,
+    plot_metrics_evolution,
+    save_pca_representation,
+)
 
 
 def main(
@@ -98,12 +102,18 @@ def main(
         item_data=item_data,
         figures_folder=pca_plots_path,
     )
+    # Create metrics evolution plots
+    metrics_plots_path = f"{MODEL_DIR}/metrics_plots/"
+    os.makedirs(metrics_plots_path, exist_ok=True)
+    plot_metrics_evolution(metrics, list_k, metrics_plots_path)
+
     connect_remote_mlflow()
     with mlflow.start_run(
         experiment_id=experiment_id, run_id=run_id, nested=True
     ) as run:
         mlflow.log_metrics(metrics)
         mlflow.log_artifacts(pca_plots_path, "pca_plots")
+        mlflow.log_artifacts(metrics_plots_path, "metrics_plots")
 
     print("------- EVALUATE DONE -------")
 

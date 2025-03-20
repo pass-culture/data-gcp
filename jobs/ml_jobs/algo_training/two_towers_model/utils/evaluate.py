@@ -347,6 +347,62 @@ def save_pca_representation(
     fig.savefig(figures_folder + "ALL_CATEGORIES.pdf")
 
 
+def plot_metrics_evolution(metrics, list_k, figures_folder):
+    """
+    Plot the evolution of metrics with different k values
+
+    Args:
+        metrics: Dictionary containing metrics for different k values
+        figures_folder: Folder to save the plot
+
+    Returns:
+        None
+    """
+    logger.info("Creating metrics evolution plot")
+
+    # Prepare data for plotting
+    precision_values = [
+        metrics[metric_name]
+        for metric_name in metrics.keys()
+        if metric_name.startswith("precision")
+    ]
+    recall_values = [
+        metrics[metric_name]
+        for metric_name in metrics.keys()
+        if metric_name.startswith("recall")
+    ]
+    coverage_values = [
+        metrics[metric_name]
+        for metric_name in metrics.keys()
+        if metric_name.startswith("coverage")
+    ]
+    novelty_values = [
+        metrics[metric_name]
+        for metric_name in metrics.keys()
+        if metric_name.startswith("novelty")
+    ]
+
+    # Create plot
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    # Plot each metric
+    ax.plot(list_k, precision_values, marker="o", label="Precision")
+    ax.plot(list_k, recall_values, marker="s", label="Recall")
+    ax.plot(list_k, coverage_values, marker="^", label="Coverage")
+    ax.plot(list_k, novelty_values, marker="d", label="Novelty")
+
+    ax.set_xlabel("k (Number of recommendations)")
+    ax.set_ylabel("Score")
+    ax.set_title("Evolution of Metrics with k")
+    ax.grid(True)
+    ax.legend()
+
+    # Save the plot
+    plot_path = f"{figures_folder}/metrics_evolution.png"
+    fig.savefig(plot_path)
+    logger.info(f"Metrics evolution plot saved to {plot_path}")
+
+
 ## Baselines: random and most popular
 
 

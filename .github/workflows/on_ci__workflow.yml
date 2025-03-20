@@ -71,6 +71,7 @@ jobs:
         uses: tj-actions/changed-files@v41
         with:
           files: "jobs/ml_jobs/**"
+          files_ignore: "jobs/ml_jobs/_template/**"
           json: true
           dir_names: true
           dir_names_max_depth: 5

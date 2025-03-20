@@ -1,2 +1,2 @@
 def test_sample():
-    assert 1 == int(1.5)
+    assert int(1.5) == 1

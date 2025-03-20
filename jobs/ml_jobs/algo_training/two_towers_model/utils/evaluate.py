@@ -79,9 +79,6 @@ def generate_predictions(
                         the predicted interaction score (dot product between user and item two tower embeddings).
     """
 
-    # Get unique items to score
-    offers_to_score = test_data.item_id.unique()
-
     ## Truncate test data if not all users are to be evaluated
     total_n_users = len(test_data["user_id"].unique())
     if not all_users:
@@ -93,9 +90,15 @@ def generate_predictions(
     else:
         logger.info(f"Computing metrics for all users ({total_n_users}) users)")
 
+    # Get unique items to score TODO DELETE THIS AFTER HOTFIX PASSES
+    offers_to_score = test_data.item_id.unique()
+    logger.info(f"Number of unique items to score: {len(offers_to_score)}")
+
     # Create List to store predictions for each user
     list_df_predictions = []
-    for current_user in tqdm(test_data["user_id"].unique()):
+    for current_user in tqdm(
+        test_data["user_id"].unique(), mininterval=20, maxinterval=60
+    ):
         # Prepare input for prediction
         prediction_input = [
             np.array([current_user] * len(offers_to_score)),

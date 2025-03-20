@@ -78,9 +78,10 @@ def generate_predictions(
         pd.DataFrame: DataFrame with columns ['user_id', 'item_id', 'score'], where score represents
                         the predicted interaction score (dot product between user and item two tower embeddings).
     """
-
-    # Get unique items to score
-    offers_to_score = test_data.item_id.unique()
+    ## TODO UNCOMMENT THIS AFTER BATCHING IS DONE
+    ## Get unique items to score
+    # offers_to_score = test_data.item_id.unique()
+    # logger.info(f"Number of unique items to score: {len(offers_to_score)}")
 
     ## Truncate test data if not all users are to be evaluated
     total_n_users = len(test_data["user_id"].unique())
@@ -93,9 +94,15 @@ def generate_predictions(
     else:
         logger.info(f"Computing metrics for all users ({total_n_users}) users)")
 
+    # TODO DELETE THIS AFTER BATCHING IS DONE
+    offers_to_score = test_data.item_id.unique()
+    logger.info(f"Number of unique items to score: {len(offers_to_score)}")
+
     # Create List to store predictions for each user
     list_df_predictions = []
-    for current_user in tqdm(test_data["user_id"].unique()):
+    for current_user in tqdm(
+        test_data["user_id"].unique(), mininterval=20, maxinterval=60
+    ):
         # Prepare input for prediction
         prediction_input = [
             np.array([current_user] * len(offers_to_score)),

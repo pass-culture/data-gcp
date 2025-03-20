@@ -131,12 +131,10 @@ create_microservice_ml:
 	MS_TYPE=ml MS_NAME=$(MS_NAME) MS_BASE_PATH=jobs/ml_jobs make create_microservice
 
 create_microservice_etl_external:
-	MS_TYPE=etl_external MS_NAME=$(MS_NAME) make create_microservice
-	MICROSERVICE_PATH=jobs/etl_jobs/external/$(MS_NAME) PHYTON_VERSION=3.10 VENV_NAME=data-gcp-$(MS_NAME) REQUIREMENTS_NAME=requirements.txt make _install_microservice
+	MS_TYPE=etl_external MS_NAME=$(MS_NAME) MS_BASE_PATH=jobs/etl_jobs/external make create_microservice
 
 create_microservice_etl_internal:
-	MS_TYPE=etl_internal MS_NAME=$(MS_NAME) make create_microservice
-	MICROSERVICE_PATH=jobs/etl_jobs/internal/$(MS_NAME) PHYTON_VERSION=3.10 VENV_NAME=data-gcp-$(MS_NAME) REQUIREMENTS_NAME=requirements.txt make _install_microservice
+	MS_TYPE=etl_internal MS_NAME=$(MS_NAME) MS_BASE_PATH=jobs/etl_jobs/internal make create_microservice
 
 ruff_fix:
 	ruff check --fix

@@ -149,7 +149,9 @@ select
     row_number() over (
         partition by v.venue_managing_offerer_id
         order by
-            v.total_theoretic_revenue desc, v.total_created_offers desc, v.venue_name desc
+            v.total_theoretic_revenue desc,
+            v.total_created_offers desc,
+            v.venue_name desc
     ) as offerer_rank_desc,
     row_number() over (
         partition by v.venue_managing_offerer_id

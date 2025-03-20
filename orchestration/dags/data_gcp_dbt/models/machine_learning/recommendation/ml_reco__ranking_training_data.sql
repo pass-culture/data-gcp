@@ -43,7 +43,7 @@ with
             offer_created_delta_in_days,
             offer_mean_stock_price,
             offer_max_stock_beginning_days,
-            offer_iris_id,
+            offer_iris_internal_id,
             offer_centroid,
             offer_centroid_x,
             offer_centroid_y
@@ -116,7 +116,7 @@ select
     offer_features.offer_created_delta_in_days,
     offer_features.offer_mean_stock_price,
     offer_features.offer_max_stock_beginning_days,
-    offer_features.offer_iris_id,
+    offer_features.offer_iris_internal_id,
     offer_features.offer_centroid,
     offer_features.offer_centroid_x,
     offer_features.offer_centroid_y,

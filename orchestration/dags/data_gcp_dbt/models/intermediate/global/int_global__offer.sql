@@ -67,7 +67,6 @@ select
     v.venue_name,
     v.venue_label,
     v.partner_id,
-    v.offerer_id,
     v.venue_managing_offerer_id,
     v.offerer_name,
     v.venue_type_label,

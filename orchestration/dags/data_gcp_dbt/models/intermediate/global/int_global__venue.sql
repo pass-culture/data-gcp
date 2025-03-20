@@ -100,6 +100,21 @@ select
     v.total_non_cancelled_tickets,
     v.total_current_year_non_cancelled_tickets,
     v.offerer_address_id,
+    v.venue_image_source,
+    v.total_distinct_headline_offers,
+    v.has_headline_offer,
+    v.first_headline_offer_date,
+    v.last_headline_offer_date,
+    v.venue_adage_inscription_date,
+    ofr.offerer_name,
+    ofr.offerer_validation_status,
+    ofr.offerer_is_active,
+    ofr.dms_accepted_at,
+    ofr.first_dms_adage_status,
+    ofr.is_reference_adage,
+    ofr.is_synchro_adage,
+    ofr.total_reimbursement_points,
+    ofr.is_local_authority,
     coalesce(
         date_diff(current_date, boh.last_bookable_offer_date, day) <= 30, false
     ) as is_active_last_30days,
@@ -122,26 +137,11 @@ select
         date_diff(current_date, boh.last_collective_bookable_offer_date, year) = 0,
         false
     ) as is_collective_active_current_year,
-    v.venue_image_source,
-    v.total_distinct_headline_offers,
-    v.has_headline_offer,
-    v.first_headline_offer_date,
-    v.last_headline_offer_date,
-    v.venue_adage_inscription_date,
-    ofr.offerer_id,
-    ofr.offerer_name,
-    ofr.offerer_validation_status,
-    ofr.offerer_is_active,
-    ofr.dms_accepted_at,
-    ofr.first_dms_adage_status,
-    ofr.is_reference_adage,
-    ofr.is_synchro_adage,
-    ofr.total_reimbursement_points,
     concat(
         "https://passculture.pro/structures/",
         ofr.offerer_humanized_id,
         "/lieux/",
-        venue_humanized_id
+        v.venue_humanized_id
     ) as venue_pc_pro_link,
     case
         when v.venue_is_permanent then concat("venue-", v.venue_id) else ofr.partner_id
@@ -149,7 +149,7 @@ select
     row_number() over (
         partition by v.venue_managing_offerer_id
         order by
-            v.total_theoretic_revenue desc, v.total_created_offers desc, venue_name desc
+            v.total_theoretic_revenue desc, v.total_created_offers desc, v.venue_name desc
     ) as offerer_rank_desc,
     row_number() over (
         partition by v.venue_managing_offerer_id
@@ -157,10 +157,9 @@ select
             v.total_theoretic_revenue desc,
             v.total_created_offers desc,
             v.venue_name asc
-    ) as offerer_rank_asc,
-    ofr.is_local_authority
+    ) as offerer_rank_asc
 from {{ ref("int_applicative__venue") }} as v
 left join
     {{ ref("int_global__offerer") }} as ofr
     on v.venue_managing_offerer_id = ofr.offerer_id
-left join bookable_offer_history as boh on boh.venue_id = v.venue_id
+left join bookable_offer_history as boh on v.venue_id = boh.venue_id

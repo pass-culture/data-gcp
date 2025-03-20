@@ -8,12 +8,20 @@ models:
         description: "{{ doc('column__user_id') }}"
       - name: consult_offer
         description: "{{ doc('column__total_item_consulted') }}"
+        data_tests:
+          - not_null
       - name: booking_cnt
         description: "{{ doc('column__total_bookings') }}"
+        data_tests:
+          - not_null
       - name: user_theoretical_remaining_credit
         description: "{{ doc('column__total_theoretical_remaining_credit') }}"
+        data_tests:
+          - not_null
       - name: has_added_offer_to_favorites
         description: "{{ doc('column__user_has_added_offer_to_favorites') }}"
+        data_tests:
+          - not_null
       - name: user_queries
         description: "{{ doc('column__search_query') }}"
       - name: qpi_subcategory_ids

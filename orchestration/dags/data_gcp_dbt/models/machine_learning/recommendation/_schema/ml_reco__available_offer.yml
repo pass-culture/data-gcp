@@ -1,0 +1,12 @@
+models:
+  - name: ml_reco__available_offer
+    description: "{{ doc('description__ml_reco__available_offer') }}"
+    data_tests:
+      - elementary.volume_anomalies:
+          tags: [elementary]
+          training_period:
+            period: day
+            count: 7
+          detection_period:
+            period: day
+            count: 1

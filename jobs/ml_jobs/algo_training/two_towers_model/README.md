@@ -270,7 +270,7 @@ This script handles the MLflow integration and orchestrates the evaluation proce
 
 #### Baselines
 - Random baseline: generates random prediction item for each user.
-- Popularity-based baseline: generates recommendations using top q% most popular items, q being a quantile parameter. E.G. if q=0.99, then the popularity baseline model will predict items from the 0.1% most clicked and booked items.
+- Popularity-based baseline: generates recommendations using top k most popular items.
 
 #### Visualization
 - PCA-based visualization of item embeddings

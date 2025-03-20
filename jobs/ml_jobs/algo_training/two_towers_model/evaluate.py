@@ -18,8 +18,8 @@ from commons.constants import (
 )
 from commons.data_collect_queries import read_from_gcs
 from commons.mlflow_tools import connect_remote_mlflow
-from two_towers_model.utils.evaluate import (
-    evaluate,
+from two_towers_model.utils.evaluate import evaluate
+from two_towers_model.utils.evaluation_plots import (
     plot_metrics_evolution,
     save_pca_representation,
 )
@@ -43,10 +43,6 @@ def main(
     ),
     dummy: bool = typer.Option(
         False, help="Whether to evaluate metrics on dummy models or not"
-    ),
-    quantile_threshold: float = typer.Option(
-        0.99,
-        help="Threshold to consider top X% most popular items (0-1 range) in recommend popular dummy model",
     ),
 ):
     logger.info("-------EVALUATE START------- ")
@@ -85,7 +81,6 @@ def main(
         list_k=list_k,
         all_users=all_users,
         dummy=dummy,
-        quantile_threshold=quantile_threshold,
     )
 
     # Export the PCA representations of the item embeddings

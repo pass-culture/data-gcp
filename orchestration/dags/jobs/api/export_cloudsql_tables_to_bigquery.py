@@ -7,6 +7,7 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
+    ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     GCP_REGION,
     RECOMMENDATION_SQL_INSTANCE,
@@ -49,6 +50,9 @@ os.environ["AIRFLOW_CONN_PROXY_POSTGRES_TCP"] = (
     + f"?database_type=postgres&project_id={GCP_PROJECT_ID}&location={GCP_REGION}&instance={DATABASE_INSTANCE_NAME}&use_proxy=True&sql_proxy_use_tcp=True"
 )
 
+# TODO: Replace schedule in dev with a VM job
+SCHEDULE_DICT = {"prod": "0 1 * * *", "dev": None, "stg": "0 1 * * *"}[ENV_SHORT_NAME]
+
 
 def fetch_dates_imported_in_raw(**context):
     base_table = PAST_OFFER_CONTEXT_RAW_QUERY["destination_table"].split("$")[0]
@@ -70,7 +74,7 @@ with DAG(
     "export_cloudsql_tables_to_bigquery_v2",
     default_args=DEFAULT_DAG_ARGS,
     description="Export tables from recommendation CloudSQL to BigQuery",
-    schedule_interval=get_airflow_schedule("0 1 * * *"),
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=180),
     user_defined_macros=macros.default,

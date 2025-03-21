@@ -58,7 +58,7 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
 }
 
-schedule_dict = {"prod": "0 12 * * 5", "dev": "0 0 * * *", "stg": "0 12 * * 3"}
+schedule_dict = {"prod": "0 12 * * 5", "dev": None, "stg": "0 12 * * 3"}
 
 
 with DAG(

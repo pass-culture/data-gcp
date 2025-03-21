@@ -10,7 +10,7 @@
 
 select
     fe.event_date,
-    o.offerer_id,
+    o.venue_managing_offerer_id as offerer_id,
     o.offerer_name,
     o.venue_id,
     o.venue_name,

@@ -282,7 +282,6 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         "command",
         "environment",
         "gce_zone",
-        "installer",
         "base_dir",
     ]
     DEFAULT_EXPORT = {
@@ -300,12 +299,10 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         command: str,
         base_dir: str = None,
         environment: t.Dict[str, str] = {},
-        installer: str = "uv",
         *args,
         **kwargs,
     ):
         self.base_dir = base_dir
-        self.installer = installer
         self.environment = environment
         self.command = command
         self.instance_name = instance_name
@@ -328,15 +325,10 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         if self.base_dir is not None:
             commands_list.append(f"cd ~/{self.base_dir}")
 
-        if self.installer == "uv":
-            commands_list.append("source .venv/bin/activate")
-        else:
-            commands_list.append("echo no virtual environment activation")
-
+        commands_list.append("source .venv/bin/activate")
         commands_list.append(self.command)
 
-        final_command = "\n".join(commands_list)
-        self.command = final_command
+        self.command = "\n".join(commands_list)
         return super().execute(context)
 
 
@@ -344,7 +336,6 @@ class InstallDependenciesOperator(SSHGCEOperator):
     REPO = "https://github.com/pass-culture/data-gcp.git"
     template_fields = set(
         [
-            "installer",
             "requirement_file",
             "branch",
             "instance_name",
@@ -359,7 +350,6 @@ class InstallDependenciesOperator(SSHGCEOperator):
         self,
         instance_name: str,
         requirement_file: str = "requirements.txt",
-        installer: str = "uv",  # 'uv'
         branch: str = "main",  # Branch for repo
         environment: t.Dict[str, str] = {},
         python_version: str = "3.10",
@@ -371,7 +361,6 @@ class InstallDependenciesOperator(SSHGCEOperator):
         self.requirement_file = requirement_file
         self.environment = environment
         self.python_version = python_version
-        self.installer = installer
         self.branch = branch
         self.base_dir = base_dir
         # Call the parent class constructor but do not pass the command yet
@@ -380,17 +369,14 @@ class InstallDependenciesOperator(SSHGCEOperator):
             command="",  # Placeholder command
             environment=self.environment,
             base_dir=self.base_dir,  # Pass base_dir to parent class
-            installer=self.installer,
             *args,
             **kwargs,
         )
 
     def execute(self, context):
-        if self.installer not in ["uv"]:
-            raise ValueError(f"Invalid installer: {self.installer}")
         # The templates have been rendered; we can construct the command
         command = self.make_install_command(
-            self.installer, self.requirement_file, self.branch, self.base_dir
+            self.requirement_file, self.branch, self.base_dir
         )
         # Use the command in the parent SSHGCEOperator to execute on the remote instance
         self.command = command
@@ -398,13 +384,12 @@ class InstallDependenciesOperator(SSHGCEOperator):
 
     def make_install_command(
         self,
-        installer: str,
         requirement_file: str,
         branch: str,
         base_dir: str = "data-gcp",
     ) -> str:
         """
-        Construct the command to clone the repo and install dependencies based on the installer.
+        Construct the command to clone the repo and install dependencies.
         """
         # Define the directory where the repo will be cloned
         REPO_DIR = "data-gcp"
@@ -427,16 +412,17 @@ class InstallDependenciesOperator(SSHGCEOperator):
             cd ~/
         """
 
-        if installer == "uv":
-            install_command = f"""
-                curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh &&
-                cd {base_dir} &&
-                uv venv --python {self.python_version} &&
-                source .venv/bin/activate &&
+        install_command = f"""
+            curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh &&
+            cd {base_dir} &&
+            uv venv --python {self.python_version} &&
+            source .venv/bin/activate &&
+            if [ -f "{requirement_file}" ]; then
                 uv pip sync {requirement_file}
-            """
-        else:
-            raise ValueError(f"Invalid installer: {installer}. Only uv available")
+            else
+                uv sync
+            fi
+        """
         # Combine the git clone and installation commands
         return f"""
             {clone_command}

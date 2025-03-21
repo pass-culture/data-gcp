@@ -10,7 +10,7 @@ SCHEDULE_DICT = {
         "stg": "45 4 * * *",
         "dev": "45 4 * * *",
     },
-    "dbt_artifacts": "0 5 * * *",
+    "dbt_artifacts": "0 6 * * *",
     "dbt_monthly": "30 4 1 * *",
     "dbt_run_dag": "45 2 * * *",
     "dbt_weekly": "0 4 * * 1",
@@ -18,7 +18,7 @@ SCHEDULE_DICT = {
     "import_applicative_database": "0 1 * * *",
     "import_intraday_firebase_data": "0 1 * * *",
     "link_items": {"prod": "0 20 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"},
-    "sync_bq_to_cloudsql_recommendation_tables": "00 5 * * *",
+    "sync_bq_to_cloudsql_recommendation_tables": "00 6 * * *",
 }
 
 

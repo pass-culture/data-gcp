@@ -5,7 +5,7 @@ from pathlib import Path
 import jinja2
 
 from config import MaterializedView
-from jobs.import_sql import get_db_connection
+from utils import get_db_connection
 
 logger = logging.getLogger(__name__)
 

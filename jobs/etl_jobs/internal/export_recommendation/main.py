@@ -8,6 +8,11 @@ from config import (
     TABLES,
     MaterializedView,
 )
+from jobs.cloudsql_to_bq import (
+    export_hourly_data_to_gcs,
+    full_export_process,
+    load_gcs_to_bigquery,
+)
 from jobs.export import export_table_to_gcs
 from jobs.import_sql import import_table_to_sql
 from jobs.materialize import refresh_materialized_view
@@ -33,6 +38,17 @@ def parse_date(date_str: str) -> datetime:
         return datetime.strptime(date_str, "%Y%m%d")
     except ValueError:
         raise typer.BadParameter("Date must be in YYYYMMDD format")
+
+
+def parse_hour(hour_str: str) -> int:
+    """Parse hour string to integer."""
+    try:
+        hour = int(hour_str)
+        if hour < 0 or hour > 23:
+            raise ValueError("Hour must be between 0 and 23")
+        return hour
+    except ValueError as e:
+        raise typer.BadParameter(str(e))
 
 
 @app.command()
@@ -89,6 +105,95 @@ def materialize_gcloud(
         refresh_materialized_view(view)
     except ValueError:
         raise typer.BadParameter(f"Invalid view name: {view_name}")
+
+
+@app.command()
+def hourly_export_cloudsql_to_gcs(
+    table_name: Annotated[
+        str, typer.Option(help="Name of the table to export (e.g., past_offer_context)")
+    ],
+    bucket_path: Annotated[str, typer.Option(help="GCS bucket path for storage")],
+    date: Annotated[str, typer.Option(help="Date in YYYYMMDD format")],
+    hour: Annotated[str, typer.Option(help="Hour of the day (0-23)")],
+    recover_missed: Annotated[
+        bool,
+        typer.Option(
+            help="Whether to check for and recover missed data from failed jobs"
+        ),
+    ] = False,
+) -> None:
+    """Export data incrementally from CloudSQL to GCS hourly."""
+    execution_date = parse_date(date)
+    hour_int = parse_hour(hour)
+
+    logger.info(
+        f"Starting incremental export for table {table_name} at {date} hour {hour}"
+    )
+    export_hourly_data_to_gcs(
+        table_name=table_name,
+        bucket_path=bucket_path,
+        execution_date=execution_date,
+        hour=hour_int,
+        recover_missed=recover_missed,
+    )
+
+
+@app.command()
+def hourly_load_gcs_to_bigquery(
+    table_name: Annotated[
+        str, typer.Option(help="Name of the table to load (e.g., past_offer_context)")
+    ],
+    bucket_path: Annotated[
+        str, typer.Option(help="GCS bucket path where data is stored")
+    ],
+    date: Annotated[str, typer.Option(help="Date in YYYYMMDD format")],
+    hour: Annotated[str, typer.Option(help="Hour of the day (0-23)")],
+) -> None:
+    """Load data from GCS to BigQuery with hourly granularity."""
+    execution_date = parse_date(date)
+    hour_int = parse_hour(hour)
+
+    logger.info(
+        f"Loading data from GCS to BigQuery for table {table_name} at {date} hour {hour}"
+    )
+    load_gcs_to_bigquery(
+        table_name=table_name,
+        bucket_path=bucket_path,
+        execution_date=execution_date,
+        hour=hour_int,
+    )
+
+
+@app.command()
+def hourly_export_process(
+    table_name: Annotated[
+        str,
+        typer.Option(help="Name of the table to process (e.g., past_offer_context)"),
+    ],
+    bucket_path: Annotated[str, typer.Option(help="GCS bucket path for storage")],
+    date: Annotated[str, typer.Option(help="Date in YYYYMMDD format")],
+    hour: Annotated[str, typer.Option(help="Hour of the day (0-23)")],
+    recover_missed: Annotated[
+        bool,
+        typer.Option(
+            help="Whether to check for and recover missed data from failed jobs"
+        ),
+    ] = True,
+) -> None:
+    """Run the full hourly export process: CloudSQL -> GCS -> BigQuery."""
+    execution_date = parse_date(date)
+    hour_int = parse_hour(hour)
+
+    logger.info(
+        f"Starting full hourly export process for table {table_name} at {date} hour {hour}"
+    )
+    full_export_process(
+        table_name=table_name,
+        bucket_path=bucket_path,
+        execution_date=execution_date,
+        hour=hour_int,
+        recover_missed=recover_missed,
+    )
 
 
 if __name__ == "__main__":

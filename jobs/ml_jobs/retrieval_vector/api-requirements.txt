@@ -86,7 +86,9 @@ idna==3.10
     #   requests
     #   yarl
 importlib-metadata==8.5.0
-    # via jina-hubble-sdk
+    # via
+    #   flask
+    #   jina-hubble-sdk
 itsdangerous==2.2.0
     # via flask
 jina-hubble-sdk==0.39.0
@@ -277,7 +279,7 @@ taskgroup==0.0.0a4
     # via hypercorn
 threadpoolctl==3.5.0
     # via scikit-learn
-tokenizers==0.19.1
+tokenizers==0.21.1
     # via transformers
 tomli==2.0.1
     # via hypercorn
@@ -295,7 +297,7 @@ tqdm==4.66.5
     #   nltk
     #   sentence-transformers
     #   transformers
-transformers==4.44.2
+transformers==4.48.0
     # via sentence-transformers
 triton==3.0.0
     # via torch

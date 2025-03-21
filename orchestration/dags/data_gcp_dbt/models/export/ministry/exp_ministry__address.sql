@@ -1,5 +1,3 @@
-{{ config(tags="monthly", labels={"schedule": "monthly"}) }}
-
 select
     address_id,
     address_ban_id,

@@ -1,5 +1,3 @@
-{{ config(tags="monthly", labels={"schedule": "monthly"}) }}
-
 select
     offerer_address_id,
     offerer_address_label,

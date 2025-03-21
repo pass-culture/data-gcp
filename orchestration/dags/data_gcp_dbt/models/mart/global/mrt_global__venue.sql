@@ -82,7 +82,6 @@ select
     is_individual_active_current_year,
     is_collective_active_last_30days,
     is_collective_active_current_year,
-    offerer_id,
     offerer_name,
     offerer_validation_status,
     offerer_is_active,

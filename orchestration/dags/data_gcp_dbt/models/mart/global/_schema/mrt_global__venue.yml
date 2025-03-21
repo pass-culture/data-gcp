@@ -267,11 +267,6 @@ models:
       - name: is_collective_active_current_year
         description: '{{ doc("column__is_collective_active_current_year") }}'
         data_type: BOOLEAN
-      - name: offerer_id
-        description: '{{ doc("column__offerer_id") }}'
-        data_type: STRING
-        data_tests:
-          - not_null
       - name: offerer_name
         description: '{{ doc("column__offerer_name") }}'
         data_type: STRING

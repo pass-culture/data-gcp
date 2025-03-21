@@ -12,7 +12,7 @@ select
     o.venue_name,
     o.venue_label,
     o.partner_id,
-    o.offerer_id,
+    o.venue_managing_offerer_id,
     o.offerer_name,
     o.venue_type_label,
     o.venue_region_name,

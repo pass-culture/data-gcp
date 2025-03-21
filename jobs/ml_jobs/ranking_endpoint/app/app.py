@@ -1,7 +1,7 @@
 from custom_logging import logger
 from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
-from model import PredictPipeline
+from model import DiversificationPipeline, PredictPipeline
 
 app = Flask(__name__)
 CORS(app)
@@ -22,8 +22,20 @@ def predict():
     try:
         input_json = request.get_json()["instances"]
         results = model.predict(input_json)
+        item_semantic_embeddings = [
+            item["offer_semantic_embeding"] for item in input_json
+        ]
+        scores = [item["score"] for item in results]
+        results_diverisified = [
+            result
+            for result in results
+            if result["offer_id"]
+            in DiversificationPipeline(
+                item_semantic_embeddings, scores
+            ).get_sampled_ids()
+        ]
 
-        return jsonify({"predictions": results}), 200
+        return jsonify({"predictions": results_diverisified}), 200
 
     except Exception as e:
         log_data = {"event": "predict", "result": results, "request": request.json()}

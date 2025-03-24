@@ -15,6 +15,7 @@ SCHEDULE_DICT = {
     "dbt_monthly": "30 4 1 * *",
     "dbt_run_dag": "45 2 * * *",
     "dbt_weekly": "0 4 * * 1",
+    "embedding_reduction_item": "0 12 * * 0",
     "historize_applicative_database": "15 3 * * *",
     "import_applicative_database": "0 1 * * *",
     "import_intraday_firebase_data": "0 1 * * *",

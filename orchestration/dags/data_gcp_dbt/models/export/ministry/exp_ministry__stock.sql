@@ -1,5 +1,3 @@
-{{ config(tags="monthly", labels={"schedule": "monthly"}) }}
-
 select
     stock_id,
     stock_beginning_date,

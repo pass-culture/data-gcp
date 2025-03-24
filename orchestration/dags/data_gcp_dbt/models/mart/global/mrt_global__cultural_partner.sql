@@ -127,7 +127,7 @@ with
             = coalesce(o.partner_type, top_venue_per_offerer.partner_type)
         where
             not o.is_local_authority
-            and v.offerer_id is null
+            and v.venue_managing_offerer_id is null
             and o.offerer_validation_status = "VALIDATED"
             and o.offerer_is_active
     )

@@ -42,9 +42,9 @@ jobs:
             SLACK_BOT_TOKEN:passculture-metier-ehp/passculture-ci-slack-bot-token
             ARTIFACT_REGISTRY_SERVICE_ACCOUNT:passculture-metier-ehp/passculture-main-artifact-registry-service-account
             ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER:passculture-metier-ehp/infra-prod-gcp-workload-identity-provider
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
+      # - uses: actions/setup-python@v5
+      #   with:
+      #     python-version: "3.10"
       - uses: yezz123/setup-uv@v4
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3

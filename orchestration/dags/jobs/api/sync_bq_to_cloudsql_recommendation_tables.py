@@ -21,8 +21,8 @@ from airflow.utils.task_group import TaskGroup
 default_args = {
     "start_date": datetime(2025, 3, 10),
     "on_failure_callback": on_failure_combined_callback,
-    "retries": 0,
-    "retry_delay": timedelta(minutes=2),
+    "retries": 3,
+    "retry_delay": timedelta(minutes=60),
 }
 
 DEFAULT_REGION = "europe-west1"

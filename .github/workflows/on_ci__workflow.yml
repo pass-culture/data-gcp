@@ -117,7 +117,7 @@ jobs:
 
   test-orchestration:
     needs: find-changed-orchestration
-    if: needs.find-changed-orchestration.outputs.run_tests == 'true'
+    # if: needs.find-changed-orchestration.outputs.run_tests == 'true'
     uses: ./.github/workflows/reusable_test_orchestration.yml
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}

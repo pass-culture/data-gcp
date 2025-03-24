@@ -1,6 +1,6 @@
 datetime
 gcsfs>= 2023.5.0
-huggingface-hub==0.10.1
+huggingface-hub==0.15.1
 loguru==0.6.0
 numpy<2.0.0
 pandas-gbq==0.23.1
@@ -11,7 +11,7 @@ protobuf>=3.9.2
 psutil
 pytest==6.1.1
 requests==2.31.0
-sentence_transformers==2.2.2
+sentence_transformers==2.3
 torch==2.4.1
 tqdm
 typer==0.7.0

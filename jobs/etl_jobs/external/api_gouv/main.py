@@ -2,10 +2,10 @@ from datetime import datetime
 
 import pandas as pd
 import typer
-from bulk_geocoding import geocode
 
 from utils import chunks, query, save
 from utils.constant import EXPECTED_ADRESS_COLUMNS
+from utils.geocoding import AddressGeocoder
 
 run = typer.Typer()
 
@@ -25,11 +25,12 @@ def user_adress(
         return
 
     print(f"Processing {df.shape[0]} rows... ")
+    geocoder = AddressGeocoder()
     results = []
     for chunk in chunks(
         df[["user_id", "user_full_address"]].to_dict(orient="records"), chunk_size
     ):
-        r = geocode(chunk, columns=["user_full_address"])
+        r = geocoder.geocode_batch(chunk, columns=["user_full_address"])
         results.extend(r)
         print(f"Processed {len(r)} rows... ")
 

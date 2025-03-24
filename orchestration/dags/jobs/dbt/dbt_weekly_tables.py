@@ -18,8 +18,8 @@ from airflow.operators.dummy_operator import DummyOperator
 
 default_args = {
     "start_date": datetime.datetime(2020, 12, 20),
-    "retries": 1,
-    "retry_delay": datetime.timedelta(minutes=2),
+    "retries": 3,
+    "retry_delay": datetime.timedelta(minutes=60),
     "project_id": GCP_PROJECT_ID,
 }
 dag_id = "dbt_weekly"

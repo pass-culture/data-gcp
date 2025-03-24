@@ -1,5 +1,3 @@
-{{ config(tags="monthly", labels={"schedule": "monthly"}) }}
-
 select
     user_id,
     user_department_code,

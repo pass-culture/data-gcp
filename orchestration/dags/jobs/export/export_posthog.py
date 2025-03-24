@@ -55,7 +55,7 @@ GCE_PARAMS = {
 }
 
 
-schedule_dict = {"prod": "0 8 * * *", "dev": "0 12 * * *", "stg": "0 10 * * *"}
+schedule_dict = {"prod": "0 8 * * *", "dev": None, "stg": None}
 
 for job_name, table_name in TABLE_PARAMS.items():
     DAG_NAME = f"export_posthog_{job_name}"

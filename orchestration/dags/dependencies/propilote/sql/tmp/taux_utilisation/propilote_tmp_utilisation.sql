@@ -1,5 +1,4 @@
 -- noqa: disable=all
-
 with
     dates as (
         select month as month
@@ -19,8 +18,10 @@ with
             user.user_region_name,
             rd.academy_name,
             case
-                when deposit.deposit_type = 'grant_17_18' and deposit.user_age = 17 then 'grant_15_17'
-                when deposit.deposit_type = 'grant_17_18' and deposit.user_age >= 18 then 'grant_18'
+                when deposit.deposit_type = 'grant_17_18' and deposit.user_age = 17
+                then 'grant_15_17'
+                when deposit.deposit_type = 'grant_17_18' and deposit.user_age >= 18
+                then 'grant_18'
                 else deposit.deposit_type
             end as deposit_type
         from `{{ bigquery_analytics_dataset }}.global_deposit` as deposit

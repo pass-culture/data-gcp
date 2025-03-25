@@ -67,7 +67,6 @@ def generate_predictions(test_data: pd.DataFrame, all_users: bool) -> pd.DataFra
     offers_to_score does not contain previously seen items during train which prevents data leak.
 
     Args:
-        model: Trained Two tower retrieval model.
         test_data (pd.DataFrame): DataFrame containing test user-item interactions with at least
             'user_id' and 'item_id' columns.
         all_users : bool: If True, evaluate all users in the test dataset. If False, evaluate only a subset of users.
@@ -88,7 +87,6 @@ def generate_predictions(test_data: pd.DataFrame, all_users: bool) -> pd.DataFra
     else:
         logger.info(f"Computing metrics for all users ({total_n_users}) users)")
 
-    # TODO DELETE THIS AFTER BATCHING IS DONE
     offers_to_score = test_data.item_id.unique()
     logger.info(f"Number of unique items to score: {len(offers_to_score)}")
 
@@ -99,42 +97,62 @@ def generate_predictions(test_data: pd.DataFrame, all_users: bool) -> pd.DataFra
     sigma = np.load("sigma.npy")
     Vt = np.load("Vt.npy")
 
-    # Create List to store predictions for each user
+    # Create mappings
     mapped_items_to_score = [item_to_index.get(item) for item in offers_to_score]
     mapped_users_to_score = [
         user_to_index.get(user) for user in test_data["user_id"].unique()
     ]
-    reverse_item_mapping = {v: k for k, v in item_to_index.items()}
+    # reverse_item_mapping = {v: k for k, v in item_to_index.items()}
     reverse_user_mapping = {v: k for k, v in user_to_index.items()}
+
     list_df_predictions = []
     for mapped_current_user in tqdm(
         mapped_users_to_score, mininterval=20, maxinterval=60
     ):
-        # Generate predictions
+        # Skip if user not in training data
+        if mapped_current_user is None:
+            continue
+
         try:
-            mapped_prediction = np.dot(U[mapped_current_user, :] * sigma, Vt)
+            # Get user latent factors and scale by singular values
+            user_factors_scaled = U[mapped_current_user, :] * sigma
+
+            # Create item scores for this user
+            item_scores = []
+            valid_items = []
+
+            for i, mapped_item in enumerate(mapped_items_to_score):
+                if mapped_item is not None:
+                    # Get the item factors and compute score
+                    item_factors = Vt[:, mapped_item]
+                    score = np.dot(user_factors_scaled, item_factors)
+                    item_scores.append(score)
+                    valid_items.append(offers_to_score[i])
+
+            # Create user predictions dataframe
+            if valid_items:
+                user_predictions = pd.DataFrame(
+                    {
+                        "user_id": [reverse_user_mapping[mapped_current_user]]
+                        * len(valid_items),
+                        "item_id": valid_items,
+                        "score": item_scores,
+                    }
+                )
+                list_df_predictions.append(user_predictions)
+
         except Exception as e:
             logger.warning(
                 f"Error generating predictions for user {mapped_current_user}: {e}"
             )
-            mapped_prediction = np.zeros(len(offers_to_score))
+            continue
 
-        # Append predictions to final predictions DataFrame
-        current_user_predictions = {
-            "user_id": [reverse_user_mapping[mapped_current_user]]
-            * len(offers_to_score),
-            "item_id": [
-                reverse_item_mapping[mapped_item]
-                for mapped_item in mapped_items_to_score
-            ],
-            "score": mapped_prediction,
-        }
+    # Combine all user predictions
+    if list_df_predictions:
+        df_predictions = pd.concat(list_df_predictions, ignore_index=True)
+    else:
+        df_predictions = pd.DataFrame(columns=["user_id", "item_id", "score"])
 
-        list_df_predictions.append(current_user_predictions)
-
-    df_predictions = pd.concat(
-        [pd.DataFrame(df) for df in list_df_predictions], ignore_index=True
-    )
     return df_predictions
 
 

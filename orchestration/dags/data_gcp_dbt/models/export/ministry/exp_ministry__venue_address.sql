@@ -1,6 +1,6 @@
 select
     venue_id,
-    venue_street,
+    -- venue_street,
     venue_latitude,
     venue_longitude,
     venue_department_code,

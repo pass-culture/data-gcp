@@ -44,8 +44,8 @@ def build_interaction_matrix(df: pd.DataFrame) -> csr_matrix:
     item_to_index = {item: i for i, item in enumerate(unique_items)}
 
     # Save indexes locally
-    np.save(f"{TRAIN_DIR}/user_to_index.npy", user_to_index)
-    np.save(f"{TRAIN_DIR}/item_to_index.npy", item_to_index)
+    np.save("user_to_index.npy", user_to_index)
+    np.save("item_to_index.npy", item_to_index)
 
     # Create sparse matrix coordinates
     user_indices = [user_to_index[user] for user in df["user_id"]]
@@ -315,9 +315,9 @@ def train(
     U, sigma, Vt = compute_svd(train_interaction_matrix, N_LATENT_VECTORS)
 
     # Save U sigma and VT locally
-    np.save(f"{TRAIN_DIR}/U.npy", U)
-    np.save(f"{TRAIN_DIR}/sigma.npy", sigma)
-    np.save(f"{TRAIN_DIR}/Vt.npy", Vt)
+    np.save("U.npy", U)
+    np.save("sigma.npy", sigma)
+    np.save("Vt.npy", Vt)
 
     log_mlflow_params(
         config_file_name=config_file_name,

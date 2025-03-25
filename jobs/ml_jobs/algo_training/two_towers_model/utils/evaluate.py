@@ -15,7 +15,7 @@ from recommenders.evaluation.python_evaluation import (
 from sklearn.decomposition import PCA
 from tqdm import tqdm
 
-from commons.constants import EVALUATION_USER_NUMBER, TRAIN_DIR
+from commons.constants import EVALUATION_USER_NUMBER
 from commons.data_collect_queries import read_from_gcs
 
 
@@ -93,11 +93,11 @@ def generate_predictions(test_data: pd.DataFrame, all_users: bool) -> pd.DataFra
     logger.info(f"Number of unique items to score: {len(offers_to_score)}")
 
     # Load Data
-    user_to_index = np.load(f"{TRAIN_DIR}/user_to_index.npy", allow_pickle=True).item()
-    item_to_index = np.load(f"{TRAIN_DIR}/item_to_index.npy", allow_pickle=True).item()
-    U = np.load(f"{TRAIN_DIR}/U.npy")
-    sigma = np.load(f"{TRAIN_DIR}/sigma.npy")
-    Vt = np.load(f"{TRAIN_DIR}/Vt.npy")
+    user_to_index = np.load("user_to_index.npy", allow_pickle=True).item()
+    item_to_index = np.load("item_to_index.npy", allow_pickle=True).item()
+    U = np.load("U.npy")
+    sigma = np.load("sigma.npy")
+    Vt = np.load("Vt.npy")
 
     # Create List to store predictions for each user
     mapped_items_to_score = [item_to_index.get(item) for item in offers_to_score]

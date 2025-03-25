@@ -74,7 +74,6 @@ def main(
         list_k=list_k,
         all_users=all_users,
         dummy=dummy,
-        quantile_threshold=quantile_threshold,
     )
 
     connect_remote_mlflow()

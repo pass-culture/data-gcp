@@ -98,6 +98,11 @@ def upload_embeddings_to_bigquery(
     logger.info(f"Partitioning: {result.time_partitioning}")
 
 
+def mocked_main():
+    print("Mock: Doing Nothin")
+    return
+
+
 def main(
     experiment_name: str = typer.Option(None, help="Name of the experiment on MLflow"),
     run_name: str = typer.Option(
@@ -198,4 +203,5 @@ def main(
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    # typer.run(main)
+    typer.run(mocked_main)

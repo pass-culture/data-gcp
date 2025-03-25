@@ -90,6 +90,7 @@ select
     user_zrr.zrr_level,
     user_zrr.zrr_level_detail,
     user.user_address_geocode_updated_at,
+    user.geocode_type as user_address_geocode_type,
     case
         when
             user_qpv.qpv_code is null

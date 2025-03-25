@@ -1,4 +1,4 @@
-SELECT
+select
     venue_id,
     venue_street,
     venue_latitude,
@@ -8,4 +8,4 @@ SELECT
     venue_city,
     venue_region_name,
     venue_epci,
-FROM {{ref("int_geo__venue_location")}}
+from {{ ref("int_geo__venue_location") }}

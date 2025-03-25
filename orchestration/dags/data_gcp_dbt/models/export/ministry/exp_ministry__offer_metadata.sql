@@ -16,4 +16,4 @@ select
     om.gtl_label_level_3,
     om.gtl_label_level_4
 from {{ ref("mrt_global__offer_metadata") }} om
-join {{ ref("mrt_global__offer")}} o on om.offer_id = o.offer_id
+join {{ ref("mrt_global__offer") }} o on om.offer_id = o.offer_id

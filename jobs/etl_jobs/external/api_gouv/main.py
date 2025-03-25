@@ -30,7 +30,9 @@ def user_adress(
     for chunk in chunks(
         df[["user_id", "user_full_address"]].to_dict(orient="records"), chunk_size
     ):
-        r = geocoder.geocode_batch(addresses=chunk, address_columns=["user_full_address"])
+        r = geocoder.geocode_batch(
+            addresses=chunk, address_columns=["user_full_address"]
+        )
         results.extend(r)
         print(f"Processed {len(r)} rows... ")
 

@@ -12,7 +12,6 @@ on:
       GCP_EHP_SERVICE_ACCOUNT:
         required: true
 
-
 jobs:
   test-orchestration:
     name: "Test Orchestration"
@@ -21,8 +20,8 @@ jobs:
       id-token: write
       contents: write
     defaults:
-     run:
-       working-directory: "./orchestration/"
+      run:
+        working-directory: "./orchestration/"
     env:
       AIRFLOW_HOME: "${{ github.workspace }}/orchestration/"
       DAG_FOLDER: "./dags"
@@ -31,13 +30,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: "Connect to Secret Manager"
-        uses: 'google-github-actions/auth@v2'
+        uses: "google-github-actions/auth@v2"
         with:
           workload_identity_provider: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
       - name: "Get secrets for Slack"
-        id: 'secrets'
-        uses: 'google-github-actions/get-secretmanager-secrets@v2'
+        id: "secrets"
+        uses: "google-github-actions/get-secretmanager-secrets@v2"
         with:
           secrets: |-
             SLACK_BOT_TOKEN:passculture-metier-ehp/passculture-ci-slack-bot-token
@@ -45,8 +44,12 @@ jobs:
             ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER:passculture-metier-ehp/infra-prod-gcp-workload-identity-provider
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
       - uses: yezz123/setup-uv@v4
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
       - name: "Install Python requirements"
         run: uv pip install --system  -r airflow/orchestration-requirements.txt
       - name: "Authenticate with Google Cloud"
@@ -69,7 +72,7 @@ jobs:
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
         uses: slackapi/slack-github-action@v1.23.0
         env:
-           SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.SLACK_BOT_TOKEN }}
+          SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.SLACK_BOT_TOKEN }}
         with:
           channel-id: ${{ inputs.NOTIF_CHANNEL_ID }}
           payload: |

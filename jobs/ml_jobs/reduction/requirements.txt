@@ -15,19 +15,71 @@ async-timeout==4.0.3
 attrs==23.2.0
     # via aiohttp
 cachetools==5.3.3
-    # via google-auth
+    # via
+    #   cudf-cu12
+    #   google-auth
 certifi==2024.7.4
     # via requests
 charset-normalizer==3.3.2
     # via requests
 click==8.1.7
-    # via typer
+    # via
+    #   dask
+    #   dask-cuda
+    #   distributed
+    #   typer
+cloudpickle==3.1.1
+    # via
+    #   dask
+    #   distributed
+cuda-bindings==12.8.0
+    # via cuda-python
+cuda-python==12.8.0
+    # via
+    #   cudf-cu12
+    #   cuml-cu12
+    #   cuvs-cu12
+    #   pylibcudf-cu12
+    #   pylibraft-cu12
+    #   rmm-cu12
+cudf-cu12==25.2.2
+    # via
+    #   cuml-cu12
+    #   dask-cudf-cu12
+cuml-cu12==25.2.1
+    # via -r requirements.in
+cupy-cuda12x==13.4.1
+    # via
+    #   cudf-cu12
+    #   cuml-cu12
+    #   dask-cudf-cu12
+cuvs-cu12==25.2.1
+    # via cuml-cu12
 cython==0.29.37
     # via hdbscan
+dask==2024.12.1
+    # via
+    #   dask-expr
+    #   distributed
+    #   rapids-dask-dependency
+dask-cuda==25.2.0
+    # via
+    #   cuml-cu12
+    #   raft-dask-cu12
+dask-cudf-cu12==25.2.2
+    # via cuml-cu12
+dask-expr==1.1.21
+    # via rapids-dask-dependency
 db-dtypes==1.2.0
     # via pandas-gbq
 decorator==5.1.1
     # via gcsfs
+distributed==2024.12.1
+    # via rapids-dask-dependency
+distributed-ucxx-cu12==0.42.0
+    # via raft-dask-cu12
+fastrlock==0.8.3
+    # via cupy-cuda12x
 flatbuffers==24.3.25
     # via tensorflow
 frozenlist==1.4.1
@@ -35,7 +87,11 @@ frozenlist==1.4.1
     #   aiohttp
     #   aiosignal
 fsspec==2023.5.0
-    # via gcsfs
+    # via
+    #   cudf-cu12
+    #   dask
+    #   dask-cudf-cu12
+    #   gcsfs
 gast==0.6.0
     # via tensorflow
 gcsfs==2023.5.0
@@ -112,8 +168,13 @@ idna==3.7
     # via
     #   requests
     #   yarl
+importlib-metadata==8.6.1
+    # via dask
+jinja2==3.1.6
+    # via distributed
 joblib==1.4.2
     # via
+    #   cuml-cu12
     #   hdbscan
     #   pynndescent
     #   scikit-learn
@@ -121,18 +182,54 @@ keras==2.14.0
     # via tensorflow
 libclang==18.1.1
     # via tensorflow
+libcudf-cu12==25.2.2
+    # via
+    #   cudf-cu12
+    #   pylibcudf-cu12
+libcuml-cu12==25.2.1
+    # via cuml-cu12
+libcuvs-cu12==25.2.1
+    # via
+    #   cuvs-cu12
+    #   libcuml-cu12
+libkvikio-cu12==25.2.1
+    # via libcudf-cu12
+libraft-cu12==25.2.0
+    # via
+    #   libcuml-cu12
+    #   libcuvs-cu12
+    #   pylibraft-cu12
+    #   raft-dask-cu12
+libucx-cu12==1.18.0
+    # via
+    #   libucxx-cu12
+    #   ucx-py-cu12
+libucxx-cu12==0.42.0
+    # via ucxx-cu12
 llvmlite==0.43.0
     # via
     #   numba
     #   pynndescent
+locket==1.0.0
+    # via
+    #   distributed
+    #   partd
 loguru==0.7.0
     # via -r requirements.in
 markdown==3.6
     # via tensorboard
+markdown-it-py==3.0.0
+    # via rich
 markupsafe==2.1.5
-    # via werkzeug
+    # via
+    #   jinja2
+    #   werkzeug
+mdurl==0.1.2
+    # via markdown-it-py
 ml-dtypes==0.2.0
     # via tensorflow
+msgpack==1.1.0
+    # via distributed
 multidict==6.0.5
     # via
     #   aiohttp
@@ -140,11 +237,24 @@ multidict==6.0.5
 numba==0.60.0
     # via
     #   -r requirements.in
+    #   cudf-cu12
+    #   cuml-cu12
+    #   dask-cuda
+    #   distributed-ucxx-cu12
+    #   numba-cuda
     #   pynndescent
     #   umap-learn
+numba-cuda==0.2.0
+    # via cudf-cu12
 numpy==1.26.4
     # via
     #   -r requirements.in
+    #   cudf-cu12
+    #   cuml-cu12
+    #   cupy-cuda12x
+    #   cuvs-cu12
+    #   dask-cuda
+    #   dask-cudf-cu12
     #   db-dtypes
     #   h5py
     #   hdbscan
@@ -153,29 +263,88 @@ numpy==1.26.4
     #   opt-einsum
     #   pandas
     #   pandas-gbq
-    #   pyarrow
+    #   pylibraft-cu12
+    #   rmm-cu12
     #   scikit-learn
     #   scipy
     #   tensorboard
     #   tensorflow
+    #   treelite
+    #   ucx-py-cu12
+    #   ucxx-cu12
     #   umap-learn
+nvidia-cublas-cu12==12.8.4.1
+    # via
+    #   cuml-cu12
+    #   libcuml-cu12
+    #   libcuvs-cu12
+    #   libraft-cu12
+    #   nvidia-cusolver-cu12
+nvidia-cufft-cu12==11.3.3.83
+    # via
+    #   cuml-cu12
+    #   libcuml-cu12
+nvidia-curand-cu12==10.3.9.90
+    # via
+    #   cuml-cu12
+    #   libcuml-cu12
+    #   libcuvs-cu12
+    #   libraft-cu12
+nvidia-cusolver-cu12==11.7.3.90
+    # via
+    #   cuml-cu12
+    #   libcuml-cu12
+    #   libcuvs-cu12
+    #   libraft-cu12
+nvidia-cusparse-cu12==12.5.8.93
+    # via
+    #   cuml-cu12
+    #   libcuml-cu12
+    #   libcuvs-cu12
+    #   libraft-cu12
+    #   nvidia-cusolver-cu12
+nvidia-ml-py==12.570.86
+    # via pynvml
+nvidia-nvcomp-cu12==4.2.0.11
+    # via libcudf-cu12
+nvidia-nvjitlink-cu12==12.8.93
+    # via
+    #   nvidia-cufft-cu12
+    #   nvidia-cusolver-cu12
+    #   nvidia-cusparse-cu12
+nvtx==0.2.11
+    # via
+    #   cudf-cu12
+    #   pylibcudf-cu12
 oauthlib==3.2.2
     # via requests-oauthlib
 opt-einsum==3.3.0
     # via tensorflow
 packaging==24.1
     # via
+    #   cudf-cu12
+    #   cuml-cu12
+    #   dask
     #   db-dtypes
+    #   distributed
     #   google-cloud-bigquery
     #   pandas-gbq
+    #   pylibcudf-cu12
     #   tensorflow
-pandas==1.4.1
+    #   treelite
+pandas==2.2.3
     # via
     #   -r requirements.in
+    #   cudf-cu12
+    #   dask-cuda
+    #   dask-cudf-cu12
+    #   dask-expr
     #   db-dtypes
     #   pandas-gbq
 pandas-gbq==0.23.1
     # via -r requirements.in
+partd==1.4.2
+    # via dask
 polars==0.19.12
     # via -r requirements.in
 proto-plus==1.24.0
@@ -192,11 +361,16 @@ protobuf==4.25.3
     #   proto-plus
     #   tensorboard
     #   tensorflow
-pyarrow==13.0.0
+psutil==7.0.0
+    # via distributed
+pyarrow==19.0.1
     # via
     #   -r requirements.in
+    #   cudf-cu12
+    #   dask-expr
     #   db-dtypes
     #   pandas-gbq
+    #   pylibcudf-cu12
 pyasn1==0.6.0
     # via
     #   pyasn1-modules
@@ -205,16 +379,46 @@ pyasn1-modules==0.4.0
     # via google-auth
 pydata-google-auth==1.8.2
     # via pandas-gbq
+pygments==2.19.1
+    # via rich
+pylibcudf-cu12==25.2.2
+    # via cudf-cu12
+pylibraft-cu12==25.2.0
+    # via
+    #   cuml-cu12
+    #   cuvs-cu12
+    #   raft-dask-cu12
 pynndescent==0.5.13
     # via
     #   -r requirements.in
     #   umap-learn
+pynvjitlink-cu12==0.5.2
+    # via cudf-cu12
+pynvml==12.0.0
+    # via
+    #   dask-cuda
+    #   dask-cudf-cu12
+    #   ucx-py-cu12
+    #   ucxx-cu12
 python-dateutil==2.9.0.post0
     # via
     #   google-cloud-bigquery
     #   pandas
 pytz==2024.1
     # via pandas
+pyyaml==6.0.2
+    # via
+    #   dask
+    #   distributed
+raft-dask-cu12==25.2.0
+    # via cuml-cu12
+rapids-dask-dependency==25.2.0
+    # via
+    #   cuml-cu12
+    #   dask-cuda
+    #   dask-cudf-cu12
+    #   distributed-ucxx-cu12
+    #   raft-dask-cu12
 requests==2.32.3
     # via
     #   gcsfs
@@ -225,6 +429,15 @@ requests==2.32.3
     #   tensorboard
 requests-oauthlib==2.0.0
     # via google-auth-oauthlib
+rich==13.9.4
+    # via cudf-cu12
+rmm-cu12==25.2.0
+    # via
+    #   cudf-cu12
+    #   cuml-cu12
+    #   pylibcudf-cu12
+    #   pylibraft-cu12
+    #   ucxx-cu12
 rsa==4.9
     # via google-auth
 scikit-learn==1.5.1
@@ -234,9 +447,11 @@ scikit-learn==1.5.1
     #   umap-learn
 scipy==1.14.0
     # via
+    #   cuml-cu12
     #   hdbscan
     #   pynndescent
     #   scikit-learn
+    #   treelite
     #   umap-learn
 setuptools==70.2.0
     # via
@@ -251,6 +466,10 @@ six==1.16.0
     #   python-dateutil
     #   tensorboard
     #   tensorflow
+sortedcontainers==2.4.0
+    # via distributed
+tblib==3.0.0
+    # via distributed
 tensorboard==2.14.1
     # via tensorflow
 tensorboard-data-server==0.7.2
@@ -265,18 +484,39 @@ termcolor==2.4.0
     # via tensorflow
 threadpoolctl==3.5.0
     # via scikit-learn
+toolz==1.0.0
+    # via
+    #   dask
+    #   distributed
+    #   partd
+tornado==6.4.2
+    # via distributed
 tqdm==4.66.1
     # via
     #   -r requirements.in
     #   umap-learn
+treelite==4.4.1
+    # via cuml-cu12
 typer==0.7.0
     # via -r requirements.in
 typing-extensions==4.12.2
-    # via tensorflow
+    # via
+    #   cudf-cu12
+    #   pylibcudf-cu12
+    #   rich
+    #   tensorflow
+tzdata==2025.2
+    # via pandas
+ucx-py-cu12==0.42.0
+    # via raft-dask-cu12
+ucxx-cu12==0.42.0
+    # via distributed-ucxx-cu12
 umap-learn==0.5.6
     # via -r requirements.in
 urllib3==2.2.2
-    # via requests
+    # via
+    #   distributed
+    #   requests
 werkzeug==3.0.3
     # via tensorboard
 wheel==0.43.0
@@ -285,3 +525,9 @@ wrapt==1.14.1
     # via tensorflow
 yarl==1.9.4
     # via aiohttp
+zict==3.0.0
+    # via
+    #   dask-cuda
+    #   distributed
+zipp==3.21.0
+    # via importlib-metadata

@@ -15,7 +15,7 @@ from recommenders.evaluation.python_evaluation import (
 from sklearn.decomposition import PCA
 from tqdm import tqdm
 
-from commons.constants import EVALUATION_USER_NUMBER
+from commons.constants import EVALUATION_USER_NUMBER, TRAIN_DIR
 from commons.data_collect_queries import read_from_gcs
 
 
@@ -60,9 +60,7 @@ def load_data_for_evaluation(
     return {"train": train_data, "test": test_data}
 
 
-def generate_predictions(
-    model, test_data: pd.DataFrame, all_users: bool
-) -> pd.DataFrame:
+def generate_predictions(test_data: pd.DataFrame, all_users: bool) -> pd.DataFrame:
     """
     Generates item dot product scores for each user in the test dataset using the provided model.
     The scores are computed for each user with all unique (item_id) in test_dataset which are stored in offers_to_score.
@@ -78,10 +76,6 @@ def generate_predictions(
         pd.DataFrame: DataFrame with columns ['user_id', 'item_id', 'score'], where score represents
                         the predicted interaction score (dot product between user and item two tower embeddings).
     """
-    ## TODO UNCOMMENT THIS AFTER BATCHING IS DONE
-    ## Get unique items to score
-    # offers_to_score = test_data.item_id.unique()
-    # logger.info(f"Number of unique items to score: {len(offers_to_score)}")
 
     ## Truncate test data if not all users are to be evaluated
     total_n_users = len(test_data["user_id"].unique())
@@ -98,31 +92,49 @@ def generate_predictions(
     offers_to_score = test_data.item_id.unique()
     logger.info(f"Number of unique items to score: {len(offers_to_score)}")
 
-    # Create List to store predictions for each user
-    list_df_predictions = []
-    for current_user in tqdm(
-        test_data["user_id"].unique(), mininterval=20, maxinterval=60
-    ):
-        # Prepare input for prediction
-        prediction_input = [
-            np.array([current_user] * len(offers_to_score)),
-            offers_to_score,
-        ]
+    # Load Data
+    user_to_index = np.load(f"{TRAIN_DIR}/user_to_index.npy", allow_pickle=True).item()
+    item_to_index = np.load(f"{TRAIN_DIR}/item_to_index.npy", allow_pickle=True).item()
+    U = np.load(f"{TRAIN_DIR}/U.npy")
+    sigma = np.load(f"{TRAIN_DIR}/sigma.npy")
+    Vt = np.load(f"{TRAIN_DIR}/Vt.npy")
 
+    # Create List to store predictions for each user
+    mapped_items_to_score = [item_to_index.get(item) for item in offers_to_score]
+    mapped_users_to_score = [
+        user_to_index.get(user) for user in test_data["user_id"].unique()
+    ]
+    reverse_item_mapping = {v: k for k, v in item_to_index.items()}
+    reverse_user_mapping = {v: k for k, v in user_to_index.items()}
+    list_df_predictions = []
+    for mapped_current_user in tqdm(
+        mapped_users_to_score, mininterval=20, maxinterval=60
+    ):
         # Generate predictions
-        prediction = model.predict(prediction_input, verbose=0)
+        try:
+            mapped_prediction = np.dot(U[mapped_current_user, :] * sigma, Vt)
+        except Exception as e:
+            logger.warning(
+                f"Error generating predictions for user {mapped_current_user}: {e}"
+            )
+            mapped_prediction = np.zeros(len(offers_to_score))
 
         # Append predictions to final predictions DataFrame
-        current_user_predictions = pd.DataFrame(
-            {
-                "user_id": [current_user] * len(offers_to_score),
-                "item_id": offers_to_score.flatten().tolist(),
-                "score": prediction.flatten().tolist(),
-            }
-        )
+        current_user_predictions = {
+            "user_id": [reverse_user_mapping[mapped_current_user]]
+            * len(offers_to_score),
+            "item_id": [
+                reverse_item_mapping[mapped_item]
+                for mapped_item in mapped_items_to_score
+            ],
+            "score": mapped_prediction,
+        }
+
         list_df_predictions.append(current_user_predictions)
 
-    df_predictions = pd.concat(list_df_predictions, ignore_index=True)
+    df_predictions = pd.concat(
+        [pd.DataFrame(df) for df in list_df_predictions], ignore_index=True
+    )
     return df_predictions
 
 
@@ -198,14 +210,12 @@ def compute_metrics(
 
 
 def evaluate(
-    model: tf.keras.models.Model,
     storage_path: str,
     train_dataset_name: str,
     test_dataset_name: str,
     list_k: List[int],
     all_users: bool,
     dummy: bool,
-    quantile_threshold: float,
 ) -> Dict[str, float]:
     """
     Runs the full evaluation pipeline for a retrieval model, including:
@@ -239,7 +249,7 @@ def evaluate(
     list_predictions_to_evaluate = []
     logger.info("Inferring model predictions")
     df_predictions = generate_predictions(
-        model=model, test_data=data_dict["test"], all_users=all_users
+        test_data=data_dict["test"], all_users=all_users
     )
     list_predictions_to_evaluate.append({"predictions": df_predictions, "prefix": ""})
 

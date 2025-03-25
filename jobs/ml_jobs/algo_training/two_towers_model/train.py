@@ -43,6 +43,10 @@ def build_interaction_matrix(df: pd.DataFrame) -> csr_matrix:
     user_to_index = {user: i for i, user in enumerate(unique_users)}
     item_to_index = {item: i for i, item in enumerate(unique_items)}
 
+    # Save indexes locally
+    np.save(f"{TRAIN_DIR}/user_to_index.npy", user_to_index)
+    np.save(f"{TRAIN_DIR}/item_to_index.npy", item_to_index)
+
     # Create sparse matrix coordinates
     user_indices = [user_to_index[user] for user in df["user_id"]]
     item_indices = [item_to_index[item] for item in df["item_id"]]

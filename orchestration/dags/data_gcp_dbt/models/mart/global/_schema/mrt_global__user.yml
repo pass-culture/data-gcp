@@ -21,9 +21,29 @@ models:
       - name: user_department_name
         description: '{{ doc("column__user_department_name") }}'
         data_type: STRING
+        data_tests:
+          - excessive_failure_ratio:
+              base_test: "not_null"
+              max_ratio: 0.0005  # 0.05%
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - not_null_proportion:
+              where_condition: "user_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) and user_department_name is null"
+              anomaly_threshold_alert_percentage: 0.01 # 0.01%
       - name: user_postal_code
         description: '{{ doc("column__user_postal_code") }}'
         data_type: STRING
+        data_tests:
+          - excessive_failure_ratio:
+              base_test: "not_null"
+              max_ratio: 0.0005  # 0.05%
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - not_null_proportion:
+              where_condition: "user_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) and user_postal_code is null"
+              anomaly_threshold_alert_percentage: 0.001 # 0.001%
       - name: user_city
         description: '{{ doc("column__user_city") }}'
         data_type: STRING
@@ -57,6 +77,13 @@ models:
       - name: user_iris_internal_id
         description: '{{ doc("column__user_iris_internal_id") }}'
         data_type: STRING
+        data_tests:
+          - excessive_failure_ratio:
+              base_test: "not_null"
+              max_ratio: 0.005  # 0.5%
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: user_is_priority_public
         description: '{{ doc("column__user_is_priority_public") }}'
         data_type: BOOLEAN
@@ -90,7 +117,7 @@ models:
         data_tests:
           - excessive_failure_ratio:
               base_test: "not_null"
-              max_ratio: 0.02
+              max_ratio: 0.0005  # 0.05%
               tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"

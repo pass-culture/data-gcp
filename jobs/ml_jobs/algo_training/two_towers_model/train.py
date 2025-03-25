@@ -2,10 +2,13 @@ import json
 from collections import OrderedDict
 
 import mlflow
+import numpy as np
 import pandas as pd
 import tensorflow as tf
 import typer
 from loguru import logger
+from scipy.sparse import csr_matrix
+from scipy.sparse.linalg import svds
 
 from commons.constants import (
     CONFIGS_PATH,
@@ -27,6 +30,57 @@ EPOCH_COUNT_PER_SHUFFLE = 5
 MIN_DELTA = 0.001
 LEARNING_RATE = 0.1
 VERBOSE = 2
+
+N_LATENT_VECTORS = 100
+
+
+def build_interaction_matrix(df: pd.DataFrame) -> csr_matrix:
+    # Get unique users and items
+    unique_users = df["user_id"].unique()
+    unique_items = df["item_id"].unique()
+
+    # Create mappings from IDs to indices
+    user_to_index = {user: i for i, user in enumerate(unique_users)}
+    item_to_index = {item: i for i, item in enumerate(unique_items)}
+
+    # Create sparse matrix coordinates
+    user_indices = [user_to_index[user] for user in df["user_id"]]
+    item_indices = [item_to_index[item] for item in df["item_id"]]
+    values = [1] * len(df)  # Assuming binary interactions (1 = interaction occurred)
+
+    # Create the sparse matrix
+    return csr_matrix(
+        (values, (user_indices, item_indices)),
+        shape=(len(unique_users), len(unique_items)),
+    )
+
+
+def compute_svd(interaction_matrix: csr_matrix, k: int):
+    """
+    Compute truncated SVD on the interaction matrix
+
+    Parameters:
+        interaction_matrix: The sparse user-item interaction matrix
+        k: Number of singular values/vectors to compute
+
+    Returns:
+        U: User latent factors
+        sigma: Singular values
+        Vt: Item latent factors
+    """
+    # Ensure k is not larger than min dimension
+    k = min(k, min(interaction_matrix.shape) - 1)
+
+    # Compute the truncated SVD
+    U, sigma, Vt = svds(interaction_matrix, k=k)
+
+    # Sort the results by singular values in descending order
+    idx = np.argsort(-sigma)
+    sigma = sigma[idx]
+    U = U[:, idx]
+    Vt = Vt[idx, :]
+
+    return U, sigma, Vt
 
 
 def setup_gpu_environment():
@@ -55,17 +109,6 @@ def load_features(config_file_name: str):
     )
 
 
-def convert_df_to_tensor_dict(df: pd.DataFrame) -> dict[str, tf.Tensor]:
-    features_dict = {}
-
-    for column in df.columns:
-        if df[column].dtype == "object":
-            features_dict[column] = df[column].astype(str).values
-        else:
-            features_dict[column] = df[column].values
-    return features_dict
-
-
 def load_datasets(
     training_table_name: str,
     validation_table_name: str,
@@ -76,17 +119,13 @@ def load_datasets(
     """Loads and prepares training and validation datasets."""
     logger.info("Loading & processing datasets")
 
-    train_data = (
-        read_from_gcs(storage_path=STORAGE_PATH, table_name=training_table_name)[
-            user_columns + item_columns
-        ]
-        .drop_duplicates(subset=["user_id", "item_id"])
-        .pipe(compute_candidate_sampling_probabilities)
-    )
+    train_data = read_from_gcs(
+        storage_path=STORAGE_PATH, table_name=training_table_name
+    )[user_columns + item_columns].drop_duplicates(subset=["user_id", "item_id"])
 
     validation_data = read_from_gcs(
         storage_path=STORAGE_PATH, table_name=validation_table_name
-    )[user_columns + item_columns].pipe(compute_candidate_sampling_probabilities)
+    )[user_columns + item_columns]
 
     train_user_data = (
         train_data[user_columns]
@@ -100,66 +139,6 @@ def load_datasets(
     )
 
     return train_data, validation_data, train_user_data, train_item_data
-
-
-def compute_candidate_sampling_probabilities(data: pd.DataFrame):
-    dict = data["item_id"].value_counts(normalize=True).to_dict()
-    return data.assign(
-        **{
-            "candidate_sampling_probability": data["item_id"]
-            .map(dict)
-            .astype("float32")
-        }
-    )
-
-
-def build_tf_datasets(
-    train_data, validation_data, train_user_data, train_item_data, batch_size
-):
-    """Builds TensorFlow datasets for training and evaluation."""
-    logger.info("Building tf datasets")
-
-    train_dataset = (
-        tf.data.Dataset.from_tensor_slices(train_data.pipe(convert_df_to_tensor_dict))
-        .cache()
-        .shuffle(buffer_size=len(train_data), reshuffle_each_iteration=True)
-        .batch(batch_size=batch_size)
-        .prefetch(tf.data.AUTOTUNE)
-    )
-
-    validation_dataset = (
-        tf.data.Dataset.from_tensor_slices(
-            validation_data.pipe(convert_df_to_tensor_dict)
-        )
-        .batch(batch_size=batch_size)
-        .cache()
-        .prefetch(tf.data.AUTOTUNE)
-    )
-
-    user_dataset = (
-        tf.data.Dataset.from_tensor_slices(
-            train_user_data.pipe(convert_df_to_tensor_dict)
-        )
-        .batch(batch_size, drop_remainder=False)
-        .cache()
-        .prefetch(tf.data.AUTOTUNE)
-    )
-
-    item_dataset = (
-        tf.data.Dataset.from_tensor_slices(
-            train_item_data.pipe(convert_df_to_tensor_dict)
-        )
-        .batch(batch_size, drop_remainder=False)
-        .cache()
-        .prefetch(tf.data.AUTOTUNE)
-    )
-
-    return (
-        train_dataset,
-        validation_dataset,
-        user_dataset,
-        item_dataset,
-    )
 
 
 def initialize_mlflow(experiment_name: str, run_name: str):
@@ -311,7 +290,7 @@ def train(
 ):
     setup_gpu_environment()
     tf.random.set_seed(seed)
-    run_uuid = initialize_mlflow(experiment_name, run_name)
+    initialize_mlflow(experiment_name, run_name)
 
     user_features_config, item_features_config, input_prediction_feature = (
         load_features(config_file_name)
@@ -328,9 +307,14 @@ def train(
         input_prediction_feature=input_prediction_feature,
     )
 
-    train_dataset, validation_dataset, user_dataset, item_dataset = build_tf_datasets(
-        train_data, validation_data, train_user_data, train_item_data, batch_size
-    )
+    train_interaction_matrix = build_interaction_matrix(train_data)
+    U, sigma, Vt = compute_svd(train_interaction_matrix, N_LATENT_VECTORS)
+
+    # Save U sigma and VT locally
+    np.save(f"{TRAIN_DIR}/U.npy", U)
+    np.save(f"{TRAIN_DIR}/sigma.npy", sigma)
+    np.save(f"{TRAIN_DIR}/Vt.npy", Vt)
+
     log_mlflow_params(
         config_file_name=config_file_name,
         extra_params={
@@ -342,39 +326,6 @@ def train(
             "item_feature_count": len(item_features_config.keys()),
             "epoch_count_per_shuffle": EPOCH_COUNT_PER_SHUFFLE,
         },
-    )
-
-    logger.info("Create Model")
-    two_tower_model = TwoTowersModel(
-        data=train_data,
-        user_features_config=user_features_config,
-        item_features_config=item_features_config,
-        user_columns=user_columns,
-        item_columns=item_columns,
-        embedding_size=embedding_size,
-    )
-
-    logger.info("Training Model")
-    training_steps = max((len(train_data) / EPOCH_COUNT_PER_SHUFFLE) // batch_size, 1)
-    validation_steps = max(len(validation_data) // batch_size, 1)
-    train_two_tower_model(
-        train_dataset,
-        validation_dataset,
-        two_tower_model,
-        training_steps=training_steps,
-        validation_steps=validation_steps,
-        run_uuid=run_uuid,
-    )
-
-    logger.info("Compute embeddings and save Model")
-    save_model_and_embeddings(
-        user_dataset,
-        item_dataset,
-        two_tower_model,
-        train_user_data,
-        train_item_data,
-        embedding_size,
-        run_uuid,
     )
 
 

@@ -1,5 +1,6 @@
 import time
 
+import cuml
 import numpy as np
 import tensorflow as tf
 import umap
@@ -38,63 +39,65 @@ def umap_reduce_embedding_dimension(
     start_time = time.time()
     logger.info(f"Starting UMAP reduction to {dimension} dimensions")
 
-    try:
-        if use_gpu:
-            # Try using RAPIDS cuML UMAP if available (GPU accelerated)
-            try:
-                import cuml
+    umap_model = cuml.UMAP(
+        n_neighbors=n_neighbors,
+        n_components=dimension,
+        init="random",
+        metric=metric,
+    )
+    transformed = umap_model.fit_transform(data)
 
-                logger.info("Using RAPIDS cuML GPU-accelerated UMAP")
+    # try:
+    #     if use_gpu:
+    #         # Try using RAPIDS cuML UMAP if available (GPU accelerated)
+    #         try:
+    #             import cuml
 
-                umap_model = cuml.UMAP(
-                    n_neighbors=n_neighbors,
-                    n_components=dimension,
-                    init="random",
-                    metric=metric,
-                )
-                transformed = umap_model.fit_transform(data)
+    #             logger.info("Using RAPIDS cuML GPU-accelerated UMAP")
 
-            except ImportError:
-                # Fall back to standard UMAP with numba GPU target
-                logger.info(
-                    "RAPIDS cuML not available, using standard UMAP with GPU target"
-                )
-                umap_model = umap.UMAP(
-                    n_neighbors=n_neighbors,
-                    n_components=dimension,
-                    init="random",
-                    metric=metric,
-                    low_memory=False,  # Better for GPU
-                    unique=True,
-                    n_jobs=-1,  # Use all available cores
-                )
-                transformed = umap_model.fit_transform(data)
-        else:
-            # Standard CPU implementation
-            logger.info("Using standard UMAP with CPU")
-            umap_model = umap.UMAP(
-                n_neighbors=n_neighbors,
-                n_components=dimension,
-                init="random",
-                metric=metric,
-                low_memory=True,
-                unique=True,
-                n_jobs=-1,  # Use all available cores
-            )
-            transformed = umap_model.fit_transform(data)
+    #             umap_model = cuml.UMAP(
+    #                 n_neighbors=n_neighbors,
+    #                 n_components=dimension,
+    #                 init="random",
+    #                 metric=metric,
+    #             )
+    #             transformed = umap_model.fit_transform(data)
 
-        logger.info(
-            f"UMAP reduction completed in {time.time() - start_time:.2f} seconds"
-        )
+    #         except ImportError:
+    #             # Fall back to standard UMAP with numba GPU target
+    #             logger.info(
+    #                 "RAPIDS cuML not available, using standard UMAP with GPU target"
+    #             )
+    #             umap_model = umap.UMAP(
+    #                 n_neighbors=n_neighbors,
+    #                 n_components=dimension,
+    #                 init="random",
+    #                 metric=metric,
+    #                 low_memory=False,  # Better for GPU
+    #                 unique=True,
+    #                 n_jobs=-1,  # Use all available cores
+    #             )
+    #             transformed = umap_model.fit_transform(data)
+    #     else:
+    #         # Standard CPU implementation
+    #         logger.info("Using standard UMAP with CPU")
+    #         umap_model = umap.UMAP(
+    #             n_neighbors=n_neighbors,
+    #             n_components=dimension,
+    #             init="random",
+    #             metric=metric,
+    #             low_memory=True,
+    #             unique=True,
+    #             n_jobs=-1,  # Use all available cores
+    #         )
+    #         transformed = umap_model.fit_transform(data)
 
-        if return_model:
-            return transformed, umap_model
-        else:
-            return transformed
+    logger.info(f"UMAP reduction completed in {time.time() - start_time:.2f} seconds")
 
-    except Exception as e:
-        logger.error(f"Error during UMAP reduction: {e}")
-        raise
+    if return_model:
+        return transformed, umap_model
+    else:
+        return transformed
 
 
 def pumap_reduce_embedding_dimension(

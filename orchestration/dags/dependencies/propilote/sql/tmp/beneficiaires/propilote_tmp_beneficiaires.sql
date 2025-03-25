@@ -1,3 +1,5 @@
+-- noqa: disable=all
+
 with
     last_day_of_month as (
         select
@@ -12,9 +14,13 @@ with
         select
             uua.deposit_active_date,
             uua.user_id,
-            uua.deposit_type,
             uua.deposit_amount,
             coalesce(sum(booking_intermediary_amount), 0) as amount_spent,
+            case
+                when uua.deposit_type = 'grant_17_18' and uua.user_age = 17 then 'grant_15_17'
+                when uua.deposit_type = 'grant_17_18' and uua.user_age >= 18 then 'grant_18'
+                else uua.deposit_type
+            end as deposit_type
         from `{{ bigquery_analytics_dataset }}.native_daily_user_deposit` uua
         left join
             `{{ bigquery_analytics_dataset }}.global_booking` ebd

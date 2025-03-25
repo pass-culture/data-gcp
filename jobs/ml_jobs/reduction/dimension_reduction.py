@@ -2,16 +2,16 @@ import multiprocessing as mp
 import os
 import secrets
 from functools import partial
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import polars as pl
 import pyarrow.dataset as ds
 import typer
 from loguru import logger
+from sklearn.decomposition import PCA
 
 from tools.dimension_reduction import (
-    pca_reduce_embedding_dimension,
     pumap_reduce_embedding_dimension,
     umap_reduce_embedding_dimension,
 )
@@ -23,59 +23,115 @@ from tools.utils import (
 )
 
 
-def reduce_transformation(
+def fit_reduction_model(
     X: np.ndarray,
     target_dimension: int,
     emb_col: str,
     method: str = "PUMAP",
     max_dimension: int = 32,
-) -> np.ndarray:
+) -> Tuple[Any, np.ndarray]:
     """
-    Reduces X dimension according to method among ["PCA", "UMAP", "PUMAP"]
-    If chosen method is "PCA":
-        - only PCA reduction is preformed
-    If chosen method is "UMAP" or "PUMAP":
-        If X's second dimension is bigger than max_dimension:
-            - we first reduce X with PCA so its second dimesnion is equal to the max_dimension
-            - then we perform the UMAP or the PUMAP.
-        If X's second dimension is smaller than max_dimension:
-            - we directly reduce with the UMAP or the PUMAP.
+    Fits a reduction model based on the entire dataset X
 
     Args:
-        X (np.ndarray): The numpy array to reduce
-        target_dimension (int): number of components to keep during reduction
-        emb_col(str): name of the column which X is extracted from in the original dataframe
-        method (str): the reduction method to use. Options are ["PCA", "UMAP", "PUMAP"]
-        max_dimension (int): dimension threshold for X's second dimension to decide whether to perform a PCA before the UMAP/PUMAP or not
+        X: Input data array
+        target_dimension: Target dimension for reduction
+        emb_col: Name of embedding column for logging
+        method: Reduction method (PCA, UMAP, PUMAP)
+        max_dimension: Maximum intermediate dimension
 
     Returns:
-        np.ndarray: the reduced array
+        Tuple of (transformed_data, models)
+        - models: Dictionary of fitted model objects
     """
     seed = secrets.randbelow(1000)
-    logger.info(f"Seed for PCA reduction set to {seed}")
+    logger.info(f"Seed for reduction set to {seed}")
+    models = {}
+
+    # For UMAP or PUMAP, we might need a PCA first
     if method in ("UMAP", "PUMAP"):
-        logger.info(f"Reducing first with PCA {emb_col}...")
+        logger.info(f"Fitting PCA model for {emb_col}...")
         current_dimension = X.shape[1]
         if current_dimension > max_dimension:
-            X = pca_reduce_embedding_dimension(X, dimension=max_dimension, seed=seed)
+            # Fit and apply PCA
+            pca_model = PCA(n_components=max_dimension, random_state=seed)
+            X = pca_model.fit_transform(X)
+            models["pca"] = pca_model
+            logger.info(
+                f"Fitted PCA model: explained variance ratio sum = {np.sum(pca_model.explained_variance_ratio_):.3f}"
+            )
         else:
             logger.info(
-                f"Current dimension {current_dimension} lower than {max_dimension}"
+                f"Current dimension {current_dimension} lower than {max_dimension}, skipping PCA"
             )
 
+        # Fit UMAP/PUMAP
         if method == "UMAP":
-            logger.info(f"Reducing with UMAP {emb_col}...")
-            X = umap_reduce_embedding_dimension(X, target_dimension)
-        elif method == "PUMAP":
-            logger.info(f"Reducing with PUMAP {emb_col}...")
-            X = pumap_reduce_embedding_dimension(
-                X, target_dimension, batch_size=2048, train_frac=0.1
+            logger.info(f"Fitting UMAP model for {emb_col}...")
+            # Get the UMAP model and transformed data
+            X, umap_model = umap_reduce_embedding_dimension(
+                X, target_dimension, return_model=True
             )
+            models["umap"] = umap_model
+        elif method == "PUMAP":
+            logger.info(f"Fitting PUMAP model for {emb_col}...")
+            # Get the PUMAP model and transformed data
+            X, pumap_model = pumap_reduce_embedding_dimension(
+                X, target_dimension, batch_size=2048, train_frac=0.1, return_model=True
+            )
+            models["pumap"] = pumap_model
     elif method == "PCA":
-        logger.info(f"Reducing with PCA {emb_col}...")
-        X = pca_reduce_embedding_dimension(X, dimension=target_dimension, seed=seed)
+        logger.info(f"Fitting PCA model for {emb_col}...")
+        # Fit and apply PCA
+        pca_model = PCA(n_components=target_dimension, random_state=seed)
+        X = pca_model.fit_transform(X)
+        models["pca"] = pca_model
+        logger.info(
+            f"Fitted PCA model: explained variance ratio sum = {np.sum(pca_model.explained_variance_ratio_):.3f}"
+        )
     else:
-        raise Exception("Method not found.")
+        raise Exception(f"Method {method} not found.")
+
+    return models, X
+
+
+def apply_reduction_model(
+    X: np.ndarray, models: Dict[str, Any], method: str, emb_col: str
+) -> np.ndarray:
+    """
+    Applies pre-fitted reduction models to transform data
+
+    Args:
+        X: Input data array
+        models: Dictionary of fitted model objects
+        method: Reduction method (PCA, UMAP, PUMAP)
+        emb_col: Name of embedding column for logging
+
+    Returns:
+        Transformed data array
+    """
+    logger.info(f"Applying pre-fitted models to transform {emb_col}...")
+
+    if method in ("UMAP", "PUMAP"):
+        # Apply PCA first if it was fitted
+        if "pca" in models:
+            logger.info(f"Applying fitted PCA model to {emb_col}...")
+            X = models["pca"].transform(X)
+
+        # Apply UMAP/PUMAP
+        if method == "UMAP":
+            logger.info(f"Applying fitted UMAP model to {emb_col}...")
+            X = models["umap"].transform(X)
+        elif method == "PUMAP":
+            logger.info(f"Applying fitted PUMAP model to {emb_col}...")
+            X = models["pumap"].transform(X)
+    elif method == "PCA":
+        # Apply PCA
+        logger.info(f"Applying fitted PCA model to {emb_col}...")
+        X = models["pca"].transform(X)
+    else:
+        raise Exception(f"Method {method} not found.")
+
     return X
 
 
@@ -89,70 +145,65 @@ def export_reduction_table(
     batch_size=10000,
     cache_dir=None,
 ):
-    """Process reduction in batches and with optional caching"""
-    # Calculate total rows to process
-    total_rows = df.height
-    logger.info(f"Processing {total_rows} rows in batches of {batch_size}")
+    """Process reduction with two-phase approach: fit on all data, transform in batches"""
+    # First phase: Fit models on all data
+    reduction_models = {}
+    all_transformed = {}
 
-    # Process in batches
+    for emb_col in embedding_columns:
+        logger.info(f"Loading all data for {emb_col} to fit models...")
+        X = np.array(convert_str_emb_to_float(df[emb_col]))
+
+        # Fit models on all data at once
+        models, transformed = fit_reduction_model(
+            X,
+            target_dimension,
+            emb_col,
+            method=method,
+            max_dimension=max_dimension,
+        )
+        reduction_models[emb_col] = models
+
+        # Store full transformed data for later use
+        all_transformed[emb_col] = transformed
+
+    # For the combined columns reduction
+    logger.info(f"Fitting models for combined embeddings ({target_name})...")
+    concat_X = np.concatenate(
+        [all_transformed[col] for col in embedding_columns], axis=1
+    )
+    combined_models, combined_transformed = fit_reduction_model(
+        concat_X,
+        target_dimension,
+        emb_col=target_name,
+        method=method,
+        max_dimension=max_dimension,
+    )
+    reduction_models[target_name] = combined_models
+
+    # Second phase: Apply transformations in batches for I/O efficiency
+    total_rows = df.height
     result_dfs = []
+
     for i in range(0, total_rows, batch_size):
         batch_end = min(i + batch_size, total_rows)
         logger.info(f"Processing batch {i}-{batch_end} of {total_rows}")
         batch_df = df.slice(i, batch_end - i)
 
-        concat_X = []
+        # Apply each embedding column transformation
         for emb_col in embedding_columns:
-            logger.info(f"Converting serialized embeddings... {emb_col}...")
-
-            # Try to load from cache if available
-            cache_loaded = False
-            if cache_dir:
-                cache_file = os.path.join(
-                    cache_dir, f"{emb_col}_batch_{i}_{batch_end}.npy"
-                )
-                if os.path.exists(cache_file):
-                    try:
-                        X = np.load(cache_file)
-                        cache_loaded = True
-                        logger.info(f"Loaded {emb_col} from cache")
-                    except Exception as e:
-                        logger.warning(f"Failed to load cache: {e}")
-
-            if not cache_loaded:
-                X = np.array(convert_str_emb_to_float(batch_df[emb_col]))
-                X = reduce_transformation(
-                    X,
-                    target_dimension,
-                    emb_col,
-                    method=method,
-                    max_dimension=max_dimension,
-                )
-
-                # Save to cache if enabled
-                if cache_dir:
-                    os.makedirs(cache_dir, exist_ok=True)
-                    cache_file = os.path.join(
-                        cache_dir, f"{emb_col}_batch_{i}_{batch_end}.npy"
-                    )
-                    np.save(cache_file, X)
-
-            concat_X.append(X)
+            transformed = all_transformed[emb_col][i:batch_end]
             batch_df = batch_df.with_columns(
-                pl.Series(name=emb_col, values=convert_arr_emb_to_str(X))
+                pl.Series(name=emb_col, values=convert_arr_emb_to_str(transformed))
             )
-            logger.info(f"Done for {emb_col}...")
 
-        logger.info("Reduce whole columns")
-        X = reduce_transformation(
-            np.concatenate(concat_X, axis=1),
-            target_dimension,
-            emb_col=target_name,
-            method=method,
-            max_dimension=max_dimension,
-        )
+        # Apply combined transformation
+        combined_transformed_batch = combined_transformed[i:batch_end]
         batch_df = batch_df.with_columns(
-            pl.Series(name=target_name, values=convert_arr_emb_to_str(X))
+            pl.Series(
+                name=target_name,
+                values=convert_arr_emb_to_str(combined_transformed_batch),
+            )
         )
         batch_df = batch_df.with_columns(reduction_method=pl.lit(method))
         result_dfs.append(batch_df)

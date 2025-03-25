@@ -72,14 +72,17 @@ with DAG(
 
     @task
     def check_source_count(**context):
-        hook = BigQueryHook(location="europe-west1")
+        bq_hook = BigQueryHook(location="europe-west1", use_legacy_sql=False)
+        bq_client = bq_hook.get_client()
+        dataset_id = context["params"]["source_dataset_id"]
+        table_name = context["params"]["source_table_name"]
         query = f"""
         SELECT count(*) as count
-        FROM `{GCP_PROJECT_ID}.{context['params']['source_dataset_id']}.{context['params']['source_table_name']}`
+        FROM `{GCP_PROJECT_ID}`.`{dataset_id}`.`{table_name}`
         """
 
-        result = hook.get_records(sql=query)
-        return result[0][0] > 0
+        result = bq_client.query(query).to_dataframe()
+        return result["count"].values[0] > 0
 
     @task.branch
     def branch(count_result):

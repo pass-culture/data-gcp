@@ -71,6 +71,9 @@ select
     user.user_department_code,
     user.user_longitude,
     user.user_latitude,
+    region_department.academy_name as user_academy_name,
+    region_department.dep_name as user_department_name,
+    region_department.region_name as user_region_name,
     user_geo_iris.iris_internal_id as user_iris_internal_id,
     user_geo_iris.city_label as user_city,
     user_geo_iris.city_code as user_city_code,
@@ -78,9 +81,7 @@ select
     user_geo_iris.density_label as user_density_label,
     user_geo_iris.density_macro_level as user_macro_density_label,
     user_geo_iris.density_level as user_density_level,
-    user_geo_iris.academy_name as user_academy_name,
-    user_geo_iris.department_name as user_department_name,
-    user_geo_iris.region_name as user_region_name,
+
     user_epci.epci_name as user_epci,
     user_epci.epci_code,
     user_qpv.qpv_code,
@@ -103,3 +104,5 @@ left join user_epci on user.user_id = user_epci.user_id
 left join user_qpv on user.user_id = user_qpv.user_id
 left join user_zrr on user.user_id = user_zrr.user_id
 left join user_geo_iris on user.user_id = user_geo_iris.user_id
+-- ensure to have region and department name for non IRIS based regions (Wallis and Futuna, New Caledonia, etc.)
+left join {{ source("seed", "region_department") }} as region_department on user.user_department_code = region_department.num_dep

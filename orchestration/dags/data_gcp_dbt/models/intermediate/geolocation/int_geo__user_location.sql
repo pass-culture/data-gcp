@@ -104,5 +104,8 @@ left join user_epci on user.user_id = user_epci.user_id
 left join user_qpv on user.user_id = user_qpv.user_id
 left join user_zrr on user.user_id = user_zrr.user_id
 left join user_geo_iris on user.user_id = user_geo_iris.user_id
--- ensure to have region and department name for non IRIS based regions (Wallis and Futuna, New Caledonia, etc.)
-left join {{ source("seed", "region_department") }} as region_department on user.user_department_code = region_department.num_dep
+-- ensure to have region and department name for non IRIS based regions (Wallis and
+-- Futuna, New Caledonia, etc.)
+left join
+    {{ source("seed", "region_department") }} as region_department
+    on user.user_department_code = region_department.num_dep

@@ -24,5 +24,5 @@ select
     release_date,
     countries,
     venue_id,
-    offerer_id
+    venue_managing_offerer_id as offerer_id
 from {{ ref("mrt_global__offer") }}

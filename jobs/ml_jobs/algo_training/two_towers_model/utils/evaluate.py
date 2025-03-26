@@ -83,6 +83,31 @@ def get_scann_params(env_short_name: str, max_k: int) -> Dict[str, Any]:
         }
 
 
+def filter_predictions(
+    df_predictions: pd.DataFrame,
+    train_data: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Filter out items that users have already interacted with in training data.
+    Args:
+        df_predictions (pd.DataFrame): DataFrame containing predictions with columns 'user_id' and 'item_id'.
+        train_data (pd.DataFrame): DataFrame containing training data with columns 'user_id' and 'item_id'.
+
+    Returns:
+        pd.DataFrame: DataFrame containing filtered predictions .
+    """
+    # merge df_predictions with train_data on user_id and item_id while keeping indicator
+    df_predictions_filtered = df_predictions.merge(
+        train_data, on=["user_id", "item_id"], how="left", indicator=True
+    ).drop(columns=["_merge"])
+    # drop rows where indicator is not left_only (meaning the (user, item) was also in training data)
+    df_predictions_filtered = df_predictions_filtered[
+        df_predictions_filtered["_merge"] == "left_only"
+    ].drop(columns=["_merge"])
+
+    return df_predictions_filtered
+
+
 def generate_predictions(
     model,
     train_data: pd.DataFrame,
@@ -153,10 +178,11 @@ def generate_predictions(
         # Get recommendations using ScaNN
         scores, candidates = scann_index(user_embeddings)
 
-        # Append batch predictions dict to list of predictions
         list_predictions_dict.append(
             {
-                "user_id": np.repeat(batch_users, max_k),
+                "user_id": np.concatenate(
+                    [[user] * len(c) for user, c in zip(batch_users, candidates)]
+                ),
                 "item_id": candidates.numpy().flatten(),
                 "score": scores.numpy().flatten(),
             }
@@ -171,14 +197,9 @@ def generate_predictions(
         ignore_index=True,
     ).astype({"item_id": str})  # convert bytes to string
 
-    # Filter out items that users have already interacted with in training data by performing an anti-join
-    df_predictions = df_predictions.merge(
-        train_data, on=["user_id", "item_id"], how="left", indicator=True
-    )
-    df_predictions = df_predictions[df_predictions["_merge"] == "left_only"].drop(
-        columns=["_merge"]
-    )
-    return df_predictions
+    # Return filtered out items that users have already interacted with in training data by performing an anti-join
+
+    return filter_predictions(df_predictions, train_data)
 
 
 def compute_metrics(
@@ -520,12 +541,8 @@ def generate_random_baseline(
         )
     )
 
-    # perform an anti-join to remove items that users have already interacted with in training data
-    df_random = df_random.merge(
-        train_data, on=["user_id", "item_id"], how="left", indicator=True
-    )
-    df_random = df_random[df_random["_merge"] == "left_only"].drop(columns=["_merge"])
-    return df_random
+    # return filtered out items that users have already interacted with in training data by performing an anti-join
+    return filter_predictions(df_random, train_data)
 
 
 def generate_popularity_baseline(
@@ -565,11 +582,5 @@ def generate_popularity_baseline(
         )
     )
 
-    # perform an anti-join to remove items that users have already interacted with in training data
-    df_popular = df_popular.merge(
-        train_data, on=["user_id", "item_id"], how="left", indicator=True
-    )
-    df_popular = df_popular[df_popular["_merge"] == "left_only"].drop(
-        columns=["_merge"]
-    )
-    return df_popular
+    # return filtered out items that users have already interacted with in training data by performing an anti-join
+    return filter_predictions(df_popular, train_data)

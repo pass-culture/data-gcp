@@ -16,7 +16,7 @@ GCP_PROJECT_ID = (
 BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
 
 # Recommendation Parameters
-EVALUATION_USER_NUMBER = 5000 if ENV_SHORT_NAME == "prod" else 200
+EVALUATION_USER_NUMBER = 50_000 if ENV_SHORT_NAME == "prod" else 5000
 
 # MLflow
 SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}"

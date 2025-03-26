@@ -35,18 +35,17 @@ def main(
         "recommendation_test_data", help="Name of the test dataset in storage"
     ),
     list_k: list[int] = typer.Option(
-        [10, 50, 100, 250, 1000],
+        [50, 100, 250, 500, 1000],
         help="List of k values (top-k cutoff) for metrics evaluation.",
     ),
     all_users: bool = typer.Option(
         False, help="Whether to evaluate for all users or not"
     ),
-    dummy: bool = typer.Option(
-        False, help="Whether to evaluate metrics on dummy models or not"
+    batch_size: int = typer.Option(
+        100, help="Number of users to process in each batch"
     ),
-    quantile_threshold: float = typer.Option(
-        0.99,
-        help="Threshold to consider top X% most popular items (0-1 range) in recommend popular dummy model",
+    dummy: bool = typer.Option(
+        True, help="Whether to evaluate metrics on dummy models or not"
     ),
 ):
     logger.info("-------EVALUATE START------- ")
@@ -84,8 +83,8 @@ def main(
         test_dataset_name=test_dataset_name,
         list_k=list_k,
         all_users=all_users,
+        batch_size=batch_size,
         dummy=dummy,
-        quantile_threshold=quantile_threshold,
     )
 
     # Export the PCA representations of the item embeddings

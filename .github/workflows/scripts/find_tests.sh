@@ -1,7 +1,16 @@
 #!/bin/bash
 
-# Find directories named "tests" and get their parent directories
-find jobs -type d -name "tests" -exec dirname {} \; > /tmp/list.txt
+# Define a list of folders to ignore
+ignored_folders=("_template")
+
+# Build the find exclusion patterns
+find_exclusions=""
+for ignored in "${ignored_folders[@]}"; do
+  find_exclusions="$find_exclusions -not -path \"*$ignored*\""
+done
+
+# Find directories named "tests" and get their parent directories, excluding ignored folders
+eval "find jobs -type d -name \"tests\" $find_exclusions -exec dirname {} \;" > /tmp/list.txt
 
 # Initialize an array to hold the folder names
 folders=()

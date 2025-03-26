@@ -98,7 +98,15 @@ def upload_embeddings_to_bigquery(
     logger.info(f"Partitioning: {result.time_partitioning}")
 
 
-def mocked_main():
+def mocked_main(
+    experiment_name: str = typer.Option(None, help="Name of the experiment on MLflow"),
+    run_name: str = typer.Option(
+        None, help="GCP BQ dataset to put users and items embeddings tables in"
+    ),
+    dataset_id: str = typer.Option(
+        None, help="GCP BQ dataset to put users and items embeddings tables in"
+    ),
+):
     print("Mock: Doing Nothin")
     return
 

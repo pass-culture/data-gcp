@@ -102,7 +102,6 @@ def generate_predictions(test_data: pd.DataFrame, all_users: bool) -> pd.DataFra
     mapped_users_to_score = [
         user_to_index.get(user) for user in test_data["user_id"].unique()
     ]
-    # reverse_item_mapping = {v: k for k, v in item_to_index.items()}
     reverse_user_mapping = {v: k for k, v in user_to_index.items()}
 
     list_df_predictions = []

@@ -30,6 +30,7 @@ from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
@@ -77,6 +78,11 @@ default_args = {
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
+
+
+def should_upload_embeddings(**kwargs):
+    upload_embeddings = kwargs["params"].get("upload_embeddings", True)
+    return "upload_embeddings" if upload_embeddings else "skip_upload_embeddings"
 
 
 with DAG(
@@ -138,6 +144,11 @@ with DAG(
         "run_name": Param(default=train_params["run_name"], type=["string", "null"]),
         "experiment_name": Param(
             default=train_params["experiment_name"], type=["string", "null"]
+        ),
+        "upload_embeddings": Param(
+            default=True,
+            type="boolean",
+            description="Whether to upload embeddings to BigQuery after training",
         ),
     },
 ) as dag:
@@ -263,6 +274,18 @@ with DAG(
         dag=dag,
     )
 
+    branch_upload_embeddings = BranchPythonOperator(
+        task_id="branch_upload_embeddings",
+        python_callable=should_upload_embeddings,
+        provide_context=True,
+        dag=dag,
+    )
+
+    skip_upload_embeddings = DummyOperator(
+        task_id="skip_upload_embeddings",
+        dag=dag,
+    )
+
     upload_embeddings = SSHGCEOperator(
         task_id="upload_embeddings",
         instance_name="{{ params.instance_name }}",
@@ -276,13 +299,16 @@ with DAG(
     )
 
     gce_instance_stop = DeleteGCEOperator(
-        task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
+        task_id="gce_stop_task",
+        instance_name="{{ params.instance_name }}",
+        trigger_rule="none_failed_or_skipped",
     )
 
     send_slack_notif_success = HttpOperator(
         task_id="send_slack_notif_success",
         method="POST",
         http_conn_id="http_slack_default",
+        trigger_rule="none_failed_or_skipped",
         endpoint=f"{SLACK_CONN_PASSWORD}",
         data=json.dumps(
             {
@@ -301,7 +327,8 @@ with DAG(
         >> preprocess_data
         >> train
         >> evaluate
-        >> upload_embeddings
+        >> branch_upload_embeddings
+        >> [upload_embeddings, skip_upload_embeddings]
         >> gce_instance_stop
         >> send_slack_notif_success
     )

@@ -31,7 +31,7 @@ MIN_DELTA = 0.001
 LEARNING_RATE = 0.1
 VERBOSE = 2
 
-N_LATENT_VECTORS = 500
+N_LATENT_VECTORS = 1000
 
 
 def build_interaction_matrix(df: pd.DataFrame) -> csr_matrix:

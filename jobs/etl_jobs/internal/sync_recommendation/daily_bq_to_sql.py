@@ -7,14 +7,9 @@ from jobs.daily_bq_to_sql.export_to_gcs import ExportToGCSOrchestrator
 from jobs.daily_bq_to_sql.gcs_to_sql import GCSToSQLOrchestrator
 from jobs.daily_bq_to_sql.sql_materialize import SQLMaterializeOrchestrator
 from utils.bq_config import EXPORT_TABLES
-from utils.constant import PROJECT_NAME
-from utils.db import (
-    RECOMMENDATION_SQL_INSTANCE,
-    access_secret_data,
-)
-from utils.sql_config import (
-    MaterializedView,
-)
+from utils.constant import PROJECT_NAME, RECOMMENDATION_SQL_INSTANCE
+from utils.secret import access_secret_data
+from utils.sql_config import MaterializedView
 from utils.validate import parse_date, validate_table
 
 # Configure logging

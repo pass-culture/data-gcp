@@ -7,11 +7,8 @@ import typer
 from jobs.hourly_sql_to_bq.cloudsql_to_gcs import ExportCloudSQLToGCSOrchestrator
 from jobs.hourly_sql_to_bq.gcs_to_bq import GCSToBQOrchestrator
 from jobs.hourly_sql_to_bq.rm_sql_table import RemoveSQLTableOrchestrator
-from utils.db import (
-    PROJECT_NAME,
-    RECOMMENDATION_SQL_INSTANCE,
-    access_secret_data,
-)
+from utils.constant import PROJECT_NAME, RECOMMENDATION_SQL_INSTANCE
+from utils.secret import access_secret_data
 from utils.sql_config import EXPORT_TABLES
 from utils.validate import parse_date, validate_table
 

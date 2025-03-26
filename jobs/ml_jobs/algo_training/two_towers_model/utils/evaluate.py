@@ -320,6 +320,7 @@ def evaluate(
         logger.info("Generating random baseline predictions")
         df_random = generate_random_baseline(
             test_data=data_dict["test"],
+            train_data=data_dict["train"],
             num_recommendations=max(list_k),
             specific_users=predicted_users,
         )
@@ -330,6 +331,7 @@ def evaluate(
         logger.info("Generating popularity baseline predictions")
         df_popular = generate_popularity_baseline(
             test_data=data_dict["test"],
+            train_data=data_dict["train"],
             num_recommendations=max(list_k),
             specific_users=predicted_users,
         )
@@ -484,6 +486,7 @@ def plot_metrics_evolution(metrics, list_k, figures_folder):
 
 def generate_random_baseline(
     test_data: pd.DataFrame,
+    train_data: pd.DataFrame,
     num_recommendations: int,
     specific_users: List[str],
 ) -> pd.DataFrame:
@@ -492,6 +495,7 @@ def generate_random_baseline(
 
     Args:
         test_data (pd.DataFrame): DataFrame with at least a 'user_id' and 'item_id' column.
+        train_data (pd.DataFrame): DataFrame with at least a 'user_id' and 'item_id' column.
         num_recommendations (int): Number of random items to recommend per user.
         specific_users (List[str]): List of user IDs to generate recommendations for.
 
@@ -515,11 +519,18 @@ def generate_random_baseline(
             score=np.random.rand(len(df_users) * num_recommendations),
         )
     )
+
+    # perform an anti-join to remove items that users have already interacted with in training data
+    df_random = df_random.merge(
+        train_data, on=["user_id", "item_id"], how="left", indicator=True
+    )
+    df_random = df_random[df_random["_merge"] == "left_only"].drop(columns=["_merge"])
     return df_random
 
 
 def generate_popularity_baseline(
     test_data: pd.DataFrame,
+    train_data: pd.DataFrame,
     num_recommendations: int,
     specific_users: List[str],
 ) -> pd.DataFrame:
@@ -528,6 +539,7 @@ def generate_popularity_baseline(
 
     Args:
         test_data (pd.DataFrame): DataFrame with at least 'user_id' column.
+        train_data (pd.DataFrame): DataFrame with at least 'user_id' and 'item_id' columns.
         num_recommendations (int): Number of items to recommend per user.
         specific_users (List[str]): List of user IDs to generate recommendations for.
 
@@ -551,5 +563,13 @@ def generate_popularity_baseline(
             ),
             score=np.random.rand(len(df_users) * num_recommendations),
         )
+    )
+
+    # perform an anti-join to remove items that users have already interacted with in training data
+    df_popular = df_popular.merge(
+        train_data, on=["user_id", "item_id"], how="left", indicator=True
+    )
+    df_popular = df_popular[df_popular["_merge"] == "left_only"].drop(
+        columns=["_merge"]
     )
     return df_popular

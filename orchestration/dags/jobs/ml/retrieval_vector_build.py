@@ -50,7 +50,7 @@ gce_params = {
     "container_worker": {"dev": "1", "stg": "1", "prod": "1"},
 }
 
-schedule_dict = {"prod": "0 5 * * *", "dev": "0 6 * * *", "stg": "0 6 * * 3"}
+schedule_dict = {"prod": "0 8 * * *", "dev": "0 8 * * *", "stg": "0 8 * * 3"}
 
 
 with DAG(

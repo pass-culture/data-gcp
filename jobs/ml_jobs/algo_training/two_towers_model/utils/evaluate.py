@@ -1,5 +1,5 @@
 import secrets
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -61,6 +61,28 @@ def load_data_for_evaluation(
     return {"train": train_data, "test": test_data}
 
 
+def get_scann_params(env_short_name: str, max_k: int) -> Dict[str, Any]:
+    if env_short_name == "prod":
+        return {
+            "k": 5,
+            "distance_measure": "dot_product",
+            "num_leaves": 500,
+            "num_leaves_to_search": 50,
+            "training_iterations": 20,
+            "parallelize_batch_searches": True,
+            "num_reordering_candidates": max_k,
+        }
+    else:
+        return {
+            "k": 5,
+            "distance_measure": "dot_product",
+            "num_leaves": 5,
+            "num_leaves_to_search": 5,
+            "training_iterations": 20,
+            "parallelize_batch_searches": True,
+        }
+
+
 def generate_predictions(
     model,
     train_data: pd.DataFrame,
@@ -110,25 +132,8 @@ def generate_predictions(
 
     # Initialize ScaNN index
     # Scann params were manually tuned for the prod dataset
-    if ENV_SHORT_NAME == "prod":
-        scann = tfrs.layers.factorized_top_k.ScaNN(
-            k=max_k,
-            distance_measure="dot_product",
-            num_leaves=500,
-            num_leaves_to_search=50,
-            training_iterations=20,
-            parallelize_batch_searches=True,
-            num_reordering_candidates=max_k,
-        )
-    else:
-        scann = tfrs.layers.factorized_top_k.ScaNN(
-            k=5,
-            distance_measure="dot_product",
-            num_leaves=5,
-            num_leaves_to_search=5,
-            training_iterations=20,
-            parallelize_batch_searches=True,
-        )
+    scann_params = get_scann_params(ENV_SHORT_NAME, max_k)
+    scann = tfrs.layers.factorized_top_k.ScaNN(**scann_params)
 
     scann_index = scann.index(
         candidates=offers_to_score_embeddings,
@@ -136,7 +141,7 @@ def generate_predictions(
     )
 
     logger.info(f"Using batch size of {batch_size} users")
-    list_df_predictions = []
+    list_predictions_dict = []
 
     for i in tqdm(
         range(0, len(users_to_test), batch_size), mininterval=20, maxinterval=60
@@ -148,22 +153,23 @@ def generate_predictions(
         # Get recommendations using ScaNN
         scores, candidates = scann_index(user_embeddings)
 
-        # Create DataFrame for this batch
-        batch_predictions = {
-            "user_id": np.repeat(batch_users, max_k),
-            "item_id": candidates.numpy().flatten(),
-            "score": scores.numpy().flatten(),
-        }
-        list_df_predictions.append(batch_predictions)
+        # Append batch predictions dict to list of predictions
+        list_predictions_dict.append(
+            {
+                "user_id": np.repeat(batch_users, max_k),
+                "item_id": candidates.numpy().flatten(),
+                "score": scores.numpy().flatten(),
+            }
+        )
 
     # Combine all batches
     df_predictions = pd.concat(
-        [pd.DataFrame(batch_predictions) for batch_predictions in list_df_predictions],
+        [
+            pd.DataFrame(batch_predictions)
+            for batch_predictions in list_predictions_dict
+        ],
         ignore_index=True,
-    )
-    df_predictions.item_id = df_predictions.item_id.astype(
-        str
-    )  # convert bytes to string
+    ).astype({"item_id": str})  # convert bytes to string
 
     # Filter out items that users have already interacted with in training data by performing an anti-join
     df_predictions = df_predictions.merge(

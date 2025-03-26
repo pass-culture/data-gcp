@@ -148,7 +148,7 @@ union all
         collective_offer_last_validation_type,
         null as institution_id,
         collective_offer_image_id,
-        provider_id,
+        null as provider_id,
         national_program_id,
         collective_offer_template_beginning_date,
         collective_offer_template_ending_date,

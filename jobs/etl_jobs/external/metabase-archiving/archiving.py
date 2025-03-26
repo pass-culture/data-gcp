@@ -168,13 +168,12 @@ class MoveToArchive:
                     "parent_folder": self.parent_folder,
                 }
             )
-        return archived_logs
+        self.archived_logs = archived_logs
 
     def save_logs_bq(self):
         """Save the movement in a BQ table."""
 
-        archived_logs_dict = self.move_object()
-        archived_logs_df = pd.DataFrame(archived_logs_dict)
+        archived_logs_df = pd.DataFrame(self.archived_logs)
         archived_logs_df.to_gbq(
             f"""{PROJECT_NAME}.{INT_METABASE_DATASET}.archiving_log""",
             project_id=PROJECT_NAME,

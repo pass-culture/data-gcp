@@ -10,6 +10,7 @@ from loguru import logger
 from commons.constants import (
     BIGQUERY_CLEAN_DATASET,
     GCP_PROJECT_ID,
+    LIST_K,
     MLFLOW_RUN_ID_FILENAME,
     MODEL_DIR,
     MODEL_NAME,
@@ -33,10 +34,6 @@ def main(
     ),
     test_dataset_name: str = typer.Option(
         "recommendation_test_data", help="Name of the test dataset in storage"
-    ),
-    list_k: list[int] = typer.Option(
-        [50, 100, 250, 500, 1000],
-        help="List of k values (top-k cutoff) for metrics evaluation.",
     ),
     all_users: bool = typer.Option(
         False, help="Whether to evaluate for all users or not"
@@ -81,7 +78,7 @@ def main(
         storage_path=STORAGE_PATH,
         train_dataset_name=train_dataset_name,
         test_dataset_name=test_dataset_name,
-        list_k=list_k,
+        list_k=LIST_K,
         all_users=all_users,
         batch_size=batch_size,
         dummy=dummy,
@@ -102,7 +99,7 @@ def main(
     # Create metrics evolution plots
     metrics_plots_path = f"{MODEL_DIR}/metrics_plots/"
     os.makedirs(metrics_plots_path, exist_ok=True)
-    plot_metrics_evolution(metrics, list_k, metrics_plots_path)
+    plot_metrics_evolution(metrics, LIST_K, metrics_plots_path)
 
     connect_remote_mlflow()
     with mlflow.start_run(

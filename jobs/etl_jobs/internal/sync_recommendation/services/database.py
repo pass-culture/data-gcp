@@ -1,11 +1,14 @@
 import logging
+import time
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Tuple
 
 import duckdb
+import psycopg2
 from google.cloud import bigquery
+from psycopg2.extensions import connection
 
-from jobs.etl_jobs.internal.sync_recommendation.utils.db import get_db_connection
+from utils.constant import MAX_RETRIES
 
 logger = logging.getLogger(__name__)
 
@@ -16,11 +19,6 @@ class DatabaseService(ABC):
     @abstractmethod
     def execute_query(self, query: str, params: Optional[Dict] = None) -> None:
         """Execute a database query"""
-        pass
-
-    @abstractmethod
-    def export_data(self, query: str, destination_path: str) -> None:
-        """Export data to a destination"""
         pass
 
     @abstractmethod
@@ -36,11 +34,23 @@ class BigQueryService(DatabaseService):
         self._last_query_result = None
 
     def execute_query(self, query: str, params: Optional[Dict] = None) -> None:
-        job_config = bigquery.QueryJobConfig(
-            destination=params.get("destination"),
-            write_disposition=params.get("write_disposition", "WRITE_TRUNCATE"),
-        )
-        query_job = self.client.query(query, job_config=job_config)
+        """Execute a BigQuery query.
+
+        Args:
+            query: The SQL query to execute
+            params: Optional dictionary containing:
+                - destination: BigQuery table to write results to (optional)
+                - write_disposition: WRITE_TRUNCATE, WRITE_APPEND, or WRITE_EMPTY (default: WRITE_TRUNCATE)
+        """
+        if params and "destination" in params:
+            job_config = bigquery.QueryJobConfig(
+                destination=params["destination"],
+                write_disposition=params.get("write_disposition", "WRITE_TRUNCATE"),
+            )
+            query_job = self.client.query(query, job_config=job_config)
+        else:
+            query_job = self.client.query(query)
+
         self._last_query_result = query_job.result()
 
     def export_data(
@@ -78,24 +88,20 @@ class BigQueryService(DatabaseService):
             source_format=bigquery.SourceFormat.PARQUET,
             write_disposition=write_disposition,
             schema=schema,
-            # Parquet-specific options
             parquet_options=bigquery.ParquetOptions(
-                enable_list_inference=True,  # Enable inference for LIST and STRUCT types
-                enum_as_string=True,  # Convert ENUM types to strings
+                enable_list_inference=True,
+                enum_as_string=True,
             ),
         )
 
-        # Start the load job
         load_job = self.client.load_table_from_uri(
             source_uris=gcs_path,
             destination=table_id,
             job_config=job_config,
         )
 
-        # Wait for the job to complete
         load_job.result()
 
-        # Get the number of rows loaded
         table = self.client.get_table(table_id)
         logger.info(f"Loaded {table.num_rows} rows into {table_id}")
 
@@ -112,8 +118,40 @@ class CloudSQLService(DatabaseService):
         self._last_cursor = None
         self.duck_service = DuckDBService()
 
+    def __get_db_connection(self) -> connection:
+        """Create a database connection with retries."""
+        retry_count = 0
+        conn = None
+
+        database_url = self.connection_params["database_url"]
+
+        while retry_count < MAX_RETRIES and conn is None:
+            try:
+                conn = psycopg2.connect(database_url)
+                conn.autocommit = False
+                return conn
+            except Exception as e:
+                retry_count += 1
+                if retry_count >= MAX_RETRIES:
+                    logger.error(
+                        f"Failed to connect to database after {MAX_RETRIES} attempts: {str(e)}"
+                    )
+                    raise
+
+                wait_time = min(30, 5 * retry_count)
+                logger.warning(
+                    f"Database connection failed (attempt {retry_count}/{MAX_RETRIES}). Retrying in {wait_time}s..."
+                )
+                time.sleep(wait_time)
+
     def execute_query(self, query: str, params: Optional[Dict] = None) -> None:
-        with get_db_connection(**self.connection_params) as conn:
+        """Execute a query on CloudSQL.
+
+        Args:
+            query: The SQL query to execute
+            params: Optional query parameters
+        """
+        with self.__get_db_connection() as conn:
             with conn.cursor() as cursor:
                 self._last_cursor = cursor
                 cursor.execute(query, params or {})
@@ -130,24 +168,34 @@ class DuckDBService(DatabaseService):
     def __init__(self, database_path: str = ":memory:"):
         self.database_path = database_path
         self._last_result = None
+        self._connection = None
 
     def setup_connection(self) -> duckdb.DuckDBPyConnection:
-        conn = duckdb.connect(self.database_path)
-        conn.execute("INSTALL postgres; LOAD postgres;")
-        conn.execute("INSTALL httpfs; LOAD httpfs;")
-        conn.execute("INSTALL spatial; LOAD spatial;")
-        return conn
+        """Setup a new DuckDB connection with required extensions."""
+        if self._connection is None:
+            self._connection = duckdb.connect(self.database_path)
+            self._connection.execute("INSTALL postgres; LOAD postgres;")
+            self._connection.execute("INSTALL httpfs; LOAD httpfs;")
+            self._connection.execute("INSTALL spatial; LOAD spatial;")
+        return self._connection
+
+    def close_connection(self) -> None:
+        """Close the DuckDB connection if it exists."""
+        if self._connection is not None:
+            self._connection.close()
+            self._connection = None
 
     def execute_query(self, query: str, params: Optional[Dict] = None) -> None:
-        with self.setup_connection() as conn:
-            self._last_result = conn.execute(query).fetchall()
+        """Execute a query using the maintained connection."""
+        conn = self.setup_connection()
+        self._last_result = conn.execute(query).fetchall()
 
     def parquet_to_cloudsql(self, query: str, destination_path: str) -> None:
         """Export data from DuckDB"""
-        with self.setup_connection() as conn:
-            conn.execute(
-                f"COPY ({query}) TO '{destination_path}' (FORMAT PARQUET, COMPRESSION SNAPPY)"
-            )
+        conn = self.setup_connection()
+        conn.execute(
+            f"COPY ({query}) TO '{destination_path}' (FORMAT PARQUET, COMPRESSION SNAPPY)"
+        )
         logger.info(f"Successfully exported data to {destination_path}")
 
     def fetch_one(self) -> Tuple[Any, ...]:
@@ -164,12 +212,11 @@ class DuckDBService(DatabaseService):
             query: SQL query to extract data from CloudSQL
             destination_path: Local path where to save the Parquet file
         """
-        # Setup DuckDB connection with PostgreSQL extension
-        with self.setup_connection() as conn:
-            conn.execute(f"""
-                COPY (
-                    SELECT * FROM pg_db.({query})
-                ) TO '{destination_path}'
-                (FORMAT PARQUET, COMPRESSION SNAPPY)
-            """)
+        conn = self.setup_connection()
+        conn.execute(f"""
+            COPY (
+                SELECT * FROM pg_db.({query})
+            ) TO '{destination_path}'
+            (FORMAT PARQUET, COMPRESSION SNAPPY)
+        """)
         logger.info(f"Successfully exported data to {destination_path}")

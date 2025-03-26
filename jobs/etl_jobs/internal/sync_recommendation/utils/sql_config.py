@@ -3,6 +3,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Dict, Optional
 
+from utils.constant import ENV_SHORT_NAME
+
 
 class MaterializedView(Enum):
     ENRICHED_USER = "enriched_user_mv"
@@ -107,6 +109,9 @@ CLOUD_SQL_TABLES_CONFIG: Dict[str, Dict] = {
         },
         "time_column": "date",
         "partition_field": "import_date",
+        "sql_table_name": "past_offer_context",
+        "bigquery_table_name": "past_offer_context",
+        "bigquery_dataset_name": f"raw_{ENV_SHORT_NAME}",
     }
 }
 

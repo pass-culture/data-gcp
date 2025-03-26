@@ -25,7 +25,6 @@ class GCSToSQLOrchestrator:
 
     def import_table(
         self,
-        table_name: str,
         table_config: BQTableConfig,
         bucket_path: str,
         execution_date: datetime,
@@ -33,23 +32,24 @@ class GCSToSQLOrchestrator:
         """Import a table from GCS Parquet files to Cloud SQL using DuckDB as an intermediary.
 
         Args:
-            table_name: Name of the table to import
             table_config: Configuration for the table
             bucket_path: Full GCS path where the export is stored
             execution_date: Execution date for the import
         """
-        logger.info(f"Starting import of {table_name} to Cloud SQL using DuckDB")
+        logger.info(
+            f"Starting import of {table_config.bigquery_table_name} to Cloud SQL using DuckDB"
+        )
         start_time = time.time()
         parquet_files = []
 
         try:
             # Download Parquet files from GCS
-            parquet_files = self._download_parquet_files(bucket_path, table_name)
+            parquet_files = self._download_parquet_files(
+                bucket_path, table_config.bigquery_table_name
+            )
 
             # Create a temporary DuckDB database
-            duck_db_path = (
-                f"/tmp/{table_name}_{execution_date.strftime('%Y%m%d')}.duckdb"
-            )
+            duck_db_path = f"/tmp/{table_config.bigquery_table_name}_{execution_date.strftime('%Y%m%d')}.duckdb"
             self.duck_service.database_path = duck_db_path
 
             try:
@@ -63,15 +63,25 @@ class GCSToSQLOrchestrator:
                 # Get column definitions for PostgreSQL table
                 columns_sql = table_config.column_definitions
 
-                # Drop existing table in PostgreSQL if it exists
-                logger.info(f"Dropping existing table {table_name} if it exists")
+                # Attach PostgreSQL database
+                logger.info("Attaching PostgreSQL database")
                 self.duck_service.execute_query(
-                    f"DROP TABLE IF EXISTS pg_db.{table_name}"
+                    f"ATTACH '{self.database_url}' AS pg_db (TYPE postgres)"
+                )
+
+                # Drop existing table in PostgreSQL if it exists
+                logger.info(
+                    f"Dropping existing table {table_config.bigquery_table_name} if it exists"
+                )
+                self.duck_service.execute_query(
+                    f"DROP TABLE IF EXISTS pg_db.{table_config.bigquery_table_name}"
                 )
 
                 # Create table in PostgreSQL
-                logger.info(f"Creating table {table_name} in PostgreSQL")
-                create_table_sql = f"CREATE TABLE pg_db.{table_name} ({columns_sql})"
+                logger.info(
+                    f"Creating table {table_config.bigquery_table_name} in PostgreSQL"
+                )
+                create_table_sql = f"CREATE TABLE pg_db.{table_config.bigquery_table_name} ({columns_sql})"
                 self.duck_service.execute_query(create_table_sql)
 
                 # Create view with proper column conversions
@@ -82,42 +92,44 @@ class GCSToSQLOrchestrator:
 
                 # Copy data from Parquet to PostgreSQL using the WKT view
                 logger.info(
-                    f"Copying data from Parquet to PostgreSQL table {table_name}"
+                    f"Copying data from Parquet to PostgreSQL table {table_config.bigquery_table_name}"
                 )
                 copy_start_time = time.time()
                 self.duck_service.execute_query(
-                    f"INSERT INTO pg_db.{table_name} SELECT * FROM parquet_data_wkt"
+                    f"INSERT INTO pg_db.{table_config.bigquery_table_name} SELECT * FROM parquet_data_wkt"
                 )
 
                 copy_elapsed_time = time.time() - copy_start_time
 
                 # Get row count
                 self.duck_service.execute_query(
-                    f"SELECT COUNT(*) FROM pg_db.{table_name}"
+                    f"SELECT COUNT(*) FROM pg_db.{table_config.bigquery_table_name}"
                 )
                 total_rows = self.duck_service.fetch_one()[0]
 
                 logger.info(
-                    f"Successfully copied {total_rows} rows to PostgreSQL table {table_name} in {copy_elapsed_time:.2f} seconds"
+                    f"Successfully copied {total_rows} rows to PostgreSQL table {table_config.bigquery_table_name} in {copy_elapsed_time:.2f} seconds"
                 )
 
                 # Detach PostgreSQL database
                 self.duck_service.execute_query("DETACH pg_db")
 
             finally:
+                # Close DuckDB connection
+                self.duck_service.close_connection()
                 # Remove temporary DuckDB database
                 if os.path.exists(duck_db_path):
                     os.remove(duck_db_path)
 
             elapsed_time = time.time() - start_time
             logger.info(
-                f"Successfully imported {table_name} to Cloud SQL in {elapsed_time:.2f} seconds"
+                f"Successfully imported {table_config.bigquery_table_name} to Cloud SQL in {elapsed_time:.2f} seconds"
             )
 
         except Exception as e:
             elapsed_time = time.time() - start_time
             logger.error(
-                f"Failed to import {table_name} to Cloud SQL after {elapsed_time:.2f} seconds: {str(e)}"
+                f"Failed to import {table_config.bigquery_table_name} to Cloud SQL after {elapsed_time:.2f} seconds: {str(e)}"
             )
             raise
         finally:

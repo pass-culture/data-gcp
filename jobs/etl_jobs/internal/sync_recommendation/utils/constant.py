@@ -1,4 +1,8 @@
 import os
+from pathlib import Path
+
+SQL_PATH = Path(__file__).parent.parent / "sql"
+
 
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 PROJECT_NAME = os.environ.get("GCP_PROJECT_ID")

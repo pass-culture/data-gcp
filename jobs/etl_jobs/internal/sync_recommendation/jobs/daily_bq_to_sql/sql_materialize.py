@@ -1,14 +1,12 @@
 import logging
 from datetime import datetime
-from pathlib import Path
 
 from services.database import CloudSQLService
 from services.materialized_view import MaterializedViewService
+from utils.constant import SQL_PATH
 from utils.sql_config import MaterializedView
 
 logger = logging.getLogger(__name__)
-
-SQL_PATH = Path(__file__).parent.parent / "sql"
 
 
 class SQLMaterializeOrchestrator:

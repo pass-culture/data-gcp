@@ -16,7 +16,7 @@ from recommenders.evaluation.python_evaluation import (
 from sklearn.decomposition import PCA
 from tqdm import tqdm
 
-from commons.constants import EVALUATION_USER_NUMBER
+from commons.constants import ENV_SHORT_NAME, EVALUATION_USER_NUMBER
 from commons.data_collect_queries import read_from_gcs
 
 
@@ -110,17 +110,26 @@ def generate_predictions(
 
     # Initialize ScaNN index
     # Scann params were manually tuned for the prod dataset
-    scann = tfrs.layers.factorized_top_k.ScaNN(
-        k=max_k,
-        distance_measure="dot_product",
-        num_leaves=500,
-        num_leaves_to_search=50,
-        training_iterations=20,
-        parallelize_batch_searches=True,
-        num_reordering_candidates=max_k,
-    )
+    if ENV_SHORT_NAME == "prod":
+        scann = tfrs.layers.factorized_top_k.ScaNN(
+            k=max_k,
+            distance_measure="dot_product",
+            num_leaves=500,
+            num_leaves_to_search=50,
+            training_iterations=20,
+            parallelize_batch_searches=True,
+            num_reordering_candidates=max_k,
+        )
+    else:
+        scann = tfrs.layers.factorized_top_k.ScaNN(
+            k=5,
+            distance_measure="dot_product",
+            num_leaves=5,
+            num_leaves_to_search=5,
+            training_iterations=20,
+            parallelize_batch_searches=True,
+        )
 
-    # Bruteforce index
     scann_index = scann.index(
         candidates=offers_to_score_embeddings,
         identifiers=tf.constant(offers_to_score),

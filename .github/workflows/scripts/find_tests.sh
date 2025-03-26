@@ -10,7 +10,7 @@ for ignored in "${ignored_folders[@]}"; do
 done
 
 # Find directories named "tests" and get their parent directories, excluding ignored folders
-eval "find jobs -type d -name \"tests\" $find_exclusions -exec dirname {} \;" > /tmp/list.txt
+find jobs -type d -name "tests" $find_exclusions -exec dirname {} \; > /tmp/list.txt
 
 # Initialize an array to hold the folder names
 folders=()

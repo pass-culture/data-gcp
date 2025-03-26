@@ -1,6 +1,6 @@
 # APIs
 
-In the data ecosystem at Pass Culture, APIs play a crucial role in the data ecosystem at Pass Culture, enabling seamless data extraction from external data sources and availability of our internal services. This section provides an overview of the APIs developed and maintained by the data team, focusing on their exposure, usage, and documentation. It also provides an overview of the use of APIs to extract data.
+APIs play a crucial role in Pass Culture's data stack. Their use range from typical data extraction from various sources to exposing our services and data products to other teams within our private network. This section provides an overview of the APIs developed and maintained by the data team, focusing on their exposure, usage, and documentation. It also provides an overview of APIs used to extract data.
 
 ## APIs deployed by the data team
 There are mainly two services deployed as APIs by the data team.

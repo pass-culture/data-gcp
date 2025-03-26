@@ -8,7 +8,7 @@ select
     o.visa as movie_visa,
     o.release_date as movie_release_date,
     o.genres as movie_genres,
-    o.countries as movie_counries,
+    o.countries as movie_countries,
     o.book_editor,
     o.isbn as offer_ean,
     om.gtl_label_level_1,

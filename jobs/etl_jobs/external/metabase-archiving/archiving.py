@@ -133,10 +133,13 @@ class MoveToArchive:
 
         id_list = [self.id]
 
+        print(self)
+
         if self.object_type == "card":
             result = self.metabase_connection.update_card_collections(
                 id_list, self.destination_collection
             )
+            print(f"Card {self.id} moved with status {result.get('status')}")
 
         archived_logs = []
 

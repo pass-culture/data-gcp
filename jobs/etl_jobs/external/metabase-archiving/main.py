@@ -46,6 +46,7 @@ def run():
         archives_dicts = list_archive.preprocess_data_archiving(object_type="card")
 
         for card in archives_dicts[:max_cards_to_archive]:
+            print(card)
             archiving = MoveToArchive(
                 movement=card,
                 metabase=metabase,

@@ -30,7 +30,7 @@ jobs:
           fetch-depth: 0
       - name: "Trouver les Jobs testables"
         id: "find-testable-jobs"
-        run: .github/workflows/scripts/find_tests.sh
+        run: .github/workflows/scripts/find_tests.sh --no-escape
 
   test-jobs:
     needs: find-test-jobs

@@ -65,7 +65,7 @@ def get_scann_params(env_short_name: str, max_k: int) -> Dict[str, Any]:
     if env_short_name == "prod":
         logger.info("Using ScaNN params for prod")
         return {
-            "k": 5,
+            "k": max_k,
             "distance_measure": "dot_product",
             "num_leaves": 500,
             "num_leaves_to_search": 50,
@@ -200,7 +200,6 @@ def generate_predictions(
     ).astype({"item_id": str})  # convert bytes to string
 
     # Return filtered out items that users have already interacted with in training data by performing an anti-join
-
     return filter_predictions(df_predictions, train_data)
 
 

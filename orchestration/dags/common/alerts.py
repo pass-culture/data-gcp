@@ -1,5 +1,6 @@
 import ast
 import json
+import re
 from datetime import datetime
 
 import requests
@@ -53,6 +54,20 @@ JOB_TYPE = {
 GROUP_SLACK_IDS = {DAG_TAGS.DS.value: "S08CVKQ4K9S", DAG_TAGS.DE.value: "S08CT44F7J6"}
 
 
+def remove_duplicate_prefix(instance_name: str, prefix: str) -> str:
+    # Build a regex pattern that matches one or more occurrences of the prefix followed by a hyphen at the beginning
+    pattern = rf"^(?:{re.escape(prefix + '-')})+"
+    match = re.match(pattern, instance_name)
+    if match:
+        # Count how many occurrences of the prefix (with hyphen) are found
+        occurrences = match.group(0).count(prefix + "-")
+        # Only modify if there is more than one occurrence
+        if occurrences > 1:
+            # Replace the matched sequence with a single occurrence of prefix and hyphen
+            instance_name = re.sub(pattern, f"{prefix}-", instance_name)
+    return instance_name
+
+
 def task_fail_slack_alert(context):
     return __task_fail_slack_alert(context, job_type=ENV_SHORT_NAME)
 
@@ -71,6 +86,7 @@ def on_failure_callback_stop_vm(context: dict):
         # Ensure any templated fields are rendered
         failing_task.render_template_fields(context)
         instance_name = failing_task.instance_name
+        # instance_name = remove_duplicate_prefix(instance_name, GCE_BASE_PREFIX)
 
         # Retrieve the TaskInstance from context
         ti = context.get("ti")
@@ -87,7 +103,6 @@ def on_failure_callback_stop_vm(context: dict):
             start_date=ti.start_date,
             end_date=ti.end_date,
             ignore_ti_state=True,
-            context=context,
         )
 
 

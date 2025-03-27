@@ -134,7 +134,7 @@ class StopGCEOperator(BaseOperator):
         **kwargs,
     ):
         super(StopGCEOperator, self).__init__(*args, **kwargs)
-        self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
+        self.instance_name = f"{instance_name}"
 
     def execute(self, context):
         hook = GCEHook()

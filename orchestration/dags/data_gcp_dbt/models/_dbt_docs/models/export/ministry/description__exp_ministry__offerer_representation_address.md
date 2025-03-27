@@ -7,7 +7,7 @@ description: Description of the `exp_ministry__offerer_representation_address` t
 
 # Table: Offerer Representation Address
 
-:warning: This has been created in 2025, is still under development and will be updated in the future.
+:construction_worker_tone1: This has been created in 2025, is still under development and will be updated in the future.
 Once the migration between old and new address concepts will be completed, this table will be removed as we will link directly offer_id to address_id.
 
 This model exports to the ministry the offerer representation address data mapping between offerer and new address concept.

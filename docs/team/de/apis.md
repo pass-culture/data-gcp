@@ -36,7 +36,7 @@ From the API, we extract statistics reports that enable marketing team to evalua
 ### 4. Batch
 > Batch is a marketing tool to automate and monitor push notifications on mobile devices.
 
-The data extracted from the Batch systems concerns data about campaigns and transactional notifications on mobile devices.
+> The data extracted from the Batch systems concerns data about campaigns and transactional notifications on mobile devices.
 
 ### 5. Brevo
 > Brevo is a marketing tool to automate and monitor marketing emails sent to users.
@@ -48,10 +48,10 @@ The data extracted from the Batch systems concerns data about campaigns and tran
 > DMS (Démarches Simplifiées) is a French government platform that allows administrations to digitize and streamline public service procedures, enabling users to submit and process requests online efficiently.
 
 ### 8. Apple/Google : App downloads
-The data extracted from Apple store and Play store enables the pass Culture team to follow the volume of downloads of the mobile app.
+> The data extracted from Apple store and Play store enables the pass Culture team to follow the volume of downloads of the mobile app.
 
 ### 9. Instagram
-Data extracted from Meta systems enables social media teams to monitor the impact of their work on young people's enthusiasm for culture.
+> Data extracted from Meta systems enables social media teams to monitor the impact of their work on young people's enthusiasm for culture.
 
 ### 10. Metabase
 > Metabase is an open-source business intelligence tool that allows users to explore, visualize, and share data through a no-code, user-friendly interface.
@@ -59,16 +59,16 @@ Data extracted from Meta systems enables social media teams to monitor the impac
 ### 11. Qualtrics
 > Qualtrics is an experience management platform that enables organizations to collect, analyze, and act on customer, employee, product, and brand feedback through surveys and advanced analytics.
 
-Every month, a survey is sent both to young users and to cultural partners to measure the satisfaction on the device. For this purpose, surveys' answers report are exported in the pass Culture system.
+> Every month, a survey is sent both to young users and to cultural partners to measure the satisfaction on the device. For this purpose, surveys' answers report are exported in the pass Culture system.
 
 ### 12. Siren
 > Access information on companies and establishments registered in Insee's Sirene inter-administrative directory
 
-This API enables the extraction of administrative information on cultural structures. This data is used by the legal/conformity team to prevent fraud.
+> This API enables the extraction of administrative information on cultural structures. This data is used by the legal/conformity team to prevent fraud.
 
 ### 13. Tiktok
 
-Data extracted from Tiktok systems enables social media teams to monitor the impact of their work on young people's enthusiasm for culture.
+> Data extracted from Tiktok systems enables social media teams to monitor the impact of their work on young people's enthusiasm for culture.
 
 ### 14. Zendesk
 > Zendesk is a cloud-based customer service and support platform that helps manage user interactions through ticketing, live chat, knowledge bases, and automation.

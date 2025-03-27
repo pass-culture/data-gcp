@@ -7,7 +7,7 @@ description: Description of the `exp_ministry__address` table.
 
 # Table: Address
 
-:warning: This has been created in 2025, is still under development and will be updated in the future.
+:construction_worker_tone1: This has been created in 2025, is still under development and will be updated in the future.
 
 This model exports address data for ministry use.
 It provides a list of addresses of representation venues by unique identifier.

@@ -108,6 +108,10 @@ with DAG(
         >> fetch_install_code
         >> fetch_install_pc_main_dependencies
         >> subcategories_job
-        >> types_job
-        >> gce_instance_stop
     )
+
+    (
+        subcategories_job >> types_job
+    )  # TODO: Put this before gce_instance_stop once it is fixed
+
+    (subcategories_job >> gce_instance_stop)

@@ -8,7 +8,7 @@ Basically, we are training a model which allows to provide :
 
 
 
-# The pipeline architecture
+## I. The pipeline architecture
 
 We are using a Retrieval-Ranking model, which is a model that retrieves a list of items from a large corpus and ranks them in order of relevance to a given query, as you can see below.
 ![Retrieval-Ranking model](assets/retrieval-ranking-architecture.png)
@@ -22,78 +22,52 @@ Indeed, the model is composed of three parts:
 * A **Post-ranking model** : it selects offers from different categories and/or subcategories. The goal is to select a more equitable and diverse distribution of offers by categories (different artists, venues, types of offers, etc.). This combination can be done by categories, subcategories, GTL (book categorization), or by groups of clusters that have been previously trained on the semantics of the offers. The default case is clusters (500 clusters out of 4M items).
 
 
-## The Retrieval Model
+## II. The Retrieval Model
 
-### Main Objective
+### II.A Overview
 
-- Extract, from a very large number of items (potentially millions), a limited subset of potentially relevant items for the user.
-- This involves retrieving candidate offers for recommendations from the pass offer catalog (~10e6). Generally, this step allows going from ***N(~1e6)*** to ***k(~1e3)*** offers. Given that the offer catalog is very large, the Retrieval is often a *less precise but fast model*. We therefore choose a ***relatively high number of candidates*** to avoid "missing" any good recommendations (i.e., with an optimization of the recall metric).
+- Main Objective:
+    - Extract, from a very large number of items (potentially millions), a limited subset of potentially relevant items for the user.
+    - This involves retrieving candidate offers for recommendations from the pass offer catalog (~10e6). Generally, this step allows going from ***N(~1e6)*** to ***k(~1e3)*** offers. Given that the offer catalog is very large, the Retrieval is often a *less precise but fast model*. We therefore choose a ***relatively high number of candidates*** to avoid "missing" any good recommendations (i.e., with an optimization of the recall metric).
+- Common Techniques
+    - **Collaborative Filtering:** Uses the history of interactions (clicks, purchases, etc.) of similar users to identify items likely to interest the target user.
+    - **Content-based Filtering:** Compares item attributes with user preferences or profile.
+- Expected Result
+    - A set of candidates (often a few hundred or thousand) that will be refined in the next step.
+- What we do in practice
+    - We use up to 3 retrieval models to generate the candidates for the ranking model:
+        - A model based on the user's interactions with the application and his profile. The algorithm used is the Two-Tower model which is the standard in the indutry (see below).
+        - A top offers model, which is a model that retrieves the most popular offers.
+        - A model based on the current trends.
+    - We apply this retrieval to 2 uses cases as presented above :
+        - Home Recommendations : Given a user, we retrieve a list of offers that are likely to interest him.
+        - Similar Offers Recommendations : Given an offer, we retrieve a list of offers that are similar to it.
 
-### Common Techniques
-
-- **Collaborative Filtering:** Uses the history of interactions (clicks, purchases, etc.) of similar users to identify items likely to interest the target user.
-- **Content-based Filtering:** Compares item attributes with user preferences or profile.
-
-### Expected Result
-
-- A set of candidates (often a few hundred or thousand) that will be refined in the next step.
-
-### What we do in practice
-- We use up to 3 retrieval models to generate the candidates for the ranking model:
-    - A model based on the user's interactions with the application and his profile. The algorithm used is the Two-Tower model which is the standard in the indutry. See the orginal [Youtube Recommendation Paper](https://static.googleusercontent.com/media/research.google.com/fr//pubs/archive/45530.pdf)
-    - A top offers model, which is a model that retrieves the most popular offers.
-    - A model based on the current trends.
-- We apply this retrieval to 2 uses cases as presented above :
-    - Home Recommendations : Given a user, we retrieve a list of offers that are likely to interest him.
-    - Similar Offers Recommendations : Given an offer, we retrieve a list of offers that are similar to it.
-
-### The Two-Tower Model
-- **"Two-Tower" Models:** Two distinct neural networks are used: one to encode the user's profile and one to encode the items. The similarity (often via a dot product) between these two representations allows quickly selecting relevant items. The standard approach for this type of model is to:
-        1. Calculate an Embedding model of Users **U** and Offers **O**, such that if user **i** has interacted with offer **j**, then the similarity of the two associated embeddings **U_i** and **O_j** is maximal, and minimal otherwise.
-        2. Make a recommendation to the user:
-            1. For a ***personalized recommendation to user $u$ (Home Recommendation)***: We perform a vector search of offers $O_j ~ , j \epsilon[1,k]$ such that $< U_u .O_j >$ is maximal. In practice, we use a search like [Approximate Nearest Neighbor](https://en.wikipedia.org/wiki/Nearest_neighbor_search) (ANN) to speed up this phase.
-            2. For a ***recommendation similar to offer $o$ (Similar Offer)***: We perform a vector search of offers $O_j ~ , j \epsilon[1,k]$ such that $< O_o .O_j >$ is maximal. In practice, we use a search like [Approximate Nearest Neighbor](https://en.wikipedia.org/wiki/Nearest_neighbor_search) (ANN) to speed up this phase.
-
+### II.B The Two-Tower Model
 
 #### Overview
 
-The Two-Tower approach represents a hybrid recommendation strategy, blending the strengths of traditional collaborative filtering and content-based recommendation systems. It achieves this by encoding both user and item features into dense embedding vectors, called **towers**.
+The Two-Tower approach represents a hybrid recommendation strategy, allowing both to use
+the strengths of collaborative filtering and content-based recommendation systems by encoding both user and item features into dense embedding vectors (towers).
+It is nowadays a standard in the industry. See the orginal [Youtube Recommendation Paper](https://static.googleusercontent.com/media/research.google.com/fr//pubs/archive/45530.pdf)
 
-In essence, it learns user preferences not just from their interactions with items, but also from the inherent properties of both users and items.
+#### Architecture
 
-#### Feature Encoding (Layers)
+ architecture is as followed :
 
-* User and item features are converted into mathematical representations using **"layers"**
-* Different layer types dictate how the features are "translated."
-* embedding_size determines the vector dimension representing a feature.
-* **Stacked layers form the user and item towers**
+- The Two Tower Model consists in training a User Encoder (User Tower) and Item Encoder (Item Tower)
+- These two encoders allow representing an item or user in the same Vector Space (therefore with N=64,128,... numbers)
+- The objective is to find these 2 encoders such that in this space, a user and an item will be close if the user has or is likely to interact with the item, and distant otherwise
+- This proximity or distance is defined based on a given distance or similarity measure (represented by ⓧ below). - Generally, we use Cosine Similarity, but it can also be a Euclidean Dot Product, or an L2 distance
+
+This kind of architecture allows building on one hand, User interaction data (Collaborative Filtering), but also to take Contextual data as input, such as a user's age, credit, or an offer's description... (Content Based Filtering)
+
+![Two Tower architecture](assets/tt-architecture.png)
 
 
-
-<!-- ##### Training and Validation
+#### Training and Validation
 
 The model is trained using a combination of user interaction data, user profile information, and item metadata.
-
-#### Training Frequency:
-The model is retrained on a weekly basis to ensure it stays up-to-date with user behavior and catalog changes.
-
-###### Data Window:
-
-The training dataset includes:
-
-Booking data from the past six months, capturing a broad view of user interests.
-
-
-Enhanced focus on the most recent 3 months of click data to place greater weight on current user trends.
-
-###### Training Process
-
-ADD Laurent notes on training
-
-Top-k metric, which evaluates the model's ability to rank consumed items highly among all items for a given user.
-Optimization Goal: Maximize the rank of consumed items.
-###### Key Distinction:
- Model uses click data for training, but booking (reservation) data for Validation. -->
 
 | Training Aspects | Description |
 | --- | ----------- |
@@ -103,7 +77,7 @@ Optimization Goal: Maximize the rank of consumed items.
 |Data Window| Booking data from the past six months and three months of click |
 |**Key Distinction**| Model uses click data for training, but booking (reservation) data for Validation.|
 
-### Offline Metrics
+#### Offline Metrics
 To evaluate our model we use a set of standard metrics, calculate by *microsoft recommenders*.
 
 **Recall**

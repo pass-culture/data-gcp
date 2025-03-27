@@ -1,4 +1,3 @@
-
 # The Pass Culture Recommendation Engine
 
 Our recommendation engine aims to showcase relevant and personalized items from our extensive collection of 2 million cultural goods and events to our xM users.
@@ -25,13 +24,35 @@ Indeed, the model is composed of three parts:
 
 ## The Retrieval Model
 
-We use the collaborative filtering technique to retrieve cultural offers to users based on their interactions with the application.
+### Main Objective
 
-**Collaborative filtering** is a technique used by recommender systems to make predictions about the interests of a user by collecting preferences from many users (collaborating), and extrapolating from that data to make predictions about the interests of one user.
+- Extract, from a very large number of items (potentially millions), a limited subset of potentially relevant items for the user.
+- This involves retrieving candidate offers for recommendations from the pass offer catalog (~10e6). Generally, this step allows going from ***N(~1e6)*** to ***k(~1e3)*** offers. Given that the offer catalog is very large, the Retrieval is often a *less precise but fast model*. We therefore choose a ***relatively high number of candidates*** to avoid "missing" any good recommendations (i.e., with an optimization of the recall metric).
 
-We use a two-tower model which is the standard in the indutry. See the orginal [Youtube Recommendation Paper](https://static.googleusercontent.com/media/research.google.com/fr//pubs/archive/45530.pdf)
+### Common Techniques
+
+- **Collaborative Filtering:** Uses the history of interactions (clicks, purchases, etc.) of similar users to identify items likely to interest the target user.
+- **Content-based Filtering:** Compares item attributes with user preferences or profile.
+
+### Expected Result
+
+- A set of candidates (often a few hundred or thousand) that will be refined in the next step.
+
+### What we do in practice
+- We use up to 3 retrieval models to generate the candidates for the ranking model:
+    - A model based on the user's interactions with the application and his profile. The algorithm used is the Two-Tower model which is the standard in the indutry. See the orginal [Youtube Recommendation Paper](https://static.googleusercontent.com/media/research.google.com/fr//pubs/archive/45530.pdf)
+    - A top offers model, which is a model that retrieves the most popular offers.
+    - A model based on the current trends.
+- We apply this retrieval to 2 uses cases as presented above :
+    - Home Recommendations : Given a user, we retrieve a list of offers that are likely to interest him.
+    - Similar Offers Recommendations : Given an offer, we retrieve a list of offers that are similar to it.
 
 ### The Two-Tower Model
+- **"Two-Tower" Models:** Two distinct neural networks are used: one to encode the user's profile and one to encode the items. The similarity (often via a dot product) between these two representations allows quickly selecting relevant items. The standard approach for this type of model is to:
+        1. Calculate an Embedding model of Users **U** and Offers **O**, such that if user **i** has interacted with offer **j**, then the similarity of the two associated embeddings **U_i** and **O_j** is maximal, and minimal otherwise.
+        2. Make a recommendation to the user:
+            1. For a ***personalized recommendation to user $u$ (Home Recommendation)***: We perform a vector search of offers $O_j ~ , j \epsilon[1,k]$ such that $< U_u .O_j >$ is maximal. In practice, we use a search like [Approximate Nearest Neighbor](https://en.wikipedia.org/wiki/Nearest_neighbor_search) (ANN) to speed up this phase.
+            2. For a ***recommendation similar to offer $o$ (Similar Offer)***: We perform a vector search of offers $O_j ~ , j \epsilon[1,k]$ such that $< O_o .O_j >$ is maximal. In practice, we use a search like [Approximate Nearest Neighbor](https://en.wikipedia.org/wiki/Nearest_neighbor_search) (ANN) to speed up this phase.
 
 
 #### Overview

@@ -13,6 +13,10 @@ def run(
         ...,
         help="Config of the table",
     ),
+    limit: int = typer.Option(
+        10,
+        help="Limit of partitions to export",
+    ),
 ):
     try:
         config_dict: dict[str, Any] = json.loads(config)  # Use safe JSON parsing
@@ -22,7 +26,7 @@ def run(
 
     archive = Archive(table, config_dict)
     archive.store_partitions_in_temp()
-    archive.export_and_delete_partitions()
+    archive.export_and_delete_partitions(limit)
 
 
 if __name__ == "__main__":

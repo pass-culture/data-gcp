@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from utils.constant import ENV_SHORT_NAME
 
@@ -24,6 +24,7 @@ class SQLTableConfig:
         columns: Dict[str, str],
         time_column: str,
         partition_field: str,
+        bigquery_schema: List[Dict[str, str]],
     ):
         self.sql_table_name = sql_table_name
         self.bigquery_table_name = bigquery_table_name
@@ -31,6 +32,7 @@ class SQLTableConfig:
         self.columns = columns
         self.time_column = time_column
         self.partition_field = partition_field
+        self.bigquery_schema = bigquery_schema
 
     def _get_time_conditions(self, start_time: datetime, end_time: datetime) -> str:
         """Helper to build WHERE clause conditions based on time range."""
@@ -42,16 +44,17 @@ class SQLTableConfig:
         return f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
     def _build_select_query(
-        self, where_clause: str, execution_date: datetime = None
+        self,
+        where_clause: str,
+        execution_date: datetime = None,
+        database_name: str = None,
     ) -> str:
         """Build the SELECT query with the given WHERE clause."""
         columns = ", ".join(self.columns.keys())
         query = f"SELECT {columns}"
         if execution_date:
-            query += (
-                f", '{execution_date.strftime('%Y-%m-%d')}' as {self.partition_field}"
-            )
-        query += f" FROM {self.sql_table_name}"
+            query += f", '{execution_date.strftime('%Y-%m-%d')}'::date as {self.partition_field}"
+        query += f" FROM {database_name}.{self.sql_table_name}"
         if where_clause:
             query += f" {where_clause}"
         return query
@@ -61,10 +64,11 @@ class SQLTableConfig:
         start_time: datetime = None,
         end_time: datetime = None,
         execution_date: datetime = None,
+        database_name: str = None,
     ) -> str:
         """Generate query to extract data between two timestamps for recovery."""
         where_clause = self._get_time_conditions(start_time, end_time)
-        return self._build_select_query(where_clause, execution_date)
+        return self._build_select_query(where_clause, execution_date, database_name)
 
     @classmethod
     def _build_delete_query(cls, where_clause: str) -> str:
@@ -119,6 +123,37 @@ CLOUD_SQL_TABLES_CONFIG: Dict[str, Dict] = {
         "sql_table_name": "past_offer_context",
         "bigquery_table_name": "past_offer_context",
         "bigquery_dataset_name": f"raw_{ENV_SHORT_NAME}",
+        "bigquery_schema": [
+            {"name": "id", "type": "INTEGER"},
+            {"name": "call_id", "type": "STRING"},
+            {"name": "context", "type": "STRING"},
+            {"name": "context_extra_data", "type": "STRING"},
+            {"name": "date", "type": "TIMESTAMP"},
+            {"name": "user_id", "type": "STRING"},
+            {"name": "user_bookings_count", "type": "FLOAT"},
+            {"name": "user_clicks_count", "type": "FLOAT"},
+            {"name": "user_favorites_count", "type": "FLOAT"},
+            {"name": "user_deposit_remaining_credit", "type": "FLOAT"},
+            {"name": "user_iris_id", "type": "STRING"},
+            {"name": "user_is_geolocated", "type": "BOOLEAN"},
+            {"name": "user_extra_data", "type": "STRING"},
+            {"name": "offer_user_distance", "type": "FLOAT"},
+            {"name": "offer_is_geolocated", "type": "BOOLEAN"},
+            {"name": "offer_id", "type": "STRING"},
+            {"name": "offer_item_id", "type": "STRING"},
+            {"name": "offer_booking_number", "type": "FLOAT"},
+            {"name": "offer_stock_price", "type": "FLOAT"},
+            {"name": "offer_creation_date", "type": "DATETIME"},
+            {"name": "offer_stock_beginning_date", "type": "DATETIME"},
+            {"name": "offer_category", "type": "STRING"},
+            {"name": "offer_subcategory_id", "type": "STRING"},
+            {"name": "offer_item_rank", "type": "FLOAT"},
+            {"name": "offer_item_score", "type": "FLOAT"},
+            {"name": "offer_order", "type": "FLOAT"},
+            {"name": "offer_venue_id", "type": "STRING"},
+            {"name": "offer_extra_data", "type": "STRING"},
+            {"name": "import_date", "type": "DATE"},
+        ],
     }
 }
 

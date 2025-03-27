@@ -1,4 +1,7 @@
 import logging
+import os
+
+from google.cloud import bigquery
 
 from services.database import BigQueryService
 from services.storage import StorageService
@@ -34,18 +37,20 @@ class GCSToBQOrchestrator:
 
         table_ref = f"{self.project_id}.{table_config.bigquery_dataset_name}.{table_config.bigquery_table_name}${partition_date_nodash}"
 
-        # Check if the file exists in GCS
         if not self.storage_service.check_files_exists(bucket_path):
             raise Exception(
                 f"No data file found at {bucket_path}, skipping BigQuery load"
             )
 
-        # Load data to BigQuery
         try:
             self.bq_service.load_from_gcs(
                 table_id=table_ref,
-                gcs_path=bucket_path,
-                schema=None,  # Schema will be inferred from Parquet files
+                gcs_path=os.path.join(bucket_path, "*.parquet"),
+                schema=table_config.bigquery_schema,
+                time_partitioning=bigquery.TimePartitioning(
+                    type_=bigquery.TimePartitioningType.DAY,
+                    field=table_config.partition_field,
+                ),
             )
             logger.info(f"Successfully loaded data from {bucket_path} to {table_ref}")
 

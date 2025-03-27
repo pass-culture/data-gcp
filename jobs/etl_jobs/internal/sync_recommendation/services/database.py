@@ -74,6 +74,7 @@ class BigQueryService(DatabaseService):
         gcs_path: str,
         schema: Optional[List[bigquery.SchemaField]] = None,
         write_disposition: str = "WRITE_APPEND",
+        time_partitioning: Optional[bigquery.TimePartitioning] = None,
     ) -> None:
         """
         Load data from GCS Parquet files into a BigQuery table.
@@ -83,15 +84,14 @@ class BigQueryService(DatabaseService):
             gcs_path: GCS path containing Parquet files
             schema: Optional schema for the table. If None, will be inferred from Parquet files
             write_disposition: Write disposition for the load job (WRITE_APPEND, WRITE_TRUNCATE, etc.)
+            time_partitioning: Optional time partitioning for the table. If None, will not be partitioned.
         """
+        logger.info(f"Loading data from {gcs_path} to {table_id}")
         job_config = bigquery.LoadJobConfig(
             source_format=bigquery.SourceFormat.PARQUET,
             write_disposition=write_disposition,
             schema=schema,
-            parquet_options=bigquery.ParquetOptions(
-                enable_list_inference=True,
-                enum_as_string=True,
-            ),
+            time_partitioning=time_partitioning,
         )
 
         load_job = self.client.load_table_from_uri(

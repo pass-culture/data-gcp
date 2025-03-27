@@ -66,7 +66,7 @@ with
 
 select
     users.user_id,
-    users.user_raw_address,
+    users.user_address_raw,
     users.user_postal_code,
     users.user_department_code,
     users.user_longitude,

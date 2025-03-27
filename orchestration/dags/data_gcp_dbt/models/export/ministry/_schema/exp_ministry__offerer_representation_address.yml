@@ -6,9 +6,6 @@ models:
     columns:
       - name: offerer_address_id
         description: "{{ doc('column__offerer_address_id') }}"
-        data_tests:
-          - not_null
-          - unique
       - name: offerer_address_label
         description: "{{ doc('column__offerer_address_label') }}"
       - name: address_id

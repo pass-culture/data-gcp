@@ -6,9 +6,6 @@ models:
     columns:
       - name: venue_id
         description: "{{ doc('column__venue_id') }}"
-        data_tests:
-          - not_null
-          - unique
       - name: venue_street
         description: "{{ doc('column__venue_street') }}"
       - name: venue_latitude

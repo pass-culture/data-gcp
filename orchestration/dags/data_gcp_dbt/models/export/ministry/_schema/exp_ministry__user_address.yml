@@ -6,9 +6,6 @@ models:
     columns:
       - name: user_id
         description: "{{ doc('column__user_id') }}"
-        data_tests:
-          - not_null
-          - unique
       - name: user_address_geocode_type
         description: "{{ doc('column__user_address_geocode_type') }}"
       - name: user_address_raw

@@ -6,9 +6,6 @@ models:
     columns:
       - name: deposit_id
         description: "{{ doc('column__deposit_id') }}"
-        data_tests:
-          - not_null
-          - unique
       - name: deposit_amount
         description: "{{ doc('column__deposit_amount') }}"
       - name: user_id

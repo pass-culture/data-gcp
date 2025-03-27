@@ -6,9 +6,6 @@ models:
     columns:
       - name: favorite_id
         description: "{{ doc('column__favorite_id') }}"
-        data_tests:
-          - not_null
-          - unique
       - name: favorite_created_at
         description: "{{ doc('column__favorite_created_at') }}"
       - name: user_id

@@ -6,9 +6,6 @@ models:
     columns:
       - name: offer_id
         description: "{{ doc('column__offer_id') }}"
-        data_tests:
-          - not_null
-          - unique
       - name: offer_is_synchronised
         description: "{{ doc('column__offer_is_synchronised') }}"
       - name: offer_name

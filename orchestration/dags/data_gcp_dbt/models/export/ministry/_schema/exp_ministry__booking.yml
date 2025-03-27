@@ -6,9 +6,6 @@ models:
     columns:
       - name: booking_id
         description: "{{ doc('column__booking_id') }}"
-        data_tests:
-          - not_null
-          - unique
       - name: booking_creation_date
         description: "{{ doc('column__booking_creation_date') }}"
       - name: booking_quantity

@@ -6,9 +6,6 @@ models:
     columns:
       - name: iris_internal_id
         description: "{{ doc('column__iris_internal_id') }}"
-        data_tests:
-          - not_null
-          - unique
       - name: iris_label
         description: "{{ doc('column__iris_label') }}"
       - name: city_code

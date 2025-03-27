@@ -5,12 +5,12 @@ import joblib
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
-from DPP import DPP
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder
+from dpp import DPP
 
 
 class ClassMapping(Enum):
@@ -247,13 +247,5 @@ class DiversificationPipeline:
         weighted_item_semantic_embeddings = (
             self.item_semantic_embeddings * self.scores[:, None]
         )
-        dpp = DPP(
-            range(len(weighted_item_semantic_embeddings)),
-            weighted_item_semantic_embeddings,
-        )
-        dpp.preprocess()
-        return dpp.sample_k(self.K_DPP)
-
-    def get_diversified_results(self):
-        indexes = self.get_sampled_ids()
-        return [self.item_ids[i] for i in indexes]
+        dpp = DPP(vectors=weighted_item_semantic_embeddings, K_DPP=self.K_DPP)
+        return self.item_ids[dpp.sample_k()]

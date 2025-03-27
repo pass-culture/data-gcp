@@ -77,12 +77,9 @@ def get_scann_params(env_short_name: str, max_k: int) -> Dict[str, Any]:
     else:
         logger.info("Using ScaNN params for ehp")
         return {
-            "k": 5,
             "distance_measure": "dot_product",
             "num_leaves": 1,
             "num_leaves_to_search": 1,
-            "training_iterations": 20,
-            "parallelize_batch_searches": True,
         }
 
 

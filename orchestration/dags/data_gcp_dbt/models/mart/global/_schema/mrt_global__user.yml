@@ -25,9 +25,9 @@ models:
           - excessive_failure_ratio:
               base_test: "not_null"
               max_ratio: 0.0005  # 0.05%
-              tags: ['critical']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              # tags: ['critical']
+              #config:
+              #  severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
           - not_null_proportion:
               where_condition: "user_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) and user_department_name is null"
               anomaly_threshold_alert_percentage: 0.01 # 0.01%

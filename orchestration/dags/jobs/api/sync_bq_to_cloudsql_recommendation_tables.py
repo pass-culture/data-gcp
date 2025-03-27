@@ -132,7 +132,7 @@ with DAG(
     with TaskGroup("export_tables", dag=dag) as export_tables:
         for table_name in TABLES_TO_PROCESS:
             export_command = f"""
-                python daily_bq_to_sql.py bq-to-gcs \
+                python bq_to_sql.py bq-to-gcs \
                     --table-name {table_name} \
                     --bucket-path {{ params.bucket_path }}/{{ params.bucket_folder }} \
                     --date {{{{ ds_nodash }}}}
@@ -150,7 +150,7 @@ with DAG(
     with TaskGroup("import_tables", dag=dag) as import_tables:
         for table_name in TABLES_TO_PROCESS:
             import_command = f"""
-                python daily_bq_to_sql.py gcs-to-cloudsql \
+                python bq_to_sql.py gcs-to-cloudsql \
                     --table-name {table_name} \
                     --bucket-path {{ params.bucket_path }}/{{ params.bucket_folder }} \
                     --date {{{{ ds_nodash }}}}
@@ -176,7 +176,7 @@ with DAG(
     with TaskGroup("refresh_materialized_views", dag=dag) as refresh_views:
         for view in MATERIALIZED_VIEWS:
             refresh_command = f"""
-                python daily_bq_to_sql.py materialize-cloudsql \
+                python bq_to_sql.py materialize-cloudsql \
                     --view-name {view}
             """
 

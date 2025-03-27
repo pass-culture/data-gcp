@@ -32,28 +32,34 @@ DEFAULT_DAG_ARGS = {
 
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 
-# Instance type based on environment
+
 INSTANCE_TYPE = {
     "dev": "n1-standard-2",
     "stg": "n1-standard-2",
     "prod": "n1-standard-4",
 }[ENV_SHORT_NAME]
 
+
+SCHEDULE_DICT = {
+    "dev": "0 5 * * *",  # every day at 5:00 AM
+    "stg": "0 5 * * *",  # every day at 5:00 AM
+    "prod": "5 * * * *",  # every hour at 5 minutes past the hour
+}[ENV_SHORT_NAME]
+
 # Base directory for the export job
 BASE_DIR = "data-gcp/jobs/etl_jobs/internal/sync_recommendation"
-DAG_ID = "sync_cloudsql_recommendation_tables_to_bigquery_hourly"
+DAG_ID = "sync_cloudsql_recommendation_tables_to_bigquery"
+
+
+NOW = datetime.datetime.now()
 
 with DAG(
     DAG_ID,
     default_args=DEFAULT_DAG_ARGS,
     description="Import tables from recommendation CloudSQL to BigQuery hourly",
-    schedule_interval=get_airflow_schedule(
-        "5 * * * *"
-    ),  # Run at 5 minutes past every hour
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT),
     catchup=False,
-    dagrun_timeout=datetime.timedelta(
-        minutes=45
-    ),  # Ensure it finishes before the next hour
+    dagrun_timeout=datetime.timedelta(minutes=45),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
@@ -79,11 +85,11 @@ with DAG(
             type="string",
         ),
         "bucket_folder": Param(
-            default="import/cloudsql_recommendation_tables_hourly/{{ ds_nodash }}/",
+            default=f"import/cloudsql_recommendation_tables/{NOW.strftime('%Y%m%d')}/",
             type="string",
         ),
         "execution_date": Param(
-            default="{{ ds_nodash }}",
+            default=NOW.strftime("%Y%m%d"),
             type="string",
         ),
     },
@@ -116,7 +122,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
         command="""
-            python hourly_sql_to_bq.py cloudsql-to-gcs \
+            python sql_to_bq.py cloudsql-to-gcs \
                 --table-name {{ params.table_name }} \
                 --bucket-path {{ params.bucket_path }}/{{ params.bucket_folder }} \
                 --execution-date {{ params.execution_date }} \
@@ -131,7 +137,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
         command="""
-            python hourly_sql_to_bq.py gcs-to-bq \
+            python sql_to_bq.py gcs-to-bq \
                 --table-name {{ params.table_name }} \
                 --bucket-path {{ params.bucket_path }}/{{ params.bucket_folder }} \
                 --execution-date {{ params.execution_date }}
@@ -145,7 +151,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
         command="""
-            python hourly_sql_to_bq.py remove-cloudsql-data \
+            python sql_to_bq.py remove-cloudsql-data \
                 --table-name {{ params.table_name }} \
         """,
     )

@@ -70,7 +70,10 @@ def on_failure_callback_stop_vm(context: Context):
     failing_task = context["task"]
     # If the failing task has an instance_name, use StopGCEOperator to stop it.
     if hasattr(failing_task, "instance_name"):
+        failing_task.render_template_fields(context)
         instance_name = failing_task.instance_name
+        if instance_name.startswith("{{"):
+            raise ValueError("Instance name jinja template was not rendered properly.")
         stop_vm_operator = StopGCEOperator(
             task_id="stop_vm_on_failure_callback", instance_name=instance_name
         )

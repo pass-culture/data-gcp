@@ -3,8 +3,6 @@ from datetime import datetime
 from typing import Optional
 
 from services.database import BigQueryService, CloudSQLService
-from utils.constant import PROJECT_NAME, RECOMMENDATION_SQL_INSTANCE
-from utils.secret import access_secret_data
 from utils.sql_config import SQLTableConfig
 
 logger = logging.getLogger(__name__)
@@ -50,31 +48,3 @@ class RemoveSQLTableOrchestrator:
         self.bigquery_service.execute_query(query)
         max_time = self.bigquery_service.fetch_one()[0]
         return max_time
-
-
-def remove_sql_table_data(
-    table_config: SQLTableConfig,
-    start_time: Optional[datetime] = None,
-    end_time: Optional[datetime] = None,
-) -> None:
-    """
-    Remove processed data from CloudSQL.
-
-    Args:
-        table_config: Configuration for the table to process
-        start_time: Start time of the deletion
-        end_time: End time of the deletion
-    """
-    # Get database connection details
-    database_url = access_secret_data(
-        PROJECT_NAME,
-        f"{RECOMMENDATION_SQL_INSTANCE}_database_url",
-    )
-
-    # Create orchestrator
-    orchestrator = RemoveSQLTableOrchestrator(database_url=database_url)
-
-    # Run removal process
-    orchestrator.remove_processed_data(
-        table_config=table_config, start_time=start_time, end_time=end_time
-    )

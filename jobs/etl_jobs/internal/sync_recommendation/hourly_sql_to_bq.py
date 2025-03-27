@@ -116,9 +116,16 @@ def remove_cloudsql_data(
     validate_table(table_name, list(EXPORT_TABLES.keys()))
     table_config = EXPORT_TABLES[table_name]
 
-    orchestrator = RemoveSQLTableOrchestrator(database_url=database_url)
+    orchestrator = RemoveSQLTableOrchestrator(
+        database_url=database_url, project_id=PROJECT_NAME
+    )
     if end_time is None:
         end_time = orchestrator.get_max_time(table_config)
+    else:
+        end_time = parse_date(end_time)
+
+    if start_time is not None:
+        start_time = parse_date(start_time)
 
     logger.info(
         f"Removing data from table {table_name}, start_time: {start_time or 'None'}, end_time: {end_time or 'None' }"

@@ -14,7 +14,6 @@ from common.config import (
 from common.operators.gce import StopGCEOperator
 
 from airflow import configuration
-from airflow.utils.context import Context
 
 HTTP_HOOK = "https://hooks.slack.com/services/"
 DEFAULT_HEADERS = {"Content-Type": "application/json"}
@@ -62,22 +61,34 @@ def analytics_fail_slack_alert(context):
     return __task_fail_slack_alert(context, job_type="analytics")
 
 
-def on_failure_callback_stop_vm(context: Context):
+def on_failure_callback_stop_vm(context: dict):
     """
-    This callback stops the VM associated with the failing task,
-    assuming the failing task has an `instance_name` attribute.
+    Callback to stop the VM associated with the failing task,
+    using the custom StopGCEOperator with a proper TaskInstance context.
     """
-    failing_task = context["task"]
-    # If the failing task has an instance_name, use StopGCEOperator to stop it.
+    failing_task = context.get("task")
     if hasattr(failing_task, "instance_name"):
+        # Ensure any templated fields are rendered
         failing_task.render_template_fields(context)
         instance_name = failing_task.instance_name
-        if instance_name.startswith("{{"):
-            raise ValueError("Instance name jinja template was not rendered properly.")
+
+        # Retrieve the TaskInstance from context
+        ti = context.get("ti")
+        if not ti:
+            raise ValueError("TaskInstance not found in context.")
+
+        # Instantiate the StopGCEOperator (note that it adds a prefix internally)
         stop_vm_operator = StopGCEOperator(
-            task_id="stop_vm_on_failure_callback", instance_name=instance_name
+            task_id="stop_vm_on_failure_callback",
+            instance_name=instance_name,
         )
-        stop_vm_operator.execute(context=context)
+        # Run the operator using the run() method so that it receives the proper context
+        stop_vm_operator.run(
+            start_date=ti.start_date,
+            end_date=ti.end_date,
+            ignore_ti_state=True,
+            context=context,
+        )
 
 
 def on_failure_combined_callback(context):

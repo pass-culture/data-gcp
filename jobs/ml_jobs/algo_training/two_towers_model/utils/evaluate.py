@@ -1,5 +1,5 @@
 import secrets
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -108,6 +108,48 @@ def filter_predictions(
     return df_predictions_filtered
 
 
+def get_offers_to_score(test_data: pd.DataFrame) -> np.ndarray:
+    """
+    Get unique items to score and duplicate them if necessary to meet ScaNN requirements.
+
+    Args:
+        test_data (pd.DataFrame): DataFrame containing test data with 'item_id' column.
+
+    Returns:
+        numpy array of unique items to score.
+    """
+    offers_to_score = test_data.item_id.unique()
+    if len(offers_to_score) < 20:
+        # ScaNN requires at least 16 items to score, so duplicate items if necessary
+        offers_to_score = np.repeat(offers_to_score, 50 // len(offers_to_score))
+    logger.info(f"Number of unique items to score: {len(offers_to_score)}")
+    return offers_to_score
+
+
+def get_users_to_test(
+    test_data: pd.DataFrame, all_users: bool
+) -> Tuple[pd.DataFrame, np.ndarray]:
+    """
+    Get users to test and filter test data based on all_users flag.
+
+    Args:
+        test_data (pd.DataFrame): DataFrame containing test data with 'user_id' column.
+        all_users (bool): If True, evaluate all users in the test dataset. If False, evaluate only a subset of users.
+
+    Returns:
+        Tuple[pd.DataFrame, numpy array]: Tuple containing the filtered test data and the list of users to test.
+    """
+    users_to_test = test_data["user_id"].unique()
+    total_n_users = len(users_to_test)
+    if not all_users:
+        users_to_test = users_to_test[: min(EVALUATION_USER_NUMBER, total_n_users)]
+        test_data = test_data[test_data.user_id.isin(users_to_test)]
+        logger.info(f"Computing metrics for {len(users_to_test)} users")
+    else:
+        logger.info(f"Computing metrics for all users ({total_n_users}) users)")
+    return test_data, users_to_test
+
+
 def generate_predictions(
     model,
     train_data: pd.DataFrame,
@@ -138,25 +180,13 @@ def generate_predictions(
     max_k = max_k + 100
 
     # Get unique items to score
-    offers_to_score = test_data.item_id.unique()
-    if len(offers_to_score) < 20:
-        # ScaNN requires at least 16 items to score, so duplicate items if necessary
-        offers_to_score = np.repeat(offers_to_score, 50 // len(offers_to_score))
-    logger.info(f"Number of unique items to score: {len(offers_to_score)}")
+    offers_to_score = get_offers_to_score(test_data)
 
     # Get item embeddings for the corpus
-    offers_to_score_embeddings = model.item_layer(offers_to_score)
-    offers_to_score_embeddings = tf.cast(offers_to_score_embeddings, tf.float32)
+    offers_to_score_embeddings = tf.cast(model.item_layer(offers_to_score), tf.float32)
 
     # Truncate test data if not all users are to be evaluated
-    users_to_test = test_data["user_id"].unique()
-    total_n_users = len(users_to_test)
-    if not all_users:
-        users_to_test = users_to_test[: min(EVALUATION_USER_NUMBER, total_n_users)]
-        test_data = test_data[test_data.user_id.isin(users_to_test)]
-        logger.info(f"Computing metrics for {len(users_to_test)} users")
-    else:
-        logger.info(f"Computing metrics for all users ({total_n_users}) users)")
+    test_data, users_to_test = get_users_to_test(test_data, all_users)
 
     # Initialize ScaNN index with appropriate parameters tuned for env.
     scann_params = get_scann_params(ENV_SHORT_NAME, max_k)
@@ -170,20 +200,24 @@ def generate_predictions(
     logger.info(f"Using batch size of {batch_size} users")
     list_predictions_dict = []
 
-    for i in tqdm(
+    for batch_start_index in tqdm(
         range(0, len(users_to_test), batch_size), mininterval=20, maxinterval=60
     ):
-        batch_users = users_to_test[i : i + batch_size]
+        batch_users = users_to_test[batch_start_index : batch_start_index + batch_size]
 
         # Get user embeddings for the batch
         user_embeddings = model.user_layer(batch_users)
+
         # Get recommendations using ScaNN
         scores, candidates = scann_index(user_embeddings)
 
         list_predictions_dict.append(
             {
                 "user_id": np.concatenate(
-                    [[user] * len(c) for user, c in zip(batch_users, candidates)]
+                    [
+                        [user] * len(candidate)
+                        for user, candidate in zip(batch_users, candidates)
+                    ]
                 ),
                 "item_id": candidates.numpy().flatten(),
                 "score": scores.numpy().flatten(),

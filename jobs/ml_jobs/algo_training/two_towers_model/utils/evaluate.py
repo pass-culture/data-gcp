@@ -63,6 +63,7 @@ def load_data_for_evaluation(
 
 def get_scann_params(env_short_name: str, max_k: int) -> Dict[str, Any]:
     if env_short_name == "prod":
+        logger.info("Using ScaNN params for prod")
         return {
             "k": 5,
             "distance_measure": "dot_product",
@@ -72,7 +73,9 @@ def get_scann_params(env_short_name: str, max_k: int) -> Dict[str, Any]:
             "parallelize_batch_searches": True,
             "num_reordering_candidates": max_k,
         }
+
     else:
+        logger.info("Using ScaNN params for ehp")
         return {
             "k": 5,
             "distance_measure": "dot_product",
@@ -99,7 +102,7 @@ def filter_predictions(
     # merge df_predictions with train_data on user_id and item_id while keeping indicator
     df_predictions_filtered = df_predictions.merge(
         train_data, on=["user_id", "item_id"], how="left", indicator=True
-    ).drop(columns=["_merge"])
+    )
     # drop rows where indicator is not left_only (meaning the (user, item) was also in training data)
     df_predictions_filtered = df_predictions_filtered[
         df_predictions_filtered["_merge"] == "left_only"
@@ -155,8 +158,7 @@ def generate_predictions(
     else:
         logger.info(f"Computing metrics for all users ({total_n_users}) users)")
 
-    # Initialize ScaNN index
-    # Scann params were manually tuned for the prod dataset
+    # Initialize ScaNN index with appropriate parameters tuned for env.
     scann_params = get_scann_params(ENV_SHORT_NAME, max_k)
     scann = tfrs.layers.factorized_top_k.ScaNN(**scann_params)
 

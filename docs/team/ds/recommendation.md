@@ -137,7 +137,32 @@ To train this model, we leverage all interactions performed on the app's home pa
 
 ### The metrics
 
+1. **Mean Average Precision (MAP@K)**
+   - Measures how well the ranking of relevant items is optimized.
+   - Computes the average precision at different cutoffs for each user and then averages across all users.
+   - **Formula:**
+     $$
+     MAP@K = \frac{1}{|U|} \sum_{u \in U} \frac{1}{\min(n, K)} \sum_{k=1}^{K} Precision@k \times \text{rel}(k)
+     $$
+   - Higher MAP@K values indicate better ranking of relevant items. Because this metric rewards the recommendation algorithm that puts more items at the top of the list. This is because any non-relevant items at the start of the list are factored into the aggregation at each subsequent precision@r computation.
 
+2. **Normalized Discounted Cumulative Gain (NDCG@K)**
+   - Measures how well relevant items are ranked, giving higher importance to top-ranked items.
+   - Uses Discounted Cumulative Gain (DCG) and Ideal DCG (IDCG) for normalization.
+   - **Formula:**
+     $$
+     NDCG@K = \frac{DCG@K}{IDCG@K}
+     $$
+   - Where:
+     $$
+     DCG@K = \sum_{i=1}^{K} \frac{\text{rel}(i)}{\log_2(i + 1)}
+     $$
+     $$
+     IDCG@K = \text{DCG@K for the ideal ranking}
+     $$
+   - Ensures that highly relevant items appear higher in the ranking.
+
+---
 
 ## IV. The Post-Ranking Model
 

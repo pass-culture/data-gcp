@@ -7,8 +7,7 @@ select
     deposit_update_date,
     deposit_expiration_date,
     deposit_type,
-    deposit_rank_asc,
-    deposit_rank_desc,
-    deposit_seniority,
+    total_recredit,
+    total_recredit_amount,
     days_between_user_creation_and_deposit_creation
 from {{ ref("mrt_global__deposit") }}

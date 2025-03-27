@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: exp_ministry__venue_address
+    description: "{{ doc('description__exp_ministry__venue_address') }}"
+    columns:
+      - name: venue_id
+        description: "{{ doc('column__venue_id') }}"
+      - name: venue_street
+        description: "{{ doc('column__venue_street') }}"
+      - name: venue_latitude
+        description: "{{ doc('column__venue_latitude') }}"
+      - name: venue_longitude
+        description: "{{ doc('column__venue_longitude') }}"
+      - name: venue_department_code
+        description: "{{ doc('column__venue_department_code') }}"
+      - name: venue_postal_code
+        description: "{{ doc('column__venue_postal_code') }}"
+      - name: venue_city
+        description: "{{ doc('column__venue_city') }}"
+      - name: venue_region_name
+        description: "{{ doc('column__venue_region_name') }}"
+      - name: qpv_code
+        description: "{{ doc('column__qpv_code') }}"
+      - name: qpv_name
+        description: "{{ doc('column__qpv_name') }}"
+      - name: venue_iris_internal_id
+        description: "{{ doc('column__venue_iris_internal_id') }}"

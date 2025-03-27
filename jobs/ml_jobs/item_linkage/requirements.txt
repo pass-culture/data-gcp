@@ -28,7 +28,6 @@ blinker==1.8.2
 cachetools==5.3.3
     # via
     #   google-auth
-    #   lancedb
     #   mlflow-skinny
     #   streamlit
 certifi==2024.7.4
@@ -243,7 +242,7 @@ multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
-networkx==3.4.2
+networkx==3.3
     # via
     #   -r requirements.in
     #   torch
@@ -284,7 +283,7 @@ nvidia-cuda-nvrtc-cu12==12.1.105
     # via torch
 nvidia-cuda-runtime-cu12==12.1.105
     # via torch
-nvidia-cudnn-cu12==8.9.2.26
+nvidia-cudnn-cu12==9.1.0.70
     # via torch
 nvidia-cufft-cu12==11.0.2.54
     # via torch
@@ -359,7 +358,6 @@ proto-plus==1.24.0
     #   google-cloud-secret-manager
 protobuf==4.25.3
     # via
-    #   -r requirements.in
     #   google-api-core
     #   google-cloud-secret-manager
     #   googleapis-common-protos
@@ -407,9 +405,7 @@ python-dateutil==2.9.0.post0
     #   matplotlib
     #   pandas
 python-jose==3.4.0
-    # via
-    #   -r requirements.in
-    #   jina-hubble-sdk
+    # via jina-hubble-sdk
 pytz==2024.1
     # via pandas
 pyyaml==6.0.1
@@ -418,11 +414,6 @@ pyyaml==6.0.1
     #   jina-hubble-sdk
     #   mlflow-skinny
     #   transformers
-querystring-parser==1.2.4
-    # via mlflow
-ratelimiter==1.2.0.post0
-    # via lancedb
-
 recordlinkage==0.16
     # via -r requirements.in
 referencing==0.35.1
@@ -441,7 +432,6 @@ requests==2.32.3
     #   google-cloud-storage
     #   huggingface-hub
     #   jina-hubble-sdk
-    #   lancedb
     #   mlflow-skinny
     #   requests-oauthlib
     #   streamlit
@@ -514,8 +504,10 @@ toml==0.10.2
     # via streamlit
 toolz==0.12.1
     # via altair
-torch==2.3.1
-    # via sentence-transformers
+torch==2.4.1
+    # via
+    #   -r requirements.in
+    #   sentence-transformers
 tornado==6.4.2
     # via
     #   -r requirements.in
@@ -530,7 +522,7 @@ tqdm==4.64.1
     #   transformers
 transformers==4.42.3
     # via sentence-transformers
-triton==2.3.1
+triton==3.0.0
     # via torch
 typer==0.7.0
     # via

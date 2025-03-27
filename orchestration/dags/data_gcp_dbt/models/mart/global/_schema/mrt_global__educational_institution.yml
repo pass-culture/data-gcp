@@ -17,7 +17,7 @@ models:
       - name: institution_program_name
         description: "{{ doc('column__institution_program_name') }}"
       - name: first_deposit_creation_date
-        description: "{{ doc('column__first_deposit_creation_date') }}"
+        description: "{{ doc('column__user_first_deposit_creation_date') }}"
       - name: current_deposit_amount
         description: "{{ doc('column__current_deposit_amount') }}"
       - name: current_deposit_creation_date

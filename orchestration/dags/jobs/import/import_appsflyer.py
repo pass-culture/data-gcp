@@ -39,7 +39,7 @@ default_dag_args = {
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }
-schedule_dict = {"prod": "30 01 * * *", "dev": None, "stg": "00 02 * * *"}
+schedule_dict = {"prod": "30 01 * * *", "dev": None, "stg": None}
 
 with DAG(
     DAG_NAME,

@@ -27,13 +27,19 @@ default_dag_args = {
     "project_id": GCP_PROJECT_ID,
 }
 
+schedule_dict = {
+    "prod": "0 2 * * *",
+    "stg": "0 3 * * *",
+    "dev": None,
+}[ENV_SHORT_NAME]
+
 
 with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Import Social Network Data",
     on_failure_callback=None,
-    schedule_interval=get_airflow_schedule("0 2 * * *"),
+    schedule_interval=get_airflow_schedule(schedule_dict),
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,

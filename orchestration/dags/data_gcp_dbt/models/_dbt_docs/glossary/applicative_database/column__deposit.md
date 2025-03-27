@@ -12,4 +12,4 @@
 {% docs column__deposit_rank_desc %}Descending rank of the deposit in user's history.{% enddocs %}
 {% docs column__deposit_seniority %}Total days between deposit_creation_date and today. Used for analytics purposes.{% enddocs %}
 {% docs column__days_between_user_creation_and_deposit_creation %} Total days between user_creation_date (user activated its account) and deposit_creation_date (user received grant). {% enddocs %}
-{% docs column__first_deposit_creation_date %} First deposit creation date. {% enddocs %}
+{% docs column__user_first_deposit_creation_date %} First deposit creation date. {% enddocs %}

@@ -7,9 +7,9 @@ select
     ul.user_academy_name,
     ul.user_department_code,
     ul.user_region_name,
-    ul.user_qpv_code,
-    ul.user_qpv_name,
-    ul.user_postal_code
-
+    ul.qpv_code as user_qpv_code,
+    ul.qpv_name as user_qpv_name,
+    ul.user_postal_code,
+    ul.user_iris_internal_id
 from {{ ref("int_geo__user_location") }} as ul
 inner join {{ ref("mrt_global__user") }} as u on ul.user_id = u.user_id

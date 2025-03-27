@@ -125,7 +125,7 @@ models:
         description: '{{ doc("column__user_is_theme_subscribed") }}'
         data_type: BOOLEAN
       - name: first_deposit_creation_date
-        description: '{{ doc("column__first_deposit_creation_date") }}'
+        description: '{{ doc("column__user_first_deposit_creation_date") }}'
         data_type: DATE
       - name: first_deposit_type
         description: '{{ doc("column__user_first_deposit_type") }}'
@@ -185,7 +185,7 @@ models:
         description: '{{ doc("column__total_theoretical_remaining_credit") }}'
         data_type: NUMERIC
       - name: user_creation_date
-        description: '{{ doc("column__user_creation_date") }}'
+        description: '{{ doc("column__user_created_at") }}'
         data_type: DATE
       - name: last_booking_date
         description: '{{ doc("column__last_booking_date") }}'
@@ -197,7 +197,7 @@ models:
         description: '{{ doc("column__days_between_activation_date_and_first_booking_paid") }}'
         data_type: INT64
       - name: user_activation_date
-        description: '{{ doc("column__user_activation_date") }}'
+        description: '{{ doc("column__user_activated_at") }}'
         data_type: DATE
       - name: first_booking_type
         description: '{{ doc("column__user_first_booking_type") }}'

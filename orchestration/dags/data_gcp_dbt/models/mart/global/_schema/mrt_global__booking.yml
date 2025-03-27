@@ -164,13 +164,13 @@ models:
         data_tests:
           - not_null
       - name: physical_goods
-        description: '{{ doc("column__physical_goods") }}'
+        description: '{{ doc("column__offer_is_physical_goods") }}'
         data_type: BOOLEAN
       - name: digital_goods
-        description: '{{ doc("column__digital_goods") }}'
+        description: '{{ doc("column__offer_is_digital_goods") }}'
         data_type: BOOLEAN
       - name: event
-        description: '{{ doc("column__event") }}'
+        description: '{{ doc("column__offer_is_event") }}'
         data_type: BOOLEAN
       - name: offer_category_id
         description: '{{ doc("column__offer_category_id") }}'
@@ -202,7 +202,7 @@ models:
         description: '{{ doc("column__user_macro_density_label") }}'
         data_type: STRING
       - name: user_creation_date
-        description: '{{ doc("column__user_creation_date") }}'
+        description: '{{ doc("column__user_created_at") }}'
         data_type: DATETIME
       - name: user_activity
         description: '{{ doc("column__user_activity") }}'
@@ -259,13 +259,13 @@ models:
         description: '{{ doc("column__offer_sub_type_label") }}'
         data_type: STRING
       - name: user_activation_date
-        description: '{{ doc("column__user_activation_date") }}'
+        description: '{{ doc("column__user_activated_at") }}'
         data_type: DATETIME
       - name: user_is_in_education
         description: '{{ doc("column__user_is_in_education") }}'
         data_type: BOOLEAN
       - name: first_deposit_creation_date
-        description: '{{ doc("column__first_deposit_creation_date") }}'
+        description: '{{ doc("column__user_first_deposit_creation_date") }}'
         data_type: DATETIME
       - name: user_density_level
         description: '{{ doc("column__user_density_level") }}'

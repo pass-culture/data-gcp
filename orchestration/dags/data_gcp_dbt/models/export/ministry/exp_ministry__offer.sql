@@ -18,8 +18,8 @@ select
     is_active as offer_is_active,
     offerer_address_id,
     offer_publication_date,
-    offer_product_id as product_id,
+    offer_product_id,
     item_id,
     venue_id,
-    offerer_id,
+    offerer_id
 from {{ ref("mrt_global__offer") }}

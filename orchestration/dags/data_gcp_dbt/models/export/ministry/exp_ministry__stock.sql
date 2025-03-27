@@ -8,8 +8,6 @@ select
     stock_price,
     stock_quantity,
     offer_id,
-    offer_name,
-    offer_subcategory_id,
     offerer_id,
     price_category_id,
     price_category_label,

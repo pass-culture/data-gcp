@@ -1,11 +1,14 @@
 select
-    venue_id,
-    venue_street,
-    venue_latitude,
-    venue_longitude,
-    venue_department_code,
-    venue_postal_code,
-    venue_city,
-    venue_region_name,
-    venue_epci,
-from {{ ref("mrt_global__venue") }}
+    vl.venue_id,
+    v.venue_street,
+    vl.venue_latitude,
+    vl.venue_longitude,
+    vl.venue_department_code,
+    vl.venue_postal_code,
+    vl.venue_city,
+    vl.venue_region_name,
+    vl.qpv_code,
+    vl.qpv_name,
+    vl.venue_iris_internal_id
+from {{ ref("int_geo__venue_location") }} as vl
+inner join {{ ref("mrt_global__venue") }} as v on vl.venue_id = v.venue_id

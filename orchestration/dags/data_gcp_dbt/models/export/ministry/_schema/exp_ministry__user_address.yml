@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: exp_ministry__user_address
+    description: "{{ doc('description__exp_ministry__user_address') }}"
+    columns:
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+      - name: user_address_geocode_type
+        description: "{{ doc('column__user_address_geocode_type') }}"
+      - name: user_address_raw
+        description: "{{ doc('column__user_address_raw') }}"
+      - name: user_address_latitude
+        description: "{{ doc('column__user_address_latitude') }}"
+      - name: user_address_longitude
+        description: "{{ doc('column__user_address_longitude') }}"
+      - name: user_academy_name
+        description: "{{ doc('column__user_academy_name') }}"
+      - name: user_department_code
+        description: "{{ doc('column__user_department_code') }}"
+      - name: user_region_name
+        description: "{{ doc('column__user_region_name') }}"
+      - name: user_qpv_code
+        description: "{{ doc('column__qpv_code') }}"
+      - name: user_qpv_name
+        description: "{{ doc('column__qpv_name') }}"
+      - name: user_postal_code
+        description: "{{ doc('column__user_postal_code') }}"
+      - name: user_iris_internal_id
+        description: "{{ doc('column__user_iris_internal_id') }}"

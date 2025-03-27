@@ -1,0 +1,68 @@
+version: 2
+
+models:
+  - name: int_seed__geo_iris
+    description: "{{ doc('description__int_seed__geo_iris') }}"
+    columns:
+      - name: iris_code
+        description: "{{ doc('column__iris_code') }}"
+        data_tests:
+          - not_null
+      - name: iris_label
+        description: "{{ doc('column__iris_label') }}"
+      - name: city_code
+        description: "{{ doc('column__city_code') }}"
+      - name: city_label
+        description: "{{ doc('column__city_label') }}"
+      - name: territorial_authority_code
+        description: "{{ doc('column__territorial_authority_code') }}"
+      - name: district_code
+        description: "{{ doc('column__district_code') }}"
+      - name: sub_district_code
+        description: "{{ doc('column__sub_district_code') }}"
+      - name: epci_code
+        description: "{{ doc('column__epci_code') }}"
+      - name: epci_label
+        description: "{{ doc('column__epci_label') }}"
+      - name: sub_district_label
+        description: "{{ doc('column__sub_district_label') }}"
+      - name: district_label
+        description: "{{ doc('column__district_label') }}"
+      - name: department_code
+        description: "{{ doc('column__department_code') }}"
+      - name: department_name
+        description: "{{ doc('column__department_name') }}"
+      - name: region_code
+        description: "{{ doc('column__region_code') }}"
+      - name: region_name
+        description: "{{ doc('column__region_name') }}"
+      - name: timezone
+        description: "{{ doc('column__timezone') }}"
+      - name: academy_name
+        description: "{{ doc('column__academy_name') }}"
+      - name: territorial_authority_label
+        description: "{{ doc('column__territorial_authority_label') }}"
+      - name: density_level
+        description: "{{ doc('column__density_level') }}"
+      - name: density_label
+        description: "{{ doc('column__density_label') }}"
+      - name: density_macro_level
+        description: "{{ doc('column__density_macro_level') }}"
+      - name: geo_code
+        description: "{{ doc('column__geo_code') }}"
+      - name: rural_city_type
+        description: "{{ doc('column__rural_city_type') }}"
+      - name: iris_internal_id
+        description: "{{ doc('column__iris_internal_id') }}"
+      - name: iris_centroid
+        description: "{{ doc('column__iris_centroid') }}"
+      - name: iris_shape
+        description: "{{ doc('column__iris_shape') }}"
+      - name: min_longitude
+        description: "{{ doc('column__min_longitude') }}"
+      - name: max_longitude
+        description: "{{ doc('column__max_longitude') }}"
+      - name: min_latitude
+        description: "{{ doc('column__min_latitude') }}"
+      - name: max_latitude
+        description: "{{ doc('column__max_latitude') }}"

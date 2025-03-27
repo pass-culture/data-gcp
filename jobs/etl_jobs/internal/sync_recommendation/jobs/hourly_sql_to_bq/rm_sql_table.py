@@ -2,13 +2,10 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from jobs.etl_jobs.internal.sync_recommendation.utils.db import (
-    PROJECT_NAME,
-    RECOMMENDATION_SQL_INSTANCE,
-    access_secret_data,
-)
-from jobs.etl_jobs.internal.sync_recommendation.utils.sql_config import SQLTableConfig
 from services.database import BigQueryService, CloudSQLService
+from utils.constant import PROJECT_NAME, RECOMMENDATION_SQL_INSTANCE
+from utils.secret import access_secret_data
+from utils.sql_config import SQLTableConfig
 
 logger = logging.getLogger(__name__)
 

@@ -176,7 +176,7 @@ with DAG(
     with TaskGroup("refresh_materialized_views", dag=dag) as refresh_views:
         for view in MATERIALIZED_VIEWS:
             refresh_command = f"""
-                python daily_bq_to_sql.py materialize-gcloud \
+                python daily_bq_to_sql.py materialize-cloudsql \
                     --view-name {view}
             """
 

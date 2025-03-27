@@ -116,6 +116,8 @@ class CloudSQLService(DatabaseService):
     def __init__(self, connection_params: Dict):
         self.connection_params = connection_params
         self._last_cursor = None
+        self._last_result = None
+        self._connection = None
         self.duck_service = DuckDBService()
 
     def __get_db_connection(self) -> connection:
@@ -144,6 +146,12 @@ class CloudSQLService(DatabaseService):
                 )
                 time.sleep(wait_time)
 
+    def _ensure_connection(self) -> None:
+        """Ensure we have an active database connection."""
+        if self._connection is None or self._connection.closed:
+            self._connection = self.__get_db_connection()
+            self._last_cursor = self._connection.cursor()
+
     def execute_query(self, query: str, params: Optional[Dict] = None) -> None:
         """Execute a query on CloudSQL.
 
@@ -151,17 +159,34 @@ class CloudSQLService(DatabaseService):
             query: The SQL query to execute
             params: Optional query parameters
         """
-        with self.__get_db_connection() as conn:
-            with conn.cursor() as cursor:
-                self._last_cursor = cursor
-                cursor.execute(query, params or {})
-                conn.commit()
+        self._ensure_connection()
+        self._last_cursor.execute(query, params or {})
+        self._last_result = self._last_cursor.fetchall()
+        self._connection.commit()
 
     def fetch_one(self) -> Tuple[Any, ...]:
         """Fetch one row from the last executed query"""
-        if not self._last_cursor:
+        if not self._last_result:
             raise RuntimeError("No query has been executed yet")
-        return self._last_cursor.fetchone()
+        if not self._last_result:
+            return None
+        return self._last_result[0]
+
+    def fetch_all(self) -> List[Tuple[Any, ...]]:
+        """Fetch all rows from the last executed query"""
+        if not self._last_result:
+            raise RuntimeError("No query has been executed yet")
+        return self._last_result
+
+    def close(self) -> None:
+        """Close the database connection and cursor."""
+        if self._last_cursor:
+            self._last_cursor.close()
+            self._last_cursor = None
+        if self._connection:
+            self._connection.close()
+            self._connection = None
+        self._last_result = None
 
 
 class DuckDBService(DatabaseService):
@@ -190,33 +215,8 @@ class DuckDBService(DatabaseService):
         conn = self.setup_connection()
         self._last_result = conn.execute(query).fetchall()
 
-    def parquet_to_cloudsql(self, query: str, destination_path: str) -> None:
-        """Export data from DuckDB"""
-        conn = self.setup_connection()
-        conn.execute(
-            f"COPY ({query}) TO '{destination_path}' (FORMAT PARQUET, COMPRESSION SNAPPY)"
-        )
-        logger.info(f"Successfully exported data to {destination_path}")
-
     def fetch_one(self) -> Tuple[Any, ...]:
         """Fetch one row from the last executed query"""
         if not self._last_result:
             raise RuntimeError("No query has been executed yet")
         return self._last_result[0]
-
-    def cloudsql_to_parquet(self, query: str, destination_path: str) -> None:
-        """
-        Export data from CloudSQL to Parquet using DuckDB.
-
-        Args:
-            query: SQL query to extract data from CloudSQL
-            destination_path: Local path where to save the Parquet file
-        """
-        conn = self.setup_connection()
-        conn.execute(f"""
-            COPY (
-                SELECT * FROM pg_db.({query})
-            ) TO '{destination_path}'
-            (FORMAT PARQUET, COMPRESSION SNAPPY)
-        """)
-        logger.info(f"Successfully exported data to {destination_path}")

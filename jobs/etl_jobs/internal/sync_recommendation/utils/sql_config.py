@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Dict, Optional
@@ -14,39 +13,58 @@ class MaterializedView(Enum):
     RECOMMENDABLE_OFFERS = "recommendable_offers_raw_mv"
 
 
-@dataclass
 class SQLTableConfig:
-    """Configuration for cloudSQL table retrieval."""
+    """Configuration for SQL table export."""
 
-    sql_table_name: str
-    bigquery_table_name: str
-    bigquery_dataset_name: str
-    columns: Dict[str, str]
-    time_column: str
-    partition_field: str
+    def __init__(
+        self,
+        sql_table_name: str,
+        bigquery_table_name: str,
+        bigquery_dataset_name: str,
+        columns: Dict[str, str],
+        time_column: str,
+        partition_field: str,
+    ):
+        self.sql_table_name = sql_table_name
+        self.bigquery_table_name = bigquery_table_name
+        self.bigquery_dataset_name = bigquery_dataset_name
+        self.columns = columns
+        self.time_column = time_column
+        self.partition_field = partition_field
 
-    @classmethod
-    def _get_time_conditions(
-        cls, start_time: Optional[datetime], end_time: Optional[datetime]
-    ) -> str:
+    def _get_time_conditions(self, start_time: datetime, end_time: datetime) -> str:
         """Helper to build WHERE clause conditions based on time range."""
         conditions = []
         if start_time:
-            conditions.append(f"{cls.time_column} >= '{start_time.isoformat()}'")
+            conditions.append(f"{self.time_column} >= '{start_time.isoformat()}'")
         if end_time:
-            conditions.append(f"{cls.time_column} <= '{end_time.isoformat()}'")
+            conditions.append(f"{self.time_column} <= '{end_time.isoformat()}'")
         return f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
-    @classmethod
-    def _build_select_query(cls, where_clause: str, execution_date: datetime) -> str:
-        columns_str = ", ".join(cls.columns.keys())
-        return f"""
-            SELECT
-                {columns_str},
-                DATE({execution_date}) AS {cls.partition_field}
-            FROM {cls.sql_table_name}
-            {where_clause}
-        """
+    def _build_select_query(
+        self, where_clause: str, execution_date: datetime = None
+    ) -> str:
+        """Build the SELECT query with the given WHERE clause."""
+        columns = ", ".join(self.columns.keys())
+        query = f"SELECT {columns}"
+        if execution_date:
+            query += (
+                f", '{execution_date.strftime('%Y-%m-%d')}' as {self.partition_field}"
+            )
+        query += f" FROM {self.sql_table_name}"
+        if where_clause:
+            query += f" {where_clause}"
+        return query
+
+    def get_extract_query(
+        self,
+        start_time: datetime = None,
+        end_time: datetime = None,
+        execution_date: datetime = None,
+    ) -> str:
+        """Generate query to extract data between two timestamps for recovery."""
+        where_clause = self._get_time_conditions(start_time, end_time)
+        return self._build_select_query(where_clause, execution_date)
 
     @classmethod
     def _build_delete_query(cls, where_clause: str) -> str:
@@ -54,17 +72,6 @@ class SQLTableConfig:
             DELETE FROM {cls.sql_table_name}
             {where_clause}
         """
-
-    @classmethod
-    def get_extract_query(
-        cls,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None,
-        execution_date: datetime = None,
-    ) -> str:
-        """Generate query to extract data between two timestamps for recovery."""
-        where_clause = cls._get_time_conditions(start_time, end_time)
-        return cls._build_select_query(where_clause, execution_date)
 
     @classmethod
     def get_drop_table_query(

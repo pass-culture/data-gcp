@@ -12,15 +12,12 @@ from utils.secret import access_secret_data
 from utils.sql_config import MaterializedView
 from utils.validate import parse_date, validate_table
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 logger = logging.getLogger(__name__)
 app = typer.Typer(help="Export/Import data between BigQuery and Cloud SQL")
-
-# Get database connection details
 database_url = access_secret_data(
     PROJECT_NAME,
     f"{RECOMMENDATION_SQL_INSTANCE}_database_url",
@@ -61,12 +58,9 @@ def gcs_to_cloudsql(
     execution_date = parse_date(date)
 
     logger.info(f"Starting import for table {table_name}")
-    # Create orchestrator
     orchestrator = GCSToSQLOrchestrator(
         project_id=PROJECT_NAME, database_url=database_url
     )
-
-    # Run import process
     orchestrator.import_table(
         table_config=EXPORT_TABLES[table_name],
         bucket_path=bucket_path,
@@ -75,7 +69,7 @@ def gcs_to_cloudsql(
 
 
 @app.command()
-def materialize_gcloud(
+def materialize_cloudsql(
     view_name: Annotated[
         str, typer.Option(help="Name of the materialized view to refresh")
     ],
@@ -83,16 +77,14 @@ def materialize_gcloud(
     """Refresh a materialized view in Cloud SQL."""
     try:
         view = MaterializedView(view_name)
-
-        # Create orchestrator
+        logger.info(f"Starting materialization for view {view_name}")
         orchestrator = SQLMaterializeOrchestrator(
             project_id=PROJECT_NAME, database_url=database_url
         )
-
-        # Run refresh process
         orchestrator.refresh_view(view)
 
     except ValueError:
+        logger.error(f"Invalid view name: {view_name}", exc_info=True)
         raise typer.BadParameter(f"Invalid view name: {view_name}")
 
 

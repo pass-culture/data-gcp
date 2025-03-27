@@ -1,6 +1,5 @@
 import logging
-from datetime import datetime
-from typing import Annotated, List, Optional
+from typing import Annotated, Optional
 
 import typer
 
@@ -12,7 +11,6 @@ from utils.secret import access_secret_data
 from utils.sql_config import EXPORT_TABLES
 from utils.validate import parse_date, validate_table
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
@@ -24,13 +22,6 @@ database_url = access_secret_data(
     PROJECT_NAME,
     f"{RECOMMENDATION_SQL_INSTANCE}_database_url",
 )
-
-
-def parse_dates(dates: Optional[List[str]] = None) -> Optional[List[datetime]]:
-    """Parse a list of date strings to datetime objects."""
-    if not dates:
-        return None
-    return [parse_date(date) for date in dates]
 
 
 @app.command()
@@ -60,11 +51,12 @@ def cloudsql_to_gcs(
     orchestrator = ExportCloudSQLToGCSOrchestrator(
         project_id=PROJECT_NAME, database_url=database_url
     )
+    end_time = parse_date(end_time)
+    execution_date = parse_date(execution_date)
 
     if start_time is None:
         start_time = orchestrator._check_min_time(table_config, end_time)
 
-    # Run export process
     orchestrator.export_data(
         table_config=table_config,
         bucket_path=bucket_path,
@@ -92,13 +84,11 @@ def gcs_to_bq(
     logger.info(f"Starting import for table {table_name}")
 
     orchestrator = GCSToBQOrchestrator(project_id=PROJECT_NAME)
-
     orchestrator.import_data(
         table_config=EXPORT_TABLES[table_name],
         bucket_path=bucket_path,
         partition_date_nodash=execution_date_datetime.strftime("%Y%m%d"),
     )
-    logger.info("Successfully imported data to BigQuery")
 
 
 @app.command()
@@ -124,14 +114,15 @@ def remove_cloudsql_data(
     Remove processed data from CloudSQL.
     """
     validate_table(table_name, list(EXPORT_TABLES.keys()))
-
-    # Create orchestrator
-    orchestrator = RemoveSQLTableOrchestrator(database_url=database_url)
-
     table_config = EXPORT_TABLES[table_name]
 
+    orchestrator = RemoveSQLTableOrchestrator(database_url=database_url)
     if end_time is None:
         end_time = orchestrator.get_max_time(table_config)
+
+    logger.info(
+        f"Removing data from table {table_name}, start_time: {start_time or 'None'}, end_time: {end_time or 'None' }"
+    )
 
     orchestrator.remove_processed_data(
         table_config=table_config, start_time=start_time, end_time=end_time

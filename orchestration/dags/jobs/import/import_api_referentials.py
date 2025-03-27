@@ -64,7 +64,7 @@ with DAG(
     )
 
     INSTALL_DEPS = """
-        sudo apt install -y libmariadb-dev clang libpq-dev
+        sudo apt update -y && sudo apt install -y libmariadb-dev clang libpq-dev
         git clone https://github.com/pass-culture/pass-culture-main.git
         cd pass-culture-main/api
         poetry export -f requirements.txt --output requirements.txt --without-hashes

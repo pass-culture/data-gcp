@@ -22,16 +22,13 @@ def predict():
     try:
         input_json = request.get_json()["instances"]
         results = model.predict(input_json)
-        item_semantic_embeddings = [
-            item["offer_semantic_embeding"] for item in input_json
-        ]
-        scores = [item["score"] for item in results]
         results_diverisified = [
             result
             for result in results
             if result["offer_id"]
             in DiversificationPipeline(
-                item_semantic_embeddings, scores
+                [item["offer_semantic_embeding"] for item in input_json],
+                [item["score"] for item in results],
             ).get_sampled_ids()
         ]
 

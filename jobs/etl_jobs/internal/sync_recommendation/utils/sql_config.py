@@ -1,228 +1,164 @@
-import logging
-import time
-from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from enum import Enum
+from typing import Dict, List, Optional
 
-import duckdb
-import psycopg2
-from google.cloud import bigquery
-from psycopg2.extensions import connection
-
-from utils.constant import MAX_RETRIES
-
-logger = logging.getLogger(__name__)
+from utils.constant import ENV_SHORT_NAME
 
 
-class DatabaseService(ABC):
-    """Abstract base class for database operations"""
-
-    @abstractmethod
-    def execute_query(self, query: str, params: Optional[Dict] = None) -> None:
-        """Execute a database query"""
-        pass
-
-    @abstractmethod
-    def fetch_one(self) -> Tuple[Any, ...]:
-        """Fetch one row from the last executed query"""
-        pass
+class MaterializedView(Enum):
+    ENRICHED_USER = "enriched_user_mv"
+    ITEM_IDS = "item_ids_mv"
+    NON_RECOMMENDABLE_ITEMS = "non_recommendable_items_mv"
+    IRIS_FRANCE = "iris_france_mv"
+    RECOMMENDABLE_OFFERS = "recommendable_offers_raw_mv"
 
 
-class BigQueryService(DatabaseService):
-    def __init__(self, project_id: str):
-        self.client = bigquery.Client(project=project_id)
-        self.project_id = project_id
-        self._last_query_result = None
+class SQLTableConfig:
+    """Configuration for SQL table export."""
 
-    def execute_query(self, query: str, params: Optional[Dict] = None) -> None:
-        """Execute a BigQuery query.
-
-        Args:
-            query: The SQL query to execute
-            params: Optional dictionary containing:
-                - destination: BigQuery table to write results to (optional)
-                - write_disposition: WRITE_TRUNCATE, WRITE_APPEND, or WRITE_EMPTY (default: WRITE_TRUNCATE)
-        """
-        if params and "destination" in params:
-            job_config = bigquery.QueryJobConfig(
-                destination=params["destination"],
-                write_disposition=params.get("write_disposition", "WRITE_TRUNCATE"),
-            )
-            query_job = self.client.query(query, job_config=job_config)
-        else:
-            query_job = self.client.query(query)
-
-        self._last_query_result = query_job.result()
-
-    def export_data(
-        self, source_ref: str, destination_uri: str, format: str = "PARQUET"
-    ) -> None:
-        """Export BigQuery table to GCS"""
-        job_config = bigquery.ExtractJobConfig(
-            destination_format=format,
-            compression="SNAPPY",
-        )
-        extract_job = self.client.extract_table(
-            source_ref,
-            destination_uri,
-            job_config=job_config,
-        )
-        extract_job.result()
-
-    def load_from_gcs(
+    def __init__(
         self,
-        table_id: str,
-        gcs_path: str,
-        schema: Optional[List[bigquery.SchemaField]] = None,
-        write_disposition: str = "WRITE_APPEND",
-        time_partitioning: Optional[bigquery.TimePartitioning] = None,
-    ) -> None:
+        sql_table_name: str,
+        bigquery_table_name: str,
+        bigquery_dataset_name: str,
+        columns: Dict[str, str],
+        time_column: str,
+        partition_field: str,
+        bigquery_schema: List[Dict[str, str]],
+    ):
+        self.sql_table_name = sql_table_name
+        self.bigquery_table_name = bigquery_table_name
+        self.bigquery_dataset_name = bigquery_dataset_name
+        self.columns = columns
+        self.time_column = time_column
+        self.partition_field = partition_field
+        self.bigquery_schema = bigquery_schema
+
+    def _get_time_conditions(
+        self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
+    ) -> str:
+        """Helper to build WHERE clause conditions based on time range."""
+        conditions = []
+        if start_time:
+            conditions.append(f"{self.time_column} >= '{start_time.isoformat()}'")
+        if end_time:
+            conditions.append(f"{self.time_column} <= '{end_time.isoformat()}'")
+        return f"WHERE {' AND '.join(conditions)}" if conditions else ""
+
+    def _build_select_query(
+        self,
+        where_clause: str,
+        execution_date: datetime = None,
+        database_name: str = None,
+    ) -> str:
+        """Build the SELECT query with the given WHERE clause."""
+        columns = ", ".join(self.columns.keys())
+        query = f"SELECT {columns}"
+        if execution_date:
+            query += f", '{execution_date.strftime('%Y-%m-%d')}'::date as {self.partition_field}"
+        query += f" FROM {database_name}.{self.sql_table_name}"
+        if where_clause:
+            query += f" {where_clause}"
+        return query
+
+    def get_extract_query(
+        self,
+        start_time: datetime = None,
+        end_time: datetime = None,
+        execution_date: datetime = None,
+        database_name: str = None,
+    ) -> str:
+        """Generate query to extract data between two timestamps for recovery."""
+        where_clause = self._get_time_conditions(start_time, end_time)
+        return self._build_select_query(where_clause, execution_date, database_name)
+
+    def _build_delete_query(self, where_clause: str) -> str:
+        return f"""
+            DELETE FROM {self.sql_table_name}
+            {where_clause}
         """
-        Load data from GCS Parquet files into a BigQuery table.
 
-        Args:
-            table_id: Full table ID (project.dataset.table)
-            gcs_path: GCS path containing Parquet files
-            schema: Optional schema for the table. If None, will be inferred from Parquet files
-            write_disposition: Write disposition for the load job (WRITE_APPEND, WRITE_TRUNCATE, etc.)
-            time_partitioning: Optional time partitioning for the table. If None, will not be partitioned.
-        """
-        logger.info(f"Loading data from {gcs_path} to {table_id}")
-        job_config = bigquery.LoadJobConfig(
-            source_format=bigquery.SourceFormat.PARQUET,
-            write_disposition=write_disposition,
-            schema=schema,
-            time_partitioning=time_partitioning,
-        )
-
-        load_job = self.client.load_table_from_uri(
-            source_uris=gcs_path,
-            destination=table_id,
-            job_config=job_config,
-        )
-
-        load_job.result()
-
-        table = self.client.get_table(table_id)
-        logger.info(f"Loaded {table.num_rows} rows into {table_id}")
-
-    def fetch_one(self) -> Tuple[Any, ...]:
-        """Fetch one row from the last executed query"""
-        if not self._last_query_result:
-            raise RuntimeError("No query has been executed yet")
-        return next(iter(self._last_query_result))
+    def get_drop_table_query(
+        self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
+    ) -> str:
+        """Generate query to delete data between two timestamps or all data."""
+        where_clause = self._get_time_conditions(start_time, end_time)
+        return self._build_delete_query(where_clause)
 
 
-class CloudSQLService(DatabaseService):
-    def __init__(self, connection_params: Dict):
-        self.connection_params = connection_params
-        self._last_cursor = None
-        self._last_result = None
-        self._connection = None
-        self.duck_service = DuckDBService()
-
-    def __get_db_connection(self) -> connection:
-        """Create a database connection with retries."""
-        retry_count = 0
-        conn = None
-
-        database_url = self.connection_params["database_url"]
-
-        while retry_count < MAX_RETRIES and conn is None:
-            try:
-                conn = psycopg2.connect(database_url)
-                conn.autocommit = False
-                return conn
-            except Exception as e:
-                retry_count += 1
-                if retry_count >= MAX_RETRIES:
-                    logger.error(
-                        f"Failed to connect to database after {MAX_RETRIES} attempts: {str(e)}"
-                    )
-                    raise
-
-                wait_time = min(30, 5 * retry_count)
-                logger.warning(
-                    f"Database connection failed (attempt {retry_count}/{MAX_RETRIES}). Retrying in {wait_time}s..."
-                )
-                time.sleep(wait_time)
-
-    def _ensure_connection(self) -> None:
-        """Ensure we have an active database connection."""
-        if self._connection is None or self._connection.closed:
-            self._connection = self.__get_db_connection()
-            self._last_cursor = self._connection.cursor()
-
-    def execute_query(self, query: str, params: Optional[Dict] = None) -> None:
-        """Execute a query on CloudSQL.
-
-        Args:
-            query: The SQL query to execute
-            params: Optional query parameters
-        """
-        self._ensure_connection()
-        self._last_cursor.execute(query, params or {})
-
-        # Only try to fetch results for SELECT queries
-        if query.strip().upper().startswith("SELECT"):
-            self._last_result = self._last_cursor.fetchall()
-        else:
-            self._last_result = None
-
-        self._connection.commit()
-
-    def fetch_one(self) -> Tuple[Any, ...]:
-        """Fetch one row from the last executed query"""
-        if not self._last_result:
-            raise RuntimeError("No query has been executed yet")
-        if not self._last_result:
-            return None
-        return self._last_result[0]
-
-    def fetch_all(self) -> List[Tuple[Any, ...]]:
-        """Fetch all rows from the last executed query"""
-        if not self._last_result:
-            raise RuntimeError("No query has been executed yet")
-        return self._last_result
-
-    def close(self) -> None:
-        """Close the database connection and cursor."""
-        if self._last_cursor:
-            self._last_cursor.close()
-            self._last_cursor = None
-        if self._connection:
-            self._connection.close()
-            self._connection = None
-        self._last_result = None
+CLOUD_SQL_TABLES_CONFIG: Dict[str, Dict] = {
+    "past_offer_context": {
+        "columns": {
+            "id": "bigint",
+            "call_id": "character varying",
+            "context": "jsonb",
+            "context_extra_data": "jsonb",
+            "date": "timestamp without time zone",
+            "user_id": "character varying",
+            "user_bookings_count": "integer",
+            "user_clicks_count": "integer",
+            "user_favorites_count": "integer",
+            "user_deposit_remaining_credit": "numeric",
+            "user_iris_id": "character varying",
+            "user_is_geolocated": "boolean",
+            "user_extra_data": "jsonb",
+            "offer_user_distance": "numeric",
+            "offer_is_geolocated": "boolean",
+            "offer_id": "character varying",
+            "offer_item_id": "character varying",
+            "offer_booking_number": "integer",
+            "offer_stock_price": "numeric",
+            "offer_creation_date": "timestamp without time zone",
+            "offer_stock_beginning_date": "timestamp without time zone",
+            "offer_category": "character varying",
+            "offer_subcategory_id": "character varying",
+            "offer_item_rank": "integer",
+            "offer_item_score": "numeric",
+            "offer_order": "integer",
+            "offer_venue_id": "character varying",
+            "offer_extra_data": "jsonb",
+        },
+        "time_column": "date",
+        "partition_field": "import_date",
+        "sql_table_name": "past_offer_context",
+        "bigquery_table_name": "past_offer_context",
+        "bigquery_dataset_name": f"raw_{ENV_SHORT_NAME}",
+        "bigquery_schema": [
+            {"name": "id", "type": "INTEGER"},
+            {"name": "call_id", "type": "STRING"},
+            {"name": "context", "type": "STRING"},
+            {"name": "context_extra_data", "type": "STRING"},
+            {"name": "date", "type": "TIMESTAMP"},
+            {"name": "user_id", "type": "STRING"},
+            {"name": "user_bookings_count", "type": "FLOAT"},
+            {"name": "user_clicks_count", "type": "FLOAT"},
+            {"name": "user_favorites_count", "type": "FLOAT"},
+            {"name": "user_deposit_remaining_credit", "type": "FLOAT"},
+            {"name": "user_iris_id", "type": "STRING"},
+            {"name": "user_is_geolocated", "type": "BOOLEAN"},
+            {"name": "user_extra_data", "type": "STRING"},
+            {"name": "offer_user_distance", "type": "FLOAT"},
+            {"name": "offer_is_geolocated", "type": "BOOLEAN"},
+            {"name": "offer_id", "type": "STRING"},
+            {"name": "offer_item_id", "type": "STRING"},
+            {"name": "offer_booking_number", "type": "FLOAT"},
+            {"name": "offer_stock_price", "type": "FLOAT"},
+            {"name": "offer_creation_date", "type": "DATETIME"},
+            {"name": "offer_stock_beginning_date", "type": "DATETIME"},
+            {"name": "offer_category", "type": "STRING"},
+            {"name": "offer_subcategory_id", "type": "STRING"},
+            {"name": "offer_item_rank", "type": "FLOAT"},
+            {"name": "offer_item_score", "type": "FLOAT"},
+            {"name": "offer_order", "type": "FLOAT"},
+            {"name": "offer_venue_id", "type": "STRING"},
+            {"name": "offer_extra_data", "type": "STRING"},
+            {"name": "import_date", "type": "DATE"},
+        ],
+    }
+}
 
 
-class DuckDBService(DatabaseService):
-    def __init__(self, database_path: str = ":memory:"):
-        self.database_path = database_path
-        self._last_result = None
-        self._connection = None
-
-    def setup_connection(self) -> duckdb.DuckDBPyConnection:
-        """Setup a new DuckDB connection with required extensions."""
-        if self._connection is None:
-            self._connection = duckdb.connect(self.database_path)
-            self._connection.execute("INSTALL postgres; LOAD postgres;")
-            self._connection.execute("INSTALL httpfs; LOAD httpfs;")
-            self._connection.execute("INSTALL spatial; LOAD spatial;")
-        return self._connection
-
-    def close_connection(self) -> None:
-        """Close the DuckDB connection if it exists."""
-        if self._connection is not None:
-            self._connection.close()
-            self._connection = None
-
-    def execute_query(self, query: str, params: Optional[Dict] = None) -> None:
-        """Execute a query using the maintained connection."""
-        conn = self.setup_connection()
-        self._last_result = conn.execute(query).fetchall()
-
-    def fetch_one(self) -> Tuple[Any, ...]:
-        """Fetch one row from the last executed query"""
-        if not self._last_result:
-            raise RuntimeError("No query has been executed yet")
-        return self._last_result[0]
+EXPORT_TABLES = {
+    name: SQLTableConfig(**{**config})
+    for name, config in CLOUD_SQL_TABLES_CONFIG.items()
+}

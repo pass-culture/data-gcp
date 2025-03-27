@@ -139,6 +139,9 @@ def generate_predictions(
 
     # Get unique items to score
     offers_to_score = test_data.item_id.unique()
+    if len(offers_to_score) < 20:
+        # ScaNN requires at least 16 items to score, so duplicate items if necessary
+        offers_to_score = np.repeat(offers_to_score, 50 // len(offers_to_score))
     logger.info(f"Number of unique items to score: {len(offers_to_score)}")
 
     # Get item embeddings for the corpus

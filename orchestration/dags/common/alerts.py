@@ -11,7 +11,7 @@ from common.config import (
     GCP_PROJECT_ID,
     LOCAL_ENV,
 )
-from common.operators.gce import StopGCEOperator
+from common.hooks.gce import GCEHook
 
 from airflow import configuration
 from airflow.utils.context import Context
@@ -67,17 +67,16 @@ def on_failure_callback_stop_vm(context: Context):
     This callback stops the VM associated with the failing task,
     assuming the failing task has an `instance_name` attribute.
     """
-    failing_task = context["task"]
-    # If the failing task has an instance_name, use StopGCEOperator to stop it.
+    failing_task = context.get("task")
     if hasattr(failing_task, "instance_name"):
+        # Ensure any templated fields are rendered
         failing_task.render_template_fields(context)
         instance_name = failing_task.instance_name
-        if instance_name.startswith("{{"):
-            raise ValueError("Instance name jinja template was not rendered properly.")
-        stop_vm_operator = StopGCEOperator(
-            task_id="stop_vm_on_failure_callback", instance_name=instance_name
-        )
-        stop_vm_operator.execute(context=context)
+
+        failing_task.log.info(f"Stopping VM {instance_name} due to task failure.")
+
+        hook = GCEHook()
+        hook.stop_vm(instance_name)
 
 
 def on_failure_combined_callback(context):

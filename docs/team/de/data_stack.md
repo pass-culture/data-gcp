@@ -2,8 +2,6 @@
 
 The data environment at pass Culture is built around a structured pipeline that takes data from collection to real-world use, through processing and distribution.
 
-![title](data_stack.png)
-
 ## 🔄 Data Collection
 
 Internal sources: from our applications, users, and backend systems.

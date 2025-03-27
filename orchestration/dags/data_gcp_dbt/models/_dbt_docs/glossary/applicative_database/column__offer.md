@@ -3,10 +3,8 @@
 {% docs column__offer_product_humanized_id %} Human-readable identifier for the product associated with the offer. {%
 enddocs %}
 {% docs column__offer_id_at_providers %} Identifier for the offer at external providers. {% enddocs %}
-{% docs column__offer_is_synchronised %} Indicates whether the offer is synchronized with API systems and has a
-product_id. {% enddocs %}
-{% docs column__offer_description %} Offer description (synopsis, further details on the show) as provided by the
-cultural partner and displayed in app.{% enddocs %}
+{% docs column__offer_is_synchronised %} Indicates whether the offer is synchronized with API systems and has a product_id. {% enddocs %}
+{% docs column__offer_description %} Offer description (synopsis, further details on the show) as provided by thecultural partner and displayed in app.{% enddocs %}
 
 {% docs column__offer_name %} Name of the offer as it appears in the application. {% enddocs %}
 {% docs column__offer_category_id %} Identifier for the category of the offer. {% enddocs %}

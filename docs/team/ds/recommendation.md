@@ -137,7 +137,8 @@ To train this model, we leverage all interactions performed on the app's home pa
 
 ### The metrics
 
-## The Post-Ranking Model
 
 
-### The metrics
+## IV. The Post-Ranking Model
+
+🏗️ Under Construction

@@ -94,15 +94,23 @@ the total number of items in our training catalog
 **Novelty**
 >Novelty measures how new, original, or unusual the recommendations are for the user.
 
-## The Ranking Model
+## III. The Ranking Model
 
-In the context of recommendation, a ranking model is used to predict
-the likelihood of specific user actions, such as clicking on or booking an item.
- By treating these actions as binary classification problems (e.g., click or no click, book or no book),
-the model assigns probabilities to each item, indicating how likely a user is to interact with it.
+After the retrieval model has generated a list of candidates, the ranking model is used to score and rank these candidates in order of relevance to the user.
+
+As said before, this model is more accurate but can be slower and less scalable than the retrieval model, since it is applied to a smaller number of items.
+As such, we can take into account more features and more complex algorithms to predict the relevance of an item to a user.
 
 
-### Classification model
+### III.A Overview
+
+In the context of recommendation, we try to learn the click and booking probabilities of a user for a given item.
+Then the score is the sum of these two probabilities.
+
+> Note that this score used to be more complex, but we recently got back to a simpler model, which worked better, in order to later iterate on it.
+
+
+### III.B Classification model
 
 The classification model leverages both user and item features,
 such as user preferences, item metadata, and contextual information (e.g., time of day, distance to the offer).
@@ -110,15 +118,14 @@ These features are processed to train the model to distinguish between items
 that are relevant to the user and those that are not.
 
 
-### Click and booking prediction
+#### Click and booking prediction
 
 We use this model to predicts both the probability of a click
 and the probability of a booking.
-The final score is simply the sum of these two probabilities.
- (it used to be more complex but we recently got back to a simpler model,
- which worked better, in order to later iterate on it).
-
- $$ s = P(click) + P(booking) $$
+The final score is simply the sum of these two probabilities as show below :
+    ```
+    score = P(click) + P(booking)
+    ```
 
 ### The Data
 To train this model, we leverage all interactions performed on the app's home page, including the offers a user has viewed, clicked on, or booked.
@@ -126,7 +133,7 @@ To train this model, we leverage all interactions performed on the app's home pa
 | Training Aspects | Description |
 | --- | ----------- |
 | Frequency | The model is retrained on a weekly basis to ensure it stays up-to-date with user behavior and catalog changes. |
-|Data Window| Booking data from the past six months and three months of click |
+|Data Window| Booking and Click data from the past 2 weeks |
 
 ### The metrics
 

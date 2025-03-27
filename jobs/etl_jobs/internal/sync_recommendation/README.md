@@ -103,7 +103,7 @@ This tool manages the bidirectional data flow between BigQuery and CloudSQL for 
 
 ## Prerequisites
 
-- Python 3.10+
+- Python 3.12+
 - Google Cloud SDK installed and configured
 - Access to relevant Google Cloud resources (BQ, GCS, CloudSQL)
 - Required dependencies installed (`pip install -r requirements.txt`)
@@ -150,13 +150,6 @@ python main.py hourly_export_process \
 
 # Individual steps can also be run separately:
 
-# 1. Export data from CloudSQL to GCS only
-python main.py hourly_export_cloudsql_to_gcs \
-  --table-name past_offer_context \
-  --bucket-path gs://<bucket-name>/export/cloudsql_hourly \
-  --date <YYYYMMDD> \
-  --hour <0-23> \
-  [--recover-missed]
 
 # 2. Load data from GCS to BigQuery only
 python main.py hourly_load_gcs_to_bigquery \

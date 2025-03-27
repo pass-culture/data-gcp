@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List
 
-from utils import ENV_SHORT_NAME
+from utils.constant import ENV_SHORT_NAME
 
 
 class DatasetType(Enum):
@@ -10,16 +10,8 @@ class DatasetType(Enum):
     SEED = "seed"
 
 
-class MaterializedView(Enum):
-    ENRICHED_USER = "enriched_user_mv"
-    ITEM_IDS = "item_ids_mv"
-    NON_RECOMMENDABLE_ITEMS = "non_recommendable_items_mv"
-    IRIS_FRANCE = "iris_france_mv"
-    RECOMMENDABLE_OFFERS = "recommendable_offers_raw_mv"
-
-
 @dataclass
-class TableConfig:
+class BQTableConfig:
     columns: Dict[str, str]
     bigquery_table_name: str
     dataset_type: DatasetType
@@ -71,8 +63,7 @@ class TableConfig:
         """
 
 
-# Tables configuration with complete schema
-TABLES_CONFIG: Dict[str, Dict] = {
+BQ_TABLES_CONFIG: Dict[str, Dict] = {
     "enriched_user": {
         "columns": {
             "user_id": "character varying",
@@ -121,6 +112,7 @@ TABLES_CONFIG: Dict[str, Dict] = {
     },
 }
 
+
 # CSV Export settings
 CSV_EXPORT_CONFIG = {
     "compression": "GZIP",
@@ -141,7 +133,7 @@ CLOUD_SQL_IMPORT_CONFIG = {
 }
 
 # Initialize table configs
-TABLES = {
-    name: TableConfig(**{**config, "dataset_type": config["dataset_type"]})
-    for name, config in TABLES_CONFIG.items()
+EXPORT_TABLES = {
+    name: BQTableConfig(**{**config, "dataset_type": config["dataset_type"]})
+    for name, config in BQ_TABLES_CONFIG.items()
 }

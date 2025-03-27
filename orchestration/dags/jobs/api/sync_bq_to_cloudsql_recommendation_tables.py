@@ -49,10 +49,8 @@ TABLE_DEPENDENCIES = {
     },
 }
 
-# List of tables to process - configuration is in config.py
 TABLES_TO_PROCESS = list(TABLE_DEPENDENCIES.keys())
 
-# List of all materialized views to refresh
 MATERIALIZED_VIEWS = [
     "enriched_user_mv",
     "item_ids_mv",
@@ -91,11 +89,18 @@ with DAG(
             default=f"recommendation-export-{ENV_SHORT_NAME}",
             type="string",
         ),
+        "bucket_path": Param(
+            default=f"gs://{DATA_GCS_BUCKET_NAME}",
+            type="string",
+        ),
+        "bucket_folder": Param(
+            default="export/cloudsql_recommendation_tables/{{ ds_nodash }}/",
+            type="string",
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start")
 
-    # Wait for upstream tables
     with TaskGroup(group_id="wait_for_tables") as wait_for_tables:
         for table_name, dependency in TABLE_DEPENDENCIES.items():
             waiting_task = delayed_waiting_operator(
@@ -127,9 +132,9 @@ with DAG(
     with TaskGroup("export_tables", dag=dag) as export_tables:
         for table_name in TABLES_TO_PROCESS:
             export_command = f"""
-                python main.py export-gcs \
+                python daily_bq_to_sql.py bq-to-gcs \
                     --table-name {table_name} \
-                    --bucket-path gs://{DATA_GCS_BUCKET_NAME}/export/recommendation_exports/{{{{ ds_nodash }}}} \
+                    --bucket-path {{ params.bucket_path }}/{{ params.bucket_folder }} \
                     --date {{{{ ds_nodash }}}}
             """
 
@@ -145,9 +150,9 @@ with DAG(
     with TaskGroup("import_tables", dag=dag) as import_tables:
         for table_name in TABLES_TO_PROCESS:
             import_command = f"""
-                python main.py import-to-gcloud \
+                python daily_bq_to_sql.py gcs-to-cloudsql \
                     --table-name {table_name} \
-                    --bucket-path gs://{DATA_GCS_BUCKET_NAME}/export/recommendation_exports/{{{{ ds_nodash }}}} \
+                    --bucket-path {{ params.bucket_path }}/{{ params.bucket_folder }} \
                     --date {{{{ ds_nodash }}}}
             """
 
@@ -162,8 +167,8 @@ with DAG(
     # Cleanup GCS files after successful import
     cleanup_gcs = GCSDeleteObjectsOperator(
         task_id="cleanup_gcs_files",
-        bucket_name=DATA_GCS_BUCKET_NAME,
-        prefix="export/recommendation_exports/{{ ds_nodash }}/",
+        bucket_name="{{ params.bucket_path }}",
+        prefix="{{ params.bucket_folder }}",
         impersonation_chain=None,  # Add if needed for your setup
     )
 
@@ -171,7 +176,7 @@ with DAG(
     with TaskGroup("refresh_materialized_views", dag=dag) as refresh_views:
         for view in MATERIALIZED_VIEWS:
             refresh_command = f"""
-                python main.py materialize-gcloud \
+                python daily_bq_to_sql.py materialize-gcloud \
                     --view-name {view}
             """
 

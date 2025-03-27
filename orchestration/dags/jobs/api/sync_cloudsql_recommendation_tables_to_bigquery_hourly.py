@@ -20,6 +20,7 @@ from common.utils import get_airflow_schedule
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
+from airflow.providers.google.cloud.operators.gcs import GCSDeleteObjectsOperator
 
 DEFAULT_DAG_ARGS = {
     "start_date": datetime.datetime(2023, 1, 1),
@@ -39,11 +40,11 @@ INSTANCE_TYPE = {
 }[ENV_SHORT_NAME]
 
 # Base directory for the export job
-BASE_DIR = "data-gcp/jobs/etl_jobs/internal/export_recommendation"
-
+BASE_DIR = "data-gcp/jobs/etl_jobs/internal/sync_recommendation"
+DAG_ID = "sync_cloudsql_recommendation_tables_to_bigquery_hourly"
 
 with DAG(
-    "import_cloudsql_tables_to_bigquery_hourly",
+    DAG_ID,
     default_args=DEFAULT_DAG_ARGS,
     description="Import tables from recommendation CloudSQL to BigQuery hourly",
     schedule_interval=get_airflow_schedule(
@@ -66,17 +67,24 @@ with DAG(
             type="string",
         ),
         "instance_name": Param(
-            default=f"cloudsql-export-{ENV_SHORT_NAME}",
+            default=f"cloudsql-to-bq-export-{ENV_SHORT_NAME}",
             type="string",
         ),
         "table_name": Param(
             default="past_offer_context",
             type="string",
         ),
-        "recover_missed": Param(
-            default=True,
-            type="boolean",
-            description="Whether to check for and recover missed data from failed jobs",
+        "bucket_path": Param(
+            default=f"gs://{DATA_GCS_BUCKET_NAME}",
+            type="string",
+        ),
+        "bucket_folder": Param(
+            default="import/cloudsql_recommendation_tables_hourly/{{ ds_nodash }}/",
+            type="string",
+        ),
+        "execution_date": Param(
+            default="{{ ds_nodash }}",
+            type="string",
         ),
     },
 ) as dag:
@@ -88,10 +96,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         instance_type="{{ params.instance_type }}",
         retries=2,
-        labels={
-            "job_type": "cloudsql_export",
-            "dag_name": "export_cloudsql_tables_to_bigquery_hourly",
-        },
+        labels={"dag_name": DAG_ID},
         preemptible=False,
     )
 
@@ -100,31 +105,63 @@ with DAG(
         task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
         branch="{{ params.branch }}",
-        python_version="3.10",
+        python_version="3.12",
         base_dir=BASE_DIR,
         retries=2,
     )
 
     # Run the hourly export process
-    run_hourly_export = SSHGCEOperator(
-        task_id="run_hourly_export",
+    export_data_to_gcs = SSHGCEOperator(
+        task_id="export_data_to_gcs",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_DIR,
         command="""
-            python main.py hourly_export_process \
+            python hourly_sql_to_bq.py cloudsql-to-gcs \
                 --table-name {{ params.table_name }} \
-                --bucket-path gs://{bucket_name}/export/cloudsql_hourly \
-                --date {{ ds_nodash }} \
-                --hour {{ execution_date.hour }} \
-                --recover-missed {{ params.recover_missed }}
-        """.format(bucket_name=DATA_GCS_BUCKET_NAME),
+                --bucket-path {{ params.bucket_path }}/{{ params.bucket_folder }} \
+                --execution-date {{ params.execution_date }} \
+                --end-time {{ ds }}
+        """,
         dag=dag,
+    )
+
+    # Import data from GCS to BigQuery
+    import_data_to_bigquery = SSHGCEOperator(
+        task_id="import_data_to_bigquery",
+        instance_name="{{ params.instance_name }}",
+        base_dir=BASE_DIR,
+        command="""
+            python hourly_sql_to_bq.py gcs-to-bq \
+                --table-name {{ params.table_name }} \
+                --bucket-path {{ params.bucket_path }}/{{ params.bucket_folder }} \
+                --execution-date {{ params.execution_date }}
+        """,
+        dag=dag,
+    )
+
+    # Remove processed data from cloudSQL
+    remove_processed_data = SSHGCEOperator(
+        task_id="remove_processed_data",
+        instance_name="{{ params.instance_name }}",
+        base_dir=BASE_DIR,
+        command="""
+            python hourly_sql_to_bq.py remove-cloudsql-data \
+                --table-name {{ params.table_name }} \
+        """,
     )
 
     # Delete the VM after processing
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
+    )
+
+    # Cleanup GCS files after successful import
+    cleanup_gcs = GCSDeleteObjectsOperator(
+        task_id="cleanup_gcs_files",
+        bucket_name="{{ params.bucket_path }}",
+        prefix="{{ params.bucket_folder }}",
+        impersonation_chain=None,
     )
 
     # Set up task dependencies
@@ -134,7 +171,9 @@ with DAG(
         start
         >> gce_instance_start
         >> fetch_install_code
-        >> run_hourly_export
+        >> export_data_to_gcs
+        >> import_data_to_bigquery
+        >> remove_processed_data
         >> gce_instance_stop
         >> end
     )

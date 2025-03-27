@@ -22,8 +22,7 @@ def run(
 
     archive = Archive(table, config_dict)
     archive.store_partitions_in_temp()
-    archive.export_partitions()
-    archive.delete_partitions()
+    archive.export_and_delete_partitions()
 
 
 if __name__ == "__main__":

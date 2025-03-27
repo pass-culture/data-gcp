@@ -23,7 +23,7 @@ class Archive:
         query_temp_job = self.client.query(query_temp)
         query_temp_job.result()
 
-    def export_partitions(self):
+    def export_and_delete_partitions(self):
         query_partitions_job = self.client.query(f"""
             SELECT DISTINCT partition_date
             FROM `{GCP_PROJECT_ID}.tmp_{ENV_SHORT_NAME}.{self.table}_old_partitions`
@@ -34,7 +34,7 @@ class Archive:
         if not partitions:
             print("No partitions to export.")
 
-        for partition_date in partitions:
+        for partition_date in partitions[:10]:
             partition_str = partition_date.strftime(
                 "%Y%m%d"
             )  # Convert to YYYYMMDD format
@@ -54,10 +54,9 @@ class Archive:
             query_export_job = self.client.query(query_export)
             query_export_job.result()
 
-    def delete_partitions(self):
-        query_delete = f"""DELETE FROM `{GCP_PROJECT_ID}.{self.dataset_id}.{self.table}`
-            WHERE {self.partition_column} < DATE_SUB(CURRENT_DATE(), INTERVAL {self.look_back_months} MONTH);
-        """
+            query_delete = f"""DELETE FROM `{GCP_PROJECT_ID}.{self.dataset_id}.{self.table}`
+                WHERE {self.partition_column} = '{partition_date}';
+            """
 
-        query_delete_job = self.client.query(query_delete)
-        query_delete_job.result()
+            query_delete_job = self.client.query(query_delete)
+            query_delete_job.result()

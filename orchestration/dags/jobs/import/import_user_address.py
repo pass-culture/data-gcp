@@ -32,7 +32,7 @@ dag_config = {
 }
 
 
-schedule_interval = "0 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
+schedule_interval = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
 
 default_args = {
     "start_date": datetime(2021, 3, 30),
@@ -56,12 +56,34 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "source_dataset_id": f"int_api_gouv_{ENV_SHORT_NAME}",
-        "source_table_name": "user_address_candidate_queue",
-        "destination_dataset_id": BIGQUERY_RAW_DATASET,
-        "destination_table_name": "user_address",
-        "max_rows": 50_000,
-        "chunk_size": 500,
+        "instance_name": Param(
+            default=GCE_INSTANCE,
+            type="string",
+        ),
+        "source_dataset_id": Param(
+            default=f"int_api_gouv_{ENV_SHORT_NAME}",
+            type="string",
+        ),
+        "source_table_name": Param(
+            default="user_address_candidate_queue",
+            type="string",
+        ),
+        "destination_dataset_id": Param(
+            default=BIGQUERY_RAW_DATASET,
+            type="string",
+        ),
+        "destination_table_name": Param(
+            default="user_address",
+            type="string",
+        ),
+        "max_rows": Param(
+            default=50_000,
+            type="number",
+        ),
+        "chunk_size": Param(
+            default=500,
+            type="number",
+        ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
@@ -91,27 +113,27 @@ with DAG(
         return "end"
 
     @task
-    def start_gce():
+    def start_gce(**context):
         operator = StartGCEOperator(
-            instance_name=GCE_INSTANCE,
+            instance_name="{{ params.instance_name }}",
             task_id="gce_start_task",
             labels={"dag_name": DAG_NAME},
         )
-        return operator.execute(context={})
+        return operator.execute(context=context)
 
     @task
-    def fetch_install_code():
+    def fetch_install_code(**context):
         operator = InstallDependenciesOperator(
             task_id="fetch_install_code",
-            instance_name=GCE_INSTANCE,
+            instance_name="{{ params.instance_name }}",
             branch="{{ params.branch }}",
             python_version="3.12",
             base_dir=BASE_PATH,
         )
-        return operator.execute(context={})
+        return operator.execute(context=context)
 
     @task
-    def addresses_to_gcs():
+    def addresses_to_gcs(**context):
         operator = SSHGCEOperator(
             task_id="user_address_to_bq",
             instance_name=GCE_INSTANCE,
@@ -127,14 +149,14 @@ with DAG(
             """,
             do_xcom_push=True,
         )
-        return operator.execute(context={})
+        return operator.execute(context=context)
 
     @task
-    def stop_gce():
+    def stop_gce(**context):
         operator = DeleteGCEOperator(
-            task_id="gce_stop_task", instance_name=GCE_INSTANCE
+            task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
         )
-        return operator.execute(context={})
+        return operator.execute(context=context)
 
     @task
     def end():

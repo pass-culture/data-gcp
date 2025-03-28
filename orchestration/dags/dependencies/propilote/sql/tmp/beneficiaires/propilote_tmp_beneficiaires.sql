@@ -16,7 +16,7 @@ with
             uua.deposit_amount,
             coalesce(sum(booking_intermediary_amount), 0) as amount_spent,
             case
-                when uua.deposit_type = "GRANT_17_18" and uua.user_age = 17
+                when uua.deposit_type = "GRANT_17_18" and uua.user_age <= 17
                 then "GRANT_15_17"
                 when uua.deposit_type = "GRANT_17_18" and uua.user_age >= 18
                 then "GRANT_18"

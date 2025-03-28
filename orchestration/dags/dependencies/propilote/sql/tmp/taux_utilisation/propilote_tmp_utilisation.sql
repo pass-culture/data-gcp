@@ -18,7 +18,7 @@ with
             user.user_region_name,
             rd.academy_name,
             case
-                when deposit.deposit_type = "GRANT_17_18" and deposit.user_age = 17
+                when deposit.deposit_type = "GRANT_17_18" and deposit.user_age <= 17
                 then "GRANT_15_17"
                 when deposit.deposit_type = "GRANT_17_18" and deposit.user_age >= 18
                 then "GRANT_18"

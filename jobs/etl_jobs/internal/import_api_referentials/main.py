@@ -4,6 +4,7 @@ import unicodedata
 
 import numpy as np
 import pandas as pd
+import requests
 
 CATEGORIES_DTYPES = {
     "id": str,
@@ -37,41 +38,57 @@ TYPES_DTYPES = {
 }
 
 
-def get_subcategories(gcp_project_id, env_short_name):
-    subcategories = importlib.import_module(
-        "pcapi.core.categories.subcategories_v2"
-    ).ALL_SUBCATEGORIES
-    export_subcat = []
-    for subcats in subcategories:
-        _exports = {
-            "id": subcats.id,
-            "category_id": subcats.category.id,
-            "pro_label": subcats.pro_label,
-            "app_label": subcats.app_label,
-            "search_group_name": subcats.search_group_name,
-            "homepage_label_name": subcats.homepage_label_name,
-            "is_event": subcats.is_event,
-            "conditional_fields": [k for k, v in subcats.conditional_fields.items()],
-            "can_expire": subcats.can_expire,
-            "is_physical_deposit": subcats.is_physical_deposit,
-            "is_digital_deposit": subcats.is_digital_deposit,
-            "online_offline_platform": subcats.online_offline_platform,
-            "reimbursement_rule": subcats.reimbursement_rule,
-            "can_be_duo": subcats.can_be_duo,
-            "can_be_educational": subcats.can_be_educational,
-            "is_selectable": subcats.is_selectable,
-            "is_bookable_by_underage_when_free": subcats.is_bookable_by_underage_when_free,
-            "is_bookable_by_underage_when_not_free": subcats.is_bookable_by_underage_when_not_free,
-            "can_be_withdrawable": subcats.can_be_withdrawable,
-        }
-        export_subcat.append(_exports)
-    df = pd.DataFrame(export_subcat)
-    dtype_list = list(df.columns)
+def convert_df_columns_to_snake_case(df: pd.DataFrame) -> pd.DataFrame:
+    def _convert_camel_case_to_snake_case(camel_case: str) -> str:
+        return "".join(
+            ["_" + c.lower() if c.isupper() else c for c in camel_case]
+        ).lstrip("_")
+
+    return df.rename(
+        columns={c: _convert_camel_case_to_snake_case(c) for c in df.columns}
+    )
+
+
+def get_subcategories(gcp_project_id: str, env_short_name: str) -> None:
+    # Read deprecated data from CSV (kept for reference)
+    deprecated_subactegories = pd.read_csv("data/subcategories_v2_20250327.csv")
+
+    # Fetch current subcategories from API
+    response = requests.get(
+        "https://backend.passculture.app/native/v1/subcategories/v2"
+    )
+    response.raise_for_status()
+    subcategories_data = response.json()
+    new_subcategories_df = pd.DataFrame(subcategories_data["subcategories"]).pipe(
+        convert_df_columns_to_snake_case
+    )
+
+    # Merge Both Dataframes
+    COLUMNS_TO_KEEP = ["id"] + list(
+        set(deprecated_subactegories.columns).difference(
+            set(new_subcategories_df.columns)
+        )
+    )
+    merged_df = deprecated_subactegories.loc[:, COLUMNS_TO_KEEP].merge(
+        new_subcategories_df, left_on="id", right_on="id", how="inner"
+    )
+
+    if len(merged_df) != len(deprecated_subactegories):
+        raise Exception(
+            "Merging subcategories failed. Length of merged dataframe is not equal to the length of the deprecated subcategories dataframe."
+        )
+
+    if set(deprecated_subactegories.columns).difference(set(merged_df.columns)):
+        raise Exception(
+            "Merging subcategories failed. Columns are missing in the merged dataframe"
+        )
+
+    dtype_list = list(merged_df.columns)
     for k, v in CATEGORIES_DTYPES.items():
         if k in dtype_list:
-            df[k] = df[k].astype(v)
+            merged_df[k] = merged_df[k].astype(v)
 
-    df.to_gbq(
+    merged_df.to_gbq(
         f"""raw_{env_short_name}.subcategories""",
         project_id=gcp_project_id,
         if_exists="replace",

@@ -35,7 +35,7 @@ models:
       - name: is_numerical
         description: "{{ doc('column__offer_is_numerical') }}"
       - name: is_national
-        description: "{{ doc('column__is_national') }}"
+        description: "{{ doc('column__offer_is_national') }}"
       - name: is_geolocated
         description: "{{ doc('column__offer_is_geolocated') }}"
       - name: offer_is_duo

@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: exp_ministry__geo_iris
+    description: "{{ doc('description__exp_ministry__geo_iris') }}"
+    columns:
+      - name: iris_internal_id
+        description: "{{ doc('column__iris_internal_id') }}"
+      - name: iris_label
+        description: "{{ doc('column__iris_label') }}"
+      - name: city_code
+        description: "{{ doc('column__city_code') }}"
+      - name: city_label
+        description: "{{ doc('column__city_label') }}"
+      - name: district_code
+        description: "{{ doc('column__district_code') }}"
+      - name: sub_district_code
+        description: "{{ doc('column__sub_district_code') }}"
+      - name: department_code
+        description: "{{ doc('column__department_code') }}"
+      - name: department_name
+        description: "{{ doc('column__department_name') }}"
+      - name: iris_centroid
+        description: "{{ doc('column__iris_centroid') }}"
+      - name: iris_shape
+        description: "{{ doc('column__iris_shape') }}"

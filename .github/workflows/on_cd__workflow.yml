@@ -1,11 +1,11 @@
 name: "3. [on_cd] Deployement workflow"
 
 on:
- workflow_dispatch:
- push:
-  branches:
-    - master
-    - production
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - production
 
 permissions:
   contents: write
@@ -30,14 +30,7 @@ jobs:
           fetch-depth: 0
       - name: "Trouver les Jobs testables"
         id: "find-testable-jobs"
-        run: |
-          find jobs -type d  -name "tests" -exec dirname {} \; > /tmp/list.txt
-          folders=()
-          for folder in $(cat /tmp/list.txt); do
-            folders+=(\"${folder}\")
-          done
-          json_array="[$(IFS=,; echo "${folders[*]}")]"
-          echo "testable_jobs=$json_array" | tee -a $GITHUB_OUTPUT
+        run: .github/workflows/scripts/find_tests.sh --no-escape
 
   test-jobs:
     needs: find-test-jobs
@@ -69,7 +62,7 @@ jobs:
     with:
       GITHUB_ENV_NAME: "dev"
       ENV_SHORT_NAME: "dev"
-      COMPOSER_DAGS_BUCKET:  ${{ vars.COMPOSER_DAGS_BUCKET_DEV }}
+      COMPOSER_DAGS_BUCKET: ${{ vars.COMPOSER_DAGS_BUCKET_DEV }}
       AIRFLOW_NAME: "data-composer-dev"
       DATA_GCP_PROJECT: "passculture-data-ehp"
       APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_DEV }}
@@ -85,7 +78,7 @@ jobs:
     with:
       GITHUB_ENV_NAME: "dev"
       ENV_SHORT_NAME: "dev"
-      COMPOSER_DAGS_BUCKET:  ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_DEV }}
+      COMPOSER_DAGS_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_DEV }}
       AIRFLOW_NAME: "gke-data-airflow-dev"
       DATA_GCP_PROJECT: "passculture-data-ehp"
       APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_DEV }}
@@ -137,7 +130,6 @@ jobs:
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
-
 
   find-build-job:
     outputs:

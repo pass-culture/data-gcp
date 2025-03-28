@@ -5,6 +5,7 @@ import typer
 
 from constants import (
     MACRO_ACTIONS_COLUMNS_BQ_SCHEMA_FIELD,
+    SURVEY_RESPONSE_COLUMN_BQ_SCHEMA_FIELD,
     TICKET_COLUMN_BQ_SCHEMA_FIELD,
 )
 from extract import ZendeskAPI
@@ -56,6 +57,8 @@ def main(
             "token": ZENDESK_API_KEY,
         }
     )
+    from_date = (reference_date - timedelta(days=ndays)).strftime("%Y-%m-%d")
+    to_date = prior_date
 
     # Run macro usage statistics job
     if job in ("macro_stat", "both"):
@@ -68,25 +71,92 @@ def main(
             date_column="export_date",
         )
 
-    # Run ticket statistics job
     if job in ("ticket_stat", "both"):
-        from_date = (reference_date - timedelta(days=ndays)).strftime("%Y-%m-%d")
-        to_date = prior_date
-        ticket_df = zendesk_api.create_ticket_stat_df(
-            from_date=from_date, to_date=to_date
-        )
-
-        # Add updated and export date columns to the ticket DataFrame
-        ticket_df["updated_date"] = pd.to_datetime(ticket_df["updated_at"]).dt.date
-        ticket_df["export_date"] = export_date
-
-        # Save the ticket data with partitioning by updated date
-        save_multiple_partitions_to_bq(
-            df=ticket_df,
+        run_ticket_stat_job(
+            zendesk_api=zendesk_api,
+            from_date=from_date,
+            to_date=to_date,
+            export_date=export_date,
+            status="closed",
             table_name="zendesk_ticket",
-            schema_field=TICKET_COLUMN_BQ_SCHEMA_FIELD,
-            date_column="updated_date",
+            filter_field="updated_at",
         )
+
+    if job in ("open_ticket_stat", "both"):
+        run_ticket_stat_job(
+            zendesk_api=zendesk_api,
+            from_date=from_date,
+            to_date=to_date,
+            export_date=export_date,
+            status="open",
+            table_name="zendesk_open_ticket",
+            filter_field="created_at",
+        )
+    if job in ("survey_response_stat", "both"):
+        run_satisfaction_stat_job(
+            zendesk_api=zendesk_api,
+            from_date=from_date,
+            to_date=to_date,
+            export_date=export_date,
+        )
+
+
+def run_ticket_stat_job(
+    zendesk_api: ZendeskAPI,
+    from_date: str,
+    to_date: str,
+    export_date: str,
+    status: str = "closed",
+    table_name: str = "zendesk_ticket",
+    filter_field: str = "updated_at",
+):
+    """
+    Run the ticket statistics job.
+
+    This function creates a DataFrame of ticket statistics from Zendesk and saves
+    it to BigQuery.
+
+    """
+    ticket_df = zendesk_api.create_ticket_stat_df(
+        from_date=from_date, to_date=to_date, status=status, filter_field=filter_field
+    )
+
+    # Add updated and export date columns to the ticket DataFrame
+    ticket_df["updated_date"] = pd.to_datetime(ticket_df["updated_at"]).dt.date
+    ticket_df["export_date"] = export_date
+
+    # Save the ticket data with partitioning by updated date
+    save_multiple_partitions_to_bq(
+        df=ticket_df,
+        table_name=table_name,
+        schema_field=TICKET_COLUMN_BQ_SCHEMA_FIELD,
+        date_column="updated_date",
+    )
+
+
+def run_satisfaction_stat_job(
+    zendesk_api: ZendeskAPI,
+    from_date: str,
+    to_date: str,
+    export_date: str,
+):
+    """
+    Run the survey response job.
+
+    This function creates a DataFrame of survey response statistics from Zendesk and saves
+    it to BigQuery.
+    """
+    satisfaction_df = zendesk_api.create_satisfaction_stat_df(
+        from_date=from_date, to_date=to_date
+    )
+    satisfaction_df["export_date"] = export_date
+    save_to_bq(
+        df=satisfaction_df,
+        table_name="zendesk_survey_response",
+        schema_field=SURVEY_RESPONSE_COLUMN_BQ_SCHEMA_FIELD,
+        event_date=export_date,
+        date_column="export_date",
+    )
 
 
 if __name__ == "__main__":

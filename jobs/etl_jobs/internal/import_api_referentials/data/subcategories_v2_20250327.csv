@@ -1,0 +1,74 @@
+id,category_id,pro_label,app_label,search_group_name,homepage_label_name,is_event,conditional_fields,can_expire,is_physical_deposit,is_digital_deposit,online_offline_platform,reimbursement_rule,can_be_duo,can_be_educational,is_selectable,is_bookable_by_underage_when_free,is_bookable_by_underage_when_not_free,can_be_withdrawable
+ABO_BIBLIOTHEQUE,LIVRE,"Abonnement (bibliothèques, médiathèques...)","Abonnement (bibliothèques, médiathèques...)",LIVRES,LIVRES,false,[],true,true,false,OFFLINE,STANDARD,false,false,true,true,true,false
+ABO_CONCERT,MUSIQUE_LIVE,Abonnement concert,Abonnement concert,CONCERTS_FESTIVALS,CONCERT,false,"['musicType', 'gtl_id']",true,false,false,OFFLINE,STANDARD,false,false,true,true,true,false
+ABO_JEU_VIDEO,JEU,Abonnement jeux vidéos,Abonnement jeux vidéos,JEUX_JEUX_VIDEOS,JEUX,false,[],false,false,true,ONLINE,NOT_REIMBURSED,false,false,true,false,false,false
+ABO_LIVRE_NUMERIQUE,LIVRE,Abonnement livres numériques,Abonnement livres numériques,LIVRES,LIVRES,false,[],true,false,true,ONLINE,BOOK,false,false,true,true,true,false
+ABO_LUDOTHEQUE,JEU,Abonnement ludothèque,Abonnement ludothèque,JEUX_JEUX_VIDEOS,JEUX,false,[],true,true,false,OFFLINE,STANDARD,false,false,false,false,false,false
+ABO_MEDIATHEQUE,FILM,Abonnement médiathèque,Abonnement médiathèque,LIVRES,FILMS,false,[],true,true,false,OFFLINE,STANDARD,false,false,true,true,true,false
+ABO_PLATEFORME_MUSIQUE,MUSIQUE_ENREGISTREE,Abonnement plateforme musicale,Abonnement plateforme musicale,CD_VINYLE_MUSIQUE_EN_LIGNE,MUSIQUE,false,[],false,false,true,ONLINE,NOT_REIMBURSED,false,false,true,true,false,false
+ABO_PLATEFORME_VIDEO,FILM,Abonnement plateforme streaming,Abonnement plateforme streaming,FILMS_SERIES_CINEMA,FILMS,false,[],false,false,true,ONLINE,NOT_REIMBURSED,false,false,true,true,false,false
+ABO_PRATIQUE_ART,PRATIQUE_ART,Abonnement pratique artistique,Abonnement pratique artistique,ARTS_LOISIRS_CREATIFS,COURS,false,[],true,false,false,OFFLINE,STANDARD,false,false,true,true,true,false
+ABO_PRESSE_EN_LIGNE,MEDIA,Abonnement presse en ligne,Abonnement presse en ligne,MEDIA_PRESSE,MEDIAS,false,[],false,false,true,ONLINE,NOT_REIMBURSED,false,false,true,true,true,false
+ABO_SPECTACLE,SPECTACLE,Abonnement spectacle,Abonnement spectacle,SPECTACLES,SPECTACLES,false,"['showSubType', 'showType']",true,false,false,OFFLINE,STANDARD,false,false,true,true,true,false
+ACHAT_INSTRUMENT,INSTRUMENT,Achat instrument,Achat instrument,INSTRUMENTS,INSTRUMENT,false,['ean'],true,true,false,OFFLINE,STANDARD,false,false,true,true,true,false
+ACTIVATION_EVENT,TECHNIQUE,Catégorie technique d'évènement d'activation ,Catégorie technique d'évènement d'activation ,NONE,NONE,true,[],false,false,false,ONLINE_OR_OFFLINE,NOT_REIMBURSED,false,false,false,true,false,false
+ACTIVATION_THING,TECHNIQUE,Catégorie technique de thing d'activation,Catégorie technique de thing d'activation,NONE,NONE,false,[],false,true,false,ONLINE_OR_OFFLINE,NOT_REIMBURSED,false,false,false,true,false,false
+APP_CULTURELLE,MEDIA,Application culturelle,Application culturelle,MEDIA_PRESSE,MEDIAS,false,[],false,false,true,ONLINE,NOT_REIMBURSED,false,false,true,true,true,false
+ATELIER_PRATIQUE_ART,PRATIQUE_ART,"Atelier, stage de pratique artistique","Atelier, stage de pratique artistique",ARTS_LOISIRS_CREATIFS,STAGE_ATELIER,true,['speaker'],false,false,false,OFFLINE,STANDARD,true,true,true,true,true,false
+AUTRE_SUPPORT_NUMERIQUE,FILM,Autre support numérique,Autre support numérique,FILMS_SERIES_CINEMA,FILMS,false,[],false,false,true,ONLINE,NOT_REIMBURSED,false,false,true,true,false,false
+BON_ACHAT_INSTRUMENT,INSTRUMENT,Bon d'achat instrument,Bon d'achat instrument,INSTRUMENTS,INSTRUMENT,false,[],true,true,false,OFFLINE,STANDARD,false,false,false,true,true,false
+CAPTATION_MUSIQUE,MUSIQUE_ENREGISTREE,Captation musicale,Captation musicale,ARTS_LOISIRS_CREATIFS,MUSIQUE,false,"['author', 'musicSubType', 'musicType', 'gtl_id', 'performer']",false,false,true,OFFLINE,NOT_REIMBURSED,false,false,false,true,true,false
+CARTE_CINE_ILLIMITE,CINEMA,Carte cinéma illimité,Carte cinéma illimité,FILMS_SERIES_CINEMA,CINEMA,false,[],true,false,false,OFFLINE,STANDARD,false,false,true,true,true,false
+CARTE_CINE_MULTISEANCES,CINEMA,Carte cinéma multi-séances,Carte cinéma multi-séances,FILMS_SERIES_CINEMA,CINEMA,false,[],true,false,false,OFFLINE,STANDARD,false,false,true,true,true,false
+CARTE_JEUNES,CARTE_JEUNES,Carte jeunes,Carte jeunes,CARTES_JEUNES,CARTE_JEUNES,false,[],true,true,false,OFFLINE,STANDARD,false,false,true,true,true,false
+CARTE_MUSEE,MUSEE,"Abonnement musée, carte ou pass","Abonnement musée, carte ou pass",MUSEES_VISITES_CULTURELLES,MUSEE,false,[],true,false,false,OFFLINE,STANDARD,true,false,true,true,true,false
+CINE_PLEIN_AIR,CINEMA,Cinéma plein air,Cinéma plein air,FILMS_SERIES_CINEMA,CINEMA,true,"['author', 'visa', 'stageDirector']",false,false,false,OFFLINE,STANDARD,true,true,true,true,true,false
+CINE_VENTE_DISTANCE,CINEMA,Cinéma vente à distance,Cinéma,FILMS_SERIES_CINEMA,CINEMA,false,"['author', 'visa', 'stageDirector']",false,false,false,ONLINE,STANDARD,false,false,true,true,true,false
+CONCERT,MUSIQUE_LIVE,Concert,Concert,CONCERTS_FESTIVALS,CONCERT,true,"['author', 'musicSubType', 'musicType', 'gtl_id', 'performer']",false,false,false,OFFLINE,STANDARD,true,true,true,true,true,true
+CONCOURS,JEU,Concours - jeux,Concours - jeux,JEUX_JEUX_VIDEOS,JEUX,true,[],false,false,false,OFFLINE,STANDARD,true,true,true,true,true,false
+CONFERENCE,CONFERENCE,Conférence,Conférence,RENCONTRES_CONFERENCES,RENCONTRES,true,['speaker'],false,false,false,OFFLINE,STANDARD,true,true,true,true,true,false
+DECOUVERTE_METIERS,CONFERENCE,Découverte des métiers,Découverte des métiers,RENCONTRES_CONFERENCES,RENCONTRES,true,['speaker'],false,false,false,OFFLINE,STANDARD,true,true,false,true,true,false
+ESCAPE_GAME,JEU,Escape game,Escape game,JEUX_JEUX_VIDEOS,JEUX,false,[],false,false,false,OFFLINE,STANDARD,true,false,true,true,true,false
+EVENEMENT_CINE,CINEMA,Évènement cinématographique,Évènement cinéma,FILMS_SERIES_CINEMA,CINEMA,true,"['author', 'visa', 'stageDirector']",false,false,false,OFFLINE,STANDARD,true,true,true,true,true,false
+EVENEMENT_JEU,JEU,Évènements - jeux,Évènements - jeux,JEUX_JEUX_VIDEOS,JEUX,true,[],false,false,false,OFFLINE,STANDARD,true,true,true,true,true,false
+EVENEMENT_MUSIQUE,MUSIQUE_LIVE,Autre type d'évènement musical,Autre type d'évènement musical,CONCERTS_FESTIVALS,CONCERT,true,"['author', 'musicSubType', 'musicType', 'gtl_id', 'performer']",false,false,false,OFFLINE,STANDARD,true,true,true,true,true,true
+EVENEMENT_PATRIMOINE,MUSEE,Évènement et atelier patrimoine,Évènement et atelier patrimoine,MUSEES_VISITES_CULTURELLES,VISITES,true,[],false,false,false,OFFLINE,STANDARD,true,true,true,true,true,false
+FESTIVAL_ART_VISUEL,MUSEE,Festival d'arts visuels / arts numériques,Festival d'arts visuels / arts numériques,MUSEES_VISITES_CULTURELLES,FESTIVAL,true,"['author', 'performer']",false,false,false,OFFLINE,STANDARD,true,true,true,true,true,true
+FESTIVAL_CINE,CINEMA,Festival de cinéma,Festival de cinéma,FILMS_SERIES_CINEMA,CINEMA,true,"['author', 'visa', 'stageDirector']",false,false,false,OFFLINE,STANDARD,true,true,true,true,true,false
+FESTIVAL_LIVRE,LIVRE,Festival et salon du livre,Festival et salon du livre,LIVRES,LIVRES,true,[],false,false,false,OFFLINE,STANDARD,true,false,true,true,true,false
+FESTIVAL_MUSIQUE,MUSIQUE_LIVE,Festival de musique,Festival de musique,CONCERTS_FESTIVALS,FESTIVAL,true,"['author', 'musicSubType', 'musicType', 'gtl_id', 'performer']",false,false,false,OFFLINE,STANDARD,true,true,true,true,true,true
+FESTIVAL_SPECTACLE,SPECTACLE,Festival de spectacle vivant,Festival de spectacle vivant,SPECTACLES,SPECTACLES,true,"['author', 'showSubType', 'showType', 'stageDirector', 'performer']",false,false,false,OFFLINE,STANDARD,true,true,true,true,true,true
+JEU_EN_LIGNE,JEU,Jeux en ligne,Jeux en ligne,JEUX_JEUX_VIDEOS,JEUX,false,['ean'],false,false,true,ONLINE,NOT_REIMBURSED,false,false,true,false,false,false
+JEU_SUPPORT_PHYSIQUE,TECHNIQUE,Catégorie technique Jeu support physique,Catégorie technique Jeu support physique,NONE,NONE,false,[],false,true,false,ONLINE_OR_OFFLINE,NOT_REIMBURSED,false,false,false,false,false,false
+LIVESTREAM_EVENEMENT,SPECTACLE,Livestream d'évènement,Livestream d'évènement,EVENEMENTS_EN_LIGNE,SPECTACLES,true,"['author', 'showSubType', 'showType', 'stageDirector', 'performer']",false,false,true,ONLINE,STANDARD,false,false,true,true,false,false
+LIVESTREAM_MUSIQUE,MUSIQUE_LIVE,Livestream musical,Livestream musical,EVENEMENTS_EN_LIGNE,MUSIQUE,true,"['author', 'musicSubType', 'musicType', 'gtl_id', 'performer']",false,false,true,ONLINE,STANDARD,false,false,true,true,false,false
+LIVESTREAM_PRATIQUE_ARTISTIQUE,PRATIQUE_ART,Pratique artistique - livestream,Pratique artistique - livestream,EVENEMENTS_EN_LIGNE,COURS,true,[],false,false,true,ONLINE,STANDARD,false,false,true,true,false,false
+LIVRE_AUDIO_PHYSIQUE,LIVRE,Livre audio sur support physique,Livre audio sur support physique,LIVRES,LIVRES,false,"['author', 'ean']",true,true,false,OFFLINE,STANDARD,false,false,true,true,true,false
+LIVRE_NUMERIQUE,LIVRE,"Livre numérique, e-book","Livre numérique, e-book",LIVRES,LIVRES,false,"['author', 'ean']",false,false,true,ONLINE,BOOK,false,false,true,true,true,false
+LIVRE_PAPIER,LIVRE,Livre papier,Livre,LIVRES,LIVRES,false,"['author', 'ean', 'gtl_id']",true,true,false,OFFLINE,BOOK,false,false,true,true,true,false
+LOCATION_INSTRUMENT,INSTRUMENT,Location instrument,Location instrument,INSTRUMENTS,INSTRUMENT,false,['ean'],true,true,false,OFFLINE,STANDARD,false,false,true,true,true,false
+MATERIEL_ART_CREATIF,BEAUX_ARTS,Matériel arts créatifs,Matériel arts créatifs,ARTS_LOISIRS_CREATIFS,BEAUX_ARTS,false,['ean'],true,true,false,OFFLINE,STANDARD,false,false,true,true,true,false
+MUSEE_VENTE_DISTANCE,MUSEE,Musée vente à distance,Musée vente à distance,MUSEES_VISITES_CULTURELLES,MUSEE,false,[],false,false,false,ONLINE,STANDARD,false,false,true,true,true,false
+OEUVRE_ART,TECHNIQUE,Catégorie technique d'oeuvre d'art,Catégorie technique d'oeuvre d'art,ARTS_LOISIRS_CREATIFS,NONE,false,[],true,true,false,ONLINE_OR_OFFLINE,NOT_REIMBURSED,false,false,false,true,false,false
+PARTITION,INSTRUMENT,Partition,Partition,INSTRUMENTS,INSTRUMENT,false,['ean'],true,true,false,OFFLINE,STANDARD,false,false,true,true,true,false
+PLATEFORME_PRATIQUE_ARTISTIQUE,PRATIQUE_ART,Pratique artistique - plateforme en ligne,Plateforme de pratique artistique,ARTS_LOISIRS_CREATIFS,PLATEFORME,false,[],true,false,true,ONLINE,NOT_REIMBURSED,false,false,true,true,false,false
+PODCAST,MEDIA,Podcast,Podcast,MEDIA_PRESSE,MEDIAS,false,[],false,false,true,ONLINE,NOT_REIMBURSED,false,false,true,true,true,false
+PRATIQUE_ART_VENTE_DISTANCE,PRATIQUE_ART,Pratique artistique - vente à distance,Pratique artistique - vente à distance,ARTS_LOISIRS_CREATIFS,COURS,false,['speaker'],false,false,false,ONLINE,STANDARD,false,false,true,true,true,false
+RENCONTRE,CONFERENCE,Rencontre,Rencontre,RENCONTRES_CONFERENCES,RENCONTRES,true,['speaker'],false,false,false,OFFLINE,STANDARD,true,true,true,true,true,false
+RENCONTRE_EN_LIGNE,CONFERENCE,Rencontre en ligne,Rencontre en ligne,RENCONTRES_CONFERENCES,RENCONTRES,true,['speaker'],false,false,false,ONLINE,NOT_REIMBURSED,false,true,true,true,false,false
+RENCONTRE_JEU,JEU,Rencontres - jeux,Rencontres - jeux,JEUX_JEUX_VIDEOS,JEUX,true,[],false,false,false,OFFLINE,STANDARD,true,true,true,true,true,false
+SALON,CONFERENCE,"Salon, Convention","Salon, Convention",RENCONTRES_CONFERENCES,RENCONTRES,true,['speaker'],false,false,false,OFFLINE,STANDARD,true,true,true,true,true,false
+SEANCE_CINE,CINEMA,Séance de cinéma,Séance de cinéma,FILMS_SERIES_CINEMA,CINEMA,true,"['author', 'visa', 'stageDirector']",false,false,false,OFFLINE,STANDARD,true,true,true,true,true,false
+SEANCE_ESSAI_PRATIQUE_ART,PRATIQUE_ART,Séance d'essai,Séance d'essai,ARTS_LOISIRS_CREATIFS,STAGE_ATELIER,true,['speaker'],true,false,false,OFFLINE,STANDARD,true,true,true,true,true,false
+SPECTACLE_ENREGISTRE,SPECTACLE,Spectacle enregistré,Spectacle enregistré,SPECTACLES,SPECTACLES,false,"['author', 'showSubType', 'showType', 'stageDirector', 'performer']",false,false,true,ONLINE,NOT_REIMBURSED,false,false,true,true,false,false
+SPECTACLE_REPRESENTATION,SPECTACLE,"Spectacle, représentation","Spectacle, représentation",SPECTACLES,SPECTACLES,true,"['author', 'showSubType', 'showType', 'stageDirector', 'performer']",false,false,false,OFFLINE,STANDARD,true,true,true,true,true,true
+SPECTACLE_VENTE_DISTANCE,SPECTACLE,Spectacle vivant - vente à distance,Spectacle vivant - vente à distance,SPECTACLES,SPECTACLES,false,"['author', 'showSubType', 'showType', 'stageDirector', 'performer']",false,false,false,ONLINE,STANDARD,false,false,true,true,true,false
+SUPPORT_PHYSIQUE_FILM,FILM,"Support physique (DVD, Blu-ray...)","Support physique (DVD, Blu-ray...)",FILMS_SERIES_CINEMA,FILMS,false,['ean'],true,true,false,OFFLINE,STANDARD,false,false,true,true,true,false
+SUPPORT_PHYSIQUE_MUSIQUE_CD,MUSIQUE_ENREGISTREE,CD,CD,CD_VINYLE_MUSIQUE_EN_LIGNE,MUSIQUE,false,"['author', 'musicSubType', 'musicType', 'gtl_id', 'performer', 'ean']",true,true,false,OFFLINE,STANDARD,false,false,true,true,true,false
+SUPPORT_PHYSIQUE_MUSIQUE_VINYLE,MUSIQUE_ENREGISTREE,Vinyles et autres supports,Vinyles et autres supports,CD_VINYLE_MUSIQUE_EN_LIGNE,MUSIQUE,false,"['author', 'musicSubType', 'musicType', 'gtl_id', 'performer', 'ean']",true,true,false,OFFLINE,STANDARD,false,false,true,true,true,false
+TELECHARGEMENT_LIVRE_AUDIO,LIVRE,Livre audio à télécharger,Livre audio à télécharger,LIVRES,LIVRES,false,['author'],false,false,true,ONLINE,NOT_REIMBURSED,false,false,true,true,true,false
+TELECHARGEMENT_MUSIQUE,MUSIQUE_ENREGISTREE,Téléchargement de musique,Téléchargement de musique,CD_VINYLE_MUSIQUE_EN_LIGNE,MUSIQUE,false,"['author', 'musicSubType', 'musicType', 'gtl_id', 'performer', 'ean']",false,false,true,ONLINE,NOT_REIMBURSED,false,false,true,true,false,false
+VISITE,MUSEE,Visite,Visite,MUSEES_VISITES_CULTURELLES,VISITES,true,[],false,false,false,OFFLINE,STANDARD,true,true,true,true,true,false
+VISITE_GUIDEE,MUSEE,Visite guidée,Visite guidée,MUSEES_VISITES_CULTURELLES,VISITES,true,[],false,false,false,OFFLINE,STANDARD,true,true,true,true,true,false
+VISITE_VIRTUELLE,MUSEE,Visite virtuelle,Visite virtuelle,MUSEES_VISITES_CULTURELLES,VISITES,false,[],false,false,true,ONLINE,NOT_REIMBURSED,false,false,true,true,false,false
+VOD,FILM,Vidéo à la demande,Vidéo à la demande,FILMS_SERIES_CINEMA,FILMS,false,[],false,false,true,ONLINE,NOT_REIMBURSED,false,false,true,true,false,false

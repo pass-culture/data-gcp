@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: exp_ministry__offerer_representation_address
+    description: "{{ doc('description__exp_ministry__offerer_representation_address') }}"
+    columns:
+      - name: offerer_address_id
+        description: "{{ doc('column__offerer_address_id') }}"
+      - name: offerer_address_label
+        description: "{{ doc('column__offerer_address_label') }}"
+      - name: address_id
+        description: "{{ doc('column__address_id') }}"
+      - name: offerer_id
+        description: "{{ doc('column__offerer_id') }}"

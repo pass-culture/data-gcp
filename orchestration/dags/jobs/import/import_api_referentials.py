@@ -64,7 +64,7 @@ with DAG(
     )
 
     INSTALL_DEPS = """
-        sudo apt install -y libmariadb-dev clang libpq-dev
+        sudo apt update -y && sudo apt install -y libmariadb-dev clang libpq-dev
         git clone https://github.com/pass-culture/pass-culture-main.git
         cd pass-culture-main/api
         poetry export -f requirements.txt --output requirements.txt --without-hashes
@@ -108,6 +108,10 @@ with DAG(
         >> fetch_install_code
         >> fetch_install_pc_main_dependencies
         >> subcategories_job
-        >> types_job
-        >> gce_instance_stop
     )
+
+    (
+        subcategories_job >> types_job
+    )  # TODO: Put this before gce_instance_stop once it is fixed
+
+    (subcategories_job >> gce_instance_stop)

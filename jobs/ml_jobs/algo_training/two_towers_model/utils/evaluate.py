@@ -1,10 +1,11 @@
 import secrets
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import tensorflow_recommenders as tfrs
 from loguru import logger
 from recommenders.evaluation.python_evaluation import (
     catalog_coverage,
@@ -15,7 +16,7 @@ from recommenders.evaluation.python_evaluation import (
 from sklearn.decomposition import PCA
 from tqdm import tqdm
 
-from commons.constants import EVALUATION_USER_NUMBER
+from commons.constants import ENV_SHORT_NAME, EVALUATION_USER_NUMBER
 from commons.data_collect_queries import read_from_gcs
 
 
@@ -60,70 +61,180 @@ def load_data_for_evaluation(
     return {"train": train_data, "test": test_data}
 
 
-def generate_predictions(
-    model, test_data: pd.DataFrame, all_users: bool
+def get_scann_params(env_short_name: str, max_k: int) -> Dict[str, Any]:
+    if env_short_name == "prod":
+        logger.info("Using ScaNN params for prod")
+        return {
+            "k": max_k,
+            "distance_measure": "dot_product",
+            "num_leaves": 500,
+            "num_leaves_to_search": 50,
+            "training_iterations": 20,
+            "parallelize_batch_searches": True,
+            "num_reordering_candidates": max_k,
+        }
+
+    else:
+        logger.info("Using ScaNN params for ehp")
+        return {
+            "distance_measure": "dot_product",
+            "num_leaves": 1,
+            "num_leaves_to_search": 1,
+        }
+
+
+def filter_predictions(
+    df_predictions: pd.DataFrame,
+    train_data: pd.DataFrame,
 ) -> pd.DataFrame:
     """
-    Generates item dot product scores for each user in the test dataset using the provided model.
-    The scores are computed for each user with all unique (item_id) in test_dataset which are stored in offers_to_score.
-    offers_to_score does not contain previously seen items during train which prevents data leak.
-
+    Filter out items that users have already interacted with in training data.
     Args:
-        model: Trained Two tower retrieval model.
-        test_data (pd.DataFrame): DataFrame containing test user-item interactions with at least
-            'user_id' and 'item_id' columns.
-        all_users : bool: If True, evaluate all users in the test dataset. If False, evaluate only a subset of users.
+        df_predictions (pd.DataFrame): DataFrame containing predictions with columns 'user_id' and 'item_id'.
+        train_data (pd.DataFrame): DataFrame containing training data with columns 'user_id' and 'item_id'.
 
     Returns:
-        pd.DataFrame: DataFrame with columns ['user_id', 'item_id', 'score'], where score represents
-                        the predicted interaction score (dot product between user and item two tower embeddings).
+        pd.DataFrame: DataFrame containing filtered predictions .
     """
-    ## TODO UNCOMMENT THIS AFTER BATCHING IS DONE
-    ## Get unique items to score
-    # offers_to_score = test_data.item_id.unique()
-    # logger.info(f"Number of unique items to score: {len(offers_to_score)}")
+    # merge df_predictions with train_data on user_id and item_id while keeping indicator
+    df_predictions_filtered = df_predictions.merge(
+        train_data, on=["user_id", "item_id"], how="left", indicator=True
+    )
+    # drop rows where indicator is not left_only (meaning the (user, item) was also in training data)
+    df_predictions_filtered = df_predictions_filtered[
+        df_predictions_filtered["_merge"] == "left_only"
+    ].drop(columns=["_merge"])
 
-    ## Truncate test data if not all users are to be evaluated
-    total_n_users = len(test_data["user_id"].unique())
+    return df_predictions_filtered
+
+
+def get_offers_to_score(test_data: pd.DataFrame) -> np.ndarray:
+    """
+    Get unique items to score and duplicate them if necessary to meet ScaNN requirements.
+
+    Args:
+        test_data (pd.DataFrame): DataFrame containing test data with 'item_id' column.
+
+    Returns:
+        numpy array of unique items to score.
+    """
+    offers_to_score = test_data.item_id.unique()
+    if len(offers_to_score) < 20:
+        # ScaNN requires at least 16 items to score, so duplicate items if necessary
+        offers_to_score = np.repeat(offers_to_score, 50 // len(offers_to_score))
+    logger.info(f"Number of unique items to score: {len(offers_to_score)}")
+    return offers_to_score
+
+
+def get_users_to_test(
+    test_data: pd.DataFrame, all_users: bool
+) -> Tuple[pd.DataFrame, np.ndarray]:
+    """
+    Get users to test and filter test data based on all_users flag.
+
+    Args:
+        test_data (pd.DataFrame): DataFrame containing test data with 'user_id' column.
+        all_users (bool): If True, evaluate all users in the test dataset. If False, evaluate only a subset of users.
+
+    Returns:
+        Tuple[pd.DataFrame, numpy array]: Tuple containing the filtered test data and the list of users to test.
+    """
+    users_to_test = test_data["user_id"].unique()
+    total_n_users = len(users_to_test)
     if not all_users:
-        users_to_test = test_data["user_id"].unique()[
-            : min(EVALUATION_USER_NUMBER, total_n_users)
-        ]
+        users_to_test = users_to_test[: min(EVALUATION_USER_NUMBER, total_n_users)]
         test_data = test_data[test_data.user_id.isin(users_to_test)]
         logger.info(f"Computing metrics for {len(users_to_test)} users")
     else:
         logger.info(f"Computing metrics for all users ({total_n_users}) users)")
+    return test_data, users_to_test
 
-    # TODO DELETE THIS AFTER BATCHING IS DONE
-    offers_to_score = test_data.item_id.unique()
-    logger.info(f"Number of unique items to score: {len(offers_to_score)}")
 
-    # Create List to store predictions for each user
-    list_df_predictions = []
-    for current_user in tqdm(
-        test_data["user_id"].unique(), mininterval=20, maxinterval=60
+def generate_predictions(
+    model,
+    train_data: pd.DataFrame,
+    test_data: pd.DataFrame,
+    all_users: bool,
+    max_k: int,
+    batch_size: int,
+) -> pd.DataFrame:
+    """
+    Generates item recommendations for each user in the test dataset using ScaNN indexing.
+    The recommendations are computed using the user embeddings from the model's user tower.
+
+    Args:
+        model: Trained Two tower retrieval model.
+        train_data (pd.DataFrame): DataFrame containing train user-item interactions with at least
+            'user_id' and 'item_id' columns.
+        test_data (pd.DataFrame): DataFrame containing test user-item interactions with at least
+            'user_id' and 'item_id' columns.
+        all_users (bool): If True, evaluate all users in the test dataset. If False, evaluate only a subset of users.
+        max_k (int): Maximum number of recommendations to generate.
+               This number will be augmented by 100 recommendations to account for the items that users have already interacted with in training data.
+        batch_size (int): Number of users to process in each batch.
+    Returns:
+        pd.DataFrame: DataFrame with columns ['user_id', 'item_id', 'score'], where score represents
+                        the similarity score between user and item embeddings.
+    """
+    # hedge against training filter
+    max_k = max_k + 100
+
+    # Get unique items to score
+    offers_to_score = get_offers_to_score(test_data)
+
+    # Get item embeddings for the corpus
+    offers_to_score_embeddings = tf.cast(model.item_layer(offers_to_score), tf.float32)
+
+    # Truncate test data if not all users are to be evaluated
+    test_data, users_to_test = get_users_to_test(test_data, all_users)
+
+    # Initialize ScaNN index with appropriate parameters tuned for env.
+    scann_params = get_scann_params(ENV_SHORT_NAME, max_k)
+    scann = tfrs.layers.factorized_top_k.ScaNN(**scann_params)
+
+    scann_index = scann.index(
+        candidates=offers_to_score_embeddings,
+        identifiers=tf.constant(offers_to_score),
+    )
+
+    logger.info(f"Using batch size of {batch_size} users")
+    list_predictions_dict = []
+
+    for batch_start_index in tqdm(
+        range(0, len(users_to_test), batch_size), mininterval=20, maxinterval=60
     ):
-        # Prepare input for prediction
-        prediction_input = [
-            np.array([current_user] * len(offers_to_score)),
-            offers_to_score,
-        ]
+        batch_users = users_to_test[batch_start_index : batch_start_index + batch_size]
 
-        # Generate predictions
-        prediction = model.predict(prediction_input, verbose=0)
+        # Get user embeddings for the batch
+        user_embeddings = model.user_layer(batch_users)
 
-        # Append predictions to final predictions DataFrame
-        current_user_predictions = pd.DataFrame(
+        # Get recommendations using ScaNN
+        scores, candidates = scann_index(user_embeddings)
+
+        list_predictions_dict.append(
             {
-                "user_id": [current_user] * len(offers_to_score),
-                "item_id": offers_to_score.flatten().tolist(),
-                "score": prediction.flatten().tolist(),
+                "user_id": np.concatenate(
+                    [
+                        [user] * len(candidate)
+                        for user, candidate in zip(batch_users, candidates)
+                    ]
+                ),
+                "item_id": candidates.numpy().flatten(),
+                "score": scores.numpy().flatten(),
             }
         )
-        list_df_predictions.append(current_user_predictions)
 
-    df_predictions = pd.concat(list_df_predictions, ignore_index=True)
-    return df_predictions
+    # Combine all batches
+    df_predictions = pd.concat(
+        [
+            pd.DataFrame(batch_predictions)
+            for batch_predictions in list_predictions_dict
+        ],
+        ignore_index=True,
+    ).astype({"item_id": str})  # convert bytes to string
+
+    # Return filtered out items that users have already interacted with in training data by performing an anti-join
+    return filter_predictions(df_predictions, train_data)
 
 
 def compute_metrics(
@@ -178,13 +289,23 @@ def compute_metrics(
         k=k,
     )
 
-    # These metrics are not computed correctly for now, will be fixed once we filter the (user_id, item_id) pairs that are both in train and test sets.
-    coverage = catalog_coverage(
-        train_data, test_data, col_user=col_user, col_item=col_item
+    # Filter df_predictions to keep top k recommendations because original catalog_coverage and novelty  do not support filtering by k
+    df_predictions_diversity_metrics = (
+        df_predictions.groupby("user_id")
+        .apply(lambda x: x.head(k))
+        .reset_index(drop=True)
     )
-
+    coverage = catalog_coverage(
+        train_data,
+        df_predictions_diversity_metrics,
+        col_user=col_user,
+        col_item=col_item,
+    )
     novelty_metric = novelty(
-        train_data, test_data, col_user=col_user, col_item=col_item
+        train_data,
+        df_predictions_diversity_metrics,
+        col_user=col_user,
+        col_item=col_item,
     )
 
     ## Assemble metrics in dict
@@ -204,8 +325,8 @@ def evaluate(
     test_dataset_name: str,
     list_k: List[int],
     all_users: bool,
+    batch_size: int,
     dummy: bool,
-    quantile_threshold: float,
 ) -> Dict[str, float]:
     """
     Runs the full evaluation pipeline for a retrieval model, including:
@@ -222,9 +343,8 @@ def evaluate(
         test_dataset_name (str): Filename of test dataset in storage.
         list_k (List[int]): List of k values (top-k cutoff) for metrics evaluation.
         all_users (bool): Whether to evaluate all users or a subset.
+        batch_size (int): Number of users to process in each batch.
         dummy (bool): Whether to also compute metrics for random and popularity baselines.
-        quantile_threshold (float): Quantile threshold to filter top popular items in popularity baseline.
-
     Returns:
         Dict[str, float]: Dictionary containing evaluation metrics for each k value.
     """
@@ -239,7 +359,12 @@ def evaluate(
     list_predictions_to_evaluate = []
     logger.info("Inferring model predictions")
     df_predictions = generate_predictions(
-        model=model, test_data=data_dict["test"], all_users=all_users
+        model=model,
+        train_data=data_dict["train"],
+        test_data=data_dict["test"],
+        all_users=all_users,
+        max_k=max(list_k),
+        batch_size=batch_size,
     )
     list_predictions_to_evaluate.append({"predictions": df_predictions, "prefix": ""})
 
@@ -251,6 +376,7 @@ def evaluate(
         logger.info("Generating random baseline predictions")
         df_random = generate_random_baseline(
             test_data=data_dict["test"],
+            train_data=data_dict["train"],
             num_recommendations=max(list_k),
             specific_users=predicted_users,
         )
@@ -261,6 +387,7 @@ def evaluate(
         logger.info("Generating popularity baseline predictions")
         df_popular = generate_popularity_baseline(
             test_data=data_dict["test"],
+            train_data=data_dict["train"],
             num_recommendations=max(list_k),
             specific_users=predicted_users,
         )
@@ -415,6 +542,7 @@ def plot_metrics_evolution(metrics, list_k, figures_folder):
 
 def generate_random_baseline(
     test_data: pd.DataFrame,
+    train_data: pd.DataFrame,
     num_recommendations: int,
     specific_users: List[str],
 ) -> pd.DataFrame:
@@ -423,6 +551,7 @@ def generate_random_baseline(
 
     Args:
         test_data (pd.DataFrame): DataFrame with at least a 'user_id' and 'item_id' column.
+        train_data (pd.DataFrame): DataFrame with at least a 'user_id' and 'item_id' column.
         num_recommendations (int): Number of random items to recommend per user.
         specific_users (List[str]): List of user IDs to generate recommendations for.
 
@@ -446,11 +575,14 @@ def generate_random_baseline(
             score=np.random.rand(len(df_users) * num_recommendations),
         )
     )
-    return df_random
+
+    # return filtered out items that users have already interacted with in training data by performing an anti-join
+    return filter_predictions(df_random, train_data)
 
 
 def generate_popularity_baseline(
     test_data: pd.DataFrame,
+    train_data: pd.DataFrame,
     num_recommendations: int,
     specific_users: List[str],
 ) -> pd.DataFrame:
@@ -459,6 +591,7 @@ def generate_popularity_baseline(
 
     Args:
         test_data (pd.DataFrame): DataFrame with at least 'user_id' column.
+        train_data (pd.DataFrame): DataFrame with at least 'user_id' and 'item_id' columns.
         num_recommendations (int): Number of items to recommend per user.
         specific_users (List[str]): List of user IDs to generate recommendations for.
 
@@ -483,4 +616,6 @@ def generate_popularity_baseline(
             score=np.random.rand(len(df_users) * num_recommendations),
         )
     )
-    return df_popular
+
+    # return filtered out items that users have already interacted with in training data by performing an anti-join
+    return filter_predictions(df_popular, train_data)

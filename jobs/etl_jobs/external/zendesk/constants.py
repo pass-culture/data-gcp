@@ -159,3 +159,33 @@ TICKET_COLUMN_BQ_SCHEMA_FIELD = [
         "updated_date", bigquery.enums.SqlTypeNames.DATE, mode="NULLABLE"
     ),
 ]
+
+SURVEY_RESPONSE_COLUMN_BQ_SCHEMA_FIELD = [
+    bigquery.SchemaField("id", bigquery.enums.SqlTypeNames.INTEGER, mode="NULLABLE"),
+    bigquery.SchemaField(
+        "ticket_id", bigquery.enums.SqlTypeNames.INTEGER, mode="NULLABLE"
+    ),
+    bigquery.SchemaField(
+        "assignee_id", bigquery.enums.SqlTypeNames.INTEGER, mode="NULLABLE"
+    ),
+    bigquery.SchemaField(
+        "group_id", bigquery.enums.SqlTypeNames.INTEGER, mode="NULLABLE"
+    ),
+    bigquery.SchemaField(
+        "requester_id", bigquery.enums.SqlTypeNames.INTEGER, mode="NULLABLE"
+    ),
+    bigquery.SchemaField("score", bigquery.enums.SqlTypeNames.STRING, mode="NULLABLE"),
+    bigquery.SchemaField(
+        "comment", bigquery.enums.SqlTypeNames.STRING, mode="NULLABLE"
+    ),
+    bigquery.SchemaField(
+        "created_at", bigquery.enums.SqlTypeNames.STRING, mode="NULLABLE"
+    ),
+    bigquery.SchemaField(
+        "updated_at", bigquery.enums.SqlTypeNames.STRING, mode="NULLABLE"
+    ),
+    bigquery.SchemaField("url", bigquery.enums.SqlTypeNames.STRING, mode="NULLABLE"),
+    bigquery.SchemaField(
+        "export_date", bigquery.enums.SqlTypeNames.DATE, mode="NULLABLE"
+    ),
+]

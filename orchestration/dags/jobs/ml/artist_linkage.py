@@ -21,6 +21,7 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
+from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
@@ -34,7 +35,6 @@ from airflow.utils.task_group import TaskGroup
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"artist-linkage-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
-SCHEDULE_CRON = "0 3 * * 1"
 DAG_NAME = "artist_linkage"
 
 # GCS Paths / Filenames
@@ -72,7 +72,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Link artists via clustering",
-    schedule_interval=get_airflow_schedule(SCHEDULE_CRON),
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME]),
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,

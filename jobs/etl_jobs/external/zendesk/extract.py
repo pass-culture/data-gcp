@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
@@ -57,7 +58,11 @@ class ZendeskAPI:
             raise RuntimeError(f"Error fetching macros: {e}")
 
     def fetch_tickets(
-        self, from_date: str, to_date: str = None
+        self,
+        from_date: str,
+        to_date: str = None,
+        status: Optional[str] = None,
+        filter_field: str = "updated_at",
     ) -> List[Dict[str, Any]]:
         """
         Fetches closed tickets updated within the specified date range.
@@ -74,26 +79,70 @@ class ZendeskAPI:
                 logger.info(
                     f"Fetching tickets updated between {from_date} and {to_date}."
                 )
-                query = f"updated_at>={from_date} updated_at<={to_date}"
+                query = f"{filter_field}>={from_date} {filter_field}<={to_date}"
             else:
                 logger.info(f"Fetching tickets updated after {from_date}.")
-                query = f"updated_at>={from_date}"
-
-            tickets = [
-                ticket.to_dict()
-                for ticket in self.client.search_export(
+                query = f"{filter_field}>={from_date}"
+            if status:
+                tickets_generator = self.client.search_export(
                     type="ticket",
-                    status="closed",
+                    status=status,
                     sort_order="desc",
                     query=query,
                 )
-            ]
+            else:
+                tickets_generator = self.client.search_export(
+                    type="ticket",
+                    sort_order="desc",
+                    query=query,
+                )
+
+            tickets = [ticket.to_dict() for ticket in tickets_generator]
             logger.info(f"Fetched {len(tickets)} tickets.")
             return tickets
 
         except APIException as e:
             logger.error(f"Error fetching tickets: {e}")
             raise RuntimeError(f"Error fetching tickets: {e}")
+
+    def fetch_satisfaction_ratings(
+        self,
+        from_date: str,
+        to_date: str = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Fetches satisfaction ratings within the specified date range.
+
+        Args:
+            from_date (str): The start date for fetching ratings (YYYY-MM-DD).
+            to_date (str, optional): The end date for fetching ratings (YYYY-MM-DD). Defaults to None.
+
+        Returns:
+            List[Dict[str, Any]]: List of satisfaction rating dictionaries.
+        """
+        try:
+            start_time = datetime.strptime(from_date, "%Y-%m-%d")
+            if to_date:
+                end_time = datetime.strptime(to_date, "%Y-%m-%d") - timedelta(minutes=1)
+            else:
+                end_time = datetime.now(datetime.timezone.utc) - timedelta(minutes=1)
+
+            logger.info(
+                f"Fetching satisfaction ratings between {from_date} and {to_date or 'now'}."
+            )
+            ratings = [
+                rating.to_dict()
+                for rating in self.client.satisfaction_ratings(
+                    start_time=start_time,
+                    end_time=end_time,
+                )
+            ]
+            logger.info(f"Fetched {len(ratings)} satisfaction ratings.")
+            return ratings
+
+        except APIException as e:
+            logger.error(f"Error fetching satisfaction ratings: {e}")
+            raise RuntimeError(f"Error fetching satisfaction ratings: {e}")
 
     def create_macro_stat_df(self) -> pd.DataFrame:
         """
@@ -109,21 +158,48 @@ class ZendeskAPI:
         return df
 
     def create_ticket_stat_df(
-        self, from_date: str, to_date: str = None
+        self,
+        from_date: str,
+        to_date: str = None,
+        status: Optional[str] = None,
+        filter_field: str = "updated_at",
     ) -> pd.DataFrame:
         """
         Creates a DataFrame from ticket statistics.
 
         Args:
-            updated_at (str): The updated_at filter for tickets.
+            from_date (str): The start date for fetching tickets (YYYY-MM-DD).
+            to_date (str, optional): The end date for fetching tickets (YYYY-MM-DD). Defaults to None.
+            status (str, optional): The status of the tickets to fetch. Defaults to "closed".
 
         Returns:
             pd.DataFrame: DataFrame containing ticket statistics.
         """
         logger.info("Creating ticket statistics DataFrame.")
-        tickets = self.fetch_tickets(from_date, to_date)
+        tickets = self.fetch_tickets(from_date, to_date, status, filter_field)
         df = pd.DataFrame([self._flatten_ticket_data(ticket) for ticket in tickets])
         logger.info(f"Ticket statistics DataFrame created with {len(df)} rows.")
+        return df
+
+    def create_satisfaction_stat_df(
+        self,
+        from_date: str,
+        to_date: str = None,
+    ) -> pd.DataFrame:
+        """
+        Creates a DataFrame from satisfaction ratings.
+
+        Args:
+            from_date (str): The start date for fetching ratings (YYYY-MM-DD).
+            to_date (str, optional): The end date for fetching ratings (YYYY-MM-DD). Defaults to None.
+
+        Returns:
+            pd.DataFrame: DataFrame containing satisfaction ratings.
+        """
+        logger.info("Creating satisfaction ratings DataFrame.")
+        ratings = self.fetch_satisfaction_ratings(from_date, to_date)
+        df = pd.DataFrame(ratings)
+        logger.info(f"Satisfaction ratings DataFrame created with {len(df)} rows.")
         return df
 
     def _flatten_ticket_data(self, ticket: Dict[str, Any]) -> Dict[str, Any]:

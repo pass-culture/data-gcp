@@ -5,6 +5,11 @@ from google.cloud import secretmanager
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
+ENVIRONMENT_LONG_NAME = {
+    "dev": "development",
+    "stg": "staging",
+    "prod": "production",
+}[ENVIRONMENT_SHORT_NAME]
 INT_METABASE_DATASET = f"int_metabase_{ENVIRONMENT_SHORT_NAME}"
 METABASE_DEFAULT_DATABASE = {
     "prod": "Analytics",
@@ -24,7 +29,7 @@ def access_secret_data(project_id, secret_id, default=None):
 
 
 METABASE_HOST = access_secret_data(
-    PROJECT_NAME, f"metabase_host_{ENVIRONMENT_SHORT_NAME}"
+    PROJECT_NAME, f"metabase_host_{ENVIRONMENT_LONG_NAME}"
 )
 
 METABASE_API_KEY = access_secret_data(
@@ -32,5 +37,5 @@ METABASE_API_KEY = access_secret_data(
 )
 
 CLIENT_ID = access_secret_data(
-    PROJECT_NAME, f"metabase-{ENVIRONMENT_SHORT_NAME}_oauth2_client_id"
+    PROJECT_NAME, f"metabase-{ENVIRONMENT_LONG_NAME}_oauth2_client_id"
 )

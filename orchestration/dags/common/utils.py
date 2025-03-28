@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+from datetime import timedelta
 
 import requests
 from common.access_gcp_secrets import create_key_if_not_exists
@@ -175,16 +176,27 @@ def delayed_waiting_operator(
         if logical_date is None:
             raise ValueError("The 'logical_date' is missing in the context.")
 
+        data_interval_end = context.get("data_interval_end")
+        if data_interval_end is None:
+            data_interval_end = logical_date + timedelta(days=1)
+
         # Compute lower date limit (defaults to start of the same day if None)
-        lower_limit = lower_date_limit or logical_date.replace(
+        local_lower = lower_date_limit or logical_date.replace(
             hour=0, minute=0, second=0, microsecond=0
+        )
+
+        logging.info(
+            "Looking for external DAG '%s' runs between lower=%s and upper=%s",
+            external_dag_id,
+            local_lower,
+            data_interval_end,
         )
 
         # Fetch last execution date of the external DAG before the current execution date
         return get_last_execution_date(
             external_dag_id,
-            upper_date_limit=logical_date,
-            lower_date_limit=lower_limit,
+            upper_date_limit=data_interval_end,
+            lower_date_limit=local_lower,
         )
 
     # If manual triggers should be skipped, create a PythonOperator instead

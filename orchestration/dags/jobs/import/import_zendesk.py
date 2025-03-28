@@ -52,9 +52,14 @@ with DAG(
         ),
         "job": Param(
             default="both",
-            enum=["macro_stat", "ticket_stat", "both"],
+            enum=[
+                "macro_stat",
+                "ticket_stat",
+                "survey_response_stat",
+                "both",
+            ],
             type="string",
-            help="Specify the job to run: 'macro_stat', 'ticket_stat', or 'both'.",
+            help="Specify the job to run: 'macro_stat', 'ticket_stat', 'open_ticket_stat', 'survey_response_stat', or 'both'.",
         ),
         "prior_date": Param(
             default=datetime.datetime.now().strftime("%Y-%m-%d"),

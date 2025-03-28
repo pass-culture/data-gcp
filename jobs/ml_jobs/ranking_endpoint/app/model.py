@@ -5,6 +5,7 @@ import joblib
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
+from jobs.ml_jobs.ranking_endpoint.app.dpp import DPP
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
@@ -233,3 +234,18 @@ class TrainPipeline:
         processed_data = self.preprocessor.transform(df)
 
         return df.assign(regression_score=self.model.predict(processed_data))
+
+
+class DiversificationPipeline:
+    def __init__(self, item_semantic_embeddings: List, ids: List, scores: List) -> None:
+        self.item_semantic_embeddings = item_semantic_embeddings
+        self.item_ids = ids
+        self.scores = scores
+        self.K_DPP = 150
+
+    def get_sampled_ids(self):
+        weighted_item_semantic_embeddings = (
+            self.item_semantic_embeddings * self.scores[:, None]
+        )
+        dpp = DPP(vectors=weighted_item_semantic_embeddings, K_DPP=self.K_DPP)
+        return self.item_ids[dpp.sample_k()]

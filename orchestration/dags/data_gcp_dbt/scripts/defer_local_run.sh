@@ -158,6 +158,7 @@ dbt_hook() {
 
 
   # Set APPLICATIVE_EXTERNAL_CONNECTION_ID based on DEFER_LOCAL_RUN_TO or TARGET_ENV
+  export APPLICATIVE_EXTERNAL_CONNECTION_ID="$APPLICATIVE_EXTERNAL_CONNECTION_ID_DEV"
   if [[ "$DEFER_LOCAL_RUN_TO" == "none" && -n "$TARGET_ENV" ]]; then
     case "$TARGET_ENV" in
       dev)
@@ -349,6 +350,9 @@ dbt_hook() {
 
   # Combine filtered arguments with defer flags
   local COMBINED_ARGS=("${FILTERED_ARGS[@]}" "${DEFER_FLAGS[@]}")
+  if [[ "$DEFER_LOCAL_RUN_TO" != "none" ]]; then
+    COMBINED_ARGS+=("--vars" "{'ENV_SHORT_NAME':'$DEFER_LOCAL_RUN_TO'}")
+  fi
 
   echo "Running dbt with arguments: ${COMBINED_ARGS[@]}"
   export DBT_PROFILES_DIR="$DBT_PROJECT_DIR"

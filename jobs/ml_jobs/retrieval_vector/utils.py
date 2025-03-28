@@ -114,7 +114,8 @@ def get_items_metadata():
 
     sql = f"""
         SELECT
-        *,
+        * except(category),
+        search_group_name as category,
         ROW_NUMBER() OVER (ORDER BY booking_number DESC) as booking_number_desc,
         ROW_NUMBER() OVER (ORDER BY booking_trend DESC) as booking_trend_desc,
         ROW_NUMBER() OVER (ORDER BY booking_creation_trend DESC) as booking_creation_trend_desc,

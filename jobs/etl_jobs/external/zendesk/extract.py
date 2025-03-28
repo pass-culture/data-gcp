@@ -61,7 +61,7 @@ class ZendeskAPI:
         self,
         from_date: str,
         to_date: str = None,
-        status: str = "closed",
+        status: Optional[str] = None,
         filter_field: str = "updated_at",
     ) -> List[Dict[str, Any]]:
         """
@@ -83,16 +83,21 @@ class ZendeskAPI:
             else:
                 logger.info(f"Fetching tickets updated after {from_date}.")
                 query = f"{filter_field}>={from_date}"
-
-            tickets = [
-                ticket.to_dict()
-                for ticket in self.client.search_export(
+            if status:
+                tickets_generator = self.client.search_export(
                     type="ticket",
                     status=status,
                     sort_order="desc",
                     query=query,
                 )
-            ]
+            else:
+                tickets_generator = self.client.search_export(
+                    type="ticket",
+                    sort_order="desc",
+                    query=query,
+                )
+
+            tickets = [ticket.to_dict() for ticket in tickets_generator]
             logger.info(f"Fetched {len(tickets)} tickets.")
             return tickets
 
@@ -156,7 +161,7 @@ class ZendeskAPI:
         self,
         from_date: str,
         to_date: str = None,
-        status: str = "closed",
+        status: Optional[str] = None,
         filter_field: str = "updated_at",
     ) -> pd.DataFrame:
         """

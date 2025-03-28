@@ -50,6 +50,7 @@ TICKET_BASE_COLUMNS = [
     "external_id",
     "requester_id",
     "tags",
+    "status",
     "forum_topic_id",
     "ticket_form_id",
 ]
@@ -107,6 +108,7 @@ TICKET_COLUMN_BQ_SCHEMA_FIELD = [
     bigquery.SchemaField(
         "brand_id", bigquery.enums.SqlTypeNames.INTEGER, mode="NULLABLE"
     ),
+    bigquery.SchemaField("status", bigquery.enums.SqlTypeNames.STRING, mode="NULLABLE"),
     bigquery.SchemaField(
         "recipient", bigquery.enums.SqlTypeNames.STRING, mode="NULLABLE"
     ),

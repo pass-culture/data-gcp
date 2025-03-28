@@ -55,7 +55,6 @@ with DAG(
             enum=[
                 "macro_stat",
                 "ticket_stat",
-                "open_ticket_stat",
                 "survey_response_stat",
                 "both",
             ],

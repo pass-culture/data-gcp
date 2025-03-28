@@ -1,4 +1,3 @@
--- noqa: disable=all
 with
     last_day_of_month as (
         select

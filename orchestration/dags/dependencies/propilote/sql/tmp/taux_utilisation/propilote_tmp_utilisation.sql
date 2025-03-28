@@ -1,4 +1,3 @@
--- noqa: disable=all
 with
     dates as (
         select month as month

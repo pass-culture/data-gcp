@@ -63,6 +63,7 @@ def main(
     # Run macro usage statistics job
     if job in ("macro_stat", "both"):
         macro_df = zendesk_api.create_macro_stat_df()
+        print("Running macro usage statistics job")
         save_to_bq(
             df=macro_df,
             table_name="zendesk_macro_usage",
@@ -72,6 +73,7 @@ def main(
         )
 
     if job in ("ticket_stat", "both"):
+        print("Running closed ticket statistics job")
         run_ticket_stat_job(
             zendesk_api=zendesk_api,
             from_date=from_date,
@@ -83,6 +85,7 @@ def main(
         )
 
     if job in ("open_ticket_stat", "both"):
+        print("Running open ticket statistics job")
         run_ticket_stat_job(
             zendesk_api=zendesk_api,
             from_date=from_date,
@@ -93,12 +96,15 @@ def main(
             filter_field="created_at",
         )
     if job in ("survey_response_stat", "both"):
+        print("Running survey response statistics job")
         run_satisfaction_stat_job(
             zendesk_api=zendesk_api,
             from_date=from_date,
             to_date=to_date,
             export_date=export_date,
         )
+
+    print("All jobs completed")
 
 
 def run_ticket_stat_job(
@@ -135,6 +141,9 @@ def run_ticket_stat_job(
         schema_field=TICKET_COLUMN_BQ_SCHEMA_FIELD,
         date_column="updated_date",
     )
+    print(
+        f"Saved {status} tickets to BigQuery for the date range {from_date} to {to_date}"
+    )
 
 
 def run_satisfaction_stat_job(
@@ -163,6 +172,9 @@ def run_satisfaction_stat_job(
         schema_field=SURVEY_RESPONSE_COLUMN_BQ_SCHEMA_FIELD,
         event_date=export_date,
         date_column="export_date",
+    )
+    print(
+        f"Saved satisfaction survey responses to BigQuery for the date range {from_date} to {to_date}"
     )
 
 

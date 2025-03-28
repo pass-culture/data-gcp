@@ -173,8 +173,6 @@ sources:
       - name: agg_partner_cultural_sector
       - name: epci
       - name: geo_iris
-      - name: institution_metadata
-      - name: institution_metadata_aggregated_type
       - name: institutional_scholar_level
       - name: iris_france
       - name: iris_nesting

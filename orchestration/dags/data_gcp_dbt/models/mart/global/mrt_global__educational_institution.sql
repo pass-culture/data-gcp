@@ -123,7 +123,7 @@ select
         ei.total_credited_beneficiaries, sh.total_students
     ) as ratio_beneficiary_students,
     sh.total_students,
-    institution_metadata_aggregated_type.macro_institution_type,
+    ei.institution_type as marco_institution_type,
     location_info.institution_city,
     location_info.institution_epci,
     location_info.institution_density_label,
@@ -145,10 +145,6 @@ left join
 left join
     educational_institution_student_headcount as sh
     on sh.institution_id = ei.institution_id
-left join
-    {{ source("seed", "institution_metadata_aggregated_type") }}
-    as institution_metadata_aggregated_type
-    on ei.institution_type = institution_metadata_aggregated_type.institution_type
 left join
     {{ ref("int_geo__institution_location") }} as location_info
     on ei.institution_id = location_info.institution_id

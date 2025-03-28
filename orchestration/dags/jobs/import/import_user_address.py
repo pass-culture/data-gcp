@@ -20,6 +20,7 @@ from common.utils import get_airflow_schedule
 from airflow import DAG
 from airflow.decorators import task
 from airflow.models import Param
+from airflow.operators.python import get_current_context
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 
 GCE_INSTANCE = f"import-user-address-bulk-{ENV_SHORT_NAME}"
@@ -113,16 +114,24 @@ with DAG(
         return "end"
 
     @task
-    def start_gce(**context):
+    def start_gce():
+        context = get_current_context()
+
+        # Instantiate the operator with templated fields
         operator = StartGCEOperator(
             instance_name="{{ params.instance_name }}",
             task_id="gce_start_task",
             labels={"dag_name": DAG_NAME},
         )
-        return operator.execute(context=context)
+        # Render all template fields in the operator
+        operator.render_template_fields(context)
+        # Use run() so that Airflow handles logging and hooks properly
+        return operator.run(context=context)
 
     @task
-    def fetch_install_code(**context):
+    def fetch_install_code():
+        context = get_current_context()
+
         operator = InstallDependenciesOperator(
             task_id="fetch_install_code",
             instance_name="{{ params.instance_name }}",
@@ -130,13 +139,16 @@ with DAG(
             python_version="3.12",
             base_dir=BASE_PATH,
         )
-        return operator.execute(context=context)
+        operator.render_template_fields(context)
+        return operator.run(context=context)
 
     @task
-    def addresses_to_gcs(**context):
+    def addresses_to_gcs():
+        context = get_current_context()
+
         operator = SSHGCEOperator(
             task_id="user_address_to_bq",
-            instance_name=GCE_INSTANCE,
+            instance_name=GCE_INSTANCE,  # if this is a constant, no templating needed
             base_dir=BASE_PATH,
             environment=dag_config,
             command="""python main.py \
@@ -149,14 +161,19 @@ with DAG(
             """,
             do_xcom_push=True,
         )
-        return operator.execute(context=context)
+        operator.render_template_fields(context)
+        return operator.run(context=context)
 
     @task
-    def stop_gce(**context):
+    def stop_gce():
+        context = get_current_context()
+
         operator = DeleteGCEOperator(
-            task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
+            task_id="gce_stop_task",
+            instance_name="{{ params.instance_name }}",
         )
-        return operator.execute(context=context)
+        operator.render_template_fields(context)
+        return operator.run(context=context)
 
     @task
     def end():

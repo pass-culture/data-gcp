@@ -22,6 +22,7 @@ from commons.mlflow_tools import connect_remote_mlflow
 from two_towers_model.utils.evaluate import (
     evaluate,
     plot_metrics_evolution,
+    plot_recall_comparison,
     save_pca_representation,
 )
 
@@ -96,10 +97,17 @@ def main(
         item_data=item_data,
         figures_folder=pca_plots_path,
     )
+
     # Create metrics evolution plots
     metrics_plots_path = f"{MODEL_DIR}/metrics_plots/"
     os.makedirs(metrics_plots_path, exist_ok=True)
-    plot_metrics_evolution(metrics, LIST_K, metrics_plots_path)
+    plot_metrics_evolution(metrics, LIST_K, metrics_plots_path, prefix="")
+
+    # Create metrics evolution plots for popular and random baselines if dummy is True
+    if dummy:
+        plot_metrics_evolution(metrics, LIST_K, metrics_plots_path, prefix="popular_")
+        plot_metrics_evolution(metrics, LIST_K, metrics_plots_path, prefix="random_")
+        plot_recall_comparison(metrics, LIST_K, metrics_plots_path)
 
     connect_remote_mlflow()
     with mlflow.start_run(

@@ -114,49 +114,52 @@ with DAG(
 
     @task
     def start_gce(**context):
+        instance_name = context["params"]["instance_name"]
         operator = StartGCEOperator(
-            instance_name="{{ params.instance_name }}",
+            instance_name=instance_name,
             task_id="gce_start_task",
             labels={"dag_name": DAG_NAME},
         )
-        return operator.execute(context=context)
+        return operator.execute(context={})
 
     @task
     def fetch_install_code(**context):
+        instance_name = context["params"]["instance_name"]
         operator = InstallDependenciesOperator(
             task_id="fetch_install_code",
-            instance_name="{{ params.instance_name }}",
-            branch="{{ params.branch }}",
+            instance_name=instance_name,
+            branch=context["params"]["branch"],
             python_version="3.12",
             base_dir=BASE_PATH,
         )
-        return operator.execute(context=context)
+        return operator.execute(context={})
 
     @task
     def addresses_to_gcs(**context):
+        instance_name = context["params"]["instance_name"]
         operator = SSHGCEOperator(
             task_id="user_address_to_bq",
-            instance_name=GCE_INSTANCE,
+            instance_name=instance_name,
             base_dir=BASE_PATH,
             environment=dag_config,
-            command="""python main.py \
-                --source-dataset-id {{ params.source_dataset_id }} \
-                --source-table-name {{ params.source_table_name }} \
-                --destination-dataset-id {{ params.destination_dataset_id }} \
-                --destination-table-name {{ params.destination_table_name }} \
-                --max-rows {{ params.max_rows }} \
-                --chunk-size {{ params.chunk_size }}
+            command=f"""python main.py \
+                --source-dataset-id {context["params"]["source_dataset_id"]} \
+                --source-table-name {context["params"]["source_table_name"]} \
+                --destination-dataset-id {context["params"]["destination_dataset_id"]} \
+                --destination-table-name {context["params"]["destination_table_name"]} \
+                --max-rows {context["params"]["max_rows"]} \
+                --chunk-size {context["params"]["chunk_size"]}
             """,
             do_xcom_push=True,
         )
-        return operator.execute(context=context)
+        return operator.execute(context={})
 
     @task
     def stop_gce(**context):
         operator = DeleteGCEOperator(
-            task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
+            task_id="gce_stop_task", instance_name=context["params"]["instance_name"]
         )
-        return operator.execute(context=context)
+        return operator.execute(context={})
 
     @task
     def end():

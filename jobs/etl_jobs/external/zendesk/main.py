@@ -120,6 +120,9 @@ def run_ticket_stat_job(
     ticket_df = zendesk_api.create_ticket_stat_df(
         from_date=from_date, to_date=to_date, status=status, filter_field=filter_field
     )
+    if ticket_df.empty:
+        print(f"No {status} tickets found for the date range {from_date} to {to_date}")
+        return
 
     # Add updated and export date columns to the ticket DataFrame
     ticket_df["updated_date"] = pd.to_datetime(ticket_df["updated_at"]).dt.date
@@ -149,6 +152,10 @@ def run_satisfaction_stat_job(
     satisfaction_df = zendesk_api.create_satisfaction_stat_df(
         from_date=from_date, to_date=to_date
     )
+    if satisfaction_df.empty:
+        print(f"No survey responses found for the date range {from_date} to {to_date}")
+        return
+
     satisfaction_df["export_date"] = export_date
     save_to_bq(
         df=satisfaction_df,

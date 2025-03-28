@@ -112,7 +112,7 @@ def run_ticket_stat_job(
     from_date: str,
     to_date: str,
     export_date: str,
-    status: str = "closed",
+    status: str,
     table_name: str = "zendesk_ticket",
     filter_field: str = "updated_at",
 ):

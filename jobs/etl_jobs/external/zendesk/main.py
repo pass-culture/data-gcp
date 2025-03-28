@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import Optional
 
 import pandas as pd
 import typer
@@ -73,28 +74,17 @@ def main(
         )
 
     if job in ("ticket_stat", "both"):
-        print("Running closed ticket statistics job")
+        print("Running ticket statistics job")
         run_ticket_stat_job(
             zendesk_api=zendesk_api,
             from_date=from_date,
             to_date=to_date,
             export_date=export_date,
-            status="closed",
+            status=None,
             table_name="zendesk_ticket",
             filter_field="updated_at",
         )
 
-    if job in ("open_ticket_stat", "both"):
-        print("Running open ticket statistics job")
-        run_ticket_stat_job(
-            zendesk_api=zendesk_api,
-            from_date=from_date,
-            to_date=to_date,
-            export_date=export_date,
-            status="open",
-            table_name="zendesk_open_ticket",
-            filter_field="created_at",
-        )
     if job in ("survey_response_stat", "both"):
         print("Running survey response statistics job")
         run_satisfaction_stat_job(
@@ -112,7 +102,7 @@ def run_ticket_stat_job(
     from_date: str,
     to_date: str,
     export_date: str,
-    status: str,
+    status: Optional[str] = None,
     table_name: str = "zendesk_ticket",
     filter_field: str = "updated_at",
 ):
@@ -127,7 +117,7 @@ def run_ticket_stat_job(
         from_date=from_date, to_date=to_date, status=status, filter_field=filter_field
     )
     if ticket_df.empty:
-        print(f"No {status} tickets found for the date range {from_date} to {to_date}")
+        print(f"No tickets found for the date range {from_date} to {to_date}")
         return
 
     # Add updated and export date columns to the ticket DataFrame
@@ -141,9 +131,7 @@ def run_ticket_stat_job(
         schema_field=TICKET_COLUMN_BQ_SCHEMA_FIELD,
         date_column="updated_date",
     )
-    print(
-        f"Saved {status} tickets to BigQuery for the date range {from_date} to {to_date}"
-    )
+    print(f"Saved tickets to BigQuery for the date range {from_date} to {to_date}")
 
 
 def run_satisfaction_stat_job(

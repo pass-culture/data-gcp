@@ -83,22 +83,13 @@ class ZendeskAPI:
             else:
                 logger.info(f"Fetching tickets updated after {from_date}.")
                 query = f"{filter_field}>={from_date}"
-            if status == "closed":
-                tickets_generator = self.client.search_export(
-                    type="ticket",
-                    status=status,
-                    sort_order="desc",
-                    query=query,
-                )
-            elif status == "open":
-                tickets_generator = self.client.search_export(
-                    type="ticket",
-                    status_less_than="closed",
-                    sort_order="desc",
-                    query=query,
-                )
-            else:
-                raise ValueError(f"Invalid status: {status}")
+
+            tickets_generator = self.client.search_export(
+                type="ticket",
+                status=status,
+                sort_order="desc",
+                query=query,
+            )
 
             tickets = [ticket.to_dict() for ticket in tickets_generator]
             logger.info(f"Fetched {len(tickets)} tickets.")

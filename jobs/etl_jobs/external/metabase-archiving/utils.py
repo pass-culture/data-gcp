@@ -77,3 +77,16 @@ def access_secret_data(project_id, secret_id, default=None):
         return response.payload.data.decode("UTF-8")
     except DefaultCredentialsError:
         return default
+
+
+METABASE_HOST = access_secret_data(
+    PROJECT_NAME, f"metabase_host_{ENVIRONMENT_LONG_NAME}"
+)
+
+CLIENT_ID = access_secret_data(
+    PROJECT_NAME, f"metabase-{ENVIRONMENT_LONG_NAME}_oauth2_client_id"
+)
+
+PASSWORD = access_secret_data(
+    PROJECT_NAME, f"metabase-api-secret-{ENVIRONMENT_SHORT_NAME}"
+)

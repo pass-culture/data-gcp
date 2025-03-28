@@ -3,6 +3,7 @@ import time
 from archiving import ListArchive, MoveToArchive
 from metabase_api import MetabaseAPI
 from utils import (
+    ENVIRONMENT_LONG_NAME,
     ENVIRONMENT_SHORT_NAME,
     METABASE_API_USERNAME,
     PROJECT_NAME,
@@ -13,11 +14,11 @@ from utils import (
 )
 
 METABASE_HOST = access_secret_data(
-    PROJECT_NAME, f"metabase_host_{ENVIRONMENT_SHORT_NAME}"
+    PROJECT_NAME, f"metabase_host_{ENVIRONMENT_LONG_NAME}"
 )
 
 CLIENT_ID = access_secret_data(
-    PROJECT_NAME, f"metabase-{ENVIRONMENT_SHORT_NAME}_oauth2_client_id"
+    PROJECT_NAME, f"metabase-{ENVIRONMENT_LONG_NAME}_oauth2_client_id"
 )
 
 PASSWORD = access_secret_data(

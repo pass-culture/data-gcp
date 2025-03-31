@@ -35,10 +35,12 @@ def main(
     test_dataset_name: str = typer.Option(
         "recommendation_test_data", help="Name of the test dataset in storage"
     ),
-    dummy: bool = typer.Option(
-        help="Whether to evaluate metrics on dummy models or not"
+    dummy: str = typer.Option(
+        "False", help="Whether to evaluate metrics on dummy models or not"
     ),
 ):
+    dummy = dummy.lower() == "true"  # Boolean conversion from Airflow DAG
+
     logger.info("-------EVALUATE START------- ")
     connect_remote_mlflow()
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id

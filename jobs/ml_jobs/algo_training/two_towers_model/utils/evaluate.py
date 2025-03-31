@@ -25,6 +25,7 @@ from two_towers_model.utils.baseline_prediction import (
     filter_predictions,
     generate_popularity_baseline,
     generate_random_baseline,
+    generate_svd_baseline,
 )
 
 
@@ -338,6 +339,17 @@ def evaluate(
         # Extract unique users from model predictions to ensure consistent user set
         predicted_users = df_predictions["user_id"].unique().tolist()
         logger.info(
+            f"Generating SVD baseline predictions on {len(predicted_users)} users"
+        )
+        df_svd = generate_svd_baseline(
+            test_data=data_dict["test"],
+            train_data=data_dict["train"],
+            num_recommendations=max(LIST_K),
+            specific_users=predicted_users,
+        )
+        list_predictions_to_evaluate.append({"predictions": df_svd, "prefix": "svd_"})
+
+        logger.info(
             f"Generating random baseline predictions on {len(predicted_users)} users"
         )
         df_random = generate_random_baseline(
@@ -350,7 +362,9 @@ def evaluate(
             {"predictions": df_random, "prefix": "random_"}
         )
 
-        logger.info("Generating popularity baseline predictions")
+        logger.info(
+            f"Generating popularity baseline predictions on {len(predicted_users)} users"
+        )
         df_popular = generate_popularity_baseline(
             test_data=data_dict["test"],
             train_data=data_dict["train"],

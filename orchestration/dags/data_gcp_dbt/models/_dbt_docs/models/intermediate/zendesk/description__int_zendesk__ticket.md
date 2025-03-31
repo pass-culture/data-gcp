@@ -7,7 +7,7 @@ description: Description of the `int_zendesk__ticket` table.
 
 # Overview
 
-This table contains closed tickets from Zendesk, a customer service software platform that we use to manage support tickets and customer interactions.
+This table contains all tickets from Zendesk, a customer service software platform that we use to manage support tickets and customer interactions.
 
 For more information about Zendesk, see the [Internal Job Zendesk API documentation](https://www.notion.so/passcultureapp/Zendesk-Ticket-1a4ad4e0ff988112aad5ecc4d1d1968f).
 

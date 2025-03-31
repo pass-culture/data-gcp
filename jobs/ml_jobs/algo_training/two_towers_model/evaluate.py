@@ -36,7 +36,7 @@ def main(
         "recommendation_test_data", help="Name of the test dataset in storage"
     ),
     dummy: bool = typer.Option(
-        True, help="Whether to evaluate metrics on dummy models or not"
+        help="Whether to evaluate metrics on dummy models or not"
     ),
 ):
     logger.info("-------EVALUATE START------- ")

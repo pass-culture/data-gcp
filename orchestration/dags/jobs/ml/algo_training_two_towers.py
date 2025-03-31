@@ -150,6 +150,11 @@ with DAG(
             type="boolean",
             description="Whether to upload embeddings to BigQuery after training",
         ),
+        "evaluate_on_dummy": Param(
+            default=False,
+            type="boolean",
+            description="Whether to evaluate the model on dummy data",
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -271,7 +276,7 @@ with DAG(
         environment=dag_config,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
         "--experiment-name {{ params.experiment_name }} "
-        "--dummy False ",
+        "--dummy {{ params.evaluate_on_dummy }} ",
         dag=dag,
     )
 

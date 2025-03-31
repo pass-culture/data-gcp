@@ -18,6 +18,8 @@ BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
 # Recommendation Parameters
 EVALUATION_USER_NUMBER = 50_000 if ENV_SHORT_NAME == "prod" else 5000
 LIST_K = [50, 100, 250, 500, 1000]
+USER_BATCH_SIZE = 100
+ALL_USERS = False
 
 # MLflow
 SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}"

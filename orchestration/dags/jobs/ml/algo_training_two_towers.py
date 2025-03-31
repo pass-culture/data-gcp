@@ -150,6 +150,11 @@ with DAG(
             type="boolean",
             description="Whether to upload embeddings to BigQuery after training",
         ),
+        "evaluate_on_dummy": Param(
+            default=False,
+            type="boolean",
+            description="Whether to evaluate the model on dummy data",
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -270,7 +275,8 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
-        "--experiment-name {{ params.experiment_name }} ",
+        "--experiment-name {{ params.experiment_name }} "
+        "--dummy {{ params.evaluate_on_dummy }} ",
         dag=dag,
     )
 
@@ -301,14 +307,14 @@ with DAG(
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
-        trigger_rule="none_failed_or_skipped",
+        trigger_rule="none_failed",
     )
 
     send_slack_notif_success = HttpOperator(
         task_id="send_slack_notif_success",
         method="POST",
         http_conn_id="http_slack_default",
-        trigger_rule="none_failed_or_skipped",
+        trigger_rule="none_failed",
         endpoint=f"{SLACK_CONN_PASSWORD}",
         data=json.dumps(
             {

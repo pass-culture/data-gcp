@@ -36,16 +36,12 @@ def main(
     test_dataset_name: str = typer.Option(
         "recommendation_test_data", help="Name of the test dataset in storage"
     ),
-    all_users: bool = typer.Option(
-        False, help="Whether to evaluate for all users or not"
-    ),
-    batch_size: int = typer.Option(
-        100, help="Number of users to process in each batch"
-    ),
-    dummy: bool = typer.Option(
-        True, help="Whether to evaluate metrics on dummy models or not"
+    dummy: str = typer.Option(
+        "False", help="Whether to evaluate metrics on dummy models or not"
     ),
 ):
+    dummy = dummy.lower() == "true"  # Boolean conversion from Airflow DAG
+
     logger.info("-------EVALUATE START------- ")
     connect_remote_mlflow()
     experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
@@ -79,9 +75,6 @@ def main(
         storage_path=STORAGE_PATH,
         train_dataset_name=train_dataset_name,
         test_dataset_name=test_dataset_name,
-        list_k=LIST_K,
-        all_users=all_users,
-        batch_size=batch_size,
         dummy=dummy,
     )
 

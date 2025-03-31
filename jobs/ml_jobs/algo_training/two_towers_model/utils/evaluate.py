@@ -481,7 +481,9 @@ def save_pca_representation(
     fig.savefig(figures_folder + "ALL_CATEGORIES.pdf")
 
 
-def plot_metrics_evolution(metrics, list_k, figures_folder, prefix):
+def plot_metrics_evolution(
+    metrics: Dict[str, float], list_k: List[int], figures_folder: str, prefix: str
+):
     """
     Plot the evolution of precision, recall, coverage and novelty with different k values in two separate plots
     (one for precision, recall and coverage, one for novelty)
@@ -554,7 +556,9 @@ def plot_metrics_evolution(metrics, list_k, figures_folder, prefix):
     logger.info(f"Metrics evolution plots saved to {figures_folder}")
 
 
-def plot_recall_comparison(metrics, list_k, figures_folder):
+def plot_recall_comparison(
+    metrics: Dict[str, float], list_k: List[int], figures_folder: str
+):
     """
     Plot the evolution of recall with different k values for the two towers model and the baselines (random and popular)
     Only relevant if dummy is True

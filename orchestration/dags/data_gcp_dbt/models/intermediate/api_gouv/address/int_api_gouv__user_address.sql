@@ -28,13 +28,41 @@ with
     user_address_geocode as (
         select
             ul.user_id,
-            ul.result_postcode as user_postal_code,
-            ul.result_citycode as user_city_code,
-            ul.result_city as user_city,
-            ul.user_full_address as user_address_raw,
-            ul.result_type as geocode_type,
-            safe_cast(ul.longitude as float64) as user_longitude,
-            safe_cast(ul.latitude as float64) as user_latitude,
+            if(
+                ul.result_postcode != "" and ul.result_postcode is not null,
+                ul.result_postcode,
+                null
+            ) as user_postal_code,
+            if(
+                ul.result_citycode != "" and ul.result_citycode is not null,
+                ul.result_citycode,
+                null
+            ) as user_city_code,
+            if(
+                ul.result_city != "" and ul.result_city is not null,
+                ul.result_city,
+                null
+            ) as user_city,
+            if(
+                ul.user_full_address != "" and ul.user_full_address is not null,
+                ul.user_full_address,
+                null
+            ) as user_address_raw,
+            if(
+                ul.result_type != "" and ul.result_type is not null,
+                ul.result_type,
+                null
+            ) as geocode_type,
+            if(
+                ul.longitude != "" and ul.longitude is not null,
+                safe_cast(ul.longitude as float64),
+                null
+            ) as user_longitude,
+            if(
+                ul.latitude != "" and ul.latitude is not null,
+                safe_cast(ul.latitude as float64),
+                null
+            ) as user_latitude,
             timestamp(ul.updated_at) as user_address_geocode_updated_at
         from {{ source("raw", "user_address") }} as ul
         where ul.result_status = "ok"

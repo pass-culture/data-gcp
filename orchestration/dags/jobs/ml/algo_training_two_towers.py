@@ -270,7 +270,8 @@ with DAG(
         base_dir=dag_config["BASE_DIR"],
         environment=dag_config,
         command=f"PYTHONPATH=. python {dag_config['MODEL_DIR']}/evaluate.py "
-        "--experiment-name {{ params.experiment_name }} ",
+        "--experiment-name {{ params.experiment_name }} "
+        "--dummy False ",
         dag=dag,
     )
 

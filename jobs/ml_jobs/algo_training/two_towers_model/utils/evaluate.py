@@ -16,7 +16,13 @@ from recommenders.evaluation.python_evaluation import (
 from sklearn.decomposition import PCA
 from tqdm import tqdm
 
-from commons.constants import ENV_SHORT_NAME, EVALUATION_USER_NUMBER
+from commons.constants import (
+    ALL_USERS,
+    ENV_SHORT_NAME,
+    EVALUATION_USER_NUMBER,
+    LIST_K,
+    USER_BATCH_SIZE,
+)
 from commons.data_collect_queries import read_from_gcs
 
 
@@ -126,22 +132,19 @@ def get_offers_to_score(test_data: pd.DataFrame) -> np.ndarray:
     return offers_to_score
 
 
-def get_users_to_test(
-    test_data: pd.DataFrame, all_users: bool
-) -> Tuple[pd.DataFrame, np.ndarray]:
+def get_users_to_test(test_data: pd.DataFrame) -> Tuple[pd.DataFrame, np.ndarray]:
     """
     Get users to test and filter test data based on all_users flag.
 
     Args:
         test_data (pd.DataFrame): DataFrame containing test data with 'user_id' column.
-        all_users (bool): If True, evaluate all users in the test dataset. If False, evaluate only a subset of users.
 
     Returns:
         Tuple[pd.DataFrame, numpy array]: Tuple containing the filtered test data and the list of users to test.
     """
     users_to_test = test_data["user_id"].unique()
     total_n_users = len(users_to_test)
-    if not all_users:
+    if not ALL_USERS:
         users_to_test = users_to_test[: min(EVALUATION_USER_NUMBER, total_n_users)]
         test_data = test_data[test_data.user_id.isin(users_to_test)]
         logger.info(f"Computing metrics for {len(users_to_test)} users")
@@ -154,9 +157,7 @@ def generate_predictions(
     model,
     train_data: pd.DataFrame,
     test_data: pd.DataFrame,
-    all_users: bool,
     max_k: int,
-    batch_size: int,
 ) -> pd.DataFrame:
     """
     Generates item recommendations for each user in the test dataset using ScaNN indexing.
@@ -168,10 +169,8 @@ def generate_predictions(
             'user_id' and 'item_id' columns.
         test_data (pd.DataFrame): DataFrame containing test user-item interactions with at least
             'user_id' and 'item_id' columns.
-        all_users (bool): If True, evaluate all users in the test dataset. If False, evaluate only a subset of users.
         max_k (int): Maximum number of recommendations to generate.
                This number will be augmented by 100 recommendations to account for the items that users have already interacted with in training data.
-        batch_size (int): Number of users to process in each batch.
     Returns:
         pd.DataFrame: DataFrame with columns ['user_id', 'item_id', 'score'], where score represents
                         the similarity score between user and item embeddings.
@@ -186,7 +185,7 @@ def generate_predictions(
     offers_to_score_embeddings = tf.cast(model.item_layer(offers_to_score), tf.float32)
 
     # Truncate test data if not all users are to be evaluated
-    test_data, users_to_test = get_users_to_test(test_data, all_users)
+    test_data, users_to_test = get_users_to_test(test_data)
 
     # Initialize ScaNN index with appropriate parameters tuned for env.
     scann_params = get_scann_params(ENV_SHORT_NAME, max_k)
@@ -197,13 +196,15 @@ def generate_predictions(
         identifiers=tf.constant(offers_to_score),
     )
 
-    logger.info(f"Using batch size of {batch_size} users")
+    logger.info(f"Using batch size of {USER_BATCH_SIZE} users")
     list_predictions_dict = []
 
     for batch_start_index in tqdm(
-        range(0, len(users_to_test), batch_size), mininterval=20, maxinterval=60
+        range(0, len(users_to_test), USER_BATCH_SIZE), mininterval=20, maxinterval=60
     ):
-        batch_users = users_to_test[batch_start_index : batch_start_index + batch_size]
+        batch_users = users_to_test[
+            batch_start_index : batch_start_index + USER_BATCH_SIZE
+        ]
 
         # Get user embeddings for the batch
         user_embeddings = model.user_layer(batch_users)
@@ -323,9 +324,6 @@ def evaluate(
     storage_path: str,
     train_dataset_name: str,
     test_dataset_name: str,
-    list_k: List[int],
-    all_users: bool,
-    batch_size: int,
     dummy: bool,
 ) -> Dict[str, float]:
     """
@@ -341,9 +339,6 @@ def evaluate(
         storage_path (str): Path to data storage.
         train_dataset_name (str): Filename of train dataset in storage.
         test_dataset_name (str): Filename of test dataset in storage.
-        list_k (List[int]): List of k values (top-k cutoff) for metrics evaluation.
-        all_users (bool): Whether to evaluate all users or a subset.
-        batch_size (int): Number of users to process in each batch.
         dummy (bool): Whether to also compute metrics for random and popularity baselines.
     Returns:
         Dict[str, float]: Dictionary containing evaluation metrics for each k value.
@@ -362,9 +357,7 @@ def evaluate(
         model=model,
         train_data=data_dict["train"],
         test_data=data_dict["test"],
-        all_users=all_users,
-        max_k=max(list_k),
-        batch_size=batch_size,
+        max_k=max(LIST_K),
     )
     list_predictions_to_evaluate.append({"predictions": df_predictions, "prefix": ""})
 
@@ -377,7 +370,7 @@ def evaluate(
         df_random = generate_random_baseline(
             test_data=data_dict["test"],
             train_data=data_dict["train"],
-            num_recommendations=max(list_k),
+            num_recommendations=max(LIST_K),
             specific_users=predicted_users,
         )
         list_predictions_to_evaluate.append(
@@ -388,7 +381,7 @@ def evaluate(
         df_popular = generate_popularity_baseline(
             test_data=data_dict["test"],
             train_data=data_dict["train"],
-            num_recommendations=max(list_k),
+            num_recommendations=max(LIST_K),
             specific_users=predicted_users,
         )
         list_predictions_to_evaluate.append(
@@ -399,7 +392,7 @@ def evaluate(
     metrics = {}
 
     for predictions in list_predictions_to_evaluate:
-        for k in list_k:
+        for k in LIST_K:
             metrics.update(
                 compute_metrics(
                     test_data=data_dict["test"],

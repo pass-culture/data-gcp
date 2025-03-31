@@ -213,7 +213,6 @@ def generate_svd_baseline(
         train_data (pd.DataFrame): DataFrame with at least 'user_id' and 'item_id' columns.
         num_recommendations (int): Number of items to recommend per user.
         specific_users (List[str]): List of user IDs to generate recommendations for.
-        item_data (pd.DataFrame): DataFrame with item metadata.
 
     Returns:
         pd.DataFrame: Recommendations DataFrame with columns ['user_id', 'item_id', 'score'].
@@ -236,6 +235,20 @@ def generate_svd_baseline(
     ]
     reverse_user_mapping = {v: k for k, v in user_to_index.items()}
 
+    # Filter out None values from mapped_items
+    valid_indices = []
+    valid_mapped_items = []
+    for i, mapped_item in enumerate(mapped_items_to_score):
+        if mapped_item is not None:
+            valid_indices.append(i)
+            valid_mapped_items.append(mapped_item)
+
+    # Get corresponding valid items
+    valid_items = offers_to_score[valid_indices]
+
+    # Extract item factors for all valid items
+    item_factors = Vt[:, valid_mapped_items]
+
     list_df_predictions = []
     for mapped_current_user in tqdm(
         mapped_users_to_score, mininterval=20, maxinterval=60
@@ -248,26 +261,17 @@ def generate_svd_baseline(
             # Get user latent factors and scale by singular values
             user_factors_scaled = U[mapped_current_user, :] * sigma
 
-            # Create item scores for this user
-            item_scores = []
-            valid_items = []
-
-            for i, mapped_item in enumerate(mapped_items_to_score):
-                if mapped_item is not None:
-                    # Get the item factors and compute score
-                    item_factors = Vt[:, mapped_item]
-                    score = np.dot(user_factors_scaled, item_factors)
-                    item_scores.append(score)
-                    valid_items.append(offers_to_score[i])
+            # Compute scores for all valid items at once using matrix multiplication
+            scores = np.dot(user_factors_scaled, item_factors)
 
             # Create user predictions dataframe
-            if valid_items:
+            if len(valid_items) > 0:
                 user_predictions = pd.DataFrame(
                     {
                         "user_id": [reverse_user_mapping[mapped_current_user]]
                         * len(valid_items),
                         "item_id": valid_items,
-                        "score": item_scores,
+                        "score": scores,
                     }
                 )
                 list_df_predictions.append(user_predictions)
@@ -285,4 +289,3 @@ def generate_svd_baseline(
         df_predictions = pd.DataFrame(columns=["user_id", "item_id", "score"])
 
     return df_predictions
-    raise NotImplementedError

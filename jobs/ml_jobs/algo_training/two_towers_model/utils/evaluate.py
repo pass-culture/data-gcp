@@ -325,7 +325,6 @@ def evaluate(
         test_dataset_name=test_dataset_name,
     )
 
-    list_predictions_to_evaluate = []
     logger.info("Inferring model predictions")
     df_predictions = generate_predictions(
         model=model,
@@ -333,51 +332,54 @@ def evaluate(
         test_data=data_dict["test"],
         max_k=max(LIST_K),
     )
-    list_predictions_to_evaluate.append({"predictions": df_predictions, "prefix": ""})
+    list_predictions_to_evaluate = [{"predictions": df_predictions, "prefix": ""}]
 
     if dummy:
         # Extract unique users from model predictions to ensure consistent user set
         predicted_users = df_predictions["user_id"].unique().tolist()
-        logger.info(
-            f"Generating SVD baseline predictions on {len(predicted_users)} users"
-        )
-        df_svd = generate_svd_baseline(
-            test_data=data_dict["test"],
-            train_data=data_dict["train"],
-            num_recommendations=max(LIST_K),
-            specific_users=predicted_users,
-        )
-        list_predictions_to_evaluate.append({"predictions": df_svd, "prefix": "svd_"})
+        logger.info(f"Using {len(predicted_users)} users for baseline evaluations")
 
-        logger.info(
-            f"Generating random baseline predictions on {len(predicted_users)} users"
-        )
-        df_random = generate_random_baseline(
-            test_data=data_dict["test"],
-            train_data=data_dict["train"],
-            num_recommendations=max(LIST_K),
-            specific_users=predicted_users,
-        )
+        logger.info("Generating SVD baseline predictions")
         list_predictions_to_evaluate.append(
-            {"predictions": df_random, "prefix": "random_"}
+            {
+                "predictions": generate_svd_baseline(
+                    test_data=data_dict["test"],
+                    train_data=data_dict["train"],
+                    num_recommendations=max(LIST_K),
+                    specific_users=predicted_users,
+                ),
+                "prefix": "svd_",
+            }
         )
 
-        logger.info(
-            f"Generating popularity baseline predictions on {len(predicted_users)} users"
-        )
-        df_popular = generate_popularity_baseline(
-            test_data=data_dict["test"],
-            train_data=data_dict["train"],
-            num_recommendations=max(LIST_K),
-            specific_users=predicted_users,
-        )
+        logger.info("Generating random baseline predictions")
         list_predictions_to_evaluate.append(
-            {"predictions": df_popular, "prefix": "popular_"}
+            {
+                "predictions": generate_random_baseline(
+                    test_data=data_dict["test"],
+                    train_data=data_dict["train"],
+                    num_recommendations=max(LIST_K),
+                    specific_users=predicted_users,
+                ),
+                "prefix": "random_",
+            }
+        )
+
+        logger.info("Generating popularity baseline predictions")
+        list_predictions_to_evaluate.append(
+            {
+                "predictions": generate_popularity_baseline(
+                    test_data=data_dict["test"],
+                    train_data=data_dict["train"],
+                    num_recommendations=max(LIST_K),
+                    specific_users=predicted_users,
+                ),
+                "prefix": "popular_",
+            }
         )
 
     logger.info("Computing metrics")
     metrics = {}
-
     for predictions in list_predictions_to_evaluate:
         for k in LIST_K:
             metrics.update(

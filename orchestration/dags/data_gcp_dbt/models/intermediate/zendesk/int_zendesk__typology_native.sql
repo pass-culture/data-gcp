@@ -15,6 +15,7 @@ with
         from
             {{ ref("int_zendesk__ticket") }} as zt,
             unnest(zt.zendesk_typology_support_native) as spt_unnest
+        where zt.ticket_status = "closed"
     )
 
 select

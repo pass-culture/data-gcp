@@ -147,7 +147,7 @@ sources:
       - name: user_address
       - name: zendesk_macro_usage
       - name: zendesk_ticket
-
+      - name: zendesk_survey_response
   - name: clean
     schema: clean_{{ var('ENV_SHORT_NAME') }}
     tables:

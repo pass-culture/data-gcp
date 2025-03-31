@@ -481,63 +481,135 @@ def save_pca_representation(
     fig.savefig(figures_folder + "ALL_CATEGORIES.pdf")
 
 
-def plot_metrics_evolution(metrics, list_k, figures_folder):
+def plot_metrics_evolution(
+    metrics: Dict[str, float], list_k: List[int], figures_folder: str, prefix: str
+):
     """
-    Plot the evolution of metrics with different k values
+    Plot the evolution of precision, recall, coverage and novelty with different k values in two separate plots
+    (one for precision, recall and coverage, one for novelty)
+    The prefix is used to identify the metrics to plot (popular_, random_, or empty string for the two towers model)
 
     Args:
         metrics: Dictionary containing metrics for different k values
+        list_k: List of k values
         figures_folder: Folder to save the plot
+        prefix: Prefix of the metrics (popular_, random_, or empty string)
 
     Returns:
         None
     """
-    logger.info("Creating metrics evolution plot")
+    logger.info("Creating metrics evolution plots")
 
     # Prepare data for plotting
     precision_values = [
         metrics[metric_name]
         for metric_name in metrics.keys()
-        if metric_name.startswith("precision")
+        if metric_name.startswith(f"{prefix}precision")
     ]
     recall_values = [
         metrics[metric_name]
         for metric_name in metrics.keys()
-        if metric_name.startswith("recall")
+        if metric_name.startswith(f"{prefix}recall")
     ]
     coverage_values = [
         metrics[metric_name]
         for metric_name in metrics.keys()
-        if metric_name.startswith("coverage")
+        if metric_name.startswith(f"{prefix}coverage")
     ]
     novelty_values = [
         metrics[metric_name]
         for metric_name in metrics.keys()
-        if metric_name.startswith("novelty")
+        if metric_name.startswith(f"{prefix}novelty")
     ]
 
-    # Create plot
+    # Create plot for precision, recall and coverage
     fig, ax = plt.subplots(figsize=(12, 8))
 
     # Plot each metric
     ax.plot(list_k, precision_values, marker="o", label="Precision")
     ax.plot(list_k, recall_values, marker="s", label="Recall")
     ax.plot(list_k, coverage_values, marker="^", label="Coverage")
-    ax.plot(list_k, novelty_values, marker="d", label="Novelty")
 
     ax.set_xlabel("k (Number of recommendations)")
     ax.set_ylabel("Score")
-    ax.set_title("Evolution of Metrics with k")
+    ax.set_title(f"Evolution of {prefix} Metrics with the value of k")
+    ax.grid(True)
+    ax.legend()
+
+    # Save the plot for precision, recall and coverage
+    plot_path = f"{figures_folder}/{prefix}metrics_evolution.png"
+    fig.savefig(plot_path)
+
+    # Create plot for novelty
+    fig, ax = plt.subplots(figsize=(12, 8))
+    ax.plot(list_k, novelty_values, marker="d", label="Novelty")
+    ax.set_xlabel("k (Number of recommendations)")
+    ax.set_ylabel("Score")
+    ax.set_title(f"Evolution of {prefix} Novelty with the value of k")
+    ax.grid(True)
+    ax.legend()
+
+    # Save the plot for novelty
+    plot_path = f"{figures_folder}/{prefix}novelty_evolution.png"
+    fig.savefig(plot_path)
+
+    logger.info(f"Metrics evolution plots saved to {figures_folder}")
+
+
+def plot_recall_comparison(
+    metrics: Dict[str, float], list_k: List[int], figures_folder: str
+):
+    """
+    Plot the evolution of recall with different k values for the two towers model and the baselines (random and popular)
+    Only relevant if dummy is True
+
+    Args:
+        metrics: Dictionary containing metrics for different k values
+        list_k: List of k values
+        figures_folder: Folder to save the plot
+    """
+    logger.info("Creating recall comparison plots")
+
+    # Prepare data for plotting
+    two_towers_recall = [
+        metrics[metric_name]
+        for metric_name in metrics.keys()
+        if metric_name.startswith("recall")
+    ]
+    random_recall = [
+        metrics[metric_name]
+        for metric_name in metrics.keys()
+        if metric_name.startswith("random_recall")
+    ]
+    popular_recall = [
+        metrics[metric_name]
+        for metric_name in metrics.keys()
+        if metric_name.startswith("popular_recall")
+    ]
+
+    # Create plot for recall comparison
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    # Plot two towers recall
+    ax.plot(list_k, two_towers_recall, marker="o", label="Two Towers")
+
+    # Plot random recall
+    ax.plot(list_k, random_recall, marker="s", label="Random")
+
+    # Plot popular recall
+    ax.plot(list_k, popular_recall, marker="^", label="Popular")
+
+    ax.set_xlabel("k (Number of recommendations)")
+    ax.set_ylabel("Recall")
+    ax.set_title("Recall Comparison between Two Towers and Baselines")
     ax.grid(True)
     ax.legend()
 
     # Save the plot
-    plot_path = f"{figures_folder}/metrics_evolution.png"
+    plot_path = f"{figures_folder}/recall_comparison.png"
     fig.savefig(plot_path)
-    logger.info(f"Metrics evolution plot saved to {plot_path}")
 
-
-## Baselines: random and most popular
+    logger.info(f"Recall comparison plot saved to {figures_folder}")
 
 
 def generate_random_baseline(

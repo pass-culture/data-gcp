@@ -274,6 +274,11 @@ def generate_svd_baseline(
                         "score": scores,
                     }
                 )
+                # Select only top num_recommendations items for this user
+                user_predictions = user_predictions.sort_values(
+                    by="score", ascending=False
+                ).head(num_recommendations)
+
                 list_df_predictions.append(user_predictions)
 
         except Exception as e:
@@ -288,4 +293,5 @@ def generate_svd_baseline(
     else:
         df_predictions = pd.DataFrame(columns=["user_id", "item_id", "score"])
 
-    return df_predictions
+    # Filter out items that users have already interacted with
+    return filter_predictions(df_predictions, train_data)

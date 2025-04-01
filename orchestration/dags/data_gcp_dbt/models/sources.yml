@@ -62,8 +62,6 @@ sources:
       - name: applicative_database_local_provider_event
       - name: applicative_database_mediation
       - name: applicative_database_national_program
-      - name: applicative_database_national_program_offer_link_history
-      - name: applicative_database_national_program_offer_template_link_history
       - name: applicative_database_login_device_history
       - name: applicative_database_payment_message
       - name: applicative_database_payment

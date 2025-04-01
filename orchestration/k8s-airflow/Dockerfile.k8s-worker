@@ -5,7 +5,7 @@ FROM apache/airflow:slim-2.9.3-python3.11 AS builder
 # Define build arguments
 ARG AIRFLOW_USER_HOME=/opt/airflow
 ARG GCLOUD_VERSION=google-cloud-cli-411.0.0-linux-x86_64.tar.gz
-ARG ELEMENTARY_PYTHON_PATH=/opt/python3.10/lib/python3.10/site-packages/elementary/monitor/dbt_project
+ARG ELEMENTARY_PYTHON_PATH=/opt/python3.11/lib/python3.11/site-packages/elementary/monitor/dbt_project
 
 # Copy uv binary from the uv image
 COPY --from=ghcr.io/astral-sh/uv:0.3.4 /uv /bin/uv

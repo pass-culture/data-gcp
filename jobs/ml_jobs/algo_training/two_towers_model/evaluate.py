@@ -102,6 +102,7 @@ def main(
     if dummy:
         plot_metrics_evolution(metrics, LIST_K, metrics_plots_path, prefix="popular_")
         plot_metrics_evolution(metrics, LIST_K, metrics_plots_path, prefix="random_")
+        plot_metrics_evolution(metrics, LIST_K, metrics_plots_path, prefix="svd_")
         plot_recall_comparison(metrics, LIST_K, metrics_plots_path)
 
     connect_remote_mlflow()

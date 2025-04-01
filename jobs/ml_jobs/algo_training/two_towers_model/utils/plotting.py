@@ -181,6 +181,11 @@ def plot_recall_comparison(
         for metric_name in metrics.keys()
         if metric_name.startswith("popular_recall")
     ]
+    svd_recall = [
+        metrics[metric_name]
+        for metric_name in metrics.keys()
+        if metric_name.startswith("svd_recall")
+    ]
 
     # Create plot for recall comparison
     fig, ax = plt.subplots(figsize=(12, 8))
@@ -193,6 +198,9 @@ def plot_recall_comparison(
 
     # Plot popular recall
     ax.plot(list_k, popular_recall, marker="^", label="Popular")
+
+    # Plot SVD recall
+    ax.plot(list_k, svd_recall, marker="d", label="SVD")
 
     ax.set_xlabel("k (Number of recommendations)")
     ax.set_ylabel("Recall")

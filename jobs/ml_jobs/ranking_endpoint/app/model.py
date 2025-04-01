@@ -5,12 +5,12 @@ import joblib
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
+from dppy.finite_dpps import FiniteDPP
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder
-from dpp import DPP
 
 
 class ClassMapping(Enum):
@@ -234,6 +234,17 @@ class TrainPipeline:
         processed_data = self.preprocessor.transform(df)
 
         return df.assign(regression_score=self.model.predict(processed_data))
+
+
+class DPP:
+    def __init__(self, vectors=None, K_DPP=150):
+        self.vectors = vectors
+        self.K_DPP = K_DPP
+        self.DPP = FiniteDPP("likelihood", **{"L": self.vectors.T.dot(self.vectors)})
+
+    def sample_k(self):
+        self.DPP.sample_exact_k_dpp(size=self.K_DPP)
+        return self.DPP.list_of_samples
 
 
 class DiversificationPipeline:

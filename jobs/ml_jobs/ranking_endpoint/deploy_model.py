@@ -133,15 +133,15 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
     return (
         data.astype(
             {
-                "consult": "float",
-                "booking": "float",
+                "is_consulted": "float",
+                "is_booked": "float",
             }
         )
-        .fillna({"consult": 0, "booking": 0})
+        .fillna({"is_consulted": 0, "is_booked": 0})
         .rename(
             columns={
-                "consult": ClassMapping.consulted.name,
-                "booking": ClassMapping.booked.name,
+                "is_consulted": ClassMapping.consulted.name,
+                "is_booked": ClassMapping.booked.name,
             }
         )
         .assign(

@@ -21,6 +21,8 @@ from commons.data_collect_queries import read_from_gcs
 from commons.mlflow_tools import connect_remote_mlflow
 from two_towers_model.utils.evaluate import (
     evaluate,
+)
+from two_towers_model.utils.plotting import (
     plot_metrics_evolution,
     plot_recall_comparison,
     save_pca_representation,
@@ -100,6 +102,7 @@ def main(
     if dummy:
         plot_metrics_evolution(metrics, LIST_K, metrics_plots_path, prefix="popular_")
         plot_metrics_evolution(metrics, LIST_K, metrics_plots_path, prefix="random_")
+        plot_metrics_evolution(metrics, LIST_K, metrics_plots_path, prefix="svd_")
         plot_recall_comparison(metrics, LIST_K, metrics_plots_path)
 
     connect_remote_mlflow()

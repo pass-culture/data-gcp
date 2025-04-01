@@ -5,7 +5,11 @@ import numpy as np
 import pandas as pd
 import requests
 
-BACKEND_API_URL = "https://backend.passculture.team/native/v1/subcategories/v2"
+BACKEND_API_URL = {
+    "dev": "https://backend.staging.passculture.team/native/v1/subcategories/v2",
+    "staging": "https://backend.staging.passculture.team/native/v1/subcategories/v2",
+    "prod": "https://backend.passculture.team/native/v1/subcategories/v2",
+}
 
 CATEGORIES_DTYPES = {
     "id": str,
@@ -62,12 +66,12 @@ def clean_string(s):
     return s
 
 
-def get_subcategories(gcp_project_id: str, env_short_name: str) -> None:
+def get_subcategories(gcp_project_id: str, env_short_name: str, url: str) -> None:
     # Read deprecated data from CSV (kept for reference)
     deprecated_subactegories = pd.read_csv("data/subcategories_v2_20250327.csv")
 
     # Fetch current subcategories from API
-    response = requests.get(BACKEND_API_URL)
+    response = requests.get(url)
     response.raise_for_status()
     subcategories_data = response.json()
     new_subcategories_df = pd.DataFrame(subcategories_data["subcategories"]).pipe(
@@ -106,9 +110,9 @@ def get_subcategories(gcp_project_id: str, env_short_name: str) -> None:
     )
 
 
-def get_types(gcp_project_id, env_short_name):
+def get_types(gcp_project_id: str, env_short_name: str, url: str) -> None:
     music_types = pd.read_csv("data/music_types_deprecated_20250401.csv")
-    response = requests.get(BACKEND_API_URL)
+    response = requests.get(url)
     response.raise_for_status()
     offer_types_data = response.json()
 
@@ -176,10 +180,11 @@ if __name__ == "__main__":
     job_type = args.job_type
     gcp_project_id = args.gcp_project_id
     env_short_name = args.env_short_name
+    url = BACKEND_API_URL[env_short_name]
     if job_type == "subcategories":
-        get_subcategories(gcp_project_id, env_short_name)
+        get_subcategories(gcp_project_id, env_short_name, url)
     elif job_type == "types":
-        get_types(gcp_project_id, env_short_name)
+        get_types(gcp_project_id, env_short_name, url)
     else:
         raise Exception(
             f"Job type not found. Got {job_type}, expecting subcategories|types."

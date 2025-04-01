@@ -34,7 +34,7 @@ RUN uv pip install --no-cache-dir -r /opt/requirements.txt
 
 # Set permissions for the elementary python module
 USER root
-RUN chmod -R 777 "$ELEMENTARY_PYTHON_PATH"
+RUN chmod -R 777 $ELEMENTARY_PYTHON_PATH
 
 # ------------------------
 # Stage 2: Final Image

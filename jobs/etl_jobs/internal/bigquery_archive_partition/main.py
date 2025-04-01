@@ -14,7 +14,7 @@ def run(
         help="Config of the table",
     ),
     limit: int = typer.Option(
-        10,
+        1,
         help="Limit of partitions to export",
     ),
 ):

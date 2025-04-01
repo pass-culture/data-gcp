@@ -1,4 +1,4 @@
-name: "[on_dispatch] build airflow image"
+name: "4. [on_dispatch] build airflow image"
 
 on:
   workflow_dispatch:
@@ -9,7 +9,6 @@ permissions:
 
 jobs:
   k8s-deploy-on-dev:
-    needs: [find-build-job]
     uses: ./.github/workflows/reusable_build_image.yml
     with:
       TARGET_ENV: "dev"

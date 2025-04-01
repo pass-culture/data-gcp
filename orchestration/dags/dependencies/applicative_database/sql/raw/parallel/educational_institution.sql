@@ -11,4 +11,4 @@ SELECT
     , "ruralLevel" AS institution_density_label
     , "latitude" AS institution_latitude
     , "longitude" AS institution_longitude
-FROM educational_institution
+FROM public.educational_institution

@@ -1,7 +1,7 @@
 # ------------------------
 # Stage 1: Builder
 # ------------------------
-FROM apache/airflow:slim-2.9.3-python3.11 AS builder
+FROM apache/airflow:slim-2.9.3-python3.11
 # Define build arguments
 ARG AIRFLOW_USER_HOME=/opt/airflow
 ARG GCLOUD_VERSION=google-cloud-cli-411.0.0-linux-x86_64.tar.gz
@@ -36,32 +36,11 @@ RUN uv pip install --no-cache-dir -r /opt/requirements.txt
 USER root
 RUN chmod -R 777 "$ELEMENTARY_PYTHON_PATH"
 
-# ------------------------
-# Stage 2: Final Image
-# ------------------------
-FROM apache/airflow:slim-2.9.3-python3.11
-
-# Define the same build arguments for consistency
-ARG AIRFLOW_USER_HOME=/opt/airflow
-ARG ELEMENTARY_PYTHON_PATH=/opt/python3.11/lib/python3.11/site-packages/elementary/monitor/dbt_project
-
-# Copy runtime artifacts from the builder stage:
-# 1. uv binary
-COPY --from=builder /bin/uv /bin/uv
-# 2. Google Cloud SDK
-COPY --from=builder ${AIRFLOW_USER_HOME}/google-cloud-sdk ${AIRFLOW_USER_HOME}/google-cloud-sdk
-# 3. Installed Python packages
-# COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-# 3. Installed Python packages (user-local site-packages)
-COPY --from=builder /home/airflow/.local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-
-
 USER airflow
 # Set environment variables to ensure tools are in PATH
 ENV PATH="/root/.cargo/bin/:$PATH"
 ENV PATH=$PATH:$AIRFLOW_USER_HOME/google-cloud-sdk/bin
 ENV PATH=$PATH:$ELEMENTARY_PYTHON_PATH/
-ENV PATH=$PATH:/usr/local/lib/python3.11/site-packages/elementary/monitor/dbt_project
 
 # Final entrypoint and default command
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/entrypoint"]

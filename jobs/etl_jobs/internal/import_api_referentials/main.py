@@ -1,10 +1,15 @@
 import argparse
-import importlib
 import unicodedata
 
 import numpy as np
 import pandas as pd
 import requests
+
+BACKEND_API_URL = {
+    "dev": "https://backend.staging.passculture.team/native/v1/subcategories/v2",
+    "staging": "https://backend.staging.passculture.team/native/v1/subcategories/v2",
+    "prod": "https://backend.passculture.team/native/v1/subcategories/v2",
+}
 
 CATEGORIES_DTYPES = {
     "id": str,
@@ -49,14 +54,24 @@ def convert_df_columns_to_snake_case(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def get_subcategories(gcp_project_id: str, env_short_name: str) -> None:
+def clean_string(s):
+    s = "".join(
+        c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c)
+    )
+    s = s.replace("&", "")
+    s = s.replace(",", "")
+    s = s.replace("-", "")
+    s = s.replace("/", "")
+    s = s.replace(" ", "")
+    return s
+
+
+def get_subcategories(gcp_project_id: str, env_short_name: str, url: str) -> None:
     # Read deprecated data from CSV (kept for reference)
     deprecated_subactegories = pd.read_csv("data/subcategories_v2_20250327.csv")
 
     # Fetch current subcategories from API
-    response = requests.get(
-        "https://backend.passculture.app/native/v1/subcategories/v2"
-    )
+    response = requests.get(url)
     response.raise_for_status()
     subcategories_data = response.json()
     new_subcategories_df = pd.DataFrame(subcategories_data["subcategories"]).pipe(
@@ -95,72 +110,61 @@ def get_subcategories(gcp_project_id: str, env_short_name: str) -> None:
     )
 
 
-def get_types(gcp_project_id, env_short_name):
-    show_types = importlib.import_module("pcapi.domain.show_types").SHOW_TYPES
-    music_types = importlib.import_module("pcapi.domain.music_types").OLD_MUSIC_TYPES
-    book_types = importlib.import_module("pcapi.domain.book_types").BOOK_MACRO_SECTIONS
-    movie_types = importlib.import_module("pcapi.domain.movie_types").MOVIE_TYPES
+def get_types(gcp_project_id: str, env_short_name: str, url: str) -> None:
+    music_types = pd.read_csv("data/music_types_deprecated_20250401.csv")
+    response = requests.get(url)
+    response.raise_for_status()
+    offer_types_data = response.json()
 
-    types = {
-        "show": show_types,
-        "music": music_types,
-        "book": book_types,
-        "movie": movie_types,
-    }
-    export_types = []
-    for domain, types_list in types.items():
-        if domain in ["show", "music"]:
-            for _t in types_list:
-                code = _t.code
-                label = _t.label
-                for _c in _t.children:
-                    export_types.append(
-                        {
-                            "domain": domain,
-                            "type": code,
-                            "label": label,
-                            "sub_type": _c.code,
-                            "sub_label": _c.label,
-                        }
-                    )
-        elif domain == "book":
-            for type_label in types_list:
-                type_id = "".join(
-                    letter for letter in type_label.lower() if letter.isalnum()
-                )
-                export_types.append(
-                    {
-                        "domain": domain,
-                        "type": str(
-                            unicodedata.normalize("NFD", type_id)
-                            .encode("ascii", "ignore")
-                            .decode("utf-8")
-                        ),
-                        "label": type_label,
-                        "sub_type": np.nan,
-                        "sub_label": np.nan,
-                    }
-                )
-        elif domain == "movie":
-            for _t in types_list:
-                type_id = _t.name
-                type_label = _t.label
-                export_types.append(
-                    {
-                        "domain": domain,
-                        "type": type_id,
-                        "label": type_label,
-                        "sub_type": np.nan,
-                        "sub_label": np.nan,
-                    }
-                )
+    for domain in offer_types_data["genreTypes"]:
+        if domain["name"] == "BOOK":
+            book_types = pd.DataFrame(domain["values"])
 
-    df = pd.DataFrame(export_types)
-    dtype_list = list(df.columns)
+            book_types["domain"] = "book"
+            book_types["type"] = book_types["name"].str.lower().apply(clean_string)
+            book_types["label"] = book_types["name"]
+            book_types["sub_type"] = np.nan
+            book_types["sub_label"] = np.nan
+
+            book_types = book_types[
+                ["domain", "type", "label", "sub_type", "sub_label"]
+            ]
+        if domain["name"] == "SHOW":
+            show_types = pd.DataFrame(domain["trees"])
+            show_types_exploded = (
+                show_types.explode("children")
+                .reset_index(drop=True)
+                .rename(columns={"code": "type"})
+            )
+            show_types_nested = pd.json_normalize(
+                show_types_exploded["children"]
+            ).rename(columns={"code": "sub_type", "label": "sub_label"})
+            show_types = pd.concat(
+                [show_types_exploded.drop(columns=["children"]), show_types_nested],
+                axis=1,
+            )
+            show_types.drop(columns=["slug"], inplace=True)
+            show_types["domain"] = "show"
+            show_types = show_types[
+                ["domain", "type", "label", "sub_type", "sub_label"]
+            ]
+
+        if domain["name"] == "MOVIE":
+            movie_types = pd.DataFrame(domain["values"])
+            movie_types.rename(columns={"name": "type", "value": "label"}, inplace=True)
+            movie_types["sub_type"] = np.nan
+            movie_types["sub_label"] = np.nan
+            movie_types["domain"] = "movie"
+            movie_types = movie_types[
+                ["domain", "type", "label", "sub_type", "sub_label"]
+            ]
+
+    offer_types = pd.concat([music_types, book_types, show_types, movie_types], axis=0)
+    dtype_list = list(offer_types.columns)
     for k, v in TYPES_DTYPES.items():
         if k in dtype_list:
-            df[k] = df[k].astype(v)
-    df.to_gbq(
+            offer_types[k] = offer_types[k].astype(v)
+    offer_types.to_gbq(
         f"""raw_{env_short_name}.offer_types""",
         project_id=gcp_project_id,
         if_exists="replace",
@@ -176,10 +180,11 @@ if __name__ == "__main__":
     job_type = args.job_type
     gcp_project_id = args.gcp_project_id
     env_short_name = args.env_short_name
+    url = BACKEND_API_URL[env_short_name]
     if job_type == "subcategories":
-        get_subcategories(gcp_project_id, env_short_name)
+        get_subcategories(gcp_project_id, env_short_name, url)
     elif job_type == "types":
-        get_types(gcp_project_id, env_short_name)
+        get_types(gcp_project_id, env_short_name, url)
     else:
         raise Exception(
             f"Job type not found. Got {job_type}, expecting subcategories|types."

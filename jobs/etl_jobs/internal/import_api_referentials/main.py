@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 import requests
 
+BACKEND_API_URL = "https://backend.passculture.team/native/v1/subcategories/v2"
+
 CATEGORIES_DTYPES = {
     "id": str,
     "category_id": str,
@@ -65,9 +67,7 @@ def get_subcategories(gcp_project_id: str, env_short_name: str) -> None:
     deprecated_subactegories = pd.read_csv("data/subcategories_v2_20250327.csv")
 
     # Fetch current subcategories from API
-    response = requests.get(
-        "https://backend.passculture.app/native/v1/subcategories/v2"
-    )
+    response = requests.get(BACKEND_API_URL)
     response.raise_for_status()
     subcategories_data = response.json()
     new_subcategories_df = pd.DataFrame(subcategories_data["subcategories"]).pipe(
@@ -108,9 +108,7 @@ def get_subcategories(gcp_project_id: str, env_short_name: str) -> None:
 
 def get_types(gcp_project_id, env_short_name):
     music_types = pd.read_csv("data/music_types_deprecated_20250401.csv")
-    response = requests.get(
-        "https://backend.passculture.app/native/v1/subcategories/v2"
-    )
+    response = requests.get(BACKEND_API_URL)
     response.raise_for_status()
     offer_types_data = response.json()
 

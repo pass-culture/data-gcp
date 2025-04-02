@@ -18,39 +18,6 @@ class ClassMapping(Enum):
     booked = 2
 
 
-DROPPED_FEATURES = [
-    "offer_semantic_emb_mean",
-    "offer_item_score",
-]
-
-NEW_FEATURES = [
-    "user_amount_spent",
-]
-
-FEATURES_MAPPING = {
-    "user_bookings_count": "user_bookings_count",
-    "user_clicks_count": "user_clicks_count",
-    "user_favorites_count": "user_favorites_count",
-    "user_deposit_amount": "user_deposit_remaining_credit",
-    "user_is_geolocated": "interaction_is_geolocated",
-    "user_iris_x": "user_centroid_x",
-    "user_iris_y": "user_centroid_y",
-    "offer_user_distance": "offer_user_distance",
-    "offer_booking_number_last_7_days": "item_booking_number_last_7_days",
-    "offer_booking_number_last_14_days": "item_booking_number_last_14_days",
-    "offer_booking_number_last_28_days": "item_booking_number_last_28_days",
-    "offer_item_rank": "displayed_position",
-    "offer_is_geolocated": "offer_is_geolocated",
-    "offer_price": "offer_mean_stock_price",
-    "offer_creation_days": "offer_created_delta_in_days",
-    "offer_stock_beginning_days": "offer_max_stock_beginning_days",
-    "day_of_the_week": "day_of_week",
-    "hour_of_the_day": "hour_of_day",
-    "context": "module_type",
-    "offer_subcategory_id": "offer_subcategory_id",
-}
-
-
 NUMERIC_FEATURES = [
     "user_bookings_count",
     "user_clicks_count",

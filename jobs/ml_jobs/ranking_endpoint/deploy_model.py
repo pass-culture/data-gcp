@@ -15,6 +15,7 @@ from figure import (
     plot_cm_multiclass,
     plot_features_importance,
 )
+from preprocessing import map_features_columns
 from utils import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -165,7 +166,7 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
 
 def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     # Load and preprocess the data
-    data = load_data(dataset_name, table_name)
+    data = load_data(dataset_name, table_name).pipe(map_features_columns)
     preprocessed_data = data.pipe(
         preprocess_data,
     )

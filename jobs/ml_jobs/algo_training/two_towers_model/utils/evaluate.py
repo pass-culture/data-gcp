@@ -1,7 +1,5 @@
-import secrets
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -13,7 +11,6 @@ from recommenders.evaluation.python_evaluation import (
     precision_at_k,
     recall_at_k,
 )
-from sklearn.decomposition import PCA
 from tqdm import tqdm
 
 from commons.constants import (
@@ -24,6 +21,12 @@ from commons.constants import (
     USER_BATCH_SIZE,
 )
 from commons.data_collect_queries import read_from_gcs
+from two_towers_model.utils.baseline_prediction import (
+    filter_predictions,
+    generate_popularity_baseline,
+    generate_random_baseline,
+    generate_svd_baseline,
+)
 
 
 def load_data_for_evaluation(
@@ -87,31 +90,6 @@ def get_scann_params(env_short_name: str, max_k: int) -> Dict[str, Any]:
             "num_leaves": 1,
             "num_leaves_to_search": 1,
         }
-
-
-def filter_predictions(
-    df_predictions: pd.DataFrame,
-    train_data: pd.DataFrame,
-) -> pd.DataFrame:
-    """
-    Filter out items that users have already interacted with in training data.
-    Args:
-        df_predictions (pd.DataFrame): DataFrame containing predictions with columns 'user_id' and 'item_id'.
-        train_data (pd.DataFrame): DataFrame containing training data with columns 'user_id' and 'item_id'.
-
-    Returns:
-        pd.DataFrame: DataFrame containing filtered predictions .
-    """
-    # merge df_predictions with train_data on user_id and item_id while keeping indicator
-    df_predictions_filtered = df_predictions.merge(
-        train_data, on=["user_id", "item_id"], how="left", indicator=True
-    )
-    # drop rows where indicator is not left_only (meaning the (user, item) was also in training data)
-    df_predictions_filtered = df_predictions_filtered[
-        df_predictions_filtered["_merge"] == "left_only"
-    ].drop(columns=["_merge"])
-
-    return df_predictions_filtered
 
 
 def get_offers_to_score(test_data: pd.DataFrame) -> np.ndarray:
@@ -188,28 +166,24 @@ def generate_predictions(
     test_data, users_to_test = get_users_to_test(test_data)
 
     # Initialize ScaNN index with appropriate parameters tuned for env.
-    scann_params = get_scann_params(ENV_SHORT_NAME, max_k)
-    scann = tfrs.layers.factorized_top_k.ScaNN(**scann_params)
-
+    scann = tfrs.layers.factorized_top_k.ScaNN(
+        **get_scann_params(ENV_SHORT_NAME, max_k)
+    )
     scann_index = scann.index(
         candidates=offers_to_score_embeddings,
         identifiers=tf.constant(offers_to_score),
     )
 
-    logger.info(f"Using batch size of {USER_BATCH_SIZE} users")
     list_predictions_dict = []
-
+    logger.info(f"Using batch size of {USER_BATCH_SIZE} users")
     for batch_start_index in tqdm(
         range(0, len(users_to_test), USER_BATCH_SIZE), mininterval=20, maxinterval=60
     ):
+        # Get recommendations using ScaNN
         batch_users = users_to_test[
             batch_start_index : batch_start_index + USER_BATCH_SIZE
         ]
-
-        # Get user embeddings for the batch
         user_embeddings = model.user_layer(batch_users)
-
-        # Get recommendations using ScaNN
         scores, candidates = scann_index(user_embeddings)
 
         list_predictions_dict.append(
@@ -351,7 +325,6 @@ def evaluate(
         test_dataset_name=test_dataset_name,
     )
 
-    list_predictions_to_evaluate = []
     logger.info("Inferring model predictions")
     df_predictions = generate_predictions(
         model=model,
@@ -359,38 +332,54 @@ def evaluate(
         test_data=data_dict["test"],
         max_k=max(LIST_K),
     )
-    list_predictions_to_evaluate.append({"predictions": df_predictions, "prefix": ""})
+    list_predictions_to_evaluate = [{"predictions": df_predictions, "prefix": ""}]
 
     if dummy:
         # Extract unique users from model predictions to ensure consistent user set
         predicted_users = df_predictions["user_id"].unique().tolist()
         logger.info(f"Using {len(predicted_users)} users for baseline evaluations")
 
-        logger.info("Generating random baseline predictions")
-        df_random = generate_random_baseline(
-            test_data=data_dict["test"],
-            train_data=data_dict["train"],
-            num_recommendations=max(LIST_K),
-            specific_users=predicted_users,
-        )
+        logger.info("Generating SVD baseline predictions")
         list_predictions_to_evaluate.append(
-            {"predictions": df_random, "prefix": "random_"}
+            {
+                "predictions": generate_svd_baseline(
+                    test_data=data_dict["test"],
+                    train_data=data_dict["train"],
+                    num_recommendations=max(LIST_K),
+                    specific_users=predicted_users,
+                ),
+                "prefix": "svd_",
+            }
+        )
+
+        logger.info("Generating random baseline predictions")
+        list_predictions_to_evaluate.append(
+            {
+                "predictions": generate_random_baseline(
+                    test_data=data_dict["test"],
+                    train_data=data_dict["train"],
+                    num_recommendations=max(LIST_K),
+                    specific_users=predicted_users,
+                ),
+                "prefix": "random_",
+            }
         )
 
         logger.info("Generating popularity baseline predictions")
-        df_popular = generate_popularity_baseline(
-            test_data=data_dict["test"],
-            train_data=data_dict["train"],
-            num_recommendations=max(LIST_K),
-            specific_users=predicted_users,
-        )
         list_predictions_to_evaluate.append(
-            {"predictions": df_popular, "prefix": "popular_"}
+            {
+                "predictions": generate_popularity_baseline(
+                    test_data=data_dict["test"],
+                    train_data=data_dict["train"],
+                    num_recommendations=max(LIST_K),
+                    specific_users=predicted_users,
+                ),
+                "prefix": "popular_",
+            }
         )
 
     logger.info("Computing metrics")
     metrics = {}
-
     for predictions in list_predictions_to_evaluate:
         for k in LIST_K:
             metrics.update(
@@ -404,283 +393,3 @@ def evaluate(
             )
 
     return metrics
-
-
-def save_pca_representation(
-    loaded_model: tf.keras.models.Model,
-    item_data: pd.DataFrame,
-    figures_folder: str,
-) -> None:
-    """
-    Computes a 2D PCA projection of item embeddings from the retrieval model
-    and generates scatter plots for visualizing item distributions by category and subcategory.
-
-    Args:
-        loaded_model (tf.keras.models.Model): Trained retrieval model from which item embeddings are extracted.
-        item_data (pd.DataFrame): DataFrame containing metadata for items, including 'item_id',
-            'offer_category_id', and 'offer_subcategory_id'.
-        figures_folder (str): Path to the folder where the generated plots will be saved.
-
-    Returns:
-        None. Saves visualizations as PDF files in the specified folder.
-    """
-    item_ids = loaded_model.item_layer.layers[0].get_vocabulary()[1:]
-    embeddings = loaded_model.item_layer.layers[1].get_weights()[0][1:]
-
-    seed = secrets.randbelow(1000)
-    logger.info(f"Random state for PCA fixed to seed={seed}")
-    pca_out = PCA(n_components=2, random_state=seed).fit_transform(embeddings)
-    categories = item_data["offer_category_id"].unique().tolist()
-    item_representation = pd.DataFrame(
-        {
-            "item_id": item_ids,
-            "x": pca_out[:, 0],
-            "y": pca_out[:, 1],
-        }
-    ).merge(item_data, on=["item_id"], how="inner")
-
-    colormap = plt.cm.tab20.colors
-    fig, ax = plt.subplots(1, 1, figsize=(15, 10))
-    for idx, category in enumerate(categories):
-        data = item_representation.loc[lambda df: df["offer_category_id"] == category]
-        max_plots = min(data.shape[0], 10000)
-        data = data.sample(n=max_plots)
-        ax.scatter(
-            data["x"].values,
-            data["y"].values,
-            s=10,
-            color=colormap[idx],
-            label=category,
-            alpha=0.7,
-        )
-        logger.info(f"Plotting {len(data)} points for category {category}")
-        fig_sub, ax_sub = plt.subplots(1, 1, figsize=(15, 10))
-        for idx_sub, subcategory in enumerate(data["offer_subcategory_id"].unique()):
-            data_sub = data.loc[lambda df: df["offer_subcategory_id"] == subcategory]
-            ax_sub.scatter(
-                data_sub["x"].values,
-                data_sub["y"].values,
-                s=10,
-                color=colormap[idx_sub],
-                label=subcategory,
-                alpha=0.7,
-            )
-        ax_sub.legend()
-        ax_sub.grid(True)
-        fig_sub.savefig(figures_folder + f"{category}.pdf")
-
-    ax.legend()
-    ax.grid(True)
-    fig.savefig(figures_folder + "ALL_CATEGORIES.pdf")
-
-
-def plot_metrics_evolution(
-    metrics: Dict[str, float], list_k: List[int], figures_folder: str, prefix: str
-):
-    """
-    Plot the evolution of precision, recall, coverage and novelty with different k values in two separate plots
-    (one for precision, recall and coverage, one for novelty)
-    The prefix is used to identify the metrics to plot (popular_, random_, or empty string for the two towers model)
-
-    Args:
-        metrics: Dictionary containing metrics for different k values
-        list_k: List of k values
-        figures_folder: Folder to save the plot
-        prefix: Prefix of the metrics (popular_, random_, or empty string)
-
-    Returns:
-        None
-    """
-    logger.info("Creating metrics evolution plots")
-
-    # Prepare data for plotting
-    precision_values = [
-        metrics[metric_name]
-        for metric_name in metrics.keys()
-        if metric_name.startswith(f"{prefix}precision")
-    ]
-    recall_values = [
-        metrics[metric_name]
-        for metric_name in metrics.keys()
-        if metric_name.startswith(f"{prefix}recall")
-    ]
-    coverage_values = [
-        metrics[metric_name]
-        for metric_name in metrics.keys()
-        if metric_name.startswith(f"{prefix}coverage")
-    ]
-    novelty_values = [
-        metrics[metric_name]
-        for metric_name in metrics.keys()
-        if metric_name.startswith(f"{prefix}novelty")
-    ]
-
-    # Create plot for precision, recall and coverage
-    fig, ax = plt.subplots(figsize=(12, 8))
-
-    # Plot each metric
-    ax.plot(list_k, precision_values, marker="o", label="Precision")
-    ax.plot(list_k, recall_values, marker="s", label="Recall")
-    ax.plot(list_k, coverage_values, marker="^", label="Coverage")
-
-    ax.set_xlabel("k (Number of recommendations)")
-    ax.set_ylabel("Score")
-    ax.set_title(f"Evolution of {prefix} Metrics with the value of k")
-    ax.grid(True)
-    ax.legend()
-
-    # Save the plot for precision, recall and coverage
-    plot_path = f"{figures_folder}/{prefix}metrics_evolution.png"
-    fig.savefig(plot_path)
-
-    # Create plot for novelty
-    fig, ax = plt.subplots(figsize=(12, 8))
-    ax.plot(list_k, novelty_values, marker="d", label="Novelty")
-    ax.set_xlabel("k (Number of recommendations)")
-    ax.set_ylabel("Score")
-    ax.set_title(f"Evolution of {prefix} Novelty with the value of k")
-    ax.grid(True)
-    ax.legend()
-
-    # Save the plot for novelty
-    plot_path = f"{figures_folder}/{prefix}novelty_evolution.png"
-    fig.savefig(plot_path)
-
-    logger.info(f"Metrics evolution plots saved to {figures_folder}")
-
-
-def plot_recall_comparison(
-    metrics: Dict[str, float], list_k: List[int], figures_folder: str
-):
-    """
-    Plot the evolution of recall with different k values for the two towers model and the baselines (random and popular)
-    Only relevant if dummy is True
-
-    Args:
-        metrics: Dictionary containing metrics for different k values
-        list_k: List of k values
-        figures_folder: Folder to save the plot
-    """
-    logger.info("Creating recall comparison plots")
-
-    # Prepare data for plotting
-    two_towers_recall = [
-        metrics[metric_name]
-        for metric_name in metrics.keys()
-        if metric_name.startswith("recall")
-    ]
-    random_recall = [
-        metrics[metric_name]
-        for metric_name in metrics.keys()
-        if metric_name.startswith("random_recall")
-    ]
-    popular_recall = [
-        metrics[metric_name]
-        for metric_name in metrics.keys()
-        if metric_name.startswith("popular_recall")
-    ]
-
-    # Create plot for recall comparison
-    fig, ax = plt.subplots(figsize=(12, 8))
-
-    # Plot two towers recall
-    ax.plot(list_k, two_towers_recall, marker="o", label="Two Towers")
-
-    # Plot random recall
-    ax.plot(list_k, random_recall, marker="s", label="Random")
-
-    # Plot popular recall
-    ax.plot(list_k, popular_recall, marker="^", label="Popular")
-
-    ax.set_xlabel("k (Number of recommendations)")
-    ax.set_ylabel("Recall")
-    ax.set_title("Recall Comparison between Two Towers and Baselines")
-    ax.grid(True)
-    ax.legend()
-
-    # Save the plot
-    plot_path = f"{figures_folder}/recall_comparison.png"
-    fig.savefig(plot_path)
-
-    logger.info(f"Recall comparison plot saved to {figures_folder}")
-
-
-def generate_random_baseline(
-    test_data: pd.DataFrame,
-    train_data: pd.DataFrame,
-    num_recommendations: int,
-    specific_users: List[str],
-) -> pd.DataFrame:
-    """
-    Generate random item recommendations for each user.
-
-    Args:
-        test_data (pd.DataFrame): DataFrame with at least a 'user_id' and 'item_id' column.
-        train_data (pd.DataFrame): DataFrame with at least a 'user_id' and 'item_id' column.
-        num_recommendations (int): Number of random items to recommend per user.
-        specific_users (List[str]): List of user IDs to generate recommendations for.
-
-    Returns:
-        pd.DataFrame: DataFrame with columns ['user_id', 'item_id', 'score'], where score is random.
-    """
-    # Unique items to randomly pick from
-    unique_items = test_data["item_id"].unique()
-
-    # Unique users
-    df_users = pd.DataFrame({"user_id": specific_users}).drop_duplicates()
-
-    # Repeat each user for num_recommendations and assign random items and scores
-    df_random = (
-        df_users.loc[df_users.index.repeat(num_recommendations)]
-        .reset_index(drop=True)
-        .assign(
-            item_id=np.random.choice(
-                unique_items, size=len(df_users) * num_recommendations, replace=True
-            ),
-            score=np.random.rand(len(df_users) * num_recommendations),
-        )
-    )
-
-    # return filtered out items that users have already interacted with in training data by performing an anti-join
-    return filter_predictions(df_random, train_data)
-
-
-def generate_popularity_baseline(
-    test_data: pd.DataFrame,
-    train_data: pd.DataFrame,
-    num_recommendations: int,
-    specific_users: List[str],
-) -> pd.DataFrame:
-    """
-    Recommend the most popular items based on past interactions.
-
-    Args:
-        test_data (pd.DataFrame): DataFrame with at least 'user_id' column.
-        train_data (pd.DataFrame): DataFrame with at least 'user_id' and 'item_id' columns.
-        num_recommendations (int): Number of items to recommend per user.
-        specific_users (List[str]): List of user IDs to generate recommendations for.
-
-    Returns:
-        pd.DataFrame: Recommendations DataFrame with columns ['user_id', 'item_id', 'score'].
-    """
-
-    # Compute item popularity
-    top_items = test_data["item_id"].value_counts().index.tolist()[:num_recommendations]
-
-    # Prepare users to recommend to
-    df_users = pd.DataFrame({"user_id": specific_users}).drop_duplicates()
-
-    # Repeat users and assign items and scores
-    df_popular = (
-        df_users.loc[df_users.index.repeat(num_recommendations)]
-        .reset_index(drop=True)
-        .assign(
-            item_id=np.random.choice(
-                top_items, size=len(df_users) * num_recommendations, replace=True
-            ),
-            score=np.random.rand(len(df_users) * num_recommendations),
-        )
-    )
-
-    # return filtered out items that users have already interacted with in training data by performing an anti-join
-    return filter_predictions(df_popular, train_data)

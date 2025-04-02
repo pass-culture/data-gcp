@@ -5,7 +5,7 @@ SCHEDULE_DICT = {
         "stg": "0 12 * * 3",
     },
     "artist_linkage": "0 12 * * 0",
-    "bigquery_export_old_partitions": "0 7 1 * *",
+    "bigquery_export_old_partitions": "0 7 * * *",
     "export_clickhouse_daily": {
         "prod": "0 6 * * *",
         "stg": "45 4 * * *",

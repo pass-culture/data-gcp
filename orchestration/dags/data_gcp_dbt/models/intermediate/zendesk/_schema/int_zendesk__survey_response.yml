@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: int_zendesk__survey_response
+    description: '{{ doc("description__int_zendesk__survey_response") }}'
+    columns:
+      - name: survey_response_id
+        description: '{{ doc("column__survey_response_id") }}'
+      - name: survey_response_created_at
+        description: '{{ doc("column__survey_response_created_at") }}'
+      - name: ticket_id
+        description: '{{ doc("column__ticket_id") }}'
+      - name: ticket_requester_id
+        description: '{{ doc("column__ticket_requester_id") }}'
+      - name: ticket_assignee_id
+        description: '{{ doc("column__ticket_assignee_id") }}'
+      - name: survey_response_score
+        description: '{{ doc("column__survey_response_score") }}'
+      - name: survey_response_updated_at
+        description: '{{ doc("column__survey_response_updated_at") }}'
+      - name: survey_response_created_date
+        description: '{{ doc("column__survey_response_created_date") }}'

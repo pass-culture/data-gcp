@@ -63,23 +63,6 @@ with DAG(
         base_dir=BASE_PATH,
     )
 
-    INSTALL_DEPS = """
-        sudo apt update -y && sudo apt install -y libmariadb-dev clang libpq-dev
-        git clone https://github.com/pass-culture/pass-culture-main.git
-        cd pass-culture-main/api
-        poetry export -f requirements.txt --output requirements.txt --without-hashes
-        uv pip install -r requirements.txt
-        cd ..
-        cp -r api/src/pcapi ..
-    """
-
-    fetch_install_pc_main_dependencies = SSHGCEOperator(
-        task_id="install_pc_main_dependencies",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        command=INSTALL_DEPS,
-    )
-
     subcategories_job = SSHGCEOperator(
         task_id="import_subcategories",
         instance_name=GCE_INSTANCE,
@@ -106,12 +89,7 @@ with DAG(
         start
         >> gce_instance_start
         >> fetch_install_code
-        >> fetch_install_pc_main_dependencies
         >> subcategories_job
+        >> types_job
+        >> gce_instance_stop
     )
-
-    (
-        subcategories_job >> types_job
-    )  # TODO: Put this before gce_instance_stop once it is fixed
-
-    (subcategories_job >> gce_instance_stop)

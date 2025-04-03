@@ -240,8 +240,12 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         print("Figures plotted")
 
         print("Saving Data...")
-        train_predictions.to_csv(f"{figure_folder}/train_predictions.csv", index=False)
-        test_predictions.to_csv(f"{figure_folder}/test_predictions.csv", index=False)
+        train_predictions.to_parquet(
+            f"{figure_folder}/train_predictions.parquet", index=False
+        )
+        test_predictions.to_parquet(
+            f"{figure_folder}/test_predictions.parquet", index=False
+        )
         print("Data saved")
 
         mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")

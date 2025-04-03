@@ -139,7 +139,14 @@ select
     user_features.user_amount_spent,
     st_distance(
         offer_features.offer_centroid, user_features.user_centroid
-    ) as offer_user_distance
+    ) as offer_user_distance,
+    (
+      select sum(x * y) as dot_product
+      from unnest(item_embeddings.item_embedding) as x with offset as pos
+      inner join unnest(user_embeddings.user_embedding) as y with offset as pos2
+      on pos = pos2 -- noqa: RF01, RF02
+    ) as item_user_distance
+
 
 from home_interactions
 left join offer_features on home_interactions.offer_id = offer_features.offer_id

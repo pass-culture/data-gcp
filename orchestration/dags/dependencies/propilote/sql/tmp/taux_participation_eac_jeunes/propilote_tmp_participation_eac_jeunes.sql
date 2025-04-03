@@ -3,9 +3,9 @@ with
         select educational_year_beginning_date as last_year_start_date
         from `{{ bigquery_raw_dataset }}.applicative_database_educational_year`
         where
-            educational_year_beginning_date <= date_sub(current_date(), interval 1 year)
+            educational_year_beginning_date <= date_sub(date("{{ ds }}"), interval 1 year)
             and educational_year_expiration_date
-            > date_sub(current_date(), interval 1 year)
+            > date_sub(date("{{ ds }}"), interval 1 year)
     ),
     last_day as (
         select
@@ -14,7 +14,7 @@ with
             max(cast(adage_id as int)) as last_adage_id
         from `{{ bigquery_analytics_dataset }}.adage_involved_student`
         where
-            date <= current_date
+            date <= date("{{ ds }}")
             and date > (select last_year_start_date from last_year_beginning_date)
         group by 1
     )

@@ -3,7 +3,7 @@ with
         select month as month
         from
             unnest(
-                generate_date_array('2020-01-01', current_date(), interval 1 month)
+                generate_date_array('2020-01-01', date("{{ ds }}"), interval 1 month)
             ) month
     )
 

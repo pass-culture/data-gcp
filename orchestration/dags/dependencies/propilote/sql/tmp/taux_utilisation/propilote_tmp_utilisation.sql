@@ -4,7 +4,7 @@ with
         select month as month
         from
             unnest(
-                generate_date_array('2020-01-01', current_date(), interval 1 month)
+                generate_date_array('2020-01-01', date("{{ ds }}"), interval 1 month)
             ) month
     ),
 
@@ -57,5 +57,5 @@ left join
     infos_users
     on dates.month >= infos_users.date_deposit  -- ici pour prendre uniquement les bénéficiaires actuels
     and dates.month <= infos_users.date_expiration  -- idem
-    and date_diff(current_date, date_deposit, day) >= {{ params.months_threshold }}  -- Base = uniquement les jeunes inscrits depuis +3 month
+    and date_diff(date("{{ ds }}"), date_deposit, day) >= {{ params.months_threshold }}  -- Base = uniquement les jeunes inscrits depuis +3 month
 group by 1, 2, 3, 4, 5

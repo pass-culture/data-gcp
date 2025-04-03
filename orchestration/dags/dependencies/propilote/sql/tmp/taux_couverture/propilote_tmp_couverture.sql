@@ -14,7 +14,7 @@ with
             `{{ bigquery_analytics_dataset }}.native_monthly_beneficiary_coverage` as up
         where
             population_decimal_age = "19"
-            and population_snapshot_month <= date_trunc(current_date, month)
+            and population_snapshot_month <= date_trunc(date("{{ ds }}"), month)
         group by 1, 2, 3, 4, 5
     ),
 
@@ -33,7 +33,7 @@ with
             `{{ bigquery_analytics_dataset }}.native_monthly_beneficiary_coverage` as up
         where
             population_decimal_age = "18"
-            and population_snapshot_month <= date_trunc(current_date, month)
+            and population_snapshot_month <= date_trunc(date("{{ ds }}"), month)
         group by 1, 2, 3, 4, 5
     ),
 
@@ -52,7 +52,7 @@ with
             `{{ bigquery_analytics_dataset }}.native_monthly_beneficiary_coverage` as up
         where
             population_decimal_age = "17"
-            and population_snapshot_month <= date_trunc(current_date, month)
+            and population_snapshot_month <= date_trunc(date("{{ ds }}"), month)
         group by 1, 2, 3, 4, 5
     ),
 
@@ -71,7 +71,7 @@ with
             `{{ bigquery_analytics_dataset }}.native_monthly_beneficiary_coverage` as up
         where
             population_decimal_age = "16"
-            and population_snapshot_month <= date_trunc(current_date, month)
+            and population_snapshot_month <= date_trunc(date("{{ ds }}"), month)
         group by 1, 2, 3, 4, 5
     )
 

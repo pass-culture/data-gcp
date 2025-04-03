@@ -29,7 +29,7 @@
         from
             `{{ bigquery_tmp_dataset }}.{{ yyyymmdd(ds) }}_{{ kpi_details.table_name }}_{{ granularity }}`
         where
-            date_trunc(date_sub(current_date, interval 1 year), month)
+            date_trunc(date_sub(date("{{ ds }}"), interval 1 year), month)
             >= date_trunc(safe_cast(month as date), month)
         {% if not loop.last %}
             union all

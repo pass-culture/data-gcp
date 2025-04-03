@@ -3,7 +3,8 @@ with
         select educational_year_beginning_date as last_year_start_date
         from `{{ bigquery_raw_dataset }}.applicative_database_educational_year`
         where
-            educational_year_beginning_date <= date_sub(date("{{ ds }}"), interval 1 year)
+            educational_year_beginning_date
+            <= date_sub(date("{{ ds }}"), interval 1 year)
             and educational_year_expiration_date
             > date_sub(date("{{ ds }}"), interval 1 year)
     ),

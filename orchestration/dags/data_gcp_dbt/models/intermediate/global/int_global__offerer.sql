@@ -224,7 +224,9 @@ select
     first_dms_adage_accepted.processed_at as dms_accepted_at,
     siren_reference_adage.siren is not null as is_reference_adage,
     case
-        when siren_reference_adage.siren is null then false else siren_reference_adage.siren_synchro_adage
+        when siren_reference_adage.siren is null
+        then false
+        else siren_reference_adage.siren_synchro_adage
     end as is_synchro_adage,
     tagged_partners.partner_type,
     rp.total_reimbursement_points
@@ -253,5 +255,7 @@ left join tagged_partners on ofr.offerer_id = tagged_partners.offerer_id
 left join reimbursement_points as rp on ofr.offerer_id = rp.offerer_id
 left join bookable_offer_history as boh on ofr.offerer_id = boh.offerer_id
 qualify
-    row_number() over (partition by ofr.offerer_siren order by siren_data.update_date desc)
+    row_number() over (
+        partition by ofr.offerer_siren order by siren_data.update_date desc
+    )
     = 1

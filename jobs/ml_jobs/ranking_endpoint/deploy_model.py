@@ -208,20 +208,30 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
 
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
         pipeline_classifier.set_pipeline()
+        print("Training model...")
         pipeline_classifier.train(train_data, class_weight=class_weight)
+        print("Training finished")
 
+        print("Evaluating model...")
         train_predictions = train_data.pipe(pipeline_classifier.predict_classifier)
         test_predictions = test_data.pipe(pipeline_classifier.predict_classifier)
+        print("Evaluation finished")
 
         # Save Data
+        print("Plotting Figures...")
         plot_figures(
             train_data=train_predictions,
             test_data=test_predictions,
             pipeline=pipeline_classifier,
             figure_folder=figure_folder,
         )
+        print("Figures plotted")
+
+        print("Saving Data...")
         train_predictions.to_csv(f"{figure_folder}/train_predictions.csv", index=False)
         test_predictions.to_csv(f"{figure_folder}/test_predictions.csv", index=False)
+        print("Data saved")
+
         mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
         mlflow.log_param("seed", seed)
 

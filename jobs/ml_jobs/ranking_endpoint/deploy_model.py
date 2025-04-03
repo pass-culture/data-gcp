@@ -188,9 +188,21 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     )
 
     seed = secrets.randbelow(1000)
-    train_data, test_data = train_test_split(
-        preprocessed_data, test_size=TEST_SIZE, random_state=seed
+
+    # Split based on unique_session_id
+
+    # Filter data by session IDs
+    unique_session_ids = preprocessed_data["unique_session_id"].unique()
+    train_session_ids, test_session_ids = train_test_split(
+        unique_session_ids, test_size=TEST_SIZE, random_state=seed
     )
+    train_data = preprocessed_data[
+        preprocessed_data["unique_session_id"].isin(train_session_ids)
+    ]
+    test_data = preprocessed_data[
+        preprocessed_data["unique_session_id"].isin(test_session_ids)
+    ]
+
     class_frequency = train_data.target_class.value_counts(normalize=True).to_dict()
     class_weight = {k: 1 / v for k, v in class_frequency.items()}
 

@@ -118,7 +118,7 @@ select
     offer.venue_name,
     offer.venue_type_label,
     offer.partner_id,
-    offer.offerer_id,
+    offer.venue_managing_offerer_id as offerer_id,
     user.user_region_name,
     user.user_department_code,
     user.user_activity,

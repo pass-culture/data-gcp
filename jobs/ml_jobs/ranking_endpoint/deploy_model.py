@@ -1,9 +1,12 @@
+import glob
+import json
 import os
 import secrets
 import shutil
 from datetime import datetime
 
 import mlflow
+import numpy as np
 import pandas as pd
 import typer
 from sklearn.model_selection import train_test_split
@@ -14,6 +17,7 @@ from figure import (
     plot_cm_multiclass,
     plot_features_importance,
 )
+from preprocessing import map_features_columns
 from utils import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -43,6 +47,10 @@ PROBA_BOOKING_THRESHOLD = 0.5
 
 
 def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
+    return pd.concat(
+        [pd.read_parquet(f) for f in glob.glob("data/data*.parquet")], ignore_index=True
+    )
+
     sql = f"""
     WITH seen AS (
       SELECT
@@ -126,41 +134,54 @@ def plot_figures(
 
 def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
     return (
-        data.astype(
-            {
-                "consult": "float",
-                "booking": "float",
-            }
-        )
-        .fillna({"consult": 0, "booking": 0})
-        .rename(
-            columns={
-                "consult": ClassMapping.consulted.name,
-                "booking": ClassMapping.booked.name,
-            }
-        )
-        .assign(
-            status=lambda df: pd.Series([ClassMapping.seen.name] * len(df))
-            .where(
-                df[ClassMapping.consulted.name] != 1.0,
-                other=ClassMapping.consulted.name,
-            )
-            .where(df[ClassMapping.booked.name] != 1.0, other=ClassMapping.booked.name),
-            target_class=lambda df: df["status"]
-            .map(
+        (
+            data.astype(
                 {
-                    class_mapping.name: class_mapping.value
-                    for class_mapping in ClassMapping
+                    "is_consulted": "float",
+                    "is_booked": "float",
                 }
             )
-            .astype(int),
+            .fillna({"is_consulted": 0, "is_booked": 0})
+            .rename(
+                columns={
+                    "is_consulted": ClassMapping.consulted.name,
+                    "is_booked": ClassMapping.booked.name,
+                }
+            )
+            .assign(
+                status=lambda df: pd.Series([ClassMapping.seen.name] * len(df))
+                .where(
+                    df[ClassMapping.consulted.name] != 1.0,
+                    other=ClassMapping.consulted.name,
+                )
+                .where(
+                    df[ClassMapping.booked.name] != 1.0, other=ClassMapping.booked.name
+                ),
+                target_class=lambda df: df["status"]
+                .map(
+                    {
+                        class_mapping.name: class_mapping.value
+                        for class_mapping in ClassMapping
+                    }
+                )
+                .astype(int),
+            )
         )
-    ).drop_duplicates()
+        .drop_duplicates()
+        .assign(
+            user_embedding=lambda df: df.user_embedding_json.apply(
+                lambda x: np.array(json.loads(x))
+            ),
+            item_embedding=lambda df: df.item_embedding_json.apply(
+                lambda x: np.array(json.loads(x))
+            ),
+        )
+    )
 
 
 def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     # Load and preprocess the data
-    data = load_data(dataset_name, table_name)
+    data = load_data(dataset_name, table_name).pipe(map_features_columns)
     preprocessed_data = data.pipe(
         preprocess_data,
     )

@@ -10,7 +10,13 @@ USER root
 
 # Install system deps & GCloud SDK
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git curl ca-certificates && \
+    apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    ca-certificates \
+    build-essential \
+    default-libmysqlclient-dev \
+    pkg-config && \
     curl -LO https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} && \
     tar xf ${GCLOUD_VERSION} -C ${AIRFLOW_USER_HOME} && \
     rm -rf /var/lib/apt/lists/* ${GCLOUD_VERSION}

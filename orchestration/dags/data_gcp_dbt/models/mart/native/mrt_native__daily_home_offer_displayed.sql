@@ -32,7 +32,7 @@ with
         group by event_date, offer_id, module_id, entry_id, displayed_position
     ),
 
-displays_by_position_bucket as (
+    displays_by_position_bucket as (
         select
             event_date,
             offer_id,
@@ -85,7 +85,7 @@ displays_by_position_bucket as (
         group by event_date, offer_id, module_id, entry_id
     ),
 
-consultations_by_position_bucket as (
+    consultations_by_position_bucket as (
         select
             event_date,
             offer_id,

@@ -22,14 +22,6 @@ from airflow.models import Param
 DAG_NAME = "bigquery_export_old_partitions"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/bigquery_archive_partition"
 TABLES = {
-    "past_offer_context": {
-        "dataset_id": f"raw_{ENV_SHORT_NAME}",
-        "partition_column": "import_date",
-        "look_back_months": json.loads('{"dev": 1, "stg": 1, "prod": 3}')[
-            ENV_SHORT_NAME
-        ],
-        "folder": "recommendation",
-    },
     "firebase_events": {
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "event_date",

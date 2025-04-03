@@ -18,29 +18,33 @@ class ClassMapping(Enum):
     booked = 2
 
 
-NUMERIC_FEATURES = [
-    "user_bookings_count",
-    "user_clicks_count",
-    "user_favorites_count",
-    "user_deposit_remaining_credit",
-    "user_is_geolocated",
-    "user_iris_x",
-    "user_iris_y",
-    "offer_user_distance",
-    "offer_booking_number_last_7_days",
-    "offer_booking_number_last_14_days",
-    "offer_booking_number_last_28_days",
-    "offer_semantic_emb_mean",
-    "offer_item_score",
-    "offer_item_rank",
-    "offer_is_geolocated",
-    "offer_stock_price",
-    "offer_creation_days",
-    "offer_stock_beginning_days",
-    "day_of_the_week",
-    "hour_of_the_day",
-    "item_user_similarity",
-]
+NUMERIC_FEATURES = (
+    [
+        "user_bookings_count",
+        "user_clicks_count",
+        "user_favorites_count",
+        "user_deposit_remaining_credit",
+        "user_is_geolocated",
+        "user_iris_x",
+        "user_iris_y",
+        "offer_user_distance",
+        "offer_booking_number_last_7_days",
+        "offer_booking_number_last_14_days",
+        "offer_booking_number_last_28_days",
+        "offer_semantic_emb_mean",
+        "offer_item_score",
+        "offer_item_rank",
+        "offer_is_geolocated",
+        "offer_stock_price",
+        "offer_creation_days",
+        "offer_stock_beginning_days",
+        "day_of_the_week",
+        "hour_of_the_day",
+        "item_user_similarity",
+    ]
+    + [f"user_emb_{i}" for i in range(64)]
+    + [f"item_emb_{i}" for i in range(64)]
+)
 
 CATEGORICAL_FEATURES = [
     "context",

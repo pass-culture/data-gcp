@@ -102,7 +102,8 @@ def plot_figures(
     shutil.rmtree(figure_folder, ignore_errors=True)
     os.makedirs(figure_folder)
 
-    for prefix, df in [("test_", test_data), ("train_", train_data)]:
+    for prefix, df in [("train_", train_data), ("test_", test_data)]:
+        print(f"Plotting figures for {prefix} data")
         plot_cm(
             y=df[ClassMapping.consulted.name],
             y_pred=df[f"prob_class_{ClassMapping.consulted.name}"],

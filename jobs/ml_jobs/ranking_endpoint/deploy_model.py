@@ -1,10 +1,12 @@
 import glob
+import json
 import os
 import secrets
 import shutil
 from datetime import datetime
 
 import mlflow
+import numpy as np
 import pandas as pd
 import typer
 from sklearn.model_selection import train_test_split
@@ -137,7 +139,12 @@ def plot_figures(
 
 
 def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
-    return (
+    # Add features horizontally
+    user_embed_dim = 64
+    item_embed_dim = 64
+    missing_array = json.dumps(np.array([0] * user_embed_dim).tolist())
+
+    df = (
         (
             data.loc[
                 :,
@@ -145,6 +152,7 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
                     ["is_seen", "is_consulted", "is_booked", "unique_session_id"]
                     + NUMERIC_FEATURES
                     + CATEGORICAL_FEATURES
+                    + ["user_embedding_json", "item_embedding_json"]
                 ),
             ]
             .astype(
@@ -178,16 +186,59 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
                 )
                 .astype(int),
             )
-        ).drop_duplicates()
-        # .assign(
-        #     user_embedding=lambda df: df.user_embedding_json.apply(
-        #         lambda x: np.array(json.loads(x))
-        #     ),
-        #     item_embedding=lambda df: df.item_embedding_json.apply(
-        #         lambda x: np.array(json.loads(x))
-        #     ),
-        # )
+        )
+        .drop_duplicates()
+        .assign(
+            user_embedding=lambda df: df.user_embedding_json.fillna(missing_array)
+            .replace("null", missing_array)
+            .apply(lambda x: np.array(json.loads(x))),
+            item_embedding=lambda df: df.item_embedding_json.fillna(missing_array)
+            .replace("null", missing_array)
+            .apply(lambda x: np.array(json.loads(x))),
+        )
     )
+
+    print(df.head())
+
+    # Stack arrays into 2D NumPy arrays
+    user_embeddings_array = np.stack(df["user_embedding"].values)
+    item_embeddings_array = np.stack(df["item_embedding"].values)
+
+    # Convert to DataFrames with proper indices and column names
+    user_embedding_features = pd.DataFrame(
+        user_embeddings_array,
+        index=df.index,
+        columns=[f"user_emb_{i}" for i in range(user_embed_dim)],
+    )
+    item_embedding_features = pd.DataFrame(
+        item_embeddings_array,
+        index=df.index,
+        columns=[f"item_emb_{i}" for i in range(item_embed_dim)],
+    )
+
+    # --- Optional but Recommended: Add Dot Product ---
+    # This is faster using the NumPy arrays directly
+    dot_product = np.sum(user_embeddings_array * item_embeddings_array, axis=1)
+    df["embedding_dot_product"] = dot_product
+    # ---------------------------------------------
+
+    # Concatenate as before
+    original_features = df.drop(
+        columns=[
+            "user_embedding_json",  # if you had it
+            "item_embedding_json",  # if you had it
+            "user_embedding",
+            "item_embedding",
+        ]
+    )
+
+    df_final_features = pd.concat(
+        [original_features, user_embedding_features, item_embedding_features], axis=1
+    )
+
+    print(df_final_features.head())
+    print(df_final_features.columns)
+    return df_final_features
 
 
 def train_pipeline(dataset_name, table_name, experiment_name, run_name):

@@ -60,7 +60,7 @@ with
             o.offerer_creation_date as partner_creation_date,
             case
                 when
-                    date_trunc(offerer_creation_date, year)
+                    date_trunc(o.offerer_creation_date, year)
                     <= date_trunc(date_sub(date("{{ ds() }}"), interval 1 year), year)
                 then true
             end as was_registered_last_year,
@@ -127,7 +127,7 @@ with
             = coalesce(o.partner_type, top_venue_per_offerer.partner_type)
         where
             not o.is_local_authority
-            and v.offerer_id is null
+            and v.venue_managing_offerer_id is null
             and o.offerer_validation_status = "VALIDATED"
             and o.offerer_is_active
     )
@@ -139,10 +139,10 @@ union all
         v.venue_id,
         v.venue_managing_offerer_id as offerer_id,
         v.partner_id,
-        venue_creation_date as partner_creation_date,
+        v.venue_creation_date as partner_creation_date,
         case
             when
-                date_trunc(venue_creation_date, year)
+                date_trunc(v.venue_creation_date, year)
                 <= date_trunc(date_sub(date("{{ ds() }}"), interval 1 year), year)
             then true
             else false
@@ -192,5 +192,5 @@ union all
         {{ source("seed", "agg_partner_cultural_sector") }}
         on v.venue_type_label = agg_partner_cultural_sector.partner_type
     left join main_venue_tag_per_venue as vt on v.venue_id = vt.venue_id
-    where venue_is_permanent
+    where v.venue_is_permanent
 )

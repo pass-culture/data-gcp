@@ -53,7 +53,8 @@ PROBA_BOOKING_THRESHOLD = 0.5
 
 def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
     return pd.concat(
-        [pd.read_parquet(f) for f in glob.glob("data/data*.parquet")], ignore_index=True
+        [pd.read_parquet(f) for f in glob.glob("data_all/data*.parquet")],
+        ignore_index=True,
     )
 
     sql = f"""

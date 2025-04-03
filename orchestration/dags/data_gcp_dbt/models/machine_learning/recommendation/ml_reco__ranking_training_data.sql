@@ -135,18 +135,20 @@ select
     user_features.user_diversification_count,
     user_features.user_deposit_amount,
     user_features.user_amount_spent,
-    TO_JSON_STRING(item_embeddings.item_embedding) as item_embedding_json,
-    TO_JSON_STRING(user_embeddings.user_embedding) as user_embedding_json,
+    to_json_string(item_embeddings.item_embedding) as item_embedding_json,
+    to_json_string(user_embeddings.user_embedding) as user_embedding_json,
     (
-      select SUM(x * y) as dot_product
-      from UNNEST(item_embeddings.item_embedding) as x with offset as pos
-      inner join UNNEST(user_embeddings.user_embedding) as y with offset as pos2
-      on pos = pos2 -- noqa: RF01, RF02
+        select sum(x * y) as dot_product
+        from unnest(item_embeddings.item_embedding) as x
+        with
+        offset as pos
+        inner join unnest(user_embeddings.user_embedding) as y
+        with
+        offset as pos2 on pos = pos2  -- noqa: RF01, RF02
     ) as item_user_similarity,
-    ST_DISTANCE(
+    st_distance(
         offer_features.offer_centroid, user_features.user_centroid
     ) as offer_user_distance
-
 
 from home_interactions
 left join offer_features on home_interactions.offer_id = offer_features.offer_id

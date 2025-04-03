@@ -1,17 +1,20 @@
 import glob
-import json
 import os
 import secrets
 import shutil
 from datetime import datetime
 
 import mlflow
-import numpy as np
 import pandas as pd
 import typer
 from sklearn.model_selection import train_test_split
 
-from app.model import ClassMapping, TrainPipeline
+from app.model import (
+    CATEGORICAL_FEATURES,
+    NUMERIC_FEATURES,
+    ClassMapping,
+    TrainPipeline,
+)
 from figure import (
     plot_cm,
     plot_cm_multiclass,
@@ -136,7 +139,15 @@ def plot_figures(
 def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
     return (
         (
-            data.astype(
+            data.loc[
+                :,
+                lambda df: df.columns.isin(
+                    ["is_seen", "is_consulted", "is_booked", "unique_session_id"]
+                    + NUMERIC_FEATURES
+                    + CATEGORICAL_FEATURES
+                ),
+            ]
+            .astype(
                 {
                     "is_consulted": "float",
                     "is_booked": "float",
@@ -167,16 +178,15 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
                 )
                 .astype(int),
             )
-        )
-        .drop_duplicates()
-        .assign(
-            user_embedding=lambda df: df.user_embedding_json.apply(
-                lambda x: np.array(json.loads(x))
-            ),
-            item_embedding=lambda df: df.item_embedding_json.apply(
-                lambda x: np.array(json.loads(x))
-            ),
-        )
+        ).drop_duplicates()
+        # .assign(
+        #     user_embedding=lambda df: df.user_embedding_json.apply(
+        #         lambda x: np.array(json.loads(x))
+        #     ),
+        #     item_embedding=lambda df: df.item_embedding_json.apply(
+        #         lambda x: np.array(json.loads(x))
+        #     ),
+        # )
     )
 
 

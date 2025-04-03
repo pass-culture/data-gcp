@@ -225,8 +225,8 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
         mlflow.log_param("seed", seed)
 
-    # retrain on whole
-    pipeline_classifier.train(preprocessed_data, class_weight=class_weight)
+    # # retrain on whole
+    # pipeline_classifier.train(preprocessed_data, class_weight=class_weight)
 
     # save
     pipeline_classifier.save(model_name="classifier")

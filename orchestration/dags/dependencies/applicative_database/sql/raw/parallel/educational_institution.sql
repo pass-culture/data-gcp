@@ -8,4 +8,7 @@ SELECT
         WHEN ("postalCode" LIKE \'97%\' OR "postalCode" LIKE \'98%\') THEN SUBSTRING("postalCode",1,3)
         ELSE SUBSTRING("postalCode",1,2) END AS institution_department_code
     , "institutionType" AS institution_type
-FROM educational_institution
+    , "ruralLevel" AS institution_density_label
+    , "latitude" AS institution_latitude
+    , "longitude" AS institution_longitude
+FROM public.educational_institution

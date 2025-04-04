@@ -24,8 +24,8 @@ models:
         description: "{{ doc('column__module_type')}}"
       - name: module_name
         description: "{{ doc('column__module_name')}}"
-      # - name: offer_subcategory_id
-      #   decription: "{{ doc('column__offer_subcategory_id')}}"
+      - name: offer_subcategory_id
+        description: "{{ doc('column__offer_subcategory_id')}}"
       - name: offerer_id
         description: "{{ doc('column__offerer_id')}}"
       - name: venue_type_label

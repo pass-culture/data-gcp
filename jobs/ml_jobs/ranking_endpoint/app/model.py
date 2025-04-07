@@ -40,16 +40,14 @@ NUMERIC_FEATURES = (
         "offer_stock_beginning_days",
         "day_of_the_week",
         "hour_of_the_day",
-        "item_user_similarity",
         "offer_centroid_x",
         "offer_centroid_y",
-        "user_diversification_count",
     ]
     + [f"user_emb_{i}" for i in range(64)]
     + [f"item_emb_{i}" for i in range(64)]
 )
 
-CATEGORICAL_FEATURES = ["context", "offer_subcategory_id", "module_name"]
+CATEGORICAL_FEATURES = ["context", "offer_subcategory_id"]
 
 DEFAULT_CATEGORICAL = "UNKNOWN"
 DEFAULT_NUMERICAL = -1
@@ -180,10 +178,17 @@ class TrainPipeline:
         self.model.save_model(f"./metadata/model_{model_name}.txt")
 
     def train(self, df: pd.DataFrame, class_weight: Optional[dict] = None):
-        X = self.fit_transform(df)
-        y = df[self.target]
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, train_size=self.train_size, random_state=42
+        unique_session_ids = df["unique_session_id"].unique()
+        train_session_ids, test_session_ids = train_test_split(
+            unique_session_ids, test_size=self.train_size, random_state=42
+        )
+        train_data = df[df["unique_session_id"].isin(train_session_ids)]
+        test_data = df[df["unique_session_id"].isin(test_session_ids)]
+
+        X_train, X_test = self.fit_transform(train_data), self.fit_transform(test_data)
+        y_train, y_test = (
+            train_data[self.target].to_numpy(),
+            test_data[self.target].to_numpy(),
         )
 
         train_data = lgb.Dataset(

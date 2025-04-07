@@ -12,6 +12,7 @@ from sklearn.model_selection import train_test_split
 
 from app.model import (
     CATEGORICAL_FEATURES,
+    DEFAULT_NUMERICAL,
     NUMERIC_FEATURES,
     ClassMapping,
     TrainPipeline,
@@ -38,14 +39,14 @@ CLASSIFIER_MODEL_PARAMS = {
     "objective": "multiclass",
     "num_class": 3,
     "metric": "multi_logloss",
-    "learning_rate": 0.05,
+    "learning_rate": 0.03,
     "feature_fraction": 0.9,
     "bagging_fraction": 0.9,
     "bagging_freq": 5,
-    "lambda_l2": 0.1,
-    "lambda_l1": 0.1,
+    "lambda_l2": 1,
+    "lambda_l1": 1,
     "verbose": -1,
-    "num_leaves": 31,
+    "num_leaves": 10,
 }
 PROBA_CONSULT_THRESHOLD = 0.5
 PROBA_BOOKING_THRESHOLD = 0.5
@@ -107,25 +108,20 @@ def plot_figures(
         print(f"Plotting figures for {prefix} data")
         plot_cm(
             y=df[ClassMapping.consulted.name],
-            y_pred=df[f"prob_class_{ClassMapping.consulted.name}"],
-            filename=f"{figure_folder}/{prefix}cm_{ClassMapping.consulted.name}_proba_{PROBA_CONSULT_THRESHOLD:.3f}.pdf",
+            y_pred=df["predicted_class"] == ClassMapping.consulted.value,
+            filename=f"{figure_folder}/{prefix}cm_{ClassMapping.consulted.name}.pdf",
             perc=True,
-            proba=PROBA_CONSULT_THRESHOLD,
         )
         plot_cm(
             y=df[ClassMapping.booked.name],
-            y_pred=df[f"prob_class_{ClassMapping.booked.name}"],
-            filename=f"{figure_folder}/{prefix}cm_{ClassMapping.booked.name}_proba_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
+            y_pred=df["predicted_class"] == ClassMapping.booked.value,
+            filename=f"{figure_folder}/{prefix}cm_{ClassMapping.booked.name}.pdf",
             perc=True,
-            proba=PROBA_BOOKING_THRESHOLD,
         )
         plot_cm_multiclass(
             y_true=df["target_class"],
-            y_pred_consulted=df[f"prob_class_{ClassMapping.consulted.name}"],
-            y_pred_booked=df[f"prob_class_{ClassMapping.booked.name}"],
-            perc_consulted=PROBA_CONSULT_THRESHOLD,
-            perc_booked=PROBA_BOOKING_THRESHOLD,
-            filename=f"{figure_folder}/{prefix}cm_multiclass_{ClassMapping.consulted.name}_{PROBA_CONSULT_THRESHOLD:.3f}_{ClassMapping.booked.name}_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
+            y_pred=df["predicted_class"],
+            filename=f"{figure_folder}/{prefix}cm_multiclass.pdf",
             class_names=[class_mapping.name for class_mapping in ClassMapping],
         )
 
@@ -138,7 +134,7 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
     # Add features horizontally
     user_embed_dim = 64
     item_embed_dim = 64
-    missing_array = json.dumps(np.array([0] * user_embed_dim).tolist())
+    missing_array = json.dumps(np.array([DEFAULT_NUMERICAL] * user_embed_dim).tolist())
 
     df = (
         data.loc[
@@ -181,8 +177,6 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
         )
     ).drop_duplicates()
 
-    print(df.head())
-
     # Stack arrays into 2D NumPy arrays
     df = df.assign(
         user_embedding=lambda df: df.user_embedding_json.fillna(missing_array)
@@ -207,24 +201,20 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
         columns=[f"item_emb_{i}" for i in range(item_embed_dim)],
     )
 
-    # --- Optional but Recommended: Add Dot Product ---
-    # This is faster using the NumPy arrays directly
-    dot_product = np.sum(user_embeddings_array * item_embeddings_array, axis=1)
-    df["embedding_dot_product"] = dot_product
-    # ---------------------------------------------
-
-    # Concatenate as before
-    original_features = df.drop(
-        columns=[
-            "user_embedding_json",  # if you had it
-            "item_embedding_json",  # if you had it
-            "user_embedding",
-            "item_embedding",
-        ]
-    )
-
     df_final_features = pd.concat(
-        [original_features, user_embedding_features, item_embedding_features], axis=1
+        [
+            df.drop(
+                columns=[
+                    "user_embedding_json",
+                    "item_embedding_json",
+                    "user_embedding",
+                    "item_embedding",
+                ]
+            ),
+            user_embedding_features,
+            item_embedding_features,
+        ],
+        axis=1,
     )
 
     print(df_final_features.head())
@@ -238,12 +228,9 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     preprocessed_data = data.pipe(
         preprocess_data,
     )
-
     seed = secrets.randbelow(1000)
 
     # Split based on unique_session_id
-
-    # Filter data by session IDs
     unique_session_ids = preprocessed_data["unique_session_id"].unique()
     train_session_ids, test_session_ids = train_test_split(
         unique_session_ids, test_size=TEST_SIZE, random_state=seed
@@ -255,6 +242,7 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         preprocessed_data["unique_session_id"].isin(test_session_ids)
     ]
 
+    # Compute class weights
     class_frequency = train_data.target_class.value_counts(normalize=True).to_dict()
     class_weight = {k: 1 / v for k, v in class_frequency.items()}
 

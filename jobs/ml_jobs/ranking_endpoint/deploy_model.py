@@ -113,24 +113,19 @@ def plot_figures(
         print(f"Plotting figures for {prefix} data")
         plot_cm(
             y=df[ClassMapping.consulted.name],
-            y_pred=df[f"prob_class_{ClassMapping.consulted.name}"],
-            filename=f"{figure_folder}/{prefix}cm_{ClassMapping.consulted.name}_proba_{PROBA_CONSULT_THRESHOLD:.3f}.pdf",
+            y_pred=df["predicted_class"] == ClassMapping.consulted.value,
+            filename=f"{figure_folder}/{prefix}cm_{ClassMapping.consulted.name}.pdf",
             perc=True,
-            proba=PROBA_CONSULT_THRESHOLD,
         )
         plot_cm(
             y=df[ClassMapping.booked.name],
-            y_pred=df[f"prob_class_{ClassMapping.booked.name}"],
-            filename=f"{figure_folder}/{prefix}cm_{ClassMapping.booked.name}_proba_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
+            y_pred=df["predicted_class"] == ClassMapping.booked.value,
+            filename=f"{figure_folder}/{prefix}cm_{ClassMapping.booked.name}.pdf",
             perc=True,
-            proba=PROBA_BOOKING_THRESHOLD,
         )
         plot_cm_multiclass(
             y_true=df["target_class"],
-            y_pred_consulted=df[f"prob_class_{ClassMapping.consulted.name}"],
-            y_pred_booked=df[f"prob_class_{ClassMapping.booked.name}"],
-            perc_consulted=PROBA_CONSULT_THRESHOLD,
-            perc_booked=PROBA_BOOKING_THRESHOLD,
+            y_pred_consulted=df["predicted_class"],
             filename=f"{figure_folder}/{prefix}cm_multiclass_{ClassMapping.consulted.name}_{PROBA_CONSULT_THRESHOLD:.3f}_{ClassMapping.booked.name}_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
             class_names=[class_mapping.name for class_mapping in ClassMapping],
         )
@@ -187,7 +182,6 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
         )
     ).drop_duplicates()
 
-    print(df.head())
     return df
 
     # Stack arrays into 2D NumPy arrays

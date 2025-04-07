@@ -29,9 +29,7 @@ with
             max(last_individual_booking_date) as last_individual_booking_date,
             sum(stock_quantity) as total_stock_quantity,
             sum(total_first_bookings) as total_first_bookings,
-            max(
-                case when stock_rk = 1 then stock_price end
-            ) as last_stock_price,
+            max(case when stock_rk = 1 then stock_price end) as last_stock_price,
             min(stock_creation_date) as first_stock_creation_date
         from {{ ref("int_applicative__stock") }}
         group by offer_id
@@ -113,7 +111,12 @@ select
         then o.showsubtype
     end as offer_sub_type_id,
     case
-        when (stocks_grouped_by_offers.is_bookable and o.offer_is_active and o.offer_validation = "APPROVED")
+        when
+            (
+                stocks_grouped_by_offers.is_bookable
+                and o.offer_is_active
+                and o.offer_validation = "APPROVED"
+            )
         then true
         else false
     end as offer_is_bookable,
@@ -195,7 +198,9 @@ select
         when
             is_headlined
             and (
-                stocks_grouped_by_offers.is_bookable and o.offer_is_active and o.offer_validation = "APPROVED"
+                stocks_grouped_by_offers.is_bookable
+                and o.offer_is_active
+                and o.offer_validation = "APPROVED"
             )
         then true
         else false

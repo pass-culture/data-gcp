@@ -43,10 +43,10 @@ CLASSIFIER_MODEL_PARAMS = {
     "feature_fraction": 0.9,
     "bagging_fraction": 0.9,
     "bagging_freq": 5,
-    "lambda_l2": 0.1,
-    "lambda_l1": 0.1,
+    "lambda_l2": 1,
+    "lambda_l1": 1,
     "verbose": -1,
-    "num_leaves": 41,
+    "num_leaves": 31,
 }
 PROBA_CONSULT_THRESHOLD = 0.5
 PROBA_BOOKING_THRESHOLD = 0.5

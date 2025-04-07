@@ -41,15 +41,15 @@ NUMERIC_FEATURES = (
         "day_of_the_week",
         "hour_of_the_day",
         "item_user_similarity",
+        "offer_centroid_x",
+        "offer_centroid_y",
+        "user_diversification_count",
     ]
     + [f"user_emb_{i}" for i in range(64)]
     + [f"item_emb_{i}" for i in range(64)]
 )
 
-CATEGORICAL_FEATURES = [
-    "context",
-    "offer_subcategory_id",
-]
+CATEGORICAL_FEATURES = ["context", "offer_subcategory_id", "module_name"]
 
 DEFAULT_CATEGORICAL = "UNKNOWN"
 DEFAULT_NUMERICAL = -1

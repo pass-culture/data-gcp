@@ -39,7 +39,7 @@ CLASSIFIER_MODEL_PARAMS = {
     "objective": "multiclass",
     "num_class": 3,
     "metric": "multi_logloss",
-    "learning_rate": 0.01,
+    "learning_rate": 0.05,
     "feature_fraction": 0.9,
     "bagging_fraction": 0.9,
     "bagging_freq": 5,

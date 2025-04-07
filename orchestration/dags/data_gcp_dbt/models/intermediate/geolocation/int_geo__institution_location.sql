@@ -5,7 +5,7 @@ with
     institution_epci as (
         {{
             generate_seed_geolocation_query(
-                source_table="int_seed__institution_metadata",
+                source_table=["raw", "applicative_database_educational_institution"],
                 referential_table="int_seed__intercommunal_public_institution",
                 id_column="institution_id",
                 prefix_name="institution",
@@ -17,7 +17,7 @@ with
     institution_qpv as (
         {{
             generate_seed_geolocation_query(
-                source_table="int_seed__institution_metadata",
+                source_table=["raw", "applicative_database_educational_institution"],
                 referential_table="int_seed__qpv",
                 id_column="institution_id",
                 prefix_name="institution",
@@ -31,7 +31,7 @@ with
     institution_zrr as (
         {{
             generate_seed_geolocation_query(
-                source_table="int_seed__institution_metadata",
+                source_table=["raw", "applicative_database_educational_institution"],
                 referential_table="int_seed__rural_revitalization_zone",
                 id_column="institution_id",
                 prefix_name="institution",
@@ -43,7 +43,7 @@ with
     institution_geo_iris as (
         {{
             generate_seed_geolocation_query(
-                source_table="int_seed__institution_metadata",
+                source_table=["raw", "applicative_database_educational_institution"],
                 referential_table="int_seed__geo_iris",
                 id_column="institution_id",
                 prefix_name="institution",
@@ -70,8 +70,8 @@ select
     institution.institution_city,
     institution.institution_postal_code,
     institution.institution_department_code,
-    metadata.institution_latitude,
-    metadata.institution_longitude,
+    institution.institution_latitude,
+    institution.institution_longitude,
     institution_geo_iris.iris_internal_id as institution_internal_iris_id,
     institution_geo_iris.density_label as institution_density_label,
     institution_geo_iris.density_macro_level as institution_macro_density_label,
@@ -89,16 +89,13 @@ select
     case
         when
             institution_qpv.qpv_code is null
-            and metadata.institution_latitude is null
-            and metadata.institution_longitude is null
+            and institution.institution_latitude is null
+            and institution.institution_longitude is null
         then null
         else institution_qpv.qpv_code is not null
     end as institution_in_qpv
 
 from {{ source("raw", "applicative_database_educational_institution") }} as institution
-left join
-    {{ ref("int_seed__institution_metadata") }} as metadata
-    on institution.institution_id = metadata.institution_id
 left join
     institution_epci on institution.institution_id = institution_epci.institution_id
 left join institution_qpv on institution.institution_id = institution_qpv.institution_id

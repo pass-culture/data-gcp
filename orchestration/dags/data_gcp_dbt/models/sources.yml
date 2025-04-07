@@ -93,7 +93,6 @@ sources:
       - name: applicative_database_trusted_device
       - name: applicative_database_user
       - name: applicative_database_user_offerer
-      - name: applicative_database_user_pro_flags
       - name: applicative_database_user_pro_new_nav_state
       - name: applicative_database_validation_rule_collective_offer_link
       - name: applicative_database_validation_rule_collective_offer_template_link
@@ -172,8 +171,6 @@ sources:
       - name: agg_partner_cultural_sector
       - name: epci
       - name: geo_iris
-      - name: institution_metadata
-      - name: institution_metadata_aggregated_type
       - name: institutional_scholar_level
       - name: iris_france
       - name: iris_nesting

@@ -26,7 +26,7 @@ left join
     {{ ref("mrt_global__venue") }} as gv
     on btp.offerer_id = gv.venue_managing_offerer_id
 left join
-    {{ ref("bookable_venue_history") }} as bvh
+    {{ ref("int_history__bookable_venue") }} as bvh
     on gv.venue_id = bvh.venue_id
     and btp.event_date <= bvh.partition_date
 where

@@ -508,7 +508,7 @@ with
                 else concat("offerer-", bookable_venue_history.offerer_id)
             end as partner_id,
             max(partition_date) last_bookable_date
-        from {{ ref("bookable_venue_history") }} as bookable_venue_history
+        from {{ ref("int_history__bookable_venue") }} as bookable_venue_history
         left join
             {{ ref("mrt_global__venue") }} as mrt_global__venue
             on bookable_venue_history.venue_id = mrt_global__venue.venue_id

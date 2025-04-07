@@ -73,7 +73,7 @@ with
             max(
                 case when total_collective_bookable_offers > 0 then partition_date end
             ) as last_collective_bookable_offer_date
-        from {{ ref("bookable_venue_history") }}
+        from {{ ref("int_history__bookable_venue") }}
         group by offerer_id
     )
 
@@ -154,9 +154,9 @@ select
     ofr.offerer_city,
     region_department.academy_name,
     siren_data.activiteprincipaleunitelegale as legal_unit_business_activity_code,
-    label_unite_legale as legal_unit_business_activity_label,
+    siren_data_labels.label_unite_legale as legal_unit_business_activity_label,
     siren_data.categoriejuridiqueunitelegale as legal_unit_legal_category_code,
-    label_categorie_juridique as legal_unit_legal_category_label,
+    siren_data_labels.label_categorie_juridique as legal_unit_legal_category_label,
     coalesce(
         siren_data.activiteprincipaleunitelegale = '84.11Z', false
     ) as is_local_authority,
@@ -204,8 +204,8 @@ select
     case
         when
             ofr.offerer_id in (
-                select priority_offerer_id
-                from {{ source("seed", "priority_local_authorities") }}
+                select p.priority_offerer_id
+                from {{ source("seed", "priority_local_authorities") }} as p
             )
         then true
         else false
@@ -224,7 +224,9 @@ select
     first_dms_adage_accepted.processed_at as dms_accepted_at,
     siren_reference_adage.siren is not null as is_reference_adage,
     case
-        when siren_reference_adage.siren is null then false else siren_synchro_adage
+        when siren_reference_adage.siren is null
+        then false
+        else siren_reference_adage.siren_synchro_adage
     end as is_synchro_adage,
     tagged_partners.partner_type,
     rp.total_reimbursement_points
@@ -253,5 +255,7 @@ left join tagged_partners on ofr.offerer_id = tagged_partners.offerer_id
 left join reimbursement_points as rp on ofr.offerer_id = rp.offerer_id
 left join bookable_offer_history as boh on ofr.offerer_id = boh.offerer_id
 qualify
-    row_number() over (partition by offerer_siren order by siren_data.update_date desc)
+    row_number() over (
+        partition by ofr.offerer_siren order by siren_data.update_date desc
+    )
     = 1

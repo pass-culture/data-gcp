@@ -120,13 +120,11 @@ select
     offer_features.offer_centroid,
     offer_features.offer_centroid_x,
     offer_features.offer_centroid_y,
-    item_embeddings.item_embedding as item_last_embedding,
     item_features_28_day.booking_number_last_28_days
     as item_booking_number_last_28_days,
     item_features_28_day.booking_number_last_14_days
     as item_booking_number_last_14_days,
     item_features_28_day.booking_number_last_7_days as item_booking_number_last_7_days,
-    user_embeddings.user_embedding as user_last_embedding,
     user_features.user_iris_id,
     user_features.user_centroid,
     user_features.user_centroid_x,
@@ -137,6 +135,17 @@ select
     user_features.user_diversification_count,
     user_features.user_deposit_amount,
     user_features.user_amount_spent,
+    to_json_string(item_embeddings.item_embedding) as item_embedding_json,
+    to_json_string(user_embeddings.user_embedding) as user_embedding_json,
+    (
+        select sum(x * y) as dot_product
+        from unnest(item_embeddings.item_embedding) as x
+        with
+        offset as pos
+        inner join unnest(user_embeddings.user_embedding) as y
+        with
+        offset as pos2 on pos = pos2  -- noqa: RF01, RF02
+    ) as item_user_similarity,
     st_distance(
         offer_features.offer_centroid, user_features.user_centroid
     ) as offer_user_distance

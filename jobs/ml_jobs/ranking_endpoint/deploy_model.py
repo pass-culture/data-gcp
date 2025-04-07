@@ -46,6 +46,7 @@ CLASSIFIER_MODEL_PARAMS = {
     "lambda_l2": 0.1,
     "lambda_l1": 0.1,
     "verbose": -1,
+    "num_leaves": 21,
 }
 PROBA_CONSULT_THRESHOLD = 0.5
 PROBA_BOOKING_THRESHOLD = 0.5

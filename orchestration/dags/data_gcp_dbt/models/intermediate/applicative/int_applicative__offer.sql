@@ -143,7 +143,7 @@ select
     subcategories.search_group_name,
     offer_ean.rayon,
     offer_ean.book_editor,
-    ii.new_item_id as item_id,
+    ii.item_id,
     m.mediation_humanized_id,
     {{ target_schema }}.humanize_id(o.offer_id) as offer_humanized_id,
     (

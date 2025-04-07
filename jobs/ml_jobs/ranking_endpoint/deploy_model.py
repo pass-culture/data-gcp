@@ -147,62 +147,58 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
     missing_array = json.dumps(np.array([0] * user_embed_dim).tolist())
 
     df = (
-        (
-            data.loc[
-                :,
-                lambda df: df.columns.isin(
-                    ["is_seen", "is_consulted", "is_booked", "unique_session_id"]
-                    + NUMERIC_FEATURES
-                    + CATEGORICAL_FEATURES
-                    + ["user_embedding_json", "item_embedding_json"]
-                ),
-            ]
-            .astype(
-                {
-                    "is_consulted": "float",
-                    "is_booked": "float",
-                }
-            )
-            .fillna({"is_consulted": 0, "is_booked": 0})
-            .rename(
-                columns={
-                    "is_consulted": ClassMapping.consulted.name,
-                    "is_booked": ClassMapping.booked.name,
-                }
-            )
-            .assign(
-                status=lambda df: pd.Series([ClassMapping.seen.name] * len(df))
-                .where(
-                    df[ClassMapping.consulted.name] != 1.0,
-                    other=ClassMapping.consulted.name,
-                )
-                .where(
-                    df[ClassMapping.booked.name] != 1.0, other=ClassMapping.booked.name
-                ),
-                target_class=lambda df: df["status"]
-                .map(
-                    {
-                        class_mapping.name: class_mapping.value
-                        for class_mapping in ClassMapping
-                    }
-                )
-                .astype(int),
-            )
+        data.loc[
+            :,
+            lambda df: df.columns.isin(
+                ["is_seen", "is_consulted", "is_booked", "unique_session_id"]
+                + NUMERIC_FEATURES
+                + CATEGORICAL_FEATURES
+                + ["user_embedding_json", "item_embedding_json"]
+            ),
+        ]
+        .astype(
+            {
+                "is_consulted": "float",
+                "is_booked": "float",
+            }
         )
-        .drop_duplicates()
+        .fillna({"is_consulted": 0, "is_booked": 0})
+        .rename(
+            columns={
+                "is_consulted": ClassMapping.consulted.name,
+                "is_booked": ClassMapping.booked.name,
+            }
+        )
         .assign(
-            user_embedding=lambda df: df.user_embedding_json.fillna(missing_array)
-            .replace("null", missing_array)
-            .apply(lambda x: np.array(json.loads(x))),
-            item_embedding=lambda df: df.item_embedding_json.fillna(missing_array)
-            .replace("null", missing_array)
-            .apply(lambda x: np.array(json.loads(x))),
+            status=lambda df: pd.Series([ClassMapping.seen.name] * len(df))
+            .where(
+                df[ClassMapping.consulted.name] != 1.0,
+                other=ClassMapping.consulted.name,
+            )
+            .where(df[ClassMapping.booked.name] != 1.0, other=ClassMapping.booked.name),
+            target_class=lambda df: df["status"]
+            .map(
+                {
+                    class_mapping.name: class_mapping.value
+                    for class_mapping in ClassMapping
+                }
+            )
+            .astype(int),
         )
-    )
+    ).drop_duplicates()
 
     print(df.head())
+    return df
 
     # Stack arrays into 2D NumPy arrays
+    df = df.assign(
+        user_embedding=lambda df: df.user_embedding_json.fillna(missing_array)
+        .replace("null", missing_array)
+        .apply(lambda x: np.array(json.loads(x))),
+        item_embedding=lambda df: df.item_embedding_json.fillna(missing_array)
+        .replace("null", missing_array)
+        .apply(lambda x: np.array(json.loads(x))),
+    )
     user_embeddings_array = np.stack(df["user_embedding"].values)
     item_embeddings_array = np.stack(df["item_embedding"].values)
 

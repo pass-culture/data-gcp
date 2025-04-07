@@ -45,8 +45,8 @@ NUMERIC_FEATURES = (
         "offer_centroid_y",
         "user_diversification_count",
     ]
-    + [f"user_emb_{i}" for i in range(64)]
-    + [f"item_emb_{i}" for i in range(64)]
+    # + [f"user_emb_{i}" for i in range(64)]
+    # + [f"item_emb_{i}" for i in range(64)]
 )
 
 CATEGORICAL_FEATURES = ["context", "offer_subcategory_id", "module_name"]

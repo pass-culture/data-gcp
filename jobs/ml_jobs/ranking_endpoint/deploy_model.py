@@ -55,7 +55,7 @@ PROBA_BOOKING_THRESHOLD = 0.5
 
 def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
     return pd.concat(
-        [pd.read_parquet(f) for f in glob.glob("data/14_days/data*.parquet")],
+        [pd.read_parquet(f) for f in glob.glob("data/3_days/data*.parquet")],
         ignore_index=True,
     )
 
@@ -126,8 +126,8 @@ def plot_figures(
         )
         plot_cm_multiclass(
             y_true=df["target_class"],
-            y_pred_consulted=df["predicted_class"],
-            filename=f"{figure_folder}/{prefix}cm_multiclass_{ClassMapping.consulted.name}_{PROBA_CONSULT_THRESHOLD:.3f}_{ClassMapping.booked.name}_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
+            y_pred=df["predicted_class"],
+            filename=f"{figure_folder}/{prefix}cm_multiclass.pdf",
             class_names=[class_mapping.name for class_mapping in ClassMapping],
         )
 

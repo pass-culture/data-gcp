@@ -202,7 +202,10 @@ sources:
         description: Partitionned table containing the history of the two tower user emebddings
       - name: two_tower_item_embedding_history
         description: Partitionned table containing the history of the two tower item emebddings
-
+  - name: ml_linkage
+    schema: ml_linkage_{{ var('ENV_SHORT_NAME') }}
+    tables:
+      - name: item_offer_mapping
   - name: appsflyer_import
     schema: appsflyer_import_{{ var('ENV_SHORT_NAME') }}
     tables:

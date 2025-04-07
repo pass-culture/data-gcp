@@ -18,7 +18,7 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from crons import SCHEDULE_DICT
+from jobs.crons import SCHEDULE_DICT
 from jobs.ml.constants import IMPORT_LINKAGE_SQL_PATH
 
 from airflow import DAG

@@ -14,6 +14,7 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
+from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
@@ -47,8 +48,6 @@ SEMANTIC_DICT = {
     "dev": "n1-standard-2",
 }
 
-schedule_dict = {"prod": "0 7 * * *", "dev": "0 7 * * *", "stg": "0 7 * * *"}
-
 
 models_to_deploy = [
     # ranking endpoint
@@ -76,7 +75,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="ML Default Deployment job",
-    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,

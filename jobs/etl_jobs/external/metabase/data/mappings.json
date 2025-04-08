@@ -441,5 +441,8 @@
   "available_stock_information": {
     "stock_id": "stock_id",
     "available_stock_information": "total_available_stock"
+  },
+  "global_venue": {
+    "venue_is_permanent": "venue_is_open_to_public"
   }
 }

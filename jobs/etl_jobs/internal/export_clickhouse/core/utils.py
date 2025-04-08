@@ -23,9 +23,7 @@ CLICKHOUSE_CLIENT = clickhouse_connect.get_client(
     port=access_secret_data(
         PROJECT_NAME, f"clickhouse_port_{ENV_SHORT_NAME}", default=8123
     ),
-    username=access_secret_data(
-        PROJECT_NAME, f"data-{ENVIRONMENT_NAME}_clickhouse_user", default="default"
-    ),
+    username="data",
     password=access_secret_data(
         PROJECT_NAME, f"data-{ENVIRONMENT_NAME}_clickhouse_password"
     ),

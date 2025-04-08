@@ -5,8 +5,8 @@ packages:
     version: 0.18.1
   - package: metaplane/dbt_expectations
     version: 0.10.8
-  - git: "https://github.com/yu-iskw/dbt-airflow-macros.git"
-    revision: 0.2.2
+  - package: yu-iskw/dbt_airflow_macros
+    version: 0.3.0
   - package: dbt-labs/codegen
     version: 0.13.1
   - package: dbt-labs/dbt_external_tables

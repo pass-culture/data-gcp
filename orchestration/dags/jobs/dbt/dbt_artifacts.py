@@ -41,10 +41,6 @@ dag = DAG(
             default=ENV_SHORT_NAME,
             type="string",
         ),
-        "script": Param(
-            default="elementary_send_report.sh",
-            type="string",
-        ),
         "GLOBAL_CLI_FLAGS": Param(
             default="",
             type="string",
@@ -83,7 +79,7 @@ dbt_test = BashOperator(
 
 send_elementary_report = BashOperator(
     task_id="send_elementary_report",
-    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/{{{{ params.script }}}} ",
+    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/elementary_send_report.sh ",
     env={
         "PATH_TO_DBT_PROJECT": PATH_TO_DBT_PROJECT,
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,

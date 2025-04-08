@@ -40,14 +40,14 @@ CLASSIFIER_MODEL_PARAMS = {
     "objective": "multiclass",
     "num_class": 3,
     "metric": "multi_logloss",
-    "learning_rate": 0.05,
+    "learning_rate": 0.03,
     "feature_fraction": 0.9,
     "bagging_fraction": 0.9,
     "bagging_freq": 5,
-    "lambda_l2": 0.1,
-    "lambda_l1": 0.1,
+    "lambda_l2": 1,
+    "lambda_l1": 1,
     "verbose": -1,
-    "num_leaves": 31,
+    "num_leaves": 10,
 }
 PROBA_CONSULT_THRESHOLD = 0.5
 PROBA_BOOKING_THRESHOLD = 0.5

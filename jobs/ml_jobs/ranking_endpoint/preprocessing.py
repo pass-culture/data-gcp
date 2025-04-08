@@ -6,7 +6,6 @@ FEATURES_CONSTRUCTION = {
     "user_deposit_remaining_credit": lambda df: df["user_deposit_amount"]
     - df["user_amount_spent"],
     "offer_semantic_emb_mean": DEFAULT_NUMERICAL,
-    "offer_item_score": DEFAULT_NUMERICAL,
     "day_of_the_week": lambda df: pd.Categorical(
         df["day_of_week"],
         categories=[

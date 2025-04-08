@@ -185,7 +185,7 @@ class TrainPipeline:
         train_data = df[df["unique_session_id"].isin(train_session_ids)]
         test_data = df[df["unique_session_id"].isin(test_session_ids)]
 
-        X_train, X_test = self.fit_transform(train_data), self.transform(test_data)
+        X_train, X_test = self.fit_transform(train_data), self.fit_transform(test_data)
         y_train, y_test = (
             train_data[self.target].to_numpy(),
             test_data[self.target].to_numpy(),

@@ -40,7 +40,6 @@ NUMERIC_FEATURES = (
         "offer_stock_beginning_days",
         "day_of_the_week",
         "hour_of_the_day",
-        "item_user_similarity",
         "offer_centroid_x",
         "offer_centroid_y",
     ]

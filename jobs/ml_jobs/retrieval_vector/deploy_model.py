@@ -9,7 +9,6 @@ from google.cloud import bigquery
 from utils import (
     BIGQUERY_CLEAN_DATASET,
     ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
     MODELS_RESULTS_TABLE_NAME,
     create_items_table,
     deploy_container,
@@ -138,9 +137,7 @@ def main(
     if model_name is None:
         model_name = "default"
     run_id = f"{model_name}_{ENV_SHORT_NAME}_v{yyyymmdd}"
-    serving_container = (
-        f"eu.gcr.io/{GCP_PROJECT_ID}/{experiment_name.replace('.', '_')}:{run_id}"
-    )
+    serving_container = f"europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/{ENV_SHORT_NAME}/{experiment_name.replace('.', '_')}:{run_id}"
     if source_artifact_uri is None or len(source_artifact_uri) <= 10:
         source_artifact_uri = get_model_from_mlflow(
             experiment_name=source_experiment_name,

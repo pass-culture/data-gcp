@@ -1,6 +1,6 @@
 select
     vl.venue_id,
-    v.venue_street,
+    vl.venue_street,
     vl.venue_latitude,
     vl.venue_longitude,
     vl.venue_department_code,

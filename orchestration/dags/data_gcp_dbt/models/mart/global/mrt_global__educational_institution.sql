@@ -90,20 +90,20 @@ select
     cb.last_category_booked,
     sh.total_students,
     institution_metadata_aggregated_type.macro_institution_type,
-    location_info.institution_city,
-    location_info.institution_epci,
-    location_info.institution_density_label,
-    location_info.institution_macro_density_label,
-    location_info.institution_density_level,
-    location_info.institution_latitude,
-    location_info.institution_longitude,
-    location_info.institution_academy_name,
-    location_info.institution_region_name,
-    location_info.institution_in_qpv,
-    location_info.institution_department_code,
-    location_info.institution_department_name,
-    location_info.institution_internal_iris_id,
-    location_info.institution_postal_code,
+    ei.institution_city,
+    ei.institution_epci,
+    ei.institution_density_label,
+    ei.institution_macro_density_label,
+    ei.institution_density_level,
+    ei.institution_latitude,
+    ei.institution_longitude,
+    ei.institution_academy_name,
+    ei.institution_region_name,
+    ei.institution_in_qpv,
+    ei.institution_department_code,
+    ei.institution_department_name,
+    ei.institution_internal_iris_id,
+    ei.institution_postal_code,
     coalesce(ei.current_deposit_amount, 0) as current_deposit_amount,
     coalesce(ei.total_deposit_amount, 0) as total_deposit_amount,
     coalesce(ei.total_deposits, 0) as total_deposits,
@@ -147,6 +147,3 @@ left join
     {{ source("seed", "institution_metadata_aggregated_type") }}
     as institution_metadata_aggregated_type
     on ei.institution_type = institution_metadata_aggregated_type.institution_type
-left join
-    {{ ref("int_geo__institution_location") }} as location_info
-    on ei.institution_id = location_info.institution_id

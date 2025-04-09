@@ -4,7 +4,7 @@ with
     venue_epci as (
         {{
             generate_seed_geolocation_query(
-                source_table=["raw", "applicative_database_venue"],
+                source_table="int_api_gouv__venue_address",
                 referential_table="int_seed__intercommunal_public_institution",
                 id_column="venue_id",
                 prefix_name="venue",
@@ -16,7 +16,7 @@ with
     venue_qpv as (
         {{
             generate_seed_geolocation_query(
-                source_table=["raw", "applicative_database_venue"],
+                source_table="int_api_gouv__venue_address",
                 referential_table="int_seed__qpv",
                 id_column="venue_id",
                 prefix_name="venue",
@@ -30,7 +30,7 @@ with
     venue_zrr as (
         {{
             generate_seed_geolocation_query(
-                source_table=["raw", "applicative_database_venue"],
+                source_table="int_api_gouv__venue_address",
                 referential_table="int_seed__rural_revitalization_zone",
                 id_column="venue_id",
                 prefix_name="venue",
@@ -42,7 +42,7 @@ with
     venue_geo_iris as (
         {{
             generate_seed_geolocation_query(
-                source_table=["raw", "applicative_database_venue"],
+                source_table="int_api_gouv__venue_address",
                 referential_table="int_seed__geo_iris",
                 id_column="venue_id",
                 prefix_name="venue",
@@ -69,6 +69,7 @@ select
     venue.venue_department_code,
     venue.venue_latitude,
     venue.venue_longitude,
+    venue.venue_street,
     venue_geo_iris.iris_internal_id as venue_iris_internal_id,
     venue_geo_iris.city_label as venue_city,
     venue_geo_iris.city_code as venue_city_code,
@@ -96,7 +97,7 @@ select
         else venue_qpv.qpv_code is not null
     end as venue_in_qpv
 
-from {{ source("raw", "applicative_database_venue") }} as venue
+from {{ ref("int_api_gouv__venue_address") }} as venue
 left join venue_epci on venue.venue_id = venue_epci.venue_id
 left join venue_qpv on venue.venue_id = venue_qpv.venue_id
 left join venue_zrr on venue.venue_id = venue_zrr.venue_id

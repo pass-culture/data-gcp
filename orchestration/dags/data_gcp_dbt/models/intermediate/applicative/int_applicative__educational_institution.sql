@@ -69,5 +69,6 @@ left join
 left join
     users_grouped_by_institution as ugi
     on ei.institution_id = ugi.institution_external_id
-left join {{ ref("int_geo__educational_institution_location") }} as eil_loc
+left join
+    {{ ref("int_geo__educational_institution_location") }} as eil_loc
     on ei.educational_institution_id = eil_loc.educational_institution_id

@@ -16,11 +16,7 @@ with
         left join
             {{ source("seed", "2025_insee_postal_code") }} as pc
             on adei.institution_postal_code = pc.postal_code
-        qualify
-            row_number() over (
-                partition by adei.educational_institution_id
-            )
-            = 1
+        qualify row_number() over (partition by adei.educational_institution_id) = 1
     ),
 
     institution_lat_long_geocode as (
@@ -29,17 +25,20 @@ with
             adei.institution_department_code,
             "geolocation" as geocode_type,
             if(
-                adei.institution_longitude != "" and adei.institution_longitude is not null,
+                adei.institution_longitude != ""
+                and adei.institution_longitude is not null,
                 adei.institution_postal_code,
                 null
             ) as institution_postal_code,
             if(
-                adei.institution_longitude != "" and adei.institution_longitude is not null,
+                adei.institution_longitude != ""
+                and adei.institution_longitude is not null,
                 safe_cast(adei.institution_longitude as float64),
                 null
             ) as institution_longitude,
             if(
-                adei.institution_latitude != "" and adei.institution_latitude is not null,
+                adei.institution_latitude != ""
+                and adei.institution_latitude is not null,
                 safe_cast(adei.institution_latitude as float64),
                 null
             ) as institution_latitude
@@ -51,11 +50,19 @@ with
             uag.educational_institution_id,
             uag.institution_department_code,
             uag.geocode_type,
-            coalesce(uag.institution_postal_code, upcg.institution_postal_code) as institution_postal_code,
-            coalesce(uag.institution_longitude, upcg.institution_longitude) as institution_longitude,
-            coalesce(uag.institution_latitude, upcg.institution_latitude) as institution_latitude
+            coalesce(
+                uag.institution_postal_code, upcg.institution_postal_code
+            ) as institution_postal_code,
+            coalesce(
+                uag.institution_longitude, upcg.institution_longitude
+            ) as institution_longitude,
+            coalesce(
+                uag.institution_latitude, upcg.institution_latitude
+            ) as institution_latitude
         from institution_lat_long_geocode as uag
-        left join institution_postal_code_geocode as upcg on uag.educational_institution_id = upcg.educational_institution_id
+        left join
+            institution_postal_code_geocode as upcg
+            on uag.educational_institution_id = upcg.educational_institution_id
     )
 
 select

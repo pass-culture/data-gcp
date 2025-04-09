@@ -16,11 +16,7 @@ with
         left join
             {{ source("seed", "2025_insee_postal_code") }} as pc
             on adv.venue_postal_code = pc.postal_code
-        qualify
-            row_number() over (
-                partition by adv.venue_id
-            )
-            = 1
+        qualify row_number() over (partition by adv.venue_id) = 1
     ),
 
     venue_lat_long_geocode as (
@@ -52,7 +48,9 @@ with
             uag.venue_department_code,
             uag.venue_street,
             coalesce(uag.geocode_type, upcg.geocode_type) as geocode_type,
-            coalesce(uag.venue_postal_code, upcg.venue_postal_code) as venue_postal_code,
+            coalesce(
+                uag.venue_postal_code, upcg.venue_postal_code
+            ) as venue_postal_code,
             coalesce(uag.venue_longitude, upcg.venue_longitude) as venue_longitude,
             coalesce(uag.venue_latitude, upcg.venue_latitude) as venue_latitude
         from venue_lat_long_geocode as uag

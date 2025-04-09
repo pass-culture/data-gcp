@@ -98,9 +98,18 @@ select
 
 from {{ ref("int_api_gouv__educational_institution_address") }} as institution
 left join
-    institution_epci on institution.educational_institution_id = institution_epci.educational_institution_id
-left join institution_qpv on institution.educational_institution_id = institution_qpv.educational_institution_id
-left join institution_zrr on institution.educational_institution_id = institution_zrr.educational_institution_id
+    institution_epci
+    on institution.educational_institution_id
+    = institution_epci.educational_institution_id
+left join
+    institution_qpv
+    on institution.educational_institution_id
+    = institution_qpv.educational_institution_id
+left join
+    institution_zrr
+    on institution.educational_institution_id
+    = institution_zrr.educational_institution_id
 left join
     institution_geo_iris
-    on institution.educational_institution_id = institution_geo_iris.educational_institution_id
+    on institution.educational_institution_id
+    = institution_geo_iris.educational_institution_id

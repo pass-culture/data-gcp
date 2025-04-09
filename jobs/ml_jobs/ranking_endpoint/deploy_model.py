@@ -236,9 +236,7 @@ def main(
     if model_name is None:
         model_name = "default"
     run_id = f"{model_name}_{ENV_SHORT_NAME}_v{yyyymmdd}"
-    serving_container = (
-        f"eu.gcr.io/{GCP_PROJECT_ID}/{experiment_name.replace('.', '_')}:{run_id}"
-    )
+    serving_container = f"europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/ranking-endpoint/{ENV_SHORT_NAME}/{experiment_name.replace('.', '_')}:{run_id}"
     train_pipeline(
         dataset_name=dataset_name,
         table_name=table_name,

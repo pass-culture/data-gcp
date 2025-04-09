@@ -256,7 +256,8 @@ with
             )
             is not null as made_another_search
         from agg_search_data as asd
-        left join bookings_aggregated as bpsi using (unique_search_id, unique_session_id)
+        left join
+            bookings_aggregated as bpsi using (unique_search_id, unique_session_id)
     )
 
 select

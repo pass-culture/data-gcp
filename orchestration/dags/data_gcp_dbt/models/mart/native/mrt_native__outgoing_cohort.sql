@@ -33,7 +33,7 @@ with
             and last_deposit_expiration_date < date_trunc(current_date, month)
     ),
 
-bookings_info as (
+    bookings_info as (
         select
             user.deposit_expiration_date,
             user.user_id,
@@ -49,12 +49,13 @@ bookings_info as (
             ) as total_distinct_venue_booked
         from users_expired_monthly as user
         inner join
-            {{ ref("mrt_global__booking") }} as bookings on user.user_id = bookings.user_id
+            {{ ref("mrt_global__booking") }} as bookings
+            on user.user_id = bookings.user_id
         where not booking_is_cancelled
         group by deposit_expiration_date, user_id
     ),
 
-consultations as (
+    consultations as (
         select
             u.deposit_expiration_date,
             u.user_id,

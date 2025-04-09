@@ -68,7 +68,9 @@ select
     ) as total_consult_offer,
     count(case when uh.fav_timestamp is not null then 1 end) as total_fav,
     count(
-        distinct case when uh.booking_timestamp is not null then uh.unique_session_id end
+        distinct case
+            when uh.booking_timestamp is not null then uh.unique_session_id
+        end
     ) as total_session_with_booking,
     count(case when uh.booking_timestamp is not null then 1 end) as total_bookings,
     count(

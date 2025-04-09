@@ -76,7 +76,7 @@ with
             = 1
     ),
 
-venue_map_bookings as (  -- Les réservations
+    venue_map_bookings as (  -- Les réservations
         select
             unique_session_id,
             ne.user_id,
@@ -105,7 +105,7 @@ venue_map_bookings as (  -- Les réservations
             {% endif %}
     ),
 
-all_events as (  -- On reprend les events "enrichis"
+    all_events as (  -- On reprend les events "enrichis"
         select
             unique_session_id,
             user_id,

@@ -78,5 +78,7 @@ with
 
 select distinct
     data_and_lags.* except (lag_1, lag_2, lag_3, event_timestamp),
-    coalesce(item_id = lag_1 or item_id = lag_2 or item_id = lag_3, false) as looped_to_other_offer
+    coalesce(
+        item_id = lag_1 or item_id = lag_2 or item_id = lag_3, false
+    ) as looped_to_other_offer
 from data_and_lags

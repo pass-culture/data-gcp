@@ -20,10 +20,7 @@ with
             count(distinct booking.booking_id) as booking_diversification_cnt,
             sum(booking.diversity_score) as total_delta_diversification
         from {{ ref("firebase_bookings") }} as firebase_bookings
-        inner join
-            {{ ref("mrt_global__booking") }} as booking using (
-                booking_id
-            )
+        inner join {{ ref("mrt_global__booking") }} as booking using (booking_id)
         group by 1
     )
 
@@ -39,32 +36,41 @@ select
     count(distinct firebase_visits.unique_session_id) as nb_sesh,
     count(
         distinct case
-            when firebase_visits.nb_consult_offer > 0 then firebase_visits.unique_session_id
+            when firebase_visits.nb_consult_offer > 0
+            then firebase_visits.unique_session_id
         end
     ) as nb_sesh_consult,
     count(
         distinct case
-            when firebase_visits.nb_add_to_favorites > 0 then firebase_visits.unique_session_id
+            when firebase_visits.nb_add_to_favorites > 0
+            then firebase_visits.unique_session_id
         end
     ) as nb_sesh_add_to_fav,
     count(
         distinct case
-            when firebase_visits.nb_booking_confirmation > 0 then firebase_visits.unique_session_id
+            when firebase_visits.nb_booking_confirmation > 0
+            then firebase_visits.unique_session_id
         end
     ) as nb_sesh_booking,
     coalesce(sum(firebase_visits.nb_consult_offer), 0) as nb_consult_offer,
     coalesce(sum(firebase_visits.nb_add_to_favorites), 0) as nb_add_to_favorites,
     coalesce(sum(firebase_visits.nb_booking_confirmation), 0) as nb_booking,
-    coalesce(sum(bookings_and_diversification_per_sesh.booking_diversification_cnt), 0) as nb_non_cancelled_bookings,
-    coalesce(sum(bookings_and_diversification_per_sesh.total_delta_diversification), 0) as total_delta_diversification,
+    coalesce(
+        sum(bookings_and_diversification_per_sesh.booking_diversification_cnt), 0
+    ) as nb_non_cancelled_bookings,
+    coalesce(
+        sum(bookings_and_diversification_per_sesh.total_delta_diversification), 0
+    ) as total_delta_diversification,
     count(
         distinct case
-            when firebase_visits.nb_signup_completed > 0 then firebase_visits.unique_session_id
+            when firebase_visits.nb_signup_completed > 0
+            then firebase_visits.unique_session_id
         end
     ) as nb_signup,
     count(
         distinct case
-            when firebase_visits.nb_benef_request_sent > 0 then firebase_visits.unique_session_id
+            when firebase_visits.nb_benef_request_sent > 0
+            then firebase_visits.unique_session_id
         end
     ) as nb_benef_request_sent
 from {{ ref("firebase_visits") }} as firebase_visits

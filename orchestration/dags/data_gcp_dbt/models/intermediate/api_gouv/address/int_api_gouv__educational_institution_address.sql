@@ -25,7 +25,8 @@ with
             adei.institution_department_code,
             "geolocation" as geocode_type,
             if(
-                adei.institution_longitude is not null and adei.institution_latitude is not null,
+                adei.institution_longitude is not null
+                and adei.institution_latitude is not null,
                 adei.institution_postal_code,
                 null
             ) as institution_postal_code,

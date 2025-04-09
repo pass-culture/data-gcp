@@ -16,6 +16,7 @@ with
         left join
             {{ source("seed", "2025_insee_postal_code") }} as pc
             on adv.venue_postal_code = pc.postal_code
+        where adv.venue_is_virtual = false
         qualify row_number() over (partition by adv.venue_id) = 1
     ),
 
@@ -33,6 +34,7 @@ with
             adv.venue_longitude,
             adv.venue_latitude
         from {{ source("raw", "applicative_database_venue") }} as adv
+        where adv.venue_is_virtual = false
     ),
 
     venue_combined as (

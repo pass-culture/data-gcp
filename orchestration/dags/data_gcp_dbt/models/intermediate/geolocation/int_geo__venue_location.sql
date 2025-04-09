@@ -102,4 +102,3 @@ left join venue_epci on venue.venue_id = venue_epci.venue_id
 left join venue_qpv on venue.venue_id = venue_qpv.venue_id
 left join venue_zrr on venue.venue_id = venue_zrr.venue_id
 left join venue_geo_iris on venue.venue_id = venue_geo_iris.venue_id
-where venue.venue_is_virtual is false

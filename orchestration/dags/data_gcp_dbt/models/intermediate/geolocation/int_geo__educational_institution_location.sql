@@ -68,15 +68,15 @@ select
     institution.educational_institution_id,
     institution.institution_postal_code,
     institution.institution_department_code,
+    region_department.academy_name as institution_academy_name,
+    region_department.region_name as institution_region_name,
+    region_department.department_name as institution_department_name,
     institution.institution_latitude,
     institution.institution_longitude,
     institution_geo_iris.iris_internal_id as institution_internal_iris_id,
     institution_geo_iris.density_label as institution_density_label,
     institution_geo_iris.density_macro_level as institution_macro_density_label,
     institution_geo_iris.density_level as institution_density_level,
-    institution_geo_iris.academy_name as institution_academy_name,
-    institution_geo_iris.region_name as institution_region_name,
-    institution_geo_iris.department_name as institution_department_name,
     institution_geo_iris.city_label as institution_city,
     institution_geo_iris.city_code as institution_city_code,
     institution_epci.epci_name as institution_epci,
@@ -113,3 +113,8 @@ left join
     institution_geo_iris
     on institution.educational_institution_id
     = institution_geo_iris.educational_institution_id
+-- ensure to have region and department name for non IRIS based regions (Wallis and
+-- Futuna, New Caledonia, etc.)
+left join
+    {{ source("seed", "region_department") }} as region_department
+    on institution.institution_department_code = region_department.num_dep

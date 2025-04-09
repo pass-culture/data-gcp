@@ -77,9 +77,9 @@ select
     venue_geo_iris.density_label as venue_density_label,
     venue_geo_iris.density_macro_level as venue_macro_density_label,
     venue_geo_iris.density_level as venue_density_level,
-    venue_geo_iris.academy_name as venue_academy_name,
-    venue_geo_iris.region_name as venue_region_name,
-    venue_geo_iris.department_name as venue_department_name,
+    region_department.academy_name as venue_academy_name,
+    region_department.region_name as venue_region_name,
+    region_department.department_name as venue_department_name,
     venue_epci.epci_name as venue_epci,
     venue_epci.epci_code,
     venue_qpv.qpv_code,
@@ -102,3 +102,8 @@ left join venue_epci on venue.venue_id = venue_epci.venue_id
 left join venue_qpv on venue.venue_id = venue_qpv.venue_id
 left join venue_zrr on venue.venue_id = venue_zrr.venue_id
 left join venue_geo_iris on venue.venue_id = venue_geo_iris.venue_id
+-- ensure to have region and department name for non IRIS based regions (Wallis and
+-- Futuna, New Caledonia, etc.)
+left join
+    {{ source("seed", "region_department") }} as region_department
+    on venue.venue_department_code = region_department.num_dep

@@ -105,11 +105,15 @@ with DAG(
         command="python api_import.py --n-days {{ params.n_days }} --table-name in_app_event_report ",
     )
 
-    gcs_cost_etl_op = SSHGCEOperator(
-        task_id="gcs_cost_etl_op",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        command=f"python gcs_import.py --gcs-base-path {GCS_ETL_PARAMS['GCS_BASE_PATH']} --prefix-table-name {GCS_ETL_PARAMS['PREFIX_TABLE_NAME']} --date {GCS_ETL_PARAMS['DATE']} ",
+    gcs_cost_etl_op = (
+        SSHGCEOperator(
+            task_id="gcs_cost_etl_op",
+            instance_name=GCE_INSTANCE,
+            base_dir=BASE_PATH,
+            command=f"python gcs_import.py --gcs-base-path {GCS_ETL_PARAMS['GCS_BASE_PATH']} --prefix-table-name {GCS_ETL_PARAMS['PREFIX_TABLE_NAME']} --date {GCS_ETL_PARAMS['DATE']} ",
+        )
+        if ENV_SHORT_NAME == "prod"
+        else DummyOperator(task_id="skip_gcs_cost_etl_op", dag=dag)
     )
 
     gce_instance_stop = DeleteGCEOperator(

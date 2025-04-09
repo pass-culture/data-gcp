@@ -22,23 +22,16 @@ with
     venue_lat_long_geocode as (
         select
             adv.venue_id,
+            adv.venue_street,
             adv.venue_department_code,
             "geolocation" as geocode_type,
             if(
-                adv.venue_longitude != "" and adv.venue_longitude is not null,
+                adv.venue_longitude is not null and adv.venue_latitude is not null,
                 adv.venue_postal_code,
                 null
             ) as venue_postal_code,
-            if(
-                adv.venue_longitude != "" and adv.venue_longitude is not null,
-                safe_cast(adv.venue_longitude as float64),
-                null
-            ) as venue_longitude,
-            if(
-                adv.venue_latitude != "" and adv.venue_latitude is not null,
-                safe_cast(adv.venue_latitude as float64),
-                null
-            ) as venue_latitude
+            adv.venue_longitude,
+            adv.venue_latitude
         from {{ source("raw", "applicative_database_venue") }} as adv
     ),
 

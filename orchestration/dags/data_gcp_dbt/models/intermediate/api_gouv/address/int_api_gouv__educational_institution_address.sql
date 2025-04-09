@@ -25,23 +25,12 @@ with
             adei.institution_department_code,
             "geolocation" as geocode_type,
             if(
-                adei.institution_longitude != ""
-                and adei.institution_longitude is not null,
+                adei.institution_longitude is not null and adei.institution_latitude is not null,
                 adei.institution_postal_code,
                 null
             ) as institution_postal_code,
-            if(
-                adei.institution_longitude != ""
-                and adei.institution_longitude is not null,
-                safe_cast(adei.institution_longitude as float64),
-                null
-            ) as institution_longitude,
-            if(
-                adei.institution_latitude != ""
-                and adei.institution_latitude is not null,
-                safe_cast(adei.institution_latitude as float64),
-                null
-            ) as institution_latitude
+            institution_longitude,
+            institution_latitude
         from {{ source("raw", "applicative_database_educational_institution") }} as adei
     ),
 

@@ -14,7 +14,7 @@ with
     main_venue_type_per_offerer as (
         select
             venue_id,
-            venue_managing_offerer_id,
+            offerer_id,
             venue_type_label as partner_type,
             "venue_type_label" as partner_type_origin
         from {{ ref("mrt_global__venue") }}
@@ -25,7 +25,7 @@ with
 
     top_venue_per_offerer as (
         select
-            main_venue_type_per_offerer.venue_managing_offerer_id,
+            main_venue_type_per_offerer.offerer_id,
             coalesce(
                 main_venue_tag_per_offerer.venue_id,
                 main_venue_type_per_offerer.venue_id
@@ -41,7 +41,7 @@ with
         from main_venue_type_per_offerer
         left join
             main_venue_tag_per_offerer
-            on main_venue_type_per_offerer.venue_managing_offerer_id
+            on main_venue_type_per_offerer.offerer_id
             = main_venue_tag_per_offerer.venue_managing_offerer_id
     ),
 
@@ -116,18 +116,18 @@ with
         from {{ ref("int_global__offerer") }} as o
         left join
             {{ ref("mrt_global__venue") }} as v
-            on o.offerer_id = v.venue_managing_offerer_id
+            on o.offerer_id = v.offerer_id
             and v.venue_is_permanent
         left join
             top_venue_per_offerer
-            on o.offerer_id = top_venue_per_offerer.venue_managing_offerer_id
+            on o.offerer_id = top_venue_per_offerer.offerer_id
         left join
             {{ source("seed", "agg_partner_cultural_sector") }}
             on agg_partner_cultural_sector.partner_type
             = coalesce(o.partner_type, top_venue_per_offerer.partner_type)
         where
             not o.is_local_authority
-            and v.venue_managing_offerer_id is null
+            and v.offerer_id is null
             and o.offerer_validation_status = "VALIDATED"
             and o.offerer_is_active
     )
@@ -137,7 +137,7 @@ union all
 (
     select
         v.venue_id,
-        v.venue_managing_offerer_id as offerer_id,
+        v.offerer_id,
         v.partner_id,
         v.venue_creation_date as partner_creation_date,
         case

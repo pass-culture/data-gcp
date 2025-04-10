@@ -12,7 +12,7 @@ select
     venue_city,
     venue_siret,
     venue_is_virtual,
-    venue_managing_offerer_id,
+    offerer_id,
     venue_creation_date,
     venue_is_permanent,
     venue_is_open_to_public,

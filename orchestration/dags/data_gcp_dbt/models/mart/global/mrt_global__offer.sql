@@ -71,7 +71,6 @@ select
     venue_is_permanent,
     partner_id,
     offerer_id,
-    venue_managing_offerer_id,
     offerer_name,
     venue_type_label,
     venue_iris_internal_id,
@@ -83,5 +82,5 @@ select
     is_headlined,
     first_headline_date,
     last_headline_date
-from {{ ref("int_global__offer") }} as o
+from {{ ref("int_global__offer") }}
 where true and offer_validation = 'APPROVED' and venue_id is not null

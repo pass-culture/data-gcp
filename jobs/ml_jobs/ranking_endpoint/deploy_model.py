@@ -4,17 +4,23 @@ import shutil
 from datetime import datetime
 
 import mlflow
+import numpy as np
 import pandas as pd
 import typer
 from sklearn.model_selection import train_test_split
 
-from app.model import ClassMapping, TrainPipeline
-from figure import (
+from app.model import (
+    ClassMapping,
+    TrainPipeline,
+)
+from src.evaluation import compute_ndcg_at_k
+from src.figure import (
     plot_cm,
     plot_cm_multiclass,
     plot_features_importance,
 )
-from utils import (
+from src.preprocessing import map_features_columns, preprocess_data
+from src.utils import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     connect_remote_mlflow,
@@ -30,59 +36,31 @@ CLASSIFIER_MODEL_PARAMS = {
     "objective": "multiclass",
     "num_class": 3,
     "metric": "multi_logloss",
-    "learning_rate": 0.05,
+    "learning_rate": 0.03,
     "feature_fraction": 0.9,
     "bagging_fraction": 0.9,
     "bagging_freq": 5,
-    "lambda_l2": 0.1,
-    "lambda_l1": 0.1,
+    "lambda_l2": 1,
+    "lambda_l1": 1,
     "verbose": -1,
+    "num_leaves": 10,
 }
 PROBA_CONSULT_THRESHOLD = 0.5
 PROBA_BOOKING_THRESHOLD = 0.5
+NDCG_K_LIST = [5, 10, 20]
 
 
 def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
+    # Hack : Use new training data
+    dataset_name = f"ml_reco_{ENV_SHORT_NAME}"
+    table_name = "ranking_training_data"
     sql = f"""
-    WITH seen AS (
-      SELECT
-          *
-      FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}`
-      WHERE not consult and not booking
-      ORDER BY offer_order ASC
-      LIMIT {PARAMS["seen"]}
-    ),
-    consult AS (
-        SELECT
-            *
-        FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}`
-        WHERE consult and not booking
-        LIMIT {PARAMS["consult"]}
-
-    ),
-    booking AS (
-      SELECT
-            *
-        FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}`
-        WHERE booking
-        LIMIT {PARAMS["booking"]}
-    )
-    SELECT * FROM seen
-    UNION ALL
-    SELECT * FROM consult
-    UNION ALL
-    SELECT * FROM booking
+    select * from `{GCP_PROJECT_ID}.{dataset_name}.{table_name}`
     """
+    # End Hack
     print(sql)
 
-    data = pd.read_gbq(sql).sample(frac=1)
-    n_rows_duplicated = data.duplicated().sum()
-    if n_rows_duplicated > 0:
-        raise ValueError(
-            f"Duplicated rows in data ({n_rows_duplicated} rows duplicated). Please review your SQL query."
-        )
-
-    return data
+    return pd.read_gbq(sql).sample(frac=1).drop_duplicates()
 
 
 def plot_figures(
@@ -94,28 +72,24 @@ def plot_figures(
     shutil.rmtree(figure_folder, ignore_errors=True)
     os.makedirs(figure_folder)
 
-    for prefix, df in [("test_", test_data), ("train_", train_data)]:
+    for prefix, df in [("train_", train_data), ("test_", test_data)]:
+        print(f"Plotting figures for {prefix} data")
         plot_cm(
             y=df[ClassMapping.consulted.name],
-            y_pred=df[f"prob_class_{ClassMapping.consulted.name}"],
-            filename=f"{figure_folder}/{prefix}cm_{ClassMapping.consulted.name}_proba_{PROBA_CONSULT_THRESHOLD:.3f}.pdf",
+            y_pred=df["predicted_class"] == ClassMapping.consulted.value,
+            filename=f"{figure_folder}/{prefix}cm_{ClassMapping.consulted.name}.pdf",
             perc=True,
-            proba=PROBA_CONSULT_THRESHOLD,
         )
         plot_cm(
             y=df[ClassMapping.booked.name],
-            y_pred=df[f"prob_class_{ClassMapping.booked.name}"],
-            filename=f"{figure_folder}/{prefix}cm_{ClassMapping.booked.name}_proba_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
+            y_pred=df["predicted_class"] == ClassMapping.booked.value,
+            filename=f"{figure_folder}/{prefix}cm_{ClassMapping.booked.name}.pdf",
             perc=True,
-            proba=PROBA_BOOKING_THRESHOLD,
         )
         plot_cm_multiclass(
             y_true=df["target_class"],
-            y_pred_consulted=df[f"prob_class_{ClassMapping.consulted.name}"],
-            y_pred_booked=df[f"prob_class_{ClassMapping.booked.name}"],
-            perc_consulted=PROBA_CONSULT_THRESHOLD,
-            perc_booked=PROBA_BOOKING_THRESHOLD,
-            filename=f"{figure_folder}/{prefix}cm_multiclass_{ClassMapping.consulted.name}_{PROBA_CONSULT_THRESHOLD:.3f}_{ClassMapping.booked.name}_{PROBA_BOOKING_THRESHOLD:.3f}.pdf",
+            y_pred=df["predicted_class"],
+            filename=f"{figure_folder}/{prefix}cm_multiclass.pdf",
             class_names=[class_mapping.name for class_mapping in ClassMapping],
         )
 
@@ -124,51 +98,25 @@ def plot_figures(
     )
 
 
-def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
-    return (
-        data.astype(
-            {
-                "consult": "float",
-                "booking": "float",
-            }
-        )
-        .fillna({"consult": 0, "booking": 0})
-        .rename(
-            columns={
-                "consult": ClassMapping.consulted.name,
-                "booking": ClassMapping.booked.name,
-            }
-        )
-        .assign(
-            status=lambda df: pd.Series([ClassMapping.seen.name] * len(df))
-            .where(
-                df[ClassMapping.consulted.name] != 1.0,
-                other=ClassMapping.consulted.name,
-            )
-            .where(df[ClassMapping.booked.name] != 1.0, other=ClassMapping.booked.name),
-            target_class=lambda df: df["status"]
-            .map(
-                {
-                    class_mapping.name: class_mapping.value
-                    for class_mapping in ClassMapping
-                }
-            )
-            .astype(int),
-        )
-    ).drop_duplicates()
-
-
 def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     # Load and preprocess the data
-    data = load_data(dataset_name, table_name)
-    preprocessed_data = data.pipe(
-        preprocess_data,
-    )
+    raw_data = load_data(dataset_name, table_name).pipe(map_features_columns)
+    preprocessed_data = raw_data.pipe(preprocess_data)
 
+    # Split based on unique_session_id
     seed = secrets.randbelow(1000)
-    train_data, test_data = train_test_split(
-        preprocessed_data, test_size=TEST_SIZE, random_state=seed
+    unique_user_x_date_ids = preprocessed_data.user_x_date_id.unique()
+    train_session_ids, test_session_ids = train_test_split(
+        unique_user_x_date_ids, test_size=TEST_SIZE, random_state=seed
     )
+    train_data = preprocessed_data[
+        preprocessed_data["user_x_date_id"].isin(train_session_ids)
+    ]
+    test_data = preprocessed_data[
+        preprocessed_data["user_x_date_id"].isin(test_session_ids)
+    ]
+
+    # Compute class weights
     class_frequency = train_data.target_class.value_counts(normalize=True).to_dict()
     class_weight = {k: 1 / v for k, v in class_frequency.items()}
 
@@ -186,25 +134,57 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
 
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
         pipeline_classifier.set_pipeline()
-        pipeline_classifier.train(train_data, class_weight=class_weight)
+        print("Training model...")
+        pipeline_classifier.train(train_data, class_weight=class_weight, seed=seed)
+        print("Training finished")
 
+        print("Evaluating model...")
         train_predictions = train_data.pipe(pipeline_classifier.predict_classifier)
         test_predictions = test_data.pipe(pipeline_classifier.predict_classifier)
+        ndcg_at_k = compute_ndcg_at_k(predictions=test_predictions, k_list=NDCG_K_LIST)
+        random_ndcg_at_k = compute_ndcg_at_k(
+            predictions=test_predictions.assign(
+                score=np.random.rand(len(test_predictions))
+            ),
+            k_list=NDCG_K_LIST,
+        )
+        popular_ndcg_at_k = compute_ndcg_at_k(
+            predictions=test_predictions.assign(
+                score=test_predictions["offer_booking_number_last_28_days"]
+                / test_predictions["offer_booking_number_last_28_days"].max()
+            ),
+            k_list=NDCG_K_LIST,
+        )
+        for k in NDCG_K_LIST:
+            mlflow.log_metric(f"ndcg_at_{k}", ndcg_at_k[k])
+            mlflow.log_metric(f"random_ndcg_at_{k}", random_ndcg_at_k[k])
+            mlflow.log_metric(f"popular_ndcg_at_{k}", popular_ndcg_at_k[k])
+        print("Evaluation finished")
 
         # Save Data
+        print("Plotting Figures...")
         plot_figures(
             train_data=train_predictions,
             test_data=test_predictions,
             pipeline=pipeline_classifier,
             figure_folder=figure_folder,
         )
-        train_predictions.to_csv(f"{figure_folder}/train_predictions.csv", index=False)
-        test_predictions.to_csv(f"{figure_folder}/test_predictions.csv", index=False)
+        print("Figures plotted")
+
+        print("Saving Data...")
+        train_predictions.to_parquet(
+            f"{figure_folder}/train_predictions.parquet", index=False
+        )
+        test_predictions.to_parquet(
+            f"{figure_folder}/test_predictions.parquet", index=False
+        )
+        print("Data saved")
+
         mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
         mlflow.log_param("seed", seed)
 
-    # retrain on whole
-    pipeline_classifier.train(preprocessed_data, class_weight=class_weight)
+    # # retrain on whole
+    # pipeline_classifier.train(preprocessed_data, class_weight=class_weight)
 
     # save
     pipeline_classifier.save(model_name="classifier")
@@ -237,6 +217,7 @@ def main(
         model_name = "default"
     run_id = f"{model_name}_{ENV_SHORT_NAME}_v{yyyymmdd}"
     serving_container = f"europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/ranking-endpoint/{ENV_SHORT_NAME}/{experiment_name.replace('.', '_')}:{run_id}"
+
     train_pipeline(
         dataset_name=dataset_name,
         table_name=table_name,

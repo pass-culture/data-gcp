@@ -34,10 +34,9 @@ def plot_cm(
     y_pred: pd.Series,
     filename: str,
     perc: bool,
-    proba: False,
 ):
-    y_pred_binary = (y_pred >= proba).astype(int)
-    y_true_binary = (y >= proba).astype(int)
+    y_pred_binary = y_pred.astype(int)
+    y_true_binary = y.astype(int)
 
     plt.figure(figsize=(6, 4))
     conf_matrix = confusion_matrix(y_true_binary, y_pred_binary)
@@ -51,7 +50,7 @@ def plot_cm(
 
     plt.xlabel("Predicted Label")
     plt.ylabel("True Label")
-    plt.title(f"Confusion Matrix [proba >= {proba}]")
+    plt.title("Confusion Matrix")
     plt.savefig(filename, format="pdf", dpi=300, bbox_inches="tight")
     plt.close()
 
@@ -82,27 +81,19 @@ def compute_y_binary(
 
 def plot_cm_multiclass(
     y_true: pd.Series,
-    y_pred_consulted: pd.Series,
-    y_pred_booked: pd.Series,
-    perc_consulted: float,
-    perc_booked: float,
+    y_pred: pd.Series,
     filename,
     class_names,
 ):
-    y_pred_binary = compute_y_binary(
-        y_pred_consulted, y_pred_booked, perc_consulted, perc_booked
-    )
-
-    conf_matrix = confusion_matrix(y_true, y_pred_binary)
+    conf_matrix = confusion_matrix(y_true, y_pred)
     print("Confusion matrix:")
-    print(f"proba_consult={perc_consulted:.3f}, proba_booked={perc_consulted:.3f}")
     print(conf_matrix)
     print("----")
 
     # Compute F1 score globally, then for each class
-    f1_per_class = f1_score(y_true, y_pred_binary, average=None)
-    f1_global_weighted = f1_score(y_true, y_pred_binary, average="weighted")
-    f1_global_macro = f1_score(y_true, y_pred_binary, average="macro")
+    f1_per_class = f1_score(y_true, y_pred, average=None)
+    f1_global_weighted = f1_score(y_true, y_pred, average="weighted")
+    f1_global_macro = f1_score(y_true, y_pred, average="macro")
     print(f"Global F1 score (weighted): {f1_global_weighted:.2f}")
     print(f"Global F1 score (macro): {f1_global_macro:.2f}")
     print("F1 score for each class:")

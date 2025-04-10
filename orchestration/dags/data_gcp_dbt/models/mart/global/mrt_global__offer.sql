@@ -70,7 +70,7 @@ select
     venue_label,
     venue_is_permanent,
     partner_id,
-    venue_managing_offerer_id,
+    offerer_id,
     offerer_name,
     venue_type_label,
     venue_iris_internal_id,

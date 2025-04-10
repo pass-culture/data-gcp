@@ -142,7 +142,7 @@ select
     offers.venue_density_label,
     offers.venue_macro_density_label,
     offers.partner_id,
-    offers.venue_managing_offerer_id as offerer_id,
+    offers.offerer_id,
     offers.offerer_name,
     offers.venue_type_label,
     coalesce(c.title, c.offer_title) as module_name,

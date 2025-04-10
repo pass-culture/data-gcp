@@ -239,8 +239,7 @@ left join
     on ofr.offerer_siren = siren_data.siren
 left join
     {{ source("seed", "siren_main_business_labels") }} as main_business
-    on siren_data.activiteprincipaleunitelegale
-    = main_business.main_business_code
+    on siren_data.activiteprincipaleunitelegale = main_business.main_business_code
 left join
     {{ source("seed", "siren_legal_category_labels") }} as legal_category
     on cast(legal_category.legal_category_code as string)

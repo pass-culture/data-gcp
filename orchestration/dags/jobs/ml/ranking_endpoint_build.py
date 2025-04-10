@@ -3,9 +3,12 @@ from datetime import datetime, timedelta
 from common import macros
 from common.alerts import on_failure_combined_callback
 from common.config import (
+    BIGQUERY_ML_RECOMMENDATION_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
+    GCP_PROJECT_ID,
+    MLFLOW_BUCKET_NAME,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -17,17 +20,22 @@ from common.utils import get_airflow_schedule
 
 from airflow import DAG
 from airflow.models import Param
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryInsertJobOperator,
+)
 
-default_args = {
+DEFAULT_ARGS = {
     "start_date": datetime(2022, 11, 30),
     "on_failure_callback": on_failure_combined_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
-
+DATE = "{{ ts_nodash }}"
 DEFAULT_REGION = "europe-west1"
 BASE_PATH = "data-gcp/jobs/ml_jobs/ranking_endpoint"
 DAG_NAME = "ranking_endpoint_build"
+RANKING_TRAINING_DATA_TABLE_NAME = "ranking_training_data"
+STORAGE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/{DAG_NAME}/{ENV_SHORT_NAME}/{DATE}"
 
 gce_params = {
     "instance_name": f"ranking-endpoint-build-{ENV_SHORT_NAME}",
@@ -45,7 +53,7 @@ schedule_dict = {"prod": "0 20 * * 5", "dev": "0 20 * * *", "stg": "0 20 * * 3"}
 
 with DAG(
     DAG_NAME,
-    default_args=default_args,
+    default_args=DEFAULT_ARGS,
     description="Train and build Ranking Endpoint",
     schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
     catchup=False,
@@ -87,6 +95,23 @@ with DAG(
         branch="{{ params.branch }}",
         python_version="3.10",
         base_dir=BASE_PATH,
+    )
+
+    import_training_data_table_to_gcs = BigQueryInsertJobOperator(
+        task_id="import_training_data_table_to_gcs",
+        configuration={
+            "extract": {
+                "sourceTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": BIGQUERY_ML_RECOMMENDATION_DATASET,
+                    "tableId": RANKING_TRAINING_DATA_TABLE_NAME,
+                },
+                "compression": None,
+                "destinationUris": f"{STORAGE_PATH}/data-*.parquet",
+                "destinationFormat": "PARQUET",
+            }
+        },
+        dag=dag,
     )
 
     deploy_model = SSHGCEOperator(

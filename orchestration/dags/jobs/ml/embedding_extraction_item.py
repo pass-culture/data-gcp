@@ -44,7 +44,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Extact items metadata embeddings",
-    schedule_interval=get_airflow_schedule("0 12 * * *"),  # every day
+    schedule_interval=get_airflow_schedule("00 12,20 * * *"),  # every day
     catchup=False,
     dagrun_timeout=timedelta(hours=20),
     user_defined_macros=macros.default,

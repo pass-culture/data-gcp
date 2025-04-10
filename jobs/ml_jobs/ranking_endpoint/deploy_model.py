@@ -53,46 +53,16 @@ PROBA_BOOKING_THRESHOLD = 0.5
 
 
 def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
+    # Hack : Use new training data
+    dataset_name = f"ml_reco_{ENV_SHORT_NAME}"
+    table_name = "ranking_training_data"
     sql = f"""
-    WITH seen AS (
-      SELECT
-          *
-      FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}`
-      WHERE not consult and not booking
-      ORDER BY offer_order ASC
-      LIMIT {PARAMS["seen"]}
-    ),
-    consult AS (
-        SELECT
-            *
-        FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}`
-        WHERE consult and not booking
-        LIMIT {PARAMS["consult"]}
-
-    ),
-    booking AS (
-      SELECT
-            *
-        FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}`
-        WHERE booking
-        LIMIT {PARAMS["booking"]}
-    )
-    SELECT * FROM seen
-    UNION ALL
-    SELECT * FROM consult
-    UNION ALL
-    SELECT * FROM booking
+    select * from `{GCP_PROJECT_ID}.{dataset_name}.{table_name}`
     """
+    # End Hack
     print(sql)
 
-    data = pd.read_gbq(sql).sample(frac=1)
-    n_rows_duplicated = data.duplicated().sum()
-    if n_rows_duplicated > 0:
-        raise ValueError(
-            f"Duplicated rows in data ({n_rows_duplicated} rows duplicated). Please review your SQL query."
-        )
-
-    return data
+    return pd.read_gbq(sql).sample(frac=1).drop_duplicates()
 
 
 def plot_figures(
@@ -217,8 +187,6 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
         axis=1,
     )
 
-    print(df_final_features.head())
-    print(df_final_features.columns)
     return df_final_features
 
 
@@ -325,6 +293,7 @@ def main(
         model_name = "default"
     run_id = f"{model_name}_{ENV_SHORT_NAME}_v{yyyymmdd}"
     serving_container = f"europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/ranking-endpoint/{ENV_SHORT_NAME}/{experiment_name.replace('.', '_')}:{run_id}"
+
     train_pipeline(
         dataset_name=dataset_name,
         table_name=table_name,

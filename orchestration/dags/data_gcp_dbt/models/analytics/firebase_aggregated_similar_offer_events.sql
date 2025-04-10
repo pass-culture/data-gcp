@@ -30,21 +30,18 @@ with
                 distinct case
                     when convert_data.event_name = 'ConsultOffer'
                     then convert_data.item_id
-                    else null
                 end
             ) as nb_items_consulted,
             count(
                 distinct case
                     when convert_data.event_name = 'BookingConfirmation'
                     then convert_data.item_id
-                    else null
                 end
             ) as nb_items_booked,
             sum(
                 case
                     when convert_data.event_name = 'BookingConfirmation'
-                    then delta_diversification
-                    else null
+                    then booking.diversity_score
                 end
             ) as diversification_score
         from display_data
@@ -55,11 +52,11 @@ with
             and display_data.similar_offer_playlist_type
             = convert_data.similar_offer_playlist_type
         left join
-            {{ ref("diversification_booking") }} as diversification_booking
-            on diversification_booking.booking_id = convert_data.booking_id
-        join
+            {{ ref("mrt_global__booking") }} as booking
+            on convert_data.booking_id = booking.booking_id
+        inner join
             {{ ref("mrt_global__user") }} as mrt_global__user
-            on mrt_global__user.user_id = display_data.user_id
+            on display_data.user_id = mrt_global__user.user_id
         group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
     ),
 
@@ -81,7 +78,7 @@ with
 
 select distinct
     data_and_lags.* except (lag_1, lag_2, lag_3, event_timestamp),
-    case
-        when item_id = lag_1 or item_id = lag_2 or item_id = lag_3 then true else false
-    end as looped_to_other_offer
+    coalesce(
+        item_id = lag_1 or item_id = lag_2 or item_id = lag_3, false
+    ) as looped_to_other_offer
 from data_and_lags

@@ -222,7 +222,10 @@ REF_TABLES = {
     "qpv_eligible_pop": {
         "file_type": "avro",
     },
-    "siren_data_labels": {
+    "siren_main_business_labels": {
+        "file_type": "parquet",
+    },
+    "siren_legal_category_labels": {
         "file_type": "parquet",
     },
     "population_age_and_department_france_details": {

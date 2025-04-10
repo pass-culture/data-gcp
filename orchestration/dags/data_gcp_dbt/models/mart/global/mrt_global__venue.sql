@@ -28,6 +28,8 @@ select
     venue_density_level,
     venue_academy_name,
     venue_in_qpv,
+    venue_in_zrr,
+    venue_rural_city_type,
     venue_targeted_audience,
     banner_url,
     venue_description,

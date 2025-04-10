@@ -5,9 +5,9 @@ with
     institution_epci as (
         {{
             generate_seed_geolocation_query(
-                source_table=["raw", "applicative_database_educational_institution"],
+                source_table="int_api_gouv__educational_institution_address",
                 referential_table="int_seed__intercommunal_public_institution",
-                id_column="institution_id",
+                id_column="educational_institution_id",
                 prefix_name="institution",
                 columns=["epci_code", "epci_name"],
             )
@@ -17,9 +17,9 @@ with
     institution_qpv as (
         {{
             generate_seed_geolocation_query(
-                source_table=["raw", "applicative_database_educational_institution"],
+                source_table="int_api_gouv__educational_institution_address",
                 referential_table="int_seed__qpv",
-                id_column="institution_id",
+                id_column="educational_institution_id",
                 prefix_name="institution",
                 columns=["qpv_code", "qpv_name", "qpv_municipality"],
                 geo_shape="qpv_geo_shape",
@@ -31,9 +31,9 @@ with
     institution_zrr as (
         {{
             generate_seed_geolocation_query(
-                source_table=["raw", "applicative_database_educational_institution"],
+                source_table="int_api_gouv__educational_institution_address",
                 referential_table="int_seed__rural_revitalization_zone",
-                id_column="institution_id",
+                id_column="educational_institution_id",
                 prefix_name="institution",
                 columns=["zrr_level", "zrr_level_detail"],
             )
@@ -43,9 +43,9 @@ with
     institution_geo_iris as (
         {{
             generate_seed_geolocation_query(
-                source_table=["raw", "applicative_database_educational_institution"],
+                source_table="int_api_gouv__educational_institution_address",
                 referential_table="int_seed__geo_iris",
-                id_column="institution_id",
+                id_column="educational_institution_id",
                 prefix_name="institution",
                 columns=[
                     "iris_internal_id",
@@ -66,19 +66,19 @@ with
 
 select
     institution.educational_institution_id,
-    institution.institution_id,
-    institution.institution_city,
     institution.institution_postal_code,
     institution.institution_department_code,
+    region_department.academy_name as institution_academy_name,
+    region_department.dep_name as institution_department_name,
+    region_department.region_name as institution_region_name,
     institution.institution_latitude,
     institution.institution_longitude,
     institution_geo_iris.iris_internal_id as institution_internal_iris_id,
     institution_geo_iris.density_label as institution_density_label,
     institution_geo_iris.density_macro_level as institution_macro_density_label,
     institution_geo_iris.density_level as institution_density_level,
-    institution_geo_iris.academy_name as institution_academy_name,
-    institution_geo_iris.region_name as institution_region_name,
-    institution_geo_iris.department_name as institution_department_name,
+    institution_geo_iris.city_label as institution_city,
+    institution_geo_iris.city_code as institution_city_code,
     institution_epci.epci_name as institution_epci,
     institution_epci.epci_code,
     institution_qpv.qpv_code,
@@ -86,6 +86,7 @@ select
     institution_qpv.qpv_municipality,
     institution_zrr.zrr_level,
     institution_zrr.zrr_level_detail,
+    institution.geocode_type as institution_address_geocode_type,
     case
         when
             institution_qpv.qpv_code is null
@@ -95,11 +96,25 @@ select
         else institution_qpv.qpv_code is not null
     end as institution_in_qpv
 
-from {{ source("raw", "applicative_database_educational_institution") }} as institution
+from {{ ref("int_api_gouv__educational_institution_address") }} as institution
 left join
-    institution_epci on institution.institution_id = institution_epci.institution_id
-left join institution_qpv on institution.institution_id = institution_qpv.institution_id
-left join institution_zrr on institution.institution_id = institution_zrr.institution_id
+    institution_epci
+    on institution.educational_institution_id
+    = institution_epci.educational_institution_id
+left join
+    institution_qpv
+    on institution.educational_institution_id
+    = institution_qpv.educational_institution_id
+left join
+    institution_zrr
+    on institution.educational_institution_id
+    = institution_zrr.educational_institution_id
 left join
     institution_geo_iris
-    on institution.institution_id = institution_geo_iris.institution_id
+    on institution.educational_institution_id
+    = institution_geo_iris.educational_institution_id
+-- ensure to have region and department name for non IRIS based regions (Wallis and
+-- Futuna, New Caledonia, etc.)
+left join
+    {{ source("seed", "region_department") }} as region_department
+    on institution.institution_department_code = region_department.num_dep

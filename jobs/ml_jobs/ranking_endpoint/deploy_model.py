@@ -1,3 +1,4 @@
+import glob
 import json
 import os
 import secrets
@@ -53,6 +54,11 @@ PROBA_BOOKING_THRESHOLD = 0.5
 
 
 def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
+    return pd.concat(
+        [pd.read_parquet(f) for f in glob.glob("data/14_days/data*.parquet")],
+        ignore_index=True,
+    )
+
     sql = f"""
     WITH seen AS (
       SELECT

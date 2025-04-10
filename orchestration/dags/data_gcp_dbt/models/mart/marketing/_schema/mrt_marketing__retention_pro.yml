@@ -1,7 +1,7 @@
 version: 2
 models:
-  - name: mrt_brevo__retention_pro
-    description: "{{ doc('description__mrt_brevo__retention_pro') }}"
+  - name: mrt_marketing__retention_pro
+    description: "{{ doc('description__mrt_marketing__retention_pro') }}"
     columns:
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"

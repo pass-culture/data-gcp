@@ -119,8 +119,7 @@ with
             on o.offerer_id = v.offerer_id
             and v.venue_is_permanent
         left join
-            top_venue_per_offerer
-            on o.offerer_id = top_venue_per_offerer.offerer_id
+            top_venue_per_offerer on o.offerer_id = top_venue_per_offerer.offerer_id
         left join
             {{ source("seed", "agg_partner_cultural_sector") }}
             on agg_partner_cultural_sector.partner_type

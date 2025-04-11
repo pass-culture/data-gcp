@@ -171,6 +171,7 @@ sources:
       - name: agg_partner_cultural_sector
       - name: epci
       - name: geo_iris
+      - name: institution_metadata_aggregated_type
       - name: institutional_scholar_level
       - name: iris_france
       - name: iris_nesting
@@ -202,7 +203,10 @@ sources:
         description: Partitionned table containing the history of the two tower user emebddings
       - name: two_tower_item_embedding_history
         description: Partitionned table containing the history of the two tower item emebddings
-
+  - name: ml_linkage
+    schema: ml_linkage_{{ var('ENV_SHORT_NAME') }}
+    tables:
+      - name: item_offer_mapping
   - name: appsflyer_import
     schema: appsflyer_import_{{ var('ENV_SHORT_NAME') }}
     tables:

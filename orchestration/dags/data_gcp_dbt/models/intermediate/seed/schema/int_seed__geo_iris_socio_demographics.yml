@@ -1,0 +1,177 @@
+version: 2
+
+models:
+  - name: int_seed__geo_iris_socio_demographics
+    description: '{{ doc("description__int_seed__geo_iris_socio_demographics") }}'
+    columns:
+      - name: iris_code
+        description: '{{ doc("column__iris_code") }}'
+        data_type: STRING
+
+      - name: geo_code
+        description: '{{ doc("column__geo_code") }}'
+        data_type: STRING
+
+      - name: total_population
+        description: '{{ doc("column__total_population") }}'
+        data_type: FLOAT64
+
+      - name: population_0_2_years
+        description: '{{ doc("column__population_0_2_years") }}'
+        data_type: FLOAT64
+
+      - name: population_3_5_years
+        description: '{{ doc("column__population_3_5_years") }}'
+        data_type: FLOAT64
+
+      - name: population_6_10_years
+        description: '{{ doc("column__population_6_10_years") }}'
+        data_type: FLOAT64
+
+      - name: population_11_17_years
+        description: '{{ doc("column__population_11_17_years") }}'
+        data_type: FLOAT64
+
+      - name: population_18_24_years
+        description: '{{ doc("column__population_18_24_years") }}'
+        data_type: FLOAT64
+
+      - name: population_25_39_years
+        description: '{{ doc("column__population_25_39_years") }}'
+        data_type: FLOAT64
+
+      - name: population_40_54_years
+        description: '{{ doc("column__population_40_54_years") }}'
+        data_type: FLOAT64
+
+      - name: population_55_64_years
+        description: '{{ doc("column__population_55_64_years") }}'
+        data_type: FLOAT64
+
+      - name: population_65_79_years
+        description: '{{ doc("column__population_65_79_years") }}'
+        data_type: FLOAT64
+
+      - name: population_over_80_years
+        description: '{{ doc("column__population_over_80_years") }}'
+        data_type: FLOAT64
+
+      - name: population_15_years_or_more
+        description: '{{ doc("column__population_15_years_or_more") }}'
+        data_type: FLOAT64
+
+      - name: csp_1
+        description: '{{ doc("column__csp_1") }}'
+        data_type: FLOAT64
+
+      - name: csp_2
+        description: '{{ doc("column__csp_2") }}'
+        data_type: FLOAT64
+
+      - name: csp_3
+        description: '{{ doc("column__csp_3") }}'
+        data_type: FLOAT64
+
+      - name: csp_4
+        description: '{{ doc("column__csp_4") }}'
+        data_type: FLOAT64
+
+      - name: csp_5
+        description: '{{ doc("column__csp_5") }}'
+        data_type: FLOAT64
+
+      - name: csp_6
+        description: '{{ doc("column__csp_6") }}'
+        data_type: FLOAT64
+
+      - name: csp_7
+        description: '{{ doc("column__csp_7") }}'
+        data_type: FLOAT64
+
+      - name: csp_8
+        description: '{{ doc("column__csp_8") }}'
+        data_type: FLOAT64
+
+      - name: french_population
+        description: '{{ doc("column__french_population") }}'
+        data_type: FLOAT64
+
+      - name: foreign_population
+        description: '{{ doc("column__foreign_population") }}'
+        data_type: FLOAT64
+
+      - name: immigrant_population
+        description: '{{ doc("column__immigrant_population") }}'
+        data_type: FLOAT64
+
+      - name: household_population
+        description: '{{ doc("column__household_population") }}'
+        data_type: FLOAT64
+
+      - name: non_household_population
+        description: '{{ doc("column__non_household_population") }}'
+        data_type: FLOAT64
+
+      - name: department_code
+        description: '{{ doc("column__department_code") }}'
+        data_type: STRING
+
+      - name: qt10_revenue
+        description: '{{ doc("column__qt10_revenue") }}'
+        data_type: FLOAT64
+
+      - name: qt50_revenue
+        description: '{{ doc("column__qt50_revenue") }}'
+        data_type: FLOAT64
+
+      - name: qt90_revenue
+        description: '{{ doc("column__qt90_revenue") }}'
+        data_type: FLOAT64
+
+      - name: interdecile_D9_D1_ratio
+        description: '{{ doc("column__interdecile_D9_D1_ratio") }}'
+        data_type: FLOAT64
+
+      - name: activity_income_share
+        description: '{{ doc("column__activity_income_share") }}'
+        data_type: FLOAT64
+
+      - name: wages_salaries_share
+        description: '{{ doc("column__wages_salaries_share") }}'
+        data_type: FLOAT64
+
+      - name: unemployment_benefits_share
+        description: '{{ doc("column__unemployment_benefits_share") }}'
+        data_type: FLOAT64
+
+      - name: self_employment_income_share
+        description: '{{ doc("column__self_employment_income_share") }}'
+        data_type: FLOAT64
+
+      - name: pensions_retirement_rents_share
+        description: '{{ doc("column__pensions_retirement_rents_share") }}'
+        data_type: FLOAT64
+
+      - name: patrimony_income_share
+        description: '{{ doc("column__patrimony_income_share") }}'
+        data_type: FLOAT64
+
+      - name: social_benefits_share
+        description: '{{ doc("column__social_benefits_share") }}'
+        data_type: FLOAT64
+
+      - name: family_benefits_share
+        description: '{{ doc("column__family_benefits_share") }}'
+        data_type: FLOAT64
+
+      - name: minimum_social_benefits_share
+        description: '{{ doc("column__minimum_social_benefits_share") }}'
+        data_type: FLOAT64
+
+      - name: housing_benefits_share
+        description: '{{ doc("column__housing_benefits_share") }}'
+        data_type: FLOAT64
+
+      - name: tax_share
+        description: '{{ doc("column__tax_share") }}'
+        data_type: FLOAT64

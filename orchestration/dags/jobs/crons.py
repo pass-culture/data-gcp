@@ -21,7 +21,7 @@ SCHEDULE_DICT = {
     "import_intraday_firebase_data": "0 1 * * *",
     "link_items": {"prod": "0 20 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"},
     "sync_bq_to_cloudsql_recommendation_tables": "00 6 * * *",
-    "sync_cloudsql_to_bq_recommendation_tables": {
+    "sync_cloudsql_recommendation_tables_to_bigquery": {
         "dev": "0 5 * * *",  # every day at 5:00 AM
         "stg": "0 5 * * *",  # every day at 5:00 AM
         "prod": "5 * * * *",  # every hour at 5 minutes past the hour

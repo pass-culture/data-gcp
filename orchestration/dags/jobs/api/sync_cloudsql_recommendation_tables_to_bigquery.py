@@ -16,7 +16,7 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
-from crons import SCHEDULE_DICT
+from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param

@@ -45,9 +45,7 @@ class ExportCloudSQLToGCSOrchestrator:
             List of GCS paths where data was exported
         """
 
-        logger.info(
-            f"Starting export process for {table_config.sql_table_name} at {start_time.strftime('%Y-%m-%d')} hour {start_time.hour}"
-        )
+        logger.info(f"Starting export process for {table_config.sql_table_name}")
 
         # Create temporary directory
         temp_dir = (

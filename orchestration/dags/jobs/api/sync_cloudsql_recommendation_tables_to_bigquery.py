@@ -48,11 +48,17 @@ DAG_ID = "sync_cloudsql_recommendation_tables_to_bigquery"
 
 NOW = datetime.datetime.now()
 
+
+def get_schedule_interval(dag_id: str):
+    schedule_interval = SCHEDULE_DICT.get(dag_id, {}).get(ENV_SHORT_NAME, None)
+    return get_airflow_schedule(schedule_interval)
+
+
 with DAG(
     DAG_ID,
     default_args=DEFAULT_DAG_ARGS,
     description="Import tables from recommendation CloudSQL to BigQuery hourly",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_ID][ENV_SHORT_NAME]),
+    schedule_interval=get_schedule_interval(DAG_ID),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=45),
     user_defined_macros=macros.default,

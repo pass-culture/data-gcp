@@ -5,6 +5,7 @@ import pandas as pd
 
 from app.model import (
     CATEGORICAL_FEATURES,
+    DEFAULT_CATEGORICAL,
     DEFAULT_NUMERICAL,
     EMBEDDING_DIM,
     NUMERIC_FEATURES,
@@ -53,7 +54,7 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
     item_embed_dim = EMBEDDING_DIM
     missing_array = json.dumps(np.array([DEFAULT_NUMERICAL] * user_embed_dim).tolist())
 
-    df = (
+    data_with_status_df = (
         data.loc[
             :,
             lambda df: df.columns.isin(
@@ -63,13 +64,13 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
                 + ["user_embedding_json", "item_embedding_json"]
             ),
         ]
+        .fillna({"is_consulted": 0.0, "is_booked": 0.0})
         .astype(
             {
                 "is_consulted": "float",
                 "is_booked": "float",
             }
         )
-        .fillna({"is_consulted": 0, "is_booked": 0})
         .rename(
             columns={
                 "is_consulted": ClassMapping.consulted.name,
@@ -77,12 +78,17 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
             }
         )
         .assign(
-            status=lambda df: pd.Series([ClassMapping.seen.name] * len(df))
+            status=lambda df: pd.Series(
+                index=df.index, data=[ClassMapping.seen.name] * len(df)
+            )
             .where(
                 df[ClassMapping.consulted.name] != 1.0,
                 other=ClassMapping.consulted.name,
             )
-            .where(df[ClassMapping.booked.name] != 1.0, other=ClassMapping.booked.name),
+            .where(
+                df[ClassMapping.booked.name] != 1.0,
+                other=ClassMapping.booked.name,
+            ),
             target_class=lambda df: df["status"]
             .map(
                 {
@@ -95,7 +101,7 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
     ).drop_duplicates()
 
     # Stack arrays into 2D NumPy arrays
-    df = df.assign(
+    data_with_string_embeddings_df = data_with_status_df.assign(
         user_embedding=lambda df: df.user_embedding_json.fillna(missing_array)
         .replace("null", missing_array)
         .apply(lambda x: np.array(json.loads(x))),
@@ -103,24 +109,28 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
         .replace("null", missing_array)
         .apply(lambda x: np.array(json.loads(x))),
     )
-    user_embeddings_array = np.stack(df["user_embedding"].values)
-    item_embeddings_array = np.stack(df["item_embedding"].values)
+    user_embeddings_array = np.stack(
+        data_with_string_embeddings_df["user_embedding"].values
+    )
+    item_embeddings_array = np.stack(
+        data_with_string_embeddings_df["item_embedding"].values
+    )
 
     # Convert to DataFrames with proper indices and column names
     user_embedding_features = pd.DataFrame(
         user_embeddings_array,
-        index=df.index,
+        index=data_with_string_embeddings_df.index,
         columns=[f"user_emb_{i}" for i in range(user_embed_dim)],
     )
     item_embedding_features = pd.DataFrame(
         item_embeddings_array,
-        index=df.index,
+        index=data_with_string_embeddings_df.index,
         columns=[f"item_emb_{i}" for i in range(item_embed_dim)],
     )
 
     return pd.concat(
         [
-            df.drop(
+            data_with_string_embeddings_df.drop(
                 columns=[
                     "user_embedding_json",
                     "item_embedding_json",
@@ -138,6 +148,7 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
 def map_features_columns(df: pd.DataFrame) -> pd.DataFrame:
     return (
         df.assign(**FEATURES_CONSTRUCTION)
-        .fillna(DEFAULT_NUMERICAL)
         .rename(columns=FEATURES_MAPPING)
+        .fillna({numeric_feat: DEFAULT_NUMERICAL for numeric_feat in NUMERIC_FEATURES})
+        .fillna({cat_feat: DEFAULT_CATEGORICAL for cat_feat in CATEGORICAL_FEATURES})
     )

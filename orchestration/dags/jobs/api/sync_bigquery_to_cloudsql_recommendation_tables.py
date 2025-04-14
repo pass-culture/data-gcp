@@ -156,7 +156,7 @@ with DAG(
             export_command = f"""
                 python bq_to_sql.py bq-to-gcs \
                     --table-name {table_name} \
-                    --bucket-path gs://{{ params.bucket_name }}/{{ params.bucket_folder }}/{{ ds }} \
+                    --bucket-path gs://{{{{ params.bucket_name }}}}/{{{{ params.bucket_folder }}}}/{{{{ ds_nodash }}}} \
                     --date {{{{ ds_nodash }}}}
             """
 
@@ -174,7 +174,7 @@ with DAG(
             import_command = f"""
                 python bq_to_sql.py gcs-to-cloudsql \
                     --table-name {table_name} \
-                    --bucket-path gs://{{ params.bucket_name }}/{{ params.bucket_folder }}/{{ ds }} \
+                    --bucket-path gs://{{{{ params.bucket_name }}}}/{{{{ params.bucket_folder }}}}/{{{{ ds_nodash }}}} \
                     --date {{{{ ds_nodash }}}}
             """
 

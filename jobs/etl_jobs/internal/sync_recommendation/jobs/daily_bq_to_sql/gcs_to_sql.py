@@ -151,13 +151,13 @@ class GCSToSQLOrchestrator:
         os.makedirs(temp_dir, exist_ok=True)
 
         # Download files using StorageService
-        prefix = f"{table_name}-*.parquet"
+        prefix = f"{table_name}-"
         parquet_files = self.storage_service.download_files(
             bucket_path=bucket_path, prefix=prefix, destination_dir=temp_dir
         )
         if not parquet_files:
             raise ValueError(
-                f"No Parquet files found for table {table_name} at {bucket_path}/{prefix}*.parquet"
+                f"No Parquet files found for table {table_name} at {bucket_path}/{prefix}"
             )
 
         logger.info(f"Found {len(parquet_files)} Parquet files for table {table_name}")

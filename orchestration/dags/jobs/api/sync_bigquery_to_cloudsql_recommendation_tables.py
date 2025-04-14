@@ -26,8 +26,8 @@ default_args = {
 }
 
 DEFAULT_REGION = "europe-west1"
-BASE_DIR = "data-gcp/jobs/etl_jobs/internal/export_recommendation"
-DAG_ID = "sync_bq_to_cloudsql_recommendation_tables"
+BASE_DIR = "data-gcp/jobs/etl_jobs/internal/sync_recommendation"
+DAG_ID = "sync_bigquery_to_cloudsql_recommendation_tables"
 
 # Table dependencies configuration
 TABLE_DEPENDENCIES = {
@@ -89,12 +89,12 @@ with DAG(
             default=f"recommendation-export-{ENV_SHORT_NAME}",
             type="string",
         ),
-        "bucket_path": Param(
-            default=f"gs://{DATA_GCS_BUCKET_NAME}",
+        "bucket_name": Param(
+            default=DATA_GCS_BUCKET_NAME,
             type="string",
         ),
         "bucket_folder": Param(
-            default="export/cloudsql_recommendation_tables/{{ ds_nodash }}/",
+            default=f"export/cloudsql_recommendation_tables/{datetime.now().strftime('%Y%m%d_%H%M%S')}/",
             type="string",
         ),
     },
@@ -134,7 +134,7 @@ with DAG(
             export_command = f"""
                 python bq_to_sql.py bq-to-gcs \
                     --table-name {table_name} \
-                    --bucket-path {{ params.bucket_path }}/{{ params.bucket_folder }} \
+                    --bucket-path gs://{{ params.bucket_name }}/{{ params.bucket_folder }} \
                     --date {{{{ ds_nodash }}}}
             """
 
@@ -152,7 +152,7 @@ with DAG(
             import_command = f"""
                 python bq_to_sql.py gcs-to-cloudsql \
                     --table-name {table_name} \
-                    --bucket-path {{ params.bucket_path }}/{{ params.bucket_folder }} \
+                    --bucket-path gs://{{ params.bucket_name }}/{{ params.bucket_folder }} \
                     --date {{{{ ds_nodash }}}}
             """
 
@@ -167,7 +167,7 @@ with DAG(
     # Cleanup GCS files after successful import
     cleanup_gcs = GCSDeleteObjectsOperator(
         task_id="cleanup_gcs_files",
-        bucket_name="{{ params.bucket_path }}",
+        bucket_name="{{ params.bucket_name }}",
         prefix="{{ params.bucket_folder }}",
         impersonation_chain=None,
     )

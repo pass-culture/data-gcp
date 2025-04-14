@@ -81,12 +81,12 @@ with DAG(
             default="past_offer_context",
             type="string",
         ),
-        "bucket_path": Param(
-            default=f"gs://{DATA_GCS_BUCKET_NAME}",
+        "bucket_name": Param(
+            default=DATA_GCS_BUCKET_NAME,
             type="string",
         ),
         "bucket_folder": Param(
-            default=f"import/cloudsql_recommendation_tables/{NOW.strftime('%Y%m%d')}/",
+            default=f"import/cloudsql_recommendation_tables/{NOW.strftime('%Y%m%d_%H%M%S')}/",
             type="string",
         ),
         "execution_date": Param(
@@ -125,7 +125,7 @@ with DAG(
         command="""
             python sql_to_bq.py cloudsql-to-gcs \
                 --table-name {{ params.table_name }} \
-                --bucket-path {{ params.bucket_path }}/{{ params.bucket_folder }} \
+                --bucket-path gs://{{ params.bucket_name }}/{{ params.bucket_folder }} \
                 --execution-date {{ params.execution_date }} \
                 --end-time {{ ds }}
         """,
@@ -140,7 +140,7 @@ with DAG(
         command="""
             python sql_to_bq.py gcs-to-bq \
                 --table-name {{ params.table_name }} \
-                --bucket-path {{ params.bucket_path }}/{{ params.bucket_folder }} \
+                --bucket-path gs://{{ params.bucket_name }}/{{ params.bucket_folder }} \
                 --execution-date {{ params.execution_date }}
         """,
         dag=dag,
@@ -166,7 +166,7 @@ with DAG(
     # Cleanup GCS files after successful import
     cleanup_gcs = GCSDeleteObjectsOperator(
         task_id="cleanup_gcs_files",
-        bucket_name="{{ params.bucket_path }}",
+        bucket_name="{{ params.bucket_name }}",
         prefix="{{ params.bucket_folder }}",
         impersonation_chain=None,
     )

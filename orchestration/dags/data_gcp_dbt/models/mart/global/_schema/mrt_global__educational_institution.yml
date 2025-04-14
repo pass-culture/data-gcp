@@ -30,8 +30,6 @@ models:
         description: "{{ doc('column__first_booking_date') }}"
       - name: last_booking_date
         description: "{{ doc('column__last_booking_date') }}"
-      - name: last_category_booked
-        description: "{{ doc('column__last_category_booked') }}"
       - name: total_non_cancelled_collective_bookings
         description: "{{ doc('column__total_non_cancelled_collective_bookings') }}"
       - name: total_current_year_non_cancelled_collective_bookings

@@ -122,7 +122,7 @@ with DAG(
         command="""
             python sql_to_bq.py cloudsql-to-gcs \
                 --table-name {{ params.table_name }} \
-                --bucket-path gs://{{ params.bucket_name }}/{{ params.bucket_folder }}/{{ ds }} \
+                --bucket-path gs://{{ params.bucket_name }}/{{ params.bucket_folder }}/{{ ts_nodash }} \
                 --execution-date {{ params.execution_date }} \
                 --end-time {{ ds }}
         """,
@@ -136,7 +136,7 @@ with DAG(
         command="""
             python sql_to_bq.py gcs-to-bq \
                 --table-name {{ params.table_name }} \
-                --bucket-path gs://{{ params.bucket_name }}/{{ params.bucket_folder }}/{{ ds }} \
+                --bucket-path gs://{{ params.bucket_name }}/{{ params.bucket_folder }}/{{ ts_nodash }} \
                 --execution-date {{ params.execution_date }}
         """,
         dag=dag,

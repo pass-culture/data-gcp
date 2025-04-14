@@ -8,7 +8,7 @@ import psycopg2
 from google.cloud import bigquery
 from psycopg2.extensions import connection
 
-from utils.constant import DATABASE_EXTENSIONS, MAX_RETRIES
+from utils.constant import DUCKDB_DATABASE_EXTENSIONS, MAX_RETRIES
 
 logger = logging.getLogger(__name__)
 
@@ -209,7 +209,7 @@ class DuckDBService(DatabaseService):
     def __init__(
         self,
         database_path: str = ":memory:",
-        extensions: List[str] = DATABASE_EXTENSIONS,
+        extensions: List[str] = DUCKDB_DATABASE_EXTENSIONS,
     ):
         self.database_path = database_path
         self.extensions = extensions

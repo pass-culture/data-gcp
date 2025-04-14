@@ -57,13 +57,7 @@ with
                     when collective_booking_rank_desc = 1
                     then collective_booking_creation_date
                 end
-            ) as last_booking_date,
-            max(
-                case
-                    when collective_booking_rank_desc = 1
-                    then collective_offer_subcategory_id
-                end
-            ) as last_category_booked
+            ) as last_booking_date
         from {{ ref("mrt_global__collective_booking") }}
         where collective_booking_status != 'CANCELLED'
         group by educational_institution_id
@@ -87,7 +81,6 @@ select
     ei.current_deposit_creation_date,
     cb.first_booking_date,
     cb.last_booking_date,
-    cb.last_category_booked,
     sh.total_students,
     institution_metadata_aggregated_type.macro_institution_type,
     ei.institution_city,

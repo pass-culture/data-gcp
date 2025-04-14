@@ -8,6 +8,6 @@ typer>=0.9.0
 tenacity>=8.2.3
 psycopg2-binary>=2.9.9
 oauth2client
-duckdb>=0.10.0
+duckdb>=1.2.1
 pyarrow
 jinja2>=3.0.0

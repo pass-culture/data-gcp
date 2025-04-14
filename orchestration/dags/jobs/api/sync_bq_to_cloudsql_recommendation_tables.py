@@ -169,7 +169,7 @@ with DAG(
         task_id="cleanup_gcs_files",
         bucket_name="{{ params.bucket_path }}",
         prefix="{{ params.bucket_folder }}",
-        impersonation_chain=None,  # Add if needed for your setup
+        impersonation_chain=None,
     )
 
     # Refresh all materialized views concurrently

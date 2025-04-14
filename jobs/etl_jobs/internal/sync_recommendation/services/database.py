@@ -161,7 +161,11 @@ class CloudSQLService(DatabaseService):
                 )
                 time.sleep(wait_time)
 
-    def execute_query(self, query: str, params: Optional[Dict] = None) -> None:
+    def execute_query(
+        self,
+        query: str,
+        params: Optional[Dict] = None,
+    ) -> None:
         """Execute a query on CloudSQL."""
         try:
             if not self._connection or self._connection.closed:
@@ -169,7 +173,10 @@ class CloudSQLService(DatabaseService):
                 self._cursor = self._connection.cursor()
 
             self._cursor.execute(query, params or {})
-            self._last_result = self._cursor.fetchall()
+            if self._cursor.description:  # Query returns rows
+                self._last_result = self._cursor.fetchall()
+            else:  # Query does not return rows (DDL, INSERT, UPDATE, DELETE)
+                self._last_result = None
             self._connection.commit()
         except Exception as e:
             logger.error(f"Error executing CloudSQL query: {str(e)}")

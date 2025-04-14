@@ -18,6 +18,7 @@ class ClassMapping(Enum):
     booked = 2
 
 
+EMBEDDING_DIM = 64  # TODO: Read this from the training data
 NUMERIC_FEATURES = (
     [
         "user_bookings_count",
@@ -43,8 +44,8 @@ NUMERIC_FEATURES = (
         "offer_centroid_x",
         "offer_centroid_y",
     ]
-    + [f"user_emb_{i}" for i in range(64)]
-    + [f"item_emb_{i}" for i in range(64)]
+    + [f"user_emb_{i}" for i in range(EMBEDDING_DIM)]
+    + [f"item_emb_{i}" for i in range(EMBEDDING_DIM)]
 )
 
 CATEGORICAL_FEATURES = ["context", "offer_subcategory_id"]

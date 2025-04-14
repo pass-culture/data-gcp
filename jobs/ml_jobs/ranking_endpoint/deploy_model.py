@@ -1,19 +1,14 @@
-import json
 import os
 import secrets
 import shutil
 from datetime import datetime
 
 import mlflow
-import numpy as np
 import pandas as pd
 import typer
 from sklearn.model_selection import train_test_split
 
 from app.model import (
-    CATEGORICAL_FEATURES,
-    DEFAULT_NUMERICAL,
-    NUMERIC_FEATURES,
     ClassMapping,
     TrainPipeline,
 )
@@ -22,7 +17,7 @@ from figure import (
     plot_cm_multiclass,
     plot_features_importance,
 )
-from preprocessing import map_features_columns
+from preprocessing import map_features_columns, preprocess_data
 from utils import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -98,96 +93,6 @@ def plot_figures(
     plot_features_importance(
         pipeline, filename=f"{figure_folder}/plot_features_importance.pdf"
     )
-
-
-def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
-    # Add features horizontally
-    user_embed_dim = 64
-    item_embed_dim = 64
-    missing_array = json.dumps(np.array([DEFAULT_NUMERICAL] * user_embed_dim).tolist())
-
-    df = (
-        data.loc[
-            :,
-            lambda df: df.columns.isin(
-                ["is_seen", "is_consulted", "is_booked", "unique_session_id"]
-                + NUMERIC_FEATURES
-                + CATEGORICAL_FEATURES
-                + ["user_embedding_json", "item_embedding_json"]
-            ),
-        ]
-        .astype(
-            {
-                "is_consulted": "float",
-                "is_booked": "float",
-            }
-        )
-        .fillna({"is_consulted": 0, "is_booked": 0})
-        .rename(
-            columns={
-                "is_consulted": ClassMapping.consulted.name,
-                "is_booked": ClassMapping.booked.name,
-            }
-        )
-        .assign(
-            status=lambda df: pd.Series([ClassMapping.seen.name] * len(df))
-            .where(
-                df[ClassMapping.consulted.name] != 1.0,
-                other=ClassMapping.consulted.name,
-            )
-            .where(df[ClassMapping.booked.name] != 1.0, other=ClassMapping.booked.name),
-            target_class=lambda df: df["status"]
-            .map(
-                {
-                    class_mapping.name: class_mapping.value
-                    for class_mapping in ClassMapping
-                }
-            )
-            .astype(int),
-        )
-    ).drop_duplicates()
-
-    # Stack arrays into 2D NumPy arrays
-    df = df.assign(
-        user_embedding=lambda df: df.user_embedding_json.fillna(missing_array)
-        .replace("null", missing_array)
-        .apply(lambda x: np.array(json.loads(x))),
-        item_embedding=lambda df: df.item_embedding_json.fillna(missing_array)
-        .replace("null", missing_array)
-        .apply(lambda x: np.array(json.loads(x))),
-    )
-    user_embeddings_array = np.stack(df["user_embedding"].values)
-    item_embeddings_array = np.stack(df["item_embedding"].values)
-
-    # Convert to DataFrames with proper indices and column names
-    user_embedding_features = pd.DataFrame(
-        user_embeddings_array,
-        index=df.index,
-        columns=[f"user_emb_{i}" for i in range(user_embed_dim)],
-    )
-    item_embedding_features = pd.DataFrame(
-        item_embeddings_array,
-        index=df.index,
-        columns=[f"item_emb_{i}" for i in range(item_embed_dim)],
-    )
-
-    df_final_features = pd.concat(
-        [
-            df.drop(
-                columns=[
-                    "user_embedding_json",
-                    "item_embedding_json",
-                    "user_embedding",
-                    "item_embedding",
-                ]
-            ),
-            user_embedding_features,
-            item_embedding_features,
-        ],
-        axis=1,
-    )
-
-    return df_final_features
 
 
 def train_pipeline(dataset_name, table_name, experiment_name, run_name):

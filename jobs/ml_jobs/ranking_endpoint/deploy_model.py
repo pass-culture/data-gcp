@@ -12,6 +12,7 @@ from app.model import (
     ClassMapping,
     TrainPipeline,
 )
+from src.evaluation import compute_ndcg_at_k
 from src.figure import (
     plot_cm,
     plot_cm_multiclass,
@@ -97,13 +98,13 @@ def plot_figures(
 
 def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     # Load and preprocess the data
-    data = load_data(dataset_name, table_name).pipe(map_features_columns)
-    preprocessed_data = data.pipe(
+    raw_data = load_data(dataset_name, table_name).pipe(map_features_columns)
+    preprocessed_data = raw_data.pipe(
         preprocess_data,
     )
-    seed = secrets.randbelow(1000)
 
     # Split based on unique_session_id
+    seed = secrets.randbelow(1000)
     unique_session_ids = preprocessed_data["unique_session_id"].unique()
     train_session_ids, test_session_ids = train_test_split(
         unique_session_ids, test_size=TEST_SIZE, random_state=seed
@@ -140,6 +141,12 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         print("Evaluating model...")
         train_predictions = train_data.pipe(pipeline_classifier.predict_classifier)
         test_predictions = test_data.pipe(pipeline_classifier.predict_classifier)
+        ndcg_at_k = compute_ndcg_at_k(
+            raw_data=raw_data, predictions=test_predictions, k_list=[5, 10, 20]
+        )
+        for key, value in ndcg_at_k.items():
+            print(f"ndcg_at_{key}: {value}")
+            mlflow.log_metric(f"ndcg_at_{key}", value)
         print("Evaluation finished")
 
         # Save Data

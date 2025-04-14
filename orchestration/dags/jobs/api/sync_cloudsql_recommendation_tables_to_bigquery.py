@@ -129,7 +129,7 @@ with DAG(
                 --table-name {{ params.table_name }} \
                 --bucket-path gs://{{ params.bucket_name }}/{{ params.bucket_folder }}/{{ ts_nodash }} \
                 --execution-date {{ params.execution_date }} \
-                --end-time {{ params.end_time }}
+                --end-time '{{ params.end_time }}'
         """,
         dag=dag,
     )

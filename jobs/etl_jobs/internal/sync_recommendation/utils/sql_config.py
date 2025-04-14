@@ -4,88 +4,6 @@ from typing import Dict, List, Optional
 
 from utils.constant import ENV_SHORT_NAME
 
-
-class MaterializedView(Enum):
-    ENRICHED_USER = "enriched_user_mv"
-    ITEM_IDS = "item_ids_mv"
-    NON_RECOMMENDABLE_ITEMS = "non_recommendable_items_mv"
-    IRIS_FRANCE = "iris_france_mv"
-    RECOMMENDABLE_OFFERS = "recommendable_offers_raw_mv"
-
-
-class SQLTableConfig:
-    """Configuration for SQL table export."""
-
-    def __init__(
-        self,
-        sql_table_name: str,
-        bigquery_table_name: str,
-        bigquery_dataset_name: str,
-        columns: Dict[str, str],
-        time_column: str,
-        partition_field: str,
-        bigquery_schema: List[Dict[str, str]],
-    ):
-        self.sql_table_name = sql_table_name
-        self.bigquery_table_name = bigquery_table_name
-        self.bigquery_dataset_name = bigquery_dataset_name
-        self.columns = columns
-        self.time_column = time_column
-        self.partition_field = partition_field
-        self.bigquery_schema = bigquery_schema
-
-    def _get_time_conditions(
-        self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
-    ) -> str:
-        """Helper to build WHERE clause conditions based on time range."""
-        conditions = []
-        if start_time:
-            conditions.append(f"{self.time_column} >= '{start_time.isoformat()}'")
-        if end_time:
-            conditions.append(f"{self.time_column} <= '{end_time.isoformat()}'")
-        return f"WHERE {' AND '.join(conditions)}" if conditions else ""
-
-    def _build_select_query(
-        self,
-        where_clause: str,
-        execution_date: datetime = None,
-        database_name: str = None,
-    ) -> str:
-        """Build the SELECT query with the given WHERE clause."""
-        columns = ", ".join(self.columns.keys())
-        query = f"SELECT {columns}"
-        if execution_date:
-            query += f", '{execution_date.strftime('%Y-%m-%d')}'::date as {self.partition_field}"
-        query += f" FROM {database_name}.{self.sql_table_name}"
-        if where_clause:
-            query += f" {where_clause}"
-        return query
-
-    def get_extract_query(
-        self,
-        start_time: datetime = None,
-        end_time: datetime = None,
-        execution_date: datetime = None,
-        database_name: str = None,
-    ) -> str:
-        """Generate query to extract data between two timestamps for recovery."""
-        where_clause = self._get_time_conditions(start_time, end_time)
-        return self._build_select_query(where_clause, execution_date, database_name)
-
-    def _build_delete_query(self, where_clause: str) -> str:
-        return f"""
-            DELETE FROM {self.sql_table_name}
-            {where_clause}
-        """
-
-    def get_drop_table_query(
-        self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
-    ) -> str:
-        """Generate query to delete data between two timestamps or all data."""
-        where_clause = self._get_time_conditions(start_time, end_time)
-        return self._build_delete_query(where_clause)
-
-
 CLOUD_SQL_TABLES_CONFIG: Dict[str, Dict] = {
     "past_offer_context": {
         "columns": {
@@ -156,6 +74,87 @@ CLOUD_SQL_TABLES_CONFIG: Dict[str, Dict] = {
         ],
     }
 }
+
+
+class MaterializedView(Enum):
+    ENRICHED_USER = "enriched_user_mv"
+    ITEM_IDS = "item_ids_mv"
+    NON_RECOMMENDABLE_ITEMS = "non_recommendable_items_mv"
+    IRIS_FRANCE = "iris_france_mv"
+    RECOMMENDABLE_OFFERS = "recommendable_offers_raw_mv"
+
+
+class SQLTableConfig:
+    """Configuration for SQL table export."""
+
+    def __init__(
+        self,
+        sql_table_name: str,
+        bigquery_table_name: str,
+        bigquery_dataset_name: str,
+        columns: Dict[str, str],
+        time_column: str,
+        partition_field: str,
+        bigquery_schema: List[Dict[str, str]],
+    ):
+        self.sql_table_name = sql_table_name
+        self.bigquery_table_name = bigquery_table_name
+        self.bigquery_dataset_name = bigquery_dataset_name
+        self.columns = columns
+        self.time_column = time_column
+        self.partition_field = partition_field
+        self.bigquery_schema = bigquery_schema
+
+    def _get_time_conditions(
+        self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
+    ) -> str:
+        """Helper to build WHERE clause conditions based on time range."""
+        conditions = []
+        if start_time:
+            conditions.append(f"{self.time_column} >= '{start_time.isoformat()}'")
+        if end_time:
+            conditions.append(f"{self.time_column} <= '{end_time.isoformat()}'")
+        return f"WHERE {' AND '.join(conditions)}" if conditions else ""
+
+    def _build_select_query(
+        self,
+        where_clause: str,
+        execution_date: Optional[datetime] = None,
+        database_name: Optional[str] = None,
+    ) -> str:
+        """Build the SELECT query with the given WHERE clause."""
+        columns = ", ".join(self.columns.keys())
+        query = f"SELECT {columns}"
+        if execution_date:
+            query += f", '{execution_date.strftime('%Y-%m-%d')}'::date as {self.partition_field}"
+        query += f" FROM {database_name}.{self.sql_table_name}"
+        if where_clause:
+            query += f" {where_clause}"
+        return query
+
+    def get_extract_query(
+        self,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        execution_date: Optional[datetime] = None,
+        database_name: Optional[str] = None,
+    ) -> str:
+        """Generate query to extract data between two timestamps for recovery."""
+        where_clause = self._get_time_conditions(start_time, end_time)
+        return self._build_select_query(where_clause, execution_date, database_name)
+
+    def _build_delete_query(self, where_clause: str) -> str:
+        return f"""
+            DELETE FROM {self.sql_table_name}
+            {where_clause}
+        """
+
+    def get_drop_table_query(
+        self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
+    ) -> str:
+        """Generate query to delete data between two timestamps or all data."""
+        where_clause = self._get_time_conditions(start_time, end_time)
+        return self._build_delete_query(where_clause)
 
 
 EXPORT_TABLES = {

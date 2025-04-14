@@ -1,10 +1,9 @@
 import logging
-import os
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 from google.api_core import retry
-from google.api_core.exceptions import GoogleAPIError
+from google.api_core.exceptions import GoogleAPIError, NotFound
 from google.cloud import storage
 
 logger = logging.getLogger(__name__)
@@ -13,6 +12,30 @@ logger = logging.getLogger(__name__)
 class StorageService:
     def __init__(self, project_id: str):
         self.client = storage.Client(project=project_id)
+
+    def extract_bucket_name_and_folder_path(self, bucket_path: str) -> Tuple[str, str]:
+        """
+        Extract bucket name and folder path from a GCS path.
+
+        Args:
+            bucket_path: GCS path (e.g., 'gs://bucket/path/*.parquet')
+
+        Returns:
+            Tuple containing (bucket_name, folder_path)
+
+        Raises:
+            ValueError: If bucket_path is not a valid GCS path
+        """
+        if not bucket_path.startswith("gs://"):
+            raise ValueError("bucket_path must start with 'gs://'")
+
+        path_parts = bucket_path.replace("gs://", "").split("/")
+        if not path_parts[0]:
+            raise ValueError("Invalid bucket name in bucket_path")
+
+        bucket_name = path_parts[0]
+        folder_path = "/".join(path_parts[1:])
+        return bucket_name, folder_path
 
     def check_files_exists(self, bucket_path: str) -> bool:
         """
@@ -26,32 +49,34 @@ class StorageService:
             bool: True if files exist, False otherwise
         """
         try:
-            # Extract bucket name and prefix from the path
-            path_parts = bucket_path.replace("gs://", "").split("/")
-            bucket_name = path_parts[0]
-            prefix = "/".join(path_parts[1:])
-
-            # Get the bucket
+            bucket_name, prefix = self.extract_bucket_name_and_folder_path(bucket_path)
             bucket = self.client.bucket(bucket_name)
 
             # List blobs matching the prefix
             blobs = list(bucket.list_blobs(prefix=prefix))
 
             if not blobs:
-                logger.warning(f"No files found at {bucket_path}")
+                logger.warning(f"No files found matching pattern: {bucket_path}")
                 return False
 
-            logger.info(f"Found {len(blobs)} files at {bucket_path}")
+            logger.info(f"Found {len(blobs)} files matching pattern: {bucket_path}")
             return True
 
+        except (ValueError, NotFound) as e:
+            logger.warning(f"Error checking files existence at {bucket_path}: {str(e)}")
+            return False
         except Exception as e:
-            logger.error(f"Error checking files existence at {bucket_path}: {str(e)}")
+            logger.error(
+                f"Unexpected error checking files existence at {bucket_path}: {str(e)}"
+            )
             return False
 
     def download_files(
         self, bucket_path: str, prefix: str, destination_dir: str
     ) -> List[str]:
         """
+        Download files from GCS to local directory.
+
         Args:
             bucket_path: GCS bucket path (gs://bucket-name/path)
             prefix: file prefix
@@ -59,20 +84,35 @@ class StorageService:
 
         Returns:
             List of local file paths to downloaded Parquet files
+
+        Raises:
+            ValueError: If bucket_path is invalid
+            FileNotFoundError: If destination directory doesn't exist
         """
-        bucket_folder_path = "/".join(bucket_path.replace("gs://", "").split("/")[1:])
-        bucket_name = bucket_path.replace("gs://", "").split("/")[0]
+        bucket_name, bucket_folder_path = self.extract_bucket_name_and_folder_path(
+            bucket_path
+        )
         bucket = self.client.bucket(bucket_name)
 
-        logger.info(bucket_folder_path + prefix)
+        destination_path = Path(destination_dir)
+        if not destination_path.exists():
+            raise FileNotFoundError(
+                f"Destination directory does not exist: {destination_dir}"
+            )
+
+        logger.info(f"Downloading files from {bucket_path} with prefix {prefix}")
 
         downloaded_files = []
         for blob in bucket.list_blobs(prefix=Path(bucket_folder_path) / prefix):
-            logger.info(blob.name)
-            local_path = Path(destination_dir) / blob.name.split("/")[-1]
+            local_path = destination_path / Path(blob.name).name
             blob.download_to_filename(str(local_path))
             downloaded_files.append(str(local_path))
             logger.info(f"Downloaded {blob.name} to {local_path}")
+
+        if not downloaded_files:
+            logger.warning(
+                f"No files found to download from {bucket_path} with prefix {prefix}"
+            )
 
         return downloaded_files
 
@@ -95,43 +135,36 @@ class StorageService:
         if not source_paths:
             raise ValueError("source_paths cannot be empty")
 
-        if not destination_dir.startswith("gs://"):
-            raise ValueError("destination_dir must start with 'gs://'")
-
-        # Extract bucket name and base path from the destination directory
-        path_parts = destination_dir.replace("gs://", "").split("/")
-        bucket_name = path_parts[0]
-        if not bucket_name:
-            raise ValueError("Invalid bucket name in destination_dir")
-
-        base_path = "/".join(path_parts[1:]).rstrip("/")
-
+        bucket_name, base_path = self.extract_bucket_name_and_folder_path(
+            destination_dir
+        )
         bucket = self.client.bucket(bucket_name)
         uploaded_paths = []
 
         for source_path in source_paths:
-            if not os.path.exists(source_path):
+            source_path_obj = Path(source_path)
+            if not source_path_obj.exists():
                 raise FileNotFoundError(f"Source file not found: {source_path}")
 
             try:
-                # Get the filename from the source path
-                filename = os.path.basename(source_path)
-                # Construct the full GCS path
-                blob_path = f"{base_path}/{filename}" if base_path else filename
+                # Construct the full GCS path using Path
+                blob_path = (
+                    str(Path(base_path) / source_path_obj.name)
+                    if base_path
+                    else source_path_obj.name
+                )
 
                 # Upload the file with retry logic
                 blob = bucket.blob(blob_path)
                 blob.upload_from_filename(
-                    source_path,
+                    str(source_path_obj),
                     timeout=300,  # 5 minutes timeout
                     retry=retry.Retry(
                         initial=1.0,
                         maximum=60.0,
                         multiplier=2,
                         deadline=300,
-                        predicate=retry.if_exception_type(
-                            GoogleAPIError,
-                        ),
+                        predicate=retry.if_exception_type(GoogleAPIError),
                     ),
                 )
 
@@ -154,6 +187,7 @@ class StorageService:
     def cleanup_files(self, file_paths: List[str]) -> None:
         """Clean up local files"""
         for file_path in file_paths:
-            if os.path.exists(file_path):
-                os.remove(file_path)
+            path = Path(file_path)
+            if path.exists():
+                path.unlink()
                 logger.info(f"Removed temporary file: {file_path}")

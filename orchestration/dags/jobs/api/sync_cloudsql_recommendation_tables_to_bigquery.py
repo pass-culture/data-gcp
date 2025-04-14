@@ -16,6 +16,7 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
+from crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
@@ -40,12 +41,6 @@ INSTANCE_TYPE = {
 }[ENV_SHORT_NAME]
 
 
-SCHEDULE_DICT = {
-    "dev": "0 5 * * *",  # every day at 5:00 AM
-    "stg": "0 5 * * *",  # every day at 5:00 AM
-    "prod": "5 * * * *",  # every hour at 5 minutes past the hour
-}[ENV_SHORT_NAME]
-
 # Base directory for the export job
 BASE_DIR = "data-gcp/jobs/etl_jobs/internal/sync_recommendation"
 DAG_ID = "sync_cloudsql_recommendation_tables_to_bigquery"
@@ -57,7 +52,7 @@ with DAG(
     DAG_ID,
     default_args=DEFAULT_DAG_ARGS,
     description="Import tables from recommendation CloudSQL to BigQuery hourly",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT),
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_ID][ENV_SHORT_NAME]),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=45),
     user_defined_macros=macros.default,

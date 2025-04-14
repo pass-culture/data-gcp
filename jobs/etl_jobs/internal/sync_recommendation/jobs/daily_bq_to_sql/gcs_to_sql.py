@@ -116,7 +116,7 @@ class GCSToSQLOrchestrator:
 
             finally:
                 # Close DuckDB connection
-                self.duck_service.close_connection()
+                self.duck_service.close()
                 # Remove temporary DuckDB database
                 if os.path.exists(duck_db_path):
                     os.remove(duck_db_path)
@@ -151,14 +151,10 @@ class GCSToSQLOrchestrator:
         os.makedirs(temp_dir, exist_ok=True)
 
         # Download files using StorageService
-        prefix = f"{table_name}-"
-        downloaded_files = self.storage_service.download_files(
+        prefix = f"{table_name}-*.parquet"
+        parquet_files = self.storage_service.download_files(
             bucket_path=bucket_path, prefix=prefix, destination_dir=temp_dir
         )
-
-        # Filter for Parquet files
-        parquet_files = [f for f in downloaded_files if f.endswith(".parquet")]
-
         if not parquet_files:
             raise ValueError(
                 f"No Parquet files found for table {table_name} at {bucket_path}/{prefix}*.parquet"

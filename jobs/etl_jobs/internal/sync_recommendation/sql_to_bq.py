@@ -34,15 +34,23 @@ def cloudsql_to_gcs(
     execution_date: Annotated[
         str, typer.Option(help="Insert execution date in YYYYMMdd format")
     ],
-    end_time: Annotated[str, typer.Option(help="End time in YYYY-MM-DD HH format")],
+    end_time: Annotated[
+        Optional[str],
+        typer.Option(
+            help="End time in YYYY-MM-DD HH format, default is the maximum time of the table in BigQuery"
+        ),
+    ] = None,
     start_time: Annotated[
         Optional[str],
         typer.Option(
-            help="Start time in YYYYMMdd HH format",
+            help="Start time in YYYYMMdd HH format, default is the minimum time of the table in CloudSQL",
         ),
     ] = None,
 ) -> None:
-    """Export data from CloudSQL to GCS."""
+    """
+    Export data from CloudSQL to GCS.
+    The data will be exported to the partition of the execution_date.
+    """
     validate_table(table_name, list(EXPORT_TABLES.keys()))
     logger.info(f"Starting export for table {table_name}")
     table_config = EXPORT_TABLES[table_name]
@@ -51,11 +59,13 @@ def cloudsql_to_gcs(
     orchestrator = ExportCloudSQLToGCSOrchestrator(
         project_id=PROJECT_NAME, database_url=database_url
     )
-    end_time = parse_date(end_time)
-    execution_date = parse_date(execution_date)
+    if start_time is not None:
+        start_time = parse_date(start_time)
 
-    if start_time is None:
-        start_time = orchestrator._check_min_time(table_config, end_time)
+    if end_time is not None:
+        end_time = parse_date(end_time)
+
+    execution_date = parse_date(execution_date)
 
     orchestrator.export_data(
         table_config=table_config,
@@ -77,7 +87,10 @@ def gcs_to_bq(
         str, typer.Option(help="Insert execution_date date in YYYYMMdd format")
     ],
 ) -> None:
-    """Import data from GCS to BigQuery."""
+    """
+    Import data from GCS to BigQuery
+    The data will be imported to the partition of the execution_date.
+    """
     validate_table(table_name, list(EXPORT_TABLES.keys()))
     execution_date_datetime = parse_date(execution_date)
 
@@ -100,18 +113,20 @@ def remove_cloudsql_data(
     start_time: Annotated[
         Optional[str],
         typer.Option(
-            help="Start time",
+            help="Start time, default is None, so we remove all data from CloudSQL",
         ),
     ] = None,
     end_time: Annotated[
         Optional[str],
         typer.Option(
-            help="End time",
+            help="End time, default is the maximum time of the table in BigQuery that has been imported",
         ),
     ] = None,
 ) -> None:
     """
-    Remove processed data from CloudSQL.
+    Remove exported data from CloudSQL based on the start and end time, in order to cleanup the CloudSQL table logs after the data has been imported to BigQuery.
+    If end_time is not provided, it will be the maximum time of the table in BigQuery that has been imported.
+    If start_time is not provided, it will be the minimum time of the table in CloudSQL (no filtering on time).
     """
     validate_table(table_name, list(EXPORT_TABLES.keys()))
     table_config = EXPORT_TABLES[table_name]
@@ -119,10 +134,10 @@ def remove_cloudsql_data(
     orchestrator = RemoveSQLTableOrchestrator(
         database_url=database_url, project_id=PROJECT_NAME
     )
-    if end_time is None:
-        end_time = orchestrator.get_max_time(table_config)
-    else:
+    if end_time is not None:
         end_time = parse_date(end_time)
+    else:
+        end_time = orchestrator.get_max_biquery_data_time(table_config, days_lag=3)
 
     if start_time is not None:
         start_time = parse_date(start_time)

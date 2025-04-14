@@ -14,3 +14,6 @@ RECOMMENDATION_SQL_INSTANCE = f"cloudsql-recommendation-{ENV_SHORT_NAME}-ew1"
 REGION = "europe-west1"
 # Constants for processing
 MAX_RETRIES = 5
+
+# Constants for database
+DATABASE_EXTENSIONS = ["postgres", "httpfs", "spatial"]

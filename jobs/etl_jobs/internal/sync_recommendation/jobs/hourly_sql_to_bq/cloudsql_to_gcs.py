@@ -23,11 +23,6 @@ class ExportCloudSQLToGCSOrchestrator:
         self.storage_service = StorageService(project_id=project_id)
         self.duck_service = DuckDBService()
 
-    def __del__(self):
-        """Cleanup database connections when the orchestrator is destroyed."""
-        if hasattr(self, "cloudsql_service"):
-            self.cloudsql_service.close()
-
     def export_data(
         self,
         table_config: SQLTableConfig,
@@ -43,12 +38,13 @@ class ExportCloudSQLToGCSOrchestrator:
             table_config: Configuration for the table
             bucket_path: GCS bucket path for storage
             execution_date: Execution date format
-            start_time: Start time of the export
+            start_time: Start time of the export, if None, it will be the minimum time of the table in CloudSQL
             end_time: End time of the export
 
         Returns:
             List of GCS paths where data was exported
         """
+
         logger.info(
             f"Starting export process for {table_config.sql_table_name} at {start_time.strftime('%Y-%m-%d')} hour {start_time.hour}"
         )
@@ -137,20 +133,3 @@ class ExportCloudSQLToGCSOrchestrator:
                     conn.execute("DETACH pg_db")
             except Exception as e:
                 logger.warning(f"Error detaching database: {str(e)}")
-
-    def _check_min_time(
-        self,
-        table_config: SQLTableConfig,
-        execution_date: datetime,
-    ) -> str:
-        """Check for missed data in previous hours."""
-        date_str = execution_date.strftime("%Y-%m-%d")
-
-        query = f"""
-            SELECT min({table_config.time_column})
-            FROM {table_config.sql_table_name}
-            WHERE {table_config.time_column} <= '{date_str}'
-        """
-        self.cloudsql_service.execute_query(query)
-        min_time = self.cloudsql_service.fetch_one()[0]
-        return min_time

@@ -8,7 +8,7 @@ import psycopg2
 from google.cloud import bigquery
 from psycopg2.extensions import connection
 
-from utils.constant import MAX_RETRIES
+from utils.constant import DATABASE_EXTENSIONS, MAX_RETRIES
 
 logger = logging.getLogger(__name__)
 
@@ -120,29 +120,29 @@ class CloudSQLService(DatabaseService):
         self._connection = None
         self.duck_service = DuckDBService()
 
-    def __get_db_connection(self) -> connection:
+    def __get_db_connection(self, max_retries: int = MAX_RETRIES) -> connection:
         """Create a database connection with retries."""
         retry_count = 0
         conn = None
 
         database_url = self.connection_params["database_url"]
 
-        while retry_count < MAX_RETRIES and conn is None:
+        while retry_count < max_retries and conn is None:
             try:
                 conn = psycopg2.connect(database_url)
                 conn.autocommit = False
                 return conn
             except Exception as e:
                 retry_count += 1
-                if retry_count >= MAX_RETRIES:
+                if retry_count >= max_retries:
                     logger.error(
-                        f"Failed to connect to database after {MAX_RETRIES} attempts: {str(e)}"
+                        f"Failed to connect to database after {max_retries} attempts: {str(e)}"
                     )
                     raise
 
                 wait_time = min(30, 5 * retry_count)
                 logger.warning(
-                    f"Database connection failed (attempt {retry_count}/{MAX_RETRIES}). Retrying in {wait_time}s..."
+                    f"Database connection failed (attempt {retry_count}/{max_retries}). Retrying in {wait_time}s..."
                 )
                 time.sleep(wait_time)
 
@@ -190,8 +190,13 @@ class CloudSQLService(DatabaseService):
 
 
 class DuckDBService(DatabaseService):
-    def __init__(self, database_path: str = ":memory:"):
+    def __init__(
+        self,
+        database_path: str = ":memory:",
+        extensions: List[str] = DATABASE_EXTENSIONS,
+    ):
         self.database_path = database_path
+        self.extensions = extensions
         self._last_result = None
         self._connection = None
 
@@ -199,12 +204,11 @@ class DuckDBService(DatabaseService):
         """Setup a new DuckDB connection with required extensions."""
         if self._connection is None:
             self._connection = duckdb.connect(self.database_path)
-            self._connection.execute("INSTALL postgres; LOAD postgres;")
-            self._connection.execute("INSTALL httpfs; LOAD httpfs;")
-            self._connection.execute("INSTALL spatial; LOAD spatial;")
+            for extension in self.extensions:
+                self._connection.execute(f"INSTALL {extension}; LOAD {extension};")
         return self._connection
 
-    def close_connection(self) -> None:
+    def close(self) -> None:
         """Close the DuckDB connection if it exists."""
         if self._connection is not None:
             self._connection.close()

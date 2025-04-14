@@ -95,7 +95,8 @@ with DAG(
         ),
         "end_time": Param(
             default=NOW.strftime("%Y-%m-%d %H:%M:%S"),
-            type="date-time",
+            type="string",
+            format="date-time",
         ),
     },
 ) as dag:

@@ -12,13 +12,13 @@ from app.model import (
     ClassMapping,
     TrainPipeline,
 )
-from figure import (
+from src.figure import (
     plot_cm,
     plot_cm_multiclass,
     plot_features_importance,
 )
-from preprocessing import map_features_columns, preprocess_data
-from utils import (
+from src.preprocessing import map_features_columns, preprocess_data
+from src.utils import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     connect_remote_mlflow,

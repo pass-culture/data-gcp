@@ -92,7 +92,7 @@ class ExportCloudSQLToGCSOrchestrator:
         temp_dir: Path,
     ) -> List[str]:
         """Export data from CloudSQL to GCS using DuckDB."""
-        parquet_path = temp_dir / "*.parquet"
+        parquet_path = temp_dir / f"{table_config.sql_table_name}.parquet"
         database_name = "pg_db.public"
         query = table_config.get_extract_query(
             start_time,

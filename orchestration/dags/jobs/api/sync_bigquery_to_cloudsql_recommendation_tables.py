@@ -15,6 +15,7 @@ from jobs.crons import SCHEDULE_DICT
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy import DummyOperator
+from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.operators.gcs import GCSDeleteObjectsOperator
 from airflow.utils.task_group import TaskGroup
 
@@ -66,11 +67,23 @@ INSTANCE_TYPE = {
 }[ENV_SHORT_NAME]
 
 
+def get_schedule_interval(dag_id: str):
+    schedule_interval = SCHEDULE_DICT.get(dag_id, {}).get(ENV_SHORT_NAME, None)
+    return get_airflow_schedule(schedule_interval)
+
+
+def choose_branch(**context):
+    run_id = context["dag_run"].run_id
+    if run_id.startswith("scheduled__"):
+        return ["waiting_group.waiting_branch"]
+    return ["shunt_manual"]
+
+
 with DAG(
     DAG_ID,
     default_args=default_args,
     description="Sync BigQuery tables to Cloud SQL for recommendation engine",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_ID]),
+    schedule_interval=get_schedule_interval(DAG_ID),
     catchup=False,
     dagrun_timeout=timedelta(minutes=480),
     user_defined_macros=macros.default,
@@ -99,16 +112,25 @@ with DAG(
         ),
     },
 ) as dag:
-    start = DummyOperator(task_id="start")
+    branching = BranchPythonOperator(
+        task_id="branching",
+        python_callable=choose_branch,
+        provide_context=True,
+        dag=dag,
+    )
 
-    with TaskGroup(group_id="wait_for_tables") as wait_for_tables:
+    with TaskGroup(group_id="waiting_group") as waiting_group:
+        wait = DummyOperator(task_id="waiting_branch", dag=dag)
         for table_name, dependency in TABLE_DEPENDENCIES.items():
             waiting_task = delayed_waiting_operator(
                 dag=dag,
                 external_dag_id=dependency["dag_id"],
                 external_task_id=dependency["task_id"],
             )
-            start >> waiting_task
+            wait >> waiting_task
+
+    shunt = DummyOperator(task_id="shunt_manual", dag=dag)
+    join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -195,10 +217,14 @@ with DAG(
 
     # Set dependencies
     (
-        wait_for_tables
+        branching
+        >> [shunt, waiting_group]
+        >> join
         >> gce_instance_start
         >> fetch_install_code
         >> export_tables
         >> import_tables
+        >> cleanup_gcs
+        >> refresh_views
+        >> gce_instance_stop
     )
-    import_tables >> cleanup_gcs >> refresh_views >> gce_instance_stop

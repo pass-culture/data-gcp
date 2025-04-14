@@ -97,7 +97,6 @@ with DAG(
 ) as dag:
     start = EmptyOperator(task_id="start", dag=dag)
 
-    # Start VM for processing
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         instance_name="{{ params.instance_name }}",
@@ -107,7 +106,6 @@ with DAG(
         preemptible=False,
     )
 
-    # Install code on VM
     fetch_install_code = InstallDependenciesOperator(
         task_id="fetch_install_code",
         instance_name="{{ params.instance_name }}",
@@ -117,7 +115,6 @@ with DAG(
         retries=2,
     )
 
-    # Run the hourly export process
     export_data_to_gcs = SSHGCEOperator(
         task_id="export_data_to_gcs",
         instance_name="{{ params.instance_name }}",
@@ -132,7 +129,6 @@ with DAG(
         dag=dag,
     )
 
-    # Import data from GCS to BigQuery
     import_data_to_bigquery = SSHGCEOperator(
         task_id="import_data_to_bigquery",
         instance_name="{{ params.instance_name }}",
@@ -146,7 +142,6 @@ with DAG(
         dag=dag,
     )
 
-    # Remove processed data from cloudSQL
     remove_processed_data = SSHGCEOperator(
         task_id="remove_processed_data",
         instance_name="{{ params.instance_name }}",
@@ -157,13 +152,11 @@ with DAG(
         """,
     )
 
-    # Delete the VM after processing
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
     )
 
-    # Cleanup GCS files after successful import
     cleanup_gcs = GCSDeleteObjectsOperator(
         task_id="cleanup_gcs_files",
         bucket_name="{{ params.bucket_name }}",
@@ -171,7 +164,6 @@ with DAG(
         impersonation_chain=None,
     )
 
-    # Set up task dependencies
     end = EmptyOperator(task_id="end", dag=dag)
 
     (
@@ -182,5 +174,6 @@ with DAG(
         >> import_data_to_bigquery
         >> remove_processed_data
         >> gce_instance_stop
+        >> cleanup_gcs
         >> end
     )

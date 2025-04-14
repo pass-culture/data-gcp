@@ -105,6 +105,7 @@ class ExportCloudSQLToGCSOrchestrator:
         try:
             conn = self.duck_service.setup_connection()
             conn.execute(f"ATTACH '{self.database_url}' AS pg_db (TYPE postgres)")
+            logger.info(f"Executing query: {query}")
             conn.execute(f"""
                 COPY (
                     {query}

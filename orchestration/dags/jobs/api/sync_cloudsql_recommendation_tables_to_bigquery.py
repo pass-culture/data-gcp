@@ -93,6 +93,10 @@ with DAG(
             default=NOW.strftime("%Y%m%d"),
             type="string",
         ),
+        "end_time": Param(
+            default=NOW.strftime("%Y-%m-%d %H:%M:%S"),
+            type="date-time",
+        ),
     },
 ) as dag:
     start = EmptyOperator(task_id="start", dag=dag)
@@ -124,7 +128,7 @@ with DAG(
                 --table-name {{ params.table_name }} \
                 --bucket-path gs://{{ params.bucket_name }}/{{ params.bucket_folder }}/{{ ts_nodash }} \
                 --execution-date {{ params.execution_date }} \
-                --end-time {{ ds }}
+                --end-time {{ params.end_time }}
         """,
         dag=dag,
     )

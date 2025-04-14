@@ -141,9 +141,10 @@ class CloudSQLService(DatabaseService):
     def _get_connection(self) -> connection:
         """Get a database connection with retries."""
         retry_count = 0
+        database_url = self.connection_params["database_url"]
         while retry_count < MAX_RETRIES:
             try:
-                conn = psycopg2.connect(**self.connection_params)
+                conn = psycopg2.connect(database_url)
                 conn.autocommit = False
                 return conn
             except Exception as e:

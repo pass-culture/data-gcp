@@ -48,8 +48,8 @@ def deploy_container(serving_container):
 
 def connect_remote_mlflow(client_id, env="ehp"):
     if os.environ.get("MLFLOW_TRACKING_TOKEN") is None:
-        os.environ["MLFLOW_TRACKING_TOKEN"] = (
-            id_token.fetch_id_token(Request(), client_id),
+        os.environ["MLFLOW_TRACKING_TOKEN"] = id_token.fetch_id_token(
+            Request(), client_id
         )
 
     uri = MLFLOW_PROD_URI if env == "prod" else MLFLOW_EHP_URI

@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import joblib
 import lightgbm as lgb
@@ -178,15 +178,18 @@ class TrainPipeline:
         joblib.dump(self.preprocessor, f"./metadata/preproc_{model_name}.joblib")
         self.model.save_model(f"./metadata/model_{model_name}.txt")
 
-    def train(self, df: pd.DataFrame, class_weight: Optional[dict] = None):
-        unique_session_ids = df["unique_session_id"].unique()
+    def train(self, df: pd.DataFrame, class_weight: dict, seed: int):
+        # Split data based on user_hour_id
+        unique_user_hour_ids = df.user_hour_id.unique()
         train_session_ids, test_session_ids = train_test_split(
-            unique_session_ids, test_size=self.train_size, random_state=42
+            unique_user_hour_ids, test_size=self.train_size, random_state=seed
         )
-        train_data = df[df["unique_session_id"].isin(train_session_ids)]
-        test_data = df[df["unique_session_id"].isin(test_session_ids)]
+        train_data = df[df["user_hour_id"].isin(train_session_ids)]
+        test_data = df[df["user_hour_id"].isin(test_session_ids)]
 
-        X_train, X_test = self.fit_transform(train_data), self.fit_transform(test_data)
+        # Preprocess for lgbm
+        X_train = self.fit_transform(train_data)
+        X_test = self.transform(test_data)
         y_train, y_test = (
             train_data[self.target].to_numpy(),
             test_data[self.target].to_numpy(),

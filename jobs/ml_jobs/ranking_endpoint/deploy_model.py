@@ -133,7 +133,7 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
         pipeline_classifier.set_pipeline()
         print("Training model...")
-        pipeline_classifier.train(train_data, class_weight=class_weight)
+        pipeline_classifier.train(train_data, class_weight=class_weight, seed=seed)
         print("Training finished")
 
         print("Evaluating model...")

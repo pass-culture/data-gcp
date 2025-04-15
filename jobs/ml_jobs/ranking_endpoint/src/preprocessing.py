@@ -54,7 +54,14 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
             data.loc[
                 :,
                 lambda df: df.columns.isin(
-                    ["is_seen", "is_consulted", "is_booked", "unique_session_id"]
+                    [
+                        "is_seen",
+                        "is_consulted",
+                        "is_booked",
+                        "user_id",
+                        "item_id",
+                        "unique_session_id",
+                    ]
                     + NUMERIC_FEATURES
                     + CATEGORICAL_FEATURES
                     + ["user_embedding_json", "item_embedding_json"]

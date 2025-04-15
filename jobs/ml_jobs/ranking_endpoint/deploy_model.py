@@ -139,9 +139,7 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         print("Evaluating model...")
         train_predictions = train_data.pipe(pipeline_classifier.predict_classifier)
         test_predictions = test_data.pipe(pipeline_classifier.predict_classifier)
-        ndcg_at_k = compute_ndcg_at_k(
-            raw_data=raw_data, predictions=test_predictions, k_list=[5, 10, 20]
-        )
+        ndcg_at_k = compute_ndcg_at_k(predictions=test_predictions, k_list=[5, 10, 20])
         for key, value in ndcg_at_k.items():
             print(f"ndcg_at_{key}: {value}")
             mlflow.log_metric(f"ndcg_at_{key}", value)

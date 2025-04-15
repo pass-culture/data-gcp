@@ -18,7 +18,7 @@ class ClassMapping(Enum):
     booked = 2
 
 
-EMBEDDING_DIM = 64  # To remove embedding dimension from the model, set to 0
+EMBEDDING_DIM = 0  # To remove embedding dimension from the model, set to 0
 NUMERIC_FEATURES = (
     [
         "user_bookings_count",

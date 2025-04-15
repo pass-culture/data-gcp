@@ -4,6 +4,7 @@ import shutil
 from datetime import datetime
 
 import mlflow
+import numpy as np
 import pandas as pd
 import typer
 from sklearn.model_selection import train_test_split
@@ -46,6 +47,7 @@ CLASSIFIER_MODEL_PARAMS = {
 }
 PROBA_CONSULT_THRESHOLD = 0.5
 PROBA_BOOKING_THRESHOLD = 0.5
+NDCG_K_LIST = [5, 10, 20]
 
 
 def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
@@ -139,10 +141,16 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         print("Evaluating model...")
         train_predictions = train_data.pipe(pipeline_classifier.predict_classifier)
         test_predictions = test_data.pipe(pipeline_classifier.predict_classifier)
-        ndcg_at_k = compute_ndcg_at_k(predictions=test_predictions, k_list=[5, 10, 20])
-        for key, value in ndcg_at_k.items():
-            print(f"ndcg_at_{key}: {value}")
-            mlflow.log_metric(f"ndcg_at_{key}", value)
+        ndcg_at_k = compute_ndcg_at_k(predictions=test_predictions, k_list=NDCG_K_LIST)
+        random_ndcg_at_k = compute_ndcg_at_k(
+            predictions=test_predictions.assign(
+                score=np.random.rand(len(test_predictions))
+            ),
+            k_list=NDCG_K_LIST,
+        )
+        for k in NDCG_K_LIST:
+            mlflow.log_metric(f"ndcg_at_{k}", ndcg_at_k[k])
+            mlflow.log_metric(f"random_ndcg_at_{k}", random_ndcg_at_k[k])
         print("Evaluation finished")
 
         # Save Data

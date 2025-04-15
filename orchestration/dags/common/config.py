@@ -94,10 +94,6 @@ BIGQUERY_TMP_DATASET = os.environ.get("BIGQUERY_TMP_DATASET", f"tmp_{ENV_SHORT_N
 
 APPLICATIVE_PREFIX = "applicative_database_"
 
-RECOMMENDATION_SQL_INSTANCE = os.environ.get(
-    "RECOMMENDATION_SQL_INSTANCE", f"cloudsql-recommendation-{ENV_SHORT_NAME}-ew1"
-)
-
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
@@ -129,13 +125,6 @@ else:
     ELEMENTARY_PYTHON_PATH = os.environ.get("ELEMENTARY_PYTHON_PATH")
 
 SLACK_TOKEN_ELEMENTARY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")
-
-INSTALL_TYPES = {
-    "simple": "install_simplified",
-    "engineering": "install_engineering",
-    "science": "install_science",
-    "analytics": "install_analytics",
-}
 
 CPU_INSTANCES_TYPES = {
     "standard": [

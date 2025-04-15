@@ -26,8 +26,6 @@ jobs:
     env:
       AIRFLOW_HOME: "${{ github.workspace }}/orchestration/"
       DAG_FOLDER: "./dags"
-      RECOMMENDATION_SQL_INSTANCE: "cloudsql-recommendation-circleci"
-      RECOMMENDATION_SQL_BASE: "cloudsql-recommendation-circleci"
     steps:
       - uses: actions/checkout@v4
       - name: "Connect to Secret Manager"

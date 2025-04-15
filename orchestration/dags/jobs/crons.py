@@ -22,7 +22,16 @@ SCHEDULE_DICT = {
     "import_applicative_database": "0 1 * * *",
     "import_intraday_firebase_data": "0 1 * * *",
     "link_items": {"prod": "0 20 * * 3", "stg": "0 6 * * 3", "dev": "0 6 * * 3"},
-    "sync_bq_to_cloudsql_recommendation_tables": "00 6 * * *",
+    "sync_bigquery_to_cloudsql_recommendation_tables": {
+        "dev": "00 6 * * *",
+        "stg": "00 6 * * *",
+        "prod": "00 6 * * *",
+    },
+    "sync_cloudsql_recommendation_tables_to_bigquery": {
+        "dev": "0 5 * * *",  # every day at 5:00 AM
+        "stg": "0 5 * * *",  # every day at 5:00 AM
+        "prod": "5 * * * *",  # every hour at 5 minutes past the hour
+    },
 }
 
 

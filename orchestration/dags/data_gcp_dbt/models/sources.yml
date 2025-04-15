@@ -178,6 +178,7 @@ sources:
       - name: macro_rayons
       - name: population_age_and_department_france_details
       - name: priority_local_authorities
+      - name: 2020_insee_iris_socio_demographics
       - name: 2024_insee_qpv
       - name: 2024_insee_qpv_population
       - name: 2025_insee_postal_code

@@ -15,6 +15,7 @@ from jobs.crons import SCHEDULE_DICT
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy import DummyOperator
+from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.operators.gcs import GCSDeleteObjectsOperator
 from airflow.utils.task_group import TaskGroup
 
@@ -26,8 +27,8 @@ default_args = {
 }
 
 DEFAULT_REGION = "europe-west1"
-BASE_DIR = "data-gcp/jobs/etl_jobs/internal/export_recommendation"
-DAG_ID = "sync_bq_to_cloudsql_recommendation_tables"
+BASE_DIR = "data-gcp/jobs/etl_jobs/internal/sync_recommendation"
+DAG_ID = "sync_bigquery_to_cloudsql_recommendation_tables"
 
 # Table dependencies configuration
 TABLE_DEPENDENCIES = {
@@ -49,10 +50,8 @@ TABLE_DEPENDENCIES = {
     },
 }
 
-# List of tables to process - configuration is in config.py
 TABLES_TO_PROCESS = list(TABLE_DEPENDENCIES.keys())
 
-# List of all materialized views to refresh
 MATERIALIZED_VIEWS = [
     "enriched_user_mv",
     "item_ids_mv",
@@ -68,11 +67,23 @@ INSTANCE_TYPE = {
 }[ENV_SHORT_NAME]
 
 
+def get_schedule_interval(dag_id: str):
+    schedule_interval = SCHEDULE_DICT.get(dag_id, {}).get(ENV_SHORT_NAME, None)
+    return get_airflow_schedule(schedule_interval)
+
+
+def choose_branch(**context):
+    run_id = context["dag_run"].run_id
+    if run_id.startswith("scheduled__"):
+        return ["waiting_group.waiting_branch"]
+    return ["shunt_manual"]
+
+
 with DAG(
     DAG_ID,
     default_args=default_args,
     description="Sync BigQuery tables to Cloud SQL for recommendation engine",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_ID]),
+    schedule_interval=get_schedule_interval(DAG_ID),
     catchup=False,
     dagrun_timeout=timedelta(minutes=480),
     user_defined_macros=macros.default,
@@ -91,19 +102,35 @@ with DAG(
             default=f"recommendation-export-{ENV_SHORT_NAME}",
             type="string",
         ),
+        "bucket_name": Param(
+            default=DATA_GCS_BUCKET_NAME,
+            type="string",
+        ),
+        "bucket_folder": Param(
+            default="export/cloudsql_recommendation_tables",
+            type="string",
+        ),
     },
 ) as dag:
-    start = DummyOperator(task_id="start")
+    branching = BranchPythonOperator(
+        task_id="branching",
+        python_callable=choose_branch,
+        provide_context=True,
+        dag=dag,
+    )
 
-    # Wait for upstream tables
-    with TaskGroup(group_id="wait_for_tables") as wait_for_tables:
+    with TaskGroup(group_id="waiting_group") as waiting_group:
+        wait = DummyOperator(task_id="waiting_branch", dag=dag)
         for table_name, dependency in TABLE_DEPENDENCIES.items():
             waiting_task = delayed_waiting_operator(
                 dag=dag,
                 external_dag_id=dependency["dag_id"],
                 external_task_id=dependency["task_id"],
             )
-            start >> waiting_task
+            wait >> waiting_task
+
+    shunt = DummyOperator(task_id="shunt_manual", dag=dag)
+    join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -127,9 +154,9 @@ with DAG(
     with TaskGroup("export_tables", dag=dag) as export_tables:
         for table_name in TABLES_TO_PROCESS:
             export_command = f"""
-                python main.py export-gcs \
+                python bq_to_sql.py bq-to-gcs \
                     --table-name {table_name} \
-                    --bucket-path gs://{DATA_GCS_BUCKET_NAME}/export/recommendation_exports/{{{{ ds_nodash }}}} \
+                    --bucket-path gs://{{{{ params.bucket_name }}}}/{{{{ params.bucket_folder }}}}/{{{{ ts_nodash }}}} \
                     --date {{{{ ds_nodash }}}}
             """
 
@@ -145,9 +172,9 @@ with DAG(
     with TaskGroup("import_tables", dag=dag) as import_tables:
         for table_name in TABLES_TO_PROCESS:
             import_command = f"""
-                python main.py import-to-gcloud \
+                python bq_to_sql.py gcs-to-cloudsql \
                     --table-name {table_name} \
-                    --bucket-path gs://{DATA_GCS_BUCKET_NAME}/export/recommendation_exports/{{{{ ds_nodash }}}} \
+                    --bucket-path gs://{{{{ params.bucket_name }}}}/{{{{ params.bucket_folder }}}}/{{{{ ts_nodash }}}} \
                     --date {{{{ ds_nodash }}}}
             """
 
@@ -162,16 +189,16 @@ with DAG(
     # Cleanup GCS files after successful import
     cleanup_gcs = GCSDeleteObjectsOperator(
         task_id="cleanup_gcs_files",
-        bucket_name=DATA_GCS_BUCKET_NAME,
-        prefix="export/recommendation_exports/{{ ds_nodash }}/",
-        impersonation_chain=None,  # Add if needed for your setup
+        bucket_name="{{ params.bucket_name }}",
+        prefix="{{ params.bucket_folder }}",
+        impersonation_chain=None,
     )
 
     # Refresh all materialized views concurrently
     with TaskGroup("refresh_materialized_views", dag=dag) as refresh_views:
         for view in MATERIALIZED_VIEWS:
             refresh_command = f"""
-                python main.py materialize-gcloud \
+                python bq_to_sql.py materialize-cloudsql \
                     --view-name {view}
             """
 
@@ -190,10 +217,14 @@ with DAG(
 
     # Set dependencies
     (
-        wait_for_tables
+        branching
+        >> [shunt, waiting_group]
+        >> join
         >> gce_instance_start
         >> fetch_install_code
         >> export_tables
         >> import_tables
+        >> cleanup_gcs
+        >> refresh_views
+        >> gce_instance_stop
     )
-    import_tables >> cleanup_gcs >> refresh_views >> gce_instance_stop

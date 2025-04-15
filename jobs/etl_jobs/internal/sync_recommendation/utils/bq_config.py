@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List
 
-from utils import ENV_SHORT_NAME
+from utils.constant import ENV_SHORT_NAME
 
 
 class DatasetType(Enum):
@@ -10,16 +10,78 @@ class DatasetType(Enum):
     SEED = "seed"
 
 
-class MaterializedView(Enum):
-    ENRICHED_USER = "enriched_user_mv"
-    ITEM_IDS = "item_ids_mv"
-    NON_RECOMMENDABLE_ITEMS = "non_recommendable_items_mv"
-    IRIS_FRANCE = "iris_france_mv"
-    RECOMMENDABLE_OFFERS = "recommendable_offers_raw_mv"
+BQ_TABLES_CONFIG: Dict[str, Dict] = {
+    "enriched_user": {
+        "columns": {
+            "user_id": "character varying",
+            "user_deposit_creation_date": "timestamp without time zone",
+            "user_birth_date": "timestamp without time zone",
+            "user_deposit_initial_amount": "real",
+            "user_theoretical_remaining_credit": "real",
+            "booking_cnt": "integer",
+            "consult_offer": "integer",
+            "has_added_offer_to_favorites": "integer",
+        },
+        "bigquery_table_name": "user_statistics",
+        "dataset_type": DatasetType.ML_RECO,
+    },
+    "recommendable_offers_raw": {
+        "columns": {
+            "item_id": "character varying",
+            "offer_id": "character varying",
+            "offer_creation_date": "timestamp without time zone",
+            "stock_beginning_date": "timestamp without time zone",
+            "booking_number": "integer",
+            "venue_latitude": "decimal",
+            "venue_longitude": "decimal",
+            "default_max_distance": "integer",
+            "unique_id": "character varying",
+            "is_sensitive": "boolean",
+            "is_geolocated": "boolean",
+        },
+        "bigquery_table_name": "recommendable_offer",
+        "dataset_type": DatasetType.ML_RECO,
+    },
+    "non_recommendable_items_data": {
+        "columns": {"user_id": "character varying", "item_id": "character varying"},
+        "bigquery_table_name": "user_booked_item",
+        "dataset_type": DatasetType.ML_RECO,
+    },
+    "iris_france": {
+        "columns": {
+            "id": "character varying",
+            "irisCode": "character varying",
+            "centroid": "geometry",
+            "shape": "geometry",
+        },
+        "bigquery_table_name": "iris_france",
+        "dataset_type": DatasetType.SEED,
+    },
+}
+
+
+# CSV Export settings
+CSV_EXPORT_CONFIG = {
+    "compression": "GZIP",
+    "field_delimiter": ",",
+    "print_header": False,
+    "quote": '"',
+    "escape_char": '"',
+}
+
+# Cloud SQL import settings
+CLOUD_SQL_IMPORT_CONFIG = {
+    "fileType": "CSV",
+    "csvImportOptions": {
+        "quote": '"',
+        "escape": '"',
+        "fields_terminated_by": ",",
+    },
+}
 
 
 @dataclass
-class TableConfig:
+class BQTableConfig:
     columns: Dict[str, str]
     bigquery_table_name: str
     dataset_type: DatasetType
@@ -71,77 +133,8 @@ class TableConfig:
         """
 
 
-# Tables configuration with complete schema
-TABLES_CONFIG: Dict[str, Dict] = {
-    "enriched_user": {
-        "columns": {
-            "user_id": "character varying",
-            "user_deposit_creation_date": "timestamp without time zone",
-            "user_birth_date": "timestamp without time zone",
-            "user_deposit_initial_amount": "real",
-            "user_theoretical_remaining_credit": "real",
-            "booking_cnt": "integer",
-            "consult_offer": "integer",
-            "has_added_offer_to_favorites": "integer",
-        },
-        "bigquery_table_name": "user_statistics",
-        "dataset_type": DatasetType.ML_RECO,
-    },
-    "recommendable_offers_raw": {
-        "columns": {
-            "item_id": "character varying",
-            "offer_id": "character varying",
-            "offer_creation_date": "timestamp without time zone",
-            "stock_beginning_date": "timestamp without time zone",
-            "booking_number": "integer",
-            "venue_latitude": "decimal",
-            "venue_longitude": "decimal",
-            "default_max_distance": "integer",
-            "unique_id": "character varying",
-            "is_sensitive": "boolean",
-            "is_geolocated": "boolean",
-        },
-        "bigquery_table_name": "recommendable_offer",
-        "dataset_type": DatasetType.ML_RECO,
-    },
-    "non_recommendable_items_data": {
-        "columns": {"user_id": "character varying", "item_id": "character varying"},
-        "bigquery_table_name": "user_booked_item",
-        "dataset_type": DatasetType.ML_RECO,
-    },
-    "iris_france": {
-        "columns": {
-            "id": "character varying",
-            "irisCode": "character varying",
-            "centroid": "geometry",
-            "shape": "geometry",
-        },
-        "bigquery_table_name": "iris_france",
-        "dataset_type": DatasetType.SEED,
-    },
-}
-
-# CSV Export settings
-CSV_EXPORT_CONFIG = {
-    "compression": "GZIP",
-    "field_delimiter": ",",
-    "print_header": False,
-    "quote": '"',
-    "escape_char": '"',
-}
-
-# Cloud SQL import settings
-CLOUD_SQL_IMPORT_CONFIG = {
-    "fileType": "CSV",
-    "csvImportOptions": {
-        "quote": '"',
-        "escape": '"',
-        "fields_terminated_by": ",",
-    },
-}
-
 # Initialize table configs
-TABLES = {
-    name: TableConfig(**{**config, "dataset_type": config["dataset_type"]})
-    for name, config in TABLES_CONFIG.items()
+EXPORT_TABLES = {
+    name: BQTableConfig(**{**config, "dataset_type": config["dataset_type"]})
+    for name, config in BQ_TABLES_CONFIG.items()
 }

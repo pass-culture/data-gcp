@@ -18,7 +18,7 @@ class ClassMapping(Enum):
     booked = 2
 
 
-EMBEDDING_DIM = 64  # TODO: Read this from the training data
+EMBEDDING_DIM = 0  # Hack : Should be 64
 NUMERIC_FEATURES = (
     [
         "user_bookings_count",

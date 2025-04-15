@@ -49,11 +49,6 @@ FEATURES_MAPPING = {
 
 
 def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
-    # Add features horizontally
-    user_embed_dim = EMBEDDING_DIM
-    item_embed_dim = EMBEDDING_DIM
-    missing_array = json.dumps(np.array([DEFAULT_NUMERICAL] * user_embed_dim).tolist())
-
     data_with_status_df = (
         data.loc[
             :,
@@ -99,6 +94,17 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
             .astype(int),
         )
     ).drop_duplicates()
+
+    if EMBEDDING_DIM == 0:
+        # If no embeddings are used, we can drop the embedding columns
+        return data_with_status_df.drop(
+            columns=["user_embedding_json", "item_embedding_json"]
+        )
+
+    # If embeddings are used, we need to process them
+    user_embed_dim = EMBEDDING_DIM
+    item_embed_dim = EMBEDDING_DIM
+    missing_array = json.dumps(np.array([DEFAULT_NUMERICAL] * user_embed_dim).tolist())
 
     # Stack arrays into 2D NumPy arrays
     data_with_string_embeddings_df = data_with_status_df.assign(

@@ -99,9 +99,7 @@ def plot_figures(
 def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     # Load and preprocess the data
     raw_data = load_data(dataset_name, table_name).pipe(map_features_columns)
-    preprocessed_data = raw_data.pipe(
-        preprocess_data,
-    )
+    preprocessed_data = raw_data.pipe(preprocess_data)
 
     # Split based on unique_session_id
     seed = secrets.randbelow(1000)

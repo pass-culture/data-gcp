@@ -29,6 +29,9 @@ FEATURES_CONSTRUCTION = {
         ],
         ordered=True,
     ).codes,
+    "user_x_date_id": lambda df: df["user_id"].astype(str)
+    + "_"
+    + df["event_date"].astype(str),
 }
 
 FEATURES_MAPPING = {
@@ -60,6 +63,7 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
                     "user_id",
                     "item_id",
                     "unique_session_id",
+                    "user_x_date_id",
                 ]
                 + NUMERIC_FEATURES
                 + CATEGORICAL_FEATURES
@@ -73,23 +77,7 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
     )
 
     data_with_status_df = (
-        typed_data_df.loc[
-            :,
-            lambda df: df.columns.isin(
-                [
-                    "is_seen",
-                    "is_consulted",
-                    "is_booked",
-                    "user_id",
-                    "item_id",
-                    "unique_session_id",
-                ]
-                + NUMERIC_FEATURES
-                + CATEGORICAL_FEATURES
-                + ["user_embedding_json", "item_embedding_json"]
-            ),
-        ]
-        .fillna({"is_consulted": 0.0, "is_booked": 0.0})
+        typed_data_df.fillna({"is_consulted": 0.0, "is_booked": 0.0})
         .astype(
             {
                 "is_consulted": "float",
@@ -124,11 +112,6 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
             .astype(int),
         )
         .drop_duplicates()
-        .assign(
-            user_hour_id=lambda df: df["user_id"].astype(str)
-            + "_"
-            + df["hour_of_the_day"].astype(str)  # For splitting data
-        )
     )
 
     if EMBEDDING_DIM == 0:

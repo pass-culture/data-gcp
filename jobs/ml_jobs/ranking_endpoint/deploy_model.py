@@ -103,15 +103,15 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
 
     # Split based on unique_session_id
     seed = secrets.randbelow(1000)
-    unique_user_hour_ids = preprocessed_data.user_hour_id.unique()
+    unique_user_x_date_ids = preprocessed_data.user_x_date_id.unique()
     train_session_ids, test_session_ids = train_test_split(
-        unique_user_hour_ids, test_size=TEST_SIZE, random_state=seed
+        unique_user_x_date_ids, test_size=TEST_SIZE, random_state=seed
     )
     train_data = preprocessed_data[
-        preprocessed_data["user_hour_id"].isin(train_session_ids)
+        preprocessed_data["user_x_date_id"].isin(train_session_ids)
     ]
     test_data = preprocessed_data[
-        preprocessed_data["user_hour_id"].isin(test_session_ids)
+        preprocessed_data["user_x_date_id"].isin(test_session_ids)
     ]
 
     # Compute class weights

@@ -2,6 +2,16 @@ import typer
 from typing import Any
 import json
 from archive import Archive
+import logging
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler()],
+)
+
+logger = logging.getLogger(__name__)
 
 
 def run(
@@ -21,12 +31,15 @@ def run(
     try:
         config_dict: dict[str, Any] = json.loads(config)  # Use safe JSON parsing
     except json.JSONDecodeError as e:
-        typer.echo(f"Error: Invalid JSON config - {e}", err=True)
+        logger.error(f"Error: Invalid JSON config - {e}")
         raise typer.Exit(code=1)
 
+    logger.info(
+        f"Running archive for table {table} with config {config_dict}, limit {limit}"
+    )
     archive = Archive(table, config_dict)
-    archive.store_partitions_in_temp()
     archive.export_and_delete_partitions(limit)
+    logger.info(f"Archive for table {table} completed successfully")
 
 
 if __name__ == "__main__":

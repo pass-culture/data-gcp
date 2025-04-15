@@ -50,50 +50,58 @@ FEATURES_MAPPING = {
 
 def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
     data_with_status_df = (
-        data.loc[
-            :,
-            lambda df: df.columns.isin(
-                ["is_seen", "is_consulted", "is_booked", "unique_session_id"]
-                + NUMERIC_FEATURES
-                + CATEGORICAL_FEATURES
-                + ["user_embedding_json", "item_embedding_json"]
-            ),
-        ]
-        .fillna({"is_consulted": 0.0, "is_booked": 0.0})
-        .astype(
-            {
-                "is_consulted": "float",
-                "is_booked": "float",
-            }
-        )
-        .rename(
-            columns={
-                "is_consulted": ClassMapping.consulted.name,
-                "is_booked": ClassMapping.booked.name,
-            }
-        )
-        .assign(
-            status=lambda df: pd.Series(
-                index=df.index, data=[ClassMapping.seen.name] * len(df)
-            )
-            .where(
-                df[ClassMapping.consulted.name] != 1.0,
-                other=ClassMapping.consulted.name,
-            )
-            .where(
-                df[ClassMapping.booked.name] != 1.0,
-                other=ClassMapping.booked.name,
-            ),
-            target_class=lambda df: df["status"]
-            .map(
+        (
+            data.loc[
+                :,
+                lambda df: df.columns.isin(
+                    ["is_seen", "is_consulted", "is_booked", "unique_session_id"]
+                    + NUMERIC_FEATURES
+                    + CATEGORICAL_FEATURES
+                    + ["user_embedding_json", "item_embedding_json"]
+                ),
+            ]
+            .fillna({"is_consulted": 0.0, "is_booked": 0.0})
+            .astype(
                 {
-                    class_mapping.name: class_mapping.value
-                    for class_mapping in ClassMapping
+                    "is_consulted": "float",
+                    "is_booked": "float",
                 }
             )
-            .astype(int),
+            .rename(
+                columns={
+                    "is_consulted": ClassMapping.consulted.name,
+                    "is_booked": ClassMapping.booked.name,
+                }
+            )
+            .assign(
+                status=lambda df: pd.Series(
+                    index=df.index, data=[ClassMapping.seen.name] * len(df)
+                )
+                .where(
+                    df[ClassMapping.consulted.name] != 1.0,
+                    other=ClassMapping.consulted.name,
+                )
+                .where(
+                    df[ClassMapping.booked.name] != 1.0,
+                    other=ClassMapping.booked.name,
+                ),
+                target_class=lambda df: df["status"]
+                .map(
+                    {
+                        class_mapping.name: class_mapping.value
+                        for class_mapping in ClassMapping
+                    }
+                )
+                .astype(int),
+            )
         )
-    ).drop_duplicates()
+        .drop_duplicates()
+        .assign(
+            user_hour_id=lambda df: df["user_id"].astype(str)
+            + "_"
+            + df["hour_of_the_day"].astype(str)  # For splitting data
+        )
+    )
 
     if EMBEDDING_DIM == 0:
         # If no embeddings are used, we can drop the embedding columns

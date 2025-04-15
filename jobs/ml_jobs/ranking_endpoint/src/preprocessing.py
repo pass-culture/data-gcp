@@ -49,58 +49,79 @@ FEATURES_MAPPING = {
 
 
 def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
+    typed_data_df = (
+        data.loc[
+            :,
+            lambda df: df.columns.isin(
+                [
+                    "is_seen",
+                    "is_consulted",
+                    "is_booked",
+                    "user_id",
+                    "item_id",
+                    "unique_session_id",
+                ]
+                + NUMERIC_FEATURES
+                + CATEGORICAL_FEATURES
+                + ["user_embedding_json", "item_embedding_json"]
+            ),
+        ]
+        .fillna({numeric_feat: DEFAULT_NUMERICAL for numeric_feat in NUMERIC_FEATURES})
+        .fillna({cat_feat: DEFAULT_CATEGORICAL for cat_feat in CATEGORICAL_FEATURES})
+        .astype({numeric_feat: "float" for numeric_feat in NUMERIC_FEATURES})
+        .astype({cat_feat: "str" for cat_feat in CATEGORICAL_FEATURES})
+    )
+
     data_with_status_df = (
-        (
-            data.loc[
-                :,
-                lambda df: df.columns.isin(
-                    [
-                        "is_seen",
-                        "is_consulted",
-                        "is_booked",
-                        "user_id",
-                        "item_id",
-                        "unique_session_id",
-                    ]
-                    + NUMERIC_FEATURES
-                    + CATEGORICAL_FEATURES
-                    + ["user_embedding_json", "item_embedding_json"]
-                ),
-            ]
-            .fillna({"is_consulted": 0.0, "is_booked": 0.0})
-            .astype(
+        typed_data_df.loc[
+            :,
+            lambda df: df.columns.isin(
+                [
+                    "is_seen",
+                    "is_consulted",
+                    "is_booked",
+                    "user_id",
+                    "item_id",
+                    "unique_session_id",
+                ]
+                + NUMERIC_FEATURES
+                + CATEGORICAL_FEATURES
+                + ["user_embedding_json", "item_embedding_json"]
+            ),
+        ]
+        .fillna({"is_consulted": 0.0, "is_booked": 0.0})
+        .astype(
+            {
+                "is_consulted": "float",
+                "is_booked": "float",
+            }
+        )
+        .rename(
+            columns={
+                "is_consulted": ClassMapping.consulted.name,
+                "is_booked": ClassMapping.booked.name,
+            }
+        )
+        .assign(
+            status=lambda df: pd.Series(
+                index=df.index, data=[ClassMapping.seen.name] * len(df)
+            )
+            .where(
+                df[ClassMapping.consulted.name] != 1.0,
+                other=ClassMapping.consulted.name,
+            )
+            .where(
+                df[ClassMapping.booked.name] != 1.0,
+                other=ClassMapping.booked.name,
+            ),
+            target_class=lambda df: df["status"]
+            .map(
                 {
-                    "is_consulted": "float",
-                    "is_booked": "float",
+                    class_mapping.name: class_mapping.value
+                    for class_mapping in ClassMapping
                 }
             )
-            .rename(
-                columns={
-                    "is_consulted": ClassMapping.consulted.name,
-                    "is_booked": ClassMapping.booked.name,
-                }
-            )
-            .assign(
-                status=lambda df: pd.Series(
-                    index=df.index, data=[ClassMapping.seen.name] * len(df)
-                )
-                .where(
-                    df[ClassMapping.consulted.name] != 1.0,
-                    other=ClassMapping.consulted.name,
-                )
-                .where(
-                    df[ClassMapping.booked.name] != 1.0,
-                    other=ClassMapping.booked.name,
-                ),
-                target_class=lambda df: df["status"]
-                .map(
-                    {
-                        class_mapping.name: class_mapping.value
-                        for class_mapping in ClassMapping
-                    }
-                )
-                .astype(int),
-            )
+            .astype(int),
         )
         .drop_duplicates()
         .assign(
@@ -167,9 +188,4 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def map_features_columns(df: pd.DataFrame) -> pd.DataFrame:
-    return (
-        df.assign(**FEATURES_CONSTRUCTION)
-        .rename(columns=FEATURES_MAPPING)
-        .fillna({numeric_feat: DEFAULT_NUMERICAL for numeric_feat in NUMERIC_FEATURES})
-        .fillna({cat_feat: DEFAULT_CATEGORICAL for cat_feat in CATEGORICAL_FEATURES})
-    )
+    return df.assign(**FEATURES_CONSTRUCTION).rename(columns=FEATURES_MAPPING)

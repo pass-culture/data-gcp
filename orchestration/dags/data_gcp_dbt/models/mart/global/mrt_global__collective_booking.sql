@@ -4,8 +4,6 @@ select
     cb.is_used_collective_booking,
     co.collective_offer_id,
     co.collective_offer_name,
-    co.collective_offer_subcategory_id,
-    co.collective_offer_category_id,
     co.collective_offer_format,
     co.venue_id,
     co.venue_name,

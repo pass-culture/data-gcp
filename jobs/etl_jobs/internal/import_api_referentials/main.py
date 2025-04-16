@@ -8,7 +8,7 @@ import requests
 BACKEND_API_URL = {
     "dev": "https://backend.staging.passculture.team/native/v1/subcategories/v2",
     "stg": "https://backend.staging.passculture.team/native/v1/subcategories/v2",
-    "prod": "https://backend.passculture.team/native/v1/subcategories/v2",
+    "prod": "https://backend.passculture.app/native/v1/subcategories/v2",
 }
 
 CATEGORIES_DTYPES = {

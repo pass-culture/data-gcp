@@ -148,9 +148,17 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
             ),
             k_list=NDCG_K_LIST,
         )
+        popular_ndcg_at_k = compute_ndcg_at_k(
+            predictions=test_predictions.assign(
+                score=test_predictions["offer_booking_number_last_28_days"]
+                / test_predictions["offer_booking_number_last_28_days"].max()
+            ),
+            k_list=NDCG_K_LIST,
+        )
         for k in NDCG_K_LIST:
             mlflow.log_metric(f"ndcg_at_{k}", ndcg_at_k[k])
             mlflow.log_metric(f"random_ndcg_at_{k}", random_ndcg_at_k[k])
+            mlflow.log_metric(f"popular_ndcg_at_{k}", popular_ndcg_at_k[k])
         print("Evaluation finished")
 
         # Save Data

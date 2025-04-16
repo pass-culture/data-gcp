@@ -122,7 +122,7 @@ with
                         "videoDuration",
                         "seenDuration",
                         "youtubeId",
-                        "isHeadline"
+                        "isHeadline",
                     ]
                 )
             }},

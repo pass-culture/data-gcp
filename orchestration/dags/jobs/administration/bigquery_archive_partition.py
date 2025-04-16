@@ -70,7 +70,7 @@ dag = DAG(
         ),
         "limit": Param(
             default=1,
-            type="int",
+            type="integer",
         ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],

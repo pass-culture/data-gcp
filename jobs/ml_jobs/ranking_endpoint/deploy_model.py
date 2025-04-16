@@ -1,3 +1,4 @@
+import glob
 import os
 import secrets
 import shutil
@@ -51,6 +52,11 @@ NDCG_K_LIST = [5, 10, 20]
 
 
 def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
+    return pd.concat(
+        [pd.read_parquet(f) for f in glob.glob("data/14_days/data*.parquet")],
+        ignore_index=True,
+    )
+
     # Hack : Use new training data
     dataset_name = f"ml_reco_{ENV_SHORT_NAME}"
     table_name = "ranking_training_data"

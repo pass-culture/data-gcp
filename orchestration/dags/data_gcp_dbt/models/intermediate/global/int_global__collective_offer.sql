@@ -29,7 +29,7 @@ select
     v.venue_macro_density_label,
     v.venue_density_level,
     v.venue_is_virtual,
-    v.venue_managing_offerer_id as offerer_id,
+    v.offerer_id,
     v.offerer_name,
     v.venue_iris_internal_id,
     v.is_local_authority,

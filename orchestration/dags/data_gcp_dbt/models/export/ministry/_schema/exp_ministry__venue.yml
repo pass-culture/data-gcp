@@ -16,8 +16,8 @@ models:
         description: "{{ doc('column__venue_siret') }}"
       - name: venue_is_virtual
         description: "{{ doc('column__venue_is_virtual') }}"
-      - name: venue_managing_offerer_id
-        description: "{{ doc('column__venue_managing_offerer_id') }}"
+      - name: offerer_id
+        description: "{{ doc('column__offerer_id') }}"
       - name: venue_creation_date
         description: "{{ doc('column__venue_creation_date') }}"
       - name: venue_type_label

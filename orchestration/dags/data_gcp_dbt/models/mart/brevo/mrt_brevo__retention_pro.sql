@@ -24,7 +24,7 @@ from {{ ref("mrt_brevo__transactional_pro") }} as btp
 left join {{ ref("int_global__offerer") }} as go on btp.offerer_id = go.offerer_id
 left join
     {{ ref("mrt_global__venue") }} as gv
-    on btp.offerer_id = gv.venue_managing_offerer_id
+    on btp.offerer_id = gv.offerer_id
 left join
     {{ ref("int_history__bookable_venue") }} as bvh
     on gv.venue_id = bvh.venue_id

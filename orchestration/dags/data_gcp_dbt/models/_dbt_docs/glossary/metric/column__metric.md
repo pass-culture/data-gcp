@@ -82,3 +82,18 @@ title: Metrics
 {% docs column__ratio_beneficiary_students %}The ratio of beneficiary students for the educational institution.{% enddocs %}
 {% docs column__mean_stock_price_per_item %} The average stock price for the item. {% enddocs %}
 {% docs column__total_diversity_score %} The total diversity score of the user or the deposit {% enddocs %}
+{% docs column__total_session_display %} The total number of sessions with a display of a specific object like module_id or offer_id. {% enddocs %}
+{% docs column__total_session_with_click %} The total number of sessions with a click on a specific object like module_id or offer_id. {% enddocs %}
+{% docs column__total_sesh_consult_offer %} The total number of sessions with a consultation related to a specific object like module_id or offer_id. {% enddocs %}
+{% docs column__total_session_fav %} The total number of sessions which puts an offer to favorite, related to a specific object like module_id or offer_id. {% enddocs %}
+{% docs column__total_session_with_consult_video %} The total number of sessions with a video consultation, related to a specific object like module_id. {% enddocs %}
+{% docs column__total_click %} The total number of clicks on a specific object like module_id or offer_id. {% enddocs %}
+{% docs column__total_consult_offer %} The total number of offer consultations. {% enddocs %}
+{% docs column__total_fav %} The total number of bookmark actions. {% enddocs %}
+{% docs column__total_session_with_booking %} The total number of session which performed a booking. {% enddocs %}
+{% docs column__total_venue_map_consult %} The total number of consultations from the venue map. {% enddocs %}
+{% docs column__total_venue_map_preview %} The total number of previews of the venue map. {% enddocs %}
+{% docs column__total_consult_venue %} The total number of venues consulted from the venue map. {% enddocs %}
+{% docs column__total_distinct_venue_consult_offer %} The total distinct number of venues which led to an offer consultation. {% enddocs %}
+{% docs column__total_session_venue_map_seen_duration_seconds %} Durée totale en seconde pendant laquelle la venue map a été affichée au cours d’une session. {% enddocs %}
+{% docs column__total_diversification %} Total du score de diversité incrémenté par les réservations associées. {% enddocs %}

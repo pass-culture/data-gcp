@@ -2,7 +2,7 @@ with
     main_venue_tag_per_offerer as (
         select
             venue_id,
-            venue_managing_offerer_id,
+            offerer_id,
             venue_tag_name as partner_type,
             "venue_tag" as partner_type_origin
         from {{ ref("mrt_global__venue_tag") }}
@@ -14,7 +14,7 @@ with
     main_venue_type_per_offerer as (
         select
             venue_id,
-            venue_managing_offerer_id,
+            offerer_id,
             venue_type_label as partner_type,
             "venue_type_label" as partner_type_origin
         from {{ ref("mrt_global__venue") }}
@@ -25,7 +25,7 @@ with
 
     top_venue_per_offerer as (
         select
-            main_venue_type_per_offerer.venue_managing_offerer_id,
+            main_venue_type_per_offerer.offerer_id,
             coalesce(
                 main_venue_tag_per_offerer.venue_id,
                 main_venue_type_per_offerer.venue_id
@@ -41,8 +41,8 @@ with
         from main_venue_type_per_offerer
         left join
             main_venue_tag_per_offerer
-            on main_venue_type_per_offerer.venue_managing_offerer_id
-            = main_venue_tag_per_offerer.venue_managing_offerer_id
+            on main_venue_type_per_offerer.offerer_id
+            = main_venue_tag_per_offerer.offerer_id
     ),
 
     main_venue_tag_per_venue as (  -- WIP, temporary fix to avoid duplicates
@@ -60,10 +60,9 @@ with
             o.offerer_creation_date as partner_creation_date,
             case
                 when
-                    date_trunc(offerer_creation_date, year)
+                    date_trunc(o.offerer_creation_date, year)
                     <= date_trunc(date_sub(date("{{ ds() }}"), interval 1 year), year)
                 then true
-                else null
             end as was_registered_last_year,
             o.offerer_name as partner_name,
             o.academy_name as partner_academy_name,
@@ -82,13 +81,12 @@ with
                 then "most_active_venue_tag"
                 when top_venue_per_offerer.partner_type_origin = "venue_type_label"
                 then "most_active_venue_type"
-                else null
             end as partner_type_origin,
-            agg_partner_cultural_sector.cultural_sector as cultural_sector,
-            o.dms_accepted_at as dms_accepted_at,
-            o.first_dms_adage_status as first_dms_adage_status,
-            o.is_reference_adage as is_reference_adage,
-            o.is_synchro_adage as is_synchro_adage,
+            agg_partner_cultural_sector.cultural_sector,
+            o.dms_accepted_at,
+            o.first_dms_adage_status,
+            o.is_reference_adage,
+            o.is_synchro_adage,
             o.is_active_last_30days,
             o.is_active_current_year,
             o.is_individual_active_last_30days,
@@ -118,11 +116,10 @@ with
         from {{ ref("int_global__offerer") }} as o
         left join
             {{ ref("mrt_global__venue") }} as v
-            on v.offerer_id = o.offerer_id
+            on o.offerer_id = v.offerer_id
             and v.venue_is_permanent
         left join
-            top_venue_per_offerer
-            on top_venue_per_offerer.venue_managing_offerer_id = o.offerer_id
+            top_venue_per_offerer on o.offerer_id = top_venue_per_offerer.offerer_id
         left join
             {{ source("seed", "agg_partner_cultural_sector") }}
             on agg_partner_cultural_sector.partner_type
@@ -130,7 +127,7 @@ with
         where
             not o.is_local_authority
             and v.offerer_id is null
-            and o.offerer_validation_status = 'VALIDATED'
+            and o.offerer_validation_status = "VALIDATED"
             and o.offerer_is_active
     )
 
@@ -139,12 +136,12 @@ union all
 (
     select
         v.venue_id,
-        v.venue_managing_offerer_id as offerer_id,
+        v.offerer_id,
         v.partner_id,
-        venue_creation_date as partner_creation_date,
+        v.venue_creation_date as partner_creation_date,
         case
             when
-                date_trunc(venue_creation_date, year)
+                date_trunc(v.venue_creation_date, year)
                 <= date_trunc(date_sub(date("{{ ds() }}"), interval 1 year), year)
             then true
             else false
@@ -158,11 +155,11 @@ union all
         case
             when vt.venue_tag_name is not null then "venue_tag" else "venue_type_label"
         end as partner_type_origin,
-        agg_partner_cultural_sector.cultural_sector as cultural_sector,
-        v.dms_accepted_at as dms_accepted_at,
-        v.first_dms_adage_status as first_dms_adage_status,
-        v.is_reference_adage as is_reference_adage,
-        v.is_synchro_adage as is_synchro_adage,
+        agg_partner_cultural_sector.cultural_sector,
+        v.dms_accepted_at,
+        v.first_dms_adage_status,
+        v.is_reference_adage,
+        v.is_synchro_adage,
         v.is_active_last_30days,
         v.is_active_current_year,
         v.is_individual_active_last_30days,
@@ -192,7 +189,7 @@ union all
     from {{ ref("mrt_global__venue") }} as v
     left join
         {{ source("seed", "agg_partner_cultural_sector") }}
-        on agg_partner_cultural_sector.partner_type = v.venue_type_label
+        on v.venue_type_label = agg_partner_cultural_sector.partner_type
     left join main_venue_tag_per_venue as vt on v.venue_id = vt.venue_id
-    where venue_is_permanent
+    where v.venue_is_permanent
 )

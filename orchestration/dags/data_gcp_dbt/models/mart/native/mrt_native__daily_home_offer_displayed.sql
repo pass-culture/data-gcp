@@ -31,6 +31,7 @@ with
         {% endif %}
         group by event_date, offer_id, module_id, entry_id, displayed_position
     ),
+
     displays_by_position_bucket as (
         select
             event_date,
@@ -76,20 +77,21 @@ with
                     else 0
                 end
             ) as total_position_41_50_displays
-        from {{ ref("int_firebase__native_home_offer_displayed") }} as native
+        from {{ ref("int_firebase__native_home_offer_displayed") }}
         {% if is_incremental() %}
             where date(event_date) = date_sub('{{ ds() }}', interval 3 day)
         {% else %} where date(event_date) >= "2024-06-13"
         {% endif %}
         group by event_date, offer_id, module_id, entry_id
     ),
+
     consultations_by_position_bucket as (
         select
             event_date,
             offer_id,
             module_id,
             entry_id,
-            sum(total_consultations) total_consultations,
+            sum(total_consultations) as total_consultations,
             sum(
                 case when displayed_position < 4 then total_consultations end
             ) as total_position_0_3_consultations,
@@ -132,7 +134,6 @@ select
     display.offer_id,
     display.module_id,
     display.entry_id,
-    coalesce(c.title, c.offer_title) as module_name,
     c.content_type as module_type,
     offers.offer_category_id,
     offers.offer_subcategory_id,
@@ -144,6 +145,7 @@ select
     offers.offerer_id,
     offers.offerer_name,
     offers.venue_type_label,
+    coalesce(c.title, c.offer_title) as module_name,
     coalesce(display.total_displays, 0) as total_displays,
     coalesce(display.total_position_0_3_displays, 0) as total_position_0_3_displays,
     coalesce(display.total_position_4_10_displays, 0) as total_position_4_10_displays,
@@ -178,4 +180,4 @@ left join
     and display.module_id = consult.module_id
     and display.entry_id = consult.entry_id
 left join {{ ref("mrt_global__offer") }} as offers on consult.offer_id = offers.offer_id
-left join {{ ref("int_contentful__entry") }} as c on c.id = display.module_id
+left join {{ ref("int_contentful__entry") }} as c on display.module_id = c.id

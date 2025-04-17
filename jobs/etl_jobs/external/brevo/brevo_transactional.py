@@ -38,6 +38,7 @@ class BrevoTransactional:
         self.api_instance = api_instance
 
     def get_active_templates_id(self):
+        active_templates = []
         try:
             offset = 0
             response = self.api_instance.get_smtp_templates(

@@ -96,3 +96,4 @@ title: Metrics
 {% docs column__total_consult_venue %} The total number of venues consulted from the venue map. {% enddocs %}
 {% docs column__total_distinct_venue_consult_offer %} The total distinct number of venues which led to an offer consultation. {% enddocs %}
 {% docs column__total_session_venue_map_seen_duration_seconds %} Durée totale en seconde pendant laquelle la venue map a été affichée au cours d’une session. {% enddocs %}
+{% docs column__total_diversification %} Total du score de diversité incrémenté par les réservations associées. {% enddocs %}

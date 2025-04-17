@@ -91,5 +91,3 @@ title: Metrics
 {% docs column__total_consult_offer %} The total number of offer consultations. {% enddocs %}
 {% docs column__total_fav %} The total number of bookmark actions. {% enddocs %}
 {% docs column__total_session_with_booking %} The total number of session which performed a booking. {% enddocs %}
-{% docs column__total_non_cancelled_bookings %} The total number of non-cancelled bookings. {% enddocs %}
-{% docs column__total_diversification %} The sum of the diversity score related to bookings. {% enddocs %}

@@ -397,8 +397,7 @@ with
         from {{ ref("mrt_global__venue") }} as mrt_global__venue
         left join
             {{ ref("mrt_global__offerer") }} as mrt_global__offerer
-            on mrt_global__venue.offerer_id
-            = mrt_global__offerer.offerer_id
+            on mrt_global__venue.offerer_id = mrt_global__offerer.offerer_id
     ),
 
     siren_status as (
@@ -410,8 +409,7 @@ with
         from {{ ref("mrt_global__venue") }} as mrt_global__venue
         join
             {{ ref("mrt_global__offerer") }} as mrt_global__offerer
-            on mrt_global__venue.offerer_id
-            = mrt_global__offerer.offerer_id
+            on mrt_global__venue.offerer_id = mrt_global__offerer.offerer_id
         left join
             {{ ref("siren_data") }}
             on mrt_global__offerer.offerer_siren = siren_data.siren
@@ -458,9 +456,7 @@ with
             bank_account_link_beginning_date,
             bank_account_link_ending_date,
             rank() over (
-                partition by
-                    mrt_global__venue.offerer_id,
-                    mrt_global__venue.venue_id
+                partition by mrt_global__venue.offerer_id, mrt_global__venue.venue_id
                 order by bank_account_link_beginning_date desc
             ) as rang
         from {{ ref("mrt_global__venue") }} as mrt_global__venue

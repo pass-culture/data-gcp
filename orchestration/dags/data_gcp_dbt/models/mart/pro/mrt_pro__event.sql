@@ -23,9 +23,7 @@ with
     offerer_per_session as (
         select
             unique_session_id,
-            coalesce(
-                ps.offerer_id, v.offerer_id, mau.offerer_id
-            ) as offerer_id
+            coalesce(ps.offerer_id, v.offerer_id, mau.offerer_id) as offerer_id
         from {{ ref("int_firebase__pro_session") }} as ps
         left join {{ ref("mrt_global__venue") }} as v on ps.venue_id = v.venue_id
         left join most_active_offerer_per_user as mau on mau.user_id = ps.user_id

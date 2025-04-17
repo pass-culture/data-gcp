@@ -30,6 +30,14 @@ TABLES = {
         ],
         "folder": "tracking",
     },
+    "past_offer_context": {
+        "dataset_id": f"raw_{ENV_SHORT_NAME}",
+        "partition_column": "import_date",
+        "look_back_months": json.loads('{"dev": 6, "stg": 6, "prod": 6}')[
+            ENV_SHORT_NAME
+        ],
+        "folder": "api_reco",
+    },
 }
 
 dag_config = {
@@ -60,6 +68,10 @@ dag = DAG(
             default=f"bigquery-archive-{ENV_SHORT_NAME}",
             type="string",
         ),
+        "limit": Param(
+            default=1,
+            type="integer",
+        ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 )
@@ -88,7 +100,7 @@ for table, config in TABLES.items():
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_PATH,
         environment=dag_config,
-        command=f"python main.py --table {table} --config '{config}' ",
+        command=f"python main.py --table {table} --config '{config}' --limit {{{{ params.limit }}}}",
         do_xcom_push=True,
     )
     tasks.append(export_old_partitions_to_gcs)

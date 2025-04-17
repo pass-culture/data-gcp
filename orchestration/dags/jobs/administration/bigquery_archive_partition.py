@@ -19,7 +19,7 @@ from airflow import DAG
 from airflow.models import Param
 
 # Configurations
-DAG_NAME = "bigquery_export_old_partitions"
+DAG_NAME = "bigquery_archive_partition"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/bigquery_archive_partition"
 TABLES = {
     "firebase_events": {
@@ -33,7 +33,7 @@ TABLES = {
     "past_offer_context": {
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "import_date",
-        "look_back_months": json.loads('{"dev": 6, "stg": 6, "prod": 6}')[
+        "look_back_months": json.loads('{"dev": 1, "stg": 3, "prod": 6}')[
             ENV_SHORT_NAME
         ],
         "folder": "api_reco",
@@ -69,7 +69,7 @@ dag = DAG(
             type="string",
         ),
         "limit": Param(
-            default=1,
+            default=30,
             type="integer",
         ),
     },

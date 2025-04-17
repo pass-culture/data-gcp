@@ -17,7 +17,7 @@ with
                 concat(
                     referenced_table_unn.dataset_id, '.', referenced_table_unn.table_id
                 ),
-                ","
+                ','
                 order by
                     concat(
                         referenced_table_unn.dataset_id,
@@ -27,7 +27,7 @@ with
             ) as referenced_tables
 
         from
-            `{{ target.project }}.{{ var('region_name') }}.INFORMATION_SCHEMA.JOBS_BY_PROJECT` q,
+            `{{ target.project }}.{{ var('region_name') }}.INFORMATION_SCHEMA.JOBS_BY_PROJECT` as q,
             unnest(referenced_tables) as referenced_table_unn
 
         group by 1, 2
@@ -41,15 +41,15 @@ with
             queries.job_id,
             user_email,
             cache_hit,
-            destination_table.dataset_id as dataset_id,
-            destination_table.table_id as table_id,
+            destination_table.dataset_id,
+            destination_table.table_id,
             tr.referenced_tables,
             statement_type,
             query,
             cast(
-                regexp_extract(query, r"Metabase:: userID: ([0-9]+).*") as int
+                regexp_extract(query, r'Metabase:: userID: ([0-9]+).*') as int
             ) as metabase_user_id,
-            regexp_extract(query, r"queryHash: ([a-z-0-9]+)\n") as metabase_hash,
+            regexp_extract(query, r'queryHash: ([a-z-0-9]+)\n') as metabase_hash,
             sum(total_bytes_billed) as total_bytes_billed,
             sum(total_bytes_processed) as total_bytes_processed,
             count(*) as total_queries
@@ -57,7 +57,7 @@ with
             `{{ target.project }}.{{ var('region_name') }}.INFORMATION_SCHEMA.JOBS_BY_PROJECT`
             as queries
         left join
-            table_references tr
+            table_references as tr
             on queries.project_id = tr.project_id
             and queries.job_id = tr.job_id
         {% if is_incremental() %}
@@ -74,6 +74,7 @@ with
 
 select
     *,
-    6.8 * total_bytes_billed / power(2, 40) as cost_euro,  -- price estimation for 1TB
+    null as dummy_column,  -- price estimation for 1TB
+    6.8 * total_bytes_billed / power(2, 40) as cost_euro,
     total_bytes_billed / power(10, 9) as total_gigabytes_billed
 from bq_costs

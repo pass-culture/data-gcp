@@ -2,7 +2,7 @@ with
     main_venue_tag_per_offerer as (
         select
             venue_id,
-            venue_managing_offerer_id,
+            offerer_id,
             venue_tag_name as partner_type,
             "venue_tag" as partner_type_origin
         from {{ ref("mrt_global__venue_tag") }}
@@ -42,7 +42,7 @@ with
         left join
             main_venue_tag_per_offerer
             on main_venue_type_per_offerer.offerer_id
-            = main_venue_tag_per_offerer.venue_managing_offerer_id
+            = main_venue_tag_per_offerer.offerer_id
     ),
 
     main_venue_tag_per_venue as (  -- WIP, temporary fix to avoid duplicates

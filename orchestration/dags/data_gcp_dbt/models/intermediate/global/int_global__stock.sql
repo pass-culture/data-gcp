@@ -42,7 +42,7 @@ select
     o.venue_density_level,
     o.venue_label,
     o.venue_type_label,
-    o.venue_managing_offerer_id as offerer_id,
+    o.offerer_id,
     o.offerer_name,
     o.partner_id,
     o.physical_goods,

@@ -24,7 +24,7 @@ with
         select
             unique_session_id,
             coalesce(
-                ps.offerer_id, v.venue_managing_offerer_id, mau.offerer_id
+                ps.offerer_id, v.offerer_id, mau.offerer_id
             ) as offerer_id
         from {{ ref("int_firebase__pro_session") }} as ps
         left join {{ ref("mrt_global__venue") }} as v on ps.venue_id = v.venue_id
@@ -58,7 +58,7 @@ select
     e.page_number,
     e.is_edition,
     e.is_draft,
-    coalesce(e.offerer_id, v.venue_managing_offerer_id, ps.offerer_id) as offerer_id,
+    coalesce(e.offerer_id, v.offerer_id, ps.offerer_id) as offerer_id,
     e.venue_id,
     e.offer_id,
     e.offer_type,
@@ -104,7 +104,7 @@ left join offerer_per_session as ps on ps.unique_session_id = e.unique_session_i
 left join {{ ref("mrt_global__venue") }} as v on e.venue_id = v.venue_id
 left join
     {{ ref("mrt_global__offerer") }} as o
-    on coalesce(e.offerer_id, v.venue_managing_offerer_id, ps.offerer_id) = o.offerer_id
+    on coalesce(e.offerer_id, v.offerer_id, ps.offerer_id) = o.offerer_id
 left join {{ ref("mrt_global__cultural_partner") }} as p on v.partner_id = p.partner_id
 where
     true

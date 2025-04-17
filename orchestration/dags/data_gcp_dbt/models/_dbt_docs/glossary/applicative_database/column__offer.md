@@ -8,6 +8,7 @@ enddocs %}
 
 {% docs column__offer_name %} Name of the offer as it appears in the application. {% enddocs %}
 {% docs column__offer_category_id %} Identifier for the category of the offer. {% enddocs %}
+{% docs column__offer_category %} Identifier for the category of the offer. {% enddocs %}
 {% docs column__offer_creation_date %} Date when the offer was created. {% enddocs %}
 {% docs column__offer_created_at %} Timestamp when the offer was created. {% enddocs %}
 {% docs column__offer_updated_at %} Timestamp when the offer was last updated. {% enddocs %}

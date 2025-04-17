@@ -157,7 +157,29 @@ def save_model_type(model_type):
 def get_table_batches(
     item_embedding_dict: dict, items_df: pd.DataFrame, emb_size: int, total_size: int
 ):
-    for row in items_df.itertuples():
+    preprocessed_items_df = items_df.fillna(
+        {
+            "topic_id": "",
+            "cluster_id": "",
+            "category": "",
+            "subcategory_id": "",
+            "search_group_name": "",
+            "offer_type_label": "",
+            "offer_type_domain": "",
+            "gtl_id": "",
+            "gtl_l1": "",
+            "gtl_l2": "",
+            "gtl_l3": "",
+            "gtl_l4": "",
+            "example_offer_id": "",
+            "example_offer_name": "",
+            "example_venue_id": "",
+            "example_venue_latitude": 0.0,
+            "example_venue_longitude": 0.0,
+        }
+    )
+
+    for row in preprocessed_items_df.itertuples():
         embedding_id = item_embedding_dict.get(row.item_id, None)
         if embedding_id is not None:
             _item_id = row.item_id
@@ -182,18 +204,18 @@ def get_table_batches(
                         pa.list_(pa.float32(), 1),
                     ),
                     pa.array([embedding_id], pa.list_(pa.float32(), emb_size)),
-                    pa.array([str(row.topic_id or "")], pa.utf8()),
-                    pa.array([str(row.cluster_id or "")], pa.utf8()),
-                    pa.array([str(row.category or "")], pa.utf8()),
-                    pa.array([str(row.subcategory_id or "")], pa.utf8()),
-                    pa.array([str(row.search_group_name or "")], pa.utf8()),
-                    pa.array([str(row.offer_type_label or "")], pa.utf8()),
-                    pa.array([str(row.offer_type_domain or "")], pa.utf8()),
-                    pa.array([str(row.gtl_id or "")], pa.utf8()),
-                    pa.array([str(row.gtl_l1 or "")], pa.utf8()),
-                    pa.array([str(row.gtl_l2 or "")], pa.utf8()),
-                    pa.array([str(row.gtl_l3 or "")], pa.utf8()),
-                    pa.array([str(row.gtl_l4 or "")], pa.utf8()),
+                    pa.array([str(row.topic_id)], pa.utf8()),
+                    pa.array([str(row.cluster_id)], pa.utf8()),
+                    pa.array([str(row.category)], pa.utf8()),
+                    pa.array([str(row.subcategory_id)], pa.utf8()),
+                    pa.array([str(row.search_group_name)], pa.utf8()),
+                    pa.array([str(row.offer_type_label)], pa.utf8()),
+                    pa.array([str(row.offer_type_domain)], pa.utf8()),
+                    pa.array([str(row.gtl_id)], pa.utf8()),
+                    pa.array([str(row.gtl_l1)], pa.utf8()),
+                    pa.array([str(row.gtl_l2)], pa.utf8()),
+                    pa.array([str(row.gtl_l3)], pa.utf8()),
+                    pa.array([str(row.gtl_l4)], pa.utf8()),
                     pa.array([to_float(row.is_numerical)], pa.float32()),
                     pa.array([to_float(row.is_national)], pa.float32()),
                     pa.array([to_float(row.is_geolocated)], pa.float32()),
@@ -211,15 +233,11 @@ def get_table_batches(
                     pa.array([to_ts(row.stock_beginning_date)], pa.float32()),
                     # if unique
                     pa.array([to_float(row.total_offers)], pa.float32()),
-                    pa.array([str(row.example_offer_id or "")], pa.utf8()),
-                    pa.array([str(row.example_offer_name or "")], pa.utf8()),
-                    pa.array([str(row.example_venue_id or "")], pa.utf8()),
-                    pa.array(
-                        [to_float(row.example_venue_latitude or 0.0)], pa.float32()
-                    ),
-                    pa.array(
-                        [to_float(row.example_venue_longitude or 0.0)], pa.float32()
-                    ),
+                    pa.array([str(row.example_offer_id)], pa.utf8()),
+                    pa.array([str(row.example_offer_name)], pa.utf8()),
+                    pa.array([str(row.example_venue_id)], pa.utf8()),
+                    pa.array([to_float(row.example_venue_latitude)], pa.float32()),
+                    pa.array([to_float(row.example_venue_longitude)], pa.float32()),
                 ],
                 item_columns,
             )
@@ -238,7 +256,7 @@ def create_items_table(
     db.drop_database()
 
     for i in range(num_batches):
-        print(f"Processing batch {i+1} // {num_batches} of batch_size {batch_size}")
+        print(f"Processing batch {i + 1} // {num_batches} of batch_size {batch_size}")
         start_idx = i * batch_size
         end_idx = min((i + 1) * batch_size, len(items_df))
         batch_df = items_df[start_idx:end_idx]

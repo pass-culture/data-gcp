@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime
 from typing import List
+
+from pydantic import BaseModel
 from utils import ENV_SHORT_NAME, GCP_PROJECT_ID, EXPORT_PATH
 from google.cloud import bigquery
 
@@ -14,23 +16,36 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+class JobConfig(BaseModel):
+    table_id: str
+    dataset_id: str
+    partition_column: str
+    look_back_months: int
+    folder: str
+    archive: bool
+
+
 class Archive:
-    def __init__(self, table, config):
-        self.table = table
+    def __init__(self, config: JobConfig):
         self.config = config
-        self.partition_column = config["partition_column"]
-        self.dataset_id = config["dataset_id"]
+        self.table_id = config.table_id
+        self.partition_column = config.partition_column
+        self.dataset_id = config.dataset_id
         self.client = bigquery.Client()
-        self.folder = config["folder"]
-        self.look_back_months = config["look_back_months"]
-        logger.info(f"Initialized Archive for table {self.table} with config: {config}")
+        self.folder = config.folder
+        self.archive = config.archive
+        self.look_back_months = config.look_back_months
+
+        logger.info(
+            f"Initialized Archive for table {self.table_id} with config: {config}"
+        )
 
     def _get_partition_ids(self, limit: int) -> List[str]:
         """Get partition IDs from INFORMATION_SCHEMA.PARTITIONS with limit, ordered by partition_id ASC."""
         query = f"""
             SELECT DISTINCT partition_id
             FROM `{GCP_PROJECT_ID}.{self.dataset_id}.INFORMATION_SCHEMA.PARTITIONS`
-            WHERE table_name = '{self.table}'
+            WHERE table_name = '{self.table_id}'
             ORDER BY partition_id ASC
             LIMIT {limit}
         """
@@ -61,7 +76,7 @@ class Archive:
     def _export_partition(self, partition_date: datetime) -> None:
         """Export a single partition to GCS."""
         partition_str = partition_date.strftime("%Y%m%d")
-        gcs_uri = f"{EXPORT_PATH}/{self.folder}/{self.table}/{partition_str}_{self.table}_*.parquet"
+        gcs_uri = f"{EXPORT_PATH}/{self.folder}/{self.table_id}/{partition_str}_{self.table_id}_*.parquet"
 
         query = f"""
             EXPORT DATA
@@ -72,7 +87,7 @@ class Archive:
             )
             AS
             SELECT *, {self.partition_column} as partition_date
-            FROM `{GCP_PROJECT_ID}.{self.dataset_id}.{self.table}`
+            FROM `{GCP_PROJECT_ID}.{self.dataset_id}.{self.table_id}`
             WHERE DATE({self.partition_column}) = '{partition_date.strftime('%Y-%m-%d')}';
         """
 
@@ -83,20 +98,20 @@ class Archive:
     def _delete_partition(self, partition_date: datetime) -> None:
         """Delete a single partition from the table."""
         query = f"""
-            DELETE FROM `{GCP_PROJECT_ID}.{self.dataset_id}.{self.table}`
+            DELETE FROM `{GCP_PROJECT_ID}.{self.dataset_id}.{self.table_id}`
             WHERE {self.partition_column} = '{partition_date.strftime('%Y-%m-%d')}';
         """
 
         query_job = self.client.query(query)
         query_job.result()
         logger.info(
-            f"Successfully deleted partition {partition_date.strftime('%Y%m%d')} from {self.table}"
+            f"Successfully deleted partition {partition_date.strftime('%Y%m%d')} from {self.table_id}"
         )
 
-    def export_and_delete_partitions(self, limit: int):
+    def archive_partitions(self, limit: int):
         """Main method to export and delete partitions."""
         logger.info(
-            f"Starting export and delete process for {self.table} with limit {limit}"
+            f"Starting export and delete process for {self.table_id} with limit {limit}"
         )
 
         partitions = self._get_valid_partitions(limit)
@@ -107,5 +122,12 @@ class Archive:
             return "No partitions to export."
 
         for partition_date in partitions:
-            self._export_partition(partition_date)
+            if self.archive:
+                logger.info(
+                    f"Exporting partition {partition_date.strftime('%Y%m%d')} to {EXPORT_PATH}/{self.folder}/{self.table_id}/{partition_date.strftime('%Y%m%d')}_{self.table_id}_*.parquet"
+                )
+                self._export_partition(partition_date)
+            logger.info(
+                f"Deleting partition {partition_date.strftime('%Y%m%d')} from {self.table_id}"
+            )
             self._delete_partition(partition_date)

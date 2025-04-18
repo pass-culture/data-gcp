@@ -28,6 +28,10 @@ def plot_graphs(
     match_frequency_df,
     percentage_duplicates,
 ):
+    """
+    Generates evaluation plots (coverage, frequency, duplicates, booking coverage).
+    Handles cases when there is no match data gracefully.
+    """
     with PdfPages(output_file) as pdf:
         # Coverage Pie Chart
         plt.figure(figsize=(12, 12))
@@ -44,20 +48,32 @@ def plot_graphs(
         plt.close()
 
         # Match Frequency Histogram
-        plt.figure(figsize=(16, 9))
-        sns.histplot(
-            match_frequency_df["match_count"],
-            bins=range(1, int(match_frequency_df["match_count"].max()) + 2),
-            kde=False,
-            color="skyblue",
-        )
-        plt.title("Match Frequency Distribution")
-        plt.xlabel("Number of Matches per Offer")
-        plt.ylabel("Number of Offers")
-        plt.xticks(range(1, match_frequency_df["match_count"].max() + 1))
-        plt.tight_layout()
-        pdf.savefig()
-        plt.close()
+        # Only plot if there is valid match_count data
+        if not match_frequency_df.empty and pd.notna(
+            match_frequency_df["match_count"].max()
+        ):
+            max_count = int(match_frequency_df["match_count"].max())
+            counts = match_frequency_df["match_count"].dropna().astype(int)
+            if max_count >= 1 and not counts.empty:
+                plt.figure(figsize=(16, 9))
+                sns.histplot(
+                    counts,
+                    bins=range(1, max_count + 2),
+                    kde=False,
+                )
+                plt.title("Match Frequency Distribution")
+                plt.xlabel("Number of Matches per Offer")
+                plt.ylabel("Number of Offers")
+                plt.xticks(range(1, max_count + 1))
+                plt.tight_layout()
+                pdf.savefig()
+                plt.close()
+            else:
+                logger.warning("No non-zero match frequencies to plot histogram.")
+        else:
+            logger.warning(
+                "Match frequency DataFrame is empty or contains only NaNs. Skipping histogram."
+            )
 
         # Percentage of Duplicate Matches
         plt.figure(figsize=(16, 9))
@@ -73,22 +89,24 @@ def plot_graphs(
         pdf.savefig()
         plt.close()
 
+        # Booking Count Coverage if available
         if "booking_count" in linkage_candidates.columns:
             logger.info("Plot Booking Count Coverage...")
 
-            total_booking_count = merged_df["booking_count"].sum()
+            total_booking_count = merged_df["booking_count"].sum(skipna=True)
             matched_booking_count = merged_df[merged_df["is_matched"]][
                 "booking_count"
-            ].sum()
+            ].sum(skipna=True)
 
-            # Calculate the coverage percentage
-            bookin_coverage_percentage = (
-                matched_booking_count / total_booking_count
-            ) * 100
+            booking_coverage_percentage = (
+                matched_booking_count / total_booking_count * 100
+                if total_booking_count > 0
+                else 0
+            )
 
             plt.figure(figsize=(12, 12))
             plt.pie(
-                [bookin_coverage_percentage, 100 - bookin_coverage_percentage],
+                [booking_coverage_percentage, 100 - booking_coverage_percentage],
                 labels=["Matched offers", "Unmatched offers"],
                 autopct="%1.1f%%",
                 startangle=140,

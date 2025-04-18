@@ -11,6 +11,7 @@ DEFAULT_DETAIL_COLUMNS: List[str] = [
     "booking_number_last_28_days",
     "booking_number_desc",
     "semantic_emb_mean",
+    "semantic_embedding",
     "stock_price",
     "offer_creation_date",
     "stock_beginning_date",

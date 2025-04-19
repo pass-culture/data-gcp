@@ -15,6 +15,7 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
+from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
@@ -44,7 +45,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Extact items metadata embeddings",
-    schedule_interval=get_airflow_schedule("0 12 * * *"),  # every day
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(hours=20),
     user_defined_macros=macros.default,

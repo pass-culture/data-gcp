@@ -37,8 +37,6 @@ select
     v.venue_is_permanent,
     co.collective_offer_creation_date,
     co.collective_offer_date_updated,
-    co.collective_offer_subcategory_id,
-    subcategories.category_id as collective_offer_category_id,
     co.collective_offer_format,
     co.collective_offer_students,
     co.collective_offer_is_active,
@@ -86,9 +84,6 @@ select
     cs.collective_stock_id
 from {{ ref("int_applicative__collective_offer") }} as co
 inner join {{ ref("int_global__venue") }} as v on v.venue_id = co.venue_id
-left join
-    {{ source("raw", "subcategories") }}
-    on subcategories.id = co.collective_offer_subcategory_id
 left join
     {{ source("raw", "applicative_database_national_program") }} as national_program
     on national_program.national_program_id = co.national_program_id

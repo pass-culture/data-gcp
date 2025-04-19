@@ -20,19 +20,15 @@ with
             global_venue.venue_is_permanent,
             global_venue.venue_region_name,
             global_venue.venue_department_code,
-            venue_location.venue_rural_city_type as geo_type,
-            -- TODO rename field in qualtrics
-            venue_location.venue_in_qpv,
-            venue_location.venue_in_zrr,
+            global_venue.venue_rural_city_type as geo_type,
+            global_venue.venue_in_qpv,
+            global_venue.venue_in_zrr,
             date_diff(
                 current_date(), global_venue.venue_creation_date, day
             ) as seniority_day_cnt,
             global_venue.total_created_individual_offers
             + global_venue.total_created_collective_offers as offers_created
         from {{ ref("mrt_global__venue") }} as global_venue
-        left join
-            {{ ref("int_geo__venue_location") }} as venue_location
-            on global_venue.venue_id = venue_location.venue_id
         left join
             {{ source("raw", "qualtrics_opt_out_users") }} as opt_out
             on global_venue.venue_id = opt_out.ext_ref

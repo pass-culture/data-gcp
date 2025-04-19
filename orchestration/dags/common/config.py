@@ -26,7 +26,9 @@ GCP_REGION = "europe-west1"
 GCE_ZONE = "europe-west1-b"
 
 GCE_SA = os.environ.get("GCE_SA", f"algo-training-{ENV_SHORT_NAME}")
-GCE_BASE_PREFIX = f"composer-{ENV_SHORT_NAME}"
+
+DEPLOYMENT_TAG = os.environ.get("DEPLOYMENT_TAG", "composer")
+GCE_BASE_PREFIX = f"{DEPLOYMENT_TAG}-{ENV_SHORT_NAME}"
 
 BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js"
 GCE_TRAINING_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
@@ -92,10 +94,6 @@ BIGQUERY_TMP_DATASET = os.environ.get("BIGQUERY_TMP_DATASET", f"tmp_{ENV_SHORT_N
 
 APPLICATIVE_PREFIX = "applicative_database_"
 
-RECOMMENDATION_SQL_INSTANCE = os.environ.get(
-    "RECOMMENDATION_SQL_INSTANCE", f"cloudsql-recommendation-{ENV_SHORT_NAME}-ew1"
-)
-
 SLACK_CONN_ID = "slack_analytics"
 SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
 
@@ -127,13 +125,6 @@ else:
     ELEMENTARY_PYTHON_PATH = os.environ.get("ELEMENTARY_PYTHON_PATH")
 
 SLACK_TOKEN_ELEMENTARY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")
-
-INSTALL_TYPES = {
-    "simple": "install_simplified",
-    "engineering": "install_engineering",
-    "science": "install_science",
-    "analytics": "install_analytics",
-}
 
 CPU_INSTANCES_TYPES = {
     "standard": [
@@ -178,6 +169,7 @@ GPU_INSTANCES_TYPES = {
 
 INSTANCES_TYPES = {"cpu": CPU_INSTANCES_TYPES, "gpu": GPU_INSTANCES_TYPES}
 
+STOP_UPON_FAILURE_LABELS = ["long_ml"]
 GCE_ZONES = [
     "europe-west1-b",
     "europe-west1-c",

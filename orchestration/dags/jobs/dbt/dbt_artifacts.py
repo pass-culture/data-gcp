@@ -86,6 +86,7 @@ send_elementary_report = BashOperator(
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
         "DATA_BUCKET_NAME": DATA_GCS_BUCKET_NAME,
         "REPORT_FILE_PATH": "elementary_reports/{{ execution_date.year }}/elementary_report_{{ execution_date.strftime('%Y%m%d') }}.html",
+        "LOOKBACK": "{{ params.report_lookback }}",
         "SLACK_TOKEN": SLACK_TOKEN_ELEMENTARY,
         "CHANNEL_NAME": SLACK_CHANNEL,
         "ELEMENTARY_PYTHON_PATH": ELEMENTARY_PYTHON_PATH,

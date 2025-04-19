@@ -26,8 +26,6 @@ select
     venue_iris_internal_id,
     collective_offer_creation_date,
     collective_offer_date_updated,
-    collective_offer_subcategory_id,
-    collective_offer_category_id,
     collective_offer_format,
     collective_offer_students,
     collective_offer_is_active,

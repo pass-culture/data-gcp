@@ -57,13 +57,7 @@ with
                     when collective_booking_rank_desc = 1
                     then collective_booking_creation_date
                 end
-            ) as last_booking_date,
-            max(
-                case
-                    when collective_booking_rank_desc = 1
-                    then collective_offer_subcategory_id
-                end
-            ) as last_category_booked
+            ) as last_booking_date
         from {{ ref("mrt_global__collective_booking") }}
         where collective_booking_status != 'CANCELLED'
         group by educational_institution_id
@@ -87,23 +81,22 @@ select
     ei.current_deposit_creation_date,
     cb.first_booking_date,
     cb.last_booking_date,
-    cb.last_category_booked,
     sh.total_students,
-    ei.institution_type as macro_institution_type,
-    location_info.institution_city,
-    location_info.institution_epci,
-    location_info.institution_density_label,
-    location_info.institution_macro_density_label,
-    location_info.institution_density_level,
-    location_info.institution_latitude,
-    location_info.institution_longitude,
-    location_info.institution_academy_name,
-    location_info.institution_region_name,
-    location_info.institution_in_qpv,
-    location_info.institution_department_code,
-    location_info.institution_department_name,
-    location_info.institution_internal_iris_id,
-    location_info.institution_postal_code,
+    institution_metadata_aggregated_type.macro_institution_type,
+    ei.institution_city,
+    ei.institution_epci,
+    ei.institution_density_label,
+    ei.institution_macro_density_label,
+    ei.institution_density_level,
+    ei.institution_latitude,
+    ei.institution_longitude,
+    ei.institution_academy_name,
+    ei.institution_region_name,
+    ei.institution_in_qpv,
+    ei.institution_department_code,
+    ei.institution_department_name,
+    ei.institution_internal_iris_id,
+    ei.institution_postal_code,
     coalesce(ei.current_deposit_amount, 0) as current_deposit_amount,
     coalesce(ei.total_deposit_amount, 0) as total_deposit_amount,
     coalesce(ei.total_deposits, 0) as total_deposits,
@@ -144,5 +137,6 @@ left join
     educational_institution_student_headcount as sh
     on ei.institution_id = sh.institution_id
 left join
-    {{ ref("int_geo__institution_location") }} as location_info
-    on ei.institution_id = location_info.institution_id
+    {{ source("seed", "institution_metadata_aggregated_type") }}
+    as institution_metadata_aggregated_type
+    on ei.institution_type = institution_metadata_aggregated_type.institution_type

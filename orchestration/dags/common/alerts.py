@@ -10,6 +10,7 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     LOCAL_ENV,
+    STOP_UPON_FAILURE_LABELS,
 )
 from common.hooks.gce import GCEHook
 
@@ -76,7 +77,24 @@ def on_failure_callback_stop_vm(context: Context):
         failing_task.log.info(f"Stopping VM {instance_name} due to task failure.")
 
         hook = GCEHook()
-        hook.stop_vm(instance_name)
+        instance_details = hook.get_instance(instance_name)
+        if instance_details:
+            labels = instance_details.get("labels", {})
+            failing_task.log.info(f"Retrieved labels for {instance_name}: {labels}")
+            if labels.get("job_type") in STOP_UPON_FAILURE_LABELS:
+                failing_task.log.info(
+                    f"Stopping VM '{instance_name}' because label 'job_type' in {STOP_UPON_FAILURE_LABELS}."
+                )
+                hook.stop_vm(instance_name)
+            else:
+                failing_task.log.info(
+                    f"Not stopping VM '{instance_name}'; label 'job_type' is not set to 'long_ml'."
+                    f" Current labels: {labels}"
+                )
+        else:
+            failing_task.log.info(
+                f"Instance '{instance_name}' not found; cannot perform VM stop."
+            )
 
 
 def on_failure_combined_callback(context):

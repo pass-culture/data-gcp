@@ -8,7 +8,8 @@ with
             pc.postal_approx_centroid_latitude as institution_latitude,
             pc.postal_approx_centroid_longitude as institution_longitude,
             if(
-                pc.postal_approx_centroid_latitude is not null and pc.postal_approx_centroid_longitude is not null,
+                pc.postal_approx_centroid_latitude is not null
+                and pc.postal_approx_centroid_longitude is not null,
                 "municipality",
                 "unknown"
             ) as geocode_type

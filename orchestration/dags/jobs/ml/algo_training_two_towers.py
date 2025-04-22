@@ -1,8 +1,9 @@
-import json
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.alerts import SLACK_ALERT_WEBHOOK_TOKEN
+from common.alerts.ml_training import create_algo_training_slack_block
+from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_PREPROCESSING_DATASET,
     BIGQUERY_ML_RECOMMENDATION_DATASET,
@@ -14,7 +15,6 @@ from common.config import (
     INSTANCES_TYPES,
     MLFLOW_BUCKET_NAME,
     MLFLOW_URL,
-    SLACK_CONN_PASSWORD,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -22,8 +22,8 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
+from common.operators.slack import SendSlackMessageOperator
 from common.utils import get_airflow_schedule
-from dependencies.ml.utils import create_algo_training_slack_block
 from jobs.crons import SCHEDULE_DICT
 from jobs.ml.constants import IMPORT_TRAINING_SQL_PATH
 
@@ -35,7 +35,6 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
-from airflow.providers.http.operators.http import HttpOperator
 from airflow.utils.task_group import TaskGroup
 
 DATE = "{{ ts_nodash }}"
@@ -74,7 +73,7 @@ gce_params = {
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -310,20 +309,13 @@ with DAG(
         trigger_rule="none_failed",
     )
 
-    send_slack_notif_success = HttpOperator(
+    send_slack_notif_success = SendSlackMessageOperator(
         task_id="send_slack_notif_success",
-        method="POST",
-        http_conn_id="http_slack_default",
+        webhook_token=SLACK_ALERT_WEBHOOK_TOKEN,
         trigger_rule="none_failed",
-        endpoint=f"{SLACK_CONN_PASSWORD}",
-        data=json.dumps(
-            {
-                "blocks": create_algo_training_slack_block(
-                    dag_config["MODEL_DIR"], MLFLOW_URL, ENV_SHORT_NAME
-                )
-            }
+        block=create_algo_training_slack_block(
+            dag_config["MODEL_DIR"], MLFLOW_URL, ENV_SHORT_NAME
         ),
-        headers={"Content-Type": "application/json"},
     )
 
     (

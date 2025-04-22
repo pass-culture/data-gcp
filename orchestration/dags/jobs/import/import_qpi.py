@@ -2,7 +2,7 @@ import time
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.callback import on_failure_base_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -41,7 +41,7 @@ QPI_ANSWERS_TABLE = "qpi_answers_v4"
 
 default_args = {
     "start_date": datetime(2020, 12, 1),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_base_callback,
     "retries": 1,
     "retry_delay": timedelta(minutes=2),
 }

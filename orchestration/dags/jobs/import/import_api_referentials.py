@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -24,7 +24,7 @@ DAG_NAME = "import_api_referentials"
 
 default_args = {
     "start_date": datetime(2022, 4, 13),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }

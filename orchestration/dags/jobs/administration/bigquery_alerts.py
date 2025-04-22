@@ -1,7 +1,8 @@
 import datetime
 
 from common import macros
-from common.alerts import bigquery_freshness_alert, on_failure_combined_callback
+from common.alerts.freshness import bigquery_freshness_alert
+from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -34,7 +35,7 @@ default_dag_args = {
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
 }
 
 with DAG(

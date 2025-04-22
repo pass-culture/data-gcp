@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
@@ -36,7 +36,7 @@ schedule_interval = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
 
 default_args = {
     "start_date": datetime(2021, 3, 30),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 1,
     "retry_delay": timedelta(minutes=2),
 }

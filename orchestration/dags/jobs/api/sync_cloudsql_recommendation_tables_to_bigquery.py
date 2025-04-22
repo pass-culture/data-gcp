@@ -2,7 +2,7 @@ import datetime
 import os
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.callback import on_failure_base_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -27,7 +27,7 @@ DEFAULT_DAG_ARGS = {
     "start_date": datetime.datetime(2023, 1, 1),
     "retries": 2,
     "retry_delay": datetime.timedelta(minutes=5),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_base_callback,
     "project_id": GCP_PROJECT_ID,
 }
 

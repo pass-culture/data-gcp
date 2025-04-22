@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import DAG_FOLDER, DAG_TAGS, DATA_GCS_BUCKET_NAME, ENV_SHORT_NAME
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -21,7 +21,7 @@ from airflow.utils.task_group import TaskGroup
 
 default_args = {
     "start_date": datetime(2025, 3, 10),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 3,
     "retry_delay": timedelta(minutes=60),
 }

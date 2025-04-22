@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from common.alerts import SLACK_ALERT_WEBHOOK_TOKEN
+from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
 from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -57,7 +57,7 @@ def task_fail_slack_alert(context):
                 *Owner*: {owner_slack_message}
                 """
 
-        slack_hook = SlackHook(SLACK_ALERT_WEBHOOK_TOKEN)
+        slack_hook = SlackHook(SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN)
         slack_hook.send_message(slack_msg)
 
     return None

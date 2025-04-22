@@ -7,7 +7,7 @@ from common.config import (
 )
 from common.hooks.slack import SlackHook
 
-DBT_TEST_CHANNEL_WEBHOOK_TOKEN = access_secret_data(
+SLACK_DBT_TEST_CHANNEL_WEBHOOK_TOKEN = access_secret_data(
     GCP_PROJECT_ID,
     "slack-composer-dbt-test-webhook-token",
     default=None,
@@ -30,7 +30,7 @@ def bigquery_freshness_alert(warning_table_list, **context):
     else:
         slack_msg = "✅ All bigquery tables are updated according to schedule"
 
-    slack_hook = SlackHook(DBT_TEST_CHANNEL_WEBHOOK_TOKEN)
+    slack_hook = SlackHook(SLACK_DBT_TEST_CHANNEL_WEBHOOK_TOKEN)
     slack_hook.send_message(slack_msg)
 
     return None

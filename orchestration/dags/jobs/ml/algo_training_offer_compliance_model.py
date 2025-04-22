@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import SLACK_ALERT_WEBHOOK_TOKEN
+from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
 from common.alerts.ml_training import create_algo_training_slack_block
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -194,7 +194,7 @@ with DAG(
 
     send_slack_notif_success = SendSlackMessageOperator(
         task_id="send_slack_notif_success",
-        webhook_token=SLACK_ALERT_WEBHOOK_TOKEN,
+        webhook_token=SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN,
         block=create_algo_training_slack_block(
             "{{ params.model_name }}", MLFLOW_URL, ENV_SHORT_NAME
         ),

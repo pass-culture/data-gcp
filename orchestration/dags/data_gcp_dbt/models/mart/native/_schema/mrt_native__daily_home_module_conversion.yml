@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: mrt_native__daily_home_module_conversion
+    columns:
+      - name: entry_id
+      - name: total_click
+      - name: playlist_type
+      - name: module_name
+      - name: user_lifecycle_home
+      - name: entry_name
+      - name: module_type
+      - name: total_bookings
+      - name: offer_category
+      - name: total_session_with_consult_video
+      - name: total_session_fav
+      - name: app_version
+      - name: total_session_display
+      - name: home_audience
+      - name: parent_module_id
+      - name: total_non_cancelled_bookings
+      - name: total_diversification
+      - name: total_session_with_booking
+      - name: playlist_reach
+      - name: module_id
+      - name: module_displayed_date
+      - name: total_fav
+      - name: home_type
+      - name: parent_home_type
+      - name: parent_entry_id
+      - name: total_consult_offer
+      - name: user_role
+      - name: parent_module_type
+      - name: playlist_recurrence
+      - name: total_sesh_consult_offer
+      - name: total_session_with_click

@@ -5,16 +5,16 @@ with
         select
             adei.educational_institution_id,
             pc.postal_code as institution_postal_code,
-            safe_cast(pc.centroid_latitude as float64) as institution_latitude,
-            safe_cast(pc.centroid_longitude as float64) as institution_longitude,
+            pc.postal_approx_centroid_latitude as institution_latitude,
+            pc.postal_approx_centroid_longitude as institution_longitude,
             if(
-                pc.centroid_latitude is not null and pc.centroid_longitude is not null,
-                "municipality",
+                pc.postal_approx_centroid_latitude is not null and pc.postal_approx_centroid_longitude is not null,
+                "postal_code",
                 "unknown"
             ) as geocode_type
         from {{ source("raw", "applicative_database_educational_institution") }} as adei
         left join
-            {{ source("seed", "2025_insee_postal_code") }} as pc
+            {{ ref("int_seed__geo_postal_code") }} as pc
             on adei.institution_postal_code = pc.postal_code
         qualify row_number() over (partition by adei.educational_institution_id) = 1
     ),
@@ -24,14 +24,14 @@ with
             adei.educational_institution_id,
             adei.institution_department_code,
             "geolocation" as geocode_type,
+            institution_longitude,
+            institution_latitude,
             if(
                 adei.institution_longitude is not null
                 and adei.institution_latitude is not null,
                 adei.institution_postal_code,
                 null
-            ) as institution_postal_code,
-            institution_longitude,
-            institution_latitude
+            ) as institution_postal_code
         from {{ source("raw", "applicative_database_educational_institution") }} as adei
     ),
 

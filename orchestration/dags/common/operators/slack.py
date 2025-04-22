@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from common.hooks.slack import SlackHook
 
-from airflow.operators.base_operator import BaseOperator
+from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
 

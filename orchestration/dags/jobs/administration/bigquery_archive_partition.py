@@ -80,7 +80,7 @@ default_dag_args = {
 dag = DAG(
     DAG_NAME,
     default_args=default_dag_args,
-    schedule_interval=SCHEDULE_DICT[DAG_NAME],
+    schedule_interval=SCHEDULE_DICT.get(DAG_NAME, None),
     catchup=False,
     params={
         "branch": Param(

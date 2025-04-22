@@ -1,0 +1,39 @@
+version: 2
+models:
+  - name: int_seed__rural_revitalization_zone
+    description: |
+        The table lists the communes classified as Rural Revitalization Zones (ZRR).
+        https://www.data.gouv.fr/fr/datasets/zones-de-revitalisation-rurale-zrr/#/information
+
+    columns:
+      - name: geo_code
+        description: 'The geographical code (CODGEO) representing the commune.'
+        data_type: STRING
+
+      - name: geo_name
+        description: 'The official geographical name (LIBGEO) of the commune.'
+        data_type: STRING
+
+      - name: zrr_status
+        description: 'Indicates whether the commune is classified as a ZRR (simplified status).'
+        data_type: STRING
+
+      - name: zrr_zone
+        description: 'The zonal classification for the ZRR status of the commune.'
+        data_type: STRING
+
+      - name: postal_code
+        description: 'The postal code of the commune.'
+        data_type: STRING
+
+      - name: insee_code
+        description: 'The INSEE code identifying the commune.'
+        data_type: STRING
+
+      - name: insee_commune
+        description: 'The name of the commune associated with the INSEE code.'
+        data_type: STRING
+
+      - name: insee_geo_shape
+        description: 'The geographical shape data for the commune according to INSEE.'
+        data_type: STRING

@@ -3,6 +3,7 @@ import os
 import subprocess
 import time
 from datetime import datetime
+from math import ceil
 
 import lancedb
 import pandas as pd
@@ -251,7 +252,7 @@ def create_items_table(
     batch_size: int = LANCE_DB_BATCH_SIZE,
     create_index: bool = True,
 ) -> None:
-    num_batches = len(items_df) // batch_size + 1
+    num_batches = ceil(len(items_df) / batch_size)
     db = lancedb.connect(uri)
     db.drop_database()
 

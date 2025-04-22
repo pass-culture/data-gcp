@@ -252,11 +252,20 @@ class DiversificationPipeline:
         self.item_semantic_embeddings = item_semantic_embeddings
         self.item_ids = ids
         self.scores = scores
-        self.K_DPP = 150
+        self.K_DPP = 6
 
     def get_sampled_ids(self):
-        weighted_item_semantic_embeddings = (
-            self.item_semantic_embeddings * self.scores[:, None]
-        )
-        dpp = DPP(vectors=weighted_item_semantic_embeddings, K_DPP=self.K_DPP)
-        return self.item_ids[dpp.sample_k()]
+        scores_arr = np.array(self.scores, dtype=np.float64)
+        embeddings_arr = np.array(self.item_semantic_embeddings, dtype=np.float64)
+        weighted_item_semantic_embeddings = scores_arr[:, np.newaxis] * embeddings_arr
+
+        # Normalize the weighted embeddings (L2 normalization)
+        norms = np.linalg.norm(weighted_item_semantic_embeddings, axis=1, keepdims=True)
+        # Avoid division by zero - replace zero norms with 1
+        norms[norms < 1e-10] = 1.0
+        normalized_weighted_embeddings = weighted_item_semantic_embeddings / norms
+
+        dpp = DPP(vectors=normalized_weighted_embeddings, K_DPP=self.K_DPP)
+        sample_indices = dpp.sample_k()
+        return [self.item_ids[i] for i in sample_indices]
+        # return np.array(self.item_ids)[dpp.sample_k()].tolist()

@@ -67,12 +67,13 @@ dag = DAG(
 )
 
 # Define initial and final tasks
-start = DummyOperator(task_id="start", dag=dag)
-end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
+start = DummyOperator(task_id="start", dag=dag, pool="dbt")
+end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed", pool="dbt")
 
 wait_for_raw = delayed_waiting_operator(
     dag=dag,
     external_dag_id="import_applicative_database",
+    pool="dbt",
 )
 
 wait_for_firebase = delayed_waiting_operator(
@@ -81,9 +82,15 @@ wait_for_firebase = delayed_waiting_operator(
     allowed_states=["success", "upstream_failed"],
     failed_states=["failed"],
 )
-end_wait = DummyOperator(task_id="end_wait", dag=dag, trigger_rule="none_failed")
-data_transfo_checkpoint = DummyOperator(task_id="data_transfo_checkpoint", dag=dag)
-snapshots_checkpoint = DummyOperator(task_id="snapshots_checkpoint", dag=dag)
+end_wait = DummyOperator(
+    task_id="end_wait", dag=dag, trigger_rule="none_failed", pool="dbt"
+)
+data_transfo_checkpoint = DummyOperator(
+    task_id="data_transfo_checkpoint", dag=dag, pool="dbt"
+)
+snapshots_checkpoint = DummyOperator(
+    task_id="snapshots_checkpoint", dag=dag, pool="dbt"
+)
 
 
 clean = BashOperator(
@@ -92,6 +99,7 @@ clean = BashOperator(
     env={
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
     },
+    pool="dbt",
 )
 
 
@@ -105,6 +113,7 @@ compile = BashOperator(
     append_env=True,
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
+    pool="dbt",
 )
 
 # Run the dbt DAG reconstruction

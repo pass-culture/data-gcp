@@ -334,9 +334,14 @@ def from_external(conn_id, sql_path):
     return f' SELECT * FROM EXTERNAL_QUERY("{conn_id}", """ {include} """ ) ; '
 
 
-def one_line_query(sql_path):
+def one_line_query(sql_path, sample=None):
     with open(f"{sql_path}", "r") as fp:
         lines = " ".join([line.strip() for line in fp.readlines()])
+    if sample:
+        assert type(sample) is int and (
+            sample > 0 and sample <= 100
+        ), "Sample must be an integer between 1 and 100"
+        lines = " ".join([lines, f"TABLESAMPLE SYSTEM ({sample})"])
     return lines
 
 

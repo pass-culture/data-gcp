@@ -5,6 +5,7 @@ from common.alerts import task_fail_slack_alert
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
+    ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
 from common.operators.bigquery import bigquery_federated_query_task, bigquery_job_task
@@ -40,6 +41,7 @@ dag = DAG(
     tags=[DAG_TAGS.DE.value],
 )
 
+sample_pgsql = 50 if ENV_SHORT_NAME != "prod" else None
 start = DummyOperator(task_id="start", dag=dag)
 
 # Sequential table import tasks
@@ -47,7 +49,10 @@ with TaskGroup(group_id="sequential_tasks_group", dag=dag) as sequential_tasks_g
     seq_tasks = []
     for table, params in SEQUENTIAL_TABLES.items():
         task = bigquery_federated_query_task(
-            dag, task_id=f"import_sequential_to_raw_{table}", job_params=params
+            dag,
+            task_id=f"import_sequential_to_raw_{table}",
+            job_params=params,
+            sample=sample_pgsql,
         )
         seq_tasks.append(task)
 
@@ -62,7 +67,10 @@ with TaskGroup(
     parallel_tasks = []
     for table, params in PARALLEL_TABLES.items():
         task = bigquery_federated_query_task(
-            dag, task_id=f"import_parallel_to_raw_{table}", job_params=params
+            dag,
+            task_id=f"import_parallel_to_raw_{table}",
+            job_params=params,
+            sample=sample_pgsql,
         )
         parallel_tasks.append(task)
 

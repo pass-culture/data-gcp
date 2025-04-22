@@ -49,7 +49,7 @@ from
         , "url" as offer_url
         , "isNational" as offer_is_national
         , "jsonData" as offer_extra_data
-        , coalesce("ean", "jsonData" ->> \'ean\') AS offer_ean
+        , "ean" AS offer_ean
         , "isDuo" as offer_is_duo
         , "fieldsUpdated" as offer_fields_updated
         , "withdrawalDetails" as offer_withdrawal_details

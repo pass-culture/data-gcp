@@ -9,6 +9,6 @@ SELECT
     ,"lastProviderId" as lastProviderId
     ,"dateModifiedAtLastProvider" as dateModifiedAtLastProvider
     ,"idAtProviders" as idAtProviders
-    ,coalesce("ean", "jsonData" ->> \'ean\') AS ean
+    ,"ean" AS ean
     ,"gcuCompatibilityType" AS gcuCompatibilityType
 FROM public.product

@@ -10,7 +10,8 @@ with
             pc.postal_approx_centroid_longitude as user_longitude,
             timestamp(adu.user_creation_date) as user_creation_at,
             if(
-                pc.postal_approx_centroid_latitude is not null and pc.postal_approx_centroid_longitude is not null,
+                pc.postal_approx_centroid_latitude is not null
+                and pc.postal_approx_centroid_longitude is not null,
                 "postal_code",
                 "unknown"
             ) as geocode_type

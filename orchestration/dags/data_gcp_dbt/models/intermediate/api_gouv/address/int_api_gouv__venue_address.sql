@@ -6,9 +6,12 @@ with
             adv.venue_id,
             adv.venue_postal_code,
             safe_cast(pc.postal_approx_centroid_latitude as float64) as venue_latitude,
-            safe_cast(pc.postal_approx_centroid_longitude as float64) as venue_longitude,
+            safe_cast(
+                pc.postal_approx_centroid_longitude as float64
+            ) as venue_longitude,
             if(
-                pc.postal_approx_centroid_latitude is not null and pc.postal_approx_centroid_longitude is not null,
+                pc.postal_approx_centroid_latitude is not null
+                and pc.postal_approx_centroid_longitude is not null,
                 "postal_code",
                 "unknown"
             ) as geocode_type

@@ -65,7 +65,7 @@ with
         from {{ ref("mrt_global__venue") }} as venue
         inner join
             {{ ref("mrt_global__offerer") }} as offerer
-            on venue.venue_managing_offerer_id = offerer.offerer_id
+            on venue.offerer_id = offerer.offerer_id
         left join
             {{ ref("mrt_global__offer") }} as offer on venue.venue_id = offer.venue_id
         left join
@@ -145,7 +145,7 @@ with
         from {{ ref("mrt_global__venue") }} as venue
         inner join
             {{ ref("mrt_global__offerer") }} as offerer
-            on venue.venue_managing_offerer_id = offerer.offerer_id
+            on venue.offerer_id = offerer.offerer_id
         left join
             {{ ref("mrt_global__collective_offer") }} as offer
             on venue.venue_id = offer.venue_id

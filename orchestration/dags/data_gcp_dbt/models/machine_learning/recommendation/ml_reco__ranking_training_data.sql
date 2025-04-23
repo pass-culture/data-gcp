@@ -67,7 +67,8 @@ with
             item_id,
             booking_number_last_28_days,
             booking_number_last_14_days,
-            booking_number_last_7_days
+            booking_number_last_7_days,
+            avg_semantic_embedding as semantic_emb_mean
         from {{ ref("ml_feat__item_feature_28_day") }}
     ),
 
@@ -125,6 +126,7 @@ select
     item_features_28_day.booking_number_last_14_days
     as item_booking_number_last_14_days,
     item_features_28_day.booking_number_last_7_days as item_booking_number_last_7_days,
+    item_features_28_day.semantic_emb_mean,
     user_features.user_iris_id,
     user_features.user_centroid,
     user_features.user_centroid_x,

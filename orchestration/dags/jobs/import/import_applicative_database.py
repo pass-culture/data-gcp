@@ -12,6 +12,7 @@ from common.operators.bigquery import bigquery_federated_query_task, bigquery_jo
 from common.utils import get_airflow_schedule
 from dependencies.applicative_database.import_applicative_database import (
     HISTORICAL_CLEAN_APPLICATIVE_TABLES,
+    IMPORT_SAMPLING,
     PARALLEL_TABLES,
     SEQUENTIAL_TABLES,
 )
@@ -41,7 +42,7 @@ dag = DAG(
     tags=[DAG_TAGS.DE.value],
 )
 
-sample_pgsql = 50 if ENV_SHORT_NAME != "prod" else None
+
 start = DummyOperator(task_id="start", dag=dag)
 
 # Sequential table import tasks
@@ -52,7 +53,7 @@ with TaskGroup(group_id="sequential_tasks_group", dag=dag) as sequential_tasks_g
             dag,
             task_id=f"import_sequential_to_raw_{table}",
             job_params=params,
-            sample=sample_pgsql,
+            sample=IMPORT_SAMPLING.get(ENV_SHORT_NAME, {}).get(table),
         )
         seq_tasks.append(task)
 
@@ -70,7 +71,7 @@ with TaskGroup(
             dag,
             task_id=f"import_parallel_to_raw_{table}",
             job_params=params,
-            sample=sample_pgsql,
+            sample=IMPORT_SAMPLING.get(ENV_SHORT_NAME, {}).get(table),
         )
         parallel_tasks.append(task)
 

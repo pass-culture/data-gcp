@@ -19,9 +19,11 @@ class SlackTeam(Enum):
     DS = SlackGroup(slack_id="S08CVKQ4K9S", name="Data Science")
     DE = SlackGroup(slack_id="S08CT44F7J6", name="Data Engineering")
 
+    @property
     def name(self) -> str:
         return self.value.name
 
+    @property
     def slack_id(self) -> str:
         return self.value.slack_id
 

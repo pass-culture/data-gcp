@@ -198,7 +198,7 @@ def get_env_emoji():
     base_url = configuration.get("webserver", "BASE_URL")
     base_emoji = ENV_EMOJI[ENV_SHORT_NAME]
     if LOCAL_ENV:
-        return ENV_EMOJI["local"]
+        return "**Local Environment**"
     if "localhost" in base_url:
         return f"{base_emoji} (k8s)"
     return base_emoji

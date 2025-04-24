@@ -19,24 +19,48 @@ from airflow import DAG
 from airflow.models import Param
 
 # Configurations
-DAG_NAME = "bigquery_export_old_partitions"
+DAG_NAME = "bigquery_archive_partition"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/bigquery_archive_partition"
 TABLES = {
-    "firebase_events": {
+    "raw_tracking_firebase_events": {
+        "table_id": "firebase_events",
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "event_date",
-        "look_back_months": json.loads('{"dev": 1, "stg": 3, "prod": 24}')[
-            ENV_SHORT_NAME
-        ],
+        "look_back_months": {"dev": 1, "stg": 3, "prod": 24}[ENV_SHORT_NAME],
         "folder": "tracking",
+        "archive": True,
     },
-    "past_offer_context": {
+    "int_firebase_native_event": {
+        "table_id": "native_event",
+        "dataset_id": f"int_firebase_{ENV_SHORT_NAME}",
+        "partition_column": "event_date",
+        "look_back_months": {"dev": 1, "stg": 3, "prod": 12}[ENV_SHORT_NAME],
+        "folder": "int_firebase",
+        "archive": True if ENV_SHORT_NAME == "prod" else False,
+    },
+    "int_firebase_native_event_flattened": {
+        "table_id": "native_event_flattened",
+        "dataset_id": f"int_firebase_{ENV_SHORT_NAME}",
+        "partition_column": "event_date",
+        "look_back_months": {"dev": 1, "stg": 3, "prod": 12}[ENV_SHORT_NAME],
+        "folder": "int_firebase",
+        "archive": True if ENV_SHORT_NAME == "prod" else False,
+    },
+    "raw_api_reco_past_offer_context": {
+        "table_id": "past_offer_context",
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "import_date",
-        "look_back_months": json.loads('{"dev": 6, "stg": 6, "prod": 6}')[
-            ENV_SHORT_NAME
-        ],
+        "look_back_months": {"dev": 1, "stg": 3, "prod": 6}[ENV_SHORT_NAME],
         "folder": "api_reco",
+        "archive": True,
+    },
+    "int_pcreco_past_offer_context": {
+        "table_id": "past_offer_context",
+        "dataset_id": f"int_pcreco_{ENV_SHORT_NAME}",
+        "partition_column": "event_date",
+        "look_back_months": {"dev": 1, "stg": 3, "prod": 6}[ENV_SHORT_NAME],
+        "folder": "api_reco",
+        "archive": False,
     },
 }
 
@@ -53,11 +77,10 @@ default_dag_args = {
     "project_id": GCP_PROJECT_ID,
 }
 
-# Define the DAG
 dag = DAG(
     DAG_NAME,
     default_args=default_dag_args,
-    schedule_interval=SCHEDULE_DICT[DAG_NAME],  # Runs daily
+    schedule_interval=SCHEDULE_DICT.get(DAG_NAME, None),
     catchup=False,
     params={
         "branch": Param(
@@ -69,7 +92,7 @@ dag = DAG(
             type="string",
         ),
         "limit": Param(
-            default=1,
+            default=30,
             type="integer",
         ),
     },
@@ -93,14 +116,14 @@ fetch_install_code = InstallDependenciesOperator(
 )
 
 tasks = []
-for table, config in TABLES.items():
+for job_name, config in TABLES.items():
     config = json.dumps(config)
     export_old_partitions_to_gcs = SSHGCEOperator(
-        task_id=f"export_old_partitions_to_gcs_{table}",
+        task_id=f"export_old_partitions_to_gcs_{job_name}",
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_PATH,
         environment=dag_config,
-        command=f"python main.py --table {table} --config '{config}' --limit {{{{ params.limit }}}}",
+        command=f"python main.py --config '{config}' --limit {{{{ params.limit }}}}",
         do_xcom_push=True,
     )
     tasks.append(export_old_partitions_to_gcs)

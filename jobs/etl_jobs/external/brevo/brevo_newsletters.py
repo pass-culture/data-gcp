@@ -32,6 +32,7 @@ class BrevoNewsletters:
         self.api_instance = api_instance
 
     def get_email_campaigns(self):
+        campaigns_list = []
         try:
             campaigns = self.api_instance.get_email_campaigns(
                 status="sent",

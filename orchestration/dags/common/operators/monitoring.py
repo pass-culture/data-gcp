@@ -38,6 +38,7 @@ class SendElementaryMonitoringReportOperator(BaseOperator):
         "days_back",
         "slack_group_alerts_by",
         "global_suppression_interval",
+        "send_slack_report",
     ]
 
     @apply_defaults
@@ -48,6 +49,7 @@ class SendElementaryMonitoringReportOperator(BaseOperator):
         days_back: int = 1,
         slack_group_alerts_by: str = "table",
         global_suppression_interval: int = 24,
+        send_slack_report: bool = True,
         *args,
         **kwargs,
     ):
@@ -57,8 +59,13 @@ class SendElementaryMonitoringReportOperator(BaseOperator):
         self.days_back = days_back
         self.slack_group_alerts_by = slack_group_alerts_by
         self.global_suppression_interval = global_suppression_interval
+        self.send_slack_report = send_slack_report
 
     def execute(self, context):
+        if not self.send_slack_report:
+            self.log.info("Skipping Slack report sending")
+            return
+
         hook = ElementaryReport()
         results = hook.send_monitoring_report(
             self.slack_channel,

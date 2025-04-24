@@ -42,6 +42,14 @@ dag = DAG(
             default=ENV_SHORT_NAME,
             type="string",
         ),
+        "send_slack_report": Param(
+            default=True if ENV_SHORT_NAME == "prod" else False,
+            type="boolean",
+        ),
+        "slack_group_alerts_by": Param(
+            default="table",
+            type="string",
+        ),
     },
     tags=[DAG_TAGS.DBT.value, DAG_TAGS.DE.value],
 )
@@ -85,8 +93,9 @@ send_elementary_report = SendElementaryMonitoringReportOperator(
     slack_channel=SLACK_CHANNEL_DATA_QUALITY,
     slack_token=SLACK_TOKEN_DATA_QUALITY,
     days_back=1,
-    slack_group_alerts_by="table",
+    slack_group_alerts_by="{{ params.slack_group_alerts_by }}",
     global_suppression_interval=0,
+    send_slack_report="{{ params.send_slack_report }}",
 )
 
 

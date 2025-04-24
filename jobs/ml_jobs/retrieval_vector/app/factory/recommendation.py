@@ -51,6 +51,9 @@ class RecommendationHandler(PredictionHandler):
                 vector=vector,
                 request_data=request_data,
             )
+            logger.info(
+                f"results: -> {len(results)} results", extra={"results": results}
+            )
 
         # If no predictions are found and fallback is active
         if len(results.predictions) == 0 and fallback_client is not None:

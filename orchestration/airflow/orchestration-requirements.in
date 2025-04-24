@@ -15,3 +15,4 @@ dbt-core==1.8.6
 dbt-bigquery==1.8.1
 sqlfluff==3.1.1
 sqlfluff-templater-dbt==3.1.1
+elementary-data

@@ -1,7 +1,7 @@
 import datetime
 
 from common import macros
-from common.alerts import on_failure_combined_callback, task_fail_slack_alert
+from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
@@ -66,8 +66,8 @@ for job_name, table_name in TABLE_PARAMS.items():
             "retries": 1,
             "retry_delay": datetime.timedelta(minutes=5),
             "project_id": GCP_PROJECT_ID,
-            "on_failure_callback": on_failure_combined_callback,
-            "on_skipped_callback": task_fail_slack_alert,
+            "on_failure_callback": on_failure_vm_callback,
+            "on_skipped_callback": on_failure_vm_callback,
         },
         description="Export to analytics data posthog",
         schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),

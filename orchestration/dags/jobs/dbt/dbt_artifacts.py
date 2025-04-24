@@ -1,5 +1,5 @@
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.callback import on_failure_base_callback
 from common.config import (
     DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
@@ -24,7 +24,7 @@ SLACK_CHANNEL = "alertes-data-quality"
 default_args = {
     "start_date": datetime(2020, 12, 23),
     "retries": 1,
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_base_callback,
     "retry_delay": timedelta(minutes=2),
     "project_id": GCP_PROJECT_ID,
 }

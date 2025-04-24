@@ -2,7 +2,7 @@ import datetime
 from itertools import chain
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -27,7 +27,7 @@ BASE_PATH = "data-gcp/jobs/etl_jobs/external/zendesk"
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 1,
     "project_id": GCP_PROJECT_ID,
 }

@@ -4,7 +4,7 @@ import pandas as pd
 import requests
 from common import macros
 from common.access_gcp_secrets import access_secret_data
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
     BIGQUERY_RAW_DATASET,
@@ -25,7 +25,7 @@ default_dag_args = {
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
 }
 
 dag = DAG(

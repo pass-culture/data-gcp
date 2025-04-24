@@ -1,6 +1,6 @@
 import datetime
 
-from common.alerts import task_fail_slack_alert
+from common.callback import on_failure_base_callback
 from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -25,8 +25,8 @@ default_args = {
     "retries": 6,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
-    "on_failure_callback": task_fail_slack_alert,
-    "on_skipped_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_base_callback,
+    "on_skipped_callback": on_failure_base_callback,
 }
 
 # Load manifest and process it

@@ -2,9 +2,6 @@ version: 2
 models:
   - name: mrt_global__booking
     description: '{{ doc("description__mrt_global__booking") }}'
-    meta:
-      subscribers: ["@cyrille.delabre", "@analytics"]
-      tags: ["#mrt", "#analytics"]
     columns:
       - name: booking_id
         description: '{{ doc("column__booking_id") }}'

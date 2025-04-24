@@ -275,3 +275,19 @@ The share of total income derived from housing benefits in the IRIS area.
 {% docs column__tax_share %}
 The share of total income paid as taxes in the IRIS area.
 {% enddocs %}
+
+{% docs column__iris_area_km2 %}
+The area of the IRIS, calculated in square kilometers.
+{% enddocs %}
+
+{% docs column__decile10_revenue %}
+The 10th percentile of income for the IRIS area, representing the income below which 10% of the population earns.
+{% enddocs %}
+
+{% docs column__decile50_revenue %}
+The 50th percentile of income for the IRIS area, representing the median income.
+{% enddocs %}
+
+{% docs column__decile90_revenue %}
+The 90th percentile of income for the IRIS area, representing the income below which 90% of the population earns.
+{% enddocs %}

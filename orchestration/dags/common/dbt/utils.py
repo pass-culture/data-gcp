@@ -69,7 +69,7 @@ def create_nested_folder_groups(
             # Create task group & corresponding trigger operator
             tg = TaskGroup(group_id=group_id, parent_group=parent_group, dag=dag)
             dummy_task = DummyOperator(
-                task_id=f"trigger_{group_id}_folder", task_group=tg, dag=dag
+                task_id=f"trigger_{group_id}_folder", task_group=tg, dag=dag, pool="dbt"
             )
             # Add them to dictionary
             task_groups[group_id] = (tg, dummy_task)
@@ -311,6 +311,7 @@ def create_test_operator(model_node: str, model_data: Dict, dag: DAG) -> BashOpe
         append_env=True,
         cwd=PATH_TO_DBT_PROJECT,
         dag=dag,
+        pool="dbt",
     )
 
 
@@ -339,6 +340,7 @@ def create_model_operator(
         append_env=True,
         cwd=PATH_TO_DBT_PROJECT,
         dag=dag,
+        pool="dbt",
     )
 
 
@@ -357,6 +359,7 @@ def create_snapshot_operator(
         append_env=True,
         cwd=PATH_TO_DBT_PROJECT,
         dag=dag,
+        pool="dbt",
     )
 
 

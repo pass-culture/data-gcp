@@ -58,7 +58,7 @@ select
     gi.density_macro_level,
     gi.geo_code,
     gi.rural_city_type,
-    id.iris_area_km2,
+    id.iris_superficie_km2 as iris_area_km2,
     id.total_venue_20_km,
     id.total_venue_5_km,
     sd.total_population,

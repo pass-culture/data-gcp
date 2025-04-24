@@ -1,6 +1,6 @@
 select
     vc.venue_id,
-    v.venue_managing_offerer_id,
+    v.offerer_id,
     v.partner_id,
     v.offerer_rank_desc,
     vc.criterion_id as venue_tag_id,

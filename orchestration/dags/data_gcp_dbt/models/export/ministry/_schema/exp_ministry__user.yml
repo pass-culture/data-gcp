@@ -6,6 +6,15 @@ models:
     columns:
       - name: user_id
         description: "{{ doc('column__user_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - unique:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: user_activity
         description: "{{ doc('column__user_activity') }}"
       - name: user_civility

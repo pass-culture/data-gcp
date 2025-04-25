@@ -6,6 +6,15 @@ models:
     columns:
       - name: favorite_id
         description: "{{ doc('column__favorite_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - unique:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: favorite_created_at
         description: "{{ doc('column__favorite_created_at') }}"
       - name: user_id

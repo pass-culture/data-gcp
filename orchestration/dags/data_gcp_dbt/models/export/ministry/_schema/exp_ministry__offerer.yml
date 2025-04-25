@@ -6,6 +6,15 @@ models:
     columns:
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - unique:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: offerer_name
         description: "{{ doc('column__offerer_name') }}"
       - name: offerer_creation_date

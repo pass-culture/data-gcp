@@ -6,33 +6,104 @@ models:
     columns:
       - name: booking_id
         description: "{{ doc('column__booking_id') }}"
+        data_type: STRING
+        data_tests:
+          - not_null:
+              tags: ['critical','export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - unique:
+              tags: ['critical','export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: booking_creation_date
         description: "{{ doc('column__booking_creation_date') }}"
       - name: booking_quantity
         description: "{{ doc('column__booking_quantity') }}"
+        data_type: INT64
+        data_tests:
+          - accepted_values:
+              values: [1,2]
+              quote: false
+              tags: ['critical','export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: booking_amount
         description: "{{ doc('column__booking_amount') }}"
       - name: booking_status
         description: "{{ doc('column__booking_status') }}"
+        data_type: STRING
+        data_tests:
+          - accepted_values:
+              values: ['REIMBURSED', 'USED', 'CANCELLED', 'CONFIRMED']
+              tags: ['critical','export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: booking_cancellation_date
         description: "{{ doc('column__booking_cancellation_date') }}"
       - name: booking_cancellation_reason
         description: "{{ doc('column__booking_cancellation_reason') }}"
       - name: user_id
         description: "{{ doc('column__user_id') }}"
+        data_type: STRING
+        data_tests:
+          - not_null:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: deposit_id
         description: "{{ doc('column__deposit_id') }}"
+        data_type: STRING
+        data_tests:
+          - not_null:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: booking_intermediary_amount
         description: "{{ doc('column__booking_intermediary_amount') }}"
+        data_type: NUMERIC
+        data_tests:
+          - dbt_utils.accepted_range:
+              tags: ['critical']
+              min_value: 0
+              max_value: 300
+              inclusive: true
+              config:
+                where: "date(booking_creation_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)"
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: booking_rank
         description: "{{ doc('column__booking_rank') }}"
       - name: booking_used_date
         description: "{{ doc('column__booking_used_date') }}"
       - name: stock_id
         description: "{{ doc('column__stock_id') }}"
+        data_type: STRING
+        data_tests:
+          - not_null:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: offer_id
         description: "{{ doc('column__offer_id') }}"
+        data_type: STRING
+        data_tests:
+          - not_null:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: venue_id
         description: "{{ doc('column__venue_id') }}"
+        data_type: STRING
+        data_tests:
+          - not_null:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
+        data_type: STRING
+        data_tests:
+          - not_null:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"

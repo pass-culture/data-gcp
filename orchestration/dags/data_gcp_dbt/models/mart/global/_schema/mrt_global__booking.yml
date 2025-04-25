@@ -25,7 +25,12 @@ models:
         description: '{{ doc("column__booking_quantity") }}'
         data_type: INT64
         data_tests:
-          - is_valid_booking_quantity
+          - accepted_values:
+              values: [1,2]
+              quote: false
+              tags: ['critical','export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: booking_amount
         description: '{{ doc("column__booking_amount") }}'
         data_type: NUMERIC
@@ -73,11 +78,12 @@ models:
         description: '{{ doc("column__booking_intermediary_amount") }}'
         data_type: NUMERIC
         data_tests:
-          - is_valid_booking_intermediary_amout:
-              where_condition: "date(booking_creation_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) and user_is_active"
+          - accepted_values:
+              values: ['REIMBURSED', 'USED', 'CANCELLED', 'CONFIRMED']
               tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              where: "date(booking_creation_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) and user_is_active"
       - name: booking_rank
         description: '{{ doc("column__booking_rank") }}'
         data_type: INT64

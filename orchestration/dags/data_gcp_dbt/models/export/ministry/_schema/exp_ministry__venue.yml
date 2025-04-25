@@ -6,6 +6,15 @@ models:
     columns:
       - name: venue_id
         description: "{{ doc('column__venue_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - unique:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: venue_name
         description: "{{ doc('column__venue_name') }}"
       - name: venue_description
@@ -16,6 +25,11 @@ models:
         description: "{{ doc('column__venue_siret') }}"
       - name: venue_is_virtual
         description: "{{ doc('column__venue_is_virtual') }}"
+        data_tests:
+          - not_null:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
       - name: venue_creation_date

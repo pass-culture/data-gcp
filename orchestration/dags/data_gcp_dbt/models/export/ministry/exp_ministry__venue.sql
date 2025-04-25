@@ -7,5 +7,5 @@ select
     venue_is_virtual,
     offerer_id,
     venue_creation_date,
-    venue_type_label,
+    venue_type_label
 from {{ ref("mrt_global__venue") }}

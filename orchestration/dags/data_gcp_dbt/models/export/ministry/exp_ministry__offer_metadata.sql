@@ -2,8 +2,8 @@ select
     om.offer_id,
     om.search_group_name,
     om.author,
-    o.theater_movie_id,
-    o.theater_room_id,
+    o.theater_movie_id as theater_movieId,
+    o.theater_room_id as theater_roomId,
     o.movie_type,
     o.visa as movie_visa,
     o.release_date as movie_release_date,
@@ -15,5 +15,5 @@ select
     om.gtl_label_level_2,
     om.gtl_label_level_3,
     om.gtl_label_level_4
-from {{ ref("mrt_global__offer_metadata") }} om
-join {{ ref("mrt_global__offer") }} o on om.offer_id = o.offer_id
+from {{ ref("mrt_global__offer_metadata") }} as om
+inner join {{ ref("mrt_global__offer") }} as o on om.offer_id = o.offer_id

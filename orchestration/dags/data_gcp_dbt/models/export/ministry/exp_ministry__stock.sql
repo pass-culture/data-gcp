@@ -9,7 +9,7 @@ select
     stock_quantity,
     offer_id,
     offerer_id,
-    price_category_id,
+    price_category_id as  price_categoryId,
     price_category_label,
-    price_category_label_id
+    price_category_label_id as  price_category_labelId
 from {{ ref("mrt_global__stock") }}

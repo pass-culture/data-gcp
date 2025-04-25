@@ -6,6 +6,15 @@ models:
     columns:
       - name: stock_id
         description: "{{ doc('column__stock_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - unique:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: stock_beginning_date
         description: "{{ doc('column__stock_beginning_date') }}"
       - name: stock_last_provider_id
@@ -22,11 +31,21 @@ models:
         description: "{{ doc('column__stock_quantity') }}"
       - name: offer_id
         description: "{{ doc('column__offer_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
-      - name: price_category_id
+        data_tests:
+          - not_null:
+              tags: ['critical', 'export']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+      - name: price_categoryId
         description: "{{ doc('column__price_category_id') }}"
       - name: price_category_label
         description: "{{ doc('column__price_category_label') }}"
-      - name: price_category_label_id
+      - name: price_category_labelId
         description: "{{ doc('column__price_category_label_id') }}"

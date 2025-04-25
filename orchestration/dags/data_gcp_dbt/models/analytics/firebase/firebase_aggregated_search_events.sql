@@ -295,6 +295,7 @@ select
     nb_iterations_search,
     nb_venue_playlist_displayed_on_search_results,
     nb_venues_consulted,
+    has_extended_search_radius,
     made_another_search,
     search_query_input_is_generic,
     nb_offers_booked,

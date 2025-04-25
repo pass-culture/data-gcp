@@ -234,12 +234,6 @@ with
             and ls.unique_session_id = ne.unique_session_id
             and ls.unique_search_id = ne.unique_search_id
             and ls.first_date = ne.event_date
-            {% if is_incremental() %}
-                and ne.event_date
-                between date_sub(date('{{ ds() }}'), interval 3 day) and date(
-                    '{{ ds() }}'
-                )
-            {% endif %}
         group by ls.unique_session_id, ls.unique_search_id
     ),
 

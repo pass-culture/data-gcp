@@ -49,7 +49,7 @@ class SendElementaryMonitoringReportOperator(BaseOperator):
         days_back: int = 1,
         slack_group_alerts_by: str = "table",
         global_suppression_interval: int = 24,
-        send_slack_report: bool = True,
+        send_slack_report: str = "True",
         *args,
         **kwargs,
     ):
@@ -61,8 +61,28 @@ class SendElementaryMonitoringReportOperator(BaseOperator):
         self.global_suppression_interval = global_suppression_interval
         self.send_slack_report = send_slack_report
 
+    def _parse_send_slack_report(self):
+        self.log.info(f"send_slack_report: {self.send_slack_report}")
+        if isinstance(self.send_slack_report, bool):
+            return self.send_slack_report
+        elif isinstance(self.send_slack_report, str):
+            if self.send_slack_report == "True":
+                return True
+            elif self.send_slack_report == "False":
+                return False
+            else:
+                raise ValueError(
+                    f"Invalid value for send_slack_report: {self.send_slack_report}"
+                )
+        else:
+            raise ValueError(
+                f"Invalid value for send_slack_report: {self.send_slack_report}"
+            )
+
     def execute(self, context):
-        if not self.send_slack_report:
+        send_slack_report = self._parse_send_slack_report()
+        self.log.info(f"Sending Slack report: {send_slack_report}")
+        if not send_slack_report:
             self.log.info("Skipping Slack report sending")
             return
 

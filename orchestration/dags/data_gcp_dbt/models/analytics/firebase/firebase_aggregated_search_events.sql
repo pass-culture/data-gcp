@@ -216,7 +216,10 @@ with
             ) as nb_venue_playlist_displayed_on_search_results,
             count(
                 distinct case when ne.event_name = 'ConsultVenue' then ne.venue_id end
-            ) as nb_venues_consulted
+            ) as nb_venues_consulted,
+            max(
+                coalesce(ne.event_name = 'ExtendSearchRadiusClicked', false)
+            ) as has_extended_search_radius
         from last_search as ls
         left join
             {{ ref("int_firebase__native_event") }} as ne
@@ -225,12 +228,18 @@ with
                 'ConsultOffer',
                 'HasAddedOfferToFavorites',
                 'VenuePlaylistDisplayedOnSearchResults',
-                'ConsultVenue'
+                'ConsultVenue',
+                'ExtendSearchRadiusClicked'
             )
             and ls.unique_session_id = ne.unique_session_id
             and ls.unique_search_id = ne.unique_search_id
             and ls.first_date = ne.event_date
-
+            {% if is_incremental() %}
+                and ne.event_date
+                between date_sub(date('{{ ds() }}'), interval 3 day) and date(
+                    '{{ ds() }}'
+                )
+            {% endif %}
         group by ls.unique_session_id, ls.unique_search_id
     ),
 
@@ -251,8 +260,8 @@ with
             asd.*,
             bpsi.nb_offers_booked,
             bpsi.total_diversification,
-            lead(first_date) over (
-                partition by unique_session_id order by first_timestamp
+            lead(asd.first_date) over (
+                partition by bpsi.unique_session_id order by asd.first_timestamp
             )
             is not null as made_another_search
         from agg_search_data as asd

@@ -28,7 +28,7 @@ models:
           - accepted_values:
               values: [1,2]
               quote: false
-              tags: ['critical','export']
+              tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: booking_amount

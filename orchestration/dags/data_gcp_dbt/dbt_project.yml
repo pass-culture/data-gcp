@@ -5,10 +5,6 @@ config-version: 2
 flags:
   send_anonymous_usage_stats: False
   require_explicit_package_overrides_for_builtin_materializations: false
-  warn_error_options:
-    error: all
-    warn:
-      - ['NoNodesForSelectionCriteria','Deprecations','UnusedResourceConfigPath', 'PackageMaterializationOverrideDeprecation']
 
 # This setting configures which "profile" dbt uses for this project.
 profile: "data_gcp_dbt"
@@ -122,6 +118,9 @@ data_tests:
   +docs:
     show: true
     tags: "test"
+  data_gcp_dbt:
+    export:
+      +severity: error
 
 vars:
   ENV_SHORT_NAME: dev

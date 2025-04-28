@@ -5,6 +5,7 @@ import joblib
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
+from dppy.finite_dpps import FiniteDPP
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
@@ -233,3 +234,38 @@ class TrainPipeline:
         processed_data = self.preprocessor.transform(df)
 
         return df.assign(regression_score=self.model.predict(processed_data))
+
+
+class DPP:
+    def __init__(self, vectors=None, K_DPP=150):
+        self.vectors = vectors
+        self.K_DPP = K_DPP
+        self.DPP = FiniteDPP("likelihood", **{"L": self.vectors.T.dot(self.vectors)})
+
+    def sample_k(self):
+        self.DPP.sample_exact_k_dpp(size=self.K_DPP)
+        return self.DPP.list_of_samples
+
+
+class DiversificationPipeline:
+    def __init__(self, item_semantic_embeddings: List, ids: List, scores: List) -> None:
+        self.item_semantic_embeddings = item_semantic_embeddings
+        self.item_ids = ids
+        self.scores = scores
+        self.K_DPP = 6
+
+    def get_sampled_ids(self):
+        scores_arr = np.array(self.scores, dtype=np.float64)
+        embeddings_arr = np.array(self.item_semantic_embeddings, dtype=np.float64)
+        weighted_item_semantic_embeddings = scores_arr[:, np.newaxis] * embeddings_arr
+
+        # Normalize the weighted embeddings (L2 normalization)
+        norms = np.linalg.norm(weighted_item_semantic_embeddings, axis=1, keepdims=True)
+        # Avoid division by zero - replace zero norms with 1
+        norms[norms < 1e-10] = 1.0
+        normalized_weighted_embeddings = weighted_item_semantic_embeddings / norms
+
+        dpp = DPP(vectors=normalized_weighted_embeddings, K_DPP=self.K_DPP)
+        sample_indices = dpp.sample_k()
+        return [self.item_ids[i] for i in sample_indices]
+        # return np.array(self.item_ids)[dpp.sample_k()].tolist()

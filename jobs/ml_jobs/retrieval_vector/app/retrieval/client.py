@@ -240,13 +240,13 @@ class DefaultClient:
             .metric(similarity_metric)
             .limit(n)
         )
-
         if re_rank and self.re_ranker and user_id:
             results = results.rerank(self.re_ranker, query_string=user_id)
-
-        return self.format_results(
+        formated_results = self.format_results(
             results.to_list(), details, excluded_items=excluded_items
         )
+        logger.info(f"retrieval results: {formated_results}")
+        return formated_results
 
     def columns(self, details: bool, re_rank: bool) -> List[str]:
         """

@@ -34,3 +34,4 @@ OUTPUT_METRIC_COLUMNS: List[str] = ["_distance", "_user_distance"]
 DEFAULT_ITEM_DOCS_PATH: str = "./metadata/item.docs"
 DEFAULT_USER_DOCS_PATH: str = "./metadata/user.docs"
 DEFAULT_LANCE_DB_URI: str = "./metadata/vector"
+PRE_DPP_SIZE: int = 1000

@@ -3,6 +3,8 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.retrieval.constants import PRE_DPP_SIZE
+
 DEFAULT_VECTOR_FIELDS = ["vector", "raw_embeddings"]
 DEFAULT_TREND_FIELDS = [
     "booking_number_desc",
@@ -31,6 +33,15 @@ class PredictionRequest(BaseModel):
         default=500,
         ge=1,
         description="Number of results to return, must be greater than 0.",
+    )
+    pre_dpp_size: Optional[int] = Field(
+        default=PRE_DPP_SIZE,
+        ge=1,
+        description="Number of results to return before DPP sampling, must be greater than size",
+    )
+    use_qi: Optional[bool] = Field(
+        default=True,
+        description="Use quality information for sampling if set.",
     )
     debug: Optional[bool] = Field(default=False, description="Enable debug mode.")
     prefilter: Optional[bool] = Field(

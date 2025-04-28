@@ -23,7 +23,7 @@ from airflow.providers.google.cloud.transfers.bigquery_to_gcs import (
 )
 from airflow.utils.task_group import TaskGroup
 
-GCE_INSTANCE = f"historize-applicative-database-{ENV_SHORT_NAME}"
+GCE_INSTANCE = f"bq-historize-applicative-database-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/export_applicative"
 
 SNAPSHOT_MODELS_PATH = "data_gcp_dbt/models/intermediate/raw"
@@ -43,13 +43,13 @@ default_dag_args = {
 }
 
 
-dag_id = "historize_applicative_database"
+dag_id = "bigquery_historize_applicative_database"
 dag = DAG(
     dag_id,
     default_args=default_dag_args,
     dagrun_timeout=datetime.timedelta(minutes=480),
     description="historize applicative database current state to gcs bucket",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[dag_id]),
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[dag_id][ENV_SHORT_NAME]),
     catchup=False,
     tags=[DAG_TAGS.DE.value],
 )

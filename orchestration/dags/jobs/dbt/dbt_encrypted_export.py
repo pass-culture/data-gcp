@@ -95,11 +95,12 @@ for partner_id, partner_name in partner_dict.items():
                 "target": "{{ params.target }}",
                 "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
                 "ENV_SHORT_NAME": ENV_SHORT_NAME,
-                "EXCLUSION": "audit",
+                "EXCLUSION": "audit elementary",
             },
             append_env=True,
             cwd=PATH_TO_DBT_PROJECT,
             dag=dag,
+            retries=0,
         )
 
         bq_obfuscation = BashOperator(

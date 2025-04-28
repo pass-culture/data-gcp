@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 dbt test ${select:+--select "$SELECT"} \
         --target "$target" \

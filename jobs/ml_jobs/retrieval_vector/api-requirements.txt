@@ -27,6 +27,10 @@ click==8.1.7
     #   flask
     #   nltk
     #   typer
+contourpy==1.3.2
+    # via matplotlib
+cycler==0.12.1
+    # via matplotlib
 cython==3.0.11
     # via hnne
 decorator==5.1.1
@@ -37,6 +41,8 @@ docarray==0.21.0
     # via -r api-requirements.in
 docker==7.1.0
     # via jina-hubble-sdk
+dppy==0.3.3
+    # via -r api-requirements.in
 ecdsa==0.19.0
     # via python-jose
 exceptiongroup==1.2.2
@@ -54,6 +60,8 @@ flask==3.0.0
     #   flask-cors
 flask-cors==4.0.0
     # via -r api-requirements.in
+fonttools==4.57.0
+    # via matplotlib
 frozenlist==1.4.1
     # via
     #   aiohttp
@@ -100,6 +108,8 @@ joblib==1.4.2
     #   nltk
     #   pynndescent
     #   scikit-learn
+kiwisolver==1.4.8
+    # via matplotlib
 lancedb==0.13.0
     # via -r api-requirements.in
 llvmlite==0.43.0
@@ -114,6 +124,8 @@ markupsafe==2.1.5
     # via
     #   jinja2
     #   werkzeug
+matplotlib==3.10.1
+    # via dppy
 mdurl==0.1.2
     # via markdown-it-py
 mpmath==1.3.0
@@ -133,8 +145,11 @@ numba==0.60.0
 numpy==1.26.4
     # via
     #   -r api-requirements.in
+    #   contourpy
     #   docarray
+    #   dppy
     #   hnne
+    #   matplotlib
     #   numba
     #   pandas
     #   pyarrow
@@ -182,6 +197,7 @@ packaging==24.1
     #   deprecation
     #   huggingface-hub
     #   lancedb
+    #   matplotlib
     #   transformers
 pandas==2.1.1
     # via
@@ -190,7 +206,9 @@ pandas==2.1.1
 pathspec==0.12.1
     # via jina-hubble-sdk
 pillow==10.4.0
-    # via torchvision
+    # via
+    #   matplotlib
+    #   torchvision
 priority==2.0.0
     # via hypercorn
 py==1.11.0
@@ -213,8 +231,12 @@ pylance==0.17.0
     # via lancedb
 pynndescent==0.5.13
     # via hnne
+pyparsing==3.2.3
+    # via matplotlib
 python-dateutil==2.9.0.post0
-    # via pandas
+    # via
+    #   matplotlib
+    #   pandas
 python-jose==3.4.0
     # via
     #   -r api-requirements.in
@@ -257,6 +279,7 @@ scikit-learn==1.5.2
     #   sentence-transformers
 scipy==1.13.1
     # via
+    #   dppy
     #   hnne
     #   pynndescent
     #   scikit-learn

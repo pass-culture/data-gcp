@@ -7,7 +7,7 @@ DPP_SAMPLING_OUTPUT = 60
 
 
 class DPP:
-    def __init__(self, vectors=None, K_DPP=150):
+    def __init__(self, vectors, K_DPP):
         self.vectors = vectors.T
         self.K_DPP = K_DPP
         self.DPP = FiniteDPP("likelihood", **{"L": self.vectors.T.dot(self.vectors)})

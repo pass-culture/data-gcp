@@ -33,6 +33,14 @@ class RecommendationHandler(PredictionHandler):
 
         return recommendable_offers_diverisified
 
+    def clean_dpp_output(self, results):
+        clean_results = []
+        for res in results:
+            clean_results.append(
+                {k: v for k, v in res.items() if k != "semantic_embedding"}
+            )
+        return clean_results
+
     def handle(
         self,
         model: RecoClient,
@@ -71,8 +79,8 @@ class RecommendationHandler(PredictionHandler):
                 vector=vector,
                 request_data=request_data,
             )
-            results = self.apply_semantic_sampling(results_raw.predictions)
-
+            results_dpp = self.apply_semantic_sampling(results_raw.predictions)
+            results = self.clean_dpp_output(results_dpp)
         # If no predictions are found and fallback is active
         if len(results.predictions) == 0 and fallback_client is not None:
             return fallback_client.handle(

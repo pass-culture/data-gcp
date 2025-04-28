@@ -28,7 +28,7 @@ TABLES = {
         "partition_column": "event_date",
         "look_back_months": {"dev": 1, "stg": 3, "prod": 24}[ENV_SHORT_NAME],
         "folder": "tracking",
-        "archive": True,
+        "archive": True if ENV_SHORT_NAME == "prod" else False,
     },
     "int_firebase_native_event": {
         "table_id": "native_event",
@@ -36,7 +36,7 @@ TABLES = {
         "partition_column": "event_date",
         "look_back_months": {"dev": 1, "stg": 3, "prod": 12}[ENV_SHORT_NAME],
         "folder": "int_firebase",
-        "archive": True if ENV_SHORT_NAME == "prod" else False,
+        "archive": False,
     },
     "int_firebase_native_event_flattened": {
         "table_id": "native_event_flattened",
@@ -44,7 +44,7 @@ TABLES = {
         "partition_column": "event_date",
         "look_back_months": {"dev": 1, "stg": 3, "prod": 12}[ENV_SHORT_NAME],
         "folder": "int_firebase",
-        "archive": True if ENV_SHORT_NAME == "prod" else False,
+        "archive": False,
     },
     "raw_api_reco_past_offer_context": {
         "table_id": "past_offer_context",
@@ -52,7 +52,7 @@ TABLES = {
         "partition_column": "import_date",
         "look_back_months": {"dev": 1, "stg": 3, "prod": 6}[ENV_SHORT_NAME],
         "folder": "api_reco",
-        "archive": True,
+        "archive": True if ENV_SHORT_NAME == "prod" else False,
     },
     "int_pcreco_past_offer_context": {
         "table_id": "past_offer_context",

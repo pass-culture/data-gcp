@@ -8,13 +8,9 @@ models:
         description: "{{ doc('column__venue_id') }}"
         data_tests:
           - not_null:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
           - unique:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
       - name: venue_name
         description: "{{ doc('column__venue_name') }}"
       - name: venue_description
@@ -27,9 +23,7 @@ models:
         description: "{{ doc('column__venue_is_virtual') }}"
         data_tests:
           - not_null:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
       - name: venue_creation_date

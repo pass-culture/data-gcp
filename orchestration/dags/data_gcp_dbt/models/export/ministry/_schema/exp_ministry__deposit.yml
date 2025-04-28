@@ -9,32 +9,24 @@ models:
         data_type: STRING
         data_tests:
           - not_null:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
           - unique:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
       - name: deposit_amount
         description: '{{ doc("column__deposit_amount") }}'
         data_type: NUMERIC
         data_tests:
           - dbt_utils.accepted_range:
-              tags: ['critical', 'export']
+              tags: [ 'export']
               min_value: 0
               max_value: 500
               inclusive: true
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: user_id
         description: '{{ doc("column__user_id") }}'
         data_type: STRING
         data_tests:
           - not_null:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
       - name: deposit_source
         description: "{{ doc('column__deposit_source') }}"
       - name: deposit_creation_date

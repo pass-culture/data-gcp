@@ -8,26 +8,18 @@ models:
         description: "{{ doc('column__offerer_address_id') }}"
         data_tests:
           - not_null:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
           - unique:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
       - name: offerer_address_label
         description: "{{ doc('column__offerer_address_label') }}"
       - name: address_id
         description: "{{ doc('column__address_id') }}"
         data_tests:
           - not_null:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
         data_tests:
           - not_null:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']

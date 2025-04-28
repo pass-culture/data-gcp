@@ -8,13 +8,9 @@ models:
         description: "{{ doc('column__address_id') }}"
         data_tests:
           - not_null:
-              tags: ['critical','export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
           - unique:
-              tags: ['critical','export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
       - name: address_ban
         description: "{{ doc('column__address_ban_id') }}"
       - name: address_insee_code
@@ -25,9 +21,7 @@ models:
         description: "{{ doc('column__address_postal_code') }}"
         data_tests:
           - not_null:
-              tags: ['critical','export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
       - name: address_city
         description: "{{ doc('column__address_city') }}"
       - name: address_latitude

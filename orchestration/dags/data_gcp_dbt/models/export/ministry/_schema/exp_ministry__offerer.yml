@@ -8,13 +8,9 @@ models:
         description: "{{ doc('column__offerer_id') }}"
         data_tests:
           - not_null:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
           - unique:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
       - name: offerer_name
         description: "{{ doc('column__offerer_name') }}"
       - name: offerer_creation_date

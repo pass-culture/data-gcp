@@ -8,13 +8,9 @@ models:
         description: "{{ doc('column__offer_id') }}"
         data_tests:
           - not_null:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
           - unique:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
       - name: search_group_name
         description: "{{ doc('column__search_group_name') }}"
       - name: author

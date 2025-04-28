@@ -8,13 +8,9 @@ models:
         description: "{{ doc('column__favorite_id') }}"
         data_tests:
           - not_null:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
           - unique:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
       - name: favorite_created_at
         description: "{{ doc('column__favorite_created_at') }}"
       - name: user_id

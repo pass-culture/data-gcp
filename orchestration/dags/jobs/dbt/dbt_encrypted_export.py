@@ -65,7 +65,7 @@ for partner_id, partner_name in partner_dict.items():
                 type="string",
             ),
             "GLOBAL_CLI_FLAGS": Param(
-                default="--no-write-json",
+                default="--warn-error --no-write-json --fail-fast",
                 type="string",
             ),
         },

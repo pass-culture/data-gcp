@@ -8,13 +8,9 @@ models:
         description: "{{ doc('column__user_id') }}"
         data_tests:
           - not_null:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
           - unique:
-              tags: ['critical', 'export']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              tags: ['export']
       - name: user_activity
         description: "{{ doc('column__user_activity') }}"
       - name: user_civility

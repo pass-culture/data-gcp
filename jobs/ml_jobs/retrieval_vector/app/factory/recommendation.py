@@ -71,10 +71,6 @@ class RecommendationHandler(PredictionHandler):
                 vector=vector,
                 request_data=request_data,
             )
-            # logger.info(
-            #    f"results: -> {len(results.predictions)} results", extra={"results": results}
-            # )
-            ##DPP
             results = self.apply_semantic_sampling(results_raw.predictions)
 
         # If no predictions are found and fallback is active

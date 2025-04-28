@@ -3,6 +3,8 @@ from typing import List
 import numpy as np
 from dppy.finite_dpps import FiniteDPP
 
+DPP_SAMPLING_OUTPUT = 60
+
 
 class DPP:
     def __init__(self, vectors=None, K_DPP=150):
@@ -22,35 +24,13 @@ class DiversificationPipeline:
         )
         self.item_ids = ids
         self.scores = np.array(scores, dtype=np.float64)
-        self.K_DPP = 60
+        self.K_DPP = DPP_SAMPLING_OUTPUT
 
     def get_sampled_ids(self):
-        # Normalize scores (min-max scaling)
-        min_score = np.min(self.scores)
-        max_score = np.max(self.scores)
-
-        # Avoid division by zero
-        if max_score - min_score < 1e-10:
-            normalized_scores = np.ones_like(self.scores)
-        else:
-            normalized_scores = (self.scores - min_score) / (max_score - min_score)
-
         # Calculate weighted embeddings and normalize in a single step
-        weighted_embeddings = (
-            normalized_scores[:, np.newaxis] * self.item_semantic_embeddings
-        )
-
-        # L2 normalization
-        norms = np.linalg.norm(weighted_embeddings, axis=1, keepdims=True)
-        norms[norms < 1e-10] = 1.0
-        normalized_weighted_embeddings = weighted_embeddings / norms
-
+        weighted_embeddings = self.scores[:, np.newaxis] * self.item_semantic_embeddings
         # Apply DPP sampling
-        dpp = DPP(vectors=normalized_weighted_embeddings, K_DPP=self.K_DPP)
+        dpp = DPP(vectors=weighted_embeddings, K_DPP=self.K_DPP)
         sample_indices = dpp.sample_k()
 
-        # Return sampled IDs
-        indices = (
-            sample_indices[0] if isinstance(sample_indices, list) else sample_indices
-        )
-        return [self.item_ids[i] for i in indices]
+        return [self.item_ids[i] for i in sample_indices[0]]

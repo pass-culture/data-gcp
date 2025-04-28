@@ -23,20 +23,26 @@ with
             = 1
     ),
 
-prepocess_embeddings as (
+    prepocess_embeddings as (
         select
             item_id,
             array(
                 select cast(e as float64)
                 from
                     unnest(
-                        split(substr(semantic_content_embedding, 2, length(semantic_content_embedding) - 2))
+                        split(
+                            substr(
+                                semantic_content_embedding,
+                                2,
+                                length(semantic_content_embedding) - 2
+                            )
+                        )
                     ) as e
             ) as semantic_content_embedding
         from {{ source("ml_preproc", "item_embedding_reduced_64") }}
     ),
 
-recommendable_items_raw as (
+    recommendable_items_raw as (
 
         select
             ro.item_id,
@@ -71,10 +77,10 @@ recommendable_items_raw as (
             ie.semantic_content_embedding as semantic_embedding
         from {{ ref("ml_reco__recommendable_offer") }} as ro
         left join prepocess_embeddings as ie on ro.item_id = ie.item_id
-        group by 1,semantic_content_embedding
+        group by 1, semantic_content_embedding
     ),
 
-trends as (
+    trends as (
         select
             ro.*,
             od.offer_name as example_offer_name,

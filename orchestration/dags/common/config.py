@@ -48,6 +48,10 @@ METABASE_EXTERNAL_CONNECTION_ID = os.environ.get("METABASE_EXTERNAL_CONNECTION_I
 DATA_GCS_BUCKET_NAME = os.environ.get(
     "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
 )
+if ENV_SHORT_NAME == "prod":
+    ELEMENTARY_REPORT_URL = "https://elementary.data.passculture.team/"
+else:
+    ELEMENTARY_REPORT_URL = None
 
 # BQ Datasets
 # TODO: Move this in a special file + construct as fstring and not env variables
@@ -123,7 +127,8 @@ if LOCAL_ENV is None:
 else:
     ELEMENTARY_PYTHON_PATH = os.environ.get("ELEMENTARY_PYTHON_PATH")
 
-SLACK_TOKEN_ELEMENTARY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")
+SLACK_TOKEN_DATA_QUALITY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")
+SLACK_CHANNEL_DATA_QUALITY = "alertes-data-quality"
 
 CPU_INSTANCES_TYPES = {
     "standard": [

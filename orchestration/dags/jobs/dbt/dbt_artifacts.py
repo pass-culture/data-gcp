@@ -2,13 +2,16 @@ from common import macros
 from common.callback import on_failure_base_callback
 from common.config import (
     DAG_TAGS,
-    DATA_GCS_BUCKET_NAME,
-    ELEMENTARY_PYTHON_PATH,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_PROJECT,
     PATH_TO_DBT_TARGET,
-    SLACK_TOKEN_ELEMENTARY,
+    SLACK_CHANNEL_DATA_QUALITY,
+    SLACK_TOKEN_DATA_QUALITY,
+)
+from common.operators.monitoring import (
+    GenerateElementaryReportOperator,
+    SendElementaryMonitoringReportOperator,
 )
 from common.utils import delayed_waiting_operator, get_airflow_schedule
 from jobs.crons import SCHEDULE_DICT
@@ -18,8 +21,6 @@ from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.dates import datetime, timedelta
-
-SLACK_CHANNEL = "alertes-data-quality"
 
 default_args = {
     "start_date": datetime(2020, 12, 23),
@@ -41,12 +42,12 @@ dag = DAG(
             default=ENV_SHORT_NAME,
             type="string",
         ),
-        "report_lookback": Param(
-            default=7,
-            type="integer",
+        "send_slack_report": Param(
+            default=True if ENV_SHORT_NAME == "prod" else False,
+            type="boolean",
         ),
-        "GLOBAL_CLI_FLAGS": Param(
-            default="",
+        "slack_group_alerts_by": Param(
+            default="table",
             type="string",
         ),
     },
@@ -70,7 +71,6 @@ dbt_test = BashOperator(
     task_id="dbt_test",
     bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
     env={
-        "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
         "target": "{{ params.target }}",
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
@@ -81,44 +81,29 @@ dbt_test = BashOperator(
     dag=dag,
 )
 
-send_elementary_report = BashOperator(
-    task_id="send_elementary_report",
-    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/elementary_send_report.sh ",
-    env={
-        "PATH_TO_DBT_PROJECT": PATH_TO_DBT_PROJECT,
-        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-        "ENV_SHORT_NAME": ENV_SHORT_NAME,
-        "DATA_BUCKET_NAME": DATA_GCS_BUCKET_NAME,
-        "REPORT_FILE_PATH": "elementary_reports/{{ execution_date.year }}/elementary_report_{{ execution_date.strftime('%Y%m%d') }}.html",
-        "LOOKBACK": "{{ params.report_lookback }}",
-        "SLACK_TOKEN": SLACK_TOKEN_ELEMENTARY,
-        "CHANNEL_NAME": SLACK_CHANNEL,
-        "ELEMENTARY_PYTHON_PATH": ELEMENTARY_PYTHON_PATH,
-        "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-    },
-    append_env=True,
-    cwd=PATH_TO_DBT_PROJECT,
-    dag=dag,
+
+create_elementary_report = GenerateElementaryReportOperator(
+    task_id="create_elementary_report",
+    report_file_path="elementary_reports/{{ execution_date.year }}/elementary_report_{{ execution_date.strftime('%Y%m%d') }}.html",
+    days_back=14,
 )
 
-compile = BashOperator(
-    task_id="compilation",
-    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_compile.sh ",
-    env={
-        "target": "{{ params.target }}",
-        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-        "ENV_SHORT_NAME": ENV_SHORT_NAME,
-    },
-    append_env=True,
-    cwd=PATH_TO_DBT_PROJECT,
-    dag=dag,
+send_elementary_report = SendElementaryMonitoringReportOperator(
+    task_id="send_elementary_report",
+    slack_channel=SLACK_CHANNEL_DATA_QUALITY,
+    slack_token=SLACK_TOKEN_DATA_QUALITY,
+    days_back=1,
+    slack_group_alerts_by="{{ params.slack_group_alerts_by }}",
+    global_suppression_interval=0,
+    send_slack_report="{{ params.send_slack_report }}",
 )
+
 
 (
     start
     >> wait_dbt_run
     >> dbt_test
     >> compute_metrics_elementary
+    >> create_elementary_report
     >> send_elementary_report
-    >> compile
 )

@@ -1,6 +1,6 @@
 import datetime
 
-from common.alerts import task_fail_slack_alert
+from common.callback import on_failure_base_callback
 from common.config import (
     BIGQUERY_INT_RAW_DATASET,
     DAG_FOLDER,
@@ -37,7 +37,7 @@ SNAPSHOT_TABLES = get_tables_config_dict(
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
     "retries": 6,
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_base_callback,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }

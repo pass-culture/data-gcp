@@ -22,6 +22,7 @@ python-jose==3.4.0
 python-json-logger==2.0.7
 sentence-transformers==2.2.2
 tensorflow==2.14.0
+torch==2.6.0
 tqdm==4.64.1
 typer==0.7.0
 unittest2==1.1.0

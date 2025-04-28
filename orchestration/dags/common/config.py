@@ -3,6 +3,8 @@ from enum import Enum
 
 from common.access_gcp_secrets import access_secret_data
 
+from airflow import configuration
+
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 ENVIRONMENT_NAME = {
@@ -46,6 +48,10 @@ METABASE_EXTERNAL_CONNECTION_ID = os.environ.get("METABASE_EXTERNAL_CONNECTION_I
 DATA_GCS_BUCKET_NAME = os.environ.get(
     "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
 )
+if ENV_SHORT_NAME == "prod":
+    ELEMENTARY_REPORT_URL = "https://elementary.data.passculture.team/"
+else:
+    ELEMENTARY_REPORT_URL = None
 
 # BQ Datasets
 # TODO: Move this in a special file + construct as fstring and not env variables
@@ -94,9 +100,6 @@ BIGQUERY_TMP_DATASET = os.environ.get("BIGQUERY_TMP_DATASET", f"tmp_{ENV_SHORT_N
 
 APPLICATIVE_PREFIX = "applicative_database_"
 
-SLACK_CONN_ID = "slack_analytics"
-SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
-
 if ENV_SHORT_NAME == "prod":
     MEDIATION_URL = "passculture-metier-prod-production"
 elif ENV_SHORT_NAME == "stg":
@@ -124,7 +127,8 @@ if LOCAL_ENV is None:
 else:
     ELEMENTARY_PYTHON_PATH = os.environ.get("ELEMENTARY_PYTHON_PATH")
 
-SLACK_TOKEN_ELEMENTARY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")
+SLACK_TOKEN_DATA_QUALITY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")
+SLACK_CHANNEL_DATA_QUALITY = "alertes-data-quality"
 
 CPU_INSTANCES_TYPES = {
     "standard": [
@@ -187,3 +191,28 @@ class DAG_TAGS(Enum):
 
 # UV Version
 UV_VERSION = "0.5.2"
+
+ENV_EMOJI = {
+    "prod": ":volcano: *PROD* :volcano:",
+    "stg": ":fire: *STAGING* :fire:",
+    "dev": ":snowflake: *DEV* :snowflake:",
+}
+
+
+def get_env_emoji():
+    base_url = configuration.get("webserver", "BASE_URL")
+    base_emoji = ENV_EMOJI[ENV_SHORT_NAME]
+    if LOCAL_ENV:
+        return "**Local Environment**"
+    if "localhost" in base_url:
+        return f"{base_emoji} (k8s)"
+    return base_emoji
+
+
+def get_airflow_uri():
+    base_url = configuration.get("webserver", "BASE_URL")
+    if LOCAL_ENV:
+        return base_url
+    if "localhost" in base_url:
+        return f"https://{AIRFLOW_URI}"
+    return base_url

@@ -2,7 +2,7 @@ import copy
 import datetime
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.callback import on_failure_base_callback
 from common.config import DAG_FOLDER, DAG_TAGS, GCP_PROJECT_ID
 from common.operators.bigquery import bigquery_job_task
 from common.utils import get_airflow_schedule
@@ -71,7 +71,7 @@ for dag_type, params in dags.items():
         dag_id,
         default_args=params["default_dag_args"],
         description="Import firebase data and dispatch it to each env",
-        on_failure_callback=task_fail_slack_alert,
+        on_failure_callback=on_failure_base_callback,
         schedule_interval=get_airflow_schedule(params["schedule_interval"]),
         catchup=False,
         dagrun_timeout=datetime.timedelta(minutes=90),

@@ -11,12 +11,14 @@ from common.config import (
     GCE_SA,
     GCE_ZONE,
     GCP_PROJECT_ID,
+    STOP_UPON_FAILURE_LABELS,
 )
 from common.hooks.image import CPUImage
 from common.hooks.network import BASE_NETWORK_LIST, VPCNetwork
 from googleapiclient.errors import HttpError
 
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
+from airflow.utils.context import Context
 
 DEFAULT_LABELS = {
     "env": ENV_SHORT_NAME,
@@ -299,3 +301,37 @@ class GCEHook(GoogleBaseHook):
                     retry = True
                 else:
                     raise e
+
+
+def on_failure_callback_stop_vm(context: Context):
+    """
+    This callback stops the VM associated with the failing task,
+    assuming the failing task has an `instance_name` attribute.
+    """
+    failing_task = context.get("task")
+    if hasattr(failing_task, "instance_name"):
+        # Ensure any templated fields are rendered
+        failing_task.render_template_fields(context)
+        instance_name = failing_task.instance_name
+
+        failing_task.log.info(f"Stopping VM {instance_name} due to task failure.")
+
+        hook = GCEHook()
+        instance_details = hook.get_instance(instance_name)
+        if instance_details:
+            labels = instance_details.get("labels", {})
+            failing_task.log.info(f"Retrieved labels for {instance_name}: {labels}")
+            if labels.get("job_type") in STOP_UPON_FAILURE_LABELS:
+                failing_task.log.info(
+                    f"Stopping VM '{instance_name}' because label 'job_type' in {STOP_UPON_FAILURE_LABELS}."
+                )
+                hook.stop_vm(instance_name)
+            else:
+                failing_task.log.info(
+                    f"Not stopping VM '{instance_name}'; label 'job_type' is not set to 'long_ml'."
+                    f" Current labels: {labels}"
+                )
+        else:
+            failing_task.log.info(
+                f"Instance '{instance_name}' not found; cannot perform VM stop."
+            )

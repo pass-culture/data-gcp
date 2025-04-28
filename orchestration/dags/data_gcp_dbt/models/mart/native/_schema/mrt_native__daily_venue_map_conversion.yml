@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: mrt_native__daily_venue_map_conversion
+    description: "{{ doc('description__mrt_native__daily_venue_map_conversion') }}"
+    columns:
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+      - name: unique_session_id
+        description: "{{ doc('column__unique_session_id') }}"
+      - name: app_version
+        description: "{{ doc('column__app_version') }}"
+      - name: event_date
+        description: "{{ doc('column__event_date') }}"
+      - name: total_venue_map_consult
+        description: "{{ doc('column__total_venue_map_consult') }}"
+      - name: total_venue_map_preview
+        description: "{{ doc('column__total_venue_map_preview') }}"
+      - name: total_consult_venue
+        description: "{{ doc('column__total_consult_venue') }}"
+      - name: total_distinct_venue_consult_offer
+        description: "{{ doc('column__total_distinct_venue_consult_offer') }}"
+      - name: total_consult_offer
+        description: "{{ doc('column__total_consult_offer') }}"
+      - name: total_bookings
+        description: "{{ doc('column__total_bookings') }}"
+      - name: total_non_cancelled_bookings
+        description: "{{ doc('column__total_non_cancelled_bookings') }}"
+      - name: total_diversification
+        description: "{{ doc('column__total_diversification') }}"
+      - name: total_session_venue_map_seen_duration_seconds
+        description: "{{ doc('column__total_session_venue_map_seen_duration_seconds') }}"

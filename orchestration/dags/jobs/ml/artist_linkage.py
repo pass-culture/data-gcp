@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_LINKAGE_DATASET,
     BIGQUERY_ML_PREPROCESSING_DATASET,
@@ -54,7 +54,7 @@ ARTISTS_TO_LINK_TABLE = "artist_name_to_link"
 ARTIST_LINK_TABLE = "artist_linked"
 default_args = {
     "start_date": datetime(2024, 7, 16),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 5,
 }
 

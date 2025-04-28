@@ -52,7 +52,7 @@ class RecommendationHandler(PredictionHandler):
                 request_data=request_data,
             )
             # logger.info(
-            #    f"results: -> {len(results)} results", extra={"results": results}
+            #    f"results: -> {len(results.predictions)} results", extra={"results": results}
             # )
 
         # If no predictions are found and fallback is active

@@ -230,7 +230,7 @@ def get_table_batches(
                     pa.array([to_float(row.booking_number_last_14_days)], pa.float32()),
                     pa.array([to_float(row.booking_number_last_28_days)], pa.float32()),
                     pa.array([to_float(row.semantic_emb_mean)], pa.float32()),
-                    pa.array([row.semantic_embedding], pa.list_(pa.float64(), 384)),
+                    pa.array([row.semantic_embedding], pa.list_(pa.float64(), 64)),
                     pa.array([to_float(row.stock_price)], pa.float32()),
                     pa.array([to_ts(row.offer_creation_date)], pa.float32()),
                     pa.array([to_ts(row.stock_beginning_date)], pa.float32()),

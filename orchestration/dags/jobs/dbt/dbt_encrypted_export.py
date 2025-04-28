@@ -86,6 +86,22 @@ for partner_id, partner_name in partner_dict.items():
             dag=dag, external_dag_id="dbt_run_dag", skip_manually_triggered=True
         )
 
+        quality_tests = dbt_test = BashOperator(
+            task_id="dbt_test",
+            bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
+            env={
+                "SELECT": "tag:export",
+                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                "target": "{{ params.target }}",
+                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                "ENV_SHORT_NAME": ENV_SHORT_NAME,
+                "EXCLUSION": "audit",
+            },
+            append_env=True,
+            cwd=PATH_TO_DBT_PROJECT,
+            dag=dag,
+        )
+
         bq_obfuscation = BashOperator(
             task_id="bq_obfuscation",
             bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run_operation.sh ",
@@ -164,6 +180,7 @@ for partner_id, partner_name in partner_dict.items():
         (
             wait_for_dbt_daily
             >> build_context
+            >> quality_tests
             >> bq_obfuscation
             >> export_group
             >> gce_instance_start

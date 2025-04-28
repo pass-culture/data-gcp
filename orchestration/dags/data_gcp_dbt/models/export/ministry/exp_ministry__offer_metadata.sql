@@ -2,8 +2,10 @@ select
     om.offer_id,
     om.search_group_name,
     om.author,
-    o.theater_movie_id as theater_movieId,
-    o.theater_room_id as theater_roomId,
+    -- fmt: off
+    o.theater_movie_id as theater_movieId, -- noqa: CP02
+    o.theater_room_id as theater_roomId, -- noqa: CP02
+    -- fmt: on
     o.movie_type,
     o.visa as movie_visa,
     o.release_date as movie_release_date,

@@ -33,7 +33,7 @@ class RecommendationHandler(PredictionHandler):
 
         return recommendable_offers_diverisified
 
-    def clean_dpp_output(self, results):
+    def remove_semantic_embedding_from_results(self, results):
         clean_results = []
         for res in results:
             clean_results.append(
@@ -84,18 +84,18 @@ class RecommendationHandler(PredictionHandler):
                 vector=vector,
                 request_data=request_data,
             )
-            dpp_predictions = self.clean_dpp_output(
+            dpp_predictions = self.remove_semantic_embedding_from_results(
                 self.apply_semantic_sampling(
                     scored_offers=results_raw.predictions,
                     output_size=output_size,
                     use_qi=request_data.use_qi,
                 )
             )
-            results = results_raw
             results.predictions = dpp_predictions
+
         # If no predictions are found and fallback is active
         if len(results.predictions) == 0 and fallback_client is not None:
-            return fallback_client.handle(
+            results = fallback_client.handle(
                 model,
                 request_data=PredictionRequest(
                     model_type="tops",
@@ -111,5 +111,9 @@ class RecommendationHandler(PredictionHandler):
                     items=request_data.items,
                 ),
             )
-        else:
-            return results
+            cleaned_predictions = self.remove_semantic_embedding_from_results(
+                results.predictions
+            )
+            results.predictions = cleaned_predictions
+
+        return results

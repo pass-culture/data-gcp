@@ -44,5 +44,9 @@ SCHEDULE_DICT = {
 
 
 ENCRYPTED_EXPORT_DICT = {
-    "20c702271b0187d039734307766eead8": {"dev": "0 14 * * 2"},
+    "20c702271b0187d039734307766eead8": {
+        "dev": None,
+        "stg": "0 14 * * 2",
+        "prod": None,
+    },
 }

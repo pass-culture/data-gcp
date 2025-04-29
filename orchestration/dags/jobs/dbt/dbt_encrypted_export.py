@@ -40,7 +40,7 @@ default_args = {
 
 GCE_INSTANCE = f"encrypted-export-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/encrypted_exports"
-BASE_BUCKET = f"data-partners-export-bucket-{ENV_SHORT_NAME}"  # "data-bucket-dev"
+BASE_BUCKET = f"data-partners-export-bucket-{ENV_SHORT_NAME}"
 
 partner_dict = get_json_from_gcs(BASE_BUCKET, "partners_names.json")
 dag_name = "dbt_encrypted_export"

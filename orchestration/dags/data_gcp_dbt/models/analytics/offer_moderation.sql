@@ -137,10 +137,7 @@ with
             string_agg(
                 offerer_tag_label, " ; " order by cast(offerer_id as int)
             ) as structure_tags
-        from {{ ref("offerer_tag_mapping") }} offerer_tag_mapping
-        left join
-            {{ ref("offerer_tag") }} offerer_tag
-            on offerer_tag_mapping.tag_id = offerer_tag.offerer_tag_id
+        from {{ ref("int_applicative__offerer_tag") }}
         group by offerer_id
     )
 

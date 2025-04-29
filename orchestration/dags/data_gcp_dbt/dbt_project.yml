@@ -121,6 +121,7 @@ data_tests:
   data_gcp_dbt:
     export:
       +severity: error
+      +store_failures: true
 
 vars:
   ENV_SHORT_NAME: dev

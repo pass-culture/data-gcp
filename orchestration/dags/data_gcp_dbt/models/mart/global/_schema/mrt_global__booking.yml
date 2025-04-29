@@ -78,8 +78,10 @@ models:
         description: '{{ doc("column__booking_intermediary_amount") }}'
         data_type: NUMERIC
         data_tests:
-          - accepted_values:
-              values: ['REIMBURSED', 'USED', 'CANCELLED', 'CONFIRMED']
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 500
+              inclusive: true
               tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"

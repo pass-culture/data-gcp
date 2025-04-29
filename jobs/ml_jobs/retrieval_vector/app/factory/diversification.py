@@ -3,8 +3,6 @@ from typing import List
 import numpy as np
 from dppy.finite_dpps import FiniteDPP
 
-DPP_SAMPLING_OUTPUT = 60
-
 
 class DPP:
     def __init__(self, vectors, K_DPP):
@@ -18,13 +16,15 @@ class DPP:
 
 
 class DiversificationPipeline:
-    def __init__(self, item_semantic_embeddings: List, ids: List, scores: List) -> None:
+    def __init__(
+        self, item_semantic_embeddings: List, ids: List, scores: List, K_DPP: int
+    ) -> None:
         self.item_semantic_embeddings = np.array(
             item_semantic_embeddings, dtype=np.float64
         )
         self.item_ids = ids
         self.scores = np.array(scores, dtype=np.float64)
-        self.K_DPP = DPP_SAMPLING_OUTPUT
+        self.K_DPP = K_DPP
 
     def get_sampled_ids(self):
         # Calculate weighted embeddings and normalize in a single step

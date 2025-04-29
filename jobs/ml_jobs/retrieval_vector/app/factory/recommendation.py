@@ -8,13 +8,15 @@ from app.models.prediction_request import PredictionRequest
 from app.models.prediction_result import PredictionResult
 from app.retrieval.reco_client import RecoClient
 
+DPP_SAMPLING_INPUT = 1000
+
 
 class RecommendationHandler(PredictionHandler):
     """
     Handler for recommendation predictions.
     """
 
-    def apply_semantic_sampling(self, scored_offers):
+    def apply_semantic_sampling(self, scored_offers, n_offers):
         valid_offers = [
             item for item in scored_offers if item["semantic_embedding"] is not None
         ]
@@ -24,6 +26,7 @@ class RecommendationHandler(PredictionHandler):
             ],
             ids=[item["offer_id"] for item in valid_offers],
             scores=[1 - float(item["_distance"]) for item in valid_offers],
+            K_DPP=n_offers,
         ).get_sampled_ids()
         sampled_offer_ids_set = set(sampled_offer_ids)
         # Filter scored_offers to get recommendable_offers_diverisified
@@ -58,13 +61,16 @@ class RecommendationHandler(PredictionHandler):
         Returns:
             DictPredictionResult: An object containing the recommended predicted items.
         """
+        dpp_input_size = DPP_SAMPLING_INPUT
+        output_size = request_data.size
         logger.debug(
             "recommendation",
             extra={
                 "uuid": request_data.call_id,
                 "user_id": request_data.user_id,
                 "params": request_data.params,
-                "size": request_data.size,
+                "dpp_input_size": dpp_input_size,
+                "output_size": output_size,
             },
         )
         if request_data.user_id is None:
@@ -74,12 +80,15 @@ class RecommendationHandler(PredictionHandler):
         vector = model.user_vector(request_data.user_id)
 
         if vector is not None:
+            request_data.size = dpp_input_size
             results_raw = self.search_by_vector(
                 model=model,
                 vector=vector,
                 request_data=request_data,
             )
-            results_dpp = self.apply_semantic_sampling(results_raw.predictions)
+            results_dpp = self.apply_semantic_sampling(
+                scored_offers=results_raw.predictions, n_offers=output_size
+            )
             results = self.clean_dpp_output(results_dpp)
         # If no predictions are found and fallback is active
         if len(results.predictions) == 0 and fallback_client is not None:

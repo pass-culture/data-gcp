@@ -19,7 +19,7 @@ with
             {{ ref("mrt_global__educational_deposit") }} as ed
             on eid.institution_id = ed.institution_id
         inner join
-            {{ ref("educational_year") }} as ey
+            {{ source("raw", "applicative_database_educational_year") }} as ey
             on ed.educational_year_id = ey.educational_year_id
     ),
 

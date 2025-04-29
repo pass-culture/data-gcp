@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.retrieval.constants import PRE_DPP_SIZE
+from app.retrieval.constants import PRE_DPP_SIZE, USE_QI
 
 DEFAULT_VECTOR_FIELDS = ["vector", "raw_embeddings"]
 DEFAULT_TREND_FIELDS = [
@@ -40,7 +40,7 @@ class PredictionRequest(BaseModel):
         description="Number of results to return before DPP sampling, must be greater than size",
     )
     use_qi: Optional[bool] = Field(
-        default=True,
+        default=USE_QI,
         description="Use quality information for sampling if set.",
     )
     debug: Optional[bool] = Field(default=False, description="Enable debug mode.")

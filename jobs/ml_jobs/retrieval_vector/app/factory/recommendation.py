@@ -69,6 +69,7 @@ class RecommendationHandler(PredictionHandler):
                 "params": request_data.params,
                 "pre_dpp_size": pre_dpp_size,
                 "output_size": output_size,
+                "use_qi": request_data.use_qi,
             },
         )
         if request_data.user_id is None:

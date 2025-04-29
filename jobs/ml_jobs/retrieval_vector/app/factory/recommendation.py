@@ -24,14 +24,14 @@ class RecommendationHandler(PredictionHandler):
             item_semantic_embeddings=[
                 item["semantic_embedding"] for item in valid_offers
             ],
-            ids=[item["offer_id"] for item in valid_offers],
+            ids=[item["item_id"] for item in valid_offers],
             scores=[1 - float(item["_distance"]) for item in valid_offers],
             K_DPP=n_offers,
         ).get_sampled_ids()
         sampled_offer_ids_set = set(sampled_offer_ids)
         # Filter scored_offers to get recommendable_offers_diverisified
         recommendable_offers_diverisified = [
-            row for row in valid_offers if row["offer_id"] in sampled_offer_ids_set
+            row for row in valid_offers if row["item_id"] in sampled_offer_ids_set
         ]
 
         return recommendable_offers_diverisified
@@ -86,10 +86,13 @@ class RecommendationHandler(PredictionHandler):
                 vector=vector,
                 request_data=request_data,
             )
-            results_dpp = self.apply_semantic_sampling(
-                scored_offers=results_raw.predictions, n_offers=output_size
+            dpp_predictions = self.clean_dpp_output(
+                self.apply_semantic_sampling(
+                    scored_offers=results_raw.predictions, n_offers=output_size
+                )
             )
-            results = self.clean_dpp_output(results_dpp)
+            results = results_raw
+            results.predictions = dpp_predictions
         # If no predictions are found and fallback is active
         if len(results.predictions) == 0 and fallback_client is not None:
             return fallback_client.handle(

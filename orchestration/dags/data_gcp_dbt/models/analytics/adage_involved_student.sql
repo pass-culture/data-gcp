@@ -74,5 +74,5 @@ with
     )
 
 select *
-from involved_students
-where not is_nan(involved_students)
+from involved_students as involved
+where not is_nan(involved.involved_students)

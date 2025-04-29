@@ -135,7 +135,7 @@ with
         select
             offerer_id,
             string_agg(
-                offerer_tag_label, " ; " order by cast(offerer_id as int)
+                tag_label, " ; " order by cast(offerer_id as int)
             ) as structure_tags
         from {{ ref("int_applicative__offerer_tag") }}
         group by offerer_id

@@ -25,7 +25,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 
 DEFAULT_REGION = "europe-west1"
-GCE_INSTANCE = f"emb-reduction-{ENV_SHORT_NAME}"
+GCE_INSTANCE = "emb-reduction"
 BASE_PATH = "data-gcp/jobs/ml_jobs/reduction"
 DATE = "{{ yyyymmdd(ds) }}"
 DAG_NAME = "embedding_reduction_item"

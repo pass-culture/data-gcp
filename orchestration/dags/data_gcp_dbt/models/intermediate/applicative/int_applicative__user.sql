@@ -36,11 +36,23 @@ select
         then "Mme."
         else u.user_civility
     end as user_civility,
+    case
+
+        -- to be beneficiary, user must be born after 2000-04-30
+        -- and be at least 15 years old
+        when
+            u.user_validated_birth_date is not null and
+            u.user_birth_date >= date("2000-04-30") and
+            u.user_birth_date <= date_sub(current_date, interval 15 year)
+        then u.user_validated_birth_date
+        when u.user_birth_date >= date("2000-04-30") and
+            u.user_birth_date <= date_sub(current_date, interval 15 year)
+        then u.user_birth_date
+        else null
+    end as user_birth_date,
     u.user_school_type,
     u.user_is_active,
-    u.user_age,
     u.user_role,
-    u.user_birth_date,
     u.user_last_connection_date,
     u.user_is_email_validated,
     u.user_has_seen_pro_tutorials,

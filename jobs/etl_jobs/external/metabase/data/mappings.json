@@ -25,7 +25,8 @@
     "criterion_id": "venue_tag_id",
     "criterion_name": "venue_tag_name",
     "partner_id": "partner_id",
-    "venue_id": "venue_id"
+    "venue_id": "venue_id",
+    "venue_managing_offerer_id": "offerer_id"
   },
   "enriched_stock_data": {
     "available_stock_information": "total_available_stock",

@@ -26,7 +26,7 @@ annotated-types==0.6.0
     # via pydantic
 anyio==4.3.0
     # via httpcore
-apache-airflow==2.9.3
+apache-airflow[gcp,google]==2.9.3
     # via
     #   -r orchestration-requirements.in
     #   apache-airflow-providers-common-io
@@ -43,7 +43,7 @@ apache-airflow==2.9.3
     #   apache-airflow-providers-ssh
 apache-airflow-providers-common-io==1.3.1
     # via apache-airflow
-apache-airflow-providers-common-sql==1.12.0
+apache-airflow-providers-common-sql==1.25.0rc1
     # via
     #   apache-airflow
     #   apache-airflow-providers-google
@@ -70,7 +70,7 @@ apache-airflow-providers-sqlite==3.7.1
     # via apache-airflow
 apache-airflow-providers-ssh==3.10.1
     # via -r orchestration-requirements.in
-apispec==6.6.1
+apispec[yaml]==6.6.1
     # via flask-appbuilder
 appdirs==1.4.4
     # via sqlfluff
@@ -159,9 +159,9 @@ colorlog==4.8.0
     # via apache-airflow
 configupdater==3.2
     # via apache-airflow
-connexion==2.14.2
+connexion[flask]==2.14.2
     # via apache-airflow
-coverage==7.5.0
+coverage[toml]==7.5.0
     # via pytest-cov
 cron-descriptor==1.4.3
     # via apache-airflow
@@ -291,7 +291,7 @@ google-ads==24.0.0
     # via apache-airflow-providers-google
 google-analytics-admin==0.22.7
     # via apache-airflow-providers-google
-google-api-core==2.19.0
+google-api-core[grpc]==2.19.0
     # via
     #   apache-airflow-providers-google
     #   dbt-bigquery
@@ -412,7 +412,7 @@ google-cloud-automl==2.13.3
     # via apache-airflow-providers-google
 google-cloud-batch==0.17.18
     # via apache-airflow-providers-google
-google-cloud-bigquery==3.21.0
+google-cloud-bigquery[pandas]==3.21.0
     # via
     #   apache-airflow-providers-google
     #   dbt-bigquery
@@ -518,7 +518,7 @@ google-resumable-media==2.7.0
     # via
     #   google-cloud-bigquery
     #   google-cloud-storage
-googleapis-common-protos==1.63.0
+googleapis-common-protos[grpc]==1.63.0
     # via
     #   google-ads
     #   google-api-core
@@ -529,6 +529,8 @@ googleapis-common-protos==1.63.0
     #   opentelemetry-exporter-otlp-proto-http
 grapheme==0.6.0
     # via alive-progress
+greenlet==3.2.1
+    # via sqlalchemy
 grpc-google-iam-v1==0.14.2
     # via
     #   google-cloud-bigtable
@@ -591,6 +593,7 @@ importlib-metadata==6.11.0
     # via
     #   apache-airflow
     #   dbt-semantic-interfaces
+    #   flask
     #   opentelemetry-api
 importlib-resources==6.4.0
     # via limits
@@ -677,7 +680,7 @@ marshmallow-oneofschema==3.1.1
     # via apache-airflow
 marshmallow-sqlalchemy==0.28.2
     # via flask-appbuilder
-mashumaro==3.13.1
+mashumaro[msgpack]==3.13.1
     # via
     #   dbt-adapters
     #   dbt-common
@@ -687,7 +690,9 @@ mdit-py-plugins==0.4.0
 mdurl==0.1.2
     # via markdown-it-py
 methodtools==0.4.7
-    # via apache-airflow
+    # via
+    #   apache-airflow
+    #   apache-airflow-providers-common-sql
 minimal-snowplow-tracker==0.0.2
     # via dbt-core
 mock==4.0.2
@@ -1027,7 +1032,7 @@ requests-toolbelt==1.0.0
     # via apache-airflow-providers-http
 rfc3339-validator==0.1.4
     # via apache-airflow
-rfc3986==1.5.0
+rfc3986[idna2008]==1.5.0
     # via httpx
 rich==13.7.1
     # via
@@ -1052,12 +1057,6 @@ s3transfer==0.12.0
     # via boto3
 setproctitle==1.3.3
     # via apache-airflow
-setuptools==66.1.1
-    # via
-    #   gcloud-aio-auth
-    #   pandas-gbq
-    #   pydata-google-auth
-    #   python-daemon
 shapely==2.0.4
     # via google-cloud-aiplatform
 six==1.16.0
@@ -1104,7 +1103,7 @@ sqlfluff==3.1.1
     #   sqlfluff-templater-dbt
 sqlfluff-templater-dbt==3.1.1
     # via -r orchestration-requirements.in
-sqlparse==0.5.0
+sqlparse==0.5.3
     # via
     #   apache-airflow-providers-common-sql
     #   dbt-core
@@ -1166,7 +1165,7 @@ universal-pathlib==0.2.2
     # via apache-airflow
 uritemplate==4.1.1
     # via google-api-python-client
-urllib3==2.2.1
+urllib3==1.26.20
     # via
     #   botocore
     #   requests
@@ -1189,4 +1188,6 @@ wtforms==3.1.2
 yarl==1.9.4
     # via aiohttp
 zipp==3.18.1
-    # via importlib-metadata
+    # via
+    #   importlib-metadata
+    #   importlib-resources

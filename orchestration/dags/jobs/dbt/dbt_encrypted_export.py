@@ -40,7 +40,7 @@ default_args = {
 
 GCE_INSTANCE = f"encrypted-export-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/encrypted_exports"
-BASE_BUCKET = f"data-partners-export-bucket-{ENV_SHORT_NAME}"  # "data-bucket-dev"
+BASE_BUCKET = f"data-partners-export-bucket-{ENV_SHORT_NAME}"
 
 partner_dict = get_json_from_gcs(BASE_BUCKET, "partners_names.json")
 dag_name = "dbt_encrypted_export"
@@ -65,7 +65,7 @@ for partner_id, partner_name in partner_dict.items():
                 type="string",
             ),
             "GLOBAL_CLI_FLAGS": Param(
-                default="--no-write-json",
+                default=" --no-write-json ",
                 type="string",
             ),
         },
@@ -84,6 +84,23 @@ for partner_id, partner_name in partner_dict.items():
 
         wait_for_dbt_daily = delayed_waiting_operator(
             dag=dag, external_dag_id="dbt_run_dag", skip_manually_triggered=True
+        )
+
+        quality_tests = dbt_test = BashOperator(
+            task_id="dbt_test",
+            bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
+            env={
+                "SELECT": "tag:export",
+                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                "target": "{{ params.target }}",
+                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                "ENV_SHORT_NAME": ENV_SHORT_NAME,
+                "EXCLUSION": "audit elementary",
+            },
+            append_env=True,
+            cwd=PATH_TO_DBT_PROJECT,
+            dag=dag,
+            retries=0,
         )
 
         bq_obfuscation = BashOperator(
@@ -164,6 +181,7 @@ for partner_id, partner_name in partner_dict.items():
         (
             wait_for_dbt_daily
             >> build_context
+            >> quality_tests
             >> bq_obfuscation
             >> export_group
             >> gce_instance_start

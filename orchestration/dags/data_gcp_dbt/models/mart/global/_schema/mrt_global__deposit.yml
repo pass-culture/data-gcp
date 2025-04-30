@@ -12,6 +12,11 @@ models:
       - name: deposit_amount
         description: '{{ doc("column__deposit_amount") }}'
         data_type: NUMERIC
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 500
+              inclusive: true
       - name: user_id
         description: '{{ doc("column__user_id") }}'
         data_type: STRING

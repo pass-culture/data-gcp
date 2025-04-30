@@ -129,12 +129,10 @@ dev-dependencies = [
 ## uv
 [tool.uv.sources]
 torch = [
-  { index = "pytorch-cpu", marker = "sys_platform != 'linux'" },
-  { index = "pytorch-cpu", marker = "sys_platform == 'linux'" },
+  { index = "pytorch-cpu" },
 ]
 torchvision = [
-  { index = "pytorch-cpu", marker = "sys_platform != 'linux'" },
-  { index = "pytorch-cpu", marker = "sys_platform == 'linux'" },
+  { index = "pytorch-cpu" },
 ]
 
 [[tool.uv.index]]

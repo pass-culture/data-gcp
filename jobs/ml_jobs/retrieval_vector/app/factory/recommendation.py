@@ -75,28 +75,21 @@ class RecommendationHandler(PredictionHandler):
         if request_data.user_id is None:
             raise ValueError("user_id is required for recommendation predictions.")
 
-        results = PredictionResult(predictions=[])
         vector = model.user_vector(request_data.user_id)
-
-        if vector is not None:
-            request_data.size = pre_dpp_size
-            results_raw = self.search_by_vector(
+        request_data.size = pre_dpp_size
+        results_pre_dpp = (
+            self.search_by_vector(
                 model=model,
                 vector=vector,
                 request_data=request_data,
             )
-            dpp_predictions = self.remove_semantic_embedding_from_results(
-                self.apply_semantic_sampling(
-                    scored_offers=results_raw.predictions,
-                    output_size=output_size,
-                    use_qi=request_data.use_qi,
-                )
-            )
-            results.predictions = dpp_predictions
+            if vector is not None
+            else PredictionResult(predictions=[])
+        )
 
         # If no predictions are found and fallback is active
-        if len(results.predictions) == 0 and fallback_client is not None:
-            results = fallback_client.handle(
+        if len(results_pre_dpp.predictions) == 0 and fallback_client is not None:
+            results_fallback = fallback_client.handle(
                 model,
                 request_data=PredictionRequest(
                     model_type="tops",
@@ -113,8 +106,17 @@ class RecommendationHandler(PredictionHandler):
                 ),
             )
             cleaned_predictions = self.remove_semantic_embedding_from_results(
-                results.predictions
+                results_fallback.predictions
             )
-            results.predictions = cleaned_predictions
+            results_fallback.predictions = cleaned_predictions
+            return results_fallback
 
-        return results
+        dpp_predictions = self.remove_semantic_embedding_from_results(
+            self.apply_semantic_sampling(
+                scored_offers=results_pre_dpp.predictions,
+                output_size=output_size,
+                use_qi=request_data.use_qi,
+            )
+        )
+        results_pre_dpp.predictions = dpp_predictions
+        return results_pre_dpp

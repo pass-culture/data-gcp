@@ -89,11 +89,10 @@ dependencies = [
     "threadpoolctl==3.5.0",
     "tokenizers==0.19.1",
     "tomli==2.0.1",
-    "torch==2.6.0+cpu",
-    "torchvision==0.21.0+cpu",
+    "torch==2.6.0",
+    "torchvision==0.21.0",
     "tqdm==4.66.5",
     "transformers==4.44.2",
-    "triton==3.2.0",
     "typer==0.12.5",
     "typing-extensions==4.12.2",
     "tzdata==2024.2",
@@ -128,11 +127,6 @@ dev-dependencies = [
 ]
 
 ## uv
-[[tool.uv.index]]
-name = "pytorch-cpu"
-url = "https://download.pytorch.org/whl/cpu"
-explicit = true
-
 [tool.uv.sources]
 torch = [
   { index = "pytorch-cpu" },
@@ -140,6 +134,11 @@ torch = [
 torchvision = [
   { index = "pytorch-cpu" },
 ]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.

@@ -5,7 +5,6 @@ import typer
 
 from utils import (
     ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
     create_items_table,
     deploy_container,
     get_item_docs,
@@ -66,9 +65,8 @@ def main(
     if model_name is None:
         model_name = "default"
     run_id = f"{model_name}_{ENV_SHORT_NAME}_v{yyyymmdd}"
-    serving_container = (
-        f"eu.gcr.io/{GCP_PROJECT_ID}/{experiment_name.replace('.', '_')}:{run_id}"
-    )
+    serving_container = f"europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/{ENV_SHORT_NAME}/{experiment_name.replace('.', '_')}:{run_id}"
+
     prepare_docs()
     print("Deploy...")
     save_model_type(model_type=MODEL_TYPE)

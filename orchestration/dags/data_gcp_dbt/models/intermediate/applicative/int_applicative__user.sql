@@ -41,12 +41,13 @@ select
         -- to be beneficiary, user must be born after 2000-04-30
         -- and be at least 15 years old
         when
-            u.user_validated_birth_date is not null and
-            u.user_birth_date >= date("2000-04-30") and
-            u.user_birth_date <= date_sub(current_date, interval 15 year)
+            u.user_validated_birth_date is not null
+            and u.user_birth_date >= date("2000-04-30")
+            and u.user_birth_date <= date_sub(current_date, interval 15 year)
         then u.user_validated_birth_date
-        when u.user_birth_date >= date("2000-04-30") and
-            u.user_birth_date <= date_sub(current_date, interval 15 year)
+        when
+            u.user_birth_date >= date("2000-04-30")
+            and u.user_birth_date <= date_sub(current_date, interval 15 year)
         then u.user_birth_date
         else null
     end as user_birth_date,

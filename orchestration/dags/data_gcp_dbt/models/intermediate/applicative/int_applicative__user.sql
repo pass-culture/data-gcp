@@ -66,7 +66,8 @@ with
             u.user_has_validated_email,
             u.user_has_enabled_marketing_push,
             u.user_subscribed_themes,
-            u.user_subscribed_themes is not null as is_theme_subscribed
+            u.user_subscribed_themes is not null as is_theme_subscribed,
+            CURRENT_DATE as reference_date
         from {{ source("raw", "applicative_database_user") }} u
         where u.user_role in ("UNDERAGE_BENEFICIARY", "BENEFICIARY")
     )
@@ -79,7 +80,7 @@ select
     user_activity,
     user_civility,
     user_birth_date,
-    {{ calculate_exact_age(CURRENT_DATE, user_birth_date) }} as user_age,
+    {{ calculate_exact_age("reference_date", "user_birth_date") }} as user_age,
     user_school_type,
     user_is_active,
     user_role,

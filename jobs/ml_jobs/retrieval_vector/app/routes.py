@@ -28,7 +28,7 @@ def predict():
     except ValidationError as e:
         # wrong input validation
         logger.error(str(e))
-        return jsonify({"error": str(e.errors())}), 403
+        return jsonify({"error": str(e)}), 403
     except Exception as e:
         # wrong expected input format (e.g. missing instances key)
         logger.error(e)
@@ -45,4 +45,4 @@ def predict():
     except Exception as e:
         # other errors
         logger.exception(e)
-        return jsonify({"error": str(e.errors())}), 500
+        return jsonify({"error": str(e)}), 500

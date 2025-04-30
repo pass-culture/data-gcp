@@ -26,22 +26,24 @@ You can find all dependencies in the `api-requirements.in` file.
     ```sh
     make install-api
     ```
-      * by default we use the lancedb model contained inside the following Docker Image  `europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/prod/retrieval_recommendation_v1_2_prod:two_towers_user_recommendation_prod_v20250429`
+      * by default we use the lancedb model contained inside the following Docker Image  `europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/dev/retrieval_recommendation_v1_2_dev:dummy_user_recommendation_dev_v20250430` which is a dummy model just for testing purposes.
       * if you want to use a different model, you can run
         ```sh
         make install-api DOCKER_IMAGE_TAG=<docker_image_tag>
         ```
         where `<docker_image_tag>` is the tag of the docker image you want to use. You can find those in [Artifact Registry](https://console.cloud.google.com/artifacts/docker/passculture-infra-prod/europe-west1/pass-culture-artifact-registry?authuser=2&project=passculture-infra-prod).
+        :warning: If you use a production model, please delete the Docker image locally after use.
         * For instance :
             ```sh
             DOCKER_IMAGE_TAG=europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/prod/retrieval_recommendation_v1_2_prod:two_towers_user_recommendation_prod_v20250428 make install-api
             ```
 
-2. Start the API using:
+2. Start the API using :
     ```sh
     make start
     ```
     => It will run the API on `0.0.0.0:8080`
+    => If you want to change the port, edit the start target in the `Makefile`
 3. Make a prediction
     ```sh
     curl -X POST localhost:8080/predict -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{

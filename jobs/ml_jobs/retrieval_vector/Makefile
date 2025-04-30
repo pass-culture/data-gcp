@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-DOCKER_IMAGE_TAG ?= europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/prod/retrieval_recommendation_v1_2_prod:two_towers_user_recommendation_prod_v20250429
+DOCKER_IMAGE_TAG ?= europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/dev/retrieval_recommendation_v1_2_dev:dummy_user_recommendation_dev_v20250430
 
 install-api:
 	uv sync --no-dev

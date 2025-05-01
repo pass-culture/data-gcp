@@ -63,9 +63,11 @@ install_science:
 	MICROSERVICE_PATH=jobs/ml_jobs/algo_training PHYTON_VERSION=3.10 REQUIREMENTS_NAME=requirements.txt make _install_microservice
 
 install_analytics:
+	gcloud auth application-default login
 	make install
 	source .venv/bin/activate && uv pip install -r orchestration/dags/data_gcp_dbt/dbt-requirements.txt
 	source .venv/bin/activate && make _init_dbt
+	gcloud components update -q
 	echo "Please setup the current venv in your IDE to make it run permanently : https://www.notion.so/passcultureapp/Comment-installer-DBT-e25f7e24813c4d48baa43d641651caf8"
 
 install_ubuntu_libs:

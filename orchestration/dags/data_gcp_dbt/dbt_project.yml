@@ -118,6 +118,9 @@ data_tests:
   +docs:
     show: true
     tags: "test"
+  data_gcp_dbt:
+    export:
+      +severity: "{{ 'error' if target.name in ['prod', 'stg'] else 'warn' }}"
 
 vars:
   ENV_SHORT_NAME: dev

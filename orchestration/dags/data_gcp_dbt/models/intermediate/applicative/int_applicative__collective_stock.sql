@@ -55,6 +55,7 @@ select
     cs.collective_stock_creation_date,
     cs.collective_stock_modification_date,
     cs.collective_stock_beginning_date_time,
+    cs.collective_stock_end_date_time,
     cs.collective_offer_id,
     cs.collective_stock_price,
     cs.collective_stock_booking_limit_date_time,

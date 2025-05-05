@@ -63,16 +63,16 @@ with
             coalesce(
                 sum(safe_cast(total_involved_students as float64)), 0
             ) as total_involved_students
-        from {{ source("clean", "adage_involved_student") }} ais
+        from {{ source("clean", "adage_involved_student") }} as ais
         left join
-            {{ ref("educational_year") }} ey
+            {{ source("raw", "applicative_database_educational_year") }} as ey
             on safe_cast(ey.adage_id as int)
             = safe_cast(ais.educational_year_adage_id as int)
-        left join institutional_scholar_level isl on ais.level = isl.level_id
+        left join institutional_scholar_level as isl on ais.level = isl.level_id
         where metric_name = "departements"
         group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
     )
 
 select *
-from involved_students involved
-where not is_nan(involved_students)
+from involved_students as involved
+where not is_nan(involved.involved_students)

@@ -35,3 +35,9 @@ def create_algo_training_slack_block(
             ],
         },
     ]
+
+
+def render_block(**kwargs):
+    experiment_name = kwargs["params"]["model_name"]
+    block = create_algo_training_slack_block(experiment_name)
+    return block

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from common import macros
 from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
-from common.alerts.ml_training import create_algo_training_slack_block
+from common.alerts.ml_training import render_block
 from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_COMPLIANCE_DATASET,
@@ -11,7 +11,6 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
-    MLFLOW_URL,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -25,6 +24,7 @@ from common.utils import get_airflow_schedule
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python_operator import PythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
@@ -192,12 +192,17 @@ with DAG(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
 
+    render_slack_msg = PythonOperator(
+        task_id="render_slack_msg",
+        python_callable=render_block,
+        provide_context=True,
+        params={"model_name": "nom_du_modele"},
+    )
+
     send_slack_notif_success = SendSlackMessageOperator(
         task_id="send_slack_notif_success",
         webhook_token=SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN,
-        block=create_algo_training_slack_block(
-            "{{ params.model_name }}", MLFLOW_URL, ENV_SHORT_NAME
-        ),
+        block="{{ task_instance.xcom_pull(task_ids='render_slack_msg') }}",
     )
 
     (
@@ -211,5 +216,6 @@ with DAG(
         >> evaluate
         >> package_api_model
         >> gce_instance_stop
+        >> render_slack_msg
         >> send_slack_notif_success
     )

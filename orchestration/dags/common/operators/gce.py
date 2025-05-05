@@ -14,6 +14,7 @@ from common.config import (
 from common.hooks.gce import GCEHook
 from common.hooks.image import MACHINE_TYPE
 from common.hooks.network import BASE_NETWORK_LIST, GKE_NETWORK_LIST
+from orchestration.dags.common.trigger.gce import SSHJobMonitorTrigger
 from paramiko.ssh_exception import SSHException
 
 from airflow.configuration import conf
@@ -318,19 +319,29 @@ class SSHGCEOperator(BaseSSHGCEOperator):
             **kwargs,
         )
 
-    def execute(self, context):
+    def prepare_command(self):
         environment = dict(self.UV_EXPORT, **self.environment)
         commands_list = []
         commands_list.append(
             "\n".join([f"export {key}={value}" for key, value in environment.items()])
         )
-
         if self.base_dir is not None:
             commands_list.append(f"cd ~/{self.base_dir}")
 
         commands_list.append("source .venv/bin/activate")
-        commands_list.append(self.command)
+        return commands_list
 
+    def execute(self, context):
+        commands_list = self.prepare_command()
+        commands_list.append(self.command)
+        self.command = "\n".join(commands_list)
+        return super().execute(context)
+
+    def nohup_command(self, context):
+        commands_list = self.prepare_command()
+        commands_list.append(
+            f"nohup {self.command} > job.log 2>&1 && touch job_done.flag & echo $! > job.pid"
+        )
         self.command = "\n".join(commands_list)
         return super().execute(context)
 
@@ -431,3 +442,35 @@ class InstallDependenciesOperator(SSHGCEOperator):
             {clone_command}
             {install_command}
         """
+
+
+class DeferrableSSHGCEOperator(SSHGCEOperator):
+    def execute(self, context):
+        self.nohup_command(context)
+
+        self.defer(
+            trigger=SSHJobMonitorTrigger(
+                task_id=self.task_id,
+                instance_name=self.instance_name,
+                zone=self.gce_zone,
+                command_dir=self.base_dir,
+                poll_interval=60,
+            ),
+            method_name="execute_complete",
+        )
+
+    def execute_complete(self, context, event=None):
+        if event is None:
+            raise AirflowException("No trigger event received.")
+
+        status = event.get("status")
+        if status == "completed":
+            self.log.info("Job completed. Full logs:\n" + event["logs"])
+            context["ti"].xcom_push(key="full_logs", value=event["logs"])
+        elif status == "running":
+            self.log.info("Job still running. Partial logs:\n" + event["logs"])
+            raise AirflowException(
+                "Unexpected status: running. Should not return this."
+            )
+        else:
+            raise AirflowException(f"Job monitoring failed: {event.get('message')}")

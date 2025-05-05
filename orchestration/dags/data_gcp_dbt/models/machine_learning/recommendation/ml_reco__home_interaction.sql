@@ -39,9 +39,9 @@ inner join
     and offer_displayed.event_timestamp = home_module.module_displayed_timestamp
 where
     offer_displayed.event_date
-    between date_sub(date("{{ ds() }}"), interval 4 day) and date("{{ ds() }}")
+    between date_sub(date("{{ ds() }}"), interval 21 day) and date("{{ ds() }}")
     and home_module.module_displayed_date
-    between date_sub(date("{{ ds() }}"), interval 4 day) and date("{{ ds() }}")
+    between date_sub(date("{{ ds() }}"), interval 21 day) and date("{{ ds() }}")
     {% if var("ENV_SHORT_NAME") == "prod" %}
         and (
             home_module.offer_id is not null

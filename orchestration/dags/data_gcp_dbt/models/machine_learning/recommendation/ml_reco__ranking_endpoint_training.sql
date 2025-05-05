@@ -1,3 +1,11 @@
+{{
+    config(
+        materialized="table",
+        tags=["weekly"],
+        labels={"schedule": "weekly"},
+    )
+}}
+
 with
     diversification as (
         select im.item_id, avg(b.diversity_score) as delta_diversification

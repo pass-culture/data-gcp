@@ -13,7 +13,14 @@ returns
         venue_longitude decimal,
         venue_geo geography,
         default_max_distance integer,
-        unique_id varchar
+        unique_id varchar,
+        new_item_embedding_json json,
+        new_offer_is_geolocated boolean,
+        new_offer_creation_days integer,
+        new_offer_stock_price decimal,
+        new_offer_stock_beginning_days decimal,
+        new_offer_centroid_x decimal,
+        new_offer_centroid_y decimal
     )
 as $body$
 BEGIN
@@ -28,7 +35,14 @@ BEGIN
         ro.venue_longitude,
         ST_MakePoint(ro.venue_longitude, ro.venue_latitude)::geography as venue_geo,
         ro.default_max_distance,
-        ro.unique_id
+        ro.unique_id,
+        ro.new_item_embedding_json,
+        ro.new_offer_is_geolocated,
+        ro.new_offer_creation_days,
+        ro.new_offer_stock_price,
+        ro.new_offer_stock_beginning_days,
+        ro.new_offer_centroid_x,
+        ro.new_offer_centroid_y
     FROM public.recommendable_offers_raw ro
     WHERE is_geolocated AND not is_sensitive ;
 END;

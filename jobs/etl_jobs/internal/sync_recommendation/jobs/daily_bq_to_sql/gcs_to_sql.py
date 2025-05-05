@@ -37,7 +37,7 @@ class GCSToSQLOrchestrator:
             execution_date: Execution date for the import
         """
         logger.info(
-            f"Starting import of {table_config.bigquery_table_name} to Cloud SQL using DuckDB"
+            f"Starting import of BigQuery {table_config.bigquery_table_name} table to Cloud SQL {table_config.cloud_sql_table_name} table using DuckDB"
         )
         start_time = time.time()
         parquet_files = []
@@ -71,17 +71,17 @@ class GCSToSQLOrchestrator:
 
                 # Drop existing table in PostgreSQL if it exists
                 logger.info(
-                    f"Dropping existing table {table_config.bigquery_table_name} if it exists"
+                    f"Dropping existing table {table_config.cloud_sql_table_name} if it exists"
                 )
                 self.duck_service.execute_query(
-                    f"DROP TABLE IF EXISTS pg_db.{table_config.bigquery_table_name}"
+                    f"DROP TABLE IF EXISTS pg_db.{table_config.cloud_sql_table_name}"
                 )
 
                 # Create table in PostgreSQL
                 logger.info(
-                    f"Creating table {table_config.bigquery_table_name} in PostgreSQL"
+                    f"Creating table {table_config.cloud_sql_table_name} in PostgreSQL"
                 )
-                create_table_sql = f"CREATE TABLE pg_db.{table_config.bigquery_table_name} ({columns_sql})"
+                create_table_sql = f"CREATE TABLE pg_db.{table_config.cloud_sql_table_name} ({columns_sql})"
                 self.duck_service.execute_query(create_table_sql)
 
                 # Create view with proper column conversions
@@ -92,23 +92,23 @@ class GCSToSQLOrchestrator:
 
                 # Copy data from Parquet to PostgreSQL using the WKT view
                 logger.info(
-                    f"Copying data from Parquet to PostgreSQL table {table_config.bigquery_table_name}"
+                    f"Copying data from Parquet to PostgreSQL table {table_config.cloud_sql_table_name}"
                 )
                 copy_start_time = time.time()
                 self.duck_service.execute_query(
-                    f"INSERT INTO pg_db.{table_config.bigquery_table_name} SELECT * FROM parquet_data_wkt"
+                    f"INSERT INTO pg_db.{table_config.cloud_sql_table_name} SELECT * FROM parquet_data_wkt"
                 )
 
                 copy_elapsed_time = time.time() - copy_start_time
 
                 # Get row count
                 self.duck_service.execute_query(
-                    f"SELECT COUNT(*) FROM pg_db.{table_config.bigquery_table_name}"
+                    f"SELECT COUNT(*) FROM pg_db.{table_config.cloud_sql_table_name}"
                 )
                 total_rows = self.duck_service.fetch_one()[0]
 
                 logger.info(
-                    f"Successfully copied {total_rows} rows to PostgreSQL table {table_config.bigquery_table_name} in {copy_elapsed_time:.2f} seconds"
+                    f"Successfully copied {total_rows} rows to PostgreSQL table {table_config.cloud_sql_table_name} in {copy_elapsed_time:.2f} seconds"
                 )
 
                 # Detach PostgreSQL database
@@ -123,13 +123,13 @@ class GCSToSQLOrchestrator:
 
             elapsed_time = time.time() - start_time
             logger.info(
-                f"Successfully imported {table_config.bigquery_table_name} to Cloud SQL in {elapsed_time:.2f} seconds"
+                f"Successfully imported BigQuery {table_config.bigquery_table_name} table to Cloud SQL {table_config.cloud_sql_table_name} table in {elapsed_time:.2f} seconds"
             )
 
         except Exception as e:
             elapsed_time = time.time() - start_time
             logger.error(
-                f"Failed to import {table_config.bigquery_table_name} to Cloud SQL after {elapsed_time:.2f} seconds: {str(e)}"
+                f"Failed to import BigQuery {table_config.bigquery_table_name} table to Cloud SQL {table_config.cloud_sql_table_name} table after {elapsed_time:.2f} seconds: {str(e)}"
             )
             raise
         finally:

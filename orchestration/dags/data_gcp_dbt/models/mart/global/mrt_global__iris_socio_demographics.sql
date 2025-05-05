@@ -19,7 +19,7 @@ with
         select
             i.iris_internal_id,
             v.venue_id,
-            st_area(i.iris_shape) / 1000000 as iris_superficie_km2,
+            st_area(i.iris_shape) / 1000000 as iris_area_sq_km,
             st_distance(v.venue_point, i.iris_centroid) as distance_iris_venue
         from iris as i
         inner join venues as v on st_dwithin(v.venue_point, i.iris_centroid, 20000)  -- ← limite à 20 km
@@ -28,7 +28,7 @@ with
     iris_density as (
         select
             iris_internal_id,
-            iris_area_km2,
+            iris_area_sq_km,
             count(
                 distinct case when distance_iris_venue < 20000 then venue_id end
             ) as total_venue_20_km,

@@ -70,7 +70,7 @@ with
             offer_centroid_x,
             offer_centroid_y
         from {{ ref("ml_feat__offer_feature") }}
-    ),
+    )
 
 select
     ro.item_id,

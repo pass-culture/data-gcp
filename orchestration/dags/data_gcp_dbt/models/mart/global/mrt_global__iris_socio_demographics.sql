@@ -36,7 +36,7 @@ with
                 distinct case when distance_iris_venue < 5000 then venue_id end
             ) as total_venue_5_km
         from candidates
-        group by iris_internal_id, iris_superficie_km2
+        group by iris_internal_id, iris_area_sq_km
     )
 
 select

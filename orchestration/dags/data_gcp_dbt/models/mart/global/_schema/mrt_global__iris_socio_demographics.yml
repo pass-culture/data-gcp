@@ -43,8 +43,8 @@ models:
         description: "{{ doc('column__geo_code') }}"
       - name: rural_city_type
         description: "{{ doc('column__rural_city_type') }}"
-      - name: iris_area_km2
-        description: "{{ doc('column__iris_area_km2') }}"
+      - name: iris_area_sq_km
+        description: "{{ doc('column__iris_area_sq_km') }}"
       - name: total_venue_20_km
         description: "{{ doc('column__total_venue_20_km') }}"
       - name: total_venue_5_km
@@ -57,12 +57,12 @@ models:
         description: "{{ doc('column__total_population_11_17_years') }}"
       - name: total_population_18_24_years
         description: "{{ doc('column__total_population_18_24_years') }}"
-      - name: decile10_revenue
-        description: "{{ doc('column__decile10_revenue') }}"
-      - name: decile50_revenue
-        description: "{{ doc('column__decile50_revenue') }}"
-      - name: decile90_revenue
-        description: "{{ doc('column__decile90_revenue') }}"
+      - name: total_revenue_10_decile
+        description: "{{ doc('column__total_revenue_10_decile') }}"
+      - name: total_revenue_50_decile
+        description: "{{ doc('column__total_revenue_50_decile') }}"
+      - name: total_revenue_90_decile
+        description: "{{ doc('column__total_revenue_90_decile') }}"
       - name: pct_csp_1
         description: "{{ doc('column__pct_csp_1') }}"
       - name: pct_csp_2

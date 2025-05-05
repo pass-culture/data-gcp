@@ -28,7 +28,7 @@ with
     iris_density as (
         select
             iris_internal_id,
-            iris_superficie_km2,
+            iris_area_km2,
             count(
                 distinct case when distance_iris_venue < 20000 then venue_id end
             ) as total_venue_20_km,
@@ -58,16 +58,16 @@ select
     gi.density_macro_level,
     gi.geo_code,
     gi.rural_city_type,
-    id.iris_superficie_km2 as iris_area_km2,
+    id.iris_area_sq_km,
     id.total_venue_20_km,
     id.total_venue_5_km,
     sd.total_population,
     sd.population_15_years_or_more as total_population_15_years_or_more,
     sd.population_11_17_years as total_population_11_17_years,
     sd.population_18_24_years as total_population_18_24_years,
-    sd.qt10_revenue as decile10_revenue,
-    sd.qt50_revenue as decile50_revenue,
-    sd.qt90_revenue as decile90_revenue,
+    sd.qt10_revenue as total_revenue_10_decile,
+    sd.qt50_revenue as total_revenue_50_decile,
+    sd.qt90_revenue as total_revenue_90_decile,
     safe_divide(sd.csp_1, sd.population_15_years_or_more) as pct_csp_1,
     safe_divide(sd.csp_2, sd.population_15_years_or_more) as pct_csp_2,
     safe_divide(sd.csp_3, sd.population_15_years_or_more) as pct_csp_3,

@@ -26,13 +26,12 @@ class ExportToGCSOrchestrator:
         """Export a BigQuery table to GCS in Parquet format.
 
         Args:
-            table_name: Name of the table to export
             table_config: Configuration for the table
             bucket_path: Full GCS path for export (e.g. gs://bucket/path)
             execution_date: Execution date for the export
         """
         logger.info(
-            f"Starting export of {table_config.bigquery_table_name} to GCS in Parquet format"
+            f"Starting export of BigQuery {table_config.bigquery_table_name} to GCS in Parquet format"
         )
 
         temp_table_name = f"tmp_{execution_date.strftime('%Y%m%d')}_export_{table_config.bigquery_table_name}"

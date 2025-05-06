@@ -59,7 +59,7 @@ jobs:
       - uses: yezz123/setup-uv@v4
 
       - name: Install Default Python requirements
-        run: uv sync
+        run: uv pip install --system -r requirements.txt
 
       - name: Install Python requirements
         run: uv pip install --system -r ${{ env.AIRFLOW_HOME }}orchestration-requirements.txt

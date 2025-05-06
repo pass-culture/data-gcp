@@ -26,6 +26,7 @@ dev-dependencies = [
   "dbt-metabase==1.4.2",
   "dbt-score==0.7.1",
   "dbt-coverage==0.3.8",
+  "psycopg2-binary==2.9.9",
 ]
 
 ## ruff

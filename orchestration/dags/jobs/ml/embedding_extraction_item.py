@@ -9,9 +9,9 @@ from common.config import (
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
+    DeferrableSSHGCEOperator,
     DeleteGCEOperator,
     InstallDependenciesOperator,
-    SSHGCEOperator,
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
@@ -91,7 +91,7 @@ with DAG(
         base_dir=BASE_PATH,
     )
 
-    extract_embedding = SSHGCEOperator(
+    extract_embedding = DeferrableSSHGCEOperator(
         task_id="extract_embedding",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
@@ -105,6 +105,7 @@ with DAG(
         f"--input-table-name {INPUT_TABLE_NAME} "
         f"--output-dataset-name {OUTPUT_DATASET_NAME} "
         f"--output-table-name {OUTPUT_TABLE_NAME} ",
+        poll_interval=300,
     )
 
     gce_instance_stop = DeleteGCEOperator(

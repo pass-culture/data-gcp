@@ -29,6 +29,107 @@ DEFAULT_LABELS = {
 }
 
 
+class DeferrableSSHGCEJobManager:
+    """Handles remote job management operations"""
+
+    def __init__(self, task_id: str, run_id: str):
+        self.task_id = task_id
+        self.run_id = run_id
+        self.job_id = f"{task_id}_{run_id}"
+
+    @property
+    def job_base_dir(self) -> str:
+        return "~/airflow_jobs"
+
+    @property
+    def job_dir(self) -> str:
+        return f"{self.job_base_dir}/{self.job_id}"
+
+    @property
+    def setup_script(self) -> str:
+        return f"""
+            # Ensure base directory exists
+            mkdir -p {self.job_base_dir}
+
+            # Create job-specific directory
+            JOB_DIR={self.job_dir}
+            mkdir -p $JOB_DIR
+
+            # Initialize job status
+            echo "running" > $JOB_DIR/status
+        """
+
+    @property
+    def trap_handlers(self) -> str:
+        return f"""
+            trap 'echo "failed" > {self.job_dir}/status; exit 1' ERR
+            trap 'echo "interrupted" > {self.job_dir}/status; exit 1' INT TERM
+        """
+
+    def wrap_command(self, command: str) -> str:
+        return f"""
+            {self.setup_script}
+
+            (
+                {self.trap_handlers}
+
+                # Execute the command and capture output
+                {command} > {self.job_dir}/output 2>&1
+
+                # Mark successful completion
+                echo "completed" > {self.job_dir}/status
+            ) </dev/null >/dev/null 2>&1 &
+
+            # Store the background job's PID
+            echo $! > {self.job_dir}/pid
+
+            # Return the job ID for monitoring
+            echo "{self.job_id}"
+            exit 0
+        """
+
+    @staticmethod
+    def get_status_check_command(self) -> str:
+        return f"""
+            JOB_DIR=~/{self.job_base_dir}/{self.job_id}
+            if [ -f "$JOB_DIR/status" ]; then
+                status=$(cat $JOB_DIR/status)
+                pid=$(cat $JOB_DIR/pid 2>/dev/null || echo "0")
+
+                # Check if process is still running
+                if [ "$status" = "running" ] && ! kill -0 $pid 2>/dev/null; then
+                    echo "failed" > $JOB_DIR/status
+                    echo "Process died unexpectedly" >> $JOB_DIR/output
+                fi
+
+                output=$(cat $JOB_DIR/output 2>/dev/null || echo "No output yet")
+                echo "STATUS:$(cat $JOB_DIR/status)"
+                echo "OUTPUT:$output"
+                echo "PID:$pid"
+            else
+                echo "STATUS:failed"
+                echo "OUTPUT:Job directory not found"
+                echo "PID:0"
+            fi
+        """
+
+    def get_cleanup_command(self) -> str:
+        """Returns command to clean up job directory after completion or failure."""
+        return f"""
+            # Only remove if job is not running
+            JOB_DIR={self.job_dir}
+            if [ -f "$JOB_DIR/status" ]; then
+                status=$(cat $JOB_DIR/status)
+                if [ "$status" != "running" ]; then
+                    # Archive the output before cleaning
+                    mkdir -p {self.job_base_dir}/archive
+                    cp $JOB_DIR/output {self.job_base_dir}/archive/{self.job_id}_output.log 2>/dev/null || true
+                    rm -rf $JOB_DIR
+                fi
+            fi
+        """
+
+
 class GCEHook(GoogleBaseHook):
     _conn = None
 

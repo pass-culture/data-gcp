@@ -7,6 +7,9 @@ compile:
 	uv pip compile pyproject.toml -o airflow/orchestration-requirements.txt --python-platform=linux
 	uv pip compile pyproject.toml -o k8s-airflow/k8s-worker-requirements.txt --python-platform=linux
 
+auth:
+	gcloud auth application-default login --no-launch-browser
+
 build:
 	docker compose down -v;
 	docker compose build --no-cache;
@@ -18,6 +21,7 @@ build_with_cache:
 	make start
 
 start:
+	make auth
 	docker compose up -d
 	@echo "Waiting for Airflow to start..."
 	@timeout 60 sh -c 'until curl -s http://localhost:8080 > /dev/null; do sleep 2; done' || (echo "Airflow did not start in time. Exiting." && exit 1)

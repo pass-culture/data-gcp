@@ -8,9 +8,9 @@ from common.config import (
     ENV_SHORT_NAME,
 )
 from common.operators.gce import (
-    DeferrableSSHGCEOperator,
     DeleteGCEOperator,
     InstallDependenciesOperator,
+    SSHGCEOperator,
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
@@ -123,7 +123,7 @@ with DAG(
                     --max-nodes {max_nodes}
             """
 
-            DeferrableSSHGCEOperator(
+            SSHGCEOperator(
                 task_id=f"deploy_model_{experiment_name}_{endpoint_name}",
                 instance_name=GCE_INSTANCE,
                 base_dir=BASE_DIR,

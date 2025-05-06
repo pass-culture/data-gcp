@@ -2,10 +2,46 @@
 ########                    Install and setup the project                      ########
 #######################################################################################
 SHELL := /bin/bash
+BASE_PYTHON_VERSION := 3.10
 
 export PERSONAL_DBT_USER :=
 
-configure_personal_user:
+
+install:
+	make _base_install
+	make _dbt_install
+
+	echo "Please setup the current venv in your IDE to make it run permanently : https://www.notion.so/passcultureapp/Comment-installer-DBT-e25f7e24813c4d48baa43d641651caf8"
+
+
+install_analytics:
+	echo "Please use `make install` instead"
+	make install
+
+install_engineering:
+	echo "Please use `make install` instead"
+	make install
+
+#######################################################################################
+########                                 Utils                                 ########
+#######################################################################################
+
+
+
+install_ubuntu_libs:
+	sudo apt-get update -y
+	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev libmariadb-dev clang
+
+install_macos_libs:
+	brew install mysql-client@8.4 pkg-config
+
+_get_gcp_credentials:
+ifeq (,$(wildcard ${HOME}/.config/gcloud/application_default_credentials.json))
+	gcloud auth application-default login
+endif
+
+
+_configure_personal_user:
 	@read -p "Enter your username (e.g., adamasio for Alain Damasio): " username; \
 	if ! echo "$$username" | grep -Eq "^[a-z]+$$"; then \
 	    echo "Invalid username. Use lowercase letters only, no spaces, underscores, or numbers."; \
@@ -35,87 +71,20 @@ configure_personal_user:
 	echo "Please run 'source $$shell_file' or restart your terminal to apply changes."
 
 
+_dbt_install:
+	source .venv/bin/activate && uv pip install -r orchestration/airflow/orchestration-requirements.txt
+	source .venv/bin/activate && cd orchestration/dags/data_gcp_dbt && dbt deps && dbt debug
 
-install_prerequisites:
-	curl -LsSf https://astral.sh/uv/install.sh | sh
-	echo -e "\n \n Please restart you shell in order to allow uv commands \n \n"
-
-
-install:
+_base_install:
+	make _configure_personal_user
 	# Log in with GCP credentials if NO_GCP_INIT is not 1
 	@if [ "$(NO_GCP_INIT)" != "1" ]; then \
 		make _get_gcp_credentials; \
 	fi
-	make _initiate_env
-	make configure_personal_user
+
 	curl -LsSf https://astral.sh/uv/install.sh | sh
-	MICROSERVICE_PATH=. PHYTON_VERSION=3.10 REQUIREMENTS_NAME=requirements.txt make _install_microservice
-	source .venv/bin/activate && pre-commit install
-
-install_engineering:
-	make install
-	MICROSERVICE_PATH=orchestration PHYTON_VERSION=3.10 REQUIREMENTS_NAME=airflow/orchestration-requirements.txt make _install_microservice
-	MICROSERVICE_PATH=orchestration/dags/data_gcp_dbt PHYTON_VERSION=3.10 REQUIREMENTS_NAME=dbt-requirements.txt make _install_microservice
-	make _init_dbt
-
-install_science:
-	make install_engineering
-	MICROSERVICE_PATH=jobs/ml_jobs/algo_training PHYTON_VERSION=3.10 REQUIREMENTS_NAME=requirements.txt make _install_microservice
-
-install_analytics:
-	make install
-	source .venv/bin/activate && uv pip install -r orchestration/dags/data_gcp_dbt/dbt-requirements.txt
-	source .venv/bin/activate && make _init_dbt
-	echo "Please setup the current venv in your IDE to make it run permanently : https://www.notion.so/passcultureapp/Comment-installer-DBT-e25f7e24813c4d48baa43d641651caf8"
-
-install_ubuntu_libs:
-	sudo apt-get update -y
-	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev libmariadb-dev clang
-
-install_macos_libs:
-	brew install mysql-client@8.4 pkg-config
-
-
-#######################################################################################
-########                                 Utils                                 ########
-#######################################################################################
-
-_install_microservice:
-	# Recreate the venv
-	cd $(MICROSERVICE_PATH) && uv venv --python $(PHYTON_VERSION)
-
-	# Install the requirements
-	cd $(MICROSERVICE_PATH) && source .venv/bin/activate && uv pip sync $(REQUIREMENTS_NAME)
-
-_init_dbt:
-	cd orchestration/dags/data_gcp_dbt && (source .venv/bin/activate || echo "\n Warning: No .venv found in data_gcp_dbt. Ignore this if you are in the analytics team. \n")  && dbt deps && dbt debug
-
-_initiate_env:
-	@if [ ! -f .env.local ]; then cp .env.template .env.local; fi
-
-_get_gcp_credentials:
-ifeq (,$(wildcard ${HOME}/.config/gcloud/application_default_credentials.json))
-	gcloud auth application-default login
-endif
-
-
-delete_python_version_files:
-	@echo "Finding all .python-version files..."
-	@files=$$(find . -name ".python-version"); \
-	if [ -z "$$files" ]; then \
-		echo "No .python-version files found."; \
-	else \
-		echo "Found the following .python-version files:"; \
-		echo "$$files"; \
-		read -p "Do you want to delete these files? (yes/no): " confirm; \
-		if [ "$$confirm" = "yes" ]; then \
-			echo "Deleting .python-version files..."; \
-			find . -name ".python-version" -exec rm -f {} +; \
-			echo "Files deleted."; \
-		else \
-			echo "Deletion aborted."; \
-		fi \
-	fi
+	uv venv --python $(BASE_PHYTON_VERSION)
+	uv sync
 
 #######################################################################################
 ########                              Automations                              ########
@@ -136,28 +105,36 @@ create_microservice_etl_external:
 create_microservice_etl_internal:
 	MS_TYPE=etl_internal MS_NAME=$(MS_NAME) MS_BASE_PATH=jobs/etl_jobs/internal make create_microservice
 
+#######################################################################################
+########                              Pre-commit                              ########
+#######################################################################################
+
 ruff_fix:
-	ruff check --fix
-	ruff format
+	uv run ruff check --fix
+	uv run ruff format
 
 ruff_check:
-	ruff check
-	ruff format --check
+	uv run ruff check
+	uv run ruff format --check
 
 sqlfluff_fix:
-	cd orchestration/dags/data_gcp_dbt && sqlfluff fix --dialect bigquery
+	cd orchestration/dags/data_gcp_dbt && uv run sqlfluff fix --dialect bigquery
 
 sqlfluff_check:
-	cd orchestration/dags/data_gcp_dbt && sqlfluff lint echo $(./scripts/test.sh) --dialect bigquery
+	cd orchestration/dags/data_gcp_dbt && uv run sqlfluff lint echo $(./scripts/test.sh) --dialect bigquery
 
 sqlfmt_fix:
-	sqlfmt orchestration/dags --exclude "**/.venv/**" --exclude "**/venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"
+	uv run sqlfmt orchestration/dags --exclude "**/.venv/**" --exclude "**/venv/**" --exclude "orchestration/dags/data_gcp_dbt/target/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**"
 
 sqlfmt_check:
-	sqlfmt --check orchestration/dags --exclude "**/.venv/**" --exclude "**/venv/**"  --exclude "orchestration/dags/data_gcp_dbt/target/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**" --exclude "**/orchestration/dags/data_gcp_dbt/snapshots/**"
-
-docs_run:
-	source .venv/bin/activate && mkdocs serve
+	uv run sqlfmt --check orchestration/dags --exclude "**/.venv/**" --exclude "**/venv/**"  --exclude "orchestration/dags/data_gcp_dbt/target/**" --exclude "**/orchestration/dags/dependencies/applicative_database/sql/raw/**" --exclude "**/orchestration/dags/data_gcp_dbt/snapshots/**"
 
 precommit_docs_run:
 	pre-commit run --all-files --config .pre-commit-ci-dbt-config.yaml
+
+#######################################################################################
+########                              Documentation                            ########
+#######################################################################################
+
+docs_run:
+	uv run mkdocs serve

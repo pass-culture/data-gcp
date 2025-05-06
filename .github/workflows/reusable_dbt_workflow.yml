@@ -58,10 +58,10 @@ jobs:
           python-version: '3.10'
       - uses: yezz123/setup-uv@v4
 
-      - name: Install Default Python requirements
-        run: uv pip install --system -r requirements.txt
+      - name: Install Default Python requirements for root project
+        run: uv sync
 
-      - name: Install Python requirements
+      - name: Install Python requirements for orchestration project (airflow + dbt)
         run: uv pip install --system -r ${{ env.AIRFLOW_HOME }}orchestration-requirements.txt
 
       - name: "Authenticate with Google Cloud"
@@ -157,7 +157,7 @@ jobs:
           ALL_CHANGED_FILES: ${{ steps.files_changes.outputs.all_changed_files }}
         run: |
           echo ${ALL_CHANGED_FILES}
-          pre-commit run --files ${ALL_CHANGED_FILES} --config .pre-commit-ci-dbt-config.yaml
+          uv run pre-commit run --files ${ALL_CHANGED_FILES} --config .pre-commit-ci-dbt-config.yaml
 
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}

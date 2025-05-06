@@ -1,147 +1,162 @@
-# Orchestration
+# Airflow Orchestration
 
-Repo pour l'orchestration sur Cloud Composer.
+Repository for orchestrating workflows using Airflow with Kubernetes deployment.
 
-## Structure du dossier
+---
 
-Les fichiers sont organisés de la manière suivante :
+## 📁 Project Structure
 
-- Les dags sont dans `dags/jobs` (2 DAGs sont dans `dags/`).
-- Les fonctions communes à tous les DAGs (~utils) sont dans `dags/common`.
-- Les requêtes SQL ainsi que la config python spécifique d'un DAG sont dans `dags/dependencies/`.
-- La config DBT est dans `dags/data_gcp_dbt`.
-- Les tests sont dans le dossier `tests/`.
+* **`airflow/`** – Contains Airflow configuration files.
+* **`dags/`** – DAGs deployed to a GCS bucket, accessible by the Airflow instance. (See [DAG Directory Structure](#dags-directory-structure))
+* **`k8s-airflow/`** – Kubernetes configs to launch Airflow. (See [Related Notion Doc](https://www.notion.so/passcultureapp/AIRFLOW-Kubernetes-1a4ad4e0ff988184b503ec43c9dd2691))
+* **`plugins/`** – Custom Airflow plugins (e.g. dbt documentation).
+* **`tests/`** – Unit and integration tests.
 
-## Configuration, Déploiement et Lancement des DAGs sur Cloud Composer (Airflow sur GCP)
+---
 
-### Déploiement des DAGs
+## 📂 DAGs Directory Structure
 
-#### Déploiement automatique
+Inside the `dags/` directory:
 
-Lorsque l'on merge sur master les dags sont automatiquement déployés sur le cloud composer grâce à Github actions( [Voir doc](../README.md#cd)).
+* **`jobs/`** – DAG definition files.
+* **`dependencies/`** – DAG dependency modules.
+* **`common/`** – Shared components like hooks, macros, operators.
+* **`data_gcp_dbt/`** – Files related to dbt integration with GCP.
 
-Le job met à jour les fichiers modifiés dans le bucket du cloud composer puis vérifie qu'airflow charge bien les dags. Pour voir quels fichiers ont été modifiés, il faut regarder l'output de l'étape `Deploy to composer` du job `composer-deploy`.
+---
 
-#### Déploiement manuel
+## 🚀 DAG Deployment & Execution (Kubernetes)
 
-```bash
-cd orchestration/dags
+### 🔄 Automatic Deployment
 
-gcloud composer environments storage dags import \
-    --environment data-composer-{ENV} \
-    --location europe-west1 \
-    --source FILE_PATH_TO_UPLOAD
-```
+When merging to `master` or `production`, DAGs are automatically deployed to Cloud Composer using GitHub Actions.
+See [CD Documentation](../README.md#cd) for more.
 
-où `{ENV}` est `dev`, `stg` ou `prod` et `FILE_PATH_TO_UPLOAD` est le chemin du fichier à envoyer. Le chemin de référence est dags, donc pour envoyer les dependencies il faut envoyer `--source dags/dependencies`.
+Deployment process:
 
-### Lancement des DAGs
+* Updates modified files in the bucket `airflow-data-bucket-{ENV}`.
+* Confirms that Airflow successfully loads the DAGs.
 
-1. Aller sur l'instance de GCP Composer
-2. Dans l'onglet `ENVIRONMENT CONFIGURATION`, cliquer sur le lien Google storage de la section `Airflow web UI`
-3. Sélectionner le DAG et le lancer
+### 🛠️ Trigger DAGs Manually
 
-### Variables d'environnement
+To manually access or trigger DAGs, use the following Airflow instances:
 
-<https://cloud.google.com/composer/docs/how-to/managing/environment-variables?hl=fr#adding_and_updating_environment_variables>
+* **EHP**: [https://airflow-{env}.data.ehp.passculture.team](https://airflow-{env}.data.ehp.passculture.team)
+* **Production**: [https://airflow.data.passculture.team](https://airflow.data.passculture.team)
 
-Pour voir, ajouter ou modifier les variables d'environement, il faut aller dans la console gcp, sur la page de l'instance de composer puis dans l'onglet variables d'environnement.
+---
 
-### Installer des dépendances
+## 🧪 Local Airflow Setup (with Docker)
 
-<https://cloud.google.com/composer/docs/how-to/using/installing-python-dependencies?hl=fr#install-package>
+To run Airflow locally for development:
 
-A partir de la console gcp, dans l'instance de composer, ajouter les dépendances avec leur version.
+---
 
-## Configuration, Déploiement et Lancement des DAGs sur le Airflow local
+### 🔐 Prerequisites: GCP Auth & Environment Variables
 
-On peut également choisir de lancer les DAGs en local. Cela permet notamment d'itérer plus vite car on n'a pas besoin de déployer les fichiers sur le cloud composer : ceux-ci sont automatiquement scannés par Airflow.
+1. **If behind a Netskope proxy**:
 
-### Installer Airflow localement (via Docker)
+   * Locate the **bundled/combined** certificate file for your machine.
+     If unsure, check this [Notion page](https://www.notion.so/passcultureapp/Proxyfication-des-outils-du-pass-d1f0da09eafb4158904e9197bbe7c1d4?pvs=4#10cad4e0ff98805ba61efcea26075d65).
+   * Place it in:
 
-On peut qu'avoir une version de Airflow installé en local. Pour pallier ça, il est possible de lancer Airflow dans un conteneur Docker, ce qui permet d'éviter d'avoir des side-effects sur la machine locale.
+     ```
+     /airflow/etc/nscacert_combined.pem
+     ```
 
-#### Prérequis : récupération des Credentials GCP et des variables d'environnement
+2. **Environment file setup**:
 
-1. Créer une clé en suivant ce [standard](https://www.notion.so/passcultureapp/R-cuperer-une-clef-SA-pour-Airflow-en-Local-ea66a948a6e644628bafd05e8f0c69ef)
-2. Renommer la clé en `sa.gcpkey.json` et la mettre dans `/airflow/etc/sa.gcpkey.json`
-3. Uniquement si la machine locale est derrière un Proxy Netskope:
-    - Récupérer le certificat **bundled** ou **combiné** de la machine locale. Voir [cette page notion](https://www.notion.so/passcultureapp/Proxyfication-des-outils-du-pass-d1f0da09eafb4158904e9197bbe7c1d4?pvs=4#10cad4e0ff98805ba61efcea26075d65) si on ne trouve pas tout de suite le fichier `*_combined.pem`.
-    - Mettre le fichier du certificat bundled dans `/airflow/etc/nscacert_combined.pem `
-4. Récupérer le fichier **.env** et le mettre dans `orchestration/.env`, puis:
-   - Modifier les valeurs de `_AIRFLOW_WWW_USER_USERNAME` et `_AIRFLOW_WWW_USER_PASSWORD` dans le fichier .env pour mettre un username et password arbitraires.
-   - Modifier la valeur du `DAG_FOLDER` en mettant le path vers le folder local.
-   - Modifier la valeur de `NETWORK_MODE`:
-        - `NETWORK_MODE="proxy"`  si vous êtes sous un proxy
-        - `NETWORK_MODE="default"`  sinon
-    - En fonction de si l'on souhaite lancer airflow en `dev`ou en `stg`, décommenter les variables :
-        - En `dev`:
-        ```
-        ENV_SHORT_NAME=dev
-        DATA_GCS_BUCKET_NAME=data-bucket-dev
-        ```
-        - en `stg`:
-        ```
-        ENV_SHORT_NAME=stg
-        DATA_GCS_BUCKET_NAME=data-bucket-stg
-        ```
+   * Copy `.env.template` to `orchestration/.env`
+   * Update variable values accordingly.
 
-### Premier lancement (La première fois uniquement)
-sur macos installer la lib coreutils `brew install coreutils`
+#### 🛠️ Environment Variable Tips
+
+* `_AIRFLOW_WWW_USER_USERNAME` / `_AIRFLOW_WWW_USER_PASSWORD`: set arbitrarily
+* `AIRFLOW__CORE__FERNET_KEY` / `AIRFLOW__WEBSERVER__SECRET_KEY`: arbitrary strings
+* `NETWORK_MODE`:
+
+  * `"proxy"` if using a proxy
+  * `"default"` otherwise
+* For environment:
+
+  * **dev**:
+
+    ```env
+    ENV_SHORT_NAME=dev
+    GOOGLE_CLOUD_PROJECT=passculture-data-ehp
+    ```
+  * **stg**:
+
+    ```env
+    ENV_SHORT_NAME=stg
+    GOOGLE_CLOUD_PROJECT=passculture-data-ehp
+    ```
+---
+
+## 🏗️ Build & Run
+
+### 🔧 Build the Docker image
+
+⚠️ This will ask you to authenticate with GCP with your gadmin account.
 
 ```sh
 make build
 ```
 
-### Troubleshooting Dockerfile
-* Si on  veut  build le dockerfile avec un arg spécifique:
+### ▶️ Start Airflow
+
+⚠️ This will ask you to authenticate with GCP with your gadmin account.
+
+```sh
+make start
 ```
-docker build -t <nom de l'image docker> <path vers le dockerfile> --build-arg NETWORK_MODE=<proxy ou default>
+
+Then access the Airflow UI at:
+
+```sh
+http://localhost:8080
 ```
-* Si on  veut  build le dockerfile avec une target spécifique (le dockerfile est en [multistage](https://docs.docker.com/build/building/multi-stage/)):
-```
-docker build --no-cache -f Dockerfile --target <nom de la target> .
-```
-### Lancement de l'app
 
-1. Lancer les différents conteneurs
+---
 
-    ```sh
-    make start
-    ```
-
-2. Se connecter au Airflow webserver
-
-    ```sh
-    > `http://localhost:8080`
-    ```
-
-#### Stop
-
-Pour éteindre les conteneurs :
+## 🛑 Stop Services
 
 ```sh
 make stop
 ```
 
-#### Changer les variables d'environnement
+---
 
-Pour changer les variables d'environnement, il faut modifier le fichier `orchestration/.env` et relancer le build des conteneurs :
+## 🔁 Update Environment Variables
+
+After modifying `orchestration/.env`, rebuild with:
 
 ```sh
 make build_with_cache
 ```
 
-#### Troubleshooting
+---
 
-- Pour voir les logs dans les conteneurs :
+## 🧹 Troubleshooting
 
-    ```sh
-    make show_airflow_logs
-    ```
+### View logs from containers:
 
-- Pour supprimer les conteneurs (et les données dans la DB) :
+```sh
+make show_airflow_logs
+```
 
-    ```sh
-    docker-compose down
-    ```
+---
+
+## 🐳 Dockerfile Tips
+
+### Build with specific `NETWORK_MODE`:
+
+```sh
+docker build -t <docker-image-name> <dockerfile-path> --build-arg NETWORK_MODE=<proxy|default>
+```
+
+### Build a specific target (multi-stage):
+
+```sh
+docker build --no-cache -f Dockerfile --target <target-name> .
+```

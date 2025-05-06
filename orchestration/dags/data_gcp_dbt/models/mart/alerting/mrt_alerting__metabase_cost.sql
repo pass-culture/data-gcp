@@ -6,29 +6,30 @@
     )
 }}
 
-WITH temp_card AS (
-  SELECT DISTINCT
-    card_id,
-    dashboard_name,
-    ROW_NUMBER() OVER (PARTITION BY card_id ORDER BY date DESC) AS rank,
-    MAX(date) OVER (PARTITION BY card_id) AS consultation_date
-  FROM {{ ref("mrt_monitoring__metabase_cost") }}
-  WHERE
-    dashboard_id IS NOT null
-)
+with
+    temp_card as (
+        select distinct
+            card_id,
+            dashboard_name,
+            row_number() over (partition by card_id order by date desc) as rank,
+            max(date) over (partition by card_id) as consultation_date
+        from {{ ref("mrt_monitoring__metabase_cost") }}
+        where dashboard_id is not null
+    )
 
-SELECT DISTINCT
-  cost.card_name,
-  cost.card_id,
-  temp_card.dashboard_name,
-  SUM(cost.total_queries) OVER (PARTITION BY cost.card_id) AS total_views,
-  COUNT(DISTINCT cost.metabase_user_id) OVER (PARTITION BY cost.card_id) AS total_distinct_users,
-  SUM(cost.cost_euro) OVER (PARTITION BY cost.card_id) AS total_cost,
-  AVG(cost.cost_euro) OVER (PARTITION BY cost.card_id) AS avg_cost
-FROM {{ ref("mrt_monitoring__metabase_cost") }} AS cost
-LEFT JOIN temp_card
-ON cost.card_id = temp_card.card_id
-AND temp_card.rank=1
-WHERE cost.card_id IS NOT null
-AND LOWER(cost.card_name) NOT LIKE '%archive%'
-AND temp_card.consultation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+select distinct
+    cost.card_name,
+    cost.card_id,
+    temp_card.dashboard_name,
+    sum(cost.total_queries) over (partition by cost.card_id) as total_views,
+    count(distinct cost.metabase_user_id) over (
+        partition by cost.card_id
+    ) as total_distinct_users,
+    sum(cost.cost_euro) over (partition by cost.card_id) as total_cost,
+    avg(cost.cost_euro) over (partition by cost.card_id) as avg_cost
+from {{ ref("mrt_monitoring__metabase_cost") }} as cost
+left join temp_card on cost.card_id = temp_card.card_id and temp_card.rank = 1
+where
+    cost.card_id is not null
+    and lower(cost.card_name) not like '%archive%'
+    and temp_card.consultation_date >= date_sub(current_date(), interval 7 day)

@@ -21,7 +21,7 @@ from airflow import DAG
 from airflow.models import Param
 
 DEFAULT_REGION = "europe-west1"
-GCE_INSTANCE = f"extract-items-embeddings-{ENV_SHORT_NAME}"
+GCE_INSTANCE = "extract-items-embeddings"
 BASE_PATH = "data-gcp/jobs/ml_jobs/embeddings"
 DATE = "{{ yyyymmdd(ds) }}"
 default_args = {

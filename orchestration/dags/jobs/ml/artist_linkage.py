@@ -33,7 +33,7 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
 from airflow.utils.task_group import TaskGroup
 
 DEFAULT_REGION = "europe-west1"
-GCE_INSTANCE = f"artist-linkage-{ENV_SHORT_NAME}"
+GCE_INSTANCE = "artist-linkage"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
 DAG_NAME = "artist_linkage"
 

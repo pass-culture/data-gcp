@@ -41,7 +41,6 @@ class GCEHook(GoogleBaseHook):
         source_image_type: CPUImage = CPUImage(),
         gcp_conn_id: str = "google_cloud_default",
         disk_size_gb: str = "100",
-        delegate_to: str = None,
         impersonation_chain: str = None,
     ):
         self.gcp_project = gcp_project
@@ -52,7 +51,6 @@ class GCEHook(GoogleBaseHook):
         self.source_image_type = source_image_type
         super().__init__(
             gcp_conn_id=gcp_conn_id,
-            delegate_to=delegate_to,
             impersonation_chain=impersonation_chain,
         )
 

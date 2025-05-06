@@ -85,29 +85,25 @@ Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestrati
 
 - Installation du projet :
 
-  - Pour les Data Analysts :
-
     ```bash
-    make install_analytics
+    make install
     ```
 
-      > Cette installation est simplifiée pour les Data Analysts, afin de mettre tous les requirements nécecssaires à la DA dans un même venv. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
+  > Cette installation est simplifiée, afin de mettre tous les requirements nécecssaires concernant la partie `orchestration` dans un même venv. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
 
-  - Pour la team DE/DS
 
-    - Pour les Data Scientists :
+#### 2. Installation d'un sous-environnement spécifique
 
-      ```bash
-      make install_science
-      ```
+- Pour installer un sous-environnement spécifique d'un micro service :
 
-    - Pour les Data Engineers :
+  ```bash
+  MICROSERVICE_PATH=jobs/ml_jobs/retrieval_vector
+  cd $(MICROSERVICE_PATH) && uv sync
+  ```
 
-      ```bash
-      make install_engineering
-      ```
+  > Ces commande créé un sous-environnement virtuel.
 
-    > Ces commande créé différents sous-environnements virtuels pour les différents types de jobs spécifiés dans le fichier `Makefile`. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
+
 
 ##### ⚒️ Troubleshooting ⚒️
 

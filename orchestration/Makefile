@@ -1,5 +1,12 @@
 SHELL := /bin/bash
 
+sync:
+	uv sync --no-cache-dir
+
+compile:
+	uv pip compile pyproject.toml -o airflow/orchestration-requirements.txt --python-platform=linux
+	uv pip compile pyproject.toml -o k8s-airflow/k8s-worker-requirements.txt --python-platform=linux
+
 build:
 	docker compose down -v;
 	docker compose build --no-cache;

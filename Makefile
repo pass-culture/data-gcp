@@ -2,6 +2,7 @@
 ########                    Install and setup the project                      ########
 #######################################################################################
 SHELL := /bin/bash
+BASE_PYTHON_VERSION := 3.10
 
 export PERSONAL_DBT_USER :=
 
@@ -35,38 +36,34 @@ configure_personal_user:
 	echo "Please run 'source $$shell_file' or restart your terminal to apply changes."
 
 
-
-install_prerequisites:
-	curl -LsSf https://astral.sh/uv/install.sh | sh
-	echo -e "\n \n Please restart you shell in order to allow uv commands \n \n"
-
-
-install:
+_base_install:
+	make configure_personal_user
 	# Log in with GCP credentials if NO_GCP_INIT is not 1
 	@if [ "$(NO_GCP_INIT)" != "1" ]; then \
 		make _get_gcp_credentials; \
 	fi
-	make _initiate_env
-	make configure_personal_user
+
 	curl -LsSf https://astral.sh/uv/install.sh | sh
-	MICROSERVICE_PATH=. PHYTON_VERSION=3.10 REQUIREMENTS_NAME=requirements.txt make _install_microservice
-	source .venv/bin/activate && pre-commit install
+	uv venv --python $(BASE_PHYTON_VERSION)
+	source .venv/bin/activate && uv sync
 
-install_engineering:
-	make install
-	MICROSERVICE_PATH=orchestration PHYTON_VERSION=3.10 REQUIREMENTS_NAME=airflow/orchestration-requirements.txt make _install_microservice
-	MICROSERVICE_PATH=orchestration/dags/data_gcp_dbt PHYTON_VERSION=3.10 REQUIREMENTS_NAME=dbt-requirements.txt make _install_microservice
-	make _init_dbt
+_dbt_install:
+	source .venv/bin/activate && uv pip install -r orchestration/airflow/orchestration-requirements.txt
+	source .venv/bin/activate && cd orchestration/dags/data_gcp_dbt && dbt deps && dbt debug
 
-install_science:
-	make install_engineering
-	MICROSERVICE_PATH=jobs/ml_jobs/algo_training PHYTON_VERSION=3.10 REQUIREMENTS_NAME=requirements.txt make _install_microservice
+install:
+	make _base_install
+	make _dbt_install
+
+	echo "Please setup the current venv in your IDE to make it run permanently : https://www.notion.so/passcultureapp/Comment-installer-DBT-e25f7e24813c4d48baa43d641651caf8"
+
 
 install_analytics:
 	make install
-	source .venv/bin/activate && uv pip install -r orchestration/dags/data_gcp_dbt/dbt-requirements.txt
-	source .venv/bin/activate && make _init_dbt
-	echo "Please setup the current venv in your IDE to make it run permanently : https://www.notion.so/passcultureapp/Comment-installer-DBT-e25f7e24813c4d48baa43d641651caf8"
+
+install_engineering:
+	make install
+
 
 install_ubuntu_libs:
 	sudo apt-get update -y
@@ -80,18 +77,8 @@ install_macos_libs:
 ########                                 Utils                                 ########
 #######################################################################################
 
-_install_microservice:
-	# Recreate the venv
-	cd $(MICROSERVICE_PATH) && uv venv --python $(PHYTON_VERSION)
-
-	# Install the requirements
-	cd $(MICROSERVICE_PATH) && source .venv/bin/activate && uv pip sync $(REQUIREMENTS_NAME)
-
 _init_dbt:
-	cd orchestration/dags/data_gcp_dbt && (source .venv/bin/activate || echo "\n Warning: No .venv found in data_gcp_dbt. Ignore this if you are in the analytics team. \n")  && dbt deps && dbt debug
-
-_initiate_env:
-	@if [ ! -f .env.local ]; then cp .env.template .env.local; fi
+	cd orchestration/dags/data_gcp_dbt && dbt deps && dbt debug
 
 _get_gcp_credentials:
 ifeq (,$(wildcard ${HOME}/.config/gcloud/application_default_credentials.json))

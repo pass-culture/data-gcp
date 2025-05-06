@@ -46,6 +46,8 @@ def access_secret_data(
         return secret_data
     except (DefaultCredentialsError, PermissionDenied, NotFound):
         return default
+    except Exception:
+        return default
 
 
 def write_secret_key(

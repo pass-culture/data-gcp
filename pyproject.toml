@@ -1,3 +1,28 @@
+[project]
+name = "data-gcp"
+version = "0.1.1"
+description = "Data Engineering GCP Project for Pass Culture"
+requires-python = ">=3.10"
+dependencies = [
+    # mkdocs
+    "mkdocs-material==9.5.42",
+    "mkdocs-awesome-pages-plugin==2.9.3",
+    "mkdocs-include-markdown-plugin",
+    "pandas==2.2.3",
+    "tabulate==0.9.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "ruff==0.5.7",
+    "typer==0.12.3",
+    "pre-commit~=2.21",
+    "shandy-sqlfmt[jinjafmt]==0.23.2",
+    "sqlfluff==3.1.1",
+    "sqlfluff-templater-dbt==3.1.1",
+]
+
+
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.
 [tool.ruff]

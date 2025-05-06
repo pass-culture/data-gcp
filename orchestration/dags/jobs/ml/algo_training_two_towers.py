@@ -32,7 +32,6 @@ from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
 from airflow.utils.task_group import TaskGroup
@@ -183,14 +182,23 @@ with DAG(
         split_tasks = {}
         for dataset in ["training", "validation", "test"]:
             # The params.input_type tells the .sql files which table to take as input
-            split_tasks[dataset] = BigQueryExecuteQueryOperator(
+            split_tasks[dataset] = BigQueryInsertJobOperator(
                 task_id=f"create_{dataset}_table",
-                sql=(
-                    IMPORT_TRAINING_SQL_PATH / f"recommendation_{dataset}_data.sql"
-                ).as_posix(),
-                write_disposition="WRITE_TRUNCATE",
-                use_legacy_sql=False,
-                destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{DATE}_recommendation_{dataset}_data",
+                configuration={
+                    "query": {
+                        "query": (
+                            IMPORT_TRAINING_SQL_PATH
+                            / f"recommendation_{dataset}_data.sql"
+                        ).as_posix(),
+                        "useLegacySql": False,
+                        "destinationTable": {
+                            "projectId": GCP_PROJECT_ID,
+                            "datasetId": BIGQUERY_TMP_DATASET,
+                            "tableId": f"{DATE}_recommendation_{dataset}_data",
+                        },
+                        "writeDisposition": "WRITE_TRUNCATE",
+                    }
+                },
                 dag=dag,
             )
 

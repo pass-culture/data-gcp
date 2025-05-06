@@ -5,20 +5,19 @@ volumes:
 x-airflow-common: &airflow-common
   environment: &airflow-common-env
     LOCAL_ENV: ${LOCAL_ENV:-1}
-    GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
     GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
     AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-}
     AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: ${AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT:-}
     AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY:-}
     ENV_SHORT_NAME: ${ENV_SHORT_NAME:-}
     APPLICATIVE_EXTERNAL_CONNECTION_ID: ${APPLICATIVE_EXTERNAL_CONNECTION_ID:-}
-    GCE_SA: ${GCE_SA:-}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./plugins:/opt/airflow/plugins
     - ./airflow/config/airflow.cfg:/opt/airflow/airflow.cfg
     - ./airflow/logs:/opt/airflow/logs
     - ./dags/data_gcp_dbt:/opt/airflow/data_gcp_dbt
+    - ~/.config/gcloud:/root/.config/gcloud
   user: root
   depends_on:
     - postgres

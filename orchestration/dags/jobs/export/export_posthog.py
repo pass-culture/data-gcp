@@ -21,7 +21,6 @@ from common.utils import get_airflow_schedule
 from airflow import DAG
 from airflow.models import Param
 from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
 
@@ -102,13 +101,21 @@ for job_name, table_name in TABLE_PARAMS.items():
         params_instance = "{{ params.instance_name }}"
         instance_name = f"{job_name}-{params_instance}"
         storage_path = f"{DAG_CONFIG['STORAGE_PATH']}/{DATE}_{table_config_name}/"
-        export_task = BigQueryExecuteQueryOperator(
+        export_task = BigQueryInsertJobOperator(
             task_id=f"{table_config_name}",
-            sql=f"""SELECT * FROM {DATASET_ID}.{table_name} """
-            """WHERE event_date = DATE("{{ add_days(ds, params.days) }}")""",
-            write_disposition="WRITE_TRUNCATE",
-            use_legacy_sql=False,
-            destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{table_id}",
+            configuration={
+                "query": {
+                    "query": f"""SELECT * FROM {DATASET_ID}.{table_name} """
+                    """WHERE event_date = DATE("{{ add_days(ds, params.days) }}")""",
+                    "useLegacySql": False,
+                    "destinationTable": {
+                        "projectId": GCP_PROJECT_ID,
+                        "datasetId": BIGQUERY_TMP_DATASET,
+                        "tableId": table_id,
+                    },
+                    "writeDisposition": "WRITE_TRUNCATE",
+                }
+            },
             dag=dag,
         )
 

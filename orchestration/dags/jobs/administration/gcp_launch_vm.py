@@ -58,7 +58,7 @@ dag_doc = doc_md = """
 
 
 with DAG(
-    "launch_vm",
+    "gcp_launch_vm",
     default_args=default_args,
     description="Launch a vm to work on",
     schedule=None,

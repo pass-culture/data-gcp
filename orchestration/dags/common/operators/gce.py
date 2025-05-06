@@ -211,6 +211,9 @@ class BaseSSHGCEOperator(BaseOperator):
             self.run_ssh_client_command(hook, context, retry=retry + 1)
 
     def execute(self, context):
+        self.log.info(
+            f"Connecting to instance {self.instance_name} in zone {self.gce_zone} with project {GCP_PROJECT_ID}"
+        )
         hook = ComputeEngineSSHHook(
             instance_name=self.instance_name,
             zone=self.gce_zone,

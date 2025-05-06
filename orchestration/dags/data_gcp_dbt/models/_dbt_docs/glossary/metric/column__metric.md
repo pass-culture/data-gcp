@@ -82,6 +82,21 @@ title: Metrics
 {% docs column__ratio_beneficiary_students %}The ratio of beneficiary students for the educational institution.{% enddocs %}
 {% docs column__mean_stock_price_per_item %} The average stock price for the item. {% enddocs %}
 {% docs column__total_diversity_score %} The total diversity score of the user or the deposit {% enddocs %}
+{% docs column__total_venue_20_km %} The total distinct number of venues located under a 20 kilometers area around the centroid of the IRIS. {% enddocs %}
+{% docs column__total_venue_5_km %} The total distinct number of venues located under a 5 kilometers area around the centroid of the IRIS. {% enddocs %}
+{% docs column__total_population_15_years_or_more %} The total population over 15 years living in the IRIS. {% enddocs %}
+{% docs column__total_population_11_17_years %} The total population between 11 and 17 years living in the IRIS. {% enddocs %}
+{% docs column__total_population_18_24_years %} The total population between 18 ans 24 years living in the IRIS. {% enddocs %}
+{% docs column__pct_csp_1 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 1 - Farmers. {% enddocs %}
+{% docs column__pct_csp_2 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 2 - Craftsmen, Traders, Business Leaders. {% enddocs %}
+{% docs column__pct_csp_3 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 3 - Executives and Higher Intellectual Professions. {% enddocs %}
+{% docs column__pct_csp_4 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 4 - Intermediate professions. {% enddocs %}
+{% docs column__pct_csp_5 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 5 - Employees. {% enddocs %}
+{% docs column__pct_csp_6 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 6 - Workers. {% enddocs %}
+{% docs column__pct_csp_7 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 7 - Retired. {% enddocs %}
+{% docs column__pct_csp_8 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 8 - Others without professional activity. {% enddocs %}
+{% docs column__pct_french_population %} The percentage of the population that have French nationality, all ages included. {% enddocs %}
+{% docs column__pct_foreign_population %} The percentage of the population that have foreign nationality, all ages included. {% enddocs %}
 {% docs column__total_session_display %} The total number of sessions with a display of a specific object like module_id or offer_id. {% enddocs %}
 {% docs column__total_session_with_click %} The total number of sessions with a click on a specific object like module_id or offer_id. {% enddocs %}
 {% docs column__total_sesh_consult_offer %} The total number of sessions with a consultation related to a specific object like module_id or offer_id. {% enddocs %}

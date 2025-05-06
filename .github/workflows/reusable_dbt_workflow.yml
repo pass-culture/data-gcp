@@ -3,7 +3,7 @@ name: "DBT building job"
 on:
   workflow_call:
     inputs:
-      TARGET_COMPOSER_BUCKET:
+      TARGET_AIRFLOW_BUCKET:
         type: string
         required: true
       ENV_SHORT_NAME:
@@ -58,10 +58,10 @@ jobs:
           python-version: '3.10'
       - uses: yezz123/setup-uv@v4
 
-      - name: Install Default Python requirements
-        run: uv pip install --system -r requirements.txt
+      - name: Install Default Python requirements for root project
+        run: uv sync
 
-      - name: Install Python requirements
+      - name: Install Python requirements for orchestration project (airflow + dbt)
         run: uv pip install --system -r ${{ env.AIRFLOW_HOME }}orchestration-requirements.txt
 
       - name: "Authenticate with Google Cloud"
@@ -77,11 +77,11 @@ jobs:
       - name: "Pull run artifacts"
         working-directory:  ${{ env.DBT_FOLDER }}
         env:
-          COMPOSER_DAGS_BUCKET: ${{ inputs.TARGET_COMPOSER_BUCKET }}
+          TARGET_AIRFLOW_BUCKET: ${{ inputs.TARGET_AIRFLOW_BUCKET }}
         run: |
           mkdir env-run-artifacts
-          gsutil cp gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json env-run-artifacts/manifest.json
-          gsutil cp gs://$COMPOSER_DAGS_BUCKET/data/target/run_results.json env-run-artifacts/run_results.json
+          gsutil cp gs://$TARGET_AIRFLOW_BUCKET/data/target/manifest.json env-run-artifacts/manifest.json
+          gsutil cp gs://$TARGET_AIRFLOW_BUCKET/data/target/run_results.json env-run-artifacts/run_results.json
           echo $(ls env-run-artifacts)
       - name: "Install dbt dependencies"
         working-directory: ${{ env.DBT_FOLDER }}
@@ -157,7 +157,7 @@ jobs:
           ALL_CHANGED_FILES: ${{ steps.files_changes.outputs.all_changed_files }}
         run: |
           echo ${ALL_CHANGED_FILES}
-          pre-commit run --files ${ALL_CHANGED_FILES} --config .pre-commit-ci-dbt-config.yaml
+          uv run pre-commit run --files ${ALL_CHANGED_FILES} --config .pre-commit-ci-dbt-config.yaml
 
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}

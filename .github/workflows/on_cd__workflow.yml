@@ -105,6 +105,22 @@ jobs:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
+  airflow-deploy-on-prod:
+    if: github.ref == 'refs/heads/production'
+    uses: ./.github/workflows/reusable_deploy_composer.yml
+    needs: [test-orchestration, test-jobs, linter, airflow-deploy-on-dev]
+    with:
+      GITHUB_ENV_NAME: "production"
+      ENV_SHORT_NAME: "prod"
+      COMPOSER_DAGS_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_PROD }}
+      AIRFLOW_NAME: "gke-data-airflow-prod"
+      DATA_GCP_PROJECT: "passculture-data-prod"
+      APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_PROD }}
+      IS_COMPOSER: false
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+
   mkdocs-deploy-on-prod:
     if: github.ref == 'refs/heads/production'
     uses: ./.github/workflows/reusable_deploy_mkdocs.yml

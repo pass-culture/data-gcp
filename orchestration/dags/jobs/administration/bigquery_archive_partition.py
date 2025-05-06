@@ -13,6 +13,7 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
+from common.utils import get_airflow_schedule
 from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
@@ -80,7 +81,7 @@ default_dag_args = {
 dag = DAG(
     DAG_NAME,
     default_args=default_dag_args,
-    schedule_interval=SCHEDULE_DICT.get(DAG_NAME, None),
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT.get(DAG_NAME, None)),
     catchup=False,
     params={
         "branch": Param(

@@ -267,3 +267,23 @@ def format_names(artist_df: pd.DataFrame) -> pd.DataFrame:
             lambda s: " ".join(sorted(rapidfuzz.utils.default_process(s).split()))
         )
     )
+
+
+def normalize_string_series(s: pd.Series) -> pd.Series:
+    """
+    Normalize a pandas Series of strings by converting to lowercase, removing accents,
+    encoding to ASCII, stripping whitespace, and removing periods.
+    Args:
+        s (pd.Series): A pandas Series containing strings to be normalized.
+    Returns:
+        pd.Series: A pandas Series with normalized strings.
+    """
+
+    return (
+        s.str.lower()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+        .str.strip()
+        .str.replace(".", "")
+    )

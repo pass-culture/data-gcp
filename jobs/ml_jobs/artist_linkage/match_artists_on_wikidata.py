@@ -6,6 +6,7 @@ import typer
 from loguru import logger
 
 from utils.gcs_utils import get_last_date_from_bucket
+from utils.preprocessing_utils import normalize_string_series
 
 app = typer.Typer()
 
@@ -115,26 +116,6 @@ def match_namesakes_per_category(
             )
         )
     return pd.concat(matched_df_list)
-
-
-def normalize_string_series(s: pd.Series) -> pd.Series:
-    """
-    Normalize a pandas Series of strings by converting to lowercase, removing accents,
-    encoding to ASCII, stripping whitespace, and removing periods.
-    Args:
-        s (pd.Series): A pandas Series containing strings to be normalized.
-    Returns:
-        pd.Series: A pandas Series with normalized strings.
-    """
-
-    return (
-        s.str.lower()
-        .str.normalize("NFKD")
-        .str.encode("ascii", errors="ignore")
-        .str.decode("utf-8")
-        .str.strip()
-        .str.replace(".", "")
-    )
 
 
 def preprocess_artists(df: pd.DataFrame) -> pd.DataFrame:

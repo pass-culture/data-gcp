@@ -87,7 +87,7 @@ models:
         +schema: backend_{{ target.name }}
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       ministry:
-        +tags: "monthly"
+        +tags: ["monthly", "partners_export", "{{ 'exclude_ci' if target.name != 'prod' else '' }}"]
         +labels:
           schedule: "monthly"
     machine_learning:

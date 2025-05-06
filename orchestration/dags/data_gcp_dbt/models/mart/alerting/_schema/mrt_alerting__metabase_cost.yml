@@ -10,3 +10,9 @@ models:
               min_value: 0
               max_value: 0.4
               inclusive: true
+      - name: total_cost
+      - name: card_name
+      - name: total_distinct_users
+      - name: total_views
+      - name: card_id
+      - name: dashboard_name

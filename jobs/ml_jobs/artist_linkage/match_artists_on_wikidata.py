@@ -118,28 +118,10 @@ def match_namesakes_per_category(
 
 
 def preprocess_artists(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Preprocesses the artist names in the given DataFrame.
-    This function performs the following steps:
-    1. Normalizes the 'first_artist' column.
-    2. Splits the normalized 'first_artist' into two parts based on the comma.
-    3. Creates an 'alias' column by combining the two parts if the second part is not NaN.
-    4. Adds a temporary ID column based on the DataFrame's index.
-    5. Drops the intermediate columns used for processing.
-    Args:
-        df (pd.DataFrame): The input DataFrame containing artist names.
-    Returns:
-        pd.DataFrame: The preprocessed DataFrame with the new 'alias' and 'tmp_id' columns.
-    """
-
     return df.assign(
-        part_1=lambda df: df.first_artist.str.split(",").str[0],
-        part_2=lambda df: df.first_artist.str.split(",").str[1],
-        alias=lambda df: df.part_1.where(
-            df.part_2.isna(), df.part_2.astype(str) + " " + df.part_1.astype(str)
-        ),
+        alias=lambda _df: _df.preprocessed_artist_name,
         tmp_id=lambda df: df.index,
-    ).drop(columns=["part_1", "part_2"])
+    )
 
 
 def preprocess_wiki(df: pd.DataFrame) -> pd.DataFrame:

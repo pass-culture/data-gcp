@@ -2,8 +2,6 @@ import string
 from typing import TypedDict
 
 import pandas as pd
-import rapidfuzz
-from unidecode import unidecode
 
 from constants import TOTAL_OFFER_COUNT
 
@@ -137,7 +135,6 @@ def _remove_single_characters(artist_df: pd.DataFrame) -> pd.DataFrame:
         .str.replace(pattern, "", regex=True)
         .str.replace(r"\s+", " ", regex=True)
         .str.strip()
-        .pipe(normalize_string_series)
     )
 
 
@@ -230,15 +227,15 @@ def _filter_artists(
     too_many_words_indexes = (
         artist_df.artist_word_count > filtering_params["max_word_count"]
     )
-    empty_first_artist_indexes = (artist_df.first_artist == "") | (
-        artist_df.first_artist.isna()
+    empty_preprocessed_artist_names = (artist_df.preprocessed_artist_name == "") | (
+        artist_df.preprocessed_artist_name.isna()
     )
 
     should_be_filtered = (
         matching_patterns_indexes
         | too_few_words_indexes
         | too_many_words_indexes
-        | empty_first_artist_indexes
+        | empty_preprocessed_artist_names
     )
 
     return artist_df.loc[~should_be_filtered]
@@ -278,10 +275,15 @@ def format_names(artist_df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: The DataFrame with formatted artist names.
     """
     return artist_df.assign(
-        preprocessed_artist_name=lambda df: df.first_artist.map(unidecode).map(
-            lambda s: " ".join(sorted(rapidfuzz.utils.default_process(s).split()))
-        )
-    )
+        preprocessed_first_artist=lambda df: normalize_string_series(
+            df.first_artist.astype(str)
+        ),
+        part_1=lambda df: df.preprocessed_first_artist.str.split(",").str[0],
+        part_2=lambda df: df.preprocessed_first_artist.str.split(",").str[1],
+        preprocessed_artist_name=lambda df: df.part_1.where(
+            df.part_2.isna(), df.part_2.astype(str) + " " + df.part_1.astype(str)
+        ).str.strip(),
+    ).drop(columns=["part_1", "part_2", "preprocessed_first_artist"])
 
 
 def normalize_string_series(s: pd.Series) -> pd.Series:

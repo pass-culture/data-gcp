@@ -54,17 +54,7 @@ To run Airflow locally for development:
 
 ### 🔐 Prerequisites: GCP Auth & Environment Variables
 
-1. **Authenticate with GCP**:
-
-    **⚠️ Don't forget to reconnect as gadmin!**
-
-    ```sh
-    gcloud auth application-default login
-
-
-   ```
-
-2. **If behind a Netskope proxy**:
+1. **If behind a Netskope proxy**:
 
    * Locate the **bundled/combined** certificate file for your machine.
      If unsure, check this [Notion page](https://www.notion.so/passcultureapp/Proxyfication-des-outils-du-pass-d1f0da09eafb4158904e9197bbe7c1d4?pvs=4#10cad4e0ff98805ba61efcea26075d65).
@@ -74,7 +64,7 @@ To run Airflow locally for development:
      /airflow/etc/nscacert_combined.pem
      ```
 
-3. **Environment file setup**:
+2. **Environment file setup**:
 
    * Copy `.env.template` to `orchestration/.env`
    * Update variable values accordingly.
@@ -107,11 +97,7 @@ To run Airflow locally for development:
 
 ### 🔧 Build the Docker image
 
-**⚠️ Don't forget to reconnect as gadmin!**
-
-```sh
-gcloud auth application-default login
-```
+⚠️ This will ask you to authenticate with GCP with your gadmin account.
 
 ```sh
 make build
@@ -119,10 +105,9 @@ make build
 
 ### ▶️ Start Airflow
 
-```sh
-gcloud auth application-default login
-gcloud config set account gadmin@passculture.app
+⚠️ This will ask you to authenticate with GCP with your gadmin account.
 
+```sh
 make start
 ```
 
@@ -158,12 +143,6 @@ make build_with_cache
 
 ```sh
 make show_airflow_logs
-```
-
-### Stop and remove containers and the database:
-
-```sh
-docker-compose down
 ```
 
 ---

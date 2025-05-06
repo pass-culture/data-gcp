@@ -2,6 +2,7 @@ import time
 from typing import Dict, List, Optional
 
 import lancedb
+import numpy as np
 from docarray import Document, DocumentArray
 from lancedb.rerankers import Reranker
 from lancedb.table import Table
@@ -12,6 +13,7 @@ from app.retrieval.constants import (
     DEFAULT_DETAIL_COLUMNS,
     DEFAULT_ITEM_DOCS_PATH,
     DEFAULT_LANCE_DB_URI,
+    DEFAULT_USER_DOCS_PATH,
     OUTPUT_METRIC_COLUMNS,
 )
 from app.retrieval.core.filter import Filter
@@ -30,12 +32,14 @@ class DefaultClient:
         detail_columns: List[str] = DEFAULT_DETAIL_COLUMNS,
         output_metric_columns: List[str] = OUTPUT_METRIC_COLUMNS,
         item_docs_path: str = DEFAULT_ITEM_DOCS_PATH,
+        user_docs_path: str = DEFAULT_USER_DOCS_PATH,
         lance_db_uri: str = DEFAULT_LANCE_DB_URI,
     ) -> None:
         self.base_columns = base_columns
         self.detail_columns = detail_columns
         self.output_metric_columns = output_metric_columns
         self.item_docs_path = item_docs_path
+        self.user_docs_path = user_docs_path
         self.lance_db_uri = lance_db_uri
         self.table: Optional[Table] = None
         self.re_ranker: Optional[Reranker] = None
@@ -48,11 +52,12 @@ class DefaultClient:
         start_time = time.time()
         logger.info("Starting to load item documents and connect to the database...")
 
-        # Load item documents
+        # Load item and user documents
         start_time = time.time()
         self.item_docs = self.load_item_document()
+        self.user_docs = self.load_user_document()
         logger.info(
-            f"Loading item documents took {time.time() - start_time:.2f} seconds."
+            f"Loading item and user documents took {time.time() - start_time:.2f} seconds."
         )
 
         # Connect to the database
@@ -65,15 +70,22 @@ class DefaultClient:
     def load_item_document(self) -> DocumentArray:
         return load_documents(self.item_docs_path)
 
-    def connect_db(self) -> Table:
+    def load_user_document(self) -> DocumentArray:
+        return load_documents(self.user_docs_path)
+
+    def user_vector(self, user_id: str) -> Optional[Document]:
         """
-        Establish a connection to the LanceDB vector database.
+        Retrieves the user vector from the document array based on the given user ID.
+
+        Args:
+            user_id (str): The ID of the user.
 
         Returns:
-            Table: The connected LanceDB table instance.
+            Optional[Document]: The user's document embedding, or None if not found.
         """
-        db = lancedb.connect(self.lance_db_uri)
-        return db.open_table("items")
+        if user_id in self.user_docs:
+            return self.user_docs[user_id]
+        return None
 
     def item_vector(self, item_id: str) -> Optional[Document]:
         """
@@ -88,6 +100,16 @@ class DefaultClient:
         if item_id in self.item_docs:
             return self.item_docs[item_id]
         return None
+
+    def connect_db(self) -> Table:
+        """
+        Establish a connection to the LanceDB vector database.
+
+        Returns:
+            Table: The connected LanceDB table instance.
+        """
+        db = lancedb.connect(self.lance_db_uri)
+        return db.open_table("items")
 
     def build_query(self, params: Optional[Dict]) -> Optional[str]:
         """
@@ -153,6 +175,7 @@ class DefaultClient:
         """
 
         DEFAULT_APPROX_TOP_VECTOR = Document(embedding=[-0.0001])
+
         return self._perform_search(
             vector=DEFAULT_APPROX_TOP_VECTOR,
             n=n,
@@ -244,8 +267,12 @@ class DefaultClient:
         if re_rank and self.re_ranker and user_id:
             results = results.rerank(self.re_ranker, query_string=user_id)
 
-        return self.format_results(
+        formatted_results = self.format_results(
             results.to_list(), details, excluded_items=excluded_items
+        )
+
+        return self._add_user_item_dot_similarity(
+            user_id=user_id, ranked_items=formatted_results
         )
 
     def columns(self, details: bool, re_rank: bool) -> List[str]:
@@ -302,3 +329,40 @@ class DefaultClient:
                 )
 
         return predictions
+
+    def _add_user_item_dot_similarity(
+        self, user_id: str, ranked_items: List[Dict]
+    ) -> List[Dict]:
+        """
+        Calculates the dot product similarity between a user's vector and multiple item vectors.
+        This method retrieves the embedding vector for the specified user and for each item
+        in the provided list of item IDs. It then computes the dot product between the
+        user's vector and each item's vector. Item IDs that are `None` are ignored.
+        Args:
+            user_id (str): The unique identifier for the user.
+            item_ids (List[str]): A list of unique identifiers for the items.
+                `None` values in this list will be skipped.
+        Returns:
+            List[Dict[str, Union[float, str]]]: A list of dictionaries. Each dictionary
+            represents an item and contains:
+                - "item_id" (str): The ID of the item.
+                - "dot_similarity" (float): The dot product similarity score between
+                  the user's vector and the item's vector.
+        """
+        if not user_id:
+            return ranked_items
+
+        user_vector = self.user_vector(user_id)
+
+        for item in ranked_items:
+            item_id = item.get("item_id")
+            if item_id is None:
+                item["user_item_dot_similarity"] = None
+            item_vector = self.item_vector(item_id)
+            if item_vector is None:
+                item["user_item_dot_similarity"] = None
+            item["user_item_dot_similarity"] = float(
+                np.dot(user_vector.embedding, item_vector.embedding)
+            )
+
+        return ranked_items

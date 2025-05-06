@@ -154,10 +154,8 @@ def preprocess_wiki(df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: The preprocessed DataFrame with normalized 'alias', renamed 'wiki_artist_name', and duplicates removed.
     """
 
-    return (
-        df.assign(alias=lambda df: df.alias.pipe(normalize_string_series))
-        .rename(columns={"artist_name": "wiki_artist_name"})
-        .drop_duplicates(subset=["wiki_id", "alias"])
+    return df.rename(columns={"artist_name": "wiki_artist_name"}).drop_duplicates(
+        subset=["wiki_id", "alias"]
     )
 
 

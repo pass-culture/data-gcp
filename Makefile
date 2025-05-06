@@ -115,7 +115,7 @@ ruff_fix:
 
 ruff_check:
 	uv run ruff check
-	ruff format --check
+	uv run ruff format --check
 
 sqlfluff_fix:
 	cd orchestration/dags/data_gcp_dbt && uv run sqlfluff fix --dialect bigquery

@@ -1,0 +1,12 @@
+version: 2
+
+models:
+  - name: mrt_alerting__metabase_cost
+    columns:
+      - name: avg_cost
+        description: Average cost of a card
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 0.4
+              inclusive: true

@@ -14,7 +14,6 @@ from common.config import (
 from common.hooks.gce import GCEHook
 from common.hooks.image import MACHINE_TYPE
 from common.hooks.network import BASE_NETWORK_LIST, GKE_NETWORK_LIST
-from orchestration.dags.common.trigger.gce import SSHJobMonitorTrigger
 from paramiko.ssh_exception import SSHException
 
 from airflow.configuration import conf
@@ -22,6 +21,7 @@ from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.utils.decorators import apply_defaults
+from dags.common.trigger.gce import SSHJobMonitorTrigger
 
 
 class StartGCEOperator(BaseOperator):
@@ -340,7 +340,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
     def nohup_command(self, context):
         commands_list = self.prepare_command()
         commands_list.append(
-            f"nohup {self.command} > job.log 2>&1 && touch job_done.flag & echo $! > job.pid"
+            f"nohup {self.command.strip()} > job.log 2>&1 && touch job_done.flag & echo $! > job.pid"
         )
         self.command = "\n".join(commands_list)
         return super().execute(context)
@@ -446,8 +446,9 @@ class InstallDependenciesOperator(SSHGCEOperator):
 
 class DeferrableSSHGCEOperator(SSHGCEOperator):
     def execute(self, context):
+        self.log.info("Start DeferrableSSHGCEOperator")
         self.nohup_command(context)
-
+        self.log.info(f"running command: {self.command}, defer to trigger")
         self.defer(
             trigger=SSHJobMonitorTrigger(
                 task_id=self.task_id,

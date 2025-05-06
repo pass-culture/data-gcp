@@ -59,7 +59,7 @@ jobs:
       - uses: yezz123/setup-uv@v4
 
       - name: Install Default Python requirements
-        run: uv pip install --system -r requirements.txt
+        run: uv sync
 
       - name: Install Python requirements
         run: uv pip install --system -r ${{ env.AIRFLOW_HOME }}orchestration-requirements.txt
@@ -77,11 +77,11 @@ jobs:
       - name: "Pull run artifacts"
         working-directory:  ${{ env.DBT_FOLDER }}
         env:
-          COMPOSER_DAGS_BUCKET: ${{ inputs.TARGET_COMPOSER_BUCKET }}
+          TARGET_COMPOSER_BUCKET: ${{ inputs.TARGET_COMPOSER_BUCKET }}
         run: |
           mkdir env-run-artifacts
-          gsutil cp gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json env-run-artifacts/manifest.json
-          gsutil cp gs://$COMPOSER_DAGS_BUCKET/data/target/run_results.json env-run-artifacts/run_results.json
+          gsutil cp gs://$TARGET_COMPOSER_BUCKET/data/target/manifest.json env-run-artifacts/manifest.json
+          gsutil cp gs://$TARGET_COMPOSER_BUCKET/data/target/run_results.json env-run-artifacts/run_results.json
           echo $(ls env-run-artifacts)
       - name: "Install dbt dependencies"
         working-directory: ${{ env.DBT_FOLDER }}

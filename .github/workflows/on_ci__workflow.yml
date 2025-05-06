@@ -42,7 +42,7 @@ jobs:
     needs: find-dbt-changes
     if: github.base_ref == 'master' && needs.find-dbt-changes.outputs.changes == 'true'
     with:
-      TARGET_COMPOSER_BUCKET: ${{ vars.COMPOSER_DAGS_BUCKET_STG }}
+      TARGET_COMPOSER_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_STG }}
       ENV_SHORT_NAME: "stg"
       APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_STG }}
     uses: ./.github/workflows/reusable_dbt_workflow.yml

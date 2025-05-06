@@ -3,7 +3,7 @@ name: "DBT building job"
 on:
   workflow_call:
     inputs:
-      TARGET_COMPOSER_BUCKET:
+      TARGET_AIRFLOW_BUCKET:
         type: string
         required: true
       ENV_SHORT_NAME:
@@ -77,11 +77,11 @@ jobs:
       - name: "Pull run artifacts"
         working-directory:  ${{ env.DBT_FOLDER }}
         env:
-          COMPOSER_DAGS_BUCKET: ${{ inputs.TARGET_COMPOSER_BUCKET }}
+          TARGET_AIRFLOW_BUCKET: ${{ inputs.TARGET_AIRFLOW_BUCKET }}
         run: |
           mkdir env-run-artifacts
-          gsutil cp gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json env-run-artifacts/manifest.json
-          gsutil cp gs://$COMPOSER_DAGS_BUCKET/data/target/run_results.json env-run-artifacts/run_results.json
+          gsutil cp gs://$TARGET_AIRFLOW_BUCKET/data/target/manifest.json env-run-artifacts/manifest.json
+          gsutil cp gs://$TARGET_AIRFLOW_BUCKET/data/target/run_results.json env-run-artifacts/run_results.json
           echo $(ls env-run-artifacts)
       - name: "Install dbt dependencies"
         working-directory: ${{ env.DBT_FOLDER }}

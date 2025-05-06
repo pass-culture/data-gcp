@@ -6,7 +6,6 @@ import typer
 from loguru import logger
 
 from utils.gcs_utils import get_last_date_from_bucket
-from utils.preprocessing_utils import normalize_string_series
 
 app = typer.Typer()
 
@@ -134,14 +133,13 @@ def preprocess_artists(df: pd.DataFrame) -> pd.DataFrame:
     """
 
     return df.assign(
-        preprocessed_first_artist=lambda df: normalize_string_series(df.first_artist),
-        part_1=lambda df: df.preprocessed_first_artist.str.split(",").str[0],
-        part_2=lambda df: df.preprocessed_first_artist.str.split(",").str[1],
+        part_1=lambda df: df.first_artist.str.split(",").str[0],
+        part_2=lambda df: df.first_artist.str.split(",").str[1],
         alias=lambda df: df.part_1.where(
             df.part_2.isna(), df.part_2.astype(str) + " " + df.part_1.astype(str)
         ),
         tmp_id=lambda df: df.index,
-    ).drop(columns=["part_1", "part_2", "preprocessed_first_artist"])
+    ).drop(columns=["part_1", "part_2"])
 
 
 def preprocess_wiki(df: pd.DataFrame) -> pd.DataFrame:

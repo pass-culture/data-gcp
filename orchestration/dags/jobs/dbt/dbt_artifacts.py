@@ -20,12 +20,14 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import PythonOperator
+from airflow.operators.python import BranchPythonOperator
 from airflow.utils.dates import datetime, timedelta
 
 
 def should_run_today():
-    return datetime.today().weekday() == 0  # Monday
+    if datetime.today().weekday() == 0:  # Monday
+        return ["dbt_test_weekly", "dbt_test"]
+    return "dbt_test"
 
 
 default_args = {
@@ -71,6 +73,7 @@ compute_metrics_elementary = BashOperator(
     + """--vars "{{ "{" }}'ENV_SHORT_NAME':'{{ params.target }}'{{ "}" }}" """,
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
+    trigger_rule="one_success",
 )
 
 dbt_test = BashOperator(
@@ -87,12 +90,12 @@ dbt_test = BashOperator(
     dag=dag,
 )
 
-check_if_weekly = PythonOperator(
+check_if_weekly = BranchPythonOperator(
     task_id="check_if_weekly_run", python_callable=should_run_today
 )
 
 dbt_test_weekly = BashOperator(
-    task_id="dbt_test",
+    task_id="dbt_test_weekly",
     bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
     env={
         "target": "{{ params.target }}",
@@ -128,9 +131,10 @@ send_elementary_report = SendElementaryMonitoringReportOperator(
 (
     start
     >> wait_dbt_run
+    >> check_if_weekly
     >> dbt_test
     >> compute_metrics_elementary
     >> create_elementary_report
     >> send_elementary_report
 )
-(wait_dbt_run >> check_if_weekly >> dbt_test_weekly >> compute_metrics_elementary)
+(check_if_weekly >> dbt_test_weekly >> compute_metrics_elementary)

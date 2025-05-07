@@ -50,7 +50,7 @@ jobs:
         run: uv sync
 
       - name: Install DBT Python requirements
-        run: uv pip install --system -r ${{ env.AIRFLOW_HOME }}orchestration-requirements.txt
+        run: uv pip install --system -r ${{ env.AIRFLOW_HOME }}/orchestration-requirements.txt
 
       - name: "compile dbt project"
         working-directory: ${{ env.DBT_FOLDER }}

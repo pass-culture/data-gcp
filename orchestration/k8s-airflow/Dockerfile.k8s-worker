@@ -52,6 +52,8 @@ USER airflow
 ENV PATH="/root/.cargo/bin/:$PATH"
 ENV PATH=$PATH:$AIRFLOW_USER_HOME/google-cloud-sdk/bin
 
+RUN pip install psycopg2-binary
+
 # Final entrypoint and default command
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/entrypoint"]
 CMD []

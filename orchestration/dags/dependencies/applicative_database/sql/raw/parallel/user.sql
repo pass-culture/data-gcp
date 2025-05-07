@@ -21,7 +21,7 @@ SELECT
 	, CAST("notificationSubscriptions" -> \'marketing_email\' AS BOOLEAN) AS user_has_enabled_marketing_email
 	, "notificationSubscriptions" -> \'subscribed_themes\' :: text AS user_subscribed_themes
 	, "user"."dateOfBirth" AS user_birth_date
-	, "user"."validatedBirthDate" AS validated_user_birth_date
+	, "user"."validatedBirthDate" AS user_validated_birth_date
 	, CASE
             WHEN "user"."schoolType" = \'PUBLIC_SECONDARY_SCHOOL\' THEN \'Collège public\'
             WHEN "user"."schoolType" = \'PUBLIC_HIGH_SCHOOL\' THEN \'Lycée public\'

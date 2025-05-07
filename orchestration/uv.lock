@@ -161,6 +161,7 @@ dependencies = [
     { name = "elementary-data", extra = ["bigquery"] },
     { name = "flask-oidc" },
     { name = "flask-openid" },
+    { name = "psycopg2-binary" },
 ]
 
 [package.dev-dependencies]
@@ -169,7 +170,6 @@ dev = [
     { name = "dbt-metabase" },
     { name = "dbt-score" },
     { name = "mock" },
-    { name = "psycopg2-binary" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "sqlfluff" },
@@ -187,6 +187,7 @@ requires-dist = [
     { name = "elementary-data", extras = ["bigquery"], specifier = "==0.18.1" },
     { name = "flask-oidc", specifier = "==2.2.2" },
     { name = "flask-openid", specifier = "==1.3.1" },
+    { name = "psycopg2-binary", specifier = "==2.9.9" },
 ]
 
 [package.metadata.requires-dev]
@@ -195,7 +196,6 @@ dev = [
     { name = "dbt-metabase", specifier = "==1.4.2" },
     { name = "dbt-score", specifier = "==0.7.1" },
     { name = "mock", specifier = "==4.0.2" },
-    { name = "psycopg2-binary", specifier = "==2.9.9" },
     { name = "pytest", specifier = "==7.4.4" },
     { name = "pytest-cov", specifier = "==5.0.0" },
     { name = "sqlfluff", specifier = "==3.1.1" },

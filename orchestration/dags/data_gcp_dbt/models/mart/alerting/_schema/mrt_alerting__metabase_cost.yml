@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: mrt_alerting__metabase_cost
+    columns:
+      - name: avg_cost
+        description: Average cost of a card
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 0.4
+              inclusive: true
+      - name: total_cost
+        description: Total cost of a card
+      - name: card_name
+        description: Name of the card
+      - name: total_distinct_users
+        description: Total distinct users of a card
+      - name: total_views
+        description: Total views of a card
+      - name: card_id
+        description: ID of the card
+      - name: dashboard_name
+        description: Name of the dashboard

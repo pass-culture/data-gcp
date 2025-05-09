@@ -124,11 +124,7 @@ select
         cb.total_current_year_collective_real_revenue, ei.current_deposit_amount
     ) as ratio_current_credit_utilization,
     coalesce(cb.total_tickets, 0) as total_tickets,
-    coalesce(cb.total_current_year_tickets, 0) as total_current_year_tickets,
-    coalesce(ei.total_credited_beneficiaries, 0) as total_credited_beneficiaries,
-    safe_divide(
-        ei.total_credited_beneficiaries, sh.total_students
-    ) as ratio_beneficiary_students
+    coalesce(cb.total_current_year_tickets, 0) as total_current_year_tickets
 from {{ ref("int_applicative__educational_institution") }} as ei
 left join
     collective_booking_grouped_by_institution as cb

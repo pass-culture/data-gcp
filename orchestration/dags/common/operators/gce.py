@@ -14,7 +14,7 @@ from common.config import (
 from common.hooks.gce import DeferrableSSHGCEJobManager, GCEHook
 from common.hooks.image import MACHINE_TYPE
 from common.hooks.network import BASE_NETWORK_LIST, GKE_NETWORK_LIST
-from common.triggers.gce import DeferrableSSHJobMonitorTrigger, JobState
+from common.triggers.gce import DeferrableSSHJobMonitorTrigger
 from paramiko.ssh_exception import SSHException
 
 from airflow.configuration import conf
@@ -346,7 +346,7 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         return super().execute(context)
 
 
-class DeferrableSSHGCEOperator(BaseOperator):
+class DeferrableSSHGCEOperator(SSHGCEOperator):
     """
     Operator for running deferrable SSH commands on GCE instances.
 
@@ -358,6 +358,7 @@ class DeferrableSSHGCEOperator(BaseOperator):
     :param base_dir: Base directory for the command execution
     :param environment: Environment variables to set for the command
     :param poll_interval: How often to check job status in seconds
+    :param timeout: Optional timeout in seconds for the job monitoring
     """
 
     template_fields = [
@@ -366,6 +367,8 @@ class DeferrableSSHGCEOperator(BaseOperator):
         "environment",
         "gce_zone",
         "base_dir",
+        "poll_interval",
+        "timeout",
     ]
 
     def __init__(
@@ -375,15 +378,20 @@ class DeferrableSSHGCEOperator(BaseOperator):
         base_dir: str = None,
         environment: t.Dict[str, str] = None,
         poll_interval: int = 60,
+        timeout: t.Optional[int] = None,
         *args,
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
-        self.instance_name = instance_name
-        self.command = command
-        self.base_dir = base_dir
-        self.environment = environment or {}
+        super().__init__(
+            instance_name=instance_name,
+            command=command,
+            base_dir=base_dir,
+            environment=environment or {},
+            *args,
+            **kwargs,
+        )
         self.poll_interval = poll_interval
+        self.timeout = timeout
 
     def execute(self, context: t.Dict[str, t.Any]) -> None:
         """
@@ -406,7 +414,7 @@ class DeferrableSSHGCEOperator(BaseOperator):
             wrapped_command = job_manager.wrap_command(self.command)
             self.command = wrapped_command
 
-            # Execute and get job_id from output
+            # Execute command using parent class's execute method
             result = super().execute(context)
             job_id = result.strip() if result else None
 
@@ -438,37 +446,32 @@ class DeferrableSSHGCEOperator(BaseOperator):
         self, context: t.Dict[str, t.Any], event: t.Optional[t.Dict[str, t.Any]] = None
     ) -> None:
         """
-        Handles the completion of a deferred job.
-
-        Args:
-            context: Airflow context dictionary
-            event: Event data from the trigger
-
-        Raises:
-            AirflowException: If the job failed or no event was received
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
         """
         if event is None:
-            raise AirflowException("No trigger event received")
+            raise AirflowException("No event received in trigger callback")
 
-        status = JobState(event.get("status", JobState.FAILED.value))
+        status = event.get("status", "error")
         logs = event.get("logs", "")
-        message = event.get("message")
+        message = event.get("message", "")
 
-        if status == JobState.COMPLETED:
+        if status == "completed":
             self.log.info("Job completed successfully")
-            self.log.debug(f"Full logs:\n{logs}")
-            context["task_instance"].xcom_push(key="full_logs", value=logs)
-            return logs
-
-        elif status == JobState.RUNNING:
-            # This should never happen as the trigger should not return while running
-            raise AirflowException("Unexpected status: job still running")
-
-        else:  # FAILED or INTERRUPTED
-            error_message = message or "No error message provided"
-            self.log.error(f"Job failed: {error_message}")
-            self.log.debug(f"Failure logs:\n{logs}")
-            raise AirflowException(f"Job failed: {error_message}")
+            if logs:
+                self.log.info(f"Job logs: {logs}")
+            if message:
+                self.log.info(f"Job message: {message}")
+            return
+        elif status == "running":
+            # This shouldn't happen as we only get here after the trigger is done
+            raise AirflowException("Got running status in trigger callback")
+        else:
+            error_msg = message if message else "Job failed"
+            if logs:
+                error_msg += f"\nLogs: {logs}"
+            raise AirflowException(error_msg)
 
 
 class InstallDependenciesOperator(SSHGCEOperator):

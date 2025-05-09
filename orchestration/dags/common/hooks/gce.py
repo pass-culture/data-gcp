@@ -88,10 +88,9 @@ class DeferrableSSHGCEJobManager:
             exit 0
         """
 
-    @staticmethod
     def get_status_check_command(self) -> str:
         return f"""
-            JOB_DIR=~/{self.job_base_dir}/{self.job_id}
+            JOB_DIR={self.job_dir}
             if [ -f "$JOB_DIR/status" ]; then
                 status=$(cat $JOB_DIR/status)
                 pid=$(cat $JOB_DIR/pid 2>/dev/null || echo "0")

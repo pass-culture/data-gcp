@@ -1,68 +1,19 @@
 import asyncio
 import re
-from dataclasses import asdict, dataclass
-from enum import Enum
-from typing import Any, Dict, Optional, Tuple
+from datetime import datetime
+from typing import Any, Dict, Optional, Tuple, Type
 
 from common.config import GCP_PROJECT_ID, SSH_USER
 from common.hooks.gce import DeferrableSSHGCEJobManager
-from paramiko.ssh_exception import SSHException
 
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 
 
-class JobState(str, Enum):
-    """Possible states of a GCE job."""
-
-    RUNNING = "running"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    INTERRUPTED = "interrupted"
-
-    def is_terminal(self) -> bool:
-        """Check if this is a terminal state."""
-        return self in {self.COMPLETED, self.FAILED, self.INTERRUPTED}
-
-
-class SSHCommandError(Exception):
-    """Raised when an SSH command fails."""
-
-    pass
-
-
-@dataclass
-class JobStatus:
-    """Represents the status of a job running on GCE."""
-
-    status: JobState
-    logs: str
-    pid: str
-    message: Optional[str] = None
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert the status to a dictionary, excluding None values."""
-        data = asdict(self)
-        data["status"] = self.status.value  # Convert enum to string
-        return {k: v for k, v in data.items() if v is not None}
-
-
 class DeferrableSSHJobMonitorTrigger(BaseTrigger):
     """
-    Trigger for monitoring remote SSH jobs on GCE instances.
-
-    This trigger periodically checks the status of a long-running SSH job
-    and triggers completion when the job finishes.
-
-    :param task_id: The task ID of the deferrable task
-    :param instance_name: Name of the GCE instance
-    :param zone: GCE zone where the instance is located
-    :param job_id: Unique identifier for the job being monitored
-    :param poll_interval: How often to check job status in seconds
+    Trigger that monitors a remote SSH job on a GCE instance and emits TriggerEvent.
     """
-
-    MAX_RETRY = 3
-    SSH_TIMEOUT = 10
 
     def __init__(
         self,
@@ -71,6 +22,8 @@ class DeferrableSSHJobMonitorTrigger(BaseTrigger):
         zone: str,
         job_id: str,
         poll_interval: int = 60,
+        timeout: Optional[int] = None,
+        ssh_hook_cls: Type[ComputeEngineSSHHook] = ComputeEngineSSHHook,
     ):
         super().__init__()
         self.task_id = task_id
@@ -78,11 +31,12 @@ class DeferrableSSHJobMonitorTrigger(BaseTrigger):
         self.zone = zone
         self.job_id = job_id
         self.poll_interval = poll_interval
-        self._hook = None
+        self.timeout = timeout
+        self._start_time = datetime.utcnow()
         self._job_manager = DeferrableSSHGCEJobManager(task_id, job_id)
+        self._ssh_hook_cls = ssh_hook_cls
 
     def serialize(self) -> Tuple[str, Dict[str, Any]]:
-        """Serializes the trigger for storage in the database."""
         return (
             "common.triggers.gce.DeferrableSSHJobMonitorTrigger",
             {
@@ -91,6 +45,7 @@ class DeferrableSSHJobMonitorTrigger(BaseTrigger):
                 "zone": self.zone,
                 "job_id": self.job_id,
                 "poll_interval": self.poll_interval,
+                "timeout": self.timeout,
             },
         )
 
@@ -98,160 +53,126 @@ class DeferrableSSHJobMonitorTrigger(BaseTrigger):
     def deserialize(
         cls, trigger_data: Dict[str, Any]
     ) -> "DeferrableSSHJobMonitorTrigger":
-        """Deserializes a trigger from the database."""
         return cls(
             task_id=trigger_data["task_id"],
             instance_name=trigger_data["instance_name"],
             zone=trigger_data["zone"],
             job_id=trigger_data["job_id"],
             poll_interval=trigger_data["poll_interval"],
+            timeout=trigger_data.get("timeout"),
         )
 
-    @property
-    def hook(self) -> ComputeEngineSSHHook:
-        """Lazy initialization of SSH hook."""
-        if self._hook is None:
-            self._hook = ComputeEngineSSHHook(
-                instance_name=self.instance_name,
-                zone=self.zone,
-                project_id=GCP_PROJECT_ID,
-                use_iap_tunnel=True,
-                use_oslogin=False,
-                user=SSH_USER,
-            )
-        return self._hook
-
-    async def run_ssh_command(
-        self, command: str, timeout: int = 30, retry: int = 1
-    ) -> tuple[int, bytes, bytes]:
+    async def run(self):
         """
-        Execute an SSH command with retry logic.
-
-        Args:
-            command: The command to execute
-            timeout: Command timeout in seconds
-            retry: Current retry attempt number
-
-        Returns:
-            Tuple of (exit_status, stdout, stderr)
-
-        Raises:
-            SSHCommandError: If command fails after all retries
+        Polls the SSH job status until completion, failure, interruption, or timeout,
+        yielding a TriggerEvent on each check.
         """
-        try:
-            with self.hook.get_conn() as ssh_client:
-                exit_status, stdout, stderr = self.hook.exec_ssh_client_command(
-                    ssh_client,
-                    command,
-                    timeout=timeout,
-                    get_pty=False,
-                )
+        hook = self._ssh_hook_cls(
+            instance_name=self.instance_name,
+            zone=self.zone,
+            project_id=GCP_PROJECT_ID,
+            use_iap_tunnel=True,
+            use_oslogin=False,
+            user=SSH_USER,
+        )
 
-                if exit_status != 0:
-                    raise SSHCommandError(
-                        f"SSH command failed with exit status {exit_status}. "
-                        f"stderr: {stderr.decode('utf-8')}"
+        while True:
+            # Check overall timeout
+            if self.timeout:
+                elapsed = (datetime.utcnow() - self._start_time).total_seconds()
+                if elapsed > self.timeout:
+                    yield TriggerEvent(
+                        {
+                            "status": "timeout",
+                            "job_id": self.job_id,
+                            "instance": self.instance_name,
+                            "message": "Exceeded monitoring timeout",
+                        }
+                    )
+                    return
+
+            try:
+                with hook.get_conn() as ssh_client:
+                    exit_code, stdout, stderr = hook.exec_ssh_client_command(
+                        ssh_client,
+                        self._job_manager.get_status_check_command(),
+                        timeout=30,
                     )
 
-                return exit_status, stdout, stderr
+                raw = stdout.decode("utf-8", errors="replace")
+                status, output = self._parse(raw)
 
-        except (SSHException, SSHCommandError) as e:
-            self.log.info(
-                f"Cannot connect to instance {self.instance_name}. "
-                f"Retry {retry}/{self.MAX_RETRY}"
-            )
-            if retry >= self.MAX_RETRY:
-                self.log.error(
-                    f"Failed to execute SSH command after {retry} retries. "
-                    f"Last error: {str(e)}"
+                if status is None:
+                    self.log.warning(f"Malformed STATUS in job output: {raw}")
+                    yield TriggerEvent(
+                        {
+                            "status": "error",
+                            "job_id": self.job_id,
+                            "message": "Could not parse STATUS",
+                            "logs": output,
+                        }
+                    )
+                    return
+
+                # Job finished
+                if status in {"completed", "failed", "interrupted"}:
+                    # attempt cleanup
+                    try:
+                        with hook.get_conn() as ssh_client:
+                            hook.exec_ssh_client_command(
+                                ssh_client,
+                                self._job_manager.get_cleanup_command(),
+                                timeout=30,
+                            )
+                    except Exception as cleanup_err:
+                        self.log.warning(f"Cleanup failed: {cleanup_err}")
+
+                    yield TriggerEvent(
+                        {
+                            "status": "completed" if status == "completed" else "error",
+                            "job_id": self.job_id,
+                            "instance": self.instance_name,
+                            "logs": output,
+                        }
+                    )
+                    return
+
+                # Still running
+                yield TriggerEvent(
+                    {
+                        "status": "running",
+                        "job_id": self.job_id,
+                        "instance": self.instance_name,
+                        "logs": self._truncate(output, 500),
+                    }
                 )
-                raise SSHCommandError(
-                    f"SSH command failed after {retry} retries: {str(e)}"
+
+            except Exception as exc:
+                self.log.error(f"Error monitoring job {self.job_id}: {exc}")
+                yield TriggerEvent(
+                    {
+                        "status": "error",
+                        "job_id": self.job_id,
+                        "message": str(exc),
+                    }
                 )
+                return
 
-            # Exponential backoff
-            sleep_time = retry * self.SSH_TIMEOUT
-            self.log.info(f"Waiting {sleep_time} seconds before retry...")
-            await asyncio.sleep(sleep_time)
+            await asyncio.sleep(self.poll_interval)
 
-            return await self.run_ssh_command(
-                command=command, timeout=timeout, retry=retry + 1
-            )
-
-    async def check_job_status(self) -> JobStatus:
+    @staticmethod
+    def _parse(raw: str) -> Tuple[Optional[str], str]:
         """
-        Check the status of the remote job.
-
-        Returns:
-            JobStatus containing status, logs, and process ID of the job
+        Extracts STATUS and OUTPUT from raw SSH output.
+        Returns (status_str or None, output_text).
         """
-        try:
-            _, stdout, _ = await self.run_ssh_command(
-                command=self._job_manager.get_status_check_command(), timeout=30
-            )
+        m_status = re.search(r"STATUS:(\w+)", raw)
+        m_output = re.search(r"OUTPUT:(.*)", raw, re.DOTALL)
+        status = m_status.group(1).lower() if m_status else None
+        output = m_output.group(1).strip() if m_output else "No output available"
+        return status, output
 
-            output = stdout.decode("utf-8")
-            status_str = re.search(r"STATUS:(\w+)", output).group(1)
-            job_output = re.search(r"OUTPUT:(.*)", output, re.DOTALL).group(1)
-            pid = re.search(r"PID:(\d+)", output).group(1)
-
-            try:
-                status = JobState(status_str)
-            except ValueError:
-                self.log.error(f"Invalid job status received: {status_str}")
-                status = JobState.FAILED
-
-            self.log.info(f"Job {self.job_id} status: {status.value}")
-            self.log.debug(f"Job {self.job_id} output: {job_output}")
-
-            return JobStatus(status=status, logs=job_output, pid=pid)
-
-        except Exception as e:
-            self.log.error(f"Error checking status for job {self.job_id}: {str(e)}")
-            return JobStatus(
-                status=JobState.FAILED,
-                logs="",
-                pid="0",
-                message=f"Status check failed: {str(e)}",
-            )
-
-    async def cleanup_job(self) -> None:
-        """Clean up job directory after completion or failure."""
-        try:
-            await self.run_ssh_command(
-                command=self._job_manager.get_cleanup_command(), timeout=30
-            )
-            self.log.info(f"Successfully cleaned up job {self.job_id}")
-        except Exception as e:
-            self.log.warning(f"Failed to cleanup job {self.job_id}: {str(e)}")
-
-    async def run(self) -> TriggerEvent:
-        """
-        Main trigger loop that monitors the job status.
-
-        Returns:
-            TriggerEvent containing the final job status and output
-        """
-        while True:
-            try:
-                result = await self.check_job_status()
-
-                if result.status.is_terminal():
-                    await self.cleanup_job()
-                    return TriggerEvent(result.to_dict())
-
-                self.log.info(
-                    f"Job {self.job_id} still running, "
-                    f"checking again in {self.poll_interval} seconds"
-                )
-                await asyncio.sleep(self.poll_interval)
-
-            except Exception as e:
-                self.log.error(f"Error in trigger run loop: {str(e)}")
-                error_status = JobStatus(
-                    status=JobState.FAILED,
-                    logs="",
-                    pid="0",
-                    message=f"Trigger error: {str(e)}",
-                )
-                return TriggerEvent(error_status.to_dict())
+    @staticmethod
+    def _truncate(text: str, length: int) -> str:
+        """Return only the last `length` characters of text."""
+        return text[-length:] if len(text) > length else text

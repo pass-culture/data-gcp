@@ -89,9 +89,10 @@ class TestPreprocessingUtils:
         def test_filter_artists_min_word_count():
             df = pd.DataFrame(
                 {
-                    "first_artist": ["a", "b", "ab", "abc"],
-                    TOTAL_OFFER_COUNT: [1, 5, 5, 5],
-                    "total_booking_count": [5, 5, 5, 5],
+                    "first_artist": ["a", "b", "ab", "abc", "abc def ghi"],
+                    "preprocessed_artist_name": ["a", "b", "ab", "abc", "abc def ghi"],
+                    TOTAL_OFFER_COUNT: [1, 5, 5, 5, 1],
+                    "total_booking_count": [5, 5, 5, 5, 5],
                 }
             )
             filtering_params = FilteringParamsType(
@@ -101,17 +102,19 @@ class TestPreprocessingUtils:
                 min_booking_count=2,
             )
             result = filter_artists(df, filtering_params)
+            print(result)
 
             expected_df = pd.DataFrame(
                 {
-                    "first_artist": ["", "ab", "abc"],
-                    TOTAL_OFFER_COUNT: [5, 5, 5],
-                    "total_booking_count": [5, 5, 5],
-                    "artist_word_count": [0, 0, 1],
+                    "first_artist": ["b", "ab", "abc", "abc def ghi"],
+                    "preprocessed_artist_name": ["b", "ab", "abc", "abc def ghi"],
+                    TOTAL_OFFER_COUNT: [5, 5, 5, 1],
+                    "total_booking_count": [5, 5, 5, 5],
+                    "artist_word_count": [0, 0, 1, 3],
                 }
-            )
+            )  # The min_word_count filter is only applied if min_offer_count or min_booking_count is applied
             assert_frame_equal_ignore_index_nor_orders(result, expected_df)
-            assert len(result) == 3
+            assert len(result) == 4
             assert "a" not in result["first_artist"].values
 
         @staticmethod
@@ -119,6 +122,11 @@ class TestPreprocessingUtils:
             df = pd.DataFrame(
                 {
                     "first_artist": ["abc dqsdqs dsqdsqd dqdqs", "abcd", "abcde"],
+                    "preprocessed_artist_name": [
+                        "abc dqsdqs dsqdsqd dqdqs",
+                        "abcd",
+                        "abcde",
+                    ],
                     TOTAL_OFFER_COUNT: [5, 5, 5],
                     "total_booking_count": [5, 5, 5],
                 }
@@ -138,6 +146,7 @@ class TestPreprocessingUtils:
             df = pd.DataFrame(
                 {
                     "first_artist": ["abc", "abcd", "abcde"],
+                    "preprocessed_artist_name": ["abc", "abcd", "abcde"],
                     TOTAL_OFFER_COUNT: [1, 2, 3],
                     "total_booking_count": [1, 2, 3],
                 }
@@ -185,6 +194,25 @@ class TestPreprocessingUtils:
             expected_data = {
                 "first_artist": ["Beyoncé"],
                 "preprocessed_artist_name": ["beyonce"],
+            }
+            expected_df = pd.DataFrame(expected_data)
+
+            # Check if the resulting DataFrame matches the expected DataFrame
+            pd.testing.assert_frame_equal(result_df, expected_df)
+
+        @staticmethod
+        def test_format_names_single_artist_with_comma():
+            # Create a sample DataFrame
+            data = {"first_artist": ["Maé, Christophe"]}
+            df = pd.DataFrame(data)
+
+            # Call the function with the sample DataFrame
+            result_df = format_names(df)
+
+            # Create the expected DataFrame
+            expected_data = {
+                "first_artist": ["Maé, Christophe"],
+                "preprocessed_artist_name": ["christophe mae"],
             }
             expected_df = pd.DataFrame(expected_data)
 

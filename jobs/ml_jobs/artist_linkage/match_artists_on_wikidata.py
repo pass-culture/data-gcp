@@ -117,50 +117,11 @@ def match_namesakes_per_category(
     return pd.concat(matched_df_list)
 
 
-def normalize_string_series(s: pd.Series) -> pd.Series:
-    """
-    Normalize a pandas Series of strings by converting to lowercase, removing accents,
-    encoding to ASCII, stripping whitespace, and removing periods.
-    Args:
-        s (pd.Series): A pandas Series containing strings to be normalized.
-    Returns:
-        pd.Series: A pandas Series with normalized strings.
-    """
-
-    return (
-        s.str.lower()
-        .str.normalize("NFKD")
-        .str.encode("ascii", errors="ignore")
-        .str.decode("utf-8")
-        .str.strip()
-        .str.replace(".", "")
-    )
-
-
 def preprocess_artists(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Preprocesses the artist names in the given DataFrame.
-    This function performs the following steps:
-    1. Normalizes the 'first_artist' column.
-    2. Splits the normalized 'first_artist' into two parts based on the comma.
-    3. Creates an 'alias' column by combining the two parts if the second part is not NaN.
-    4. Adds a temporary ID column based on the DataFrame's index.
-    5. Drops the intermediate columns used for processing.
-    Args:
-        df (pd.DataFrame): The input DataFrame containing artist names.
-    Returns:
-        pd.DataFrame: The preprocessed DataFrame with the new 'alias' and 'tmp_id' columns.
-    """
-
     return df.assign(
-        preprocessed_first_artist=lambda df: normalize_string_series(df.first_artist),
-        part_1=lambda df: df.preprocessed_first_artist.str.split(",").str[0],
-        part_2=lambda df: df.preprocessed_first_artist.str.split(",").str[1],
-        alias=lambda df: df.part_1.where(
-            df.part_2.isna(), df.part_2.astype(str) + " " + df.part_1.astype(str)
-        ),
+        alias=lambda _df: _df.preprocessed_artist_name,
         tmp_id=lambda df: df.index,
-    ).drop(columns=["part_1", "part_2", "preprocessed_first_artist"])
+    )
 
 
 def preprocess_wiki(df: pd.DataFrame) -> pd.DataFrame:
@@ -173,10 +134,8 @@ def preprocess_wiki(df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: The preprocessed DataFrame with normalized 'alias', renamed 'wiki_artist_name', and duplicates removed.
     """
 
-    return (
-        df.assign(alias=lambda df: df.alias.pipe(normalize_string_series))
-        .rename(columns={"artist_name": "wiki_artist_name"})
-        .drop_duplicates(subset=["wiki_id", "alias"])
+    return df.rename(columns={"artist_name": "wiki_artist_name"}).drop_duplicates(
+        subset=["wiki_id", "alias"]
     )
 
 

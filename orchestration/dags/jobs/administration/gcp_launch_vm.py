@@ -43,7 +43,7 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
     "dag_config": dag_config,
 }
-dag_doc = doc_md = """
+DAG_DOC = """
     ### Launch VM Dag
     Use this DAG to launch a VM to work on.
 
@@ -97,7 +97,7 @@ with DAG(
             enum=["'3.8'", "'3.9'", "'3.10'", "'3.11'", "'3.12'", "'3.13'"],
         ),
     },
-    doc_md=dag_doc,
+    doc_md=DAG_DOC,
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
 

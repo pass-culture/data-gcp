@@ -6,6 +6,8 @@ import requests
 import typer
 from loguru import logger
 
+from utils.preprocessing_utils import normalize_string_series
+
 QLEVER_ENDPOINT = "https://qlever.cs.uni-freiburg.de/api/wikidata"
 QLEVER_HEADERS = {"Accept": "text/csv", "Content-Type": "application/sparql-query"}
 QUERIES_PATHES = {
@@ -70,7 +72,12 @@ def postprocess_data(df: pd.DataFrame) -> pd.DataFrame:
         )
         .explode("aliases_list")
         .rename(columns={"aliases_list": "alias"})
-        .loc[lambda df: df.alias != EMPTY_ALIAS_KEYWORD]
+        .assign(alias=lambda df: df.alias.pipe(normalize_string_series))
+        .loc[
+            lambda df: (df.alias.notna())
+            & (df.alias != "")
+            & (df.alias != EMPTY_ALIAS_KEYWORD)
+        ]
         .drop_duplicates()
     )
 

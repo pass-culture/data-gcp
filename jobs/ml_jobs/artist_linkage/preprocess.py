@@ -27,8 +27,8 @@ def main(
     preprocessed_df = (
         artists_to_match_df.pipe(clean_names)
         .pipe(extract_first_artist)
-        .pipe(filter_artists, filtering_params=FILTERING_PARAMS)
         .pipe(format_names)
+        .pipe(filter_artists, filtering_params=FILTERING_PARAMS)
     ).loc[
         :,
         [

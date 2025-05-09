@@ -74,10 +74,6 @@ models:
         description: "{{ doc('column__total_tickets') }}"
       - name: total_current_year_tickets
         description: "{{ doc('column__total_current_year_tickets') }}"
-      - name: total_credited_beneficiaries
-        description: "{{ doc('column__total_credited_beneficiaries') }}"
-      - name: ratio_beneficiary_students
-        description: "{{ doc('column__ratio_beneficiary_students') }}"
       - name: total_students
         description: "{{ doc('column__total_students') }}"
       - name: macro_institution_type

@@ -1,12 +1,13 @@
 SHELL := /bin/bash
 
-DOCKER_IMAGE_TAG ?= europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/dev/retrieval_recommendation_v1_2_dev:dummy_user_recommendation_dev_v20250430
-
 install-api:
 	uv sync --no-dev
-	DOCKER_IMAGE_TAG=$(DOCKER_IMAGE_TAG) make download-vector-database
 
 download-vector-database:
+	if [ "$(DOCKER_IMAGE_TAG)" == "" ]; then \
+		echo "Please set the DOCKER_IMAGE_TAG environment variable"; \
+		exit 1; \
+	fi
 	gcloud auth login
 	gcloud auth configure-docker europe-west1-docker.pkg.dev
 	(docker rm temp-copy-container || true) && docker create --name temp-copy-container $(DOCKER_IMAGE_TAG)

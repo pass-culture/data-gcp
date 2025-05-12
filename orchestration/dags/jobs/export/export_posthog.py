@@ -102,6 +102,7 @@ for job_name, table_name in TABLE_PARAMS.items():
         instance_name = f"{job_name}-{params_instance}"
         storage_path = f"{DAG_CONFIG['STORAGE_PATH']}/{DATE}_{table_config_name}/"
         export_task = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
             task_id=f"{table_config_name}",
             configuration={
                 "query": {
@@ -120,6 +121,7 @@ for job_name, table_name in TABLE_PARAMS.items():
         )
 
         export_bq = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
             task_id=f"{table_config_name}_to_bucket",
             configuration={
                 "extract": {

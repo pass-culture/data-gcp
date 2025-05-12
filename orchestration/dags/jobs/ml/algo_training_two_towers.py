@@ -183,6 +183,7 @@ with DAG(
         for dataset in ["training", "validation", "test"]:
             # The params.input_type tells the .sql files which table to take as input
             split_tasks[dataset] = BigQueryInsertJobOperator(
+                project_id=GCP_PROJECT_ID,
                 task_id=f"create_{dataset}_table",
                 configuration={
                     "query": {
@@ -208,6 +209,7 @@ with DAG(
         import_tasks = {}
         for split in ["training", "validation", "test"]:
             import_tasks[split] = BigQueryInsertJobOperator(
+                project_id=GCP_PROJECT_ID,
                 task_id=f"store_{split}_data",
                 configuration={
                     "extract": {
@@ -225,6 +227,7 @@ with DAG(
             )
 
         import_tasks["booking"] = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
             task_id="import_booking_to_bucket",
             configuration={
                 "extract": {

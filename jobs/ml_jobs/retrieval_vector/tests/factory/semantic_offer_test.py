@@ -31,6 +31,7 @@ def test_semantic_handler(
     request,
     mock_semantic_connect_db,
     mock_semantic_load_item_document,
+    mock_semantic_load_user_document,
 ):
     """Test SemanticHandler."""
 

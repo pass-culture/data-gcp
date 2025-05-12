@@ -178,6 +178,26 @@ def mock_semantic_load_item_document(generate_fake_text_item_data):
 
 
 @pytest.fixture
+def mock_semantic_load_user_document(generate_fake_data):
+    """Fixture to mock the load_user_document function used in DefaultClient."""
+
+    with patch("app.retrieval.client.DefaultClient.load_user_document") as mock_load:
+        prefix_key = "user"
+        user_docs = DocumentArray()
+        for _, row in generate_fake_data(
+            n=VECTOR_SIZE, vector_dim=VECTOR_DIM, prefix_key=prefix_key
+        ).iterrows():
+            user_docs.append(
+                Document(id=row[f"{prefix_key}_id"], embedding=row["vector"])
+            )
+        mock_load.return_value = user_docs
+
+        logger.info(f"Mocked load_user_document with {len(user_docs)} users.")
+        logger.info(f"User document: {user_docs['user_1']}")
+        yield mock_load
+
+
+@pytest.fixture
 def mock_semantic_connect_db(generate_fake_text_item_data):
     """Fixture to mock the load_item_document function used in DefaultClient."""
 

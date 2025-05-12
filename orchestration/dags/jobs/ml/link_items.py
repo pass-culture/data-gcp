@@ -165,6 +165,7 @@ with DAG(
         "import_data", tooltip="Import data from SQL to BQ"
     ) as import_data_group:
         import_sources = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
             task_id="import_sources",
             configuration={
                 "query": {
@@ -183,6 +184,7 @@ with DAG(
         )
 
         import_candidates = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
             task_id="import_candidates",
             configuration={
                 "query": {
@@ -207,6 +209,7 @@ with DAG(
         "export_data", tooltip="Export data from BQ to GCS"
     ) as export_data_group:
         export_sources_bq = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
             task_id="export_sources_bq",
             configuration={
                 "extract": {
@@ -227,6 +230,7 @@ with DAG(
         )
 
         export_candidates_bq = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
             task_id="export_candidates_bq",
             configuration={
                 "extract": {

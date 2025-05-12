@@ -104,6 +104,7 @@ with DAG(
     )
 
     append_to_raw = BigQueryInsertJobOperator(
+        project_id=GCP_PROJECT_ID,
         task_id="add_tmp_table_to_raw",
         configuration={
             "query": {

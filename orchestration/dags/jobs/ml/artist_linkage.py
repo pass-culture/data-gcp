@@ -138,6 +138,7 @@ with DAG(
     # Artist Linkage
     with TaskGroup("data_collection") as collect:
         import_artists_to_link_to_bucket = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
             task_id="import_artists_to_link_to_bucket",
             configuration={
                 "extract": {

@@ -41,7 +41,7 @@ def request_data_rerank() -> PredictionRequest:
 )
 def test_similar_offer_handler(
     mock_connect_db,
-    mock_generate_fake_load_user_document,
+    mock_user_document_loading,
     mock_generate_fake_load_item_document,
     request_data_fixture,
     request,

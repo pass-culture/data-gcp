@@ -78,5 +78,5 @@ jobs:
           file: ${{ env.SOURCE_PATH }}/Dockerfile.k8s-worker
           push: true
           tags: |
-            ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:${{ steps.sha.outputs.short_sha }}
-            ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:v1
+            ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/${{ vars.TARGET_ENV }}/airflow:${{ steps.sha.outputs.short_sha }}
+            ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/${{ vars.TARGET_ENV }}/airflow:v1

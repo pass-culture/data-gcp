@@ -94,6 +94,7 @@ with DAG(
     start = DummyOperator(task_id="start", dag=dag)
 
     import_offer_as_parquet = BigQueryInsertJobOperator(
+        project_id=GCP_PROJECT_ID,
         task_id="import_offer_as_parquet",
         configuration={
             "extract": {

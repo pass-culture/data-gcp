@@ -13,6 +13,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 # TODO: rename table in task_id
 def bigquery_job_task(dag, table, job_params, extra_params={}):
     return BigQueryInsertJobOperator(
+        project_id=GCP_PROJECT_ID,
         task_id=table,
         configuration={
             "query": {

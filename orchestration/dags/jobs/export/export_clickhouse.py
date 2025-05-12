@@ -184,6 +184,7 @@ for dag_name, dag_params in dags.items():
                 )
 
             export_task = BigQueryInsertJobOperator(
+                project_id=GCP_PROJECT_ID,
                 task_id=f"bigquery_export_{clickhouse_table_name}",
                 configuration={
                     "query": {
@@ -202,6 +203,7 @@ for dag_name, dag_params in dags.items():
             in_tables_tasks.append(export_task)
 
             export_bq = BigQueryInsertJobOperator(
+                project_id=GCP_PROJECT_ID,
                 task_id=f"{clickhouse_table_name}_to_bucket",
                 configuration={
                     "extract": {

@@ -62,7 +62,7 @@ with
                 distinct case when not venue_is_virtual then venue_id end
             ) as total_physical_managed_venues,
             count(
-                distinct case when venue_is_permanent then venue_id end
+                distinct case when venue_is_open_to_public then venue_id end
             ) as total_permanent_managed_venues,
             string_agg(
                 distinct concat(

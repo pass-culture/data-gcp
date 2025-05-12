@@ -7,7 +7,7 @@ from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    GCS_COMPOSER_BUCKET,
+    GCS_AIRFLOW_BUCKET,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -57,8 +57,8 @@ with DAG(
             default=f"metabase-dbt-{ENV_SHORT_NAME}",
             type="string",
         ),
-        "composer_bucket_name": Param(
-            default=GCS_COMPOSER_BUCKET,
+        "airflow_bucket_name": Param(
+            default=GCS_AIRFLOW_BUCKET,
             type="string",
         ),
         "exposure_dataset_name": Param(
@@ -91,7 +91,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py export-models --composer-bucket-name {{ params.composer_bucket_name}} ",
+        command="python main.py export-models --airflow-bucket-name {{ params.airflow_bucket_name}} ",
         do_xcom_push=True,
     )
 
@@ -100,7 +100,7 @@ with DAG(
         instance_name="{{ params.instance_name }}",
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py export-exposures --composer-bucket-name {{ params.composer_bucket_name}} --exposure-dataset-name {{ params.exposure_dataset_name }} --exposure-table-name {{ params.exposure_table_name }}",
+        command="python main.py export-exposures --airflow-bucket-name {{ params.airflow_bucket_name}} --exposure-dataset-name {{ params.exposure_dataset_name }} --exposure-table-name {{ params.exposure_table_name }}",
         do_xcom_push=True,
     )
 

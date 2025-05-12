@@ -8,7 +8,7 @@ compile:
 	uv export --format requirements.txt -o k8s-airflow/k8s-worker-requirements.txt --python=python3.10
 
 auth:
-	gcloud auth application-default login --no-launch-browser
+	gcloud auth application-default login
 
 build:
 	make auth

@@ -52,6 +52,7 @@ with DAG(
     import_tables_to_raw_tasks = []
     for name, params in import_tables.items():
         task = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
             task_id=f"import_metabase_{name}_to_raw",
             configuration={
                 "query": {

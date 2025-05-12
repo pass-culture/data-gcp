@@ -111,6 +111,7 @@ with DAG(
     )
 
     export_bq = BigQueryInsertJobOperator(
+        project_id=GCP_PROJECT_ID,
         task_id="store_item_embbedding_data",
         configuration={
             "extract": {

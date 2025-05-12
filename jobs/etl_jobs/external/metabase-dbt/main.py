@@ -49,7 +49,7 @@ def export_exposures(
         "data/target/manifest.json",
         help="Path to the manifest file in the Composer Bucket",
     ),
-    composer_bucket_base_folder: str = typer.Option(
+    airflow_bucket_base_folder: str = typer.Option(
         "data/exposures/",
         help="Base folder in the Composer Bucket to save the exposures",
     ),
@@ -69,7 +69,7 @@ def export_exposures(
     handler.export_exposures(collection_filters=collection_filters, output_path=".")
     handler.push_exposures_to_bucket(
         airflow_bucket_name=airflow_bucket_name,
-        airflow_bucket_path=f"{composer_bucket_base_folder}exposures.yml",
+        airflow_bucket_path=f"{airflow_bucket_base_folder}exposures.yml",
         exposure_local_path="exposures.yml",
     )
 

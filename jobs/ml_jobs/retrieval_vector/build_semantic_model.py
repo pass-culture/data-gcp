@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import joblib
 import numpy as np
 import polars as pl
@@ -10,10 +8,8 @@ from hnne import HNNE
 from utils import (
     ENV_SHORT_NAME,
     create_items_table,
-    deploy_container,
     get_item_docs,
     get_items_metadata,
-    save_experiment,
     save_model_type,
 )
 
@@ -61,35 +57,16 @@ def prepare_docs(bucket_path):
 
 
 def main(
-    experiment_name: str = typer.Option(
-        None,
-        help="Name of the experiment",
-    ),
-    model_name: str = typer.Option(
-        None,
-        help="Name of the model",
-    ),
     source_gs_path: str = typer.Option(
         None,
         help="GCS parquet path",
     ),
-    container_worker: str = typer.Option(
-        "1",
-        help="Number of workers",
-    ),
 ) -> None:
-    yyyymmdd = datetime.now().strftime("%Y%m%d")
-    if model_name is None:
-        model_name = "default"
-    run_id = f"{model_name}_{ENV_SHORT_NAME}_v{yyyymmdd}"
-    serving_container = f"europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/{ENV_SHORT_NAME}/{experiment_name.replace('.', '_')}:{run_id}"
     print("Download...")
 
     prepare_docs(source_gs_path)
     print("Deploy...")
     save_model_type(model_type=MODEL_TYPE)
-    deploy_container(serving_container, workers=int(container_worker))
-    save_experiment(experiment_name, model_name, serving_container, run_id=run_id)
 
 
 if __name__ == "__main__":

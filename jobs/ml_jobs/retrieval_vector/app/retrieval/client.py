@@ -334,20 +334,27 @@ class DefaultClient:
         self, user_id: str, ranked_items: List[Dict]
     ) -> List[Dict]:
         """
-        Calculates the dot product similarity between a user's vector and multiple item vectors.
-        This method retrieves the embedding vector for the specified user and for each item
-        in the provided list of item IDs. It then computes the dot product between the
-        user's vector and each item's vector. Item IDs that are `None` are ignored.
+        Adds dot product similarity scores between a user's vector and item vectors.
+
+        This method calculates the dot product similarity between the embedding vector
+        of the specified user and the embedding vector of each item in the `ranked_items` list.
+        The similarity score is added to each item's dictionary under the
+        key specified by `SIMILARITY_COLUMN_NAME`.
+
+        If `user_id` is not provided, or if the user vector or an item vector
+        cannot be found, the similarity score will be `None`.
+
         Args:
-            user_id (str): The unique identifier for the user.
-            item_ids (List[str]): A list of unique identifiers for the items.
-                `None` values in this list will be skipped.
+            user_id (str): The unique identifier for the user. If None,
+                   similarity scores will be set to None.
+            ranked_items (List[Dict]): A list of dictionaries, where each dictionary
+                           represents an item and should contain an "item_id"
+                           key to retrieve its vector.
+
         Returns:
-            List[Dict[str, Union[float, str]]]: A list of dictionaries. Each dictionary
-            represents an item and contains:
-                - "item_id" (str): The ID of the item.
-                - "dot_similarity" (float): The dot product similarity score between
-                  the user's vector and the item's vector.
+            List[Dict]: The input list of `ranked_items`, with each item dictionary
+                updated to include a `SIMILARITY_COLUMN_NAME` key holding
+                the dot product similarity score (float) or None.
         """
         if not user_id:
             return [{**item, SIMILARITY_COLUMN_NAME: None} for item in ranked_items]

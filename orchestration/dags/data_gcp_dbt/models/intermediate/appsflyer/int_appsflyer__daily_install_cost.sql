@@ -24,7 +24,7 @@ with
             sum(installs) as total_installs
         from {{ source("raw", "appsflyer_cost_channel") }}
         {% if is_incremental() %}
-        -- 15-day window to ensure 14th day data is included before DAG runs
+            -- 15-day window to ensure 14th day data is included before DAG runs
             where
                 date(
                     execution_date

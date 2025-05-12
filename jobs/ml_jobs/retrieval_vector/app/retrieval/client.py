@@ -15,6 +15,7 @@ from app.retrieval.constants import (
     DEFAULT_LANCE_DB_URI,
     DEFAULT_USER_DOCS_PATH,
     OUTPUT_METRIC_COLUMNS,
+    SIMILARITY_COLUMN_NAME,
 )
 from app.retrieval.core.filter import Filter
 from app.retrieval.utils import load_documents
@@ -267,12 +268,11 @@ class DefaultClient:
         if re_rank and self.re_ranker and user_id:
             results = results.rerank(self.re_ranker, query_string=user_id)
 
-        formatted_results = self.format_results(
-            results.to_list(), details, excluded_items=excluded_items
+        postprocessed_results = self._add_user_item_dot_similarity(
+            user_id=user_id, ranked_items=results.to_list()
         )
-
-        return self._add_user_item_dot_similarity(
-            user_id=user_id, ranked_items=formatted_results
+        return self.format_results(
+            postprocessed_results, details, excluded_items=excluded_items
         )
 
     def columns(self, details: bool, re_rank: bool) -> List[str]:
@@ -350,18 +350,18 @@ class DefaultClient:
                   the user's vector and the item's vector.
         """
         if not user_id:
-            return ranked_items
+            return [{**item, SIMILARITY_COLUMN_NAME: None} for item in ranked_items]
 
         user_vector = self.user_vector(user_id)
 
         for item in ranked_items:
             item_id = item.get("item_id")
             if item_id is None:
-                item["user_item_dot_similarity"] = None
+                item[SIMILARITY_COLUMN_NAME] = None
             item_vector = self.item_vector(item_id)
             if item_vector is None:
-                item["user_item_dot_similarity"] = None
-            item["user_item_dot_similarity"] = float(
+                item[SIMILARITY_COLUMN_NAME] = None
+            item[SIMILARITY_COLUMN_NAME] = float(
                 np.dot(user_vector.embedding, item_vector.embedding)
             )
 

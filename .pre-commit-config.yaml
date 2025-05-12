@@ -48,3 +48,5 @@ repos:
     hooks:
     - id: markdownlint-cli2
       language_version: 24.0.0
+      args:
+        - --fix

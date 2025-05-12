@@ -1,10 +1,10 @@
 # Retrieval Recommendation API
 
-### Overview
+## Overview
 
 This API is designed to provide recommendations based on user preferences and vector embeddings. The API leverages **LanceDB** for vector search and supports similar offer, recommendation, semantic search, and filtering mechanisms to deliver personalized results.
 
-### Key Features
+## Key Features
 
 - **User Recommendation** engine: Suggests similar items based on user preferences calculated through vector embeddings (Two Tower Logic).
 - **In the Same Category** engine: Suggests similar items based on a set of provided items calculated through custom vector embeddings or semantics from sentence transformers.
@@ -12,7 +12,7 @@ This API is designed to provide recommendations based on user preferences and ve
 - **Filtering**: Applies filtering criteria to narrow down recommendations and get top associated items.
 - **Re-ranking**: Supports re-ranking of results based on additional metrics.
 
-### Requirements
+## Requirements
 
 - **Python 3.10+**
 - **LanceDB** for vector database operations.
@@ -22,25 +22,33 @@ This API is designed to provide recommendations based on user preferences and ve
 
 You can find all dependencies in the `api-requirements.in` file.
 
-### How to Run the API locally
+## How to Run the API locally
 
 1. **Install Dependencies**:
    The following command will install packages.
+
    ```sh
    make install-api
    ```
+
 2. **Build the lancedb vector database**:
    You can build the LanceDB vector database using the following command:
+
    ```sh
    python deploy_model.py BLABLA
    ```
-3. Start the API using :
+
+3. **Start the API using**:
+
    ```sh
    make start
    ```
+
    => It will run the API on `0.0.0.0:8080`
-   => If you want to change the port, edit the start target in the `Makefile`
-4. Make a prediction
+   => If you want to change the port, edit the start target in the `Makefile`.
+
+4. **Make a prediction**:
+
    ```sh
    curl -X POST localhost:8080/predict -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{
    "instances": [
@@ -87,13 +95,17 @@ pytest tests/retrieval/test_similar_offer.py
 1. Retrieve lancedb database from the docker image: If you want to use the same vector database as the one which was already build and deploy (for debug purposes), you can retrieve the LanceDB vector database from the docker image.
 
    To do this, run:
+
    ```sh
    DOCKER_IMAGE_TAG=<docker_image_tag> make install-api
    ```
+
    where `<docker_image_tag>` is the tag of the docker image you want to use. You can find those in [Artifact Registry](https://console.cloud.google.com/artifacts/docker/passculture-infra-prod/europe-west1/pass-culture-artifact-registry?authuser=2&project=passculture-infra-prod).
 
    - For instance :
+
      ```sh
      DOCKER_IMAGE_TAG=europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/prod/retrieval_recommendation_v1_2_prod:two_towers_user_recommendation_prod_v20250428 make install-api
      ```
-    - ⚠️ If you use a production model, please delete the Docker image locally after use. ⚠️
+
+   - ⚠️ If you use a production model, please delete the Docker image locally after use. ⚠️

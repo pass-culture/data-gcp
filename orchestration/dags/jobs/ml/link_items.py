@@ -357,6 +357,7 @@ with DAG(
 
         # 5.4) Load linked product into BigQuery
         load_linked_product_into_bq = GCSToBigQueryOperator(
+            project_id=GCP_PROJECT_ID,
             task_id="load_linked_product_into_bq",
             bucket=MLFLOW_BUCKET_NAME,
             source_objects=f"""{
@@ -460,6 +461,7 @@ with DAG(
 
         # 6.5) Load linked offers into BigQuery
         load_linked_offer_into_bq = GCSToBigQueryOperator(
+            project_id=GCP_PROJECT_ID,
             task_id="load_linked_offer_into_bq",
             bucket=MLFLOW_BUCKET_NAME,
             source_objects=f"""{

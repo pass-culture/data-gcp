@@ -208,6 +208,7 @@ with DAG(
         (match_artists_on_wikidata >> get_wikimedia_commons_license)
 
     load_data_into_artist_linked_table = GCSToBigQueryOperator(
+        project_id=GCP_PROJECT_ID,
         bucket=MLFLOW_BUCKET_NAME,
         task_id="load_data_into_artist_linked_table",
         source_objects=os.path.join(

@@ -360,14 +360,18 @@ class DefaultClient:
             return [{**item, SIMILARITY_COLUMN_NAME: None} for item in ranked_items]
 
         user_vector = self.user_vector(user_id)
+        if user_vector is None:
+            return [{**item, SIMILARITY_COLUMN_NAME: None} for item in ranked_items]
 
         for item in ranked_items:
             item_id = item.get("item_id")
             if item_id is None:
                 item[SIMILARITY_COLUMN_NAME] = None
+                continue
             item_vector = self.item_vector(item_id)
             if item_vector is None:
                 item[SIMILARITY_COLUMN_NAME] = None
+                continue
             item[SIMILARITY_COLUMN_NAME] = float(
                 np.dot(user_vector.embedding, item_vector.embedding)
             )

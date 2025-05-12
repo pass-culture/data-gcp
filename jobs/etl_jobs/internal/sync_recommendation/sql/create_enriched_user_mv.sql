@@ -16,8 +16,7 @@ returns
         new_user_clicks_count integer,
         new_user_favorites_count integer,
         new_user_deposit_amount real,
-        new_user_amount_spent real,
-        new_user_embedding_json json
+        new_user_amount_spent real
     )
 as $body$
 BEGIN

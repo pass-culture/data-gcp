@@ -12,11 +12,6 @@ with
         where eu.last_deposit_amount is not null  -- Bad quality data (4 rows in stg and prod)
     ),
 
-    user_embeddings as (
-        select user_id, to_json_string(user_embedding) as user_embedding_json
-        from {{ ref("ml_feat__two_tower_last_user_embedding") }}
-    ),
-
     user_features as (
         select
             user_id,
@@ -41,7 +36,6 @@ select
     user_features.user_favorites_count as new_user_favorites_count,
     user_features.user_deposit_amount as new_user_deposit_amount,
     user_features.user_amount_spent as new_user_amount_spent,
-    user_embeddings.user_embedding_json as new_user_embedding_json,
     coalesce(
         selected_users.total_theoretical_remaining_credit,
         selected_users.user_last_deposit_amount
@@ -50,7 +44,6 @@ from selected_users
 left join
     {{ ref("firebase_aggregated_users") }} as au on selected_users.user_id = au.user_id
 left join user_features on selected_users.user_id = user_features.user_id
-left join user_embeddings on selected_users.user_id = user_embeddings.user_id
 qualify
     row_number() over (
         partition by selected_users.user_id order by selected_users.booking_cnt desc

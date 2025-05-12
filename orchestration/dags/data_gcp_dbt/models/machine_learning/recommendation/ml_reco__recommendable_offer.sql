@@ -55,11 +55,6 @@ with
             ) as available_offers
     ),
 
-    item_embeddings as (
-        select item_id, to_json_string(item_embedding) as item_embedding_json
-        from {{ ref("ml_feat__two_tower_last_item_embedding") }}
-    ),
-
     offer_features as (
         select
             offer_id,
@@ -110,7 +105,6 @@ select
     ro.is_sensitive,
     ro.is_restrained,
     ro.default_max_distance,
-    item_embeddings.item_embedding_json as new_item_embedding_json,
     offer_features.offer_is_geolocated as new_offer_is_geolocated,
     offer_features.offer_creation_days as new_offer_creation_days,
     offer_features.offer_stock_price as new_offer_stock_price,
@@ -121,5 +115,4 @@ select
 
 from recommendable_offers_data as ro
 left join offer_features on ro.offer_id = offer_features.offer_id
-left join item_embeddings on ro.item_id = item_embeddings.item_id
 where ro.stock_rank < 30  -- only next 30 events

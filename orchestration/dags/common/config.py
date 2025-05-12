@@ -20,8 +20,8 @@ AIRFLOW_URI = {
     "prod": "airflow.data.passculture.team",
 }[ENV_SHORT_NAME]
 
-GCS_COMPOSER_BUCKET = os.environ.get(
-    "GCS_BUCKET", f"airflow-data-bucket-{ENVIRONMENT_NAME}"
+GCS_AIRFLOW_BUCKET = os.environ.get(
+    "GCS_BUCKET", f"airflow-data-bucket-{ENV_SHORT_NAME}"
 )
 
 SSH_USER = os.environ.get("SSH_USER", "airflow")

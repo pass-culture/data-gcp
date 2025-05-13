@@ -136,7 +136,7 @@ with DAG(
         task_id="semantic_retrieval_build",
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
-        command="python build_semantic_model.py "
+        command="python create_vector_database.py semantic-database "
         f"--source-gs-path {dag_config['STORAGE_PATH']} ",
         dag=dag,
     )

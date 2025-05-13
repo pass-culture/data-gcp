@@ -10,6 +10,7 @@ import pandas as pd
 import pyarrow as pa
 from docarray import Document, DocumentArray
 from google.cloud import bigquery
+from loguru import logger
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
@@ -19,6 +20,8 @@ MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"
 BIGQUERY_RECOMMENDATION_DATASET = f"ml_reco_{ENV_SHORT_NAME}"
 LANCE_DB_BATCH_SIZE = 100_000
 OUTPUT_DATA_PATH = "./metadata"
+MODEL_BASE_PATH = "./model"
+
 
 ITEM_COLUMNS = [
     "vector",
@@ -62,6 +65,21 @@ ITEM_COLUMNS = [
     "example_venue_latitude",
     "example_venue_longitude",
 ]
+
+
+def download_model(artifact_uri: str) -> None:
+    """
+    Download model from GCS bucket
+    Args:
+        artifact_uri (str): GCS bucket path
+    """
+    command = f"gsutil -m cp -r {artifact_uri} ."
+    results = subprocess.Popen(
+        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    )
+    # TODO handle errors
+    for line in results.stdout:
+        logger.info(line.rstrip().decode("utf-8"))
 
 
 def save_experiment(experiment_name, model_name, serving_container, run_id):
@@ -304,3 +322,35 @@ def get_user_docs(user_dict: dict) -> DocumentArray:
     for k, v in user_dict.items():
         docs.append(Document(id=str(k), embedding=v))
     return docs
+
+
+def get_model_from_mlflow(
+    experiment_name: str, run_id: str = None, artifact_uri: str = None
+):
+    client = bigquery.Client()
+
+    # get artifact_uri from BQ
+    if artifact_uri is None or len(artifact_uri) <= 10:
+        if run_id is None or len(run_id) <= 2:
+            results_array = (
+                client.query(
+                    f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' ORDER BY execution_date DESC LIMIT 1"""
+                )
+                .to_dataframe()
+                .to_dict("records")
+            )
+        else:
+            results_array = (
+                client.query(
+                    f"""SELECT * FROM `{BIGQUERY_CLEAN_DATASET}.{MODELS_RESULTS_TABLE_NAME}` WHERE experiment_name = '{experiment_name}' AND run_id = '{run_id}' ORDER BY execution_date DESC LIMIT 1"""
+                )
+                .to_dataframe()
+                .to_dict("records")
+            )
+        if len(results_array) == 0:
+            raise Exception(
+                f"Model {experiment_name} not found into BQ {MODELS_RESULTS_TABLE_NAME}. Failing."
+            )
+        else:
+            artifact_uri = results_array[0]["artifact_uri"]
+    return artifact_uri

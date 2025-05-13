@@ -117,18 +117,18 @@ with DAG(
 
     if ENV_SHORT_NAME == "dev":
         # dummy deploy
-        retrieval_build = SSHGCEOperator(
-            task_id="retrieval_build",
+        create_vector_database = SSHGCEOperator(
+            task_id="create_vector_database",
             instance_name="{{ params.instance_name }}",
             base_dir="{{ params.base_dir }}",
-            command="python build_dummy_model.py ",
+            command="python create_vector_database.py dummy-database ",
         )
     else:
-        retrieval_build = SSHGCEOperator(
-            task_id="retrieval_build",
+        create_vector_database = SSHGCEOperator(
+            task_id="create_vector_database",
             instance_name="{{ params.instance_name }}",
             base_dir="{{ params.base_dir }}",
-            command="python build_default_model.py "
+            command="python create_vector_database.py default-database "
             "--source-experiment-name {{ params.source_experiment_name }} "
             "--source-artifact-uri {{  params.source_artifact_uri }} "
             "--source-run-id {{ params.source_run_id }} ",
@@ -153,7 +153,7 @@ with DAG(
     (
         gce_instance_start
         >> fetch_install_code
-        >> retrieval_build
+        >> create_vector_database
         >> build_and_push_docker_image
         >> gce_instance_stop
     )

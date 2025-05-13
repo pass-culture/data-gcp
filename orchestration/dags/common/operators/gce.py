@@ -195,6 +195,7 @@ class BaseSSHGCEOperator(BaseOperator):
             hook=ssh_hook,
             environment=self.environment,
         )
+        self.log.info(f"Running command: {self.command}")
         return job_manager.run_ssh_client_command(self.command)
 
     def run_deferrable(self, context, ssh_hook: ComputeEngineSSHHook):
@@ -206,6 +207,7 @@ class BaseSSHGCEOperator(BaseOperator):
             hook=ssh_hook,
             environment=self.environment,
         )
+        self.log.info(f"Running command: {self.command}")
         result = job_manager.run_ssh_client_command(self.command)
         job_id = result.strip() if result else None
 
@@ -220,6 +222,7 @@ class BaseSSHGCEOperator(BaseOperator):
                 instance_name=self.instance_name,
                 zone=self.gce_zone,
                 run_id=run_id,
+                poll_interval=self.poll_interval,
             ),
             method_name="execute_complete",
         )

@@ -68,8 +68,7 @@ class SSHGCEJobManager:
         self.do_xcom_push = do_xcom_push
         self.log = task_instance.log
 
-    def run_ssh_client_command(self, command: str, retry=1):
-        self.log.info(f"Running command: {command}")
+    def run_ssh_client_command(self, command: str, retry=1) -> str:
         try:
             with self.ssh_hook.get_conn() as ssh_client:
                 exit_status, agg_stdout, agg_stderr = (
@@ -117,12 +116,14 @@ class SSHGCEJobManager:
             sleep(retry * self.SSH_TIMEOUT)
             return self.run_ssh_client_command(command, retry=retry + 1)
 
-    def _decode_result(self, result: bytes) -> str:
+    def _decode_result(self, result: bytes | str) -> str:
         enable_pickling = conf.getboolean("core", "enable_xcom_pickling")
         if not enable_pickling:
             if result is not None:
                 result = b64encode(result).decode("utf-8")
-        return result.decode("utf-8")
+        if isinstance(result, bytes):
+            return result.decode("utf-8")
+        return str(result)
 
 
 class DeferrableSSHGCEJobManager(SSHGCEJobManager):
@@ -214,7 +215,7 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
         """Returns command to clean up job directory after completion or failure."""
         command = f"""
             # Only remove if job is not running
-            JOB_DIR={self.job_dir}
+            JOB_DIR={self._job_dir}
             if [ -f "$JOB_DIR/status" ]; then
                 status=$(cat $JOB_DIR/status)
                 if [ "$status" != "running" ]; then
@@ -228,12 +229,17 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
         self.log.info(f"Running cleanup command: {command}")
         return super().run_ssh_client_command(command, retry=retry)
 
-    @staticmethod
-    def _parse_check_command_output(raw: str) -> DeferrableSSHJobStatus:
+    def _parse_check_command_output(self, raw: str | bytes) -> DeferrableSSHJobStatus:
         """
         Extracts STATUS and OUTPUT from raw SSH output.
         Returns (status_str or None, output_text).
         """
+        # Always ensure we're working with a string
+        if isinstance(raw, bytes):
+            raw = raw.decode("utf-8")
+        elif not isinstance(raw, str):
+            raw = str(raw)
+
         m_status = re.search(r"STATUS:(\w+)", raw)
         m_output = re.search(r"OUTPUT:(.*)", raw, re.DOTALL)
         m_pid = re.search(r"PID:(\d+)", raw)

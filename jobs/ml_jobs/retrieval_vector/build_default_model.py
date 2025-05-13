@@ -64,7 +64,7 @@ def download_model(artifact_uri: str) -> None:
     Args:
         artifact_uri (str): GCS bucket path
     """
-    command = f"gsutil -m cp -r {artifact_uri} {MODEL_BASE_PATH}"
+    command = f"gsutil -m cp -r {artifact_uri} ."
     results = subprocess.Popen(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )

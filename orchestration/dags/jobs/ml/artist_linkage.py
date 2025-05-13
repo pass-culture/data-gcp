@@ -214,7 +214,7 @@ with DAG(
         source_objects=os.path.join(
             GCS_FOLDER_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME
         ),
-        destination_project_dataset_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.{ARTIST_LINK_TABLE}",
+        destination_project_dataset_table=f"{GCP_PROJECT_ID}.{BIGQUERY_ML_PREPROCESSING_DATASET}.{ARTIST_LINK_TABLE}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,

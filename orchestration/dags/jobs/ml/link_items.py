@@ -367,7 +367,7 @@ with DAG(
                 )
             }/data.parquet""",
             destination_project_dataset_table=(
-                f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['BIGQUERY']['LINKED_PRODUCT_TABLE']}"
+                f"{GCP_PROJECT_ID}.{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['BIGQUERY']['LINKED_PRODUCT_TABLE']}"
             ),
             source_format="PARQUET",
             write_disposition="WRITE_TRUNCATE",
@@ -471,7 +471,7 @@ with DAG(
                 )
             }/data.parquet""",
             destination_project_dataset_table=(
-                f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['BIGQUERY']['LINKED_OFFER_TABLE']}"
+                f"{GCP_PROJECT_ID}.{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['BIGQUERY']['LINKED_OFFER_TABLE']}"
             ),
             source_format="PARQUET",
             write_disposition="WRITE_TRUNCATE",

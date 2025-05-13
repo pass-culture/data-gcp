@@ -32,11 +32,25 @@ You can find all dependencies in the `api-requirements.in` file.
    ```
 
 2. **Build the lancedb vector database**:
-   You can build the LanceDB vector database using the following command:
+   You can build the LanceDB vector database using the following commands:
+   - For a dummy model:
 
-   ```sh
-   python deploy_model.py BLABLA
-   ```
+      ```sh
+      python build_dummy_model.py
+      ```
+
+   - For a production model:
+
+      ```sh
+      python build_default_model.py --source-artifact-uri <source_artifact_uri>
+      ```
+
+      where `<source_artifact_uri>` is the GS URI of the source artifact of the Two Tower training you want to use (don't forget the `/model` suffix). You can find it on [MLFlow](https://mlflow.passculture.team/#/experiments/35).
+      Example:
+
+      ```sh
+      python build_default_model.py --source-artifact-uri --source-artifact-uri gs://mlflow-bucket-prod/artifacts/35/e894fb5e2b5248feb4114bb2473571ff/artifacts/model
+      ```
 
 3. **Start the API using**:
 

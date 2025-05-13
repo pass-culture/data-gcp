@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 import typer
 from google.cloud import bigquery
+from loguru import logger
 
 from utils import (
     BIGQUERY_CLEAN_DATASET,
@@ -55,42 +56,49 @@ def get_model_from_mlflow(
     return artifact_uri
 
 
-def download_model(artifact_uri):
-    command = f"gsutil -m cp -r {artifact_uri} ./"
+def download_model(artifact_uri: str, output_path: str) -> None:
+    """
+    Download model from GCS bucket
+    Args:
+        artifact_uri (str): GCS bucket path
+        output_path (str): local path to save the model
+    """
+    command = f"gsutil -m cp -r {artifact_uri} {output_path}"
     results = subprocess.Popen(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
     # TODO handle errors
     for line in results.stdout:
-        print(line.rstrip().decode("utf-8"))
+        logger.info(line.rstrip().decode("utf-8"))
 
 
-def prepare_docs(normalize: bool = False) -> None:
-    print("Get items...")
+def prepare_docs() -> None:
+    logger.info("Get items metadata...")
     items_df = get_items_metadata()
+    logger.info("Items metadata loaded.")
+
     # download model
-    print("Get model...")
+    logger.info("Load Two Tower model...")
     tf_reco = tf.keras.models.load_model("./model/")
+    logger.info("Two Tower model loaded.")
+
+    # get user and item embeddings
     item_list = tf_reco.item_layer.layers[0].get_vocabulary()
     item_weights = tf_reco.item_layer.layers[1].get_weights()[0].astype(np.float32)
     user_list = tf_reco.user_layer.layers[0].get_vocabulary()
     user_weights = tf_reco.user_layer.layers[1].get_weights()[0].astype(np.float32)
-    # convert
-    if normalize:
-        user_embedding_dict = {
-            x: y / np.linalg.norm(y) for x, y in zip(user_list, user_weights)
-        }
-        item_embedding_dict = {
-            x: y / np.linalg.norm(y) for x, y in zip(item_list, item_weights)
-        }
-    else:
-        user_embedding_dict = {x: y for x, y in zip(user_list, user_weights)}
-        item_embedding_dict = {x: y for x, y in zip(item_list, item_weights)}
+    user_embedding_dict = {x: y for x, y in zip(user_list, user_weights)}
+    item_embedding_dict = {x: y for x, y in zip(item_list, item_weights)}
 
+    # build user and item documents
+    logger.info("Build user and item documents...")
     user_docs = get_user_docs(user_embedding_dict)
     user_docs.save("./metadata/user.docs")
     item_docs = get_item_docs(item_embedding_dict, items_df)
     item_docs.save("./metadata/item.docs")
+    logger.info("User and item documents built.")
+
+    logger.info("Create items lancedb table...")
     create_items_table(
         item_embedding_dict,
         items_df,
@@ -98,6 +106,7 @@ def prepare_docs(normalize: bool = False) -> None:
         uri="./metadata/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,
     )
+    logger.info("Items lancedb table created.")
 
 
 def main(
@@ -113,24 +122,28 @@ def main(
         None,
         help="Source run_id of the model",
     ),
-    normalize: bool = typer.Option(
-        False,
-        help="Normalize embeddings",
-    ),
 ) -> None:
     if source_artifact_uri is None or len(source_artifact_uri) <= 10:
+        logger.info(
+            f"Get model from MLFlow experiment {source_experiment_name} with run_id {source_run_id}..."
+        )
         source_artifact_uri = get_model_from_mlflow(
             experiment_name=source_experiment_name,
             run_id=source_run_id,
             artifact_uri=source_artifact_uri,
         )
-    print(f"Get from {source_artifact_uri} trained model")
-    print("Download...")
-    download_model(source_artifact_uri)
+        logger.info(f"Model artifact_uri: {source_artifact_uri}")
 
-    print("Build vector database")
-    prepare_docs(normalize=normalize)
+    logger.info(f"Download model from {source_artifact_uri} trained model...")
+    download_model(artifact_uri=source_artifact_uri, output_path="./")
+    logger.info("Model downloaded.")
+
+    logger.info("Building lanceDB table, and user and item docarrays...")
+    prepare_docs()
+    logger.info("LanceDB table and documents built.")
+
     save_model_type(model_type=MODEL_TYPE)
+    logger.info("Model type saved.")
 
 
 if __name__ == "__main__":

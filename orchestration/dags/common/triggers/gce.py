@@ -19,7 +19,7 @@ class DeferrableSSHJobMonitorTrigger(BaseTrigger):
         instance_name: str,
         zone: str,
         run_id: str,
-        poll_interval: int = 60,
+        poll_interval: int = 300,
     ):
         self.task_id = task_id
         self.instance_name = instance_name
@@ -73,7 +73,9 @@ class DeferrableSSHJobMonitorTrigger(BaseTrigger):
             try:
                 self.log.info(f"Checking job {self.run_id} status")
                 deferrable_status = await job_manager.run_ssh_status_check_command()
-                self.log.info(f"Job {self.run_id} status: {deferrable_status.status}")
+                self.log.info(
+                    f"\t\t Deferrable job {self.run_id} STATUS: {deferrable_status.status}"
+                )
 
                 # Job finished
                 if deferrable_status.status in {"completed", "failed", "interrupted"}:

@@ -53,7 +53,6 @@ class SSHGCEJobManager:
     def __init__(
         self,
         task_id: str,
-        run_id: str,
         task_instance: TaskInstance,
         hook: ComputeEngineSSHHook,
         environment: t.Dict[str, str],
@@ -61,8 +60,6 @@ class SSHGCEJobManager:
     ):
         self.ssh_hook = hook
         self.task_id = task_id
-        self.run_id = run_id
-        self.job_id = f"{task_id}_{str(run_id)}"
         self.environment = environment
         self.task_instance = task_instance
         self.do_xcom_push = do_xcom_push
@@ -128,6 +125,23 @@ class SSHGCEJobManager:
 
 class DeferrableSSHGCEJobManager(SSHGCEJobManager):
     """Handles remote job management operations"""
+
+    def __init__(
+        self,
+        task_id: str,
+        task_instance: TaskInstance,
+        hook: ComputeEngineSSHHook,
+        environment: t.Dict[str, str],
+        run_id: str,
+        do_xcom_push: bool = True,
+        *args,
+        **kwargs,
+    ):
+        self.run_id = run_id
+        self.job_id = f"{task_id}_{str(run_id)}"
+        super().__init__(
+            task_id, task_instance, hook, environment, do_xcom_push, *args, **kwargs
+        )
 
     @property
     def _job_base_dir(self) -> str:
@@ -220,8 +234,8 @@ class DeferrableSSHGCEJobManager(SSHGCEJobManager):
                 status=$(cat $JOB_DIR/status)
                 if [ "$status" != "running" ]; then
                     # Archive the output before cleaning
-                    mkdir -p {self.job_base_dir}/archive
-                    cp $JOB_DIR/output {self.job_base_dir}/archive/{self.job_id}_output.log 2>/dev/null || true
+                    mkdir -p {self._job_base_dir}/archive
+                    cp $JOB_DIR/output {self._job_base_dir}/archive/{self.job_id}_output.log 2>/dev/null || true
                     rm -rf $JOB_DIR
                 fi
             fi

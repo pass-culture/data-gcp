@@ -1,4 +1,5 @@
 import typing as t
+from datetime import datetime
 
 from common.config import (
     ENV_SHORT_NAME,
@@ -156,7 +157,7 @@ class BaseSSHGCEOperator(BaseOperator):
         environment: t.Dict[str, str] = {},
         gce_zone=GCE_ZONE,
         deferrable: bool = False,
-        poll_interval: int = 60,
+        poll_interval: int = 300,
         *args,
         **kwargs,
     ):
@@ -190,7 +191,6 @@ class BaseSSHGCEOperator(BaseOperator):
     def run_sync(self, context, ssh_hook: ComputeEngineSSHHook):
         job_manager = SSHGCEJobManager(
             task_id=self.task_id,
-            run_id=context["run_id"],
             task_instance=context["task_instance"],
             hook=ssh_hook,
             environment=self.environment,
@@ -199,7 +199,7 @@ class BaseSSHGCEOperator(BaseOperator):
         return job_manager.run_ssh_client_command(self.command)
 
     def run_deferrable(self, context, ssh_hook: ComputeEngineSSHHook):
-        run_id = str(context["run_id"])
+        run_id = str(context.get("run_id", datetime.now().strftime("%Y%m%d%H%M%S")))
         job_manager = DeferrableSSHGCEJobManager(
             task_id=self.task_id,
             run_id=run_id,

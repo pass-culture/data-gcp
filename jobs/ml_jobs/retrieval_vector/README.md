@@ -36,20 +36,20 @@ You can find all dependencies in the `api-requirements.in` file.
    - For a dummy model:
 
       ```sh
-      python build_dummy_model.py
+      python create_vector_database.py dummy-database
       ```
 
    - For a production model:
 
       ```sh
-      python build_default_model.py --source-artifact-uri <source_artifact_uri>
+      python create_vector_database.py default-database --source-artifact-uri <source_artifact_uri>
       ```
 
       where `<source_artifact_uri>` is the GS URI of the source artifact of the Two Tower training you want to use (don't forget the `/model` suffix). You can find it on [MLFlow](https://mlflow.passculture.team/#/experiments/35).
       Example:
 
       ```sh
-      python build_default_model.py --source-artifact-uri --source-artifact-uri gs://mlflow-bucket-prod/artifacts/35/e894fb5e2b5248feb4114bb2473571ff/artifacts/model
+      python create_vector_database.py default-database --source-artifact-uri gs://mlflow-bucket-prod/artifacts/35/e894fb5e2b5248feb4114bb2473571ff/artifacts/model
       ```
 
 3. **Start the API using**:

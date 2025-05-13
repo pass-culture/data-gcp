@@ -145,32 +145,6 @@ CONTENTFUL_MODULES = [
         ],
     },
     {
-        "name": "business",
-        "additional_fields": [
-            "title",
-            "first_line",
-            "second_line",
-            "image",
-            "url",
-            "target_not_connected_users_only",
-            "left_icon",
-        ],
-        "children": [],
-    },
-    {
-        "name": "exclusivity",
-        "additional_fields": [
-            "title",
-            "alt",
-            "image",
-            "offer_id",
-            "display_parameters",
-        ],
-        "children": [
-            BLOCK_PARAMETERS["display_parameters"],
-        ],
-    },
-    {
         "name": "highlightOffer",
         "additional_fields": [
             "offer_title",

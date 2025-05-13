@@ -8,24 +8,11 @@
 }}
 
 
-{% set start_date = var("start_date", none) %}
 with
     {% if not is_incremental() %}
         date_bounds as (
             select
-                {% if start_date is not none %} date('{{ start_date }}') as start_date,
-                {% else %}
-                    least(
-                        (
-                            select min(date(dbt_valid_from))
-                            from {{ ref("snapshot__bookable_offer") }}
-                        ),
-                        (
-                            select min(date(dbt_valid_from))
-                            from {{ ref("snapshot__bookable_collective_offer") }}
-                        )
-                    ) as start_date,
-                {% endif %}
+                date('{{ var("pass_start_date") }}') as start_date,
                 date('{{ ds() }}') as end_date
         ),
     {% endif %}

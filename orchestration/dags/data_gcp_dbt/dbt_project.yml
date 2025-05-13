@@ -124,6 +124,7 @@ data_tests:
 
 vars:
   ENV_SHORT_NAME: dev
+  pass_start_date: "2018-01-01"
   CI_MATERIALIZATION: none
   region_name: region-europe-west1
   mute_ensure_materialization_override: true

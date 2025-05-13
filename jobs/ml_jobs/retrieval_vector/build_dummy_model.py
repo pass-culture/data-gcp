@@ -1,5 +1,6 @@
 import numpy as np
 import typer
+from loguru import logger
 
 from utils import (
     ENV_SHORT_NAME,
@@ -18,7 +19,8 @@ MODEL_TYPE = {
 EMBEDDING_DIMENSION = 16
 
 
-def prepare_docs():
+def prepare_docs() -> None:
+    """Prepare dummy documents and lanceDB table."""
     print("Get items...")
     items_df = get_items_metadata()
     user_df = get_users_dummy_metadata()
@@ -48,8 +50,12 @@ def prepare_docs():
 
 
 def main() -> None:
+    logger.info("Building dummy lanceDB table, and dummy user and item docarrays...")
     prepare_docs()
+    logger.info("Dummy lanceDB table and documents built.")
+
     save_model_type(model_type=MODEL_TYPE)
+    logger.info("Model type saved.")
 
 
 if __name__ == "__main__":

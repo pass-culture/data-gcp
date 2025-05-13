@@ -96,3 +96,12 @@ HISTORICAL_CLEAN_APPLICATIVE_TABLES = {
         "clustering_fields": {"fields": ["partition_date"]},
     },
 }
+
+IMPORT_SAMPLING = {
+    "stg": {
+        "offer_legacy": 10,
+        "stock": 10,
+        "booking": 10,
+        "benificiary_fraud_check": 10,
+    }
+}

@@ -89,7 +89,7 @@ with DAG(
             type="string",
         ),
         "artifact_registry_base_path": Param(
-            default="europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/{ENV_SHORT_NAME}",
+            default=f"europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/{ENV_SHORT_NAME}",
             type="string",
         ),
     },

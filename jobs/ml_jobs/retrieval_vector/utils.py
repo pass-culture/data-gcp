@@ -18,8 +18,9 @@ BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
 MODELS_RESULTS_TABLE_NAME = "mlflow_training_results"
 BIGQUERY_RECOMMENDATION_DATASET = f"ml_reco_{ENV_SHORT_NAME}"
 LANCE_DB_BATCH_SIZE = 100_000
+OUTPUT_DATA_PATH = "./metadata"
 
-item_columns = [
+ITEM_COLUMNS = [
     "vector",
     "item_id",
     "booking_number_desc",
@@ -150,8 +151,8 @@ def to_float(f):
         return None
 
 
-def save_model_type(model_type):
-    with open("./metadata/model_type.json", "w") as file:
+def save_model_type(model_type: dict, output_dir: str):
+    with open(f"{output_dir}/model_type.json", "w") as file:
         json.dump(model_type, file)
 
 
@@ -240,7 +241,7 @@ def get_table_batches(
                     pa.array([to_float(row.example_venue_latitude)], pa.float32()),
                     pa.array([to_float(row.example_venue_longitude)], pa.float32()),
                 ],
-                item_columns,
+                ITEM_COLUMNS,
             )
 
 
@@ -248,7 +249,7 @@ def create_items_table(
     item_embedding_dict: dict,
     items_df: pd.DataFrame,
     emb_size: int,
-    uri: str = "./metadata/vector",
+    uri: str,
     batch_size: int = LANCE_DB_BATCH_SIZE,
     create_index: bool = True,
 ) -> None:
@@ -284,7 +285,7 @@ def create_items_table(
         table.create_scalar_index("stock_price", index_type="BTREE")
 
 
-def get_item_docs(item_embedding_dict, items_df):
+def get_item_docs(item_embedding_dict: dict, items_df: pd.DataFrame) -> DocumentArray:
     docs = DocumentArray()
     for row in items_df.itertuples():
         embedding_id = item_embedding_dict.get(row.item_id, None)
@@ -298,7 +299,7 @@ def get_item_docs(item_embedding_dict, items_df):
     return docs
 
 
-def get_user_docs(user_dict):
+def get_user_docs(user_dict: dict) -> DocumentArray:
     docs = DocumentArray()
     for k, v in user_dict.items():
         docs.append(Document(id=str(k), embedding=v))

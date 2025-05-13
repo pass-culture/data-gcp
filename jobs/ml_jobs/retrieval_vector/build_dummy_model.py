@@ -4,6 +4,7 @@ from loguru import logger
 
 from utils import (
     ENV_SHORT_NAME,
+    OUTPUT_DATA_PATH,
     create_items_table,
     get_item_docs,
     get_items_metadata,
@@ -37,14 +38,14 @@ def prepare_docs() -> None:
         for row in items_df.itertuples()
     }
     user_docs = get_user_docs(user_embedding_dict)
-    user_docs.save("./metadata/user.docs")
+    user_docs.save(f"{OUTPUT_DATA_PATH}/user.docs")
     item_docs = get_item_docs(item_embedding_dict, items_df)
-    item_docs.save("./metadata/item.docs")
+    item_docs.save(f"{OUTPUT_DATA_PATH}/item.docs")
     create_items_table(
         item_embedding_dict,
         items_df,
         emb_size=EMBEDDING_DIMENSION,
-        uri="./metadata/vector",
+        uri=f"{OUTPUT_DATA_PATH}/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,
     )
 
@@ -54,7 +55,7 @@ def main() -> None:
     prepare_docs()
     logger.info("Dummy lanceDB table and documents built.")
 
-    save_model_type(model_type=MODEL_TYPE)
+    save_model_type(model_type=MODEL_TYPE, output_dir=OUTPUT_DATA_PATH)
     logger.info("Model type saved.")
 
 

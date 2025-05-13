@@ -10,6 +10,7 @@ from utils import (
     BIGQUERY_CLEAN_DATASET,
     ENV_SHORT_NAME,
     MODELS_RESULTS_TABLE_NAME,
+    OUTPUT_DATA_PATH,
     create_items_table,
     get_item_docs,
     get_items_metadata,
@@ -17,6 +18,7 @@ from utils import (
     save_model_type,
 )
 
+MODEL_BASE_PATH = "./model"
 MODEL_TYPE = {
     "type": "recommendation",
     "default_token": "[UNK]",
@@ -56,14 +58,13 @@ def get_model_from_mlflow(
     return artifact_uri
 
 
-def download_model(artifact_uri: str, output_path: str) -> None:
+def download_model(artifact_uri: str) -> None:
     """
     Download model from GCS bucket
     Args:
         artifact_uri (str): GCS bucket path
-        output_path (str): local path to save the model
     """
-    command = f"gsutil -m cp -r {artifact_uri} {output_path}"
+    command = f"gsutil -m cp -r {artifact_uri} {MODEL_BASE_PATH}"
     results = subprocess.Popen(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
@@ -79,7 +80,7 @@ def prepare_docs() -> None:
 
     # download model
     logger.info("Load Two Tower model...")
-    tf_reco = tf.keras.models.load_model("./model/")
+    tf_reco = tf.keras.models.load_model(MODEL_BASE_PATH)
     logger.info("Two Tower model loaded.")
 
     # get user and item embeddings
@@ -91,11 +92,11 @@ def prepare_docs() -> None:
     item_embedding_dict = {x: y for x, y in zip(item_list, item_weights)}
 
     # build user and item documents
-    logger.info("Build user and item documents...")
+    logger.info("Building user and item documents...")
     user_docs = get_user_docs(user_embedding_dict)
-    user_docs.save("./metadata/user.docs")
+    user_docs.save(f"{OUTPUT_DATA_PATH}/user.docs")
     item_docs = get_item_docs(item_embedding_dict, items_df)
-    item_docs.save("./metadata/item.docs")
+    item_docs.save(f"{OUTPUT_DATA_PATH}/item.docs")
     logger.info("User and item documents built.")
 
     logger.info("Create items lancedb table...")
@@ -103,7 +104,7 @@ def prepare_docs() -> None:
         item_embedding_dict,
         items_df,
         emb_size=EMBEDDING_DIMENSION,
-        uri="./metadata/vector",
+        uri=f"{OUTPUT_DATA_PATH}/vector",
         create_index=True if ENV_SHORT_NAME == "prod" else False,
     )
     logger.info("Items lancedb table created.")
@@ -135,14 +136,14 @@ def main(
         logger.info(f"Model artifact_uri: {source_artifact_uri}")
 
     logger.info(f"Download model from {source_artifact_uri} trained model...")
-    download_model(artifact_uri=source_artifact_uri, output_path="./")
+    download_model(artifact_uri=source_artifact_uri)
     logger.info("Model downloaded.")
 
     logger.info("Building lanceDB table, and user and item docarrays...")
     prepare_docs()
     logger.info("LanceDB table and documents built.")
 
-    save_model_type(model_type=MODEL_TYPE)
+    save_model_type(model_type=MODEL_TYPE, output_dir=OUTPUT_DATA_PATH)
     logger.info("Model type saved.")
 
 

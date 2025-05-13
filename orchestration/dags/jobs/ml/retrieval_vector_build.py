@@ -121,7 +121,7 @@ with DAG(
             task_id="retrieval_build",
             instance_name="{{ params.instance_name }}",
             base_dir="{{ params.base_dir }}",
-            command="python build_dummy_model.py --model-name {{ params.model_name }} ",
+            command="python build_dummy_model.py ",
         )
     else:
         retrieval_build = SSHGCEOperator(

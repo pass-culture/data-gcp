@@ -20,7 +20,15 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import BranchPythonOperator
 from airflow.utils.dates import datetime, timedelta
+
+
+def should_run_today():
+    if datetime.today().weekday() == 0:  # Monday
+        return ["dbt_test_weekly", "dbt_test"]
+    return "dbt_test"
+
 
 default_args = {
     "start_date": datetime(2020, 12, 23),
@@ -65,6 +73,7 @@ compute_metrics_elementary = BashOperator(
     + """--vars "{{ "{" }}'ENV_SHORT_NAME':'{{ params.target }}'{{ "}" }}" """,
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
+    trigger_rule="one_success",
 )
 
 dbt_test = BashOperator(
@@ -74,11 +83,31 @@ dbt_test = BashOperator(
         "target": "{{ params.target }}",
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
-        "EXCLUSION": "audit tag:export",
+        "EXCLUSION": "audit tag:export tag:weekly",
     },
     append_env=True,
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
+)
+
+check_if_weekly = BranchPythonOperator(
+    task_id="check_if_weekly_run", python_callable=should_run_today
+)
+
+dbt_test_weekly = BashOperator(
+    task_id="dbt_test_weekly",
+    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
+    env={
+        "target": "{{ params.target }}",
+        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+        "ENV_SHORT_NAME": ENV_SHORT_NAME,
+        "EXCLUSION": "audit tag:export",
+        "SELECT": "tag:weekly",
+    },
+    append_env=True,
+    cwd=PATH_TO_DBT_PROJECT,
+    dag=dag,
+    trigger_rule="all_success",
 )
 
 
@@ -102,8 +131,10 @@ send_elementary_report = SendElementaryMonitoringReportOperator(
 (
     start
     >> wait_dbt_run
+    >> check_if_weekly
     >> dbt_test
     >> compute_metrics_elementary
     >> create_elementary_report
     >> send_elementary_report
 )
+(check_if_weekly >> dbt_test_weekly >> compute_metrics_elementary)

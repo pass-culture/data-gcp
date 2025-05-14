@@ -80,3 +80,5 @@ jobs:
           tags: |
             ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:${{ steps.sha.outputs.short_sha }}
             ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:v1
+            if: ${{ inputs.TARGET_ENV == 'dev' }}
+            ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:${ inputs.TARGET_ENV }}

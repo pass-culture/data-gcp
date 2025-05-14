@@ -53,6 +53,18 @@ with
                 from {{ ref("ml_reco__available_offer") }}
                 group by 1, 2, 3, 4, 5, 6, 7, 8
             ) as available_offers
+    ),
+
+    offer_features as (
+        select
+            offer_id,
+            is_geolocated as offer_is_geolocated,
+            offer_created_delta_in_days as offer_creation_days,
+            offer_mean_stock_price as offer_stock_price,
+            offer_max_stock_beginning_days as offer_stock_beginning_days,
+            offer_centroid_x,
+            offer_centroid_y
+        from {{ ref("ml_feat__offer_feature") }}
     )
 
 select
@@ -93,6 +105,14 @@ select
     ro.is_sensitive,
     ro.is_restrained,
     ro.default_max_distance,
+    offer_features.offer_is_geolocated as new_offer_is_geolocated,
+    offer_features.offer_creation_days as new_offer_creation_days,
+    offer_features.offer_stock_price as new_offer_stock_price,
+    offer_features.offer_stock_beginning_days as new_offer_stock_beginning_days,
+    offer_features.offer_centroid_x as new_offer_centroid_x,
+    offer_features.offer_centroid_y as new_offer_centroid_y,
     row_number() over () as unique_id
+
 from recommendable_offers_data as ro
+left join offer_features on ro.offer_id = offer_features.offer_id
 where ro.stock_rank < 30  -- only next 30 events

@@ -28,7 +28,7 @@ def request_data_single_item() -> PredictionRequest:
 )
 def test_recommendation_handler(
     mock_connect_db,
-    mock_generate_fake_load_user_document,
+    mock_user_document_loading,
     mock_generate_fake_load_item_document,
     request_data_fixture,
     request,
@@ -62,7 +62,7 @@ def test_recommendation_handler(
 
 def test_recommendation_fallback_handler(
     mock_connect_db,
-    mock_generate_fake_load_user_document,
+    mock_user_document_loading,
     mock_generate_fake_load_item_document,
     request,
     reco_client,

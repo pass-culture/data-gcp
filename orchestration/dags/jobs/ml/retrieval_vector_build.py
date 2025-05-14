@@ -92,6 +92,10 @@ with DAG(
         ),
         "source_run_id": Param(default=".", type="string"),
         "source_artifact_uri": Param(default=".", type="string"),
+        "artifact_registry_base_path": Param(
+            default=f"europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/{ENV_SHORT_NAME}",
+            type="string",
+        ),
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
@@ -113,31 +117,43 @@ with DAG(
 
     if ENV_SHORT_NAME == "dev":
         # dummy deploy
-        retrieval = SSHGCEOperator(
-            task_id="containerize_retrieval_vector",
+        create_vector_database = SSHGCEOperator(
+            task_id="create_vector_database",
             instance_name="{{ params.instance_name }}",
             base_dir="{{ params.base_dir }}",
-            command="python deploy_dummy.py "
-            "--experiment-name {{ params.experiment_name }} "
-            "--model-name {{ params.model_name }} ",
+            command="python create_vector_database.py dummy-database ",
         )
     else:
-        retrieval = SSHGCEOperator(
-            task_id="containerize_retrieval_vector",
+        create_vector_database = SSHGCEOperator(
+            task_id="create_vector_database",
             instance_name="{{ params.instance_name }}",
             base_dir="{{ params.base_dir }}",
-            command="python deploy_model.py "
-            "--experiment-name {{ params.experiment_name }} "
-            "--model-name {{ params.model_name }} "
+            command="python create_vector_database.py default-database "
             "--source-experiment-name {{ params.source_experiment_name }} "
-            "--source-run-id {{ params.source_run_id }} "
             "--source-artifact-uri {{  params.source_artifact_uri }} "
-            "--container-worker {{ params.container_worker }} ",
+            "--source-run-id {{ params.source_run_id }} ",
         )
+
+    build_and_push_docker_image = SSHGCEOperator(
+        task_id="build_and_push_docker_image",
+        instance_name="{{ params.instance_name }}",
+        base_dir="{{ params.base_dir }}",
+        command="python build_and_push_docker_image.py "
+        "--base-serving-container-path {{ params.artifact_registry_base_path }} "
+        "--experiment-name {{ params.experiment_name }} "
+        "--model-name {{ params.model_name }} "
+        "--container-worker {{ params.container_worker }} ",
+    )
 
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
     )
 
-    (gce_instance_start >> fetch_install_code >> retrieval >> gce_instance_stop)
+    (
+        gce_instance_start
+        >> fetch_install_code
+        >> create_vector_database
+        >> build_and_push_docker_image
+        >> gce_instance_stop
+    )

@@ -24,7 +24,7 @@ def fake_data(generate_fake_data):
 def test_search_by_vector_dot_product(
     mock_connect_db,
     mock_generate_fake_load_item_document,
-    mock_generate_fake_load_user_document,
+    mock_user_document_loading,
     fake_data,
     reco_client,
     query_vector,
@@ -50,7 +50,7 @@ def test_search_by_vector_dot_product(
 def test_search_by_vector_l2_product(
     mock_connect_db,
     mock_generate_fake_load_item_document,
-    mock_generate_fake_load_user_document,
+    mock_user_document_loading,
     fake_data,
     reco_client,
     query_vector,
@@ -77,7 +77,7 @@ def test_search_by_vector_l2_product(
 def test_search_by_tops(
     mock_connect_db,
     mock_generate_fake_load_item_document,
-    mock_generate_fake_load_user_document,
+    mock_user_document_loading,
     reco_client,
 ):
     """Test search by tops using booking_number_desc as the vector column."""
@@ -100,7 +100,7 @@ def test_search_by_tops(
 def test_search_by_tops_rerank(
     mock_connect_db,
     mock_generate_fake_load_item_document,
-    mock_generate_fake_load_user_document,
+    mock_user_document_loading,
     reco_client,
 ):
     """Test search by tops using booking_number_desc as the vector column."""

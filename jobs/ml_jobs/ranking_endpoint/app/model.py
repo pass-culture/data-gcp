@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import joblib
 import lightgbm as lgb
@@ -18,33 +18,38 @@ class ClassMapping(Enum):
     booked = 2
 
 
-NUMERIC_FEATURES = [
-    "user_bookings_count",
-    "user_clicks_count",
-    "user_favorites_count",
-    "user_deposit_remaining_credit",
-    "user_is_geolocated",
-    "user_iris_x",
-    "user_iris_y",
-    "offer_user_distance",
-    "offer_booking_number_last_7_days",
-    "offer_booking_number_last_14_days",
-    "offer_booking_number_last_28_days",
-    "offer_semantic_emb_mean",
-    "offer_item_score",
-    "offer_item_rank",
-    "offer_is_geolocated",
-    "offer_stock_price",
-    "offer_creation_days",
-    "offer_stock_beginning_days",
-    "day_of_the_week",
-    "hour_of_the_day",
-]
+EMBEDDING_DIM = 0  # To remove embedding dimension from the model, set to 0
+NUMERIC_FEATURES = (
+    [
+        "user_bookings_count",
+        "user_clicks_count",
+        "user_favorites_count",
+        "user_deposit_amount",
+        "user_amount_spent",
+        "user_is_geolocated",
+        "user_iris_x",
+        "user_iris_y",
+        "offer_user_distance",
+        "offer_booking_number_last_7_days",
+        "offer_booking_number_last_14_days",
+        "offer_booking_number_last_28_days",
+        "offer_semantic_emb_mean",
+        "offer_item_score",
+        # "offer_item_rank",
+        "offer_is_geolocated",
+        "offer_stock_price",
+        "offer_creation_days",
+        "offer_stock_beginning_days",
+        "day_of_the_week",
+        "hour_of_the_day",
+        "offer_centroid_x",
+        "offer_centroid_y",
+    ]
+    + [f"user_emb_{i}" for i in range(EMBEDDING_DIM)]
+    + [f"item_emb_{i}" for i in range(EMBEDDING_DIM)]
+)
 
-CATEGORICAL_FEATURES = [
-    "context",
-    "offer_subcategory_id",
-]
+CATEGORICAL_FEATURES = ["context", "offer_subcategory_id"]
 
 DEFAULT_CATEGORICAL = "UNKNOWN"
 DEFAULT_NUMERICAL = -1
@@ -174,11 +179,21 @@ class TrainPipeline:
         joblib.dump(self.preprocessor, f"./metadata/preproc_{model_name}.joblib")
         self.model.save_model(f"./metadata/model_{model_name}.txt")
 
-    def train(self, df: pd.DataFrame, class_weight: Optional[dict] = None):
-        X = self.fit_transform(df)
-        y = df[self.target]
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, train_size=self.train_size, random_state=42
+    def train(self, df: pd.DataFrame, class_weight: dict, seed: int):
+        # Split data based on user_x_date_id
+        unique_user_x_date_ids = df.user_x_date_id.unique()
+        train_session_ids, test_session_ids = train_test_split(
+            unique_user_x_date_ids, test_size=self.train_size, random_state=seed
+        )
+        train_data = df[df["user_x_date_id"].isin(train_session_ids)]
+        test_data = df[df["user_x_date_id"].isin(test_session_ids)]
+
+        # Preprocess for lgbm
+        X_train = self.fit_transform(train_data)
+        X_test = self.transform(test_data)
+        y_train, y_test = (
+            train_data[self.target].to_numpy(),
+            test_data[self.target].to_numpy(),
         )
 
         train_data = lgb.Dataset(

@@ -57,7 +57,9 @@ train_params = {
     "run_name": "updated-loss-202502",
     "batch_size": {"prod": 2048, "dev": 8192, "stg": 4096}[ENV_SHORT_NAME],
     "embedding_size": 64,
-    "train_set_size": 0.95 if ENV_SHORT_NAME == "prod" else 0.8,
+    "train_set_size": 0.95
+    if ENV_SHORT_NAME == "prod"
+    else 0.4,  # To ensure that the test set is not too small with few data
     "event_day_number": {"prod": 90, "dev": 365, "stg": 30}[ENV_SHORT_NAME],
     "experiment_name": f"{DAG_NAME}_v1.2_{ENV_SHORT_NAME}",
 }

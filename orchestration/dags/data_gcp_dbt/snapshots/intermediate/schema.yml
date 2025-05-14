@@ -1,0 +1,7 @@
+version: 2
+
+snapshots:
+  - name: snapshot_intermediate__bookable_collective_offer
+    description: "This snapshot captures the "
+  - name: snapshot_intermediate__bookable_offer
+    description: "This snapshot captures the changed bookings in the raw booking table. It has the check strategy on multiple columns."

@@ -83,7 +83,7 @@ _base_install:
 	fi
 
 	curl -LsSf https://astral.sh/uv/install.sh | sh
-	uv venv --python $(BASE_PHYTON_VERSION)
+	uv venv --python $(BASE_PYTHON_VERSION)
 	uv sync
 
 #######################################################################################

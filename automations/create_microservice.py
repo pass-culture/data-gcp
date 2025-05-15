@@ -36,7 +36,7 @@ def append_to_makefile(service_name):
     )
 
     service_name_kebab = service_name.replace("_", "-")
-    new_line = f"\tMICROSERVICE_PATH=jobs/ml_jobs/{service_name} PHYTON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-{service_name_kebab} REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice\n"
+    new_line = f"\tMICROSERVICE_PATH=jobs/ml_jobs/{service_name} PYTHON_VENV_VERSION=3.10.4 VENV_NAME=data-gcp-{service_name_kebab} REQUIREMENTS_NAME=requirements.txt RECREATE_VENV=$(CLEAN_INSTALL) make install_microservice\n"
 
     lines.insert(end_install_index, new_line)
 

@@ -29,7 +29,7 @@ with
             ) as seniority_days
         from {{ ref("mrt_global__user") }}
         where
-            current_deposit_type IN ("GRANT_18", "GRANT_15_17")
+            current_deposit_type IN ("GRANT_18", "GRANT_17_18")
             and last_deposit_expiration_date < date_trunc(current_date, month)
     ),
 

@@ -127,6 +127,18 @@ send_elementary_report = SendElementaryMonitoringReportOperator(
     send_slack_report="{{ params.send_slack_report }}",
 )
 
+recompile_dbt_project = BashOperator(
+    task_id="recompile_dbt_project",
+    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_compile.sh ",
+    env={
+        "target": "{{ params.target }}",
+        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+        "ENV_SHORT_NAME": ENV_SHORT_NAME,
+    },
+    append_env=True,
+    cwd=PATH_TO_DBT_PROJECT,
+    dag=dag,
+)
 
 (
     start
@@ -136,5 +148,6 @@ send_elementary_report = SendElementaryMonitoringReportOperator(
     >> compute_metrics_elementary
     >> create_elementary_report
     >> send_elementary_report
+    >> recompile_dbt_project
 )
 (check_if_weekly >> dbt_test_weekly >> compute_metrics_elementary)

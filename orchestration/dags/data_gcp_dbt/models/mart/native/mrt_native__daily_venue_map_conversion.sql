@@ -188,8 +188,7 @@ select
     ) as total_bookings,
     count(
         distinct case
-            when
-                event_name = 'BookingConfirmation' and delta_diversity is not null
+            when event_name = 'BookingConfirmation' and delta_diversity is not null
             then offer_id
         end
     ) as total_non_cancelled_bookings,

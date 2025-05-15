@@ -109,6 +109,7 @@ select
     v.venue_creation_date,
     v.venue_is_permanent,
     v.venue_is_open_to_public,
+    v.venue_is_soft_deleted,
     v.banner_url,
     v.venue_audiodisabilitycompliant,
     v.venue_mentaldisabilitycompliant,

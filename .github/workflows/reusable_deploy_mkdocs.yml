@@ -27,7 +27,7 @@ jobs:
       contents: write
     env:
       DBT_FOLDER: "./orchestration/dags/data_gcp_dbt"
-      AIRFLOW_HOME: "./orchestration"
+      AIRFLOW_HOME: "./orchestration/airflow"
 
     steps:
       - name: Checkout code

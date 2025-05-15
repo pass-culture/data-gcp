@@ -3,7 +3,7 @@ ARG NETWORK_MODE=default
 
 ################################
 ## Stage 1 Builder with proxy ##
-FROM apache/airflow:2.9.3-python3.10 AS base-proxy
+FROM apache/airflow:3.0.1-python3.12 AS base-proxy
 ARG CERT_PATH_DOCKER=/usr/local/share/ca-certificates/nscacert_combined.pem
 COPY airflow/etc/nscacert_combined.pem ${CERT_PATH_DOCKER}
 ENV REQUESTS_CA_BUNDLE=${CERT_PATH_DOCKER}
@@ -13,7 +13,7 @@ ENV HTTPLIB2_CA_CERTS=${CERT_PATH_DOCKER}
 
 ##################################
 ## Stage 1 Builder without proxy ##
-FROM apache/airflow:2.9.3-python3.10 AS base-default
+FROM apache/airflow:3.0.1-python3.12 AS base-default
 
 #####################
 ## Stage 2 Builder ##
@@ -45,5 +45,6 @@ FROM general-builder AS builder-default
 ###################
 ## Final builder ##
 FROM builder-${NETWORK_MODE} AS final-builder
+USER airflow
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/entrypoint"]
 CMD []

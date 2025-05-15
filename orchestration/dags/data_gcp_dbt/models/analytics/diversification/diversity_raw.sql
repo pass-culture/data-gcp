@@ -1,4 +1,4 @@
-{% set diversification_features = [
+{% set diversity_features = [
     "category",
     "sub_category",
     "format",
@@ -6,7 +6,7 @@
     "extra_category",
     "venue_type_label",
 ] %}
-{% set delta_diversification_features = [
+{% set delta_diversity_features = [
     "category",
     "sub_category",
     "format",
@@ -23,14 +23,14 @@ with
             bookings.item_id,
             bookings.offer_id,
             bookings.booking_amount,
-            case when bookings.booking_amount = 0 then 1 else 0 end as is_free_offer,
             bookings.booking_created_at as booking_creation_date,
             bookings.booking_id,
             bookings.physical_goods,
             bookings.digital_goods,
             bookings.event,
             bookings.venue_id,
-            bookings.venue_type_label
+            bookings.venue_type_label,
+            case when bookings.booking_amount = 0 then 1 else 0 end as is_free_offer
 
         from {{ ref("mrt_global__booking") }} as bookings
         where booking_status != 'CANCELLED'
@@ -52,25 +52,12 @@ with
         from {{ ref("int_applicative__offer_metadata") }}
     ),
 
-    base_diversification as (
+    base_diversity as (
         select
             users.user_id,
             bookings.booking_creation_date,
             bookings.booking_id,
             bookings.item_id,
-            case
-                when subcategories.is_event = true
-                then "event"
-                when
-                    subcategories.online_offline_platform = "ONLINE"
-                    and subcategories.is_event = false
-                then "digital"
-                when
-                    subcategories.online_offline_platform
-                    in ("OFFLINE", "ONLINE_OR_OFFLINE")
-                    and subcategories.is_event = false
-                then "physical"
-            end as format,
             bookings.offer_id,
             bookings.venue_type_label,
             is_free_offer,
@@ -83,17 +70,26 @@ with
             offer_metadata.gtl_label_level_2,
             offer_metadata.gtl_label_level_3,
             offer_metadata.gtl_label_level_4,
+            case
+                when subcategories.is_event = true
+                then 'event'
+                when
+                    subcategories.online_offline_platform = 'ONLINE'
+                    and subcategories.is_event = false
+                then 'digital'
+                when
+                    subcategories.online_offline_platform
+                    in ('OFFLINE', 'ONLINE_OR_OFFLINE')
+                    and subcategories.is_event = false
+                then 'physical'
+            end as format,
             -- prendre une venue unique pour les offres digitales
             case
-                when bookings.digital_goods = true then "digital_venue" else venue_id
+                when bookings.digital_goods = true then 'digital_venue' else venue_id
             end as venue_id,
-            -- création d'une extra catégorie pour observer la diversification en
+            -- création d'une extra catégorie pour observer la diversity en
             -- genre au sein d'une catégorie(style de musique, genre de film etc...)
-            case
-                when offer_metadata.offer_type_label is null
-                then venue_id
-                else offer_metadata.offer_type_label
-            end as extra_category,
+            coalesce(offer_metadata.offer_type_label, venue_id) as extra_category,
             -- attribuer un numéro de réservation
             row_number() over (
                 partition by users.user_id order by booking_creation_date
@@ -102,12 +98,12 @@ with
         inner join bookings on users.user_id = bookings.user_id
         left join offer_metadata on bookings.offer_id = offer_metadata.offer_id
         left join
-            {{ source("raw", "subcategories") }} subcategories
+            {{ source("raw", "subcategories") }} as subcategories
             on offer_metadata.offer_subcategory_id = subcategories.id
 
     ),
 
-    diversification_scores as (
+    diversity_scores as (
         select
             user_id,
             booking_id,
@@ -119,11 +115,11 @@ with
             sub_category,
             format,
             extra_category,
-            -- Pour attribuer les scores de diversification :
+            -- Pour attribuer les scores de diversity :
             -- Comparer la date de booking avec la première date de booking sur chaque
             -- feature.
             -- Lorsque ces 2 dates sont les mêmes, attribuer 1 point.
-            {% for feature in diversification_features %}
+            {% for feature in diversity_features %}
                 case
                     when
                         booking_creation_date = min(booking_creation_date) over (
@@ -132,10 +128,10 @@ with
                         and booking_rank != 1
                     then 1
                     else 0
-                end as {{ feature }}_diversification
+                end as {{ feature }}_diversity
                 {% if not loop.last -%}, {%- endif %}
             {% endfor %}
-        from base_diversification
+        from base_diversity
     )
 
 select
@@ -143,15 +139,15 @@ select
     item_id,
     booking_id,
     booking_creation_date,
-    {% for feature in diversification_features %}
-        {{ feature }}_diversification {% if not loop.last -%}, {%- endif %}
+    {% for feature in diversity_features %}
+        {{ feature }}_diversity {% if not loop.last -%}, {%- endif %}
     {% endfor %},
     case
         when booking_rank = 1
         then 1  -- 1 point d'office pour le premier booking
-        else  -- somme des points de diversification pr les suivants
-            {% for feature in delta_diversification_features %}
-                {{ feature }}_diversification {% if not loop.last -%} + {%- endif %}
+        else  -- somme des points de diversity pr les suivants
+            {% for feature in delta_diversity_features %}
+                {{ feature }}_diversity {% if not loop.last -%} + {%- endif %}
             {% endfor %}
-    end as delta_diversification
-from diversification_scores
+    end as delta_diversity
+from diversity_scores

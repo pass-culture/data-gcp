@@ -64,5 +64,5 @@ models:
         description: "{{ doc('column__total_bookings') }}"
       - name: total_non_cancelled_bookings
         description: "{{ doc('column__total_non_cancelled_bookings') }}"
-      - name: total_diversification
-        description: "{{ doc('column__total_diversification') }}"
+      - name: total_diversity
+        description: "{{ doc('column__total_diversity') }}"

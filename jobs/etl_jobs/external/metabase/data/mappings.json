@@ -441,5 +441,12 @@
   "available_stock_information": {
     "stock_id": "stock_id",
     "available_stock_information": "total_available_stock"
+  },
+  "aggregated_weekly_user_data": {
+    "delta_diversification": "delta_diversity",
+    "delta_diversification_cumsum": "delta_diversity_cumsum"
+  },
+  "mrt_native__outgoing_cohort": {
+    "total_diversification_score": "total_diversity_score"
   }
 }

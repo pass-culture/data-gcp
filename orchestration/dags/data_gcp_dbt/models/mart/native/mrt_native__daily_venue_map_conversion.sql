@@ -87,7 +87,7 @@ with
             ne.origin,
             ne.venue_id,
             ne.offer_id,
-            db.diversity_score as delta_diversification,
+            db.diversity_score as delta_diversity,
             safe_cast(ne.duration as int64) as duration_seconds
         from {{ ref("int_firebase__native_event") }} as ne
         inner join venue_map_consultations using (unique_session_id, offer_id, user_id)
@@ -117,7 +117,7 @@ with
             venue_id,
             offer_id,
             duration_seconds,
-            null as delta_diversification
+            null as delta_diversity
         from {{ ref("int_firebase__native_venue_map_event") }}
         where
             event_name in (
@@ -145,7 +145,7 @@ with
             venue_id,
             offer_id,
             duration_seconds,
-            null as delta_diversification
+            null as delta_diversity
         from venue_map_consultations
         union all
         select
@@ -159,7 +159,7 @@ with
             venue_id,
             offer_id,
             duration_seconds,
-            delta_diversification
+            delta_diversity
         from venue_map_bookings
     )
 
@@ -189,11 +189,11 @@ select
     count(
         distinct case
             when
-                event_name = 'BookingConfirmation' and delta_diversification is not null
+                event_name = 'BookingConfirmation' and delta_diversity is not null
             then offer_id
         end
     ) as total_non_cancelled_bookings,
-    sum(coalesce(delta_diversification, 0)) as total_diversification,
+    sum(coalesce(delta_diversity, 0)) as total_diversity,
     sum(
         case when event_name = 'VenueMapSeenDuration' then duration_seconds end
     ) as total_session_venue_map_seen_duration_seconds

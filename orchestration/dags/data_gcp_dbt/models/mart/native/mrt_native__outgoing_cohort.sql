@@ -37,7 +37,7 @@ with
         select
             user.deposit_expiration_date,
             user.user_id,
-            sum(bookings.diversity_score) as total_diversification,
+            sum(bookings.diversity_score) as total_diversity,
             count(
                 distinct bookings.offer_category_id
             ) as total_distinct_category_booked,
@@ -51,8 +51,8 @@ with
         inner join
             {{ ref("mrt_global__booking") }} as bookings
             on user.user_id = bookings.user_id
-        where not booking_is_cancelled
-        group by deposit_expiration_date, user_id
+        where not bookings.booking_is_cancelled
+        group by user.deposit_expiration_date, user.user_id
     ),
 
     consultations as (
@@ -67,10 +67,10 @@ with
         inner join
             users_expired_monthly as u
             on c.user_id = u.user_id
-            and date_sub(deposit_expiration_date, interval 2 year)
+            and date_sub(u.deposit_expiration_date, interval 2 year)
             <= c.consultation_date
-            and deposit_expiration_date >= c.consultation_date
-        group by deposit_expiration_date, user_id
+            and u.deposit_expiration_date >= c.consultation_date
+        group by u.deposit_expiration_date, u.user_id
     )
 
 select
@@ -105,8 +105,8 @@ select
         sum(u.total_non_cancelled_duo_bookings), 0
     ) as total_non_cancelled_duo_bookings,
     coalesce(sum(u.total_free_bookings), 0) as total_free_bookings,
-    coalesce(sum(total_item_consulted), 0) as total_item_consulted,
-    coalesce(sum(total_venue_consulted), 0) as total_venue_consulted,
+    coalesce(sum(c.total_item_consulted), 0) as total_item_consulted,
+    coalesce(sum(c.total_venue_consulted), 0) as total_venue_consulted,
     coalesce(
         sum(u.total_grant_18_subcategory_booked), 0
     ) as total_grant_18_subcategory_booked,
@@ -114,7 +114,7 @@ select
         sum(u.total_grant_15_17_subcategory_booked), 0
     ) as total_grant_15_17_subcategory_booked,
     coalesce(
-        sum(total_venue_type_label_consulted), 0
+        sum(c.total_venue_type_label_consulted), 0
     ) as total_venue_type_label_consulted,
     coalesce(
         sum(
@@ -124,7 +124,7 @@ select
         ),
         0
     ) as total_day_between_deposit_and_first_booking,
-    coalesce(sum(b.total_diversification), 0) as total_diversification_score,
+    coalesce(sum(b.total_diversity), 0) as total_diversity_score,
     coalesce(sum(b.total_distinct_venue_booked), 0) as total_venue_id_booked,
     coalesce(sum(b.total_distinct_venue_type_booked), 0) as total_venue_type_booked,
     coalesce(sum(b.total_distinct_category_booked), 0) as total_category_booked
@@ -138,7 +138,7 @@ left join
     on u.user_id = b.user_id
     and u.deposit_expiration_date = b.deposit_expiration_date
 group by
-    user_expiration_month,
+    u.user_expiration_month,
     u.total_deposit_amount,
     u.user_is_priority_public,
     u.user_is_in_qpv,

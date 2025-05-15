@@ -75,7 +75,7 @@ with
             ) as months_since_deposit_created,
             coalesce(sum(booking_intermediary_amount), 0) as amount_spent,
             coalesce(count(ebd.booking_id), 0) as cnt_no_cancelled_bookings,
-            coalesce(sum(ebd.diversity_score), 0) as delta_diversification
+            coalesce(sum(ebd.diversity_score), 0) as delta_diversity
         from deposit_active_weeks
         left join
             {{ ref("mrt_global__booking") }} as ebd
@@ -115,13 +115,13 @@ with
                 ),
                 0
             ) as cumulative_cnt_no_cancelled_bookings,
-            coalesce(delta_diversification, 0) as delta_diversification,
+            coalesce(delta_diversity, 0) as delta_diversity,
             coalesce(
-                sum(delta_diversification) over (
+                sum(delta_diversity) over (
                     partition by activity.deposit_id order by active_week
                 ),
                 0
-            ) as delta_diversification_cumsum
+            ) as delta_diversity_cumsum
         from aggregated_weekly_deposit_bookings_history as activity
     ),
 
@@ -144,8 +144,8 @@ with
             cnt_no_cancelled_bookings,
             cumulative_amount_spent,
             cumulative_cnt_no_cancelled_bookings,
-            delta_diversification,
-            delta_diversification_cumsum,
+            delta_diversity,
+            delta_diversity_cumsum,
             coalesce(count(distinct session_id), 0) as nb_visits,
             coalesce(
                 count(distinct date_trunc(date(first_event_timestamp), day)), 0

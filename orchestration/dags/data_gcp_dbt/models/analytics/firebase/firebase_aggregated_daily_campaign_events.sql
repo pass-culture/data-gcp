@@ -14,11 +14,11 @@
 }}
 
 with
-    bookings_and_diversification_per_sesh as (
+    bookings_and_diversity_per_sesh as (
         select
             firebase_bookings.unique_session_id,
-            count(distinct booking.booking_id) as booking_diversification_cnt,
-            sum(booking.diversity_score) as total_delta_diversification
+            count(distinct booking.booking_id) as booking_diversity_cnt,
+            sum(booking.diversity_score) as total_delta_diversity
         from {{ ref("firebase_bookings") }} as firebase_bookings
         inner join {{ ref("mrt_global__booking") }} as booking using (booking_id)
         group by 1
@@ -56,11 +56,11 @@ select
     coalesce(sum(firebase_visits.nb_add_to_favorites), 0) as nb_add_to_favorites,
     coalesce(sum(firebase_visits.nb_booking_confirmation), 0) as nb_booking,
     coalesce(
-        sum(bookings_and_diversification_per_sesh.booking_diversification_cnt), 0
+        sum(bookings_and_diversity_per_sesh.booking_diversity_cnt), 0
     ) as nb_non_cancelled_bookings,
     coalesce(
-        sum(bookings_and_diversification_per_sesh.total_delta_diversification), 0
-    ) as total_delta_diversification,
+        sum(bookings_and_diversity_per_sesh.total_delta_diversity), 0
+    ) as total_delta_diversity,
     count(
         distinct case
             when firebase_visits.nb_signup_completed > 0
@@ -89,8 +89,8 @@ left join
     and daily_activity.deposit_active_date
     between date_sub(date('{{ ds() }}'), interval 48 month) and date('{{ ds() }}')
 left join
-    bookings_and_diversification_per_sesh
-    on bookings_and_diversification_per_sesh.unique_session_id
+    bookings_and_diversity_per_sesh
+    on bookings_and_diversity_per_sesh.unique_session_id
     = firebase_visits.unique_session_id
 {% if is_incremental() %}
     where

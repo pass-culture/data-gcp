@@ -448,5 +448,8 @@
   },
   "mrt_native__outgoing_cohort": {
     "total_diversification_score": "total_diversity_score"
+  },
+  "diversity_booking": {
+    "delta_diversification": "delta_diversity"
   }
 }

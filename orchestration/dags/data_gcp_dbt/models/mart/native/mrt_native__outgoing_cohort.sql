@@ -138,7 +138,7 @@ left join
     on u.user_id = b.user_id
     and u.deposit_expiration_date = b.deposit_expiration_date
 group by
-    u.user_expiration_month,
+    user_expiration_month,
     u.total_deposit_amount,
     u.user_is_priority_public,
     u.user_is_in_qpv,

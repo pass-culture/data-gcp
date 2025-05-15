@@ -40,9 +40,9 @@ kpis_list = [
     },
     {
         "question": 7,
-        "effect": "Score de diversification médian",
-        "kpi": "diversification_median",
-        "table_name": "propilote_tmp_diversification",
+        "effect": "Score de diversité médian",
+        "kpi": "diversity_median",
+        "table_name": "propilote_tmp_diversity",
     },
     {
         "question": 8,
@@ -316,38 +316,38 @@ tmp_tables_detailed = {
             "group_type_name": "all_dim",
         },
     },
-    # Diversification
-    "propilote_diversification_region": {
-        "sql": f"{SQL_TMP_PATH}/diversification/propilote_tmp_diversification.sql",
+    # Diversité
+    "propilote_diversity_region": {
+        "sql": f"{SQL_TMP_PATH}/diversity/propilote_tmp_diversity.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_diversification_region",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_diversity_region",
         "params": {
             "group_type": "REG",
             "group_type_name": "region_name",
         },
     },
-    "propilote_diversification_departement": {
-        "sql": f"{SQL_TMP_PATH}/diversification/propilote_tmp_diversification.sql",
+    "propilote_diversity_departement": {
+        "sql": f"{SQL_TMP_PATH}/diversity/propilote_tmp_diversity.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_diversification_departement",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_diversity_departement",
         "params": {
             "group_type": "DEPT",
             "group_type_name": "num_dep",
         },
     },
-    "propilote_diversification_academie": {
-        "sql": f"{SQL_TMP_PATH}/diversification/propilote_tmp_diversification.sql",
+    "propilote_diversity_academie": {
+        "sql": f"{SQL_TMP_PATH}/diversity/propilote_tmp_diversity.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_diversification_academie",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_diversity_academie",
         "params": {
             "group_type": "ACAD",
             "group_type_name": "academy_name",
         },
     },
-    "propilote_diversification_all": {
-        "sql": f"{SQL_TMP_PATH}/diversification/propilote_tmp_diversification.sql",
+    "propilote_diversity_all": {
+        "sql": f"{SQL_TMP_PATH}/diversity/propilote_tmp_diversity.sql",
         "destination_dataset": "{{ bigquery_tmp_dataset }}",
-        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_diversification_all",
+        "destination_table": "{{ yyyymmdd(ds) }}_propilote_tmp_diversity_all",
         "params": {
             "group_type": "NAT",
             "group_type_name": "all_dim",

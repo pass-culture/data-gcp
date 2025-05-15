@@ -7,8 +7,8 @@
 }}
 
 with
-    diversification as (
-        select im.item_id, avg(b.diversity_score) as delta_diversification
+    diversity as (
+        select im.item_id, avg(b.diversity_score) as delta_diversity
         from {{ ref("mrt_global__booking") }} as b
         inner join
             {{ ref("int_applicative__offer_item_id") }} as im
@@ -92,10 +92,10 @@ with
             e.*,
             coalesce(i.booking, 0) > 0 as booking,
             (coalesce(i.booking, 0) + coalesce(i.consult, 0)) > 0 as consult,
-            coalesce(d.delta_diversification, 0) as delta_diversification
+            coalesce(d.delta_diversity, 0) as delta_diversity
         from events as e
         left join interact as i on e.user_id = i.user_id and e.item_id = i.item_id
-        left join diversification as d on e.item_id = d.item_id
+        left join diversity as d on e.item_id = d.item_id
     )
 
 select
@@ -126,7 +126,7 @@ select
     avg(offer_display_order) as offer_order,
     max(booking) as booking,
     max(consult) as consult,
-    max(delta_diversification) as delta_diversification
+    max(delta_diversity) as delta_diversity
 from transactions
 group by
     user_deposit_remaining_credit,

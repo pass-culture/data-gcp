@@ -50,7 +50,7 @@ with
             co.unique_search_id,
             co.offer_id,
             co.consult_timestamp,
-            booking.diversity_score as delta_diversification
+            booking.diversity_score as delta_diversity
         from consulted_offers as co
         inner join
             {{ ref("int_firebase__native_event") }} as ne
@@ -87,9 +87,9 @@ with
             count(distinct offer_id) over (
                 partition by unique_search_id, unique_session_id
             ) as nb_offers_booked,
-            sum(delta_diversification) over (
+            sum(delta_diversity) over (
                 partition by unique_search_id, unique_session_id
-            ) as total_diversification
+            ) as total_diversity
         from booked_offers
     ),
 
@@ -253,7 +253,7 @@ with
         select
             asd.*,
             bpsi.nb_offers_booked,
-            bpsi.total_diversification,
+            bpsi.total_diversity,
             lead(asd.first_date) over (
                 partition by bpsi.unique_session_id order by asd.first_timestamp
             )
@@ -293,7 +293,7 @@ select
     made_another_search,
     search_query_input_is_generic,
     nb_offers_booked,
-    total_diversification,
+    total_diversity,
     case
         when query_input is not null and not search_query_input_is_generic
         then 'specific_search'

@@ -1,11 +1,11 @@
 ---
-title: Diversification of Cultural Practices
+title: diversity of Cultural Practices
 description: Description of the `int_metric__diversity_daily_booking` table.
 ---
 
 {% docs description__int_metric__diversity_daily_booking %}
 
-The `int_metric__diversity_daily_booking` table captures the diversification of cultural practices within the pass Culture application. Diversification is defined by booking an offer with different characteristics from those previously booked, indicating a cultural discovery by the user.
+The `int_metric__diversity_daily_booking` table captures the diversity of cultural practices within the pass Culture application. Diversity is defined by booking an offer with different characteristics from those previously booked, indicating a cultural discovery by the user.
 
 For each reservation, the analyzed characteristics include:
 

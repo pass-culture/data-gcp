@@ -43,7 +43,7 @@ with
                     when convert_data.event_name = 'BookingConfirmation'
                     then booking.diversity_score
                 end
-            ) as diversification_score
+            ) as diversity_score
         from display_data
         left join
             convert_data

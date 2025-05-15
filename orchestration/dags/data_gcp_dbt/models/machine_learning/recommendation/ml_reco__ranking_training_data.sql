@@ -84,7 +84,7 @@ with
             user_bookings_count,
             user_clicks_count,
             user_favorites_count,
-            user_diversification_count,
+            user_diversity_count,
             user_deposit_amount,
             user_amount_spent
         from {{ ref("ml_feat__user_feature") }}
@@ -134,7 +134,7 @@ select
     user_features.user_bookings_count,
     user_features.user_clicks_count,
     user_features.user_favorites_count,
-    user_features.user_diversification_count,
+    user_features.user_diversity_count,
     user_features.user_deposit_amount,
     user_features.user_amount_spent,
     to_json_string(item_embeddings.item_embedding) as item_embedding_json,

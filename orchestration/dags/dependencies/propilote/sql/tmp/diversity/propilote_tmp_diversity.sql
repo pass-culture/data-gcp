@@ -7,7 +7,7 @@ with
             ) month
     ),
 
-    diversification as (
+    diversity as (
         select
             div.user_id,
             "{{ params.group_type }}" as dimension_name,
@@ -17,8 +17,8 @@ with
             user.current_deposit_type as user_type,
             date_trunc(user.first_deposit_creation_date, month) as month_deposit,
             date_trunc(deposit.deposit_expiration_date, month) as month_expiration,
-            sum(delta_diversification) as diversification_indicateur
-        from `{{ bigquery_analytics_dataset }}.diversification_booking` as div
+            sum(delta_diversity) as diversity_indicateur
+        from `{{ bigquery_analytics_dataset }}.diversity_booking` as div
         left join
             `{{ bigquery_analytics_dataset }}.global_user` as user
             on div.user_id = user.user_id
@@ -45,14 +45,14 @@ select distinct
     dimension_name,
     dimension_value,
     user_type,
-    "diversification_median" as indicator,
-    percentile_disc(diversification_indicateur, 0.5) over (
+    "diversity_median" as indicator,
+    percentile_disc(diversity_indicateur, 0.5) over (
         partition by dates.month
     ) as numerator,
     1 as denominator
 from dates
 left join
-    diversification
-    on dates.month >= diversification.month_deposit
-    and dates.month <= diversification.month_expiration
-    and date_diff(dates.month, diversification.month_deposit, day) >= 365  -- Uniquement les utilisateurs ayant plus d'un an d'ancienneté
+    diversity
+    on dates.month >= diversity.month_deposit
+    and dates.month <= diversity.month_expiration
+    and date_diff(dates.month, diversity.month_deposit, day) >= 365  -- Uniquement les utilisateurs ayant plus d'un an d'ancienneté

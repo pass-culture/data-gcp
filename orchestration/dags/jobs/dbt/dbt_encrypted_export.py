@@ -69,9 +69,7 @@ for partner_id, partner_name in partner_dict.items():
                 type="string",
             ),
             "instance_type": Param(
-                default="n1-standard-8"
-                if ENV_SHORT_NAME == "prod"
-                else "n1-standard-2",
+                default="n1-highmem-2",
                 type="string",
             ),
         },
@@ -140,6 +138,7 @@ for partner_id, partner_name in partner_dict.items():
         gce_instance_start = StartGCEOperator(
             instance_name=f"{GCE_INSTANCE}-{partner_name}",
             task_id="gce_start_task",
+            instance_type="{{ params.instance_type }}",
             instance_type="{{ params.instance_type }}",
             preemptible=True,
             disk_size_gb=100,

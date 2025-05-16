@@ -55,10 +55,10 @@ dbt_sync_artifacts() {
   # Determine the GCS bucket based on DEFER_LOCAL_RUN_TO
   case "$DEFER_LOCAL_RUN_TO" in
     dev)
-      GCS_BUCKET_PATH="gs://${COMPOSER_BUCKET_DEV}/data/target"
+      GCS_BUCKET_PATH="gs://${AIRFLOW_BUCKET_DEV}/data/target"
       ;;
     stg)
-      GCS_BUCKET_PATH="gs://${COMPOSER_BUCKET_STG}/data/target"
+      GCS_BUCKET_PATH="gs://${AIRFLOW_BUCKET_STG}/data/target"
       ;;
     prod)
       GCS_BUCKET_PATH="gs://${COMPOSER_BUCKET_PROD}/data/target"
@@ -240,10 +240,10 @@ dbt_hook() {
 
     case "$env" in
       dev)
-        GCS_BUCKET_PATH="gs://${COMPOSER_BUCKET_DEV}/data/target"
+        GCS_BUCKET_PATH="gs://${AIRFLOW_BUCKET_DEV}/data/target"
         ;;
       stg)
-        GCS_BUCKET_PATH="gs://${COMPOSER_BUCKET_STG}/data/target"
+        GCS_BUCKET_PATH="gs://${AIRFLOW_BUCKET_STG}/data/target"
         ;;
       prod)
         GCS_BUCKET_PATH="gs://${COMPOSER_BUCKET_PROD}/data/target"

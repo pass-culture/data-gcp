@@ -85,12 +85,14 @@ To run Airflow locally for development:
     ENV_SHORT_NAME=dev
     GOOGLE_CLOUD_PROJECT=passculture-data-ehp
     ```
+
   * **stg**:
 
     ```env
     ENV_SHORT_NAME=stg
     GOOGLE_CLOUD_PROJECT=passculture-data-ehp
     ```
+
 ---
 
 ## 🏗️ Build & Run
@@ -137,9 +139,33 @@ make build_with_cache
 
 ---
 
+## :heavy_plus_sign: Adding/removing a requirement package
+
+Add required package to pyproject.toml
+
+* export to format txt for images
+
+```sh
+uv export --format requirements-txt -o airflow/orchestration-requirements.txt
+```
+
+or
+
+```sh
+make compile
+```
+
+* update packge lock
+
+```sh
+make sync
+```
+
+---
+
 ## 🧹 Troubleshooting
 
-### View logs from containers:
+### View logs from containers
 
 ```sh
 make show_airflow_logs
@@ -149,13 +175,13 @@ make show_airflow_logs
 
 ## 🐳 Dockerfile Tips
 
-### Build with specific `NETWORK_MODE`:
+### Build with specific `NETWORK_MODE`
 
 ```sh
 docker build -t <docker-image-name> <dockerfile-path> --build-arg NETWORK_MODE=<proxy|default>
 ```
 
-### Build a specific target (multi-stage):
+### Build a specific target (multi-stage)
 
 ```sh
 docker build --no-cache -f Dockerfile --target <target-name> .

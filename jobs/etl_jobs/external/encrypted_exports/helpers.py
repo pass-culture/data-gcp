@@ -4,10 +4,11 @@ import json
 import duckdb
 import boto3
 from pathlib import Path
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import storage, secretmanager
 from botocore.client import Config
+import concurrent.futures
 
 FILE_EXTENSION = ".parquet"
 PROJECT_NAME = os.environ.get("GCP_PROJECT_ID")
@@ -168,37 +169,35 @@ def transfer_single_blob(
         return False
 
 
-def process_encryption(
+def _process_single_table(
     partner_name: str,
     gcs_bucket: str,
     export_date: str,
-    table_list: List[str],
+    table: str,
     encryption_key: str,
-) -> None:
+    client: storage.Client,
+    tmp_download: str,
+    tmp_encrypted_folder: str,
+) -> Optional[Tuple[str, int]]:
     """
-    Encrypt parquet files for each table.
-
-    For each table, this function:
-      - Connects to DuckDB and registers the provided encryption key.
-      - Creates temporary directories for downloads and for the encrypted files.
-      - Downloads the parquet files from the GCS bucket.
-      - Encrypts the downloaded file using DuckDB.
-      - Uploads the encrypted file back to GCS.
-      - Removes temporary files.
+    Process encryption for a single table.
 
     Args:
         partner_name (str): Name of the partner.
         gcs_bucket (str): GCS bucket name.
         export_date (str): Export date.
-        table_list (List[str]): List of tables to process.
+        table (str): Table name to process.
         encryption_key (str): A 32-character encryption key.
-    """
-    client = storage.Client()
-    bucket = client.get_bucket(gcs_bucket)
-    tmp_encrypted_folder = "tmp_encrypted_parquet"
-    tmp_download = "tmp_downloads"
+        client (storage.Client): GCS client.
+        tmp_download (str): Temporary download directory.
+        tmp_encrypted_folder (str): Temporary encrypted folder directory.
 
-    for table in table_list:
+    Returns:
+        Optional[Tuple[str, int]]: Table name and number of files processed, or None if failed.
+    """
+    try:
+        bucket = client.get_bucket(gcs_bucket)
+
         # Connect to DuckDB and register the encryption key
         duckdb_conn = duckdb.connect(config={"threads": 2})
         duckdb_conn.execute(f"PRAGMA add_parquet_key('key256', '{encryption_key}');")
@@ -231,10 +230,69 @@ def process_encryption(
                 gcs_encrypted_folder_path,
             )
 
+        file_count = i + 1
         print(
-            f"Table {table} successfully encrypted in {i + 1} files -> gs://{gcs_bucket}/{gcs_encrypted_folder_path}"
+            f"Table {table} successfully encrypted in {file_count} files -> gs://{gcs_bucket}/{gcs_encrypted_folder_path}"
         )
         duckdb_conn.close()
+        return table, file_count
+    except Exception as e:
+        print(f"Error processing table {table}: {e}")
+        return None
+
+
+def process_encryption(
+    partner_name: str,
+    gcs_bucket: str,
+    export_date: str,
+    table_list: List[str],
+    encryption_key: str,
+) -> None:
+    """
+    Encrypt parquet files for each table in parallel.
+
+    For each table, this function:
+      - Connects to DuckDB and registers the provided encryption key.
+      - Creates temporary directories for downloads and for the encrypted files.
+      - Downloads the parquet files from the GCS bucket.
+      - Encrypts the downloaded file using DuckDB.
+      - Uploads the encrypted file back to GCS.
+      - Removes temporary files.
+
+    Args:
+        partner_name (str): Name of the partner.
+        gcs_bucket (str): GCS bucket name.
+        export_date (str): Export date.
+        table_list (List[str]): List of tables to process.
+        encryption_key (str): A 32-character encryption key.
+    """
+    tmp_encrypted_folder = "tmp_encrypted_parquet"
+    tmp_download = "tmp_downloads"
+
+    # Process tables in parallel
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # Create a list of futures
+        futures = [
+            executor.submit(
+                _process_single_table,
+                partner_name,
+                gcs_bucket,
+                export_date,
+                table,
+                encryption_key,
+                client=storage.Client(),
+                tmp_download=tmp_download,
+                tmp_encrypted_folder=tmp_encrypted_folder,
+            )
+            for table in table_list
+        ]
+
+        # Process results as they complete
+        for future in concurrent.futures.as_completed(futures):
+            result = future.result()
+            if result:
+                table, file_count = result
+                print(f"Completed processing for table {table} with {file_count} files")
 
 
 def process_transfer(

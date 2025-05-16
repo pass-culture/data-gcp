@@ -68,6 +68,10 @@ for partner_id, partner_name in partner_dict.items():
                 default=" --no-write-json ",
                 type="string",
             ),
+            "instance_type": Param(
+                default="n1-highmem-2",
+                type="string",
+            ),
         },
         tags=[DAG_TAGS.DBT.value, DAG_TAGS.DE.value],
     ) as dag:
@@ -134,7 +138,7 @@ for partner_id, partner_name in partner_dict.items():
         gce_instance_start = StartGCEOperator(
             instance_name=f"{GCE_INSTANCE}-{partner_name}",
             task_id="gce_start_task",
-            instance_type="n1-highmem-2",
+            instance_type="{{ params.instance_type }}",
             preemptible=True,
             disk_size_gb=100,
         )

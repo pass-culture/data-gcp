@@ -51,7 +51,7 @@ DATA_GCS_BUCKET_NAME = os.environ.get(
     "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
 )
 if ENV_SHORT_NAME == "prod":
-    ELEMENTARY_REPORT_URL = "https://elementary.data.passculture.team/"
+    ELEMENTARY_REPORT_URL = "https://dataquality.data.passculture.team/#/"
 else:
     ELEMENTARY_REPORT_URL = None
 

@@ -1,7 +1,11 @@
 import datetime
 import json
+import re
 import time
 import typing as t
+from base64 import b64encode
+from dataclasses import dataclass
+from time import sleep
 
 import dateutil
 import googleapiclient.discovery
@@ -16,7 +20,12 @@ from common.config import (
 from common.hooks.image import CPUImage
 from common.hooks.network import BASE_NETWORK_LIST, VPCNetwork
 from googleapiclient.errors import HttpError
+from paramiko import SSHException
 
+from airflow.configuration import conf
+from airflow.exceptions import AirflowException
+from airflow.models.taskinstance import TaskInstance
+from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from airflow.utils.context import Context
 
@@ -27,6 +36,231 @@ DEFAULT_LABELS = {
     "keep_alive": "false",
     "job_type": "default",
 }
+
+
+@dataclass
+class DeferrableSSHJobStatus:
+    status: str
+    output: str
+    pid: str
+    logs: str
+
+
+class SSHGCEJobManager:
+    MAX_RETRY = 3
+    SSH_TIMEOUT = 10
+
+    def __init__(
+        self,
+        task_id: str,
+        task_instance: TaskInstance,
+        hook: ComputeEngineSSHHook,
+        environment: t.Dict[str, str],
+        do_xcom_push: bool = True,
+    ):
+        self.ssh_hook = hook
+        self.task_id = task_id
+        self.environment = environment
+        self.task_instance = task_instance
+        self.do_xcom_push = do_xcom_push
+        self.log = task_instance.log
+
+    def run_ssh_client_command(self, command: str, retry=1) -> str:
+        try:
+            with self.ssh_hook.get_conn() as ssh_client:
+                exit_status, agg_stdout, agg_stderr = (
+                    self.ssh_hook.exec_ssh_client_command(
+                        ssh_client,
+                        command,
+                        timeout=3600,
+                        environment=self.environment,
+                        get_pty=False,
+                    )
+                )
+                if self.do_xcom_push:
+                    self.task_instance.xcom_push(key="ssh_exit", value=exit_status)
+                    # Ensure there are enough lines in the output
+                    lines_result = agg_stdout.decode("utf-8").split("\n")
+                    if len(lines_result) == 0:
+                        result = ""  # No output available
+                    elif len(lines_result) == 1:
+                        result = lines_result[0]  # Only one line exists, use it
+                    else:
+                        # Use the last or second-to-last line depending on content
+                        if len(lines_result[-1]) > 0:
+                            result = lines_result[-1]
+                        else:
+                            result = lines_result[-2]
+
+                    # Push result to XCom
+                    self.task_instance.xcom_push(key="result", value=result)
+
+                if exit_status != 0:
+                    raise AirflowException(
+                        f"SSH operator error: exit status = {exit_status}"
+                    )
+
+                return self._decode_result(agg_stdout)
+        except SSHException as e:
+            self.log.info(
+                f"Cannot connect to instance {self.instance_name}. Retry : {retry}."
+            )
+            if retry > self.MAX_RETRY:
+                self.log.info(
+                    f"Could not connect to instance {self.instance_name}. After {retry} retries. Abort."
+                )
+                raise e
+            sleep(retry * self.SSH_TIMEOUT)
+            return self.run_ssh_client_command(command, retry=retry + 1)
+
+    def _decode_result(self, result: bytes | str) -> str:
+        enable_pickling = conf.getboolean("core", "enable_xcom_pickling")
+        if not enable_pickling:
+            if result is not None:
+                result = b64encode(result).decode("utf-8")
+        if isinstance(result, bytes):
+            return result.decode("utf-8")
+        return str(result)
+
+
+class DeferrableSSHGCEJobManager(SSHGCEJobManager):
+    """Handles remote job management operations"""
+
+    def __init__(
+        self,
+        task_id: str,
+        task_instance: TaskInstance,
+        hook: ComputeEngineSSHHook,
+        environment: t.Dict[str, str],
+        run_id: str,
+        do_xcom_push: bool = True,
+        *args,
+        **kwargs,
+    ):
+        self.run_id = run_id
+        self.job_id = f"{task_id}_{str(run_id)}"
+        super().__init__(
+            task_id, task_instance, hook, environment, do_xcom_push, *args, **kwargs
+        )
+
+    @property
+    def _job_base_dir(self) -> str:
+        return "~/airflow_jobs"
+
+    @property
+    def _job_dir(self) -> str:
+        return f"{self._job_base_dir}/{self.job_id}"
+
+    @property
+    def _setup_script(self) -> str:
+        return f"""
+            # Ensure base directory exists
+            mkdir -p {self._job_base_dir}
+
+            # Create job-specific directory
+            JOB_DIR={self._job_dir}
+            mkdir -p $JOB_DIR
+
+            # Initialize job status
+            echo "running" > $JOB_DIR/status
+        """
+
+    @property
+    def _trap_handlers(self) -> str:
+        return f"""
+            trap 'echo "failed" > {self._job_dir}/status; exit 1' ERR
+            trap 'echo "interrupted" > {self._job_dir}/status; exit 1' INT TERM
+        """
+
+    def _deferrable_command(self, command: str) -> str:
+        return f"""
+            {self._setup_script}
+
+            (
+                {self._trap_handlers}
+
+                # Execute the command and capture output
+                {command} > {self._job_dir}/output 2>&1
+
+                # Mark successful completion
+                echo "completed" > {self._job_dir}/status
+            ) </dev/null >/dev/null 2>&1 &
+
+            # Store the background job's PID
+            echo $! > {self._job_dir}/pid
+
+            # Return the job ID for monitoring
+            echo "{self.job_id}"
+            exit 0
+        """
+
+    def run_ssh_client_command(self, command: str, retry=1) -> str:
+        command = self._deferrable_command(command)
+        return super().run_ssh_client_command(command, retry)
+
+    async def run_ssh_status_check_command(self, retry=1) -> DeferrableSSHJobStatus:
+        command = f"""
+            JOB_DIR={self._job_dir}
+            if [ -f "$JOB_DIR/status" ]; then
+                status=$(cat $JOB_DIR/status)
+                pid=$(cat $JOB_DIR/pid 2>/dev/null || echo "0")
+
+                # Check if process is still running
+                if [ "$status" = "running" ] && ! kill -0 $pid 2>/dev/null; then
+                    echo "failed" > $JOB_DIR/status
+                    echo "Process died unexpectedly" >> $JOB_DIR/output
+                fi
+
+                output=$(cat $JOB_DIR/output 2>/dev/null || echo "No output yet")
+                echo "STATUS:$(cat $JOB_DIR/status)"
+                echo "OUTPUT:$output"
+                echo "PID:$pid"
+            else
+                echo "STATUS:failed"
+                echo "OUTPUT:Job directory not found"
+                echo "PID:0"
+            fi
+        """
+        self.log.info(f"Running status check command: {command}")
+        agg_output = super().run_ssh_client_command(command, retry=retry)
+        return self._parse_check_command_output(agg_output)
+
+    async def run_ssh_cleanup_command(self, retry=1) -> str:
+        """Returns command to clean up job directory after completion or failure."""
+        command = f"""
+            # Only remove if job is not running
+            JOB_DIR={self._job_dir}
+            if [ -f "$JOB_DIR/status" ]; then
+                status=$(cat $JOB_DIR/status)
+                if [ "$status" != "running" ]; then
+                    # Archive the output before cleaning
+                    mkdir -p {self._job_base_dir}/archive
+                    cp $JOB_DIR/output {self._job_base_dir}/archive/{self.job_id}_output.log 2>/dev/null || true
+                    rm -rf $JOB_DIR
+                fi
+            fi
+        """
+        self.log.info(f"Running cleanup command: {command}")
+        return super().run_ssh_client_command(command, retry=retry)
+
+    def _parse_check_command_output(self, raw: str | bytes) -> DeferrableSSHJobStatus:
+        """
+        Extracts STATUS and OUTPUT from raw SSH output.
+        Returns (status_str or None, output_text).
+        """
+        # Always ensure we're working with a string
+        if isinstance(raw, bytes):
+            raw = raw.decode("utf-8")
+        elif not isinstance(raw, str):
+            raw = str(raw)
+
+        m_status = re.search(r"STATUS:(\w+)", raw)
+        m_output = re.search(r"OUTPUT:(.*)", raw, re.DOTALL)
+        m_pid = re.search(r"PID:(\d+)", raw)
+        status = m_status.group(1).lower() if m_status else None
+        output = m_output.group(1).strip() if m_output else "No output available"
+        pid = m_pid.group(1) if m_pid else None
+        return DeferrableSSHJobStatus(status=status, output=output, pid=pid, logs=raw)
 
 
 class GCEHook(GoogleBaseHook):

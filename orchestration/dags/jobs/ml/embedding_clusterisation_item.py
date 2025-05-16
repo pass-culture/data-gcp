@@ -103,6 +103,8 @@ with DAG(
             f"--output-dataset-name tmp_{ENV_SHORT_NAME} "
             f"--output-table-name {DATE}_{cluster_prefix}_import_item_clusters_preprocess "
             f"--config-file-name {cluster_config_file_name} ",
+            deferrable=True,
+            poll_interval=300,
         )
 
         generate_clustering = SSHGCEOperator(
@@ -115,6 +117,8 @@ with DAG(
             f"--output-dataset-name ml_preproc_{ENV_SHORT_NAME} "
             f"--output-table-name {cluster_prefix}_item_cluster "
             f"--config-file-name {cluster_config_file_name} ",
+            deferrable=True,
+            poll_interval=300,
         )
 
         gce_instance_stop = DeleteGCEOperator(

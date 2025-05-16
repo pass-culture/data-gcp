@@ -1,6 +1,5 @@
 import typing as t
-from base64 import b64encode
-from time import sleep
+from datetime import datetime
 
 from common.config import (
     ENV_SHORT_NAME,
@@ -11,12 +10,11 @@ from common.config import (
     SSH_USER,
     UV_VERSION,
 )
-from common.hooks.gce import GCEHook
+from common.hooks.gce import DeferrableSSHGCEJobManager, GCEHook, SSHGCEJobManager
 from common.hooks.image import MACHINE_TYPE
 from common.hooks.network import BASE_NETWORK_LIST, GKE_NETWORK_LIST
-from paramiko.ssh_exception import SSHException
+from common.triggers.gce import DeferrableSSHJobMonitorTrigger
 
-from airflow.configuration import conf
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
@@ -142,9 +140,14 @@ class StopGCEOperator(BaseOperator):
 
 
 class BaseSSHGCEOperator(BaseOperator):
-    MAX_RETRY = 3
-    SSH_TIMEOUT = 10
-    template_fields = ["instance_name", "command", "environment", "gce_zone"]
+    template_fields = [
+        "instance_name",
+        "command",
+        "environment",
+        "gce_zone",
+        "deferrable",
+        "poll_interval",
+    ]
 
     @apply_defaults
     def __init__(
@@ -153,6 +156,8 @@ class BaseSSHGCEOperator(BaseOperator):
         command: str,
         environment: t.Dict[str, str] = {},
         gce_zone=GCE_ZONE,
+        deferrable: bool = False,
+        poll_interval: int = 300,
         *args,
         **kwargs,
     ):
@@ -160,61 +165,12 @@ class BaseSSHGCEOperator(BaseOperator):
         self.command = command
         self.environment = environment
         self.gce_zone = gce_zone
+        self.deferrable = deferrable
+        self.poll_interval = poll_interval
         super(BaseSSHGCEOperator, self).__init__(*args, **kwargs)
 
-    def run_ssh_client_command(self, hook, context, retry=1):
-        try:
-            with hook.get_conn() as ssh_client:
-                exit_status, agg_stdout, agg_stderr = hook.exec_ssh_client_command(
-                    ssh_client,
-                    self.command,
-                    timeout=3600,
-                    environment=self.environment,
-                    get_pty=False,
-                )
-                if context and self.do_xcom_push:
-                    ti = context.get("task_instance")
-                    ti.xcom_push(key="ssh_exit", value=exit_status)
-
-                    # Ensure there are enough lines in the output
-                    lines_result = agg_stdout.decode("utf-8").split("\n")
-                    self.log.info(f"Lines result: {lines_result}")
-                    if len(lines_result) == 0:
-                        result = ""  # No output available
-                    elif len(lines_result) == 1:
-                        result = lines_result[0]  # Only one line exists, use it
-                    else:
-                        # Use the last or second-to-last line depending on content
-                        if len(lines_result[-1]) > 0:
-                            result = lines_result[-1]
-                        else:
-                            result = lines_result[-2]
-
-                    # Push result to XCom
-                    ti.xcom_push(key="result", value=result)
-
-                if exit_status != 0:
-                    raise AirflowException(
-                        f"SSH operator error: exit status = {exit_status}"
-                    )
-                return agg_stdout
-        except SSHException as e:
-            self.log.info(
-                f"Cannot connect to instance {self.instance_name}. Retry : {retry}."
-            )
-            if retry > self.MAX_RETRY:
-                self.log.info(
-                    f"Could not connect to instance {self.instance_name}. After {retry} retries. Abort."
-                )
-                raise e
-            sleep(retry * self.SSH_TIMEOUT)
-            self.run_ssh_client_command(hook, context, retry=retry + 1)
-
     def execute(self, context):
-        self.log.info(
-            f"Connecting to instance {self.instance_name} in zone {self.gce_zone} with project {GCP_PROJECT_ID}"
-        )
-        hook = ComputeEngineSSHHook(
+        ssh_hook = ComputeEngineSSHHook(
             instance_name=self.instance_name,
             zone=self.gce_zone,
             project_id=GCP_PROJECT_ID,
@@ -224,69 +180,92 @@ class BaseSSHGCEOperator(BaseOperator):
             gcp_conn_id="google_cloud_default",
             expire_time=300,
         )
-        result = self.run_ssh_client_command(hook, context)
-        enable_pickling = conf.getboolean("core", "enable_xcom_pickling")
-        if not enable_pickling:
-            if result is not None:
-                result = b64encode(result).decode("utf-8")
-        return result
+        self.log.info(
+            f"Connecting to instance {self.instance_name} in zone {self.gce_zone} with project {GCP_PROJECT_ID}"
+        )
+        if self.deferrable:
+            return self.run_deferrable(context, ssh_hook)
+        else:
+            return self.run_sync(context, ssh_hook)
 
-
-class CloneRepositoryGCEOperator(BaseSSHGCEOperator):
-    REPO = "https://github.com/pass-culture/data-gcp.git"
-
-    @apply_defaults
-    def __init__(
-        self,
-        instance_name: str,
-        command: str,
-        environment: t.Dict[str, str] = {},
-        python_version: str = "3.10",
-        use_uv: bool = True,
-        *args,
-        **kwargs,
-    ):
-        self.use_uv = use_uv
-        self.command = self.clone_and_init_with_uv(command, python_version)
-
-        self.instance_name = instance_name
-        self.environment = environment
-        self.python_version = python_version
-        super(CloneRepositoryGCEOperator, self).__init__(
-            instance_name=self.instance_name,
-            command=self.command,
+    def run_sync(self, context, ssh_hook: ComputeEngineSSHHook):
+        job_manager = SSHGCEJobManager(
+            task_id=self.task_id,
+            task_instance=context["task_instance"],
+            hook=ssh_hook,
             environment=self.environment,
-            *args,
-            **kwargs,
+        )
+        self.log.info(f"Running command: {self.command}")
+        return job_manager.run_ssh_client_command(self.command)
+
+    def run_deferrable(self, context, ssh_hook: ComputeEngineSSHHook):
+        run_id = str(context.get("run_id", datetime.now().strftime("%Y%m%d%H%M%S")))
+        job_manager = DeferrableSSHGCEJobManager(
+            task_id=self.task_id,
+            run_id=run_id,
+            task_instance=context["task_instance"],
+            hook=ssh_hook,
+            environment=self.environment,
+        )
+        self.log.info(f"Running command: {self.command}")
+        result = job_manager.run_ssh_client_command(self.command)
+        job_id = result.strip() if result else None
+
+        if not job_id:
+            raise AirflowException("Failed to get job ID after submission")
+
+        # Defer to trigger for monitoring
+        self.log.info(f"Job {job_id} submitted, deferring to trigger for monitoring")
+        self.defer(
+            trigger=DeferrableSSHJobMonitorTrigger(
+                task_id=self.task_id,
+                instance_name=self.instance_name,
+                zone=self.gce_zone,
+                run_id=run_id,
+                poll_interval=self.poll_interval,
+            ),
+            method_name="execute_complete",
         )
 
-    def clone_and_init_with_uv(self, branch, python_version) -> str:
-        return f"""
-        curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh
-        uv venv --python {python_version}
-        DIR=data-gcp &&
-        if [ -d "$DIR" ]; then
-            echo "Update and Checkout repo..." &&
-            cd $DIR &&
-            git fetch --all &&
-            git reset --hard origin/{branch}
-        else
-            echo "Clone and checkout repo..." &&
-            git clone {self.REPO} &&
-            cd $DIR &&
-            git checkout {branch}
-        fi
+    def execute_complete(
+        self, context: t.Dict[str, t.Any], event: t.Optional[t.Dict[str, t.Any]] = None
+    ) -> None:
         """
+        Callback for when the trigger fires - returns immediately.
+        Relies on trigger to throw an exception, otherwise it assumes execution was
+        successful.
+        """
+        self.log.info(f"Executing complete for job {event}")
+        if event is None:
+            raise AirflowException("No event received in trigger callback")
+
+        status = event.get("status", "error")
+        logs = event.get("logs", "")
+        message = event.get("message", "")
+
+        if status == "completed":
+            self.log.info("Job completed successfully")
+            if logs:
+                self.log.info(f"Job logs: {logs}")
+            if message:
+                self.log.info(f"Job message: {message}")
+            return
+        elif status == "running":
+            # This shouldn't happen as we only get here after the trigger is done
+            raise AirflowException("Got running status in trigger callback")
+        else:
+            self.log.error(
+                f"Job {context['task_instance'].run_id} failed with status {status}"
+            )
+            error_msg = message if message else "Job failed"
+            if logs:
+                error_msg += f"\nLogs: {logs}"
+            raise AirflowException(error_msg)
 
 
 class SSHGCEOperator(BaseSSHGCEOperator):
-    template_fields = [
-        "instance_name",
-        "command",
-        "environment",
-        "gce_zone",
-        "base_dir",
-    ]
+    template_fields = ["base_dir"] + BaseSSHGCEOperator.template_fields
+
     DEFAULT_EXPORT = {
         "ENV_SHORT_NAME": ENV_SHORT_NAME,
         "GCP_PROJECT_ID": GCP_PROJECT_ID,
@@ -302,6 +281,8 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         command: str,
         base_dir: str = None,
         environment: t.Dict[str, str] = {},
+        deferrable: bool = False,
+        poll_interval: int = 60,
         *args,
         **kwargs,
     ):
@@ -309,28 +290,34 @@ class SSHGCEOperator(BaseSSHGCEOperator):
         self.environment = environment
         self.command = command
         self.instance_name = instance_name
+        self.deferrable = deferrable
+        self.poll_interval = poll_interval
 
         super(SSHGCEOperator, self).__init__(
             instance_name=self.instance_name,
             command=self.command,
             environment=self.environment,
+            deferrable=self.deferrable,
+            poll_interval=self.poll_interval,
             *args,
             **kwargs,
         )
 
-    def execute(self, context):
+    def prepare_command(self):
         environment = dict(self.UV_EXPORT, **self.environment)
         commands_list = []
         commands_list.append(
             "\n".join([f"export {key}={value}" for key, value in environment.items()])
         )
-
         if self.base_dir is not None:
             commands_list.append(f"cd ~/{self.base_dir}")
 
         commands_list.append("source .venv/bin/activate")
-        commands_list.append(self.command)
+        return commands_list
 
+    def execute(self, context):
+        commands_list = self.prepare_command()
+        commands_list.append(self.command)
         self.command = "\n".join(commands_list)
         return super().execute(context)
 
@@ -377,11 +364,9 @@ class InstallDependenciesOperator(SSHGCEOperator):
         )
 
     def execute(self, context):
-        # The templates have been rendered; we can construct the command
         command = self.make_install_command(
             self.requirement_file, self.branch, self.base_dir
         )
-        # Use the command in the parent SSHGCEOperator to execute on the remote instance
         self.command = command
         return super(InstallDependenciesOperator, self).execute(context)
 

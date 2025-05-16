@@ -1,0 +1,13 @@
+analyses/notebooks/**
+target/
+edr_target/
+dbt_packages/
+package-lock.yml
+edr_target/
+env-run-artifacts/
+exposures.yml
+
+.clickhouse_portforward.pid
+.env.local
+.dbt_clickhouse_env/
+.user.yml

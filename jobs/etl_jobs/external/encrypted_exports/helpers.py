@@ -4,10 +4,11 @@ import json
 import duckdb
 import boto3
 from pathlib import Path
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import storage, secretmanager
 from botocore.client import Config
+import concurrent.futures
 
 FILE_EXTENSION = ".parquet"
 PROJECT_NAME = os.environ.get("GCP_PROJECT_ID")
@@ -168,40 +169,34 @@ def transfer_single_blob(
         return False
 
 
-def process_encryption(
+def _process_single_table(
     partner_name: str,
     gcs_bucket: str,
     export_date: str,
-    table_list: List[str],
+    table: str,
     encryption_key: str,
-) -> None:
+    client: storage.Client,
+    tmp_download: str,
+    tmp_encrypted_folder: str,
+) -> Optional[Tuple[str, int]]:
     """
-    Encrypt parquet files for each table.
-
-    For each table, this function:
-      - Connects to DuckDB and registers the provided encryption key.
-      - Creates temporary directories for downloads and for the encrypted files.
-      - Downloads the parquet files from the GCS bucket.
-      - Encrypts the downloaded file using DuckDB.
-      - Uploads the encrypted file back to GCS.
-      - Removes temporary files.
+    Process encryption for a single table.
 
     Args:
         partner_name (str): Name of the partner.
         gcs_bucket (str): GCS bucket name.
         export_date (str): Export date.
-        table_list (List[str]): List of tables to process.
+        table (str): Table name to process.
         encryption_key (str): A 32-character encryption key.
-    """
-    client = storage.Client()
-    bucket = client.get_bucket(gcs_bucket)
-    tmp_encrypted_folder = "tmp_encrypted_parquet"
-    tmp_download = "tmp_downloads"
+        client (storage.Client): GCS client.
+        tmp_download (str): Temporary download directory.
+        tmp_encrypted_folder (str): Temporary encrypted folder directory.
 
-    for table in table_list:
-        # Connect to DuckDB and register the encryption key
-        duckdb_conn = duckdb.connect(config={"threads": 2})
-        duckdb_conn.execute(f"PRAGMA add_parquet_key('key256', '{encryption_key}');")
+    Returns:
+        Optional[Tuple[str, int]]: Table name and number of files processed, or None if failed.
+    """
+    try:
+        bucket = client.get_bucket(gcs_bucket)
 
         # Prepare local directories and get the GCS encrypted folder path
         local_base, encrypted_base, gcs_encrypted_folder_path = prepare_directories(
@@ -220,7 +215,11 @@ def process_encryption(
         assert len(parquet_file_list) != 0, f"{gcs_bucket}/{gcs_folder_path} is empty"
 
         # Process each parquet file
-        for i, parquet_file in enumerate(parquet_file_list):
+        def process_single_file(parquet_file):
+            duckdb_conn = duckdb.connect(config={"threads": 1})
+            duckdb_conn.execute(
+                f"PRAGMA add_parquet_key('key256', '{encryption_key}');"
+            )
             print(f"parquet file: {parquet_file}")
             encrypt_and_upload_file(
                 bucket,
@@ -230,11 +229,74 @@ def process_encryption(
                 encrypted_base,
                 gcs_encrypted_folder_path,
             )
+            duckdb_conn.close()
+            return True
+
+        # Use ThreadPoolExecutor to process files in parallel
+        max_workers = min(
+            32, len(parquet_file_list)
+        )  # Limit max workers to avoid overwhelming the system
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all tasks and wait for completion
+            futures = [
+                executor.submit(process_single_file, parquet_file)
+                for parquet_file in parquet_file_list
+            ]
+            # Wait for all futures to complete
+            concurrent.futures.wait(futures)
+            # Get the count of successfully processed files
+            file_count = sum(1 for future in futures if future.result())
 
         print(
-            f"Table {table} successfully encrypted in {i + 1} files -> gs://{gcs_bucket}/{gcs_encrypted_folder_path}"
+            f"Table {table} successfully encrypted in {file_count} files -> gs://{gcs_bucket}/{gcs_encrypted_folder_path}"
         )
-        duckdb_conn.close()
+
+        return table, file_count
+    except Exception as e:
+        print(f"Error processing table {table}: {e}")
+        return None
+
+
+def process_encryption(
+    partner_name: str,
+    gcs_bucket: str,
+    export_date: str,
+    table_list: List[str],
+    encryption_key: str,
+) -> None:
+    """
+    Encrypt parquet files for each table in parallel.
+
+    For each table, this function:
+      - Connects to DuckDB and registers the provided encryption key.
+      - Creates temporary directories for downloads and for the encrypted files.
+      - Downloads the parquet files from the GCS bucket.
+      - Encrypts the downloaded file using DuckDB.
+      - Uploads the encrypted file back to GCS.
+      - Removes temporary files.
+
+    Args:
+        partner_name (str): Name of the partner.
+        gcs_bucket (str): GCS bucket name.
+        export_date (str): Export date.
+        table_list (List[str]): List of tables to process.
+        encryption_key (str): A 32-character encryption key.
+    """
+    tmp_encrypted_folder = "tmp_encrypted_parquet"
+    tmp_download = "tmp_downloads"
+
+    for table in table_list:
+        table, file_count = _process_single_table(
+            partner_name,
+            gcs_bucket,
+            export_date,
+            table,
+            encryption_key,
+            client=storage.Client(),
+            tmp_download=tmp_download,
+            tmp_encrypted_folder=tmp_encrypted_folder,
+        )
+        print(f"Completed processing for table {table} with {file_count} files")
 
 
 def process_transfer(

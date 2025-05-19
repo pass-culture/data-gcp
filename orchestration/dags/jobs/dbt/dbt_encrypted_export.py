@@ -49,7 +49,7 @@ for partner_id, partner_name in partner_dict.items():
     with DAG(
         f"{dag_name}_{partner_name}",
         default_args=default_args,
-        dagrun_timeout=datetime.timedelta(minutes=60),
+        dagrun_timeout=datetime.timedelta(minutes=180),
         catchup=False,
         description=f"Generate obfuscated export for {partner_name}",
         schedule_interval=ENCRYPTED_EXPORT_DICT.get(partner_id, {}).get(
@@ -66,6 +66,12 @@ for partner_id, partner_name in partner_dict.items():
             ),
             "GLOBAL_CLI_FLAGS": Param(
                 default=" --no-write-json ",
+                type="string",
+            ),
+            "instance_type": Param(
+                default="n1-standard-8"
+                if ENV_SHORT_NAME == "prod"
+                else "n1-standard-2",
                 type="string",
             ),
         },
@@ -134,7 +140,7 @@ for partner_id, partner_name in partner_dict.items():
         gce_instance_start = StartGCEOperator(
             instance_name=f"{GCE_INSTANCE}-{partner_name}",
             task_id="gce_start_task",
-            instance_type="n1-highmem-2",
+            instance_type="{{ params.instance_type }}",
             preemptible=True,
             disk_size_gb=100,
         )

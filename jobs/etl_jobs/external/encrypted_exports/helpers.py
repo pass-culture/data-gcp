@@ -209,10 +209,6 @@ def _process_single_table(
     try:
         bucket = client.get_bucket(gcs_bucket)
 
-        # Connect to DuckDB and register the encryption key
-        duckdb_conn = duckdb.connect(config={"threads": 2})
-        duckdb_conn.execute(f"PRAGMA add_parquet_key('key256', '{encryption_key}');")
-
         # Prepare local directories and get the GCS encrypted folder path
         local_base, encrypted_base, gcs_encrypted_folder_path = prepare_directories(
             partner_name, table, tmp_download, tmp_encrypted_folder, export_date
@@ -244,13 +240,30 @@ def _process_single_table(
                 encrypted_base,
                 gcs_encrypted_folder_path,
             )
+            duckdb_conn.close()
+            print(f"encrypted file: {parquet_file}")
+            return True
 
-        file_count = i + 1
+        # Use ThreadPoolExecutor to process files in parallel
+        max_workers = min(
+            32, len(parquet_file_list)
+        )  # Limit max workers to avoid overwhelming the system
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all tasks and wait for completion
+            futures = [
+                executor.submit(process_single_file, parquet_file)
+                for parquet_file in parquet_file_list
+            ]
+            # Wait for all futures to complete
+            concurrent.futures.wait(futures)
+            # Get the count of successfully processed files
+            file_count = sum(1 for future in futures if future.result())
+
         print(
             f"Table {table} successfully encrypted in {file_count} files -> gs://{gcs_bucket}/{gcs_encrypted_folder_path}"
             f"Table {table} successfully encrypted in {file_count} files -> gs://{gcs_bucket}/{gcs_encrypted_folder_path}"
         )
-        duckdb_conn.close()
+
         return table, file_count
     except Exception as e:
         print(f"Error processing table {table}: {e}")
@@ -285,30 +298,18 @@ def process_encryption(
     tmp_encrypted_folder = "tmp_encrypted_parquet"
     tmp_download = "tmp_downloads"
 
-    # Process tables in parallel
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        # Create a list of futures
-        futures = [
-            executor.submit(
-                _process_single_table,
-                partner_name,
-                gcs_bucket,
-                export_date,
-                table,
-                encryption_key,
-                client=storage.Client(),
-                tmp_download=tmp_download,
-                tmp_encrypted_folder=tmp_encrypted_folder,
-            )
-            for table in table_list
-        ]
-
-        # Process results as they complete
-        for future in concurrent.futures.as_completed(futures):
-            result = future.result()
-            if result:
-                table, file_count = result
-                print(f"Completed processing for table {table} with {file_count} files")
+    for table in table_list:
+        table, file_count = _process_single_table(
+            partner_name,
+            gcs_bucket,
+            export_date,
+            table,
+            encryption_key,
+            client=storage.Client(),
+            tmp_download=tmp_download,
+            tmp_encrypted_folder=tmp_encrypted_folder,
+        )
+        print(f"Completed processing for table {table} with {file_count} files")
 
 
 def process_transfer(

@@ -6,19 +6,19 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Description of the `mrt_global__deposit` table.">
+        <meta name="description" content="Description of the `mrt_global__iris_socio_demographics` table.">
       
       
         <meta name="author" content="Pass Culture Team">
       
       
-        <link rel="canonical" href="https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__deposit/">
+        <link rel="canonical" href="https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__iris_socio_demographics/">
       
       
-        <link rel="prev" href="../description__mrt_global__cultural_partner/">
+        <link rel="prev" href="../description__mrt_global__favorite/">
       
       
-        <link rel="next" href="../description__mrt_global__educational_deposit/">
+        <link rel="next" href="../description__mrt_global__offer/">
       
       
       <link rel="icon" href="../../../../../assets/favicon.png">
@@ -26,7 +26,7 @@
     
     
       
-        <title>Deposit - Pass Culture Data Documentation</title>
+        <title>Agregated Socio Demographic information Per IRIS - Pass Culture Data Documentation</title>
       
     
     
@@ -115,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Deposit
+              Agregated Socio Demographic information Per IRIS
             
           </span>
         </div>
@@ -3277,28 +3277,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Deposit
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../description__mrt_global__deposit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3307,33 +3289,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#table-description" class="md-nav__link">
-    <span class="md-ellipsis">
-      Table description
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -3406,10 +3361,28 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../description__mrt_global__iris_socio_demographics/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Agregated Socio Demographic information Per IRIS
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3418,6 +3391,33 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-description" class="md-nav__link">
+    <span class="md-ellipsis">
+      Table description
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -6815,15 +6815,25 @@
   
 
 
-  <h1>Deposit</h1>
-
-<p>The <code>Global Deposit</code> model offers a detailed view of deposit-related data by integrating key attributes to support analysis and reporting.</p>
-<p>This model aggregates data on cultural credits (or financial deposits) allocated to users, based on their age, eligibility, location, and activity within the cultural application. It draws from both the deposit and user tables, providing a comprehensive view of each user's deposit details alongside demographic and engagement information.</p>
-<p><em>GRANT_15_17</em> refers to credits for users aged 15 to 17, capped at €80. This amount reflects specific age-based offers: €20 for users aged 15 and €30 for users aged 16 and 17.</p>
-<p><em>GRANT_18</em> covers credits for users aged 18, ranging between €300 and €500, with a duration of two years, offering an extended cultural allowance for this age group.</p>
-<p>In this context, a "deposit" signifies a cultural credit allocated individually to users aged 15-18 through the application, granting access to cultural resources like books, digital goods, and various experiences. These deposits serve as financial allowances that differ by age and grant type (e.g., individual or duo offers), empowering users to engage with cultural activities either alone or with a companion.</p>
+<h1>Table: Socio Demographics Per IRIS</h1>
+<p>This model provides agregated socio-demographic statistics for France at the IRIS level, based on INSEE datasets from the 2020 population census, FiLoSoFi, and other public datasets. It includes breakdowns by age group, socio-professional categories (CSP), nationality, and income quantiles.</p>
+<p>The data was aggregated and cleaned via an intermediate Jupyter notebook that harmonizes multiple sources into a single, structured dataset. Each row represents an IRIS unit, which is the smallest statistical geographic unit used by INSEE. It was then agregated with the global venue model to include a venue_density metric.</p>
 
 <h2 id="table-description">Table description</h2>
+<p>Data sources :
+    - Code Commune / Canton (INSEE)
+         A dataset containing codes for French communes and cantons, enabling the geographical linking of socio-economic data. This source is key for geographical identification in data analyses.
+         <a href="https://www.insee.fr/fr/information/7766585">Link to source</a>
+    - Population 2020 et Statistiques (INSEE)
+         The 2020 census data, detailing demographic characteristics like age, sex, and socio-professional categories. It is used to analyze the population structure in France.
+         <a href="https://www.insee.fr/fr/statistiques/7704076#dictionnaire">Link to source</a>
+    - FiLoSoFi IRIS ou COM - 2020 (INSEE)
+         This dataset provides detailed information on the living standards of households at a fine geographical level (IRIS or communes), focusing on income and poverty levels. It enables a detailed analysis of income distribution and economic disparities.
+         <a href="https://www.insee.fr/fr/statistiques/8229323#documentation">Link to FiLoSoFi IRIS 2020</a>
+         <a href="https://www.insee.fr/fr/statistiques/6692392?sommaire=6692394#consulter">Link to FiLoSoFi IRIS ou COM - 2020</a>
+    - Population 2020 (INSEE)
+         Detailed demographic data for the population of France in 2020, covering age, sex, nationality, and other socio-demographic factors. This data is used for socio-demographic analysis and infrastructure planning.
+         <a href="https://www.insee.fr/fr/statistiques/7704076#consulter">Link to source</a></p>
 <table>
 <thead>
 <tr>
@@ -6834,209 +6844,194 @@
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;">deposit_id</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Unique identifier for the deposit.</td>
+<td style="text-align: left;">iris_code</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The official INSEE code identifying the IRIS (Îlots Regroupés pour l'Information Statistique) area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">deposit_amount</td>
-<td style="text-align: left;">NUMERIC</td>
-<td style="text-align: left;">The total amount of the deposit.</td>
+<td style="text-align: left;">iris_internal_id</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The internal identifier for the IRIS area within the system.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_id</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Unique identifier for a user.</td>
+<td style="text-align: left;">iris_label</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The descriptive name or label of the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_civility</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Registered civility of the user (male, female).</td>
+<td style="text-align: left;">city_code</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The official INSEE code of the municipality (commune) containing the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_region_name</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Region name of the user's registered address.</td>
+<td style="text-align: left;">city_label</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The name of the municipality (commune) containing the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_postal_code</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Postal code of the user's registered address.</td>
+<td style="text-align: left;">territorial_authority_code</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The official code of the territorial authority (collectivité territoriale) containing the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_city</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">City associated with the user's registered address.</td>
+<td style="text-align: left;">epci_code</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The official code of the EPCI (Établissement Public de Coopération Intercommunale) containing the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_epci</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">EPCI code associated with the user's registered address. An EPCI is a French public body enabling municipalities to collaborate on shared local services and development.</td>
+<td style="text-align: left;">epci_label</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The name of the EPCI containing the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_academy_name</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Academy name associated with the user's registered address.</td>
+<td style="text-align: left;">department_code</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The official code of the department (département) containing the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_density_label</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">String column.Density label (urban, rural) of the user's registered address.</td>
+<td style="text-align: left;">department_name</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The official name of the department containing the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_macro_density_label</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Macro density label of the user's registered address.</td>
+<td style="text-align: left;">region_name</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The official name of the region containing the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_density_level</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Integer column. Density level of the user's registered address. Ranges from 1 (highly urban) to 7 (highly rural).</td>
+<td style="text-align: left;">academy_name</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The name of the educational academy (académie) associated with the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_is_in_qpv</td>
-<td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Boolean. Indicates if the user's registered address is in a priority neighborhood (QPV).</td>
+<td style="text-align: left;">territorial_authority_label</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The name of the territorial authority (collectivité territoriale) containing the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_is_unemployed</td>
-<td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Boolean. Indicates if the user is unemployed as per its registered activity.</td>
+<td style="text-align: left;">density_level</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The numerical level indicating the population density of the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_is_in_education</td>
-<td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Boolean. Indicates if the user is in education, based on their registered activity. According to the INSEE, a user is considered to be in education if they fall under one of the following categories: Middle school student (Collégien), High school student (Lycéen), University student (Étudiant), Apprentice (Apprenti), Work-study student (Alternant).</td>
+<td style="text-align: left;">density_label</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The descriptive label for the population density level of the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_is_priority_public</td>
-<td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Boolean. Indicates if the user considered as a pass Culture priority public (users that are either residing in a rural area, in a QPV or are not in education).</td>
+<td style="text-align: left;">density_macro_level</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The broader categorization of population density for the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_department_code</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Department code associated with the user's registered address.</td>
+<td style="text-align: left;">geo_code</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The unique geographic code identifying the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_department_name</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Department name associated with the user's registered address.</td>
+<td style="text-align: left;">rural_city_type</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The classification of the municipality type (rural, urban, etc.) containing the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_age</td>
-<td style="text-align: left;">INT64</td>
-<td style="text-align: left;">Current age of the user.</td>
+<td style="text-align: left;">iris_area_sq_km</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The area of the IRIS, calculated in square kilometers.</td>
 </tr>
 <tr>
-<td style="text-align: left;">user_creation_date</td>
-<td style="text-align: left;">DATE</td>
-<td style="text-align: left;">Date when the user account was created.</td>
+<td style="text-align: left;">total_venue_20_km</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The total distinct number of venues located under a 20 kilometers area around the centroid of the IRIS.</td>
 </tr>
 <tr>
-<td style="text-align: left;">deposit_source</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Creation source of the deposit (educonnect, ubble, dms).</td>
+<td style="text-align: left;">total_venue_5_km</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The total distinct number of venues located under a 5 kilometers area around the centroid of the IRIS.</td>
 </tr>
 <tr>
-<td style="text-align: left;">deposit_creation_date</td>
-<td style="text-align: left;">DATE</td>
-<td style="text-align: left;">The date when the deposit was created.</td>
+<td style="text-align: left;">total_population</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The total number of french population.</td>
 </tr>
 <tr>
-<td style="text-align: left;">deposit_update_date</td>
-<td style="text-align: left;">DATE</td>
-<td style="text-align: left;">The date when the deposit was last updated (only for GRANT_15_17).</td>
+<td style="text-align: left;">total_population_15_years_or_more</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The total population over 15 years living in the IRIS.</td>
 </tr>
 <tr>
-<td style="text-align: left;">deposit_expiration_date</td>
-<td style="text-align: left;">DATE</td>
-<td style="text-align: left;">The expiration date of the deposit. 24 months after deposit creation for GRANT_18; at the user's 18th birthday for GRANT_15_17.</td>
+<td style="text-align: left;">total_population_11_17_years</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The total population between 11 and 17 years living in the IRIS.</td>
 </tr>
 <tr>
-<td style="text-align: left;">deposit_type</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Type of the deposit, can be GRANT_18, GRANT_15_17, GRANT_17_18.</td>
+<td style="text-align: left;">total_population_18_24_years</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The total population between 18 ans 24 years living in the IRIS.</td>
 </tr>
 <tr>
-<td style="text-align: left;">deposit_reform_category</td>
-<td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Categorizes deposits following the reform, allowing distinction between 17 and 18-year-old beneficiaries for the new GRANT_17_18 credit. This field also differentiates between deposits granted before and after the reform. Values are : 15_17_pre_reform, 18_pre_reform, 18_experiment_phase, 17_post_reform, 18_post_reform.</td>
+<td style="text-align: left;">total_revenue_10_decile</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The 10th percentile of income for the IRIS area, representing the income below which 10% of the population earns.</td>
 </tr>
 <tr>
-<td style="text-align: left;">deposit_rank_asc</td>
-<td style="text-align: left;">INT64</td>
-<td style="text-align: left;">Ascending rank of the deposit in user's history.</td>
+<td style="text-align: left;">total_revenue_50_decile</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The 50th percentile of income for the IRIS area, representing the median income.</td>
 </tr>
 <tr>
-<td style="text-align: left;">deposit_rank_desc</td>
-<td style="text-align: left;">INT64</td>
-<td style="text-align: left;">Descending rank of the deposit in user's history.</td>
+<td style="text-align: left;">total_revenue_90_decile</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The 90th percentile of income for the IRIS area, representing the income below which 90% of the population earns.</td>
 </tr>
 <tr>
-<td style="text-align: left;">last_recredit_date</td>
-<td style="text-align: left;">DATE</td>
-<td style="text-align: left;">The most recent date on which the beneficiary received a new recredit.</td>
+<td style="text-align: left;">pct_csp_1</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The percentage of the population, that have 15 years or more, belonging to the socio-professional category 1 - Farmers.</td>
 </tr>
 <tr>
-<td style="text-align: left;">total_recredit</td>
-<td style="text-align: left;">INT64</td>
-<td style="text-align: left;">The total number of times the beneficiary received a new recredit.</td>
+<td style="text-align: left;">pct_csp_2</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The percentage of the population, that have 15 years or more, belonging to the socio-professional category 2 - Craftsmen, Traders, Business Leaders.</td>
 </tr>
 <tr>
-<td style="text-align: left;">total_recredit_amount</td>
-<td style="text-align: left;">FLOAT64</td>
-<td style="text-align: left;">The total amount that has been recredited to the beneficiary.</td>
+<td style="text-align: left;">pct_csp_3</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The percentage of the population, that have 15 years or more, belonging to the socio-professional category 3 - Executives and Higher Intellectual Professions.</td>
 </tr>
 <tr>
-<td style="text-align: left;">total_theoretical_amount_spent</td>
-<td style="text-align: left;">NUMERIC</td>
-<td style="text-align: left;">Total theoretical amount that would have been spent based on expected transactions.</td>
+<td style="text-align: left;">pct_csp_4</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The percentage of the population, that have 15 years or more, belonging to the socio-professional category 4 - Intermediate professions.</td>
 </tr>
 <tr>
-<td style="text-align: left;">total_actual_amount_spent</td>
-<td style="text-align: left;">NUMERIC</td>
-<td style="text-align: left;">Total actual amount spent, reflecting real transactions.</td>
+<td style="text-align: left;">pct_csp_5</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The percentage of the population, that have 15 years or more, belonging to the socio-professional category 5 - Employees.</td>
 </tr>
 <tr>
-<td style="text-align: left;">total_theoretical_amount_spent_in_digital_goods</td>
-<td style="text-align: left;">NUMERIC</td>
-<td style="text-align: left;">Total theoretical amount spent on digital goods based on expected transactions.</td>
+<td style="text-align: left;">pct_csp_6</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The percentage of the population, that have 15 years or more, belonging to the socio-professional category 6 - Workers.</td>
 </tr>
 <tr>
-<td style="text-align: left;">total_non_cancelled_individual_bookings</td>
-<td style="text-align: left;">INT64</td>
-<td style="text-align: left;">Total number of non-cancelled individual bookings made by the user.</td>
+<td style="text-align: left;">pct_csp_7</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The percentage of the population, that have 15 years or more, belonging to the socio-professional category 7 - Retired.</td>
 </tr>
 <tr>
-<td style="text-align: left;">total_diversity_score</td>
-<td style="text-align: left;">INT64</td>
-<td style="text-align: left;">The total diversity score of the user or the deposit</td>
+<td style="text-align: left;">pct_csp_8</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The percentage of the population, that have 15 years or more, belonging to the socio-professional category 8 - Others without professional activity.</td>
 </tr>
 <tr>
-<td style="text-align: left;">first_individual_booking_date</td>
-<td style="text-align: left;">DATE</td>
-<td style="text-align: left;">Date of the first individual booking.</td>
+<td style="text-align: left;">pct_french_population</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The percentage of the population that have French nationality, all ages included.</td>
 </tr>
 <tr>
-<td style="text-align: left;">last_individual_booking_date</td>
-<td style="text-align: left;">DATE</td>
-<td style="text-align: left;">Date of the last individual booking.</td>
-</tr>
-<tr>
-<td style="text-align: left;">deposit_seniority</td>
-<td style="text-align: left;">INT64</td>
-<td style="text-align: left;">Total days between deposit_creation_date and today. Used for analytics purposes.</td>
-</tr>
-<tr>
-<td style="text-align: left;">days_between_user_creation_and_deposit_creation</td>
-<td style="text-align: left;">INT64</td>
-<td style="text-align: left;">Total days between user_creation_date (user activated its account) and deposit_creation_date (user received grant).</td>
-</tr>
-<tr>
-<td style="text-align: left;">user_birth_date</td>
-<td style="text-align: left;">DATE</td>
-<td style="text-align: left;">Birth date of the user.</td>
+<td style="text-align: left;">pct_foreign_population</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The percentage of the population that have foreign nationality, all ages included.</td>
 </tr>
 </tbody>
 </table>
@@ -7078,7 +7073,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../description__mrt_global__cultural_partner/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Cultural Partner">
+          <a href="../description__mrt_global__favorite/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Favorite">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -7088,20 +7083,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Cultural Partner
+                Favorite
               </div>
             </div>
           </a>
         
         
           
-          <a href="../description__mrt_global__educational_deposit/" class="md-footer__link md-footer__link--next" aria-label="Next: Educational Deposit">
+          <a href="../description__mrt_global__offer/" class="md-footer__link md-footer__link--next" aria-label="Next: Offer">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Educational Deposit
+                Offer
               </div>
             </div>
             <div class="md-footer__button md-icon">

@@ -241,7 +241,6 @@ def _process_single_table(
                 gcs_encrypted_folder_path,
             )
             duckdb_conn.close()
-            print(f"encrypted file: {parquet_file}")
             return True
 
         # Use ThreadPoolExecutor to process files in parallel

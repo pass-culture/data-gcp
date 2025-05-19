@@ -21,7 +21,7 @@ async-timeout==4.0.3
     # via aiohttp
 attrs==23.2.0
     # via aiohttp
-bertopic==0.16.2
+bertopic[spacy]==0.16.2
     # via -r requirements.in
 blis==0.7.11
     # via thinc
@@ -88,7 +88,7 @@ gast==0.6.0
     # via tensorflow
 gcsfs==2023.5.0
     # via -r requirements.in
-google-api-core==2.19.1
+google-api-core[grpc]==2.19.1
     # via
     #   google-cloud-bigquery
     #   google-cloud-core
@@ -133,7 +133,7 @@ google-resumable-media==2.7.1
     # via
     #   google-cloud-bigquery
     #   google-cloud-storage
-googleapis-common-protos==1.63.2
+googleapis-common-protos[grpc]==1.63.2
     # via
     #   google-api-core
     #   grpc-google-iam-v1
@@ -175,6 +175,10 @@ idna==3.7
     #   httpx
     #   requests
     #   yarl
+importlib-metadata==8.7.0
+    # via markdown
+importlib-resources==6.5.2
+    # via matplotlib
 jinja2==3.1.4
     # via
     #   spacy
@@ -234,7 +238,7 @@ murmurhash==1.0.10
     #   thinc
 namex==0.0.8
     # via keras
-networkx==3.3
+networkx==3.2.1
     # via torch
 numba==0.60.0
     # via
@@ -449,15 +453,6 @@ seaborn==0.13.2
     # via polyfuzz
 sentence-transformers==3.0.1
     # via bertopic
-setuptools==70.2.0
-    # via
-    #   marisa-trie
-    #   pandas-gbq
-    #   pydata-google-auth
-    #   spacy
-    #   tensorboard
-    #   tensorflow
-    #   thinc
 six==1.16.0
     # via
     #   astunparse
@@ -543,7 +538,7 @@ typing-extensions==4.12.2
     #   pydantic-core
     #   tensorflow
     #   torch
-umap-learn==0.5.6
+umap-learn[parametric-umap]==0.5.6
     # via
     #   -r requirements.in
     #   bertopic
@@ -566,3 +561,7 @@ wrapt==1.16.0
     #   tensorflow
 yarl==1.9.4
     # via aiohttp
+zipp==3.21.0
+    # via
+    #   importlib-metadata
+    #   importlib-resources

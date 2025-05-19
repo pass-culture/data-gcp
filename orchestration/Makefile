@@ -4,26 +4,26 @@ sync:
 	uv sync --no-cache-dir
 
 compile:
-	uv export --format requirements.txt -o airflow/orchestration-requirements.txt --python=python3.12
-	uv export --format requirements.txt -o k8s-airflow/k8s-worker-requirements.txt --python=python3.12
+	uv export --format requirements-txt -o airflow/orchestration-requirements.txt --python=python3.12 --only-group airflow --only-group dbt --only-group sso
+	uv export --format requirements-txt -o k8s-airflow/k8s-worker-requirements.txt --python=python3.12 --only-group airflow --only-group dbt --only-group sso
 
 auth:
 	gcloud auth application-default login
 
 build:
-	make auth
+	@if [ "$(NO_LOGIN)" != "true" ]; then make auth; fi
 	docker compose down -v;
 	docker compose build --no-cache;
 	make _start
 
 build_with_cache:
-	make auth
+	@if [ "$(NO_LOGIN)" != "true" ]; then make auth; fi
 	docker compose down -v;
 	docker compose build;
 	make _start
 
 start:
-	make auth
+	@if [ "$(NO_LOGIN)" != "true" ]; then make auth; fi
 	make _start
 
 _start:

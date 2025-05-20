@@ -141,8 +141,7 @@ for partner_id, partner_name in partner_dict.items():
             instance_name=f"{GCE_INSTANCE}-{partner_name}",
             task_id="gce_start_task",
             instance_type="{{ params.instance_type }}",
-            instance_type="{{ params.instance_type }}",
-            preemptible=True,
+            preemptible=False,
             disk_size_gb=100,
         )
 

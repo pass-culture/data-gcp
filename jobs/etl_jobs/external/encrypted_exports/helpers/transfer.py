@@ -2,7 +2,12 @@ import os
 import io
 from typing import List, Dict, Any
 from google.cloud import storage
-from utils import FILE_EXTENSION, init_s3_client, logger, load_target_bucket_config
+from helpers.utils import (
+    FILE_EXTENSION,
+    init_s3_client,
+    logger,
+    load_target_bucket_config,
+)
 
 
 def process_transfer(

@@ -6,7 +6,7 @@ from google.cloud import storage
 import concurrent.futures
 import time
 
-from utils import (
+from helpers.utils import (
     FILE_EXTENSION,
     logger,
     get_optimal_worker_count,

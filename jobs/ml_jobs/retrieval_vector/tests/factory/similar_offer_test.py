@@ -3,7 +3,7 @@ import pytest
 from app.factory.similar_offer import SimilarOfferHandler
 from app.models.prediction_request import PredictionRequest
 from app.models.prediction_result import SearchType
-from app.retrieval.constants import DISTANCE_COLUMN_NAME
+from app.retrieval.constants import DISTANCE_COLUMN_NAME, SEARCH_TYPE_COLUMN_NAME
 
 
 @pytest.fixture
@@ -105,12 +105,12 @@ def test_similar_offer_handler(
         distances
     ), f"Predictions are not sorted by {DISTANCE_COLUMN_NAME} in increasing order"
 
-    # Check if we are using the correct search type
-    assert (
-        result.search_type == SearchType.VECTOR
-        if request_data_fixture != "request_data_multiple_items"
-        else SearchType.AGGREGATED_VECTORS
-    )
+    # Ensure we are using fallback search type
+    for prediction in result.predictions:
+        if len(request_data.items) == 1:
+            assert prediction[SEARCH_TYPE_COLUMN_NAME] == SearchType.VECTOR
+        else:
+            assert prediction[SEARCH_TYPE_COLUMN_NAME] == SearchType.AGGREGATED_VECTORS
 
 
 def test_similar_offer_fallback_handler(
@@ -156,4 +156,7 @@ def test_similar_offer_fallback_handler(
     assert distances == sorted(
         distances
     ), f"Predictions are not sorted by {DISTANCE_COLUMN_NAME} in increasing order"
-    assert result.search_type == SearchType.TOPS
+
+    # Ensure we are using fallback search type
+    for prediction in result.predictions:
+        assert prediction[SEARCH_TYPE_COLUMN_NAME] == SearchType.TOPS

@@ -121,7 +121,7 @@ class SimilarOfferHandler(PredictionHandler):
                 )
             )
 
-        return PredictionResult(predictions=results)
+        return PredictionResult(predictions=predictions_list)
 
     def _select_best_predictions(
         self, predictions: List[Dict], size: int

@@ -69,7 +69,7 @@ for partner_id, partner_name in partner_dict.items():
                 type="string",
             ),
             "instance_type": Param(
-                default="n1-standard-8"
+                default="n1-highcpu-32"
                 if ENV_SHORT_NAME == "prod"
                 else "n1-standard-2",
                 type="string",

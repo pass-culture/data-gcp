@@ -11,7 +11,8 @@ dbt_clickhouse:
       user: "{{ env_var('CLICKHOUSE_USER') }}"
       password: "{{ env_var('CLICKHOUSE_PASSWORD_DEV') }}"
       secure: False
-      timeout: 300
+      timeout: 30
+      cluster: default
     dev: # a consolider avec les ops
       type: clickhouse
       driver: http
@@ -22,3 +23,4 @@ dbt_clickhouse:
       password: "{{ env_var('CLICKHOUSE_PASSWORD_DEV') }}"
       secure: False
       timeout: 300
+      cluster: default

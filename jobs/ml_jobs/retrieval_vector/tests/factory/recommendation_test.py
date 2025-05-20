@@ -1,8 +1,8 @@
 import pytest
 
 from app.factory.recommendation import RecommendationHandler
-from app.factory.tops import SearchByTopsHandler
 from app.models.prediction_request import PredictionRequest
+from app.models.prediction_result import SearchType
 
 
 @pytest.fixture
@@ -43,7 +43,7 @@ def test_recommendation_handler(
     handler = RecommendationHandler()
 
     # Call the handler
-    result = handler.handle(reco_client, request_data, fallback_client=None)
+    result = handler.handle(reco_client, request_data)
 
     # Assertions
     assert len(result.predictions) == request_data.size
@@ -58,6 +58,7 @@ def test_recommendation_handler(
     assert distances == sorted(
         distances
     ), "Predictions are not sorted by _distance in increasing order"
+    assert result.search_type == SearchType.VECTOR
 
 
 def test_recommendation_fallback_handler(
@@ -87,9 +88,7 @@ def test_recommendation_fallback_handler(
     handler = RecommendationHandler()
 
     # Call the handler
-    result = handler.handle(
-        reco_client, request_data, fallback_client=SearchByTopsHandler()
-    )
+    result = handler.handle(reco_client, request_data)
 
     # Assertions
     assert len(result.predictions) == request_data.size
@@ -104,3 +103,4 @@ def test_recommendation_fallback_handler(
     assert distances == sorted(
         distances
     ), "Predictions are not sorted by _distance in increasing order"
+    assert result.search_type == SearchType.TOPS

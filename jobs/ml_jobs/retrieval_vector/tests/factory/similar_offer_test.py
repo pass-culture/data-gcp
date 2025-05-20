@@ -1,8 +1,8 @@
 import pytest
 
 from app.factory.similar_offer import SimilarOfferHandler
-from app.factory.tops import SearchByTopsHandler
 from app.models.prediction_request import PredictionRequest
+from app.models.prediction_result import SearchType
 
 
 @pytest.fixture
@@ -84,8 +84,8 @@ def test_similar_offer_handler(
     handler = SimilarOfferHandler()
 
     # Call the handler
-    result = handler.handle(reco_client, request_data, fallback_client=None)
-    print(result)
+    result = handler.handle(reco_client, request_data)
+
     # Assertions
     assert len(result.predictions) == request_data.size
 
@@ -103,6 +103,13 @@ def test_similar_offer_handler(
     assert distances == sorted(
         distances
     ), "Predictions are not sorted by _distance in increasing order"
+
+    # Check if we are using the correct search type
+    assert (
+        result.search_type == SearchType.VECTOR
+        if request_data_fixture != "request_data_multiple_items"
+        else SearchType.AGGREGATED_VECTORS
+    )
 
 
 def test_similar_offer_fallback_handler(
@@ -133,9 +140,7 @@ def test_similar_offer_fallback_handler(
     handler = SimilarOfferHandler()
 
     # Call the handler
-    result = handler.handle(
-        reco_client, request_data, fallback_client=SearchByTopsHandler()
-    )
+    result = handler.handle(reco_client, request_data)
 
     # Assertions
     assert len(result.predictions) == request_data.size
@@ -150,3 +155,4 @@ def test_similar_offer_fallback_handler(
     assert distances == sorted(
         distances
     ), "Predictions are not sorted by _distance in increasing order"
+    assert result.search_type == SearchType.TOPS

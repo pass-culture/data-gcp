@@ -24,7 +24,7 @@ dev-dependencies = [
   "mock==4.0.2",
   "sqlfluff==3.1.1",
   "sqlfluff-templater-dbt==3.1.1",
-  "dbt-metabase==1.4.2", 
+  "dbt-metabase==1.4.2",
   "dbt-score==0.7.1",
   "dbt-coverage==0.3.8",
 ]

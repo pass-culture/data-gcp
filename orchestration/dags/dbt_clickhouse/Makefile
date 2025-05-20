@@ -24,7 +24,7 @@ PID_FILE     := .clickhouse_portforward.pid
 # Helpers
 # ────────────────────────────────────────────────────────
 
-# Append env-sourcing snippet 
+# Append env-sourcing snippet
 patch_activate:
 	@echo "🔧 Ensuring $(ACTIVATE) auto-loads $(ENV_FILE)…"
 	@if ! grep -q "# >>> load project $(ENV_FILE)" $(ACTIVATE); then \

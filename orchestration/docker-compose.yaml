@@ -1,7 +1,7 @@
 volumes:
   postgres-db-volume:
   empty_venv:
-  
+
 x-airflow-common: &airflow-common
   environment: &airflow-common-env
     LOCAL_ENV: ${LOCAL_ENV:-1}

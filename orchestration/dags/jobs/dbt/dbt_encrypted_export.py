@@ -43,11 +43,11 @@ BASE_PATH = "data-gcp/jobs/etl_jobs/external/encrypted_exports"
 BASE_BUCKET = f"data-partners-export-bucket-{ENV_SHORT_NAME}"
 
 partner_dict = get_json_from_gcs(BASE_BUCKET, "partners_names.json")
-dag_name = "dbt_encrypted_export"
+DAG_NAME = "dbt_encrypted_export"
 
 for partner_id, partner_name in partner_dict.items():
     with DAG(
-        f"{dag_name}_{partner_name}",
+        f"{DAG_NAME}_{partner_name}",
         default_args=default_args,
         dagrun_timeout=datetime.timedelta(minutes=180),
         catchup=False,
@@ -69,7 +69,7 @@ for partner_id, partner_name in partner_dict.items():
                 type="string",
             ),
             "instance_type": Param(
-                default="n1-highcpu-32"
+                default="n1-standard-32"
                 if ENV_SHORT_NAME == "prod"
                 else "n1-standard-2",
                 type="string",
@@ -143,6 +143,7 @@ for partner_id, partner_name in partner_dict.items():
             instance_type="{{ params.instance_type }}",
             preemptible=False,
             disk_size_gb=100,
+            labels={"job_type": "long_task", "dag_name": DAG_NAME},
         )
 
         fetch_install_code = InstallDependenciesOperator(

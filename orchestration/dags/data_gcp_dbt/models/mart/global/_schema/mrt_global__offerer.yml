@@ -111,8 +111,7 @@ models:
       - name: offerer_siren
         description: '{{ doc("column__offerer_siren") }}'
         data_tests:
-          - not_null:
-              where: "offerer_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)"
+          - not_null
           - unique
       - name: offerer_region_name
         description: '{{ doc("column__offerer_region_name") }}'

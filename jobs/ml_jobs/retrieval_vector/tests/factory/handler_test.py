@@ -4,7 +4,7 @@ import pytest
 
 from app.factory.handler import PredictionHandler
 from app.models.prediction_request import PredictionRequest
-from app.models.prediction_result import PredictionResult
+from app.models.prediction_result import PredictionResult, SearchType
 from app.retrieval.client import DefaultClient
 
 
@@ -27,7 +27,9 @@ class TestPredictionHandler(PredictionHandler):
         Returns:
             PredictionResult: A mock prediction result.
         """
-        return PredictionResult(predictions=[{"item_id": "test"}])
+        return PredictionResult(
+            predictions=[{"item_id": "test"}], search_type=SearchType.VECTOR
+        )
 
 
 @pytest.fixture
@@ -62,4 +64,6 @@ def test_handle_returns_correct_prediction(
         mock_prediction_request (Mock): Mocked PredictionRequest instance.
     """
     result = test_handler.handle(mock_default_client, mock_prediction_request)
-    assert result == PredictionResult(predictions=[{"item_id": "test"}])
+    assert result == PredictionResult(
+        predictions=[{"item_id": "test"}], search_type=SearchType.VECTOR
+    )

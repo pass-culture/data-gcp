@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import numpy as np
 
@@ -7,7 +7,7 @@ from app.factory.handler import PredictionHandler
 from app.factory.tops import SearchByTopsHandler
 from app.logging.logger import logger
 from app.models.prediction_request import PredictionRequest
-from app.models.prediction_result import PredictionResult
+from app.models.prediction_result import PredictionResult, SearchType
 from app.retrieval.client import DefaultClient
 
 
@@ -17,11 +17,12 @@ class SimilarOfferHandler(PredictionHandler):
     Supports both single and multiple items.
     """
 
+    fallback_client: PredictionHandler = SearchByTopsHandler()
+
     def handle(
         self,
         model: DefaultClient,
         request_data: PredictionRequest,
-        fallback_client: Optional[PredictionHandler] = SearchByTopsHandler(),
     ) -> PredictionResult:
         """
         Handles the prediction request for similar offers based on item vectors.
@@ -54,35 +55,27 @@ class SimilarOfferHandler(PredictionHandler):
         prediction_result = self._get_predictions_for_items(
             model, request_data, excluded_items=excluded_items
         )
-
-        # If no predictions were found and fallback is activated
-        if len(prediction_result.predictions) == 0 and fallback_client is not None:
-            return fallback_client.handle(
-                model,
-                request_data=PredictionRequest(
-                    model_type="tops",
-                    size=request_data.size,
-                    debug=request_data.debug,
-                    prefilter=request_data.is_prefilter,
-                    re_rank=request_data.re_rank,
-                    vector_column_name="booking_number_desc",
-                    similarity_metric="dot",
-                    params=request_data.params,
-                    call_id=request_data.call_id,
-                    user_id=request_data.user_id,
-                    items=request_data.items,
-                    excluded_items=excluded_items,
-                ),
-            )
-
-        # If we have multiple predictions, compute the bests items by calculating the mean distance and selecting top N
-        if len(request_data.items) > 1:
-            return self._select_best_predictions(
-                prediction_result.predictions,
-                request_data.size,
-            )
-        else:
+        if len(prediction_result.predictions) > 0:
             return prediction_result
+
+        # If no predictions were found
+        return self.fallback_client.handle(
+            model,
+            request_data=PredictionRequest(
+                model_type="tops",
+                size=request_data.size,
+                debug=request_data.debug,
+                prefilter=request_data.is_prefilter,
+                re_rank=request_data.re_rank,
+                vector_column_name="booking_number_desc",
+                similarity_metric="dot",
+                params=request_data.params,
+                call_id=request_data.call_id,
+                user_id=request_data.user_id,
+                items=request_data.items,
+                excluded_items=excluded_items,
+            ),
+        )
 
     def _get_predictions_for_items(
         self,
@@ -100,7 +93,9 @@ class SimilarOfferHandler(PredictionHandler):
         Returns:
             List[PredictionResult]: A list of predictions retrieved for the items.
         """
-        prediction_result = PredictionResult(predictions=[])
+
+        # Iterate over each item in the request_data.items and search for predictions
+        predictions_list = []
         for item_id in request_data.items:
             logger.debug(f"Searching for item_id: {item_id}")
             vector = model.item_vector(item_id)
@@ -112,14 +107,28 @@ class SimilarOfferHandler(PredictionHandler):
                     excluded_items=excluded_items,
                 )
                 if len(results.predictions) > 0:
-                    prediction_result.predictions.extend(results.predictions)
+                    predictions_list += results.predictions
             else:
                 logger.debug(f"No vector found for item_id: {item_id}")
-        return prediction_result
+
+        # If we have multiple predictions, compute the bests items by calculating the mean distance and selecting top N
+        if len(request_data.items) > 1:
+            return PredictionResult(
+                self._select_best_predictions(
+                    predictions_list,
+                    request_data.size,
+                ),
+                search_type=SearchType.AGGREGATED_VECTORS,
+            )
+
+        return PredictionResult(
+            predictions=predictions_list,
+            search_type=SearchType.VECTOR,
+        )
 
     def _select_best_predictions(
         self, predictions: List[Dict], size: int
-    ) -> PredictionResult:
+    ) -> List[Dict]:
         """
         Selects the best predictions by calculating the mean `_distance` value for each item,
         and then sorting and returning the top X predictions based on the smallest mean `_distance`.
@@ -127,7 +136,6 @@ class SimilarOfferHandler(PredictionHandler):
         Args:
             predictions (List[Dict]): A list of predictions.
             size (int): The number of top results to return.
-            items (List[str]): The input items to exclude from the predictions.
 
         Returns:
             List[Dict]: A list of predictions with the mean `_distance` for each item.
@@ -138,8 +146,8 @@ class SimilarOfferHandler(PredictionHandler):
         for entry in predictions:
             grouped_predictions[entry["item_id"]].append(entry)
 
-        averaged_predictions = []
         # Calculate mean distance over multiple predictions for the same item
+        averaged_predictions = []
         for _, entries in grouped_predictions.items():
             mean_distance = np.mean([entry["_distance"] for entry in entries])
             best_entry = entries[0].copy()
@@ -147,4 +155,5 @@ class SimilarOfferHandler(PredictionHandler):
             averaged_predictions.append(best_entry)
 
         averaged_predictions.sort(key=lambda x: x["_distance"])
-        return PredictionResult(predictions=averaged_predictions[:size])
+
+        return averaged_predictions[:size]

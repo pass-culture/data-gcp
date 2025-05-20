@@ -1,34 +1,17 @@
 import os
-import io
-import json
 import duckdb
-import boto3
 from pathlib import Path
-from typing import List, Dict, Any, Tuple, Optional
-from typing import List, Dict, Any, Tuple, Optional
-from google.auth.exceptions import DefaultCredentialsError
-from google.cloud import storage, secretmanager
-from botocore.client import Config
+from typing import List, Tuple, Optional
+from google.cloud import storage
 import concurrent.futures
-import multiprocessing
-import psutil
-import threading
-from loguru import logger
 import time
-import sys
 
-# Configure loguru
-logger.remove()  # Remove default handler
-logger.add(
-    sys.stdout,
-    format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-    level="INFO",
+from utils import (
+    FILE_EXTENSION,
+    logger,
+    get_optimal_worker_count,
+    get_optimal_batch_size,
 )
-
-FILE_EXTENSION = ".parquet"
-PROJECT_NAME = os.environ.get("GCP_PROJECT_ID")
-ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
-PREFIX_S3_SECRET = "dbt_export_s3_config"
 
 
 def prepare_directories(
@@ -106,96 +89,6 @@ def encrypt_and_upload_file(
     # Cleanup temporary files
     os.remove(local_file_path)
     os.remove(encrypted_file_path)
-
-
-def load_target_bucket_config(partner_name: str) -> Dict[str, Any]:
-    secret_id = f"{PREFIX_S3_SECRET}_{partner_name}"
-
-    try:
-        client = secretmanager.SecretManagerServiceClient()
-        name = f"projects/{PROJECT_NAME}/secrets/{secret_id}/versions/latest"
-        response = client.access_secret_version(request={"name": name})
-        access_secret_data = response.payload.data.decode("UTF-8")
-        return json.loads(access_secret_data)
-    except DefaultCredentialsError:
-        return {}
-
-
-def init_s3_client(s3_config: Dict[str, Any]) -> boto3.client:
-    """
-    Initialize and return an S3 client using the provided configuration.
-
-    Args:
-        s3_config (Dict[str, Any]): The configuration dictionary for S3.
-
-    Returns:
-        boto3.client: An S3 client instance.
-    """
-    # Store configuration state with a session
-    _ = boto3.session.Session()
-    return boto3.client(
-        "s3",
-        aws_access_key_id=s3_config["target_access_key"],
-        aws_secret_access_key=s3_config["target_secret_key"],
-        endpoint_url=s3_config["target_endpoint_url"],
-        region_name=s3_config["target_s3_region"],
-        config=Config(
-            signature_version="s3v4",
-            request_checksum_calculation="when_required",
-            response_checksum_validation="when_required",
-        ),
-    )
-
-
-def transfer_single_blob(
-    blob: storage.blob.Blob, s3_client, s3_config: Dict[str, Any], s3_prefix_export: str
-) -> bool:
-    """
-    Transfer a single GCS blob to S3.
-
-    Args:
-        blob (storage.blob.Blob): GCS blob to transfer.
-        s3_client: Initialized S3 client.
-        s3_config (Dict[str, Any]): S3 configuration dictionary.
-        s3_prefix_export (str): The S3 key prefix for the upload.
-
-    Returns:
-        bool: True if the transfer was successful, False otherwise.
-    """
-    if not blob.name.endswith(FILE_EXTENSION):
-        return True  # Skip non-parquet files silently
-
-    # Download blob as a byte stream
-    gcs_stream = io.BytesIO(blob.download_as_bytes())
-    if gcs_stream.getbuffer().nbytes == 0:
-        print(f"ERROR: {blob.name} is empty. Skipping upload.")
-        return False
-
-    s3_object_name = f"{s3_prefix_export}/{os.path.basename(blob.name)}"
-    try:
-        s3_client.put_object(
-            Bucket=s3_config["target_s3_name"],
-            Key=s3_object_name,
-            Body=gcs_stream.read(),
-        )
-        return True
-    except Exception as e:
-        print(f"Failed to upload {blob.name}: {e}")
-        return False
-
-
-def get_optimal_worker_count(file_count: int) -> int:
-    """Calculate optimal number of workers based on file count."""
-    cpu_count = multiprocessing.cpu_count()
-    return min(cpu_count, file_count)  # Use all available CPUs
-
-
-def get_optimal_batch_size(file_count: int, worker_count: int) -> int:
-    """Calculate optimal batch size based on file count and worker count."""
-    # Make batch size a multiple of worker count
-    base_batch = min(20, file_count)  # Base batch size
-    # Round up to nearest multiple of worker count
-    return ((base_batch + worker_count - 1) // worker_count) * worker_count
 
 
 def process_single_file(
@@ -312,14 +205,7 @@ def _process_single_table(
     gcs_bucket: str,
     export_date: str,
     table: str,
-    table: str,
     encryption_key: str,
-    client: storage.Client,
-    tmp_download: str,
-    tmp_encrypted_folder: str,
-) -> Optional[Tuple[str, int]]:
-    """
-    Process encryption for a single table.
     client: storage.Client,
     tmp_download: str,
     tmp_encrypted_folder: str,
@@ -334,7 +220,7 @@ def _process_single_table(
 
         # Define the GCS folder path for original parquet files
         gcs_folder_path = f"{partner_name}/{export_date}/{table}"
-        print(f"gcs folder: {gcs_folder_path}")
+        logger.info(f"gcs folder: {gcs_folder_path}")
 
         # List parquet files from GCS
         blobs = bucket.list_blobs(prefix=gcs_folder_path)
@@ -399,7 +285,7 @@ def _process_single_table(
 
         return table, file_count
     except Exception as e:
-        print(f"Error processing table {table}: {e}")
+        logger.error(f"Error processing table {table}: {e}")
         return None
 
 
@@ -443,75 +329,6 @@ def process_encryption(
             tmp_encrypted_folder=tmp_encrypted_folder,
         )
         if result is None:
-            print(f"Failed to process table {table}")
+            logger.error(f"Failed to process table {table}")
             continue
         table, file_count = result
-
-
-def process_transfer(
-    partner_name: str,
-    gcs_bucket: str,
-    export_date: str,
-    table_list: List[str],
-) -> None:
-    """
-    Transfer encrypted parquet files from GCS to an S3-compatible bucket.
-
-    The function:
-      - Parses the target bucket configuration (JSON or dictionary-like string).
-      - Initializes an S3 client using the provided configuration.
-      - For each table, it lists the encrypted parquet files in the specified GCS bucket,
-        ensuring that only file blobs (and not directory markers) are processed.
-      - Uploads each file to the target S3 bucket.
-      - Tracks and prints the number of successfully transferred files and any failures.
-
-    Args:
-        partner_name (str): Name of the partner.
-        gcs_bucket (str): GCS bucket name.
-        export_date (str): Export date.
-        table_list (List[str]): List of tables to process.
-    """
-    s3_config = load_target_bucket_config(partner_name)
-
-    s3_client = init_s3_client(s3_config)
-    tmp_encrypted_folder = "tmp_encrypted_parquet"
-    encrypted_base = os.path.join(tmp_encrypted_folder, partner_name, export_date)
-    client = storage.Client()
-    bucket = client.get_bucket(gcs_bucket)
-
-    for table in table_list:
-        # Define the GCS folder path for encrypted files
-        gcs_folder_path = os.path.join(encrypted_base, table)
-
-        # List all blobs under the encrypted folder and filter out directory markers
-        blobs = list(bucket.list_blobs(prefix=gcs_folder_path))
-        file_blobs = [blob for blob in blobs if not blob.name.endswith("/")]
-
-        # Ensure there is at least one parquet file to transfer
-        parquet_file_list = [
-            blob.name for blob in file_blobs if blob.name.endswith(FILE_EXTENSION)
-        ]
-        assert len(parquet_file_list) != 0, f"{gcs_bucket}/{gcs_folder_path} is empty"
-
-        prefix_target_bucket = s3_config.get("target_s3_prefix", "passculture_export")
-        s3_prefix_export = f"{prefix_target_bucket}/{export_date}/{table}"
-
-        success_count = 0
-        fail_count = 0
-
-        for blob in file_blobs:
-            if blob.name.endswith(FILE_EXTENSION):
-                if transfer_single_blob(blob, s3_client, s3_config, s3_prefix_export):
-                    success_count += 1
-                else:
-                    fail_count += 1
-
-        total = success_count + fail_count
-        if success_count:
-            print(
-                f"SUCCESS {table}: {success_count}/{total} files transferred to {s3_config['target_s3_name']}"
-            )
-        if fail_count:
-            print(
-                f"FAIL {table}: {fail_count}/{total} files NOT transferred to {s3_config['target_s3_name']}"
-            )

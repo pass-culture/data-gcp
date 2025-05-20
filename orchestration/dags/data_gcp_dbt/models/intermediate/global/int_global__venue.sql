@@ -167,4 +167,3 @@ left join
     {{ ref("int_global__offerer") }} as ofr
     on v.venue_managing_offerer_id = ofr.offerer_id
 left join bookable_offer_history as boh on v.venue_id = boh.venue_id
-where not v.venue_is_soft_deleted

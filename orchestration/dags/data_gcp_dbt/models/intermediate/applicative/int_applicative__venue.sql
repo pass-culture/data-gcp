@@ -302,3 +302,4 @@ left join
 left join
     {{ source("raw", "applicative_database_google_places_info") }} as gp
     on v.venue_id = gp.venue_id
+where not v.venue_is_soft_deleted

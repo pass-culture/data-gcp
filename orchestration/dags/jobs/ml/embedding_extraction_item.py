@@ -18,7 +18,9 @@ from common.utils import get_airflow_schedule
 from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
+from airflow.decorators import task
 from airflow.models import Param
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"extract-items-embeddings-{ENV_SHORT_NAME}"
@@ -69,29 +71,62 @@ with DAG(
             type="integer",
         ),
         "max_rows_to_process": Param(
-            default=200_000 if ENV_SHORT_NAME == "prod" else 15_000,
+            default=100_000 if ENV_SHORT_NAME == "prod" else 15_000,
             type="integer",
         ),
     },
 ) as dag:
-    gce_instance_start = StartGCEOperator(
-        task_id="gce_start_task",
-        instance_name=GCE_INSTANCE,
-        preemptible=False,
-        instance_type="{{ params.instance_type }}",
-        retries=2,
-        labels={"job_type": "ml", "dag_name": DAG_NAME},
-    )
 
-    fetch_install_code = InstallDependenciesOperator(
-        task_id="fetch_install_code",
-        instance_name=GCE_INSTANCE,
-        branch="{{ params.branch }}",
-        python_version="3.10",
-        base_dir=BASE_PATH,
-    )
+    @task
+    def start():
+        return "started"
 
-    extract_embedding = SSHGCEOperator(
+    @task
+    def check_source_count(**context):
+        bq_hook = BigQueryHook(location="europe-west1", use_legacy_sql=False)
+        bq_client = bq_hook.get_client()
+        dataset_id = INPUT_DATASET_NAME
+        table_name = INPUT_TABLE_NAME
+        query = f"""
+        SELECT count(*) as count
+        FROM `{GCP_PROJECT_ID}`.`{dataset_id}`.`{table_name}`
+        """
+
+        result = bq_client.query(query).to_dataframe()
+        return result["count"].values[0] > 0
+
+    @task.branch
+    def branch(count_result):
+        if count_result:
+            return "start_gce"
+        return "end"
+
+    @task
+    def start_gce(**context):
+        operator = StartGCEOperator(
+            task_id="gce_start_task",
+            instance_name=GCE_INSTANCE,
+            preemptible=False,
+            instance_type=context["params"]["instance_type"],
+            retries=2,
+            labels={"job_type": "ml", "dag_name": DAG_NAME},
+        )
+        return operator.execute(context={})
+
+    @task
+    def fetch_install_code(**context):
+        operator = InstallDependenciesOperator(
+            task_id="fetch_install_code",
+            instance_name=GCE_INSTANCE,
+            branch=context["params"]["branch"],
+            python_version="3.10",
+            base_dir=BASE_PATH,
+        )
+        return operator.execute(context={})
+
+    @task
+    def extract_embedding(**context):
+        operator = SSHGCEOperator(
         task_id="extract_embedding",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
@@ -107,10 +142,38 @@ with DAG(
         f"--output-table-name {OUTPUT_TABLE_NAME} ",
         deferrable=True,
         poll_interval=300,
-    )
+        )
+        return operator.execute(context={})
 
-    gce_instance_stop = DeleteGCEOperator(
-        task_id="gce_stop_task", instance_name=GCE_INSTANCE
-    )
+    @task
+    def stop_gce(**context):
+        operator = DeleteGCEOperator(
+            task_id="gce_stop_task", instance_name=GCE_INSTANCE
+        )
+        return operator.execute(context={})
 
-    (gce_instance_start >> fetch_install_code >> extract_embedding >> gce_instance_stop)
+    @task
+    def end():
+        return "completed"
+
+    # Define task dependencies
+    start_result = start()
+    count_result = check_source_count()
+    branch_result = branch(count_result)
+    gce_start_result = start_gce()
+    fetch_result = fetch_install_code()
+    extract_result = extract_embedding()
+    stop_result = stop_gce()
+    end_result = end()
+
+    # Set task dependencies
+    start_result >> count_result >> branch_result
+    (
+        branch_result
+        >> gce_start_result
+        >> fetch_result
+        >> extract_result
+        >> stop_result
+        >> end_result
+    )
+    branch_result >> end_result

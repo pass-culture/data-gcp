@@ -1,9 +1,8 @@
 import ast
-import json
 import typer
-from typing import List
 
-from helpers import process_encryption, process_transfer
+from helpers.encrypt import process_encryption
+from helpers.transfer import process_transfer
 
 run = typer.Typer()
 

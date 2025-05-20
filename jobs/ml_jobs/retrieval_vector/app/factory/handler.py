@@ -8,6 +8,7 @@ from app.logging.logger import logger
 from app.models.prediction_request import PredictionRequest
 from app.models.prediction_result import PredictionResult, SearchType
 from app.retrieval.client import DefaultClient
+from app.retrieval.constants import SEARCH_TYPE_COLUMN_NAME
 
 
 class PredictionHandler(ABC):
@@ -36,7 +37,7 @@ class PredictionHandler(ABC):
                 "content": {"error": e.__class__.__name__, "trace": tb},
             },
         )
-        return PredictionResult(predictions=[], search_type=SearchType.ERROR)
+        return PredictionResult(predictions=[])
 
     def search_by_tops(
         self,
@@ -55,7 +56,12 @@ class PredictionHandler(ABC):
                 re_rank=request_data.re_rank,
                 user_id=request_data.user_id,
             )
-            return PredictionResult(predictions=results, search_type=SearchType.TOPS)
+            return PredictionResult(
+                predictions=[
+                    {**result, SEARCH_TYPE_COLUMN_NAME: SearchType.TOPS}
+                    for result in results
+                ]
+            )
         except Exception as e:
             return self._handle_exception(
                 e, request_data.call_id, request_data.params, request_data.size
@@ -83,7 +89,12 @@ class PredictionHandler(ABC):
                 user_id=request_data.user_id,
                 item_ids=request_data.items,
             )
-            return PredictionResult(predictions=results, search_type=SearchType.VECTOR)
+            return PredictionResult(
+                predictions=[
+                    {**result, SEARCH_TYPE_COLUMN_NAME: SearchType.VECTOR}
+                    for result in results
+                ]
+            )
         except Exception as e:
             return self._handle_exception(
                 e, request_data.call_id, request_data.params, request_data.size

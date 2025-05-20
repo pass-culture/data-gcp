@@ -27,4 +27,3 @@ class PredictionResult:
     """
 
     predictions: List[dict]
-    search_type: SearchType

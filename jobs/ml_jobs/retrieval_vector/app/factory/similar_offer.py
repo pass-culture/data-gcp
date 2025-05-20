@@ -114,17 +114,13 @@ class SimilarOfferHandler(PredictionHandler):
         # If we have multiple predictions, compute the bests items by calculating the mean distance and selecting top N
         if len(request_data.items) > 1:
             return PredictionResult(
-                self._select_best_predictions(
+                predictions=self._select_best_predictions(
                     predictions_list,
                     request_data.size,
-                ),
-                search_type=SearchType.AGGREGATED_VECTORS,
+                )
             )
 
-        return PredictionResult(
-            predictions=predictions_list,
-            search_type=SearchType.VECTOR,
-        )
+        return PredictionResult(predictions=results)
 
     def _select_best_predictions(
         self, predictions: List[Dict], size: int
@@ -152,6 +148,7 @@ class SimilarOfferHandler(PredictionHandler):
             mean_distance = np.mean([entry["_distance"] for entry in entries])
             best_entry = entries[0].copy()
             best_entry["_distance"] = mean_distance
+            best_entry["_search_type"] = SearchType.AGGREGATED_VECTORS
             averaged_predictions.append(best_entry)
 
         averaged_predictions.sort(key=lambda x: x["_distance"])

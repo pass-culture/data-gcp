@@ -42,7 +42,7 @@ jobs:
 
       - name: Run shippie review
         if: env.run_code_review == 'true'
-        run: bun shippie review --platform=github
+        run: bun shippie review --platform=github --telemetry false
         env:
           GITHUB_TOKEN: ${{ github.token }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}

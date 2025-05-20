@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from docarray import Document
 
+from app.retrieval.constants import DISTANCE_COLUMN_NAME
 from tests.utils import (
     VECTOR_DIM,
     VECTOR_SIZE,
@@ -32,8 +33,10 @@ def test_search_by_vector_dot_product(
     """Test search by vector using dot product similarity."""
     limit = 10
 
-    fake_data["_distance"] = calculate_dot_product(query_vector.embedding, fake_data)
-    fake_data.sort_values("_distance", ascending=True, inplace=True)
+    fake_data[DISTANCE_COLUMN_NAME] = calculate_dot_product(
+        query_vector.embedding, fake_data
+    )
+    fake_data.sort_values(DISTANCE_COLUMN_NAME, ascending=True, inplace=True)
     result = reco_client.search_by_vector(
         vector=query_vector, similarity_metric="dot", n=limit, details=True
     )
@@ -58,8 +61,10 @@ def test_search_by_vector_l2_product(
     """Test search by vector using L2 (Euclidean distance) similarity."""
     limit = 10
 
-    fake_data["_distance"] = calculate_l2_distance(query_vector.embedding, fake_data)
-    fake_data.sort_values("_distance", ascending=True, inplace=True)
+    fake_data[DISTANCE_COLUMN_NAME] = calculate_l2_distance(
+        query_vector.embedding, fake_data
+    )
+    fake_data.sort_values(DISTANCE_COLUMN_NAME, ascending=True, inplace=True)
 
     result = reco_client.search_by_vector(
         vector=query_vector, similarity_metric="l2", n=limit, details=True

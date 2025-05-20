@@ -3,6 +3,7 @@ import pytest
 from app.factory.recommendation import RecommendationHandler
 from app.models.prediction_request import PredictionRequest
 from app.models.prediction_result import SearchType
+from app.retrieval.constants import DISTANCE_COLUMN_NAME
 
 
 @pytest.fixture
@@ -53,11 +54,11 @@ def test_recommendation_handler(
         for column in reco_client.detail_columns:
             assert column in prediction
 
-    # Ensure the predictions are sorted by _distance in increasing order
-    distances = [prediction["_distance"] for prediction in result.predictions]
+    # Ensure the predictions are sorted by DISTANCE_COLUMN_NAME in increasing order
+    distances = [prediction[DISTANCE_COLUMN_NAME] for prediction in result.predictions]
     assert distances == sorted(
         distances
-    ), "Predictions are not sorted by _distance in increasing order"
+    ), f"Predictions are not sorted by {DISTANCE_COLUMN_NAME} in increasing order"
     assert result.search_type == SearchType.VECTOR
 
 
@@ -98,9 +99,9 @@ def test_recommendation_fallback_handler(
         for column in reco_client.detail_columns:
             assert column in prediction
 
-    # Ensure the predictions are sorted by _distance in increasing order
-    distances = [prediction["_distance"] for prediction in result.predictions]
+    # Ensure the predictions are sorted by DISTANCE_COLUMN_NAME in increasing order
+    distances = [prediction[DISTANCE_COLUMN_NAME] for prediction in result.predictions]
     assert distances == sorted(
         distances
-    ), "Predictions are not sorted by _distance in increasing order"
+    ), f"Predictions are not sorted by {DISTANCE_COLUMN_NAME} in increasing order"
     assert result.search_type == SearchType.TOPS

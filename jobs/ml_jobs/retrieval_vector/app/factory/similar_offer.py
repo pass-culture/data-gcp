@@ -9,6 +9,7 @@ from app.logging.logger import logger
 from app.models.prediction_request import PredictionRequest
 from app.models.prediction_result import PredictionResult, SearchType
 from app.retrieval.client import DefaultClient
+from app.retrieval.constants import DISTANCE_COLUMN_NAME, SEARCH_TYPE_COLUMN_NAME
 
 
 class SimilarOfferHandler(PredictionHandler):
@@ -145,12 +146,12 @@ class SimilarOfferHandler(PredictionHandler):
         # Calculate mean distance over multiple predictions for the same item
         averaged_predictions = []
         for _, entries in grouped_predictions.items():
-            mean_distance = np.mean([entry["_distance"] for entry in entries])
+            mean_distance = np.mean([entry[DISTANCE_COLUMN_NAME] for entry in entries])
             best_entry = entries[0].copy()
-            best_entry["_distance"] = mean_distance
-            best_entry["_search_type"] = SearchType.AGGREGATED_VECTORS
+            best_entry[DISTANCE_COLUMN_NAME] = mean_distance
+            best_entry[SEARCH_TYPE_COLUMN_NAME] = SearchType.AGGREGATED_VECTORS
             averaged_predictions.append(best_entry)
 
-        averaged_predictions.sort(key=lambda x: x["_distance"])
+        averaged_predictions.sort(key=lambda x: x[DISTANCE_COLUMN_NAME])
 
         return averaged_predictions[:size]

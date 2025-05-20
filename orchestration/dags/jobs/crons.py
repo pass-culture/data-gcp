@@ -47,6 +47,6 @@ ENCRYPTED_EXPORT_DICT = {
     "20c702271b0187d039734307766eead8": {
         "dev": None,
         "stg": None,
-        "prod": "0 14 * * 2",
+        "prod": "0 14 * * 5",  # every 5th of the month at 2:00 PM
     },
 }

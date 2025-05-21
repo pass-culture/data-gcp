@@ -163,7 +163,6 @@ sources:
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: adage
-      - name: linked_offers
 
   - name: seed
     schema: seed_{{ var('ENV_SHORT_NAME') }}

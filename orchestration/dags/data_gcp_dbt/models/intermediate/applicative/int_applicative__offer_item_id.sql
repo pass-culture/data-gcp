@@ -13,9 +13,6 @@ with
             end as item_id
         from {{ ref("int_raw__offer") }} as offer
         left join
-            {{ source("analytics", "linked_offers") }} as linked_offers
-            on offer.offer_id = linked_offers.offer_id
-        left join
             {{ source("ml_linkage", "item_offer_mapping") }} as linkage_v2
             on offer.offer_id = linkage_v2.offer_id
         qualify

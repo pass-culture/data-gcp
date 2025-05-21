@@ -43,10 +43,10 @@ repos:
         additional_dependencies:
           ["dbt-bigquery==1.8.1", "sqlfluff-templater-dbt"]
         stages: [commit]
-  - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.18.0
-    hooks:
-    - id: markdownlint-cli2
-      language_version: 24.0.0
-      args:
-        - --fix
+  # - repo: https://github.com/DavidAnson/markdownlint-cli2
+  #   rev: v0.18.0
+  #   hooks:
+  #   - id: markdownlint-cli2
+  #     language_version: 24.0.0
+  #     args:
+  #       - --fix

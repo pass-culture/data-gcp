@@ -85,6 +85,9 @@ models:
       metabase:
         +meta:
           owner: "@analytics-engineering"
+      geolocation:
+        +meta:
+          owner: "@analytics-engineering"
       raw:
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     mart:

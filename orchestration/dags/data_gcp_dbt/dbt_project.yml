@@ -68,6 +68,23 @@ models:
       +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"
       global:
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+        +meta:
+          owner: "@analytics-engineering"
+      applicative:
+        +meta:
+          owner: "@analytics-engineering"
+      firebase:
+        +meta:
+          owner: "@analytics-engineering"
+      metric:
+        +meta:
+          owner: "@analytics-engineering"
+      seed:
+        +meta:
+          owner: "@analytics-engineering"
+      metabase:
+        +meta:
+          owner: "@analytics-engineering"
       raw:
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     mart:
@@ -109,6 +126,8 @@ seeds:
 
 snapshots:
   +target_schema: snapshot_{{ target.name }}
+  +meta:
+    owner: "@data-engineering"
   +docs:
     show: false
 

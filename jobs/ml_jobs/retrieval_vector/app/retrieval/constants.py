@@ -1,7 +1,5 @@
 from typing import List
 
-SIMILARITY_COLUMN_NAME: str = "_user_item_dot_similarity"
-
 DEFAULT_COLUMNS: List[str] = ["item_id"]
 DEFAULT_DETAIL_COLUMNS: List[str] = [
     "topic_id",
@@ -30,11 +28,18 @@ DEFAULT_DETAIL_COLUMNS: List[str] = [
     "example_venue_longitude",
 ]
 
+SIMILARITY_USER_ITEM_COLUMN_NAME: str = "_user_item_dot_similarity"
+SIMILARITY_ITEM_ITEM_COLUMN_NAME: str = "_item_item_dot_similarity"
+SEARCH_TYPE_COLUMN_NAME: str = "_search_type"
+DISTANCE_COLUMN_NAME: str = "_distance"
+USER_DISTANCE_COLUMN_NAME: str = "_user_distance"
 
 OUTPUT_METRIC_COLUMNS: List[str] = [
-    "_distance",
-    "_user_distance",
-    SIMILARITY_COLUMN_NAME,
+    DISTANCE_COLUMN_NAME,
+    USER_DISTANCE_COLUMN_NAME,
+    SIMILARITY_ITEM_ITEM_COLUMN_NAME,
+    SIMILARITY_USER_ITEM_COLUMN_NAME,
+    SEARCH_TYPE_COLUMN_NAME,
 ]
 DEFAULT_ITEM_DOCS_PATH: str = "./metadata/item.docs"
 DEFAULT_USER_DOCS_PATH: str = "./metadata/user.docs"

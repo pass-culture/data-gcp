@@ -15,7 +15,8 @@ from app.retrieval.constants import (
     DEFAULT_LANCE_DB_URI,
     DEFAULT_USER_DOCS_PATH,
     OUTPUT_METRIC_COLUMNS,
-    SIMILARITY_COLUMN_NAME,
+    SIMILARITY_ITEM_ITEM_COLUMN_NAME,
+    SIMILARITY_USER_ITEM_COLUMN_NAME,
 )
 from app.retrieval.core.filter import Filter
 from app.retrieval.utils import load_documents
@@ -136,6 +137,7 @@ class DefaultClient:
         similarity_metric: str = "dot",
         re_rank: bool = False,
         user_id: Optional[str] = None,
+        item_ids: List[str] = [],
     ) -> List[Dict]:
         """
         Perform a search query that filters and ranks items based on a specified vector column,
@@ -169,7 +171,10 @@ class DefaultClient:
             vector_column_name (str): Column used for ranking. Default is "booking_number_desc".
             similarity_metric (str): Metric for ranking, typically "dot" (dot product similarity).
             re_rank (bool): Whether to apply a secondary re-ranking process. Default is False.
-            user_id (Optional[str]): User ID for personalized ranking. Default is None.
+            user_id (Optional[str]): User ID for personalized ranking. Default is None. If provided, will also compute
+                similarity scores for the user.
+            item_ids (List[str]): List of item IDs to include in the search. Default is empty list. If provided, will also compute
+                similarity scores for the items.
 
         ### Returns:
             List[Dict]: A list of dictionaries, where each represents a ranked item.
@@ -187,6 +192,7 @@ class DefaultClient:
             prefilter=prefilter,
             re_rank=re_rank,
             user_id=user_id,
+            item_ids=item_ids,
         )
 
     def search_by_vector(
@@ -201,6 +207,7 @@ class DefaultClient:
         vector_column_name: str = "vector",
         re_rank: bool = False,
         user_id: Optional[str] = None,
+        item_ids: List[str] = [],
     ) -> List[Dict]:
         """
         Search the vector database for similar items and optionally rerank results.
@@ -231,6 +238,7 @@ class DefaultClient:
             prefilter=prefilter,
             re_rank=re_rank,
             user_id=user_id,
+            item_ids=item_ids,
         )
 
     def _perform_search(
@@ -243,6 +251,7 @@ class DefaultClient:
         details: bool = False,
         excluded_items: List[str] = [],
         user_id: Optional[str] = None,
+        item_ids: List[str] = [],
         prefilter: bool = True,
         re_rank: bool = False,
     ) -> List[Dict]:
@@ -268,8 +277,8 @@ class DefaultClient:
         if re_rank and self.re_ranker and user_id:
             results = results.rerank(self.re_ranker, query_string=user_id)
 
-        postprocessed_results = self._add_user_item_dot_similarity(
-            user_id=user_id, ranked_items=results.to_list()
+        postprocessed_results = self._add_item_dot_similarities(
+            ranked_items=results.to_list(), user_id=user_id, input_item_ids=item_ids
         )
         return self.format_results(
             postprocessed_results, details, excluded_items=excluded_items
@@ -330,8 +339,11 @@ class DefaultClient:
 
         return predictions
 
-    def _add_user_item_dot_similarity(
-        self, user_id: str, ranked_items: List[Dict]
+    def _add_item_dot_similarities(
+        self,
+        ranked_items: List[Dict],
+        user_id: Optional[str],
+        input_item_ids: List[str],
     ) -> List[Dict]:
         """
         Adds dot product similarity scores between a user's vector and item vectors.
@@ -347,6 +359,7 @@ class DefaultClient:
         Args:
             user_id (str): The unique identifier for the user. If None,
                    similarity scores will be set to None.
+            item_ids (List[str]): A list of item IDs to retrieve their vectors.
             ranked_items (List[Dict]): A list of dictionaries, where each dictionary
                            represents an item and should contain an "item_id"
                            key to retrieve its vector.
@@ -356,24 +369,53 @@ class DefaultClient:
                 updated to include a `SIMILARITY_COLUMN_NAME` key holding
                 the dot product similarity score (float) or None.
         """
-        if not user_id:
-            return [{**item, SIMILARITY_COLUMN_NAME: None} for item in ranked_items]
-
         user_vector = self.user_vector(user_id)
-        if user_vector is None:
-            return [{**item, SIMILARITY_COLUMN_NAME: None} for item in ranked_items]
+        input_item_vectors = {
+            item_id: self.item_vector(item_id) for item_id in input_item_ids
+        }
+        ranked_item_vectors = {
+            item["item_id"]: self.item_vector(item["item_id"]) for item in ranked_items
+        }
 
-        for item in ranked_items:
-            item_id = item.get("item_id")
-            if item_id is None:
-                item[SIMILARITY_COLUMN_NAME] = None
-                continue
-            item_vector = self.item_vector(item_id)
-            if item_vector is None:
-                item[SIMILARITY_COLUMN_NAME] = None
-                continue
-            item[SIMILARITY_COLUMN_NAME] = float(
-                np.dot(user_vector.embedding, item_vector.embedding)
-            )
+        if len(input_item_vectors) > 0:
+            for item in ranked_items:
+                item_id = item.get("item_id")
+                item_vector = ranked_item_vectors[item_id]
+                item[SIMILARITY_USER_ITEM_COLUMN_NAME] = (
+                    float(np.dot(user_vector.embedding, item_vector.embedding))
+                    if user_vector
+                    else None
+                )
 
+                item[SIMILARITY_ITEM_ITEM_COLUMN_NAME] = []
+                for input_item_id in input_item_ids:
+                    input_item_vector = input_item_vectors.get(input_item_id)
+                    item[SIMILARITY_ITEM_ITEM_COLUMN_NAME].append(
+                        {
+                            input_item_id: (
+                                float(
+                                    np.dot(
+                                        item_vector.embedding,
+                                        input_item_vector.embedding,
+                                    )
+                                )
+                                if item_vector and input_item_vector
+                                else None
+                            ),
+                        }
+                    )
+        else:
+            for item in ranked_items:
+                item_id = item.get("item_id")
+                item[SIMILARITY_ITEM_ITEM_COLUMN_NAME] = []
+                item[SIMILARITY_USER_ITEM_COLUMN_NAME] = (
+                    float(
+                        np.dot(
+                            user_vector.embedding,
+                            ranked_item_vectors[item_id].embedding,
+                        )
+                    )
+                    if user_vector
+                    else None
+                )
         return ranked_items

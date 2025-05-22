@@ -31,10 +31,21 @@ jobs:
         if: env.run_code_review == 'true'
         with:
           fetch-depth: 0
-      - name: Code Review GPT
+      - uses: oven-sh/setup-bun@v2
         if: env.run_code_review == 'true'
-        uses: mattzcarey/code-review-gpt@v0.1.10
         with:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          MODEL: 'gpt-4o'
+          bun-version: latest
+
+      - name: Install shippie
+        if: env.run_code_review == 'true'
+        run: bun i shippie
+
+      - name: Run shippie review
+        if: env.run_code_review == 'true'
+        run: bun shippie review --platform=github --telemetry false
+        env:
           GITHUB_TOKEN: ${{ github.token }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_SHA: ${{ github.sha }}
+          MODEL: "gpt-4o"
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

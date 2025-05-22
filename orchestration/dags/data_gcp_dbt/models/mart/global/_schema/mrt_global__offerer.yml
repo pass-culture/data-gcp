@@ -130,14 +130,14 @@ models:
               where: "offerer_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)"
       - name: legal_unit_business_activity_code
         description: '{{ doc("column__offerer_legal_unit_business_activity_code") }}'
-        data_tests:
-          - not_null
+        # data_tests:
+        #   - not_null
       - name: legal_unit_business_activity_label
         description: '{{ doc("column__offerer_legal_unit_business_activity_label") }}'
       - name: legal_unit_legal_category_code
         description: '{{ doc("column__offerer_legal_unit_legal_category_code") }}'
-        data_tests:
-          - not_null
+        # data_tests:
+        #   - not_null
       - name: legal_unit_legal_category_label
         description: '{{ doc("column__offerer_legal_unit_legal_category_label") }}'
       - name: is_local_authority

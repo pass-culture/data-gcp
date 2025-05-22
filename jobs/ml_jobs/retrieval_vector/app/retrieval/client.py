@@ -137,6 +137,7 @@ class DefaultClient:
         similarity_metric: str = "dot",
         re_rank: bool = False,
         user_id: Optional[str] = None,
+        item_ids: List[str] = [],
     ) -> List[Dict]:
         """
         Perform a search query that filters and ranks items based on a specified vector column,
@@ -188,6 +189,7 @@ class DefaultClient:
             prefilter=prefilter,
             re_rank=re_rank,
             user_id=user_id,
+            item_ids=item_ids,
         )
 
     def search_by_vector(

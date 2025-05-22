@@ -55,6 +55,7 @@ class PredictionHandler(ABC):
                 similarity_metric=request_data.similarity_metric,
                 re_rank=request_data.re_rank,
                 user_id=request_data.user_id,
+                item_ids=request_data.items,
             )
             return PredictionResult(
                 predictions=[

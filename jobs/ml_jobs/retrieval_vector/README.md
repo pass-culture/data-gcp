@@ -141,6 +141,12 @@ You can find all dependencies in the `api-requirements.in` file.
       }
       ```
 
+   In the above examples, you will get a dictionnary with a key "predictions" containing the list of recommended items.
+   > Note that the `"_distance"` field is to improved :
+   - for top recommendations, it will return a number > 1, the lowest being the best recommendation.
+   - for vector search, it will return the distance between the input vector and the closest vector in the database for the given similarity_metric. For instance, if you use the `dot` similarity metric, it will return `1 - dot product`.
+      - ⚠️ If you do a vector search but find no resutlts, then the fallback will be the top recommendations, giving you a `"_distance"` > 1 ⚠️
+
 ### Testing
 
 To run the tests, including unit tests and integration tests, use:

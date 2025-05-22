@@ -28,7 +28,6 @@ DEFAULT_DETAIL_COLUMNS: List[str] = [
     "example_venue_longitude",
 ]
 
-
 SIMILARITY_USER_ITEM_COLUMN_NAME: str = "_user_item_dot_similarity"
 SIMILARITY_ITEM_ITEM_COLUMN_NAME: str = "_item_item_dot_similarity"
 SEARCH_TYPE_COLUMN_NAME: str = "_search_type"

@@ -171,7 +171,10 @@ class DefaultClient:
             vector_column_name (str): Column used for ranking. Default is "booking_number_desc".
             similarity_metric (str): Metric for ranking, typically "dot" (dot product similarity).
             re_rank (bool): Whether to apply a secondary re-ranking process. Default is False.
-            user_id (Optional[str]): User ID for personalized ranking. Default is None.
+            user_id (Optional[str]): User ID for personalized ranking. Default is None. If provided, will also compute
+                similarity scores for the user.
+            item_ids (List[str]): List of item IDs to include in the search. Default is empty list. If provided, will also compute
+                similarity scores for the items.
 
         ### Returns:
             List[Dict]: A list of dictionaries, where each represents a ranked item.

@@ -1,6 +1,6 @@
 volumes:
   postgres-db-volume:
-
+  empty_venv:
 
 x-airflow-common: &airflow-common
   environment: &airflow-common-env
@@ -12,12 +12,13 @@ x-airflow-common: &airflow-common
     ENV_SHORT_NAME: ${ENV_SHORT_NAME:-}
     APPLICATIVE_EXTERNAL_CONNECTION_ID: ${APPLICATIVE_EXTERNAL_CONNECTION_ID:-}
   volumes:
-    - ./dags:/opt/airflow/dags
+    - ./dags:/opt/airflow/dags:cached
     - ./plugins:/opt/airflow/plugins
     - ./airflow/config/airflow.cfg:/opt/airflow/airflow.cfg
     - ./airflow/logs:/opt/airflow/logs
     - ./dags/data_gcp_dbt:/opt/airflow/data_gcp_dbt
     - ~/.config/gcloud:/root/.config/gcloud
+    - empty_venv:/opt/airflow/dags/data_gcp_dbt/.venv
   user: root
   depends_on:
     - postgres

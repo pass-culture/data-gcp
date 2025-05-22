@@ -25,6 +25,11 @@ ARG GCLOUD_VERSION=google-cloud-cli-411.0.0-linux-x86_64.tar.gz
 WORKDIR ${AIRFLOW_USER_HOME}
 COPY ./airflow/orchestration-requirements.txt ./requirements.txt
 RUN uv pip install -r requirements.txt
+RUN uv pip install astronomer-cosmos
+
+
+RUN python -m venv dbt_venv && source dbt_venv/bin/activate && \
+    pip install --no-cache-dir dbt-bigquery && deactivate
 
 # Install gcloud
 USER root

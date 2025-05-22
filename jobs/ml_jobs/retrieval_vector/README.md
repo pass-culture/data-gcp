@@ -80,6 +80,67 @@ You can find all dependencies in the `api-requirements.in` file.
    }'
    ```
 
+   There are several use cases for which you can use the API:
+   - `for user recommendation :
+
+      ```json
+      {
+         "model_type": "recommendation",
+         "user_id": "3734607",
+         "size": 10,
+         "params": {},
+         "call_id": "1234567890",
+         "debug": 1,
+         "prefilter": 1,
+         "similarity_metric": "dot"
+      }
+      ```
+
+   - for similar offer recommendation :
+
+      ```json
+      {
+         "model_type": "similar_offer",
+         "items": ["product-6344516"],
+         "size": 10,
+         "params": {},
+         "call_id": "1234567890",
+         "debug": 1,
+         "prefilter": 1,
+         "similarity_metric": "dot"
+      }
+      ```
+
+   - for playlist recommendation constructions (with multiple items) :
+
+      ```json
+      {
+         "model_type": "similar_offer",
+         "items": ["product-6344516", "product-6344517"],
+         "size": 10,
+         "params": {},
+         "call_id": "1234567890",
+         "debug": 1,
+         "prefilter": 1,
+         "similarity_metric": "dot"
+      }
+      ```
+
+   - for top recommendations
+
+      ```json
+      {
+         "model_type": "tops",
+         "size": 10,
+         "params": {},
+         "call_id": "1234567890",
+         "debug": 1,
+         "prefilter": 1,
+         "similarity_metric": "dot",
+         "vector_column_name": "booking_number_desc"
+      }
+      ```
+
 ### Testing
 
 To run the tests, including unit tests and integration tests, use:

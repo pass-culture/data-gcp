@@ -1,10 +1,16 @@
 SHELL := /bin/bash
 
-# Path to your ADC file
-ADC_FILE := $(HOME)/.config/gcloud/application_default_credentials.json
 # Age threshold in minutes 3h
 ADC_MAX_AGE_MIN := 180
 
+IS_WSL := $(if $(WSL_DISTRO_NAME),yes,no)
+
+# Path to ADC file wsl windows vs linux/macOS
+ifeq ($(IS_WSL),yes)
+	ADC_FILE := mnt/c/$(HOME)/AppData/gcloud/application_default_credentials.json
+else
+	ADC_FILE := $(HOME)/.config/gcloud/application_default_credentials.json
+endif
 
 sync:
 	uv sync --no-cache-dir

@@ -75,11 +75,34 @@ def encrypt_and_upload_file(
     blob = bucket.blob(parquet_file)
     blob.download_to_filename(local_file_path)
 
-    # Encrypt the file using DuckDB
+    # Identify STRING columns and build decode expressions
+    string_cols = [
+        row[0]
+        for row in duckdb_conn.sql(
+            f"SELECT name FROM parquet_schema('{local_file_path}') WHERE converted_type='UTF8';"
+        ).fetchall()
+    ]
+    decode_exprs = [
+        f"COALESCE(TRY(decode({col}, 'utf8')), '') AS {col}" for col in string_cols
+    ]
+    select_clause = ", ".join(
+        decode_exprs + ["* EXCLUDE (" + ", ".join(string_cols) + ")"]
+    )
+
+    # Encrypt the file using DuckDB with decoded STRING columns
     duckdb_conn.execute(
-        f"""COPY (SELECT * FROM read_parquet('{local_file_path}'))
-            TO '{encrypted_file_path}'
-            (FORMAT 'parquet', ENCRYPTION_CONFIG {{footer_key: 'key256'}});"""
+        f"""
+        COPY (
+            SELECT {select_clause}
+            FROM read_parquet(
+                '{local_file_path}',
+                binary_as_string = false
+            )
+        )
+        TO '{encrypted_file_path}'
+        (FORMAT parquet,
+            ENCRYPTION_CONFIG {{footer_key: 'key256'}});
+        """
     )
 
     # Upload the encrypted file to GCS

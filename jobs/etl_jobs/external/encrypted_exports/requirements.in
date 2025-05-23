@@ -5,3 +5,5 @@ botocore
 typer
 google-cloud-secret-manager==2.20.0
 loguru
+fsspec
+gcsfs

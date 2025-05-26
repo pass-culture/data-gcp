@@ -143,7 +143,7 @@ with DAG(
             deferrable=True,
             poll_interval=300,
         )
-        return operator.execute(context={})
+        return operator.execute(context=context)
 
     @task
     def stop_gce(**context):

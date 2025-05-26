@@ -46,7 +46,7 @@ DAG_NAME = "embeddings_extraction_item"
     catchup=False,
     dagrun_timeout=timedelta(hours=20),
     user_defined_macros=None,  # Replace with actual macros if needed
-    tags=["ds", "vm"],
+    tags=["ds", "vm", "debug"],
 )
 def extract_embedding_item_dag(
     branch="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -72,12 +72,6 @@ def extract_embedding_item_dag(
 
         result = bq_client.query(query).to_dataframe()
         return result["count"].values[0] > 0
-
-    @task.branch
-    def branch(count_result):
-        if count_result:
-            return "start_gce"
-        return "end"
 
     @task
     def start_gce(instance_type_resolved: str, **context):

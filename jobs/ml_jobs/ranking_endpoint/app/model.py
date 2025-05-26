@@ -18,7 +18,7 @@ class ClassMapping(Enum):
     booked = 2
 
 
-EMBEDDING_DIM = 0  # To remove embedding dimension from the model, set to 0
+EMBEDDING_DIM = 0  # HACK : To remove embedding dimension from the model, set to 0
 NUMERIC_FEATURES = (
     [
         "user_bookings_count",
@@ -35,7 +35,6 @@ NUMERIC_FEATURES = (
         "offer_booking_number_last_28_days",
         "offer_semantic_emb_mean",
         "offer_item_score",
-        # "offer_item_rank",
         "offer_is_geolocated",
         "offer_stock_price",
         "offer_creation_days",

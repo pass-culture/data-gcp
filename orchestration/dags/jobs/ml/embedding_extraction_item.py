@@ -111,7 +111,7 @@ with DAG(
             retries=2,
             labels={"job_type": "ml", "dag_name": DAG_NAME},
         )
-        return operator.execute(context={})
+        return operator.execute(context=context)
 
     @task
     def fetch_install_code(**context):
@@ -122,7 +122,7 @@ with DAG(
             python_version="3.10",
             base_dir=BASE_PATH,
         )
-        return operator.execute(context={})
+        return operator.execute(context=context)
 
     @task
     def extract_embedding(**context):
@@ -150,7 +150,7 @@ with DAG(
         operator = DeleteGCEOperator(
             task_id="gce_stop_task", instance_name=GCE_INSTANCE
         )
-        return operator.execute(context={})
+        return operator.execute(context=context)
 
     @task
     def end():

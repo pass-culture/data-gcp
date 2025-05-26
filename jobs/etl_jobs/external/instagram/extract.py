@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import requests
 
-MAX_ERROR_RATE = 0.1
+MAX_ERROR_RATE = 0.2
 
 
 class InstagramAnalytics:

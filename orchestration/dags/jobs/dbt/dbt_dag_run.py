@@ -100,6 +100,7 @@ clean = BashOperator(
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
     },
     pool="dbt",
+    dag=dag,
 )
 
 

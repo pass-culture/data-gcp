@@ -55,14 +55,11 @@ jobs:
             ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER:passculture-metier-ehp/infra-prod-gcp-workload-identity-provider
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
       - uses: yezz123/setup-uv@v4
 
       - name: Install Default Python requirements for root project
         run: uv sync
-
-      - name: Install Python requirements for orchestration project (airflow + dbt)
-        run: uv pip install --system -r ${{ env.AIRFLOW_HOME }}orchestration-requirements.txt
 
       - name: "Authenticate with Google Cloud"
         uses: "google-github-actions/auth@v2"

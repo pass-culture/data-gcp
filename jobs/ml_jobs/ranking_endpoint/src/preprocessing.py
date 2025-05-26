@@ -49,6 +49,97 @@ FEATURES_MAPPING = {
 }
 
 
+def map_features_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Apply feature construction and column mapping to a DataFrame.
+    This function performs two main operations on the input DataFrame:
+    1. Constructs new features using the FEATURES_CONSTRUCTION mapping
+    2. Renames columns according to the FEATURES_MAPPING dictionary
+    Args:
+        df (pd.DataFrame): Input DataFrame to transform
+    Returns:
+        pd.DataFrame: Transformed DataFrame with new features constructed and columns renamed
+    Note:
+        Requires FEATURES_CONSTRUCTION and FEATURES_MAPPING to be defined in the module scope.
+    """
+
+    return df.assign(**FEATURES_CONSTRUCTION).rename(columns=FEATURES_MAPPING)
+
+
+def preprocess_embeddings(
+    data: pd.DataFrame, embedding_dim: int, default_numerical: float
+) -> pd.DataFrame:
+    """
+    Preprocess embedding data by converting JSON string embeddings to individual feature columns.
+    This function handles two scenarios:
+    1. If embedding_dim is 0, drops embedding columns entirely
+    2. If embedding_dim > 0, converts JSON string embeddings into separate numerical columns
+    Args:
+        data (pd.DataFrame): Input DataFrame containing 'user_embedding_json' and 'item_embedding_json' columns
+        embedding_dim (int): Dimension of embeddings. If 0, embedding columns are dropped.
+        default_numerical (float): Default value to use for missing or null embeddings
+    Returns:
+        pd.DataFrame: Processed DataFrame with either:
+            - Embedding columns removed (if embedding_dim=0), or
+            - JSON embeddings converted to individual columns named 'user_emb_{i}' and 'item_emb_{i}'
+    Notes:
+        - Missing embeddings (NaN or "null") are filled with arrays of default_numerical values
+        - Original embedding JSON columns are removed from the output
+        - Output maintains the same row indices as input DataFrame
+    """
+
+    if embedding_dim == 0:
+        # If no embeddings are used, we can drop the embedding columns
+        return data.drop(columns=["user_embedding_json", "item_embedding_json"])
+
+    # If embeddings are used, we need to process them
+    missing_array = json.dumps(np.array([default_numerical] * embedding_dim).tolist())
+
+    # Stack arrays into 2D NumPy arrays
+    data_with_string_embeddings_df = data.assign(
+        user_embedding=lambda df: df.user_embedding_json.fillna(missing_array)
+        .replace("null", missing_array)
+        .apply(lambda x: np.array(json.loads(x))),
+        item_embedding=lambda df: df.item_embedding_json.fillna(missing_array)
+        .replace("null", missing_array)
+        .apply(lambda x: np.array(json.loads(x))),
+    )
+    user_embeddings_array = np.stack(
+        data_with_string_embeddings_df["user_embedding"].values
+    )
+    item_embeddings_array = np.stack(
+        data_with_string_embeddings_df["item_embedding"].values
+    )
+
+    # Convert to DataFrames with proper indices and column names
+    user_embedding_features = pd.DataFrame(
+        user_embeddings_array,
+        index=data_with_string_embeddings_df.index,
+        columns=[f"user_emb_{i}" for i in range(embedding_dim)],
+    )
+    item_embedding_features = pd.DataFrame(
+        item_embeddings_array,
+        index=data_with_string_embeddings_df.index,
+        columns=[f"item_emb_{i}" for i in range(embedding_dim)],
+    )
+
+    return pd.concat(
+        [
+            data_with_string_embeddings_df.drop(
+                columns=[
+                    "user_embedding_json",
+                    "item_embedding_json",
+                    "user_embedding",
+                    "item_embedding",
+                ]
+            ),
+            user_embedding_features,
+            item_embedding_features,
+        ],
+        axis=1,
+    )
+
+
 def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
     typed_data_df = (
         data.loc[
@@ -112,61 +203,8 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
         .drop_duplicates()
     )
 
-    if EMBEDDING_DIM == 0:
-        # If no embeddings are used, we can drop the embedding columns
-        return data_with_status_df.drop(
-            columns=["user_embedding_json", "item_embedding_json"]
-        )
-
-    # If embeddings are used, we need to process them
-    user_embed_dim = EMBEDDING_DIM
-    item_embed_dim = EMBEDDING_DIM
-    missing_array = json.dumps(np.array([DEFAULT_NUMERICAL] * user_embed_dim).tolist())
-
-    # Stack arrays into 2D NumPy arrays
-    data_with_string_embeddings_df = data_with_status_df.assign(
-        user_embedding=lambda df: df.user_embedding_json.fillna(missing_array)
-        .replace("null", missing_array)
-        .apply(lambda x: np.array(json.loads(x))),
-        item_embedding=lambda df: df.item_embedding_json.fillna(missing_array)
-        .replace("null", missing_array)
-        .apply(lambda x: np.array(json.loads(x))),
+    return preprocess_embeddings(
+        data=data_with_status_df,
+        embedding_dim=EMBEDDING_DIM,
+        default_numerical=DEFAULT_NUMERICAL,
     )
-    user_embeddings_array = np.stack(
-        data_with_string_embeddings_df["user_embedding"].values
-    )
-    item_embeddings_array = np.stack(
-        data_with_string_embeddings_df["item_embedding"].values
-    )
-
-    # Convert to DataFrames with proper indices and column names
-    user_embedding_features = pd.DataFrame(
-        user_embeddings_array,
-        index=data_with_string_embeddings_df.index,
-        columns=[f"user_emb_{i}" for i in range(user_embed_dim)],
-    )
-    item_embedding_features = pd.DataFrame(
-        item_embeddings_array,
-        index=data_with_string_embeddings_df.index,
-        columns=[f"item_emb_{i}" for i in range(item_embed_dim)],
-    )
-
-    return pd.concat(
-        [
-            data_with_string_embeddings_df.drop(
-                columns=[
-                    "user_embedding_json",
-                    "item_embedding_json",
-                    "user_embedding",
-                    "item_embedding",
-                ]
-            ),
-            user_embedding_features,
-            item_embedding_features,
-        ],
-        axis=1,
-    )
-
-
-def map_features_columns(df: pd.DataFrame) -> pd.DataFrame:
-    return df.assign(**FEATURES_CONSTRUCTION).rename(columns=FEATURES_MAPPING)

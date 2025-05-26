@@ -92,9 +92,7 @@ INSTAGRAM_POST_DETAIL_DTYPE = [
         "total_interactions", bigquery.enums.SqlTypeNames.FLOAT, mode="NULLABLE"
     ),
     bigquery.SchemaField("reach", bigquery.enums.SqlTypeNames.FLOAT, mode="NULLABLE"),
-    bigquery.SchemaField(
-        "impressions", bigquery.enums.SqlTypeNames.FLOAT, mode="NULLABLE"
-    ),
+    bigquery.SchemaField("views", bigquery.enums.SqlTypeNames.FLOAT, mode="NULLABLE"),
     bigquery.SchemaField("follows", bigquery.enums.SqlTypeNames.FLOAT, mode="NULLABLE"),
     bigquery.SchemaField(
         "profile_visits", bigquery.enums.SqlTypeNames.FLOAT, mode="NULLABLE"

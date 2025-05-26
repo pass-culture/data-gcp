@@ -2,25 +2,25 @@
 ########                    Install and setup the project                      ########
 #######################################################################################
 SHELL := /bin/bash
-BASE_PYTHON_VERSION := 3.10
+BASE_PYTHON_VERSION := 3.12
 
 export PERSONAL_DBT_USER :=
 
+activate:
+	@if [ ! -d ".venv" ]; then \
+		echo "Virtual environment not found. Please run 'make install' first."; \
+		exit 1; \
+	fi
+	@echo "To activate, run: source .venv/bin/activate"
 
 install:
 	make _base_install
 	make _dbt_install
-
 	echo "Please setup the current venv in your IDE to make it run permanently : https://www.notion.so/passcultureapp/Comment-installer-DBT-e25f7e24813c4d48baa43d641651caf8"
 
 
-install_analytics:
-	echo "Please use `make install` instead"
-	make install
-
-install_engineering:
-	echo "Please use `make install` instead"
-	make install
+auth:
+	gcloud auth application-default login
 
 #######################################################################################
 ########                                 Utils                                 ########
@@ -72,7 +72,6 @@ _configure_personal_user:
 
 
 _dbt_install:
-	source .venv/bin/activate && uv pip install -r orchestration/airflow/orchestration-requirements.txt
 	source .venv/bin/activate && cd orchestration/dags/data_gcp_dbt && dbt deps && dbt debug
 
 _base_install:
@@ -82,9 +81,21 @@ _base_install:
 		make _get_gcp_credentials; \
 	fi
 
-	curl -LsSf https://astral.sh/uv/install.sh | sh
+	# Install uv if not already installed
+	@if ! command -v uv &> /dev/null; then \
+		echo "Installing uv..."; \
+		curl -LsSf https://astral.sh/uv/install.sh | sh; \
+	fi
+
+	# Create and setup virtual environment
+	@echo "Creating virtual environment..."
 	uv venv --python $(BASE_PYTHON_VERSION)
+	uv pip install --upgrade pip
+	uv pip install uv
 	uv sync
+
+	@echo "Base installation completed. Activate the environment with: source .venv/bin/activate"
+
 
 #######################################################################################
 ########                              Automations                              ########
@@ -104,6 +115,18 @@ create_microservice_etl_external:
 
 create_microservice_etl_internal:
 	MS_TYPE=etl_internal MS_NAME=$(MS_NAME) MS_BASE_PATH=jobs/etl_jobs/internal make create_microservice
+
+
+#######################################################################################
+########                              Docker Requirements                      ########
+#######################################################################################
+
+
+docker_compile:
+	uv export --format requirements-txt --only-group airflow -o orchestration/airflow/orchestration-requirements.txt --python=python3.10
+	uv export --format requirements-txt --only-group airflow -o orchestration/k8s-airflow/k8s-worker-requirements.txt --python=python3.10
+
+
 
 #######################################################################################
 ########                              Pre-commit                              ########

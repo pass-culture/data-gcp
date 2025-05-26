@@ -1,162 +1,114 @@
-# data-gcp
+# Data GCP
 
-Repo pour la team data sur GCP.
+Repository for the data team on Google Cloud Platform (GCP).
 
-Ce repo contient les DAGs Airflow et les scripts nécessaires pour l'orchestration des jobs.
+This repository contains Airflow DAGs, DBT models, ML models, and necessary scripts for job orchestration.
 
-- Les DAGs sont dans `orchestration/dags/`
-- Les scripts appelés dans les DAGs sont à mettre dans `jobs/`, et divisés en 2 catégories :
-  - ETL jobs : pour l'extraction, la transformation et le chargement des données
-  - ML jobs : pour les micro services de machine learning
+- DAGs are located in `orchestration/dags/`
+- Scripts called by DAGs should be placed in `jobs/`, divided into two categories:
+  - ETL jobs: for data extraction, transformation, and loading
+  - ML jobs: for machine learning microservices
 
-## Organisation
+The project overview is available in the github site [here](https://pass-culture.github.io/data-gcp/) with main data models, glossary,documentation and technical references.
+
+## Repository Structure
 
 ```
-+-- orchestration : DAGS Airflow (Cloud Composer)
++-- orchestration : Airflow DAGs (Cloud Composer)
 | +-- airflow
 | +-- dags
-| +-- tests
-|
+|    +-- dependencies
+|    +-- data_gcp_dbt
 +-- jobs
 | +-- etl_jobs
 |   +-- external
-|     +-- adage
-|     +-- addresses
-|     +-- appsflyer
-|     +-- contentful
-|     +-- dms
-|     +-- downloads
-|     +-- metabase-archiving
-|     +-- qualtrics
-|     +-- brevo
-|     +-- siren
-|     +-- batch
 |     +-- ...
 |
 |   +-- internal
-|     +-- gcs_seed
-|     +-- human_ids
-|     +-- import_api_referentials
 |     +-- ...
 |
 | +-- ml_jobs
-|   +-- algo_training
-|   +-- embeddings
-|   +-- record_linkage
-|   +-- ranking_endpoint
-|   +-- clusterisation
-|   +-- retrieval_endpoint
 |   +-- ...
-
 ```
 
-## INSTALL
+## Installation
 
-### Analytics (BigQuery)
+#### 0. Prerequisites
 
-#### 0. Prérequis
-
-- Accès aux comptes de services GCP
-- [Gcloud CLI](https://cloud.google.com/sdk/docs/install?hl=fr)
-- Make installé
-  - linux : `sudo apt install make`
-  - mac : `brew install make`
-- Cloner le projet
+- Access to GCP service accounts and [Google Cloud CLI](https://cloud.google.com/sdk/docs/install)
+- Make installed
+  - Linux: `sudo apt install make`
+  - macOS: `brew install make`
+- Clone the project
 
   ```bash
   git clone git@github.com:pass-culture/data-gcp.git
   cd data-gcp
   ```
 
-- Installer les librairies prérequises (non nécessaire sur macos)
+#### 1. Project Installation
+
+Install the project:
+
+```bash
+make install
+```
+
+> This installation is simplified to include all necessary requirements for the `orchestration` part in a single virtual environment. It also installs **pre-commit** hooks for the project, ensuring code quality from the first commit.
+
+#### 2. Installing a Specific Microservice Environment
+
+To install a specific microservice environment:
+
+```bash
+MICROSERVICE_PATH=jobs/ml_jobs/retrieval_vector
+cd $(MICROSERVICE_PATH) && uv sync
+```
+
+> This command creates a dedicated virtual environment for the microservice.
+
+#### 3. Troubleshooting
+
+- Install required libraries (not necessary on macOS)
   - [Ubuntu]:
     - `make install_ubuntu_libs`
-  - [MacOS]:
+  - [macOS]:
     - `make install_macos_libs`
-    - ajouter les lignes suivantes à votre `~/.zshrc`
+    - Add the following lines to your `~/.zshrc`:
 
       ```bash
       export MYSQLCLIENT_LDFLAGS="-L/opt/homebrew/opt/mysql-client/lib -lmysqlclient -rpath /usr/local/mysql/lib"
       export MYSQLCLIENT_CFLAGS="-I/opt/homebrew/opt/mysql-client/include -I/opt/homebrew/opt/mysql-client/include/mysql"
       ```
 
-#### 1. Installation du projet
-
-
-- Installation du projet :
-
-    ```bash
-    make install
-    ```
-
-  > Cette installation est simplifiée, afin de mettre tous les requirements nécecssaires concernant la partie `orchestration` dans un même venv. Elle installe également des **pre-commit** hooks pour le projet, ce qui permet de coder juste du premier coup.
-
-
-#### 2. Installation d'un sous-environnement spécifique
-
-- Pour installer un sous-environnement spécifique d'un micro service :
-
-  ```bash
-  MICROSERVICE_PATH=jobs/ml_jobs/retrieval_vector
-  cd $(MICROSERVICE_PATH) && uv sync
-  ```
-
-  > Ces commande créé un sous-environnement virtuel.
-
-
-
-##### ⚒️ Troubleshooting ⚒️
-
-- Si vous avez une erreur liée à uv : Redémarrer un terminal et relancez la commande posant problème
-- La migration de `pyenv` à `uv` peut poser problème en mélangeant les environnements virtuels. 2 solutions s'offrent à vous :
-  - Retirer pyenv de votre PATH en supprimant les lignes suivantes de votre .bashrc/.zshrc
-
-    ```bash
-    export PYENV_ROOT="$HOME/.pyenv"
-    export PATH="$PYENV_ROOT/bin:$PATH"
-    eval "$(pyenv init --path)"
-    eval "$(pyenv init -)"
-    eval "$(pyenv virtualenv-init -)"
-    ```
-
-  - Supprimer toutes les configs de pyenv dans le dossier courant
-
-    ```bash
-    make delete_python_version_files
-    ```
-
-#### 2. Config .env.local
-
-Dans le fichier `.env.local`, renseigne les valeurs des variables manquantes en utilisant [cette page](https://www.notion.so/passcultureapp/Les-secrets-du-repo-data-gcp-085759e27a664a95a65a6886831bde54)
-
 ## Orchestration
 
-Les DAGs Airflow orchestrant les différents jobs DA/DE/DS sont détaillés dans [le README.md du dossier orchestration](/orchestration/README.md)
+Airflow DAGs orchestrating various DA/DE/DS jobs are detailed in [the orchestration folder's README.md](/orchestration/README.md)
 
-Les dags sont déployés automatiquement lors d'un merge sur master / production (voir [la doc de déploiement continu](.github/workflows/README.md))
+DAGs are automatically deployed upon merging to master/production (see [continuous deployment documentation](.github/workflows/README.md))
 
 ## CI/CD
 
-Pipelines détaillées dans le [README de github Action](.github/workflows/README.md)
+Pipelines are detailed in the [GitHub Actions README](.github/workflows/README.md)
 
-## Automatisations
+## Automation
 
 ### ML Jobs
 
-Pour créer un nouveau micro service de ML ou d'ETL, nous pouvons utiliser les 3 commandes suivantes :
+To create a new ML or ETL microservice, you can use the following commands:
 
-- `MS_NAME=mon_micro_service make create_microservice_ml` :  Créé un micro service de ML dans le dossier `jobs/ml_jobs`
-- `MS_NAME=mon_micro_service make create_microservice_etl_internal` :  Créé un micro service de ML dans le dossier `jobs/etl_jobs/internal`
-- `MS_NAME=mon_micro_service make create_microservice_etl_external` :  Créé un micro service de ML dans le dossier `jobs/etl_jobs/external`
+- `MS_NAME=my_microservice make create_microservice_ml`: Creates an ML microservice in the `jobs/ml_jobs` directory
+- `MS_NAME=my_microservice make create_microservice_etl_internal`: Creates an ETL microservice in the `jobs/etl_jobs/internal` directory
+- `MS_NAME=my_microservice make create_microservice_etl_external`: Creates an ETL microservice in the `jobs/etl_jobs/external` directory
 
-où mon_micro_service est le nom du micro service. Exemple :
+where `my_microservice` is the name of your microservice. Example:
 
 ```bash
 MS_NAME=algo_llm make create_microservice_ml
 ```
 
-Cela va :
+This will:
 
-1. créer un dossier `algo_llm` dans le dossier `jobs/ml_jobs` avec les fichiers nécessaires pour le micro service.
-2. Commiter les changements
-3. Lancer l'installation du nouveau micro service
+1. Create an `algo_llm` directory in `jobs/ml_jobs` with all necessary files for the microservice
+2. Commit the changes
+3. Launch the installation of the new microservice

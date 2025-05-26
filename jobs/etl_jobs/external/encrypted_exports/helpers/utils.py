@@ -5,10 +5,9 @@ from typing import Dict, Any
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 from botocore.client import Config
-import multiprocessing
 from loguru import logger
 import sys
-
+import multiprocessing
 
 logger.remove()
 logger.add(
@@ -21,6 +20,9 @@ FILE_EXTENSION = ".parquet"
 PROJECT_NAME = os.environ.get("GCP_PROJECT_ID")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 PREFIX_S3_SECRET = "dbt_export_s3_config"
+ENCRYPTED_FOLDER = "tmp_encrypted_folder"
+DEFAULT_BATCH_SIZE = 10
+DEFAULT_MAX_WORKERS = multiprocessing.cpu_count()
 
 
 def init_s3_client(s3_config: Dict[str, Any]) -> boto3.client:
@@ -69,32 +71,3 @@ def load_target_bucket_config(partner_name: str) -> Dict[str, Any]:
         return json.loads(access_secret_data)
     except DefaultCredentialsError:
         return {}
-
-
-def get_optimal_worker_count(file_count: int) -> int:
-    """
-    Calculate optimal number of workers based on file count.
-
-    Args:
-        file_count (int): The number of files to process.
-
-    Returns:
-        int: The optimal number of workers.
-    """
-    cpu_count = multiprocessing.cpu_count()
-    return min(cpu_count, file_count)
-
-
-def get_optimal_batch_size(file_count: int, worker_count: int) -> int:
-    """
-    Calculate optimal batch size based on file count and worker count.
-
-    Args:
-        file_count (int): The number of files to process.
-        worker_count (int): The number of workers to use.
-
-    Returns:
-        int: The optimal batch size.
-    """
-    base_batch = min(20, file_count)
-    return ((base_batch + worker_count - 1) // worker_count) * worker_count

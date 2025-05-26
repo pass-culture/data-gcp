@@ -80,6 +80,73 @@ You can find all dependencies in the `api-requirements.in` file.
    }'
    ```
 
+   There are several use cases for which you can use the API:
+   - `for user recommendation :
+
+      ```json
+      {
+         "model_type": "recommendation",
+         "user_id": "3734607",
+         "size": 10,
+         "params": {},
+         "call_id": "1234567890",
+         "debug": 1,
+         "prefilter": 1,
+         "similarity_metric": "dot"
+      }
+      ```
+
+   - for similar offer recommendation :
+
+      ```json
+      {
+         "model_type": "similar_offer",
+         "items": ["product-6344516"],
+         "size": 10,
+         "params": {},
+         "call_id": "1234567890",
+         "debug": 1,
+         "prefilter": 1,
+         "similarity_metric": "dot"
+      }
+      ```
+
+   - for playlist recommendation constructions (with multiple items) :
+
+      ```json
+      {
+         "model_type": "similar_offer",
+         "items": ["product-6344516", "product-6344517"],
+         "size": 10,
+         "params": {},
+         "call_id": "1234567890",
+         "debug": 1,
+         "prefilter": 1,
+         "similarity_metric": "dot"
+      }
+      ```
+
+   - for top recommendations
+
+      ```json
+      {
+         "model_type": "tops",
+         "size": 10,
+         "params": {},
+         "call_id": "1234567890",
+         "debug": 1,
+         "prefilter": 1,
+         "similarity_metric": "dot",
+         "vector_column_name": "booking_number_desc"
+      }
+      ```
+
+   In the above examples, you will get a dictionnary with a key "predictions" containing the list of recommended items.
+   > Note that the `"_distance"` field is to improved :
+   - for top recommendations, it will return a number > 1, the lowest being the best recommendation.
+   - for vector search, it will return the distance between the input vector and the closest vector in the database for the given similarity_metric. For instance, if you use the `dot` similarity metric, it will return `1 - dot product`.
+      - ⚠️ If you do a vector search but find no resutlts, then the fallback will be the top recommendations, giving you a `"_distance"` > 1 ⚠️
+
 ### Testing
 
 To run the tests, including unit tests and integration tests, use:

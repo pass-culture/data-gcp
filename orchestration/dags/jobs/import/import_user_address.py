@@ -120,7 +120,7 @@ with DAG(
             task_id="gce_start_task",
             labels={"dag_name": DAG_NAME},
         )
-        return operator.execute(context={})
+        return operator.execute(context=context)
 
     @task
     def fetch_install_code(**context):
@@ -132,7 +132,7 @@ with DAG(
             python_version="3.12",
             base_dir=BASE_PATH,
         )
-        return operator.execute(context={})
+        return operator.execute(context=context)
 
     @task
     def addresses_to_gcs(**context):
@@ -152,14 +152,14 @@ with DAG(
             """,
             do_xcom_push=True,
         )
-        return operator.execute(context={})
+        return operator.execute(context=context)
 
     @task
     def stop_gce(**context):
         operator = DeleteGCEOperator(
             task_id="gce_stop_task", instance_name=context["params"]["instance_name"]
         )
-        return operator.execute(context={})
+        return operator.execute(context=context)
 
     @task
     def end():

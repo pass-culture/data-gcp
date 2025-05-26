@@ -100,6 +100,7 @@ clean = BashOperator(
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
     },
     pool="dbt",
+    dag=dag,
 )
 
 
@@ -124,7 +125,7 @@ operator_dict = dbt_dag_reconstruction(
     dbt_snapshots,
     models_with_crit_test_dependencies,
     crit_test_parents,
-    compile,
+    clean,
 )
 
 ##### DAG orchestration
@@ -143,4 +144,5 @@ snapshot_tasks = list(operator_dict["snapshot_op_dict"].values())
 )
 start >> operator_dict["trigger_block"]
 end_wait >> snapshots_checkpoint >> snapshot_tasks
-(model_tasks + snapshot_tasks) >> compile >> clean >> end
+end_wait >> compile
+compile >> (model_tasks + snapshot_tasks) >> clean >> end

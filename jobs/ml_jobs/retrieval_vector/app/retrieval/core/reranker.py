@@ -6,6 +6,7 @@ from docarray import Document, DocumentArray
 from lancedb.rerankers import Reranker
 
 from app.logging.logger import logger
+from app.retrieval.constants import DISTANCE_COLUMN_NAME, USER_DISTANCE_COLUMN_NAME
 
 
 class UserReranker(Reranker):
@@ -70,14 +71,16 @@ class UserReranker(Reranker):
                 vector_results[self.vector_column_name].to_pylist(), -user_doc.embedding
             )
             updated_distances = self._compute_relevance_score(
-                vector_results["_distance"].to_numpy(), np.array(scores)
+                vector_results[DISTANCE_COLUMN_NAME].to_numpy(), np.array(scores)
             )
             # Update score with personalized dot product
             return (
-                vector_results.append_column("_user_distance", pa.array(scores))
-                .drop(["_distance"])
-                .append_column("_distance", pa.array(updated_distances))
-                .sort_by([("_distance", "ascending")])
+                vector_results.append_column(
+                    USER_DISTANCE_COLUMN_NAME, pa.array(scores)
+                )
+                .drop([DISTANCE_COLUMN_NAME])
+                .append_column(DISTANCE_COLUMN_NAME, pa.array(updated_distances))
+                .sort_by([(DISTANCE_COLUMN_NAME, "ascending")])
             )
         else:
             logger.debug(f"reranker, user_id not found {user_id}, cannot re_rank")

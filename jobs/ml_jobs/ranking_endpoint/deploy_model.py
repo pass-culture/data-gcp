@@ -25,7 +25,6 @@ from src.preprocessing import (
 )
 from src.utils import (
     ENV_SHORT_NAME,
-    GCP_PROJECT_ID,
     connect_remote_mlflow,
     deploy_container,
     get_mlflow_experiment,
@@ -53,14 +52,8 @@ PROBA_BOOKING_THRESHOLD = 0.5
 NDCG_K_LIST = [5, 10, 20]
 
 
-def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
-    sql = f"""
-    select * from `{GCP_PROJECT_ID}.{dataset_name}.{table_name}`
-    """
-    print(f"Loading data from {GCP_PROJECT_ID}.{dataset_name}.{table_name}...")
-    print(f"SQL query: {sql}")
-
-    return pd.read_gbq(sql).sample(frac=1).drop_duplicates()
+def load_data(input_ccs_dir: str) -> pd.DataFrame:
+    return pd.read_parquet(input_ccs_dir).sample(frac=1).drop_duplicates()
 
 
 def plot_figures(
@@ -98,9 +91,37 @@ def plot_figures(
     )
 
 
-def train_pipeline(dataset_name, table_name, experiment_name, run_name):
+def train_pipeline(input_gcs_dir: str, experiment_name: str, run_name: str) -> None:
+    """
+    Train a LightGBM ranking model pipeline with MLflow experiment tracking.
+    This function performs end-to-end model training including data loading, preprocessing,
+    train-test splitting, model training with class weights, evaluation using NDCG metrics,
+    and artifact logging to MLflow.
+    Args:
+        input_gcs_dir (str): Path to the Google Cloud Storage directory containing input data.
+        experiment_name (str): Name of the MLflow experiment for tracking this training run.
+        run_name (str): Specific name for this training run within the experiment.
+    Returns:
+        None
+    Process:
+        1. Loads and preprocesses data from GCS
+        2. Splits data by unique user_x_date_id into train/test sets
+        3. Computes class weights based on target class frequency
+        4. Connects to remote MLflow for experiment tracking
+        5. Trains LightGBM classifier with auto-logging enabled
+        6. Evaluates model using NDCG@k metrics against random and popularity baselines
+        7. Generates and saves visualization plots
+        8. Logs all metrics, parameters, and artifacts to MLflow
+        9. Saves the trained pipeline model
+    Note:
+        - Uses a random seed for reproducible train-test splits
+        - Computes NDCG metrics for multiple k values defined in NDCG_K_LIST
+        - Saves predictions, plots, and model artifacts to MLflow
+        - Model is saved with the name "classifier"
+    """
+
     # Load and preprocess the data
-    raw_data = load_data(dataset_name, table_name).pipe(
+    raw_data = load_data(input_gcs_dir).pipe(
         map_features_columns,
     )
     preprocessed_data = raw_data.pipe(preprocess_data)
@@ -185,6 +206,7 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
         mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
         mlflow.log_param("seed", seed)
 
+    # TODO: Check to see if it is better with or without
     # # retrain on whole
     # pipeline_classifier.train(preprocessed_data, class_weight=class_weight)
 
@@ -205,13 +227,9 @@ def main(
         None,
         help="Name of the model",
     ),
-    dataset_name: str = typer.Option(
+    input_gcs_dir: str = typer.Option(
         None,
-        help="Name input dataset with preproc data",
-    ),
-    table_name: str = typer.Option(
-        None,
-        help="Name input table with preproc data",
+        help="GCS directory where the input data is stored",
     ),
 ) -> None:
     yyyymmdd = datetime.now().strftime("%Y%m%d")
@@ -221,8 +239,7 @@ def main(
     serving_container = f"europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/ranking-endpoint/{ENV_SHORT_NAME}/{experiment_name.replace('.', '_')}:{run_id}"
 
     train_pipeline(
-        dataset_name=dataset_name,
-        table_name=table_name,
+        input_gcs_dir=input_gcs_dir,
         experiment_name=experiment_name,
         run_name=run_name,
     )

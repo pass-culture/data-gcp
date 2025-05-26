@@ -80,30 +80,35 @@ def extract_embedding_item_dag(
         return "end"
 
     @task
-    def start_gce(**context):
+    def start_gce(instance_type_resolved: str, **context):
         operator = StartGCEOperator(
             task_id="gce_start_task",
             instance_name=GCE_INSTANCE,
             preemptible=False,
-            instance_type=instance_type,
+            instance_type=instance_type_resolved,
             retries=2,
             labels={"job_type": "ml", "dag_name": DAG_NAME},
         )
         return operator.execute(context=context)
 
     @task
-    def fetch_install_code(**context):
+    def fetch_install_code(branch_resolved: str, **context):
         operator = InstallDependenciesOperator(
             task_id="fetch_install_code",
             instance_name=GCE_INSTANCE,
-            branch=branch,
+            branch=branch_resolved,
             python_version="3.10",
             base_dir=BASE_PATH,
         )
         return operator.execute(context=context)
 
     @task
-    def extract_embedding(**context):
+    def extract_embedding(
+        config_file_name_resolved: str,
+        batch_size_resolved: int,
+        max_rows_to_process_resolved: int,
+        **context,
+    ):
         operator = SSHGCEOperator(
             task_id="extract_embedding",
             instance_name=GCE_INSTANCE,
@@ -111,9 +116,9 @@ def extract_embedding_item_dag(
             environment=DAG_CONFIG,
             command="mkdir -p img && PYTHONPATH=. python main.py "
             f"--gcp-project {GCP_PROJECT_ID} "
-            f"--config-file-name {config_file_name} "
-            f"--batch-size {batch_size} "
-            f"--max-rows-to-process {max_rows_to_process} "
+            f"--config-file-name {config_file_name_resolved} "
+            f"--batch-size {batch_size_resolved} "
+            f"--max-rows-to-process {max_rows_to_process_resolved} "
             f"--input-dataset-name {INPUT_DATASET_NAME} "
             f"--input-table-name {INPUT_TABLE_NAME} "
             f"--output-dataset-name {OUTPUT_DATASET_NAME} "
@@ -145,9 +150,13 @@ def extract_embedding_item_dag(
     start_dag = start()
     source_has_data = check_source_count()
     branch_decision = decide_next_step(source_has_data)
-    gce_started = start_gce()
-    dependencies_installed = fetch_install_code()
-    embeddings_extracted = extract_embedding()
+    gce_started = start_gce(instance_type_resolved=instance_type)
+    dependencies_installed = fetch_install_code(branch_resolved=branch)
+    embeddings_extracted = extract_embedding(
+        config_file_name_resolved=config_file_name,
+        batch_size_resolved=batch_size,
+        max_rows_to_process_resolved=max_rows_to_process,
+    )
     gce_stopped = stop_gce()
     pipeline_completed = end()
 

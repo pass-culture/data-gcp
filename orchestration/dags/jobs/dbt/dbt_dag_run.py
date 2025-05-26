@@ -124,7 +124,7 @@ operator_dict = dbt_dag_reconstruction(
     dbt_snapshots,
     models_with_crit_test_dependencies,
     crit_test_parents,
-    compile,
+    clean,
 )
 
 ##### DAG orchestration
@@ -136,6 +136,7 @@ snapshot_tasks = list(operator_dict["snapshot_op_dict"].values())
 # Defining the task dependency flow
 (
     start
+    >> compile
     >> [wait_for_raw, wait_for_firebase]
     >> end_wait
     >> data_transfo_checkpoint
@@ -143,4 +144,4 @@ snapshot_tasks = list(operator_dict["snapshot_op_dict"].values())
 )
 start >> operator_dict["trigger_block"]
 end_wait >> snapshots_checkpoint >> snapshot_tasks
-(model_tasks + snapshot_tasks) >> compile >> clean >> end
+(model_tasks + snapshot_tasks) >> clean >> end

@@ -117,6 +117,8 @@ def process_encryption(
     export_date: str,
     table_list: List[str],
     encryption_key: str,
+    batch_size: int = BATCH_SIZE,
+    max_workers: int = MAX_WORKERS,
 ) -> None:
     """
     Encrypt parquet files directly from GCS to GCS using DuckDB.
@@ -149,13 +151,13 @@ def process_encryption(
             # Process files in batches
             total_files = len(parquet_files)
             logger.info(
-                f"Total files to process: {total_files}, batch size: {BATCH_SIZE}, will process {len(range(0, total_files, BATCH_SIZE))} batches"
+                f"Total files to process: {total_files}, batch size: {batch_size}, will process {len(range(0, total_files, batch_size))} batches"
             )
 
             # Create batch processing tasks
             batch_tasks = []
-            for batch_idx, i in enumerate(range(0, total_files, BATCH_SIZE)):
-                batch_files = parquet_files[i : i + BATCH_SIZE]
+            for batch_idx, i in enumerate(range(0, total_files, batch_size)):
+                batch_files = parquet_files[i : i + batch_size]
                 batch_num = batch_idx + 1
                 output_gcs_path = f"gs://{str(Path(gcs_bucket) / output_folder)}/{batch_num:012d}.parquet"
 
@@ -167,7 +169,7 @@ def process_encryption(
             processed_files = 0
 
             with concurrent.futures.ProcessPoolExecutor(
-                max_workers=MAX_WORKERS
+                max_workers=max_workers
             ) as executor:
                 # Submit all batch processing tasks
                 future_to_batch = {

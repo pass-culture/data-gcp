@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 import pandas as pd
 import requests
 
+MAX_ERROR_RATE = 0.2
+
 
 class InstagramAnalytics:
     """
@@ -31,6 +33,9 @@ class InstagramAnalytics:
 
         Returns:
             list: A list of daily insights data.
+
+        Raises:
+            RuntimeError: If more than MAX_ERROR_RATE of requests fail.
         """
 
         start_dt = datetime.strptime(start_date, "%Y-%m-%d")
@@ -39,13 +44,18 @@ class InstagramAnalytics:
         if start_dt > end_dt:
             raise ValueError("start_date must be earlier than or equal to end_date.")
 
-        metrics = [
-            "impressions",
-            "reach",
-            "follower_count",
-        ]
         period = "day"
         data = []
+        error_count = 0
+        total_requests = 0
+        # Metric type mapping for Instagram Graph API
+        METRIC_TYPES = {
+            "total_value": ["views"],  # metrics that need total_value
+            "default": [
+                "reach",
+                "follower_count",
+            ],  # metrics that don't need special type
+        }
 
         total_days = (end_dt - start_dt).days + 1
 
@@ -54,24 +64,41 @@ class InstagramAnalytics:
             since = int(day_date.timestamp())
             until = int((day_date + timedelta(days=1)).timestamp()) - 1
 
-            params = {
-                "metric": ",".join(metrics),
-                "period": period,
-                "since": since,
-                "until": until,
-                "access_token": self.access_token,
-            }
+            # Make separate calls for each metric type
+            for metric_type, metrics in METRIC_TYPES.items():
+                if not metrics:  # Skip if no metrics for this type
+                    continue
 
-            response = requests.get(
-                f"{self.graph_uri}{self.account_id}/insights", params=params
-            )
+                total_requests += 1
+                params = {
+                    "metric": ",".join(metrics),
+                    "period": period,
+                    "since": since,
+                    "until": until,
+                    "access_token": self.access_token,
+                }
 
-            if response.status_code == 200:
-                data.append(response.json())
-            else:
-                print(
-                    f"Error fetching daily insights data: {response.status_code} - {response.text}"
+                # Add metric_type parameter if needed
+                if metric_type != "default":
+                    params["metric_type"] = metric_type
+
+                response = requests.get(
+                    f"{self.graph_uri}{self.account_id}/insights", params=params
                 )
+
+                if response.status_code == 200:
+                    data.append(response.json())
+                else:
+                    error_count += 1
+                    print(
+                        f"Error fetching daily insights data for {metric_type} metrics: {response.status_code} - {response.text}"
+                    )
+
+        error_rate = error_count / total_requests
+        if error_rate > MAX_ERROR_RATE:
+            raise RuntimeError(
+                f"More than {MAX_ERROR_RATE*100}% of requests failed ({error_count}/{total_requests} errors)"
+            )
 
         return data
 
@@ -256,7 +283,7 @@ class InstagramAnalytics:
             print(
                 f"Error fetching post insights: {response.status_code} - {response.text}"
             )
-            return {}
+            return None
 
     def preprocess_insight_posts(self, posts: list) -> pd.DataFrame:
         """
@@ -267,13 +294,22 @@ class InstagramAnalytics:
 
         Returns:
             pd.DataFrame: Processed posts insights data.
+
+        Raises:
+            RuntimeError: If more than MAX_ERROR_RATE of post insight requests fail.
         """
         rows = []
+        error_count = 0
+        total_posts = len(posts)
 
         for post in posts:
             post_insights = self._get_post_insights(
                 post.get("id"), post.get("media_type")
             )
+
+            if post_insights is None:
+                error_count += 1
+                continue
 
             row = {
                 "post_id": post.get("id"),
@@ -291,6 +327,12 @@ class InstagramAnalytics:
                 row[metric_name] = value
 
             rows.append(row)
+
+        error_rate = error_count / total_posts
+        if error_rate > MAX_ERROR_RATE:
+            raise RuntimeError(
+                f"More than {MAX_ERROR_RATE*100}% of post insight requests failed ({error_count}/{total_posts} errors)"
+            )
 
         return pd.DataFrame(rows)
 

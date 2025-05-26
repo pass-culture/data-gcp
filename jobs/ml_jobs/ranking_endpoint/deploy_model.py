@@ -20,7 +20,10 @@ from src.figure import (
     plot_cm_multiclass,
     plot_features_importance,
 )
-from src.preprocessing import map_features_columns, preprocess_data
+from src.preprocessing import (
+    map_features_columns,
+    preprocess_data,
+)
 from src.utils import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -106,7 +109,9 @@ def plot_figures(
 
 def train_pipeline(dataset_name, table_name, experiment_name, run_name):
     # Load and preprocess the data
-    raw_data = load_data(dataset_name, table_name).pipe(map_features_columns)
+    raw_data = load_data(dataset_name, table_name).pipe(
+        map_features_columns,
+    )
     preprocessed_data = raw_data.pipe(preprocess_data)
 
     # Split based on unique_session_id

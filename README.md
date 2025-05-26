@@ -1,114 +1,129 @@
-# Data GCP
+# Data GCP 🚀
 
-Repository for the data team on Google Cloud Platform (GCP).
+[![Python Version](https://img.shields.io/badge/python-3.12-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MPL--2.0-orange)](LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-pass--culture.github.io-blue)](https://pass-culture.github.io/data-gcp/)
 
-This repository contains Airflow DAGs, DBT models, ML models, and necessary scripts for job orchestration.
+> Data Engineering Platform for Pass Culture on Google Cloud Platform (GCP)
 
-- DAGs are located in `orchestration/dags/`
-- Scripts called by DAGs should be placed in `jobs/`, divided into two categories:
-  - ETL jobs: for data extraction, transformation, and loading
-  - ML jobs: for machine learning microservices
+## 📚 Overview
 
-The project overview is available in the github site [here](https://pass-culture.github.io/data-gcp/) with main data models, glossary,documentation and technical references.
+This repository contains the core components of our data platform:
 
-## Repository Structure
+- **Airflow DAGs** for workflow orchestration
+- **DBT models** for data transformation
+- **ML models** for machine learning services
+- **ETL jobs** for data processing
+
+## 📖 Documentation
+
+- [Project Overview](https://pass-culture.github.io/data-gcp/) - Main data models, glossary, and technical references
+- [Orchestration Guide](/orchestration/README.md) - Airflow DAGs documentation
+- [CI/CD Documentation](.github/workflows/README.md) - Deployment and pipeline details
+
+## 🏗️ Architecture
 
 ```
-+-- orchestration : Airflow DAGs (Cloud Composer)
-| +-- airflow
++-- orchestration
 | +-- dags
 |    +-- dependencies
+|    +-- jobs
 |    +-- data_gcp_dbt
 +-- jobs
 | +-- etl_jobs
 |   +-- external
 |     +-- ...
-|
 |   +-- internal
 |     +-- ...
-|
 | +-- ml_jobs
 |   +-- ...
 ```
 
-## Installation
+## 🚀 Getting Started
 
-#### 0. Prerequisites
+### Prerequisites
 
-- Access to GCP service accounts and [Google Cloud CLI](https://cloud.google.com/sdk/docs/install)
+- [Google Cloud CLI](https://cloud.google.com/sdk/docs/install)
+- Access to our GCP service accounts
 - Make installed
   - Linux: `sudo apt install make`
   - macOS: `brew install make`
-- Clone the project
 
-  ```bash
-  git clone git@github.com:pass-culture/data-gcp.git
-  cd data-gcp
-  ```
+### Installation
 
-#### 1. Project Installation
+1. **Clone the repository**
+   ```bash
+   git clone git@github.com:pass-culture/data-gcp.git
+   cd data-gcp
+   ```
 
-Install the project:
+2. **Install the project**
+   ```bash
+   make install
+   ```
+   > This installation includes all necessary requirements for the `orchestration` part in a single virtual environment and sets up pre-commit hooks for code quality.
 
+### Troubleshooting
+
+#### Ubuntu
 ```bash
-make install
+make install_ubuntu_libs
 ```
 
-> This installation is simplified to include all necessary requirements for the `orchestration` part in a single virtual environment. It also installs **pre-commit** hooks for the project, ensuring code quality from the first commit.
-
-#### 2. Installing a Specific Microservice Environment
-
-To install a specific microservice environment:
-
+#### macOS
 ```bash
-MICROSERVICE_PATH=jobs/ml_jobs/retrieval_vector
-cd $(MICROSERVICE_PATH) && uv sync
+make install_macos_libs
+```
+Add to your `~/.zshrc`:
+```bash
+export MYSQLCLIENT_LDFLAGS="-L/opt/homebrew/opt/mysql-client/lib -lmysqlclient -rpath /usr/local/mysql/lib"
+export MYSQLCLIENT_CFLAGS="-I/opt/homebrew/opt/mysql-client/include -I/opt/homebrew/opt/mysql-client/include/mysql"
 ```
 
-> This command creates a dedicated virtual environment for the microservice.
 
-#### 3. Troubleshooting
+## 🛠️ Development
 
-- Install required libraries (not necessary on macOS)
-  - [Ubuntu]:
-    - `make install_ubuntu_libs`
-  - [macOS]:
-    - `make install_macos_libs`
-    - Add the following lines to your `~/.zshrc`:
+### Creating New Microservices
 
-      ```bash
-      export MYSQLCLIENT_LDFLAGS="-L/opt/homebrew/opt/mysql-client/lib -lmysqlclient -rpath /usr/local/mysql/lib"
-      export MYSQLCLIENT_CFLAGS="-I/opt/homebrew/opt/mysql-client/include -I/opt/homebrew/opt/mysql-client/include/mysql"
-      ```
-
-## Orchestration
-
-Airflow DAGs orchestrating various DA/DE/DS jobs are detailed in [the orchestration folder's README.md](/orchestration/README.md)
-
-DAGs are automatically deployed upon merging to master/production (see [continuous deployment documentation](.github/workflows/README.md))
-
-## CI/CD
-
-Pipelines are detailed in the [GitHub Actions README](.github/workflows/README.md)
-
-## Automation
-
-### ML Jobs
-
-To create a new ML or ETL microservice, you can use the following commands:
-
-- `MS_NAME=my_microservice make create_microservice_ml`: Creates an ML microservice in the `jobs/ml_jobs` directory
-- `MS_NAME=my_microservice make create_microservice_etl_internal`: Creates an ETL microservice in the `jobs/etl_jobs/internal` directory
-- `MS_NAME=my_microservice make create_microservice_etl_external`: Creates an ETL microservice in the `jobs/etl_jobs/external` directory
-
-where `my_microservice` is the name of your microservice. Example:
-
+#### ML Microservice
 ```bash
-MS_NAME=algo_llm make create_microservice_ml
+MS_NAME=my_microservice make create_microservice_ml
 ```
 
-This will:
+#### ETL Microservice (Internal)
+```bash
+MS_NAME=my_microservice make create_microservice_etl_internal
+```
 
-1. Create an `algo_llm` directory in `jobs/ml_jobs` with all necessary files for the microservice
-2. Commit the changes
-3. Launch the installation of the new microservice
+#### ETL Microservice (External)
+```bash
+MS_NAME=my_microservice make create_microservice_etl_external
+```
+
+### Install specific dependencies
+
+```bash
+uv sync --group <airflow|dbt|dev|docs>
+```
+
+### Run pre-commit hooks
+
+```bash
+make ruff_fix / ruff_check / sqlfluff_fix / sqlfluff_check / sqlfmt_fix / sqlfmt_check
+```
+
+
+
+## 🔄 CI/CD
+
+Our CI/CD pipelines are managed through GitHub Actions. See the [workflows documentation](.github/workflows/README.md) for details.
+
+## 🤝 Contributing
+
+1. Create a new branch for your feature
+2. Make your changes
+3. Submit a pull request
+
+## 📝 License
+
+This project is licensed under the Mozilla Public License Version 2.0 - see the [LICENSE](LICENSE) file for details.

@@ -2,10 +2,10 @@
 ########                    Install and setup the project                      ########
 #######################################################################################
 SHELL := /bin/bash
-BASE_PYTHON_VERSION := 3.12
+
 
 export PERSONAL_DBT_USER :=
-
+export DBT_TARGET_PATH ?= "target"
 activate:
 	@if [ ! -d ".venv" ]; then \
 		echo "Virtual environment not found. Please run 'make install' first."; \
@@ -72,6 +72,7 @@ _configure_personal_user:
 
 
 _dbt_install:
+	@echo "Installing dbt dependencies..."
 	source .venv/bin/activate && cd orchestration/dags/data_gcp_dbt && dbt deps && dbt debug
 
 _base_install:
@@ -89,9 +90,6 @@ _base_install:
 
 	# Create and setup virtual environment
 	@echo "Creating virtual environment..."
-	uv venv --python $(BASE_PYTHON_VERSION)
-	uv pip install --upgrade pip
-	uv pip install uv
 	uv sync
 
 	@echo "Base installation completed. Activate the environment with: source .venv/bin/activate"

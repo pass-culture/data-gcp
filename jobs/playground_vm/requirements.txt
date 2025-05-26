@@ -12,9 +12,11 @@ exceptiongroup==1.2.1
     # via ipython
 executing==2.0.1
     # via stack-data
+importlib-metadata==8.7.0
+    # via jupyter-client
 ipykernel==6.29.5
     # via -r requirements.in
-ipython==8.26.0
+ipython==8.18.1
     # via ipykernel
 jedi==0.19.1
     # via ipython
@@ -70,7 +72,7 @@ six==1.16.0
     #   python-dateutil
 stack-data==0.6.3
     # via ipython
-tornado==6.4.2
+tornado==6.5.1
     # via
     #   -r requirements.in
     #   ipykernel
@@ -89,3 +91,5 @@ tzdata==2024.1
     # via pandas
 wcwidth==0.2.13
     # via prompt-toolkit
+zipp==3.21.0
+    # via importlib-metadata

@@ -249,7 +249,7 @@ class InstagramAnalytics:
             dict: JSON response containing insights data.
         """
         default_metrics = [
-            "impressions",
+            "views",
             "shares",
             "comments",
             "likes",

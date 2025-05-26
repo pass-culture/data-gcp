@@ -119,6 +119,7 @@ INSTAGRAM_ACCOUNT_DAILY_ACTIVITY_DTYPE = [
     bigquery.SchemaField(
         "impressions", bigquery.enums.SqlTypeNames.INTEGER, mode="NULLABLE"
     ),
+    bigquery.SchemaField("views", bigquery.enums.SqlTypeNames.INTEGER, mode="NULLABLE"),
     bigquery.SchemaField("reach", bigquery.enums.SqlTypeNames.INTEGER, mode="NULLABLE"),
     bigquery.SchemaField(
         "follower_count", bigquery.enums.SqlTypeNames.INTEGER, mode="NULLABLE"

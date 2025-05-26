@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 import pandas as pd
 import requests
 
+MAX_ERROR_RATE = 0.1
+
 
 class InstagramAnalytics:
     """
@@ -31,6 +33,9 @@ class InstagramAnalytics:
 
         Returns:
             list: A list of daily insights data.
+
+        Raises:
+            RuntimeError: If more than 50% of the requests fail.
         """
 
         start_dt = datetime.strptime(start_date, "%Y-%m-%d")
@@ -40,12 +45,13 @@ class InstagramAnalytics:
             raise ValueError("start_date must be earlier than or equal to end_date.")
 
         metrics = [
-            "impressions",
+            "views",
             "reach",
             "follower_count",
         ]
         period = "day"
         data = []
+        error_count = 0
 
         total_days = (end_dt - start_dt).days + 1
 
@@ -69,9 +75,16 @@ class InstagramAnalytics:
             if response.status_code == 200:
                 data.append(response.json())
             else:
+                error_count += 1
                 print(
                     f"Error fetching daily insights data: {response.status_code} - {response.text}"
                 )
+
+        error_rate = error_count / total_days
+        if error_rate > MAX_ERROR_RATE:
+            raise RuntimeError(
+                f"More than 50% of requests failed ({error_count}/{total_days} errors)"
+            )
 
         return data
 
@@ -256,7 +269,7 @@ class InstagramAnalytics:
             print(
                 f"Error fetching post insights: {response.status_code} - {response.text}"
             )
-            return {}
+            return None
 
     def preprocess_insight_posts(self, posts: list) -> pd.DataFrame:
         """
@@ -267,13 +280,22 @@ class InstagramAnalytics:
 
         Returns:
             pd.DataFrame: Processed posts insights data.
+
+        Raises:
+            RuntimeError: If more than MAX_ERROR_RATE of post insight requests fail.
         """
         rows = []
+        error_count = 0
+        total_posts = len(posts)
 
         for post in posts:
             post_insights = self._get_post_insights(
                 post.get("id"), post.get("media_type")
             )
+
+            if post_insights is None:
+                error_count += 1
+                continue
 
             row = {
                 "post_id": post.get("id"),
@@ -291,6 +313,12 @@ class InstagramAnalytics:
                 row[metric_name] = value
 
             rows.append(row)
+
+        error_rate = error_count / total_posts
+        if error_rate > MAX_ERROR_RATE:
+            raise RuntimeError(
+                f"More than {MAX_ERROR_RATE*100}% of post insight requests failed ({error_count}/{total_posts} errors)"
+            )
 
         return pd.DataFrame(rows)
 

@@ -6,7 +6,7 @@ flags:
   send_anonymous_usage_stats: False
   state_modified_compare_more_unrendered_values: True
   require_explicit_package_overrides_for_builtin_materializations: False
-  require_model_names_without_spaces: False
+  require_model_names_without_spaces: True
   source_freshness_run_project_hooks: False
   restrict_direct_pg_catalog_access: False
   require_yaml_configuration_for_mf_time_spines: False

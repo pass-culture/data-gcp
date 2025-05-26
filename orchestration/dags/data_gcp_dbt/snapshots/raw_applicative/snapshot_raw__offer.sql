@@ -57,7 +57,7 @@
                     strategy="timestamp",
                     unique_key="offer_id",
                     updated_at="offer_updated_date",
-                    hard_deletes="invalidate",
+                    hard_deletes="ignore",
                 )
             )
         }}

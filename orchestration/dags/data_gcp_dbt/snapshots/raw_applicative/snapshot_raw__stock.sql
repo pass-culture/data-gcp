@@ -16,7 +16,7 @@
                     "price_category_id",
                     "stock_features",
                 ],
-                hard_deletes="invalidate",
+                hard_deletes="ignore",
             )
         )
     }}

@@ -73,4 +73,6 @@ def bigquery_federated_query_task(dag, task_id, job_params):
         },
         params=dict(job_params.get("params", {})),
         dag=dag,
+        deferrable=True,
+        poll_interval=60,
     )

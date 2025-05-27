@@ -1,4 +1,29 @@
-EXPECTED_ADRESS_COLUMNS = [
+GEOPF_API_URL = "https://data.geopf.fr/geocodage/search/csv"
+GEOPF_EXPECTED_ADDRESS_COLUMNS = [
+    "user_id",
+    "user_full_address",
+    "longitude",
+    "latitude",
+    "result_score",
+    "result_score_next",
+    "result_label",
+    "result_type",
+    "result_id",
+    "result_housenumber",
+    "result_name",
+    "result_street",
+    "result_postcode",
+    "result_city",
+    "result_context",
+    "result_citycode",
+    "result_oldcitycode",
+    "result_oldcity",
+    "result_district",
+    "result_status",
+]
+
+BAN_API_URL = "https://api-adresse.data.gouv.fr/search/csv/"
+BAN_EXPECTED_ADDRESS_COLUMNS = [
     "user_id",
     "user_full_address",
     "longitude",

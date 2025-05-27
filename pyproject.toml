@@ -41,7 +41,6 @@ dev = [
 ]
 
 [tool.uv]
-python = "3.12"
 default-groups = ["airflow", "dbt", 'dev', 'docs']
 
 

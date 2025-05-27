@@ -2,7 +2,7 @@
 ########                    Install and setup the project                      ########
 #######################################################################################
 SHELL := /bin/bash
-
+PYTHON_VERSION := 3.12
 
 export PERSONAL_DBT_USER :=
 export DBT_TARGET_PATH ?= "target"
@@ -90,7 +90,7 @@ _base_install:
 
 	# Create and setup virtual environment
 	@echo "Creating virtual environment..."
-	uv sync
+	uv sync --python $(PYTHON_VERSION)
 
 	@echo "Base installation completed. Activate the environment with: source .venv/bin/activate"
 

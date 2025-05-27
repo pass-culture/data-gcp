@@ -57,48 +57,50 @@ DAG_DOC = """
     """
 
 
-with DAG(
-    "gcp_launch_vm",
-    default_args=default_args,
-    description="Launch a vm to work on",
-    schedule=None,
-    catchup=False,
-    dagrun_timeout=None,
-    template_searchpath=DAG_FOLDER,
-    render_template_as_native_obj=True,  # be careful using this because "3.10" is rendered as 3.1 if not double escaped
-    params={
-        "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
-            type="string",
-        ),
-        "base_dir": Param(
-            default="data-gcp",
-            type="string",
-        ),
-        "instance_type": Param(
-            default=gce_params["instance_type"]["prod"],
-            enum=list(chain(*INSTANCES_TYPES["cpu"].values())),
-        ),
-        "instance_name": Param(default=gce_params["instance_name"], type="string"),
-        "gpu_count": Param(default=0, enum=INSTANCES_TYPES["gpu"]["count"]),
-        "gpu_type": Param(
-            default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
-        ),
-        "gce_zone": Param(default="europe-west-1b", enum=GCE_ZONES),
-        "keep_alive": Param(default=True, type="boolean"),
-        "install_project": Param(default=True, type="boolean"),
-        "use_gke_network": Param(default=False, type="boolean"),
-        "disk_size_gb": Param(default="100", type="string"),
-        "install_type": Param(
-            default="simple", enum=["simple", "engineering", "science", "analytics"]
-        ),
-        "python_version": Param(
-            default="'3.10'",
-            enum=["'3.8'", "'3.9'", "'3.10'", "'3.11'", "'3.12'", "'3.13'"],
-        ),
-    },
-    doc_md=DAG_DOC,
-) as dag:
+with (
+    DAG(
+        "gcp_launch_vm",
+        default_args=default_args,
+        description="Launch a vm to work on",
+        schedule=None,
+        catchup=False,
+        dagrun_timeout=None,
+        template_searchpath=DAG_FOLDER,
+        render_template_as_native_obj=True,  # be careful using this because "3.10" is rendered as 3.1 if not double escaped
+        params={
+            "branch": Param(
+                default="production" if ENV_SHORT_NAME == "prod" else "master",
+                type="string",
+            ),
+            "base_dir": Param(
+                default="data-gcp",
+                type="string",
+            ),
+            "instance_type": Param(
+                default=gce_params["instance_type"]["prod"],
+                enum=list(chain(*INSTANCES_TYPES["cpu"].values())),
+            ),
+            "instance_name": Param(default=gce_params["instance_name"], type="string"),
+            "gpu_count": Param(default=0, enum=INSTANCES_TYPES["gpu"]["count"]),
+            "gpu_type": Param(
+                default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
+            ),
+            "gce_zone": Param(default="europe-west-1b", enum=GCE_ZONES),
+            "keep_alive": Param(default=True, type="boolean"),
+            "install_project": Param(default=True, type="boolean"),
+            "use_gke_network": Param(default=False, type="boolean"),
+            "disk_size_gb": Param(default="100", type="string"),
+            "install_type": Param(
+                default="simple", enum=["simple", "engineering", "science", "analytics"]
+            ),
+            "python_version": Param(
+                default="'3.10'",
+                enum=["'3.8'", "'3.9'", "'3.10'", "'3.11'", "'3.12'", "'3.13'"],
+            ),
+        },
+        doc_md=DAG_DOC,
+    ) as dag
+):
     start = DummyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(

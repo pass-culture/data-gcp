@@ -28,8 +28,14 @@ RUN uv pip install -r requirements.txt
 
 # Install gcloud
 USER root
-RUN apt-get update && apt-get install -y git ca-certificates --no-install-recommends && update-ca-certificates
-RUN curl -LO https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} && tar xf ${GCLOUD_VERSION}
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git ca-certificates curl \
+    && update-ca-certificates \
+    && curl -LO https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} \
+    && tar xf ${GCLOUD_VERSION} \
+    && rm ${GCLOUD_VERSION} \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 ENV PATH=$PATH:$AIRFLOW_USER_HOME/google-cloud-sdk/bin
 
 
@@ -45,5 +51,11 @@ FROM general-builder AS builder-default
 ###################
 ## Final builder ##
 FROM builder-${NETWORK_MODE} AS final-builder
+COPY airflow/scripts/create_pools.py create_pools.py
+COPY airflow/scripts/verify_pools.py verify_pools.py
+COPY airflow/config/pools.json pools.json
+RUN chmod +x create_pools.py verify_pools.py
+
+
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/entrypoint"]
 CMD []

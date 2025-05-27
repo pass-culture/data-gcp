@@ -154,9 +154,9 @@ select
     ofr.offerer_city,
     region_department.academy_name,
     siren_data.activiteprincipaleunitelegale as legal_unit_business_activity_code,
-    siren_data_labels.label_unite_legale as legal_unit_business_activity_label,
+    main_business.main_business_label as legal_unit_business_activity_label,
     siren_data.categoriejuridiqueunitelegale as legal_unit_legal_category_code,
-    siren_data_labels.label_categorie_juridique as legal_unit_legal_category_label,
+    legal_category.legal_category_label as legal_unit_legal_category_label,
     coalesce(
         siren_data.activiteprincipaleunitelegale = '84.11Z', false
     ) as is_local_authority,
@@ -238,10 +238,11 @@ left join
     {{ source("clean", "siren_data") }} as siren_data
     on ofr.offerer_siren = siren_data.siren
 left join
-    {{ source("seed", "siren_data_labels") }} as siren_data_labels
-    on siren_data.activiteprincipaleunitelegale
-    = siren_data_labels.activiteprincipaleunitelegale
-    and cast(siren_data_labels.categoriejuridiqueunitelegale as string)
+    {{ source("seed", "siren_main_business_labels") }} as main_business
+    on siren_data.activiteprincipaleunitelegale = main_business.main_business_code
+left join
+    {{ source("seed", "siren_legal_category_labels") }} as legal_category
+    on cast(legal_category.legal_category_code as string)
     = cast(siren_data.categoriejuridiqueunitelegale as string)
 left join
     dms_adage as first_dms_adage

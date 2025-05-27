@@ -184,7 +184,8 @@ sources:
       - name: qpi_mapping
       - name: rural_city_type_data
       - name: region_department
-      - name: siren_data_labels
+      - name: siren_main_business_labels
+      - name: siren_legal_category_labels
       - name: zrr
 
   - name: ml_preproc

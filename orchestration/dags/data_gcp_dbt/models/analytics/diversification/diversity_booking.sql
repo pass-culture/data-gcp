@@ -1,4 +1,4 @@
-{% set diversification_features = [
+{% set diversity_features = [
     "category",
     "sub_category",
     "format",
@@ -8,10 +8,10 @@
 ] %}
 
 select
-    diversification_raw.user_id,
+    diversity_raw.user_id,
     booking.offer_id,
-    diversification_raw.booking_id,
-    diversification_raw.booking_creation_date,
+    diversity_raw.booking_id,
+    diversity_raw.booking_creation_date,
     booking.offer_category_id as category,
     booking.offer_subcategory_id as subcategory,
     booking.offer_type_label,
@@ -28,11 +28,11 @@ select
         if(booking.digital_goods = true, 'digital', null),
         if(booking.event = true, 'event', null)
     ) as format,
-    {% for feature in diversification_features %}
-        {{ feature }}_diversification {% if not loop.last -%}, {%- endif %}
+    {% for feature in diversity_features %}
+        {{ feature }}_diversity {% if not loop.last -%}, {%- endif %}
     {% endfor %},
-    delta_diversification
-from {{ ref("diversification_raw") }} as diversification_raw
+    diversity_raw.delta_diversity
+from {{ ref("diversity_raw") }} as diversity_raw
 left join
     {{ ref("mrt_global__booking") }} as booking
-    on booking.booking_id = diversification_raw.booking_id
+    on booking.booking_id = diversity_raw.booking_id

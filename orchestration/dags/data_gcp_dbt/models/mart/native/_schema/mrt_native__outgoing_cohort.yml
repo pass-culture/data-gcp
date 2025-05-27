@@ -56,8 +56,8 @@ models:
         description: "{{ doc('column__total_venue_type_label_consulted') }}"
       - name: total_day_between_deposit_and_first_booking
         description: "{{ doc('column__total_day_between_deposit_and_first_booking') }}"
-      - name: total_diversification_score
-        description: "{{ doc('column__total_diversification_score') }}"
+      - name: total_diversity_score
+        description: "{{ doc('column__total_diversity_score') }}"
       - name: total_venue_id_booked
         description: "{{ doc('column__total_venue_id_booked') }}"
       - name: total_venue_type_booked

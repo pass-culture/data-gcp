@@ -76,7 +76,7 @@ select
     count(
         case when uh.booking_id is not null then 1 end
     ) as total_non_cancelled_bookings,
-    sum(db.diversity_score) as total_diversification
+    sum(db.diversity_score) as total_diversity
 from {{ ref("mrt_native__daily_user_home_module") }} as uh
 left join {{ ref("int_applicative__user") }} as u on u.user_id = uh.user_id
 left join {{ ref("mrt_global__booking") }} as db on db.booking_id = uh.booking_id

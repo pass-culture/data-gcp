@@ -38,9 +38,7 @@ with
             users_expired_monthly.deposit_expiration_date,
             users_expired_monthly.user_id,
             sum(booking.diversity_score) as total_diversification,
-            count(
-                distinct booking.offer_category_id
-            ) as total_distinct_category_booked,
+            count(distinct booking.offer_category_id) as total_distinct_category_booked,
             count(
                 distinct booking.venue_type_label
             ) as total_distinct_venue_type_booked,
@@ -52,7 +50,8 @@ with
             {{ ref("mrt_global__booking") }} as booking
             on users_expired_monthly.user_id = booking.user_id
         where not booking.booking_is_cancelled
-        group by users_expired_monthly.deposit_expiration_date, users_expired_monthly.user_id
+        group by
+            users_expired_monthly.deposit_expiration_date, users_expired_monthly.user_id
     ),
 
     consultations as (

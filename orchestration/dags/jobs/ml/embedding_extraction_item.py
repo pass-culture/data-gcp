@@ -154,11 +154,8 @@ def extract_embedding_item_dag(
     gce_stopped = stop_gce()
     pipeline_completed = end()
 
-    # No processing needed
-    skip_completed = end()
-
     # Set task dependencies
-    start_dag >> source_has_data >> branch_decision >> [gce_started, skip_completed]
+    start_dag >> source_has_data >> branch_decision >> [gce_started, pipeline_completed]
     (
         gce_started
         >> dependencies_installed

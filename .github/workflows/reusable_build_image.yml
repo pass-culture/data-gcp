@@ -71,14 +71,19 @@ jobs:
           registry: "${{ env.DOCKER_REGISTRY_REGION }}-docker.pkg.dev"
           username: "oauth2accesstoken"
           password: "${{ steps.openid-auth.outputs.access_token }}"
+      - name: "Set Docker Tags"
+        id: docker_tags
+        run: |
+          tags="${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:${{ steps.sha.outputs.short_sha }}"
+          tags="$tags\n${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:v1"
+          if [ "${{ inputs.TARGET_ENV }}" == "dev" ]; then
+            tags="$tags\n${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:dev"
+          fi
+          echo -e "tags<<EOF\n$tags\nEOF" >> $GITHUB_OUTPUT
       - name: "Build and push docker image"
         uses: docker/build-push-action@v3.2.0
         with:
           context: ${{ env.SOURCE_PATH }}
           file: ${{ env.SOURCE_PATH }}/Dockerfile.k8s-worker
           push: true
-          tags: |
-            ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:${{ steps.sha.outputs.short_sha }}
-            ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:v1
-            if: ${{ inputs.TARGET_ENV == 'dev' }}
-            ${{ steps.vars.outputs.DOCKER_REPO }}/k8s-data/airflow:${ inputs.TARGET_ENV }}
+          tags: ${{ steps.docker_tags.outputs.tags }}

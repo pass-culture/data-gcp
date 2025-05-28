@@ -34,7 +34,7 @@ jobs:
             SLACK_BOT_TOKEN:passculture-metier-ehp/passculture-ci-slack-bot-token
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
       - uses: yezz123/setup-uv@v4
       - name : "Install linters (Ruff & sqlfmt)"
         run: uv sync

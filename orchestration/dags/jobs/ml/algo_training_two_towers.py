@@ -83,78 +83,82 @@ def should_upload_embeddings(**kwargs):
     return "upload_embeddings" if upload_embeddings else "skip_upload_embeddings"
 
 
-with DAG(
-    DAG_NAME,
-    default_args=default_args,
-    description="Custom training job",
-    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME]),
-    catchup=False,
-    dagrun_timeout=timedelta(minutes=1440),
-    user_defined_macros=macros.default,
-    template_searchpath=DAG_FOLDER,
-    render_template_as_native_obj=True,  # be careful using this because "3.10" is rendered as 3.1 if not double escaped
-    doc_md="This DAG is used to train a two-towers model. It takes the data from ml_reco__training_data_click which is computed every day.",
-    tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
-    params={
-        "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
-            type="string",
-        ),
-        "config_file_name": Param(
-            default=train_params["config_file_name"],
-            type="string",
-        ),
-        "batch_size": Param(
-            default=str(train_params["batch_size"]),
-            type="string",
-        ),
-        "embedding_size": Param(
-            default=str(train_params["embedding_size"]),
-            type="string",
-        ),
-        "train_set_size": Param(
-            default=str(train_params["train_set_size"]),
-            type="string",
-        ),
-        "event_day_number": Param(
-            default=str(train_params["event_day_number"]),
-            type="string",
-        ),
-        # TODO: Voir si on peut le supprimer, sinon mettre un enum
-        "input_type": Param(
-            default="click",
-            type="string",
-        ),
-        "instance_type": Param(
-            default=gce_params["instance_type"][ENV_SHORT_NAME],
-            type="string",
-        ),
-        "gpu_type": Param(
-            default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
-        ),
-        "gpu_count": Param(default=1, enum=INSTANCES_TYPES["gpu"]["count"]),
-        "instance_name": Param(
-            default=gce_params["instance_name"]
-            + "-"
-            + train_params["config_file_name"],
-            type="string",
-        ),
-        "run_name": Param(default=train_params["run_name"], type=["string", "null"]),
-        "experiment_name": Param(
-            default=train_params["experiment_name"], type=["string", "null"]
-        ),
-        "upload_embeddings": Param(
-            default=True,
-            type="boolean",
-            description="Whether to upload embeddings to BigQuery after training",
-        ),
-        "evaluate_on_dummy": Param(
-            default=False,
-            type="boolean",
-            description="Whether to evaluate the model on dummy data",
-        ),
-    },
-) as dag:
+with (
+    DAG(
+        DAG_NAME,
+        default_args=default_args,
+        description="Custom training job",
+        schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME][ENV_SHORT_NAME]),
+        catchup=False,
+        dagrun_timeout=timedelta(minutes=1440),
+        user_defined_macros=macros.default,
+        template_searchpath=DAG_FOLDER,
+        render_template_as_native_obj=True,  # be careful using this because "3.10" is rendered as 3.1 if not double escaped
+        doc_md="This DAG is used to train a two-towers model. It takes the data from ml_reco__training_data_click which is computed every day.",
+        tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
+        params={
+            "branch": Param(
+                default="production" if ENV_SHORT_NAME == "prod" else "master",
+                type="string",
+            ),
+            "config_file_name": Param(
+                default=train_params["config_file_name"],
+                type="string",
+            ),
+            "batch_size": Param(
+                default=str(train_params["batch_size"]),
+                type="string",
+            ),
+            "embedding_size": Param(
+                default=str(train_params["embedding_size"]),
+                type="string",
+            ),
+            "train_set_size": Param(
+                default=str(train_params["train_set_size"]),
+                type="string",
+            ),
+            "event_day_number": Param(
+                default=str(train_params["event_day_number"]),
+                type="string",
+            ),
+            # TODO: Voir si on peut le supprimer, sinon mettre un enum
+            "input_type": Param(
+                default="click",
+                type="string",
+            ),
+            "instance_type": Param(
+                default=gce_params["instance_type"][ENV_SHORT_NAME],
+                type="string",
+            ),
+            "gpu_type": Param(
+                default="nvidia-tesla-t4", enum=INSTANCES_TYPES["gpu"]["name"]
+            ),
+            "gpu_count": Param(default=1, enum=INSTANCES_TYPES["gpu"]["count"]),
+            "instance_name": Param(
+                default=gce_params["instance_name"]
+                + "-"
+                + train_params["config_file_name"],
+                type="string",
+            ),
+            "run_name": Param(
+                default=train_params["run_name"], type=["string", "null"]
+            ),
+            "experiment_name": Param(
+                default=train_params["experiment_name"], type=["string", "null"]
+            ),
+            "upload_embeddings": Param(
+                default=True,
+                type="boolean",
+                description="Whether to upload embeddings to BigQuery after training",
+            ),
+            "evaluate_on_dummy": Param(
+                default=False,
+                type="boolean",
+                description="Whether to evaluate the model on dummy data",
+            ),
+        },
+    ) as dag
+):
     start = DummyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(

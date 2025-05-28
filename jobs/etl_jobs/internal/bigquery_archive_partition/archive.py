@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 
 from pydantic import BaseModel
@@ -20,7 +20,7 @@ class JobConfig(BaseModel):
     table_id: str
     dataset_id: str
     partition_column: str
-    look_back_months: int
+    look_back_days: int
     folder: str
     archive: bool
 
@@ -34,10 +34,13 @@ class Archive:
         self.client = bigquery.Client()
         self.folder = config.folder
         self.archive = config.archive
-        self.look_back_months = config.look_back_months
+        self.look_back_days = config.look_back_days
+        self.cutoff_date = (
+            datetime.now() - timedelta(days=self.look_back_days)
+        ).replace(day=1)  # First day of current month - look_back_days
 
         logger.info(
-            f"Initialized Archive for table {self.table_id} with config: {config}"
+            f"Initialized Archive for table {self.table_id} with config: {config}, cutoff_date: {self.cutoff_date}"
         )
 
     def _get_partition_ids(self, limit: int) -> List[str]:
@@ -63,12 +66,11 @@ class Archive:
     def _get_valid_partitions(self, limit: int) -> List[datetime]:
         """Get and validate partition dates."""
         partition_ids = self._get_partition_ids(limit)
-        cutoff_date = datetime.now().replace(day=1)  # First day of current month
 
         valid_partitions = []
         for partition_id in partition_ids:
             partition_date = self._parse_partition_date(partition_id)
-            if partition_date and partition_date < cutoff_date:
+            if partition_date and partition_date < self.cutoff_date:
                 valid_partitions.append(partition_date)
 
         return sorted(valid_partitions)

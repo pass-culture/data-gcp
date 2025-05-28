@@ -139,30 +139,6 @@ make build_with_cache
 
 ---
 
-## :heavy_plus_sign: Adding/removing a requirement package
-
-Add required package to pyproject.toml
-
-* export to format txt for images
-
-```sh
-uv export --format requirements-txt -o airflow/orchestration-requirements.txt
-```
-
-or
-
-```sh
-make compile
-```
-
-* update packge lock
-
-```sh
-make sync
-```
-
----
-
 ## 🧹 Troubleshooting
 
 ### View logs from containers

@@ -21,7 +21,7 @@ check-auth:
 		echo "ADC file older than 3h, re-authenticating…"; \
 		gcloud auth application-default login; \
 	else \
-		echo "ADC file is fresh (≤3h)—no need to re-authenticate."; \
+		echo "ADC file is fresh ( ≤ 3h )—no need to re-authenticate."; \
 	fi
 
 
@@ -46,7 +46,6 @@ start:
 
 _start:
 	docker compose up -d
-	docker compose run --rm create-pools
 	@echo "Waiting for Airflow to start..."
 	@timeout 60 sh -c 'until curl -s http://localhost:8080 > /dev/null; do sleep 2; done' || (echo "Airflow did not start in time. Exiting." && exit 1)
 	@echo "Airflow is ready!"

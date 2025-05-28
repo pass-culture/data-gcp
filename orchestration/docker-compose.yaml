@@ -86,7 +86,7 @@ services:
       args:
         - NETWORK_MODE=${NETWORK_MODE:-default}
     <<: *airflow-common
-    command: "airflow db init"
+    command: "airflow db init && exit 0"
     environment:
       <<: *airflow-common-env
       _AIRFLOW_DB_UPGRADE: 'true'
@@ -110,7 +110,10 @@ services:
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
       _AIRFLOW_WWW_USER_EMAIL: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}admin@example.com
     depends_on:
-      - postgres
-      - airflow-webserver
-      - airflow-scheduler
+      postgres:
+        condition: service_healthy
+      airflow-scheduler:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
     restart: "no"

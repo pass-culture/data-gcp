@@ -11,12 +11,7 @@ returns
         user_theoretical_remaining_credit real,
         booking_cnt integer,
         consult_offer integer,
-        has_added_offer_to_favorites integer,
-        new_user_bookings_count integer,
-        new_user_clicks_count integer,
-        new_user_favorites_count integer,
-        new_user_deposit_amount real,
-        new_user_amount_spent real
+        has_added_offer_to_favorites integer
     )
 as $body$
 BEGIN

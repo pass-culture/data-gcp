@@ -27,7 +27,7 @@ TABLES = {
         "table_id": "firebase_events",
         "dataset_id": f"raw_{ENV_SHORT_NAME}",
         "partition_column": "event_date",
-        "look_back_days": {"dev": 30, "stg": 90, "prod": 365}[ENV_SHORT_NAME],
+        "look_back_days": {"dev": 30, "stg": 90, "prod": 730}[ENV_SHORT_NAME],
         "folder": "tracking",
         "archive": True if ENV_SHORT_NAME == "prod" else False,
     },

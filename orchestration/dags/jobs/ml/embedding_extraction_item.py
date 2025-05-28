@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from common.callback import on_failure_vm_callback
 from common.config import (
+    DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     GCP_REGION,
@@ -46,7 +47,7 @@ DAG_NAME = "embeddings_extraction_item"
     catchup=False,
     dagrun_timeout=timedelta(hours=20),
     user_defined_macros=None,  # Replace with actual macros if needed
-    tags=["ds", "vm", "debug"],
+    tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
 )
 def extract_embedding_item_dag(
     branch="production" if ENV_SHORT_NAME == "prod" else "master",
@@ -74,93 +75,71 @@ def extract_embedding_item_dag(
         return result["count"].values[0] > 0
 
     @task
-    def start_gce(instance_type_resolved: str, **context):
-        operator = StartGCEOperator(
-            task_id="gce_start_task",
-            instance_name=GCE_INSTANCE,
-            preemptible=False,
-            instance_type=instance_type_resolved,
-            retries=2,
-            labels={"job_type": "ml", "dag_name": DAG_NAME},
-        )
-        return operator.execute(context=context)
-
-    @task
-    def fetch_install_code(branch_resolved: str, **context):
-        operator = InstallDependenciesOperator(
-            task_id="fetch_install_code",
-            instance_name=GCE_INSTANCE,
-            branch=branch_resolved,
-            python_version="3.10",
-            base_dir=BASE_PATH,
-        )
-        return operator.execute(context=context)
-
-    @task
-    def extract_embedding(
-        config_file_name_resolved: str,
-        batch_size_resolved: int,
-        max_rows_to_process_resolved: int,
-        **context,
-    ):
-        operator = SSHGCEOperator(
-            task_id="extract_embedding",
-            instance_name=GCE_INSTANCE,
-            base_dir=BASE_PATH,
-            environment=DAG_CONFIG,
-            command="mkdir -p img && PYTHONPATH=. python main.py "
-            f"--gcp-project {GCP_PROJECT_ID} "
-            f"--config-file-name {config_file_name_resolved} "
-            f"--batch-size {batch_size_resolved} "
-            f"--max-rows-to-process {max_rows_to_process_resolved} "
-            f"--input-dataset-name {INPUT_DATASET_NAME} "
-            f"--input-table-name {INPUT_TABLE_NAME} "
-            f"--output-dataset-name {OUTPUT_DATASET_NAME} "
-            f"--output-table-name {OUTPUT_TABLE_NAME} ",
-            deferrable=True,
-            poll_interval=300,
-        )
-        return operator.execute(context=context)
-
-    @task
-    def stop_gce(**context):
-        operator = DeleteGCEOperator(task_id="stop_gce", instance_name=GCE_INSTANCE)
-        return operator.execute(context=context)
-
-    @task
     def end():
         return "completed"
 
-    # Create conditional flow based on source data availability
     @task.branch
     def decide_next_step(has_data: bool):
         if has_data:
             return "start_gce"
         return "end"
 
-    # Define task flow
+    # Use operator classes directly instead of @task decorators
+    start_gce_op = StartGCEOperator(
+        task_id="start_gce",
+        instance_name=GCE_INSTANCE,
+        preemptible=False,
+        instance_type=instance_type,
+        retries=2,
+        labels={"job_type": "ml", "dag_name": DAG_NAME},
+    )
 
-    # Processing pipeline (only runs if data exists)
+    fetch_install_code_op = InstallDependenciesOperator(
+        task_id="fetch_install_code",
+        instance_name=GCE_INSTANCE,
+        branch=branch,
+        python_version="3.10",
+        base_dir=BASE_PATH,
+    )
+
+    extract_embedding_op = SSHGCEOperator(
+        task_id="extract_embedding",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        environment=DAG_CONFIG,
+        command="mkdir -p img && PYTHONPATH=. python main.py "
+        f"--gcp-project {GCP_PROJECT_ID} "
+        f"--config-file-name {config_file_name} "
+        f"--batch-size {batch_size} "
+        f"--max-rows-to-process {max_rows_to_process} "
+        f"--input-dataset-name {INPUT_DATASET_NAME} "
+        f"--input-table-name {INPUT_TABLE_NAME} "
+        f"--output-dataset-name {OUTPUT_DATASET_NAME} "
+        f"--output-table-name {OUTPUT_TABLE_NAME} ",
+        deferrable=True,
+        poll_interval=300,
+    )
+
+    stop_gce_op = DeleteGCEOperator(task_id="stop_gce", instance_name=GCE_INSTANCE)
+
+    # Define task flow
     start_dag = start()
     source_has_data = check_source_count()
     branch_decision = decide_next_step(source_has_data)
-    gce_started = start_gce(instance_type_resolved=instance_type)
-    dependencies_installed = fetch_install_code(branch_resolved=branch)
-    embeddings_extracted = extract_embedding(
-        config_file_name_resolved=config_file_name,
-        batch_size_resolved=batch_size,
-        max_rows_to_process_resolved=max_rows_to_process,
-    )
-    gce_stopped = stop_gce()
     pipeline_completed = end()
 
     # Set task dependencies
-    start_dag >> source_has_data >> branch_decision >> [gce_started, pipeline_completed]
     (
-        gce_started
-        >> dependencies_installed
-        >> embeddings_extracted
-        >> gce_stopped
+        start_dag
+        >> source_has_data
+        >> branch_decision
+        >> [start_gce_op, pipeline_completed]
+    )
+    (
+        start_gce_op
+        >> fetch_install_code_op
+        >> extract_embedding_op
+        >> stop_gce_op
         >> pipeline_completed
     )
 

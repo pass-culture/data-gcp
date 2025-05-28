@@ -5,6 +5,7 @@ volumes:
 x-airflow-common: &airflow-common
   environment: &airflow-common-env
     LOCAL_ENV: ${LOCAL_ENV:-1}
+    LOCAL_TAG: ${LOCAL_TAG:-local-airflow}
     GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
     AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-}
     AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: ${AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT:-}

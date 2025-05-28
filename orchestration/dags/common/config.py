@@ -33,7 +33,10 @@ GCE_ZONE = "europe-west1-b"
 
 GCE_SA = os.environ.get("GCE_SA", f"algo-training-{ENV_SHORT_NAME}")
 
-DEPLOYMENT_TAG = os.environ.get("DEPLOYMENT_TAG", "local-airflow")
+
+DEPLOYMENT_TAG = os.environ.get(
+    "DEPLOYMENT_TAG", os.environ.get("LOCAL_TAG", "local-airflow")
+)
 
 GCE_BASE_PREFIX = f"{DEPLOYMENT_TAG}-{ENV_SHORT_NAME}"
 

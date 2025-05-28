@@ -5,7 +5,6 @@
 
 select
     thumbcount as thumb_count,
-    idatproviders as id_at_providers,
     datemodifiedatlastprovider as date_modified_at_last_provider,
     id,
     datecreated as date_created,
@@ -14,7 +13,6 @@ select
     offerid as offer_id,
     credit,
     isactive as is_active,
-    fieldsupdated as fields_updated,
     case when isactive and thumbcount > 0 then 1 else 0 end as is_mediation,
     {{ target_schema }}.humanize_id(id) as mediation_humanized_id,
     row_number() over (

@@ -152,7 +152,7 @@ select
         offset as pos2 on pos = pos2  -- noqa: RF01, RF02
     ) as item_user_similarity,
     st_distance(
-        offer_features.offer_centroid, user_features.user_centroid
+        offer_features.offer_centroid, user_daily_iris_location.user_centroid
     ) as offer_user_distance
 
 from home_interactions

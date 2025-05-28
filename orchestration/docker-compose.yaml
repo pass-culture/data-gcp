@@ -66,6 +66,18 @@ services:
     depends_on:
       - airflow-init
 
+  airflow-triggerer:
+    image: airflow-custom-image:latest
+    <<: *airflow-common
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      - airflow-init
+
   airflow-init:
     build:
       context: .

@@ -109,9 +109,9 @@ def extract_embedding_item_dag(
         environment=DAG_CONFIG,
         command="mkdir -p img && PYTHONPATH=. python main.py "
         f"--gcp-project {GCP_PROJECT_ID} "
-        f"--config-file-name {config_file_name} "
-        f"--batch-size {batch_size} "
-        f"--max-rows-to-process {max_rows_to_process} "
+        "--config-file-name {{ params.config_file_name }} "
+        "--batch-size {{ params.batch_size }} "
+        "--max-rows-to-process {{ params.max_rows_to_process }} "
         f"--input-dataset-name {INPUT_DATASET_NAME} "
         f"--input-table-name {INPUT_TABLE_NAME} "
         f"--output-dataset-name {OUTPUT_DATASET_NAME} "

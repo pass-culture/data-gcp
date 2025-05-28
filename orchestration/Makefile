@@ -1,5 +1,6 @@
 SHELL := /bin/bash
 
+
 # Age threshold in minutes 3h
 ADC_MAX_AGE_MIN := 180
 
@@ -12,14 +13,6 @@ else
 	ADC_FILE := $(HOME)/.config/gcloud/application_default_credentials.json
 endif
 
-sync:
-	uv sync --no-cache-dir
-
-compile:
-	uv export --format requirements-txt -o airflow/orchestration-requirements.txt --python=python3.10
-	uv export --format requirements-txt -o k8s-airflow/k8s-worker-requirements.txt --python=python3.10
-
-
 check-auth:
 	@if [ ! -f "$(ADC_FILE)" ]; then \
 		echo "No ADC file found, authenticating…"; \
@@ -30,6 +23,7 @@ check-auth:
 	else \
 		echo "ADC file is fresh (≤3h)—no need to re-authenticate."; \
 	fi
+
 
 auth:
 	make check-auth
@@ -60,5 +54,6 @@ _start:
 
 stop:
 	docker compose stop;
+
 show_airflow_logs:
 	docker compose logs -f;

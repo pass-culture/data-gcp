@@ -1,6 +1,5 @@
 SELECT
     "thumbCount"
-    , CAST("idAtProviders" AS varchar(255))
     , "dateModifiedAtLastProvider"
     , CAST("id" AS varchar(255))
     , "dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as dateCreated
@@ -9,5 +8,4 @@ SELECT
     , CAST("offerId" AS varchar(255))
     , "credit"
     , "isActive"
-    , "fieldsUpdated"
 FROM public.mediation

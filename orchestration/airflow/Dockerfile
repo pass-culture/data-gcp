@@ -53,8 +53,9 @@ FROM general-builder AS builder-default
 FROM builder-${NETWORK_MODE} AS final-builder
 COPY airflow/scripts/create_pools.py create_pools.py
 COPY airflow/scripts/verify_pools.py verify_pools.py
+COPY airflow/scripts/sync_pools.py sync_pools.py
 COPY airflow/config/pools.json pools.json
-RUN chmod +x create_pools.py verify_pools.py
+RUN chmod +x create_pools.py verify_pools.py airflow_pools.py
 
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/entrypoint"]

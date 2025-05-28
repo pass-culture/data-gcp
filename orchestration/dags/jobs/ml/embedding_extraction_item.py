@@ -84,8 +84,7 @@ def extract_embedding_item_dag(
             return "start_gce"
         return "end"
 
-    # Use operator classes directly instead of @task decorators
-    start_gce_op = StartGCEOperator(
+    start_gce = StartGCEOperator(
         task_id="start_gce",
         instance_name=GCE_INSTANCE,
         preemptible=False,
@@ -94,7 +93,7 @@ def extract_embedding_item_dag(
         labels={"job_type": "ml", "dag_name": DAG_NAME},
     )
 
-    fetch_install_code_op = InstallDependenciesOperator(
+    fetch_install_code = InstallDependenciesOperator(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch=branch,
@@ -102,7 +101,7 @@ def extract_embedding_item_dag(
         base_dir=BASE_PATH,
     )
 
-    extract_embedding_op = SSHGCEOperator(
+    extract_embedding = SSHGCEOperator(
         task_id="extract_embedding",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
@@ -120,7 +119,7 @@ def extract_embedding_item_dag(
         poll_interval=300,
     )
 
-    stop_gce_op = DeleteGCEOperator(task_id="stop_gce", instance_name=GCE_INSTANCE)
+    stop_gce = DeleteGCEOperator(task_id="stop_gce", instance_name=GCE_INSTANCE)
 
     # Define task flow
     start_dag = start()
@@ -129,17 +128,12 @@ def extract_embedding_item_dag(
     pipeline_completed = end()
 
     # Set task dependencies
+    (start_dag >> source_has_data >> branch_decision >> [start_gce, pipeline_completed])
     (
-        start_dag
-        >> source_has_data
-        >> branch_decision
-        >> [start_gce_op, pipeline_completed]
-    )
-    (
-        start_gce_op
-        >> fetch_install_code_op
-        >> extract_embedding_op
-        >> stop_gce_op
+        start_gce
+        >> fetch_install_code
+        >> extract_embedding
+        >> stop_gce
         >> pipeline_completed
     )
 

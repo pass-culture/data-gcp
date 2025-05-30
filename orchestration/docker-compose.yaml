@@ -6,6 +6,7 @@ x-airflow-common: &airflow-common
   environment: &airflow-common-env
     LOCAL_ENV: ${LOCAL_ENV:-1}
     LOCAL_TAG: ${LOCAL_TAG:-local-airflow}
+    DEPLOYMENT_TAG: ${DEPLOYMENT_TAG:-local-airflow}
     GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
     AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-}
     AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: ${AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT:-}
@@ -71,6 +72,8 @@ services:
     image: airflow-custom-image:latest
     <<: *airflow-common
     command: triggerer
+    ports:
+      - "8794:8794"
     healthcheck:
       test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
       interval: 10s

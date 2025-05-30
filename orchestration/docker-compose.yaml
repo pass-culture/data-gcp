@@ -5,17 +5,20 @@ volumes:
 x-airflow-common: &airflow-common
   environment: &airflow-common-env
     LOCAL_ENV: ${LOCAL_ENV:-1}
+    LOCAL_TAG: ${LOCAL_TAG:-local-airflow}
+    DEPLOYMENT_TAG: ${DEPLOYMENT_TAG:-local-airflow}
     GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
     AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-}
     AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: ${AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT:-}
     AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY:-}
     ENV_SHORT_NAME: ${ENV_SHORT_NAME:-}
     APPLICATIVE_EXTERNAL_CONNECTION_ID: ${APPLICATIVE_EXTERNAL_CONNECTION_ID:-}
+    AIRFLOW__CORE__LOAD_EXAMPLES: false
   volumes:
     - ./dags:/opt/airflow/dags
     - ./plugins:/opt/airflow/plugins
-    - ./airflow/config/airflow.cfg:/opt/airflow/airflow.cfg
     - ./airflow/logs:/opt/airflow/logs
+    - ./airflow/config/airflow.cfg:/opt/airflow/airflow.cfg
     - ./dags/data_gcp_dbt:/opt/airflow/data_gcp_dbt
     - ~/.config/gcloud:/root/.config/gcloud
   user: root
@@ -65,6 +68,21 @@ services:
     depends_on:
       - airflow-init
 
+  airflow-triggerer:
+    image: airflow-custom-image:latest
+    <<: *airflow-common
+    command: triggerer
+    ports:
+      - "8794:8794"
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    depends_on:
+      - airflow-init
+
   airflow-init:
     build:
       context: .
@@ -73,7 +91,7 @@ services:
       args:
         - NETWORK_MODE=${NETWORK_MODE:-default}
     <<: *airflow-common
-    command: "airflow db init"
+    command: "airflow db init && exit 0"
     environment:
       <<: *airflow-common-env
       _AIRFLOW_DB_UPGRADE: 'true'
@@ -87,18 +105,16 @@ services:
       postgres:
         condition: service_healthy
 
-  create-pools:
+  sync-pools:
     <<: *airflow-common
     image: airflow-custom-image:latest
-    entrypoint: ["uv"]
-    command: ["run","/opt/airflow/create_pools.py"]
+    entrypoint: ["uv", "run","/opt/airflow/sync_pools.py","sync"]
     environment:
       <<: *airflow-common-env
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
       _AIRFLOW_WWW_USER_EMAIL: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}admin@example.com
     depends_on:
-      - postgres
-      - airflow-webserver
-      - airflow-scheduler
-    restart: "no"
+      postgres:
+        condition: service_healthy
+    restart: "on-failure"

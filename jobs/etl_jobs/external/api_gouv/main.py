@@ -4,7 +4,7 @@ import pandas as pd
 import typer
 
 from utils import chunks, query, save
-from utils.constant import EXPECTED_ADRESS_COLUMNS
+from utils.constant import GEOPF_EXPECTED_ADDRESS_COLUMNS as EXPECTED_ADDRESS_COLUMNS
 from utils.geocoding import AddressGeocoder
 
 run = typer.Typer()
@@ -36,7 +36,7 @@ def user_adress(
         results.extend(r)
         print(f"Processed {len(r)} rows... ")
 
-    df_results = pd.DataFrame(results, columns=EXPECTED_ADRESS_COLUMNS)
+    df_results = pd.DataFrame(results, columns=EXPECTED_ADDRESS_COLUMNS)
     df_results["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"Saving {df_results.shape[0]} rows... ")
     save(df_results, destination_dataset_id, destination_table_name)

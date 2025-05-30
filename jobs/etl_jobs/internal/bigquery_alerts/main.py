@@ -1,46 +1,39 @@
-from utils import (
-    get_datasets_to_scan,
-    get_last_update_date,
-    get_table_schedule,
-    schedule_mapping,
-    table_name_contains_partition_date,
-)
-import re
 import typer
-import pandas as pd
+from core import BigQueryAlerts, AlertConfig
+from utils import SLACK_DBT_TEST_CHANNEL_WEBHOOK_TOKEN, GCP_PROJECT_ID, ENV_SHORT_NAME
 
 
-def run():
-    datasets_to_scan = get_datasets_to_scan()
+def run(
+    archive_days: int = typer.Option(
+        14, help="Number of days before archiving a table"
+    ),
+    archive_dataset: str = typer.Option(None, help="Dataset to archive tables to"),
+    delete_instead_of_archive: bool = typer.Option(
+        False, help="Delete tables instead of archiving them"
+    ),
+    skip_slack_alerts: bool = typer.Option(False, help="Skip sending Slack alerts"),
+):
+    try:
+        config = AlertConfig(
+            project_id=GCP_PROJECT_ID,
+            env_short_name=ENV_SHORT_NAME,
+            webhook_url=SLACK_DBT_TEST_CHANNEL_WEBHOOK_TOKEN,
+            archive_days_threshold=archive_days,
+            archive_dataset=archive_dataset,
+            delete_instead_of_archive=delete_instead_of_archive,
+            skip_slack_alerts=skip_slack_alerts,
+        )
+    except ValueError as e:
+        typer.echo(f"Error in configuration: {str(e)}", err=True)
+        raise typer.Exit(1)
 
-    table_last_update_df = get_last_update_date(datasets_to_scan)
+    alerts = BigQueryAlerts(config)
+    warning_tables = alerts.get_warning_tables()
 
-    table_schedule_df = get_table_schedule()
+    if not skip_slack_alerts:
+        alerts.send_slack_alert(warning_tables)
 
-    df = table_last_update_df.merge(
-        table_schedule_df, on=["table_schema", "table_name"], how="left"
-    ).assign(
-        full_table_name=lambda _df: _df["table_schema"] + "." + _df["table_name"],
-        schedule_tag=lambda _df: _df["schedule_tag"].fillna("default"),
-        last_modified_time=lambda _df: pd.to_datetime(
-            _df["last_modified_time"]
-        ).dt.tz_localize(None),
-        is_partition_table=lambda _df: _df["table_name"].apply(
-            table_name_contains_partition_date
-        ),
-    )
-
-    warning_tables = df[
-        df["last_modified_time"] < df["schedule_tag"].map(schedule_mapping)
-    ]
-
-    warning_tables = warning_tables[warning_tables.is_partition_table == False]
-
-    warning_tables_list = warning_tables["full_table_name"].to_list()
-
-    print(f"{warning_tables_list}")
-
-    return f"{warning_tables_list}"
+    return
 
 
 if __name__ == "__main__":

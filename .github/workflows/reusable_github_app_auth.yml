@@ -1,0 +1,38 @@
+name: "GitHub App Authentication"
+
+on:
+  workflow_call:
+    inputs:
+      permission-contents:
+        description: "Permission level for contents"
+        type: string
+        default: "write"
+      permission-pull-requests:
+        description: "Permission level for pull requests"
+        type: string
+        default: "write"
+      repositories:
+        description: "List of repositories to grant access to (one per line)"
+        type: string
+        default: "${{ github.repository }}"
+    outputs:
+      token:
+        description: "The GitHub App token"
+        value: ${{ jobs.github-app-auth.outputs.token }}
+
+jobs:
+  github-app-auth:
+    runs-on: ubuntu-latest
+    outputs:
+      token: ${{ steps.github-token.outputs.token }}
+    steps:
+      - name: Get GitHub App Token
+        id: github-token
+        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e
+        with:
+          app-id: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
+          private-key: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ inputs.repositories }}
+          permission-contents: ${{ inputs.permission-contents }}
+          permission-pull-requests: ${{ inputs.permission-pull-requests }} 

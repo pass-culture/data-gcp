@@ -22,7 +22,13 @@ on:
         required: true
 
 jobs:
+  get-token:
+    uses: ./.github/workflows/reusable_github_app_auth.yml
+    with:
+      permission-contents: write
+
   dbt-build:
+    needs: get-token
     name: "dbt-build"
     runs-on: ubuntu-latest
     environment: ${{ inputs.GITHUB_ENV_NAME }}

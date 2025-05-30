@@ -12,6 +12,11 @@ permissions:
   id-token: write
 
 jobs:
+  get-token:
+    uses: ./.github/workflows/reusable_github_app_auth.yml
+    with:
+      permission-contents: write
+
   linter:
     uses: ./.github/workflows/reusable_linter.yml
     with:
@@ -124,11 +129,11 @@ jobs:
   mkdocs-deploy-on-prod:
     if: github.ref == 'refs/heads/production'
     uses: ./.github/workflows/reusable_deploy_mkdocs.yml
-    needs: [linter]
+    needs: [linter, get-token]
     with:
       ENV_SHORT_NAME: "prod"
       APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_PROD }}
-
+      GITHUB_TOKEN: ${{ needs.get-token.outputs.token }}
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
@@ -157,6 +162,7 @@ jobs:
           else
             echo "output=false" >> $GITHUB_OUTPUT
           fi
+
   k8s-deploy-on-dev:
     needs: [find-build-job]
     if: ${{ needs.find-build-job.outputs.has-changed == 'true' && ( github.ref == 'refs/heads/production' || github.event_name == 'workflow_dispatch' )}}

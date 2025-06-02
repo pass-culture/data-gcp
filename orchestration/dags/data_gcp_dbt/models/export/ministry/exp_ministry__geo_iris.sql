@@ -1,5 +1,6 @@
 select
     iris_internal_id,
+    iris_code,
     iris_label,
     city_code,
     city_label,

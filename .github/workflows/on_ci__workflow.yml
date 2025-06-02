@@ -8,13 +8,14 @@ permissions:
   id-token: write
 
 jobs:
-  get-token:
-    uses: ./.github/workflows/reusable_github_app_auth.yml
-    with:
-      permission-contents: write
-    secrets:
-      PASSCULTURE_GITHUB_ACTION_APP_ID: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
-      PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
+  # get-token:
+  #   uses: ./.github/workflows/reusable_github_app_auth.yml
+  #   with:
+  #     permission-contents: write
+      
+  #   secrets:
+  #     PASSCULTURE_GITHUB_ACTION_APP_ID: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
+  #     PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
 
   linter:
     uses: ./.github/workflows/reusable_linter.yml

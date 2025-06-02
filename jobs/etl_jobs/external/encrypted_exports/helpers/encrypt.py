@@ -87,7 +87,7 @@ def process_batch(
             COPY (
                     SELECT
                         *
-                    FROM read_parquet(['{files_list}'], union_by_name=True)
+                    FROM read_parquet(['{files_list}'])
                 )
             TO '{output_gcs_path}'
             (FORMAT 'parquet', ENCRYPTION_CONFIG {{footer_key: 'key256'}}, COMPRESSION 'zstd');
@@ -135,7 +135,7 @@ def process_encryption(
             start_time = time.time()
 
             # Define input and output paths
-            input_folder = Path(partner_name) / export_date / table
+            input_folder = Path(partner_name) / export_date / table / "*.parquet"
             output_folder = Path(ENCRYPTED_FOLDER) / partner_name / export_date / table
 
             # Get list of all parquet files

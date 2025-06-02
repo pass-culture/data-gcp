@@ -62,6 +62,9 @@ def process_transfer(
 
         success_count = 0
         fail_count = 0
+        logger.info(
+            f"Transferring {len(file_blobs)} files to {s3_config['target_s3_name']}"
+        )
 
         # Use ThreadPoolExecutor for parallel transfers
         with ThreadPoolExecutor(max_workers=max_workers) as executor:

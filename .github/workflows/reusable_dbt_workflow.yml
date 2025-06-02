@@ -27,8 +27,8 @@ jobs:
     with:
       permission-contents: write
     secrets:
-      app-id: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
-      private-key: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
+      PASSCULTURE_GITHUB_ACTION_APP_ID: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
+      PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
 
   dbt-build:
     needs: get-token

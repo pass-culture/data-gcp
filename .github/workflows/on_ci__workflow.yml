@@ -115,7 +115,7 @@ jobs:
       JOB_PATH: ${{ matrix.job }}
 
   find-changed-orchestration:
-    needs: get-token
+    # needs: get-token
     runs-on: ubuntu-latest
     outputs:
       run_tests: ${{ steps.changed-orchestration-files.outputs.any_modified }}

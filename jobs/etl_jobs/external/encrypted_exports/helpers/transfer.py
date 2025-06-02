@@ -4,6 +4,7 @@ from typing import List, Dict, Any
 from google.cloud import storage
 from helpers.utils import (
     FILE_EXTENSION,
+    ENCRYPTED_FOLDER,
     init_s3_client,
     logger,
     load_target_bucket_config,
@@ -36,8 +37,8 @@ def process_transfer(
     s3_config = load_target_bucket_config(partner_name)
 
     s3_client = init_s3_client(s3_config)
-    tmp_encrypted_folder = "tmp_encrypted_parquet"
-    encrypted_base = os.path.join(tmp_encrypted_folder, partner_name, export_date)
+
+    encrypted_base = os.path.join(ENCRYPTED_FOLDER, partner_name, export_date)
     client = storage.Client()
     bucket = client.get_bucket(gcs_bucket)
 

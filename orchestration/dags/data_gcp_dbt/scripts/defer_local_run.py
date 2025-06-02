@@ -98,11 +98,11 @@ def dbt_cmd(
     Exécute une commande dbt avec support du deferral inter-GCP project.
     """
     load_dotenv(find_dotenv())
+    set_connection_id(defer_to, "local")
 
     # Sync artifacts si demandé
     state_path = None
     if defer_to:
-        set_connection_id(defer_to, "yest")
         state_path = f"env-run-artifacts/{defer_to}"
         if refresh_state or not (
             Path(f"{state_path}/manifest.json").exists()

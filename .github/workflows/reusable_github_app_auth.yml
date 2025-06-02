@@ -15,6 +15,12 @@ on:
         description: "List of repositories to grant access to (one per line)"
         type: string
         default: "${{ github.repository }}"
+    secrets:
+      PASSCULTURE_GITHUB_ACTION_APP_ID:
+        required: true
+      PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY:
+        required: true
+
     outputs:
       token:
         description: "The GitHub App token"
@@ -28,11 +34,11 @@ jobs:
     steps:
       - name: Get GitHub App Token
         id: github-token
-        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e
+        uses: actions/create-github-app-token@v2
         with:
           app-id: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
           private-key: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ inputs.repositories }}
           permission-contents: ${{ inputs.permission-contents }}
-          permission-pull-requests: ${{ inputs.permission-pull-requests }} 
+          permission-pull-requests: ${{ inputs.permission-pull-requests }}

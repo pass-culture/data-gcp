@@ -26,6 +26,9 @@ jobs:
     uses: ./.github/workflows/reusable_github_app_auth.yml
     with:
       permission-contents: write
+    secrets:
+      app-id: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
+      private-key: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
 
   dbt-build:
     needs: get-token

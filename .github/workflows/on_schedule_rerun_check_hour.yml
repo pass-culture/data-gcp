@@ -14,6 +14,9 @@ jobs:
     with:
       permission-contents: write
       permission-pull-requests: write
+    secrets:
+      app-id: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
+      private-key: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
 
   re-run-worflow:
     needs: get-token

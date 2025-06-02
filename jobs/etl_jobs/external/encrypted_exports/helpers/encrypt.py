@@ -135,7 +135,7 @@ def process_encryption(
             start_time = time.time()
 
             # Define input and output paths
-            input_folder = Path(partner_name) / export_date / table / "*.parquet"
+            input_folder = Path(partner_name) / export_date / table / ""
             output_folder = Path(ENCRYPTED_FOLDER) / partner_name / export_date / table
 
             # Get list of all parquet files

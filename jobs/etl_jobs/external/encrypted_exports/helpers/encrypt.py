@@ -6,14 +6,12 @@ from fsspec import filesystem
 from pathlib import Path
 from google.cloud import storage
 import concurrent.futures
-import multiprocessing
 from helpers.utils import (
     logger,
+    ENCRYPTED_FOLDER,
+    DEFAULT_BATCH_SIZE,
+    DEFAULT_MAX_WORKERS,
 )
-
-ENCRYPTED_FOLDER = "tmp_encrypted_folder"
-BATCH_SIZE = 10
-MAX_WORKERS = multiprocessing.cpu_count()
 
 
 @contextmanager
@@ -117,8 +115,8 @@ def process_encryption(
     export_date: str,
     table_list: List[str],
     encryption_key: str,
-    batch_size: int = BATCH_SIZE,
-    max_workers: int = MAX_WORKERS,
+    batch_size: int = DEFAULT_BATCH_SIZE,
+    max_workers: int = DEFAULT_MAX_WORKERS,
 ) -> None:
     """
     Encrypt parquet files directly from GCS to GCS using DuckDB.

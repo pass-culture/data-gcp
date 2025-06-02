@@ -45,6 +45,7 @@ def transfer(
     gcs_bucket: str = typer.Option(..., help="GCS bucket name"),
     export_date: str = typer.Option(..., help="Export date"),
     table_list: str = typer.Option(..., help="String list of tables to encrypt"),
+    max_workers: int = typer.Option(DEFAULT_MAX_WORKERS, help="Max CPU workers"),
 ) -> None:
     """
     Transfer encrypted parquet files from GCS to an S3-compatible bucket.
@@ -53,7 +54,9 @@ def transfer(
     each table, it retrieves the encrypted parquet files from GCS and uploads them to the target S3 bucket.
     """
     table_list = ast.literal_eval(table_list)
-    process_transfer(partner_name, gcs_bucket, export_date, table_list)
+    process_transfer(
+        partner_name, gcs_bucket, export_date, table_list, max_workers=max_workers
+    )
 
 
 if __name__ == "__main__":

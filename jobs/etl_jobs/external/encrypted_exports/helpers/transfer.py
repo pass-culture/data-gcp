@@ -1,5 +1,6 @@
 import os
 import io
+import time
 from typing import List, Dict, Any
 from google.cloud import storage
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -7,6 +8,7 @@ from helpers.utils import (
     FILE_EXTENSION,
     ENCRYPTED_FOLDER,
     DEFAULT_MAX_WORKERS,
+    DEFAULT_BATCH_SIZE,
     init_s3_client,
     logger,
     load_target_bucket_config,
@@ -62,8 +64,17 @@ def process_transfer(
 
         success_count = 0
         fail_count = 0
+        total_files = len(
+            [blob for blob in file_blobs if blob.name.endswith(FILE_EXTENSION)]
+        )
+        start_time = time.time()
+        total_batches = (
+            total_files + DEFAULT_BATCH_SIZE - 1
+        ) // DEFAULT_BATCH_SIZE  # Ceiling division
+
         logger.info(
-            f"Transferring {len(file_blobs)} files to {s3_config['target_s3_name']}"
+            f"Starting transfer for table {table}: {total_files} files in {total_batches} batches "
+            f"to {s3_config['target_s3_name']}"
         )
 
         # Use ThreadPoolExecutor for parallel transfers
@@ -78,6 +89,8 @@ def process_transfer(
             }
 
             # Process completed transfers as they finish
+            processed = 0
+            current_batch = 0
             for future in as_completed(future_to_blob):
                 blob = future_to_blob[future]
                 try:
@@ -85,6 +98,27 @@ def process_transfer(
                         success_count += 1
                     else:
                         fail_count += 1
+
+                    processed += 1
+                    new_batch = (processed - 1) // DEFAULT_BATCH_SIZE + 1
+
+                    # Only log when we complete a batch or it's the last file
+                    if new_batch > current_batch or processed == total_files:
+                        current_batch = new_batch
+                        current_duration = time.time() - start_time
+                        transfer_rate = (
+                            processed / current_duration if current_duration > 0 else 0
+                        )
+
+                        batch_start = (current_batch - 1) * DEFAULT_BATCH_SIZE + 1
+                        batch_end = min(current_batch * DEFAULT_BATCH_SIZE, total_files)
+
+                        logger.info(
+                            f"Batch {current_batch}/{total_batches} complete: "
+                            f"files {batch_start}-{batch_end} of {total_files} "
+                            f"({(processed/total_files*100):.1f}%) "
+                            f"at {transfer_rate:.2f} files/s"
+                        )
                 except Exception as e:
                     logger.error(f"Error processing {blob.name}: {e}")
                     fail_count += 1

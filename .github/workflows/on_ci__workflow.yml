@@ -60,7 +60,7 @@ jobs:
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
   find-test-jobs:
-    needs: get-token
+    # needs: get-token
     outputs:
       jobs: ${{ steps.compute.outputs.jobs }}
     runs-on: ubuntu-latest

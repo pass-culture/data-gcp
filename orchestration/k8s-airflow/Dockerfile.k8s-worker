@@ -19,6 +19,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV PATH=$PATH:$AIRFLOW_USER_HOME/google-cloud-sdk/bin
 
+# make sure /opt/airflow/logs exists and is owned by airflow:airflow
+RUN mkdir -p /opt/airflow/logs \
+    && chown -R airflow:airflow /opt/airflow/logs
+
 # Install python dependencies
 USER airflow
 

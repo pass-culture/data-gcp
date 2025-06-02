@@ -39,6 +39,6 @@ jobs:
           app-id: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
           private-key: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
-          repositories: ${{ inputs.repositories }}
+          repositories: data-gcp
           permission-contents: ${{ inputs.permission-contents }}
           permission-pull-requests: ${{ inputs.permission-pull-requests }}

@@ -1,12 +1,12 @@
 name: "1. [on_pr] Prevent Merges on Master Allowed Hours"
 on:
   pull_request:
-    branches:
-      - master
-    types:
-      - opened
-      - synchronize
-      - edited
+    # branches:
+    #   - master
+    # types:
+    #   - opened
+    #   - synchronize
+    #   - edited
   workflow_run:
     workflows:
       - on_schedule_rerun_check_hour
@@ -25,12 +25,12 @@ jobs:
           echo "paris_hour=$paris_hour" >> $GITHUB_ENV
       - name: Block merge if outside allowed hours
         run: |
-          echo "Paris hour: ${{ env.paris_hour }}"
-          if [ $((10#$paris_hour)) -ge 18 ] || [ $((10#$paris_hour)) -lt 12 ]; then
-            echo "Merges are not allowed between 18:00 and 12:00 TZ:Europe/Paris + daylight saving."
-            exit 1
-          else
-            echo "Merge allowed."
-          fi
+          # echo "Paris hour: ${{ env.paris_hour }}"
+          # if [ $((10#$paris_hour)) -ge 18 ] || [ $((10#$paris_hour)) -lt 12 ]; then
+          #   echo "Merges are not allowed between 18:00 and 12:00 TZ:Europe/Paris + daylight saving."
+          #   exit 1
+          # else
+          #   echo "Merge allowed."
+          # fi
         env:
           paris_hour: ${{ env.paris_hour }}

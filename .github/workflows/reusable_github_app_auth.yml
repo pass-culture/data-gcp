@@ -41,4 +41,4 @@ jobs:
           owner: ${{ github.repository_owner }}
           repositories: data-gcp
           permission-contents: ${{ inputs.permission-contents }}
-          permission-pull-requests: ${{ inputs.permission-pull-requests }}
+          # permission-pull-requests: ${{ inputs.permission-pull-requests }}

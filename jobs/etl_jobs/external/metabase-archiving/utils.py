@@ -38,7 +38,7 @@ rules = [
                 OR (total_views_6_months <=  5 and nbr_dashboards = 0)
                 )
             AND date(card_creation_date) < date_sub(current_date(), interval 14 day)
-            AND clean_slug_reduced_level_2 =! 'secretariat_general'
+            AND clean_slug_reduced_level_2 != 'secretariat_general'
         """,
         "rule_alerting_sql": """
             WHERE

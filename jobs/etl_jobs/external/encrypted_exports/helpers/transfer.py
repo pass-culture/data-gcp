@@ -1,9 +1,14 @@
 import os
 import io
+import time
 from typing import List, Dict, Any
 from google.cloud import storage
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from helpers.utils import (
     FILE_EXTENSION,
+    ENCRYPTED_FOLDER,
+    DEFAULT_MAX_WORKERS,
+    DEFAULT_BATCH_SIZE,
     init_s3_client,
     logger,
     load_target_bucket_config,
@@ -15,16 +20,17 @@ def process_transfer(
     gcs_bucket: str,
     export_date: str,
     table_list: List[str],
+    max_workers: int = DEFAULT_MAX_WORKERS,
 ) -> None:
     """
-    Transfer encrypted parquet files from GCS to an S3-compatible bucket.
+    Transfer encrypted parquet files from GCS to an S3-compatible bucket using parallel processing.
 
     The function:
       - Parses the target bucket configuration (JSON or dictionary-like string).
       - Initializes an S3 client using the provided configuration.
       - For each table, it lists the encrypted parquet files in the specified GCS bucket,
         ensuring that only file blobs (and not directory markers) are processed.
-      - Uploads each file to the target S3 bucket.
+      - Uploads each file to the target S3 bucket in parallel using ThreadPoolExecutor.
       - Tracks and logs the number of successfully transferred files and any failures.
 
     Args:
@@ -34,10 +40,8 @@ def process_transfer(
         table_list (List[str]): List of tables to process.
     """
     s3_config = load_target_bucket_config(partner_name)
-
     s3_client = init_s3_client(s3_config)
-    tmp_encrypted_folder = "tmp_encrypted_parquet"
-    encrypted_base = os.path.join(tmp_encrypted_folder, partner_name, export_date)
+    encrypted_base = os.path.join(ENCRYPTED_FOLDER, partner_name, export_date)
     client = storage.Client()
     bucket = client.get_bucket(gcs_bucket)
 
@@ -60,12 +64,63 @@ def process_transfer(
 
         success_count = 0
         fail_count = 0
+        total_files = len(
+            [blob for blob in file_blobs if blob.name.endswith(FILE_EXTENSION)]
+        )
+        start_time = time.time()
+        total_batches = (
+            total_files + DEFAULT_BATCH_SIZE - 1
+        ) // DEFAULT_BATCH_SIZE  # Ceiling division
 
-        for blob in file_blobs:
-            if blob.name.endswith(FILE_EXTENSION):
-                if transfer_single_blob(blob, s3_client, s3_config, s3_prefix_export):
-                    success_count += 1
-                else:
+        logger.info(
+            f"Starting transfer for table {table}: {total_files} files in {total_batches} batches "
+            f"to {s3_config['target_s3_name']}"
+        )
+
+        # Use ThreadPoolExecutor for parallel transfers
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Create a list of futures for all file transfers
+            future_to_blob = {
+                executor.submit(
+                    transfer_single_blob, blob, s3_client, s3_config, s3_prefix_export
+                ): blob
+                for blob in file_blobs
+                if blob.name.endswith(FILE_EXTENSION)
+            }
+
+            # Process completed transfers as they finish
+            processed = 0
+            current_batch = 0
+            for future in as_completed(future_to_blob):
+                blob = future_to_blob[future]
+                try:
+                    if future.result():
+                        success_count += 1
+                    else:
+                        fail_count += 1
+
+                    processed += 1
+                    new_batch = (processed - 1) // DEFAULT_BATCH_SIZE + 1
+
+                    # Only log when we complete a batch or it's the last file
+                    if new_batch > current_batch or processed == total_files:
+                        current_batch = new_batch
+                        current_duration = time.time() - start_time
+                        transfer_rate = (
+                            processed / current_duration if current_duration > 0 else 0
+                        )
+
+                        batch_start = (current_batch - 1) * DEFAULT_BATCH_SIZE + 1
+                        batch_end = min(current_batch * DEFAULT_BATCH_SIZE, total_files)
+
+                        logger.info(
+                            f"Batch {current_batch}/{total_batches} complete: "
+                            f"files {batch_start}-{batch_end} of {total_files} "
+                            f"({(processed/total_files*100):.1f}%) "
+                            f"at {transfer_rate:.2f} files/s"
+                        )
+                except Exception as e:
+                    logger.error(f"Error processing {blob.name}: {e}")
                     fail_count += 1
 
         total = success_count + fail_count

@@ -52,7 +52,7 @@ def get_parquet_files(bucket_name: str, prefix: str) -> List[str]:
     """
     client = storage.Client()
     bucket = client.bucket(bucket_name)
-    blobs = bucket.list_blobs(prefix=prefix)
+    blobs = bucket.list_blobs(prefix=prefix + "/")
 
     # Filter for parquet files only
     parquet_files = [

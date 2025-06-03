@@ -5,12 +5,14 @@ from common.callback import on_failure_base_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
+    ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
 from common.operators.bigquery import bigquery_federated_query_task, bigquery_job_task
 from common.utils import get_airflow_schedule
 from dependencies.applicative_database.import_applicative_database import (
     HISTORICAL_CLEAN_APPLICATIVE_TABLES,
+    IMPORT_SAMPLING,
     PARALLEL_TABLES,
     SEQUENTIAL_TABLES,
 )
@@ -40,6 +42,7 @@ dag = DAG(
     tags=[DAG_TAGS.DE.value],
 )
 
+
 start = DummyOperator(task_id="start", dag=dag)
 
 # Sequential table import tasks
@@ -47,7 +50,10 @@ with TaskGroup(group_id="sequential_tasks_group", dag=dag) as sequential_tasks_g
     seq_tasks = []
     for table, params in SEQUENTIAL_TABLES.items():
         task = bigquery_federated_query_task(
-            dag, task_id=f"import_sequential_to_raw_{table}", job_params=params
+            dag,
+            task_id=f"import_sequential_to_raw_{table}",
+            job_params=params,
+            sample=IMPORT_SAMPLING.get(ENV_SHORT_NAME, {}).get(table),
         )
         seq_tasks.append(task)
 
@@ -62,7 +68,10 @@ with TaskGroup(
     parallel_tasks = []
     for table, params in PARALLEL_TABLES.items():
         task = bigquery_federated_query_task(
-            dag, task_id=f"import_parallel_to_raw_{table}", job_params=params
+            dag,
+            task_id=f"import_parallel_to_raw_{table}",
+            job_params=params,
+            sample=IMPORT_SAMPLING.get(ENV_SHORT_NAME, {}).get(table),
         )
         parallel_tasks.append(task)
 

@@ -3,9 +3,9 @@ name: "3. [on_cd] Deployement workflow"
 on:
   workflow_dispatch:
   push:
-    # branches:
-      # - master
-      # - production
+    branches:
+      - master
+      - production
 
 permissions:
   contents: write

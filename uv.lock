@@ -1090,9 +1090,7 @@ airflow = [
 dbt = [
     { name = "dbt-bigquery" },
     { name = "dbt-core" },
-    { name = "dbt-coverage" },
     { name = "dbt-metabase" },
-    { name = "dbt-score" },
 ]
 dev = [
     { name = "mock" },
@@ -1128,9 +1126,7 @@ airflow = [
 dbt = [
     { name = "dbt-bigquery", specifier = "==1.8.1" },
     { name = "dbt-core", specifier = "==1.8.6" },
-    { name = "dbt-coverage", specifier = "==0.3.8" },
     { name = "dbt-metabase", specifier = "==1.4.2" },
-    { name = "dbt-score", specifier = "==0.7.1" },
 ]
 dev = [
     { name = "mock", specifier = ">=4.0.2" },
@@ -1256,18 +1252,6 @@ wheels = [
 ]
 
 [[package]]
-name = "dbt-coverage"
-version = "0.3.8"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "typer" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a3/e7/db8c8b08bc8d0d79c7d72a13926aa9964f7d5eb7cbc20ecee7fef8b31e13/dbt_coverage-0.3.8.tar.gz", hash = "sha256:0e47fcfa212c80a5d748c4210867ae8fdc3d91bb7608d7211b8dd65886acfaa4", size = 14934, upload-time = "2024-06-19T07:58:26.204Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a6/43/bb6c51d5bc4c2e7dc6ec3ae2b66022402c5faddd6fb9ff22ee92ef6b3937/dbt_coverage-0.3.8-py3-none-any.whl", hash = "sha256:42df670306eee518a68262658e4a36a4a48200623ef4247baa1b5843e5ab4a12", size = 12448, upload-time = "2024-06-19T07:58:22.206Z" },
-]
-
-[[package]]
 name = "dbt-extractor"
 version = "0.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1303,19 +1287,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/99/08/4f7fc119fab941b5acfe9adc48f41c37c907c445f258d3c0827375b53c5c/dbt_metabase-1.4.2.tar.gz", hash = "sha256:ce76c5e2a654aca9aaaf18acaf982961cd4ee8cf5e1abc447299f3f2c8521867", size = 515723, upload-time = "2024-12-20T07:13:23.066Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d2/35/d27a7015f678586fea0ec2da65beb5849cde8078ec546c89425026259c03/dbt_metabase-1.4.2-py3-none-any.whl", hash = "sha256:82b1b725b1bde230b363e5d5f7aa80a1e6a92397780c3c6e21354e6be2c95483", size = 28661, upload-time = "2024-12-20T07:13:20.39Z" },
-]
-
-[[package]]
-name = "dbt-score"
-version = "0.7.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "click" },
-    { name = "tomli", marker = "python_full_version < '3.11'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/dd/64/293fb6ae12d3565dc61f7691e81f8918d36f732c7e65b2838917b697699f/dbt_score-0.7.1.tar.gz", hash = "sha256:e052309e3487c8331ec16e32e14d6d6dd06edc38b8173fe2ca3220ce47e67ed6", size = 28792, upload-time = "2024-11-01T12:10:41.416Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/95/0a/42f199262dbd17eeec7718954d9b3b58b2bb080531ec78745162b5ce7c71/dbt_score-0.7.1-py3-none-any.whl", hash = "sha256:4b588078acf8023b8d3085dd1a86ee28a93472e42c3809e3c09267174d490c30", size = 26281, upload-time = "2024-11-01T12:10:40.012Z" },
 ]
 
 [[package]]

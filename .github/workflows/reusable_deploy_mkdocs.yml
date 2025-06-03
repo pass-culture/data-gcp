@@ -50,10 +50,10 @@ jobs:
         run: uv sync
 
       - name: "compile dbt project"
-        working-directory: ${{ env.DBT_FOLDER }}
+        working-directory: "."
         env:
-          DBT_TARGET_PATH: "target/"
-          DBT_PROFILES_DIR: "."
+          DBT_TARGET_PATH: ${{ env.DBT_FOLDER }}/target/
+          DBT_PROFILES_DIR: ${{ env.DBT_FOLDER }}/
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
           IS_CI: "true"

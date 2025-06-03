@@ -121,8 +121,8 @@ create_microservice_etl_internal:
 
 
 docker_compile:
-	uv export --format requirements-txt --only-group airflow -o orchestration/airflow/orchestration-requirements.txt --python=python3.10
-	uv export --format requirements-txt --only-group airflow -o orchestration/k8s-airflow/k8s-worker-requirements.txt --python=python3.10
+	uv export --format requirements-txt --only-group airflow -o orchestration/airflow/orchestration-requirements.txt --python=python3.10 --no-hashes
+	uv export --format requirements-txt --only-group airflow -o orchestration/k8s-airflow/k8s-worker-requirements.txt --python=python3.10 --no-hashes
 
 
 

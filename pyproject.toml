@@ -18,8 +18,6 @@ dbt = [
   "dbt-core==1.8.6",
   "dbt-bigquery==1.8.1",
   "dbt-metabase==1.4.2",
-  "dbt-score==0.7.1",
-  "dbt-coverage==0.3.8",
 ]
 docs = [
     "mkdocs-material==9.5.42",

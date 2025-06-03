@@ -50,7 +50,7 @@ def process_transfer(
         gcs_folder_path = os.path.join(encrypted_base, table)
 
         # List all blobs under the encrypted folder and filter out directory markers
-        blobs = list(bucket.list_blobs(prefix=gcs_folder_path))
+        blobs = list(bucket.list_blobs(prefix=gcs_folder_path + "/"))
         file_blobs = [blob for blob in blobs if not blob.name.endswith("/")]
 
         # Ensure there is at least one parquet file to transfer

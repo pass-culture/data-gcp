@@ -50,20 +50,20 @@ jobs:
         run: uv sync
 
       - name: "compile dbt project"
-        working-directory: "."
+        working-directory: ${{ env.DBT_FOLDER }}
         env:
-          DBT_TARGET_PATH: ${{ env.DBT_FOLDER }}/target/
-          DBT_PROFILES_DIR: ${{ env.DBT_FOLDER }}/
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
           IS_CI: "true"
         run: uv run dbt deps --project-dir $DBT_FOLDER && uv run dbt compile --project-dir $DBT_FOLDER --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
 
       - name: Build MkDocs site
-        working-directory: "."
+        working-directory: ${{ env.DBT_FOLDER }}
         env:
-          DBT_TARGET_PATH: ${{ env.DBT_FOLDER }}/target/
-          DBT_PROFILES_DIR: ${{ env.DBT_FOLDER }}/
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
           IS_CI: "true"

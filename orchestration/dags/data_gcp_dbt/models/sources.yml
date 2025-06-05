@@ -3,6 +3,7 @@ version: 1
 sources:
   - name: raw
     schema: raw_{{ var('ENV_SHORT_NAME') }}
+    database: passculture-data-{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: adage
       - name: applicative_database_accessibility_provider
@@ -147,6 +148,7 @@ sources:
       - name: zendesk_survey_response
   - name: clean
     schema: clean_{{ var('ENV_SHORT_NAME') }}
+    database: passculture-data-{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: applicative_database_booking_history
       - name: applicative_database_stock_history
@@ -161,11 +163,13 @@ sources:
 
   - name: analytics
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
+    database: passculture-data-{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: adage
 
   - name: seed
     schema: seed_{{ var('ENV_SHORT_NAME') }}
+    database: passculture-data-{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: agg_partner_cultural_sector
       - name: epci
@@ -190,6 +194,7 @@ sources:
 
   - name: ml_preproc
     schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
+    database: passculture-data-{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: default_item_cluster
       - name: item_embedding_extraction
@@ -206,10 +211,12 @@ sources:
         description: Partitionned table containing the history of the two tower item emebddings
   - name: ml_linkage
     schema: ml_linkage_{{ var('ENV_SHORT_NAME') }}
+    database: passculture-data-{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: item_offer_mapping
   - name: appsflyer_import
     schema: appsflyer_import_{{ var('ENV_SHORT_NAME') }}
+    database: passculture-data-{{ var('ENV_SHORT_NAME') }}
     tables:
       - name: cohort_unified_timezone_versioned
       - name: installs

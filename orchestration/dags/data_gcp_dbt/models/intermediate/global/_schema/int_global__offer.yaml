@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: int_global__offer
+    columns:
+      - name: venue_id
+        data_tests:
+          - relationships:
+              to: ref('int_global__venue')
+              field: venue_id

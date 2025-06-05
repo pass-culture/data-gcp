@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: int_global__venue
+    columns:
+      - name: offerer_id
+        data_tests:
+          - relationships:
+              to: ref('int_global__offerer')
+              field: offerer_id

@@ -9,12 +9,6 @@ from dotenv import load_dotenv
 
 app = typer.Typer()
 
-ENV_BUCKETS = {
-    "dev": os.environ.get("AIRFLOW_BUCKET_DEV"),
-    "stg": os.environ.get("AIRFLOW_BUCKET_STG"),
-    "prod": os.environ.get("COMPOSER_BUCKET_PROD"),
-}
-
 
 def find_dotenv():
     """Recherche récursive du fichier .env.dbt"""
@@ -28,7 +22,7 @@ def find_dotenv():
 
 
 def sync_artifacts(from_env: str):
-    bucket = ENV_BUCKETS.get(from_env)
+    bucket = set_bucket_name(from_env)
     if not bucket:
         typer.echo(f"Unknown environment: {from_env}")
         raise typer.Exit(code=1)
@@ -43,6 +37,34 @@ def sync_artifacts(from_env: str):
             check=True,
         )
         print(f"Copied {file} to {local_dir}")
+
+
+def compile_project(defer_to: str):
+    compile_target_path = f"target/defer_to/{defer_to}"
+    typer.echo(f"Recompiling project in : {compile_target_path}")
+
+    subprocess.run(
+        [
+            "dbt",
+            "compile",
+            "--target",
+            defer_to,
+            "--target-path",
+            compile_target_path,
+            "--vars",
+            f"{{'ENV_SHORT_NAME': '{defer_to}'}}",
+        ],
+        check=True,
+    )
+
+
+def set_bucket_name(defer_to: str):
+    ENV_BUCKETS = {
+        "dev": os.getenv("AIRFLOW_BUCKET_DEV"),
+        "stg": os.getenv("AIRFLOW_BUCKET_STG"),
+        "prod": os.getenv("COMPOSER_BUCKET_PROD"),
+    }
+    return ENV_BUCKETS.get(defer_to, None)
 
 
 def set_connection_id(defer_to: str, target_env: str):
@@ -103,16 +125,21 @@ def dbt_cmd(
     # Sync artifacts si demandé
     state_path = None
     if defer_to:
-        state_path = f"env-run-artifacts/{defer_to}"
+        state_path = f"target/defer_to/{defer_to}"
         if refresh_state or not (
             Path(f"{state_path}/manifest.json").exists()
             and Path(f"{state_path}/run_results.json").exists()
         ):
             typer.secho(
-                f"🔄 Synchronisation des artefacts depuis {defer_to}",
+                f"🔄 Recompiler le projet en {defer_to}",
                 fg=typer.colors.CYAN,
             )
-            sync_artifacts(defer_to)
+            compile_project(defer_to)
+            # typer.secho(
+            #     f"🔄 Synchronisation des artefacts depuis {defer_to}",
+            #     fg=typer.colors.CYAN,
+            # )
+            # sync_artifacts(defer_to)
         else:
             typer.echo(
                 f"✅ Artefacts déjà présents pour {defer_to} (utiliser --refresh-state pour forcer la MAJ)"

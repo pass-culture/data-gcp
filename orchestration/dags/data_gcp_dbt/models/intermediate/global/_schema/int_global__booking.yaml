@@ -11,3 +11,8 @@ models:
               to: source('raw', 'applicative_database_booking')
               lookback_month: 6
               lookback_fields: ['booking_creation_date','booking_creation_date']
+      - name: stock_id
+        data_tests:
+          - relationships:
+              to: ref('int_global__stock')
+              field: stock_id

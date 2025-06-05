@@ -69,6 +69,6 @@ select
         partition by b.user_id order by b.booking_created_at asc, b.booking_id asc
     ) as user_booking_rank
 from {{ ref("int_applicative__booking") }} as b
-inner join {{ ref("int_global__stock") }} as s on b.stock_id = s.stock_id
+left join {{ ref("int_global__stock") }} as s on b.stock_id = s.stock_id
 left join {{ ref("int_applicative__offer_metadata") }} as o on s.offer_id = o.offer_id
 left join {{ ref("int_metric__diversity_score") }} as ds on b.booking_id = ds.booking_id

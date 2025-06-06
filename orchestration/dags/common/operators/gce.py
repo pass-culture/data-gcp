@@ -113,7 +113,7 @@ class DeleteGCEOperator(BaseOperator):
         *args,
         **kwargs,
     ):
-        super(DeleteGCEOperator, self).__init__(*args, **kwargs)
+        super(DeleteGCEOperator, self).__init__(*args, priority_weight=1000, **kwargs)
         self.instance_name = f"{GCE_BASE_PREFIX}-{instance_name}"
 
     def execute(self, context):

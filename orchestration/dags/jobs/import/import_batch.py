@@ -80,6 +80,8 @@ with DAG(
         python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} ios
         """,
         retries=2,
+        deferrable=True,
+        poll_interval=300,
     )
 
     android_job = SSHGCEOperator(
@@ -90,6 +92,8 @@ with DAG(
         python main.py {GCP_PROJECT_ID} {ENV_SHORT_NAME} android
         """,
         retries=2,
+        deferrable=True,
+        poll_interval=300,
     )
 
     gce_instance_stop = DeleteGCEOperator(

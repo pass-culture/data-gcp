@@ -387,27 +387,23 @@ class DefaultClient:
                     else None
                 )
 
-                item[SIMILARITY_ITEM_ITEM_COLUMN_NAME] = []
+                item[SIMILARITY_ITEM_ITEM_COLUMN_NAME] = {}
                 for input_item_id in input_item_ids:
                     input_item_vector = input_item_vectors.get(input_item_id)
-                    item[SIMILARITY_ITEM_ITEM_COLUMN_NAME].append(
-                        {
-                            input_item_id: (
-                                float(
-                                    np.dot(
-                                        item_vector.embedding,
-                                        input_item_vector.embedding,
-                                    )
-                                )
-                                if item_vector and input_item_vector
-                                else None
-                            ),
-                        }
+                    item[SIMILARITY_ITEM_ITEM_COLUMN_NAME][input_item_id] = (
+                        float(
+                            np.dot(
+                                item_vector.embedding,
+                                input_item_vector.embedding,
+                            )
+                        )
+                        if item_vector and input_item_vector
+                        else None
                     )
         else:
             for item in ranked_items:
                 item_id = item.get("item_id")
-                item[SIMILARITY_ITEM_ITEM_COLUMN_NAME] = []
+                item[SIMILARITY_ITEM_ITEM_COLUMN_NAME] = {}
                 item[SIMILARITY_USER_ITEM_COLUMN_NAME] = (
                     float(
                         np.dot(

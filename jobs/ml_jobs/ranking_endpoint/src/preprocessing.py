@@ -26,8 +26,8 @@ FEATURES_CONSTRUCTION = {
         ],
         ordered=True,
     ).codes,
-    "offer_stock_beginning_days": lambda df: -df["offer_stock_beginning_days"],
-    "offer_creation_days": lambda df: -df["offer_creation_days"],
+    "offer_max_stock_beginning_days": lambda df: -df["offer_max_stock_beginning_days"],
+    "offer_created_delta_in_days": lambda df: -df["offer_created_delta_in_days"],
     "user_x_date_id": lambda df: df["user_id"].astype(str)
     + "_"
     + df["event_date"].astype(str),

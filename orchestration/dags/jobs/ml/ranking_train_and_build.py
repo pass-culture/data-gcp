@@ -1,5 +1,10 @@
 from datetime import datetime, timedelta
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryInsertJobOperator,
+)
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -18,12 +23,6 @@ from common.operators.gce import (
 )
 from common.utils import get_airflow_schedule
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-)
-
 default_args = {
     "start_date": datetime(2022, 11, 30),
     "on_failure_callback": on_failure_vm_callback,
@@ -41,7 +40,7 @@ TRAINING_DATA_DIR = f"{STORAGE_PATH}/training_data"
 
 gce_params = {
     "instance_name": f"ranking-train-and-build-{ENV_SHORT_NAME}",
-    "experiment_name": f"ranking_training_v1.2_{ENV_SHORT_NAME}",
+    "experiment_name": f"ranking_training_v1.0_{ENV_SHORT_NAME}",
     "model_name": f"v1.0_{ENV_SHORT_NAME}",
     "run_name": "default",
     "instance_type": {

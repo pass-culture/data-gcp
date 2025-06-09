@@ -1,8 +1,12 @@
 from datetime import datetime, timedelta
 from itertools import chain
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
 from common.config import (
     DAG_FOLDER,
+    DAG_TAGS,
     ENV_SHORT_NAME,
     GCE_ZONES,
     INSTANCES_TYPES,
@@ -11,10 +15,6 @@ from common.operators.gce import (
     InstallDependenciesOperator,
     StartGCEOperator,
 )
-
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
 
 DATE = "{{ ts_nodash }}"
 
@@ -67,6 +67,7 @@ with (
         dagrun_timeout=None,
         template_searchpath=DAG_FOLDER,
         render_template_as_native_obj=True,  # be careful using this because "3.10" is rendered as 3.1 if not double escaped
+        tags=[DAG_TAGS.VM.value],
         params={
             "branch": Param(
                 default="production" if ENV_SHORT_NAME == "prod" else "master",

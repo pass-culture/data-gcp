@@ -34,6 +34,7 @@ FEATURES_CONSTRUCTION = {
 }
 
 FEATURES_MAPPING = {
+    "interaction_is_geolocated": "user_is_geolocated",
     "user_centroid_x": "user_iris_x",
     "user_centroid_y": "user_iris_y",
     "item_booking_number_last_7_days": "offer_booking_number_last_7_days",

@@ -1,6 +1,10 @@
 import typing as t
 from datetime import datetime
 
+from airflow.exceptions import AirflowException
+from airflow.models import BaseOperator
+from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
+from airflow.utils.decorators import apply_defaults
 from common.config import (
     ENV_SHORT_NAME,
     ENVIRONMENT_NAME,
@@ -14,11 +18,6 @@ from common.hooks.gce import DeferrableSSHGCEJobManager, GCEHook, SSHGCEJobManag
 from common.hooks.image import MACHINE_TYPE
 from common.hooks.network import BASE_NETWORK_LIST, GKE_NETWORK_LIST
 from common.triggers.gce import DeferrableSSHJobMonitorTrigger
-
-from airflow.exceptions import AirflowException
-from airflow.models import BaseOperator
-from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
-from airflow.utils.decorators import apply_defaults
 
 
 class StartGCEOperator(BaseOperator):
@@ -175,6 +174,7 @@ class BaseSSHGCEOperator(BaseOperator):
             zone=self.gce_zone,
             project_id=GCP_PROJECT_ID,
             use_iap_tunnel=True,
+            use_internal_ip=False,
             use_oslogin=False,
             user=SSH_USER,
             gcp_conn_id="google_cloud_default",

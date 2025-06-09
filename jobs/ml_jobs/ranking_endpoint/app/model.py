@@ -19,13 +19,13 @@ class ClassMapping(Enum):
 
 
 EMBEDDING_DIM = 0  # HACK : To remove embedding dimension from the model, set to 0
+
 NUMERIC_FEATURES = (
     [
         "user_bookings_count",
         "user_clicks_count",
         "user_favorites_count",
-        "user_theoretical_remaining_credit",
-        "user_deposit_initial_amount",
+        "user_deposit_remaining_credit",
         "user_is_geolocated",
         "user_iris_x",
         "user_iris_y",
@@ -41,14 +41,20 @@ NUMERIC_FEATURES = (
         "offer_stock_beginning_days",
         "day_of_the_week",
         "hour_of_the_day",
-        "offer_centroid_x",
-        "offer_centroid_y",
+        # "offer_booking_number",
+        # "offer_item_rank"
+        # "offer_centroid_x",
+        # "offer_centroid_y",
     ]
     + [f"user_emb_{i}" for i in range(EMBEDDING_DIM)]
     + [f"item_emb_{i}" for i in range(EMBEDDING_DIM)]
 )
 
-CATEGORICAL_FEATURES = ["context", "offer_subcategory_id"]
+CATEGORICAL_FEATURES = [
+    # "context",
+    "offer_subcategory_id"
+]
+
 
 DEFAULT_CATEGORICAL = "UNKNOWN"
 DEFAULT_NUMERICAL = -1

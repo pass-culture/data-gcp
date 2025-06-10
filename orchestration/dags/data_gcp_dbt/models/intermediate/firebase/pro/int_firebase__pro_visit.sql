@@ -203,9 +203,7 @@ select
                 )
                 and page_location like "%edition"
             )
-            or (
-                page_name = "Paramètres généraux - pass Culture Pro"
-            )
+            or (page_name = "Paramètres généraux - pass Culture Pro")
         )
     ) as total_started_edited_venues,
     countif(
@@ -247,7 +245,9 @@ select
     countif(
         event_name = "hasClickedPartnerBlockCollectiveHelpLink"
     ) as total_collective_help_clicks,
-    countif(event_name in ("hasClickedHelpCenter","hasClickedConsultHelp")) as total_help_center_clicks,
+    countif(
+        event_name in ("hasClickedHelpCenter", "hasClickedConsultHelp")
+    ) as total_help_center_clicks,
     countif(
         event_name = "hasClickedBestPracticesAndStudies"
     ) as total_best_practices_clicks,

@@ -40,12 +40,6 @@ MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
 ML_BUCKET_TEMP = os.environ.get(
     "ML_BUCKET_TEMP", f"data-bucket-ml-temp-{ENV_SHORT_NAME}"
 )
-ML_BUCKET_PROCESSING = os.environ.get(
-    "ML_BUCKET_PROCESSING", f"data-bucket-ml-processing-{ENV_SHORT_NAME}"
-)
-ML_BUCKET_OUTPUT = os.environ.get(
-    "ML_BUCKET_OUTPUT", f"data-bucket-ml-output-{ENV_SHORT_NAME}"
-)
 if ENV_SHORT_NAME != "prod":
     MLFLOW_URL = "https://mlflow.staging.passculture.team/"
 else:

@@ -11,6 +11,9 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
+    ML_BUCKET_OUTPUT,
+    ML_BUCKET_PROCESSING,
+    ML_BUCKET_TEMP,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -47,7 +50,7 @@ DAG_CONFIG = {
     },
     "BASE_PATHS": {
         "GCS_FOLDER": f"linkage_item_{ENV_SHORT_NAME}/linkage_{DATE}",
-        "STORAGE": f"gs://{MLFLOW_BUCKET_NAME}/linkage_item_{ENV_SHORT_NAME}/linkage_{DATE}",
+        "STORAGE": f"gs://{ML_BUCKET_TEMP}/linkage_item_{ENV_SHORT_NAME}/linkage_{DATE}",
     },
     "DIRS": {
         "BASE": "data-gcp/jobs/ml_jobs/item_linkage/",

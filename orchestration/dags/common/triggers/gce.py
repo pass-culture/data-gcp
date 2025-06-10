@@ -46,7 +46,7 @@ class DeferrableSSHJobMonitorTrigger(BaseTrigger):
             zone=zone,
             project_id=GCP_PROJECT_ID,
             use_internal_ip=False,
-            use_iap_tunnel=False,
+            use_iap_tunnel=True,
             use_oslogin=False,
             user=SSH_USER,
             gcp_conn_id="google_cloud_default",

@@ -42,7 +42,7 @@ fsspec==2024.6.1
     #   torch
 gcsfs==2024.6.1
     # via -r requirements.in
-google-api-core==2.19.1
+google-api-core[grpc]==2.19.1
     # via
     #   google-cloud-bigquery
     #   google-cloud-core
@@ -116,7 +116,7 @@ multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
-networkx==3.3
+networkx==3.2.1
     # via torch
 nltk==3.8.1
     # via sentence-transformers
@@ -233,7 +233,7 @@ regex==2024.5.15
     # via
     #   nltk
     #   transformers
-requests==2.31.0
+requests==2.32.4
     # via
     #   -r requirements.in
     #   gcsfs
@@ -251,7 +251,7 @@ safetensors==0.5.3
     # via transformers
 scikit-learn==1.5.1
     # via sentence-transformers
-scipy==1.14.0
+scipy==1.13.1
     # via
     #   scikit-learn
     #   sentence-transformers
@@ -259,11 +259,6 @@ sentence-transformers==2.3.0
     # via -r requirements.in
 sentencepiece==0.2.0
     # via sentence-transformers
-setuptools==70.2.0
-    # via
-    #   pandas-gbq
-    #   pydata-google-auth
-    #   zope-interface
 six==1.16.0
     # via python-dateutil
 sympy==1.13.1

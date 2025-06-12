@@ -30,3 +30,13 @@ CREATE INDEX idx_non_recommendable_item_id_tmp_{{ ts_nodash  }}  ON public.non_r
 -- Refresh state
 refresh materialized view non_recommendable_items_mv_tmp
 ;
+
+-- Move tmp to final Materialized view
+-- mv -> mv_old
+-- mv_tmp -> mv
+-- drop mv_old if exists
+ALTER MATERIALIZED VIEW IF EXISTS non_recommendable_items_mv
+    RENAME TO non_recommendable_items_mv_old;
+ALTER MATERIALIZED VIEW IF EXISTS non_recommendable_items_mv_tmp
+    RENAME TO non_recommendable_items_mv;
+DROP MATERIALIZED VIEW IF EXISTS non_recommendable_items_mv_old;

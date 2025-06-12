@@ -1,7 +1,8 @@
 -- noqa: disable=all
-{{ config(
-    cluster_by="active_week",
-)
+{{
+    config(
+        cluster_by="active_week",
+    )
 }}
 with
     weeks as (

@@ -8,7 +8,17 @@ permissions:
   pull-requests: write
 
 jobs:
+  get-token:
+    uses: ./.github/workflows/reusable_github_app_auth.yml
+    with:
+      permission-contents: write
+      permission-pull-requests: write
+    secrets:
+      PASSCULTURE_GITHUB_ACTION_APP_ID: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
+      PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
+
   run_code_review:
+    needs: get-token
     runs-on: ubuntu-latest
     if: ${{ contains('\gpt,/gpt', github.event.comment.body) }}
     steps:
@@ -44,8 +54,8 @@ jobs:
         if: env.run_code_review == 'true'
         run: bun shippie review --platform=github --telemetry false
         env:
-          GITHUB_TOKEN: ${{ github.token }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           GITHUB_SHA: ${{ github.sha }}
           MODEL: "gpt-4o"
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ needs.get-token.outputs.token }}

@@ -71,7 +71,16 @@ CREATE INDEX IF NOT EXISTS venue_geo_idx_offer_recommendable_raw_{{ ts_nodash  }
 ON public.recommendable_offers_raw_mv_tmp
 USING gist(venue_geo);
 
-
 -- Refresh state
 refresh materialized view recommendable_offers_raw_mv_tmp
 ;
+
+-- Move tmp to final Materialized view
+-- mv -> mv_old
+-- mv_tmp -> mv
+-- drop mv_old if exists
+ALTER MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_mv
+    RENAME TO recommendable_offers_raw_mv_old;
+ALTER MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_mv_tmp
+    RENAME TO recommendable_offers_raw_mv;
+DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_mv_old;

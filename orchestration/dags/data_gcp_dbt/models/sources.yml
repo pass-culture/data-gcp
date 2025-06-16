@@ -5,9 +5,9 @@ sources:
     schema: raw_{{ var('ENV_SHORT_NAME') }}
     database: >
           {% if var('ENV_SHORT_NAME') == 'prod' %}
-              passculture-data-prod
+              "passculture-data-prod"
           {% else %}
-              passculture-data-ehp
+              "passculture-data-ehp"
           {% endif %}
     tables:
       - name: adage
@@ -155,9 +155,9 @@ sources:
     schema: clean_{{ var('ENV_SHORT_NAME') }}
     database: >
       {% if var('ENV_SHORT_NAME') == 'prod' %}
-          passculture-data-prod
+          "passculture-data-prod"
       {% else %}
-          passculture-data-ehp
+          "passculture-data-ehp"
       {% endif %}
     tables:
       - name: applicative_database_booking_history
@@ -175,9 +175,9 @@ sources:
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
     database: >
       {% if var('ENV_SHORT_NAME') == 'prod' %}
-          passculture-data-prod
+          "passculture-data-prod"
       {% else %}
-          passculture-data-ehp
+          "passculture-data-ehp"
       {% endif %}
     tables:
       - name: adage
@@ -186,9 +186,9 @@ sources:
     schema: seed_{{ var('ENV_SHORT_NAME') }}
     database: >
       {% if var('ENV_SHORT_NAME') == 'prod' %}
-          passculture-data-prod
+          "passculture-data-prod"
       {% else %}
-          passculture-data-ehp
+          "passculture-data-ehp"
       {% endif %}
     tables:
       - name: agg_partner_cultural_sector
@@ -216,9 +216,9 @@ sources:
     schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
     database: >
       {% if var('ENV_SHORT_NAME') == 'prod' %}
-          passculture-data-prod
+          "passculture-data-prod"
       {% else %}
-          passculture-data-ehp
+          "passculture-data-ehp"
       {% endif %}
     tables:
       - name: default_item_cluster
@@ -238,9 +238,9 @@ sources:
     schema: ml_linkage_{{ var('ENV_SHORT_NAME') }}
     database: >
       {% if var('ENV_SHORT_NAME') == 'prod' %}
-          passculture-data-prod
+          "passculture-data-prod"
       {% else %}
-          passculture-data-ehp
+          "passculture-data-ehp"
       {% endif %}
     tables:
       - name: item_offer_mapping
@@ -248,9 +248,9 @@ sources:
     schema: appsflyer_import_{{ var('ENV_SHORT_NAME') }}
     database: >
       {% if var('ENV_SHORT_NAME') == 'prod' %}
-          passculture-data-prod
+          "passculture-data-prod"
       {% else %}
-          passculture-data-ehp
+          "passculture-data-ehp"
       {% endif %}
     tables:
       - name: cohort_unified_timezone_versioned

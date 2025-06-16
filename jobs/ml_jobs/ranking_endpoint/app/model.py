@@ -185,13 +185,13 @@ class TrainPipeline:
         self.model.save_model(f"./metadata/model_{model_name}.txt")
 
     def train(self, df: pd.DataFrame, class_weight: dict, seed: int):
-        # Split data based on user_x_date_id
-        unique_user_x_date_ids = df.user_x_date_id.unique()
+        # Split data based on user_x_item_id
+        unique_user_x_item_ids = df.user_x_item_id.unique()
         train_session_ids, test_session_ids = train_test_split(
-            unique_user_x_date_ids, test_size=self.train_size, random_state=seed
+            unique_user_x_item_ids, test_size=self.train_size, random_state=seed
         )
-        train_data = df[df["user_x_date_id"].isin(train_session_ids)]
-        test_data = df[df["user_x_date_id"].isin(test_session_ids)]
+        train_data = df[df["user_x_item_id"].isin(train_session_ids)]
+        test_data = df[df["user_x_item_id"].isin(test_session_ids)]
 
         # Preprocess for lgbm
         X_train = self.fit_transform(train_data)

@@ -31,6 +31,9 @@ FEATURES_CONSTRUCTION = {
     "user_x_date_id": lambda df: df["user_id"].astype(str)
     + "_"
     + df["event_date"].astype(str),
+    "user_x_item_id": lambda df: df["user_id"].astype(str)
+    + "_"
+    + df["item_id"].astype(str),
 }
 
 FEATURES_MAPPING = {
@@ -155,6 +158,7 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
                     "item_id",
                     "unique_session_id",
                     "user_x_date_id",
+                    "user_x_item_id",
                 ]
                 + NUMERIC_FEATURES
                 + CATEGORICAL_FEATURES

@@ -24,7 +24,7 @@ with
         from {{ ref("int_firebase__native_event") }}
         where
             event_name in ('CategoryBlockClicked', 'HighlightBlockClicked')
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -63,7 +63,7 @@ with
         where
             event_name = 'ModuleDisplayedOnHomePage'
             and events.unique_session_id is not null
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -96,7 +96,7 @@ with
                 'ConsultVideo',
                 'TrendsBlockClicked'
             )
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -132,7 +132,7 @@ with
                 'highlightOffer'
             )
             and unique_session_id is not null
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -159,7 +159,7 @@ with
             event_name = 'ConsultVenue'
             and origin in ('home', 'venueList')
             and unique_session_id is not null
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -212,7 +212,7 @@ with
                 'highlightOffer'
             )
             and events.unique_session_id is not null
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"

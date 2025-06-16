@@ -91,6 +91,58 @@ def plot_figures(
     )
 
 
+def evaluate_model(
+    train_predictions: pd.DataFrame,
+    test_predictions: pd.DataFrame,
+    pipeline_classifier: TrainPipeline,
+    figure_folder: str,
+    suffix: str,
+) -> None:
+    figure_folder = f"{figure_folder}{suffix}"
+
+    print("Evaluating model...")
+    ndcg_at_k = compute_ndcg_at_k(predictions=test_predictions, k_list=NDCG_K_LIST)
+    random_ndcg_at_k = compute_ndcg_at_k(
+        predictions=test_predictions.assign(
+            score=np.random.rand(len(test_predictions))
+        ),
+        k_list=NDCG_K_LIST,
+    )
+    popular_ndcg_at_k = compute_ndcg_at_k(
+        predictions=test_predictions.assign(
+            score=test_predictions["offer_booking_number_last_28_days"]
+            / test_predictions["offer_booking_number_last_28_days"].max()
+        ),
+        k_list=NDCG_K_LIST,
+    )
+    for k in NDCG_K_LIST:
+        mlflow.log_metric(f"ndcg{suffix}_at_{k}", ndcg_at_k[k])
+        mlflow.log_metric(f"random_ndcg{suffix}_at_{k}", random_ndcg_at_k[k])
+        mlflow.log_metric(f"popular_ndcg{suffix}_at_{k}", popular_ndcg_at_k[k])
+    print("Evaluation finished")
+
+    # Save Data
+    print("Plotting Figures...")
+    plot_figures(
+        train_data=train_predictions,
+        test_data=test_predictions,
+        pipeline=pipeline_classifier,
+        figure_folder=figure_folder,
+    )
+    print("Figures plotted")
+
+    print("Saving Data...")
+    train_predictions.to_parquet(
+        f"{figure_folder}/train_predictions.parquet", index=False
+    )
+    test_predictions.to_parquet(
+        f"{figure_folder}/test_predictions.parquet", index=False
+    )
+    print("Data saved")
+
+    mlflow.log_artifacts(figure_folder, f"model_plots_and_predictions{suffix}")
+
+
 def train_pipeline(input_gcs_dir: str, experiment_name: str, run_name: str) -> None:
     """
     Train a LightGBM ranking model pipeline with MLflow experiment tracking.
@@ -147,7 +199,6 @@ def train_pipeline(input_gcs_dir: str, experiment_name: str, run_name: str) -> N
     client_id = get_secret("mlflow_client_id")
     connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
     experiment = get_mlflow_experiment(experiment_name)
-    figure_folder = f"/tmp/{experiment_name}/"
 
     # Start training
     mlflow.lightgbm.autolog()
@@ -161,49 +212,31 @@ def train_pipeline(input_gcs_dir: str, experiment_name: str, run_name: str) -> N
         pipeline_classifier.train(train_data, class_weight=class_weight, seed=seed)
         print("Training finished")
 
-        print("Evaluating model...")
+        print("Whole data evaluation...")
         train_predictions = train_data.pipe(pipeline_classifier.predict_classifier)
         test_predictions = test_data.pipe(pipeline_classifier.predict_classifier)
-        ndcg_at_k = compute_ndcg_at_k(predictions=test_predictions, k_list=NDCG_K_LIST)
-        random_ndcg_at_k = compute_ndcg_at_k(
-            predictions=test_predictions.assign(
-                score=np.random.rand(len(test_predictions))
-            ),
-            k_list=NDCG_K_LIST,
+        evaluate_model(
+            train_predictions=train_predictions,
+            test_predictions=test_predictions,
+            pipeline_classifier=pipeline_classifier,
+            figure_folder=f"/tmp/{experiment_name}",
+            suffix="",
         )
-        popular_ndcg_at_k = compute_ndcg_at_k(
-            predictions=test_predictions.assign(
-                score=test_predictions["offer_booking_number_last_28_days"]
-                / test_predictions["offer_booking_number_last_28_days"].max()
-            ),
-            k_list=NDCG_K_LIST,
-        )
-        for k in NDCG_K_LIST:
-            mlflow.log_metric(f"ndcg_at_{k}", ndcg_at_k[k])
-            mlflow.log_metric(f"random_ndcg_at_{k}", random_ndcg_at_k[k])
-            mlflow.log_metric(f"popular_ndcg_at_{k}", popular_ndcg_at_k[k])
-        print("Evaluation finished")
 
-        # Save Data
-        print("Plotting Figures...")
-        plot_figures(
-            train_data=train_predictions,
-            test_data=test_predictions,
-            pipeline=pipeline_classifier,
-            figure_folder=figure_folder,
+        print("Evaluation on recommendation only...")
+        train_recommendation_predictions = train_data.loc[
+            lambda df: df.context == "recommendation"
+        ].pipe(pipeline_classifier.predict_classifier)
+        test_recommendation_predictions = test_data.loc[
+            lambda df: df.context == "recommendation"
+        ].pipe(pipeline_classifier.predict_classifier)
+        evaluate_model(
+            train_predictions=train_recommendation_predictions,
+            test_predictions=test_recommendation_predictions,
+            pipeline_classifier=pipeline_classifier,
+            figure_folder=f"/tmp/{experiment_name}",
+            suffix="_reco",
         )
-        print("Figures plotted")
-
-        print("Saving Data...")
-        train_predictions.to_parquet(
-            f"{figure_folder}/train_predictions.parquet", index=False
-        )
-        test_predictions.to_parquet(
-            f"{figure_folder}/test_predictions.parquet", index=False
-        )
-        print("Data saved")
-
-        mlflow.log_artifacts(figure_folder, "model_plots_and_predictions")
         mlflow.log_param("seed", seed)
 
     # TODO: Check to see if it is better with or without

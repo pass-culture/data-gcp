@@ -50,10 +50,7 @@ NUMERIC_FEATURES = (
     + [f"item_emb_{i}" for i in range(EMBEDDING_DIM)]
 )
 
-CATEGORICAL_FEATURES = [
-    # "context",
-    "offer_subcategory_id"
-]
+CATEGORICAL_FEATURES = ["context", "offer_subcategory_id"]
 
 
 DEFAULT_CATEGORICAL = "UNKNOWN"

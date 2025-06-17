@@ -23,6 +23,7 @@ select
     uh.parent_module_id,
     uh.parent_module_type,
     uh.parent_entry_id,
+    uh.typeform_id,
     uh.app_version,
     uh.parent_home_type,
     uh.home_audience,

@@ -7,6 +7,7 @@ select
     entry_name,
     module_id,
     module_name,
+    typeform_id,
     parent_module_id,
     parent_modules.content_type as parent_module_type,
     parent_entry_id,

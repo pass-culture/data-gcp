@@ -27,7 +27,7 @@ dependencies = [
     "flask-cors==4.0.0",
     "flask==3.0.0",
     "frozenlist==1.4.1",
-    "fsspec==2024.9.0",
+    "fsspec==2025.5.1",
     "h11==0.14.0",
     "h2==4.1.0",
     "hnne==0.1.10",

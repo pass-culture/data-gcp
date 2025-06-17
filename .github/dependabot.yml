@@ -4,7 +4,8 @@ updates:
   - package-ecosystem: "uv"
     directory: "/jobs/ml_jobs/retrieval_vector"
     schedule:
-      interval: "daily"
+      interval: cron
+      cronjob: "*/3 * * * *"  # Every 3 minutes
     open-pull-requests-limit: 0
     groups:
       retrieval-vector-security:

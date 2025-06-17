@@ -8,7 +8,7 @@ with
         select
             u.user_id,
             u.user_creation_date,
-            {{ target_schema }}.humanize_id(u.user_id) as user_humanized_id, --noqa: PRS
+            {{ target_schema }}.humanize_id(u.user_id) as user_humanized_id,  -- noqa: PRS
             u.user_has_enabled_marketing_email,
             case
                 when u.user_activity in ("Alternant")

@@ -5,3 +5,8 @@ updates:
     directory: "/jobs/ml_jobs/retrieval_vector"
     schedule:
       interval: "daily"
+    open-pull-requests-limit: 0
+    groups:
+      retrieval-vector-security:
+        patterns:
+          - "*"

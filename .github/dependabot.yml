@@ -1,0 +1,7 @@
+version: 2
+
+updates:
+  - package-ecosystem: "uv"
+    directory: "/jobs/ml_jobs/retrieval_vector"
+    schedule:
+      interval: "daily"

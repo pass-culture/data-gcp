@@ -28,12 +28,7 @@ FEATURES_CONSTRUCTION = {
     ).codes,
     "offer_max_stock_beginning_days": lambda df: -df["offer_max_stock_beginning_days"],
     "offer_created_delta_in_days": lambda df: -df["offer_created_delta_in_days"],
-    "user_x_date_id": lambda df: df["user_id"].astype(str)
-    + "_"
-    + df["event_date"].astype(str),
-    "user_x_item_id": lambda df: df["user_id"].astype(str)
-    + "_"
-    + df["item_id"].astype(str),
+    "event_date": lambda df: df["event_date"].astype(str),
 }
 
 FEATURES_MAPPING = {
@@ -214,3 +209,20 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
         embedding_dim=EMBEDDING_DIM,
         default_numerical=DEFAULT_NUMERICAL,
     )
+
+
+def linear_train_test_split(
+    data_to_split_df: pd.DataFrame, test_size: float, split_key: str
+) -> tuple:
+    unique_split_values = data_to_split_df[split_key].sort_values().unique()
+    if len(unique_split_values) < 2:
+        raise ValueError(
+            f"Not enough unique values in '{split_key}' to perform train-test split."
+        )
+
+    split_index = int(len(unique_split_values) * (1 - test_size))
+    train_split_value = unique_split_values[split_index - 1]
+    test_split_value = unique_split_values[split_index]
+    train_data = data_to_split_df[lambda df: df[split_key] <= train_split_value]
+    test_data = data_to_split_df[lambda df: df[split_key] > test_split_value]
+    return train_data, test_data

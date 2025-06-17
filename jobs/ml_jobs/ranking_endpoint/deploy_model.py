@@ -7,7 +7,6 @@ import mlflow
 import numpy as np
 import pandas as pd
 import typer
-from sklearn.model_selection import train_test_split
 
 from app.model import (
     ClassMapping,
@@ -180,8 +179,8 @@ def train_pipeline(input_gcs_dir: str, experiment_name: str, run_name: str) -> N
 
     # Split based on unique_session_id
     seed = secrets.randbelow(1000)
-    unique_user_x_item_ids = preprocessed_data.user_x_item_id.unique()
-    train_session_ids, test_session_ids = train_test_split(
+    unique_dates = preprocessed_data.event_date.unique()
+    train_session_ids, test_session_ids = time_train_test_split(
         unique_user_x_item_ids, test_size=TEST_SIZE, random_state=seed
     )
     train_data = preprocessed_data[

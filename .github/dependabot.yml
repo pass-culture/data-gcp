@@ -10,10 +10,11 @@ updates:
         patterns:
           - "*"
   - package-ecosystem: "uv"
-    directory: "/jobs/etl_jobs/internal/sync_recommendation"
+    directory: "."
     schedule:
       interval: "daily"
     groups:
       project-security:
         patterns:
-          - "*"
+          - "/pyproject.toml"
+          - "/uv.lock"

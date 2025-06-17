@@ -9,3 +9,12 @@ updates:
       retrieval-vector-security:
         patterns:
           - "*"
+  - package-ecosystem: "uv"
+    directory: "."
+    schedule:
+      interval: "daily"
+    groups:
+      project-security:
+        patterns:
+          - "/pyproject.toml"
+          - "/uv.lock"

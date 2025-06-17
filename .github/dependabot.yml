@@ -9,3 +9,11 @@ updates:
       retrieval-vector-security:
         patterns:
           - "*"
+  - package-ecosystem: "uv"
+    directory: "/jobs/etl_jobs/internal/sync_recommendation"
+    schedule:
+      interval: "daily"
+    groups:
+      project-security:
+        patterns:
+          - "*"

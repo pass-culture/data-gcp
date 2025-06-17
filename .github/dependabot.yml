@@ -2,19 +2,21 @@ version: 2
 
 updates:
   - package-ecosystem: "uv"
-    directory: "/jobs/ml_jobs/retrieval_vector"
+    open-pull-requests-limit: 0
+    directory: "jobs/etl_jobs/internal/sync_recommendation"
     schedule:
       interval: "daily"
     groups:
-      retrieval-vector-security:
+      sync-recommendation-security:
         patterns:
           - "*"
   - package-ecosystem: "uv"
+    open-pull-requests-limit: 0
     directory: "."
     schedule:
       interval: "daily"
     groups:
-      project-security:
+      root-project-security:
         patterns:
           - "/pyproject.toml"
           - "/uv.lock"

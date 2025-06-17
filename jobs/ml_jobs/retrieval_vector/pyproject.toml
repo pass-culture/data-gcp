@@ -96,7 +96,7 @@ dependencies = [
     "typer==0.12.5",
     "typing-extensions==4.12.2",
     "tzdata==2024.2",
-    "urllib3==2.2.3",
+    "urllib3==2.4.0",
     "werkzeug==3.0.4",
     "wsproto==1.2.0",
     "yarl==1.12.1",

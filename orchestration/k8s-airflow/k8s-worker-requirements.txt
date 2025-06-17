@@ -839,7 +839,7 @@ proto-plus==1.26.1
     #   google-cloud-videointelligence
     #   google-cloud-vision
     #   google-cloud-workflows
-protobuf==4.25.7
+protobuf==4.25.8
     # via
     #   dbt-adapters
     #   dbt-common

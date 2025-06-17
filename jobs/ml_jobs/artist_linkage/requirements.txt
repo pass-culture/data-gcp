@@ -88,7 +88,7 @@ gitpython==3.1.43
     # via
     #   mlflow-skinny
     #   streamlit
-google-api-core==2.19.0
+google-api-core[grpc]==2.19.0
     # via
     #   google-cloud-core
     #   google-cloud-secret-manager
@@ -117,7 +117,7 @@ google-crc32c==1.5.0
     #   google-resumable-media
 google-resumable-media==2.7.0
     # via google-cloud-storage
-googleapis-common-protos==1.63.0
+googleapis-common-protos[grpc]==1.63.0
     # via
     #   google-api-core
     #   grpc-google-iam-v1
@@ -150,13 +150,18 @@ idna==3.7
     #   yarl
 importlib-metadata==7.2.1
     # via
+    #   flask
+    #   jupyter-client
+    #   markdown
     #   mlflow-skinny
     #   opentelemetry-api
+importlib-resources==6.5.2
+    # via matplotlib
 iniconfig==2.0.0
     # via pytest
 ipykernel==6.29.4
     # via -r requirements.in
-ipython==8.24.0
+ipython==8.18.1
     # via ipykernel
 itsdangerous==2.2.0
     # via flask
@@ -256,7 +261,7 @@ packaging==23.2
     #   mlflow-skinny
     #   pytest
     #   streamlit
-pandas==2.2.3
+pandas[parquet,performance]==2.2.3
     # via
     #   -r requirements.in
     #   altair
@@ -282,7 +287,7 @@ proto-plus==1.23.0
     # via
     #   google-api-core
     #   google-cloud-secret-manager
-protobuf==4.25.3
+protobuf==4.25.8
     # via
     #   google-api-core
     #   google-cloud-secret-manager
@@ -375,8 +380,6 @@ scipy==1.13.1
     # via
     #   mlflow
     #   scikit-learn
-setuptools==75.1.0
-    # via -r requirements.in
 shellingham==1.5.4
     # via typer
 six==1.16.0
@@ -432,6 +435,7 @@ typing-extensions==4.12.0
     #   alembic
     #   altair
     #   graphene
+    #   graphql-core
     #   ipython
     #   mlflow-skinny
     #   multidict
@@ -460,4 +464,6 @@ wrapt==1.17.0
 yarl==1.14.0
     # via aiohttp
 zipp==3.19.2
-    # via importlib-metadata
+    # via
+    #   importlib-metadata
+    #   importlib-resources

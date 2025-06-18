@@ -20,3 +20,21 @@ updates:
         patterns:
           - "/pyproject.toml"
           - "/uv.lock"
+  - package-ecosystem: "pip"
+    open-pull-requests-limit: 0
+    directory: "jobs/etl_jobs/internal/sync_recommendation"
+    schedule:
+      interval: "daily"
+    groups:
+      sync-recommendation-security:
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    open-pull-requests-limit: 0
+    directory: "."
+    schedule:
+      interval: "daily"
+    groups:
+      root-project-security:
+        patterns:
+          - "/pyproject.toml"

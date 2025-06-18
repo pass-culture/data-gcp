@@ -45,8 +45,24 @@ CLASSIFIER_MODEL_PARAMS = {
     "verbose": -1,
     "num_leaves": 10,
 }
-PROBA_CONSULT_THRESHOLD = 0.5
-PROBA_BOOKING_THRESHOLD = 0.5
+
+# Parameters for LambdaRank learning to rank
+LAMBDARANK_MODEL_PARAMS = {
+    "objective": "lambdarank",  # Learning to rank objective
+    "metric": "ndcg",  # Use NDCG as the evaluation metric
+    "ndcg_at": [5, 10, 20],  # Calculate NDCG at these positions
+    "learning_rate": 0.05,
+    "num_leaves": 31,
+    "feature_fraction": 0.8,
+    "bagging_fraction": 0.8,
+    "bagging_freq": 5,
+    "lambda_l1": 0.1,
+    "lambda_l2": 0.1,
+    "max_depth": -1,
+    "min_data_in_leaf": 20,
+    "verbose": -1,
+}
+
 NDCG_K_LIST = [5, 10, 20]
 
 
@@ -139,17 +155,8 @@ def evaluate_model(
         mlflow.log_metric(f"popular_ndcg{suffix}_at_{k}", popular_ndcg_at_k[k])
     print("Evaluation finished")
 
-    # Save Data
-    print("Plotting Figures...")
-    plot_figures(
-        train_data=train_predictions,
-        test_data=test_predictions,
-        pipeline=pipeline_classifier,
-        figure_folder=figure_folder,
-    )
-    print("Figures plotted")
-
     print("Saving Data...")
+    os.makedirs(figure_folder, exist_ok=True)
     train_predictions.to_parquet(
         f"{figure_folder}/train_predictions.parquet", index=False
     )
@@ -258,6 +265,125 @@ def train_pipeline(input_gcs_dir: str, experiment_name: str, run_name: str) -> N
     pipeline_classifier.save(model_name="classifier")
 
 
+def preprocess_for_ranking(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Preprocess data for learning to rank by converting class labels to relevance scores.
+
+    Learning to rank requires numerical relevance labels where higher values indicate
+    more relevant items. This function converts class labels to relevance scores:
+    - booked (most relevant) = 2
+    - consulted/clicked = 1
+    - seen (least relevant) = 0
+
+    Args:
+        df (pd.DataFrame): Input dataframe with class labels
+
+    Returns:
+        pd.DataFrame: Processed dataframe with relevance scores
+    """
+    # Create a relevance column for ranking (higher = more relevant)
+    return df.assign(
+        relevance=lambda x: (
+            (x[ClassMapping.consulted.name] * 1) + (x[ClassMapping.booked.name] * 2)
+        )
+    )
+
+
+def train_ranking_pipeline(
+    input_gcs_dir: str, experiment_name: str, run_name: str
+) -> None:
+    """
+    Train a LightGBM LambdaRank learning-to-rank model with MLflow experiment tracking.
+
+    This function performs end-to-end model training for a learning-to-rank approach:
+    1. Loads and preprocesses data from GCS
+    2. Converts classification labels to relevance scores
+    3. Uses LambdaRank objective with grouped data by user_id
+    4. Evaluates using NDCG metrics
+    5. Logs all metrics, parameters, and artifacts to MLflow
+
+    Args:
+        input_gcs_dir (str): Path to the Google Cloud Storage directory containing input data.
+        experiment_name (str): Name of the MLflow experiment for tracking this training run.
+        run_name (str): Specific name for this training run within the experiment.
+
+    Returns:
+        None
+    """
+    # Load and preprocess the data
+    raw_data = load_data(input_gcs_dir).pipe(
+        map_features_columns,
+    )
+    preprocessed_data = raw_data.pipe(preprocess_data)
+
+    # Preprocess for learning to rank by creating relevance scores
+    ranking_data = preprocess_for_ranking(preprocessed_data)
+
+    # Connect to MLFlow
+    client_id = get_secret("mlflow_client_id")
+    connect_remote_mlflow(client_id, env=ENV_SHORT_NAME)
+    experiment = get_mlflow_experiment(experiment_name)
+
+    # Start training
+    mlflow.lightgbm.autolog()
+    pipeline_ranking = TrainPipeline(target="relevance", params=LAMBDARANK_MODEL_PARAMS)
+
+    with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
+        # Log parameters specific to learning to rank
+        mlflow.log_params(
+            {
+                "model_type": "learning_to_rank",
+                "ranking_algorithm": "lambdarank",
+                "group_key": "user_id",
+                "relevance_levels": 3,  # 0=seen, 1=consulted, 2=booked
+            }
+        )
+
+        pipeline_ranking.set_pipeline()
+        print("Training ranking model...")
+        pipeline_ranking.train_ranking(ranking_data)
+        print("Training finished")
+
+        # Generate predictions
+        train_data, test_data = pipeline_ranking.linear_train_test_split(
+            data_to_split_df=ranking_data,
+            split_key="event_date",
+            test_size=TEST_SIZE,
+        )
+
+        train_predictions = train_data.pipe(pipeline_ranking.predict_ranking)
+        test_predictions = test_data.pipe(pipeline_ranking.predict_ranking)
+
+        # Evaluate
+        print("Evaluating model...")
+        evaluate_model(
+            train_predictions=train_predictions,
+            test_predictions=test_predictions,
+            pipeline_classifier=pipeline_ranking,  # Reuse the evaluation function
+            figure_folder=f"/tmp/{experiment_name}",
+            suffix="_lambdarank",
+        )
+
+        # Evaluate on recommendation context only
+        train_recommendation_predictions = train_data.loc[
+            lambda df: df.context == "recommendation"
+        ].pipe(pipeline_ranking.predict_ranking)
+        test_recommendation_predictions = test_data.loc[
+            lambda df: df.context == "recommendation"
+        ].pipe(pipeline_ranking.predict_ranking)
+
+        evaluate_model(
+            train_predictions=train_recommendation_predictions,
+            test_predictions=test_recommendation_predictions,
+            pipeline_classifier=pipeline_ranking,
+            figure_folder=f"/tmp/{experiment_name}",
+            suffix="_lambdarank_reco",
+        )
+
+    # Save the model
+    pipeline_ranking.save(model_name="lambdarank")
+
+
 def main(
     experiment_name: str = typer.Option(
         None,
@@ -279,6 +405,10 @@ def main(
         False,
         help="If True, only train the model without deploying",
     ),
+    use_lambdarank: bool = typer.Option(
+        False,
+        help="If True, use LambdaRank learning to rank instead of classification",
+    ),
 ) -> None:
     yyyymmdd = datetime.now().strftime("%Y%m%d")
     if model_name is None:
@@ -286,11 +416,18 @@ def main(
     run_id = f"{model_name}_{ENV_SHORT_NAME}_v{yyyymmdd}"
     serving_container = f"europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/ranking-endpoint/{ENV_SHORT_NAME}/{experiment_name.replace('.', '_')}:{run_id}"
 
-    train_pipeline(
-        input_gcs_dir=input_gcs_dir,
-        experiment_name=experiment_name,
-        run_name=run_name,
-    )
+    if use_lambdarank:
+        train_ranking_pipeline(
+            input_gcs_dir=input_gcs_dir,
+            experiment_name=experiment_name,
+            run_name=run_name,
+        )
+    else:
+        train_pipeline(
+            input_gcs_dir=input_gcs_dir,
+            experiment_name=experiment_name,
+            run_name=run_name,
+        )
 
     if training_only:
         print("Training only, skipping deployment...")

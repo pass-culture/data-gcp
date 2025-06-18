@@ -159,13 +159,18 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
                 + ["user_embedding_json", "item_embedding_json"]
             ),
         ]
+        .pipe(
+            preprocess_embeddings,
+            embedding_dim=EMBEDDING_DIM,
+            default_numerical=DEFAULT_NUMERICAL,
+        )
         .fillna({numeric_feat: DEFAULT_NUMERICAL for numeric_feat in NUMERIC_FEATURES})
         .fillna({cat_feat: DEFAULT_CATEGORICAL for cat_feat in CATEGORICAL_FEATURES})
         .astype({numeric_feat: "float" for numeric_feat in NUMERIC_FEATURES})
         .astype({cat_feat: "str" for cat_feat in CATEGORICAL_FEATURES})
     )
 
-    data_with_status_df = (
+    return (
         typed_data_df.fillna({"is_consulted": 0.0, "is_booked": 0.0})
         .astype(
             {
@@ -203,8 +208,40 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
         .drop_duplicates()
     )
 
-    return preprocess_embeddings(
-        data=data_with_status_df,
-        embedding_dim=EMBEDDING_DIM,
-        default_numerical=DEFAULT_NUMERICAL,
-    )
+
+def linear_train_test_split(
+    data_to_split_df: pd.DataFrame, test_size: float, split_key: str
+) -> tuple:
+    """
+    Performs a linear train-test split on a DataFrame based on sorted unique values of a specified column.
+    This function splits the data chronologically or sequentially by sorting the unique values
+    of the split_key column and using them to determine the train-test boundary. The split
+    ensures that all rows with split_key values below a certain threshold go to training,
+    and all rows with values at or above that threshold go to testing.
+    Args:
+        data_to_split_df (pd.DataFrame): The DataFrame to split into train and test sets.
+        test_size (float): The proportion of unique split_key values to allocate to the test set.
+                        Should be between 0 and 1.
+        split_key (str): The column name to use for determining the split boundary.
+                        Values in this column will be sorted to create a linear split.
+    Returns:
+        tuple: A tuple containing (train_data, test_data) where both are pd.DataFrame objects.
+            train_data contains rows where split_key < train_split_value,
+            test_data contains rows where split_key >= test_split_value.
+    Raises:
+        ValueError: If there are fewer than 2 unique values in the split_key column,
+                    making it impossible to perform a meaningful train-test split.
+    """
+    sorted_unique_split_values = data_to_split_df[split_key].sort_values().unique()
+    if len(sorted_unique_split_values) < 2:
+        raise ValueError(
+            f"Not enough unique values in '{split_key}' to perform train-test split."
+        )
+
+    split_index = int(len(sorted_unique_split_values) * (1 - test_size))
+    train_split_value = sorted_unique_split_values[split_index - 1]
+    test_split_value = sorted_unique_split_values[split_index]
+
+    train_data = data_to_split_df[lambda df: df[split_key] < train_split_value]
+    test_data = data_to_split_df[lambda df: df[split_key] >= test_split_value]
+    return train_data, test_data

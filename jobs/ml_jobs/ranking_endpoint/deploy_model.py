@@ -30,23 +30,23 @@ from src.utils import (
     save_experiment,
 )
 
-PARAMS = {"seen": 500_000, "consult": 500_000, "booking": 500_000}
 TEST_SIZE = 0.1
 CLASSIFIER_MODEL_PARAMS = {
     "objective": "multiclass",
     "num_class": 3,
     "metric": "multi_logloss",
-    "learning_rate": 0.03,
-    "feature_fraction": 0.9,
-    "bagging_fraction": 0.9,
-    "bagging_freq": 5,
-    "lambda_l2": 1,
-    "lambda_l1": 1,
+    "learning_rate": 0.05,
+    "feature_fraction": 0.8,  # Will use 80% of features for each tree
+    "bagging_fraction": 0.8,  # Will use 80% of data for each tree
+    "bagging_freq": 5,  # Perform bagging at every iteration
+    "lambda_l2": 0.1,
+    "lambda_l1": 0.1,
     "verbose": -1,
-    "num_leaves": 10,
+    "num_leaves": 31,
+    "max_depth": -1,
+    "min_data_in_leaf": 20,
 }
-PROBA_CONSULT_THRESHOLD = 0.5
-PROBA_BOOKING_THRESHOLD = 0.5
+
 NDCG_K_LIST = [5, 10, 20]
 
 

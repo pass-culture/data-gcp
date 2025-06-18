@@ -87,7 +87,6 @@ def preprocess_embeddings(
         - Original embedding JSON columns are removed from the output
         - Output maintains the same row indices as input DataFrame
     """
-
     if embedding_dim == 0:
         # If no embeddings are used, we can drop the embedding columns
         return data.drop(columns=["user_embedding_json", "item_embedding_json"])
@@ -159,13 +158,18 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
                 + ["user_embedding_json", "item_embedding_json"]
             ),
         ]
+        .pipe(
+            preprocess_embeddings,
+            embedding_dim=EMBEDDING_DIM,
+            default_numerical=DEFAULT_NUMERICAL,
+        )
         .fillna({numeric_feat: DEFAULT_NUMERICAL for numeric_feat in NUMERIC_FEATURES})
         .fillna({cat_feat: DEFAULT_CATEGORICAL for cat_feat in CATEGORICAL_FEATURES})
         .astype({numeric_feat: "float" for numeric_feat in NUMERIC_FEATURES})
         .astype({cat_feat: "str" for cat_feat in CATEGORICAL_FEATURES})
     )
 
-    data_with_status_df = (
+    return (
         typed_data_df.fillna({"is_consulted": 0.0, "is_booked": 0.0})
         .astype(
             {
@@ -201,10 +205,4 @@ def preprocess_data(data: pd.DataFrame) -> pd.DataFrame:
             .astype(int),
         )
         .drop_duplicates()
-    )
-
-    return preprocess_embeddings(
-        data=data_with_status_df,
-        embedding_dim=EMBEDDING_DIM,
-        default_numerical=DEFAULT_NUMERICAL,
     )

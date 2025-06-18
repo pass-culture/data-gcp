@@ -37,11 +37,11 @@ CLASSIFIER_MODEL_PARAMS = {
     "num_class": 3,
     "metric": "multi_logloss",
     "learning_rate": 0.03,
-    "feature_fraction": 0.9,
-    "bagging_fraction": 0.9,
-    "bagging_freq": 5,
-    "lambda_l2": 1,
-    "lambda_l1": 1,
+    "feature_fraction": 0.8,  # Will use 80% of features for each tree
+    "bagging_fraction": 0.8,  # Will use 80% of data for each tree
+    "bagging_freq": 1,  # Perform bagging at every iteration
+    "lambda_l2": 50,
+    "lambda_l1": 50,
     "verbose": -1,
     "num_leaves": 10,
 }

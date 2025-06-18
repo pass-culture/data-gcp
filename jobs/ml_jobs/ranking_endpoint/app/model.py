@@ -128,6 +128,7 @@ class TrainPipeline:
         self.train_size = 0.9
         self.target = target
         self.params = params
+        self.group_key = "user_id"  # Default group key for ranking
 
     @staticmethod
     def linear_train_test_split(
@@ -266,6 +267,60 @@ class TrainPipeline:
             callbacks=[lgb.early_stopping(stopping_rounds=200)],
         )
 
+    def train_ranking(self, df: pd.DataFrame):
+        """
+        Train a LightGBM ranking model with grouping by user_id.
+
+        This method adapts the training process for learning-to-rank tasks:
+        1. Groups data by user_id to create query groups
+        2. Uses relevance scores (higher = more relevant) as the target
+        3. Configures LightGBM with appropriate ranking parameters
+
+        Args:
+            df (pd.DataFrame): Training data with features and target
+        """
+        train_data, test_data = self.linear_train_test_split(
+            data_to_split_df=df,
+            test_size=1 - self.train_size,
+            split_key="event_date",
+        )
+
+        # Preprocess for lgbm
+        X_train = self.fit_transform(train_data)
+        X_test = self.transform(test_data)
+        y_train, y_test = (
+            train_data[self.target].to_numpy(),
+            test_data[self.target].to_numpy(),
+        )
+
+        # Extract query groups (user_ids) for ranking
+        group_train = train_data.groupby(self.group_key).size().values
+        group_test = test_data.groupby(self.group_key).size().values
+
+        # Create LightGBM datasets with group information
+        train_data = lgb.Dataset(
+            X_train,
+            y_train,
+            group=group_train,
+            feature_name=self.numeric_features + self.categorical_features,
+        )
+        test_data = lgb.Dataset(
+            X_test,
+            y_test,
+            group=group_test,
+            feature_name=self.numeric_features + self.categorical_features,
+            reference=train_data,
+        )
+
+        # Train the model
+        self.model = lgb.train(
+            self.params,
+            train_data,
+            num_boost_round=50_000,
+            valid_sets=[train_data, test_data],
+            callbacks=[lgb.early_stopping(stopping_rounds=200)],
+        )
+
     def predict_classifier(self, df: pd.DataFrame) -> pd.DataFrame:
         processed_data = self.preprocessor.transform(df)
         probabilities = self.model.predict(processed_data)
@@ -289,3 +344,16 @@ class TrainPipeline:
         processed_data = self.preprocessor.transform(df)
 
         return df.assign(regression_score=self.model.predict(processed_data))
+
+    def predict_ranking(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Generate ranking scores for items.
+
+        Args:
+            df (pd.DataFrame): Input data to predict ranking scores for
+
+        Returns:
+            pd.DataFrame: Original dataframe with added ranking score column
+        """
+        processed_data = self.preprocessor.transform(df)
+        return df.assign(score=self.model.predict(processed_data))

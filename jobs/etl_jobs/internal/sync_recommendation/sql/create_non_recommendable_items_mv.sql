@@ -33,11 +33,13 @@ refresh materialized view non_recommendable_items_mv_tmp
 
 -- Move tmp to final Materialized view in a transaction
 -- This is to avoid any downtime in case of a failure
-BEGIN;
+begin
+;
 DROP MATERIALIZED VIEW IF EXISTS non_recommendable_items_mv_old;
 ALTER MATERIALIZED VIEW IF EXISTS non_recommendable_items_mv
     RENAME TO non_recommendable_items_mv_old;
 ALTER MATERIALIZED VIEW IF EXISTS non_recommendable_items_mv_tmp
     RENAME TO non_recommendable_items_mv;
 DROP MATERIALIZED VIEW IF EXISTS non_recommendable_items_mv_old;
-COMMIT;
+commit
+;

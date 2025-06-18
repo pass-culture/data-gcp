@@ -12,12 +12,14 @@ on:
       APPLICATIVE_EXTERNAL_CONNECTION_ID:
         type: string
         required: false
+      GITHUB_TOKEN:
+        type: string
+        required: true
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER:
         required: true
       GCP_EHP_SERVICE_ACCOUNT:
         required: true
-
 
 jobs:
   mkdocs-deploy:
@@ -72,7 +74,7 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ inputs.GITHUB_TOKEN }}
           publish_dir: ./site
 
       - name: "Get secrets for Slack"

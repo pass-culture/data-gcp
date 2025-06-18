@@ -8,6 +8,15 @@ permissions:
   id-token: write
 
 jobs:
+  # get-token:
+  #   uses: ./.github/workflows/reusable_github_app_auth.yml
+  #   with:
+  #     permission-contents: write
+      
+  #   secrets:
+  #     PASSCULTURE_GITHUB_ACTION_APP_ID: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
+  #     PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
+
   linter:
     uses: ./.github/workflows/reusable_linter.yml
     secrets:
@@ -51,6 +60,7 @@ jobs:
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
   find-test-jobs:
+    # needs: get-token
     outputs:
       jobs: ${{ steps.compute.outputs.jobs }}
     runs-on: ubuntu-latest
@@ -105,6 +115,7 @@ jobs:
       JOB_PATH: ${{ matrix.job }}
 
   find-changed-orchestration:
+    # needs: get-token
     runs-on: ubuntu-latest
     outputs:
       run_tests: ${{ steps.changed-orchestration-files.outputs.any_modified }}

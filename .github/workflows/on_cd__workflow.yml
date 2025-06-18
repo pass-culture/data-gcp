@@ -12,6 +12,14 @@ permissions:
   id-token: write
 
 jobs:
+  get-token:
+    uses: ./.github/workflows/reusable_github_app_auth.yml
+    with:
+      permission-contents: write
+    secrets:
+      PASSCULTURE_GITHUB_ACTION_APP_ID: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
+      PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
+
   linter:
     uses: ./.github/workflows/reusable_linter.yml
     with:
@@ -112,7 +120,7 @@ jobs:
     with:
       ENV_SHORT_NAME: "prod"
       APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_PROD }}
-
+      GITHUB_TOKEN: ${{ needs.get-token.outputs.token }}
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
@@ -141,6 +149,7 @@ jobs:
           else
             echo "output=false" >> $GITHUB_OUTPUT
           fi
+
   k8s-deploy-on-dev:
     needs: [find-build-job]
     if: ${{ needs.find-build-job.outputs.has-changed == 'true' && ( github.ref == 'refs/heads/production' || github.event_name == 'workflow_dispatch' )}}

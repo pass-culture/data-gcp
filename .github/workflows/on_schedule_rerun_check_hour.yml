@@ -9,12 +9,22 @@ permissions:
   actions: write
 
 jobs:
+  get-token:
+    uses: ./.github/workflows/reusable_github_app_auth.yml
+    with:
+      permission-contents: write
+      permission-pull-requests: write
+    secrets:
+      PASSCULTURE_GITHUB_ACTION_APP_ID: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
+      PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
+
   re-run-worflow:
+    needs: get-token
     runs-on: ubuntu-latest
     steps:
       - name: List workflow open branch with associated PR
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ needs.get-token.outputs.token }}
           WORKFLOW_ID: 134227518 # id of the workflow "on_pr_check_hour.yaml"
           REPOSITORY: ${{ github.repository }}
         run: |

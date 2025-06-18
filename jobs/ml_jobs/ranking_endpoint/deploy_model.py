@@ -18,7 +18,6 @@ from src.figure import (
     plot_features_importance,
 )
 from src.preprocessing import (
-    linear_train_test_split,
     map_features_columns,
     preprocess_data,
 )
@@ -198,7 +197,7 @@ def train_pipeline(input_gcs_dir: str, experiment_name: str, run_name: str) -> N
     preprocessed_data = raw_data.pipe(preprocess_data)
 
     # Split based on unique_session_id
-    train_data, test_data = linear_train_test_split(
+    train_data, test_data = TrainPipeline.linear_train_test_split(
         data_to_split_df=preprocessed_data,
         split_key="event_date",
         test_size=TEST_SIZE,

@@ -275,6 +275,10 @@ def main(
         None,
         help="GCS directory where the input data is stored",
     ),
+    training_only: bool = typer.Option(
+        False,
+        help="If True, only train the model without deploying",
+    ),
 ) -> None:
     yyyymmdd = datetime.now().strftime("%Y%m%d")
     if model_name is None:
@@ -287,6 +291,11 @@ def main(
         experiment_name=experiment_name,
         run_name=run_name,
     )
+
+    if training_only:
+        print("Training only, skipping deployment...")
+        return
+
     print("Deploy...")
     deploy_container(serving_container)
     save_experiment(experiment_name, model_name, serving_container, run_id=run_id)

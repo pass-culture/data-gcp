@@ -5,9 +5,9 @@ import joblib
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
+from preprocessing import linear_train_test_split
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder
 
@@ -181,14 +181,12 @@ class TrainPipeline:
         joblib.dump(self.preprocessor, f"./metadata/preproc_{model_name}.joblib")
         self.model.save_model(f"./metadata/model_{model_name}.txt")
 
-    def train(self, df: pd.DataFrame, class_weight: dict, seed: int):
-        # Split data based on user_x_item_id
-        unique_user_x_item_ids = df.user_x_item_id.unique()
-        train_session_ids, test_session_ids = train_test_split(
-            unique_user_x_item_ids, test_size=self.train_size, random_state=seed
+    def train(self, df: pd.DataFrame, class_weight: dict):
+        train_data, test_data = linear_train_test_split(
+            data_to_split_df=df,
+            test_size=1 - self.train_size,
+            split_key="event_date",
         )
-        train_data = df[df["user_x_item_id"].isin(train_session_ids)]
-        test_data = df[df["user_x_item_id"].isin(test_session_ids)]
 
         # Preprocess for lgbm
         X_train = self.fit_transform(train_data)

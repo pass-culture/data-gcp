@@ -1,5 +1,4 @@
 import os
-import secrets
 import shutil
 from datetime import datetime
 
@@ -19,6 +18,7 @@ from src.figure import (
     plot_features_importance,
 )
 from src.preprocessing import (
+    linear_train_test_split,
     map_features_columns,
     preprocess_data,
 )
@@ -99,6 +99,26 @@ def evaluate_model(
 ) -> None:
     figure_folder = f"{figure_folder}{suffix}"
 
+    print("Postprocessing predictions...")
+    test_stats_df = pd.DataFrame.from_records(
+        test_predictions.groupby("user_id").apply(
+            lambda g: {
+                "user_id": g.name,
+                "item_count": g.item_id.nunique(),
+            }
+        )
+    )
+    user_ids_with_enough_items = test_stats_df.loc[
+        lambda df: df.item_count >= 20, "user_id"
+    ].drop_duplicates()
+    test_predictions = test_predictions.loc[
+        lambda df: df.user_id.isin(user_ids_with_enough_items)
+    ].reset_index(drop=True)
+
+    print(f"Number of users in test set : {len(test_stats_df)}")
+    print(f"Number of users : {len(user_ids_with_enough_items)} with enough items")
+    print(f"Postprocessing done, {len(test_predictions)} predictions")
+
     print("Evaluating model...")
     ndcg_at_k = compute_ndcg_at_k(predictions=test_predictions, k_list=NDCG_K_LIST)
     random_ndcg_at_k = compute_ndcg_at_k(
@@ -156,7 +176,7 @@ def train_pipeline(input_gcs_dir: str, experiment_name: str, run_name: str) -> N
         None
     Process:
         1. Loads and preprocesses data from GCS
-        2. Splits data by unique user_x_item_id into train/test sets
+        2. Splits data by event_date into train/test sets
         3. Computes class weights based on target class frequency
         4. Connects to remote MLflow for experiment tracking
         5. Trains LightGBM classifier with auto-logging enabled
@@ -178,17 +198,11 @@ def train_pipeline(input_gcs_dir: str, experiment_name: str, run_name: str) -> N
     preprocessed_data = raw_data.pipe(preprocess_data)
 
     # Split based on unique_session_id
-    seed = secrets.randbelow(1000)
-    unique_dates = preprocessed_data.event_date.unique()
-    train_session_ids, test_session_ids = time_train_test_split(
-        unique_user_x_item_ids, test_size=TEST_SIZE, random_state=seed
+    train_data, test_data = linear_train_test_split(
+        data_to_split_df=preprocessed_data,
+        split_key="event_date",
+        test_size=TEST_SIZE,
     )
-    train_data = preprocessed_data[
-        preprocessed_data["user_x_item_id"].isin(train_session_ids)
-    ]
-    test_data = preprocessed_data[
-        preprocessed_data["user_x_item_id"].isin(test_session_ids)
-    ]
 
     # Compute class weights
     class_frequency = train_data.target_class.value_counts(normalize=True).to_dict()
@@ -208,7 +222,7 @@ def train_pipeline(input_gcs_dir: str, experiment_name: str, run_name: str) -> N
     with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=run_name):
         pipeline_classifier.set_pipeline()
         print("Training model...")
-        pipeline_classifier.train(train_data, class_weight=class_weight, seed=seed)
+        pipeline_classifier.train(train_data, class_weight=class_weight)
         print("Training finished")
 
         print("Whole data evaluation...")
@@ -236,7 +250,6 @@ def train_pipeline(input_gcs_dir: str, experiment_name: str, run_name: str) -> N
             figure_folder=f"/tmp/{experiment_name}",
             suffix="_reco",
         )
-        mlflow.log_param("seed", seed)
 
     # TODO: Check to see if it is better with or without
     # # retrain on whole

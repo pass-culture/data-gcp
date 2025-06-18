@@ -145,7 +145,7 @@ for dag_type, params in dags.items():
             dag=dag,
             table=f"{job_name_table}",
             job_params=job_params,
-            extra_params={"prefix": prefix, "dag_type": dag_type},
+            extra_params={"dag_type": dag_type},
         )
 
         start >> loading_task >> end

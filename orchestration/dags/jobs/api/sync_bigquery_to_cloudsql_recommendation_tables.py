@@ -1,5 +1,13 @@
 from datetime import datetime, timedelta
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.bash import BashOperator
+from airflow.operators.dummy import DummyOperator
+from airflow.operators.python import BranchPythonOperator
+from airflow.providers.google.cloud.operators.gcs import GCSDeleteObjectsOperator
+from airflow.sensors.time_delta import TimeDeltaSensor
+from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import DAG_FOLDER, DAG_TAGS, DATA_GCS_BUCKET_NAME, ENV_SHORT_NAME
@@ -10,14 +18,8 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import delayed_waiting_operator, get_airflow_schedule
-from jobs.crons import SCHEDULE_DICT
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy import DummyOperator
-from airflow.operators.python import BranchPythonOperator
-from airflow.providers.google.cloud.operators.gcs import GCSDeleteObjectsOperator
-from airflow.utils.task_group import TaskGroup
+from jobs.crons import SCHEDULE_DICT
 
 default_args = {
     "start_date": datetime(2025, 3, 10),
@@ -203,7 +205,7 @@ with DAG(
                     --view-name {view}
             """
 
-            current_task = SSHGCEOperator(
+            refresh_materialized_view = SSHGCEOperator(
                 task_id=f"refresh_{view}",
                 instance_name="{{ params.instance_name }}",
                 base_dir=BASE_DIR,
@@ -211,9 +213,16 @@ with DAG(
                 dag=dag,
             )
 
+            # Add a 3 minute delay before each view refresh (except the first)
             if previous_task:
-                previous_task >> current_task
-            previous_task = current_task
+                # This is the task that waits for 3 minutes (180 seconds)
+                wait_between_refreshes = TimeDeltaSensor(
+                    task_id=f"wait_before_{view}_refresh",
+                    delta=timedelta(minutes=3),
+                )
+                previous_task >> wait_between_refreshes >> refresh_materialized_view
+            # else:
+            previous_task = refresh_materialized_view
 
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task",

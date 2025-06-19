@@ -194,21 +194,26 @@ with DAG(
         impersonation_chain=None,
     )
 
-    # Refresh all materialized views concurrently
+    # Refresh all materialized views sequentially
     with TaskGroup("refresh_materialized_views", dag=dag) as refresh_views:
+        previous_task = None
         for view in MATERIALIZED_VIEWS:
             refresh_command = f"""
                 python bq_to_sql.py materialize-cloudsql \
                     --view-name {view}
             """
 
-            SSHGCEOperator(
+            current_task = SSHGCEOperator(
                 task_id=f"refresh_{view}",
                 instance_name="{{ params.instance_name }}",
                 base_dir=BASE_DIR,
                 command=refresh_command,
                 dag=dag,
             )
+
+            if previous_task:
+                previous_task >> current_task
+            previous_task = current_task
 
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task",

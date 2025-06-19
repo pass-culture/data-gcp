@@ -9,6 +9,7 @@ select
     safe_cast(min_offers as int64) as min_offers,
     {{ clean_str("title") }} as title,
     {{ clean_str("offer_title") }} as offer_title,
+    regexp_extract(url, r'to/([^/?#]+)') as typeform_id,
     * except (
         ending_datetime,
         beginning_datetime,

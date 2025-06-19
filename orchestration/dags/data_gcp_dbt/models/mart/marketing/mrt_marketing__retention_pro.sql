@@ -20,7 +20,7 @@ select
     min(
         case when bvh.total_collective_bookable_offers > 0 then bvh.partition_date end
     ) as first_collective_bookable_date_after_mail
-from {{ ref("mrt_brevo__transactional_pro") }} as btp
+from {{ ref("mrt_marketing__transactional_pro") }} as btp
 left join {{ ref("int_global__offerer") }} as go on btp.offerer_id = go.offerer_id
 left join {{ ref("mrt_global__venue") }} as gv on btp.offerer_id = gv.offerer_id
 left join

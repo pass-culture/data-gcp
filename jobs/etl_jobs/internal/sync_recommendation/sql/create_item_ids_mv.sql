@@ -41,12 +41,15 @@ CREATE UNIQUE INDEX idx_item_ids_mv_{{ ts_nodash }} ON public.item_ids_mv_tmp US
 refresh materialized view item_ids_mv_tmp
 ;
 
--- Move tmp to final Materialized view
--- mv -> mv_old
--- mv_tmp -> mv
--- drop mv_old if exists
+-- Move tmp to final Materialized view in a transaction
+-- This is to avoid any downtime in case of a failure
+begin
+;
+DROP MATERIALIZED VIEW IF EXISTS item_ids_mv_old;
 ALTER MATERIALIZED VIEW IF EXISTS item_ids_mv
     RENAME TO item_ids_mv_old;
 ALTER MATERIALIZED VIEW IF EXISTS item_ids_mv_tmp
     RENAME TO item_ids_mv;
 DROP MATERIALIZED VIEW IF EXISTS item_ids_mv_old;
+commit
+;

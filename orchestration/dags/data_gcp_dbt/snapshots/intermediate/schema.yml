@@ -1,0 +1,7 @@
+version: 2
+
+snapshots:
+  - name: snapshot_intermediate__bookable_collective_offer
+    description: "This snapshot captures the changes in the bookability of collective offers. It is based on table int_applicative__collective_offer."
+  - name: snapshot_intermediate__bookable_offer
+    description: "This snapshot captures the changes in the bookability of offers.  It is based on table int_applicative__offer."

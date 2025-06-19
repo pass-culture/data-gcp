@@ -14,6 +14,7 @@ SELECT
   (GROUP_CONCAT(DISTINCT(?profession); separator=" | ") AS ?professions)
   (GROUP_CONCAT(DISTINCT(?alias_fr); separator=" | ") AS ?aliases_fr)
   (GROUP_CONCAT(DISTINCT(?alias_en); separator=" | ") AS ?aliases_en)
+  ((IF(BOUND(?genius_id) && ?genius_id != "", 1, 0) + IF(BOUND(?spotify_id) && ?spotify_id != "", 1, 0)) AS ?matching_score)
 WHERE {
   ?wiki_id wdt:P31 wd:Q5;  # Ensure the entity is a human (P31 = instance of, Q5 = human)
   OPTIONAL { ?wiki_id schema:description ?description . FILTER (LANG(?description) = "fr") . }
@@ -23,10 +24,10 @@ WHERE {
   OPTIONAL { ?wiki_id skos:altLabel ?alias_fr . FILTER (lang(?alias_fr) = "fr") }
   OPTIONAL { ?wiki_id skos:altLabel ?alias_en . FILTER (lang(?alias_en) = "en") }
   OPTIONAL {?wiki_id wdt:P2373 ?genius_id . }
-  OPTIONAL {?wiki_id wdt:P10780 ?radiofr_id . }
+  OPTIONAL {?wiki_id wdt:P1902 ?spotify_id . }
   OPTIONAL {?wiki_id wdt:P18 ?img . }
   OPTIONAL {?wiki_id wdt:P2671 ?gkg_id .}
   FILTER ((?artist_name_fr != "") || (?artist_name_en != ""))
-  FILTER ((?genius_id != "" ) || (?radiofr_id != "") )
+  FILTER ((?genius_id != "" ) || (?spotify_id != "") )
 }
-GROUP BY ?wiki_id ?artist_name_fr ?artist_name_en ?description ?img ?gkg_id
+GROUP BY ?wiki_id ?artist_name_fr ?artist_name_en ?description ?img ?gkg_id ?genius_id ?spotify_id

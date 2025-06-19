@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: mrt_brevo__transactional_pro
-    description: "{{ doc('description__mrt_brevo__transactional_pro') }}"
+  - name: mrt_marketing__transactional_pro
+    description: "{{ doc('description__mrt_marketing__transactional_pro') }}"
     columns:
       - name: brevo_tag
         description: "{{ doc('column__brevo_tag') }}"

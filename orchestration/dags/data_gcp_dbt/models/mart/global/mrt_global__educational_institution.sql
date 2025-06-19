@@ -57,13 +57,7 @@ with
                     when collective_booking_rank_desc = 1
                     then collective_booking_creation_date
                 end
-            ) as last_booking_date,
-            max(
-                case
-                    when collective_booking_rank_desc = 1
-                    then collective_offer_subcategory_id
-                end
-            ) as last_category_booked
+            ) as last_booking_date
         from {{ ref("mrt_global__collective_booking") }}
         where collective_booking_status != 'CANCELLED'
         group by educational_institution_id
@@ -87,23 +81,22 @@ select
     ei.current_deposit_creation_date,
     cb.first_booking_date,
     cb.last_booking_date,
-    cb.last_category_booked,
     sh.total_students,
     institution_metadata_aggregated_type.macro_institution_type,
-    location_info.institution_city,
-    location_info.institution_epci,
-    location_info.institution_density_label,
-    location_info.institution_macro_density_label,
-    location_info.institution_density_level,
-    location_info.institution_latitude,
-    location_info.institution_longitude,
-    location_info.institution_academy_name,
-    location_info.institution_region_name,
-    location_info.institution_in_qpv,
-    location_info.institution_department_code,
-    location_info.institution_department_name,
-    location_info.institution_internal_iris_id,
-    location_info.institution_postal_code,
+    ei.institution_city,
+    ei.institution_epci,
+    ei.institution_density_label,
+    ei.institution_macro_density_label,
+    ei.institution_density_level,
+    ei.institution_latitude,
+    ei.institution_longitude,
+    ei.institution_academy_name,
+    ei.institution_region_name,
+    ei.institution_in_qpv,
+    ei.institution_department_code,
+    ei.institution_department_name,
+    ei.institution_internal_iris_id,
+    ei.institution_postal_code,
     coalesce(ei.current_deposit_amount, 0) as current_deposit_amount,
     coalesce(ei.total_deposit_amount, 0) as total_deposit_amount,
     coalesce(ei.total_deposits, 0) as total_deposits,
@@ -131,11 +124,7 @@ select
         cb.total_current_year_collective_real_revenue, ei.current_deposit_amount
     ) as ratio_current_credit_utilization,
     coalesce(cb.total_tickets, 0) as total_tickets,
-    coalesce(cb.total_current_year_tickets, 0) as total_current_year_tickets,
-    coalesce(ei.total_credited_beneficiaries, 0) as total_credited_beneficiaries,
-    safe_divide(
-        ei.total_credited_beneficiaries, sh.total_students
-    ) as ratio_beneficiary_students
+    coalesce(cb.total_current_year_tickets, 0) as total_current_year_tickets
 from {{ ref("int_applicative__educational_institution") }} as ei
 left join
     collective_booking_grouped_by_institution as cb
@@ -147,6 +136,3 @@ left join
     {{ source("seed", "institution_metadata_aggregated_type") }}
     as institution_metadata_aggregated_type
     on ei.institution_type = institution_metadata_aggregated_type.institution_type
-left join
-    {{ ref("int_geo__institution_location") }} as location_info
-    on ei.institution_id = location_info.institution_id

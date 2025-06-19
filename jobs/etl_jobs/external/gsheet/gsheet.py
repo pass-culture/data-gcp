@@ -103,6 +103,17 @@ SHEETS = {
             "movie_production_country": "movie_production_country",
         },
     },
+    "gsheet_masa_affiliation_details_2324": {
+        "spreadsheet_ids": ["1zRRO50DprjnBiWsb83vZESGmCoA8gT52qm1eCFtfkrs"],
+        "expected_headers_dict": {
+            "UAI": "institution_external_id",
+            "Ministère": "ministry",
+            "Année scolaire": "scholar_year",
+            "Provisoire": "is_provisional",
+            "Secteur": "sector",
+            "Affiliation": "affiliation",
+        },
+    },
 }
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]

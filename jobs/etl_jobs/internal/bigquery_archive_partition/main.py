@@ -1,14 +1,19 @@
 import typer
-from typing import Any
+from typing import Any, Optional
 import json
-from archive import Archive
+from archive import Archive, JobConfig
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler()],
+)
+
+logger = logging.getLogger(__name__)
 
 
 def run(
-    table: str = typer.Option(
-        ...,
-        help="Table name",
-    ),
     config: str = typer.Option(
         ...,
         help="Config of the table",
@@ -19,14 +24,17 @@ def run(
     ),
 ):
     try:
-        config_dict: dict[str, Any] = json.loads(config)  # Use safe JSON parsing
+        config: JobConfig = JobConfig(**json.loads(config))
     except json.JSONDecodeError as e:
-        typer.echo(f"Error: Invalid JSON config - {e}", err=True)
+        logger.error(f"Error: Invalid JSON config - {e}")
         raise typer.Exit(code=1)
 
-    archive = Archive(table, config_dict)
-    archive.store_partitions_in_temp()
-    archive.export_and_delete_partitions(limit)
+    logger.info(
+        f"Running archive for table {config.table_id} with config {config}, limit {limit}"
+    )
+    archive = Archive(config)
+    archive.archive_partitions(limit)
+    logger.info(f"Archive for table {config.table_id} completed successfully")
 
 
 if __name__ == "__main__":

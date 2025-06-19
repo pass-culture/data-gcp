@@ -1,4 +1,5 @@
-EXPECTED_ADRESS_COLUMNS = [
+GEOPF_API_URL = "https://data.geopf.fr/geocodage/search/csv"
+GEOPF_EXPECTED_ADDRESS_COLUMNS = [
     "user_id",
     "user_full_address",
     "longitude",

@@ -6,8 +6,8 @@ models:
     columns:
       - name: venue_id
         description: "{{ doc('column__venue_id') }}"
-      - name: venue_managing_offerer_id
-        description: "{{ doc('column__venue_managing_offerer_id') }}"
+      - name: offerer_id
+        description: "{{ doc('column__offerer_id') }}"
       - name: partner_id
         description: "{{ doc('column__partner_id') }}"
       - name: offerer_rank_desc

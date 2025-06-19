@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_RETRIEVAL_DATASET,
     DAG_FOLDER,
@@ -46,7 +46,7 @@ gce_params = {
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -88,6 +88,10 @@ with DAG(
             default=gce_params["container_worker"][ENV_SHORT_NAME],
             type="string",
         ),
+        "artifact_registry_base_path": Param(
+            default=f"europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/{ENV_SHORT_NAME}",
+            type="string",
+        ),
     },
 ) as dag:
     start = DummyOperator(task_id="start", dag=dag)
@@ -111,6 +115,7 @@ with DAG(
     )
 
     export_bq = BigQueryInsertJobOperator(
+        project_id=GCP_PROJECT_ID,
         task_id="store_item_embbedding_data",
         configuration={
             "extract": {
@@ -127,16 +132,24 @@ with DAG(
         dag=dag,
     )
 
-    sim_offers = SSHGCEOperator(
-        task_id="containerize_retrieval_semantic_vector",
+    semantic_retrieval_build = SSHGCEOperator(
+        task_id="semantic_retrieval_build",
         instance_name="{{ params.instance_name }}",
         base_dir=dag_config["BASE_DIR"],
-        command="python deploy_semantic.py "
+        command="python create_vector_database.py semantic-database "
+        f"--source-gs-path {dag_config['STORAGE_PATH']} ",
+        dag=dag,
+    )
+
+    build_and_push_docker_image = SSHGCEOperator(
+        task_id="build_and_push_docker_image",
+        instance_name="{{ params.instance_name }}",
+        base_dir=dag_config["BASE_DIR"],
+        command="python build_and_push_docker_image.py "
+        "--base-serving-container-path {{ params.artifact_registry_base_path }} "
         "--experiment-name {{ params.experiment_name }} "
         "--model-name {{ params.model_name }} "
-        f"--source-gs-path {dag_config['STORAGE_PATH']} "
         "--container-worker {{ params.container_worker }} ",
-        dag=dag,
     )
 
     gce_instance_stop = DeleteGCEOperator(
@@ -147,7 +160,8 @@ with DAG(
         start
         >> gce_instance_start
         >> fetch_install_code
-        >> sim_offers
+        >> semantic_retrieval_build
+        >> build_and_push_docker_image
         >> gce_instance_stop
     )
-    (start >> export_bq >> sim_offers)
+    (start >> export_bq >> semantic_retrieval_build)

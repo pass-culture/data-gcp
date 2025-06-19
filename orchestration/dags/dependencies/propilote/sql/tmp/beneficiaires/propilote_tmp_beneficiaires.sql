@@ -5,7 +5,7 @@ with
             date_trunc(deposit_active_date, month) as month,
             max(deposit_active_date) as last_active_date
         from `{{ bigquery_analytics_dataset }}.native_daily_user_deposit`
-        where deposit_active_date > date_sub(current_date, interval 24 month)
+        where deposit_active_date > date('2021-01-01')
         group by date_trunc(deposit_active_date, month)
     ),
 
@@ -28,7 +28,7 @@ with
             on ebd.deposit_id = uua.deposit_id
             and uua.deposit_active_date = date(booking_used_date)
             and booking_is_used
-        where deposit_active_date > date_sub(current_date, interval 24 month)
+        where deposit_active_date > date('2021-01-01')
         group by deposit_active_date, user_id, deposit_type, deposit_amount
     ),
 

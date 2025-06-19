@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_FEATURES_DATASET,
     DAG_FOLDER,
@@ -31,7 +31,7 @@ DATE = "{{ yyyymmdd(ds) }}"
 DAG_NAME = "embedding_reduction_item"
 default_args = {
     "start_date": datetime(2023, 8, 2),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -86,6 +86,7 @@ with DAG(
     )
 
     export_bq = BigQueryInsertJobOperator(
+        project_id=GCP_PROJECT_ID,
         task_id="store_item_embbedding_data",
         configuration={
             "extract": {
@@ -114,6 +115,8 @@ with DAG(
         f"--output-prefix-table-name item_embedding "
         f"--reduction-config default ",
         retries=2,
+        deferrable=True,
+        poll_interval=300,
     )
 
     gce_instance_stop = DeleteGCEOperator(

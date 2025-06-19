@@ -24,7 +24,6 @@ select
     collective_offer_name,
     collective_offer_description,
     collective_offer_creation_date,
-    collective_offer_subcategory_id,
     collective_offer_date_updated,
     collective_offer_students,
     collective_offer_price_detail,

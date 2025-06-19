@@ -6,17 +6,18 @@ with
             adu.user_id,
             adu.user_department_code,
             pc.postal_code as user_postal_code,
+            pc.postal_approx_centroid_latitude as user_latitude,
+            pc.postal_approx_centroid_longitude as user_longitude,
             timestamp(adu.user_creation_date) as user_creation_at,
-            safe_cast(pc.centroid_latitude as float64) as user_latitude,
-            safe_cast(pc.centroid_longitude as float64) as user_longitude,
             if(
-                pc.centroid_latitude is not null and pc.centroid_longitude is not null,
-                "municipality",
+                pc.postal_approx_centroid_latitude is not null
+                and pc.postal_approx_centroid_longitude is not null,
+                "postal_code",
                 "unknown"
             ) as geocode_type
         from {{ source("raw", "applicative_database_user") }} as adu
         left join
-            {{ source("seed", "2025_insee_postal_code") }} as pc
+            {{ ref("int_seed__geo_postal_code") }} as pc
             on adu.user_postal_code = pc.postal_code
         qualify
             row_number() over (

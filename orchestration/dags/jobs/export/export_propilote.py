@@ -1,7 +1,7 @@
 import datetime
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import DAG_FOLDER, DAG_TAGS, GCP_PROJECT_ID
 from common.operators.bigquery import bigquery_job_task
 from common.utils import depends_loop, get_airflow_schedule
@@ -15,7 +15,7 @@ default_dag_args = {
     "retries": 1,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
 }
 
 dag = DAG(

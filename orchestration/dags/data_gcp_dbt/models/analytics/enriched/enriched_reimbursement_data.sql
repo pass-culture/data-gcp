@@ -147,7 +147,9 @@ with
             invoice.invoice_reference,
             invoice.invoice_creation_date,
             invoice.amount as invoice_amount
-        from {{ ref("collective_booking") }} as collective_booking
+        from
+            {{ source("raw", "applicative_database_collective_booking") }}
+            as collective_booking
         left join
             {{ ref("pricing") }} as pricing
             on collective_booking.collective_booking_id = pricing.collective_booking_id

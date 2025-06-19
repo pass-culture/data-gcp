@@ -1,6 +1,9 @@
 duckdb
+fsspec
+gcsfs
 google-cloud-storage
 boto3
 botocore
 typer
-google-cloud-secret-manager==2.20.0
+google-cloud-secret-manager
+loguru

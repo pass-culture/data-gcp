@@ -7,6 +7,8 @@ class CPUImage:
     startup_script: str = """
         #!/bin/bash
         echo 'CC=gcc' | sudo tee -a /etc/environment
+        curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
+        sudo bash add-google-cloud-ops-agent-repo.sh --also-install
         """
     startup_script_wait_time: int = 30
 
@@ -18,6 +20,8 @@ class TFGPUImage:
         #!/bin/bash
         echo 'CC=gcc' | sudo tee -a /etc/environment
         sudo /opt/deeplearning/install-driver.sh
+        curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
+        sudo bash add-google-cloud-ops-agent-repo.sh --also-install
     """
     startup_script_wait_time: int = 180
 

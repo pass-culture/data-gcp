@@ -1,8 +1,9 @@
-import json
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.alerts import SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN
+from common.alerts.ml_training import create_algo_training_slack_block
+from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_COMPLIANCE_DATASET,
     DAG_FOLDER,
@@ -11,7 +12,6 @@ from common.config import (
     GCP_PROJECT_ID,
     MLFLOW_BUCKET_NAME,
     MLFLOW_URL,
-    SLACK_CONN_PASSWORD,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -19,8 +19,8 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
+from common.operators.slack import SendSlackMessageOperator
 from common.utils import get_airflow_schedule
-from dependencies.ml.utils import create_algo_training_slack_block
 
 from airflow import DAG
 from airflow.models import Param
@@ -28,7 +28,6 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
-from airflow.providers.http.operators.http import HttpOperator
 
 DATE = "{{ ts_nodash }}"
 DAG_NAME = "algo_training_offer_compliance_model"
@@ -54,7 +53,7 @@ gce_params = {
 
 default_args = {
     "start_date": datetime(2023, 5, 9),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -95,6 +94,7 @@ with DAG(
     start = DummyOperator(task_id="start", dag=dag)
 
     import_offer_as_parquet = BigQueryInsertJobOperator(
+        project_id=GCP_PROJECT_ID,
         task_id="import_offer_as_parquet",
         configuration={
             "extract": {
@@ -193,19 +193,12 @@ with DAG(
         task_id="gce_stop_task", instance_name="{{ params.instance_name }}"
     )
 
-    send_slack_notif_success = HttpOperator(
+    send_slack_notif_success = SendSlackMessageOperator(
         task_id="send_slack_notif_success",
-        method="POST",
-        http_conn_id="http_slack_default",
-        endpoint=f"{SLACK_CONN_PASSWORD}",
-        data=json.dumps(
-            {
-                "blocks": create_algo_training_slack_block(
-                    "{{ params.model_name }}", MLFLOW_URL, ENV_SHORT_NAME
-                )
-            }
+        webhook_token=SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN,
+        block=create_algo_training_slack_block(
+            "{{ params.model_name }}", MLFLOW_URL, ENV_SHORT_NAME
         ),
-        headers={"Content-Type": "application/json"},
     )
 
     (

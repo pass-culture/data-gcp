@@ -135,12 +135,9 @@ with
         select
             offerer_id,
             string_agg(
-                offerer_tag_label, " ; " order by cast(offerer_id as int)
+                tag_label, " ; " order by cast(offerer_id as int)
             ) as structure_tags
-        from {{ ref("offerer_tag_mapping") }} offerer_tag_mapping
-        left join
-            {{ ref("offerer_tag") }} offerer_tag
-            on offerer_tag_mapping.tag_id = offerer_tag.offerer_tag_id
+        from {{ ref("int_applicative__offerer_tag") }}
         group by offerer_id
     )
 
@@ -166,7 +163,7 @@ select distinct
     offer.is_active as offer_is_active,
     offer_status.offer_status,
     if(offer_status.offer_status = 'SOLD_OUT', true, false) as is_sold_out,
-    venue.venue_managing_offerer_id as offerer_id,
+    venue.offerer_id,
     offerer.offerer_name,
     venue.venue_id,
     venue.venue_name,
@@ -209,8 +206,7 @@ select distinct
     ) as passculture_pro_url,
     concat('https://passculture.app/offre/', offer.offer_id) as webapp_url,
     concat(
-        "https://backoffice.passculture.team/pro/offerer/",
-        venue.venue_managing_offerer_id
+        "https://backoffice.passculture.team/pro/offerer/", venue.offerer_id
     ) as link_pc_pro,
     count_bookings.first_booking_date as first_booking_date,
     coalesce(count_bookings.max_bookings_in_day, 0) as max_bookings_in_day,
@@ -241,9 +237,7 @@ left join venue_humanized_id on venue_humanized_id.venue_id = venue.venue_id
 left join
     {{ source("seed", "region_department") }} region_dept
     on region_dept.num_dep = venue.venue_department_code
-left join
-    {{ ref("int_raw__offerer") }} offerer
-    on offerer.offerer_id = venue.venue_managing_offerer_id
+left join {{ ref("int_raw__offerer") }} offerer on offerer.offerer_id = venue.offerer_id
 left join offerer_humanized_id on offerer_humanized_id.offerer_id = offerer.offerer_id
 left join {{ ref("siren_data") }} siren_data on siren_data.siren = offerer.offerer_siren
 left join offerer_tags on offerer_tags.offerer_id = offerer.offerer_id

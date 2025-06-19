@@ -3,6 +3,7 @@ version: 1
 sources:
   - name: raw
     schema: raw_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: adage
       - name: applicative_database_accessibility_provider
@@ -147,6 +148,7 @@ sources:
       - name: zendesk_survey_response
   - name: clean
     schema: clean_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: applicative_database_booking_history
       - name: applicative_database_stock_history
@@ -161,12 +163,13 @@ sources:
 
   - name: analytics
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: adage
-      - name: linked_offers
 
   - name: seed
     schema: seed_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: agg_partner_cultural_sector
       - name: epci
@@ -178,17 +181,20 @@ sources:
       - name: macro_rayons
       - name: population_age_and_department_france_details
       - name: priority_local_authorities
+      - name: 2020_insee_iris_socio_demographics
       - name: 2024_insee_qpv
       - name: 2024_insee_qpv_population
-      - name: 2025_insee_postal_code
+      - name: 2025_insee_code
       - name: qpi_mapping
       - name: rural_city_type_data
       - name: region_department
-      - name: siren_data_labels
+      - name: siren_main_business_labels
+      - name: siren_legal_category_labels
       - name: zrr
 
   - name: ml_preproc
     schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: default_item_cluster
       - name: item_embedding_extraction
@@ -205,10 +211,12 @@ sources:
         description: Partitionned table containing the history of the two tower item emebddings
   - name: ml_linkage
     schema: ml_linkage_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: item_offer_mapping
   - name: appsflyer_import
     schema: appsflyer_import_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: cohort_unified_timezone_versioned
       - name: installs

@@ -1,4 +1,9 @@
 -- noqa: disable=all
+{{
+    config(
+        cluster_by="active_week",
+    )
+}}
 with
     weeks as (
         select *
@@ -75,7 +80,7 @@ with
             ) as months_since_deposit_created,
             coalesce(sum(booking_intermediary_amount), 0) as amount_spent,
             coalesce(count(ebd.booking_id), 0) as cnt_no_cancelled_bookings,
-            coalesce(sum(delta_diversification), 0) as delta_diversification
+            coalesce(sum(ebd.diversity_score), 0) as delta_diversification
         from deposit_active_weeks
         left join
             {{ ref("mrt_global__booking") }} as ebd
@@ -83,9 +88,6 @@ with
             and deposit_active_weeks.active_week
             = date_trunc(booking_creation_date, week(monday))
             and not booking_is_cancelled
-        left join
-            {{ ref("diversification_booking") }} as diversification_booking
-            on ebd.booking_id = diversification_booking.booking_id
         group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
     ),
 

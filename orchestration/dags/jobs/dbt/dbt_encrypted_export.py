@@ -40,16 +40,16 @@ default_args = {
 
 GCE_INSTANCE = f"encrypted-export-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/encrypted_exports"
-BASE_BUCKET = f"data-partners-export-bucket-{ENV_SHORT_NAME}"  # "data-bucket-dev"
+BASE_BUCKET = f"data-partners-export-bucket-{ENV_SHORT_NAME}"
 
 partner_dict = get_json_from_gcs(BASE_BUCKET, "partners_names.json")
-dag_name = "dbt_encrypted_export"
+DAG_NAME = "dbt_encrypted_export"
 
 for partner_id, partner_name in partner_dict.items():
     with DAG(
-        f"{dag_name}_{partner_name}",
+        f"{DAG_NAME}_{partner_name}",
         default_args=default_args,
-        dagrun_timeout=datetime.timedelta(minutes=60),
+        dagrun_timeout=datetime.timedelta(minutes=180),
         catchup=False,
         description=f"Generate obfuscated export for {partner_name}",
         schedule_interval=ENCRYPTED_EXPORT_DICT.get(partner_id, {}).get(
@@ -65,7 +65,13 @@ for partner_id, partner_name in partner_dict.items():
                 type="string",
             ),
             "GLOBAL_CLI_FLAGS": Param(
-                default="--no-write-json",
+                default=" --no-write-json ",
+                type="string",
+            ),
+            "instance_type": Param(
+                default="n1-standard-32"
+                if ENV_SHORT_NAME == "prod"
+                else "n1-standard-2",
                 type="string",
             ),
         },
@@ -84,6 +90,23 @@ for partner_id, partner_name in partner_dict.items():
 
         wait_for_dbt_daily = delayed_waiting_operator(
             dag=dag, external_dag_id="dbt_run_dag", skip_manually_triggered=True
+        )
+
+        quality_tests = dbt_test = BashOperator(
+            task_id="dbt_test",
+            bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
+            env={
+                "SELECT": "tag:export",
+                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
+                "target": "{{ params.target }}",
+                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
+                "ENV_SHORT_NAME": ENV_SHORT_NAME,
+                "EXCLUSION": "audit elementary",
+            },
+            append_env=True,
+            cwd=PATH_TO_DBT_PROJECT,
+            dag=dag,
+            retries=0,
         )
 
         bq_obfuscation = BashOperator(
@@ -117,9 +140,10 @@ for partner_id, partner_name in partner_dict.items():
         gce_instance_start = StartGCEOperator(
             instance_name=f"{GCE_INSTANCE}-{partner_name}",
             task_id="gce_start_task",
-            instance_type="n1-highmem-2",
-            preemptible=True,
+            instance_type="{{ params.instance_type }}",
+            preemptible=False,
             disk_size_gb=100,
+            labels={"job_type": "long_task", "dag_name": DAG_NAME},
         )
 
         fetch_install_code = InstallDependenciesOperator(
@@ -164,6 +188,7 @@ for partner_id, partner_name in partner_dict.items():
         (
             wait_for_dbt_daily
             >> build_context
+            >> quality_tests
             >> bq_obfuscation
             >> export_group
             >> gce_instance_start

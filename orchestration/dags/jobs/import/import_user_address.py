@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
@@ -36,7 +36,7 @@ schedule_interval = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
 
 default_args = {
     "start_date": datetime(2021, 3, 30),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 1,
     "retry_delay": timedelta(minutes=2),
 }
@@ -120,7 +120,7 @@ with DAG(
             task_id="gce_start_task",
             labels={"dag_name": DAG_NAME},
         )
-        return operator.execute(context={})
+        return operator.execute(context=context)
 
     @task
     def fetch_install_code(**context):
@@ -132,7 +132,7 @@ with DAG(
             python_version="3.12",
             base_dir=BASE_PATH,
         )
-        return operator.execute(context={})
+        return operator.execute(context=context)
 
     @task
     def addresses_to_gcs(**context):
@@ -152,14 +152,14 @@ with DAG(
             """,
             do_xcom_push=True,
         )
-        return operator.execute(context={})
+        return operator.execute(context=context)
 
     @task
     def stop_gce(**context):
         operator = DeleteGCEOperator(
             task_id="gce_stop_task", instance_name=context["params"]["instance_name"]
         )
-        return operator.execute(context={})
+        return operator.execute(context=context)
 
     @task
     def end():

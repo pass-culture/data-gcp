@@ -1,4 +1,5 @@
--- depends_on: {{ ref('raw_applicative__offer_full') }}, {{ ref('raw_applicative__offer_lite') }}
+--depends_on: {{ ref('raw_applicative__offer_full') }}
+--depends_on: {{ ref('raw_applicative__offer_lite') }}
 {% snapshot snapshot_raw__offer %}
 
     {% if is_first_day_of_month() == "TRUE" %}

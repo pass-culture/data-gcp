@@ -1,6 +1,4 @@
-from typing import List, Optional
-
-from docarray import Document, DocumentArray
+from typing import List
 
 from app.retrieval.client import DefaultClient
 from app.retrieval.constants import (
@@ -12,7 +10,6 @@ from app.retrieval.constants import (
     OUTPUT_METRIC_COLUMNS,
 )
 from app.retrieval.core.reranker import UserReranker
-from app.retrieval.utils import load_documents
 
 
 class RecoClient(DefaultClient):
@@ -47,20 +44,3 @@ class RecoClient(DefaultClient):
         self.re_ranker = UserReranker(
             weight=self.re_rank_weight, user_docs=self.user_docs
         )
-
-    def load_user_document(self) -> DocumentArray:
-        return load_documents(self.user_docs_path)
-
-    def user_vector(self, user_id: str) -> Optional[Document]:
-        """
-        Retrieves the user vector from the document array based on the given user ID.
-
-        Args:
-            user_id (str): The ID of the user.
-
-        Returns:
-            Optional[Document]: The user's document embedding, or None if not found.
-        """
-        if user_id in self.user_docs:
-            return self.user_docs[user_id]
-        return None

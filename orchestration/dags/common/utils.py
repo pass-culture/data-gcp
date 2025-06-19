@@ -144,6 +144,7 @@ def delayed_waiting_operator(
     failed_states: list = ["failed", "upstream_failed", "skipped"],
     lower_date_limit=None,
     skip_manually_triggered: bool = False,
+    pool: str = "default_pool",
     **kwargs,
 ):
     """
@@ -233,6 +234,7 @@ def delayed_waiting_operator(
             task_id=task_id,
             python_callable=handle_manual_trigger,
             dag=dag,
+            pool=pool,
         )
 
     # If manual triggers are NOT skipped, return the normal ExternalTaskSensor
@@ -246,6 +248,7 @@ def delayed_waiting_operator(
         allowed_states=allowed_states,
         failed_states=failed_states,
         dag=dag,
+        pool=pool,
         **kwargs,
     )
 

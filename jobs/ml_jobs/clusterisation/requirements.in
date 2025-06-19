@@ -17,7 +17,7 @@ scipy==1.13
 tensorflow
 timeout-decorator
 tqdm==4.66.1
-torch==2.4.1
+torch==2.6.0
 typer==0.7.0
 typer==0.7.0
 umap_learn>=0.5.3

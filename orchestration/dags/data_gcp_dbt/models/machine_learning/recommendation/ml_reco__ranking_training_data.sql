@@ -67,25 +67,30 @@ with
             item_id,
             booking_number_last_28_days,
             booking_number_last_14_days,
-            booking_number_last_7_days
+            booking_number_last_7_days,
+            avg_semantic_embedding as semantic_emb_mean
         from {{ ref("ml_feat__item_feature_28_day") }}
+    ),
+
+    user_daily_iris_location as (
+        select
+            user_id,
+            event_date,
+            user_iris_id,
+            user_centroid,
+            user_centroid_x,
+            user_centroid_y
+        from {{ ref("ml_feat__user_daily_iris_location") }}
     ),
 
     user_features as (
         select
             user_id,
-            event_date,
-            active_week,
-            user_iris_id,
-            user_centroid,
-            user_centroid_x,
-            user_centroid_y,
-            user_bookings_count,
             user_clicks_count,
             user_favorites_count,
-            user_diversification_count,
-            user_deposit_amount,
-            user_amount_spent
+            user_bookings_count,
+            user_deposit_initial_amount,
+            user_theoretical_remaining_credit
         from {{ ref("ml_feat__user_feature") }}
     )
 
@@ -125,16 +130,16 @@ select
     item_features_28_day.booking_number_last_14_days
     as item_booking_number_last_14_days,
     item_features_28_day.booking_number_last_7_days as item_booking_number_last_7_days,
-    user_features.user_iris_id,
-    user_features.user_centroid,
-    user_features.user_centroid_x,
-    user_features.user_centroid_y,
+    item_features_28_day.semantic_emb_mean,
+    user_daily_iris_location.user_iris_id,
+    user_daily_iris_location.user_centroid,
+    user_daily_iris_location.user_centroid_x,
+    user_daily_iris_location.user_centroid_y,
     user_features.user_bookings_count,
     user_features.user_clicks_count,
     user_features.user_favorites_count,
-    user_features.user_diversification_count,
-    user_features.user_deposit_amount,
-    user_features.user_amount_spent,
+    user_features.user_deposit_initial_amount,
+    user_features.user_theoretical_remaining_credit,
     to_json_string(item_embeddings.item_embedding) as item_embedding_json,
     to_json_string(user_embeddings.user_embedding) as user_embedding_json,
     (
@@ -147,7 +152,7 @@ select
         offset as pos2 on pos = pos2  -- noqa: RF01, RF02
     ) as item_user_similarity,
     st_distance(
-        offer_features.offer_centroid, user_features.user_centroid
+        offer_features.offer_centroid, user_daily_iris_location.user_centroid
     ) as offer_user_distance
 
 from home_interactions
@@ -156,9 +161,10 @@ left join item_embeddings on offer_features.item_id = item_embeddings.item_id
 left join user_embeddings on home_interactions.user_id = user_embeddings.user_id
 left join item_features_28_day on offer_features.item_id = item_features_28_day.item_id
 left join
-    user_features
-    on home_interactions.user_id = user_features.user_id
-    and home_interactions.event_date = user_features.event_date
+    user_daily_iris_location
+    on home_interactions.user_id = user_daily_iris_location.user_id
+    and home_interactions.event_date = user_daily_iris_location.event_date
+left join user_features on home_interactions.user_id = user_features.user_id
 order by
     home_interactions.event_date,
     home_interactions.user_id,

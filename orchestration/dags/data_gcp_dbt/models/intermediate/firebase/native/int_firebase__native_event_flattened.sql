@@ -30,18 +30,18 @@ with
             user_id,
             user_pseudo_id,
             event_name,
-            timestamp_micros(event_timestamp) as event_timestamp,
-            timestamp_micros(event_previous_timestamp) as event_previous_timestamp,
-            timestamp_micros(event_timestamp) as user_first_touch_timestamp,
             platform,
             traffic_source.name,
             traffic_source.medium,
             traffic_source.source,
             app_info.version as app_version,
+            timestamp_micros(event_timestamp) as event_timestamp,
+            timestamp_micros(event_previous_timestamp) as event_previous_timestamp,
+            timestamp_micros(event_timestamp) as user_first_touch_timestamp,
             (
                 select event_params.value.double_value
-                from unnest(event_params) event_params
-                where event_params.key = 'offerId'
+                from unnest(event_params) as event_params
+                where event_params.key = "offerId"
             ) as double_offer_id,
             {{
                 extract_params_int_value(
@@ -122,13 +122,14 @@ with
                         "videoDuration",
                         "seenDuration",
                         "youtubeId",
+                        "isHeadline",
                     ]
                 )
             }},
             (
                 select event_params.value.string_value
-                from unnest(event_params) event_params
-                where event_params.key = 'from'
+                from unnest(event_params) as event_params
+                where event_params.key = "from"
             ) as origin
         from firebase_last_two_days_events
     )
@@ -149,11 +150,11 @@ select
     {{ extract_str_to_array_field("offers", 0, 10, 50) }} as displayed_offers,
     {{ extract_str_to_array_field("venues", 0, 10, 50) }} as displayed_venues,
     case
-        when event_name = 'BookingConfirmation' and bookingid is null
+        when event_name = "BookingConfirmation" and bookingid is null
         then true
-        when event_name = 'BookingConfirmation' and user_id is null
+        when event_name = "BookingConfirmation" and user_id is null
         then true
-        when event_name = 'ConsultOffer' and offerid is null
+        when event_name = "ConsultOffer" and offerid is null
         then true
         else false
     end as is_anomaly

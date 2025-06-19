@@ -38,14 +38,14 @@ models:
       columns: true
     raw:
       +meta:
-        owner: "@team-data-engineering"
+        owner: "@data-engineering"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: raw_applicative_{{ target.name }}
       applicative:
         +tags: "exclude_ci"
     clean:
       +meta:
-        owner: "@team-data-engineering"
+        owner: "@data-engineering"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: clean_{{ target.name }}
       +docs:
@@ -56,7 +56,7 @@ models:
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     analytics:
       +meta:
-        owner: "@team-data-analytics"
+        owner: "@analytics"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: analytics_{{ target.name }}
       +docs:
@@ -64,7 +64,7 @@ models:
         show: false
     intermediate:
       +meta:
-        owner: "@team-data-engineering"
+        owner: "@data-engineering"
       +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"
       global:
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
@@ -72,17 +72,17 @@ models:
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     mart:
       +meta:
-        owner: "@team-data-analytics"
+        owner: "@analytics"
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +schema: analytics_{{ target.name }}
       monitoring:
         +meta:
-          owner: "@team-data-engineering"
+          owner: "@data-engineering"
     export:
       +schema: export_{{ target.name }}
       +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"
       +meta:
-        owner: "@team-data-engineering"
+        owner: "@data-engineering"
       backend:
         +schema: backend_{{ target.name }}
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
@@ -93,7 +93,7 @@ models:
     machine_learning:
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +meta:
-        owner: "@team-data-science"
+        owner: "@data-science"
 
   elementary:
     +on_schema_change: "append_new_columns"
@@ -118,9 +118,13 @@ data_tests:
   +docs:
     show: true
     tags: "test"
+  data_gcp_dbt:
+    export:
+      +severity: "{{ 'error' if target.name in ['prod', 'stg'] else 'warn' }}"
 
 vars:
   ENV_SHORT_NAME: dev
+  pass_start_date: "2018-01-01"
   CI_MATERIALIZATION: none
   region_name: region-europe-west1
   mute_ensure_materialization_override: true

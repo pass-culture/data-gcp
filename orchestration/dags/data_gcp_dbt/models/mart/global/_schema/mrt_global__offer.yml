@@ -230,12 +230,8 @@ models:
       - name: offerer_id
         description: '{{ doc("column__offerer_id") }}'
         data_type: STRING
-        # failed : investigation
-        # data_tests:
-        #   - not_null
-      - name: venue_managing_offerer_id
-        description: '{{ doc("column__venue_managing_offerer_id") }}'
-        data_type: STRING
+        data_tests:
+          - not_null
       - name: offerer_name
         description: '{{ doc("column__offerer_name") }}'
         data_type: STRING

@@ -297,7 +297,7 @@ with
             case
                 when mrt_global__venue.venue_is_permanent
                 then concat("venue-", mrt_global__venue.venue_id)
-                else concat("offerer-", mrt_global__venue.venue_managing_offerer_id)
+                else concat("offerer-", mrt_global__venue.offerer_id)
             end as partner_id_f1,
             favorite.*
         from {{ ref("mrt_global__venue") }} as mrt_global__venue
@@ -331,7 +331,7 @@ with
             case
                 when venue.venue_is_permanent
                 then concat("venue-", venue.venue_id)
-                else concat("offerer-", venue.venue_managing_offerer_id)
+                else concat("offerer-", venue.offerer_id)
             end as partner_id,
             sum(cnt_events) as total_consultation,
             coalesce(
@@ -379,7 +379,7 @@ with
                 case
                     when venue.venue_is_permanent
                     then concat("venue-", venue.venue_id)
-                    else concat("offerer-", venue.venue_managing_offerer_id)
+                    else concat("offerer-", venue.offerer_id)
                 end
             )
             = mrt_global__cultural_partner.partner_id
@@ -391,14 +391,13 @@ with
             case
                 when mrt_global__venue.venue_is_permanent
                 then concat("venue-", mrt_global__venue.venue_id)
-                else concat("offerer-", mrt_global__venue.venue_managing_offerer_id)
+                else concat("offerer-", mrt_global__venue.offerer_id)
             end as partner_id,
             mrt_global__offerer.first_dms_adage_status
         from {{ ref("mrt_global__venue") }} as mrt_global__venue
         left join
             {{ ref("mrt_global__offerer") }} as mrt_global__offerer
-            on mrt_global__venue.venue_managing_offerer_id
-            = mrt_global__offerer.offerer_id
+            on mrt_global__venue.offerer_id = mrt_global__offerer.offerer_id
     ),
 
     siren_status as (
@@ -410,8 +409,7 @@ with
         from {{ ref("mrt_global__venue") }} as mrt_global__venue
         join
             {{ ref("mrt_global__offerer") }} as mrt_global__offerer
-            on mrt_global__venue.venue_managing_offerer_id
-            = mrt_global__offerer.offerer_id
+            on mrt_global__venue.offerer_id = mrt_global__offerer.offerer_id
         left join
             {{ ref("siren_data") }}
             on mrt_global__offerer.offerer_siren = siren_data.siren
@@ -422,7 +420,7 @@ with
             case
                 when mrt_global__venue.venue_is_permanent
                 then concat("venue-", mrt_global__venue.venue_id)
-                else concat("offerer-", mrt_global__venue.venue_managing_offerer_id)
+                else concat("offerer-", mrt_global__venue.offerer_id)
             end as partner_id,
             coalesce(count(*), 0) as offers_cnt
         from {{ ref("mrt_global__venue") }} as mrt_global__venue
@@ -438,7 +436,7 @@ with
             case
                 when mrt_global__venue.venue_is_permanent
                 then concat("venue-", mrt_global__venue.venue_id)
-                else concat("offerer-", mrt_global__venue.venue_managing_offerer_id)
+                else concat("offerer-", mrt_global__venue.offerer_id)
             end as partner_id,
             case when provider_id is not null then true else false end as has_provider
         from {{ ref("mrt_global__venue") }} as mrt_global__venue
@@ -452,15 +450,13 @@ with
     -- remboursement, tous les lieux de la structure le sont
     reimbursment_point1 as (
         select distinct
-            mrt_global__venue.venue_managing_offerer_id as offerer_id,
+            mrt_global__venue.offerer_id,
             mrt_global__venue.venue_id,
             venue_is_permanent,
             bank_account_link_beginning_date,
             bank_account_link_ending_date,
             rank() over (
-                partition by
-                    mrt_global__venue.venue_managing_offerer_id,
-                    mrt_global__venue.venue_id
+                partition by mrt_global__venue.offerer_id, mrt_global__venue.venue_id
                 order by bank_account_link_beginning_date desc
             ) as rang
         from {{ ref("mrt_global__venue") }} as mrt_global__venue

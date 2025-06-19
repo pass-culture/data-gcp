@@ -1,0 +1,17 @@
+version: 2
+
+models:
+  - name: int_seed__geo_postal_code
+    description: '{{ doc("description__int_seed__geo_postal_code") }}'
+    columns:
+      - name: postal_code
+        description: '{{ doc("column__postal_code") }}'
+        data_type: STRING
+
+      - name: postal_approx_centroid_latitude
+        description: '{{ doc("column__postal_approx_centroid_latitude") }}'
+        data_type: FLOAT64
+
+      - name: postal_approx_centroid_longitude
+        description: '{{ doc("column__postal_approx_centroid_longitude") }}'
+        data_type: FLOAT64

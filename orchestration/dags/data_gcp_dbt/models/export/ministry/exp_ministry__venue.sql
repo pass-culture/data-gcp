@@ -5,7 +5,7 @@ select
     venue_public_name,
     venue_siret,
     venue_is_virtual,
-    venue_managing_offerer_id,
+    offerer_id,
     venue_creation_date,
-    venue_type_label,
+    venue_type_label
 from {{ ref("mrt_global__venue") }}

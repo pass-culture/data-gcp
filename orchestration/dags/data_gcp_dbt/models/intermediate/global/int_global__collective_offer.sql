@@ -29,7 +29,7 @@ select
     v.venue_macro_density_label,
     v.venue_density_level,
     v.venue_is_virtual,
-    v.venue_managing_offerer_id as offerer_id,
+    v.offerer_id,
     v.offerer_name,
     v.venue_iris_internal_id,
     v.is_local_authority,
@@ -37,8 +37,6 @@ select
     v.venue_is_permanent,
     co.collective_offer_creation_date,
     co.collective_offer_date_updated,
-    co.collective_offer_subcategory_id,
-    subcategories.category_id as collective_offer_category_id,
     co.collective_offer_format,
     co.collective_offer_students,
     co.collective_offer_is_active,
@@ -76,6 +74,7 @@ select
     co.collective_offer_contact_phone,
     co.institution_internal_iris_id,
     cs.collective_stock_beginning_date_time,
+    cs.collective_stock_end_date_time,
     cs.collective_stock_booking_limit_date_time,
     co.collective_offer_template_beginning_date,
     co.collective_offer_template_ending_date,
@@ -86,9 +85,6 @@ select
     cs.collective_stock_id
 from {{ ref("int_applicative__collective_offer") }} as co
 inner join {{ ref("int_global__venue") }} as v on v.venue_id = co.venue_id
-left join
-    {{ source("raw", "subcategories") }}
-    on subcategories.id = co.collective_offer_subcategory_id
 left join
     {{ source("raw", "applicative_database_national_program") }} as national_program
     on national_program.national_program_id = co.national_program_id

@@ -2,6 +2,7 @@ import pytest
 
 from app.factory.tops import SearchByTopsHandler
 from app.models.prediction_request import PredictionRequest
+from app.retrieval.constants import DISTANCE_COLUMN_NAME
 
 
 @pytest.fixture
@@ -41,7 +42,7 @@ def request_data_rerank() -> PredictionRequest:
 )
 def test_similar_offer_handler(
     mock_connect_db,
-    mock_generate_fake_load_user_document,
+    mock_user_document_loading,
     mock_generate_fake_load_item_document,
     request_data_fixture,
     request,
@@ -62,7 +63,7 @@ def test_similar_offer_handler(
         for column in reco_client.detail_columns:
             assert column in prediction
 
-    distances = [prediction["_distance"] for prediction in result.predictions]
+    distances = [prediction[DISTANCE_COLUMN_NAME] for prediction in result.predictions]
     assert distances == sorted(
         distances
-    ), "Predictions are not sorted by _distance in increasing order"
+    ), f"Predictions are not sorted by {DISTANCE_COLUMN_NAME} in increasing order"

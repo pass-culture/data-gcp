@@ -1,7 +1,7 @@
 import datetime
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.callback import on_failure_base_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -23,7 +23,7 @@ from airflow.utils.task_group import TaskGroup
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
     "retries": 6,
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_base_callback,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }

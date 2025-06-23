@@ -11,7 +11,7 @@ from common.config import (
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    MLFLOW_BUCKET_NAME,
+    ML_BUCKET_TEMP,
 )
 from common.operators.bigquery import BigQueryInsertJobOperator
 from common.operators.gce import (
@@ -39,7 +39,7 @@ DAG_NAME = "artist_linkage"
 
 # GCS Paths / Filenames
 GCS_FOLDER_PATH = f"artist_linkage_{ENV_SHORT_NAME}"
-STORAGE_BASE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}"
+STORAGE_BASE_PATH = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}"
 WIKIDATA_STORAGE_BASE_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/dump_wikidata"
 ARTISTS_TO_LINK_GCS_FILENAME = "artists_to_link.parquet"
 PREPROCESSED_GCS_FILENAME = "preprocessed_artists_to_link.parquet"
@@ -209,7 +209,7 @@ with DAG(
 
     load_data_into_artist_linked_table = GCSToBigQueryOperator(
         project_id=GCP_PROJECT_ID,
-        bucket=MLFLOW_BUCKET_NAME,
+        bucket=ML_BUCKET_TEMP,
         task_id="load_data_into_artist_linked_table",
         source_objects=os.path.join(
             GCS_FOLDER_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME

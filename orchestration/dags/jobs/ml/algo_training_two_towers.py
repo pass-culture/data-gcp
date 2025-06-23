@@ -13,10 +13,7 @@ from common.config import (
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     INSTANCES_TYPES,
-    MLFLOW_BUCKET_NAME,
     ML_BUCKET_TEMP,
-    ML_BUCKET_PROCESSING,
-    ML_BUCKET_OUTPUT,
     MLFLOW_URL,
 )
 from common.operators.gce import (
@@ -44,8 +41,7 @@ DAG_NAME = "algo_training_two_towers"
 
 # Environment variables to export before running commands
 dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/algo_training_{ENV_SHORT_NAME}/{DAG_NAME}_{DATE}",
-    "TEMP_PATH": f"gs://{ML_BUCKET_TEMP}/algo_training_{ENV_SHORT_NAME}/{DAG_NAME}_{DATE}",
+    "STORAGE_PATH": f"gs://{ML_BUCKET_TEMP}/algo_training_{ENV_SHORT_NAME}/{DAG_NAME}_{DATE}",
     "BASE_DIR": "data-gcp/jobs/ml_jobs/algo_training",
     "MODEL_DIR": "two_towers_model",
     "TRAIN_DIR": "/home/airflow/train",
@@ -227,7 +223,7 @@ with (
                             "tableId": f"{DATE}_recommendation_{split}_data",
                         },
                         "compression": None,
-                        "destinationUris": f"{dag_config['TEMP_PATH']}/raw_recommendation_{split}_data/data-*.parquet",
+                        "destinationUris": f"{dag_config['STORAGE_PATH']}/raw_recommendation_{split}_data/data-*.parquet",
                         "destinationFormat": "PARQUET",
                     }
                 },
@@ -245,7 +241,7 @@ with (
                         "tableId": "training_data_booking",
                     },
                     "compression": None,
-                    "destinationUris": f"{dag_config['TEMP_PATH']}/bookings/data-*.parquet",
+                    "destinationUris": f"{dag_config['STORAGE_PATH']}/bookings/data-*.parquet",
                     "destinationFormat": "PARQUET",
                 }
             },

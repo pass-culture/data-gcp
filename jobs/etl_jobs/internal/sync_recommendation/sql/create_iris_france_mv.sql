@@ -48,15 +48,9 @@ CREATE UNIQUE INDEX iris_france_pkey_tmp_{{ ts_nodash }} ON public.iris_france_m
 refresh materialized view iris_france_mv_tmp
 ;
 
--- Move tmp to final Materialized view in a transaction
--- This is to avoid any downtime in case of a failure
-begin
-;
 DROP MATERIALIZED VIEW IF EXISTS iris_france_mv_old;
 ALTER MATERIALIZED VIEW IF EXISTS iris_france_mv
     RENAME TO iris_france_mv_old;
 ALTER MATERIALIZED VIEW IF EXISTS iris_france_mv_tmp
     RENAME TO iris_france_mv;
 DROP MATERIALIZED VIEW IF EXISTS iris_france_mv_old;
-commit
-;

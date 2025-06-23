@@ -75,15 +75,9 @@ USING gist(venue_geo);
 refresh materialized view recommendable_offers_raw_mv_tmp
 ;
 
--- Move tmp to final Materialized view in a transaction
--- This is to avoid any downtime in case of a failure
-begin
-;
 DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_mv_old;
 ALTER MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_mv
     RENAME TO recommendable_offers_raw_mv_old;
 ALTER MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_mv_tmp
     RENAME TO recommendable_offers_raw_mv;
 DROP MATERIALIZED VIEW IF EXISTS recommendable_offers_raw_mv_old;
-commit
-;

@@ -67,6 +67,12 @@ class PredictPipeline:
             "./metadata/preproc_classifier.joblib"
         )
 
+    def set_feature_at_inference(
+        self, preprocessed_item: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        preprocessed_item["context"] = "recommendation"
+        return preprocessed_item
+
     def predict(self, input_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Predict class and scores based on input data using a pre-trained model.
@@ -94,6 +100,9 @@ class PredictPipeline:
 
             for feature in self.categorical_features:
                 processed_item[feature] = item.get(feature, DEFAULT_CATEGORICAL)
+
+            # Set additional features at inference time
+            processed_item = self.set_feature_at_inference(processed_item)
 
             processed_data.append(processed_item)
 

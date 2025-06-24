@@ -406,7 +406,7 @@ def main(
         help="If True, only train the model without deploying",
     ),
     use_lambdarank: bool = typer.Option(
-        False,
+        True,
         help="If True, use LambdaRank learning to rank instead of classification",
     ),
 ) -> None:

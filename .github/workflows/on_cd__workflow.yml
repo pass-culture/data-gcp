@@ -6,9 +6,6 @@ on:
     branches:
       - master
       - production
-  pull_request:
-    branches:
-      - master
 
 permissions:
   contents: write
@@ -23,90 +20,90 @@ jobs:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
-  # find-test-jobs:
-  #   outputs:
-  #     jobs: ${{ steps.find-testable-jobs.outputs.testable_jobs }}
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-  #     - name: "Trouver les Jobs testables"
-  #       id: "find-testable-jobs"
-  #       run: .github/workflows/scripts/find_tests.sh --no-escape
+  find-test-jobs:
+    outputs:
+      jobs: ${{ steps.find-testable-jobs.outputs.testable_jobs }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: "Trouver les Jobs testables"
+        id: "find-testable-jobs"
+        run: .github/workflows/scripts/find_tests.sh --no-escape
 
-  # test-jobs:
-  #   needs: find-test-jobs
-  #   if: ${{ needs.find-test-jobs.outputs.jobs != '' && toJson(fromJson(needs.find-test-jobs.outputs.jobs)) != '[]' }}
-  #   uses: ./.github/workflows/reusable_job_test.yml
-  #   secrets:
-  #     GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
-  #     GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       job: ${{ fromJSON(needs.find-test-jobs.outputs.jobs) }}
-  #   with:
-  #     JOB_PATH: ${{ matrix.job }}
-  #     NOTIF_CHANNEL_ID: ${{ vars.DEFAULT_NOTIF_CHANNEL_ID }}
+  test-jobs:
+    needs: find-test-jobs
+    if: ${{ needs.find-test-jobs.outputs.jobs != '' && toJson(fromJson(needs.find-test-jobs.outputs.jobs)) != '[]' }}
+    uses: ./.github/workflows/reusable_job_test.yml
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+    strategy:
+      fail-fast: false
+      matrix:
+        job: ${{ fromJSON(needs.find-test-jobs.outputs.jobs) }}
+    with:
+      JOB_PATH: ${{ matrix.job }}
+      NOTIF_CHANNEL_ID: ${{ vars.DEFAULT_NOTIF_CHANNEL_ID }}
 
-  # test-orchestration:
-  #   uses: ./.github/workflows/reusable_test_orchestration.yml
-  #   with:
-  #     NOTIF_CHANNEL_ID: ${{ vars.DEFAULT_NOTIF_CHANNEL_ID }}
-  #   secrets:
-  #     GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
-  #     GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+  test-orchestration:
+    uses: ./.github/workflows/reusable_test_orchestration.yml
+    with:
+      NOTIF_CHANNEL_ID: ${{ vars.DEFAULT_NOTIF_CHANNEL_ID }}
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
-  # airflow-deploy-on-dev:
-  #   # deploying new custom gke airflow on dev
-  #   if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/production' }}
-  #   uses: ./.github/workflows/reusable_deploy_composer.yml
-  #   needs: [test-orchestration, test-jobs, linter]
-  #   with:
-  #     GITHUB_ENV_NAME: "dev"
-  #     ENV_SHORT_NAME: "dev"
-  #     COMPOSER_DAGS_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_DEV }}
-  #     AIRFLOW_NAME: "gke-data-airflow-dev"
-  #     DATA_GCP_PROJECT: "passculture-data-ehp"
-  #     APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_DEV }}
-  #     IS_COMPOSER: false
-  #   secrets:
-  #     GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
-  #     GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+  airflow-deploy-on-dev:
+    # deploying new custom gke airflow on dev
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/production' }}
+    uses: ./.github/workflows/reusable_deploy_composer.yml
+    needs: [test-orchestration, test-jobs, linter]
+    with:
+      GITHUB_ENV_NAME: "dev"
+      ENV_SHORT_NAME: "dev"
+      COMPOSER_DAGS_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_DEV }}
+      AIRFLOW_NAME: "gke-data-airflow-dev"
+      DATA_GCP_PROJECT: "passculture-data-ehp"
+      APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_DEV }}
+      IS_COMPOSER: false
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
-  # airflow-deploy-on-stg:
-  #   # deploying new custom gke airflow on stg
-  #   if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' }}
-  #   uses: ./.github/workflows/reusable_deploy_composer.yml
-  #   needs: [test-orchestration, test-jobs, linter]
-  #   with:
-  #     GITHUB_ENV_NAME: "staging"
-  #     ENV_SHORT_NAME: "stg"
-  #     COMPOSER_DAGS_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_STG }}
-  #     AIRFLOW_NAME: "gke-data-airflow-stg"
-  #     DATA_GCP_PROJECT: "passculture-data-ehp"
-  #     APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_STG}}
-  #     IS_COMPOSER: false
-  #   secrets:
-  #     GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
-  #     GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+  airflow-deploy-on-stg:
+    # deploying new custom gke airflow on stg
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' }}
+    uses: ./.github/workflows/reusable_deploy_composer.yml
+    needs: [test-orchestration, test-jobs, linter]
+    with:
+      GITHUB_ENV_NAME: "staging"
+      ENV_SHORT_NAME: "stg"
+      COMPOSER_DAGS_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_STG }}
+      AIRFLOW_NAME: "gke-data-airflow-stg"
+      DATA_GCP_PROJECT: "passculture-data-ehp"
+      APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_STG}}
+      IS_COMPOSER: false
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
-  # airflow-deploy-on-prod:
-  #   if: github.ref == 'refs/heads/production'
-  #   uses: ./.github/workflows/reusable_deploy_composer.yml
-  #   needs: [test-orchestration, test-jobs, linter, airflow-deploy-on-dev]
-  #   with:
-  #     GITHUB_ENV_NAME: "production"
-  #     ENV_SHORT_NAME: "prod"
-  #     COMPOSER_DAGS_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_PROD }}
-  #     AIRFLOW_NAME: "gke-data-airflow-prod"
-  #     DATA_GCP_PROJECT: "passculture-data-prod"
-  #     APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_PROD }}
-  #     IS_COMPOSER: false
-  #   secrets:
-  #     GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
-  #     GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+  airflow-deploy-on-prod:
+    if: github.ref == 'refs/heads/production'
+    uses: ./.github/workflows/reusable_deploy_composer.yml
+    needs: [test-orchestration, test-jobs, linter, airflow-deploy-on-dev]
+    with:
+      GITHUB_ENV_NAME: "production"
+      ENV_SHORT_NAME: "prod"
+      COMPOSER_DAGS_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_PROD }}
+      AIRFLOW_NAME: "gke-data-airflow-prod"
+      DATA_GCP_PROJECT: "passculture-data-prod"
+      APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_PROD }}
+      IS_COMPOSER: false
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
   mkdocs-deploy-on-prod:
     # if: github.ref == 'refs/heads/production'
@@ -121,58 +118,58 @@ jobs:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
-  # find-build-job:
-  #   outputs:
-  #     has-changed: ${{ steps.container-changes.outputs.output }}
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-  #     - name: "Get changed files"
-  #       id: "changed-files"
-  #       uses: tj-actions/changed-files@v41
-  #       with:
-  #         files: "orchestration/k8s-airflow/**"
-  #         json: true
-  #         dir_names: true
-  #         dir_names_max_depth: 4
-  #     - name: "Container changes"
-  #       id: "container-changes"
-  #       run: |
-  #         if [ "${{ steps.changed-files.outputs.any_changed }}" == "true" ]; then
-  #           echo "output=true" >> $GITHUB_OUTPUT
-  #         else
-  #           echo "output=false" >> $GITHUB_OUTPUT
-  #         fi
-  # k8s-deploy-on-dev:
-  #   needs: [find-build-job]
-  #   if: ${{ needs.find-build-job.outputs.has-changed == 'true' && ( github.ref == 'refs/heads/production' || github.event_name == 'workflow_dispatch' )}}
-  #   uses: ./.github/workflows/reusable_build_image.yml
-  #   with:
-  #     TARGET_ENV: "dev"
-  #     DATA_GCP_PROJECT: "passculture-data-ehp"
-  #   secrets:
-  #     GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
-  #     GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+  find-build-job:
+    outputs:
+      has-changed: ${{ steps.container-changes.outputs.output }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: "Get changed files"
+        id: "changed-files"
+        uses: tj-actions/changed-files@v41
+        with:
+          files: "orchestration/k8s-airflow/**"
+          json: true
+          dir_names: true
+          dir_names_max_depth: 4
+      - name: "Container changes"
+        id: "container-changes"
+        run: |
+          if [ "${{ steps.changed-files.outputs.any_changed }}" == "true" ]; then
+            echo "output=true" >> $GITHUB_OUTPUT
+          else
+            echo "output=false" >> $GITHUB_OUTPUT
+          fi
+  k8s-deploy-on-dev:
+    needs: [find-build-job]
+    if: ${{ needs.find-build-job.outputs.has-changed == 'true' && ( github.ref == 'refs/heads/production' || github.event_name == 'workflow_dispatch' )}}
+    uses: ./.github/workflows/reusable_build_image.yml
+    with:
+      TARGET_ENV: "dev"
+      DATA_GCP_PROJECT: "passculture-data-ehp"
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
 
-  # k8s-deploy-on-stg:
-  #   needs: [find-build-job]
-  #   if: ${{ needs.find-build-job.outputs.has-changed == 'true' && ( github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch' )}}
-  #   uses: ./.github/workflows/reusable_build_image.yml
-  #   with:
-  #     TARGET_ENV: "stg"
-  #     DATA_GCP_PROJECT: "passculture-data-ehp"
-  #   secrets:
-  #     GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
-  #     GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
-  # k8s-deploy-on-prod:
-  #   needs: [find-build-job]
-  #   if: ${{ needs.find-build-job.outputs.has-changed == 'true' && ( github.ref == 'refs/heads/prod' || github.event_name == 'workflow_dispatch' )}}
-  #   uses: ./.github/workflows/reusable_build_image.yml
-  #   with:
-  #     TARGET_ENV: "prod"
-  #     DATA_GCP_PROJECT: "passculture-data-prod"
-  #   secrets:
-  #     GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
-  #     GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+  k8s-deploy-on-stg:
+    needs: [find-build-job]
+    if: ${{ needs.find-build-job.outputs.has-changed == 'true' && ( github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch' )}}
+    uses: ./.github/workflows/reusable_build_image.yml
+    with:
+      TARGET_ENV: "stg"
+      DATA_GCP_PROJECT: "passculture-data-ehp"
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+  k8s-deploy-on-prod:
+    needs: [find-build-job]
+    if: ${{ needs.find-build-job.outputs.has-changed == 'true' && ( github.ref == 'refs/heads/prod' || github.event_name == 'workflow_dispatch' )}}
+    uses: ./.github/workflows/reusable_build_image.yml
+    with:
+      TARGET_ENV: "prod"
+      DATA_GCP_PROJECT: "passculture-data-prod"
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}

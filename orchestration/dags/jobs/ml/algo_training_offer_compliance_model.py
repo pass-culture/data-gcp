@@ -10,8 +10,7 @@ from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    MLFLOW_BUCKET_NAME,
-    ML_TEMP_BUCKET,
+    ML_BUCKET_TEMP,
     MLFLOW_URL,
 )
 from common.operators.gce import (
@@ -35,7 +34,7 @@ DAG_NAME = "algo_training_offer_compliance_model"
 
 # Environment variables to export before running commands
 dag_config = {
-    "STORAGE_PATH": f"gs://{ML_TEMP_BUCKET}/algo_training_{ENV_SHORT_NAME}/algo_training_offer_compliance_model_v1.0_{DATE}",
+    "STORAGE_PATH": f"gs://{ML_BUCKET_TEMP}/algo_training_{ENV_SHORT_NAME}/algo_training_offer_compliance_model_v1.0_{DATE}",
     "BASE_DIR": "data-gcp/jobs/ml_jobs/offer_compliance",
 }
 

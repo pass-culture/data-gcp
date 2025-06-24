@@ -1,9 +1,4 @@
 #!/usr/bin/env -S uv run --script
-#
-# /// script
-# requires-python = ">=3.12"
-# dependencies = ['dotenv', 'typer', 'google-cloud-storage']
-# ///
 
 import os
 import subprocess

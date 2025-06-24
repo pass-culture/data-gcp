@@ -57,6 +57,10 @@ jobs:
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
           IS_CI: "true"
         run: echo "DBT_FOLDER=$DBT_FOLDER"
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
       - name: "compile dbt project"
         working-directory: "."
         env:

@@ -28,7 +28,6 @@ jobs:
     env:
       DBT_FOLDER: "./orchestration/dags/data_gcp_dbt"
       AIRFLOW_HOME: "./orchestration/airflow"
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -48,24 +47,11 @@ jobs:
 
       - name: Install Default Python requirements
         run: uv sync
-      - name: "Print DBT_FOLDER"
-        working-directory: "."
-        env:
-          DBT_TARGET_PATH: ${{ env.DBT_FOLDER }}/target/
-          DBT_PROFILES_DIR: ${{ env.DBT_FOLDER }}/
-          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
-          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
-          IS_CI: "true"
-        run: echo "DBT_FOLDER=$DBT_FOLDER"
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          detached: true
       - name: "compile dbt project"
         working-directory: "."
         env:
-          DBT_TARGET_PATH: ${{ env.DBT_FOLDER }}/target/
           DBT_PROFILES_DIR: ${{ env.DBT_FOLDER }}/
+          DBT_TARGET_PATH: ${{ env.DBT_FOLDER }}/target/
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
           IS_CI: "true"
@@ -83,6 +69,10 @@ jobs:
         run: |
           echo "Listing DBT target directory:"
           ls -R $DBT_TARGET_PATH || echo "Target path not found!"
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
       - name: Build MkDocs site
         working-directory: "."
         env:

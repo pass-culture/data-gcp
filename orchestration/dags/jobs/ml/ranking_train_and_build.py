@@ -52,38 +52,42 @@ gce_params = {
 # schedule_dict = {"prod": "0 20 * * 5", "dev": "0 20 * * *", "stg": "0 20 * * 3"}
 
 
-with DAG(
-    DAG_NAME,
-    default_args=default_args,
-    description="Train and build Ranking",
-    schedule_interval=None,
-    catchup=False,
-    dagrun_timeout=timedelta(minutes=1440),
-    user_defined_macros=macros.default,
-    template_searchpath=DAG_FOLDER,
-    tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
-    params={
-        "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
-            type="string",
-        ),
-        "instance_type": Param(
-            default=gce_params["instance_type"][ENV_SHORT_NAME],
-            type="string",
-        ),
-        "instance_name": Param(
-            default=gce_params["instance_name"],
-            type="string",
-        ),
-        "dataset_name": Param(
-            default=BIGQUERY_ML_RECOMMENDATION_DATASET, type="string"
-        ),
-        "table_name": Param(default=RANKING_TRAINING_TABLE, type="string"),
-        "experiment_name": Param(default=gce_params["experiment_name"], type="string"),
-        "run_name": Param(default=gce_params["run_name"], type="string"),
-        "model_name": Param(default=gce_params["model_name"], type="string"),
-    },
-) as dag:
+with (
+    DAG(
+        DAG_NAME,
+        default_args=default_args,
+        description="Train and build Ranking",
+        schedule_interval=None,
+        catchup=False,
+        dagrun_timeout=timedelta(minutes=1440),
+        user_defined_macros=macros.default,
+        template_searchpath=DAG_FOLDER,
+        tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
+        params={
+            "branch": Param(
+                default="feat/new-ranking-lambda-rank",  # "production" if ENV_SHORT_NAME == "prod" else "master",
+                type="string",
+            ),
+            "instance_type": Param(
+                default=gce_params["instance_type"][ENV_SHORT_NAME],
+                type="string",
+            ),
+            "instance_name": Param(
+                default=gce_params["instance_name"],
+                type="string",
+            ),
+            "dataset_name": Param(
+                default=BIGQUERY_ML_RECOMMENDATION_DATASET, type="string"
+            ),
+            "table_name": Param(default=RANKING_TRAINING_TABLE, type="string"),
+            "experiment_name": Param(
+                default=gce_params["experiment_name"], type="string"
+            ),
+            "run_name": Param(default=gce_params["run_name"], type="string"),
+            "model_name": Param(default=gce_params["model_name"], type="string"),
+        },
+    ) as dag
+):
     download_data = BigQueryInsertJobOperator(
         project_id=GCP_PROJECT_ID,
         task_id="store_data_to_gcs",

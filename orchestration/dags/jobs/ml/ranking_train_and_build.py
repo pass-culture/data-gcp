@@ -49,14 +49,14 @@ gce_params = {
         "prod": "n1-standard-16",
     },
 }
-schedule_dict = {"prod": "0 20 * * 5", "dev": "0 20 * * *", "stg": "0 20 * * 3"}
+# schedule_dict = {"prod": "0 20 * * 5", "dev": "0 20 * * *", "stg": "0 20 * * 3"}
 
 
 with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Train and build Ranking",
-    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
+    schedule_interval=None,
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,

@@ -1,3 +1,16 @@
+#!/usr/bin/env uv run --script
+#
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ['dotenv', 'typer', 'google-cloud-storage']
+# ///
+
+# # uv python interpreters compiled with LibreSSL -> Ignore warnings related to urllib3 and OpenSSL
+# # Note: This workaround fails as the warning is thrown by the gsutil call packing its own urllib3 library.
+# import warnings
+# from urllib3.exceptions import NotOpenSSLWarning
+# warnings.filterwarnings("ignore", category=NotOpenSSLWarning)
+
 import os
 import subprocess
 import sys
@@ -5,6 +18,7 @@ from pathlib import Path
 from typing import Optional
 
 import typer
+from typing_extensions import Annotated
 from dotenv import load_dotenv
 
 app = typer.Typer()
@@ -21,7 +35,7 @@ def find_dotenv():
     raise FileNotFoundError(".env.dbt file not found")
 
 
-def sync_artifacts(from_env: str):
+def pull_artifacts(from_env: str):
     bucket = set_bucket_name(from_env)
     if not bucket:
         typer.echo(f"Unknown environment: {from_env}")
@@ -115,6 +129,9 @@ def dbt_cmd(
     refresh_state: bool = typer.Option(
         False, help="Forcer le rafraîchissement des artefacts"
     ),
+    sync_artifacts: Optional[bool] = typer.Option(
+        None, "--sync-artifacts/--no-sync-artifacts"
+    ),
 ):
     """
     Exécute une commande dbt avec support du deferral inter-GCP project.
@@ -124,6 +141,14 @@ def dbt_cmd(
 
     # Sync artifacts si demandé
     state_path = None
+    if sync_artifacts:
+        for env in ["dev", "stg", "prod"]:
+            typer.secho(
+                f"🔄 Synchronisation des artefacts depuis {env}",
+                fg=typer.colors.CYAN,
+            )
+            pull_artifacts(env)
+        return
     if defer_to:
         state_path = f"target/defer_to/{defer_to}"
         if refresh_state or not (

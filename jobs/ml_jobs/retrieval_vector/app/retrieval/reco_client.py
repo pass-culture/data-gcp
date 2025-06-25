@@ -38,9 +38,7 @@ class RecoClient(DefaultClient):
         self.user_docs = None
 
     def load(self) -> None:
-        self.item_docs = self.load_item_document()
-        self.user_docs = self.load_user_document()
-        self.table = self.connect_db()
+        super().load()
         self.re_ranker = UserReranker(
             weight=self.re_rank_weight, user_docs=self.user_docs
         )

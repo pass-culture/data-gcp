@@ -62,7 +62,7 @@ with (
         dagrun_timeout=timedelta(minutes=1440),
         user_defined_macros=macros.default,
         template_searchpath=DAG_FOLDER,
-        tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
+        tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value, "WIP"],
         params={
             "branch": Param(
                 default="feat/new-ranking-lambda-rank",  # "production" if ENV_SHORT_NAME == "prod" else "master",

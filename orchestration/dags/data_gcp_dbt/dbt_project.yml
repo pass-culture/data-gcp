@@ -28,7 +28,7 @@ macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 
 # If you wish to write dbt artifacts to a custom directory, please use the --target-path CLI flag or DBT_TARGET_PATH env var instead.
-packages-install-path: "{{ env_var('DBT_TARGET_PATH', 'target') }}/dbt_packages"
+packages-install-path: "{{ env_var('DBT_TARGET_PATH' ~ '/dbt_packages', 'target/dbt_packages') }}"
 # directories to be removed by `dbt clean`
 clean-targets:
   - "{{ env_var('DBT_TARGET_PATH', 'target') }}"

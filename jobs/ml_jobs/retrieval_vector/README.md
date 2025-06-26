@@ -99,6 +99,7 @@ You can find all dependencies in the `api-requirements.in` file.
    - for similar offer recommendation :
 
       ```json
+
       {
          "model_type": "similar_offer",
          "items": ["product-6344516"],
@@ -140,6 +141,22 @@ You can find all dependencies in the `api-requirements.in` file.
          "vector_column_name": "booking_number_desc"
       }
       ```
+
+   - If you built a semantic retrieval textclient :
+
+      ```json
+      {
+         "model_type": "semantic",
+         "size": 10,
+         "params": {},
+         "call_id": "1234567890",
+         "debug": 1,
+         "prefilter": 1,
+         "similarity_metric": "dot",
+         "text": "YOUR TEXT HERE"
+      }
+      ```
+
 
    In the above examples, you will get a dictionnary with a key "predictions" containing the list of recommended items.
    > Note that the `"_distance"` field is to improved :

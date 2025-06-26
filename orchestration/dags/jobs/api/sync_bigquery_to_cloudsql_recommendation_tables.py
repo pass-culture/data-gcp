@@ -6,7 +6,6 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.operators.gcs import GCSDeleteObjectsOperator
-from airflow.sensors.time_delta import TimeDeltaSensor
 from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
@@ -215,13 +214,11 @@ with DAG(
 
             # Add a 3 minute delay before each view refresh (except the first)
             if previous_task:
-                # This is the task that waits for 3 minutes (180 seconds)
-                wait_between_refreshes = TimeDeltaSensor(
+                wait_between_refreshes = BashOperator(
                     task_id=f"wait_before_{view}_refresh",
-                    delta=timedelta(minutes=3),
+                    bash_command="sleep 180",
                 )
                 previous_task >> wait_between_refreshes >> refresh_materialized_view
-            # else:
             previous_task = refresh_materialized_view
 
     gce_instance_stop = DeleteGCEOperator(

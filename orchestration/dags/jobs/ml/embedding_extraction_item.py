@@ -13,37 +13,37 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-
+from common.utils import get_airflow_schedule
 from airflow.decorators import dag, task
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+from jobs.crons import SCHEDULE_DICT
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"extract-items-embeddings-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/ml_jobs/embeddings"
-DATE = "{{ yyyymmdd(ds) }}"
-default_args = {
-    "start_date": datetime(2023, 9, 6),
-    "on_failure_callback": on_failure_vm_callback,
-    "retries": 0,
-    "retry_delay": timedelta(minutes=2),
-}
-DAG_CONFIG = {
-    "TOKENIZERS_PARALLELISM": "false",
-}
-
 
 INPUT_DATASET_NAME = f"ml_input_{ENV_SHORT_NAME}"
 INPUT_TABLE_NAME = "item_embedding_extraction"
 OUTPUT_DATASET_NAME = f"ml_preproc_{ENV_SHORT_NAME}"
 OUTPUT_TABLE_NAME = "item_embedding_extraction"
 DAG_NAME = "embeddings_extraction_item"
+dag_schedule = get_airflow_schedule(SCHEDULE_DICT.get(DAG_NAME))
+
+
+default_args = {
+    "start_date": datetime(2023, 9, 6),
+    "on_failure_callback": on_failure_vm_callback,
+    "retries": 0,
+    "retry_delay": timedelta(minutes=2),
+}
+DAG_CONFIG = {"TOKENIZERS_PARALLELISM": "false"}
 
 
 @dag(
     dag_id=DAG_NAME,
     default_args=default_args,
     description="Extract items metadata embeddings",
-    schedule_interval="0 12,18,23 * * *",  # every day at 12:00, 18:00, and 23:00
+    schedule_interval=dag_schedule,  # every day at 12:00, 18:00, and 23:00
     catchup=False,
     dagrun_timeout=timedelta(hours=20),
     user_defined_macros=None,  # Replace with actual macros if needed

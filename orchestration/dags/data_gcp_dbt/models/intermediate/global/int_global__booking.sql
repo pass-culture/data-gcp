@@ -1,3 +1,9 @@
+{{
+    config(
+        cluster_by="booking_status",
+    )
+}}
+
 select
     b.booking_id,
     b.booking_creation_date,

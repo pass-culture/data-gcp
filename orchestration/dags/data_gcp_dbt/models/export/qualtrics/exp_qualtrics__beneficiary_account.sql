@@ -32,7 +32,8 @@ with
             user_location.user_rural_city_type as geo_type,
             user_location.qpv_code as code_qpv,  -- TODO legacy: rename field in qualtrics
             user_location.zrr_level as zrr,
-            user_data.user_seniority
+            user_data.user_seniority,
+            user_data.user_current_deposit_reform_category
 
         from {{ ref("mrt_global__user") }} as user_data
         left join
@@ -58,8 +59,8 @@ with
         from ir_export as ir
         {% if is_incremental() %}
             left join previous_export as pe on ir.user_id = pe.user_id
-            where ir.deposit_type = "GRANT_15_7" and pe.user_id is null
-        {% else %} where ir.deposit_type = "GRANT_15_7"
+            where ir.deposit_type = "GRANT_15_17" and pe.user_id is null
+        {% else %} where ir.deposit_type = "GRANT_15_17"
         {% endif %}
         order by rand()
         limit 8000

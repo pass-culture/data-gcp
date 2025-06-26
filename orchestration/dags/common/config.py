@@ -37,9 +37,13 @@ GCE_BASE_PREFIX = f"{DEPLOYMENT_TAG}-{ENV_SHORT_NAME}"
 BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js"
 GCE_TRAINING_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
 MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
+<<<<<<< DE-1813-buckets-migration-embedding-extraction-and-reduction
 ML_BUCKET_TEMP = os.environ.get(
     "ML_BUCKET_TEMP", f"data-bucket-ml-temp-{ENV_SHORT_NAME}"
 )
+=======
+
+>>>>>>> master
 if ENV_SHORT_NAME != "prod":
     MLFLOW_URL = "https://mlflow.staging.passculture.team/"
 else:

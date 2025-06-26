@@ -57,4 +57,4 @@ select
     o.venue_is_virtual,
     o.is_local_authority
 from {{ ref("int_applicative__stock") }} as s
-inner join {{ ref("int_global__offer") }} as o on s.offer_id = o.offer_id
+left join {{ ref("int_global__offer") }} as o on s.offer_id = o.offer_id

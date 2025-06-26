@@ -1,19 +1,34 @@
 import os
 from enum import Enum
 
+from airflow import configuration
 from common.access_gcp_secrets import access_secret_data
 
-from airflow import configuration
-
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
+DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags/")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
+
+LOCAL_ENV = os.environ.get("LOCAL_ENV", None)
+
+GCP_PROJECT_ID = {
+    "dev": "passculture-data-ehp",
+    "stg": "passculture-data-ehp",
+    "prod": "passculture-data-prod",
+}[ENV_SHORT_NAME]
+MLFLOW_BUCKET_NAME = {
+    "dev": "mlflow-bucket-ehp",
+    "stg": "mlflow-bucket-ehp",
+    "prod": "mlflow-bucket-prod",
+}[ENV_SHORT_NAME]
+MLFLOW_URL = {
+    "dev": "https://mlflow-dev.data.ehp.passculture.team/",
+    "stg": "https://mlflow-stg.data.ehp.passculture.team/",
+    "prod": "https://mlflow.data.passculture.team/",
+}[ENV_SHORT_NAME]
 ENVIRONMENT_NAME = {
     "dev": "development",
     "stg": "staging",
     "prod": "production",
 }[ENV_SHORT_NAME]
-DAG_FOLDER = os.environ.get("DAG_FOLDER", "dags/")
-LOCAL_ENV = os.environ.get("LOCAL_ENV", None)
 AIRFLOW_URI = {
     "dev": "airflow-dev.data.ehp.passculture.team",
     "stg": "airflow-stg.data.ehp.passculture.team",
@@ -23,9 +38,7 @@ AIRFLOW_URI = {
 GCS_AIRFLOW_BUCKET = os.environ.get(
     "GCS_BUCKET", f"airflow-data-bucket-{ENV_SHORT_NAME}"
 )
-
 SSH_USER = os.environ.get("SSH_USER", "airflow")
-
 GCP_REGION = "europe-west1"
 GCE_ZONE = "europe-west1-b"
 
@@ -36,12 +49,6 @@ GCE_BASE_PREFIX = f"{DEPLOYMENT_TAG}-{ENV_SHORT_NAME}"
 
 BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js"
 GCE_TRAINING_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
-MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
-
-if ENV_SHORT_NAME != "prod":
-    MLFLOW_URL = "https://mlflow.staging.passculture.team/"
-else:
-    MLFLOW_URL = "https://mlflow.passculture.team/"
 
 APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
     "APPLICATIVE_EXTERNAL_CONNECTION_ID",
@@ -103,12 +110,11 @@ BIGQUERY_TMP_DATASET = os.environ.get("BIGQUERY_TMP_DATASET", f"tmp_{ENV_SHORT_N
 
 APPLICATIVE_PREFIX = "applicative_database_"
 
-if ENV_SHORT_NAME == "prod":
-    MEDIATION_URL = "passculture-metier-prod-production"
-elif ENV_SHORT_NAME == "stg":
-    MEDIATION_URL = "passculture-metier-ehp-staging"
-else:
-    MEDIATION_URL = "passculture-metier-ehp-testing"
+MEDIATION_URL = {
+    "prod": "passculture-metier-prod-production",
+    "stg": "passculture-metier-ehp-staging",
+    "dev": "passculture-metier-ehp-testing",
+}[ENV_SHORT_NAME]
 
 if LOCAL_ENV is not None:
     PATH_TO_DBT_PROJECT = "/opt/airflow/dags/data_gcp_dbt"

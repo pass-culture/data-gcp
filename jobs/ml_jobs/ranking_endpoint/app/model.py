@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import joblib
 import lightgbm as lgb
@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder
 
@@ -18,33 +17,40 @@ class ClassMapping(Enum):
     booked = 2
 
 
-NUMERIC_FEATURES = [
-    "user_bookings_count",
-    "user_clicks_count",
-    "user_favorites_count",
-    "user_deposit_remaining_credit",
-    "user_is_geolocated",
-    "user_iris_x",
-    "user_iris_y",
-    "offer_user_distance",
-    "offer_booking_number_last_7_days",
-    "offer_booking_number_last_14_days",
-    "offer_booking_number_last_28_days",
-    "offer_semantic_emb_mean",
-    "offer_item_score",
-    "offer_item_rank",
-    "offer_is_geolocated",
-    "offer_stock_price",
-    "offer_creation_days",
-    "offer_stock_beginning_days",
-    "day_of_the_week",
-    "hour_of_the_day",
-]
+EMBEDDING_DIM = 0  # HACK : To remove embedding dimension from the model, set to 0
 
-CATEGORICAL_FEATURES = [
-    "context",
-    "offer_subcategory_id",
-]
+NUMERIC_FEATURES = (
+    [
+        "user_bookings_count",
+        "user_clicks_count",
+        "user_favorites_count",
+        "user_deposit_remaining_credit",
+        "user_is_geolocated",
+        "user_iris_x",
+        "user_iris_y",
+        "offer_user_distance",
+        "offer_booking_number_last_7_days",
+        "offer_booking_number_last_14_days",
+        "offer_booking_number_last_28_days",
+        "offer_semantic_emb_mean",
+        "offer_item_score",
+        "offer_is_geolocated",
+        "offer_stock_price",
+        "offer_creation_days",
+        "offer_stock_beginning_days",
+        "day_of_the_week",
+        "hour_of_the_day",
+        # "offer_booking_number",
+        # "offer_item_rank"
+        # "offer_centroid_x",
+        # "offer_centroid_y",
+    ]
+    + [f"user_emb_{i}" for i in range(EMBEDDING_DIM)]
+    + [f"item_emb_{i}" for i in range(EMBEDDING_DIM)]
+)
+
+CATEGORICAL_FEATURES = ["context", "offer_subcategory_id"]
+
 
 DEFAULT_CATEGORICAL = "UNKNOWN"
 DEFAULT_NUMERICAL = -1
@@ -60,6 +66,12 @@ class PredictPipeline:
         self.preprocessor_classifier = joblib.load(
             "./metadata/preproc_classifier.joblib"
         )
+
+    def set_feature_at_inference(
+        self, preprocessed_item: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        preprocessed_item["context"] = "recommendation"
+        return preprocessed_item
 
     def predict(self, input_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
@@ -88,6 +100,9 @@ class PredictPipeline:
 
             for feature in self.categorical_features:
                 processed_item[feature] = item.get(feature, DEFAULT_CATEGORICAL)
+
+            # Set additional features at inference time
+            processed_item = self.set_feature_at_inference(processed_item)
 
             processed_data.append(processed_item)
 
@@ -122,6 +137,49 @@ class TrainPipeline:
         self.train_size = 0.9
         self.target = target
         self.params = params
+        self.group_key = "user_id"  # Default group key for ranking
+
+    @staticmethod
+    def linear_train_test_split(
+        data_to_split_df: pd.DataFrame, test_size: float, split_key: str
+    ) -> tuple:
+        """
+        Performs a linear train-test split on a DataFrame based on sorted unique values of a specified column.
+        This function splits the data chronologically or sequentially by sorting the unique values
+        of the split_key column and using them to determine the train-test boundary. The split
+        ensures that all rows with split_key values below a certain threshold go to training,
+        and all rows with values at or above that threshold go to testing.
+        Args:
+            data_to_split_df (pd.DataFrame): The DataFrame to split into train and test sets.
+            test_size (float): The proportion of unique split_key values to allocate to the test set.
+                            Should be between 0 and 1.
+            split_key (str): The column name to use for determining the split boundary.
+                            Values in this column will be sorted to create a linear split.
+        Returns:
+            tuple: A tuple containing (train_data, test_data) where both are pd.DataFrame objects.
+                train_data contains rows where split_key < train_split_value,
+                test_data contains rows where split_key >= test_split_value.
+        Raises:
+            ValueError: If there are fewer than 2 unique values in the split_key column,
+                        making it impossible to perform a meaningful train-test split.
+        Example:
+            >>> df = pd.DataFrame({'date': ['2023-01-01', '2023-01-02', '2023-01-03'],
+                                'value': [1, 2, 3]})
+            >>> train, test = linear_train_test_split(df, test_size=0.3, split_key='date')
+        """
+        sorted_unique_split_values = data_to_split_df[split_key].sort_values().unique()
+        if len(sorted_unique_split_values) < 2:
+            raise ValueError(
+                f"Not enough unique values in '{split_key}' to perform train-test split."
+            )
+
+        split_index = int(len(sorted_unique_split_values) * (1 - test_size))
+        train_split_value = sorted_unique_split_values[split_index - 1]
+        test_split_value = sorted_unique_split_values[split_index]
+
+        train_data = data_to_split_df[lambda df: df[split_key] < train_split_value]
+        test_data = data_to_split_df[lambda df: df[split_key] >= test_split_value]
+        return train_data, test_data
 
     def set_pipeline(self):
         numeric_transformer = Pipeline(
@@ -174,11 +232,19 @@ class TrainPipeline:
         joblib.dump(self.preprocessor, f"./metadata/preproc_{model_name}.joblib")
         self.model.save_model(f"./metadata/model_{model_name}.txt")
 
-    def train(self, df: pd.DataFrame, class_weight: Optional[dict] = None):
-        X = self.fit_transform(df)
-        y = df[self.target]
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, train_size=self.train_size, random_state=42
+    def train(self, df: pd.DataFrame, class_weight: dict):
+        train_data, test_data = self.linear_train_test_split(
+            data_to_split_df=df,
+            test_size=1 - self.train_size,
+            split_key="event_date",
+        )
+
+        # Preprocess for lgbm
+        X_train = self.fit_transform(train_data)
+        X_test = self.transform(test_data)
+        y_train, y_test = (
+            train_data[self.target].to_numpy(),
+            test_data[self.target].to_numpy(),
         )
 
         train_data = lgb.Dataset(
@@ -210,6 +276,60 @@ class TrainPipeline:
             callbacks=[lgb.early_stopping(stopping_rounds=200)],
         )
 
+    def train_ranking(self, df: pd.DataFrame):
+        """
+        Train a LightGBM ranking model with grouping by user_id.
+
+        This method adapts the training process for learning-to-rank tasks:
+        1. Groups data by user_id to create query groups
+        2. Uses relevance scores (higher = more relevant) as the target
+        3. Configures LightGBM with appropriate ranking parameters
+
+        Args:
+            df (pd.DataFrame): Training data with features and target
+        """
+        train_data, test_data = self.linear_train_test_split(
+            data_to_split_df=df,
+            test_size=1 - self.train_size,
+            split_key="event_date",
+        )
+
+        # Preprocess for lgbm
+        X_train = self.fit_transform(train_data)
+        X_test = self.transform(test_data)
+        y_train, y_test = (
+            train_data[self.target].to_numpy(),
+            test_data[self.target].to_numpy(),
+        )
+
+        # Extract query groups (user_ids) for ranking
+        group_train = train_data.groupby(self.group_key).size().values
+        group_test = test_data.groupby(self.group_key).size().values
+
+        # Create LightGBM datasets with group information
+        train_data = lgb.Dataset(
+            X_train,
+            y_train,
+            group=group_train,
+            feature_name=self.numeric_features + self.categorical_features,
+        )
+        test_data = lgb.Dataset(
+            X_test,
+            y_test,
+            group=group_test,
+            feature_name=self.numeric_features + self.categorical_features,
+            reference=train_data,
+        )
+
+        # Train the model
+        self.model = lgb.train(
+            self.params,
+            train_data,
+            num_boost_round=50_000,
+            valid_sets=[train_data, test_data],
+            callbacks=[lgb.early_stopping(stopping_rounds=200)],
+        )
+
     def predict_classifier(self, df: pd.DataFrame) -> pd.DataFrame:
         processed_data = self.preprocessor.transform(df)
         probabilities = self.model.predict(processed_data)
@@ -233,3 +353,16 @@ class TrainPipeline:
         processed_data = self.preprocessor.transform(df)
 
         return df.assign(regression_score=self.model.predict(processed_data))
+
+    def predict_ranking(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Generate ranking scores for items.
+
+        Args:
+            df (pd.DataFrame): Input data to predict ranking scores for
+
+        Returns:
+            pd.DataFrame: Original dataframe with added ranking score column
+        """
+        processed_data = self.preprocessor.transform(df)
+        return df.assign(score=self.model.predict(processed_data))

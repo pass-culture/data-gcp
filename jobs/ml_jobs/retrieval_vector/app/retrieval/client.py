@@ -369,7 +369,10 @@ class DefaultClient:
                 updated to include a `SIMILARITY_COLUMN_NAME` key holding
                 the dot product similarity score (float) or None.
         """
-        user_vector = self.user_vector(user_id)
+        if hasattr(self, "user_docs") and self.user_docs:
+            user_vector = self.user_vector(user_id)
+        else:
+            user_vector = None
         input_item_vectors = {
             item_id: self.item_vector(item_id) for item_id in input_item_ids
         }

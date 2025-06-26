@@ -40,7 +40,6 @@ MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
 ML_BUCKET_TEMP = os.environ.get(
     "ML_BUCKET_TEMP", f"data-bucket-ml-temp-{ENV_SHORT_NAME}"
 )
-# TODO? : add sandbox bucket
 if ENV_SHORT_NAME != "prod":
     MLFLOW_URL = "https://mlflow.staging.passculture.team/"
 else:

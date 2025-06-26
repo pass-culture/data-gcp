@@ -35,3 +35,16 @@ CREATE UNIQUE INDEX idx_enriched_user_mv_user_tmp_{{ ts_nodash }} ON public.enri
 -- Refresh state
 refresh materialized view enriched_user_mv_tmp
 ;
+
+-- Move tmp to final Materialized view in a transaction
+-- This is to avoid any downtime in case of a failure
+begin
+;
+DROP MATERIALIZED VIEW IF EXISTS enriched_user_mv_old;
+ALTER MATERIALIZED VIEW IF EXISTS enriched_user_mv
+    RENAME TO enriched_user_mv_old;
+ALTER MATERIALIZED VIEW IF EXISTS enriched_user_mv_tmp
+    RENAME TO enriched_user_mv;
+DROP MATERIALIZED VIEW IF EXISTS enriched_user_mv_old;
+commit
+;

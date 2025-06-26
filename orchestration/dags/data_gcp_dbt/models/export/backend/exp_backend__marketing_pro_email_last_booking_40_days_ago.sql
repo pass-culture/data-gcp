@@ -14,4 +14,4 @@
 
 select date('{{ ds() }}') as execution_date, venue_id, venue_booking_email
 from {{ ref("mrt_global__venue") }}
-where venue_is_permanent and date_diff(current_date, last_booking_date, day) = 40
+where venue_is_open_to_public and date_diff(current_date, last_booking_date, day) = 40

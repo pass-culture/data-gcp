@@ -97,7 +97,7 @@ select
         else "marketing"
     end as home_type,
     coalesce(age, userstatus) as onboarding_user_selected_age,
-    coalesce(isheadline = "true", false) as is_headline_offer,
+    isheadline as is_headline_offer,
     case when event_name = "ConsultOffer" then 1 else 0 end as is_consult_offer,
     case
         when event_name = "BookingConfirmation" then 1 else 0

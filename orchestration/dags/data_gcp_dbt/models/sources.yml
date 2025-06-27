@@ -32,6 +32,9 @@ sources:
               time_bucket:
                 period: day
                 count: 1
+              anomaly_sensitivity: 3
+                period: day
+                count: 1
       - name: applicative_database_booking_finance_incident
       - name: applicative_database_boost_cinema_details
       - name: applicative_database_cashflow

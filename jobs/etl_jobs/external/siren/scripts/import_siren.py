@@ -15,6 +15,7 @@ from scripts.utils import (
 
 MAX_SIREN_CALL = 100
 MAX_SIREN_TO_UPDATE = 5000
+INSEE_SIRENE_BASE_URL = "https://api.insee.fr/api-siren/3.11"
 
 
 def get_offerer_siren_list():
@@ -46,7 +47,8 @@ def get_offerer_siren_list():
 
 
 def get_siren_query(siren_list):
-    query = "https://api.insee.fr/entreprises/sirene/V3.11/siren?q="
+    route_unite_legale = "/siren"
+    query = f"{INSEE_SIRENE_BASE_URL}{route_unite_legale}?q="
     for siren in siren_list:
         query += f"""siren:{siren} OR """
     query += f"""siren:{siren_list[len(siren_list)-1]}&nombre=1000"""

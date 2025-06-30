@@ -1,6 +1,8 @@
 import os
 from enum import Enum
 
+import re
+
 from common.access_gcp_secrets import access_secret_data
 
 from airflow import configuration
@@ -31,7 +33,10 @@ GCE_ZONE = "europe-west1-b"
 
 GCE_SA = os.environ.get("GCE_SA", f"algo-training-{ENV_SHORT_NAME}")
 
-DEPLOYMENT_TAG = os.environ.get("DEPLOYMENT_TAG", "composer")
+DEPLOYMENT_TAG = os.environ.get(
+    "DEPLOYMENT_TAG", os.environ.get("LOCAL_TAG", "local-airflow")
+)
+
 GCE_BASE_PREFIX = f"{DEPLOYMENT_TAG}-{ENV_SHORT_NAME}"
 
 BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js"
@@ -131,6 +136,8 @@ if LOCAL_ENV is None:
     )
 else:
     ELEMENTARY_PYTHON_PATH = os.environ.get("ELEMENTARY_PYTHON_PATH")
+
+USE_INTERNAL_IP = False if LOCAL_ENV is not None else True
 
 SLACK_TOKEN_DATA_QUALITY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")
 SLACK_CHANNEL_DATA_QUALITY = "alertes-data-quality"

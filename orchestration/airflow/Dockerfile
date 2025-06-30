@@ -33,7 +33,7 @@ USER root
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git ca-certificates curl \
     && update-ca-certificates \
-    && curl -fsSL https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} \
+    && curl --proto =https --proto-redir =https -fsSL https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} \
          -o /tmp/${GCLOUD_VERSION} \
     && cd /tmp \
     && tar -xzf ${GCLOUD_VERSION} \

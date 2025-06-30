@@ -75,6 +75,7 @@ COPY airflow/scripts/sync_pools.py sync_pools.py
 COPY airflow/config/pools.json pools.json
 RUN chmod +x sync_pools.py
 
+
 # Switch back to airflow user
 USER airflow
 

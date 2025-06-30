@@ -12,6 +12,8 @@ x-airflow-common: &airflow-common
     ENV_SHORT_NAME: ${ENV_SHORT_NAME:-}
     APPLICATIVE_EXTERNAL_CONNECTION_ID: ${APPLICATIVE_EXTERNAL_CONNECTION_ID:-}
     SSL_CERT_FILE: /usr/local/share/ca-certificates/nscacert_combined.pem
+    CLOUDSDK_CONFIG: /root/.config/gcloud
+    CLOUDSDK_CORE_CUSTOM_CA_CERTS_FILE: /usr/local/share/ca-certificates/nscacert_combined.pem
   volumes:
     - ./dags:/opt/airflow/dags
     - ./plugins:/opt/airflow/plugins
@@ -40,7 +42,10 @@ services:
 
   airflow-webserver:
     image: airflow-custom-image:latest
+    hostname: airflow-webserver
     <<: *airflow-common
+    environment:
+      <<: *airflow-common-env
     command: webserver
     ports:
       - 8080:8080
@@ -55,7 +60,10 @@ services:
 
   airflow-scheduler:
     image: airflow-custom-image:latest
+    hostname: airflow-scheduler
     <<: *airflow-common
+    environment:
+      <<: *airflow-common-env
     command: scheduler
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://airflow-webserver:8080/health"]
@@ -68,11 +76,15 @@ services:
   airflow-triggerer:
     image: airflow-custom-image:latest
     <<: *airflow-common
+    environment:
+      <<: *airflow-common-env
+      CLOUDSDK_AUTH_DISABLE_CREDENTIALS_REFRESH: true
     command: triggerer
     ports:
       - "8794:8794"
+    hostname: airflow-triggerer
     healthcheck:
-      test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
+      test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname airflow-triggerer']
       interval: 10s
       timeout: 10s
       retries: 5

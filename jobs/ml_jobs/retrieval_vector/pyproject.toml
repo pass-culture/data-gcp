@@ -124,6 +124,7 @@ dev-dependencies = [
     "sentence-transformers==2.2.2",
     "tensorflow==2.14.0",
     "unittest2==1.1.0",
+    "tensorflow-macos==2.14.0 ; sys_platform == 'darwin'",
 ]
 
 ## uv

@@ -2808,6 +2808,7 @@ dev = [
     { name = "python-json-logger" },
     { name = "sentence-transformers" },
     { name = "tensorflow" },
+    { name = "tensorflow-macos", marker = "sys_platform == 'darwin'" },
     { name = "unittest2" },
 ]
 
@@ -2931,6 +2932,7 @@ dev = [
     { name = "python-json-logger", specifier = "==2.0.7" },
     { name = "sentence-transformers", specifier = "==2.2.2" },
     { name = "tensorflow", specifier = "==2.14.0" },
+    { name = "tensorflow-macos", marker = "sys_platform == 'darwin'", specifier = "==2.14.0" },
     { name = "unittest2", specifier = "==1.1.0" },
 ]
 
@@ -3411,6 +3413,39 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/43/9b/be27588352d7bd971696874db92d370f578715c17c0ccb27e4b13e16751e/tensorflow_io_gcs_filesystem-0.37.1-cp312-cp312-macosx_12_0_arm64.whl", hash = "sha256:fe8dcc6d222258a080ac3dfcaaaa347325ce36a7a046277f6b3e19abc1efb3c5", size = 3479614, upload-time = "2024-07-01T23:44:32.316Z" },
     { url = "https://files.pythonhosted.org/packages/d3/46/962f47af08bd39fc9feb280d3192825431a91a078c856d17a78ae4884eb1/tensorflow_io_gcs_filesystem-0.37.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:fbb33f1745f218464a59cecd9a18e32ca927b0f4d77abd8f8671b645cc1a182f", size = 4842077, upload-time = "2024-07-01T23:44:33.86Z" },
     { url = "https://files.pythonhosted.org/packages/f0/9b/790d290c232bce9b691391cf16e95a96e469669c56abfb1d9d0f35fa437c/tensorflow_io_gcs_filesystem-0.37.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:286389a203a5aee1a4fa2e53718c661091aa5fea797ff4fa6715ab8436b02e6c", size = 5085733, upload-time = "2024-07-01T23:44:36.663Z" },
+]
+
+[[package]]
+name = "tensorflow-macos"
+version = "2.14.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "absl-py", marker = "sys_platform == 'darwin'" },
+    { name = "astunparse", marker = "sys_platform == 'darwin'" },
+    { name = "flatbuffers", marker = "sys_platform == 'darwin'" },
+    { name = "gast", marker = "sys_platform == 'darwin'" },
+    { name = "google-pasta", marker = "sys_platform == 'darwin'" },
+    { name = "grpcio", marker = "sys_platform == 'darwin'" },
+    { name = "h5py", marker = "sys_platform == 'darwin'" },
+    { name = "keras", marker = "sys_platform == 'darwin'" },
+    { name = "libclang", marker = "sys_platform == 'darwin'" },
+    { name = "ml-dtypes", marker = "sys_platform == 'darwin'" },
+    { name = "numpy", marker = "sys_platform == 'darwin'" },
+    { name = "opt-einsum", marker = "sys_platform == 'darwin'" },
+    { name = "packaging", marker = "sys_platform == 'darwin'" },
+    { name = "protobuf", marker = "sys_platform == 'darwin'" },
+    { name = "setuptools", marker = "sys_platform == 'darwin'" },
+    { name = "six", marker = "sys_platform == 'darwin'" },
+    { name = "tensorboard", marker = "sys_platform == 'darwin'" },
+    { name = "tensorflow-estimator", marker = "sys_platform == 'darwin'" },
+    { name = "tensorflow-io-gcs-filesystem", marker = "sys_platform == 'darwin'" },
+    { name = "termcolor", marker = "sys_platform == 'darwin'" },
+    { name = "typing-extensions", marker = "sys_platform == 'darwin'" },
+    { name = "wrapt", marker = "sys_platform == 'darwin'" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/20/87/1d5c17426662f1da4ac38546de0fe2d2062ad6db55b33fd2d6ca7bd77196/tensorflow_macos-2.14.0-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:31fa670b0afd2a52b3ad15bab97a0d0aae28c4ea2a96ab7f0a91e8844390bfb0", size = 199667451, upload-time = "2023-09-27T13:38:07.415Z" },
+    { url = "https://files.pythonhosted.org/packages/d3/4b/ae9037ea22ba94eb2cf267e991384c3444f3e6142fa49923352b4ab73e14/tensorflow_macos-2.14.0-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:064e98b67d7a89e72c37c90254c0a322a0b8d0ce9b68f23286816210e3ef6685", size = 199710290, upload-time = "2023-09-27T13:38:19.679Z" },
 ]
 
 [[package]]

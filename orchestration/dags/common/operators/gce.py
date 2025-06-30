@@ -13,6 +13,7 @@ from common.config import (
     GCP_PROJECT_ID,
     SSH_USER,
     UV_VERSION,
+    USE_INTERNAL_IP,
 )
 from common.hooks.gce import DeferrableSSHGCEJobManager, GCEHook, SSHGCEJobManager
 from common.hooks.image import MACHINE_TYPE
@@ -173,7 +174,7 @@ class BaseSSHGCEOperator(BaseOperator):
             instance_name=self.instance_name,
             zone=self.gce_zone,
             project_id=GCP_PROJECT_ID,
-            use_internal_ip=False,
+            use_internal_ip=USE_INTERNAL_IP,
             use_iap_tunnel=True,
             use_oslogin=False,
             user=SSH_USER,

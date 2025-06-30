@@ -135,6 +135,8 @@ if LOCAL_ENV is None:
 else:
     ELEMENTARY_PYTHON_PATH = os.environ.get("ELEMENTARY_PYTHON_PATH")
 
+USE_INTERNAL_IP = False if LOCAL_ENV is not None else True
+
 SLACK_TOKEN_DATA_QUALITY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")
 SLACK_CHANNEL_DATA_QUALITY = "alertes-data-quality"
 

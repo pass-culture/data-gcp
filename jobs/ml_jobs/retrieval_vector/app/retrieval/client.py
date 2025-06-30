@@ -285,6 +285,7 @@ class DefaultClient:
     def postprocess(
         self,
         ranked_items: List[Dict],
+        **kwargs,
     ) -> List[Dict]:
         """
         Postprocess the results.

@@ -163,8 +163,9 @@ def query_siren():
                 result = response.json()
                 siren_info_list = append_info_siren_list(siren_info_list, result)
             elif response.status_code == 404:
-                print("Error 404")
-                print(response.json())
+                print(f"Error 404 for query: {query}")
+                print("Response body:", response.text or "<empty>")
+                # print(response.json())
             else:
                 raise ValueError(
                     f"Error API CALL {response.status_code} : {response.reason}"

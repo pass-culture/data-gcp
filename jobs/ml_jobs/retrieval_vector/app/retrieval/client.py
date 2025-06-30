@@ -285,8 +285,6 @@ class DefaultClient:
     def postprocess(
         self,
         ranked_items: List[Dict],
-        user_id: Optional[str],
-        input_item_ids: List[str],
     ) -> List[Dict]:
         """
         Postprocess the results.

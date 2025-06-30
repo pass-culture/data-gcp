@@ -47,7 +47,7 @@ class RecoClient(DefaultClient):
             weight=self.re_rank_weight, user_docs=self.user_docs
         )
 
-    def postprocess(
+    def _add_item_dot_similarities(
         self,
         ranked_items: List[Dict],
         user_id: Optional[str],
@@ -77,10 +77,7 @@ class RecoClient(DefaultClient):
                 updated to include a `SIMILARITY_COLUMN_NAME` key holding
                 the dot product similarity score (float) or None.
         """
-        if hasattr(self, "user_docs") and self.user_docs:
-            user_vector = self.user_vector(user_id)
-        else:
-            user_vector = None
+        user_vector = self.user_vector(user_id)
         input_item_vectors = {
             item_id: self.item_vector(item_id) for item_id in input_item_ids
         }
@@ -126,3 +123,11 @@ class RecoClient(DefaultClient):
                     else None
                 )
         return ranked_items
+
+    def postprocess(
+        self,
+        ranked_items: List[Dict],
+        user_id: Optional[str],
+        input_item_ids: List[str],
+    ) -> List[Dict]:
+        return self._add_item_dot_similarities(ranked_items, user_id, input_item_ids)

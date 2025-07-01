@@ -55,7 +55,7 @@ select
     case
         when d.type = "GRANT_15_17"
         then "15_17_pre_reform"
-        when d.type = "GRANT_18" and d.amount = 300
+        when d.type = "GRANT_18" and d.amount <= 300
         then "18_pre_reform"
         when d.type = "GRANT_18" and d.amount > 300
         then "18_experiment_phase"

@@ -39,20 +39,6 @@ def preprocess_artists(
         .pipe(extract_first_artist)
         .pipe(format_names)
         .pipe(filter_artists, filtering_params=FILTERING_PARAMS)
-        .loc[
-            :,
-            [
-                ARTIST_NAME_KEY,
-                OFFER_CATEGORY_ID_KEY,
-                OFFER_IS_SYNCHRONISED,
-                TOTAL_OFFER_COUNT,
-                TOTAL_BOOKING_COUNT,
-                ARTIST_TYPE_KEY,
-                IS_MULTI_ARTISTS_KEY,
-                FIRST_ARTIST_KEY,
-                PREPROCESSED_ARTIST_NAME_KEY,
-            ],
-        ]
     )
 
 
@@ -62,7 +48,20 @@ def main(
 ) -> None:
     artists_to_match_df = pd.read_parquet(source_file_path)
 
-    preprocessed_df = artists_to_match_df.pipe(preprocess_artists)
+    preprocessed_df = artists_to_match_df.pipe(preprocess_artists).loc[
+        :,
+        [
+            ARTIST_NAME_KEY,
+            OFFER_CATEGORY_ID_KEY,
+            OFFER_IS_SYNCHRONISED,
+            TOTAL_OFFER_COUNT,
+            TOTAL_BOOKING_COUNT,
+            ARTIST_TYPE_KEY,
+            IS_MULTI_ARTISTS_KEY,
+            FIRST_ARTIST_KEY,
+            PREPROCESSED_ARTIST_NAME_KEY,
+        ],
+    ]
 
     preprocessed_df.to_parquet(output_file_path)
 

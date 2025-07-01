@@ -185,11 +185,11 @@ select
         when subcategories.category_id <> "SPECTACLE" and o.musicsubtype is not null
         then o.musicsubtype
     end as subtype,
-    future_offer.offer_publication_date,
+    coalesce(o.offer_publication_date,future_offer.offer_publication_date) as offer_publication_date,
     case
         when
             o.offer_is_active is false
-            and future_offer.offer_publication_date >= current_date
+            and coalesce(o.offer_publication_date,future_offer.offer_publication_date) >= current_date
         then true
         else false
     end as is_future_scheduled,
@@ -206,7 +206,9 @@ select
         else false
     end as is_headlined,
     first_headline_date,
-    last_headline_date
+    last_headline_date,
+    o.offer_finalization_date,
+    o.scheduled_offer_bookability_date
 from {{ ref("int_applicative__extract_offer") }} as o
 left join {{ ref("int_applicative__offer_item_id") }} as ii on ii.offer_id = o.offer_id
 left join stocks_grouped_by_offers on stocks_grouped_by_offers.offer_id = o.offer_id

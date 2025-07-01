@@ -6,17 +6,14 @@ from constants import (
     ARTIST_NAME_KEY,
     ARTIST_NAME_TO_MATCH_KEY,
     ARTIST_TYPE_KEY,
+    FIRST_ARTIST_KEY,
     ID_KEY,
     ID_PER_CATEGORY,
     OFFER_CATEGORY_ID_KEY,
+    PREPROCESSED_ARTIST_NAME_KEY,
     PRODUCT_ID_KEY,
 )
-from match_artists_on_wikidata import preprocess_artists
-from utils.preprocessing_utils import (
-    clean_names,
-    extract_first_artist,
-    format_names,
-)
+from preprocess import preprocess_artists
 
 app = typer.Typer()
 
@@ -79,9 +76,8 @@ def get_products_to_remove_and_link_df(
 
 def preprocess_before_matching(df: pd.DataFrame) -> pd.DataFrame:
     return (
-        (df.pipe(clean_names).pipe(extract_first_artist).pipe(format_names))
-        .pipe(preprocess_artists)
-        .rename(columns={"alias": ARTIST_NAME_TO_MATCH_KEY})
+        df.pipe(preprocess_artists)
+        .rename(columns={PREPROCESSED_ARTIST_NAME_KEY: ARTIST_NAME_TO_MATCH_KEY})
         .filter(
             [
                 PRODUCT_ID_KEY,
@@ -90,10 +86,13 @@ def preprocess_before_matching(df: pd.DataFrame) -> pd.DataFrame:
                 ARTIST_NAME_KEY,
                 ARTIST_NAME_TO_MATCH_KEY,
                 ARTIST_ID_KEY,
+                FIRST_ARTIST_KEY,
             ],
         )
-        .assign(artist_name_to_match=lambda df: df.artist_name_to_match.str.strip())
-        .loc[lambda df: ~df.artist_name_to_match.isin(ARTIST_NAME_TO_FILTER)]
+        .assign(
+            artist_name_to_match=lambda df: df[ARTIST_NAME_TO_MATCH_KEY].str.strip()
+        )
+        .loc[lambda df: ~df[ARTIST_NAME_TO_MATCH_KEY].isin(ARTIST_NAME_TO_FILTER)]
     )
 
 

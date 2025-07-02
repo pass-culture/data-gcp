@@ -8,7 +8,7 @@ from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    MLFLOW_BUCKET_NAME,
+    ML_BUCKET_TEMP,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -36,7 +36,7 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
 }
 dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/embedding_reduction_items_{ENV_SHORT_NAME}/embedding_reduction_items_{DATE}/{DATE}_item_embbedding_data",
+    "STORAGE_PATH": f"gs://{ML_BUCKET_TEMP}/embedding_reduction_items_{ENV_SHORT_NAME}/run_{DATE}",
 }
 
 

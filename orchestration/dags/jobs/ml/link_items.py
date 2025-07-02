@@ -10,7 +10,7 @@ from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    MLFLOW_BUCKET_NAME,
+    ML_BUCKET_TEMP,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -47,7 +47,7 @@ DAG_CONFIG = {
     },
     "BASE_PATHS": {
         "GCS_FOLDER": f"linkage_item_{ENV_SHORT_NAME}/linkage_{DATE}",
-        "STORAGE": f"gs://{MLFLOW_BUCKET_NAME}/linkage_item_{ENV_SHORT_NAME}/linkage_{DATE}",
+        "STORAGE": f"gs://{ML_BUCKET_TEMP}/linkage_item_{ENV_SHORT_NAME}/linkage_{DATE}",
     },
     "DIRS": {
         "BASE": "data-gcp/jobs/ml_jobs/item_linkage/",
@@ -359,7 +359,7 @@ with DAG(
         load_linked_product_into_bq = GCSToBigQueryOperator(
             project_id=GCP_PROJECT_ID,
             task_id="load_linked_product_into_bq",
-            bucket=MLFLOW_BUCKET_NAME,
+            bucket=ML_BUCKET_TEMP,
             source_objects=f"""{
                 build_path(
                     DAG_CONFIG["BASE_PATHS"]["GCS_FOLDER"],
@@ -463,7 +463,7 @@ with DAG(
         load_linked_offer_into_bq = GCSToBigQueryOperator(
             project_id=GCP_PROJECT_ID,
             task_id="load_linked_offer_into_bq",
-            bucket=MLFLOW_BUCKET_NAME,
+            bucket=ML_BUCKET_TEMP,
             source_objects=f"""{
                 build_path(
                     DAG_CONFIG["BASE_PATHS"]["GCS_FOLDER"],

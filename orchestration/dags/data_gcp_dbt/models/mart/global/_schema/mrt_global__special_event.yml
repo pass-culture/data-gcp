@@ -12,6 +12,8 @@ models:
         description: "{{ doc('column__offerer_id') }}"
       - name: venue_id
         description: "{{ doc('column__venue_id') }}"
+      - name: typeform_id
+        description: "{{ doc('column__typeform_id') }}"
       - name: special_event_creation_date
         description: "{{ doc('column__special_event_creation_date') }}"
       - name: special_event_date

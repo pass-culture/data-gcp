@@ -22,6 +22,8 @@ models:
         description: "{{ doc('column__parent_module_type') }}"
       - name: parent_entry_id
         description: "{{ doc('column__parent_entry_id') }}"
+      - name: typeform_id
+        description: "{{ doc('column__typeform_id') }}"
       - name: app_version
         description: "{{ doc('column__app_version') }}"
       - name: parent_home_type

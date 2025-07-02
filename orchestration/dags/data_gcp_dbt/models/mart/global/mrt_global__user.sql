@@ -69,6 +69,5 @@ select
     ) as user_seniority
 from {{ ref("int_global__user") }}
 where
-    user_is_active
-    or user_suspension_reason = 'upon user request'
-    or current_deposit_type != 'GRANT_FREE'
+    (user_is_active or user_suspension_reason = 'upon user request')
+    and current_deposit_type != 'GRANT_FREE'

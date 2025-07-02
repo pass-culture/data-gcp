@@ -3,6 +3,7 @@ select
     se.special_event_title,
     se.offerer_id,
     se.venue_id,
+    se.typeform_id,
     ser.special_event_response_id,
     ser.user_id,
     ser.special_event_response_status,

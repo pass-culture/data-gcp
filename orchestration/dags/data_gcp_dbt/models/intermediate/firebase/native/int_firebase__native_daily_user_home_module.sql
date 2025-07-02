@@ -46,6 +46,7 @@ with
             redirections.parent_module_id,
             redirections.parent_entry_id,
             events.user_location_type,
+            modules.typeform_id,
             coalesce(modules.title, modules.offer_title) as module_name,
             case
                 when modules.content_type = 'recommendation' then events.reco_call_id
@@ -233,6 +234,7 @@ select
     displayed.entry_name,
     displayed.module_id,
     displayed.module_name,
+    displayed.typeform_id,
     displayed.parent_module_id,
     displayed.parent_entry_id,
     displayed.module_type,

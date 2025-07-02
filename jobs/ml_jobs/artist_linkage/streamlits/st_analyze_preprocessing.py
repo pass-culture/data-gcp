@@ -105,42 +105,46 @@ def extract_true_artist_name(artist_name: str) -> str:
     # --- Step 4: Handle "Lastname, Firstname" Format ---
     # This is a common format, e.g., "Gregson, Edward"
     if "," in name:
-        parts = name.split(",", 1)
-        last_name = parts[0].strip()
-        first_name = parts[1].strip()
-        # Recombine as "Firstname Lastname"
-        return f"{first_name} {last_name}".strip()
+        # Can mean multiple artists or a single artist in "Lastname, Firstname" format.
+        if len(name.split(",")) > 2:
+            # If there are more than two parts, we assume it's multiple artists.
+            # We take the first part as the main artist.
+            name = name.split(",")[0].strip()
+        elif len(name.split()) >= 4:
+            # If the name has more than four parts, we assume it's two artists
+            # and take the first part as the main artist.
+            name = name.split(",")[0].strip()
+        else:
+            # Otherwise, we assume it's a single artist in "Lastname, Firstname" format.
+            # We split by comma and then reformat to "Firstname Lastname".
+            parts = name.split(",", 1)
+            last_name = parts[0].strip()
+            first_name = parts[1].strip()
+            # Recombine as "Firstname Lastname"
+            name = f"{first_name} {last_name}".strip()
 
     # --- Step 5: Handle "Lastname Initial(s)" Format ---
     # This is the most complex part. We need to distinguish the name from the initials.
-    words = re.split(r"\s+|-", name)
+    words = [word for word in re.split(r"\s+|-|\.", name) if word != ""]
     if len(words) < 2:
         # If it's a single word, there's nothing to reorder.
         return name
-
-    # Define particles that are part of names, not initials (e.g., "de", "van")
-    particles = {"de", "la", "di", "van", "le", "du"}
 
     # We iterate backwards to separate initials from the main name.
     # An "initial" is a short word that is not a particle.
     initial_parts = []
     lastname_parts = []
-    is_lastname_part = False
 
-    for word in reversed(words):
-        # A word is considered an initial if it's short and not a known particle.
-        # This heuristic is robust for cases like "ch", "j.l", "p", etc.
-        is_initial = (
-            len(word.replace(".", "").replace("-", "")) <= 2
-            and word.lower().replace(".", "") not in particles
-        )
+    for word in words:
+        # A word is considered an initial if it's 1 alphabet character long
+        is_initial = len(word.replace(".", "").replace("-", "")) <= 1 and word.isalpha()
 
-        if is_initial and not is_lastname_part:
-            initial_parts.insert(0, word)
+        if is_initial:
+            initial_parts.append(word)
         else:
-            # Once we hit a non-initial word, all preceding words are part of the name.
-            is_lastname_part = True
-            lastname_parts.insert(0, word)
+            lastname_parts.append(word)
+    st.write(f"Initial parts: {initial_parts} for name: {name} with words: {words}")
+    st.write(f"Lastname parts: {lastname_parts} for name: {name} with words: {words}")
 
     # --- Step 6: Format and Recombine ---
     if initial_parts:
@@ -149,21 +153,11 @@ def extract_true_artist_name(artist_name: str) -> str:
         # Format the initials consistently (e.g., "p", "j" -> "p.j.")
         # Flatten all initial parts into a single string without separators.
         flat_initials = "".join(initial_parts).replace(".", "").replace("-", "")
-
-        # Handle multi-character initials like "ch" or "ph" which should not be split by dots.
-        if (
-            len(initial_parts) == 1
-            and len(initial_parts[0]) > 1
-            and "." not in initial_parts[0]
-        ):
-            formatted_initials = initial_parts[0]
-        # Otherwise, join single letters with dots.
-        else:
-            formatted_initials = ".".join(list(flat_initials))
-            if formatted_initials:
-                # Add a trailing dot for consistency, e.g., "j.l."
-                if not formatted_initials.endswith("."):
-                    formatted_initials += "."
+        formatted_initials = ".".join(list(flat_initials))
+        if formatted_initials:
+            # Add a trailing dot for consistency, e.g., "j.l."
+            if not formatted_initials.endswith("."):
+                formatted_initials += "."
 
         # Reconstruct the last name
         reordered_lastname = " ".join(lastname_parts)
@@ -173,13 +167,6 @@ def extract_true_artist_name(artist_name: str) -> str:
     else:
         # No initials were found to reorder, but we might need to fix particles.
         reordered_name = " ".join(lastname_parts)
-
-        # Handle cases like "genlis de" -> "de genlis"
-        words_no_initials = reordered_name.split()
-        if len(words_no_initials) > 1 and words_no_initials[-1].lower() in particles:
-            reordered_name = (
-                f"{words_no_initials[-1]} {' '.join(words_no_initials[:-1])}"
-            )
 
         # --- Step 7: Final Spacing and Formatting Fixes ---
         # Fix cases like "b.b.king" -> "b.b. king"
@@ -223,9 +210,9 @@ with cols[0].expander("Show OK", expanded=False):
     )
 cols[0].dataframe(errors_df)
 cols[0].write(
-    (
-        prediction_df.true_artist_name == prediction_df.artist_name_to_match
-    ).value_counts()
+    (prediction_df.true_artist_name == prediction_df.artist_name_to_match).value_counts(
+        normalize=True
+    )
 )
 cols[1].markdown("### Gemini Script")
 with cols[1].expander("Show OK", expanded=False):
@@ -238,5 +225,5 @@ cols[1].dataframe(gemini_errors_df)
 cols[1].write(
     (
         prediction_df.true_artist_name == prediction_df.gemini_artist_name_to_match
-    ).value_counts()
+    ).value_counts(normalize=True)
 )

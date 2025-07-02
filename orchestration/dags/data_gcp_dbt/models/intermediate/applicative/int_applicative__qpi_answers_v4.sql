@@ -27,7 +27,7 @@ with
     clean as (
         select us.user_id, us.submitted_at, unnested.element as subcategories
         from user_subcat as us
-        cross join unnest(user_subcat.subcategories.list) as unnested
+        cross join unnest(us.subcategories.list) as unnested
     ),
 
     base_deduplicate as (

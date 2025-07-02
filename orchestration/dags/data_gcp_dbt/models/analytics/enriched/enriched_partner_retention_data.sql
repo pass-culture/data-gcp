@@ -461,7 +461,7 @@ with
             ) as rang
         from {{ ref("mrt_global__venue") }} as mrt_global__venue
         left join
-            {{ ref("venue_bank_account_link") }}
+            {{ ref("int_applicative__venue_bank_account_link") }}
             as applicative_database_venue_bank_account_link
             on mrt_global__venue.venue_id
             = applicative_database_venue_bank_account_link.venue_id

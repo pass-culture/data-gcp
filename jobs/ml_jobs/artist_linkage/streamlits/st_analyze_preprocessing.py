@@ -143,8 +143,6 @@ def extract_true_artist_name(artist_name: str) -> str:
             initial_parts.append(word)
         else:
             lastname_parts.append(word)
-    st.write(f"Initial parts: {initial_parts} for name: {name} with words: {words}")
-    st.write(f"Lastname parts: {lastname_parts} for name: {name} with words: {words}")
 
     # --- Step 6: Format and Recombine ---
     if initial_parts:

@@ -1,6 +1,6 @@
 with
     qpi_v4 as (
-        select uqpi.user_id, uqpi.submitted_at, subcat.category_id, subcat.subcategories
+        select uqpi.user_id, uqpi.submitted_at, subcat.category_id, uqpi.subcategories
         from {{ ref("int_applicative__qpi_answers_v4") }} as uqpi
         inner join
             {{ source("raw", "subcategories") }} as subcat

@@ -153,7 +153,7 @@ def extract_true_artist_name(artist_name: str) -> str:
         # Format the initials consistently (e.g., "p", "j" -> "p.j.")
         # Flatten all initial parts into a single string without separators.
         flat_initials = "".join(initial_parts).replace(".", "").replace("-", "")
-        formatted_initials = ".".join(list(flat_initials))
+        formatted_initials = ". ".join(list(flat_initials))
         if formatted_initials:
             # Add a trailing dot for consistency, e.g., "j.l."
             if not formatted_initials.endswith("."):

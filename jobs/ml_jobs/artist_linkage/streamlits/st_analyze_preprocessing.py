@@ -113,7 +113,7 @@ def extract_true_artist_name(artist_name: str) -> str:
 
     # --- Step 5: Handle "Lastname Initial(s)" Format ---
     # This is the most complex part. We need to distinguish the name from the initials.
-    words = name.split()
+    words = re.split(r"\s+|-", name)
     if len(words) < 2:
         # If it's a single word, there's nothing to reorder.
         return name
@@ -217,6 +217,10 @@ gemini_errors_df = prediction_df.loc[
 ]
 cols = st.columns([1, 1])
 cols[0].markdown("### Old Script")
+with cols[0].expander("Show OK", expanded=False):
+    st.dataframe(
+        prediction_df.loc[lambda df: df.true_artist_name == df.artist_name_to_match]
+    )
 cols[0].dataframe(errors_df)
 cols[0].write(
     (
@@ -224,6 +228,12 @@ cols[0].write(
     ).value_counts()
 )
 cols[1].markdown("### Gemini Script")
+with cols[1].expander("Show OK", expanded=False):
+    st.dataframe(
+        prediction_df.loc[
+            lambda df: df.true_artist_name == df.gemini_artist_name_to_match
+        ]
+    )
 cols[1].dataframe(gemini_errors_df)
 cols[1].write(
     (

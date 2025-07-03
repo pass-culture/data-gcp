@@ -72,7 +72,10 @@ def postprocess_data(df: pd.DataFrame) -> pd.DataFrame:
         )
         .explode("aliases_list")
         .rename(columns={"aliases_list": "alias"})
-        .assign(alias=lambda df: df.alias.pipe(normalize_string_series))
+        .assign(
+            raw_alias=lambda df: df.alias,
+            alias=lambda df: df.alias.pipe(normalize_string_series),
+        )
         .loc[
             lambda df: (df.alias.notna())
             & (df.alias != "")

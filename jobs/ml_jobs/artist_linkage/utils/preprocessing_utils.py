@@ -1,5 +1,6 @@
 import re
 import string
+import unicodedata
 from typing import TypedDict
 
 import pandas as pd
@@ -337,6 +338,13 @@ def extract_artist_name(artist_name: str) -> str:
         The cleaned artist name.
     """
 
+    def _remove_accents(text):
+        return "".join(
+            char
+            for char in unicodedata.normalize("NFD", text)
+            if unicodedata.category(char) != "Mn"
+        )
+
     if (
         not isinstance(artist_name, str)
         or not artist_name.strip()
@@ -345,8 +353,8 @@ def extract_artist_name(artist_name: str) -> str:
         return None
 
     # --- Step 1: Initial Cleaning and Pre-processing ---
-    # Remove leading/trailing whitespace and surrounding quotes
-    name = artist_name.strip().strip('"')
+    # Remove accents, leading/trailing whitespace and surrounding quotes
+    name = _remove_accents(artist_name.strip().strip('"').lower())
 
     # --- Step 2: Handle Hardcoded Edge Cases ---
     # These are specific cases that don't fit the general rules.

@@ -187,15 +187,12 @@ select
     end as subtype,
     o.offer_publication_date,
     case
-        when
-            o.offer_publication_date> current_date
-        then true
-        else false
+        when o.offer_publication_date > current_date then true else false
     end as is_future_scheduled,
     case
         when
-            o.scheduled_offer_bookability_date> current_date
-            and o.offer_publication_date<= current_date
+            o.scheduled_offer_bookability_date > current_date
+            and o.offer_publication_date <= current_date
         then true
         else false
     end as is_coming_soon,

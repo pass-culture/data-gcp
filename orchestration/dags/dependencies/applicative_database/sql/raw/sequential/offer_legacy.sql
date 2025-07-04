@@ -30,4 +30,7 @@ SELECT
     , CAST("bookingContact" AS varchar(255)) as booking_contact
     , CAST("offererAddressId" AS varchar(255)) as offerer_address_id
     , CAST("ean" AS varchar(255)) as offer_ean
+    , "finalizationDatetime" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as offer_finalization_date
+    , "publicationDatetime" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as offer_publication_date
+    , "bookingAllowedDatetime" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as scheduled_offer_bookability_date
 FROM public.offer

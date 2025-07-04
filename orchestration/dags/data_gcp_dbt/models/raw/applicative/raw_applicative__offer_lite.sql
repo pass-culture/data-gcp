@@ -30,7 +30,10 @@ select
     booking_contact,
     offerer_address_id,
     timestamp(offer_updated_date) as offer_updated_date,
-    to_hex(md5(to_json_string(offer))) as custom_scd_id
+    to_hex(md5(to_json_string(offer))) as custom_scd_id,
+    offer_finalization_date,
+    offer_publication_date,
+    scheduled_offer_bookability_date
 from
     external_query(
         "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",
@@ -66,6 +69,9 @@ from
         , "withdrawalDelay" AS offer_withdrawal_delay
         , CAST("bookingContact" AS varchar(255)) as booking_contact
         , CAST("offererAddressId" AS varchar(255)) as offerer_address_id
+        , "finalizationDatetime" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as offer_finalization_date
+        , "publicationDatetime" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as offer_publication_date
+        , "bookingAllowedDatetime" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' as scheduled_offer_bookability_date
     FROM public.offer
     WHERE "dateUpdated" > NOW() - INTERVAL '5' DAY
     """

@@ -94,7 +94,10 @@
             offer_withdrawal_delay,
             booking_contact,
             offerer_address_id,
-            custom_scd_id
+            custom_scd_id,
+            offer_finalization_date,
+            offer_publication_date,
+            scheduled_offer_bookability_date
         from {{ ref("raw_applicative__offer_lite") }}
 
     {% endif %}

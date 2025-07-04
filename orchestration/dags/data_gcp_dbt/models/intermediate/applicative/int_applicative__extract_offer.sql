@@ -36,7 +36,10 @@ with
             offer.offer_updated_date,
             coalesce(product.description, offer.offer_description) as offer_description,
             coalesce(product.product_extra_data, offer.offer_extra_data) as extra_data,
-            coalesce(product.ean, offer.offer_ean) as offer_ean
+            coalesce(product.ean, offer.offer_ean) as offer_ean,
+            offer.offer_finalization_date,
+            offer.offer_publication_date,
+            offer.scheduled_offer_bookability_date
         from {{ ref("int_raw__offer") }} as offer
         left join
             {{ ref("int_applicative__product") }} as product
@@ -80,6 +83,9 @@ select
     offer.booking_contact,
     offer.offerer_address_id,
     offer.offer_updated_date,
+    offer.offer_finalization_date,
+    offer.offer_publication_date,
+    offer.scheduled_offer_bookability_date,
     lower(trim(json_extract_scalar(offer.extra_data, "$.author"), " ")) as author,
     lower(trim(json_extract_scalar(offer.extra_data, "$.performer"), " ")) as performer,
     lower(trim(json_extract_scalar(offer.extra_data, "$.musicType"), " ")) as musictype,

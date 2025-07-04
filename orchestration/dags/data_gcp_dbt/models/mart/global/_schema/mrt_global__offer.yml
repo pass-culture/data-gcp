@@ -259,6 +259,9 @@ models:
       - name: is_headlined
         description: '{{ doc("column__is_headlined") }}'
         data_type: BOOLEAN
+      - name: is_coming_soon
+        description: '{{ doc("column__is_coming_soon") }}'
+        data_type: BOOLEAN
       - name: first_headline_date
         description: '{{ doc("column__first_headline_date") }}'
         data_type: DATETIME

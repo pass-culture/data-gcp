@@ -185,17 +185,20 @@ select
         when subcategories.category_id <> "SPECTACLE" and o.musicsubtype is not null
         then o.musicsubtype
     end as subtype,
-    coalesce(
-        o.offer_publication_date, future_offer.offer_publication_date
-    ) as offer_publication_date,
+    o.offer_publication_date,
     case
         when
-            o.offer_is_active is false
-            and coalesce(o.offer_publication_date, future_offer.offer_publication_date)
-            >= current_date
+            o.offer_publication_date> current_date
         then true
         else false
     end as is_future_scheduled,
+    case
+        when
+            o.scheduled_offer_bookability_date> current_date
+            and o.offer_publication_date<= current_date
+        then true
+        else false
+    end as is_coming_soon,
     ho.total_headlines,
     case
         when
@@ -227,9 +230,6 @@ left join
     on o.offer_id = m.offer_id
     and m.is_active
     and m.mediation_rown = 1
-left join
-    {{ source("raw", "applicative_database_future_offer") }} as future_offer
-    on future_offer.offer_id = o.offer_id
 left join {{ ref("int_applicative__headline_offer") }} as ho on ho.offer_id = o.offer_id
 where
     o.offer_subcategoryid not in ("ACTIVATION_THING", "ACTIVATION_EVENT")

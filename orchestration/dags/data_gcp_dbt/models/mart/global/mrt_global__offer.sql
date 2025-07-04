@@ -78,6 +78,7 @@ select
     is_local_authority,
     offer_publication_date,
     is_future_scheduled,
+    is_coming_soon,
     total_headlines,
     is_headlined,
     first_headline_date,

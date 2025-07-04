@@ -86,6 +86,7 @@ select
     o.offerer_address_id,
     o.offer_publication_date,
     o.is_future_scheduled,
+    o.is_coming_soon,
     o.total_headlines,
     o.is_headlined,
     o.first_headline_date,

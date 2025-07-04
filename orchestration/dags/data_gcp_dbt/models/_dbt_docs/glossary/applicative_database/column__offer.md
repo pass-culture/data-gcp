@@ -54,7 +54,8 @@ enddocs %}
 {% docs column__type %} Type of the offer. {% enddocs %}
 {% docs column__sub_type %} Sub-type of the offer. {% enddocs %}
 {% docs column__mediation_humanized_id %} Human-readable identifier for mediation. {% enddocs %}
-{% docs column__is_future_scheduled %} Indicates if the offer is scheduled for the future. {% enddocs %}
+{% docs column__is_future_scheduled %} Indicates if the offer's publication is scheduled in the future. {% enddocs %}
+{% docs column__is_coming_soon %} Indicates if the offer is published in the app but not bookable yet (coming soon). {% enddocs %}
 {% docs column__item_id %}Identifier for the item associated with the offer used internally by the data science team. {%
 enddocs %}
 {% docs column__search_group_name %} Legacy: Category displayed in the application {% enddocs %}

@@ -185,11 +185,14 @@ select
         when subcategories.category_id <> "SPECTACLE" and o.musicsubtype is not null
         then o.musicsubtype
     end as subtype,
-    coalesce(o.offer_publication_date,future_offer.offer_publication_date) as offer_publication_date,
+    coalesce(
+        o.offer_publication_date, future_offer.offer_publication_date
+    ) as offer_publication_date,
     case
         when
             o.offer_is_active is false
-            and coalesce(o.offer_publication_date,future_offer.offer_publication_date) >= current_date
+            and coalesce(o.offer_publication_date, future_offer.offer_publication_date)
+            >= current_date
         then true
         else false
     end as is_future_scheduled,

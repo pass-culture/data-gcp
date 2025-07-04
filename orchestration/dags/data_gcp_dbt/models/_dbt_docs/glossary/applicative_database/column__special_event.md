@@ -5,3 +5,4 @@
 {% docs column__special_event_response_id %} Unique identifier of a response of a user to a special event .{% enddocs %}
 {% docs column__special_event_response_status %} Status of the response to the user's candidacy to a special event .{% enddocs %}
 {% docs column__special_event_response_submitted_date %} Date when the response was given to the user .{% enddocs %}
+{% docs column__typeform_id %} Unique typeform_id related to a unique special event id. This id is used to link contentful datas .{% enddocs %}

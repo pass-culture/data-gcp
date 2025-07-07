@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS intermediate.venue_offer_statistic ON CLUSTER default
     total_inactive_non_rejected_collective_offers UInt64 CODEC(T64, ZSTD(3))
 )
 ENGINE = MergeTree
-PARTITION BY venue_id
-ORDER BY update_date
+PARTITION BY tuple()
+ORDER BY (venue_id)
 SETTINGS storage_policy='gcs_main'
-COMMENT 'Offer statistics, partitioned by venue ordered by update date'
+COMMENT 'Offer statistics, ordered by venue id'

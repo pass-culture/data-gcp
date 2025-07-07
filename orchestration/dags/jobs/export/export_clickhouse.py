@@ -1,7 +1,7 @@
 import datetime
 
 from common import macros
-from common.alerts import on_failure_combined_callback, task_fail_slack_alert
+from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
@@ -28,7 +28,6 @@ from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python import BranchPythonOperator
 from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
 from airflow.utils.task_group import TaskGroup
@@ -55,15 +54,15 @@ gce_params = {
 
 dags = {
     "daily": {
-        "schedule_interval": SCHEDULE_DICT["clickhouse_exports"]["daily"],
+        "schedule_interval": SCHEDULE_DICT["export_clickhouse_daily"],
         "yyyymmdd": "{{ yyyymmdd(ds) }}",
         "default_dag_args": {
             "start_date": datetime.datetime(2024, 3, 1),
             "retries": 1,
             "retry_delay": datetime.timedelta(minutes=20),
             "project_id": GCP_PROJECT_ID,
-            "on_failure_callback": on_failure_combined_callback,
-            "on_skipped_callback": task_fail_slack_alert,
+            "on_failure_callback": on_failure_vm_callback,
+            "on_skipped_callback": on_failure_vm_callback,
         },
     },
 }
@@ -184,17 +183,27 @@ for dag_name, dag_params in dags.items():
                     + ' BETWEEN DATE("{{ add_days(ds, params.from_days)}}") AND DATE("{{ add_days(ds, params.to_days) }}")'
                 )
 
-            export_task = BigQueryExecuteQueryOperator(
+            export_task = BigQueryInsertJobOperator(
+                project_id=GCP_PROJECT_ID,
                 task_id=f"bigquery_export_{clickhouse_table_name}",
-                sql=sql_query,
-                write_disposition="WRITE_TRUNCATE",
-                use_legacy_sql=False,
-                destination_dataset_table=f"{BIGQUERY_TMP_DATASET}.{table_id}",
+                configuration={
+                    "query": {
+                        "query": sql_query,
+                        "useLegacySql": False,
+                        "destinationTable": {
+                            "projectId": GCP_PROJECT_ID,
+                            "datasetId": BIGQUERY_TMP_DATASET,
+                            "tableId": table_id,
+                        },
+                        "writeDisposition": "WRITE_TRUNCATE",
+                    }
+                },
                 dag=dag,
             )
             in_tables_tasks.append(export_task)
 
             export_bq = BigQueryInsertJobOperator(
+                project_id=GCP_PROJECT_ID,
                 task_id=f"{clickhouse_table_name}_to_bucket",
                 configuration={
                     "extract": {

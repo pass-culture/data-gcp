@@ -15,13 +15,13 @@ SELECT
 	, "isEmailValidated" as user_is_email_validated
 	, "isActive" as user_is_active
 	, "hasSeenProTutorials" as user_has_seen_pro_tutorials
-	, EXTRACT(YEAR FROM AGE(COALESCE("user"."validatedBirthDate","user"."dateOfBirth"))) AS user_age
 	, "phoneValidationStatus" AS user_phone_validation_status
 	, "isEmailValidated" AS user_has_validated_email
 	, CAST("notificationSubscriptions" -> \'marketing_push\' AS BOOLEAN) AS user_has_enabled_marketing_push
 	, CAST("notificationSubscriptions" -> \'marketing_email\' AS BOOLEAN) AS user_has_enabled_marketing_email
 	, "notificationSubscriptions" -> \'subscribed_themes\' :: text AS user_subscribed_themes
-	, COALESCE("user"."validatedBirthDate","user"."dateOfBirth") AS user_birth_date
+	, "user"."dateOfBirth" AS user_birth_date
+	, "user"."validatedBirthDate" AS user_validated_birth_date
 	, CASE
             WHEN "user"."schoolType" = \'PUBLIC_SECONDARY_SCHOOL\' THEN \'Collège public\'
             WHEN "user"."schoolType" = \'PUBLIC_HIGH_SCHOOL\' THEN \'Lycée public\'

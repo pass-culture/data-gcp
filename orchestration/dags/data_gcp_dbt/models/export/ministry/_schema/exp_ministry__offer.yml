@@ -1,0 +1,73 @@
+version: 2
+
+models:
+  - name: exp_ministry__offer
+    description: "{{ doc('description__exp_ministry__offer') }}"
+    columns:
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+        data_type: STRING
+        data_tests:
+          - not_null:
+              tags: ['export']
+          - unique:
+              tags: ['export']
+      - name: offer_is_synchronised
+        description: "{{ doc('column__offer_is_synchronised') }}"
+      - name: offer_name
+        description: "{{ doc('column__offer_name') }}"
+      - name: offer_description
+        description: "{{ doc('column__offer_description') }}"
+      - name: offer_subcategory
+        description: "{{ doc('column__offer_subcategory_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['export']
+      - name: offer_category
+        description: "{{ doc('column__offer_category_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['export']
+      - name: offer_created_at
+        description: "{{ doc('column__offer_created_at') }}"
+      - name: offer_updated_at
+        description: "{{ doc('column__offer_updated_at') }}"
+      - name: offer_is_duo
+        description: "{{ doc('column__offer_is_duo') }}"
+      - name: offer_is_bookable
+        description: "{{ doc('column__offer_is_bookable') }}"
+      - name: offer_is_digital_goods
+        description: "{{ doc('column__offer_is_digital_goods') }}"
+      - name: offer_is_physical_goods
+        description: "{{ doc('column__offer_is_physical_goods') }}"
+      - name: offer_is_event
+        description: "{{ doc('column__offer_is_event') }}"
+      - name: webapp_url
+        description: "{{ doc('column__webapp_url') }}"
+      - name: offer_url
+        description: "{{ doc('column__offer_url') }}"
+      - name: offer_is_national
+        description: "{{ doc('column__offer_is_national') }}"
+      - name: offer_is_active
+        description: "{{ doc('column__offer_is_active') }}"
+      - name: offerer_address_id
+        description: "{{ doc('column__offerer_address_id') }}"
+      - name: offer_publication_date
+        description: "{{ doc('column__offer_publication_date') }}"
+      - name: offer_product_id
+        description: "{{ doc('column__offer_product_id') }}"
+      - name: item_id
+        description: "{{ doc('column__item_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['export']
+      - name: venue_id
+        description: "{{ doc('column__venue_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['export']
+      - name: offerer_id
+        description: "{{ doc('column__offerer_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['export']

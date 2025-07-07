@@ -6,6 +6,12 @@ from google.cloud import secretmanager
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
+ENVIRONMENT_LONG_NAME = {
+    "dev": "development",
+    "stg": "staging",
+    "prod": "production",
+}[ENVIRONMENT_SHORT_NAME]
+
 INT_METABASE_DATASET = f"int_metabase_{ENVIRONMENT_SHORT_NAME}"
 METABASE_API_USERNAME = "metabase-data-bot@passculture.app"
 

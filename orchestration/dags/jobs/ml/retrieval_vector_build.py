@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -20,7 +20,7 @@ from airflow.models import Param
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -50,7 +50,7 @@ gce_params = {
     "container_worker": {"dev": "1", "stg": "1", "prod": "1"},
 }
 
-schedule_dict = {"prod": "0 5 * * *", "dev": "0 6 * * *", "stg": "0 6 * * 3"}
+schedule_dict = {"prod": "0 8 * * *", "dev": "0 8 * * *", "stg": "0 8 * * 3"}
 
 
 with DAG(
@@ -92,6 +92,10 @@ with DAG(
         ),
         "source_run_id": Param(default=".", type="string"),
         "source_artifact_uri": Param(default=".", type="string"),
+        "artifact_registry_base_path": Param(
+            default=f"europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/retrieval-vector/{ENV_SHORT_NAME}",
+            type="string",
+        ),
     },
 ) as dag:
     gce_instance_start = StartGCEOperator(
@@ -113,31 +117,43 @@ with DAG(
 
     if ENV_SHORT_NAME == "dev":
         # dummy deploy
-        retrieval = SSHGCEOperator(
-            task_id="containerize_retrieval_vector",
+        create_vector_database = SSHGCEOperator(
+            task_id="create_vector_database",
             instance_name="{{ params.instance_name }}",
             base_dir="{{ params.base_dir }}",
-            command="python deploy_dummy.py "
-            "--experiment-name {{ params.experiment_name }} "
-            "--model-name {{ params.model_name }} ",
+            command="python create_vector_database.py dummy-database ",
         )
     else:
-        retrieval = SSHGCEOperator(
-            task_id="containerize_retrieval_vector",
+        create_vector_database = SSHGCEOperator(
+            task_id="create_vector_database",
             instance_name="{{ params.instance_name }}",
             base_dir="{{ params.base_dir }}",
-            command="python deploy_model.py "
-            "--experiment-name {{ params.experiment_name }} "
-            "--model-name {{ params.model_name }} "
+            command="python create_vector_database.py default-database "
             "--source-experiment-name {{ params.source_experiment_name }} "
-            "--source-run-id {{ params.source_run_id }} "
             "--source-artifact-uri {{  params.source_artifact_uri }} "
-            "--container-worker {{ params.container_worker }} ",
+            "--source-run-id {{ params.source_run_id }} ",
         )
+
+    build_and_push_docker_image = SSHGCEOperator(
+        task_id="build_and_push_docker_image",
+        instance_name="{{ params.instance_name }}",
+        base_dir="{{ params.base_dir }}",
+        command="python build_and_push_docker_image.py "
+        "--base-serving-container-path {{ params.artifact_registry_base_path }} "
+        "--experiment-name {{ params.experiment_name }} "
+        "--model-name {{ params.model_name }} "
+        "--container-worker {{ params.container_worker }} ",
+    )
 
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task",
         instance_name="{{ params.instance_name }}",
     )
 
-    (gce_instance_start >> fetch_install_code >> retrieval >> gce_instance_stop)
+    (
+        gce_instance_start
+        >> fetch_install_code
+        >> create_vector_database
+        >> build_and_push_docker_image
+        >> gce_instance_stop
+    )

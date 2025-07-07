@@ -3,6 +3,8 @@ from enum import Enum
 
 from common.access_gcp_secrets import access_secret_data
 
+from airflow import configuration
+
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 ENVIRONMENT_NAME = {
@@ -18,7 +20,9 @@ AIRFLOW_URI = {
     "prod": "airflow.data.passculture.team",
 }[ENV_SHORT_NAME]
 
-GCS_COMPOSER_BUCKET = os.environ.get("GCS_BUCKET", f"airflow-{ENVIRONMENT_NAME}-bucket")
+GCS_AIRFLOW_BUCKET = os.environ.get(
+    "GCS_BUCKET", f"airflow-data-bucket-{ENV_SHORT_NAME}"
+)
 
 SSH_USER = os.environ.get("SSH_USER", "airflow")
 
@@ -26,11 +30,16 @@ GCP_REGION = "europe-west1"
 GCE_ZONE = "europe-west1-b"
 
 GCE_SA = os.environ.get("GCE_SA", f"algo-training-{ENV_SHORT_NAME}")
-GCE_BASE_PREFIX = f"composer-{ENV_SHORT_NAME}"
+
+DEPLOYMENT_TAG = os.environ.get("DEPLOYMENT_TAG", "composer")
+GCE_BASE_PREFIX = f"{DEPLOYMENT_TAG}-{ENV_SHORT_NAME}"
 
 BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js"
 GCE_TRAINING_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
 MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
+ML_BUCKET_TEMP = os.environ.get(
+    "ML_BUCKET_TEMP", f"data-bucket-ml-temp-{ENV_SHORT_NAME}"
+)
 if ENV_SHORT_NAME != "prod":
     MLFLOW_URL = "https://mlflow.staging.passculture.team/"
 else:
@@ -44,6 +53,10 @@ METABASE_EXTERNAL_CONNECTION_ID = os.environ.get("METABASE_EXTERNAL_CONNECTION_I
 DATA_GCS_BUCKET_NAME = os.environ.get(
     "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
 )
+if ENV_SHORT_NAME == "prod":
+    ELEMENTARY_REPORT_URL = "https://dataquality.data.passculture.team/#/"
+else:
+    ELEMENTARY_REPORT_URL = None
 
 # BQ Datasets
 # TODO: Move this in a special file + construct as fstring and not env variables
@@ -92,13 +105,6 @@ BIGQUERY_TMP_DATASET = os.environ.get("BIGQUERY_TMP_DATASET", f"tmp_{ENV_SHORT_N
 
 APPLICATIVE_PREFIX = "applicative_database_"
 
-RECOMMENDATION_SQL_INSTANCE = os.environ.get(
-    "RECOMMENDATION_SQL_INSTANCE", f"cloudsql-recommendation-{ENV_SHORT_NAME}-ew1"
-)
-
-SLACK_CONN_ID = "slack_analytics"
-SLACK_CONN_PASSWORD = access_secret_data(GCP_PROJECT_ID, "slack-conn-password")
-
 if ENV_SHORT_NAME == "prod":
     MEDIATION_URL = "passculture-metier-prod-production"
 elif ENV_SHORT_NAME == "stg":
@@ -126,14 +132,8 @@ if LOCAL_ENV is None:
 else:
     ELEMENTARY_PYTHON_PATH = os.environ.get("ELEMENTARY_PYTHON_PATH")
 
-SLACK_TOKEN_ELEMENTARY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")
-
-INSTALL_TYPES = {
-    "simple": "install_simplified",
-    "engineering": "install_engineering",
-    "science": "install_science",
-    "analytics": "install_analytics",
-}
+SLACK_TOKEN_DATA_QUALITY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")
+SLACK_CHANNEL_DATA_QUALITY = "alertes-data-quality"
 
 CPU_INSTANCES_TYPES = {
     "standard": [
@@ -178,6 +178,7 @@ GPU_INSTANCES_TYPES = {
 
 INSTANCES_TYPES = {"cpu": CPU_INSTANCES_TYPES, "gpu": GPU_INSTANCES_TYPES}
 
+STOP_UPON_FAILURE_LABELS = ["long_ml"]
 GCE_ZONES = [
     "europe-west1-b",
     "europe-west1-c",
@@ -195,3 +196,28 @@ class DAG_TAGS(Enum):
 
 # UV Version
 UV_VERSION = "0.5.2"
+
+ENV_EMOJI = {
+    "prod": ":volcano: *PROD* :volcano:",
+    "stg": ":fire: *STAGING* :fire:",
+    "dev": ":snowflake: *DEV* :snowflake:",
+}
+
+
+def get_env_emoji():
+    base_url = configuration.get("webserver", "BASE_URL")
+    base_emoji = ENV_EMOJI[ENV_SHORT_NAME]
+    if LOCAL_ENV:
+        return "**Local Environment**"
+    if "localhost" in base_url:
+        return f"{base_emoji} (k8s)"
+    return base_emoji
+
+
+def get_airflow_uri():
+    base_url = configuration.get("webserver", "BASE_URL")
+    if LOCAL_ENV:
+        return base_url
+    if "localhost" in base_url:
+        return f"https://{AIRFLOW_URI}"
+    return base_url

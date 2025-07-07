@@ -1,8 +1,25 @@
 select
     offer_id,
+    is_synchronised as offer_is_synchronised,
     offer_name,
-    offer_category_id as offer_category_name,
+    offer_description,
+    offer_subcategory_id as offer_subcategory,
+    offer_category_id as offer_category,
     offer_created_at,
-    is_active
+    offer_updated_date as offer_updated_at,
+    offer_is_duo,
+    offer_is_bookable,
+    digital_goods as offer_is_digital_goods,
+    physical_goods as offer_is_physical_goods,
+    event as offer_is_event,
+    webapp_url,
+    offer_url,
+    is_national as offer_is_national,
+    is_active as offer_is_active,
+    offerer_address_id,
+    offer_publication_date,
+    offer_product_id,
+    item_id,
+    venue_id,
+    offerer_id
 from {{ ref("mrt_global__offer") }}
-where is_active

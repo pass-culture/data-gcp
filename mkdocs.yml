@@ -57,7 +57,6 @@ nav:
   - Data Models:
       - Overview: dbt/overview.md
       - ... | dbt/models/**/description*.md
-
   - Glossary:
       - Overview: dbt/glossary.md
       - ... | dbt/glossary/*/column*.md
@@ -66,6 +65,9 @@ nav:
       - Recommendation: team/ds/recommendation.md
   - Data Engineering:
       - Overview: team/de/overview.md
+      - Data Stack: team/de/data_stack.md
+      - APIs & Connections: team/de/apis.md
+
   - About: about.md
 
 # Plugins

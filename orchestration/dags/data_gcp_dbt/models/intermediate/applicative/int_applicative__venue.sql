@@ -23,13 +23,13 @@ with
             max(last_individual_booking_date) as last_individual_booking_date,
             min(first_stock_creation_date) as first_stock_creation_date,
             min(
-                case when offer_validation = "APPROVED" then offer_creation_date end
+                case when offer_validation = 'APPROVED' then offer_creation_date end
             ) as first_individual_offer_creation_date,
             max(
-                case when offer_validation = "APPROVED" then offer_creation_date end
+                case when offer_validation = 'APPROVED' then offer_creation_date end
             ) as last_individual_offer_creation_date,
             count(
-                case when offer_validation = "APPROVED" then offer_id end
+                case when offer_validation = 'APPROVED' then offer_id end
             ) as total_created_individual_offers,
             count(
                 distinct case when offer_is_bookable then offer_id end
@@ -95,14 +95,10 @@ with
 
 select
     v.venue_thumb_count,
-    v.venue_street,
-    v.venue_postal_code,
     v.ban_id,
     v.venue_id,
     v.venue_name,
     v.venue_siret,
-    v.venue_latitude,
-    v.venue_longitude,
     v.venue_managing_offerer_id,
     v.venue_booking_email,
     v.venue_is_virtual,
@@ -113,6 +109,7 @@ select
     v.venue_creation_date,
     v.venue_is_permanent,
     v.venue_is_open_to_public,
+    v.venue_is_soft_deleted,
     v.banner_url,
     v.venue_audiodisabilitycompliant,
     v.venue_mentaldisabilitycompliant,
@@ -132,26 +129,15 @@ select
     v.venue_description,
     v.venue_withdrawal_details,
     v.venue_adage_inscription_date,
-    coalesce(
-        case
-            when v.venue_postal_code = "97150"
-            then "978"
-            when substring(v.venue_postal_code, 0, 2) = "97"
-            then substring(v.venue_postal_code, 0, 3)
-            when substring(v.venue_postal_code, 0, 2) = "98"
-            then substring(v.venue_postal_code, 0, 3)
-            when substring(v.venue_postal_code, 0, 3) in ("200", "201", "209", "205")
-            then "2A"
-            when substring(v.venue_postal_code, 0, 3) in ("202", "206")
-            then "2B"
-            else substring(v.venue_postal_code, 0, 2)
-        end,
-        v.venue_department_code
-    ) as venue_department_code,
     concat(
-        "https://backoffice.passculture.team/pro/venue/", v.venue_id
+        'https://backoffice.passculture.team/pro/venue/', v.venue_id
     ) as venue_backoffice_link,
     {{ target_schema }}.humanize_id(v.venue_id) as venue_humanized_id,
+    v_loc.venue_street,
+    v_loc.venue_latitude,
+    v_loc.venue_longitude,
+    v_loc.venue_postal_code,
+    v_loc.venue_department_code,
     v_loc.venue_department_name,
     v_loc.venue_iris_internal_id,
     v_loc.venue_region_name,
@@ -162,6 +148,8 @@ select
     v_loc.venue_density_level,
     v_loc.venue_academy_name,
     v_loc.venue_in_qpv,
+    v_loc.venue_in_zrr,
+    v_loc.venue_rural_city_type,
     v.offerer_address_id,
     vr.venue_target as venue_targeted_audience,
     vc.venue_contact_phone_number,
@@ -314,3 +302,4 @@ left join
 left join
     {{ source("raw", "applicative_database_google_places_info") }} as gp
     on v.venue_id = gp.venue_id
+where not v.venue_is_soft_deleted

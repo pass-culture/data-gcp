@@ -1,7 +1,7 @@
 import datetime
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -30,7 +30,7 @@ dag_config = {
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
     "retries": 2,
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
 }
@@ -48,7 +48,8 @@ with DAG(
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
-        )
+        ),
+        "instance_name": Param(default=GCE_INSTANCE, type="string"),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:

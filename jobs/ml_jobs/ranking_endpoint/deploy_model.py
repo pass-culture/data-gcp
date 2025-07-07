@@ -50,14 +50,14 @@ def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
       FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}`
       WHERE not consult and not booking
       ORDER BY offer_order ASC
-      LIMIT {PARAMS['seen']}
+      LIMIT {PARAMS["seen"]}
     ),
     consult AS (
         SELECT
             *
         FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}`
         WHERE consult and not booking
-        LIMIT {PARAMS['consult']}
+        LIMIT {PARAMS["consult"]}
 
     ),
     booking AS (
@@ -65,7 +65,7 @@ def load_data(dataset_name: str, table_name: str) -> pd.DataFrame:
             *
         FROM `{GCP_PROJECT_ID}.{dataset_name}.{table_name}`
         WHERE booking
-        LIMIT {PARAMS['booking']}
+        LIMIT {PARAMS["booking"]}
     )
     SELECT * FROM seen
     UNION ALL
@@ -193,10 +193,10 @@ def train_pipeline(dataset_name, table_name, experiment_name, run_name):
 
         # Save Data
         plot_figures(
-            train_predictions,
-            test_predictions,
-            pipeline_classifier,
-            figure_folder,
+            train_data=train_predictions,
+            test_data=test_predictions,
+            pipeline=pipeline_classifier,
+            figure_folder=figure_folder,
         )
         train_predictions.to_csv(f"{figure_folder}/train_predictions.csv", index=False)
         test_predictions.to_csv(f"{figure_folder}/test_predictions.csv", index=False)
@@ -236,9 +236,7 @@ def main(
     if model_name is None:
         model_name = "default"
     run_id = f"{model_name}_{ENV_SHORT_NAME}_v{yyyymmdd}"
-    serving_container = (
-        f"eu.gcr.io/{GCP_PROJECT_ID}/{experiment_name.replace('.', '_')}:{run_id}"
-    )
+    serving_container = f"europe-west1-docker.pkg.dev/passculture-infra-prod/pass-culture-artifact-registry/data-gcp/ranking-endpoint/{ENV_SHORT_NAME}/{experiment_name.replace('.', '_')}:{run_id}"
     train_pipeline(
         dataset_name=dataset_name,
         table_name=table_name,

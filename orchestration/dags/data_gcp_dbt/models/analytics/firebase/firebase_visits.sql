@@ -8,7 +8,7 @@
                 "time_ingestion_partitioning": false,
             },
             incremental_strategy="insert_overwrite",
-            on_schema_change="sync_all_columns",
+            on_schema_change="append_new_columns",
         )
     )
 }}

@@ -2,6 +2,7 @@ import pytest
 
 from app.factory.semantic import SemanticHandler
 from app.models.prediction_request import PredictionRequest
+from app.retrieval.constants import DISTANCE_COLUMN_NAME
 from app.retrieval.text_client import TextClient
 
 TRANSFORMER = "hf-internal-testing/tiny-random-camembert"
@@ -31,6 +32,7 @@ def test_semantic_handler(
     request,
     mock_semantic_connect_db,
     mock_semantic_load_item_document,
+    mock_user_document_loading,
 ):
     """Test SemanticHandler."""
 
@@ -49,7 +51,7 @@ def test_semantic_handler(
         for column in text_client.detail_columns:
             assert column in prediction
 
-    distances = [prediction["_distance"] for prediction in result.predictions]
+    distances = [prediction[DISTANCE_COLUMN_NAME] for prediction in result.predictions]
     assert distances == sorted(
         distances
-    ), "Predictions are not sorted by _distance in increasing order"
+    ), f"Predictions are not sorted by {DISTANCE_COLUMN_NAME} in increasing order"

@@ -12,7 +12,7 @@ with
         left join {{ ref("int_global__venue") }} v on v.venue_id = o.venue_id
         where
             collective_offer_is_template is true
-            and v.venue_is_permanent
+            and v.venue_is_open_to_public
             and v.venue_creation_date >= date_sub(current_date(), interval 4 month)
         qualify
             row_number() over (

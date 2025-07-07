@@ -1,0 +1,70 @@
+version: 2
+
+models:
+  - name: mrt_native__daily_home_module_conversion
+    description: "{{ doc('description__mrt_native__daily_home_module_conversion') }}"
+    columns:
+      - name: module_displayed_date
+        description: "{{ doc('column__module_displayed_date') }}"
+      - name: module_id
+        description: "{{ doc('column__module_id') }}"
+      - name: module_name
+        description: "{{ doc('column__module_name') }}"
+      - name: module_type
+        description: "{{ doc('column__module_type') }}"
+      - name: entry_id
+        description: "{{ doc('column__entry_id') }}"
+      - name: entry_name
+        description: "{{ doc('column__entry_name') }}"
+      - name: parent_module_id
+        description: "{{ doc('column__parent_module_id') }}"
+      - name: parent_module_type
+        description: "{{ doc('column__parent_module_type') }}"
+      - name: parent_entry_id
+        description: "{{ doc('column__parent_entry_id') }}"
+      - name: typeform_id
+        description: "{{ doc('column__typeform_id') }}"
+      - name: app_version
+        description: "{{ doc('column__app_version') }}"
+      - name: parent_home_type
+        description: "{{ doc('column__parent_home_type') }}"
+      - name: home_audience
+        description: "{{ doc('column__home_audience') }}"
+      - name: user_lifecycle_home
+        description: "{{ doc('column__user_lifecycle_home') }}"
+      - name: home_type
+        description: "{{ doc('column__home_type') }}"
+      - name: playlist_type
+        description: "{{ doc('column__playlist_type') }}"
+      - name: offer_category
+        description: "{{ doc('column__offer_category') }}"
+      - name: playlist_reach
+        description: "{{ doc('column__playlist_reach') }}"
+      - name: playlist_recurrence
+        description: "{{ doc('column__playlist_recurrence') }}"
+      - name: user_role
+        description: "{{ doc('column__user_role') }}"
+      - name: total_session_display
+        description: "{{ doc('column__total_session_display') }}"
+      - name: total_session_with_click
+        description: "{{ doc('column__total_session_with_click') }}"
+      - name: total_sesh_consult_offer
+        description: "{{ doc('column__total_sesh_consult_offer') }}"
+      - name: total_session_fav
+        description: "{{ doc('column__total_session_fav') }}"
+      - name: total_session_with_consult_video
+        description: "{{ doc('column__total_session_with_consult_video') }}"
+      - name: total_click
+        description: "{{ doc('column__total_click') }}"
+      - name: total_consult_offer
+        description: "{{ doc('column__total_consult_offer') }}"
+      - name: total_fav
+        description: "{{ doc('column__total_fav') }}"
+      - name: total_session_with_booking
+        description: "{{ doc('column__total_session_with_booking') }}"
+      - name: total_bookings
+        description: "{{ doc('column__total_bookings') }}"
+      - name: total_non_cancelled_bookings
+        description: "{{ doc('column__total_non_cancelled_bookings') }}"
+      - name: total_diversification
+        description: "{{ doc('column__total_diversification') }}"

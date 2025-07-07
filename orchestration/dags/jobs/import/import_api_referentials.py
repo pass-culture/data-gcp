@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -24,7 +24,7 @@ DAG_NAME = "import_api_referentials"
 
 default_args = {
     "start_date": datetime(2022, 4, 13),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -63,23 +63,6 @@ with DAG(
         base_dir=BASE_PATH,
     )
 
-    INSTALL_DEPS = """
-        sudo apt install -y libmariadb-dev clang libpq-dev
-        git clone https://github.com/pass-culture/pass-culture-main.git
-        cd pass-culture-main/api
-        poetry export -f requirements.txt --output requirements.txt --without-hashes
-        uv pip install -r requirements.txt
-        cd ..
-        cp -r api/src/pcapi ..
-    """
-
-    fetch_install_pc_main_dependencies = SSHGCEOperator(
-        task_id="install_pc_main_dependencies",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        command=INSTALL_DEPS,
-    )
-
     subcategories_job = SSHGCEOperator(
         task_id="import_subcategories",
         instance_name=GCE_INSTANCE,
@@ -106,7 +89,6 @@ with DAG(
         start
         >> gce_instance_start
         >> fetch_install_code
-        >> fetch_install_pc_main_dependencies
         >> subcategories_job
         >> types_job
         >> gce_instance_stop

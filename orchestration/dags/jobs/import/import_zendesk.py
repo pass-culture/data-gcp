@@ -2,7 +2,7 @@ import datetime
 from itertools import chain
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -27,7 +27,7 @@ BASE_PATH = "data-gcp/jobs/etl_jobs/external/zendesk"
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 1,
     "project_id": GCP_PROJECT_ID,
 }
@@ -52,9 +52,14 @@ with DAG(
         ),
         "job": Param(
             default="both",
-            enum=["macro_stat", "ticket_stat", "both"],
+            enum=[
+                "macro_stat",
+                "ticket_stat",
+                "survey_response_stat",
+                "both",
+            ],
             type="string",
-            help="Specify the job to run: 'macro_stat', 'ticket_stat', or 'both'.",
+            help="Specify the job to run: 'macro_stat', 'ticket_stat', 'open_ticket_stat', 'survey_response_stat', or 'both'.",
         ),
         "prior_date": Param(
             default=datetime.datetime.now().strftime("%Y-%m-%d"),

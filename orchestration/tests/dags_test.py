@@ -3,20 +3,11 @@ from datetime import timedelta
 from unittest import mock
 
 import pandas as pd
+from jobs.crons import SCHEDULE_DICT
 
 from airflow.models import DagBag
 
-DAG_ID_LIST = [
-    "recommendation_cloud_sql_v1",
-    "export_cloudsql_tables_to_bigquery_v1",
-    "import_daily_firebase_data",
-    "import_intraday_firebase_data",
-    "import_qpi_answers_v1",
-    "import_addresses_v1",
-    "import_dms_subscriptions",
-    "import_siren_v1",
-    "algo_default_deployment",
-]
+DAG_ID_LIST = list(SCHEDULE_DICT.keys())
 
 
 class TestDags(unittest.TestCase):

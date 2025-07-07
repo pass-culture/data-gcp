@@ -1,24 +1,25 @@
 import os
 
 CONFIGS_PATH = "configs"
+
 # Environment variables
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
+ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 STORAGE_PATH = os.environ.get("STORAGE_PATH", "")
 MODEL_DIR = os.environ.get("MODEL_DIR", "")
-ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
 TRAIN_DIR = os.environ.get("TRAIN_DIR", "/home/airflow/train")
 MODEL_NAME = os.environ.get("MODEL_NAME", "")
+GCP_PROJECT_ID = (
+    "passculture-data-prod" if ENV_SHORT_NAME == "prod" else "passculture-data-ehp"
+)
 
 # Infra Parameters
 BIGQUERY_CLEAN_DATASET = f"clean_{ENV_SHORT_NAME}"
-SERVING_CONTAINER = "europe-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-5:latest"
 
 # Recommendation Parameters
-NUMBER_OF_PRESELECTED_OFFERS = 40
-RECOMMENDATION_NUMBER = 10
-SHUFFLE_RECOMMENDATION = True
-EVALUATION_USER_NUMBER = 5000 if ENV_SHORT_NAME == "prod" else 200
-EVALUATION_USER_NUMBER_DIVERSIFICATION = EVALUATION_USER_NUMBER // 2
+EVALUATION_USER_NUMBER = 50_000 if ENV_SHORT_NAME == "prod" else 5000
+LIST_K = [50, 100, 250, 500, 1000]
+USER_BATCH_SIZE = 100
+ALL_USERS = False
 
 # MLflow
 SA_ACCOUNT = f"algo-training-{ENV_SHORT_NAME}"

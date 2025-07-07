@@ -36,6 +36,14 @@ class TextClient(DefaultClient):
         self.encoder = SentenceTransformer(transformer)
         self.reducer = joblib.load(reducer_path) if reducer_path else None
 
+    def load(self) -> None:
+        """
+        Load only item documents and connect to the database.
+        Overrides the load method in the DefaultClient class, not to load the user documents.
+        """
+        self.item_docs = self.load_item_document()
+        self.table = self.connect_db()
+
     def text_vector(self, text: str) -> Document:
         encoded_vector = self.encoder.encode(text)
         if self.reducer:

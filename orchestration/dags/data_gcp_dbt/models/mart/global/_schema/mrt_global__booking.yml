@@ -24,6 +24,13 @@ models:
       - name: booking_quantity
         description: '{{ doc("column__booking_quantity") }}'
         data_type: INT64
+        data_tests:
+          - accepted_values:
+              values: [1,2]
+              quote: false
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: booking_amount
         description: '{{ doc("column__booking_amount") }}'
         data_type: NUMERIC
@@ -56,8 +63,13 @@ models:
       - name: deposit_id
         description: '{{ doc("column__deposit_id") }}'
         data_type: STRING
+        data_tests:
+          - not_null
       - name: deposit_type
         description: '{{ doc("column__deposit_type") }}'
+        data_type: STRING
+      - name: deposit_reform_category
+        description: '{{ doc("column__deposit_reform_category") }}'
         data_type: STRING
       - name: reimbursed
         description: '{{ doc("column__booking_reimbursed") }}'
@@ -66,11 +78,14 @@ models:
         description: '{{ doc("column__booking_intermediary_amount") }}'
         data_type: NUMERIC
         data_tests:
-          - is_valid_booking_intermediary_amout:
-              where_condition: "date(booking_creation_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)"
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 500
+              inclusive: true
               tags: ['critical']
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              where: "date(booking_creation_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) and user_is_active"
       - name: booking_rank
         description: '{{ doc("column__booking_rank") }}'
         data_type: INT64
@@ -111,6 +126,8 @@ models:
       - name: venue_id
         description: '{{ doc("column__venue_id") }}'
         data_type: STRING
+        data_tests:
+          - not_null
       - name: venue_postal_code
         description: '{{ doc("column__venue_postal_code") }}'
         data_type: STRING
@@ -146,21 +163,28 @@ models:
       - name: partner_id
         description: '{{ doc("column__partner_id") }}'
         data_type: STRING
+        # failed : investigation
+        # data_tests:
+        #   - not_null
       - name: offer_subcategory_id
         description: '{{ doc("column__offer_subcategory_id") }}'
         data_type: STRING
+        data_tests:
+          - not_null
       - name: physical_goods
-        description: '{{ doc("column__physical_goods") }}'
+        description: '{{ doc("column__offer_is_physical_goods") }}'
         data_type: BOOLEAN
       - name: digital_goods
-        description: '{{ doc("column__digital_goods") }}'
+        description: '{{ doc("column__offer_is_digital_goods") }}'
         data_type: BOOLEAN
       - name: event
-        description: '{{ doc("column__event") }}'
+        description: '{{ doc("column__offer_is_event") }}'
         data_type: BOOLEAN
       - name: offer_category_id
         description: '{{ doc("column__offer_category_id") }}'
         data_type: STRING
+        data_tests:
+          - not_null
       - name: user_postal_code
         description: '{{ doc("column__user_postal_code") }}'
         data_type: STRING
@@ -186,7 +210,7 @@ models:
         description: '{{ doc("column__user_macro_density_label") }}'
         data_type: STRING
       - name: user_creation_date
-        description: '{{ doc("column__user_creation_date") }}'
+        description: '{{ doc("column__user_created_at") }}'
         data_type: DATETIME
       - name: user_activity
         description: '{{ doc("column__user_activity") }}'
@@ -243,13 +267,13 @@ models:
         description: '{{ doc("column__offer_sub_type_label") }}'
         data_type: STRING
       - name: user_activation_date
-        description: '{{ doc("column__user_activation_date") }}'
+        description: '{{ doc("column__user_activated_at") }}'
         data_type: DATETIME
       - name: user_is_in_education
         description: '{{ doc("column__user_is_in_education") }}'
         data_type: BOOLEAN
       - name: first_deposit_creation_date
-        description: '{{ doc("column__first_deposit_creation_date") }}'
+        description: '{{ doc("column__user_first_deposit_creation_date") }}'
         data_type: DATETIME
       - name: user_density_level
         description: '{{ doc("column__user_density_level") }}'

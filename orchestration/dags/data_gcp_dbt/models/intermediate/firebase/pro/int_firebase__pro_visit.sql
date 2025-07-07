@@ -4,7 +4,7 @@
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
             partition_by={"field": "first_event_date", "data_type": "date"},
-            on_schema_change="sync_all_columns",
+            on_schema_change="append_new_columns",
         )
     )
 }}
@@ -203,6 +203,7 @@ select
                 )
                 and page_location like "%edition"
             )
+            or (page_name = "Paramètres généraux - pass Culture Pro")
         )
     ) as total_started_edited_venues,
     countif(
@@ -244,12 +245,18 @@ select
     countif(
         event_name = "hasClickedPartnerBlockCollectiveHelpLink"
     ) as total_collective_help_clicks,
-    countif(event_name = "hasClickedHelpCenter") as total_help_center_clicks,
+    countif(
+        event_name in ("hasClickedHelpCenter", "hasClickedConsultHelp")
+    ) as total_help_center_clicks,
     countif(
         event_name = "hasClickedBestPracticesAndStudies"
     ) as total_best_practices_clicks,
     countif(event_name = "hasClickedConsultSupport") as total_consult_support_clicks,
-    countif(event_name = "hasClickedConsultCGU") as total_consult_cgu_clicks
+    countif(event_name = "hasClickedConsultCGU") as total_consult_cgu_clicks,
+    countif(event_name = "hasClickedContactOurTeams") as total_contact_our_team,
+    countif(event_name = "hasClickedNewEvolutions") as total_new_evolutions_clicks,
+    countif(event_name = "hasClickedDownloadBooking") as total_download_booking_clicks,
+    countif(event_name = "hasClickedAddImage") as total_had_image_clicks
 
 from filtered_events
 where

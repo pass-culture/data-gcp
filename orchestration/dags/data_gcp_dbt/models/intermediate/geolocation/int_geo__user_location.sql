@@ -65,12 +65,15 @@ with
     )
 
 select
-    user.user_id,
-    user.user_address,
-    user.user_postal_code,
-    user.user_department_code,
-    user.user_longitude,
-    user.user_latitude,
+    users.user_id,
+    users.user_address_raw,
+    users.user_postal_code,
+    users.user_department_code,
+    users.user_longitude,
+    users.user_latitude,
+    region_department.academy_name as user_academy_name,
+    region_department.dep_name as user_department_name,
+    region_department.region_name as user_region_name,
     user_geo_iris.iris_internal_id as user_iris_internal_id,
     user_geo_iris.city_label as user_city,
     user_geo_iris.city_code as user_city_code,
@@ -78,9 +81,6 @@ select
     user_geo_iris.density_label as user_density_label,
     user_geo_iris.density_macro_level as user_macro_density_label,
     user_geo_iris.density_level as user_density_level,
-    user_geo_iris.academy_name as user_academy_name,
-    user_geo_iris.department_name as user_department_name,
-    user_geo_iris.region_name as user_region_name,
     user_epci.epci_name as user_epci,
     user_epci.epci_code,
     user_qpv.qpv_code,
@@ -88,18 +88,24 @@ select
     user_qpv.qpv_municipality,
     user_zrr.zrr_level,
     user_zrr.zrr_level_detail,
-    user.updated_date,
+    users.user_address_geocode_updated_at,
+    users.geocode_type as user_address_geocode_type,
     case
         when
             user_qpv.qpv_code is null
-            and user.user_latitude is null
-            and user.user_longitude is null
+            and users.user_latitude is null
+            and users.user_longitude is null
         then null
         else user_qpv.qpv_code is not null
     end as user_is_in_qpv
 
-from {{ ref("int_api_gouv__user_address") }} as user
-left join user_epci on user.user_id = user_epci.user_id
-left join user_qpv on user.user_id = user_qpv.user_id
-left join user_zrr on user.user_id = user_zrr.user_id
-left join user_geo_iris on user.user_id = user_geo_iris.user_id
+from {{ ref("int_api_gouv__user_address") }} as users
+left join user_epci on users.user_id = user_epci.user_id
+left join user_qpv on users.user_id = user_qpv.user_id
+left join user_zrr on users.user_id = user_zrr.user_id
+left join user_geo_iris on users.user_id = user_geo_iris.user_id
+-- ensure to have region and department name for non IRIS based regions (Wallis and
+-- Futuna, New Caledonia, etc.)
+left join
+    {{ source("seed", "region_department") }} as region_department
+    on users.user_department_code = region_department.num_dep

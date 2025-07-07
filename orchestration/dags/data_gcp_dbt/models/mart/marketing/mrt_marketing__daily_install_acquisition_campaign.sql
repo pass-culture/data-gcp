@@ -3,7 +3,7 @@
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
             partition_by={"field": "app_install_date", "data_type": "date"},
-            on_schema_change="sync_all_columns",
+            on_schema_change="append_new_columns",
         )
     )
 }}
@@ -26,7 +26,12 @@ with
             sum(total_beneficiaries_18) as total_beneficiaries_18,
             sum(total_beneficiaries_17) as total_beneficiaries_17,
             sum(total_beneficiaries_16) as total_beneficiaries_16,
-            sum(total_beneficiaries_15) as total_beneficiaries_15
+            sum(total_beneficiaries_15) as total_beneficiaries_15,
+            sum(total_registrations_15) as total_registrations_15,
+            sum(total_registrations_16) as total_registrations_16,
+            sum(total_registrations_17) as total_registrations_17,
+            sum(total_registrations_18) as total_registrations_18,
+            sum(total_registrations_19_plus) as total_registrations_19_plus
         from {{ ref("int_appsflyer__daily_install_attribution") }}
         {% if is_incremental() %}
             where
@@ -59,7 +64,12 @@ select
     daily_attribution_summary.total_beneficiaries_18,
     daily_attribution_summary.total_beneficiaries_17,
     daily_attribution_summary.total_beneficiaries_16,
-    daily_attribution_summary.total_beneficiaries_15
+    daily_attribution_summary.total_beneficiaries_15,
+    daily_attribution_summary.total_registrations_15,
+    daily_attribution_summary.total_registrations_16,
+    daily_attribution_summary.total_registrations_17,
+    daily_attribution_summary.total_registrations_18,
+    daily_attribution_summary.total_registrations_19_plus
 from daily_attribution_summary
 left join
     {{ ref("int_appsflyer__daily_install_cost") }} as daily_install_cost

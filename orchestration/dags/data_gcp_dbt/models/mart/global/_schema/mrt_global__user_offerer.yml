@@ -6,12 +6,16 @@ models:
     columns:
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
+        data_tests:
+          - not_null
       - name: user_id
         description: "{{ doc('column__user_id') }}"
+        data_tests:
+          - not_null
       - name: user_affiliation_rank
         description: "{{ doc('column__user_affiliation_rank') }}"
       - name: user_creation_date
-        description: "{{ doc('column__user_creation_date') }}"
+        description: "{{ doc('column__user_created_at') }}"
       - name: user_department_code
         description: "{{ doc('column__user_department_code') }}"
       - name: user_postal_code

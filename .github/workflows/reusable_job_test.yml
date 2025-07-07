@@ -28,29 +28,29 @@ jobs:
       id-token: write
       contents: write
     defaults:
-     run:
-       working-directory: "./${{ inputs.JOB_PATH }}"
+      run:
+        working-directory: "./${{ inputs.JOB_PATH }}"
     steps:
       - uses: actions/checkout@v4
       - name: "Connect to Secret Manager"
-        uses: 'google-github-actions/auth@v2'
+        uses: "google-github-actions/auth@v2"
         with:
           workload_identity_provider: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
       - name: "Get secrets for Slack"
-        id: 'secrets'
-        uses: 'google-github-actions/get-secretmanager-secrets@v2'
+        id: "secrets"
+        uses: "google-github-actions/get-secretmanager-secrets@v2"
         with:
           secrets: |-
             SLACK_BOT_TOKEN:passculture-metier-ehp/passculture-ci-slack-bot-token
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
       - uses: yezz123/setup-uv@v4
       - name: "Install Python requirements"
-        run:  uv pip install --system -r requirements.txt
+        run: uv pip install --system -r requirements.txt || uv sync
       - name: "Run tests"
-        run: pytest tests
+        run: pytest tests || uv run pytest tests
         env:
           PYTHONPATH: "."
       - name: "Post to a Slack channel"

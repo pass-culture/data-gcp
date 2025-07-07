@@ -21,9 +21,26 @@ models:
       - name: user_department_name
         description: '{{ doc("column__user_department_name") }}'
         data_type: STRING
+        data_tests:
+          - excessive_failure_ratio:
+              base_test: "not_null"
+              max_ratio: 0.0005  # 0.05%
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - not_null_proportion:
+              where_condition: "user_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)"
+              anomaly_threshold_alert_percentage: 0.01 # 0.01%
       - name: user_postal_code
         description: '{{ doc("column__user_postal_code") }}'
         data_type: STRING
+        data_tests:
+          - excessive_failure_ratio:
+              base_test: "not_null"
+              max_ratio: 0.0005  # 0.05%
+          - not_null_proportion:
+              where_condition: "user_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)"
+              anomaly_threshold_alert_percentage: 0.001 # 0.001%
       - name: user_city
         description: '{{ doc("column__user_city") }}'
         data_type: STRING
@@ -45,6 +62,9 @@ models:
       - name: user_birth_date
         description: '{{ doc("column__user_birth_date") }}'
         data_type: DATE
+        # failed : investigation
+        # data_tests:
+        #   - is_valid_beneficiary_birth_date
       - name: user_has_enabled_marketing_email
         description: '{{ doc("column__user_has_enabled_marketing_email") }}'
         data_type: BOOLEAN
@@ -54,6 +74,10 @@ models:
       - name: user_iris_internal_id
         description: '{{ doc("column__user_iris_internal_id") }}'
         data_type: STRING
+        data_tests:
+          - excessive_failure_ratio:
+              base_test: "not_null"
+              max_ratio: 0.005  # 0.5%
       - name: user_is_priority_public
         description: '{{ doc("column__user_is_priority_public") }}'
         data_type: BOOLEAN
@@ -87,10 +111,7 @@ models:
         data_tests:
           - excessive_failure_ratio:
               base_test: "not_null"
-              max_ratio: 0.02
-              tags: ['critical']
-              config:
-                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+              max_ratio: 0.0005  # 0.05%
       - name: user_academy_name
         description: '{{ doc("column__user_academy_name") }}'
         data_type: STRING
@@ -104,7 +125,7 @@ models:
         description: '{{ doc("column__user_is_theme_subscribed") }}'
         data_type: BOOLEAN
       - name: first_deposit_creation_date
-        description: '{{ doc("column__first_deposit_creation_date") }}'
+        description: '{{ doc("column__user_first_deposit_creation_date") }}'
         data_type: DATE
       - name: first_deposit_type
         description: '{{ doc("column__user_first_deposit_type") }}'
@@ -114,6 +135,12 @@ models:
         data_type: NUMERIC
       - name: current_deposit_type
         description: '{{ doc("column__user_current_deposit_type") }}'
+        data_type: STRING
+      - name: user_first_deposit_reform_category
+        description: '{{ doc("column__user_first_deposit_reform_category") }}'
+        data_type: STRING
+      - name: user_current_deposit_reform_category
+        description: '{{ doc("column__user_current_deposit_reform_category") }}'
         data_type: STRING
       - name: first_individual_booking_date
         description: '{{ doc("column__first_individual_booking_date") }}'
@@ -145,6 +172,9 @@ models:
       - name: total_last_deposit_digital_goods_amount_spent
         description: '{{ doc("column__total_last_deposit_digital_goods_amount_spent") }}'
         data_type: NUMERIC
+      - name: total_last_deposit_theoretical_amount_spent
+        description: '{{ doc("column__total_last_deposit_theoretical_amount_spent") }}'
+        data_type: NUMERIC
       - name: total_deposit_actual_amount_spent
         description: '{{ doc("column__total_deposit_actual_amount_spent") }}'
         data_type: NUMERIC
@@ -155,7 +185,7 @@ models:
         description: '{{ doc("column__total_theoretical_remaining_credit") }}'
         data_type: NUMERIC
       - name: user_creation_date
-        description: '{{ doc("column__user_creation_date") }}'
+        description: '{{ doc("column__user_created_at") }}'
         data_type: DATE
       - name: last_booking_date
         description: '{{ doc("column__last_booking_date") }}'
@@ -167,7 +197,7 @@ models:
         description: '{{ doc("column__days_between_activation_date_and_first_booking_paid") }}'
         data_type: INT64
       - name: user_activation_date
-        description: '{{ doc("column__user_activation_date") }}'
+        description: '{{ doc("column__user_activated_at") }}'
         data_type: DATE
       - name: first_booking_type
         description: '{{ doc("column__user_first_booking_type") }}'

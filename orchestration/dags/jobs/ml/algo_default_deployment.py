@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -14,6 +14,7 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
+from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
@@ -21,7 +22,7 @@ from airflow.utils.task_group import TaskGroup
 
 default_args = {
     "start_date": datetime(2022, 11, 30),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
@@ -46,8 +47,6 @@ SEMANTIC_DICT = {
     "stg": "n1-standard-2",
     "dev": "n1-standard-2",
 }
-
-schedule_dict = {"prod": "0 7 * * *", "dev": "0 7 * * *", "stg": "0 7 * * *"}
 
 
 models_to_deploy = [
@@ -76,7 +75,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="ML Default Deployment job",
-    schedule_interval=get_airflow_schedule(schedule_dict[ENV_SHORT_NAME]),
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,

@@ -1,0 +1,85 @@
+version: 2
+
+models:
+  - name: mrt_global__iris_socio_demographics
+    description: "{{ doc('description__mrt_global__iris_socio_demographics') }}"
+    columns:
+      - name: iris_code
+        description: "{{ doc('column__iris_code') }}"
+        data_tests:
+          - not_null
+          - unique
+      - name: iris_internal_id
+        description: "{{ doc('column__iris_internal_id') }}"
+      - name: iris_label
+        description: "{{ doc('column__iris_label') }}"
+      - name: city_code
+        description: "{{ doc('column__city_code') }}"
+      - name: city_label
+        description: "{{ doc('column__city_label') }}"
+      - name: territorial_authority_code
+        description: "{{ doc('column__territorial_authority_code') }}"
+      - name: epci_code
+        description: "{{ doc('column__epci_code') }}"
+      - name: epci_label
+        description: "{{ doc('column__epci_label') }}"
+      - name: department_code
+        description: "{{ doc('column__department_code') }}"
+      - name: department_name
+        description: "{{ doc('column__department_name') }}"
+      - name: region_name
+        description: "{{ doc('column__region_name') }}"
+      - name: academy_name
+        description: "{{ doc('column__academy_name') }}"
+      - name: territorial_authority_label
+        description: "{{ doc('column__territorial_authority_label') }}"
+      - name: density_level
+        description: "{{ doc('column__density_level') }}"
+      - name: density_label
+        description: "{{ doc('column__density_label') }}"
+      - name: density_macro_level
+        description: "{{ doc('column__density_macro_level') }}"
+      - name: geo_code
+        description: "{{ doc('column__geo_code') }}"
+      - name: rural_city_type
+        description: "{{ doc('column__rural_city_type') }}"
+      - name: iris_area_sq_km
+        description: "{{ doc('column__iris_area_sq_km') }}"
+      - name: total_venue_20_km
+        description: "{{ doc('column__total_venue_20_km') }}"
+      - name: total_venue_5_km
+        description: "{{ doc('column__total_venue_5_km') }}"
+      - name: total_population
+        description: "{{ doc('column__total_population') }}"
+      - name: total_population_15_years_or_more
+        description: "{{ doc('column__total_population_15_years_or_more') }}"
+      - name: total_population_11_17_years
+        description: "{{ doc('column__total_population_11_17_years') }}"
+      - name: total_population_18_24_years
+        description: "{{ doc('column__total_population_18_24_years') }}"
+      - name: total_revenue_10_decile
+        description: "{{ doc('column__total_revenue_10_decile') }}"
+      - name: total_revenue_50_decile
+        description: "{{ doc('column__total_revenue_50_decile') }}"
+      - name: total_revenue_90_decile
+        description: "{{ doc('column__total_revenue_90_decile') }}"
+      - name: pct_csp_1
+        description: "{{ doc('column__pct_csp_1') }}"
+      - name: pct_csp_2
+        description: "{{ doc('column__pct_csp_2') }}"
+      - name: pct_csp_3
+        description: "{{ doc('column__pct_csp_3') }}"
+      - name: pct_csp_4
+        description: "{{ doc('column__pct_csp_4') }}"
+      - name: pct_csp_5
+        description: "{{ doc('column__pct_csp_5') }}"
+      - name: pct_csp_6
+        description: "{{ doc('column__pct_csp_6') }}"
+      - name: pct_csp_7
+        description: "{{ doc('column__pct_csp_7') }}"
+      - name: pct_csp_8
+        description: "{{ doc('column__pct_csp_8') }}"
+      - name: pct_french_population
+        description: "{{ doc('column__pct_french_population') }}"
+      - name: pct_foreign_population
+        description: "{{ doc('column__pct_foreign_population') }}"

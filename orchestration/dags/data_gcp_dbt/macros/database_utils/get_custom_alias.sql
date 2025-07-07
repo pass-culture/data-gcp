@@ -4,6 +4,9 @@
         target.name in ["prod", "stg", "dev"]
         and target.profile_name != "sandbox"
     ) -%}
+    {%- set is_elementary = target.profile_name == "elementary" -%}
+    {%- set is_ci = target.profile_name == "CI" -%}
+    {%- set is_local = target.name == "local" -%}
     {%- set is_applicative = "applicative" in node.path -%}
     {%- set is_intermediate_or_ml = (
         "intermediate" in node.path
@@ -18,7 +21,7 @@
     {%- set is_raw_applicative = "raw_applicative" in node.name -%}
     {%- set is_mart_or_export = "mart" in node.path or "export" in node.path -%}
 
-    {%- if target.profile_name == "CI" or target.name == "local" -%} {{ node.name }}
+    {%- if is_ci or is_local or is_elementary -%} {{ node.name }}
 
     {%- elif is_raw_snapshot or is_raw_applicative -%}
         {{ "applicative_database_" ~ node.name.split("__")[-1] | trim }}

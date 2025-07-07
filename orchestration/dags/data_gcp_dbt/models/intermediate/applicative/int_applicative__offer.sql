@@ -29,9 +29,7 @@ with
             max(last_individual_booking_date) as last_individual_booking_date,
             sum(stock_quantity) as total_stock_quantity,
             sum(total_first_bookings) as total_first_bookings,
-            max(
-                case when stock_rk = 1 then stock_price else null end
-            ) as last_stock_price,
+            max(case when stock_rk = 1 then stock_price end) as last_stock_price,
             min(stock_creation_date) as first_stock_creation_date
         from {{ ref("int_applicative__stock") }}
         group by offer_id
@@ -113,26 +111,31 @@ select
         then o.showsubtype
     end as offer_sub_type_id,
     case
-        when (so.is_bookable and o.offer_is_active and o.offer_validation = "APPROVED")
+        when
+            (
+                stocks_grouped_by_offers.is_bookable
+                and o.offer_is_active
+                and o.offer_validation = "APPROVED"
+            )
         then true
         else false
     end as offer_is_bookable,
-    so.total_available_stock,
-    so.total_bookings,
-    so.total_individual_bookings,
-    so.total_cancelled_individual_bookings,
-    so.total_non_cancelled_individual_bookings,
-    so.total_used_individual_bookings,
-    so.total_individual_theoretic_revenue,
-    so.total_individual_real_revenue,
-    so.total_individual_current_year_real_revenue,
-    so.first_individual_booking_date,
-    so.last_individual_booking_date,
-    so.total_stock_quantity,
-    so.total_first_bookings,
-    so.last_stock_price,
-    so.first_stock_creation_date,
-    tf.total_favorites,
+    stocks_grouped_by_offers.total_available_stock,
+    stocks_grouped_by_offers.total_bookings,
+    stocks_grouped_by_offers.total_individual_bookings,
+    stocks_grouped_by_offers.total_cancelled_individual_bookings,
+    stocks_grouped_by_offers.total_non_cancelled_individual_bookings,
+    stocks_grouped_by_offers.total_used_individual_bookings,
+    stocks_grouped_by_offers.total_individual_theoretic_revenue,
+    stocks_grouped_by_offers.total_individual_real_revenue,
+    stocks_grouped_by_offers.total_individual_current_year_real_revenue,
+    stocks_grouped_by_offers.first_individual_booking_date,
+    stocks_grouped_by_offers.last_individual_booking_date,
+    stocks_grouped_by_offers.total_stock_quantity,
+    stocks_grouped_by_offers.total_first_bookings,
+    stocks_grouped_by_offers.last_stock_price,
+    stocks_grouped_by_offers.first_stock_creation_date,
+    total_favorites.total_favorites,
     subcategories.is_physical_deposit as physical_goods,
     subcategories.is_digital_deposit as digital_goods,
     subcategories.is_event as event,
@@ -149,7 +152,7 @@ select
         )
         and (
             o.offer_url is null  -- not numerical
-            or so.last_stock_price = 0
+            or stocks_grouped_by_offers.last_stock_price = 0
             or subcategories.id = "LIVRE_NUMERIQUE"
             or subcategories.id = "ABO_LIVRE_NUMERIQUE"
             or subcategories.id = "TELECHARGEMENT_LIVRE_AUDIO"
@@ -182,30 +185,37 @@ select
         when subcategories.category_id <> "SPECTACLE" and o.musicsubtype is not null
         then o.musicsubtype
     end as subtype,
-    future_offer.offer_publication_date,
+    o.offer_publication_date,
+    case
+        when o.offer_publication_date > current_date then true else false
+    end as is_future_scheduled,
     case
         when
-            o.offer_is_active is false
-            and future_offer.offer_publication_date >= current_date
+            o.scheduled_offer_bookability_date > current_date
+            and o.offer_publication_date <= current_date
         then true
         else false
-    end as is_future_scheduled,
+    end as is_coming_soon,
     ho.total_headlines,
     case
         when
             is_headlined
             and (
-                so.is_bookable and o.offer_is_active and o.offer_validation = "APPROVED"
+                stocks_grouped_by_offers.is_bookable
+                and o.offer_is_active
+                and o.offer_validation = "APPROVED"
             )
         then true
         else false
     end as is_headlined,
     first_headline_date,
-    last_headline_date
+    last_headline_date,
+    o.offer_finalization_date,
+    o.scheduled_offer_bookability_date
 from {{ ref("int_applicative__extract_offer") }} as o
 left join {{ ref("int_applicative__offer_item_id") }} as ii on ii.offer_id = o.offer_id
-left join stocks_grouped_by_offers as so on so.offer_id = o.offer_id
-left join total_favorites as tf on tf.offerid = o.offer_id
+left join stocks_grouped_by_offers on stocks_grouped_by_offers.offer_id = o.offer_id
+left join total_favorites on total_favorites.offerid = o.offer_id
 left join
     {{ source("raw", "subcategories") }} as subcategories
     on o.offer_subcategoryid = subcategories.id
@@ -217,9 +227,6 @@ left join
     on o.offer_id = m.offer_id
     and m.is_active
     and m.mediation_rown = 1
-left join
-    {{ source("raw", "applicative_database_future_offer") }} as future_offer
-    on future_offer.offer_id = o.offer_id
 left join {{ ref("int_applicative__headline_offer") }} as ho on ho.offer_id = o.offer_id
 where
     o.offer_subcategoryid not in ("ACTIVATION_THING", "ACTIVATION_EVENT")

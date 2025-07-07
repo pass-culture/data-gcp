@@ -26,8 +26,6 @@ jobs:
     env:
       AIRFLOW_HOME: "${{ github.workspace }}/orchestration/"
       DAG_FOLDER: "./dags"
-      RECOMMENDATION_SQL_INSTANCE: "cloudsql-recommendation-circleci"
-      RECOMMENDATION_SQL_BASE: "cloudsql-recommendation-circleci"
     steps:
       - uses: actions/checkout@v4
       - name: "Connect to Secret Manager"
@@ -48,7 +46,7 @@ jobs:
           python-version: '3.10'
       - uses: yezz123/setup-uv@v4
       - name: "Install Python requirements"
-        run: uv pip install --system  -r airflow/orchestration-requirements.txt
+        run: uv sync
       - name: "Authenticate with Google Cloud"
         uses: "google-github-actions/auth@v2"
         with:
@@ -63,8 +61,8 @@ jobs:
           GCLOUD_PROJECT: "passculture-data-ehp"
         run: |
           export PYTHONPATH=$PYTHONPATH:./dags
-          airflow db migrate
-          pytest tests
+          uv run airflow db migrate
+          uv run pytest tests
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
         uses: slackapi/slack-github-action@v1.23.0

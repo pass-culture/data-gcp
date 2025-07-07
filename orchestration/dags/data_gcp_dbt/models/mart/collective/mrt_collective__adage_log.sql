@@ -3,7 +3,7 @@
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
             partition_by={"field": "event_date", "data_type": "date"},
-            on_schema_change="sync_all_columns",
+            on_schema_change="append_new_columns",
         )
     )
 }}
@@ -25,6 +25,7 @@ select
     a.text_filter,
     a.department_filter,
     a.academy_filter,
+    a.geoloc_radius_filter,
     a.artistic_domain_filter,
     a.student_filter,
     a.suggestion_type,

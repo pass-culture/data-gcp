@@ -6,8 +6,26 @@ models:
     columns:
       - name: institution_id
         description: "{{ doc('column__institution_id') }}"
+        data_tests:
+          - unique:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: institution_external_id
         description: "{{ doc('column__institution_external_id') }}"
+        data_tests:
+          - unique:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: institution_name
         description: "{{ doc('column__institution_name') }}"
       - name: ministry
@@ -17,7 +35,7 @@ models:
       - name: institution_program_name
         description: "{{ doc('column__institution_program_name') }}"
       - name: first_deposit_creation_date
-        description: "{{ doc('column__first_deposit_creation_date') }}"
+        description: "{{ doc('column__user_first_deposit_creation_date') }}"
       - name: current_deposit_amount
         description: "{{ doc('column__current_deposit_amount') }}"
       - name: current_deposit_creation_date
@@ -30,8 +48,6 @@ models:
         description: "{{ doc('column__first_booking_date') }}"
       - name: last_booking_date
         description: "{{ doc('column__last_booking_date') }}"
-      - name: last_category_booked
-        description: "{{ doc('column__last_category_booked') }}"
       - name: total_non_cancelled_collective_bookings
         description: "{{ doc('column__total_non_cancelled_collective_bookings') }}"
       - name: total_current_year_non_cancelled_collective_bookings
@@ -50,18 +66,26 @@ models:
         description: "{{ doc('column__total_current_year_collective_real_revenue') }}"
       - name: ratio_current_credit_utilization
         description: "{{ doc('column__ratio_current_credit_utilization') }}"
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
       - name: total_tickets
         description: "{{ doc('column__total_tickets') }}"
       - name: total_current_year_tickets
         description: "{{ doc('column__total_current_year_tickets') }}"
-      - name: total_credited_beneficiaries
-        description: "{{ doc('column__total_credited_beneficiaries') }}"
-      - name: ratio_beneficiary_students
-        description: "{{ doc('column__ratio_beneficiary_students') }}"
       - name: total_students
         description: "{{ doc('column__total_students') }}"
       - name: macro_institution_type
         description: "{{ doc('column__macro_institution_type') }}"
+        data_tests:
+        - accepted_values:
+            name: marseille_en_grand_ecole
+            values: ['ECOLE']
+            config:
+              where: institution_program_name = 'Marseille en grand'
+        - accepted_values:
+            values: ['ECOLE','COLLEGE','LYCEE']
       - name: institution_city
         description: "{{ doc('column__institution_city') }}"
       - name: institution_epci

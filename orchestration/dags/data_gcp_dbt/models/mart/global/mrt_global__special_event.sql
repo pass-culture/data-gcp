@@ -3,6 +3,7 @@ select
     special_event_title,
     offerer_id,
     venue_id,
+    typeform_id,
     special_event_creation_date,
     special_event_date,
     special_event_response_id,

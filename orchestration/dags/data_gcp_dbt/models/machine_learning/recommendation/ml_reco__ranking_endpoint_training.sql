@@ -1,11 +1,19 @@
+{{
+    config(
+        materialized="table",
+        tags=["weekly"],
+        labels={"schedule": "weekly"},
+    )
+}}
+
 with
     diversification as (
-        select im.item_id, avg(d.delta_diversification) as delta_diversification
-        from {{ ref("diversification_booking") }} as d
+        select im.item_id, avg(b.diversity_score) as delta_diversification
+        from {{ ref("mrt_global__booking") }} as b
         inner join
             {{ ref("int_applicative__offer_item_id") }} as im
-            on d.offer_id = im.offer_id
-        where date(d.booking_creation_date) > date_sub(current_date, interval 90 day)
+            on b.offer_id = im.offer_id
+        where date(b.booking_creation_date) > date_sub(current_date, interval 90 day)
         group by im.item_id
     ),
 

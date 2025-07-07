@@ -25,7 +25,7 @@ models:
       - name: offer_category_id
         description: "{{ doc('column__offer_category_id') }}"
       - name: genres
-        description: "{{ doc('column__genres') }}"
+        description: "{{ doc('column__movie_genres') }}"
       - name: rayon
         description: "{{ doc('column__rayon') }}"
       - name: type

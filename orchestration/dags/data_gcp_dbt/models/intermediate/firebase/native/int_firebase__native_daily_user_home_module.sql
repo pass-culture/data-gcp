@@ -7,7 +7,8 @@
                 "data_type": "date",
                 "granularity": "day",
             },
-            on_schema_change="sync_all_columns",
+            cluster_by="entry_id",
+            on_schema_change="append_new_columns",
             require_partition_filter=true,
         )
     )
@@ -23,7 +24,7 @@ with
         from {{ ref("int_firebase__native_event") }}
         where
             event_name in ('CategoryBlockClicked', 'HighlightBlockClicked')
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -39,32 +40,31 @@ with
             events.event_date as module_displayed_date,
             events.event_timestamp as module_displayed_timestamp,
             events.module_id,
-            coalesce(modules.title, modules.offer_title) as module_name,
             modules.content_type as module_type,
-            events.entry_id as entry_id,
+            events.entry_id,
             homes.title as entry_name,
             redirections.parent_module_id,
             redirections.parent_entry_id,
             events.user_location_type,
+            modules.typeform_id,
+            coalesce(modules.title, modules.offer_title) as module_name,
             case
-                when modules.content_type = 'recommendation'
-                then events.reco_call_id
-                else null
+                when modules.content_type = 'recommendation' then events.reco_call_id
             end as reco_call_id
         from {{ ref("int_firebase__native_event") }} as events
         left join
             redirections
-            on redirections.unique_session_id = events.unique_session_id
-            and redirections.entry_id = events.entry_id
+            on events.unique_session_id = redirections.unique_session_id
+            and events.entry_id = redirections.entry_id
         inner join
             {{ ref("int_contentful__entry") }} as modules
-            on modules.id = events.module_id
+            on events.module_id = modules.id
         inner join
-            {{ ref("int_contentful__entry") }} as homes on homes.id = events.entry_id
+            {{ ref("int_contentful__entry") }} as homes on events.entry_id = homes.id
         where
             event_name = 'ModuleDisplayedOnHomePage'
             and events.unique_session_id is not null
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -90,14 +90,14 @@ with
         where
             unique_session_id is not null
             and event_name in (
-                "ExclusivityBlockClicked",
-                "CategoryBlockClicked",
-                "HighlightBlockClicked",
-                "BusinessBlockClicked",
-                "ConsultVideo",
-                "TrendsBlockClicked"
+                'ExclusivityBlockClicked',
+                'CategoryBlockClicked',
+                'HighlightBlockClicked',
+                'BusinessBlockClicked',
+                'ConsultVideo',
+                'TrendsBlockClicked'
             )
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -124,16 +124,16 @@ with
         where
             event_name = 'ConsultOffer'
             and origin in (
-                "home",
-                "exclusivity",
-                "venue",
-                "video",
-                "videoModal",
-                "video_carousel_block",
-                "highlightOffer"
+                'home',
+                'exclusivity',
+                'venue',
+                'video',
+                'videoModal',
+                'video_carousel_block',
+                'highlightOffer'
             )
             and unique_session_id is not null
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -157,10 +157,10 @@ with
             user_location_type
         from {{ ref("int_firebase__native_event") }}
         where
-            event_name = "ConsultVenue"
-            and origin in ("home", "venueList")
+            event_name = 'ConsultVenue'
+            and origin in ('home', 'venueList')
             and unique_session_id is not null
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -176,20 +176,20 @@ with
     consultations as (
         select
             o.unique_session_id,
-            coalesce(o.entry_id, v.entry_id) as entry_id,
-            coalesce(o.module_id, v.module_id) as module_id,
             o.origin,
-            coalesce(o.user_location_type, v.user_location_type) as user_location_type,
             o.offer_id,
             v.venue_id,
             consult_offer_timestamp,
-            consult_venue_timestamp
+            consult_venue_timestamp,
+            coalesce(o.entry_id, v.entry_id) as entry_id,
+            coalesce(o.module_id, v.module_id) as module_id,
+            coalesce(o.user_location_type, v.user_location_type) as user_location_type
         from consultations_venue as v
         full outer join
             consultations_offer as o
-            on o.unique_session_id = v.unique_session_id
-            and o.venue_id = v.venue_id
-            and o.consult_offer_timestamp >= v.consult_venue_timestamp
+            on v.unique_session_id = o.unique_session_id
+            and v.venue_id = o.venue_id
+            and v.consult_venue_timestamp <= o.consult_offer_timestamp
     ),
 
     favorites as (
@@ -204,16 +204,16 @@ with
         where
             events.event_name = 'HasAddedOfferToFavorites'
             and events.origin in (
-                "home",
-                "exclusivity",
-                "venue",
-                "video",
-                "videoModal",
-                "video_carousel_block",
-                "highlightOffer"
+                'home',
+                'exclusivity',
+                'venue',
+                'video',
+                'videoModal',
+                'video_carousel_block',
+                'highlightOffer'
             )
             and events.unique_session_id is not null
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -234,6 +234,7 @@ select
     displayed.entry_name,
     displayed.module_id,
     displayed.module_name,
+    displayed.typeform_id,
     displayed.parent_module_id,
     displayed.parent_entry_id,
     displayed.module_type,
@@ -264,12 +265,12 @@ left join
 left join
     consultations
     on displayed.unique_session_id = consultations.unique_session_id
-    and consultations.module_id = displayed.module_id
+    and displayed.module_id = consultations.module_id
     and consultations.consult_offer_timestamp >= module_displayed_timestamp
 left join
     favorites
-    on favorites.unique_session_id = displayed.unique_session_id
-    and favorites.module_id = displayed.module_id
+    on displayed.unique_session_id = favorites.unique_session_id
+    and displayed.module_id = favorites.module_id
 left join
     {{ ref("firebase_bookings") }} as bookings
     on displayed.unique_session_id = bookings.unique_session_id

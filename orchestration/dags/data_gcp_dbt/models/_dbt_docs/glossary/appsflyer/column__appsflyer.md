@@ -16,3 +16,8 @@
 {% docs column__total_beneficiaries_17 %} The total number of 17-year-old beneficiaries tracked by AppsFlyer. {% enddocs %}
 {% docs column__total_beneficiaries_16 %} The total number of 16-year-old beneficiaries tracked by AppsFlyer. {% enddocs %}
 {% docs column__total_beneficiaries_15 %} The total number of 15-year-old beneficiaries tracked by AppsFlyer. {% enddocs %}
+{% docs column__total_registrations_15 %} The total number of 15-year-old registrations tracked by AppsFlyer. {% enddocs %}
+{% docs column__total_registrations_16 %} The total number of 16-year-old registrations tracked by AppsFlyer. {% enddocs %}
+{% docs column__total_registrations_17 %} The total number of 17-year-old registrations tracked by AppsFlyer. {% enddocs %}
+{% docs column__total_registrations_18 %} The total number of 18-year-old registrations tracked by AppsFlyer. {% enddocs %}
+{% docs column__total_registrations_19_plus %} The total number of registrations for users 19 years and older tracked by AppsFlyer. {% enddocs %}

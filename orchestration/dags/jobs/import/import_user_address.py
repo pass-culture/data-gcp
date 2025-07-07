@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
@@ -18,8 +18,9 @@ from common.operators.gce import (
 from common.utils import get_airflow_schedule
 
 from airflow import DAG
+from airflow.decorators import task
 from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 
 GCE_INSTANCE = f"import-user-address-bulk-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/api_gouv"
@@ -31,11 +32,11 @@ dag_config = {
 }
 
 
-schedule_interval = "0 * * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
+schedule_interval = "0 */6 * * *" if ENV_SHORT_NAME == "prod" else "30 2 * * *"
 
 default_args = {
     "start_date": datetime(2021, 3, 30),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 1,
     "retry_delay": timedelta(minutes=2),
 }
@@ -55,57 +56,133 @@ with DAG(
             default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "source_dataset_id": f"int_api_gouv_{ENV_SHORT_NAME}",
-        "source_table_name": "user_address_candidate_queue",
-        "destination_dataset_id": BIGQUERY_RAW_DATASET,
-        "destination_table_name": "user_address",
-        "max_rows": 50_000,
-        "chunk_size": 500,
+        "instance_name": Param(
+            default=GCE_INSTANCE,
+            type="string",
+        ),
+        "source_dataset_id": Param(
+            default=f"int_api_gouv_{ENV_SHORT_NAME}",
+            type="string",
+        ),
+        "source_table_name": Param(
+            default="user_address_candidate_queue",
+            type="string",
+        ),
+        "destination_dataset_id": Param(
+            default=BIGQUERY_RAW_DATASET,
+            type="string",
+        ),
+        "destination_table_name": Param(
+            default="user_address",
+            type="string",
+        ),
+        "max_rows": Param(
+            default=50_000,
+            type="number",
+        ),
+        "chunk_size": Param(
+            default=500,
+            type="number",
+        ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
-    start = DummyOperator(task_id="start")
 
-    gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE,
-        task_id="gce_start_task",
-        labels={"dag_name": DAG_NAME},
-    )
+    @task
+    def start():
+        return "started"
 
-    fetch_install_code = InstallDependenciesOperator(
-        task_id="fetch_install_code",
-        instance_name=GCE_INSTANCE,
-        branch="{{ params.branch }}",
-        python_version="3.10",
-        base_dir=BASE_PATH,
-    )
+    @task
+    def check_source_count(**context):
+        bq_hook = BigQueryHook(location="europe-west1", use_legacy_sql=False)
+        bq_client = bq_hook.get_client()
+        dataset_id = context["params"]["source_dataset_id"]
+        table_name = context["params"]["source_table_name"]
+        query = f"""
+        SELECT count(*) as count
+        FROM `{GCP_PROJECT_ID}`.`{dataset_id}`.`{table_name}`
+        """
 
-    addresses_to_gcs = SSHGCEOperator(
-        task_id="user_address_to_bq",
-        instance_name=GCE_INSTANCE,
-        base_dir=BASE_PATH,
-        environment=dag_config,
-        command="""python main.py \
-            --source-dataset-id {{ params.source_dataset_id }} \
-            --source-table-name {{ params.source_table_name }} \
-            --destination-dataset-id {{ params.destination_dataset_id }} \
-            --destination-table-name {{ params.destination_table_name }} \
-            --max-rows {{ params.max_rows }} \
-            --chunk-size {{ params.chunk_size }}
-        """,
-        do_xcom_push=True,
-    )
+        result = bq_client.query(query).to_dataframe()
+        return result["count"].values[0] > 0
 
-    gce_instance_stop = DeleteGCEOperator(
-        task_id="gce_stop_task", instance_name=GCE_INSTANCE
-    )
+    @task.branch
+    def branch(count_result):
+        if count_result:
+            return "start_gce"
+        return "end"
 
-    end = DummyOperator(task_id="end")
+    @task
+    def start_gce(**context):
+        instance_name = context["params"]["instance_name"]
+        operator = StartGCEOperator(
+            instance_name=instance_name,
+            task_id="gce_start_task",
+            labels={"dag_name": DAG_NAME},
+        )
+        return operator.execute(context=context)
 
+    @task
+    def fetch_install_code(**context):
+        instance_name = context["params"]["instance_name"]
+        operator = InstallDependenciesOperator(
+            task_id="fetch_install_code",
+            instance_name=instance_name,
+            branch=context["params"]["branch"],
+            python_version="3.12",
+            base_dir=BASE_PATH,
+        )
+        return operator.execute(context=context)
+
+    @task
+    def addresses_to_gcs(**context):
+        instance_name = context["params"]["instance_name"]
+        operator = SSHGCEOperator(
+            task_id="user_address_to_bq",
+            instance_name=instance_name,
+            base_dir=BASE_PATH,
+            environment=dag_config,
+            command=f"""python main.py \
+                --source-dataset-id {context["params"]["source_dataset_id"]} \
+                --source-table-name {context["params"]["source_table_name"]} \
+                --destination-dataset-id {context["params"]["destination_dataset_id"]} \
+                --destination-table-name {context["params"]["destination_table_name"]} \
+                --max-rows {context["params"]["max_rows"]} \
+                --chunk-size {context["params"]["chunk_size"]}
+            """,
+            do_xcom_push=True,
+        )
+        return operator.execute(context=context)
+
+    @task
+    def stop_gce(**context):
+        operator = DeleteGCEOperator(
+            task_id="gce_stop_task", instance_name=context["params"]["instance_name"]
+        )
+        return operator.execute(context=context)
+
+    @task
+    def end():
+        return "completed"
+
+    # Define the task dependencies
+    start_result = start()
+    count_result = check_source_count()
+    branch_result = branch(count_result)
+    gce_start_result = start_gce()
+    fetch_result = fetch_install_code()
+    addresses_result = addresses_to_gcs()
+    stop_result = stop_gce()
+    end_result = end()
+
+    # Set task dependencies
+    start_result >> count_result >> branch_result
     (
-        start
-        >> gce_instance_start
-        >> fetch_install_code
-        >> addresses_to_gcs
-        >> gce_instance_stop
-    ) >> end
+        branch_result
+        >> gce_start_result
+        >> fetch_result
+        >> addresses_result
+        >> stop_result
+        >> end_result
+    )
+    branch_result >> end_result

@@ -40,6 +40,7 @@ title: Metrics
 {% docs column__total_individual_real_revenue %} Total actual revenue from individual bookings. {% enddocs %}
 {% docs column__total_individual_theoretic_revenue %} Total theoretical revenue from individual bookings. {% enddocs %}
 {% docs column__total_last_deposit_digital_goods_amount_spent %} Total amount spent on digital goods from the last deposit. {% enddocs %}
+{% docs column__total_last_deposit_theoretical_amount_spent %} Total theoretical amount spent from the last deposit. {% enddocs %}
 {% docs column__total_non_cancelled_bookings %} Total number of bookings that were not cancelled, both individual and collective. {% enddocs %}
 {% docs column__total_non_cancelled_collective_bookings %} Total number of collective bookings that were not cancelled. {% enddocs %}
 {% docs column__total_non_cancelled_duo_bookings %} Total number of non-cancelled duo bookings made by the user. {% enddocs %}
@@ -81,3 +82,33 @@ title: Metrics
 {% docs column__ratio_beneficiary_students %}The ratio of beneficiary students for the educational institution.{% enddocs %}
 {% docs column__mean_stock_price_per_item %} The average stock price for the item. {% enddocs %}
 {% docs column__total_diversity_score %} The total diversity score of the user or the deposit {% enddocs %}
+{% docs column__total_venue_20_km %} The total distinct number of venues located under a 20 kilometers area around the centroid of the IRIS. {% enddocs %}
+{% docs column__total_venue_5_km %} The total distinct number of venues located under a 5 kilometers area around the centroid of the IRIS. {% enddocs %}
+{% docs column__total_population_15_years_or_more %} The total population over 15 years living in the IRIS. {% enddocs %}
+{% docs column__total_population_11_17_years %} The total population between 11 and 17 years living in the IRIS. {% enddocs %}
+{% docs column__total_population_18_24_years %} The total population between 18 ans 24 years living in the IRIS. {% enddocs %}
+{% docs column__pct_csp_1 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 1 - Farmers. {% enddocs %}
+{% docs column__pct_csp_2 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 2 - Craftsmen, Traders, Business Leaders. {% enddocs %}
+{% docs column__pct_csp_3 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 3 - Executives and Higher Intellectual Professions. {% enddocs %}
+{% docs column__pct_csp_4 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 4 - Intermediate professions. {% enddocs %}
+{% docs column__pct_csp_5 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 5 - Employees. {% enddocs %}
+{% docs column__pct_csp_6 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 6 - Workers. {% enddocs %}
+{% docs column__pct_csp_7 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 7 - Retired. {% enddocs %}
+{% docs column__pct_csp_8 %} The percentage of the population, that have 15 years or more, belonging to the socio-professional category 8 - Others without professional activity. {% enddocs %}
+{% docs column__pct_french_population %} The percentage of the population that have French nationality, all ages included. {% enddocs %}
+{% docs column__pct_foreign_population %} The percentage of the population that have foreign nationality, all ages included. {% enddocs %}
+{% docs column__total_session_display %} The total number of sessions with a display of a specific object like module_id or offer_id. {% enddocs %}
+{% docs column__total_session_with_click %} The total number of sessions with a click on a specific object like module_id or offer_id. {% enddocs %}
+{% docs column__total_sesh_consult_offer %} The total number of sessions with a consultation related to a specific object like module_id or offer_id. {% enddocs %}
+{% docs column__total_session_fav %} The total number of sessions which puts an offer to favorite, related to a specific object like module_id or offer_id. {% enddocs %}
+{% docs column__total_session_with_consult_video %} The total number of sessions with a video consultation, related to a specific object like module_id. {% enddocs %}
+{% docs column__total_click %} The total number of clicks on a specific object like module_id or offer_id. {% enddocs %}
+{% docs column__total_consult_offer %} The total number of offer consultations. {% enddocs %}
+{% docs column__total_fav %} The total number of bookmark actions. {% enddocs %}
+{% docs column__total_session_with_booking %} The total number of session which performed a booking. {% enddocs %}
+{% docs column__total_venue_map_consult %} The total number of consultations from the venue map. {% enddocs %}
+{% docs column__total_venue_map_preview %} The total number of previews of the venue map. {% enddocs %}
+{% docs column__total_consult_venue %} The total number of venues consulted from the venue map. {% enddocs %}
+{% docs column__total_distinct_venue_consult_offer %} The total distinct number of venues which led to an offer consultation. {% enddocs %}
+{% docs column__total_session_venue_map_seen_duration_seconds %} Durée totale en seconde pendant laquelle la venue map a été affichée au cours d’une session. {% enddocs %}
+{% docs column__total_diversification %} Total du score de diversité incrémenté par les réservations associées. {% enddocs %}

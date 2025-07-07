@@ -10,18 +10,10 @@ models:
         description: "{{ doc('column__collective_stock_id') }}"
       - name: is_used_collective_booking
         description: "{{ doc('column__collective_booking_is_used') }}"
-      - name: stock_id
-        description: "{{ doc('column__stock_id') }}"
       - name: collective_offer_id
         description: "{{ doc('column__collective_offer_id') }}"
-      - name: offer_id
-        description: "{{ doc('column__offer_id') }}"
       - name: collective_offer_name
         description: "{{ doc('column__collective_offer_name') }}"
-      - name: collective_offer_subcategory_id
-        description: "{{ doc('column__collective_offer_subcategory_id') }}"
-      - name: collective_offer_category_id
-        description: "{{ doc('column__collective_offer_category_id') }}"
       - name: collective_offer_format
         description: "{{ doc('column__collective_offer_format') }}"
       - name: venue_id
@@ -48,6 +40,8 @@ models:
         description: "{{ doc('column__collective_stock_number_of_tickets') }}"
       - name: collective_stock_beginning_date_time
         description: "{{ doc('column__collective_stock_beginning_date_time') }}"
+      - name: collective_stock_end_date_time
+        description: "{{ doc('column__collective_stock_end_date_time') }}"
       - name: educational_institution_id
         description: "{{ doc('column__educational_institution_id') }}"
       - name: educational_year_id

@@ -2,7 +2,7 @@ import time
 from datetime import date, datetime, timedelta
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
@@ -41,7 +41,7 @@ dag_config = {
 
 default_args = {
     "start_date": datetime(2020, 12, 1),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 2,
     "retry_delay": timedelta(minutes=5),
 }
@@ -137,6 +137,7 @@ with DAG(
     )
 
     import_dms_jeunes_to_bq = GCSToBigQueryOperator(
+        project_id=GCP_PROJECT_ID,
         task_id="import_dms_jeunes_to_bq",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=[
@@ -163,6 +164,7 @@ with DAG(
     )
 
     import_dms_pro_to_bq = GCSToBigQueryOperator(
+        project_id=GCP_PROJECT_ID,
         task_id="import_dms_pro_to_bq",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=["dms_export/dms_pro_{{ params.updated_since_pro }}.parquet"],

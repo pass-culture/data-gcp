@@ -1,3 +1,4 @@
+-- noqa: disable=all
 with
     dates as (
         select month as month
@@ -10,13 +11,19 @@ with
     infos_users as (
         select
             deposit.user_id,
-            deposit.deposit_type,
             date_trunc(deposit_creation_date, month) as date_deposit,
             date_trunc(deposit_expiration_date, month) as date_expiration,
             user.first_individual_booking_date as first_booking_date,
             user.user_department_code,
             user.user_region_name,
-            rd.academy_name
+            rd.academy_name,
+            case
+                when deposit.deposit_type = "GRANT_17_18" and deposit.user_age <= 17
+                then "GRANT_15_17"
+                when deposit.deposit_type = "GRANT_17_18" and deposit.user_age >= 18
+                then "GRANT_18"
+                else deposit.deposit_type
+            end as deposit_type
         from `{{ bigquery_analytics_dataset }}.global_deposit` as deposit
         join
             `{{ bigquery_analytics_dataset }}.global_user` as user

@@ -3,7 +3,7 @@
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
             partition_by={"field": "app_install_date", "data_type": "date"},
-            on_schema_change="sync_all_columns",
+            on_schema_change="append_new_columns",
         )
     )
 }}
@@ -65,7 +65,42 @@ select
             safe_cast(unique_users as int64),
             0
         )
-    ) as total_beneficiaries_15
+    ) as total_beneficiaries_15,
+    sum(
+        if(
+            event_name = 'af_complete_registration_15',
+            safe_cast(unique_users as int64),
+            0
+        )
+    ) as total_registrations_15,
+    sum(
+        if(
+            event_name = 'af_complete_registration_16',
+            safe_cast(unique_users as int64),
+            0
+        )
+    ) as total_registrations_16,
+    sum(
+        if(
+            event_name = 'af_complete_registration_17',
+            safe_cast(unique_users as int64),
+            0
+        )
+    ) as total_registrations_17,
+    sum(
+        if(
+            event_name = 'af_complete_registration_18',
+            safe_cast(unique_users as int64),
+            0
+        )
+    ) as total_registrations_18,
+    sum(
+        if(
+            event_name = 'af_complete_registration_19+',
+            safe_cast(unique_users as int64),
+            0
+        )
+    ) as total_registrations_19_plus
 from {{ source("appsflyer_import", "cohort_unified_timezone_versioned") }}
 where
     safe_cast(days_post_attribution as int64) < 14

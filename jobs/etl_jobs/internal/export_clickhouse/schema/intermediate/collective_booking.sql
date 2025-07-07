@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS intermediate.collective_booking ON CLUSTER default
     venue_id String CODEC(ZSTD),
     offerer_id String CODEC(ZSTD),
     collective_offer_id String CODEC(ZSTD),
-    offer_id Nullable(String) CODEC(ZSTD),
     creation_date String CODEC(ZSTD),
     used_date Nullable(String) CODEC(ZSTD),
     reimbursement_date Nullable(String) CODEC(ZSTD),

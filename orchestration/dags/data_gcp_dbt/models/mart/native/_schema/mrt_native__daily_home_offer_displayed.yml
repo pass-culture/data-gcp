@@ -12,8 +12,30 @@ models:
         description: "{{ doc('column__module_id') }}"
       - name: entry_id
         description: "{{ doc('column__entry_id') }}"
-      - name: displayed_position
-        description: "{{ doc('column__displayed_position') }}"
+      - name: offer_category_id
+        description: "{{ doc('column__offer_category_id') }}"
+      - name: venue_id
+        description: "{{ doc('column__venue_id')}}"
+      - name: venue_name
+        description: "{{ doc('column__venue_name')}}"
+      - name: venue_macro_density_label
+        description: "{{ doc('column__venue_macro_density_label')}}"
+      - name: module_type
+        description: "{{ doc('column__module_type')}}"
+      - name: module_name
+        description: "{{ doc('column__module_name')}}"
+      - name: offer_subcategory_id
+        description: "{{ doc('column__offer_subcategory_id')}}"
+      - name: offerer_id
+        description: "{{ doc('column__offerer_id')}}"
+      - name: venue_type_label
+        description: "{{ doc('column__venue_type_label')}}"
+      - name: venue_density_label
+        description: "{{ doc('column__venue_density_label')}}"
+      - name: partner_id
+        description: "{{ doc('column__partner_id')}}"
+      - name: offerer_name
+        description: "{{ doc('column__offerer_name')}}"
       - name: total_displays
         description: "{{ doc('column__total_displays') }}"
       - name: total_position_0_3_displays

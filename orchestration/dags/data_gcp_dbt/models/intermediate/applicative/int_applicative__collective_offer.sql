@@ -42,7 +42,6 @@ with
             co.collective_offer_last_validation_date,
             co.collective_offer_validation,
             co.collective_offer_id,
-            co.offer_id,
             co.collective_offer_is_active,
             co.venue_id,
             co.collective_offer_name,
@@ -50,7 +49,6 @@ with
             co.collective_offer_duration_minutes,
             date(co.collective_offer_creation_date) as collective_offer_creation_date,
             co.collective_offer_creation_date as collective_offer_created_at,
-            co.collective_offer_subcategory_id,
             co.collective_offer_format,
             co.collective_offer_date_updated,
             co.collective_offer_students,
@@ -89,17 +87,17 @@ with
             cs.last_collective_booking_date,
             cs.total_non_cancelled_tickets,
             cs.total_current_year_non_cancelled_tickets,
-            il.institution_internal_iris_id,
-            il.institution_academy_name,
-            il.institution_region_name,
-            il.institution_department_code,
-            il.institution_department_name,
-            il.institution_postal_code,
-            il.institution_city,
-            il.institution_epci,
-            il.institution_density_label,
-            il.institution_macro_density_label,
-            il.institution_density_level,
+            ei.institution_internal_iris_id,
+            ei.institution_academy_name,
+            ei.institution_region_name,
+            ei.institution_department_code,
+            ei.institution_department_name,
+            ei.institution_postal_code,
+            ei.institution_city,
+            ei.institution_epci,
+            ei.institution_density_label,
+            ei.institution_macro_density_label,
+            ei.institution_density_level,
             co.collective_offer_rejection_reason,
             false as collective_offer_is_template
         from {{ source("raw", "applicative_database_collective_offer") }} as co
@@ -109,9 +107,6 @@ with
         left join
             {{ ref("int_applicative__educational_institution") }} as ei
             on co.institution_id = ei.educational_institution_id
-        left join
-            {{ ref("int_geo__institution_location") }} as il
-            on ei.institution_id = il.institution_id
     )
 union all
 (
@@ -123,7 +118,6 @@ union all
         collective_offer_last_validation_date,
         collective_offer_validation,
         collective_offer_id,
-        offer_id,
         collective_offer_is_active,
         venue_id,
         collective_offer_name,
@@ -131,7 +125,6 @@ union all
         collective_offer_duration_minutes,
         date(collective_offer_creation_date) as collective_offer_creation_date,
         collective_offer_creation_date as collective_offer_created_at,
-        collective_offer_subcategory_id,
         collective_offer_format,
         collective_offer_date_updated,
         collective_offer_students,
@@ -150,7 +143,7 @@ union all
         collective_offer_last_validation_type,
         null as institution_id,
         collective_offer_image_id,
-        provider_id,
+        null as provider_id,
         national_program_id,
         collective_offer_template_beginning_date,
         collective_offer_template_ending_date,

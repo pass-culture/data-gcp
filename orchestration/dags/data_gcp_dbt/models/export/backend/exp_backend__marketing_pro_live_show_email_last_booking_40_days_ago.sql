@@ -7,7 +7,7 @@
                 "data_type": "date",
                 "granularity": "day",
             },
-            on_schema_change="sync_all_columns",
+            on_schema_change="append_new_columns",
         )
     )
 }}
@@ -16,6 +16,6 @@ select date('{{ ds() }}') as execution_date, venue_id, venue_booking_email
 from {{ ref("mrt_global__venue") }} venue
 join
     {{ ref("mrt_global__offerer") }} offerer
-    on venue.venue_managing_offerer_id = offerer.offerer_id
+    on venue.offerer_id = offerer.offerer_id
     and date_diff(date('{{ ds() }}'), offerer.last_booking_date, day) >= 40
-where venue_is_permanent and venue_type_label = "Spectacle vivant"
+where venue_is_open_to_public and venue_type_label = "Spectacle vivant"

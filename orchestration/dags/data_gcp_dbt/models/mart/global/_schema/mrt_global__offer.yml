@@ -48,7 +48,7 @@ models:
         description: '{{ doc("column__offer_created_at") }}'
         data_type: DATETIME
       - name: offer_updated_date
-        description: '{{ doc("column__offer_updated_date") }}'
+        description: '{{ doc("column__offer_updated_at") }}'
         data_type: DATETIME
       - name: offer_is_duo
         description: '{{ doc("column__offer_is_duo") }}'
@@ -71,13 +71,13 @@ models:
         description: '{{ doc("column__venue_is_virtual") }}'
         data_type: BOOLEAN
       - name: digital_goods
-        description: '{{ doc("column__digital_goods") }}'
+        description: '{{ doc("column__offer_is_digital_goods") }}'
         data_type: BOOLEAN
       - name: physical_goods
-        description: '{{ doc("column__physical_goods") }}'
+        description: '{{ doc("column__offer_is_physical_goods") }}'
         data_type: BOOLEAN
       - name: event
-        description: '{{ doc("column__event") }}'
+        description: '{{ doc("column__offer_is_event") }}'
         data_type: BOOLEAN
       - name: offer_humanized_id
         description: '{{ doc("column__offer_humanized_id") }}'
@@ -100,10 +100,10 @@ models:
         description: '{{ doc("column__offer_url") }}'
         data_type: STRING
       - name: is_national
-        description: '{{ doc("column__is_national") }}'
+        description: '{{ doc("column__offer_is_national") }}'
         data_type: BOOLEAN
       - name: is_active
-        description: '{{ doc("column__is_active") }}'
+        description: '{{ doc("column__offer_is_active") }}'
         data_type: BOOLEAN
       - name: offer_validation
         description: '{{ doc("column__offer_validation") }}'
@@ -130,19 +130,19 @@ models:
         description: '{{ doc("column__movie_type") }}'
         data_type: STRING
       - name: visa
-        description: '{{ doc("column__visa") }}'
+        description: '{{ doc("column__movie_visa") }}'
         data_type: STRING
       - name: release_date
-        description: '{{ doc("column__release_date") }}'
+        description: '{{ doc("column__movie_release_date") }}'
         data_type: STRING
       - name: genres
-        description: '{{ doc("column__genres") }}'
+        description: '{{ doc("column__movie_genres") }}'
         data_type: STRING
       - name: companies
         description: '{{ doc("column__companies") }}'
         data_type: STRING
       - name: countries
-        description: '{{ doc("column__countries") }}'
+        description: '{{ doc("column__movie_countries") }}'
         data_type: STRING
       - name: casting
         description: '{{ doc("column__casting") }}'
@@ -224,12 +224,14 @@ models:
       - name: partner_id
         description: '{{ doc("column__partner_id") }}'
         data_type: STRING
+        # failed : investigation
+        # data_tests:
+        #   - not_null
       - name: offerer_id
         description: '{{ doc("column__offerer_id") }}'
         data_type: STRING
-      - name: venue_managing_offerer_id
-        description: '{{ doc("column__venue_managing_offerer_id") }}'
-        data_type: STRING
+        data_tests:
+          - not_null
       - name: offerer_name
         description: '{{ doc("column__offerer_name") }}'
         data_type: STRING
@@ -242,6 +244,9 @@ models:
       - name: offerer_address_id
         description: '{{ doc("column__offerer_address_id") }}'
         data_type: STRING
+        # failed : investigation
+        # data_tests:
+        #   - not_null
       - name: offer_publication_date
         description: '{{ doc("column__offer_publication_date") }}'
         data_type: DATETIME
@@ -254,8 +259,17 @@ models:
       - name: is_headlined
         description: '{{ doc("column__is_headlined") }}'
         data_type: BOOLEAN
+      - name: is_coming_soon
+        description: '{{ doc("column__is_coming_soon") }}'
+        data_type: BOOLEAN
       - name: first_headline_date
         description: '{{ doc("column__first_headline_date") }}'
+        data_type: DATETIME
+      - name: offer_finalization_date
+        description: '{{ doc("column__offer_finalization_date") }}'
+        data_type: DATETIME
+      - name: scheduled_offer_bookability_date
+        description: '{{ doc("column__scheduled_offer_bookability_date") }}'
         data_type: DATETIME
       - name: last_headline_date
         description: '{{ doc("column__last_headline_date") }}'

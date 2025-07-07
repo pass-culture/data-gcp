@@ -3,7 +3,7 @@ name: "DBT building job"
 on:
   workflow_call:
     inputs:
-      TARGET_COMPOSER_BUCKET:
+      TARGET_AIRFLOW_BUCKET:
         type: string
         required: true
       ENV_SHORT_NAME:
@@ -33,21 +33,22 @@ jobs:
       AIRFLOW_HOME: "./orchestration/airflow/"
       DAG_FOLDER: "./orchestration/dags/"
       DBT_FOLDER: "./orchestration/dags/data_gcp_dbt/"
+      UV_PROJECT: ${{ github.workspace }}
     defaults:
-     run:
-       working-directory: "."
+      run:
+        working-directory: "."
     steps:
       - uses: actions/checkout@v4
         with:
-            fetch-depth: 0
+          fetch-depth: 0
       - name: "Connect to Secret Manager"
-        uses: 'google-github-actions/auth@v2'
+        uses: "google-github-actions/auth@v2"
         with:
           workload_identity_provider: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
       - name: "Get secrets for Slack"
-        id: 'secrets'
-        uses: 'google-github-actions/get-secretmanager-secrets@v2'
+        id: "secrets"
+        uses: "google-github-actions/get-secretmanager-secrets@v2"
         with:
           secrets: |-
             SLACK_BOT_TOKEN:passculture-metier-ehp/passculture-ci-slack-bot-token
@@ -55,14 +56,11 @@ jobs:
             ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER:passculture-metier-ehp/infra-prod-gcp-workload-identity-provider
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.12"
       - uses: yezz123/setup-uv@v4
 
-      - name: Install Default Python requirements
-        run: uv pip install --system -r requirements.txt
-
-      - name: Install Python requirements
-        run: uv pip install --system -r ${{ env.AIRFLOW_HOME }}orchestration-requirements.txt
+      - name: Install Default Python requirements for root project
+        run: uv sync
 
       - name: "Authenticate with Google Cloud"
         uses: "google-github-actions/auth@v2"
@@ -72,23 +70,23 @@ jobs:
           workload_identity_provider: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
 
-      - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@v2'
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v2"
       - name: "Pull run artifacts"
-        working-directory:  ${{ env.DBT_FOLDER }}
+        working-directory: ${{ env.DBT_FOLDER }}
         env:
-          COMPOSER_DAGS_BUCKET: ${{ inputs.TARGET_COMPOSER_BUCKET }}
+          TARGET_AIRFLOW_BUCKET: ${{ inputs.TARGET_AIRFLOW_BUCKET }}
         run: |
           mkdir env-run-artifacts
-          gsutil cp gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json env-run-artifacts/manifest.json
-          gsutil cp gs://$COMPOSER_DAGS_BUCKET/data/target/run_results.json env-run-artifacts/run_results.json
+          gsutil cp gs://$TARGET_AIRFLOW_BUCKET/data/target/manifest.json env-run-artifacts/manifest.json
+          gsutil cp gs://$TARGET_AIRFLOW_BUCKET/data/target/run_results.json env-run-artifacts/run_results.json
           echo $(ls env-run-artifacts)
       - name: "Install dbt dependencies"
         working-directory: ${{ env.DBT_FOLDER }}
         env:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
-        run: PYTHONPATH=$PYTHONPATH:./dags dbt deps
+        run: uv run dbt deps
       # - name: "Sqlfluff format"
       #   working-directory: "./orchestration/dags/data_gcp_dbt/"
       #   env:
@@ -106,13 +104,13 @@ jobs:
       #     TARGET_BRANCH: ${{ github.base_ref }}
       #   run: ./scripts/sqlfluff_lint.sh $TARGET_BRANCH
       - name: "compile dbt project"
-        working-directory:  ${{ env.DBT_FOLDER }}
+        working-directory: ${{ env.DBT_FOLDER }}
         env:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
-        run: dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+        run: uv run dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Run modified models & 1st order childrens"
         working-directory: .
         env:
@@ -121,18 +119,18 @@ jobs:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
-        run: .github/workflows/scripts/run_dbt_changed_models.sh ${{ github.base_ref }} orchestration/dags/data_gcp_dbt
+        run: uv run .github/workflows/scripts/run_dbt_changed_models.sh ${{ github.base_ref }} orchestration/dags/data_gcp_dbt
       - name: "Run modified tests"
-        working-directory:  ${{ env.DBT_FOLDER }}
+        working-directory: ${{ env.DBT_FOLDER }}
         env:
           TARGET_BRANCH: ${{ github.base_ref }}
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
-          CI_SEVERITY: 'warn'
+          CI_SEVERITY: "warn"
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: |
-          dbt test --store-failures -s "state:modified" \
+          uv run dbt test --store-failures -s "state:modified" \
           --exclude "test_name:relationships" "tag:elementary" "config.materialized:incremental" \
           --profile CI --target $ENV_SHORT_NAME --defer \
           --state env-run-artifacts --favor-state \
@@ -141,11 +139,11 @@ jobs:
       - name: "generate dbt docs"
         working-directory: ${{ env.DBT_FOLDER }}
         env:
-            DBT_TARGET_PATH: "target/"
-            DBT_PROFILES_DIR: "."
-            ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
-            APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
-        run: dbt docs generate --profile CI --no-compile --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
+        run: uv run dbt docs generate --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
 
       - name: Get changed files
         id: files_changes
@@ -157,13 +155,13 @@ jobs:
           ALL_CHANGED_FILES: ${{ steps.files_changes.outputs.all_changed_files }}
         run: |
           echo ${ALL_CHANGED_FILES}
-          pre-commit run --files ${ALL_CHANGED_FILES} --config .pre-commit-ci-dbt-config.yaml
+          uv run pre-commit run --files ${ALL_CHANGED_FILES} --config .pre-commit-ci-dbt-config.yaml
 
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
         uses: slackapi/slack-github-action@v1.23.0
         env:
-           SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.SLACK_BOT_TOKEN }}
+          SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.SLACK_BOT_TOKEN }}
         with:
           channel-id: ${{ inputs.NOTIF_CHANNEL_ID }}
           payload: |

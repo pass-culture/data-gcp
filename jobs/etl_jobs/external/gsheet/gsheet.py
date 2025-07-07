@@ -58,6 +58,7 @@ SHEETS = {
             "macro_objective": "macro_objective",
             "micro_objective": "micro_objective",
             "offer_category": "offer_category",
+            "region": "region",
         },
     },
     "gsheet_instagram_campaign_tag": {
@@ -70,6 +71,7 @@ SHEETS = {
             "macro_objective": "macro_objective",
             "micro_objective": "micro_objective",
             "offer_category": "offer_category",
+            "region": "region",
         },
     },
     "gsheet_institution_meg_scholar_group": {
@@ -99,6 +101,17 @@ SHEETS = {
             "Label Patrimoine & Répertoire": "movie_is_heritage_repertory_label",
             "Label Jeune Public": "movie_is_young_audience_label",
             "movie_production_country": "movie_production_country",
+        },
+    },
+    "gsheet_masa_affiliation_details_2324": {
+        "spreadsheet_ids": ["1zRRO50DprjnBiWsb83vZESGmCoA8gT52qm1eCFtfkrs"],
+        "expected_headers_dict": {
+            "UAI": "institution_external_id",
+            "Ministère": "ministry",
+            "Année scolaire": "scholar_year",
+            "Provisoire": "is_provisional",
+            "Secteur": "sector",
+            "Affiliation": "affiliation",
         },
     },
 }

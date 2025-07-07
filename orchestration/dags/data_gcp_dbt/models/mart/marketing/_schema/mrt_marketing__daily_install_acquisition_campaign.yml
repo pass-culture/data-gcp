@@ -49,3 +49,18 @@ models:
       - name: total_beneficiaries_15
         description: '{{ doc("column__total_beneficiaries_15") }}'
         data_type: INT64
+      - name: total_registrations_15
+        description: '{{ doc("column__total_registrations_15") }}'
+        data_type: INT64
+      - name: total_registrations_16
+        description: '{{ doc("column__total_registrations_16") }}'
+        data_type: INT64
+      - name: total_registrations_17
+        description: '{{ doc("column__total_registrations_17") }}'
+        data_type: INT64
+      - name: total_registrations_18
+        description: '{{ doc("column__total_registrations_18") }}'
+        data_type: INT64
+      - name: total_registrations_19_plus
+        description: '{{ doc("column__total_registrations_19_plus") }}'
+        data_type: INT64

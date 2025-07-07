@@ -19,7 +19,7 @@ with
             {{ ref("mrt_global__educational_deposit") }} as ed
             on eid.institution_id = ed.institution_id
         inner join
-            {{ ref("educational_year") }} as ey
+            {{ source("raw", "applicative_database_educational_year") }} as ey
             on ed.educational_year_id = ey.educational_year_id
     ),
 
@@ -61,7 +61,7 @@ with
                 sum(total_theoretical_amount_spent), sum(deposit_amount)
             ) as pct_spent,
             count(distinct ebd.user_id) as nb_credit_used_students
-        from {{ ref("beneficiary_fraud_check") }} as bfc
+        from {{ ref("int_applicative__beneficiary_fraud_check") }} as bfc
         inner join {{ ref("mrt_global__deposit") }} as edd on bfc.user_id = edd.user_id
         left join
             {{ ref("mrt_global__booking") }} as ebd

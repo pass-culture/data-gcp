@@ -1,0 +1,43 @@
+version: 2
+
+models:
+  - name: exp_ministry__offer_metadata
+    description: "{{ doc('description__exp_ministry__offer_metadata') }}"
+    columns:
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['export']
+          - unique:
+              tags: ['export']
+      - name: search_group_name
+        description: "{{ doc('column__search_group_name') }}"
+      - name: author
+        description: "{{ doc('column__author') }}"
+      - name: theater_movieId
+        description: "{{ doc('column__theater_movie_id') }}"
+      - name: theater_roomId
+        description: "{{ doc('column__theater_room_id') }}"
+      - name: movie_type
+        description: "{{ doc('column__movie_type') }}"
+      - name: movie_visa
+        description: "{{ doc('column__movie_visa') }}"
+      - name: movie_release_date
+        description: "{{ doc('column__movie_release_date') }}"
+      - name: movie_genres
+        description: "{{ doc('column__movie_genres') }}"
+      - name: movie_countries
+        description: "{{ doc('column__movie_countries') }}"
+      - name: book_editor
+        description: "{{ doc('column__book_editor') }}"
+      - name: offer_ean
+        description: "{{ doc('column__offer_ean') }}"
+      - name: gtl_label_level_1
+        description: "{{ doc('column__gtl_label_level_1') }}"
+      - name: gtl_label_level_2
+        description: "{{ doc('column__gtl_label_level_2') }}"
+      - name: gtl_label_level_3
+        description: "{{ doc('column__gtl_label_level_3') }}"
+      - name: gtl_label_level_4
+        description: "{{ doc('column__gtl_label_level_4') }}"

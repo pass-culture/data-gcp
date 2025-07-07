@@ -3,7 +3,7 @@
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
             partition_by={"field": "acquisition_execution_date", "data_type": "date"},
-            on_schema_change="sync_all_columns",
+            on_schema_change="append_new_columns",
         )
     )
 }}
@@ -24,10 +24,11 @@ with
             sum(installs) as total_installs
         from {{ source("raw", "appsflyer_cost_channel") }}
         {% if is_incremental() %}
+            -- 15-day window to ensure 14th day data is included before DAG runs
             where
                 date(
                     execution_date
-                ) between date_sub(date('{{ ds() }}'), interval 7 day) and date(
+                ) between date_sub(date('{{ ds() }}'), interval 15 day) and date(
                     '{{ ds() }}'
                 )
         {% endif %}

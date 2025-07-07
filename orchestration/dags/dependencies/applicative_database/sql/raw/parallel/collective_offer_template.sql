@@ -6,14 +6,12 @@ SELECT
     , "lastValidationDate" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_offer_last_validation_date
     , CAST("validation" AS VARCHAR) AS collective_offer_validation
     , CAST("id" AS varchar(255)) AS collective_offer_id
-    , CAST("offerId" AS varchar(255)) AS offer_id
     , "isActive" AS collective_offer_is_active
     , CAST("venueId" AS varchar(255)) AS venue_id
     , "name" AS collective_offer_name
     , "description" AS collective_offer_description
     , "durationMinutes" AS collective_offer_duration_minutes
     , "dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_offer_creation_date
-    , CAST("subcategoryId" AS varchar(255)) AS collective_offer_subcategory_id
     , REPLACE(REPLACE(CAST("formats" AS varchar(255)), \'{\', \'\'), \'}\', \'\')  AS collective_offer_format
     , "dateUpdated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_offer_date_updated
     , BTRIM(array_to_string("students", \',\'), \'{\') AS collective_offer_students
@@ -26,7 +24,6 @@ SELECT
     , BTRIM(array_to_string("interventionArea", \',\'), \'{\') AS intervention_area
     , CAST("lastValidationType" AS VARCHAR) AS collective_offer_last_validation_type
     , CAST("imageId" AS varchar(255)) AS collective_offer_image_id
-    , CAST("providerId" AS VARCHAR) AS provider_id
     , CAST("nationalProgramId" AS varchar(255)) AS national_program_id
     , CAST(TRIM(BOTH \'[") \' FROM SPLIT_PART("dateRange" :: text, \',\',1)) AS timestamp) AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_offer_template_beginning_date
     , CAST(NULLIF(TRIM(BOTH \'[") \' FROM SPLIT_PART("dateRange" :: text, \',\',2)),\'\') AS timestamp) AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\' AS collective_offer_template_ending_date

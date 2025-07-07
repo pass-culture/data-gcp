@@ -7,7 +7,7 @@
                 "data_type": "date",
                 "granularity": "day",
             },
-            on_schema_change="sync_all_columns",
+            on_schema_change="append_new_columns",
             cluster_by="event_name",
             require_partition_filter=true,
         )
@@ -31,9 +31,7 @@ select
     traffic_source,
     traffic_medium,
     traffic_campaign,
-    coalesce(cast(double_offer_id as string), offerid) as offer_id,
     ga_session_id as session_id,
-    concat(user_pseudo_id, "-", ga_session_id) as unique_session_id,
     ga_session_number as session_number,
     shouldusealgoliarecommend as is_algolia_recommend,
     searchisautocomplete as search_is_autocomplete,
@@ -46,7 +44,6 @@ select
     pagename as page_name,
     origin,
     locationtype as user_location_type,
-    coalesce(query, searchquery) as query,
     categoryname as category_name,
     type as filter_type,
     venueid as venue_id,
@@ -56,7 +53,6 @@ select
     step as booking_cancellation_step,
     filtertypes as search_filter_types,
     searchid as search_id,
-    concat(user_pseudo_id, "-", ga_session_id, "-", searchid) as unique_search_id,
     filter,
     searchlocationfilter as search_location_filter,
     searchcategories as search_categories_filter,
@@ -71,14 +67,6 @@ select
     displayed_venues,
     traffic_gen,
     traffic_content,
-    coalesce(entryid, homeentryid) as entry_id,
-    case
-        when entryid in ('4XbgmX7fVVgBMoCJiLiY9n', '1ZmUjN7Za1HfxlbAOJpik2')
-        then "generale"
-        when entryid is null
-        then null
-        else "marketing"
-    end as home_type,
     toentryid as destination_entry_id,
     reco_origin,
     ab_test as reco_ab_test,
@@ -86,7 +74,6 @@ select
     model_version as reco_model_version,
     model_name as reco_model_name,
     model_endpoint as reco_model_endpoint,
-    coalesce(age, userstatus) as onboarding_user_selected_age,
     social as selected_social_media,
     searchview as search_type,
     type as share_type,
@@ -97,6 +84,20 @@ select
     seenduration as video_seen_duration_seconds,
     youtubeid as video_id,
     frommultivenueofferid as multi_venue_offer_id,
+    coalesce(cast(double_offer_id as string), offerid) as offer_id,
+    concat(user_pseudo_id, "-", ga_session_id) as unique_session_id,
+    coalesce(query, searchquery) as query,
+    concat(user_pseudo_id, "-", ga_session_id, "-", searchid) as unique_search_id,
+    coalesce(entryid, homeentryid) as entry_id,
+    case
+        when entryid in ("4XbgmX7fVVgBMoCJiLiY9n", "1ZmUjN7Za1HfxlbAOJpik2")
+        then "generale"
+        when entryid is null
+        then null
+        else "marketing"
+    end as home_type,
+    coalesce(age, userstatus) as onboarding_user_selected_age,
+    coalesce(isheadline = "true", false) as is_headline_offer,
     case when event_name = "ConsultOffer" then 1 else 0 end as is_consult_offer,
     case
         when event_name = "BookingConfirmation" then 1 else 0
@@ -154,26 +155,27 @@ select
         when
             exists (
                 select 1
-                from {{ source("raw", "subcategories") }} sc
+                from {{ source("raw", "subcategories") }} as sc
                 where
-                    lower(query) like concat('%', lower(sc.category_id), '%')
-                    or lower(query) like concat('%', lower(sc.id), '%')
+                    lower(query) like concat("%", lower(sc.category_id), "%")
+                    or lower(query) like concat("%", lower(sc.id), "%")
             )
             or exists (
                 select 1
-                from {{ source("seed", "macro_rayons") }} mr
+                from {{ source("seed", "macro_rayons") }} as mr
                 where
-                    lower(query) like concat('%', lower(mr.macro_rayon), '%')
-                    or lower(query) like concat('%', lower(mr.rayon), '%')
+                    lower(query) like concat("%", lower(mr.macro_rayon), "%")
+                    or lower(query) like concat("%", lower(mr.rayon), "%")
             )
         then true
         else false
     end as search_query_input_is_generic
-from {{ ref("int_firebase__native_event_flattened") }} as e
+from {{ ref("int_firebase__native_event_flattened") }}
 where
     not is_anomaly
     {% if target.profile_name != "CI" %} and {% endif %}
     {% if is_incremental() %}
-        event_date
-        between date_sub(date("{{ ds() }}"), interval 3 day) and date("{{ ds() }}")
+        event_date between date_sub(
+            date("{{ ds() }}"), interval {{ var("lookback_days", 3) }} day
+        ) and date("{{ ds() }}")
     {% endif %}

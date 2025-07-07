@@ -5,6 +5,12 @@ from google.cloud import secretmanager
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
+ENVIRONMENT_LONG_NAME = {
+    "dev": "development",
+    "stg": "staging",
+    "prod": "production",
+}[ENVIRONMENT_SHORT_NAME]
+
 ANALYTICS_DATASET = f"analytics_{ENVIRONMENT_SHORT_NAME}"
 CLEAN_DATASET = f"clean_{ENVIRONMENT_SHORT_NAME}"
 INT_METABASE_DATASET = f"int_metabase_{ENVIRONMENT_SHORT_NAME}"
@@ -27,8 +33,12 @@ rules = [
             WHERE
                 parent_folder = 'interne'
             AND
+                (
                 days_since_last_execution >= {limit_inactivity_in_days['interne']}
-            OR (total_views_6_months <=  5 and nbr_dashboards = 0)
+                OR (total_views_6_months <=  5 and nbr_dashboards = 0)
+                )
+            AND date(card_creation_date) < date_sub(current_date(), interval 14 day)
+            AND clean_slug_reduced_level_2 != 'secretariat_general'
         """,
         "rule_alerting_sql": """
             WHERE
@@ -46,6 +56,7 @@ rules = [
                 parent_folder = 'operationnel'
             AND
                 days_since_last_execution >= {limit_inactivity_in_days['operationnel']}
+            AND date(card_creation_date) < date_sub(current_date(), interval 14 day)
         """,
     },
     {
@@ -56,8 +67,11 @@ rules = [
             WHERE
                 parent_folder = 'adhoc'
             AND
+                (
                 days_since_last_execution >= {limit_inactivity_in_days['adhoc']}
-            OR total_views_6_months <= 5
+                OR total_views_6_months <= 5
+                )
+            AND date(card_creation_date) < date_sub(current_date(), interval 14 day)
         """,
     },
 ]
@@ -71,3 +85,16 @@ def access_secret_data(project_id, secret_id, default=None):
         return response.payload.data.decode("UTF-8")
     except DefaultCredentialsError:
         return default
+
+
+METABASE_HOST = access_secret_data(
+    PROJECT_NAME, f"metabase_host_{ENVIRONMENT_LONG_NAME}"
+)
+
+CLIENT_ID = access_secret_data(
+    PROJECT_NAME, f"metabase-{ENVIRONMENT_LONG_NAME}_oauth2_client_id"
+)
+
+PASSWORD = access_secret_data(
+    PROJECT_NAME, f"metabase-api-secret-{ENVIRONMENT_SHORT_NAME}"
+)

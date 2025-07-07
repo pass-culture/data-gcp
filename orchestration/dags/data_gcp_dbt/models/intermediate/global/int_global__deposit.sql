@@ -93,6 +93,7 @@ select
     d.deposit_update_date,
     d.deposit_expiration_date,
     d.deposit_type,
+    d.deposit_reform_category,
     d.deposit_source,
     d.deposit_rank_asc,
     d.deposit_rank_desc,

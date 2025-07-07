@@ -3,6 +3,7 @@ version: 1
 sources:
   - name: raw
     schema: raw_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: adage
       - name: applicative_database_accessibility_provider
@@ -17,6 +18,21 @@ sources:
       - name: applicative_database_beneficiary_import
       - name: applicative_database_beneficiary_import_status
       - name: applicative_database_booking
+        data_tests:
+          - elementary.volume_anomalies:
+              tags: [elementary]
+              timestamp_column: booking_creation_date
+              anomaly_direction: both
+              detection_period:
+                period: day
+                count: 1
+              training_period:
+                period: month
+                count: 1
+              time_bucket:
+                period: day
+                count: 1
+              anomaly_sensitivity: 3
       - name: applicative_database_booking_finance_incident
       - name: applicative_database_boost_cinema_details
       - name: applicative_database_cashflow
@@ -52,7 +68,6 @@ sources:
       - name: applicative_database_feature
       - name: applicative_database_finance_event
       - name: applicative_database_finance_incident
-      - name: applicative_database_future_offer
       - name: applicative_database_google_places_info
       - name: applicative_database_headline_offer
       - name: applicative_database_internal_user
@@ -62,8 +77,6 @@ sources:
       - name: applicative_database_local_provider_event
       - name: applicative_database_mediation
       - name: applicative_database_national_program
-      - name: applicative_database_national_program_offer_link_history
-      - name: applicative_database_national_program_offer_template_link_history
       - name: applicative_database_login_device_history
       - name: applicative_database_payment_message
       - name: applicative_database_payment
@@ -72,6 +85,7 @@ sources:
       - name: applicative_database_offerer_tag_category_mapping
       - name: applicative_database_offerer_tag_category
       - name: applicative_database_offerer_tag
+      - name: applicative_database_offer_legacy
       - name: applicative_database_offer_validation_sub_rule
       - name: applicative_database_offer_validation_rule
       - name: applicative_database_offer_report
@@ -94,7 +108,6 @@ sources:
       - name: applicative_database_trusted_device
       - name: applicative_database_user
       - name: applicative_database_user_offerer
-      - name: applicative_database_user_pro_flags
       - name: applicative_database_user_pro_new_nav_state
       - name: applicative_database_validation_rule_collective_offer_link
       - name: applicative_database_validation_rule_collective_offer_template_link
@@ -143,13 +156,13 @@ sources:
       - name: subcategories
       - name: tiktok_video_detail
       - name: offer_types
-      - name: user_locations
       - name: user_address
       - name: zendesk_macro_usage
       - name: zendesk_ticket
-
+      - name: zendesk_survey_response
   - name: clean
     schema: clean_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: applicative_database_booking_history
       - name: applicative_database_stock_history
@@ -164,17 +177,17 @@ sources:
 
   - name: analytics
     schema: analytics_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: adage
-      - name: linked_offers
 
   - name: seed
     schema: seed_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: agg_partner_cultural_sector
       - name: epci
       - name: geo_iris
-      - name: institution_metadata
       - name: institution_metadata_aggregated_type
       - name: institutional_scholar_level
       - name: iris_france
@@ -182,16 +195,20 @@ sources:
       - name: macro_rayons
       - name: population_age_and_department_france_details
       - name: priority_local_authorities
+      - name: 2020_insee_iris_socio_demographics
       - name: 2024_insee_qpv
       - name: 2024_insee_qpv_population
+      - name: 2025_insee_code
       - name: qpi_mapping
       - name: rural_city_type_data
       - name: region_department
-      - name: siren_data_labels
+      - name: siren_main_business_labels
+      - name: siren_legal_category_labels
       - name: zrr
 
   - name: ml_preproc
     schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: default_item_cluster
       - name: item_embedding_extraction
@@ -206,9 +223,14 @@ sources:
         description: Partitionned table containing the history of the two tower user emebddings
       - name: two_tower_item_embedding_history
         description: Partitionned table containing the history of the two tower item emebddings
-
+  - name: ml_linkage
+    schema: ml_linkage_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
+    tables:
+      - name: item_offer_mapping
   - name: appsflyer_import
     schema: appsflyer_import_{{ var('ENV_SHORT_NAME') }}
+    database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
       - name: cohort_unified_timezone_versioned
       - name: installs

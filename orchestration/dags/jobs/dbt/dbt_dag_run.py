@@ -1,6 +1,6 @@
 import datetime
 
-from common.alerts import task_fail_slack_alert
+from common.callback import on_failure_base_callback
 from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -25,8 +25,8 @@ default_args = {
     "retries": 6,
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
-    "on_failure_callback": task_fail_slack_alert,
-    "on_skipped_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_base_callback,
+    "on_skipped_callback": on_failure_base_callback,
 }
 
 # Load manifest and process it
@@ -67,12 +67,13 @@ dag = DAG(
 )
 
 # Define initial and final tasks
-start = DummyOperator(task_id="start", dag=dag)
-end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed")
+start = DummyOperator(task_id="start", dag=dag, pool="dbt")
+end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed", pool="dbt")
 
 wait_for_raw = delayed_waiting_operator(
     dag=dag,
     external_dag_id="import_applicative_database",
+    pool="dbt",
 )
 
 wait_for_firebase = delayed_waiting_operator(
@@ -81,9 +82,15 @@ wait_for_firebase = delayed_waiting_operator(
     allowed_states=["success", "upstream_failed"],
     failed_states=["failed"],
 )
-end_wait = DummyOperator(task_id="end_wait", dag=dag, trigger_rule="none_failed")
-data_transfo_checkpoint = DummyOperator(task_id="data_transfo_checkpoint", dag=dag)
-snapshots_checkpoint = DummyOperator(task_id="snapshots_checkpoint", dag=dag)
+end_wait = DummyOperator(
+    task_id="end_wait", dag=dag, trigger_rule="none_failed", pool="dbt"
+)
+data_transfo_checkpoint = DummyOperator(
+    task_id="data_transfo_checkpoint", dag=dag, pool="dbt"
+)
+snapshots_checkpoint = DummyOperator(
+    task_id="snapshots_checkpoint", dag=dag, pool="dbt"
+)
 
 
 clean = BashOperator(
@@ -92,6 +99,8 @@ clean = BashOperator(
     env={
         "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
     },
+    pool="dbt",
+    dag=dag,
 )
 
 
@@ -105,6 +114,7 @@ compile = BashOperator(
     append_env=True,
     cwd=PATH_TO_DBT_PROJECT,
     dag=dag,
+    pool="dbt",
 )
 
 # Run the dbt DAG reconstruction
@@ -115,7 +125,7 @@ operator_dict = dbt_dag_reconstruction(
     dbt_snapshots,
     models_with_crit_test_dependencies,
     crit_test_parents,
-    compile,
+    clean,
 )
 
 ##### DAG orchestration
@@ -134,4 +144,5 @@ snapshot_tasks = list(operator_dict["snapshot_op_dict"].values())
 )
 start >> operator_dict["trigger_block"]
 end_wait >> snapshots_checkpoint >> snapshot_tasks
-(model_tasks + snapshot_tasks) >> compile >> clean >> end
+end_wait >> compile
+compile >> (model_tasks + snapshot_tasks) >> clean >> end

@@ -36,13 +36,13 @@ select
     u.user_is_in_education,
     u.user_is_in_qpv,
     u.current_deposit_type,
+    u.user_current_deposit_reform_category,
     u.user_epci,
     u.user_density_label,
     u.user_city_code,
     u.user_macro_density_label,
     u.user_region_name,
-    u.user_academy_name,
-
-from {{ ref("int_applicative__favorite") }} f
-left join {{ ref("int_global__offer") }} o on f.offer_id = o.offer_id
-left join {{ ref("int_global__user") }} u on u.user_id = f.user_id
+    u.user_academy_name
+from {{ ref("int_applicative__favorite") }} as f
+left join {{ ref("int_global__offer") }} as o on f.offer_id = o.offer_id
+left join {{ ref("int_global__user") }} as u on f.user_id = u.user_id

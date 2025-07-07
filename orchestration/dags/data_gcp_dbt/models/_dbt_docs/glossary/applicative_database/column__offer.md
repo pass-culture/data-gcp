@@ -3,16 +3,15 @@
 {% docs column__offer_product_humanized_id %} Human-readable identifier for the product associated with the offer. {%
 enddocs %}
 {% docs column__offer_id_at_providers %} Identifier for the offer at external providers. {% enddocs %}
-{% docs column__offer_is_synchronised %} Indicates whether the offer is synchronized with API systems and has a
-product_id. {% enddocs %}
-{% docs column__offer_description %} Offer description (synopsis, further details on the show) as provided by the
-cultural partner and displayed in app.{% enddocs %}
+{% docs column__offer_is_synchronised %} Indicates whether the offer is synchronized with API systems and has a product_id. {% enddocs %}
+{% docs column__offer_description %} Offer description (synopsis, further details on the show) as provided by thecultural partner and displayed in app.{% enddocs %}
 
 {% docs column__offer_name %} Name of the offer as it appears in the application. {% enddocs %}
 {% docs column__offer_category_id %} Identifier for the category of the offer. {% enddocs %}
+{% docs column__offer_category %} Identifier for the category of the offer. {% enddocs %}
 {% docs column__offer_creation_date %} Date when the offer was created. {% enddocs %}
 {% docs column__offer_created_at %} Timestamp when the offer was created. {% enddocs %}
-{% docs column__offer_updated_date %} Timestamp when the offer was last updated. {% enddocs %}
+{% docs column__offer_updated_at %} Timestamp when the offer was last updated. {% enddocs %}
 {% docs column__offer_is_duo %} Indicates if the offer can be booked as a duo. {% enddocs %}
 {% docs column__offer_is_underage_selectable %} Indicates if the offer is selectable for underage users. {% enddocs %}
 
@@ -20,18 +19,18 @@ cultural partner and displayed in app.{% enddocs %}
 
 {% docs column__offer_type %} Deprecated. {% enddocs %}
 {% docs column__offer_is_bookable %} Indicates if the offer is bookable. {% enddocs %}
-{% docs column__digital_goods %} Indicates if the offer includes digital goods. {% enddocs %}
-{% docs column__physical_goods %} Indicates if the offer includes physical goods. {% enddocs %}
-{% docs column__event %} Indicates if the offer is an event. {% enddocs %}
+{% docs column__offer_is_digital_goods %} Indicates if the offer includes digital goods. {% enddocs %}
+{% docs column__offer_is_physical_goods %} Indicates if the offer includes physical goods. {% enddocs %}
+{% docs column__offer_is_event %} Indicates if the offer is an event. {% enddocs %}
 {% docs column__offer_humanized_id %} Human-readable identifier for the offer used in various platforms. {% enddocs %}
 {% docs column__passculture_pro_url %} URL to the offer on PassCulture Pro. {% enddocs %}
 {% docs column__webapp_url %} URL to the offer on the web application. {% enddocs %}
 {% docs column__offer_subcategory_id %} Identifier for the subcategory of the offer. {% enddocs %}
 {% docs column__offer_url %} URL to the offer. {% enddocs %}
-{% docs column__is_national %} Indicates if the offer is available nationally. {% enddocs %}
+{% docs column__offer_is_national %} Indicates if the offer is available nationally. {% enddocs %}
 {% docs column__offer_is_numerical %} Indicates if the offer is digital (based on an url). {% enddocs %}
 {% docs column__offer_is_geolocated %} Indicates if the offer is geolocated. {% enddocs %}
-{% docs column__is_active %} Indicates if the offer is active. {% enddocs %}
+{% docs column__offer_is_active %} Indicates if the offer is active. {% enddocs %}
 {% docs column__offer_validation %} Validation status of the offer. {% enddocs %}
 {% docs column__author %} The offer's author (a book's author, a music's singer, a movie's director).{% enddocs %}
 {% docs column__performer %} Performers involved in this offer.{% enddocs %}
@@ -40,22 +39,23 @@ cultural partner and displayed in app.{% enddocs %}
 {% docs column__theater_room_id %} Allociné identifier for the theater room, if applicable. {% enddocs %}
 {% docs column__speaker %} Speaker or professor, if applicable. {% enddocs %}
 {% docs column__movie_type %} Type of movie, if applicable (e.g., feature film, short film). {% enddocs %}
-{% docs column__visa %} Film visa number, if applicable. {% enddocs %}
-{% docs column__release_date %} Release date, if applicable. {% enddocs %}
-{% docs column__genres %} Genres of the film, if applicable. {% enddocs %}
+{% docs column__movie_visa %} Film visa number, if applicable. {% enddocs %}
+{% docs column__movie_release_date %} Release date, if applicable. {% enddocs %}
+{% docs column__movie_genres %} Genres of the film, if applicable. {% enddocs %}
 {% docs column__companies %} Companies involved in the production or distribution of the film, if applicable. {% enddocs
 %}
-{% docs column__countries %} Countries where the film was produced, if applicable. {% enddocs %}
+{% docs column__movie_countries %} Countries where the film was produced, if applicable. {% enddocs %}
 {% docs column__casting %} Actors in the film, if applicable. {% enddocs %}
 {% docs column__isbn %} ISBN of the book, if applicable. {% enddocs %}
+{% docs column__offer_ean %} EAN of the offer, if applicable. {% enddocs %}
 {% docs column__rayon %} Literary genre, if applicable. {% enddocs %}
 {% docs column__offer_macro_rayon %} Semantic clustering of `column__rayon`. {% enddocs %}
 {% docs column__book_editor %} Editor of the book, if applicable. {% enddocs %}
 {% docs column__type %} Type of the offer. {% enddocs %}
 {% docs column__sub_type %} Sub-type of the offer. {% enddocs %}
 {% docs column__mediation_humanized_id %} Human-readable identifier for mediation. {% enddocs %}
-{% docs column__offer_publication_date %} Publication date of the offer. {% enddocs %}
-{% docs column__is_future_scheduled %} Indicates if the offer is scheduled for the future. {% enddocs %}
+{% docs column__is_future_scheduled %} Indicates if the offer's publication is scheduled in the future. {% enddocs %}
+{% docs column__is_coming_soon %} Indicates if the offer is published in the app but not bookable yet (coming soon). {% enddocs %}
 {% docs column__item_id %}Identifier for the item associated with the offer used internally by the data science team. {%
 enddocs %}
 {% docs column__search_group_name %} Legacy: Category displayed in the application {% enddocs %}
@@ -97,4 +97,6 @@ offer show sub type for shows. {% enddocs %}
 {% docs column__last_offer_creation_date %} Date of the last offer creation. {% enddocs %}
 {% docs column__first_headline_date %} First date of headline on the app venue page. {% enddocs %}
 {% docs column__last_headline_date %} Last date of headline on the app venue page. {% enddocs %}
-
+{% docs column__offer_publication_date %} Publication date of the offer on the app, bookable or not (coming soon). Data available only from July 2025. {% enddocs %}
+{% docs column__offer_finalization_date %} Finalization date of the offer creation. If offer_creation_date is not null and offer_finalization_date is null, then it is draft. Data available only from July 2025. {% enddocs %}
+{% docs column__scheduled_offer_bookability_date %} Date of bookability of the offer. This field is filled only if the offer is scheduled. {% enddocs %}

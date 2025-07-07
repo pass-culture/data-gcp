@@ -48,16 +48,10 @@ models:
         description: "{{ doc('column__offerer_name') }}"
       - name: venue_iris_internal_id
         description: "{{ doc('column__venue_iris_internal_id') }}"
-      - name: offer_id
-        description: "{{ doc('column__offer_id') }}"
       - name: collective_offer_creation_date
         description: "{{ doc('column__collective_offer_creation_date') }}"
       - name: collective_offer_date_updated
         description: "{{ doc('column__collective_offer_date_updated') }}"
-      - name: collective_offer_subcategory_id
-        description: "{{ doc('column__collective_offer_subcategory_id') }}"
-      - name: collective_offer_category_id
-        description: "{{ doc('column__collective_offer_category_id') }}"
       - name: collective_offer_format
         description: "{{ doc('column__collective_offer_format') }}"
       - name: collective_offer_students

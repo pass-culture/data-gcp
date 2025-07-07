@@ -5,23 +5,11 @@ import typer
 
 from metabase_api import MetabaseAPI
 from utils import (
-    ENVIRONMENT_SHORT_NAME,
+    CLIENT_ID,
     INT_METABASE_DATASET,
     METABASE_API_USERNAME,
-    PROJECT_NAME,
-    access_secret_data,
-)
-
-METABASE_HOST = access_secret_data(
-    PROJECT_NAME, f"metabase_host_{ENVIRONMENT_SHORT_NAME}"
-)
-
-CLIENT_ID = access_secret_data(
-    PROJECT_NAME, f"metabase-{ENVIRONMENT_SHORT_NAME}_oauth2_client_id"
-)
-
-PASSWORD = access_secret_data(
-    PROJECT_NAME, f"metabase-api-secret-{ENVIRONMENT_SHORT_NAME}"
+    METABASE_HOST,
+    PASSWORD,
 )
 
 

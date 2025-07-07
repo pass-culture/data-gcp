@@ -5,20 +5,19 @@ volumes:
 x-airflow-common: &airflow-common
   environment: &airflow-common-env
     LOCAL_ENV: ${LOCAL_ENV:-1}
-    GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
     GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
     AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-}
     AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: ${AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT:-}
     AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY:-}
     ENV_SHORT_NAME: ${ENV_SHORT_NAME:-}
     APPLICATIVE_EXTERNAL_CONNECTION_ID: ${APPLICATIVE_EXTERNAL_CONNECTION_ID:-}
-    GCE_SA: ${GCE_SA:-}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./plugins:/opt/airflow/plugins
     - ./airflow/config/airflow.cfg:/opt/airflow/airflow.cfg
     - ./airflow/logs:/opt/airflow/logs
     - ./dags/data_gcp_dbt:/opt/airflow/data_gcp_dbt
+    - ~/.config/gcloud:/root/.config/gcloud
   user: root
   depends_on:
     - postgres
@@ -45,7 +44,7 @@ services:
     ports:
       - 8080:8080
     healthcheck:
-      test: [ "CMD", "curl", "--fail", "http://airflow-webserver:8080/health" ]
+      test: [ "CMD", "curl", "--fail", "localhost:8080/health" ]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -58,10 +57,10 @@ services:
     <<: *airflow-common
     command: scheduler
     healthcheck:
-      test: [ "CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "http://airflow-webserver:8080"' ]
+      test: ["CMD", "curl", "--fail", "http://airflow-webserver:8080/health"]
       interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 10
     restart: "unless-stopped"
     depends_on:
       - airflow-init
@@ -87,3 +86,19 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+
+  create-pools:
+    <<: *airflow-common
+    image: airflow-custom-image:latest
+    entrypoint: ["uv"]
+    command: ["run","/opt/airflow/create_pools.py"]
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+      _AIRFLOW_WWW_USER_EMAIL: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}admin@example.com
+    depends_on:
+      - postgres
+      - airflow-webserver
+      - airflow-scheduler
+    restart: "no"

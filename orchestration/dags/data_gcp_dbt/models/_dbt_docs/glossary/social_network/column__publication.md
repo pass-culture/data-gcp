@@ -14,4 +14,5 @@
 {% docs column__publication_tag_macro_objective %} The high-level marketing goal of the publication. {% enddocs %}
 {% docs column__publication_tag_micro_objective %} The specific marketing objective of the publication. {% enddocs %}
 {% docs column__publication_tag_offer_category %} The category of the offer associated with the publication. {% enddocs %}
+{% docs column__publication_tag_region_name %} The region name associated with the publication. {% enddocs %}
 {% docs column__is_publication_tagged %} Boolean indicator (TRUE/FALSE) showing whether the publication is part of a tracked campaign. {% enddocs %}

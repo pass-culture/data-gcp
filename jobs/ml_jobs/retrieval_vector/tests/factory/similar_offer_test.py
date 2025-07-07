@@ -1,8 +1,9 @@
 import pytest
 
 from app.factory.similar_offer import SimilarOfferHandler
-from app.factory.tops import SearchByTopsHandler
 from app.models.prediction_request import PredictionRequest
+from app.models.prediction_result import SearchType
+from app.retrieval.constants import DISTANCE_COLUMN_NAME, SEARCH_TYPE_COLUMN_NAME
 
 
 @pytest.fixture
@@ -69,7 +70,7 @@ def request_data_multiple_items() -> PredictionRequest:
 )
 def test_similar_offer_handler(
     mock_connect_db,
-    mock_generate_fake_load_user_document,
+    mock_user_document_loading,
     mock_generate_fake_load_item_document,
     request_data_fixture,
     request,
@@ -84,8 +85,8 @@ def test_similar_offer_handler(
     handler = SimilarOfferHandler()
 
     # Call the handler
-    result = handler.handle(reco_client, request_data, fallback_client=None)
-    print(result)
+    result = handler.handle(reco_client, request_data)
+
     # Assertions
     assert len(result.predictions) == request_data.size
 
@@ -99,15 +100,22 @@ def test_similar_offer_handler(
             assert column in prediction
 
     # Ensure the predictions are sorted by _distance in increasing order
-    distances = [prediction["_distance"] for prediction in result.predictions]
+    distances = [prediction[DISTANCE_COLUMN_NAME] for prediction in result.predictions]
     assert distances == sorted(
         distances
-    ), "Predictions are not sorted by _distance in increasing order"
+    ), f"Predictions are not sorted by {DISTANCE_COLUMN_NAME} in increasing order"
+
+    # Ensure we are using fallback search type
+    for prediction in result.predictions:
+        if len(request_data.items) == 1:
+            assert prediction[SEARCH_TYPE_COLUMN_NAME] == SearchType.VECTOR
+        else:
+            assert prediction[SEARCH_TYPE_COLUMN_NAME] == SearchType.AGGREGATED_VECTORS
 
 
 def test_similar_offer_fallback_handler(
     mock_connect_db,
-    mock_generate_fake_load_user_document,
+    mock_user_document_loading,
     mock_generate_fake_load_item_document,
     request,
     reco_client,
@@ -133,9 +141,7 @@ def test_similar_offer_fallback_handler(
     handler = SimilarOfferHandler()
 
     # Call the handler
-    result = handler.handle(
-        reco_client, request_data, fallback_client=SearchByTopsHandler()
-    )
+    result = handler.handle(reco_client, request_data)
 
     # Assertions
     assert len(result.predictions) == request_data.size
@@ -145,8 +151,12 @@ def test_similar_offer_fallback_handler(
         for column in reco_client.detail_columns:
             assert column in prediction
 
-    # Ensure the predictions are sorted by _distance in increasing order
-    distances = [prediction["_distance"] for prediction in result.predictions]
+    # Ensure the predictions are sorted by DISTANCE_COLUMN_NAME in increasing order
+    distances = [prediction[DISTANCE_COLUMN_NAME] for prediction in result.predictions]
     assert distances == sorted(
         distances
-    ), "Predictions are not sorted by _distance in increasing order"
+    ), f"Predictions are not sorted by {DISTANCE_COLUMN_NAME} in increasing order"
+
+    # Ensure we are using fallback search type
+    for prediction in result.predictions:
+        assert prediction[SEARCH_TYPE_COLUMN_NAME] == SearchType.TOPS

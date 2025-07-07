@@ -5,8 +5,19 @@ models:
     columns:
       - name: offerer_id
         description: '{{ doc("column__offerer_id") }}'
+        data_tests:
+          - not_null:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+          - unique:
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: partner_id
         description: '{{ doc("column__partner_id") }}'
+        data_tests:
+          - not_null
       - name: offerer_name
         description: '{{ doc("column__offerer_name") }}'
       - name: offerer_creation_date
@@ -91,22 +102,41 @@ models:
         description: '{{ doc("column__total_bookable_offers") }}'
       - name: offerer_postal_code
         description: '{{ doc("column__offerer_postal_code") }}'
+        data_tests:
+          - not_null
       - name: offerer_department_code
         description: '{{ doc("column__offerer_department_code") }}'
+        data_tests:
+          - not_null
       - name: offerer_siren
         description: '{{ doc("column__offerer_siren") }}'
+        data_tests:
+          - not_null
+          - unique
       - name: offerer_region_name
         description: '{{ doc("column__offerer_region_name") }}'
+        data_tests:
+          - not_null:
+              where: "offerer_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)"
       - name: offerer_city
         description: '{{ doc("column__offerer_city") }}'
+        data_tests:
+          - not_null
       - name: academy_name
         description: '{{ doc("column__offerer_academy_name") }}'
+        data_tests:
+          - not_null:
+              where: "offerer_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)"
       - name: legal_unit_business_activity_code
         description: '{{ doc("column__offerer_legal_unit_business_activity_code") }}'
+        # data_tests:
+        #   - not_null
       - name: legal_unit_business_activity_label
         description: '{{ doc("column__offerer_legal_unit_business_activity_label") }}'
       - name: legal_unit_legal_category_code
         description: '{{ doc("column__offerer_legal_unit_legal_category_code") }}'
+        # data_tests:
+        #   - not_null
       - name: legal_unit_legal_category_label
         description: '{{ doc("column__offerer_legal_unit_legal_category_label") }}'
       - name: is_local_authority

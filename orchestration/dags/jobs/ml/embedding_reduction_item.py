@@ -1,14 +1,14 @@
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_FEATURES_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    MLFLOW_BUCKET_NAME,
+    ML_BUCKET_TEMP,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -17,6 +17,7 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
+from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
@@ -30,12 +31,12 @@ DATE = "{{ yyyymmdd(ds) }}"
 DAG_NAME = "embedding_reduction_item"
 default_args = {
     "start_date": datetime(2023, 8, 2),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 0,
     "retry_delay": timedelta(minutes=2),
 }
 dag_config = {
-    "STORAGE_PATH": f"gs://{MLFLOW_BUCKET_NAME}/embedding_reduction_items_{ENV_SHORT_NAME}/embedding_reduction_items_{DATE}/{DATE}_item_embbedding_data",
+    "STORAGE_PATH": f"gs://{ML_BUCKET_TEMP}/embedding_reduction_items_{ENV_SHORT_NAME}/run_{DATE}",
 }
 
 
@@ -43,7 +44,7 @@ with DAG(
     DAG_NAME,
     default_args=default_args,
     description="Reduce embeddings",
-    schedule_interval=get_airflow_schedule("0 23 * * 0"),  # every sunday
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_NAME]),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
@@ -85,6 +86,7 @@ with DAG(
     )
 
     export_bq = BigQueryInsertJobOperator(
+        project_id=GCP_PROJECT_ID,
         task_id="store_item_embbedding_data",
         configuration={
             "extract": {
@@ -113,6 +115,8 @@ with DAG(
         f"--output-prefix-table-name item_embedding "
         f"--reduction-config default ",
         retries=2,
+        deferrable=True,
+        poll_interval=300,
     )
 
     gce_instance_stop = DeleteGCEOperator(

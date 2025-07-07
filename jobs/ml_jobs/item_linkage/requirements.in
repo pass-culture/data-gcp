@@ -3,7 +3,6 @@ gcsfs>= 2023.1.0
 google-cloud-bigquery[pandas]
 google-cloud-secret-manager==2.20.0
 hnne==0.1.10
-lancedb==0.8.2
 loguru==0.6.0
 mlflow==2.20.1
 networkx==3.3
@@ -20,6 +19,7 @@ recordlinkage==0.16
 seaborn
 matplotlib
 networkx==3.3
+torch==2.6.0
 tornado==6.4.2
 tqdm==4.64.1
 typer==0.7.0

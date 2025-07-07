@@ -10,6 +10,8 @@ models:
         description: '{{ doc("column__ticket_created_date") }}'
       - name: ticket_id
         description: '{{ doc("column__ticket_id") }}'
+      - name: ticket_status
+        description: '{{ doc("column__ticket_status") }}'
       - name: zendesk_typology_type
         description: '{{ doc("column__zendesk_typology_type") }}'
       - name: zendesk_typology_id

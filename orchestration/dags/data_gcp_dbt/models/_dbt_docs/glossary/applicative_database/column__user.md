@@ -1,12 +1,12 @@
 {% docs column__user_academy_name %} Academy name associated with the user's registered address. {% enddocs %}
-{% docs column__user_activation_date %} Date when the user's account was activated. Corresponds to the first booking date for users in experiment phase, and to user creation date for all users after the experiment phase. {% enddocs %}
+{% docs column__user_activated_at %} Date when the user's account was activated. Corresponds to the first booking date for users in experiment phase, and to user creation date for all users after the experiment phase. {% enddocs %}
 {% docs column__user_activity %} User's registered activity (student, apprentice, unemployed etc). Registered at first grant deposit and updated when the user applies for its GRANT_18. {% enddocs %}
 {% docs column__user_age %} Current age of the user. {% enddocs %}
 {% docs column__user_birth_date %} Birth date of the user. {% enddocs %}
 {% docs column__user_civility %} Registered civility of the user (male, female). {% enddocs %}
 {% docs column__user_city %} City associated with the user's registered address. {% enddocs %}
 {% docs column__user_city_code %} The INSEE code of the city associated with the user's registered address. {% enddocs %}
-{% docs column__user_creation_date %} Date when the user account was created. {% enddocs %}
+{% docs column__user_created_at %} Date when the user account was created. {% enddocs %}
 {% docs column__user_department_code %} Department code associated with the user's registered address. {% enddocs %}
 {% docs column__user_department_name %} Department name associated with the user's registered address. {% enddocs %}
 {% docs column__user_density_label %} String column.Density label (urban, rural) of the user's registered address. {% enddocs %}
@@ -42,6 +42,8 @@
 {% docs column__user_last_deposit_amount %} Amount of the last deposit received by the user. {% enddocs %}
 {% docs column__user_first_deposit_type %} Type of the user's first deposit (GRANT_18 or GRANT_15_17). {% enddocs %}
 {% docs column__user_current_deposit_type %} Type of the user's current deposit. {% enddocs %}
+{% docs column__user_first_deposit_reform_category %} The first deposit reform category associated with the user. {% enddocs %}
+{% docs column__user_current_deposit_reform_category %} The current deposit reform category associated with the user. {% enddocs %}
 {% docs column__user_expiration_month %} Month of the user's credit expiration {% enddocs %}
 {% docs column__days_between_activation_date_and_first_booking_date %} Number of days between the user's activation date and their first booking date. {% enddocs %}
 {% docs column__days_between_activation_date_and_first_booking_paid %} Number of days between the user's activation date and their first paid booking. {% enddocs %}
@@ -52,3 +54,7 @@
 {% docs column__user_qpi_subcategories %} QPI stands for 'Initial Practice Questionnaires'. We asked young users about their cultural practices before using the Pass, resulting in a list of subcategories used during the cold start to display offers based on these initial practices. {% enddocs %}
 {% docs column__user_modified_at %} Timestamp at which user has updated its informations. {% enddocs %}
 {% docs column__user_age_at_booking %} The age of the user at the time of booking, calculated as the difference between the booking date and the user's date of birth. {% enddocs %}
+{% docs column__user_address_geocode_type %} Geocode precision type (street, municipality, etc) of the user's registered address. {% enddocs %}
+{% docs column__user_address_latitude %} Latitude of the user's registered address. {% enddocs %}
+{% docs column__user_address_longitude %} Longitude of the user's registered address. {% enddocs %}
+{% docs column__user_address_raw %} Raw address of the user's registered address. {% enddocs %}

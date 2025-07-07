@@ -10,6 +10,7 @@ from native import NativeCard
 from query import QueryCard
 from table import MetabaseTable, get_mapped_fields
 from utils import (
+    ENVIRONMENT_LONG_NAME,
     ENVIRONMENT_SHORT_NAME,
     INT_METABASE_DATASET,
     METABASE_API_USERNAME,
@@ -21,11 +22,11 @@ from utils import (
 MAPPINGS_PATH = Path("data/mappings.json")
 
 METABASE_HOST = access_secret_data(
-    PROJECT_NAME, f"metabase_host_{ENVIRONMENT_SHORT_NAME}"
+    PROJECT_NAME, f"metabase_host_{ENVIRONMENT_LONG_NAME}"
 )
 
 CLIENT_ID = access_secret_data(
-    PROJECT_NAME, f"metabase-{ENVIRONMENT_SHORT_NAME}_oauth2_client_id"
+    PROJECT_NAME, f"metabase-{ENVIRONMENT_LONG_NAME}_oauth2_client_id"
 )
 
 PASSWORD = access_secret_data(

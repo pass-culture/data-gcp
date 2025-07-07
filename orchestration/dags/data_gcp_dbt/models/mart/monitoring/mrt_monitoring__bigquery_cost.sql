@@ -9,6 +9,8 @@ select
         then 'Metabase'
         when gbc.user_email like '%composer%'
         then 'Composer'
+        when gbc.user_email like '%airflow%'
+        then 'Airflow'
         else 'Bigquery (adhoc)'
     end as origin,
     gbc.referenced_tables,
@@ -24,14 +26,14 @@ select
     sum(gbc.total_gigabytes_billed) as total_gigabytes,
     sum(gbc.total_bytes_billed) as total_bytes,
     sum(gbc.total_queries) as total_queries
-from {{ ref("int_gcp__bigquery_cost") }} gbc
-left join {{ ref("int_metabase__user") }} mu on mu.user_id = gbc.metabase_user_id
+from {{ ref("int_gcp__bigquery_cost") }} as gbc
+left join {{ ref("int_metabase__user") }} as mu on gbc.metabase_user_id = mu.user_id
 left join
-    {{ ref("mrt_monitoring__metabase_cost") }} mc
+    {{ ref("mrt_monitoring__metabase_cost") }} as mc
     on (
         date(mc.date) = date(gbc.creation_date)
-        and mc.metabase_hash = gbc.metabase_hash
-        and mc.metabase_user_id = gbc.metabase_user_id
+        and gbc.metabase_hash = mc.metabase_hash
+        and gbc.metabase_user_id = mc.metabase_user_id
     )
 
 where not cache_hit

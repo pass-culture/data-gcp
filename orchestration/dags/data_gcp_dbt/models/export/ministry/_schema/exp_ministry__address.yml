@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: exp_ministry__address
+    description: "{{ doc('description__exp_ministry__address') }}"
+    columns:
+      - name: address_id
+        description: "{{ doc('column__address_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['export']
+          - unique:
+              tags: ['export']
+      - name: address_ban
+        description: "{{ doc('column__address_ban_id') }}"
+      - name: address_insee_code
+        description: "{{ doc('column__address_insee_code') }}"
+      - name: address_street
+        description: "{{ doc('column__address_street') }}"
+      - name: address_postal_code
+        description: "{{ doc('column__address_postal_code') }}"
+        data_tests:
+          - not_null:
+              tags: ['export']
+      - name: address_city
+        description: "{{ doc('column__address_city') }}"
+      - name: address_latitude
+        description: "{{ doc('column__address_latitude') }}"
+      - name: address_longitude
+        description: "{{ doc('column__address_longitude') }}"
+      - name: address_department_code
+        description: "{{ doc('column__address_department_code') }}"

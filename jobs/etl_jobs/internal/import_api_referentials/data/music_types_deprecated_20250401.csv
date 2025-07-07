@@ -1,0 +1,201 @@
+domain,type,label,sub_type,sub_label
+music,501,Jazz,502.0,Acid Jazz
+music,501,Jazz,503.0,Avant-Garde Jazz
+music,501,Jazz,504.0,Bebop
+music,501,Jazz,505.0,Big Band
+music,501,Jazz,506.0,Blue Note
+music,501,Jazz,507.0,Cool Jazz
+music,501,Jazz,508.0,Crossover Jazz
+music,501,Jazz,509.0,Dixieland
+music,501,Jazz,510.0,Ethio Jazz
+music,501,Jazz,511.0,Fusion
+music,501,Jazz,512.0,Jazz Contemporain
+music,501,Jazz,513.0,Jazz Funk
+music,501,Jazz,514.0,Mainstream
+music,501,Jazz,515.0,Manouche
+music,501,Jazz,516.0,Traditionel
+music,501,Jazz,517.0,Vocal Jazz
+music,501,Jazz,518.0,Ragtime
+music,501,Jazz,519.0,Smooth
+music,501,Jazz,-1.0,Autre
+music,520,Blues,521.0,Blues Acoustique
+music,520,Blues,522.0,Blues Contemporain
+music,520,Blues,523.0,Blues Électrique
+music,520,Blues,524.0,Blues Rock
+music,520,Blues,525.0,Chicago Blues
+music,520,Blues,526.0,Classic Blues
+music,520,Blues,527.0,Country Blues
+music,520,Blues,528.0,Delta Blues
+music,520,Blues,529.0,Ragtime
+music,520,Blues,-1.0,Autre
+music,530,Reggae,531.0,2-Tone
+music,530,Reggae,532.0,Dancehall
+music,530,Reggae,533.0,Dub
+music,530,Reggae,534.0,Roots
+music,530,Reggae,535.0,Ska
+music,530,Reggae,536.0,Zouk
+music,530,Reggae,-1.0,Autre
+music,600,Classique,601.0,Avant-garde
+music,600,Classique,602.0,Baroque
+music,600,Classique,603.0,Chant
+music,600,Classique,604.0,Chorale
+music,600,Classique,605.0,Contemporain
+music,600,Classique,606.0,Expressioniste
+music,600,Classique,607.0,Impressioniste
+music,600,Classique,608.0,Médievale
+music,600,Classique,609.0,Minimaliste
+music,600,Classique,610.0,Moderne
+music,600,Classique,611.0,Oratorio
+music,600,Classique,612.0,Opéra
+music,600,Classique,613.0,Renaissance
+music,600,Classique,614.0,Romantique
+music,600,Classique,-1.0,Autre
+music,700,Musique du Monde,701.0,Africaine
+music,700,Musique du Monde,702.0,Afro Beat
+music,700,Musique du Monde,703.0,Afro Pop
+music,700,Musique du Monde,704.0,Alternativo
+music,700,Musique du Monde,705.0,Amérique du Nord
+music,700,Musique du Monde,706.0,Amérique du Sud
+music,700,Musique du Monde,707.0,Asiatique
+music,700,Musique du Monde,708.0,Baladas y Boleros
+music,700,Musique du Monde,709.0,Bossa Nova
+music,700,Musique du Monde,710.0,Brésilienne
+music,700,Musique du Monde,711.0,Cajun
+music,700,Musique du Monde,712.0,Calypso
+music,700,Musique du Monde,713.0,Caribéenne
+music,700,Musique du Monde,714.0,Celtique
+music,700,Musique du Monde,715.0,Cumbia
+music,700,Musique du Monde,716.0,Flamenco
+music,700,Musique du Monde,717.0,Grècque
+music,700,Musique du Monde,718.0,Indienne
+music,700,Musique du Monde,719.0,Latin Jazz
+music,700,Musique du Monde,720.0,Moyen-Orient
+music,700,Musique du Monde,721.0,Musique Latine Contemporaine
+music,700,Musique du Monde,722.0,Nuevo Flamenco
+music,700,Musique du Monde,723.0,Pop Latino
+music,700,Musique du Monde,724.0,Portuguese fado
+music,700,Musique du Monde,725.0,Rai
+music,700,Musique du Monde,726.0,Salsa
+music,700,Musique du Monde,727.0,Tango Argentin
+music,700,Musique du Monde,728.0,Yiddish
+music,700,Musique du Monde,-1.0,Autre
+music,800,Pop,801.0,Britpop
+music,800,Pop,802.0,Bubblegum
+music,800,Pop,803.0,Dance Pop
+music,800,Pop,804.0,Dream Pop 
+music,800,Pop,805.0,Electro Pop
+music,800,Pop,806.0,Indie Pop
+music,800,Pop,808.0,J-Pop
+music,800,Pop,809.0,K-Pop
+music,800,Pop,810.0,Pop Punk
+music,800,Pop,811.0,Pop/Rock
+music,800,Pop,812.0,Power Pop 
+music,800,Pop,813.0,Soft Rock
+music,800,Pop,814.0,Synthpop 
+music,800,Pop,815.0,Teen Pop
+music,800,Pop,-1.0,Autre
+music,820,Rock,821.0,Acid Rock
+music,820,Rock,822.0,Arena Rock
+music,820,Rock,823.0,Art Rock
+music,820,Rock,824.0,College Rock
+music,820,Rock,825.0,Glam Rock
+music,820,Rock,826.0,Grunge
+music,820,Rock,827.0,Hard Rock
+music,820,Rock,828.0,Indie Rock
+music,820,Rock,829.0,Lo-fi
+music,820,Rock,830.0,Prog-Rock
+music,820,Rock,831.0,Psychedelic
+music,820,Rock,832.0,Rock & Roll
+music,820,Rock,833.0,Rock Experimental
+music,820,Rock,834.0,Rockabilly
+music,820,Rock,835.0,Shoegaze
+music,820,Rock,836.0,Rock Electro
+music,820,Rock,-1.0,Autre
+music,840,Metal,841.0,Black Metal
+music,840,Metal,842.0,Death Metal
+music,840,Metal,843.0,Doom Metal
+music,840,Metal,844.0,Gothic
+music,840,Metal,845.0,Metal Core
+music,840,Metal,846.0,Metal Progressif
+music,840,Metal,847.0,Trash Metal
+music,840,Metal,848.0,Metal Industriel
+music,840,Metal,849.0,Fusion
+music,840,Metal,-1.0,Autre
+music,850,Punk,851.0,Post Punk
+music,850,Punk,852.0,Hardcore Punk
+music,850,Punk,853.0,Afro Punk
+music,850,Punk,854.0,Grindcore
+music,850,Punk,855.0,Noise Rock
+music,850,Punk,-1.0,Autre
+music,860,Folk,861.0,Folk Contemporaine
+music,860,Folk,862.0,Indie Folk
+music,860,Folk,863.0,Folk Rock
+music,860,Folk,864.0,New Acoustic
+music,860,Folk,865.0,Folk Traditionelle
+music,860,Folk,866.0,Tex-Mex
+music,860,Folk,-1.0,Autre
+music,870,Country,871.0,Country Alternative
+music,870,Country,872.0,Americana
+music,870,Country,873.0,Bluegrass
+music,870,Country,874.0,Country Contemporaine
+music,870,Country,875.0,Gospel Country
+music,870,Country,876.0,Country Pop
+music,870,Country,-1.0,Autre
+music,880,Electro,881.0,Bitpop
+music,880,Electro,882.0,Breakbeat
+music,880,Electro,883.0,Chillwave
+music,880,Electro,884.0,Dance
+music,880,Electro,885.0,Downtempo
+music,880,Electro,886.0,Drum & Bass
+music,880,Electro,887.0,Dubstep
+music,880,Electro,888.0,Electro Experimental
+music,880,Electro,889.0,Electronica
+music,880,Electro,890.0,Garage
+music,880,Electro,891.0,Grime
+music,880,Electro,892.0,Hard Dance
+music,880,Electro,893.0,Hardcore
+music,880,Electro,894.0,House
+music,880,Electro,895.0,Industriel
+music,880,Electro,896.0,Lounge
+music,880,Electro,897.0,Techno
+music,880,Electro,898.0,Trance
+music,880,Electro,-1.0,Autre
+music,900,Hip-Hop/Rap,901.0,Bounce
+music,900,Hip-Hop/Rap,902.0,Hip Hop
+music,900,Hip-Hop/Rap,903.0,Rap Alternatif
+music,900,Hip-Hop/Rap,905.0,Rap East Coast
+music,900,Hip-Hop/Rap,906.0,Rap Français
+music,900,Hip-Hop/Rap,907.0,Rap Gangsta
+music,900,Hip-Hop/Rap,908.0,Rap Hardcore
+music,900,Hip-Hop/Rap,909.0,Rap Latino
+music,900,Hip-Hop/Rap,910.0,Rap Old School
+music,900,Hip-Hop/Rap,911.0,Rap Underground
+music,900,Hip-Hop/Rap,912.0,Rap West Coast
+music,900,Hip-Hop/Rap,913.0,Trap
+music,900,Hip-Hop/Rap,914.0,Trip Hop
+music,900,Hip-Hop/Rap,921.0,R&B Contemporain
+music,900,Hip-Hop/Rap,922.0,Disco
+music,900,Hip-Hop/Rap,923.0,Doo Wop
+music,900,Hip-Hop/Rap,924.0,Funk
+music,900,Hip-Hop/Rap,925.0,Soul
+music,900,Hip-Hop/Rap,926.0,Motown
+music,900,Hip-Hop/Rap,927.0,Neo Soul
+music,900,Hip-Hop/Rap,928.0,Soul Psychedelique
+music,900,Hip-Hop/Rap,-1.0,Autre
+music,930,Gospel,931.0,Spiritual Gospel
+music,930,Gospel,932.0,Traditional Gospel
+music,930,Gospel,933.0,Southern Gospel
+music,930,Gospel,934.0,Contemporary Gospel
+music,930,Gospel,935.0,Bluegrass Gospel
+music,930,Gospel,936.0,Blues Gospel
+music,930,Gospel,937.0,Country Gospel
+music,930,Gospel,938.0,Hybrid Gospel
+music,930,Gospel,-1.0,Autre
+music,1000,Chansons / Variétés,1001.0,Musette
+music,1000,Chansons / Variétés,1002.0,Chanson Française
+music,1000,Chansons / Variétés,1003.0,Music Hall
+music,1000,Chansons / Variétés,1004.0,Folklore français
+music,1000,Chansons / Variétés,1005.0,Chanson à texte
+music,1000,Chansons / Variétés,1006.0,Slam
+music,1000,Chansons / Variétés,-1.0,Autre
+music,-1,Autre,-1.0,Autre

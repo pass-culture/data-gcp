@@ -12,9 +12,16 @@ models:
       - name: deposit_amount
         description: '{{ doc("column__deposit_amount") }}'
         data_type: NUMERIC
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 500
+              inclusive: true
       - name: user_id
         description: '{{ doc("column__user_id") }}'
         data_type: STRING
+        data_tests:
+          - not_null
       - name: user_civility
         description: '{{ doc("column__user_civility") }}'
         data_type: STRING
@@ -64,7 +71,7 @@ models:
         description: '{{ doc("column__user_age") }}'
         data_type: INT64
       - name: user_creation_date
-        description: '{{ doc("column__user_creation_date") }}'
+        description: '{{ doc("column__user_created_at") }}'
         data_type: DATE
       - name: deposit_source
         description: '{{ doc("column__deposit_source") }}'
@@ -80,6 +87,9 @@ models:
         data_type: DATE
       - name: deposit_type
         description: '{{ doc("column__deposit_type") }}'
+        data_type: STRING
+      - name: deposit_reform_category
+        description: '{{ doc("column__deposit_reform_category") }}'
         data_type: STRING
       - name: deposit_rank_asc
         description: '{{ doc("column__deposit_rank_asc") }}'

@@ -2,8 +2,6 @@ import string
 from typing import TypedDict
 
 import pandas as pd
-import rapidfuzz
-from unidecode import unidecode
 
 from constants import TOTAL_OFFER_COUNT
 
@@ -120,27 +118,6 @@ def _extract_first_artist_comma(artist_df: pd.DataFrame):
     )
 
 
-def extract_first_artist(artist_df: pd.DataFrame):
-    """
-    Extracts the first artist from the given DataFrame.
-
-    Args:
-        artist_df (pd.DataFrame): The DataFrame containing artist information.
-            Required columns: artist_name.
-
-    Returns:
-        pd.DataFrame: The DataFrame with the first artist extracted.
-    """
-    return (
-        artist_df.pipe(_extract_first_artist_pattern)
-        .pipe(_extract_first_artist_comma)
-        .assign(first_artist=lambda df: df.first_artist.str.strip())
-    )
-
-
-### Filtering
-
-
 def _remove_single_characters(artist_df: pd.DataFrame) -> pd.DataFrame:
     """
     Removes single characters from the 'first_artist' column of the input DataFrame.
@@ -154,10 +131,32 @@ def _remove_single_characters(artist_df: pd.DataFrame) -> pd.DataFrame:
     """
     pattern = r"\b[a-zA-Z]\b(?!\.)"
     return artist_df.assign(
-        first_artist=lambda df: df.first_artist.str.replace(pattern, "", regex=True)
+        first_artist=lambda df: df.first_artist.str.strip()
+        .str.replace(pattern, "", regex=True)
         .str.replace(r"\s+", " ", regex=True)
         .str.strip()
     )
+
+
+def extract_first_artist(artist_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Extracts the first artist from the given DataFrame.
+
+    Args:
+        artist_df (pd.DataFrame): The DataFrame containing artist information.
+            Required columns: artist_name.
+
+    Returns:
+        pd.DataFrame: The DataFrame with the first artist extracted.
+    """
+    return (
+        artist_df.pipe(_extract_first_artist_pattern)
+        .pipe(_extract_first_artist_comma)
+        .pipe(_remove_single_characters)
+    )
+
+
+### Filtering
 
 
 def _extract_artist_word_count(artist_df: pd.DataFrame) -> pd.DataFrame:
@@ -195,15 +194,26 @@ def _filter_artists(
     artist_df: pd.DataFrame, filtering_params: FilteringParamsType
 ) -> bool:
     """
-    Filters artists based on specified criteria.
+    Filters the artist DataFrame based on various criteria.
+
+    The function filters out artists if:
+    - The 'first_artist' name contains patterns like "word/word" or "word+word".
+    - The 'artist_word_count' is below 'min_word_count' AND either 'total_offer_count' is below 'min_offer_count'
+      OR 'total_booking_count' is below 'min_booking_count'.
+    - The 'artist_word_count' is above 'max_word_count'.
+    - The 'first_artist' name is empty or NaN.
 
     Args:
-        artist_df (pd.DataFrame): The DataFrame containing artist information.
-            Required columns: first_artist, artist_word_count, total_offer_count, total_booking_count.
-        filtering_params (FilteringParamsType): A dictionary of filtering parameters.
+        artist_df (pd.DataFrame): The DataFrame to filter.
+            Required columns: first_artist, artist_word_count, TOTAL_OFFER_COUNT, total_booking_count.
+        filtering_params (FilteringParamsType): A dictionary containing filtering parameters:
+            - min_word_count (int): Minimum word count for an artist name.
+            - max_word_count (int): Maximum word count for an artist name.
+            - min_offer_count (int): Minimum total offer count for an artist.
+            - min_booking_count (int): Minimum total booking count for an artist.
 
     Returns:
-        pd.DataFrame: The filtered DataFrame containing artists that pass the filtering criteria.
+        pd.DataFrame: The filtered DataFrame, containing only the rows that do not meet the filtering criteria.
     """
     pattern = "[\w\-\.]+\/[\w-]+|\+"  # pattern for multi artists separated by + or /
 
@@ -217,9 +227,15 @@ def _filter_artists(
     too_many_words_indexes = (
         artist_df.artist_word_count > filtering_params["max_word_count"]
     )
+    empty_preprocessed_artist_names = (artist_df.preprocessed_artist_name == "") | (
+        artist_df.preprocessed_artist_name.isna()
+    )
 
     should_be_filtered = (
-        matching_patterns_indexes | too_few_words_indexes | too_many_words_indexes
+        matching_patterns_indexes
+        | too_few_words_indexes
+        | too_many_words_indexes
+        | empty_preprocessed_artist_names
     )
 
     return artist_df.loc[~should_be_filtered]
@@ -239,12 +255,8 @@ def filter_artists(
     Returns:
         pd.DataFrame: The filtered artist DataFrame.
     """
-    return (
-        artist_df.pipe(_extract_artist_word_count)
-        .pipe(
-            _remove_single_characters
-        )  # TODO: test without this line once we have metrics
-        .pipe(_filter_artists, filtering_params=filtering_params)
+    return artist_df.pipe(_extract_artist_word_count).pipe(
+        _filter_artists, filtering_params=filtering_params
     )
 
 
@@ -263,7 +275,32 @@ def format_names(artist_df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: The DataFrame with formatted artist names.
     """
     return artist_df.assign(
-        preprocessed_artist_name=lambda df: df.first_artist.map(unidecode).map(
-            lambda s: " ".join(sorted(rapidfuzz.utils.default_process(s).split()))
-        )
+        preprocessed_first_artist=lambda df: normalize_string_series(
+            df.first_artist.astype(str)
+        ),
+        part_1=lambda df: df.preprocessed_first_artist.str.split(",").str[0],
+        part_2=lambda df: df.preprocessed_first_artist.str.split(",").str[1],
+        preprocessed_artist_name=lambda df: df.part_1.where(
+            df.part_2.isna(), df.part_2.astype(str) + " " + df.part_1.astype(str)
+        ).str.strip(),
+    ).drop(columns=["part_1", "part_2", "preprocessed_first_artist"])
+
+
+def normalize_string_series(s: pd.Series) -> pd.Series:
+    """
+    Normalize a pandas Series of strings by converting to lowercase, removing accents,
+    encoding to ASCII, stripping whitespace, and removing periods.
+    Args:
+        s (pd.Series): A pandas Series containing strings to be normalized.
+    Returns:
+        pd.Series: A pandas Series with normalized strings.
+    """
+
+    return (
+        s.str.lower()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+        .str.strip()
+        .str.replace(".", "")
     )

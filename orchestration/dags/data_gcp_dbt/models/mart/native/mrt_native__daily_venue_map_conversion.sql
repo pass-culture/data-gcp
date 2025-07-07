@@ -7,7 +7,7 @@
                 "data_type": "date",
                 "granularity": "day",
             },
-            on_schema_change="sync_all_columns",
+            on_schema_change="append_new_columns",
         )
     )
 }}
@@ -26,9 +26,9 @@ with
             offer.venue_id,
             offer.offer_id,
             offer.duration_seconds
-        from {{ ref("int_firebase__native_venue_map_event") }} offer
+        from {{ ref("int_firebase__native_venue_map_event") }} as offer
         inner join
-            {{ ref("int_firebase__native_venue_map_event") }} preview using (
+            {{ ref("int_firebase__native_venue_map_event") }} as preview using (
                 unique_session_id, venue_id
             )
         where
@@ -62,7 +62,7 @@ with
             duration_seconds
         from {{ ref("int_firebase__native_venue_map_event") }}
         where
-            event_name = 'ConsultOffer' and origin in ("venuemap", "venueMap")
+            event_name = 'ConsultOffer' and origin in ('venuemap', 'venueMap')
             {% if is_incremental() %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
@@ -75,6 +75,7 @@ with
             )
             = 1
     ),
+
     venue_map_bookings as (  -- Les réservations
         select
             unique_session_id,
@@ -86,12 +87,12 @@ with
             ne.origin,
             ne.venue_id,
             ne.offer_id,
-            safe_cast(ne.duration as int64) as duration_seconds,
-            delta_diversification
-        from {{ ref("int_firebase__native_event") }} ne
+            db.diversity_score as delta_diversification,
+            safe_cast(ne.duration as int64) as duration_seconds
+        from {{ ref("int_firebase__native_event") }} as ne
         inner join venue_map_consultations using (unique_session_id, offer_id, user_id)
         left join
-            {{ ref("diversification_booking") }} db on db.booking_id = ne.booking_id
+            {{ ref("mrt_global__booking") }} as db on ne.booking_id = db.booking_id
         where
             ne.event_name = 'BookingConfirmation'
             and venue_map_consultations.event_name = 'ConsultOffer'
@@ -103,6 +104,7 @@ with
                 )
             {% endif %}
     ),
+
     all_events as (  -- On reprend les events "enrichis"
         select
             unique_session_id,
@@ -119,11 +121,11 @@ with
         from {{ ref("int_firebase__native_venue_map_event") }}
         where
             event_name in (
-                "ConsultVenueMap",
-                "VenueMapSessionDuration",
-                "VenueMapSeenDuration",
-                "PinMapPressed",
-                "ConsultVenue"
+                'ConsultVenueMap',
+                'VenueMapSessionDuration',
+                'VenueMapSeenDuration',
+                'PinMapPressed',
+                'ConsultVenue'
             )
             {% if is_incremental() %}
                 and event_date

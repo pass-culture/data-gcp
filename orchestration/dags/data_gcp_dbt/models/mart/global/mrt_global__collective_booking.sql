@@ -2,12 +2,8 @@ select
     cb.collective_booking_id,
     cb.collective_stock_id,
     cb.is_used_collective_booking,
-    co.stock_id,
     co.collective_offer_id,
-    co.offer_id,
     co.collective_offer_name,
-    co.collective_offer_subcategory_id,
-    co.collective_offer_category_id,
     co.collective_offer_format,
     co.venue_id,
     co.venue_name,
@@ -21,6 +17,7 @@ select
     co.collective_stock_price as booking_amount,
     co.collective_stock_number_of_tickets,
     co.collective_stock_beginning_date_time,
+    co.collective_stock_end_date_time,
     cb.educational_institution_id,
     cb.educational_year_id,
     ey.scholar_year,
@@ -61,23 +58,21 @@ select
     cb.collective_booking_rank_asc,
     cb.collective_booking_rank_desc,
     co.collective_offer_image_id,
-    case
-        when
-            (
-                cast(ey.educational_year_beginning_date as date) <= current_date
-                and cast(ey.educational_year_expiration_date as date) >= current_date
-            )
-        then true
-        else false
-    end as is_current_year_booking,
+    coalesce(
+        (
+            cast(ey.educational_year_beginning_date as date) <= current_date
+            and cast(ey.educational_year_expiration_date as date) >= current_date
+        ),
+        false
+    ) as is_current_year_booking
 from {{ ref("int_applicative__collective_booking") }} as cb
 inner join
     {{ ref("int_global__collective_offer") }} as co
-    on co.collective_stock_id = cb.collective_stock_id
+    on cb.collective_stock_id = co.collective_stock_id
 inner join
     {{ source("raw", "applicative_database_educational_year") }} as ey
-    on ey.adage_id = cb.educational_year_id
+    on cb.educational_year_id = ey.adage_id
 inner join
     {{ ref("int_applicative__educational_institution") }} as educational_institution
-    on educational_institution.educational_institution_id
-    = cb.educational_institution_id
+    on cb.educational_institution_id
+    = educational_institution.educational_institution_id

@@ -7,7 +7,7 @@
                 "data_type": "date",
                 "granularity": "day",
             },
-            on_schema_change="sync_all_columns",
+            on_schema_change="append_new_columns",
         )
     )
 }}
@@ -50,10 +50,10 @@ with
             co.unique_search_id,
             co.offer_id,
             co.consult_timestamp,
-            db.delta_diversification
-        from consulted_offers co
-        join
-            {{ ref("int_firebase__native_event") }} ne
+            booking.diversity_score as delta_diversification
+        from consulted_offers as co
+        inner join
+            {{ ref("int_firebase__native_event") }} as ne
             on co.unique_session_id = ne.unique_session_id
             and co.offer_id = ne.offer_id
             and ne.event_name = 'BookingConfirmation'
@@ -65,10 +65,10 @@ with
                 )
             {% endif %}
         left join
-            {{ ref("diversification_booking") }} db
-            on db.user_id = co.user_id
-            and db.offer_id = co.offer_id
-            and date(co.consult_timestamp) = date(db.booking_creation_date)
+            {{ ref("mrt_global__booking") }} as booking
+            on co.user_id = booking.user_id
+            and co.offer_id = booking.offer_id
+            and date(co.consult_timestamp) = date(booking.booking_creation_date)
         qualify
             row_number() over (
                 partition by co.unique_search_id, co.unique_session_id, co.offer_id
@@ -216,21 +216,24 @@ with
             ) as nb_venue_playlist_displayed_on_search_results,
             count(
                 distinct case when ne.event_name = 'ConsultVenue' then ne.venue_id end
-            ) as nb_venues_consulted
-        from last_search ls
+            ) as nb_venues_consulted,
+            max(
+                coalesce(ne.event_name = 'ExtendSearchRadiusClicked', false)
+            ) as has_extended_search_radius
+        from last_search as ls
         left join
-            {{ ref("int_firebase__native_event") }} ne
+            {{ ref("int_firebase__native_event") }} as ne
             on ne.event_name in (
                 'NoSearchResult',
                 'ConsultOffer',
                 'HasAddedOfferToFavorites',
                 'VenuePlaylistDisplayedOnSearchResults',
-                'ConsultVenue'
+                'ConsultVenue',
+                'ExtendSearchRadiusClicked'
             )
-            and ne.unique_session_id = ls.unique_session_id
-            and ne.unique_search_id = ls.unique_search_id
-            and ne.event_date = ls.first_date
-
+            and ls.unique_session_id = ne.unique_session_id
+            and ls.unique_search_id = ne.unique_search_id
+            and ls.first_date = ne.event_date
         group by ls.unique_session_id, ls.unique_search_id
     ),
 
@@ -238,25 +241,26 @@ with
     agg_search_data as (
         select
             ls.*,
-            fs.first_filter_applied,
-            cm.* except (unique_search_id, unique_session_id)
-        from last_search ls
-        inner join first_search fs using (unique_search_id, unique_session_id)
-        inner join conversion_metrics cm using (unique_search_id, unique_session_id)
+            cm.* except (unique_search_id, unique_session_id),
+            fs.first_filter_applied
+        from last_search as ls
+        inner join first_search as fs using (unique_search_id, unique_session_id)
+        inner join conversion_metrics as cm using (unique_search_id, unique_session_id)
     ),
 
     -- Step 8: Categorizing Search Type and Calculating Additional Metrics
     final_data as (
         select
             asd.*,
-            lead(first_date) over (
-                partition by unique_session_id order by first_timestamp
-            )
-            is not null as made_another_search,
             bpsi.nb_offers_booked,
-            bpsi.total_diversification
-        from agg_search_data asd
-        left join bookings_aggregated bpsi using (unique_search_id, unique_session_id)
+            bpsi.total_diversification,
+            lead(asd.first_date) over (
+                partition by bpsi.unique_session_id order by asd.first_timestamp
+            )
+            is not null as made_another_search
+        from agg_search_data as asd
+        left join
+            bookings_aggregated as bpsi using (unique_search_id, unique_session_id)
     )
 
 select
@@ -285,6 +289,7 @@ select
     nb_iterations_search,
     nb_venue_playlist_displayed_on_search_results,
     nb_venues_consulted,
+    has_extended_search_radius,
     made_another_search,
     search_query_input_is_generic,
     nb_offers_booked,

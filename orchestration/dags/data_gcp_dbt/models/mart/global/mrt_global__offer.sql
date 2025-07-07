@@ -71,7 +71,6 @@ select
     venue_is_permanent,
     partner_id,
     offerer_id,
-    venue_managing_offerer_id,
     offerer_name,
     venue_type_label,
     venue_iris_internal_id,
@@ -79,9 +78,12 @@ select
     is_local_authority,
     offer_publication_date,
     is_future_scheduled,
+    is_coming_soon,
     total_headlines,
     is_headlined,
     first_headline_date,
-    last_headline_date
-from {{ ref("int_global__offer") }} as o
+    last_headline_date,
+    offer_finalization_date,
+    scheduled_offer_bookability_date
+from {{ ref("int_global__offer") }}
 where true and offer_validation = 'APPROVED' and venue_id is not null

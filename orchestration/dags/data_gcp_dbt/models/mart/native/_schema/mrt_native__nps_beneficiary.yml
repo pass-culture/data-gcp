@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: mrt_native__nps_beneficiary
+    description: "{{ doc('description__mrt_native__nps_beneficiary') }}"
+    columns:
+      - name: response_date
+        description: "{{ doc('column__qualtrics_response_date') }}"
+      - name: user_id
+        description: "{{ doc('column__user_id') }}"
+      - name: response_id
+        description: "{{ doc('column__qualtrics_response_id') }}"
+      - name: deposit_type
+        description: "{{ doc('column__deposit_type') }}"
+      - name: user_civility
+        description: "{{ doc('column__user_civility') }}"
+      - name: user_region_name
+        description: "{{ doc('column__user_region_name') }}"
+      - name: user_activity
+        description: "{{ doc('column__user_activity') }}"
+      - name: user_is_in_qpv
+        description: "{{ doc('column__user_is_in_qpv') }}"
+      - name: total_bookings
+        description: "{{ doc('column__total_bookings') }}"
+      - name: response_rating
+        description: "{{ doc('column__qualtrics_response_rating') }}"
+      - name: user_seniority
+        description: "{{ doc('column__user_seniority') }}"

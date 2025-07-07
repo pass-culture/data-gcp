@@ -14,6 +14,10 @@ models:
         description: '{{ doc("column__ticket_updated_at") }}'
       - name: ticket_level
         description: '{{ doc("column__ticket_level") }}'
+      - name: ticket_status
+        description: '{{ doc("column__ticket_status") }}'
+      - name: recipient
+        description: '{{ doc("column__ticket_recipient") }}'
       - name: user_id
         description: '{{ doc("column__user_id") }}'
       - name: technical_partner

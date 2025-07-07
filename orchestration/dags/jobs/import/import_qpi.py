@@ -2,7 +2,7 @@ import time
 from datetime import datetime, timedelta
 
 from common import macros
-from common.alerts import task_fail_slack_alert
+from common.callback import on_failure_base_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -41,7 +41,7 @@ QPI_ANSWERS_TABLE = "qpi_answers_v4"
 
 default_args = {
     "start_date": datetime(2020, 12, 1),
-    "on_failure_callback": task_fail_slack_alert,
+    "on_failure_callback": on_failure_base_callback,
     "retries": 1,
     "retry_delay": timedelta(minutes=2),
 }
@@ -82,6 +82,7 @@ with DAG(
     empty = DummyOperator(task_id="Empty")
 
     import_historical_answers_to_bigquery = GCSToBigQueryOperator(
+        project_id=GCP_PROJECT_ID,
         task_id="import_historical_answers_to_bigquery",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=["QPI_historical/qpi_answers_historical_*.parquet"],
@@ -93,6 +94,7 @@ with DAG(
 
     # it fetches the file corresponding to the initial execution date of the dag and not the day the task is run.
     import_answers_to_bigquery = GCSToBigQueryOperator(
+        project_id=GCP_PROJECT_ID,
         task_id="import_answers_to_bigquery",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=["QPI_exports/qpi_answers_{{ ds_nodash }}/*.jsonl"],
@@ -104,6 +106,7 @@ with DAG(
     )
 
     append_to_raw = BigQueryInsertJobOperator(
+        project_id=GCP_PROJECT_ID,
         task_id="add_tmp_table_to_raw",
         configuration={
             "query": {

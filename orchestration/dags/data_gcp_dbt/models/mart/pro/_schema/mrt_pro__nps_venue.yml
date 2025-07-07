@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: mrt_pro__nps_venue
+    description: "{{ doc('description__mrt_pro__nps_venue') }}"
+    columns:
+      - name: response_date
+        description: "{{ doc('column__qualtrics_response_date') }}"
+      - name: venue_id
+        description: "{{ doc('column__venue_id') }}"
+      - name: response_id
+        description: "{{ doc('column__qualtrics_response_id') }}"
+      - name: venue_region_name
+        description: "{{ doc('column__venue_region_name') }}"
+      - name: venue_type_label
+        description: "{{ doc('column__venue_type_label') }}"
+      - name: venue_is_permanent
+        description: "{{ doc('column__venue_is_permanent') }}"
+      - name: response_rating
+        description: "{{ doc('column__qualtrics_response_rating') }}"
+      - name: venue_seniority
+        description: "{{ doc('column__venue_seniority') }}"

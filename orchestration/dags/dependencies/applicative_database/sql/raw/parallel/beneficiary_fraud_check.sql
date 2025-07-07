@@ -8,7 +8,7 @@ SELECT
     , status
     , eligibility_type
     , thirdpartyid
-    , regexp_replace(content, \'"(email|phone|lastName|birthDate|firstName|phoneNumber|reason_code|account_email|last_name|birth_date|first_name|phone_number|id_piece_number)": "[^"]*",\' ,\'"\\1":"XXX",\', \'g\') as result_content
+    , regexp_replace(content, \'"(email|phone|lastName|firstName|phoneNumber|reason_code|account_email|last_name|first_name|phone_number|id_piece_number)": "[^"]*",\' ,\'"\\1":"XXX",\', \'g\') as result_content
 FROM (
     SELECT
         CAST("id" AS varchar(255)) AS id

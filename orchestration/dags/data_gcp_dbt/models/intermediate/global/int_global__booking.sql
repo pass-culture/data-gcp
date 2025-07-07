@@ -1,3 +1,9 @@
+{{
+    config(
+        cluster_by="booking_status",
+    )
+}}
+
 select
     b.booking_id,
     b.booking_creation_date,
@@ -13,6 +19,7 @@ select
     b.user_age_at_booking,
     b.deposit_id,
     b.deposit_type,
+    b.deposit_reform_category,
     b.reimbursed,
     b.booking_intermediary_amount,
     b.booking_rank,

@@ -36,9 +36,25 @@ models:
       - name: venue_department_code
         description: '{{ doc("column__venue_department_code") }}'
         data_type: STRING
+        data_tests:
+          - excessive_failure_ratio:
+              base_test: "not_null"
+              max_ratio: 0.005
+              where: 'not venue_is_virtual'
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: venue_postal_code
         description: '{{ doc("column__venue_postal_code") }}'
         data_type: STRING
+        data_tests:
+          - excessive_failure_ratio:
+              base_test: "not_null"
+              max_ratio: 0.005
+              where: 'not venue_is_virtual'
+              tags: ['critical']
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
       - name: venue_city
         description: '{{ doc("column__venue_city") }}'
         data_type: STRING
@@ -50,8 +66,8 @@ models:
       - name: venue_is_virtual
         description: '{{ doc("column__venue_is_virtual") }}'
         data_type: BOOLEAN
-      - name: venue_managing_offerer_id
-        description: '{{ doc("column__venue_managing_offerer_id") }}'
+      - name: offerer_id
+        description: '{{ doc("column__offerer_id") }}'
         data_type: STRING
         data_tests:
           - not_null
@@ -267,11 +283,6 @@ models:
       - name: is_collective_active_current_year
         description: '{{ doc("column__is_collective_active_current_year") }}'
         data_type: BOOLEAN
-      - name: offerer_id
-        description: '{{ doc("column__offerer_id") }}'
-        data_type: STRING
-        data_tests:
-          - not_null
       - name: offerer_name
         description: '{{ doc("column__offerer_name") }}'
         data_type: STRING
@@ -313,6 +324,12 @@ models:
       - name: venue_in_qpv
         description: '{{ doc("column__venue_in_qpv") }}'
         data_type: BOOLEAN
+      - name: venue_in_zrr
+        description: '{{ doc("column__venue_in_zrr") }}'
+        data_type: BOOLEAN
+      - name: venue_rural_city_type
+        description: '{{ doc("column__venue_rural_city_type") }}'
+        data_type: STRING
       - name: venue_department_name
         description: '{{ doc("column__venue_department_name") }}'
         data_type: STRING

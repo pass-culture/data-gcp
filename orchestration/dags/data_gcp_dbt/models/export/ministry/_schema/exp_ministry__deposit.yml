@@ -1,0 +1,45 @@
+version: 2
+
+models:
+  - name: exp_ministry__deposit
+    description: "{{ doc('description__exp_ministry__deposit') }}"
+    columns:
+      - name: deposit_id
+        description: '{{ doc("column__deposit_id") }}'
+        data_type: STRING
+        data_tests:
+          - not_null:
+              tags: ['export']
+          - unique:
+              tags: ['export']
+      - name: deposit_amount
+        description: '{{ doc("column__deposit_amount") }}'
+        data_type: NUMERIC
+        data_tests:
+          - dbt_utils.accepted_range:
+              tags: [ 'export']
+              min_value: 0
+              max_value: 500
+              inclusive: true
+      - name: user_id
+        description: '{{ doc("column__user_id") }}'
+        data_type: STRING
+        data_tests:
+          - not_null:
+              tags: ['export']
+      - name: deposit_source
+        description: "{{ doc('column__deposit_source') }}"
+      - name: deposit_creation_date
+        description: "{{ doc('column__deposit_creation_date') }}"
+      - name: deposit_update_date
+        description: "{{ doc('column__deposit_update_date') }}"
+      - name: deposit_expiration_date
+        description: "{{ doc('column__deposit_expiration_date') }}"
+      - name: deposit_type
+        description: "{{ doc('column__deposit_type') }}"
+      - name: total_recredit
+        description: "{{ doc('column__total_recredit') }}"
+      - name: total_recredit_amount
+        description: "{{ doc('column__total_recredit_amount') }}"
+      - name: days_between_user_creation_and_deposit_creation
+        description: "{{ doc('column__days_between_user_creation_and_deposit_creation') }}"

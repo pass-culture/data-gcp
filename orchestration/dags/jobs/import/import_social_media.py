@@ -1,7 +1,7 @@
 import datetime
 
 from common import macros
-from common.alerts import on_failure_combined_callback
+from common.callback import on_failure_vm_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
@@ -22,10 +22,16 @@ from airflow.models import Param
 DAG_NAME = "import_social_network"
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
-    "on_failure_callback": on_failure_combined_callback,
+    "on_failure_callback": on_failure_vm_callback,
     "retries": 1,
     "project_id": GCP_PROJECT_ID,
 }
+
+schedule_dict = {
+    "prod": "0 2 * * *",
+    "stg": "0 3 * * *",
+    "dev": None,
+}[ENV_SHORT_NAME]
 
 
 with DAG(
@@ -33,7 +39,7 @@ with DAG(
     default_args=default_dag_args,
     description="Import Social Network Data",
     on_failure_callback=None,
-    schedule_interval=get_airflow_schedule("0 2 * * *"),
+    schedule_interval=get_airflow_schedule(schedule_dict),
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,

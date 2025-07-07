@@ -66,19 +66,52 @@ def remove_stale_partitions(dataset_name, table_name, update_date) -> None:
 def update_overwrite(
     dataset_name: str, table_name: str, tmp_table_name: str, update_date: str
 ) -> None:
+    """
+    Overwrites data in `dataset_name.table_name` either by:
+        - Replacing the specified partition (if the table is partitioned), or
+        - Truncating and reloading the entire table (if it's single-partition).
+    """
     print(f"Will overwrite {dataset_name}.{table_name}. New update : {update_date}")
-    CLICKHOUSE_CLIENT.command(
-        f" ALTER TABLE {dataset_name}.{table_name} ON cluster default REPLACE PARTITION '{update_date}' FROM tmp.{tmp_table_name}"
+
+    # 1) Inspect the table’s partition_key expression
+    partition_key_expr = CLICKHOUSE_CLIENT.command(
+        f"SELECT partition_key FROM system.tables "
+        f"WHERE database='{dataset_name}' AND name='{table_name}'"
+    ).strip()
+    # 'tuple()' or empty means a single dummy partition
+    num_parts = (
+        0
+        if not partition_key_expr or partition_key_expr == "tuple()"
+        else partition_key_expr.count(",") + 1
     )
 
-    remove_stale_partitions(dataset_name, table_name, update_date)
+    if num_parts == 0:
+        # Single-partition: drop and reload whole table
+        CLICKHOUSE_CLIENT.command(
+            f"TRUNCATE TABLE {dataset_name}.{table_name} ON CLUSTER default"
+        )
+        CLICKHOUSE_CLIENT.command(
+            f"INSERT INTO {dataset_name}.{table_name} "
+            f"SELECT * FROM tmp.{tmp_table_name}"
+        )
+    else:
+        # Multi-partition: replace only the date partition
+        CLICKHOUSE_CLIENT.command(
+            f"ALTER TABLE {dataset_name}.{table_name} ON CLUSTER default "
+            f"REPLACE PARTITION '{update_date}' FROM tmp.{tmp_table_name}"
+        )
+        # Only here do we need to clear out old partitions
+        remove_stale_partitions(dataset_name, table_name, update_date)
+
+    # 2) Report final row count
     total_rows = (
         CLICKHOUSE_CLIENT.command(f"SELECT count(*) FROM {dataset_name}.{table_name}")
-        | 0
+        or 0
     )
-
     print(f"Done updating. Table contains {total_rows}. Removing temporary table.")
-    CLICKHOUSE_CLIENT.command(f" DROP TABLE tmp.{tmp_table_name} ON cluster default")
+
+    # 3) Drop the temp table
+    CLICKHOUSE_CLIENT.command(f"DROP TABLE tmp.{tmp_table_name} ON CLUSTER default")
 
 
 def create_intermediate_schema(table_name: str, dataset_name: str) -> None:

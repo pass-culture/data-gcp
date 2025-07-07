@@ -54,8 +54,8 @@ enddocs %}
 {% docs column__type %} Type of the offer. {% enddocs %}
 {% docs column__sub_type %} Sub-type of the offer. {% enddocs %}
 {% docs column__mediation_humanized_id %} Human-readable identifier for mediation. {% enddocs %}
-{% docs column__offer_publication_date %} Publication date of the offer. {% enddocs %}
-{% docs column__is_future_scheduled %} Indicates if the offer is scheduled for the future. {% enddocs %}
+{% docs column__is_future_scheduled %} Indicates if the offer's publication is scheduled in the future. {% enddocs %}
+{% docs column__is_coming_soon %} Indicates if the offer is published in the app but not bookable yet (coming soon). {% enddocs %}
 {% docs column__item_id %}Identifier for the item associated with the offer used internally by the data science team. {%
 enddocs %}
 {% docs column__search_group_name %} Legacy: Category displayed in the application {% enddocs %}
@@ -97,3 +97,6 @@ offer show sub type for shows. {% enddocs %}
 {% docs column__last_offer_creation_date %} Date of the last offer creation. {% enddocs %}
 {% docs column__first_headline_date %} First date of headline on the app venue page. {% enddocs %}
 {% docs column__last_headline_date %} Last date of headline on the app venue page. {% enddocs %}
+{% docs column__offer_publication_date %} Publication date of the offer on the app, bookable or not (coming soon). Data available only from July 2025. {% enddocs %}
+{% docs column__offer_finalization_date %} Finalization date of the offer creation. If offer_creation_date is not null and offer_finalization_date is null, then it is draft. Data available only from July 2025. {% enddocs %}
+{% docs column__scheduled_offer_bookability_date %} Date of bookability of the offer. This field is filled only if the offer is scheduled. {% enddocs %}

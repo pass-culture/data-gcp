@@ -7144,12 +7144,12 @@
 <tr>
 <td style="text-align: left;">offer_publication_date</td>
 <td style="text-align: left;">DATETIME</td>
-<td style="text-align: left;">Publication date of the offer.</td>
+<td style="text-align: left;">Publication date of the offer on the app, bookable or not (coming soon). Data available only from July 2025.</td>
 </tr>
 <tr>
 <td style="text-align: left;">is_future_scheduled</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the offer is scheduled for the future.</td>
+<td style="text-align: left;">Indicates if the offer's publication is scheduled in the future.</td>
 </tr>
 <tr>
 <td style="text-align: left;">total_headlines</td>
@@ -7162,9 +7162,24 @@
 <td style="text-align: left;">Indicates if the offer is currently headlined on the app venue page.</td>
 </tr>
 <tr>
+<td style="text-align: left;">is_coming_soon</td>
+<td style="text-align: left;">BOOLEAN</td>
+<td style="text-align: left;">Indicates if the offer is published in the app but not bookable yet (coming soon).</td>
+</tr>
+<tr>
 <td style="text-align: left;">first_headline_date</td>
 <td style="text-align: left;">DATETIME</td>
 <td style="text-align: left;">First date of headline on the app venue page.</td>
+</tr>
+<tr>
+<td style="text-align: left;">offer_finalization_date</td>
+<td style="text-align: left;">DATETIME</td>
+<td style="text-align: left;">Finalization date of the offer creation. If offer_creation_date is not null and offer_finalization_date is null, then it is draft. Data available only from July 2025.</td>
+</tr>
+<tr>
+<td style="text-align: left;">scheduled_offer_bookability_date</td>
+<td style="text-align: left;">DATETIME</td>
+<td style="text-align: left;">Date of bookability of the offer. This field is filled only if the offer is scheduled.</td>
 </tr>
 <tr>
 <td style="text-align: left;">last_headline_date</td>

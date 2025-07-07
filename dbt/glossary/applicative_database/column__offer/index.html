@@ -6764,8 +6764,8 @@
 <p><strong>type</strong>:  Type of the offer. </p>
 <p><strong>sub_type</strong>:  Sub-type of the offer. </p>
 <p><strong>mediation_humanized_id</strong>:  Human-readable identifier for mediation. </p>
-<p><strong>offer_publication_date</strong>:  Publication date of the offer. </p>
-<p><strong>is_future_scheduled</strong>:  Indicates if the offer is scheduled for the future. </p>
+<p><strong>is_future_scheduled</strong>:  Indicates if the offer's publication is scheduled in the future. </p>
+<p><strong>is_coming_soon</strong>:  Indicates if the offer is published in the app but not bookable yet (coming soon). </p>
 <p><strong>item_id</strong>: Identifier for the item associated with the offer used internally by the data science team. </p>
 <p><strong>search_group_name</strong>:  Legacy: Category displayed in the application </p>
 <p><strong>image_url</strong>:  Image displayed in the passculture.app if present. </p>
@@ -6804,6 +6804,9 @@ offer show sub type for shows. </p>
 <p><strong>last_offer_creation_date</strong>:  Date of the last offer creation. </p>
 <p><strong>first_headline_date</strong>:  First date of headline on the app venue page. </p>
 <p><strong>last_headline_date</strong>:  Last date of headline on the app venue page. </p>
+<p><strong>offer_publication_date</strong>:  Publication date of the offer on the app, bookable or not (coming soon). Data available only from July 2025. </p>
+<p><strong>offer_finalization_date</strong>:  Finalization date of the offer creation. If offer_creation_date is not null and offer_finalization_date is null, then it is draft. Data available only from July 2025. </p>
+<p><strong>scheduled_offer_bookability_date</strong>:  Date of bookability of the offer. This field is filled only if the offer is scheduled. </p>
 
 
 

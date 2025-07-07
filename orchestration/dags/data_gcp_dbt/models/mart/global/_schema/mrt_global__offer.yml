@@ -259,8 +259,17 @@ models:
       - name: is_headlined
         description: '{{ doc("column__is_headlined") }}'
         data_type: BOOLEAN
+      - name: is_coming_soon
+        description: '{{ doc("column__is_coming_soon") }}'
+        data_type: BOOLEAN
       - name: first_headline_date
         description: '{{ doc("column__first_headline_date") }}'
+        data_type: DATETIME
+      - name: offer_finalization_date
+        description: '{{ doc("column__offer_finalization_date") }}'
+        data_type: DATETIME
+      - name: scheduled_offer_bookability_date
+        description: '{{ doc("column__scheduled_offer_bookability_date") }}'
         data_type: DATETIME
       - name: last_headline_date
         description: '{{ doc("column__last_headline_date") }}'

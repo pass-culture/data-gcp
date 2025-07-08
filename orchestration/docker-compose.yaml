@@ -11,6 +11,9 @@ x-airflow-common: &airflow-common
     AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY:-}
     ENV_SHORT_NAME: ${ENV_SHORT_NAME:-}
     APPLICATIVE_EXTERNAL_CONNECTION_ID: ${APPLICATIVE_EXTERNAL_CONNECTION_ID:-}
+    SSL_CERT_FILE: /usr/local/share/ca-certificates/nscacert_combined.pem
+    CLOUDSDK_CONFIG: /root/.config/gcloud
+    CLOUDSDK_CORE_CUSTOM_CA_CERTS_FILE: /usr/local/share/ca-certificates/nscacert_combined.pem
   volumes:
     - ./dags:/opt/airflow/dags
     - ./plugins:/opt/airflow/plugins
@@ -39,7 +42,10 @@ services:
 
   airflow-webserver:
     image: airflow-custom-image:latest
+    hostname: airflow-webserver
     <<: *airflow-common
+    environment:
+      <<: *airflow-common-env
     command: webserver
     ports:
       - 8080:8080
@@ -54,7 +60,10 @@ services:
 
   airflow-scheduler:
     image: airflow-custom-image:latest
+    hostname: airflow-scheduler
     <<: *airflow-common
+    environment:
+      <<: *airflow-common-env
     command: scheduler
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://airflow-webserver:8080/health"]
@@ -64,7 +73,24 @@ services:
     restart: "unless-stopped"
     depends_on:
       - airflow-init
-
+  airflow-triggerer:
+    image: airflow-custom-image:latest
+    <<: *airflow-common
+    environment:
+      <<: *airflow-common-env
+      CLOUDSDK_AUTH_DISABLE_CREDENTIALS_REFRESH: true
+    command: triggerer
+    ports:
+      - "8794:8794"
+    hostname: airflow-triggerer
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname airflow-triggerer']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    depends_on:
+      - airflow-init
   airflow-init:
     build:
       context: .
@@ -73,7 +99,7 @@ services:
       args:
         - NETWORK_MODE=${NETWORK_MODE:-default}
     <<: *airflow-common
-    command: "airflow db init"
+    command: "airflow db init && exit 0"
     environment:
       <<: *airflow-common-env
       _AIRFLOW_DB_UPGRADE: 'true'
@@ -87,18 +113,16 @@ services:
       postgres:
         condition: service_healthy
 
-  create-pools:
+  sync-pools:
     <<: *airflow-common
     image: airflow-custom-image:latest
-    entrypoint: ["uv"]
-    command: ["run","/opt/airflow/create_pools.py"]
+    entrypoint: ["uv", "run","/opt/airflow/sync_pools.py","sync"]
     environment:
       <<: *airflow-common-env
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
       _AIRFLOW_WWW_USER_EMAIL: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}admin@example.com
     depends_on:
-      - postgres
-      - airflow-webserver
-      - airflow-scheduler
-    restart: "no"
+      postgres:
+        condition: service_healthy
+    restart: "on-failure"

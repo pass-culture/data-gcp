@@ -113,7 +113,7 @@ select
     case
         when (
             (offer_validation = "APPROVED" AND ( scheduled_offer_bookability_date <= current_date))
-            OR (scheduled_offer_bookability_date IS NULL AND offer_publication_date ≤ current_date)
+            OR (scheduled_offer_bookability_date IS NULL AND offer_publication_date <= current_date)
 		)
         then true
         else false

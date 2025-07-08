@@ -1,3 +1,6 @@
+import logging
+import time
+
 import brevo_python
 import pandas as pd
 from brevo_python.rest import ApiException
@@ -33,18 +36,37 @@ class BrevoNewsletters:
 
     def get_email_campaigns(self):
         campaigns_list = []
-        try:
-            campaigns = self.api_instance.get_email_campaigns(
-                status="sent",
-                limit=50,
-                statistics="globalStats",
-            )
-            campaigns_list = campaigns.campaigns
-        except ApiException as e:
-            print(
-                "Exception when calling EmailCampaignsApi->get_email_campaigns: %s\n"
-                % e
-            )
+        max_retries = 5
+        delay = 1
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                resp = self.api_instance.get_email_campaigns(
+                    status="sent",
+                    limit=50,
+                    statistics="globalStats",
+                )
+                campaigns_list = resp.campaigns or []
+                break
+            except ApiException as e:
+                if e.status == 429:
+                    reset = int(e.headers.get("x-sib-ratelimit-reset", delay))
+                    wait = min(delay, reset) + 2
+                    logging.warning(
+                        "[get_email_campaigns] rate limited, attempt %d/%d; "
+                        "reset in %ds, sleeping %ds",
+                        attempt,
+                        max_retries,
+                        reset,
+                        wait,
+                    )
+                    time.sleep(wait)
+                    delay = min(delay * 2, 60)
+                else:
+                    print(f"[get_email_campaigns] unexpected error: {e}")
+                    raise
+        else:
+            raise RuntimeError("Failed to fetch email campaigns after retries")
 
         return campaigns_list
 

@@ -1,4 +1,5 @@
 import logging
+import time
 from datetime import datetime
 
 import brevo_python
@@ -66,50 +67,48 @@ class BrevoTransactional:
 
     def get_events(self, event_type):
         active_templates = self.get_active_templates_id()
-        if ENV_SHORT_NAME != "prod" and len(active_templates) > 0:
+        if ENV_SHORT_NAME != "prod" and active_templates:
             active_templates = active_templates[:1]
-
-        print(f"Number of active templates : {len(active_templates)}")
 
         api_responses = []
         for template in active_templates:
             offset = 0
-            response = self.api_instance.get_email_event_report(
-                template_id=template,
-                start_date=self.start_date,
-                end_date=self.end_date,
-                event=event_type,
-                offset=offset,
-            ).events
-            if response is not None:
-                logging.info(
-                    f"Number of responses for template {template}: {len(response)}"
-                )
-                api_responses.append(response)
-                if ENV_SHORT_NAME != "prod":
-                    continue
-                while response is not None and len(response) == 2500:
-                    offset = offset + 2500
-                    logging.info(f"Importing offset {offset} for template {template} ")
-                    response = self.api_instance.get_email_event_report(
+            while True:
+                try:
+                    resp = self.api_instance.get_email_event_report(
                         template_id=template,
                         start_date=self.start_date,
                         end_date=self.end_date,
                         event=event_type,
                         offset=offset,
-                    ).events
-                    if response is not None:
-                        api_responses.append(response)
-
-        api_responses = sum(
-            api_responses, []
-        )  # concatener tous les events dans une unique liste
-
-        logging.info(
-            f"Number of active templates with events between {self.start_date} and {self.end_date} : {len(api_responses)}"
-        )
-
-        return api_responses
+                    )
+                    events = resp.events or []
+                except ApiException as e:
+                    # on 429, back off until reset
+                    if e.status == 429:
+                        reset_secs = int(e.headers.get("x-sib-ratelimit-reset", 60))
+                        wait = reset_secs + 5
+                        logging.warning(
+                            "[get_events] rate limited on template %s for event %s; "
+                            "reset in %ds, sleeping %ds then retrying",
+                            template,
+                            event_type,
+                            reset_secs,
+                            wait,
+                        )
+                        time.sleep(wait)
+                        continue
+                    else:
+                        raise
+                # collect and break if no more pages
+                api_responses.append(events)
+                if ENV_SHORT_NAME != "prod" or len(events) < 2500:
+                    break
+                offset += 2500
+        # flatten
+        all_events = sum(api_responses, [])
+        print(f"Fetched {len(all_events)} events for {event_type}")
+        return all_events
 
     def parse_to_df(self, all_events):
         df = pd.DataFrame()

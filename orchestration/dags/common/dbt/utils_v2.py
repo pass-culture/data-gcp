@@ -11,7 +11,7 @@ from common.config import (
 from airflow import DAG
 from airflow.models.baseoperator import BaseOperator, chain
 from airflow.operators.python import PythonOperator
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.utils.task_group import TaskGroup
 from airflow.exceptions import AirflowSkipException
 
@@ -39,7 +39,7 @@ def create_nested_folder_groups(
     dag: DAG,
 ) -> None:
     nested_folders = get_models_folder_dict(dbt_models, manifest)
-    task_groups: Dict[str, Tuple[TaskGroup, DummyOperator]] = {}
+    task_groups: Dict[str, Tuple[TaskGroup, EmptyOperator]] = {}
 
     def create_nested_task_group(
         folder_hierarchy: List[str],
@@ -68,7 +68,7 @@ def create_nested_folder_groups(
         else:
             # Create task group & corresponding trigger operator
             tg = TaskGroup(group_id=group_id, parent_group=parent_group, dag=dag)
-            dummy_task = DummyOperator(
+            dummy_task = EmptyOperator(
                 task_id=f"trigger_{group_id}_folder", task_group=tg, dag=dag, pool="dbt"
             )
             # Add them to dictionary

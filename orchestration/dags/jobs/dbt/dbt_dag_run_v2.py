@@ -19,7 +19,7 @@ from jobs.crons import SCHEDULE_DICT
 from airflow import DAG
 from airflow.models import Param
 from airflow.operators.python import PythonOperator
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 
 # Import dbt execution functions
 from common.dbt.dbt_executors import (
@@ -53,7 +53,7 @@ default_args = {
 ) = load_and_process_manifest(f"{PATH_TO_DBT_TARGET}")
 
 # Initialize the DAG
-dag_id = "dbt_run_dag_v2"
+dag_id = "dbt_run_dag"
 dag = DAG(
     dag_id,
     default_args=default_args,
@@ -79,8 +79,8 @@ dag = DAG(
 )
 
 # Define initial and final tasks
-start = DummyOperator(task_id="start", dag=dag, pool="dbt")
-end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed", pool="dbt")
+start = EmptyOperator(task_id="start", dag=dag, pool="dbt")
+end = EmptyOperator(task_id="end", dag=dag, trigger_rule="none_failed", pool="dbt")
 
 wait_for_raw = delayed_waiting_operator(
     dag=dag,
@@ -95,15 +95,15 @@ wait_for_firebase = delayed_waiting_operator(
     failed_states=["failed"],
 )
 
-end_wait = DummyOperator(
+end_wait = EmptyOperator(
     task_id="end_wait", dag=dag, trigger_rule="none_failed", pool="dbt"
 )
 
-data_transfo_checkpoint = DummyOperator(
+data_transfo_checkpoint = EmptyOperator(
     task_id="data_transfo_checkpoint", dag=dag, pool="dbt"
 )
 
-snapshots_checkpoint = DummyOperator(
+snapshots_checkpoint = EmptyOperator(
     task_id="snapshots_checkpoint", dag=dag, pool="dbt"
 )
 

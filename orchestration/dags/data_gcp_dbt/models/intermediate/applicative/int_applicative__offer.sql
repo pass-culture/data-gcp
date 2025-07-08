@@ -111,10 +111,17 @@ select
         then o.showsubtype
     end as offer_sub_type_id,
     case
-        when (
-            (offer_validation = "APPROVED" AND ( scheduled_offer_bookability_date <= current_date))
-            OR (scheduled_offer_bookability_date IS NULL AND offer_publication_date <= current_date)
-		)
+        when
+            (
+                (
+                    offer_validation = "APPROVED"
+                    and (scheduled_offer_bookability_date <= current_date)
+                )
+                or (
+                    scheduled_offer_bookability_date is null
+                    and offer_publication_date <= current_date
+                )
+            )
         then true
         else false
     end as offer_is_bookable,

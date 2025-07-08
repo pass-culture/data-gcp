@@ -30,7 +30,6 @@ from common.dbt.dbt_executors import (
     run_dbt_snapshot,
 )
 
-logger = logging.getLogger(__name__)
 
 default_args = {
     "start_date": datetime.datetime(2020, 12, 23),
@@ -38,7 +37,6 @@ default_args = {
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
     "on_failure_callback": on_failure_base_callback,
-    "on_skipped_callback": on_failure_base_callback,
 }
 
 # Load manifest and process it
@@ -53,7 +51,7 @@ default_args = {
 ) = load_and_process_manifest(f"{PATH_TO_DBT_TARGET}")
 
 # Initialize the DAG
-dag_id = "dbt_run_dag"
+dag_id = "dbt_run_dag_v2"
 dag = DAG(
     dag_id,
     default_args=default_args,

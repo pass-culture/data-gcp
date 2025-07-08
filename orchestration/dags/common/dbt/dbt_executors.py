@@ -9,8 +9,10 @@ import tempfile
 import logging
 from pathlib import Path
 from typing import List, Optional
+from datetime import datetime
 
 from dbt.cli.main import dbtRunner, dbtRunnerResult
+from airflow.exceptions import AirflowSkipException
 
 from common.config import (
     ENV_SHORT_NAME,
@@ -19,13 +21,44 @@ from common.config import (
     EXCLUDED_TAGS,
 )
 
-logger = logging.getLogger(__name__)
+
+def should_skip_scheduled_node(node_tags: List[str], ds: str) -> Optional[str]:
+    """
+    Check if a node should be skipped based on its schedule tags and the execution date.
+
+    Args:
+        node_tags: List of tags for the node
+        ds: Airflow execution date string (YYYY-MM-DD)
+
+    Returns:
+        Schedule type ('weekly' or 'monthly') if should skip, None otherwise
+    """
+    if not node_tags or not ds:
+        return None
+
+    try:
+        execution_date = datetime.strptime(ds, "%Y-%m-%d")
+
+        # Check for weekly tag - run only on first day of week (Monday)
+        if "weekly" in node_tags:
+            if execution_date.weekday() != 0:  # 0 is Monday
+                return "weekly"
+
+        # Check for monthly tag - run only on first day of month
+        if "monthly" in node_tags:
+            if execution_date.day != 1:
+                return "monthly"
+
+    except ValueError:
+        logging.warning(f"Invalid date format for ds: {ds}")
+
+    return None
 
 
 def create_tmp_folder(base_path: str) -> str:
     """Create a temporary directory for dbt target files."""
     temp_dir = tempfile.mkdtemp(prefix="dbt_target_", dir="/tmp")
-    logger.debug(f"Created temporary directory: {temp_dir}")
+    logging.debug(f"Created temporary directory: {temp_dir}")
 
     # Copy existing target files to temp directory
     if os.path.exists(base_path):
@@ -44,7 +77,7 @@ def cleanup_temp_dir(temp_dir: str) -> None:
     """Clean up temporary directory."""
     if os.path.exists(temp_dir) and temp_dir.startswith("/tmp/dbt_target_"):
         shutil.rmtree(temp_dir)
-        logger.debug(f"Removed temporary directory: {temp_dir}")
+        logging.debug(f"Removed temporary directory: {temp_dir}")
 
 
 def run_dbt_command(command: list, **context) -> None:
@@ -67,12 +100,13 @@ def run_dbt_command(command: list, **context) -> None:
         cli_args.extend(["--target-path", temp_target_dir])
         cli_args.extend(["--vars", f"{{ENV_SHORT_NAME: {ENV_SHORT_NAME}}}"])
         cli_args.extend(["--project-dir", PATH_TO_DBT_PROJECT])
+        cli_args.extend(["--profiles-dir", PATH_TO_DBT_PROJECT])
 
         # Add global CLI flags if they exist
         if global_cli_flags:
             cli_args.extend(global_cli_flags.split())
 
-        logger.info(f"Executing dbt command: {' '.join(cli_args)}")
+        logging.info(f"Executing dbt command: {' '.join(cli_args)}")
 
         # Execute dbt command
         res: dbtRunnerResult = dbt.invoke(cli_args)
@@ -80,10 +114,10 @@ def run_dbt_command(command: list, **context) -> None:
         # Check for errors
         if not res.success:
             error_msg = f"dbt command failed with exit code {res.exception}."
-            logger.error(error_msg)
+            logging.error(error_msg)
             raise Exception(error_msg)
 
-        logger.info("DBT run completed successfully.")
+        logging.info("DBT run completed successfully.")
 
     finally:
         # Clean up temporary directory
@@ -103,14 +137,26 @@ def clean_dbt(**context):
         try:
             shutil.rmtree(folder)
         except Exception as e:
-            logger.warning(f"Could not remove {folder}: {e}")
+            logging.warning(f"Could not remove {folder}: {e}")
 
     # Run dbt clean
     run_dbt_command(["clean"], **context)
 
 
-def run_dbt_model(model_name: str, exclude_tags: Optional[List[str]] = None, **context):
+def run_dbt_model(
+    model_name: str,
+    exclude_tags: Optional[List[str]] = None,
+    node_tags: Optional[List[str]] = None,
+    **context,
+):
     """Run a specific dbt model."""
+    # Check if we should skip based on schedule
+    ds = context.get("ds")
+    skip_schedule = should_skip_scheduled_node(node_tags or [], ds)
+    if skip_schedule:
+        logging.info(f"Skipping node scheduled {skip_schedule}")
+        raise AirflowSkipException(f"Skipping node scheduled {skip_schedule}")
+
     params = context.get("params", {})
     full_refresh = params.get("full_refresh", False)
 
@@ -126,13 +172,29 @@ def run_dbt_model(model_name: str, exclude_tags: Optional[List[str]] = None, **c
     run_dbt_command(command, **context)
 
 
-def run_dbt_test(model_name: str, **context):
+def run_dbt_test(model_name: str, node_tags: Optional[List[str]] = None, **context):
     """Run tests for a specific dbt model."""
+    # Check if we should skip based on schedule
+    ds = context.get("ds")
+    skip_schedule = should_skip_scheduled_node(node_tags or [], ds)
+    if skip_schedule:
+        logging.info(f"Skipping node scheduled {skip_schedule}")
+        raise AirflowSkipException(f"Skipping node scheduled {skip_schedule}")
+
     command = ["test", "--select", f"{model_name},tag:critical"]
     run_dbt_command(command, **context)
 
 
-def run_dbt_snapshot(snapshot_name: str, **context):
+def run_dbt_snapshot(
+    snapshot_name: str, node_tags: Optional[List[str]] = None, **context
+):
     """Run a specific dbt snapshot."""
+    # Check if we should skip based on schedule
+    ds = context.get("ds")
+    skip_schedule = should_skip_scheduled_node(node_tags or [], ds)
+    if skip_schedule:
+        logging.info(f"Skipping node scheduled {skip_schedule}")
+        raise AirflowSkipException(f"Skipping node scheduled {skip_schedule}")
+
     command = ["snapshot", "--select", snapshot_name]
     run_dbt_command(command, **context)

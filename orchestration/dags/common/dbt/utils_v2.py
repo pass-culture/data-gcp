@@ -11,7 +11,7 @@ from common.config import (
 from airflow import DAG
 from airflow.models.baseoperator import BaseOperator, chain
 from airflow.operators.python import PythonOperator
-from airflow.operators.empty import EmptyOperator
+from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.task_group import TaskGroup
 from airflow.exceptions import AirflowSkipException
 
@@ -39,7 +39,7 @@ def create_nested_folder_groups(
     dag: DAG,
 ) -> None:
     nested_folders = get_models_folder_dict(dbt_models, manifest)
-    task_groups: Dict[str, Tuple[TaskGroup, EmptyOperator]] = {}
+    task_groups: Dict[str, Tuple[TaskGroup, DummyOperator]] = {}
 
     def create_nested_task_group(
         folder_hierarchy: List[str],
@@ -68,7 +68,7 @@ def create_nested_folder_groups(
         else:
             # Create task group & corresponding trigger operator
             tg = TaskGroup(group_id=group_id, parent_group=parent_group, dag=dag)
-            dummy_task = EmptyOperator(
+            dummy_task = DummyOperator(
                 task_id=f"trigger_{group_id}_folder", task_group=tg, dag=dag, pool="dbt"
             )
             # Add them to dictionary
@@ -298,11 +298,13 @@ def load_and_process_manifest(
 
 def create_test_operator(model_node: str, model_data: Dict, dag: DAG) -> PythonOperator:
     """Create a Python operator for running dbt tests."""
+    node_tags = model_data.get("tags", [])
     return PythonOperator(
         task_id=model_data["alias"] + "_tests",
-        python_callable=partial(run_dbt_test, model_data["name"]),
+        python_callable=partial(run_dbt_test, model_data["name"], node_tags),
         dag=dag,
         pool="dbt",
+        trigger_rule="none_failed_min_one_success",  # Run if upstream tasks succeed or skip
     )
 
 
@@ -310,13 +312,22 @@ def create_model_operator(
     model_node: str, model_data: Dict, is_applicative: bool, dag: DAG
 ) -> PythonOperator:
     """Create a Python operator for running a dbt model."""
-    exclude_tags = EXCLUDED_TAGS if len(EXCLUDED_TAGS) > 0 else None
+    # Filter out weekly/monthly from excluded tags since we handle them differently now
+    exclude_tags = (
+        [tag for tag in EXCLUDED_TAGS if tag not in ["weekly", "monthly"]]
+        if EXCLUDED_TAGS
+        else None
+    )
+    node_tags = model_data.get("tags", [])
 
     return PythonOperator(
         task_id=model_data["alias"] if is_applicative else model_data["name"],
-        python_callable=partial(run_dbt_model, model_data["name"], exclude_tags),
+        python_callable=partial(
+            run_dbt_model, model_data["name"], exclude_tags, node_tags
+        ),
         dag=dag,
         pool="dbt",
+        trigger_rule="none_failed_min_one_success",  # Run if upstream tasks succeed or skip
     )
 
 
@@ -324,11 +335,13 @@ def create_snapshot_operator(
     snapshot_node: str, snapshot_data: Dict, dag: DAG
 ) -> PythonOperator:
     """Create a Python operator for running a dbt snapshot."""
+    node_tags = snapshot_data.get("tags", [])
     return PythonOperator(
         task_id=snapshot_data["alias"],
-        python_callable=partial(run_dbt_snapshot, snapshot_data["name"]),
+        python_callable=partial(run_dbt_snapshot, snapshot_data["name"], node_tags),
         dag=dag,
         pool="dbt",
+        trigger_rule="none_failed_min_one_success",  # Run if upstream tasks succeed or skip
     )
 
 

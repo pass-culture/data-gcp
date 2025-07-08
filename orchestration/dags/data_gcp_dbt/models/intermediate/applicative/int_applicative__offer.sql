@@ -111,12 +111,10 @@ select
         then o.showsubtype
     end as offer_sub_type_id,
     case
-        when
-            (
-                stocks_grouped_by_offers.is_bookable
-                and o.offer_is_active
-                and o.offer_validation = "APPROVED"
-            )
+        when (
+            (offer_validation = "APPROVED" AND ( scheduled_offer_bookability_date <= current_date))
+            OR (scheduled_offer_bookability_date IS NULL AND offer_publication_date ≤ current_date)
+		)
         then true
         else false
     end as offer_is_bookable,

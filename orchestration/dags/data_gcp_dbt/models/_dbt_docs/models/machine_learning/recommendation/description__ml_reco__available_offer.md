@@ -7,7 +7,7 @@ description: Description of the `ml_reco__available_offer table.
 
 # Table: Avalaible Offer
 
-The `ml_reco__available_offer` table contains the offer which are available to be booked. It filtered out offers from recommendable_offers table which have for exemple no stock nor image.
+The `ml_reco__available_offer` table contains the offer that are available for booking. It filtered out offers from `recommendable_offers` table which have, for exemple, no stock nor image.
 
 {% enddocs %}
 

@@ -151,7 +151,7 @@ send_elementary_report = SendElementaryMonitoringReportOperator(
 # Convert to Python operator
 recompile_dbt_project = PythonOperator(
     task_id="recompile_dbt_project",
-    python_callable=compile_dbt,
+    python_callable=partial(compile_dbt, use_tmp_artifacts=False),
     dag=dag,
 )
 

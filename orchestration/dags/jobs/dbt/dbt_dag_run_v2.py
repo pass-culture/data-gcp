@@ -1,5 +1,6 @@
 import datetime
 import logging
+from functools import partial
 
 from common.callback import on_failure_base_callback
 from common.config import (
@@ -115,8 +116,7 @@ clean = PythonOperator(
 
 compile = PythonOperator(
     task_id="compilation",
-    python_callable=compile_dbt,
-    pool="dbt",
+    python_callable=partial(compile_dbt, use_tmp_artifacts=False),
     dag=dag,
 )
 

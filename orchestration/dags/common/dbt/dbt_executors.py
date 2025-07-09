@@ -80,7 +80,7 @@ def cleanup_temp_dir(temp_dir: str) -> None:
         logging.debug(f"Removed temporary directory: {temp_dir}")
 
 
-def run_dbt_command(command: list, **context) -> None:
+def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) -> None:
     """Execute a dbt command using dbtRunner."""
     # Get parameters from context
     params = context.get("params", {})
@@ -88,7 +88,10 @@ def run_dbt_command(command: list, **context) -> None:
     global_cli_flags = params.get("GLOBAL_CLI_FLAGS", "--no-write-json")
 
     # Create temporary target directory
-    temp_target_dir = create_tmp_folder(PATH_TO_DBT_TARGET)
+    if use_tmp_artifacts:
+        temp_target_dir = create_tmp_folder(PATH_TO_DBT_TARGET)
+    else:
+        temp_target_dir = PATH_TO_DBT_TARGET
 
     try:
         # Initialize dbt runner
@@ -121,7 +124,8 @@ def run_dbt_command(command: list, **context) -> None:
 
     finally:
         # Clean up temporary directory
-        cleanup_temp_dir(temp_target_dir)
+        if use_tmp_artifacts:
+            cleanup_temp_dir(temp_target_dir)
 
 
 def run_dbt_with_selector(selector: str, **context):
@@ -135,9 +139,16 @@ def run_dbt_with_selector(selector: str, **context):
     run_dbt_command(command, **context)
 
 
-def compile_dbt(**context):
-    """Compile dbt project."""
-    run_dbt_command(["compile"], **context)
+def compile_dbt(use_tmp_artifacts: bool = False, **context):
+    """
+    Compile dbt project.
+
+    Args:
+        use_tmp_artifacts: If True, use temporary directory. If False, compile directly to target.
+        **context: Airflow context
+    """
+
+    run_dbt_command(["compile"], use_tmp_artifacts=use_tmp_artifacts, **context)
 
 
 def clean_dbt(**context):

@@ -1,3 +1,6 @@
+import logging
+from functools import partial
+
 from common import macros
 from common.callback import on_failure_base_callback
 from common.config import (
@@ -18,16 +21,34 @@ from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.bash_operator import BashOperator
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import BranchPythonOperator
+from airflow.operators.python import PythonOperator, BranchPythonOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.utils.dates import datetime, timedelta
 
+# Import dbt execution functions
+from common.dbt.dbt_executors import (
+    compile_dbt_with_selector,
+    run_dbt_quality_tests,
+    run_dbt_with_selector,
+)
 
-def should_run_today():
-    if datetime.today().weekday() == 0:  # Monday
-        return ["dbt_test_weekly", "dbt_test"]
-    return "dbt_test"
+
+def should_run_today(ds):
+    try:
+        next_tasks = ["dbt_test", "dbt_test_weekly", "dbt_test_monthly"]
+        execution_date = datetime.strptime(ds, "%Y-%m-%d")
+        if execution_date.weekday() != 0:  # 0 is Monday
+            next_tasks.remove("dbt_test_weekly")
+        if execution_date.day != 1:
+            next_tasks.remove("dbt_test_monthly")
+        logging.info(f"Next tasks for ds {ds}: {next_tasks}")
+        if len(next_tasks) == 0:
+            raise ValueError(f"empty next_tasks for ds: {ds}")
+        elif len(next_tasks) == 1:
+            next_tasks = next_tasks[0]
+        return next_tasks
+    except ValueError:
+        logging.warning(f"Invalid date format for ds: {ds}")
 
 
 default_args = {
@@ -37,6 +58,7 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
     "project_id": GCP_PROJECT_ID,
 }
+
 dag_id = "dbt_artifacts"
 dag = DAG(
     dag_id,
@@ -62,54 +84,53 @@ dag = DAG(
     tags=[DAG_TAGS.DBT.value, DAG_TAGS.DE.value],
 )
 
-start = DummyOperator(task_id="start", dag=dag)
+start = EmptyOperator(task_id="start", dag=dag)
 
 wait_dbt_run = delayed_waiting_operator(dag=dag, external_dag_id="dbt_run_dag")
 
-compute_metrics_elementary = BashOperator(
+# Convert to Python operator
+compute_metrics_elementary = PythonOperator(
     task_id="compute_metrics_elementary",
-    bash_command="dbt run --no-write-json --target {{ params.target }} --select package:elementary "
-    + f"--target-path {PATH_TO_DBT_TARGET} --profiles-dir {PATH_TO_DBT_PROJECT} "
-    + """--vars "{{ "{" }}'ENV_SHORT_NAME':'{{ params.target }}'{{ "}" }}" """,
-    cwd=PATH_TO_DBT_PROJECT,
+    python_callable=partial(run_dbt_with_selector, "package:elementary"),
     dag=dag,
     trigger_rule="one_success",
 )
 
-dbt_test = BashOperator(
+# Convert to Python operator
+dbt_test = PythonOperator(
     task_id="dbt_test",
-    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
-    env={
-        "target": "{{ params.target }}",
-        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-        "ENV_SHORT_NAME": ENV_SHORT_NAME,
-        "EXCLUSION": "audit tag:export tag:weekly",
-    },
-    append_env=True,
-    cwd=PATH_TO_DBT_PROJECT,
+    python_callable=partial(
+        run_dbt_quality_tests,
+        select=None,  # No specific selection, will test all
+        exclude="audit tag:export tag:weekly tag:monthly",  #
+    ),
     dag=dag,
 )
 
-check_if_weekly = BranchPythonOperator(
-    task_id="check_if_weekly_run", python_callable=should_run_today
+check_schedule = BranchPythonOperator(
+    task_id="check_scheduled_run",
+    python_callable=should_run_today,
+    dag=dag,
 )
 
-dbt_test_weekly = BashOperator(
+# Convert to Python operator
+dbt_test_weekly = PythonOperator(
     task_id="dbt_test_weekly",
-    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
-    env={
-        "target": "{{ params.target }}",
-        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-        "ENV_SHORT_NAME": ENV_SHORT_NAME,
-        "EXCLUSION": "audit tag:export",
-        "SELECT": "tag:weekly",
-    },
-    append_env=True,
-    cwd=PATH_TO_DBT_PROJECT,
+    python_callable=partial(
+        run_dbt_quality_tests, select="tag:weekly", exclude="audit"
+    ),
     dag=dag,
     trigger_rule="all_success",
 )
 
+dbt_test_monthly = PythonOperator(
+    task_id="dbt_test_monthly",
+    python_callable=partial(
+        run_dbt_quality_tests, select="tag:monthly", exclude="audit"
+    ),
+    dag=dag,
+    trigger_rule="all_success",
+)
 
 create_elementary_report = GenerateElementaryReportOperator(
     task_id="create_elementary_report",
@@ -127,27 +148,27 @@ send_elementary_report = SendElementaryMonitoringReportOperator(
     send_slack_report="{{ params.send_slack_report }}",
 )
 
-recompile_dbt_project = BashOperator(
+# Convert to Python operator
+recompile_dbt_project = PythonOperator(
     task_id="recompile_dbt_project",
-    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_compile.sh ",
-    env={
-        "target": "{{ params.target }}",
-        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-        "ENV_SHORT_NAME": ENV_SHORT_NAME,
-    },
-    append_env=True,
-    cwd=PATH_TO_DBT_PROJECT,
+    python_callable=partial(
+        compile_dbt_with_selector,
+        selector="package:data_gcp_dbt",
+        use_tmp_artifacts=False,
+    ),
     dag=dag,
 )
 
+# DAG Dependencies
 (
     start
     >> wait_dbt_run
-    >> check_if_weekly
+    >> check_schedule
     >> dbt_test
     >> compute_metrics_elementary
     >> create_elementary_report
     >> send_elementary_report
     >> recompile_dbt_project
 )
-(check_if_weekly >> dbt_test_weekly >> compute_metrics_elementary)
+(check_schedule >> dbt_test_weekly >> compute_metrics_elementary)
+(check_schedule >> dbt_test_monthly >> compute_metrics_elementary)

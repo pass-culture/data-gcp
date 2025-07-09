@@ -18,10 +18,8 @@ SCHEDULE_DICT = {
         "dev": "45 4 * * *",  # every day at 4:45 AM
     },
     "dbt_artifacts": "0 6 * * *",
-    "dbt_artifacts_v2": "0 6 * * *",
     "dbt_monthly": "30 10 1 * *",
     "dbt_run_dag": "45 2 * * *",
-    "dbt_run_dag_v2": "45 2 * * *",
     "dbt_weekly": "0 10 * * 1",
     "embeddings_extraction_item": "0 12,18,23 * * *",
     "embedding_reduction_item": "0 12 * * 0",

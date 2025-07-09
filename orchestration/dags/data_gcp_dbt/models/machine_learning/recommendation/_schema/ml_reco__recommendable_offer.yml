@@ -41,10 +41,6 @@ models:
         description: "{{ doc('column__offer_is_numerical') }}"
         data_tests:
           - not_null
-      - name: is_national
-        description: "{{ doc('column__is_national') }}"
-        data_tests:
-          - not_null
       - name: is_geolocated
         description: "{{ doc('column__offer_is_geolocated') }}"
         data_tests:

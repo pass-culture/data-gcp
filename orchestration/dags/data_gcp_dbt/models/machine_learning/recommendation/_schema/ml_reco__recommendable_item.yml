@@ -3,7 +3,7 @@ version: 2
 models:
   - name: ml_reco__recommendable_item
     description: "{{ doc('description__ml_reco__recommendable_item') }}"
-    data_tests:
+    tests:
       - elementary.volume_anomalies:
           tags: [elementary]
           training_period:
@@ -13,16 +13,16 @@ models:
             period: day
             count: 1
       - elementary.dimension_anomalies:
-        tags: [elementary]
-        dimensions:
-          - category
-          - offer_is_geolocated
-        training_period:
-          period: day
-          count: 7
-        detection_period:
-          period: day
-          count: 1
+          tags: [elementary]
+          dimensions:
+            - category
+            - offer_is_geolocated
+          training_period:
+            period: day
+            count: 7
+          detection_period:
+            period: day
+            count: 1
     columns:
       - name: item_id
         description: "{{ doc('column__item_id') }}"
@@ -45,10 +45,6 @@ models:
         description: "{{ doc('column__search_group_name') }}"
       - name: is_numerical
         description: "{{ doc('column__offer_is_numerical') }}"
-        data_tests:
-          - not_null
-      - name: is_national
-        description: "{{ doc('column__offer_is_national') }}"
         data_tests:
           - not_null
       - name: is_geolocated

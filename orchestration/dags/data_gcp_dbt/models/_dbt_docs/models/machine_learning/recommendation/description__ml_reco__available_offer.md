@@ -13,4 +13,4 @@ The `ml_reco__available_offer` table contains the offer that are available for b
 
 ## Table description
 
-{% docs description__ml_reco__available_offer %}{% enddocs %}
+{% docs table__ml_reco__available_offer %}{% enddocs %}

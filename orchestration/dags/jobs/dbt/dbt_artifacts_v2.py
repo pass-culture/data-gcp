@@ -27,7 +27,7 @@ from airflow.utils.dates import datetime, timedelta
 
 # Import dbt execution functions
 from common.dbt.dbt_executors import (
-    compile_dbt,
+    compile_dbt_with_selector,
     run_dbt_quality_tests,
     run_dbt_with_selector,
 )
@@ -151,7 +151,11 @@ send_elementary_report = SendElementaryMonitoringReportOperator(
 # Convert to Python operator
 recompile_dbt_project = PythonOperator(
     task_id="recompile_dbt_project",
-    python_callable=partial(compile_dbt, use_tmp_artifacts=False),
+    python_callable=partial(
+        compile_dbt_with_selector,
+        selector="package:data_gcp_dbt",
+        use_tmp_artifacts=False,
+    ),
     dag=dag,
 )
 

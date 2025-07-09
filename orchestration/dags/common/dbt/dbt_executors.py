@@ -85,7 +85,7 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
     # Get parameters from context
     params = context.get("params", {})
     target = params.get("target", ENV_SHORT_NAME)
-    global_cli_flags = params.get("GLOBAL_CLI_FLAGS", "--no-write-json")
+    global_cli_flags = params.get("GLOBAL_CLI_FLAGS", None)
 
     # Create temporary target directory
     if use_tmp_artifacts:
@@ -106,8 +106,11 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
         cli_args.extend(["--profiles-dir", PATH_TO_DBT_PROJECT])
 
         # Add global CLI flags if they exist
-        if global_cli_flags:
-            cli_args.extend(global_cli_flags.split())
+        if global_cli_flags is not None:
+            tmp_cli_flags = global_cli_flags.copy()
+            if "compile" in command:
+                tmp_cli_flags.remove("--no-write-json")
+            cli_args.extend(tmp_cli_flags.split())
 
         logging.info(f"Executing dbt command: {' '.join(cli_args)}")
 
@@ -149,6 +152,21 @@ def compile_dbt(use_tmp_artifacts: bool = False, **context):
     """
 
     run_dbt_command(["compile"], use_tmp_artifacts=use_tmp_artifacts, **context)
+
+
+def compile_dbt_with_selector(
+    selector: str, use_tmp_artifacts: bool = False, **context
+):
+    """
+    Compile dbt project.
+
+    Args:
+        selector: dbt selector (e.g., "package:data_gcp_dbt")
+        use_tmp_artifacts: If True, use temporary directory. If False, compile directly to target.
+        **context: Airflow context
+    """
+    command = ["compile", "--select", selector]
+    run_dbt_command(command, use_tmp_artifacts=use_tmp_artifacts, **context)
 
 
 def clean_dbt(**context):

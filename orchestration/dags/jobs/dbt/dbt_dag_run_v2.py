@@ -24,7 +24,7 @@ from airflow.operators.empty import EmptyOperator
 
 # Import dbt execution functions
 from common.dbt.dbt_executors import (
-    compile_dbt,
+    compile_dbt_with_selector,
     clean_dbt,
     run_dbt_model,
     run_dbt_test,
@@ -116,7 +116,11 @@ clean = PythonOperator(
 
 compile = PythonOperator(
     task_id="compilation",
-    python_callable=partial(compile_dbt, use_tmp_artifacts=False),
+    python_callable=partial(
+        compile_dbt_with_selector,
+        selector="package:data_gcp_dbt",
+        use_tmp_artifacts=False,
+    ),
     dag=dag,
 )
 

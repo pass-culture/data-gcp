@@ -124,6 +124,17 @@ def run_dbt_command(command: list, **context) -> None:
         cleanup_temp_dir(temp_target_dir)
 
 
+def run_dbt_with_selector(selector: str, **context):
+    """
+    Run dbt with a specific selector.
+    Args:
+        selector: dbt selector (e.g., "package:elementary")
+        **context: Airflow context
+    """
+    command = ["run", "--select", selector]
+    run_dbt_command(command, **context)
+
+
 def compile_dbt(**context):
     """Compile dbt project."""
     run_dbt_command(["compile"], **context)
@@ -182,6 +193,30 @@ def run_dbt_test(model_name: str, node_tags: Optional[List[str]] = None, **conte
         raise AirflowSkipException(f"Skipping node scheduled {skip_schedule}")
 
     command = ["test", "--select", f"{model_name},tag:critical"]
+    run_dbt_command(command, **context)
+
+
+def run_dbt_quality_tests(
+    select: Optional[str] = None, exclude: Optional[str] = None, **context
+):
+    """
+    Run dbt tests with custom select and exclude patterns.
+
+    Args:
+        select: dbt selector pattern (e.g., "tag:weekly")
+        exclude: dbt exclusion pattern (e.g., "audit tag:export")
+        **context: Airflow context
+    """
+    command = ["test"]
+
+    if select:
+        command.extend(["--select", select])
+
+    if exclude:
+        # Split multiple exclusions and add each
+        for exclusion in exclude.split():
+            command.extend(["--exclude", exclusion])
+
     run_dbt_command(command, **context)
 
 

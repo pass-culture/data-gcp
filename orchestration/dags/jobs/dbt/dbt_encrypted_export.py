@@ -1,5 +1,6 @@
 import datetime
-
+import json
+from functools import partial
 from common.access_gcp_secrets import access_secret_data
 from common.config import (
     DAG_TAGS,
@@ -24,12 +25,43 @@ from jobs.crons import ENCRYPTED_EXPORT_DICT
 from airflow import DAG
 from airflow.models import Param
 from airflow.models.xcom_arg import XComArg
-from airflow.operators.bash_operator import BashOperator
-from airflow.operators.python_operator import PythonOperator
+from common.dbt.dbt_executors import run_dbt_quality_tests, run_dbt_operation
+from airflow.operators.python import PythonOperator
 from airflow.providers.google.cloud.transfers.bigquery_to_gcs import (
     BigQueryToGCSOperator,
 )
 from airflow.utils.task_group import TaskGroup
+
+
+def run_bq_obfuscation(**context):
+    """Run the dbt operation for BigQuery obfuscation."""
+    ti = context["ti"]
+
+    # Build the args dictionary
+    table_list = ti.xcom_pull(task_ids="build_export_context", key="table_list")
+    partner_name_xcom = ti.xcom_pull(
+        task_ids="build_export_context", key="partner_name"
+    )
+    obfuscation_config = ti.xcom_pull(
+        task_ids="build_export_context", key="obfuscation_config"
+    )
+
+    args_dict = {
+        "export_tables": table_list,
+        "export_schema": f"tmp_export_{partner_name_xcom}",
+        "export_schema_expiration_day": 1,
+        "secret_partner_value": access_secret_data(
+            GCP_PROJECT_ID, f"dbt_export_private_partner_salt_{partner_name}"
+        ),
+        "fields_obfuscation_config": obfuscation_config.get("obfuscated_fields", {})
+        if obfuscation_config
+        else {},
+    }
+
+    args_str = json.dumps(args_dict)
+
+    run_dbt_operation(operation="generate_export_tables", args=args_str, **context)
+
 
 default_args = {
     "start_date": datetime.datetime(2020, 12, 1),
@@ -92,43 +124,19 @@ for partner_id, partner_name in partner_dict.items():
             dag=dag, external_dag_id="dbt_run_dag", skip_manually_triggered=True
         )
 
-        quality_tests = dbt_test = BashOperator(
+        quality_tests = PythonOperator(
             task_id="dbt_test",
-            bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test.sh ",
-            env={
-                "SELECT": "tag:export",
-                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-                "target": "{{ params.target }}",
-                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-                "ENV_SHORT_NAME": ENV_SHORT_NAME,
-                "EXCLUSION": "audit elementary",
-            },
-            append_env=True,
-            cwd=PATH_TO_DBT_PROJECT,
+            python_callable=partial(
+                run_dbt_quality_tests, select="tag:export", exclude="audit elementary"
+            ),
             dag=dag,
             retries=0,
         )
 
-        bq_obfuscation = BashOperator(
+        bq_obfuscation = PythonOperator(
             task_id="bq_obfuscation",
-            bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run_operation.sh ",
-            env={
-                "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-                "target": "{{ params.target }}",
-                "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-                "operation": "generate_export_tables",
-                "args": (
-                    "{"
-                    "export_tables: {{ ti.xcom_pull(task_ids='build_export_context', key='table_list') | tojson }}, "
-                    "export_schema: tmp_export_{{ ti.xcom_pull(task_ids='build_export_context', key='partner_name') }}, "
-                    "export_schema_expiration_day : 1,"
-                    f"secret_partner_value: '{access_secret_data(GCP_PROJECT_ID, f'dbt_export_private_partner_salt_{partner_name}')}', "
-                    "fields_obfuscation_config: {{ ti.xcom_pull(task_ids='build_export_context', key='obfuscation_config').obfuscated_fields | tojson if ti.xcom_pull(task_ids='build_export_context', key='obfuscation_config') else '{}' }}"
-                    "}"
-                ),
-            },
-            cwd=PATH_TO_DBT_PROJECT,
-            append_env=True,
+            python_callable=run_bq_obfuscation,
+            dag=dag,
         )
 
         with TaskGroup(group_id="export_group") as export_group:

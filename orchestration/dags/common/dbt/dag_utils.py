@@ -1,4 +1,5 @@
 import json
+from functools import partial
 from typing import Dict, List, Optional, Tuple, Union
 
 from common.config import (
@@ -9,12 +10,15 @@ from common.config import (
 
 from airflow import DAG
 from airflow.models.baseoperator import BaseOperator, chain
-from airflow.operators.bash_operator import BashOperator
+from airflow.operators.python import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.task_group import TaskGroup
+from airflow.exceptions import AirflowSkipException
+
+# Import the Python callable functions from dbt_executors module
+from common.dbt.dbt_executors import run_dbt_model, run_dbt_test, run_dbt_snapshot
 
 
-# ruff: noqa: F841
 def get_models_folder_dict(
     dbt_models: List[str], manifest: Optional[Dict]
 ) -> Dict[str, List[str]]:
@@ -46,10 +50,6 @@ def create_nested_folder_groups(
         """
         Recursively create nested TaskGroups based on folder hierarchy.
         This function modifies task_group dictionary declared above.
-        TODO:
-            - Remove leaf TaskGroup and put the trigger operator in parent TaskGroup.
-            Hint: the recursive function is idempotent over original_hierarchy.
-            - Internalize task_group dict and output it.
         """
         if not folder_hierarchy:
             return (None, original_hierarchy)
@@ -296,70 +296,52 @@ def load_and_process_manifest(
     )
 
 
-def create_test_operator(model_node: str, model_data: Dict, dag: DAG) -> BashOperator:
-    full_ref_str = " --full-refresh" if not "{{ params.full_refresh }}" else ""
-    return BashOperator(
+def create_test_operator(model_node: str, model_data: Dict, dag: DAG) -> PythonOperator:
+    """Create a Python operator for running dbt tests."""
+    node_tags = model_data.get("tags", [])
+    return PythonOperator(
         task_id=model_data["alias"] + "_tests",
-        bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_test_model.sh ",
-        env={
-            "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-            "target": "{{ params.target }}",
-            "model": f"""{model_data['name']},tag:critical""",
-            "full_ref_str": full_ref_str,
-            "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-        },
-        append_env=True,
-        cwd=PATH_TO_DBT_PROJECT,
+        python_callable=partial(run_dbt_test, model_data["name"], node_tags),
         dag=dag,
         pool="dbt",
+        trigger_rule="none_failed_min_one_success",  # Run if upstream tasks succeed or skip
     )
 
 
 def create_model_operator(
     model_node: str, model_data: Dict, is_applicative: bool, dag: DAG
-) -> BashOperator:
-    full_ref_str = (
-        " --full-refresh" if "{{ params.full_refresh|lower }}" == "true" else ""
+) -> PythonOperator:
+    """Create a Python operator for running a dbt model."""
+    # Filter out weekly/monthly from excluded tags since we handle them differently now
+    exclude_tags = (
+        [tag for tag in EXCLUDED_TAGS if tag not in ["weekly", "monthly"]]
+        if EXCLUDED_TAGS
+        else None
     )
-    exclusion_str = (
-        " --exclude " + " ".join([f"tag:{item}" for item in EXCLUDED_TAGS])
-        if len(EXCLUDED_TAGS) > 0
-        else ""
-    )
-    return BashOperator(
+    node_tags = model_data.get("tags", [])
+
+    return PythonOperator(
         task_id=model_data["alias"] if is_applicative else model_data["name"],
-        bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_run.sh ",
-        env={
-            "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-            "target": "{{ params.target }}",
-            "model": f"{model_data['name']}",
-            "full_ref_str": full_ref_str,
-            "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-            "EXCLUSION": exclusion_str,
-        },
-        append_env=True,
-        cwd=PATH_TO_DBT_PROJECT,
+        python_callable=partial(
+            run_dbt_model, model_data["name"], exclude_tags, node_tags
+        ),
         dag=dag,
         pool="dbt",
+        trigger_rule="none_failed_min_one_success",  # Run if upstream tasks succeed or skip
     )
 
 
 def create_snapshot_operator(
     snapshot_node: str, snapshot_data: Dict, dag: DAG
-) -> BashOperator:
-    return BashOperator(
+) -> PythonOperator:
+    """Create a Python operator for running a dbt snapshot."""
+    node_tags = snapshot_data.get("tags", [])
+    return PythonOperator(
         task_id=snapshot_data["alias"],
-        bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_snapshot.sh ",
-        env={
-            "GLOBAL_CLI_FLAGS": "{{ params.GLOBAL_CLI_FLAGS }}",
-            "target": "{{ params.target }}",
-            "snapshot": f"""{snapshot_data['name']}""",
-            "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-        },
-        append_env=True,
-        cwd=PATH_TO_DBT_PROJECT,
+        python_callable=partial(run_dbt_snapshot, snapshot_data["name"], node_tags),
         dag=dag,
         pool="dbt",
+        trigger_rule="none_failed_min_one_success",  # Run if upstream tasks succeed or skip
     )
 
 
@@ -368,8 +350,8 @@ def create_critical_tests_group(
     dbt_models: List[str],
     manifest: Dict,
     models_with_crit_test_dependencies: List[Optional[str]],
-) -> Dict[str, BashOperator]:
-    test_op_dict: Dict[str, BashOperator] = {}
+) -> Dict[str, PythonOperator]:
+    test_op_dict: Dict[str, PythonOperator] = {}
     if any(
         model_node in models_with_crit_test_dependencies for model_node in dbt_models
     ):
@@ -388,9 +370,9 @@ def create_data_transformation_group(
     dbt_models: List[str],
     manifest: Dict,
     models_with_crit_test_dependencies: List[Optional[str]],
-    test_op_dict: Dict[str, BashOperator],
-) -> Dict[str, BashOperator]:
-    model_op_dict: Dict[str, BashOperator] = {}
+    test_op_dict: Dict[str, PythonOperator],
+) -> Dict[str, PythonOperator]:
+    model_op_dict: Dict[str, PythonOperator] = {}
     with TaskGroup(group_id="data_transformation", dag=dag) as data_transfo:
         with TaskGroup(group_id="applicative_tables", dag=dag) as applicative:
             for model_node in dbt_models:
@@ -420,7 +402,7 @@ def setup_dependencies(
     test_op_dict: Dict[str, BaseOperator],
     snapshot_op_dict: Dict[str, BaseOperator],
     models_with_crit_test_dependencies: List[Optional[str]],
-    final_op: BashOperator,
+    final_op: BaseOperator,
 ) -> None:
     children = [
         model_op_dict[child]
@@ -448,7 +430,7 @@ def set_up_nodes_dependencies(
     test_op_dict: Dict[str, BaseOperator],
     snapshot_op_dict: Dict[str, BaseOperator],
     models_with_crit_test_dependencies: List[Optional[str]],
-    final_op: Union[BaseOperator, BashOperator],
+    final_op: Union[BaseOperator, PythonOperator],
 ) -> None:
     for model_node in dbt_models:
         setup_dependencies(
@@ -475,8 +457,8 @@ def set_up_nodes_dependencies(
 
 def create_snapshot_group(
     dag: DAG, dbt_snapshots: List[str], manifest: Dict
-) -> Dict[str, BashOperator]:
-    snapshot_op_dict: Dict[str, BashOperator] = {}
+) -> Dict[str, PythonOperator]:
+    snapshot_op_dict: Dict[str, PythonOperator] = {}
     with TaskGroup(group_id="snapshots", dag=dag) as snapshot_group:
         for snapshot_node in dbt_snapshots:
             snapshot_data = manifest["nodes"][snapshot_node]
@@ -505,8 +487,8 @@ def dbt_dag_reconstruction(
     dbt_snapshots: List[str],
     models_with_crit_test_dependencies: List[Optional[str]],
     crit_test_parents: Dict[Optional[str], List[str]],
-    final_op: Union[BaseOperator, BashOperator],
-) -> Dict[str, Union[Dict[str, BashOperator], TaskGroup]]:
+    final_op: Union[BaseOperator, PythonOperator],
+) -> Dict[str, Union[Dict[str, PythonOperator], TaskGroup]]:
     # Create the task group for critical tests only if necessary
     test_op_dict = create_critical_tests_group(
         dag, dbt_models, manifest, models_with_crit_test_dependencies

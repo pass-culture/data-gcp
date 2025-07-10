@@ -47,10 +47,23 @@ GCP_PROJECT_PRO_ENV = {
 
 GCP_PROJECT_PERFORMANCE_ENV = {
     "dev": "pc-native-testing.firebase_performance",
-    "stg": "pc-native-staging.firebase_performance",
+    "stg": "pc-native-testing.firebase_performance",
     "prod": "pc-native-production.firebase_performance",
 }[ENV_SHORT_NAME]
 
+
+PERFORMANCE_SUFFIX_IOS = {
+    "dev": "test_IOS",
+    "stg": "test_IOS",
+    "prod": "IOS",
+}[ENV_SHORT_NAME]
+
+
+PERFORMANCE_SUFFIX_ANDROID = {
+    "dev": "testing_ANDROID",
+    "stg": "testing_ANDROID",
+    "prod": "webapp_ANDROID",
+}[ENV_SHORT_NAME]
 
 import_firebase_pro_tables = {
     # raw
@@ -98,7 +111,7 @@ import_firebase_performance_tables = {
         "clustering_fields": {"fields": ["event_name"]},
         "params": {
             "gcp_project_env": GCP_PROJECT_PERFORMANCE_ENV,
-            "suffix": "test_IOS",
+            "suffix": PERFORMANCE_SUFFIX_IOS,
         },
         "schemaUpdateOptions": ["ALLOW_FIELD_ADDITION"],
     },
@@ -111,7 +124,7 @@ import_firebase_performance_tables = {
         "clustering_fields": {"fields": ["event_name"]},
         "params": {
             "gcp_project_env": GCP_PROJECT_PERFORMANCE_ENV,
-            "suffix": "testing_ANDROID",
+            "suffix": PERFORMANCE_SUFFIX_ANDROID,
         },
         "schemaUpdateOptions": ["ALLOW_FIELD_ADDITION"],
     },

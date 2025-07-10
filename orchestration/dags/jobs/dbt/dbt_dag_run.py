@@ -10,9 +10,16 @@ from common.config import (
     PATH_TO_DBT_PROJECT,
     PATH_TO_DBT_TARGET,
 )
-from orchestration.dags.common.dbt.dag_utils import (
+from common.dbt.dag_utils import (
     dbt_dag_reconstruction,
     load_and_process_manifest,
+)
+from common.dbt.dbt_executors import (
+    compile_dbt_with_selector,
+    clean_dbt,
+    run_dbt_model,
+    run_dbt_test,
+    run_dbt_snapshot,
 )
 from common.utils import (
     delayed_waiting_operator,
@@ -24,15 +31,6 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.python import PythonOperator
 from airflow.operators.empty import EmptyOperator
-
-# Import dbt execution functions
-from common.dbt.dbt_executors import (
-    compile_dbt_with_selector,
-    clean_dbt,
-    run_dbt_model,
-    run_dbt_test,
-    run_dbt_snapshot,
-)
 
 
 default_args = {

@@ -5,6 +5,7 @@ Simple implementation that mirrors the original bash scripts functionality.
 
 import os
 import shutil
+from copy import copy
 import tempfile
 import logging
 from pathlib import Path
@@ -107,7 +108,7 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
 
         # Add global CLI flags if they exist
         if global_cli_flags is not None:
-            tmp_cli_flags = global_cli_flags.copy()
+            tmp_cli_flags = copy(global_cli_flags)
             if "compile" in command:
                 tmp_cli_flags.remove("--no-write-json")
             cli_args.extend(tmp_cli_flags.split())
@@ -261,4 +262,21 @@ def run_dbt_snapshot(
         raise AirflowSkipException(f"Skipping node scheduled {skip_schedule}")
 
     command = ["snapshot", "--select", snapshot_name]
+    run_dbt_command(command, **context)
+
+
+def run_dbt_operation(operation: str, args: Optional[str] = None, **context):
+    """
+    Run a dbt operation (macro).
+
+    Args:
+        operation: Name of the dbt operation/macro to run
+        args: JSON string of arguments to pass to the operation
+        **context: Airflow context
+    """
+    command = ["run-operation", operation]
+
+    if args:
+        command.extend(["--args", args])
+
     run_dbt_command(command, **context)

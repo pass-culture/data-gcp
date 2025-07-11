@@ -6,6 +6,7 @@ from common.hooks.gce import DeferrableSSHGCEJobManager
 
 from airflow.providers.google.cloud.hooks.compute_ssh import ComputeEngineSSHHook
 from airflow.triggers.base import BaseTrigger, TriggerEvent
+from common.config import USE_INTERNAL_IP
 
 
 class DeferrableSSHJobMonitorTrigger(BaseTrigger):
@@ -45,7 +46,7 @@ class DeferrableSSHJobMonitorTrigger(BaseTrigger):
             instance_name=instance_name,
             zone=zone,
             project_id=GCP_PROJECT_ID,
-            use_internal_ip=False,
+            use_internal_ip=USE_INTERNAL_IP,
             use_iap_tunnel=True,
             use_oslogin=False,
             user=SSH_USER,

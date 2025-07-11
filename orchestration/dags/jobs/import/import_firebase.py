@@ -6,7 +6,7 @@ from common.callback import on_failure_base_callback
 from common.config import DAG_FOLDER, DAG_TAGS, GCP_PROJECT_ID
 from common.operators.bigquery import bigquery_job_task
 from common.utils import get_airflow_schedule
-from dependencies.firebase.import_firebase import import_tables
+from dependencies.firebase.import_firebase import import_tables, import_perf_tables
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
@@ -134,3 +134,18 @@ for dag_type, params in dags.items():
         )
 
         start >> check_table_task >> [default_task, fallback_task] >> end_job >> end
+
+    for job_name_table, job_params in import_perf_tables.items():
+        if job_params.get("partition_prefix", None) is not None:
+            job_params["destination_table"] = (
+                f"{job_params['destination_table']}{job_params['partition_prefix']}{yyyymmdd}"
+            )
+
+        loading_task = bigquery_job_task(
+            dag=dag,
+            table=f"{job_name_table}",
+            job_params=job_params,
+            extra_params={"dag_type": dag_type},
+        )
+
+        start >> loading_task >> end

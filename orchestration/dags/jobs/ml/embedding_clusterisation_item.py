@@ -103,7 +103,7 @@ with DAG(
             f"--output-dataset-name tmp_{ENV_SHORT_NAME} "
             f"--output-table-name {DATE}_{cluster_prefix}_import_item_clusters_preprocess "
             f"--config-file-name {cluster_config_file_name} ",
-            deferrable=True,
+            deferrable=False,
             poll_interval=300,
         )
 
@@ -117,7 +117,7 @@ with DAG(
             f"--output-dataset-name ml_preproc_{ENV_SHORT_NAME} "
             f"--output-table-name {cluster_prefix}_item_cluster "
             f"--config-file-name {cluster_config_file_name} ",
-            deferrable=True,
+            deferrable=False,
             poll_interval=300,
         )
 

@@ -124,36 +124,16 @@ with
                     ]
                 )
             }},
-            coalesce( 
-                {{ extract_params_string_value(
-                    [
-                        "bookingId"
-                    ],
-                    alias=false) 
-                    }},
-                cast({{ extract_params_int_value(
-                    [
-                        "bookingId"
-                    ],
-                    alias=false)
-                    }} as STRING 
+            coalesce(
+                {{ extract_params_string_value(["bookingId"], alias=false) }},
+                cast(
+                    {{ extract_params_int_value(["bookingId"], alias=false) }} as string
                 )
-                ) as bookingId,
-            coalesce( 
-                {{ extract_params_string_value(
-                    [
-                        "offerId"
-                    ],
-                    alias=false) 
-                    }},
-                cast({{ extract_params_int_value(
-                    [
-                        "offerId"
-                    ],
-                    alias=false)
-                    }} as STRING 
-                )
-                ) as offerId,
+            ) as bookingid,
+            coalesce(
+                {{ extract_params_string_value(["offerId"], alias=false) }},
+                cast({{ extract_params_int_value(["offerId"], alias=false) }} as string)
+            ) as offerid,
             (
                 select event_params.value.string_value
                 from unnest(event_params) as event_params

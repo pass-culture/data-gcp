@@ -86,6 +86,13 @@ models:
       monitoring:
         +meta:
           owner: "@data-engineering"
+      propilote:
+        +meta:
+          owner: "@data-engineering"
+          propilote:
+            PPG:
+              ephemerals_kpis:
+                +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     export:
       +schema: export_{{ target.name }}
       +materialized: "{{ var('CI_MATERIALIZATION', 'view') }}"

@@ -135,7 +135,8 @@ for dag_type, params in dags.items():
 
         start >> check_table_task >> [default_task, fallback_task] >> end_job >> end
 
-    for job_name_table, job_params in import_perf_tables.items():
+    import_perf_tables_temp = copy.deepcopy(import_perf_tables)
+    for job_name_table, job_params in import_perf_tables_temp.items():
         if job_params.get("partition_prefix", None) is not None:
             job_params["destination_table"] = (
                 f"{job_params['destination_table']}{job_params['partition_prefix']}{yyyymmdd}"

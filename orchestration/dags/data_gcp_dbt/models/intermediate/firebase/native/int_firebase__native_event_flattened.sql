@@ -56,7 +56,7 @@ with
                         "enabled",
                     ]
                 )
-            }}
+            }},
             {{
                 extract_params_string_value(
                     [
@@ -77,13 +77,11 @@ with
                         "firebase_previous_screen",
                         "fromMultivenueOfferId",
                         "pageName",
-                        "offerId",
                         "query",
                         "searchQuery",
                         "categoryName",
                         "type",
                         "venueId",
-                        "bookingId",
                         "fromOfferId",
                         "filterTypes",
                         "filter",
@@ -126,6 +124,16 @@ with
                     ]
                 )
             }},
+            coalesce(
+                {{ extract_params_string_value(["bookingId"], alias=false) }},
+                cast(
+                    {{ extract_params_int_value(["bookingId"], alias=false) }} as string
+                )
+            ) as bookingid,
+            coalesce(
+                {{ extract_params_string_value(["offerId"], alias=false) }},
+                cast({{ extract_params_int_value(["offerId"], alias=false) }} as string)
+            ) as offerid,
             (
                 select event_params.value.string_value
                 from unnest(event_params) as event_params

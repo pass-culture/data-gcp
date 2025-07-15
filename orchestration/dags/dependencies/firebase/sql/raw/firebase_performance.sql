@@ -4,8 +4,8 @@ select
     app_build_version,
     os_version,
     device_name,
-    country
-    carrier
+    country,
+    carrier,
     radio_type,
     custom_attributes,
     event_type,

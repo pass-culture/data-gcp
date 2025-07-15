@@ -22,9 +22,11 @@ with
             date("{{ ds() }}") as update_date,
             max(deposit_active_date) as last_active_date
         from {{ ref("mrt_native__daily_user_deposit") }}
-        where deposit_active_date > date('2021-01-01')
+        where
+            deposit_active_date > date('2021-01-01')
             {% if is_incremental() %}
-            and date_trunc(deposit_active_date, month) = date_trunc(date("{{ ds() }}"), month)
+                and date_trunc(deposit_active_date, month)
+                = date_trunc(date("{{ ds() }}"), month)
             {% endif %}
         group by date_trunc(deposit_active_date, month)
     ),
@@ -44,7 +46,6 @@ with
         where deposit_active_date > date('2021-01-01')
         group by deposit_active_date, user_id, deposit_amount
     ),
-
 
     user_cumulative_amount_spent as (
         select
@@ -81,16 +82,13 @@ with
             left join
                 {{ ref("region_department") }} rd
                 on eud.user_department_code = rd.num_dep
-            where cumulative_amount_spent < initial_deposit_amount
-            {% if is_incremental() %}
-                and execution_date = date_trunc(date("{{ ds() }}"), month)
-            {% endif %}
+            where
+                cumulative_amount_spent < initial_deposit_amount
+                {% if is_incremental() %}
+                    and execution_date = date_trunc(date("{{ ds() }}"), month)
+                {% endif %}
             group by
-                execution_date,
-                update_date,
-                dimension_name,
-                dimension_value,
-                indicator
+                execution_date, update_date, dimension_name, dimension_value, indicator
         {% endfor %}
 
     ),
@@ -113,16 +111,13 @@ with
                 {{ ref("mrt_global__user") }} eud
                 on date(eud.first_deposit_creation_date) <= date(ldm.last_active_date)
             left join
-                {{ ref("region_department") }} as rd on eud.user_department_code = rd.num_dep
+                {{ ref("region_department") }} as rd
+                on eud.user_department_code = rd.num_dep
             {% if is_incremental() %}
                 where execution_date = date_trunc(date("{{ ds() }}"), month)
             {% endif %}
             group by
-                execution_date,
-                update_date,
-                dimension_name,
-                dimension_value,
-                indicator
+                execution_date, update_date, dimension_name, dimension_value, indicator
         {% endfor %}
     )
 

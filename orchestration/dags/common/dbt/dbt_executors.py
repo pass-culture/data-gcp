@@ -124,7 +124,7 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
                 )
             if "compile" in command:
                 tmp_cli_flags.remove("--no-write-json")
-            cli_args.extend(tmp_cli_flags.split())
+            cli_args.extend(tmp_cli_flags)
 
         logging.info(f"Executing dbt command: {' '.join(cli_args)}")
 

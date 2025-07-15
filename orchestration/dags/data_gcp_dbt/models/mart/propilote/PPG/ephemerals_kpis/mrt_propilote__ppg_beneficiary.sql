@@ -72,7 +72,7 @@ with
                 update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
-                'beneficiaire_actuel' as indicator,
+                'beneficiaire_actuel' as kpi_name,
                 count(distinct uua.user_id) as numerator,
                 1 as denominator
             from user_cumulative_amount_spent uua
@@ -88,7 +88,7 @@ with
                     and execution_date = date_trunc(date("{{ ds() }}"), month)
                 {% endif %}
             group by
-                execution_date, update_date, dimension_name, dimension_value, indicator
+                execution_date, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
     ),
@@ -103,7 +103,7 @@ with
                 update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
-                "beneficiaire_total" as indicator,
+                "beneficiaire_total" as kpi_name,
                 count(distinct eud.user_id) as numerator,
                 1 as denominator
             from last_day_of_month ldm
@@ -117,12 +117,28 @@ with
                 where execution_date = date_trunc(date("{{ ds() }}"), month)
             {% endif %}
             group by
-                execution_date, update_date, dimension_name, dimension_value, indicator
+                execution_date, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
     )
 
-select *
+select 
+    execution_date,
+    update_date,
+    dimension_name,
+    dimension_value,
+    kpi_name,
+    numerator,
+    denominator,
+    SAFE_DIVIDE(numerator,denominator) as kpi
 from aggregated_active_beneficiary
 union all
-select *
+select 
+    execution_date,
+    update_date,
+    dimension_name,
+    dimension_value,
+    kpi_name,
+    numerator,
+    denominator,
+    SAFE_DIVIDE(numerator,denominator) as kpi
 from aggregated_total_beneficiary

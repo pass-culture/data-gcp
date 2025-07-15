@@ -97,7 +97,7 @@ for partner_id, partner_name in partner_dict.items():
                 type="string",
             ),
             "GLOBAL_CLI_FLAGS": Param(
-                default=" --no-write-json ",
+                default="--no-write-json",
                 type="string",
             ),
             "instance_type": Param(

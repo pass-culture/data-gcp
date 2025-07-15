@@ -14,6 +14,7 @@ from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_ML_LINKAGE_DATASET,
     BIGQUERY_ML_PREPROCESSING_DATASET,
+    BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
@@ -39,9 +40,12 @@ DAG_NAME = "artist_linkage"
 
 # GCS Paths / Filenames
 GCS_FOLDER_PATH = f"artist_linkage_{ENV_SHORT_NAME}"
-STORAGE_BASE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}"
+STORAGE_BASE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}/{{{{ ds_nodash }}}}"
 WIKIDATA_STORAGE_BASE_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/dump_wikidata"
+
+## Link from Scratch
 ARTISTS_TO_LINK_GCS_FILENAME = "artists_to_link.parquet"
+PRODUCTS_TO_LINK_GCS_FILENAME = "products_to_link.parquet"
 PREPROCESSED_GCS_FILENAME = "preprocessed_artists_to_link.parquet"
 ARTIST_LINKED_GCS_FILENAME = "artist_linked.parquet"
 WIKIDATA_EXTRACTION_GCS_FILENAME = "wikidata_extraction.parquet"
@@ -49,25 +53,58 @@ ARTISTS_MATCHED_ON_WIKIDATA = "artists_matched_on_wikidata.parquet"
 ARTISTS_WITH_METADATA_GCS_FILENAME = "artist_linked_with_metadata.parquet"
 TEST_SETS_GCS_DIR = f"gs://{DATA_GCS_BUCKET_NAME}/artists/labelled_test_sets"
 
+## Link New Products to Artists
+APPLICATIVE_ARTISTS_GCS_FILENAME = "applicative_database_artist.parquet"
+APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME = "applicative_database_artist_alias.parquet"
+APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME = (
+    "applicative_database_product_artist_link.parquet"
+)
+DELTA_ARTISTS_GCS_FILENAME = "delta_artist.parquet"
+DELTA_ARTIST_ALIAS_GCS_FILENAME = "delta_artist_alias.parquet"
+DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME = "delta_product_artist_link.parquet"
+
+
 # BQ Tables
 ARTISTS_TO_LINK_TABLE = "artist_name_to_link"
 ARTIST_LINK_TABLE = "artist_linked"
+TABLES_TO_IMPORT_TO_GCS_FOR_SYNC = [
+    {
+        "dataset_id": BIGQUERY_RAW_DATASET,
+        "table_id": "applicative_database_artist",
+        "filename": APPLICATIVE_ARTISTS_GCS_FILENAME,
+    },
+    {
+        "dataset_id": BIGQUERY_RAW_DATASET,
+        "table_id": "applicative_database_artist_alias",
+        "filename": APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME,
+    },
+    {
+        "dataset_id": BIGQUERY_RAW_DATASET,
+        "table_id": "applicative_database_product_artist_link",
+        "filename": APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME,
+    },
+    {
+        "dataset_id": BIGQUERY_ML_LINKAGE_DATASET,
+        "table_id": "product_to_link",
+        "filename": PRODUCTS_TO_LINK_GCS_FILENAME,
+    },
+]
+
+LINK_FROM_SCRATCH_FLOW = "link_from_scratch_flow"
+LINK_NEW_PRODUCTS_TO_ARTISTS_FLOW = "link_new_products_to_artists_flow"
+
+
+def _choose_linkage(**context):
+    if context["params"]["link_from_scratch"] is True:
+        return LINK_FROM_SCRATCH_FLOW
+    return LINK_NEW_PRODUCTS_TO_ARTISTS_FLOW
+
+
 default_args = {
     "start_date": datetime(2024, 7, 16),
     "on_failure_callback": on_failure_vm_callback,
     "retries": 5,
 }
-
-LINK_FROM_SCRATCH_TASK_ID = "link_from_scratch"
-LINK_NEW_PRODUCTS_TO_ARTISTS_TASK_ID = "link_new_products_to_artists"
-
-
-def _choose_linkage(**context):
-    if context["params"]["link_from_scratch"] is True:
-        return LINK_FROM_SCRATCH_TASK_ID
-    return LINK_NEW_PRODUCTS_TO_ARTISTS_TASK_ID
-
-
 with DAG(
     DAG_NAME,
     default_args=default_args,
@@ -130,13 +167,15 @@ with DAG(
         provide_context=True,
         dag=dag,
     )
-    link_from_scratch = DummyOperator(task_id=LINK_FROM_SCRATCH_TASK_ID)
-    link_new_products_to_artists = DummyOperator(
-        task_id=LINK_NEW_PRODUCTS_TO_ARTISTS_TASK_ID
+    link_from_scratch_flow = DummyOperator(task_id=LINK_FROM_SCRATCH_FLOW)
+    link_new_products_to_artists_flow = DummyOperator(
+        task_id=LINK_NEW_PRODUCTS_TO_ARTISTS_FLOW
     )
 
-    # Artist Linkage
-    with TaskGroup("data_collection") as collect:
+    # Artist Linkage From Scratch
+    with TaskGroup(
+        "import_data_for_linkage_from_scratch"
+    ) as import_data_for_linkage_from_scratch:
         import_artists_to_link_to_bucket = BigQueryInsertJobOperator(
             project_id=GCP_PROJECT_ID,
             task_id="import_artists_to_link_to_bucket",
@@ -220,34 +259,107 @@ with DAG(
         autodetect=True,
     )
 
-    artist_metrics = (
-        SSHGCEOperator(
-            task_id="artist_metrics",
-            instance_name=GCE_INSTANCE,
-            base_dir=BASE_DIR,
-            command=f"""
+    artist_metrics = SSHGCEOperator(
+        task_id="artist_metrics",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
          python evaluate.py \
         --artists-to-link-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_TO_LINK_GCS_FILENAME)} \
         --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)} \
         --test-sets-dir {TEST_SETS_GCS_DIR} \
         --experiment-name artist_linkage_v1.0_{ENV_SHORT_NAME}
         """,
-        ),
     )
+
+    # Link New Products to Artists
+    with TaskGroup(
+        "import_data_for_new_products_synchronization"
+    ) as import_data_for_new_products_synchronization:
+        for table_data in TABLES_TO_IMPORT_TO_GCS_FOR_SYNC:
+            BigQueryInsertJobOperator(
+                project_id=GCP_PROJECT_ID,
+                task_id=f"import_{table_data['table_id']}_to_bucket",
+                configuration={
+                    "extract": {
+                        "sourceTable": {
+                            "projectId": GCP_PROJECT_ID,
+                            "datasetId": table_data["dataset_id"],
+                            "tableId": table_data["table_id"],
+                        },
+                        "compression": None,
+                        "destinationUris": os.path.join(
+                            STORAGE_BASE_PATH, table_data["filename"]
+                        ),
+                        "destinationFormat": "PARQUET",
+                    }
+                },
+                dag=dag,
+            )
+
+    link_new_products_to_artists = SSHGCEOperator(
+        task_id="link_new_products_to_artists",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+             python link_new_products_to_artists.py \
+            --artist-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
+            --artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME)} \
+            --product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
+            --product-filepath {os.path.join(STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME)} \
+            --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
+            --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
+            --output-delta-artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME)} \
+            --output-delta-artist-alias-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTIST_ALIAS_GCS_FILENAME)} \
+            --output-delta-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME)}
+            """,
+    )
+
+    TABLES_TO_IMPORT_TO_GCS_FOR_SYNC = [
+        {
+            "dataset_id": BIGQUERY_RAW_DATASET,
+            "table_id": "applicative_database_artist",
+            "filename": APPLICATIVE_ARTISTS_GCS_FILENAME,
+        },
+        {
+            "dataset_id": BIGQUERY_RAW_DATASET,
+            "table_id": "applicative_database_artist_alias",
+            "filename": APPLICATIVE_ARTIST_ALIAS_GCS_FILENAME,
+        },
+        {
+            "dataset_id": BIGQUERY_RAW_DATASET,
+            "table_id": "applicative_database_product_artist_link",
+            "filename": APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME,
+        },
+        {
+            "dataset_id": BIGQUERY_ML_LINKAGE_DATASET,
+            "table_id": "product_to_link",
+            "filename": PRODUCTS_TO_LINK_GCS_FILENAME,
+        },
+    ]
 
     # Common tasks
     (
         dag_init
         >> vm_init
         >> choose_linkage
-        >> [link_from_scratch, link_new_products_to_artists]
+        >> [link_from_scratch_flow, link_new_products_to_artists_flow]
     )
 
     # Link From Scratch tasks
-    link_from_scratch >> collect >> internal_linkage
-    link_from_scratch >> [internal_linkage, wikidata_matching]
-    (internal_linkage >> wikidata_matching >> load_data_into_artist_linked_table)
-    wikidata_matching >> artist_metrics >> gce_instance_stop
+    (
+        link_from_scratch_flow
+        >> import_data_for_linkage_from_scratch
+        >> internal_linkage
+        >> wikidata_matching
+        >> [load_data_into_artist_linked_table, artist_metrics]
+        >> gce_instance_stop
+    )
 
     # Link New Products to Artists tasks
-    link_new_products_to_artists >> gce_instance_stop
+    (
+        link_new_products_to_artists_flow
+        >> import_data_for_new_products_synchronization
+        >> link_new_products_to_artists
+        >> gce_instance_stop
+    )

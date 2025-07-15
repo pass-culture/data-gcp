@@ -21,6 +21,7 @@ ARTIST_NAME_TO_FILTER = {
     "wallpaper",
     "<<<<<",
     "nc",
+    "",
 }
 
 

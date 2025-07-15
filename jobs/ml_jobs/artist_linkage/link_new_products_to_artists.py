@@ -5,6 +5,7 @@ import typer
 from loguru import logger
 
 from match_artists_on_wikidata import (
+    load_wikidata,
     match_namesakes_per_category,
     match_per_category_no_namesakes,
 )
@@ -219,7 +220,9 @@ def match_artist_on_offer_names(
         how="left",
         on=[ARTIST_NAME_TO_MATCH_KEY, ARTIST_TYPE_KEY, OFFER_CATEGORY_ID_KEY],
     )
-    preproc_linked_products_df = preproc_matched_df.loc[lambda df: df.artist_id.notna()]
+    preproc_linked_products_df = preproc_matched_df.loc[
+        lambda df: df.artist_id.notna()
+    ].loc[lambda df: ~df[PRODUCT_ID_KEY].isin(raw_linked_products_df[PRODUCT_ID_KEY])]
     preproc_unlinked_products_df = (
         preproc_matched_df.loc[lambda df: df.artist_id.isna()]
         .drop_duplicates()
@@ -265,14 +268,14 @@ def match_new_artists_with_wikidata(
     """
     # 1? Preprocess to use wikidata matching functions
     wiki_df = (
-        wiki_df.assign(alias=lambda df: df.alias_name_to_match)
-        .rename(
+        wiki_df.rename(
             columns={
                 "artist_name": "wiki_artist_name",
             }
         )
         .assign(
             alias_name_to_match=lambda df: df.raw_alias.apply(extract_artist_name),
+            alias=lambda df: df.alias_name_to_match,
         )
         .loc[lambda df: (df.alias_name_to_match != "") & df.alias_name_to_match.notna()]
     )
@@ -390,7 +393,8 @@ def create_delta_tables(
                 ],
             )
             .filter(PRODUCTS_KEYS)
-            .assign(action="add", comment="linked to new artist"),
+            .assign(action="add", comment="linked to new artist")
+            .drop_duplicates(),
         ]
     )
     delta_artist_df = (
@@ -457,7 +461,7 @@ def sanity_checks(
             "There are still products that could not be linked to artists after matching."
         )
     assert (
-        not delta_product_df.duplicated().any()
+        not delta_product_df.drop(columns=["action", "comment"]).duplicated().any()
     ), "Duplicate entries in delta_product_df"
 
     # 2. Artists
@@ -471,7 +475,7 @@ def sanity_checks(
             "There are artists that already exist in the database after matching."
         )
     assert (
-        not delta_artist_df.duplicated().any()
+        not delta_artist_df.drop(columns=["action", "comment"]).duplicated().any()
     ), "Duplicate entries in delta_artist_df"
 
     # 3. Artist Aliases
@@ -488,7 +492,7 @@ def sanity_checks(
             "There are artist aliases that already exist in the database after matching."
         )
     assert (
-        not delta_artist_alias_df.duplicated().any()
+        not delta_artist_alias_df.drop(columns=["action", "comment"]).duplicated().any()
     ), "Duplicate entries in delta_artist_alias_df"
 
     # Additional checks can be added as needed
@@ -504,7 +508,8 @@ def main(
     artist_alias_file_path: str = typer.Option(),
     product_artist_link_filepath: str = typer.Option(),
     product_filepath: str = typer.Option(),
-    wiki_artist_alias_filepath: str = typer.Option(),
+    wiki_base_path: str = typer.Option(),
+    wiki_file_name: str = typer.Option(),
     # Output files
     output_delta_artist_file_path: str = typer.Option(),
     output_delta_artist_alias_file_path: str = typer.Option(),
@@ -521,7 +526,9 @@ def main(
     )
     artist_df = pd.read_parquet(artist_filepath)
     existing_artist_alias_df = pd.read_parquet(artist_alias_file_path)
-    wiki_df = pd.read_parquet(wiki_artist_alias_filepath)
+    wiki_df = load_wikidata(
+        wiki_base_path=wiki_base_path, wiki_file_name=wiki_file_name
+    ).reset_index(drop=True)
     artist_alias_df = build_artist_alias(product_df, product_artist_link_df)
 
     # 2. Split products between to remove and to link
@@ -548,14 +555,14 @@ def main(
         .reset_index()
     )
 
-    # 4. Match new artist clusters with existing artists on Wikidata
+    # 5. Match new artist clusters with existing artists on Wikidata
     exploded_artist_alias_df = match_new_artists_with_wikidata(
         new_artist_clusters_df,
         existing_artist_alias_df,
         wiki_df,
     )
 
-    # %% 5. Create new artists and artist aliases
+    # 6. Create new artists and artist aliases
     delta_product_df, delta_artist_df, delta_artist_alias_df = create_delta_tables(
         products_to_remove_df,
         raw_linked_products_df,
@@ -564,16 +571,16 @@ def main(
         exploded_artist_alias_df,
     )
 
-    # 6. Sanity check for consistency
+    # 7. Sanity check for consistency
     sanity_checks(
         delta_product_df,
         delta_artist_df,
         delta_artist_alias_df,
         artist_df,
-        existing_artist_alias_df,
+        artist_alias_df,
     )
 
-    # %% Save files
+    # 7. Save files
     delta_artist_df.to_parquet(output_delta_artist_file_path, index=False)
     delta_artist_alias_df.to_parquet(output_delta_artist_alias_file_path, index=False)
     delta_product_df.to_parquet(output_delta_product_artist_link_filepath, index=False)

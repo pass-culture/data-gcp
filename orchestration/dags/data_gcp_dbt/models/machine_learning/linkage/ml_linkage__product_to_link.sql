@@ -1,5 +1,3 @@
-{{ config(**custom_table_config(materialized="view")) }}
-
 with
     product_author as (
         select distinct
@@ -10,6 +8,7 @@ with
         from {{ ref("mrt_global__offer") }}
         where offer_product_id != ""
     ),
+
     product_performer as (
         select distinct
             offer_product_id,
@@ -19,6 +18,7 @@ with
         from {{ ref("mrt_global__offer") }}
         where offer_product_id != ""
     ),
+
     product_artist as (
         select offer_product_id, artist_name, offer_category_id, artist_type
         from product_author
@@ -26,6 +26,7 @@ with
         select offer_product_id, artist_name, offer_category_id, artist_type
         from product_performer
     )
+
 select distinct
     product_artist.offer_product_id,
     product_artist.artist_name,

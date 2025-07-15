@@ -121,7 +121,7 @@ with
         {% endfor %}
     )
 
-select 
+select
     execution_date,
     update_date,
     dimension_name,
@@ -129,10 +129,10 @@ select
     kpi_name,
     numerator,
     denominator,
-    SAFE_DIVIDE(numerator,denominator) as kpi
+    safe_divide(numerator, denominator) as kpi
 from aggregated_active_beneficiary
 union all
-select 
+select
     execution_date,
     update_date,
     dimension_name,
@@ -140,5 +140,5 @@ select
     kpi_name,
     numerator,
     denominator,
-    SAFE_DIVIDE(numerator,denominator) as kpi
+    safe_divide(numerator, denominator) as kpi
 from aggregated_total_beneficiary

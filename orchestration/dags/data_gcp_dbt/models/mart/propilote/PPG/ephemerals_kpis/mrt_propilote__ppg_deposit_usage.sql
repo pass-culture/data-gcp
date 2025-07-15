@@ -15,41 +15,45 @@
 ] %}
 
 {% for dim in dimensions %}
-{% if not loop.first %}
-    union all
-{% endif %}
-    SELECT 
-        DATE_TRUNC(date(last_deposit_expiration_date), MONTH) AS execution_date,
-        DATE("{{ ds() }}") as update_date,
+    {% if not loop.first %}
+        union all
+    {% endif %}
+    select
+        date_trunc(date(last_deposit_expiration_date), month) as execution_date,
+        date("{{ ds() }}") as update_date,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
-        "montant_moyen_octroye_a_l_expiration_du_credit" AS kpi_name,
-        1 AS denominator,
-        AVG(total_deposit_amount) AS numerator,
-        AVG(total_deposit_amount) AS kpi
-    FROM {{ ref('mrt_global__user')}}
+        "montant_moyen_octroye_a_l_expiration_du_credit" as kpi_name,
+        1 as denominator,
+        avg(total_deposit_amount) as numerator,
+        avg(total_deposit_amount) as kpi
+    from {{ ref("mrt_global__user") }}
     {% if is_incremental() %}
-    WHERE date_trunc(last_deposit_expiration_date, month) = date_trunc(date("{{ ds() }}"), month)
+        where
+            date_trunc(last_deposit_expiration_date, month)
+            = date_trunc(date("{{ ds() }}"), month)
     {% endif %}
-    GROUP BY execution_date, update_date, dimension_name, dimension_value, kpi_name
+    group by execution_date, update_date, dimension_name, dimension_value, kpi_name
 {% endfor %}
-UNION ALL 
+union all
 {% for dim in dimensions %}
-{% if not loop.first %}
-    union all
-{% endif %}
-    SELECT 
-        DATE_TRUNC(date(last_deposit_expiration_date), MONTH) AS execution_date,
-        DATE("{{ ds() }}") as update_date,
+    {% if not loop.first %}
+        union all
+    {% endif %}
+    select
+        date_trunc(date(last_deposit_expiration_date), month) as execution_date,
+        date("{{ ds() }}") as update_date,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
-        "montant_moyen_depense_a_l_expiration_du_credit" AS kpi_name,
-        1 AS denominator,
-        AVG(total_actual_amount_spent) AS numerator,
-        AVG(total_actual_amount_spent) AS kpi
-    FROM {{ ref('mrt_global__user')}}
+        "montant_moyen_depense_a_l_expiration_du_credit" as kpi_name,
+        1 as denominator,
+        avg(total_actual_amount_spent) as numerator,
+        avg(total_actual_amount_spent) as kpi
+    from {{ ref("mrt_global__user") }}
     {% if is_incremental() %}
-    WHERE date_trunc(last_deposit_expiration_date, month) = date_trunc(date("{{ ds() }}"), month)
+        where
+            date_trunc(last_deposit_expiration_date, month)
+            = date_trunc(date("{{ ds() }}"), month)
     {% endif %}
-    GROUP BY execution_date, update_date, dimension_name, dimension_value, kpi_name
+    group by execution_date, update_date, dimension_name, dimension_value, kpi_name
 {% endfor %}

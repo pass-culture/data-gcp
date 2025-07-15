@@ -15,21 +15,23 @@
 ] %}
 
 {% for dim in dimensions %}
-{% if not loop.first %}
-    union all
-{% endif %}
-    SELECT 
-        DATE_TRUNC(date(user_expiration_month), MONTH) AS execution_date,
+    {% if not loop.first %}
+        union all
+    {% endif %}
+    select
+        date_trunc(date(user_expiration_month), month) as execution_date,
         date("{{ ds() }}") as update_date,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
-        "pct_beneficiaires_ayant_reserve_dans_3_categories" AS kpi_name,
-        SUM(total_users) AS denominator,
-        SUM(total_3_category_booked_users) AS numerator,
-        SAFE_DIVIDE(SUM(total_3_category_booked_users), SUM(total_users)) AS kpi
-    FROM {{ ref('mrt_native__outgoing_cohort')}}
+        "pct_beneficiaires_ayant_reserve_dans_3_categories" as kpi_name,
+        sum(total_users) as denominator,
+        sum(total_3_category_booked_users) as numerator,
+        safe_divide(sum(total_3_category_booked_users), sum(total_users)) as kpi
+    from {{ ref("mrt_native__outgoing_cohort") }}
     {% if is_incremental() %}
-    WHERE date_trunc(user_expiration_month, month) = date_trunc(date("{{ ds() }}"), month)
-    {% endif %} 
-    GROUP BY execution_date, update_date, dimension_name, dimension_value, kpi_name
+        where
+            date_trunc(user_expiration_month, month)
+            = date_trunc(date("{{ ds() }}"), month)
+    {% endif %}
+    group by execution_date, update_date, dimension_name, dimension_value, kpi_name
 {% endfor %}

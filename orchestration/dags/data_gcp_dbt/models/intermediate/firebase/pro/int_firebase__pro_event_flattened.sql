@@ -24,7 +24,7 @@ select
                 "filesCount",
             ]
         )
-    }}
+    }},
     {{
         extract_params_string_value(
             [

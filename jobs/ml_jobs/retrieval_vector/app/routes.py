@@ -37,7 +37,7 @@ def predict():
     try:
         handler = PredictionHandlerFactory.get_handler(request_data.model_type)
         result: PredictionResult = handler.handle(model, request_data)
-        return jsonify({"predictions": result.predictions})
+        return jsonify(result), 200
     except ValueError as e:
         # wrong logic in the request (e.g. missing user_id for recommendation or items for similar_offer)
         logger.error(str(e))

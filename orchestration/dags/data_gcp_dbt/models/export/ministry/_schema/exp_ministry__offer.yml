@@ -6,6 +6,12 @@ models:
     columns:
       - name: offer_id
         description: "{{ doc('column__offer_id') }}"
+        data_type: STRING
+        data_tests:
+          - not_null:
+              tags: ['export']
+          - unique:
+              tags: ['export']
       - name: offer_is_synchronised
         description: "{{ doc('column__offer_is_synchronised') }}"
       - name: offer_name
@@ -14,8 +20,14 @@ models:
         description: "{{ doc('column__offer_description') }}"
       - name: offer_subcategory
         description: "{{ doc('column__offer_subcategory_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['export']
       - name: offer_category
         description: "{{ doc('column__offer_category_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['export']
       - name: offer_created_at
         description: "{{ doc('column__offer_created_at') }}"
       - name: offer_updated_at
@@ -46,7 +58,16 @@ models:
         description: "{{ doc('column__offer_product_id') }}"
       - name: item_id
         description: "{{ doc('column__item_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['export']
       - name: venue_id
         description: "{{ doc('column__venue_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['export']
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
+        data_tests:
+          - not_null:
+              tags: ['export']

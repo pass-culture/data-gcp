@@ -139,25 +139,6 @@ def mock_generate_fake_load_item_document(generate_fake_data):
         yield mock_load
 
 
-@pytest.fixture(scope="session")
-def mock_generate_fake_load_user_document(generate_fake_data):
-    """Fixture to mock the load_user_document function used in RecoClient and generate dummy user data."""
-    with patch("app.retrieval.reco_client.RecoClient.load_user_document") as mock_load:
-        prefix_key = "user"
-        user_docs = DocumentArray()
-        for _, row in generate_fake_data(
-            n=VECTOR_SIZE, vector_dim=VECTOR_DIM, prefix_key=prefix_key
-        ).iterrows():
-            user_docs.append(
-                Document(id=row[f"{prefix_key}_id"], embedding=row["vector"])
-            )
-        mock_load.return_value = user_docs
-
-        logger.info(f"Mocked load_user_document with {len(user_docs)} users.")
-        logger.info(f"User document: {user_docs['user_1']}")
-        yield mock_load
-
-
 @pytest.fixture
 def mock_semantic_load_item_document(generate_fake_text_item_data):
     """Fixture to mock the load_item_document function used in DefaultClient."""
@@ -175,6 +156,45 @@ def mock_semantic_load_item_document(generate_fake_text_item_data):
             )
         mock_load.return_value = item_docs
         yield mock_load
+
+
+@pytest.fixture(scope="session")
+def mock_user_document_loading(
+    generate_fake_data: Callable[[int, int, str], pd.DataFrame],
+):
+    """
+    Fixture to mock load_user_document for both RecoClient and DefaultClient.
+    Generates dummy user data and sets it as the return value for the patched methods.
+    This is a session-scoped fixture.
+    """
+    prefix_key = "user"
+    user_docs = DocumentArray()
+    for _, row in generate_fake_data(
+        n=VECTOR_SIZE, vector_dim=VECTOR_DIM, prefix_key=prefix_key
+    ).iterrows():
+        user_docs.append(Document(id=row[f"{prefix_key}_id"], embedding=row["vector"]))
+
+    logger.info(
+        f"Generated {len(user_docs)} user documents for mocking load_user_document."
+    )
+    if len(user_docs) > 1 and f"{prefix_key}_1" in user_docs:
+        logger.info(f"Example user document (user_1): {user_docs[f'{prefix_key}_1']}")
+
+    with (
+        patch(
+            "app.retrieval.reco_client.RecoClient.load_user_document"
+        ) as mock_reco_load,
+        patch(
+            "app.retrieval.client.DefaultClient.load_user_document"
+        ) as mock_default_load,
+    ):
+        mock_reco_load.return_value = user_docs
+        mock_default_load.return_value = user_docs
+
+        logger.info(
+            "Patched RecoClient.load_user_document and DefaultClient.load_user_document to return mock user docs."
+        )
+        yield mock_reco_load, mock_default_load
 
 
 @pytest.fixture

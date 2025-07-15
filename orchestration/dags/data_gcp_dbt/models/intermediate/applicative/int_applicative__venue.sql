@@ -109,6 +109,7 @@ select
     v.venue_creation_date,
     v.venue_is_permanent,
     v.venue_is_open_to_public,
+    v.venue_is_soft_deleted,
     v.banner_url,
     v.venue_audiodisabilitycompliant,
     v.venue_mentaldisabilitycompliant,
@@ -301,3 +302,4 @@ left join
 left join
     {{ source("raw", "applicative_database_google_places_info") }} as gp
     on v.venue_id = gp.venue_id
+where not v.venue_is_soft_deleted

@@ -106,9 +106,10 @@ select
             when
                 total_collective_help_clicks
                 + total_help_center_clicks
-                + total_help_center_clicks
                 + total_consult_support_clicks
                 + total_consult_cgu_clicks
+                + total_contact_our_team
+                + total_new_evolutions_clicks
                 > 0
             then 1
             else 0

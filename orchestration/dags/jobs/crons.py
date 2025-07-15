@@ -18,10 +18,8 @@ SCHEDULE_DICT = {
         "dev": "45 4 * * *",  # every day at 4:45 AM
     },
     "dbt_artifacts": "0 6 * * *",
-    "dbt_monthly": "30 10 1 * *",
     "dbt_run_dag": "45 2 * * *",
-    "dbt_weekly": "0 10 * * 1",
-    "embeddings_extraction_item": "0 12,20 * * *",
+    "embeddings_extraction_item": "0 12,18,23 * * *",
     "embedding_reduction_item": "0 12 * * 0",
     "import_applicative_database": "0 1 * * *",
     "import_intraday_firebase_data": "0 1 * * *",
@@ -44,5 +42,9 @@ SCHEDULE_DICT = {
 
 
 ENCRYPTED_EXPORT_DICT = {
-    "20c702271b0187d039734307766eead8": {"dev": "0 14 * * 2"},
+    "20c702271b0187d039734307766eead8": {
+        "dev": None,
+        "stg": None,
+        "prod": "0 14 5 * *",  # every 5th of the month at 2:00 PM
+    },
 }

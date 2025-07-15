@@ -20,6 +20,6 @@ inner join
     on venue.offerer_id = offerer.offerer_id
     and date_diff(date('{{ ds() }}'), offerer.last_bookable_offer_date, day) >= 40
 where
-    venue_is_permanent
+    venue_is_open_to_public
     and venue_type_label = 'Spectacle vivant'
     and venue_booking_email is not null

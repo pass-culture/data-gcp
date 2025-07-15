@@ -73,8 +73,8 @@ class BigqueryDBTHandler:
 class MetabaseDBTHandler:
     def __init__(
         self,
-        composer_bucket_name: str,
-        composer_bucket_manifest_path: str,
+        airflow_bucket_name: str,
+        airflow_bucket_manifest_path: str,
         local_manifest_path: str,
     ):
         """
@@ -82,8 +82,8 @@ class MetabaseDBTHandler:
         from Google Cloud Storage and setting up the DbtMetabase client.
 
         Args:
-            composer_bucket_name (str): The name of the GCS bucket where the DBT manifest is stored.
-            composer_bucket_manifest_path (str): The path to the DBT manifest in the GCS bucket.
+            airflow_bucket_name (str): The name of the GCS bucket where the DBT manifest is stored.
+            airflow_bucket_manifest_path (str): The path to the DBT manifest in the GCS bucket.
             local_manifest_path (str): The path to the DBT manifest on the local filesystem.
         """
         open_id_token = self.get_open_id(CLIENT_ID)
@@ -91,8 +91,8 @@ class MetabaseDBTHandler:
 
         # Download DBT manifest from GCS
         self.download_gcs_dbt_manifest(
-            composer_bucket_name,
-            blob_name=composer_bucket_manifest_path,
+            airflow_bucket_name,
+            blob_name=airflow_bucket_manifest_path,
             destination_file_path=local_manifest_path,
         )
         logger.info(f"Downloaded DBT manifest from GCS: {local_manifest_path}")
@@ -200,28 +200,28 @@ class MetabaseDBTHandler:
 
     def push_exposures_to_bucket(
         self,
-        composer_bucket_name: str,
-        composer_bucket_path: str,
+        airflow_bucket_name: str,
+        airflow_bucket_path: str,
         exposure_local_path: str,
     ) -> None:
         """
         Pushes the exported exposures to the specified GCS bucket.
 
         Args:
-            composer_bucket_name (str): The name of the GCS bucket where the exposures will be saved.
-            composer_bucket_path (str): The base folder in the GCS bucket to save the exposures.
+            airflow_bucket_name (str): The name of the GCS bucket where the exposures will be saved.
+            airflow_bucket_path (str): The base folder in the GCS bucket to save the exposures.
             exposure_local_path (str): The path where the exposures are saved locally.
         """
         logger.info(
-            f"Pushing exposures to GCS bucket {composer_bucket_name}, folder {composer_bucket_path}"
+            f"Pushing exposures to GCS bucket {airflow_bucket_name}, folder {airflow_bucket_path}"
         )
         try:
             storage_client = storage.Client()
-            bucket = storage_client.get_bucket(composer_bucket_name)
-            blob = bucket.blob(composer_bucket_path)
+            bucket = storage_client.get_bucket(airflow_bucket_name)
+            blob = bucket.blob(airflow_bucket_path)
             blob.upload_from_filename(exposure_local_path)
             logger.info(
-                f"Exposures pushed to GCS bucket {composer_bucket_name} successfully."
+                f"Exposures pushed to GCS bucket {airflow_bucket_name} successfully."
             )
         except Exception as e:
             logger.error(f"Failed to push exposures to GCS bucket: {e}")

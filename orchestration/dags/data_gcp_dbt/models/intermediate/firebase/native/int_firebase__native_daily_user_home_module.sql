@@ -7,6 +7,7 @@
                 "data_type": "date",
                 "granularity": "day",
             },
+            cluster_by="entry_id",
             on_schema_change="append_new_columns",
             require_partition_filter=true,
         )
@@ -23,7 +24,7 @@ with
         from {{ ref("int_firebase__native_event") }}
         where
             event_name in ('CategoryBlockClicked', 'HighlightBlockClicked')
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -45,6 +46,7 @@ with
             redirections.parent_module_id,
             redirections.parent_entry_id,
             events.user_location_type,
+            modules.typeform_id,
             coalesce(modules.title, modules.offer_title) as module_name,
             case
                 when modules.content_type = 'recommendation' then events.reco_call_id
@@ -62,7 +64,7 @@ with
         where
             event_name = 'ModuleDisplayedOnHomePage'
             and events.unique_session_id is not null
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -95,7 +97,7 @@ with
                 'ConsultVideo',
                 'TrendsBlockClicked'
             )
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -131,7 +133,7 @@ with
                 'highlightOffer'
             )
             and unique_session_id is not null
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -158,7 +160,7 @@ with
             event_name = 'ConsultVenue'
             and origin in ('home', 'venueList')
             and unique_session_id is not null
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -211,7 +213,7 @@ with
                 'highlightOffer'
             )
             and events.unique_session_id is not null
-            {% if is_incremental() %}
+            {% if is_incremental() or target.profile_name == "CI" %}
                 and event_date
                 between date_sub(date("{{ ds() }}"), interval 1 day) and date(
                     "{{ ds() }}"
@@ -232,6 +234,7 @@ select
     displayed.entry_name,
     displayed.module_id,
     displayed.module_name,
+    displayed.typeform_id,
     displayed.parent_module_id,
     displayed.parent_entry_id,
     displayed.module_type,

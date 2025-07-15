@@ -137,6 +137,7 @@ with DAG(
     )
 
     import_dms_jeunes_to_bq = GCSToBigQueryOperator(
+        project_id=GCP_PROJECT_ID,
         task_id="import_dms_jeunes_to_bq",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=[
@@ -163,6 +164,7 @@ with DAG(
     )
 
     import_dms_pro_to_bq = GCSToBigQueryOperator(
+        project_id=GCP_PROJECT_ID,
         task_id="import_dms_pro_to_bq",
         bucket=DATA_GCS_BUCKET_NAME,
         source_objects=["dms_export/dms_pro_{{ params.updated_since_pro }}.parquet"],

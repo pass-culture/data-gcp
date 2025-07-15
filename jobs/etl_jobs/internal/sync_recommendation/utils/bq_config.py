@@ -23,6 +23,7 @@ BQ_TABLES_CONFIG: Dict[str, Dict] = {
             "has_added_offer_to_favorites": "integer",
         },
         "bigquery_table_name": "user_statistics",
+        "cloud_sql_table_name": "enriched_user",
         "dataset_type": DatasetType.ML_RECO,
     },
     "recommendable_offers_raw": {
@@ -38,13 +39,21 @@ BQ_TABLES_CONFIG: Dict[str, Dict] = {
             "unique_id": "character varying",
             "is_sensitive": "boolean",
             "is_geolocated": "boolean",
+            "new_offer_is_geolocated": "boolean",
+            "new_offer_creation_days": "integer",
+            "new_offer_stock_price": "decimal",
+            "new_offer_stock_beginning_days": "decimal",
+            "new_offer_centroid_x": "decimal",
+            "new_offer_centroid_y": "decimal",
         },
         "bigquery_table_name": "recommendable_offer",
+        "cloud_sql_table_name": "recommendable_offers_raw",
         "dataset_type": DatasetType.ML_RECO,
     },
     "non_recommendable_items_data": {
         "columns": {"user_id": "character varying", "item_id": "character varying"},
         "bigquery_table_name": "user_booked_item",
+        "cloud_sql_table_name": "non_recommendable_items_data",
         "dataset_type": DatasetType.ML_RECO,
     },
     "iris_france": {
@@ -55,6 +64,7 @@ BQ_TABLES_CONFIG: Dict[str, Dict] = {
             "shape": "geometry",
         },
         "bigquery_table_name": "iris_france",
+        "cloud_sql_table_name": "iris_france",
         "dataset_type": DatasetType.SEED,
     },
 }
@@ -84,6 +94,7 @@ CLOUD_SQL_IMPORT_CONFIG = {
 class BQTableConfig:
     columns: Dict[str, str]
     bigquery_table_name: str
+    cloud_sql_table_name: str
     dataset_type: DatasetType
 
     @property

@@ -40,6 +40,8 @@ models:
         description: "{{ doc('column__collective_stock_number_of_tickets') }}"
       - name: collective_stock_beginning_date_time
         description: "{{ doc('column__collective_stock_beginning_date_time') }}"
+      - name: collective_stock_end_date_time
+        description: "{{ doc('column__collective_stock_end_date_time') }}"
       - name: educational_institution_id
         description: "{{ doc('column__educational_institution_id') }}"
       - name: educational_year_id

@@ -33,8 +33,12 @@ rules = [
             WHERE
                 parent_folder = 'interne'
             AND
+                (
                 days_since_last_execution >= {limit_inactivity_in_days['interne']}
-            OR (total_views_6_months <=  5 and nbr_dashboards = 0)
+                OR (total_views_6_months <=  5 and nbr_dashboards = 0)
+                )
+            AND date(card_creation_date) < date_sub(current_date(), interval 14 day)
+            AND clean_slug_reduced_level_2 != 'secretariat_general'
         """,
         "rule_alerting_sql": """
             WHERE
@@ -52,6 +56,7 @@ rules = [
                 parent_folder = 'operationnel'
             AND
                 days_since_last_execution >= {limit_inactivity_in_days['operationnel']}
+            AND date(card_creation_date) < date_sub(current_date(), interval 14 day)
         """,
     },
     {
@@ -62,8 +67,11 @@ rules = [
             WHERE
                 parent_folder = 'adhoc'
             AND
+                (
                 days_since_last_execution >= {limit_inactivity_in_days['adhoc']}
-            OR total_views_6_months <= 5
+                OR total_views_6_months <= 5
+                )
+            AND date(card_creation_date) < date_sub(current_date(), interval 14 day)
         """,
     },
 ]

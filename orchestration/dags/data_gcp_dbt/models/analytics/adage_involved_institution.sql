@@ -23,9 +23,9 @@ with
             coalesce(
                 sum(safe_cast(total_institutions as float64)), 0
             ) as total_institutions
-        from {{ source("clean", "adage_involved_student") }} ais
+        from {{ source("clean", "adage_involved_student") }} as ais
         left join
-            {{ ref("educational_year") }} ey
+            {{ source("raw", "applicative_database_educational_year") }} as ey
             on safe_cast(ey.adage_id as int)
             = safe_cast(ais.educational_year_adage_id as int)
         where metric_name = "departements"
@@ -42,6 +42,6 @@ select
     involved.scholar_year,
     avg(institutions) as institutions,
     avg(total_institutions) as total_institutions
-from involved_students involved
+from involved_students as involved
 where not is_nan(institutions)
 group by 1, 2, 3, 4, 5, 6, 7

@@ -1,0 +1,5 @@
+{
+    "default_pool":  {"slots": 128, "description": "Default pool"},
+    "dbt": {"slots": 10, "description": "dbt tasks"},
+    "ml": {"slots": 5, "description": "ml tasks"}
+}

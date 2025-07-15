@@ -1,0 +1,35 @@
+version: 2
+models:
+  - name: mrt_marketing__retention_pro
+    description: "{{ doc('description__mrt_marketing__retention_pro') }}"
+    columns:
+      - name: offerer_id
+        description: "{{ doc('column__offerer_id') }}"
+      - name: brevo_tag
+        description: "{{ doc('column__brevo_tag') }}"
+      - name: offerer_name
+        description: "{{ doc('column__offerer_name') }}"
+      - name: offerer_creation_date
+        description: "{{ doc('column__offerer_creation_date') }}"
+      - name: first_open_date
+        description: "{{ doc('column__first_open_date') }}"
+      - name: last_open_date
+        description: "{{ doc('column__last_open_date') }}"
+      - name: nb_open_days
+        description: "{{ doc('column__nb_open_days') }}"
+      - name: last_individual_offer_creation_date
+        description: "{{ doc('column__last_individual_offer_creation_date') }}"
+      - name: last_collective_offer_creation_date
+        description: "{{ doc('column__last_collective_offer_creation_date') }}"
+      - name: last_individual_bookable_offer_date
+        description: "{{ doc('column__last_individual_bookable_offer_date') }}"
+      - name: last_collective_bookable_offer_date
+        description: "{{ doc('column__last_collective_bookable_offer_date') }}"
+      - name: first_individual_bookable_date_after_mail
+        description: "{{ doc('column__first_individual_bookable_date_after_mail') }}"
+      - name: first_collective_bookable_date_after_mail
+        description: "{{ doc('column__first_collective_bookable_date_after_mail') }}"
+      - name: last_individual_booking_date
+        description: "{{ doc('column__last_individual_booking_date') }}"
+      - name: last_collective_booking_date
+        description: "{{ doc('column__last_collective_booking_date') }}"

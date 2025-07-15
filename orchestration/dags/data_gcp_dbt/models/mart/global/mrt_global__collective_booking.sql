@@ -17,6 +17,7 @@ select
     co.collective_stock_price as booking_amount,
     co.collective_stock_number_of_tickets,
     co.collective_stock_beginning_date_time,
+    co.collective_stock_end_date_time,
     cb.educational_institution_id,
     cb.educational_year_id,
     ey.scholar_year,

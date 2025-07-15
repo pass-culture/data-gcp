@@ -68,4 +68,6 @@ select
         date('{{ ds() }}'), cast(user_activation_date as date), day
     ) as user_seniority
 from {{ ref("int_global__user") }}
-where (user_is_active or user_suspension_reason = 'upon user request')
+where
+    (user_is_active or user_suspension_reason = 'upon user request')
+    and current_deposit_type != 'GRANT_FREE'

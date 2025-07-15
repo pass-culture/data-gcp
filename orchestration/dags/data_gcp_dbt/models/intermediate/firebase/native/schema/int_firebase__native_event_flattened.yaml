@@ -28,9 +28,9 @@ models:
       - name: bookingId
         data_tests:
           - relationships:
-              to: ref("int_global__booking")
+              to: ref("int_applicative__booking")
               field: booking_id
-              where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
+              where: "event_name = 'BookingConfirmation' AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
           - not_null_proportion:
               where_condition: "event_name = 'BookingConfirmation' AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
               anomaly_threshold_alert_percentage: 5

@@ -6,6 +6,8 @@ from typing import Any, Dict, List, Optional, Sequence, TextIO, Union
 import requests
 from requests.exceptions import RequestException
 
+from utils.constant import GEOPF_API_URL as API_URL
+
 
 @dataclass
 class GeocodingConfig:
@@ -26,7 +28,7 @@ class AddressGeocoder:
 
     def __init__(
         self,
-        api_url: str = "https://api-adresse.data.gouv.fr/search/csv/",
+        api_url: str = API_URL,
         config: Optional[GeocodingConfig] = None,
     ):
         """

@@ -1,7 +1,7 @@
 with
     clean_payment_status as (
         select paymentid, max(date) as last_status_date
-        from {{ ref("payment_status") }}
+        from {{ ref("int_finance__payment_status") }}
         group by 1
     ),
 
@@ -16,9 +16,10 @@ with
             end as offerer_contribution
         from {{ ref("int_applicative__booking") }} as booking
         left join
-            {{ ref("pricing") }} as pricing on booking.booking_id = pricing.bookingid
+            {{ ref("int_finance__pricing") }} as pricing
+            on booking.booking_id = pricing.bookingid
         left join
-            {{ ref("pricing_line") }} as pricing_line
+            {{ ref("int_finance__pricing_line") }} as pricing_line
             on pricing.id = pricing_line.pricingid
     ),
 
@@ -67,23 +68,24 @@ with
             {{ ref("int_global__deposit") }} as deposit
             on booking.deposit_id = deposit.deposit_id
         left join
-            {{ ref("pricing") }} as pricing on booking.booking_id = pricing.bookingid
+            {{ ref("int_finance__pricing") }} as pricing
+            on booking.booking_id = pricing.bookingid
         left join
             clean_pricing_line2 on booking.booking_id = clean_pricing_line2.booking_id
         left join
-            {{ ref("cashflow_pricing") }} as cashflow_pricing
+            {{ ref("int_finance__cashflow_pricing") }} as cashflow_pricing
             on pricing.id = cashflow_pricing.pricingid
         left join
-            {{ ref("cashflow") }} as cashflow
+            {{ ref("int_finance__cashflow") }} as cashflow
             on cashflow_pricing.cashflowid = cashflow.id
         left join
-            {{ ref("cashflow_batch") }} as cashflow_batch
+            {{ ref("int_finance__cashflow_batch") }} as cashflow_batch
             on cashflow.batchid = cashflow_batch.id
         left join
-            {{ ref("invoice_cashflow") }} as invoice_cashflow
+            {{ ref("int_finance__invoice_cashflow") }} as invoice_cashflow
             on cashflow.id = invoice_cashflow.cashflow_id
         left join
-            {{ ref("invoice") }} as invoice
+            {{ ref("int_finance__invoice") }} as invoice
             on invoice_cashflow.invoice_id = invoice.invoice_id
         left join
             {{ source("raw", "applicative_database_invoice_line") }} as invoice_line
@@ -102,10 +104,10 @@ with
             end as offerer_contribution
         from {{ ref("mrt_global__collective_booking") }} as collective_booking
         left join
-            {{ ref("pricing") }} as pricing
+            {{ ref("int_finance__pricing") }} as pricing
             on collective_booking.collective_booking_id = pricing.collective_booking_id
         left join
-            {{ ref("pricing_line") }} as pricing_line
+            {{ ref("int_finance__pricing_line") }} as pricing_line
             on pricing.id = pricing_line.pricingid
     ),
 
@@ -147,28 +149,30 @@ with
             invoice.invoice_reference,
             invoice.invoice_creation_date,
             invoice.amount as invoice_amount
-        from {{ ref("collective_booking") }} as collective_booking
+        from
+            {{ source("raw", "applicative_database_collective_booking") }}
+            as collective_booking
         left join
-            {{ ref("pricing") }} as pricing
+            {{ ref("int_finance__pricing") }} as pricing
             on collective_booking.collective_booking_id = pricing.collective_booking_id
         left join
             coll_clean_pricing_line2
             on collective_booking.collective_booking_id
             = coll_clean_pricing_line2.collective_booking_id
         left join
-            {{ ref("cashflow_pricing") }} as cashflow_pricing
+            {{ ref("int_finance__cashflow_pricing") }} as cashflow_pricing
             on pricing.id = cashflow_pricing.pricingid
         left join
-            {{ ref("cashflow") }} as cashflow
+            {{ ref("int_finance__cashflow") }} as cashflow
             on cashflow_pricing.cashflowid = cashflow.id
         left join
-            {{ ref("cashflow_batch") }} as cashflow_batch
+            {{ ref("int_finance__cashflow_batch") }} as cashflow_batch
             on cashflow.batchid = cashflow_batch.id
         left join
-            {{ ref("invoice_cashflow") }} as invoice_cashflow
+            {{ ref("int_finance__invoice_cashflow") }} as invoice_cashflow
             on cashflow.id = invoice_cashflow.cashflow_id
         left join
-            {{ ref("invoice") }} as invoice
+            {{ ref("int_finance__invoice") }} as invoice
             on invoice_cashflow.invoice_id = invoice.invoice_id
         left join
             {{ source("raw", "applicative_database_invoice_line") }} as invoice_line

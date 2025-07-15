@@ -7,10 +7,16 @@ from airflow.utils.decorators import apply_defaults
 
 
 class SendSlackMessageOperator(BaseOperator):
+    """
+    Send a message to a Slack channel.
+    """
+
+    template_fields = ["message", "block"]
+
     @apply_defaults
     def __init__(
         self,
-        webhook_token,
+        webhook_token: str,
         message: Optional[str] = None,
         block: Optional[List[dict]] = None,
         *args,

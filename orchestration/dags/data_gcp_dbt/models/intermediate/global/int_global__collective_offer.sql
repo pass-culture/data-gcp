@@ -74,6 +74,7 @@ select
     co.collective_offer_contact_phone,
     co.institution_internal_iris_id,
     cs.collective_stock_beginning_date_time,
+    cs.collective_stock_end_date_time,
     cs.collective_stock_booking_limit_date_time,
     co.collective_offer_template_beginning_date,
     co.collective_offer_template_ending_date,

@@ -62,4 +62,5 @@ SELECT
     , CAST("offererAddressId"AS varchar(255)) AS offerer_address_id
     , "isOpenToPublic" AS venue_is_open_to_public
     ,"adageInscriptionDate" AS venue_adage_inscription_date
+    , "isSoftDeleted" AS venue_is_soft_deleted
 FROM public.venue

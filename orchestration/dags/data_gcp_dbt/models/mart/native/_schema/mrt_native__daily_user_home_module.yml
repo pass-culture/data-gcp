@@ -16,6 +16,8 @@ models:
         description: "{{ doc('column__module_id') }}"
       - name: module_name
         description: "{{ doc('column__module_name') }}"
+      - name: typeform_id
+        description: "{{ doc('column__typeform_id') }}"
       - name: parent_module_id
         description: "{{ doc('column__parent_module_id') }}"
       - name: parent_module_type

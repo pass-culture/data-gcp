@@ -1,6 +1,14 @@
 import os
 from datetime import datetime
 
+from airflow import DAG
+from airflow.models import Param
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import BranchPythonOperator, PythonOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
+    GCSToBigQueryOperator,
+)
+from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
 from common.config import (
@@ -21,16 +29,8 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
-from jobs.crons import SCHEDULE_DICT
 
-from airflow import DAG
-from airflow.models import Param
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python import BranchPythonOperator, PythonOperator
-from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
-    GCSToBigQueryOperator,
-)
-from airflow.utils.task_group import TaskGroup
+from jobs.crons import SCHEDULE_DICT
 
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = "artist-linkage"
@@ -47,7 +47,7 @@ ARTIST_LINKED_GCS_FILENAME = "artist_linked.parquet"
 WIKIDATA_EXTRACTION_GCS_FILENAME = "wikidata_extraction.parquet"
 ARTISTS_MATCHED_ON_WIKIDATA = "artists_matched_on_wikidata.parquet"
 ARTISTS_WITH_METADATA_GCS_FILENAME = "artist_linked_with_metadata.parquet"
-TEST_SETS_GCS_DIR = "labelled_test_sets"
+TEST_SETS_GCS_DIR = f"gs://{DATA_GCS_BUCKET_NAME}/artists/labelled_test_sets"
 
 # BQ Tables
 ARTISTS_TO_LINK_TABLE = "artist_name_to_link"
@@ -138,6 +138,7 @@ with DAG(
     # Artist Linkage
     with TaskGroup("data_collection") as collect:
         import_artists_to_link_to_bucket = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
             task_id="import_artists_to_link_to_bucket",
             configuration={
                 "extract": {
@@ -207,6 +208,7 @@ with DAG(
         (match_artists_on_wikidata >> get_wikimedia_commons_license)
 
     load_data_into_artist_linked_table = GCSToBigQueryOperator(
+        project_id=GCP_PROJECT_ID,
         bucket=MLFLOW_BUCKET_NAME,
         task_id="load_data_into_artist_linked_table",
         source_objects=os.path.join(
@@ -227,7 +229,7 @@ with DAG(
          python evaluate.py \
         --artists-to-link-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_TO_LINK_GCS_FILENAME)} \
         --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)} \
-        --test-sets-dir {os.path.join(STORAGE_BASE_PATH, TEST_SETS_GCS_DIR)} \
+        --test-sets-dir {TEST_SETS_GCS_DIR} \
         --experiment-name artist_linkage_v1.0_{ENV_SHORT_NAME}
         """,
         ),

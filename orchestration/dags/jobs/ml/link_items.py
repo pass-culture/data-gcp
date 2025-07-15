@@ -10,7 +10,7 @@ from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    MLFLOW_BUCKET_NAME,
+    ML_BUCKET_TEMP,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -18,6 +18,7 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
+from common.utils import get_airflow_schedule
 from jobs.crons import SCHEDULE_DICT
 from jobs.ml.constants import IMPORT_LINKAGE_SQL_PATH
 
@@ -25,7 +26,6 @@ from airflow import DAG
 from airflow.models import Param
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryExecuteQueryOperator,
     BigQueryInsertJobOperator,
 )
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
@@ -47,7 +47,7 @@ DAG_CONFIG = {
     },
     "BASE_PATHS": {
         "GCS_FOLDER": f"linkage_item_{ENV_SHORT_NAME}/linkage_{DATE}",
-        "STORAGE": f"gs://{MLFLOW_BUCKET_NAME}/linkage_item_{ENV_SHORT_NAME}/linkage_{DATE}",
+        "STORAGE": f"gs://{ML_BUCKET_TEMP}/linkage_item_{ENV_SHORT_NAME}/linkage_{DATE}",
     },
     "DIRS": {
         "BASE": "data-gcp/jobs/ml_jobs/item_linkage/",
@@ -121,7 +121,9 @@ with DAG(
     DAG_CONFIG["ID"],
     default_args=DEFAULT_ARGS,
     description="Process to link items using semantic vectors (grouped by product/offer).",
-    schedule_interval=SCHEDULE_DICT[DAG_CONFIG["ID"]][ENV_SHORT_NAME],
+    schedule_interval=get_airflow_schedule(
+        SCHEDULE_DICT[DAG_CONFIG["ID"]][ENV_SHORT_NAME]
+    ),
     catchup=False,
     dagrun_timeout=timedelta(minutes=1440),
     user_defined_macros=macros.default,
@@ -162,26 +164,42 @@ with DAG(
     with TaskGroup(
         "import_data", tooltip="Import data from SQL to BQ"
     ) as import_data_group:
-        import_sources = BigQueryExecuteQueryOperator(
+        import_sources = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
             task_id="import_sources",
-            sql=(IMPORT_LINKAGE_SQL_PATH / "linkage_item_sources_data.sql").as_posix(),
-            write_disposition="WRITE_TRUNCATE",
-            use_legacy_sql=False,
-            destination_dataset_table=(
-                f"{BIGQUERY_TMP_DATASET}.{DAG_CONFIG['BIGQUERY']['INPUT_SOURCES_TABLE']}"
-            ),
+            configuration={
+                "query": {
+                    "query": (
+                        IMPORT_LINKAGE_SQL_PATH / "linkage_item_sources_data.sql"
+                    ).as_posix(),
+                    "useLegacySql": False,
+                    "destinationTable": {
+                        "projectId": GCP_PROJECT_ID,
+                        "datasetId": BIGQUERY_TMP_DATASET,
+                        "tableId": DAG_CONFIG["BIGQUERY"]["INPUT_SOURCES_TABLE"],
+                    },
+                    "writeDisposition": "WRITE_TRUNCATE",
+                }
+            },
         )
 
-        import_candidates = BigQueryExecuteQueryOperator(
+        import_candidates = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
             task_id="import_candidates",
-            sql=(
-                IMPORT_LINKAGE_SQL_PATH / "linkage_item_candidates_data.sql"
-            ).as_posix(),
-            write_disposition="WRITE_TRUNCATE",
-            use_legacy_sql=False,
-            destination_dataset_table=(
-                f"{BIGQUERY_TMP_DATASET}.{DAG_CONFIG['BIGQUERY']['INPUT_CANDIDATES_TABLE']}"
-            ),
+            configuration={
+                "query": {
+                    "query": (
+                        IMPORT_LINKAGE_SQL_PATH / "linkage_item_candidates_data.sql"
+                    ).as_posix(),
+                    "useLegacySql": False,
+                    "destinationTable": {
+                        "projectId": GCP_PROJECT_ID,
+                        "datasetId": BIGQUERY_TMP_DATASET,
+                        "tableId": DAG_CONFIG["BIGQUERY"]["INPUT_CANDIDATES_TABLE"],
+                    },
+                    "writeDisposition": "WRITE_TRUNCATE",
+                }
+            },
         )
 
     # ---------------------------------------------------------------------
@@ -191,6 +209,7 @@ with DAG(
         "export_data", tooltip="Export data from BQ to GCS"
     ) as export_data_group:
         export_sources_bq = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
             task_id="export_sources_bq",
             configuration={
                 "extract": {
@@ -211,6 +230,7 @@ with DAG(
         )
 
         export_candidates_bq = BigQueryInsertJobOperator(
+            project_id=GCP_PROJECT_ID,
             task_id="export_candidates_bq",
             configuration={
                 "extract": {
@@ -337,8 +357,9 @@ with DAG(
 
         # 5.4) Load linked product into BigQuery
         load_linked_product_into_bq = GCSToBigQueryOperator(
+            project_id=GCP_PROJECT_ID,
             task_id="load_linked_product_into_bq",
-            bucket=MLFLOW_BUCKET_NAME,
+            bucket=ML_BUCKET_TEMP,
             source_objects=f"""{
                 build_path(
                     DAG_CONFIG["BASE_PATHS"]["GCS_FOLDER"],
@@ -440,8 +461,9 @@ with DAG(
 
         # 6.5) Load linked offers into BigQuery
         load_linked_offer_into_bq = GCSToBigQueryOperator(
+            project_id=GCP_PROJECT_ID,
             task_id="load_linked_offer_into_bq",
-            bucket=MLFLOW_BUCKET_NAME,
+            bucket=ML_BUCKET_TEMP,
             source_objects=f"""{
                 build_path(
                     DAG_CONFIG["BASE_PATHS"]["GCS_FOLDER"],
@@ -480,14 +502,20 @@ with DAG(
     # - ---------------------------------------------------------------------
     #  7) Export item mapping to BigQuery
     # ---------------------------------------------------------------------
-    export_item_mapping = BigQueryExecuteQueryOperator(
+    export_item_mapping = BigQueryInsertJobOperator(
         task_id="export_item_mapping",
-        sql=(IMPORT_LINKAGE_SQL_PATH / "build_mapping.sql").as_posix(),
-        write_disposition="WRITE_TRUNCATE",
-        use_legacy_sql=False,
-        destination_dataset_table=(
-            f"{BIGQUERY_ML_LINKAGE_DATASET}.{DAG_CONFIG['BIGQUERY']['ITEM_MAPPING_TABLE']}"
-        ),
+        configuration={
+            "query": {
+                "query": (IMPORT_LINKAGE_SQL_PATH / "build_mapping.sql").as_posix(),
+                "useLegacySql": False,
+                "destinationTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": BIGQUERY_ML_LINKAGE_DATASET,
+                    "tableId": DAG_CONFIG["BIGQUERY"]["ITEM_MAPPING_TABLE"],
+                },
+                "writeDisposition": "WRITE_TRUNCATE",
+            }
+        },
     )
 
     gce_instance_stop = DeleteGCEOperator(

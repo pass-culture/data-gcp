@@ -29,30 +29,29 @@ with
             ) as seniority_days
         from {{ ref("mrt_global__user") }}
         where
-            current_deposit_type = "GRANT_18"
+            current_deposit_type in ("GRANT_18", "GRANT_17_18")
             and last_deposit_expiration_date < date_trunc(current_date, month)
     ),
 
     bookings_info as (
         select
-            user.deposit_expiration_date,
-            user.user_id,
-            sum(bookings.diversity_score) as total_diversification,
+            users_expired_monthly.deposit_expiration_date,
+            users_expired_monthly.user_id,
+            sum(booking.diversity_score) as total_diversification,
+            count(distinct booking.offer_category_id) as total_distinct_category_booked,
             count(
-                distinct bookings.offer_category_id
-            ) as total_distinct_category_booked,
-            count(
-                distinct bookings.venue_type_label
+                distinct booking.venue_type_label
             ) as total_distinct_venue_type_booked,
             count(
-                distinct if(bookings.venue_is_virtual is false, bookings.venue_id, null)
+                distinct if(booking.venue_is_virtual is false, booking.venue_id, null)
             ) as total_distinct_venue_booked
-        from users_expired_monthly as user
+        from users_expired_monthly
         inner join
-            {{ ref("mrt_global__booking") }} as bookings
-            on user.user_id = bookings.user_id
-        where not booking_is_cancelled
-        group by deposit_expiration_date, user_id
+            {{ ref("mrt_global__booking") }} as booking
+            on users_expired_monthly.user_id = booking.user_id
+        where not booking.booking_is_cancelled
+        group by
+            users_expired_monthly.deposit_expiration_date, users_expired_monthly.user_id
     ),
 
     consultations as (
@@ -67,10 +66,10 @@ with
         inner join
             users_expired_monthly as u
             on c.user_id = u.user_id
-            and date_sub(deposit_expiration_date, interval 2 year)
+            and date_sub(u.deposit_expiration_date, interval 2 year)
             <= c.consultation_date
-            and deposit_expiration_date >= c.consultation_date
-        group by deposit_expiration_date, user_id
+            and u.deposit_expiration_date >= c.consultation_date
+        group by u.deposit_expiration_date, u.user_id
     )
 
 select
@@ -105,8 +104,8 @@ select
         sum(u.total_non_cancelled_duo_bookings), 0
     ) as total_non_cancelled_duo_bookings,
     coalesce(sum(u.total_free_bookings), 0) as total_free_bookings,
-    coalesce(sum(total_item_consulted), 0) as total_item_consulted,
-    coalesce(sum(total_venue_consulted), 0) as total_venue_consulted,
+    coalesce(sum(c.total_item_consulted), 0) as total_item_consulted,
+    coalesce(sum(c.total_venue_consulted), 0) as total_venue_consulted,
     coalesce(
         sum(u.total_grant_18_subcategory_booked), 0
     ) as total_grant_18_subcategory_booked,
@@ -114,7 +113,7 @@ select
         sum(u.total_grant_15_17_subcategory_booked), 0
     ) as total_grant_15_17_subcategory_booked,
     coalesce(
-        sum(total_venue_type_label_consulted), 0
+        sum(c.total_venue_type_label_consulted), 0
     ) as total_venue_type_label_consulted,
     coalesce(
         sum(
@@ -138,7 +137,7 @@ left join
     on u.user_id = b.user_id
     and u.deposit_expiration_date = b.deposit_expiration_date
 group by
-    user_expiration_month,
+    date_trunc(u.deposit_expiration_date, month),
     u.total_deposit_amount,
     u.user_is_priority_public,
     u.user_is_in_qpv,

@@ -12,6 +12,7 @@ from app.retrieval.constants import (
     DEFAULT_DETAIL_COLUMNS,
     DEFAULT_ITEM_DOCS_PATH,
     DEFAULT_LANCE_DB_URI,
+    DEFAULT_USER_DOCS_PATH,
     OUTPUT_METRIC_COLUMNS,
 )
 from app.retrieval.core.filter import Filter
@@ -30,12 +31,14 @@ class DefaultClient:
         detail_columns: List[str] = DEFAULT_DETAIL_COLUMNS,
         output_metric_columns: List[str] = OUTPUT_METRIC_COLUMNS,
         item_docs_path: str = DEFAULT_ITEM_DOCS_PATH,
+        user_docs_path: str = DEFAULT_USER_DOCS_PATH,
         lance_db_uri: str = DEFAULT_LANCE_DB_URI,
     ) -> None:
         self.base_columns = base_columns
         self.detail_columns = detail_columns
         self.output_metric_columns = output_metric_columns
         self.item_docs_path = item_docs_path
+        self.user_docs_path = user_docs_path
         self.lance_db_uri = lance_db_uri
         self.table: Optional[Table] = None
         self.re_ranker: Optional[Reranker] = None
@@ -48,11 +51,12 @@ class DefaultClient:
         start_time = time.time()
         logger.info("Starting to load item documents and connect to the database...")
 
-        # Load item documents
+        # Load item and user documents
         start_time = time.time()
         self.item_docs = self.load_item_document()
+        self.user_docs = self.load_user_document()
         logger.info(
-            f"Loading item documents took {time.time() - start_time:.2f} seconds."
+            f"Loading item and user documents took {time.time() - start_time:.2f} seconds."
         )
 
         # Connect to the database
@@ -65,15 +69,22 @@ class DefaultClient:
     def load_item_document(self) -> DocumentArray:
         return load_documents(self.item_docs_path)
 
-    def connect_db(self) -> Table:
+    def load_user_document(self) -> DocumentArray:
+        return load_documents(self.user_docs_path)
+
+    def user_vector(self, user_id: str) -> Optional[Document]:
         """
-        Establish a connection to the LanceDB vector database.
+        Retrieves the user vector from the document array based on the given user ID.
+
+        Args:
+            user_id (str): The ID of the user.
 
         Returns:
-            Table: The connected LanceDB table instance.
+            Optional[Document]: The user's document embedding, or None if not found.
         """
-        db = lancedb.connect(self.lance_db_uri)
-        return db.open_table("items")
+        if user_id in self.user_docs:
+            return self.user_docs[user_id]
+        return None
 
     def item_vector(self, item_id: str) -> Optional[Document]:
         """
@@ -88,6 +99,16 @@ class DefaultClient:
         if item_id in self.item_docs:
             return self.item_docs[item_id]
         return None
+
+    def connect_db(self) -> Table:
+        """
+        Establish a connection to the LanceDB vector database.
+
+        Returns:
+            Table: The connected LanceDB table instance.
+        """
+        db = lancedb.connect(self.lance_db_uri)
+        return db.open_table("items")
 
     def build_query(self, params: Optional[Dict]) -> Optional[str]:
         """
@@ -113,6 +134,7 @@ class DefaultClient:
         similarity_metric: str = "dot",
         re_rank: bool = False,
         user_id: Optional[str] = None,
+        item_ids: List[str] = [],
     ) -> List[Dict]:
         """
         Perform a search query that filters and ranks items based on a specified vector column,
@@ -146,13 +168,17 @@ class DefaultClient:
             vector_column_name (str): Column used for ranking. Default is "booking_number_desc".
             similarity_metric (str): Metric for ranking, typically "dot" (dot product similarity).
             re_rank (bool): Whether to apply a secondary re-ranking process. Default is False.
-            user_id (Optional[str]): User ID for personalized ranking. Default is None.
+            user_id (Optional[str]): User ID for personalized ranking. Default is None. If provided, will also compute
+                similarity scores for the user.
+            item_ids (List[str]): List of item IDs to include in the search. Default is empty list. If provided, will also compute
+                similarity scores for the items.
 
         ### Returns:
             List[Dict]: A list of dictionaries, where each represents a ranked item.
         """
 
         DEFAULT_APPROX_TOP_VECTOR = Document(embedding=[-0.0001])
+
         return self._perform_search(
             vector=DEFAULT_APPROX_TOP_VECTOR,
             n=n,
@@ -163,6 +189,7 @@ class DefaultClient:
             prefilter=prefilter,
             re_rank=re_rank,
             user_id=user_id,
+            item_ids=item_ids,
         )
 
     def search_by_vector(
@@ -177,6 +204,7 @@ class DefaultClient:
         vector_column_name: str = "vector",
         re_rank: bool = False,
         user_id: Optional[str] = None,
+        item_ids: List[str] = [],
     ) -> List[Dict]:
         """
         Search the vector database for similar items and optionally rerank results.
@@ -207,6 +235,7 @@ class DefaultClient:
             prefilter=prefilter,
             re_rank=re_rank,
             user_id=user_id,
+            item_ids=item_ids,
         )
 
     def _perform_search(
@@ -219,6 +248,7 @@ class DefaultClient:
         details: bool = False,
         excluded_items: List[str] = [],
         user_id: Optional[str] = None,
+        item_ids: List[str] = [],
         prefilter: bool = True,
         re_rank: bool = False,
     ) -> List[Dict]:
@@ -244,9 +274,23 @@ class DefaultClient:
         if re_rank and self.re_ranker and user_id:
             results = results.rerank(self.re_ranker, query_string=user_id)
 
-        return self.format_results(
-            results.to_list(), details, excluded_items=excluded_items
+        postprocessed_results = self.postprocess(
+            ranked_items=results.to_list(), user_id=user_id, input_item_ids=item_ids
         )
+
+        return self.format_results(
+            postprocessed_results, details, excluded_items=excluded_items
+        )
+
+    def postprocess(
+        self,
+        ranked_items: List[Dict],
+        **kwargs,
+    ) -> List[Dict]:
+        """
+        Postprocess the results.
+        """
+        return ranked_items
 
     def columns(self, details: bool, re_rank: bool) -> List[str]:
         """

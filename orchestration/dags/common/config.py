@@ -1,6 +1,8 @@
 import os
 from enum import Enum
 
+import re
+
 from common.access_gcp_secrets import access_secret_data
 
 from airflow import configuration
@@ -20,7 +22,9 @@ AIRFLOW_URI = {
     "prod": "airflow.data.passculture.team",
 }[ENV_SHORT_NAME]
 
-GCS_COMPOSER_BUCKET = os.environ.get("GCS_BUCKET", f"airflow-{ENVIRONMENT_NAME}-bucket")
+GCS_AIRFLOW_BUCKET = os.environ.get(
+    "GCS_BUCKET", f"airflow-data-bucket-{ENV_SHORT_NAME}"
+)
 
 SSH_USER = os.environ.get("SSH_USER", "airflow")
 
@@ -29,12 +33,18 @@ GCE_ZONE = "europe-west1-b"
 
 GCE_SA = os.environ.get("GCE_SA", f"algo-training-{ENV_SHORT_NAME}")
 
-DEPLOYMENT_TAG = os.environ.get("DEPLOYMENT_TAG", "composer")
+DEPLOYMENT_TAG = os.environ.get(
+    "DEPLOYMENT_TAG", os.environ.get("LOCAL_TAG", "local-airflow")
+)
+
 GCE_BASE_PREFIX = f"{DEPLOYMENT_TAG}-{ENV_SHORT_NAME}"
 
 BASE32_JS_LIB_PATH = f"gs://data-bucket-{ENV_SHORT_NAME}/base32-encode/base32.js"
 GCE_TRAINING_INSTANCE = os.environ.get("GCE_TRAINING_INSTANCE", "algo-training-dev")
 MLFLOW_BUCKET_NAME = os.environ.get("MLFLOW_BUCKET_NAME", "mlflow-bucket-ehp")
+ML_BUCKET_TEMP = os.environ.get(
+    "ML_BUCKET_TEMP", f"data-bucket-ml-temp-{ENV_SHORT_NAME}"
+)
 if ENV_SHORT_NAME != "prod":
     MLFLOW_URL = "https://mlflow.staging.passculture.team/"
 else:
@@ -49,7 +59,7 @@ DATA_GCS_BUCKET_NAME = os.environ.get(
     "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
 )
 if ENV_SHORT_NAME == "prod":
-    ELEMENTARY_REPORT_URL = "https://elementary.data.passculture.team/"
+    ELEMENTARY_REPORT_URL = "https://dataquality.data.passculture.team/#/"
 else:
     ELEMENTARY_REPORT_URL = None
 
@@ -126,6 +136,8 @@ if LOCAL_ENV is None:
     )
 else:
     ELEMENTARY_PYTHON_PATH = os.environ.get("ELEMENTARY_PYTHON_PATH")
+
+USE_INTERNAL_IP = False if LOCAL_ENV is not None else True
 
 SLACK_TOKEN_DATA_QUALITY = access_secret_data(GCP_PROJECT_ID, "slack-token-elementary")
 SLACK_CHANNEL_DATA_QUALITY = "alertes-data-quality"

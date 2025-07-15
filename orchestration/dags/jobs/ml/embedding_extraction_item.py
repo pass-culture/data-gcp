@@ -115,7 +115,7 @@ def extract_embedding_item_dag(
         f"--input-table-name {INPUT_TABLE_NAME} "
         f"--output-dataset-name {OUTPUT_DATASET_NAME} "
         f"--output-table-name {OUTPUT_TABLE_NAME} ",
-        deferrable=False,
+        deferrable=True,
         poll_interval=300,
     )
 

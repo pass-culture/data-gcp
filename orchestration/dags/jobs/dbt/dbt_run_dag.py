@@ -1,4 +1,6 @@
 import datetime
+import logging
+from functools import partial
 
 from common.callback import on_failure_base_callback
 from common.config import (
@@ -8,7 +10,17 @@ from common.config import (
     PATH_TO_DBT_PROJECT,
     PATH_TO_DBT_TARGET,
 )
-from common.dbt.utils import dbt_dag_reconstruction, load_and_process_manifest
+from common.dbt.dag_utils import (
+    dbt_dag_reconstruction,
+    load_and_process_manifest,
+)
+from common.dbt.dbt_executors import (
+    compile_dbt_with_selector,
+    clean_dbt,
+    run_dbt_model,
+    run_dbt_test,
+    run_dbt_snapshot,
+)
 from common.utils import (
     delayed_waiting_operator,
     get_airflow_schedule,
@@ -17,8 +29,9 @@ from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
-from airflow.operators.bash_operator import BashOperator
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import PythonOperator
+from airflow.operators.empty import EmptyOperator
+
 
 default_args = {
     "start_date": datetime.datetime(2020, 12, 23),
@@ -26,7 +39,6 @@ default_args = {
     "retry_delay": datetime.timedelta(minutes=5),
     "project_id": GCP_PROJECT_ID,
     "on_failure_callback": on_failure_base_callback,
-    "on_skipped_callback": on_failure_base_callback,
 }
 
 # Load manifest and process it
@@ -47,7 +59,7 @@ dag = DAG(
     default_args=default_args,
     dagrun_timeout=datetime.timedelta(minutes=480),
     catchup=False,
-    description="A dbt wrapper for airflow",
+    description="A dbt wrapper for airflow using Python operators",
     schedule_interval=get_airflow_schedule(SCHEDULE_DICT[dag_id]),
     params={
         "target": Param(
@@ -67,8 +79,8 @@ dag = DAG(
 )
 
 # Define initial and final tasks
-start = DummyOperator(task_id="start", dag=dag, pool="dbt")
-end = DummyOperator(task_id="end", dag=dag, trigger_rule="none_failed", pool="dbt")
+start = EmptyOperator(task_id="start", dag=dag, pool="dbt")
+end = EmptyOperator(task_id="end", dag=dag, trigger_rule="none_failed", pool="dbt")
 
 wait_for_raw = delayed_waiting_operator(
     dag=dag,
@@ -82,39 +94,35 @@ wait_for_firebase = delayed_waiting_operator(
     allowed_states=["success", "upstream_failed"],
     failed_states=["failed"],
 )
-end_wait = DummyOperator(
+
+end_wait = EmptyOperator(
     task_id="end_wait", dag=dag, trigger_rule="none_failed", pool="dbt"
 )
-data_transfo_checkpoint = DummyOperator(
+
+data_transfo_checkpoint = EmptyOperator(
     task_id="data_transfo_checkpoint", dag=dag, pool="dbt"
 )
-snapshots_checkpoint = DummyOperator(
+
+snapshots_checkpoint = EmptyOperator(
     task_id="snapshots_checkpoint", dag=dag, pool="dbt"
 )
 
-
-clean = BashOperator(
+# Create Python operators
+clean = PythonOperator(
     task_id="cleanup",
-    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_clean_tmp_folders.sh ",
-    env={
-        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-    },
+    python_callable=clean_dbt,
     pool="dbt",
     dag=dag,
 )
 
-
-compile = BashOperator(
+compile = PythonOperator(
     task_id="compilation",
-    bash_command=f"bash {PATH_TO_DBT_PROJECT}/scripts/dbt_compile.sh ",
-    env={
-        "target": "{{ params.target }}",
-        "PATH_TO_DBT_TARGET": PATH_TO_DBT_TARGET,
-    },
-    append_env=True,
-    cwd=PATH_TO_DBT_PROJECT,
+    python_callable=partial(
+        compile_dbt_with_selector,
+        selector="package:data_gcp_dbt",
+        use_tmp_artifacts=False,
+    ),
     dag=dag,
-    pool="dbt",
 )
 
 # Run the dbt DAG reconstruction

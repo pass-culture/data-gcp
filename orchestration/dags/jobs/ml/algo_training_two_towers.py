@@ -281,7 +281,7 @@ with (
         "--seed {{ ds_nodash }} "
         "--run-name {{ params.run_name }}",
         dag=dag,
-        deferrable=False,
+        deferrable=True,
         poll_interval=300,
     )
 
@@ -294,7 +294,7 @@ with (
         "--experiment-name {{ params.experiment_name }} "
         "--dummy {{ params.evaluate_on_dummy }} ",
         dag=dag,
-        deferrable=False,
+        deferrable=True,
         poll_interval=300,
     )
 

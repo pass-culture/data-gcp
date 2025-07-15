@@ -114,17 +114,17 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
             elif isinstance(global_cli_flags, list):
                 # Ensure all flags are prefixed with --
                 assert all(
-                    [flag.srtip().startswith("--") for flag in global_cli_flags]
+                    [flag.strip().startswith("--") for flag in global_cli_flags]
                 ), "All flags in GLOBAL_CLI_FLAGS must start with '--'."
                 # Copy the list to avoid modifying the original
-                tmp_cli_flags = copy(global_cli_flags)
+                tmp_cli_flags = [flag.strip() for flag in copy(global_cli_flags)]
             else:
                 raise TypeError(
                     f"Invalid type for GLOBAL_CLI_FLAGS: {type(global_cli_flags)}. Expected str or list, available flags here https://docs.getdbt.com/reference/global-configs/about-global-configs#available-flags"
                 )
             if "compile" in command:
                 tmp_cli_flags.remove("--no-write-json")
-            cli_args.extend(tmp_cli_flags.split())
+            cli_args.extend(tmp_cli_flags)
 
         logging.info(f"Executing dbt command: {' '.join(cli_args)}")
 

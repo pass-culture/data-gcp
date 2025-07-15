@@ -1,16 +1,10 @@
-{{
-    config(
-        materialized='table'
-    )
-}}
+{{ config(materialized="table") }}
 
-{% set dimensions =
-        [
-            {"name": "NAT", "value_expr": "'NAT'"},
-            {"name": "REG", "value_expr": "region_name"},
-            {"name": "DEP", "value_expr": "dep_name"}
-        ]
-    %}
+{% set dimensions = [
+    {"name": "NAT", "value_expr": "'NAT'"},
+    {"name": "REG", "value_expr": "region_name"},
+    {"name": "DEP", "value_expr": "dep_name"},
+] %}
 
 -- noqa: disable=all
 with
@@ -61,52 +55,66 @@ with
 
     aggregated_active_beneficiary as (
 
-    {% for dim in dimensions %}
-        {% if not loop.first %}UNION ALL{% endif %}
+        {% for dim in dimensions %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
             select
-            execution_date,
-            update_date,
-            '{{ dim.name }}' as dimension_name,
-            {{ dim.value_expr }} as dimension_value,
-            deposit_type as user_type,
-            'beneficiaire_actuel' as indicator,
-            count(distinct uua.user_id) as numerator,
-            1 as denominator
-        from user_cumulative_amount_spent uua
-        inner join last_day_of_month ldm
-            on ldm.last_active_date = uua.deposit_active_date
-        inner join {{ ref('mrt_global__user') }} eud
-            on eud.user_id = uua.user_id
-        left join {{ ref('region_department') }} rd
-            on eud.user_department_code = rd.num_dep
-        where cumulative_amount_spent < initial_deposit_amount
-        group by execution_date, update_date, dim.name, dim.value_expr, deposit_type, indicator
-    {% endfor %}
-
+                execution_date,
+                update_date,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.value_expr }} as dimension_value,
+                deposit_type as user_type,
+                'beneficiaire_actuel' as indicator,
+                count(distinct uua.user_id) as numerator,
+                1 as denominator
+            from user_cumulative_amount_spent uua
+            inner join
+                last_day_of_month ldm on ldm.last_active_date = uua.deposit_active_date
+            inner join {{ ref("mrt_global__user") }} eud on eud.user_id = uua.user_id
+            left join
+                {{ ref("region_department") }} rd
+                on eud.user_department_code = rd.num_dep
+            where cumulative_amount_spent < initial_deposit_amount
+            group by
+                execution_date,
+                update_date,
+                dim.name,
+                dim.value_expr,
+                deposit_type,
+                indicator
+        {% endfor %}
 
     ),
 
     aggregated_total_beneficiairy as (
-    {% for dim in dimensions %}
-        {% if not loop.first %}UNION ALL{% endif %}
-        select
-            execution_date,
-            update_date,
-            '{{ dim.name }}' as dimension_name,
-            {{ dim.value_expr }} as dimension_value,
-            cast(null as string) as user_type,
-            "beneficiaire_total" as indicator,
-            count(distinct eud.user_id) as numerator,
-            1 as denominator
-        from last_day_of_month ldm
-        inner join
-            ref("mrt_global__user") eud
-            on date(eud.first_deposit_creation_date) <= date(ldm.last_active_date)
-        left join
-            ref("region_department") as rd
-            on eud.user_department_code = rd.num_dep
-        group by execution_date, update_date, dim.name, dim.value_expr, user_type, indiator
-    {% endfor %}
+        {% for dim in dimensions %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
+            select
+                execution_date,
+                update_date,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.value_expr }} as dimension_value,
+                cast(null as string) as user_type,
+                "beneficiaire_total" as indicator,
+                count(distinct eud.user_id) as numerator,
+                1 as denominator
+            from last_day_of_month ldm
+            inner join
+                ref("mrt_global__user") eud
+                on date(eud.first_deposit_creation_date) <= date(ldm.last_active_date)
+            left join
+                ref("region_department") as rd on eud.user_department_code = rd.num_dep
+            group by
+                execution_date,
+                update_date,
+                dim.name,
+                dim.value_expr,
+                user_type,
+                indiator
+        {% endfor %}
     )
 
 select *

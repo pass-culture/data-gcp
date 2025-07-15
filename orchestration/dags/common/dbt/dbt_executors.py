@@ -109,7 +109,7 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
         # Add global CLI flags if they exist
         if global_cli_flags is not None:
             if isinstance(global_cli_flags, str):
-                tmp_cli_flags = [copy(global_cli_flags)]
+                tmp_cli_flags = copy(global_cli_flags.strip().split(" "))
             elif isinstance(global_cli_flags, list):
                 tmp_cli_flags = copy(global_cli_flags)
             else:

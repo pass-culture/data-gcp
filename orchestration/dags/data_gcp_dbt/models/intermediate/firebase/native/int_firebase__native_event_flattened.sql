@@ -56,7 +56,7 @@ with
                         "enabled",
                     ]
                 )
-            }}
+            }},
             {{
                 extract_params_string_value(
                     [
@@ -83,7 +83,6 @@ with
                         "categoryName",
                         "type",
                         "venueId",
-                        "bookingId",
                         "fromOfferId",
                         "filterTypes",
                         "filter",
@@ -126,6 +125,21 @@ with
                     ]
                 )
             }},
+            coalesce( 
+                {{ extract_params_string_value(
+                    [
+                        "bookingId"
+                    ],
+                    alias=false) 
+                    }},
+                cast({{ extract_params_int_value(
+                    [
+                        "bookingId"
+                    ],
+                    alias=false)
+                    }} as STRING 
+                )
+                ) as bookingId,
             (
                 select event_params.value.string_value
                 from unnest(event_params) as event_params

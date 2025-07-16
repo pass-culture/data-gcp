@@ -124,16 +124,19 @@ with
                     ]
                 )
             }},
+            -- noqa: disable=CP02
+            -- fmt: off
             coalesce(
                 {{ extract_params_string_value(["bookingId"], alias=false) }},
                 cast(
                     {{ extract_params_int_value(["bookingId"], alias=false) }} as string
                 )
-            ) as bookingid,
+            ) as bookingId, -- dbt internal hook needs to have the same name as the field name (including the capitalization)
             coalesce(
                 {{ extract_params_string_value(["offerId"], alias=false) }},
                 cast({{ extract_params_int_value(["offerId"], alias=false) }} as string)
-            ) as offerid,
+            ) as offerId, -- dbt internal hook needs to have the same name as the field name (including the capitalization)
+            -- fmt: on
             (
                 select event_params.value.string_value
                 from unnest(event_params) as event_params

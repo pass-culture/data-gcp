@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: int_global__stock
+    columns:
+      - name: offer_id
+        data_tests:
+          - relationships:
+              to: ref('int_global__offer')
+              field: offer_id

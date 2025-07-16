@@ -39,8 +39,8 @@ BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
 DAG_NAME = "artist_linkage"
 
 # GCS Paths / Filenames
-GCS_FOLDER_PATH = f"artist_linkage_{ENV_SHORT_NAME}"
-STORAGE_BASE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}/{{{{ ds_nodash }}}}"
+GCS_FOLDER_PATH = f"artist_linkage_{ENV_SHORT_NAME}/{{{{ ds_nodash }}}}"
+STORAGE_BASE_PATH = f"gs://{MLFLOW_BUCKET_NAME}/{GCS_FOLDER_PATH}"
 WIKIDATA_STORAGE_BASE_PATH = f"gs://{DATA_GCS_BUCKET_NAME}/dump_wikidata"
 
 ## Link from Scratch
@@ -62,7 +62,7 @@ APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME = (
 DELTA_ARTISTS_GCS_FILENAME = "delta_artist.parquet"
 DELTA_ARTIST_ALIAS_GCS_FILENAME = "delta_artist_alias.parquet"
 DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME = "delta_product_artist_link.parquet"
-
+DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME = "delta_artist_with_metadata.parquet"
 
 # BQ Tables
 ARTISTS_TO_LINK_TABLE = "artist_name_to_link"
@@ -87,6 +87,23 @@ TABLES_TO_IMPORT_TO_GCS_FOR_SYNC = [
         "dataset_id": BIGQUERY_ML_LINKAGE_DATASET,
         "table_id": "product_to_link",
         "filename": PRODUCTS_TO_LINK_GCS_FILENAME,
+    },
+]
+GCS_TO_DELTA_TABLES = [
+    {
+        "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
+        "table_id": "delta_artist",
+        "filename": DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME,
+    },
+    {
+        "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
+        "table_id": "delta_artist_alias",
+        "filename": DELTA_ARTIST_ALIAS_GCS_FILENAME,
+    },
+    {
+        "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
+        "table_id": "delta_product_artist_link",
+        "filename": DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME,
     },
 ]
 
@@ -315,6 +332,30 @@ with DAG(
             """,
     )
 
+    get_wikimedia_commons_license_on_artist_delta = SSHGCEOperator(
+        task_id="get_wikimedia_commons_license_on_artist_delta",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+             python get_wikimedia_commons_license.py \
+            --artists-matched-on-wikidata {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME)} \
+            --output-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME)}
+            """,
+    )
+
+    with TaskGroup("load_data_into_delta_tables") as load_data_into_delta_tables:
+        for table_data in GCS_TO_DELTA_TABLES:
+            GCSToBigQueryOperator(
+                task_id=f"load_data_into_{table_data['table_id']}_table",
+                project_id=GCP_PROJECT_ID,
+                bucket=MLFLOW_BUCKET_NAME,
+                source_objects=os.path.join(GCS_FOLDER_PATH, table_data["filename"]),
+                destination_project_dataset_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.{table_data['table_id']}",
+                source_format="PARQUET",
+                write_disposition="WRITE_TRUNCATE",
+                autodetect=True,
+            )
+
     TABLES_TO_IMPORT_TO_GCS_FOR_SYNC = [
         {
             "dataset_id": BIGQUERY_RAW_DATASET,
@@ -361,5 +402,7 @@ with DAG(
         link_new_products_to_artists_flow
         >> import_data_for_new_products_synchronization
         >> link_new_products_to_artists
+        >> get_wikimedia_commons_license_on_artist_delta
+        >> load_data_into_delta_tables
         >> gce_instance_stop
     )

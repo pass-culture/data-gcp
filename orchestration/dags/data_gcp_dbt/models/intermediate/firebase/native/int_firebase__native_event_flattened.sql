@@ -131,11 +131,11 @@ with
                 cast(
                     {{ extract_params_int_value(["bookingId"], alias=false) }} as string
                 )
-            ) as bookingId, -- dbt internal hook needs to have the same name as the field name (including the capitalization)
+            ) as bookingId, -- dbt internal hook creates tmp table for incremental and compare fields names (including the capitalization), if not biquery (case insensitive) breaks
             coalesce(
                 {{ extract_params_string_value(["offerId"], alias=false) }},
                 cast({{ extract_params_int_value(["offerId"], alias=false) }} as string)
-            ) as offerId, -- dbt internal hook needs to have the same name as the field name (including the capitalization)
+            ) as offerId, -- dbt internal hook creates tmp table for incremental and compare fields names (including the capitalization), if not biquery (case insensitive) breaks
             -- fmt: on
             (
                 select event_params.value.string_value
@@ -161,11 +161,11 @@ select
     {{ extract_str_to_array_field("offers", 0, 10, 50) }} as displayed_offers,
     {{ extract_str_to_array_field("venues", 0, 10, 50) }} as displayed_venues,
     case
-        when event_name = "BookingConfirmation" and bookingid is null
+        when event_name = "BookingConfirmation" and bookingid is null  -- this is not in the hook so case insensitive is fine
         then true
         when event_name = "BookingConfirmation" and user_id is null
         then true
-        when event_name = "ConsultOffer" and offerid is null
+        when event_name = "ConsultOffer" and offerid is null  -- this is not in the hook so case insensitive is fine
         then true
         else false
     end as is_anomaly

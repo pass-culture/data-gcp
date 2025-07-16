@@ -16,7 +16,7 @@ models:
           tags: [elementary]
           dimensions:
             - category
-            - offer_is_geolocated
+            - is_geolocated
           training_period:
             period: day
             count: 7

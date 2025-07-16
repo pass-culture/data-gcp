@@ -12,6 +12,17 @@ models:
           detection_period:
             period: day
             count: 1
+      - elementary.dimension_anomalies:
+          tags: [elementary]
+          dimensions:
+            - category
+            - is_geolocated
+          training_period:
+            period: day
+            count: 7
+          detection_period:
+            period: day
+            count: 1
     columns:
       - name: item_id
         description: "{{ doc('column__item_id') }}"
@@ -30,7 +41,6 @@ models:
         description: "{{ doc('column__offer_category_id') }}"
         data_tests:
           - not_null
-          - elementary.column_anomalies
       - name: subcategory_id
         description: "{{ doc('column__offer_subcategory_id') }}"
         data_tests:
@@ -45,7 +55,6 @@ models:
         description: "{{ doc('column__offer_is_geolocated') }}"
         data_tests:
           - not_null
-          - elementary.column_anomalies
       - name: offer_is_duo
         description: "{{ doc('column__offer_is_duo') }}"
       - name: offer_type_domain

@@ -141,7 +141,7 @@ with DAG(
             type="string",
         ),
         "link_from_scratch": Param(
-            default=True,
+            default=False,
             type="boolean",
         ),
     },

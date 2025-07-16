@@ -343,6 +343,7 @@ def create_delta_tables(
     preproc_linked_products_df: pd.DataFrame,
     preproc_unlinked_products_df: pd.DataFrame,
     exploded_artist_alias_df: pd.DataFrame,
+    artist_df: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Create delta tables for products, artists, and artist aliases with action tracking.
@@ -406,7 +407,10 @@ def create_delta_tables(
                 "description",
             ]
         )
-        .loc[:, ARTISTS_KEYS]
+        .assign(
+            artist_name=lambda df: df["postprocessed_artist_name"]
+        )  # Replace artist_name by postprocessed_artist_name so that it is well formatted
+        .loc[lambda df: ~df.artist_id.isin(artist_df.artist_id.unique()), ARTISTS_KEYS]
         .drop_duplicates()
         .assign(action="add", comment="new artist")
     )
@@ -569,6 +573,7 @@ def main(
         preproc_linked_products_df,
         preproc_unlinked_products_df,
         exploded_artist_alias_df,
+        artist_df,
     )
 
     # 7. Sanity check for consistency
@@ -580,7 +585,7 @@ def main(
         artist_alias_df,
     )
 
-    # 7. Save files
+    # 8. Save files
     delta_artist_df.to_parquet(output_delta_artist_file_path, index=False)
     delta_artist_alias_df.to_parquet(output_delta_artist_alias_file_path, index=False)
     delta_product_df.to_parquet(output_delta_product_artist_link_filepath, index=False)

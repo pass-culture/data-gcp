@@ -76,7 +76,7 @@ with DAG(
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,
         task_id="gce_start_task",
-        labels={"dag_name": DAG_NAME},
+        labels={"job_type": "long_task", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(

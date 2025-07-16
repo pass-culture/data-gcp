@@ -198,9 +198,6 @@ def clean_dbt(**context):
         except Exception as e:
             logging.warning(f"Could not remove {folder}: {e}")
 
-    # Run dbt clean
-    run_dbt_command(["clean"], **context)
-
 
 def run_dbt_model(
     model_name: str,

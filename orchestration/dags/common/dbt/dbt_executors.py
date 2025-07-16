@@ -107,24 +107,29 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
         cli_args.extend(["--profiles-dir", PATH_TO_DBT_PROJECT])
 
         # Add global CLI flags if they exist
-        if global_cli_flags is not None:
-            if isinstance(global_cli_flags, str):
-                str_flags = copy(global_cli_flags).strip()
-                tmp_cli_flags = [f"--{flag}" for flag in str_flags.split("--")]
-            elif isinstance(global_cli_flags, list):
-                # Ensure all flags are prefixed with --
-                assert all(
-                    [flag.strip().startswith("--") for flag in global_cli_flags]
-                ), "All flags in GLOBAL_CLI_FLAGS must start with '--'."
-                # Copy the list to avoid modifying the original
-                tmp_cli_flags = [flag.strip() for flag in copy(global_cli_flags)]
+
+        if global_cli_flags is not None or global_cli_flags != "":
+            tmp_cli_flags = copy(global_cli_flags)
+            if isinstance(tmp_cli_flags, str):
+                # Ensure the string is split into a list
+                tmp_cli_flags = tmp_cli_flags.strip()
             else:
                 raise TypeError(
-                    f"Invalid type for GLOBAL_CLI_FLAGS: {type(global_cli_flags)}. Expected str or list, available flags here https://docs.getdbt.com/reference/global-configs/about-global-configs#available-flags"
+                    f"Invalid type for GLOBAL_CLI_FLAGS: {type(global_cli_flags)}. Expected str"
                 )
+            g_cli_flags_list = tmp_cli_flags.split()
+            assert all(
+                [flag.startswith("--") for flag in g_cli_flags_list]
+            ), "All flags in GLOBAL_CLI_FLAGS must start with '--'."
+
             if "compile" in command:
-                tmp_cli_flags.remove("--no-write-json")
-            cli_args.extend(tmp_cli_flags)
+                g_cli_flags_list = tmp_cli_flags.split()
+                # Remove --no-write-json if it exists
+                if "--no-write-json" in g_cli_flags_list:
+                    g_cli_flags_list.remove("--no-write-json")
+
+            tmp_cli_flags = " ".join(g_cli_flags_list)
+            cli_args.extend(tmp_cli_flags.split())
 
         logging.info(f"Executing dbt command: {' '.join(cli_args)}")
 

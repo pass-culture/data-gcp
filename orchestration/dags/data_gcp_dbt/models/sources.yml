@@ -218,6 +218,9 @@ sources:
       - name: item_embedding_reduced_5
       - name: artist_linked
         description: This table contains the artist_linkage dag
+      - name: delta_artist
+      - name: delta_artist_alias
+      - name: delta_product_artist_link
       - name: unconstrained_item_cluster
       - name: two_tower_user_embedding_history
         description: Partitionned table containing the history of the two tower user emebddings

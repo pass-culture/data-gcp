@@ -384,13 +384,19 @@ def create_delta_tables(
     delta_product_df = pd.concat(
         [
             products_to_remove_df.filter(PRODUCTS_KEYS).assign(
-                {ACTION_KEY: Action.remove, COMMENT_KEY: Comment.removed_linked}
+                **{ACTION_KEY: Action.remove, COMMENT_KEY: Comment.removed_linked}
             ),
             raw_linked_products_df.filter(PRODUCTS_KEYS).assign(
-                {ACTION_KEY: Action.add, COMMENT_KEY: Comment.linked_to_existing_artist}
+                **{
+                    ACTION_KEY: Action.add,
+                    COMMENT_KEY: Comment.linked_to_existing_artist,
+                }
             ),
             preproc_linked_products_df.filter(PRODUCTS_KEYS).assign(
-                {ACTION_KEY: Action.add, COMMENT_KEY: Comment.linked_to_existing_artist}
+                **{
+                    ACTION_KEY: Action.add,
+                    COMMENT_KEY: Comment.linked_to_existing_artist,
+                }
             ),
             preproc_unlinked_products_df.merge(
                 exploded_artist_alias_df,
@@ -402,7 +408,9 @@ def create_delta_tables(
                 ],
             )
             .filter(PRODUCTS_KEYS)
-            .assign({ACTION_KEY: Action.add, COMMENT_KEY: Comment.linked_to_new_artist})
+            .assign(
+                **{ACTION_KEY: Action.add, COMMENT_KEY: Comment.linked_to_new_artist}
+            )
             .drop_duplicates(),
         ]
     )
@@ -420,12 +428,12 @@ def create_delta_tables(
         )  # Replace artist_name by postprocessed_artist_name so that it is well formatted
         .loc[lambda df: ~df.artist_id.isin(artist_df.artist_id.unique()), ARTISTS_KEYS]
         .drop_duplicates()
-        .assign({ACTION_KEY: Action.add, COMMENT_KEY: Comment.new_artist})
+        .assign(**{ACTION_KEY: Action.add, COMMENT_KEY: Comment.new_artist})
     )
     delta_artist_alias_df = (
         exploded_artist_alias_df.loc[:, ARTIST_ALIASES_KEYS]
         .drop_duplicates()
-        .assign({ACTION_KEY: Action.add, COMMENT_KEY: Comment.new_artist_alias})
+        .assign(**{ACTION_KEY: Action.add, COMMENT_KEY: Comment.new_artist_alias})
     )
     return (
         delta_product_df,

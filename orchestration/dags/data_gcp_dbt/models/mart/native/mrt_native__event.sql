@@ -111,6 +111,7 @@ where
         )
     )
     {% if is_incremental() %}
-        and e.event_date
-        between date_sub(date("{{ ds() }}"), interval {{ var("lookback_days", 3) }} day) and date("{{ ds() }}")
+        and e.event_date between date_sub(
+            date("{{ ds() }}"), interval {{ var("lookback_days", 3) }} day
+        ) and date("{{ ds() }}")
     {% endif %}

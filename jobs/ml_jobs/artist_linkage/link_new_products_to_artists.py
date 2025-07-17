@@ -4,12 +4,12 @@ import pandas as pd
 import typer
 from loguru import logger
 
+from constants import ARTIST_NAME_TO_FILTER, extract_artist_name
 from match_artists_on_wikidata import (
     load_wikidata,
     match_namesakes_per_category,
     match_per_category_no_namesakes,
 )
-from utils.preprocessing_utils import ARTIST_NAME_TO_FILTER, extract_artist_name
 
 # Columns
 ARTIST_ID_KEY = "artist_id"

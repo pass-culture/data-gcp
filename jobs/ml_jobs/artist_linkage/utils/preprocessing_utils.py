@@ -5,24 +5,7 @@ from typing import TypedDict
 
 import pandas as pd
 
-from constants import TOTAL_OFFER_COUNT
-
-ARTIST_NAME_TO_FILTER = {
-    "multi-artistes",
-    "xxx",
-    "compilation",
-    "tbc",
-    "divers",
-    "a preciser",
-    "aa.vv.",
-    "etai",
-    "france",
-    "0",
-    "wallpaper",
-    "<<<<<",
-    "nc",
-    "",
-}
+from constants import ARTIST_NAME_TO_FILTER, TOTAL_OFFER_COUNT
 
 
 ### Cleaning

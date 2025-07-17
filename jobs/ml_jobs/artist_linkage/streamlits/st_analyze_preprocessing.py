@@ -4,6 +4,7 @@
 import pandas as pd
 import streamlit as st
 
+from constants import ARTIST_NAME_TO_FILTER
 from match_artists_on_wikidata import preprocess_artists
 from utils.preprocessing_utils import (
     clean_names,
@@ -18,22 +19,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-# Params
-ARTIST_NAME_TO_FILTER = {
-    "multi-artistes",
-    "xxx",
-    "compilation",
-    "tbc",
-    "divers",
-    "a preciser",
-    "aa.vv.",
-    "etai",
-    "france",
-    "0",
-    "wallpaper",
-    "<<<<<",
-    "nc",
-}
 
 # Columns
 ARTIST_ID_KEY = "artist_id"

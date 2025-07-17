@@ -4,42 +4,29 @@ import pandas as pd
 import typer
 from loguru import logger
 
-from constants import ARTIST_NAME_TO_FILTER, extract_artist_name
+from constants import (
+    ARTIST_ALIASES_KEYS,
+    ARTIST_ID_KEY,
+    ARTIST_NAME_KEY,
+    ARTIST_NAME_TO_FILTER,
+    ARTIST_NAME_TO_MATCH_KEY,
+    ARTIST_TYPE_KEY,
+    ARTISTS_KEYS,
+    OFFER_CATEGORY_ID_KEY,
+    PRODUCT_ID_KEY,
+    PRODUCTS_KEYS,
+    WIKI_ID_KEY,
+)
 from match_artists_on_wikidata import (
     load_wikidata,
     match_namesakes_per_category,
     match_per_category_no_namesakes,
 )
-
-# Columns
-ARTIST_ID_KEY = "artist_id"
-ID_KEY = "id"
-PRODUCT_ID_KEY = "offer_product_id"
-ARTIST_NAME_KEY = "artist_name"
-ARTIST_NAME_TO_MATCH_KEY = "artist_name_to_match"
-ARTIST_TYPE_KEY = "artist_type"
-WIKI_ID_KEY = "wiki_id"
-OFFER_CATEGORY_ID_KEY = "offer_category_id"
-ID_PER_CATEGORY = "id_per_category"
+from utils.preprocessing_utils import extract_artist_name
 
 NOT_MATCHED_WITH_ARTISTS_KEY = "not_matched_with_artists"
 REMOVED_PRODUCTS_KEY = "removed_products"
 MATCHED_WITH_ARTISTS_KEY = "matched_with_artists"
-
-ARTIST_ALIASES_KEYS = [
-    ARTIST_ID_KEY,
-    OFFER_CATEGORY_ID_KEY,
-    ARTIST_TYPE_KEY,
-    ARTIST_NAME_KEY,
-    ARTIST_NAME_TO_MATCH_KEY,
-    WIKI_ID_KEY,
-]
-ARTISTS_KEYS = [ARTIST_ID_KEY, ARTIST_NAME_KEY, "description", "img", "wiki_id"]
-PRODUCTS_KEYS = [
-    PRODUCT_ID_KEY,
-    ARTIST_ID_KEY,
-    ARTIST_TYPE_KEY,
-]
 
 
 def get_products_to_remove_and_link_df(

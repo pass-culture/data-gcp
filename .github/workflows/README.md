@@ -67,13 +67,13 @@ Le fichier `CD_workflow.yml` est le workflow principal qui est déclenché sur l
 
 * **Test d'Orchestration** : Cette tâche exécute des tests d'orchestration pour s'assurer que les processus sont correctement orchestrés.
 
-* **DBT installation et compilation** : Ces tâches installent python, DBT + dbt-packages, compile le projet dbt et deploie les dbt-packages et le manifest dans le bucket de Composer.
+* **DBT installation et compilation** : Ces tâches installent python, DBT + dbt-packages, compile le projet dbt et deploie les dbt-packages et le manifest dans le bucket de Airflow.
 
-* **Déploiement de Composer en Dev** : Cette tâche déploie Composer dans l'environnement de développement si la branche est `production`.
+* **Déploiement de Airflow en Dev** : Cette tâche déploie Airflow dans l'environnement de développement si la branche est `production`.
 
-* **Déploiement de Composer & DBT en Staging** : Si la branche cible est master, cette tâche déploie Composer & DBT dans l'environnement de staging (upload les dags, models SQL & artfact DBT dans le bucket staging).
+* **Déploiement de Airflow & DBT en Staging** : Si la branche cible est master, cette tâche déploie Airflow & DBT dans l'environnement de staging (upload les dags, models SQL & artfact DBT dans le bucket staging).
 
-* **Déploiement de Composer & DBT en Production** : Si la branche cible est `production`, cette tâche déploie Composer & DBT dans l'environnement de production (upload les dags, models SQL & artfact DBT dans le bucket prod).
+* **Déploiement de Airflow & DBT en Production** : Si la branche cible est `production`, cette tâche déploie Airflow & DBT dans l'environnement de production (upload les dags, models SQL & artfact DBT dans le bucket prod).
 
 ### Arbre d'Exécution des Tâches (trigger: merge)
 
@@ -85,7 +85,7 @@ graph TD;
     B --> E[Tâches de Test]
     C --> E
     D --> E
-    E -->|merge -> master| H[Déploiement de Composer & DBT en Staging]
-    E -->|merge -> production| F[Déploiement de Composer & DBT en Dev]
-    F --> G[Déploiement de Composer & DBT en Production]
+    E -->|merge -> master| H[Déploiement de Airflow & DBT en Staging]
+    E -->|merge -> production| F[Déploiement de Airflow & DBT en Dev]
+    F --> G[Déploiement de Airflow & DBT en Production]
 ```

@@ -10,11 +10,11 @@ app = typer.Typer()
 def export_models(
     airflow_bucket_name: str = typer.Option(
         ...,
-        help="Composer Bucket where the manifest is present",
+        help="Airflow Bucket where the manifest is present",
     ),
     airflow_bucket_manifest_path: str = typer.Option(
         "data/target/manifest.json",
-        help="Path to the manifest file in the Composer Bucket",
+        help="Path to the manifest file in the Airflow Bucket",
     ),
     local_manifest_path: str = typer.Option(
         "manifest.json",
@@ -35,7 +35,7 @@ def export_models(
 def export_exposures(
     airflow_bucket_name: str = typer.Option(
         ...,
-        help="Composer Bucket where the manifest is present",
+        help="Airflow Bucket where the manifest is present",
     ),
     exposure_dataset_name: str = typer.Option(
         ...,
@@ -47,11 +47,11 @@ def export_exposures(
     ),
     airflow_bucket_manifest_path: str = typer.Option(
         "data/target/manifest.json",
-        help="Path to the manifest file in the Composer Bucket",
+        help="Path to the manifest file in the Airflow Bucket",
     ),
     airflow_bucket_base_folder: str = typer.Option(
         "data/exposures/",
-        help="Base folder in the Composer Bucket to save the exposures",
+        help="Base folder in the Airflow Bucket to save the exposures",
     ),
     local_manifest_path: str = typer.Option(
         "manifest.json",

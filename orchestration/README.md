@@ -29,7 +29,7 @@ Inside the `dags/` directory:
 
 ### 🔄 Automatic Deployment
 
-When merging to `master` or `production`, DAGs are automatically deployed to Cloud Composer using GitHub Actions.
+When merging to `master` or `production`, DAGs are automatically deployed to Airflow using GitHub Actions.
 See [CD Documentation](../README.md#cd) for more.
 
 Deployment process:

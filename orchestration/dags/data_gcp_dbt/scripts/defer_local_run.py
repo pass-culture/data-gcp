@@ -76,7 +76,7 @@ def set_bucket_name(defer_to: str):
     ENV_BUCKETS = {
         "dev": os.getenv("AIRFLOW_BUCKET_DEV"),
         "stg": os.getenv("AIRFLOW_BUCKET_STG"),
-        "prod": os.getenv("COMPOSER_BUCKET_PROD"),
+        "prod": os.getenv("AIRFLOW_BUCKET_PROD"),
     }
     return ENV_BUCKETS.get(defer_to, None)
 

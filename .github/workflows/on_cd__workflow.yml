@@ -63,7 +63,7 @@ jobs:
     with:
       GITHUB_ENV_NAME: "dev"
       ENV_SHORT_NAME: "dev"
-      COMPOSER_DAGS_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_DEV }}
+      AIRFLOW_DAGS_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_DEV }}
       AIRFLOW_NAME: "gke-data-airflow-dev"
       DATA_GCP_PROJECT: "passculture-data-ehp"
       APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_DEV }}
@@ -80,7 +80,7 @@ jobs:
     with:
       GITHUB_ENV_NAME: "staging"
       ENV_SHORT_NAME: "stg"
-      COMPOSER_DAGS_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_STG }}
+      AIRFLOW_DAGS_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_STG }}
       AIRFLOW_NAME: "gke-data-airflow-stg"
       DATA_GCP_PROJECT: "passculture-data-ehp"
       APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_STG}}
@@ -96,7 +96,7 @@ jobs:
     with:
       GITHUB_ENV_NAME: "production"
       ENV_SHORT_NAME: "prod"
-      COMPOSER_DAGS_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_PROD }}
+      AIRFLOW_DAGS_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_PROD }}
       AIRFLOW_NAME: "gke-data-airflow-prod"
       DATA_GCP_PROJECT: "passculture-data-prod"
       APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_PROD }}

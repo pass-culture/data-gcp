@@ -28,6 +28,7 @@ OFFER_IS_SYNCHRONISED = "offer_is_synchronised"
 FIRST_ARTIST_KEY = "first_artist"
 IS_MULTI_ARTISTS_KEY = "is_multi_artists"
 PREPROCESSED_ARTIST_NAME_KEY = "preprocessed_artist_name"
+POSTPROCESSED_ARTIST_NAME_KEY = "postprocessed_artist_name"
 
 # Dataframe Columns List
 ARTIST_ALIASES_KEYS = [

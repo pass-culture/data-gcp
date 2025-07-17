@@ -15,7 +15,10 @@ from constants import (
     ARTIST_TYPE_KEY,
     ARTISTS_KEYS,
     COMMENT_KEY,
+    DESCRIPTION_KEY,
+    IMG_KEY,
     OFFER_CATEGORY_ID_KEY,
+    POSTPROCESSED_ARTIST_NAME_KEY,
     PRODUCT_ID_KEY,
     PRODUCTS_KEYS,
     WIKI_ID_KEY,
@@ -408,12 +411,12 @@ def create_delta_tables(
             by=[
                 ARTIST_ID_KEY,
                 WIKI_ID_KEY,
-                "img",
-                "description",
+                IMG_KEY,
+                DESCRIPTION_KEY,
             ]
         )
         .assign(
-            artist_name=lambda df: df["postprocessed_artist_name"]
+            artist_name=lambda df: df[POSTPROCESSED_ARTIST_NAME_KEY]
         )  # Replace artist_name by postprocessed_artist_name so that it is well formatted
         .loc[lambda df: ~df.artist_id.isin(artist_df.artist_id.unique()), ARTISTS_KEYS]
         .drop_duplicates()

@@ -80,7 +80,7 @@ dag = DAG(
 
 # Define initial and final tasks
 start = EmptyOperator(task_id="start", dag=dag, pool="dbt")
-end = EmptyOperator(task_id="end", dag=dag, trigger_rule="none_failed", pool="dbt")
+end = EmptyOperator(task_id="end", dag=dag, pool="dbt")
 
 wait_for_raw = delayed_waiting_operator(
     dag=dag,
@@ -96,7 +96,7 @@ wait_for_firebase = delayed_waiting_operator(
 )
 
 end_wait = EmptyOperator(
-    task_id="end_wait", dag=dag, trigger_rule="none_failed", pool="dbt"
+    task_id="end_wait", dag=dag, trigger_rule="none_failed_min_one_success", pool="dbt"
 )
 
 data_transfo_checkpoint = EmptyOperator(
@@ -113,6 +113,7 @@ clean = PythonOperator(
     python_callable=clean_dbt,
     pool="dbt",
     dag=dag,
+    trigger_rule="none_failed_min_one_success",
 )
 
 compile = PythonOperator(

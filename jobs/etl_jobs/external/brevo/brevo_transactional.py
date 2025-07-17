@@ -7,7 +7,10 @@ import pandas as pd
 from brevo_python.rest import ApiException
 from google.cloud import bigquery
 
-from utils import ENV_SHORT_NAME
+from utils import (
+    ENV_SHORT_NAME,
+    rate_limiter,
+)
 
 
 class BrevoTransactional:
@@ -64,17 +67,22 @@ class BrevoTransactional:
 
         return active_templates
 
+    # https://developers.brevo.com/docs/api-limits
+    @rate_limiter(calls=280, period=3600)  # Custom rate limiter: 280 calls per hour
+    def _get_email_event_report(self, **kwargs):
+        return self.api_instance.get_email_event_report(**kwargs)
+
     def get_events(self, event_type):
         active_templates = self.get_active_templates_id()
         if ENV_SHORT_NAME != "prod" and len(active_templates) > 0:
             active_templates = active_templates[:1]
 
-        print(f"Number of active templates : {len(active_templates)}")
+        logging.info(f"Number of active templates : {len(active_templates)}")
 
         api_responses = []
         for template in active_templates:
             offset = 0
-            response = self.api_instance.get_email_event_report(
+            response = self._get_email_event_report(
                 template_id=template,
                 start_date=self.start_date,
                 end_date=self.end_date,
@@ -91,7 +99,7 @@ class BrevoTransactional:
                 while response is not None and len(response) == 2500:
                     offset = offset + 2500
                     logging.info(f"Importing offset {offset} for template {template} ")
-                    response = self.api_instance.get_email_event_report(
+                    response = self._get_email_event_report(
                         template_id=template,
                         start_date=self.start_date,
                         end_date=self.end_date,

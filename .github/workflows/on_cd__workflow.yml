@@ -58,7 +58,7 @@ jobs:
   airflow-deploy-on-dev:
     # deploying new custom gke airflow on dev
     if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/production' }}
-    uses: ./.github/workflows/reusable_deploy_composer.yml
+    uses: ./.github/workflows/reusable_deploy_airflow.yml
     needs: [test-orchestration, test-jobs, linter]
     with:
       GITHUB_ENV_NAME: "dev"
@@ -75,7 +75,7 @@ jobs:
   airflow-deploy-on-stg:
     # deploying new custom gke airflow on stg
     if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' }}
-    uses: ./.github/workflows/reusable_deploy_composer.yml
+    uses: ./.github/workflows/reusable_deploy_airflow.yml
     needs: [test-orchestration, test-jobs, linter]
     with:
       GITHUB_ENV_NAME: "staging"
@@ -91,7 +91,7 @@ jobs:
 
   airflow-deploy-on-prod:
     if: github.ref == 'refs/heads/production'
-    uses: ./.github/workflows/reusable_deploy_composer.yml
+    uses: ./.github/workflows/reusable_deploy_airflow.yml
     needs: [test-orchestration, test-jobs, linter, airflow-deploy-on-dev]
     with:
       GITHUB_ENV_NAME: "production"

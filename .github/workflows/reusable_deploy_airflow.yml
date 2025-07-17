@@ -1,6 +1,6 @@
-name: "Deploy Composer"
+name: "Deploy Airflow"
 
-run-name: "Deploy Composer on ${{ github.event.inputs.GITHUB_ENV_NAME }}"
+run-name: "Deploy Airflow on ${{ github.event.inputs.GITHUB_ENV_NAME }}"
 
 on:
   workflow_call:
@@ -115,10 +115,10 @@ jobs:
           COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
         run: gsutil cp target/manifest.json gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json
 
-      - name: "Deploy composer (dags)"
+      - name: "Deploy Airflow (dags)"
         run: gsutil -m rsync -d -r dags gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/dags
 
-      - name: "Deploy composer (plugins)"
+      - name: "Deploy Airflow (plugins)"
         run: gsutil -m rsync -d -r plugins gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/plugins
 
       - name: "Push documentation (dbt) to GCS (plugins/static/dbt_docs)"

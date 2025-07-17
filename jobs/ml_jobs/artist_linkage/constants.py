@@ -18,6 +18,8 @@ OFFER_CATEGORY_ID_KEY = "offer_category_id"
 WIKI_ID_KEY = "wiki_id"
 DESCRIPTION_KEY = "description"
 IMG_KEY = "img"
+ACTION_KEY = "action"
+COMMENT_KEY = "comment"
 
 ID_PER_CATEGORY = "id_per_category"
 TOTAL_BOOKING_COUNT = "total_booking_count"
@@ -28,7 +30,6 @@ IS_MULTI_ARTISTS_KEY = "is_multi_artists"
 PREPROCESSED_ARTIST_NAME_KEY = "preprocessed_artist_name"
 
 # Dataframe Columns List
-
 ARTIST_ALIASES_KEYS = [
     ARTIST_ID_KEY,
     OFFER_CATEGORY_ID_KEY,

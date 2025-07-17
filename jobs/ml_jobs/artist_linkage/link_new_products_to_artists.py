@@ -1,10 +1,12 @@
 import uuid
+from typing import ClassVar
 
 import pandas as pd
 import typer
 from loguru import logger
 
 from constants import (
+    ACTION_KEY,
     ARTIST_ALIASES_KEYS,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
@@ -12,6 +14,7 @@ from constants import (
     ARTIST_NAME_TO_MATCH_KEY,
     ARTIST_TYPE_KEY,
     ARTISTS_KEYS,
+    COMMENT_KEY,
     OFFER_CATEGORY_ID_KEY,
     PRODUCT_ID_KEY,
     PRODUCTS_KEYS,
@@ -24,9 +27,24 @@ from match_artists_on_wikidata import (
 )
 from utils.preprocessing_utils import extract_artist_name
 
-NOT_MATCHED_WITH_ARTISTS_KEY = "not_matched_with_artists"
-REMOVED_PRODUCTS_KEY = "removed_products"
-MATCHED_WITH_ARTISTS_KEY = "matched_with_artists"
+
+class Action:
+    add: ClassVar[str] = "add"
+    remove: ClassVar[str] = "remove"
+
+
+class Comment:
+    linked_to_existing_artist: ClassVar[str] = "linked to existing artist"
+    removed_linked: ClassVar[str] = "removed linked"
+    linked_to_new_artist: ClassVar[str] = "linked to new artist"
+    new_artist: ClassVar[str] = "new artist"
+    new_artist_alias: ClassVar[str] = "new artist_alias"
+
+
+class ProductToLinkStatus:
+    not_matched_with_artists_key = "not matched with artists"
+    removed_products_key = "removed product"
+    matched_with_artists_key = "matched with artists"
 
 
 def get_products_to_remove_and_link_df(
@@ -67,19 +85,19 @@ def get_products_to_remove_and_link_df(
     ).replace(
         {
             "_merge": {
-                "left_only": NOT_MATCHED_WITH_ARTISTS_KEY,
-                "right_only": REMOVED_PRODUCTS_KEY,
-                "both": MATCHED_WITH_ARTISTS_KEY,
+                "left_only": ProductToLinkStatus.not_matched_with_artists_key,
+                "right_only": ProductToLinkStatus.removed_products_key,
+                "both": ProductToLinkStatus.matched_with_artists_key,
             }
         }
     )
 
     products_to_remove_df = merged_df.loc[
-        lambda df: df._merge == REMOVED_PRODUCTS_KEY,
+        lambda df: df._merge == ProductToLinkStatus.removed_products_key,
         MERGE_COLUMNS + [ARTIST_ID_KEY],
     ]
     products_to_link_df = merged_df.loc[
-        lambda df: df._merge == NOT_MATCHED_WITH_ARTISTS_KEY,
+        lambda df: df._merge == ProductToLinkStatus.not_matched_with_artists_key,
         MERGE_COLUMNS,
     ].merge(products_df, how="left", on=MERGE_COLUMNS)
 
@@ -363,13 +381,13 @@ def create_delta_tables(
     delta_product_df = pd.concat(
         [
             products_to_remove_df.filter(PRODUCTS_KEYS).assign(
-                action="remove", comment="removed linked"
+                {ACTION_KEY: Action.remove, COMMENT_KEY: Comment.removed_linked}
             ),
             raw_linked_products_df.filter(PRODUCTS_KEYS).assign(
-                action="add", comment="linked to existing artist"
+                {ACTION_KEY: Action.add, COMMENT_KEY: Comment.linked_to_existing_artist}
             ),
             preproc_linked_products_df.filter(PRODUCTS_KEYS).assign(
-                action="add", comment="linked to existing artist"
+                {ACTION_KEY: Action.add, COMMENT_KEY: Comment.linked_to_existing_artist}
             ),
             preproc_unlinked_products_df.merge(
                 exploded_artist_alias_df,
@@ -381,7 +399,7 @@ def create_delta_tables(
                 ],
             )
             .filter(PRODUCTS_KEYS)
-            .assign(action="add", comment="linked to new artist")
+            .assign({ACTION_KEY: Action.add, COMMENT_KEY: Comment.linked_to_new_artist})
             .drop_duplicates(),
         ]
     )
@@ -399,12 +417,12 @@ def create_delta_tables(
         )  # Replace artist_name by postprocessed_artist_name so that it is well formatted
         .loc[lambda df: ~df.artist_id.isin(artist_df.artist_id.unique()), ARTISTS_KEYS]
         .drop_duplicates()
-        .assign(action="add", comment="new artist")
+        .assign({ACTION_KEY: Action.add, COMMENT_KEY: Comment.new_artist})
     )
     delta_artist_alias_df = (
         exploded_artist_alias_df.loc[:, ARTIST_ALIASES_KEYS]
         .drop_duplicates()
-        .assign(action="add", comment="new artist alias")
+        .assign({ACTION_KEY: Action.add, COMMENT_KEY: Comment.new_artist_alias})
     )
     return (
         delta_product_df,
@@ -452,7 +470,7 @@ def sanity_checks(
             "There are still products that could not be linked to artists after matching."
         )
     assert (
-        not delta_product_df.drop(columns=["action", "comment"]).duplicated().any()
+        not delta_product_df.drop(columns=[ACTION_KEY, COMMENT_KEY]).duplicated().any()
     ), "Duplicate entries in delta_product_df"
 
     # 2. Artists
@@ -466,7 +484,7 @@ def sanity_checks(
             "There are artists that already exist in the database after matching."
         )
     assert (
-        not delta_artist_df.drop(columns=["action", "comment"]).duplicated().any()
+        not delta_artist_df.drop(columns=[ACTION_KEY, COMMENT_KEY]).duplicated().any()
     ), "Duplicate entries in delta_artist_df"
 
     # 3. Artist Aliases
@@ -483,7 +501,9 @@ def sanity_checks(
             "There are artist aliases that already exist in the database after matching."
         )
     assert (
-        not delta_artist_alias_df.drop(columns=["action", "comment"]).duplicated().any()
+        not delta_artist_alias_df.drop(columns=[ACTION_KEY, COMMENT_KEY])
+        .duplicated()
+        .any()
     ), "Duplicate entries in delta_artist_alias_df"
 
     # Additional checks can be added as needed

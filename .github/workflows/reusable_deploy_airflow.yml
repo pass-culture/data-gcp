@@ -1,6 +1,6 @@
-name: "Deploy Composer"
+name: "Deploy Airflow"
 
-run-name: "Deploy Composer on ${{ github.event.inputs.GITHUB_ENV_NAME }}"
+run-name: "Deploy Airflow on ${{ github.event.inputs.GITHUB_ENV_NAME }}"
 
 on:
   workflow_call:
@@ -8,7 +8,7 @@ on:
       DATA_GCP_PROJECT:
         type: string
         required: true
-      COMPOSER_DAGS_BUCKET:
+      AIRFLOW_DAGS_BUCKET:
         type: string
         required: true
       AIRFLOW_NAME:
@@ -37,7 +37,7 @@ env:
   GCP_REGION: "europe-west1"
 
 jobs:
-  composer-deploy:
+  airflow-deploy:
     permissions:
       id-token: write
       contents: write
@@ -82,8 +82,8 @@ jobs:
       - name: "Pull dbt exposures (if any) from GCS locally"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
-          COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
-        run: gsutil cp 'gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/exposures/*' ./models/
+          AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
+        run: gsutil cp 'gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/data/exposures/*' ./models/
 
       - name: "Install dbt dependencies"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
@@ -106,27 +106,27 @@ jobs:
       - name: "Push dependencies (dbt) to GCS (data/target/dbt_packages)"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
-          COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
-        run: gsutil -m rsync -d -r target/dbt_packages gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/data/target/dbt_packages
+          AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
+        run: gsutil -m rsync -d -r target/dbt_packages gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/data/target/dbt_packages
 
       - name: "Push manifest (dbt) to GCS (data/target)"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
-          COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
-        run: gsutil cp target/manifest.json gs://$COMPOSER_DAGS_BUCKET/data/target/manifest.json
+          AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
+        run: gsutil cp target/manifest.json gs://$AIRFLOW_DAGS_BUCKET/data/target/manifest.json
 
-      - name: "Deploy composer (dags)"
-        run: gsutil -m rsync -d -r dags gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/dags
+      - name: "Deploy Airflow (dags)"
+        run: gsutil -m rsync -d -r dags gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/dags
 
-      - name: "Deploy composer (plugins)"
-        run: gsutil -m rsync -d -r plugins gs://${{ inputs.COMPOSER_DAGS_BUCKET }}/plugins
+      - name: "Deploy Airflow (plugins)"
+        run: gsutil -m rsync -d -r plugins gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/plugins
 
       - name: "Push documentation (dbt) to GCS (plugins/static/dbt_docs)"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:
-          COMPOSER_DAGS_BUCKET: ${{ inputs.COMPOSER_DAGS_BUCKET }}
+          AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
         run: |
-          gsutil cp target/static_index.html gs://$COMPOSER_DAGS_BUCKET/plugins/static/dbt_docs/index.html
+          gsutil cp target/static_index.html gs://$AIRFLOW_DAGS_BUCKET/plugins/static/dbt_docs/index.html
 
       - name: "Wait for composer to be deployed (10s x 6 times)"
         if: ${{ inputs.IS_COMPOSER }}
@@ -148,7 +148,7 @@ jobs:
                   "author_name": "${{github.actor}}",
                   "author_link": "https://github.com/${{github.actor}}",
                   "author_icon": "https://github.com/${{github.actor}}.png",
-                  "title": "Composer déployé",
+                  "title": "Airflow déployé",
                   "title_link": "https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}",
                   "text": "Airflow a été déployé sur l'environnement ${{ inputs.AIRFLOW_NAME }}"
                 }

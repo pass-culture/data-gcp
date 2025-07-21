@@ -39,7 +39,7 @@ def _remove_parenthesis(artist_df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: The DataFrame with parentheses removed from the artist names.
     """
     return artist_df.assign(
-        artist_name=lambda df: df.artist_name.str.replace("\([.*]+\))", "")
+        artist_name=lambda df: df.artist_name.str.replace(r"\([^)]*\)", "", regex=True)
         .str.split("\(", regex=True)
         .map(lambda ll: ll[0])
     )
@@ -58,8 +58,8 @@ def clean_names(artist_df: pd.DataFrame) -> pd.DataFrame:
 
     """
     return (
-        artist_df.pipe(_remove_leading_punctuation)
-        .pipe(_remove_parenthesis)
+        artist_df.pipe(_remove_parenthesis)
+        .pipe(_remove_leading_punctuation)
         .assign(artist_name=lambda df: df.artist_name.str.strip())
     )
 

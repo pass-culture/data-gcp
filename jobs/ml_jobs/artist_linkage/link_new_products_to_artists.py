@@ -20,7 +20,7 @@ from match_artists_on_wikidata import (
     load_wikidata,
 )
 from utils.matching import (
-    create_delta_tables,
+    create_artists_tables,
     match_artist_on_offer_names,
     match_artists_with_wikidata,
 )
@@ -278,7 +278,7 @@ def main(
     )
 
     # 6. Create new artists and artist aliases
-    delta_product_df, delta_artist_df, delta_artist_alias_df = create_delta_tables(
+    delta_product_df, delta_artist_df, delta_artist_alias_df = create_artists_tables(
         products_to_remove_df,
         raw_linked_products_df,
         preproc_linked_products_df,

@@ -6,7 +6,6 @@ import typer
 
 from constants import (
     ACTION_KEY,
-    ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
     ARTIST_NAME_TO_MATCH_KEY,
     ARTIST_TYPE_KEY,
@@ -15,7 +14,7 @@ from constants import (
     PRODUCT_ID_KEY,
 )
 from match_artists_on_wikidata import load_wikidata
-from utils.matching import create_delta_tables, match_artists_with_wikidata
+from utils.matching import create_artists_tables, match_artists_with_wikidata
 from utils.preprocessing_utils import prepare_artist_names_for_matching
 
 app = typer.Typer()
@@ -94,13 +93,9 @@ def main(
     )
 
     # 5. Create new artists and artist aliases
-    product_artist_link_df, artist_df, artist_alias_df = create_delta_tables(
+    product_artist_link_df, artist_df, artist_alias_df = create_artists_tables(
         preproc_unlinked_products_df=preproc_products_df,
         exploded_artist_alias_df=exploded_artist_alias_df,
-        products_to_remove_df=pd.DataFrame(),
-        raw_linked_products_df=pd.DataFrame(),
-        preproc_linked_products_df=pd.DataFrame(),
-        artist_df=pd.DataFrame(columns=[ARTIST_ID_KEY]),
     )
 
     # 6. Sanity check for consistency

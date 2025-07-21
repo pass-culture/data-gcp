@@ -104,29 +104,31 @@ def match_artist_on_offer_names(
     )
 
 
-def create_delta_tables(
-    products_to_remove_df: pd.DataFrame,
-    raw_linked_products_df: pd.DataFrame,
-    preproc_linked_products_df: pd.DataFrame,
+def create_artists_tables(
     preproc_unlinked_products_df: pd.DataFrame,
     exploded_artist_alias_df: pd.DataFrame,
-    artist_df: pd.DataFrame,
+    products_to_remove_df=pd.DataFrame(),
+    raw_linked_products_df=pd.DataFrame(),
+    preproc_linked_products_df=pd.DataFrame(),
+    artist_df=pd.DataFrame(columns=[ARTIST_ID_KEY]),
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Create delta tables for products, artists, and artist aliases with action tracking.
     This function processes various product and artist dataframes to create delta tables
     that track additions and removals for database synchronization purposes.
     Args:
-        products_to_remove_df (pd.DataFrame): DataFrame containing products to be removed
-            from the linked products table.
-        raw_linked_products_df (pd.DataFrame): DataFrame containing raw products that
-            have been linked to existing artists.
-        preproc_linked_products_df (pd.DataFrame): DataFrame containing preprocessed
-            products that have been linked to existing artists.
         preproc_unlinked_products_df (pd.DataFrame): DataFrame containing preprocessed
             products that need to be linked to new artists.
         exploded_artist_alias_df (pd.DataFrame): DataFrame containing artist information
             with exploded aliases for new artists to be created.
+        products_to_remove_df (pd.DataFrame, optional): DataFrame containing products to be removed
+            from the linked products table. Defaults to empty DataFrame.
+        raw_linked_products_df (pd.DataFrame, optional): DataFrame containing raw products that
+            have been linked to existing artists. Defaults to empty DataFrame.
+        preproc_linked_products_df (pd.DataFrame, optional): DataFrame containing preprocessed
+            products that have been linked to existing artists. Defaults to empty DataFrame.
+        artist_df (pd.DataFrame, optional): DataFrame containing existing artists to avoid
+            duplicating when creating new artists. Defaults to empty DataFrame with ARTIST_ID_KEY column.
     Returns:
         tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: A tuple containing:
             - delta_product_df: DataFrame with product changes including action tracking

@@ -4,12 +4,13 @@ from functools import wraps
 
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
+import logging
+from http_custom.rate_limiters import BaseRateLimiter
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 BIGQUERY_RAW_DATASET = f"raw_{ENV_SHORT_NAME}"
 BIGQUERY_TMP_DATASET = f"tmp_{ENV_SHORT_NAME}"
-
 
 def rate_limiter(calls: int, period: int):
     """Custom rate limiter decorator that ensures calls are evenly spaced within a period.
@@ -80,3 +81,27 @@ transactional_histo_schema = {
     "opened_count": "INTEGER",
     "unsubscribed_count": "INTEGER",
 }
+
+
+
+logger = logging.getLogger(__name__)
+
+class SyncBrevoHeaderRateLimiter(BaseRateLimiter):
+    """
+    Brevo-specific rate limiter using headers:
+    - x-sib-ratelimit-limit
+    - x-sib-ratelimit-remaining
+    - x-sib-ratelimit-reset
+    """
+    def acquire(self):
+        # No pre-request throttling — Brevo rate is dynamic
+        pass
+
+    def backoff(self, response):
+        try:
+            reset = float(response.headers.get("x-sib-ratelimit-reset", "10"))
+            logger.warning(f"Rate limited. Waiting {reset:.2f}s based on x-sib-ratelimit-reset header...")
+            time.sleep(reset)
+        except Exception:
+            logger.warning("Fallback backoff: 10s")
+            time.sleep(10)

@@ -6,7 +6,6 @@ import logging
 
 from connectors.brevo import BrevoConnector
 from http_custom.clients import SyncHttpClient
-from http_custom.rate_limiters import SyncTokenBucketRateLimiter
 from jobs.brevo.utils import (
     GCP_PROJECT,
     BIGQUERY_RAW_DATASET,
@@ -16,6 +15,8 @@ from jobs.brevo.utils import (
     transactional_histo_schema,
     ENV_SHORT_NAME,
 )
+
+from jobs.brevo.utils import SyncBrevoHeaderRateLimiter
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
@@ -70,7 +71,7 @@ def run(
         typer.echo("Invalid audience. Must be one of native/pro.")
         raise typer.Exit(code=1)
 
-    rate_limiter = SyncTokenBucketRateLimiter(calls=200, period=3600)
+    rate_limiter = SyncBrevoHeaderRateLimiter()
     client = SyncHttpClient(rate_limiter=rate_limiter)
     connector = BrevoConnector(api_key=api_key, client=client)
 

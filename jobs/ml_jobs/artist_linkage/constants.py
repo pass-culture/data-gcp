@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import ClassVar
 
 # Config
 ARTIST_LINKAGE_CONFIG = json.loads(
@@ -45,3 +46,24 @@ PRODUCTS_KEYS = [
     ARTIST_ID_KEY,
     ARTIST_TYPE_KEY,
 ]
+
+# Enum like classes
+
+
+class Action:
+    add: ClassVar[str] = "add"
+    remove: ClassVar[str] = "remove"
+
+
+class Comment:
+    linked_to_existing_artist: ClassVar[str] = "linked to existing artist"
+    removed_linked: ClassVar[str] = "removed linked"
+    linked_to_new_artist: ClassVar[str] = "linked to new artist"
+    new_artist: ClassVar[str] = "new artist"
+    new_artist_alias: ClassVar[str] = "new artist_alias"
+
+
+class ProductToLinkStatus:
+    not_matched_with_artists_key = "not matched with artists"
+    removed_products_key = "removed product"
+    matched_with_artists_key = "matched with artists"

@@ -14,11 +14,8 @@ from constants import (
     OFFER_CATEGORY_ID_KEY,
     PRODUCT_ID_KEY,
 )
-from link_new_products_to_artists import (
-    create_delta_tables,
-    match_new_artists_with_wikidata,
-)
 from match_artists_on_wikidata import load_wikidata
+from utils.matching import create_delta_tables, match_artists_with_wikidata
 from utils.preprocessing_utils import prepare_artist_names_for_matching
 
 app = typer.Typer()
@@ -91,10 +88,9 @@ def main(
     )
 
     # 4. Match new artist clusters with existing artists on Wikidata
-    exploded_artist_alias_df = match_new_artists_with_wikidata(
-        new_artist_clusters_df,
-        pd.DataFrame(columns=[ARTIST_ID_KEY, "artist_wiki_id"]),
-        wiki_df,
+    exploded_artist_alias_df = match_artists_with_wikidata(
+        new_artist_clusters_df=new_artist_clusters_df,
+        wiki_df=wiki_df,
     )
 
     # 5. Create new artists and artist aliases

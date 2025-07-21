@@ -15,10 +15,17 @@ from utils import (
 )
 
 NATIVE_API_KEY = access_secret_data(GCP_PROJECT, f"sendinblue-api-key-{ENV_SHORT_NAME}")
+NATIVE_API_KEY_2 = access_secret_data(
+    GCP_PROJECT, f"sendinblue-api-key-2-{ENV_SHORT_NAME}"
+)
 
 PRO_API_KEY = access_secret_data(
     GCP_PROJECT, f"sendinblue-pro-api-key-{ENV_SHORT_NAME}"
 )
+PRO_API_KEY_2 = access_secret_data(
+    GCP_PROJECT, f"sendinblue-pro-api-key-2-{ENV_SHORT_NAME}"
+)
+
 
 TRANSACTIONAL_TABLE_NAME = "sendinblue_transactional_detailed"
 UPDATE_WINDOW = 31 if ENV_SHORT_NAME == "prod" else 500
@@ -41,9 +48,11 @@ def run(
 ):
     if audience == "native":
         API_KEY = NATIVE_API_KEY
+        API_KEY_2 = NATIVE_API_KEY_2
         NEWSLETTERS_TABLE_NAME = "sendinblue_newsletters"
     elif audience == "pro":
         API_KEY = PRO_API_KEY
+        API_KEY_2 = PRO_API_KEY_2
         NEWSLETTERS_TABLE_NAME = "sendinblue_pro_newsletters"
     else:
         return "Invalid audience. Must be one of native/pro."
@@ -70,7 +79,7 @@ def run(
         brevo_transactional = BrevoTransactional(
             gcp_project=GCP_PROJECT,
             tmp_dataset=BIGQUERY_TMP_DATASET,
-            api_key=API_KEY,
+            api_keys=[API_KEY, API_KEY_2],
             destination_table_name=TRANSACTIONAL_TABLE_NAME,
             start_date=start_date,
             end_date=end_date,

@@ -54,7 +54,7 @@ with DAG(
     if ENV_SHORT_NAME in ["prod", "stg"]
     else get_airflow_schedule(None),
     catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=120),
+    dagrun_timeout=datetime.timedelta(minutes=240),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     params={

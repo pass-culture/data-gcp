@@ -423,3 +423,35 @@ def extract_artist_name(artist_name: str) -> str:
         reordered_name = re.sub(r"\s+", " ", reordered_name)
 
         return reordered_name
+
+
+def prepare_artist_names_for_matching(input_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Extract and clean artist names from input DataFrame for matching purposes.
+    This function processes artist names by cleaning them, extracting the first artist name,
+    and filtering out unwanted entries based on predefined criteria.
+    Args:
+        input_df (pd.DataFrame): Input DataFrame containing artist information with
+                               an 'artist_name' column.
+    Returns:
+        pd.DataFrame: Filtered DataFrame with an additional 'artist_name_to_match' column
+                     containing cleaned artist names. Rows with null artist names or
+                     names in the filter list are excluded.
+    Notes:
+        - Applies name cleaning via the clean_names pipeline
+        - Extracts artist names using extract_artist_name function
+        - Filters out rows where artist_name_to_match is null
+        - Excludes rows where either artist_name or artist_name_to_match
+          are in ARTIST_NAME_TO_FILTER list
+    """
+
+    return (
+        input_df.assign(
+            artist_name_to_match=lambda df: df.pipe(clean_names).artist_name.apply(
+                extract_artist_name
+            ),
+        )
+        .loc[lambda df: df.artist_name_to_match.notna()]
+        .loc[lambda df: ~df.artist_name.isin(ARTIST_NAME_TO_FILTER)]
+        .loc[lambda df: ~df.artist_name_to_match.isin(ARTIST_NAME_TO_FILTER)]
+    )

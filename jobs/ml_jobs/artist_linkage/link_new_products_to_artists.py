@@ -28,7 +28,10 @@ from match_artists_on_wikidata import (
     match_namesakes_per_category,
     match_per_category_no_namesakes,
 )
-from utils.preprocessing_utils import extract_artist_name
+from utils.preprocessing_utils import (
+    extract_artist_name,
+    prepare_artist_names_for_matching,
+)
 
 
 class Action:
@@ -198,30 +201,18 @@ def match_artist_on_offer_names(
     ]
 
     # 2. Match artists with products to link on preproc offer_names
-    preproc_unlinked_products_df = (
-        raw_unlinked_products_df.assign(
-            artist_name_to_match=lambda df: df.artist_name.apply(extract_artist_name),
-        )
-        .loc[
-            lambda df: (df.artist_name_to_match != "") & df.artist_name_to_match.notna()
+    preproc_unlinked_products_df = raw_unlinked_products_df.pipe(
+        prepare_artist_names_for_matching
+    ).drop_duplicates()
+    preproc_artist_alias_df = artist_alias_df.pipe(
+        prepare_artist_names_for_matching
+    ).drop_duplicates(
+        subset=[
+            ARTIST_ID_KEY,
+            OFFER_CATEGORY_ID_KEY,
+            ARTIST_TYPE_KEY,
+            ARTIST_NAME_TO_MATCH_KEY,
         ]
-        .drop_duplicates()
-    )
-    preproc_artist_alias_df = (
-        artist_alias_df.assign(
-            artist_name_to_match=lambda df: df.artist_name.apply(extract_artist_name),
-        )
-        .loc[
-            lambda df: (df.artist_name_to_match != "") & df.artist_name_to_match.notna()
-        ]
-        .drop_duplicates(
-            subset=[
-                ARTIST_ID_KEY,
-                OFFER_CATEGORY_ID_KEY,
-                ARTIST_TYPE_KEY,
-                ARTIST_NAME_TO_MATCH_KEY,
-            ]
-        )
     )
     preproc_matched_df = preproc_unlinked_products_df.merge(
         preproc_artist_alias_df.drop(columns=[ARTIST_NAME_KEY]),

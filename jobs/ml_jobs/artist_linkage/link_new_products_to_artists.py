@@ -120,7 +120,7 @@ def build_artist_alias(
 
     product_with_names_df = product_artist_link_df.merge(
         product_df,
-        how="left",
+        how="inner",
         left_on=[PRODUCT_ID_KEY, ARTIST_TYPE_KEY],
         right_on=[PRODUCT_ID_KEY, ARTIST_TYPE_KEY],
     )

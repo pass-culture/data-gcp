@@ -142,7 +142,7 @@ def create_artists_tables(
         the type of operation being performed.
     """
 
-    delta_product_df = pd.concat(
+    delta_product_artist_link_df = pd.concat(
         [
             products_to_remove_df.filter(PRODUCTS_KEYS).assign(
                 **{ACTION_KEY: Action.remove, COMMENT_KEY: Comment.removed_linked}
@@ -197,7 +197,7 @@ def create_artists_tables(
         .assign(**{ACTION_KEY: Action.add, COMMENT_KEY: Comment.new_artist_alias})
     )
     return (
-        delta_product_df,
+        delta_product_artist_link_df,
         delta_artist_df,
         delta_artist_alias_df,
     )

@@ -14,6 +14,7 @@ from constants import (
     COMMENT_KEY,
     OFFER_CATEGORY_ID_KEY,
     PRODUCT_ID_KEY,
+    PRODUCTS_KEYS,
     ProductToLinkStatus,
 )
 from match_artists_on_wikidata import (
@@ -51,7 +52,7 @@ def get_products_to_remove_and_link_df(
 
     actual_product_ids = products_df.loc[:, MERGE_COLUMNS].reset_index(drop=True)
     linked_product_ids = (
-        product_artist_link_df.loc[:, MERGE_COLUMNS + [ARTIST_ID_KEY]]
+        product_artist_link_df.loc[:, PRODUCTS_KEYS]
         .drop_duplicates()
         .reset_index(drop=True)
     )
@@ -73,7 +74,7 @@ def get_products_to_remove_and_link_df(
 
     products_to_remove_df = merged_df.loc[
         lambda df: df._merge == ProductToLinkStatus.removed_products_key,
-        MERGE_COLUMNS + [ARTIST_ID_KEY],
+        PRODUCTS_KEYS,
     ]
     products_to_link_df = merged_df.loc[
         lambda df: df._merge == ProductToLinkStatus.not_matched_with_artists_key,

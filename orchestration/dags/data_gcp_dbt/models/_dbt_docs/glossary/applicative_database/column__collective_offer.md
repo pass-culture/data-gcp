@@ -24,7 +24,8 @@
 {% docs column__last_collective_bookable_offer_date %} Date of the last collective bookable offer. {% enddocs %}
 {% docs column__collective_offer_template_beginning_date %} Beginning publication date for template offer (if null : permanent). {% enddocs %}
 {% docs column__collective_offer_template_ending_date %} Ending publication date for template offer (if null : permanent). {% enddocs %}
-{% docs column__collective_offer_rejection_reason %} For offers rejected by pass Culture team, rejection's reason (ineligble offers, missing information etc). {% enddocs %}
+{% docs column__collective_offer_location_type %} Specify where the collective offer takes place ('school' : at school, 'offerer' : at the offerer's place, 'other' : in another place specify by the offerer) - replace 'collective_offer_address_type. {% enddocs %}
+
 
 * To migrate to more specific files *
 {% docs column__template_id %} Identifier for the template associated with the collective offer. {% enddocs %}

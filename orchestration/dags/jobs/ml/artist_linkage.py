@@ -90,6 +90,23 @@ TABLES_TO_IMPORT_TO_GCS_FOR_SYNC = [
         "filename": PRODUCTS_TO_LINK_GCS_FILENAME,
     },
 ]
+GCS_TO_ARTIST_TABLES = [
+    {
+        "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
+        "table_id": "artist",
+        "filename": ARTISTS_WITH_METADATA_GCS_FILENAME,
+    },
+    {
+        "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
+        "table_id": "artist_alias",
+        "filename": ARTIST_ALIAS_GCS_FILENAME,
+    },
+    {
+        "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
+        "table_id": "product_artist_link",
+        "filename": PRODUCT_ARTIST_LINK_GCS_FILENAME,
+    },
+]
 GCS_TO_DELTA_TABLES = [
     {
         "dataset_id": BIGQUERY_ML_PREPROCESSING_DATASET,
@@ -245,7 +262,7 @@ with DAG(
     with TaskGroup(
         "load_artist_data_into_delta_tables"
     ) as load_artist_data_into_delta_tables:
-        for table_data in GCS_TO_DELTA_TABLES:
+        for table_data in GCS_TO_ARTIST_TABLES:
             GCSToBigQueryOperator(
                 task_id=f"load_data_into_{table_data['table_id']}_table",
                 project_id=GCP_PROJECT_ID,

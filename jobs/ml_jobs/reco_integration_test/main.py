@@ -281,7 +281,7 @@ source_artifact_uri = get_model_from_mlflow(
 print(f"Model artifact_uri: {source_artifact_uri}")
 # logger.info(f"Model artifact_uri: {source_artifact_uri}")
 
-# logger.info(f"Download model from {source_artifact_uri} trained model...")
+# logger.info(f"Download model from {source_artifact_uri} trained model..."
 download_model(artifact_uri=source_artifact_uri)
 print("Model downloaded.")
 # logger.info("Model downloaded.")
@@ -295,8 +295,14 @@ item_list = tf_reco.item_layer.layers[0].get_vocabulary()
 item_weights = tf_reco.item_layer.layers[1].get_weights()[0].astype(np.float32)
 user_list = tf_reco.user_layer.layers[0].get_vocabulary()
 user_weights = tf_reco.user_layer.layers[1].get_weights()[0].astype(np.float32)
-user_embedding_dict = {x: y for x, y in zip(user_list, user_weights, strict=False)}
-item_embedding_dict = {x: y for x, y in zip(item_list, item_weights, strict=False)}
+
+# Create embedding dictionaries with explicit types for better code clarity
+user_embedding_dict: dict[str, np.ndarray] = dict(
+    zip(user_list, user_weights, strict=False)
+)
+item_embedding_dict: dict[str, np.ndarray] = dict(
+    zip(item_list, item_weights, strict=False)
+)
 user_id_list = user_data_df["user_id"].unique().tolist()
 
 true_user_id_subset = user_id_list[:10]  # Take a subset of 10 user IDs for testing

@@ -21,6 +21,7 @@ dependencies = [
     "mlflow==2.20.1",
     "numpy==1.26.4",
     "pandas>=1.5.3",
+    db-dtypes==1.4.3
 ]
 
 [tool.setuptools]

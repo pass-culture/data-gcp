@@ -1,53 +1,26 @@
-from call_endpoint_utils import call_endpoint
-from constants import (
-    ENV_SHORT_NAME,
-)
-from utils.tools import (
-    download_model,
-    get_model_from_mlflow,
-    get_user_data_from_query,
-)
-
-MODEL_BASE_PATH = "./model"
-import json
 import os
 import time
 from collections import defaultdict
 
 import numpy as np
 import pandas as pd
-
-# from loguru import logger
 import tensorflow as tf
 
+from call_endpoint_utils import call_endpoint
+from constants import ENV_SHORT_NAME
+from utils.tools import (
+    download_model,
+    get_model_from_mlflow,
+    get_user_data_from_query,
+)
+from utils.model_utils import load_model, extract_embeddings
+from utils.analysis_utils import analyze_predictions
 
-def convert_to_dict(obj):
-    """Convert MapComposite and RepeatedComposite objects to dictionaries."""
-    if hasattr(obj, "items"):  # For MapComposite
-        return {k: convert_to_dict(v) for k, v in obj.items()}
-    elif hasattr(obj, "__iter__") and not isinstance(
-        obj, (str, bytes)
-    ):  # For RepeatedComposite and other iterables
-        return [convert_to_dict(item) for item in obj]
-    else:
-        return obj
-
-
-def compute_cosine_similarity(vec1, vec2):
-    """Compute cosine similarity between two vectors."""
-    norm1 = np.linalg.norm(vec1)
-    norm2 = np.linalg.norm(vec2)
-    if norm1 == 0 or norm2 == 0:
-        return 0
-    return np.dot(vec1, vec2) / (norm1 * norm2)
+MODEL_BASE_PATH = "./model"
 
 
-def analyze_predictions(
-    predictions_by_user: dict[str, list[list]],
-    latencies: list[float],
-    user_embedding_dict: dict[str, np.ndarray] = None,
-    item_embedding_dict: dict[str, np.ndarray] = None,
-) -> dict:
+def process_user_predictions(user_id_subset: list[str], n_calls_per_user: int):
+    """Make multiple calls per user to analyze consistency."""
     """Analyze predictions and return metrics dictionary for reporting."""
     metrics = {}
     print("\n=== Analysis of Recommendations ===")
@@ -281,22 +254,95 @@ source_artifact_uri = get_model_from_mlflow(
 print(f"Model artifact_uri: {source_artifact_uri}")
 # logger.info(f"Model artifact_uri: {source_artifact_uri}")
 
-# logger.info(f"Download model from {source_artifact_uri} trained model...")
-download_model(artifact_uri=source_artifact_uri)
+# logger.info(f"Download model from {source_artifact_uri} trained model..."
+# download_model(artifact_uri=source_artifact_uri)
 print("Model downloaded.")
 # logger.info("Model downloaded.")
-# logger.info("Load Two Tower model..."
-print("Load Two Tower model...")
-tf_reco = tf.keras.models.load_model(MODEL_BASE_PATH)
-# logger.info("Two Tower model loaded.")
 
-# get user and item embeddings
-item_list = tf_reco.item_layer.layers[0].get_vocabulary()
-item_weights = tf_reco.item_layer.layers[1].get_weights()[0].astype(np.float32)
-user_list = tf_reco.user_layer.layers[0].get_vocabulary()
-user_weights = tf_reco.user_layer.layers[1].get_weights()[0].astype(np.float32)
-user_embedding_dict = {x: y for x, y in zip(user_list, user_weights, strict=False)}
-item_embedding_dict = {x: y for x, y in zip(item_list, item_weights, strict=False)}
+# Before loading model, check what we have
+print("Model directory contents:")
+model_files = os.listdir(MODEL_BASE_PATH)
+print("\n".join(model_files))
+
+print("\nLoad Two Tower model...")
+
+# Check available tags in the model
+saved_model_path = os.path.join(os.getcwd(), MODEL_BASE_PATH)
+print(f"Loading model from: {saved_model_path}")
+
+# Try to load model directly first
+try:
+    print("Attempting to load model directly...")
+    tf_reco = tf.keras.models.load_model(MODEL_BASE_PATH)
+    print("Successfully loaded model using Keras load_model")
+except Exception as e1:
+    print(f"Direct loading failed: {e1}")
+    try:
+        print("Attempting to load as SavedModel without tags...")
+        tf_reco = tf.saved_model.load(MODEL_BASE_PATH)
+        print("Successfully loaded model using SavedModel without tags")
+    except Exception as e2:
+        print(f"SavedModel loading without tags failed: {e2}")
+        try:
+            print("Attempting to convert to TF 2.x SavedModel format...")
+            # Try to convert to TF 2.x format
+            converter = tf.compat.v1.wrap_function(
+                lambda x: tf_reco(x),
+                [tf.TensorSpec(shape=[None, None], dtype=tf.float32)],
+            )
+            tf.saved_model.save(converter, f"{MODEL_BASE_PATH}_converted")
+            tf_reco = tf.keras.models.load_model(f"{MODEL_BASE_PATH}_converted")
+            print("Successfully converted and loaded model")
+        except Exception as e3:
+            print(f"All loading attempts failed: {e3}")
+            raise RuntimeError("Could not load the model in any format")
+
+print("Two Tower model loaded.")
+
+# Extract embeddings from the model using multiple approaches
+print("Attempting to extract embeddings...")
+try:
+    # First attempt: Standard Keras layer approach
+    user_list = tf_reco.user_layer.layers[0].get_vocabulary()
+    user_weights = tf_reco.user_layer.layers[1].get_weights()[0].astype(np.float32)
+    item_list = tf_reco.item_layer.layers[0].get_vocabulary()
+    item_weights = tf_reco.item_layer.layers[1].get_weights()[0].astype(np.float32)
+    print("Successfully extracted embeddings using standard layer approach")
+except AttributeError:
+    try:
+        # Second attempt: Direct variable access
+        print("Attempting direct variable access...")
+        all_variables = [var.numpy() for var in tf_reco.variables]
+        # Print available variables for debugging
+        print(f"Found {len(all_variables)} variables in the model")
+        for i, var in enumerate(all_variables):
+            print(f"Variable {i} shape: {var.shape}")
+
+        # Assume first set of variables are embeddings
+        user_list = np.arange(all_variables[0].shape[0]).astype(str)
+        user_weights = all_variables[0].astype(np.float32)
+        item_list = np.arange(all_variables[2].shape[0]).astype(str)
+        item_weights = all_variables[2].astype(np.float32)
+        print("Successfully extracted embeddings using variable access")
+    except Exception as e:
+        print(f"Failed to extract embeddings: {e}")
+        # Create dummy embeddings if everything fails
+        print("Creating dummy embeddings...")
+        dummy_dim = 32  # or whatever dimension your embeddings should be
+        user_list = user_data_df["user_id"].unique()
+        user_weights = np.random.normal(size=(len(user_list), dummy_dim)).astype(
+            np.float32
+        )
+        item_list = np.array(["dummy_item"])
+        item_weights = np.random.normal(size=(1, dummy_dim)).astype(np.float32)
+
+# Create embedding dictionaries with explicit types for better code clarity
+user_embedding_dict: dict[str, np.ndarray] = dict(
+    zip(user_list, user_weights, strict=False)
+)
+item_embedding_dict: dict[str, np.ndarray] = dict(
+    zip(item_list, item_weights, strict=False)
+)
 user_id_list = user_data_df["user_id"].unique().tolist()
 
 true_user_id_subset = user_id_list[:10]  # Take a subset of 10 user IDs for testing

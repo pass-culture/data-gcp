@@ -182,11 +182,11 @@ union all
         null as institution_density_level,
         collective_offer_rejection_reason,
         case
-            when co.collective_offer_location_type = "TO_BE_DEFINED"
+            when collective_offer_location_type = "TO_BE_DEFINED"
             then "other"
-            when co.collective_offer_location_type = "ADDRESS"
+            when collective_offer_location_type = "ADDRESS"
             then "offerer"
-            when co.collective_offer_location_type = "SCHOOL"
+            when collective_offer_location_type = "SCHOOL"
             then "school"
         end as collective_offer_location_type,
         true as collective_offer_is_template

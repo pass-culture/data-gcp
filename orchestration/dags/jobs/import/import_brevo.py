@@ -57,6 +57,7 @@ with DAG(
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
+    render_template_as_native_obj=True,
     params={
         "branch": Param(
             default=TARGET_BRANCH
@@ -74,6 +75,8 @@ with DAG(
             default=yesterday,
             type="string",
         ),
+        "async": Param(default=True, type="boolean"),
+        "async_concurent": Param(default=5, type="integer"),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
@@ -88,7 +91,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         requirement_file="jobs/brevo/requirements.txt",
         branch="{{ params.branch }}",
-        python_version="3.10",
+        python_version="'3.10'",
         base_dir=BASE_PATH,
         retries=2,
     )
@@ -98,7 +101,14 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command='python -m jobs.brevo.main --target transactional --audience pro --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
+        command="""
+            python -m jobs.brevo.main \
+            --target transactional \
+            --audience pro \
+            --start-date {{ params.start_date }} \
+            --end-date {{ params.end_date }}{% if params['async'] %} \
+            --async --max-concurrent {{ params.async_concurent }}{% endif %}
+        """,
         do_xcom_push=True,
     )
 
@@ -107,7 +117,14 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command='python -m jobs.brevo.main --target transactional --audience native --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
+        command="""
+            python -m jobs.brevo.main \
+            --target transactional \
+            --audience native \
+            --start-date {{ params.start_date }} \
+            --end-date {{ params.end_date }}{% if params['async'] %} \
+            --async --max-concurrent {{ params.async_concurent }}{% endif %}
+        """,
         do_xcom_push=True,
     )
 

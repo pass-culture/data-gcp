@@ -29,14 +29,16 @@ def run(
     start_date: str = typer.Option(None, help="Import start date (YYYY-MM-DD)"),
     end_date: str = typer.Option(None, help="Import end date (YYYY-MM-DD)"),
     use_async: bool = typer.Option(
-        False, "--async", help="Use async processing (transactional only)"
+        True, "--async", help="Use async processing (transactional only)"
     ),
     max_concurrent: int = typer.Option(
         5, "--max-concurrent", help="Max concurrent requests for async processing"
     ),
 ):
     """Main entry point for Brevo ETL."""
-
+    async_mode = False
+    if use_async:
+        async_mode = True
     # Set up dates
     today = datetime.now(tz=timezone.utc)
 
@@ -51,12 +53,13 @@ def run(
     else:
         end_dt = today
 
+    warn_flag = async_mode and target == "newsletter"
+    legit_async = async_mode and target == "transactional"
     logger.info(
         f"Running Brevo ETL: target={target}, audience={audience}, "
         f"start={start_dt.strftime('%Y-%m-%d')}, end={end_dt.strftime('%Y-%m-%d')}, "
-        f"async={use_async}"
-        if target == "transactional"
-        else "async=False (unsupported for newsletter)"
+        f"{'WARNING: Async mode disabled: only supported for transactional target! ' if warn_flag else ''}"
+        f"async={legit_async}, max_concurrent={max_concurrent if legit_async else 'N/A'} "
     )
 
     # Get API configuration
@@ -68,11 +71,6 @@ def run(
 
     # Process based on target
     if target == "newsletter":
-        if use_async:
-            typer.echo(
-                "Async mode is only supported for transactional target switching to sync mode."
-            )
-
         # Set up sync HTTP client and connector
         rate_limiter = SyncBrevoHeaderRateLimiter()
         client = SyncHttpClient(rate_limiter=rate_limiter)
@@ -81,7 +79,7 @@ def run(
         etl_newsletter(connector, audience, table_name, start_dt, end_dt)
 
     elif target == "transactional":
-        if use_async:
+        if async_mode:
             # Run async version
             asyncio.run(
                 _run_async_transactional(
@@ -99,7 +97,7 @@ def run(
         typer.echo("Invalid target. Must be one of transactional/newsletter.")
         raise typer.Exit(code=1)
 
-    logger.info("ETL process completed successfully.")
+    logger.info(f"ETL {target} process for audience {audience} completed successfully.")
 
 
 async def _run_async_transactional(

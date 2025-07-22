@@ -101,11 +101,13 @@ with
             co.collective_offer_rejection_reason,
             co.collective_offer_location_type,
             case
-                when co.collective_offer_location_type = "TO_BE_DEFINED"
-                then collective_offer_location_comment
-                when co.collective_offer_location_type = "ADDRESS"
-                then oa.address_id
-            end as collective_offer_address,
+            when co.collective_offer_location_type = "TO_BE_DEFINED"
+            then "other"
+            when co.collective_offer_location_type = "ADDRESS"
+            then "offerer"
+            when co.collective_offer_location_type = "SCHOOL"
+            then "school"
+        end as collective_offer_location_type,
             false as collective_offer_is_template
         from {{ source("raw", "applicative_database_collective_offer") }} as co
         left join
@@ -185,13 +187,14 @@ union all
         null as institution_macro_density_label,
         null as institution_density_level,
         collective_offer_rejection_reason,
-        co.collective_offer_location_type,
         case
             when co.collective_offer_location_type = "TO_BE_DEFINED"
-            then collective_offer_location_comment
+            then "other"
             when co.collective_offer_location_type = "ADDRESS"
-            then oa.address_id
-        end as collective_offer_address,
+            then "offerer"
+            when co.collective_offer_location_type = "SCHOOL"
+            then "school"
+        end as collective_offer_location_type,
         true as collective_offer_is_template
     from {{ source("raw", "applicative_database_collective_offer_template") }}
 )

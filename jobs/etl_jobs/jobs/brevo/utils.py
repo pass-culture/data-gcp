@@ -1,21 +1,21 @@
-import time
+import asyncio
 import logging
-from functools import wraps
+import time
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+from connectors.brevo import AsyncBrevoConnector, BrevoConnector
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import bigquery, secretmanager
 from http_custom.rate_limiters import BaseRateLimiter
-from connectors.brevo import BrevoConnector
 from jobs.brevo.config import (
-    GCP_PROJECT,
-    ENV_SHORT_NAME,
-    TRANSACTIONAL_TABLE_NAME,
     BIGQUERY_RAW_DATASET,
     BIGQUERY_TMP_DATASET,
+    ENV_SHORT_NAME,
+    GCP_PROJECT,
+    TRANSACTIONAL_TABLE_NAME,
     campaigns_histo_schema,
     transactional_histo_schema,
 )
@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 # ===== CUSTOM RATE LIMITER =====
 
+
 class SyncBrevoHeaderRateLimiter(BaseRateLimiter):
     """
     Brevo-specific rate limiter using headers:
@@ -31,6 +32,7 @@ class SyncBrevoHeaderRateLimiter(BaseRateLimiter):
     - x-sib-ratelimit-remaining
     - x-sib-ratelimit-reset
     """
+
     def acquire(self):
         # No pre-request throttling — Brevo rate is dynamic
         pass
@@ -38,13 +40,97 @@ class SyncBrevoHeaderRateLimiter(BaseRateLimiter):
     def backoff(self, response):
         try:
             reset = float(response.headers.get("x-sib-ratelimit-reset", "10"))
-            logger.warning(f"Rate limited. Waiting {reset:.2f}s based on x-sib-ratelimit-reset header...")
+            logger.warning(
+                f"Rate limited. Waiting {reset:.2f}s based on x-sib-ratelimit-reset header..."
+            )
             time.sleep(reset)
         except Exception:
             logger.warning("Fallback backoff: 10s")
             time.sleep(10)
 
+
+class AsyncBrevoHeaderRateLimiter(BaseRateLimiter):
+    """
+    Async Brevo-specific rate limiter with concurrency control to prevent thundering herd.
+    Uses semaphore to limit concurrent requests and implements jittered backoff.
+    """
+
+    def __init__(self, max_concurrent: int = 5):
+        self.semaphore = asyncio.Semaphore(max_concurrent)
+        self.backoff_event = asyncio.Event()
+        self.backoff_event.set()  # Initially not in backoff
+        self.backoff_lock = asyncio.Lock()
+        self.request_interval = 0.2  # 200ms between requests
+        self.last_request_time = 0
+
+    async def acquire(self):
+        """Acquire permission to make a request."""
+        # Wait if we're in global backoff
+        await self.backoff_event.wait()
+
+        # Acquire semaphore for concurrency control
+        await self.semaphore.acquire()
+
+        # Add small delay between requests to avoid bursts
+        async with self.backoff_lock:
+            now = time.time()
+            time_since_last = now - self.last_request_time
+            if time_since_last < self.request_interval:
+                await asyncio.sleep(self.request_interval - time_since_last)
+            self.last_request_time = time.time()
+
+    def release(self):
+        """Release the semaphore after request completion."""
+        self.semaphore.release()
+
+    async def backoff(self, response):
+        """Handle rate limit with jittered backoff to prevent thundering herd."""
+        async with self.backoff_lock:
+            if not self.backoff_event.is_set():
+                # Already in backoff, don't reset
+                return
+
+            # Clear the event to block new requests
+            self.backoff_event.clear()
+
+            try:
+                reset_time = float(response.headers.get("x-sib-ratelimit-reset", "10"))
+                # Add jitter: 0-20% additional wait time to spread out retries
+                import random
+
+                jitter = reset_time * random.uniform(0, 0.2)
+                total_wait = reset_time + jitter
+
+                logger.warning(
+                    f"[Async] Rate limited. Waiting {total_wait:.2f}s "
+                    f"(base: {reset_time:.2f}s + jitter: {jitter:.2f}s)"
+                )
+
+                await asyncio.sleep(total_wait)
+
+                # Gradually release requests instead of all at once
+                self.request_interval = 1.0  # Increase interval after backoff
+
+            except Exception:
+                logger.warning("[Async] Fallback backoff: 10s")
+                await asyncio.sleep(10)
+            finally:
+                # Resume accepting requests
+                self.backoff_event.set()
+
+                # Gradually decrease interval back to normal
+                asyncio.create_task(self._gradually_restore_rate())
+
+    async def _gradually_restore_rate(self):
+        """Gradually restore request rate to normal after backoff."""
+        steps = 10
+        for i in range(steps):
+            await asyncio.sleep(2)  # Wait 2 seconds between steps
+            self.request_interval = max(0.2, self.request_interval - 0.08)
+
+
 # ===== COMMON FUNCTIONS =====
+
 
 def access_secret_data(project_id, secret_id, version_id="latest", default=None):
     try:
@@ -54,6 +140,7 @@ def access_secret_data(project_id, secret_id, version_id="latest", default=None)
         return response.payload.data.decode("UTF-8")
     except DefaultCredentialsError:
         return default
+
 
 def get_api_configuration(audience: str):
     """Get API key and table name based on audience."""
@@ -69,23 +156,19 @@ def get_api_configuration(audience: str):
         table_name = "sendinblue_pro_newsletters"
     else:
         raise ValueError("Invalid audience. Must be one of native/pro.")
-    
+
     return api_key, table_name
+
 
 # ===== TRANSFORMATION FUNCTIONS =====
 
-def transform_campaigns_to_dataframe(campaigns: List[Dict[str, Any]], audience: str, update_date: datetime = None) -> pd.DataFrame:
+
+def transform_campaigns_to_dataframe(
+    campaigns: List[Dict[str, Any]], audience: str, update_date: datetime = None
+) -> pd.DataFrame:
     """
     Transform raw campaign data from Brevo API to DataFrame format.
     Matches the legacy BrevoNewsletters.get_data() transformation.
-    
-    Args:
-        campaigns: List of campaign dictionaries from API response
-        audience: Target audience ('native' or 'pro')
-        update_date: Date to use for update_date field (defaults to today)
-    
-    Returns:
-        pd.DataFrame with transformed campaign data
     """
     campaign_stats = {
         "campaign_id": [],
@@ -97,18 +180,17 @@ def transform_campaigns_to_dataframe(campaigns: List[Dict[str, Any]], audience: 
         "unsubscriptions": [],
         "open_number": [],
     }
-    
+
     for camp in campaigns:
         campaign_stats["campaign_id"].append(camp.get("id"))
         campaign_stats["campaign_utm"].append(camp.get("tag"))
         campaign_stats["campaign_name"].append(camp.get("name"))
         campaign_stats["campaign_sent_date"].append(camp.get("sentDate"))
         campaign_stats["share_link"].append(camp.get("shareLink"))
-        
-        # Handle statistics with same logic as legacy code
+
         stats = camp.get("statistics", {})
         global_stats = stats.get("globalStats", {})
-        
+
         campaign_stats["audience_size"].append(
             global_stats.get("delivered", 0) if global_stats else 0
         )
@@ -118,100 +200,108 @@ def transform_campaigns_to_dataframe(campaigns: List[Dict[str, Any]], audience: 
         campaign_stats["open_number"].append(
             global_stats.get("uniqueViews", 0) if global_stats else 0
         )
-    
-    # Create DataFrame with same structure as legacy code
+
     df = pd.DataFrame(campaign_stats)
-    
-    # Use provided update_date or default to today
+
     if update_date is None:
         df["update_date"] = pd.to_datetime("today")
     else:
-        # Ensure update_date matches the partition date
         df["update_date"] = pd.to_datetime(update_date)
-    
+
     df["campaign_target"] = audience
-    
-    # Ensure column order matches legacy
-    return df[[
-        "campaign_id",
-        "campaign_utm",
-        "campaign_name",
-        "campaign_sent_date",
-        "share_link",
-        "audience_size",
-        "open_number",
-        "unsubscriptions",
-        "update_date",
-        "campaign_target",
-    ]]
+
+    return df[
+        [
+            "campaign_id",
+            "campaign_utm",
+            "campaign_name",
+            "campaign_sent_date",
+            "share_link",
+            "audience_size",
+            "open_number",
+            "unsubscriptions",
+            "update_date",
+            "campaign_target",
+        ]
+    ]
 
 
-def transform_events_to_dataframe(all_events: List[Dict[str, Any]], audience: str) -> pd.DataFrame:
+def transform_events_to_dataframe(
+    all_events: List[Dict[str, Any]], audience: str
+) -> pd.DataFrame:
     """
     Transform raw event data to aggregated DataFrame format.
-    Matches the legacy BrevoTransactional.parse_to_df() transformation.
-    
-    Args:
-        all_events: List of event dictionaries
-        audience: Target audience ('native' or 'pro')
-    
-    Returns:
-        pd.DataFrame with aggregated event data
     """
     if not all_events:
-        # Return empty DataFrame with correct schema
-        return pd.DataFrame(columns=[
-            "template", "tag", "email", "event_date", 
-            "delivered_count", "opened_count", "unsubscribed_count", "target"
-        ])
-    
-    # Create initial DataFrame
+        return pd.DataFrame(
+            columns=[
+                "template",
+                "tag",
+                "email",
+                "event_date",
+                "delivered_count",
+                "opened_count",
+                "unsubscribed_count",
+                "target",
+            ]
+        )
+
     df = pd.DataFrame(all_events)
-    
-    # Group and count events (matching legacy logic)
-    df_grouped = df.groupby(
-        ["tag", "template", "email", "event", "event_date"]
-    ).size().reset_index(name="count")
-    
-    # Pivot to get counts by event type
+
+    df_grouped = (
+        df.groupby(["tag", "template", "email", "event", "event_date"])
+        .size()
+        .reset_index(name="count")
+    )
+
     df_pivot = pd.pivot_table(
         df_grouped,
         values="count",
         index=["tag", "template", "email", "event_date"],
         columns=["event"],
         aggfunc="sum",
-        fill_value=0
+        fill_value=0,
     ).reset_index()
-    
-    # Ensure all event columns exist
+
     for event_type in ["delivered", "opened", "unsubscribed"]:
         if event_type not in df_pivot.columns:
             df_pivot[event_type] = 0
-    
-    # Rename columns to match schema
-    df_pivot.rename(columns={
-        "delivered": "delivered_count",
-        "opened": "opened_count",
-        "unsubscribed": "unsubscribed_count",
-    }, inplace=True)
-    
-    # Add target column
+
+    df_pivot.rename(
+        columns={
+            "delivered": "delivered_count",
+            "opened": "opened_count",
+            "unsubscribed": "unsubscribed_count",
+        },
+        inplace=True,
+    )
+
     df_pivot["target"] = audience
-    
-    # Ensure column order and types match schema
+
     columns = [
-        "template", "tag", "email", "event_date",
-        "delivered_count", "opened_count", "unsubscribed_count", "target"
+        "template",
+        "tag",
+        "email",
+        "event_date",
+        "delivered_count",
+        "opened_count",
+        "unsubscribed_count",
+        "target",
     ]
-    
-    # Ensure all columns exist
+
     for col in columns:
         if col not in df_pivot.columns:
-            df_pivot[col] = np.nan if col not in ["delivered_count", "opened_count", "unsubscribed_count"] else 0
-    
+            df_pivot[col] = (
+                np.nan
+                if col not in ["delivered_count", "opened_count", "unsubscribed_count"]
+                else 0
+            )
+
     return df_pivot[columns]
 
+
 # ===== LOADING FUNCTIONS =====
+
 
 def save_to_historical(
     df: pd.DataFrame,
@@ -221,17 +311,7 @@ def save_to_historical(
     table_name: str,
     end_date: datetime,
 ):
-    """
-    Upload the DataFrame to BigQuery using partitioned table naming conventions.
-
-    Args:
-        df (pd.DataFrame): DataFrame to write
-        schema (dict): BigQuery schema, e.g. {"field": "STRING"}
-        project (str): GCP project name
-        dataset (str): BigQuery dataset
-        table_name (str): Base table name
-        end_date (datetime): Date used for partitioning
-    """
+    """Upload the DataFrame to BigQuery using partitioned table naming conventions."""
     client = bigquery.Client()
     yyyymmdd = end_date.strftime("%Y%m%d")
     table_id = f"{project}.{dataset}.{table_name}_histo${yyyymmdd}"
@@ -239,8 +319,7 @@ def save_to_historical(
     job_config = bigquery.LoadJobConfig(
         write_disposition="WRITE_TRUNCATE",
         time_partitioning=bigquery.TimePartitioning(
-            type_=bigquery.TimePartitioningType.DAY, 
-            field="update_date"
+            type_=bigquery.TimePartitioningType.DAY, field="update_date"
         ),
         schema=[
             bigquery.SchemaField(name, field_type)
@@ -265,10 +344,7 @@ def save_transactional_to_historical(
     table_name: str,
     date_suffix: datetime,
 ):
-    """
-    Save transactional data to BigQuery.
-    Uses different naming convention than newsletter data.
-    """
+    """Save transactional data to BigQuery."""
     client = bigquery.Client()
     yyyymmdd = date_suffix.strftime("%Y%m%d")
     table_id = f"{project}.{dataset}.{yyyymmdd}_{table_name}_histo"
@@ -286,7 +362,9 @@ def save_transactional_to_historical(
     job.result()
     logger.info("Upload completed.")
 
-# ===== PIPELINES FUNCTIONS =====
+
+# ===== SYNC PIPELINE FUNCTIONS =====
+
 
 def etl_newsletter(
     connector: BrevoConnector,
@@ -297,30 +375,22 @@ def etl_newsletter(
 ):
     """ETL pipeline newsletter campaigns."""
     logger.info("Fetching email campaigns...")
-    
-    # Fetch campaigns - legacy code doesn't use date filtering for campaigns API
-    # The dates are only used for BigQuery partitioning
+
     resp = connector.get_email_campaigns()
-    
+
     if not resp:
         logger.warning("No campaigns fetched.")
         return
-    
+
     campaigns = resp.json().get("campaigns", [])
     logger.info(f"Fetched {len(campaigns)} campaigns")
-    
+
     if not campaigns:
         logger.warning("No campaigns in response.")
         return
-    
-    # Note: Legacy code doesn't paginate campaigns, only fetches first batch
-    # If you need all campaigns, you would need to implement pagination here
-    
-    # Transform campaigns using the utility function
-    # Pass end_date to ensure update_date matches the partition
+
     df = transform_campaigns_to_dataframe(campaigns, audience, update_date=end_date)
-    
-    # Save to BigQuery using the same logic as legacy code
+
     save_to_historical(
         df,
         campaigns_histo_schema,
@@ -339,34 +409,31 @@ def etl_transactional(
 ):
     """ETL pipeline transactional emails."""
     logger.info("Fetching active SMTP templates...")
-    
-    # Fetch templates
+
     templates_resp = connector.get_smtp_templates(active_only=True)
     templates = templates_resp.json().get("templates", []) if templates_resp else []
-    
+
     if not templates:
         logger.warning("No active templates found.")
         return
-    
+
     logger.info(f"Fetched {len(templates)} active templates")
-    
-    # Limit templates in non-prod (matching legacy behavior)
+
     if ENV_SHORT_NAME != "prod" and len(templates) > 0:
         templates = templates[:1]
-    
-    # Collect all events
+
     all_events = []
     for template in templates:
         template_id = template.get("id")
         tag = template.get("tag")
-        
+
         for event_type in ["delivered", "opened", "unsubscribed"]:
             offset = 0
             while True:
                 logger.info(
                     f"Fetching events: template={template_id}, event={event_type}, offset={offset}"
                 )
-                
+
                 events_resp = connector.get_email_event_report(
                     template_id=template_id,
                     event=event_type,
@@ -374,51 +441,187 @@ def etl_transactional(
                     end_date=end_date.strftime("%Y-%m-%d"),
                     offset=offset,
                 )
-                
+
                 if not events_resp:
                     logger.warning("No response received. Skipping.")
                     break
-                
+
                 events = events_resp.json().get("events", [])
                 if not events:
                     logger.info("No more events in page.")
                     break
-                
-                # Collect events with same structure as legacy
+
                 for event in events:
-                    all_events.append({
-                        "template": template_id,
-                        "tag": tag,
-                        "email": event.get("email"),
-                        "event": event.get("event"),
-                        "event_date": pd.to_datetime(event.get("date")).date(),
-                    })
-                
-                # Check if we need to paginate (matching legacy logic)
+                    all_events.append(
+                        {
+                            "template": template_id,
+                            "tag": tag,
+                            "email": event.get("email"),
+                            "event": event.get("event"),
+                            "event_date": pd.to_datetime(event.get("date")).date(),
+                        }
+                    )
+
                 if len(events) < 2500:
                     break
-                    
+
                 offset += 2500
-                
-                # In non-prod, don't paginate beyond first page
+
                 if ENV_SHORT_NAME != "prod":
                     break
-    
+
     if not all_events:
         logger.warning("No events collected.")
         return
-    
+
     logger.info(f"Collected {len(all_events)} total events")
-    
-    # Transform events using utility function
+
     df_final = transform_events_to_dataframe(all_events, audience)
-    
-    # Save to BigQuery
+
     save_transactional_to_historical(
         df_final,
         transactional_histo_schema,
         GCP_PROJECT,
         BIGQUERY_TMP_DATASET,
         TRANSACTIONAL_TABLE_NAME,
-        datetime.today(),  # Using today's date for file naming
+        datetime.today(),
     )
+
+
+# ===== ASYNC PIPELINE FUNCTIONS =====
+
+
+async def async_etl_transactional(
+    connector: AsyncBrevoConnector,
+    audience: str,
+    start_date: datetime,
+    end_date: datetime,
+):
+    """Async ETL pipeline for transactional emails with concurrent template processing."""
+    logger.info("[Async] Fetching active SMTP templates...")
+
+    templates_resp = await connector.get_smtp_templates(active_only=True)
+
+    if not templates_resp:
+        logger.warning("[Async] No response for templates.")
+        return
+
+    templates = templates_resp.json().get("templates", [])
+
+    if not templates:
+        logger.warning("[Async] No active templates found.")
+        return
+
+    logger.info(f"[Async] Fetched {len(templates)} active templates")
+
+    if ENV_SHORT_NAME != "prod" and len(templates) > 0:
+        templates = templates[:1]
+
+    # Process templates concurrently
+    all_events = []
+    tasks = []
+
+    for template in templates:
+        task = _fetch_template_events(connector, template, start_date, end_date)
+        tasks.append(task)
+
+    # Process templates in batches to avoid overwhelming the API
+    batch_size = 3  # Process 3 templates concurrently
+    for i in range(0, len(tasks), batch_size):
+        batch = tasks[i : i + batch_size]
+        batch_results = await asyncio.gather(*batch)
+
+        for events in batch_results:
+            all_events.extend(events)
+
+    if not all_events:
+        logger.warning("[Async] No events collected.")
+        return
+
+    logger.info(f"[Async] Collected {len(all_events)} total events")
+
+    # Transform and save (same as sync version)
+    df_final = transform_events_to_dataframe(all_events, audience)
+
+    save_transactional_to_historical(
+        df_final,
+        transactional_histo_schema,
+        GCP_PROJECT,
+        BIGQUERY_TMP_DATASET,
+        TRANSACTIONAL_TABLE_NAME,
+        datetime.today(),
+    )
+
+
+async def _fetch_template_events(
+    connector: AsyncBrevoConnector,
+    template: dict,
+    start_date: datetime,
+    end_date: datetime,
+) -> List[Dict[str, Any]]:
+    """Fetch all events for a single template."""
+    template_id = template.get("id")
+    tag = template.get("tag")
+    events_list = []
+
+    # Process event types sequentially for this template
+    for event_type in ["delivered", "opened", "unsubscribed"]:
+        offset = 0
+        while True:
+            logger.info(
+                f"[Async] Fetching events: template={template_id}, "
+                f"event={event_type}, offset={offset}"
+            )
+
+            # The rate limiter will handle request spacing
+            try:
+                events_resp = await connector.get_email_event_report(
+                    template_id=template_id,
+                    event=event_type,
+                    start_date=start_date.strftime("%Y-%m-%d"),
+                    end_date=end_date.strftime("%Y-%m-%d"),
+                    offset=offset,
+                )
+
+                # Release semaphore after successful request
+                if hasattr(connector.client.rate_limiter, "release"):
+                    connector.client.rate_limiter.release()
+
+                if not events_resp:
+                    logger.warning(f"[Async] No response for template {template_id}")
+                    break
+
+                events = events_resp.json().get("events", [])
+                if not events:
+                    logger.info(f"[Async] No more events for template {template_id}")
+                    break
+
+                for event in events:
+                    events_list.append(
+                        {
+                            "template": template_id,
+                            "tag": tag,
+                            "email": event.get("email"),
+                            "event": event.get("event"),
+                            "event_date": pd.to_datetime(event.get("date")).date(),
+                        }
+                    )
+
+                if len(events) < 2500:
+                    break
+
+                offset += 2500
+
+                if ENV_SHORT_NAME != "prod":
+                    break
+
+            except Exception as e:
+                logger.error(
+                    f"[Async] Error fetching events for template {template_id}: {e}"
+                )
+                # Release semaphore on error
+                if hasattr(connector.client.rate_limiter, "release"):
+                    connector.client.rate_limiter.release()
+                break
+
+    return events_list

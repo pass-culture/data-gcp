@@ -30,13 +30,15 @@ from airflow.models import Param
 from airflow.operators.empty import EmptyOperator
 
 DAG_NAME = "import_brevo_v2"
-GCE_INSTANCE = f"import-brevo-{ENV_SHORT_NAME}"
+GCE_INSTANCE = f"import-brevo-2-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/"
 yesterday = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 dag_config = {
     "GCP_PROJECT": GCP_PROJECT_ID,
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
 }
+
+TARGET_BRANCH = "brevo-refactor"
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -57,7 +59,11 @@ with DAG(
     template_searchpath=DAG_FOLDER,
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default=TARGET_BRANCH
+            if TARGET_BRANCH
+            else "production"
+            if ENV_SHORT_NAME == "prod"
+            else "master",
             type="string",
         ),
         "start_date": Param(

@@ -280,7 +280,7 @@ with DAG(
         base_dir=BASE_DIR,
         command=f"""
          python evaluate.py \
-        --artists-to-link-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_TO_LINK_GCS_FILENAME)} \
+        --artists-to-link-file-path {os.path.join(STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME)} \
         --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)} \
         --test-sets-dir {TEST_SETS_GCS_DIR} \
         --experiment-name artist_linkage_v1.0_{ENV_SHORT_NAME}

@@ -30,4 +30,7 @@ SELECT
     , CAST("providerId" AS varchar(255)) AS provider_id
     , CAST("nationalProgramId" AS varchar(255)) AS national_program_id
     , "rejectionReason" AS collective_offer_rejection_reason
+    , "locationType" AS collective_offer_location_type
+    , "locationComment" AS collective_offer_location_comment
+    , CAST("offererAddressId" AS varchar(255)) AS offerer_address_id
 FROM public.collective_offer

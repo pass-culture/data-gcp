@@ -5,7 +5,7 @@ from typing import TypedDict
 
 import pandas as pd
 
-from constants import ARTIST_NAME_TO_FILTER, TOTAL_OFFER_COUNT
+from constants import ARTIST_NAME_TO_FILTER, PRODUCT_ID_KEY, TOTAL_OFFER_COUNT
 
 
 ### Cleaning
@@ -455,3 +455,32 @@ def prepare_artist_names_for_matching(input_df: pd.DataFrame) -> pd.DataFrame:
         .loc[lambda df: ~df.artist_name.isin(ARTIST_NAME_TO_FILTER)]
         .loc[lambda df: ~df.artist_name_to_match.isin(ARTIST_NAME_TO_FILTER)]
     )
+
+
+def filter_products(raw_products_df: pd.DataFrame):
+    """
+    Filter products dataframe by removing unwanted artists and products with multiple categories.
+    This function performs two main filtering operations:
+    1. Removes products associated with artists listed in ARTIST_NAME_TO_FILTER
+    2. Removes products that appear in multiple offer categories (determined by grouping
+       by offer_product_id and counting unique offer_category_id values)
+    Args:
+        raw_products_df (pd.DataFrame): Input dataframe containing product data with columns
+            including 'artist_name', 'offer_product_id', 'offer_category_id', and
+            a column referenced by PRODUCT_ID_KEY constant.
+    Returns:
+        pd.DataFrame: Filtered dataframe with unwanted artists and multi-category products removed.
+    """
+
+    products_df = raw_products_df.loc[
+        lambda df: ~df.artist_name.isin(ARTIST_NAME_TO_FILTER)
+    ]
+
+    # This is a hack to remove products that are in multiple categories (which should not happen)
+    product_ids_to_remove = (
+        products_df.groupby("offer_product_id")
+        .agg({"offer_category_id": "nunique"})
+        .loc[lambda dfff: dfff.offer_category_id > 1]
+        .index
+    )
+    return products_df.loc[lambda df: ~df[PRODUCT_ID_KEY].isin(product_ids_to_remove)]

@@ -1,3 +1,4 @@
+# %%
 import uuid
 
 import pandas as pd
@@ -8,7 +9,6 @@ from constants import (
     ACTION_KEY,
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
-    ARTIST_NAME_TO_FILTER,
     ARTIST_NAME_TO_MATCH_KEY,
     ARTIST_TYPE_KEY,
     COMMENT_KEY,
@@ -25,6 +25,7 @@ from utils.matching import (
     match_artist_on_offer_names,
     match_artists_with_wikidata,
 )
+from utils.preprocessing_utils import filter_products
 
 
 def get_products_to_remove_and_link_df(
@@ -214,6 +215,7 @@ def sanity_checks(
     # Additional checks can be added as needed
 
 
+# %%
 app = typer.Typer()
 
 
@@ -238,7 +240,7 @@ def main(
     product_df = (
         pd.read_parquet(product_filepath)
         .astype({PRODUCT_ID_KEY: int})
-        .loc[lambda df: ~df.artist_name.isin(ARTIST_NAME_TO_FILTER)]
+        .pipe(filter_products)
     )
     artist_df = pd.read_parquet(artist_filepath)
     existing_artist_alias_df = pd.read_parquet(artist_alias_file_path)
@@ -254,8 +256,15 @@ def main(
 
     # 3. Match products to link with artists on both raw and preprocessed offer names
     raw_linked_products_df, preproc_linked_products_df, preproc_unlinked_products_df = (
-        match_artist_on_offer_names(products_to_link_df, artist_alias_df)
+        match_artist_on_offer_names(
+            products_to_link_df=products_to_link_df, artist_alias_df=artist_alias_df
+        )
     )
+    preproc_linked_products_df.loc[
+        lambda df: df[["offer_product_id", "artist_type", "artist_type"]].duplicated(
+            keep=False
+        )
+    ]
 
     # 4. Create new artist clusters by offer_category and artist type
     new_artist_clusters_df = (
@@ -273,19 +282,19 @@ def main(
 
     # 5. Match new artist clusters with existing artists on Wikidata
     exploded_artist_alias_df = match_artists_with_wikidata(
-        new_artist_clusters_df,
-        existing_artist_alias_df,
-        wiki_df,
+        new_artist_clusters_df=new_artist_clusters_df,
+        wiki_df=wiki_df,
+        existing_artist_alias_df=existing_artist_alias_df,
     )
 
     # 6. Create new artists and artist aliases
     delta_product_df, delta_artist_df, delta_artist_alias_df = create_artists_tables(
-        products_to_remove_df,
-        raw_linked_products_df,
-        preproc_linked_products_df,
-        preproc_unlinked_products_df,
-        exploded_artist_alias_df,
-        artist_df,
+        preproc_unlinked_products_df=preproc_unlinked_products_df,
+        exploded_artist_alias_df=exploded_artist_alias_df,
+        products_to_remove_df=products_to_remove_df,
+        raw_linked_products_df=raw_linked_products_df,
+        preproc_linked_products_df=preproc_linked_products_df,
+        artist_df=artist_df,
     )
 
     # 7. Sanity check for consistency

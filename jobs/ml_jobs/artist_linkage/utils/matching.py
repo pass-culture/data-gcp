@@ -150,7 +150,7 @@ def create_artists_tables(
             raw_linked_products_df.filter(PRODUCTS_KEYS).assign(
                 **{
                     ACTION_KEY: Action.add,
-                    COMMENT_KEY: Comment.linked_to_existing_artist,
+                    COMMENT_KEY: Comment.linked_to_existing_artist_raw,
                 }
             ),
             preproc_linked_products_df.filter(PRODUCTS_KEYS).assign(

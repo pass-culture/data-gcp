@@ -15,7 +15,7 @@ from constants import (
 )
 from match_artists_on_wikidata import load_wikidata
 from utils.matching import create_artists_tables, match_artists_with_wikidata
-from utils.preprocessing_utils import prepare_artist_names_for_matching
+from utils.preprocessing_utils import filter_products, prepare_artist_names_for_matching
 
 app = typer.Typer()
 
@@ -64,7 +64,11 @@ def main(
     output_product_artist_link_filepath: str = typer.Option(),
 ) -> None:
     # 1. Load data
-    product_df = pd.read_parquet(product_filepath).astype({PRODUCT_ID_KEY: int})
+    product_df = (
+        pd.read_parquet(product_filepath)
+        .astype({PRODUCT_ID_KEY: int})
+        .pipe(filter_products)
+    )
     wiki_df = load_wikidata(
         wiki_base_path=wiki_base_path, wiki_file_name=wiki_file_name
     ).reset_index(drop=True)
@@ -109,3 +113,7 @@ def main(
     artist_df.to_parquet(output_artist_file_path, index=False)
     artist_alias_df.to_parquet(output_artist_alias_file_path, index=False)
     product_artist_link_df.to_parquet(output_product_artist_link_filepath, index=False)
+
+
+if __name__ == "__main__":
+    app()

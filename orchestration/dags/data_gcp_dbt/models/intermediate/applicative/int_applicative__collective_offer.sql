@@ -99,7 +99,6 @@ with
             ei.institution_macro_density_label,
             ei.institution_density_level,
             co.collective_offer_rejection_reason,
-            co.collective_offer_location_type,
             case
                 when co.collective_offer_location_type = "TO_BE_DEFINED"
                 then "other"
@@ -116,12 +115,7 @@ with
         left join
             {{ ref("int_applicative__educational_institution") }} as ei
             on co.institution_id = ei.educational_institution_id
-        left join
-            {{ source("raw", "applicative_database_offerer_address") }} as oa
-            on co.offerer_address_id = oa.offerer_address_id
-        left join
-            {{ source("raw", "applicative_database_address") }} as ad
-            on oa.address_id = ad.address_id
+
     )
 union all
 (

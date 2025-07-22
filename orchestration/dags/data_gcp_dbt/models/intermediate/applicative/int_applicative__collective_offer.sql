@@ -101,8 +101,11 @@ with
             co.collective_offer_rejection_reason,
             co.collective_offer_location_type,
             case
-                when co.collective_offer_location_type = "TO_BE_DEFINED" then collective_offer_location_comment
-                when co.collective_offer_location_type = "ADDRESS" then oa.address_id end as collective_offer_address,
+                when co.collective_offer_location_type = "TO_BE_DEFINED"
+                then collective_offer_location_comment
+                when co.collective_offer_location_type = "ADDRESS"
+                then oa.address_id
+            end as collective_offer_address,
             false as collective_offer_is_template
         from {{ source("raw", "applicative_database_collective_offer") }} as co
         left join
@@ -112,10 +115,10 @@ with
             {{ ref("int_applicative__educational_institution") }} as ei
             on co.institution_id = ei.educational_institution_id
         left join
-            {{ source ("raw", "applicative_database_offerer_address") }} as oa
+            {{ source("raw", "applicative_database_offerer_address") }} as oa
             on co.offerer_address_id = oa.offerer_address_id
         left join
-            {{ source ('raw', "applicative_database_address") }} as ad
+            {{ source("raw", "applicative_database_address") }} as ad
             on oa.address_id = ad.address_id
     )
 union all
@@ -183,9 +186,12 @@ union all
         null as institution_density_level,
         collective_offer_rejection_reason,
         co.collective_offer_location_type,
-            case
-                when co.collective_offer_location_type = "TO_BE_DEFINED" then collective_offer_location_comment
-                when co.collective_offer_location_type = "ADDRESS" then oa.address_id end as collective_offer_address,
+        case
+            when co.collective_offer_location_type = "TO_BE_DEFINED"
+            then collective_offer_location_comment
+            when co.collective_offer_location_type = "ADDRESS"
+            then oa.address_id
+        end as collective_offer_address,
         true as collective_offer_is_template
     from {{ source("raw", "applicative_database_collective_offer_template") }}
 )

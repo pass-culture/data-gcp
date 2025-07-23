@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -euo pipefail
 # Check if TARGET_BRANCH is provided
 if [ -z "$1" ]; then
   echo "TARGET_BRANCH is required as the first argument"
@@ -24,9 +25,11 @@ dbt_run_changed_models() {
   echo ${#models}
   if [ -z "$models" ]; then
     echo "no models were modified"
+    echo "should_run_tests=false" >> "$GITHUB_OUTPUT"
   else
     echo "Running models: ${models}"
     dbt run --model $models --profile CI --target $ENV_SHORT_NAME --defer --state env-run-artifacts --favor-state --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}" --exclude tag:failing_ci tag:exclude_ci
+    echo "should_run_tests=true" >> "$GITHUB_OUTPUT"
   fi
 
 }

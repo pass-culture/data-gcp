@@ -11,6 +11,7 @@ with
             user_macro_density_label,
             user_region_name,
             user_department_code,
+            user_department_name,
             user_activity,
             user_civility,
             total_deposit_amount,
@@ -82,6 +83,7 @@ select
     u.user_macro_density_label,
     u.user_region_name,
     u.user_department_code,
+    u.user_department_name,
     u.user_activity,
     u.user_civility,
     u.user_is_theme_subscribed,
@@ -147,6 +149,7 @@ group by
     u.user_macro_density_label,
     u.user_region_name,
     u.user_department_code,
+    u.user_department_name,
     u.user_activity,
     u.user_civility,
     u.user_is_theme_subscribed

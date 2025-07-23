@@ -53,6 +53,8 @@ def run(
     else:
         end_dt = today
 
+    assert start_dt <= end_dt, "Start date must be before end date."
+
     warn_flag = async_mode and target == "newsletter"
     legit_async = async_mode and target == "transactional"
     logger.info(

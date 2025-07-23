@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 import typer
 from connectors.brevo import AsyncBrevoConnector, BrevoConnector
-from http_custom.clients import AsyncHttpClient, SyncHttpClient
+from http_tools.clients import AsyncHttpClient, SyncHttpClient
 from jobs.brevo.config import UPDATE_WINDOW
 from jobs.brevo.utils import (
     AsyncBrevoHeaderRateLimiter,
@@ -16,8 +16,12 @@ from jobs.brevo.utils import (
 )
 
 # Logging setup
+for name in ("httpx", "httpcore", "urllib3"):
+    logging.getLogger(name).setLevel(logging.WARNING)
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 app = typer.Typer()
 

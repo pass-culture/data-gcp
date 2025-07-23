@@ -16,6 +16,7 @@ class BaseRateLimiter(ABC):
     """
     Abstract base class for rate limiter strategies.
     """
+
     @abstractmethod
     def acquire(self):
         """Acquire a slot before making a request."""
@@ -25,7 +26,7 @@ class BaseRateLimiter(ABC):
     def backoff(self, response):
         """Handle backoff logic when receiving a rate-limit response."""
         pass
-    
+
 
 # -----------------------------
 # Sync Token Bucket
@@ -35,6 +36,7 @@ class SyncTokenBucketRateLimiter(BaseRateLimiter):
     Synchronous token bucket rate limiter.
     Controls number of requests per time period.
     """
+
     def __init__(self, calls: int, period: int):
         self.calls = calls
         self.period = period
@@ -65,6 +67,7 @@ class AsyncTokenBucketRateLimiter(BaseRateLimiter):
     Asynchronous token bucket rate limiter.
     Uses asyncio locks and sleeps for non-blocking behavior.
     """
+
     def __init__(self, calls: int, period: int):
         self.calls = calls
         self.period = period
@@ -79,7 +82,9 @@ class AsyncTokenBucketRateLimiter(BaseRateLimiter):
                     self.timestamps.popleft()
                 else:
                     wait = self.period - (now - self.timestamps[0])
-                    logger.warning(f"[Async] Rate limit reached. Sleeping {wait:.2f}s...")
+                    logger.warning(
+                        f"[Async] Rate limit reached. Sleeping {wait:.2f}s..."
+                    )
                     await asyncio.sleep(wait)
             self.timestamps.append(time.time())
 

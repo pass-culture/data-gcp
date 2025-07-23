@@ -5,7 +5,7 @@ from typing import Optional
 
 import requests
 import httpx
-from http_custom.rate_limiters import BaseRateLimiter
+from http_tools.rate_limiters import BaseRateLimiter
 
 # Set up logging
 logger = logging.getLogger(__name__)

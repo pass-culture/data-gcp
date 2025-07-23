@@ -9,7 +9,7 @@ import pandas as pd
 from connectors.brevo import AsyncBrevoConnector, BrevoConnector
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import bigquery, secretmanager
-from http_custom.rate_limiters import BaseRateLimiter
+from http_tools.rate_limiters import BaseRateLimiter
 from jobs.brevo.config import (
     BIGQUERY_RAW_DATASET,
     BIGQUERY_TMP_DATASET,
@@ -95,10 +95,10 @@ class AsyncBrevoHeaderRateLimiter(BaseRateLimiter):
 
             try:
                 reset_time = float(response.headers.get("x-sib-ratelimit-reset", "10"))
-                # Add jitter: 0-20% additional wait time to spread out retries
+                # Add jitter: 0-10% additional wait time to spread out retries
                 import random
 
-                jitter = reset_time * random.uniform(0, 0.2)
+                jitter = reset_time * random.uniform(0, 0.01)
                 total_wait = reset_time + jitter
 
                 logger.warning(

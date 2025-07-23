@@ -37,6 +37,7 @@ DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"artist-linkage-{ENV_SHORT_NAME}"
 BASE_DIR = "data-gcp/jobs/ml_jobs/artist_linkage"
 DAG_NAME = "artist_linkage"
+DAG_VERSION = "2.0"
 
 # GCS Paths / Filenames
 GCS_FOLDER_PATH = f"artist_linkage_{ENV_SHORT_NAME}/{{{{ ds_nodash }}}}"
@@ -280,10 +281,11 @@ with DAG(
         base_dir=BASE_DIR,
         command=f"""
          python evaluate.py \
-        --artists-to-link-file-path {os.path.join(STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME)} \
-        --linked-artists-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)} \
+        --products-to-link-file-path {os.path.join(STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME)} \
+        --artists-file-path {os.path.join(STORAGE_BASE_PATH, ARTISTS_WITH_METADATA_GCS_FILENAME)} \
+        --product-artist-link-file-path {os.path.join(STORAGE_BASE_PATH, PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
         --test-sets-dir {TEST_SETS_GCS_DIR} \
-        --experiment-name artist_linkage_v1.0_{ENV_SHORT_NAME}
+        --experiment-name artist_linkage_v{DAG_VERSION}_{ENV_SHORT_NAME}
         """,
     )
 

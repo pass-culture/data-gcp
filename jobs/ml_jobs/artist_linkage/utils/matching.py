@@ -21,14 +21,18 @@ from constants import (
     Action,
     Comment,
 )
-from match_artists_on_wikidata import (
-    match_namesakes_per_category,
-    match_per_category_no_namesakes,
-)
 from utils.preprocessing_utils import (
     extract_artist_name,
     prepare_artist_names_for_matching,
 )
+
+CATEGORY_MAPPING = {
+    "SPECTACLE": ["music"],
+    "MUSIQUE_LIVE": ["music"],
+    "MUSIQUE_ENREGISTREE": ["music"],
+    "LIVRE": ["book"],
+    "CINEMA": ["movie"],
+}
 
 
 def match_artist_on_offer_names(
@@ -305,3 +309,92 @@ def match_artists_with_wikidata(
         .explode(ARTIST_NAME_KEY)
         .drop_duplicates()
     )
+
+
+def match_per_category_no_namesakes(
+    artists_df: pd.DataFrame,
+    wikidata_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Matches artists from a DataFrame with Wikidata entries per category, excluding namesakes.
+    Args:
+        artists_df (pd.DataFrame): DataFrame containing artist data with a column 'offer_category_id' and 'alias'.
+        wikidata_df (pd.DataFrame): DataFrame containing Wikidata artist data with a column 'alias' and category columns.
+    Returns:
+        pd.DataFrame: DataFrame with matched artists per category, excluding namesakes.
+    """
+    matched_df_list = []
+    for pass_category, wiki_category in CATEGORY_MAPPING.items():
+        # Select artist df for current category
+        artists_per_category_df = artists_df.loc[
+            lambda df, pass_category=pass_category: df.offer_category_id
+            == pass_category
+        ]
+
+        # Select wikidata artists for current category (remove namesaked ones)
+        wiki_per_category_no_ns_df = wikidata_df.loc[
+            lambda df, wiki_category=wiki_category: df.loc[:, wiki_category].any(axis=1)
+        ].loc[lambda df: ~df.alias.duplicated(keep=False)]
+
+        matched_df_list.append(
+            pd.merge(
+                artists_per_category_df,
+                wiki_per_category_no_ns_df,
+                on="alias",
+                how="left",
+            )
+        )
+    return pd.concat(matched_df_list)
+
+
+def match_namesakes_per_category(
+    artists_df: pd.DataFrame,
+    wikidata_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Matches artists with the same name (namesakes) per category between two dataframes: artists_df and wikidata_df.
+    Args:
+        artists_df (pd.DataFrame): DataFrame containing artist data with at least 'offer_category_id' and 'alias' columns.
+        wikidata_df (pd.DataFrame): DataFrame containing Wikidata artist data with at least 'alias' column and category columns.
+    Returns:
+        pd.DataFrame: DataFrame containing matched artists with the best Wikidata entry per alias for each category.
+    """
+
+    def _select_best_wiki_per_alias(df: pd.DataFrame) -> pd.DataFrame:
+        return df.sort_values(by=["alias", "gkg"], ascending=False).drop_duplicates(
+            subset="alias"
+        )
+
+    matched_df_list = []
+    for pass_category, wiki_categories in CATEGORY_MAPPING.items():
+        # Select artist df for current category
+        artists_per_category_df = artists_df.loc[
+            lambda df, pass_category=pass_category: df.offer_category_id
+            == pass_category
+        ]
+
+        # Select namesaked wikidata artists for current category
+        wiki_per_category_with_ns_df = (
+            wikidata_df.loc[
+                lambda df, wiki_categories=wiki_categories: df.loc[
+                    :, wiki_categories
+                ].any(axis=1)
+            ]
+            .loc[lambda df: df.alias.duplicated(keep=False)]
+            .pipe(_select_best_wiki_per_alias)
+        )
+
+        # Select the best wiki artist per alias
+        selected_wiki_per_category_df = wiki_per_category_with_ns_df.pipe(
+            _select_best_wiki_per_alias
+        )
+
+        matched_df_list.append(
+            pd.merge(
+                artists_per_category_df,
+                selected_wiki_per_category_df,
+                on="alias",
+                how="left",
+            )
+        )
+    return pd.concat(matched_df_list)

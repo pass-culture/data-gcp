@@ -17,9 +17,7 @@ from constants import (
     PRODUCTS_KEYS,
     ProductToLinkStatus,
 )
-from match_artists_on_wikidata import (
-    load_wikidata,
-)
+from utils.loading import load_wikidata
 from utils.matching import (
     create_artists_tables,
     match_artist_on_offer_names,

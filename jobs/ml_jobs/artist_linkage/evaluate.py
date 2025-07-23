@@ -11,6 +11,7 @@ from constants import (
     OFFER_CATEGORY_ID_KEY,
     OFFER_IS_SYNCHRONISED,
     PRODUCT_ID_KEY,
+    WIKI_ID_KEY,
 )
 from utils.mlflow import (
     connect_remote_mlflow,
@@ -26,7 +27,10 @@ WIKI_MATCHED_WEIGHTED_BY_BOOKINGS_PERC = "wiki_matched_weighted_by_bookings_perc
 WIKI_MATCHED_WEIGHTED_BY_PRODUCT_PERC = "wiki_matched_weighted_by_product_perc"
 WIKI_MATCHED_PERC = "wiki_matched_perc"
 
-TOTAL_PRODUCT_COUNT = "total_product_count"
+TOTAL_PRODUCT_COUNT_KEY = "total_product_count"
+TOTAL_BOOKING_COUNT_KEY = "total_booking_count"
+DATASET_NAME_KEY = "dataset_name"
+RAW_ARTIST_NAME_KEY = "raw_artist_name"
 
 
 ### Params
@@ -100,12 +104,12 @@ def get_main_artist_per_dataset(
 
     return (
         linked_products_on_test_sets_df.loc[lambda df: df.is_my_artist]
-        .groupby(["dataset_name", ARTIST_ID_KEY])
+        .groupby([DATASET_NAME_KEY, ARTIST_ID_KEY])
         .agg(product_count=(PRODUCT_ID_KEY, "nunique"))
         .reset_index()
-        .sort_values(["dataset_name", "product_count"], ascending=[True, False])
-        .drop_duplicates(subset=["dataset_name"], keep="first")
-        .set_index("dataset_name")
+        .sort_values([DATASET_NAME_KEY, "product_count"], ascending=[True, False])
+        .drop_duplicates(subset=[DATASET_NAME_KEY], keep="first")
+        .set_index(DATASET_NAME_KEY)
         .to_dict()[ARTIST_ID_KEY]
     )
 
@@ -113,11 +117,12 @@ def get_main_artist_per_dataset(
 def get_test_sets_df(test_set_dir: str) -> pd.DataFrame:
     fs = gcsfs.GCSFileSystem()
     GS_PREFIX = "gs://"
+    PARQUET_EXTENSION = ".parquet"
 
     parquet_files = [
         GS_PREFIX + path
         for path in fs.glob(f"{test_set_dir}/**")
-        if path.endswith(".parquet")
+        if path.endswith(PARQUET_EXTENSION)
     ]
 
     return pd.concat(
@@ -138,7 +143,7 @@ def project_linked_artists_on_test_sets(
     artist name, offer category ID, and artist type to find matching records.
     Args:
         linked_products_df (pd.DataFrame): DataFrame containing linked product information
-            with columns including 'raw_artist_name', offer category ID, and artist type.
+            with columns including raw artist name, offer category ID, and artist type.
         test_sets_df (pd.DataFrame): DataFrame containing test set information
             with columns including artist name, offer category ID, and artist type.
     Returns:
@@ -149,7 +154,7 @@ def project_linked_artists_on_test_sets(
     return linked_products_df.merge(
         test_sets_df,
         how="inner",
-        left_on=["raw_artist_name", OFFER_CATEGORY_ID_KEY, ARTIST_TYPE_KEY],
+        left_on=[RAW_ARTIST_NAME_KEY, OFFER_CATEGORY_ID_KEY, ARTIST_TYPE_KEY],
         right_on=[
             ARTIST_NAME_KEY,
             OFFER_CATEGORY_ID_KEY,
@@ -185,14 +190,18 @@ def get_wiki_matching_metrics(artists_df: pd.DataFrame) -> pd.DataFrame:
         return {
             WIKI_MATCHED_WEIGHTED_BY_BOOKINGS_PERC: round(
                 100
-                * input_df.loc[lambda df: df.wiki_id.notna()].total_booking_count.sum()
-                / input_df.total_booking_count.sum(),
+                * input_df.loc[lambda df: df.wiki_id.notna()][
+                    TOTAL_BOOKING_COUNT_KEY
+                ].sum()
+                / input_df[TOTAL_BOOKING_COUNT_KEY].sum(),
                 2,
             ),
             WIKI_MATCHED_WEIGHTED_BY_PRODUCT_PERC: round(
                 100
-                * input_df.loc[lambda df: df.wiki_id.notna()][TOTAL_PRODUCT_COUNT].sum()
-                / input_df[TOTAL_PRODUCT_COUNT].sum(),
+                * input_df.loc[lambda df: df.wiki_id.notna()][
+                    TOTAL_PRODUCT_COUNT_KEY
+                ].sum()
+                / input_df[TOTAL_PRODUCT_COUNT_KEY].sum(),
                 2,
             ),
             WIKI_MATCHED_PERC: round(
@@ -200,8 +209,8 @@ def get_wiki_matching_metrics(artists_df: pd.DataFrame) -> pd.DataFrame:
                 2,
             ),
             "artist_name_count": len(input_df),
-            TOTAL_PRODUCT_COUNT: input_df.total_product_count.sum(),
-            "total_booking_count": input_df.total_booking_count.sum(),
+            TOTAL_PRODUCT_COUNT_KEY: input_df.total_product_count.sum(),
+            TOTAL_BOOKING_COUNT_KEY: input_df.total_booking_count.sum(),
         }
 
     stats_dict = {"TOTAL": _get_stats_per_df(artists_df)}
@@ -254,7 +263,7 @@ def get_matching_metrics_per_dataset(
             fn=lambda df: df.is_my_artist & ~df.is_main_cluster,
             tn=lambda df: ~df.is_my_artist & ~df.is_main_cluster,
         )
-        .groupby("dataset_name")
+        .groupby(DATASET_NAME_KEY)
         .apply(compute_metrics_per_dataset)
         .reset_index()
     )
@@ -278,7 +287,7 @@ def main(
     products_to_link_df = (
         pd.read_parquet(products_to_link_file_path)
         .astype({PRODUCT_ID_KEY: int})
-        .rename(columns={ARTIST_NAME_KEY: "raw_artist_name"})
+        .rename(columns={ARTIST_NAME_KEY: RAW_ARTIST_NAME_KEY})
     )
     artists_df = pd.read_parquet(artists_file_path)
     product_artist_link_df = pd.read_parquet(product_artist_link_file_path).astype(
@@ -297,9 +306,9 @@ def main(
         linked_products_df.groupby([ARTIST_ID_KEY, OFFER_CATEGORY_ID_KEY])
         .agg(
             total_product_count=(PRODUCT_ID_KEY, "nunique"),
-            total_booking_count=("total_booking_count", "sum"),
-            artist_name=("artist_name", "first"),
-            wiki_id=("wiki_id", "first"),
+            total_booking_count=(TOTAL_BOOKING_COUNT_KEY, "sum"),
+            artist_name=(ARTIST_NAME_KEY, "first"),
+            wiki_id=(WIKI_ID_KEY, "first"),
         )
         .reset_index()
     )
@@ -357,7 +366,7 @@ def main(
 
         # Create and Log Graph
         ax = metrics_per_dataset_df.plot.barh(
-            x="dataset_name", y=["precision", "recall", "f1"], rot=0, figsize=(8, 12)
+            x=DATASET_NAME_KEY, y=["precision", "recall", "f1"], rot=0, figsize=(8, 12)
         )
         ax.legend(loc="upper left")
         plt.tight_layout()

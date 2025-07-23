@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 import pandas as pd
 import requests
 
+from utils import DEPRECATED_METRICS
+
 MAX_ERROR_RATE = 0.2
 
 
@@ -343,9 +345,7 @@ class InstagramAnalytics:
         Returns:
             pd.DataFrame: Processed posts data with added 'export_date' and 'account_id' columns.
         """
-        deprecated_metrics = [
-            "video_views",
-        ]
+        deprecated_metrics = DEPRECATED_METRICS
         posts = self.fetch_posts()
         df_posts = self.preprocess_insight_posts(posts)
         df_posts["export_date"] = export_date

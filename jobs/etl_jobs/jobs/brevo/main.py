@@ -28,17 +28,18 @@ def run(
     audience: str = typer.Option(..., help="Audience name (native or pro)"),
     start_date: str = typer.Option(None, help="Import start date (YYYY-MM-DD)"),
     end_date: str = typer.Option(None, help="Import end date (YYYY-MM-DD)"),
-    use_async: bool = typer.Option(
-        True, "--async", help="Use async processing (transactional only)"
+    async_mode: bool = typer.Option(
+        False,
+        "--async/--no-async",
+        help="Use async processing (transactional only)",
+        show_default=True,
     ),
     max_concurrent: int = typer.Option(
         5, "--max-concurrent", help="Max concurrent requests for async processing"
     ),
 ):
     """Main entry point for Brevo ETL."""
-    async_mode = False
-    if use_async:
-        async_mode = True
+
     # Set up dates
     today = datetime.now(tz=timezone.utc)
 
@@ -55,13 +56,13 @@ def run(
 
     assert start_dt <= end_dt, "Start date must be before end date."
 
-    warn_flag = async_mode and target == "newsletter"
-    legit_async = async_mode and target == "transactional"
+    fallback_flag = async_mode and target == "newsletter"
+    async_fallback = async_mode and target == "transactional"
     logger.info(
         f"Running Brevo ETL: target={target}, audience={audience}, "
         f"start={start_dt.strftime('%Y-%m-%d')}, end={end_dt.strftime('%Y-%m-%d')}, "
-        f"{'WARNING: Async mode disabled: only supported for transactional target! ' if warn_flag else ''}"
-        f"async={legit_async}, max_concurrent={max_concurrent if legit_async else 'N/A'} "
+        f"{'WARNING: Async mode disabled: only supported for transactional target! ' if fallback_flag else ''}"
+        f"async={async_fallback}, max_concurrent={max_concurrent if async_fallback else 'N/A'} "
     )
 
     # Get API configuration

@@ -40,7 +40,7 @@ def _remove_parenthesis(artist_df: pd.DataFrame) -> pd.DataFrame:
     """
     return artist_df.assign(
         artist_name=lambda df: df.artist_name.str.replace(r"\([^)]*\)", "", regex=True)
-        .str.split("\(", regex=True)
+        .str.split(r"\(", regex=True)
         .map(lambda ll: ll[0])
     )
 
@@ -80,7 +80,7 @@ def _extract_first_artist_pattern(artist_df: pd.DataFrame):
             - first_artist_pattern: The first artist pattern extracted from the artist_name column.
             - is_multi_artists_pattern: A boolean column indicating whether the artist_name contains multiple patterns.
     """
-    pattern = ";|/|\+|\&"
+    pattern = r";|/|\+|\&"
     return artist_df.assign(
         first_artist_pattern=lambda df: df.artist_name.str.split(
             pattern, regex=True
@@ -105,7 +105,7 @@ def _extract_first_artist_comma(artist_df: pd.DataFrame):
         pd.DataFrame: The DataFrame with additional columns 'is_multi_artists' and 'first_artist'.
 
     """
-    pattern = "^(?![\w\-']+,).*,.*|.*,.*,.*"
+    pattern = r"^(?![\w\-']+,).*,.*|.*,.*,.*"
     return artist_df.assign(
         is_multi_artists_comma=lambda df: (
             df.first_artist_pattern.str.contains(pattern, regex=True)
@@ -216,7 +216,7 @@ def _filter_artists(
     Returns:
         pd.DataFrame: The filtered DataFrame, containing only the rows that do not meet the filtering criteria.
     """
-    pattern = "[\w\-\.]+\/[\w-]+|\+"  # pattern for multi artists separated by + or /
+    pattern = r"[\w\-\.]+\/[\w-]+|\+"  # pattern for multi artists separated by + or /
 
     matching_patterns_indexes = artist_df.first_artist.str.contains(pattern, regex=True)
     too_few_words_indexes = (
@@ -462,7 +462,8 @@ def filter_products(raw_products_df: pd.DataFrame):
     Filter products dataframe by removing unwanted artists and products with multiple categories.
     This function performs two main filtering operations:
     1. Removes products associated with artists listed in ARTIST_NAME_TO_FILTER
-    2. Removes products that appear in multiple offer categories (determined by grouping
+    2. Removes products with names that are null or empty
+    3. Removes products that appear in multiple offer categories (determined by grouping
        by offer_product_id and counting unique offer_category_id values)
     Args:
         raw_products_df (pd.DataFrame): Input dataframe containing product data with columns
@@ -474,7 +475,7 @@ def filter_products(raw_products_df: pd.DataFrame):
 
     products_df = raw_products_df.loc[
         lambda df: ~df.artist_name.isin(ARTIST_NAME_TO_FILTER)
-    ]
+    ].loc[lambda df: df.artist_name.notna()]
 
     # This is a hack to remove products that are in multiple categories (which should not happen)
     product_ids_to_remove = (

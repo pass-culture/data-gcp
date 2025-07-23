@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -euo pipefail
 # Check if TARGET_BRANCH is provided
 if [ -z "$1" ]; then
   echo "TARGET_BRANCH is required as the first argument"

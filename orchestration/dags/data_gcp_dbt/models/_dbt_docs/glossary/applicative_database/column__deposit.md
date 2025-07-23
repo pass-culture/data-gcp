@@ -1,6 +1,6 @@
 {% docs column__deposit_id %}Unique identifier for the deposit.{% enddocs %}
 {% docs column__deposit_date %}The date when the deposit was made.{% enddocs %}
-{% docs column__deposit_amount %}The total amount of the deposit. Amount varies by deposit_type.GRANT_15_17: 20€ in the year the user turns 15, 30€ at 16, 30€ at 17, 30€ in the year they turn 17; GRANT_18: 300€ before the reform, 500€ during the experimental phase; GRANT_17_18: 150€; GRANT_FREE: 0€ for 15–16-year-olds (allows free bookings).{% enddocs %}
+{% docs column__deposit_amount %}The total amount of the deposit. Amount varies by deposit_type. GRANT_15_17: 20€ in the year the user turns 15, 30€ at 16, 30€ at 17, 30€ in the year they turn 17; GRANT_18: 300€ before the reform, 500€ during the experimental phase; GRANT_17_18: 150€; GRANT_FREE: 0€ for 15–16-year-olds (allows free bookings).{% enddocs %}
 {% docs column__deposit_source %} Creation source of the deposit. Possible values: educonnect – Deposit initiated via the French national education authentication system; ubble – Deposit created following a remote identity verification process via Ubble.
 dms – Deposit imported from a Document Management System (internal or third-party document repository).{% enddocs %}
 {% docs column__deposit_creation_date %}The date when the deposit was created.{% enddocs %}

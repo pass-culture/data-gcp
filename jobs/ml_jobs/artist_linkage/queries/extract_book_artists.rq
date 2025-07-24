@@ -14,7 +14,7 @@ SELECT
   (GROUP_CONCAT(DISTINCT(?profession); separator=" | ") AS ?professions)
   (GROUP_CONCAT(DISTINCT(?alias_fr); separator=" | ") AS ?aliases_fr)
   (GROUP_CONCAT(DISTINCT(?alias_en); separator=" | ") AS ?aliases_en)
-  ((IF(BOUND(?ibdbfw_id) && ?ibdbfw_id != "", 1, 0) + IF(BOUND(?babelio_id) && ?babelio_id != "", 1, 0)) AS ?matching_score)
+  ((IF(BOUND(?ibdbfw_id) && ?ibdbfw_id != "", 1, 0) + IF(BOUND(?babelio_id) && ?babelio_id != "", 1, 0) + IF(BOUND(?goodreads_id) && ?goodreads_id != "", 1, 0) + IF(BOUND(?myanimelist_id) && ?myanimelist_id != "", 1, 0)) AS ?matching_score)
 WHERE {
   ?wiki_id wdt:P31 wd:Q5;  # Ensure the entity is a human (P31 = instance of, Q5 = human)
   OPTIONAL { ?wiki_id schema:description ?description . FILTER (LANG(?description) = "fr") . }
@@ -25,9 +25,11 @@ WHERE {
   OPTIONAL { ?wiki_id skos:altLabel ?alias_en . FILTER (lang(?alias_en) = "en") }
   OPTIONAL {?wiki_id wdt:P5365 ?ibdbfw_id . }
   OPTIONAL {?wiki_id wdt:P3630 ?babelio_id . }
+  OPTIONAL {?wiki_id wdt:P2963 ?goodreads_id . }
+  OPTIONAL {?wiki_id wdt:P4084 ?myanimelist_id .}
   OPTIONAL {?wiki_id wdt:P18 ?img . }
   OPTIONAL {?wiki_id wdt:P2671 ?gkg_id .}
   FILTER ((?artist_name_fr != "") || (?artist_name_en != ""))
-  FILTER ((?ibdbfw_id != "" ) || (?babelio_id != ""))
+  FILTER ((?ibdbfw_id != "" ) || (?babelio_id != "") || (?goodreads_id != "") || (?myanimelist_id != ""))
 }
-GROUP BY ?wiki_id ?artist_name_fr ?artist_name_en ?description ?img ?gkg_id ?ibdbfw_id ?babelio_id
+GROUP BY ?wiki_id ?artist_name_fr ?artist_name_en ?description ?img ?gkg_id ?ibdbfw_id ?babelio_id ?goodreads_id ?myanimelist_id

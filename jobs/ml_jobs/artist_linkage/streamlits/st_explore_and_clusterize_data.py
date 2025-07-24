@@ -11,8 +11,8 @@ from sklearn.cluster import DBSCAN
 from stqdm import stqdm
 
 from constants import OFFER_IS_SYNCHRONISED
-from preprocess import FILTERING_PARAMS
 from utils.preprocessing_utils import (
+    FilteringParamsType,
     clean_names,
     extract_first_artist,
     filter_artists,
@@ -20,6 +20,10 @@ from utils.preprocessing_utils import (
 )
 
 st.set_page_config(layout="wide")
+
+FILTERING_PARAMS = FilteringParamsType(
+    min_word_count=2, max_word_count=5, min_offer_count=100, min_booking_count=100
+)
 
 
 # %% Load Data

@@ -5,7 +5,6 @@ import pandas as pd
 import streamlit as st
 
 from constants import ARTIST_NAME_TO_FILTER
-from match_artists_on_wikidata import preprocess_artists
 from utils.preprocessing_utils import (
     clean_names,
     extract_artist_name,
@@ -34,6 +33,13 @@ NOT_MATCHED_WITH_ARTISTS_KEY = "not_matched_with_artists"
 REMOVED_PRODUCTS_KEY = "removed_products"
 MATCHED_WITH_ARTISTS_KEY = "matched_with_artists"
 MERGE_COLUMNS = [PRODUCT_ID_KEY, ARTIST_TYPE_KEY]
+
+
+def preprocess_artists(df: pd.DataFrame) -> pd.DataFrame:
+    return df.assign(
+        alias=lambda _df: _df.preprocessed_artist_name,
+        tmp_id=lambda df: df.index,
+    )
 
 
 def preprocess_before_matching(df: pd.DataFrame) -> pd.DataFrame:

@@ -168,8 +168,8 @@ def sanity_checks(
     # 1. Product Artist Links
     unmatched_products = delta_product_df.loc[lambda df: df.artist_id.isna()]
     if len(unmatched_products) > 0:
-        print("There are products with no artist_id after matching.")
-        print(unmatched_products)
+        logger.error("There are products with no artist_id after matching.")
+        logger.error(unmatched_products)
         raise ValueError(
             "There are still products that could not be linked to artists after matching."
         )
@@ -182,8 +182,8 @@ def sanity_checks(
         lambda df: df.artist_id.isin(artist_df.artist_id)
     ]
     if len(recreated_artist_ids) > 0:
-        print("Found existing artists after matching.")
-        print(recreated_artist_ids)
+        logger.error("Found existing artists after matching.")
+        logger.error(recreated_artist_ids)
         raise ValueError(
             "There are artists that already exist in the database after matching."
         )
@@ -199,8 +199,8 @@ def sanity_checks(
         indicator=True,
     ).loc[lambda df: df._merge == "both"]
     if len(already_existing_artist_aliases) > 0:
-        print("Found existing artist aliases after matching.")
-        print(already_existing_artist_aliases)
+        logger.error("Found existing artist aliases after matching.")
+        logger.error(already_existing_artist_aliases)
         raise ValueError(
             "There are artist aliases that already exist in the database after matching."
         )

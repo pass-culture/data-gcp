@@ -3,6 +3,7 @@ import uuid
 
 import pandas as pd
 import typer
+from loguru import logger
 
 from constants import (
     ACTION_KEY,
@@ -28,8 +29,8 @@ def sanity_checks(
     # 1. Product Artist Links
     unmatched_products = product_artist_link_df.loc[lambda df: df.artist_id.isna()]
     if len(unmatched_products) > 0:
-        print("There are products with no artist_id after matching.")
-        print(unmatched_products)
+        logger.error("There are products with no artist_id after matching.")
+        logger.error(unmatched_products)
         raise ValueError(
             "There are still products that could not be linked to artists after matching."
         )

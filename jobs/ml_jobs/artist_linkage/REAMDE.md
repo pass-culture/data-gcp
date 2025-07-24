@@ -5,6 +5,8 @@ learning and data matching techniques. It includes two main scripts for
 different scenarios: creating artist-product links from scratch and updating
 existing links with new products.
 
+The documentation of this track is available in this **[Notion page](https://www.notion.so/passcultureapp/Artist-Linkage-9a83bb4e274c49e0894e2993e9f831e9)**.
+
 ## Overview
 
 The artist linkage system helps match products (books, music, movies, etc.)

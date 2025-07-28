@@ -69,7 +69,6 @@
             )
         }}
 
-        -- dummy select to enforce snapshot dependency
         -- depends_on: {{ ref('raw_applicative__offer_full') }}
 
         select

@@ -3,7 +3,7 @@ polars==0.19.12
 requests==2.31.0
 google-cloud-bigquery==3.12.0
 google-cloud-secret-manager==2.16.4
-pyarrow==13.0.0
+pyarrow==14.0.1
 loguru==0.7.2
 tqdm==4.66.1
 pytest==7.4.3

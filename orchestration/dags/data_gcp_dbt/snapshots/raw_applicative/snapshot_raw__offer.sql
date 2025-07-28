@@ -48,22 +48,23 @@
                 )
             )
         }}
-
+        with dummy_dependency_lite as (
+            select
+                {% for col in columns %}
+                    {{ col }} {% if not loop.last %},{% endif %}
+                {% endfor %}
+            from {{ ref("raw_applicative__offer_lite") }}
+            limit 0
+        )
         select
             {% for col in columns %}
                 {{ col }} {% if not loop.last %},{% endif %}
             {% endfor %}
         from {{ ref("raw_applicative__offer_full") }}
         union all -- dummy select to enforce snapshot dependency
-        select
-            {% for col in columns %}
-                {{ col }} {% if not loop.last %},{% endif %}
-            {% endfor %}
-        from {{ ref("raw_applicative__offer_lite") }}
-        limit 0
+        select * from dummy_dependency_lite
 
     {% else %}
-
         {{
             config(
                 **custom_snapshot_config(
@@ -74,19 +75,21 @@
                 )
             )
         }}
-
+        with dummy_dependency_full as (
+            select
+                {% for col in columns %}
+                    {{ col }} {% if not loop.last %},{% endif %}
+                {% endfor %}
+            from {{ ref("raw_applicative__offer_full") }}
+            limit 0
+        )
         select
             {% for col in columns %}
                 {{ col }} {% if not loop.last %},{% endif %}
             {% endfor %}
         from {{ ref("raw_applicative__offer_lite") }}
         union all -- dummy select to enforce snapshot dependency
-        select
-            {% for col in columns %}
-                {{ col }} {% if not loop.last %},{% endif %}
-            {% endfor %}
-        from {{ ref("raw_applicative__offer_full") }}
-        limit 0
+        select * from dummy_dependency_full
     {% endif %}
 
 {% endsnapshot %}

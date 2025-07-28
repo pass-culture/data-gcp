@@ -48,19 +48,14 @@
                 )
             )
         }}
+        -- dummy select to enforce snapshot dependency
+        -- depends_on: {{ ref('raw_applicative__offer_lite') }}
 
         select
             {% for col in columns %}
                 {{ col }} {% if not loop.last %},{% endif %}
             {% endfor %}
         from {{ ref("raw_applicative__offer_full") }}
-        union all -- dummy select to enforce snapshot dependency
-        select
-            {% for col in columns %}
-                {{ col }} {% if not loop.last %},{% endif %}
-            {% endfor %}
-        from {{ ref("raw_applicative__offer_lite") }}
-        limit 0
 
     {% else %}
 
@@ -75,18 +70,15 @@
             )
         }}
 
+        -- dummy select to enforce snapshot dependency
+        -- depends_on: {{ ref('raw_applicative__offer_full') }}
+
         select
             {% for col in columns %}
                 {{ col }} {% if not loop.last %},{% endif %}
             {% endfor %}
         from {{ ref("raw_applicative__offer_lite") }}
-        union all -- dummy select to enforce snapshot dependency
-        select
-            {% for col in columns %}
-                {{ col }} {% if not loop.last %},{% endif %}
-            {% endfor %}
-        from {{ ref("raw_applicative__offer_full") }}
-        limit 0
+
     {% endif %}
 
 {% endsnapshot %}

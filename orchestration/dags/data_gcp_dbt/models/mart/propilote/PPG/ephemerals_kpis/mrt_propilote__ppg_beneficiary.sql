@@ -279,6 +279,100 @@ with
         )
     {% endfor %}
 
+        ,
+
+        aggregated_active_men_beneficiary as (
+            {% for dim in dimensions %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
+            select
+                execution_date,
+                update_date,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.value_expr }} as dimension_value,
+                'beneficiaire_actuel_homme' as kpi_name,
+                count(distinct case when eud.user_civility = 'M.' then uua.user_id end) as numerator,
+                1 as denominator
+            from user_cumulative_amount_spent uua
+            inner join
+                last_day_of_month ldm on ldm.last_active_date = uua.deposit_active_date
+            inner join {{ ref("mrt_global__user") }} eud on eud.user_id = uua.user_id
+            left join
+                {{ ref("region_department") }} rd
+                on eud.user_department_code = rd.num_dep
+            where
+                cumulative_amount_spent < initial_deposit_amount
+                {% if is_incremental() %}
+                    and execution_date = date_trunc(date("{{ ds() }}"), month)
+                {% endif %}
+            group by
+                execution_date, update_date, dimension_name, dimension_value, kpi_name
+        {% endfor %}
+        ),
+
+        aggregated_active_women_beneficiary as (
+            {% for dim in dimensions %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
+            select
+                execution_date,
+                update_date,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.value_expr }} as dimension_value,
+                'beneficiaire_actuel_femme' as kpi_name,
+                count(distinct case when eud.user_civility = 'Mme.' then uua.user_id end) as numerator,
+                1 as denominator
+            from user_cumulative_amount_spent uua
+            inner join
+                last_day_of_month ldm on ldm.last_active_date = uua.deposit_active_date
+            inner join {{ ref("mrt_global__user") }} eud on eud.user_id = uua.user_id
+            left join
+                {{ ref("region_department") }} rd
+                on eud.user_department_code = rd.num_dep
+            where
+                cumulative_amount_spent < initial_deposit_amount
+                {% if is_incremental() %}
+                    and execution_date = date_trunc(date("{{ ds() }}"), month)
+                {% endif %}
+            group by
+                execution_date, update_date, dimension_name, dimension_value, kpi_name
+        {% endfor %}
+        ),
+
+        aggregated_active_no_genre_beneficiary as (
+            {% for dim in dimensions %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
+            select
+                execution_date,
+                update_date,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.value_expr }} as dimension_value,
+                'beneficiaire_actuel_sans_genre' as kpi_name,
+                count(distinct case when eud.user_civility is null then uua.user_id end) as numerator,
+                1 as denominator
+            from user_cumulative_amount_spent uua
+            inner join
+                last_day_of_month ldm on ldm.last_active_date = uua.deposit_active_date
+            inner join {{ ref("mrt_global__user") }} eud on eud.user_id = uua.user_id
+            left join
+                {{ ref("region_department") }} rd
+                on eud.user_department_code = rd.num_dep
+            where
+                cumulative_amount_spent < initial_deposit_amount
+                {% if is_incremental() %}
+                    and execution_date = date_trunc(date("{{ ds() }}"), month)
+                {% endif %}
+            group by
+                execution_date, update_date, dimension_name, dimension_value, kpi_name
+        {% endfor %}
+        )
+
+
+
     {% set cte_list = [
         "aggregated_active_beneficiary",
         "aggregated_total_beneficiary",
@@ -294,6 +388,9 @@ with
         "aggregated_active_lyceen_beneficiary",
         "aggregated_active_collegien_beneficiary",
         "aggregated_active_inactif_beneficiary",
+        "aggregated_active_men_beneficiary",
+        "aggregated_active_women_beneficiary",
+        "aggregated_active_no_genre_beneficiary",
     ] %}
 
 {% for cte in cte_list %}

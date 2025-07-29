@@ -88,7 +88,8 @@ with
                 / 60
             ) as stock_date_penalty_factor,
             least(
-                1, greatest(date_diff(current_date, ro.offer_creation_date, day), 1) / 60
+                1,
+                greatest(date_diff(current_date, ro.offer_creation_date, day), 1) / 60
             ) as creation_date_penalty_factor
         from recommendable_items_raw as ro
         left join offer_details as od on ro.item_id = od.item_id

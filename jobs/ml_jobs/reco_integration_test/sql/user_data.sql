@@ -5,7 +5,7 @@ WITH user_sample AS (
     WHERE event_date > DATE_SUB(CURRENT_DATE(), INTERVAL 2 MONTH)
     AND event_name = 'ConsultOffer'
     AND user_id IS NOT NULL
-    LIMIT 100
+    LIMIT 1000
 ),
 users_clics AS (
     SELECT us.user_id, CAST(fe.offer_id AS STRING) AS offer_id
@@ -68,5 +68,5 @@ ranked_users AS (
 SELECT
     ru.user_id, ru.offer_subcategory_id, ru.total_count, ru.subcategory_ratio
 FROM ranked_users ru
-WHERE ru.rank <= 10
+WHERE ru.rank <= 1000
 ORDER BY ru.offer_subcategory_id, ru.total_count DESC;

@@ -79,7 +79,7 @@ def call_endpoint(model_type: str, user_id: str, size: int = 10) -> None:
         location=LOCATION,
         api_endpoint=API_ENDPOINT,
     )
-    return response
+    return response.predictions
 
 
 # [END aiplatform_predict_custom_trained_model_sample]

@@ -15,9 +15,9 @@ def read_sql_query(file_path: str) -> str:
         return file.read()
 
 
-def get_user_data_from_query() -> pd.DataFrame:
+def get_data_from_sql_query(file_path: str) -> pd.DataFrame:
     """Fetch user data from BigQuery using the SQL query and return as pandas DataFrame."""
-    query = read_sql_query("sql/user_data.sql")
+    query = read_sql_query(file_path)
     client = bigquery.Client(project="passculture-data-prod")
     query_job = client.query(query)
     df = query_job.to_dataframe()
@@ -67,5 +67,5 @@ def download_model(artifact_uri: str) -> None:
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
     # TODO handle errors
-    # for line in results.stdout:
-    # logger.info(line.rstrip().decode("utf-8"))
+    for line in results.stdout:
+        print(line.rstrip().decode("utf-8"))

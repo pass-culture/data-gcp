@@ -5,7 +5,7 @@ ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 BIGQUERY_RAW_DATASET = f"raw_{ENV_SHORT_NAME}"
 BIGQUERY_TMP_DATASET = f"tmp_{ENV_SHORT_NAME}"
 
-TRANSACTIONAL_TABLE_NAME = "sendinblue_transactional_detailed"
+TRANSACTIONAL_TABLE_NAME = "brevo_transactional_detailed"
 UPDATE_WINDOW = 31 if ENV_SHORT_NAME == "prod" else 500
 
 campaigns_histo_schema = {

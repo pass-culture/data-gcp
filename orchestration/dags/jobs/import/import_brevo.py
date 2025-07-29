@@ -19,7 +19,7 @@ from common.utils import (
     depends_loop,
     get_airflow_schedule,
 )
-from dependencies.sendinblue.import_sendinblue import (
+from dependencies.brevo.import_brevo import (
     analytics_tables,
     clean_tables,
     raw_tables,
@@ -38,7 +38,6 @@ dag_config = {
     "ENV_SHORT_NAME": ENV_SHORT_NAME,
 }
 
-TARGET_BRANCH = "brevo-refactor"
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -52,7 +51,9 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Import brevo tables",
-    schedule_interval=None,
+    schedule_interval=get_airflow_schedule(
+        "00 03 * * *" if ENV_SHORT_NAME == "prod" else None
+    ),
     catchup=False,
     dagrun_timeout=datetime.timedelta(minutes=120),
     user_defined_macros=macros.default,
@@ -60,11 +61,7 @@ with DAG(
     render_template_as_native_obj=True,
     params={
         "branch": Param(
-            default=TARGET_BRANCH
-            if TARGET_BRANCH
-            else "production"
-            if ENV_SHORT_NAME == "prod"
-            else "master",
+            default="production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
         "start_date": Param(

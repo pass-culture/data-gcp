@@ -277,12 +277,10 @@ with
                     kpi_name
             {% endfor %}
         )
-    {% endfor %}
+    {% endfor %},
 
-        ,
-
-        aggregated_active_men_beneficiary as (
-            {% for dim in dimensions %}
+    aggregated_active_men_beneficiary as (
+        {% for dim in dimensions %}
             {% if not loop.first %}
                 union all
             {% endif %}
@@ -292,7 +290,9 @@ with
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 'beneficiaire_actuel_homme' as kpi_name,
-                count(distinct case when eud.user_civility = 'M.' then uua.user_id end) as numerator,
+                count(
+                    distinct case when eud.user_civility = 'M.' then uua.user_id end
+                ) as numerator,
                 1 as denominator
             from user_cumulative_amount_spent uua
             inner join
@@ -309,10 +309,10 @@ with
             group by
                 execution_date, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
-        ),
+    ),
 
-        aggregated_active_women_beneficiary as (
-            {% for dim in dimensions %}
+    aggregated_active_women_beneficiary as (
+        {% for dim in dimensions %}
             {% if not loop.first %}
                 union all
             {% endif %}
@@ -322,7 +322,9 @@ with
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 'beneficiaire_actuel_femme' as kpi_name,
-                count(distinct case when eud.user_civility = 'Mme.' then uua.user_id end) as numerator,
+                count(
+                    distinct case when eud.user_civility = 'Mme.' then uua.user_id end
+                ) as numerator,
                 1 as denominator
             from user_cumulative_amount_spent uua
             inner join
@@ -339,10 +341,10 @@ with
             group by
                 execution_date, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
-        ),
+    ),
 
-        aggregated_active_no_genre_beneficiary as (
-            {% for dim in dimensions %}
+    aggregated_active_no_genre_beneficiary as (
+        {% for dim in dimensions %}
             {% if not loop.first %}
                 union all
             {% endif %}
@@ -352,7 +354,9 @@ with
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 'beneficiaire_actuel_sans_genre' as kpi_name,
-                count(distinct case when eud.user_civility is null then uua.user_id end) as numerator,
+                count(
+                    distinct case when eud.user_civility is null then uua.user_id end
+                ) as numerator,
                 1 as denominator
             from user_cumulative_amount_spent uua
             inner join
@@ -369,9 +373,7 @@ with
             group by
                 execution_date, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
-        )
-
-
+    )
 
     {% set cte_list = [
         "aggregated_active_beneficiary",

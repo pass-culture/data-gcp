@@ -37,10 +37,11 @@ class SyncTokenBucketRateLimiter(BaseRateLimiter):
     Controls number of requests per time period.
     """
 
-    def __init__(self, calls: int, period: int):
+    def __init__(self, calls: int, period: int, default_backoff: int = 10):
         self.calls = calls
         self.period = period
         self.timestamps = deque()
+        self.default_backoff = default_backoff
 
     def acquire(self):
         now = time.time()
@@ -54,8 +55,21 @@ class SyncTokenBucketRateLimiter(BaseRateLimiter):
         self.timestamps.append(time.time())
 
     def backoff(self, response):
-        retry_after = int(response.headers.get("Retry-After", "10"))
-        logger.warning(f"Received 429. Backing off for {retry_after}s...")
+        header = response.headers.get("Retry-After")
+        if header is None:
+            logger.warning(
+                f"Retry-After header missing; defaulting to {self.default_backoff}s backoff"
+            )
+            retry_after = self.default_backoff
+        else:
+            try:
+                retry_after = int(header)
+            except ValueError:
+                logger.warning(
+                    f"Invalid Retry-After header '{header}'; defaulting to {self.default_backoff}s backoff"
+                )
+                retry_after = self.default_backoff
+        logger.warning(f"Received 429. Backing off for {retry_after}s…")
         time.sleep(retry_after)
 
 
@@ -68,11 +82,12 @@ class AsyncTokenBucketRateLimiter(BaseRateLimiter):
     Uses asyncio locks and sleeps for non-blocking behavior.
     """
 
-    def __init__(self, calls: int, period: int):
+    def __init__(self, calls: int, period: int, default_backoff: int = 10):
         self.calls = calls
         self.period = period
         self.timestamps = deque()
         self.lock = asyncio.Lock()
+        self.default_backoff = default_backoff
 
     async def acquire(self):
         async with self.lock:
@@ -89,6 +104,19 @@ class AsyncTokenBucketRateLimiter(BaseRateLimiter):
             self.timestamps.append(time.time())
 
     async def backoff(self, response):
-        retry_after = int(response.headers.get("Retry-After", "10"))
-        logger.warning(f"[Async] Received 429. Backing off for {retry_after}s...")
+        header = response.headers.get("Retry-After")
+        if header is None:
+            logger.warning(
+                f"[Async] Retry-After header missing; defaulting to {self.default_backoff}s backoff"
+            )
+            retry_after = self.default_backoff
+        else:
+            try:
+                retry_after = int(header)
+            except ValueError:
+                logger.warning(
+                    f"[Async] Invalid Retry-After header '{header}'; defaulting to {self.default_backoff}s backoff"
+                )
+                retry_after = self.default_backoff
+        logger.warning(f"[Async] Received 429. Backing off for {retry_after}s…")
         await asyncio.sleep(retry_after)

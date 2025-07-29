@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import random
 import time
 from datetime import datetime
 from typing import Any, Dict, List
@@ -96,7 +97,6 @@ class AsyncBrevoHeaderRateLimiter(BaseRateLimiter):
             try:
                 reset_time = float(response.headers.get("x-sib-ratelimit-reset", "10"))
                 # Add jitter: 0-10% additional wait time to spread out retries
-                import random
 
                 jitter = reset_time * random.uniform(0, 0.01)
                 total_wait = reset_time + jitter

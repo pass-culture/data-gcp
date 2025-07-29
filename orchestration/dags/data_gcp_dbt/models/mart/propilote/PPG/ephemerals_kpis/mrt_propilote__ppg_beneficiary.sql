@@ -279,35 +279,35 @@ with
         )
     {% endfor %}
 
-{% set cte_list = [
-    'aggregated_active_beneficiary',
-    'aggregated_total_beneficiary',
-    'aggregated_active_qpv_beneficiary',
-    'aggregated_active_rural_beneficiary',
-    'aggregated_active_not_in_education_beneficiary',
-    'aggregated_active_apprenti_beneficiary',
-    'aggregated_active_chomeur_beneficiary',
-    'aggregated_active_volontaire_beneficiary',
-    'aggregated_active_alternant_beneficiary',
-    'aggregated_active_employe_beneficiary',
-    'aggregated_active_etudiant_beneficiary',
-    'aggregated_active_lyceen_beneficiary',
-    'aggregated_active_collegien_beneficiary',
-    'aggregated_active_inactif_beneficiary',
-] %}
+    {% set cte_list = [
+        "aggregated_active_beneficiary",
+        "aggregated_total_beneficiary",
+        "aggregated_active_qpv_beneficiary",
+        "aggregated_active_rural_beneficiary",
+        "aggregated_active_not_in_education_beneficiary",
+        "aggregated_active_apprenti_beneficiary",
+        "aggregated_active_chomeur_beneficiary",
+        "aggregated_active_volontaire_beneficiary",
+        "aggregated_active_alternant_beneficiary",
+        "aggregated_active_employe_beneficiary",
+        "aggregated_active_etudiant_beneficiary",
+        "aggregated_active_lyceen_beneficiary",
+        "aggregated_active_collegien_beneficiary",
+        "aggregated_active_inactif_beneficiary",
+    ] %}
 
 {% for cte in cte_list %}
-{% if not loop.first %}
-union all
-{% endif %}
-select
-    execution_date,
-    update_date,
-    dimension_name,
-    dimension_value,
-    kpi_name,
-    numerator,
-    denominator,
-    safe_divide(numerator, denominator) as kpi
-from {{ cte_list }}
+    {% if not loop.first %}
+        union all
+    {% endif %}
+    select
+        execution_date,
+        update_date,
+        dimension_name,
+        dimension_value,
+        kpi_name,
+        numerator,
+        denominator,
+        safe_divide(numerator, denominator) as kpi
+    from {{ cte }}
 {% endfor %}

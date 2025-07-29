@@ -23,7 +23,34 @@
         )
     }}
 
-    select *
+    select
+        venue_thumb_count,
+        venue_street,
+        venue_postal_code,
+        venue_city,
+        ban_id,
+        venue_id,
+        venue_name,
+        venue_siret,
+        venue_department_code,
+        venue_latitude,
+        venue_longitude,
+        venue_managing_offerer_id,
+        venue_booking_email,
+        venue_is_virtual,
+        venue_comment,
+        venue_public_name,
+        venue_type_code,
+        venue_label_id,
+        venue_creation_date,
+        venue_is_permanent,
+        banner_url,
+        venue_audiodisabilitycompliant,
+        venue_mentaldisabilitycompliant,
+        venue_motordisabilitycompliant,
+        venue_visualdisabilitycompliant,
+        venue_adage_id,
+        venue_educational_status_id
     from
         external_query(
             "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",

@@ -1,4 +1,11 @@
-select * from external_query("{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}", """
+select
+    id,
+    user_id,
+    booking_id,
+    name,
+    unlocked_date,
+    seen_date
+from external_query("{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}", """
 SELECT
     CAST("id" AS varchar(255)) AS id,
     CAST("userId" AS varchar(255)) AS user_id,

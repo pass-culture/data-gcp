@@ -7,6 +7,45 @@
     )
 }}
 
-select *
+select
+    venue_thumb_count,
+    venue_street,
+    venue_postal_code,
+    venue_city,
+    ban_id,
+    venue_id,
+    venue_name,
+    venue_siret,
+    venue_department_code,
+    venue_latitude,
+    venue_longitude,
+    venue_managing_offerer_id,
+    venue_booking_email,
+    venue_is_virtual,
+    venue_comment,
+    venue_public_name,
+    venue_type_code,
+    venue_label_id,
+    venue_creation_date,
+    venue_is_permanent,
+    banner_url,
+    venue_audiodisabilitycompliant,
+    venue_mentaldisabilitycompliant,
+    venue_motordisabilitycompliant,
+    venue_visualdisabilitycompliant,
+    venue_adage_id,
+    venue_educational_status_id,
+    collective_description,
+    collective_students,
+    collective_website,
+    collective_network,
+    collective_intervention_area,
+    collective_access_information,
+    collective_phone,
+    collective_email,
+    dms_token,
+    venue_description,
+    venue_withdrawal_details,
+    offerer_address_id
 from {{ ref("snapshot_raw__venue") }}
 where {{ var("snapshot_filter") }}

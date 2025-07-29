@@ -19,7 +19,7 @@ with
             venue.venue_id,
             venue.venue_latitude,
             venue.venue_longitude,
-            offer.offer_name as name,
+            offer.offer_name as `name`,
             offer.offer_is_duo,
             im.offer_subcategory_id as subcategory_id,
             im.offer_category_id as category,
@@ -48,7 +48,6 @@ with
             ) as booking_number_last_28_days,
             any_value(ml_feat.cluster_id) as cluster_id,
             any_value(ml_feat.topic_id) as topic_id,
-            min(offer.is_national) as is_national,
             max(
                 coalesce(
                     (

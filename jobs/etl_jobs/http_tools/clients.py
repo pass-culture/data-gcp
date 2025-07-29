@@ -5,6 +5,7 @@ from typing import Optional
 
 import requests
 import httpx
+import asyncio
 from http_tools.rate_limiters import BaseRateLimiter
 
 # Set up logging
@@ -73,8 +74,9 @@ class AsyncHttpClient(BaseHttpClient):
     def __init__(self, rate_limiter: Optional[BaseRateLimiter] = None):
         super().__init__(rate_limiter)
         self._client = None
+        self._restore_task: Optional[asyncio.Task] = None
 
-    async def _get_client(self):
+    def _get_client(self) -> httpx.AsyncClient:
         if self._client is None:
             self._client = httpx.AsyncClient(
                 timeout=httpx.Timeout(30.0),  # 30 second timeout
@@ -97,7 +99,7 @@ class AsyncHttpClient(BaseHttpClient):
                 await self.rate_limiter.acquire()
                 acquired = True
 
-            client = await self._get_client()
+            client = self._get_client()
             response = await client.request(method, url, **kwargs)
 
             if response.status_code == 429 and self.rate_limiter:

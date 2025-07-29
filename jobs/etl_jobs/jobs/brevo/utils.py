@@ -125,7 +125,7 @@ class AsyncBrevoHeaderRateLimiter(BaseRateLimiter):
     async def _gradually_restore_rate(self):
         """Gradually restore request rate to normal after backoff."""
         steps = 10
-        for i in range(steps):
+        for _ in range(steps):
             await asyncio.sleep(2)  # Wait 2 seconds between steps
             self.request_interval = max(0.2, self.request_interval - 0.08)
 

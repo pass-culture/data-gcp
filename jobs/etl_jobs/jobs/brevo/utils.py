@@ -3,7 +3,7 @@ import logging
 import random
 import time
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -63,6 +63,7 @@ class AsyncBrevoHeaderRateLimiter(BaseRateLimiter):
         self.backoff_lock = asyncio.Lock()
         self.request_interval = 0.2  # 200ms between requests
         self.last_request_time = 0
+        self._restore_task: Optional[asyncio.Task] = None
 
     async def acquire(self):
         """Acquire permission to make a request."""
@@ -119,7 +120,7 @@ class AsyncBrevoHeaderRateLimiter(BaseRateLimiter):
                 self.backoff_event.set()
 
                 # Gradually decrease interval back to normal
-                asyncio.create_task(self._gradually_restore_rate())
+                self._restore_task = asyncio.create_task(self._gradually_restore_rate())
 
     async def _gradually_restore_rate(self):
         """Gradually restore request rate to normal after backoff."""

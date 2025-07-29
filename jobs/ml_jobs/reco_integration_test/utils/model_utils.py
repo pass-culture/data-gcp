@@ -2,6 +2,7 @@
 
 import numpy as np
 import tensorflow as tf
+import pandas as pd
 
 
 def load_model(model_path: str) -> tf.keras.Model:

@@ -11,7 +11,37 @@
 
 with
     firebase_last_two_days_events as (
-        select *
+        select
+            event_timestamp,
+            event_name,
+            event_params,
+            event_previous_timestamp,
+            event_value_in_usd,
+            event_bundle_sequence_id,
+            event_server_timestamp_offset,
+            user_id,
+            user_pseudo_id,
+            privacy_info,
+            user_properties,
+            user_first_touch_timestamp,
+            user_ltv,
+            device,
+            geo,
+            app_info,
+            traffic_source,
+            stream_id,
+            platform,
+            event_dimensions,
+            ecommerce,
+            items,
+            collected_traffic_source,
+            is_active_user,
+            batch_event_index,
+            batch_page_id,
+            batch_ordering_id,
+            session_traffic_source_last_click,
+            publisher,
+            event_date
         from {{ source("raw", "firebase_events") }}
         where
             true

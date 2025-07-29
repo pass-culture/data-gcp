@@ -47,5 +47,3 @@ select
     regexp_extract(url, r'to/([^/?#]+)') as typeform_id
 from {{ source("raw", "contentful_entry") }}
 qualify row_number() over (partition by id order by execution_date desc) = 1
-
-

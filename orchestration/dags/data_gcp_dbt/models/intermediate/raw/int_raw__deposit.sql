@@ -4,7 +4,7 @@ select
     userid,
     source,
     datecreated,
-    expirationDate,
+    expirationdate,
     type,
     cast(dateupdated as datetime) as dateupdated
 from {{ ref("snapshot_raw__deposit") }}

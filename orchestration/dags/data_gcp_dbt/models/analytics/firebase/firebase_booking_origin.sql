@@ -209,13 +209,7 @@ with
     ),
 
     mapping_module as (
-        select
-            date,
-            home_id,
-            home_name,
-            module_name,
-            module_id,
-            content_type
+        select date, home_id, home_name, module_name, module_id, content_type
         from {{ ref("int_contentful__homepage") }}
         qualify rank() over (partition by module_id, home_id order by date desc) = 1
     )

@@ -6,7 +6,7 @@ select
     creationdate,
     valuedate,
     amount,
-    standardRule,
+    standardrule,
     customruleid,
     revenue,
     pricing_point_id,

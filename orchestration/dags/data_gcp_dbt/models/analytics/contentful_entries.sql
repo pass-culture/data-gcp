@@ -1,6 +1,6 @@
 -- Deprecated: will be removed once all models are migrated in Metabase
 select
-	
+
     tags,
     venue_types,
     layout,

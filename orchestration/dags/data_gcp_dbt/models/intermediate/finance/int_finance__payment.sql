@@ -2,13 +2,13 @@ select
     id,
     author,
     comment,
-    recipientName,
+    recipientname,
     bookingid,
     amount,
-    reimbursementRule,
-    transactionEndToEndId,
-    recipientSiren,
-    reimbursementRate,
-    transactionLabel,
-    paymentMessageid
+    reimbursementrule,
+    transactionendtoendid,
+    recipientsiren,
+    reimbursementrate,
+    transactionlabel,
+    paymentmessageid
 from {{ source("raw", "applicative_database_payment") }}

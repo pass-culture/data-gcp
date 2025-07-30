@@ -15,3 +15,4 @@ polars==0.19.12
 umap-learn[parametric_umap]
 numba
 pynndescent
+setuptools==78.1.1

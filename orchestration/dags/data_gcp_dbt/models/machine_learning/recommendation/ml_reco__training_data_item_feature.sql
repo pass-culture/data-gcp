@@ -23,6 +23,18 @@ with
         group by 1, 2, 3, 4, 5
     )
 
-select *
+select
+    item_id,
+    offer_category_id,
+    offer_subcategory_id,
+    item_image_embedding,
+    item_semantic_content_hybrid_embedding,
+    item_names,
+    item_descriptions,
+    item_rayons,
+    item_author,
+    item_mean_stock_price,
+    item_booking_cnt,
+    item_favourite_cnt
 from base
 qualify row_number() over (partition by item_id order by item_booking_cnt desc) = 1

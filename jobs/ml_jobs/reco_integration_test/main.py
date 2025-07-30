@@ -1,18 +1,19 @@
 import os
 import time
 from collections import defaultdict
+
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 
 from call_endpoint_utils import call_endpoint
 from constants import ENV_SHORT_NAME
+from utils.analysis_utils import analyze_predictions
 from utils.tools import (
     download_model,
-    get_model_from_mlflow,
     get_data_from_sql_query,
+    get_model_from_mlflow,
 )
-from utils.analysis_utils import analyze_predictions, _analyze_search_types
 
 MODEL_BASE_PATH = "model"
 RETRIEVAL_SIZE = 60  # Default size for retrieval, can be adjusted as needed
@@ -24,13 +25,11 @@ def process_users_endpoint_calls(user_id_subset, n_calls_per_user):
     Returns predictions, latencies, and success/failure counts.
     """
     predictions_by_user = defaultdict(list)
-    test_user = defaultdict(list)
     latencies = []
     success_count = 0
     failure_count = 0
     for user_id in user_id_subset:
         for call_num in range(n_calls_per_user):
-            test_user = defaultdict(list)
             start_time = time.time()
             results = call_endpoint(
                 model_type="recommendation",

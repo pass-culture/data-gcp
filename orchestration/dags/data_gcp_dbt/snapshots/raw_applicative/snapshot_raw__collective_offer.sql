@@ -11,7 +11,35 @@
     }}
 
     select
-        * except (collective_offer_date_updated),
+        collective_offer_audio_disability_compliant,
+        collective_offer_mental_disability_compliant,
+        collective_offer_motor_disability_compliant,
+        collective_offer_visual_disability_compliant,
+        collective_offer_last_validation_date,
+        collective_offer_validation,
+        collective_offer_id,
+        collective_offer_is_active,
+        venue_id,
+        collective_offer_name,
+        collective_offer_booking_email,
+        collective_offer_description,
+        collective_offer_duration_minutes,
+        collective_offer_creation_date,
+        collective_offer_format,
+        collective_offer_students,
+        collective_offer_contact_email,
+        collective_offer_contact_phone,
+        collective_offer_offer_venue,
+        collective_offer_venue_humanized_id,
+        collective_offer_venue_address_type,
+        collective_offer_venue_other_address,
+        collective_offer_last_validation_type,
+        institution_id,
+        intervention_area,
+        template_id,
+        collective_offer_image_id,
+        provider_id,
+        national_program_id,
         cast(
             collective_offer_date_updated as timestamp
         ) as collective_offer_date_updated

@@ -67,8 +67,7 @@ def run(
         },
     }
 
-    if playlists_names:
-        playlists_names = playlists_names.split(",")
+    playlists_names = playlists_names.split(",") if playlists_names else []
 
     config_env = contentful_envs[ENV_SHORT_NAME]
     contentful_client = ContentfulClient(config_env, playlists_names)

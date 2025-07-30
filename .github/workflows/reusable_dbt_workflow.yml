@@ -137,7 +137,10 @@ jobs:
           --profile CI --target $ENV_SHORT_NAME --defer \
           --state env-run-artifacts --favor-state \
           --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
-
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
       - name: "generate dbt docs"
         working-directory: ${{ env.DBT_FOLDER }}
         env:

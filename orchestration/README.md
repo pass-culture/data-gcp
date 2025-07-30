@@ -54,13 +54,14 @@ To run Airflow locally for development:
 
 ### 🔐 Prerequisites: GCP Auth & Environment Variables
 
-1. **If behind a Netskope proxy**:
+1. Retrieve the GCP certificate of your machine and place it in the Airflow configuration directory:
 
    * Locate the **bundled/combined** certificate file for your machine.
      If unsure, check this [Notion page](https://www.notion.so/passcultureapp/Proxyfication-des-outils-du-pass-d1f0da09eafb4158904e9197bbe7c1d4?pvs=4#10cad4e0ff98805ba61efcea26075d65).
+     * If you don't have the certificate, ask a team member from the DE or DS team.
    * Place it in:
 
-     ```
+     ```bash
      /airflow/etc/nscacert_combined.pem
      ```
 

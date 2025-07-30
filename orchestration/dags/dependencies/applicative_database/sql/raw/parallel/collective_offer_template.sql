@@ -32,4 +32,5 @@ SELECT
     , "contactEmail" AS collective_offer_contact_email
     , "contactPhone" AS collective_offer_contact_phone
     , "rejectionReason" AS collective_offer_rejection_reason
+    , "locationType" AS collective_offer_location_type
 FROM public.collective_offer_template

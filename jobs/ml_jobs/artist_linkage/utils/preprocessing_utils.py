@@ -5,7 +5,7 @@ from typing import TypedDict
 
 import pandas as pd
 
-from constants import ARTIST_NAME_TO_FILTER, TOTAL_OFFER_COUNT
+from constants import ARTIST_NAME_TO_FILTER, PRODUCT_ID_KEY, TOTAL_OFFER_COUNT
 
 
 ### Cleaning
@@ -39,8 +39,8 @@ def _remove_parenthesis(artist_df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: The DataFrame with parentheses removed from the artist names.
     """
     return artist_df.assign(
-        artist_name=lambda df: df.artist_name.str.replace("\([.*]+\))", "")
-        .str.split("\(", regex=True)
+        artist_name=lambda df: df.artist_name.str.replace(r"\([^)]*\)", "", regex=True)
+        .str.split(r"\(", regex=True)
         .map(lambda ll: ll[0])
     )
 
@@ -58,8 +58,8 @@ def clean_names(artist_df: pd.DataFrame) -> pd.DataFrame:
 
     """
     return (
-        artist_df.pipe(_remove_leading_punctuation)
-        .pipe(_remove_parenthesis)
+        artist_df.pipe(_remove_parenthesis)
+        .pipe(_remove_leading_punctuation)
         .assign(artist_name=lambda df: df.artist_name.str.strip())
     )
 
@@ -80,7 +80,7 @@ def _extract_first_artist_pattern(artist_df: pd.DataFrame):
             - first_artist_pattern: The first artist pattern extracted from the artist_name column.
             - is_multi_artists_pattern: A boolean column indicating whether the artist_name contains multiple patterns.
     """
-    pattern = ";|/|\+|\&"
+    pattern = r";|/|\+|\&"
     return artist_df.assign(
         first_artist_pattern=lambda df: df.artist_name.str.split(
             pattern, regex=True
@@ -105,7 +105,7 @@ def _extract_first_artist_comma(artist_df: pd.DataFrame):
         pd.DataFrame: The DataFrame with additional columns 'is_multi_artists' and 'first_artist'.
 
     """
-    pattern = "^(?![\w\-']+,).*,.*|.*,.*,.*"
+    pattern = r"^(?![\w\-']+,).*,.*|.*,.*,.*"
     return artist_df.assign(
         is_multi_artists_comma=lambda df: (
             df.first_artist_pattern.str.contains(pattern, regex=True)
@@ -216,7 +216,7 @@ def _filter_artists(
     Returns:
         pd.DataFrame: The filtered DataFrame, containing only the rows that do not meet the filtering criteria.
     """
-    pattern = "[\w\-\.]+\/[\w-]+|\+"  # pattern for multi artists separated by + or /
+    pattern = r"[\w\-\.]+\/[\w-]+|\+"  # pattern for multi artists separated by + or /
 
     matching_patterns_indexes = artist_df.first_artist.str.contains(pattern, regex=True)
     too_few_words_indexes = (
@@ -423,3 +423,65 @@ def extract_artist_name(artist_name: str) -> str:
         reordered_name = re.sub(r"\s+", " ", reordered_name)
 
         return reordered_name
+
+
+def prepare_artist_names_for_matching(input_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Extract and clean artist names from input DataFrame for matching purposes.
+    This function processes artist names by cleaning them, extracting the first artist name,
+    and filtering out unwanted entries based on predefined criteria.
+    Args:
+        input_df (pd.DataFrame): Input DataFrame containing artist information with
+                               an 'artist_name' column.
+    Returns:
+        pd.DataFrame: Filtered DataFrame with an additional 'artist_name_to_match' column
+                     containing cleaned artist names. Rows with null artist names or
+                     names in the filter list are excluded.
+    Notes:
+        - Applies name cleaning via the clean_names pipeline
+        - Extracts artist names using extract_artist_name function
+        - Filters out rows where artist_name_to_match is null
+        - Excludes rows where either artist_name or artist_name_to_match
+          are in ARTIST_NAME_TO_FILTER list
+    """
+
+    return (
+        input_df.assign(
+            artist_name_to_match=lambda df: df.pipe(clean_names).artist_name.apply(
+                extract_artist_name
+            ),
+        )
+        .loc[lambda df: df.artist_name_to_match.notna()]
+        .loc[lambda df: ~df.artist_name.isin(ARTIST_NAME_TO_FILTER)]
+        .loc[lambda df: ~df.artist_name_to_match.isin(ARTIST_NAME_TO_FILTER)]
+    )
+
+
+def filter_products(raw_products_df: pd.DataFrame):
+    """
+    Filter products dataframe by removing unwanted artists and products with multiple categories.
+    This function performs two main filtering operations:
+    1. Removes products associated with artists listed in ARTIST_NAME_TO_FILTER
+    2. Removes products with names that are null or empty
+    3. Removes products that appear in multiple offer categories (determined by grouping
+       by offer_product_id and counting unique offer_category_id values)
+    Args:
+        raw_products_df (pd.DataFrame): Input dataframe containing product data with columns
+            including 'artist_name', 'offer_product_id', 'offer_category_id', and
+            a column referenced by PRODUCT_ID_KEY constant.
+    Returns:
+        pd.DataFrame: Filtered dataframe with unwanted artists and multi-category products removed.
+    """
+
+    products_df = raw_products_df.loc[
+        lambda df: ~df.artist_name.isin(ARTIST_NAME_TO_FILTER)
+    ].loc[lambda df: df.artist_name.notna()]
+
+    # This is a hack to remove products that are in multiple categories (which should not happen)
+    product_ids_to_remove = (
+        products_df.groupby("offer_product_id")
+        .agg({"offer_category_id": "nunique"})
+        .loc[lambda dfff: dfff.offer_category_id > 1]
+        .index
+    )
+    return products_df.loc[lambda df: ~df[PRODUCT_ID_KEY].isin(product_ids_to_remove)]

@@ -113,3 +113,6 @@ models:
       - name: venue_type_label
         description: "{{ doc('column__venue_type_label') }}"
         data_type: STRING
+      - name: collective_offer_location_type
+        description: "{{ doc('column__collective_offer_location_type') }}"
+        data_type: STRING

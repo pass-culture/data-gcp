@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 from connectors.brevo import AsyncBrevoConnector, BrevoConnector
+from google.api_core.exceptions import NotFound
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import bigquery, secretmanager
 from http_tools.rate_limiters import BaseRateLimiter
@@ -149,12 +150,12 @@ def get_api_configuration(audience: str):
         api_key = access_secret_data(
             GCP_PROJECT, f"sendinblue-api-key-{ENV_SHORT_NAME}"
         )
-        table_name = "sendinblue_newsletters"
+        table_name = "brevo_newsletters"
     elif audience == "pro":
         api_key = access_secret_data(
             GCP_PROJECT, f"sendinblue-pro-api-key-{ENV_SHORT_NAME}"
         )
-        table_name = "sendinblue_pro_newsletters"
+        table_name = "brevo_pro_newsletters"
     else:
         raise ValueError("Invalid audience. Must be one of native/pro.")
 
@@ -306,34 +307,61 @@ def transform_events_to_dataframe(
 
 def save_to_historical(
     df: pd.DataFrame,
-    schema: dict,
+    schema: dict[str, str],
     project: str,
     dataset: str,
     table_name: str,
     end_date: datetime,
 ):
-    """Upload the DataFrame to BigQuery using partitioned table naming conventions."""
+    """
+    Upload the DataFrame to BigQuery using partitioned table naming conventions,
+    creating the table if it doesn't exist.
+    """
     client = bigquery.Client()
-    yyyymmdd = end_date.strftime("%Y%m%d")
-    table_id = f"{project}.{dataset}.{table_name}_histo${yyyymmdd}"
+    date_str = end_date.strftime("%Y%m%d")
 
-    job_config = bigquery.LoadJobConfig(
-        write_disposition="WRITE_TRUNCATE",
-        time_partitioning=bigquery.TimePartitioning(
+    # Fully‐qualified partitioned table identifier:
+    #   project.dataset.table_histo$YYYYMMDD
+    table_id = f"{project}.{dataset}.{table_name}_histo${date_str}"
+
+    # First, ensure the base table exists so we can control its partitioning:
+    base_table_id = f"{project}.{dataset}.{table_name}_histo"
+    try:
+        client.get_table(base_table_id)
+        logger.info(f"Table {base_table_id} already exists")
+    except NotFound:
+        logger.info(
+            f"Table {base_table_id} not found — creating with daily partitioning"
+        )
+        tbl = bigquery.Table(
+            base_table_id,
+            schema=[
+                bigquery.SchemaField(name, dtype) for name, dtype in schema.items()
+            ],
+        )
+        tbl.time_partitioning = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY, field="update_date"
-        ),
-        schema=[
-            bigquery.SchemaField(name, field_type)
-            for name, field_type in schema.items()
-        ],
+        )
+        client.create_table(tbl)
+        logger.info(f"Created partitioned table {base_table_id}")
+
+    # Now configure the load job to overwrite the specific partition,
+    # and to create the table if somehow it still doesn’t exist.
+    job_config = bigquery.LoadJobConfig(
+        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+        create_disposition=bigquery.CreateDisposition.CREATE_IF_NEEDED,
+        schema=[bigquery.SchemaField(name, dtype) for name, dtype in schema.items()],
         schema_update_options=[
             bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION,
         ],
+        time_partitioning=bigquery.TimePartitioning(
+            type_=bigquery.TimePartitioningType.DAY, field="update_date"
+        ),
     )
 
-    logger.info(f"Saving {len(df)} rows to {table_id}...")
-    job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
-    job.result()
+    logger.info(f"Saving {len(df)} rows to {table_id}…")
+    load_job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
+    load_job.result()
     logger.info("Upload completed.")
 
 

@@ -14,18 +14,63 @@
     {"name": "DEP", "value_expr": "user_department_name"},
 ] %}
 
+{% set categories = [
+    {"name":"SPECTACLE", "value":"spectacle"},
+    {"name":"MUSEE", "value":"musee"},
+    {"name":"CINEMA", "value":"cinema"},
+    {"name":"PRATIQUE_ART", "value":"pratique_artistique"},
+    {"name":"INSTRUMENT", "value":"instrument"},
+    {"name":"LIVRE", "value":"livre"},
+    {"name":"MUSIQUE_LIVE", "value":"concert"},
+] %}
+
+{% for category in categories %}
+    {% if loop.first %} with {% endif %}
+    booked_category_{{ category.value }} as (
+    select distinct
+        user_id
+    from {{ ref("mrt_global__booking") }}
+    where booking_is_used
+    and offer_category_id = "{{ category.name }}"
+){% if not loop.last %} , {% endif %}
+{% endfor %}
+
+{% for category in categories %}
+    {% for dim in dimensions %}
+        {% if not loop.first %}
+            union all
+        {% endif %}
+        select
+            date_trunc(date(last_deposit_expiration_date), month) as execution_date,
+            date("{{ ds() }}") as update_date,
+            '{{ dim.name }}' as dimension_name,
+            {{ dim.value_expr }} as dimension_value,
+            "pct_beneficiaires_ayant_reserve_dans_la_categorie_{{ category.value }}" as kpi_name,
+            count(distinct bc.user_id) as numerator,
+            count(distinct user_id) as denominator,
+            safe_divide(count(distinct bc.user_id), count(distinct user_id)) as kpi
+        from {{ ref('mrt_global__user') }}
+        left join booked_category_{{ category.value }} as bc using(user_id)
+        where total_deposit_amount >= 300
+        {% if is_incremental() %}
+        and date_trunc(last_deposit_expiration_date, month)
+        = date_trunc(date("{{ ds() }}"), month)
+        {% endif %}
+        group by execution_date, update_date, dimension_name, dimension_value, kpi_name
+    {% endfor %}
+    {% if not loop.last %} union all {% endif %}
+{% endfor %}
+
 {% for dim in dimensions %}
-    {% if not loop.first %}
-        union all
-    {% endif %}
+    union all
     select
         date_trunc(date(user_expiration_month), month) as execution_date,
         date("{{ ds() }}") as update_date,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         "pct_beneficiaires_ayant_reserve_dans_3_categories" as kpi_name,
-        sum(total_users) as denominator,
         sum(total_3_category_booked_users) as numerator,
+        sum(total_users) as denominator,
         safe_divide(sum(total_3_category_booked_users), sum(total_users)) as kpi
     from {{ ref("mrt_native__outgoing_cohort") }}
     {% if is_incremental() %}

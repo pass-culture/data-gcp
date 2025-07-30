@@ -17,13 +17,19 @@
 {% set activity_list = [
     {"activity": "Apprenti", "value": "apprenti"},
     {"activity": "Chômeur, En recherche d'emploi", "value": "chomeur"},
-    {"activity": "Volontaire en service civique rémunéré", "value": "volontaire"},
+    {
+        "activity": "Volontaire en service civique rémunéré",
+        "value": "volontaire",
+    },
     {"activity": "Alternant", "value": "alternant"},
     {"activity": "Employé", "value": "employe"},
     {"activity": "Etudiant", "value": "etudiant"},
     {"activity": "Lycéen", "value": "lyceen"},
     {"activity": "Collégien", "value": "collegien"},
-    {"activity": "Inactif (ni en emploi ni au chômage), En incapacité de travailler", "value": "inactif"},
+    {
+        "activity": "Inactif (ni en emploi ni au chômage), En incapacité de travailler",
+        "value": "inactif",
+    },
 ] %}
 
 -- Base CTEs optimisées
@@ -37,7 +43,8 @@ with
         where
             deposit_active_date > date("2021-01-01")
             {% if is_incremental() %}
-                and date_trunc(deposit_active_date, month) = date_trunc(date("{{ ds() }}"), month)
+                and date_trunc(deposit_active_date, month)
+                = date_trunc(date("{{ ds() }}"), month)
             {% endif %}
         group by date_trunc(deposit_active_date, month)
     ),
@@ -49,7 +56,8 @@ with
             uua.deposit_amount,
             coalesce(sum(booking_intermediary_amount), 0) as amount_spent
         from {{ ref("mrt_native__daily_user_deposit") }} as uua
-        left join {{ ref("mrt_global__booking") }} as ebd
+        left join
+            {{ ref("mrt_global__booking") }} as ebd
             on uua.deposit_id = ebd.deposit_id
             and uua.deposit_active_date = date(booking_used_date)
             and booking_is_used
@@ -88,11 +96,11 @@ with
             rd.region_name,
             rd.dep_name
         from user_cumulative_amount_spent as uua
-        inner join last_day_of_month as ldm
-            on uua.deposit_active_date = ldm.last_active_date
-        inner join {{ ref("mrt_global__user") }} as eud
-            on uua.user_id = eud.user_id
-        left join {{ ref("region_department") }} as rd
+        inner join
+            last_day_of_month as ldm on uua.deposit_active_date = ldm.last_active_date
+        inner join {{ ref("mrt_global__user") }} as eud on uua.user_id = eud.user_id
+        left join
+            {{ ref("region_department") }} as rd
             on eud.user_department_code = rd.num_dep
         where
             cumulative_amount_spent < initial_deposit_amount
@@ -111,9 +119,11 @@ with
             rd.region_name,
             rd.dep_name
         from last_day_of_month as ldm
-        inner join {{ ref("mrt_global__user") }} as eud
+        inner join
+            {{ ref("mrt_global__user") }} as eud
             on date(eud.first_deposit_creation_date) <= date(ldm.last_active_date)
-        left join {{ ref("region_department") }} as rd
+        left join
+            {{ ref("region_department") }} as rd
             on eud.user_department_code = rd.num_dep
         {% if is_incremental() %}
             where execution_date = date_trunc(date("{{ ds() }}"), month)
@@ -124,7 +134,9 @@ with
     unified_metrics as (
         -- Bénéficiaires actuels
         {% for dim in dimensions %}
-            {% if not loop.first %}union all{% endif %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
             select
                 execution_date,
                 update_date,
@@ -134,14 +146,17 @@ with
                 count(distinct user_id) as numerator,
                 1 as denominator
             from active_users_base
-            group by execution_date, update_date, dimension_name, dimension_value, kpi_name
+            group by
+                execution_date, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
 
         -- Bénéficiaires totaux
         {% for dim in dimensions %}
-            {% if not loop.first %}union all{% endif %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
             select
                 execution_date,
                 update_date,
@@ -151,14 +166,17 @@ with
                 count(distinct user_id) as numerator,
                 1 as denominator
             from total_users_base
-            group by execution_date, update_date, dimension_name, dimension_value, kpi_name
+            group by
+                execution_date, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
 
         -- QVP
         {% for dim in dimensions %}
-            {% if not loop.first %}union all{% endif %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
             select
                 execution_date,
                 update_date,
@@ -168,60 +186,86 @@ with
                 count(distinct case when user_is_in_qpv then user_id end) as numerator,
                 count(distinct user_id) as denominator
             from active_users_base
-            group by execution_date, update_date, dimension_name, dimension_value, kpi_name
+            group by
+                execution_date, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
 
         -- Rural
         {% for dim in dimensions %}
-            {% if not loop.first %}union all{% endif %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
             select
                 execution_date,
                 update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 "pct_beneficiaire_actuel_rural" as kpi_name,
-                count(distinct case when user_macro_density_label = "rural" then user_id end) as numerator,
+                count(
+                    distinct case
+                        when user_macro_density_label = "rural" then user_id
+                    end
+                ) as numerator,
                 count(distinct user_id) as denominator
             from active_users_base
-            group by execution_date, update_date, dimension_name, dimension_value, kpi_name
+            group by
+                execution_date, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
 
         -- Non scolarisé
         {% for dim in dimensions %}
-            {% if not loop.first %}union all{% endif %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
             select
                 execution_date,
                 update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 "pct_beneficiaire_actuel_non_scolarise" as kpi_name,
-                count(distinct case when not user_is_in_education then user_id end) as numerator,
+                count(
+                    distinct case when not user_is_in_education then user_id end
+                ) as numerator,
                 count(distinct user_id) as denominator
             from active_users_base
-            group by execution_date, update_date, dimension_name, dimension_value, kpi_name
+            group by
+                execution_date, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
 
         -- Activités
         {% for activity in activity_list %}
-            {% if not loop.first %}union all{% endif %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
             {% for dim in dimensions %}
-                {% if not loop.first %}union all{% endif %}
+                {% if not loop.first %}
+                    union all
+                {% endif %}
                 select
                     execution_date,
                     update_date,
                     '{{ dim.name }}' as dimension_name,
                     {{ dim.value_expr }} as dimension_value,
                     "pct_beneficiaire_actuel_{{ activity.value }}" as kpi_name,
-                    count(distinct case when user_activity = "{{ activity.activity }}" then user_id end) as numerator,
+                    count(
+                        distinct case
+                            when user_activity = "{{ activity.activity }}" then user_id
+                        end
+                    ) as numerator,
                     count(distinct user_id) as denominator
                 from active_users_base
-                group by execution_date, update_date, dimension_name, dimension_value, kpi_name
+                group by
+                    execution_date,
+                    update_date,
+                    dimension_name,
+                    dimension_value,
+                    kpi_name
             {% endfor %}
         {% endfor %}
 
@@ -229,49 +273,64 @@ with
 
         -- Genre
         {% for dim in dimensions %}
-            {% if not loop.first %}union all{% endif %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
             select
                 execution_date,
                 update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 "beneficiaire_actuel_homme" as kpi_name,
-                count(distinct case when user_civility = "M." then user_id end) as numerator,
+                count(
+                    distinct case when user_civility = "M." then user_id end
+                ) as numerator,
                 1 as denominator
             from active_users_base
-            group by execution_date, update_date, dimension_name, dimension_value, kpi_name
+            group by
+                execution_date, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
 
         {% for dim in dimensions %}
-            {% if not loop.first %}union all{% endif %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
             select
                 execution_date,
                 update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 "beneficiaire_actuel_femme" as kpi_name,
-                count(distinct case when user_civility = "Mme." then user_id end) as numerator,
+                count(
+                    distinct case when user_civility = "Mme." then user_id end
+                ) as numerator,
                 1 as denominator
             from active_users_base
-            group by execution_date, update_date, dimension_name, dimension_value, kpi_name
+            group by
+                execution_date, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
 
         {% for dim in dimensions %}
-            {% if not loop.first %}union all{% endif %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
             select
                 execution_date,
                 update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 "beneficiaire_actuel_sans_genre" as kpi_name,
-                count(distinct case when user_civility is null then user_id end) as numerator,
+                count(
+                    distinct case when user_civility is null then user_id end
+                ) as numerator,
                 1 as denominator
             from active_users_base
-            group by execution_date, update_date, dimension_name, dimension_value, kpi_name
+            group by
+                execution_date, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
     )
 

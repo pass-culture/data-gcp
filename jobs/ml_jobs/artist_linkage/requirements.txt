@@ -14,6 +14,8 @@ annotated-types==0.7.0
     # via pydantic
 asttokens==2.4.1
     # via stack-data
+async-timeout==4.0.3
+    # via aiohttp
 attrs==23.2.0
     # via
     #   aiohttp
@@ -62,6 +64,10 @@ deprecated==1.2.15
     #   opentelemetry-semantic-conventions
 docker==7.1.0
     # via mlflow
+exceptiongroup==1.2.1
+    # via
+    #   ipython
+    #   pytest
 executing==2.0.1
     # via stack-data
 flask==3.0.3
@@ -369,7 +375,7 @@ scipy==1.13.1
     # via
     #   mlflow
     #   scikit-learn
-setuptools==78.1.1
+setuptools==75.1.0
     # via -r requirements.in
 shellingham==1.5.4
     # via typer
@@ -399,6 +405,8 @@ threadpoolctl==3.5.0
     # via scikit-learn
 toml==0.10.2
     # via streamlit
+tomli==2.0.1
+    # via pytest
 toolz==0.12.1
     # via altair
 tornado==6.4.2
@@ -422,9 +430,11 @@ typer==0.12.3
 typing-extensions==4.12.0
     # via
     #   alembic
+    #   altair
     #   graphene
     #   ipython
     #   mlflow-skinny
+    #   multidict
     #   opentelemetry-sdk
     #   pydantic
     #   pydantic-core

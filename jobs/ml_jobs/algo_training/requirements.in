@@ -21,4 +21,3 @@ tornado==6.4.2
 tqdm==4.64.1
 typer==0.7.0
 recommenders==1.2.1
-setuptools==78.1.1

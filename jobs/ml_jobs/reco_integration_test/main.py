@@ -47,6 +47,7 @@ def process_endpoint_calls(call_type, ids, n_calls_per_user):
 def main():
     # Configuration
     config = {
+        "data_path": "data",
         "source_experiment_name": {
             "dev": f"dummy_{ENV_SHORT_NAME}",
             "stg": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",

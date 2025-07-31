@@ -16,6 +16,8 @@ from constants import (
 def fetch_user_item_data_with_embeddings(config):
     user_data_df = fetch_or_load_data(type="user")
     item_data_df = fetch_or_load_data(type="item")
+    # user_data_df = pd.read_parquet(f"{config['data_path']}/user_data.parquet")
+    # item_data_df = pd.read_parquet(f"{config['data_path']}/item_data.parquet")
     # Keep only necessary columns
     user_id_list = user_data_df["user_id"].unique().tolist()
     item_id_list = item_data_df["item_id"].unique().tolist()
@@ -24,13 +26,57 @@ def fetch_user_item_data_with_embeddings(config):
     mock_item_id_list = [f"item_{i}" for i in range(config["number_of_mock_ids"])]
 
     # Load TT
-    source_artifact_uri = get_model_from_mlflow(
-        experiment_name=config["source_experiment_name"]["prod"],
-        run_id=None,
-        artifact_uri=None,
+    # Load or download model from MLflow
+    # Check if model already exists in MODEL_BASE_PATH
+    loaded_model = download_and_load_model(config)
+    print("Two Tower model loaded.")
+
+    print("\nExtracting user and item embeddings...")
+    # Get user and item embeddings from TT
+    user_embedding_dict, item_embedding_dict = extract_embeddings(loaded_model)
+
+    # Filter user IDs to those present in the model's user embedding vocabulary
+    print("Filtering IDs based on model's embedding vocabulary...")
+    user_set = set(user_embedding_dict.keys())
+    user_id_list = [uid for uid in user_id_list if uid in user_set]
+    user_id_list = user_id_list[: config["number_of_ids"]]
+    print("len(user_id_list):", len(user_id_list))
+    # Filter item IDs to those present in the model's item embedding vocabulary
+    item_set = set(item_embedding_dict.keys())
+    item_id_list = [iid for iid in item_id_list if iid in item_set]
+    item_id_list = item_id_list[: config["number_of_ids"]]
+
+    return (
+        user_id_list,
+        item_id_list,
+        mock_user_id_list,
+        mock_item_id_list,
+        user_embedding_dict,
+        item_embedding_dict,
     )
-    print(f"Model artifact_uri: {source_artifact_uri}")
-    download_model(artifact_uri=source_artifact_uri)
+
+
+def extract_embeddings(loaded_model):
+    item_list = loaded_model.item_layer.layers[0].get_vocabulary()
+    item_weights = loaded_model.item_layer.layers[1].get_weights()[0].astype(np.float32)
+    user_list = loaded_model.user_layer.layers[0].get_vocabulary()
+    user_weights = loaded_model.user_layer.layers[1].get_weights()[0].astype(np.float32)
+    user_embedding_dict = dict(zip(user_list, user_weights, strict=True))
+    item_embedding_dict = dict(zip(item_list, item_weights, strict=True))
+    return item_list, user_list, user_embedding_dict, item_embedding_dict
+
+
+def download_and_load_model(config):
+    if not os.path.exists(MODEL_BASE_PATH) or not os.listdir(MODEL_BASE_PATH):
+        source_artifact_uri = get_model_from_mlflow(
+            experiment_name=config["source_experiment_name"]["prod"],
+            run_id=None,
+            artifact_uri=None,
+        )
+        print(f"Model artifact_uri: {source_artifact_uri}")
+        download_model(artifact_uri=source_artifact_uri)
+    else:
+        print(f"Model already present in {MODEL_BASE_PATH}, skipping download.")
     print("Model downloaded.")
     print("Model directory contents:")
     model_files = os.listdir(MODEL_BASE_PATH)
@@ -42,32 +88,7 @@ def fetch_user_item_data_with_embeddings(config):
     loaded_model = tf.keras.models.load_model(saved_model_path)
     print(f"Model loaded successfully from: {saved_model_path}")
     loaded_model.summary()
-    print("Two Tower model loaded.")
-
-    # Get user and item embeddings from TT
-    item_list = loaded_model.item_layer.layers[0].get_vocabulary()
-    item_weights = loaded_model.item_layer.layers[1].get_weights()[0].astype(np.float32)
-    user_list = loaded_model.user_layer.layers[0].get_vocabulary()
-    user_weights = loaded_model.user_layer.layers[1].get_weights()[0].astype(np.float32)
-    user_embedding_dict = dict(zip(user_list, user_weights, strict=True))
-    item_embedding_dict = dict(zip(item_list, item_weights, strict=True))
-
-    # Filter user IDs to those present in the model's user embedding vocabulary
-    user_id_list = [uid for uid in user_id_list if uid in user_list]
-    user_id_list = user_id_list[: config["number_of_ids"]]
-    print("len(user_id_list):", len(user_id_list))
-    # Filter item IDs to those present in the model's item embedding vocabulary
-    item_id_list = [iid for iid in item_id_list if iid in item_list]
-    item_id_list = item_id_list[: config["number_of_ids"]]
-
-    return (
-        user_id_list,
-        item_id_list,
-        mock_user_id_list,
-        mock_item_id_list,
-        user_embedding_dict,
-        item_embedding_dict,
-    )
+    return loaded_model
 
 
 # from loguru import logger

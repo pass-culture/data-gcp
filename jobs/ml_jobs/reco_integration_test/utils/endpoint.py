@@ -32,7 +32,7 @@ def call_endpoint(model_type: str, id: str, size: int = 10) -> None:
     instances = {
         "model_type": model_type,
         "user_id": id if model_type == "recommendation" else None,
-        "item_id": id if model_type == "SimilarOffers" else None,
+        "item_id": id if model_type == "similar_offers" else None,
         "size": size,
         "params": {},
         "call_id": "1234567890",
@@ -48,7 +48,7 @@ def call_endpoint(model_type: str, id: str, size: int = 10) -> None:
         location=LOCATION,
         api_endpoint=API_ENDPOINT,
     )
-    return response.predictions
+    return response
 
 
 def predict_custom_trained_model_sample(

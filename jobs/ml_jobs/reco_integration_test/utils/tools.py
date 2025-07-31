@@ -52,10 +52,6 @@ def fetch_user_item_data_with_embeddings(config):
     user_embedding_dict = dict(zip(user_list, user_weights, strict=True))
     item_embedding_dict = dict(zip(item_list, item_weights, strict=True))
 
-    # print users size
-    print(f"Number of users in user_data_df: {len(user_id_list)}")
-    print(f"Number of users in model: {len(user_list)}")
-
     # Filter user IDs to those present in the model's user embedding vocabulary
     user_id_list = [uid for uid in user_id_list if uid in user_list]
     user_id_list = user_id_list[: config["number_of_ids"]]
@@ -63,6 +59,7 @@ def fetch_user_item_data_with_embeddings(config):
     # Filter item IDs to those present in the model's item embedding vocabulary
     item_id_list = [iid for iid in item_id_list if iid in item_list]
     item_id_list = item_id_list[: config["number_of_ids"]]
+
     return (
         user_id_list,
         item_id_list,
@@ -81,15 +78,7 @@ def fetch_or_load_data(type: str) -> pd.DataFrame:
     else:
         print(f"Fetching data for {type}...")
         data = get_data_from_sql_query(f"sql/{type}_data.sql")
-        data_df = pd.DataFrame(
-            data,
-            columns=[
-                "user_id",
-                "offer_subcategory_id",
-                "total_count",
-                "subcategory_ratio",
-            ],
-        )
+        data_df = pd.DataFrame(data)
         data_df.to_parquet(f"data/{type}_data.parquet", index=False)
     return data_df
 

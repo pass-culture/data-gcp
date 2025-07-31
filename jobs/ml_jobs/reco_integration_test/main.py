@@ -3,7 +3,7 @@ from collections import defaultdict
 
 import pandas as pd
 
-from call_endpoint_utils import call_endpoint
+from utils.endpoint import call_endpoint
 from constants import ENV_SHORT_NAME
 from utils.analysis_utils import analyze_predictions
 from utils.tools import (
@@ -69,26 +69,35 @@ def main():
     print("len(item_id_list):", len(item_id_list))
 
     analysis_config = {
-        "recomendation": {
+        "recommendation": {
             "true_ids": user_id_list,
             "mock_ids": mock_user_id_list,
         },
-        "SimilarOffers": {
+        "similar_offer": {
             "true_ids": item_id_list,
             "mock_ids": mock_item_id_list,
         },
     }
     results = {}
     for call_type in analysis_config:
+        print(f"\n=== Processing {call_type} calls ===")
         call_type_results = []
         for data_type in ["true", "mock"]:
+            print(f"\nProcessing {data_type} IDs for {call_type} calls...")
             # Test real users
             ids = analysis_config[call_type][f"{data_type}_ids"]
+
             predictions, latencies, success_count, failure_count = (
                 process_endpoint_calls(
                     call_type, ids, config["number_of_calls_per_user"]
                 )
             )
+            print(f"Processed {len(ids)} {data_type} IDs for {call_type} calls.")
+            # Analyze predictions
+            print(
+                f"Analyzing predictions for {call_type} calls with {data_type} IDs..."
+            )
+            # Flatten predictions for analysis
             metrics = analyze_predictions(
                 predictions,
                 latencies,

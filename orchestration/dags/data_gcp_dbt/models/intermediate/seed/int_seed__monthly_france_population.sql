@@ -1,3 +1,10 @@
+{{
+    config(
+        tags="monthly",
+        labels={"schedule": "monthly"},
+    )
+}}
+
 select
     pop.decimal_age as population_decimal_age,
     pop.department_code as population_department_code,

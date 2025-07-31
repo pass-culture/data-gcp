@@ -2,6 +2,8 @@
 {{
     config(
         cluster_by="active_week",
+        tags="weekly",
+        labels={"schedule": "weekly"},
     )
 }}
 with

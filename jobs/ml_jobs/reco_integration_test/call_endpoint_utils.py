@@ -33,9 +33,7 @@ def predict_custom_trained_model_sample(
     # The AI Platform services require regional API endpoints.
     client_options = {"api_endpoint": api_endpoint}
     # Initialize client that will be used to create and send requests.
-    # This client only needs to be created once, and can be reused for multiple requests.
     client = aiplatform.gapic.PredictionServiceClient(client_options=client_options)
-    # The format of each instance should conform to the deployed model's prediction input schema.
     instances = instances if isinstance(instances, list) else [instances]
     instances = [
         json_format.ParseDict(instance_dict, Value()) for instance_dict in instances
@@ -51,7 +49,7 @@ def predict_custom_trained_model_sample(
     return response
 
 
-def call_endpoint(model_type: str, user_id: str, size: int = 10) -> None:
+def call_endpoint(model_type: str, id: str, size: int = 10) -> None:
     """
     Example function to call the predict_custom_trained_model_sample.
     This is a placeholder and should be replaced with actual logic.
@@ -63,7 +61,8 @@ def call_endpoint(model_type: str, user_id: str, size: int = 10) -> None:
 
     instances = {
         "model_type": model_type,
-        "user_id": user_id,
+        "user_id": id if model_type == "recommendation" else None,
+        "item_id": id if model_type == "SimilarOffers" else None,
         "size": size,
         "params": {},
         "call_id": "1234567890",

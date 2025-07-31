@@ -9,9 +9,17 @@
 
 select
     co.collective_offer_id,
-    {{ target_schema }}.humanize_id(
-        co.collective_offer_id
-    ) as collective_offer_humanized_id,
+    case  -- noqa: PRS
+        when co.collective_offer_is_template
+        then
+            concat(
+                'template-',
+                {{ target_schema }}.humanize_id(
+                    regexp_replace(co.collective_offer_id, r'^template-', '')
+                )
+            )
+        else {{ target_schema }}.humanize_id(co.collective_offer_id)
+    end as collective_offer_humanized_id,
     co.collective_offer_name,
     co.venue_id,
     v.partner_id,

@@ -32,7 +32,6 @@ def call_endpoint(model_type: str, id: str, size: int = 10) -> None:
     instances = {
         "model_type": model_type,
         "user_id": id if model_type == "recommendation" else None,
-        "items": [id] if model_type == "similar_offer" else None,
         "size": size,
         "params": {},
         "call_id": "1234567890",
@@ -40,7 +39,8 @@ def call_endpoint(model_type: str, id: str, size: int = 10) -> None:
         "prefilter": 1,
         "similarity_metric": "dot",
     }
-
+    if model_type == "similar_offer":
+        instances["items"] = [id]
     response = predict_custom_trained_model_sample(
         project=PROJECT,
         endpoint_id=ENDPOINT_ID,

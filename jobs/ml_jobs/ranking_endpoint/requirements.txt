@@ -16,6 +16,8 @@ annotated-types==0.7.0
     # via pydantic
 astunparse==1.6.3
     # via tensorflow
+async-timeout==5.0.1
+    # via aiohttp
 attrs==24.2.0
     # via aiohttp
 blinker==1.9.0
@@ -360,8 +362,9 @@ scipy==1.14.1
     #   scikit-learn
 seaborn==0.13.2
     # via -r requirements.in
-setuptools==75.6.0
+setuptools==78.1.1
     # via
+    #   -r requirements.in
     #   pandas-gbq
     #   pydata-google-auth
     #   tensorboard
@@ -407,6 +410,7 @@ typing-extensions==4.12.2
     #   alembic
     #   graphene
     #   mlflow-skinny
+    #   multidict
     #   opentelemetry-sdk
     #   pydantic
     #   pydantic-core

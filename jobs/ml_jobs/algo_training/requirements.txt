@@ -737,8 +737,9 @@ seaborn==0.13.2
     # via recommenders
 send2trash==1.8.3
     # via jupyter-server
-setuptools==75.8.0
+setuptools==78.1.1
     # via
+    #   -r requirements.in
     #   ipython
     #   jupyterlab
     #   locust

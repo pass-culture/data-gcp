@@ -32,7 +32,7 @@ def call_endpoint(model_type: str, id: str, size: int = 10) -> None:
     instances = {
         "model_type": model_type,
         "user_id": id if model_type == "recommendation" else None,
-        "item_id": id if model_type == "similar_offers" else None,
+        "items": [id] if model_type == "similar_offer" else None,
         "size": size,
         "params": {},
         "call_id": "1234567890",

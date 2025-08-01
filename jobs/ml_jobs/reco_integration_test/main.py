@@ -3,9 +3,9 @@ from collections import defaultdict
 
 import pandas as pd
 
-from utils.endpoint import call_endpoint
 from constants import ENV_SHORT_NAME
 from utils.analysis_utils import analyze_predictions
+from utils.endpoint import call_endpoint
 from utils.tools import (
     fetch_user_item_data_with_embeddings,
 )
@@ -53,7 +53,7 @@ def main():
             "stg": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",
             "prod": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",
         },
-        "number_of_ids": 100,
+        "number_of_ids": 10,
         "number_of_mock_ids": 10,
         "number_of_calls_per_user": 2,
     }
@@ -113,7 +113,7 @@ def main():
         call_type_results_df = pd.DataFrame(call_type_results)
         results[call_type] = call_type_results_df
 
-        print("\n=== Comparison Report ===")
+        print(f"\n=== Comparison Report for {call_type} ===")
         print(call_type_results_df.to_string(index=False))
         call_type_results_df.to_csv(f"{call_type}_comparison_report.csv", index=False)
         print(f"\nComparison report saved to {call_type}_comparison_report.csv")

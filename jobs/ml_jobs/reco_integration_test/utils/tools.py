@@ -63,7 +63,7 @@ def extract_embeddings(loaded_model):
     user_weights = loaded_model.user_layer.layers[1].get_weights()[0].astype(np.float32)
     user_embedding_dict = dict(zip(user_list, user_weights, strict=True))
     item_embedding_dict = dict(zip(item_list, item_weights, strict=True))
-    return item_list, user_list, user_embedding_dict, item_embedding_dict
+    return user_embedding_dict, item_embedding_dict
 
 
 def download_and_load_model(config):

@@ -19,7 +19,7 @@ with
             venue.venue_id,
             venue.venue_latitude,
             venue.venue_longitude,
-            offer.offer_name as name,
+            offer.offer_name as `name`,
             offer.offer_is_duo,
             im.offer_subcategory_id as subcategory_id,
             im.offer_category_id as category,
@@ -116,6 +116,7 @@ with
             offer.is_active = true
             and offer.offer_is_bookable = true
             and offer.offer_validation = 'APPROVED'
+            and offer.last_stock_price is not null
             and not (
                 offer.offer_subcategory_id = 'LIVRE_PAPIER'
                 and offer.titelive_gtl_id is null

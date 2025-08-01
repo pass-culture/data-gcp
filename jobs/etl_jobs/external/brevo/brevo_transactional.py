@@ -96,6 +96,7 @@ class BrevoTransactional:
             try:
                 return api_instance.get_email_event_report(**kwargs)
             except ApiException as e:
+                transient_error_statuses = [500, 502, 503, 504]
                 # Check if it's a rate limit error (429)
                 if e.status == 429:
                     # Extract the reset time from headers
@@ -116,6 +117,14 @@ class BrevoTransactional:
                         f"[API Instance {instance_id}] Rate limit exceeded. Waiting for {reset_seconds:.1f} seconds before retry."
                     )
                     time.sleep(reset_seconds)
+                    retry_count += 1
+                elif e.status in transient_error_statuses:
+                    # For other transient errors, wait and retry
+                    instance_id = getattr(api_instance, "instance_id", "unknown")
+                    logger.warning(
+                        f"[API Instance {instance_id}] Transient error {e.status}. Retrying in 10 seconds..."
+                    )
+                    time.sleep(10)
                     retry_count += 1
                 else:
                     # For other API exceptions, just raise them

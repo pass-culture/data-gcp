@@ -1,0 +1,3 @@
+pandas
+mlflow
+tensorflow==2.14.0

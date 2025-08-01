@@ -33,7 +33,7 @@ dev = [
     "mock>=4.0.2",
     "ruff==0.5.7",
     "typer==0.12.3",
-    "pre-commit~=2.21",
+    "pre-commit~=4.2.0",
     "shandy-sqlfmt[jinjafmt]==0.23.2",
     "sqlfluff==3.1.1",
     "sqlfluff-templater-dbt==3.1.1",

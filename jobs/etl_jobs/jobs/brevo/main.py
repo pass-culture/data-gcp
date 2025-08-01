@@ -116,7 +116,9 @@ async def _run_async_transactional(
 ):
     """Helper function to run async transactional ETL."""
     # Set up async HTTP client and connector with concurrency control
-    rate_limiter = AsyncBrevoHeaderRateLimiter(max_concurrent=max_concurrent)
+    rate_limiter = AsyncBrevoHeaderRateLimiter(
+        max_concurrent=max_concurrent, min_jitter_factor=0.1, max_jitter_factor=1.2
+    )
 
     async with AsyncHttpClient(rate_limiter=rate_limiter) as client:
         connector = AsyncBrevoConnector(api_key=api_key, client=client)

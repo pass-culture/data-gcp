@@ -65,6 +65,8 @@ class AsyncBrevoHeaderRateLimiter(BaseRateLimiter):
         self.request_interval = 0.2  # 200ms between requests
         self.last_request_time = 0
         self._restore_task: Optional[asyncio.Task] = None
+        self.min_jitter_factor: Optional[float] = 0.1  # +10% jitter requested
+        self.max_jitter_factor: Optional[float] = None
 
     async def acquire(self):
         """Acquire permission to make a request."""
@@ -99,8 +101,12 @@ class AsyncBrevoHeaderRateLimiter(BaseRateLimiter):
             try:
                 reset_time = float(response.headers.get("x-sib-ratelimit-reset", "10"))
                 # Add jitter: 0-10% additional wait time to spread out retries
-
-                jitter = reset_time * random.uniform(0, 0.01)
+                if self.max_jitter_factor:
+                    jitter = reset_time * random.uniform(
+                        self.min_jitter_factor, self.max_jitter_factor
+                    )
+                else:
+                    jitter = reset_time * self.min_jitter_factor
                 total_wait = reset_time + jitter
 
                 logger.warning(

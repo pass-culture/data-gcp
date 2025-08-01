@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import typer
 from google.cloud import bigquery
 
 from contentful_client import ContentfulClient
@@ -41,7 +42,9 @@ def save_raw_modules_to_bq(modules_df, table_name):
     job.result()
 
 
-def run():
+def run(
+    playlists_names: str = typer.Option(None, help="Liste des playlists à importer"),
+):
     """The Cloud Function entrypoint.
     Args:
         request (flask.Request): The request object.
@@ -64,9 +67,11 @@ def run():
         },
     }
 
+    playlists_names = playlists_names.split(",") if playlists_names else []
+
     config_env = contentful_envs[ENV_SHORT_NAME]
-    contentful_client = ContentfulClient(config_env)
-    df_modules, links_df, tags_df = contentful_client.get_all_playlists()
+    contentful_client = ContentfulClient(config_env, playlists_names)
+    df_modules, links_df, tags_df = contentful_client.get_playlists()
 
     for k, v in ENTRIES_DTYPE.items():
         if k in df_modules.columns:
@@ -88,4 +93,5 @@ def run():
     return "Done"
 
 
-run()
+if __name__ == "__main__":
+    typer.run(run)

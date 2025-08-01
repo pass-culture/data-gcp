@@ -145,6 +145,32 @@ CONTENTFUL_MODULES = [
         ],
     },
     {
+        "name": "business",
+        "additional_fields": [
+            "title",
+            "first_line",
+            "second_line",
+            "image",
+            "url",
+            "target_not_connected_users_only",
+            "left_icon",
+        ],
+        "children": [],
+    },
+    {
+        "name": "exclusivity",
+        "additional_fields": [
+            "title",
+            "alt",
+            "image",
+            "offer_id",
+            "display_parameters",
+        ],
+        "children": [
+            BLOCK_PARAMETERS["display_parameters"],
+        ],
+    },
+    {
         "name": "highlightOffer",
         "additional_fields": [
             "offer_title",
@@ -231,7 +257,7 @@ CONTENTFUL_MODULES = [
 
 
 class ContentfulClient:
-    def __init__(self, config_env, timeout=1) -> None:
+    def __init__(self, config_env, playlists_names=[], timeout=1) -> None:
         self.client = contentful.Client(
             SPACE_ID,  # This is the space ID. A space is like a project folder in Contentful terms
             access_token=config_env[
@@ -246,6 +272,18 @@ class ContentfulClient:
         self.df_tags = pd.DataFrame(columns=["tag_id", "tag_name", "entry_id"])
         self.datetime = datetime.today()
         self.page_size = 500
+        self.contentful_modules = self.set_contentful_modules(playlists_names)
+
+    def set_contentful_modules(self, playlists_names):
+        return (
+            CONTENTFUL_MODULES
+            if not playlists_names
+            else [
+                module
+                for module in CONTENTFUL_MODULES
+                if module["name"] in playlists_names
+            ]
+        )
 
     def add_parent_child_to_df(self, parent_id, child_id):
         self.df_links = pd.concat(
@@ -382,8 +420,8 @@ class ContentfulClient:
         print(f"Retrieved {len(all_entries)} entries")
         return all_entries
 
-    def get_all_playlists(self):
-        for module_details in CONTENTFUL_MODULES:
+    def get_playlists(self):
+        for module_details in self.contentful_modules:
             # Here we get all the modules matching the type desired
             modules = self.get_paged_modules(module_details)
             for module in modules:

@@ -48,6 +48,10 @@ This repository contains the core components of our data platform:
 - Make installed
   - Linux: `sudo apt install make`
   - macOS: `brew install make`
+- ggshield installed
+   - Linux: `sudo apt install ggshield`
+   - Mac: `brew install ggshield`
+- ggshield authenticated `ggshield auth login` use github auth with your work account
 
 ### Installation
 

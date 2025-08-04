@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: mrt_propilote__ppg_deposit_usage
-    description: "{{ doc('description__mrt_propilote__ppg_deposit_usage') }}"
+  - name: mrt_external_reporting__ppg_deposit_usage
+    description: "{{ doc('description__mrt_external_reporting__ppg_deposit_usage') }}"
     columns:
       - name: execution_date
         description: "{{ doc('column__execution_date') }}"

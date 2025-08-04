@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: mrt_propilote__ppg_coverage
-    description: "{{ doc('description__mrt_propilote__ppg_coverage') }}"
+  - name: mrt_external_reporting__ppg_coverage
+    description: "{{ doc('description__mrt_external_reporting__ppg_coverage') }}"
     columns:
       - name: execution_date
         description: "{{ doc('column__execution_date') }}"

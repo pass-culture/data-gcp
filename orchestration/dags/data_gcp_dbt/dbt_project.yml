@@ -86,7 +86,7 @@ models:
       monitoring:
         +meta:
           owner: "@data-engineering"
-      propilote:
+      external_reporting:
         +tags: "monthly"
         +labels:
           schedule: "monthly"

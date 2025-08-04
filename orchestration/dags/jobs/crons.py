@@ -38,6 +38,11 @@ SCHEDULE_DICT = {
         "stg": "0 5 * * *",  # every day at 5:00 AM
         "prod": "5 * * * *",  # every hour at 5 minutes past the hour
     },
+    "recommendation_integration_test": {
+        "prod": "0 12 * * 5",  # every Friday at 12:00 PM
+        "stg": "0 12 * * 5",  # every Friday at 12:00 PM
+        "dev": "0 12 * * 5",  # every Friday at 12:00 PM
+    },
 }
 
 

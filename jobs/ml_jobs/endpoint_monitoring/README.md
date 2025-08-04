@@ -20,7 +20,7 @@ You can run the integration test via the Typer CLI. Example usage:
 python main.py \
   --endpoint-name <ENDPOINT_NAME> \
   --experiment-name <EXPERIMENT_NAME> \
-  --data-path <PATH_TO_DATA> \
+  --storage-path <PATH_TO_DATA> \
   --number-of-ids 10 \
   --number-of-mock-ids 10 \
   --number-of-calls-per-user 2
@@ -29,15 +29,14 @@ python main.py \
 **Arguments:**
 - `--endpoint-name`: Name of the endpoint to test (required)
 - `--experiment-name`: Name of the mlflow experiment containing 'recommendation model (required)
-- `--data-path`: Path to the data directory containing user and item data and output report (required)
+- `--storage-path`: Path to the data directory containing user and item data and output report (required)
 - `--number-of-ids`: Number of real IDs to test (default: 10)
 - `--number-of-mock-ids`: Number of mock IDs to test (default: 10)
 - `--number-of-calls-per-user`: Number of calls per user (default: 2)
 
 ## Output
 
-- CSV reports for each call type: `recommendation_comparison_report.csv`, `similar_offer_comparison_report.csv`
-- Combined Parquet report: `integration_tests_reports.parquet` in the specified data path
+- Reports for each call type: `integration_tests_reports.parquet` in the specified storage path
 
 ## Running Tests
 
@@ -46,4 +45,3 @@ To run the tests:
 ```bash
 make test
 ```
-

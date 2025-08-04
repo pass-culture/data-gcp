@@ -14,13 +14,17 @@
 
 # [START aiplatform_predict_custom_trained_model_sample]
 
+import time
+from collections import defaultdict
+
 from google.cloud import aiplatform
 from google.protobuf import json_format
 from google.protobuf.struct_pb2 import Value
-from constants import GCP_PROJECT, LOCATION, API_ENDPOINT
+from loguru import logger
+
+from constants import API_ENDPOINT, GCP_PROJECT, LOCATION
 
 RETRIEVAL_SIZE = 60  # Default size for retrieval, can be adjusted as needed
-import time
 
 
 def process_endpoint_calls(endpoint_name, call_type, ids, n_calls_per_user):

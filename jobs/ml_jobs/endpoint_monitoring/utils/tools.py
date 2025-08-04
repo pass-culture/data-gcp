@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from google.cloud import bigquery
+from loguru import logger
 
 from constants import (
     BIGQUERY_CLEAN_DATASET,
@@ -27,18 +28,17 @@ def fetch_user_item_data_with_embeddings(config):
     # Load or download model from MLflow
     # Check if model already exists in MODEL_BASE_PATH
     loaded_model = download_and_load_model(config)
-    print("Two Tower model loaded.")
+    logger.info("Two Tower model loaded.")
 
-    print("\nExtracting user and item embeddings...")
+    logger.info("\nExtracting user and item embeddings...")
     # Get user and item embeddings from TT
     user_embedding_dict, item_embedding_dict = extract_embeddings(loaded_model)
 
     # Filter user IDs to those present in the model's user embedding vocabulary
-    print("Filtering IDs based on model's embedding vocabulary...")
+    logger.info("Filtering IDs based on model's embedding vocabulary...")
     user_set = set(user_embedding_dict.keys())
     user_id_list = [uid for uid in user_id_list if uid in user_set]
     user_id_list = user_id_list[: config["number_of_ids"]]
-    print("len(user_id_list):", len(user_id_list))
     # Filter item IDs to those present in the model's item embedding vocabulary
     item_set = set(item_embedding_dict.keys())
     item_id_list = [iid for iid in item_id_list if iid in item_set]
@@ -71,50 +71,22 @@ def download_and_load_model(config):
             run_id=None,
             artifact_uri=None,
         )
-        print(f"Model artifact_uri: {source_artifact_uri}")
+        logger.info(f"Model artifact_uri: {source_artifact_uri}")
         download_model(artifact_uri=source_artifact_uri)
     else:
-        print(f"Model already present in {MODEL_BASE_PATH}, skipping download.")
-    print("Model downloaded.")
-    print("Model directory contents:")
+        logger.info(f"Model already present in {MODEL_BASE_PATH}, skipping download.")
+    logger.info("Model downloaded.")
+    logger.info("Model directory contents:")
     model_files = os.listdir(MODEL_BASE_PATH)
-    print("\n".join(model_files))
+    logger.info("\n".join(model_files))
 
-    print("\nLoad Two Tower model...")
+    logger.info("\nLoad Two Tower model...")
     saved_model_path = os.path.join(os.getcwd(), MODEL_BASE_PATH)
-    print(f"Loading model from: {saved_model_path}")
+    logger.info(f"Loading model from: {saved_model_path}")
     loaded_model = tf.keras.models.load_model(saved_model_path)
-    print(f"Model loaded successfully from: {saved_model_path}")
+    logger.info(f"Model loaded successfully from: {saved_model_path}")
     loaded_model.summary()
     return loaded_model
-
-
-# from loguru import logger
-def fetch_or_load_data(type: str) -> pd.DataFrame:
-    if os.path.exists(f"data/{type}_data.parquet"):
-        print(f"Loading existing data from data/{type}_data.parquet...")
-        data_df = pd.read_parquet(f"data/{type}_data.parquet")
-    else:
-        print(f"Fetching data for {type}...")
-        data = get_data_from_sql_query(f"sql/{type}_data.sql")
-        data_df = pd.DataFrame(data)
-        data_df.to_parquet(f"data/{type}_data.parquet", index=False)
-    return data_df
-
-
-def read_sql_query(file_path: str) -> str:
-    """Read SQL query from a file and return as a string."""
-    with open(file_path) as file:
-        return file.read()
-
-
-def get_data_from_sql_query(file_path: str) -> pd.DataFrame:
-    """Fetch from BigQuery and return as DataFrame."""
-    query = read_sql_query(file_path)
-    client = bigquery.Client(project="passculture-data-prod")
-    query_job = client.query(query)
-    df = query_job.to_dataframe()
-    return df
 
 
 def get_model_from_mlflow(experiment_name: str, run_id: str, artifact_uri: str):
@@ -165,4 +137,4 @@ def download_model(artifact_uri: str) -> None:
     )
     # TODO handle errors
     for line in results.stdout:
-        print(line.rstrip().decode("utf-8"))
+        logger.info(line.rstrip().decode("utf-8"))

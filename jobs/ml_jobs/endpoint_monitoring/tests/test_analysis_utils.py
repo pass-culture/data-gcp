@@ -1,7 +1,6 @@
 import numpy as np
 
-from utils.analysis_utils import _analyze_user_recommendation_overlap
-from utils.analysis_utils import _analyze_overlap
+from utils.analysis_utils import _analyze_overlap, _analyze_user_recommendation_overlap
 
 
 def test_analyze_overlap_basic():

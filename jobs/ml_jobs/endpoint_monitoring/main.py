@@ -1,7 +1,7 @@
-import typer
-
 import pandas as pd
+import typer
 from loguru import logger
+
 from utils.analysis_utils import analyze_predictions
 from utils.endpoint import process_endpoint_calls
 from utils.tools import (
@@ -18,7 +18,25 @@ def main(
     number_of_calls_per_user: int = typer.Option(2, help="Number of calls per user"),
 ):
     """
-    Run integration tests for recommendation endpoints using Typer CLI.
+    Runs monitoring tests for recommendation endpoints.
+
+    Parameters:
+        endpoint_name (str): Name of the endpoint to test.
+        experiment_name (str): Name of the experiment for tracking and configuration.
+        storage_path (str): Path where results and reports will be stored.
+        number_of_ids (int): Number of real user IDs to test.
+        number_of_mock_ids (int): Number of mock user IDs to test.
+        number_of_calls_per_user (int): Number of endpoint calls per user/item.
+
+    Process:
+        - Loads user and item data along with their embeddings.
+        - For each call type processes both real and mock IDs.
+        - Collects predictions for each scenario.
+        - Analyzes prediction results and aggregates metrics.
+        - Saves a comparison report as a parquet file in the specified storage path.
+
+    Outputs:
+        - Logs detailed metrics and saves a DataFrame report of the results.
     """
     config = {
         "endpoint_name": endpoint_name,
@@ -82,12 +100,12 @@ def main(
     call_type_results_df = pd.DataFrame(call_type_results)
     logger.info(call_type_results_df.to_string(index=False))
     call_type_results_df.to_parquet(
-        f"{config['storage_path']}/integration_tests_reports.parquet",
+        f"{config['storage_path']}/endpoint_monitoring_reports.parquet",
         index=False,
     )
     logger.info(
         f"\nComparison report saved to {config['storage_path']}"
-        "/integration_tests_reports.parquet"
+        "/endpoint_monitoring_reports.parquet"
     )
 
 

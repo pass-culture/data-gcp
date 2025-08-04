@@ -27,7 +27,7 @@ enddocs %}
 {% docs column__webapp_url %} URL to the offer on the web application. {% enddocs %}
 {% docs column__offer_subcategory_id %} Identifier for the subcategory of the offer. Determined by the cultural partner via a list of pre-set options. {% enddocs %}
 {% docs column__offer_url %} URL to the offer. {% enddocs %}
-{% docs column__offer_is_national %} Indicates if the offer is available nationally. Information orirginally filled by pass Culture teams and no longer used, will be decommissioned soon. {% enddocs %}
+{% docs column__offer_is_national %} Indicates if the offer is available nationally. This Information is originally filled by pass Culture teams but is no longer used. It will be decommissioned soon. {% enddocs %}
 {% docs column__offer_is_numerical %} Indicates if the offer is digital (based on an url). {% enddocs %}
 {% docs column__offer_is_geolocated %} Indicates if the offer is geolocated. {% enddocs %}
 {% docs column__offer_is_active %} Indicates if the offer is active (the offer has been deactivated and is no longer visible in app). {% enddocs %}

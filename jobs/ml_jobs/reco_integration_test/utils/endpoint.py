@@ -17,17 +17,36 @@
 from google.cloud import aiplatform
 from google.protobuf import json_format
 from google.protobuf.struct_pb2 import Value
+from constants import GCP_PROJECT, LOCATION, API_ENDPOINT
 
 
-def call_endpoint(model_type: str, id: str, size: int = 10) -> None:
+def get_endpoint_details(
+    endpoint_name: str,
+    gcp_project: str,
+    location: str = "europe-west1",
+):
+    """
+    Fetches the endpoint details for a given endpoint name and location.
+    Returns a dictionary with model name, model version ID, and endpoint path.
+    """
+
+    endpoint = aiplatform.Endpoint.list(
+        filter=f"display_name={endpoint_name}", location=location, project=gcp_project
+    )[0]
+    endpoint_dict = endpoint.to_dict()
+    print(f"Endpoint details: {endpoint_dict}")
+    return {
+        "model_name": endpoint_dict["displayName"],
+        "model_version_id": endpoint_dict["deployedModels"][0]["displayName"],
+        "endpoint_path": endpoint_dict["name"],
+    }
+
+
+def call_endpoint(endpoint_path: str, model_type: str, id: str, size: int = 10) -> None:
     """
     Example function to call the predict_custom_trained_model_sample.
     This is a placeholder and should be replaced with actual logic.
     """
-    PROJECT = "962488981524"
-    ENDPOINT_ID = "4777694682035519488"
-    LOCATION = "europe-west1"
-    API_ENDPOINT = "europe-west1-aiplatform.googleapis.com"
 
     instances = {
         "model_type": model_type,
@@ -41,9 +60,10 @@ def call_endpoint(model_type: str, id: str, size: int = 10) -> None:
     }
     if model_type == "similar_offer":
         instances["items"] = [id]
+
     response = predict_custom_trained_model_sample(
-        project=PROJECT,
-        endpoint_id=ENDPOINT_ID,
+        project=GCP_PROJECT,
+        endpoint_path=endpoint_path,
         instances=instances,
         location=LOCATION,
         api_endpoint=API_ENDPOINT,
@@ -53,7 +73,7 @@ def call_endpoint(model_type: str, id: str, size: int = 10) -> None:
 
 def predict_custom_trained_model_sample(
     project: str,
-    endpoint_id: str,
+    endpoint_path: str,
     instances: dict | list[dict],
     location: str = "us-central1",
     api_endpoint: str = "us-central1-aiplatform.googleapis.com",
@@ -72,10 +92,10 @@ def predict_custom_trained_model_sample(
     ]
     parameters_dict = {}
     parameters = json_format.ParseDict(parameters_dict, Value())
-    endpoint = client.endpoint_path(
-        project=project, location=location, endpoint=endpoint_id
-    )
+    # endpoint = client.endpoint_path(
+    #     project=project, location=location, endpoint=endpoint_path
+    # )
     response = client.predict(
-        endpoint=endpoint, instances=instances, parameters=parameters
+        endpoint=endpoint_path, instances=instances, parameters=parameters
     )
     return response

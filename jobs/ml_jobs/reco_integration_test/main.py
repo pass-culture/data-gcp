@@ -3,9 +3,9 @@ from collections import defaultdict
 
 import pandas as pd
 
-from constants import ENV_SHORT_NAME
+from constants import ENV_SHORT_NAME, GCP_PROJECT, LOCATION
 from utils.analysis_utils import analyze_predictions
-from utils.endpoint import call_endpoint
+from utils.endpoint import call_endpoint, get_endpoint_details
 from utils.tools import (
     fetch_user_item_data_with_embeddings,
 )
@@ -13,7 +13,7 @@ from utils.tools import (
 RETRIEVAL_SIZE = 60  # Default size for retrieval, can be adjusted as needed
 
 
-def process_endpoint_calls(call_type, ids, n_calls_per_user):
+def process_endpoint_calls(endpoint_path, call_type, ids, n_calls_per_user):
     """
     Call the recommendation endpoint for each user in the subset, multiple times.
     Returns predictions, latencies, and success/failure counts.
@@ -26,6 +26,7 @@ def process_endpoint_calls(call_type, ids, n_calls_per_user):
         for call_num in range(n_calls_per_user):
             start_time = time.time()
             results = call_endpoint(
+                endpoint_path=endpoint_path,
                 model_type=call_type,
                 id=id,
                 size=RETRIEVAL_SIZE,
@@ -44,19 +45,32 @@ def process_endpoint_calls(call_type, ids, n_calls_per_user):
     return predictions_by_id, latencies, success_count, failure_count
 
 
-def main():
+def main(
+    endpoint_name: str,
+    experiment_name: str,
+    data_path: str,
+    number_of_ids: int,
+    number_of_mock_ids: int,
+    number_of_calls_per_user: int,
+):
     # Configuration
     config = {
-        "data_path": "data",
-        "source_experiment_name": {
-            "dev": f"dummy_{ENV_SHORT_NAME}",
-            "stg": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",
-            "prod": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",
-        },
-        "number_of_ids": 10,
-        "number_of_mock_ids": 10,
-        "number_of_calls_per_user": 2,
+        "endpoint_name": endpoint_name,
+        "experiment_name": experiment_name,
+        "data_path": data_path,
+        "source_experiment_name": experiment_name,
+        "number_of_ids": number_of_ids,
+        "number_of_mock_ids": number_of_mock_ids,
+        "number_of_calls_per_user": number_of_calls_per_user,
     }
+    # config = {
+    #     "endpoint_name": "recommendation_user_retrieval_prod",
+    #     "source_experiment_name": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",
+    #     "data_path": "data",
+    #     "number_of_ids": 10,
+    #     "number_of_mock_ids": 10,
+    #     "number_of_calls_per_user": 2,
+    # }
 
     # Load user data
     (
@@ -80,6 +94,10 @@ def main():
         },
     }
     results = {}
+    # get endpont details
+    endpoint_details = get_endpoint_details(
+        config["endpoint_name"], gcp_project=GCP_PROJECT, location=LOCATION
+    )
     for call_type in analysis_config:
         print(f"\n=== Processing {call_type} calls ===")
         call_type_results = []
@@ -90,7 +108,10 @@ def main():
 
             predictions, latencies, success_count, failure_count = (
                 process_endpoint_calls(
-                    call_type, ids, config["number_of_calls_per_user"]
+                    endpoint_path=endpoint_details["endpoint_path"],
+                    call_type=call_type,
+                    ids=ids,
+                    n_calls_per_user=config["number_of_calls_per_user"],
                 )
             )
             print(f"Processed {len(ids)} {data_type} IDs for {call_type} calls.")
@@ -115,8 +136,12 @@ def main():
 
         print(f"\n=== Comparison Report for {call_type} ===")
         print(call_type_results_df.to_string(index=False))
-        call_type_results_df.to_csv(f"{call_type}_comparison_report.csv", index=False)
-        print(f"\nComparison report saved to {call_type}_comparison_report.csv")
+        call_type_results_df.to_csv(
+            f"{data_type}_{call_type}_comparison_report.csv", index=False
+        )
+        print(
+            f"\nComparison report saved to {data_type}_{call_type}_comparison_report.csv"
+        )
 
 
 if __name__ == "__main__":

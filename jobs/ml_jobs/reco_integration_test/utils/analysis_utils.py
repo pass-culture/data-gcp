@@ -41,7 +41,11 @@ def analyze_predictions(
     )
     metrics.update(_analyze_search_types(predictions_by_user))
     metrics.update(_analyze_overlap(predictions_by_user))
+
     metrics.update(_analyze_latencies(latencies))
+
+    # Analyze _distance and _user_item_dot_similarity attributes
+    metrics.update(_analyze_prediction_attributes(predictions_by_user))
 
     # Check if recommended offers are different for different users (identical sets)
     # metrics.update(_analyze_user_recommendation_uniqueness(predictions_by_user))
@@ -302,3 +306,33 @@ def _analyze_user_recommendation_overlap(predictions_by_user):
         }
     else:
         return {"user_reco_avg_jaccard": 0}
+
+
+def _analyze_prediction_attributes(predictions_by_user):
+    """
+    Analyze the _distance and _user_item_dot_similarity attributes in predictions.
+    Computes average, min, and max for each if present.
+    """
+    distance_values = []
+    dot_sim_values = []
+    for user_preds in predictions_by_user.values():
+        for preds in user_preds:
+            for pred in preds:
+                pred_dict = convert_to_dict(pred)
+                if "_distance" in pred_dict and pred_dict["_distance"] is not None:
+                    distance_values.append(float(pred_dict["_distance"]))
+                if (
+                    "_user_item_dot_similarity" in pred_dict
+                    and pred_dict["_user_item_dot_similarity"] is not None
+                ):
+                    dot_sim_values.append(float(pred_dict["_user_item_dot_similarity"]))
+    metrics = {}
+    if distance_values:
+        metrics["distance_avg"] = float(np.mean(distance_values))
+        metrics["distance_min"] = float(np.min(distance_values))
+        metrics["distance_max"] = float(np.max(distance_values))
+    if dot_sim_values:
+        metrics["user_item_dot_similarity_avg"] = float(np.mean(dot_sim_values))
+        metrics["user_item_dot_similarity_min"] = float(np.min(dot_sim_values))
+        metrics["user_item_dot_similarity_max"] = float(np.max(dot_sim_values))
+    return metrics

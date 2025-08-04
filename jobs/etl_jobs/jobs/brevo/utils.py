@@ -57,7 +57,12 @@ class AsyncBrevoHeaderRateLimiter(BaseRateLimiter):
     Uses semaphore to limit concurrent requests and implements jittered backoff.
     """
 
-    def __init__(self, max_concurrent: int = 5):
+    def __init__(
+        self,
+        max_concurrent: int = 5,
+        min_jitter_factor: Optional[float] = 0.1,
+        max_jitter_factor: Optional[float] = None,
+    ):
         self.semaphore = asyncio.Semaphore(max_concurrent)
         self.backoff_event = asyncio.Event()
         self.backoff_event.set()  # Initially not in backoff
@@ -65,8 +70,8 @@ class AsyncBrevoHeaderRateLimiter(BaseRateLimiter):
         self.request_interval = 0.2  # 200ms between requests
         self.last_request_time = 0
         self._restore_task: Optional[asyncio.Task] = None
-        self.min_jitter_factor: Optional[float] = 0.1  # +10% jitter requested
-        self.max_jitter_factor: Optional[float] = None
+        self.min_jitter_factor = min_jitter_factor
+        self.max_jitter_factor = max_jitter_factor
 
     async def acquire(self):
         """Acquire permission to make a request."""
@@ -211,10 +216,7 @@ def transform_campaigns_to_dataframe(
 
     df = pd.DataFrame(campaign_stats)
 
-    if update_date is None:
-        df["update_date"] = pd.to_datetime("today")
-    else:
-        df["update_date"] = pd.to_datetime(update_date)
+    df["update_date"] = pd.to_datetime("today")
 
     df["campaign_target"] = audience
 

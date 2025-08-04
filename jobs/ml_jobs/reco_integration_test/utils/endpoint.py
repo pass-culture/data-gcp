@@ -19,6 +19,41 @@ from google.protobuf import json_format
 from google.protobuf.struct_pb2 import Value
 from constants import GCP_PROJECT, LOCATION, API_ENDPOINT
 
+RETRIEVAL_SIZE = 60  # Default size for retrieval, can be adjusted as needed
+import time
+
+
+def process_endpoint_calls(endpoint_name, call_type, ids, n_calls_per_user):
+    """
+    Call the recommendation endpoint for each user in the subset, multiple times.
+    Returns predictions, latencies, and success/failure counts.
+    """
+    predictions_by_id = defaultdict(list)
+    latencies = []
+    success_count = 0
+    failure_count = 0
+    for id in ids:
+        for call_num in range(n_calls_per_user):
+            start_time = time.time()
+            results = call_endpoint(
+                endpoint_path=get_endpoint_path(endpoint_name=endpoint_name),
+                model_type=call_type,
+                id=id,
+                size=RETRIEVAL_SIZE,
+            )
+            end_time = time.time()
+            latencies.append(end_time - start_time)
+            predictions_by_id[id].append(results.predictions)
+            if hasattr(results, "predictions") and results.predictions:
+                success_count += 1
+            else:
+                failure_count += 1
+            logger.info(f"Call {call_num + 1} completed for user {id}")
+            ### search type analysis can be added here if needed
+    logger.info(f"Total successful calls: {success_count}")
+    logger.info(f"Total failed calls: {failure_count}")
+    return predictions_by_id, latencies, success_count, failure_count
+
 
 def get_endpoint_path(
     endpoint_name: str,

@@ -108,7 +108,7 @@ select
     dgu.total_deposit_actual_amount_spent,
     dgu.total_diversity_score,
     dgu.last_deposit_amount,
-    dgu.last_individual_booking_date as last_booking_date,
+    dgu.last_individual_booking_date,
     dgu.first_booking_type,
     dgu.first_paid_booking_type,
     dgu.total_grant_18_subcategory_booked,

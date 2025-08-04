@@ -33,3 +33,5 @@
 {% docs column__offerer_legal_category_label %}The legal category label of the offerer.{% enddocs %}
 {% docs column__local_authority_type %}When the offerer is a local authority, the type of the local authority, such as Commune, Département, or Région.{% enddocs %}
 {% docs column__local_authority_is_priority %}Indicates whether the local authority is internally seen as a priority partner.{% enddocs %}
+{% docs column__first_booking_date %} The date of the first booking, individual or collective.{% enddocs %}
+{% docs column__last_booking_date %} The date of the last booking, individual or collective.{% enddocs %}

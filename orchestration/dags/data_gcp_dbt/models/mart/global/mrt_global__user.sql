@@ -49,7 +49,7 @@ select
     last_deposit_amount,
     total_theoretical_remaining_credit,
     user_creation_date,
-    last_booking_date,
+    last_individual_booking_date,
     days_between_activation_date_and_first_booking_date,
     days_between_activation_date_and_first_booking_paid,
     user_activation_date,

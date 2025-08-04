@@ -40,7 +40,7 @@
 {% docs column__user_is_theme_subscribed %} Boolean. Indicates whether a user has subscribed to at least one theme. {% enddocs %}
 {% docs column__user_last_deposit_expiration_date %} Expiration date of the user's last deposit. {% enddocs %}
 {% docs column__user_last_deposit_amount %} Amount of the last deposit received by the user. {% enddocs %}
-{% docs column__user_first_deposit_type %} Type of the user's first deposit, can be GRANT_18, GRANT_15_17, GRANT_17_18, GRANT_FREE.. {% enddocs %}
+{% docs column__user_first_deposit_type %} Type of the user's first deposit, can be GRANT_18, GRANT_15_17, GRANT_17_18, GRANT_FREE. {% enddocs %}
 {% docs column__user_current_deposit_type %} Type of the user's current deposit. {% enddocs %}
 {% docs column__user_first_deposit_reform_category %} The first deposit reform category associated with the user. {% enddocs %}
 {% docs column__user_current_deposit_reform_category %} The current deposit reform category associated with the user. {% enddocs %}

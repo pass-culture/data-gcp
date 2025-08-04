@@ -58,5 +58,5 @@
 {% docs column__user_address_latitude %} Latitude of the user's registered address. {% enddocs %}
 {% docs column__user_address_longitude %} Longitude of the user's registered address. {% enddocs %}
 {% docs column__user_address_raw %} Raw address of the user's registered address. {% enddocs %}
-{% docs column__first_individual_booking_date %} Date of the first booking. {% enddocs %}
-{% docs column__last_individual_booking_date %} Date of the last booking. {% enddocs %}
+{% docs column__first_individual_booking_date %} The date of the first individual booking made by the user. {% enddocs %}
+{% docs column__last_individual_booking_date %} The date of the last individual booking made by the user. {% enddocs %}

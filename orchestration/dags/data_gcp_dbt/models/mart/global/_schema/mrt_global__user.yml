@@ -187,8 +187,8 @@ models:
       - name: user_creation_date
         description: '{{ doc("column__user_created_at") }}'
         data_type: DATE
-      - name: last_booking_date
-        description: '{{ doc("column__last_booking_date") }}'
+      - name: last_individual_booking_date
+        description: '{{ doc("column__last_individual_booking_date") }}'
         data_type: DATE
       - name: days_between_activation_date_and_first_booking_date
         description: '{{ doc("column__days_between_activation_date_and_first_booking_date") }}'

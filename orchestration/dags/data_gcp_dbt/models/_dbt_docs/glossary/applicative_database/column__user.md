@@ -3,7 +3,7 @@
 {% docs column__user_activity %} User's registered activity (student, apprentice, unemployed etc). Registered at first grant deposit and updated when the user applies for its GRANT_18. {% enddocs %}
 {% docs column__user_age %} Current age of the user. {% enddocs %}
 {% docs column__user_birth_date %} Birth date of the user. {% enddocs %}
-{% docs column__user_civility %} Registered civility of the user (male, female). {% enddocs %}
+{% docs column__user_civility %} Registered civility of the user (male, female). Information collected during registration.{% enddocs %}
 {% docs column__user_city %} City associated with the user's registered address. {% enddocs %}
 {% docs column__user_city_code %} The INSEE code of the city associated with the user's registered address. {% enddocs %}
 {% docs column__user_created_at %} Date when the user account was created. {% enddocs %}
@@ -24,9 +24,9 @@
 {% docs column__user_macro_density_label %} Macro density label of the user's registered address. {% enddocs %}
 {% docs column__user_postal_code %} Postal code of the user's registered address. {% enddocs %}
 {% docs column__user_region_name %} Region name of the user's registered address. {% enddocs %}
-{% docs column__user_school_type %} Type of school the user is enrolled in (public, private etc), for GRANT_15_17 users. {% enddocs %}
+{% docs column__user_school_type %} Type of school the user is enrolled in: Centre de formation apprentis, Collège privé, Collège public, Lycée agricole, Lycée maritime, Lycée militaire, Lycée privé, Lycée public, À domicile (CNED, institut de santé, etc.). {% enddocs %}
 {% docs column__user_seniority %} Days between user account creation date and current date. {% enddocs %}
-{% docs column__user_suspension_reason %} Reason for the user's suspension (upon user request, fraud suspicion etc). {% enddocs %}
+{% docs column__user_suspension_reason %} Reason for the user's suspension. Possible values include: end of eligibility – The user no longer meets the criteria to be eligible for a deposit; fraud suspicion – Suspicious activity detected, requiring investigation; hacking fraud – Confirmed or suspected account compromise; upon user request – The user has explicitly requested the suspension or deletion of their account. {% enddocs %}
 {% docs column__user_has_enabled_marketing_email %} Indicates if the user has accepted to receive marketing emails. {% enddocs %}
 {% docs column__user_has_enabled_marketing_push %} Indicates if the user has accepted to received marketing push. {% enddocs %}
 {% docs column__user_role %} Role assigned to the user (GRANT_18, GRANT_15_17, PRO, ADMIN). {% enddocs %}
@@ -40,7 +40,7 @@
 {% docs column__user_is_theme_subscribed %} Boolean. Indicates whether a user has subscribed to at least one theme. {% enddocs %}
 {% docs column__user_last_deposit_expiration_date %} Expiration date of the user's last deposit. {% enddocs %}
 {% docs column__user_last_deposit_amount %} Amount of the last deposit received by the user. {% enddocs %}
-{% docs column__user_first_deposit_type %} Type of the user's first deposit (GRANT_18 or GRANT_15_17). {% enddocs %}
+{% docs column__user_first_deposit_type %} Type of the user's first deposit, can be GRANT_18, GRANT_15_17, GRANT_17_18, GRANT_FREE. {% enddocs %}
 {% docs column__user_current_deposit_type %} Type of the user's current deposit. {% enddocs %}
 {% docs column__user_first_deposit_reform_category %} The first deposit reform category associated with the user. {% enddocs %}
 {% docs column__user_current_deposit_reform_category %} The current deposit reform category associated with the user. {% enddocs %}

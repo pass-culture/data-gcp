@@ -13,5 +13,6 @@ It is designed for automated export, especially in Excel format.
 ## Table Description
 
 Each row represents a key indicator calculated for a specific month and geographic aggregation level.
+A lexique details the meaning of each kpi_name here: https://docs.google.com/spreadsheets/d/13Epof9MJbtN7srmDIld3-7QN0Hq6WpX7/edit?usp=sharing&ouid=113033507472186952579&rtpof=true&sd=true
 
 {% docs table__mrt_propilote__ppg_beneficiary %}{% enddocs %}

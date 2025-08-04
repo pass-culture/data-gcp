@@ -48,7 +48,6 @@ with
             ) as booking_number_last_28_days,
             any_value(ml_feat.cluster_id) as cluster_id,
             any_value(ml_feat.topic_id) as topic_id,
-            min(offer.is_national) as is_national,
             max(
                 coalesce(
                     (

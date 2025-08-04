@@ -25,6 +25,8 @@ python main.py \
   --number-of-mock-ids 10 \
   --number-of-calls-per-user 2
 ```
+recommendation_user_retrieval_
+algo_training_two_towers_v1.2_
 
 **Arguments:**
 - `--endpoint-name`: Name of the endpoint to test (required)
@@ -34,6 +36,14 @@ python main.py \
 - `--number-of-mock-ids`: Number of mock IDs to test (default: 10)
 - `--number-of-calls-per-user`: Number of calls per user (default: 2)
 
+**in staging**
+python main.py \
+  --endpoint-name recommendation_user_retrieval_stg \
+  --experiment-name algo_training_two_towers_v1.2_stg \
+  --storage-path . \
+  --number-of-ids 10 \
+  --number-of-mock-ids 10 \
+  --number-of-calls-per-user 2
 ## Output
 
 - Reports for each call type: `integration_tests_reports.parquet` in the specified storage path

@@ -20,10 +20,8 @@ from google.protobuf.struct_pb2 import Value
 from constants import GCP_PROJECT, LOCATION, API_ENDPOINT
 
 
-def get_endpoint_details(
+def get_endpoint_path(
     endpoint_name: str,
-    gcp_project: str,
-    location: str = "europe-west1",
 ):
     """
     Fetches the endpoint details for a given endpoint name and location.
@@ -31,15 +29,10 @@ def get_endpoint_details(
     """
 
     endpoint = aiplatform.Endpoint.list(
-        filter=f"display_name={endpoint_name}", location=location, project=gcp_project
+        filter=f"display_name={endpoint_name}", location=LOCATION, project=GCP_PROJECT
     )[0]
     endpoint_dict = endpoint.to_dict()
-    print(f"Endpoint details: {endpoint_dict}")
-    return {
-        "model_name": endpoint_dict["displayName"],
-        "model_version_id": endpoint_dict["deployedModels"][0]["displayName"],
-        "endpoint_path": endpoint_dict["name"],
-    }
+    return endpoint_dict["name"]
 
 
 def call_endpoint(endpoint_path: str, model_type: str, id: str, size: int = 10) -> None:

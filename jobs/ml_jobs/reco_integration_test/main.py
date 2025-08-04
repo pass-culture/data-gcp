@@ -1,11 +1,12 @@
 import time
 from collections import defaultdict
+import typer
 
 import pandas as pd
-
+from loguru import logger
 from constants import ENV_SHORT_NAME, GCP_PROJECT, LOCATION
 from utils.analysis_utils import analyze_predictions
-from utils.endpoint import call_endpoint, get_endpoint_details
+from utils.endpoint import call_endpoint, get_endpoint_path
 from utils.tools import (
     fetch_user_item_data_with_embeddings,
 )
@@ -13,7 +14,7 @@ from utils.tools import (
 RETRIEVAL_SIZE = 60  # Default size for retrieval, can be adjusted as needed
 
 
-def process_endpoint_calls(endpoint_path, call_type, ids, n_calls_per_user):
+def process_endpoint_calls(endpoint_name, call_type, ids, n_calls_per_user):
     """
     Call the recommendation endpoint for each user in the subset, multiple times.
     Returns predictions, latencies, and success/failure counts.
@@ -26,7 +27,7 @@ def process_endpoint_calls(endpoint_path, call_type, ids, n_calls_per_user):
         for call_num in range(n_calls_per_user):
             start_time = time.time()
             results = call_endpoint(
-                endpoint_path=endpoint_path,
+                endpoint_path=get_endpoint_path(endpoint_name=endpoint_name),
                 model_type=call_type,
                 id=id,
                 size=RETRIEVAL_SIZE,
@@ -38,41 +39,34 @@ def process_endpoint_calls(endpoint_path, call_type, ids, n_calls_per_user):
                 success_count += 1
             else:
                 failure_count += 1
-            print(f"Call {call_num + 1} completed for user {id}")
+            logger.info(f"Call {call_num + 1} completed for user {id}")
             ### search type analysis can be added here if needed
-    print(f"Total successful calls: {success_count}")
-    print(f"Total failed calls: {failure_count}")
+    logger.info(f"Total successful calls: {success_count}")
+    logger.info(f"Total failed calls: {failure_count}")
     return predictions_by_id, latencies, success_count, failure_count
 
 
 def main(
-    endpoint_name: str,
-    experiment_name: str,
-    data_path: str,
-    number_of_ids: int,
-    number_of_mock_ids: int,
-    number_of_calls_per_user: int,
+    endpoint_name: str = typer.Option(..., help="Name of the endpoint"),
+    experiment_name: str = typer.Option(..., help="Name of the experiment"),
+    storage_path: str = typer.Option(..., help="Path to the data"),
+    number_of_ids: int = typer.Option(10, help="Number of real IDs to test"),
+    number_of_mock_ids: int = typer.Option(10, help="Number of mock IDs to test"),
+    number_of_calls_per_user: int = typer.Option(2, help="Number of calls per user"),
 ):
-    # Configuration
+    """
+    Run integration tests for recommendation endpoints using Typer CLI.
+    """
     config = {
         "endpoint_name": endpoint_name,
         "experiment_name": experiment_name,
-        "data_path": data_path,
+        "storage_path": storage_path,
         "source_experiment_name": experiment_name,
         "number_of_ids": number_of_ids,
         "number_of_mock_ids": number_of_mock_ids,
         "number_of_calls_per_user": number_of_calls_per_user,
     }
-    # config = {
-    #     "endpoint_name": "recommendation_user_retrieval_prod",
-    #     "source_experiment_name": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",
-    #     "data_path": "data",
-    #     "number_of_ids": 10,
-    #     "number_of_mock_ids": 10,
-    #     "number_of_calls_per_user": 2,
-    # }
 
-    # Load user data
     (
         user_id_list,
         item_id_list,
@@ -81,7 +75,7 @@ def main(
         user_embedding_dict,
         item_embedding_dict,
     ) = fetch_user_item_data_with_embeddings(config)
-    print("len(item_id_list):", len(item_id_list))
+    logger.info(f"len(item_id_list): {len(item_id_list)}")
 
     analysis_config = {
         "recommendation": {
@@ -94,67 +88,57 @@ def main(
         },
     }
     results = {}
-    # get endpont details
-    endpoint_details = get_endpoint_details(
-        config["endpoint_name"], gcp_project=GCP_PROJECT, location=LOCATION
-    )
     for call_type in analysis_config:
-        print(f"\n=== Processing {call_type} calls ===")
+        logger.info(f"\n=== Processing {call_type} calls ===")
         call_type_results = []
         for data_type in ["true", "mock"]:
-            print(f"\nProcessing {data_type} IDs for {call_type} calls...")
-            # Test real users
+            logger.info(f"\nProcessing {data_type} IDs for {call_type} calls...")
             ids = analysis_config[call_type][f"{data_type}_ids"]
 
             predictions, latencies, success_count, failure_count = (
                 process_endpoint_calls(
-                    endpoint_path=endpoint_details["endpoint_path"],
+                    endpoint_name=config["endpoint_name"],
                     call_type=call_type,
                     ids=ids,
                     n_calls_per_user=config["number_of_calls_per_user"],
                 )
             )
-            print(f"Processed {len(ids)} {data_type} IDs for {call_type} calls.")
-            # Analyze predictions
-            print(
-                f"Analyzing predictions for {call_type} calls with {data_type} IDs..."
-            )
-            # Flatten predictions for analysis
-            metrics = analyze_predictions(
-                predictions,
-                latencies,
-                user_embedding_dict,
-                item_embedding_dict,
-                success_count=success_count,
-                failure_count=failure_count,
+            logger.info(f"Processed {len(ids)} {data_type} IDs for {call_type} calls.")
+            metrics = {"call_type": call_type, "data_type": data_type}
+            metrics.update(
+                analyze_predictions(
+                    predictions,
+                    user_embedding_dict,
+                    item_embedding_dict,
+                    latencies,
+                    success_count=success_count,
+                    failure_count=failure_count,
+                )
             )
             call_type_results.append(metrics)
 
-        # Create and save comparison DataFrame
         call_type_results_df = pd.DataFrame(call_type_results)
         results[call_type] = call_type_results_df
 
-        print(f"\n=== Comparison Report for {call_type} ===")
-        print(call_type_results_df.to_string(index=False))
-        call_type_results_df.to_csv(
-            f"{data_type}_{call_type}_comparison_report.csv", index=False
-        )
-        # Concatenate all comparison CSVs into one file after processing all call_types
+        logger.info(f"\n=== Comparison Report for {call_type} ===")
+        logger.info(call_type_results_df.to_string(index=False))
+        call_type_results_df.to_csv(f"{call_type}_comparison_report.csv", index=False)
         if len(results) == len(analysis_config):
             csv_files = [
-                f"{data_type}_{call_type}_comparison_report.csv"
-                for call_type in analysis_config
-                for data_type in ["true", "mock"]
+                f"{call_type}_comparison_report.csv" for call_type in analysis_config
             ]
             combined_df = pd.concat(
                 [pd.read_csv(f) for f in csv_files], ignore_index=True
             )
-            combined_df.to_csv("comparison_reports.csv", index=False)
-            print("\nOverall comparison report saved to comparison_reports.csv")
-        print(
-            f"\nComparison report saved to {data_type}_{call_type}_comparison_report.csv"
+            combined_df.to_parquet(
+                f"{config['storage_path']}/integration_tests_reports.parquet",
+                index=False,
+            )
+        logger.info(
+            f"\nComparison report saved to {config['storage_path']}"
+            "/integration_tests_reports.parquet"
         )
 
 
 if __name__ == "__main__":
-    main()
+    typer.run(main)

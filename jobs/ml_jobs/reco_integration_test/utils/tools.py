@@ -14,10 +14,8 @@ from constants import (
 
 
 def fetch_user_item_data_with_embeddings(config):
-    user_data_df = fetch_or_load_data(type="user")
-    item_data_df = fetch_or_load_data(type="item")
-    # user_data_df = pd.read_parquet(f"{config['data_path']}/user_data.parquet")
-    # item_data_df = pd.read_parquet(f"{config['data_path']}/item_data.parquet")
+    user_data_df = pd.read_parquet(f"{config['storage_path']}/user_data.parquet")
+    item_data_df = pd.read_parquet(f"{config['storage_path']}/item_data.parquet")
     # Keep only necessary columns
     user_id_list = user_data_df["user_id"].unique().tolist()
     item_id_list = item_data_df["item_id"].unique().tolist()
@@ -69,7 +67,7 @@ def extract_embeddings(loaded_model):
 def download_and_load_model(config):
     if not os.path.exists(MODEL_BASE_PATH) or not os.listdir(MODEL_BASE_PATH):
         source_artifact_uri = get_model_from_mlflow(
-            experiment_name=config["source_experiment_name"]["prod"],
+            experiment_name=config["source_experiment_name"],
             run_id=None,
             artifact_uri=None,
         )

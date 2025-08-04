@@ -21,9 +21,9 @@ def convert_to_dict(obj: Any) -> Any:
 
 def analyze_predictions(
     predictions_by_user: dict[str, list[list]],
-    latencies: list[float],
     user_embedding_dict: dict[str, np.ndarray] | None = None,
     item_embedding_dict: dict[str, np.ndarray] | None = None,
+    latencies: list[float] | None = None,
     success_count: int | None = None,
     failure_count: int | None = None,
 ) -> dict[str, Any]:
@@ -308,7 +308,9 @@ def _analyze_user_recommendation_overlap(predictions_by_user):
         return {"user_reco_avg_jaccard": 0}
 
 
-def _analyze_prediction_attributes(predictions_by_user):
+def _analyze_prediction_attributes(
+    predictions_by_user,
+):
     """
     Analyze the _distance and _user_item_dot_similarity attributes in predictions.
     Computes average, min, and max for each if present.

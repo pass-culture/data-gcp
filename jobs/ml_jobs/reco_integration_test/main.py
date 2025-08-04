@@ -139,6 +139,18 @@ def main(
         call_type_results_df.to_csv(
             f"{data_type}_{call_type}_comparison_report.csv", index=False
         )
+        # Concatenate all comparison CSVs into one file after processing all call_types
+        if len(results) == len(analysis_config):
+            csv_files = [
+                f"{data_type}_{call_type}_comparison_report.csv"
+                for call_type in analysis_config
+                for data_type in ["true", "mock"]
+            ]
+            combined_df = pd.concat(
+                [pd.read_csv(f) for f in csv_files], ignore_index=True
+            )
+            combined_df.to_csv("comparison_reports.csv", index=False)
+            print("\nOverall comparison report saved to comparison_reports.csv")
         print(
             f"\nComparison report saved to {data_type}_{call_type}_comparison_report.csv"
         )

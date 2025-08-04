@@ -1,22 +1,13 @@
-SELECT
+select
     go.item_id,
     go.offer_name,
     go.offer_description,
-    SUM(CASE WHEN ne.event_name = 'ConsultOffer' THEN 1 ELSE 0 END) AS item_vues
-FROM
-    `{{ bigquery_analytics_dataset }}.native_event` AS ne
-JOIN
-    `{{ bigquery_analytics_dataset }}.global_offer` AS go
-ON
-    ne.offer_id = go.offer_id
-WHERE
-    ne.event_date >= '2025-07-01'
-    AND ne.offer_id IS NOT NULL
+    sum(case when ne.event_name = 'ConsultOffer' then 1 else 0 end) as item_vues
+from `{{ bigquery_analytics_dataset }}.native_event` as ne
+join `{{ bigquery_analytics_dataset }}.global_offer` as go on ne.offer_id = go.offer_id
+where ne.event_date >= '2025-07-01' and ne.offer_id is not null
 
-GROUP BY
-    go.item_id,
-    go.offer_name,
-    go.offer_description
-ORDER BY
-    item_vues DESC
-LIMIT 50;
+group by go.item_id, go.offer_name, go.offer_description
+order by item_vues desc
+limit 50
+;

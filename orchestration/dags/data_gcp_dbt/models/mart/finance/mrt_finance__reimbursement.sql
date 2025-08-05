@@ -4,6 +4,7 @@ with
             booking_id,
             offer_category_id,
             venue_department_code,
+            venue_department_name,
             venue_region_name,
             booking_used_date,
             booking_intermediary_amount,
@@ -64,6 +65,7 @@ with
 select
     booking_amount.booking_used_date,
     booking_amount.venue_department_code,
+    booking_amount.venue_department_name,
     booking_amount.venue_region_name,
     booking_amount.offer_category_id,
     count(distinct booking_amount.booking_id) as total_bookings,
@@ -77,5 +79,6 @@ inner join
 group by
     booking_amount.booking_used_date,
     booking_amount.venue_department_code,
+    booking_amount.venue_department_name,
     booking_amount.venue_region_name,
     booking_amount.offer_category_id

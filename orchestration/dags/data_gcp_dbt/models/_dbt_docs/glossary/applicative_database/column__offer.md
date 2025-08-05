@@ -7,8 +7,8 @@ enddocs %}
 {% docs column__offer_description %} Offer description (synopsis, further details on the show) as provided by thecultural partner and displayed in app.{% enddocs %}
 
 {% docs column__offer_name %} Name of the offer as it appears in the application. {% enddocs %}
-{% docs column__offer_category_id %} Identifier for the category of the offer. {% enddocs %}
-{% docs column__offer_category %} Identifier for the category of the offer. {% enddocs %}
+{% docs column__offer_category_id %} Identifier for the category of the offer. Determined by the cultural partner via a list of pre-set options in a drop down menu. {% enddocs %}
+{% docs column__offer_category %} Identifier for the category of the offer. Determined by the cultural partner via a list of pre-set options in a drop down menu. {% enddocs %}
 {% docs column__offer_creation_date %} Date when the offer was created. {% enddocs %}
 {% docs column__offer_created_at %} Timestamp when the offer was created. {% enddocs %}
 {% docs column__offer_updated_at %} Timestamp when the offer was last updated. {% enddocs %}
@@ -18,19 +18,19 @@ enddocs %}
 # Metadata related
 
 {% docs column__offer_type %} Deprecated. {% enddocs %}
-{% docs column__offer_is_bookable %} Indicates if the offer is bookable. {% enddocs %}
+{% docs column__offer_is_bookable %} Indicates if the offer is bookable (the offer has non expired and non depleted stock, and can thus still be booked by users in app). {% enddocs %}
 {% docs column__offer_is_digital_goods %} Indicates if the offer includes digital goods. {% enddocs %}
 {% docs column__offer_is_physical_goods %} Indicates if the offer includes physical goods. {% enddocs %}
 {% docs column__offer_is_event %} Indicates if the offer is an event. {% enddocs %}
 {% docs column__offer_humanized_id %} Human-readable identifier for the offer used in various platforms. {% enddocs %}
 {% docs column__passculture_pro_url %} URL to the offer on PassCulture Pro. {% enddocs %}
 {% docs column__webapp_url %} URL to the offer on the web application. {% enddocs %}
-{% docs column__offer_subcategory_id %} Identifier for the subcategory of the offer. {% enddocs %}
+{% docs column__offer_subcategory_id %} Identifier for the subcategory of the offer. Determined by the cultural partner via a list of pre-set options. {% enddocs %}
 {% docs column__offer_url %} URL to the offer. {% enddocs %}
-{% docs column__offer_is_national %} Indicates if the offer is available nationally. {% enddocs %}
+{% docs column__offer_is_national %} Indicates if the offer is available nationally. This Information is originally filled by pass Culture teams but is no longer used. It will be decommissioned soon. {% enddocs %}
 {% docs column__offer_is_numerical %} Indicates if the offer is digital (based on an url). {% enddocs %}
 {% docs column__offer_is_geolocated %} Indicates if the offer is geolocated. {% enddocs %}
-{% docs column__offer_is_active %} Indicates if the offer is active. {% enddocs %}
+{% docs column__offer_is_active %} Indicates if the offer is active (the offer has been deactivated and is no longer visible in app). {% enddocs %}
 {% docs column__offer_validation %} Validation status of the offer. {% enddocs %}
 {% docs column__author %} The offer's author (a book's author, a music's singer, a movie's director).{% enddocs %}
 {% docs column__performer %} Performers involved in this offer.{% enddocs %}

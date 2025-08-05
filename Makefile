@@ -30,10 +30,10 @@ auth:
 
 install_ubuntu_libs:
 	sudo apt-get update -y
-	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev libmariadb-dev clang
+	sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gcc libpq-dev python3-dev libmariadb-dev clang ggshield
 
 install_macos_libs:
-	brew install mysql-client@8.4 pkg-config
+	brew install mysql-client@8.4 pkg-config ggshield
 
 _get_gcp_credentials:
 ifeq (,$(wildcard ${HOME}/.config/gcloud/application_default_credentials.json))

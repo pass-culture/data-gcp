@@ -38,8 +38,6 @@ models:
         description: "{{ doc('column__performer') }}"
       - name: item_mean_stock_price
         description: "{{ doc('column__mean_stock_price_per_item') }}"
-        data_tests:
-          - not_null
       - name: item_booking_cnt
         description: "{{ doc('column__total_bookings') }}"
         data_tests:

@@ -22,3 +22,4 @@ typer==0.7.0
 typer==0.7.0
 umap_learn>=0.5.3
 umap-learn[parametric_umap]
+setuptools==78.1.1

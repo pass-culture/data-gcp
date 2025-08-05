@@ -7,6 +7,8 @@ models:
         description: '{{ doc("column__booking_used_date") }}'
       - name: venue_department_code
         description: '{{ doc("column__venue_department_code") }}'
+      - name: venue_department_name
+        description: '{{ doc("column__venue_department_name") }}'
       - name: venue_region_name
         description: '{{ doc("column__venue_region_name") }}'
       - name: offer_category_id

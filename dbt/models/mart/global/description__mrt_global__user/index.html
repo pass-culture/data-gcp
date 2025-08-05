@@ -1197,6 +1197,8 @@
       
         
       
+        
+      
     
     
       
@@ -1284,6 +1286,27 @@
   
   <span class="md-ellipsis">
     User information history
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../intermediate/applicative/description__subcategories/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Subcategories
   </span>
   
 
@@ -4514,6 +4537,8 @@
       
         
       
+        
+      
     
     
       
@@ -5000,6 +5025,27 @@
   
   <span class="md-ellipsis">
     Column  stock
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../glossary/applicative_database/column__subcategories/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Column  subcategories
   </span>
   
 
@@ -6858,12 +6904,12 @@ Demographic information (address, activity) are purely declarative. They are reg
 <tr>
 <td style="text-align: left;">user_civility</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Registered civility of the user (male, female).</td>
+<td style="text-align: left;">Registered civility of the user (male, female). Information collected during registration.</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_school_type</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Type of school the user is enrolled in (public, private etc), for GRANT_15_17 users.</td>
+<td style="text-align: left;">Type of school the user is enrolled in: Centre de formation apprentis, Collège privé, Collège public, Lycée agricole, Lycée maritime, Lycée militaire, Lycée privé, Lycée public, À domicile (CNED, institut de santé, etc.).</td>
 </tr>
 <tr>
 <td style="text-align: left;">user_is_active</td>
@@ -6973,7 +7019,7 @@ Demographic information (address, activity) are purely declarative. They are reg
 <tr>
 <td style="text-align: left;">first_deposit_type</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Type of the user's first deposit (GRANT_18 or GRANT_15_17).</td>
+<td style="text-align: left;">Type of the user's first deposit, can be GRANT_18, GRANT_15_17, GRANT_17_18, GRANT_FREE.</td>
 </tr>
 <tr>
 <td style="text-align: left;">total_deposit_amount</td>
@@ -7113,7 +7159,7 @@ Demographic information (address, activity) are purely declarative. They are reg
 <tr>
 <td style="text-align: left;">user_suspension_reason</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Reason for the user's suspension (upon user request, fraud suspicion etc).</td>
+<td style="text-align: left;">Reason for the user's suspension. Possible values include: end of eligibility – The user no longer meets the criteria to be eligible for a deposit; fraud suspicion – Suspicious activity detected, requiring investigation; hacking fraud – Confirmed or suspected account compromise; upon user request – The user has explicitly requested the suspension or deletion of their account.</td>
 </tr>
 <tr>
 <td style="text-align: left;">first_deposit_amount</td>

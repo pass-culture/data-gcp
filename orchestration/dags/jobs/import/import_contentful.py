@@ -53,6 +53,7 @@ with DAG(
         "playlists_names": Param(
             default="",
             type="string",
+            description="Comma separated list of playlists names to import: p1,p2,p3",
         ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],

@@ -16,7 +16,7 @@
 
 {% set categories = [
     {"name": "LIVRE", "value_expr": "livres"},
-    {"name": "CINEMA", "value_expr": "cinema"}, 
+    {"name": "CINEMA", "value_expr": "cinema"},
     {"name": "MUSIQUE_LIVE", "value_expr": "musique_live"},
     {"name": "SPECTACLE", "value_expr": "spectacle_vivant"},
     {"name": "MUSEE", "value_expr": "musee"},

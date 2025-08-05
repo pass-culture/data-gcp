@@ -50,6 +50,11 @@ with DAG(
             type="string",
         ),
         "instance_name": Param(default=GCE_INSTANCE, type="string"),
+        "playlists_names": Param(
+            default="",
+            type="string",
+            description="Comma separated list of playlists names to import: p1,p2,p3",
+        ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
 ) as dag:
@@ -75,7 +80,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py ",
+        command="python main.py {% if params.playlists_names and params.playlists_names != '' %} --playlists_names {{ params.playlists_names }}{% endif %}",
         do_xcom_push=True,
     )
 

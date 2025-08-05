@@ -27,6 +27,40 @@ def compute_cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
     return np.dot(vec1, vec2) / (norm1 * norm2)
 
 
+def update_metrics(metrics, update_dict):
+    if update_dict:
+        metrics.update(update_dict)
+
+
+def calculate_response_codes(predictions_by_user):
+    response_code_counts = {"success": 0, "error": 0}
+    total_responses = 0
+    for user_preds in predictions_by_user.values():
+        for preds in user_preds:
+            total_responses += 1
+            if preds:
+                pred_dict = convert_to_dict(preds[0])
+                is_error = any(
+                    "error" in str(value).lower() for value in pred_dict.values()
+                )
+                response_code_counts["error" if is_error else "success"] += 1
+            else:
+                response_code_counts["error"] += 1
+    return response_code_counts, total_responses
+
+
+def calculate_pairwise_similarities(item_ids, item_embedding_dict):
+    similarities = []
+    for i in range(len(item_ids)):
+        for j in range(i + 1, len(item_ids)):
+            sim = compute_cosine_similarity(
+                item_embedding_dict[item_ids[i]],
+                item_embedding_dict[item_ids[j]],
+            )
+            similarities.append(sim)
+    return similarities
+
+
 def analyze_predictions(
     predictions_by_user: dict[str, list[list]],
     user_embedding_dict: dict[str, np.ndarray] | None = None,
@@ -39,39 +73,35 @@ def analyze_predictions(
     metrics = {}
     print("\n=== Analysis of Recommendations ===")
 
-    metrics.update(_analyze_recommendation_counts(predictions_by_user))
-    metrics.update(
+    update_metrics(metrics, _analyze_recommendation_counts(predictions_by_user))
+    update_metrics(
+        metrics,
         _analyze_response_codes(
             predictions_by_user,
             success_count=success_count,
             failure_count=failure_count,
-        )
+        ),
     )
-    metrics.update(_analyze_search_types(predictions_by_user))
-    metrics.update(_analyze_overlap(predictions_by_user))
-
-    metrics.update(_analyze_latencies(latencies))
-
-    # Analyze _distance and _user_item_dot_similarity attributes
-    metrics.update(_analyze_prediction_attributes(predictions_by_user))
-
-    # Check if recommended offers are different for different users (identical sets)
-    # metrics.update(_analyze_user_recommendation_uniqueness(predictions_by_user))
-    # New: Analyze overlap (Jaccard) between user recommendations
-    metrics.update(_analyze_user_recommendation_overlap(predictions_by_user))
-
+    update_metrics(metrics, _analyze_search_types(predictions_by_user))
+    update_metrics(metrics, _analyze_overlap(predictions_by_user))
+    update_metrics(metrics, _analyze_latencies(latencies))
+    update_metrics(metrics, _analyze_prediction_attributes(predictions_by_user))
+    update_metrics(metrics, _analyze_user_recommendation_overlap(predictions_by_user))
     if item_embedding_dict:
-        metrics.update(
-            _analyze_intralist_similarity(predictions_by_user, item_embedding_dict)
+        update_metrics(
+            metrics,
+            _analyze_intralist_similarity(
+                predictions_by_user,
+                item_embedding_dict,
+            ),
         )
-
     if user_embedding_dict and item_embedding_dict:
-        metrics.update(
+        update_metrics(
+            metrics,
             _analyze_user_item_similarity(
                 predictions_by_user, user_embedding_dict, item_embedding_dict
-            )
+            ),
         )
-
     return metrics
 
 
@@ -93,25 +123,14 @@ def _analyze_response_codes(
     failure_count: int | None = None,
 ):
     """Analyze response codes from predictions."""
-    response_code_counts = {"success": 0, "error": 0}
-    total_responses = 0
-    for user_preds in predictions_by_user.values():
-        for preds in user_preds:
-            total_responses += 1
-            if preds:
-                pred_dict = convert_to_dict(preds[0])
-                is_error = any(
-                    "error" in str(value).lower() for value in pred_dict.values()
-                )
-                response_code_counts["error" if is_error else "success"] += 1
-            else:
-                response_code_counts["error"] += 1
 
-    # If explicit counts are provided, use them instead
     if success_count is not None and failure_count is not None:
-        response_code_counts["success"] = success_count
-        response_code_counts["error"] = failure_count
+        response_code_counts = {"success": success_count, "error": failure_count}
         total_responses = success_count + failure_count
+    else:
+        response_code_counts, total_responses = calculate_response_codes(
+            predictions_by_user
+        )
 
     success_rate = (
         response_code_counts["success"] / total_responses * 100
@@ -203,16 +222,10 @@ def _analyze_intralist_similarity(predictions_by_user, item_embedding_dict):
                 for pred in pred_dicts
                 if pred.get("item_id") in item_embedding_dict
             ]
-
             if len(item_ids) >= 2:
-                similarities = []
-                for i in range(len(item_ids)):
-                    for j in range(i + 1, len(item_ids)):
-                        sim = compute_cosine_similarity(
-                            item_embedding_dict[item_ids[i]],
-                            item_embedding_dict[item_ids[j]],
-                        )
-                        similarities.append(sim)
+                similarities = calculate_pairwise_similarities(
+                    item_ids, item_embedding_dict
+                )
                 if similarities:
                     avg_intralist_similarities.append(np.mean(similarities))
 

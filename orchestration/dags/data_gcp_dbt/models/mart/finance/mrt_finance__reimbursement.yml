@@ -17,7 +17,7 @@ models:
         description: '{{ doc("column__total_quantities") }}'
       - name: total_revenue_amount
         description: '{{ doc("column__total_revenue_amount") }}'
-      - name: total_reimbursement_amount
-        description: '{{ doc("column__total_reimbursement_amount") }}'
+      - name: total_reimbursed_amount
+        description: '{{ doc("column__total_reimbursed_amount") }}'
       - name: total_contribution_amount
         description: '{{ doc("column__total_contribution_amount") }}'

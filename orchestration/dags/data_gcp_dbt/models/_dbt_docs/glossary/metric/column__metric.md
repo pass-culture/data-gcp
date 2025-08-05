@@ -114,5 +114,5 @@ title: Metrics
 {% docs column__total_diversification %} Total du score de diversité incrémenté par les réservations associées. {% enddocs %}
 {% docs column__total_quantities %} Total quantities booked. A booking quantity can be 1 or 2. {% enddocs %}
 {% docs column__total_revenue_amount %} The total revenue amount associated with the bookings. {% enddocs %}
-{% docs column__total_reimbursement_amount %} Total amount reimbursed to the offerers.  {% enddocs %}
+{% docs column__total_reimbursed_amount %} Total amount reimbursed to the offerers.  {% enddocs %}
 {% docs column__total_contribution_amount %} Total amount contributed by the offerers on their bookings.  {% enddocs %}

@@ -112,3 +112,7 @@ title: Metrics
 {% docs column__total_distinct_venue_consult_offer %} The total distinct number of venues which led to an offer consultation. {% enddocs %}
 {% docs column__total_session_venue_map_seen_duration_seconds %} Durée totale en seconde pendant laquelle la venue map a été affichée au cours d’une session. {% enddocs %}
 {% docs column__total_diversification %} Total du score de diversité incrémenté par les réservations associées. {% enddocs %}
+{% docs column__total_quantities %} Total quantities booked. A booking quantity can be 1 or 2. {% enddocs %}
+{% docs column__total_revenue_amount %} The total revenue amount associated with the bookings. {% enddocs %}
+{% docs column__total_reimbursement_amount %} Total amount reimbursed to the offerers.  {% enddocs %}
+{% docs column__total_contribution_amount %} Total amount contributed by the offerers on their bookings.  {% enddocs %}

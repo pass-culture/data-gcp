@@ -1,68 +1,102 @@
-WITH booking_amount AS(
-SELECT
-    booking_id,
-    offer_category_id,
-    venue_department_code,
-    venue_region_name,
-    booking_used_date,
-    booking_intermediary_amount,
-    booking_quantity
-FROM {{ ref('int_global__booking') }}
-WHERE booking_is_used IS true
-AND booking_used_date>="2021-01-01"
-),
+with
+    booking_amount as (
+        select
+            booking_id,
+            offer_category_id,
+            venue_department_code,
+            venue_region_name,
+            booking_used_date,
+            booking_intermediary_amount,
+            booking_quantity
+        from {{ ref("int_global__booking") }}
+        where booking_is_used is true and booking_used_date >= "2021-01-01"
+    ),
 
-reimbursed_amount AS (
-SELECT DISTINCT
-    finance_event.booking_id AS indiv_bookingid,
-    pricing_line.category AS amount_type,
-    pricing.amount,
-    cashflow.batchid,
-    bfi.booking_id AS  indiv_incident_id
-FROM {{ ref('int_finance__pricing') }} AS pricing
-LEFT JOIN {{ ref('int_finance__event') }} AS finance_event ON pricing.event_id = finance_event.finance_event_id
-LEFT JOIN {{ ref('int_finance__pricing_line') }} AS pricing_line ON pricing.id = pricing_line.pricingid
-LEFT JOIN {{ ref('int_finance__cashflow_pricing') }} AS cash ON pricing.id = cash.pricingid
-LEFT JOIN {{ ref('int_finance__cashflow') }} AS cashflow ON cash.cashflowid = cashflow.id
-LEFT JOIN {{ ref('int_finance__booking_incident') }} AS bfi ON finance_event.booking_finance_incident_id = bfi.id
-LEFT JOIN {{ ref('int_global__venue') }} AS venue ON pricing.venue_id = venue.venue_id
-WHERE pricing.status="invoiced"
-AND (pricing.bookingid IS NOT null OR bfi.booking_id IS NOT null) -- conserver uniquement le volet individuel
-AND pricing_line.category ="offerer revenue"
-),
+    reimbursed_amount as (
+        select distinct
+            finance_event.booking_id as indiv_bookingid,
+            pricing_line.category as amount_type,
+            pricing.amount,
+            cashflow.batchid,
+            bfi.booking_id as indiv_incident_id
+        from {{ ref("int_finance__pricing") }} as pricing
+        left join
+            {{ ref("int_finance__event") }} as finance_event
+            on pricing.event_id = finance_event.finance_event_id
+        left join
+            {{ ref("int_finance__pricing_line") }} as pricing_line
+            on pricing.id = pricing_line.pricingid
+        left join
+            {{ ref("int_finance__cashflow_pricing") }} as cash
+            on pricing.id = cash.pricingid
+        left join
+            {{ ref("int_finance__cashflow") }} as cashflow
+            on cash.cashflowid = cashflow.id
+        left join
+            {{ ref("int_finance__booking_incident") }} as bfi
+            on finance_event.booking_finance_incident_id = bfi.id
+        left join
+            {{ ref("int_global__venue") }} as venue on pricing.venue_id = venue.venue_id
+        where
+            pricing.status = "invoiced"
+            and (pricing.bookingid is not null or bfi.booking_id is not null)  -- conserver uniquement le volet individuel
+            and pricing_line.category = "offerer revenue"
+    ),
 
-contribution_amount AS (
-SELECT DISTINCT
-    finance_event.booking_id AS indiv_bookingid,
-    pricing_line.category AS amount_type,
-    pricing_line.amount,
-    cashflow.batchid,
-    bfi.booking_id AS  indiv_incident_id
-FROM {{ ref('int_finance__pricing') }} AS pricing
-LEFT JOIN {{ ref('int_finance__event') }} AS finance_event ON pricing.event_id = finance_event.finance_event_id
-LEFT JOIN {{ ref('int_finance__pricing_line') }} AS pricing_line ON pricing.id = pricing_line.pricingid
-LEFT JOIN {{ ref('int_finance__cashflow_pricing') }} AS cash ON pricing.id = cash.pricingid
-LEFT JOIN {{ ref('int_finance__cashflow') }} AS cashflow ON cash.cashflowid = cashflow.id
-LEFT JOIN {{ ref('int_finance__booking_incident') }} AS bfi ON finance_event.booking_finance_incident_id = bfi.id
-LEFT JOIN {{ ref('int_global__venue') }} AS venue ON pricing.venue_id = venue.venue_id
-WHERE pricing.status="invoiced"
-AND (pricing.bookingid IS NOT null OR bfi.booking_id IS NOT null) -- conserver uniquement le volet individuel
-AND pricing_line.category="offerer contribution"
-)
+    contribution_amount as (
+        select distinct
+            finance_event.booking_id as indiv_bookingid,
+            pricing_line.category as amount_type,
+            pricing_line.amount,
+            cashflow.batchid,
+            bfi.booking_id as indiv_incident_id
+        from {{ ref("int_finance__pricing") }} as pricing
+        left join
+            {{ ref("int_finance__event") }} as finance_event
+            on pricing.event_id = finance_event.finance_event_id
+        left join
+            {{ ref("int_finance__pricing_line") }} as pricing_line
+            on pricing.id = pricing_line.pricingid
+        left join
+            {{ ref("int_finance__cashflow_pricing") }} as cash
+            on pricing.id = cash.pricingid
+        left join
+            {{ ref("int_finance__cashflow") }} as cashflow
+            on cash.cashflowid = cashflow.id
+        left join
+            {{ ref("int_finance__booking_incident") }} as bfi
+            on finance_event.booking_finance_incident_id = bfi.id
+        left join
+            {{ ref("int_global__venue") }} as venue on pricing.venue_id = venue.venue_id
+        where
+            pricing.status = "invoiced"
+            and (pricing.bookingid is not null or bfi.booking_id is not null)  -- conserver uniquement le volet individuel
+            and pricing_line.category = "offerer contribution"
+    )
 
-SELECT
+select
     booking_amount.booking_used_date,
     booking_amount.venue_department_code,
     booking_amount.venue_region_name,
     booking_amount.offer_category_id,
-    count(DISTINCT booking_amount.booking_id) AS total_bookings,
-    sum(booking_amount.booking_quantity) AS total_quantities,
-    sum(booking_amount.booking_intermediary_amount) AS total_revenue_amount,
-    -sum(reimbursed_amount.amount)/100 AS total_reimbused_amount,
-    sum(contribution_amount.amount)/100 AS total_contribution_amount
-FROM booking_amount
-LEFT JOIN reimbursed_amount ON booking_amount.booking_id = coalesce(reimbursed_amount.indiv_bookingid, reimbursed_amount.indiv_incident_id)
-LEFT JOIN contribution_amount ON booking_amount.booking_id = coalesce(contribution_amount.indiv_bookingid, contribution_amount.indiv_incident_id)
-WHERE reimbursed_amount.batchid IS NOT null
-AND contribution_amount.batchid IS NOT null
-GROUP BY booking_amount.booking_used_date, booking_amount.venue_department_code, booking_amount.venue_region_name, booking_amount.offer_category_id
+    count(distinct booking_amount.booking_id) as total_bookings,
+    sum(booking_amount.booking_quantity) as total_quantities,
+    sum(booking_amount.booking_intermediary_amount) as total_revenue_amount,
+    - sum(reimbursed_amount.amount) / 100 as total_reimbused_amount,
+    sum(contribution_amount.amount) / 100 as total_contribution_amount
+from booking_amount
+left join
+    reimbursed_amount
+    on booking_amount.booking_id
+    = coalesce(reimbursed_amount.indiv_bookingid, reimbursed_amount.indiv_incident_id)
+left join
+    contribution_amount
+    on booking_amount.booking_id = coalesce(
+        contribution_amount.indiv_bookingid, contribution_amount.indiv_incident_id
+    )
+where reimbursed_amount.batchid is not null and contribution_amount.batchid is not null
+group by
+    booking_amount.booking_used_date,
+    booking_amount.venue_department_code,
+    booking_amount.venue_region_name,
+    booking_amount.offer_category_id

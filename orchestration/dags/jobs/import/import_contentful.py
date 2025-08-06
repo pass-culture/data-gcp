@@ -69,7 +69,7 @@ with DAG(
         task_id="fetch_install_code",
         instance_name=GCE_INSTANCE,
         branch="{{ params.branch }}",
-        python_version="3.8",
+        python_version="3.10",
         base_dir=BASE_PATH,
         dag=dag,
         retries=2,
@@ -80,7 +80,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py {% if params.playlists_names and params.playlists_names != '' %} --playlists_names {{ params.playlists_names }}{% endif %}",
+        command="python main.py {% if params.playlists_names and params.playlists_names != '' %} --playlists-names {{ params.playlists_names }}{% endif %}",
         do_xcom_push=True,
     )
 

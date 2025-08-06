@@ -395,64 +395,79 @@ class ContentfulClient:
     def get_paged_modules(self, module_details):
         content_type = module_details["name"]
 
-        # Set initial query parameters
-        query = {
-            "content_type": content_type,
-            "include": 1,
-            "order": "sys.updatedAt",
-            "limit": self.page_size,
-            "skip": 0,
-        }
-        all_entries = []
+        try:
+            # Set initial query parameters
+            query = {
+                "content_type": content_type,
+                "include": 1,
+                "order": "sys.updatedAt",
+                "limit": self.page_size,
+                "skip": 0,
+            }
+            all_entries = []
 
-        # Retrieve the total number of entries
-        num_entries = self.client.entries(
-            {"content_type": content_type, "limit": 1, "include": 1}
-        ).total
-        print(f"Found {num_entries} for {content_type}")
+            # Retrieve the total number of entries
+            num_entries = self.client.entries(
+                {"content_type": content_type, "limit": 1, "include": 1}
+            ).total
+            print(f"Found {num_entries} for {content_type}")
 
-        # Iterate through pages
-        for i in range((num_entries // self.page_size) + 1):
-            query["skip"] = i * self.page_size
-            page = self.client.entries(query)
-            all_entries.extend(page)
+            # Iterate through pages
+            for i in range((num_entries // self.page_size) + 1):
+                query["skip"] = i * self.page_size
+                page = self.client.entries(query)
+                all_entries.extend(page)
 
-        print(f"Retrieved {len(all_entries)} entries")
-        return all_entries
+            print(f"Retrieved {len(all_entries)} entries")
+            return all_entries
+
+        except Exception as e:
+            if "BadRequestError: HTTP status code: 400" in str(e):
+                # Content type doesn't exist or has bad config - skip it
+                print(f"SKIP: {content_type} (HTTP 400 - not accessible)")
+                print(f"  {e}")
+                return []
+            else:
+                # Some other error - show full details
+                print(f"ERROR: {content_type} failed:")
+                print(f"  {e}")
+                return []
 
     def get_playlists(self):
-        for module_details in self.contentful_modules:
-            # Here we get all the modules matching the type desired
-            modules = self.get_paged_modules(module_details)
-            for module in modules:
-                # Get all the infos from the module and add it to the final dataframe
-                all_infos = self.get_all_fields(module, module_details)
-                self.add_module_infos_to_modules_dataframe(all_infos)
+        for module_def in self.contentful_modules:
+            for entry in self.get_paged_modules(module_def):
+                self._process_module(entry, module_def)
 
-                # Special case for homepages where we don't unfold submodules so we need to get the child-parent relationship here
-                if module_details["name"] == "homepageNatif":
-                    # Get parent-child relationships
-                    submodules = module.fields().get("modules", [])
-                    for submodule in submodules:
-                        self.add_parent_child_to_df(module.id, submodule.id)
-
-                for submodule_details in module_details["children"]:
-                    try:
-                        if submodule_details["type"] == "unique":
-                            submodules = [module.fields()[submodule_details["name"]]]
-                        else:
-                            submodules = module.fields()[submodule_details["name"]]
-                        for submodule in submodules:
-                            if submodule is not None:
-                                submodule_infos = self.get_all_fields(
-                                    submodule, submodule_details
-                                )
-                                self.add_module_infos_to_modules_dataframe(
-                                    submodule_infos
-                                )
-                                self.add_parent_child_to_df(module.id, submodule.id)
-                    except KeyError:
-                        continue
-
+        # final clean-up
         self.df_modules = self.df_modules.replace([None, "None"], float("nan"))
         return self.df_modules, self.df_links, self.df_tags
+
+    def _process_module(self, module, module_def):
+        # 1) core fields: extract and store the module itself
+        infos = self.get_all_fields(module, module_def)
+        self.add_module_infos_to_modules_dataframe(infos)
+
+        # 2) flat homepage modules: special case for homepageNatif
+        if module_def["name"] == "homepageNatif":
+            for child in module.fields().get("modules", []):
+                self.add_parent_child_to_df(module.id, child.id)
+
+        # 3) recursive children: for each declared child block, fetch and store submodules
+        for child_def in module_def.get("children", []):
+            try:
+                subs = module.fields()[child_def["name"]]
+            except KeyError:
+                # this module has no such field → skip
+                continue
+
+            # normalize to a list if it's declared "unique", else ensure it's a list or empty
+            subs = [subs] if child_def.get("type") == "unique" else (subs or [])
+
+            for sub in subs:
+                if sub is None:
+                    continue
+                # extract and store each submodule’s fields
+                sub_infos = self.get_all_fields(sub, child_def)
+                self.add_module_infos_to_modules_dataframe(sub_infos)
+                # record the parent→child link
+                self.add_parent_child_to_df(module.id, sub.id)

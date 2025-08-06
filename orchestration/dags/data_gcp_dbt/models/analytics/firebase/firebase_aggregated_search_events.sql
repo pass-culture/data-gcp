@@ -217,6 +217,9 @@ with
             count(
                 distinct case when ne.event_name = 'ConsultVenue' then ne.venue_id end
             ) as nb_venues_consulted,
+            count(
+                case when ne.event_name = 'ConsultArtist' AND ne.origin = 'search' then 1 end
+            ) as nb_artists_consulted,
             max(
                 coalesce(ne.event_name = 'ExtendSearchRadiusClicked', false)
             ) as has_extended_search_radius
@@ -229,7 +232,8 @@ with
                 'HasAddedOfferToFavorites',
                 'VenuePlaylistDisplayedOnSearchResults',
                 'ConsultVenue',
-                'ExtendSearchRadiusClicked'
+                'ExtendSearchRadiusClicked',
+                'ConsultArtist'
             )
             and ls.unique_session_id = ne.unique_session_id
             and ls.unique_search_id = ne.unique_search_id
@@ -254,6 +258,7 @@ with
             asd.*,
             bpsi.nb_offers_booked,
             bpsi.total_diversification,
+            bpsi.user_id, 
             lead(asd.first_date) over (
                 partition by bpsi.unique_session_id order by asd.first_timestamp
             )
@@ -266,6 +271,7 @@ with
 select
     unique_search_id,
     unique_session_id,
+    user_id, 
     first_date,
     first_timestamp,
     app_version,
@@ -289,6 +295,7 @@ select
     nb_iterations_search,
     nb_venue_playlist_displayed_on_search_results,
     nb_venues_consulted,
+    nb_artists_consulted,
     has_extended_search_radius,
     made_another_search,
     search_query_input_is_generic,

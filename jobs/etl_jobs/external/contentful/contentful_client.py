@@ -422,8 +422,16 @@ class ContentfulClient:
             return all_entries
 
         except Exception as e:
-            print(f"ERROR: Cannot fetch '{content_type}': {e}")
-            return []
+            if "BadRequestError: HTTP status code: 400" in str(e):
+                # Content type doesn't exist or has bad config - skip it
+                print(f"SKIP: {content_type} (HTTP 400 - not accessible)")
+                print(f"  {e}")
+                return []
+            else:
+                # Some other error - show full details
+                print(f"ERROR: {content_type} failed:")
+                print(f"  {e}")
+                return []
 
     def get_playlists(self):
         for module_def in self.contentful_modules:

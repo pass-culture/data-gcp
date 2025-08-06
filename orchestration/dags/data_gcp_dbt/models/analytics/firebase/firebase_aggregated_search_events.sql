@@ -218,7 +218,9 @@ with
                 distinct case when ne.event_name = 'ConsultVenue' then ne.venue_id end
             ) as nb_venues_consulted,
             count(
-                case when ne.event_name = 'ConsultArtist' and ne.origin = 'search' then 1 end
+                case
+                    when ne.event_name = 'ConsultArtist' and ne.origin = 'search' then 1
+                end
             ) as nb_artists_consulted,
             max(
                 coalesce(ne.event_name = 'ExtendSearchRadiusClicked', false)

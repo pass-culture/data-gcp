@@ -10,3 +10,4 @@ google-cloud-storage>=1.38.0
 requests==2.32.3
 pyarrow==21.0.0
 gcsfs==2021.9.0
+typer==0.15.1

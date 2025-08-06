@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 import typer
 from google.cloud import bigquery
@@ -47,8 +48,19 @@ def save_raw_modules_to_bq(modules_df, table_name):
     job.result()
 
 
+def parse_playlist_names(playlist_names: Optional[str]):
+    if playlist_names is None:
+        return []
+    elif playlist_names.strip() == "":
+        return []
+    else:
+        return [name.strip() for name in playlist_names.split(",")]
+
+
 def run(
-    playlists_names: str = typer.Option(None, help="Liste des playlists à importer"),
+    playlists_names: Optional[str] = typer.Option(
+        None, help="Liste des playlists à importer"
+    ),
 ):
     """The Cloud Function entrypoint.
     Args:
@@ -71,8 +83,7 @@ def run(
             "api_url": "cdn.contentful.com",
         },
     }
-
-    playlists_names = playlists_names.split(",") if playlists_names else []
+    playlists_names = parse_playlist_names(playlists_names)
 
     config_env = contentful_envs[ENV_SHORT_NAME]
     contentful_client = ContentfulClient(config_env, playlists_names)

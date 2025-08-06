@@ -80,7 +80,7 @@ with DAG(
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
         environment=dag_config,
-        command="python main.py {% if params.playlists_names and params.playlists_names != '' %} --playlists-names {{ params.playlists_names }}{% endif %}",
+        command="python main.py {% if params.playlists_names and params.playlists_names | trim != '' %} --playlists-names {{ params.playlists_names }}{% endif %}",
         do_xcom_push=True,
     )
 

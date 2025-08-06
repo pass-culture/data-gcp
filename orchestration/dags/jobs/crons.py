@@ -8,7 +8,7 @@ SCHEDULE_DICT = {
     "artist_linkage": "0 12 * * 0",
     "bigquery_archive_partition": "0 7 * * *",
     "bigquery_historize_applicative_database": {
-        "prod": "15 3 * * 1",  # every Monday at 3:15 AM
+        "prod": "15 3 * * *",  # every day at 3:15 AM
         "stg": None,
         "dev": None,
     },

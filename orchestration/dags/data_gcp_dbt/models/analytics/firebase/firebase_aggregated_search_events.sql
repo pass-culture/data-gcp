@@ -1,4 +1,3 @@
--- noqa: disable=all
 {{
     config(
         **custom_incremental_config(
@@ -259,7 +258,7 @@ with
             asd.*,
             bpsi.nb_offers_booked,
             bpsi.total_diversification,
-            bpsi.user_id, 
+            bpsi.user_id,
             lead(asd.first_date) over (
                 partition by bpsi.unique_session_id order by asd.first_timestamp
             )
@@ -272,7 +271,7 @@ with
 select
     unique_search_id,
     unique_session_id,
-    user_id, 
+    user_id,
     first_date,
     first_timestamp,
     app_version,

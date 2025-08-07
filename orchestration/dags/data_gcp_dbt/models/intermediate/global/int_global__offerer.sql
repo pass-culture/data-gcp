@@ -49,6 +49,14 @@ with
         group by offerer_id
     ),
 
+    epn_list as (
+        select
+        distinct offerer_id
+        from {{ ref("mrt_global__offerer_tag")}}
+        where tag_name in ("part-epn","ecosysteme-epn")
+    ),
+
+
     reimbursement_points as (
         select offerer_id, count(distinct bank_account_id) as total_reimbursement_points
         from {{ source("raw", "applicative_database_bank_account") }}
@@ -230,7 +238,8 @@ select
         else siren_reference_adage.siren_synchro_adage
     end as is_synchro_adage,
     tagged_partners.partner_type,
-    rp.total_reimbursement_points
+    rp.total_reimbursement_points,
+    case when epn_list.offerer_id is not null then true else false end as offerer_is_epn
 from {{ ref("int_applicative__offerer") }} as ofr
 left join
     {{ source("seed", "region_department") }} as region_department
@@ -256,6 +265,7 @@ left join siren_reference_adage on ofr.offerer_siren = siren_reference_adage.sir
 left join tagged_partners on ofr.offerer_id = tagged_partners.offerer_id
 left join reimbursement_points as rp on ofr.offerer_id = rp.offerer_id
 left join bookable_offer_history as boh on ofr.offerer_id = boh.offerer_id
+left join epn_list on ofr.offerer_id = epn_list.offerer_id
 qualify
     row_number() over (
         partition by ofr.offerer_siren order by siren_data.update_date desc

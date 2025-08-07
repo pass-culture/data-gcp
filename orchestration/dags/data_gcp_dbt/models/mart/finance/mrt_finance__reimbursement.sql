@@ -1,16 +1,16 @@
-with
-    booking_amount as (
+with booking_amount as (
         select
-            booking_id,
-            offer_category_id,
-            venue_department_code,
-            venue_department_name,
-            venue_region_name,
-            booking_used_date,
-            booking_intermediary_amount,
-            booking_quantity
-        from {{ ref("int_global__booking") }}
-        where booking_is_used is true and booking_used_date >= "2021-01-01"
+            b.booking_id,
+            b.offer_category_id,
+            b.venue_department_code,
+            b.venue_department_name,
+            b.venue_region_name,
+            b.offerer_is_epn,
+            b.booking_used_date,
+            b.booking_intermediary_amount,
+            b.booking_quantity
+        from {{ ref("int_global__booking") }} as b
+        where b.booking_is_used is true and b.booking_used_date >= "2021-01-01"
     ),
 
     financial_amounts as (
@@ -67,6 +67,7 @@ select
     booking_amount.venue_department_code,
     booking_amount.venue_department_name,
     booking_amount.venue_region_name,
+    booking_amount.offerer_is_epn,
     booking_amount.offer_category_id,
     count(distinct booking_amount.booking_id) as total_bookings,
     sum(booking_amount.booking_quantity) as total_quantities,
@@ -81,4 +82,5 @@ group by
     booking_amount.venue_department_code,
     booking_amount.venue_department_name,
     booking_amount.venue_region_name,
+    booking_amount.offerer_is_epn,
     booking_amount.offer_category_id

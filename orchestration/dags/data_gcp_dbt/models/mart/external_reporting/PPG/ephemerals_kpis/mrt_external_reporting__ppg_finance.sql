@@ -45,6 +45,7 @@ with
             venue_region_name,
             venue_department_name,
             offer_category_id,
+            offerer_is_epn,
             {% for kpi in kpis %}
                 {{ kpi.value_expr }}{% if not loop.last %},{% endif %}
             {% endfor %}
@@ -65,6 +66,7 @@ with
                 execution_date,
                 update_date,
                 offer_category_id,
+                offerer_is_epn,
                 {% for kpi in kpis %}
                     {{ kpi.value_expr }}{% if not loop.last %},{% endif %}
                 {% endfor %}
@@ -119,6 +121,26 @@ with
                 union all
             {% endif %}
         {% endfor %}
+    ),
+
+    epn_metrics as (
+        {% for kpi in kpis %}
+            select
+                execution_date,
+                update_date,
+                dimension_name,
+                dimension_value,
+                '{{ kpi.name }}_epn' as kpi_name,
+                sum({{ kpi.value_expr }}) as numerator,
+                1 as denominator,
+                safe_divide(sum({{ kpi.value_expr }}), 1) as kpi
+            from dimension_cross
+            where offerer_is_epn = true
+            group by execution_date, update_date, dimension_name, dimension_value
+            {% if not loop.last %}
+                union all
+            {% endif %}
+        {% endfor %}
     )
 
 select *
@@ -126,3 +148,6 @@ from global_metrics
 union all
 select *
 from category_metrics
+union all
+select *
+from epn_metrics

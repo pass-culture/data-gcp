@@ -68,6 +68,7 @@ with
             o.academy_name as partner_academy_name,
             o.offerer_region_name as partner_region_name,
             o.offerer_department_code as partner_department_code,
+            o.offerer_department_name as partner_department_name,
             o.offerer_postal_code as partner_postal_code,
             coalesce(
                 o.partner_type,
@@ -150,6 +151,7 @@ union all
         v.venue_academy_name as partner_academy_name,
         v.venue_region_name as partner_region_name,
         v.venue_department_code as partner_department_code,
+        v.venue_department_name as partner_department_name,
         v.venue_postal_code as partner_postal_code,
         coalesce(vt.venue_tag_name, v.venue_type_label) as partner_type,
         case

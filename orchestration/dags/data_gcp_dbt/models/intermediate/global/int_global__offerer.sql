@@ -124,6 +124,7 @@ select
     ofr.total_bookable_collective_offers,
     ofr.total_bookable_offers,
     ofr.offerer_department_code,
+    region_department.dep_name as offerer_department_name,
     ofr.offerer_postal_code,
     ofr.offerer_siren,
     coalesce(

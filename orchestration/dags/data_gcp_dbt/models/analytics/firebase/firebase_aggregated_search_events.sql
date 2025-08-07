@@ -86,7 +86,7 @@ with
             user_id,
             count(distinct offer_id) over (
                 partition by unique_search_id, unique_session_id
-            ) as nb_offers_booked,
+            ) as total_offers_booked,
             sum(delta_diversification) over (
                 partition by unique_search_id, unique_session_id
             ) as total_diversification
@@ -197,31 +197,31 @@ with
             ls.unique_search_id,
             count(
                 distinct case when ne.event_name = 'ConsultOffer' then ne.offer_id end
-            ) as nb_offers_consulted,
+            ) as total_offers_consulted,
             count(
                 distinct case
                     when ne.event_name = 'HasAddedOfferToFavorites' then ne.offer_id
                 end
-            ) as nb_offers_added_to_favorites,
+            ) as total_offers_added_to_favorites,
             count(
                 case when ne.event_name = 'NoSearchResult' then 1 end
-            ) as nb_no_search_result,
+            ) as total_searches_with_no_result,
             count(
                 case when ne.event_name = 'PerformSearch' then 1 end
-            ) as nb_iterations_search,
+            ) as total_search_iterations,
             count(
                 case
                     when ne.event_name = 'VenuePlaylistDisplayedOnSearchResults' then 1
                 end
-            ) as nb_venue_playlist_displayed_on_search_results,
+            ) as total_venue_playlists_displayed_in_search,
             count(
                 distinct case when ne.event_name = 'ConsultVenue' then ne.venue_id end
-            ) as nb_venues_consulted,
+            ) as total_venues_consulted,
             count(
                 case
                     when ne.event_name = 'ConsultArtist' and ne.origin = 'search' then 1
                 end
-            ) as nb_artists_consulted,
+            ) as total_artists_consulted,
             max(
                 coalesce(ne.event_name = 'ExtendSearchRadiusClicked', false)
             ) as has_extended_search_radius
@@ -258,7 +258,7 @@ with
     final_data as (
         select
             asd.*,
-            bpsi.nb_offers_booked,
+            bpsi.total_offers_booked,
             bpsi.total_diversification,
             bpsi.user_id,
             lead(asd.first_date) over (
@@ -291,17 +291,17 @@ select
     search_accessibility_filter,
     user_location_type,
     first_filter_applied,
-    nb_offers_consulted,
-    nb_offers_added_to_favorites,
-    nb_no_search_result,
-    nb_iterations_search,
-    nb_venue_playlist_displayed_on_search_results,
-    nb_venues_consulted,
-    nb_artists_consulted,
+    total_offers_consulted,
+    total_offers_added_to_favorites,
+    total_searches_with_no_result,
+    total_search_iterations,
+    total_venue_playlists_displayed_in_search,
+    total_venues_consulted,
+    total_artists_consulted,
     has_extended_search_radius,
     made_another_search,
     search_query_input_is_generic,
-    nb_offers_booked,
+    total_offers_booked,
     total_diversification,
     case
         when query_input is not null and not search_query_input_is_generic

@@ -1,4 +1,5 @@
-with booking_amount as (
+with
+    booking_amount as (
         select
             b.booking_id,
             b.offer_category_id,

@@ -50,12 +50,10 @@ with
     ),
 
     epn_list as (
-        select
-        distinct offerer_id
-        from {{ ref("mrt_global__offerer_tag")}}
-        where tag_name in ("part-epn","ecosysteme-epn")
+        select distinct offerer_id
+        from {{ ref("mrt_global__offerer_tag") }}
+        where tag_name in ("part-epn", "ecosysteme-epn")
     ),
-
 
     reimbursement_points as (
         select offerer_id, count(distinct bank_account_id) as total_reimbursement_points

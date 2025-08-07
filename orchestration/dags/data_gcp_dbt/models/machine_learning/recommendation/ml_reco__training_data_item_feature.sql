@@ -13,8 +13,10 @@ with
             string_agg(distinct offer.author, " ") as item_author,
             string_agg(distinct offer.performer, " ") as item_performer,
             round(avg(offer.last_stock_price), -1) as item_mean_stock_price,
-            round(sum(offer.total_used_individual_bookings), -1) as item_booking_cnt,
-            round(sum(offer.total_favorites), -1) as item_favourite_cnt
+            coalesce(
+                round(sum(offer.total_used_individual_bookings), -1), 0
+            ) as item_booking_cnt,
+            coalesce(round(sum(offer.total_favorites), -1), 0) as item_favourite_cnt
         from {{ ref("mrt_global__offer") }} as offer
         inner join
             {{ source("ml_preproc", "item_embedding_reduced_16") }}

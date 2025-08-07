@@ -30,10 +30,7 @@ models:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
           - not_null_proportion:
               where_condition: "user_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)"
-              anomaly_threshold_alert_percentage: 0.1
-              description: >
-                We have on average less than 10k new users on the last 30 days. We want to be
-                alerted when at least 10 of them don't have a postal code.
+              anomaly_threshold_alert_percentage: 0.01 # 0.01%
       - name: user_postal_code
         description: '{{ doc("column__user_postal_code") }}'
         data_type: STRING
@@ -43,7 +40,10 @@ models:
               max_ratio: 0.0005  # 0.05%
           - not_null_proportion:
               where_condition: "user_creation_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)"
-              anomaly_threshold_alert_percentage: 0
+              anomaly_threshold_alert_percentage: 0.1
+              description: >
+                We have on average less than 10k new users on the last 30 days. We want to be
+                alerted when at least 10 of them don't have a postal code.
       - name: user_city
         description: '{{ doc("column__user_city") }}'
         data_type: STRING

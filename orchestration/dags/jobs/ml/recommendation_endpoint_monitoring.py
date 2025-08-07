@@ -51,8 +51,6 @@ def create_ssh_task(task_id, command, instance_name, base_dir):
 
 
 DATE = "{{ ts_nodash }}"
-GCP_PROJECT_ID = "passculture-data-ehp"
-ENV_SHORT_NAME = "stg"
 DAG_CONFIG = {
     "ID": "endpoint_monitoring",
     "ENVIROMENT": {
@@ -73,8 +71,8 @@ DAG_CONFIG = {
         "prod": f"algo_training_two_towers_v1.2_{ENV_SHORT_NAME}",
     },
     "endpoint_name": f"recommendation_user_retrieval_{ENV_SHORT_NAME}",
-    "number_of_ids": 10,
-    "number_of_mock_ids": 10,
+    "number_of_ids": 100,
+    "number_of_mock_ids": 100,
     "number_of_calls_per_user": 2,
 }
 

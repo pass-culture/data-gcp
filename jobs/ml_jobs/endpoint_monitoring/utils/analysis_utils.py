@@ -61,6 +61,52 @@ def calculate_pairwise_similarities(item_ids, item_embedding_dict):
     return similarities
 
 
+def get_user_offer_sets(predictions_by_user):
+    user_offer_sets = {}
+    for user_id, user_preds in predictions_by_user.items():
+        all_preds = []
+        for preds in user_preds:
+            if isinstance(preds, list):
+                all_preds.extend(preds)
+        item_ids = set()
+        for pred in all_preds:
+            pred_dict = convert_to_dict(pred)
+            item_id = pred_dict.get("item_id")
+            if item_id is not None:
+                item_ids.add(item_id)
+        user_offer_sets[user_id] = item_ids
+    return user_offer_sets
+
+
+def calculate_jaccard_overlaps(user_offer_sets):
+    user_ids = list(user_offer_sets.keys())
+    n_users = len(user_ids)
+    overlaps = []
+    for i in range(n_users):
+        for j in range(i + 1, n_users):
+            set1 = user_offer_sets[user_ids[i]]
+            set2 = user_offer_sets[user_ids[j]]
+            if set1 or set2:
+                intersection = len(set1 & set2)
+                union = len(set1 | set2)
+                jaccard = intersection / union if union else 0
+                overlaps.append(jaccard)
+    return overlaps
+
+
+def get_item_embeddings(preds, item_embedding_dict):
+    pred_dicts = [convert_to_dict(pred) for pred in preds]
+    return [
+        item_embedding_dict.get(pred.get("item_id"))
+        for pred in pred_dicts
+        if pred.get("item_id") in item_embedding_dict
+    ]
+
+
+def calculate_similarities(user_emb, item_embs):
+    return [compute_cosine_similarity(user_emb, item_emb) for item_emb in item_embs]
+
+
 def analyze_predictions(
     predictions_by_user: dict[str, list[list]],
     user_embedding_dict: dict[str, np.ndarray] | None = None,
@@ -176,6 +222,7 @@ def _analyze_overlap(predictions_by_user):
     overlap_count = 0
 
     for user_preds in predictions_by_user.values():
+        # no need to convert to string
         if len(user_preds) >= 2:
             set1 = {str(convert_to_dict(item)) for item in user_preds[0]}
             set2 = {str(convert_to_dict(item)) for item in user_preds[1]}
@@ -251,17 +298,10 @@ def _analyze_user_item_similarity(
         if user_emb is None:
             continue
         for preds in user_preds:
-            pred_dicts = [convert_to_dict(pred) for pred in preds]
-            item_embs = [
-                item_embedding_dict.get(pred.get("item_id"))
-                for pred in pred_dicts
-                if pred.get("item_id") in item_embedding_dict
-            ]
+            item_embs = get_item_embeddings(preds, item_embedding_dict)
             if not item_embs:
                 continue
-            similarities = [
-                compute_cosine_similarity(user_emb, item_emb) for item_emb in item_embs
-            ]
+            similarities = calculate_similarities(user_emb, item_embs)
             if similarities:
                 avg_user_item_similarities.append(np.mean(similarities))
 
@@ -277,32 +317,9 @@ def _analyze_user_recommendation_overlap(predictions_by_user):
     Analyze the overlap (Jaccard similarity) between recommended offers for all
     user pairs. Returns statistics on overlap distribution.
     """
-    user_offer_sets = {}
-    for user_id, user_preds in predictions_by_user.items():
-        all_preds = []
-        for preds in user_preds:
-            if isinstance(preds, list):
-                all_preds.extend(preds)
-        item_ids = set()
-        for pred in all_preds:
-            pred_dict = convert_to_dict(pred)
-            item_id = pred_dict.get("item_id")
-            if item_id is not None:
-                item_ids.add(item_id)
-        user_offer_sets[user_id] = item_ids
 
-    user_ids = list(user_offer_sets.keys())
-    n_users = len(user_ids)
-    overlaps = []
-    for i in range(n_users):
-        for j in range(i + 1, n_users):
-            set1 = user_offer_sets[user_ids[i]]
-            set2 = user_offer_sets[user_ids[j]]
-            if set1 or set2:
-                intersection = len(set1 & set2)
-                union = len(set1 | set2)
-                jaccard = intersection / union if union else 0
-                overlaps.append(jaccard)
+    user_offer_sets = get_user_offer_sets(predictions_by_user)
+    overlaps = calculate_jaccard_overlaps(user_offer_sets)
     if overlaps:
         avg_overlap = np.mean(overlaps)
         min_overlap = np.min(overlaps)

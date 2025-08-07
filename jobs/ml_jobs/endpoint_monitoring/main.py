@@ -9,6 +9,17 @@ from utils.tools import (
 )
 
 
+def process_call_type_data(config, call_type, data_type, ids):
+    logger.info(f"\nProcessing {data_type} IDs for {call_type} calls...")
+    predictions, latencies, success_count, failure_count = process_endpoint_calls(
+        endpoint_name=config["endpoint_name"],
+        call_type=call_type,
+        ids=ids,
+        n_calls_per_user=config["number_of_calls_per_user"],
+    )
+    return predictions, latencies, success_count, failure_count
+
+
 def main(
     endpoint_name: str = typer.Option(..., help="Name of the endpoint"),
     experiment_name: str = typer.Option(..., help="Name of the experiment"),
@@ -58,28 +69,6 @@ def main(
     ) = fetch_user_item_data_with_embeddings(config)
     logger.info(f"len(item_id_list): {len(item_id_list)}")
 
-    def process_call_type_data(call_type, data_type, ids):
-        logger.info(f"\nProcessing {data_type} IDs for {call_type} calls...")
-        predictions, latencies, success_count, failure_count = process_endpoint_calls(
-            endpoint_name=config["endpoint_name"],
-            call_type=call_type,
-            ids=ids,
-            n_calls_per_user=config["number_of_calls_per_user"],
-        )
-        logger.info(f"Processed {len(ids)} {data_type} IDs for {call_type} calls.")
-        metrics = {"call_type": call_type, "data_type": data_type}
-        metrics.update(
-            analyze_predictions(
-                predictions,
-                user_embedding_dict,
-                item_embedding_dict,
-                latencies,
-                success_count=success_count,
-                failure_count=failure_count,
-            )
-        )
-        return metrics
-
     analysis_config = {
         "recommendation": {
             "true_ids": user_id_list,
@@ -96,7 +85,17 @@ def main(
         logger.info(f"\n=== Processing {call_type} calls ===")
         for data_type in ["true", "mock"]:
             ids = ids_dict[f"{data_type}_ids"]
-            metrics = process_call_type_data(call_type, data_type, ids)
+            predictions, latencies, success_count, failure_count = (
+                process_call_type_data(config, call_type, data_type, ids)
+            )
+            metrics = analyze_predictions(
+                predictions,
+                user_embedding_dict,
+                item_embedding_dict,
+                latencies,
+                success_count=success_count,
+                failure_count=failure_count,
+            )
             call_type_results.append(metrics)
     call_type_results_df = pd.DataFrame(call_type_results)
     logger.info(call_type_results_df.to_string(index=False))

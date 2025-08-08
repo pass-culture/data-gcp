@@ -160,6 +160,7 @@ sources:
       - name: zendesk_macro_usage
       - name: zendesk_ticket
       - name: zendesk_survey_response
+      - name: brevo_newsletters_histo
   - name: clean
     schema: clean_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"

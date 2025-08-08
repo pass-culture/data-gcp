@@ -65,5 +65,6 @@ select
     dms_accepted_at,
     is_reference_adage,
     is_synchro_adage,
+    offerer_is_epn
 from {{ ref("int_global__offerer") }}
 where offerer_validation_status = 'VALIDATED' and offerer_is_active

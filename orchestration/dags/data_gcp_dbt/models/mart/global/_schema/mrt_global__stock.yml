@@ -57,3 +57,6 @@ models:
         description: '{{ doc("column__price_category_label_id") }}'
       - name: venue_department_code
         description: '{{ doc("column__venue_department_code") }}'
+      - name: offerer_is_epn
+        description: "{{ doc('column__offerer_is_epn') }}"
+        data_type: BOOLEAN

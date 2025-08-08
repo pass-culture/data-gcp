@@ -1,17 +1,22 @@
 import asyncio
 import logging
-import random
-import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
-from connectors.brevo import AsyncBrevoConnector, BrevoConnector
+
+# Rate limiters now imported from connector module
+from connectors.brevo import (
+    AsyncBrevoConnector,
+    # Rate limiters available but not needed here anymore
+    # SyncBrevoHeaderRateLimiter,
+    # AsyncBrevoHeaderRateLimiter,
+    BrevoConnector,
+)
 from google.api_core.exceptions import NotFound
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import bigquery, secretmanager
-from http_tools.rate_limiters import BaseRateLimiter
 from jobs.brevo.config import (
     BIGQUERY_RAW_DATASET,
     BIGQUERY_TMP_DATASET,
@@ -23,112 +28,6 @@ from jobs.brevo.config import (
 )
 
 logger = logging.getLogger(__name__)
-
-# ===== CUSTOM RATE LIMITER =====
-
-
-class SyncBrevoHeaderRateLimiter(BaseRateLimiter):
-    """
-    Brevo-specific rate limiter using headers:
-    - x-sib-ratelimit-limit
-    - x-sib-ratelimit-remaining
-    - x-sib-ratelimit-reset
-    """
-
-    def acquire(self):
-        # No pre-request throttling — Brevo rate is dynamic
-        pass
-
-    def backoff(self, response):
-        try:
-            reset = float(response.headers.get("x-sib-ratelimit-reset", "10"))
-            logger.warning(
-                f"Rate limited. Waiting {reset:.2f}s based on x-sib-ratelimit-reset header..."
-            )
-            time.sleep(reset)
-        except Exception:
-            logger.warning("Fallback backoff: 10s")
-            time.sleep(10)
-
-
-class AsyncBrevoHeaderRateLimiter(BaseRateLimiter):
-    """
-    Async Brevo-specific rate limiter with concurrency control to prevent thundering herd.
-    Uses semaphore to limit concurrent requests and implements jittered backoff.
-    """
-
-    def __init__(self, max_concurrent: int = 5):
-        self.semaphore = asyncio.Semaphore(max_concurrent)
-        self.backoff_event = asyncio.Event()
-        self.backoff_event.set()  # Initially not in backoff
-        self.backoff_lock = asyncio.Lock()
-        self.request_interval = 0.2  # 200ms between requests
-        self.last_request_time = 0
-        self._restore_task: Optional[asyncio.Task] = None
-
-    async def acquire(self):
-        """Acquire permission to make a request."""
-        # Wait if we're in global backoff
-        await self.backoff_event.wait()
-
-        # Acquire semaphore for concurrency control
-        await self.semaphore.acquire()
-
-        # Add small delay between requests to avoid bursts
-        async with self.backoff_lock:
-            now = time.time()
-            time_since_last = now - self.last_request_time
-            if time_since_last < self.request_interval:
-                await asyncio.sleep(self.request_interval - time_since_last)
-            self.last_request_time = time.time()
-
-    def release(self):
-        """Release the semaphore after request completion."""
-        self.semaphore.release()
-
-    async def backoff(self, response):
-        """Handle rate limit with jittered backoff to prevent thundering herd."""
-        async with self.backoff_lock:
-            if not self.backoff_event.is_set():
-                # Already in backoff, don't reset
-                return
-
-            # Clear the event to block new requests
-            self.backoff_event.clear()
-
-            try:
-                reset_time = float(response.headers.get("x-sib-ratelimit-reset", "10"))
-                # Add jitter: 0-10% additional wait time to spread out retries
-
-                jitter = reset_time * random.uniform(0, 0.01)
-                total_wait = reset_time + jitter
-
-                logger.warning(
-                    f"[Async] Rate limited. Waiting {total_wait:.2f}s "
-                    f"(base: {reset_time:.2f}s + jitter: {jitter:.2f}s)"
-                )
-
-                await asyncio.sleep(total_wait)
-
-                # Gradually release requests instead of all at once
-                self.request_interval = 1.0  # Increase interval after backoff
-
-            except Exception:
-                logger.warning("[Async] Fallback backoff: 10s")
-                await asyncio.sleep(10)
-            finally:
-                # Resume accepting requests
-                self.backoff_event.set()
-
-                # Gradually decrease interval back to normal
-                self._restore_task = asyncio.create_task(self._gradually_restore_rate())
-
-    async def _gradually_restore_rate(self):
-        """Gradually restore request rate to normal after backoff."""
-        steps = 10
-        for _ in range(steps):
-            await asyncio.sleep(2)  # Wait 2 seconds between steps
-            self.request_interval = max(0.2, self.request_interval - 0.08)
 
 
 # ===== COMMON FUNCTIONS =====
@@ -346,7 +245,7 @@ def save_to_historical(
         logger.info(f"Created partitioned table {base_table_id}")
 
     # Now configure the load job to overwrite the specific partition,
-    # and to create the table if somehow it still doesn’t exist.
+    # and to create the table if somehow it still doesn't exist.
     job_config = bigquery.LoadJobConfig(
         write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
         create_disposition=bigquery.CreateDisposition.CREATE_IF_NEEDED,
@@ -612,10 +511,6 @@ async def _fetch_template_events(
                     offset=offset,
                 )
 
-                # Release semaphore after successful request
-                if hasattr(connector.client.rate_limiter, "release"):
-                    connector.client.rate_limiter.release()
-
                 if not events_resp:
                     logger.warning(f"[Async] No response for template {template_id}")
                     break
@@ -648,9 +543,6 @@ async def _fetch_template_events(
                 logger.error(
                     f"[Async] Error fetching events for template {template_id}: {e}"
                 )
-                # Release semaphore on error
-                if hasattr(connector.client.rate_limiter, "release"):
-                    connector.client.rate_limiter.release()
                 break
 
     return events_list

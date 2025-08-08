@@ -3,12 +3,12 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 import typer
-from connectors.brevo import AsyncBrevoConnector, BrevoConnector
-from http_tools.clients import AsyncHttpClient, SyncHttpClient
+from connectors.brevo import (
+    create_async_brevo_connector,
+    create_brevo_connector,
+)
 from jobs.brevo.config import UPDATE_WINDOW
 from jobs.brevo.utils import (
-    AsyncBrevoHeaderRateLimiter,
-    SyncBrevoHeaderRateLimiter,
     async_etl_transactional,
     etl_newsletter,
     etl_transactional,
@@ -21,7 +21,6 @@ for name in ("httpx", "httpcore", "urllib3"):
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 app = typer.Typer()
 
@@ -78,27 +77,18 @@ def run(
 
     # Process based on target
     if target == "newsletter":
-        # Set up sync HTTP client and connector
-        rate_limiter = SyncBrevoHeaderRateLimiter()
-        client = SyncHttpClient(rate_limiter=rate_limiter)
-        connector = BrevoConnector(api_key=api_key, client=client)
-
+        connector = create_brevo_connector(api_key)
         etl_newsletter(connector, audience, table_name, start_dt, end_dt)
 
     elif target == "transactional":
         if async_mode:
-            # Run async version
             asyncio.run(
                 _run_async_transactional(
                     api_key, audience, start_dt, end_dt, max_concurrent=max_concurrent
                 )
             )
         else:
-            # Set up sync HTTP client and connector
-            rate_limiter = SyncBrevoHeaderRateLimiter()
-            client = SyncHttpClient(rate_limiter=rate_limiter)
-            connector = BrevoConnector(api_key=api_key, client=client)
-
+            connector = create_brevo_connector(api_key)
             etl_transactional(connector, audience, start_dt, end_dt)
     else:
         typer.echo("Invalid target. Must be one of transactional/newsletter.")
@@ -115,11 +105,10 @@ async def _run_async_transactional(
     max_concurrent: int = 5,
 ):
     """Helper function to run async transactional ETL."""
-    # Set up async HTTP client and connector with concurrency control
-    rate_limiter = AsyncBrevoHeaderRateLimiter(max_concurrent=max_concurrent)
 
-    async with AsyncHttpClient(rate_limiter=rate_limiter) as client:
-        connector = AsyncBrevoConnector(api_key=api_key, client=client)
+    async with create_async_brevo_connector(
+        api_key, max_concurrent=max_concurrent
+    ) as connector:
         await async_etl_transactional(connector, audience, start_dt, end_dt)
 
 

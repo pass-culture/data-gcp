@@ -93,7 +93,7 @@ select
     cs.collective_stock_id,
     co.collective_offer_location_type,
 from {{ ref("int_applicative__collective_offer") }} as co
-inner join {{ ref("int_global__venue") }} as v on v.venue_id = co.venue_id
+left join {{ ref("int_global__venue") }} as v on v.venue_id = co.venue_id
 left join
     {{ source("raw", "applicative_database_national_program") }} as national_program
     on national_program.national_program_id = co.national_program_id

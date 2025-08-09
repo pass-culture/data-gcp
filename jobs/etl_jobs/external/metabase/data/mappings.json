@@ -441,5 +441,14 @@
   "available_stock_information": {
     "stock_id": "stock_id",
     "available_stock_information": "total_available_stock"
+  },
+  "firebase_aggregated_search_events": {
+    "nb_offers_consulted": "total_offers_consulted",
+    "nb_offers_added_to_favorites": "total_offers_added_to_favorites",
+    "nb_no_search_result": "total_searches_with_no_result",
+    "nb_iterations_search": "total_search_iterations",
+    "nb_venue_playlist_displayed_on_search_results": "total_venue_playlists_displayed_in_search",
+    "nb_venues_consulted": "total_venues_consulted",
+    "nb_offers_booked":"total_offers_booked"
   }
 }

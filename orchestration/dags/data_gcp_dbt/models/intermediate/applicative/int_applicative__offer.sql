@@ -1,7 +1,7 @@
 {% set target_name = var("ENV_SHORT_NAME") %}
 {% set target_schema = generate_schema_name("analytics_" ~ target_name) %}
 
-{{ config(pre_hook="{{create_humanize_id_function()}}") }}
+{{ config(materialized="table", pre_hook="{{create_humanize_id_function()}}") }}
 
 with
     stocks_grouped_by_offers as (

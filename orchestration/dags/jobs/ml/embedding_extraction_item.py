@@ -19,7 +19,7 @@ from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from jobs.crons import SCHEDULE_DICT
 
 DEFAULT_REGION = "europe-west1"
-GCE_INSTANCE = f"extract-items-embeddings-{ENV_SHORT_NAME}"
+GCE_INSTANCE = "extract-items-embeddings"
 BASE_PATH = "data-gcp/jobs/ml_jobs/embeddings"
 
 INPUT_DATASET_NAME = f"ml_input_{ENV_SHORT_NAME}"

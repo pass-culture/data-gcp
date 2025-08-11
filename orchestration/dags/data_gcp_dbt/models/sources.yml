@@ -218,6 +218,9 @@ sources:
       - name: item_embedding_reduced_5
       - name: artist_linked
         description: This table contains the artist_linkage dag
+      - name: artist
+      - name: artist_alias
+      - name: product_artist_link
       - name: delta_artist
       - name: delta_artist_alias
       - name: delta_product_artist_link

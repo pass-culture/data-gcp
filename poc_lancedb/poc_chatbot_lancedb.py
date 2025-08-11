@@ -135,6 +135,9 @@ def setup_lancedb_table(db_path: str, table_name: str,
         import pandas as pd
         df = pd.read_parquet(parquet_file_path)
         print(f"Loaded parquet file with shape: {df.shape}")
+        # df.head()  # Uncomment to see the first few rows of the DataFrame
+        print(df.head())
+
         # Convert 'semantic_content_embedding' from string to numpy array if needed
         def parse_embedding(val):
             if isinstance(val, str):
@@ -149,11 +152,18 @@ def setup_lancedb_table(db_path: str, table_name: str,
         else:
             print(f"Column '{vector_column_parquet}' not found in DataFrame.")
 
+        # Ensure unique item_id values
+        if 'item_id' in df.columns:
+            before = len(df)
+            df = df.drop_duplicates(subset=['item_id'])
+            after = len(df)
+            print(f"Dropped duplicates in 'item_id': {before - after} rows removed, {after} unique rows remain.")
+        else:
+            print("Warning: 'item_id' column not found in DataFrame for uniqueness check.")
+
         # Convert the embedding column to a FixedSizeListArray for LanceDB
         if vector_column_parquet in df.columns:
-            # Stack all embeddings into a 2D numpy array
             arr = np.stack(df[vector_column_parquet].values)
-            # Flatten and convert to pyarrow array
             arr_flat = arr.flatten().tolist()
             arr_value_array = pa.array(arr_flat, pa.float32())
             vector_dim = arr.shape[1]
@@ -193,6 +203,7 @@ def setup_lancedb_table(db_path: str, table_name: str,
             print("Warning: 'offer_description' column not found in parquet file. RAG features requiring text content might not work as expected.")
         data_to_load = table
         print(f"Loaded {data_to_load.num_rows} records from {parquet_file_path}.")
+        print(f"Table schema: {data_to_load.schema}")
     except Exception as e:
         print(f"Error reading parquet file {parquet_file_path}: {e}")
         return None
@@ -210,7 +221,8 @@ def setup_lancedb_table(db_path: str, table_name: str,
             db.drop_table(table_name)
 
         # Create the table
-
+        #Preview data_to_load
+        # print(f"data_to_load.head():{data_to_load.head()}")
         table = db.create_table(table_name, data=data_to_load, mode="overwrite")
 
         print(f"Table '{table_name}' created successfully.")
@@ -280,20 +292,23 @@ def rag_query(table, question: str, k_retrieval: int = 5):
         print(f"Retrieving top {k_retrieval} relevant chunks from LanceDB...")
         retrieved_results = table.search(question_vector).limit(k_retrieval).to_list()
         print(f"Retrieved {len(retrieved_results)} chunks from LanceDB.")
-        print(f"Retrieved results: {retrieved_results[:3]}...")  # Show first 3 for brevity
+        # print(f"Retrieved results: {retrieved_results[:5]}...")  # Show first 3 for brevity
         if not retrieved_results:
             return "No relevant documents found in the database for the given question."
 
         # Aggregate the retrieved text content to form the context for the LLM
-        context = "\n".join([res.get('offer_description', '') for res in retrieved_results if res.get('offer_description')])
+        context = "\n".join([f"{res.get('id', '')}: {res.get('offer_name', '')}, {res.get('offer_description', '')}" for res in retrieved_results if res.get('offer_name')])
         print(f"Retrieved {len(retrieved_results)} chunks.")
         print(f"Context for LLM:\n{context[:500]}...")  # Show first 500 characters of context
         # 3. Construct the RAG prompt for OpenAI's chat completions API
         messages = [
-            {"role": "system", "content": "You are a helpful assistant. Use the provided context to answer the question. If the answer is not available in the context, state that you cannot answer from the provided information."},
-            {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {question}\n\nAnswer:"}
+            {"role": "system", "content": "You are a cultural curator and event planner."
+            " Your task is to analyze a list of cultural offerings and select those that align with a specific thematic. There is no limit on the number of offers you can select, but you should focus on relevance and quality."},
+            {"role": "user", "content": f"Context:\n{context}\n\nAnalyze the provided cultural offerings and identify all events, exhibitions, or performances that fit the following thematic: \"{question}\"\n\n"
+            f"Present the selected offerings in a clear and organized list. For each selected item, please include: id, offer_name and relevance: Briefly explain why this offering was selected for the thematic.\n"}
         ]
-
+        #Preview openai prompt
+        print(f"OpenAI prompt messages:\n{messages[0]['content']}\n{messages[1]['content']}")
         # 4. Generate answer using the OpenAI LLM
         print(f"Generating answer with OpenAI's {OPENAI_LLM_MODEL}...")
         response = openai_client.chat.completions.create(
@@ -346,7 +361,7 @@ if __name__ == "__main__":
     # If you loaded data from parquet and it has 'offer_description' and OpenAI API key is available, you can run RAG queries.
     if 'offer_description' in lancedb_table.schema.names and openai_client:
         print("\n--- Demonstrating RAG Query on Parquet Imported Data (Hybrid: ST Embeddings, OpenAI LLM) ---")
-        user_question_parquet = "What are the common topics discussed in these items?"
+        user_question_parquet = "Moyen age"
         rag_answer_parquet = rag_query(
             lancedb_table,
             user_question_parquet,

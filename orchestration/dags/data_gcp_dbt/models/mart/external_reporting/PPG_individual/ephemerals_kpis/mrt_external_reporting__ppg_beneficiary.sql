@@ -172,7 +172,7 @@ with
 
         union all
 
-        -- QVP
+        -- QPV
         {% for dim in dimensions %}
             {% if not loop.first %}
                 union all

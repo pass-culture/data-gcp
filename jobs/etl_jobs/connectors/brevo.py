@@ -164,7 +164,7 @@ class BrevoConnector:
         end_date: Optional[str] = None,
         offset: int = 0,
     ):
-        url = f"{self.BASE_URL}/emailCampaigns"
+        url = f"{BASE_URL}/emailCampaigns"
         params = {
             "status": status,
             "limit": limit,
@@ -180,7 +180,7 @@ class BrevoConnector:
         return self.client.request("GET", url, headers=self.headers, params=params)
 
     def get_smtp_templates(self, active_only: bool = True, offset: int = 0):
-        url = f"{self.BASE_URL}/smtp/templates"
+        url = f"{BASE_URL}/smtp/templates"
         params = {"templateStatus": str(active_only).lower(), "offset": offset}
         return self.client.request("GET", url, headers=self.headers, params=params)
 
@@ -192,7 +192,7 @@ class BrevoConnector:
         end_date: str,
         offset: int = 0,
     ):
-        url = f"{self.BASE_URL}/smtp/statistics/events"
+        url = f"{BASE_URL}/smtp/statistics/events"
         params = {
             "templateId": template_id,
             "event": event,
@@ -239,14 +239,14 @@ class AsyncBrevoConnector:
     async def get_email_campaigns(
         self, status: str = "sent", limit: int = 50, offset: int = 0
     ):
-        url = f"{self.BASE_URL}/emailCampaigns"
+        url = f"{BASE_URL}/emailCampaigns"
         params = {"status": status, "limit": limit, "offset": offset}
         return await self.client.request(
             "GET", url, headers=self.headers, params=params
         )
 
     async def get_smtp_templates(self, active_only: bool = True, offset: int = 0):
-        url = f"{self.BASE_URL}/smtp/templates"
+        url = f"{BASE_URL}/smtp/templates"
         params = {"templateStatus": str(active_only).lower(), "offset": offset}
         return await self.client.request(
             "GET", url, headers=self.headers, params=params
@@ -260,7 +260,7 @@ class AsyncBrevoConnector:
         end_date: str,
         offset: int = 0,
     ):
-        url = f"{self.BASE_URL}/smtp/statistics/events"
+        url = f"{BASE_URL}/smtp/statistics/events"
         params = {
             "templateId": template_id,
             "event": event,
@@ -271,6 +271,15 @@ class AsyncBrevoConnector:
         return await self.client.request(
             "GET", url, headers=self.headers, params=params
         )
+
+    async def __aenter__(self):
+        """Async context manager entry."""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit - close underlying client."""
+        if hasattr(self.client, "close"):
+            await self.client.close()
 
 
 # ========================================

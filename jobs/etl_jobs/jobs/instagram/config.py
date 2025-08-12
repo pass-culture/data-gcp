@@ -79,6 +79,11 @@ INSTAGRAM_ACCOUNT_DAILY_ACTIVITY_DTYPE = [
     bigquery.SchemaField(
         "follower_count", bigquery.enums.SqlTypeNames.INTEGER, mode="NULLABLE"
     ),
+    # Mapped metrics for v23.0 compatibility - keep as INTEGER to match existing schema
+    bigquery.SchemaField(
+        "impressions", bigquery.enums.SqlTypeNames.INTEGER, mode="NULLABLE"
+    ),
+    bigquery.SchemaField("plays", bigquery.enums.SqlTypeNames.INTEGER, mode="NULLABLE"),
     # Deprecated metrics - kept for schema compatibility, will be set to 0
     bigquery.SchemaField(
         "email_contacts", bigquery.enums.SqlTypeNames.INTEGER, mode="NULLABLE"

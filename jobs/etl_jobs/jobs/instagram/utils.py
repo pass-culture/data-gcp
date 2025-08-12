@@ -318,7 +318,7 @@ def handle_metric_replacements(df: pd.DataFrame) -> pd.DataFrame:
     for old_metric, new_metric in replacements.items():
         if new_metric in df.columns and old_metric not in df.columns:
             # If we have the new metric but not the old one, create old metric from new
-            df[old_metric] = df[new_metric]
+            df[old_metric] = df[new_metric].fillna(0).astype(int)
             logger.info(f"Mapped {new_metric} to {old_metric} for compatibility")
         elif old_metric in df.columns and new_metric not in df.columns:
             # If we have old metric but not new, create new from old

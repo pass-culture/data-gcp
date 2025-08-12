@@ -12,7 +12,7 @@ def find_changed_jobs():
     """Find jobs that have changed compared to main branch."""
     try:
         result = subprocess.run(
-            ["git", "diff", "--name-only", "origin/main", "HEAD"],
+            ["git", "diff", "--name-only", "origin/master", "HEAD"],
             capture_output=True,
             text=True,
             check=True,

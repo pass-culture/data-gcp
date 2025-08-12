@@ -11,6 +11,7 @@
 {% set dimensions = [
     {"name": "NAT", "value_expr": "'NAT'"},
     {"name": "REG", "value_expr": "venue_region_name"},
+    {"name": "DEP", "value_expr": "venue_department_name"},
 ] %}
 
 {% for dim in dimensions %}
@@ -30,7 +31,6 @@
         sum(booking_intermediary_amount) as total_booking_amount,
         sum(booking_quantity) as total_booking_quantity,
         row_number() over (
-            partition by offer_category_id
             order by sum(booking_intermediary_amount) desc
         ) as total_booking_amount_ranked
     from {{ ref("mrt_global__booking") }}
@@ -47,20 +47,16 @@
         dimension_value,
         item_id,
         offer_category_id,
-        total_booking_amount_ranked
+        offer_subcategory_id
 
     qualify
         row_number() over (
-            partition by offer_category_id
             order by sum(booking_intermediary_amount) desc
         )
         <= 50
-
     order by
         execution_date,
         dimension_name,
-        dimension_value,
-        offer_category_id,
         total_booking_amount_ranked,
         total_booking_amount,
         total_booking_quantity
@@ -85,4 +81,3 @@ select
     total_booking_amount_ranked
 from cte_{{ dim.name }}
 {% endfor %}
-

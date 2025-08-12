@@ -14,7 +14,7 @@ models:
         description: "{{ doc('column__dimension_value') }}"
       - name: venue_id
         description: "{{ doc('column__venue_id') }}"
-      - name: venue_name 
+      - name: venue_name
         description: "{{ doc('column__venue_name') }}"
       - name: offerer_name
         description: "{{ doc('column__offerer_name') }}"

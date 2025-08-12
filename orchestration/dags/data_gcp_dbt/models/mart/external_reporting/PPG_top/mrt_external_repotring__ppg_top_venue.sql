@@ -38,18 +38,11 @@
                     = date_trunc(date("{{ ds() }}"), month)
                 {% endif %}
             group by
-                execution_date,
-                update_date,
-                dimension_name,
-                dimension_value,
-                venue_id
+                execution_date, update_date, dimension_name, dimension_value, venue_id
 
             qualify
                 row_number() over (order by sum(booking_intermediary_amount) desc) <= 50
-            order by
-                execution_date,
-                dimension_name,
-                total_venue_booking_amount_ranked
+            order by execution_date, dimension_name, total_venue_booking_amount_ranked
         )
         {% if not loop.last %}, {% endif %}
 {% endfor %}

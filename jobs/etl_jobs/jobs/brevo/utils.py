@@ -30,6 +30,27 @@ from jobs.brevo.config import (
 logger = logging.getLogger(__name__)
 
 
+# ===== CUSTOM EXCEPTIONS =====
+
+
+class BrevoETLError(Exception):
+    """Base exception for Brevo ETL operations."""
+
+    pass
+
+
+class BrevoAPIError(BrevoETLError):
+    """Exception raised when Brevo API calls fail."""
+
+    pass
+
+
+class BrevoDataError(BrevoETLError):
+    """Exception raised when data processing fails."""
+
+    pass
+
+
 # ===== COMMON FUNCTIONS =====
 
 
@@ -304,20 +325,46 @@ def etl_newsletter(
     """ETL pipeline newsletter campaigns."""
     logger.info("Fetching email campaigns...")
 
-    resp = connector.get_email_campaigns()
+    all_campaigns = []
+    offset = 0
+    limit = 50  # API default limit
 
-    if not resp:
-        logger.warning("No campaigns fetched.")
-        return
+    while True:
+        logger.info(f"Fetching campaigns: offset={offset}")
 
-    campaigns = resp.json().get("campaigns", [])
-    logger.info(f"Fetched {len(campaigns)} campaigns")
+        resp = connector.get_email_campaigns(status="sent", limit=limit, offset=offset)
 
-    if not campaigns:
-        logger.warning("No campaigns in response.")
-        return
+        if not resp:
+            raise BrevoAPIError(
+                "Failed to fetch campaigns - no response from Brevo API"
+            )
 
-    df = transform_campaigns_to_dataframe(campaigns, audience, update_date=end_date)
+        if not resp.ok:
+            raise BrevoAPIError(
+                f"Failed to fetch campaigns - HTTP {resp.status_code}: {resp.text}"
+            )
+
+        campaigns = resp.json().get("campaigns", [])
+
+        if not campaigns:
+            logger.info("No more campaigns in page.")
+            break
+
+        all_campaigns.extend(campaigns)
+        logger.info(f"Fetched {len(campaigns)} campaigns (total: {len(all_campaigns)})")
+
+        # If we got fewer campaigns than the limit, we've reached the end
+        if len(campaigns) < limit:
+            break
+
+        offset += limit
+
+    if not all_campaigns:
+        raise BrevoDataError("No campaigns found in API response")
+
+    logger.info(f"Total campaigns fetched: {len(all_campaigns)}")
+
+    df = transform_campaigns_to_dataframe(all_campaigns, audience, update_date=end_date)
 
     save_to_historical(
         df,
@@ -339,11 +386,20 @@ def etl_transactional(
     logger.info("Fetching active SMTP templates...")
 
     templates_resp = connector.get_smtp_templates(active_only=True)
-    templates = templates_resp.json().get("templates", []) if templates_resp else []
+
+    if not templates_resp:
+        raise BrevoAPIError("Failed to fetch templates - no response from Brevo API")
+
+    # BrevoConnector uses SyncHttpClient which uses requests.Response.ok
+    if not templates_resp.ok:
+        raise BrevoAPIError(
+            f"Failed to fetch templates - HTTP {templates_resp.status_code}: {templates_resp.text}"
+        )
+
+    templates = templates_resp.json().get("templates", [])
 
     if not templates:
-        logger.warning("No active templates found.")
-        return
+        raise BrevoDataError("No active templates found")
 
     logger.info(f"Fetched {len(templates)} active templates")
 
@@ -371,8 +427,15 @@ def etl_transactional(
                 )
 
                 if not events_resp:
-                    logger.warning("No response received. Skipping.")
-                    break
+                    raise BrevoAPIError(
+                        f"Failed to fetch events for template {template_id} - no response from API"
+                    )
+
+                # BrevoConnector uses SyncHttpClient which uses requests.Response.ok
+                if not events_resp.ok:
+                    raise BrevoAPIError(
+                        f"Failed to fetch events for template {template_id} - HTTP {events_resp.status_code}: {events_resp.text}"
+                    )
 
                 events = events_resp.json().get("events", [])
                 if not events:
@@ -399,8 +462,7 @@ def etl_transactional(
                     break
 
     if not all_events:
-        logger.warning("No events collected.")
-        return
+        raise BrevoDataError("No events collected from any template")
 
     logger.info(f"Collected {len(all_events)} total events")
 
@@ -431,19 +493,30 @@ async def async_etl_transactional(
     templates_resp = await connector.get_smtp_templates(active_only=True)
 
     if not templates_resp:
-        logger.warning("[Async] No response for templates.")
-        return
+        raise BrevoAPIError(
+            "[Async] Failed to fetch templates - no response from Brevo API"
+        )
+
+    # FIXED: Use is_success for httpx.Response instead of ok
+    if not templates_resp.is_success:
+        raise BrevoAPIError(
+            f"[Async] Failed to fetch templates - HTTP {templates_resp.status_code}: {templates_resp.text}"
+        )
 
     templates = templates_resp.json().get("templates", [])
 
     if not templates:
-        logger.warning("[Async] No active templates found.")
-        return
+        raise BrevoDataError("[Async] No active templates found")
 
     logger.info(f"[Async] Fetched {len(templates)} active templates")
 
-    if ENV_SHORT_NAME != "prod" and len(templates) > 0:
+    # Limit templates in non-prod environments for testing
+    if ENV_SHORT_NAME != "prod":
+        logger.info(
+            f"[Async] Non-prod environment ({ENV_SHORT_NAME}), limiting to 1 template for testing"
+        )
         templates = templates[:1]
+        logger.info(f"[Async] Processing {len(templates)} template(s)")
 
     # Process templates concurrently
     all_events = []
@@ -463,8 +536,7 @@ async def async_etl_transactional(
             all_events.extend(events)
 
     if not all_events:
-        logger.warning("[Async] No events collected.")
-        return
+        raise BrevoDataError("[Async] No events collected from any template")
 
     logger.info(f"[Async] Collected {len(all_events)} total events")
 
@@ -512,8 +584,15 @@ async def _fetch_template_events(
                 )
 
                 if not events_resp:
-                    logger.warning(f"[Async] No response for template {template_id}")
-                    break
+                    raise BrevoAPIError(
+                        f"[Async] Failed to fetch events for template {template_id} - no response from API"
+                    )
+
+                # FIXED: Use is_success for httpx.Response
+                if not events_resp.is_success:
+                    raise BrevoAPIError(
+                        f"[Async] Failed to fetch events for template {template_id} - HTTP {events_resp.status_code}: {events_resp.text}"
+                    )
 
                 events = events_resp.json().get("events", [])
                 if not events:
@@ -539,10 +618,12 @@ async def _fetch_template_events(
                 if ENV_SHORT_NAME != "prod":
                     break
 
+            except BrevoAPIError:
+                # Re-raise API errors
+                raise
             except Exception as e:
-                logger.error(
-                    f"[Async] Error fetching events for template {template_id}: {e}"
-                )
-                break
+                raise BrevoAPIError(
+                    f"[Async] Unexpected error fetching events for template {template_id}: {e}"
+                ) from e
 
     return events_list

@@ -408,13 +408,13 @@ class AsyncHttpClient(BaseHttpClient):
                         continue  # Retry the request
 
                     # Log final result
-                    if response.ok:
+                    if response.is_success:
                         logger.debug(
                             f"Request {request_id}: Success ({response.status_code})"
                         )
                     else:
                         logger.warning(
-                            f"Request {request_id}: HTTP error {response.status_code} - {response.reason}"
+                            f"Request {request_id}: HTTP error {response.status_code} - {response.reason_phrase}"
                         )
 
                     return response

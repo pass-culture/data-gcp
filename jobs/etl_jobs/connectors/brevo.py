@@ -241,16 +241,32 @@ class AsyncBrevoConnector:
     ):
         url = f"{BASE_URL}/emailCampaigns"
         params = {"status": status, "limit": limit, "offset": offset}
-        return await self.client.request(
-            "GET", url, headers=self.headers, params=params
-        )
+        try:
+            response = await self.client.request(
+                "GET", url, headers=self.headers, params=params
+            )
+            return response
+        finally:
+            # Release rate limiter after request completes
+            if self.client.rate_limiter and hasattr(
+                self.client.rate_limiter, "release"
+            ):
+                self.client.rate_limiter.release()
 
     async def get_smtp_templates(self, active_only: bool = True, offset: int = 0):
         url = f"{BASE_URL}/smtp/templates"
         params = {"templateStatus": str(active_only).lower(), "offset": offset}
-        return await self.client.request(
-            "GET", url, headers=self.headers, params=params
-        )
+        try:
+            response = await self.client.request(
+                "GET", url, headers=self.headers, params=params
+            )
+            return response
+        finally:
+            # Release rate limiter after request completes
+            if self.client.rate_limiter and hasattr(
+                self.client.rate_limiter, "release"
+            ):
+                self.client.rate_limiter.release()
 
     async def get_email_event_report(
         self,
@@ -268,9 +284,17 @@ class AsyncBrevoConnector:
             "endDate": end_date,
             "offset": offset,
         }
-        return await self.client.request(
-            "GET", url, headers=self.headers, params=params
-        )
+        try:
+            response = await self.client.request(
+                "GET", url, headers=self.headers, params=params
+            )
+            return response
+        finally:
+            # Release rate limiter after request completes
+            if self.client.rate_limiter and hasattr(
+                self.client.rate_limiter, "release"
+            ):
+                self.client.rate_limiter.release()
 
     async def __aenter__(self):
         """Async context manager entry."""

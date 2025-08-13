@@ -13,52 +13,64 @@
     {"name": "REG", "value_expr": "venue_region_name"},
 ] %}
 
-{% for dim in dimensions %}
-    {% if loop.first %}
-        with
-    {% endif %}
-        cte_{{ dim.name }} as (
+with
+    base_aggregation as (
+        select
+            date_trunc(date(booking_used_date), month) as execution_date,
+            date("{{ ds() }}") as update_date,
+            venue_id,
+            venue_name,
+            offerer_name,
+            venue_region_name,
+            sum(booking_intermediary_amount) as total_venue_booking_amount
+        from {{ ref("mrt_global__booking") }}
+        where
+            booking_is_used
+            {% if is_incremental() %}
+                and date_trunc(date(booking_used_date), month)
+                = date_trunc(date("{{ ds() }}"), month)
+            {% endif %}
+        group by
+            execution_date,
+            update_date,
+            venue_id,
+            venue_name,
+            offerer_name,
+            venue_region_name
+    ),
+
+    all_dimensions as (
+        {% for dim in dimensions %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
             select
-                date_trunc(date(booking_used_date), month) as execution_date,
-                date("{{ ds() }}") as update_date,
+                execution_date,
+                update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 venue_id,
                 venue_name,
                 offerer_name,
-                sum(booking_intermediary_amount) as total_venue_booking_amount,
+                total_venue_booking_amount,
                 row_number() over (
-                    order by sum(booking_intermediary_amount) desc
+                    order by total_venue_booking_amount desc
                 ) as total_venue_booking_amount_ranked
-            from {{ ref("mrt_global__booking") }}
-            where
-                booking_is_used
-                {% if is_incremental() %}
-                    and date_trunc(date(booking_used_date), month)
-                    = date_trunc(date("{{ ds() }}"), month)
-                {% endif %}
-            group by
-                execution_date, update_date, dimension_name, dimension_value, venue_id
+            from base_aggregation
+            qualify row_number() over (order by total_venue_booking_amount desc) <= 50
+        {% endfor %}
+    )
 
-            qualify
-                row_number() over (order by sum(booking_intermediary_amount) desc) <= 50
-            order by execution_date, dimension_name, total_venue_booking_amount_ranked
-        )
-        {% if not loop.last %}, {% endif %}
-{% endfor %}
-
-{% for dim in dimensions %}
-    {% if not loop.first %}
-        union all
-    {% endif %}
-    select
-        execution_date,
-        update_date,
-        dimension_name,
-        dimension_value,
-        venue_id,
-        venue_name,
-        offerer_name,
-        total_venue_booking_amount_ranked
-    from cte_{{ dim.name }}
-{% endfor %}
+select
+    execution_date,
+    update_date,
+    dimension_name,
+    dimension_value,
+    venue_id,
+    venue_name,
+    offerer_name,
+    total_venue_booking_amount_ranked
+from
+    all_dimensions
+    -- order by execution_date, dimension_name, total_venue_booking_amount_ranked
+    

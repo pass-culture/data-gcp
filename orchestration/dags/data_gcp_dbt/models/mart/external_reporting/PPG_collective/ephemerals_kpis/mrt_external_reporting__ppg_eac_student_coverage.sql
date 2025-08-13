@@ -22,7 +22,7 @@ with
             max(cast(adage_id as int)) as last_adage_id
         from {{ ref("adage_involved_student") }}
         where
-            1=1
+            1 = 1
             {% if is_incremental() %}
                 and date_trunc(date, month) = date_trunc(date("{{ ds() }}"), month)
             {% endif %}
@@ -33,32 +33,28 @@ with
     {% if not loop.first %}
         union all
     {% endif %}
-select
-    date_trunc(involved.date, month) as execution_date,
-    date("{{ ds() }}") as update_date,
-    '{{ dim.name }}' as dimension_name,
-    {{ dim.value_expr }} as dimension_value,
-    "taux_participation_eac_jeunes" as kpi_name,
-    sum(involved_students) as numerator,  -- students_involved_in_eac_offer
-    sum(total_involved_students) as denominator,  -- students_eligible
-    safe_divide(
-        sum(involved_students),
-        sum(total_involved_students)
-    ) as kpi
-from {{ ref("adage_involved_student") }} as involved
--- take only last day for each month.
-inner join
-    last_day
-    on involved.date = last_day.last_date
-    and date_trunc(involved.date, month) = last_day.execution_date
-    and last_day.last_adage_id = cast(involved.adage_id as int)
-left join
-    {{ source("seed", "region_department") }} as rd
-    on involved.department_code = rd.num_dep
-where
-    1=1 and
-    {% if '{{ dim.name }}' == "NAT" %} department_code = '-1'
-    {% else %} not department_code = "-1"
-    {% endif %}
-group by execution_date, update_date, dimension_name, dimension_value, kpi_name
+    select
+        date_trunc(involved.date, month) as execution_date,
+        date("{{ ds() }}") as update_date,
+        '{{ dim.name }}' as dimension_name,
+        {{ dim.value_expr }} as dimension_value,
+        "taux_participation_eac_jeunes" as kpi_name,
+        sum(involved_students) as numerator,  -- students_involved_in_eac_offer
+        sum(total_involved_students) as denominator,  -- students_eligible
+        safe_divide(sum(involved_students), sum(total_involved_students)) as kpi
+    from {{ ref("adage_involved_student") }} as involved
+    -- take only last day for each month.
+    inner join
+        last_day
+        on involved.date = last_day.last_date
+        and date_trunc(involved.date, month) = last_day.execution_date
+        and last_day.last_adage_id = cast(involved.adage_id as int)
+    left join
+        {{ source("seed", "region_department") }} as rd
+        on involved.department_code = rd.num_dep
+    where
+        1 = 1 and {% if "{{ dim.name }}" == "NAT" %} department_code = '-1'
+        {% else %} not department_code = "-1"
+        {% endif %}
+    group by execution_date, update_date, dimension_name, dimension_value, kpi_name
 {% endfor %}

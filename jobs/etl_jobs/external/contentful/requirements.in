@@ -11,3 +11,4 @@ requests==2.32.3
 pyarrow==21.0.0
 gcsfs==2021.9.0
 typer==0.15.1
+pytest==8.2.2

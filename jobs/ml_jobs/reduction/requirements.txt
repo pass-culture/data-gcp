@@ -11,7 +11,9 @@ aiosignal==1.3.1
 astunparse==1.6.3
     # via tensorflow
 async-timeout==4.0.3
-    # via aiohttp
+    # via
+    #   -r requirements.in
+    #   aiohttp
 attrs==23.2.0
     # via aiohttp
 cachetools==5.3.3
@@ -238,8 +240,9 @@ scipy==1.14.0
     #   pynndescent
     #   scikit-learn
     #   umap-learn
-setuptools==70.2.0
+setuptools==78.1.1
     # via
+    #   -r requirements.in
     #   pandas-gbq
     #   pydata-google-auth
     #   tensorboard

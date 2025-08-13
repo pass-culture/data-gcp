@@ -1,13 +1,14 @@
+import re
 import string
+import unicodedata
 from typing import TypedDict
 
 import pandas as pd
 
-from constants import TOTAL_OFFER_COUNT
+from constants import ARTIST_NAME_TO_FILTER, PRODUCT_ID_KEY, TOTAL_OFFER_COUNT
+
 
 ### Cleaning
-
-
 def _remove_leading_punctuation(artist_df: pd.DataFrame) -> pd.DataFrame:
     """
     Removes leading punctuation and parentheses from the artist names in the given DataFrame.
@@ -38,8 +39,8 @@ def _remove_parenthesis(artist_df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: The DataFrame with parentheses removed from the artist names.
     """
     return artist_df.assign(
-        artist_name=lambda df: df.artist_name.str.replace("\([.*]+\))", "")
-        .str.split("\(", regex=True)
+        artist_name=lambda df: df.artist_name.str.replace(r"\([^)]*\)", "", regex=True)
+        .str.split(r"\(", regex=True)
         .map(lambda ll: ll[0])
     )
 
@@ -57,8 +58,8 @@ def clean_names(artist_df: pd.DataFrame) -> pd.DataFrame:
 
     """
     return (
-        artist_df.pipe(_remove_leading_punctuation)
-        .pipe(_remove_parenthesis)
+        artist_df.pipe(_remove_parenthesis)
+        .pipe(_remove_leading_punctuation)
         .assign(artist_name=lambda df: df.artist_name.str.strip())
     )
 
@@ -79,7 +80,7 @@ def _extract_first_artist_pattern(artist_df: pd.DataFrame):
             - first_artist_pattern: The first artist pattern extracted from the artist_name column.
             - is_multi_artists_pattern: A boolean column indicating whether the artist_name contains multiple patterns.
     """
-    pattern = ";|/|\+|\&"
+    pattern = r";|/|\+|\&"
     return artist_df.assign(
         first_artist_pattern=lambda df: df.artist_name.str.split(
             pattern, regex=True
@@ -104,7 +105,7 @@ def _extract_first_artist_comma(artist_df: pd.DataFrame):
         pd.DataFrame: The DataFrame with additional columns 'is_multi_artists' and 'first_artist'.
 
     """
-    pattern = "^(?![\w\-']+,).*,.*|.*,.*,.*"
+    pattern = r"^(?![\w\-']+,).*,.*|.*,.*,.*"
     return artist_df.assign(
         is_multi_artists_comma=lambda df: (
             df.first_artist_pattern.str.contains(pattern, regex=True)
@@ -215,7 +216,7 @@ def _filter_artists(
     Returns:
         pd.DataFrame: The filtered DataFrame, containing only the rows that do not meet the filtering criteria.
     """
-    pattern = "[\w\-\.]+\/[\w-]+|\+"  # pattern for multi artists separated by + or /
+    pattern = r"[\w\-\.]+\/[\w-]+|\+"  # pattern for multi artists separated by + or /
 
     matching_patterns_indexes = artist_df.first_artist.str.contains(pattern, regex=True)
     too_few_words_indexes = (
@@ -304,3 +305,183 @@ def normalize_string_series(s: pd.Series) -> pd.Series:
         .str.strip()
         .str.replace(".", "")
     )
+
+
+def extract_artist_name(artist_name: str) -> str:
+    """
+    Extracts a clean, standardized artist name from a raw string.
+
+    This function processes the raw artist name through a series of rules
+    to handle multiple artists, different name formats (Last, First vs. First Last),
+    initials, and other common variations.
+
+    Args:
+        artist_name: The raw artist name string.
+
+    Returns:
+        The cleaned artist name.
+    """
+
+    def _remove_accents(text):
+        return "".join(
+            char
+            for char in unicodedata.normalize("NFD", text)
+            if unicodedata.category(char) != "Mn"
+        )
+
+    if (
+        not isinstance(artist_name, str)
+        or not artist_name.strip()
+        or artist_name.strip() in ARTIST_NAME_TO_FILTER
+    ):
+        return None
+
+    # --- Step 1: Initial Cleaning and Pre-processing ---
+    # Remove accents, leading/trailing whitespace and surrounding quotes
+    name = _remove_accents(artist_name.strip().strip('"').lower())
+
+    # --- Step 2: Handle Hardcoded Edge Cases ---
+    # These are specific cases that don't fit the general rules.
+    if name.lower().startswith("collectif"):
+        pattern = r"collectif\s*[^\w\s]*"
+        name = re.sub(pattern, "", name.lower()).strip()
+
+    # --- Step 3: Split Multiple Artists ---
+    # Artists can be separated by various delimiters. We take the first one.
+    name = re.split(r"\s*[/;&+]\s*", name)[0].strip()
+
+    # --- Step 4: Handle "Lastname, Firstname" Format ---
+    # This is a common format, e.g., "Gregson, Edward"
+    if "," in name:
+        # Can mean multiple artists or a single artist in "Lastname, Firstname" format.
+        if len(name.split(",")) > 2:
+            # If there are more than two parts, we assume it's multiple artists.
+            # We take the first part as the main artist.
+            name = name.split(",")[0].strip()
+        elif len(name.split()) >= 4:
+            # If the name has more than four parts, we assume it's two artists
+            # and take the first part as the main artist.
+            name = name.split(",")[0].strip()
+        else:
+            # Otherwise, we assume it's a single artist in "Lastname, Firstname" format.
+            # We split by comma and then reformat to "Firstname Lastname".
+            parts = name.split(",", 1)
+            last_name = parts[0].strip()
+            first_name = parts[1].strip()
+            # Recombine as "Firstname Lastname"
+            name = f"{first_name} {last_name}".strip()
+
+    # --- Step 5: Handle "Lastname Initial(s)" Format ---
+    # This is the most complex part. We need to distinguish the name from the initials.
+    words = [word for word in re.split(r"\s+|-|\.", name) if word != ""]
+    if len(words) < 2:
+        # If it's a single word, there's nothing to reorder.
+        return name
+
+    # We iterate backwards to separate initials from the main name.
+    # An "initial" is a short word that is not a particle.
+    initial_parts = []
+    lastname_parts = []
+
+    for word in words:
+        # A word is considered an initial if it's 1 alphabet character long
+        is_initial = len(word.replace(".", "").replace("-", "")) <= 1 and word.isalpha()
+
+        if is_initial:
+            initial_parts.append(word)
+        else:
+            lastname_parts.append(word)
+
+    # --- Step 6: Format and Recombine ---
+    if initial_parts:
+        # We have found and separated initials that need to be moved to the front.
+
+        # Format the initials consistently (e.g., "p", "j" -> "p.j.")
+        # Flatten all initial parts into a single string without separators.
+        flat_initials = "".join(initial_parts).replace(".", "").replace("-", "")
+        formatted_initials = ". ".join(list(flat_initials))
+        if formatted_initials:
+            # Add a trailing dot for consistency, e.g., "j.l."
+            if not formatted_initials.endswith("."):
+                formatted_initials += "."
+
+        # Reconstruct the last name
+        reordered_lastname = " ".join(lastname_parts)
+
+        return f"{formatted_initials} {reordered_lastname}".strip()
+
+    else:
+        # No initials were found to reorder, but we might need to fix particles.
+        reordered_name = " ".join(lastname_parts)
+
+        # --- Step 7: Final Spacing and Formatting Fixes ---
+        # Fix cases like "b.b.king" -> "b.b. king"
+        # Use a lookbehind to add a space after a dot if it's followed by a letter.
+        reordered_name = re.sub(r"(?<=\.)([a-zA-Z])", r" \1", reordered_name)
+
+        # Normalize multiple spaces
+        reordered_name = re.sub(r"\s+", " ", reordered_name)
+
+        return reordered_name
+
+
+def prepare_artist_names_for_matching(input_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Extract and clean artist names from input DataFrame for matching purposes.
+    This function processes artist names by cleaning them, extracting the first artist name,
+    and filtering out unwanted entries based on predefined criteria.
+    Args:
+        input_df (pd.DataFrame): Input DataFrame containing artist information with
+                               an 'artist_name' column.
+    Returns:
+        pd.DataFrame: Filtered DataFrame with an additional 'artist_name_to_match' column
+                     containing cleaned artist names. Rows with null artist names or
+                     names in the filter list are excluded.
+    Notes:
+        - Applies name cleaning via the clean_names pipeline
+        - Extracts artist names using extract_artist_name function
+        - Filters out rows where artist_name_to_match is null
+        - Excludes rows where either artist_name or artist_name_to_match
+          are in ARTIST_NAME_TO_FILTER list
+    """
+
+    return (
+        input_df.assign(
+            artist_name_to_match=lambda df: df.pipe(clean_names).artist_name.apply(
+                extract_artist_name
+            ),
+        )
+        .loc[lambda df: df.artist_name_to_match.notna()]
+        .loc[lambda df: ~df.artist_name.isin(ARTIST_NAME_TO_FILTER)]
+        .loc[lambda df: ~df.artist_name_to_match.isin(ARTIST_NAME_TO_FILTER)]
+    )
+
+
+def filter_products(raw_products_df: pd.DataFrame):
+    """
+    Filter products dataframe by removing unwanted artists and products with multiple categories.
+    This function performs two main filtering operations:
+    1. Removes products associated with artists listed in ARTIST_NAME_TO_FILTER
+    2. Removes products with names that are null or empty
+    3. Removes products that appear in multiple offer categories (determined by grouping
+       by offer_product_id and counting unique offer_category_id values)
+    Args:
+        raw_products_df (pd.DataFrame): Input dataframe containing product data with columns
+            including 'artist_name', 'offer_product_id', 'offer_category_id', and
+            a column referenced by PRODUCT_ID_KEY constant.
+    Returns:
+        pd.DataFrame: Filtered dataframe with unwanted artists and multi-category products removed.
+    """
+
+    products_df = raw_products_df.loc[
+        lambda df: ~df.artist_name.isin(ARTIST_NAME_TO_FILTER)
+    ].loc[lambda df: df.artist_name.notna()]
+
+    # This is a hack to remove products that are in multiple categories (which should not happen)
+    product_ids_to_remove = (
+        products_df.groupby("offer_product_id")
+        .agg({"offer_category_id": "nunique"})
+        .loc[lambda dfff: dfff.offer_category_id > 1]
+        .index
+    )
+    return products_df.loc[lambda df: ~df[PRODUCT_ID_KEY].isin(product_ids_to_remove)]

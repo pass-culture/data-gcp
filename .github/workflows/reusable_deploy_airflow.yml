@@ -1,0 +1,158 @@
+name: "Deploy Airflow"
+
+run-name: "Deploy Airflow on ${{ github.event.inputs.GITHUB_ENV_NAME }}"
+
+on:
+  workflow_call:
+    inputs:
+      DATA_GCP_PROJECT:
+        type: string
+        required: true
+      AIRFLOW_DAGS_BUCKET:
+        type: string
+        required: true
+      AIRFLOW_NAME:
+        type: string
+        required: true
+      GITHUB_ENV_NAME:
+        type: string
+        required: true
+      ENV_SHORT_NAME:
+        type: string
+        required: true
+      APPLICATIVE_EXTERNAL_CONNECTION_ID:
+        type: string
+        required: false
+      IS_COMPOSER:
+        type: boolean
+        required: true
+        description: "Temporary; If false, the workflow will not wait for the composer to be deployed as we are not deploying a composer but custom airflow"
+    secrets:
+      GCP_EHP_WORKLOAD_IDENTITY_PROVIDER:
+        required: true
+      GCP_EHP_SERVICE_ACCOUNT:
+        required: true
+
+env:
+  GCP_REGION: "europe-west1"
+
+jobs:
+  airflow-deploy:
+    permissions:
+      id-token: write
+      contents: write
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.GITHUB_ENV_NAME }}
+    defaults:
+      run:
+        working-directory: "./orchestration/"
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Connect to Secret Manager"
+        uses: "google-github-actions/auth@v2"
+        with:
+          workload_identity_provider: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
+      - name: "Get secrets for Slack"
+        id: "secrets"
+        uses: "google-github-actions/get-secretmanager-secrets@v2"
+        with:
+          secrets: |-
+            SLACK_BOT_TOKEN:passculture-metier-ehp/passculture-ci-slack-bot-token
+            ARTIFACT_REGISTRY_SERVICE_ACCOUNT:passculture-metier-ehp/passculture-main-artifact-registry-service-account
+            ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER:passculture-metier-ehp/infra-prod-gcp-workload-identity-provider
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - uses: yezz123/setup-uv@v4
+      - name: "Install Python requirements"
+        run: uv pip install --system -r airflow/orchestration-requirements.txt
+      - id: auth
+        name: "Authenticate with Google Cloud"
+        uses: "google-github-actions/auth@v2"
+        with:
+          create_credentials_file: true
+          project_id: ${{ inputs.DATA_GCP_PROJECT }}
+          token_format: "access_token"
+          workload_identity_provider: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ steps.secrets.outputs.ARTIFACT_REGISTRY_SERVICE_ACCOUNT }}
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v2"
+
+      - name: "Pull dbt exposures (if any) from GCS locally"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
+        run: gsutil cp 'gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/data/exposures/*' ./models/
+
+      - name: "Install dbt dependencies"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+        run: |
+          export PYTHONPATH=$PYTHONPATH:./dags
+          dbt deps
+
+      - name: "compile dbt & generate dbt docs"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          DBT_TARGET_PATH: "target/"
+          DBT_PROFILES_DIR: "."
+          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
+          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
+        run: dbt docs generate --static --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+
+      - name: "Push dependencies (dbt) to GCS (data/target/dbt_packages)"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
+        run: gsutil -m rsync -d -r target/dbt_packages gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/data/target/dbt_packages
+
+      - name: "Push manifest (dbt) to GCS (data/target)"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
+        run: gsutil cp target/manifest.json gs://$AIRFLOW_DAGS_BUCKET/data/target/manifest.json
+
+      - name: "Deploy Airflow (dags)"
+        run: gsutil -m rsync -d -r dags gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/dags
+
+      - name: "Deploy Airflow (plugins)"
+        run: gsutil -m rsync -d -r plugins gs://${{ inputs.AIRFLOW_DAGS_BUCKET }}/plugins
+
+      - name: "Push documentation (dbt) to GCS (plugins/static/dbt_docs)"
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        env:
+          AIRFLOW_DAGS_BUCKET: ${{ inputs.AIRFLOW_DAGS_BUCKET }}
+        run: |
+          gsutil cp target/static_index.html gs://$AIRFLOW_DAGS_BUCKET/plugins/static/dbt_docs/index.html
+
+      - name: "Wait for composer to be deployed (10s x 6 times)"
+        if: ${{ inputs.IS_COMPOSER }}
+        run: |
+          ./wait_for_dag_deployed.sh ${{ inputs.AIRFLOW_NAME }} ${{ env.GCP_REGION }} airflow_monitoring 6 10 ${{ inputs.DATA_GCP_PROJECT }}
+      - name: "Post to a Slack channel"
+        if: always()
+        uses: slackapi/slack-github-action@v1.23.0
+        env:
+          SLACK_BOT_TOKEN: ${{ steps.secrets.outputs.SLACK_BOT_TOKEN }}
+        with:
+          channel-id: ${{ vars.NOTIF_CHANNEL_ID }}
+          payload: |
+            {
+              "attachments": [
+                {
+                  "mrkdwn_in": ["text"],
+                  "color": "${{ fromJSON('["#36a64f", "#A30002"]')[job.status != 'success'] }}",
+                  "author_name": "${{github.actor}}",
+                  "author_link": "https://github.com/${{github.actor}}",
+                  "author_icon": "https://github.com/${{github.actor}}.png",
+                  "title": "Airflow déployé",
+                  "title_link": "https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}",
+                  "text": "Airflow a été déployé sur l'environnement ${{ inputs.AIRFLOW_NAME }}"
+                }
+              ],
+              "unfurl_links": false,
+              "unfurl_media": false
+            }

@@ -5,7 +5,9 @@ aiohttp==3.9.5
 aiosignal==1.3.1
     # via aiohttp
 async-timeout==4.0.3
-    # via aiohttp
+    # via
+    #   -r requirements.in
+    #   aiohttp
 attrs==23.2.0
     # via
     #   aiohttp
@@ -259,8 +261,9 @@ sentence-transformers==2.3.0
     # via -r requirements.in
 sentencepiece==0.2.0
     # via sentence-transformers
-setuptools==70.2.0
+setuptools==78.1.1
     # via
+    #   -r requirements.in
     #   pandas-gbq
     #   pydata-google-auth
     #   zope-interface

@@ -10,7 +10,6 @@ from scripts.utils import (
     BIGQUERY_INT_RAW_DATASET,
     GCP_PROJECT,
     access_secret_data,
-    get_api_token,
 )
 
 MAX_SIREN_CALL = 100
@@ -46,7 +45,7 @@ def get_offerer_siren_list():
 
 
 def get_siren_query(siren_list):
-    query = "https://api.insee.fr/entreprises/sirene/V3.11/siren?q="
+    query = "https://api.insee.fr/api-sirene/3.11/siren?q="
     for siren in siren_list:
         query += f"""siren:{siren} OR """
     query += f"""siren:{siren_list[len(siren_list)-1]}&nombre=1000"""
@@ -137,11 +136,11 @@ def append_info_siren_list(siren_info_list, result):
 
 # put token secrets
 def query_siren():
-    token = get_api_token(access_secret_data(GCP_PROJECT, "siren-key"))
+    api_key = access_secret_data(GCP_PROJECT, "siren-key")
     siren_info_list = []
     headers = {
         "Accept": "application/json",
-        "Authorization": f"""Bearer {token}""",
+        "X-INSEE-Api-Key-Integration": api_key,
     }
     siren_list = get_offerer_siren_list()
     print(f"Will update {len(siren_list)} SIREN")

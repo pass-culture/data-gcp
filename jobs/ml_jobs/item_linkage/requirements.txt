@@ -15,7 +15,9 @@ aniso8601==9.0.1
 annotated-types==0.7.0
     # via pydantic
 async-timeout==4.0.3
-    # via aiohttp
+    # via
+    #   -r requirements.in
+    #   aiohttp
 attrs==23.2.0
     # via
     #   aiohttp
@@ -474,8 +476,9 @@ seaborn==0.13.2
     # via -r requirements.in
 sentence-transformers==3.3.1
     # via -r requirements.in
-setuptools==70.2.0
+setuptools==78.1.1
     # via
+    #   -r requirements.in
     #   opentelemetry-api
     #   opentelemetry-sdk
     #   pandas-gbq

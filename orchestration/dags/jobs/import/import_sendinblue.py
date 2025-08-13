@@ -54,7 +54,7 @@ with DAG(
     if ENV_SHORT_NAME in ["prod", "stg"]
     else get_airflow_schedule(None),
     catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=120),
+    dagrun_timeout=datetime.timedelta(minutes=240),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
     params={
@@ -76,7 +76,7 @@ with DAG(
     gce_instance_start = StartGCEOperator(
         instance_name=GCE_INSTANCE,
         task_id="gce_start_task",
-        labels={"dag_name": DAG_NAME},
+        labels={"job_type": "long_task", "dag_name": DAG_NAME},
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -95,6 +95,8 @@ with DAG(
         environment=dag_config,
         command='python main.py --target transactional --audience pro --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
         do_xcom_push=True,
+        deferrable=True,
+        poll_interval=300,
     )
 
     import_native_transactional_data_to_tmp = SSHGCEOperator(
@@ -104,6 +106,8 @@ with DAG(
         environment=dag_config,
         command='python main.py --target transactional --audience native --start-date "{{ params.start_date }}" --end-date "{{ params.end_date }}"',
         do_xcom_push=True,
+        deferrable=True,
+        poll_interval=300,
     )
 
     ### jointure avec pcapi pour retirer les emails

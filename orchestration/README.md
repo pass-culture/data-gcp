@@ -29,7 +29,7 @@ Inside the `dags/` directory:
 
 ### 🔄 Automatic Deployment
 
-When merging to `master` or `production`, DAGs are automatically deployed to Cloud Composer using GitHub Actions.
+When merging to `master` or `production`, DAGs are automatically deployed to Airflow on k8s cluster using GitHub Actions.
 See [CD Documentation](../README.md#cd) for more.
 
 Deployment process:
@@ -54,13 +54,14 @@ To run Airflow locally for development:
 
 ### 🔐 Prerequisites: GCP Auth & Environment Variables
 
-1. **If behind a Netskope proxy**:
+1. Retrieve the GCP certificate of your machine and place it in the Airflow configuration directory:
 
    * Locate the **bundled/combined** certificate file for your machine.
      If unsure, check this [Notion page](https://www.notion.so/passcultureapp/Proxyfication-des-outils-du-pass-d1f0da09eafb4158904e9197bbe7c1d4?pvs=4#10cad4e0ff98805ba61efcea26075d65).
+     * If you don't have the certificate, ask a team member from the DE or DS team.
    * Place it in:
 
-     ```
+     ```bash
      /airflow/etc/nscacert_combined.pem
      ```
 

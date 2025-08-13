@@ -17,20 +17,35 @@ jobs:
   check_time:
     runs-on: ubuntu-latest
     steps:
+      - name: Get PR title
+        id: get_pr
+        run: |
+          # Read the PR title into an env var
+          echo "PR_TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
       - name: Get current time in Paris timezone with daylight saving
         id: get_time
         run: |
-          # Get current Paris time by adjusting UTC time
+          # Get current Paris hour (00–23) by adjusting UTC time
           paris_hour=$(TZ='Europe/Paris' date +'%H')
-          echo "paris_hour=$paris_hour" >> $GITHUB_ENV
-      - name: Block merge if outside allowed hours
+          echo "PARIS_HOUR=$paris_hour" >> $GITHUB_ENV
+
+      - name: Block merge if outside allowed hours (unless HF)
         run: |
-          echo "Paris hour: ${{ env.paris_hour }}"
-          if [ $((10#$paris_hour)) -ge 18 ] || [ $((10#$paris_hour)) -lt 12 ]; then
-            echo "Merges are not allowed between 18:00 and 12:00 TZ:Europe/Paris + daylight saving."
+          echo "PR title: $PR_TITLE"
+          # If title starts with "(HF)", allow immediately
+          if [[ "$PR_TITLE" == "(HF)"* ]]; then
+            echo "Hotfix PR detected, bypassing merge window."
+            exit 0
+          fi
+
+          echo "Paris hour: $PARIS_HOUR"
+          # Block merges outside 12:00–18:00 Europe/Paris
+          if [ $((10#$PARIS_HOUR)) -ge 18 ] || [ $((10#$PARIS_HOUR)) -lt 12 ]; then
+            echo "Merges are not allowed between 18:00 and 12:00 TZ:Europe/Paris."
             exit 1
           else
             echo "Merge allowed."
           fi
         env:
-          paris_hour: ${{ env.paris_hour }}
+          PR_TITLE: ${{ env.PR_TITLE }}
+          PARIS_HOUR: ${{ env.PARIS_HOUR }}

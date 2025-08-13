@@ -1,5 +1,8 @@
 import logging
+import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from typing import List
 
 import brevo_python
 import numpy as np
@@ -7,7 +10,17 @@ import pandas as pd
 from brevo_python.rest import ApiException
 from google.cloud import bigquery
 
-from utils import ENV_SHORT_NAME
+from utils import (
+    ENV_SHORT_NAME,
+    rate_limiter,
+)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 class BrevoTransactional:
@@ -16,26 +29,35 @@ class BrevoTransactional:
         gcp_project,
         tmp_dataset,
         destination_table_name,
-        api_key,
+        api_keys: List[str],
         start_date,
         end_date,
     ):
         self.gcp_project = gcp_project
         self.tmp_dataset = tmp_dataset
         self.destination_table_name = destination_table_name
-        self.api_key = api_key
+        self.api_keys = (
+            api_keys if isinstance(api_keys, list) else [api_keys]
+        )  # Ensure it's a list
         self.start_date = start_date
         self.end_date = end_date
+        self.api_instances = []
 
     def create_instance_transactional_email_api(self):
-        configuration = brevo_python.Configuration()
-        configuration.api_key["api-key"] = self.api_key  # get secret
+        # Create an API instance for each API key
+        for i, api_key in enumerate(self.api_keys):
+            configuration = brevo_python.Configuration()
+            configuration.api_key["api-key"] = api_key
+            api_instance = brevo_python.TransactionalEmailsApi(
+                brevo_python.ApiClient(configuration)
+            )
+            # Store the instance with its index for identification
+            api_instance.instance_id = i
+            self.api_instances.append(api_instance)
 
-        api_instance = brevo_python.TransactionalEmailsApi(
-            brevo_python.ApiClient(configuration)
-        )
-
-        self.api_instance = api_instance
+        # For backward compatibility, set the first instance as the default
+        if self.api_instances:
+            self.api_instance = self.api_instances[0]
 
     def get_active_templates_id(self):
         active_templates = []
@@ -55,26 +77,91 @@ class BrevoTransactional:
                         api_responses.append(temp)
 
             active_templates = [template.id for template in api_responses]
-            logging.info("Number of active templates : ", len(active_templates))
+            logger.info("Number of active templates : %s", len(active_templates))
         except ApiException as e:
-            logging.info(
+            logger.info(
                 "Exception when calling TransactionalEmailsApi->get_smtp_templates: %s\n"
                 % e
             )
 
         return active_templates
 
-    def get_events(self, event_type):
-        active_templates = self.get_active_templates_id()
-        if ENV_SHORT_NAME != "prod" and len(active_templates) > 0:
-            active_templates = active_templates[:1]
+    # https://developers.brevo.com/docs/api-limits
+    @rate_limiter(calls=280, period=3600)  # Custom rate limiter: 280 calls per hour
+    def _get_email_event_report(self, api_instance, **kwargs):
+        max_retries = 3
+        retry_count = 0
 
-        print(f"Number of active templates : {len(active_templates)}")
+        while retry_count <= max_retries:
+            try:
+                return api_instance.get_email_event_report(**kwargs)
+            except ApiException as e:
+                # Check if it's a rate limit error (429)
+                if e.status == 429:
+                    # Extract the reset time from headers
+                    reset_seconds = 600  # Default fallback
+                    try:
+                        headers = e.headers
+                        if headers and "x-sib-ratelimit-reset" in headers:
+                            reset_seconds = int(headers["x-sib-ratelimit-reset"])
+                            # Add 10% buffer as requested
+                            reset_seconds = reset_seconds * 1.1
+                    except (ValueError, KeyError, AttributeError) as header_error:
+                        logger.warning(
+                            f"Could not extract reset time from headers: {header_error}"
+                        )
 
-        api_responses = []
-        for template in active_templates:
-            offset = 0
-            response = self.api_instance.get_email_event_report(
+                    instance_id = getattr(api_instance, "instance_id", "unknown")
+                    logger.warning(
+                        f"[API Instance {instance_id}] Rate limit exceeded. Waiting for {reset_seconds:.1f} seconds before retry."
+                    )
+                    time.sleep(reset_seconds)
+                    retry_count += 1
+                else:
+                    # For other API exceptions, just raise them
+                    raise
+
+        # If we've exhausted all retries
+        raise Exception(
+            f"Maximum retries ({max_retries}) exceeded for API call due to rate limiting"
+        )
+
+    def _process_template(self, template, event_type, api_instance):
+        """Process a single template using the specified API instance"""
+        instance_id = getattr(api_instance, "instance_id", "unknown")
+
+        template_responses = []
+        offset = 0
+        response = self._get_email_event_report(
+            api_instance=api_instance,
+            template_id=template,
+            start_date=self.start_date,
+            end_date=self.end_date,
+            event=event_type,
+            offset=offset,
+        ).events
+
+        if response is None:
+            logger.info(
+                f"[API Instance {instance_id}] No responses for template {template}"
+            )
+            return template_responses
+
+        logger.info(
+            f"[API Instance {instance_id}] Number of responses for template {template}: {len(response)}"
+        )
+        template_responses.append(response)
+
+        if ENV_SHORT_NAME != "prod":
+            return template_responses
+
+        while response is not None and len(response) == 2500:
+            offset = offset + 2500
+            logger.info(
+                f"[API Instance {instance_id}] Importing offset {offset} for template {template}"
+            )
+            response = self._get_email_event_report(
+                api_instance=api_instance,
                 template_id=template,
                 start_date=self.start_date,
                 end_date=self.end_date,
@@ -82,31 +169,56 @@ class BrevoTransactional:
                 offset=offset,
             ).events
             if response is not None:
-                logging.info(
-                    f"Number of responses for template {template}: {len(response)}"
-                )
-                api_responses.append(response)
-                if ENV_SHORT_NAME != "prod":
-                    continue
-                while response is not None and len(response) == 2500:
-                    offset = offset + 2500
-                    logging.info(f"Importing offset {offset} for template {template} ")
-                    response = self.api_instance.get_email_event_report(
-                        template_id=template,
-                        start_date=self.start_date,
-                        end_date=self.end_date,
-                        event=event_type,
-                        offset=offset,
-                    ).events
-                    if response is not None:
-                        api_responses.append(response)
+                template_responses.append(response)
 
+        return template_responses
+
+    def get_events(self, event_type):
+        active_templates = self.get_active_templates_id()
+        if ENV_SHORT_NAME != "prod" and len(active_templates) > 0:
+            active_templates = active_templates[:1]
+
+        logger.info(f"Number of active templates : {len(active_templates)}")
+
+        # If no API instances are available, create them
+        if not self.api_instances:
+            self.create_instance_transactional_email_api()
+
+        # Distribute templates among available API keys
+        template_distribution = []
+        num_api_instances = len(self.api_instances)
+
+        for i, template in enumerate(active_templates):
+            # Assign each template to an API instance in a round-robin fashion
+            api_instance_index = i % num_api_instances
+            template_distribution.append(
+                (template, self.api_instances[api_instance_index])
+            )
+
+        api_responses = []
+        # Process templates in parallel using ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=num_api_instances) as executor:
+            # Submit tasks for each template with its assigned API instance
+            futures = [
+                executor.submit(
+                    self._process_template, template, event_type, api_instance
+                )
+                for template, api_instance in template_distribution
+            ]
+
+            # Collect results as they complete
+            for future in futures:
+                template_responses = future.result()
+                if template_responses:
+                    api_responses.extend(template_responses)
+
+        # Flatten the list of responses
         api_responses = sum(
             api_responses, []
-        )  # concatener tous les events dans une unique liste
+        )  # concatenate all events into a single list
 
-        logging.info(
-            f"Number of active templates with events between {self.start_date} and {self.end_date} : {len(api_responses)}"
+        logger.info(
+            f"Number of events between {self.start_date} and {self.end_date} for event type {event_type}: {len(api_responses)}"
         )
 
         return api_responses

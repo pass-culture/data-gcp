@@ -1,0 +1,146 @@
+version: 2
+
+models:
+  - name: ml_reco__recommendable_offer
+    description: "{{ doc('description__ml_reco__recommendable_offer') }}"
+    data_tests:
+      - elementary.volume_anomalies:
+          tags: [elementary]
+          training_period:
+            period: day
+            count: 7
+          detection_period:
+            period: day
+            count: 1
+      - elementary.dimension_anomalies:
+          tags: [elementary]
+          dimensions:
+            - category
+            - is_geolocated
+          training_period:
+            period: day
+            count: 7
+          detection_period:
+            period: day
+            count: 1
+    columns:
+      - name: item_id
+        description: "{{ doc('column__item_id') }}"
+        data_tests:
+          - not_null
+      - name: offer_id
+        description: "{{ doc('column__offer_id') }}"
+        data_tests:
+          - not_null
+      - name: topic_id
+        description: "{{ doc('column__clustering_topic_id') }}"
+      - name: cluster_id
+        description: "{{ doc('column__clustering_cluster_id') }}"
+      - name: category
+        description: "{{ doc('column__offer_category_id') }}"
+        data_tests:
+          - not_null
+      - name: subcategory_id
+        description: "{{ doc('column__offer_subcategory_id') }}"
+        data_tests:
+          - not_null
+      - name: search_group_name
+        description: "{{ doc('column__search_group_name') }}"
+      - name: is_numerical
+        description: "{{ doc('column__offer_is_numerical') }}"
+        data_tests:
+          - not_null
+      - name: is_geolocated
+        description: "{{ doc('column__offer_is_geolocated') }}"
+        data_tests:
+          - not_null
+      - name: offer_is_duo
+        description: "{{ doc('column__offer_is_duo') }}"
+      - name: offer_type_domain
+        description: "{{ doc('column__offer_type_domain') }}"
+      - name: offer_type_label
+        description: "{{ doc('column__offer_type_label') }}"
+      - name: gtl_id
+        description: "{{ doc('column__titelive_gtl_id') }}"
+      - name: gtl_l1
+        description: "{{ doc('column__gtl_label_level_1') }}"
+      - name: gtl_l2
+        description: "{{ doc('column__gtl_label_level_2') }}"
+      - name: gtl_l3
+        description: "{{ doc('column__gtl_label_level_3') }}"
+      - name: gtl_l4
+        description: "{{ doc('column__gtl_label_level_4') }}"
+      - name: booking_number
+        description: "{{ doc('column__reco_total_bookings') }}"
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: booking_number_last_7_days
+        description: "{{ doc('column__reco_total_bookings_last_7_days') }}"
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: booking_number_last_14_days
+        description: "{{ doc('column__reco_total_bookings_last_14_days') }}"
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: booking_number_last_28_days
+        description: "{{ doc('column__reco_total_bookings_last_28_days') }}"
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: is_underage_recommendable
+        description: "{{ doc('column__reco_item_is_underage_recommendable') }}"
+      - name: is_sensitive
+        description: "{{ doc('column__reco_item_is_sensitive') }}"
+        data_tests:
+          - not_null
+      - name: is_restrained
+        description: "{{ doc('column__reco_item_is_restrained') }}"
+        data_tests:
+          - not_null
+      - name: offer_creation_date
+        description: "{{ doc('column__offer_creation_date') }}"
+        data_tests:
+          - not_null
+      - name: stock_beginning_date
+        description: "{{ doc('column__stock_beginning_date') }}"
+      - name: stock_price
+        description: "{{ doc('column__stock_price') }}"
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: total_offers
+        description: "{{ doc('column__reco_total_offers') }}"
+        data_tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: semantic_emb_mean
+        description: "{{ doc('column__reco_mean_semantic_embedding') }}"
+      - name: booking_trend
+        description: "{{ doc('column__reco_booking_trend') }}"
+      - name: stock_date_penalty_factor
+        description: "{{ doc('column__reco_stock_date_penalty_factor') }}"
+      - name: creation_date_penalty_factor
+        description: "{{ doc('column__reco_creation_date_penalty_factor') }}"
+      - name: example_offer_name
+        description: "{{ doc('column__reco_example_offer_name') }}"
+      - name: example_offer_id
+        description: "{{ doc('column__reco_example_offer_id') }}"
+      - name: example_venue_id
+        description: "{{ doc('column__reco_example_venue_id') }}"
+      - name: example_venue_longitude
+        description: "{{ doc('column__reco_example_venue_longitude') }}"
+      - name: example_venue_latitude
+        description: "{{ doc('column__reco_example_venue_latitude') }}"
+      - name: booking_release_trend
+        description: "{{ doc('column__reco_booking_release_trend') }}"
+      - name: booking_creation_trend
+        description: "{{ doc('column__reco_booking_creation_trend') }}"

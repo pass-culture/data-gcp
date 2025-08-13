@@ -18,7 +18,9 @@ anyio==4.4.0
 astunparse==1.6.3
     # via tensorflow
 async-timeout==4.0.3
-    # via aiohttp
+    # via
+    #   -r requirements.in
+    #   aiohttp
 attrs==23.2.0
     # via aiohttp
 bertopic==0.16.2
@@ -65,7 +67,9 @@ decorator==5.1.1
 distro==1.9.0
     # via openai
 exceptiongroup==1.2.2
-    # via anyio
+    # via
+    #   -r requirements.in
+    #   anyio
 filelock==3.15.4
     # via
     #   huggingface-hub
@@ -449,8 +453,9 @@ seaborn==0.13.2
     # via polyfuzz
 sentence-transformers==3.0.1
     # via bertopic
-setuptools==70.2.0
+setuptools==78.1.1
     # via
+    #   -r requirements.in
     #   marisa-trie
     #   pandas-gbq
     #   pydata-google-auth

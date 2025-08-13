@@ -4,7 +4,7 @@
             unique_key="offer_id",
             strategy="check",
             check_cols=["offer_id"],
-            hard_deletes='invalidate',
+            hard_deletes="invalidate",
         )
     }}
 

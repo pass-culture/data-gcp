@@ -10,7 +10,7 @@ data_gcp_dbt:
       method: oauth
       priority: interactive
       project: passculture-data-ehp
-      threads: 4
+      threads: 8
       type: bigquery
     dev:
       dataset: tmp_dev

@@ -5,9 +5,14 @@ from utils import (
     schedule_mapping,
     table_name_contains_partition_date,
 )
-import re
 import typer
 import pandas as pd
+import os
+
+# Tables to exclude manually
+TABLES_TO_EXCLUDE = [
+    f"raw_{os.environ.get('ENV_SHORT_NAME')}.export_errors",
+]
 
 
 def run():
@@ -37,6 +42,10 @@ def run():
     warning_tables = warning_tables[warning_tables.is_partition_table == False]
 
     warning_tables_list = warning_tables["full_table_name"].to_list()
+
+    warning_tables_list = [
+        table for table in warning_tables_list if table not in TABLES_TO_EXCLUDE
+    ]
 
     print(f"{warning_tables_list}")
 

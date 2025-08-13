@@ -1,6 +1,5 @@
 import os
 
-import requests
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import secretmanager
 
@@ -23,21 +22,3 @@ def access_secret_data(project_id, secret_id, version_id="latest", default=None)
         return response.payload.data.decode("UTF-8")
     except DefaultCredentialsError:
         return default
-
-
-def get_api_token(consumer_key):
-    headers = {
-        "Authorization": f"""Basic {consumer_key}""",
-    }
-
-    data = {"grant_type": "client_credentials"}
-
-    response = requests.post(
-        "https://api.insee.fr/token",
-        headers=headers,
-        data=data,
-        verify="/etc/ssl/certs/ca-certificates.crt",
-    )
-    result_token = response.json()
-
-    return result_token["access_token"]

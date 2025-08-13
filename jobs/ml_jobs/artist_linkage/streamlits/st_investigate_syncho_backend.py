@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-from match_artists_on_wikidata import preprocess_artists
+from constants import ARTIST_NAME_TO_FILTER
 from utils.preprocessing_utils import (
     clean_names,
     extract_first_artist,
@@ -12,7 +12,12 @@ DEFAULT_EXPANDER_STATE = False
 MERGE_COLUMNS = ["product_id", "artist_type"]
 st.set_page_config(layout="wide")
 
-ARTIST_NAME_TO_FILTER = {"multi-artistes", "xxx", "compilation", "tbc", "divers"}
+
+def preprocess_artists(df: pd.DataFrame) -> pd.DataFrame:
+    return df.assign(
+        alias=lambda _df: _df.preprocessed_artist_name,
+        tmp_id=lambda df: df.index,
+    )
 
 
 @st.cache_data

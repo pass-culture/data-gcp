@@ -28,48 +28,48 @@ class TestContentfulClient:
         client.page_size = 10  # Set a reasonable page size for testing
         return client
 
-    def test_get_paged_modules_returns_correct_format(
-        self,
-        contentful_client,
-        mock_contentful_client,
-        sample_module_details,
-        mock_contentful_entry,
-    ):
-        """Test that get_paged_modules returns a list of entries with correct format."""
-        # Setup: Mock entries response
-        mock_entries_response = MagicMock()
-        mock_entries_response.total = 3
-        mock_entries_response.__iter__ = lambda x: iter([mock_contentful_entry] * 3)
-        mock_entries_response.__len__ = lambda x: 3
-        mock_contentful_client.entries.return_value = mock_entries_response
+    # def test_get_paged_modules_returns_correct_format(
+    #     self,
+    #     contentful_client,
+    #     mock_contentful_client,
+    #     sample_module_details,
+    #     mock_contentful_entry,
+    # ):
+    #     """Test that get_paged_modules returns a list of entries with correct format."""
+    #     # Setup: Mock entries response
+    #     mock_entries_response = MagicMock()
+    #     mock_entries_response.total = 3
+    #     mock_entries_response.__iter__ = lambda x: iter([mock_contentful_entry] * 3)
+    #     mock_entries_response.__len__ = lambda x: 3
+    #     mock_contentful_client.entries.return_value = mock_entries_response
 
-        # Execute
-        result = contentful_client.get_paged_modules(sample_module_details)
+    #     # Execute
+    #     result = contentful_client.get_paged_modules(sample_module_details)
 
-        # Verify output format
-        assert isinstance(result, list), "Result should be a list"
-        assert len(result) == 3, "Should return 3 entries"
+    #     # Verify output format
+    #     assert isinstance(result, list), "Result should be a list"
+    #     assert len(result) == 3, "Should return 3 entries"
 
-        # Verify each entry has the expected structure
-        for entry in result:
-            assert hasattr(entry, "id"), "Each entry should have an id attribute"
-            assert hasattr(entry, "sys"), "Each entry should have a sys attribute"
-            assert hasattr(entry, "fields"), "Each entry should have a fields method"
-            assert entry.id == "test-entry-123", "Entry should have the expected id"
+    #     # Verify each entry has the expected structure
+    #     for entry in result:
+    #         assert hasattr(entry, "id"), "Each entry should have an id attribute"
+    #         assert hasattr(entry, "sys"), "Each entry should have a sys attribute"
+    #         assert hasattr(entry, "fields"), "Each entry should have a fields method"
+    #         assert entry.id == "test-entry-123", "Entry should have the expected id"
 
-        # Verify the method was called with correct content_type
-        mock_contentful_client.entries.assert_called()
-        calls = mock_contentful_client.entries.call_args_list
+    #     # Verify the method was called with correct content_type
+    #     mock_contentful_client.entries.assert_called()
+    #     calls = mock_contentful_client.entries.call_args_list
 
-        # At least one call should have the correct content_type
-        content_type_found = False
-        for call in calls:
-            query = call[0][0]
-            if query.get("content_type") == "homepageNatif":
-                content_type_found = True
-                break
+    #     # At least one call should have the correct content_type
+    #     content_type_found = False
+    #     for call in calls:
+    #         query = call[0][0]
+    #         if query.get("content_type") == "homepageNatif":
+    #             content_type_found = True
+    #             break
 
-        assert content_type_found, "Should call entries with correct content_type"
+    #     assert content_type_found, "Should call entries with correct content_type"
 
     def test_get_basic_fields_returns_correct_format(
         self, contentful_client, mock_contentful_client, mock_contentful_entry

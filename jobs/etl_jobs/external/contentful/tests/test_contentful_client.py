@@ -200,7 +200,9 @@ class TestContentfulClient:
         assert (
             result["venues_search_parameters"] == "['venue-1', 'venue-2']"
         ), "Should convert list of IDs to string"
-        assert result["duration_in_minutes"] == 120.0, "Should convert to float"
+        assert (
+            abs(result["duration_in_minutes"] - 120.0) < 1e-9
+        ), "Should convert to float"
         assert (
             result["video_publication_date"] == "2023-01-01"
         ), "Should preserve date strings"
@@ -294,7 +296,9 @@ class TestContentfulClient:
         assert (
             result["recommendation_parameters"] == "rec-param-456"
         ), "Should extract .id from parameter objects"
-        assert result["duration_in_minutes"] == 90.0, "Should convert to float"
+        assert (
+            abs(result["duration_in_minutes"] - 90.0) < 1e-9
+        ), "Should convert to float"
         assert result["description"] == "Test description", "Should convert to string"
 
         # Verify basic field values are correct

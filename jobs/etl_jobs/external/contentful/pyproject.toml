@@ -24,10 +24,7 @@ dependencies = [
     "typer==0.15.1",
 ]
 
-[project.optional-dependencies]
-ci = [
-    "pytest==8.2.2",
-]
+[dependency-groups]
 dev = [
     "pytest==8.2.2",
 ]

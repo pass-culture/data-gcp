@@ -343,7 +343,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
         requirement_file: str = "requirements.txt",
         branch: str = "main",  # Branch for repo
         environment: t.Dict[str, str] = {},
-        python_version: str = None,
+        python_version: str = "3.10",
         base_dir: str = "data-gcp",
         *args,
         **kwargs,
@@ -404,7 +404,7 @@ class InstallDependenciesOperator(SSHGCEOperator):
         install_command = f"""
             curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh &&
             cd {base_dir} &&
-            uv venv {f"--python {self.python_version}" if self.python_version else ""} &&
+            uv venv --python {self.python_version} &&
             source .venv/bin/activate &&
             if [ -f "{requirement_file}" ]; then
                 uv pip sync {requirement_file}

@@ -86,3 +86,4 @@ from
     -- execution_date,
     -- dimension_name,
     -- total_booking_amount_ranked
+    

@@ -89,3 +89,4 @@ from
     -- dimension_value,
     -- offer_category_id,
     -- total_booking_amount_ranked
+    

@@ -1,3 +1,8 @@
+-- cannot order partition table -> To order by
+    -- execution_date,
+    -- dimension_name,
+    -- total_venue_booking_amount_ranked
+
 {{
     config(
         **custom_incremental_config(
@@ -72,5 +77,3 @@ select
     total_venue_booking_amount_ranked
 from
     all_dimensions
-    -- order by execution_date, dimension_name, total_venue_booking_amount_ranked
-    

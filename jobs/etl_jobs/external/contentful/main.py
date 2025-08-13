@@ -3,8 +3,6 @@ from typing import Optional
 
 import typer
 from google.cloud import bigquery
-
-from contentful_client import ContentfulClient
 from utils import (
     BIGQUERY_RAW_DATASET,
     ENTRIES_DTYPE,
@@ -13,6 +11,8 @@ from utils import (
     PREVIEW_TOKEN,
     TOKEN,
 )
+
+from contentful_client import ContentfulClient
 
 CONTENTFUL_ENTRIES_TABLE_NAME = "contentful_entry"
 CONTENTFUL_RELATIONSHIP_TABLE_NAME = "contentful_relationship"

@@ -43,7 +43,7 @@ with DAG(
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    dagrun_timeout=datetime.timedelta(minutes=120),
+    dagrun_timeout=datetime.timedelta(minutes=240),
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",

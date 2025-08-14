@@ -22,6 +22,8 @@ models:
         description: "{{ doc('column__partner_region_name') }}"
       - name: partner_department_code
         description: "{{ doc('column__partner_department_code') }}"
+      - name: partner_department_name
+        description: "{{ doc('column__partner_department_name') }}"
       - name: partner_postal_code
         description: "{{ doc('column__partner_postal_code') }}"
       - name: partner_type

@@ -24,6 +24,8 @@ models:
         description: "{{ doc('column__user_region_name') }}"
       - name: user_department_code
         description: "{{ doc('column__user_department_code') }}"
+      - name: user_department_name
+        description: "{{ doc('column__user_department_name') }}"
       - name: user_activity
         description: "{{ doc('column__user_activity') }}"
       - name: user_civility

@@ -354,3 +354,6 @@ models:
       - name: venue_adage_inscription_date
         description: '{{ doc("column__venue_adage_inscription_date") }}'
         data_type: DATE
+      - name: offerer_is_epn
+        description: "{{ doc('column__offerer_is_epn') }}"
+        data_type: BOOLEAN

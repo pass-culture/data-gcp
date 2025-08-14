@@ -31,27 +31,13 @@ DEFAULT_REGION = "europe-west1"
 BASE_DIR = "data-gcp/jobs/etl_jobs/internal/sync_recommendation"
 DAG_ID = "sync_bigquery_to_cloudsql_recommendation_tables"
 
-# Table dependencies configuration
-TABLE_DEPENDENCIES = {
-    "enriched_user": {
-        "dag_id": "dbt_run_dag",
-        "task_id": "data_transformation.ml_reco__user_statistics",
-    },
-    "recommendable_offers_raw": {
-        "dag_id": "dbt_run_dag",
-        "task_id": "data_transformation.ml_reco__recommendable_offer",
-    },
-    "non_recommendable_items_data": {
-        "dag_id": "dbt_run_dag",
-        "task_id": "data_transformation.ml_reco__user_booked_item",
-    },
-    "iris_france": {
-        "dag_id": "dbt_run_dag",
-        "task_id": "data_transformation.int_seed__iris_france",
-    },
-}
 
-TABLES_TO_PROCESS = list(TABLE_DEPENDENCIES.keys())
+TABLES_TO_PROCESS = [
+    "enriched_user",
+    "recommendable_offers_raw",
+    "non_recommendable_items_data",
+    "iris_france",
+]
 
 MATERIALIZED_VIEWS = [
     "enriched_user_mv",
@@ -71,13 +57,6 @@ INSTANCE_TYPE = {
 def get_schedule_interval(dag_id: str):
     schedule_interval = SCHEDULE_DICT.get(dag_id, {}).get(ENV_SHORT_NAME, None)
     return get_airflow_schedule(schedule_interval)
-
-
-def choose_branch(**context):
-    run_id = context["dag_run"].run_id
-    if run_id.startswith("scheduled__"):
-        return ["waiting_group.waiting_branch"]
-    return ["shunt_manual"]
 
 
 with DAG(
@@ -113,25 +92,7 @@ with DAG(
         ),
     },
 ) as dag:
-    branching = BranchPythonOperator(
-        task_id="branching",
-        python_callable=choose_branch,
-        provide_context=True,
-        dag=dag,
-    )
-
-    with TaskGroup(group_id="waiting_group") as waiting_group:
-        wait = DummyOperator(task_id="waiting_branch", dag=dag)
-        for table_name, dependency in TABLE_DEPENDENCIES.items():
-            waiting_task = delayed_waiting_operator(
-                dag=dag,
-                external_dag_id=dependency["dag_id"],
-                external_task_id=dependency["task_id"],
-            )
-            wait >> waiting_task
-
-    shunt = DummyOperator(task_id="shunt_manual", dag=dag)
-    join = DummyOperator(task_id="join", dag=dag, trigger_rule="none_failed")
+    start = DummyOperator(task_id="start", dag=dag)
 
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
@@ -228,9 +189,7 @@ with DAG(
 
     # Set dependencies
     (
-        branching
-        >> [shunt, waiting_group]
-        >> join
+        start
         >> gce_instance_start
         >> fetch_install_code
         >> export_tables

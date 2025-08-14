@@ -15,12 +15,13 @@
 ] %}
 
 {% set categories = [
-    {"name": "LIVRE", "value_expr": "livres"},
-    {"name": "CINEMA", "value_expr": "cinema"},
-    {"name": "MUSIQUE_LIVE", "value_expr": "musique_live"},
-    {"name": "SPECTACLE", "value_expr": "spectacle_vivant"},
+    {"name": "SPECTACLE", "value_expr": "spectacle"},
     {"name": "MUSEE", "value_expr": "musee"},
-    {"name": "PRATIQUE_ART", "value_expr": "pratiques_artistiques"},
+    {"name": "CINEMA", "value_expr": "cinema"},
+    {"name": "LIVRE", "value_expr": "livre"},
+    {"name": "PRATIQUE_ART", "value_expr": "pratique_artistique"},
+    {"name": "MUSIQUE_LIVE", "value_expr": "musique_live"},
+    {"name": "INSTRUMENT", "value": "instrument"},
 ] %}
 
 {% set kpis = [

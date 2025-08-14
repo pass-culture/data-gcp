@@ -91,7 +91,7 @@ with
         left join
             {{ ref("bookable_partner_history") }} as bph
             on apd.partner_id = bph.partner_id
-            and apd.partition_day = bph.partition_month
+            and apd.partition_day = bph.partition_date
     ),
 
     bookable_dates as (

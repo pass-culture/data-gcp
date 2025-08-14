@@ -18,10 +18,10 @@
     {"name": "SPECTACLE", "value": "spectacle"},
     {"name": "MUSEE", "value": "musee"},
     {"name": "CINEMA", "value": "cinema"},
-    {"name": "PRATIQUE_ART", "value": "pratique_artistique"},
-    {"name": "INSTRUMENT", "value": "instrument"},
     {"name": "LIVRE", "value": "livre"},
-    {"name": "MUSIQUE_LIVE", "value": "concert"},
+    {"name": "PRATIQUE_ART", "value": "pratique_artistique"},
+    {"name": "MUSIQUE_LIVE", "value": "musique_live"},
+    {"name": "INSTRUMENT", "value": "instrument"},
 ] %}
 
 {% for category in categories %}

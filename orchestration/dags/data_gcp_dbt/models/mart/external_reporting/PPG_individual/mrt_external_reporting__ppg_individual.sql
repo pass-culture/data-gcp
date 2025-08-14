@@ -37,6 +37,6 @@
         1 = 1
         {% if is_incremental() %}
             and partition_month
-            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+            = date_trunc(date_sub(date("{{ ds() }}"), interval 3 month), month)
         {% endif %}
 {% endfor %}

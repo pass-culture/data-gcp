@@ -35,10 +35,9 @@ clean-targets:
 
 models:
   data_gcp_dbt:
+    +hours_to_expiration: "{{ var('hours_to_expiration','336') if target.name=='local' else none }}"
     +pre-hook:
       - "{{ create_schema_dev() }}"
-    +post-hook:
-      - "{{ set_table_expiration_dev() }}"
     +labels:
       schedule: "daily"
     +persist_docs:

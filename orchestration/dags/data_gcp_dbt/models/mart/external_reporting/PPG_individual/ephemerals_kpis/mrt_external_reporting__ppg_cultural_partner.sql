@@ -179,11 +179,12 @@ with
             end
         ) as kpi
     from partner_details
-    where 1=1 
-    {% if is_incremental() %}
-        and date_trunc(date(partition_day), month)
-        = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-    {% endif %}
+    where
+        1 = 1
+        {% if is_incremental() %}
+            and date_trunc(date(partition_day), month)
+            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+        {% endif %}
     group by partition_month, update_date, dimension_name, dimension_value, kpi_name
     union all
     {% for partner_type in partner_types %}
@@ -214,11 +215,12 @@ with
                 end
             ) as kpi
         from partner_details
-        where 1=1 
-        {% if is_incremental() %}
-            and date_trunc(date(partition_day), month)
-            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-        {% endif %}
+        where
+            1 = 1
+            {% if is_incremental() %}
+                and date_trunc(date(partition_day), month)
+                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+            {% endif %}
         group by partition_month, update_date, dimension_name, dimension_value, kpi_name
     {% endfor %}
 {% endfor %}

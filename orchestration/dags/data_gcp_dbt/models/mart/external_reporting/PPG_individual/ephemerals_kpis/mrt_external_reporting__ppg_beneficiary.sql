@@ -75,7 +75,9 @@ with
             ) as cumulative_amount_spent
         from user_amount_spent_per_day
         {% if is_incremental() %}
-            where deposit_active_date = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+            where
+                deposit_active_date
+                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
     ),
 
@@ -105,7 +107,8 @@ with
         where
             cumulative_amount_spent < initial_deposit_amount
             {% if is_incremental() %}
-                and partition_month = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+                and partition_month
+                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
             {% endif %}
     ),
 
@@ -126,7 +129,9 @@ with
             {{ ref("region_department") }} as rd
             on eud.user_department_code = rd.num_dep
         {% if is_incremental() %}
-            where partition_month = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+            where
+                partition_month
+                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
     ),
 

@@ -24,7 +24,8 @@ with
         where
             1 = 1
             {% if is_incremental() %}
-                and date_trunc(date, month) = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+                and date_trunc(date, month)
+                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
             {% endif %}
         group by 1
     )

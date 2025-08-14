@@ -26,7 +26,7 @@
         "montant_moyen_octroye_a_l_expiration_du_credit" as kpi_name,
         count(distinct user_id) as denominator,
         sum(total_deposit_amount) as numerator,
-        safe_divide(sum(total_deposit_amount),count(distinct user_id)) as kpi
+        safe_divide(sum(total_deposit_amount), count(distinct user_id)) as kpi
     from {{ ref("mrt_global__user") }}
     {% if is_incremental() %}
         where

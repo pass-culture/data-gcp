@@ -29,9 +29,9 @@ SCHEDULE_DICT = {
         "dev": "0 6 * * 3",  # every Wednesday at 6:00 AM
     },
     "sync_bigquery_to_cloudsql_recommendation_tables": {
-        "dev": "00 6 * * *",  # every day at 6:00 AM
-        "stg": "00 6 * * *",
-        "prod": "00 6 * * *",
+        "dev": "00 2 * * *",  # every day at 2:00 AM UTC
+        "stg": "00 2 * * *",
+        "prod": "00 2 * * *",
     },
     "sync_cloudsql_recommendation_tables_to_bigquery": {
         "dev": "0 5 * * *",  # every day at 5:00 AM

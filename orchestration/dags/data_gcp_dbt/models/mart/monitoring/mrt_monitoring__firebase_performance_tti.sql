@@ -7,7 +7,7 @@
     )
 }}
 
-SELECT
+select
     event_timestamp,
     operating_system,
     radio_type,
@@ -17,8 +17,9 @@ SELECT
     device_name,
     country,
     home_time_to_interactive_container_in_ms
-FROM {{ ref("int_firebase__performance") }}
-WHERE true
-{% if is_incremental() %}
-AND TIMESTAMP_TRUNC(event_timestamp, DAY) = TIMESTAMP(date('{{ ds() }}'))
-{% endif %}
+from {{ ref("int_firebase__performance") }}
+where
+    true
+    {% if is_incremental() %}
+        and timestamp_trunc(event_timestamp, day) = timestamp(date('{{ ds() }}'))
+    {% endif %}

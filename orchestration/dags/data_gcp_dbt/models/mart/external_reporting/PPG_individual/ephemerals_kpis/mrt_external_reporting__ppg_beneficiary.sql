@@ -2,7 +2,7 @@
     config(
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
-            partition_by={"field": "execution_date", "data_type": "date"},
+            partition_by={"field": "partition_month", "data_type": "date"},
             on_schema_change="append_new_columns",
         )
     )
@@ -36,7 +36,7 @@
 with
     last_day_of_month as (
         select
-            date_trunc(deposit_active_date, month) as execution_date,
+            date_trunc(deposit_active_date, month) as partition_month,
             date("{{ ds() }}") as update_date,
             max(deposit_active_date) as last_active_date
         from {{ ref("mrt_native__daily_user_deposit") }}
@@ -44,7 +44,7 @@ with
             deposit_active_date > date("2021-01-01")
             {% if is_incremental() %}
                 and date_trunc(deposit_active_date, month)
-                = date_trunc(date("{{ ds() }}"), month)
+                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
             {% endif %}
         group by date_trunc(deposit_active_date, month)
     ),
@@ -75,7 +75,7 @@ with
             ) as cumulative_amount_spent
         from user_amount_spent_per_day
         {% if is_incremental() %}
-            where deposit_active_date = date_trunc(date("{{ ds() }}"), month)
+            where deposit_active_date = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
     ),
 
@@ -83,7 +83,7 @@ with
     active_users_base as (
         select
             uua.user_id,
-            ldm.execution_date,
+            ldm.partition_month,
             ldm.update_date,
             uua.initial_deposit_amount,
             uua.cumulative_amount_spent,
@@ -105,7 +105,7 @@ with
         where
             cumulative_amount_spent < initial_deposit_amount
             {% if is_incremental() %}
-                and execution_date = date_trunc(date("{{ ds() }}"), month)
+                and partition_month = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
             {% endif %}
     ),
 
@@ -113,7 +113,7 @@ with
     total_users_base as (
         select
             eud.user_id,
-            ldm.execution_date,
+            ldm.partition_month,
             ldm.update_date,
             eud.first_deposit_creation_date,
             rd.region_name,
@@ -126,7 +126,7 @@ with
             {{ ref("region_department") }} as rd
             on eud.user_department_code = rd.num_dep
         {% if is_incremental() %}
-            where execution_date = date_trunc(date("{{ ds() }}"), month)
+            where partition_month = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
     ),
 
@@ -138,7 +138,7 @@ with
                 union all
             {% endif %}
             select
-                execution_date,
+                partition_month,
                 update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
@@ -147,7 +147,7 @@ with
                 1 as denominator
             from active_users_base
             group by
-                execution_date, update_date, dimension_name, dimension_value, kpi_name
+                partition_month, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
@@ -158,7 +158,7 @@ with
                 union all
             {% endif %}
             select
-                execution_date,
+                partition_month,
                 update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
@@ -167,7 +167,7 @@ with
                 1 as denominator
             from total_users_base
             group by
-                execution_date, update_date, dimension_name, dimension_value, kpi_name
+                partition_month, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
@@ -178,7 +178,7 @@ with
                 union all
             {% endif %}
             select
-                execution_date,
+                partition_month,
                 update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
@@ -187,7 +187,7 @@ with
                 count(distinct user_id) as denominator
             from active_users_base
             group by
-                execution_date, update_date, dimension_name, dimension_value, kpi_name
+                partition_month, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
@@ -198,7 +198,7 @@ with
                 union all
             {% endif %}
             select
-                execution_date,
+                partition_month,
                 update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
@@ -211,7 +211,7 @@ with
                 count(distinct user_id) as denominator
             from active_users_base
             group by
-                execution_date, update_date, dimension_name, dimension_value, kpi_name
+                partition_month, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
@@ -222,7 +222,7 @@ with
                 union all
             {% endif %}
             select
-                execution_date,
+                partition_month,
                 update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
@@ -233,7 +233,7 @@ with
                 count(distinct user_id) as denominator
             from active_users_base
             group by
-                execution_date, update_date, dimension_name, dimension_value, kpi_name
+                partition_month, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
@@ -248,7 +248,7 @@ with
                     union all
                 {% endif %}
                 select
-                    execution_date,
+                    partition_month,
                     update_date,
                     '{{ dim.name }}' as dimension_name,
                     {{ dim.value_expr }} as dimension_value,
@@ -261,7 +261,7 @@ with
                     count(distinct user_id) as denominator
                 from active_users_base
                 group by
-                    execution_date,
+                    partition_month,
                     update_date,
                     dimension_name,
                     dimension_value,
@@ -277,7 +277,7 @@ with
                 union all
             {% endif %}
             select
-                execution_date,
+                partition_month,
                 update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
@@ -288,7 +288,7 @@ with
                 1 as denominator
             from active_users_base
             group by
-                execution_date, update_date, dimension_name, dimension_value, kpi_name
+                partition_month, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
@@ -298,7 +298,7 @@ with
                 union all
             {% endif %}
             select
-                execution_date,
+                partition_month,
                 update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
@@ -309,7 +309,7 @@ with
                 1 as denominator
             from active_users_base
             group by
-                execution_date, update_date, dimension_name, dimension_value, kpi_name
+                partition_month, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
@@ -319,7 +319,7 @@ with
                 union all
             {% endif %}
             select
-                execution_date,
+                partition_month,
                 update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
@@ -330,12 +330,12 @@ with
                 1 as denominator
             from active_users_base
             group by
-                execution_date, update_date, dimension_name, dimension_value, kpi_name
+                partition_month, update_date, dimension_name, dimension_value, kpi_name
         {% endfor %}
     )
 
 select
-    execution_date,
+    partition_month,
     update_date,
     dimension_name,
     dimension_value,

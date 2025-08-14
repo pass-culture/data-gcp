@@ -2,7 +2,7 @@
     config(
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
-            partition_by={"field": "execution_date", "data_type": "date"},
+            partition_by={"field": "partition_month", "data_type": "date"},
             on_schema_change="append_new_columns",
         )
     )
@@ -40,7 +40,7 @@
 with
     base_data as (
         select
-            date_trunc(date(booking_used_date), month) as execution_date,
+            date_trunc(date(booking_used_date), month) as partition_month,
             date("{{ ds() }}") as update_date,
             venue_region_name,
             venue_department_name,
@@ -54,7 +54,7 @@ with
             1 = 1
             {% if is_incremental() %}
                 and date_trunc(booking_used_date, month)
-                = date_trunc(date("{{ ds() }}"), month)
+                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
             {% endif %}
     ),
 
@@ -63,7 +63,7 @@ with
             select
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
-                execution_date,
+                partition_month,
                 update_date,
                 offer_category_id,
                 offerer_is_epn,
@@ -81,7 +81,7 @@ with
     global_metrics as (
         {% for kpi in kpis %}
             select
-                execution_date,
+                partition_month,
                 update_date,
                 dimension_name,
                 dimension_value,
@@ -90,7 +90,7 @@ with
                 1 as denominator,
                 safe_divide(sum({{ kpi.value_expr }}), 1) as kpi
             from dimension_cross
-            group by execution_date, update_date, dimension_name, dimension_value
+            group by partition_month, update_date, dimension_name, dimension_value
             {% if not loop.last %}
                 union all
             {% endif %}
@@ -102,7 +102,7 @@ with
         {% for category in categories %}
             {% for kpi in kpis %}
                 select
-                    execution_date,
+                    partition_month,
                     update_date,
                     dimension_name,
                     dimension_value,
@@ -112,7 +112,7 @@ with
                     safe_divide(sum({{ kpi.value_expr }}), 1) as kpi
                 from dimension_cross
                 where offer_category_id = '{{ category.name }}'
-                group by execution_date, update_date, dimension_name, dimension_value
+                group by partition_month, update_date, dimension_name, dimension_value
                 {% if not loop.last %}
                     union all
                 {% endif %}
@@ -126,7 +126,7 @@ with
     epn_metrics as (
         {% for kpi in kpis %}
             select
-                execution_date,
+                partition_month,
                 update_date,
                 dimension_name,
                 dimension_value,
@@ -136,7 +136,7 @@ with
                 safe_divide(sum({{ kpi.value_expr }}), 1) as kpi
             from dimension_cross
             where offerer_is_epn = true
-            group by execution_date, update_date, dimension_name, dimension_value
+            group by partition_month, update_date, dimension_name, dimension_value
             {% if not loop.last %}
                 union all
             {% endif %}

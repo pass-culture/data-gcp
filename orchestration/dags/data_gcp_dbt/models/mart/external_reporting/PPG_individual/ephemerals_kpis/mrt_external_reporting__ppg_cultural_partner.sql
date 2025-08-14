@@ -2,7 +2,7 @@
     config(
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
-            partition_by={"field": "execution_date", "data_type": "date"},
+            partition_by={"field": "partition_month", "data_type": "date"},
             on_schema_change="append_new_columns",
         )
     )
@@ -91,7 +91,7 @@ with
         left join
             {{ ref("bookable_partner_history") }} as bph
             on apd.partner_id = bph.partner_id
-            and apd.partition_day = bph.partition_date
+            and apd.partition_day = bph.partition_month
     ),
 
     bookable_dates as (
@@ -162,7 +162,7 @@ with
         union all
     {% endif %}
     select
-        date_trunc(date(partition_day), month) as execution_date,
+        date_trunc(date(partition_day), month) as partition_month,
         date("{{ ds() }}") as update_date,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
@@ -179,14 +179,19 @@ with
             end
         ) as kpi
     from partner_details
-    group by execution_date, update_date, dimension_name, dimension_value, kpi_name
+    where 1=1 
+    {% if is_incremental() %}
+        and date_trunc(date(partition_day), month)
+        = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+    {% endif %}
+    group by partition_month, update_date, dimension_name, dimension_value, kpi_name
     union all
     {% for partner_type in partner_types %}
         {% if not loop.first %}
             union all
         {% endif %}
         select
-            date_trunc(date(partition_day), month) as execution_date,
+            date_trunc(date(partition_day), month) as partition_month,
             date("{{ ds() }}") as update_date,
             '{{ dim.name }}' as dimension_name,
             {{ dim.value_expr }} as dimension_value,
@@ -209,6 +214,11 @@ with
                 end
             ) as kpi
         from partner_details
-        group by execution_date, update_date, dimension_name, dimension_value, kpi_name
+        where 1=1 
+        {% if is_incremental() %}
+            and date_trunc(date(partition_day), month)
+            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+        {% endif %}
+        group by partition_month, update_date, dimension_name, dimension_value, kpi_name
     {% endfor %}
 {% endfor %}

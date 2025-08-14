@@ -1,12 +1,12 @@
 -- cannot order partition table -> To order by
--- execution_date,
+-- partition_month,
 -- dimension_name,
 -- total_booking_amount_ranked
 {{
     config(
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
-            partition_by={"field": "execution_date", "data_type": "date"},
+            partition_by={"field": "partition_month", "data_type": "date"},
             on_schema_change="append_new_columns",
         )
     )
@@ -21,7 +21,7 @@
 with
     base_aggregation as (
         select
-            date_trunc(date(booking_used_date), month) as execution_date,
+            date_trunc(date(booking_used_date), month) as partition_month,
             date("{{ ds() }}") as update_date,
             item_id,
             offer_category_id,
@@ -36,10 +36,10 @@ with
             booking_is_used
             {% if is_incremental() %}
                 and date_trunc(date(booking_used_date), month)
-                = date_trunc(date("{{ ds() }}"), month)
+                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
             {% endif %}
         group by
-            execution_date,
+            partition_month,
             update_date,
             item_id,
             offer_category_id,
@@ -54,7 +54,7 @@ with
                 union all
             {% endif %}
             select
-                execution_date,
+                partition_month,
                 update_date,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
@@ -73,7 +73,7 @@ with
     )
 
 select
-    execution_date,
+    partition_month,
     update_date,
     dimension_name,
     dimension_value,

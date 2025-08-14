@@ -2,7 +2,7 @@
     config(
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
-            partition_by={"field": "execution_date", "data_type": "date"},
+            partition_by={"field": "partition_month", "data_type": "date"},
             on_schema_change="append_new_columns",
         )
     )
@@ -42,7 +42,7 @@
             union all
         {% endif %}
         select
-            date_trunc(date(last_deposit_expiration_date), month) as execution_date,
+            date_trunc(date(last_deposit_expiration_date), month) as partition_month,
             date("{{ ds() }}") as update_date,
             '{{ dim.name }}' as dimension_name,
             {{ dim.value_expr }} as dimension_value,
@@ -57,9 +57,9 @@
             total_deposit_amount >= 300
             {% if is_incremental() %}
                 and date_trunc(last_deposit_expiration_date, month)
-                = date_trunc(date("{{ ds() }}"), month)
+                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
             {% endif %}
-        group by execution_date, update_date, dimension_name, dimension_value, kpi_name
+        group by partition_month, update_date, dimension_name, dimension_value, kpi_name
     {% endfor %}
     {% if not loop.last %}
         union all
@@ -69,7 +69,7 @@
 {% for dim in dimensions %}
     union all
     select
-        date_trunc(date(user_expiration_month), month) as execution_date,
+        date_trunc(date(user_expiration_month), month) as partition_month,
         date("{{ ds() }}") as update_date,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
@@ -81,7 +81,7 @@
     {% if is_incremental() %}
         where
             date_trunc(user_expiration_month, month)
-            = date_trunc(date("{{ ds() }}"), month)
+            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
     {% endif %}
-    group by execution_date, update_date, dimension_name, dimension_value, kpi_name
+    group by partition_month, update_date, dimension_name, dimension_value, kpi_name
 {% endfor %}

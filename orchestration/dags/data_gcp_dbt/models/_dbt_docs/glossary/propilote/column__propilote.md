@@ -1,4 +1,4 @@
-{% docs column__execution_date %}
+{% docs column__partition_month %}
 Indicates the first day of the month the KPI refers to.
 {% enddocs %}
 

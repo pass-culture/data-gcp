@@ -2,7 +2,7 @@
     config(
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
-            partition_by={"field": "execution_date", "data_type": "date"},
+            partition_by={"field": "partition_month", "data_type": "date"},
             on_schema_change="append_new_columns",
         )
     )
@@ -17,14 +17,14 @@
 with
     last_day as (
         select
-            date_trunc(date, month) as execution_date,
+            date_trunc(date, month) as partition_month,
             max(date) as last_date,
             max(cast(adage_id as int)) as last_adage_id
         from {{ ref("adage_involved_student") }}
         where
             1 = 1
             {% if is_incremental() %}
-                and date_trunc(date, month) = date_trunc(date("{{ ds() }}"), month)
+                and date_trunc(date, month) = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
             {% endif %}
         group by 1
     )
@@ -34,7 +34,7 @@ with
         union all
     {% endif %}
     select
-        date_trunc(involved.date, month) as execution_date,
+        date_trunc(involved.date, month) as partition_month,
         date("{{ ds() }}") as update_date,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
@@ -47,7 +47,7 @@ with
     inner join
         last_day
         on involved.date = last_day.last_date
-        and date_trunc(involved.date, month) = last_day.execution_date
+        and date_trunc(involved.date, month) = last_day.partition_month
         and last_day.last_adage_id = cast(involved.adage_id as int)
     left join
         {{ source("seed", "region_department") }} as rd
@@ -56,5 +56,5 @@ with
         1 = 1 and {% if "{{ dim.name }}" == "NAT" %} department_code = '-1'
         {% else %} not department_code = "-1"
         {% endif %}
-    group by execution_date, update_date, dimension_name, dimension_value, kpi_name
+    group by partition_month, update_date, dimension_name, dimension_value, kpi_name
 {% endfor %}

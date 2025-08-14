@@ -4,8 +4,8 @@ models:
   - name: mrt_external_reporting__ppg_cultural_partner
     description: "{{ doc('description__mrt_external_reporting__ppg_cultural_partner') }}"
     columns:
-      - name: execution_date
-        description: "{{ doc('column__execution_date') }}"
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
       - name: update_date
         description: "{{ doc('column__update_date') }}"
       - name: dimension_name

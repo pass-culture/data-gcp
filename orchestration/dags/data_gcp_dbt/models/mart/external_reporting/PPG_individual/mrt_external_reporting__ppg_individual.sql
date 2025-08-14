@@ -2,7 +2,7 @@
     config(
         **custom_incremental_config(
             incremental_strategy="insert_overwrite",
-            partition_by={"field": "execution_date", "data_type": "date"},
+            partition_by={"field": "partition_month", "data_type": "date"},
             on_schema_change="append_new_columns",
             cluster_by=["dimension_name", "dimension_value", "kpi_name"],
         )
@@ -24,7 +24,7 @@
         union all
     {% endif %}
     select
-        execution_date,
+        partition_month,
         update_date,
         dimension_name,
         dimension_value,
@@ -36,6 +36,6 @@
     where
         1 = 1
         {% if is_incremental() %}
-            and execution_date = date_trunc(date("{{ ds() }}"), month)
+            and partition_month = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
 {% endfor %}

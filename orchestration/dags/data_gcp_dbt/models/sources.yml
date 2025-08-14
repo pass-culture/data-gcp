@@ -127,7 +127,9 @@ sources:
       - name: contentful_entry
       - name: contentful_relationship
       - name: contentful_tag
+      - name: firebase_android_performance
       - name: firebase_events
+      - name: firebase_ios_performance
       - name: firebase_pro_events
       - name: gsheet_eac_webinar
       - name: gsheet_educational_institution_student_headcount

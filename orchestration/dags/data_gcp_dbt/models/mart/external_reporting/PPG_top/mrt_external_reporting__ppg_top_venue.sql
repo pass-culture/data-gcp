@@ -56,11 +56,19 @@ with
                 venue_id,
                 venue_name,
                 offerer_name,
-                total_venue_booking_amount,
+                sum(total_venue_booking_amount) as total_venue_booking_amount,
                 row_number() over (
-                    order by total_venue_booking_amount desc
+                    order by sum(total_venue_booking_amount) desc
                 ) as total_venue_booking_amount_ranked
             from base_aggregation
+            group by
+                partition_month,
+                update_date,
+                dimension_name,
+                dimension_value,
+                venue_id,
+                venue_name,
+                offerer_name
             qualify row_number() over (order by total_venue_booking_amount desc) <= 50
         {% endfor %}
     )

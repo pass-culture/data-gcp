@@ -62,12 +62,21 @@ with
                 offer_category_id,
                 offer_subcategory_id,
                 offer_name,
-                total_booking_amount,
-                total_booking_quantity,
+                sum(total_booking_amount) as total_booking_amount,
+                sum(total_booking_quantity) as total_booking_quantity,
                 row_number() over (
-                    order by total_booking_amount desc
+                    order by sum(total_booking_amount) desc
                 ) as total_booking_amount_ranked
             from base_aggregation
+            group by
+                partition_month,
+                update_date,
+                dimension_name,
+                dimension_value,
+                item_id,
+                offer_category_id,
+                offer_subcategory_id,
+                offer_name
             qualify row_number() over (order by total_booking_amount desc) <= 50
         {% endfor %}
     )

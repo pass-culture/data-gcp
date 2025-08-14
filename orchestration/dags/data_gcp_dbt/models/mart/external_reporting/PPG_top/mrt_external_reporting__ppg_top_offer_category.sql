@@ -62,7 +62,8 @@ with
                 sum(total_booking_amount) as total_booking_amount,
                 sum(total_booking_quantity) as total_booking_quantity,
                 row_number() over (
-                    partition by offer_category_id order by sum(total_booking_amount) desc
+                    partition by offer_category_id
+                    order by sum(total_booking_amount) desc
                 ) as total_booking_amount_ranked
             from base_aggregation
             group by

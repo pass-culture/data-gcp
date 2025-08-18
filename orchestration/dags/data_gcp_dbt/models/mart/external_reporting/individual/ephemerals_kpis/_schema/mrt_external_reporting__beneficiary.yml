@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: mrt_external_reporting__ppg_diversity
-    description: "{{ doc('description__mrt_external_reporting__ppg_diversity') }}"
+  - name: mrt_external_reporting__beneficiary
+    description: "{{ doc('description__mrt_external_reporting__beneficiary') }}"
     columns:
       - name: partition_month
         description: "{{ doc('column__partition_month') }}"

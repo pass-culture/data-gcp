@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: mrt_external_reporting__ppg_top_venue
-    description: "{{ doc('description__mrt_external_reporting__ppg_top_venue') }}"
+  - name: mrt_external_reporting__top_venue
+    description: "{{ doc('description__mrt_external_reporting__top_venue') }}"
     columns:
       - name: partition_month
         description: "{{ doc('column__partition_month') }}"

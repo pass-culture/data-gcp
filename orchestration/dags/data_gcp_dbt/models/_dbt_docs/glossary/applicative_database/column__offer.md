@@ -32,7 +32,7 @@ enddocs %}
 {% docs column__offer_is_geolocated %} Indicates if the offer is geolocated. {% enddocs %}
 {% docs column__offer_is_active %} Indicates if the offer is active (the offer has been deactivated and is no longer visible in app). {% enddocs %}
 {% docs column__offer_validation %} Current status of the offer validation by internal teams. The offer may be:
-- "DRAFT" (yet to be published by the cultural partner )
+- "DRAFT" (yet to be published by the cultural partner)
 - "PENDING" (published, yet to be reviewed by the pass Culture Fraud team)
 - "VALIDATED" (validated by pass Culture fraud team, ready to be made available to users)
 - "REJECTED" (rejected and not made available to users) {% enddocs %}

@@ -37,8 +37,7 @@ models:
   data_gcp_dbt:
     +pre-hook:
       - "{{ create_schema_dev() }}"
-    +post-hook:
-      - "{{ set_table_expiration_dev() }}"
+    +hours_to_expiration: "{{ var('hours_to_expiration','336') if target.name=='local' else none }}"
     +labels:
       schedule: "daily"
     +persist_docs:
@@ -92,7 +91,7 @@ models:
           schedule: "monthly"
         +meta:
           owner: "@data-engineering"
-        PPG:
+        individual:
           ephemerals_kpis:
             +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
     export:

@@ -32,7 +32,7 @@
         numerator,
         denominator,
         kpi
-    from {{ ref("mrt_external_reporting__ppg_" ~ model) }}
+    from {{ ref("mrt_external_reporting__" ~ model) }}
     where
         1 = 1
         {% if is_incremental() %}

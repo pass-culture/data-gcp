@@ -15,7 +15,7 @@
 ] %}
 
 {% set categories = [
-    {"name": "SPECTACLE", "value": "spectacle"},
+    {"name": "SPECTACLE", "value": "spectacle_vivant"},
     {"name": "MUSEE", "value": "musee"},
     {"name": "CINEMA", "value": "cinema"},
     {"name": "PRATIQUE_ART", "value": "pratique_artistique"},

@@ -22,7 +22,6 @@
     {"name": "MUSEE", "value_expr": "musee"},
     {"name": "PRATIQUE_ART", "value_expr": "pratique_artistique"},
     {"name": "INSTRUMENT", "value_expr": "instrument"},
-
 ] %}
 
 {% set kpis = [

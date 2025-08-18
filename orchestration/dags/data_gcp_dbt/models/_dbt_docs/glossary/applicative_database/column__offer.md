@@ -31,7 +31,11 @@ enddocs %}
 {% docs column__offer_is_numerical %} Indicates if the offer is digital (based on an url). {% enddocs %}
 {% docs column__offer_is_geolocated %} Indicates if the offer is geolocated. {% enddocs %}
 {% docs column__offer_is_active %} Indicates if the offer is active (the offer has been deactivated and is no longer visible in app). {% enddocs %}
-{% docs column__offer_validation %} Validation status of the offer. {% enddocs %}
+{% docs column__offer_validation %} Current status of the offer validation by internal teams. The offer may be:
+- "DRAFT" (yet to be published by the cultural partner)
+- "PENDING" (published, yet to be reviewed by the pass Culture Fraud team)
+- "VALIDATED" (validated by pass Culture fraud team, ready to be made available to users)
+- "REJECTED" (rejected and not made available to users) {% enddocs %}
 {% docs column__author %} The offer's author (a book's author, a music's singer, a movie's director).{% enddocs %}
 {% docs column__performer %} Performers involved in this offer.{% enddocs %}
 {% docs column__stage_director %} Stage director, if applicable. {% enddocs %}

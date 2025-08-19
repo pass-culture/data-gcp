@@ -13,7 +13,7 @@ from common.operators.gce import (
     InstallDependenciesOperator,
     SSHGCEOperator,
     StartGCEOperator,
-    StopGCEOperator,
+    DeleteGCEOperator,
 )
 from common.utils import (
     build_export_context,
@@ -189,7 +189,7 @@ for partner_id, partner_name in partner_dict.items():
             ),
         )
 
-        gce_instance_stop = StopGCEOperator(
+        gce_instance_stop = DeleteGCEOperator(
             task_id="gce_stop_task", instance_name=f"{GCE_INSTANCE}-{partner_name}"
         )
 

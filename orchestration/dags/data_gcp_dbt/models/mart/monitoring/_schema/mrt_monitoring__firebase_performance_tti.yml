@@ -5,20 +5,20 @@ models:
     description: "Model for Firebase Performance TTI metrics"
     columns:
       - name: event_timestamp
-        description: "Timestamp of the event when the TTI metric was recorded."
+        description: "{{ doc('column__event_timestamp') }}"
       - name: operating_system
-        description: "Operating system of the device (e.g., Android, iOS)."
+        description: "{{ doc('column__user_device_operating_system') }}"
       - name: radio_type
-        description: "Type of network connection (e.g., WIFI, LTE, 5G)."
+        description: "{{ doc('column__radio_type') }}"
       - name: app_display_version
-        description: "Version of the application as displayed to the user."
+        description: "{{ doc('column__app_version') }}"
       - name: os_version
-        description: "Version of the operating system running on the device."
+        description: "{{ doc('column__user_device_operating_system_version') }}"
       - name: carrier
-        description: "Mobile carrier or network provider."
+        description: "{{ doc('column__user_carrier') }}"
       - name: device_name
-        description: "Name or model of the device."
+        description: "{{ doc('column__user_device_name') }}"
       - name: country
-        description: "Country from which the event was recorded."
+        description: "{{ doc('column__user_country') }}"
       - name: home_time_to_interactive_container_in_ms
-        description: "Time To Interactive (TTI) in milliseconds for the home container; it is the total time between the app launch and the moment when the homepage is usable."
+        description: "{{ doc('column__time_to_interactive') }}"

@@ -24,3 +24,4 @@ select
     offerer_id,
     offer_validation
 from {{ ref("int_global__offer") }}
+where venue_id is not null

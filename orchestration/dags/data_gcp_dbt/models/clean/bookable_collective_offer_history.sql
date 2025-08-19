@@ -20,12 +20,10 @@ with
                     then collective_booking_id
                 end
             ) as collective_booking_stock_no_cancelled_cnt
-        from
-            {{ source("clean", "applicative_database_collective_booking_history") }}
+        from {{ source("clean", "applicative_database_collective_booking_history") }}
         {% if is_incremental() %}
             where partition_date = date_sub('{{ ds() }}', interval 1 day)
-        {% else %}
-            where partition_date > date_sub('{{ ds() }}', interval 3 month)
+        {% else %} where partition_date > date_sub('{{ ds() }}', interval 3 month)
         {% endif %}
 
         group by 1, 2
@@ -82,6 +80,5 @@ where
     collective_offer_validation = 'APPROVED'
     {% if is_incremental() %}
         and partition_date = date_sub('{{ ds() }}', interval 1 day)
-    {% else %}
-        and partition_date > date_sub('{{ ds() }}', interval 3 month)
+    {% else %} and partition_date > date_sub('{{ ds() }}', interval 3 month)
     {% endif %}

@@ -18,6 +18,8 @@ with
         inner join {{ ref("mrt_global__offer") }} as mrt_global__offer using (offer_id)
         {% if is_incremental() %}
             where partition_date = date_sub('{{ ds() }}', interval 1 day)
+        {% else %}
+            where partition_date > date_sub('{{ ds() }}', interval 3 month)
         {% endif %}
         group by 1, 2, 3
         union all

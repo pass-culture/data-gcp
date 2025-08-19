@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: mrt_monitoring__firebase_performance_tti
+    description: "Model for Firebase Performance TTI metrics"
+    columns:
+      - name: event_timestamp
+        description: "Timestamp of the event when the TTI metric was recorded."
+      - name: operating_system
+        description: "Operating system of the device (e.g., Android, iOS)."
+      - name: radio_type
+        description: "Type of network connection (e.g., WIFI, LTE, 5G)."
+      - name: app_display_version
+        description: "Version of the application as displayed to the user."
+      - name: os_version
+        description: "Version of the operating system running on the device."
+      - name: carrier
+        description: "Mobile carrier or network provider."
+      - name: device_name
+        description: "Name or model of the device."
+      - name: country
+        description: "Country from which the event was recorded."
+      - name: home_time_to_interactive_container_in_ms
+        description: "Time To Interactive (TTI) in milliseconds for the home container; it is the total time between the app launch and the moment when the homepage is usable."

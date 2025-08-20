@@ -42,10 +42,6 @@ with
         from {{ ref("mrt_native__daily_user_deposit") }}
         where
             deposit_active_date > date("2021-01-01")
-            {% if is_incremental() %}
-                and date_trunc(deposit_active_date, month)
-                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-            {% endif %}
         group by date_trunc(deposit_active_date, month)
     ),
 
@@ -54,6 +50,13 @@ with
             uua.deposit_active_date,
             uua.user_id,
             uua.deposit_amount,
+            case
+                when uua.deposit_type = "GRANT_17_18" and uua.user_age <= 17
+                then "GRANT_15_17"
+                when uua.deposit_type = "GRANT_17_18" and uua.user_age >= 18
+                then "GRANT_18"
+                else uua.deposit_type
+            end as deposit_type,
             coalesce(sum(booking_intermediary_amount), 0) as amount_spent
         from {{ ref("mrt_native__daily_user_deposit") }} as uua
         left join
@@ -62,23 +65,19 @@ with
             and uua.deposit_active_date = date(booking_used_date)
             and booking_is_used
         where deposit_active_date > date("2021-01-01")
-        group by deposit_active_date, user_id, deposit_amount
+        group by deposit_active_date, user_id, deposit_type, deposit_amount
     ),
 
     user_cumulative_amount_spent as (
         select
             deposit_active_date,
             user_id,
+            deposit_type,
             deposit_amount as initial_deposit_amount,
             sum(amount_spent) over (
-                partition by user_id order by deposit_active_date asc
+                partition by user_id, deposit_type order by deposit_active_date asc
             ) as cumulative_amount_spent
         from user_amount_spent_per_day
-        {% if is_incremental() %}
-            where
-                deposit_active_date
-                = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
-        {% endif %}
     ),
 
     -- Table principale avec tous les utilisateurs actifs et leurs informations

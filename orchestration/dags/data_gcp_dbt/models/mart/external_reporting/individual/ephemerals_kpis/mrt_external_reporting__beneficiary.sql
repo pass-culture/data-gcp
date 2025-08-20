@@ -40,8 +40,7 @@ with
             date("{{ ds() }}") as update_date,
             max(deposit_active_date) as last_active_date
         from {{ ref("mrt_native__daily_user_deposit") }}
-        where
-            deposit_active_date > date("2021-01-01")
+        where deposit_active_date > date("2021-01-01")
         group by date_trunc(deposit_active_date, month)
     ),
 

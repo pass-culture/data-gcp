@@ -1,3 +1,5 @@
+import time
+
 import pandas as pd
 
 from utils import (
@@ -170,53 +172,70 @@ def videos_import(
 
 
 def account_import(business_api, business_id: str, from_date: str, to_date: str) -> str:
-    account_stats = business_api.get_account_data(
-        business_id=business_id,
-        return_json=True,
-        start_date=from_date,
-        end_date=to_date,
-        fields=[
-            "username",
-            "display_name",
-            "profile_image",
-            "audience_countries",
-            "audience_genders",
-            "likes",
-            "comments",
-            "shares",
-            "followers_count",
-            "profile_views",
-            "video_views",
-            "audience_activity",
-        ],
-    )
+    max_retries = 20
+    retry_delay = 10
+
+    for attempt in range(max_retries):
+        account_stats = business_api.get_account_data(
+            business_id=business_id,
+            return_json=True,
+            start_date=from_date,
+            end_date=to_date,
+            fields=[
+                "username",
+                "display_name",
+                "profile_image",
+                "audience_countries",
+                "audience_genders",
+                "likes",
+                "comments",
+                "shares",
+                "followers_count",
+                "profile_views",
+                "video_views",
+                "audience_activity",
+            ],
+        )
+
+        # Check if metrics are available
+        if "metrics" in account_stats["data"]:
+            print(f"Successfully retrieved metrics on attempt {attempt + 1}")
+            break
+        else:
+            print(f"Metrics not available, attempt {attempt + 1}/{max_retries}")
+            if attempt < max_retries - 1:
+                print(f"Waiting {retry_delay} seconds before retry...")
+                time.sleep(retry_delay)
+
     # Extracting the audience_activity data
-    tiktok_hourly_audience_activity_df = extract_hourly_activity_data(
-        json_data=account_stats["data"]["metrics"]
-    )
-    if tiktok_hourly_audience_activity_df.shape[0] > 0:
-        tiktok_hourly_audience_activity_df["account"] = account_stats["data"][
-            "username"
-        ]
+    if "metrics" in account_stats["data"]:
+        print(account_stats["data"]["metrics"])
+        tiktok_hourly_audience_activity_df = extract_hourly_activity_data(
+            json_data=account_stats["data"]["metrics"]
+        )
+        if tiktok_hourly_audience_activity_df.shape[0] > 0:
+            tiktok_hourly_audience_activity_df["account"] = account_stats["data"][
+                "username"
+            ]
+            save_to_bq(
+                tiktok_hourly_audience_activity_df,
+                TIKTOK_ACCOUNT_HOURLY_AUDIENCE,
+                from_date,
+                to_date,
+                "date",
+            )
+
+        # Creating the tiktok_daily_activity dataframe
+        tiktok_daily_activity_df = create_daily_activity_df(
+            json_data=account_stats["data"]["metrics"]
+        )
+        tiktok_daily_activity_df["account"] = account_stats["data"]["username"]
         save_to_bq(
-            tiktok_hourly_audience_activity_df,
-            TIKTOK_ACCOUNT_HOURLY_AUDIENCE,
+            tiktok_daily_activity_df,
+            TIKTOK_ACCOUNT_DAILY_ACTIVITY,
             from_date,
             to_date,
             "date",
         )
 
-    # Creating the tiktok_daily_activity dataframe
-    tiktok_daily_activity_df = create_daily_activity_df(
-        json_data=account_stats["data"]["metrics"]
-    )
-    tiktok_daily_activity_df["account"] = account_stats["data"]["username"]
-    save_to_bq(
-        tiktok_daily_activity_df,
-        TIKTOK_ACCOUNT_DAILY_ACTIVITY,
-        from_date,
-        to_date,
-        "date",
-    )
-
-    return account_stats["data"]["username"]
+        return account_stats["data"]["username"]

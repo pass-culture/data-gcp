@@ -20,7 +20,7 @@
     {% endif %}
     select
         date_trunc(date(last_deposit_expiration_date), month) as partition_month,
-        date("{{ ds() }}") as update_date,
+        timestamp("{{ ts() }}") as update_date,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         "montant_moyen_octroye_a_l_expiration_du_credit" as kpi_name,
@@ -42,7 +42,7 @@ union all
     {% endif %}
     select
         date_trunc(date(last_deposit_expiration_date), month) as partition_month,
-        date("{{ ds() }}") as update_date,
+        timestamp("{{ ts() }}") as update_date,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         "montant_moyen_depense_a_l_expiration_du_credit" as kpi_name,

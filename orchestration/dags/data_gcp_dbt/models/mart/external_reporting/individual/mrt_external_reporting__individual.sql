@@ -25,7 +25,7 @@
     {% endif %}
     select
         partition_month,
-        update_date,
+        updated_at,
         dimension_name,
         dimension_value,
         kpi_name,

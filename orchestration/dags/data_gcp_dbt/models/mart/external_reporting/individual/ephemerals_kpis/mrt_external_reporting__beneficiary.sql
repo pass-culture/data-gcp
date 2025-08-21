@@ -37,7 +37,7 @@ with
     last_day_of_month as (
         select
             date_trunc(deposit_active_date, month) as partition_month,
-            date("{{ ds() }}") as update_date,
+            timestamp("{{ ts() }}") as updated_at,
             max(deposit_active_date) as last_active_date
         from {{ ref("mrt_native__daily_user_deposit") }}
         where deposit_active_date > date("2021-01-01")
@@ -84,7 +84,7 @@ with
         select
             uua.user_id,
             ldm.partition_month,
-            ldm.update_date,
+            ldm.updated_at,
             uua.initial_deposit_amount,
             uua.cumulative_amount_spent,
             eud.user_is_in_qpv,
@@ -115,7 +115,7 @@ with
         select
             eud.user_id,
             ldm.partition_month,
-            ldm.update_date,
+            ldm.updated_at,
             eud.first_deposit_creation_date,
             rd.region_name,
             rd.dep_name
@@ -142,7 +142,7 @@ with
             {% endif %}
             select
                 partition_month,
-                update_date,
+                updated_at,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 "beneficiaire_actuel" as kpi_name,
@@ -150,7 +150,7 @@ with
                 1 as denominator
             from active_users_base
             group by
-                partition_month, update_date, dimension_name, dimension_value, kpi_name
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
@@ -162,7 +162,7 @@ with
             {% endif %}
             select
                 partition_month,
-                update_date,
+                updated_at,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 "beneficiaire_total" as kpi_name,
@@ -170,7 +170,7 @@ with
                 1 as denominator
             from total_users_base
             group by
-                partition_month, update_date, dimension_name, dimension_value, kpi_name
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
@@ -182,7 +182,7 @@ with
             {% endif %}
             select
                 partition_month,
-                update_date,
+                updated_at,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 "pct_beneficiaire_actuel_qpv" as kpi_name,
@@ -190,7 +190,7 @@ with
                 count(distinct user_id) as denominator
             from active_users_base
             group by
-                partition_month, update_date, dimension_name, dimension_value, kpi_name
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
@@ -202,7 +202,7 @@ with
             {% endif %}
             select
                 partition_month,
-                update_date,
+                updated_at,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 "pct_beneficiaire_actuel_rural" as kpi_name,
@@ -214,7 +214,7 @@ with
                 count(distinct user_id) as denominator
             from active_users_base
             group by
-                partition_month, update_date, dimension_name, dimension_value, kpi_name
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
@@ -226,7 +226,7 @@ with
             {% endif %}
             select
                 partition_month,
-                update_date,
+                updated_at,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 "pct_beneficiaire_actuel_non_scolarise" as kpi_name,
@@ -236,7 +236,7 @@ with
                 count(distinct user_id) as denominator
             from active_users_base
             group by
-                partition_month, update_date, dimension_name, dimension_value, kpi_name
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
@@ -252,7 +252,7 @@ with
                 {% endif %}
                 select
                     partition_month,
-                    update_date,
+                    updated_at,
                     '{{ dim.name }}' as dimension_name,
                     {{ dim.value_expr }} as dimension_value,
                     "pct_beneficiaire_actuel_{{ activity.value }}" as kpi_name,
@@ -265,7 +265,7 @@ with
                 from active_users_base
                 group by
                     partition_month,
-                    update_date,
+                    updated_at,
                     dimension_name,
                     dimension_value,
                     kpi_name
@@ -281,7 +281,7 @@ with
             {% endif %}
             select
                 partition_month,
-                update_date,
+                updated_at,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 "beneficiaire_actuel_homme" as kpi_name,
@@ -291,7 +291,7 @@ with
                 1 as denominator
             from active_users_base
             group by
-                partition_month, update_date, dimension_name, dimension_value, kpi_name
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
@@ -302,7 +302,7 @@ with
             {% endif %}
             select
                 partition_month,
-                update_date,
+                updated_at,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 "beneficiaire_actuel_femme" as kpi_name,
@@ -312,7 +312,7 @@ with
                 1 as denominator
             from active_users_base
             group by
-                partition_month, update_date, dimension_name, dimension_value, kpi_name
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
         {% endfor %}
 
         union all
@@ -323,7 +323,7 @@ with
             {% endif %}
             select
                 partition_month,
-                update_date,
+                updated_at,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 "beneficiaire_actuel_sans_genre" as kpi_name,
@@ -333,13 +333,13 @@ with
                 1 as denominator
             from active_users_base
             group by
-                partition_month, update_date, dimension_name, dimension_value, kpi_name
+                partition_month, updated_at, dimension_name, dimension_value, kpi_name
         {% endfor %}
     )
 
 select
     partition_month,
-    update_date,
+    updated_at,
     dimension_name,
     dimension_value,
     kpi_name,

@@ -163,7 +163,7 @@ with
     {% endif %}
     select
         date_trunc(date(partition_day), month) as partition_month,
-        date("{{ ds() }}") as update_date,
+        timestamp("{{ ts() }}") as updated_at,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         'nombre_total_de_partenaire_actif' as kpi_name,
@@ -185,7 +185,7 @@ with
             and date_trunc(date(partition_day), month)
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
-    group by partition_month, update_date, dimension_name, dimension_value, kpi_name
+    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
     union all
     {% for partner_type in partner_types %}
         {% if not loop.first %}
@@ -193,7 +193,7 @@ with
         {% endif %}
         select
             date_trunc(date(partition_day), month) as partition_month,
-            date("{{ ds() }}") as update_date,
+            timestamp("{{ ts() }}") as updated_at,
             '{{ dim.name }}' as dimension_name,
             {{ dim.value_expr }} as dimension_value,
             "nombre_de_partenaire_actif_{{ partner_type.name }}" as kpi_name,
@@ -221,6 +221,6 @@ with
                 and date_trunc(date(partition_day), month)
                 = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
             {% endif %}
-        group by partition_month, update_date, dimension_name, dimension_value, kpi_name
+        group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
     {% endfor %}
 {% endfor %}

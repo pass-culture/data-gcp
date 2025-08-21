@@ -42,7 +42,7 @@ with
     base_data as (
         select
             date_trunc(date(booking_used_date), month) as partition_month,
-            date("{{ ds() }}") as update_date,
+            timestamp("{{ ts() }}") as updated_at,
             venue_region_name,
             venue_department_name,
             offer_category_id,
@@ -65,7 +65,7 @@ with
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 partition_month,
-                update_date,
+                updated_at,
                 offer_category_id,
                 offerer_is_epn,
                 {% for kpi in kpis %}
@@ -83,7 +83,7 @@ with
         {% for kpi in kpis %}
             select
                 partition_month,
-                update_date,
+                updated_at,
                 dimension_name,
                 dimension_value,
                 '{{ kpi.name }}' as kpi_name,
@@ -91,7 +91,7 @@ with
                 1 as denominator,
                 safe_divide(sum({{ kpi.value_expr }}), 1) as kpi
             from dimension_cross
-            group by partition_month, update_date, dimension_name, dimension_value
+            group by partition_month, updated_at, dimension_name, dimension_value
             {% if not loop.last %}
                 union all
             {% endif %}
@@ -104,7 +104,7 @@ with
             {% for kpi in kpis %}
                 select
                     partition_month,
-                    update_date,
+                    updated_at,
                     dimension_name,
                     dimension_value,
                     '{{ kpi.name }}_{{ category.value_expr }}' as kpi_name,
@@ -113,7 +113,7 @@ with
                     safe_divide(sum({{ kpi.value_expr }}), 1) as kpi
                 from dimension_cross
                 where offer_category_id = '{{ category.name }}'
-                group by partition_month, update_date, dimension_name, dimension_value
+                group by partition_month, updated_at, dimension_name, dimension_value
                 {% if not loop.last %}
                     union all
                 {% endif %}
@@ -128,7 +128,7 @@ with
         {% for kpi in kpis %}
             select
                 partition_month,
-                update_date,
+                updated_at,
                 dimension_name,
                 dimension_value,
                 '{{ kpi.name }}_epn' as kpi_name,
@@ -137,7 +137,7 @@ with
                 safe_divide(sum({{ kpi.value_expr }}), 1) as kpi
             from dimension_cross
             where offerer_is_epn = true
-            group by partition_month, update_date, dimension_name, dimension_value
+            group by partition_month, updated_at, dimension_name, dimension_value
             {% if not loop.last %}
                 union all
             {% endif %}

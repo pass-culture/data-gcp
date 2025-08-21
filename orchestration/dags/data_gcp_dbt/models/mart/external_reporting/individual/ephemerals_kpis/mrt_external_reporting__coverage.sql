@@ -20,7 +20,7 @@
     {% endif %}
     select
         date_trunc(population_snapshot_month, month) as partition_month,
-        date("{{ ds() }}") as update_date,
+        timestamp("{{ ts() }}") as updated_at,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         "taux_couverture_18" as kpi_name,
@@ -37,11 +37,11 @@
             and date_trunc(population_snapshot_month, month)
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
-    group by partition_month, update_date, dimension_name, dimension_value, kpi_name
+    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
     union all
     select
         date_trunc(population_snapshot_month, month) as partition_month,
-        date("{{ ds() }}") as update_date,
+        timestamp("{{ ts() }}") as updated_at,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         "taux_couverture_17" as kpi_name,
@@ -58,11 +58,11 @@
             and date_trunc(population_snapshot_month, month)
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
-    group by partition_month, update_date, dimension_name, dimension_value, kpi_name
+    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
     union all
     select
         date_trunc(population_snapshot_month, month) as partition_month,
-        date("{{ ds() }}") as update_date,
+        timestamp("{{ ts() }}") as updated_at,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         "taux_couverture_16" as kpi_name,
@@ -79,11 +79,11 @@
             and date_trunc(population_snapshot_month, month)
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
-    group by partition_month, update_date, dimension_name, dimension_value, kpi_name
+    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
     union all
     select
         date_trunc(population_snapshot_month, month) as partition_month,
-        date("{{ ds() }}") as update_date,
+        timestamp("{{ ts() }}") as updated_at,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         "taux_couverture_15" as kpi_name,
@@ -100,5 +100,5 @@
             and date_trunc(population_snapshot_month, month)
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
-    group by partition_month, update_date, dimension_name, dimension_value, kpi_name
+    group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
 {% endfor %}

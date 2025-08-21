@@ -68,6 +68,7 @@ with
             o.academy_name as partner_academy_name,
             o.offerer_region_name as partner_region_name,
             o.offerer_department_code as partner_department_code,
+            o.offerer_department_name as partner_department_name,
             o.offerer_postal_code as partner_postal_code,
             coalesce(
                 o.partner_type,
@@ -117,7 +118,7 @@ with
         left join
             {{ ref("mrt_global__venue") }} as v
             on o.offerer_id = v.offerer_id
-            and v.venue_is_permanent
+            and v.venue_is_open_to_public
         left join
             top_venue_per_offerer on o.offerer_id = top_venue_per_offerer.offerer_id
         left join
@@ -150,6 +151,7 @@ union all
         v.venue_academy_name as partner_academy_name,
         v.venue_region_name as partner_region_name,
         v.venue_department_code as partner_department_code,
+        v.venue_department_name as partner_department_name,
         v.venue_postal_code as partner_postal_code,
         coalesce(vt.venue_tag_name, v.venue_type_label) as partner_type,
         case
@@ -191,5 +193,5 @@ union all
         {{ source("seed", "agg_partner_cultural_sector") }}
         on v.venue_type_label = agg_partner_cultural_sector.partner_type
     left join main_venue_tag_per_venue as vt on v.venue_id = vt.venue_id
-    where v.venue_is_permanent
+    where v.venue_is_open_to_public
 )

@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: mrt_monitoring__firebase_performance_tti
+    description: "Model for Firebase Performance TTI metrics"
+    columns:
+      - name: event_timestamp
+        description: "{{ doc('column__event_timestamp') }}"
+      - name: operating_system
+        description: "{{ doc('column__user_device_operating_system') }}"
+      - name: radio_type
+        description: "{{ doc('column__radio_type') }}"
+      - name: app_display_version
+        description: "{{ doc('column__app_version') }}"
+      - name: os_version
+        description: "{{ doc('column__user_device_operating_system_version') }}"
+      - name: carrier
+        description: "{{ doc('column__user_carrier') }}"
+      - name: device_name
+        description: "{{ doc('column__user_device_name') }}"
+      - name: country
+        description: "{{ doc('column__user_country') }}"
+      - name: home_time_to_interactive_container_in_ms
+        description: "{{ doc('column__time_to_interactive') }}"

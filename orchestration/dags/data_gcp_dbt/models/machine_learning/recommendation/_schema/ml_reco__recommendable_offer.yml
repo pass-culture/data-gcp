@@ -23,6 +23,9 @@ models:
           detection_period:
             period: day
             count: 1
+          ignore_small_changes:
+            spike_failure_percent_threshold: 5
+            drop_failure_percent_threshold: 5
     columns:
       - name: item_id
         description: "{{ doc('column__item_id') }}"

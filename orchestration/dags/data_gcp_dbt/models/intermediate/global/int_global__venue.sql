@@ -161,7 +161,8 @@ select
             v.total_theoretic_revenue desc,
             v.total_created_offers desc,
             v.venue_name asc
-    ) as offerer_rank_asc
+    ) as offerer_rank_asc,
+    offerer_is_epn
 from {{ ref("int_applicative__venue") }} as v
 left join
     {{ ref("int_global__offerer") }} as ofr

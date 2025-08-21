@@ -18,14 +18,12 @@ with
                 distinct case
                     when collective_booking_status not in ('CANCELLED')
                     then collective_booking_id
-                    else null
                 end
             ) as collective_booking_stock_no_cancelled_cnt
-        from
-            {{ source("clean", "applicative_database_collective_booking_history") }}
-            as collective_booking
+        from {{ source("clean", "applicative_database_collective_booking_history") }}
         {% if is_incremental() %}
             where partition_date = date_sub('{{ ds() }}', interval 1 day)
+        {% else %} where partition_date > date_sub('{{ ds() }}', interval 3 month)
         {% endif %}
 
         group by 1, 2
@@ -38,13 +36,13 @@ select distinct
 from
     {{ source("clean", "applicative_database_collective_stock_history") }}
     as collective_stock
-join
+inner join
     {{ source("clean", "applicative_database_collective_offer_history") }}
     as collective_offer
     on collective_stock.collective_offer_id = collective_offer.collective_offer_id
     and collective_offer.collective_offer_is_active
-    and collective_offer.partition_date = collective_stock.partition_date
-    and collective_offer_validation = "APPROVED"
+    and collective_stock.partition_date = collective_offer.partition_date
+    and collective_offer_validation = 'APPROVED'
 left join
     bookings_per_stock
     on collective_stock.collective_stock_id = bookings_per_stock.collective_stock_id
@@ -66,6 +64,8 @@ where
     )
     {% if is_incremental() %}
         and collective_stock.partition_date = date_sub('{{ ds() }}', interval 1 day)
+    {% else %}
+        and collective_stock.partition_date > date_sub('{{ ds() }}', interval 3 month)
     {% endif %}
 
 union all
@@ -77,7 +77,8 @@ from
     {{ source("clean", "applicative_database_collective_offer_template_history") }}
     as collective_offer_template
 where
-    collective_offer_validation = "APPROVED"
+    collective_offer_validation = 'APPROVED'
     {% if is_incremental() %}
         and partition_date = date_sub('{{ ds() }}', interval 1 day)
+    {% else %} and partition_date > date_sub('{{ ds() }}', interval 3 month)
     {% endif %}

@@ -6,3 +6,4 @@
 {% docs column__offerer_tag_category_id %}The unique identifier for the tag category.{% enddocs %}
 {% docs column__offerer_tag_category_name %}The name (as displayed in pass Culture backoffice) of the tag category.{% enddocs %}
 {% docs column__offerer_tag_category_label %}The label (for display purposes) of the tag category.{% enddocs %}
+{% docs column__offerer_is_epn %}Boolean true when the offerer is flagged as a national public structure.{% enddocs %}

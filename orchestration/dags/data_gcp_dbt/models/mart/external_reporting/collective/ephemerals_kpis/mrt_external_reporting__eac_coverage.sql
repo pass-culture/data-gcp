@@ -56,7 +56,7 @@ with
         {% endif %}
         select
             date_trunc(involved.date, month) as partition_month,
-            date("{{ ds() }}") as update_date,
+            timestamp("{{ ts() }}") as updated_at,
             '{{ dim.name }}' as dimension_name,
             {{ dim.value_expr }} as dimension_value,
             "taux_participation_eac_{{ obj.name }}" as kpi_name,
@@ -81,6 +81,6 @@ with
             1 = 1 and {% if "{{ dim.name }}" == "NAT" %} involved.department_code = '-1'
             {% else %} not involved.department_code = "-1"
             {% endif %}
-        group by partition_month, update_date, dimension_name, dimension_value, kpi_name
+        group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
     {% endfor %}
 {% endfor %}

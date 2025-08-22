@@ -1,4 +1,4 @@
- ---
+---
 title: Individual Indicators
 description: Key indicators from the `mrt_external_reporting__individual` model.
 ---

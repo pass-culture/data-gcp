@@ -93,7 +93,10 @@ with
         inner join
             {{ ref("mrt_global__offerer") }} as gof on gcp.offerer_id = gof.offerer_id
         left join
-            {{ source("raw", "applicative_database_educational_year") }} as ey on date(bd.partition_day) between ey.educational_year_beginning_date and ey.educational_year_expiration_date
+            {{ source("raw", "applicative_database_educational_year") }} as ey
+            on date(bd.partition_day)
+            between ey.educational_year_beginning_date
+            and ey.educational_year_expiration_date
     )
 
 {% for dim in dimensions %}
@@ -108,7 +111,10 @@ with
         'pct_partenaire_culturel_actif' as kpi_name,
         count(
             distinct case
-                when days_since_last_collective_bookable_date <= date_diff(partition_day, educational_year_beginning_date, day) then partner_id
+                when
+                    days_since_last_collective_bookable_date
+                    <= date_diff(partition_day, educational_year_beginning_date, day)
+                then partner_id
             end
         ) as numerator,
         count(
@@ -116,15 +122,21 @@ with
                 when days_since_last_collective_bookable_date >= 0 then partner_id
             end
         ) as denominator,
-        safe_divide(count(
-            distinct case
-                when days_since_last_collective_bookable_date <= date_diff(partition_day, educational_year_beginning_date, day) then partner_id
-            end
-        ), count(
-            distinct case
-                when days_since_last_collective_bookable_date >= 0 then partner_id
-            end
-        )
+        safe_divide(
+            count(
+                distinct case
+                    when
+                        days_since_last_collective_bookable_date <= date_diff(
+                            partition_day, educational_year_beginning_date, day
+                        )
+                    then partner_id
+                end
+            ),
+            count(
+                distinct case
+                    when days_since_last_collective_bookable_date >= 0 then partner_id
+                end
+            )
         ) as kpi
     from partner_details
     where

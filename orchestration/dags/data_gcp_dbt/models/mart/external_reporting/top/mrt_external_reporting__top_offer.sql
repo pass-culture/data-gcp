@@ -22,7 +22,7 @@ with
     base_aggregation as (
         select
             date_trunc(date(booking_used_date), month) as partition_month,
-            date("{{ ds() }}") as update_date,
+            timestamp("{{ ts() }}") as updated_at,
             item_id,
             offer_category_id,
             offer_subcategory_id,
@@ -40,7 +40,7 @@ with
             {% endif %}
         group by
             partition_month,
-            update_date,
+            updated_at,
             item_id,
             offer_category_id,
             offer_subcategory_id,
@@ -55,7 +55,7 @@ with
             {% endif %}
             select
                 partition_month,
-                update_date,
+                updated_at,
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 item_id,
@@ -70,7 +70,7 @@ with
             from base_aggregation
             group by
                 partition_month,
-                update_date,
+                updated_at,
                 dimension_name,
                 dimension_value,
                 item_id,
@@ -83,7 +83,7 @@ with
 
 select
     partition_month,
-    update_date,
+    updated_at,
     dimension_name,
     dimension_value,
     item_id,

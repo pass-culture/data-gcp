@@ -64,7 +64,6 @@ with
         select
             gcp.partner_id,
             gcp.first_individual_offer_creation_date,
-            gcp.first_collective_offer_creation_date,
             date_add(date('2022-01-01'), interval offset day) as partition_day
         from {{ ref("mrt_global__cultural_partner") }} as gcp
         cross join
@@ -81,12 +80,8 @@ with
         select
             apd.partner_id,
             apd.first_individual_offer_creation_date,
-            apd.first_collective_offer_creation_date,
             apd.partition_day,
-            coalesce(bph.individual_bookable_offers, 0) as total_indiv_bookable_offers,
-            coalesce(
-                bph.collective_bookable_offers, 0
-            ) as total_collective_bookable_offers
+            coalesce(bph.individual_bookable_offers, 0) as total_indiv_bookable_offers
         from all_activated_partners_and_days as apd
         left join
             {{ ref("bookable_partner_history") }} as bph
@@ -114,24 +109,7 @@ with
                     first_individual_offer_creation_date
                 ),
                 day
-            ) as days_since_last_indiv_bookable_date,
-            date_diff(
-                partition_day,
-                coalesce(
-                    max(
-                        case
-                            when total_collective_bookable_offers != 0
-                            then partition_day
-                        end
-                    ) over (
-                        partition by partner_id
-                        order by partition_day
-                        rows between unbounded preceding and current row
-                    ),
-                    first_collective_offer_creation_date
-                ),
-                day
-            ) as days_since_last_collective_bookable_date
+            ) as days_since_last_indiv_bookable_date
         from all_days_with_bookability
     ),
 
@@ -141,7 +119,6 @@ with
             bd.partition_day,
             bd.first_individual_offer_creation_date,
             bd.days_since_last_indiv_bookable_date,
-            bd.days_since_last_collective_bookable_date,
             gcp.partner_region_name,
             gcp.partner_department_name,
             gcp.partner_type,

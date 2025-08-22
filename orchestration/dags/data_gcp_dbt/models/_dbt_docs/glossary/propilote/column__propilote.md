@@ -2,7 +2,7 @@
 Indicates the first day of the month the KPI refers to.
 {% enddocs %}
 
-{% docs column__update_date %}
+{% docs column__updated_at %}
 The actual date when the data refresh was executed.
 {% enddocs %}
 

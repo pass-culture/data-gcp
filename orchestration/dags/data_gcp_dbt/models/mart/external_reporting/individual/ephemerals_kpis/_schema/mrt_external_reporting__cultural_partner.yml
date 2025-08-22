@@ -6,8 +6,8 @@ models:
     columns:
       - name: partition_month
         description: "{{ doc('column__partition_month') }}"
-      - name: update_date
-        description: "{{ doc('column__update_date') }}"
+      - name: updated_at
+        description: "{{ doc('column__updated_at') }}"
       - name: dimension_name
         description: "{{ doc('column__dimension_name') }}"
       - name: dimension_value

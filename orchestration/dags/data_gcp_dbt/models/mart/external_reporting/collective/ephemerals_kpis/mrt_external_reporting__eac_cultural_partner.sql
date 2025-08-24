@@ -97,6 +97,41 @@ with
             on date(bd.partition_day)
             between ey.educational_year_beginning_date
             and ey.educational_year_expiration_date
+    ),
+
+    partner_with_template_offers as (
+        select
+            gcp.partner_id,
+            gcp.partner_region_name,
+            gcp.partner_department_name,
+            min(co.collective_offer_creation_date) as first_template_offer_creation_date
+        from {{ ref("mrt_global__cultural_partner") }} as gcp
+        inner join {{ ref("int_global__collective_offer") }} as co
+            on gcp.partner_id = co.partner_id
+        where co.collective_offer_is_template = true
+        group by partner_id, partner_region_name, partner_department_name
+    ),
+
+    monthly_partner_with_template_offers as (
+        select
+            partner_region_name,
+            partner_department_name,
+            date_trunc(first_template_offer_creation_date, month) as partition_month,
+            count(distinct partner_id) as monthly_new_partners_with_template_offers
+        from partner_with_template_offers
+        group by partition_month, partner_region_name, partner_department_name
+    ),
+
+    cumul_partner_template as (
+        select
+            partition_month,
+            partner_region_name,
+            partner_department_name,
+            sum(monthly_new_partners_with_template_offers) over (
+                partition by partner_region_name, partner_department_name
+                order by partition_month asc
+            ) as cumul_partners_with_template_offers
+        from monthly_partner_with_template_offers
     )
 
 {% for dim in dimensions %}
@@ -146,4 +181,19 @@ with
             = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
         {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
+    union all
+    select
+        partition_month,
+        timestamp("{{ ts() }}") as updated_at,
+        '{{ dim.name }}' as dimension_name,
+        {{ dim.value_expr }} as dimension_value,
+        'partenaires_avec_offre_vitrine' as kpi_name,
+        sum(cumul_partners_with_template_offers) as numerator,
+        1 as denominator,
+        sum(cumul_partners_with_template_offers) as kpi
+    from cumul_partner_template
+    {% if is_incremental() %}
+        where partition_month = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+    {% endif %}
+    group by partition_month, updated_at, dimension_name, dimension_value
 {% endfor %}

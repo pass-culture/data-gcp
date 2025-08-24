@@ -106,7 +106,8 @@ with
             gcp.partner_department_name,
             min(co.collective_offer_creation_date) as first_template_offer_creation_date
         from {{ ref("mrt_global__cultural_partner") }} as gcp
-        inner join {{ ref("int_global__collective_offer") }} as co
+        inner join
+            {{ ref("int_global__collective_offer") }} as co
             on gcp.partner_id = co.partner_id
         where co.collective_offer_is_template = true
         group by partner_id, partner_region_name, partner_department_name
@@ -193,7 +194,9 @@ with
         sum(cumul_partners_with_template_offers) as kpi
     from cumul_partner_template
     {% if is_incremental() %}
-        where partition_month = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+        where
+            partition_month
+            = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
     {% endif %}
     group by partition_month, updated_at, dimension_name, dimension_value
 {% endfor %}

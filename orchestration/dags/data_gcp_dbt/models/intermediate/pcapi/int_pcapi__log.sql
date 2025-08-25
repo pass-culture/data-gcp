@@ -66,24 +66,24 @@ select
         jsonpayload.extra.changes.price.new_value, jsonpayload.extra.stock_price
     ) as stock_new_price,
     cast(jsonpayload.extra.stock_dnbookedquantity as int64) as stock_booking_quantity,
-    jsonpayload.extra.changes.publicationdatetime.oldvalue
+    jsonpayload.extra.changes.publicationdatetime.old_value
     as publication_date_old_value,
-    jsonpayload.extra.changes.publicationdatetime.newvalue
+    jsonpayload.extra.changes.publicationdatetime.new_value
     as publication_date_new_value,
-    jsonpayload.extra.changes.bookinglimitdatetime.oldvalue
+    jsonpayload.extra.changes.bookinglimitdatetime.old_value
     as booking_limit_date_old_value,
-    jsonpayload.extra.changes.bookinglimitdatetime.newvalue
+    jsonpayload.extra.changes.bookinglimitdatetime.new_value
     as booking_limit_date_new_value,
-    jsonpayload.extra.changes.beginningdatetime.oldvalue
+    jsonpayload.extra.changes.beginningdatetime.old_value
     as stock_beginning_date_old_value,
-    jsonpayload.extra.changes.beginningdatetime.newvalue
+    jsonpayload.extra.changes.beginningdatetime.new_value
     as stock_beginning_date_new_value,
-    jsonpayload.extra.changes.withdrawaldetails.oldvalue
+    jsonpayload.extra.changes.withdrawaldetails.old_value
     as offer_withdrawal_details_old_value,
-    jsonpayload.extra.changes.withdrawaldetails.newvalue
+    jsonpayload.extra.changes.withdrawaldetails.new_value
     as offer_withdrawal_details_new_value,
-    jsonpayload.extra.changes.description.oldvalue as offer_description_old_value,
-    jsonpayload.extra.changes.description.newvalue as offer_description_new_value,
+    jsonpayload.extra.changes.description.old_value as offer_description_old_value,
+    jsonpayload.extra.changes.description.new_value as offer_description_new_value,
     coalesce(
         jsonpayload.extra.changes.pricecategory.old_value, jsonpayload.extra.old_price
     ) as stock_old_price_category,

@@ -78,12 +78,12 @@ select
     as stock_beginning_date_old_value,
     jsonpayload.extra.changes.beginningdatetime.new_value
     as stock_beginning_date_new_value,
-    jsonpayload.extra.changes.withdrawaldetails.old_value
+    jsonpayload.extra.changes.withdrawaldetails.oldvalue
     as offer_withdrawal_details_old_value,
-    jsonpayload.extra.changes.withdrawaldetails.new_value
+    jsonpayload.extra.changes.withdrawaldetails.newvalue
     as offer_withdrawal_details_new_value,
-    jsonpayload.extra.changes.description.old_value as offer_description_old_value,
-    jsonpayload.extra.changes.description.new_value as offer_description_new_value,
+    jsonpayload.extra.changes.description.oldvalue as offer_description_old_value,
+    jsonpayload.extra.changes.description.newvalue as offer_description_new_value,
     coalesce(
         jsonpayload.extra.changes.pricecategory.old_value, jsonpayload.extra.old_price
     ) as stock_old_price_category,

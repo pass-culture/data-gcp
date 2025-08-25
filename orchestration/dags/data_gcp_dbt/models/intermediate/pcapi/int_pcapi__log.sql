@@ -67,9 +67,9 @@ select
     ) as stock_new_price,
     cast(jsonpayload.extra.stock_dnbookedquantity as int64) as stock_booking_quantity,
     jsonpayload.extra.changes.publicationdatetime.old_value
-    as publication_date_old_value,
+    as publication_date_oldvalue,
     jsonpayload.extra.changes.publicationdatetime.new_value
-    as publication_date_new_value,
+    as publication_date_newvalue,
     jsonpayload.extra.changes.bookinglimitdatetime.old_value
     as booking_limit_date_old_value,
     jsonpayload.extra.changes.bookinglimitdatetime.new_value

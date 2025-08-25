@@ -1,18 +1,11 @@
 
-FROM ghcr.io/astral-sh/uv:python3.10-alpine
-
+FROM python:3.10
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 ARG WORKERS=8
-# Enable bytecode compilation
-ENV UV_COMPILE_BYTECODE=1
-
-# Copy from the cache instead of linking since it's a mounted volume
-ENV UV_LINK_MODE=copy
-
-# Ensure installed tools can be executed out of the box
-ENV UV_TOOL_BIN_DIR=/usr/local/bin
 
 COPY ./app/pyproject.toml pyproject.toml
 COPY ./app/uv.lock uv.lock
+RUN uv venv --python 3.10
 RUN uv sync
 
 COPY ./app /app

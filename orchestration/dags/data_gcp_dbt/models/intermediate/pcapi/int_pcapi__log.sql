@@ -48,23 +48,48 @@ select
     cast(jsonpayload.extra.playlistid as string) as playlist_id,
     cast(jsonpayload.extra.domainid as string) as domain_id,
     cast(jsonpayload.extra.index as int) as rank_clicked,
-    cast(coalesce(jsonPayload.extra.changes.quantity.old_value,jsonpayload.extra.old_quantity) as int64) as stock_old_quantity,
-    cast(coalesce(jsonPayload.extra.changes.quantity.new_value,jsonpayload.extra.stock_quantity) as int64) as stock_new_quantity,
-    coalesce(jsonPayload.extra.changes.price.old_value,jsonpayload.extra.old_price) as stock_old_price,
-    coalesce(jsonPayload.extra.changes.price.new_value,jsonpayload.extra.stock_price) as stock_new_price,
+    cast(
+        coalesce(
+            jsonpayload.extra.changes.quantity.old_value, jsonpayload.extra.old_quantity
+        ) as int64
+    ) as stock_old_quantity,
+    cast(
+        coalesce(
+            jsonpayload.extra.changes.quantity.new_value,
+            jsonpayload.extra.stock_quantity
+        ) as int64
+    ) as stock_new_quantity,
+    coalesce(
+        jsonpayload.extra.changes.price.old_value, jsonpayload.extra.old_price
+    ) as stock_old_price,
+    coalesce(
+        jsonpayload.extra.changes.price.new_value, jsonpayload.extra.stock_price
+    ) as stock_new_price,
     cast(jsonpayload.extra.stock_dnbookedquantity as int64) as stock_booking_quantity,
-    jsonPayload.extra.changes.publicationdatetime.oldvalue as publication_date_old_value,
-    jsonPayload.extra.changes.publicationdatetime.newvalue as publication_date_new_value,
-    jsonPayload.extra.changes.bookinglimitdatetime.oldvalue as booking_limit_date_old_value,
-    jsonPayload.extra.changes.bookinglimitdatetime.newvalue as booking_limit_date_new_value,
-    jsonPayload.extra.changes.beginningdatetime.oldvalue as stock_beginning_date_old_value,
-    jsonPayload.extra.changes.beginningdatetime.newvalue as stock_beginning_date_new_value,
-    jsonPayload.extra.changes.withdrawaldetails.oldvalue as offer_withdrawal_details_old_value,
-    jsonPayload.extra.changes.withdrawaldetails.newvalue as offer_withdrawal_details_new_value,
-    jsonPayload.extra.changes.description.oldvalue as offer_description_old_value,
-    jsonPayload.extra.changes.description.newvalue as offer_description_new_value,
-    coalesce(jsonPayload.extra.changes.pricecategory.old_value,jsonpayload.extra.old_price) as stock_old_price_category,
-    coalesce(jsonPayload.extra.changes.pricecategory.new_value,jsonpayload.extra.stock_price) as stock_new_price_category,
+    jsonpayload.extra.changes.publicationdatetime.oldvalue
+    as publication_date_old_value,
+    jsonpayload.extra.changes.publicationdatetime.newvalue
+    as publication_date_new_value,
+    jsonpayload.extra.changes.bookinglimitdatetime.oldvalue
+    as booking_limit_date_old_value,
+    jsonpayload.extra.changes.bookinglimitdatetime.newvalue
+    as booking_limit_date_new_value,
+    jsonpayload.extra.changes.beginningdatetime.oldvalue
+    as stock_beginning_date_old_value,
+    jsonpayload.extra.changes.beginningdatetime.newvalue
+    as stock_beginning_date_new_value,
+    jsonpayload.extra.changes.withdrawaldetails.oldvalue
+    as offer_withdrawal_details_old_value,
+    jsonpayload.extra.changes.withdrawaldetails.newvalue
+    as offer_withdrawal_details_new_value,
+    jsonpayload.extra.changes.description.oldvalue as offer_description_old_value,
+    jsonpayload.extra.changes.description.newvalue as offer_description_new_value,
+    coalesce(
+        jsonpayload.extra.changes.pricecategory.old_value, jsonpayload.extra.old_price
+    ) as stock_old_price_category,
+    coalesce(
+        jsonpayload.extra.changes.pricecategory.new_value, jsonpayload.extra.stock_price
+    ) as stock_new_price_category,
     jsonpayload.extra.eans as list_of_eans_not_found,
     cast(jsonpayload.extra.offerer_id as int64) as offerer_id,
     jsonpayload.extra.isconvenient as beta_test_new_nav_is_convenient,
@@ -159,7 +184,7 @@ select
     array_to_string(
         jsonpayload.extra.offer_subcategories, ','
     ) as suggested_offer_api_subcategories,
-    jsonPayload.extra.provider_id,
-    jsonPayload.extra.author_id,
-    cast(jsonPayload.extra.user_connect_as as boolean) as is_user_connect_as
+    jsonpayload.extra.provider_id,
+    jsonpayload.extra.author_id,
+    cast(jsonpayload.extra.user_connect_as as boolean) as is_user_connect_as
 from {{ source("raw", "stdout") }}

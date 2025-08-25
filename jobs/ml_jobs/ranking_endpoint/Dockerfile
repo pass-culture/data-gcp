@@ -13,10 +13,7 @@ ENV UV_TOOL_BIN_DIR=/usr/local/bin
 
 COPY ./app/pyproject.toml pyproject.toml
 COPY ./app/uv.lock uv.lock
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --locked --no-install-project --no-dev
+RUN uv sync
 
 COPY ./app /app
 COPY ./metadata /metadata

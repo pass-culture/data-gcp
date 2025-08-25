@@ -8,6 +8,10 @@ models:
         description: "{{ doc('column__environement') }}"
       - name: user_id
         description: "{{ doc('column__user_id') }}"
+      - name: author_id
+        description: "{{ doc('column__author_id') }}"
+      - name: is_user_connect_as
+        description: "{{ doc('column__is_user_connect_as') }}"
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
       - name: message
@@ -18,6 +22,8 @@ models:
         description: "{{ doc('column__offer_id') }}"
       - name: venue_id
         description: "{{ doc('column__venue_id') }}"
+      - name: provider_id
+        description: "{{ doc('column__provider_id') }}"
       - name: product_id
         description: "{{ doc('column__offer_product_id') }}"
       - name: stock_id
@@ -30,8 +36,32 @@ models:
         description: "{{ doc('column__stock_old_price') }}"
       - name: stock_new_price
         description: "{{ doc('column__stock_new_price') }}"
+      - name: stock_old_price_category
+        description: "{{ doc('column__stock_old_price_category') }}"
+      - name: stock_new_price_category
+        description: "{{ doc('column__stock_new_price_category') }}"
       - name: stock_booking_quantity
         description: "{{ doc('column__stock_booking_quantity') }}"
+      - name: publication_date_old_value
+        description: "{{ doc('column__publication_date_old_value') }}"
+      - name: publication_date_new_value
+        description: "{{ doc('column__publication_date_new_value') }}"
+      - name: booking_limit_date_old_value
+        description: "{{ doc('column__booking_limit_date_old_value') }}"
+      - name: booking_limit_date_new_value
+        description: "{{ doc('column__booking_limit_date_new_value') }}"
+      - name: stock_beginning_date_old_value
+        description: "{{ doc('column__stock_beginning_date_old_value') }}"
+      - name: stock_beginning_date_new_value
+        description: "{{ doc('column__stock_beginning_date_new_value') }}"
+      - name: offer_withdrawal_details_old_value
+        description: "{{ doc('column__offer_withdrawal_details_old_value') }}"
+      - name: offer_withdrawal_details_new_value
+        description: "{{ doc('column__offer_withdrawal_details_new_value') }}"
+      - name: offer_description_old_value
+        description: "{{ doc('column__offer_description_old_value') }}"
+      - name: offer_description_new_value
+        description: "{{ doc('column__offer_description_new_value') }}"
       - name: list_of_eans_not_found
         description: "{{ doc('column__list_of_eans_not_found') }}"
       - name: log_timestamp

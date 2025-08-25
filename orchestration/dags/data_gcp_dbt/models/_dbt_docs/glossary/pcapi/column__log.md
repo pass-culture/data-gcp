@@ -38,5 +38,19 @@
 {% docs column__suggested_offer_api_id %}API call ID as part of individual offer creation predictiv model of suggested subcategories.{% enddocs %}
 {% docs column__suggested_offer_api_subcategory %}Subcategory chosen by the user as part of individual offer creation(predictiv model).{% enddocs %}
 {% docs column__suggested_offer_api_subcategories %}Subcategories suggested to the user as part of individual offer creation (predictiv model).{% enddocs %}
+{% docs column__author_id %}The identifier of the author responsible for the action (could be a user, admin, or automated process).{% enddocs %}
+{% docs column__is_user_connect_as %}Indicates whether the user is connected on behalf of another account (impersonation).{% enddocs %}
+{% docs column__stock_old_price_category %}The previous price category before the log entry event.{% enddocs %}
+{% docs column__stock_new_price_category %}The new price category after the log entry event.{% enddocs %}
+{% docs column__publication_date_old_value %}The previous publication date of the offer before modification.{% enddocs %}
+{% docs column__publication_date_new_value %}The new publication date of the offer after modification.{% enddocs %}
+{% docs column__booking_limit_date_old_value %}The previous booking limit date of the offer before modification.{% enddocs %}
+{% docs column__booking_limit_date_new_value %}The new booking limit date of the offer after modification.{% enddocs %}
+{% docs column__stock_beginning_date_old_value %}The previous beginning date of the stock before modification.{% enddocs %}
+{% docs column__stock_beginning_date_new_value %}The new beginning date of the stock after modification.{% enddocs %}
+{% docs column__offer_withdrawal_details_old_value %}The previous withdrawal details of the offer before modification.{% enddocs %}
+{% docs column__offer_withdrawal_details_new_value %}The new withdrawal details of the offer after modification.{% enddocs %}
+{% docs column__offer_description_old_value %}The previous description of the offer before modification.{% enddocs %}
+{% docs column__offer_description_new_value %}The new description of the offer after modification.{% enddocs %}
 
 {% endhide %}

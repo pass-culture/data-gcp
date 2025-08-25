@@ -11,18 +11,33 @@
 select
     environement,
     user_id,
+    author_id,
+    is_user_connect_as,
     offerer_id,
     message,
     booking_id,
     offer_id,
     venue_id,
+    provider_id,
     product_id,
     stock_id,
     stock_old_quantity,
     stock_new_quantity,
     stock_old_price,
     stock_new_price,
+    stock_old_price_category,
+    stock_new_price_category,
     stock_booking_quantity,
+    publication_date_old_value,
+    publication_date_new_value,
+    booking_limit_date_old_value,
+    booking_limit_date_new_value,
+    stock_beginning_date_old_value,
+    stock_beginning_date_new_value,
+    offer_withdrawal_details_old_value,
+    offer_withdrawal_details_new_value,
+    offer_description_old_value,
+    offer_description_new_value,
     list_of_eans_not_found,
     log_timestamp,
     partition_date,
@@ -56,7 +71,8 @@ where
             "Stock update blocked because of price limitation",
             "User with new nav activated submitting review",
             "User submitting review",
-            "Offer Categorisation Data API"
+            "Offer Categorisation Data API",
+            "Deleted stock and cancelled its bookings"
         )
     )
     {% if is_incremental() %}

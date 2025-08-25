@@ -3,11 +3,12 @@ FROM python:3.10
 
 ARG WORKERS=8
 
-COPY ./api-requirements.txt ./
-RUN pip3 install -r api-requirements.txt
+COPY ./app/pyproject.toml pyproject.toml
+COPY ./app/uv.lock uv.lock
+RUN uv sync --no-dev --no-cache-dir
 
 COPY ./app /app
-COPY ./metadata /app/metadata
+COPY ./metadata /metadata
 WORKDIR /app
 EXPOSE 8080
 ENV WORKERS=${WORKERS}

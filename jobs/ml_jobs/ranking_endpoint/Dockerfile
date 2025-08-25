@@ -5,6 +5,7 @@ ARG WORKERS=8
 
 COPY ./app/pyproject.toml pyproject.toml
 COPY ./app/uv.lock uv.lock
+RUN curl -LsSf https://astral.sh/uv/{UV_VERSION}/install.sh | sh
 RUN uv sync --no-dev --no-cache-dir
 
 COPY ./app /app

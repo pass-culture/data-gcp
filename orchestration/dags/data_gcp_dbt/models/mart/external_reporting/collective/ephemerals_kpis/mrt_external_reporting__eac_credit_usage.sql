@@ -19,9 +19,9 @@ select
   ea.scholar_year,
   ey.educational_year_beginning_date,
   ey.educational_year_expiration_date,
-  region_name,
-  institution_academie,
-  sum(institution_deposit_amount) as total_institution_deposit_amount
+  ea.region_name,
+  ea.institution_academie,
+  sum(ea.institution_deposit_amount) as total_institution_deposit_amount
 from {{ ref('eple_aggregated') }} as ea
 left join {{ source("raw", "applicative_database_educational_year") }} as ey
     on ea.scholar_year = ey.scholar_year

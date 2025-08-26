@@ -62,10 +62,6 @@ models:
         description: "{{ doc('column__offer_withdrawal_details_old_value') }}"
       - name: offer_withdrawal_details_new_value
         description: "{{ doc('column__offer_withdrawal_details_new_value') }}"
-      - name: offer_description_old_value
-        description: "{{ doc('column__offer_description_old_value') }}"
-      - name: offer_description_new_value
-        description: "{{ doc('column__offer_description_new_value') }}"
       - name: list_of_eans_not_found
         description: "{{ doc('column__list_of_eans_not_found') }}"
       - name: log_timestamp

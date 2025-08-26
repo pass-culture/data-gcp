@@ -50,8 +50,6 @@
 {% docs column__stock_beginning_date_new_value %}The new beginning date of the stock after modification.{% enddocs %}
 {% docs column__offer_withdrawal_details_old_value %}The previous withdrawal details of the offer before modification.{% enddocs %}
 {% docs column__offer_withdrawal_details_new_value %}The new withdrawal details of the offer after modification.{% enddocs %}
-{% docs column__offer_description_old_value %}The previous description of the offer before modification.{% enddocs %}
-{% docs column__offer_description_new_value %}The new description of the offer after modification.{% enddocs %}
 {% docs column__offerer_address_old_value %}The previous address (performance venue) of the offer/stock before modification, as recorded in the system.{% enddocs %}
 {% docs column__offerer_address_new_value %}The new address (performance venue) of the offer/stock after modification, as updated in the system.{% enddocs %}
 

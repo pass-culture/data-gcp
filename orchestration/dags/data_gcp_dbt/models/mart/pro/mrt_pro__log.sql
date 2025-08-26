@@ -38,8 +38,6 @@ select
     stock_beginning_date_new_value,
     offer_withdrawal_details_old_value,
     offer_withdrawal_details_new_value,
-    offer_description_old_value,
-    offer_description_new_value,
     list_of_eans_not_found,
     log_timestamp,
     partition_date,

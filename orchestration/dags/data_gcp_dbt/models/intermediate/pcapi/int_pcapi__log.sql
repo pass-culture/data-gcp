@@ -84,8 +84,6 @@ select
     as offer_withdrawal_details_new_value,
     jsonpayload.extra.changes.offereraddress.oldvalue as offerer_address_old_value,
     jsonpayload.extra.changes.offereraddress.newvalue as offerer_address_new_value,
-    jsonpayload.extra.changes.description.oldvalue as offer_description_old_value,
-    jsonpayload.extra.changes.description.newvalue as offer_description_new_value,
     coalesce(
         jsonpayload.extra.changes.pricecategory.old_value, jsonpayload.extra.old_price
     ) as stock_old_price_category,

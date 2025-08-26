@@ -1,0 +1,14 @@
+pandas==2.2.2
+pandas_gbq==0.23.1
+duckdb >=0.8.0
+numpy>=1.21.0
+google-cloud-bigquery
+google-cloud-bigquery-storage
+google-cloud-storage==2.19.0
+google-cloud-secret-manager==2.20.0
+google-auth-oauthlib==1.2.0
+typer==0.12
+python-dateutil
+openpyxl
+pyarrow
+logging

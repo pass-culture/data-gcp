@@ -57,7 +57,7 @@ class Report:
     stakeholder: TargetStakeholder
     base_template_path: Path
     output_path: Path
-    scope: str = "all",   # individual, collective, all
+    scope: str = "all"   # individual, collective, all
     sheets: List[Sheet] = None,
     workbook: Optional[openpyxl.Workbook] = None
     

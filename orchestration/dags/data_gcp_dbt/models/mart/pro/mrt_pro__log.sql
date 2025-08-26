@@ -28,6 +28,8 @@ select
     stock_old_price_category,
     stock_new_price_category,
     stock_booking_quantity,
+    offerer_address_old_value,
+    offerer_address_new_value,
     publication_date_old_value,
     publication_date_new_value,
     booking_limit_date_old_value,

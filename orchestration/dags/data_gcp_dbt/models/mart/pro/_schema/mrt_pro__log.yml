@@ -42,6 +42,10 @@ models:
         description: "{{ doc('column__stock_new_price_category') }}"
       - name: stock_booking_quantity
         description: "{{ doc('column__stock_booking_quantity') }}"
+      - name: offerer_address_old_value
+        description: "{{ doc('column__offerer_address_old_value') }}"
+      - name: offerer_address_new_value
+        description: "{{ doc('column__offerer_address_new_value') }}"
       - name: publication_date_old_value
         description: "{{ doc('column__publication_date_old_value') }}"
       - name: publication_date_new_value

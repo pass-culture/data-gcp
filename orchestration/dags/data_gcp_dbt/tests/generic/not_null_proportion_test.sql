@@ -3,7 +3,8 @@
     column_name,
     where_condition,
     warn_if,
-    anomaly_threshold_alert_percentage
+    anomaly_threshold_alert_percentage,
+    description
 ) %}
 
     with

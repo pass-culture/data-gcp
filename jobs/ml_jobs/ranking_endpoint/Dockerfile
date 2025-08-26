@@ -8,6 +8,7 @@ COPY ./metadata /metadata
 WORKDIR /app
 RUN uv venv --python 3.10
 RUN uv sync
+ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8080
 ENV WORKERS=${WORKERS}
 

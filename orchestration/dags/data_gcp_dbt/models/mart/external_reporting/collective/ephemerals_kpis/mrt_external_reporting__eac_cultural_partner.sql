@@ -188,7 +188,7 @@ with
         timestamp("{{ ts() }}") as updated_at,
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
-        'partenaires_avec_offre_vitrine' as kpi_name,
+        'total_partenaire_avec_offre_vitrine' as kpi_name,
         sum(cumul_partners_with_template_offers) as numerator,
         1 as denominator,
         sum(cumul_partners_with_template_offers) as kpi

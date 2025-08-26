@@ -4,7 +4,7 @@
     where_condition,
     warn_if,
     anomaly_threshold_alert_percentage,
-    description
+    description=None
 ) %}
 
     with

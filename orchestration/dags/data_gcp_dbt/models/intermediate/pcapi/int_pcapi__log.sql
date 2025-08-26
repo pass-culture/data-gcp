@@ -82,8 +82,8 @@ select
     as offer_withdrawal_details_old_value,
     jsonpayload.extra.changes.withdrawaldetails.newvalue
     as offer_withdrawal_details_new_value,
-    jsonPayload.extra.changes.offereraddress.oldvalue as offerer_address_old_value,
-    jsonPayload.extra.changes.offereraddress.newvalue as offerer_address_new_value,
+    jsonpayload.extra.changes.offereraddress.oldvalue as offerer_address_old_value,
+    jsonpayload.extra.changes.offereraddress.newvalue as offerer_address_new_value,
     jsonpayload.extra.changes.description.oldvalue as offer_description_old_value,
     jsonpayload.extra.changes.description.newvalue as offer_description_new_value,
     coalesce(

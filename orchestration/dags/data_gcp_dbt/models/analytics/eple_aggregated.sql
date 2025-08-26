@@ -40,8 +40,7 @@ with
             ) as real_amount_spent,
             sum(
                 case
-                    when collective_booking_status = 'REIMBURSED'
-                    then booking_amount
+                    when collective_booking_status = 'REIMBURSED' then booking_amount
                 end
             ) as real_amount_reimbursed
         from eple_infos

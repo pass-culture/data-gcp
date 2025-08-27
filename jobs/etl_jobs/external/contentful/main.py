@@ -27,7 +27,7 @@ def save_raw_modules_to_bq(modules_df, table_name):
 
     _now = datetime.today()
     yyyymmdd = _now.strftime("%Y%m%d")
-    modules_df["execution_date"] = _now
+    modules_df["execution_date"] = _now.strftime("%Y-%m-%d %H:%M:%S")
     print(f"Will save {nb_rows} rows to {table_name}")
 
     bigquery_client = bigquery.Client()

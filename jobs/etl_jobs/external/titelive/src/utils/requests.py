@@ -2,7 +2,11 @@ from datetime import datetime
 
 import requests
 
-from src.constants import TITELIVE_BASE_URL, TITELIVE_TOKEN_ENDPOINT
+from src.constants import (
+    TITELIVE_BASE_URL,
+    TITELIVE_CATEGORIES,
+    TITELIVE_TOKEN_ENDPOINT,
+)
 from src.env_vars import TITELIVE_IDENTIFIER, TITELIVE_PASSWORD
 
 TOKEN = None
@@ -104,40 +108,68 @@ def get_metadata_from_ean(ean: str) -> dict:
         raise Exception(f"Unexpected error for EAN {ean}: {e}") from e
 
 
-def get_modified_offers(offer_category: str, min_modified_date: datetime) -> dict:
+def get_modified_offers(
+    offer_category: TITELIVE_CATEGORIES, min_modified_date: datetime
+) -> dict:
     """
     Get modified offers from Titelive API using search endpoint
     """
+
+    def _fetch_modified_offers_per_page(params: dict, page: int) -> dict:
+        params["page"] = str(page)
+        try:
+            response = requests.get(
+                search_url, headers=headers, params=params, timeout=30
+            )
+
+            if response.status_code == 401:
+                print("Token expired for search request, fetching a new one.")
+                token = _refresh_token()
+                headers["Authorization"] = f"Bearer {token}"
+                response = requests.get(
+                    search_url, headers=headers, params=params, timeout=30
+                )
+
+            response.raise_for_status()
+            return response.json()
+
+        except requests.exceptions.RequestException as e:
+            # For other request exceptions, don't retry
+            raise requests.exceptions.RequestException(
+                f"Search request failed: {e}"
+            ) from e
+
+        except ValueError as e:
+            raise ValueError(f"Error processing search response: {e}") from e
+
+        except Exception as e:
+            raise Exception(f"Unexpected error in search request: {e}") from e
+
     # Format the date as DD/MM/YYYY
     formatted_date = min_modified_date.strftime("%d/%m/%Y")
 
     # Construct the search URL with required parameters
     search_url = f"{TITELIVE_BASE_URL}/search"
-    params = {"base": "paper", "dateminm": formatted_date, "nombre": "120", "page": "1"}
+    page = 0
+    params = {
+        "base": "paper",
+        "dateminm": formatted_date,
+        "nombre": "120",
+        "page": str(page),
+    }
 
     token = _get_valid_token()
     headers = {"Authorization": f"Bearer {token}"}
+    results = []
 
-    try:
-        response = requests.get(search_url, headers=headers, params=params, timeout=30)
+    while True and page < 3:
+        fetched_result = _fetch_modified_offers_per_page(params, page)
 
-        if response.status_code == 401:
-            print("Token expired for search request, fetching a new one.")
-            token = _refresh_token()
-            headers["Authorization"] = f"Bearer {token}"
-            response = requests.get(
-                search_url, headers=headers, params=params, timeout=30
-            )
+        results.extend(fetched_result.get("result", []))
+        page += 1
 
-        response.raise_for_status()
-        return response.json()
+        if fetched_result.get("result") == []:
+            break
 
-    except requests.exceptions.RequestException as e:
-        # For other request exceptions, don't retry
-        raise requests.exceptions.RequestException(f"Search request failed: {e}") from e
-
-    except ValueError as e:
-        raise ValueError(f"Error processing search response: {e}") from e
-
-    except Exception as e:
-        raise Exception(f"Unexpected error in search request: {e}") from e
+    print(len(results))
+    return results

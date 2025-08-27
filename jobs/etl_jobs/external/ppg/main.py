@@ -1,14 +1,17 @@
 import typer
 from pathlib import Path
-from utils.configs import (
+from configs import (
     TEMPLATE_DEFAULT,
     REPORT_BASE_DIR_DEFAULT,
 )
 
-from utils.models import TargetStakeholder, Report, Sheet
+from core import TargetStakeholder, Report, Sheet, ExportSession
 from datetime import date, datetime, timedelta
+import logging
 
-from utils.services import ExportSession
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = typer.Typer()
 

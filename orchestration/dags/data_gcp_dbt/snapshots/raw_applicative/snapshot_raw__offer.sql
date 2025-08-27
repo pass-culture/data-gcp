@@ -48,7 +48,7 @@
                 )
             )
         }}
-        -- depends_on: {{ ref('raw_applicative__offer_lite') }}
+        -- depends_on: {{ ref('raw_applicative__offer_full') }}
 
         select
             {% for col in columns %}
@@ -69,7 +69,7 @@
             )
         }}
 
-        -- depends_on: {{ ref('raw_applicative__offer_full') }}
+        -- depends_on: {{ ref('raw_applicative__offer_lite') }}
 
         select
             {% for col in columns %}

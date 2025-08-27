@@ -48,7 +48,8 @@
                 )
             )
         }}
-        -- depends_on: {{ ref('raw_applicative__offer_full') }}
+        -- Explicit dependency to raw_applicative__offer_lite needed for lineage
+        -- depends_on: {{ ref('raw_applicative__offer_lite') }}
 
         select
             {% for col in columns %}
@@ -69,7 +70,8 @@
             )
         }}
 
-        -- depends_on: {{ ref('raw_applicative__offer_lite') }}
+        -- Explicit dependency to raw_applicative__offer_full needed for lineage
+        -- depends_on: {{ ref('raw_applicative__offer_full') }}
 
         select
             {% for col in columns %}

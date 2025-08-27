@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import requests
 
 from src.constants import TITELIVE_BASE_URL, TITELIVE_TOKEN_ENDPOINT
@@ -100,3 +102,42 @@ def get_metadata_from_ean(ean: str) -> dict:
 
     except Exception as e:
         raise Exception(f"Unexpected error for EAN {ean}: {e}") from e
+
+
+def get_modified_offers(offer_category: str, min_modified_date: datetime) -> dict:
+    """
+    Get modified offers from Titelive API using search endpoint
+    """
+    # Format the date as DD/MM/YYYY
+    formatted_date = min_modified_date.strftime("%d/%m/%Y")
+
+    # Construct the search URL with required parameters
+    search_url = f"{TITELIVE_BASE_URL}/search"
+    params = {"base": "paper", "dateminm": formatted_date, "nombre": "120", "page": "1"}
+
+    token = _get_valid_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    try:
+        response = requests.get(search_url, headers=headers, params=params, timeout=30)
+
+        if response.status_code == 401:
+            print("Token expired for search request, fetching a new one.")
+            token = _refresh_token()
+            headers["Authorization"] = f"Bearer {token}"
+            response = requests.get(
+                search_url, headers=headers, params=params, timeout=30
+            )
+
+        response.raise_for_status()
+        return response.json()
+
+    except requests.exceptions.RequestException as e:
+        # For other request exceptions, don't retry
+        raise requests.exceptions.RequestException(f"Search request failed: {e}") from e
+
+    except ValueError as e:
+        raise ValueError(f"Error processing search response: {e}") from e
+
+    except Exception as e:
+        raise Exception(f"Unexpected error in search request: {e}") from e

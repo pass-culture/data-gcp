@@ -1,7 +1,7 @@
 import requests
 
-from constants import TITELIVE_BASE_URL, TITELIVE_TOKEN_ENDPOINT
-from env_vars import TITELIVE_IDENTIFIER, TITELIVE_PASSWORD
+from src.constants import TITELIVE_BASE_URL, TITELIVE_TOKEN_ENDPOINT
+from src.env_vars import TITELIVE_IDENTIFIER, TITELIVE_PASSWORD
 
 TOKEN = None
 

@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
+import pandas as pd
 import typer
 from google.cloud import bigquery
 
@@ -27,7 +28,7 @@ def save_raw_modules_to_bq(modules_df, table_name):
 
     _now = datetime.today()
     yyyymmdd = _now.strftime("%Y%m%d")
-    modules_df["execution_date"] = _now.strftime("%Y-%m-%d %H:%M:%S")
+    modules_df["execution_date"] = pd.to_datetime(_now.strftime("%Y-%m-%d %H:%M:%S"))
     print(f"Will save {nb_rows} rows to {table_name}")
 
     bigquery_client = bigquery.Client()

@@ -168,6 +168,6 @@ def get_modified_offers(
             break
 
     return pd.DataFrame(
-        {"ean": result["id"], "data": json.dumps(result, ensure_ascii=False)}
+        {"id": result["id"], "data": json.dumps(result, ensure_ascii=False)}
         for result in results
-    ).set_index("ean")
+    ).set_index("id")

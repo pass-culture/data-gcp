@@ -37,7 +37,12 @@ with
                     when collective_booking_status in ('USED', 'REIMBURSED')
                     then booking_amount
                 end
-            ) as real_amount_spent
+            ) as real_amount_spent,
+            sum(
+                case
+                    when collective_booking_status = 'REIMBURSED' then booking_amount
+                end
+            ) as real_amount_reimbursed
         from eple_infos
         inner join
             {{ ref("mrt_global__collective_booking") }} as ecbd
@@ -89,6 +94,7 @@ select
     institution_deposit_amount,
     theoric_amount_spent,
     real_amount_spent,
+    real_amount_reimbursed,
     total_students,
     educonnect_inscriptions,
     last_12_months_inscriptions,
@@ -100,7 +106,10 @@ select
     ) as pct_credit_theoric_amount_spent,
     safe_divide(
         real_amount_spent, institution_deposit_amount
-    ) as pct_credit_real_amount_spent
+    ) as pct_credit_real_amount_spent,
+    safe_divide(
+        real_amount_reimbursed, institution_deposit_amount
+    ) as pct_credit_real_amount_reimbursed
 from eple_infos
 left join
     eple_bookings

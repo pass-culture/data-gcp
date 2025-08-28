@@ -44,6 +44,7 @@ select
     total_bookable_offers,
     offerer_postal_code,
     offerer_department_code,
+    offerer_department_name,
     offerer_siren,
     offerer_region_name,
     offerer_city,

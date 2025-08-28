@@ -11,8 +11,8 @@ pandas==1.4.1
 polars==0.19.12
 pyarrow==13.0.0
 pynndescent
-setuptools==78.1.1
-tqdm==4.66.1
+setuptools==80.9.0
+tqdm==4.66.3
 typer==0.7.0
 umap_learn>=0.5.3
 umap-learn[parametric_umap]

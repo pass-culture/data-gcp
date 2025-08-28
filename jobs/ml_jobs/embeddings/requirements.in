@@ -11,9 +11,9 @@ polars==0.19.12
 protobuf>=3.9.2
 psutil
 pytest==6.1.1
-requests==2.31.0
+requests==2.32.4
 sentence_transformers==2.3
-setuptools==78.1.1
-torch==2.6.0
+setuptools==80.9.0
+torch==2.8.0
 tqdm
 typer==0.7.0

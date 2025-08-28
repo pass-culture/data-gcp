@@ -21,5 +21,6 @@ from {{ ref("int_firebase__performance") }}
 where
     true
     {% if is_incremental() %}
-        and timestamp_trunc(event_timestamp, day) = timestamp(date_sub(date('{{ ds() }}'), interval 2 day))
+        and timestamp_trunc(event_timestamp, day)
+        = timestamp(date_sub(date('{{ ds() }}'), interval 2 day))
     {% endif %}

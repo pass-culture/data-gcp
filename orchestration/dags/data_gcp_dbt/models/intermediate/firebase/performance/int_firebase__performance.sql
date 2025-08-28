@@ -23,7 +23,8 @@ from {{ source("raw", "firebase_ios_performance") }}
 where
     event_type = 'TRACE_METRIC' and event_name = 'home_time_to_interactive_in_ms'
     {% if is_incremental() %}
-        and timestamp_trunc(event_timestamp, day) = timestamp(date_sub(date('{{ ds() }}'), interval 2 day))
+        and timestamp_trunc(event_timestamp, day)
+        = timestamp(date_sub(date('{{ ds() }}'), interval 2 day))
     {% endif %}
 
 union all
@@ -44,5 +45,6 @@ from {{ source("raw", "firebase_android_performance") }}
 where
     event_type = 'TRACE_METRIC' and event_name = 'home_time_to_interactive_in_ms'
     {% if is_incremental() %}
-        and timestamp_trunc(event_timestamp, day) = timestamp(date_sub(date('{{ ds() }}'), interval 2 day))
+        and timestamp_trunc(event_timestamp, day)
+        = timestamp(date_sub(date('{{ ds() }}'), interval 2 day))
     {% endif %}

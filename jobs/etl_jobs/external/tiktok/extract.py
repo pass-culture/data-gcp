@@ -142,7 +142,7 @@ def videos_import(
     videos_data = extract_videos(business_api, business_id)
 
     impression_sources_data_df = extract_impression_sources_data(videos_data)
-    impression_sources_data_df["account"] = account_username
+    impression_sources_data_df["account"] = str(account_username)
     impression_sources_data_df["export_date"] = export_date
     save_to_bq(
         impression_sources_data_df,

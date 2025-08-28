@@ -68,7 +68,13 @@ def save_to_bq(
         tmp_df.loc[:, date_column] = tmp_df[date_column].astype(str)
         if tmp_df.shape[0] > 0:
             print(f"Saving.. {table_name} -> {date_str}")
-            __save_to_bq(tmp_df, table_name, date_str, schema_field, date_column)
+            __save_to_bq(
+                df=tmp_df,
+                table_name=table_name,
+                event_date=date_str,
+                schema_field=schema_field,
+                date_column=date_column,
+            )
 
 
 def __save_to_bq(

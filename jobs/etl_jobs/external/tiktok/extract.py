@@ -7,6 +7,7 @@ from utils import (
     TIKTOK_ACCOUNT_HOURLY_AUDIENCE,
     TIKTOK_VIDEO_AUDIENCE_COUNTRY,
     TIKTOK_VIDEO_DETAIL,
+    TIKTOK_VIDEO_DETAIL_SCHEMA,
     TIKTOK_VIDEO_IMPRESSION_SOURCE,
     save_to_bq,
 )
@@ -167,7 +168,12 @@ def videos_import(
     videos_data_df["account"] = str(account_username)
     videos_data_df["export_date"] = export_date
     save_to_bq(
-        videos_data_df, TIKTOK_VIDEO_DETAIL, export_date, export_date, "export_date"
+        videos_data_df,
+        TIKTOK_VIDEO_DETAIL,
+        export_date,
+        export_date,
+        TIKTOK_VIDEO_DETAIL_SCHEMA,
+        "export_date",
     )
 
 

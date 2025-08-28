@@ -11,8 +11,6 @@
 select
     environement,
     user_id,
-    author_id,
-    is_user_connect_as,
     offerer_id,
     message,
     booking_id,
@@ -25,8 +23,6 @@ select
     stock_new_quantity,
     stock_old_price,
     stock_new_price,
-    stock_old_price_category,
-    stock_new_price_category,
     stock_booking_quantity,
     offerer_address_old_value,
     offerer_address_new_value,

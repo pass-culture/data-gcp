@@ -8,10 +8,6 @@ models:
         description: "{{ doc('column__environement') }}"
       - name: user_id
         description: "{{ doc('column__user_id') }}"
-      - name: author_id
-        description: "{{ doc('column__author_id') }}"
-      - name: is_user_connect_as
-        description: "{{ doc('column__is_user_connect_as') }}"
       - name: offerer_id
         description: "{{ doc('column__offerer_id') }}"
       - name: message
@@ -36,10 +32,6 @@ models:
         description: "{{ doc('column__stock_old_price') }}"
       - name: stock_new_price
         description: "{{ doc('column__stock_new_price') }}"
-      - name: stock_old_price_category
-        description: "{{ doc('column__stock_old_price_category') }}"
-      - name: stock_new_price_category
-        description: "{{ doc('column__stock_new_price_category') }}"
       - name: stock_booking_quantity
         description: "{{ doc('column__stock_booking_quantity') }}"
       - name: offerer_address_old_value

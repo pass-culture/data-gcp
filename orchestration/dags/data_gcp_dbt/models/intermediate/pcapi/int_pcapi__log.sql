@@ -84,12 +84,6 @@ select
     as offer_withdrawal_details_new_value,
     jsonpayload.extra.changes.offereraddress.oldvalue as offerer_address_old_value,
     jsonpayload.extra.changes.offereraddress.newvalue as offerer_address_new_value,
-    coalesce(
-        jsonpayload.extra.changes.pricecategory.old_value, jsonpayload.extra.old_price
-    ) as stock_old_price_category,
-    coalesce(
-        jsonpayload.extra.changes.pricecategory.new_value, jsonpayload.extra.stock_price
-    ) as stock_new_price_category,
     jsonpayload.extra.eans as list_of_eans_not_found,
     cast(jsonpayload.extra.offerer_id as int64) as offerer_id,
     jsonpayload.extra.isconvenient as beta_test_new_nav_is_convenient,
@@ -184,7 +178,5 @@ select
     array_to_string(
         jsonpayload.extra.offer_subcategories, ','
     ) as suggested_offer_api_subcategories,
-    jsonpayload.extra.provider_id,
-    jsonpayload.extra.author_id,
-    cast(jsonpayload.extra.user_connect_as as boolean) as is_user_connect_as
+    jsonpayload.extra.provider_id
 from {{ source("raw", "stdout") }}

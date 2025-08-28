@@ -57,7 +57,7 @@ def to_sql_type(_type):
 
 
 def save_to_bq(
-    df, table_name, start_date, end_date, schema_field=None, date_column="export_date"
+    df, table_name, start_date, end_date, schema_field={}, date_column="export_date"
 ):
     df[date_column] = pd.to_datetime(df[date_column])
     _dates = pd.date_range(start_date, end_date)
@@ -72,7 +72,7 @@ def save_to_bq(
 
 
 def __save_to_bq(
-    df, table_name, event_date, schema_field=None, date_column="export_date"
+    df, table_name, event_date, schema_field={}, date_column="export_date"
 ):
     date_fmt = datetime.strptime(event_date, "%Y-%m-%d")
     yyyymmdd = date_fmt.strftime("%Y%m%d")

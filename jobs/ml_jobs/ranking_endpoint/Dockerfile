@@ -1,14 +1,14 @@
 
 FROM python:3.10
-
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 ARG WORKERS=8
-
-COPY ./api-requirements.txt ./
-RUN pip3 install -r api-requirements.txt
 
 COPY ./app /app
 COPY ./metadata /app/metadata
 WORKDIR /app
+RUN uv venv --python 3.10
+RUN uv sync
+ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8080
 ENV WORKERS=${WORKERS}
 

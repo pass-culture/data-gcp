@@ -1,6 +1,7 @@
-from custom_logging import logger
 from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
+
+from custom_logging import logger
 from model import PredictPipeline
 
 app = Flask(__name__)

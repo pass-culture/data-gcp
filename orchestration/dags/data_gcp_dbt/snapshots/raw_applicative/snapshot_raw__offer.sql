@@ -48,6 +48,7 @@
                 )
             )
         }}
+        -- Explicit dependency to raw_applicative__offer_lite needed for lineage
         -- depends_on: {{ ref('raw_applicative__offer_lite') }}
 
         select
@@ -69,6 +70,7 @@
             )
         }}
 
+        -- Explicit dependency to raw_applicative__offer_full needed for lineage
         -- depends_on: {{ ref('raw_applicative__offer_full') }}
 
         select

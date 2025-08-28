@@ -25,7 +25,7 @@ with
         group by venue_region_name, venue_academy_name, partition_month
     ),
 
-ac_booked_collective_offers as (
+    ac_booked_collective_offers as (
         select
             venue_region_name as region_name,
             venue_academy_name as academy_name,

@@ -51,7 +51,9 @@ select
     user_comment,
     suggested_offer_api_id,
     suggested_offer_api_subcategory,
-    suggested_offer_api_subcategories
+    suggested_offer_api_subcategories,
+    siret,
+    siret_is_diffusible
 from {{ ref("int_pcapi__log") }}
 where
     (
@@ -68,7 +70,9 @@ where
             "User with new nav activated submitting review",
             "User submitting review",
             "Offer Categorisation Data API",
-            "Deleted stock and cancelled its bookings"
+            "Deleted stock and cancelled its bookings",
+            "Searching for structure",
+            "Creating new Offerer and Venue"
         )
     )
     {% if is_incremental() %}

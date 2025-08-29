@@ -178,5 +178,7 @@ select
     array_to_string(
         jsonpayload.extra.offer_subcategories, ','
     ) as suggested_offer_api_subcategories,
-    jsonpayload.extra.provider_id
+    jsonpayload.extra.provider_id,
+    jsonpayload.extra.siret,
+    cast(jsonpayload.extra.is_diffusibel as boolean) as siret_is_diffusible
 from {{ source("raw", "stdout") }}

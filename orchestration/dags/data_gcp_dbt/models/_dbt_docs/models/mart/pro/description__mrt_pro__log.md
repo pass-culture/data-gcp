@@ -23,5 +23,7 @@ Detail of logs supported (field message) :
             "Stock update blocked because of price limitation" : fraud teams need to detect fraud attempt from cultural parterns who try to raise their price
             "User with new nav activated submitting review" and "User submitting review" : product teams gather user reviews enabled on the website
             "Offer Categorisation Data API" : data science team need to measure performance of their predictive model for individual offer creation (suggestion of subcategories)
+            "Searching for structure"
+            "Creating new Offerer and Venue"
 
 {% docs table__mrt_pro__log %}{% enddocs %}

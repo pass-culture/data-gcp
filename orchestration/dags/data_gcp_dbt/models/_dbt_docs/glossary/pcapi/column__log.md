@@ -48,6 +48,8 @@
 {% docs column__offer_withdrawal_details_new_value %}The new withdrawal details of the offer after modification.{% enddocs %}
 {% docs column__offerer_address_old_value %}The previous address (performance venue) of the offer/stock before modification, as recorded in the system.{% enddocs %}
 {% docs column__offerer_address_new_value %}The new address (performance venue) of the offer/stock after modification, as updated in the system.{% enddocs %}
+{% docs column__siret %}The SIRET code by the cultural partner during subscription{% enddocs %}
+{% docs column__siret_is_diffusible %}Indicates whether SIRET with which the cultural partner subscribed is diffisuble.{% enddocs %}
 
 
 {% endhide %}

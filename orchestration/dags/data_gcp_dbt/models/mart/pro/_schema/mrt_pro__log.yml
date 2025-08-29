@@ -90,3 +90,7 @@ models:
         description: "{{ doc('column__suggested_offer_api_subcategory') }}"
       - name: suggested_offer_api_subcategories
         description: "{{ doc('column__suggested_offer_api_subcategories') }}"
+      - name: siret
+        description: "{{ doc('column__siret') }}"
+      - name: siret_is_diffusible
+        description: "{{ doc('column__siret_is_diffusible') }}"

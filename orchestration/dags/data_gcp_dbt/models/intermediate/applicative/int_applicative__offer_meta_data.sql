@@ -1,5 +1,2 @@
-SELECT
-    id,
-    offer_id,
-    videoUrl as offer_video_url
-FROM {{ source("raw", "applicative_database_offer_meta_data") }}
+select id, offer_id, videourl as offer_video_url
+from {{ source("raw", "applicative_database_offer_meta_data") }}

@@ -229,7 +229,8 @@ left join
     and m.is_active
     and m.mediation_rown = 1
 left join {{ ref("int_applicative__headline_offer") }} as ho on ho.offer_id = o.offer_id
-left join {{ ref("int_applicative__offer_meta_data") }} as om on om.offer_id= o.offer_id
+left join
+    {{ ref("int_applicative__offer_meta_data") }} as om on om.offer_id = o.offer_id
 where
     o.offer_subcategoryid not in ("ACTIVATION_THING", "ACTIVATION_EVENT")
     and (o.booking_email <> "jeux-concours@passculture.app" or o.booking_email is null)

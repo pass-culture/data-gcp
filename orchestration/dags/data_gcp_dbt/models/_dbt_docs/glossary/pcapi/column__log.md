@@ -38,5 +38,18 @@
 {% docs column__suggested_offer_api_id %}API call ID as part of individual offer creation predictiv model of suggested subcategories.{% enddocs %}
 {% docs column__suggested_offer_api_subcategory %}Subcategory chosen by the user as part of individual offer creation(predictiv model).{% enddocs %}
 {% docs column__suggested_offer_api_subcategories %}Subcategories suggested to the user as part of individual offer creation (predictiv model).{% enddocs %}
+{% docs column__publication_date_old_value %}The previous publication date of the offer before modification.{% enddocs %}
+{% docs column__publication_date_new_value %}The new publication date of the offer after modification.{% enddocs %}
+{% docs column__booking_limit_date_old_value %}The previous booking limit date of the offer before modification.{% enddocs %}
+{% docs column__booking_limit_date_new_value %}The new booking limit date of the offer after modification.{% enddocs %}
+{% docs column__stock_beginning_date_old_value %}The previous beginning date of the stock before modification.{% enddocs %}
+{% docs column__stock_beginning_date_new_value %}The new beginning date of the stock after modification.{% enddocs %}
+{% docs column__offer_withdrawal_details_old_value %}The previous withdrawal details of the offer before modification.{% enddocs %}
+{% docs column__offer_withdrawal_details_new_value %}The new withdrawal details of the offer after modification.{% enddocs %}
+{% docs column__offerer_address_old_value %}The previous address (performance venue) of the offer/stock before modification, as recorded in the system.{% enddocs %}
+{% docs column__offerer_address_new_value %}The new address (performance venue) of the offer/stock after modification, as updated in the system.{% enddocs %}
+{% docs column__siret %}The SIRET code by the cultural partner during subscription{% enddocs %}
+{% docs column__siret_is_diffusible %}Indicates whether SIRET with which the cultural partner subscribed is diffisuble.{% enddocs %}
+
 
 {% endhide %}

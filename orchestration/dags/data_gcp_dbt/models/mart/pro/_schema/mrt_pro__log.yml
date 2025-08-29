@@ -18,6 +18,8 @@ models:
         description: "{{ doc('column__offer_id') }}"
       - name: venue_id
         description: "{{ doc('column__venue_id') }}"
+      - name: provider_id
+        description: "{{ doc('column__provider_id') }}"
       - name: product_id
         description: "{{ doc('column__offer_product_id') }}"
       - name: stock_id
@@ -32,6 +34,26 @@ models:
         description: "{{ doc('column__stock_new_price') }}"
       - name: stock_booking_quantity
         description: "{{ doc('column__stock_booking_quantity') }}"
+      - name: offerer_address_old_value
+        description: "{{ doc('column__offerer_address_old_value') }}"
+      - name: offerer_address_new_value
+        description: "{{ doc('column__offerer_address_new_value') }}"
+      - name: publication_date_old_value
+        description: "{{ doc('column__publication_date_old_value') }}"
+      - name: publication_date_new_value
+        description: "{{ doc('column__publication_date_new_value') }}"
+      - name: booking_limit_date_old_value
+        description: "{{ doc('column__booking_limit_date_old_value') }}"
+      - name: booking_limit_date_new_value
+        description: "{{ doc('column__booking_limit_date_new_value') }}"
+      - name: stock_beginning_date_old_value
+        description: "{{ doc('column__stock_beginning_date_old_value') }}"
+      - name: stock_beginning_date_new_value
+        description: "{{ doc('column__stock_beginning_date_new_value') }}"
+      - name: offer_withdrawal_details_old_value
+        description: "{{ doc('column__offer_withdrawal_details_old_value') }}"
+      - name: offer_withdrawal_details_new_value
+        description: "{{ doc('column__offer_withdrawal_details_new_value') }}"
       - name: list_of_eans_not_found
         description: "{{ doc('column__list_of_eans_not_found') }}"
       - name: log_timestamp
@@ -68,3 +90,7 @@ models:
         description: "{{ doc('column__suggested_offer_api_subcategory') }}"
       - name: suggested_offer_api_subcategories
         description: "{{ doc('column__suggested_offer_api_subcategories') }}"
+      - name: siret
+        description: "{{ doc('column__siret') }}"
+      - name: siret_is_diffusible
+        description: "{{ doc('column__siret_is_diffusible') }}"

@@ -211,7 +211,8 @@ select
     first_headline_date,
     last_headline_date,
     o.offer_finalization_date,
-    o.scheduled_offer_bookability_date
+    o.scheduled_offer_bookability_date,
+    om.offer_video_url
 from {{ ref("int_applicative__extract_offer") }} as o
 left join {{ ref("int_applicative__offer_item_id") }} as ii on ii.offer_id = o.offer_id
 left join stocks_grouped_by_offers on stocks_grouped_by_offers.offer_id = o.offer_id
@@ -228,6 +229,7 @@ left join
     and m.is_active
     and m.mediation_rown = 1
 left join {{ ref("int_applicative__headline_offer") }} as ho on ho.offer_id = o.offer_id
+left join {{ ref("int_applicative__offer_meta_data") }} as om on om.offer_id= o.offer_id
 where
     o.offer_subcategoryid not in ("ACTIVATION_THING", "ACTIVATION_EVENT")
     and (o.booking_email <> "jeux-concours@passculture.app" or o.booking_email is null)

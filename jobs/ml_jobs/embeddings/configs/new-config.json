@@ -1,0 +1,29 @@
+{
+    "features": [
+        {
+            "name": "description",
+            "type": "macro_text",
+            "content": [
+                "offer_description"
+            ],
+            "model": [
+                "sentence-transformers/all-MiniLM-L6-v2"
+            ]
+        },
+        {
+            "name": "semantic_content",
+            "content": [
+                "subcategory_id",
+                "category_id",
+                "offer_label_concat",
+                "author_concat",
+                "offer_name",
+                "offer_description"
+            ],
+            "type": "macro_text",
+            "model": [
+                "sentence-transformers/all-MiniLM-L6-v2"
+            ]
+        }
+    ]
+}

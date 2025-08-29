@@ -1,8 +1,11 @@
+import json
 import os
 import shutil
 import time
 
-from sentence_transformers import SentenceTransformer
+from langchain_google_vertexai import VertexAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
+from loguru import logger
 
 from tools.config import TRANSFORMER_BATCH_SIZE
 from utils.download import IMAGE_DIR, download_img_multiprocess
@@ -15,7 +18,6 @@ def extract_embedding(df_data, params):
     Extract embeddings with pretrained models.
     Handles both image and text inputs.
     """
-    models = load_models(params["models"])
     start = time.time()
     df_encoded = df_data[["item_id"]].astype(str)
 
@@ -24,35 +26,33 @@ def extract_embedding(df_data, params):
     download_img_multiprocess(df_data.image.tolist())
 
     for feature in params["features"]:
-        for model_type in feature["model"]:
+        for model_name in feature["model"]:
             step_time = time.time()
-            model = models[model_type]
-            emb_col_name = create_embedding_column_name(feature, model_type)
-            if feature["type"] == "image":
-                df_encoded[emb_col_name] = encode_img_from_path(
-                    model, df_data.image.tolist()
-                )
-
-            elif feature["type"] in ["text", "macro_text"]:
-                df_encoded[emb_col_name] = encode_text(
-                    model, df_data[feature["name"]].tolist()
-                )
-            df_encoded[emb_col_name] = df_encoded[emb_col_name].astype(str)
-            log_duration(f"Processed {feature['name']}, using {model_type}", step_time)
+            emb_col_name = create_embedding_column_name(feature, model_name)
+            embedding_model = load_embedding_model(model_name)
+            df_encoded[emb_col_name] = embedding_model.embed_documents(
+                df_data[feature["name"]]
+            )
+            log_duration(f"Processed {feature['name']}, using {model_name}", step_time)
 
     shutil.rmtree(IMAGE_DIR, ignore_errors=True)
     log_duration("Done processing.", start)
     return df_encoded
 
 
-def load_models(model_params):
-    """
-    Load and return the models specified in model_params.
-    """
-    return {
-        model_name: SentenceTransformer(model_path)
-        for model_name, model_path in model_params.items()
-    }
+def load_embedding_model(model_name):
+    # load available models:
+    with open("configs/available_configs.json", "r") as f:
+        model_map = json.load(f)
+
+    if model_name not in model_map.keys():
+        logger.error(f"Model {model_name} is unsupported")
+        exit
+
+    if model_map[model_name] == "HuggingFaceEmbeddings":
+        return HuggingFaceEmbeddings(model_name)
+    elif model_map[model_name] == "VertexAIEmbeddings":
+        return VertexAIEmbeddings(model_name)
 
 
 def create_embedding_column_name(feature, model_type):
@@ -107,18 +107,3 @@ def encode_img_from_path(model, paths):
 
     log_duration("Predict all images", start)
     return [embeddings.get(url, [0] * 512) for url in paths]
-
-
-def encode_text(model, texts):
-    """
-    Encode texts using the specified model.
-    """
-    return [
-        list(embedding)
-        for embedding in model.encode(
-            texts,
-            batch_size=TRANSFORMER_BATCH_SIZE,
-            normalize_embeddings=True,
-            show_progress_bar=False,
-        )
-    ]

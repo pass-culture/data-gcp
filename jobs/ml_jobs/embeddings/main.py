@@ -20,7 +20,6 @@ def preprocess(df, features):
             ]
         )
     )
-    columns = list(set(columns))
     df[columns] = df[columns].fillna(" ")
 
     for feature in features:
@@ -107,7 +106,6 @@ def main(
         for start in range(0, df.shape[0], batch_size):
             df_subset = df.iloc[start : start + batch_size]
             extract_embedding(df_subset, params).assign(
-                extraction_date=datetime.now().strftime("%Y-%m-%d"),
                 extraction_datetime=datetime.now(),
             ).to_gbq(
                 f"{output_dataset_name}.{output_table_name}",

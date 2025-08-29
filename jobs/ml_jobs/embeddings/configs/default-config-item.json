@@ -32,8 +32,7 @@
             ],
             "type": "macro_text",
             "model": [
-                "optim_text",
-                "hybrid"
+                "optim_text"
             ]
         },
         {
@@ -45,8 +44,7 @@
             ],
             "type": "macro_text",
             "model": [
-                "optim_text",
-                "hybrid"
+                "optim_text"
             ]
         },
         {

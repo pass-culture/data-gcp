@@ -1,0 +1,5 @@
+{
+    "sentence-transformers/all-MiniLM-L6-v2": "HuggingFaceEmbeddings",
+    "intfloat/multilingual-e5-large-instruct": "HuggingFaceEmbeddings",
+    "gemini-embedding-001": "VertexAIEmbeddings"
+}

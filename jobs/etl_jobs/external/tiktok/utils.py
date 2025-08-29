@@ -10,6 +10,25 @@ ENV_SHORT_NAME = os.environ["ENV_SHORT_NAME"]
 BIGQUERY_RAW_DATASET = f"raw_{ENV_SHORT_NAME}"
 # export tables
 TIKTOK_VIDEO_DETAIL = "tiktok_video_detail"
+TIKTOK_VIDEO_DETAIL_SCHEMA = {
+    "item_id": "STRING",
+    "caption": "STRING",
+    "average_time_watched": "FLOAT",
+    "reach": "INTEGER",
+    "create_time": "STRING",
+    "share_url": "STRING",
+    "video_views": "INTEGER",
+    "total_time_watched": "FLOAT",
+    "likes": "INTEGER",
+    "shares": "INTEGER",
+    "comments": "INTEGER",
+    "video_duration": "FLOAT",
+    "full_video_watched_rate": "FLOAT",
+    "thumbnail_url": "STRING",
+    "embed_url": "STRING",
+    "account": "STRING",
+    "export_date": "DATETIME",
+}
 TIKTOK_VIDEO_AUDIENCE_COUNTRY = "tiktok_video_audience_country"
 TIKTOK_VIDEO_IMPRESSION_SOURCE = "tiktok_video_impression_source"
 
@@ -27,7 +46,19 @@ def access_secret_data(project_id, secret_id, version_id=1, default=None):
         return default
 
 
-def save_to_bq(df, table_name, start_date, end_date, date_column):
+def to_sql_type(_type):
+    _dict = {
+        "STRING": bigquery.enums.SqlTypeNames.STRING,
+        "FLOAT": bigquery.enums.SqlTypeNames.FLOAT64,
+        "INTEGER": bigquery.enums.SqlTypeNames.INT64,
+        "DATETIME": bigquery.enums.SqlTypeNames.DATETIME,
+    }
+    return _dict[_type]
+
+
+def save_to_bq(
+    df, table_name, start_date, end_date, schema_field={}, date_column="export_date"
+):
     df[date_column] = pd.to_datetime(df[date_column])
     _dates = pd.date_range(start_date, end_date)
     print(f"Will Save.. {table_name} -> {df.shape[0]}")
@@ -37,10 +68,18 @@ def save_to_bq(df, table_name, start_date, end_date, date_column):
         tmp_df.loc[:, date_column] = tmp_df[date_column].astype(str)
         if tmp_df.shape[0] > 0:
             print(f"Saving.. {table_name} -> {date_str}")
-            __save_to_bq(tmp_df, table_name, date_str, date_column)
+            __save_to_bq(
+                df=tmp_df,
+                table_name=table_name,
+                event_date=date_str,
+                schema_field=schema_field,
+                date_column=date_column,
+            )
 
 
-def __save_to_bq(df, table_name, event_date, date_column="export_date"):
+def __save_to_bq(
+    df, table_name, event_date, schema_field={}, date_column="export_date"
+):
     date_fmt = datetime.strptime(event_date, "%Y-%m-%d")
     yyyymmdd = date_fmt.strftime("%Y%m%d")
     df.loc[:, date_column] = date_fmt
@@ -50,6 +89,10 @@ def __save_to_bq(df, table_name, event_date, date_column="export_date"):
         write_disposition="WRITE_TRUNCATE",
         schema_update_options=[
             bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION,
+        ],
+        schema=[
+            bigquery.SchemaField(col, to_sql_type(_type))
+            for col, _type in schema_field.items()
         ],
         time_partitioning=bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,

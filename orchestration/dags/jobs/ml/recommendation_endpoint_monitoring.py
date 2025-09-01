@@ -8,7 +8,7 @@ from common.alerts.endpoint_monitoring import (
 from common.callback import on_failure_vm_callback
 from common.config import (
     BIGQUERY_TMP_DATASET,
-    BIGQUERY_SANDBOX_DATASET,
+    BIGQUERY_ANALYTICS_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
@@ -254,7 +254,7 @@ with (
         bucket=ML_BUCKET_TEMP,
         source_objects=f"""{DAG_CONFIG['GCS_PATH']}/endpoint_monitoring_reports.parquet""",
         destination_project_dataset_table=(
-            f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['BIGQUERY']['OUTPUT_REPORT_TABLE']}"
+            f"{BIGQUERY_ANALYTICS_DATASET}.{DAG_CONFIG['BIGQUERY']['OUTPUT_REPORT_TABLE']}"
         ),
         source_format="PARQUET",
         write_disposition="WRITE_APPEND",

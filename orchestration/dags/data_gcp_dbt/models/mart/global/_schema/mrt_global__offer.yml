@@ -292,6 +292,3 @@ models:
       - name: offerer_is_epn
         description: "{{ doc('column__offerer_is_epn') }}"
         data_type: BOOLEAN
-      - name: offer_video_url
-        description: '{{ doc("column__offer_video_url") }}'
-        data_type: STRING

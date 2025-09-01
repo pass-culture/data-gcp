@@ -88,6 +88,7 @@ select
             end
 
     end as image_url,
+    omd.videourl as offer_video_url,
     gtl.gtl_type,
     gtl.gtl_label_level_1,
     gtl.gtl_label_level_2,
@@ -159,4 +160,5 @@ left join
     {{ ref("int_applicative__product_mediation") }} as pm
     on o.offer_product_id = pm.product_id
 left join {{ ref("int_applicative__product") }} as p on o.offer_product_id = p.id
+left join {{ source("raw", "applicative_database_offer_meta_data") }} omd on omd.offerid=o.offer_id
 qualify row_number() over (partition by offer_id order by pm.image_type) = 1

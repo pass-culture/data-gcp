@@ -11,7 +11,7 @@ def create_recommendation_endpoint_monitoring_slack_block(
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": f":martial_arts_uniform:  Endpoint monitoring on {endpoint_name} is complete :martial_arts_uniform: ",
+                "text": f":martial_arts_uniform:  Endpoint monitoring on *{endpoint_name}* is complete :martial_arts_uniform: ",
             },
         },
         {

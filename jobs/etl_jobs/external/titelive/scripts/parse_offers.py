@@ -17,17 +17,20 @@ def post_process_before_saving(df: pd.DataFrame):
         "article_taux_tva": float,
         "article_image": int,
         "article_iad": int,
+        "article_typeproduit": int,
     }
 
     for col in df.select_dtypes(include=[object]).columns:
-        df[col] = df[col].replace(["None", "nan", "NaN"], None)
+        df.loc[:, col] = df[col].replace(["None", "nan", "NaN"], None)
 
         if df[col].dropna().apply(lambda x: isinstance(x, dict | list)).any():
             # Convert dict like columns to JSON
-            df[col] = df[col].map(json.dumps).replace(["None", "nan", "NaN"], None)
+            df.loc[:, col] = (
+                df[col].map(json.dumps).replace(["None", "nan", "NaN"], None)
+            )
 
         if col in ENFORCE_COLUMN_TYPES:
-            df[col] = df[col].astype(ENFORCE_COLUMN_TYPES[col])
+            df.loc[:, col] = df[col].astype(ENFORCE_COLUMN_TYPES[col])
 
     return df
 
@@ -69,7 +72,10 @@ def format_products(
     min_formatted_date = min_modified_date.strftime("%d/%m/%Y")
     filtered_df = merged_df.loc[
         (merged_df["article_datemodification"].isna())
-        | (pd.to_datetime(merged_df["article_datemodification"]) >= min_formatted_date)
+        | (
+            pd.to_datetime(merged_df["article_datemodification"], dayfirst=True)
+            >= min_formatted_date
+        )
     ]
 
     final_df = filtered_df.pipe(post_process_before_saving)

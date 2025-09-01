@@ -108,6 +108,7 @@ def calculate_similarities(user_emb, item_embs):
 
 
 def analyze_predictions(
+    metrics: dict[str, Any],
     predictions_by_user: dict[str, list[list]],
     user_embedding_dict: dict[str, np.ndarray] | None = None,
     item_embedding_dict: dict[str, np.ndarray] | None = None,
@@ -116,7 +117,6 @@ def analyze_predictions(
     failure_count: int | None = None,
 ) -> dict[str, Any]:
     """Analyze predictions and return metrics dictionary for reporting."""
-    metrics = {}
     print("\n=== Analysis of Recommendations ===")
 
     update_metrics(metrics, _analyze_recommendation_counts(predictions_by_user))

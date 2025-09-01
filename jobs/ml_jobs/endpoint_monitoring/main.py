@@ -88,7 +88,16 @@ def main(
             predictions, latencies, success_count, failure_count = (
                 process_call_type_data(config, call_type, data_type, ids)
             )
+            metrics = {}
+            metrics.update(
+                {
+                    "date": pd.Timestamp.today().normalize(),
+                    "call_type": call_type,
+                    "data_type": data_type,
+                }
+            )
             metrics = analyze_predictions(
+                metrics,
                 predictions,
                 user_embedding_dict,
                 item_embedding_dict,

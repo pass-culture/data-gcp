@@ -107,7 +107,7 @@ with (
         tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
         params={
             "branch": Param(
-                default="master" if ENV_SHORT_NAME == "prod" else "production",
+                default="production" if ENV_SHORT_NAME == "prod" else "master",
                 type="string",
             ),
             "instance_name": Param(default=gce_params["instance_name"], type="string"),

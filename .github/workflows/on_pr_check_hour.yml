@@ -2,7 +2,7 @@ name: "TEST 1. [on_pr] Prevent Merges on Master Allowed Hours"
 on:
   pull_request:
     branches:
-      - bsr-fix-code-injection-PR-title
+      - '*'
     types:
       - opened
       - synchronize

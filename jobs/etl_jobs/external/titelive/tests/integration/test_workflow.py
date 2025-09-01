@@ -1,6 +1,7 @@
 """Integration tests for the complete ETL workflow."""
 
 import json
+import math
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -210,7 +211,7 @@ class TestETLWorkflow:
         # Check specific values
         assert saved_df["titre"].iloc[0] == "Test Book 1"
         assert saved_df["article_ean"].iloc[0] == "9781234567890"
-        assert saved_df["article_prix"].iloc[0] == 15.99
+        assert math.isclose(saved_df["article_prix"].iloc[0], 15.99)
 
         # Check that auteurs_multi is JSON string
         auteurs_data = json.loads(saved_df["auteurs_multi"].iloc[0])
@@ -290,7 +291,7 @@ class TestETLWorkflow:
             assert len(final_df) == 1
             assert final_df["titre"].iloc[0] == "Integration Test Book"
             assert final_df["article_ean"].iloc[0] == "9781234567890"
-            assert final_df["article_prix"].iloc[0] == 25.99
+            assert math.isclose(final_df["article_prix"].iloc[0], 25.99)
 
             # Check that complex data types are properly handled
             assert isinstance(final_df["auteurs_multi"].iloc[0], str)

@@ -1,5 +1,7 @@
 """Tests for the parse_offers script functions."""
 
+import math
+
 import pandas as pd
 
 from scripts.parse_offers import post_process_before_saving
@@ -95,10 +97,10 @@ class TestPostProcessBeforeSaving:
         assert result["article_typeproduit"].dtype == float  # May be float due to NaN
 
         # Check values (non-null values should be preserved)
-        assert result["article_taux_tva"].iloc[0] == 5.5
-        assert result["article_image"].iloc[0] == 1.0
-        assert result["article_iad"].iloc[1] == 1.0
-        assert result["article_typeproduit"].iloc[3] == 3.0
+        assert math.isclose(result["article_taux_tva"].iloc[0], 5.5)
+        assert math.isclose(result["article_image"].iloc[0], 1.0)
+        assert math.isclose(result["article_iad"].iloc[1], 1.0)
+        assert math.isclose(result["article_typeproduit"].iloc[3], 3.0)
 
     def test_post_process_complex_scenario(self):
         """Test complex scenario with multiple transformations."""
@@ -132,7 +134,7 @@ class TestPostProcessBeforeSaving:
         # Check type enforcement
         assert result["article_taux_tva"].dtype == float
         assert result["article_image"].dtype == float  # May be float due to NaN
-        assert result["article_taux_tva"].iloc[0] == 5.5
+        assert math.isclose(result["article_taux_tva"].iloc[0], 5.5)
         assert pd.isna(result["article_taux_tva"].iloc[1])
 
     def test_post_process_empty_dataframe(self):

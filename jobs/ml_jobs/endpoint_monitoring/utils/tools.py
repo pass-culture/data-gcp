@@ -68,8 +68,8 @@ def download_and_load_model(config):
     if not os.path.exists(MODEL_BASE_PATH) or not os.listdir(MODEL_BASE_PATH):
         source_artifact_uri = get_model_from_mlflow(
             experiment_name=config["source_experiment_name"],
-            run_id=None,
-            artifact_uri=None,
+            run_id="",
+            artifact_uri="",
         )
         logger.info(f"Model artifact_uri: {source_artifact_uri}")
         download_model(artifact_uri=source_artifact_uri)
@@ -117,7 +117,7 @@ def get_model_from_mlflow(experiment_name: str, run_id: str, artifact_uri: str):
                 .to_dict("records")
             )
         if len(results_array) == 0:
-            raise Exception(
+            raise ValueError(
                 f"Model {experiment_name} not found into BQ {MODELS_RESULTS_TABLE_NAME}"
             )
         else:
@@ -135,6 +135,5 @@ def download_model(artifact_uri: str) -> None:
     results = subprocess.Popen(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
-    # TODO handle errors
     for line in results.stdout:
         logger.info(line.rstrip().decode("utf-8"))

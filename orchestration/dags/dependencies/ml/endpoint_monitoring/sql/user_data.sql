@@ -93,5 +93,5 @@ with
 select ru.user_id, ru.offer_subcategory_id, ru.total_count, ru.subcategory_ratio
 from ranked_users ru
 where ru.rank <= 1000
-order by ru.offer_subcategory_id, ru.total_count desc
+order by ru.offer_subcategory_id asc, ru.total_count desc
 ;

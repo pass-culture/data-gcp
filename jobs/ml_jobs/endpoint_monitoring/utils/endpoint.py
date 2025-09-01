@@ -37,7 +37,7 @@ def process_endpoint_calls(endpoint_name, call_type, ids, n_calls_per_user):
     success_count = 0
     failure_count = 0
 
-    def process_single_call(id, call_num):
+    def process_single_call(id):
         start_time = time.time()
         results = call_endpoint(
             endpoint_path=get_endpoint_path(endpoint_name=endpoint_name),
@@ -109,10 +109,8 @@ def call_endpoint(endpoint_path: str, model_type: str, id: str, size: int = 10) 
 
 
 def predict_custom_trained_model_sample(
-    project: str,
     endpoint_path: str,
     instances: dict | list[dict],
-    location: str = "us-central1",
     api_endpoint: str = "us-central1-aiplatform.googleapis.com",
 ):
     """
@@ -129,9 +127,6 @@ def predict_custom_trained_model_sample(
     ]
     parameters_dict = {}
     parameters = json_format.ParseDict(parameters_dict, Value())
-    # endpoint = client.endpoint_path(
-    #     project=project, location=location, endpoint=endpoint_path
-    # )
     response = client.predict(
         endpoint=endpoint_path, instances=instances, parameters=parameters
     )

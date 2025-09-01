@@ -12,7 +12,7 @@ def test_analyze_overlap_basic():
         ]
     }
     metrics = _analyze_overlap(predictions_by_user)
-    assert metrics["avg_user_overlap"] == 100.0
+    assert np.isclose(metrics["avg_user_overlap"], 100.0)
 
 
 def test_analyze_overlap_partial():
@@ -36,7 +36,7 @@ def test_analyze_overlap_none():
         ]
     }
     metrics = _analyze_overlap(predictions_by_user)
-    assert metrics["avg_user_overlap"] == 0.0
+    assert np.isclose(metrics["avg_user_overlap"], 0.0)
 
 
 def test_analyze_overlap_multiple_users():
@@ -62,8 +62,8 @@ def test_analyze_user_recommendation_overlap_basic():
         "user2": [[{"item_id": "A"}, {"item_id": "B"}, {"item_id": "C"}]],
     }
     metrics = _analyze_user_recommendation_overlap(predictions_by_user)
-    assert metrics["user_reco_avg_jaccard"] == 1.0
-    assert metrics["user_reco_high_overlap_pairs"] == 1
+    assert np.isclose(metrics["user_reco_avg_jaccard"], 1.0)
+    assert np.isclose(metrics["user_reco_high_overlap_pairs"], 1)
 
 
 def test_analyze_user_recommendation_overlap_partial():
@@ -74,7 +74,7 @@ def test_analyze_user_recommendation_overlap_partial():
     }
     metrics = _analyze_user_recommendation_overlap(predictions_by_user)
     assert np.isclose(metrics["user_reco_avg_jaccard"], 1 / 3)
-    assert metrics["user_reco_high_overlap_pairs"] == 0
+    assert np.isclose(metrics["user_reco_high_overlap_pairs"], 0)
 
 
 def test_analyze_user_recommendation_overlap_none():
@@ -84,8 +84,8 @@ def test_analyze_user_recommendation_overlap_none():
         "user2": [[{"item_id": "B"}]],
     }
     metrics = _analyze_user_recommendation_overlap(predictions_by_user)
-    assert metrics["user_reco_avg_jaccard"] == 0.0
-    assert metrics["user_reco_high_overlap_pairs"] == 0
+    assert np.isclose(metrics["user_reco_avg_jaccard"], 0.0)
+    assert np.isclose(metrics["user_reco_high_overlap_pairs"], 0.0)
 
 
 def test_analyze_user_recommendation_overlap_multiple_users():
@@ -99,4 +99,4 @@ def test_analyze_user_recommendation_overlap_multiple_users():
     # There are 3 pairs: (user1,user2), (user1,user3), (user2,user3)
     # Each pair has 1/3 overlap
     assert np.isclose(metrics["user_reco_avg_jaccard"], 1 / 3)
-    assert metrics["user_reco_high_overlap_pairs"] == 0
+    assert np.isclose(metrics["user_reco_high_overlap_pairs"], 0.0)

@@ -97,9 +97,7 @@ with (
         dag_id=DAG_CONFIG["ID"],
         default_args=default_args,
         description="Run recommendation endpoint monitoring",
-        schedule_interval=get_airflow_schedule(
-            SCHEDULE_DICT[DAG_CONFIG["ID"]][ENV_SHORT_NAME]
-        ),
+        schedule_interval=get_airflow_schedule(SCHEDULE_DICT[DAG_CONFIG["ID"]]),
         catchup=False,
         dagrun_timeout=timedelta(minutes=60),
         user_defined_macros=macros.default,
@@ -109,9 +107,7 @@ with (
         tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value],
         params={
             "branch": Param(
-                default="DS-1887-retrieval-integration-test"
-                if ENV_SHORT_NAME == "prod"
-                else "DS-1887-retrieval-integration-test",
+                default="master" if ENV_SHORT_NAME == "prod" else "production",
                 type="string",
             ),
             "instance_name": Param(default=gce_params["instance_name"], type="string"),
@@ -130,8 +126,8 @@ with (
         },
     ) as dag
 ):
+    INSTANCE_NAME = "{{ params.instance_name }}"
     start = DummyOperator(task_id="start", dag=dag)
-
     with TaskGroup(
         "import_data", tooltip="Import data from SQL to BQ"
     ) as import_data_group:
@@ -219,7 +215,7 @@ with (
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         preemptible=False,
-        instance_name="{{ params.instance_name }}",
+        instance_name=INSTANCE_NAME,
         instance_type="{{ params.instance_type }}",
         retries=2,
         labels={"job_type": "ml", "dag_name": DAG_CONFIG["ID"]},
@@ -227,7 +223,7 @@ with (
 
     fetch_install_code = InstallDependenciesOperator(
         task_id="fetch_install_code",
-        instance_name="{{ params.instance_name }}",
+        instance_name=INSTANCE_NAME,
         branch="{{ params.branch }}",
         python_version="'3.10'",
         base_dir=DAG_CONFIG["BASE_DIR"],
@@ -243,13 +239,13 @@ with (
         f"--number-of-ids {DAG_CONFIG['number_of_ids']} "
         f"--number-of-mock-ids {DAG_CONFIG['number_of_mock_ids']} "
         f"--number-of-calls-per-user {DAG_CONFIG['number_of_calls_per_user']} ",
-        instance_name="{{ params.instance_name }}",
+        instance_name=INSTANCE_NAME,
         base_dir=DAG_CONFIG["BASE_DIR"],
     )
 
     gce_instance_stop = DeleteGCEOperator(
         task_id="gce_stop_task",
-        instance_name="{{ params.instance_name }}",
+        instance_name=INSTANCE_NAME,
         trigger_rule="none_failed",
     )
     load_endpoint_monitoring_report_to_bq = GCSToBigQueryOperator(

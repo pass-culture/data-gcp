@@ -353,19 +353,23 @@ def _analyze_prediction_attributes(
     Analyze the _distance and _user_item_dot_similarity attributes in predictions.
     Computes average, min, and max for each if present.
     """
+
+    def _collect_pred_attributes(pred, distance_values, dot_sim_values):
+        pred_dict = convert_to_dict(pred)
+        distance = pred_dict.get("_distance")
+        if distance is not None:
+            distance_values.append(float(distance))
+        dot_sim = pred_dict.get("_user_item_dot_similarity")
+        if dot_sim is not None:
+            dot_sim_values.append(float(dot_sim))
+
     distance_values = []
     dot_sim_values = []
     for user_preds in predictions_by_user.values():
         for preds in user_preds:
             for pred in preds:
-                pred_dict = convert_to_dict(pred)
-                if "_distance" in pred_dict and pred_dict["_distance"] is not None:
-                    distance_values.append(float(pred_dict["_distance"]))
-                if (
-                    "_user_item_dot_similarity" in pred_dict
-                    and pred_dict["_user_item_dot_similarity"] is not None
-                ):
-                    dot_sim_values.append(float(pred_dict["_user_item_dot_similarity"]))
+                _collect_pred_attributes(pred, distance_values, dot_sim_values)
+
     metrics = {}
     if distance_values:
         metrics["distance_avg"] = float(np.mean(distance_values))

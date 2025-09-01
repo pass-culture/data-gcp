@@ -1,8 +1,8 @@
-name: "1. [on_pr] Prevent Merges on Master Allowed Hours"
+name: "TEST 1. [on_pr] Prevent Merges on Master Allowed Hours"
 on:
   pull_request:
     branches:
-      - master
+      - bsr-fix-code-injection-PR-title
     types:
       - opened
       - synchronize
@@ -17,11 +17,6 @@ jobs:
   check_time:
     runs-on: ubuntu-latest
     steps:
-      - name: Get PR title
-        id: get_pr
-        run: |
-          # Read the PR title into an env var
-          echo "PR_TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
       - name: Get current time in Paris timezone with daylight saving
         id: get_time
         run: |
@@ -30,6 +25,9 @@ jobs:
           echo "PARIS_HOUR=$paris_hour" >> $GITHUB_ENV
 
       - name: Block merge if outside allowed hours (unless HF)
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PARIS_HOUR: ${{ env.PARIS_HOUR }}
         run: |
           echo "PR title: $PR_TITLE"
           # If title starts with "(HF)", allow immediately
@@ -46,6 +44,3 @@ jobs:
           else
             echo "Merge allowed."
           fi
-        env:
-          PR_TITLE: ${{ env.PR_TITLE }}
-          PARIS_HOUR: ${{ env.PARIS_HOUR }}

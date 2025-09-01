@@ -257,7 +257,7 @@ with (
             f"{BIGQUERY_SANDBOX_DATASET}.{DAG_CONFIG['BIGQUERY']['OUTPUT_REPORT_TABLE']}"
         ),
         source_format="PARQUET",
-        write_disposition="WRITE_TRUNCATE",
+        write_disposition="WRITE_APPEND",
         autodetect=True,
     )
     send_slack_notif_success = SendSlackMessageOperator(

@@ -3,10 +3,31 @@
 import json
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest
+
+
+@pytest.fixture(scope="session", autouse=True)
+def mock_gcp_secret_manager():
+    """
+    Global mock for GCP Secret Manager to avoid authentication issues during tests.
+    This fixture automatically applies to all tests and mocks the access_secret_data
+    function before any module imports happen.
+    """
+    with patch("src.utils.gcp.access_secret_data") as mock_access_secret:
+        # Configure the mock to return appropriate test values
+        def mock_secret_data(project_id, secret_id, version_id="latest"):
+            if secret_id == "titelive_epagine_api_username":
+                return "test_username"
+            elif secret_id == "titelive_epagine_api_password":
+                return "test_password"
+            else:
+                return f"mock_secret_value_{secret_id}"
+
+        mock_access_secret.side_effect = mock_secret_data
+        yield mock_access_secret
 
 
 @pytest.fixture()

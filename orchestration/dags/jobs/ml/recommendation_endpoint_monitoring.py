@@ -266,7 +266,7 @@ with (
         trigger_rule="none_failed",
         block=create_recommendation_endpoint_monitoring_slack_block(
             endpoint_name=DAG_CONFIG["endpoint_name"],
-            metabase_url="https://analytics.data.passculture.team/",
+            metabase_url="https://analytics.data.passculture.team/dashboard/986-test-dintregation-recommendation#edit",
             env_short_name=ENV_SHORT_NAME,
         ),
     )

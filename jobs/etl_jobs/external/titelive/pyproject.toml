@@ -1,0 +1,80 @@
+[project]
+name = "titelive"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "google-cloud-secret-manager>=2.24.0",
+    "google-cloud-storage==2.16.0",
+    "ipykernel>=6.30.1",
+    "loguru>=0.7.3",
+    "pandas==2.2.0",
+    "pytest==8.2.2",
+    "pytest-mock>=3.12.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.12.10",
+    "tornado==6.4.2",
+    "typer==0.12.3",
+    "pyarrow>=21.0.0",
+]
+
+## ruff
+# Recommended ruff config for now, to be updated as we go along.
+[tool.ruff]
+target-version = 'py312'
+
+lint.select = [
+    "E",      # pycodestyle
+    "W",      # pycodestyle
+    "F",      # Pyflakes
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "I",      # isort
+    "SIM",    # flake8-simplify
+    "TCH",    # flake8-type-checking
+    "TID",    # flake8-tidy-imports
+    "UP",     # pyupgrade
+    "PT",     # flake8-pytest-style
+    "RUF",    # Ruff-specific rules
+    "FBT001", # flake8-boolean-trap
+]
+
+[tool.ruff.lint.pydocstyle]
+# Automatically disable rules that are incompatible with Google docstring convention
+convention = "google"
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 100
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.flake8-type-checking]
+strict = true
+runtime-evaluated-base-classes = ["pydantic.BaseModel"]
+# Pydantic needs to be able to evaluate types at runtime
+# see https://pypi.org/project/flake8-type-checking/ for flake8-type-checking documentation
+# see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+    "--tb=short",
+    "--disable-warnings",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Slow tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]

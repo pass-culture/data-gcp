@@ -3,13 +3,15 @@ from datetime import datetime
 
 import pandas as pd
 import requests
+from loguru import logger
 
 from src.constants import (
     TITELIVE_BASE_URL,
     TITELIVE_CATEGORIES,
+    TITELIVE_PASSWORD,
     TITELIVE_TOKEN_ENDPOINT,
+    TITELIVE_USERNAME,
 )
-from src.env_vars import TITELIVE_IDENTIFIER, TITELIVE_PASSWORD
 
 TOKEN = None
 RESULTS_PER_PAGE = 120
@@ -24,14 +26,14 @@ def get_titelive_token() -> str:
     """
     # Get configuration from environment variables or config
 
-    if not all([TITELIVE_TOKEN_ENDPOINT, TITELIVE_IDENTIFIER, TITELIVE_PASSWORD]):
+    if not all([TITELIVE_TOKEN_ENDPOINT, TITELIVE_USERNAME, TITELIVE_PASSWORD]):
         raise ValueError(
             "Missing required environment variables: "
-            "TITELIVE_IDENTIFIER, TITELIVE_PASSWORD"
+            "TITELIVE_USERNAME, TITELIVE_PASSWORD"
         )
 
     # Construct the URL
-    url = f"{TITELIVE_TOKEN_ENDPOINT}/{TITELIVE_IDENTIFIER}/token"
+    url = f"{TITELIVE_TOKEN_ENDPOINT}/{TITELIVE_USERNAME}/token"
 
     # Prepare the request
     headers = {
@@ -150,6 +152,10 @@ def get_modified_offers(
 
     # Iterate over the requests
     results = []
+    logger.info(
+        f"Fetching modified offers for category: {offer_category},"
+        f"date: {formatted_date}"
+    )
     while True and page < (MAX_RESPONSES // RESULTS_PER_PAGE):
         response_data = fetch_get_request(
             search_url, headers, {**params, "page": str(page)}
@@ -163,6 +169,11 @@ def get_modified_offers(
 
         results.extend(fetched_results)
         page += 1
+
+        logger.info(
+            f"Fetched {len(fetched_results)} results on page {page} "
+            f"(Total so far: {len(results)})"
+        )
 
         if fetched_results == [] or len(fetched_results) < RESULTS_PER_PAGE:
             break

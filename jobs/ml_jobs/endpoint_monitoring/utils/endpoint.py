@@ -52,7 +52,7 @@ def process_endpoint_calls(endpoint_name, call_type, ids, n_calls_per_user):
 
     for id in ids:
         for call_num in range(n_calls_per_user):
-            success = process_single_call(id, call_num)
+            success = process_single_call(id)
             if success:
                 success_count += 1
             else:
@@ -99,10 +99,8 @@ def call_endpoint(endpoint_path: str, model_type: str, id: str, size: int = 10) 
         instances["items"] = [id]
 
     response = predict_custom_trained_model_sample(
-        project=GCP_PROJECT,
         endpoint_path=endpoint_path,
         instances=instances,
-        location=LOCATION,
         api_endpoint=API_ENDPOINT,
     )
     return response

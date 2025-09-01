@@ -14,22 +14,6 @@ INPUT_FILE_PATH_OPTION = typer.Option(..., help="Path to the input file")
 OUTPUT_FILE_PATH_OPTION = typer.Option(..., help="Path to the output file")
 
 
-BOOK_OUTPUT_COLUMNS_WITH_TYPES = {
-    "titre": str,
-    "auteurs_multi": str,
-    "article_langueiso": str,
-    "article_taux_tva": float,
-    "article_id_lectorat": float,
-    "article_resume": str,
-    "article_gencod": str,
-    "article_codesupport": str,
-    "article_gtl": str,
-    "article_dateparution": str,
-    "article_editeur": str,
-    "article_prix": float,
-}
-
-
 def post_process_before_saving(df: pd.DataFrame):
     ENFORCE_COLUMN_TYPES = {
         "article_taux_tva": float,
@@ -37,11 +21,11 @@ def post_process_before_saving(df: pd.DataFrame):
         "article_iad": int,
     }
 
-    # Convert dict like columns to JSON
     for col in df.select_dtypes(include=[object]).columns:
         df[col] = df[col].replace(["None", "nan", "NaN"], None)
 
         if df[col].dropna().apply(lambda x: isinstance(x, dict | list)).any():
+            # Convert dict like columns to JSON
             df[col] = df[col].map(json.dumps).replace(["None", "nan", "NaN"], None)
 
         if col in ENFORCE_COLUMN_TYPES:
@@ -60,10 +44,6 @@ def format_products(
     """
     Extract new offers from Titelive API.
     """
-    min_formatted_date = min_modified_date.strftime("%d/%m/%Y")
-
-    if offer_category != TITELIVE_CATEGORIES.LIVRE:
-        raise NotImplementedError("Formatting is only implemented for books yet.")
 
     raw_products_df = pd.read_parquet(input_file_path)
 
@@ -89,18 +69,13 @@ def format_products(
         .drop(columns=["article"])
     )
 
-    # min_modified_date = datetime.strptime(min_modified_date, "%Y-%m-%d")
+    min_formatted_date = min_modified_date.strftime("%d/%m/%Y")
     filtered_df = merged_df.loc[
         (merged_df["article_datemodification"].isna())
         | (pd.to_datetime(merged_df["article_datemodification"]) >= min_formatted_date)
     ]
 
-    final_df = (
-        filtered_df.loc[:, BOOK_OUTPUT_COLUMNS_WITH_TYPES.keys()]
-        .astype(BOOK_OUTPUT_COLUMNS_WITH_TYPES)
-        .pipe(post_process_before_saving)
-    )
-
+    final_df = filtered_df.pipe(post_process_before_saving)
     final_df.to_parquet(output_file_path)
 
 

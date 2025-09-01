@@ -4,8 +4,6 @@ from datetime import datetime
 import pandas as pd
 import typer
 
-from src.constants import TITELIVE_CATEGORIES
-
 app = typer.Typer()
 
 OFFER_CATEGORY_OPTION = typer.Option(..., help="Category of offers to extract")
@@ -36,7 +34,6 @@ def post_process_before_saving(df: pd.DataFrame):
 
 @app.command()
 def format_products(
-    offer_category: TITELIVE_CATEGORIES = OFFER_CATEGORY_OPTION,
     min_modified_date: datetime = MIN_MODIFIED_DATE_OPTION,
     input_file_path: str = INPUT_FILE_PATH_OPTION,
     output_file_path: str = OUTPUT_FILE_PATH_OPTION,

@@ -1,6 +1,18 @@
 install:
 	uv sync
 
+test:
+	PYTHONPATH=. uv run pytest tests/ -v
+
+test-unit:
+	PYTHONPATH=. uv run pytest tests/unit/ -v
+
+test-integration:
+	PYTHONPATH=. uv run pytest tests/integration/ -v
+
+test-coverage:
+	PYTHONPATH=. uv run pytest tests/ --cov=src --cov=scripts --cov-report=html --cov-report=term
+
 get_books_from_yesterday:
 	PYTHONPATH=. uv run --env-file .env python ./scripts/extract_new_offers_from_titelive.py \
 		--offer-category paper \

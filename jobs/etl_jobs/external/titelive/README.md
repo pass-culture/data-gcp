@@ -169,6 +169,46 @@ The project uses:
 - **Loguru** for logging
 - **PyArrow** for Parquet file handling
 
+### Testing
+
+The project includes a comprehensive automated test suite covering unit tests and integration tests.
+
+#### Running Tests
+
+```bash
+# Install dependencies
+make install
+
+# Run all tests
+make test
+
+# Run only unit tests
+make test-unit
+
+# Run only integration tests
+make test-integration
+
+# Run tests with coverage report
+make test-coverage
+```
+
+#### Test Structure
+
+- **Unit Tests** (`tests/unit/`): Test individual functions and components in isolation
+- **Integration Tests** (`tests/integration/`): Test complete workflows end-to-end
+- **Test Data** (`tests/data/`): Sample API responses and test fixtures
+
+For detailed testing documentation, see [`tests/README.md`](tests/README.md).
+
+#### Continuous Integration
+
+The project includes GitHub Actions CI/CD pipeline that:
+
+- Runs tests on Python 3.12
+- Performs code linting with ruff
+- Generates coverage reports
+- Validates both unit and integration tests
+
 ## Notes
 
 - The scripts are designed to work with incremental data updates based on modification dates

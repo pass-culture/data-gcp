@@ -1,0 +1,177 @@
+# Titelive ETL Scripts
+
+This project contains ETL scripts for extracting and processing data from the Titelive API. Titelive is a French book and music distribution platform that provides metadata and commercial information about cultural products.
+
+## Overview
+
+The project consists of two main scripts that work together to extract and process Titelive data:
+
+1. **`extract_new_offers_from_titelive.py`** - Extracts raw data from the Titelive API
+2. **`parse_offers.py`** - Processes and formats the extracted data
+
+## Prerequisites
+
+- Python 3.12+
+- Access to Titelive API credentials (stored in GCP Secret Manager)
+- Required dependencies (see `pyproject.toml`)
+
+## Installation
+
+We use uv to manage our Python environment and dependencies. To install the required packages, run:
+
+```bash
+make install
+```
+
+## Scripts
+
+### 1. Extract New Offers (`extract_new_offers_from_titelive.py`)
+
+This script extracts raw product data from the Titelive API based on modification date and product category.
+
+#### Usage
+
+```bash
+python scripts/extract_new_offers_from_titelive.py \
+  --offer-category LIVRE \
+  --min-modified-date "2024-01-01" \
+  --output-file-path "data/raw_offers.parquet"
+```
+
+#### Parameters
+
+- `--offer-category`: Category of offers to extract
+  - `LIVRE` (paper books)
+  - `MUSIQUE_ENREGISTREE` (recorded music)
+- `--min-modified-date`: Minimum modification date for offers (YYYY-MM-DD format)
+- `--output-file-path`: Path where the extracted data will be saved (Parquet format)
+
+#### Output
+
+The script generates a Parquet file containing:
+
+- `id`: Unique identifier for each product
+- `data`: JSON string containing the raw API response for each product
+
+#### Features
+
+- Automatic token management with refresh capability
+- Pagination handling for large result sets
+- Rate limiting and error handling
+- UTF-8 encoding support for French content
+- Configurable results per page (default: 120)
+- Maximum response limit protection
+
+### 2. Parse Offers (`parse_offers.py`)
+
+This script processes the raw data extracted by the first script, flattening the nested JSON structure and applying data transformations.
+
+#### Usage
+
+```bash
+python scripts/parse_offers.py \
+  --min-modified-date "2024-01-01" \
+  --input-file-path "data/raw_offers.parquet" \
+  --output-file-path "data/processed_offers.parquet"
+```
+
+#### Parameters
+
+- `--min-modified-date`: Minimum modification date for filtering (YYYY-MM-DD format)
+- `--input-file-path`: Path to the input Parquet file (output from extract script)
+- `--output-file-path`: Path where the processed data will be saved
+
+#### Processing Steps
+
+1. **JSON Parsing**: Converts the JSON data column into structured DataFrame columns
+2. **Article Explosion**: Flattens nested article data from the product records
+3. **Column Prefixing**: Adds `article_` prefix to article-specific columns
+4. **Date Filtering**: Filters records based on modification date
+5. **Data Type Enforcement**: Ensures proper data types for specific columns
+6. **JSON Serialization**: Converts complex objects (dicts, lists) to JSON strings
+7. **Null Value Cleaning**: Standardizes null representations
+
+#### Output Columns
+
+The processed dataset includes columns such as:
+
+- `titre`: Product title
+- `auteurs_multi`: Authors information (JSON format)
+- `article_*`: Article-specific attributes, which vary depending on the product type (LIVRE, MUSIQUE_ENREGISTREE)
+
+## Project Structure
+
+```
+├── scripts/
+│   ├── extract_new_offers_from_titelive.py  # Data extraction script
+│   └── parse_offers.py                      # Data processing script
+├── src/
+│   ├── constants.py                         # API configuration and constants
+│   └── utils/
+│       ├── gcp.py                          # GCP Secret Manager utilities
+│       └── requests.py                     # API request handling
+├── data/                                   # Data storage directory
+├── pyproject.toml                         # Project dependencies
+└── README.md                              # This file
+```
+
+## Configuration
+
+### Environment Variables
+
+- `GCP_PROJECT_ID`: Google Cloud Project ID (default: "passculture-data-ehp")
+
+### Secrets (stored in GCP Secret Manager)
+
+- `titelive_epagine_api_username`: Titelive API username
+- `titelive_epagine_api_password`: Titelive API password
+
+## API Details
+
+- **Base URL**: `https://catsearch.epagine.fr/v1`
+- **Authentication**: Bearer token obtained via login endpoint
+- **Rate Limiting**: Built-in handling with configurable timeouts
+- **Encoding**: UTF-8 for proper French character support
+
+## Error Handling
+
+Both scripts include comprehensive error handling:
+
+- Automatic token refresh on 401 errors
+- Request timeout handling
+- JSON parsing error management
+- Data type conversion error handling
+- Graceful handling of missing or malformed data
+
+## Example Workflow
+
+```bash
+# Step 1: Extract raw data from Titelive API
+python scripts/extract_new_offers_from_titelive.py \
+  --offer-category LIVRE \
+  --min-modified-date "2024-01-01" \
+  --output-file-path "data/raw_books.parquet"
+
+# Step 2: Process and format the data
+python scripts/parse_offers.py \
+  --min-modified-date "2024-01-01" \
+  --input-file-path "data/raw_books.parquet" \
+  --output-file-path "data/processed_books.parquet"
+```
+
+## Development
+
+The project uses:
+
+- **Ruff** for linting and code formatting
+- **Typer** for CLI interface
+- **Pandas** for data manipulation
+- **Loguru** for logging
+- **PyArrow** for Parquet file handling
+
+## Notes
+
+- The scripts are designed to work with incremental data updates based on modification dates
+- All dates should be provided in YYYY-MM-DD format but are converted to DD/MM/YYYY for the Titelive API
+- The processed data maintains referential integrity between products and their articles
+- JSON serialization is used for complex nested data structures to ensure compatibility with downstream systems

@@ -1,6 +1,5 @@
 import requests
 from google.cloud import secretmanager, storage
-from loguru import logger
 
 
 def upload_image_to_gcs(
@@ -40,7 +39,6 @@ def upload_image_to_gcs(
             response.raw, content_type=response.headers["Content-Type"]
         )
 
-        logger.debug(f"Successfully uploaded {base_image_url} to {gcs_upload_url}")
         return True, base_image_url, "Success"
 
     except requests.exceptions.RequestException as e:

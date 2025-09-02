@@ -18,11 +18,11 @@ def upload_recto_verso_images_to_gcs(
     row: pd.Series, storage_client: storage.Client, base_column_name: str
 ):
     """Upload image for a given row, handling missing URLs."""
-    if pd.notna(row[f"{base_column_name}_article_imagesUrl"]):
+    if pd.notna(row[f"{base_column_name}"]):
         return upload_image_to_gcs(
             storage_client=storage_client,
-            base_image_url=row[f"{base_column_name}_article_imagesUrl"],
-            gcs_upload_url=row[f"{base_column_name}_gcs_path_article_imagesUrl"],
+            base_image_url=row[f"{base_column_name}"],
+            gcs_upload_url=row[f"{base_column_name}_gcs_path"],
         )
     else:
         return (False, None, f"No URL for {base_column_name}")
@@ -37,25 +37,23 @@ def upload_titelive_images_to_gcs(
     input_df = pd.read_parquet(input_parquet_path)
 
     # Extracting image urls and generating uuids
-    images_url_df = (
-        pd.DataFrame.from_dict(input_df["article_imagesUrl"].apply(json.loads).tolist())
-        .assign(
-            recto_uuid=lambda df: df.recto.where(
-                df.recto.isna(), df.index.map(lambda s: uuid.uuid4())
-            ),
-            verso_uuid=lambda df: df.verso.where(
-                df.verso.isna(), df.index.map(lambda s: uuid.uuid4())
-            ),
-            recto_gcs_path=lambda df: df.recto_uuid.where(
-                df.recto_uuid.isna(),
-                df.recto_uuid.map(lambda s: f"{gcs_thumb_base_path}/{s}"),
-            ),
-            verso_gcs_path=lambda df: df.verso_uuid.where(
-                df.verso_uuid.isna(),
-                df.verso_uuid.map(lambda s: f"{gcs_thumb_base_path}/{s}"),
-            ),
-        )
-        .add_suffix("_article_imagesUrl")
+    images_url_df = pd.DataFrame.from_dict(
+        input_df["article_imagesUrl"].apply(json.loads).tolist()
+    ).assign(
+        recto_uuid=lambda df: df.recto.where(
+            df.recto.isna(), df.index.map(lambda s: uuid.uuid4())
+        ),
+        verso_uuid=lambda df: df.verso.where(
+            df.verso.isna(), df.index.map(lambda s: uuid.uuid4())
+        ),
+        recto_gcs_path=lambda df: df.recto_uuid.where(
+            df.recto_uuid.isna(),
+            df.recto_uuid.map(lambda s: f"{gcs_thumb_base_path}/{s}"),
+        ),
+        verso_gcs_path=lambda df: df.verso_uuid.where(
+            df.verso_uuid.isna(),
+            df.verso_uuid.map(lambda s: f"{gcs_thumb_base_path}/{s}"),
+        ),
     )
 
     # Uploading images to GCS
@@ -78,12 +76,18 @@ def upload_titelive_images_to_gcs(
     )
 
     # Merging and saving to GCS
-    output_df = final_df.merge(
-        images_url_df,
+    input_df.merge(
+        final_df,
         left_index=True,
         right_index=True,
-    )
-    output_df.to_parquet(output_parquet_path)
+    ).astype(
+        {
+            "recto_upload_status": "string",
+            "verso_upload_status": "string",
+            "recto_uuid": "string",
+            "verso_uuid": "string",
+        }
+    ).to_parquet(output_parquet_path)
 
 
 if __name__ == "__main__":

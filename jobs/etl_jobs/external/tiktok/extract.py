@@ -7,6 +7,7 @@ from utils import (
     TIKTOK_ACCOUNT_HOURLY_AUDIENCE,
     TIKTOK_VIDEO_AUDIENCE_COUNTRY,
     TIKTOK_VIDEO_DETAIL,
+    TIKTOK_VIDEO_DETAIL_SCHEMA,
     TIKTOK_VIDEO_IMPRESSION_SOURCE,
     save_to_bq,
 )
@@ -142,32 +143,37 @@ def videos_import(
     videos_data = extract_videos(business_api, business_id)
 
     impression_sources_data_df = extract_impression_sources_data(videos_data)
-    impression_sources_data_df["account"] = account_username
+    impression_sources_data_df["account"] = str(account_username)
     impression_sources_data_df["export_date"] = export_date
     save_to_bq(
-        impression_sources_data_df,
-        TIKTOK_VIDEO_IMPRESSION_SOURCE,
-        export_date,
-        export_date,
-        "export_date",
+        df=impression_sources_data_df,
+        table_name=TIKTOK_VIDEO_IMPRESSION_SOURCE,
+        start_date=export_date,
+        end_date=export_date,
+        date_column="export_date",
     )
 
     audience_countries_data_df = extract_audience_countries_data(videos_data)
-    audience_countries_data_df["account"] = account_username
+    audience_countries_data_df["account"] = str(account_username)
     audience_countries_data_df["export_date"] = export_date
     save_to_bq(
-        audience_countries_data_df,
-        TIKTOK_VIDEO_AUDIENCE_COUNTRY,
-        export_date,
-        export_date,
-        "export_date",
+        df=audience_countries_data_df,
+        table_name=TIKTOK_VIDEO_AUDIENCE_COUNTRY,
+        start_date=export_date,
+        end_date=export_date,
+        date_column="export_date",
     )
 
     videos_data_df = create_videos_df(videos_data)
-    videos_data_df["account"] = account_username
+    videos_data_df["account"] = str(account_username)
     videos_data_df["export_date"] = export_date
     save_to_bq(
-        videos_data_df, TIKTOK_VIDEO_DETAIL, export_date, export_date, "export_date"
+        df=videos_data_df,
+        table_name=TIKTOK_VIDEO_DETAIL,
+        start_date=export_date,
+        end_date=export_date,
+        schema_field=TIKTOK_VIDEO_DETAIL_SCHEMA,
+        date_column="export_date",
     )
 
 
@@ -214,28 +220,28 @@ def account_import(business_api, business_id: str, from_date: str, to_date: str)
             json_data=account_stats["data"]["metrics"]
         )
         if tiktok_hourly_audience_activity_df.shape[0] > 0:
-            tiktok_hourly_audience_activity_df["account"] = account_stats["data"][
-                "username"
-            ]
+            tiktok_hourly_audience_activity_df["account"] = str(
+                account_stats["data"]["username"]
+            )
             save_to_bq(
-                tiktok_hourly_audience_activity_df,
-                TIKTOK_ACCOUNT_HOURLY_AUDIENCE,
-                from_date,
-                to_date,
-                "date",
+                df=tiktok_hourly_audience_activity_df,
+                table_name=TIKTOK_ACCOUNT_HOURLY_AUDIENCE,
+                start_date=from_date,
+                end_date=to_date,
+                date_column="date",
             )
 
         # Creating the tiktok_daily_activity dataframe
         tiktok_daily_activity_df = create_daily_activity_df(
             json_data=account_stats["data"]["metrics"]
         )
-        tiktok_daily_activity_df["account"] = account_stats["data"]["username"]
+        tiktok_daily_activity_df["account"] = str(account_stats["data"]["username"])
         save_to_bq(
-            tiktok_daily_activity_df,
-            TIKTOK_ACCOUNT_DAILY_ACTIVITY,
-            from_date,
-            to_date,
-            "date",
+            df=tiktok_daily_activity_df,
+            table_name=TIKTOK_ACCOUNT_DAILY_ACTIVITY,
+            start_date=from_date,
+            end_date=to_date,
+            date_column="date",
         )
 
         return account_stats["data"]["username"]

@@ -54,7 +54,7 @@ with DAG(
     catchup=False,
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value, DAG_TAGS.DE.value],
+    tags=[DAG_TAGS.DS.value, DAG_TAGS.VM.value, DAG_TAGS.DE.value, DAG_TAGS.POC.value],
     params={
         "branch": Param(
             default="production" if ENV_SHORT_NAME == "prod" else "master",

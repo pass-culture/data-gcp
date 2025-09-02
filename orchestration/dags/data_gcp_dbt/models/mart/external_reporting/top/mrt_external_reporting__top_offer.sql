@@ -65,6 +65,9 @@ with
                 sum(total_booking_amount) as total_booking_amount,
                 sum(total_booking_quantity) as total_booking_quantity,
                 row_number() over (
+                    {% if not dim.name == "NAT" %}
+                        partition by {{ dim.value_expr }}
+                    {% endif %}
                     order by sum(total_booking_amount) desc
                 ) as total_booking_amount_ranked
             from base_aggregation
@@ -77,7 +80,14 @@ with
                 offer_category_id,
                 offer_subcategory_id,
                 offer_name
-            qualify row_number() over (order by total_booking_amount desc) <= 50
+            qualify
+                row_number() over (
+                    {% if not dim.name == "NAT" %}
+                        partition by {{ dim.value_expr }}
+                    {% endif %}
+                    order by total_booking_amount desc
+                )
+                <= 50
         {% endfor %}
     )
 

@@ -21,6 +21,9 @@ GCS_THUMB_BASE_PATH_OPTION = typer.Option(..., help="GCS output directory")
 OUTPUT_FILE_PATH_OPTION = typer.Option(..., help="Path to the output file")
 
 MAX_WORKERS = (os.cpu_count() - 1) * 5
+# This parameter dramatically affects the performance if set too low or high
+POOL_CONNECTIONS = 10
+POOL_MAXSIZE = 20
 
 
 def _get_session():
@@ -38,11 +41,10 @@ def _get_session():
     # Configure adapter with connection pooling
     adapter = HTTPAdapter(
         max_retries=retry_strategy,
-        pool_connections=10,  # Number of connection pools
-        pool_maxsize=20,  # Max connections per pool
+        pool_connections=POOL_CONNECTIONS,
+        pool_maxsize=POOL_MAXSIZE,
     )
 
-    session.mount("http://", adapter)
     session.mount("https://", adapter)
 
     return session

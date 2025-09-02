@@ -4,10 +4,13 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pandas as pd
+import requests
 import typer
 from google.cloud import storage
 from loguru import logger
+from requests.adapters import HTTPAdapter
 from tqdm import tqdm
+from urllib3.util.retry import Retry
 
 from src.utils.gcp import upload_image_to_gcs
 
@@ -20,8 +23,36 @@ OUTPUT_FILE_PATH_OPTION = typer.Option(..., help="Path to the output file")
 MAX_WORKERS = (os.cpu_count() - 1) * 5
 
 
+def _get_session():
+    """Create a requests session with connection pooling and retries."""
+    session = requests.Session()
+
+    # Configure retry strategy
+    retry_strategy = Retry(
+        total=10,
+        backoff_factor=1,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["GET"],
+    )
+
+    # Configure adapter with connection pooling
+    adapter = HTTPAdapter(
+        max_retries=retry_strategy,
+        pool_connections=10,  # Number of connection pools
+        pool_maxsize=20,  # Max connections per pool
+    )
+
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+
+    return session
+
+
 def _upload_recto_verso_images_to_gcs(
-    row: pd.Series, storage_client: storage.Client, base_column_name: str
+    row: pd.Series,
+    storage_client: storage.Client,
+    base_column_name: str,
+    session: requests.Session,
 ):
     """Upload image for a given row, handling missing URLs."""
     if pd.notna(row[f"{base_column_name}"]):
@@ -29,15 +60,20 @@ def _upload_recto_verso_images_to_gcs(
             storage_client=storage_client,
             base_image_url=row[f"{base_column_name}"],
             gcs_upload_url=row[f"{base_column_name}_gcs_path"],
+            session=session,
         )
     else:
         return (False, None, f"No URL for {base_column_name}")
 
 
-def _process_row_images(row, storage_client):
+def _process_row_images(row, storage_client, session):
     """Process both recto and verso images for a single row."""
-    recto_result = _upload_recto_verso_images_to_gcs(row, storage_client, "recto")
-    verso_result = _upload_recto_verso_images_to_gcs(row, storage_client, "verso")
+    recto_result = _upload_recto_verso_images_to_gcs(
+        row, storage_client, "recto", session
+    )
+    verso_result = _upload_recto_verso_images_to_gcs(
+        row, storage_client, "verso", session
+    )
     return recto_result, verso_result
 
 
@@ -71,10 +107,11 @@ def upload_titelive_images_to_gcs(
 
     # Uploading images to GCS
     storage_client = storage.Client()
+    session = _get_session()
     logger.info(f"Uploading  images to GCS using {MAX_WORKERS} workers")
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {
-            executor.submit(_process_row_images, row, storage_client): idx
+            executor.submit(_process_row_images, row, storage_client, session): idx
             for idx, row in images_url_df.iterrows()
         }
 

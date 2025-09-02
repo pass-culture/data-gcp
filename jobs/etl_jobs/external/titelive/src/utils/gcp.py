@@ -1,40 +1,12 @@
 import requests
 from google.cloud import secretmanager, storage
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-
-
-def _get_session():
-    """Create a requests session with connection pooling and retries."""
-    session = requests.Session()
-
-    # Configure retry strategy
-    retry_strategy = Retry(
-        total=3,
-        backoff_factor=1,
-        status_forcelist=[429, 500, 502, 503, 504],
-        allowed_methods=["GET"],
-    )
-
-    # Configure adapter with connection pooling
-    adapter = HTTPAdapter(
-        max_retries=retry_strategy,
-        pool_connections=10,  # Number of connection pools
-        pool_maxsize=20,  # Max connections per pool
-    )
-
-    session.mount("http://", adapter)
-    session.mount("https://", adapter)
-
-    return session
-
-
-# Global session for connection reuse across all uploads
-_session = _get_session()
 
 
 def upload_image_to_gcs(
-    storage_client: storage.Client, base_image_url: str, gcs_upload_url: str
+    storage_client: storage.Client,
+    base_image_url: str,
+    gcs_upload_url: str,
+    session: requests.Session,
 ):
     """
     Downloads an image from a URL and uploads it to Google Cloud Storage.
@@ -43,13 +15,14 @@ def upload_image_to_gcs(
         storage_client: GCS client instance
         base_image_url (str): The URL of the image to download.
         gcs_upload_url (str): The full GCS path (e.g., gs://your-bucket/path/to/image.jpg).
+        session (requests.Session): Requests session for connection reuse.
 
     Returns:
         tuple: A tuple (success_boolean, original_base_image_url, message)
     """
     try:
         # 1. Download the image using shared session
-        response = _session.get(
+        response = session.get(
             base_image_url,
             timeout=(10, 30),  # (connect_timeout, read_timeout)
             headers={"User-Agent": "TiteliveETL/1.0"},

@@ -65,8 +65,9 @@ with DAG(
             type="string",
         ),
         "instance_type": Param(
-            default="n1-standard-1" if ENV_SHORT_NAME == "dev" else "n1-standard-2",
-            type="string",
+            default="n1-standard-4",
+            type="enum",
+            enum=["n1-standard-1", "n1-standard-2", "n1-standard-4", "n1-standard-8"],
         ),
         "category": Param(
             default="paper",

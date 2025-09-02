@@ -7440,14 +7440,14 @@
 <p><strong>venue_department_code</strong>:  Department code of the venue. </p>
 <p><strong>venue_postal_code</strong>:  Postal code of the venue. </p>
 <p><strong>venue_city</strong>:  City where the venue is located. </p>
-<p><strong>venue_siret</strong>:  SIRET number of the venue. </p>
-<p><strong>venue_is_virtual</strong>:  Indicates if the venue is virtual. Each offerer has a virtual venue, it is only used to publish digital offers. </p>
+<p><strong>venue_siret</strong>:  SIRET number of the venue. A venue may not have a SIRET (especially when it hosts public but does not belong to the offerer. Exemple : a theater company performs a play in a concert hall they don't own.) </p>
+<p><strong>venue_is_virtual</strong>:  Indicates if the venue is virtual. Each offerer has a virtual venue, it is only used to publish digital offers. NB : digital venues will soon be deleted, their offers/bookings/stocks will be transferred to other venues of the offerer. </p>
 <p><strong>venue_managing_offerer_id</strong>:  ID of the offerer who manage the venue. One offerer can have multiple venues. </p>
 <p><strong>venue_creation_date</strong>:  Date when the venue was created on the application. </p>
 <p><strong>venue_is_permanent</strong>:  Indicates if the venue is permanent. A permanent venue is a venue that can receive public permanently, that can propose offers, and that is managed by the partner. Permanent venues exemple : a library, a cinema. Non permanent venues example : a public garden that hosted a festival once, or a theater that hosted a concert once - it can be permanent for the partner who owns the theater, but not for the partner who is hosted once in this place. </p>
 <p><strong>venue_is_open_to_public</strong>:  This field will replace the venue_is_permanent field (mid-2025), as part of the offer-adresse project. It is a venue that can receive public permanently, that can propose offers, and that is managed by the partner. </p>
 <p><strong>venue_is_acessibility_synched</strong>:  Indicates if the venue's accessibility is synchronized. </p>
-<p><strong>venue_type_label</strong>:  Type of the venue ('Musée', 'Cinéma','Librairie', etc). Selected by the partner in a drop-down list. </p>
+<p><strong>venue_type_label</strong>:  Type of the venue ('Musée', 'Cinéma','Librairie', etc). Selected by the partner in a drop-down list during subscription. If you need to study bookings and offers per cultural sector, use the offer categories instead. "Autre" category contains many administrative venues of live performance actors and local authorities. NB : this venue_type_label segmentation is limited and currently being revised.  </p>
 <p><strong>venue_label</strong>:  Label of the venue. The label is appended by the Ministry as token of quality and standing in its category. </p>
 <p><strong>venue_humanized_id</strong>:  Unique identifier of the venue. </p>
 <p><strong>venue_backoffice_link</strong>:  Backoffice link for the venue. </p>

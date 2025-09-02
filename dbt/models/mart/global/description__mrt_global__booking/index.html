@@ -7638,7 +7638,7 @@ A booking is made by a user (identified via a user_id), using its grant (identif
 <tr>
 <td style="text-align: left;">venue_type_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Type of the venue ('Musée', 'Cinéma','Librairie', etc). Selected by the partner in a drop-down list.</td>
+<td style="text-align: left;">Type of the venue ('Musée', 'Cinéma','Librairie', etc). Selected by the partner in a drop-down list during subscription. If you need to study bookings and offers per cultural sector, use the offer categories instead. "Autre" category contains many administrative venues of live performance actors and local authorities. NB : this venue_type_label segmentation is limited and currently being revised.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_id</td>
@@ -7898,7 +7898,7 @@ A booking is made by a user (identified via a user_id), using its grant (identif
 <tr>
 <td style="text-align: left;">venue_is_virtual</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the venue is virtual. Each offerer has a virtual venue, it is only used to publish digital offers.</td>
+<td style="text-align: left;">Indicates if the venue is virtual. Each offerer has a virtual venue, it is only used to publish digital offers. NB : digital venues will soon be deleted, their offers/bookings/stocks will be transferred to other venues of the offerer.</td>
 </tr>
 <tr>
 <td style="text-align: left;">offer_type_label</td>

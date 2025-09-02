@@ -7501,10 +7501,13 @@
             "Booking was marked as used"
             "Booking was marked as unused"
             "Successfully updated stock"
+            "Deleted stock and cancelled its bookings"
             "Some provided eans were not found" : as part of offer manual creation and offer synchronisation with API, our teams need to detect EANs which do not belong to our database
             "Stock update blocked because of price limitation" : fraud teams need to detect fraud attempt from cultural parterns who try to raise their price
             "User with new nav activated submitting review" and "User submitting review" : product teams gather user reviews enabled on the website
-            "Offer Categorisation Data API" : data science team need to measure performance of their predictive model for individual offer creation (suggestion of subcategories)</p>
+            "Offer Categorisation Data API" : data science team need to measure performance of their predictive model for individual offer creation (suggestion of subcategories)
+            "Searching for structure"
+            "Creating new Offerer and Venue"</p>
 <table>
 <thead>
 <tr>
@@ -7550,6 +7553,11 @@
 <td style="text-align: left;">Unique identifier for the venue.</td>
 </tr>
 <tr>
+<td style="text-align: left;">provider_id</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The unique identifier for the synchronization provider.</td>
+</tr>
+<tr>
 <td style="text-align: left;">product_id</td>
 <td style="text-align: left;"></td>
 <td style="text-align: left;">Identifier for the product associated with the offer.</td>
@@ -7583,6 +7591,56 @@
 <td style="text-align: left;">stock_booking_quantity</td>
 <td style="text-align: left;"></td>
 <td style="text-align: left;">The quantity of stock booked during the log entry event.</td>
+</tr>
+<tr>
+<td style="text-align: left;">offerer_address_old_value</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The previous address (performance venue) of the offer/stock before modification, as recorded in the system.</td>
+</tr>
+<tr>
+<td style="text-align: left;">offerer_address_new_value</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The new address (performance venue) of the offer/stock after modification, as updated in the system.</td>
+</tr>
+<tr>
+<td style="text-align: left;">publication_date_old_value</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The previous publication date of the offer before modification.</td>
+</tr>
+<tr>
+<td style="text-align: left;">publication_date_new_value</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The new publication date of the offer after modification.</td>
+</tr>
+<tr>
+<td style="text-align: left;">booking_limit_date_old_value</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The previous booking limit date of the offer before modification.</td>
+</tr>
+<tr>
+<td style="text-align: left;">booking_limit_date_new_value</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The new booking limit date of the offer after modification.</td>
+</tr>
+<tr>
+<td style="text-align: left;">stock_beginning_date_old_value</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The previous beginning date of the stock before modification.</td>
+</tr>
+<tr>
+<td style="text-align: left;">stock_beginning_date_new_value</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The new beginning date of the stock after modification.</td>
+</tr>
+<tr>
+<td style="text-align: left;">offer_withdrawal_details_old_value</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The previous withdrawal details of the offer before modification.</td>
+</tr>
+<tr>
+<td style="text-align: left;">offer_withdrawal_details_new_value</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The new withdrawal details of the offer after modification.</td>
 </tr>
 <tr>
 <td style="text-align: left;">list_of_eans_not_found</td>
@@ -7673,6 +7731,16 @@
 <td style="text-align: left;">suggested_offer_api_subcategories</td>
 <td style="text-align: left;"></td>
 <td style="text-align: left;">Subcategories suggested to the user as part of individual offer creation (predictiv model).</td>
+</tr>
+<tr>
+<td style="text-align: left;">siret</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">The SIRET code by the cultural partner during subscription</td>
+</tr>
+<tr>
+<td style="text-align: left;">siret_is_diffusible</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Indicates whether SIRET with which the cultural partner subscribed is diffisuble.</td>
 </tr>
 </tbody>
 </table>

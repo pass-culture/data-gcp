@@ -7491,7 +7491,9 @@
 
 <h1>Table: Venue Model</h1>
 <p>The <code>mrt_global__venue</code> table provides detailed information about venues, including their location, capacity, and associated offers.
-A venue is managed by an offerer. It can be a physical place (library, cinema, theater) or a virtual platform that proposes digital offers (streaming, audios). </p>
+A venue is managed by an offerer. It can be a physical place (library, cinema, theater) - owned by the offerer or a performance venue -  or a virtual platform that hosts digital offers (streaming, audios).
+It can be represented by a SIRET.</p>
+<p>NB : the amount of venues will soon decrease because tech teams are currently regularizing venues : only physical venues belonging to the offerer (which can be performance venues or “administrative” venues) will remain. Activity (offers, reservations, stick) of performance venues that do not belong to the offerer / of digital venues will be transferred to other venues belonging to the offerer.</p>
 
 <h2 id="table-description">Table description</h2>
 <table>
@@ -7556,12 +7558,12 @@ A venue is managed by an offerer. It can be a physical place (library, cinema, t
 <tr>
 <td style="text-align: left;">venue_siret</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">SIRET number of the venue.</td>
+<td style="text-align: left;">SIRET number of the venue. A venue may not have a SIRET (especially when it hosts public but does not belong to the offerer. Exemple : a theater company performs a play in a concert hall they don't own.)</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_is_virtual</td>
 <td style="text-align: left;">BOOLEAN</td>
-<td style="text-align: left;">Indicates if the venue is virtual. Each offerer has a virtual venue, it is only used to publish digital offers.</td>
+<td style="text-align: left;">Indicates if the venue is virtual. Each offerer has a virtual venue, it is only used to publish digital offers. NB : digital venues will soon be deleted, their offers/bookings/stocks will be transferred to other venues of the offerer.</td>
 </tr>
 <tr>
 <td style="text-align: left;">offerer_id</td>
@@ -7591,7 +7593,7 @@ A venue is managed by an offerer. It can be a physical place (library, cinema, t
 <tr>
 <td style="text-align: left;">venue_type_label</td>
 <td style="text-align: left;">STRING</td>
-<td style="text-align: left;">Type of the venue ('Musée', 'Cinéma','Librairie', etc). Selected by the partner in a drop-down list.</td>
+<td style="text-align: left;">Type of the venue ('Musée', 'Cinéma','Librairie', etc). Selected by the partner in a drop-down list during subscription. If you need to study bookings and offers per cultural sector, use the offer categories instead. "Autre" category contains many administrative venues of live performance actors and local authorities. NB : this venue_type_label segmentation is limited and currently being revised.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_label</td>

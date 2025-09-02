@@ -1,8 +1,6 @@
 import requests
 from google.cloud import secretmanager, storage
 
-# Initialize GCS client outside the function for efficiency
-
 
 def upload_image_to_gcs(
     storage_client: storage.Client, base_image_url: str, gcs_upload_url: str

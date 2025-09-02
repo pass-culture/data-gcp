@@ -126,7 +126,7 @@ with DAG(
         )
 
         upload_images_offers_task = SSHGCEOperator(
-            task_id="parse_offers",
+            task_id="upload_images_offers_task",
             instance_name=GCE_INSTANCE,
             base_dir=BASE_DIR,
             command=f"""PYTHONPATH=. python scripts/upload_titelive_images_to_gcs.py \

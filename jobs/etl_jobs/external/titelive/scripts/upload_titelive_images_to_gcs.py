@@ -58,9 +58,8 @@ def upload_titelive_images_to_gcs(
 
     # Uploading images to GCS
     storage_client = storage.Client()
-    sample_df = images_url_df.head(5)
 
-    final_df = sample_df.assign(
+    final_df = images_url_df.assign(
         recto_upload_status=lambda df: df.apply(
             upload_recto_verso_images_to_gcs,
             axis=1,

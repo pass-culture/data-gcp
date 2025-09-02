@@ -19,5 +19,5 @@ TITELIVE_PASSWORD = access_secret_data(
 
 
 class TITELIVE_CATEGORIES(StrEnum):
-    LIVRE = "paper"
-    MUSIQUE_ENREGISTREE = "music"
+    PAPER = "paper"
+    MUSIC = "music"

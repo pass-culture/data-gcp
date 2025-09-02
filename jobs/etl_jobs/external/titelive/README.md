@@ -4,10 +4,12 @@ This project contains ETL scripts for extracting and processing data from the Ti
 
 ## Overview
 
-The project consists of two main scripts that work together to extract and process Titelive data:
+The project consists of three main scripts that work together to extract,
+process, and manage Titelive data:
 
 1. **`extract_new_offers_from_titelive.py`** - Extracts raw data from the Titelive API
 2. **`parse_offers.py`** - Processes and formats the extracted data
+3. **`upload_titelive_images_to_gcs.py`** - Downloads and uploads product images to Google Cloud Storage
 
 ## Prerequisites
 
@@ -99,12 +101,71 @@ The processed dataset includes columns such as:
 - `auteurs_multi`: Authors information (JSON format)
 - `article_*`: Article-specific attributes, which vary depending on the product type (LIVRE, MUSIQUE_ENREGISTREE)
 
+### 3. Upload Titelive Images to GCS (`upload_titelive_images_to_gcs.py`)
+
+This script downloads product images from Titelive and uploads them to Google
+Cloud Storage. It processes both recto (front) and verso (back) images,
+generating unique UUIDs for each image and creating GCS paths for storage.
+
+#### Image Upload Usage
+
+```bash
+python scripts/upload_titelive_images_to_gcs.py \
+  --input-parquet-path "data/processed_offers.parquet" \
+  --gcs-thumb-base-path "gs://bucket-name/images/titelive" \
+  --output-parquet-path "data/offers_with_images.parquet"
+```
+
+#### Image Upload Parameters
+
+- `--input-parquet-path`: Path to the input Parquet file containing parsed
+  Titelive data with `article_imagesUrl` column
+- `--gcs-thumb-base-path`: Base GCS path where images will be uploaded
+  (e.g., "gs://bucket-name/images/titelive")
+- `--output-parquet-path`: Path where the enhanced data with image upload
+  status will be saved
+
+#### Image Processing Steps
+
+1. **Image URL Extraction**: Parses the `article_imagesUrl` JSON column to
+   extract recto and verso image URLs
+2. **UUID Generation**: Creates unique UUIDs for each image to avoid naming
+   conflicts
+3. **GCS Path Construction**: Builds full GCS paths using the base path and
+   generated UUIDs
+4. **Image Download and Upload**: Downloads images from Titelive URLs and
+   uploads them to GCS
+5. **Status Tracking**: Records upload success/failure status for each image
+6. **Data Merging**: Combines original data with image metadata and upload status
+
+#### Image Output Columns
+
+In addition to the original columns, the output includes:
+
+- `recto`: Original recto (front) image URL
+- `verso`: Original verso (back) image URL
+- `recto_uuid`: Generated UUID for recto image
+- `verso_uuid`: Generated UUID for verso image
+- `recto_gcs_path`: Full GCS path for uploaded recto image
+- `verso_gcs_path`: Full GCS path for uploaded verso image
+- `recto_upload_status`: Upload status tuple (success, url, message) for recto
+- `verso_upload_status`: Upload status tuple (success, url, message) for verso
+
+#### Image Upload Features
+
+- Handles missing image URLs gracefully
+- Generates unique UUIDs to prevent filename conflicts
+- Provides detailed upload status tracking
+- Processes sample data (currently limited to first 5 rows)
+- Supports both recto and verso images
+
 ## Project Structure
 
 ```
 ├── scripts/
 │   ├── extract_new_offers_from_titelive.py  # Data extraction script
-│   └── parse_offers.py                      # Data processing script
+│   ├── parse_offers.py                      # Data processing script
+│   └── upload_titelive_images_to_gcs.py     # Image upload script
 ├── src/
 │   ├── constants.py                         # API configuration and constants
 │   └── utils/
@@ -135,13 +196,14 @@ The processed dataset includes columns such as:
 
 ## Error Handling
 
-Both scripts include comprehensive error handling:
+All scripts include comprehensive error handling:
 
 - Automatic token refresh on 401 errors
 - Request timeout handling
 - JSON parsing error management
 - Data type conversion error handling
 - Graceful handling of missing or malformed data
+- Image download and upload error management (for the image upload script)
 
 ## Example Workflow
 
@@ -157,6 +219,12 @@ python scripts/parse_offers.py \
   --min-modified-date "2024-01-01" \
   --input-file-path "data/raw_books.parquet" \
   --output-file-path "data/processed_books.parquet"
+
+# Step 3: Upload product images to GCS
+python scripts/upload_titelive_images_to_gcs.py \
+  --input-parquet-path "data/processed_books.parquet" \
+  --gcs-thumb-base-path "gs://your-bucket/images/titelive" \
+  --output-parquet-path "data/books_with_images.parquet"
 ```
 
 ## Development
@@ -168,6 +236,7 @@ The project uses:
 - **Pandas** for data manipulation
 - **Loguru** for logging
 - **PyArrow** for Parquet file handling
+- **Google Cloud Storage** for image storage and management
 
 ### Testing
 

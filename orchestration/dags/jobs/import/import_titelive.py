@@ -35,8 +35,12 @@ DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"import-titelive-{ENV_SHORT_NAME}"
 GCS_FOLDER_PATH = f"{DAG_NAME}_{ENV_SHORT_NAME}/{{{{ ds_nodash }}}}"
 STORAGE_BASE_PATH = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}"
+# TODO: Plug this to the actual metier bucket once we have proper rights.
+GCS_THUMB_BASE_PATH = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/thumb"
+
 
 OUTPUT_BOOK_TABLE_NAME = "titelive_books"
+TITELIVE_WITH_IMAGE_URLS_FILENAME = "titelive_with_image_urls.parquet"
 
 default_args = {
     "owner": "data-team",
@@ -121,13 +125,24 @@ with DAG(
                 """,
         )
 
-        extract_offers_task >> parse_offers_task
+        upload_images_offers_task = SSHGCEOperator(
+            task_id="parse_offers",
+            instance_name=GCE_INSTANCE,
+            base_dir=BASE_DIR,
+            command=f"""PYTHONPATH=. python scripts/upload_titelive_images_to_gcs.py \
+                --input-parquet-path {STORAGE_BASE_PATH}/parsed_offers.parquet \
+                --output-parquet-path {STORAGE_BASE_PATH}/{TITELIVE_WITH_IMAGE_URLS_FILENAME} \
+                --gcs-thumb-base-path {GCS_THUMB_BASE_PATH}
+                """,
+        )
+
+        extract_offers_task >> parse_offers_task >> upload_images_offers_task
 
     export_data_to_bigquery = GCSToBigQueryOperator(
         task_id=f"load_data_into_{OUTPUT_BOOK_TABLE_NAME}_table",
         project_id=GCP_PROJECT_ID,
         bucket=ML_BUCKET_TEMP,
-        source_objects=os.path.join(GCS_FOLDER_PATH, "parsed_offers.parquet"),
+        source_objects=os.path.join(GCS_FOLDER_PATH, TITELIVE_WITH_IMAGE_URLS_FILENAME),
         destination_project_dataset_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.{OUTPUT_BOOK_TABLE_NAME}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",

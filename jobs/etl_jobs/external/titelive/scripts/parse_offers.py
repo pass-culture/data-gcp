@@ -32,7 +32,7 @@ def post_process_before_saving(df: pd.DataFrame):
         if col in ENFORCE_COLUMN_TYPES:
             df.loc[:, col] = df[col].astype(ENFORCE_COLUMN_TYPES[col])
 
-    return df
+    return df.drop_duplicates()
 
 
 @app.command()

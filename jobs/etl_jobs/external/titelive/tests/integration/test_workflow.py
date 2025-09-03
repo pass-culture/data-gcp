@@ -10,8 +10,8 @@ import pandas as pd
 import pytest
 import typer.testing
 
-# from scripts.extract_new_offers_from_titelive import app as extract_app
-# from scripts.parse_offers import app as parse_app
+# from scripts.extract_new_products_from_titelive import app as extract_app
+# from scripts.parse_products import app as parse_app
 # from src.constants import TITELIVE_CATEGORIES
 
 
@@ -58,8 +58,8 @@ class TestETLWorkflow:
     def test_extract_script_integration(self, sample_book_data):
         """Test the extract script with mocked API responses."""
 
-        with patch("src.utils.requests.get_modified_offers") as mock_get_offers:
-            from scripts.extract_new_offers_from_titelive import app as extract_app
+        with patch("src.utils.requests.get_modified_products") as mock_get_products:
+            from scripts.extract_new_products_from_titelive import app as extract_app
 
             # Arrange - Use the same data structure as the complete workflow test
             mock_data = [
@@ -103,7 +103,7 @@ class TestETLWorkflow:
                     "data": [json.dumps(data) for data in mock_data],
                 }
             ).set_index("id")
-            mock_get_offers.return_value = mock_df
+            mock_get_products.return_value = mock_df
 
             output_file = Path(self.temp_dir) / "test_extract.parquet"
 
@@ -111,7 +111,7 @@ class TestETLWorkflow:
             result = self.runner.invoke(
                 extract_app,
                 [
-                    "--offer-category",
+                    "--product-category",
                     "paper",
                     "--min-modified-date",
                     "2024-01-01",
@@ -129,12 +129,12 @@ class TestETLWorkflow:
             assert len(saved_df) == 2
             assert "data" in saved_df.columns
             # Verify the mock was called
-            assert mock_get_offers.call_count >= 1
+            assert mock_get_products.call_count >= 1
 
     def test_parse_script_integration(self):
         """Test the parse script with real data processing."""
         # Import here to avoid GCP constant issues
-        from scripts.parse_offers import app as parse_app
+        from scripts.parse_products import app as parse_app
 
         # Arrange
         input_data = pd.DataFrame(
@@ -220,10 +220,10 @@ class TestETLWorkflow:
     def test_complete_workflow_integration(self):
         """Test the complete workflow from extraction to parsing."""
 
-        with patch("src.utils.requests.get_modified_offers") as mock_get_offers:
+        with patch("src.utils.requests.get_modified_products") as mock_get_products:
             # Import here to avoid GCP constant issues
-            from scripts.extract_new_offers_from_titelive import app as extract_app
-            from scripts.parse_offers import app as parse_app
+            from scripts.extract_new_products_from_titelive import app as extract_app
+            from scripts.parse_products import app as parse_app
 
             # Arrange
             raw_data = {
@@ -249,7 +249,7 @@ class TestETLWorkflow:
                     "data": [json.dumps(raw_data)],
                 }
             ).set_index("id")
-            mock_get_offers.return_value = mock_df
+            mock_get_products.return_value = mock_df
 
             extract_output = Path(self.temp_dir) / "extracted.parquet"
             parse_output = Path(self.temp_dir) / "parsed.parquet"
@@ -258,7 +258,7 @@ class TestETLWorkflow:
             extract_result = self.runner.invoke(
                 extract_app,
                 [
-                    "--offer-category",
+                    "--product-category",
                     "paper",
                     "--min-modified-date",
                     "2024-01-01",
@@ -301,7 +301,7 @@ class TestETLWorkflow:
     def test_parse_script_date_filtering(self):
         """Test that the parse script correctly filters by modification date."""
         # Import here to avoid GCP constant issues
-        from scripts.parse_offers import app as parse_app
+        from scripts.parse_products import app as parse_app
 
         # Arrange - Create data with different modification dates
         input_data = pd.DataFrame(
@@ -382,7 +382,7 @@ class TestETLWorkflow:
     def test_error_handling_invalid_json(self):
         """Test error handling when input contains invalid JSON."""
         # Import here to avoid GCP constant issues
-        from scripts.parse_offers import app as parse_app
+        from scripts.parse_products import app as parse_app
 
         # Arrange
         input_data = pd.DataFrame(

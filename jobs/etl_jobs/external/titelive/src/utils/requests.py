@@ -128,11 +128,11 @@ def get_metadata_from_ean(ean: str) -> dict:
     return fetch_get_request(get_url, headers)
 
 
-def get_modified_offers(
-    offer_category: TITELIVE_CATEGORIES, min_modified_date: datetime
+def get_modified_products(
+    product_category: TITELIVE_CATEGORIES, min_modified_date: datetime
 ) -> pd.DataFrame:
     """
-    Get modified offers from Titelive API using search endpoint
+    Get modified products from Titelive API using search endpoint
     """
 
     # Format the date as DD/MM/YYYY
@@ -144,7 +144,7 @@ def get_modified_offers(
     headers = {"Authorization": f"Bearer {token}"}
     page = 0
     params = {
-        "base": offer_category,
+        "base": product_category,
         "dateminm": formatted_date,
         "nombre": str(RESULTS_PER_PAGE),
         "page": str(page),
@@ -153,7 +153,7 @@ def get_modified_offers(
     # Iterate over the requests
     results = []
     logger.info(
-        f"Fetching modified offers for category: {offer_category},"
+        f"Fetching modified products for category: {product_category},"
         f"date: {formatted_date}"
     )
     while True and page < (MAX_RESPONSES // RESULTS_PER_PAGE):

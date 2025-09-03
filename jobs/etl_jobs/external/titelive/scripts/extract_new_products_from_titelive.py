@@ -4,12 +4,12 @@ import pandas as pd
 import typer
 
 from src.constants import TITELIVE_CATEGORIES
-from src.utils.requests import get_modified_offers
+from src.utils.requests import get_modified_products
 
 app = typer.Typer()
 
-OFFER_CATEGORY_OPTION = typer.Option(..., help="Category of offers to extract")
-MIN_MODIFIED_DATE_OPTION = typer.Option(..., help="Minimum modified date for offers")
+PRODUCT_CATEGORY_OPTION = typer.Option(..., help="Category of products to extract")
+MIN_MODIFIED_DATE_OPTION = typer.Option(..., help="Minimum modified date for products")
 OUTPUT_FILE_PATH_OPTION = typer.Option(..., help="Path to the output file")
 
 
@@ -27,14 +27,14 @@ def post_process_data(df: pd.DataFrame) -> pd.DataFrame:
 
 @app.command()
 def extract_titelive_products(
-    offer_category: TITELIVE_CATEGORIES = OFFER_CATEGORY_OPTION,
+    product_category: TITELIVE_CATEGORIES = PRODUCT_CATEGORY_OPTION,
     min_modified_date: datetime = MIN_MODIFIED_DATE_OPTION,
     output_file_path: str = OUTPUT_FILE_PATH_OPTION,
 ):
     """
-    Extract new offers from Titelive API.
+    Extract new products from Titelive API.
     """
-    get_modified_offers(offer_category, min_modified_date).pipe(
+    get_modified_products(product_category, min_modified_date).pipe(
         post_process_data
     ).to_parquet(output_file_path)
 

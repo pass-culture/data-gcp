@@ -9,8 +9,8 @@ into structured format.
 
 ## Architecture & Data Flow
 
-- **Stage 1**: `extract_new_offers_from_titelive.py` → Raw Parquet with JSON strings
-- **Stage 2**: `parse_offers.py` → Flattened/structured Parquet
+- **Stage 1**: `extract_new_products_from_titelive.py` → Raw Parquet with JSON strings
+- **Stage 2**: `parse_products.py` → Flattened/structured Parquet
 - **Token Management**: Global singleton pattern with automatic refresh on 401 errors
 - **Data Storage**: All intermediate files in `data/` directory, Parquet format only
 
@@ -27,7 +27,7 @@ into structured format.
 
 ```python
 # Stage 1: Raw extraction pattern
-get_modified_offers(category, date).to_parquet(output_file)
+get_modified_products(category, date).to_parquet(output_file)
 
 # Stage 2: Parse pattern - explode nested articles
 exploded_df = df.assign(article_list=lambda _df: _df.article.map(lambda o: list(o.values()))).explode("article_list")
@@ -61,7 +61,7 @@ make parse_products_from_yesterday # Parse yesterday's data
 
 ### Key Testing Patterns
 
-- **Integration tests**: Mock `get_modified_offers()` function, test full CLI workflow
+- **Integration tests**: Mock `get_modified_products()` function, test full CLI workflow
 - **Fixtures**: Use `tests/data/sample_responses.json` for realistic API responses
 - **Import isolation**: Import scripts inside test methods to avoid GCP
   credential issues during test discovery

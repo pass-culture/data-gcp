@@ -104,40 +104,40 @@ with DAG(
         gce_instance_start >> fetch_install_code
 
     with TaskGroup("titelive_extraction") as titelive_extraction:
-        extract_offers_task = SSHGCEOperator(
-            task_id="extract_new_offers_from_titelive",
+        extract_products_task = SSHGCEOperator(
+            task_id="extract_new_products_from_titelive",
             instance_name=GCE_INSTANCE,
             base_dir=BASE_DIR,
-            command=f"""PYTHONPATH=. python scripts/extract_new_offers_from_titelive.py \
-                --offer-category {{{{ params.category }}}} \
+            command=f"""PYTHONPATH=. python scripts/extract_new_products_from_titelive.py \
+                --product-category {{{{ params.category }}}} \
                 --min-modified-date {{{{ params.custom_min_modified_date or macros.ds_add(ds, -1) }}}} \
-                --output-file-path {STORAGE_BASE_PATH}/extracted_offers.parquet
+                --output-file-path {STORAGE_BASE_PATH}/extracted_products.parquet
                 """,
         )
 
-        parse_offers_task = SSHGCEOperator(
-            task_id="parse_offers",
+        parse_products_task = SSHGCEOperator(
+            task_id="parse_products",
             instance_name=GCE_INSTANCE,
             base_dir=BASE_DIR,
-            command=f"""PYTHONPATH=. python scripts/parse_offers.py \
+            command=f"""PYTHONPATH=. python scripts/parse_products.py \
                 --min-modified-date {{{{ params.custom_min_modified_date or macros.ds_add(ds, -1) }}}} \
-                --input-file-path {STORAGE_BASE_PATH}/extracted_offers.parquet \
-                --output-file-path {STORAGE_BASE_PATH}/parsed_offers.parquet
+                --input-file-path {STORAGE_BASE_PATH}/extracted_products.parquet \
+                --output-file-path {STORAGE_BASE_PATH}/parsed_products.parquet
                 """,
         )
 
-        upload_images_offers_task = SSHGCEOperator(
-            task_id="upload_images_offers_task",
+        upload_images_products_task = SSHGCEOperator(
+            task_id="upload_images_products_task",
             instance_name=GCE_INSTANCE,
             base_dir=BASE_DIR,
             command=f"""PYTHONPATH=. python scripts/upload_titelive_images_to_gcs.py \
-                --input-parquet-path {STORAGE_BASE_PATH}/parsed_offers.parquet \
+                --input-parquet-path {STORAGE_BASE_PATH}/parsed_products.parquet \
                 --output-parquet-path {STORAGE_BASE_PATH}/{TITELIVE_WITH_IMAGE_URLS_FILENAME} \
                 --gcs-thumb-base-path {GCS_THUMB_BASE_PATH}
                 """,
         )
 
-        extract_offers_task >> parse_offers_task >> upload_images_offers_task
+        extract_products_task >> parse_products_task >> upload_images_products_task
 
     export_data_to_bigquery = GCSToBigQueryOperator(
         task_id=f"load_data_into_{OUTPUT_BOOK_TABLE_NAME}_table",

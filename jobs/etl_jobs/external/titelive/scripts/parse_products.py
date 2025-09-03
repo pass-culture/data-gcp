@@ -6,8 +6,8 @@ import typer
 
 app = typer.Typer()
 
-OFFER_CATEGORY_OPTION = typer.Option(..., help="Category of offers to extract")
-MIN_MODIFIED_DATE_OPTION = typer.Option(..., help="Minimum modified date for offers")
+PRODUCT_CATEGORY_OPTION = typer.Option(..., help="Category of products to extract")
+MIN_MODIFIED_DATE_OPTION = typer.Option(..., help="Minimum modified date for products")
 INPUT_FILE_PATH_OPTION = typer.Option(..., help="Path to the input file")
 OUTPUT_FILE_PATH_OPTION = typer.Option(..., help="Path to the output file")
 
@@ -32,7 +32,7 @@ def post_process_before_saving(df: pd.DataFrame):
         if col in ENFORCE_COLUMN_TYPES:
             df.loc[:, col] = df[col].astype(ENFORCE_COLUMN_TYPES[col])
 
-    return df
+    return df.drop_duplicates()
 
 
 @app.command()
@@ -42,7 +42,7 @@ def format_products(
     output_file_path: str = OUTPUT_FILE_PATH_OPTION,
 ):
     """
-    Extract new offers from Titelive API.
+    Extract new products from Titelive API.
     """
 
     raw_products_df = pd.read_parquet(input_file_path)

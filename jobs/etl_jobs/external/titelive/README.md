@@ -7,8 +7,8 @@ This project contains ETL scripts for extracting and processing data from the Ti
 The project consists of three main scripts that work together to extract,
 process, and manage Titelive data:
 
-1. **`extract_new_offers_from_titelive.py`** - Extracts raw data from the Titelive API
-2. **`parse_offers.py`** - Processes and formats the extracted data
+1. **`extract_new_products_from_titelive.py`** - Extracts raw data from the Titelive API
+2. **`parse_products.py`** - Processes and formats the extracted data
 3. **`upload_titelive_images_to_gcs.py`** - Downloads and uploads product images to Google Cloud Storage
 
 ## Prerequisites
@@ -27,25 +27,25 @@ make install
 
 ## Scripts
 
-### 1. Extract New Offers (`extract_new_offers_from_titelive.py`)
+### 1. Extract New Offers (`extract_new_products_from_titelive.py`)
 
 This script extracts raw product data from the Titelive API based on modification date and product category.
 
 #### Usage
 
 ```bash
-python scripts/extract_new_offers_from_titelive.py \
-  --offer-category LIVRE \
+python scripts/extract_new_products_from_titelive.py \
+  --product-category LIVRE \
   --min-modified-date "2024-01-01" \
-  --output-file-path "data/raw_offers.parquet"
+  --output-file-path "data/raw_products.parquet"
 ```
 
 #### Parameters
 
-- `--offer-category`: Category of offers to extract
+- `--product-category`: Category of products to extract
   - `LIVRE` (paper books)
   - `MUSIQUE_ENREGISTREE` (recorded music)
-- `--min-modified-date`: Minimum modification date for offers (YYYY-MM-DD format)
+- `--min-modified-date`: Minimum modification date for products (YYYY-MM-DD format)
 - `--output-file-path`: Path where the extracted data will be saved (Parquet format)
 
 #### Output
@@ -64,17 +64,17 @@ The script generates a Parquet file containing:
 - Configurable results per page (default: 120)
 - Maximum response limit protection
 
-### 2. Parse Offers (`parse_offers.py`)
+### 2. Parse Offers (`parse_products.py`)
 
 This script processes the raw data extracted by the first script, flattening the nested JSON structure and applying data transformations.
 
 #### Usage
 
 ```bash
-python scripts/parse_offers.py \
+python scripts/parse_products.py \
   --min-modified-date "2024-01-01" \
-  --input-file-path "data/raw_offers.parquet" \
-  --output-file-path "data/processed_offers.parquet"
+  --input-file-path "data/raw_products.parquet" \
+  --output-file-path "data/processed_products.parquet"
 ```
 
 #### Parameters
@@ -111,9 +111,9 @@ generating unique UUIDs for each image and creating GCS paths for storage.
 
 ```bash
 python scripts/upload_titelive_images_to_gcs.py \
-  --input-parquet-path "data/processed_offers.parquet" \
+  --input-parquet-path "data/processed_products.parquet" \
   --gcs-thumb-base-path "gs://bucket-name/images/titelive" \
-  --output-parquet-path "data/offers_with_images.parquet"
+  --output-parquet-path "data/products_with_images.parquet"
 ```
 
 #### Image Upload Parameters
@@ -252,8 +252,8 @@ Using sessions with connection pooling typically provides:
 
 ```
 ├── scripts/
-│   ├── extract_new_offers_from_titelive.py  # Data extraction script
-│   ├── parse_offers.py                      # Data processing script
+│   ├── extract_new_products_from_titelive.py  # Data extraction script
+│   ├── parse_products.py                      # Data processing script
 │   └── upload_titelive_images_to_gcs.py     # Image upload script
 ├── src/
 │   ├── constants.py                         # API configuration and constants
@@ -298,13 +298,13 @@ All scripts include comprehensive error handling:
 
 ```bash
 # Step 1: Extract raw data from Titelive API
-python scripts/extract_new_offers_from_titelive.py \
-  --offer-category LIVRE \
+python scripts/extract_new_products_from_titelive.py \
+  --product-category LIVRE \
   --min-modified-date "2024-01-01" \
   --output-file-path "data/raw_books.parquet"
 
 # Step 2: Process and format the data
-python scripts/parse_offers.py \
+python scripts/parse_products.py \
   --min-modified-date "2024-01-01" \
   --input-file-path "data/raw_books.parquet" \
   --output-file-path "data/processed_books.parquet"

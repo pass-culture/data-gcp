@@ -1,6 +1,7 @@
 import uuid
 
 import pandas as pd
+from loguru import logger
 
 from constants import (
     ACTION_KEY,
@@ -74,6 +75,9 @@ def match_artist_on_offer_names(
     ]
 
     # 2. Match artists with products to link on preproc offer_names
+    logger.info(
+        f"Preprocessing {len(raw_unlinked_products_df)} products and {len(artist_alias_df)} artist_aliases..."
+    )
     preproc_unlinked_products_df = raw_unlinked_products_df.pipe(
         prepare_artist_names_for_matching
     ).drop_duplicates()
@@ -87,6 +91,10 @@ def match_artist_on_offer_names(
             ARTIST_NAME_TO_MATCH_KEY,
         ]
     )
+    logger.info(
+        f"...Done {len(preproc_unlinked_products_df)} products and {len(preproc_artist_alias_df)} artist_aliases after preprocessing."
+    )
+
     preproc_matched_df = preproc_unlinked_products_df.merge(
         preproc_artist_alias_df.drop(columns=[ARTIST_NAME_KEY]),
         how="left",

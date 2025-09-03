@@ -10,4 +10,4 @@ select
     total_recredit,
     total_recredit_amount,
     days_between_user_creation_and_deposit_creation
-from {{ ref("mrt_global__deposit") }}
+from {{ ref("int_global__deposit") }}

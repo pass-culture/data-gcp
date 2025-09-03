@@ -7,7 +7,7 @@ description: Description of the `exp_ministry__offer` table.
 
 # Table: Offer
 
-This model exports validated offers data for ministry use. It contains information about individual cultural offers including:
+This model exports offers data for ministry use. It contains information about individual cultural offers including:
 - Offer details (ID, name, description, category, subcategory)
 - Offer characteristics (duo, bookable, digital/physical goods, event)
 - Temporal information (creation, update, publication dates)

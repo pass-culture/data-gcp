@@ -7,8 +7,8 @@ description: Description of the `exp_ministry__venue` table.
 
 # Table: Venue
 
-This model exports validated venue data for ministry use. Venues are defined by a SIRET number.
-Model contains validated information about cultural venues including:
+This model exports venue data for ministry use. Venues are defined by a SIRET number.
+Model contains information about cultural venues including:
 - Basic information (ID, name, description, public name)
 - Business information (SIRET number, virtual status)
 - Temporal information (creation date)

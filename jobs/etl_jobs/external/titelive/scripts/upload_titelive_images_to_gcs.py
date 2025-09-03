@@ -21,7 +21,7 @@ GCS_THUMB_BASE_PATH_OPTION = typer.Option(..., help="GCS output directory")
 OUTPUT_FILE_PATH_OPTION = typer.Option(..., help="Path to the output file")
 
 MAX_WORKERS = (os.cpu_count() - 1) * 5
-# This parameter dramatically affects the performance if set too low or high
+# POOL_* parameters dramatically affects the performance if set too low or high
 POOL_CONNECTIONS = 10
 POOL_MAXSIZE = 20
 

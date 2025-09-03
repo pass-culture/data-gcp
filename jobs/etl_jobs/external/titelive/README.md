@@ -4,10 +4,12 @@ This project contains ETL scripts for extracting and processing data from the Ti
 
 ## Overview
 
-The project consists of two main scripts that work together to extract and process Titelive data:
+The project consists of three main scripts that work together to extract,
+process, and manage Titelive data:
 
 1. **`extract_new_offers_from_titelive.py`** - Extracts raw data from the Titelive API
 2. **`parse_offers.py`** - Processes and formats the extracted data
+3. **`upload_titelive_images_to_gcs.py`** - Downloads and uploads product images to Google Cloud Storage
 
 ## Prerequisites
 
@@ -99,12 +101,160 @@ The processed dataset includes columns such as:
 - `auteurs_multi`: Authors information (JSON format)
 - `article_*`: Article-specific attributes, which vary depending on the product type (LIVRE, MUSIQUE_ENREGISTREE)
 
+### 3. Upload Titelive Images to GCS (`upload_titelive_images_to_gcs.py`)
+
+This script downloads product images from Titelive and uploads them to Google
+Cloud Storage. It processes both recto (front) and verso (back) images,
+generating unique UUIDs for each image and creating GCS paths for storage.
+
+#### Image Upload Usage
+
+```bash
+python scripts/upload_titelive_images_to_gcs.py \
+  --input-parquet-path "data/processed_offers.parquet" \
+  --gcs-thumb-base-path "gs://bucket-name/images/titelive" \
+  --output-parquet-path "data/offers_with_images.parquet"
+```
+
+#### Image Upload Parameters
+
+- `--input-parquet-path`: Path to the input Parquet file containing parsed
+  Titelive data with `article_imagesUrl` column
+- `--gcs-thumb-base-path`: Base GCS path where images will be uploaded
+  (e.g., "gs://bucket-name/images/titelive")
+- `--output-parquet-path`: Path where the enhanced data with image upload
+  status will be saved
+
+#### Image Processing Steps
+
+1. **Image URL Extraction**: Parses the `article_imagesUrl` JSON column to
+   extract recto and verso image URLs
+2. **UUID Generation**: Creates unique UUIDs for each image to avoid naming
+   conflicts
+3. **GCS Path Construction**: Builds full GCS paths using the base path and
+   generated UUIDs
+4. **Image Download and Upload**: Downloads images from Titelive URLs and
+   uploads them to GCS
+5. **Status Tracking**: Records upload success/failure status for each image
+6. **Data Merging**: Combines original data with image metadata and upload status
+
+#### Image Output Columns
+
+In addition to the original columns, the output includes:
+
+- `recto`: Original recto (front) image URL
+- `verso`: Original verso (back) image URL
+- `recto_uuid`: Generated UUID for recto image
+- `verso_uuid`: Generated UUID for verso image
+- `recto_gcs_path`: Full GCS path for uploaded recto image
+- `verso_gcs_path`: Full GCS path for uploaded verso image
+- `recto_upload_status`: Upload status tuple (success, url, message) for recto
+- `verso_upload_status`: Upload status tuple (success, url, message) for verso
+
+#### Image Upload Features
+
+- Handles missing image URLs gracefully
+- Generates unique UUIDs to prevent filename conflicts
+- Provides detailed upload status tracking
+- Processes sample data (currently limited to first 5 rows)
+- Supports both recto and verso images
+
+## Performance Optimization
+
+### Parallelization Strategy
+
+The image upload script implements a parallelized approach using
+`ThreadPoolExecutor` to maximize throughput when processing large datasets.
+This design choice is critical for handling thousands of images efficiently.
+
+#### Key Configuration Parameters
+
+- **`MAX_WORKERS`**: `(os.cpu_count() - 1) * 5` - Optimizes thread pool size
+  based on available CPU cores
+- **`POOL_CONNECTIONS`**: `10` - Number of connection pools to maintain
+- **`POOL_MAXSIZE`**: `20` - Maximum connections per pool
+
+#### Why Parallelization Matters
+
+1. **I/O Bound Operations**: Image downloading and uploading are primarily
+   I/O operations, making them ideal candidates for threading
+2. **Network Latency**: Parallel processing masks network latency by allowing
+   multiple requests to be in-flight simultaneously
+3. **Resource Utilization**: Maximizes utilization of available bandwidth and
+   CPU resources
+
+### TCP Connection Management in GCP VMs
+
+When running on Google Cloud Platform Virtual Machines, proper session
+management is crucial to prevent TCP connection overflow and ensure reliable
+operations.
+
+#### Session Configuration Benefits
+
+The script uses a shared `requests.Session` with the following optimizations:
+
+```python
+def _get_session():
+    session = requests.Session()
+
+    # Configure retry strategy
+    retry_strategy = Retry(
+        total=10,
+        backoff_factor=1,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["GET"],
+    )
+
+    # Configure adapter with connection pooling
+    adapter = HTTPAdapter(
+        max_retries=retry_strategy,
+        pool_connections=POOL_CONNECTIONS,
+        pool_maxsize=POOL_MAXSIZE,
+    )
+
+    session.mount("https://", adapter)
+    return session
+```
+
+#### TCP Overflow Prevention
+
+1. **Connection Pooling**: Reuses existing TCP connections instead of creating
+   new ones for each request
+2. **Pool Size Limits**: `POOL_MAXSIZE=20` prevents excessive connection
+   creation that could exhaust system resources
+3. **Connection Pool Management**: `POOL_CONNECTIONS=10` balances performance
+   with resource consumption
+4. **Automatic Retry Logic**: Handles transient network issues without manual
+   intervention
+
+#### GCP VM Considerations
+
+- **Ephemeral Port Exhaustion**: Without session reuse, GCP VMs can quickly
+  exhaust available ephemeral ports (typically 32,768-65,535)
+- **Network Stack Optimization**: Connection pooling reduces overhead on the
+  VM's network stack
+- **Resource Constraints**: Proper session management prevents memory leaks
+  and connection timeouts
+- **Firewall and Load Balancer Compatibility**: Maintains persistent
+  connections that work well with GCP's networking infrastructure
+
+#### Performance Impact
+
+Using sessions with connection pooling typically provides:
+
+- **3-5x faster** image processing compared to creating new connections for
+  each request
+- **Reduced memory footprint** by reusing connection objects
+- **Lower CPU utilization** due to reduced connection establishment overhead
+- **Better error resilience** through automatic retry mechanisms
+
 ## Project Structure
 
 ```
 ├── scripts/
 │   ├── extract_new_offers_from_titelive.py  # Data extraction script
-│   └── parse_offers.py                      # Data processing script
+│   ├── parse_offers.py                      # Data processing script
+│   └── upload_titelive_images_to_gcs.py     # Image upload script
 ├── src/
 │   ├── constants.py                         # API configuration and constants
 │   └── utils/
@@ -135,13 +285,14 @@ The processed dataset includes columns such as:
 
 ## Error Handling
 
-Both scripts include comprehensive error handling:
+All scripts include comprehensive error handling:
 
 - Automatic token refresh on 401 errors
 - Request timeout handling
 - JSON parsing error management
 - Data type conversion error handling
 - Graceful handling of missing or malformed data
+- Image download and upload error management (for the image upload script)
 
 ## Example Workflow
 
@@ -157,6 +308,12 @@ python scripts/parse_offers.py \
   --min-modified-date "2024-01-01" \
   --input-file-path "data/raw_books.parquet" \
   --output-file-path "data/processed_books.parquet"
+
+# Step 3: Upload product images to GCS
+python scripts/upload_titelive_images_to_gcs.py \
+  --input-parquet-path "data/processed_books.parquet" \
+  --gcs-thumb-base-path "gs://your-bucket/images/titelive" \
+  --output-parquet-path "data/books_with_images.parquet"
 ```
 
 ## Development
@@ -168,6 +325,7 @@ The project uses:
 - **Pandas** for data manipulation
 - **Loguru** for logging
 - **PyArrow** for Parquet file handling
+- **Google Cloud Storage** for image storage and management
 
 ### Testing
 

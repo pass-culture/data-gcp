@@ -108,6 +108,8 @@ models:
         description: '{{ doc("column__offerer_department_code") }}'
         data_tests:
           - not_null
+      - name: offerer_department_name
+        description: '{{ doc("column__offerer_department_name")}}'
       - name: offerer_siren
         description: '{{ doc("column__offerer_siren") }}'
         data_tests:

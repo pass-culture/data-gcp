@@ -253,7 +253,7 @@ def main(
     )
 
     # 3. Match products to link with artists on both raw and preprocessed offer names
-    raw_linked_products_df, preproc_linked_products_df, preproc_unlinked_products_df = (
+    preproc_linked_products_df, preproc_unlinked_products_df = (
         match_artist_on_offer_names(
             products_to_link_df=products_to_link_df, artist_alias_df=artist_alias_df
         )
@@ -290,7 +290,6 @@ def main(
         preproc_unlinked_products_df=preproc_unlinked_products_df,
         exploded_artist_alias_df=exploded_artist_alias_df,
         products_to_remove_df=products_to_remove_df,
-        raw_linked_products_df=raw_linked_products_df,
         preproc_linked_products_df=preproc_linked_products_df,
         artist_df=artist_df,
     )

@@ -16,7 +16,6 @@ from constants import (
     IMG_KEY,
     OFFER_CATEGORY_ID_KEY,
     POSTPROCESSED_ARTIST_NAME_KEY,
-    PRODUCT_ID_KEY,
     PRODUCTS_KEYS,
     WIKI_ID_KEY,
     Action,
@@ -42,9 +41,7 @@ def match_artist_on_offer_names(
 ):
     """
     Match artists with products based on offer names using both raw and preprocessed matching.
-    This function performs a two-step matching process:
-    1. First attempts to match products with artists using raw offer names
-    2. For unmatched products, applies preprocessing to artist names and attempts matching again
+    This function applies preprocessing to artist names and attempts matching.
     Args:
         products_to_link_df (pd.DataFrame): DataFrame containing products that need to be linked
             to artists. Must contain columns for artist_name, artist_type, and offer_category_id.
@@ -52,33 +49,15 @@ def match_artist_on_offer_names(
             artist_ids. Must contain columns for artist_name, artist_type, offer_category_id, and artist_id.
     Returns:
         tuple: A tuple containing three DataFrames:
-            - raw_linked_products_df: Products successfully matched using raw offer names
             - preproc_linked_products_df: Products successfully matched using preprocessed offer names
             - preproc_unlinked_products_df: Products that remain unmatched after both attempts
     """
 
-    # 1. Match artists with products to link on raw offer_names
-    raw_matched_df = products_to_link_df.merge(
-        artist_alias_df,
-        how="left",
-        on=[ARTIST_NAME_KEY, ARTIST_TYPE_KEY, OFFER_CATEGORY_ID_KEY],
-    )
-    raw_linked_products_df = raw_matched_df.loc[lambda df: df.artist_id.notna()]
-    raw_unlinked_products_df = raw_matched_df.loc[
-        lambda df: df.artist_id.isna(),
-        [
-            PRODUCT_ID_KEY,
-            ARTIST_TYPE_KEY,
-            ARTIST_NAME_KEY,
-            OFFER_CATEGORY_ID_KEY,
-        ],
-    ]
-
-    # 2. Match artists with products to link on preproc offer_names
+    # Preprocess artist names for matching
     logger.info(
-        f"Preprocessing {len(raw_unlinked_products_df)} products and {len(artist_alias_df)} artist_aliases..."
+        f"Preprocessing {len(products_to_link_df)} products and {len(artist_alias_df)} artist_aliases..."
     )
-    preproc_unlinked_products_df = raw_unlinked_products_df.pipe(
+    preproc_products_to_link_df = products_to_link_df.pipe(
         prepare_artist_names_for_matching
     ).drop_duplicates()
     preproc_artist_alias_df = artist_alias_df.pipe(
@@ -92,35 +71,29 @@ def match_artist_on_offer_names(
         ]
     )
     logger.info(
-        f"...Done {len(preproc_unlinked_products_df)} products and {len(preproc_artist_alias_df)} artist_aliases after preprocessing."
+        f"...Done {len(preproc_products_to_link_df)} products and {len(preproc_artist_alias_df)} artist_aliases after preprocessing."
     )
 
-    preproc_matched_df = preproc_unlinked_products_df.merge(
+    # Match artists with products to link on preproc offer_names
+    preproc_matched_df = preproc_products_to_link_df.merge(
         preproc_artist_alias_df.drop(columns=[ARTIST_NAME_KEY]),
         how="left",
         on=[ARTIST_NAME_TO_MATCH_KEY, ARTIST_TYPE_KEY, OFFER_CATEGORY_ID_KEY],
     )
-    preproc_linked_products_df = preproc_matched_df.loc[
-        lambda df: df.artist_id.notna()
-    ].loc[lambda df: ~df[PRODUCT_ID_KEY].isin(raw_linked_products_df[PRODUCT_ID_KEY])]
+    preproc_linked_products_df = preproc_matched_df.loc[lambda df: df.artist_id.notna()]
     preproc_unlinked_products_df = (
         preproc_matched_df.loc[lambda df: df.artist_id.isna()]
         .drop_duplicates()
         .drop(columns=[ARTIST_ID_KEY])
     )
 
-    return (
-        raw_linked_products_df,
-        preproc_linked_products_df,
-        preproc_unlinked_products_df,
-    )
+    return (preproc_linked_products_df, preproc_unlinked_products_df)
 
 
 def create_artists_tables(
     preproc_unlinked_products_df: pd.DataFrame,
     exploded_artist_alias_df: pd.DataFrame,
     products_to_remove_df=pd.DataFrame(),
-    raw_linked_products_df=pd.DataFrame(),
     preproc_linked_products_df=pd.DataFrame(),
     artist_df=pd.DataFrame(columns=[ARTIST_ID_KEY]),
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -158,12 +131,6 @@ def create_artists_tables(
         [
             products_to_remove_df.filter(PRODUCTS_KEYS).assign(
                 **{ACTION_KEY: Action.remove, COMMENT_KEY: Comment.removed_linked}
-            ),
-            raw_linked_products_df.filter(PRODUCTS_KEYS).assign(
-                **{
-                    ACTION_KEY: Action.add,
-                    COMMENT_KEY: Comment.linked_to_existing_artist_raw,
-                }
             ),
             preproc_linked_products_df.filter(PRODUCTS_KEYS).assign(
                 **{

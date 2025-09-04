@@ -59,8 +59,7 @@ with
                 date(cb.collective_booking_creation_date), month
             ) as partition_month,
             case
-                when vt.venue_tag_id is not null then true
-                else false
+                when vt.venue_tag_id is not null then true else false
             end as is_labelled_mc,
             count(distinct cb.collective_booking_id) as total_bookings,
             sum(cb.booking_amount) as total_booking_amount,
@@ -70,9 +69,11 @@ with
         left join
             {{ ref("mrt_global__collective_offer_domain") }} as cod
             on cb.collective_offer_id = cod.collective_offer_id
-        left join 
+        left join
             {{ ref("mrt_global__venue_tag") }} as vt
-            on cb.venue_id = vt.venue_id and venue_tag_category_label = 'Comptage partenaire label et appellation du MC'
+            on cb.venue_id = vt.venue_id
+            and venue_tag_category_label
+            = 'Comptage partenaire label et appellation du MC'
         where cb.collective_booking_status in ('CONFIRMED', 'USED', 'REIMBURSED')
         group by partition_month, region_name, academy_name, domain_name, is_labelled_mc
     )
@@ -160,8 +161,8 @@ with
             {% endif %}
             and domain_name = '{{ domain.name }}'
         group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
-        union all 
-        select 
+        union all
+        select
             partition_month,
             timestamp("{{ ts() }}") as updated_at,
             '{{ dim.name }}' as dimension_name,
@@ -169,7 +170,10 @@ with
             'pct_reservations_labelisees_{{ domain.name }}' as kpi_name,
             sum(case when is_labelled_mc then total_bookings end) as numerator,
             sum(total_bookings) as denominator,
-            safe_divide(sum(case when is_labelled_mc then total_bookings end),sum(total_bookings)) as kpi
+            safe_divide(
+                sum(case when is_labelled_mc then total_bookings end),
+                sum(total_bookings)
+            ) as kpi
         from bookings_data
         where
             1 = 1

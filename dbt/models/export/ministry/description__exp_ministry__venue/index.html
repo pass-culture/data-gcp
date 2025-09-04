@@ -783,6 +783,8 @@
       
         
       
+        
+      
     
     
       
@@ -954,6 +956,27 @@
   
   <span class="md-ellipsis">
     Offer Metadata
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../description__exp_ministry__offer_removed/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Offer
   </span>
   
 
@@ -7490,8 +7513,8 @@
 
 
 <h1>Table: Venue</h1>
-<p>This model exports validated venue data for ministry use. Venues are defined by a SIRET number.
-Model contains validated information about cultural venues including:
+<p>This model exports venue data for ministry use. Venues are defined by a SIRET number.
+Model contains information about cultural venues including:
 - Basic information (ID, name, description, public name)
 - Business information (SIRET number, virtual status)
 - Temporal information (creation date)
@@ -7542,6 +7565,16 @@ Model contains validated information about cultural venues including:
 <td style="text-align: left;">offerer_id</td>
 <td style="text-align: left;"></td>
 <td style="text-align: left;">Unique identifier of the offerer.</td>
+</tr>
+<tr>
+<td style="text-align: left;">offerer_validation_status</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Validation status of the offerer.</td>
+</tr>
+<tr>
+<td style="text-align: left;">offerer_is_active</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Indicates if the offerer is active. Returns 'true' if offerer is active. Returns 'false' if the offerer has been deactivated.</td>
 </tr>
 <tr>
 <td style="text-align: left;">venue_creation_date</td>

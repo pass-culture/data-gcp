@@ -56,3 +56,6 @@ models:
         description: "{{ doc('column__offer_type_labels') }}"
       - name: offer_sub_type_label
         description: "{{ doc('column__offer_sub_type_label') }}"
+      - name: offer_video_url
+        description: '{{ doc("column__offer_video_url") }}'
+        data_type: STRING

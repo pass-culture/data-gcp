@@ -86,6 +86,7 @@ sources:
       - name: applicative_database_offerer_tag_category
       - name: applicative_database_offerer_tag
       - name: applicative_database_offer_legacy
+      - name: applicative_database_offer_meta_data
       - name: applicative_database_offer_validation_sub_rule
       - name: applicative_database_offer_validation_rule
       - name: applicative_database_offer_report

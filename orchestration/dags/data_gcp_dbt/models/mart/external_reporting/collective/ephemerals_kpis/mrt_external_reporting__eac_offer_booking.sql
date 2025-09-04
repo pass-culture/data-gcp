@@ -69,7 +69,7 @@ with
         sum(total_booking) as numerator,
         1 as denominator,
         sum(total_booking) as kpi
-    from booked_collective_offers
+    from ac_booked_collective_offers
     {% if is_incremental() %}
         where
             partition_month
@@ -86,7 +86,7 @@ with
         sum(total_booking_amount) as numerator,
         1 as denominator,
         sum(total_booking_amount) as kpi
-    from created_collective_offers
+    from ac_booked_collective_offers
     {% if is_incremental() %}
         where
             partition_month

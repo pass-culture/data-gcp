@@ -258,11 +258,6 @@ def main(
             products_to_link_df=products_to_link_df, artist_alias_df=artist_alias_df
         )
     )
-    preproc_linked_products_df.loc[
-        lambda df: df[["offer_product_id", "artist_type", "artist_type"]].duplicated(
-            keep=False
-        )
-    ]
 
     # 4. Create new artist clusters by offer_category and artist type
     new_artist_clusters_df = (
@@ -276,6 +271,9 @@ def main(
             artist_name_nunique=(ARTIST_NAME_KEY, "nunique"),
         )
         .reset_index()
+    )
+    logger.info(
+        f"Created {len(new_artist_clusters_df)} new artist clusters from {len(preproc_unlinked_products_df)} unlinked products."
     )
 
     # 5. Match new artist clusters with existing artists on Wikidata

@@ -75,6 +75,7 @@ def match_artist_on_offer_names(
     )
 
     # Match artists with products to link on preproc offer_names
+    logger.info("Matching products on preprocessed offer names...")
     preproc_matched_df = preproc_products_to_link_df.merge(
         preproc_artist_alias_df.drop(columns=[ARTIST_NAME_KEY]),
         how="left",
@@ -85,6 +86,12 @@ def match_artist_on_offer_names(
         preproc_matched_df.loc[lambda df: df.artist_id.isna()]
         .drop_duplicates()
         .drop(columns=[ARTIST_ID_KEY])
+    )
+
+    # Logging
+    logger.info(
+        f"...Matched {len(preproc_linked_products_df)} products on already existing artists."
+        f" {len(preproc_unlinked_products_df)} products remain unmatched."
     )
 
     return (preproc_linked_products_df, preproc_unlinked_products_df)
@@ -175,6 +182,11 @@ def create_artists_tables(
         .drop_duplicates()
         .assign(**{ACTION_KEY: Action.add, COMMENT_KEY: Comment.new_artist_alias})
     )
+
+    logger.info(f"Created {len(delta_artist_df)} new artists.")
+    logger.info(f"Created {len(delta_artist_alias_df)} new artist aliases.")
+    logger.info(f"Created {len(delta_product_artist_link_df)} product-artist links.")
+
     return (
         delta_product_artist_link_df,
         delta_artist_df,
@@ -238,6 +250,7 @@ def match_artists_with_wikidata(
     )
 
     # 2. Match artists on wikidata for artists with no namesake
+    logger.info(f"Matching {len(new_artist_clusters_df)} artists with Wikidata...")
     matched_without_namesake_df = (
         match_per_category_no_namesakes(new_artist_clusters_df, wiki_df)
         .assign(has_namesake=False)
@@ -277,6 +290,10 @@ def match_artists_with_wikidata(
             df[ARTIST_NAME_TO_MATCH_KEY]
         ).apply(lambda s: s.title()),
     ).sort_values(by=ARTIST_ID_KEY)
+
+    logger.info(
+        f"...Matched {len(matched_with_ids_df.loc[lambda df: df.wiki_id.notna()].wiki_id.notna().unique())} new artist clusters with Wikidata entries."
+    )
 
     # 6. Explode artist names and drop duplicates to output artist aliases
     return (

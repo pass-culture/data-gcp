@@ -16,7 +16,7 @@ tests/
 │   ├── __init__.py
 │   ├── test_gcp.py             # Tests for GCP utilities
 │   ├── test_requests.py        # Tests for API request functions
-│   └── test_parse_offers.py    # Tests for data processing functions
+│   └── test_parse_products.py    # Tests for data processing functions
 └── integration/                 # Integration tests for complete workflows
     ├── __init__.py
     └── test_workflow.py         # End-to-end workflow tests
@@ -30,7 +30,7 @@ Unit tests focus on testing individual functions and classes in isolation:
 
 - **`test_gcp.py`**: Tests for Google Cloud Secret Manager integration
 - **`test_requests.py`**: Tests for Titelive API communication, token management, and data retrieval
-- **`test_parse_offers.py`**: Tests for data transformation and processing logic
+- **`test_parse_products.py`**: Tests for data transformation and processing logic
 
 ### Integration Tests
 
@@ -80,7 +80,7 @@ PYTHONPATH=. uv run pytest tests/unit/test_requests.py -v
 
 # Run specific test class or method
 PYTHONPATH=. uv run pytest tests/unit/test_requests.py::TestGetModifiedOffers -v
-PYTHONPATH=. uv run pytest tests/unit/test_requests.py::TestGetModifiedOffers::test_get_modified_offers_single_page -v
+PYTHONPATH=. uv run pytest tests/unit/test_requests.py::TestGetModifiedOffers::test_get_modified_products_single_page -v
 ```
 
 ## Test Configuration

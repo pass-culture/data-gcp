@@ -14,4 +14,4 @@ select
     user_suspension_reason,
     user_is_current_beneficiary,
     user_seniority
-from {{ ref("mrt_global__user") }}
+from {{ ref("int_global__user") }}

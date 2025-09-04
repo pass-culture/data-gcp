@@ -1,10 +1,10 @@
-"""Tests for the parse_offers script functions."""
+"""Tests for the parse_products script functions."""
 
 import math
 
 import pandas as pd
 
-from scripts.parse_offers import post_process_before_saving
+from scripts.parse_products import post_process_before_saving
 
 
 class TestPostProcessBeforeSaving:

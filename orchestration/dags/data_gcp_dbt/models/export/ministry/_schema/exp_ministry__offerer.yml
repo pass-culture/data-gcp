@@ -17,6 +17,10 @@ models:
         description: "{{ doc('column__offerer_creation_date') }}"
       - name: offerer_validation_date
         description: "{{ doc('column__offerer_validation_date') }}"
+      - name: offerer_validation_status
+        description: "{{ doc('column__offerer_validation_status') }}"
+      - name: offerer_is_active
+        description: "{{ doc('column__offerer_is_active') }}"
       - name: offerer_siren
         description: "{{ doc('column__offerer_siren') }}"
       - name: legal_unit_business_activity_code

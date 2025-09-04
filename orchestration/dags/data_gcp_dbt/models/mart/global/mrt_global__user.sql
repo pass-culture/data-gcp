@@ -64,9 +64,7 @@ select
     last_recredit_date,
     total_recredit,
     total_recredit_amount,
-    date_diff(
-        date('{{ ds() }}'), cast(user_activation_date as date), day
-    ) as user_seniority
+    user_seniority
 from {{ ref("int_global__user") }}
 where
     (user_is_active or user_suspension_reason = 'upon user request')

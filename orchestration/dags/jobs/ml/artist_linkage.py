@@ -66,8 +66,6 @@ DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME = "delta_product_artist_link.parquet"
 DELTA_ARTISTS_WITH_METADATA_GCS_FILENAME = "delta_artist_with_metadata.parquet"
 
 # BQ Tables
-ARTISTS_TO_LINK_TABLE = "artist_name_to_link"
-ARTIST_LINK_TABLE = "artist_linked"
 PRODUCT_TO_LINK_TABLE = "product_to_link"
 TABLES_TO_IMPORT_TO_GCS_FOR_SYNC = [
     {

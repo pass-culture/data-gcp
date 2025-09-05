@@ -21,6 +21,14 @@ ALLOWED_LICENSES = [
     "Public domain",
     "CC0",
 ]
+LICENSES_COLUMNS = [
+    "filename",
+    "image_file_url",
+    "image_page_url",
+    "image_author",
+    "image_license",
+    "image_license_url",
+]
 
 
 def extract_title_from_url(url: str) -> str:
@@ -109,7 +117,10 @@ def get_image_license(image_urls: list[str]) -> pd.DataFrame:
         # Sleep to avoid hitting the API rate limits
         time.sleep(0.5)
 
-    return pd.DataFrame(licenses_list)
+    return pd.DataFrame(
+        licenses_list,
+        columns=LICENSES_COLUMNS,
+    )
 
 
 def remove_image_with_improper_license(df: pd.DataFrame) -> pd.DataFrame:
@@ -118,14 +129,7 @@ def remove_image_with_improper_license(df: pd.DataFrame) -> pd.DataFrame:
     )
     df.loc[
         indexes_to_remove_images,
-        [
-            "image_file_url",
-            "filename",
-            "image_page_url",
-            "image_author",
-            "image_license",
-            "image_license_url",
-        ],
+        LICENSES_COLUMNS,
     ] = None
 
     return df

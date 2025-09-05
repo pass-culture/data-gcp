@@ -69,12 +69,13 @@ def format_products(
         .drop(columns=["article"])
     )
 
-    min_formatted_date = min_modified_date.strftime("%d/%m/%Y")
     filtered_df = merged_df.loc[
-        (merged_df["article_datemodification"].isna())
-        | (
-            pd.to_datetime(merged_df["article_datemodification"], dayfirst=True)
-            >= min_formatted_date
+        (
+            merged_df["article_datemodification"].isna()
+            | (
+                pd.to_datetime(merged_df["article_datemodification"], dayfirst=True)
+                >= min_modified_date
+            )
         )
     ]
 

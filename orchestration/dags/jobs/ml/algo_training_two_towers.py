@@ -62,7 +62,7 @@ train_params = {
     "experiment_name": f"{DAG_NAME}_v1.2_{ENV_SHORT_NAME}",
 }
 gce_params = {
-    "instance_name": f"algo-training-two-towers-{ENV_SHORT_NAME}",
+    "instance_name": "algo-training-two-towers",
     "instance_type": {
         "dev": "n1-standard-2",
         "stg": "n1-highmem-8",

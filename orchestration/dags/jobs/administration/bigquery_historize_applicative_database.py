@@ -17,11 +17,54 @@ from common.utils import (
 from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator
+
 from airflow.providers.google.cloud.transfers.bigquery_to_gcs import (
     BigQueryToGCSOperator,
 )
 from airflow.utils.task_group import TaskGroup
+from airflow.exceptions import AirflowSkipException
+
+
+def skip_if_tagged_or_labeled(**context):
+    """
+    Skip the task based on the dbt config for this table.
+    Expects 'table_config' in params with optional 'tags' or 'schedule'.
+    """
+    table_config = context["params"].get("table_config", {})
+    ds = context["ds"]  # execution date as YYYY-MM-DD
+    execution_date = datetime.datetime.strptime(ds, "%Y-%m-%d")
+
+    tags = table_config.get("tags", [])
+    if isinstance(tags, str):
+        tags = [tags]  # convert string to list for uniformity
+
+    # check monthly
+    if "monthly" in tags:
+        if execution_date.day != 1:
+            raise AirflowSkipException(f"Skipping because table is monthly scheduled")
+
+    # check weekly
+    if "weekly" in tags:
+        if execution_date.weekday() != 0:  # Monday
+            raise AirflowSkipException(f"Skipping because table is weekly scheduled")
+
+    # same checks for labels
+    labels = table_config.get("labels", {})
+    schedule_label = labels.get("schedule")  # e.g., "monthly" or "weekly"
+    if schedule_label == "monthly":
+        if execution_date.day != 1:
+            raise AirflowSkipException(
+                f"Skipping because table is monthly scheduled (label)"
+            )
+
+    if schedule_label == "weekly":
+        if execution_date.weekday() != 0:
+            raise AirflowSkipException(
+                f"Skipping because table is weekly scheduled (label)"
+            )
+
 
 GCE_INSTANCE = f"bq-historize-applicative-database-{ENV_SHORT_NAME}"
 BASE_PATH = "data-gcp/jobs/etl_jobs/internal/export_applicative"
@@ -42,7 +85,6 @@ default_dag_args = {
     "project_id": GCP_PROJECT_ID,
 }
 
-
 dag_id = "bigquery_historize_applicative_database"
 dag = DAG(
     dag_id,
@@ -54,7 +96,7 @@ dag = DAG(
     tags=[DAG_TAGS.DE.value],
 )
 
-start = DummyOperator(task_id="start", dag=dag)
+start = EmptyOperator(task_id="start", dag=dag)
 
 with TaskGroup(group_id="snapshots_to_gcs", dag=dag) as to_gcs:
     for table_name, bq_config in SNAPSHOT_TABLES.items():
@@ -63,6 +105,14 @@ with TaskGroup(group_id="snapshots_to_gcs", dag=dag) as to_gcs:
         _now = datetime.datetime.now()
         historization_date = _now - datetime.timedelta(days=1)
         yyyymmdd = historization_date.strftime("%Y%m%d")
+
+        skip_task = PythonOperator(
+            task_id=f"skip_check_{table_name}",
+            python_callable=skip_if_tagged_or_labeled,
+            provide_context=True,
+            params={"table_config": bq_config},  # pass the full config
+            dag=dag,
+        )
 
         waiting_task = delayed_waiting_operator(
             dag,
@@ -80,8 +130,8 @@ with TaskGroup(group_id="snapshots_to_gcs", dag=dag) as to_gcs:
             print_header=True,
             dag=dag,
         )
-        waiting_task >> export_bigquery_to_gcs
+        skip_task >> waiting_task >> export_bigquery_to_gcs
 
-end = DummyOperator(task_id="end", dag=dag)
+end = EmptyOperator(task_id="end", dag=dag, trigger_rule="none_failed_min_one_success")
 
 start >> to_gcs >> end

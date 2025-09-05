@@ -58,9 +58,7 @@ with
             date_trunc(
                 date(cb.collective_booking_creation_date), month
             ) as partition_month,
-            case
-                when vt.venue_tag_id is not null then true else false
-            end as is_labelled_mc,
+            coalesce(vt.venue_tag_id is not null, false) as is_labelled_mc,
             count(distinct cb.collective_booking_id) as total_bookings,
             sum(cb.booking_amount) as total_booking_amount,
             sum(cb.collective_stock_number_of_tickets) as total_tickets,
@@ -102,7 +100,7 @@ with
                 and partition_month
                 = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
             {% endif %}
-            and domain_name = '{{ domain.name }}'
+            and domain_name = '{{ domain.label }}'
         group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
         union all
         select
@@ -121,7 +119,7 @@ with
                 and partition_month
                 = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
             {% endif %}
-            and domain_name = '{{ domain.name }}'
+            and domain_name = '{{ domain.label }}'
         group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
         union all
         select
@@ -140,7 +138,7 @@ with
                 and partition_month
                 = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
             {% endif %}
-            and domain_name = '{{ domain.name }}'
+            and domain_name = '{{ domain.label }}'
         group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
         union all
         select
@@ -159,7 +157,7 @@ with
                 and partition_month
                 = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
             {% endif %}
-            and domain_name = '{{ domain.name }}'
+            and domain_name = '{{ domain.label }}'
         group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
         union all
         select
@@ -181,7 +179,7 @@ with
                 and partition_month
                 = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
             {% endif %}
-            and domain_name = '{{ domain.name }}'
+            and domain_name = '{{ domain.label }}'
         group by partition_month, updated_at, dimension_name, dimension_value, kpi_name
     {% endfor %}
 {% endfor %}

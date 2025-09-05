@@ -12,7 +12,7 @@ local_file = "chatbot_test_dataset_enriched.parquet"
 bq_client = bigquery.Client()
 extract_job = bq_client.extract_table(
     bq_table,
-    gcs_uri,
+    gcs_uri,py
     job_config=bigquery.job.ExtractJobConfig(destination_format="PARQUET"),
 )
 extract_job.result()

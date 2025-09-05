@@ -6,6 +6,9 @@ import logging
 import pyarrow as pa
 from openai import OpenAI # For OpenAI LLM
 from sentence_transformers import SentenceTransformer # For SentenceTransformer embeddings
+from pydantic import BaseModel
+from pydantic_ai import Agent
+from typing import List
 
 # --- Configuration ---
 # Path where LanceDB will store its data. This will create a directory.
@@ -13,7 +16,7 @@ DB_PATH = "lancedb_parquet_rag.db" # Adjusted DB path for parquet-only setup
 # Name of the table within the LanceDB database
 TABLE_NAME = "my_rag_data" # Adjusted table name for parquet-only setup
 # Dummy parquet file path for demonstration purposes when importing from parquet.
-DUMMY_PARQUET_FILE_FOR_IMPORT = "item_embedding_chatbot.parquet" # Keeping existing dummy file name
+DUMMY_PARQUET_FILE_FOR_IMPORT = "chatbot_test_dataset_enriched.parquet" # Keeping existing dummy file name
 
 # Global variables for models and API keys
 embedding_model = None # For SentenceTransformer
@@ -87,7 +90,7 @@ def initialize_environment():
 
         table = pa.table({
             'item_id': ids_array,
-            'semantic_content_embedding': vector_list_array,
+            'embedding': vector_list_array,
             'offer_description': texts_array
         })
         # Write to Parquet
@@ -100,7 +103,7 @@ def initialize_environment():
 def setup_lancedb_table(db_path: str, table_name: str,
                         parquet_file_path: str, # No longer optional, as it's the only method
                         id_column_parquet: str = 'item_id',
-                        vector_column_parquet: str = 'semantic_content_embedding',
+                        vector_column_parquet: str = 'embedding',
                         text_column_parquet: str = 'offer_description', # Crucial for RAG compatibility from parquet
                         index_type: str = "IVF_PQ", num_partitions: int = 128, num_sub_vectors: int = 96):
     """
@@ -112,7 +115,7 @@ def setup_lancedb_table(db_path: str, table_name: str,
         table_name (str): Name of the table to create within LanceDB.
         parquet_file_path (str): Path to the input parquet file containing data.
         id_column_parquet (str): The name of the ID column in the parquet file. Defaults to 'item_id'.
-        vector_column_parquet (str): The name of the vector column in the parquet file. Defaults to 'semantic_content_embedding'.
+        vector_column_parquet (str): The name of the vector column in the parquet file. Defaults to 'embedding'.
         text_column_parquet (str): The name of the text content column in the parquet file. Defaults to 'offer_description'.
                                    Crucial if RAG queries are intended on parquet data.
         index_type (str): The type of index to create.
@@ -138,7 +141,7 @@ def setup_lancedb_table(db_path: str, table_name: str,
         # df.head()  # Uncomment to see the first few rows of the DataFrame
         print(df.head())
 
-        # Convert 'semantic_content_embedding' from string to numpy array if needed
+        # Convert 'embedding' from string to numpy array if needed
         def parse_embedding(val):
             if isinstance(val, str):
                 return np.array([float(x) for x in val.strip('[]').split(',')])
@@ -191,8 +194,8 @@ def setup_lancedb_table(db_path: str, table_name: str,
         rename_map = {}
         if id_column_parquet != 'id':
             rename_map[id_column_parquet] = 'id'
-        if vector_column_parquet != 'semantic_content_embedding':
-            rename_map[vector_column_parquet] = 'semantic_content_embedding'
+        if vector_column_parquet != 'embedding':
+            rename_map[vector_column_parquet] = 'embedding'
         if text_column_parquet != 'offer_description' and text_column_parquet in table.column_names:
             rename_map[text_column_parquet] = 'offer_description'
         if rename_map:
@@ -228,10 +231,10 @@ def setup_lancedb_table(db_path: str, table_name: str,
         print(f"Table '{table_name}' created successfully.")
 
         # Create a vector index
-        print(f"Creating index of type '{index_type}' on column 'semantic_content_embedding'...")
+        print(f"Creating index of type '{index_type}' on column 'embedding'...")
         # FIX: Explicitly specify the column name for indexing
-        if 'semantic_content_embedding' not in table.schema.names:
-            print(f"Error: 'semantic_content_embedding' column not found in the table schema. Cannot create index.")
+        if 'embedding' not in table.schema.names:
+            print(f"Error: 'embedding' column not found in the table schema. Cannot create index.")
             return None # Cannot create index if vector column isn't there
 
         if index_type == "vector":
@@ -240,7 +243,7 @@ def setup_lancedb_table(db_path: str, table_name: str,
             metric="dot",
             num_partitions=8,
             num_sub_vectors=4,
-            vector_column_name="semantic_content_embedding",
+            vector_column_name="embedding",
         )   
             print(f"Index created with {num_partitions} partitions and {num_sub_vectors} sub-vectors.")
         elif index_type == "text":
@@ -256,79 +259,54 @@ def setup_lancedb_table(db_path: str, table_name: str,
         return None
 
 # --- RAG Query Function ---
+class OfferSelection(BaseModel):
+    id: str
+    relevance: str
+
+class LLMOutput(BaseModel):
+    offers: List[OfferSelection]
+
+# Create the agent for LLM calls and parsing
+llm_agent = Agent(
+    'openai:gpt-3.5-turbo',  # or 'openai:gpt-4o-mini' if available
+    output_type=[LLMOutput, str],
+    system_prompt=(
+        "Extract all selected offers from the context. "
+        "For each offer, provide: id (product-ID or offer-ID), relevance (brief explanation). "
+        "If you can't extract all data, ask the user to try again. "
+        "Return the result as a JSON object with an 'offers' list."
+    ),
+)
+
 def rag_query(table, question: str, k_retrieval: int = 5):
-    """
-    Performs a Retrieval Augmented Generation (RAG) query.
-    1. Embeds the user's question using the global SentenceTransformer embedding model.
-    2. Retrieves top-k most relevant documents/chunks from LanceDB.
-    3. Constructs a prompt for the OpenAI LLM using the question and retrieved context.
-    4. Generates an answer using the OpenAI LLM.
-
-    Args:
-        table (lancedb.table.LanceTable): The LanceDB table object to search within.
-        question (str): The user's natural language question.
-        k_retrieval (int): The number of top relevant chunks to retrieve from LanceDB.
-
-    Returns:
-        str: The OpenAI LLM's generated answer based on the retrieved context.
-    """
-    global embedding_model, openai_api_key, openai_client
-
+    global embedding_model
     if embedding_model is None:
         return "SentenceTransformer embedding model not loaded. Cannot perform RAG query."
-    if openai_client is None or openai_api_key is None:
-        return "OpenAI client not initialized or API key not set. Cannot perform RAG query with LLM."
     if 'offer_description' not in table.schema.names:
         return "Error: RAG query requires 'offer_description' column in the LanceDB table, but it's missing."
 
     print(f"\n--- Performing RAG Query for: '{question}' ---")
-
     try:
-        # 1. Embed the question using SentenceTransformer
-        print(f"Embedding question using SentenceTransformer '{SENTENCE_TRANSFORMER_MODEL}'...")
         question_vector = embedding_model.encode(question).tolist()
-
-        # 2. Retrieve top-k relevant documents/chunks from LanceDB
-        print(f"Retrieving top {k_retrieval} relevant chunks from LanceDB...")
         retrieved_results = table.search(question_vector).limit(k_retrieval).to_list()
-        print(f"Retrieved {len(retrieved_results)} chunks from LanceDB.")
-        # print(f"Retrieved results: {retrieved_results[:5]}...")  # Show first 3 for brevity
         if not retrieved_results:
             return "No relevant documents found in the database for the given question."
-
-        # Aggregate the retrieved text content to form the context for the LLM
-        context = "\n".join([f"{res.get('id', '')}: {res.get('offer_name', '')}, {res.get('offer_description', '')}" for res in retrieved_results if res.get('offer_name')])
-        print(f"Retrieved {len(retrieved_results)} chunks.")
-        print(f"Context for LLM:\n{context[:500]}...")  # Show first 500 characters of context
-        # 3. Construct the RAG prompt for OpenAI's chat completions API
-        messages = [
-            {"role": "system", "content": "You are a cultural curator and event planner."
-            " Your task is to analyze a list of cultural offerings and select those that align with a specific thematic. There is no limit on the number of offers you can select, but you should focus on relevance and quality."},
-            {"role": "user", "content": f"Context:\n{context}\n\nAnalyze the provided cultural offerings and identify all events, exhibitions, or performances that fit the following thematic: \"{question}\"\n\n"
-            f"Present the selected offerings in a clear and organized list. For each selected item, please include: id, offer_name and relevance: Briefly explain why this offering was selected for the thematic.\n"}
-        ]
-        #Preview openai prompt
-        print(f"OpenAI prompt messages:\n{messages[0]['content']}\n{messages[1]['content']}")
-        # 4. Generate answer using the OpenAI LLM
-        print(f"Generating answer with OpenAI's {OPENAI_LLM_MODEL}...")
-        response = openai_client.chat.completions.create(
-            model=OPENAI_LLM_MODEL,
-            messages=messages,
-            temperature=0.7, # Controls randomness: higher values mean more random output
-            max_tokens=500 # Max tokens for the generated answer
+        context = "\n".join([
+            f"{res.get('id', '')}: {res.get('offer_name', '')}, {res.get('offer_description', '')}"
+            for res in retrieved_results if res.get('offer_name')
+        ])
+        prompt = (
+            "You are a cultural curator and event planner. "
+            "Your task is to analyze a list of cultural offerings and select those that align with a specific thematic. "
+            "There is no limit on the number of offers you can select, but you should focus on relevance and quality. "
+            f"\n\nContext:\n{context}\n\nAnalyze the provided cultural offerings and identify all events, exhibitions, or performances that fit the following thematic: '{question}'\n\n"
+            "Present the selected offerings in a clear and organized list. For each selected item, please include: id, relevance. Return the result as a JSON object with an 'offers' list."
         )
-
-        if response.choices and response.choices[0].message and response.choices[0].message.content:
-            llm_answer = response.choices[0].message.content
-            print("\n--- LLM Generated Answer ---")
-            print(llm_answer)
-            return llm_answer
-        else:
-            return "OpenAI LLM did not return a valid answer."
-
+        result = llm_agent.run_sync(prompt)
+        return result.output
     except Exception as e:
-        print(f"Error during RAG query with OpenAI: {e}")
-        return f"RAG query failed due to an OpenAI error: {e}"
+        print(f"Error during RAG query with pydantic-ai Agent: {e}")
+        return f"RAG query failed due to an LLM error: {e}"
 
 # --- Main Execution Block ---
 if __name__ == "__main__":
@@ -349,7 +327,7 @@ if __name__ == "__main__":
         table_name=TABLE_NAME,
         parquet_file_path=DUMMY_PARQUET_FILE_FOR_IMPORT, # Use the dummy file created at init
         id_column_parquet='item_id', # Name of the ID column in your parquet file
-        vector_column_parquet='semantic_content_embedding', # Name of the vector column in your parquet file
+        vector_column_parquet='embedding', # Name of the vector column in your parquet file
         text_column_parquet='offer_description', # Name of the text content column in your parquet file (for RAG compatibility)
         index_type="vector" # Choose "IVF_PQ" or "IVFFlat"
     )
@@ -362,6 +340,7 @@ if __name__ == "__main__":
     if 'offer_description' in lancedb_table.schema.names and openai_client:
         print("\n--- Demonstrating RAG Query on Parquet Imported Data (Hybrid: ST Embeddings, OpenAI LLM) ---")
         user_question_parquet = "Moyen age"
+        
         rag_answer_parquet = rag_query(
             lancedb_table,
             user_question_parquet,

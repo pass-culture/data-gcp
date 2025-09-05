@@ -1,8 +1,10 @@
+import ast
 import json
 import logging
 import os
+import re
 import time
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 import requests
 from common.access_gcp_secrets import create_key_if_not_exists
@@ -140,64 +142,81 @@ def delayed_waiting_operator(
     dag,
     external_dag_id: str,
     external_task_id: str = "end",
-    allowed_states: list = ["success"],
-    failed_states: list = ["failed", "upstream_failed", "skipped"],
-    lower_date_limit=None,
-    skip_manually_triggered: bool = False,
+    allowed_states: list = None,
+    failed_states: list = None,
+    offset_days: int = 0,
+    window_days: int = 1,
+    offset_hours: int = 0,
+    window_hours: int = 0,
+    skip_manually_triggered: bool = True,
     pool: str = "default_pool",
     **kwargs,
 ):
     """
     Creates an ExternalTaskSensor that waits for a task in another DAG to finish,
-    with two key features:
-    1. Uses execution_date_fn to dynamically determine the last execution date of the external DAG.
-    2. Skips waiting for manually triggered DAG runs.
+    with a flexible day-based window.
+
+    Guarantees:
+        - Only scheduled DAG runs are considered (manual triggers considered optionally).
+        - DAG2 waits for the DAG1 run scheduled on the same day (before DAG2 run time).
+        - Window can be parametrized with offset_days/hours and window_days/hours.
 
     Args:
         dag: The DAG where this task will be added.
-        external_dag_id (str): The ID of the external DAG.
-        external_task_id (str): Task ID within the external DAG to wait for.
-        allowed_states (list): List of states considered as successful.
-        failed_states (list): List of states considered as failed.
-        lower_date_limit (datetime, optional): Lower bound for execution date filtering.
-        skip_manually_triggered (bool, optional): If True, skips waiting when DAG is manually triggered.
+        external_dag_id (str): ID of the external DAG.
+        external_task_id (str): Task ID in the external DAG to wait for.
+        allowed_states (list): States considered successful.
+        failed_states (list): States considered failed.
+        offset_days (int): How many days back to shift the window.
+        window_days (int): Width of the window in days.
+        offset_hours (int): Increase window back shift in hours.
+        window_hours (int): Increase width of the window in hours.
+        skip_manually_triggered (bool): Skip waiting for manual DAG runs if True.
+        pool (str): Airflow pool.
         **kwargs: Additional arguments for the Airflow task.
-
-    Returns:
-        ExternalTaskSensor or PythonOperator: The sensor for scheduled DAG runs or a PythonOperator that skips waiting for manual DAG runs.
     """
+    if allowed_states is None:
+        allowed_states = ["success"]
+    if failed_states is None:
+        failed_states = ["failed", "upstream_failed", "skipped"]
 
     task_id = f"wait_for_{external_dag_id}_{external_task_id}"
 
-    # Function to compute the last execution date of the external DAG
-    def compute_execution_date_fn(logical_date, **context):
+    def compute_execution_date_fn(logical_date: datetime, **context):
         """
-        Compute the execution date for the ExternalTaskSensor using Airflow's context.
+        Computes the external DAG run to wait for.
+
+        We define the window in terms of DAG2's logical_date:
+            - upper_bound: DAG2 logical_date (so we never pick DAG1 runs after DAG2)
+            - lower_bound: upper_bound - window_days (default 1)
+            - offset_days shifts the window back in time if needed
+
+        Note:
+            - logical_date is preferred here over data_interval_end to align with same-day semantics.
+            - data_interval_end could overshoot when DAG2's interval spans multiple days.
         """
         if logical_date is None:
             raise ValueError("The 'logical_date' is missing in the context.")
-
-        data_interval_end = context.get("data_interval_end")
-        if data_interval_end is None:
-            data_interval_end = logical_date + timedelta(days=1)
-
-        # Compute lower date limit (defaults to start of the same day if None)
-        local_lower = lower_date_limit or logical_date.replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        if window_days == 0 and window_hours == 0:
+            raise ValueError("The window cannot be zero")
+        if window_days < 0 or window_hours < 0:
+            raise ValueError("The window parameters cannot be negative")
+        # Compute upper date limit for external DAG (defaults to logical_date minus offsets)
+        upper_bound = logical_date - timedelta(days=offset_days, hours=offset_hours)
+        # Compute lower date limit (defaults to window_days=1 day before DAG's logical_date)
+        lower_bound = upper_bound - timedelta(days=window_days, hours=window_hours)
 
         logging.info(
             "Looking for external DAG '%s' runs between lower=%s and upper=%s",
             external_dag_id,
-            local_lower,
-            data_interval_end,
+            lower_bound,
+            upper_bound,
         )
 
-        # Fetch last execution date of the external DAG before the current execution date
         return get_last_execution_date(
             external_dag_id,
-            upper_date_limit=data_interval_end,
-            lower_date_limit=local_lower,
+            lower_date_limit=lower_bound,
+            upper_date_limit=upper_bound,
         )
 
     # If manual triggers should be skipped, create a PythonOperator instead
@@ -243,10 +262,10 @@ def delayed_waiting_operator(
         external_dag_id=external_dag_id,
         external_task_id=external_task_id,
         execution_date_fn=compute_execution_date_fn,
-        check_existence=True,
-        mode="reschedule",
         allowed_states=allowed_states,
         failed_states=failed_states,
+        check_existence=True,
+        mode="reschedule",
         dag=dag,
         pool=pool,
         **kwargs,
@@ -358,28 +377,50 @@ def decode_output(task_id, key, **kwargs):
     return decoded_output
 
 
+def parse_dbt_config(sql_text: str) -> dict:
+    """
+    Parse dbt config() block for tags and labels, even inside **macro(...) calls.
+    """
+    config_dict = {}
+
+    # capture everything inside config(...)
+    match = re.search(r"\{\{\s*config\((.*?)\)\s*\}\}", sql_text, re.DOTALL)
+    if not match:
+        return config_dict
+
+    config_body = match.group(1).strip()
+
+    # --- Extract tags (string or list) ---
+    tag_match = re.search(
+        r"tags\s*=\s*(\[.*?\]|[\"'][^\"']+[\"'])", config_body, re.DOTALL
+    )
+    if tag_match:
+        try:
+            config_dict["tags"] = ast.literal_eval(tag_match.group(1))
+        except Exception:
+            pass
+
+    # --- Extract labels (dict) ---
+    label_match = re.search(r"labels\s*=\s*(\{.*?\})", config_body, re.DOTALL)
+    if label_match:
+        try:
+            config_dict["labels"] = ast.literal_eval(label_match.group(1))
+        except Exception:
+            pass
+
+    return config_dict
+
+
 def get_tables_config_dict(PATH, BQ_DATASET, is_source=False, dbt_alias=False):
-    """
-    Generates a dictionary configuration for tables based on SQL files in a given directory.
-
-    Args:
-        PATH (str): The path to the directory containing SQL files.
-        BQ_DATASET (str): The BigQuery dataset where the tables will be stored or loaded from.
-        is_source (bool): If True, use 'source_dataset' and 'source_table' keys instead of 'destination_dataset' and 'destination_table'.
-
-    Returns:
-        dict: A dictionary where each key is a table name (derived from the SQL file name) and each value is a dictionary containing:
-            - 'sql': The path to the SQL file.
-            - 'source_dataset' or 'destination_dataset': The BigQuery dataset.
-            - 'source_table' or 'destination_table': The name of the table in BigQuery.
-    """
     tables_config = {}
     for file in os.listdir(PATH):
         extension = file.split(".")[-1]
         table_name = file.split(".")[0]
         if extension == "sql":
-            tables_config[table_name] = {}
-            tables_config[table_name]["sql"] = os.path.join(PATH, file)
+            sql_path = os.path.join(PATH, file)
+            tables_config[table_name] = {"sql": sql_path}
+
+            # destination vs source
             if is_source:
                 tables_config[table_name]["source_dataset"] = BQ_DATASET
                 tables_config[table_name]["source_table"] = (
@@ -390,9 +431,18 @@ def get_tables_config_dict(PATH, BQ_DATASET, is_source=False, dbt_alias=False):
                 tables_config[table_name]["destination_table"] = (
                     f"applicative_database_{table_name}"
                 )
+
+            # parse dbt config for tags/labels
+            with open(sql_path, "r") as f:
+                sql_text = f.read()
+                config_extras = parse_dbt_config(sql_text)
+                tables_config[table_name].update(config_extras)
+
+    # handle dbt alias
     for table_name, table_config in tables_config.items():
         if dbt_alias:
             table_config["table_alias"] = table_name.split("__")[-1]
+
     return tables_config
 
 

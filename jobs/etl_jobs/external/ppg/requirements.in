@@ -8,6 +8,7 @@ google-cloud-storage==2.19.0
 google-cloud-secret-manager==2.20.0
 google-auth-oauthlib==1.2.0
 typer==0.12
+treelib
 python-dateutil
 openpyxl
 pyarrow

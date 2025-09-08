@@ -74,7 +74,7 @@ def process_transfer(
 
         logger.info(
             f"Starting transfer for table {table}: {total_files} files in {total_batches} batches "
-            f"to {s3_config['target_s3_name']}"
+            f"to {s3_prefix_export}"
         )
 
         # Use ThreadPoolExecutor for parallel transfers
@@ -126,11 +126,11 @@ def process_transfer(
         total = success_count + fail_count
         if success_count:
             logger.info(
-                f"SUCCESS {table}: {success_count}/{total} files transferred to {s3_config['target_s3_name']}"
+                f"SUCCESS {table}: {success_count}/{total} files transferred to {s3_prefix_export}"
             )
         if fail_count:
             logger.error(
-                f"FAIL {table}: {fail_count}/{total} files NOT transferred to {s3_config['target_s3_name']}"
+                f"FAIL {table}: {fail_count}/{total} files NOT transferred to {s3_prefix_export}"
             )
 
 
@@ -164,6 +164,9 @@ def transfer_single_blob(
             Bucket=s3_config["target_s3_name"],
             Key=s3_object_name,
             Body=gcs_stream.read(),
+        )
+        logger.info(
+            f"Uploaded {blob.name} to s3://{s3_config['target_s3_name']}/{s3_object_name}"
         )
         return True
     except Exception as e:

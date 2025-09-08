@@ -12,7 +12,7 @@ from config import (
     BIGQUERY_ANALYTICS_DATASET,
     REGION_HIERARCHY_TABLE,
 )
-from xlsx_utils.core import BASE_TEMPLATE, SOURCE_TABLES, REPORTS, Stakeholder, StakeholderType, SheetType, Report
+from xlsx_utils.core import BASE_TEMPLATE, SOURCE_TABLES, REPORTS, Stakeholder, StakeholderType, Report, ReportPlanner
 
 
 logger = logging.getLogger(__name__)
@@ -164,17 +164,11 @@ def sanitize_numeric_types(df: pd.DataFrame) -> pd.DataFrame:
 
 class ExportSession:
     """Manages the entire export session with proper resource cleanup."""
-    def __init__(self, ds: str):#, template_path: Path, output_dir: Path, scope: str, target: str):
+    def __init__(self, ds: str):
         self.ds = ds
-        # self.template_path = template_path
-        # self.output_dir = output_dir
-        # self.scope: str = scope
-        # self.target = target
         self.tables_to_load = SOURCE_TABLES
         self.conn: Optional[duckdb.DuckDBPyConnection] = None
-        # self.hierarchy_data = None
-        
-        
+
     def __enter__(self):
         return self
         
@@ -233,83 +227,17 @@ class ExportSession:
         )
         typer.secho(f"➡️ Processing reports for {stakeholder.type.value} - {stakeholder.name}", fg="cyan")
         
-        
         # Generate reports based on stakeholder's desired reports
-        for report_key in stakeholder.desired_reports:
-            if report_key not in REPORTS:
-                typer.secho(f"❌ Unknown report key: {report_key}", fg="red")
-                raise typer.Exit(code=1)
-            
-            filename = f"{report_key}"
-            typer.secho(f"➡️ Creating report {filename}.xlsx", fg="cyan")
-            # Copy base template and select and rename deisred sheets
+        planner = ReportPlanner(stakeholder)
+        for job in planner.plan_reports():
             report = Report(
+                report_type=job["report_type"],
                 stakeholder=stakeholder,
                 base_template_path=BASE_TEMPLATE,
-                output_path=output_path / f"{filename}.xlsx"
-            )        
-        
+                output_path=output_path / job["output_path"],
+                context=job["context"]
+            )
+            report.build()
+            report.save()
         pass
     
-    
-    
-    
-    def process_stakeholder_old(self, stakeholder_type: str, name:str, output_path: Path, ds: str):
-        """Process reports for a given stakeholder."""
-        stakeholder = Stakeholder(
-            type=StakeholderType.MINISTERE if stakeholder_type == "ministere" else StakeholderType.DRAC,
-            name="Ministère" if stakeholder_type == "ministere" else name,
-        )
-        typer.secho(f"➡️ Processing reports for {stakeholder.type.value} - {stakeholder.name}", fg="cyan")
-        # Generate reports based on stakeholder's desired reports
-        for report_key in stakeholder.desired_reports:
-            if report_key not in REPORTS:
-                typer.secho(f"❌ Unknown report key: {report_key}", fg="red")
-                raise typer.Exit(code=1)
-            
-            filename = f"{report_key}"
-            typer.secho(f"➡️ Creating report {filename}.xlsx", fg="cyan")
-            # Copy base template and select and rename deisred sheets
-            report = Report(
-                stakeholder=stakeholder,
-                base_template_path=BASE_TEMPLATE,
-                output_path=output_path / f"{filename}.xlsx"
-            )        
-        
-        pass
-    
-# def process_stakeholder(stakeholder_type: str, output_dir: Path, ds: str, region: Optional[str] = None):
-#     if stakeholder_type not in ["ministere", "drac"]:
-#         typer.secho("❌ Invalid stakeholder type. Choose from [ministere, drac]", fg="red")
-#         raise typer.Exit(code=1)
-#     # Create Stakeholder instance
-#     stakeholder = Stakeholder(
-#         type=StakeholderType.MINISTERE if stakeholder_type == "ministere" else StakeholderType.DRAC,
-#         name=region if region else "Ministère",
-#     )
-    
-#     typer.secho(f"➡️ Processing reports for {stakeholder.type.value} - {stakeholder.name}", fg="cyan")
-    
-#     # Generate reports based on stakeholder's desired reports
-#     for report_key in stakeholder.desired_reports:
-#         if report_key not in REPORTS:
-#             typer.secho(f"❌ Unknown report key: {report_key}", fg="red")
-#             raise typer.Exit(code=1)
-        
-#         # Copy base template and select and rename deisred sheets
-#         report = Report(
-#             stakeholder=stakeholder,
-#             base_template_path=BASE_TEMPLATE,
-#             output_path=output_dir / f"{report_key}_{slugify(stakeholder.name)}.xlsx"
-#         )
-#         # Generate sheets as per the report configuration
-#         for sheet_info in report_config["sheets"]:
-#             sheet_type = SheetType.KPIS if "KPIs" in sheet_info["sheet"] else (SheetType.TOP if "Top" in sheet_info["sheet"] else SheetType.LEXIQUE)
-#             sheet = report.add_sheet(sheet_type, sheet_info["name"], sheet_info["filter"], sheet_info["config"])
-#             sheet.fill_with_data(conn=None, stakeholder=stakeholder, ds=ds)  # conn would be your DB connection
-        
-#         # save the report
-
-#         report_name = f"{report_key}_{slugify(stakeholder.name)}.xlsx"
-#         report_config = REPORTS[report_key]
-#         report.save()

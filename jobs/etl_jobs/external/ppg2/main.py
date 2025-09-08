@@ -4,7 +4,7 @@ import typer
 import logging
 from datetime import date
 
-from utils.data_utils import get_available_regions, ExportSession
+from utils.data_utils import get_available_regions, ExportSession, Stakeholder, StakeholderType
 from utils.file_utils import start_of_current_month, slugify, get_dated_base_dir, create_directory_structure
 
 logger = logging.getLogger(__name__)
@@ -94,7 +94,7 @@ def main(
     if ds:
         typer.secho(f"➡️ DS: {ds}", fg="cyan")
 
-    
+    # TO DO: hide later in 
     if stakeholder == "all":
         selected_regions = get_available_regions()
         national = True
@@ -109,7 +109,7 @@ def main(
         selected_regions = drac_selector(target)
         
     base_dir = get_dated_base_dir(report_base_dir, ds)
-    create_directory_structure(base_dir, selected_regions, national)
+    # create_directory_structure(base_dir, selected_regions, national)
     
     #export session:
     try:
@@ -118,10 +118,12 @@ def main(
             # session.load_data()
             # generate reports
             if national:
-                session.process_stakeholder("ministere", "ministere", base_dir / "NATIONAL", ds)
+                # session.process_stakeholder_old("ministere", "ministere", base_dir / "NATIONAL", ds)
+                stakeholder = Stakeholder(name="Ministère", type=StakeholderType.MINISTERE)
+                session.process_stakeholder(stakeholder, base_dir / "NATIONAL", ds)
             if selected_regions:
                 for region in selected_regions:
-                    session.process_stakeholder("drac",region, base_dir / "REGIONAL" / slugify(region), ds)
+                    session.process_stakeholder("drac",region, base_dir / "REGIONAL" / region, ds)
     except Exception as e:
         logger.error(f"❌ Export session failed: {e}")
         raise

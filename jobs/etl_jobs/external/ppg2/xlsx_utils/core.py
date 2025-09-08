@@ -147,7 +147,9 @@ STAKEHOLDER_REPORTS = {
     "drac": ["regional_summary", "departemental_detail", "academy_detail"]
 }
 
-BASE_TEMPLATE = Path("./jobs/etl_jobs/external/ppg/templates/PPG_Template_v4.xlsx")
+# BASE_TEMPLATE = Path("./jobs/etl_jobs/external/ppg/templates/PPG_Template_v4.xlsx")
+BASE_TEMPLATE = Path("./templates/export_template_v4.xlsx")
+
 TEMPLATE_DEFAULT = Path("./templates/export_template_v2.xlsx")
 
 
@@ -163,82 +165,121 @@ TOP_INDIV_OFFER_CAT = {"dataset": BIGQUERY_ANALYTICS_DATASET, "table": f"{table_
 TOP_INDIV_VENUE = {"dataset": BIGQUERY_ANALYTICS_DATASET, "table": f"{table_prefix}top_venue"}
 
 
-SHEETS = {
-    "Lexique": {
-        "template": TEMPLATE_DEFAULT,
-        "tab": "Lexique",
-        "data": None,
-        },
-    "Individual_KPIs": {
-        "template": TEMPLATE_DEFAULT,
-        "tab": "template_individuel",
-        "data": KPI_INDIV,
-        },
-    "Collective_KPIs": {
-        "template": TEMPLATE_DEFAULT,
-        "tab": "template_collective",
-        "data": KPI_COLL,
-        },
-    "Top_individual_Offer": {
-        "template": TEMPLATE_DEFAULT,
-        "tab": "template_top",
-        "data": TOP_INDIV_OFFER,
-        "headers": None
-        },
-    "Top_individual_Offer_Category": {
-        "template": TEMPLATE_DEFAULT,
-        "tab": "template_top",
-        "data": TOP_INDIV_OFFER_CAT,
-        },
-    "Top_individual_Venue": {
-        "template": TEMPLATE_DEFAULT,
-        "tab": "template_top",
-        "data": TOP_INDIV_VENUE,
-        },
-}
+# SHEETS = {
+#     "Lexique": {
+#         "template": TEMPLATE_DEFAULT,
+#         "tab": "Lexique",
+#         "data": None,
+#         },
+#     "Individual_KPIs": {
+#         "template": TEMPLATE_DEFAULT,
+#         "tab": "template_individuel",
+#         "data": KPI_INDIV,
+#         },
+#     "Collective_KPIs": {
+#         "template": TEMPLATE_DEFAULT,
+#         "tab": "template_collective",
+#         "data": KPI_COLL,
+#         },
+#     "Top_individual_Offer": {
+#         "template": TEMPLATE_DEFAULT,
+#         "tab": "template_top",
+#         "data": TOP_INDIV_OFFER,
+#         "headers": None
+#         },
+#     "Top_individual_Offer_Category": {
+#         "template": TEMPLATE_DEFAULT,
+#         "tab": "template_top",
+#         "data": TOP_INDIV_OFFER_CAT,
+#         },
+#     "Top_individual_Venue": {
+#         "template": TEMPLATE_DEFAULT,
+#         "tab": "template_top",
+#         "data": TOP_INDIV_VENUE,
+#         },
+# }
 
+class SheetType(Enum):
+    KPIS = "kpis"
+    TOP = "top"
+    LEXIQUE = "lexique"
+
+SHEET_DEFINITIONS = {
+    "individual_kpis": {
+        "type": SheetType.KPIS,
+        "template_tab": "template_individuel",
+        "source_table": "individual",
+    },
+    "collective_kpis": {
+        "type": SheetType.KPIS,
+        "template_tab": "template_collectif",
+        "source_table": "collective",
+    },
+    "lexique": {
+        "type": SheetType.LEXIQUE,
+        "template_tab": "Lexique",
+        "source_table": None,
+    },
+    "top_offer": {
+        "type": SheetType.TOP,
+        "template_tab": "Top 50 offres",
+        "source_table": "top_offer",
+    },
+    "top_offer_category": {
+        "type": SheetType.TOP,
+        "template_tab": "Top 50 par catégorie",
+        "source_table": "top_offer_category",
+    },
+    "top_venue": {
+        "type": SheetType.TOP,
+        "template_tab": "Top 50 lieux",
+        "source_table": "top_venue",
+    },
+}
 
 REPORTS = {
-    "national_summary":{
+    "national_summary": {
         "sheets": [
-            {"name": "Lexique", "sheet": "Lexique", "filter": {}, "config":{}},
-            {"name": "Part Individuelle", "sheet":"Individual_KPIs","filter":{"scope":"individual","scale":"national"}, "config": {}},
-            {"name": "Top 50 Offres", "sheet":"Top_individual_Offer","filter":{"scope":"individual","scale":"national"}, "config": {}},
-            {"name": "Top 50 Offres par Catégorie", "sheet": "Top_individual_Offer_Category","filter": {"scope":"individual", "scale": "national"},"config":{}},
-            {"name": "Top 50 Lieux", "sheet": "Top_individual_Venue", "filter": {"scope":"individual","scale":"national"}, "config":{}},
-            {"name": "Part Collective", "sheet": "Collective_KPIs", "filter": {"scope": "collective", "scale": "national"}, "config":{}},
-        ],
+            {"definition": "lexique"},
+            {"definition": "individual_kpis", "filters": {"scope": "individual", "scale": "national"}},
+            {"definition": "top_offer", "filters": {"scope": "individual", "scale": "national"}},
+            {"definition": "top_offer_category", "filters": {"scope": "individual", "scale": "national"}},
+            {"definition": "top_venue", "filters": {"scope": "individual", "scale": "national"}},
+            {"definition": "collective_kpis", "filters": {"scope": "collective", "scale": "national"}},
+        ]
     },
-    "regional_summary":{
+    "region_summary": {
         "sheets": [
-            {"name": "Lexique", "sheet": "Lexique", "filter": {}, "config":{}},
-            {"name": "Part Individuelle (national)", "sheet":"Individual_KPIs","filter":{"scope":"individual","scale":"national"}, "config": {}},
-            {"name": "Part Individuelle", "sheet":"Individual_KPIs","filter":{"scope":"individual","scale":"regional"}, "config": {}},
-            {"name": "Top 50 Offres", "sheet":"Top_individual_Offer","filter":{"scope":"individual","scale":"regional"}, "config": {}},
-            {"name": "Top 50 Offres par Catégorie", "sheet": "Top_individual_Offer_Category","filter": {"scope":"individual", "scale": "regional"},"config":{}},
-            {"name": "Top 50 Lieux", "sheet": "Top_individual_Venue", "filter": {"scope":"individual","scale":"regional"}, "config":{}},
-            {"name": "Part Collective (national)", "sheet": "Collective_KPIs", "filter": {"scope": "collective", "scale": "national"}, "config":{}},
-            {"name": "Part Collective", "sheet": "Collective_KPIs", "filter": {"scope": "collective", "scale": "regional"}, "config":{}},
-        ],
+            {"definition": "lexique"},
+            {"definition": "individual_kpis", "filters": {"scope": "individual", "scale": "national"}},
+            {"definition": "individual_kpis", "filters": {"scope": "individual", "scale": "region"}},
+            {"definition": "top_offer", "filters": {"scope": "individual", "scale": "region"}},
+            {"definition": "top_offer_category", "filters": {"scope": "individual", "scale": "region"}},
+            {"definition": "top_venue", "filters": {"scope": "individual", "scale": "region"}},
+            {"definition": "collective_kpis", "filters": {"scope": "collective", "scale": "national"}},
+            {"definition": "collective_kpis", "filters": {"scope": "collective", "scale": "region"}},
+
+        ]
     },
-    "departemental_detail":{
+    "academy_detail": {
         "sheets": [
-            {"name": "Lexique", "sheet": "Lexique", "filter": {}, "config":{}},
-            {"name": "Part Individuelle (regional)", "sheet":"Individual_KPIs","filter":{"scope":"individual","scale":"regional"}, "config": {}},
-            {"name": "Part Individuelle", "sheet":"Individual_KPIs","filter":{"scope":"individual","scale":"departemental"}, "config": {}},
-            {"name": "Top 50 Offres", "sheet":"Top_individual_Offer","filter":{"scope":"individual","scale":"departemental"}, "config": {}},
-            {"name": "Top 50 Offres par Catégorie", "sheet": "Top_individual_Offer_Category","filter": {"scope":"individual", "scale": "departemental"},"config":{}},
-            {"name": "Top 50 Lieux", "sheet": "Top_individual_Venue", "filter": {"scope":"individual","scale":"departemental"}, "config":{}},
-        ],
+            {"definition": "lexique"},
+            {"definition": "collective_kpis", "filters": {"scope": "collective", "scale": "region"}},
+            {"definition": "collective_kpis", "filters": {"scope": "collective", "scale": "academy"}},
+        ]
     },
-    "academy_detail":{
+    "department_detail": {
         "sheets": [
-            {"name": "Lexique", "sheet": "Lexique", "filter": {}, "config":{}},
-            {"name": "Part Collective (regional)", "sheet": "Collective_KPIs", "filter": {"scope": "collective", "scale": "regional"}, "config":{}},
-            {"name": "Part Collective", "sheet": "Collective_KPIs", "filter": {"scope": "collective", "scale": "academie"}, "config":{}},
-        ],
+            {"definition": "lexique"},
+            {"definition": "individual_kpis", "filters": {"scope": "individual", "scale": "region"}},
+            {"definition": "individual_kpis", "filters": {"scope": "individual", "scale": "department"}},
+            {"definition": "top_offer", "filters": {"scope": "individual", "scale": "department"}},
+            {"definition": "top_offer_category", "filters": {"scope": "individual", "scale": "department"}},
+            {"definition": "top_venue", "filters": {"scope": "individual", "scale": "department"}},
+        ]
     },
 }
+
 # BASIC_QUERY_TEMPLATE = """
 # SELECT partition_month, updated_at, dimension_name, dimension_value,
 #        kpi_name, numerator, denominator, kpi
@@ -265,10 +306,6 @@ class StakeholderType(Enum):
     MINISTERE = "ministere"
     DRAC = "drac"
 
-class SheetType(Enum):
-    KPIS = "kpis"
-    TOP = "top"
-    LEXIQUE = "lexique"
 
 @dataclass
 class Stakeholder:
@@ -316,58 +353,209 @@ class Stakeholder:
 
 @dataclass
 class Sheet:
-    """Represents a sheet within a report."""
-    type: SheetType  # lexique, kpis or top
-    name: Optional[str] = None
-    scale: Optional[str] = None  # national, regional, departmental, academie
-    scope: Optional[str] = None  # individual, collective
-    ds: Optional[str] = None  # consolidation date
-    source_table: Optional[str] = None  # individual_data, collective_data, top_individual_offer_data
-    format_config: Optional[Dict[str, Any]] = field(default_factory=dict)
+    """Represents a sheet instance within a report."""
+    definition: str                    # key from SHEET_DEFINITIONS
+    template_tab: str                  # template tab name
+    worksheet: Any                     # openpyxl worksheet instance
+    filters: Dict[str, Any] = field(default_factory=dict)
+    tab_name: Optional[str] = None
+    stakeholder: Optional[Any] = None  # reference to Stakeholder
+    context: Optional[Dict[str, Any]] = None  # region, academy, department, etc.
+
+    def preprocess(self):
+        """Placeholder for preprocessing formatting, column widths, titles."""
+        pass
+
+    def fill_data(self):
+        """Placeholder for filling the sheet with data based on filters."""
+        pass
+    
+    def postprocess(self):
+        """Placeholder for postprocessing formatting."""
+        pass
 
 
 class Report:
-    """Report - represents a complete report file."""
-    def __init__(self,report_name: str, stakeholder: Stakeholder,base_template_path: Path,output_path: Path):
-        self.report_name = report_name
+    """Represents a single Excel report for a stakeholder."""
+    
+    def __init__(self, report_type: str, stakeholder, base_template_path: Path, output_path: Path, context: Dict[str, Any] = None):
+        self.report_type = report_type
         self.stakeholder = stakeholder
         self.base_template_path = base_template_path
         self.output_path = output_path
-        self.workbook: Optional[Any] = None  # openpyxl.Workbook
-        sheets: List[Any] = field(default_factory=list)
-    # scope: str = "all"   # individual, collective, all
-    # sheets: List[Any] = field(default_factory=list)
-    # workbook: Optional[Any] = None  # openpyxl.Workbook
-    
-    def _load_workbook_template(self):
-        """Load the workbook template."""
+        self.context = context or {}
+        self.workbook: Any = None          # openpyxl.Workbook
+        self.sheets: List[Sheet] = []      # list of Sheet instances
+
+    def _load_template(self):
+        """Load the template workbook directly as the report workbook."""
         self.workbook = openpyxl.load_workbook(self.base_template_path)
+        
+        # Remove default sheet if it exists and is empty
+        if "Sheet" in self.workbook.sheetnames and len(self.workbook["Sheet"].rows) == 0:
+            self.workbook.remove(self.workbook["Sheet"])
+
+    def _copy_template_tab(self, template_tab: str, new_tab_name: str):
+        template_ws = self.workbook_template[template_tab]
+        new_ws = self.workbook.copy_worksheet(template_ws)
+        new_ws.title = new_tab_name[:31]  # truncate if needed
+        return new_ws
     
-    def add_sheet(self, sheet_type: SheetType, name: str, data_filter: Dict[str, Any], config: Dict[str, Any]):
-        """Add a sheet to the report."""
-        if not self.workbook:
-            self.load_workbook_template()
+    def _build_tab_name(self, definition_key: str, filters: Dict[str, Any], context: Dict[str, Any]):
+        """Return a user-friendly tab name based on sheet definition, filters, and context."""
         
-        sheet_info = SHEETS.get(f"{sheet_type.value.capitalize()}_{name.replace(' ', '_')}", None)
-        if not sheet_info:
-            raise ValueError(f"Sheet type {sheet_type} with name {name} not found in SHEETS configuration.")
+        if definition_key == "individual_kpis":
+            base = "Part Individuelle"
+            scale = filters.get("scale", "").capitalize()
+            return f"{base} ({scale})"
         
-        worksheet = self.workbook[sheet_info["tab"]]
-        sheet = Sheet(sheet_type=sheet_type.value, worksheet=worksheet, kpi_filters=[])
-        self.sheets.append(sheet)
-        return sheet
+        elif definition_key == "collective_kpis":
+            base = "Part Collective"
+            scale = filters.get("scale", "").capitalize()
+            return f"{base} ({scale})"
+    
+        else:
+            tab_name = SHEET_DEFINITIONS.get(definition_key, {}).get("tab_name")
+            if tab_name is None:
+                tab_name = SHEET_DEFINITIONS.get(definition_key, {}).get("template_tab", definition_key)
+            return tab_name.capitalize()
+    
+    def _resolve_sheets(self):
+        """Rename and configure tabs from the template instead of copying across workbooks."""
+        blueprint = REPORTS[self.report_type]
+        for sheet_info in blueprint["sheets"]:
+            definition_key = sheet_info["definition"]
+            template_info = SHEET_DEFINITIONS[definition_key]
+            
+            # Decide tab name based on definition + filters + context
+            tab_name = self._build_tab_name(
+                definition_key, 
+                {**sheet_info.get("filters", {}), **self.context},
+                self.context
+            )
 
-        
-    def _build_report(self):
-        if not self.workbook:
-            self._load_workbook_template()
+            # Check if the tab already exists
+            if tab_name in self.workbook.sheetnames:
+                ws = self.workbook[tab_name]
+            else:
+                # Copy the template tab
+                template_ws = self.workbook[template_info["template_tab"]]
+                ws = self.workbook.copy_worksheet(template_ws)
+       
+            if len(tab_name) > 31:
+                typer.secho(f"⚠️ Tab name '{tab_name}' exceeds 31 characters, truncating.", fg="yellow")
+                tab_name = tab_name[:31] # truncate if too long
+            ws.title = tab_name  
+            
+            # Create Sheet instance
+            sheet = Sheet(
+                definition=definition_key,
+                template_tab=template_info["template_tab"],
+                worksheet=ws,
+                filters={**sheet_info.get("filters", {}), **self.context},
+                tab_name=tab_name,
+                stakeholder=self.stakeholder,
+                context=self.context
+            )
+            self.sheets.append(sheet)
+
+    def _cleanup_template_sheets(self, used_tabs: List[str]):
+        """
+        Remove all template/unused sheets and enforce blueprint order.
+        """
+        # Remove any sheet not in the used list
+        for sheet_name in list(self.workbook.sheetnames):
+            if sheet_name not in used_tabs:
+                self.workbook.remove(self.workbook[sheet_name])
+
+        # Enforce order from used_tabs
+        for idx, tab_name in enumerate(used_tabs):
+            ws = self.workbook[tab_name]
+            self.workbook._sheets.remove(ws)
+            self.workbook._sheets.insert(idx, ws)
+
+                
+    def build(self):
+        """Build the report workbook with all sheets (copy templates, preprocess, fill data)."""
+        self._load_template()
+        self._resolve_sheets()
+        self._cleanup_template_sheets([sheet.tab_name for sheet in self.sheets])
+
+        # Preprocess and fill data for each sheet
         for sheet in self.sheets:
-            ...
-        
-        pass
-    # def save(self):
-    #     """Save the report to the output path."""
-    #     if not self.workbook:
-    #         raise ValueError("Workbook is not loaded.")
-    #     self.workbook.save(self.output_path)
+            sheet.preprocess()
+            sheet.fill_data()
 
+    def save(self):
+        """Save the workbook to the output path."""
+        if not self.output_path.suffix == ".xlsx":
+            self.output_path = self.output_path.with_suffix(".xlsx")
+        self.output_path.parent.mkdir(parents=True, exist_ok=True)
+        self.workbook.save(self.output_path)
+        
+class ReportPlanner:
+    """Expands a stakeholder into the list of reports they should get."""
+
+    def __init__(self, stakeholder):
+        self.stakeholder = stakeholder
+
+    def plan_reports(self) -> List[Dict[str, Any]]:
+        """
+        Returns a list of report jobs:
+        {
+            "report_type": str,
+            "context": dict,  # region, academy, department, etc.
+            "output_path": Path
+        }
+        """
+        jobs = []
+
+        if self.stakeholder.type.name == "MINISTERE":
+            # Ministère gets only the national summary
+            # base_path = Path("NATIONAL")
+            jobs.append(
+                {
+                    "report_type": "national_summary",
+                    "context": {},
+                    "output_path": "rapport_national.xlsx"
+                }
+            )
+            return jobs
+
+        # DRAC gets:
+        # 1) Regional summary (includes national for comparison)
+        region_name = self.stakeholder.name
+        # base_path = Path("REGIONAL") / f"{region_name}"
+        jobs.append(
+            {
+                "report_type": "region_summary",
+                "context": {"region": region_name},
+                "output_path": "rapport_regional.xlsx"
+            }
+            )
+
+        # 2) One detailed report per académie (collective scope)
+        if self.stakeholder.academy_tree:
+            for node in self.stakeholder.academy_tree.all_nodes():
+                if node.tag not in ["root_acad", "Academies"]:
+                    jobs.append(
+                        {
+                            "report_type": "academy_detail",
+                            "context": {"region": region_name, "academy": node.tag},
+                            "output_path": f"academie_{node.tag}.xlsx"
+                        }
+                    )
+
+        # 3) One detailed report per département (individual scope)
+        if self.stakeholder.department_tree:
+            for node in self.stakeholder.department_tree.all_nodes():
+                if node.tag not in ["root_dept", "Departements"]:
+                    jobs.append(
+                        {
+                            "report_type": "department_detail",
+                            "context": {"region": region_name, "department": node.tag},
+                            "output_path": f"departement_{node.tag}.xlsx"
+                        }
+                    )
+
+        return jobs

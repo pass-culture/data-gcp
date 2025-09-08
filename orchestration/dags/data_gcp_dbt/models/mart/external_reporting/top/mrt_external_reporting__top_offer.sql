@@ -1,7 +1,3 @@
--- cannot order partition table -> To order by
--- partition_month,
--- dimension_name,
--- total_booking_amount_ranked
 {{
     config(
         **custom_incremental_config(
@@ -65,8 +61,9 @@ with
                 sum(total_booking_amount) as total_booking_amount,
                 sum(total_booking_quantity) as total_booking_quantity,
                 row_number() over (
+                        partition by partition_month
                     {% if not dim.name == "NAT" %}
-                        partition by {{ dim.value_expr }}
+                        ,{{ dim.value_expr }}
                     {% endif %}
                     order by sum(total_booking_amount) desc
                 ) as total_booking_amount_ranked
@@ -82,8 +79,9 @@ with
                 offer_name
             qualify
                 row_number() over (
+                        partition by partition_month
                     {% if not dim.name == "NAT" %}
-                        partition by {{ dim.value_expr }}
+                        ,{{ dim.value_expr }}
                     {% endif %}
                     order by total_booking_amount desc
                 )

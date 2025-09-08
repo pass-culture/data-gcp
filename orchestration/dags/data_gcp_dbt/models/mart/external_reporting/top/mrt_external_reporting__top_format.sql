@@ -52,7 +52,9 @@ with
                 collective_offer_format,
                 sum(total_booking_amount) as total_booking_amount,
                 sum(total_number_of_tickets) as total_number_of_tickets,
-                row_number() over (partition by partition_month
+                row_number() over (
+                    partition by
+                        partition_month
                         {% if not dim.name == "NAT" %}, {{ dim.value_expr }} {% endif %}
                     order by sum(total_booking_amount) desc
                 ) as total_booking_amount_ranked
@@ -64,7 +66,9 @@ with
                 dimension_value,
                 collective_offer_format
             qualify
-                row_number() over (partition by partition_month
+                row_number() over (
+                    partition by
+                        partition_month
                         {% if not dim.name == "NAT" %}, {{ dim.value_expr }} {% endif %}
                     order by total_booking_amount desc
                 )

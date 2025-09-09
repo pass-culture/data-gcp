@@ -16,22 +16,14 @@ def run():
 
         # Initialize environment and LanceDB table
         with st.spinner("Initializing models and LanceDB table..."):
-            initialize_environment()
+            embedding_model, openai_client = initialize_environment()
             db = lancedb.connect(DB_PATH)
             if TABLE_NAME in db.table_names():
                 lancedb_table = db.open_table(TABLE_NAME)
                 st.info(f"Loaded existing LanceDB table: {TABLE_NAME}")
             else:
-                lancedb_table = setup_lancedb_table(
-                    db_path=DB_PATH,
-                    table_name=TABLE_NAME,
-                    parquet_file_path=DUMMY_PARQUET_FILE_FOR_IMPORT,
-                    id_column_parquet='item_id',
-                    vector_column_parquet='embedding',
-                    text_column_parquet='offer_description',
-                    index_type="vector"
-                )
-                st.info(f"Created new LanceDB table: {TABLE_NAME}")
+                st.error(f"LanceDB table '{TABLE_NAME}' not found in database at '{DB_PATH}'. Please set up the table first.")
+                return
 
         # Function to extract item ids from LLM output
         def extract_ids_from_llm_answer(llm_answer):
@@ -53,9 +45,9 @@ def run():
                 st.write(f"\n--- Evaluating tag: {tag_name} ---")
                 gt_ids = set(labellised_df[labellised_df['tag_name'] == tag_name]['item_id'].astype(str))
                 query_text = TAG_DESCRIPTIONS.get(tag_name, tag_name)
-                llm_answer = rag_query(lancedb_table, query_text, k_retrieval=k_retrieval)
+                llm_answer,table_results = rag_query(lancedb_table, embedding_model, query_text, k_retrieval=k_retrieval)
                 logger.info(f"LLM answer for tag '{tag_name}': {llm_answer}")
-                pred_ids = extract_ids_from_llm_answer(llm_answer)
+                pred_ids = set([offer.id for offer in llm_answer.offers])
                 intersection = gt_ids & pred_ids
                 precision = len(intersection) / len(pred_ids) if pred_ids else 0
                 recall = len(intersection) / len(gt_ids) if gt_ids else 0
@@ -81,5 +73,15 @@ def run():
                 if row:
                     st.write(f"**Ground truth IDs:** {row['ground_truth_ids']}")
                     st.write(f"**Predicted IDs:** {row['predicted_ids']}")
+            check_results = st.checkbox("Check individual results for a tag")
+            if check_results :
+                df = pd.DataFrame(table_results)
+                # Build a DataFrame from a list of Pydantic objects (llm_answer.offers)
+                llm_df = pd.DataFrame([offer.dict() for offer in llm_answer.offers])
+                llm_enriched_df = df.merge(llm_df, left_on='id', right_on='id', how='left', suffixes=('', '_llm'))
+                st.subheader("LLM retrieval Results:")
+                st.dataframe(llm_enriched_df)
+                st.subheader("Raw table results:")
+                st.dataframe(df)
     else:
         st.info("Please upload a labellised parquet file to begin.")

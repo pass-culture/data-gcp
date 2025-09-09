@@ -46,7 +46,9 @@ dependencies = [
     "pydantic-ai==1.0.1",
     "lancedb==0.25.0",
     "sentence-transformers==5.1.0",
-    "loguru==0.7.3"
+    "loguru==0.7.3",
+    "google-cloud-secret-manager>=2.16.2",
+    "langchain>=0.0.208"
 
 ]
 

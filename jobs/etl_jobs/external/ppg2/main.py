@@ -115,12 +115,12 @@ def main(
     try:
         with ExportSession(ds) as session:
             # load data
-            # session.load_data()
+            session.load_data()
             # generate reports
             if national:
                 # session.process_stakeholder_old("ministere", "ministere", base_dir / "NATIONAL", ds)
                 stakeholder = Stakeholder(name="Ministère", type=StakeholderType.MINISTERE)
-                session.process_stakeholder(stakeholder, base_dir / "NATIONAL", ds)
+                session.process_stakeholder("ministere",stakeholder, base_dir / "NATIONAL", ds)
             if selected_regions:
                 for region in selected_regions:
                     session.process_stakeholder("drac",region, base_dir / "REGIONAL" / region, ds)

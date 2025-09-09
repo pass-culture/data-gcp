@@ -192,7 +192,7 @@ class ExportSession:
         dataset = config.get('dataset', BIGQUERY_ANALYTICS_DATASET)
         project_id = config.get('project', GCP_PROJECT)
         typer.echo(f"Loading {table_name} from BigQuery...")
-        query = f"SELECT * FROM `{project_id}.{dataset}.{table_name}` WHERE partition_month = '{self.ds}'"
+        query = f"SELECT * FROM `{project_id}.{dataset}.{table_name}`"
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", message=".*BigQuery Storage module not found.*")
             df = client.query(query).to_dataframe()
@@ -237,7 +237,7 @@ class ExportSession:
                 output_path=output_path / job["output_path"],
                 context=job["context"]
             )
-            report.build()
+            report.build(ds,self.conn)
             report.save()
         pass
     

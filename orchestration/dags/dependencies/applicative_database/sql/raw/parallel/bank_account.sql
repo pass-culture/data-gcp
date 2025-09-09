@@ -8,5 +8,4 @@ SELECT
     ,CAST("dsApplicationId" AS VARCHAR(255)) AS ds_application_id
     ,CAST("status" AS VARCHAR(255)) AS status
     ,"dateCreated" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\'  AS date_created
-    ,"dateLastStatusUpdate" AT TIME ZONE \'UTC\' AT TIME ZONE \'Europe/Paris\'  AS date_last_status_update
 FROM public.bank_account

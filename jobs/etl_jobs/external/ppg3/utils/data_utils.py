@@ -12,8 +12,7 @@ from config import (
     BIGQUERY_ANALYTICS_DATASET,
     REGION_HIERARCHY_TABLE,
 )
-from xlsx_utils.core import BASE_TEMPLATE, SOURCE_TABLES, REPORTS, Stakeholder, StakeholderType, Report, ReportPlanner
-
+from utils.file_utils import slugify
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -127,6 +126,52 @@ def build_region_hierarchy(
 def get_available_regions():
     return sorted(build_region_hierarchy().keys())
 
+def drac_selector(target: Optional[str]):
+    """Special handling for stakeholder 'drac' with optional target regions."""
+    regions = get_available_regions()
+    slug_regions = {slugify(r): r for r in regions}
+    selected_regions = []
+
+    if target:
+        input_slug_regions = target.split()
+        typer.secho(f"➡️ Input regions: {', '.join(input_slug_regions)}", fg="cyan")
+        invalid_regions = [r for r in input_slug_regions if r not in slug_regions.keys()]
+        if invalid_regions:
+            typer.secho(
+                f"❌ Invalid region(s): {', '.join(invalid_regions)}. "
+                f"Allowed regions: {', '.join(slug_regions.keys())}",
+                fg="red",
+            )
+            raise typer.Exit(code=1)
+        selected_regions = [slug_regions[r] for r in input_slug_regions]
+        typer.secho(
+            f"✅ selected region{'s' if len(selected_regions) > 1 else ''}: {', '.join(selected_regions)}",
+            fg="green",
+        )
+    else:
+        # Interactive selection
+        typer.echo("Please choose one or more regions (space-separated numbers):")
+        typer.echo("0. All regions")
+        for i, r in enumerate(slug_regions.values(), start=1):
+            typer.echo(f"{i}. {r}")
+
+        choice = typer.prompt("Enter numbers")
+
+        try:
+            indices = [int(x) for x in choice.split()]
+            if 0 in indices:
+                selected_regions = regions[:]  # select all
+            else:
+                selected_regions = [regions[i - 1] for i in indices]
+        except (ValueError, IndexError):
+            typer.secho("❌ Invalid choice", fg="red")
+            raise typer.Exit(code=1)
+
+        typer.secho(
+            f"✅ You selected regions: {', '.join(selected_regions)}", fg="green"
+        )
+
+    return selected_regions
 
 def sanitize_date_fields(df: pd.DataFrame, fields: Union[str, Iterable[str]]) -> pd.DataFrame:
     """Ensure date fields are in YYYY-MM-DD format."""
@@ -161,165 +206,3 @@ def sanitize_numeric_types(df: pd.DataFrame) -> pd.DataFrame:
                 df[col] = pd.to_numeric(df[col], errors='coerce').astype('float64')
     return df
 
-
-class ExportSession:
-    """Manages the entire export session with proper resource cleanup."""
-    def __init__(self, ds: str):
-        self.ds = ds
-        self.tables_to_load = SOURCE_TABLES
-        self.conn: Optional[duckdb.DuckDBPyConnection] = None
-
-    def __enter__(self):
-        return self
-        
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.conn:
-            self.conn.close()
-
-    
-    def load_data(self):
-        """Load tables based on self.scope."""
-        
-        client = bigquery.Client(project=GCP_PROJECT)
-        self.conn = duckdb.connect(":memory:")
-        
-        for _, config in self.tables_to_load.items():
-            self._load_table(client,config)
-    
-    def _load_table(self, client: bigquery.Client, config: Dict):
-        """Load a single table into DuckDB."""
-        table_name = config['table']
-        dataset = config.get('dataset', BIGQUERY_ANALYTICS_DATASET)
-        project_id = config.get('project', GCP_PROJECT)
-        typer.echo(f"Loading {table_name} from BigQuery...")
-        query = f"SELECT * FROM `{project_id}.{dataset}.{table_name}`"
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", message=".*BigQuery Storage module not found.*")
-            df = client.query(query).to_dataframe()
-            typer.echo(f"{table_name} dtypes: {df.dtypes}")
-        if df.empty:
-            typer.echo(f"Warning: {table_name} returned no data")
-            return
-        
-        df = sanitize_date_fields(df, "partition_month")
-        df = sanitize_numeric_types(df)
-            
-        typer.echo(f"Loaded {len(df):,} records for {table_name}")
-        
-        # Register and create table
-        self.conn.register(f"{table_name}_tmp", df)
-        self.conn.execute(f"CREATE TABLE {table_name} AS SELECT * FROM {table_name}_tmp")
-        
-        # Create indexes based on available columns
-        self._create_indexes(table_name, df.columns.tolist())
-        typer.echo(f"Created {table_name} table with indexes")
-
-    
-    def _create_indexes(self, table_name: str, columns: List[str]):
-        """Create indexes on commonly queried columns with error recovery."""
-        indexes_created = []
-        indexes_failed = []
-        
-        typer.secho(f"🔍 Creating indexes for table: {table_name}", fg="cyan")
-        
-        # List of indexes to attempt
-        index_operations = []
-        
-        # Core filtering columns
-        core_filter_columns = ['dimension_name', 'dimension_value', 'partition_month']
-        kpi_columns = ['kpi_name']
-        
-        if all(col in columns for col in core_filter_columns):
-            index_operations.append({
-                "name": "core_filters",
-                "sql": f"CREATE INDEX IF NOT EXISTS idx_{table_name}_core_filters ON {table_name} (dimension_name, dimension_value, partition_month)",
-                "description": "Core filters composite index"
-            })
-        
-        if all(col in columns for col in core_filter_columns + kpi_columns):
-            index_operations.append({
-                "name": "kpi_filters", 
-                "sql": f"CREATE INDEX IF NOT EXISTS idx_{table_name}_kpi_filters ON {table_name} (kpi_name, dimension_name, dimension_value, partition_month)",
-                "description": "KPI-specific composite index"
-            })
-        
-        # Individual indexes
-        for col in ['partition_month', 'dimension_name','dimension_value', 'kpi_name']:
-            if col in columns:
-                index_operations.append({
-                    "name": col,
-                    "sql": f"CREATE INDEX IF NOT EXISTS idx_{table_name}_{col} ON {table_name} ({col})",
-                    "description": f"Individual index on {col}"
-                })
-        
-
-        # Execute each index creation with individual error handling
-        for idx_op in index_operations:
-            try:
-                self.conn.execute(idx_op["sql"])
-                indexes_created.append(idx_op["name"])
-                typer.echo(f"   ✓ {idx_op['description']}")
-            except Exception as e:
-                indexes_failed.append(idx_op["name"])
-                if "INTERNAL Error" in str(e):
-                    typer.secho(f"   ⚠ {idx_op['description']} - skipped (DuckDB internal error)", fg="yellow")
-                else:
-                    typer.secho(f"   ❌ {idx_op['description']} - failed: {str(e)[:50]}...", fg="red")
-        
-        # Summary
-        if indexes_created:
-            typer.secho(f"📊 {table_name}: Created {len(indexes_created)} indexes successfully", fg="green")
-        if indexes_failed:
-            typer.secho(f"⚠ {table_name}: {len(indexes_failed)} indexes failed (table will still work)", fg="yellow")
-        
-
-    def process_stakeholder(self, stakeholder_type: str, name: str, output_path: Path, ds: str):
-        """Process reports for a given stakeholder using new service architecture."""
-        stakeholder = Stakeholder(
-            type=StakeholderType.MINISTERE if stakeholder_type == "ministere" else StakeholderType.DRAC,
-            name="Ministère" if stakeholder_type == "ministere" else name,
-        )
-        typer.secho(f"➡️ Processing reports for {stakeholder.type.value} - {stakeholder.name}", fg="cyan")
-        
-        # Generate reports based on stakeholder's desired reports
-        planner = ReportPlanner(stakeholder)
-        report_jobs = planner.plan_reports()
-        
-        successful_reports = 0
-        total_reports = len(report_jobs)
-        
-        typer.secho(f"📋 Planning to generate {total_reports} reports", fg="cyan")
-        
-        for job in report_jobs:
-            try:
-                # Create Report instance
-                report = Report(
-                    report_type=job["report_type"],
-                    stakeholder=stakeholder,
-                    base_template_path=BASE_TEMPLATE,
-                    output_path=output_path / job["output_path"],
-                    context=job["context"]
-                )
-                
-                # Build and save report using new architecture
-                report.build(ds, self.conn)
-                report.save()
-                
-                successful_reports += 1
-                
-            except Exception as e:
-                typer.secho(f"❌ Failed to generate report {job['output_path']}: {e}", fg="red")
-                logger.error(f"Report generation failed for {job['output_path']}: {e}")
-                # Continue with next report instead of failing completely
-        
-        # Final summary
-        if successful_reports == total_reports:
-            typer.secho(f"✅ All {total_reports} reports generated successfully for {stakeholder.name}", fg="green")
-        elif successful_reports > 0:
-            typer.secho(
-                f"⚠️ {successful_reports}/{total_reports} reports generated successfully for {stakeholder.name}", 
-                fg="yellow"
-            )
-        else:
-            typer.secho(f"❌ No reports generated successfully for {stakeholder.name}", fg="red")
-        

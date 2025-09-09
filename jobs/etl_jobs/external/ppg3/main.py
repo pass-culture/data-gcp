@@ -1,68 +1,14 @@
-from pathlib import Path
-from typing import List, Optional
 import typer
 import logging
-from datetime import date
 
-from utils.data_utils import get_available_regions, ExportSession, Stakeholder, StakeholderType
-from utils.file_utils import start_of_current_month, slugify, get_dated_base_dir
+from utils.data_utils import get_available_regions, drac_selector
+from utils.file_utils import start_of_current_month, get_dated_base_dir
+from core import ExportSession, Stakeholder, StakeholderType
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-def drac_selector(target: Optional[str]):
-    """Special handling for stakeholder 'drac' with optional target regions."""
-    regions = get_available_regions()
-    slug_regions = {slugify(r): r for r in regions}
-    selected_regions = []
-
-    if target:
-        input_slug_regions = target.split()
-        typer.secho(f"➡️ Input regions: {', '.join(input_slug_regions)}", fg="cyan")
-        invalid_regions = [r for r in input_slug_regions if r not in slug_regions.keys()]
-        if invalid_regions:
-            typer.secho(
-                f"❌ Invalid region(s): {', '.join(invalid_regions)}. "
-                f"Allowed regions: {', '.join(slug_regions.keys())}",
-                fg="red",
-            )
-            raise typer.Exit(code=1)
-        selected_regions = [slug_regions[r] for r in input_slug_regions]
-        typer.secho(
-            f"✅ selected region{'s' if len(selected_regions) > 1 else ''}: {', '.join(selected_regions)}",
-            fg="green",
-        )
-    else:
-        # Interactive selection
-        typer.echo("Please choose one or more regions (space-separated numbers):")
-        typer.echo("0. All regions")
-        for i, r in enumerate(slug_regions.values(), start=1):
-            typer.echo(f"{i}. {r}")
-
-        choice = typer.prompt("Enter numbers")
-
-        try:
-            indices = [int(x) for x in choice.split()]
-            if 0 in indices:
-                selected_regions = regions[:]  # select all
-            else:
-                selected_regions = [regions[i - 1] for i in indices]
-        except (ValueError, IndexError):
-            typer.secho("❌ Invalid choice", fg="red")
-            raise typer.Exit(code=1)
-
-        typer.secho(
-            f"✅ You selected regions: {', '.join(selected_regions)}", fg="green"
-        )
-
-    return selected_regions
-
-
-REPORT_BASE_DIR_DEFAULT = Path("./reports")
-report_base_dir = REPORT_BASE_DIR_DEFAULT
-
-
-
+from config import REPORT_BASE_DIR_DEFAULT
 
 
 app = typer.Typer()
@@ -108,7 +54,7 @@ def main(
         national = False
         selected_regions = drac_selector(target)
         
-    base_dir = get_dated_base_dir(report_base_dir, ds)
+    base_dir = get_dated_base_dir(REPORT_BASE_DIR_DEFAULT, ds)
     # create_directory_structure(base_dir, selected_regions, national)
     
     #export session:

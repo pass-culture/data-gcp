@@ -3,16 +3,7 @@ import logging
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from copy import copy
-from collections import defaultdict
-
-def default_layout():
-    return {"title_row_offset": 0, "title_col_offset": 0,"title_height": 3}
-
-SHEET_LAYOUT = defaultdict(default_layout, {
-    "top": {"title_row_offset": 0, "title_col_offset": 0,"title_height": 3},
-    "kpis": {"title_row_offset": 0, "title_col_offset": 3,"title_height": 3}
-    }
-)
+from config import SHEET_LAYOUT
 
 
 logger = logging.getLogger(__name__)

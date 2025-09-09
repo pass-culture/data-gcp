@@ -7,7 +7,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 from utils.duckdb_utils import query_yearly_kpi, query_monthly_kpi, aggregate_kpi_data
-from services.excel_layout import SHEET_LAYOUT
+from config import SHEET_LAYOUT
 
 logger = logging.getLogger(__name__)
 

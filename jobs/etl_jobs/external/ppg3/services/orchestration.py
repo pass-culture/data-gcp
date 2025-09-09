@@ -5,23 +5,11 @@ import logging
 import typer
 
 from services.data import DataService
-from services.excel_layout import ExcelLayoutService ,SHEET_LAYOUT
+from services.excel_layout import ExcelLayoutService
 from services.excel_writer import ExcelWriterService
 
-# Import existing configurations
-from xlsx_utils.core import SHEET_DEFINITIONS, SOURCE_TABLES
+from config import SHEET_DEFINITIONS, SOURCE_TABLES, AGG_TYPE_MAPPING, DEFAULT_AGG_TYPE, SHEET_LAYOUT
 
-
-AGG_TYPE_MAPPING = {
-    "Par an: somme sur l'année": "sum",
-    "Par an: moyenne sur l'année": "wavg",
-    "Par an: maximum": "max",
-    "Par an: Août": "august",
-    "Par an: décembre": "december",
-}
-
-# Default aggregation if not found or invalid
-DEFAULT_AGG_TYPE = "sum"
 
 logger = logging.getLogger(__name__)
 
@@ -190,7 +178,7 @@ class ReportOrchestrationService:
             table_config = SOURCE_TABLES[source_table_key]
             table_name = table_config["table"]
 
-            dimension_context = sheet.get_dimension_context()
+            dimension_context = sheet.context
             if not dimension_context:
                 logger.warning(f"Could not resolve dimension context for {sheet.tab_name}")
                 result["success"] = False
@@ -258,7 +246,7 @@ class ReportOrchestrationService:
             scope = "individual" if sheet.definition == "individual_kpis" else "collective"
             
             # Get dimension context  
-            dimension_context = sheet.get_dimension_context()
+            dimension_context = sheet.context
             if not dimension_context:
                 logger.warning(f"Could not resolve dimension context for {sheet.tab_name}")
                 result["success"] = False

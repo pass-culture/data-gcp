@@ -3,13 +3,16 @@ from duckdb import DuckDBPyConnection
 import typer
 import logging
 import pandas as pd
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 from utils.duckdb_utils import query_yearly_kpi, query_monthly_kpi, aggregate_kpi_data
+from services.excel_layout import SHEET_LAYOUT
 
 logger = logging.getLogger(__name__)
 
 
-class KPIDataService:
+class DataService:
     """Handles KPI data retrieval and aggregation from DuckDB."""
     
     def __init__(self, conn: DuckDBPyConnection):
@@ -177,3 +180,61 @@ class KPIDataService:
                 result[month_key] = float(value)
         
         return result
+    
+    def get_top_rankings(
+        self,
+        dimension_name: str,
+        dimension_value: str,
+        ds: str,
+        table_name: str,
+        top_n: int = 50,
+        select_fields: List[str] = [],
+        order_by: List[str] = []
+    ) -> Optional[pd.DataFrame]:
+        """
+        Get top N rankings for a given dimension.
+        
+        Args:
+            dimension_name: NAT, REG, ACAD, DEP
+            dimension_value: Specific value for dimension
+            ds: Consolidation date in YYYY-MM-DD format
+            table_name: DuckDB table name
+            top_n: Number of top entries to retrieve
+            order_by: List of fields to order by (descending)
+        
+        Returns:
+            DataFrame with top rankings, None if failed
+        """
+        assert order_by, "order_by list cannot be empty"
+        assert len(order_by) <= 2, "order_by can have at most 2 fields"
+        assert select_fields, "select_fields list cannot be empty"
+        full_select = select_fields + [field for field in order_by if field not in select_fields]
+        reorder_by = [order_by[0],"rank"] if len(order_by) > 1 else ["rank"]
+        partition = f"PARTITION BY {order_by[0]}" if len(order_by) == 2  else ""
+
+        ds_date = datetime.strptime(ds, "%Y-%m-%d").date()
+        previous_month = ds_date - relativedelta(months=1)
+        previous_month_str = previous_month.strftime("%Y-%m-%d")
+        try:
+            query = f"""
+                SELECT {', '.join(select_fields)}, rank
+                FROM (
+                    SELECT {', '.join(full_select)},
+                        RANK() OVER ({partition} ORDER BY {order_by[-1]} DESC) as rank
+                    FROM {table_name}
+                    WHERE dimension_name = ? AND dimension_value = ? AND partition_month = ?
+                ) ranked_data
+                WHERE rank <= ?
+                ORDER BY {', '.join(reorder_by)} ASC
+            """
+            params = [dimension_name, dimension_value, previous_month_str, top_n]
+            # print("DEBUG: Query with parameters substituted:")
+            # manual_query = query.replace('?', '{}').format(*[f"'{p}'" if isinstance(p, str) else str(p) for p in params])
+            # print(manual_query)
+            result = self.conn.execute(query, params).df()
+            # print(f"DEBUG: Query returned {len(result)} rows")
+
+            return result
+        except Exception as e:
+            logger.warning(f"Failed to retrieve top rankings for {dimension_name}={dimension_value}: {e}")
+            return None

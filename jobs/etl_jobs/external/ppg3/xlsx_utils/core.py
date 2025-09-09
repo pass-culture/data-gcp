@@ -204,41 +204,43 @@ SHEET_DEFINITIONS = {
         "template_tab": "Top 50 offres",
         "source_table": "top_offer",
         "top_n": 50,
+        "select_fields": ["partition_month","offer_category_id","offer_subcategory_id","offer_name","total_booking_amount","total_booking_quantity"],
+        "order_by": ["total_booking_amount"]
     },
     "top_offer_category": {
         "type": SheetType.TOP,
         "template_tab": "Top 50 par catégorie",
         "source_table": "top_offer_category",
         "top_n": 50,
+        "select_fields": ["partition_month","offer_category_id","offer_subcategory_id","offer_name","total_booking_amount","total_booking_quantity"],
+        "order_by": ["offer_category_id","total_booking_amount"]
     },
     "top_venue": {
         "type": SheetType.TOP,
         "template_tab": "Top 50 lieux",
         "source_table": "top_venue",
         "top_n": 50,
+        "select_fields": ["partition_month","venue_name","offerer_name"],
+        "order_by": ["total_venue_booking_amount_ranked"]
     },
     "top_ac": {
         "type": SheetType.TOP,
         "template_tab": "Top 50 acteurs culturels",
         "source_table": "top_ac",
         "top_n": 50,
+        "select_fields": ["partition_month","offerer_name","total_number_of_tickets"],
+        "order_by": ["total_booking_amount"]
     },
     "top_format": {
         "type": SheetType.TOP,
         "template_tab": "Top 5 formats",
         "source_table": "top_format",
         "top_n": 5,
+        "select_fields": ["partition_month","collective_offer_format","total_booking_amount","total_number_of_tickets"],
+        "order_by": ["total_booking_amount"]
     },
 }
 
-def default_layout():
-    return {"title_row_offset": 0, "title_col_offset": 0}
-
-SHEET_LAYOUT = defaultdict(default_layout, {
-    "top": {"title_row_offset": 0, "title_col_offset": 0},
-    "kpis": {"title_row_offset": 0, "title_col_offset": 3}
-    }
-)
 
 REPORTS = {
     "national_summary": {
@@ -271,19 +273,19 @@ REPORTS = {
         "sheets": [
             {"definition": "lexique"},
             {"definition": "collective_kpis", "filters": {"scope": "collective", "scale": "region"}},
-            {"definition": "collective_kpis", "filters": {"scope": "collective", "scale": "academy"}},
-            {"definition": "top_ac", "filters": {"scope": "collective", "scale": "academy"}},
-            {"definition": "top_format", "filters": {"scope": "collective", "scale": "academy"}},
+            {"definition": "collective_kpis", "filters": {"scope": "collective", "scale": "academie"}},
+            {"definition": "top_ac", "filters": {"scope": "collective", "scale": "academie"}},
+            {"definition": "top_format", "filters": {"scope": "collective", "scale": "academie"}},
         ]
     },
     "department_detail": {
         "sheets": [
             {"definition": "lexique"},
             {"definition": "individual_kpis", "filters": {"scope": "individual", "scale": "region"}},
-            {"definition": "individual_kpis", "filters": {"scope": "individual", "scale": "department"}},
-            {"definition": "top_offer", "filters": {"scope": "individual", "scale": "department"}},
-            {"definition": "top_offer_category", "filters": {"scope": "individual", "scale": "department"}},
-            {"definition": "top_venue", "filters": {"scope": "individual", "scale": "department"}},
+            {"definition": "individual_kpis", "filters": {"scope": "individual", "scale": "departement"}},
+            {"definition": "top_offer", "filters": {"scope": "individual", "scale": "departement"}},
+            {"definition": "top_offer_category", "filters": {"scope": "individual", "scale": "departement"}},
+            {"definition": "top_venue", "filters": {"scope": "individual", "scale": "departement"}},
         ]
     },
 }
@@ -335,9 +337,9 @@ class Stakeholder:
         else:
             self.academy_tree = None
             self.department_tree = None
-        if self.type == StakeholderType.DRAC:
-            typer.secho(f"➡️ DRAC '{self.name}' with adademy tree:\n{self.academy_tree.show(stdout=False)}", fg="cyan")
-            typer.secho(f"➡️ DRAC '{self.name}' with department tree:\n{self.department_tree.show(stdout=False)}", fg="cyan")
+        # if self.type == StakeholderType.DRAC:
+        #     typer.secho(f"➡️ DRAC '{self.name}' with adademy tree:\n{self.academy_tree.show(stdout=False)}", fg="cyan")
+        #     typer.secho(f"➡️ DRAC '{self.name}' with department tree:\n{self.department_tree.show(stdout=False)}", fg="cyan")
 
 @dataclass
 class Sheet:
@@ -365,8 +367,8 @@ class Sheet:
             dimension_name_map = {
                 "national": "NAT",
                 "region": "REG", 
-                "academy": "ACAD",
-                "department": "DEP"
+                "academie": "ACAD",
+                "departement": "DEP"
             }
             
             dimension_name = dimension_name_map.get(scale, "NAT")
@@ -514,8 +516,6 @@ class Report:
         self._cleanup_template_sheets([sheet.tab_name for sheet in self.sheets])
         
         # Step 2: Use ReportOrchestrationService for complex processing
-        from services.orchestration import ReportOrchestrationService
-        
         orchestrator = ReportOrchestrationService(duckdb_conn)
         stats = orchestrator.process_all_sheets(self.sheets, ds)
         
@@ -528,7 +528,7 @@ class Report:
                 fg="yellow"
             )
         else:
-            typer.secho(f"❌ Report failed: No sheets processed successfully", fg="red")
+            typer.secho("❌ Report failed: No sheets processed successfully", fg="red")
 
     def save(self):
         """Save the workbook to the output path."""
@@ -586,7 +586,7 @@ class ReportPlanner:
                     jobs.append(
                         {
                             "report_type": "academy_detail",
-                            "context": {"region": region_name, "academy": node.tag},
+                            "context": {"region": region_name, "academie": node.tag},
                             "output_path": f"academie_{node.tag}.xlsx"
                         }
                     )
@@ -598,7 +598,7 @@ class ReportPlanner:
                     jobs.append(
                         {
                             "report_type": "department_detail",
-                            "context": {"region": region_name, "department": node.tag},
+                            "context": {"region": region_name, "departement": node.tag},
                             "output_path": f"departement_{node.tag}.xlsx"
                         }
                     )

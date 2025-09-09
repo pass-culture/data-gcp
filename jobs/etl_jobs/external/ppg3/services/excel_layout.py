@@ -3,9 +3,19 @@ import logging
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from copy import copy
+from collections import defaultdict
+
+def default_layout():
+    return {"title_row_offset": 0, "title_col_offset": 0,"title_height": 3}
+
+SHEET_LAYOUT = defaultdict(default_layout, {
+    "top": {"title_row_offset": 0, "title_col_offset": 0,"title_height": 3},
+    "kpis": {"title_row_offset": 0, "title_col_offset": 3,"title_height": 3}
+    }
+)
+
 
 logger = logging.getLogger(__name__)
-
 
 class ExcelLayoutService:
     """Handles Excel layout operations like date column expansion and styling."""
@@ -66,8 +76,8 @@ class ExcelLayoutService:
         ds_year, ds_month, _ = map(int, ds.split("-"))
 
         # Layout info - using hardcoded values since SHEET_LAYOUT not available
-        title_row_offset = 0
-        title_height = 3
+        title_row_offset = SHEET_LAYOUT["kpis"]["title_row_offset"]
+        title_height = SHEET_LAYOUT["kpis"]["title_height"]
         start_row = title_row_offset + title_height + 1
         header_row = worksheet[start_row]
 
@@ -142,9 +152,9 @@ class ExcelLayoutService:
         """
         ds_year, ds_month, _ = map(int, ds.split("-"))
 
-        # Layout info - using hardcoded values since SHEET_LAYOUT not available  
-        title_row_offset = 0
-        title_height = 3
+        # Layout info - using hardcoded values since SHEET_LAYOUT not available 
+        title_row_offset = SHEET_LAYOUT["kpis"]["title_row_offset"]
+        title_height = SHEET_LAYOUT["kpis"]["title_height"]
         start_row = title_row_offset + title_height + 1
         header_row = worksheet[start_row]
 
@@ -228,12 +238,11 @@ class ExcelLayoutService:
             filters: Sheet filters (scale, scope, etc.)
         """
         try:
-            # Layout configuration - hardcoded since SHEET_LAYOUT not available
-            if layout_type in ["kpis", "top"]:
-                row_offset, col_offset = 0, 3
-            else:
-                row_offset, col_offset = 0, 0
-                
+            # Layout configuration for title placement
+            layout = SHEET_LAYOUT[layout_type]
+            row_offset = layout.get("title_row_offset")
+            col_offset = layout.get("title_col_offset")
+            
             # Build title
             title = title_base
             if layout_type in ["kpis", "top"]:

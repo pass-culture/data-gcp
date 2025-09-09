@@ -190,4 +190,3 @@ def aggregate_kpi_data(
         grouped = data.groupby(group_col)[select_field].sum()
 
     return {k: float(v) for k, v in grouped.to_dict().items() if pd.notna(v)}
-

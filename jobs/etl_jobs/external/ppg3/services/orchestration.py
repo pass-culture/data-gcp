@@ -4,8 +4,8 @@ from duckdb import DuckDBPyConnection
 import logging
 import typer
 
-from services.data import KPIDataService
-from services.excel_layout import ExcelLayoutService  
+from services.data import DataService
+from services.excel_layout import ExcelLayoutService ,SHEET_LAYOUT
 from services.excel_writer import ExcelWriterService
 
 # Import existing configurations
@@ -31,7 +31,7 @@ class ReportOrchestrationService:
     
     def __init__(self, duckdb_conn: DuckDBPyConnection):
         self.conn = duckdb_conn
-        self.kpi_service = KPIDataService(duckdb_conn)
+        self.data_service = DataService(duckdb_conn)
         
     def process_all_sheets(self, sheets: List, ds: str) -> Dict[str, Any]:
         """
@@ -118,16 +118,25 @@ class ReportOrchestrationService:
                 kpi_result = self._handle_kpi_data_filling(sheet, ds, date_mappings)
                 result.update(kpi_result)
             elif sheet.definition.startswith("top"):
-                # TODO: Implement top sheet processing if needed
-                typer.echo(f"⏭️  Skipping top sheet processing for {sheet.tab_name}")
+                top_result = self._handle_top_data_filling(sheet, ds)
+                result.update(top_result)
                 result["success"] = True
             elif sheet.definition == "lexique":
                 # Lexique sheets need no data processing
                 result["success"] = True
             else:
                 logger.warning(f"Unknown sheet definition: {sheet.definition}")
-                
-            typer.echo(f"✅ Completed sheet {sheet.tab_name}: {result['kpis_successful']} KPIs successful, {result['kpis_failed']} KPIs failed")
+            
+            if sheet.definition in ("individual_kpis", "collective_kpis"):
+                n_success = result.get("kpis_successful", 0)
+                n_failed = result.get("kpis_failed", 0)
+                typer.echo(f"✅ Completed sheet {sheet.tab_name}: {n_success} KPIs successful, {n_failed} KPIs failed")
+            elif sheet.definition.startswith("top"):    
+                n_success = result.get("tops_successful", 0)
+                n_failed = result.get("tops_failed", 0)
+                typer.echo(f"✅ Completed sheet {sheet.tab_name}: {n_success} tops successful, {n_failed} tops failed")
+            elif sheet.definition == "lexique":
+                typer.echo(f"✅ Completed sheet {sheet.tab_name}")
             return result
             
         except Exception as e:
@@ -166,6 +175,66 @@ class ReportOrchestrationService:
             
         except Exception as e:
             logger.warning(f"Failed to set title for {sheet.tab_name}: {e}")
+
+    def _handle_top_data_filling(self, sheet, ds: str) -> Dict[str, Any]:
+        """Handle top data filling for top sheets."""
+        result = {"success": True, "tops_successful": 0, "tops_failed": 0}
+        try:
+            source_table_key = SHEET_DEFINITIONS[sheet.definition].get("source_table")
+            if not source_table_key or source_table_key not in SOURCE_TABLES:
+                logger.warning(f"No source table found for sheet definition: {sheet.definition}")
+                result["success"] = False
+                return result
+            
+            
+            table_config = SOURCE_TABLES[source_table_key]
+            table_name = table_config["table"]
+
+            dimension_context = sheet.get_dimension_context()
+            if not dimension_context:
+                logger.warning(f"Could not resolve dimension context for {sheet.tab_name}")
+                result["success"] = False
+                return result
+
+            min_row = SHEET_LAYOUT["top"]["title_row_offset"] + SHEET_LAYOUT["top"]["title_height"] + 2
+            
+            top_data = self.data_service.get_top_rankings(
+                dimension_name=dimension_context["name"],
+                dimension_value=dimension_context["value"],
+                ds=ds,
+                table_name=table_name,
+                top_n=SHEET_DEFINITIONS[sheet.definition].get("top_n", 50),
+                select_fields=SHEET_DEFINITIONS[sheet.definition].get("select_fields", []),
+                order_by=SHEET_DEFINITIONS[sheet.definition].get("order_by", []),
+                
+            )
+            # print(f"DEBUG: top_data type: {type(top_data)}")
+            # print(f"DEBUG: top_data shape: {top_data.shape if hasattr(top_data, 'shape') else 'N/A'}")
+            # print(f"DEBUG: top_data empty?: {top_data.empty if hasattr(top_data, 'empty') else 'N/A'}")
+            # print(f"DEBUG: min_row: {min_row}")
+            
+            if len(top_data) > 0:
+                    # Write data to Excel
+                    write_success = ExcelWriterService.write_top_data_to_sheet(
+                        worksheet=sheet.worksheet,
+                        top_data=top_data,
+                        start_row=min_row
+                    )
+                    
+                    if write_success:
+                        result["tops_successful"] += 1
+                    else:
+                        result["tops_failed"] += 1
+            else:
+                result["tops_failed"] += 1
+            
+            return result
+            
+        except Exception as e:
+            logger.warning(f"Top data filling failed for {sheet.tab_name}: {e}")
+            result["success"] = False
+            return result
+    
     
     def _handle_kpi_data_filling(
         self, 
@@ -196,16 +265,16 @@ class ReportOrchestrationService:
                 return result
             
             # Process each KPI row
-            min_row = 4  # Based on your layout (title + 3 rows)
+            min_row = SHEET_LAYOUT["kpis"]["title_row_offset"] + SHEET_LAYOUT["kpis"]["title_height"] + 2
             for row_idx, row in enumerate(sheet.worksheet.iter_rows(min_row=min_row, max_row=sheet.worksheet.max_row)):
                 kpi_config = self._parse_kpi_row(row, row_idx + min_row - 1)
                 if not kpi_config:
                     continue
                     
                 # Get KPI data
-                kpi_data = self.kpi_service.get_kpi_data(
+                kpi_data = self.data_service.get_kpi_data(
                     kpi_name=kpi_config["kpi_name"],
-                    dimension_name=dimension_context["name"], 
+                    dimension_name=dimension_context["name"],
                     dimension_value=dimension_context["value"],
                     ds=ds,
                     scope=scope,

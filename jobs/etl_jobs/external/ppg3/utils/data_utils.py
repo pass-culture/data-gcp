@@ -212,13 +212,66 @@ class ExportSession:
         
         # Create indexes based on available columns
         self._create_indexes(table_name, df.columns.tolist())
-        typer.echo(f"MOCK -> Created {table_name} table with indexes")
+        typer.echo(f"Created {table_name} table with indexes")
 
     
     def _create_indexes(self, table_name: str, columns: List[str]):
-        """Create indexes on commonly queried columns."""
-        pass
-    
+        """Create indexes on commonly queried columns with error recovery."""
+        indexes_created = []
+        indexes_failed = []
+        
+        typer.secho(f"🔍 Creating indexes for table: {table_name}", fg="cyan")
+        
+        # List of indexes to attempt
+        index_operations = []
+        
+        # Core filtering columns
+        core_filter_columns = ['dimension_name', 'dimension_value', 'partition_month']
+        kpi_columns = ['kpi_name']
+        
+        if all(col in columns for col in core_filter_columns):
+            index_operations.append({
+                "name": "core_filters",
+                "sql": f"CREATE INDEX IF NOT EXISTS idx_{table_name}_core_filters ON {table_name} (dimension_name, dimension_value, partition_month)",
+                "description": "Core filters composite index"
+            })
+        
+        if all(col in columns for col in core_filter_columns + kpi_columns):
+            index_operations.append({
+                "name": "kpi_filters", 
+                "sql": f"CREATE INDEX IF NOT EXISTS idx_{table_name}_kpi_filters ON {table_name} (kpi_name, dimension_name, dimension_value, partition_month)",
+                "description": "KPI-specific composite index"
+            })
+        
+        # Individual indexes
+        for col in ['partition_month', 'dimension_name','dimension_value', 'kpi_name']:
+            if col in columns:
+                index_operations.append({
+                    "name": col,
+                    "sql": f"CREATE INDEX IF NOT EXISTS idx_{table_name}_{col} ON {table_name} ({col})",
+                    "description": f"Individual index on {col}"
+                })
+        
+
+        # Execute each index creation with individual error handling
+        for idx_op in index_operations:
+            try:
+                self.conn.execute(idx_op["sql"])
+                indexes_created.append(idx_op["name"])
+                typer.echo(f"   ✓ {idx_op['description']}")
+            except Exception as e:
+                indexes_failed.append(idx_op["name"])
+                if "INTERNAL Error" in str(e):
+                    typer.secho(f"   ⚠ {idx_op['description']} - skipped (DuckDB internal error)", fg="yellow")
+                else:
+                    typer.secho(f"   ❌ {idx_op['description']} - failed: {str(e)[:50]}...", fg="red")
+        
+        # Summary
+        if indexes_created:
+            typer.secho(f"📊 {table_name}: Created {len(indexes_created)} indexes successfully", fg="green")
+        if indexes_failed:
+            typer.secho(f"⚠ {table_name}: {len(indexes_failed)} indexes failed (table will still work)", fg="yellow")
+        
 
     def process_stakeholder(self, stakeholder_type: str, name: str, output_path: Path, ds: str):
         """Process reports for a given stakeholder using new service architecture."""

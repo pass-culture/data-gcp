@@ -162,9 +162,8 @@ class ExcelWriterService:
     @staticmethod
     def write_top_data_to_sheet(
         worksheet,
-        top_data: List[Dict[str, Any]],
+        top_data: pd.DataFrame,
         start_row: int = 1,
-        max_rows: int = 50
     ) -> bool:
         """
         Write top rankings data to Excel sheet.
@@ -173,36 +172,47 @@ class ExcelWriterService:
             worksheet: openpyxl worksheet instance
             top_data: List of dicts with ranking data
             start_row: Starting row (1-based)
-            max_rows: Maximum number of rows to write
-            
+        
         Returns:
             True if successful, False otherwise
         """
         try:
-            if not top_data:
+            if top_data is None or top_data.empty:
                 logger.warning("No top data to write")
                 return False
             
-            # Limit data to max_rows
-            limited_data = top_data[:max_rows]
             
             success_count = 0
-            for i, row_data in enumerate(limited_data):
-                row_idx = start_row + i
-                col_idx = 1
+            total_cells = 0
+            
+            # Iterate through DataFrame rows and columns
+            for i, (_, row_data) in enumerate(top_data.iterrows()):
+                excel_row = start_row + i
                 
-                # Write each field in the row_data dict
-                for field_name, value in row_data.items():
+                # Write each column value in the row
+                for col_offset, value in enumerate(row_data.values):
+                    excel_col = col_offset + 1  # Excel columns are 1-based
+                    total_cells += 1
+                    
+                    # Format timestamp in first column to %m/%Y
+                    if col_offset == 0 and hasattr(value, 'strftime'):  # First column and is datetime-like
+                        formatted_value = value.strftime("%m/%Y")
+                    else:
+                        formatted_value = value
+                        
+                    # Use existing method to write value (preserves formatting)
                     success = ExcelWriterService._write_cell_value(
-                        worksheet, row_idx, col_idx, value
+                        worksheet, excel_row, excel_col, formatted_value
                     )
                     if success:
                         success_count += 1
-                    col_idx += 1
-            
-            logger.debug(f"Wrote {success_count} values for top data")
+                        
+            success_rate = (success_count / total_cells * 100) if total_cells > 0 else 0
+            logger.debug(f"Wrote top data: {success_count}/{total_cells} cells successful ({success_rate:.1f}%)")
+        
+            # Return True if at least some data was written
             return success_count > 0
-            
+        
         except Exception as e:
             logger.warning(f"Failed to write top data: {e}")
             return False

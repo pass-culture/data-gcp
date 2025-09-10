@@ -148,17 +148,63 @@ with
         group by partition_month, partner_region_name, partner_department_name
     ),
 
-    cumul_epn_details as (
-        select
-            partition_month,
-            partner_region_name,
-            partner_department_name,
-            sum(epn_created) over (
-                partition by partner_region_name, partner_department_name
-                order by partition_month asc
-            ) as cumul_epn_created
-        from epn_details
-    )
+    -- Générer la série complète de mois et régions/départements
+date_range as (
+    select 
+        date_trunc(date_add(
+            (select min(partition_month) from epn_details), 
+            interval generate_month month
+        ), month) as partition_month
+    from unnest(generate_array(0, date_diff(
+        (select max(partition_month) from epn_details),
+        (select min(partition_month) from epn_details),
+        month
+    ))) as generate_month
+),
+
+regions_departments as (
+    select distinct 
+        partner_region_name,
+        partner_department_name
+    from epn_details
+),
+
+complete_grid as (
+    select 
+        dr.partition_month,
+        rd.partner_region_name,
+        rd.partner_department_name
+    from date_range dr
+    cross join regions_departments rd
+),
+
+epn_with_zeros as (
+    select
+        cg.partition_month,
+        cg.partner_region_name,
+        cg.partner_department_name,
+        coalesce(ed.epn_created, 0) as epn_created
+    from complete_grid cg
+    left join epn_details ed
+        on cg.partition_month = ed.partition_month
+        and cg.partner_region_name = ed.partner_region_name
+        and cg.partner_department_name = ed.partner_department_name
+),
+
+-- Calculer le cumul
+cumul_epn_details as (
+    select
+        partition_month,
+        partner_region_name,
+        partner_department_name,
+        epn_created,
+        sum(epn_created) over (
+            partition by partner_region_name, partner_department_name
+            order by partition_month asc
+            rows unbounded preceding
+        ) as cumul_epn_created
+    from epn_with_zeros
+)
 
 {% for dim in dimensions %}
     {% if not loop.first %}

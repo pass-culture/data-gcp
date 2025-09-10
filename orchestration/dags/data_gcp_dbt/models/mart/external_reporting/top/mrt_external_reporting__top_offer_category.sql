@@ -11,7 +11,7 @@
 {% set dimensions = [
     {"name": "NAT", "value_expr": "'NAT'"},
     {"name": "REG", "value_expr": "venue_region_name"},
-    {"name": "DEP", "value_expr": "venue_department_name"}
+    {"name": "DEP", "value_expr": "venue_department_name"},
 ] %}
 
 with

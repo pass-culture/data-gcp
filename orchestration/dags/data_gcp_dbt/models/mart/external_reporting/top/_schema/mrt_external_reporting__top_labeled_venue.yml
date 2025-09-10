@@ -18,5 +18,7 @@ models:
         description: "{{ doc('column__venue_name') }}"
       - name: offerer_name
         description: "{{ doc('column__offerer_name') }}"
+      - name: venue_tag_name
+        description: "{{ doc('column__venue_tag_name') }}"
       - name: total_venue_booking_amount_ranked
         description: "{{ doc('column__total_venue_booking_amount_ranked') }}"

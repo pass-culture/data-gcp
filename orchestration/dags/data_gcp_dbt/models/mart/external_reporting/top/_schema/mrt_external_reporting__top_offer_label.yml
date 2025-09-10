@@ -20,6 +20,8 @@ models:
         description: "{{ doc('column__offer_subcategory_id') }}"
       - name: offer_name
         description: "{{ doc('column__offer_name') }}"
+      - name: venue_tag_name
+        description: "{{ doc('column__venue_tag_name') }}"
       - name: total_booking_amount
         description: "{{ doc('column__total_booking_amount') }}"
       - name: total_booking_quantity

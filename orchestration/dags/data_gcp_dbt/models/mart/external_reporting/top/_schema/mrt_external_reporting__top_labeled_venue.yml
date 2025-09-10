@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: mrt_external_reporting__top_labeled_venue
+    description: "{{ doc('description__mrt_external_reporting__top_labeled_venue') }}"
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+      - name: updated_at
+        description: "{{ doc('column__updated_at') }}"
+      - name: dimension_name
+        description: "{{ doc('column__dimension_name') }}"
+      - name: dimension_value
+        description: "{{ doc('column__dimension_value') }}"
+      - name: venue_id
+        description: "{{ doc('column__venue_id') }}"
+      - name: venue_name
+        description: "{{ doc('column__venue_name') }}"
+      - name: offerer_name
+        description: "{{ doc('column__offerer_name') }}"
+      - name: total_venue_booking_amount_ranked
+        description: "{{ doc('column__total_venue_booking_amount_ranked') }}"

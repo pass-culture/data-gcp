@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: mrt_external_reporting__top_offer_label
+    description: "{{ doc('description__mrt_external_reporting__top_offer_label') }}"
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+      - name: updated_at
+        description: "{{ doc('column__updated_at') }}"
+      - name: dimension_name
+        description: "{{ doc('column__dimension_name') }}"
+      - name: dimension_value
+        description: "{{ doc('column__dimension_value') }}"
+      - name: item_id
+        description: "{{ doc('column__item_id') }}"
+      - name: offer_category_id
+        description: "{{ doc('column__offer_category_id') }}"
+      - name: offer_subcategory_id
+        description: "{{ doc('column__offer_subcategory_id') }}"
+      - name: offer_name
+        description: "{{ doc('column__offer_name') }}"
+      - name: total_booking_amount
+        description: "{{ doc('column__total_booking_amount') }}"
+      - name: total_booking_quantity
+        description: "{{ doc('column__total_booking_quantity') }}"
+      - name: total_booking_amount_ranked
+        description: "{{ doc('column__total_booking_amount_ranked') }}"

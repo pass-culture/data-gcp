@@ -29,9 +29,9 @@
         dimension_name,
         dimension_value,
         kpi_name,
-        numerator,
-        denominator,
-        kpi
+        coalesce(numerator,0) as numerator,
+        coalesce(denominator,0) as denominator,
+        coalesce(kpi,0) as kpi
     from {{ ref("mrt_external_reporting__" ~ model) }}
     where
         1 = 1

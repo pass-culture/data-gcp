@@ -17,29 +17,35 @@
 with
     base_aggregation as (
         select
-            date_trunc(date(booking_used_date), month) as partition_month,
+            date_trunc(date(bo.booking_used_date), month) as partition_month,
             timestamp("{{ ts() }}") as updated_at,
-            venue_id,
-            venue_name,
-            offerer_name,
-            venue_region_name,
-            venue_department_name,
-            sum(booking_intermediary_amount) as total_venue_booking_amount
-        from {{ ref("mrt_global__booking") }}
+            bo.venue_id,
+            bo.venue_name,
+            bo.offerer_name,
+            bo.venue_region_name,
+            bo.venue_department_name,
+            vt.venue_tag_name,
+            sum(bo.booking_intermediary_amount) as total_venue_booking_amount
+        from {{ ref("mrt_global__booking") }} as bo
+        inner join {{ ref("mrt_global__venue_tag") }} as vt
+            on bo.venue_id = vt.venue_id
+            and vt.venue_tag_category_label
+            = "Comptage partenaire label et appellation du MC"
         where
-            booking_is_used
+            bo.booking_is_used
             {% if is_incremental() %}
-                and date_trunc(date(booking_used_date), month)
+                and date_trunc(date(bo.booking_used_date), month)
                 = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
             {% endif %}
         group by
             partition_month,
             updated_at,
-            venue_id,
-            venue_name,
-            offerer_name,
-            venue_region_name,
-            venue_department_name
+            bo.venue_id,
+            bo.venue_name,
+            bo.offerer_name,
+            bo.venue_region_name,
+            bo.venue_department_name,
+            vt.venue_tag_name
     ),
 
     all_dimensions as (
@@ -55,6 +61,7 @@ with
                 venue_id,
                 venue_name,
                 offerer_name,
+                venue_tag_name,
                 sum(total_venue_booking_amount) as total_venue_booking_amount,
                 row_number() over (
                     partition by
@@ -70,7 +77,8 @@ with
                 dimension_value,
                 venue_id,
                 venue_name,
-                offerer_name
+                offerer_name,
+                venue_tag_name
             qualify
                 row_number() over (
                     partition by
@@ -90,5 +98,6 @@ select
     venue_id,
     venue_name,
     offerer_name,
+    venue_tag_name,
     total_venue_booking_amount_ranked
 from all_dimensions

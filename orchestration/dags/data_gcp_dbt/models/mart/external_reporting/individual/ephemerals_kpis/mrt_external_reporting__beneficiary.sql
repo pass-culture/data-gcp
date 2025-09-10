@@ -343,7 +343,7 @@ select
     dimension_name,
     dimension_value,
     kpi_name,
-    numerator,
-    denominator,
-    safe_divide(numerator, denominator) as kpi
+    coalesce(numerator,0) as numerator,
+    coalesce(denominator,0) as denominator,
+    coalesce(safe_divide(numerator, denominator),0) as kpi
 from unified_metrics

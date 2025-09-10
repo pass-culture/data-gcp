@@ -27,7 +27,8 @@ with
             vt.venue_tag_name,
             sum(bo.booking_intermediary_amount) as total_venue_booking_amount
         from {{ ref("mrt_global__booking") }} as bo
-        inner join {{ ref("mrt_global__venue_tag") }} as vt
+        inner join
+            {{ ref("mrt_global__venue_tag") }} as vt
             on bo.venue_id = vt.venue_id
             and vt.venue_tag_category_label
             = "Comptage partenaire label et appellation du MC"

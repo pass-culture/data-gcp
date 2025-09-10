@@ -210,10 +210,11 @@ with
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 'taux_d_utilisation_du_credit' as kpi_name,
-                coalesce(sum(cumulative_amount_spent),0) as numerator,
-                coalesce(sum(total_institution_deposit_amount),0) as denominator,
+                coalesce(sum(cumulative_amount_spent), 0) as numerator,
+                coalesce(sum(total_institution_deposit_amount), 0) as denominator,
                 safe_divide(
-                    coalesce(sum(cumulative_amount_spent),0), coalesce(sum(total_institution_deposit_amount),0)
+                    coalesce(sum(cumulative_amount_spent), 0),
+                    coalesce(sum(total_institution_deposit_amount), 0)
                 ) as kpi
             from base_data
             {% if is_incremental() %}
@@ -235,10 +236,11 @@ with
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 'montant_moyen_par_reservation' as kpi_name,
-                coalesce(sum(cumulative_amount_spent),0) as numerator,
-                coalesce(sum(cumulative_bookings),0) as denominator,
+                coalesce(sum(cumulative_amount_spent), 0) as numerator,
+                coalesce(sum(cumulative_bookings), 0) as denominator,
                 safe_divide(
-                    coalesce(sum(cumulative_amount_spent),0), coalesce(sum(cumulative_bookings),0)
+                    coalesce(sum(cumulative_amount_spent), 0),
+                    coalesce(sum(cumulative_bookings), 0)
                 ) as kpi
             from base_data
             {% if is_incremental() %}
@@ -260,10 +262,11 @@ with
                 '{{ dim.name }}' as dimension_name,
                 {{ dim.value_expr }} as dimension_value,
                 'montant_moyen_par_reservation_meme_territoire' as kpi_name,
-                coalesce(sum(cumulative_amount_spent),0) as numerator,
-                coalesce(sum(cumulative_bookings),0) as denominator,
+                coalesce(sum(cumulative_amount_spent), 0) as numerator,
+                coalesce(sum(cumulative_bookings), 0) as denominator,
                 safe_divide(
-                    coalesce(sum(cumulative_amount_spent),0), coalesce(sum(cumulative_bookings),0)
+                    coalesce(sum(cumulative_amount_spent), 0),
+                    coalesce(sum(cumulative_bookings), 0)
                 ) as kpi
             from base_data
             where

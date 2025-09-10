@@ -60,11 +60,11 @@ with
             '{{ dim.name }}' as dimension_name,
             {{ dim.value_expr }} as dimension_value,
             "taux_participation_eac_{{ obj.name }}" as kpi_name,
-            coalesce(sum(involved.{{ obj.attribute }}),0) as numerator,
-            coalesce(sum(involved.total_{{ obj.attribute }}),0) as denominator,
+            coalesce(sum(involved.{{ obj.attribute }}), 0) as numerator,
+            coalesce(sum(involved.total_{{ obj.attribute }}), 0) as denominator,
             safe_divide(
-                coalesce(sum(involved.{{ obj.attribute }}),0),
-                coalesce(sum(involved.total_{{ obj.attribute }}),0)
+                coalesce(sum(involved.{{ obj.attribute }}), 0),
+                coalesce(sum(involved.total_{{ obj.attribute }}), 0)
             ) as kpi
         from {{ ref(obj.table_name) }} as involved
         -- take only last day for each month.

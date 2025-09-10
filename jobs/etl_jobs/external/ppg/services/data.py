@@ -220,10 +220,10 @@ class DataService:
                 SELECT {', '.join(select_fields)}, rank
                 FROM (
                     SELECT {', '.join(full_select)},
-                        RANK() OVER ({partition} ORDER BY {order_by[-1]} DESC) as rank
+                        ROw_NUMBER() OVER ({partition} ORDER BY {order_by[-1]} DESC) as rank
                     FROM {table_name}
                     WHERE dimension_name = ? AND dimension_value = ? AND partition_month = ?
-                ) ranked_data
+                )
                 WHERE rank <= ?
                 ORDER BY {', '.join(reorder_by)} ASC
             """

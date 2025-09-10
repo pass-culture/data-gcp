@@ -144,7 +144,7 @@ SHEET_DEFINITIONS = {
     },
 }
 
-TOP_TITLE_WIDTH = {"top_offer":7, "top_offer_category":7, "top_venue":4, "top_ac":4, "top_format":3}
+TOP_TITLE_WIDTH = {"top_offer":7, "top_offer_category":7, "top_venue":4, "top_ac":4, "top_format":5}
 def default_layout():
     return {"title_row_offset": 0, "title_col_offset": 0,"title_height": 3,"title_width": 1}
 

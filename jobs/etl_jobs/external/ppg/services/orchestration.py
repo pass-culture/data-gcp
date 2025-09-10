@@ -101,13 +101,10 @@ class ReportOrchestrationService:
             # Extract date_mappings from expansion_result
             date_mappings = expansion_result.get("date_mappings") if expansion_result else {}
             
-            # Step 2: Set title (pass the full expansion_result for width calculation)
-            layout_type = "top" if sheet.definition.startswith("top") else "kpis" if sheet.definition.endswith("kpis") else "other"
-            ExcelLayoutService.cleanup_template_columns(sheet.worksheet, layout_type)
+
             
-            self._handle_title_setting(sheet, expansion_result)
             
-            # Step 3: Fill data based on sheet type
+            # Step 2: Fill data based on sheet type
             if sheet.definition in ("individual_kpis", "collective_kpis"):
                 kpi_result = self._handle_kpi_data_filling(sheet, ds, date_mappings)  # Use extracted date_mappings
                 result.update(kpi_result)
@@ -132,7 +129,12 @@ class ReportOrchestrationService:
                 typer.echo(f"✅ Completed sheet {sheet.tab_name}: {n_success} tops successful, {n_failed} tops failed")
             elif sheet.definition == "lexique":
                 typer.echo(f"✅ Completed sheet {sheet.tab_name}")
-                
+            
+            # Step 3: Delete template columns and Set title (pass the full expansion_result for width calculation)
+            layout_type = "top" if sheet.definition.startswith("top") else "kpis" if sheet.definition.endswith("kpis") else "other"
+            ExcelLayoutService.cleanup_template_columns(sheet.worksheet, layout_type)
+            self._handle_title_setting(sheet, expansion_result)
+            
             return result
             
         except Exception as e:

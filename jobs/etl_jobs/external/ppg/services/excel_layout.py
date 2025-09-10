@@ -266,7 +266,7 @@ class ExcelLayoutService:
             # Layout configuration for title placement
             layout = SHEET_LAYOUT[layout_type]
             row_offset = layout.get("title_row_offset")
-            col_offset = 0 # since we delete them before 
+            col_offset = 0 # since we delete them before  // layout.get("title_col_offset")
             title_height = layout.get("title_height", 3)
             
             title_width_config = layout.get("title_width", 1)

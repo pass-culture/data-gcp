@@ -212,10 +212,6 @@ class ReportOrchestrationService:
                 order_by=SHEET_DEFINITIONS[sheet.definition].get("order_by", []),
                 
             )
-            # print(f"DEBUG: top_data type: {type(top_data)}")
-            # print(f"DEBUG: top_data shape: {top_data.shape if hasattr(top_data, 'shape') else 'N/A'}")
-            # print(f"DEBUG: top_data empty?: {top_data.empty if hasattr(top_data, 'empty') else 'N/A'}")
-            # print(f"DEBUG: min_row: {min_row}")
             
             if len(top_data) > 0:
                     # Write data to Excel
@@ -364,17 +360,11 @@ class ReportOrchestrationService:
         
         # Clean the input (lowercase, strip spaces)
         clean_agg_type = excel_agg_type.lower().strip()
-        # typer.echo(f"DEBUG: Mapping aggregation type '{excel_agg_type}'")
-        # typer.echo(f"DEBUG: aggregation type MAPPING '{AGG_TYPE_MAPPING}'")
+
         # Look up in mapping
         LOWER_AGG_TYPE_MAPPING = {k.lower().strip(): v for k, v in AGG_TYPE_MAPPING.items()}
-        # typer.echo(f"DEBUG: LOWER_AGG_TYPE_MAPPING '{LOWER_AGG_TYPE_MAPPING}'")
         technical_agg_type = LOWER_AGG_TYPE_MAPPING.get(clean_agg_type, DEFAULT_AGG_TYPE)
-        # typer.echo(f"DEBUG: Mapped to technical aggregation type '{technical_agg_type}'")
         if technical_agg_type != clean_agg_type:
             logger.debug(f"Mapped aggregation type: '{excel_agg_type}' -> '{technical_agg_type}'")
-        
-        # if clean_agg_type not in technical_agg_type:
-        #     logger.warning(f"Unknown aggregation type in Excel: '{excel_agg_type}', using default: '{DEFAULT_AGG_TYPE}'")
         
         return technical_agg_type

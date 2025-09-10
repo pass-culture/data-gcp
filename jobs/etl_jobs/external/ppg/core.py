@@ -73,9 +73,6 @@ class Stakeholder:
         else:
             self.academy_tree = None
             self.department_tree = None
-        # if self.type == StakeholderType.DRAC:
-        #     typer.secho(f"➡️ DRAC '{self.name}' with adademy tree:\n{self.academy_tree.show(stdout=False)}", fg="cyan")
-        #     typer.secho(f"➡️ DRAC '{self.name}' with department tree:\n{self.department_tree.show(stdout=False)}", fg="cyan")
 
 @dataclass
 class Sheet:
@@ -119,7 +116,6 @@ class Sheet:
                 logger.warning(f"Could not resolve dimension value for scale '{scale}' in context {self.context}")
                 return None
 
-            print(f"DEBUG: Resolved dimension context - name: {dimension_name}, value: {dimension_value}")
             return {
                 "name": dimension_name,
                 "value": dimension_value
@@ -129,20 +125,6 @@ class Sheet:
             logger.warning(f"Failed to resolve dimension context: {e}")
             return None
             
-    # def preprocess(self, ds: str):
-    #     """Placeholder for preprocessing - now handled by ReportOrchestrationService."""
-    #     pass
-        
-    # def fill_data(self, duckdb_conn: duckdb.DuckDBPyConnection, ds: str):
-    #     """Placeholder for data filling - now handled by ReportOrchestrationService.""" 
-    #     pass
-        
-    # def postprocess(self):
-    #     """Placeholder for postprocessing."""
-    #     pass
-
-
-
 class Report:
     """Represents a single Excel report for a stakeholder."""
     

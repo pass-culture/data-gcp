@@ -47,18 +47,7 @@ class ExcelWriterService:
                         success_count += 1
                 else:
                     pass
-                    # print(f"DEBUG: No value found for year_label '{year_label}'")
-            
-            # Write monthly data (simplified for now)
-            # monthly_data = kpi_data.get("monthly", {})
-            # months_mapping = date_mappings.get("months", [])
-            
-            # # Convert monthly_data timestamps to string format for matching
-            # monthly_data_formatted = {}
-            # for timestamp_key, value in monthly_data.items():
-            #     if hasattr(timestamp_key, 'strftime'):
-            #         formatted_key = timestamp_key.strftime("%m/%Y")
-            #         monthly_data_formatted[formatted_key] = value
+
             monthly_data = kpi_data.get("monthly", {})  # Now already a dict with string keys
             months_mapping = date_mappings.get("months", [])
 
@@ -73,27 +62,12 @@ class ExcelWriterService:
                     )
                     if success:
                         success_count += 1
-            # print(f"DEBUG: monthly_data_formatted dict: {monthly_data_formatted}")
 
-            # for mapping in months_mapping:
-            #     col_idx = list(mapping.keys())[0] - 1
-            #     month_label = list(mapping.values())[0]
-                
-
-            #     if month_label in monthly_data_formatted:
-            #         # print(f"DEBUG: Found match using 'in' operator")
-            #         success = ExcelWriterService._write_cell_value(
-            #             worksheet, row_idx + 1, col_idx + 1, monthly_data_formatted[month_label]
-            #         )
-            #         if success:
-            #             success_count += 1
-            
             logger.debug(f"Wrote {success_count} values to row {row_idx}")
             return success_count > 0
             
         except Exception as e:
             logger.warning(f"Failed to write KPI data to row {row_idx}: {e}")
-            print(f"DEBUG EXCEPTION: {e}")
             import traceback
             traceback.print_exc()
             return False

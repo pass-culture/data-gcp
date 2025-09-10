@@ -266,7 +266,7 @@ class ExcelLayoutService:
             # Layout configuration for title placement
             layout = SHEET_LAYOUT[layout_type]
             row_offset = layout.get("title_row_offset")
-            col_offset = 0 # since we delete them before  // layout.get("title_col_offset")
+            col_offset = 0 # since we delete them before setting title  // layout.get("title_col_offset")
             title_height = layout.get("title_height", 3)
             
             title_width_config = layout.get("title_width", 1)
@@ -275,7 +275,7 @@ class ExcelLayoutService:
                 title_width = expanded_width if expanded_width else 1
             elif layout_type == "top" and isinstance(title_width_config, dict):
                 # Use dictionary lookup for top sheets
-                title_width = title_width_config.get(sheet_definition, 5)  # Default to 5 if not found
+                title_width = title_width_config.get(sheet_definition, 5)
             else:
                 # Use static width
                 title_width = title_width_config if isinstance(title_width_config, int) else 1

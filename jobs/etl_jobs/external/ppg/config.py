@@ -11,7 +11,7 @@ BIGQUERY_ANALYTICS_DATASET = f"analytics_{ENV_SHORT_NAME}"
 
 REGION_HIERARCHY_TABLE = "region_department"
 
-BASE_TEMPLATE = Path("./templates/export_template_v4.xlsx")
+BASE_TEMPLATE = Path("./templates/export_template.xlsx")
 REPORT_BASE_DIR_DEFAULT = Path("./reports")
 
 

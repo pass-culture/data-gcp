@@ -172,12 +172,12 @@ class Report:
         if definition_key == "individual_kpis":
             base = "Part Individuelle"
             scale = filters.get("scale", "").capitalize()
-            return f"{base} ({scale})" if scale and scale != "National" else base
+            return f"{base} ({scale})" if scale else base
         
         elif definition_key == "collective_kpis":
             base = "Part Collective" 
             scale = filters.get("scale", "").capitalize()
-            return f"{base} ({scale})" if scale and scale != "National" else base
+            return f"{base} ({scale})" if scale else base
     
         else:
             tab_name = SHEET_DEFINITIONS.get(definition_key, {}).get("tab_name")

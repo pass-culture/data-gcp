@@ -93,17 +93,23 @@ class ReportOrchestrationService:
             typer.echo(f"📊 Processing sheet: {sheet.tab_name}")
             
             # Step 1: Layout preprocessing (date column expansion)
-            date_mappings = self._handle_layout_preprocessing(sheet, ds)
-            if not date_mappings and sheet.definition.endswith("kpis"):
+            expansion_result = self._handle_layout_preprocessing(sheet, ds)
+            if not expansion_result and sheet.definition.endswith("kpis"):
                 logger.warning(f"Failed to expand date columns for {sheet.tab_name}")
                 return result
             
-            # Step 2: Set title
-            self._handle_title_setting(sheet)
+            # Extract date_mappings from expansion_result
+            date_mappings = expansion_result.get("date_mappings") if expansion_result else {}
+            
+            # Step 2: Set title (pass the full expansion_result for width calculation)
+            layout_type = "top" if sheet.definition.startswith("top") else "kpis" if sheet.definition.endswith("kpis") else "other"
+            ExcelLayoutService.cleanup_template_columns(sheet.worksheet, layout_type)
+            
+            self._handle_title_setting(sheet, expansion_result)
             
             # Step 3: Fill data based on sheet type
             if sheet.definition in ("individual_kpis", "collective_kpis"):
-                kpi_result = self._handle_kpi_data_filling(sheet, ds, date_mappings)
+                kpi_result = self._handle_kpi_data_filling(sheet, ds, date_mappings)  # Use extracted date_mappings
                 result.update(kpi_result)
             elif sheet.definition.startswith("top"):
                 top_result = self._handle_top_data_filling(sheet, ds)
@@ -114,7 +120,8 @@ class ReportOrchestrationService:
                 result["success"] = True
             else:
                 logger.warning(f"Unknown sheet definition: {sheet.definition}")
-            
+                        
+        
             if sheet.definition in ("individual_kpis", "collective_kpis"):
                 n_success = result.get("kpis_successful", 0)
                 n_failed = result.get("kpis_failed", 0)
@@ -125,6 +132,7 @@ class ReportOrchestrationService:
                 typer.echo(f"✅ Completed sheet {sheet.tab_name}: {n_success} tops successful, {n_failed} tops failed")
             elif sheet.definition == "lexique":
                 typer.echo(f"✅ Completed sheet {sheet.tab_name}")
+                
             return result
             
         except Exception as e:
@@ -135,30 +143,36 @@ class ReportOrchestrationService:
         """Handle Excel layout preprocessing (date column expansion)."""
         try:
             if sheet.definition.endswith("kpis"):
-                date_mappings = ExcelLayoutService.expand_date_columns_kpis(
+                expansion_result = ExcelLayoutService.expand_date_columns_kpis(
                     worksheet=sheet.worksheet,
                     sheet_definition=sheet.definition,
                     ds=ds
                 )
-                return date_mappings.get("date_mappings") if date_mappings else None
+                return expansion_result
             return {}  # No date mappings needed for non-KPI sheets
             
         except Exception as e:
             logger.warning(f"Layout preprocessing failed for {sheet.tab_name}: {e}")
             return None
     
-    def _handle_title_setting(self, sheet):
+    def _handle_title_setting(self, sheet,expansion_result: Dict[str, Any] = None):
         """Handle sheet title setting."""
         try:
             # Determine layout type
             layout_type = "top" if sheet.definition.startswith("top") else "kpis" if sheet.definition.endswith("kpis") else "other"
             
+            expanded_width = None
+            if layout_type == "kpis" and expansion_result:
+                expanded_width = expansion_result.get("total_width")
             ExcelLayoutService.set_sheet_title(
                 worksheet=sheet.worksheet,
                 title_base=sheet.tab_name or sheet.definition.capitalize(),
                 layout_type=layout_type,
                 context=sheet.context or {},
-                filters=sheet.filters or {}
+                filters=sheet.filters or {},
+                expanded_width=expanded_width,
+                sheet_definition=sheet.definition
+                
             )
             
         except Exception as e:

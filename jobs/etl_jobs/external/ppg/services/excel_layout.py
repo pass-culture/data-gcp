@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from copy import copy
+from openpyxl.utils import get_column_letter
 from config import SHEET_LAYOUT
 
 
@@ -128,7 +129,18 @@ class ExcelLayoutService:
         # 4) Remove template columns
         worksheet.delete_cols(template_col_idx, nblank_cols + len(month_shifts) + 1)
         
-        return {"date_mappings": {"years": years_mapping, "months": months_mapping}}
+        # Calculate total width of expanded area
+        num_years = ds_year - min_year
+        num_months = len(month_shifts)
+        total_expanded_width = num_years + nblank_cols + num_months
+        
+        return {
+            "date_mappings": {
+                "years": years_mapping, 
+                "months": months_mapping
+            },
+            "total_width": total_expanded_width
+        }
     
     @staticmethod
     def _expand_date_columns_collective(
@@ -208,7 +220,18 @@ class ExcelLayoutService:
         # 4) Remove template columns
         worksheet.delete_cols(template_col_idx, nblank_cols + len(month_shifts) + 1)
         
-        return {"date_mappings": {"years": years_mapping, "months": months_mapping}}
+        ds_year_scholar = ds_year if ds_month >= 9 else ds_year - 1
+        num_years = ds_year_scholar - min_year
+        num_months = len(month_shifts)
+        total_expanded_width = num_years + nblank_cols + num_months + 1 # kpi definition
+        
+        return {
+            "date_mappings": {
+                "years": years_mapping,
+                "months": months_mapping  
+            },
+            "total_width": total_expanded_width
+        }
     
     @staticmethod
     def set_sheet_title(
@@ -216,7 +239,9 @@ class ExcelLayoutService:
         title_base: str, 
         layout_type: str,
         context: Dict[str, Any],
-        filters: Dict[str, Any]
+        filters: Dict[str, Any],
+        expanded_width: Optional[int] = None,
+        sheet_definition: Optional[str] = None
     ):
         """
         Insert title in the worksheet according to layout rules.
@@ -229,10 +254,6 @@ class ExcelLayoutService:
             filters: Sheet filters (scale, scope, etc.)
         """
         try:
-            # Layout configuration for title placement
-            layout = SHEET_LAYOUT[layout_type]
-            row_offset = layout.get("title_row_offset")
-            col_offset = layout.get("title_col_offset")
             
             # Build title
             title = title_base
@@ -240,10 +261,64 @@ class ExcelLayoutService:
                 scale = filters.get("scale", "")
                 node_tag = context.get(scale)
                 if node_tag:
-                    title += "\n" + node_tag.capitalize()
-
-            # Insert into worksheet
-            worksheet.cell(row=row_offset + 1, column=col_offset + 1, value=title)
+                    title += "\n" + node_tag
+                    
+            # Layout configuration for title placement
+            layout = SHEET_LAYOUT[layout_type]
+            row_offset = layout.get("title_row_offset")
+            col_offset = 0 # since we delete them before 
+            title_height = layout.get("title_height", 3)
+            
+            title_width_config = layout.get("title_width", 1)
+            if layout_type == "kpis" and title_width_config == "dynamic":
+                # Use expanded width for KPI sheets
+                title_width = expanded_width if expanded_width else 1
+            elif layout_type == "top" and isinstance(title_width_config, dict):
+                # Use dictionary lookup for top sheets
+                title_width = title_width_config.get(sheet_definition, 5)  # Default to 5 if not found
+            else:
+                # Use static width
+                title_width = title_width_config if isinstance(title_width_config, int) else 1
+            
+                
+            # Calculate merge range
+            start_row = row_offset + 1
+            start_col = col_offset + 1
+            end_row = start_row + title_height - 1
+            end_col = start_col + title_width - 1
+            
+            # Merge cells if more than one cell
+            if title_height > 1 or title_width > 1:
+                start_cell = f"{get_column_letter(start_col)}{start_row}"
+                end_cell = f"{get_column_letter(end_col)}{end_row}"
+                merge_range = f"{start_cell}:{end_cell}"
+                
+                try:
+                    worksheet.merge_cells(merge_range)
+                    logger.debug(f"Merged cells {merge_range} for title")
+                except Exception as merge_error:
+                    logger.warning(f"Failed to merge cells {merge_range}: {merge_error}")
+            
+            # Insert title in top-left cell of merged range
+            worksheet.cell(row=start_row, column=start_col, value=title)
+                    
             
         except Exception as e:
             logger.warning(f"Failed to set sheet title '{title_base}': {e}")
+    
+    @staticmethod
+    def cleanup_template_columns(worksheet, layout_type: str):
+        """Delete columns up to title_col_offset to clean up template artifacts."""
+        try:
+            layout = SHEET_LAYOUT[layout_type]
+            title_col_offset = layout.get("title_col_offset", 0)
+            
+            if title_col_offset > 0:
+                # Delete columns 1 through title_col_offset
+                worksheet.delete_cols(1, title_col_offset)
+                logger.debug(f"Deleted {title_col_offset} template columns for {layout_type} sheet")
+            else:
+                logger.debug(f"No template columns to delete for {layout_type} sheet (offset: {title_col_offset})")
+                
+        except Exception as e:
+            logger.warning(f"Failed to cleanup template columns for {layout_type}: {e}")

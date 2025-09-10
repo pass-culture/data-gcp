@@ -144,14 +144,16 @@ SHEET_DEFINITIONS = {
     },
 }
 
+TOP_TITLE_WIDTH = {"top_offer":7, "top_offer_category":7, "top_venue":4, "top_ac":4, "top_format":3}
 def default_layout():
-    return {"title_row_offset": 0, "title_col_offset": 0,"title_height": 3}
+    return {"title_row_offset": 0, "title_col_offset": 0,"title_height": 3,"title_width": 1}
 
 SHEET_LAYOUT = defaultdict(default_layout, {
-    "top": {"title_row_offset": 0, "title_col_offset": 0,"title_height": 3},
-    "kpis": {"title_row_offset": 0, "title_col_offset": 3,"title_height": 3}
+    "top": {"title_row_offset": 0, "title_col_offset": 0,"title_height": 3,"title_width": TOP_TITLE_WIDTH},
+    "kpis": {"title_row_offset": 0, "title_col_offset": 3,"title_height": 3,"title_width": "dynamic"}
     }
 )
+
 
 AGG_TYPE_MAPPING = {
     "Par an: somme sur l'année": "sum",

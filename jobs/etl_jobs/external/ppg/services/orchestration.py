@@ -192,7 +192,7 @@ class ReportOrchestrationService:
             table_config = SOURCE_TABLES[source_table_key]
             table_name = table_config["table"]
 
-            dimension_context = sheet.context
+            dimension_context = sheet.get_dimension_context()
             if not dimension_context:
                 logger.warning(f"Could not resolve dimension context for {sheet.tab_name}")
                 result["success"] = False
@@ -260,7 +260,7 @@ class ReportOrchestrationService:
             scope = "individual" if sheet.definition == "individual_kpis" else "collective"
             
             # Get dimension context  
-            dimension_context = sheet.context
+            dimension_context = sheet.get_dimension_context()
             if not dimension_context:
                 logger.warning(f"Could not resolve dimension context for {sheet.tab_name}")
                 result["success"] = False

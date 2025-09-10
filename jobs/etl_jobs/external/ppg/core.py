@@ -98,7 +98,7 @@ class Sheet:
         """
         try:
             scale = self.filters.get("scale", "national")
-            
+
             # Map scale to dimension name
             dimension_name_map = {
                 "national": "NAT",
@@ -106,32 +106,29 @@ class Sheet:
                 "academie": "ACAD",
                 "departement": "DEP"
             }
-            
+
             dimension_name = dimension_name_map.get(scale, "NAT")
-            
+
             # Get dimension value from context
             if scale == "national":
                 dimension_value = "NAT"
             else:
                 dimension_value = self.context.get(scale) if self.context else None
-                
+
             if not dimension_value and scale != "national":
                 logger.warning(f"Could not resolve dimension value for scale '{scale}' in context {self.context}")
                 return None
-                
+
+            print(f"DEBUG: Resolved dimension context - name: {dimension_name}, value: {dimension_value}")
             return {
                 "name": dimension_name,
                 "value": dimension_value
             }
-            
+
         except Exception as e:
             logger.warning(f"Failed to resolve dimension context: {e}")
             return None
-        
-    def __post_init__(self):
-        if not self.context:
-            self.context = self.get_dimension_context()
-
+            
     # def preprocess(self, ds: str):
     #     """Placeholder for preprocessing - now handled by ReportOrchestrationService."""
     #     pass

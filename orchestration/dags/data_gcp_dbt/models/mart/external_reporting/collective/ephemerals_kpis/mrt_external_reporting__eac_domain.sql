@@ -59,10 +59,12 @@ with
                 date(cb.collective_booking_creation_date), month
             ) as partition_month,
             coalesce(vt.venue_tag_id is not null, false) as is_labelled_mc,
-            count(distinct cb.collective_booking_id) as total_bookings,
-            sum(cb.booking_amount) as total_booking_amount,
-            sum(cb.collective_stock_number_of_tickets) as total_tickets,
-            count(distinct cb.educational_institution_id) as total_institutions
+            coalesce(count(distinct cb.collective_booking_id), 0) as total_bookings,
+            coalesce(sum(cb.booking_amount), 0) as total_booking_amount,
+            coalesce(sum(cb.collective_stock_number_of_tickets), 0) as total_tickets,
+            coalesce(
+                count(distinct cb.educational_institution_id), 0
+            ) as total_institutions
         from {{ ref("mrt_global__collective_booking") }} as cb
         left join
             {{ ref("mrt_global__collective_offer_domain") }} as cod

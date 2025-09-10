@@ -14,7 +14,6 @@ REGION_HIERARCHY_TABLE = "region_department"
 BASE_TEMPLATE = Path("./templates/export_template.xlsx")
 REPORT_BASE_DIR_DEFAULT = Path("./reports")
 
-
 # data sources
 table_prefix = "external_reporting"
 
@@ -23,7 +22,9 @@ SOURCE_TABLES = {
     "collective": {"dataset": BIGQUERY_ANALYTICS_DATASET, "table": f"{table_prefix}_eac"},
     "top_offer": {"dataset": BIGQUERY_ANALYTICS_DATASET, "table": f"{table_prefix}_top_offer"},
     "top_offer_category": {"dataset": BIGQUERY_ANALYTICS_DATASET, "table": f"{table_prefix}_top_offer_category"},
+    "top_offer_label": {"dataset": BIGQUERY_ANALYTICS_DATASET, "table": f"{table_prefix}_top_offer_label"},
     "top_venue": {"dataset": BIGQUERY_ANALYTICS_DATASET, "table": f"{table_prefix}_top_venue"},
+    "top_labeled_venue": {"dataset": BIGQUERY_ANALYTICS_DATASET, "table": f"{table_prefix}_top_labeled_venue"},
     "top_ac": {"dataset": BIGQUERY_ANALYTICS_DATASET, "table": f"{table_prefix}_top_ac"},
     "top_format": {"dataset": BIGQUERY_ANALYTICS_DATASET, "table": f"{table_prefix}_top_format"},
 }
@@ -41,6 +42,8 @@ REPORTS = {
             {"definition": "top_offer", "filters": {"scope": "individual", "scale": "national"}},
             {"definition": "top_offer_category", "filters": {"scope": "individual", "scale": "national"}},
             {"definition": "top_venue", "filters": {"scope": "individual", "scale": "national"}},
+            {"definition": "top_labeled_venue", "filters": {"scope": "individual", "scale": "national"}},
+            {"definition": "top_offer_label", "filters": {"scope": "individual", "scale": "national"}},
             {"definition": "collective_kpis", "filters": {"scope": "collective", "scale": "national"}},
             {"definition": "top_ac", "filters": {"scope": "collective", "scale": "national"}},
             {"definition": "top_format", "filters": {"scope": "collective", "scale": "national"}},
@@ -53,7 +56,9 @@ REPORTS = {
             {"definition": "individual_kpis", "filters": {"scope": "individual", "scale": "region"}},
             {"definition": "top_offer", "filters": {"scope": "individual", "scale": "region"}},
             {"definition": "top_offer_category", "filters": {"scope": "individual", "scale": "region"}},
+            {"definition": "top_offer_label", "filters": {"scope": "individual", "scale": "region"}},
             {"definition": "top_venue", "filters": {"scope": "individual", "scale": "region"}},
+            {"definition": "top_labeled_venue", "filters": {"scope": "individual", "scale": "region"}},
             {"definition": "collective_kpis", "filters": {"scope": "collective", "scale": "national"}},
             {"definition": "collective_kpis", "filters": {"scope": "collective", "scale": "region"}},
             {"definition": "top_ac", "filters": {"scope": "collective", "scale": "region"}},
@@ -76,7 +81,9 @@ REPORTS = {
             {"definition": "individual_kpis", "filters": {"scope": "individual", "scale": "departement"}},
             {"definition": "top_offer", "filters": {"scope": "individual", "scale": "departement"}},
             {"definition": "top_offer_category", "filters": {"scope": "individual", "scale": "departement"}},
+            {"definition": "top_offer_label", "filters": {"scope": "individual", "scale": "departement"}},
             {"definition": "top_venue", "filters": {"scope": "individual", "scale": "departement"}},
+            {"definition": "top_labeled_venue", "filters": {"scope": "individual", "scale": "departement"}},
         ]
     },
 }
@@ -118,6 +125,14 @@ SHEET_DEFINITIONS = {
         "select_fields": ["partition_month","offer_category_id","offer_subcategory_id","offer_name","total_booking_amount","total_booking_quantity"],
         "order_by": ["offer_category_id","total_booking_amount"]
     },
+    "top_offer_label": {
+        "type": SheetType.TOP,
+        "template_tab": "Top 50 offres lieux labellisés",
+        "source_table": "top_offer_label",
+        "top_n": 50,
+        "select_fields": ["partition_month","offer_category_id","offer_subcategory_id","offer_name","venue_tag_name","total_booking_amount","total_booking_quantity"],
+        "order_by": ["venue_tag_name","total_booking_amount"]
+    },
     "top_venue": {
         "type": SheetType.TOP,
         "template_tab": "Top 50 lieux",
@@ -125,6 +140,14 @@ SHEET_DEFINITIONS = {
         "top_n": 50,
         "select_fields": ["partition_month","venue_name","offerer_name"],
         "order_by": ["total_venue_booking_amount_ranked"]
+    },
+    "top_labeled_venue": {
+        "type": SheetType.TOP,
+        "template_tab": "Top 50 lieux labellisés",
+        "source_table": "top_venue_label",
+        "top_n": 50,
+        "select_fields": ["partition_month","venue_name","offerer_name","venue_tag_name"],
+        "order_by": ["venue_tag_name","total_venue_booking_amount_ranked"]
     },
     "top_ac": {
         "type": SheetType.TOP,
@@ -144,11 +167,11 @@ SHEET_DEFINITIONS = {
     },
 }
 
-TOP_TITLE_WIDTH = {"top_offer":7, "top_offer_category":7, "top_venue":4, "top_ac":4, "top_format":5}
-def default_layout():
+TOP_TITLE_WIDTH = {"top_offer":7, "top_offer_category":7, "top_offer_label":8, "top_venue":4, "top_labeled_venue":5, "top_ac":4, "top_format":5}
+def default_title_layout():
     return {"title_row_offset": 0, "title_col_offset": 0,"title_height": 3,"title_width": 1}
 
-SHEET_LAYOUT = defaultdict(default_layout, {
+SHEET_LAYOUT = defaultdict(default_title_layout, {
     "top": {"title_row_offset": 0, "title_col_offset": 0,"title_height": 3,"title_width": TOP_TITLE_WIDTH},
     "kpis": {"title_row_offset": 0, "title_col_offset": 3,"title_height": 3,"title_width": "dynamic"}
     }

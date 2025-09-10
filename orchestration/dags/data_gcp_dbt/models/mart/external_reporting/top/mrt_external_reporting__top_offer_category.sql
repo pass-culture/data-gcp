@@ -11,6 +11,7 @@
 {% set dimensions = [
     {"name": "NAT", "value_expr": "'NAT'"},
     {"name": "REG", "value_expr": "venue_region_name"},
+    {"name": "DEP", "value_expr": "venue_department_name"},
 ] %}
 
 with
@@ -22,6 +23,7 @@ with
             offer_category_id,
             offer_subcategory_id,
             venue_region_name,
+            venue_department_name,
             any_value(offer_name) as offer_name,
             sum(booking_intermediary_amount) as total_booking_amount,
             sum(booking_quantity) as total_booking_quantity
@@ -38,7 +40,8 @@ with
             item_id,
             offer_category_id,
             offer_subcategory_id,
-            venue_region_name
+            venue_region_name,
+            venue_department_name
     ),
 
     all_dimensions as (

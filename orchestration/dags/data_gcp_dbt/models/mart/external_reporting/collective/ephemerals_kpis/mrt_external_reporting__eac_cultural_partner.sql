@@ -128,9 +128,12 @@ with
             partition_month,
             partner_region_name,
             partner_department_name,
-            sum(monthly_new_partners_with_template_offers) over (
-                partition by partner_region_name, partner_department_name
-                order by partition_month asc
+            coalesce(
+                sum(monthly_new_partners_with_template_offers) over (
+                    partition by partner_region_name, partner_department_name
+                    order by partition_month asc
+                ),
+                0
             ) as cumul_partners_with_template_offers
         from monthly_partner_with_template_offers
     )
@@ -145,20 +148,7 @@ with
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         'pct_partenaire_culturel_actif' as kpi_name,
-        count(
-            distinct case
-                when
-                    days_since_last_collective_bookable_date
-                    <= date_diff(partition_day, educational_year_beginning_date, day)
-                then partner_id
-            end
-        ) as numerator,
-        count(
-            distinct case
-                when days_since_last_collective_bookable_date >= 0 then partner_id
-            end
-        ) as denominator,
-        safe_divide(
+        coalesce(
             count(
                 distinct case
                     when
@@ -168,10 +158,37 @@ with
                     then partner_id
                 end
             ),
+            0
+        ) as numerator,
+        coalesce(
             count(
                 distinct case
                     when days_since_last_collective_bookable_date >= 0 then partner_id
                 end
+            ),
+            0
+        ) as denominator,
+        safe_divide(
+            coalesce(
+                count(
+                    distinct case
+                        when
+                            days_since_last_collective_bookable_date <= date_diff(
+                                partition_day, educational_year_beginning_date, day
+                            )
+                        then partner_id
+                    end
+                ),
+                0
+            ),
+            coalesce(
+                count(
+                    distinct case
+                        when days_since_last_collective_bookable_date >= 0
+                        then partner_id
+                    end
+                ),
+                0
             )
         ) as kpi
     from partner_details
@@ -189,9 +206,9 @@ with
         '{{ dim.name }}' as dimension_name,
         {{ dim.value_expr }} as dimension_value,
         'total_partenaire_avec_offre_vitrine' as kpi_name,
-        sum(cumul_partners_with_template_offers) as numerator,
+        coalesce(sum(cumul_partners_with_template_offers), 0) as numerator,
         1 as denominator,
-        sum(cumul_partners_with_template_offers) as kpi
+        coalesce(sum(cumul_partners_with_template_offers), 0) as kpi
     from cumul_partner_template
     {% if is_incremental() %}
         where

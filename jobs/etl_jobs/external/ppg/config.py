@@ -147,7 +147,7 @@ SHEET_DEFINITIONS = {
         "source_table": "top_labeled_venue",
         "top_n": 50,
         "select_fields": ["partition_month","venue_name","offerer_name","venue_tag_name"],
-        "order_by": ["venue_tag_name","total_venue_booking_amount_ranked"]
+        "order_by": ["total_venue_booking_amount_ranked"]
     },
     "top_ac": {
         "type": SheetType.TOP,

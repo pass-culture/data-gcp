@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e # exit on error
+
 API_DOCKER_IMAGE=$1
 
 echo "${API_DOCKER_IMAGE}"

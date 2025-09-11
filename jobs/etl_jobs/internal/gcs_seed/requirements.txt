@@ -8,7 +8,7 @@ charset-normalizer==3.3.2
     # via requests
 datetime==4.7
     # via -r requirements.in
-google-api-core==1.34.1
+google-api-core[grpc]==1.34.1
     # via
     #   google-cloud-bigquery
     #   google-cloud-core
@@ -60,23 +60,19 @@ pyasn1-modules==0.4.0
     # via google-auth
 pytz==2024.1
     # via datetime
-requests==2.32.3
+requests==2.32.4
     # via
     #   google-api-core
     #   google-cloud-storage
 rsa==4.9
     # via google-auth
-setuptools==70.2.0
-    # via
-    #   google-auth
-    #   zope-interface
 six==1.16.0
     # via
     #   google-auth
     #   google-cloud-bigquery
     #   google-cloud-core
     #   google-resumable-media
-urllib3==2.2.2
+urllib3==2.5.0
     # via requests
 zope-interface==6.4.post2
     # via datetime

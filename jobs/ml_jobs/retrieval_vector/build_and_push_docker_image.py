@@ -1,3 +1,4 @@
+import sys
 from datetime import datetime
 
 import typer
@@ -33,13 +34,20 @@ def main(
         f"{base_serving_container_path}/{experiment_name.replace('.', '_')}:{run_id}"
     )
 
-    logger.info(f"Deploying container: {serving_container}...")
-    deploy_container(serving_container, workers=int(container_worker))
-    logger.info(f"Container deployed: {serving_container}")
+    try:
+        logger.info(f"Deploying container: {serving_container}...")
+        deploy_container(serving_container, workers=int(container_worker))
+        logger.info(f"Container deployed: {serving_container}")
 
-    logger.info(f"Saving experiment: {experiment_name} in MLFlow...")
-    save_experiment(experiment_name, model_name, serving_container, run_id=run_id)
-    logger.info(f"Experiment saved: {experiment_name} in MLFlow with run_id: {run_id}")
+        logger.info(f"Saving experiment: {experiment_name} in MLFlow...")
+        save_experiment(experiment_name, model_name, serving_container, run_id=run_id)
+        logger.info(
+            f"Experiment saved: {experiment_name} in MLFlow with run_id: {run_id}"
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to deploy container or save experiment: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -73,12 +73,19 @@ def download_model(artifact_uri: str) -> None:
         artifact_uri (str): GCS bucket path
     """
     command = f"gsutil -m cp -r {artifact_uri} ."
-    results = subprocess.Popen(
-        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-    )
-    # TODO handle errors
-    for line in results.stdout:
-        logger.info(line.rstrip().decode("utf-8"))
+    try:
+        result = subprocess.run(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            check=True,
+        )
+        logger.info(result.stdout)
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Command failed with return code {e.returncode}: {e.output}")
+        raise
 
 
 def save_experiment(experiment_name, model_name, serving_container, run_id):
@@ -120,12 +127,19 @@ def save_experiment(experiment_name, model_name, serving_container, run_id):
 
 def deploy_container(serving_container, workers):
     command = f"sh ./deploy_to_docker_registery.sh {serving_container} {workers}"
-    results = subprocess.Popen(
-        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-    )
-    # TODO handle errors
-    for line in results.stdout:
-        print(line.rstrip().decode("utf-8"))
+    try:
+        result = subprocess.run(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            check=True,
+        )
+        print(result.stdout)
+    except subprocess.CalledProcessError as e:
+        print(f"Command failed with return code {e.returncode}: {e.output}")
+        raise
 
 
 def get_items_metadata():

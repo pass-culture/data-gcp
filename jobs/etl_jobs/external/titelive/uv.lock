@@ -1073,18 +1073,18 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "google-cloud-secret-manager", specifier = ">=2.24.0" },
-    { name = "google-cloud-storage", specifier = "==2.16.0" },
+    { name = "google-cloud-storage", specifier = ">=2.16.0" },
     { name = "ipykernel", specifier = ">=6.30.1" },
     { name = "loguru", specifier = ">=0.7.3" },
-    { name = "pandas", specifier = "==2.2.0" },
+    { name = "pandas", specifier = ">=2.2.0" },
     { name = "pyarrow", specifier = ">=21.0.0" },
-    { name = "pytest", specifier = "==8.2.2" },
+    { name = "pytest", specifier = ">=8.2.2" },
     { name = "pytest-cov", specifier = ">=4.0.0" },
     { name = "pytest-mock", specifier = ">=3.12.0" },
     { name = "ruff", specifier = ">=0.12.10" },
-    { name = "tornado", specifier = "==6.4.2" },
+    { name = "tornado", specifier = ">=6.4.2" },
     { name = "tqdm", specifier = ">=4.67.1" },
-    { name = "typer", specifier = "==0.12.3" },
+    { name = "typer", specifier = ">=0.12.3" },
 ]
 
 [[package]]

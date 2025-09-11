@@ -8,7 +8,10 @@ select
 from
     (
         select
-            *,
+            tag_id,
+            tag_name,
+            entry_id,
+            execution_date,
             split(tag_name, ':')[safe_ordinal(1)] as tag_key,
             split(tag_name, ':')[safe_ordinal(2)] as tag_value,
             row_number() over (

@@ -1,19 +1,15 @@
 import json
 from functools import partial
 from typing import Dict, List, Optional, Tuple, Union
+from pathlib import Path
 
-from common.config import (
-    EXCLUDED_TAGS,
-    PATH_TO_DBT_PROJECT,
-    PATH_TO_DBT_TARGET,
-)
+from common.config import EXCLUDED_TAGS
 
 from airflow import DAG
 from airflow.models.baseoperator import BaseOperator, chain
 from airflow.operators.python import PythonOperator
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.utils.task_group import TaskGroup
-from airflow.exceptions import AirflowSkipException
 
 # Import the Python callable functions from dbt_executors module
 from common.dbt.dbt_executors import run_dbt_model, run_dbt_test, run_dbt_snapshot
@@ -39,7 +35,7 @@ def create_nested_folder_groups(
     dag: DAG,
 ) -> None:
     nested_folders = get_models_folder_dict(dbt_models, manifest)
-    task_groups: Dict[str, Tuple[TaskGroup, DummyOperator]] = {}
+    task_groups: Dict[str, Tuple[TaskGroup, EmptyOperator]] = {}
 
     def create_nested_task_group(
         folder_hierarchy: List[str],
@@ -68,7 +64,7 @@ def create_nested_folder_groups(
         else:
             # Create task group & corresponding trigger operator
             tg = TaskGroup(group_id=group_id, parent_group=parent_group, dag=dag)
-            dummy_task = DummyOperator(
+            dummy_task = EmptyOperator(
                 task_id=f"trigger_{group_id}_folder", task_group=tg, dag=dag, pool="dbt"
             )
             # Add them to dictionary
@@ -106,10 +102,9 @@ def load_json_artifact(_PATH_TO_DBT_TARGET: str, artifact: str) -> Dict:
     local_filepath = _PATH_TO_DBT_TARGET + "/" + artifact
     try:
         with open(local_filepath) as f:
-            data = json.load(f)
+            return json.load(f)
     except FileNotFoundError:
-        data = {}
-    return data
+        return {}
 
 
 def load_manifest(_PATH_TO_DBT_TARGET: str) -> Dict:
@@ -133,6 +128,48 @@ def load_manifest(_PATH_TO_DBT_TARGET: str) -> Dict:
             "disabled": {},
         }
         return empty_manifest
+
+
+def get_node_tags(node: str, node_manifest: dict) -> List[str]:
+    tags = node_manifest.get(node, {}).get("tags", [])
+    config_tags = node_manifest.get(node, {}).get("config", {}).get("tags", [])
+
+    tags = list(set(tags + config_tags))
+    return tags
+
+
+def get_node_labels(node: str, node_manifest: dict) -> Dict:
+    return node_manifest.get(node, {}).get("config", {}).get("labels", {})
+
+
+def get_models_schedule_from_manifest(
+    nodes: Union[str, List[str]],
+    _PATH_TO_DBT_TARGET: Path,
+    allowed_schedule=["daily", "weekly", "monthly"],
+) -> Dict:
+    nodes_manifest = load_manifest(_PATH_TO_DBT_TARGET).get("nodes", {})
+    node_prefix = "model.data_gcp_dbt"
+    if isinstance(nodes, str):
+        nodes = [nodes]
+
+    schedules = {}
+    for n in nodes:
+        tags = get_node_tags(f"{node_prefix}.{n}", nodes_manifest)
+        labels = get_node_labels(f"{node_prefix}.{n}", nodes_manifest)
+
+        schedules[n] = {
+            "schedule_config": [tag for tag in tags if tag in allowed_schedule]
+            + (
+                [labels.get("schedule")]
+                if (sched := labels.get("schedule")) in allowed_schedule
+                and sched not in tags
+                else []
+            )
+        }
+
+        if len(schedules[n].values()) > 1:
+            raise ValueError(f"Node {n} has multiple schedules defined: {schedules[n]}")
+    return schedules
 
 
 def build_simplified_manifest(

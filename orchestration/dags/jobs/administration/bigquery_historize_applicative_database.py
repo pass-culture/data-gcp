@@ -1,5 +1,5 @@
 import datetime
-
+import os
 from common.callback import on_failure_base_callback
 from common.config import (
     BIGQUERY_INT_RAW_DATASET,
@@ -8,12 +8,16 @@ from common.config import (
     DATA_GCS_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+    PATH_TO_DBT_TARGET,
+    PATH_TO_DBT_PROJECT,
 )
 from common.utils import (
     delayed_waiting_operator,
     get_airflow_schedule,
     get_tables_config_dict,
 )
+
+from common.dbt.dag_utils import get_models_schedule_from_manifest, load_manifest
 from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
@@ -27,55 +31,49 @@ from airflow.utils.task_group import TaskGroup
 from airflow.exceptions import AirflowSkipException
 
 
-def skip_if_tagged_or_labeled(**context):
-    """
-    Skip the task based on the dbt config for this table.
-    Expects 'table_config' in params with optional 'tags' or 'schedule'.
-    """
-    table_config = context["params"].get("table_config", {})
-    ds = context["ds"]  # execution date as YYYY-MM-DD
-    execution_date = datetime.datetime.strptime(ds, "%Y-%m-%d")
+SNAPSHOTED_APPLICATIVE_PATH = f"{PATH_TO_DBT_PROJECT}/models/intermediate/raw"
+SNAPSHOTED_MODELS = [
+    filename[:-4]
+    for filename in os.listdir(SNAPSHOTED_APPLICATIVE_PATH)
+    if filename.endswith(".sql")
+]
+MODELS_SCHEDULES = get_models_schedule_from_manifest(
+    SNAPSHOTED_MODELS, PATH_TO_DBT_TARGET
+)
 
-    tags = table_config.get("tags", [])
-    if isinstance(tags, str):
-        tags = [tags]  # convert string to list for uniformity
-
-    # check monthly
-    if "monthly" in tags:
-        if execution_date.day != 1:
-            raise AirflowSkipException(f"Skipping because table is monthly scheduled")
-
-    # check weekly
-    if "weekly" in tags:
-        if execution_date.weekday() != 0:  # Monday
-            raise AirflowSkipException(f"Skipping because table is weekly scheduled")
-
-    # same checks for labels
-    labels = table_config.get("labels", {})
-    schedule_label = labels.get("schedule")  # e.g., "monthly" or "weekly"
-    if schedule_label == "monthly":
-        if execution_date.day != 1:
-            raise AirflowSkipException(
-                f"Skipping because table is monthly scheduled (label)"
-            )
-
-    if schedule_label == "weekly":
-        if execution_date.weekday() != 0:
-            raise AirflowSkipException(
-                f"Skipping because table is weekly scheduled (label)"
-            )
-
-
-GCE_INSTANCE = f"bq-historize-applicative-database-{ENV_SHORT_NAME}"
-BASE_PATH = "data-gcp/jobs/etl_jobs/internal/export_applicative"
-
-SNAPSHOT_MODELS_PATH = "data_gcp_dbt/models/intermediate/raw"
 SNAPSHOT_TABLES = get_tables_config_dict(
-    PATH=DAG_FOLDER + "/" + SNAPSHOT_MODELS_PATH,
+    PATH=DAG_FOLDER + "/" + SNAPSHOTED_APPLICATIVE_PATH,
     BQ_DATASET=BIGQUERY_INT_RAW_DATASET,
     is_source=True,
     dbt_alias=True,
 )
+
+
+def skip_if_not_scheduled(**context):
+    """
+    Skip the task based on the dbt manifest data for this table.
+    Expects 'table_config' in params with optional 'tags' or 'schedule'.
+    """
+    schedules = context["params"].get(
+        "schedule_config", {}
+    )  # list of tags or schedules
+    ds = context["ds"]  # execution date as YYYY-MM-DD
+    execution_date = datetime.datetime.strptime(ds, "%Y-%m-%d")
+
+    if "weekly" in schedules and "monthly" in schedules:
+        if execution_date.weekday() != 0 and execution_date.day != 1:
+            raise AirflowSkipException(
+                f"Skipping because table is weekly and monthly scheduled"
+            )
+    # check weekly
+    elif "weekly" in schedules:
+        if execution_date.weekday() != 0:  # Monday
+            raise AirflowSkipException(f"Skipping because table is weekly scheduled")
+    # check monthly
+    elif "monthly" in schedules:
+        if execution_date.day != 1:
+            raise AirflowSkipException(f"Skipping because table is monthly scheduled")
+
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
@@ -108,9 +106,9 @@ with TaskGroup(group_id="snapshots_to_gcs", dag=dag) as to_gcs:
 
         skip_task = PythonOperator(
             task_id=f"skip_check_{table_name}",
-            python_callable=skip_if_tagged_or_labeled,
+            python_callable=skip_if_not_scheduled,
             provide_context=True,
-            params={"table_config": bq_config},  # pass the full config
+            params={**bq_config, **(MODELS_SCHEDULES.get(table_name, {}))},
             dag=dag,
         )
 

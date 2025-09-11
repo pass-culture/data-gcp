@@ -6,6 +6,7 @@ import re
 import time
 from datetime import timedelta, datetime
 
+
 import requests
 from common.access_gcp_secrets import create_key_if_not_exists
 from common.config import (
@@ -375,6 +376,23 @@ def decode_output(task_id, key, **kwargs):
     decoded_output = output.decode("utf-8")
 
     return decoded_output
+
+
+def get_dbt_node_tags(node: str) -> dict:
+    """
+    Extract tags and labels from a dbt model node in the manifest.
+    """
+    dbt_manifest = load_dbt_manifest()
+    if node not in dbt_manifest["nodes"]:
+        raise ValueError(f"Node '{node}' not found in dbt manifest.")
+
+    model_node = dbt_manifest["nodes"][node]
+    config = model_node.get("config", {})
+
+    tags = config.get("tags", [])
+    labels = config.get("labels", {})
+
+    return {"tags": tags, "labels": labels}
 
 
 def parse_dbt_config(sql_text: str) -> dict:

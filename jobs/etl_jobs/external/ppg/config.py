@@ -144,7 +144,7 @@ SHEET_DEFINITIONS = {
     "top_labeled_venue": {
         "type": SheetType.TOP,
         "template_tab": "Top 50 lieux labellisés",
-        "source_table": "top_venue_label",
+        "source_table": "top_labeled_venue",
         "top_n": 50,
         "select_fields": ["partition_month","venue_name","offerer_name","venue_tag_name"],
         "order_by": ["venue_tag_name","total_venue_booking_amount_ranked"]

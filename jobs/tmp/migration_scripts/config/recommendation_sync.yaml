@@ -1,0 +1,34 @@
+# Recommendation Sync Migration Configuration
+# Bidirectional staging between BigQuery ↔ GCS ↔ CloudSQL
+
+use_case: "recommendation_sync"
+description: "Migrate recommendation sync staging files with bidirectional data flow"
+
+# Single pattern configuration for entire folder migration
+pattern: "single_folder"
+name: "recommendation_sync_staging"
+
+# Source configuration (current bucket)
+source_bucket: "passculture-data-{env}"
+source_path: "staging/recommendation_sync/"
+
+# Target configuration (new bucket structure)
+target_bucket: "passculture-data-staging-{env}"
+target_path: "recommendation_sync/"
+
+# Migration settings
+batch_size: 50
+include_subfolders: true
+file_types: ["*.json", "*.csv", "*.parquet"]
+
+# Validation settings
+validation:
+  verify_checksums: true
+  verify_file_sizes: true
+
+# Cleanup settings
+cleanup_after_migration: false  # Keep source files for safety
+retention_days: 30
+
+# Logging
+log_level: "INFO"

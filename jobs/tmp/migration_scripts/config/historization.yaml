@@ -1,0 +1,67 @@
+# Historization Migration Configuration
+# Multiple archival processes for different data retention strategies
+
+use_case: "historization"
+description: "Migrate historization archives with different retention and organization strategies"
+
+# Multiple patterns for different historization processes
+patterns:
+  - pattern: "date_partitioned"
+    name: "daily_snapshots"
+    source_bucket: "passculture-data-{env}"
+    source_path: "historization/daily_snapshots/"
+    target_bucket: "passculture-data-archive-{env}"
+    target_path: "snapshots/daily/"
+    date_format: "%Y-%m-%d"
+    # partition_pattern: "snapshot_date=(\d{4}-\d{2}-\d{2})"
+    days_back: 365  # Last year
+    file_types: ["*.parquet", "*.avro"]
+    target_date_structure: "year={year}/month={month}"
+    batch_size: 20
+    validation:
+      verify_checksums: true
+    cleanup_after_migration: false
+    retention_days: 730  # 2 years retention
+
+  - pattern: "multi_folder"
+    name: "entity_archives"
+    source_bucket: "passculture-data-{env}"
+    source_path: "historization/entities/"
+    target_bucket: "passculture-data-archive-{env}"
+    target_path: "entities/"
+    subfolder_mapping:
+      "user_history/": "users/"
+      "booking_history/": "bookings/"
+      "offer_history/": "offers/"
+      "venue_history/": "venues/"
+      "payment_history/": "finance/payments/"
+      "event_history/": "analytics/events/"
+    batch_size: 30
+    file_types: ["*.parquet", "*.json.gz"]
+    validation:
+      verify_file_sizes: true
+    cleanup_after_migration: false
+    retention_days: 1095  # 3 years retention
+
+  - pattern: "file_pattern"
+    name: "compressed_archives"
+    source_bucket: "passculture-data-{env}"
+    source_path: "historization/compressed/"
+    target_bucket: "passculture-data-archive-{env}"
+    target_path: "compressed/"
+    file_patterns:
+      - "*.tar.gz"
+      - "*.zip"
+      - "*_archive_*.gz"
+    exclude_patterns:
+      - "*.tmp"
+      - "*_processing_*"
+    batch_size: 10  # Smaller batches for large compressed files
+    validation:
+      verify_checksums: true
+      verify_file_sizes: true
+    cleanup_after_migration: false
+    retention_days: 2555  # 7 years retention
+
+# Global settings
+log_level: "INFO"

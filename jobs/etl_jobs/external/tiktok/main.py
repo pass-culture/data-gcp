@@ -15,6 +15,9 @@ def main(
         help="End date for exporting accounts data.",
     ),
 ):
+    print(CLIENT_ID)
+    print(CLIENT_SECRET)
+    print(REFRESH_TOKEN)
     business_api = BusinessAccountApi(
         app_id=CLIENT_ID,
         app_secret=CLIENT_SECRET,

@@ -1,0 +1,58 @@
+# DMS Export Migration Configuration
+# Complete ETL pipeline: API → JSON → Parquet → BigQuery
+
+use_case: "dms_export"
+description: "Migrate DMS export ETL pipeline files (API → JSON → Parquet → BigQuery)"
+
+# Multiple patterns for different stages of the ETL pipeline
+patterns:
+  - pattern: "file_pattern"
+    name: "dms_raw_json"
+    source_bucket: "passculture-data-{env}"
+    source_path: "staging/dms_export/raw/"
+    target_bucket: "passculture-data-etl-{env}"
+    target_path: "dms_export/raw/"
+    file_patterns:
+      - "*.json"
+      - "*.ndjson"
+    batch_size: 100
+    validation:
+      verify_file_sizes: true
+    cleanup_after_migration: false
+    retention_days: 30
+
+  - pattern: "file_pattern"
+    name: "dms_processed_parquet"
+    source_bucket: "passculture-data-{env}"
+    source_path: "staging/dms_export/processed/"
+    target_bucket: "passculture-data-etl-{env}"
+    target_path: "dms_export/processed/"
+    file_patterns:
+      - "*.parquet"
+      - "*.parq"
+    batch_size: 50
+    validation:
+      verify_checksums: true
+      verify_file_sizes: true
+    cleanup_after_migration: false
+    retention_days: 60
+
+  - pattern: "date_partitioned"
+    name: "dms_partitioned_data"
+    source_bucket: "passculture-data-{env}"
+    source_path: "staging/dms_export/partitioned/"
+    target_bucket: "passculture-data-etl-{env}"
+    target_path: "dms_export/partitioned/"
+    date_format: "%Y%m%d"
+    # partition_pattern: "date=(\d{8})"
+    days_back: 90  # Last 90 days
+    file_types: ["*.parquet"]
+    target_date_structure: "year={year}/month={month}/day={day}"
+    batch_size: 25
+    validation:
+      verify_checksums: true
+    cleanup_after_migration: false
+    retention_days: 90
+
+# Global settings
+log_level: "INFO"

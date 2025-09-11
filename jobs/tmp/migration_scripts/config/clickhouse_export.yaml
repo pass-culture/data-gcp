@@ -1,0 +1,51 @@
+# ClickHouse Export Migration Configuration
+# Temporary staging for BigQuery → GCS → ClickHouse pipeline
+
+use_case: "clickhouse_export"
+description: "Migrate ClickHouse export staging files (BigQuery → GCS → ClickHouse pipeline)"
+
+# File pattern for ClickHouse export files
+pattern: "file_pattern"
+name: "clickhouse_export_staging"
+
+# Source configuration (current bucket)
+source_bucket: "passculture-data-{env}"
+source_path: "staging/clickhouse_export/"
+
+# Target configuration (new bucket structure)
+target_bucket: "passculture-data-staging-{env}"
+target_path: "clickhouse_export/"
+
+# File patterns for ClickHouse export data
+file_patterns:
+  - "*.csv"
+  - "*.tsv"
+  - "*.parquet"
+  - "export_*.json"
+
+# Exclude temporary/processing files
+exclude_patterns:
+  - "*.tmp"
+  - "*.processing"
+  - ".temp*"
+
+# Migration settings
+batch_size: 75
+include_subfolders: true
+
+# Optional file renaming pattern
+rename_pattern:
+  from: "staging/clickhouse_export/"
+  to: "export/"
+
+# Validation settings
+validation:
+  verify_checksums: true
+  verify_file_sizes: true
+
+# Cleanup settings - More aggressive for staging files
+cleanup_after_migration: true  # Clean up temporary staging files
+retention_days: 7  # Short retention for staging
+
+# Logging
+log_level: "INFO"

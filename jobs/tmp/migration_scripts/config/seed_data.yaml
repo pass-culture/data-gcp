@@ -1,0 +1,62 @@
+# Seed Data Migration Configuration
+# Multiple folder migration with subfolder mapping for 50+ seed data types
+
+use_case: "seed_data"
+description: "Migrate seed data from bigquery_imports/seed with subfolder organization"
+
+# Multi-folder pattern for organized seed data migration
+pattern: "multi_folder"
+name: "gcs_seed_operations"
+
+# Source configuration (current bucket)
+source_bucket: "passculture-data-{env}"
+source_path: "bigquery_imports/seed/"
+
+# Target configuration (new bucket structure)
+target_bucket: "passculture-data-imports-{env}"
+target_path: "seed/"
+
+# Subfolder mapping for reorganization
+subfolder_mapping:
+  # Core entities
+  "user/": "core/users/"
+  "offerer/": "core/offerers/"
+  "venue/": "core/venues/"
+  "booking/": "core/bookings/"
+  "offer/": "core/offers/"
+  "stock/": "core/stocks/"
+
+  # Financial data
+  "payment/": "finance/payments/"
+  "deposit/": "finance/deposits/"
+  "pricing/": "finance/pricing/"
+
+  # Content data
+  "category/": "content/categories/"
+  "product/": "content/products/"
+  "provider/": "content/providers/"
+
+  # Reference data
+  "geography/": "reference/geography/"
+  "transport/": "reference/transport/"
+  "external/": "reference/external/"
+
+  # Analytics
+  "event/": "analytics/events/"
+  "metric/": "analytics/metrics/"
+
+# Migration settings
+batch_size: 100
+file_types: ["*.json", "*.csv", "*.parquet", "*.avro"]
+
+# Validation settings
+validation:
+  verify_checksums: false  # Skip checksums for large seed data
+  verify_file_sizes: true
+
+# Cleanup settings
+cleanup_after_migration: false  # Keep source files for rollback capability
+retention_days: 90
+
+# Logging
+log_level: "INFO"

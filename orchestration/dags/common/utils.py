@@ -23,6 +23,7 @@ from airflow.operators.python import PythonOperator
 from airflow.sensors.external_task import ExternalTaskSensor
 from airflow.utils.db import provide_session
 from airflow.utils.types import DagRunType
+from dags.common.dbt.dag_utils import load_manifest
 
 
 @provide_session
@@ -126,6 +127,17 @@ def waiting_operator(
     allowed_states=["success"],
     failed_states=["failed", "upstream_failed", "skipped"],
 ):
+    """
+    A simple dependency operator.
+
+    Creates an ExternalTaskSensor that pauses the current DAG
+    until a specific task in another DAG finishes (default "end"). This assumes
+    that both DAGs are scheduled in lockstep (e.g., both run daily
+    at midnight), so the sensor can directly wait for the run with
+    the same execution date.
+
+    Use this when DAG schedules are perfectly aligned.
+    """
     return ExternalTaskSensor(
         task_id=f"wait_for_{dag_id}_{external_task_id}",
         external_dag_id=dag_id,
@@ -154,27 +166,46 @@ def delayed_waiting_operator(
     **kwargs,
 ):
     """
-    Creates an ExternalTaskSensor that waits for a task in another DAG to finish,
-    with a flexible day-based window.
+    Creates a cross-DAG dependency sensor with a flexible time window.
+
+    Purpose:
+        - Waits for a task in another DAG to finish.
+        - Handles DAGs with misaligned schedules or different execution intervals.
+        - Skips waiting for manual DAG runs if `skip_manually_triggered=True`.
+
+    Window logic:
+        - upper_bound = DAG2 logical_date - offset_days/hours
+        - lower_bound = upper_bound - window_days/hours
+        This ensures we wait for the latest valid run of the external DAG
+        **before** DAG2's current logical_date, optionally shifted by offsets.
+
+        ASCII example:
+            DAG2 logical_date = 2025-09-12 01:00
+            offset_days=0, window_days=1
+            -------------------------------
+            |  2025-09-11 01:00  |  upper_bound = 2025-09-12 01:00
+            |  2025-09-11 00:00  |  lower_bound = upper_bound - window
+            -------------------------------
+            External DAG runs between lower and upper bounds will be considered.
 
     Guarantees:
-        - Only scheduled DAG runs are considered (manual triggers considered optionally).
-        - DAG2 waits for the DAG1 run scheduled on the same day (before DAG2 run time).
-        - Window can be parametrized with offset_days/hours and window_days/hours.
+        - Only scheduled DAG runs are considered.
+        - Manual triggers are skipped if `skip_manually_triggered=True`.
+        - The sensor always waits for the latest external DAG run in the defined window.
 
     Args:
         dag: The DAG where this task will be added.
         external_dag_id (str): ID of the external DAG.
         external_task_id (str): Task ID in the external DAG to wait for.
-        allowed_states (list): States considered successful.
-        failed_states (list): States considered failed.
-        offset_days (int): How many days back to shift the window.
+        allowed_states (list): States considered successful. Defaults to ["success"].
+        failed_states (list): States considered failed. Defaults to ["failed", "upstream_failed", "skipped"].
+        offset_days (int): Shift the window back in days.
         window_days (int): Width of the window in days.
-        offset_hours (int): Increase window back shift in hours.
-        window_hours (int): Increase width of the window in hours.
+        offset_hours (int): Shift the window back in hours.
+        window_hours (int): Width of the window in hours.
         skip_manually_triggered (bool): Skip waiting for manual DAG runs if True.
-        pool (str): Airflow pool.
-        **kwargs: Additional arguments for the Airflow task.
+        pool (str): Airflow pool to use.
+        **kwargs: Additional arguments passed to the ExternalTaskSensor or PythonOperator.
     """
     if allowed_states is None:
         allowed_states = ["success"]
@@ -185,16 +216,17 @@ def delayed_waiting_operator(
 
     def compute_execution_date_fn(logical_date: datetime, **context):
         """
-        Computes the external DAG run to wait for.
+        Determine the external DAG run to wait for based on a flexible window.
 
-        We define the window in terms of DAG2's logical_date:
-            - upper_bound: DAG2 logical_date (so we never pick DAG1 runs after DAG2)
-            - lower_bound: upper_bound - window_days (default 1)
-            - offset_days shifts the window back in time if needed
+        - Aligns with the current DAG run (logical_date).
+        - Calculates a window using offset_days/hours and window_days/hours.
+        - Returns the most recent external DAG run within this window.
 
-        Note:
-            - logical_date is preferred here over data_interval_end to align with same-day semantics.
-            - data_interval_end could overshoot when DAG2's interval spans multiple days.
+        This allows robust cross-DAG dependencies even when DAG schedules
+        differ (e.g., hourly DAG waits for daily DAG).
+
+        Raises:
+            ValueError if window parameters are invalid (zero or negative).
         """
         if logical_date is None:
             raise ValueError("The 'logical_date' is missing in the context.")
@@ -225,7 +257,11 @@ def delayed_waiting_operator(
 
         def handle_manual_trigger(**context):
             """
-            Skips waiting for manually triggered DAG runs, but waits for scheduled DAGs.
+            Skip waiting for manually triggered DAG runs.
+
+            - Manual DAG runs are typically ad-hoc or test runs.
+            - Scheduled runs still enforce the cross-DAG dependency.
+            - Creates a sensor dynamically at runtime and checks external task status.
             """
             dag_run = context.get("dag_run")
             if dag_run and dag_run.run_id.startswith("manual__"):
@@ -382,7 +418,7 @@ def get_dbt_node_tags(node: str) -> dict:
     """
     Extract tags and labels from a dbt model node in the manifest.
     """
-    dbt_manifest = load_dbt_manifest()
+    dbt_manifest = load_manifest()
     if node not in dbt_manifest["nodes"]:
         raise ValueError(f"Node '{node}' not found in dbt manifest.")
 

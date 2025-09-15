@@ -57,7 +57,7 @@ def export_requirements_for_branch(branch: str, output_dir: Path) -> None:
 
 @app.command()
 def export_requirements(
-    prefix: str = typer.Option(..., help="The prefix to use for the output file."),
+    prefix: str = typer.Option("", help="The prefix to use for the output file."),
 ) -> None:
     """Compile the requirements for all jobs."""
     import subprocess
@@ -77,11 +77,15 @@ def export_requirements(
 def diff_requirements(
     branch1: str = typer.Option(..., help="First branch to compare"),
     branch2: str = typer.Option(..., help="Second branch to compare"),
-    output_file: str = typer.Option(None, help="Output file for the diff (optional)"),
+    write_to_file: bool = typer.Option(
+        False,
+        help="Output file for the diff (optional) into a package_versions.diff file",
+    ),
 ) -> None:
     """Export requirements from two branches and show the diff."""
 
     # Store current branch
+    OUTPUT_FILE = "package_versions.diff"
     current_branch = subprocess.run(
         ["git", "branch", "--show-current"],
         cwd=BASE_PATH,
@@ -141,10 +145,10 @@ def diff_requirements(
             # Output results
             diff_text = "\n".join(diff_output)
 
-            if output_file:
-                with open(output_file, "w") as f:
+            if write_to_file:
+                with open(OUTPUT_FILE, "w") as f:
                     f.write(diff_text)
-                print(f"Diff saved to {output_file}")
+                print(f"Diff saved to {OUTPUT_FILE}")
             else:
                 print(diff_text)
 

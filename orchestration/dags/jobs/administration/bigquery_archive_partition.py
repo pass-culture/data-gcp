@@ -30,6 +30,7 @@ TABLES = {
         "look_back_days": {"dev": 30, "stg": 90, "prod": 730}[ENV_SHORT_NAME],
         "folder": "tracking",
         "archive": True if ENV_SHORT_NAME == "prod" else False,
+        "bucket": f"de-bigquery-data-archive-{ENV_SHORT_NAME}",
     },
     "int_firebase_native_event": {
         "table_id": "native_event",
@@ -38,6 +39,7 @@ TABLES = {
         "look_back_days": {"dev": 30, "stg": 90, "prod": 365}[ENV_SHORT_NAME],
         "folder": "int_firebase",
         "archive": False,
+        "bucket": f"de-bigquery-data-archive-{ENV_SHORT_NAME}",
     },
     "int_firebase_native_event_flattened": {
         "table_id": "native_event_flattened",
@@ -46,6 +48,7 @@ TABLES = {
         "look_back_days": {"dev": 30, "stg": 90, "prod": 365}[ENV_SHORT_NAME],
         "folder": "int_firebase",
         "archive": False,
+        "bucket": f"de-bigquery-data-archive-{ENV_SHORT_NAME}",
     },
     "raw_api_reco_past_offer_context": {
         "table_id": "past_offer_context",
@@ -54,6 +57,7 @@ TABLES = {
         "look_back_days": {"dev": 30, "stg": 90, "prod": 180}[ENV_SHORT_NAME],
         "folder": "api_reco",
         "archive": True if ENV_SHORT_NAME == "prod" else False,
+        "bucket": f"ds-data-archive-{ENV_SHORT_NAME}",
     },
     "int_pcreco_past_offer_context": {
         "table_id": "past_offer_context",
@@ -62,6 +66,7 @@ TABLES = {
         "look_back_days": {"dev": 30, "stg": 90, "prod": 180}[ENV_SHORT_NAME],
         "folder": "api_reco",
         "archive": False,
+        "bucket": f"ds-data-archive-{ENV_SHORT_NAME}",
     },
 }
 

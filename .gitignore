@@ -31,3 +31,4 @@ apps/recommendation/api/src/locustfile.py
 data-gcp-api
 logs/dbt.log
 site
+package_versions.diff

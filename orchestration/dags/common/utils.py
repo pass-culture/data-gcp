@@ -414,23 +414,6 @@ def decode_output(task_id, key, **kwargs):
     return decoded_output
 
 
-def get_dbt_node_tags(node: str) -> dict:
-    """
-    Extract tags and labels from a dbt model node in the manifest.
-    """
-    dbt_manifest = load_manifest()
-    if node not in dbt_manifest["nodes"]:
-        raise ValueError(f"Node '{node}' not found in dbt manifest.")
-
-    model_node = dbt_manifest["nodes"][node]
-    config = model_node.get("config", {})
-
-    tags = config.get("tags", [])
-    labels = config.get("labels", {})
-
-    return {"tags": tags, "labels": labels}
-
-
 def get_tables_config_dict(PATH, BQ_DATASET, is_source=False, dbt_alias=False):
     """
     Generates a dictionary configuration for tables based on SQL files in a given directory.

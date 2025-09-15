@@ -155,13 +155,13 @@ def delayed_waiting_operator(
     dag,
     external_dag_id: str,
     external_task_id: str = "end",
-    allowed_states: list = None,
-    failed_states: list = None,
+    allowed_states: list = ["success"],
+    failed_states: list = ["failed", "upstream_failed", "skipped"],
     offset_days: int = 0,
     window_days: int = 1,
     offset_hours: int = 0,
     window_hours: int = 0,
-    skip_manually_triggered: bool = True,
+    skip_manually_triggered: bool = False,
     pool: str = "default_pool",
     **kwargs,
 ):
@@ -431,50 +431,61 @@ def get_dbt_node_tags(node: str) -> dict:
     return {"tags": tags, "labels": labels}
 
 
-def parse_dbt_config(sql_text: str) -> dict:
-    """
-    Parse dbt config() block for tags and labels, even inside **macro(...) calls.
-    """
-    config_dict = {}
+# def parse_dbt_config(sql_text: str) -> dict:
+#     """
+#     Parse dbt config() block for tags and labels, even inside **macro(...) calls.
+#     """
+#     config_dict = {}
 
-    # capture everything inside config(...)
-    match = re.search(r"\{\{\s*config\((.*?)\)\s*\}\}", sql_text, re.DOTALL)
-    if not match:
-        return config_dict
+#     # capture everything inside config(...)
+#     match = re.search(r"\{\{\s*config\((.*?)\)\s*\}\}", sql_text, re.DOTALL)
+#     if not match:
+#         return config_dict
 
-    config_body = match.group(1).strip()
+#     config_body = match.group(1).strip()
 
-    # --- Extract tags (string or list) ---
-    tag_match = re.search(
-        r"tags\s*=\s*(\[.*?\]|[\"'][^\"']+[\"'])", config_body, re.DOTALL
-    )
-    if tag_match:
-        try:
-            config_dict["tags"] = ast.literal_eval(tag_match.group(1))
-        except Exception:
-            pass
+#     # --- Extract tags (string or list) ---
+#     tag_match = re.search(
+#         r"tags\s*=\s*(\[.*?\]|[\"'][^\"']+[\"'])", config_body, re.DOTALL
+#     )
+#     if tag_match:
+#         try:
+#             config_dict["tags"] = ast.literal_eval(tag_match.group(1))
+#         except Exception:
+#             pass
 
-    # --- Extract labels (dict) ---
-    label_match = re.search(r"labels\s*=\s*(\{.*?\})", config_body, re.DOTALL)
-    if label_match:
-        try:
-            config_dict["labels"] = ast.literal_eval(label_match.group(1))
-        except Exception:
-            pass
+#     # --- Extract labels (dict) ---
+#     label_match = re.search(r"labels\s*=\s*(\{.*?\})", config_body, re.DOTALL)
+#     if label_match:
+#         try:
+#             config_dict["labels"] = ast.literal_eval(label_match.group(1))
+#         except Exception:
+#             pass
 
-    return config_dict
+#     return config_dict
 
 
 def get_tables_config_dict(PATH, BQ_DATASET, is_source=False, dbt_alias=False):
+    """
+    Generates a dictionary configuration for tables based on SQL files in a given directory.
+
+    Args:
+        PATH (str): The path to the directory containing SQL files.
+        BQ_DATASET (str): The BigQuery dataset where the tables will be stored or loaded from.
+        is_source (bool): If True, use 'source_dataset' and 'source_table' keys instead of 'destination_dataset' and 'destination_table'.
+    Returns:
+        dict: A dictionary where each key is a table name (derived from the SQL file name) and each value is a dictionary containing:
+            - 'sql': The path to the SQL file.
+            - 'source_dataset' or 'destination_dataset': The BigQuery dataset.
+            - 'source_table' or 'destination_table': The name of the table in BigQuery.
+    """
     tables_config = {}
     for file in os.listdir(PATH):
         extension = file.split(".")[-1]
         table_name = file.split(".")[0]
         if extension == "sql":
-            sql_path = os.path.join(PATH, file)
-            tables_config[table_name] = {"sql": sql_path}
-
-            # destination vs source
+            tables_config[table_name] = {}
+            tables_config[table_name]["sql"] = os.path.join(PATH, file)
             if is_source:
                 tables_config[table_name]["source_dataset"] = BQ_DATASET
                 tables_config[table_name]["source_table"] = (
@@ -485,19 +496,31 @@ def get_tables_config_dict(PATH, BQ_DATASET, is_source=False, dbt_alias=False):
                 tables_config[table_name]["destination_table"] = (
                     f"applicative_database_{table_name}"
                 )
-
-            # parse dbt config for tags/labels
-            with open(sql_path, "r") as f:
-                sql_text = f.read()
-                config_extras = parse_dbt_config(sql_text)
-                tables_config[table_name].update(config_extras)
-
-    # handle dbt alias
     for table_name, table_config in tables_config.items():
         if dbt_alias:
             table_config["table_alias"] = table_name.split("__")[-1]
-
     return tables_config
+
+
+def sparkql_health_check(url: str, timeout=5, retries=5, initial_delay=5):
+    for attempt in range(retries):
+        try:
+            response = requests.get(url, params={"query": "ASK { }"}, timeout=timeout)
+            logging.info(f"response: {response}")
+            if response.status_code == 200:
+                logging.info(f"{url} is healthy on attempt {attempt + 1}.")
+                return True  # Exit on successful health check
+            else:
+                logging.warning(
+                    f"{url} returned status code {response.status_code} on attempt {attempt + 1}."
+                )
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Attempt {attempt + 1}: Could not reach {url}. Error: {e}")
+        if attempt < retries - 1:
+            delay = initial_delay * (2**attempt)
+            logging.info(f"Retrying in {delay} seconds...")
+            time.sleep(delay)
+    raise Exception(f"Health check failed for {url} after {retries} attempts.")
 
 
 def sparkql_health_check(url: str, timeout=5, retries=5, initial_delay=5):

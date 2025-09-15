@@ -6,6 +6,17 @@ import typer
 
 BASE_PATH = Path(__file__).resolve().parent.parent
 
+UV_EXPORT_CMD = [
+    "uv",
+    "export",
+    "--no-hashes",
+    "--no-annotate",
+    "--no-header",
+    "--format",
+    "requirements-txt",
+    "-o",
+]
+
 
 def get_uv_lock_dir() -> Path:
     """Get the directory containing the `uv.lock` file."""
@@ -38,17 +49,7 @@ def export_requirements_for_branch(branch: str, output_dir: Path) -> None:
 
         print(f"Exporting requirements from {uv_lock_dir} (branch: {branch})")
         subprocess.run(
-            [
-                "uv",
-                "export",
-                "--no-hashes",
-                "--no-annotate",
-                "--no-header",
-                "--format",
-                "requirements-txt",
-                "-o",
-                str(output_file),
-            ],
+            UV_EXPORT_CMD + [str(output_file)],
             cwd=uv_lock_dir,
             check=True,
         )
@@ -62,20 +63,11 @@ def export_requirements(
     import subprocess
 
     uv_lock_dirs = get_uv_lock_dir()
+    output_filename = f"{prefix}requirements.txt"
     for uv_lock_dir in uv_lock_dirs:
         print(f"Compiling requirements in {uv_lock_dir}")
         subprocess.run(
-            [
-                "uv",
-                "export",
-                "--no-hashes",
-                "--no-annotate",
-                "--no-header",
-                "--format",
-                "requirements-txt",
-                "-o",
-                f"{prefix}requirements.txt",
-            ],
+            UV_EXPORT_CMD + [output_filename],
             cwd=uv_lock_dir,
             check=True,
         )

@@ -42,7 +42,7 @@ MODELS_SCHEDULES = get_models_schedule_from_manifest(
 )
 
 SNAPSHOT_TABLES = get_tables_config_dict(
-    PATH=DAG_FOLDER + "/" + SNAPSHOTED_APPLICATIVE_PATH,
+    PATH=SNAPSHOTED_APPLICATIVE_PATH,
     BQ_DATASET=BIGQUERY_INT_RAW_DATASET,
     is_source=True,
     dbt_alias=True,

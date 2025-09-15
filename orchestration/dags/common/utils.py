@@ -431,40 +431,6 @@ def get_dbt_node_tags(node: str) -> dict:
     return {"tags": tags, "labels": labels}
 
 
-# def parse_dbt_config(sql_text: str) -> dict:
-#     """
-#     Parse dbt config() block for tags and labels, even inside **macro(...) calls.
-#     """
-#     config_dict = {}
-
-#     # capture everything inside config(...)
-#     match = re.search(r"\{\{\s*config\((.*?)\)\s*\}\}", sql_text, re.DOTALL)
-#     if not match:
-#         return config_dict
-
-#     config_body = match.group(1).strip()
-
-#     # --- Extract tags (string or list) ---
-#     tag_match = re.search(
-#         r"tags\s*=\s*(\[.*?\]|[\"'][^\"']+[\"'])", config_body, re.DOTALL
-#     )
-#     if tag_match:
-#         try:
-#             config_dict["tags"] = ast.literal_eval(tag_match.group(1))
-#         except Exception:
-#             pass
-
-#     # --- Extract labels (dict) ---
-#     label_match = re.search(r"labels\s*=\s*(\{.*?\})", config_body, re.DOTALL)
-#     if label_match:
-#         try:
-#             config_dict["labels"] = ast.literal_eval(label_match.group(1))
-#         except Exception:
-#             pass
-
-#     return config_dict
-
-
 def get_tables_config_dict(PATH, BQ_DATASET, is_source=False, dbt_alias=False):
     """
     Generates a dictionary configuration for tables based on SQL files in a given directory.

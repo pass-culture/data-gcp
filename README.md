@@ -49,57 +49,66 @@ This repository contains the core components of our data platform:
   - Linux: `sudo apt install make`
   - macOS: `brew install make`
 - ggshield installed
-   - Linux: `sudo apt install ggshield`
-   - Mac: `brew install ggshield`
+  - Linux: `sudo apt install ggshield`
+  - Mac: `brew install ggshield`
 - ggshield authenticated `ggshield auth login` use github auth with your work account
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone git@github.com:pass-culture/data-gcp.git
    cd data-gcp
    ```
 
 2. **Install the project**
+
    ```bash
    make install
    ```
+
    > This installation includes all necessary requirements for the `orchestration` part in a single virtual environment and sets up pre-commit hooks for code quality.
 
 ### Troubleshooting
 
 #### Ubuntu
+
 ```bash
 make install_ubuntu_libs
 ```
 
 #### macOS
+
 ```bash
 make install_macos_libs
 ```
+
 Add to your `~/.zshrc`:
+
 ```bash
 export MYSQLCLIENT_LDFLAGS="-L/opt/homebrew/opt/mysql-client/lib -lmysqlclient -rpath /usr/local/mysql/lib"
 export MYSQLCLIENT_CFLAGS="-I/opt/homebrew/opt/mysql-client/include -I/opt/homebrew/opt/mysql-client/include/mysql"
 ```
-
 
 ## 🛠️ Development
 
 ### Creating New Microservices
 
 #### ML Microservice
+
 ```bash
 MS_NAME=my_microservice make create_microservice_ml
 ```
 
 #### ETL Microservice (Internal)
+
 ```bash
 MS_NAME=my_microservice make create_microservice_etl_internal
 ```
 
 #### ETL Microservice (External)
+
 ```bash
 MS_NAME=my_microservice make create_microservice_etl_external
 ```
@@ -116,7 +125,43 @@ uv sync --group <airflow|dbt|dev|docs>
 make ruff_fix / ruff_check / sqlfluff_fix / sqlfluff_check / sqlfmt_fix / sqlfmt_check
 ```
 
+### View uv lock file as a human readable file
 
+uv allows to manage dependencies with a lock file. However the lock file is not really easy to read. You can generate a human readable file by uv.lock with:
+
+```bash
+python automations/export_requirements.py export-requirements
+```
+
+or with a prefix
+
+```bash
+python automations/export_requirements.py export-requirements --prefix "new_"
+```
+
+⚠️ Don't commit these files, they are only for helping you to understand the dependencies. ⚠️
+
+### Compute diff of requirements between two branches
+
+```bash
+python automations/export_requirements.py diff-requirements --branch1 {first_branch} --branch2 {second_branch}
+```
+
+or
+
+```bash
+python automations/export_requirements.py diff-requirements --branch1 {first_branch} --branch2 {second_branch} --write-to-file
+```
+
+to write the output to a file named package_versions.diff
+
+Example :
+
+```bash
+python automations/export_requirements.py diff-requirements --branch1 master --branch2 refactor/remove-hardcoded-deps-in-pyproject.toml --write-to-file
+```
+
+This will generate a file `package_versions.diff` with the diff of the requirements between the two branches.
 
 ## 🔄 CI/CD
 

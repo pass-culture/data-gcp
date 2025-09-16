@@ -22,7 +22,7 @@ with
             = 1
     )
 
-select offer_id, max(item_id) as item_id
+select offer_id, max(item_id) as item_id, count(*) as item_count
 from items_grouping
 where offer_id is not null and item_id is not null
 group by offer_id

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import List
 
 from pydantic import BaseModel
-from utils import GCP_PROJECT_ID
+from utils import ENV_SHORT_NAME, GCP_PROJECT_ID, EXPORT_PATH
 from google.cloud import bigquery
 
 # Configure logging
@@ -23,7 +23,6 @@ class JobConfig(BaseModel):
     look_back_days: int
     folder: str
     archive: bool
-    bucket: str
 
 
 class Archive:
@@ -36,8 +35,6 @@ class Archive:
         self.folder = config.folder
         self.archive = config.archive
         self.look_back_days = config.look_back_days
-        self.bucket = config.bucket
-        self.export_path = f"gs://{self.bucket}"
         self.cutoff_date = (
             datetime.now() - timedelta(days=self.look_back_days)
         ).replace(day=1)  # First day of current month - look_back_days
@@ -81,7 +78,7 @@ class Archive:
     def _export_partition(self, partition_date: datetime) -> None:
         """Export a single partition to GCS."""
         partition_str = partition_date.strftime("%Y%m%d")
-        gcs_uri = f"{self.export_path}/{self.folder}/{self.table_id}/{partition_str}_{self.table_id}_*.parquet"
+        gcs_uri = f"{EXPORT_PATH}/{self.folder}/{self.table_id}/{partition_str}_{self.table_id}_*.parquet"
 
         query = f"""
             EXPORT DATA
@@ -129,7 +126,7 @@ class Archive:
         for partition_date in partitions:
             if self.archive:
                 logger.info(
-                    f"Exporting partition {partition_date.strftime('%Y%m%d')} to {self.export_path}/{self.folder}/{self.table_id}/{partition_date.strftime('%Y%m%d')}_{self.table_id}_*.parquet"
+                    f"Exporting partition {partition_date.strftime('%Y%m%d')} to {EXPORT_PATH}/{self.folder}/{self.table_id}/{partition_date.strftime('%Y%m%d')}_{self.table_id}_*.parquet"
                 )
                 self._export_partition(partition_date)
             logger.info(

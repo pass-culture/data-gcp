@@ -121,7 +121,7 @@ jobs:
           CI_SEVERITY: "warn"
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: |
-          uv run dbt build -s "state:modified.body+1" \
+          uv run dbt build -s "state:modified.body+1 state:modified.macros+1" \
           --exclude "test_name:relationships" "tag:elementary" \
           --profile CI --target $ENV_SHORT_NAME --defer \
           --state env-run-artifacts --favor-state \

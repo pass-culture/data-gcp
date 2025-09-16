@@ -12,7 +12,11 @@
     )
 }}
 
-select date('{{ ds() }}') as execution_date, venue_id, venue_booking_email, 'test' as dbt_test_field
+select
+    date('{{ ds() }}') as execution_date,
+    venue_id,
+    venue_booking_email,
+    'test' as dbt_test_field
 from {{ ref("mrt_global__venue") }} as venue
 inner join
     {{ ref("mrt_global__offerer") }} as offerer

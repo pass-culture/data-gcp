@@ -111,17 +111,7 @@ jobs:
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: uv run dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
-      - name: "Run modified models & 1st order childrens"
-        id: run-changed-models
-        working-directory: .
-        env:
-          TARGET_BRANCH: ${{ github.base_ref }}
-          ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
-          DBT_TARGET_PATH: "target/"
-          DBT_PROFILES_DIR: "."
-          APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
-        run: uv run .github/workflows/scripts/run_dbt_changed_models.sh ${{ github.base_ref }} orchestration/dags/data_gcp_dbt
-      - name: "Run modified tests"
+      - name: "build modified"
         if: steps.run-changed-models.outputs.should_run_tests == 'true'
         working-directory: ${{ env.DBT_FOLDER }}
         env:
@@ -132,7 +122,7 @@ jobs:
           CI_SEVERITY: "warn"
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: |
-          uv run dbt test --store-failures -s "state:modified" \
+          uv run dbt build -s "state:modified" \
           --exclude "test_name:relationships" "tag:elementary" "config.materialized:incremental" \
           --profile CI --target $ENV_SHORT_NAME --defer \
           --state env-run-artifacts --favor-state \

@@ -112,7 +112,6 @@ jobs:
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: uv run dbt compile --profile CI --target $ENV_SHORT_NAME --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "build modified"
-        if: steps.run-changed-models.outputs.should_run_tests == 'true'
         working-directory: ${{ env.DBT_FOLDER }}
         env:
           TARGET_BRANCH: ${{ github.base_ref }}

@@ -74,7 +74,7 @@
     {% else %}
         {{
             log(
-                "This is a dry run or compilation step. No SQL will be executed.",
+                "This is a dry run or compiiilation step. No SQL will be executed.",
                 info=True,
             )
         }}

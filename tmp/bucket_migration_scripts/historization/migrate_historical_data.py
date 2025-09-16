@@ -6,10 +6,10 @@ This script migrates historical data from the old bucket structure to the new
 dedicated archive buckets, based on the bucket migration implemented in commit d216232ee.
 
 Migration paths:
-- historization/tracking/ → de-bigquery-data-archive-{env}/historization/tracking/
-- historization/int_firebase/ → de-bigquery-data-archive-{env}/historization/int_firebase/
-- historization/api_reco/ → ds-data-archive-{env}/historization/api_reco/
-- historization/applicative/ → de-bigquery-data-archive-{env}/historization/applicative/
+- historization/tracking/ → de-bigquery-data-archive-{env}/tracking/
+- historization/int_firebase/ → de-bigquery-data-archive-{env}/int_firebase/
+- historization/api_reco/ → ds-data-archive-{env}/api_reco/
+- historization/applicative/ → de-bigquery-data-archive-{env}/applicative/
 
 Usage:
     python migrate_historical_data.py --env prod --days 30 --dry-run
@@ -18,6 +18,7 @@ Usage:
 
 import argparse
 import logging
+import os
 import subprocess
 import sys
 from datetime import datetime, timedelta
@@ -62,25 +63,25 @@ class HistoricalDataMigrator:
             MigrationPath(
                 old_folder="historization/tracking",
                 new_bucket=f"de-bigquery-data-archive-{env}",
-                new_folder="historization/tracking",
+                new_folder="tracking",
                 description="Firebase tracking events",
             ),
             MigrationPath(
                 old_folder="historization/int_firebase",
                 new_bucket=f"de-bigquery-data-archive-{env}",
-                new_folder="historization/int_firebase",
+                new_folder="int_firebase",
                 description="Firebase intermediate events",
             ),
             MigrationPath(
                 old_folder="historization/api_reco",
                 new_bucket=f"ds-data-archive-{env}",
-                new_folder="historization/api_reco",
+                new_folder="api_reco",
                 description="API recommendation data",
             ),
             MigrationPath(
                 old_folder="historization/applicative",
                 new_bucket=f"de-bigquery-data-archive-{env}",
-                new_folder="historization/applicative",
+                new_folder="applicative",
                 description="Applicative database snapshots",
             ),
         ]
@@ -100,7 +101,7 @@ class HistoricalDataMigrator:
         """Check if a GCS bucket exists."""
         try:
             result = subprocess.run(
-                ["gcloud", "storage", "ls", f"gs://{bucket_name}/"],
+                ["gsutil", "ls", f"gs://{bucket_name}/"],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -115,7 +116,7 @@ class HistoricalDataMigrator:
 
         try:
             result = subprocess.run(
-                ["gcloud", "storage", "ls", "--recursive", old_path],
+                ["gsutil", "ls", "-r", old_path],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -181,7 +182,7 @@ class HistoricalDataMigrator:
                 self.logger.info(f"  {file_path} → {new_path}")
             return True, len(files_to_migrate), 0
 
-        # Perform actual migration using gcloud storage rsync for efficiency
+        # Perform actual migration using gsutil rsync for efficiency
         old_path = f"gs://{self.old_bucket}/{migration_path.old_folder}/"
         new_path = f"gs://{migration_path.new_bucket}/{migration_path.new_folder}/"
 
@@ -189,12 +190,12 @@ class HistoricalDataMigrator:
         date_strings = self.get_date_range()
         include_patterns = []
         for date in date_strings:
-            include_patterns.extend(["--include", f"*{date}*"])
+            include_patterns.extend(["-I", f"*{date}*"])
 
         try:
-            # Build gcloud storage rsync command
+            # Build gsutil rsync command
             cmd = (
-                ["gcloud", "storage", "rsync", "-r"]
+                ["gsutil", "-m", "rsync", "-r"]
                 + include_patterns
                 + [old_path, new_path]
             )
@@ -207,11 +208,11 @@ class HistoricalDataMigrator:
                 self.logger.info(
                     f"Successfully migrated data for {migration_path.description}"
                 )
-                self.logger.info(f"gcloud storage output: {result.stdout}")
+                self.logger.info(f"gsutil output: {result.stdout}")
                 return True, len(files_to_migrate), 0
             else:
                 self.logger.error(f"Migration failed for {migration_path.description}")
-                self.logger.error(f"gcloud storage error: {result.stderr}")
+                self.logger.error(f"gsutil error: {result.stderr}")
                 return False, 0, len(files_to_migrate)
 
         except subprocess.SubprocessError as e:
@@ -232,7 +233,7 @@ class HistoricalDataMigrator:
 
         try:
             result = subprocess.run(
-                ["gcloud", "storage", "ls", "--recursive", new_path],
+                ["gsutil", "ls", "-r", new_path],
                 capture_output=True,
                 text=True,
                 check=False,

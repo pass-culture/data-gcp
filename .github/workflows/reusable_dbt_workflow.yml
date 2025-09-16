@@ -122,7 +122,7 @@ jobs:
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: |
           uv run dbt build -s "state:modified.body+1" \
-          --exclude "test_name:relationships" "tag:elementary" "config.materialized:incremental" \
+          --exclude "test_name:relationships" "tag:elementary" \
           --profile CI --target $ENV_SHORT_NAME --defer \
           --state env-run-artifacts --favor-state \
           --vars "{'CI_MATERIALIZATION':'view','ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"

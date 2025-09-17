@@ -8,6 +8,7 @@ from airflow.operators.python import BranchPythonOperator, PythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
     GCSToBigQueryOperator,
 )
+from airflow.providers.google.cloud.transfers.gcs_to_gcs import GCSToGCSOperator
 from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
@@ -28,11 +29,13 @@ from common.operators.gce import (
 from common.utils import get_airflow_schedule
 from jobs.crons import SCHEDULE_DICT
 
+# Basic settings
 BASE_DIR = "data-gcp/jobs/etl_jobs/external/titelive"
 DAG_NAME = "import_titelive"
-
 DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"import-titelive-{ENV_SHORT_NAME}"
+
+# Paths
 GCS_FOLDER_PATH = f"{DAG_NAME}_{ENV_SHORT_NAME}/{{{{ ds_nodash }}}}"
 STORAGE_BASE_PATH = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}"
 GCS_THUMB_BASE_PATH = {
@@ -40,8 +43,13 @@ GCS_THUMB_BASE_PATH = {
     "stg": "gs://passculture-metier-ehp-staging-assets-fine-grained/thumbs",
     "dev": "gs://passculture-metier-ehp-testing-assets-fine-grained/thumbs",
 }[ENV_SHORT_NAME]
+
+# Filenames and table names
+TITELIVE_PRODUCTS_FILENAME = "titelive_products.parquet"
+TITELIVE_PRODUCTS_WITH_METADATAS_FILENAME = "titelive_products_with_metadata.parquet"
 OUTPUT_BOOK_TABLE_NAME = "titelive_books"
-TITELIVE_WITH_IMAGE_URLS_FILENAME = "titelive_with_image_urls.parquet"
+OUTPUT_BOOK_WITH_METADATAS_TABLE_NAME = "titelive_books_with_metadatas"
+
 
 default_args = {
     "owner": "data-team",
@@ -129,16 +137,24 @@ with DAG(
 
         extract_products_task >> parse_products_task
 
-    # Upload images task (outside TaskGroup to avoid cycles)
     upload_images_products_task = SSHGCEOperator(
         task_id="upload_images_products_task",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_DIR,
         command=f"""PYTHONPATH=. python scripts/upload_titelive_images_to_gcs.py \
             --input-parquet-path {STORAGE_BASE_PATH}/parsed_products.parquet \
-            --output-parquet-path {STORAGE_BASE_PATH}/{TITELIVE_WITH_IMAGE_URLS_FILENAME} \
+            --output-parquet-path {STORAGE_BASE_PATH}/{TITELIVE_PRODUCTS_FILENAME} \
             --gcs-thumb-base-path {GCS_THUMB_BASE_PATH}
             """,
+    )
+
+    copy_parsed_products_task = GCSToGCSOperator(
+        task_id="copy_parsed_products_task",
+        source_bucket=ML_BUCKET_TEMP,
+        source_object=os.path.join(GCS_FOLDER_PATH, "parsed_products.parquet"),
+        destination_bucket=ML_BUCKET_TEMP,
+        destination_object=os.path.join(GCS_FOLDER_PATH, TITELIVE_PRODUCTS_FILENAME),
+        move_object=False,
     )
 
     # Branch decision based on upload_images parameter
@@ -147,30 +163,18 @@ with DAG(
         if upload_images:
             return "upload_images_products_task"
         else:
-            return "export_data_without_images"
+            return "copy_parsed_products_task"
 
-    branch_task = BranchPythonOperator(
+    branch_upload_image_task = BranchPythonOperator(
         task_id="decide_upload_images",
         python_callable=decide_upload_images_branch,
     )
 
-    # Create conditional export tasks
-    export_data_with_images = GCSToBigQueryOperator(
-        task_id="export_data_with_images",
+    export_data = GCSToBigQueryOperator(
+        task_id="export_data",
         project_id=GCP_PROJECT_ID,
         bucket=ML_BUCKET_TEMP,
-        source_objects=os.path.join(GCS_FOLDER_PATH, TITELIVE_WITH_IMAGE_URLS_FILENAME),
-        destination_project_dataset_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.{OUTPUT_BOOK_TABLE_NAME}",
-        source_format="PARQUET",
-        write_disposition="WRITE_TRUNCATE",
-        autodetect=True,
-    )
-
-    export_data_without_images = GCSToBigQueryOperator(
-        task_id="export_data_without_images",
-        project_id=GCP_PROJECT_ID,
-        bucket=ML_BUCKET_TEMP,
-        source_objects=os.path.join(GCS_FOLDER_PATH, "parsed_products.parquet"),
+        source_objects=os.path.join(GCS_FOLDER_PATH, TITELIVE_PRODUCTS_FILENAME),
         destination_project_dataset_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.{OUTPUT_BOOK_TABLE_NAME}",
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
@@ -187,11 +191,11 @@ with DAG(
     )
 
     # Task dependencies
-    dag_init >> vm_init >> titelive_extraction >> branch_task
+    dag_init >> vm_init >> titelive_extraction >> branch_upload_image_task
 
     # Branch paths
-    branch_task >> upload_images_products_task >> export_data_with_images >> join_task
-    branch_task >> export_data_without_images >> join_task
+    branch_upload_image_task >> upload_images_products_task >> join_task
+    branch_upload_image_task >> copy_parsed_products_task >> join_task
 
     # Final dependency
-    join_task >> gce_instance_stop
+    join_task >> export_data >> gce_instance_stop

@@ -5,7 +5,7 @@ from common.config import (
     BIGQUERY_INT_RAW_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
-    DE_BIGQUERY_DATA_ARCHIVE_NAME,
+    DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     PATH_TO_DBT_TARGET,
@@ -121,7 +121,7 @@ with TaskGroup(group_id="snapshots_to_gcs", dag=dag) as to_gcs:
             task_id=f"export_bq_to_gcs_{table_name}",
             source_project_dataset_table=f"{GCP_PROJECT_ID}.{dataset}.{alias}",
             destination_cloud_storage_uris=[
-                f"gs://{DE_BIGQUERY_DATA_ARCHIVE_NAME}/applicative/{alias}/{yyyymmdd}/*.parquet"
+                f"gs://{DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME}/applicative/{alias}/{yyyymmdd}/*.parquet"
             ],
             export_format="PARQUET",
             field_delimiter=",",

@@ -6,10 +6,10 @@ This script migrates historical data from the old bucket structure to the new
 dedicated archive buckets, based on the bucket migration implemented in commit d216232ee.
 
 Migration paths:
-- historization/tracking/ → de-bigquery-data-archive-{env}/tracking/
-- historization/int_firebase/ → de-bigquery-data-archive-{env}/int_firebase/
-- historization/api_reco/ → ds-data-archive-{env}/api_reco/
-- historization/applicative/ → de-bigquery-data-archive-{env}/applicative/
+- historization/tracking/ → de-bigquery-data-archive-{env}/historization/tracking/
+- historization/int_firebase/ → de-bigquery-data-archive-{env}/historization/int_firebase/
+- historization/api_reco/ → ds-data-archive-{env}/historization/api_reco/
+- historization/applicative/ → de-bigquery-data-archive-{env}/historization/applicative/
 
 Usage:
     python migrate_historical_data.py --env prod --days 30 --dry-run
@@ -63,25 +63,25 @@ class HistoricalDataMigrator:
             MigrationPath(
                 old_folder="historization/tracking",
                 new_bucket=f"de-bigquery-data-archive-{env}",
-                new_folder="tracking",
+                new_folder="historization/tracking",
                 description="Firebase tracking events",
             ),
             MigrationPath(
                 old_folder="historization/int_firebase",
                 new_bucket=f"de-bigquery-data-archive-{env}",
-                new_folder="int_firebase",
+                new_folder="historization/int_firebase",
                 description="Firebase intermediate events",
             ),
             MigrationPath(
                 old_folder="historization/api_reco",
                 new_bucket=f"ds-data-archive-{env}",
-                new_folder="api_reco",
+                new_folder="historization/api_reco",
                 description="API recommendation data",
             ),
             MigrationPath(
                 old_folder="historization/applicative",
                 new_bucket=f"de-bigquery-data-archive-{env}",
-                new_folder="applicative",
+                new_folder="historization/applicative",
                 description="Applicative database snapshots",
             ),
         ]

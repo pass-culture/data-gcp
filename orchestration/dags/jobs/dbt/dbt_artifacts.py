@@ -7,8 +7,6 @@ from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    PATH_TO_DBT_PROJECT,
-    PATH_TO_DBT_TARGET,
     SLACK_CHANNEL_DATA_QUALITY,
     SLACK_TOKEN_DATA_QUALITY,
 )
@@ -136,6 +134,7 @@ create_elementary_report = GenerateElementaryReportOperator(
     task_id="create_elementary_report",
     report_file_path="elementary_reports/{{ execution_date.year }}/elementary_report_{{ execution_date.strftime('%Y%m%d') }}.html",
     days_back=14,
+    trigger_rule="none_failed_min_one_success",
 )
 
 send_elementary_report = SendElementaryMonitoringReportOperator(
@@ -157,7 +156,9 @@ recompile_dbt_project = PythonOperator(
         use_tmp_artifacts=False,
     ),
     dag=dag,
+    trigger_rule="all_done",
 )
+
 
 # DAG Dependencies
 (

@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: mrt_global__fraudulent_booking_tag
+    description: '{{ doc("description__mrt_global__fraudulent_booking_tag") }}'
+    columns:
+      - name: fraudulent_booking_tag_id
+        description: "{{ doc('column__fraudulent_booking_tag_id') }}"
+      - name: fraudulent_booking_tag_creation_date
+        description: "{{ doc('column__fraudulent_booking_tag_creation_date') }}"
+      - name: fraudulent_booking_tag_author_id
+        description: "{{ doc('column__fraudulent_booking_tag_author_id') }}"
+      - name: booking_id
+        description: "{{ doc('column__booking_id') }}"
+

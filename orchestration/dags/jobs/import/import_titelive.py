@@ -170,6 +170,21 @@ with DAG(
         python_callable=decide_upload_images_branch,
     )
 
+    # Join task to continue after either branch
+    join_task = EmptyOperator(
+        task_id="join_branches", trigger_rule="none_failed_min_one_success"
+    )
+
+    augment_metadatas = SSHGCEOperator(
+        task_id="augment_metadatas",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""PYTHONPATH=. python scripts/generate_metadatas_with_llms.py \
+            --input-file-path {STORAGE_BASE_PATH}/{TITELIVE_PRODUCTS_FILENAME} \
+            --output-file-path {STORAGE_BASE_PATH}/{TITELIVE_PRODUCTS_WITH_METADATAS_FILENAME}
+            """,
+    )
+
     export_data = GCSToBigQueryOperator(
         task_id="export_data",
         project_id=GCP_PROJECT_ID,
@@ -181,9 +196,17 @@ with DAG(
         autodetect=True,
     )
 
-    # Join task to continue after either branch
-    join_task = EmptyOperator(
-        task_id="join_branches", trigger_rule="none_failed_min_one_success"
+    export_data_with_metadatas = GCSToBigQueryOperator(
+        task_id="export_data_with_metadatas",
+        project_id=GCP_PROJECT_ID,
+        bucket=ML_BUCKET_TEMP,
+        source_objects=os.path.join(
+            GCS_FOLDER_PATH, TITELIVE_PRODUCTS_WITH_METADATAS_FILENAME
+        ),
+        destination_project_dataset_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.{OUTPUT_BOOK_WITH_METADATAS_TABLE_NAME}",
+        source_format="PARQUET",
+        write_disposition="WRITE_TRUNCATE",
+        autodetect=True,
     )
 
     gce_instance_stop = DeleteGCEOperator(
@@ -199,3 +222,4 @@ with DAG(
 
     # Final dependency
     join_task >> export_data >> gce_instance_stop
+    join_task >> augment_metadatas >> export_data_with_metadatas >> gce_instance_stop

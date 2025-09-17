@@ -158,9 +158,9 @@ class ArchiveDataMigrator:
 
             return True, len(files)
 
-        # Perform actual migration using gsutil rsync
+        # Perform actual migration using gcloud storage rsync
         try:
-            cmd = ["gsutil", "-m", "rsync", "-r", self.old_path, self.new_path]
+            cmd = ["gcloud", "storage", "rsync", "-r", self.old_path, self.new_path]
 
             self.logger.info(f"Executing: {' '.join(cmd)}")
 
@@ -169,11 +169,11 @@ class ArchiveDataMigrator:
             if result.returncode == 0:
                 self.logger.info("Successfully migrated archive data")
                 if result.stdout:
-                    self.logger.info(f"gsutil output: {result.stdout}")
+                    self.logger.info(f"gcloud storage output: {result.stdout}")
                 return True, len(files)
             else:
                 self.logger.error("Archive data migration failed")
-                self.logger.error(f"gsutil error: {result.stderr}")
+                self.logger.error(f"gcloud storage error: {result.stderr}")
                 return False, 0
 
         except subprocess.SubprocessError as e:

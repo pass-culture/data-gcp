@@ -195,7 +195,9 @@ def run_writing_style_prediction(data: pd.DataFrame, model_name: str) -> pd.Data
     results = []
 
     # Process each row without stqdm to avoid conflicts
-    for _, row_data in tqdm(data.iterrows()):
+    for _, row_data in tqdm(
+        data.iterrows(), total=len(data), desc="Predicting writing styles"
+    ):
         # Prepare input data
         title, resume, authors = prepare_text_data(row_data)
 

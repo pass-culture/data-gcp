@@ -11,6 +11,7 @@ GEMINI_MODEL_NAME_OPTION = typer.Option(
     "gemini-2.5-flash", help="LLM model name to use"
 )
 MAX_CONCURRENT_OPTION = typer.Option(5, help="Maximum concurrent requests")
+DEBUG_OPTION = typer.Option(False, help="Enable debug mode")
 
 
 @app.command()
@@ -19,6 +20,8 @@ def generate_metadatas_with_llms(
     output_file_path: str = OUTPUT_FILE_PATH_OPTION,
     gemini_model_name: str = GEMINI_MODEL_NAME_OPTION,
     max_concurrent: int = MAX_CONCURRENT_OPTION,
+    *,
+    debug: bool = DEBUG_OPTION,
 ):
     """
     Extract new products from Titelive API with async LLM predictions.
@@ -31,6 +34,7 @@ def generate_metadatas_with_llms(
         data=raw_products_df,
         gemini_model_name=gemini_model_name,
         max_concurrent=max_concurrent,
+        debug=debug,
     )
     output_df.to_parquet(output_file_path, index=False)
 

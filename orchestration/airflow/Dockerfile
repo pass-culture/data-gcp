@@ -19,7 +19,7 @@ FROM apache/airflow:2.9.3-python3.10 AS base-default
 ## Stage 2 Builder ##
 FROM base-${NETWORK_MODE} AS general-builder
 ARG AIRFLOW_USER_HOME=/opt/airflow
-ARG GCLOUD_VERSION=google-cloud-cli-411.0.0-linux-x86_64.tar.gz
+ARG GCLOUD_VERSION=google-cloud-cli-538.0.0-linux-x86_64.tar.gz
 ARG CERT_PATH_DOCKER=/usr/local/share/ca-certificates/nscacert_combined.pem
 COPY --from=base-proxy ${CERT_PATH_DOCKER} ${CERT_PATH_DOCKER}
 

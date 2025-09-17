@@ -4,12 +4,14 @@ This project contains ETL scripts for extracting and processing data from the Ti
 
 ## Overview
 
-The project consists of three main scripts that work together to extract,
+The project consists of four main scripts that work together to extract,
 process, and manage Titelive data:
 
 1. **`extract_new_products_from_titelive.py`** - Extracts raw data from the Titelive API
 2. **`parse_products.py`** - Processes and formats the extracted data
-3. **`upload_titelive_images_to_gcs.py`** - Downloads and uploads product images to Google Cloud Storage
+3. **`generate_metadatas_with_llms.py`** - Generates AI-powered metadata using
+   Large Language Models
+4. **`upload_titelive_images_to_gcs.py`** - Downloads and uploads product images to Google Cloud Storage
 
 ## Prerequisites
 
@@ -101,7 +103,67 @@ The processed dataset includes columns such as:
 - `auteurs_multi`: Authors information (JSON format)
 - `article_*`: Article-specific attributes, which vary depending on the product type (LIVRE, MUSIQUE_ENREGISTREE)
 
-### 3. Upload Titelive Images to GCS (`upload_titelive_images_to_gcs.py`)
+### 3. Generate Metadata with LLMs (`generate_metadatas_with_llms.py`)
+
+This script uses Large Language Models (specifically Google's Gemini) to
+generate AI-powered metadata for books, including writing style classification,
+topic identification, and historical period detection.
+
+#### Usage
+
+```bash
+python scripts/generate_metadatas_with_llms.py \
+  --input-file-path "data/processed_products.parquet" \
+  --output-file-path "data/products_with_metadata.parquet" \
+  --gemini-model-name "gemini-2.5-flash" \
+  --max-concurrent 5
+```
+
+#### Parameters
+
+- `--input-file-path`: Path to the input Parquet file (processed products)
+- `--output-file-path`: Path where the enhanced data with AI metadata will be saved
+- `--gemini-model-name`: Gemini model to use (default: "gemini-2.5-flash")
+- `--max-concurrent`: Maximum concurrent LLM requests (default: 5)
+
+#### AI-Generated Metadata
+
+The script analyzes book titles, summaries, and author information to generate:
+
+1. **Writing Style Classification** (one of):
+   - Didactique, Informatif, Mystérieux, Narratif, Réflexif
+   - Humoristique, Poétique, Dramatique, Descriptif, Argumentatif
+
+2. **Topic Identification** (0-3 topics from):
+   - Amour, Amitié, Haine, Enfance, Adolescence, Magie, Identité
+   - Beauté, Arts, Criminalité, Survie, Espoir, Désespoir
+   - Manipulation, Violence, Secrets, Famille, Science, Histoire
+   - Apprentissage, Politique, Science-fiction
+
+3. **Historical Period Detection** (if applicable):
+   - Antiquité, Haut/Moyen/Bas moyen-âge, Renaissance
+   - Classique, Lumières, Romantique, Moderne, Contemporaine
+
+#### Enhanced Output Columns
+
+In addition to the original columns, the output includes:
+
+- `predicted_writing_style`: AI-predicted writing style
+- `predicted_topics`: List of AI-identified topics (JSON format)
+- `predicted_historical_period`: AI-detected historical period (if applicable)
+- `input_tokens`: Number of input tokens used for the prediction
+- `output_tokens`: Number of output tokens generated
+- `raw_llm_response`: Full structured LLM response (JSON format)
+
+#### Features
+
+- **Concurrent Processing**: Configurable concurrency with semaphore control
+- **Structured Output**: Uses Pydantic AI for reliable, structured responses
+- **Cost Monitoring**: Tracks token usage for cost analysis
+- **Error Handling**: Graceful handling of LLM API errors and timeouts
+- **Google Vertex AI Integration**: Uses application default credentials
+
+### 4. Upload Titelive Images to GCS (`upload_titelive_images_to_gcs.py`)
 
 This script downloads product images from Titelive and uploads them to Google
 Cloud Storage. It processes both recto (front) and verso (back) images,
@@ -254,11 +316,14 @@ Using sessions with connection pooling typically provides:
 ├── scripts/
 │   ├── extract_new_products_from_titelive.py  # Data extraction script
 │   ├── parse_products.py                      # Data processing script
+│   ├── generate_metadatas_with_llms.py        # AI metadata generation script
 │   └── upload_titelive_images_to_gcs.py     # Image upload script
 ├── src/
 │   ├── constants.py                         # API configuration and constants
+│   ├── llm_config.py                        # LLM configuration and data models
 │   └── utils/
 │       ├── gcp.py                          # GCP Secret Manager utilities
+│       ├── llm.py                          # LLM processing utilities
 │       └── requests.py                     # API request handling
 ├── data/                                   # Data storage directory
 ├── pyproject.toml                         # Project dependencies
@@ -309,9 +374,16 @@ python scripts/parse_products.py \
   --input-file-path "data/raw_books.parquet" \
   --output-file-path "data/processed_books.parquet"
 
-# Step 3: Upload product images to GCS
+# Step 3: Generate AI-powered metadata
+python scripts/generate_metadatas_with_llms.py \
+  --input-file-path "data/processed_books.parquet" \
+  --output-file-path "data/books_with_metadata.parquet" \
+  --gemini-model-name "gemini-2.5-flash" \
+  --max-concurrent 5
+
+# Step 4: Upload product images to GCS
 python scripts/upload_titelive_images_to_gcs.py \
-  --input-parquet-path "data/processed_books.parquet" \
+  --input-parquet-path "data/books_with_metadata.parquet" \
   --gcs-thumb-base-path "gs://your-bucket/images/titelive" \
   --output-parquet-path "data/books_with_images.parquet"
 ```
@@ -326,6 +398,9 @@ The project uses:
 - **Loguru** for logging
 - **PyArrow** for Parquet file handling
 - **Google Cloud Storage** for image storage and management
+- **Pydantic AI** for structured LLM interactions
+- **Google Vertex AI** for LLM inference
+- **Logfire** for LLM monitoring and debugging
 
 ### Testing
 

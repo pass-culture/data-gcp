@@ -182,7 +182,7 @@ class HistoricalDataMigrator:
                 self.logger.info(f"  {file_path} → {new_path}")
             return True, len(files_to_migrate), 0
 
-        # Perform actual migration using gsutil rsync for efficiency
+        # Perform actual migration using gcloud storage rsync for efficiency
         old_path = f"gs://{self.old_bucket}/{migration_path.old_folder}/"
         new_path = f"gs://{migration_path.new_bucket}/{migration_path.new_folder}/"
 
@@ -190,12 +190,12 @@ class HistoricalDataMigrator:
         date_strings = self.get_date_range()
         include_patterns = []
         for date in date_strings:
-            include_patterns.extend(["-I", f"*{date}*"])
+            include_patterns.extend(["--include", f"*{date}*"])
 
         try:
-            # Build gsutil rsync command
+            # Build gcloud storage rsync command
             cmd = (
-                ["gsutil", "-m", "rsync", "-r"]
+                ["gcloud", "storage", "rsync", "-r"]
                 + include_patterns
                 + [old_path, new_path]
             )
@@ -208,11 +208,11 @@ class HistoricalDataMigrator:
                 self.logger.info(
                     f"Successfully migrated data for {migration_path.description}"
                 )
-                self.logger.info(f"gsutil output: {result.stdout}")
+                self.logger.info(f"gcloud storage output: {result.stdout}")
                 return True, len(files_to_migrate), 0
             else:
                 self.logger.error(f"Migration failed for {migration_path.description}")
-                self.logger.error(f"gsutil error: {result.stderr}")
+                self.logger.error(f"gcloud storage error: {result.stderr}")
                 return False, 0, len(files_to_migrate)
 
         except subprocess.SubprocessError as e:

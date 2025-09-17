@@ -222,7 +222,7 @@ class HistorizationFolderDeleter:
         """Delete the entire /historization folder."""
         if self.dry_run:
             self.logger.info(
-                "DRY RUN - Would execute: gsutil -m rm -r {self.historization_path}"
+                f"DRY RUN - Would execute: gcloud storage rm -r {self.historization_path}"
             )
             return True
 
@@ -230,7 +230,7 @@ class HistorizationFolderDeleter:
             self.logger.info(f"EXECUTING DELETION: {self.historization_path}")
 
             result = subprocess.run(
-                ["gsutil", "-m", "rm", "-r", self.historization_path],
+                ["gcloud", "storage", "rm", "-r", self.historization_path],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -238,11 +238,11 @@ class HistorizationFolderDeleter:
 
             if result.returncode == 0:
                 self.logger.info("Successfully deleted /historization folder")
-                self.logger.info(f"gsutil output: {result.stdout}")
+                self.logger.info(f"gcloud storage output: {result.stdout}")
                 return True
             else:
                 self.logger.error("Failed to delete /historization folder")
-                self.logger.error(f"gsutil error: {result.stderr}")
+                self.logger.error(f"gcloud storage error: {result.stderr}")
                 return False
 
         except subprocess.SubprocessError as e:

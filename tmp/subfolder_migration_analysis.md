@@ -11,256 +11,263 @@ This analysis takes a **subfolder-first approach** to identify horizontal use ca
 ## Subfolder Analysis (Sorted by Migration Priority)
 
 ## 🔴 HIGH PRIORITY SUBFOLDERS
-*Prioritized by isolation level + cold storage for maximum cost savings and low migration risk*
 
-### **archives** 🔴 HIGH PRIORITY
-**Pattern**: Manual BigQuery Table Archives (Cold Storage)
-- **WRITE**: Manual BigQuery table exports (infrequent)
-- **READ**: Manual/adhoc analysis (rare)
+### **bigquery_imports/seed** 🔴 HIGH PRIORITY
+**Pattern**: Reference Data Repository (50+ subfolders)
+- **WRITE**: Manual uploads and automated seed processes
+- **READ**: `jobs/etl_jobs/internal/gcs_seed/main.py`
+  - **50+ Reference Tables** including:
+    - Geographic data: `iris_france`, `region_department`, `deps_qpv_2017`
+    - Institution data: `institution_metadata`, `macro_rayons`
+    - Business data: `siren_main_business_labels`, `eac_cash_in`
+    - Compliance data: Various `deps_*` tables
+  - Format: CSV, Parquet, Avro files
+  - Destination: `seed_{ENV_SHORT_NAME}` BigQuery dataset
 - **Migration Assessment**: ✅ **EXCELLENT CANDIDATE**
-  - **Perfect isolation**: Completely independent cold storage
-  - **Cost optimization**: Large archived data ideal for cold storage tiers
-  - **Low risk**: Minimal active usage, easy rollback if needed
-  - **High impact**: Significant storage cost savings potential
+  - Largest isolated use case (50+ subfolders)
+  - Complete horizontal isolation
+  - Single consumer pipeline
+  - Clear reference data pattern
 
 ---
 
-### **bigquery_archive_tables** 🔴 HIGH PRIORITY
-**Pattern**: Legacy Archive System (Cold Storage)
-- **WRITE**: Legacy archiving processes (potentially deprecated)
-- **READ**: Unknown/minimal (inferred cold)
+### **dms_export** 🔴 HIGH PRIORITY
+**Pattern**: ETL Staging Pipeline (API → JSON → Parquet → BigQuery)
+- **WRITE**: Multiple operations in sequence:
+  1. `jobs/etl_jobs/external/dms/main.py` writes JSON: `dms_export/unsorted_dms_{target}_{updated_since}.json`
+  2. `jobs/etl_jobs/external/dms/parse_dms_subscriptions_to_tabular.py` converts to Parquet: `dms_export/dms_{target}_{updated_since}.parquet`
+- **READ**: `orchestration/dags/jobs/import/import_dms_subscriptions.py`
+  - Reads: `dms_export/dms_jeunes_{updated_since}.parquet`
+  - Reads: `dms_export/dms_pro_{updated_since}.parquet`
+  - Imports to BigQuery for further processing
 - **Migration Assessment**: ✅ **EXCELLENT CANDIDATE**
-  - **Perfect isolation**: Legacy system, completely independent
-  - **Cold storage optimization**: Ideal for immediate coldline storage
-  - **Cleanup opportunity**: Validate usage and potentially delete unused data
-  - **Low migration risk**: Minimal active dependencies
+  - Complete ETL staging pipeline with clear data transformation flow
+  - Horizontal isolation (single use case: DMS processing)
+  - Multiple file formats (JSON→Parquet) within same subfolder
+  - Well-defined consumer pattern
+
+---
+
+### **QPI_exports** 🔴 HIGH PRIORITY
+**Pattern**: External Import Pipeline (External writes → Internal processing)
+- **WRITE**: External QPI system writes daily exports
+  - Path: `QPI_exports/qpi_answers_{YYYYMMDD}/`
+  - Format: `*.jsonl` files
+- **READ**: `orchestration/dags/jobs/import/import_qpi.py`
+  - Checks: `QPI_exports/qpi_answers_{today}/` for file presence
+  - Imports: `QPI_exports/qpi_answers_{ds_nodash}/*.jsonl` → BigQuery
+- **Migration Assessment**: ✅ **EXCELLENT CANDIDATE**
+  - Complete horizontal isolation
+  - Clear external→internal pipeline
+  - Single consumer pipeline
+  - No dependencies on other subfolders
+
+---
+
+### **export/cloudsql_recommendation_tables_to_bigquery** 🔴 HIGH PRIORITY
+**Pattern**: Bidirectional Sync Staging (BigQuery ↔ GCS ↔ CloudSQL)
+- **WRITE**: `orchestration/dags/jobs/api/sync_bigquery_to_cloudsql_recommendation_tables.py`
+  - Exports BigQuery data → GCS: `export/cloudsql_recommendation_tables_to_bigquery/{timestamp}/`
+  - Uses: `jobs/etl_jobs/internal/sync_recommendation/jobs/daily_bq_to_sql/export_to_gcs.py`
+- **READ**: Two consumers:
+  1. Same DAG reads GCS data → imports to CloudSQL via `gcs_to_sql.py`
+  2. `orchestration/dags/jobs/api/sync_cloudsql_recommendation_tables_to_bigquery.py` for reverse sync
+- **Migration Assessment**: ✅ **EXCELLENT CANDIDATE**
+  - Complete bidirectional staging pipeline
+  - Horizontal isolation (recommendation sync only)
+  - Temporary staging with clear lifecycle
+  - Multiple coordinated operations within single use case
 
 ---
 
 ### **historization/** 🔴 HIGH PRIORITY
-**Pattern**: BigQuery Archival System (Cold Storage with Organized Structure)
+**Pattern**: BigQuery Archival System (Multiple organized subfolders)
 - **WRITE**: Two archival processes:
   1. `orchestration/dags/jobs/administration/bigquery_archive_partition.py` → `historization/{folder}/{table_id}/{partition}/`
      - Subfolders: `tracking/`, `int_firebase/`, `api_reco/`
   2. `orchestration/dags/jobs/administration/bigquery_historize_applicative_database.py` → `historization/applicative/{table}/{YYYYMMDD}/`
-- **READ**: Minimal, mainly for data recovery/analysis (cold access)
+- **READ**: Currently minimal, mainly for data recovery/analysis
 - **Migration Assessment**: ✅ **EXCELLENT CANDIDATE**
-  - **Perfect isolation**: Complete archival system with organized subfolders
-  - **Cold storage optimization**: Write-heavy, read-cold pattern ideal for archive buckets
-  - **Cost impact**: Large volume archival data with immediate coldline potential
-  - **Well-structured**: Clear subfolder organization for targeted lifecycle policies
+  - Complete archival system with organized subfolders by data type
+  - Clear write-heavy pattern (archival storage)
+  - Well-structured subfolder organization
+  - Self-contained archival operations
 
 ---
 
-### **QPI_historical** 🔴 HIGH PRIORITY
-**Pattern**: Cold Storage (Read-only Historical Data)
-- **WRITE**: None (historical data only)
-- **READ**: `orchestration/dags/jobs/import/import_qpi.py` (infrequent)
-  - Path: `QPI_historical/qpi_answers_historical_*.parquet`
-  - Destination: BigQuery raw dataset
-- **Migration Assessment**: ✅ **EXCELLENT CANDIDATE**
-  - **Perfect isolation**: Read-only historical data, no active writes
-  - **Cold storage**: Accessed infrequently for historical context
-  - **Migration target**: Better suited for `seed-data-bucket` as reference data
-  - **Low risk**: Single consumer, minimal active usage
+### **archives** 🔴 HIGH PRIORITY
+**Pattern**: Manual BigQuery Table Archives
+- **WRITE**: Manual BigQuery table exports (inferred)
+- **READ**: Manual/adhoc analysis (inferred)
+- **Migration Assessment**: 🔄 **NEEDS INVESTIGATION**
+  - Unclear usage patterns
+  - Potentially large cold storage
+  - May be candidates for deletion or BigQuery archiving
 
 ---
-
-
-### **QPI_mapping** 🔴 HIGH PRIORITY
-**Pattern**: Reference Data (Cold Reference Mapping Table)
-- **WRITE**: Manual uploads (infrequent)
-- **READ**: `jobs/etl_jobs/internal/gcs_seed/main.py` (infrequent)
-  - Part of `REF_TABLES` configuration
-  - Path: `QPI_mapping/` (root subfolder of bucket)
-  - Format: Parquet files
-- **Migration Assessment**: ✅ **EXCELLENT CANDIDATE**
-  - **Perfect isolation**: Independent reference data subfolder
-  - **Cold access pattern**: Infrequent manual updates, occasional reads
-  - **Reference data pattern**: Static mapping table, ideal for cold storage
-  - **Easy migration**: Simple subfolder structure, minimal dependencies
-
----
-
 
 ## 🟡 MEDIUM PRIORITY SUBFOLDERS
-*Well-isolated use cases with warm access patterns - good candidates but less immediate cost impact*
 
-### **bigquery_imports/seed** 🟡 MEDIUM PRIORITY
-**Pattern**: Reference Data Repository (Well-isolated but Frequently Accessed)
-- **WRITE**: Manual uploads and automated seed processes
-- **READ**: `jobs/etl_jobs/internal/gcs_seed/main.py` (frequent)
-  - **50+ Reference Tables** including geographic, institution, business, and compliance data
-  - Format: CSV, Parquet, Avro files
-  - Destination: `seed_{ENV_SHORT_NAME}` BigQuery dataset
+### **clickhouse_export** 🟡 MEDIUM PRIORITY
+**Pattern**: Temporary Staging (Write → Read → Export pipeline)
+- **WRITE**: `orchestration/dags/jobs/export/export_clickhouse.py`
+  - Path: `{DATA_GCS_BUCKET_NAME}/clickhouse_export/{ENV_SHORT_NAME}/export/{DATE}`
+  - Exports BigQuery data to GCS as intermediate staging
+- **READ**: Same DAG reads the staged GCS data and forwards to ClickHouse
 - **Migration Assessment**: ✅ **GOOD CANDIDATE**
-  - **Excellent isolation**: 50+ subfolders, complete horizontal isolation
-  - **Warm access pattern**: Frequently accessed reference data
-  - **High volume impact**: Largest isolated use case
-  - **Clear structure**: Single consumer pipeline, well-defined pattern
+  - Single-purpose export pipeline with temporary staging
+  - Complete horizontal isolation (single DAG manages both write/read)
+  - Clear staging pattern: BigQuery → GCS → ClickHouse
 
 ---
 
-
-
-
-### **base32-encode** 🟡 MEDIUM PRIORITY
-**Pattern**: Shared Utility Library (Small, Multi-consumer)
-- **WRITE**: Manual deployment (rare updates)
-- **READ**: `orchestration/dags/common/config.py` (frequent)
-  - Path: `gs://data-bucket-{env}/base32-encode/base32.js`
-  - Used by: Multiple BigQuery UDF JavaScript functions
-  - Files: `orchestration/dags/data_gcp_dbt/macros/function_utils/udf_js/*.sql`
-- **Migration Assessment**: 🔄 **CONSIDER FOR SHARED UTILITIES BUCKET**
-  - **Good isolation potential**: Dedicated utilities bucket for shared resources
-  - **Small file size**: Easy to migrate, minimal risk
-  - **Multiple consumers**: Used across BigQuery UDF functions
-  - **Infrastructure improvement**: Better organization of shared utilities
+### **elementary_reports** 🟡 MEDIUM PRIORITY
+**Pattern**: Report Storage (Write data quality reports)
+- **WRITE**: `orchestration/dags/jobs/dbt/dbt_artifacts.py`
+  - Path: `elementary_reports/{year}/elementary_report_{YYYYMMDD}.html`
+  - Creates data quality monitoring reports
+- **READ**: Manual access for report viewing (inferred)
+- **Migration Assessment**: 🔄 **CONSIDER RETENTION POLICY**
+  - Growing storage (daily reports)
+  - May need archival/pruning strategy
+  - Single writer, manual readers
 
 ---
 
+### **QPI_historical** 🟡 MEDIUM PRIORITY
+**Pattern**: Cold Storage (Read-only historical data)
+- **WRITE**: None (historical data only)
+- **READ**: `orchestration/dags/jobs/import/import_qpi.py`
+  - Path: `QPI_historical/qpi_answers_historical_*.parquet`
+  - Destination: BigQuery raw dataset
+- **Migration Assessment**: 🔄 **SHOULD MIGRATE TO SEED**
+  - Cold storage data, used for historical context
+  - Better suited for `bigquery_imports/seed/` as reference data
+  - Single consumer, minimal impact
+
+---
+
+### **qpi_mapping** 🟡 MEDIUM PRIORITY
+**Pattern**: Reference Data (Read-only mapping table)
+- **WRITE**: Manual uploads (infrequent)
+- **READ**: `jobs/etl_jobs/internal/gcs_seed/main.py`
+  - Part of `REF_TABLES` configuration
+  - Path: `bigquery_imports/seed/qpi_mapping/`
+  - Format: Parquet files
+- **Migration Assessment**: ✅ **ALREADY IN SEED STRUCTURE**
+  - Part of existing seed data pattern
+  - No additional migration needed
+
+---
+
+### **bigquery_archive_tables** 🟡 MEDIUM PRIORITY
+**Pattern**: Legacy Archive System
+- **WRITE**: Legacy archiving processes (potentially deprecated)
+- **READ**: Unknown/minimal (inferred)
+- **Migration Assessment**: 🗑️ **CANDIDATE FOR CLEANUP**
+  - Legacy system, potentially unused
+  - Should validate if still needed
+  - May be safe to delete
+
+---
+
+### **dump_wiki_data** 🟡 MEDIUM PRIORITY
+**Pattern**: Monthly Wikidata Extractions
+- **WRITE**: `orchestration/dags/jobs/ml/artist_wikidata_dump.py`
+  - Path: `gs://{DATA_GCS_BUCKET_NAME}/dump_wikidata/{YYYYMMDD}/`
+  - File: `wikidata_extraction.parquet`
+  - Schedule: Monthly (CRON: `0 3 1 * *`)
+- **READ**: Artist linkage ML processes (inferred)
+- **Migration Assessment**: 🤔 **CONSIDER ML BUCKET**
+  - ML-related data, could use existing `ML_BUCKET_TEMP`
+  - Scheduled generation, clear pattern
+  - Medium isolation (ML-specific use case)
+
+---
+
+### **artists** (link_artists) 🟡 MEDIUM PRIORITY
+**Pattern**: ML Artist Linkage Data
+- **WRITE**: ML processing pipelines (inferred)
+- **READ**: Multiple ML Streamlit applications
+  - `jobs/ml_jobs/artist_linkage/streamlits/st_explore_and_clusterize_data.py`
+  - `jobs/ml_jobs/artist_linkage/streamlits/st_analyze_clustering.py`
+  - Reads: `gs://data-bucket-stg/link_artists/artists_to_match.parquet`
+  - Reads: `gs://data-bucket-stg/link_artists/matched_artists.parquet`
+- **Migration Assessment**: 🤔 **USE EXISTING ML_BUCKET_TEMP**
+  - ML-specific use case
+  - Already have `data-bucket-ml-temp-{ENV_SHORT_NAME}`
+  - Multiple ML consumers
 
 ---
 
 ## 🟢 LOW PRIORITY SUBFOLDERS
-*Active, frequently accessed data with good isolation but minimal migration benefits due to hot access patterns*
 
-### **QPI_exports** 🟢 LOW PRIORITY ATTENTION DEPENDANCE AUX DEVS
-**Pattern**: External Import Pipeline (Hot Daily Processing)
-- **WRITE**: External QPI system writes daily exports
-  - Path: `QPI_exports/qpi_answers_{YYYYMMDD}/`
-  - Format: `*.jsonl` files
-- **READ**: `orchestration/dags/jobs/import/import_qpi.py` (daily, hot access)
-  - Checks: `QPI_exports/qpi_answers_{today}/` for file presence
-  - Imports: `QPI_exports/qpi_answers_{ds_nodash}/*.jsonl` → BigQuery
-- **Migration Assessment**: 🔄 **DEFER UNTIL LATER PHASE**
-  - **Excellent isolation**: Complete horizontal isolation, single consumer
-  - **Hot access pattern**: Daily external imports, high-frequency usage
-  - **Migration complexity**: Active external system dependency
-  - **Lower cost benefit**: Hot data doesn't benefit from cold storage tiers
-
----
-
-### **dms_export** 🟢 LOW PRIORITY
-**Pattern**: ETL Staging Pipeline (Hot Active Processing)
-- **WRITE**: Multiple operations in sequence (daily):
-  1. `jobs/etl_jobs/external/dms/main.py` writes JSON: `dms_export/unsorted_dms_{target}_{updated_since}.json`
-  2. `jobs/etl_jobs/external/dms/parse_dms_subscriptions_to_tabular.py` converts to Parquet
-- **READ**: `orchestration/dags/jobs/import/import_dms_subscriptions.py` (daily processing)
-  - Active processing of `dms_jeunes_{updated_since}.parquet` and `dms_pro_{updated_since}.parquet`
-- **Migration Assessment**: 🔄 **DEFER UNTIL LATER PHASE**
-  - **Perfect isolation**: Complete ETL pipeline, single use case
-  - **Hot staging data**: Active daily transformation pipeline
-  - **High-frequency access**: JSON→Parquet→BigQuery processing
-  - **Lower priority**: Hot data provides less cost optimization benefit
-
----
-
-### **elementary_reports** 🟢 LOW PRIORITY
-**Pattern**: Report Archive (Daily Generation, Growing Volume)
-- **WRITE**: `orchestration/dags/jobs/dbt/dbt_artifacts.py`
-  - Path: `elementary_reports/{year}/elementary_report_{YYYYMMDD}.html`
-  - Creates data quality monitoring reports daily
-- **READ**: Manual access for report viewing (occasional)
-- **Migration Assessment**: 🔄 **CONSIDER RETENTION POLICY FIRST**
-  - **Good isolation**: Single writer, independent report storage
-  - **Growing volume**: Daily accumulation requires management
-  - **Lower priority**: Focus on retention/pruning strategy before migration
-  - **Operational dependency**: Reports used for monitoring, need careful handling
-
----
-
-### **export/cloudsql_recommendation_tables_to_bigquery** 🟢 LOW PRIORITY
-**Pattern**: Bidirectional Sync Staging (Active Daily Operations)
-- **WRITE**: `orchestration/dags/jobs/api/sync_bigquery_to_cloudsql_recommendation_tables.py`
-  - Exports BigQuery data → GCS: `export/cloudsql_recommendation_tables_to_bigquery/{timestamp}/`
-- **READ**: Bidirectional sync operations (active daily usage)
-- **Migration Assessment**: 🔄 **DEFER DUE TO ACTIVE SYNC OPERATIONS**
-  - **Good isolation**: Recommendation sync only, no external dependencies
-  - **Active daily usage**: Regular bidirectional sync operations
-  - **Complex coordination**: Multiple coordinated operations within single use case
-  - **Lower priority**: Active staging data, limited cold storage benefits
-
----
-
-### **clickhouse_export** 🟢 LOW PRIORITY
-**Pattern**: Temporary Staging (Daily Active Processing)
-- **WRITE**: `orchestration/dags/jobs/export/export_clickhouse.py`
-  - Path: `{DATA_GCS_BUCKET_NAME}/clickhouse_export/{ENV_SHORT_NAME}/export/{DATE}`
-  - Exports BigQuery data to GCS as intermediate staging
-- **READ**: Same DAG forwards staged data to ClickHouse (daily)
-- **Migration Assessment**: 🔄 **DEFER DUE TO ACTIVE USAGE**
-  - **Good isolation**: Single DAG manages entire pipeline
-  - **Daily active usage**: Regular staging pattern BigQuery → GCS → ClickHouse
-  - **External system dependency**: ClickHouse integration complexity
-  - **Lower cost benefit**: Temporary staging data, limited savings
-
----
-
+### **base32-encode** 🟢 LOW PRIORITY
+**Pattern**: Utility Library (Read-only JavaScript resource)
+- **WRITE**: Manual deployment (rare updates)
+- **READ**: `orchestration/dags/common/config.py`
+  - Path: `gs://data-bucket-{env}/base32-encode/base32.js`
+  - Used by: BigQuery UDF JavaScript functions
+  - Files: `orchestration/dags/data_gcp_dbt/macros/function_utils/udf_js/*.sql`
+- **Migration Assessment**: 🤔 **KEEP IN MAIN BUCKET**
+  - Small utility, minimal storage impact
+  - Shared across multiple BigQuery UDFs
+  - Low complexity, low benefit to migrate
 
 ---
 
 ## Migration Priority Ranking
-*Prioritized by isolation + temperature for maximum cost savings and minimum risk*
 
-### **Tier 1: Immediate Cold Storage Migration (Maximum Cost Savings, Minimal Risk)**
-1. **archives** - Cold storage archives, perfect isolation, immediate cost savings
-2. **bigquery_archive_tables** - Legacy cold archives, cleanup opportunity
-3. **historization/** - Large volume archival system, immediate coldline benefits
-4. **QPI_historical** - Historical cold data, migrate to seed structure
-5. **QPI_mapping** - Cold reference mapping table, perfect isolation
+### **Tier 1: Immediate Migration (High Impact, Low Risk)**
+1. **bigquery_imports/seed** - Largest isolated use case (50+ subfolders)
+2. **dms_export** - Complete ETL staging pipeline with JSON→Parquet transformation
+3. **QPI_exports** - Perfect horizontal isolation, external→internal pipeline
+4. **export/cloudsql_recommendation_tables_to_bigquery** - Complete bidirectional sync staging
+5. **historization/** - Complete archival system with organized subfolders
 
-### **Tier 2: Warm Isolated Data Migration (Good Cost Benefits, Moderate Risk)**
-6. **bigquery_imports/seed** - Large isolated reference data, frequent access
-7. **base32-encode** - Shared utility, dedicated utilities bucket
+### **Tier 2: Medium-term Migration (Good Isolation, Moderate Impact)**
+6. **clickhouse_export** - Temporary staging pipeline (BigQuery→GCS→ClickHouse)
+7. **elementary_reports** - Consider retention policy first
+8. **archives** - Investigate usage patterns first
 
-### **Tier 3: Hot Data Migration (Lower Cost Benefits, Higher Complexity)**
-8. **QPI_exports** - Daily hot imports, external system dependencies
-9. **dms_export** - Active hot ETL pipeline, high-frequency processing
+### **Tier 3: Evaluate & Optimize (Special Handling)**
+7. **QPI_historical** - Migrate to seed structure
+8. **dump_wiki_data** - Consider ML bucket consolidation
+9. **artists** - Use existing ML bucket infrastructure
 
-### **Tier 4: Low Priority / Keep in Main Bucket (Minimal Benefits or Active Dependencies)**
-10. **export/cloudsql_recommendation_tables_to_bigquery** - Active sync operations, complex coordination
-11. **elementary_reports** - Daily reports, consider retention policy first
-12. **clickhouse_export** - Active daily staging, external system complexity
+### **Tier 4: Clean-up & Consolidate (Low Priority)**
+10. **bigquery_archive_tables** - Validate if needed, potential cleanup
+11. **base32-encode** - Keep in main bucket (utility, low impact)
 
 ---
 
 ## Progressive Migration Roadmap
-*Following temperature-first approach: Cold → Warm → Hot*
 
-### **Phase 1: Cold Storage Migration (Month 1) - Maximum Impact, Minimal Risk**
-- **archives** → `cold-archive-bucket-{ENV_SHORT_NAME}`
-  - Manual archives, perfect isolation, immediate cost savings
-- **bigquery_archive_tables** → `legacy-archive-bucket-{ENV_SHORT_NAME}` or cleanup
-  - Legacy cold archives, validate usage first
-- **historization/** → `archive-bucket-{ENV_SHORT_NAME}`
-  - Large volume archival system, immediate coldline benefits
+### **Phase 1: Staging Pipelines (Month 1)**
+- **dms_export** → `dms-staging-bucket-{ENV_SHORT_NAME}`
+  - Complete ETL staging pipeline, clear transformation flow
+  - High isolation, well-defined lifecycle
+- **export/cloudsql_recommendation_tables_to_bigquery** → `recommendation-sync-bucket-{ENV_SHORT_NAME}`
+  - Bidirectional sync staging, temporary data lifecycle
 
-### **Phase 2: Cold Reference Data Migration (Month 2) - High Volume, Low Risk**
-- **QPI_historical** → `seed-data-bucket-{ENV_SHORT_NAME}`
-  - Historical cold data consolidation with seed structure
-- **QPI_mapping** → `seed-data-bucket-{ENV_SHORT_NAME}` or dedicated reference bucket
-  - Cold reference mapping table, perfect isolation, easy migration
-
-### **Phase 3: Warm Isolated Data Migration (Month 3) - Good Benefits, Moderate Risk**
+### **Phase 2: Reference & External Data (Month 2)**
 - **bigquery_imports/seed** → `seed-data-bucket-{ENV_SHORT_NAME}`
-  - Large reference data volume, frequent but predictable access
-- **base32-encode** → `shared-utilities-bucket-{ENV_SHORT_NAME}`
-  - Shared utility migration, dedicated utilities bucket for better organization
+  - 50+ reference tables, largest use case
+- **QPI_exports** → `qpi-import-bucket-{ENV_SHORT_NAME}`
+  - External system dependency, clear isolation
+- **clickhouse_export** → `clickhouse-staging-bucket-{ENV_SHORT_NAME}`
+  - Temporary staging for external system
 
-### **Phase 4: Hot Data Migration (Month 4+) - Lower Priority, Higher Complexity**
-- **QPI_exports** → `qpi-import-bucket-{ENV_SHORT_NAME}` (coordinate with devs)
-  - Hot daily imports, external system dependencies, requires dev coordination
-- **dms_export** → `dms-staging-bucket-{ENV_SHORT_NAME}` (final phase)
-  - Hot ETL pipeline, high-frequency processing, most complex migration
+### **Phase 3: Archival Systems (Month 3)**
+- **historization/** → `archive-bucket-{ENV_SHORT_NAME}`
+  - Complete archival system migration
+- Investigate **archives** subfolder usage
 
-### **Phase 5: Low Priority / Deferred (Month 5+) - Consider Later or Keep in Main Bucket**
-- **export/cloudsql_recommendation_tables_to_bigquery** → Consider later if needed
-  - Active sync operations, complex coordination, minimal cost benefits
-- **elementary_reports** → Implement retention policy first, then consider migration
-  - Daily reports accumulation, focus on pruning strategy
-- **clickhouse_export** → Consider later if external system changes
-  - Active daily staging, external system complexity
+### **Phase 4: Optimization & Cleanup (Month 4)**
+- **QPI_historical** → Migrate to seed bucket
+- **dump_wiki_data** + **artists** → Consolidate with ML bucket
+- Cleanup **bigquery_archive_tables** if unused
+- Implement **elementary_reports** retention policy
 
 ---
 
@@ -284,40 +291,34 @@ Examples:
 6. **Clean up old subfolder** after validation period
 
 ### **Risk Mitigation**
-- Start with **cold storage** subfolders first (minimal active usage, lower risk)
-- Prioritize **perfect isolation** cases before mixed-usage scenarios
-- Maintain **parallel operations** during transition periods for active systems
+- Start with **read-only** subfolders first (lower risk)
+- Maintain **parallel operations** during transition periods
 - Implement **monitoring** for bucket usage and access patterns
 - Plan **rollback procedures** for each migration phase
-- **Temperature-based staging**: Cold → Warm → Hot migration sequence
 
 ---
 
 ## Expected Benefits
 
-### **Immediate Cost Optimization (Phase 1 Focus)**
-- **Maximum savings from cold storage**: Archives and historical data move to coldline/archive tiers
-- **Dedicated lifecycle policies**: Temperature-based storage class transitions
-- **Volume-based savings**: Large archival datasets benefit from cheaper storage tiers
-- **Regional optimization**: Archive buckets in cost-optimized regions
+### **Cost Optimization**
+- Dedicated lifecycle policies per use case
+- Cold storage for archival data
+- Regional optimization for specific workflows
 
-### **Operational Efficiency (Progressive Improvement)**
-- **Risk-minimized approach**: Start with cold, isolated data (minimal disruption)
-- **Clear ownership boundaries**: Each bucket dedicated to specific use cases
-- **Simplified troubleshooting**: Isolated failure domains per use case
-- **Better monitoring**: Use case-specific metrics and alerting
+### **Security & Access Control**
+- Granular bucket-level permissions
+- Isolated blast radius for access issues
+- Better compliance for sensitive data
 
-### **Security & Access Control (Enhanced Isolation)**
-- **Granular bucket-level permissions**: Fine-tuned access per data temperature
-- **Isolated blast radius**: Security issues contained within specific buckets
-- **Compliance optimization**: Sensitive archives with dedicated access controls
-- **Audit trail improvements**: Clear data lineage per use case
+### **Operational Excellence**
+- Clear ownership boundaries
+- Simplified troubleshooting
+- Better monitoring and alerting per use case
 
-### **Strategic Infrastructure Benefits (Long-term Value)**
-- **Temperature-aware architecture**: Foundation for intelligent data management
-- **Scalable data patterns**: Easy to add new use cases following temperature model
-- **Cost predictability**: Clear cost allocation per data use case and temperature
-- **Future-ready foundation**: Ready for advanced lifecycle policies and automation
+### **Infrastructure Scalability**
+- Use case-specific optimization
+- Better resource allocation
+- Foundation for future growth
 
 ---
 

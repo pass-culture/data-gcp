@@ -72,7 +72,10 @@ where
             "Offer Categorisation Data API",
             "Deleted stock and cancelled its bookings",
             "Searching for structure",
-            "Creating new Offerer and Venue"
+            "Creating new Offerer and Venue",
+            "Video has been deleted from offer",
+            "Video has been added to offer",
+            "Video has been updated on offer"
         )
     )
     {% if is_incremental() %}

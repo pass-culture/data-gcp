@@ -7,25 +7,30 @@ app = typer.Typer()
 
 INPUT_FILE_PATH_OPTION = typer.Option(..., help="Path to the input file")
 OUTPUT_FILE_PATH_OPTION = typer.Option(..., help="Path to the output file")
+GEMINI_MODEL_NAME_OPTION = typer.Option(
+    "gemini-2.5-flash", help="LLM model name to use"
+)
+MAX_CONCURRENT_OPTION = typer.Option(5, help="Maximum concurrent requests")
 
 
 @app.command()
 def generate_metadatas_with_llms(
     input_file_path: str = INPUT_FILE_PATH_OPTION,
     output_file_path: str = OUTPUT_FILE_PATH_OPTION,
+    gemini_model_name: str = GEMINI_MODEL_NAME_OPTION,
+    max_concurrent: int = MAX_CONCURRENT_OPTION,
 ):
     """
-    Extract new products from Titelive API.
+    Extract new products from Titelive API with async LLM predictions.
     """
 
     raw_products_df = pd.read_parquet(input_file_path)
 
-    # TODO: Remove sample
-    raw_products_df = raw_products_df.sample(30, random_state=42)
-    # TODO: End TODO
-
+    # Run prediction with controlled concurrency
     output_df = run_writing_style_prediction(
-        data=raw_products_df, model_name="gemini-2.5-flash"
+        data=raw_products_df,
+        gemini_model_name=gemini_model_name,
+        max_concurrent=max_concurrent,
     )
     output_df.to_parquet(output_file_path, index=False)
 

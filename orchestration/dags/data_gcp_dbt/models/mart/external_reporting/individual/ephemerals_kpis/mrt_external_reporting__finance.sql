@@ -97,17 +97,19 @@ with
             {% endif %}
         {% endfor %}
         union all
-            select
-                partition_month,
-                updated_at,
-                dimension_name,
-                dimension_value,
-                "pct_montant_contribution" as kpi_name,
-                sum(total_contribution_amount) as numerator,
-                sum(total_revenue_amount) as denominator,
-                safe_divide(sum(total_contribution_amount), sum(total_revenue_amount)) as kpi
-            from dimension_cross
-            group by partition_month, updated_at, dimension_name, dimension_value
+        select
+            partition_month,
+            updated_at,
+            dimension_name,
+            dimension_value,
+            "pct_montant_contribution" as kpi_name,
+            sum(total_contribution_amount) as numerator,
+            sum(total_revenue_amount) as denominator,
+            safe_divide(
+                sum(total_contribution_amount), sum(total_revenue_amount)
+            ) as kpi
+        from dimension_cross
+        group by partition_month, updated_at, dimension_name, dimension_value
     ),
 
     -- KPIs par catégorie
@@ -130,19 +132,21 @@ with
                     union all
                 {% endif %}
             {% endfor %}
-                union all
-                select
-                    partition_month,
-                    updated_at,
-                    dimension_name,
-                    dimension_value,
-                    'pct_montant_contribution_{{ category.value_expr }}' as kpi_name,
-                    sum(total_contribution_amount) as numerator,
-                    sum(total_revenue_amount) as denominator,
-                    safe_divide(sum(total_contribution_amount), sum(total_revenue_amount)) as kpi
-                from dimension_cross
-                where offer_category_id = '{{ category.name }}'
-                group by partition_month, updated_at, dimension_name, dimension_value
+            union all
+            select
+                partition_month,
+                updated_at,
+                dimension_name,
+                dimension_value,
+                'pct_montant_contribution_{{ category.value_expr }}' as kpi_name,
+                sum(total_contribution_amount) as numerator,
+                sum(total_revenue_amount) as denominator,
+                safe_divide(
+                    sum(total_contribution_amount), sum(total_revenue_amount)
+                ) as kpi
+            from dimension_cross
+            where offer_category_id = '{{ category.name }}'
+            group by partition_month, updated_at, dimension_name, dimension_value
             {% if not loop.last %}
                 union all
             {% endif %}
@@ -168,18 +172,20 @@ with
             {% endif %}
         {% endfor %}
         union all
-            select
-                partition_month,
-                updated_at,
-                dimension_name,
-                dimension_value,
-                "pct_montant_contribution_epn" as kpi_name,
-                sum(total_contribution_amount) as numerator,
-                sum(total_revenue_amount) as denominator,
-                safe_divide(sum(total_contribution_amount), sum(total_revenue_amount)) as kpi
-            from dimension_cross
-            where offerer_is_epn = true
-            group by partition_month, updated_at, dimension_name, dimension_value
+        select
+            partition_month,
+            updated_at,
+            dimension_name,
+            dimension_value,
+            "pct_montant_contribution_epn" as kpi_name,
+            sum(total_contribution_amount) as numerator,
+            sum(total_revenue_amount) as denominator,
+            safe_divide(
+                sum(total_contribution_amount), sum(total_revenue_amount)
+            ) as kpi
+        from dimension_cross
+        where offerer_is_epn = true
+        group by partition_month, updated_at, dimension_name, dimension_value
     )
 
 select *

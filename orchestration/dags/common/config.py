@@ -63,12 +63,6 @@ DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME = os.environ.get(
 DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME = os.environ.get(
     "DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME", f"de-bigquery-data-import-{ENV_SHORT_NAME}"
 )
-DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME = os.environ.get(
-    "DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME", f"de-bigquery-data-import-{ENV_SHORT_NAME}"
-)
-DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME = os.environ.get(
-    "DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME", f"de-bigquery-data-import-{ENV_SHORT_NAME}"
-)
 DS_DATA_ARCHIVE_BUCKET_NAME = os.environ.get(
     "DS_DATA_ARCHIVE_BUCKET_NAME", f"ds-data-archive-{ENV_SHORT_NAME}"
 )

@@ -1,5 +1,6 @@
 import logging
 from functools import partial
+import os
 
 from common import macros
 from common.callback import on_failure_base_callback
@@ -9,6 +10,7 @@ from common.config import (
     GCP_PROJECT_ID,
     SLACK_CHANNEL_DATA_QUALITY,
     SLACK_TOKEN_DATA_QUALITY,
+    PATH_TO_DBT_TARGET,
 )
 from common.operators.monitoring import (
     GenerateElementaryReportOperator,
@@ -56,6 +58,7 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
     "project_id": GCP_PROJECT_ID,
 }
+ELEMENTARY_ARTIFACTS_TARGET_PATH = os.path.join(PATH_TO_DBT_TARGET, "target_elementary")
 
 dag_id = "dbt_artifacts"
 dag = DAG(
@@ -89,7 +92,11 @@ wait_dbt_run = delayed_waiting_operator(dag=dag, external_dag_id="dbt_run_dag")
 # Convert to Python operator
 compute_metrics_elementary = PythonOperator(
     task_id="compute_metrics_elementary",
-    python_callable=partial(run_dbt_with_selector, "package:elementary"),
+    python_callable=partial(
+        run_dbt_with_selector,
+        "package:elementary",
+        target_path=ELEMENTARY_ARTIFACTS_TARGET_PATH,
+    ),
     dag=dag,
     trigger_rule="one_success",
 )
@@ -100,7 +107,8 @@ dbt_test = PythonOperator(
     python_callable=partial(
         run_dbt_quality_tests,
         select=None,  # No specific selection, will test all
-        exclude="audit tag:export tag:weekly tag:monthly",  #
+        exclude="audit tag:export tag:weekly tag:monthly",
+        target_path=ELEMENTARY_ARTIFACTS_TARGET_PATH,
     ),
     dag=dag,
 )
@@ -115,7 +123,10 @@ check_schedule = BranchPythonOperator(
 dbt_test_weekly = PythonOperator(
     task_id="dbt_test_weekly",
     python_callable=partial(
-        run_dbt_quality_tests, select="tag:weekly", exclude="audit"
+        run_dbt_quality_tests,
+        select="tag:weekly",
+        exclude="audit",
+        target_path=ELEMENTARY_ARTIFACTS_TARGET_PATH,
     ),
     dag=dag,
     trigger_rule="all_success",
@@ -124,7 +135,10 @@ dbt_test_weekly = PythonOperator(
 dbt_test_monthly = PythonOperator(
     task_id="dbt_test_monthly",
     python_callable=partial(
-        run_dbt_quality_tests, select="tag:monthly", exclude="audit"
+        run_dbt_quality_tests,
+        select="tag:monthly",
+        exclude="audit",
+        target_path=ELEMENTARY_ARTIFACTS_TARGET_PATH,
     ),
     dag=dag,
     trigger_rule="all_success",
@@ -134,6 +148,7 @@ create_elementary_report = GenerateElementaryReportOperator(
     task_id="create_elementary_report",
     report_file_path="elementary_reports/{{ execution_date.year }}/elementary_report_{{ execution_date.strftime('%Y%m%d') }}.html",
     days_back=14,
+    target_path=ELEMENTARY_ARTIFACTS_TARGET_PATH,
     trigger_rule="none_failed_min_one_success",
 )
 
@@ -145,6 +160,7 @@ send_elementary_report = SendElementaryMonitoringReportOperator(
     slack_group_alerts_by="{{ params.slack_group_alerts_by }}",
     global_suppression_interval=0,
     send_slack_report="{{ params.send_slack_report }}",
+    target_path=ELEMENTARY_ARTIFACTS_TARGET_PATH,
 )
 
 # Convert to Python operator

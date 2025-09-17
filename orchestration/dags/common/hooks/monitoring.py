@@ -17,7 +17,9 @@ from elementary.tracking.anonymous_tracking import AnonymousCommandLineTracking
 
 
 class ElementaryReport:
-    def generate_report(self, report_file_path: str, days_back: int = 7) -> bool:
+    def generate_report(
+        self, report_file_path: str, days_back: int = 7, target_path: str = None
+    ) -> bool:
         """
         Generate monitoring report
 
@@ -25,13 +27,14 @@ class ElementaryReport:
             days_back: Number of days to look back for report. Default is 7.
             report_file_path: Path to save the report file
         """
+        dbt_target_path = target_path or PATH_TO_DBT_TARGET
 
         config = Config(
             config_dir=PATH_TO_DBT_PROJECT,
             profiles_dir=PATH_TO_DBT_PROJECT,
             project_dir=PATH_TO_DBT_PROJECT,
             profile_target=ENV_SHORT_NAME,
-            target_path=PATH_TO_DBT_TARGET,
+            target_path=dbt_target_path,
             gcs_bucket_name=DATA_GCS_BUCKET_NAME,
             env=ENV_SHORT_NAME,
             run_dbt_deps_if_needed=True,
@@ -64,6 +67,7 @@ class ElementaryReport:
         slack_group_alerts_by: str = "table",
         global_suppression_interval: int = 24,
         days_back: int = 1,
+        target_path: str = None,
     ) -> bool:
         """
         Send monitoring report to slack channel
@@ -76,12 +80,14 @@ class ElementaryReport:
             days_back: Number of days to look back for alerts. Default is 1.
         """
 
+        dbt_target_path = target_path or PATH_TO_DBT_TARGET
+
         config = Config(
             config_dir=PATH_TO_DBT_PROJECT,
             profiles_dir=PATH_TO_DBT_PROJECT,
             project_dir=PATH_TO_DBT_PROJECT,
             profile_target=ENV_SHORT_NAME,
-            target_path=PATH_TO_DBT_TARGET,
+            target_path=dbt_target_path,
             env=ENV_SHORT_NAME,
             run_dbt_deps_if_needed=True,
             slack_channel_name=slack_channel,

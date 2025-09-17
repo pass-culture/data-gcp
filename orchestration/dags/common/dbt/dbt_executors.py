@@ -81,15 +81,26 @@ def cleanup_temp_dir(temp_dir: str) -> None:
         logging.debug(f"Removed temporary directory: {temp_dir}")
 
 
-def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) -> None:
+def run_dbt_command(
+    command: list,
+    use_tmp_artifacts: bool = True,
+    target_path: Optional[str] = None,
+    **context,
+) -> None:
     """Execute a dbt command using dbtRunner."""
     # Get parameters from context
     params = context.get("params", {})
     target = params.get("target", ENV_SHORT_NAME)
     global_cli_flags = params.get("GLOBAL_CLI_FLAGS", None)
 
-    # Create temporary target directory
-    if use_tmp_artifacts:
+    # Use custom target path or default
+    if target_path:
+        # Create directory if it doesn't exist
+        os.makedirs(target_path, exist_ok=True)
+        temp_target_dir = target_path
+        use_tmp_artifacts = False  # Don't use temp when we have a dedicated path
+    elif use_tmp_artifacts:
+        # Create temporary target directory
         temp_target_dir = create_tmp_folder(PATH_TO_DBT_TARGET)
     else:
         temp_target_dir = PATH_TO_DBT_TARGET
@@ -151,7 +162,7 @@ def run_dbt_command(command: list, use_tmp_artifacts: bool = True, **context) ->
             cleanup_temp_dir(temp_target_dir)
 
 
-def run_dbt_with_selector(selector: str, **context):
+def run_dbt_with_selector(selector: str, target_path: Optional[str] = None, **context):
     """
     Run dbt with a specific selector.
     Args:
@@ -159,10 +170,12 @@ def run_dbt_with_selector(selector: str, **context):
         **context: Airflow context
     """
     command = ["run", "--select", selector]
-    run_dbt_command(command, **context)
+    run_dbt_command(command, target_path=target_path, **context)
 
 
-def compile_dbt(use_tmp_artifacts: bool = False, **context):
+def compile_dbt(
+    use_tmp_artifacts: bool = False, target_path: Optional[str] = None, **context
+):
     """
     Compile dbt project.
 
@@ -171,11 +184,19 @@ def compile_dbt(use_tmp_artifacts: bool = False, **context):
         **context: Airflow context
     """
 
-    run_dbt_command(["compile"], use_tmp_artifacts=use_tmp_artifacts, **context)
+    run_dbt_command(
+        ["compile"],
+        use_tmp_artifacts=use_tmp_artifacts,
+        target_path=target_path,
+        **context,
+    )
 
 
 def compile_dbt_with_selector(
-    selector: str, use_tmp_artifacts: bool = False, **context
+    selector: str,
+    use_tmp_artifacts: bool = False,
+    target_path: Optional[str] = None,
+    **context,
 ):
     """
     Compile dbt project.
@@ -186,7 +207,9 @@ def compile_dbt_with_selector(
         **context: Airflow context
     """
     command = ["compile", "--select", selector]
-    run_dbt_command(command, use_tmp_artifacts=use_tmp_artifacts, **context)
+    run_dbt_command(
+        command, use_tmp_artifacts=use_tmp_artifacts, target_path=target_path, **context
+    )
 
 
 def clean_dbt(**context):
@@ -204,6 +227,7 @@ def run_dbt_model(
     model_name: str,
     exclude_tags: Optional[List[str]] = None,
     node_tags: Optional[List[str]] = None,
+    target_path: Optional[str] = None,
     **context,
 ):
     """Run a specific dbt model."""
@@ -229,10 +253,15 @@ def run_dbt_model(
         for tag in exclude_tags:
             command.extend(["--exclude", f"tag:{tag}"])
 
-    run_dbt_command(command, **context)
+    run_dbt_command(command, target_path=target_path, **context)
 
 
-def run_dbt_test(model_name: str, node_tags: Optional[List[str]] = None, **context):
+def run_dbt_test(
+    model_name: str,
+    node_tags: Optional[List[str]] = None,
+    target_path: Optional[str] = None,
+    **context,
+):
     """Run tests for a specific dbt model."""
     # Check if we should skip based on schedule
     ds = context.get("ds")
@@ -242,11 +271,14 @@ def run_dbt_test(model_name: str, node_tags: Optional[List[str]] = None, **conte
         raise AirflowSkipException(f"Skipping node scheduled {skip_schedule}")
 
     command = ["test", "--select", f"{model_name},tag:critical"]
-    run_dbt_command(command, **context)
+    run_dbt_command(command, target_path=target_path, **context)
 
 
 def run_dbt_quality_tests(
-    select: Optional[str] = None, exclude: Optional[str] = None, **context
+    select: Optional[str] = None,
+    exclude: Optional[str] = None,
+    target_path: Optional[str] = None,
+    **context,
 ):
     """
     Run dbt tests with custom select and exclude patterns.
@@ -266,11 +298,14 @@ def run_dbt_quality_tests(
         for exclusion in exclude.split():
             command.extend(["--exclude", exclusion])
 
-    run_dbt_command(command, **context)
+    run_dbt_command(command, target_path=target_path, **context)
 
 
 def run_dbt_snapshot(
-    snapshot_name: str, node_tags: Optional[List[str]] = None, **context
+    snapshot_name: str,
+    node_tags: Optional[List[str]] = None,
+    target_path: Optional[str] = None,
+    **context,
 ):
     """Run a specific dbt snapshot."""
     # Check if we should skip based on schedule
@@ -281,10 +316,15 @@ def run_dbt_snapshot(
         raise AirflowSkipException(f"Skipping node scheduled {skip_schedule}")
 
     command = ["snapshot", "--select", snapshot_name]
-    run_dbt_command(command, **context)
+    run_dbt_command(command, target_path=target_path, **context)
 
 
-def run_dbt_operation(operation: str, args: Optional[str] = None, **context):
+def run_dbt_operation(
+    operation: str,
+    args: Optional[str] = None,
+    target_path: Optional[str] = None,
+    **context,
+):
     """
     Run a dbt operation (macro).
 
@@ -298,4 +338,4 @@ def run_dbt_operation(operation: str, args: Optional[str] = None, **context):
     if args:
         command.extend(["--args", args])
 
-    run_dbt_command(command, **context)
+    run_dbt_command(command, target_path=target_path, **context)

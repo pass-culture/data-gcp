@@ -132,7 +132,7 @@ class ExcelLayoutService:
         # Calculate total width of expanded area
         num_years = ds_year - min_year
         num_months = len(month_shifts)
-        total_expanded_width = num_years + nblank_cols + num_months
+        total_expanded_width = num_years + nblank_cols + num_months + 1 # kpi definition
         
         return {
             "date_mappings": {

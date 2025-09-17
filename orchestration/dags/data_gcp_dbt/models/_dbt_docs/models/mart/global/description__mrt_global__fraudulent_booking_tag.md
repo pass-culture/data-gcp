@@ -3,7 +3,7 @@ title: Fraudulent booking tag
 description: Description of the `mrt_global__fraudulent_booking_tag` table.
 ---
 
-{% docs mrt_global__fraudulent_booking_tag %}
+{% docs description__mrt_global__fraudulent_booking_tag %}
 
 # Fraudulent booking tag Model
 

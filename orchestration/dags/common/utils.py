@@ -461,27 +461,6 @@ def sparkql_health_check(url: str, timeout=5, retries=5, initial_delay=5):
                 logging.warning(
                     f"{url} returned status code {response.status_code} on attempt {attempt + 1}."
                 )
-        except requests.exceptions.RequestException as e:
-            logging.error(f"Attempt {attempt + 1}: Could not reach {url}. Error: {e}")
-        if attempt < retries - 1:
-            delay = initial_delay * (2**attempt)
-            logging.info(f"Retrying in {delay} seconds...")
-            time.sleep(delay)
-    raise Exception(f"Health check failed for {url} after {retries} attempts.")
-
-
-def sparkql_health_check(url: str, timeout=5, retries=5, initial_delay=5):
-    for attempt in range(retries):
-        try:
-            response = requests.get(url, params={"query": "ASK { }"}, timeout=timeout)
-            logging.info(f"response: {response}")
-            if response.status_code == 200:
-                logging.info(f"{url} is healthy on attempt {attempt + 1}.")
-                return True  # Exit on successful health check
-            else:
-                logging.warning(
-                    f"{url} returned status code {response.status_code} on attempt {attempt + 1}."
-                )
 
         except requests.exceptions.RequestException as e:
             logging.error(f"Attempt {attempt + 1}: Could not reach {url}. Error: {e}")

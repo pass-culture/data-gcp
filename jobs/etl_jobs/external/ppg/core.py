@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Dict, Optional, Any
 from enum import Enum
-from collections import defaultdict
 import duckdb
 import warnings
 
@@ -12,16 +11,9 @@ import openpyxl
 from config import (BASE_TEMPLATE,SOURCE_TABLES,STAKEHOLDER_REPORTS,REGION_HIERARCHY_TABLE,GCP_PROJECT, BIGQUERY_ANALYTICS_DATASET, SHEET_DEFINITIONS, REPORTS)
 from google.cloud import bigquery
 
-from utils.file_utils import slugify
 from utils.data_utils import sanitize_date_fields, sanitize_numeric_types
 
-import os
-from copy import copy
-from datetime import datetime, timedelta,date
-from dateutil.relativedelta import relativedelta
-import pandas as pd
 import logging
-from utils.duckdb_utils import aggregate_kpi_data, query_yearly_kpi, query_monthly_kpi
 from utils.data_utils import build_region_hierarchy
 
 

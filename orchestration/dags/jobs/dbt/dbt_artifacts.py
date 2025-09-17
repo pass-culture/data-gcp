@@ -10,7 +10,7 @@ from common.config import (
     GCP_PROJECT_ID,
     SLACK_CHANNEL_DATA_QUALITY,
     SLACK_TOKEN_DATA_QUALITY,
-    PATH_TO_DBT_TARGET,
+    ELEMENTARY_ARTIFACTS_TARGET_PATH,
 )
 from common.operators.monitoring import (
     GenerateElementaryReportOperator,
@@ -27,7 +27,6 @@ from airflow.utils.dates import datetime, timedelta
 
 # Import dbt execution functions
 from common.dbt.dbt_executors import (
-    compile_dbt_with_selector,
     run_dbt_quality_tests,
     run_dbt_with_selector,
 )
@@ -58,7 +57,7 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
     "project_id": GCP_PROJECT_ID,
 }
-ELEMENTARY_ARTIFACTS_TARGET_PATH = os.path.join(PATH_TO_DBT_TARGET, "target_elementary")
+
 
 dag_id = "dbt_artifacts"
 dag = DAG(
@@ -102,11 +101,11 @@ compute_metrics_elementary = PythonOperator(
 )
 
 # Convert to Python operator
-dbt_test = PythonOperator(
+dbt_test_daily = PythonOperator(
     task_id="dbt_test",
     python_callable=partial(
         run_dbt_quality_tests,
-        select=None,  # No specific selection, will test all
+        select=None,
         exclude="audit tag:export tag:weekly tag:monthly",
         target_path=ELEMENTARY_ARTIFACTS_TARGET_PATH,
     ),
@@ -163,29 +162,12 @@ send_elementary_report = SendElementaryMonitoringReportOperator(
     target_path=ELEMENTARY_ARTIFACTS_TARGET_PATH,
 )
 
-# Convert to Python operator
-recompile_dbt_project = PythonOperator(
-    task_id="recompile_dbt_project",
-    python_callable=partial(
-        compile_dbt_with_selector,
-        selector="package:data_gcp_dbt",
-        use_tmp_artifacts=False,
-    ),
-    dag=dag,
-    trigger_rule="all_done",
-)
-
 
 # DAG Dependencies
-(
-    start
-    >> wait_dbt_run
-    >> check_schedule
-    >> dbt_test
-    >> compute_metrics_elementary
-    >> create_elementary_report
-    >> send_elementary_report
-    >> recompile_dbt_project
-)
+(start >> wait_dbt_run >> check_schedule)
+
+(check_schedule >> dbt_test_daily >> compute_metrics_elementary)
 (check_schedule >> dbt_test_weekly >> compute_metrics_elementary)
 (check_schedule >> dbt_test_monthly >> compute_metrics_elementary)
+
+(compute_metrics_elementary >> create_elementary_report >> send_elementary_report)

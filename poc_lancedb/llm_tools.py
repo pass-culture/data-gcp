@@ -12,19 +12,19 @@ def build_prompt(question, retrieved_results,custom_prompt=None):
         template=(
             "{action} "
             "\n\nContext:\n{context}\n\n"
-            "Analyze the provided cultural offerings and identify all events, exhibitions, or performances that fit the following thematic: '{question}'\n\n"
+            "Analysez les offres culturelles fournies et identifiez celles qui correspondent à la requête suivante : '{question}'\n\n"
         )
     )
     if custom_prompt:
         action = custom_prompt
     else:
         action = (
-            "You are a cultural curator and event planner. "
-            "Your task is to analyze a list of cultural offerings and select those that align with a specific thematic. "
-            "There is no limit on the number of offers you can select, but you should focus on relevance and quality."
-            "Present the selected offerings in a clear and organized list. For each selected item, please include: id, relevance: Briefly explain why this offering was selected for the thematic."
+        "Vous êtes un(e) curateur(trice) culturel(le) et organisateur(trice) d'événements. "
+        "Votre tâche est d'analyser une liste d'offres culturelles et de sélectionner celles qui correspondent à une requête spécifique. "
+        "Il n'y a pas de limite au nombre d'offres que vous pouvez sélectionner, mais vous devez privilégier la pertinence et la qualité."
+         "Présentez les offres sélectionnées dans une liste claire et organisée. Pour chaque offre sélectionnée, veuillez inclure : id, pertinence : Expliquez brièvement en français pourquoi cette offre a été retenue pour la thématique."
         )
-    context = "\n".join([f"- ID: {item['id']}, Description: {item.get('offer_description', 'N/A')}" for item in retrieved_results])
+    context = "\n".join([f"- ID: {item['id']}, Name: {item.get('offer_name', 'N/A')}, Description: {item.get('offer_description', 'N/A')}, Type de bien: {item.get('offer_subcategory_id', 'N/A')}" for item in retrieved_results])
     return rag_prompt_template.format(context=context, question=question, action=action)
 
 # --- RAG Query Function ---
@@ -37,13 +37,13 @@ class LLMOutput(BaseModel):
 
 # Create the agent for LLM calls and parsing
 llm_agent = Agent(
-    'openai:gpt-3.5-turbo',  # or 'openai:gpt-4o-mini' if available
+    'openai:gpt-5',  # or 'openai:gpt-4o-mini' if available
     output_type=[LLMOutput, str],
     system_prompt=(
-        "Extract all selected offers from the context. "
-        "For each offer, provide: id (product-ID or offer-ID), relevance (brief explanation). "
-        "If no offers match, return an empty list. "
-        "Return the result as a JSON object with an 'offers' list."
+        "Extrayez toutes les offres sélectionnées du contexte."
+        "Pour chaque offre, indiquez : id (product-ID ou offer-ID), pertinence (brève explication). "
+        "Si aucune offre ne correspond ou n'est pertinente, retournez une liste vide. "
+        "Retournez le résultat sous forme d'un objet JSON avec une liste 'offers'."
     ),
 )
 

@@ -14,7 +14,7 @@ def access_secret(project_id, secret_id, version_id=1, default=None):
         return default
 
 GCP_PROJECT=os.getenv("GCP_PROJECT", "passculture-data-ehp")
-
+ENV_SHORT_NAME=os.getenv("ENV_SHORT_NAME", "dev")
 OPENAI_API_KEY=os.getenv("OPENAI_API_KEY",None)
 if not OPENAI_API_KEY:
     logger.warning("OPENAI_API_KEY environment variable not set. Attempting to fetch from Secret Manager.")
@@ -30,9 +30,8 @@ TABLE_NAME = "my_rag_data" # Adjusted table name for parquet-only setup
 # Dummy parquet file path for demonstration purposes when importing from parquet.
 PARQUET_FILE = "chatbot_test_dataset_enriched.parquet" # Keeping existing dummy file name
 DUMMY_PARQUET = "dummy_data.parquet" # Keeping existing dummy file name
+BUCKET_NAME = f"data-bucket-ml-temp-{ENV_SHORT_NAME}"
+GCS_VECTOR_DB_PATH="chatbot_edito"
 # Global variables for models and API keys
-embedding_model = None # For SentenceTransformer
-openai_api_key = None
-openai_client = None
 SENTENCE_TRANSFORMER_MODEL = 'all-MiniLM-L6-v2' # Model for embeddings
 OPENAI_LLM_MODEL = "gpt-3.5-turbo" # Or "gpt-4" for higher quality

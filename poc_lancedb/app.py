@@ -10,7 +10,7 @@ from constants import OPENAI_API_KEY
 from poc_chatbot_lancedb import rag_query,initialize_environment
 from constants import DB_PATH, TABLE_NAME, SENTENCE_TRANSFORMER_MODEL, OPENAI_LLM_MODEL
 from loguru import logger
-def run():
+def main():
     # --- Configuration ---
     
     # --- Load models and LanceDB table ---
@@ -29,7 +29,7 @@ def run():
     embedding_model, openai_client, lancedb_table = load_resources()
 
     # --- Streamlit UI ---
-    st.title("RAG Chatbot with LanceDB, SentenceTransformers, and OpenAI")
+    st.title("🤖 Prototype de chatbot éditorial")
 
     if embedding_model is None or openai_client is None or lancedb_table is None:
         st.error("Failed to load models or LanceDB table. Check your setup.")
@@ -37,19 +37,19 @@ def run():
 
     # Prompt template
     prompt_default = (
-        "You are a cultural curator and event planner. "
-        "Your task is to analyze a list of cultural offerings and select those that align with a specific thematic. "
-        "There is no limit on the number of offers you can select, but you should focus on relevance and quality."
-        "Present the selected offerings in a clear and organized list. For each selected item, please include: id, relevance: Briefly explain why this offering was selected for the thematic."
+    "Vous êtes un(e) curateur(trice) culturel(le) et organisateur(trice) d'événements. \n"
+    "Votre tâche est d'analyser une liste d'offres culturelles et de sélectionner celles qui correspondent à une thématique spécifique. \n"
+    "Il n'y a pas de limite au nombre d'offres que vous pouvez sélectionner, mais vous devez privilégier la pertinence et la qualité.\n"
+    "Présentez les offres sélectionnées dans une liste claire et organisée. Pour chaque offre sélectionnée, veuillez inclure : id, pertinence : Expliquez brièvement en français pourquoi cette offre a été retenue pour la thématique.\n"
     )
 
-    st.subheader("Ask a question about the cultural offers:")
-    question = st.text_input("Your thematic/question", "Moyen age")
-    prompt_template = st.text_area("Prompt template (edit as needed)", prompt_default, height=200)
-    k_retrieval = st.slider("Number of offers to retrieve", 1, 1000, 20)
+    st.subheader("📝 Entrez votre thématique/question et ajustez le prompt si nécessaire")
+    question = st.text_input("🎯 Votre requête/thématique", "Moyen age")
+    prompt_template = st.text_area("🛠️ Template de prompt (éditez si besoin)", prompt_default, height=200)
+    k_retrieval = 100
 
-    if st.button("Run RAG Query"):
-        with st.spinner("Running RAG query..."):
+    if st.button("🚀 Exécuter la requête"):
+        with st.spinner("⏳ Recherche en cours..."):
             llm_answer, table_results = rag_query(
                 lancedb_table,
                 embedding_model,
@@ -63,21 +63,27 @@ def run():
         df = pd.DataFrame(table_results)
         logger.info(f"columns in retrieved results: {df.columns.tolist()}")
         # Build a DataFrame from a list of Pydantic objects (llm_answer.offers)
-        logger.info(f"LLM extracted offers: {llm_answer.offers}")
-        llm_df = pd.DataFrame([offer.dict() for offer in llm_answer.offers])
-        logger.info(f"columns in LLM extracted offers: {llm_df.columns.tolist()}")
-        llm_enriched_df = df.merge(llm_df, left_on='id', right_on='id', how='left', suffixes=('', '_llm'))
-        df_selected = llm_enriched_df
-        logger.info(f"Columns after merging: {df_selected.columns.tolist()}")
-        logger.info(f"preview of merged DataFrame: {df_selected.head()}  ")
-        # Always keep the full DataFrame ID (with prefix)
-        display_cols = ['id', 'offer_name', 'offer_description', '_distance', 'relevance']
-        df_selected = df_selected[[col for col in display_cols if col in df_selected.columns]]
-        st.markdown("### Selected Offers (merged with input DataFrame):")
-        st.dataframe(df_selected)
-        if df_selected.empty:
-            st.warning("No matches found after merging. Debug info:")
-            st.text(f"Extracted IDs: {list(extracted_df['id'])}")
-            st.text(f"DataFrame IDs: {list(df['id'])}")
-        else:
-            st.warning("No 'id' column found in retrieved results for merging.")
+        logger.info(f"df length of retrieved results: {len(df)}     ")
+        # logger.info(f"llm_answer len: {len(llm_answer.offers)}  ")
+        logger.info(f"df preview of retrieved results: {df.head()}  ")
+        st.markdown("<h3>🧠 Offres extraites par le LLM :</h3>", unsafe_allow_html=True)
+        # st.write(llm_answer)
+        output_dataframe=True
+        if output_dataframe:
+            llm_df = pd.DataFrame([offer.dict() for offer in llm_answer.offers])
+            logger.info(f"columns in LLM extracted offers: {llm_df.columns.tolist()}")
+            llm_enriched_df = df.merge(llm_df, left_on='id', right_on='id', how='inner', suffixes=('', '_llm'))
+            df_selected = llm_enriched_df
+            logger.info(f"Columns after merging: {df_selected.columns.tolist()}")
+            logger.info(f"preview of merged DataFrame: {df_selected.head()}  ")
+            # Always keep the full DataFrame ID (with prefix)
+            display_cols = ['id', 'offer_name', 'offer_description','offer_subcategory_id' ,'_distance', 'relevance']
+            df_selected = df_selected[[col for col in display_cols if col in df_selected.columns]]
+            st.markdown("<h3>🎉 Offres sélectionnées (fusionnées avec les données d'entrée) :</h3>", unsafe_allow_html=True)
+            st.dataframe(df_selected, use_container_width=True)
+            if df_selected.empty:
+                st.warning("⚠️ Aucun résultat trouvé après fusion. Infos de debug :")
+                st.text(f"🆔 IDs extraits : {list(df_selected['id'])}")
+                st.text(f"🆔 IDs du DataFrame : {list(df['id'])}")
+if __name__ == "__main__":
+	main()

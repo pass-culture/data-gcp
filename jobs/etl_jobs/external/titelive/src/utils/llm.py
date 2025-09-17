@@ -1,3 +1,5 @@
+import asyncio
+
 import logfire
 import pandas as pd
 from loguru import logger
@@ -6,7 +8,7 @@ from pydantic_ai import Agent
 from pydantic_ai.models.gemini import ThinkingConfig
 from pydantic_ai.models.google import GoogleModel, GoogleModelSettings
 from pydantic_ai.providers.google import GoogleProvider
-from tqdm import tqdm
+from tqdm.asyncio import tqdm
 
 from src.llm_config import (
     MAX_TOPICS,
@@ -23,13 +25,13 @@ logfire.instrument_pydantic_ai()
 
 
 def initialize_pydantic_ai_agent(
-    model_name: str, output_type: type[BaseModel] = BookAnalysis
+    gemini_model_name: str, output_type: type[BaseModel] = BookAnalysis
 ) -> Agent | None:
     """Initialize pydantic AI agent with Google Vertex AI (cached for performance)"""
     try:
         # Use Vertex AI with application default credentials
         provider = GoogleProvider(vertexai=True)
-        model = GoogleModel(model_name, provider=provider)
+        model = GoogleModel(gemini_model_name, provider=provider)
         thinkingDisabledConfig = ThinkingConfig(
             include_thoughts=False, thinking_budget=0
         )
@@ -129,10 +131,12 @@ def prepare_text_data(row_data: pd.Series) -> tuple[str, str, str]:
     return title, resume, authors
 
 
-def predict_writing_style_with_pydantic_ai(
+async def predict_writing_style_with_pydantic_ai(
     title: str, resume: str, authors: str, agent: Agent
 ) -> dict[str, str | float | list[str] | None]:
-    """Predict writing style and topics using Pydantic AI for structured output"""
+    """
+    Predict writing style and topics using Pydantic AI for structured output (async)
+    """
     try:
         # Prepare the input text
         input_text = f"""
@@ -143,8 +147,8 @@ def predict_writing_style_with_pydantic_ai(
         Veuillez analyser ce livre et déterminer son style d'écriture et ses sujets pertinents.
         """  # noqa: E501
 
-        # Run the agent to get structured output with timeout
-        result = agent.run_sync(input_text)
+        # Run the agent to get structured output with timeout (async version)
+        result = await agent.run(input_text)
 
         # Extract topics as list of string values
         topics_list = [topic.value for topic in result.output.topics]
@@ -182,22 +186,11 @@ def predict_writing_style_with_pydantic_ai(
         }
 
 
-def run_writing_style_prediction(data: pd.DataFrame, model_name: str) -> pd.DataFrame:
-    """Run writing style prediction on the dataset using Pydantic AI"""
-    # Initialize agent once and reuse it (cached)
-    agent = initialize_pydantic_ai_agent(model_name=model_name)
-    if not agent:
-        logger.error(
-            "Failed to initialize Pydantic AI agent. Cannot proceed with predictions."
-        )
-        return pd.DataFrame()
-
-    results = []
-
-    # Process each row without stqdm to avoid conflicts
-    for _, row_data in tqdm(
-        data.iterrows(), total=len(data), desc="Predicting writing styles"
-    ):
+async def process_single_row(
+    row_data: pd.Series, agent: Agent, semaphore: asyncio.Semaphore
+) -> pd.Series:
+    """Process a single row with semaphore for concurrency control"""
+    async with semaphore:
         # Prepare input data
         title, resume, authors = prepare_text_data(row_data)
 
@@ -213,7 +206,7 @@ def run_writing_style_prediction(data: pd.DataFrame, model_name: str) -> pd.Data
             }
         else:
             # Make prediction
-            prediction_result = predict_writing_style_with_pydantic_ai(
+            prediction_result = await predict_writing_style_with_pydantic_ai(
                 title, resume, authors, agent
             )
 
@@ -227,6 +220,45 @@ def run_writing_style_prediction(data: pd.DataFrame, model_name: str) -> pd.Data
         result_row["input_tokens"] = prediction_result["input_tokens"]
         result_row["output_tokens"] = prediction_result["output_tokens"]
         result_row["raw_llm_response"] = prediction_result["raw_response"]
-        results.append(result_row)
+        return result_row
 
-    return pd.DataFrame(results)
+
+def run_writing_style_prediction(
+    data: pd.DataFrame, gemini_model_name: str, max_concurrent: int = 5
+) -> pd.DataFrame:
+    """
+    Run writing style prediction on the dataset using Pydantic AI with async concurrency
+    """
+    return asyncio.run(
+        _async_run_writing_style_prediction(data, gemini_model_name, max_concurrent)
+    )
+
+
+async def _async_run_writing_style_prediction(
+    data: pd.DataFrame, gemini_model_name: str, max_concurrent: int = 5
+) -> pd.DataFrame:
+    """Async implementation of writing style prediction with controlled concurrency"""
+    # Initialize agent once and reuse it (cached)
+    agent = initialize_pydantic_ai_agent(gemini_model_name=gemini_model_name)
+    if not agent:
+        logger.error(
+            "Failed to initialize Pydantic AI agent. Cannot proceed with predictions."
+        )
+        return pd.DataFrame()
+
+    # Create semaphore to limit concurrent requests
+    semaphore = asyncio.Semaphore(max_concurrent)
+
+    # Create tasks for all rows
+    tasks = [
+        process_single_row(row_data, agent, semaphore)
+        for _, row_data in data.iterrows()
+    ]
+
+    # Run all tasks concurrently with progress bar
+    # Use asyncio.gather with tqdm to show progress
+    completed_results = await tqdm.gather(
+        *tasks, desc="Predicting writing styles (async)", total=len(tasks)
+    )
+
+    return pd.DataFrame(completed_results)

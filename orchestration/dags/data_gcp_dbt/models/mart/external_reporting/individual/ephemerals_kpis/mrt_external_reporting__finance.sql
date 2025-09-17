@@ -25,23 +25,35 @@
 ] %}
 
 {% set kpis = [
-    {"name": "total_reservations", "numerator_expr": "total_bookings", "denominator_expr":"1"},
-    {"name": "total_quantites", "numerator_expr": "total_quantities", "denominator_expr":"1"},
-    {"name": "total_ca", "numerator_expr": "total_revenue_amount", "denominator_expr":"1"},
+    {
+        "name": "total_reservations",
+        "numerator_expr": "total_bookings",
+        "denominator_expr": "1",
+    },
+    {
+        "name": "total_quantites",
+        "numerator_expr": "total_quantities",
+        "denominator_expr": "1",
+    },
+    {
+        "name": "total_ca",
+        "numerator_expr": "total_revenue_amount",
+        "denominator_expr": "1",
+    },
     {
         "name": "total_montant_rembourse",
         "numerator_expr": "total_reimbursed_amount",
-        "denominator_expr":"1"
+        "denominator_expr": "1",
     },
     {
         "name": "total_montant_contribution",
         "numerator_expr": "total_contribution_amount",
-        "denominator_expr":"1"
+        "denominator_expr": "1",
     },
     {
         "name": "pct_montant_contribution",
-        "numerator_expr":"total_contribution_amount",
-        "denominator_expr":"total_revenue_amount"
+        "numerator_expr": "total_contribution_amount",
+        "denominator_expr": "total_revenue_amount",
     },
 ] %}
 
@@ -100,7 +112,9 @@ with
                 '{{ kpi.name }}' as kpi_name,
                 sum({{ kpi.numerator_expr }}) as numerator,
                 sum(cast({{ kpi.denominator_expr }} as int64)) as denominator,
-                safe_divide(sum({{ kpi.numerator_expr }}), sum({{ kpi.denominator_expr }})) as kpi
+                safe_divide(
+                    sum({{ kpi.numerator_expr }}), sum({{ kpi.denominator_expr }})
+                ) as kpi
             from dimension_cross
             group by partition_month, updated_at, dimension_name, dimension_value
             {% if not loop.last %}
@@ -121,7 +135,10 @@ with
                     '{{ kpi.name }}_{{ category.value_expr }}' as kpi_name,
                     sum({{ kpi.numerator_expr }}) as numerator,
                     sum(cast({{ kpi.denominator_expr }} as int64)) as denominator,
-                    safe_divide(sum({{ kpi.numerator_expr }}),sum(cast({{ kpi.denominator_expr }} as int64))) as kpi
+                    safe_divide(
+                        sum({{ kpi.numerator_expr }}),
+                        sum(cast({{ kpi.denominator_expr }} as int64))
+                    ) as kpi
                 from dimension_cross
                 where offer_category_id = '{{ category.name }}'
                 group by partition_month, updated_at, dimension_name, dimension_value
@@ -145,7 +162,10 @@ with
                 '{{ kpi.name }}_epn' as kpi_name,
                 sum({{ kpi.numerator_expr }}) as numerator,
                 sum(cast({{ kpi.denominator_expr }} as int64)) as denominator,
-                safe_divide(sum({{ kpi.numerator_expr }}),sum(cast({{ kpi.denominator_expr }} as int64))) as kpi
+                safe_divide(
+                    sum({{ kpi.numerator_expr }}),
+                    sum(cast({{ kpi.denominator_expr }} as int64))
+                ) as kpi
             from dimension_cross
             where offerer_is_epn = true
             group by partition_month, updated_at, dimension_name, dimension_value

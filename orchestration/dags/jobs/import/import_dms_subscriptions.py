@@ -7,7 +7,7 @@ from common.config import (
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
-    DATA_GCS_BUCKET_NAME,
+    DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
@@ -122,7 +122,7 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="python parse_dms_subscriptions_to_tabular.py --target jeunes --updated-since {{ params.updated_since_jeunes }} "
-        + f"--bucket-name {DATA_GCS_BUCKET_NAME} ",
+        + f"--bucket-name {DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME} ",
         do_xcom_push=True,
     )
 
@@ -132,14 +132,14 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="python parse_dms_subscriptions_to_tabular.py --target pro --updated-since {{ params.updated_since_pro }} "
-        + f"--bucket-name {DATA_GCS_BUCKET_NAME} ",
+        + f"--bucket-name {DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME} ",
         do_xcom_push=True,
     )
 
     import_dms_jeunes_to_bq = GCSToBigQueryOperator(
         project_id=GCP_PROJECT_ID,
         task_id="import_dms_jeunes_to_bq",
-        bucket=DATA_GCS_BUCKET_NAME,
+        bucket=DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
         source_objects=[
             "dms_export/dms_jeunes_{{ params.updated_since_jeunes }}.parquet"
         ],
@@ -166,7 +166,7 @@ with DAG(
     import_dms_pro_to_bq = GCSToBigQueryOperator(
         project_id=GCP_PROJECT_ID,
         task_id="import_dms_pro_to_bq",
-        bucket=DATA_GCS_BUCKET_NAME,
+        bucket=DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
         source_objects=["dms_export/dms_pro_{{ params.updated_since_pro }}.parquet"],
         source_format="PARQUET",
         destination_project_dataset_table=f"{BIGQUERY_RAW_DATASET}.raw_dms_pro",

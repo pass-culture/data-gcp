@@ -7,6 +7,7 @@ GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID", "passculture-data-dev")
 ENV_SHORT_NAME = os.getenv("ENV_SHORT_NAME", "dev")
 DMS_TOKEN = access_secret_data(GCP_PROJECT_ID, "token_dms")
 API_URL = "https://www.demarches-simplifiees.fr/api/v2/graphql"
+DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME = f"de-bigquery-data-export-{ENV_SHORT_NAME}"
 
 # Procedure IDs
 demarches = {

@@ -1,5 +1,5 @@
 from common.config import (
-    DATA_GCS_BUCKET_NAME,
+    DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
     ELEMENTARY_REPORT_URL,
     ENV_SHORT_NAME,
     PATH_TO_DBT_PROJECT,
@@ -32,7 +32,7 @@ class ElementaryReport:
             project_dir=PATH_TO_DBT_PROJECT,
             profile_target=ENV_SHORT_NAME,
             target_path=PATH_TO_DBT_TARGET,
-            gcs_bucket_name=DATA_GCS_BUCKET_NAME,
+            gcs_bucket_name=DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
             env=ENV_SHORT_NAME,
             run_dbt_deps_if_needed=True,
         )

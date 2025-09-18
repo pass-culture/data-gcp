@@ -52,6 +52,12 @@ with DAG(
         "n_days": Param(
             default=-14,
             type="integer",
+            description="Number of days to go back from the execution date for the start date (e.g., -1 for yesterday).",
+        ),
+        "n_index": Param(
+            default=0,
+            type="integer",
+            description="Offset in days from the execution date for the end date (e.g., 0 for the execution date, -1 for yesterday).",
         ),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.VM.value],
@@ -81,7 +87,7 @@ with DAG(
             command="""
             python main.py \
             --start-date {{ add_days(yesterday() if dag_run.run_type == 'manual' else ds, params.n_days) }} \
-            --end-date {{ yesterday() if dag_run.run_type == 'manual' else ds }}
+            --end-date {{ add_days(yesterday() if dag_run.run_type == 'manual' else ds, params.n_index) }} \
             """,
             do_xcom_push=True,
         )

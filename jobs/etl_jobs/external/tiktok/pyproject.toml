@@ -1,5 +1,25 @@
-## ruff
-# Recommended ruff config for now, to be updated as we go along.
+[project]
+name = "tiktok-etl"
+version = "0.1.0"
+description = "TikTok ETL job for extracting analytics data"
+requires-python = ">=3.10"
+dependencies = [
+    "google-auth-oauthlib==1.2.0",
+    "google-cloud-bigquery==3.24.0",
+    "google-cloud-bigquery-storage==2.25.0",
+    "google-cloud-core==2.4.1",
+    "google-cloud-secret-manager==2.20.0",
+    "google-cloud-storage==2.17.0",
+    "numpy==1.26.4",
+    "pandas==2.0.3",
+    "requests==2.32.3",
+    "pandas-gbq==0.23.1",
+    "gspread==6.0.0",
+    "typer>=0.7.0",
+    "urllib3>=2.0.0",
+    "loguru>=0.7.0",
+]
+
 [tool.ruff]
 target-version = 'py310'
 

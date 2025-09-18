@@ -85,8 +85,8 @@ python scripts/migrate_historical_data.py --env prod --days 30 --dry-run
 python scripts/migrate_historical_data.py --env prod --days 30 --execute
 
 # 3. Verify migration was successful by checking new buckets
-gsutil ls -r gs://de-bigquery-data-archive-prod/
-gsutil ls -r gs://ds-data-archive-prod/
+gcloud storage ls --recursive gs://de-bigquery-data-archive-prod/
+gcloud storage ls --recursive gs://ds-data-archive-prod/
 ```
 
 ### Step 3: Cleanup (Optional)
@@ -140,7 +140,7 @@ python scripts/delete_historization_folder.py --env dev --dry-run
 
 If issues are discovered after migration:
 
-1. **Migration rollback**: Use `gsutil rsync` to copy data back from new buckets to old structure
+1. **Migration rollback**: Use `gcloud storage rsync` to copy data back from new buckets to old structure
 2. **Deletion rollback**: Use the backup manifest JSON file to identify deleted files (files cannot be recovered after deletion)
 
 ## Related Files
@@ -154,5 +154,5 @@ If issues are discovered after migration:
 For issues with these scripts:
 1. Check the log files for detailed error information
 2. Verify bucket permissions and existence
-3. Ensure `gsutil` is properly configured and authenticated
+3. Ensure `gcloud` CLI is properly configured and authenticated
 4. Review the commit changes to understand the migration context

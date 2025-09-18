@@ -57,7 +57,7 @@ class HistorizationFolderDeleter:
         """Check if the old bucket exists."""
         try:
             result = subprocess.run(
-                ["gsutil", "ls", f"gs://{self.old_bucket}/"],
+                ["gcloud", "storage", "ls", f"gs://{self.old_bucket}/"],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -71,9 +71,16 @@ class HistorizationFolderDeleter:
         self.logger.info(f"Scanning contents of {self.historization_path}")
 
         try:
-            # Use gsutil ls -L for detailed information including size and timestamps
+            # Use gcloud storage ls --long for detailed information including size and timestamps
             result = subprocess.run(
-                ["gsutil", "ls", "-r", "-L", self.historization_path],
+                [
+                    "gcloud",
+                    "storage",
+                    "ls",
+                    "--recursive",
+                    "--long",
+                    self.historization_path,
+                ],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -175,7 +182,7 @@ class HistorizationFolderDeleter:
         """Simple bucket existence check."""
         try:
             result = subprocess.run(
-                ["gsutil", "ls", f"gs://{bucket_name}/"],
+                ["gcloud", "storage", "ls", f"gs://{bucket_name}/"],
                 capture_output=True,
                 text=True,
                 check=False,

@@ -18,7 +18,6 @@ Usage:
 
 import argparse
 import logging
-import os
 import subprocess
 import sys
 from datetime import datetime, timedelta
@@ -101,7 +100,7 @@ class HistoricalDataMigrator:
         """Check if a GCS bucket exists."""
         try:
             result = subprocess.run(
-                ["gsutil", "ls", f"gs://{bucket_name}/"],
+                ["gcloud", "storage", "ls", f"gs://{bucket_name}/"],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -116,7 +115,7 @@ class HistoricalDataMigrator:
 
         try:
             result = subprocess.run(
-                ["gsutil", "ls", "-r", old_path],
+                ["gcloud", "storage", "ls", "--recursive", old_path],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -233,7 +232,7 @@ class HistoricalDataMigrator:
 
         try:
             result = subprocess.run(
-                ["gsutil", "ls", "-r", new_path],
+                ["gcloud", "storage", "ls", "--recursive", new_path],
                 capture_output=True,
                 text=True,
                 check=False,

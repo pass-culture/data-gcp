@@ -9,7 +9,12 @@ from airflow.providers.google.cloud.operators.gcs import GCSDeleteObjectsOperato
 from airflow.utils.task_group import TaskGroup
 from common import macros
 from common.callback import on_failure_vm_callback
-from common.config import DAG_FOLDER, DAG_TAGS, DATA_GCS_BUCKET_NAME, ENV_SHORT_NAME
+from common.config import (
+    DAG_FOLDER,
+    DAG_TAGS,
+    DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
+    ENV_SHORT_NAME,
+)
 from common.operators.gce import (
     DeleteGCEOperator,
     InstallDependenciesOperator,
@@ -83,7 +88,7 @@ with DAG(
             type="string",
         ),
         "bucket_name": Param(
-            default=DATA_GCS_BUCKET_NAME,
+            default=DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
             type="string",
         ),
         "bucket_folder": Param(

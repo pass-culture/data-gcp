@@ -6,7 +6,7 @@ from common.config import (
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
-    DATA_GCS_BUCKET_NAME,
+    DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
@@ -43,7 +43,7 @@ dag_config = {
 DATE = "{{ yyyymmdd(ds) }}"
 
 dag_config = {
-    "STORAGE_PATH": f"{DATA_GCS_BUCKET_NAME}/clickhouse_export/{ENV_SHORT_NAME}/export/{DATE}",
+    "STORAGE_PATH": f"{DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME}/clickhouse_export/{ENV_SHORT_NAME}/export/{DATE}",
     "BASE_DIR": "data-gcp/jobs/etl_jobs/internal/export_clickhouse/",
 }
 

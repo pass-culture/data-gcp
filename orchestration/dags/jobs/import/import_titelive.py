@@ -83,6 +83,7 @@ with DAG(
         ),
         "custom_min_modified_date": Param(default=None, type=["null", "string"]),
         "upload_images": Param(default=False, type="boolean"),
+        "augment_metadatas": Param(default=False, type="boolean"),
     },
 ) as dag:
     with TaskGroup("dag_init") as dag_init:
@@ -170,9 +171,18 @@ with DAG(
         python_callable=decide_upload_images_branch,
     )
 
-    # Join task to continue after either branch
-    join_task = EmptyOperator(
-        task_id="join_branches", trigger_rule="none_failed_min_one_success"
+    # Branch decision based on augment_metadatas parameter
+    def decide_augment_metadatas_branch(**context):
+        augment_metadatas = context["params"].get("augment_metadatas", True)
+        if augment_metadatas:
+            return "augment_metadatas"
+        else:
+            return "export_data"
+
+    branch_augment_metadatas_task = BranchPythonOperator(
+        task_id="decide_augment_metadatas",
+        python_callable=decide_augment_metadatas_branch,
+        trigger_rule="none_failed_min_one_success",
     )
 
     augment_metadatas = SSHGCEOperator(
@@ -210,16 +220,31 @@ with DAG(
     )
 
     gce_instance_stop = DeleteGCEOperator(
-        task_id="gce_stop_task", instance_name=GCE_INSTANCE, trigger_rule="none_failed"
+        task_id="gce_stop_task",
+        instance_name=GCE_INSTANCE,
+        trigger_rule="none_failed_min_one_success",
     )
 
     # Task dependencies
     dag_init >> vm_init >> titelive_extraction >> branch_upload_image_task
 
-    # Branch paths
-    branch_upload_image_task >> upload_images_products_task >> join_task
-    branch_upload_image_task >> copy_parsed_products_task >> join_task
+    # Branch paths upload images
+    (
+        branch_upload_image_task
+        >> upload_images_products_task
+        >> branch_augment_metadatas_task
+    )
+    (
+        branch_upload_image_task
+        >> copy_parsed_products_task
+        >> branch_augment_metadatas_task
+    )
 
-    # Final dependency
-    join_task >> export_data >> gce_instance_stop
-    join_task >> augment_metadatas >> export_data_with_metadatas >> gce_instance_stop
+    # Branch paths augment metadatas
+    branch_augment_metadatas_task >> export_data >> gce_instance_stop
+    (
+        branch_augment_metadatas_task
+        >> augment_metadatas
+        >> export_data_with_metadatas
+        >> gce_instance_stop
+    )

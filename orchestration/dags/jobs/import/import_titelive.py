@@ -25,7 +25,6 @@ from common.operators.gce import (
     StartGCEOperator,
 )
 from common.utils import get_airflow_schedule
-
 from jobs.crons import SCHEDULE_DICT
 
 BASE_DIR = "data-gcp/jobs/etl_jobs/external/titelive"
@@ -35,10 +34,11 @@ DEFAULT_REGION = "europe-west1"
 GCE_INSTANCE = f"import-titelive-{ENV_SHORT_NAME}"
 GCS_FOLDER_PATH = f"{DAG_NAME}_{ENV_SHORT_NAME}/{{{{ ds_nodash }}}}"
 STORAGE_BASE_PATH = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}"
-# TODO: Plug this to the actual metier bucket once we have proper rights.
-GCS_THUMB_BASE_PATH = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/thumb"
-
-
+GCS_THUMB_BASE_PATH = {
+    "prod": f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/thumb",  # For prod, we use a different bucket path because metier bucket is too sensitive
+    "stg": "gs://passculture-metier-ehp-staging-assets-fine-grained/thumbs",
+    "dev": "gs://passculture-metier-ehp-testing-assets-fine-grained/thumbs",
+}[ENV_SHORT_NAME]
 OUTPUT_BOOK_TABLE_NAME = "titelive_books"
 TITELIVE_WITH_IMAGE_URLS_FILENAME = "titelive_with_image_urls.parquet"
 

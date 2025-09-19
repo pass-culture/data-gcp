@@ -30,7 +30,7 @@ DAG_NAME = "retrieval_vector_build"
 
 gce_params = {
     "base_dir": "data-gcp/jobs/ml_jobs/retrieval_vector",
-    "instance_name": f"retrieval-recommendation-build-{ENV_SHORT_NAME}",
+    "instance_name": "retrieval-recommendation-build",
     "experiment_name": f"retrieval_recommendation_v1.2_{ENV_SHORT_NAME}",
     "model_name": {
         "dev": "dummy_user_recommendation",

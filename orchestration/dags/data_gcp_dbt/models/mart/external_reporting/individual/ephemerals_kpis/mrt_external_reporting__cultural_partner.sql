@@ -141,10 +141,7 @@ with
             date_trunc(date(offerer.offerer_creation_date), month) as partition_month,
             count(distinct offerer.offerer_id) as epn_created
         from {{ ref("mrt_global__offerer") }} as offerer
-        inner join
-            {{ ref("mrt_global__offerer_tag") }} as tag
-            on offerer.offerer_id = tag.offerer_id
-        where tag.tag_name in ('part-epn', 'ecosysteme-epn')
+        where offerer_is_epn
         group by partition_month, partner_region_name, partner_department_name
     ),
 

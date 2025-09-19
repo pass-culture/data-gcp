@@ -7,6 +7,7 @@ from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
     DATA_GCS_BUCKET_NAME,
+    DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
 )
@@ -84,7 +85,7 @@ with DAG(
     import_historical_answers_to_bigquery = GCSToBigQueryOperator(
         project_id=GCP_PROJECT_ID,
         task_id="import_historical_answers_to_bigquery",
-        bucket=DATA_GCS_BUCKET_NAME,
+        bucket=DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME,
         source_objects=["QPI_historical/qpi_answers_historical_*.parquet"],
         destination_project_dataset_table="{{ bigquery_raw_dataset }}.qpi_answers_historical",
         source_format="PARQUET",

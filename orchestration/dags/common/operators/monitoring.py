@@ -9,6 +9,7 @@ class GenerateElementaryReportOperator(BaseOperator):
     template_fields = [
         "report_file_path",
         "days_back",
+        "target_path",
     ]
 
     @apply_defaults
@@ -16,16 +17,20 @@ class GenerateElementaryReportOperator(BaseOperator):
         self,
         report_file_path: str,
         days_back: int,
+        target_path: str = None,
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.report_file_path = report_file_path
         self.days_back = days_back
+        self.target_path = target_path
 
     def execute(self, context):
         hook = ElementaryReport()
-        results = hook.generate_report(self.report_file_path, self.days_back)
+        results = hook.generate_report(
+            self.report_file_path, self.days_back, self.target_path
+        )
         if results:
             self.log.info("Elementary report generated successfully")
         else:
@@ -39,6 +44,7 @@ class SendElementaryMonitoringReportOperator(BaseOperator):
         "slack_group_alerts_by",
         "global_suppression_interval",
         "send_slack_report",
+        "target_path",
     ]
 
     @apply_defaults
@@ -50,6 +56,7 @@ class SendElementaryMonitoringReportOperator(BaseOperator):
         slack_group_alerts_by: str = "table",
         global_suppression_interval: int = 24,
         send_slack_report: str = "True",
+        target_path: str = None,
         *args,
         **kwargs,
     ):
@@ -60,6 +67,7 @@ class SendElementaryMonitoringReportOperator(BaseOperator):
         self.slack_group_alerts_by = slack_group_alerts_by
         self.global_suppression_interval = global_suppression_interval
         self.send_slack_report = send_slack_report
+        self.target_path = target_path
 
     def _parse_send_slack_report(self):
         self.log.info(f"send_slack_report: {self.send_slack_report}")
@@ -93,6 +101,7 @@ class SendElementaryMonitoringReportOperator(BaseOperator):
             days_back=self.days_back,
             slack_group_alerts_by=self.slack_group_alerts_by,
             global_suppression_interval=self.global_suppression_interval,
+            target_path=self.target_path,
         )
         if results:
             self.log.info("Elementary monitoring report sent successfully")

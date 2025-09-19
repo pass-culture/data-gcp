@@ -1,5 +1,6 @@
 import logging
 from functools import partial
+import os
 
 from common import macros
 from common.callback import on_failure_base_callback
@@ -9,6 +10,7 @@ from common.config import (
     GCP_PROJECT_ID,
     SLACK_CHANNEL_DATA_QUALITY,
     SLACK_TOKEN_DATA_QUALITY,
+    ELEMENTARY_ARTIFACTS_TARGET_PATH,
 )
 from common.operators.monitoring import (
     GenerateElementaryReportOperator,
@@ -25,7 +27,6 @@ from airflow.utils.dates import datetime, timedelta
 
 # Import dbt execution functions
 from common.dbt.dbt_executors import (
-    compile_dbt_with_selector,
     run_dbt_quality_tests,
     run_dbt_with_selector,
 )
@@ -56,6 +57,7 @@ default_args = {
     "retry_delay": timedelta(minutes=2),
     "project_id": GCP_PROJECT_ID,
 }
+
 
 dag_id = "dbt_artifacts"
 dag = DAG(
@@ -89,18 +91,23 @@ wait_dbt_run = delayed_waiting_operator(dag=dag, external_dag_id="dbt_run_dag")
 # Convert to Python operator
 compute_metrics_elementary = PythonOperator(
     task_id="compute_metrics_elementary",
-    python_callable=partial(run_dbt_with_selector, "package:elementary"),
+    python_callable=partial(
+        run_dbt_with_selector,
+        "package:elementary",
+        target_path=ELEMENTARY_ARTIFACTS_TARGET_PATH,
+    ),
     dag=dag,
     trigger_rule="one_success",
 )
 
 # Convert to Python operator
-dbt_test = PythonOperator(
+dbt_test_daily = PythonOperator(
     task_id="dbt_test",
     python_callable=partial(
         run_dbt_quality_tests,
-        select=None,  # No specific selection, will test all
-        exclude="audit tag:export tag:weekly tag:monthly",  #
+        select=None,
+        exclude="audit tag:export tag:weekly tag:monthly",
+        target_path=ELEMENTARY_ARTIFACTS_TARGET_PATH,
     ),
     dag=dag,
 )
@@ -115,7 +122,10 @@ check_schedule = BranchPythonOperator(
 dbt_test_weekly = PythonOperator(
     task_id="dbt_test_weekly",
     python_callable=partial(
-        run_dbt_quality_tests, select="tag:weekly", exclude="audit"
+        run_dbt_quality_tests,
+        select="tag:weekly",
+        exclude="audit",
+        target_path=ELEMENTARY_ARTIFACTS_TARGET_PATH,
     ),
     dag=dag,
     trigger_rule="all_success",
@@ -124,7 +134,10 @@ dbt_test_weekly = PythonOperator(
 dbt_test_monthly = PythonOperator(
     task_id="dbt_test_monthly",
     python_callable=partial(
-        run_dbt_quality_tests, select="tag:monthly", exclude="audit"
+        run_dbt_quality_tests,
+        select="tag:monthly",
+        exclude="audit",
+        target_path=ELEMENTARY_ARTIFACTS_TARGET_PATH,
     ),
     dag=dag,
     trigger_rule="all_success",
@@ -134,6 +147,7 @@ create_elementary_report = GenerateElementaryReportOperator(
     task_id="create_elementary_report",
     report_file_path="elementary_reports/{{ execution_date.year }}/elementary_report_{{ execution_date.strftime('%Y%m%d') }}.html",
     days_back=14,
+    target_path=ELEMENTARY_ARTIFACTS_TARGET_PATH,
     trigger_rule="none_failed_min_one_success",
 )
 
@@ -145,31 +159,15 @@ send_elementary_report = SendElementaryMonitoringReportOperator(
     slack_group_alerts_by="{{ params.slack_group_alerts_by }}",
     global_suppression_interval=0,
     send_slack_report="{{ params.send_slack_report }}",
-)
-
-# Convert to Python operator
-recompile_dbt_project = PythonOperator(
-    task_id="recompile_dbt_project",
-    python_callable=partial(
-        compile_dbt_with_selector,
-        selector="package:data_gcp_dbt",
-        use_tmp_artifacts=False,
-    ),
-    dag=dag,
-    trigger_rule="all_done",
+    target_path=ELEMENTARY_ARTIFACTS_TARGET_PATH,
 )
 
 
 # DAG Dependencies
-(
-    start
-    >> wait_dbt_run
-    >> check_schedule
-    >> dbt_test
-    >> compute_metrics_elementary
-    >> create_elementary_report
-    >> send_elementary_report
-    >> recompile_dbt_project
-)
+(start >> wait_dbt_run >> check_schedule)
+
+(check_schedule >> dbt_test_daily >> compute_metrics_elementary)
 (check_schedule >> dbt_test_weekly >> compute_metrics_elementary)
 (check_schedule >> dbt_test_monthly >> compute_metrics_elementary)
+
+(compute_metrics_elementary >> create_elementary_report >> send_elementary_report)

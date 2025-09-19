@@ -1,5 +1,4 @@
 import os
-import re
 from enum import Enum
 
 from airflow import configuration
@@ -134,6 +133,8 @@ if LOCAL_ENV is None:
     )
 else:
     ELEMENTARY_PYTHON_PATH = os.environ.get("ELEMENTARY_PYTHON_PATH")
+
+ELEMENTARY_ARTIFACTS_TARGET_PATH = os.path.join(PATH_TO_DBT_TARGET, "target_elementary")
 
 USE_INTERNAL_IP = False if LOCAL_ENV is not None else True
 

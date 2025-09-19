@@ -12,4 +12,3 @@ models:
         description: "{{ doc('column__fraudulent_booking_tag_author_id') }}"
       - name: booking_id
         description: "{{ doc('column__booking_id') }}"
-

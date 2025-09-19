@@ -134,6 +134,7 @@ class ReportOrchestrationService:
             layout_type = "top" if sheet.definition.startswith("top") else "kpis" if sheet.definition.endswith("kpis") else "other"
             ExcelLayoutService.cleanup_template_columns(sheet.worksheet, layout_type)
             self._handle_title_setting(sheet, expansion_result)
+            ExcelLayoutService.freeze_panes(sheet.worksheet, layout_type)
             
             return result
             

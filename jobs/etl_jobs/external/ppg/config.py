@@ -172,9 +172,9 @@ def default_title_layout():
     return {"title_row_offset": 0, "title_col_offset": 0,"title_height": 3,"title_width": 1}
 
 SHEET_LAYOUT = defaultdict(default_title_layout, {
-    "top": {"title_row_offset": 0, "title_col_offset": 0,"title_height": 3,"title_width": TOP_TITLE_WIDTH},
-    "kpis": {"title_row_offset": 0, "title_col_offset": 3,"title_height": 3,"title_width": "dynamic"}
-    }
+    "top": {"title_row_offset": 0, "title_col_offset": 0,"title_height": 3,"title_width": TOP_TITLE_WIDTH,"freeze_panes": {"row":4}},
+    "kpis": {"title_row_offset": 0, "title_col_offset": 3,"title_height": 3,"title_width": "dynamic","freeze_panes": {"row":4}}
+    },
 )
 
 

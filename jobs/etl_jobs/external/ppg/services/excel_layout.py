@@ -322,3 +322,22 @@ class ExcelLayoutService:
                 
         except Exception as e:
             logger.warning(f"Failed to cleanup template columns for {layout_type}: {e}")
+    
+    @staticmethod
+    def freeze_panes(worksheet, layout_type: str):
+        """Apply freeze panes based on layout configuration."""
+        try:
+            layout = SHEET_LAYOUT[layout_type]
+            freeze_info = layout.get("freeze_panes", {})
+            row = freeze_info.get("row", 0)
+            col = freeze_info.get("col", 0)
+            
+            if row > 0 or col > 0:
+                cell = f"{get_column_letter(col + 1)}{row + 1}" # everything will be frozen above and left of this cell
+                worksheet.freeze_panes = cell
+                logger.debug(f"Set freeze panes at {cell} for {layout_type} sheet")
+            else:
+                logger.debug(f"No freeze panes to set for {layout_type} sheet")
+                
+        except Exception as e:
+            logger.warning(f"Failed to set freeze panes for {layout_type}: {e}")

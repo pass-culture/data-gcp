@@ -2,7 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 from collections import deque
 from typing import Optional
-
+import time
 import requests
 import httpx
 import asyncio
@@ -11,6 +11,9 @@ from http_tools.rate_limiters import BaseRateLimiter
 # Set up logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+server_transient_error_statuses = [500, 502, 503, 504]
+transient_error_backoff_seconds = 10
 
 
 # -----------------------------
@@ -53,7 +56,16 @@ class SyncHttpClient(BaseHttpClient):
             if response.status_code == 429 and self.rate_limiter:
                 self.rate_limiter.backoff(response)
                 return self.request(method, url, **kwargs)  # Retry
-
+            elif response.status_code in server_transient_error_statuses:
+                # Handle server transient errors
+                instance_id = kwargs.get("api_instance", {}).get(
+                    "instance_id", "unknown"
+                )
+                logger.warning(
+                    f"[API Instance {instance_id}] Server transient error {response.status_code}. Retrying..."
+                )
+                time.sleep(transient_error_backoff_seconds)
+                return self.request(method, url, **kwargs)
             response.raise_for_status()
             return response
 
@@ -110,6 +122,16 @@ class AsyncHttpClient(BaseHttpClient):
 
                 await self.rate_limiter.backoff(response)
                 return await self.request(method, url, **kwargs)  # Retry
+            elif response.status_code in server_transient_error_statuses:
+                # Handle server transient errors
+                instance_id = kwargs.get("api_instance", {}).get(
+                    "instance_id", "unknown"
+                )
+                logger.warning(
+                    f"[API Instance {instance_id}] Server transient error {response.status_code}. Retrying..."
+                )
+                await asyncio.sleep(transient_error_backoff_seconds)
+                return await self.request(method, url, **kwargs)
 
             response.raise_for_status()
             return response

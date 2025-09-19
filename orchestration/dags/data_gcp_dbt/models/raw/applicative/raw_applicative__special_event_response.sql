@@ -1,4 +1,9 @@
-select *
+select
+    special_event_response_id,
+    special_event_id,
+    user_id,
+    special_event_response_status,
+    special_event_response_submitted_date
 from
     external_query(
         "{{ env_var('APPLICATIVE_EXTERNAL_CONNECTION_ID') }}",

@@ -1,21 +1,20 @@
-from typing import Dict, List, Optional, Union, Iterable
-from pathlib import Path
 import logging
-import warnings
+from typing import Dict, Iterable, Optional, Union
+
+import pandas as pd
 import typer
 from google.cloud import bigquery
-import duckdb
-import pandas as pd
 
 from config import (
-    GCP_PROJECT,
     BIGQUERY_ANALYTICS_DATASET,
+    GCP_PROJECT,
     REGION_HIERARCHY_TABLE,
 )
 from utils.file_utils import slugify
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
 
 def build_region_hierarchy(
     project_id: str = GCP_PROJECT,
@@ -123,8 +122,10 @@ def build_region_hierarchy(
         typer.secho(f"❌ Failed to build region hierarchy: {e}", fg="red")
         raise
 
+
 def get_available_regions():
     return sorted(build_region_hierarchy().keys())
+
 
 def drac_selector(target: Optional[str]):
     """Special handling for stakeholder 'drac' with optional target regions."""
@@ -135,7 +136,9 @@ def drac_selector(target: Optional[str]):
     if target:
         input_slug_regions = target.split()
         typer.secho(f"➡️ Input regions: {', '.join(input_slug_regions)}", fg="cyan")
-        invalid_regions = [r for r in input_slug_regions if r not in slug_regions.keys()]
+        invalid_regions = [
+            r for r in input_slug_regions if r not in slug_regions.keys()
+        ]
         if invalid_regions:
             typer.secho(
                 f"❌ Invalid region(s): {', '.join(invalid_regions)}. "
@@ -173,7 +176,10 @@ def drac_selector(target: Optional[str]):
 
     return selected_regions
 
-def sanitize_date_fields(df: pd.DataFrame, fields: Union[str, Iterable[str]]) -> pd.DataFrame:
+
+def sanitize_date_fields(
+    df: pd.DataFrame, fields: Union[str, Iterable[str]]
+) -> pd.DataFrame:
     """Ensure date fields are in YYYY-MM-DD format."""
     if isinstance(fields, str):
         fields = [fields]
@@ -192,17 +198,23 @@ def sanitize_date_fields(df: pd.DataFrame, fields: Union[str, Iterable[str]]) ->
             out[col] = pd.to_datetime(s, errors="coerce").dt.date
             s = out[col]
         except Exception as e:
-            logger.warning("sanitize_date_fields: failed to convert '%s' to date: %s", col, e)
+            logger.warning(
+                "sanitize_date_fields: failed to convert '%s' to date: %s", col, e
+            )
 
     return out
+
 
 def sanitize_numeric_types(df: pd.DataFrame) -> pd.DataFrame:
     """Convert problematic numeric columns to appropriate types."""
     df = df.copy()
     # Convert object columns that should be numeric to float64
     for col in df.columns:
-        if ('amount' in col.lower() or 'quantity' in col.lower()) or col.lower() in ['numerator', 'denominator', 'kpi']:
-            if df[col].dtype == 'object':
-                df[col] = pd.to_numeric(df[col], errors='coerce').astype('float64')
+        if ("amount" in col.lower() or "quantity" in col.lower()) or col.lower() in [
+            "numerator",
+            "denominator",
+            "kpi",
+        ]:
+            if df[col].dtype == "object":
+                df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
     return df
-

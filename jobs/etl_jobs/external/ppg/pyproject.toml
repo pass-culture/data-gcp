@@ -1,3 +1,11 @@
+
+[project]
+name = "ppg-export"
+version = "0.0.0"
+description = "PPG export job"
+readme = "README.md"
+requires-python = ">=3.10"
+
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.
 [tool.ruff]

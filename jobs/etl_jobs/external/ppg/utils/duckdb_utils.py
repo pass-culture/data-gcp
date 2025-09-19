@@ -1,18 +1,19 @@
-from typing import Dict, Union, Optional
+from datetime import date, datetime
+from typing import Dict, Optional, Union
 
-from duckdb import DuckDBPyConnection
-import typer
-from datetime import datetime,date
-from dateutil.relativedelta import relativedelta
 import pandas as pd
+from dateutil.relativedelta import relativedelta
+from duckdb import DuckDBPyConnection
 
 
 # --- Exceptions ---
 class QueryError(Exception):
     pass
 
+
 class AggregationError(Exception):
     pass
+
 
 # --- Query helpers ---
 def query_kpi_data(
@@ -37,7 +38,9 @@ def query_kpi_data(
             start_date = date(2021, 1, 1)
             where.append("partition_month >= ?")
             where.append("partition_month <= ?")
-            params.extend([start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d")])
+            params.extend(
+                [start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d")]
+            )
 
         query = f"""
             SELECT partition_month, kpi_name, numerator, denominator, kpi
@@ -70,7 +73,7 @@ def query_yearly_kpi(
     """
     # end_date = datetime.strptime(ds, "%Y-%m-%d").date()
     if end_year is None:
-        end_year = date.today().year 
+        end_year = date.today().year
 
     try:
         all_data = []
@@ -84,8 +87,20 @@ def query_yearly_kpi(
                 end_date_ = date(year + 1, 8, 31)
                 year_label = f"{year}-{year+1}"
 
-            where = ["kpi_name = ?", "dimension_name = ?", "partition_month >= ?", "partition_month <=  ?","dimension_value = ?"]
-            params = [kpi_name, dimension_name, start_date.strftime("%Y-%m-%d"), end_date_.strftime("%Y-%m-%d"),dimension_value]
+            where = [
+                "kpi_name = ?",
+                "dimension_name = ?",
+                "partition_month >= ?",
+                "partition_month <=  ?",
+                "dimension_value = ?",
+            ]
+            params = [
+                kpi_name,
+                dimension_name,
+                start_date.strftime("%Y-%m-%d"),
+                end_date_.strftime("%Y-%m-%d"),
+                dimension_value,
+            ]
 
             query = f"""
                 SELECT partition_month, kpi_name, numerator, denominator, kpi
@@ -99,11 +114,21 @@ def query_yearly_kpi(
 
         if all_data:
             return pd.concat(all_data, ignore_index=True)
-        return pd.DataFrame(columns=["partition_month", "kpi_name", "numerator", "denominator", "kpi", "year_label"])
+        return pd.DataFrame(
+            columns=[
+                "partition_month",
+                "kpi_name",
+                "numerator",
+                "denominator",
+                "kpi",
+                "year_label",
+            ]
+        )
 
     except Exception as e:
-        raise QueryError(f"Failed to query yearly KPI {kpi_name} for scope {scope}: {e}")
-
+        raise QueryError(
+            f"Failed to query yearly KPI {kpi_name} for scope {scope}: {e}"
+        )
 
 
 def query_monthly_kpi(
@@ -121,14 +146,20 @@ def query_monthly_kpi(
     last_month = ref_date.replace(day=1) - relativedelta(months=1)
 
     periods = [
-        last_month - relativedelta(months=1),   # prev-2
-        last_month,                             # prev-1
-        last_month - relativedelta(months=12)   # prev-13
+        last_month - relativedelta(months=1),  # prev-2
+        last_month,  # prev-1
+        last_month - relativedelta(months=12),  # prev-13
     ]
 
-    where = ["kpi_name = ?", "dimension_name = ?","dimension_value = ?", "partition_month IN (?, ?, ?)"]
-    params = [kpi_name, dimension_name,dimension_value] + [p.strftime("%Y-%m-%d") for p in periods]
-
+    where = [
+        "kpi_name = ?",
+        "dimension_name = ?",
+        "dimension_value = ?",
+        "partition_month IN (?, ?, ?)",
+    ]
+    params = [kpi_name, dimension_name, dimension_value] + [
+        p.strftime("%Y-%m-%d") for p in periods
+    ]
 
     query = f"""
         SELECT partition_month, kpi_name, numerator, denominator, kpi
@@ -174,17 +205,28 @@ def aggregate_kpi_data(
         grouped = data.groupby(group_col)[select_field].sum()
     elif agg_type == "max":
         grouped = data.groupby(group_col)[select_field].max()
-    elif agg_type in ["december","august"]:
+    elif agg_type in ["december", "august"]:
         # For individual, Dec logic; for collective, last month of scholar year = Aug
         if scope == "individual":
-            grouped = data[data["partition_month"].dt.month == 12].groupby(group_col)[select_field].first()
+            grouped = (
+                data[data["partition_month"].dt.month == 12]
+                .groupby(group_col)[select_field]
+                .first()
+            )
         elif scope == "collective":
-            grouped = data[data["partition_month"].dt.month == 8].groupby(group_col)[select_field].first()
+            grouped = (
+                data[data["partition_month"].dt.month == 8]
+                .groupby(group_col)[select_field]
+                .first()
+            )
         else:
             raise AggregationError(f"Unknown scope for december aggregation: {scope}")
-    elif agg_type in ["wavg","avg"] and select_field == "kpi":
+    elif agg_type in ["wavg", "avg"] and select_field == "kpi":
         data["weighted_value"] = data["numerator"]
-        grouped = (data.groupby(group_col)["weighted_value"].sum() / data.groupby(group_col)["denominator"].sum()).to_dict()
+        grouped = (
+            data.groupby(group_col)["weighted_value"].sum()
+            / data.groupby(group_col)["denominator"].sum()
+        ).to_dict()
         return grouped
     else:
         grouped = data.groupby(group_col)[select_field].sum()

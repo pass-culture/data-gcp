@@ -1,18 +1,22 @@
-import unicodedata
 import re
-from datetime import date, datetime, timedelta
+import unicodedata
+from datetime import date, datetime
 from pathlib import Path
-from typing import Dict, Optional, List
+from typing import Dict, List
+
 import typer
 
 
 class FileUtilsError(Exception):
     """Exception raised when file operations fail."""
+
     pass
+
 
 def start_of_current_month() -> str:
     today = date.today()
     return f"{today.year}-{today.month:02d}-01"
+
 
 def safe_fs_name(name: str) -> str:
     """Make a safe folder name preserving French characters (max ~50 chars)."""
@@ -20,6 +24,7 @@ def safe_fs_name(name: str) -> str:
     problematic_chars = r'[<>:"/\\|?*]'
     cleaned = re.sub(problematic_chars, "_", name).strip()
     return (cleaned or "default")[:50]
+
 
 def slugify(value: str) -> str:
     """Filesystem-safe, ASCII-ish name preserving hyphens/underscores/dots."""
@@ -33,7 +38,6 @@ def slugify(value: str) -> str:
             safe.append("_")
     s = "".join(safe).strip("._-")
     return s or "default"
-
 
 
 def get_dated_base_dir(base_dir: Path, ds: str = None) -> Path:
@@ -55,6 +59,7 @@ def get_dated_base_dir(base_dir: Path, ds: str = None) -> Path:
     dated_folder = f"reports_{date_obj.strftime('%Y%m%d')}"
     return base_dir / dated_folder
 
+
 def _ensure_directory(path: Path) -> bool:
     """
     Ensure directory exists, create if it doesn't.
@@ -71,8 +76,9 @@ def _ensure_directory(path: Path) -> bool:
         path.mkdir(parents=True, exist_ok=True)
         return True
 
+
 def create_directory_structure(
-    base_dir: Path, selected_regions: List=None, national: bool = True
+    base_dir: Path, selected_regions: List = None, national: bool = True
 ) -> Dict[str, int]:
     """
     Create the complete directory structure for reports.
@@ -111,7 +117,6 @@ def create_directory_structure(
                     stats["directories_created"] += 1
                 else:
                     stats["directories_existing"] += 1
-
 
         typer.echo(
             f"📁 Directory structure created: {stats['directories_created']} new, {stats['directories_existing']} existing"

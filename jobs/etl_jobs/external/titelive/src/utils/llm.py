@@ -64,7 +64,7 @@ def initialize_pydantic_ai_agent(
             model_settings=model_settings,
             output_type=output_type,
             system_prompt=f"""
-            Vous êtes un analyste littéraire expert spécialisé dansl'identification des styles d'écriture et des thèmes dans les livres.
+            Vous êtes un analyste littéraire expert spécialisé dans l'identification des styles d'écriture et des thèmes dans les livres.
 
             Votre tâche est d'analyser les titres de livres, les résumés, et les informations sur les auteurs pour déterminer :
             1. Le style d'écriture à partir de la liste prédéfinie

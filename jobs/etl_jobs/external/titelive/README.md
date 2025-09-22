@@ -131,18 +131,50 @@ python scripts/generate_metadatas_with_llms.py \
 The script analyzes book titles, summaries, and author information to generate:
 
 1. **Writing Style Classification** (one of):
-   - Didactique, Informatif, Mystérieux, Narratif, Réflexif
-   - Humoristique, Poétique, Dramatique, Descriptif, Argumentatif
+   - Didactique
+   - Informatif
+   - Mystérieux
+   - Narratif
+   - Réflexif
+   - Humoristique
+   - Poétique
+   - Dramatique
+   - Descriptif
+   - Argumentatif
 
 2. **Topic Identification** (0-3 topics from):
-   - Amour, Amitié, Haine, Enfance, Adolescence, Magie, Identité
-   - Beauté, Arts, Criminalité, Survie, Espoir, Désespoir
-   - Manipulation, Violence, Secrets, Famille, Science, Histoire
-   - Apprentissage, Politique, Science-fiction
+   - Amour
+   - Amitié
+   - Haine
+   - Enfance
+   - Adolescence
+   - Magie
+   - Identité
+   - Beauté
+   - Arts
+   - Criminalité
+   - Survie
+   - Espoir
+   - Désespoir
+   - Manipulation
+   - Violence
+   - Secrets
+   - Famille
+   - Science
+   - Histoire
+   - Apprentissage
+   - Politique
+   - Science-fiction
 
 3. **Historical Period Detection** (if applicable):
-   - Antiquité, Haut/Moyen/Bas moyen-âge, Renaissance
-   - Classique, Lumières, Romantique, Moderne, Contemporaine
+   - Antiquité
+   - Haut/Moyen/Bas moyen-âge
+   - Renaissance
+   - Classique
+   - Lumières
+   - Romantique
+   - Moderne
+   - Contemporaine
 
 #### Enhanced Output Columns
 

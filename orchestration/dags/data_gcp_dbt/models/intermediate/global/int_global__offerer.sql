@@ -52,7 +52,7 @@ with
     epn_list as (
         select distinct offerer_id
         from {{ ref("mrt_global__offerer_tag") }}
-        where tag_name in ("part-epn", "ecosysteme-epn")
+        where tag_name in ("part-epn")
     ),
 
     reimbursement_points as (

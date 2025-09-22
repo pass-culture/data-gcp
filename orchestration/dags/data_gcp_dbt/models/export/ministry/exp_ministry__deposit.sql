@@ -8,6 +8,5 @@ select
     deposit_expiration_date,
     deposit_type,
     total_recredit,
-    total_recredit_amount,
-    days_between_user_creation_and_deposit_creation
-from {{ ref("mrt_global__deposit") }}
+    total_recredit_amount
+from {{ ref("int_global__deposit") }}

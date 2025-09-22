@@ -1,7 +1,3 @@
--- cannot order partition table -> To order by
--- partition_month,
--- dimension_name,
--- total_booking_amount_ranked
 {{
     config(
         **custom_incremental_config(
@@ -15,6 +11,7 @@
 {% set dimensions = [
     {"name": "NAT", "value_expr": "'NAT'"},
     {"name": "REG", "value_expr": "venue_region_name"},
+    {"name": "DEP", "value_expr": "venue_department_name"},
 ] %}
 
 with
@@ -26,6 +23,7 @@ with
             offer_category_id,
             offer_subcategory_id,
             venue_region_name,
+            venue_department_name,
             any_value(offer_name) as offer_name,
             sum(booking_intermediary_amount) as total_booking_amount,
             sum(booking_quantity) as total_booking_quantity
@@ -42,7 +40,8 @@ with
             item_id,
             offer_category_id,
             offer_subcategory_id,
-            venue_region_name
+            venue_region_name,
+            venue_department_name
     ),
 
     all_dimensions as (
@@ -62,7 +61,10 @@ with
                 sum(total_booking_amount) as total_booking_amount,
                 sum(total_booking_quantity) as total_booking_quantity,
                 row_number() over (
-                    partition by offer_category_id
+                    partition by
+                        partition_month,
+                        offer_category_id
+                        {% if not dim.name == "NAT" %}, {{ dim.value_expr }} {% endif %}
                     order by sum(total_booking_amount) desc
                 ) as total_booking_amount_ranked
             from base_aggregation
@@ -77,7 +79,11 @@ with
                 offer_name
             qualify
                 row_number() over (
-                    partition by offer_category_id order by total_booking_amount desc
+                    partition by
+                        partition_month,
+                        offer_category_id
+                        {% if not dim.name == "NAT" %}, {{ dim.value_expr }} {% endif %}
+                    order by total_booking_amount desc
                 )
                 <= 50
         {% endfor %}

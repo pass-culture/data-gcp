@@ -1,5 +1,6 @@
 import datetime
 import os
+import logging
 
 from common import macros
 from common.callback import on_failure_vm_callback
@@ -9,6 +10,7 @@ from common.config import (
     GCP_PROJECT_ID,
     ENV_SHORT_NAME,
     DATA_GCS_BUCKET_NAME,
+    DAG_FOLDER,
 )
 
 from common.operators.gce import (
@@ -41,17 +43,8 @@ dag_id = "export_ppg"
 GCE_INSTANCE = f"export-ppg-{dag_id}-{ENV_SHORT_NAME }"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/ppg"
 GCP_STORAGE_URI = "https://storage.googleapis.com"
-DBT_SQL_PATH = "dags/data_gcp_dbt/mart/external_reporting"
+DBT_REPORTING_MODELS_PATH = f"{DAG_FOLDER}/data_gcp_dbt/models/mart/external_reporting"
 AWAITED_TABLES = [""]
-print(DBT_SQL_PATH)
-if main := "__main__":
-    for root, _, files in os.walk(DBT_SQL_PATH):
-        print(root)
-        for f in files:
-            if f.endswith(".sql"):
-                sql_path = os.path.join(root, f)
-                task_id = f"run_{f.replace('.sql','')}"
-                print(f"{task_id}: {sql_path}")
 
 
 DATE = "{{ yyyymmdd(ds) }}"
@@ -84,65 +77,57 @@ with DAG(
             default=GCE_INSTANCE,
             type="string",
         ),
+        
     },
 ) as dag:
     start = EmptyOperator(task_id="start")
 
-    with TaskGroup("waiting_group") as waiting_group:
-        # for table_name in AWAITED_TABLES:
-        #     wait_operator = delayed_waiting_operator(
-        #         dag=dag,
-        #         external_dag_id="dbt_run_dag",
-        #         task_id=f"data_transformation.{table_name}",
-        #         timeout=600,
-        # )
+    with TaskGroup(group_id = "waiting_group",dag=dag) as waiting_group:
 
-        for root, _, files in os.walk(DBT_SQL_PATH):
-            for f in files:
+        for subdir in ["collective", "individual","top"]:
+            folder = os.path.join(DBT_REPORTING_MODELS_PATH, subdir)
+            for f in os.listdir(folder):
                 if f.endswith(".sql"):
-                    sql_path = os.path.join(root, f)
+                    sql_path = os.path.join(folder, f)
                     task_id = f"run_{f.replace('.sql','')}"
 
-                    EmptyOperator(
-                        task_id=task_id,
+                    delayed_waiting_operator(
+                        dag,
+                        external_dag_id="dbt_run_dag",
+                        external_task_id=f"data_transformation.{f.replace('.sql','')}",
                     )
 
-    # gce_instance_start = StartGCEOperator(
-    #     instance_name=GCE_INSTANCE,
-    #     task_id="gce_start_task",
-    #     labels={"dag_name": dag_id},
-    # )
+    gce_instance_start = StartGCEOperator(
+        instance_name=GCE_INSTANCE,
+        task_id="gce_start_task",
+        labels={"dag_name": dag_id},
+    )
 
-    # fetch_install_code = InstallDependenciesOperator(
-    #     task_id="fetch_install_code",
-    #     instance_name=GCE_INSTANCE,
-    #     branch="{{ params.branch }}",
-    #     python_version="3.10",
-    #     base_dir=BASE_PATH,
-    # )
+    fetch_install_code = InstallDependenciesOperator(
+        task_id="fetch_install_code",
+        instance_name=GCE_INSTANCE,
+        branch="{{ params.branch }}",
+        python_version="3.10",
+        base_dir=BASE_PATH,
+    )
 
-    # gce_generate_reports = SSHGCEOperator(
-    #     task_id="gce_generate_reports",
-    #     instance_name=GCE_INSTANCE,
-    #     base_dir=BASE_PATH,
-    #     command="python main.py "
-    # )
+    gce_generate_reports = SSHGCEOperator(
+        task_id="gce_generate_reports",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_PATH,
+        command="python main.py --compression --clean",
+    )
 
-    # gce_export_reports = SSHGCEOperator(
-    #     task_id="gce_export_reports",
-    #     instance_name=GCE_INSTANCE,
-    #     base_dir=BASE_PATH,
-    #     command="python export_gcs.py ",
-    # )
+    gce_export_to_gcs = EmptyOperator(
+        task_id="TO_DO_export_reports_to_gcs"
+    )
+    
+    gce_export_to_drive = EmptyOperator(
+        task_id="TO_DO_export_reports_to_google_drive"
+    )
 
-    # gce_export_reports = EmptyOperator(
-    #     task_id="gce_export_reports_EMPTY_TASK"
-    # )
+    gce_instance_stop = DeleteGCEOperator(
+        task_id="gce_stop_task", instance_name=GCE_INSTANCE
+    )
 
-    # gce_instance_stop = DeleteGCEOperator(
-    #     task_id="gce_stop_task", instance_name=GCE_INSTANCE
-    # )
-
-    (
-        start >> waiting_group
-    )  # >> gce_instance_start >> fetch_install_code >> gce_generate_reports >> gce_export_reports >> gce_instance_stop >> end
+    (start >> waiting_group >> gce_instance_start >> fetch_install_code >> gce_generate_reports >> gce_export_to_gcs >> gce_export_to_drive >> gce_instance_stop)

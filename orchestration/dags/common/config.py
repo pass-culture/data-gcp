@@ -1,11 +1,9 @@
 import os
+import re
 from enum import Enum
 
-import re
-
-from common.access_gcp_secrets import access_secret_data
-
 from airflow import configuration
+from common.access_gcp_secrets import access_secret_data
 
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "passculture-data-ehp")
 ENV_SHORT_NAME = os.environ.get("ENV_SHORT_NAME", "dev")
@@ -199,6 +197,7 @@ class DAG_TAGS(Enum):
     VM = "VM"
     DBT = "DBT"
     INCREMENTAL = "INCREMENTAL"
+    POC = "POC"
 
 
 # UV Version

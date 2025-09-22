@@ -5,7 +5,11 @@ import typer
 from config import REPORT_BASE_DIR_DEFAULT
 from core import ExportSession, Stakeholder, StakeholderType
 from utils.data_utils import drac_selector, get_available_regions
-from utils.file_utils import get_dated_base_dir, start_of_current_month
+from utils.file_utils import (
+    compress_directory,
+    get_dated_base_dir,
+    start_of_current_month,
+)
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -26,6 +30,12 @@ def main(
         help="Consolidation date in YYYY-MM-DD format",
     ),
     target: str = typer.Option(None, "--target", "-t", help="Target name"),
+    compression: bool = typer.Option(
+        False, "--compression", "-c", help="compress output files (gzip"
+    ),
+    clean: bool = typer.Option(
+        False, "--clean", "-C", help="clean output directory after compression"
+    ),
 ):
     # normalize case
     stakeholder = stakeholder.lower()
@@ -81,6 +91,9 @@ def main(
     except Exception as e:
         logger.error(f"❌ Export session failed: {e}")
         raise
+    
+    if compression:
+        compress_directory(base_dir, REPORT_BASE_DIR_DEFAULT, clean_after_compression=clean)
 
 
 if __name__ == "__main__":

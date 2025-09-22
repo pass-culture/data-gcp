@@ -1,6 +1,6 @@
 
 FROM python:3.10-slim
-COPY --from=ghcr.io/astral-sh/uv:0.4.23 /uv /bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.7.22 /uv /bin/uv
 
 ARG WORKERS=5
 

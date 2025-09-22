@@ -1,5 +1,4 @@
 import datetime
-import logging
 from functools import partial
 
 from common.callback import on_failure_base_callback
@@ -7,8 +6,8 @@ from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
-    PATH_TO_DBT_PROJECT,
     PATH_TO_DBT_TARGET,
+    GCS_AIRFLOW_BUCKET,
 )
 from common.dbt.dag_utils import (
     dbt_dag_reconstruction,
@@ -17,9 +16,6 @@ from common.dbt.dag_utils import (
 from common.dbt.dbt_executors import (
     compile_dbt_with_selector,
     clean_dbt,
-    run_dbt_model,
-    run_dbt_test,
-    run_dbt_snapshot,
 )
 from common.utils import (
     delayed_waiting_operator,
@@ -29,6 +25,7 @@ from jobs.crons import SCHEDULE_DICT
 
 from airflow import DAG
 from airflow.models import Param
+from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.empty import EmptyOperator
 
@@ -40,6 +37,7 @@ default_args = {
     "project_id": GCP_PROJECT_ID,
     "on_failure_callback": on_failure_base_callback,
 }
+
 
 # Load manifest and process it
 (
@@ -126,6 +124,13 @@ compile = PythonOperator(
     dag=dag,
 )
 
+upload_compilation_to_gcs = BashOperator(
+    task_id="upload_compilation_to_gcs",
+    bash_command=f"gcloud storage rsync --recursive /opt/airflow/data/target gs://{GCS_AIRFLOW_BUCKET}/data/target",
+    pool="dbt",
+    dag=dag,
+)
+
 # Run the dbt DAG reconstruction
 operator_dict = dbt_dag_reconstruction(
     dag,
@@ -154,4 +159,4 @@ snapshot_tasks = list(operator_dict["snapshot_op_dict"].values())
 start >> operator_dict["trigger_block"]
 end_wait >> snapshots_checkpoint >> snapshot_tasks
 end_wait >> compile
-compile >> (model_tasks + snapshot_tasks) >> clean >> end
+compile >> upload_compilation_to_gcs >> (model_tasks + snapshot_tasks) >> clean >> end

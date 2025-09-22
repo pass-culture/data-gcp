@@ -20,5 +20,6 @@ select
     gtl_label_level_4,
     offer_type_label,
     offer_type_labels,
-    offer_sub_type_label
+    offer_sub_type_label,
+    offer_video_url
 from {{ ref("int_applicative__offer_metadata") }}

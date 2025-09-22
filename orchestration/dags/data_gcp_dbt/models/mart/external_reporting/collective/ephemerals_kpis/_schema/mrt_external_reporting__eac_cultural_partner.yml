@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: mrt_external_reporting__eac_cultural_partner
+    description: "{{ doc('description__mrt_external_reporting__eac_cultural_partner') }}"
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+      - name: updated_at
+        description: "{{ doc('column__updated_at') }}"
+      - name: dimension_name
+        description: "{{ doc('column__dimension_name') }}"
+      - name: dimension_value
+        description: "{{ doc('column__dimension_value') }}"
+      - name: kpi_name
+        description: "{{ doc('column__kpi_name') }}"
+      - name: numerator
+        description: "{{ doc('column__numerator') }}"
+      - name: denominator
+        description: "{{ doc('column__denominator') }}"
+      - name: kpi
+        description: "{{ doc('column__kpi') }}"

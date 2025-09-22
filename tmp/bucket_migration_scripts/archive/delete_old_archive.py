@@ -38,8 +38,8 @@ class OldArchiveFolderDeleter:
         self.dry_run = dry_run
         self.old_bucket = f"data-bucket-{env}"
         self.new_bucket = f"de-bigquery-data-archive-{env}"
-        self.old_archive_path = f"gs://{self.old_bucket}/archive"
-        self.new_archive_path = f"gs://{self.new_bucket}/archive"
+        self.old_archive_path = f"gs://{self.old_bucket}/archive/"
+        self.new_archive_path = f"gs://{self.new_bucket}/archive/"
 
         # Configure logging
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -59,7 +59,7 @@ class OldArchiveFolderDeleter:
         """Check if a GCS bucket exists."""
         try:
             result = subprocess.run(
-                ["gcloud", "storage", "ls", f"gs://{bucket_name}"],
+                ["gsutil", "ls", f"gs://{bucket_name}/"],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -73,16 +73,9 @@ class OldArchiveFolderDeleter:
         self.logger.info(f"Scanning contents of {self.old_archive_path}")
 
         try:
-            # Use gcloud storage ls --long for detailed information including size and timestamps
+            # Use gsutil ls -L for detailed information including size and timestamps
             result = subprocess.run(
-                [
-                    "gcloud",
-                    "storage",
-                    "ls",
-                    "--recursive",
-                    "--long",
-                    f"{self.old_archive_path}/",
-                ],
+                ["gsutil", "ls", "-r", "-L", self.old_archive_path],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -169,7 +162,7 @@ class OldArchiveFolderDeleter:
         """Verify that the new archive bucket contains migrated data."""
         try:
             result = subprocess.run(
-                ["gcloud", "storage", "ls", "--recursive", f"{self.new_archive_path}/"],
+                ["gsutil", "ls", "-r", self.new_archive_path],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -237,7 +230,7 @@ class OldArchiveFolderDeleter:
         """Delete the entire /archive folder from old bucket."""
         if self.dry_run:
             self.logger.info(
-                f"DRY RUN - Would execute: gcloud storage rm --recursive {self.old_archive_path}/"
+                f"DRY RUN - Would execute: gsutil -m rm -r {self.old_archive_path}"
             )
             return True
 
@@ -245,7 +238,7 @@ class OldArchiveFolderDeleter:
             self.logger.info(f"EXECUTING DELETION: {self.old_archive_path}")
 
             result = subprocess.run(
-                ["gcloud", "storage", "rm", "--recursive", f"{self.old_archive_path}/"],
+                ["gsutil", "-m", "rm", "-r", self.old_archive_path],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -254,11 +247,11 @@ class OldArchiveFolderDeleter:
             if result.returncode == 0:
                 self.logger.info("Successfully deleted old /archive folder")
                 if result.stdout:
-                    self.logger.info(f"gcloud storage output: {result.stdout}")
+                    self.logger.info(f"gsutil output: {result.stdout}")
                 return True
             else:
                 self.logger.error("Failed to delete old /archive folder")
-                self.logger.error(f"gcloud storage error: {result.stderr}")
+                self.logger.error(f"gsutil error: {result.stderr}")
                 return False
 
         except subprocess.SubprocessError as e:

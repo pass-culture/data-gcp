@@ -31,8 +31,8 @@ class ArchiveDataMigrator:
         self.dry_run = dry_run
         self.old_bucket = f"data-bucket-{env}"
         self.new_bucket = f"de-bigquery-data-archive-{env}"
-        self.old_path = f"gs://{self.old_bucket}/archive"
-        self.new_path = f"gs://{self.new_bucket}/archive"
+        self.old_path = f"gs://{self.old_bucket}/archive/"
+        self.new_path = f"gs://{self.new_bucket}/archive/"
 
         # Configure logging
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -49,7 +49,7 @@ class ArchiveDataMigrator:
         """Check if a GCS bucket exists."""
         try:
             result = subprocess.run(
-                ["gcloud", "storage", "ls", f"gs://{bucket_name}"],
+                ["gsutil", "ls", f"gs://{bucket_name}/"],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -64,7 +64,7 @@ class ArchiveDataMigrator:
 
         try:
             result = subprocess.run(
-                ["gcloud", "storage", "ls", "--recursive", self.old_path],
+                ["gsutil", "ls", "-r", self.old_path],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -96,17 +96,10 @@ class ArchiveDataMigrator:
             return []
 
     def get_folder_size(self, path: str) -> str:
-        """Get total size of folder using gcloud storage du."""
+        """Get total size of folder using gsutil du."""
         try:
             result = subprocess.run(
-                [
-                    "gcloud",
-                    "storage",
-                    "du",
-                    "--summarize",
-                    "--readable-sizes",
-                    f"{path}/",
-                ],
+                ["gsutil", "du", "-s", "-h", path],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -124,7 +117,7 @@ class ArchiveDataMigrator:
 
     def migrate_archive_data(self) -> Tuple[bool, int]:
         """
-        Migrate all archive data using gcloud storage rsync.
+        Migrate all archive data using gsutil rsync.
 
         Returns:
             Tuple of (success, files_count)
@@ -150,31 +143,24 @@ class ArchiveDataMigrator:
             # Show sample of files (first 10 and last 10 if more than 20 files)
             if len(files) <= 20:
                 for file_path in files:
-                    relative_path = file_path.replace(f"{self.old_path}/", "")
-                    self.logger.info(f"  {file_path} → {self.new_path}/{relative_path}")
+                    relative_path = file_path.replace(self.old_path, "")
+                    self.logger.info(f"  {file_path} → {self.new_path}{relative_path}")
             else:
                 self.logger.info("Sample of files to be migrated (first 10):")
                 for file_path in files[:10]:
-                    relative_path = file_path.replace(f"{self.old_path}/", "")
-                    self.logger.info(f"  {file_path} → {self.new_path}/{relative_path}")
+                    relative_path = file_path.replace(self.old_path, "")
+                    self.logger.info(f"  {file_path} → {self.new_path}{relative_path}")
                 self.logger.info(f"  ... and {len(files) - 20} more files ...")
                 self.logger.info("Last 10 files:")
                 for file_path in files[-10:]:
-                    relative_path = file_path.replace(f"{self.old_path}/", "")
-                    self.logger.info(f"  {file_path} → {self.new_path}/{relative_path}")
+                    relative_path = file_path.replace(self.old_path, "")
+                    self.logger.info(f"  {file_path} → {self.new_path}{relative_path}")
 
             return True, len(files)
 
-        # Perform actual migration using gcloud storage rsync
+        # Perform actual migration using gsutil rsync
         try:
-            cmd = [
-                "gcloud",
-                "storage",
-                "rsync",
-                "--recursive",
-                f"{self.old_path}",
-                f"{self.new_path}",
-            ]
+            cmd = ["gsutil", "-m", "rsync", "-r", self.old_path, self.new_path]
 
             self.logger.info(f"Executing: {' '.join(cmd)}")
 
@@ -183,11 +169,11 @@ class ArchiveDataMigrator:
             if result.returncode == 0:
                 self.logger.info("Successfully migrated archive data")
                 if result.stdout:
-                    self.logger.info(f"gcloud storage output: {result.stdout}")
+                    self.logger.info(f"gsutil output: {result.stdout}")
                 return True, len(files)
             else:
                 self.logger.error("Archive data migration failed")
-                self.logger.error(f"gcloud storage error: {result.stderr}")
+                self.logger.error(f"gsutil error: {result.stderr}")
                 return False, 0
 
         except subprocess.SubprocessError as e:
@@ -202,7 +188,7 @@ class ArchiveDataMigrator:
         try:
             # Check if data exists in new location
             result = subprocess.run(
-                ["gcloud", "storage", "ls", "--recursive", f"{self.new_path}/"],
+                ["gsutil", "ls", "-r", self.new_path],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -238,12 +224,12 @@ class ArchiveDataMigrator:
 
         # Check if old bucket exists
         if not self.check_bucket_exists(self.old_bucket):
-            self.logger.error(f"Source bucket gs://{self.old_bucket} does not exist!")
+            self.logger.error(f"Source bucket gs://{self.old_bucket}/ does not exist!")
             return False
 
         # Check if new bucket exists
         if not self.check_bucket_exists(self.new_bucket):
-            self.logger.error(f"Target bucket gs://{self.new_bucket} does not exist!")
+            self.logger.error(f"Target bucket gs://{self.new_bucket}/ does not exist!")
             return False
 
         # Perform migration

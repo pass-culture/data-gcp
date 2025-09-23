@@ -58,7 +58,7 @@ class OldQPIHistoricalFolderDeleter:
         """Check if a GCS bucket exists."""
         try:
             result = subprocess.run(
-                ["gcloud", "storage", "ls", f"gs://{bucket_name}/"],
+                ["gcloud", "storage", "ls", f"gs://{bucket_name}"],
                 capture_output=True,
                 text=True,
                 check=False,

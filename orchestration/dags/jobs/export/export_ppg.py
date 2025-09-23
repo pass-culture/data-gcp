@@ -10,6 +10,7 @@ from common.config import (
     GCP_PROJECT_ID,
     ENV_SHORT_NAME,
     DAG_FOLDER,
+    DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
 )
 
 from common.operators.gce import (
@@ -43,7 +44,6 @@ GCE_INSTANCE = f"export-ppg-{ENV_SHORT_NAME }"
 BASE_PATH = "data-gcp/jobs/etl_jobs/external/ppg/"
 GCP_STORAGE_URI = "https://storage.googleapis.com"
 DBT_REPORTING_MODELS_PATH = f"{DAG_FOLDER}/data_gcp_dbt/models/mart/external_reporting"
-EXPORT_BUCKET_NAME = f"de-bigquery-data-export-{ENV_SHORT_NAME}"
 
 
 dag_config = {
@@ -129,7 +129,7 @@ with (
         task_id="gce_export_reports_to_gcs",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
-        command=f"python main.py upload --ds {{{{ ds }}}} --bucket {EXPORT_BUCKET_NAME} --destination ppg_reports",
+        command=f"python main.py upload --ds {{{{ ds }}}} --bucket {DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME} --destination ppg_reports",
     )
 
     gce_export_to_drive = EmptyOperator(task_id="TO_DO_export_reports_to_google_drive")

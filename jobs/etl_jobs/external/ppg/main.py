@@ -168,7 +168,6 @@ def upload(
         typer.secho("⚠️ Warning: File doesn't have .zip extension", fg="yellow")
 
     typer.secho(f"➡️ Uploading: {zip_file}", fg="cyan")
-    typer.secho(f"➡️ To bucket: {bucket}", fg="cyan")
 
     if destination:
         typer.secho(f"➡️ Destination: {destination}", fg="cyan")

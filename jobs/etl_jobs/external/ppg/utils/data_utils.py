@@ -237,19 +237,20 @@ def upload_zip_to_gcs(local_zip_path, bucket_name=None, destination_name=None):
         bucket_name = EXPORT_BUCKET
         typer.secho(f"➡️ Using default export bucket: {bucket_name}", fg="cyan")
 
-    # Get destination name
-    if not destination_name:
-        destination_name = Path(local_zip_path).name
+    local_path = Path(local_zip_path)
 
-    # Use default credentials (works if running on GCP or with GOOGLE_APPLICATION_CREDENTIALS)
+    # If destination_name is a folder, append the file name
+    if destination_name:
+        destination_blob = Path(destination_name) / local_path.name
+    else:
+        destination_blob = local_path.name
+
     client = storage.Client(GCP_PROJECT)
-
-    # Upload file
     bucket = client.bucket(bucket_name)
-    blob = bucket.blob(destination_name)
+    blob = bucket.blob(str(destination_blob))  # convert Path to string
 
     with open(local_zip_path, "rb") as f:
         blob.upload_from_file(f, content_type="application/zip")
 
-    print(f"✓ Uploaded {local_zip_path} to gs://{bucket_name}/{destination_name}")
+    print(f"✓ Uploaded {local_zip_path} to gs://{bucket_name}/{destination_blob}")
     return True

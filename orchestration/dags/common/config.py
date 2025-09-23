@@ -53,9 +53,23 @@ APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
     "passculture-metier-ehp.europe-west1.metier-pcapi-testing-connection",
 )
 METABASE_EXTERNAL_CONNECTION_ID = os.environ.get("METABASE_EXTERNAL_CONNECTION_ID", "")
+
 DATA_GCS_BUCKET_NAME = os.environ.get(
     "DATA_GCS_BUCKET_NAME", f"data-bucket-{ENV_SHORT_NAME}"
 )
+DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME = os.environ.get(
+    "DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME", f"de-bigquery-data-archive-{ENV_SHORT_NAME}"
+)
+DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME = os.environ.get(
+    "DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME", f"de-bigquery-data-import-{ENV_SHORT_NAME}"
+)
+DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME = os.environ.get(
+    "DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME", f"de-bigquery-data-export-{ENV_SHORT_NAME}"
+)
+DS_DATA_ARCHIVE_BUCKET_NAME = os.environ.get(
+    "DS_DATA_ARCHIVE_BUCKET_NAME", f"ds-data-archive-{ENV_SHORT_NAME}"
+)
+
 if ENV_SHORT_NAME == "prod":
     ELEMENTARY_REPORT_URL = "https://dataquality.data.passculture.team/#/"
 else:

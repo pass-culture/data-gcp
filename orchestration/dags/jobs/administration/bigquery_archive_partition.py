@@ -6,6 +6,8 @@ from common.config import (
     DAG_TAGS,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
+    DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME,
+    DS_DATA_ARCHIVE_BUCKET_NAME,
 )
 from common.operators.gce import (
     DeleteGCEOperator,
@@ -30,6 +32,7 @@ TABLES = {
         "look_back_days": {"dev": 30, "stg": 90, "prod": 730}[ENV_SHORT_NAME],
         "folder": "tracking",
         "archive": True if ENV_SHORT_NAME == "prod" else False,
+        "bucket": DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME,
     },
     "int_firebase_native_event": {
         "table_id": "native_event",
@@ -38,6 +41,7 @@ TABLES = {
         "look_back_days": {"dev": 30, "stg": 90, "prod": 365}[ENV_SHORT_NAME],
         "folder": "int_firebase",
         "archive": False,
+        "bucket": DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME,
     },
     "int_firebase_native_event_flattened": {
         "table_id": "native_event_flattened",
@@ -46,6 +50,7 @@ TABLES = {
         "look_back_days": {"dev": 30, "stg": 90, "prod": 365}[ENV_SHORT_NAME],
         "folder": "int_firebase",
         "archive": False,
+        "bucket": DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME,
     },
     "raw_api_reco_past_offer_context": {
         "table_id": "past_offer_context",
@@ -54,6 +59,7 @@ TABLES = {
         "look_back_days": {"dev": 30, "stg": 90, "prod": 180}[ENV_SHORT_NAME],
         "folder": "api_reco",
         "archive": True if ENV_SHORT_NAME == "prod" else False,
+        "bucket": DS_DATA_ARCHIVE_BUCKET_NAME,
     },
     "int_pcreco_past_offer_context": {
         "table_id": "past_offer_context",
@@ -62,6 +68,7 @@ TABLES = {
         "look_back_days": {"dev": 30, "stg": 90, "prod": 180}[ENV_SHORT_NAME],
         "folder": "api_reco",
         "archive": False,
+        "bucket": DS_DATA_ARCHIVE_BUCKET_NAME,
     },
 }
 

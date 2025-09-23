@@ -1,11 +1,11 @@
 ---
-title: Offer
+title: Offer Removed
 description: Description of the `exp_ministry__offer_removed` table.
 ---
 
 {% docs description__exp_ministry__offer_removed %}
 
-# Table: Offer
+# Table: Offer Removed
 
 This model exports offers removed data for ministry use. It contains only removed offers not longer available for booking in pass Culture apps.
 These offers are actually "useless" offers :

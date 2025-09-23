@@ -39,6 +39,9 @@ SCHEDULE_DICT = {
         "stg": "0 5 * * *",  # every day at 5:00 AM
         "prod": "5 * * * *",  # every hour at 5 minutes past the hour
     },
+    "export_ppg": {
+        "prod": "45 4 1 1,4,8,12 *",  # every 1st of 4 months at 4:45 AM
+    },
 }
 
 

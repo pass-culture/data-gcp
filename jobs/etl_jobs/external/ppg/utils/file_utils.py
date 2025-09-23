@@ -172,3 +172,4 @@ def compress_directory(
             raise FileUtilsError(
                 f"Failed to clean original directory {target_dir}: {e}"
             )
+    return f"{target_dir.parts[-1]}.zip"

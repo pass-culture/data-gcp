@@ -1,3 +1,4 @@
+import logging
 import re
 import shutil
 import unicodedata
@@ -6,6 +7,9 @@ from pathlib import Path
 from typing import Dict, List
 
 import typer
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class FileUtilsError(Exception):
@@ -17,6 +21,18 @@ class FileUtilsError(Exception):
 def start_of_current_month() -> str:
     today = date.today()
     return f"{today.year}-{today.month:02d}-01"
+
+
+def to_first_of_month(ds: str) -> str:
+    """Convert date string to first day of month."""
+    if ds.endswith("01"):
+        return ds
+
+    first_of_month = ds[:8] + "01"  # YYYY-MM-DD -> YYYY-MM-01
+    logger.info(
+        f"📅 Converting consolidation date {ds} -> {first_of_month} (first of month)"
+    )
+    return first_of_month
 
 
 def safe_fs_name(name: str) -> str:

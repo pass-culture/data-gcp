@@ -11,6 +11,7 @@ from utils.file_utils import (
     compress_directory,
     get_dated_base_dir,
     start_of_current_month,
+    to_first_of_month,
 )
 
 logger = logging.getLogger(__name__)
@@ -35,6 +36,7 @@ def generate(
 ):
     """Generate reports for specified stakeholder."""
 
+    ds = to_first_of_month(ds)
     # normalize case
     stakeholder = stakeholder.lower()
 
@@ -109,6 +111,7 @@ def compress(
 ):
     """Compress generated reports directory."""
 
+    ds = to_first_of_month(ds)
     if base_dir:
         source_dir = Path(base_dir)
     else:
@@ -152,6 +155,7 @@ def upload(
 ):
     """Upload ZIP file to Google Cloud Storage."""
 
+    ds = to_first_of_month(ds)
     base_dir = get_dated_base_dir(REPORT_BASE_DIR_DEFAULT, ds)
     zip_file = base_dir.with_suffix(".zip")
     typer.secho(f"➡️ Auto-detected zip file: {zip_file}", fg="cyan")

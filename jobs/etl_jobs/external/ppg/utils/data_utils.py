@@ -1,12 +1,14 @@
 import logging
+from pathlib import Path
 from typing import Dict, Iterable, Optional, Union
 
 import pandas as pd
 import typer
-from google.cloud import bigquery
+from google.cloud import bigquery, storage
 
 from config import (
     BIGQUERY_ANALYTICS_DATASET,
+    EXPORT_BUCKET,
     GCP_PROJECT,
     REGION_HIERARCHY_TABLE,
 )
@@ -218,3 +220,37 @@ def sanitize_numeric_types(df: pd.DataFrame) -> pd.DataFrame:
             if df[col].dtype == "object":
                 df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
     return df
+
+
+def upload_zip_to_gcs(local_zip_path, bucket_name=None, destination_name=None):
+    """
+    Upload a local .zip file to GCS bucket using service account.
+
+    Args:
+        local_zip_path: Path to local .zip file
+        bucket_name: GCS bucket name
+        destination_name: Name in GCS (optional, uses filename if None)
+
+    Returns:
+        bool: True if successful
+    """
+    if not bucket_name:
+        bucket_name = EXPORT_BUCKET
+        typer.secho(f"➡️ Using default export bucket: {bucket_name}", fg="cyan")
+
+    # Get destination name
+    if not destination_name:
+        destination_name = Path(local_zip_path).name
+
+    # Use default credentials (works if running on GCP or with GOOGLE_APPLICATION_CREDENTIALS)
+    client = storage.Client(GCP_PROJECT)
+
+    # Upload file
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(destination_name)
+
+    with open(local_zip_path, "rb") as f:
+        blob.upload_from_file(f, content_type="application/zip")
+
+    print(f"✓ Uploaded {local_zip_path} to gs://{bucket_name}/{destination_name}")
+    return True

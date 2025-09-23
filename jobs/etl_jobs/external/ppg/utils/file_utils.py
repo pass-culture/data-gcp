@@ -128,7 +128,9 @@ def create_directory_structure(
         raise FileUtilsError(f"Failed to create directory structure: {e}")
 
 
-def compress_directory(target_dir: Path, output_dir: Path, clean_after_compression: bool = False):
+def compress_directory(
+    target_dir: Path, output_dir: Path, clean_after_compression: bool = False
+):
     """
     Compress all files in the given directory using gzip.
 
@@ -137,16 +139,20 @@ def compress_directory(target_dir: Path, output_dir: Path, clean_after_compressi
         clean_after_compression: If True, delete original files after compression
     """
     if not target_dir.exists() or not target_dir.is_dir():
-        raise FileUtilsError(f"Directory {target_dir} does not exist or is not a directory.")
+        raise FileUtilsError(
+            f"Directory {target_dir} does not exist or is not a directory."
+        )
 
     try:
-        shutil.make_archive(f"{target_dir}", 'zip', output_dir)
+        shutil.make_archive(f"{target_dir}", "zip", output_dir)
     except Exception as e:
         raise FileUtilsError(f"Failed to compress target_directory {target_dir}: {e}")
     typer.echo(f"🗜️ Compressed target_directory {target_dir} to {target_dir}.zip")
     if clean_after_compression:
-            try:
-                shutil.rmtree(target_dir)
-                typer.echo(f"🧹 Cleaned up original directory {target_dir}")
-            except Exception as e:
-                raise FileUtilsError(f"Failed to clean original directory {target_dir}: {e}")
+        try:
+            shutil.rmtree(target_dir)
+            typer.echo(f"🧹 Cleaned up original directory {target_dir}")
+        except Exception as e:
+            raise FileUtilsError(
+                f"Failed to clean original directory {target_dir}: {e}"
+            )

@@ -15,6 +15,9 @@ class ExcelLayoutService:
     """Handles Excel layout operations like date column expansion and styling."""
 
     def __init__(self):
+        # The constructor is currently empty because this service class
+        # only provides static methods. No instance-level initialization
+        # is needed at this time.
         pass
 
     @staticmethod

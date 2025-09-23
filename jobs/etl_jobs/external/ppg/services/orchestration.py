@@ -25,6 +25,15 @@ class ReportOrchestrationService:
         self.conn = duckdb_conn
         self.data_service = DataService(duckdb_conn)
 
+    def _get_layout_type(self, sheet) -> str:
+        """Determine layout type based on sheet definition."""
+        if sheet.definition.startswith("top"):
+            return "top"
+        elif sheet.definition.endswith("kpis"):
+            return "kpis"
+        else:
+            return "other"
+
     def process_all_sheets(self, sheets: List, ds: str) -> Dict[str, Any]:
         """
         Process all sheets in a report with comprehensive error handling.
@@ -143,13 +152,7 @@ class ReportOrchestrationService:
                 typer.echo(f"✅ Completed sheet {sheet.tab_name}")
 
             # Step 3: Delete template columns and Set title (pass the full expansion_result for width calculation)
-            layout_type = (
-                "top"
-                if sheet.definition.startswith("top")
-                else "kpis"
-                if sheet.definition.endswith("kpis")
-                else "other"
-            )
+            layout_type = self._get_layout_type(sheet)
             ExcelLayoutService.cleanup_template_columns(sheet.worksheet, layout_type)
             self._handle_title_setting(sheet, expansion_result)
             ExcelLayoutService.freeze_panes(sheet.worksheet, layout_type)
@@ -178,13 +181,7 @@ class ReportOrchestrationService:
         """Handle sheet title setting."""
         try:
             # Determine layout type
-            layout_type = (
-                "top"
-                if sheet.definition.startswith("top")
-                else "kpis"
-                if sheet.definition.endswith("kpis")
-                else "other"
-            )
+            layout_type = self._get_layout_type(sheet)
 
             expanded_width = None
             if layout_type == "kpis" and expansion_result:

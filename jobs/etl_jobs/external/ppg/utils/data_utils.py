@@ -212,13 +212,12 @@ def sanitize_numeric_types(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     # Convert object columns that should be numeric to float64
     for col in df.columns:
-        if ("amount" in col.lower() or "quantity" in col.lower()) or col.lower() in [
-            "numerator",
-            "denominator",
-            "kpi",
-        ]:
-            if df[col].dtype == "object":
-                df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
+        if (
+            ("amount" in col.lower() or "quantity" in col.lower())
+            or col.lower() in ["numerator", "denominator", "kpi"]
+        ) and df[col].dtype == "object":
+            df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
+
     return df
 
 

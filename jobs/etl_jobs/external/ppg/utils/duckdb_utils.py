@@ -71,9 +71,8 @@ def query_yearly_kpi(
     - Individual: calendar year (Jan-Dec)
     - Collective: scholar year (Sep-Aug)
     """
-    # end_date = datetime.strptime(ds, "%Y-%m-%d").date()
     if end_year is None:
-        end_year = date.today().year
+        end_year = datetime.strptime(ds, "%Y-%m-%d").date().year
 
     try:
         all_data = []

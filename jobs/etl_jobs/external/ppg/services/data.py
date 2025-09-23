@@ -57,10 +57,8 @@ class DataService:
             monthly_data = self._get_monthly_kpi_data(
                 kpi_name, dimension_name, dimension_value, ds, table_name
             )
-            # monthly_agg = self._aggregate_monthly_data(monthly_data, agg_type, select_field, scope)
-            monthly_formatted = self._format_monthly_data(
-                monthly_data, select_field, ds
-            )
+
+            monthly_formatted = self._format_monthly_data(monthly_data, select_field)
 
             return {"yearly": yearly_agg, "monthly": monthly_formatted}
 
@@ -144,7 +142,7 @@ class DataService:
         )
 
     def _format_monthly_data(
-        self, data: pd.DataFrame, select_field: str, ds: str
+        self, data: pd.DataFrame, select_field: str
     ) -> Dict[str, float]:
         """
         Format monthly data into dict with MM/YYYY keys (no aggregation).
@@ -221,11 +219,11 @@ class DataService:
                 ORDER BY {', '.join(reorder_by)} ASC
             """
             params = [dimension_name, dimension_value, previous_month_str, top_n]
-            # print("DEBUG: Query with parameters substituted:")
-            # manual_query = query.replace('?', '{}').format(*[f"'{p}'" if isinstance(p, str) else str(p) for p in params])
-            # print(manual_query)
+            logger.debug(
+                f"""Executing top rankings query: {query.replace('?', '{}').format(*[f"'{p}'" if isinstance(p, str) else str(p) for p in params])}"""
+            )
+
             result = self.conn.execute(query, params).df()
-            # print(f"DEBUG: Query returned {len(result)} rows")
 
             return result
         except Exception as e:

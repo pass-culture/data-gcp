@@ -44,8 +44,6 @@ class ExcelWriterService:
                     )
                     if success:
                         success_count += 1
-                else:
-                    pass
 
             monthly_data = kpi_data.get(
                 "monthly", {}

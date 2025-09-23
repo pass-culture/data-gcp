@@ -164,7 +164,7 @@ def upload(
         typer.secho(f"❌ ZIP file not found: {zip_file}", fg="red")
         raise typer.Exit(code=1)
 
-    if not zip_file.suffix.lower() == ".zip":
+    if zip_file.suffix.lower() != ".zip":
         typer.secho("⚠️ Warning: File doesn't have .zip extension", fg="yellow")
 
     typer.secho(f"➡️ Uploading: {zip_file}", fg="cyan")

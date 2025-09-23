@@ -233,7 +233,7 @@ class Report:
     def _cleanup_template_sheets(self, used_tabs: List[str]):
         """Remove all template/unused sheets and enforce blueprint order."""
         # Remove any sheet not in the used list
-        for sheet_name in list(self.workbook.sheetnames):
+        for sheet_name in self.workbook.sheetnames:
             if sheet_name not in used_tabs:
                 self.workbook.remove(self.workbook[sheet_name])
 
@@ -282,7 +282,7 @@ class Report:
 
     def save(self):
         """Save the workbook to the output path."""
-        if not self.output_path.suffix == ".xlsx":
+        if self.output_path.suffix != ".xlsx":
             self.output_path = self.output_path.with_suffix(".xlsx")
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
         self.workbook.save(self.output_path)
@@ -321,7 +321,6 @@ class ReportPlanner:
         # DRAC gets:
         # 1) Regional summary (includes national for comparison)
         region_name = self.stakeholder.name
-        # base_path = Path("REGIONAL") / f"{region_name}"
         jobs.append(
             {
                 "report_type": "region_summary",

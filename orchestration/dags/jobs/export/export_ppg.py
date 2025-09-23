@@ -112,12 +112,14 @@ with DAG(
         task_id="gce_generate_reports",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        environment=dag_config,
         command="python main.py generate --stakeholder all --ds {{ ds }}",
     )
     gce_compress_reports = SSHGCEOperator(
         task_id="gce_compress_reports",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        environment=dag_config,
         command="python main.py compress --ds {{ ds }}",  # add --clean flag after testing
     )
 
@@ -125,6 +127,7 @@ with DAG(
         task_id="gce_export_reports_to_gcs",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        environment=dag_config,
         command=f"python main.py upload --ds {{{{ ds }}}} --bucket {DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME} --destination ppg_reports",
     )
 

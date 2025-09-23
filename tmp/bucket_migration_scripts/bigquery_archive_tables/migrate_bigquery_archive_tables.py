@@ -30,8 +30,8 @@ class BigQueryArchiveTablesMigrator:
         self.dry_run = dry_run
         self.old_bucket = f"data-bucket-{env}"
         self.new_bucket = f"de-bigquery-data-archive-{env}"
-        self.old_path = f"gs://{self.old_bucket}/bigquery_archive_tables/"
-        self.new_path = f"gs://{self.new_bucket}/archive/"
+        self.old_path = f"gs://{self.old_bucket}/bigquery_archive_tables"
+        self.new_path = f"gs://{self.new_bucket}/archive"
 
         # Configure logging
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -48,7 +48,7 @@ class BigQueryArchiveTablesMigrator:
         """Check if a GCS bucket exists."""
         try:
             result = subprocess.run(
-                ["gcloud", "storage", "ls", f"gs://{bucket_name}/"],
+                ["gcloud", "storage", "ls", f"gs://{bucket_name}"],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -63,7 +63,7 @@ class BigQueryArchiveTablesMigrator:
 
         try:
             result = subprocess.run(
-                ["gcloud", "storage", "ls", "--recursive", self.old_path],
+                ["gcloud", "storage", "ls", "--recursive", f"{self.old_path}/"],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -100,7 +100,14 @@ class BigQueryArchiveTablesMigrator:
         """Get total size of folder using gcloud storage du."""
         try:
             result = subprocess.run(
-                ["gcloud", "storage", "du", "--summarize", "--readable-sizes", path],
+                [
+                    "gcloud",
+                    "storage",
+                    "du",
+                    "--summarize",
+                    "--readable-sizes",
+                    f"{path}/",
+                ],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -118,7 +125,7 @@ class BigQueryArchiveTablesMigrator:
 
     def migrate_bigquery_archive_tables_data(self) -> Tuple[bool, int]:
         """
-        Migrate all bigquery_archive_tables data using gsutil rsync.
+        Migrate all bigquery_archive_tables data using gcloud storage rsync.
 
         Returns:
             Tuple of (success, files_count)
@@ -146,18 +153,18 @@ class BigQueryArchiveTablesMigrator:
             # Show sample of files (first 10 and last 10 if more than 20 files)
             if len(files) <= 20:
                 for file_path in files:
-                    relative_path = file_path.replace(self.old_path, "")
-                    self.logger.info(f"  {file_path} → {self.new_path}{relative_path}")
+                    relative_path = file_path.replace(f"{self.old_path}/", "")
+                    self.logger.info(f"  {file_path} → {self.new_path}/{relative_path}")
             else:
                 self.logger.info("Sample of files to be migrated (first 10):")
                 for file_path in files[:10]:
-                    relative_path = file_path.replace(self.old_path, "")
-                    self.logger.info(f"  {file_path} → {self.new_path}{relative_path}")
+                    relative_path = file_path.replace(f"{self.old_path}/", "")
+                    self.logger.info(f"  {file_path} → {self.new_path}/{relative_path}")
                 self.logger.info(f"  ... and {len(files) - 20} more files ...")
                 self.logger.info("Last 10 files:")
                 for file_path in files[-10:]:
-                    relative_path = file_path.replace(self.old_path, "")
-                    self.logger.info(f"  {file_path} → {self.new_path}{relative_path}")
+                    relative_path = file_path.replace(f"{self.old_path}/", "")
+                    self.logger.info(f"  {file_path} → {self.new_path}/{relative_path}")
 
             return True, len(files)
 
@@ -168,8 +175,8 @@ class BigQueryArchiveTablesMigrator:
                 "storage",
                 "rsync",
                 "--recursive",
-                self.old_path,
-                self.new_path,
+                f"{self.old_path}",
+                f"{self.new_path}",
             ]
 
             self.logger.info(f"Executing: {' '.join(cmd)}")
@@ -234,12 +241,12 @@ class BigQueryArchiveTablesMigrator:
 
         # Check if old bucket exists
         if not self.check_bucket_exists(self.old_bucket):
-            self.logger.error(f"Source bucket gs://{self.old_bucket}/ does not exist!")
+            self.logger.error(f"Source bucket gs://{self.old_bucket} does not exist!")
             return False
 
         # Check if new bucket exists
         if not self.check_bucket_exists(self.new_bucket):
-            self.logger.error(f"Target bucket gs://{self.new_bucket}/ does not exist!")
+            self.logger.error(f"Target bucket gs://{self.new_bucket} does not exist!")
             return False
 
         # Perform migration

@@ -18,10 +18,11 @@ Usage:
 
 import argparse
 import logging
+import os
 import subprocess
 import sys
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 from dataclasses import dataclass
 
 
@@ -59,24 +60,24 @@ class HistoricalDataMigrator:
 
         # Define migration paths based on the new bucket structure
         self.migration_paths = [
-            MigrationPath(
-                old_folder="historization/tracking",
-                new_bucket=f"de-bigquery-data-archive-{env}",
-                new_folder="historization/tracking",
-                description="Firebase tracking events",
-            ),
-            MigrationPath(
-                old_folder="historization/int_firebase",
-                new_bucket=f"de-bigquery-data-archive-{env}",
-                new_folder="historization/int_firebase",
-                description="Firebase intermediate events",
-            ),
-            MigrationPath(
-                old_folder="historization/api_reco",
-                new_bucket=f"ds-data-archive-{env}",
-                new_folder="historization/api_reco",
-                description="API recommendation data",
-            ),
+            # MigrationPath(
+            #     old_folder="historization/tracking",
+            #     new_bucket=f"de-bigquery-data-archive-{env}",
+            #     new_folder="historization/tracking",
+            #     description="Firebase tracking events",
+            # ),
+            # MigrationPath(
+            #     old_folder="historization/int_firebase",
+            #     new_bucket=f"de-bigquery-data-archive-{env}",
+            #     new_folder="historization/int_firebase",
+            #     description="Firebase intermediate events",
+            # ),
+            # MigrationPath(
+            #     old_folder="historization/api_reco",
+            #     new_bucket=f"ds-data-archive-{env}",
+            #     new_folder="historization/api_reco",
+            #     description="API recommendation data",
+            # ),
             MigrationPath(
                 old_folder="historization/applicative",
                 new_bucket=f"de-bigquery-data-archive-{env}",
@@ -100,7 +101,7 @@ class HistoricalDataMigrator:
         """Check if a GCS bucket exists."""
         try:
             result = subprocess.run(
-                ["gcloud", "storage", "ls", f"gs://{bucket_name}/"],
+                ["gcloud", "storage", "ls", f"gs://{bucket_name}"],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -109,9 +110,50 @@ class HistoricalDataMigrator:
         except subprocess.SubprocessError:
             return False
 
+    def get_cache_filename(self, migration_path: MigrationPath) -> str:
+        """Generate cache filename for the file list."""
+        safe_folder = migration_path.old_folder.replace("/", "_")
+        return f"file_list_cache_{self.env}_{safe_folder}_{self.days}days.txt"
+
+    def save_file_list_to_cache(
+        self, migration_path: MigrationPath, files: List[str]
+    ) -> None:
+        """Save file list to cache file."""
+        cache_file = self.get_cache_filename(migration_path)
+        try:
+            with open(cache_file, "w") as f:
+                for file_path in files:
+                    f.write(f"{file_path}\n")
+            self.logger.info(f"Saved {len(files)} file paths to cache: {cache_file}")
+        except IOError as e:
+            self.logger.warning(f"Failed to save cache file {cache_file}: {e}")
+
+    def load_file_list_from_cache(self, migration_path: MigrationPath) -> List[str]:
+        """Load file list from cache file if it exists."""
+        cache_file = self.get_cache_filename(migration_path)
+        if not os.path.exists(cache_file):
+            return []
+
+        try:
+            with open(cache_file, "r") as f:
+                files = [line.strip() for line in f if line.strip()]
+            self.logger.info(f"Loaded {len(files)} file paths from cache: {cache_file}")
+            return files
+        except IOError as e:
+            self.logger.warning(f"Failed to load cache file {cache_file}: {e}")
+            return []
+
     def list_old_data(self, migration_path: MigrationPath) -> List[str]:
         """List existing data in the old bucket structure for given date range."""
-        old_path = f"gs://{self.old_bucket}/{migration_path.old_folder}/"
+        # Try to load from cache first
+        cached_files = self.load_file_list_from_cache(migration_path)
+        if cached_files:
+            self.logger.info(f"Using cached file list ({len(cached_files)} files)")
+            return cached_files
+
+        # Cache miss - scan the bucket
+        self.logger.info("Cache miss - scanning bucket for files...")
+        old_path = f"gs://{self.old_bucket}/{migration_path.old_folder}"
 
         try:
             result = subprocess.run(
@@ -129,11 +171,18 @@ class HistoricalDataMigrator:
             date_strings = self.get_date_range()
             files = []
 
+            self.logger.info(
+                f"Filtering files by date range ({len(date_strings)} dates)"
+            )
             for line in result.stdout.strip().split("\n"):
                 if line and not line.endswith("/"):  # Skip directories
                     # Check if file contains any of our target dates
                     if any(date in line for date in date_strings):
                         files.append(line)
+
+            # Save to cache for future runs
+            if files:
+                self.save_file_list_to_cache(migration_path, files)
 
             return files
 
@@ -149,17 +198,17 @@ class HistoricalDataMigrator:
             Tuple of (success, files_migrated, files_failed)
         """
         self.logger.info(f"Starting migration: {migration_path.description}")
-        self.logger.info(f"  From: gs://{self.old_bucket}/{migration_path.old_folder}/")
+        self.logger.info(f"  From: gs://{self.old_bucket}/{migration_path.old_folder}")
         self.logger.info(
-            f"  To: gs://{migration_path.new_bucket}/{migration_path.new_folder}/"
+            f"  To: gs://{migration_path.new_bucket}/{migration_path.new_folder}"
         )
 
         # Check if target bucket exists
-        if not self.check_bucket_exists(migration_path.new_bucket):
-            self.logger.error(
-                f"Target bucket gs://{migration_path.new_bucket}/ does not exist!"
-            )
-            return False, 0, 0
+        # if not self.check_bucket_exists(migration_path.new_bucket):
+        #     self.logger.error(
+        #         f"Target bucket gs://{migration_path.new_bucket} does not exist!"
+        #     )
+        #     return False, 0, 0
 
         # Get list of files to migrate
         files_to_migrate = self.list_old_data(migration_path)
@@ -175,48 +224,219 @@ class HistoricalDataMigrator:
             for file_path in files_to_migrate:
                 # Extract relative path from old structure
                 relative_path = file_path.replace(
-                    f"gs://{self.old_bucket}/{migration_path.old_folder}/", ""
+                    f"gs://{self.old_bucket}/{migration_path.old_folder}", ""
                 )
                 new_path = f"gs://{migration_path.new_bucket}/{migration_path.new_folder}/{relative_path}"
                 self.logger.info(f"  {file_path} → {new_path}")
             return True, len(files_to_migrate), 0
 
-        # Perform actual migration using gcloud storage rsync for efficiency
-        old_path = f"gs://{self.old_bucket}/{migration_path.old_folder}/"
-        new_path = f"gs://{migration_path.new_bucket}/{migration_path.new_folder}/"
-
-        # Use rsync with date-based inclusion filter
-        date_strings = self.get_date_range()
-        include_patterns = []
-        for date in date_strings:
-            include_patterns.extend(["--include", f"*{date}*"])
+        # Choose migration strategy based on folder structure
+        self.logger.info(
+            f"Starting optimized migration for {migration_path.old_folder}..."
+        )
 
         try:
-            # Build gcloud storage rsync command
-            cmd = (
-                ["gcloud", "storage", "rsync", "-r"]
-                + include_patterns
-                + [old_path, new_path]
+            old_base_path = f"gs://{self.old_bucket}/{migration_path.old_folder}"
+            new_base_path = (
+                f"gs://{migration_path.new_bucket}/{migration_path.new_folder}"
             )
+            date_strings = self.get_date_range()
 
-            self.logger.info(f"Executing: {' '.join(cmd)}")
-
-            result = subprocess.run(cmd, capture_output=True, text=True, check=False)
-
-            if result.returncode == 0:
-                self.logger.info(
-                    f"Successfully migrated data for {migration_path.description}"
+            if "applicative" in migration_path.old_folder:
+                return self._migrate_applicative_structure(
+                    old_base_path, new_base_path, date_strings
                 )
-                self.logger.info(f"gcloud storage output: {result.stdout}")
-                return True, len(files_to_migrate), 0
+            elif "api_reco" in migration_path.old_folder:
+                return self._migrate_api_reco_structure(old_base_path, new_base_path)
             else:
-                self.logger.error(f"Migration failed for {migration_path.description}")
-                self.logger.error(f"gcloud storage error: {result.stderr}")
-                return False, 0, len(files_to_migrate)
+                # Fallback to generic migration
+                return self._migrate_generic_structure(old_base_path, new_base_path)
 
         except subprocess.SubprocessError as e:
             self.logger.error(f"Error during migration: {e}")
-            return False, 0, len(files_to_migrate)
+            return False, 0, 0
+
+    def _migrate_applicative_structure(
+        self, old_base_path: str, new_base_path: str, date_strings: List[str]
+    ) -> Tuple[bool, int, int]:
+        """Migrate applicative data: subfolder/YYYYMMDD/files structure."""
+        subfolders = [
+            "booking",
+            "collective_booking",
+            "collective_offer",
+            "deposit",
+            "offer",
+            "offer_removed",
+            "offerer",
+            "stock",
+            "venue",
+        ]
+
+        migrated_count = 0
+        failed_count = 0
+        total_operations = len(subfolders) * len(date_strings)
+        operation_idx = 0
+
+        self.logger.info(
+            f"Applicative migration: {len(subfolders)} subfolders × {len(date_strings)} dates = {total_operations} operations"
+        )
+
+        for subfolder in subfolders:
+            self.logger.info(f"Processing subfolder: {subfolder}")
+
+            for date_str in date_strings:
+                operation_idx += 1
+
+                source_path = f"{old_base_path}/{subfolder}/{date_str}"
+                dest_path = f"{new_base_path}/{subfolder}/{date_str}"
+
+                # Progress logging every 5% or for each subfolder start
+                if (
+                    operation_idx % max(1, total_operations // 20) == 0
+                    or operation_idx == 1
+                ):
+                    progress_pct = (operation_idx / total_operations) * 100
+                    self.logger.info(
+                        f"Progress: [{operation_idx}/{total_operations}] ({progress_pct:.1f}%) - {subfolder}/{date_str}"
+                    )
+
+                success, synced = self._rsync_single_folder(source_path, dest_path)
+                if success and synced > 0:
+                    migrated_count += synced
+                elif not success:
+                    failed_count += 1
+
+        return self._log_migration_result(migrated_count, failed_count, "Applicative")
+
+    def _migrate_api_reco_structure(
+        self, old_base_path: str, new_base_path: str
+    ) -> Tuple[bool, int, int]:
+        """Migrate api_reco data: rsync the entire folder structure."""
+        self.logger.info(f"API Reco migration: Syncing entire folder structure")
+
+        # Simply rsync the entire api_reco folder
+        rsync_cmd = [
+            "gcloud",
+            "storage",
+            "rsync",
+            "--recursive",
+            old_base_path,
+            new_base_path,
+        ]
+
+        self.logger.info(
+            f"Syncing entire api_reco folder: {old_base_path} → {new_base_path}"
+        )
+        self.logger.debug(
+            f"Command: gcloud storage rsync --recursive {old_base_path} {new_base_path}"
+        )
+
+        result = subprocess.run(rsync_cmd, capture_output=True, text=True, check=False)
+
+        if result.returncode == 0:
+            files_synced = 0
+            if result.stdout:
+                sync_lines = [
+                    line
+                    for line in result.stdout.strip().split("\n")
+                    if "Copying" in line or "Uploading" in line
+                ]
+                files_synced = len(sync_lines)
+
+            if files_synced > 0:
+                self.logger.info(f"✓ Synced {files_synced} files from api_reco")
+            else:
+                self.logger.info(f"→ No files to sync (already up to date)")
+
+            return True, files_synced, 0
+        else:
+            self.logger.error(f"✗ Failed to sync api_reco folder")
+            self.logger.error(f"  Error: {result.stderr.strip()}")
+            return False, 0, 1
+
+    def _migrate_generic_structure(
+        self, old_base_path: str, new_base_path: str
+    ) -> Tuple[bool, int, int]:
+        """Fallback migration for other structures."""
+        self.logger.info("Using generic rsync migration")
+
+        rsync_cmd = [
+            "gcloud",
+            "storage",
+            "rsync",
+            "--recursive",
+            old_base_path,
+            new_base_path,
+        ]
+
+        result = subprocess.run(rsync_cmd, capture_output=True, text=True, check=False)
+
+        if result.returncode == 0:
+            files_synced = 0
+            if result.stdout:
+                sync_lines = [
+                    line
+                    for line in result.stdout.strip().split("\n")
+                    if "Copying" in line or "Uploading" in line
+                ]
+                files_synced = len(sync_lines)
+            return True, files_synced, 0
+        else:
+            self.logger.error(f"Generic migration failed: {result.stderr.strip()}")
+            return False, 0, 1
+
+    def _rsync_single_folder(
+        self, source_path: str, dest_path: str
+    ) -> Tuple[bool, int]:
+        """Perform rsync on a single folder."""
+        # Quick check if source exists
+        check_cmd = ["gcloud", "storage", "ls", source_path]
+        check_result = subprocess.run(
+            check_cmd, capture_output=True, text=True, check=False
+        )
+
+        if check_result.returncode != 0:
+            return True, 0  # No data, but not an error
+
+        rsync_cmd = [
+            "gcloud",
+            "storage",
+            "rsync",
+            "--recursive",
+            source_path,
+            dest_path,
+        ]
+
+        result = subprocess.run(rsync_cmd, capture_output=True, text=True, check=False)
+
+        if result.returncode == 0:
+            files_synced = 0
+            if result.stdout:
+                sync_lines = [
+                    line
+                    for line in result.stdout.strip().split("\n")
+                    if "Copying" in line or "Uploading" in line
+                ]
+                files_synced = len(sync_lines)
+            return True, files_synced
+        else:
+            self.logger.error(
+                f"  Rsync failed for {source_path}: {result.stderr.strip()}"
+            )
+            return False, 0
+
+    def _log_migration_result(
+        self, migrated_count: int, failed_count: int, migration_type: str
+    ) -> Tuple[bool, int, int]:
+        """Log and return migration results."""
+        self.logger.info(
+            f"{migration_type} migration completed: {migrated_count} files synced, {failed_count} operations failed"
+        )
+
+        if failed_count == 0:
+            return True, migrated_count, 0
+        else:
+            return False, migrated_count, failed_count
 
     def verify_migration(self, migration_path: MigrationPath) -> bool:
         """Verify that data was successfully migrated."""

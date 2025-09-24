@@ -38,17 +38,20 @@ with
             and ((offer.offer_name is not null or offer.offer_name <> 'NaN'))
             and offer.offer_creation_date > datetime '2022-09-01'
             and offer.offer_is_active
-            and (case
-                when
-                    subcategories.id = 'ESCAPE_GAME'
-                    and offer.offer_creation_date < datetime '2022-02-01'
-                then false
-                when
-                    subcategories.id = 'BON_ACHAT_INSTRUMENT'
-                    and offer.offer_creation_date < datetime '2022-09-01'
-                then false
-                else true
-            end) = true
+            and (
+                case
+                    when
+                        subcategories.id = 'ESCAPE_GAME'
+                        and offer.offer_creation_date < datetime '2022-02-01'
+                    then false
+                    when
+                        subcategories.id = 'BON_ACHAT_INSTRUMENT'
+                        and offer.offer_creation_date < datetime '2022-09-01'
+                    then false
+                    else true
+                end
+            )
+            = true
         group by
             offer.offer_id,
             offer.offer_name,
@@ -62,10 +65,7 @@ with
             stock.stock_price
     )
 
-select
-    base.*,
-    item_embedding.semantic_content_embedding,
-    item_embedding.image_embedding
+select base.*, item_embedding.semantic_content_embedding, item_embedding.image_embedding
 from base
 left join
     {{ ref("int_applicative__offer_item_id") }} as offer_item_id

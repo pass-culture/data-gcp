@@ -31,29 +31,31 @@ with
             offer.item_id,
             sum(
                 if(
-                    booking.booking_creation_date >= date_sub(current_date(), interval 7 day),
+                    booking.booking_creation_date
+                    >= date_sub(current_date(), interval 7 day),
                     1,
                     0
                 )
             ) as booking_number_last_7_days,
             sum(
                 if(
-                    booking.booking_creation_date >= date_sub(current_date(), interval 14 day),
+                    booking.booking_creation_date
+                    >= date_sub(current_date(), interval 14 day),
                     1,
                     0
                 )
             ) as booking_number_last_14_days,
             sum(
                 if(
-                    booking.booking_creation_date >= date_sub(current_date(), interval 28 day),
+                    booking.booking_creation_date
+                    >= date_sub(current_date(), interval 28 day),
                     1,
                     0
                 )
             ) as booking_number_last_28_days
         from {{ ref("mrt_global__booking") }} as booking
         inner join
-            {{ ref("mrt_global__stock") }} as stock
-            on booking.stock_id = stock.stock_id
+            {{ ref("mrt_global__stock") }} as stock on booking.stock_id = stock.stock_id
         inner join
             {{ ref("mrt_global__offer") }} as offer on stock.offer_id = offer.offer_id
         where

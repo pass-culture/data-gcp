@@ -67,12 +67,12 @@ with DAG(
             default="master",  # "production" if ENV_SHORT_NAME == "prod" else "master",
             type="string",
         ),
-        "instance_type": Param(
-            default="n1-standard-4",
-            type="string",
-        ),
         "instance_name": Param(
             default=GCE_INSTANCE,
+            type="string",
+        ),
+        "instance_type": Param(
+            default="n1-standard-4",
             type="string",
         ),
     },
@@ -95,9 +95,11 @@ with DAG(
                     )
 
     gce_instance_start = StartGCEOperator(
-        instance_name=GCE_INSTANCE,
         task_id="gce_start_task",
-        labels={"dag_name": dag_id},
+        preemptible=False,
+        instance_name="{{ params.instance_name }}",
+        instance_type="{{ params.instance_type }}",
+        labels={"job_type": "long_task", "dag_name": dag_id},
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -114,7 +116,10 @@ with DAG(
         base_dir=BASE_PATH,
         environment=dag_config,
         command="python main.py generate --stakeholder all --ds {{ ds }}",
+        deferrable=True,
+        poll_interval=120,
     )
+
     gce_compress_reports = SSHGCEOperator(
         task_id="gce_compress_reports",
         instance_name=GCE_INSTANCE,

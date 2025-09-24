@@ -25,7 +25,9 @@ with
             offer_metadata.offer_type_labels,
             offer_metadata.offer_sub_type_label,
             if(
-                offer_metadata.offer_type_label is not null, offer.total_used_individual_bookings, null
+                offer_metadata.offer_type_label is not null,
+                offer.total_used_individual_bookings,
+                null
             ) as total_used_individual_bookings
         from {{ ref("mrt_global__offer") }} as offer
         left join

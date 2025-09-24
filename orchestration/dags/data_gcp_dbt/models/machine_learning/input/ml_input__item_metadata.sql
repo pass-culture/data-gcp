@@ -1,36 +1,36 @@
 with
     enriched_items as (
         select
-            o.offer_id,
-            o.item_id,
+            offer.offer_id,
+            offer.item_id,
+            offer.offer_creation_date,
+            offer.offer_subcategory_id,
+            offer.offer_category_id,
+            offer.offer_name,
+            offer.offer_description,
+            offer.offer_type_domain,
+            offer.author,
+            offer.performer,
+            offer.titelive_gtl_id,
+            offer_metadata.search_group_name,
+            offer_metadata.image_url,
+            offer_metadata.offer_type_id,
+            offer_metadata.offer_sub_type_id,
+            offer_metadata.gtl_type,
+            offer_metadata.gtl_label_level_1,
+            offer_metadata.gtl_label_level_2,
+            offer_metadata.gtl_label_level_3,
+            offer_metadata.gtl_label_level_4,
+            offer_metadata.offer_type_label,
+            offer_metadata.offer_type_labels,
+            offer_metadata.offer_sub_type_label,
             if(
-                offer_type_label is not null, o.total_used_individual_bookings, null
-            ) as total_used_individual_bookings,
-            o.offer_creation_date,
-            o.offer_subcategory_id,
-            o.offer_category_id,
-            o.offer_name,
-            o.offer_description,
-            o.offer_type_domain,
-            o.author,
-            o.performer,
-            o.titelive_gtl_id,
-            search_group_name,
-            image_url,
-            offer_type_id,
-            offer_sub_type_id,
-            gtl_type,
-            gtl_label_level_1,
-            gtl_label_level_2,
-            gtl_label_level_3,
-            gtl_label_level_4,
-            offer_type_label,
-            offer_type_labels,
-            offer_sub_type_label,
-        from {{ ref("int_global__offer") }} as o
+                offer_metadata.offer_type_label is not null, offer.total_used_individual_bookings, null
+            ) as total_used_individual_bookings
+        from {{ ref("mrt_global__offer") }} as offer
         left join
-            {{ ref("int_applicative__offer_metadata") }} as om
-            on o.offer_id = om.offer_id
+            {{ ref("mrt_global__offer_metadata") }} as offer_metadata
+            on offer.offer_id = offer_metadata.offer_id
     )
 
 select * except (total_used_individual_bookings, offer_id)

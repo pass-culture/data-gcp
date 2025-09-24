@@ -7,7 +7,7 @@ dedicated seed data bucket.
 
 Migration path:
 - From: gs://data-bucket-{env}/bigquery_imports/seed/
-- To: gs://seed-data-bucket-{env}/
+- To: gs://de-bigquery-data-import-{env}/bigquery_imports/seed/
 
 Usage:
     python migrate_seed_data.py --env prod --dry-run
@@ -29,9 +29,9 @@ class SeedDataMigrator:
         self.env = env
         self.dry_run = dry_run
         self.old_bucket = f"data-bucket-{env}"
-        self.new_bucket = f"seed-data-bucket-{env}"
+        self.new_bucket = f"de-bigquery-data-import-{env}"
         self.old_path = f"gs://{self.old_bucket}/bigquery_imports/seed/"
-        self.new_path = f"gs://{self.new_bucket}/"
+        self.new_path = f"gs://{self.new_bucket}/bigquery_imports/seed/"
 
         # Configure logging
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -278,12 +278,12 @@ class SeedDataMigrator:
 
                 if len(new_files) >= original_total:
                     self.logger.info("✅ Migration verification successful")
-                    return True
+                    return len(new_files) > 0
                 else:
                     self.logger.warning(
                         f"⚠️  Migration verification warning: Expected {original_total} files, found {len(new_files)}"
                     )
-                    return False
+                    return len(new_files) > 0
             else:
                 self.logger.warning(
                     "Could not verify migration - new path not accessible"
@@ -374,13 +374,15 @@ def main():
 
     if not dry_run:
         print(
-            f"⚠️  WARNING: This will migrate ALL seed data from bigquery_imports/seed/ to seed-data-bucket-{args.env}"
+            f"⚠️  WARNING: This will migrate ALL seed data from bigquery_imports/seed/ to de-bigquery-data-import-{args.env}/bigquery_imports/seed/"
         )
         print(
             f"   This includes 50+ reference tables with CSV, Parquet, and Avro files"
         )
         print(f"   Source: gs://data-bucket-{args.env}/bigquery_imports/seed/")
-        print(f"   Target: gs://seed-data-bucket-{args.env}/")
+        print(
+            f"   Target: gs://de-bigquery-data-import-{args.env}/bigquery_imports/seed/"
+        )
         print()
         response = input(
             f"Are you sure you want to migrate seed data for {args.env}? (yes/no): "

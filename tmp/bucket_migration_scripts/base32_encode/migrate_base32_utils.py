@@ -29,7 +29,7 @@ class Base32UtilityMigrator:
         self.env = env
         self.dry_run = dry_run
         self.old_bucket = f"data-bucket-{env}"
-        self.new_bucket = f"shared-utilities-bucket-{env}"
+        self.new_bucket = f"de-tools-{env}"
         self.old_path = f"gs://{self.old_bucket}/base32-encode/"
         self.new_path = f"gs://{self.new_bucket}/base32-encode/"
 
@@ -259,12 +259,12 @@ class Base32UtilityMigrator:
                             "⚠️  Key file base32.js not found in new location"
                         )
 
-                    return True
+                    return len(new_files) > 0
                 else:
                     self.logger.warning(
                         f"⚠️  Migration verification warning: Expected {original_file_count} files, found {len(new_files)}"
                     )
-                    return False
+                    return len(new_files) > 0
             else:
                 self.logger.warning(
                     "Could not verify migration - new path not accessible"

@@ -4,7 +4,7 @@ with
             offer.offer_id,
             offer.offer_validation,
             offer.offer_subcategoryid as offer_subcategory_id,
-            extract_offer.rayon,
+            offer.rayon,
             macro_rayons.macro_rayon,
             case
                 when (offer.offer_name is null or offer.offer_name = 'NaN')
@@ -27,14 +27,11 @@ with
             {{ source("raw", "applicative_database_stock") }} as stock
             on offer.offer_id = stock.offer_id  -- TODO:update join with offer_extra_data
         left join
-            {{ ref("int_applicative__extract_offer") }} as extract_offer
-            on offer.offer_id = extract_offer.offer_id
-        left join
             {{ source("raw", "subcategories") }} as subcategories
             on offer.offer_subcategoryid = subcategories.id
         left join
             {{ source("seed", "macro_rayons") }} as macro_rayons
-            on extract_offer.rayon = macro_rayons.rayon
+            on offer.rayon = macro_rayons.rayon
         where
             offer.offer_validation <> 'DRAFT'
             and offer.offer_last_validation_type = 'MANUAL'
@@ -60,7 +57,7 @@ with
             offer.offer_subcategoryid,
             subcategories.id,
             offer.offer_creation_date,
-            extract_offer.rayon,
+            offer.rayon,
             macro_rayons.macro_rayon,
             stock.stock_price
     )

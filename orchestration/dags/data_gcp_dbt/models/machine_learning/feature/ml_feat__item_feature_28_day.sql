@@ -1,12 +1,12 @@
-with
+with -- TODO : move from int_applicative to mrt_global
     item_count as (
         select item_id, count(distinct offer_id) as total_offers
-        from {{ ref("int_applicative__offer") }}
+        from {{ ref("mrt_global__offer") }}
         group by item_id
     ),
 
     embeddings as (
-        select item_id, semantic_content_embedding as semantic_content_embedding
+        select item_id, semantic_content_embedding
         from {{ ref("ml_feat__item_embedding") }}
     ),
 
@@ -22,7 +22,7 @@ with
                         length(semantic_content_embedding) - 2
                     )
                 )
-            ) e
+            ) as e
         group by item_id
     ),
 
@@ -50,12 +50,12 @@ with
                     0
                 )
             ) as booking_number_last_28_days
-        from {{ ref("int_applicative__booking") }} booking
+        from {{ ref("mrt_global__booking") }} as booking
         inner join
-            {{ ref("int_applicative__stock") }} stock
+            {{ ref("mrt_global__stock") }} as stock
             on booking.stock_id = stock.stock_id
         inner join
-            {{ ref("int_applicative__offer") }} offer on stock.offer_id = offer.offer_id
+            {{ ref("mrt_global__offer") }} as offer on stock.offer_id = offer.offer_id
         where
             booking_creation_date >= date_sub(current_date(), interval 28 day)
             and not booking_is_cancelled
@@ -67,10 +67,10 @@ with
             ic.item_id,
             any_value(ic.semantic_cluster_id) as cluster_id,
             any_value(it.semantic_cluster_id) as topic_id  -- TODO: temporary solution, should be removed after the refactor of topics logics.
-        from {{ source("ml_preproc", "default_item_cluster") }} ic
+        from {{ source("ml_preproc", "default_item_cluster") }} as ic
         left join
-            {{ source("ml_preproc", "unconstrained_item_cluster") }} it
-            on it.item_id = ic.item_id
+            {{ source("ml_preproc", "unconstrained_item_cluster") }} as it
+            on ic.item_id = it.item_id
         group by 1
     )
 
@@ -83,7 +83,7 @@ select
     bn.booking_number_last_28_days,
     icc.cluster_id,
     icc.topic_id
-from item_count ic
-left join avg_embedding ae on ae.item_id = ic.item_id
-left join booking_numbers bn on bn.item_id = ic.item_id
-left join item_clusters icc on ic.item_id = icc.item_id
+from item_count as ic
+left join avg_embedding as ae on ic.item_id = ae.item_id
+left join booking_numbers as bn on ic.item_id = bn.item_id
+left join item_clusters as icc on ic.item_id = icc.item_id

@@ -1,51 +1,51 @@
-with -- TODO : move from int_applicative to mrt_global
+with
     item_count as (
-        select item_id, count(distinct offer_id) as total_offers
-        from {{ ref("mrt_global__offer") }}
-        group by item_id
+        select offer.item_id, count(distinct offer.offer_id) as total_offers
+        from {{ ref("mrt_global__offer") }} as offer
+        group by offer.item_id
     ),
 
     embeddings as (
-        select item_id, semantic_content_embedding
-        from {{ ref("ml_feat__item_embedding") }}
+        select raw_embeddings.item_id, raw_embeddings.semantic_content_embedding
+        from {{ ref("ml_feat__item_embedding") }} as raw_embeddings
     ),
 
     avg_embedding as (
-        select item_id, avg(cast(e as float64)) as avg_semantic_embedding
+        select embeddings.item_id, avg(cast(e as float64)) as avg_semantic_embedding
         from
             embeddings,
             unnest(
                 split(
                     substr(
-                        semantic_content_embedding,
+                        embeddings.semantic_content_embedding,
                         2,
-                        length(semantic_content_embedding) - 2
+                        length(embeddings.semantic_content_embedding) - 2
                     )
                 )
             ) as e
-        group by item_id
+        group by embeddings.item_id
     ),
 
     booking_numbers as (
         select
-            item_id,
+            offer.item_id,
             sum(
                 if(
-                    booking_creation_date >= date_sub(current_date(), interval 7 day),
+                    booking.booking_creation_date >= date_sub(current_date(), interval 7 day),
                     1,
                     0
                 )
             ) as booking_number_last_7_days,
             sum(
                 if(
-                    booking_creation_date >= date_sub(current_date(), interval 14 day),
+                    booking.booking_creation_date >= date_sub(current_date(), interval 14 day),
                     1,
                     0
                 )
             ) as booking_number_last_14_days,
             sum(
                 if(
-                    booking_creation_date >= date_sub(current_date(), interval 28 day),
+                    booking.booking_creation_date >= date_sub(current_date(), interval 28 day),
                     1,
                     0
                 )
@@ -57,9 +57,9 @@ with -- TODO : move from int_applicative to mrt_global
         inner join
             {{ ref("mrt_global__offer") }} as offer on stock.offer_id = offer.offer_id
         where
-            booking_creation_date >= date_sub(current_date(), interval 28 day)
-            and not booking_is_cancelled
-        group by item_id
+            booking.booking_creation_date >= date_sub(current_date(), interval 28 day)
+            and not booking.booking_is_cancelled
+        group by offer.item_id
     ),
 
     item_clusters as (
@@ -71,7 +71,7 @@ with -- TODO : move from int_applicative to mrt_global
         left join
             {{ source("ml_preproc", "unconstrained_item_cluster") }} as it
             on ic.item_id = it.item_id
-        group by 1
+        group by ic.item_id
     )
 
 select

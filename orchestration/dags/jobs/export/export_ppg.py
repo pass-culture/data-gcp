@@ -52,35 +52,31 @@ dag_config = {
 }
 
 
-with (
-    DAG(
-        dag_id,
-        default_args=default_dag_args,
-        description="Data reporting export for ministère & DRAC",
-        schedule_interval=get_airflow_schedule(
-            SCHEDULE_DICT[dag_id].get(ENV_SHORT_NAME)
+with DAG(
+    dag_id,
+    default_args=default_dag_args,
+    description="Data reporting export for ministère & DRAC",
+    schedule_interval=get_airflow_schedule(SCHEDULE_DICT[dag_id].get(ENV_SHORT_NAME)),
+    catchup=False,
+    dagrun_timeout=datetime.timedelta(minutes=120),
+    user_defined_macros=macros.default,
+    template_searchpath=DAG_FOLDER,
+    tags=[DAG_TAGS.DE.value],
+    params={
+        "branch": Param(
+            default="master",  # "production" if ENV_SHORT_NAME == "prod" else "master",
+            type="string",
         ),
-        catchup=False,
-        dagrun_timeout=datetime.timedelta(minutes=120),
-        user_defined_macros=macros.default,
-        template_searchpath=DAG_FOLDER,
-        tags=[DAG_TAGS.DE.value],
-        params={
-            "branch": Param(
-                default="ppg-refactor",  # "production" if ENV_SHORT_NAME == "prod" else "master",
-                type="string",
-            ),
-            "instance_type": Param(
-                default="n1-standard-4",
-                type="string",
-            ),
-            "instance_name": Param(
-                default=GCE_INSTANCE,
-                type="string",
-            ),
-        },
-    ) as dag
-):
+        "instance_type": Param(
+            default="n1-standard-4",
+            type="string",
+        ),
+        "instance_name": Param(
+            default=GCE_INSTANCE,
+            type="string",
+        ),
+    },
+) as dag:
     start = EmptyOperator(task_id="start")
 
     with TaskGroup(group_id="waiting_group", dag=dag) as waiting_group:
@@ -116,12 +112,14 @@ with (
         task_id="gce_generate_reports",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        environment=dag_config,
         command="python main.py generate --stakeholder all --ds {{ ds }}",
     )
     gce_compress_reports = SSHGCEOperator(
         task_id="gce_compress_reports",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        environment=dag_config,
         command="python main.py compress --ds {{ ds }}",  # add --clean flag after testing
     )
 
@@ -129,6 +127,7 @@ with (
         task_id="gce_export_reports_to_gcs",
         instance_name=GCE_INSTANCE,
         base_dir=BASE_PATH,
+        environment=dag_config,
         command=f"python main.py upload --ds {{{{ ds }}}} --bucket {DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME} --destination ppg_reports",
     )
 

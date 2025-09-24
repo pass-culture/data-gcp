@@ -21,18 +21,7 @@ with
                 when stock.stock_price is null
                 then 0
                 else safe_cast(stock.stock_price as integer)
-            end as stock_price,
-            case
-                when
-                    subcategories.id = 'ESCAPE_GAME'
-                    and offer.offer_creation_date < datetime '2022-02-01'
-                then false
-                when
-                    subcategories.id = 'BON_ACHAT_INSTRUMENT'
-                    and offer.offer_creation_date < datetime '2022-09-01'
-                then false
-                else true
-            end as is_rule_up_to_date
+            end as stock_price
         from {{ ref("int_raw__offer") }} as offer
         left join
             {{ source("raw", "applicative_database_stock") }} as stock
@@ -52,6 +41,17 @@ with
             and ((offer.offer_name is not null or offer.offer_name <> 'NaN'))
             and offer.offer_creation_date > datetime '2022-09-01'
             and offer.offer_is_active
+            and (case
+                when
+                    subcategories.id = 'ESCAPE_GAME'
+                    and offer.offer_creation_date < datetime '2022-02-01'
+                then false
+                when
+                    subcategories.id = 'BON_ACHAT_INSTRUMENT'
+                    and offer.offer_creation_date < datetime '2022-09-01'
+                then false
+                else true
+            end) = true
         group by
             offer.offer_id,
             offer.offer_name,
@@ -61,12 +61,12 @@ with
             subcategories.id,
             offer.offer_creation_date,
             extract_offer.rayon,
-            macro_rayon,
-            stock_price
+            macro_rayons.macro_rayon,
+            stock.stock_price
     )
 
 select
-    base.* except (is_rule_up_to_date),
+    base.*,
     item_embedding.semantic_content_embedding,
     item_embedding.image_embedding
 from base
@@ -77,7 +77,6 @@ left join
 inner join
     {{ ref("ml_feat__item_embedding") }} as item_embedding
     on offer_item_id.item_id = item_embedding.item_id
-where is_rule_up_to_date
 qualify
     row_number() over (
         partition by item_embedding.item_id order by item_embedding.extraction_date desc

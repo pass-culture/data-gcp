@@ -9,7 +9,7 @@
     options
         (
             library
-            = "gs://data-bucket-{{ 'dev' if target_name == 'local' else target_name }}/base32-encode/base32.js"
+            = "gs://de-tools-{{ 'dev' if target_name == 'local' else target_name }}/base32-encode/base32.js"
         )
     as """
 var public_id = id.replace(/8/g, 'O').replace(/9/g, 'I');

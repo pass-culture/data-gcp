@@ -3,7 +3,7 @@ with
         select
             offer.offer_id,
             offer.offer_validation,
-            offer.offer_subcategoryid as offer_subcategory_id,
+            offer.offer_subcategory_id,
             offer.rayon,
             macro_rayons.macro_rayon,
             case
@@ -22,13 +22,13 @@ with
                 then 0
                 else safe_cast(stock.stock_price as integer)
             end as stock_price
-        from {{ ref("int_raw__offer") }} as offer
+        from {{ ref("int_global__offer") }} as offer
         left join
             {{ source("raw", "applicative_database_stock") }} as stock
             on offer.offer_id = stock.offer_id  -- TODO:update join with offer_extra_data
         left join
             {{ source("raw", "subcategories") }} as subcategories
-            on offer.offer_subcategoryid = subcategories.id
+            on offer.offer_subcategory_id = subcategories.id
         left join
             {{ source("seed", "macro_rayons") }} as macro_rayons
             on offer.rayon = macro_rayons.rayon
@@ -37,7 +37,7 @@ with
             and offer.offer_last_validation_type = 'MANUAL'
             and ((offer.offer_name is not null or offer.offer_name <> 'NaN'))
             and offer.offer_creation_date > datetime '2022-09-01'
-            and offer.offer_is_active
+            --and offer.is_active
             and (
                 case
                     when
@@ -57,7 +57,7 @@ with
             offer.offer_name,
             offer.offer_description,
             offer.offer_validation,
-            offer.offer_subcategoryid,
+            offer.offer_subcategory_id,
             subcategories.id,
             offer.offer_creation_date,
             offer.rayon,

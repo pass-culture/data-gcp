@@ -31,7 +31,7 @@ class BigQueryArchiveTablesMigrator:
         self.old_bucket = f"data-bucket-{env}"
         self.new_bucket = f"de-bigquery-data-archive-{env}"
         self.old_path = f"gs://{self.old_bucket}/bigquery_archive_tables"
-        self.new_path = f"gs://{self.new_bucket}/archive"
+        self.new_path = f"gs://{self.new_bucket}/bigquery_archive_tables"
 
         # Configure logging
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

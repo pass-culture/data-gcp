@@ -31,7 +31,7 @@ class QPIHistoricalDataMigrator:
         self.old_bucket = f"data-bucket-{env}"
         self.new_bucket = f"de-bigquery-data-import-{env}"
         self.old_path = f"gs://{self.old_bucket}/QPI_historical"
-        self.new_path = f"gs://{self.new_bucket}/historical"
+        self.new_path = f"gs://{self.new_bucket}/QPI_historical"
 
         # Configure logging
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

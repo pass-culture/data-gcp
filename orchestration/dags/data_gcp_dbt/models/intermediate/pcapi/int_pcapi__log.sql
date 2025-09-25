@@ -120,7 +120,8 @@ select
     date(timestamp) as partition_date,
     coalesce(
         cast(jsonpayload.extra.stockid as string),
-        cast(jsonpayload.extra.stock_id as string)
+        cast(jsonpayload.extra.stock_id as string),
+        cast(jsonpayload.extra.stock as string)
     ) as stock_id,
     coalesce(
         cast(jsonpayload.extra.offerid as string),

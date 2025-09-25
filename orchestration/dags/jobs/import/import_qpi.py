@@ -6,7 +6,7 @@ from common.callback import on_failure_base_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
-    DATA_GCS_BUCKET_NAME,
+    DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
     DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME,
     ENV_SHORT_NAME,
     GCP_PROJECT_ID,
@@ -51,7 +51,7 @@ default_args = {
 def verify_folder():
     today = time.strftime("%Y%m%d")
     storage_client = storage.Client()
-    bucket = storage_client.bucket(DATA_GCS_BUCKET_NAME)
+    bucket = storage_client.bucket(DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME)
     name = f"QPI_exports/qpi_answers_{today}/"
     stats = bucket.list_blobs(prefix=name)
     blob_list = []
@@ -97,7 +97,7 @@ with DAG(
     import_answers_to_bigquery = GCSToBigQueryOperator(
         project_id=GCP_PROJECT_ID,
         task_id="import_answers_to_bigquery",
-        bucket=DATA_GCS_BUCKET_NAME,
+        bucket=DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
         source_objects=["QPI_exports/qpi_answers_{{ ds_nodash }}/*.jsonl"],
         destination_project_dataset_table="{{ bigquery_tmp_dataset }}.{{ ds_nodash }}_qpi_answers_v4",
         write_disposition="WRITE_TRUNCATE",

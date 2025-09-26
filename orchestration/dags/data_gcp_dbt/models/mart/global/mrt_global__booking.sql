@@ -82,7 +82,9 @@ select
     u.user_is_in_education,
     u.user_is_priority_public,
     u.first_deposit_creation_date,
-    b.offerer_is_epn
+    b.offerer_is_epn,
+    b.booking_email,
+    b.booking_contact
 from {{ ref("int_global__booking") }} as b
 left join {{ ref("mrt_global__user") }} as u on u.user_id = b.user_id
 where b.deposit_type is not null and b.user_id is not null

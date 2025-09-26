@@ -2,7 +2,6 @@ with
     metabase_query as (
         select
             mqe.execution_date,
-            to_hex(`hash`) as metabase_hash,
             dashboard_id,
             mqe.card_id,
             mqe.execution_id,
@@ -10,9 +9,10 @@ with
             mqe.cache_hit,
             mqe.error,
             mqe.context,
+            to_hex(`hash`) as metabase_hash,
             sum(mqe.running_time) as running_time,
             sum(mqe.result_rows) as result_rows
-        from {{ source("raw", "metabase_query_execution") }} mqe
+        from {{ source("raw", "metabase_query_execution") }} as mqe
         group by
             execution_date,
             metabase_hash,
@@ -30,8 +30,10 @@ select
     mrc.card_name,
     mrc.created_at as card_creation_date,
     mrc.updated_at as card_update_date,
-    mrc.card_collection_id as card_collection_id,
+    mrc.card_collection_id,
     mrd.dashboard_name,
+    mrc.query_type,
+    mrc.dataset_query,
     row_number() over (
         partition by card_id order by execution_date desc
     ) as card_id_execution_rank

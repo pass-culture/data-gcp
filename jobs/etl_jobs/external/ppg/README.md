@@ -189,15 +189,15 @@ graph TD
     RP --> |generates jobs| REP[Report]
     REP --> |contains| SHEET[Sheet]
     SHEET --> ROS[ReportOrchestrationService]
-    
+
     ROS --> DS[DataService]
-    ROS --> ELS[ExcelLayoutService] 
+    ROS --> ELS[ExcelLayoutService]
     ROS --> EWS[ExcelWriterService]
-    
+
     DS --> |queries| DDB
     ELS --> |formats| WS[openpyxl Worksheet]
     EWS --> |writes data| WS
-    
+
     REP --> |saves| EXCEL[Excel File]
 ```
 

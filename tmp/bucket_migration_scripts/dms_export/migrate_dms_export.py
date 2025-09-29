@@ -7,7 +7,7 @@ dedicated export bucket structure.
 
 Migration path:
 - From: gs://data-bucket-{env}/dms_export/
-- To: gs://de-bigquery-data-export-{env}/dms_export/
+- To: gs://de-bigquery-data-import-{env}/dms_export/
 
 Usage:
     python migrate_dms_export.py --env prod --dry-run
@@ -29,7 +29,7 @@ class DMSExportMigrator:
         self.env = env
         self.dry_run = dry_run
         self.old_bucket = f"data-bucket-{env}"
-        self.new_bucket = f"de-bigquery-data-export-{env}"
+        self.new_bucket = f"de-bigquery-data-import-{env}"
         self.old_path = f"gs://{self.old_bucket}/dms_export/"
         self.new_path = f"gs://{self.new_bucket}/dms_export/"
 
@@ -199,7 +199,7 @@ class DMSExportMigrator:
             self.logger.info("DRY RUN - DMS export files that would be migrated:")
             for file_path in files:
                 relative_path = file_path.replace(self.old_path, "")
-                self.logger.info(f"  {file_path} → {self.new_path}{relative_path}")
+                # self.logger.info(f"  {file_path} → {self.new_path}{relative_path}")
 
             return True, len(files), analysis
 
@@ -368,7 +368,7 @@ class DMSExportMigrator:
                 f"   Change paths from: gs://data-bucket-{self.env}/dms_export/"
             )
             self.logger.info(
-                f"   To: gs://de-bigquery-data-export-{self.env}/dms_export/"
+                f"   To: gs://de-bigquery-data-import-{self.env}/dms_export/"
             )
 
         self.logger.info("=" * 80)
@@ -416,11 +416,11 @@ Coordinate with development team for timing.
 
     if not dry_run:
         print(
-            f"⚠️  WARNING: This will migrate active DMS staging data to de-bigquery-data-export-{args.env}"
+            f"⚠️  WARNING: This will migrate active DMS staging data to de-bigquery-data-import-{args.env}"
         )
         print(f"   This affects ETL staging pipeline!")
         print(f"   Source: gs://data-bucket-{args.env}/dms_export/")
-        print(f"   Target: gs://de-bigquery-data-export-{args.env}/dms_export/")
+        print(f"   Target: gs://de-bigquery-data-import-{args.env}/dms_export/")
         print()
         print("After migration, you MUST update code references:")
         print("   - jobs/etl_jobs/external/dms/main.py")

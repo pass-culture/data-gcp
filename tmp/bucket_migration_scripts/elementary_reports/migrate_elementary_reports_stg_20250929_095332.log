@@ -1,0 +1,34 @@
+2025-09-29 09:53:32,975 - INFO - ================================================================================
+2025-09-29 09:53:32,975 - INFO - Starting Elementary Reports Migration
+2025-09-29 09:53:32,975 - INFO - Environment: stg
+2025-09-29 09:53:32,975 - INFO - Mode: DRY RUN
+2025-09-29 09:53:32,975 - INFO - ⚠️  NOTE: This affects daily report generation and growing volume!
+2025-09-29 09:53:32,975 - INFO - ================================================================================
+2025-09-29 09:53:33,975 - INFO - Starting Elementary reports migration
+2025-09-29 09:53:33,975 - INFO -   From: gs://data-bucket-stg/elementary_reports/
+2025-09-29 09:53:33,975 - INFO -   To: gs://de-bigquery-data-export-stg/elementary_reports/
+2025-09-29 09:53:33,975 - INFO - Scanning contents of gs://data-bucket-stg/elementary_reports/
+2025-09-29 09:53:34,636 - INFO - Found 284 Elementary report files to migrate
+2025-09-29 09:53:35,319 - INFO - Total size: 2.36GiB gs://data-bucket-stg/elementary_reports/
+2025-09-29 09:53:35,319 - INFO - File analysis:
+2025-09-29 09:53:35,319 - INFO -   Total files: 284
+2025-09-29 09:53:35,319 - INFO -   File types: {'no_ext': 3, 'html': 281}
+2025-09-29 09:53:35,319 - INFO -   Years with reports: ['2024', '2025']
+2025-09-29 09:53:35,319 - INFO -   Recent months: ['202504', '202505', '202506', '202507', '202508', '202509']
+2025-09-29 09:53:35,319 - INFO -   Sample reports:
+2025-09-29 09:53:35,319 - INFO -     📄 :
+2025-09-29 09:53:35,319 - INFO -     📄 :
+2025-09-29 09:53:35,319 - INFO -     📊 elementary_report_20240918.html (Daily monitoring report)
+2025-09-29 09:53:35,319 - INFO -     📊 elementary_report_20240919.html (Daily monitoring report)
+2025-09-29 09:53:35,319 - INFO -     📊 elementary_report_20240923.html (Daily monitoring report)
+2025-09-29 09:53:35,319 - INFO - DRY RUN - Elementary report files that would be migrated:
+2025-09-29 09:53:35,320 - INFO - ================================================================================
+2025-09-29 09:53:35,320 - INFO - MIGRATION SUMMARY
+2025-09-29 09:53:35,320 - INFO - Files migrated: 284
+2025-09-29 09:53:35,320 - INFO - Status: SUCCESS
+2025-09-29 09:53:35,320 - INFO - File type breakdown:
+2025-09-29 09:53:35,320 - INFO -   no_ext: 3 files
+2025-09-29 09:53:35,320 - INFO -   html: 281 files
+2025-09-29 09:53:35,320 - INFO - Report coverage: 2 years (2024 - 2025)
+2025-09-29 09:53:35,320 - INFO - DRY RUN - No actual migration performed
+2025-09-29 09:53:35,320 - INFO - ================================================================================

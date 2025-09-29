@@ -1,0 +1,36 @@
+2025-09-29 09:50:18,699 - INFO - ================================================================================
+2025-09-29 09:50:18,699 - INFO - Starting DMS Export Migration
+2025-09-29 09:50:18,699 - INFO - Environment: prod
+2025-09-29 09:50:18,699 - INFO - Mode: DRY RUN
+2025-09-29 09:50:18,699 - INFO - ⚠️  WARNING: This affects active ETL staging pipeline!
+2025-09-29 09:50:18,699 - INFO - ================================================================================
+2025-09-29 09:50:19,996 - INFO - Starting DMS export migration
+2025-09-29 09:50:19,997 - INFO -   From: gs://data-bucket-prod/dms_export/
+2025-09-29 09:50:19,997 - INFO -   To: gs://de-bigquery-data-import-prod/dms_export/
+2025-09-29 09:50:19,997 - INFO - Scanning contents of gs://data-bucket-prod/dms_export/
+2025-09-29 09:50:21,419 - INFO - Found 5097 DMS export files to migrate
+2025-09-29 09:50:22,775 - INFO - Total size: 6.15GiB gs://data-bucket-prod/dms_export/
+2025-09-29 09:50:22,775 - INFO - File analysis:
+2025-09-29 09:50:22,775 - INFO -   Total files: 5097
+2025-09-29 09:50:22,775 - INFO -   File types: {'no_ext': 1, 'csv': 491, 'parquet': 2206, 'json': 2399}
+2025-09-29 09:50:22,775 - INFO -   Raw JSON files: 2399
+2025-09-29 09:50:22,775 - INFO -     📄 unsorted_dms_pro_2025-09-26.json
+2025-09-29 09:50:22,775 - INFO -     📄 unsorted_dms_pro_2025-09-27.json
+2025-09-29 09:50:22,775 - INFO -     📄 unsorted_dms_pro_2025-09-28.json
+2025-09-29 09:50:22,775 - INFO -   Processed Parquet files: 2206
+2025-09-29 09:50:22,775 - INFO -     📊 dms_pro_2025-09-26.parquet
+2025-09-29 09:50:22,775 - INFO -     📊 dms_pro_2025-09-27.parquet
+2025-09-29 09:50:22,775 - INFO -     📊 dms_pro_2025-09-28.parquet
+2025-09-29 09:50:22,775 - INFO - DRY RUN - DMS export files that would be migrated:
+2025-09-29 09:50:22,776 - INFO - ================================================================================
+2025-09-29 09:50:22,776 - INFO - MIGRATION SUMMARY
+2025-09-29 09:50:22,776 - INFO - Files migrated: 5097
+2025-09-29 09:50:22,776 - INFO - Status: SUCCESS
+2025-09-29 09:50:22,776 - INFO - File type breakdown:
+2025-09-29 09:50:22,776 - INFO -   no_ext: 1 files
+2025-09-29 09:50:22,776 - INFO -   csv: 491 files
+2025-09-29 09:50:22,776 - INFO -   parquet: 2206 files
+2025-09-29 09:50:22,776 - INFO -   json: 2399 files
+2025-09-29 09:50:22,776 - INFO - Staging pipeline files: 2399 JSON, 2206 Parquet
+2025-09-29 09:50:22,776 - INFO - DRY RUN - No actual migration performed
+2025-09-29 09:50:22,776 - INFO - ================================================================================

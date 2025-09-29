@@ -233,7 +233,7 @@ class ClickHouseExportMigrator:
             )
             for file_path in files:
                 relative_path = file_path.replace(self.old_path, "")
-                self.logger.info(f"  {file_path} → {self.new_path}{relative_path}")
+                # self.logger.info(f"  {file_path} → {self.new_path}{relative_path}")
 
             return True, len(files), analysis
 

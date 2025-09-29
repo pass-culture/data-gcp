@@ -7,7 +7,7 @@ to the new dedicated export bucket structure.
 
 Migration path:
 - From: gs://data-bucket-{env}/export/cloudsql_recommendation_tables_to_bigquery/
-- To: gs://de-bigquery-data-export-{env}/export_cloudsql_recommendation/
+- To: gs://de-bigquery-data-import-{env}/export_cloudsql_recommendation/
 
 Usage:
     python migrate_recommendation_sync.py --env prod --dry-run
@@ -30,11 +30,13 @@ class RecommendationSyncMigrator:
         self.env = env
         self.dry_run = dry_run
         self.old_bucket = f"data-bucket-{env}"
-        self.new_bucket = f"de-bigquery-data-export-{env}"
+        self.new_bucket = f"de-bigquery-data-import-{env}"
         self.old_path = (
             f"gs://{self.old_bucket}/export/cloudsql_recommendation_tables_to_bigquery/"
         )
-        self.new_path = f"gs://{self.new_bucket}/export_cloudsql_recommendation/"
+        self.new_path = (
+            f"gs://{self.new_bucket}/export/cloudsql_recommendation_tables_to_bigquery/"
+        )
 
         # Configure logging
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -220,7 +222,7 @@ class RecommendationSyncMigrator:
             )
             for file_path in files:
                 relative_path = file_path.replace(self.old_path, "")
-                self.logger.info(f"  {file_path} → {self.new_path}{relative_path}")
+                # self.logger.info(f"  {file_path} → {self.new_path}{relative_path}")
 
             return True, len(files), analysis
 
@@ -379,7 +381,7 @@ class RecommendationSyncMigrator:
                 f"   Change path from: gs://data-bucket-{self.env}/export/cloudsql_recommendation_tables_to_bigquery/"
             )
             self.logger.info(
-                f"   To: gs://de-bigquery-data-export-{self.env}/export_cloudsql_recommendation/"
+                f"   To: gs://de-bigquery-data-import-{self.env}/export_cloudsql_recommendation/"
             )
 
         self.logger.info("=" * 80)
@@ -427,14 +429,14 @@ Coordinate with development team for complex sync operations.
 
     if not dry_run:
         print(
-            f"⚠️  WARNING: This will migrate CloudSQL recommendation sync data to de-bigquery-data-export-{args.env}"
+            f"⚠️  WARNING: This will migrate CloudSQL recommendation sync data to de-bigquery-data-import-{args.env}"
         )
         print(f"   This affects bidirectional sync operations!")
         print(
             f"   Source: gs://data-bucket-{args.env}/export/cloudsql_recommendation_tables_to_bigquery/"
         )
         print(
-            f"   Target: gs://de-bigquery-data-export-{args.env}/export_cloudsql_recommendation/"
+            f"   Target: gs://de-bigquery-data-import-{args.env}/export_cloudsql_recommendation/"
         )
         print()
         print("After migration, you MUST update code references:")

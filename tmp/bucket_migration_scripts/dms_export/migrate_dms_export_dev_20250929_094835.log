@@ -1,0 +1,7 @@
+2025-09-29 09:48:35,941 - INFO - ================================================================================
+2025-09-29 09:48:35,941 - INFO - Starting DMS Export Migration
+2025-09-29 09:48:35,941 - INFO - Environment: dev
+2025-09-29 09:48:35,941 - INFO - Mode: DRY RUN
+2025-09-29 09:48:35,941 - INFO - ⚠️  WARNING: This affects active ETL staging pipeline!
+2025-09-29 09:48:35,941 - INFO - ================================================================================
+2025-09-29 09:48:37,067 - ERROR - Source bucket gs://data-bucket-dev/ does not exist!

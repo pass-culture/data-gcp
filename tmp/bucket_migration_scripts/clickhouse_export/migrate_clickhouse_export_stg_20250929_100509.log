@@ -1,0 +1,35 @@
+2025-09-29 10:05:09,467 - INFO - ================================================================================
+2025-09-29 10:05:09,467 - INFO - Starting ClickHouse Export Migration
+2025-09-29 10:05:09,467 - INFO - Environment: stg
+2025-09-29 10:05:09,467 - INFO - Mode: DRY RUN
+2025-09-29 10:05:09,467 - INFO - ⚠️  WARNING: This affects active daily staging pipeline!
+2025-09-29 10:05:09,467 - INFO - ================================================================================
+2025-09-29 10:05:10,470 - INFO - Starting ClickHouse export migration
+2025-09-29 10:05:10,470 - INFO -   From: gs://data-bucket-stg/clickhouse_export/
+2025-09-29 10:05:10,470 - INFO -   To: gs://de-bigquery-data-export-stg/clickhouse_export/
+2025-09-29 10:05:10,470 - INFO - Scanning contents of gs://data-bucket-stg/clickhouse_export/
+2025-09-29 10:05:34,231 - INFO - Found 13843 ClickHouse export files to migrate
+2025-09-29 10:05:56,706 - INFO - Total size: 84.84GiB gs://data-bucket-stg/clickhouse_export/
+2025-09-29 10:05:56,706 - INFO - File analysis:
+2025-09-29 10:05:56,706 - INFO -   Total files: 13843
+2025-09-29 10:05:56,706 - INFO -   File types: {'no_ext': 523, 'parquet': 13320}
+2025-09-29 10:05:56,706 - INFO -   Environment paths: ['stg']
+2025-09-29 10:05:56,706 - INFO -   Export dates detected: 114
+2025-09-29 10:05:56,706 - INFO -   Recent export dates: ['20250924', '20250925', '20250926', '20250927', '20250928']
+2025-09-29 10:05:56,706 - INFO -   Sample export files:
+2025-09-29 10:05:56,706 - INFO -     📄 : (Export file)
+2025-09-29 10:05:56,707 - INFO -     📄 : (Export file)
+2025-09-29 10:05:56,707 - INFO -     📄 : (Export file)
+2025-09-29 10:05:56,707 - INFO -     📄 : (Export file)
+2025-09-29 10:05:56,707 - INFO -     📄 : (Export file)
+2025-09-29 10:05:56,707 - INFO - DRY RUN - ClickHouse export files that would be migrated:
+2025-09-29 10:05:56,708 - INFO - ================================================================================
+2025-09-29 10:05:56,708 - INFO - MIGRATION SUMMARY
+2025-09-29 10:05:56,708 - INFO - Files migrated: 13843
+2025-09-29 10:05:56,708 - INFO - Status: SUCCESS
+2025-09-29 10:05:56,708 - INFO - File type breakdown:
+2025-09-29 10:05:56,708 - INFO -   no_ext: 523 files
+2025-09-29 10:05:56,708 - INFO -   parquet: 13320 files
+2025-09-29 10:05:56,708 - INFO - Export operations: 114 dates detected
+2025-09-29 10:05:56,708 - INFO - DRY RUN - No actual migration performed
+2025-09-29 10:05:56,708 - INFO - ================================================================================

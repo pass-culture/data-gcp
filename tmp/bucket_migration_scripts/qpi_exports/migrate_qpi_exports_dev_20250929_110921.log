@@ -1,0 +1,28 @@
+2025-09-29 11:09:21,548 - INFO - ================================================================================
+2025-09-29 11:09:21,549 - INFO - Starting QPI Exports Migration
+2025-09-29 11:09:21,549 - INFO - Environment: dev
+2025-09-29 11:09:21,549 - INFO - Mode: EXECUTION
+2025-09-29 11:09:21,549 - INFO - ⚠️  WARNING: This affects hot daily import pipeline!
+2025-09-29 11:09:21,549 - INFO - ================================================================================
+2025-09-29 11:09:22,607 - INFO - Starting QPI exports migration
+2025-09-29 11:09:22,607 - INFO -   From: gs://data-bucket-dev/QPI_exports/
+2025-09-29 11:09:22,607 - INFO -   To: gs://de-bigquery-data-import-dev/QPI_exports/
+2025-09-29 11:09:22,607 - INFO - Scanning contents of gs://data-bucket-dev/QPI_exports/
+2025-09-29 11:09:30,888 - INFO - Found 1250 QPI export files to migrate
+2025-09-29 11:09:39,086 - INFO - Total size: 660.36MiB gs://data-bucket-dev/QPI_exports/
+2025-09-29 11:09:39,086 - INFO - File analysis:
+2025-09-29 11:09:39,086 - INFO -   Total files: 1250
+2025-09-29 11:09:39,086 - INFO -   File types: {'no_ext': 189, 'jsonl': 708, 'csv': 352, 'json': 1}
+2025-09-29 11:09:39,086 - INFO -   Date partitions found: 349
+2025-09-29 11:09:39,086 - INFO -   Recent dates: ['20220412', '20220413', '20220427', '20220429', '20220901']
+2025-09-29 11:09:39,086 - INFO -   Sample files:
+2025-09-29 11:09:39,086 - INFO -     📄 :
+2025-09-29 11:09:39,086 - INFO -     📄 qpi_answers.jsonl (Daily export data)
+2025-09-29 11:09:39,086 - INFO -     📄 qpi_answers_20210310.jsonl (Daily export data)
+2025-09-29 11:09:39,086 - INFO -     📄 qpi_answers_20210311.jsonl (Daily export data)
+2025-09-29 11:09:39,086 - INFO -     📄 qpi_answers_20210312.jsonl (Daily export data)
+2025-09-29 11:09:39,086 - INFO - Executing: gcloud storage rsync --recursive --exclude=.DS_Store gs://data-bucket-dev/QPI_exports/ gs://de-bigquery-data-import-dev/QPI_exports/
+2025-09-29 11:09:39,605 - ERROR - QPI exports migration failed
+2025-09-29 11:09:39,605 - ERROR - gcloud storage error: ERROR: (gcloud.storage.rsync) gs://data-bucket-dev/QPI_exports/ matched more than one URL: [gs://data-bucket-dev/QPI_exports/#1614961787385592, gs://data-bucket-dev/QPI_exports/]
+
+2025-09-29 11:09:39,605 - ERROR - Migration failed

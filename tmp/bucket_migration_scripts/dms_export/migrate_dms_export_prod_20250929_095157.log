@@ -1,0 +1,46 @@
+2025-09-29 09:51:57,923 - INFO - ================================================================================
+2025-09-29 09:51:57,924 - INFO - Starting DMS Export Migration
+2025-09-29 09:51:57,924 - INFO - Environment: prod
+2025-09-29 09:51:57,924 - INFO - Mode: EXECUTION
+2025-09-29 09:51:57,924 - INFO - ⚠️  WARNING: This affects active ETL staging pipeline!
+2025-09-29 09:51:57,924 - INFO - ================================================================================
+2025-09-29 09:51:59,128 - INFO - Starting DMS export migration
+2025-09-29 09:51:59,128 - INFO -   From: gs://data-bucket-prod/dms_export/
+2025-09-29 09:51:59,128 - INFO -   To: gs://de-bigquery-data-import-prod/dms_export/
+2025-09-29 09:51:59,128 - INFO - Scanning contents of gs://data-bucket-prod/dms_export/
+2025-09-29 09:52:00,457 - INFO - Found 5097 DMS export files to migrate
+2025-09-29 09:52:01,685 - INFO - Total size: 6.15GiB gs://data-bucket-prod/dms_export/
+2025-09-29 09:52:01,685 - INFO - File analysis:
+2025-09-29 09:52:01,685 - INFO -   Total files: 5097
+2025-09-29 09:52:01,685 - INFO -   File types: {'no_ext': 1, 'csv': 491, 'parquet': 2206, 'json': 2399}
+2025-09-29 09:52:01,685 - INFO -   Raw JSON files: 2399
+2025-09-29 09:52:01,685 - INFO -     📄 unsorted_dms_pro_2025-09-26.json
+2025-09-29 09:52:01,685 - INFO -     📄 unsorted_dms_pro_2025-09-27.json
+2025-09-29 09:52:01,685 - INFO -     📄 unsorted_dms_pro_2025-09-28.json
+2025-09-29 09:52:01,685 - INFO -   Processed Parquet files: 2206
+2025-09-29 09:52:01,685 - INFO -     📊 dms_pro_2025-09-26.parquet
+2025-09-29 09:52:01,685 - INFO -     📊 dms_pro_2025-09-27.parquet
+2025-09-29 09:52:01,685 - INFO -     📊 dms_pro_2025-09-28.parquet
+2025-09-29 09:52:01,685 - INFO - Executing: gcloud storage rsync --recursive --exclude=.DS_Store gs://data-bucket-prod/dms_export/ gs://de-bigquery-data-import-prod/dms_export/
+2025-09-29 09:52:13,160 - INFO - Successfully migrated DMS export files
+2025-09-29 09:52:14,364 - INFO - Verification: 5097 files found in new location
+2025-09-29 09:52:14,364 - INFO - ✅ Migration verification successful
+2025-09-29 09:52:14,364 - INFO - ✅ JSON staging files verified: 2399
+2025-09-29 09:52:14,364 - INFO - ✅ Parquet staging files verified: 2206
+2025-09-29 09:52:14,365 - INFO - ================================================================================
+2025-09-29 09:52:14,365 - INFO - MIGRATION SUMMARY
+2025-09-29 09:52:14,365 - INFO - Files migrated: 5097
+2025-09-29 09:52:14,365 - INFO - Status: SUCCESS
+2025-09-29 09:52:14,365 - INFO - File type breakdown:
+2025-09-29 09:52:14,365 - INFO -   no_ext: 1 files
+2025-09-29 09:52:14,365 - INFO -   csv: 491 files
+2025-09-29 09:52:14,365 - INFO -   parquet: 2206 files
+2025-09-29 09:52:14,365 - INFO -   json: 2399 files
+2025-09-29 09:52:14,365 - INFO - Staging pipeline files: 2399 JSON, 2206 Parquet
+2025-09-29 09:52:14,365 - INFO - ⚠️  IMPORTANT: Update code references to use new bucket path!
+2025-09-29 09:52:14,365 - INFO -    Update jobs/etl_jobs/external/dms/main.py
+2025-09-29 09:52:14,365 - INFO -    Update jobs/etl_jobs/external/dms/parse_dms_subscriptions_to_tabular.py
+2025-09-29 09:52:14,365 - INFO -    Update orchestration/dags/jobs/import/import_dms_subscriptions.py
+2025-09-29 09:52:14,365 - INFO -    Change paths from: gs://data-bucket-prod/dms_export/
+2025-09-29 09:52:14,365 - INFO -    To: gs://de-bigquery-data-import-prod/dms_export/
+2025-09-29 09:52:14,365 - INFO - ================================================================================

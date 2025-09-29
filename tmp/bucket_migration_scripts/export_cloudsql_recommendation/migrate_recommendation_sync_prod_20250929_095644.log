@@ -1,0 +1,19 @@
+2025-09-29 09:56:44,878 - INFO - ================================================================================
+2025-09-29 09:56:44,879 - INFO - Starting CloudSQL Recommendation Sync Migration
+2025-09-29 09:56:44,879 - INFO - Environment: prod
+2025-09-29 09:56:44,879 - INFO - Mode: DRY RUN
+2025-09-29 09:56:44,879 - INFO - ⚠️  WARNING: This affects active bidirectional sync operations!
+2025-09-29 09:56:44,879 - INFO - ================================================================================
+2025-09-29 09:56:45,932 - INFO - Starting CloudSQL recommendation sync migration
+2025-09-29 09:56:45,932 - INFO -   From: gs://data-bucket-prod/export/cloudsql_recommendation_tables_to_bigquery/
+2025-09-29 09:56:45,932 - INFO -   To: gs://de-bigquery-data-import-prod/export/cloudsql_recommendation_tables_to_bigquery/
+2025-09-29 09:56:45,932 - INFO - Scanning contents of gs://data-bucket-prod/export/cloudsql_recommendation_tables_to_bigquery/
+2025-09-29 09:56:46,436 - ERROR - Error listing recommendation sync contents: ERROR: (gcloud.storage.ls) One or more URLs matched no objects.
+
+2025-09-29 09:56:46,436 - INFO - No recommendation sync files to migrate
+2025-09-29 09:56:46,436 - INFO - ================================================================================
+2025-09-29 09:56:46,436 - INFO - MIGRATION SUMMARY
+2025-09-29 09:56:46,436 - INFO - Files migrated: 0
+2025-09-29 09:56:46,436 - INFO - Status: SUCCESS
+2025-09-29 09:56:46,436 - INFO - DRY RUN - No actual migration performed
+2025-09-29 09:56:46,436 - INFO - ================================================================================

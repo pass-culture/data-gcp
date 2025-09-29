@@ -1,0 +1,42 @@
+2025-09-29 11:11:34,723 - INFO - ================================================================================
+2025-09-29 11:11:34,724 - INFO - Starting QPI Exports Migration
+2025-09-29 11:11:34,724 - INFO - Environment: stg
+2025-09-29 11:11:34,724 - INFO - Mode: EXECUTION
+2025-09-29 11:11:34,724 - INFO - ⚠️  WARNING: This affects hot daily import pipeline!
+2025-09-29 11:11:34,724 - INFO - ================================================================================
+2025-09-29 11:11:35,716 - INFO - Starting QPI exports migration
+2025-09-29 11:11:35,716 - INFO -   From: gs://data-bucket-stg/QPI_exports
+2025-09-29 11:11:35,716 - INFO -   To: gs://de-bigquery-data-import-stg/QPI_exports
+2025-09-29 11:11:35,716 - INFO - Scanning contents of gs://data-bucket-stg/QPI_exports
+2025-09-29 11:11:44,586 - INFO - Found 1166 QPI export files to migrate
+2025-09-29 11:11:53,237 - INFO - Total size: 659.17MiB gs://data-bucket-stg/QPI_exports
+2025-09-29 11:11:53,237 - INFO - File analysis:
+2025-09-29 11:11:53,237 - INFO -   Total files: 1166
+2025-09-29 11:11:53,237 - INFO -   File types: {'no_ext': 204, 'jsonl': 618, 'csv': 344}
+2025-09-29 11:11:53,237 - INFO -   Date partitions found: 342
+2025-09-29 11:11:53,237 - INFO -   Recent dates: ['20220425', '20220426', '20220427', '20220428', '20220429']
+2025-09-29 11:11:53,237 - INFO -   Sample files:
+2025-09-29 11:11:53,237 - INFO -     📄 :
+2025-09-29 11:11:53,237 - INFO -     📄 qpi_answers_20210316.jsonl (Daily export data)
+2025-09-29 11:11:53,237 - INFO -     📄 qpi_answers_20210317.jsonl (Daily export data)
+2025-09-29 11:11:53,237 - INFO -     📄 qpi_answers_20210318.jsonl (Daily export data)
+2025-09-29 11:11:53,237 - INFO -     📄 qpi_answers_20210319.jsonl (Daily export data)
+2025-09-29 11:11:53,237 - INFO - Executing: gcloud storage rsync --recursive --exclude=.DS_Store gs://data-bucket-stg/QPI_exports gs://de-bigquery-data-import-stg/QPI_exports
+2025-09-29 11:11:57,938 - INFO - Successfully migrated QPI export files
+2025-09-29 11:12:06,715 - INFO - Verification: 1166 files found in new location
+2025-09-29 11:12:06,715 - INFO - ✅ Migration verification successful
+2025-09-29 11:12:06,715 - INFO - ✅ Found 618 JSONL export files in new location
+2025-09-29 11:12:06,715 - INFO - ================================================================================
+2025-09-29 11:12:06,715 - INFO - MIGRATION SUMMARY
+2025-09-29 11:12:06,715 - INFO - Files migrated: 1166
+2025-09-29 11:12:06,715 - INFO - Status: SUCCESS
+2025-09-29 11:12:06,715 - INFO - File type breakdown:
+2025-09-29 11:12:06,716 - INFO -   no_ext: 204 files
+2025-09-29 11:12:06,716 - INFO -   jsonl: 618 files
+2025-09-29 11:12:06,716 - INFO -   csv: 344 files
+2025-09-29 11:12:06,716 - INFO - Date partitions: 342
+2025-09-29 11:12:06,716 - INFO - ⚠️  IMPORTANT: Update code references to use new bucket path!
+2025-09-29 11:12:06,716 - INFO -    Update orchestration/dags/jobs/import/import_qpi.py
+2025-09-29 11:12:06,716 - INFO -    Change path from: gs://data-bucket-stg/QPI_exports/
+2025-09-29 11:12:06,716 - INFO -    To: gs://de-bigquery-data-import-stg/qpi_exports/
+2025-09-29 11:12:06,716 - INFO - ================================================================================

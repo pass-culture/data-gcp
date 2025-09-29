@@ -7,11 +7,11 @@ dedicated export bucket structure.
 
 Migration path:
 - From: gs://data-bucket-{env}/QPI_exports/
-- To: gs://de-bigquery-data-export-{env}/qpi_exports/
+- To: gs://de-bigquery-data-import-{env}/qpi_exports/
 
 Usage:
-    python migrate_qpi_exports.py --env prod --dry-run
-    python migrate_qpi_exports.py --env prod --execute
+    python3 migrate_qpi_exports.py --env prod --dry-run
+    python3 migrate_qpi_exports.py --env prod --execute
 """
 
 import argparse
@@ -29,9 +29,9 @@ class QPIExportsMigrator:
         self.env = env
         self.dry_run = dry_run
         self.old_bucket = f"data-bucket-{env}"
-        self.new_bucket = f"de-bigquery-data-export-{env}"
-        self.old_path = f"gs://{self.old_bucket}/QPI_exports/"
-        self.new_path = f"gs://{self.new_bucket}/qpi_exports/"
+        self.new_bucket = f"de-bigquery-data-import-{env}"
+        self.old_path = f"gs://{self.old_bucket}/QPI_exports"
+        self.new_path = f"gs://{self.new_bucket}/QPI_exports"
 
         # Configure logging
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -199,7 +199,7 @@ class QPIExportsMigrator:
             self.logger.info("DRY RUN - QPI export files that would be migrated:")
             for file_path in files:
                 relative_path = file_path.replace(self.old_path, "")
-                self.logger.info(f"  {file_path} → {self.new_path}{relative_path}")
+                # self.logger.info(f"  {file_path} → {self.new_path}{relative_path}")
 
             return True, len(files), analysis
 
@@ -339,7 +339,7 @@ class QPIExportsMigrator:
                 f"   Change path from: gs://data-bucket-{self.env}/QPI_exports/"
             )
             self.logger.info(
-                f"   To: gs://de-bigquery-data-export-{self.env}/qpi_exports/"
+                f"   To: gs://de-bigquery-data-import-{self.env}/qpi_exports/"
             )
 
         self.logger.info("=" * 80)
@@ -387,11 +387,11 @@ Coordinate with development team before execution.
 
     if not dry_run:
         print(
-            f"⚠️  WARNING: This will migrate hot QPI export data to de-bigquery-data-export-{args.env}"
+            f"⚠️  WARNING: This will migrate hot QPI export data to de-bigquery-data-import-{args.env}"
         )
         print(f"   This affects daily import pipeline!")
         print(f"   Source: gs://data-bucket-{args.env}/QPI_exports/")
-        print(f"   Target: gs://de-bigquery-data-export-{args.env}/qpi_exports/")
+        print(f"   Target: gs://de-bigquery-data-import-{args.env}/qpi_exports/")
         print()
         print("After migration, you MUST update code references:")
         print("   - orchestration/dags/jobs/import/import_qpi.py")

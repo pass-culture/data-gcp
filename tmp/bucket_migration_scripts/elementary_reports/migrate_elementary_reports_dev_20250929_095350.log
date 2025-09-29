@@ -1,0 +1,42 @@
+2025-09-29 09:53:50,421 - INFO - ================================================================================
+2025-09-29 09:53:50,422 - INFO - Starting Elementary Reports Migration
+2025-09-29 09:53:50,422 - INFO - Environment: dev
+2025-09-29 09:53:50,422 - INFO - Mode: EXECUTION
+2025-09-29 09:53:50,422 - INFO - ⚠️  NOTE: This affects daily report generation and growing volume!
+2025-09-29 09:53:50,422 - INFO - ================================================================================
+2025-09-29 09:53:51,429 - INFO - Starting Elementary reports migration
+2025-09-29 09:53:51,429 - INFO -   From: gs://data-bucket-dev/elementary_reports/
+2025-09-29 09:53:51,429 - INFO -   To: gs://de-bigquery-data-export-dev/elementary_reports/
+2025-09-29 09:53:51,429 - INFO - Scanning contents of gs://data-bucket-dev/elementary_reports/
+2025-09-29 09:53:52,053 - INFO - Found 131 Elementary report files to migrate
+2025-09-29 09:53:52,674 - INFO - Total size: 1.04GiB gs://data-bucket-dev/elementary_reports/
+2025-09-29 09:53:52,674 - INFO - File analysis:
+2025-09-29 09:53:52,674 - INFO -   Total files: 131
+2025-09-29 09:53:52,674 - INFO -   File types: {'no_ext': 3, 'html': 128}
+2025-09-29 09:53:52,674 - INFO -   Years with reports: ['2024', '2025']
+2025-09-29 09:53:52,674 - INFO -   Recent months: ['202504', '202505', '202506', '202507', '202508', '202509']
+2025-09-29 09:53:52,674 - INFO -   Sample reports:
+2025-09-29 09:53:52,674 - INFO -     📄 :
+2025-09-29 09:53:52,674 - INFO -     📄 :
+2025-09-29 09:53:52,674 - INFO -     📊 elementary_report_20240917.html (Daily monitoring report)
+2025-09-29 09:53:52,674 - INFO -     📊 elementary_report_20240919.html (Daily monitoring report)
+2025-09-29 09:53:52,674 - INFO -     📊 elementary_report_20240920.html (Daily monitoring report)
+2025-09-29 09:53:52,674 - INFO - Executing: gcloud storage rsync --recursive --exclude=.DS_Store gs://data-bucket-dev/elementary_reports/ gs://de-bigquery-data-export-dev/elementary_reports/
+2025-09-29 09:53:56,023 - INFO - Successfully migrated Elementary report files
+2025-09-29 09:53:56,691 - INFO - Verification: 131 files found in new location
+2025-09-29 09:53:56,691 - INFO - ✅ Migration verification successful
+2025-09-29 09:53:56,691 - INFO - ✅ HTML report files verified: 128
+2025-09-29 09:53:56,691 - INFO - ================================================================================
+2025-09-29 09:53:56,691 - INFO - MIGRATION SUMMARY
+2025-09-29 09:53:56,691 - INFO - Files migrated: 131
+2025-09-29 09:53:56,691 - INFO - Status: SUCCESS
+2025-09-29 09:53:56,691 - INFO - File type breakdown:
+2025-09-29 09:53:56,691 - INFO -   no_ext: 3 files
+2025-09-29 09:53:56,691 - INFO -   html: 128 files
+2025-09-29 09:53:56,691 - INFO - Report coverage: 2 years (2024 - 2025)
+2025-09-29 09:53:56,691 - INFO - ⚠️  IMPORTANT: Update code references to use new bucket path!
+2025-09-29 09:53:56,691 - INFO -    Update orchestration/dags/jobs/dbt/dbt_artifacts.py
+2025-09-29 09:53:56,691 - INFO -    Change path from: gs://data-bucket-dev/elementary_reports/
+2025-09-29 09:53:56,691 - INFO -    To: gs://de-bigquery-data-export-dev/elementary_reports/
+2025-09-29 09:53:56,691 - INFO -    Consider implementing retention policy for growing reports
+2025-09-29 09:53:56,691 - INFO - ================================================================================

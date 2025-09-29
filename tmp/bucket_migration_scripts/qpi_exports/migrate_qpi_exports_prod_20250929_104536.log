@@ -1,0 +1,35 @@
+2025-09-29 10:45:36,799 - INFO - ================================================================================
+2025-09-29 10:45:36,799 - INFO - Starting QPI Exports Migration
+2025-09-29 10:45:36,799 - INFO - Environment: prod
+2025-09-29 10:45:36,800 - INFO - Mode: DRY RUN
+2025-09-29 10:45:36,800 - INFO - ⚠️  WARNING: This affects hot daily import pipeline!
+2025-09-29 10:45:36,800 - INFO - ================================================================================
+2025-09-29 10:45:38,014 - INFO - Starting QPI exports migration
+2025-09-29 10:45:38,014 - INFO -   From: gs://data-bucket-prod/QPI_exports/
+2025-09-29 10:45:38,014 - INFO -   To: gs://de-bigquery-data-import-prod/QPI_exports/
+2025-09-29 10:45:38,014 - INFO - Scanning contents of gs://data-bucket-prod/QPI_exports/
+2025-09-29 10:51:51,284 - INFO - Found 2652999 QPI export files to migrate
+2025-09-29 10:57:35,336 - INFO - Total size: 1.39GiB gs://data-bucket-prod/QPI_exports/
+2025-09-29 10:57:35,336 - INFO - File analysis:
+2025-09-29 10:57:35,336 - INFO -   Total files: 2652999
+2025-09-29 10:57:35,336 - INFO -   File types: {'no_ext': 1146, 'jsonl': 2651517, 'csv': 336}
+2025-09-29 10:57:35,336 - INFO -   Date partitions found: 3
+2025-09-29 10:57:35,336 - INFO -   Recent dates: ['20210326', '20210405', '20210417']
+2025-09-29 10:57:35,336 - INFO -   Sample files:
+2025-09-29 10:57:35,336 - INFO -     📄 :
+2025-09-29 10:57:35,336 - INFO -     📄 qpi_answers_20210326.jsonl (Daily export data)
+2025-09-29 10:57:35,336 - INFO -     📄 qpi_answers_20210405.jsonl (Daily export data)
+2025-09-29 10:57:35,336 - INFO -     📄 qpi_answers_20210417.jsonl (Daily export data)
+2025-09-29 10:57:35,336 - INFO -     📄 :
+2025-09-29 10:57:35,336 - INFO - DRY RUN - QPI export files that would be migrated:
+2025-09-29 10:57:35,545 - INFO - ================================================================================
+2025-09-29 10:57:35,545 - INFO - MIGRATION SUMMARY
+2025-09-29 10:57:35,545 - INFO - Files migrated: 2652999
+2025-09-29 10:57:35,545 - INFO - Status: SUCCESS
+2025-09-29 10:57:35,545 - INFO - File type breakdown:
+2025-09-29 10:57:35,545 - INFO -   no_ext: 1146 files
+2025-09-29 10:57:35,545 - INFO -   jsonl: 2651517 files
+2025-09-29 10:57:35,545 - INFO -   csv: 336 files
+2025-09-29 10:57:35,545 - INFO - Date partitions: 3
+2025-09-29 10:57:35,546 - INFO - DRY RUN - No actual migration performed
+2025-09-29 10:57:35,546 - INFO - ================================================================================

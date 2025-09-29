@@ -1,0 +1,41 @@
+2025-09-29 10:17:53,121 - INFO - ================================================================================
+2025-09-29 10:17:53,121 - INFO - Starting ClickHouse Export Migration
+2025-09-29 10:17:53,121 - INFO - Environment: prod
+2025-09-29 10:17:53,121 - INFO - Mode: EXECUTION
+2025-09-29 10:17:53,122 - INFO - ⚠️  WARNING: This affects active daily staging pipeline!
+2025-09-29 10:17:53,122 - INFO - ================================================================================
+2025-09-29 10:17:54,206 - INFO - Starting ClickHouse export migration
+2025-09-29 10:17:54,206 - INFO -   From: gs://data-bucket-prod/clickhouse_export/
+2025-09-29 10:17:54,206 - INFO -   To: gs://de-bigquery-data-export-prod/clickhouse_export/
+2025-09-29 10:17:54,206 - INFO - Scanning contents of gs://data-bucket-prod/clickhouse_export/
+2025-09-29 10:18:35,643 - INFO - Found 27375 ClickHouse export files to migrate
+2025-09-29 10:19:15,918 - INFO - Total size: 169.11GiB gs://data-bucket-prod/clickhouse_export/
+2025-09-29 10:19:15,918 - INFO - File analysis:
+2025-09-29 10:19:15,918 - INFO -   Total files: 27375
+2025-09-29 10:19:15,918 - INFO -   File types: {'no_ext': 910, 'parquet': 26465}
+2025-09-29 10:19:15,918 - INFO -   Environment paths: ['prod']
+2025-09-29 10:19:15,918 - INFO -   Export dates detected: 210
+2025-09-29 10:19:15,918 - INFO -   Recent export dates: ['20250924', '20250925', '20250926', '20250927', '20250928']
+2025-09-29 10:19:15,918 - INFO -   Sample export files:
+2025-09-29 10:19:15,918 - INFO -     📄 : (Export file)
+2025-09-29 10:19:15,918 - INFO -     📄 : (Export file)
+2025-09-29 10:19:15,918 - INFO -     📄 : (Export file)
+2025-09-29 10:19:15,918 - INFO -     📄 : (Export file)
+2025-09-29 10:19:15,918 - INFO -     📄 : (Export file)
+2025-09-29 10:19:15,918 - INFO - Executing: gcloud storage rsync --recursive --exclude=.DS_Store gs://data-bucket-prod/clickhouse_export/ gs://de-bigquery-data-export-prod/clickhouse_export/
+2025-09-29 10:19:58,932 - INFO - Successfully migrated ClickHouse export files
+2025-09-29 10:20:39,918 - INFO - Verification: 27375 files found in new location
+2025-09-29 10:20:39,918 - INFO - ✅ Migration verification successful
+2025-09-29 10:20:39,937 - INFO - ================================================================================
+2025-09-29 10:20:39,937 - INFO - MIGRATION SUMMARY
+2025-09-29 10:20:39,937 - INFO - Files migrated: 27375
+2025-09-29 10:20:39,937 - INFO - Status: SUCCESS
+2025-09-29 10:20:39,937 - INFO - File type breakdown:
+2025-09-29 10:20:39,937 - INFO -   no_ext: 910 files
+2025-09-29 10:20:39,937 - INFO -   parquet: 26465 files
+2025-09-29 10:20:39,937 - INFO - Export operations: 210 dates detected
+2025-09-29 10:20:39,937 - INFO - ⚠️  IMPORTANT: Update code references to use new bucket path!
+2025-09-29 10:20:39,937 - INFO -    Update orchestration/dags/jobs/export/export_clickhouse.py
+2025-09-29 10:20:39,937 - INFO -    Change path from: gs://data-bucket-prod/clickhouse_export/
+2025-09-29 10:20:39,937 - INFO -    To: gs://de-bigquery-data-export-prod/clickhouse_export/
+2025-09-29 10:20:39,937 - INFO - ================================================================================

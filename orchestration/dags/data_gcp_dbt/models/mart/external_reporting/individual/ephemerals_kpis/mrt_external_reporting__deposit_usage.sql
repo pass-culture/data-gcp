@@ -1,3 +1,4 @@
+-- noqa: disable=all
 {{
     config(
         **custom_incremental_config(
@@ -27,7 +28,7 @@
         count(distinct user_id) as denominator,
         sum(total_deposit_amount) as numerator,
         safe_divide(sum(total_deposit_amount), count(distinct user_id)) as kpi
-    from {{ ref("mrt_global__user") }}
+    from {{ ref("mrt_global__user_beneficiary") }}
     {% if is_incremental() %}
         where
             date_trunc(last_deposit_expiration_date, month)
@@ -49,7 +50,7 @@ union all
         count(distinct user_id) as denominator,
         sum(total_actual_amount_spent) as numerator,
         safe_divide(sum(total_actual_amount_spent), count(distinct user_id)) as kpi
-    from {{ ref("mrt_global__user") }}
+    from {{ ref("mrt_global__user_beneficiary") }}
     {% if is_incremental() %}
         where
             date_trunc(last_deposit_expiration_date, month)

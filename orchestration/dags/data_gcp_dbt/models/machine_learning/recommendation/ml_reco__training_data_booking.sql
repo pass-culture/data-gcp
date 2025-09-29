@@ -21,5 +21,6 @@ select
     extract(month from booking.booking_created_at) as event_month
 from {{ ref("int_global__booking") }} as booking
 inner join {{ ref("int_global__offer") }} as offer on booking.offer_id = offer.offer_id
-inner join {{ ref("int_global__user_beneficiary") }} as user on booking.user_id = user.user_id
+inner join
+    {{ ref("int_global__user_beneficiary") }} as user on booking.user_id = user.user_id
 where booking.booking_creation_date >= date_sub(date("{{ ds() }}"), interval 6 month)

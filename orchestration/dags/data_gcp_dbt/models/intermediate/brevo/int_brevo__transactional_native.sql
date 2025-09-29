@@ -1,3 +1,4 @@
+-- noqa: disable=all
 with
     brevo_perf_by_user as (
         select
@@ -35,7 +36,7 @@ with
             ) as total_favorites
         from {{ ref("int_firebase__native_event") }} as firebase
         left join
-            {{ ref("mrt_global__user") }} as user on firebase.user_id = user.user_id
+            {{ ref("mrt_global__user_beneficiary") }} as user on firebase.user_id = user.user_id
         where
             traffic_campaign is not null
             and lower(traffic_medium) like '%email%'

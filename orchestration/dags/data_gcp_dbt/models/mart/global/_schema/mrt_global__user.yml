@@ -1,7 +1,7 @@
 version: 2
 models:
-  - name: mrt_global__user
-    description: '{{ doc("description__mrt_global__user") }}'
+  - name: mrt_global__user_beneficiary
+    description: '{{ doc("description__mrt_global__user_beneficiary") }}'
     columns:
       - name: user_id
         description: '{{ doc("column__user_id") }}'

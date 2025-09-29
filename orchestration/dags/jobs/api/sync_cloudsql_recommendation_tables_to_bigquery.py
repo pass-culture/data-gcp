@@ -6,7 +6,7 @@ from common.callback import on_failure_base_callback
 from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
-    DATA_GCS_BUCKET_NAME,
+    DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME,
     GCP_PROJECT_ID,
 )
 from common.operators.gce import (
@@ -82,7 +82,7 @@ with DAG(
             type="string",
         ),
         "bucket_name": Param(
-            default=DATA_GCS_BUCKET_NAME,
+            default=DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME,
             type="string",
         ),
         "bucket_folder": Param(

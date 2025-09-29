@@ -5,8 +5,8 @@ import typer
 
 from constants import (
     API_URL,
+    DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME,
     DMS_TOKEN,
-    ENV_SHORT_NAME,
     GCP_PROJECT_ID,
     demarches,
 )
@@ -31,7 +31,7 @@ def fetch_dms(updated_since, demarches, target):
     result = fetch_result(demarches, updated_since)
     save_json(
         result,
-        f"gs://data-bucket-{ENV_SHORT_NAME}/dms_export/unsorted_dms_{target}_{updated_since}.json",
+        f"gs://{DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME}/dms_export/unsorted_dms_{target}_{updated_since}.json",
         GCP_PROJECT_ID,
     )
 

@@ -196,7 +196,8 @@ from {{ ref("int_firebase__native_consultation") }} as consult
 left join
     discoveries_by_consultation as dc on consult.consultation_id = dc.consultation_id
 left join {{ ref("int_global__offer") }} as offer on consult.offer_id = offer.offer_id
-left join {{ ref("int_global__user_beneficiary") }} as user on consult.user_id = user.user_id
+left join
+    {{ ref("int_global__user_beneficiary") }} as user on consult.user_id = user.user_id
 left join {{ ref("int_contentful__home_tag") }} as ht on consult.entry_id = ht.entry_id
 left join
     consult_offer_through_venue as ov

@@ -1,3 +1,4 @@
+-- noqa: disable=all
 {{
     config(
         **custom_incremental_config(
@@ -51,7 +52,7 @@
             count(distinct bc.user_id) as numerator,
             count(distinct user_id) as denominator,
             safe_divide(count(distinct bc.user_id), count(distinct user_id)) as kpi
-        from {{ ref("mrt_global__user") }}
+        from {{ ref("mrt_global__user_beneficiary") }}
         left join booked_category_{{ category.value }} as bc using (user_id)
         where
             total_deposit_amount >= 300

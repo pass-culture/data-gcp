@@ -16,7 +16,7 @@ This data warehouse is essential for analytics, managed by the data analysts, an
 Theses models comes from our internal systems and handle the business logic of the application. The global models are an
 aggregated view of intermediate models and are used as main data sources for the analytics team.
 
-- **[Global User](models/mart/global/description__mrt_global__user.md)**: Aggregates user-related data, including
+- **[Global User Beneficiary](models/mart/global/description__mrt_global__user_beneficiary.md)**: Aggregates user-related data, including
 demographics, activity, and financial interactions.
 
 - **[Global Deposit](models/mart/global/description__mrt_global__deposit.md)**: Handle the deposit amounts given to each

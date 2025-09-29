@@ -1,3 +1,4 @@
+-- noqa: disable=all
 {{ config(**custom_table_config(materialized="view")) }}
 
 with
@@ -15,8 +16,9 @@ with
             and event_date >= date_sub(date("{{ ds() }}"), interval 6 month)
             and user_id is not null
             and offer_id is not null
-            and offer_id != 'NaN'
+            and offer_id != "NaN"
     )
+
 select
     events.user_id,
     cast(user.user_age as int64) as user_age,
@@ -25,14 +27,14 @@ select
     event_hour,
     event_day,
     event_month,
-    offer.item_id as item_id,
-    offer.offer_subcategory_id as offer_subcategory_id,
-    offer.offer_category_id as offer_category_id,
+    offer.item_id,
+    offer.offer_subcategory_id,
+    offer.offer_category_id,
     offer.genres,
     offer.rayon,
     offer.type,
     offer.venue_id,
-    offer.venue_name,
+    offer.venue_name
 from events
-join {{ ref("int_global__offer") }} offer on offer.offer_id = events.offer_id
-inner join {{ ref("int_global__user") }} user on user.user_id = events.user_id
+inner join {{ ref("int_global__offer") }} as offer on events.offer_id = offer.offer_id
+inner join {{ ref("int_global__user_beneficiary") }} as user on events.user_id = user.user_id

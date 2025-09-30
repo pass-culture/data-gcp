@@ -25,6 +25,13 @@ from utils.matching import (
 )
 from utils.preprocessing_utils import filter_products
 
+ALIAS_MERGE_COLUMNS = [
+    ARTIST_ID_KEY,
+    ARTIST_NAME_KEY,
+    ARTIST_TYPE_KEY,
+    OFFER_CATEGORY_ID_KEY,
+]
+
 
 def get_products_to_remove_and_link_df(
     products_df: pd.DataFrame,
@@ -125,13 +132,9 @@ def build_artist_alias(
     )
 
     return (
-        product_with_names_df.loc[
-            :, [ARTIST_ID_KEY, ARTIST_NAME_KEY, ARTIST_TYPE_KEY, OFFER_CATEGORY_ID_KEY]
-        ]
+        product_with_names_df.loc[:, ALIAS_MERGE_COLUMNS]
         .drop_duplicates()
-        .sort_values(
-            by=[ARTIST_ID_KEY, ARTIST_NAME_KEY, ARTIST_TYPE_KEY, OFFER_CATEGORY_ID_KEY]
-        )
+        .sort_values(by=ALIAS_MERGE_COLUMNS)
     )
 
 
@@ -195,7 +198,7 @@ def sanity_checks(
     already_existing_artist_aliases = delta_artist_alias_df.merge(
         artist_alias_df,
         how="outer",
-        on=[ARTIST_ID_KEY, ARTIST_NAME_KEY, ARTIST_TYPE_KEY],
+        on=ALIAS_MERGE_COLUMNS,
         indicator=True,
     ).loc[lambda df: df._merge == "both"]
     if len(already_existing_artist_aliases) > 0:
